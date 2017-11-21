@@ -16,10 +16,12 @@ type variable = t
 type variable_contents =
   | B of bool
   | S of string
+  | L of string list
 
 let string_of_variable_contents = function
   | B b -> string_of_bool b
   | S s -> s
+  | L l -> String.concat " " l
 
 let string str = S str
 

@@ -347,7 +347,7 @@ They can be used in two forms:
 
 For both forms, and within values that allow them, the variables are replaced by
 their contents, if any, just before the value is used. Variable contents can be
-either _strings_, _booleans_ or _undefined_, and automatic conversion may take
+either _strings_, _booleans_, _lists of strings_ or _undefined_, and automatic conversion may take
 place using the strings `"true"` and `"false"` (leading to an _undefined_ bool
 when converting from any other string). Undefined values are propagated through
 boolean expressions, and lead otherwise to context-dependent default values (the
@@ -660,7 +660,7 @@ contains configuration options specific to that switch:
   defines the standard paths within the switch: recognised fields include
   `prefix:`, `bin:`, `sbin:`, `lib:`, `share:`, `etc:`, `doc:`, `man:`,
   `stublibs:`, `toplevel:`.
-- <a id="switchconfigsection-variables">`variables: "{" { <ident>: <string> ... } "}"`</a>:
+- <a id="switchconfigsection-variables">`variables: "{" { <ident>: ( <string> | [ <string> ... ] | <bool> ) ... } "}"`</a>:
   allows the definition of variables local to the switch.
 
 ### Package definitions
@@ -871,7 +871,6 @@ files.
 
 - <a id="opamfield-depexts">
   `depexts: [ [ <string> ... ] { <filter> }  ... ]`</a>:
-
   the package external dependencies. This field may be used to describe the
   dependencies of the package toward software or packages external to the <span
   class="opam">opam</span> ecosystem, for various systems. Each
@@ -879,12 +878,11 @@ files.
   identifiers to required system-managed packages, while the filter to the right
   allows to select the systems they will be active on.
 
-  The filters typically use variables `arch`, `os`, `os-distribution`,
-  `os-version`, `os-family`, as defined in
-  [opam-depext](https://github.com/ocaml/opam-depext) (note that opam itself
-  doesn't define all of these at the moment). The `depexts` information can be
-  retrieved through the `opam list --external` command with the appropriate
-  `--vars` bindings.
+    The filters typically use variables `arch`, `os`, `os-distribution`,
+    `os-version`, `os-family`. The `depexts` information can be retrieved
+    through the `opam list --depexts` command (which can be targeted to a
+    specific system other than the host by using the appropriate `--vars`
+    bindings).
 
     The `depexts:` field should preferably be used on [`conf`](#opamflag-conf)
     packages, which makes the dependencies clearer and avoids duplicating the
@@ -1140,7 +1138,7 @@ source tree after its installation instructions have been run.
   consistency of packages that rely on system-wide files or system packages when
   those are changed, _e.g._ by `apt-get upgrade`. The user will be warned if the
   file was removed, and the package marked for reinstallation if it was changed.
-- <a id="dotconfigsection-variables">`variables: "{" { <ident>: <string> ... }
+- <a id="dotconfigsection-variables">`variables: "{" { <ident>: ( <string> | [ <string> ... ] | <bool> ) ... }
   "}"`</a>: allows the definition of package variables, that will be available
   as `<pkgname>:<varname>` to dependent packages.
 
@@ -1226,7 +1224,7 @@ for <span class="opam">opam</span>.
     - `input` is the name of the input file, in [Cudf](http://mancoosi.org/cudf/) format
     - `output` is the expected name of the output file, containing the solution
     - `criteria` is the defined solver criteria.
-- <a id="configfield-global-variables">`global-variables: [ "[" <ident> ( <string> | <bool> ) <string> "]" ... ]`</a>:
+- <a id="configfield-global-variables">`global-variables: [ "[" <ident> ( <string> | [ <string> ... ] | <bool> ) <string> "]" ... ]`</a>:
   allows the definition of global variables. The last `<string>` is for
   documentation and is shown in the output of `opam config list`.
 - <a id="configfield-eval-variables">`eval-variables: [ "[" <ident> [ <string> ... ] <string> "]" ... ]`</a>:
@@ -1258,18 +1256,33 @@ for <span class="opam">opam</span>.
   the return value of the package script.
 
     The `post-install-commands` hook also has access to an extra variable
-    `installed-files` which is the list of files and directories added or
-    modified during the installation of the package, separated by space
-    characters. Note that this hook is run after the scan for installed files is
+    `installed-files` which expands to the list of files and directories added or
+    modified during the installation of the package.
+    Note that this hook is run after the scan for installed files is
     done, so any additional installed files won't be recorded and must be taken
     care of by a `pre-remove-commands` hook.
 - <a id="configfield-pre-session-commands">`pre-session-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
   <a id="configfield-post-session-commands">`post-session-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
   These commands will be run once respectively before and after the sequence of
   actions done by a given instance of opam. Only the switch variables are
-  available, since this doesn't concern any single package, plus a `success`
-  variable for `post-session-commands` (`failure = !success` is also defined for
-  convenience).
+  available, since this doesn't concern one single package, plus the following,
+  related to the sequence of actions. They correspond respectively to the
+  expected final state for `pre-session`, and to the actually reached state
+  for `post-session`.
+    - `installed`: all installed packages with versions.
+    - `new`: all packages or versions that are geting installed but wheren't
+      present before the session.
+    - `removed`: all packages or versions that were installed before, but no
+      longer after the session. Note that an upgrade of `foo.0.1` to `foo.0.2` is considered
+      as removal of `foo.0.1` and addition of `foo.0.2`. Reinstallations aren't
+      visible with these variables.
+    - `success` (and `failure`, which is `!success`): only for `post-session`,
+      `success` is `true` only if all the expected operations were successful (a
+      subset of the package actions may have been successful even if `false`).
+    - `depexts`: for `pre-session`, the list of
+      [`depexts:`](#opamfield-depexts) inferred for the host system on
+      `installed`.
+
 - <a id="configfield-repository-validation-command">`repository-validation-command: [ <string> { <filter> } ... ]`</a>:
   defines a command to run on the upstream repositories to validate their
   authenticity. When this is specified, and for repositories that define

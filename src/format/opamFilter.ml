@@ -167,14 +167,15 @@ let desugar_fident ((packages,var,converter) as fident) =
     packages, OpamVariable.of_string "installed", Some ("enable","disable")
   else fident
 
-(* Resolves [FIdent] to string or bool, using its package and converter
-   specification *)
-let resolve_ident ?(no_undef_expand=false) env fident =
+(* Resolves an ident to variable contents *)
+let resolve_ident_raw ?(no_undef_expand=false) env fident =
   let open OpamStd.Option.Op in
   let packages,var,converter = desugar_fident fident in
   let bool_of_value = function
     | B b -> Some b
-    | S s -> try Some (bool_of_string s) with Invalid_argument _ -> None
+    | S s | L [s] ->
+      (try Some (bool_of_string s) with Invalid_argument _ -> None)
+    | L _ -> None
   in
   let resolve name =
     let var = match name with
@@ -198,14 +199,19 @@ let resolve_ident ?(no_undef_expand=false) env fident =
   match converter, no_undef_expand with
   | Some (iftrue, iffalse), false ->
     (match value_opt >>= bool_of_value with
-     | Some true -> FString iftrue
-     | Some false -> FString iffalse
-     | None -> FString iffalse)
-  | _ ->
-    (match value_opt with
-     | Some (B b) -> FBool b
-     | Some (S s) -> FString s
-     | None -> FUndef (FIdent fident))
+     | Some true -> Some (S iftrue)
+     | Some false -> Some (S iffalse)
+     | None -> Some (S iffalse))
+  | _ -> value_opt
+
+(* Resolves [FIdent] to string or bool, using its package and converter
+   specification *)
+let resolve_ident ?no_undef_expand env fident =
+  match resolve_ident_raw ?no_undef_expand env fident with
+  | Some (B b) -> FBool b
+  | Some (S s) -> FString s
+  | Some (L l) -> FString (String.concat " " l)
+  | None -> FUndef (FIdent fident)
 
 (* Resolves ["%{x}%"] string interpolations *)
 let expand_string ?(partial=false) ?default env text =
@@ -413,18 +419,20 @@ let expand_interpolations_in_file env file =
 let arguments env (a,f) =
   if opt_eval_to_bool env f then
     match a with
-    | CString s -> Some (expand_string ~default:(fun _ -> "") env s)
-    | CIdent i  ->
-      try
-        let fident = filter_ident_of_string i in
-        Some (value_string (resolve_ident env fident))
-      with Failure msg -> log "ERR in replacement: %s" msg; None
+    | CString s -> [expand_string ~default:(fun _ -> "") env s]
+    | CIdent i ->
+      let fident = filter_ident_of_string i in
+      match resolve_ident_raw env fident with
+      | Some (S s) -> [s]
+      | Some (B b) -> [string_of_bool b]
+      | Some (L sl) -> sl
+      | None -> log "ERR in replacement: undefined ident %S" i; []
   else
-    None
+    []
 
 let command env (l, f) =
   if opt_eval_to_bool env f then
-    match OpamStd.List.filter_map (arguments env) l with
+    match List.concat (List.map (arguments env) l) with
     | [] -> None
     | l  -> Some l
   else
@@ -432,7 +440,7 @@ let command env (l, f) =
 
 let commands env l = OpamStd.List.filter_map (command env) l
 
-let single_command env l = OpamStd.List.filter_map (arguments env) l
+let single_command env l = List.concat (List.map (arguments env) l)
 
 let simple_arg_variables = function
   | CString s -> string_variables s

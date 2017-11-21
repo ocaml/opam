@@ -478,17 +478,6 @@ let mini_field_printer ?(prettify=false) ?(normalise=false) =
   | List (_, l) -> OpamPrinter.value_list l
   | f -> OpamPrinter.Normalise.value f
 
-let get_depexts st nv =
-  let env v = OpamPackageVar.resolve_switch ~package:nv st v in
-  List.fold_left (fun acc (names, filter) ->
-      if OpamFilter.eval_to_bool ~default:false env filter
-      then
-        List.fold_left (fun acc n -> OpamStd.String.Set.add n acc)
-          acc names
-      else acc)
-    OpamStd.String.Set.empty
-    (OpamFile.OPAM.depexts (get_opam st nv))
-
 let detail_printer ?prettify ?normalise st nv =
   let open OpamStd.Option.Op in
   let (%) s cols = OpamConsole.colorise' cols s in
@@ -607,7 +596,8 @@ let detail_printer ?prettify ?normalise st nv =
       +! ""
     )
   | Depexts ->
-    String.concat " " (OpamStd.String.Set.elements (get_depexts st nv))
+    String.concat " "
+      (OpamStd.String.Set.elements (OpamSwitchState.depexts st nv))
 
 type package_listing_format = {
   short: bool;
@@ -701,7 +691,8 @@ let print_depexts st packages =
          if OpamPackage.Set.mem nv packages then nv else
            OpamPackage.Set.max_elt (OpamPackage.packages_of_name packages name)
        in
-       OpamStd.String.Set.union acc (get_depexts st nv))
+       OpamStd.String.Set.union acc
+         (OpamSwitchState.depexts st nv))
     (OpamPackage.names_of_packages packages)
     OpamStd.String.Set.empty
   |> OpamStd.String.Set.iter print_endline
