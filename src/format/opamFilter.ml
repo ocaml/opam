@@ -426,7 +426,7 @@ let arguments env (a,f) =
       | Some (S s) -> [s]
       | Some (B b) -> [string_of_bool b]
       | Some (L sl) -> sl
-      | None -> log "ERR in replacement: undefined ident %S" i; []
+      | None -> log "ERR in replacement: undefined ident %S" i; [""]
   else
     []
 
