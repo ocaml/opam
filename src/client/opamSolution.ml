@@ -799,13 +799,18 @@ let apply ?ask t action ~requested ?add_roots solution =
     );
 
     if not OpamClientConfig.(!r.show) &&
-              confirmation ?ask requested action_graph
+       confirmation ?ask requested action_graph
     then (
       let requested =
         OpamPackage.packages_of_names new_state.installed requested
       in
+      let run_job =
+        if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake)
+        then OpamProcess.Job.dry_run
+        else OpamProcess.Job.run
+      in
       let pre_session =
-        OpamProcess.Job.run @@
+        run_job @@
         run_hook_job t "pre-session"
           (OpamFile.Wrappers.pre_session
              (OpamFile.Config.wrappers t.switch_global.config))
@@ -815,7 +820,7 @@ let apply ?ask t action ~requested ?add_roots solution =
       let t, r = parallel_apply t action ~requested ?add_roots action_graph in
       let success = match r with OK _ -> true | _ -> false in
       let post_session =
-        OpamProcess.Job.run @@
+        run_job @@
         run_hook_job t "post-session"
           ~local:[OpamVariable.Full.of_string "success", B (success);
                   OpamVariable.Full.of_string "failure", B (not success)]
