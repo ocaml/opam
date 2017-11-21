@@ -174,7 +174,9 @@ let resolve_ident ?(no_undef_expand=false) env fident =
   let packages,var,converter = desugar_fident fident in
   let bool_of_value = function
     | B b -> Some b
-    | S s -> try Some (bool_of_string s) with Invalid_argument _ -> None
+    | S s | L [s] ->
+      (try Some (bool_of_string s) with Invalid_argument _ -> None)
+    | L _ -> None
   in
   let resolve name =
     let var = match name with
@@ -205,6 +207,7 @@ let resolve_ident ?(no_undef_expand=false) env fident =
     (match value_opt with
      | Some (B b) -> FBool b
      | Some (S s) -> FString s
+     | Some (L l) -> FString (String.concat " " l)
      | None -> FUndef (FIdent fident))
 
 (* Resolves ["%{x}%"] string interpolations *)
