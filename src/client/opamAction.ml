@@ -740,10 +740,6 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
   in
   let post_install error changes =
     let local =
-      let escape_spaces =
-        let re = Re.(compile (set "\\ ")) in
-        Re.(replace re ~f:(fun g -> "\\"^Group.get g 0))
-      in
       let added =
         let open OpamDirTrack in
         OpamStd.List.filter_map (function
@@ -756,7 +752,7 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
           | _ -> None) |>
       OpamVariable.Map.add
         (OpamVariable.of_string "installed-files")
-        (Some (S (OpamStd.List.concat_map " " escape_spaces added)))
+        (Some (L added))
     in
     OpamProcess.Job.of_fun_list ~keep_going:true
       (List.map (fun cmd () -> mk_cmd cmd)

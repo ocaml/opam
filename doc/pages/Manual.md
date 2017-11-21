@@ -347,7 +347,7 @@ They can be used in two forms:
 
 For both forms, and within values that allow them, the variables are replaced by
 their contents, if any, just before the value is used. Variable contents can be
-either _strings_, _booleans_ or _undefined_, and automatic conversion may take
+either _strings_, _booleans_, _lists of strings_ or _undefined_, and automatic conversion may take
 place using the strings `"true"` and `"false"` (leading to an _undefined_ bool
 when converting from any other string). Undefined values are propagated through
 boolean expressions, and lead otherwise to context-dependent default values (the
@@ -1256,9 +1256,9 @@ for <span class="opam">opam</span>.
   the return value of the package script.
 
     The `post-install-commands` hook also has access to an extra variable
-    `installed-files` which is the list of files and directories added or
-    modified during the installation of the package, separated by space
-    characters. Note that this hook is run after the scan for installed files is
+    `installed-files` which expands to the list of files and directories added or
+    modified during the installation of the package.
+    Note that this hook is run after the scan for installed files is
     done, so any additional installed files won't be recorded and must be taken
     care of by a `pre-remove-commands` hook.
 - <a id="configfield-pre-session-commands">`pre-session-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
@@ -1268,18 +1268,18 @@ for <span class="opam">opam</span>.
   available, since this doesn't concern one single package, plus the following,
   related to the sequence of actions. They correspond respectively to the
   expected final state for `pre-session`, and to the actually reached state
-  for `post-session`. The two may differ when `success` is `false`.
-    - `installed`: all installed packages with versions(space separated list).
-    - `new`: all packages or versions that get installed but wheren't
+  for `post-session`.
+    - `installed`: all installed packages with versions.
+    - `new`: all packages or versions that are geting installed but wheren't
       present before the session.
     - `removed`: all packages or versions that were installed before, but no
-      longer after. Note that an upgrade of `foo.0.1` to `foo.0.2` is considered
+      longer after the session. Note that an upgrade of `foo.0.1` to `foo.0.2` is considered
       as removal of `foo.0.1` and addition of `foo.0.2`. Reinstallations aren't
       visible with these variables.
     - `success` (and `failure`, which is `!success`): only for `post-session`,
       `success` is `true` only if all the expected operations were successful (a
       subset of the package actions may have been successful even if `false`).
-    - `depexts`: for `pre-session`, the space-separated list of
+    - `depexts`: for `pre-session`, the list of
       [`depexts:`](#opamfield-depexts) inferred for the host system on
       `installed`.
 

@@ -26,16 +26,13 @@ case $COMMAND in
     store)
         if [ -d "$CACHE_DIR" ]; then exit 0
         else
-            for fl in "$@"; do
-                echo "ARR=$fl"
-                while IFS= read -d ' ' f; do
-                    echo "STORING FILE: $f"
-                    if [ -d "$OPAM_SWITCH_PREFIX/$f" ]; then mkdir -p "$CACHE_DIR/$f"
-                    else
-                        mkdir -p "$(dirname "$CACHE_DIR/$f")"
-                        cp -aT "$OPAM_SWITCH_PREFIX/$f" "$CACHE_DIR/$f"
-                    fi
-                done <<<"$fl "
+            for f in "$@"; do
+                echo "STORING FILE: $f"
+                if [ -d "$OPAM_SWITCH_PREFIX/$f" ]; then mkdir -p "$CACHE_DIR/$f"
+                else
+                    mkdir -p "$(dirname "$CACHE_DIR/$f")"
+                    cp -aT "$OPAM_SWITCH_PREFIX/$f" "$CACHE_DIR/$f"
+                fi
             done
         fi;;
     *)

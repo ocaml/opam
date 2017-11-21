@@ -820,7 +820,7 @@ let apply ?ask t action ~requested ?add_roots solution =
         else OpamProcess.Job.run
       in
       let var_def name l =
-        OpamVariable.Full.of_string name, S (String.concat " " l)
+        OpamVariable.Full.of_string name, L l
       in
       let var_def_set name set =
         var_def name
