@@ -53,16 +53,25 @@ let post_message ?(failed=false) st action =
             ~indent:(OpamStd.Format.visual_length mark)
             "%s%s\n" mark msg)
         messages
-    );
-    if failed && OpamFile.OPAM.depexts opam <> [] then (
-      if messages = [] then
-        OpamConsole.header_msg "%s troubleshooting" (OpamPackage.to_string pkg);
-      OpamConsole.formatted_msg ~indent:(OpamStd.Format.visual_length mark)
-        "%sThis package relies on external (system) dependencies that may \
-         be missing. `opam depext %s' may help you find the correct \
-         installation for your system.\n"
-        mark (OpamPackage.to_string pkg)
     )
+
+let print_depexts_helper st actions =
+  let depexts =
+    List.fold_left (fun depexts -> function
+        | `Build nv ->
+          OpamStd.String.Set.union depexts (OpamSwitchState.depexts st nv)
+        | _ -> depexts)
+      OpamStd.String.Set.empty
+      actions
+  in
+  if not (OpamStd.String.Set.is_empty depexts) then (
+    OpamConsole.formatted_msg
+      "\nThe packages you requested declare the following system dependencies. \
+       Please make sure they are installed before retrying:\n";
+    OpamConsole.formatted_msg ~indent:4 "    %s\n\n"
+      (OpamStd.List.concat_map " " (OpamConsole.colorise `bold)
+         (OpamStd.String.Set.elements depexts))
+  )
 
 let check_solution ?(quiet=false) st = function
   | No_solution ->
@@ -71,6 +80,7 @@ let check_solution ?(quiet=false) st = function
   | Partial_error (success, failed, _remaining) ->
     List.iter (post_message st) success;
     List.iter (post_message ~failed:true st) failed;
+    print_depexts_helper st failed;
     OpamEnv.check_and_print_env_warning st;
     OpamStd.Sys.exit_because `Package_operation_error
   | OK actions ->
