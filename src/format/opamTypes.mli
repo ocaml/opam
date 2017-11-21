@@ -97,6 +97,7 @@ type full_variable = OpamVariable.Full.t
 type variable_contents = OpamVariable.variable_contents =
   | B of bool
   | S of string
+  | L of string list
 
 (** A map from variables to their contents (i.e an environment) *)
 type variable_map = OpamVariable.variable_contents OpamVariable.Map.t

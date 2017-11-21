@@ -23,6 +23,7 @@ type variable = t
 type variable_contents =
   | B of bool
   | S of string
+  | L of string list
 
 (** Pretty print of variable contents *)
 val string_of_variable_contents: variable_contents -> string

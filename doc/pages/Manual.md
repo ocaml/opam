@@ -660,7 +660,7 @@ contains configuration options specific to that switch:
   defines the standard paths within the switch: recognised fields include
   `prefix:`, `bin:`, `sbin:`, `lib:`, `share:`, `etc:`, `doc:`, `man:`,
   `stublibs:`, `toplevel:`.
-- <a id="switchconfigsection-variables">`variables: "{" { <ident>: <string> ... } "}"`</a>:
+- <a id="switchconfigsection-variables">`variables: "{" { <ident>: ( <string> | [ <string> ... ] | <bool> ) ... } "}"`</a>:
   allows the definition of variables local to the switch.
 
 ### Package definitions
@@ -1138,7 +1138,7 @@ source tree after its installation instructions have been run.
   consistency of packages that rely on system-wide files or system packages when
   those are changed, _e.g._ by `apt-get upgrade`. The user will be warned if the
   file was removed, and the package marked for reinstallation if it was changed.
-- <a id="dotconfigsection-variables">`variables: "{" { <ident>: <string> ... }
+- <a id="dotconfigsection-variables">`variables: "{" { <ident>: ( <string> | [ <string> ... ] | <bool> ) ... }
   "}"`</a>: allows the definition of package variables, that will be available
   as `<pkgname>:<varname>` to dependent packages.
 
@@ -1224,7 +1224,7 @@ for <span class="opam">opam</span>.
     - `input` is the name of the input file, in [Cudf](http://mancoosi.org/cudf/) format
     - `output` is the expected name of the output file, containing the solution
     - `criteria` is the defined solver criteria.
-- <a id="configfield-global-variables">`global-variables: [ "[" <ident> ( <string> | <bool> ) <string> "]" ... ]`</a>:
+- <a id="configfield-global-variables">`global-variables: [ "[" <ident> ( <string> | [ <string> ... ] | <bool> ) <string> "]" ... ]`</a>:
   allows the definition of global variables. The last `<string>` is for
   documentation and is shown in the output of `opam config list`.
 - <a id="configfield-eval-variables">`eval-variables: [ "[" <ident> [ <string> ... ] <string> "]" ... ]`</a>:
