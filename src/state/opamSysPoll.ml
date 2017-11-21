@@ -64,13 +64,19 @@ let os_release_field =
   let os_release_file = lazy (
     List.find Sys.file_exists ["/etc/os-release"; "/usr/lib/os-release"] |>
     OpamProcess.read_lines |>
-    List.map (fun s -> Scanf.sscanf s "%s@= %s" (fun x v ->
-        x,
-        try Scanf.sscanf v "\"%s@\"" (fun s -> s)
-        with Scanf.Scan_failure _ -> v))
+    OpamStd.List.filter_map (fun s ->
+        try
+          Scanf.sscanf s "%s@= %s" (fun x v ->
+              let contents =
+                try Scanf.sscanf v "\"%s@\"" (fun s -> s)
+                with Scanf.Scan_failure _ | End_of_file -> v
+              in
+              Some (x, contents))
+        with Scanf.Scan_failure _ | End_of_file -> None)
   ) in
   fun f ->
-    OpamStd.Option.of_Not_found (List.assoc f) (Lazy.force os_release_file)
+    try Some (List.assoc f (Lazy.force os_release_file))
+    with Not_found -> None
 
 let is_android, android_release =
   let prop = lazy (command_output ["getprop"; "ro.build.version.release"]) in
@@ -110,7 +116,7 @@ let os_version_lazy = lazy (
     (try
        command_output ["cmd"; "/C"; "ver"] >>= fun s ->
        Scanf.sscanf s "%_s@[ Version %s@]" norm
-     with Scanf.Scan_failure _ -> None)
+     with Scanf.Scan_failure _ | End_of_file -> None)
   | Some "freebsd" ->
     OpamStd.Sys.uname "-U" >>= norm
   | _ ->
@@ -122,7 +128,7 @@ let os_family_lazy = lazy (
   match os () with
   | Some "linux" ->
     (os_release_field "ID_LIKE" >>= fun s ->
-     Scanf.sscanf s "%s" norm (* first word *))
+     Scanf.sscanf s " %s" norm (* first word *))
     >>+ os_distribution
   | Some ("freebsd" | "openbsd" | "netbsd" | "dragonfly") -> Some "bsd"
   | Some ("win32" | "cygwin") -> Some "windows"

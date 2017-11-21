@@ -1364,7 +1364,7 @@ let update =
     if upgrade then
       OpamSwitchState.with_ `Lock_write gt ~rt @@ fun st ->
       OpamConsole.msg "\n";
-      ignore @@ OpamClient.upgrade st ~check []
+      ignore @@ OpamClient.upgrade st ~check ~all:true []
     else if check then
       OpamStd.Sys.exit_because (if changed then `Success else `False)
     else

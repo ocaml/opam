@@ -131,6 +131,10 @@ val dev_packages: 'a switch_state -> package_set
     wether it's pinned). *)
 val source_dir: 'a switch_state -> package -> dirname
 
+(** Returns the set of active external dependencies for the package, computed
+    from the values of the system-specific variables *)
+val depexts: 'a switch_state -> package -> OpamStd.String.Set.t
+
 (** [conflicts_with st subset pkgs] returns all packages declared in conflict
     with at least one element of [subset] within [pkgs], through forward or
     backward conflict definition or common conflict-class. Packages in [subset]

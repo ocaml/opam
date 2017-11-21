@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0.0~beta4"
+version: "2.0.0~beta5"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
