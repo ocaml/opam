@@ -134,6 +134,7 @@ module type SIG = sig
   include OpamParallel.GRAPH with type V.t = package OpamTypes.action
   val reduce: t -> t
   val explicit: ?noop_remove:(package -> bool) -> t -> t
+  val fold_descendants: (V.t -> 'a -> 'a) -> 'a -> t -> V.t -> 'a
 end
 
 module Make (A: ACTION) : SIG with type package = A.package = struct
@@ -266,4 +267,7 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
         | `Install _ | `Reinstall _ | `Change _ | `Build _ -> ())
       g;
     g
+
+  let rec fold_descendants f acc t v =
+    fold_succ (fun v acc -> fold_descendants f acc t v) t v (f v acc)
 end
