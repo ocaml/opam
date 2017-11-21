@@ -389,7 +389,7 @@ let list ?(force_search=false) () =
        packages that match $(i,any) of them"
   in
   let depexts =
-    mk_flag ["e";"external"] ~section:display_docs
+    mk_flag ["e";"external";"depexts"] ~section:display_docs
       "Instead of displaying the packages, display their external dependencies \
        that are associated with the current system. This excludes other \
        display options. Rather than using this directly, you should probably \

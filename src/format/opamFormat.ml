@@ -109,14 +109,17 @@ module V = struct
         | CString s -> String (pos_null, s))
 
   let variable_contents =
-    pp ~name:"string-or-bool"
+    pp ~name:"string-or-stringlist-or-bool"
       (fun ~pos:_ -> function
          | String (_,s) -> S s
          | Bool (_,b) -> B b
+         | List (_,l) ->
+           L (List.map (function String (_, s) -> s | _ -> unexpected ()) l)
          | _ -> unexpected ())
       (function
         | S s -> String (pos_null, s)
-        | B b -> Bool (pos_null, b))
+        | B b -> Bool (pos_null, b)
+        | L l -> List (pos_null, List.map (fun s -> String (pos_null, s)) l))
 
   let list =
     pp ~name:"list" ~name_constr:(Printf.sprintf "[%s]")

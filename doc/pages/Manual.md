@@ -232,6 +232,7 @@ and _options_:
 <bool>          ::= true | false
 <int>           ::= [ "-" ] { <digit> }+
 <string>        ::= ( (") { <char> }* (") ) | ( (""") { <char> }* (""") )
+<term>          ::= <string> | <varident>
 <operator>      ::= { "!" | "=" | "<" | ">" | "|" | "&" }+ | [ ":" ] <operator> [ ":" ]
 <list>          ::= "[" { <value> }* "]"
 <option>        ::= <value> "{" { <value> }* "}"
@@ -347,7 +348,7 @@ They can be used in two forms:
 
 For both forms, and within values that allow them, the variables are replaced by
 their contents, if any, just before the value is used. Variable contents can be
-either _strings_, _booleans_ or _undefined_, and automatic conversion may take
+either _strings_, _booleans_, _lists of strings_ or _undefined_, and automatic conversion may take
 place using the strings `"true"` and `"false"` (leading to an _undefined_ bool
 when converting from any other string). Undefined values are propagated through
 boolean expressions, and lead otherwise to context-dependent default values (the
@@ -425,6 +426,7 @@ is `true`. This is evaluated just when the command is going to be run.
            | <filter> <relop> <filter>
            | <varident>
            | <string>
+           | <int>
            | <bool>
 ```
 
@@ -432,7 +434,7 @@ Filters are evaluated at a certain point in time, and should not be mistaken
 with package formulas, which express requirements.
 
 The following are allowed in filters:
-- String and boolean literals
+- String, integer and boolean literals
 - Idents
 - Parentheses
 - Logical operators (binary AND `&`, binary OR `|`, prefix, unary NOT `!`)
@@ -440,8 +442,9 @@ The following are allowed in filters:
   variables
 - Binary relational operators (`=`, `!=`, `<`, `<=`, `>`, `>=`)
 
-The comparisons are done using [Version Order](#version-ordering). Relational
-operators have a higher precedence than logical operators.
+The comparisons are done using [Version Order](#version-ordering), including for
+integers, which are treated as strings. Relational operators have a higher
+precedence than logical operators.
 
 Undefined values are propagated through relational operators, and logical
 operators unless absorbed (`undef & false` is `false`, `undef | true` is
@@ -660,7 +663,7 @@ contains configuration options specific to that switch:
   defines the standard paths within the switch: recognised fields include
   `prefix:`, `bin:`, `sbin:`, `lib:`, `share:`, `etc:`, `doc:`, `man:`,
   `stublibs:`, `toplevel:`.
-- <a id="switchconfigsection-variables">`variables: "{" { <ident>: <string> ... } "}"`</a>:
+- <a id="switchconfigsection-variables">`variables: "{" { <ident>: ( <string> | [ <string> ... ] | <bool> ) ... } "}"`</a>:
   allows the definition of variables local to the switch.
 
 ### Package definitions
@@ -736,7 +739,7 @@ files.
   expanded.
 
 - <a id="opamfield-build">
-  `build: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
+  `build: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>:
   the list of commands that will be run in order to compile the package.
 
     Each command is provided as a list of terms (a command and zero or more
@@ -763,8 +766,11 @@ files.
       detect that the package is not installed from a release tarball, and may
       need additional preprocessing (_e.g._ `automake`).
 
+    If a term is undefined (_e.g._ an undefined variable), the empty string is
+    used as positional argument.
+
 - <a id="opamfield-install">
-  `install: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
+  `install: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>:
   the list of commands that will be run in order to install the package.
 
     This field follows the exact same format as `build:`. It is used to move
@@ -786,9 +792,9 @@ files.
     documentation have been requested.
 
 - <a id="opamfield-build-doc">
-  `build-doc: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
+  `build-doc: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
   <a id="opamfield-build-test">
-  `build-test: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a> (__deprecated__):
+  `build-test: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a> (__deprecated__):
   you should use the [`build:`](#opamfield-build) and
   [`install:`](#opamfield-install) fields with filters based on the `with-test`
   and `with-doc` variables, to specify test and documentation specific
@@ -796,11 +802,11 @@ files.
   understood as part of the [`run-test:`](#opamfield-run-test) field.
 
 - <a id="opamfield-run-test">
-  `run-test: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
+  `run-test: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>:
   specific instructions for running the package tests, in a format similar to
   the [`build:`](#opamfield-build) field.
 
-- <a id="opamfield-remove"> `remove: [ [ <string> { <filter> } ... ] { <filter>
+- <a id="opamfield-remove"> `remove: [ [ <term> { <filter> } ... ] { <filter>
   } ... ]`</a>: commands to run before removing the package, in the same format
   as `build:` and `install:`.
   As of `2.0`, <span class="opam">opam</span> tracks the files added to the prefix during package
@@ -871,7 +877,6 @@ files.
 
 - <a id="opamfield-depexts">
   `depexts: [ [ <string> ... ] { <filter> }  ... ]`</a>:
-
   the package external dependencies. This field may be used to describe the
   dependencies of the package toward software or packages external to the <span
   class="opam">opam</span> ecosystem, for various systems. Each
@@ -879,12 +884,11 @@ files.
   identifiers to required system-managed packages, while the filter to the right
   allows to select the systems they will be active on.
 
-  The filters typically use variables `arch`, `os`, `os-distribution`,
-  `os-version`, `os-family`, as defined in
-  [opam-depext](https://github.com/ocaml/opam-depext) (note that opam itself
-  doesn't define all of these at the moment). The `depexts` information can be
-  retrieved through the `opam list --external` command with the appropriate
-  `--vars` bindings.
+    The filters typically use variables `arch`, `os`, `os-distribution`,
+    `os-version`, `os-family`. The `depexts` information can be retrieved
+    through the `opam list --depexts` command (which can be targeted to a
+    specific system other than the host by using the appropriate `--vars`
+    bindings).
 
     The `depexts:` field should preferably be used on [`conf`](#opamflag-conf)
     packages, which makes the dependencies clearer and avoids duplicating the
@@ -1140,7 +1144,7 @@ source tree after its installation instructions have been run.
   consistency of packages that rely on system-wide files or system packages when
   those are changed, _e.g._ by `apt-get upgrade`. The user will be warned if the
   file was removed, and the package marked for reinstallation if it was changed.
-- <a id="dotconfigsection-variables">`variables: "{" { <ident>: <string> ... }
+- <a id="dotconfigsection-variables">`variables: "{" { <ident>: ( <string> | [ <string> ... ] | <bool> ) ... }
   "}"`</a>: allows the definition of package variables, that will be available
   as `<pkgname>:<varname>` to dependent packages.
 
@@ -1226,30 +1230,30 @@ for <span class="opam">opam</span>.
     - `input` is the name of the input file, in [Cudf](http://mancoosi.org/cudf/) format
     - `output` is the expected name of the output file, containing the solution
     - `criteria` is the defined solver criteria.
-- <a id="configfield-global-variables">`global-variables: [ "[" <ident> ( <string> | <bool> ) <string> "]" ... ]`</a>:
+- <a id="configfield-global-variables">`global-variables: [ "[" <ident> ( <string> | [ <string> ... ] | <bool> ) <string> "]" ... ]`</a>:
   allows the definition of global variables. The last `<string>` is for
   documentation and is shown in the output of `opam config list`.
 - <a id="configfield-eval-variables">`eval-variables: [ "[" <ident> [ <string> ... ] <string> "]" ... ]`</a>:
   allows the definition of global variables that will be lazily initialised to
   the output of the given command. The last `<string>` documents the variable.
-- <a id="configfield-pre-build-commands">`pre-build-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
-  <a id="configfield-pre-install-commands">`pre-install-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
-  <a id="configfield-pre-remove-commands">`pre-remove-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
+- <a id="configfield-pre-build-commands">`pre-build-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-pre-install-commands">`pre-install-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-pre-remove-commands">`pre-remove-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>:
   specify commands that will be run just before processing the package's commands
   for the corresponding action, on any package. The filters are evaluated in the
   same scope as the package commands.
-- <a id="configfield-wrap-build-commands">`wrap-build-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
-  <a id="configfield-wrap-install-commands">`wrap-install-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
-  <a id="configfield-wrap-remove-commands">`wrap-remove-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
+- <a id="configfield-wrap-build-commands">`wrap-build-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-wrap-install-commands">`wrap-install-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-wrap-remove-commands">`wrap-remove-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>:
   specify wrappers around every command executed during the corresponding action
   of any package. The command-line elements will be prefixed to the package
   command, so for example command `[ make "install" ]` with wrapper
   `[ "time" "-o" "/tmp/timings" "-a" ]` will result in the command
   `[ "time" "-o" "/tmp/timings" "-a" make "install" ]`.
   The filters are evaluated in the same scope as the package commands.
-- <a id="configfield-post-build-commands">`post-build-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
-  <a id="configfield-post-install-commands">`post-install-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
-  <a id="configfield-post-remove-commands">`post-remove-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
+- <a id="configfield-post-build-commands">`post-build-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-post-install-commands">`post-install-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-post-remove-commands">`post-remove-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>:
   specify commands that will be run just after processing the package's commands
   for the corresponding action, and the `<pkgname>.install` file in the case of
   install and remove, on any package. The post commands are run wether or not
@@ -1258,19 +1262,34 @@ for <span class="opam">opam</span>.
   the return value of the package script.
 
     The `post-install-commands` hook also has access to an extra variable
-    `installed-files` which is the list of files and directories added or
-    modified during the installation of the package, separated by space
-    characters. Note that this hook is run after the scan for installed files is
+    `installed-files` which expands to the list of files and directories added or
+    modified during the installation of the package.
+    Note that this hook is run after the scan for installed files is
     done, so any additional installed files won't be recorded and must be taken
     care of by a `pre-remove-commands` hook.
-- <a id="configfield-pre-session-commands">`pre-session-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>,
-  <a id="configfield-post-session-commands">`post-session-commands: [ [ <string> { <filter> } ... ] { <filter> } ... ]`</a>:
+- <a id="configfield-pre-session-commands">`pre-session-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
+  <a id="configfield-post-session-commands">`post-session-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>:
   These commands will be run once respectively before and after the sequence of
   actions done by a given instance of opam. Only the switch variables are
-  available, since this doesn't concern any single package, plus a `success`
-  variable for `post-session-commands` (`failure = !success` is also defined for
-  convenience).
-- <a id="configfield-repository-validation-command">`repository-validation-command: [ <string> { <filter> } ... ]`</a>:
+  available, since this doesn't concern one single package, plus the following,
+  related to the sequence of actions. They correspond respectively to the
+  expected final state for `pre-session`, and to the actually reached state
+  for `post-session`.
+    - `installed`: all installed packages with versions.
+    - `new`: all packages or versions that are geting installed but wheren't
+      present before the session.
+    - `removed`: all packages or versions that were installed before, but no
+      longer after the session. Note that an upgrade of `foo.0.1` to `foo.0.2` is considered
+      as removal of `foo.0.1` and addition of `foo.0.2`. Reinstallations aren't
+      visible with these variables.
+    - `success` (and `failure`, which is `!success`): only for `post-session`,
+      `success` is `true` only if all the expected operations were successful (a
+      subset of the package actions may have been successful even if `false`).
+    - `depexts`: for `pre-session`, the list of
+      [`depexts:`](#opamfield-depexts) inferred for the host system on
+      `installed`.
+
+- <a id="configfield-repository-validation-command">`repository-validation-command: [ <term> { <filter> } ... ]`</a>:
   defines a command to run on the upstream repositories to validate their
   authenticity. When this is specified, and for repositories that define
   [trust anchors](#opamrcfield-repositories), opam will refuse any update that
