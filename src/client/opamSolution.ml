@@ -414,8 +414,14 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
       let t0 = Unix.gettimeofday () in
       fun () -> Hashtbl.add timings action (Unix.gettimeofday () -. t0)
     in
+    let not_yet_removed =
+      PackageActionGraph.fold_descendants (function
+          | `Remove nv -> OpamPackage.Set.add nv
+          | _ -> fun acc -> acc)
+        OpamPackage.Set.empty action_graph action
+    in
     let visible_installed =
-      OpamPackage.Set.Op.(minimal_install ++ installed)
+      OpamPackage.Set.Op.(minimal_install ++ not_yet_removed ++ installed)
     in
     let t =
       { !t_ref with
@@ -433,7 +439,7 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
         OpamConsole.msg "Faking installation of %s\n"
           (OpamPackage.to_string nv);
         add_to_install nv;
-        Done (`Successful (OpamPackage.Set.add nv installed , removed))
+        Done (`Successful (OpamPackage.Set.add nv installed, removed))
       | `Remove nv ->
         remove_from_install nv;
         Done (`Successful (installed, OpamPackage.Set.add nv removed))
