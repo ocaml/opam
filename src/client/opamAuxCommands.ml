@@ -392,7 +392,7 @@ let get_compatible_compiler ?repos rt dir =
           match OpamFile.OPAM.version_opt opam with
           | Some v -> OpamPackage.create name v, opam
           | None ->
-            let v = OpamPackage.Version.of_string "dev" in
+            let v = OpamPackage.Version.of_string "~dev" in
             OpamPackage.create name v,
             OpamFile.OPAM.with_version v opam
         in
@@ -404,47 +404,71 @@ let get_compatible_compiler ?repos rt dir =
   let local_atoms =
     OpamSolution.eq_atoms_of_packages local_packages
   in
-  try
-    let univ =
-      let virt_st =
-        OpamSwitchState.load_virtual ?repos_list:repos gt rt
-      in
-      let opams =
-        OpamPackage.Map.union (fun _ x -> x) virt_st.opams local_opams
-      in
-      let virt_st =
-        { virt_st with
-          opams;
-          packages =
-            OpamPackage.Set.union virt_st.packages local_packages;
-          available_packages = lazy (
-            OpamPackage.Map.filter (fun package opam ->
-                OpamFilter.eval_to_bool ~default:false
-                  (OpamPackageVar.resolve_switch_raw ~package gt
-                     (OpamSwitch.of_dirname dir)
-                     OpamFile.Switch_config.empty)
-                  (OpamFile.OPAM.available opam))
-              opams
-            |> OpamPackage.keys);
-        }
-      in
-      OpamSwitchState.universe virt_st
-        ~requested:(OpamPackage.names_of_packages local_packages)
-        Query
+  let virt_st =
+    let virt_st =
+      OpamSwitchState.load_virtual ?repos_list:repos gt rt
     in
+    let opams =
+      OpamPackage.Map.union (fun _ x -> x) virt_st.opams local_opams
+    in
+    { virt_st with
+      opams;
+      packages =
+        OpamPackage.Set.union virt_st.packages local_packages;
+      available_packages = lazy (
+        OpamPackage.Map.filter (fun package opam ->
+            OpamFilter.eval_to_bool ~default:false
+              (OpamPackageVar.resolve_switch_raw ~package gt
+                 (OpamSwitch.of_dirname dir)
+                 OpamFile.Switch_config.empty)
+              (OpamFile.OPAM.available opam))
+          opams
+        |> OpamPackage.keys);
+    }
+  in
+  let univ =
+    OpamSwitchState.universe virt_st
+      ~requested:(OpamPackage.names_of_packages local_packages)
+      Query
+  in
+  try
+    (* Find a matching compiler from the default selection *)
     List.find
       (fun atoms ->
          OpamSolver.atom_coinstallability_check univ
            (local_atoms @ atoms))
       candidates
   with Not_found ->
-    OpamConsole.warning
-      "The default compiler selection: %s\n\
-       is not compatible with the local packages found at %s.\n\
-       You can use `--compiler` to select a different compiler."
-      (OpamFormula.to_string default_compiler)
-      (OpamFilename.Dir.to_string dir);
-    if OpamConsole.confirm
-        "Continue anyway, with no compiler selected ?"
-    then []
-    else OpamStd.Sys.exit_because `Aborted
+    (* Find if there is a single possible dependency having Pkgflag_Compiler *)
+    let alldeps =
+      OpamSolver.dependencies
+        ~depopts:false ~build:true ~post:false ~installed:false
+        univ local_packages
+    in
+    let compilers =
+      OpamPackage.Set.filter (fun nv ->
+          OpamFile.OPAM.has_flag Pkgflag_Compiler
+            (OpamSwitchState.opam virt_st nv))
+        (OpamPackage.Set.of_list alldeps)
+    in
+    let compilers =
+      OpamPackage.Set.filter (fun c ->
+          OpamSolver.atom_coinstallability_check univ
+            (OpamSolution.eq_atom_of_package c :: local_atoms))
+        compilers
+    in
+    try
+      [OpamSolution.eq_atom_of_package
+         (OpamPackage.Set.choose_one compilers)]
+    with Not_found | Failure _ ->
+      OpamConsole.warning
+        "The default compiler selection: %s\n\
+         is not compatible with the local packages found at %s, and the \
+         packages don't specify an unambiguous compiler.\n\
+         You can use `--compiler` to manually select a specific compiler."
+        (OpamFormula.to_string default_compiler)
+        (OpamFilename.Dir.to_string dir);
+      if OpamConsole.confirm
+          "Continue anyway, with no specific compiler selected ?"
+      then []
+      else OpamStd.Sys.exit_because `Aborted
