@@ -1221,7 +1221,7 @@ let remove =
       ignore @@ OpamClient.remove st ~autoremove ~force atoms
   in
   Term.(const remove $global_options $build_options $autoremove $force $destdir
-        $atom_or_local_list),
+        $atom_or_dir_list),
   term_info "remove" ~doc ~man
 
 (* REINSTALL *)
@@ -1305,7 +1305,7 @@ let reinstall =
     | _, _::_ ->
       `Error (true, "Package arguments not allowed with this option")
   in
-  Term.(ret (const reinstall $global_options $build_options $atom_or_local_list
+  Term.(ret (const reinstall $global_options $build_options $atom_or_dir_list
              $cmd)),
   term_info "reinstall" ~doc ~man
 
@@ -1425,7 +1425,7 @@ let upgrade =
       `Ok ()
   in
   Term.(ret (const upgrade $global_options $build_options $fixup $check $all
-             $atom_or_local_list)),
+             $atom_or_dir_list)),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)

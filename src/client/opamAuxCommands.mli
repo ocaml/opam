@@ -46,12 +46,10 @@ val resolve_locals:
     location, according to what is currently pinned, and returns the
     corresponding list of atoms. Prints warnings for directories where nothing
     is pinned, or opam files corresponding to no pinned package.
-
-    NOTE: opam files are currently not supported and a fatal error.
 *)
 val resolve_locals_pinned:
   'a switch_state ->
-  [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
+  [ `Atom of atom | `Dirname of dirname ] list ->
   atom list
 
 (** Resolves the opam files in the list to package name and location, pins the
