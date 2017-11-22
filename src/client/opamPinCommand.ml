@@ -398,12 +398,12 @@ and source_pin
           (if no_changes then "already" else "currently")
           (string_of_pinned cur_opam);
       if no_changes then ()
-      else if OpamConsole.confirm "Proceed and change pinning target ?" then
+      else (* if OpamConsole.confirm "Proceed and change pinning target ?" then *)
         OpamFilename.remove
           (OpamFile.filename
              (OpamPath.Switch.Overlay.tmp_opam
                 st.switch_global.root st.switch name))
-      else raise Exns.Aborted;
+      (* else raise Exns.Aborted *);
       cur_version, cur_urlf
     with Not_found ->
       if OpamPackage.has_name st.compiler_packages name then (
