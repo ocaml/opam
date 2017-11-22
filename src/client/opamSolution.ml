@@ -415,10 +415,13 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
       fun () -> Hashtbl.add timings action (Unix.gettimeofday () -. t0)
     in
     let not_yet_removed =
-      PackageActionGraph.fold_descendants (function
-          | `Remove nv -> OpamPackage.Set.add nv
-          | _ -> fun acc -> acc)
-        OpamPackage.Set.empty action_graph action
+      match action with
+      | `Remove _ ->
+        PackageActionGraph.fold_descendants (function
+            | `Remove nv -> OpamPackage.Set.add nv
+            | _ -> fun acc -> acc)
+          OpamPackage.Set.empty action_graph action
+      | _ -> OpamPackage.Set.empty
     in
     let visible_installed =
       OpamPackage.Set.Op.(minimal_install ++ not_yet_removed ++ installed)
