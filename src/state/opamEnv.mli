@@ -27,8 +27,9 @@ val get_full:
     to ensure opam dirs are leading. *)
 val get_opam: force_path:bool -> 'a switch_state -> env
 
-(** Returns the running environment, with any opam modifications cleaned out *)
-val get_pure: unit -> env
+(** Returns the running environment, with any opam modifications cleaned out,
+    and optionally the given updates *)
+val get_pure: ?updates:env_update list -> unit -> env
 
 (** Update an environment, including reverting opam changes that could have been
     previously applied (therefore, don't apply to an already updated env as
@@ -57,7 +58,8 @@ val path: force_path:bool -> dirname -> switch -> string
 
 (** Returns the full environment with only the PATH variable updated, as per
     [path] *)
-val full_with_path: force_path:bool -> dirname -> switch -> env
+val full_with_path:
+  force_path:bool -> ?updates:env_update list -> dirname -> switch -> env
 
 (** {2 Shell and initialisation support} *)
 

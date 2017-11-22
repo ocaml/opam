@@ -38,14 +38,19 @@ let check_and_run_external_commands () =
       OpamFormatConfig.init ();
       let root_dir = OpamStateConfig.opamroot () in
       let has_init = OpamStateConfig.load_defaults root_dir <> None in
+      let plugins_bin = OpamPath.plugins_bin root_dir in
       let env =
-        if has_init then (
+        if has_init then
+          let updates =
+            ["PATH", PlusEq, OpamFilename.Dir.to_string plugins_bin, None]
+          in
           OpamStateConfig.init ~root_dir ();
           match OpamStateConfig.(!r.current_switch) with
-          | None -> Unix.environment ()
+          | None -> env_array (OpamEnv.get_pure ~updates ())
           | Some sw ->
-            env_array (OpamEnv.full_with_path ~force_path:false root_dir sw)
-        ) else
+            env_array
+              (OpamEnv.full_with_path ~force_path:false ~updates root_dir sw)
+        else
           Unix.environment ()
       in
       match OpamSystem.resolve_command ~env command with
