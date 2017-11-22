@@ -1094,8 +1094,16 @@ let install =
        --destdir) to revert."
       Arg.(some dirname) None
   in
+  let locked =
+    mk_flag ["locked"]
+      "With a directory as argument, when a package definition file is found, \
+       if a file by the same name with a $(i,.locked) extension is present \
+       beside it, use the latter. This allows alternate local package \
+       definitions, and is typically useful to provide more constrained \
+       dependencies that describe a precise development environment."
+  in
   let install
-      global_options build_options add_to_roots deps_only restore destdir
+      global_options build_options add_to_roots deps_only restore destdir locked
       atoms_or_locals =
     apply_global_options global_options;
     apply_build_options build_options;
@@ -1124,7 +1132,7 @@ let install =
         atoms_or_locals
     in
     let st, atoms =
-      OpamAuxCommands.autopin st ~simulate:deps_only atoms_or_locals
+      OpamAuxCommands.autopin st ~simulate:deps_only ~locked atoms_or_locals
     in
     if atoms = [] then
       (OpamConsole.msg "Nothing to do\n";
@@ -1142,7 +1150,7 @@ let install =
   in
   Term.ret
     Term.(const install $global_options $build_options
-          $add_to_roots $deps_only $restore $destdir
+          $add_to_roots $deps_only $restore $destdir $locked
           $atom_or_local_list),
   term_info "install" ~doc ~man
 
@@ -1861,9 +1869,18 @@ let switch =
        containing opam package definitions), install the dependencies of the \
        project but not the project itself."
   in
+  let locked =
+    mk_flag ["locked"]
+      "With a directory as argument, when a package definition file is found, \
+       if a file by the same name with a $(i,.locked) extension is present \
+       beside it, use the latter. This allows alternate local package \
+       definitions, and is typically useful to provide more constrained \
+       dependencies that describe a precise development environment."
+  in
   let switch
       global_options build_options command print_short
-      no_switch packages empty descr full no_install deps_only repos params =
+      no_switch packages empty descr full no_install deps_only locked repos
+      params =
     apply_global_options global_options;
     apply_build_options build_options;
     let packages =
@@ -1880,7 +1897,7 @@ let switch =
         OpamSwitchCommand.guess_compiler_package ?repos rt
           (OpamSwitch.to_string switch)
       | None, None, true ->
-        OpamAuxCommands.get_compatible_compiler ?repos rt
+        OpamAuxCommands.get_compatible_compiler ?repos ~locked rt
           (OpamFilename.dirname_dir
              (OpamSwitch.get_root rt.repos_global.root switch))
       | _ ->
@@ -1960,7 +1977,7 @@ let switch =
       let st =
         if not no_install && not empty && OpamSwitch.is_external switch then
           let st, atoms =
-            OpamAuxCommands.autopin st ~simulate:deps_only ~quiet:true
+            OpamAuxCommands.autopin st ~simulate:deps_only ~locked ~quiet:true
               [`Dirname (OpamFilename.Dir.of_string switch_arg)]
           in
           OpamClient.install st atoms
@@ -2066,7 +2083,7 @@ let switch =
              $global_options $build_options $command
              $print_short_flag
              $no_switch
-             $packages $empty $descr $full $no_install $deps_only
+             $packages $empty $descr $full $no_install $deps_only $locked
              $repos $params)),
   term_info "switch" ~doc ~man
 

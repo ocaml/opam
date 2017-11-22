@@ -36,9 +36,11 @@ val name_and_dir_of_opam_file: filename -> name option * dirname
 (** Resolves the opam files and directories in the list to package name and
     location, and returns the corresponding pinnings and atoms. May fail and
     exit if package names for provided [`Filename] could not be inferred, or if
-    the same package name appears multiple times *)
+    the same package name appears multiple times.
+    If [locked], the [*.locked] counterparts of opam files are used if present.
+*)
 val resolve_locals:
-  ?quiet:bool ->
+  ?quiet:bool -> ?locked:bool ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   (name * OpamUrl.t * OpamFile.OPAM.t OpamFile.t) list * atom list
 
@@ -58,11 +60,14 @@ val resolve_locals_pinned:
     return the switch state with the package definitions that would have been
     obtained if pinning. Also synchronises the specified directories, that is,
     unpins any package pinned there but not current (no more corresponding opam
-    file). *)
+    file).
+    If [locked], the [*.locked] counterparts of opam files are used if present.
+ *)
 val autopin:
   rw switch_state ->
   ?simulate:bool ->
   ?quiet:bool ->
+  ?locked:bool ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   rw switch_state * atom list
 
@@ -71,6 +76,7 @@ val autopin:
 val simulate_autopin:
   'a switch_state ->
   ?quiet:bool ->
+  ?locked:bool ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   'a switch_state * atom list
 
@@ -80,4 +86,6 @@ val simulate_autopin:
     Returns the corresponding atoms. If no compiler matches, prints a
     warning, and returns the empty list after user confirmation. *)
 val get_compatible_compiler:
-  ?repos:repository_name list -> 'a repos_state -> dirname -> atom list
+  ?repos:repository_name list ->
+  ?locked:bool ->
+  'a repos_state -> dirname -> atom list

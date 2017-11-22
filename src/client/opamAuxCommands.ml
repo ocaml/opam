@@ -88,9 +88,16 @@ let url_with_local_branch = function
      | None -> url)
   | url -> url
 
-let opams_of_dir d =
+let opams_of_dir ?(locked=false) d =
   let files = OpamPinned.files_in_source d in
   List.fold_left (fun acc (n, f) ->
+      let f =
+        let locked_f =
+          OpamFilename.add_extension (OpamFile.filename f) "locked"
+        in
+        if locked && OpamFilename.exists locked_f then OpamFile.make locked_f
+        else f
+      in
       let name =
         let open OpamStd.Option.Op in
         n >>+ fun () ->
@@ -152,7 +159,7 @@ let resolve_locals_pinned st atom_or_local_list =
   in
   List.rev atoms
 
-let resolve_locals ?(quiet=false) atom_or_local_list =
+let resolve_locals ?(quiet=false) ?locked atom_or_local_list =
   let target_dir dir =
     let d = OpamFilename.Dir.to_string dir in
     let backend = OpamUrl.guess_version_control d in
@@ -163,7 +170,7 @@ let resolve_locals ?(quiet=false) atom_or_local_list =
     List.fold_left (fun (to_pin, atoms) -> function
         | `Atom a -> to_pin, a :: atoms
         | `Dirname d ->
-          let names_files = opams_of_dir d in
+          let names_files = opams_of_dir ?locked d in
           if names_files = [] && not quiet then
             OpamConsole.warning "No package definitions found at %s"
               (OpamFilename.Dir.to_string d);
@@ -205,8 +212,8 @@ let resolve_locals ?(quiet=false) atom_or_local_list =
            (OpamUrl.to_string t))
           duplicates)
 
-let autopin_aux st ?quiet atom_or_local_list =
-  let to_pin, atoms = resolve_locals ?quiet atom_or_local_list in
+let autopin_aux st ?quiet ?locked atom_or_local_list =
+  let to_pin, atoms = resolve_locals ?quiet ?locked atom_or_local_list in
   if to_pin = [] then
     atoms, to_pin, OpamPackage.Set.empty, OpamPackage.Set.empty
   else
@@ -241,6 +248,11 @@ let autopin_aux st ?quiet atom_or_local_list =
         with Not_found -> false)
       to_pin
   in
+  log "to pin: %a"
+    (slog @@ OpamStd.List.concat_map " " @@
+     fun (name, _, opam_f) -> OpamPackage.Name.to_string name ^"->"^
+                              OpamFile.to_string opam_f)
+    to_pin;
   let already_pinned_set =
     List.fold_left (fun acc (name, _, _) ->
         OpamPackage.Set.add (OpamPinned.package st name) acc)
@@ -304,9 +316,9 @@ let fix_atom_versions_in_set set atoms =
           (OpamPackage.package_of_name_opt set name))
     atoms
 
-let simulate_autopin st ?quiet atom_or_local_list =
+let simulate_autopin st ?quiet ?locked atom_or_local_list =
   let atoms, to_pin, obsolete_pins, already_pinned_set =
-    autopin_aux st ?quiet atom_or_local_list
+    autopin_aux st ?quiet ?locked atom_or_local_list
   in
   if to_pin = [] then st, atoms else
   let st =
@@ -318,12 +330,12 @@ let simulate_autopin st ?quiet atom_or_local_list =
   let atoms = fix_atom_versions_in_set pins atoms in
   st, atoms
 
-let autopin st ?(simulate=false) ?quiet atom_or_local_list =
+let autopin st ?(simulate=false) ?quiet ?locked atom_or_local_list =
   if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) then
-    simulate_autopin st atom_or_local_list
+    simulate_autopin st ?quiet ?locked atom_or_local_list
   else
   let atoms, to_pin, obsolete_pins, already_pinned_set =
-    autopin_aux st ?quiet atom_or_local_list
+    autopin_aux st ?quiet ?locked atom_or_local_list
   in
   if to_pin = [] && OpamPackage.Set.is_empty obsolete_pins &&
      OpamPackage.Set.is_empty already_pinned_set
@@ -374,7 +386,7 @@ let autopin st ?(simulate=false) ?quiet atom_or_local_list =
   let atoms = fix_atom_versions_in_set pins atoms in
   st, atoms
 
-let get_compatible_compiler ?repos rt dir =
+let get_compatible_compiler ?repos ?locked rt dir =
   let gt = rt.repos_global in
   let default_compiler =
     OpamFile.Config.default_compiler gt.config
@@ -383,7 +395,7 @@ let get_compatible_compiler ?repos rt dir =
     (OpamConsole.warning "No compiler selected"; [])
   else
   let candidates = OpamFormula.to_dnf default_compiler in
-  let local_files = opams_of_dir dir in
+  let local_files = opams_of_dir ?locked dir in
   let local_opams =
     List.fold_left (fun acc (name, f) ->
         let opam = OpamFile.OPAM.safe_read f in
