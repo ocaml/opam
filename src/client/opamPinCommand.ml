@@ -424,6 +424,7 @@ and source_pin
   in
 
   if not (OpamPackage.has_name st.packages name) &&
+     opam_opt = None &&
      not (OpamConsole.confirm
             "Package %s does not exist, create as a %s package ?"
             (OpamPackage.Name.to_string name)
