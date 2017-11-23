@@ -43,7 +43,12 @@ module type SIG = sig
       The argument [noop_remove] is a function that should return `true`
       for package where the `remove` action is known not to modify the
       filesystem (such as `conf-*` package). *)
-  val explicit: ?noop_remove:(package -> bool) -> t -> t end
+  val explicit: ?noop_remove:(package -> bool) -> t -> t
+
+  (** Folds on all recursive successors of the given action, including itself,
+      depth-first. Assumes an acyclic graph. *)
+  val fold_descendants: (V.t -> 'a -> 'a) -> 'a -> t -> V.t -> 'a
+end
 
 module Make (A: ACTION) : SIG with type package = A.package
 
