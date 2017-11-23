@@ -61,6 +61,20 @@ val backup_dir: t -> dirname
 (** Backup file for state export *)
 val backup: t -> switch_selections OpamFile.t
 
+(** The directory for plugins data {i $opam/plugins} *)
+val plugins: t -> dirname
+
+(** The directory for shared plugin binaries {i $opam/plugins/bin} *)
+val plugins_bin: t -> dirname
+
+(** The globally installed binary of the given plugin {i
+    $opam/plugins/bin/opam-foo} *)
+val plugin_bin: t -> name -> filename
+
+(** The directory for a given plugin's data {i $opam/plugins/$name}. ["bin"] is
+    forbidden. *)
+val plugin: t -> name -> dirname
+
 (** Switch related paths *)
 module Switch: sig
 

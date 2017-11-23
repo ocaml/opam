@@ -224,7 +224,11 @@ let move ~src ~dst =
 
 let readlink src =
   if exists src then
-    try of_string (Unix.readlink (to_string src))
+    try
+      let rl = Unix.readlink (to_string src) in
+      if Filename.is_relative rl then
+        of_string (Filename.concat (dirname src) rl)
+      else of_string rl
     with Unix.Unix_error _ -> src
   else
     OpamSystem.internal_error "%s does not exist." (to_string src)

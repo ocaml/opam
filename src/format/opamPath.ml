@@ -55,6 +55,23 @@ let backup_dir t = t / "backup"
 
 let backup t = backup_dir t /- backup_file ()
 
+let plugins t = t / "plugins"
+
+let plugins_bin t = plugins t / "bin"
+
+let plugin_bin t name =
+  let sname = OpamPackage.Name.to_string name in
+  let basename =
+    if OpamStd.String.starts_with ~prefix:"opam-" sname then sname
+    else "opam-" ^ sname
+  in
+  plugins_bin t // basename
+
+let plugin t name =
+  let sname = OpamPackage.Name.to_string name in
+  assert (sname <> "bin");
+  plugins t / sname
+
 module Switch = struct
 
   let root t a = OpamSwitch.get_root t a

@@ -453,6 +453,7 @@ let remove_package_aux
     t ?(silent=false) ?changes ?force ?build_dir nv =
   log "Removing %a" (slog OpamPackage.to_string) nv;
   let name = nv.name in
+  let root = t.switch_global.root in
 
   (* There are three uninstall stages:
      1. execute the package's remove script
@@ -467,11 +468,28 @@ let remove_package_aux
   *)
 
   let dot_install =
-    OpamPath.Switch.install t.switch_global.root t.switch name
+    OpamPath.Switch.install root t.switch name
   in
   let changes_file =
-    OpamPath.Switch.changes t.switch_global.root t.switch name
+    OpamPath.Switch.changes root t.switch name
   in
+  let opam =
+    match installed_opam_opt t nv with
+    | Some o -> o
+    | None -> OpamFile.OPAM.create nv
+  in
+
+  (* Remove the installed plugin, if it matches *)
+  if OpamFile.OPAM.has_flag Pkgflag_Plugin opam then (
+    let link = OpamPath.plugin_bin root name in
+    let bin =
+      OpamFilename.create
+        (OpamPath.Switch.bin root t.switch t.switch_config)
+        (OpamFilename.basename link)
+    in
+    if OpamFilename.readlink link = bin then
+      OpamFilename.remove link
+  );
 
   (* handle .install file *)
   let uninstall_files () =
@@ -480,7 +498,7 @@ let remove_package_aux
     in
     let remove_files dst_fn files =
       let files = files install in
-      let dst_dir = dst_fn t.switch_global.root t.switch t.switch_config in
+      let dst_dir = dst_fn root t.switch t.switch_config in
       List.iter (fun (base, dst) ->
           let dst_file = match dst with
             | None   -> dst_dir // Filename.basename (OpamFilename.Base.to_string base.c)
@@ -489,7 +507,7 @@ let remove_package_aux
         ) files
     in
     let remove_files_and_dir dst_fn files =
-      let dir = dst_fn t.switch_global.root t.switch t.switch_config name in
+      let dir = dst_fn root t.switch t.switch_config name in
       remove_files (fun _ _ _ -> dir) files;
       if OpamFilename.rec_files dir = [] then OpamFilename.rmdir dir
     in
@@ -526,20 +544,15 @@ let remove_package_aux
     let title = Printf.sprintf "While removing %s" (OpamPackage.to_string nv) in
     OpamStd.Option.iter
       (OpamDirTrack.revert ~title ~verbose:(not silent) ?force
-         (OpamPath.Switch.root t.switch_global.root t.switch))
+         (OpamPath.Switch.root root t.switch))
       changes
   in
 
   (* Run the remove script *)
-  let opam =
-    match installed_opam_opt t nv with
-    | Some o -> o
-    | None -> OpamFile.OPAM.create nv
-  in
   let build_dir =
     OpamStd.Option.default_map
       (OpamFilename.opt_dir
-        (OpamPath.Switch.remove t.switch_global.root t.switch nv))
+        (OpamPath.Switch.remove root t.switch nv))
        build_dir
   in
   let wrappers = get_wrappers t in
@@ -559,7 +572,7 @@ let remove_package_aux
   if not OpamStateConfig.(!r.dryrun) then (
     OpamFilename.remove
       (OpamFile.filename
-         (OpamPath.Switch.config t.switch_global.root t.switch nv.name));
+         (OpamPath.Switch.config root t.switch nv.name));
     uninstall_files ();
     OpamFilename.remove (OpamFile.filename dot_install)
   );
@@ -787,4 +800,19 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
               (action_color (`Install ()) (action_strings (`Install ()))))
       (OpamConsole.colorise `bold name)
       (OpamPackage.version_to_string nv);
+    if OpamFile.OPAM.has_flag Pkgflag_Plugin opam then (
+      let link = OpamPath.plugin_bin root (OpamPackage.name nv) in
+      let target =
+        OpamFilename.create
+          (OpamPath.Switch.bin root t.switch t.switch_config)
+          (OpamFilename.basename link)
+      in
+      if OpamFilename.exists target then
+        OpamFilename.link
+          ~relative:(not (OpamSwitch.is_external t.switch))
+          ~target ~link
+      else
+        OpamConsole.warning "%s claims to be a plugin but no %s file was found"
+          name (OpamFilename.to_string target)
+    );
     Done None

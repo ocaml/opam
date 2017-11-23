@@ -236,9 +236,9 @@ let updates ~opamswitch ?force_path st =
     else [] in
   switch @ update
 
-let get_pure () =
+let get_pure ?(updates=[]) () =
   let env = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
-  add env []
+  add env updates
 
 (* This function is used by 'opam config env' and 'opam switch' to
    display the environment variables. We have to make sure that
@@ -301,9 +301,9 @@ let path ~force_path root switch =
   let (_, path_value, _) = List.find (fun (v, _, _) -> v = "PATH") env in
   path_value
 
-let full_with_path ~force_path root switch =
+let full_with_path ~force_path ?(updates=[]) root switch =
   let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
-  add env0 (switch_path_update ~force_path root switch)
+  add env0 (switch_path_update ~force_path root switch @ updates)
 
 let is_up_to_date st =
   let opamswitch =
