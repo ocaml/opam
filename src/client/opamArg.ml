@@ -502,6 +502,18 @@ let atom_or_local =
   in
   parse, print
 
+let atom_or_dir =
+  let parse str = match fst atom_or_local str with
+    | `Ok (`Filename _) ->
+      `Error (Printf.sprintf
+                "Not a valid package specification or existing directory: %s"
+                str)
+    | `Ok (`Atom _ | `Dirname _ as atom_or_dir) -> `Ok (atom_or_dir)
+    | `Error e -> `Error e
+  in
+  let print ppf = snd atom_or_local ppf in
+  parse, print
+
 let variable_bindings =
   let parse str =
     try
@@ -809,6 +821,13 @@ let atom_or_local_list =
      `pkg.1.0' or `pkg>=0.5' ; or files or directory names containing package \
      description, with explicit directory (e.g. `./foo.opam' or `.')"
     atom_or_local
+
+let atom_or_dir_list =
+  arg_list "PACKAGES"
+    "List of package names, with an optional version or constraint, e.g `pkg', \
+     `pkg.1.0' or `pkg>=0.5' ; or directory names containing package \
+     description, with explicit directory (e.g. `./srcdir' or `.')"
+    atom_or_dir
 
 let nonempty_atom_list =
   nonempty_arg_list "PACKAGES"

@@ -38,8 +38,7 @@ let read_opam_file_for_pinning name f url =
     let warns = if opam <> opam0 then OpamFileTools.lint opam else warns in
     if warns <> [] then
       (OpamConsole.warning
-         "Failed checks on %s package definition from source at %s \
-          (fix with 'opam pin edit'):"
+         "Failed checks on %s package definition from source at %s:"
          (OpamPackage.Name.to_string name)
          (OpamUrl.to_string url);
        OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string warns));
@@ -357,7 +356,7 @@ let rec handle_pin_depends st nv opam =
               (OpamConsole.colorise `underline (OpamUrl.to_string url)))
           extra_pins);
      if not (OpamConsole.confirm "Continue ?") then
-       (OpamConsole.msg "You can specify --ignore-pin-depends to bypass\n"; (* TODO *)
+       (OpamConsole.msg "You can specify --ignore-pin-depends to bypass\n";
         OpamStd.Sys.exit_because `Aborted);
      List.fold_left (fun st (nv, url) ->
          source_pin st nv.name ~version:nv.version (Some url)
@@ -398,12 +397,12 @@ and source_pin
           (if no_changes then "already" else "currently")
           (string_of_pinned cur_opam);
       if no_changes then ()
-      else if OpamConsole.confirm "Proceed and change pinning target ?" then
+      else (* if OpamConsole.confirm "Proceed and change pinning target ?" then *)
         OpamFilename.remove
           (OpamFile.filename
              (OpamPath.Switch.Overlay.tmp_opam
                 st.switch_global.root st.switch name))
-      else raise Exns.Aborted;
+      (* else raise Exns.Aborted *);
       cur_version, cur_urlf
     with Not_found ->
       if OpamPackage.has_name st.compiler_packages name then (
@@ -424,6 +423,7 @@ and source_pin
   in
 
   if not (OpamPackage.has_name st.packages name) &&
+     opam_opt = None &&
      not (OpamConsole.confirm
             "Package %s does not exist, create as a %s package ?"
             (OpamPackage.Name.to_string name)

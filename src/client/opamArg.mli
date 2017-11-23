@@ -63,6 +63,9 @@ val atom_or_local_list:
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list
     Term.t
 
+val atom_or_dir_list:
+  [ `Atom of atom | `Dirname of dirname ] list Term.t
+
 (** Generic argument list builder *)
 val arg_list: string -> string -> 'a Arg.converter -> 'a list Term.t
 
@@ -168,6 +171,9 @@ val atom: atom Arg.converter
 (** Accepts [atom] but also (explicit) file and directory names *)
 val atom_or_local:
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] Arg.converter
+
+val atom_or_dir:
+  [ `Atom of atom | `Dirname of dirname ] Arg.converter
 
 (** [var=value,...] argument *)
 val variable_bindings: (OpamVariable.t * string) list Arg.converter
