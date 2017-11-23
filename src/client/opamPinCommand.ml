@@ -38,8 +38,7 @@ let read_opam_file_for_pinning name f url =
     let warns = if opam <> opam0 then OpamFileTools.lint opam else warns in
     if warns <> [] then
       (OpamConsole.warning
-         "Failed checks on %s package definition from source at %s \
-          (fix with 'opam pin edit'):"
+         "Failed checks on %s package definition from source at %s:"
          (OpamPackage.Name.to_string name)
          (OpamUrl.to_string url);
        OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string warns));
@@ -357,7 +356,7 @@ let rec handle_pin_depends st nv opam =
               (OpamConsole.colorise `underline (OpamUrl.to_string url)))
           extra_pins);
      if not (OpamConsole.confirm "Continue ?") then
-       (OpamConsole.msg "You can specify --ignore-pin-depends to bypass\n"; (* TODO *)
+       (OpamConsole.msg "You can specify --ignore-pin-depends to bypass\n";
         OpamStd.Sys.exit_because `Aborted);
      List.fold_left (fun st (nv, url) ->
          source_pin st nv.name ~version:nv.version (Some url)

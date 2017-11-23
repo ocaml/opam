@@ -61,8 +61,12 @@ val resolve_locals_pinned:
     obtained if pinning. Also synchronises the specified directories, that is,
     unpins any package pinned there but not current (no more corresponding opam
     file).
+
+    This also handles [pin-depends:] of the local packages. That part is done
+    even if [simulate] is [true].
+
     If [locked], the [*.locked] counterparts of opam files are used if present.
- *)
+*)
 val autopin:
   rw switch_state ->
   ?simulate:bool ->

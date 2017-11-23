@@ -248,11 +248,6 @@ let autopin_aux st ?quiet ?locked atom_or_local_list =
         with Not_found -> false)
       to_pin
   in
-  log "to pin: %a"
-    (slog @@ OpamStd.List.concat_map " " @@
-     fun (name, _, opam_f) -> OpamPackage.Name.to_string name ^"->"^
-                              OpamFile.to_string opam_f)
-    to_pin;
   let already_pinned_set =
     List.fold_left (fun acc (name, _, _) ->
         OpamPackage.Set.add (OpamPinned.package st name) acc)
@@ -327,6 +322,24 @@ let simulate_autopin st ?quiet ?locked atom_or_local_list =
   in
   let st, pins = simulate_local_pinnings st to_pin in
   let pins = OpamPackage.Set.union pins already_pinned_set in
+  let pin_depends =
+    OpamPackage.Set.fold (fun nv acc ->
+        List.fold_left (fun acc (nv,target) ->
+            OpamPackage.Map.add nv target acc)
+          acc
+          (OpamFile.OPAM.pin_depends (OpamSwitchState.opam st nv)))
+      pins OpamPackage.Map.empty
+  in
+  if not (OpamPackage.Map.is_empty pin_depends) then
+    (OpamConsole.msg "Would pin the following:\n%s"
+       (OpamStd.Format.itemize (fun (nv, url) ->
+            Printf.sprintf "%s to %s"
+              (OpamConsole.colorise `bold (OpamPackage.to_string nv))
+              (OpamConsole.colorise `underline (OpamUrl.to_string url)))
+           (OpamPackage.Map.bindings pin_depends));
+     OpamConsole.note "The following may not reflect the above pinnings \
+                       (package definitions are not available yet)";
+     OpamConsole.msg "\n");
   let atoms = fix_atom_versions_in_set pins atoms in
   st, atoms
 
@@ -380,7 +393,7 @@ let autopin st ?(simulate=false) ?quiet ?locked atom_or_local_list =
   let st =
     OpamPackage.Set.fold (fun nv st ->
         OpamPinCommand.handle_pin_depends st nv (OpamSwitchState.opam st nv))
-      already_pinned_set st
+      (OpamPackage.Set.union pins already_pinned_set) st
   in
   let pins = OpamPackage.Set.union pins already_pinned_set in
   let atoms = fix_atom_versions_in_set pins atoms in
@@ -388,13 +401,6 @@ let autopin st ?(simulate=false) ?quiet ?locked atom_or_local_list =
 
 let get_compatible_compiler ?repos ?locked rt dir =
   let gt = rt.repos_global in
-  let default_compiler =
-    OpamFile.Config.default_compiler gt.config
-  in
-  if default_compiler = Empty then
-    (OpamConsole.warning "No compiler selected"; [])
-  else
-  let candidates = OpamFormula.to_dnf default_compiler in
   let local_files = opams_of_dir ?locked dir in
   let local_opams =
     List.fold_left (fun acc (name, f) ->
@@ -413,6 +419,12 @@ let get_compatible_compiler ?repos ?locked rt dir =
       local_files
   in
   let local_packages = OpamPackage.keys local_opams in
+  let pin_depends =
+    OpamPackage.Map.fold (fun _nv opam acc ->
+        List.fold_left (fun acc (nv,_) -> OpamPackage.Set.add nv acc)
+          acc (OpamFile.OPAM.pin_depends opam))
+      local_opams OpamPackage.Set.empty
+  in
   let local_atoms =
     OpamSolution.eq_atoms_of_packages local_packages
   in
@@ -423,19 +435,26 @@ let get_compatible_compiler ?repos ?locked rt dir =
     let opams =
       OpamPackage.Map.union (fun _ x -> x) virt_st.opams local_opams
     in
+    let available = lazy (
+      OpamPackage.Map.filter (fun package opam ->
+          OpamFilter.eval_to_bool ~default:false
+            (OpamPackageVar.resolve_switch_raw ~package gt
+               (OpamSwitch.of_dirname dir)
+               OpamFile.Switch_config.empty)
+            (OpamFile.OPAM.available opam))
+        opams
+      |> OpamPackage.keys
+    ) in
+    let open OpamPackage.Set.Op in
     { virt_st with
-      opams;
+      opams =
+        OpamPackage.Set.fold (fun nv acc ->
+            OpamPackage.Map.add nv (OpamFile.OPAM.create nv) acc)
+          pin_depends opams;
       packages =
-        OpamPackage.Set.union virt_st.packages local_packages;
-      available_packages = lazy (
-        OpamPackage.Map.filter (fun package opam ->
-            OpamFilter.eval_to_bool ~default:false
-              (OpamPackageVar.resolve_switch_raw ~package gt
-                 (OpamSwitch.of_dirname dir)
-                 OpamFile.Switch_config.empty)
-              (OpamFile.OPAM.available opam))
-          opams
-        |> OpamPackage.keys);
+         virt_st.packages ++ local_packages ++ pin_depends;
+      available_packages =
+        lazy (Lazy.force available ++ pin_depends);
     }
   in
   let univ =
@@ -443,41 +462,58 @@ let get_compatible_compiler ?repos ?locked rt dir =
       ~requested:(OpamPackage.names_of_packages local_packages)
       Query
   in
+  (* Find if there is a single possible dependency having Pkgflag_Compiler *)
+  let alldeps =
+    OpamSolver.dependencies
+      ~depopts:false ~build:true ~post:true ~installed:false
+      univ local_packages
+  in
+  let compilers =
+    OpamPackage.Set.filter (fun nv ->
+        OpamFile.OPAM.has_flag Pkgflag_Compiler
+          (OpamSwitchState.opam virt_st nv))
+      (OpamPackage.Set.of_list alldeps)
+  in
+  let compilers =
+    OpamSolver.installable_subset
+      {univ with u_base = local_packages; u_installed = local_packages}
+      compilers
+  in
   try
-    (* Find a matching compiler from the default selection *)
-    List.find
-      (fun atoms ->
-         OpamSolver.atom_coinstallability_check univ
-           (local_atoms @ atoms))
-      candidates
-  with Not_found ->
-    (* Find if there is a single possible dependency having Pkgflag_Compiler *)
-    let alldeps =
-      OpamSolver.dependencies
-        ~depopts:false ~build:true ~post:false ~installed:false
-        univ local_packages
-    in
-    let compilers =
-      OpamPackage.Set.filter (fun nv ->
-          OpamFile.OPAM.has_flag Pkgflag_Compiler
-            (OpamSwitchState.opam virt_st nv))
-        (OpamPackage.Set.of_list alldeps)
-    in
-    let compilers =
-      OpamPackage.Set.filter (fun c ->
+    [OpamSolution.eq_atom_of_package
+       (OpamPackage.Set.choose_one compilers)]
+  with
+  | Not_found ->
+    OpamConsole.warning
+      "No possible installation was found including a compiler and the \
+       selected packages.";
+    if OpamClientConfig.(!r.show) ||
+       OpamConsole.confirm
+         "Create the switch with no specific compiler selected, and attempt to \
+          continue anyway ?"
+    then []
+    else OpamStd.Sys.exit_because `Aborted
+ | Failure _ ->
+   (* Find a matching compiler from the default selection *)
+   let default_compiler =
+     OpamFile.Config.default_compiler gt.config
+   in
+   if default_compiler = Empty then
+     (OpamConsole.warning "No compiler selected"; [])
+   else
+   let candidates = OpamFormula.to_dnf default_compiler in
+   try
+     List.find
+       (fun atoms ->
           OpamSolver.atom_coinstallability_check univ
-            (OpamSolution.eq_atom_of_package c :: local_atoms))
-        compilers
-    in
-    try
-      [OpamSolution.eq_atom_of_package
-         (OpamPackage.Set.choose_one compilers)]
-    with Not_found | Failure _ ->
+            (local_atoms @ atoms))
+       candidates
+   with Not_found ->
       OpamConsole.warning
         "The default compiler selection: %s\n\
          is not compatible with the local packages found at %s, and the \
          packages don't specify an unambiguous compiler.\n\
-         You can use `--compiler` to manually select a specific compiler."
+         You can use `--compiler` to manually select one."
         (OpamFormula.to_string default_compiler)
         (OpamFilename.Dir.to_string dir);
       if OpamConsole.confirm
