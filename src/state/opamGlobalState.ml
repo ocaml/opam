@@ -41,7 +41,11 @@ let load lock_kind =
   log "LOAD-GLOBAL-STATE @ %a" (slog OpamFilename.Dir.to_string) root;
   (* Always take a global read lock, this is only used to prevent concurrent
      ~/.opam format changes *)
-  let global_lock = OpamFilename.flock `Lock_read (OpamPath.lock root) in
+  let global_lock =
+    if OpamFilename.exists_dir root then
+      OpamFilename.flock `Lock_read (OpamPath.lock root)
+    else OpamSystem.lock_none
+  in
   (* The global_state lock actually concerns the global config file only (and
      the consistence thereof with the repository and switch sets, and the
      currently installed shell init scripts) *)
