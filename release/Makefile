@@ -68,7 +68,7 @@ LIBRARY_PATH=/usr/local/lib: \
 opam-$(VERSION)-%: out/opam-$(VERSION)-%
 	ln -sf $^ $@
 
-host: opam-$(VERSION)-$(HOST)
+# host: opam-$(VERSION)-$(HOST)
 
 # Build for the local host. Containerised builds, below, are preferred, but not always available
 build/$(HOST).env:
@@ -85,19 +85,20 @@ build/$(HOST).env:
 # Actually builds out/opam-$(VERSION)-$(HOST), but we don't want to override the
 # rule that goes through a container
 host: out/opam-full-$(VERSION).tar.gz build/$(HOST).env
+	rm -rf build/opam-full-$(VERSION)
 	cd build && tar xzf ../$<
 	( export \
 	    PATH=$(shell pwd)/build/$(HOST)/bin:$$PATH \
 	    MAKE=$(MAKE) \
 	    $(EXPORTS_$(HOST_OS)); \
 	  cd build/opam-full-$(VERSION) && \
-	  ./configure --with-glpk && \
-	  echo test:
+	  ./configure && \
 	  echo "$(call LINKING,$(HOST_OS))" >src/client/linking.sexp && \
-	  $(MAKE) clean lib-ext opam JBUILDER_ARGS="--root=`pwd`"; \
+	  $(MAKE) lib-ext JBUILDER_ARGS="--root=`pwd`"; \
+	  $(MAKE) opam JBUILDER_ARGS="--root=`pwd`"; \
 	)
-	strip build/opam-full-$(VERSION)/opam
 	cp build/opam-full-$(VERSION)/opam out/opam-$(VERSION)-$(HOST)
+	strip out/opam-$(VERSION)-$(HOST)
 	rm -rf build/opam-full-$(VERSION)
 
 # Containerised builds
