@@ -31,8 +31,8 @@ MD5_dose3 = e7d4b1840383c6732f29a47c08ba5650
 URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+4.tar.gz
 MD5_mccs = 1ff2d73ab5c69e1fb58160213fc2d4c9
 
-URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta3.tar.gz
-MD5_opam-file-format = fb461d14a44aac3a43751aa936e79143
+URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta5.tar.gz
+MD5_opam-file-format = 5408798ca3af6e36379dd34b1b618b9c
 
 URL_result = https://github.com/janestreet/result/archive/1.2.tar.gz
 MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
