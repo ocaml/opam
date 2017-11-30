@@ -1112,6 +1112,10 @@ let install =
     else
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+    let pure_atoms =
+      OpamStd.List.filter_map (function `Atom a -> Some a | _ -> None)
+        atoms_or_locals
+    in
     let atoms_or_locals =
       if restore then
         let to_restore = OpamPackage.Set.diff st.installed_roots st.installed in
@@ -1127,10 +1131,6 @@ let install =
       else atoms_or_locals
     in
     if atoms_or_locals = [] then `Ok () else
-    let pure_atoms =
-      OpamStd.List.filter_map (function `Atom a -> Some a | _ -> None)
-        atoms_or_locals
-    in
     let st, atoms =
       OpamAuxCommands.autopin st ~simulate:deps_only ~locked atoms_or_locals
     in
