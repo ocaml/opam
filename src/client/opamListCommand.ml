@@ -259,8 +259,8 @@ let apply_selector ~base st = function
              (OpamSolver.request ~install:atoms ()) with
     | Success s -> OpamSolver.new_packages s
     | Conflicts cs ->
-      failwith @@
-      Printf.sprintf "No solution%s for %s:\n%s"
+      OpamConsole.error_and_exit `No_solution
+        "No solution%s for %s: %s"
         (if tog.depopts then " including optional dependencies" else "")
         (OpamFormula.string_of_atoms atoms)
         (OpamCudf.string_of_conflict st.packages
