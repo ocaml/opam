@@ -292,8 +292,9 @@ let pinned_package st ?version ?(working_dir=false) name =
     | Result (), Some new_opam
       when changed_opam old_source_opam new_source_opam &&
            changed_opam overlay_opam new_source_opam ->
+      log "Metadata from the package source of %s changed"
+        (OpamPackage.to_string nv);
       let interactive_part st =
-        (* Metadata from the package source changed *)
         if not (changed_opam old_source_opam overlay_opam) ||
            not (changed_opam repo_opam overlay_opam)
         then
@@ -329,10 +330,11 @@ let pinned_package st ?version ?(working_dir=false) name =
     | (Up_to_date _ | Not_available _), _ ->
       Done ((fun st -> st), false)
     | Result  (), Some new_opam ->
-      (* The new opam is not _effectively_ different from the old, but use it
-         still (e.g. descr may have changed) *)
+      (* The new opam is not _effectively_ different from the old, so no need to
+         confirm, but use it still (e.g. descr may have changed) *)
+      let opam = save_overlay new_opam in
       Done
-        ((fun st -> {st with opams = OpamPackage.Map.add nv new_opam st.opams}),
+        ((fun st -> {st with opams = OpamPackage.Map.add nv opam st.opams}),
          true)
     | Result  (), None ->
       Done ((fun st -> st), true)
