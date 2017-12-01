@@ -172,13 +172,8 @@ let vpkg2atom cudfnv2opam (name,cstr) =
   | None ->
     OpamPackage.Name.of_string (Common.CudfAdd.decode name), None
   | Some (relop,v) ->
-    try
-      let nv = cudfnv2opam (name,v) in
-      nv.name, Some (relop, nv.version)
-    with Not_found ->
-      OpamConsole.error "Translation error for package %s"
-        (string_of_atom (name, cstr));
-      assert false
+    let nv = cudfnv2opam (name,v) in
+    nv.name, Some (relop, nv.version)
 (* Should be unneeded now that we pass a full version_map along
    [{
       log "Could not find corresponding version in cudf universe: %a"
@@ -285,7 +280,13 @@ let strings_of_reasons packages cudfnv2opam unav_reasons rs =
       str :: aux rs
     | Missing (p,missing) :: rs when is_dose_request p ->
       (* Requested pkg missing *)
-      let atoms = List.map (vpkg2atom cudfnv2opam) missing in
+      let atoms =
+        List.map (fun vp ->
+            try vpkg2atom cudfnv2opam vp
+            with Not_found ->
+              OpamPackage.Name.of_string (Common.CudfAdd.decode (fst vp)), None)
+          missing
+      in
       let names = OpamStd.List.sort_nodup compare (List.map fst atoms) in
       List.map (fun name ->
           let formula =

@@ -115,7 +115,7 @@ let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
       match op with
       | `Neq -> None (* Always true *)
       | `Eq -> (* Always false *)
-        Some (`Eq, OpamPackage.Map.cardinal all_versions + 1)
+        Some (`Gt, OpamPackage.Map.cardinal all_versions)
       | (`Geq | `Gt | `Leq | `Lt) as op ->
         let sign, result_op =  match op with
           | `Geq | `Gt -> (fun x -> x), `Geq

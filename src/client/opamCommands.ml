@@ -1112,6 +1112,10 @@ let install =
     else
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+    let pure_atoms =
+      OpamStd.List.filter_map (function `Atom a -> Some a | _ -> None)
+        atoms_or_locals
+    in
     let atoms_or_locals =
       if restore then
         let to_restore = OpamPackage.Set.diff st.installed_roots st.installed in
@@ -1127,10 +1131,6 @@ let install =
       else atoms_or_locals
     in
     if atoms_or_locals = [] then `Ok () else
-    let pure_atoms =
-      OpamStd.List.filter_map (function `Atom a -> Some a | _ -> None)
-        atoms_or_locals
-    in
     let st, atoms =
       OpamAuxCommands.autopin st ~simulate:deps_only ~locked atoms_or_locals
     in
@@ -1669,11 +1669,22 @@ let repository =
     | Some `set_repos, names ->
       let names = List.map OpamRepositoryName.of_string names in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      let _gt =
-        OpamRepositoryCommand.update_selection gt ~global ~switches
-          (fun _ -> names)
+      let repos =
+        OpamFile.Repos_config.safe_read (OpamPath.repos_config gt.root)
       in
-      `Ok ()
+      let not_found =
+        List.filter (fun r -> not (OpamRepositoryName.Map.mem r repos)) names
+      in
+      if not_found = [] then
+        let _gt =
+          OpamRepositoryCommand.update_selection gt ~global ~switches
+            (fun _ -> names)
+        in
+        `Ok ()
+      else
+        OpamConsole.error_and_exit `Bad_arguments
+          "No configured repositories by these names found: %s"
+          (OpamStd.List.concat_map " " OpamRepositoryName.to_string not_found)
     | (None | Some `list), [] ->
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
       if List.mem `All scope then
