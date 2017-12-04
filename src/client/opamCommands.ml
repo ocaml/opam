@@ -319,8 +319,8 @@ let list ?(force_search=false) () =
     `P "Unless the $(b,--short) switch is used, the output format displays one \
         package per line, and each line contains the name of the package, the \
         installed version or `--' if the package is not installed, and a short \
-        description. In color mode, root packages (e.g., manually installed) \
-        are underlined.";
+        description. In color mode, manually installed packages (as opposed to \
+        automatically installed ones because of dependencies) are underlined.";
     `P ("See section $(b,"^selection_docs^") for all the ways to select the \
          packages to be displayed, and section $(b,"^display_docs^") to \
          customise the output format.");
