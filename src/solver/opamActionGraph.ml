@@ -268,6 +268,11 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
       g;
     g
 
-  let rec fold_descendants f acc t v =
-    fold_succ (fun v acc -> fold_descendants f acc t v) t v (f v acc)
+  let fold_descendants f acc t v =
+    let rec aux seen f acc t v =
+      if A.Set.mem v seen then seen, acc else
+        fold_succ (fun v (seen, acc) -> aux seen f acc t v)
+          t v (A.Set.add v seen, f v acc)
+    in
+    snd (aux A.Set.empty f acc t v)
 end

@@ -46,7 +46,7 @@ module type SIG = sig
   val explicit: ?noop_remove:(package -> bool) -> t -> t
 
   (** Folds on all recursive successors of the given action, including itself,
-      depth-first. Assumes an acyclic graph. *)
+      depth-first. *)
   val fold_descendants: (V.t -> 'a -> 'a) -> 'a -> t -> V.t -> 'a
 end
 
