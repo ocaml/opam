@@ -209,7 +209,7 @@ if [ -d "$OPAMROOT" ]; then
             echo "Please move it away or run with --no-backup"
         fi
         FREE=$(df -k "$OPAMROOT" | awk 'NR>1 {print $4}')
-        NEEDED=$(du -s "$OPAMROOT" | awk '{print $1}')
+        NEEDED=$(du -sk "$OPAMROOT" | awk '{print $1}')
         if ! [ $NEEDED -lt $FREE ]; then
             echo "Error: not enough free space to backup. You can retry with --no-backup,"
             echo "--fresh, or remove '$OPAMROOT'"
