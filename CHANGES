@@ -2,6 +2,10 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+2.0.0~beta6
+* Small UI fixes
+* Fixed a rare case of looping while processing actions
+
 2.0.0~beta5
 * Added timeout support to the solvers (default 1min)
 * Added `--unlock-base` to allow changing the compiler of a switch
