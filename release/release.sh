@@ -15,9 +15,8 @@ TAG="$1"; shift
 
 if [[ $# -eq 0 || " $* " =~ " archive " ]]; then
   make TAG="$TAG" GIT_URL="https://github.com/ocaml/opam.git" "out/opam-full-$TAG.tar.gz"
-  cd out && git-upload-release ocaml opam "$TAG" "opam-full-$TAG.tar.gz"
+  ( cd out && git-upload-release ocaml opam "$TAG" "opam-full-$TAG.tar.gz"; )
 fi
-cd "$DIR"
 
 if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
   make TAG="$TAG" all &
