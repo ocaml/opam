@@ -53,7 +53,7 @@ the way (see Tuareg [issue #94](https://github.com/ocaml/tuareg/issues/94)).
 
 ---
 
-#### Easily provide a set of packages for a group of users to install
+#### Provide a set of packages for a group of users to install
 
 The easiest way is to create a package with your prerequisites as `depends` and
 have them pin that. A quick way to host the file is to use a
@@ -74,7 +74,7 @@ depends: [ "menhir" { = "20140422" }
 Save that and get the `HTTPS clone URL`. All that is needed then is to run:
 
 ```shell
-$ opam pin add ocaml101 <HTTPS clone URL>
+$ opam pin <HTTPS clone URL>
 ```
 
 Furthermore, `opam update` will then pick up any modification you made to the gist.
@@ -108,3 +108,22 @@ The need to define the virtual package explicitely also ensures that a third
 package can't inject a new implementation without that being visible in `foo`:
 it would otherwise be a security hole when we deploy end-to-end signing of
 packages.
+
+---
+
+#### How to rename a package
+
+Opam doesn't technically allow packages to be renamed, but you can create a
+package with the new name, and a upgrade path between the two. Assuming you want
+to rename `foo` to `bar`:
+
+1. Create a new version of `foo`, e.g. `foo.transition`, depending on `bar`, and
+   with a description mentioning it is a virtual package that can be safely
+   removed. The package shouldn't have a source URL or build, install, etc.
+   instructions.
+2. Create `bar` as a new package.
+3. Add `conflicts: "foo" {!= "transition"}`. Remember to keep that field on any
+   new version of `bar`.
+
+This ensures at the same time that users upgrading will get the new package
+`bar`, and that the package can't be installed twice under the two names.
