@@ -212,6 +212,9 @@ let pull_tree
     OpamFilename.cleandir local_dirname;
     OpamFilename.extract_job f local_dirname @@+ function
     | None -> Done (Up_to_date ())
+    | Some (Failure _) ->
+      Done (Not_available (OpamFilename.(Base.to_string (basename f))^
+                           " (could not extract archive)"))
     | Some e -> Done (Not_available (Printexc.to_string e))
   in
   (match cache_dir with
