@@ -301,16 +301,6 @@ let simulate_local_pinnings st to_pin =
   } in
   st, local_packages
 
-let fix_atom_versions_in_set set atoms =
-  List.map (function
-      | (_, Some _) as at -> at
-      | name, None ->
-        name,
-        OpamStd.Option.map
-          (fun nv -> `Eq, nv.version)
-          (OpamPackage.package_of_name_opt set name))
-    atoms
-
 let simulate_autopin st ?quiet ?locked atom_or_local_list =
   let atoms, to_pin, obsolete_pins, already_pinned_set =
     autopin_aux st ?quiet ?locked atom_or_local_list
@@ -340,7 +330,6 @@ let simulate_autopin st ?quiet ?locked atom_or_local_list =
      OpamConsole.note "The following may not reflect the above pinnings \
                        (package definitions are not available yet)";
      OpamConsole.msg "\n");
-  let atoms = fix_atom_versions_in_set pins atoms in
   st, atoms
 
 let autopin st ?(simulate=false) ?quiet ?locked atom_or_local_list =
@@ -395,8 +384,6 @@ let autopin st ?(simulate=false) ?quiet ?locked atom_or_local_list =
         OpamPinCommand.handle_pin_depends st nv (OpamSwitchState.opam st nv))
       (OpamPackage.Set.union pins already_pinned_set) st
   in
-  let pins = OpamPackage.Set.union pins already_pinned_set in
-  let atoms = fix_atom_versions_in_set pins atoms in
   st, atoms
 
 let get_compatible_compiler ?repos ?locked rt dir =

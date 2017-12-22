@@ -735,6 +735,15 @@ let install_t t ?ask atoms add_to_roots ~deps_only =
 
   let t, full_orphans, orphan_versions = check_conflicts t atoms in
 
+  let atoms =
+    List.map (function
+        | (_, Some _) as at -> at
+        | (name, None) as at ->
+          match OpamPinned.package_opt t name with
+          | Some nv -> OpamSolution.eq_atom_of_package nv
+          | None -> at)
+      atoms
+  in
   let pkg_skip, pkg_new =
     get_installed_atoms t atoms in
   let pkg_reinstall =

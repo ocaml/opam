@@ -640,11 +640,7 @@ let extract_job ~dir file =
   with_tmp_dir_job @@ fun tmp_dir ->
   match extract_command file with
   | None   ->
-    (try
-       mkdir dir;
-       copy_file file (dir/Filename.basename file);
-       Done None
-     with e -> Done (Some e))
+    Done (Some (Failure ("Unknown archive type: "^file)))
   | Some cmd ->
     cmd tmp_dir @@> fun r ->
     if not (OpamProcess.is_success r) then
