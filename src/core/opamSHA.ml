@@ -111,7 +111,7 @@ module Input_file(Buf: BufSig with type t = bigstring) = struct
 
   let init ~blocksize src =
     let fd = Unix.openfile src [Unix.O_RDONLY] 0 in
-    let buf = B.(Array1.map_file fd B.char c_layout false (-1)) in
+    let buf = B.(array1_of_genarray (OpamCompat.Unix.map_file fd B.char c_layout false [|-1|])) in
     { fd; blocksize; buf }
 
   let close {fd; _} = Unix.close fd

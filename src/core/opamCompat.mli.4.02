@@ -26,3 +26,9 @@ module Char : sig
   val lowercase_ascii: char -> char
 end
 
+module Unix : sig
+  include module type of Unix
+  val map_file : Unix.file_descr -> ?pos:int64 -> ('a, 'b) Bigarray.kind ->
+                 'c Bigarray.layout -> bool -> int array ->
+                 ('a, 'b, 'c) Bigarray.Genarray.t
+end
