@@ -1,25 +1,37 @@
 platform:
-    - x86
+    - x64
+
+image: Visual Studio 2017
 
 environment:
   global:
-    CYG_ROOT: C:/cygwin
+    CYG_ROOT: cygwin64
+    CYG_ARCH: x86_64
+    OCAML_PORT:
     CYG_CACHE: C:/cygwin/var/cache/setup
     CYG_MIRROR: http://mirrors.kernel.org/sourceware/cygwin/
   matrix:
-    -
+    - CYG_ROOT: cygwin
       CYG_ARCH: x86
+    - CYG_ROOT: cygwin64
+      CYG_ARCH: x86_64
+    - OCAML_PORT: msvc
+    - OCAML_PORT: msvc64
+    - OCAML_PORT: mingw
+    - OCAML_PORT: mingw64
+
+cache:
+  - C:\projects\opam\bootstrap
+  - C:\projects\opam\src_ext\archives
 
 init:
-  - 'echo System architecture: %PLATFORM%'
+  - "echo System architecture: %PLATFORM%"
 
 install:
-  - 'appveyor DownloadFile http://cygwin.com/setup-%CYG_ARCH%.exe -FileName setup.exe'
-  - 'setup.exe -gqnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P make,git,gcc-core,gcc-g++,ocaml,ocaml-camlp4,ocaml-compiler-libs,libncurses-devel,unzip,libmpfr-devel,patch,flexdll,libglpk-devel >NUL'
-  - '%CYG_ROOT%/bin/bash -lc "cygcheck -dc cygwin gcc-core"'
+  - call "%APPVEYOR_BUILD_FOLDER%\appveyor_build.cmd" install
 
 build_script:
-  - '%CYG_ROOT%/bin/bash -lc "cd \"$OLDPWD\" && env DJDIR="workaround" ./configure && make lib-ext && make && make install"'
-  - '%CYG_ROOT%/bin/bash -lc "opam init -y -a"'
-  - '%CYG_ROOT%/bin/bash -lc "opam config env"'
-  - '%CYG_ROOT%/bin/bash -lc "opam install -y -v ocamlfind"'
+  - call "%APPVEYOR_BUILD_FOLDER%\appveyor_build.cmd" build
+
+test_script:
+  - call "%APPVEYOR_BUILD_FOLDER%\appveyor_build.cmd" test

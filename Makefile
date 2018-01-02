@@ -175,3 +175,7 @@ cold: compiler
 
 cold-%:
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE) $*
+
+.PHONY: run-appveyor-test
+run-appveyor-test:
+	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" ./appveyor_test.sh

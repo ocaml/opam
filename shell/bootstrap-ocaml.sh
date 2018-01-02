@@ -111,3 +111,4 @@ else
   ${MAKE:-make} world opt.opt
   ${MAKE:-make} install
 fi
+echo "${URL} ${FV_URL}" > ../installed-tarball
