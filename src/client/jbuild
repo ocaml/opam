@@ -10,7 +10,7 @@ let (sha, version) =
       ()
   in
   try
-    let _ = Sys.command "git rev-parse HEAD > current-git-sha" in
+    let _ = if Sys.command "git rev-parse --quiet --verify HEAD > current-git-sha" <> 0 then raise Exit in
     let c = open_in "current-git-sha" in
     let sha =
       try
