@@ -674,7 +674,7 @@ let display st format packages =
     List.rev |>
     add_head |>
     OpamStd.Format.align_table |>
-    OpamStd.Format.print_table ?cut:format.wrap stdout ~sep:format.separator
+    OpamConsole.print_table ?cut:format.wrap stdout ~sep:format.separator
 
 let get_switch_state gt =
   let rt = OpamRepositoryState.load `Lock_none gt in
@@ -694,7 +694,7 @@ let print_depexts st packages =
          (OpamSwitchState.depexts st nv))
     (OpamPackage.names_of_packages packages)
     OpamStd.String.Set.empty
-  |> OpamStd.String.Set.iter print_endline
+  |> OpamStd.String.Set.iter (OpamConsole.msg "%s\n")
 
 let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
   let packages =
@@ -743,7 +743,7 @@ let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
         [] (List.rev fields)
     in
     OpamStd.Format.align_table tbl |>
-    OpamStd.Format.print_table stdout ~sep:" ";
+    OpamConsole.print_table stdout ~sep:" ";
   in
   OpamPackage.names_of_packages packages |>
   OpamPackage.Name.Set.iter (fun name ->

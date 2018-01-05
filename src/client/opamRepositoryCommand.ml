@@ -137,7 +137,7 @@ let print_selection rt ~short repos_list =
         ])
       repos_list |>
     OpamStd.Format.align_table |>
-    OpamStd.Format.print_table stdout ~sep:" "
+    OpamConsole.print_table stdout ~sep:" "
 
 let switch_repos rt sw =
   let switch_config =
@@ -209,7 +209,7 @@ let list_all rt ~short =
   in
   cols :: OpamRepositoryName.Map.values lines |>
   OpamStd.Format.align_table |>
-  OpamStd.Format.print_table stdout ~sep:" "
+  OpamConsole.print_table stdout ~sep:" "
 
 let update_with_auto_upgrade rt repo_names =
   let repos = List.map (OpamRepositoryState.get_repo rt) repo_names in

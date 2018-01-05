@@ -223,6 +223,7 @@ module String : sig
 
   val map: (char -> char) -> string -> string
   val strip: string -> string
+  val strip_right: string -> string
   val sub_at: int -> string -> string
   val remove_prefix: prefix:string -> string -> string
   val remove_suffix: suffix:string -> string -> string
@@ -281,15 +282,6 @@ module Format : sig
   (** Display a pretty list: ["x";"y";"z"] -> "x, y and z".
       "and" can be changed by specifying [last] *)
   val pretty_list: ?last:string -> string list -> string
-
-  (** {4 Printing} *)
-
-  (** Prints a table; generally called on tables passed through [align_table].
-      The default [cut] is to wrap on stdout, stderr, keep as-is otherwise.
-      [`Wrap sep] prepends [sep] on wrapped lines *)
-  val print_table:
-    ?cut:[`Wrap of string | `Truncate | `None] -> out_channel -> sep:string ->
-    string list list -> unit
 end
 
 module Exn : sig

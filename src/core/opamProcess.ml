@@ -321,9 +321,7 @@ let verbose_print_cmd p =
 let verbose_print_out =
   let pfx = OpamConsole.colorise `yellow "- " in
   fun s ->
-    print_string pfx;
-    print_string s;
-    print_char '\n'
+    OpamConsole.msg "%s%s\n" pfx s
 
 (** Semi-synchronous printing of the output of a command *)
 let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =

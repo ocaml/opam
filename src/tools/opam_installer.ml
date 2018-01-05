@@ -390,8 +390,8 @@ let () =
     | _ -> exit 0
   with
   | Invalid_argument s ->
-    prerr_string "ERROR: "; prerr_endline s; exit 2
+    OpamConsole.error "%s" s; exit 2
   | OpamStd.Sys.Exit i -> exit i
   | e ->
     OpamConsole.error "Failure during install";
-    Printf.eprintf "%s\n" (Printexc.to_string e); exit 1
+    OpamConsole.errmsg "%s\n" (Printexc.to_string e); exit 1

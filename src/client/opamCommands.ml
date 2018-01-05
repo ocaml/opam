@@ -54,7 +54,8 @@ let switch_to_updated_self debug opamroot =
           (OpamVersion.to_string update_version)
           (OpamVersion.to_string (OpamVersion.full ()));
       (if debug || (OpamConsole.debug ()) then
-         Printf.eprintf "!! %s found, switching to it !!\n%!" updated_self_str;
+         OpamConsole.errmsg "!! %s found, switching to it !!\n"
+           updated_self_str;
        let env =
          Array.append
            [|"OPAMNOSELFUPGRADE="^ self_upgrade_bootstrapping_value|]
@@ -621,7 +622,7 @@ let show =
             flds
         in
         OpamStd.Format.align_table tbl |>
-        OpamStd.Format.print_table stdout ~sep:" ";
+        OpamConsole.print_table stdout ~sep:" ";
         `Ok ()
   in
   Term.(ret
@@ -856,8 +857,8 @@ let config =
        | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
        | _ -> bad_subcommand commands ("config", command, params))
     | Some `report, [] -> (
-        let print label fmt = Printf.printf ("# %-17s "^^fmt^^"\n") label in
-        Printf.printf "# opam config report\n";
+        let print label fmt = OpamConsole.msg ("# %-17s "^^fmt^^"\n") label in
+        OpamConsole.msg "# opam config report\n";
         print "opam-version" "%s " (OpamVersion.to_string (OpamVersion.full ()));
         print "self-upgrade" "%s"
           (if self_upgrade_status global_options = `Running then
@@ -2862,7 +2863,8 @@ let help =
       let conv, _ = Cmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
       match conv topic with
       | `Error e -> `Error (false, e)
-      | `Ok t when t = "topics" -> List.iter print_endline cmds; `Ok ()
+      | `Ok t when t = "topics" ->
+          List.iter (OpamConsole.msg "%s\n") cmds; `Ok ()
       | `Ok t -> `Help (man_format, Some t) in
 
   Term.(ret (const help $Term.man_format $Term.choice_names $topic)),

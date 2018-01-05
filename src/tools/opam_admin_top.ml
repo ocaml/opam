@@ -81,10 +81,12 @@ let iter_packages_gen ?(quiet=false) f =
         (upd (); wopt OpamFile.Dot_install.write dot_install_file dot_install2);
       if !changed then
         (incr changed_pkgs;
-         if not quiet then
-           OpamConsole.msg "\r\027[KUpdated %s\n" (OpamPackage.to_string package))
+         if not quiet then begin
+           OpamConsole.carriage_delete ();
+           OpamConsole.msg "Updated %s\n" (OpamPackage.to_string package)
+         end)
       else if not quiet then
-        OpamConsole.msg "\r\027[K";
+        OpamConsole.carriage_delete ();
     ) packages;
   if not quiet then
     OpamConsole.msg "Done. Updated %d files in %d packages.\n"

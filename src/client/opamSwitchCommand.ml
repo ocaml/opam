@@ -83,7 +83,7 @@ let list gt ~print_short =
             descr ])
       list
   in
-  OpamStd.Format.print_table stdout ~sep:"  "
+  OpamConsole.print_table stdout ~sep:"  "
     (OpamStd.Format.align_table table);
 
   match OpamStateConfig.get_switch_opt (), OpamStateConfig.(!r.switch_from)
