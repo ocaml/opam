@@ -19,6 +19,7 @@ src
 │   ├── opamParallel.ml                 Parallel execution of jobs following a directed graph
 │   ├── opamUrl.ml                      URL parsing and printing, with support for our different backends
 |   |   # Windows support
+│   ├── opamStubsTypes.ml               Types in the stubs definitions (shared between both implementations)
 │   └── opamStubs.ml                    C stubs for Windows. A "dummy" alternate is provided for Unix, which doesn't require any C code
 │
 ├── format                              Definition of OPAM datastructures and its file interface

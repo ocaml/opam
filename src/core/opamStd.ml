@@ -630,6 +630,13 @@ module OpamSys = struct
     in
     if cols > 0 then cols else fallback
 
+  let win32_get_console_width () =
+    let hConsoleOutput = OpamStubs.(getStdHandle STD_OUTPUT_HANDLE) in
+    let {OpamStubs.size = (width, _); _} =
+      OpamStubs.getConsoleScreenBufferInfo hConsoleOutput
+    in
+    width
+
   let terminal_columns =
     let v = ref (lazy (get_terminal_columns ())) in
     let () =
@@ -638,10 +645,16 @@ module OpamSys = struct
                (fun _ -> v := lazy (get_terminal_columns ())))
       with Invalid_argument _ -> ()
     in
-    fun () ->
-      if tty_out
-      then Lazy.force !v
-      else default_columns
+    if Sys.win32 then
+      fun () ->
+        if tty_out
+        then win32_get_console_width ()
+        else default_columns
+    else
+      fun () ->
+        if tty_out
+        then Lazy.force !v
+        else default_columns
 
   let home =
     let home = lazy (try Env.get "HOME" with Not_found -> Sys.getcwd ()) in

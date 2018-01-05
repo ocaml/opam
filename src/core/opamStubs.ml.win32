@@ -8,4 +8,5 @@
 (*                                                                        *)
 (**************************************************************************)
 
-let getpid = OpamWin32Stubs.getpid
+include OpamStubsTypes
+include OpamWin32Stubs
