@@ -184,6 +184,7 @@ let carriage_delete () =
   print_string "\r\027[K"
 
 let last_status = ref ""
+let displaying_status = ref false
 let status_line fmt =
   if debug () || not (disp_status_line ()) then
     Printf.ksprintf
@@ -193,9 +194,16 @@ let status_line fmt =
     let print_string s =
       print_string s;
       flush stdout;
-      carriage_delete ()
+      carriage_delete ();
+      displaying_status := true
     in
     Printf.ksprintf print_string ("\r\027[K" ^^ fmt)
+
+let clear_status () =
+  if !displaying_status then begin
+    flush stdout;
+    displaying_status := false
+  end
 
 let header_width () = min 80 (OpamStd.Sys.terminal_columns ())
 

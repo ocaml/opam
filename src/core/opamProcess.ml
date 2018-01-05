@@ -619,8 +619,15 @@ module Job = struct
            else OpamConsole.msg "%s\n")
           (text_of_command cmd);
         let r = run cmd in
-        let k = try cont r with e -> cleanup r; raise e in
+        let k =
+          try cont r
+          with e ->
+            cleanup r;
+            OpamConsole.clear_status ();
+            raise e
+        in
         cleanup r;
+        OpamConsole.clear_status ();
         aux k
     in
     aux

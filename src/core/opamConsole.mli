@@ -79,9 +79,13 @@ val header_error :
 (** Erase the current line on stdout (doesn't flush stdout) *)
 val carriage_delete: unit -> unit
 
-(** Display a dynamic status line to stdout, that will be erased on next output.
-    The message should not be wider than screen nor contain newlines. *)
+(** Display a dynamic status line to stdout, that will be erased on next call.
+    The message should not be wider than screen nor contain newlines. Use
+    {!clear_status} when the status line should be erased. *)
 val status_line : ('a, unit, string, unit) format4 -> 'a
+
+(** Erase the status line and restore the cursor to the start of the line *)
+val clear_status : unit -> unit
 
 (** Ask the user to press Y/y/N/n to continue (returns a boolean).
     Defaults to true (yes) if unspecified *)
