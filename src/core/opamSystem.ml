@@ -49,7 +49,7 @@ let file_or_symlink_exists f =
 let (/) = Filename.concat
 
 let temp_basename prefix =
-  Printf.sprintf "%s-%d-%06x" prefix (Unix.getpid ()) (Random.int 0xFFFFFF)
+  Printf.sprintf "%s-%d-%06x" prefix (OpamStubs.getpid ()) (Random.int 0xFFFFFF)
 
 let rec mk_temp_dir () =
   let s = Filename.get_temp_dir_name () / temp_basename "opam" in

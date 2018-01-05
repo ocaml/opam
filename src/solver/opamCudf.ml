@@ -550,7 +550,7 @@ let dump_cudf_error ~version_map univ req =
     | None ->
       let (/) = Filename.concat in
       OpamCoreConfig.(!r.log_dir) /
-      ("solver-error-"^string_of_int (Unix.getpid())) in
+      ("solver-error-"^string_of_int (OpamStubs.getpid())) in
   match
     dump_cudf_request (to_cudf univ req) ~version_map
       (OpamSolverConfig.criteria req.criteria)

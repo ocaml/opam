@@ -79,6 +79,10 @@ td.sublib {
 <tr><th><a href="ocamldoc/OpamUrl.html">opamUrl.ml</a></th>
   <td>URL parsing and printing, with support for our different backends</td></tr>
 
+<tr><td colspan="2" class="sublib">Windows support</td></tr>
+<tr><th><a href="ocamldoc/OpamStubs.html">opamStubs.ml</a></th>
+  <td>C stubs for Windows. A &ldquo;dummy&rdquo; alternate is provided for Unix, which doesn&rsquo;t require any C code</td></tr>
+
 <tr class="lib">
   <th><code>src/format</code></th>
   <td><em>opam-format</em> library</td>
@@ -216,6 +220,20 @@ td.sublib {
   <td>Specific query and handling of pinned packages</td></tr>
 <tr><th><a href="ocamldoc/OpamUpdate.html">opamUpdate.ml</a></th>
   <td>Synchronisation and downloading of repositories and package sources</td></tr>
+
+<tr class="lib">
+  <th><code>src/stubs</code></th>
+  <td><em>opam-stubs</em> library</td>
+</tr>
+
+<tr><td colspan="2" class="libnote">
+    C stubs. This library is built on Windows-only and automatically pulled into opam-core if needed
+</td></tr>
+
+<tr><th><a>opamWindows.c</a></th>
+  <td>C stubs themselves</td></tr>
+<tr><th><a href="ocamldoc/OpamWin32Stubs.html">opamWin32Stubs.ml</a></th>
+  <td>OCaml <code>external</code> declarations for the stubs</td></tr>
 
 <tr class="lib">
   <th><code>src/client</code></th>

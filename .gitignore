@@ -65,6 +65,7 @@ config.status
 aclocal.m4
 autom4te.cache
 src/*/.merlin
+src/stubs/jbuild
 # doc
 doc/dev-manual/*aux
 doc/dev-manual/*.html

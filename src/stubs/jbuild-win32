@@ -1,0 +1,15 @@
+(jbuild_version 1)
+
+(library
+  ((name opam_stubs)
+   (public_name opam-core.stubs)
+   (synopsis "OCaml Package Manager C stubs")
+   (libraries (unix))
+   (flags (:standard (:include ../ocaml-flags-standard.sexp)
+                     (:include ../ocaml-context-flags.sexp)))
+   (c_names (opamWindows))
+   (c_flags (:standard (:include c-flags.sexp)))
+   (wrapped false)))
+
+(rule
+  (with-stdout-to c-flags.sexp (run ocaml ${path:../../shell/subst_var.ml} CONF_CFLAGS "" ${path:c-flags.sexp.in})))

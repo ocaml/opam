@@ -614,6 +614,7 @@ LIB_PREPEND
 PATH_PREPEND
 EXE
 WIN32
+CONF_CFLAGS
 CONF_OCAMLFLAGS
 MCCS_ENABLED
 DEVELOPER
@@ -3926,6 +3927,24 @@ else
   CONF_OCAMLFLAGS=
 
 fi
+if test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"; then :
+
+  if test "x${CCOMP_TYPE}" = "xmsvc"; then :
+
+    CONF_CFLAGS="/WX"
+
+else
+
+    CONF_CFLAGS="-Werror"
+
+fi
+
+else
+
+  CONF_CFLAGS=
+
+fi
+
 
 
 if  test "${OCAML_OS_TYPE}" = "Win32"; then :
@@ -3942,6 +3961,18 @@ fi
 
 
 
+
+if  test ${WIN32} -eq 1 -a "$GCC" = "yes"; then :
+
+  # Pre-Visual Studio 2013 Microsoft C compiler adhere to the C89 standard, well
+  # at least the bit of it which requires variable declarations to appear before
+  # statements. Adding this warning to GCC prevents accidentally using C99 and
+  # then getting unexpected C2143 errors from older Microsoft C compilers. I'm
+  # not aware of an equivalent option for the Microsoft C compiler.
+  CC="$CC -Wdeclaration-after-statement"
+
+
+fi
 
 if  test ${WIN32} -eq 1 -a "$GCC" != "yes" ; then :
 
@@ -6144,6 +6175,18 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
 $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
 
+
+if  test ${WIN32} -eq 1; then :
+
+  cd src/stubs
+  ${LN_S} -f jbuild-win32 jbuild
+  cd ../..
+
+else
+
+  rm -f src/stubs/jbuild
+
+fi
 
 echo
 

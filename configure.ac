@@ -109,7 +109,17 @@ AS_IF([test "x${CI}" != "x"], [
 ],[
   CONF_OCAMLFLAGS=
 ])
+AS_IF([test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"],[
+  AS_IF([test "x${CCOMP_TYPE}" = "xmsvc"],[
+    CONF_CFLAGS="/WX"
+  ],[
+    CONF_CFLAGS="-Werror"
+  ])
+],[
+  CONF_CFLAGS=
+])
 AC_SUBST(CONF_OCAMLFLAGS)
+AC_SUBST(CONF_CFLAGS)
 
 AS_IF([ test "${OCAML_OS_TYPE}" = "Win32"],[
   WIN32=1
@@ -121,6 +131,16 @@ AS_IF([ test "${OCAML_OS_TYPE}" = "Win32"],[
 
 AC_SUBST(WIN32)
 AC_SUBST(EXE)
+
+AS_IF([ test ${WIN32} -eq 1 -a "$GCC" = "yes"],[
+  # Pre-Visual Studio 2013 Microsoft C compiler adhere to the C89 standard, well
+  # at least the bit of it which requires variable declarations to appear before
+  # statements. Adding this warning to GCC prevents accidentally using C99 and
+  # then getting unexpected C2143 errors from older Microsoft C compilers. I'm
+  # not aware of an equivalent option for the Microsoft C compiler.
+  CC="$CC -Wdeclaration-after-statement"
+  AC_SUBST(CC)
+])
 
 AS_IF([ test ${WIN32} -eq 1 -a "$GCC" != "yes" ],[
   AC_MSG_CHECKING([whether Microsoft Linker needs a PATH shim])
@@ -248,6 +268,14 @@ AC_CONFIG_FILES(
   Makefile.config
 )
 AC_OUTPUT
+
+AS_IF([ test ${WIN32} -eq 1],[
+  cd src/stubs
+  ${LN_S} -f jbuild-win32 jbuild
+  cd ../..
+],[
+  rm -f src/stubs/jbuild
+])
 
 echo
 
