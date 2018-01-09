@@ -24,6 +24,11 @@ module Char = struct
   let lowercase_ascii = lowercase
 end
 
+module Printexc = struct
+  include Printexc
+  let raise_with_backtrace e _bt = raise e
+end
+
 module Unix = struct
   include Unix
 

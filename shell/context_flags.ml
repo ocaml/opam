@@ -15,8 +15,10 @@ match Sys.argv.(1) with
     exit 1
   end else if ocaml_major = 4 && ocaml_minor < 3 then
     Printf.printf "4.0%d" ocaml_minor
-  else if ocaml_major = 4 && ocaml_minor < 6 then
+  else if ocaml_major = 4 && ocaml_minor < 5 then
     Printf.printf "4.03"
+  else if ocaml_major = 4 && ocaml_minor < 6 then
+    Printf.printf "4.05"
   else
     Printf.printf "4.06"
 | _ ->

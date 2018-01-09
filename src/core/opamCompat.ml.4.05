@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2018 OCamlPro                                             *)
+(*    Copyright 2014 OCamlPro                                             *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -8,12 +8,15 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Compatibility layer (Bytes, etc.) for different OCaml versions *)
-
 module Bytes = Bytes
 module Buffer = Buffer
 module Filename = Filename
 module String = String
 module Char = Char
 module Printexc = Printexc
-module Unix = Unix
+
+module Unix = struct
+  include Unix
+
+  let map_file = Bigarray.Genarray.map_file
+end
