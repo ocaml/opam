@@ -43,16 +43,73 @@ let filters_of_formula f =
         acc f)
     [] f
 
+(* Doesn't include filters in commands *)
 let all_filters ?(exclude_post=false) t =
   OpamStd.List.filter_map snd t.patches @
   OpamStd.List.filter_map snd t.messages @
   (if exclude_post then [] else OpamStd.List.filter_map snd t.post_messages) @
+  List.map snd t.depexts @
+  OpamStd.List.filter_map snd t.libraries @
+  OpamStd.List.filter_map snd t.syntax @
   [t.available] @
   filters_of_formula
     (OpamFormula.ands
        (t.depends ::
         t.depopts ::
+        t.conflicts ::
         List.map (fun (_,f,_) -> f) t.features))
+
+let map_all_filters f t =
+  let mapsnd x =
+    List.map (fun (x, ft) -> x, f ft) x
+  in
+  let mapsndopt x =
+    List.map (function
+        | (x, Some ft) -> x, Some (f ft)
+        | nf -> nf)
+      x
+  in
+  let map_commands =
+    List.map
+      (fun (args, filter) ->
+         List.map (function
+             | s, Some ft -> s, Some (f ft)
+             | nf -> nf)
+           args,
+         OpamStd.Option.map f filter)
+  in
+  let map_filtered_formula =
+    OpamFormula.map (fun (name, fc) ->
+        let fc =
+          OpamFormula.map (function
+              | Filter flt -> Atom (Filter (f flt))
+              | Constraint (relop, flt) -> Atom (Constraint (relop, (f flt))))
+            fc
+        in
+        Atom (name, fc))
+  in
+  let map_features =
+    List.map (fun (var, fformula, doc) ->
+        var, map_filtered_formula fformula, doc)
+  in
+  t |>
+  with_patches (mapsndopt t.patches) |>
+  with_messages (mapsndopt t.messages) |>
+  with_post_messages (mapsndopt t.post_messages) |>
+  with_depexts (mapsnd t.depexts) |>
+  with_libraries (mapsndopt t.libraries) |>
+  with_syntax (mapsndopt t.syntax) |>
+  with_available (f t.available) |>
+  with_depends (map_filtered_formula t.depends) |>
+  with_depopts (map_filtered_formula t.depopts) |>
+  with_conflicts (map_filtered_formula t.conflicts) |>
+  with_features (map_features t.features) |>
+  with_build (map_commands t.build) |>
+  with_run_test (map_commands t.run_test) |>
+  with_install (map_commands t.install) |>
+  with_remove (map_commands t.remove) |>
+  with_deprecated_build_test (map_commands t.deprecated_build_test) |>
+  with_deprecated_build_doc (map_commands t.deprecated_build_doc)
 
 let all_variables ?exclude_post t =
   OpamFilter.commands_variables (all_commands t) @
@@ -60,6 +117,7 @@ let all_variables ?exclude_post t =
     [] (all_filters ?exclude_post t)
 
 let map_all_variables f t =
+  let map_fld (x, flt) = x, OpamFilter.map_variables f flt in
   let map_optfld = function
     | x, Some flt -> x, Some (OpamFilter.map_variables f flt)
     | _, None as optfld -> optfld
@@ -106,16 +164,20 @@ let map_all_variables f t =
   with_patches (List.map map_optfld t.patches) |>
   with_messages (List.map map_optfld t.messages) |>
   with_post_messages (List.map map_optfld t.post_messages) |>
+  with_depexts (List.map map_fld t.depexts) |>
+  with_libraries (List.map map_optfld t.libraries) |>
+  with_syntax (List.map map_optfld t.syntax) |>
   with_build (map_commands t.build) |>
   with_run_test (map_commands t.run_test) |>
   with_install (map_commands t.install) |>
   with_remove (map_commands t.remove) |>
   with_depends (map_filtered_formula t.depends) |>
   with_depopts (map_filtered_formula t.depopts) |>
+  with_conflicts (map_filtered_formula t.conflicts) |>
   with_available (OpamFilter.map_variables f t.available) |>
   with_features (map_features t.features) |>
+  with_deprecated_build_test (map_commands t.deprecated_build_test) |>
   with_deprecated_build_doc (map_commands t.deprecated_build_doc)
-
 
 let all_expanded_strings t =
   List.map fst t.messages @
