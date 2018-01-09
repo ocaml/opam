@@ -167,7 +167,7 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
       | _ -> false)
       (OpamFilter.variables available)
   then OpamConsole.warning
-      "Could not translate some OCaml variables in the 'available:' \
+      "Could not translate some 'ocaml-*' variables in the 'available:' \
        field of %s: %s"
       filename (OpamFilter.to_string available);
   let depends =
@@ -304,6 +304,16 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
   let depexts =
     upgrade_depexts_to_2_0_beta5 filename (OpamFile.OPAM.depexts opam)
   in
+  let rewrite_filter =
+    OpamFilter.map_up (function
+        | FOp (FIdent ([],v,None), op, FString ("darwin"|"osx"))
+          when v = OpamVariable.of_string "os" ->
+          FOp (FIdent ([],v,None), op, FString "macos")
+        | FOp (FString ("darwin"|"osx"), op, FIdent ([],v,None))
+          when v = OpamVariable.of_string "os" ->
+          FOp (FString "macos", op, FIdent ([],v,None))
+        | ft -> ft)
+  in
   opam |>
   OpamFile.OPAM.with_opam_version (OpamVersion.of_string "2.0") |>
   OpamFile.OPAM.with_depends depends |>
@@ -316,6 +326,7 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
   OpamFile.OPAM.with_deprecated_build_test [] |>
   OpamFile.OPAM.with_deprecated_build_doc [] |>
   OpamFileTools.map_all_variables rewrite_var |>
+  OpamFileTools.map_all_filters rewrite_filter |>
   OpamFile.OPAM.with_depexts depexts |>
   auto_add_flags |>
   filter_out_flagtags

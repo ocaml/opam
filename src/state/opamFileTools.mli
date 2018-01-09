@@ -53,3 +53,6 @@ val add_aux_files:
 (** {2 Tools to manipulate the [OpamFile.OPAM.t] contents} *)
 val map_all_variables:
   (full_variable -> full_variable) -> OpamFile.OPAM.t -> OpamFile.OPAM.t
+
+val map_all_filters:
+  (filter -> filter) -> OpamFile.OPAM.t -> OpamFile.OPAM.t
