@@ -362,9 +362,8 @@ let with_flock flag ?dontblock file f =
     OpamSystem.funlock lock;
     r
   with e ->
-    OpamStd.Exn.register_backtrace e;
-    OpamSystem.funlock lock;
-    raise e
+    OpamStd.Exn.finalise e @@ fun () ->
+    OpamSystem.funlock lock
 
 let with_flock_upgrade flag ?dontblock lock f =
   if OpamSystem.lock_isatleast flag lock then f ()
@@ -376,9 +375,8 @@ let with_flock_upgrade flag ?dontblock lock f =
       OpamSystem.flock_update old_flag lock;
       r
     with e ->
-      OpamStd.Exn.register_backtrace e;
-      OpamSystem.flock_update old_flag lock;
-      raise e
+      OpamStd.Exn.finalise e @@ fun () ->
+      OpamSystem.flock_update old_flag lock
   )
 
 let with_flock_write_then_read ?dontblock file write read =
@@ -390,9 +388,8 @@ let with_flock_write_then_read ?dontblock file write read =
     OpamSystem.funlock lock;
     r
   with e ->
-    OpamStd.Exn.register_backtrace e;
-    OpamSystem.funlock lock;
-    raise e
+    OpamStd.Exn.finalise e @@ fun () ->
+    OpamSystem.funlock lock
 
 let prettify_path s =
   let aux ~short ~prefix =

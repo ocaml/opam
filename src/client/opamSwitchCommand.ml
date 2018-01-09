@@ -299,13 +299,13 @@ let install gt ?rt ?synopsis ?repos ~update_config ~packages switch =
   let packages =
     try OpamSolution.sanitize_atom_list st packages
     with e ->
+      OpamStd.Exn.finalise e @@ fun () ->
       if update_config then
         (OpamEnv.clear_dynamic_init_scripts gt;
          OpamStd.Option.iter
            (ignore @* OpamSwitchAction.set_current_switch `Lock_write gt)
            old_switch_opt);
-      ignore (clear_switch gt switch);
-      raise e
+      ignore (clear_switch gt switch)
   in
   let gt = OpamGlobalState.unlock gt in
   try

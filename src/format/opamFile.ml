@@ -115,7 +115,9 @@ module MakeIO (F : IO_Arg) = struct
       close_out oc;
       Stats.write_files := filename :: !Stats.write_files;
       log "Wrote %s in %.3fs" filename (chrono ())
-    with e -> close_out oc; OpamFilename.remove f; raise e
+    with e ->
+      OpamStd.Exn.finalise e @@ fun () ->
+      close_out oc; OpamFilename.remove f
 
   let read_opt f =
     let filename = OpamFilename.prettify f in
@@ -129,7 +131,7 @@ module MakeIO (F : IO_Arg) = struct
         close_in ic;
         log ~level:3 "Read %s in %.3fs" filename (chrono ());
         Some r
-      with e -> close_in ic; raise e
+      with e -> OpamStd.Exn.finalise e (fun () -> close_in ic)
     with
     | OpamSystem.File_not_found _ ->
       None

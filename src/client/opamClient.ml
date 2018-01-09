@@ -671,10 +671,9 @@ let init
         gt, OpamRepositoryState.unlock rt,
         OpamFile.InitConfig.default_compiler init_config
       with e ->
-        OpamStd.Exn.register_backtrace e;
+        OpamStd.Exn.finalise e @@ fun () ->
         if not (OpamConsole.debug ()) && root_empty then
-          OpamFilename.rmdir root;
-        raise e)
+          OpamFilename.rmdir root)
   in
   let _updated = match update_config with
     | `no  -> false

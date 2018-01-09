@@ -293,7 +293,7 @@ module Exn : sig
   (** To use when catching default exceptions: ensures we don't catch fatal errors
       like C-c. try-with should _always_ (by decreasing order of preference):
       - either catch specific exceptions
-      - or re-raise the same exception
+      - or re-raise the same exception (preferably with [Exn.finalise])
       - or call this function on the caught exception *)
   val fatal: exn -> unit
 
@@ -304,6 +304,10 @@ module Exn : sig
 
   (** Return a pretty-printed backtrace *)
   val pretty_backtrace: exn -> string
+
+  (** Runs the given finaliser, then reraises the given exception, while
+      preserving backtraces (when the OCaml version permits, e.g. >= 4.05.0) *)
+  val finalise: exn -> (unit -> unit) -> 'a
 
 end
 

@@ -73,10 +73,9 @@ let call_external_solver command ~criteria ?timeout (_, universe,_ as cudf) =
     OpamFilename.remove solver_out;
     r
   with e ->
+    OpamStd.Exn.finalise e @@ fun () ->
     OpamFilename.remove solver_in;
-    OpamFilename.remove solver_out;
-    raise e
-
+    OpamFilename.remove solver_out
 
 module External (E: ExternalArg) : S = struct
   let name = E.name
