@@ -1,0 +1,48 @@
+From bb10c2537b740fe5ab4eacc5323132df89e58b62 Mon Sep 17 00:00:00 2001
+From: Damien Doligez <damien.doligez@inria.fr>
+Date: Wed, 22 Nov 2017 15:40:35 +0100
+Subject: [PATCH] fixes for 4.06 safe-string
+
+---
+ common/criteria_lexer.mll | 4 ++--
+ common/input.ml           | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/common/criteria_lexer.mll b/common/criteria_lexer.mll
+index 71f9178..5518fa0 100644
+--- a/common/criteria_lexer.mll
++++ b/common/criteria_lexer.mll
+@@ -18,7 +18,7 @@
+     let c = Lexing.lexeme_char lexbuf 2 in (* the delimiter can be any character *)
+     (* find the terminating delimiter *)
+     let endpos =
+-      try String.index_from lexbuf.lex_buffer (lexbuf.lex_start_pos + 3) c with
++      try Bytes.index_from lexbuf.lex_buffer (lexbuf.lex_start_pos + 3) c with
+       |Invalid_argument _ ->
+           raise (Format822.Syntax_error (
+             Format822.error lexbuf "String too short"))
+@@ -27,7 +27,7 @@
+             Format822.error lexbuf (Printf.sprintf "cannot find: %c" c)))
+     in
+     let len = endpos - (lexbuf.lex_start_pos + 3) in
+-    let s = String.sub lexbuf.lex_buffer (lexbuf.lex_start_pos + 3) len in
++    let s = Bytes.sub_string lexbuf.lex_buffer (lexbuf.lex_start_pos + 3) len in
+     lexbuf.Lexing.lex_curr_pos <- lexbuf.Lexing.lex_start_pos + ((String.length s)+4);
+     s
+ 
+diff --git a/common/input.ml b/common/input.ml
+index ea189de..e25ca99 100644
+--- a/common/input.ml
++++ b/common/input.ml
+@@ -42,7 +42,7 @@ let bzip_open_file file =
+     with End_of_file -> raise IO.No_more_input
+   in
+   let read ch s pos len =
+-    try Bz2.read ch s pos len 
++    try Bz2.read ch (Bytes.unsafe_to_string s) pos len 
+     with End_of_file -> raise IO.No_more_input
+   in
+   IO.create_in
+-- 
+2.7.2
+
