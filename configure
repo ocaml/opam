@@ -1330,7 +1330,6 @@ Optional Packages:
   --without-mccs          Compile without a built-in Cudf solver (only works
                           if 'mccs' is not otherwise installed)
 
-
 Some influential environment variables:
   CC          C compiler command
   CFLAGS      C compiler flags
@@ -3066,6 +3065,9 @@ fi
 # Check whether --with-mccs was given.
 if test "${with_mccs+set}" = set; then :
   withval=$with_mccs;
+else
+  MCCS_DEFAULT=yes
+
 fi
 
 
@@ -4412,7 +4414,8 @@ if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_ocamlgraph" = "xno" ||
        test "x$OCAML_PKG_cudf" = "xno" ||
        test "x$OCAML_PKG_dose3_common" = "xno" ||
-       test "x$OCAML_PKG_opam_file_format" = "xno"; }; then :
+       test "x$OCAML_PKG_opam_file_format" = "xno" ||
+       test "x$OCAML_PKG_mccs$MCCS_DISABLED$MCCS_DEFAULT" = "xnofalse"; }; then :
 
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"

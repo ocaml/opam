@@ -62,7 +62,7 @@ git config --global user.name "Travis CI"
 
     [ "$(ocaml -vnum)" = "$OCAML_VERSION" ] || exit 12
 
-    ./configure --prefix ~/local
+    ./configure --prefix ~/local --with-mccs
 
     if [ "$OPAM_TEST" != "1" ]; then make lib-ext; fi
     make all
