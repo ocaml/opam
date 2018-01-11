@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
-V=ocaml-4.04.0
-URL=http://caml.inria.fr/pub/distrib/ocaml-4.04/${V}.tar.gz
+V=ocaml-4.06.0
+URL=http://caml.inria.fr/pub/distrib/ocaml-4.06/${V}.tar.gz
 mkdir -p bootstrap
 cd bootstrap
 if [ ! -e ${V}.tar.gz ]; then

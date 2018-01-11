@@ -31,7 +31,7 @@ AC_ARG_ENABLE([developer_mode],
 
 AC_ARG_WITH([mccs],
   AC_HELP_STRING([--without-mccs],
-                 [Compile without a built-in Cudf solver (only works if 'mccs' is not otherwise installed)])
+                 [Compile without a built-in Cudf solver (only works if 'mccs' is not otherwise installed)]),[],[MCCS_DEFAULT=yes]
 )
 
 AS_IF([test "x" != "x$LIB_PREFIX"], [
@@ -161,7 +161,8 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_ocamlgraph" = "xno" ||
        test "x$OCAML_PKG_cudf" = "xno" ||
        test "x$OCAML_PKG_dose3_common" = "xno" ||
-       test "x$OCAML_PKG_opam_file_format" = "xno"; }],[
+       test "x$OCAML_PKG_opam_file_format" = "xno" ||
+       test "x$OCAML_PKG_mccs$MCCS_DISABLED$MCCS_DEFAULT" = "xnofalse"; }],[
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"
   echo "'opam' binary, run 'make lib-ext' to download and include them."

@@ -42,3 +42,10 @@ module Filename : sig
   include module type of Filename
   val get_temp_dir_name : unit -> string
 end
+
+module Unix : sig
+  include module type of Unix
+  val map_file : Unix.file_descr -> ?pos:int64 -> ('a, 'b) Bigarray.kind ->
+                 'c Bigarray.layout -> bool -> int array ->
+                 ('a, 'b, 'c) Bigarray.Genarray.t
+end

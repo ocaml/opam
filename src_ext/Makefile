@@ -7,8 +7,8 @@ ifneq ($(MCCS_DISABLED),true)
 SRC_EXTS := $(SRC_EXTS) mccs
 endif
 
-URL_cppo = https://github.com/mjambon/cppo/archive/v1.5.0.tar.gz
-MD5_cppo = bdc99442945f6bc26e7a8096d0975239
+URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.0.tar.gz
+MD5_cppo = aee411b3546bc5d198c71ae9185cade4
 
 URL_extlib = https://github.com/ygrek/ocaml-extlib/releases/download/1.7.2/extlib-1.7.2.tar.gz
 MD5_extlib = 0f550dd06242828399a73387c49e0eed
@@ -16,11 +16,11 @@ MD5_extlib = 0f550dd06242828399a73387c49e0eed
 URL_re = https://github.com/ocaml/ocaml-re/archive/1.7.1.tar.gz
 MD5_re = 0e45743512b7ab5e6b175f955dc72002
 
-URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.0.0.tbz
-MD5_cmdliner = 6baa375f393fbe9ca1fcb0a7a875e001
+URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.0.2.tbz
+MD5_cmdliner = ab2f0130e88e8dcd723ac6154c98a881
 
-URL_ocamlgraph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.7.tar.gz
-MD5_ocamlgraph = e733b8309b9374e89d96e907ecaf4f76
+URL_ocamlgraph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.8.tar.gz
+MD5_ocamlgraph = 9d71ca69271055bd22d0dfe4e939831a
 
 URL_cudf = https://gforge.inria.fr/frs/download.php/file/36602/cudf-0.9.tar.gz
 MD5_cudf = a4c0e652e56e74c7b388a43f9258d119

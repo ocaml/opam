@@ -15,12 +15,12 @@
 
 (rule
   ((targets (opamCompat.ml))
-   (deps (opamCompat.ml.4.01 opamCompat.ml.4.02 opamCompat.ml.4.03))
+   (deps (opamCompat.ml.4.01 opamCompat.ml.4.02 opamCompat.ml.4.03 opamCompat.ml.4.06))
    (action (copy ${@}.${read:ocaml-compat.sexp} ${@}))))
 
 (rule
   ((targets (opamCompat.mli))
-   (deps (opamCompat.mli.4.01 opamCompat.mli.4.02 opamCompat.mli.4.03))
+   (deps (opamCompat.mli.4.01 opamCompat.mli.4.02 opamCompat.mli.4.03 opamCompat.ml.4.06))
    (action (copy ${@}.${read:ocaml-compat.sexp} ${@}))))
 
 (rule

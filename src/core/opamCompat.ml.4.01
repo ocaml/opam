@@ -40,3 +40,9 @@ module Filename = struct
   include Filename
   let get_temp_dir_name () = temp_dir_name
 end
+
+module Unix = struct
+  include Unix
+
+  let map_file = Bigarray.Genarray.map_file
+end

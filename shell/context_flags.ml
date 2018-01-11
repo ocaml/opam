@@ -15,8 +15,10 @@ match Sys.argv.(1) with
     exit 1
   end else if ocaml_major = 4 && ocaml_minor < 3 then
     Printf.printf "4.0%d" ocaml_minor
-  else
+  else if ocaml_major = 4 && ocaml_minor < 6 then
     Printf.printf "4.03"
+  else
+    Printf.printf "4.06"
 | _ ->
     Printf.eprintf "Unrecognised context instruction: %s\n" Sys.argv.(1);
     exit 1
