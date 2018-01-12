@@ -1,0 +1,49 @@
+From 083bae674ad77b6b5b5fafbff25b20473655cb2a Mon Sep 17 00:00:00 2001
+From: David Allsopp <david.allsopp@metastack.com>
+Date: Wed, 27 Dec 2017 10:37:12 +0200
+Subject: [PATCH] Use dra27 jbuilder/ocaml-mccs/flexdll
+
+ - Need unreleased ocaml-mccs 1.1+5 to build mccs on Windows.
+ - Need unreleased jbuilder beta17 to build mccs on MSVC.
+ - Need unreleased flexdll 0.38 to build mccs on mingw.
+---
+ src_ext/Makefile | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/src_ext/Makefile b/src_ext/Makefile
+index 64fdd8af..d1457b5f 100644
+--- a/src_ext/Makefile
++++ b/src_ext/Makefile
+@@ -28,8 +28,8 @@ MD5_cudf = a4c0e652e56e74c7b388a43f9258d119
+ URL_dose3 = https://gforge.inria.fr/frs/download.php/file/36063/dose3-5.0.1.tar.gz
+ MD5_dose3 = e7d4b1840383c6732f29a47c08ba5650
+ 
+-URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+4.tar.gz
+-MD5_mccs = 1ff2d73ab5c69e1fb58160213fc2d4c9
++URL_mccs = https://github.com/dra27/ocaml-mccs/archive/1.1+4-dra27.tar.gz
++MD5_mccs = 08e80e39a0d960c01955a970d13afb29
+ 
+ URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta5.tar.gz
+ MD5_opam-file-format = 5408798ca3af6e36379dd34b1b618b9c
+@@ -37,14 +37,14 @@ MD5_opam-file-format = 5408798ca3af6e36379dd34b1b618b9c
+ URL_result = https://github.com/janestreet/result/archive/1.2.tar.gz
+ MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
+ 
+-URL_jbuilder = https://github.com/janestreet/jbuilder/archive/08050696fb701dafcd1372aadfaa800a50bc01ca.tar.gz
+-MD5_jbuilder = 53b65232ebb5fd319acf90922342615d
++URL_jbuilder = https://github.com/dra27/jbuilder/archive/fix-copy.tar.gz
++MD5_jbuilder = cbf9d2e783feab1f4a61fea35ec96118
+ 
+ URL_ocaml = http://caml.inria.fr/pub/distrib/ocaml-4.06/ocaml-4.06.0.tar.gz
+ MD5_ocaml = 66e5439eb63dbb8b8224cba5d1b20947
+ 
+-URL_flexdll = https://github.com/alainfrisch/flexdll/archive/0.37.tar.gz
+-MD5_flexdll = cc456a89382e60d84130cddd53977486
++URL_flexdll = https://github.com/dra27/flexdll/archive/linking-c++.tar.gz
++MD5_flexdll = 75bd0efc328ad9f8f2e01414464d217b
+ 
+ ifndef FETCH
+   ifneq ($(shell command -v curl 2>/dev/null),)
+-- 
+2.12.0.windows.1
+

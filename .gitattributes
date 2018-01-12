@@ -6,6 +6,7 @@
 *.zsh text eol=lf
 configure text eol=lf
 configure.ac text eol=lf
+msvs-detect text eol=lf
 check_linker text eol=lf
 *.m4 text eol=lf
 

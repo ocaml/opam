@@ -70,7 +70,7 @@ OPAMINSTALLER_FLAGS += --mandir "$(DESTDIR)$(mandir)"
 ifdef OCAMLFIND
 ifndef DESTDIR
 ifneq ($(OCAMLFIND),no)
-    LIBINSTALL_DIR ?= $(shell $(OCAMLFIND) printconf destdir)
+    LIBINSTALL_DIR ?= $(shell PATH="$(PATH)" $(OCAMLFIND) printconf destdir)
 endif
 endif
 endif
@@ -156,11 +156,26 @@ configure: configure.ac m4/*.m4
 release-%:
 	$(MAKE) -C release TAG="$*"
 
-cold:
-	env MAKE=$(MAKE) ./shell/bootstrap-ocaml.sh
+ifeq ($(OCAML_PORT),)
+ifneq ($(COMSPEC),)
+ifeq ($(shell which gcc 2>/dev/null),)
+OCAML_PORT=auto
+endif
+endif
+endif
+
+.PHONY: compiler cold
+compiler:
+	env MAKE=$(MAKE) ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
+
+cold: compiler
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" ./configure $(CONFIGURE_ARGS)
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE) lib-ext
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE)
 
 cold-%:
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE) $*
+
+.PHONY: run-appveyor-test
+run-appveyor-test:
+	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" ./appveyor_test.sh

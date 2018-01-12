@@ -46,6 +46,77 @@ it as a second step.
 If you are developing OPAM, you may enable developer features by including the
 `--enable-developer-mode` parameter with `./configure`.
 
+## Compiling on Native Windows
+
+```
+BUILDING ON WINDOWS IS A WORK-IN-PROGRESS AND THESE INSTRUCTIONS WILL EVOLVE!
+```
+
+Cygwin (https://www.cygwin.com/setup-x86_64.exe) is always required to build opam on
+Windows. Both the 64-bit and 32-bit versions of Cygwin may be used (you can build
+32-bit opam using 64-bit Cygwin and vice versa though note that you must be running
+64-bit Windows in order to build the 64-bit version).
+
+The following Cygwin packages are required:
+* From Devel - `make`
+* From Devel - `patch` (not required if OCaml and all required packages are
+                        pre-installed)
+* From Devel - `mingw64-i686-gcc-core` & `mingw64-x86_64-gcc-core` (not required if
+                                                                 building with MSVC)
+
+Alternatively, having downloaded Cygwin's setup program, Cygwin can be installed
+using the following command line:
+
+`setup-x86_64 --root=C:\cygwin64 --quiet-mode --no-desktop --no-startmenu --packages=make,mingw64-i686-gcc-core,mingw64-x86_64-gcc-core,patch`
+
+The `--no-desktop` and `--no-startmenu` switches may be omitted in order to create
+shortcuts on the Desktop and Start Menu respectively. Executed this way, setup will
+still be interactive, but the packages will have been pre-selected. To make setup
+fully unattended, choose a mirror URL from https://cygwin.com/mirrors.lst and add
+the --site switch to the command line
+(e.g. `--site=http://www.mirrorservice.org/sites/sourceware.org/pub/cygwin/`).
+
+It is recommended that you set the `CYGWIN` environment variable to
+`nodosfilewarning winsymlinks:native`.
+
+Cygwin is started either from a shortcut or by running:
+
+```
+C:\cygwin64\bin\mintty -
+```
+
+It is recommended that opam be built outside Cygwin's root
+(so in `/cygdrive/c/...`). From an elevated Cygwin shell, edit `/etc/fstab` and
+ensure that the file's content is exactly:
+
+```
+none /cygdrive cygdrive noacl,binary,posix=0,user 0 0
+```
+
+The change is the addition of the `noacl` option to the mount instructions for
+`/cygdrive` and this stops from Cygwin from attempting to emulate POSIX permissions
+over NTFS (which can result in strange and unnecessary permissions showing up in
+Windows Explorer). It is necessary to close and restart all Cygwin terminal windows
+after changing `/etc/fstab`.
+
+opam is able to be built **without** a pre-installed OCaml compiler. For the MSVC
+ports of OCaml, the Microsoft Windows SDK 7 or later or Microsoft Visual Studio is
+required (https://www.microsoft.com/en-gb/download/details.aspx?id=8442 - either x86
+or x64 may be installed, as appropriate to your system). It is not necessary to
+modify PATH, INCLUDE or LIB - opam's build system will automatically detect the
+required changes.
+
+If OCaml is not pre-installed, run:
+```
+make compiler [OCAML_PORT=mingw64|mingw|msvc64|msvc|auto]
+```
+The `OCAML_PORT` variable determines which flavour of Windows OCaml is compiled -
+`auto` will attempt to guess. As long as `gcc` is **not** installed in Cygwin
+(i.e. the native C compiler *for Cygwin*), `OCAML_PORT` does not need to be
+specified and `auto` will be assumed.
+
+You can then `configure` and build opam as above.
+
 ## Compiling without OCaml
 
 `make cold` is provided as a facility to compile OCaml, then bootstrap opam.
