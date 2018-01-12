@@ -369,21 +369,8 @@ let resolve_command =
       | _ -> None
     else None
   in
-  let cached_results = Hashtbl.create 17 in
   fun ?(env=default_env) ?dir name ->
-    if dir <> None && is_external_cmd name && Filename.is_relative name then
-      resolve env ?dir name (* no caching *)
-    else
-    let path = env_var env "PATH" in
-    try Hashtbl.find (Hashtbl.find cached_results path) name
-    with Not_found ->
-      let r = resolve env ?dir name in
-      (try Hashtbl.add (Hashtbl.find cached_results path) name r
-       with Not_found ->
-         let phash = Hashtbl.create 17 in
-         Hashtbl.add phash name r;
-         Hashtbl.add cached_results path phash);
-      r
+    resolve env ?dir name
 
 let runs = ref []
 let print_stats () =
