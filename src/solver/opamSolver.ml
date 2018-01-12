@@ -185,7 +185,8 @@ let opam2cudf universe ?(depopts=false) ~build ~post version_map package =
         (fun v (i,r) -> if v = version then i,i else i+1, r)
         all_versions (0,0)
     in
-    count - i
+    let linear_lag = (count - i) in
+    linear_lag * linear_lag * linear_lag
   in
   let extras =
     let e = [
