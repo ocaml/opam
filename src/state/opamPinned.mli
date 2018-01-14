@@ -34,7 +34,9 @@ val find_opam_file_in_source: name -> dirname -> OpamFile.OPAM.t OpamFile.t opti
 
 (** Finds all package definition files in a given source dir [opam],
     [pkgname.opam/opam], etc. *)
-val files_in_source: dirname -> (name option * OpamFile.OPAM.t OpamFile.t) list
+val files_in_source:
+  ?recurse:bool ->
+  dirname -> (name option * OpamFile.OPAM.t OpamFile.t * string option) list
 
 (** From an opam file location, sitting below the given project directory, find
     the corresponding package name if specified ([<name>.opam] or

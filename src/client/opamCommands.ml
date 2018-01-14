@@ -1107,9 +1107,12 @@ let install =
        definitions, and is typically useful to provide more constrained \
        dependencies that describe a precise development environment."
   in
+  let recurse =
+    mk_flag ["r";"rec"]
+      "Allow recursive lookups of .opam files." in
   let install
       global_options build_options add_to_roots deps_only restore destdir locked
-      atoms_or_locals =
+      recurse atoms_or_locals =
     apply_global_options global_options;
     apply_build_options build_options;
     if atoms_or_locals = [] && not restore then
@@ -1137,7 +1140,8 @@ let install =
     in
     if atoms_or_locals = [] then `Ok () else
     let st, atoms =
-      OpamAuxCommands.autopin st ~simulate:deps_only ~locked atoms_or_locals
+      OpamAuxCommands.autopin
+        st ~recurse ~simulate:deps_only ~locked atoms_or_locals
     in
     if atoms = [] then
       (OpamConsole.msg "Nothing to do\n";
@@ -1156,7 +1160,7 @@ let install =
   Term.ret
     Term.(const install $global_options $build_options
           $add_to_roots $deps_only $restore $destdir $locked
-          $atom_or_local_list),
+          $recurse $atom_or_local_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
@@ -2177,6 +2181,9 @@ let pin ?(unpin_only=false) () =
     mk_flag ["e";"edit"]
       "With $(i,opam pin add), edit the opam file as with `opam pin edit' \
        after pinning." in
+  let recurse =
+    mk_flag ["r";"rec"]
+      "Allow recursive lookups of .opam files." in
   let kind =
     let main_kinds = [
       "version", `version;
@@ -2213,13 +2220,15 @@ let pin ?(unpin_only=false) () =
     mk_flag ["dev-repo"] "Pin to the upstream package source for the latest \
                           development version"
   in
-  let guess_names url =
+  let guess_names ~recurse url =
     let from_opam_files dir =
       OpamStd.List.filter_map
-        (fun (nameopt, f) -> match nameopt with
+        (fun (nameopt, f, subpath) ->
+           let nameopt = match nameopt with
            | None -> OpamFile.OPAM.(name_opt (safe_read f))
-           | some -> some)
-        (OpamPinned.files_in_source dir)
+           | some -> some in
+           OpamStd.Option.map (fun n -> (n, subpath)) nameopt)
+        (OpamPinned.files_in_source ~recurse dir)
     in
     let basename =
       List.hd (OpamStd.String.split (OpamUrl.basename url) '.')
@@ -2243,7 +2252,7 @@ let pin ?(unpin_only=false) () =
     match found with
     | _::_ -> found
     | [] ->
-      try [OpamPackage.Name.of_string basename] with
+      try [OpamPackage.Name.of_string basename, None] with
       | Failure _ ->
         OpamConsole.error_and_exit `Bad_arguments
           "Could not infer a package name from %s, please specify it on the \
@@ -2279,7 +2288,7 @@ let pin ?(unpin_only=false) () =
   in
   let pin
       global_options build_options
-      kind edit no_act dev_repo print_short command params =
+      kind edit no_act dev_repo print_short recurse command params =
     apply_global_options global_options;
     apply_build_options build_options;
     let action = not no_act in
@@ -2352,12 +2361,14 @@ let pin ?(unpin_only=false) () =
          in
          `Error (true, msg)
        | `Source url ->
-         let names = guess_names url in
+         let names = guess_names ~recurse url in
          let names = match names with
            | _::_::_ ->
              if OpamConsole.confirm
                  "This will pin the following packages: %s. Continue ?"
-                 (OpamStd.List.concat_map ", " OpamPackage.Name.to_string names)
+                 (OpamStd.List.concat_map ", "
+                    (fun (n, _) -> OpamPackage.Name.to_string n)
+                    names)
              then names
              else OpamStd.Sys.exit_because `Aborted
            | _ -> names
@@ -2365,8 +2376,8 @@ let pin ?(unpin_only=false) () =
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let st =
-           List.fold_left (fun st name ->
-               try OpamPinCommand.source_pin st name ~edit (Some url)
+           List.fold_left (fun st (name, subpath) ->
+               try OpamPinCommand.source_pin st name ~edit ?subpath (Some url)
                with OpamPinCommand.Aborted
                   | OpamPinCommand.Nothing_to_do -> st)
              st names
@@ -2375,7 +2386,7 @@ let pin ?(unpin_only=false) () =
            let _st =
              OpamClient.upgrade_t
                ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
-               (List.map (fun n -> n, None) names) st
+               (List.map (fun (n, _) -> n, None) names) st
            in
            `Ok ()
          else `Ok ())
@@ -2394,7 +2405,8 @@ let pin ?(unpin_only=false) () =
   Term.ret
     Term.(const pin
           $global_options $build_options
-          $kind $edit $no_act $dev_repo $print_short_flag $command $params),
+          $kind $edit $no_act $dev_repo $print_short_flag $recurse
+          $command $params),
   term_info "pin" ~doc ~man
 
 (* SOURCE *)
@@ -2558,16 +2570,20 @@ let lint =
        an opam file directly."
       Arg.(some package) None
   in
-  let lint global_options files package normalise short warnings_sel =
+  let recurse =
+    mk_flag ["r";"rec"]
+      "Allow recursive lookups of .opam files."
+  in
+  let lint global_options files package normalise short recurse warnings_sel =
     apply_global_options global_options;
     let opam_files_in_dir d =
-      match OpamPinned.files_in_source d with
+      match OpamPinned.files_in_source ~recurse d with
       | [] ->
         OpamConsole.warning "No opam files found in %s"
           (OpamFilename.Dir.to_string d);
         []
       | l ->
-        List.map (fun (_name,f) -> Some f) l
+        List.map (fun (_name,f,_) -> Some f) l
     in
     let files = match files, package with
       | [], None -> (* Lookup in cwd if nothing was specified *)
@@ -2661,7 +2677,8 @@ let lint =
     in
     if err then OpamStd.Sys.exit_because `False
   in
-  Term.(const lint $global_options $files $package $normalise $short $warnings),
+  Term.(const lint $global_options $files $package $normalise $short
+        $recurse $warnings),
   term_info "lint" ~doc ~man
 
 (* CLEAN *)
