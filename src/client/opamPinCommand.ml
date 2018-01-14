@@ -68,7 +68,11 @@ let get_source_definition ?version st nv url =
   OpamUpdate.fetch_dev_package url srcdir nv @@| function
   | Not_available (_,s) -> raise (Fetch_Fail s)
   | Up_to_date _ | Result _ ->
-    match OpamPinned.find_opam_file_in_source nv.name srcdir with
+    let subsrcdir =
+      match OpamFile.URL.subpath url with
+      | None -> srcdir
+      | Some subpath -> OpamFilename.Op.(srcdir / subpath) in
+    match OpamPinned.find_opam_file_in_source nv.name subsrcdir with
     | None -> None
     | Some f ->
       match read_opam_file_for_pinning nv.name f (OpamFile.URL.url url) with
@@ -378,12 +382,20 @@ and source_pin
     st name
     ?version ?edit:(need_edit=false) ?opam:opam_opt ?(quiet=false)
     ?(force=false) ?(ignore_extra_pins=OpamClientConfig.(!r.ignore_pin_depends))
+    ?subpath
     target_url
   =
-  log "pin %a to %a %a"
+  log "pin %a to %a %a%a"
     (slog OpamPackage.Name.to_string) name
     (slog (OpamStd.Option.to_string OpamPackage.Version.to_string)) version
-    (slog (OpamStd.Option.to_string ~none:"none" OpamUrl.to_string)) target_url;
+    (slog (OpamStd.Option.to_string ~none:"none" OpamUrl.to_string)) target_url
+    (slog (OpamStd.Option.to_string ~none:"" (fun x -> " ("^x^")"))) subpath;
+ (* let installed_version =
+    try
+      Some (OpamPackage.version
+              (OpamSwitchState.find_installed_package_by_name st name))
+    with Not_found -> None
+  in *)
 
   let cur_version, cur_urlf =
     try
@@ -444,7 +456,7 @@ and source_pin
 
   let nv = OpamPackage.create name pin_version in
 
-  let urlf = OpamStd.Option.Op.(target_url >>| OpamFile.URL.create) in
+  let urlf = OpamStd.Option.Op.(target_url >>| OpamFile.URL.create ?subpath) in
 
   let temp_file =
     OpamPath.Switch.Overlay.tmp_opam st.switch_global.root st.switch name

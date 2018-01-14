@@ -163,29 +163,51 @@ let name_of_opam_filename dir file =
   try Some (OpamPackage.Name.of_string name)
   with Failure _ -> None
 
-let files_in_source d =
+let files_in_source ?(recurse = false) d =
   let baseopam = OpamFilename.Base.of_string "opam" in
-  let files d =
-    List.filter (fun f ->
-        OpamFilename.basename f = baseopam ||
-        OpamFilename.check_suffix f ".opam")
-      (OpamFilename.files d) @
-    OpamStd.List.filter_map (fun d ->
-        if OpamFilename.(basename_dir d = Base.of_string "opam") ||
-           OpamStd.String.ends_with ~suffix:".opam"
-             (OpamFilename.Dir.to_string d)
-        then OpamFilename.opt_file OpamFilename.Op.(d//"opam")
-        else None)
+  let rec files acc base d =
+    let acc =
+      OpamStd.List.filter_map (fun f ->
+          if OpamFilename.basename f = baseopam ||
+             OpamFilename.check_suffix f ".opam" then
+            Some (f, base)
+          else
+            None)
+        (OpamFilename.files d) @ acc in
+    List.fold_left
+      (fun acc d ->
+         if OpamFilename.(basename_dir d = Base.of_string "opam") ||
+            OpamStd.String.ends_with ~suffix:".opam"
+              (OpamFilename.Dir.to_string d)
+         then
+           match OpamFilename.opt_file OpamFilename.Op.(d//"opam") with
+           | None -> acc
+           | Some f -> (f, base) :: acc
+         else if recurse then
+           let basename = OpamFilename.(Base.to_string (basename_dir d)) in
+           let base = match base with
+             | None -> Some basename
+             | Some base -> Some (Filename.concat base basename) in
+           files acc base d
+         else
+           acc)
+      acc
       (OpamFilename.dirs d)
   in
-  files d @ files (d / "opam") |>
-  List.map check_locked |>
+  files [] None d @ files [] None (d / "opam") |>
+  List.map
+    (fun (f, s) ->
+       match OpamStateConfig.(!r.locked) with
+       | None -> f, s
+       | Some ext ->
+         (let fl = OpamFilename.add_extension f ext in
+          if OpamFilename.exists fl then fl else f), s) |>
   OpamStd.List.filter_map
-    (fun f ->
+    (fun (f, subpath) ->
        try
          (* Ignore empty files *)
          if (Unix.stat (OpamFilename.to_string f)).Unix.st_size = 0 then None
-         else Some (name_of_opam_filename d f, OpamFile.make f)
+         else Some (name_of_opam_filename d f, OpamFile.make f, subpath)
        with Unix.Unix_error _ ->
          OpamConsole.error "Can not read %s, ignored."
            (OpamFilename.to_string f);
