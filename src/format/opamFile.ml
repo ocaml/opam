@@ -1821,11 +1821,12 @@ module URLSyntax = struct
     mirrors : url list;
     checksum: OpamHash.t list;
     errors  : (string * Pp.bad_format) list;
+    subpath : string option;
   }
 
-  let create ?(mirrors=[]) ?(checksum=[]) url =
+  let create ?(mirrors=[]) ?(checksum=[]) ?subpath url =
     {
-      url; mirrors; checksum; errors = [];
+      url; mirrors; checksum; errors = []; subpath;
     }
 
   let empty = {
@@ -1833,15 +1834,18 @@ module URLSyntax = struct
     mirrors = [];
     checksum= [];
     errors  = [];
+    subpath = None;
   }
 
   let url t = t.url
   let mirrors t = t.mirrors
   let checksum t = t.checksum
+  let subpath t = t.subpath
 
   let with_url url t = { t with url }
   let with_mirrors mirrors t = { t with mirrors }
   let with_checksum checksum t = { t with checksum = checksum }
+  let with_subpath subpath t = { t with subpath = Some subpath }
 
   let fields =
     let with_url url t =
@@ -1868,6 +1872,9 @@ module URLSyntax = struct
            (Pp.V.string -| Pp.of_module "checksum" (module OpamHash)));
       "mirrors", Pp.ppacc with_mirrors mirrors
         (Pp.V.map_list ~depth:1 Pp.V.url);
+      "subpath", Pp.ppacc_opt
+        with_subpath subpath
+        Pp.V.string;
     ]
 
   let pp_contents =

@@ -235,7 +235,9 @@ module URL: sig
 
   include IO_FILE
 
-  val create: ?mirrors:url list -> ?checksum:OpamHash.t list -> url -> t
+  val create:
+    ?mirrors:url list -> ?checksum:OpamHash.t list -> ?subpath:string ->
+    url -> t
 
   (** URL address *)
   val url: t -> url
@@ -247,6 +249,8 @@ module URL: sig
 
   (** Constructor *)
   val with_checksum: OpamHash.t list -> t -> t
+
+  val subpath: t -> string option
 
 end
 
