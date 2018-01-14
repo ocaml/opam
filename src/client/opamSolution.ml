@@ -404,7 +404,15 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
             !t_ref.conf_files; }
     in
     let nv = action_contents action in
-    let source_dir = OpamSwitchState.source_dir t nv in
+    let opam = OpamSwitchState.opam t nv in
+    let source_dir =
+      let raw = OpamSwitchState.source_dir t nv in
+      match OpamFile.OPAM.url opam with
+      | None -> raw
+      | Some url ->
+        match OpamFile.URL.subpath url with
+        | None -> raw
+        | Some subpath -> OpamFilename.Op.(raw / subpath) in
     if OpamClientConfig.(!r.fake) then
       match action with
       | `Build _ | `Fetch _ -> Done (`Successful (installed, removed))

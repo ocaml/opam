@@ -637,14 +637,20 @@ let list st ~short =
   let lines nv =
     try
       let opam = OpamSwitchState.opam st nv in
-      let url = OpamFile.OPAM.get_url opam in
+      let url = OpamFile.OPAM.url opam in
       let kind, target =
         if OpamSwitchState.is_version_pinned st nv.name then
           "version", OpamPackage.Version.to_string nv.version
         else
         match url with
-        | Some u ->
-          OpamUrl.string_of_backend u.OpamUrl.backend, OpamUrl.to_string u
+        | Some url ->
+          let u = OpamFile.URL.url url in
+          let subpath =
+            match OpamFile.URL.subpath url with
+            | None -> ""
+            | Some s -> " ("^s^")" in
+          OpamUrl.string_of_backend u.OpamUrl.backend,
+          OpamUrl.to_string u ^ subpath
         | None -> "local definition", ""
       in
       let state, extra =
