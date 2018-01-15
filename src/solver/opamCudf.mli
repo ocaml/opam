@@ -164,7 +164,7 @@ val s_installed_root: string
 (** true if the package is pinned to this version *)
 val s_pinned: string
 
-(** the number of versions of the package since this one*)
+(** the number of versions of the package since this one, cubed *)
 val s_version_lag: string
 
 (** {2 Pretty-printing} *)
