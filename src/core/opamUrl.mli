@@ -32,7 +32,9 @@ type t = {
 
 (** Same as [of_string], but allows enforcing the expected backend, and may
     otherwise guess version control from the suffix by default (for e.g.
-    https://foo/bar.git) (this should be disabled when parsing from files) *)
+    https://foo/bar.git). (this should be disabled when parsing from files).
+    Note that [handle_suffix] also handles user-name in ssh addresses (e.g.
+    "ssh://git@github.com/...") *)
 val parse: ?backend:backend -> ?handle_suffix:bool -> string -> t
 
 include OpamStd.ABSTRACT with type t := t

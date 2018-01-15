@@ -116,8 +116,12 @@ let parse ?backend ?(handle_suffix=true) s =
         let of_suffix ~default =
           if not handle_suffix then default else
           match suffix with
-          | None -> default
-          | Some sf -> try vc_of_string sf with Failure _ -> default
+          | Some sf -> (try vc_of_string sf with Failure _ -> default)
+          | None ->
+            match OpamStd.String.cut_at path '@' with
+            | Some (user, _) ->
+              (try vc_of_string user with Failure _ -> default)
+            | None -> default
         in
         match transport with
         | None -> of_suffix ~default:`rsync
