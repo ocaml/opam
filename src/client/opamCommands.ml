@@ -2289,7 +2289,7 @@ let pin ?(unpin_only=false) () =
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
       OpamClient.PIN.list st ~short:print_short;
       `Ok ()
-    | Some `remove, arg ->
+    | Some `remove, (_::_ as arg) ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       let err, to_unpin =
