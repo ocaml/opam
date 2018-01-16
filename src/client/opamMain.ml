@@ -151,7 +151,9 @@ let run default commands =
   | OpamStd.Sys.Exit 0 -> ()
   | OpamStd.Sys.Exec (cmd,args,env) ->
     OpamStd.Sys.exec_at_exit ();
-    Unix.execvpe cmd args env
+    (try Unix.execvpe cmd args env with
+     | Unix.Unix_error (Unix.ENOENT, _, _) -> exit 127
+     | Unix.Unix_error (Unix.EACCES, _, _) -> exit 126)
   | e                  ->
     flush stdout;
     flush stderr;
