@@ -72,9 +72,15 @@ let download_args ~url ~out ~retry ?checksum ~compress =
 
 let tool_return url ret =
   match Lazy.force OpamRepositoryConfig.(!r.download_tool) with
-  | _, `Default -> Done (OpamSystem.raise_on_process_error ret)
+  | _, `Default ->
+    if OpamProcess.is_failure ret then
+      Printf.ksprintf failwith "Download command failed: %s"
+        (OpamProcess.result_summary ret)
+    else Done ()
   | _, `Curl ->
-    OpamSystem.raise_on_process_error ret;
+    if OpamProcess.is_failure ret then
+      Printf.ksprintf failwith "Curl failed: %s"
+        (OpamProcess.result_summary ret);
     match ret.OpamProcess.r_stdout with
     | [] ->
       failwith (Printf.sprintf "curl: empty response while downloading %s"
