@@ -186,8 +186,7 @@ let in_dir dir fn =
     reset_cwd ();
     r
   with e ->
-    reset_cwd ();
-    raise e
+    OpamStd.Exn.finalise e reset_cwd
 
 let list kind dir =
   try
@@ -244,8 +243,8 @@ let with_tmp_dir fn =
     remove_dir dir;
     e
   with e ->
-    remove_dir dir;
-    raise e
+    OpamStd.Exn.finalise e @@ fun () ->
+    remove_dir dir
 
 let with_tmp_dir_job fjob =
   let dir = mk_temp_dir () in

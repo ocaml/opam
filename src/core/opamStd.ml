@@ -1060,6 +1060,11 @@ module Exn = struct
       in
       Printf.sprintf "Backtrace:\n%s" b
 
+  let finalise e f =
+    let bt = Printexc.get_raw_backtrace () in
+    f ();
+    Printexc.raise_with_backtrace e bt
+
 end
 
 

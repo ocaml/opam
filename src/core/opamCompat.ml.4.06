@@ -13,4 +13,5 @@ module Buffer = Buffer
 module Filename = Filename
 module String = String
 module Char = Char
+module Printexc = Printexc
 module Unix = Unix

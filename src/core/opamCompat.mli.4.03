@@ -16,6 +16,11 @@ module Filename = Filename
 module String = String
 module Char = Char
 
+module Printexc : sig
+  include module type of Printexc
+  val raise_with_backtrace: exn -> raw_backtrace -> 'a
+end
+
 module Unix : sig
   include module type of Unix
   val map_file : Unix.file_descr -> ?pos:int64 -> ('a, 'b) Bigarray.kind ->

@@ -14,6 +14,11 @@ module Filename = Filename
 module String = String
 module Char = Char
 
+module Printexc = struct
+  include Printexc
+  let raise_with_backtrace e _bt = raise e
+end
+
 module Unix = struct
   include Unix
 
