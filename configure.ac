@@ -18,10 +18,20 @@ if test "x$OCAMLC" = "xno"; then
    AC_MSG_ERROR([You must install the OCaml compiler])
 fi
 AC_CHECK_OCAML_OS_TYPE
-if test "${OCAML_OS_TYPE}" = "Win32" ; then
+AS_IF([ test "${OCAML_OS_TYPE}" = "Win32"],[
   OCAMLLIB="$(echo "${OCAMLLIB}" | tr -d '\015' | sed -e 's|\\|/|g')"
-fi
+  WIN32=1
+  EXE=.exe
+],[
+  EXE=
+  WIN32=0
+])
 
+AC_SUBST(WIN32)
+AC_SUBST(EXE)
+
+# AC_PREFIX_DEFAULT must be at the top level, which is the reason for the
+# somewhat convoluted pair of sed expressions...
 AC_PREFIX_DEFAULT([`echo "os_type: ${OCAML_OS_TYPE}" | sed -e "s;^os_type: Win32;C:/OPAM;" -e "s;^os_type:.*;/usr/local;"`])
 
 AC_ARG_ENABLE([version_check],
@@ -54,9 +64,11 @@ AC_SUBST(CPATH,$CPATH)
 AC_SUBST(LIBRARY_PATH,$LIBRARY_PATH)
 
 # Check that OCaml version is greater or equal to 4.02.3
+# Native Windows builds require at least 4.06.0 for the Unicode runtime.
 AS_IF([test "x${enable_version_check}" != "xno"], [
+  AS_IF([ test ${WIN32} -eq 1 ],[MIN_OCAML_VERSION=4.06.0],[MIN_OCAML_VERSION=4.02.3])
   AX_COMPARE_VERSION(
-    [$OCAMLVERSION], [lt], [4.02.3],
+    [$OCAMLVERSION], [lt], [$MIN_OCAML_VERSION],
     AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported]))
 ])
 
@@ -120,17 +132,6 @@ AS_IF([test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"],[
 ])
 AC_SUBST(CONF_OCAMLFLAGS)
 AC_SUBST(CONF_CFLAGS)
-
-AS_IF([ test "${OCAML_OS_TYPE}" = "Win32"],[
-  WIN32=1
-  EXE=.exe
-],[
-  EXE=
-  WIN32=0
-])
-
-AC_SUBST(WIN32)
-AC_SUBST(EXE)
 
 AS_IF([ test ${WIN32} -eq 1 -a "$GCC" = "yes"],[
   # Pre-Visual Studio 2013 Microsoft C compiler adhere to the C89 standard, well

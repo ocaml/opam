@@ -58,9 +58,15 @@ module Symbols : sig
   val south_east_arrow : OpamCompat.Uchar.t
   val clockwise_open_circle_arrow : OpamCompat.Uchar.t
   val greek_small_letter_lambda : OpamCompat.Uchar.t
+  val latin_capital_letter_o_with_stroke : OpamCompat.Uchar.t
+  val six_pointed_black_star : OpamCompat.Uchar.t
+  val upwards_arrow : OpamCompat.Uchar.t
+  val downwards_arrow : OpamCompat.Uchar.t
+  val up_down_arrow : OpamCompat.Uchar.t
 end
 
-val utf8_symbol: OpamCompat.Uchar.t -> string -> string
+val utf8_symbol:
+  OpamCompat.Uchar.t -> ?alternates:OpamCompat.Uchar.t list -> string -> string
 
 (** Logging *)
 

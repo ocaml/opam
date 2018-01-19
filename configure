@@ -612,8 +612,6 @@ OCAMLOBJINFO
 INC_PREPEND
 LIB_PREPEND
 PATH_PREPEND
-EXE
-WIN32
 CONF_CFLAGS
 CONF_OCAMLFLAGS
 MCCS_ENABLED
@@ -629,6 +627,8 @@ AWK
 LIBRARY_PATH
 CPATH
 LIB_PREFIX
+EXE
+WIN32
 OCAML_OS_TYPE
 OCAMLBUILD
 OCAMLDOCDOTOPT
@@ -3100,10 +3100,24 @@ EOF
 $as_echo "$OCAML_OS_TYPE" >&6; }
 
 
-if test "${OCAML_OS_TYPE}" = "Win32" ; then
+if  test "${OCAML_OS_TYPE}" = "Win32"; then :
+
   OCAMLLIB="$(echo "${OCAMLLIB}" | tr -d '\015' | sed -e 's|\\|/|g')"
+  WIN32=1
+  EXE=.exe
+
+else
+
+  EXE=
+  WIN32=0
+
 fi
 
+
+
+
+# AC_PREFIX_DEFAULT must be at the top level, which is the reason for the
+# somewhat convoluted pair of sed expressions...
 
 
 # Check whether --enable-version_check was given.
@@ -3149,6 +3163,7 @@ LIBRARY_PATH=$LIBRARY_PATH
 
 
 # Check that OCaml version is greater or equal to 4.02.3
+# Native Windows builds require at least 4.06.0 for the Unicode runtime.
 for ac_prog in gawk mawk nawk awk
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
@@ -3193,6 +3208,11 @@ done
 
 if test "x${enable_version_check}" != "xno"; then :
 
+  if  test ${WIN32} -eq 1 ; then :
+  MIN_OCAML_VERSION=4.06.0
+else
+  MIN_OCAML_VERSION=4.02.3
+fi
 
 
 
@@ -3212,7 +3232,7 @@ if test "x${enable_version_check}" != "xno"; then :
                      -e 's/[^0-9]//g'`
 
 
-  ax_compare_version_B=`echo "4.02.3" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+  ax_compare_version_B=`echo "$MIN_OCAML_VERSION" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
                      -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
                      -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
                      -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
@@ -3944,21 +3964,6 @@ else
   CONF_CFLAGS=
 
 fi
-
-
-
-if  test "${OCAML_OS_TYPE}" = "Win32"; then :
-
-  WIN32=1
-  EXE=.exe
-
-else
-
-  EXE=
-  WIN32=0
-
-fi
-
 
 
 

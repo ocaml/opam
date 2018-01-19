@@ -27,6 +27,24 @@ type console_screen_buffer_info = {
     (** Maximum displayable size of the console for this screen buffer *)
 }
 
+(** CONSOLE_FONT_INFOEX struct
+    (see https://docs.microsoft.com/en-us/windows/console/console-font-infoex)
+ *)
+type console_font_infoex = {
+  font: int;
+    (** Index in the system's console font table *)
+  fontSize: int * int;
+    (** Size, in logical units, of the font *)
+  fontFamily: int;
+    (** Font pitch and family (low 8 bits only).
+        See tmPitchAndFamily in
+        https://msdn.microsoft.com/library/windows/desktop/dd145132 *)
+  fontWeight: int;
+    (** Font weight. Normal = 400; Bold = 700 *)
+  faceName: string;
+    (** Name of the typeface *)
+}
+
 (** Win32 API handles *)
 type handle
 

@@ -9,6 +9,8 @@
 /**************************************************************************/
 
 #define CAML_NAME_SPACE
+/* We need the UTF16 conversion functions */
+#define CAML_INTERNALS
 #include <stdio.h>
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
@@ -377,4 +379,132 @@ CAMLprim value OPAMW_WriteRegistry(value hKey,
 #endif
 
   OPAMreturn(Val_unit);
+}
+
+CAMLprim value OPAMW_GetConsoleOutputCP(value unit)
+{
+  CAMLparam1(unit);
+
+  OPAMreturn(Val_int(GetConsoleOutputCP()));
+}
+
+CAMLprim value OPAMW_GetCurrentConsoleFontEx(value hConsoleOutput,
+                                             value bMaximumWindow)
+{
+  CAMLparam2(hConsoleOutput, bMaximumWindow);
+#ifdef _WIN32
+  CAMLlocal3(result, coord, name);
+
+  int len;
+  CONSOLE_FONT_INFOEX fontInfo;
+  fontInfo.cbSize = sizeof(fontInfo);
+
+  if (GetCurrentConsoleFontEx(HANDLE_val(hConsoleOutput),
+                              Bool_val(bMaximumWindow),
+                              &fontInfo))
+  {
+    result = caml_alloc(5, 0);
+    Store_field(result, 0, Val_int(fontInfo.nFont));
+    coord = caml_alloc(2, 0);
+    Store_field(coord, 0, Val_int(fontInfo.dwFontSize.X));
+    Store_field(coord, 0, Val_int(fontInfo.dwFontSize.Y));
+    Store_field(result, 1, coord);
+    Store_field(result, 2, Val_int(fontInfo.FontFamily));
+    Store_field(result, 3, Val_int(fontInfo.FontWeight));
+    Store_field(result, 4, caml_copy_string_of_utf16(fontInfo.FaceName));
+  }
+  else
+  {
+    caml_raise_not_found();
+  }
+#endif
+
+  OPAMreturn(result);
+}
+
+CAMLprim value OPAMW_CreateGlyphChecker(value fontName)
+{
+  CAMLparam1(fontName);
+#ifdef _WIN32
+  CAMLlocal2(result, handle);
+
+  /*
+   * Any device context will do to load the font, so use the Screen DC.
+   */
+  HDC hDC = GetDC(NULL);
+
+  if (hDC)
+  {
+    wchar_t* lpszFace = caml_stat_strdup_to_utf16(String_val(fontName));
+    HFONT hFont =
+      CreateFontW(0, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                  OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                  DEFAULT_PITCH, lpszFace);
+    caml_stat_free(lpszFace);
+
+    if (hFont)
+    {
+      if (SelectObject(hDC, hFont))
+      {
+        result = caml_alloc_tuple(2);
+        handle = caml_alloc_custom(&HandleOps, sizeof(HANDLE), 0, 1);
+        HANDLE_val(handle) = hDC;
+        Store_field(result, 0, handle);
+        handle = caml_alloc_custom(&HandleOps, sizeof(HANDLE), 0, 1);
+        HANDLE_val(handle) = hFont;
+        Store_field(result, 1, handle);
+      }
+      else
+      {
+        caml_failwith("OPAMW_CheckGlyphs: SelectObject");
+      }
+    }
+    else
+    {
+      caml_failwith("OPAMW_CheckGlyphs: CreateFontW");
+    }
+  }
+  else
+  {
+    caml_failwith("OPAMW_CheckGlyphs: GetDC");
+  }
+#endif
+
+  OPAMreturn(result);
+}
+
+CAMLprim value OPAMW_DeleteGlyphChecker(value checker)
+{
+  CAMLparam1(checker);
+
+#ifdef _WIN32
+  DeleteObject(HANDLE_val(Field(checker, 1)));
+  ReleaseDC(NULL, HANDLE_val(Field(checker, 0)));
+#endif
+
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value OPAMW_HasGlyph(value checker, value scalar)
+{
+  CAMLparam2(checker, scalar);
+#ifdef _WIN32
+  BOOL result = FALSE;
+  HDC hDC = HANDLE_val(Field(checker, 0));
+
+  WCHAR test = (WCHAR)Int_val(scalar);
+  WORD index = 0;
+
+  switch (GetGlyphIndicesW(hDC, &test, 1, &index, GGI_MARK_NONEXISTING_GLYPHS))
+  {
+    case 1:
+      break;
+    case GDI_ERROR:
+      caml_failwith("OPAMW_CheckGlyphs: GetGlyphIndicesW");
+    default:
+      caml_failwith("OPAMW_CheckGlyphs: GetGlyphIndicesW (unexpected return)");
+  }
+#endif
+
+  OPAMreturn(Val_bool(test != 0xffff));
 }

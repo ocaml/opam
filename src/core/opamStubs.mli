@@ -68,3 +68,25 @@ val writeRegistry :
  
       @raise Failure If the value could not be set.
       @raise Not_found If [key] does not exist. *)
+
+val getConsoleOutputCP : unit -> int
+(** Windows only. Retrieves the current Console Output Code Page. *)
+
+val getCurrentConsoleFontEx : handle -> bool -> console_font_infoex
+(** Windows only. Gets information on the current console output font. *)
+
+val create_glyph_checker : string -> handle * handle
+(** Windows only. Given a font name, returns a pair consisting of a screen DC
+    and a font object, which will have been selected into the DC.
+
+    @raise Failure If anything goes wrong with the GDI calls. *)
+
+val delete_glyph_checker : handle * handle -> unit
+(** Windows only. Given [(dc, font)], deletes the font object and releases the
+    DC. *)
+
+val has_glyph : handle * handle -> OpamCompat.Uchar.t -> bool
+(** Windows only. [has_glyph (dc, font) scalar] returns [true] if [font]
+    contains a glyph for [scalar].
+
+    @raise Failure If the call to [GetGlyphIndicesW] fails. *)

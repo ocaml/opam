@@ -41,18 +41,41 @@ let disp_status_line () =
 
 let utf8, utf8_extended =
   let auto = lazy (
-    let checkv v =
-      try Some (OpamStd.String.ends_with ~suffix:"UTF-8" (OpamStd.Env.get v))
-      with Not_found -> None
-    in
-    OpamStd.Option.Op.(checkv "LC_ALL" ++ checkv "LANG" +! false)
+    if Sys.win32 then
+      let attempt handle =
+        let (info : OpamStubs.console_font_infoex) =
+          let hConsoleOutput = OpamStubs.getStdHandle handle in
+          OpamStubs.getCurrentConsoleFontEx hConsoleOutput false
+        in
+        (*
+         * The Windows Console will be able to output Unicode as long as a
+         * TrueType font has been selected (Consolas or Lucida Console are
+         * installed by default) and the output code page has been set to
+         * CP_UTF8 (65001)
+         * TMPF_TRUETYPE = 0x4 (wingdi.h)
+         *)
+        info.fontFamily land 0x4 <> 0 && OpamStubs.getConsoleOutputCP () = 65001
+      in
+      try
+        attempt OpamStubs.STD_OUTPUT_HANDLE
+      with Not_found ->
+        try
+          attempt OpamStubs.STD_INPUT_HANDLE
+        with Not_found ->
+          false
+    else
+      let checkv v =
+        try Some (OpamStd.String.ends_with ~suffix:"UTF-8" (OpamStd.Env.get v))
+        with Not_found -> None
+      in
+      OpamStd.Option.Op.(checkv "LC_ALL" ++ checkv "LANG" +! false)
   ) in
   (fun () -> match OpamCoreConfig.(!r.utf8) with
      | `Always | `Extended -> true
      | `Never -> false
      | `Auto -> Lazy.force auto),
   (fun () -> match OpamCoreConfig.(!r.utf8) with
-     | `Extended -> true
+     | `Extended -> not Sys.win32
      | `Always | `Never -> false
      | `Auto -> Lazy.force auto && OpamStd.Sys.(os () = Darwin))
 
@@ -69,13 +92,81 @@ module Symbols = struct
   let south_east_arrow = Uchar.of_int 0x2198
   let clockwise_open_circle_arrow = Uchar.of_int 0x21bb
   let greek_small_letter_lambda = Uchar.of_int 0x03bb
+  let latin_capital_letter_o_with_stroke = Uchar.of_int 0x00d8
+  let six_pointed_black_star = Uchar.of_int 0x2736
+  let upwards_arrow = Uchar.of_int 0x2191
+  let downwards_arrow = Uchar.of_int 0x2193
+  let up_down_arrow = Uchar.of_int 0x2195
 end
 
-let utf8_symbol c s =
+type win32_glyph_checker = {
+  font: string;
+  checker: OpamStubs.handle * OpamStubs.handle;
+  glyphs: (Uchar.t, bool) Hashtbl.t;
+}
+let win32_glyph_checker = ref None
+let () =
+  if Sys.win32 then
+    let release_checker checker () =
+      match checker with
+      | {contents = Some {checker; _}} ->
+          OpamStubs.delete_glyph_checker checker
+      | _ ->
+        ()
+    in
+    at_exit (release_checker win32_glyph_checker)
+
+let utf8_symbol main ?(alternates=[]) s =
   if utf8 () then
-    let b = Buffer.create 4 in
-    Buffer.add_utf_8_uchar b c;
-    Buffer.contents b
+    try
+      let scalar =
+        if Sys.win32 then
+          let current_font =
+            let open OpamStubs in
+            try
+              let stdout = getStdHandle OpamStubs.STD_OUTPUT_HANDLE in
+              (getCurrentConsoleFontEx stdout false).faceName
+            with Not_found ->
+              let stderr = getStdHandle OpamStubs.STD_ERROR_HANDLE in
+              (getCurrentConsoleFontEx stderr false).faceName
+          in
+          let checker =
+            let new_checker =
+              lazy {font = current_font;
+                    checker = OpamStubs.create_glyph_checker current_font;
+                    glyphs = Hashtbl.create 16}
+            in
+            match win32_glyph_checker with
+            | {contents = Some {font; checker; _}} when font <> current_font ->
+                OpamStubs.delete_glyph_checker checker;
+                let checker = Lazy.force new_checker in
+                win32_glyph_checker := Some checker;
+                checker
+            | {contents = None} ->
+                let checker = Lazy.force new_checker in
+                win32_glyph_checker := Some checker;
+                checker
+            | {contents = Some checker} ->
+                checker
+          in
+          let check_glyph scalar =
+            try
+              Hashtbl.find checker.glyphs scalar
+            with Not_found ->
+              let has_glyph = OpamStubs.has_glyph checker.checker scalar in
+              Hashtbl.add checker.glyphs scalar has_glyph;
+              has_glyph
+          in
+          List.find check_glyph (main::alternates)
+        else
+          main
+      in
+      let b = Buffer.create 4 in
+      Buffer.add_utf_8_uchar b scalar;
+      Buffer.contents b
+    with Failure _
+       | Not_found ->
+      s
   else
     s
 
