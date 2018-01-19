@@ -277,9 +277,9 @@ let help_sections = [
   `P "$(i,OPAMYES) see option `--yes'.";
 
   `S "EXIT STATUS";
-  `P "As an exception to the following, the `exec' command mimics a shell and \
-      returns 127 if the command was not found, 126 if it didn't have the \
-      required permissions, and the command's exit value otherwise."
+  `P "As an exception to the following, the `exec' command returns 127 if the \
+      command was not found or couldn't be executed, and the command's exit \
+      value otherwise."
 ] @
   List.map (fun (reason, code) ->
       `I (string_of_int code, match reason with

@@ -321,4 +321,6 @@ let exec gt ~inplace_path command =
     OpamTypesBase.env_array
       (OpamEnv.get_full ~opamswitch ~force_path:(not inplace_path) st)
   in
-  raise (OpamStd.Sys.Exec (cmd, args, env))
+  match OpamSystem.resolve_command ~env cmd with
+  | Some cmd -> raise (OpamStd.Sys.Exec (cmd, args, env))
+  | None -> raise (OpamStd.Sys.Exit 127)

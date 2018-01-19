@@ -37,8 +37,8 @@ MD5_opam-file-format = 5408798ca3af6e36379dd34b1b618b9c
 URL_result = https://github.com/janestreet/result/archive/1.2.tar.gz
 MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
 
-URL_jbuilder = https://github.com/janestreet/jbuilder/archive/08050696fb701dafcd1372aadfaa800a50bc01ca.tar.gz
-MD5_jbuilder = 53b65232ebb5fd319acf90922342615d
+URL_jbuilder = https://github.com/janestreet/jbuilder/archive/1.0+beta16.tar.gz
+MD5_jbuilder = baef04fc99d52e98736db9e53a72bfce
 
 URL_ocaml = http://caml.inria.fr/pub/distrib/ocaml-4.06/ocaml-4.06.0.tar.gz
 MD5_ocaml = 66e5439eb63dbb8b8224cba5d1b20947

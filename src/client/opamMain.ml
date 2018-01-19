@@ -118,11 +118,19 @@ let check_and_run_external_commands () =
                 ignore @@
                 OpamClient.install st [OpamSolution.eq_atom_of_package nv]
               );
-            OpamConsole.header_msg "Carrying on to \"%s\""
-              (String.concat " " (Array.to_list Sys.argv));
-            OpamConsole.msg "\n";
-            let argv = Array.of_list (command :: args) in
-            raise (OpamStd.Sys.Exec (command, argv, env))
+            match OpamSystem.resolve_command ~env command with
+            | None ->
+              OpamConsole.error_and_exit `Package_operation_error
+                "Plugin %s was installed, but no %s command was found.\n\
+                 This is probably an error in the plugin package."
+                (OpamPackage.to_string nv)
+                command
+            | Some command ->
+              OpamConsole.header_msg "Carrying on to \"%s\""
+                (String.concat " " (Array.to_list Sys.argv));
+              OpamConsole.msg "\n";
+              let argv = Array.of_list (command :: args) in
+              raise (OpamStd.Sys.Exec (command, argv, env))
 
 let run default commands =
   OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
@@ -151,9 +159,7 @@ let run default commands =
   | OpamStd.Sys.Exit 0 -> ()
   | OpamStd.Sys.Exec (cmd,args,env) ->
     OpamStd.Sys.exec_at_exit ();
-    (try Unix.execvpe cmd args env with
-     | Unix.Unix_error (Unix.ENOENT, _, _) -> exit 127
-     | Unix.Unix_error (Unix.EACCES, _, _) -> exit 126)
+    Unix.execvpe cmd args env
   | e                  ->
     flush stdout;
     flush stderr;
