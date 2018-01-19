@@ -7,7 +7,7 @@ let p = succ p in
 let ocaml_minor = String.sub Sys.ocaml_version p (String.index_from Sys.ocaml_version p '.' - p) |> int_of_string in
 match Sys.argv.(1) with
 | "flags" ->
-  Printf.printf "(-safe-string)"
+  Printf.printf "()"
 | "compat" ->
   if ocaml_major < 4 || ocaml_major = 4 && ocaml_minor < 2 then begin
     Printf.eprintf "Unsupported version of OCaml: %d.%02d\n" ocaml_major ocaml_minor;
