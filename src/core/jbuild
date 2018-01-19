@@ -6,22 +6,9 @@
    (synopsis "OCaml Package Manager core internal stdlib")
    (libraries (re ocamlgraph unix bigarray))
    (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))
+   (preprocess (per_module
+                  ((action (run ${bin:cppo} -V OCAML:${ocaml_version} ${<})) (opamCompat))))
    (wrapped false)))
-
-(rule
-  ((targets (ocaml-compat.sexp))
-   (deps (../../shell/context_flags.ml))
-   (action (with-stdout-to ${@} (run ocaml ../../shell/context_flags.ml compat)))))
-
-(rule
-  ((targets (opamCompat.ml))
-   (deps (opamCompat.ml.4.02 opamCompat.ml.4.03 opamCompat.ml.4.05 opamCompat.ml.4.06))
-   (action (copy ${@}.${read:ocaml-compat.sexp} ${@}))))
-
-(rule
-  ((targets (opamCompat.mli))
-   (deps (opamCompat.mli.4.02 opamCompat.mli.4.03 opamCompat.ml.4.05 opamCompat.ml.4.06))
-   (action (copy ${@}.${read:ocaml-compat.sexp} ${@}))))
 
 (rule
   ((targets (opamVersion.ml))

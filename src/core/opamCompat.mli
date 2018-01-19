@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2016 OCamlPro                                             *)
+(*    Copyright 2018 OCamlPro                                             *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -8,18 +8,50 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Compatibility layer (Bytes, etc.) for different OCaml versions *)
+module String
+#if OCAML_VERSION >= (4, 3, 0)
+= String
+#else
+: sig
+  include module type of String
 
-module Bytes = Bytes
-module Buffer = Buffer
-module Filename = Filename
-module String = String
-module Char = Char
-module Printexc = Printexc
+  val lowercase_ascii : string -> string
+  val uppercase_ascii : string -> string
+  val capitalize_ascii : string -> string
+end
+#endif
 
-module Unix : sig
+module Char
+#if OCAML_VERSION >= (4, 3, 0)
+= Char
+#else
+: sig
+  include module type of Char
+
+  val lowercase_ascii: char -> char
+end
+#endif
+
+module Printexc
+#if OCAML_VERSION >= (4, 5, 0)
+= Printexc
+#else
+: sig
+  include module type of Printexc
+
+  val raise_with_backtrace: exn -> raw_backtrace -> 'a
+end
+#endif
+
+module Unix
+#if OCAML_VERSION >= (4, 6, 0)
+= Unix
+#else
+: sig
   include module type of Unix
+
   val map_file : Unix.file_descr -> ?pos:int64 -> ('a, 'b) Bigarray.kind ->
                  'c Bigarray.layout -> bool -> int array ->
                  ('a, 'b, 'c) Bigarray.Genarray.t
 end
+#endif

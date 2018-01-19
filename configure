@@ -587,6 +587,7 @@ ac_default_prefix=`echo "os_type: ${OCAML_OS_TYPE}" | sed -e "s;^os_type: Win32;
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 hasalldeps
+OCAML_PKG_cppo
 OCAML_PKG_mccs
 OCAML_PKG_opam_file_format
 OCAML_PKG_dose3_algo
@@ -4598,6 +4599,30 @@ $as_echo "not found" >&6; }
 
 
 
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package cppo" >&5
+$as_echo_n "checking for OCaml findlib package cppo... " >&6; }
+
+  unset found
+  unset pkg
+  found=no
+  for pkg in cppo  ; do
+    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
+$as_echo "found" >&6; }
+      OCAML_PKG_cppo=$pkg
+      found=yes
+      break
+    fi
+  done
+  if test "$found" = "no" ; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
+$as_echo "not found" >&6; }
+    OCAML_PKG_cppo=no
+  fi
+
+
+
+
 if test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"; then :
   as_fn_error $? "Option --without-mccs is not supported. You need to uninstall the 'mccs' package" "$LINENO" 5
 fi
@@ -4615,6 +4640,7 @@ if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_cudf" = "xno" ||
        test "x$OCAML_PKG_dose3_common" = "xno" ||
        test "x$OCAML_PKG_opam_file_format" = "xno" ||
+       test "x$OCAML_PKG_cppo" = "xno" ||
        test "x$OCAML_PKG_mccs$MCCS_DISABLED$MCCS_DEFAULT" = "xnofalse"; }; then :
 
   echo "============================================================================"
