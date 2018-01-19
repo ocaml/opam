@@ -31,12 +31,18 @@ let name_of_action = function
   | `Build _ -> "build"
 
 let symbol_of_action = function
-  | `Remove _ -> "\xe2\x8a\x98 " (* U+2298 *)
-  | `Install _ -> "\xe2\x88\x97 " (* U+2217 *)
-  | `Change (`Up,_,_) -> "\xe2\x86\x97 " (* U+2197 *)
-  | `Change (`Down,_,_) -> "\xe2\x86\x98 " (* U+2198 *)
-  | `Reinstall _ -> "\xe2\x86\xbb " (* U+21BB *)
-  | `Build _ -> "\xce\xbb " (* U+03BB *)
+  | `Remove _ ->
+      OpamConsole.utf8_symbol OpamConsole.Symbols.circled_division_slash ""
+  | `Install _ ->
+      OpamConsole.utf8_symbol OpamConsole.Symbols.asterisk_operator ""
+  | `Change (`Up,_,_) ->
+      OpamConsole.utf8_symbol OpamConsole.Symbols.north_east_arrow ""
+  | `Change (`Down,_,_) ->
+      OpamConsole.utf8_symbol OpamConsole.Symbols.south_east_arrow ""
+  | `Reinstall _ ->
+      OpamConsole.utf8_symbol OpamConsole.Symbols.clockwise_open_circle_arrow ""
+  | `Build _ ->
+      OpamConsole.utf8_symbol OpamConsole.Symbols.greek_small_letter_lambda ""
 
 let action_strings ?utf8 a =
   if utf8 = None && (OpamConsole.utf8 ()) || utf8 = Some true

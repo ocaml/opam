@@ -220,8 +220,7 @@ let cycle_conflict ~version_map univ cycle =
 
 let arrow_concat sl =
   let arrow =
-    if OpamConsole.utf8 () then " \xe2\x86\x92 " (* U+2192 *)
-    else " -> "
+    OpamConsole.utf8_symbol OpamConsole.Symbols.rightwards_arrow " -> "
   in
   String.concat (OpamConsole.colorise `yellow arrow) sl
 

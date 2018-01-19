@@ -656,7 +656,7 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
       cleanup_artefacts successful;
       let successful = PackageActionGraph.reduce successful in
       let failed = PackageActionGraph.reduce (filter_graph failed) in
-      let print_actions filter color header ?empty actions =
+      let print_actions filter tint header ?empty actions =
         let actions =
           PackageActionGraph.fold_vertex (fun v acc ->
               if filter v then v::acc else acc)
@@ -664,32 +664,31 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
         in
         let actions = List.sort PackageAction.compare actions in
         if actions <> [] then
-          OpamConsole.msg "%s%s\n%s%s\n"
-            (OpamConsole.colorise color
-               (if OpamConsole.utf8 ()
-                then "\xe2\x94\x8c\xe2\x94\x80 " (* U+250C U+2500 *)
-                else "+- "))
+          OpamConsole.(msg "%s%s\n%s%s\n"
+            (colorise tint
+               (Printf.sprintf "%s%s "
+                  (utf8_symbol Symbols.box_drawings_light_down_and_right "+")
+                  (utf8_symbol Symbols.box_drawings_light_horizontal "-")))
             header
             (OpamStd.Format.itemize
-               ~bullet:(OpamConsole.colorise color
-                          (if OpamConsole.utf8 ()
-                           then "\xe2\x94\x82 " (* U+2503 *) else "| "))
+               ~bullet:(colorise tint
+                 (utf8_symbol Symbols.box_drawings_light_vertical "|" ^ " "))
                (fun x -> x)
                (List.map (String.concat " ") @@
                 OpamStd.Format.align_table
                   (PackageAction.to_aligned_strings actions)))
-            (OpamConsole.colorise color
-               (if OpamConsole.utf8 ()
-                then "\xe2\x94\x94\xe2\x94\x80 " (* U+2514 U+2500 *)
-                else "+- "))
+            (colorise tint
+               (Printf.sprintf "%s%s "
+                  (utf8_symbol Symbols.box_drawings_light_up_and_right "+")
+                  (utf8_symbol Symbols.box_drawings_light_horizontal "-"))))
         else match empty with
           | Some s ->
-            OpamConsole.msg "%s%s\n"
-              (OpamConsole.colorise color
-                 (if OpamConsole.utf8 ()
-                  then "\xe2\x95\xb6\xe2\x94\x80 " (* U+2576 U+2500 *)
-                  else "- "))
-              s
+            OpamConsole.(msg "%s%s\n"
+              (colorise tint
+                 (Printf.sprintf "%s%s "
+                    (utf8_symbol Symbols.box_drawings_light_right "-")
+                    (utf8_symbol Symbols.box_drawings_light_horizontal "")))
+              s)
           | None -> ()
       in
       OpamConsole.msg "\n";

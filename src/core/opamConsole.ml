@@ -56,6 +56,29 @@ let utf8, utf8_extended =
      | `Always | `Never -> false
      | `Auto -> Lazy.force auto && OpamStd.Sys.(os () = Darwin))
 
+module Symbols = struct
+  let rightwards_arrow = Uchar.of_int 0x2192
+  let box_drawings_light_down_and_right = Uchar.of_int 0x250c
+  let box_drawings_light_horizontal = Uchar.of_int 0x2500
+  let box_drawings_light_vertical = Uchar.of_int 0x2502
+  let box_drawings_light_up_and_right = Uchar.of_int 0x2514
+  let box_drawings_light_right = Uchar.of_int 0x2576
+  let circled_division_slash = Uchar.of_int 0x2298
+  let asterisk_operator = Uchar.of_int 0x2217
+  let north_east_arrow = Uchar.of_int 0x2197
+  let south_east_arrow = Uchar.of_int 0x2198
+  let clockwise_open_circle_arrow = Uchar.of_int 0x21bb
+  let greek_small_letter_lambda = Uchar.of_int 0x03bb
+end
+
+let utf8_symbol c s =
+  if utf8 () then
+    let b = Buffer.create 4 in
+    Buffer.add_utf_8_uchar b c;
+    Buffer.contents b
+  else
+    s
+
 let timer () =
   if debug () then
     let t = Unix.gettimeofday () in

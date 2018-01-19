@@ -45,6 +45,23 @@ val colorise' : text_style list -> string -> string
 val acolor : text_style -> unit -> string -> string
 val acolor_w : int -> text_style -> out_channel -> string -> unit
 
+module Symbols : sig
+  val rightwards_arrow : OpamCompat.Uchar.t
+  val box_drawings_light_down_and_right : OpamCompat.Uchar.t
+  val box_drawings_light_horizontal : OpamCompat.Uchar.t
+  val box_drawings_light_vertical : OpamCompat.Uchar.t
+  val box_drawings_light_up_and_right : OpamCompat.Uchar.t
+  val box_drawings_light_right : OpamCompat.Uchar.t
+  val circled_division_slash : OpamCompat.Uchar.t
+  val asterisk_operator : OpamCompat.Uchar.t
+  val north_east_arrow : OpamCompat.Uchar.t
+  val south_east_arrow : OpamCompat.Uchar.t
+  val clockwise_open_circle_arrow : OpamCompat.Uchar.t
+  val greek_small_letter_lambda : OpamCompat.Uchar.t
+end
+
+val utf8_symbol: OpamCompat.Uchar.t -> string -> string
+
 (** Logging *)
 
 (** Timers, only active when debug is on. Returns the time between the
