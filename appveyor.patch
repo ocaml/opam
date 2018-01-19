@@ -30,17 +30,6 @@ diff --git a/src_ext/Makefile.sources b/src_ext/Makefile.sources
 index a1aa44cb..0d297877 100644
 --- a/src_ext/Makefile.sources
 +++ b/src_ext/Makefile.sources
-@@ -33,8 +33,8 @@ MD5_dose3 = e7d4b1840383c6732f29a47c08ba5650
- 
- $(call PKG_SAME,dose3)
- 
--URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+4.tar.gz
--MD5_mccs = 1ff2d73ab5c69e1fb58160213fc2d4c9
-+URL_mccs = https://github.com/dra27/ocaml-mccs/archive/1.1+4-dra27.tar.gz
-+MD5_mccs = 08e80e39a0d960c01955a970d13afb29
- 
- $(call PKG_SAME,mccs)
- 
 @@ -48,8 +48,8 @@ MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
  
  $(call PKG_SAME,result)
