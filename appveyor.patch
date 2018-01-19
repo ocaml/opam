@@ -29,8 +29,8 @@ index 64fdd8af..d1457b5f 100644
  URL_result = https://github.com/janestreet/result/archive/1.2.tar.gz
  MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
  
--URL_jbuilder = https://github.com/janestreet/jbuilder/archive/08050696fb701dafcd1372aadfaa800a50bc01ca.tar.gz
--MD5_jbuilder = 53b65232ebb5fd319acf90922342615d
+-URL_jbuilder = https://github.com/janestreet/jbuilder/archive/1.0+beta16.tar.gz
+-MD5_jbuilder = baef04fc99d52e98736db9e53a72bfce
 +URL_jbuilder = https://github.com/dra27/jbuilder/archive/fix-copy.tar.gz
 +MD5_jbuilder = cbf9d2e783feab1f4a61fea35ec96118
  
