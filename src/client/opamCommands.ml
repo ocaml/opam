@@ -1687,7 +1687,11 @@ let upgrade =
        $(i,PACKAGES) was not specified, and can be useful with $(i,PACKAGES) \
        to upgrade while ensuring that some packages get or remain installed."
   in
-  let upgrade global_options build_options fixup check all atom_locs =
+  let installed =
+    mk_flag ["installed"]
+      "When a directory is provided as argument, do not install pinned package \
+       that are not yet installed." in
+  let upgrade global_options build_options fixup check only_installed all atom_locs =
     apply_global_options global_options;
     apply_build_options build_options;
     let all = all || atom_locs = [] in
@@ -1702,11 +1706,11 @@ let upgrade =
     else
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       let atoms = OpamAuxCommands.resolve_locals_pinned st atom_locs in
-      OpamSwitchState.drop @@ OpamClient.upgrade st ~check ~all atoms;
+      OpamSwitchState.drop @@ OpamClient.upgrade st ~check ~only_installed ~all atoms;
       `Ok ()
   in
-  Term.(ret (const upgrade $global_options $build_options $fixup $check $all
-             $atom_or_dir_list)),
+  Term.(ret (const upgrade $global_options $build_options $fixup $check
+             $installed $all $atom_or_dir_list)),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)

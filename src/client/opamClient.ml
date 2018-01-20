@@ -124,7 +124,7 @@ let get_installed_atoms t atoms =
 
 (* Check atoms for pinned packages, and update them. Returns the state that
    may have been reloaded if there were changes *)
-let update_dev_packages_t atoms t =
+let update_dev_packages_t ?(only_installed=false) atoms t =
   (* Check last update of the repo *)
   let last_update =
     (Unix.stat (OpamFilename.to_string
@@ -136,14 +136,16 @@ let update_dev_packages_t atoms t =
     OpamConsole.note "It seems you have not updated your repositories \
                       for a while. Consider updating them with:\n%s\n"
       (OpamConsole.colorise `bold "opam update");
-
   if OpamClientConfig.(!r.skip_dev_update) then t else
   let working_dir = OpamClientConfig.(!r.working_dir || !r.inplace_build) in
   let to_update =
     List.fold_left (fun to_update (name,_) ->
         try
           let nv = OpamPackage.package_of_name t.pinned name in
-          if OpamSwitchState.is_dev_package t nv then
+          if OpamSwitchState.is_dev_package t nv &&
+             ( not only_installed ||
+               OpamPackage.Set.exists (fun nv -> nv.name = name) t.installed )
+          then
             OpamPackage.Set.add nv to_update
           else to_update
         with Not_found -> to_update)
@@ -167,7 +169,8 @@ let update_dev_packages_t atoms t =
   )
 
 let compute_upgrade_t
-    ?(strict_upgrade=true) ?(auto_install=false) ~all atoms t =
+    ?(strict_upgrade=true) ?(auto_install=false) ?(only_installed=false)
+    ~all atoms t =
   let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
   let atoms =
     List.map (function
@@ -201,7 +204,7 @@ let compute_upgrade_t
           packages, atom :: not_installed)
       (OpamPackage.Set.empty,[]) atoms in
   let to_install =
-    if not_installed = [] then [] else
+    if only_installed || not_installed = [] then [] else
     if auto_install ||
        OpamConsole.confirm "%s %s not installed. Install %s?"
          (OpamStd.Format.pretty_list
@@ -249,13 +252,13 @@ let compute_upgrade_t
        ())
 
 let upgrade_t
-    ?strict_upgrade ?auto_install ?ask ?(check=false) ?(terse=false) ~all
-    atoms t
+    ?strict_upgrade ?auto_install ?ask ?(check=false) ?(terse=false)
+    ?only_installed ~all atoms t
   =
   log "UPGRADE %a"
     (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
     atoms;
-  match compute_upgrade_t ?strict_upgrade ?auto_install ~all atoms t with
+  match compute_upgrade_t ?strict_upgrade ?auto_install ?only_installed ~all atoms t with
   | requested, Conflicts cs ->
     log "conflict!";
     if not (OpamPackage.Name.Set.is_empty requested) then
@@ -439,10 +442,10 @@ let upgrade_t
     OpamSolution.check_solution t (Success result);
     t
 
-let upgrade t ?check ~all names =
+let upgrade t ?check ?only_installed ~all names =
   let atoms = OpamSolution.sanitize_atom_list t names in
-  let t = update_dev_packages_t atoms t in
-  upgrade_t ?check ~strict_upgrade:(not all) ~all atoms t
+  let t = update_dev_packages_t ?only_installed atoms t in
+  upgrade_t ?check ~strict_upgrade:(not all) ?only_installed ~all atoms t
 
 let fixup t =
   log "FIXUP";
@@ -578,20 +581,15 @@ let update
              let cache_url =
                OpamUrl.of_string (OpamFilename.Dir.to_string src_cache)
              in
-             match OpamSwitchState.url st nv  with
-             | None -> false
-             | Some urlf ->
-               match OpamFile.URL.url urlf with
-               | { OpamUrl.backend = #OpamUrl.version_control as vc; _ } ->
-                 (try
-                   let subpath = OpamFile.URL.subpath urlf in
-                   OpamProcess.Job.run @@
-                   OpamRepository.is_dirty ?subpath
-                     { cache_url with OpamUrl.backend = vc }
-                  with OpamSystem.Process_error _ ->
-                    log "Skipping %s, not a git repo" (OpamPackage.to_string nv);
-                    false)
-               | _ -> false)
+             match OpamSwitchState.primary_url st nv with
+             | Some { OpamUrl.backend = #OpamUrl.version_control as vc; _ } ->
+               (try
+                 OpamProcess.Job.run @@
+                 OpamRepository.is_dirty { cache_url with OpamUrl.backend = vc }
+                with OpamSystem.Process_error _ ->
+                  log "Skipping %s, not a git repo" (OpamPackage.to_string nv);
+                  false)
+             | _ -> false)
           dev_packages
     in
     OpamPackage.Set.iter (fun nv ->
