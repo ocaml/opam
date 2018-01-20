@@ -62,12 +62,15 @@ val update:
     versions. The specified atoms are kept installed (or newly installed after a
     confirmation). The upgrade concerns them only unless [all] is specified. *)
 val upgrade:
-  rw switch_state -> ?check:bool -> all:bool -> atom list -> rw switch_state
+  rw switch_state ->
+  ?check:bool -> ?only_installed:bool ->
+  all:bool -> atom list -> rw switch_state
 
 (** Low-level version of [upgrade], bypassing the package name sanitization
     and dev package update, and offering more control *)
 val upgrade_t:
   ?strict_upgrade:bool -> ?auto_install:bool -> ?ask:bool -> ?check:bool ->
+  ?only_installed:bool ->
   all:bool -> atom list -> rw switch_state -> rw switch_state
 
 (** Recovers from an inconsistent universe *)
