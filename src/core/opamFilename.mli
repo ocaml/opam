@@ -204,6 +204,9 @@ val extract_generic_file: generic_file -> Dir.t -> unit
 (** Check whether a filename starts by a given Dir.t *)
 val starts_with: Dir.t -> t -> bool
 
+(** Check whether a dirname starts by a given Dir.t *)
+val dir_starts_with: prefix:Dir.t -> Dir.t -> bool
+
 (** Check whether a filename ends with a given suffix *)
 val ends_with: string -> t -> bool
 

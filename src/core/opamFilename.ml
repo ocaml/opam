@@ -255,6 +255,9 @@ let is_exec file =
 let starts_with dirname filename =
   OpamStd.String.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
 
+let dir_starts_with ~prefix dirname =
+  OpamStd.String.starts_with ~prefix:(Dir.to_string prefix) (Dir.to_string dirname)
+
 let remove_prefix prefix filename =
   let prefix =
     let str = Dir.to_string prefix in
