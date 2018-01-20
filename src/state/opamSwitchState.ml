@@ -375,6 +375,15 @@ let url st nv =
 let primary_url st nv =
   OpamStd.Option.Op.(url st nv >>| OpamFile.URL.url)
 
+let primary_url_with_subpath st nv =
+  match url st nv with
+  | None -> None
+  | Some urlf ->
+    let url = OpamFile.URL.url urlf in
+    match OpamFile.URL.subpath urlf with
+    | None -> Some url
+    | Some subpath -> Some (OpamUrl.Op.(url / subpath))
+
 let files st nv =
   match opam_opt st nv with
   | None -> []
