@@ -99,7 +99,7 @@ module VCS = struct
     | { OpamProcess.r_code = 0; OpamProcess.r_stdout = [b]; _ } -> Done (Some b)
     | _ -> Done None
 
-  let is_dirty dir =
+  let is_dirty ?subpath:_ dir =
     hg dir [ "stat" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done (r.OpamProcess.r_stdout = [])

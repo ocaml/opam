@@ -177,8 +177,12 @@ module VCS : OpamVCS.VCS = struct
     | _ ->
       Done (Some "HEAD")
 
-  let is_dirty dir =
-    git dir [ "diff"; "--quiet" ]
+  let is_dirty ?subpath dir =
+    let subpath =
+      match subpath with
+      | None -> []
+      | Some dir -> ["--" ; dir] in
+    git dir ([ "diff"; "--quiet" ; "HEAD" ] @ subpath)
     @@> function
     | { OpamProcess.r_code = 0; _ } -> Done false
     | { OpamProcess.r_code = 1; _ } as r ->

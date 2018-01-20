@@ -455,11 +455,16 @@ let update
              let cache_url =
                OpamUrl.of_string (OpamFilename.Dir.to_string src_cache)
              in
-             match OpamSwitchState.primary_url st nv with
-             | Some { OpamUrl.backend = #OpamUrl.version_control as vc; _ } ->
-               OpamProcess.Job.run @@
-               OpamRepository.is_dirty { cache_url with OpamUrl.backend = vc }
-             | _ -> false)
+             match OpamSwitchState.url st nv  with
+             | None -> false
+             | Some urlf ->
+               match OpamFile.URL.url urlf with
+               | { OpamUrl.backend = #OpamUrl.version_control as vc; _ } ->
+                 let subpath = OpamFile.URL.subpath urlf in
+                 OpamProcess.Job.run @@
+                 OpamRepository.is_dirty ?subpath
+                   { cache_url with OpamUrl.backend = vc }
+               | _ -> false)
           dev_packages
     in
     OpamPackage.Set.iter (fun nv ->

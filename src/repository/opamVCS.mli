@@ -61,7 +61,7 @@ module type VCS = sig
       recorded in the VCS as current. This differs from [is_up_to_date], which
       compares specifically to the last fetched state. This should always be
       [false] after [reset] has been called. *)
-  val is_dirty: dirname -> bool OpamProcess.job
+  val is_dirty: ?subpath:string -> dirname -> bool OpamProcess.job
 end
 
 (** Create a backend from a [VCS] implementation. *)
