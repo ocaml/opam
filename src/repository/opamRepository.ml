@@ -463,9 +463,9 @@ let current_branch url =
   on_local_version_control url ~default:(Done None) @@
   fun dir (module VCS) -> VCS.current_branch dir
 
-let is_dirty url =
+let is_dirty ?subpath url =
   on_local_version_control url ~default:(Done false) @@
-  fun dir (module VCS) -> VCS.is_dirty dir
+  fun dir (module VCS) -> VCS.is_dirty ?subpath dir
 
 let report_fetch_result pkg = function
   | Result msg ->

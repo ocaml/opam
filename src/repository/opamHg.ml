@@ -111,7 +111,7 @@ module VCS = struct
             | branch::_ when branch <> "default" -> Done (Some branch)
             | _ -> Done None
 
-  let is_dirty repo_root =
+  let is_dirty ?subpath:_ repo_root =
     hg repo_root [ "status"; "--subrepos" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done (r.OpamProcess.r_stdout = [])

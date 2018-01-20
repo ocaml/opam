@@ -195,6 +195,7 @@ let pinned_package st ?version ?(working_dir=false) name =
   | None | Some (_, None) -> Done ((fun st -> st), false)
   | Some (opam, Some urlf) ->
     let url = OpamFile.URL.url urlf in
+    let subpath = OpamFile.URL.subpath urlf in
     let version =
       OpamFile.OPAM.version_opt opam ++
       version +!
@@ -239,11 +240,12 @@ let pinned_package st ?version ?(working_dir=false) name =
         | Some h ->
           OpamRepository.current_branch url @@| fun branch -> branch = Some h)
        @@+ function false -> Done () | true ->
-         OpamRepository.is_dirty url
+         OpamRepository.is_dirty ?subpath url
          @@| function false -> () | true ->
            OpamConsole.note
-             "Ignoring uncommitted changes in %s (`--working-dir' not active)."
-             url.OpamUrl.path)
+             "Ignoring uncommitted changes in %s%s (`--working-dir' not active)."
+             url.OpamUrl.path
+             (match subpath with None -> "" | Some s -> "/" ^ s))
     @@+ fun () ->
     (* Do the update *)
     fetch_dev_package urlf srcdir ~working_dir nv @@+ fun result ->

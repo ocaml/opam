@@ -578,15 +578,20 @@ let update
              let cache_url =
                OpamUrl.of_string (OpamFilename.Dir.to_string src_cache)
              in
-             match OpamSwitchState.primary_url st nv with
-             | Some { OpamUrl.backend = #OpamUrl.version_control as vc; _ } ->
-               (try
-                  OpamProcess.Job.run @@
-                  OpamRepository.is_dirty { cache_url with OpamUrl.backend = vc }
-                with OpamSystem.Process_error _ ->
-                  log "Skipping %s, not a git repo" (OpamPackage.to_string nv);
-                  false)
-             | _ -> false)
+             match OpamSwitchState.url st nv  with
+             | None -> false
+             | Some urlf ->
+               match OpamFile.URL.url urlf with
+               | { OpamUrl.backend = #OpamUrl.version_control as vc; _ } ->
+                 (try
+                   let subpath = OpamFile.URL.subpath urlf in
+                   OpamProcess.Job.run @@
+                   OpamRepository.is_dirty ?subpath
+                     { cache_url with OpamUrl.backend = vc }
+                  with OpamSystem.Process_error _ ->
+                    log "Skipping %s, not a git repo" (OpamPackage.to_string nv);
+                    false)
+               | _ -> false)
           dev_packages
     in
     OpamPackage.Set.iter (fun nv ->

@@ -157,7 +157,7 @@ module VCS = struct
 
   let current_branch _dir = Done None (* No branches in Darcs *)
 
-  let is_dirty dir =
+  let is_dirty ?subpath:_ dir =
     darcs dir [ "whatsnew"; "--quiet"; "--summary" ]
     @@> fun r -> Done (OpamProcess.check_success_and_cleanup r)
 
