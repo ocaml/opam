@@ -23,6 +23,6 @@ depends: [
   "mccs" {>= "1.1+4"}
   "dose3" {>= "5"}
   "cudf" {>= "0.7"}
-  "jbuilder" {build & >= "1.0+beta12"}
+  "jbuilder" {build & >= "1.0+beta17"}
 ]
 available: ocaml-version >= "4.02.3"
