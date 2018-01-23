@@ -21,6 +21,6 @@ build: [
 depends: [
   "opam-core" {= "2.0.0~rc"}
   "opam-file-format" {>= "2.0.0~beta5"}
-  "jbuilder" {build & >= "1.0+beta12"}
+  "jbuilder" {build & >= "1.0+beta17"}
 ]
 available: ocaml-version >= "4.02.3"

@@ -26,21 +26,6 @@ index 1a350068..964a818c 100644
  
  ifndef FETCH
    ifneq ($(shell command -v curl 2>/dev/null),)
-diff --git a/src_ext/Makefile.sources b/src_ext/Makefile.sources
-index a1aa44cb..0d297877 100644
---- a/src_ext/Makefile.sources
-+++ b/src_ext/Makefile.sources
-@@ -48,8 +48,8 @@ MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
- 
- $(call PKG_SAME,result)
- 
--URL_jbuilder = https://github.com/janestreet/jbuilder/archive/1.0+beta16.tar.gz
--MD5_jbuilder = baef04fc99d52e98736db9e53a72bfce
-+URL_jbuilder = https://github.com/dra27/jbuilder/archive/fix-copy.tar.gz
-+MD5_jbuilder = cbf9d2e783feab1f4a61fea35ec96118
- 
- $(call PKG_SAME,jbuilder)
- 
 -- 
 2.12.0.windows.1
 
