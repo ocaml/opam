@@ -53,3 +53,42 @@ struct
   let map_file = Bigarray.Genarray.map_file
 end
 #endif
+
+module Uchar =
+#if OCAML_VERSION >= (4, 3, 0)
+  Uchar
+#else
+struct
+  type t = int
+
+  let of_int i = i
+  external to_int : t -> int = "%identity"
+end
+#endif
+
+module Buffer =
+#if OCAML_VERSION >= (4, 6, 0)
+  Buffer
+#else
+struct
+  include Buffer
+
+  let add_utf_8_uchar b u = match Uchar.to_int u with
+  | u when u < 0 -> assert false
+  | u when u <= 0x007F ->
+      add_char b (Char.unsafe_chr u)
+  | u when u <= 0x07FF ->
+      add_char b (Char.unsafe_chr (0xC0 lor (u lsr 6)));
+      add_char b (Char.unsafe_chr (0x80 lor (u land 0x3F)))
+  | u when u <= 0xFFFF ->
+      add_char b (Char.unsafe_chr (0xE0 lor (u lsr 12)));
+      add_char b (Char.unsafe_chr (0x80 lor ((u lsr 6) land 0x3F)));
+      add_char b (Char.unsafe_chr (0x80 lor (u land 0x3F)))
+  | u when u <= 0x10FFFF ->
+      add_char b (Char.unsafe_chr (0xF0 lor (u lsr 18)));
+      add_char b (Char.unsafe_chr (0x80 lor ((u lsr 12) land 0x3F)));
+      add_char b (Char.unsafe_chr (0x80 lor ((u lsr 6) land 0x3F)));
+      add_char b (Char.unsafe_chr (0x80 lor (u land 0x3F)))
+  | _ -> assert false
+end
+#endif

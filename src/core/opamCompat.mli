@@ -55,3 +55,26 @@ module Unix
                  ('a, 'b, 'c) Bigarray.Genarray.t
 end
 #endif
+
+module Uchar
+#if OCAML_VERSION >= (4, 3, 0)
+= Uchar
+#else
+: sig
+  type t
+
+  val of_int : int -> t
+  external to_int : t -> int = "%identity"
+end
+#endif
+
+module Buffer
+#if OCAML_VERSION >= (4, 6, 0)
+= Buffer
+#else
+: sig
+  include module type of struct include Buffer end
+
+  val add_utf_8_uchar : t -> Uchar.t -> unit
+end
+#endif
