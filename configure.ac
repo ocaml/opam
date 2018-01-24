@@ -184,6 +184,7 @@ AC_CHECK_OCAML_PKG(dose3.common,dose.common)
 AC_CHECK_OCAML_PKG(dose3.algo,dose.algo)
 AC_CHECK_OCAML_PKG([opam-file-format])
 AC_CHECK_OCAML_PKG([mccs])
+AC_CHECK_OCAML_PKG([cppo])
 
 AS_IF([test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"],
       [AC_MSG_ERROR([Option --without-mccs is not supported. You need to uninstall the 'mccs' package])])
@@ -214,6 +215,7 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_cudf" = "xno" ||
        test "x$OCAML_PKG_dose3_common" = "xno" ||
        test "x$OCAML_PKG_opam_file_format" = "xno" ||
+       test "x$OCAML_PKG_cppo" = "xno" ||
        test "x$OCAML_PKG_mccs$MCCS_DISABLED$MCCS_DEFAULT" = "xnofalse"; }],[
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"

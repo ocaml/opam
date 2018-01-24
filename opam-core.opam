@@ -24,5 +24,6 @@ depends: [
   "ocamlgraph"
   "re" {>= "1.5.0"}
   "jbuilder" {build & >= "1.0+beta12"}
+  "cppo" {build}
 ]
 available: ocaml-version >= "4.02.3"
