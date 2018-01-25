@@ -627,28 +627,26 @@ let show =
 module Common_config_flags = struct
   let sexp =
     mk_flag ["sexp"]
-      "Print environment variables as an s-expression rather than in shell \
-       format"
+      "Print environment as an s-expression rather than in shell format"
 
   let inplace_path =
     mk_flag ["inplace-path"]
       "When updating the $(i,PATH) variable, replace any pre-existing opam \
        path in-place rather than putting the new path in front. This means \
        programs installed in opam that were shadowed will remain so after \
-       $(b,opam config env)"
+       $(b,opam env)"
 
   let set_opamroot =
     mk_flag ["set-root"]
       "With the $(b,env) and $(b,exec) subcommands, also sets the \
        $(i,OPAMROOT) variable, making sure further calls to opam will use the \
-       samme root."
+       same root."
 
   let set_opamswitch =
     mk_flag ["set-switch"]
       "With the $(b,env) and $(b,exec) subcommands, also sets the \
        $(i,OPAMSWITCH) variable, making sure further calls to opam will use \
-       the same switch. This can be used to select a local switch from a \
-       directory outside of CWD."
+       the same switch as this one."
 
 end
 

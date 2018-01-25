@@ -114,8 +114,8 @@ this case, and it is safe to just remove that subdirectory to clear the switch.
 Yes. Use one of:
 
 ```
-eval $(opam config env --switch <switch> --set-switch)  # for the current shell
-opam config exec --switch <switch> -- <command>         # for one command
+eval $(opam env --switch <switch> --set-switch)  # for the current shell
+opam exec --switch <switch> -- <command>         # for one command
 ```
 
 This only affects the environment.
