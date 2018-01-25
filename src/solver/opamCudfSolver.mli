@@ -12,7 +12,7 @@
     relying on external solvers (aspcud, etc.). Used for calling-back below
     Dose. *)
 
-include module type of OpamCudfSolverSig
+include module type of struct include OpamCudfSolverSig end
 
 module Aspcud : S
 module Aspcud_old : S

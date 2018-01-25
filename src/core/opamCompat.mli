@@ -13,7 +13,7 @@ module String
 = String
 #else
 : sig
-  include module type of String
+  include module type of struct include String end
 
   val lowercase_ascii : string -> string
   val uppercase_ascii : string -> string
@@ -26,7 +26,7 @@ module Char
 = Char
 #else
 : sig
-  include module type of Char
+  include module type of struct include Char end
 
   val lowercase_ascii: char -> char
 end
@@ -37,7 +37,7 @@ module Printexc
 = Printexc
 #else
 : sig
-  include module type of Printexc
+  include module type of struct include Printexc end
 
   val raise_with_backtrace: exn -> raw_backtrace -> 'a
 end
@@ -48,7 +48,7 @@ module Unix
 = Unix
 #else
 : sig
-  include module type of Unix
+  include module type of struct include Unix end
 
   val map_file : Unix.file_descr -> ?pos:int64 -> ('a, 'b) Bigarray.kind ->
                  'c Bigarray.layout -> bool -> int array ->
