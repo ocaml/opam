@@ -29,6 +29,14 @@ case "$TARGET" in
       mkdir -p ~/local/bin
 
       if [ "$COLD" = "1" ]; then
+        wget http://ftpmirror.gnu.org/gnu/make/make-4.2.tar.gz
+        tar -xzf make-4.2.tar.gz
+        mkdir make-4.2-build
+        cd make-4.2-build
+        ../make-4.2/configure --prefix ~/local
+        make
+        make install
+        cd ..
         make compiler
       else
         wget -q -O ~/local/bin/opam \
