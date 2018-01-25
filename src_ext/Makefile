@@ -180,6 +180,9 @@ endef
      cp $$j $*$$(echo "$$j" | sed -e "s/jbuild-$*//" -e "s|-|/|g")/jbuild; \
    done
 	@touch $*/$*.opam
+	@for i in `find $* -name jbuild`; do \
+     sed -i -e "s/name \+runtest/name disabled-runtest/g" $$i; \
+   done
 	@touch $@ && rm -f $*.pkgstamp $*.pkgbuild
 
 %.pkgstamp: %.pkgdownload
