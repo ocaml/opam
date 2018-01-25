@@ -624,6 +624,33 @@ let show =
            $file $normalise $atom_or_local_list)),
   term_info "show" ~doc ~man
 
+module Common_config_flags = struct
+  let sexp =
+    mk_flag ["sexp"]
+      "Print environment variables as an s-expression rather than in shell \
+       format"
+
+  let inplace_path =
+    mk_flag ["inplace-path"]
+      "When updating the $(i,PATH) variable, replace any pre-existing opam \
+       path in-place rather than putting the new path in front. This means \
+       programs installed in opam that were shadowed will remain so after \
+       $(b,opam config env)"
+
+  let set_opamroot =
+    mk_flag ["set-root"]
+      "With the $(b,env) and $(b,exec) subcommands, also sets the \
+       $(i,OPAMROOT) variable, making sure further calls to opam will use the \
+       samme root."
+
+  let set_opamswitch =
+    mk_flag ["set-switch"]
+      "With the $(b,env) and $(b,exec) subcommands, also sets the \
+       $(i,OPAMSWITCH) variable, making sure further calls to opam will use \
+       the same switch. This can be used to select a local switch from a \
+       directory outside of CWD."
+
+end
 
 (* CONFIG *)
 let config_doc = "Display configuration options for packages."
@@ -712,24 +739,18 @@ let config =
   let no_complete_doc = "Do not load the auto-completion scripts in the environment." in
   let dot_profile_doc = "Select which configuration file to update (default is ~/.profile)." in
   let list_doc        = "List the current configuration." in
-  let sexp_doc        = "Display environment variables as an s-expression" in
-  let inplace_path_doc= "When updating the PATH variable, replace any pre-existing opam path \
-                         in-place rather than putting the new path in front. This means programs \
-                         installed in opam that were shadowed will remain so after \
-                         $(b,opam config env)" in
   let profile         = mk_flag ["profile"]        profile_doc in
   let no_complete     = mk_flag ["no-complete"]    no_complete_doc in
   let all             = mk_flag ["a";"all"]        all_doc in
   let user            = mk_flag ["u";"user"]       user_doc in
   let global          = mk_flag ["g";"global"]     global_doc in
   let list            = mk_flag ["l";"list"]       list_doc in
-  let sexp            = mk_flag ["sexp"]           sexp_doc in
-  let inplace_path    = mk_flag ["inplace-path"]   inplace_path_doc in
+  let open Common_config_flags in
 
   let config global_options
       command shell sexp inplace_path
       dot_profile_o list all global user
-      profile no_complete params =
+      profile no_complete set_opamroot set_opamswitch params =
     apply_global_options global_options;
     match command, params with
     | Some `env, [] ->
@@ -737,6 +758,7 @@ let config =
       if OpamStateConfig.(!r.current_switch) = None then `Ok () else
         OpamSwitchState.with_ `Lock_none gt @@ fun st ->
         `Ok (OpamConfigCommand.env st
+               ~set_opamroot ~set_opamswitch
                ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path)
     | Some `revert_env, [] ->
        `Ok (OpamConfigCommand.print_eval_env
@@ -779,7 +801,8 @@ let config =
                global_doc no_complete_doc)
     | Some `exec, (_::_ as c) ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      `Ok (OpamConfigCommand.exec gt ~inplace_path c)
+      `Ok (OpamConfigCommand.exec
+             gt ~set_opamroot ~set_opamswitch ~inplace_path c)
     | Some `list, params ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       (try `Ok (OpamConfigCommand.list gt (List.map OpamPackage.Name.of_string params))
@@ -919,6 +942,7 @@ let config =
           $inplace_path
           $dot_profile_flag $list $all $global $user
           $profile $no_complete
+          $set_opamroot $set_opamswitch
           $params)
   ),
   term_info "config" ~doc ~man
@@ -982,19 +1006,16 @@ let exec =
   let cmd =
     Arg.(non_empty & pos_all string [] & info ~docv:"COMMAND [ARG]..." [])
   in
-  let inplace_path_doc=
-    "When updating the PATH variable, replace any \
-     pre-existing opam path in-place rather than putting \
-     the new path in front. This means programs installed \
-     in opam that were shadowed will remain so after \
-     $(b,opam config env)" in
-  let inplace_path    = mk_flag ["inplace-path"] inplace_path_doc in
-  let exec global_options inplace_path cmd =
+  let exec global_options inplace_path set_opamroot set_opamswitch cmd =
     apply_global_options global_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
-    OpamConfigCommand.exec gt ~inplace_path cmd
+    OpamConfigCommand.exec gt
+      ~set_opamroot ~set_opamswitch ~inplace_path cmd
   in
-  Term.(const exec $global_options $inplace_path $cmd),
+  let open Common_config_flags in
+  Term.(const exec $global_options $inplace_path
+        $set_opamroot $set_opamswitch
+        $cmd),
   term_info "exec" ~doc ~man
 
 (* ENV *)
@@ -1015,19 +1036,9 @@ let env =
     mk_flag ["revert"]
       "Output the environment with updates done by opam reverted instead."
   in
-  let inplace_path_doc=
-    "When updating the PATH variable, replace any \
-     pre-existing opam path in-place rather than putting \
-     the new path in front. This means programs installed \
-     in opam that were shadowed will remain so after \
-     $(b,opam env)" in
-  let inplace_path = mk_flag ["inplace-path"] inplace_path_doc in
-  let sexp =
-    mk_flag ["sexp"]
-      "Display environment variables as an s-expression rather than in shell \
-       format"
-  in
-  let env global_options shell sexp inplace_path revert =
+  let env
+      global_options shell sexp inplace_path set_opamroot set_opamswitch
+      revert =
     apply_global_options global_options;
     match revert with
     | false ->
@@ -1035,13 +1046,17 @@ let env =
       if OpamStateConfig.(!r.current_switch) <> None then
         OpamSwitchState.with_ `Lock_none gt @@ fun st ->
         OpamConfigCommand.env st
+          ~set_opamroot ~set_opamswitch
           ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path
     | true ->
       OpamConfigCommand.print_eval_env
         ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish)
         (OpamEnv.add [] [])
   in
-  Term.(const env $global_options $shell_opt $sexp $inplace_path $revert),
+  let open Common_config_flags in
+  Term.(const env
+        $global_options $shell_opt $sexp $inplace_path
+        $set_opamroot $set_opamswitch$revert),
   term_info "env" ~doc ~man
 
 (* INSTALL *)

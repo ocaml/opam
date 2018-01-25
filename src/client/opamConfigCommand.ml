@@ -187,9 +187,41 @@ let print_eval_env ~csh ~sexp ~fish env =
   else
     print_env env
 
-let env st ~csh ~sexp ~fish ~inplace_path =
+let env st ?(set_opamroot=false) ?(set_opamswitch=false)
+    ~csh ~sexp ~fish ~inplace_path =
   log "config-env";
-  let env = OpamEnv.get_opam ~force_path:(not inplace_path) st in
+  let opamroot_not_current =
+    let current = st.switch_global.root in
+    let default = OpamStateConfig.(default.root_dir) in
+    match OpamStd.Env.getopt "OPAMROOT" with
+    | None -> current <> default
+    | Some r -> r <> OpamFilename.Dir.to_string current
+  in
+  let opamswitch_not_current =
+    let current = st.switch in
+    let default = OpamFile.Config.switch st.switch_global.config in
+    match OpamStd.Env.getopt "OPAMSWITCH" with
+    | None -> Some current <> default
+    | Some s -> s <> OpamSwitch.to_string current
+  in
+  if opamroot_not_current && not set_opamroot then
+    OpamConsole.note
+      "To make opam select %s as its root in the current shell, add %s or set \
+       %s"
+      (OpamFilename.Dir.to_string st.switch_global.root)
+      (OpamConsole.colorise `bold "--set-root")
+      (OpamConsole.colorise `bold "OPAMROOT");
+  if opamswitch_not_current && not set_opamswitch then
+    OpamConsole.note
+      "To make opam select the switch %s in the current shell, add %s or set \
+       %s"
+      (OpamSwitch.to_string st.switch)
+      (OpamConsole.colorise `bold "--set-switch")
+      (OpamConsole.colorise `bold "OPAMSWITCH");
+  let env =
+    OpamEnv.get_opam
+      ~set_opamroot ~set_opamswitch ~force_path:(not inplace_path) st
+  in
   print_eval_env ~csh ~sexp ~fish env
 
 let subst gt fs =
@@ -306,7 +338,7 @@ let setup_list shell dot_profile =
   log "config-setup-list";
   OpamEnv.display_setup OpamStateConfig.(!r.root_dir) ~dot_profile shell
 
-let exec gt ~inplace_path command =
+let exec gt ?set_opamroot ?set_opamswitch ~inplace_path command =
   log "config-exec command=%a" (slog (String.concat " ")) command;
   OpamSwitchState.with_ `Lock_none gt @@ fun st ->
   let cmd, args =
@@ -316,10 +348,10 @@ let exec gt ~inplace_path command =
     with
     | []        -> OpamSystem.internal_error "Empty command"
     | h::_ as l -> h, Array.of_list l in
-  let opamswitch = OpamStateConfig.(!r.switch_from <> `Default) in
   let env =
     OpamTypesBase.env_array
-      (OpamEnv.get_full ~opamswitch ~force_path:(not inplace_path) st)
+      (OpamEnv.get_full
+         ?set_opamroot ?set_opamswitch ~force_path:(not inplace_path) st)
   in
   match OpamSystem.resolve_command ~env cmd with
   | Some cmd -> raise (OpamStd.Sys.Exec (cmd, args, env))
