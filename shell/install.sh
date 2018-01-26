@@ -5,7 +5,7 @@ set -ue
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
 # (c) Copyright Louis Gesbert OCamlPro 2014-2017
 
-VERSION='2.0.0~beta6'
+VERSION='2.0.0~rc'
 TAG=$(echo "$VERSION" | tr '~' '-')
 DEFAULT_BINDIR=/usr/local/bin
 

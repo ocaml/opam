@@ -2,6 +2,13 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+2.0.0~rc
+* Fixes
+* Support compiling on OCaml 4.06.0
+* `opam env` and `opam exec` no longer set the `OPAMROOT` or `OPAMSWITCH`
+  variables
+* Allow in-source package metadata to be gathered in an `opam/` directory
+
 2.0.0~beta6
 * Small UI fixes
 * Fixed a rare case of looping while processing actions

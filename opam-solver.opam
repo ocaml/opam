@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0.0~beta6"
+version: "2.0.0~rc"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
@@ -19,7 +19,7 @@ build: [
   [make "%{name}%.install"]
 ]
 depends: [
-  "opam-format" {= "2.0.0~beta6"}
+  "opam-format" {= "2.0.0~rc"}
   "mccs" {>= "1.1+4"}
   "dose3" {>= "5"}
   "cudf" {>= "0.7"}
