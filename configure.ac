@@ -10,7 +10,7 @@ AS_IF([ test -x bootstrap/ocaml/bin/ocamlc -o -x bootstrap/ocaml/bin/ocamlopt ],
   echo Bootstrap compiler found -- activating
   unset OCAMLLIB
   export PATH_PREPEND=`pwd`/bootstrap/ocaml/bin:
-  export PATH="$PATH_PREPEND:$PATH"
+  export PATH="$PATH_PREPEND$PATH"
 ])
 
 AC_PROG_OCAML
@@ -88,13 +88,13 @@ AS_IF([test ! -x ${OCAML_TEST_CC}],[
       ])
     ],[
       AC_MSG_RESULT([from $MSVS_NAME])
-      export PATH_PREPEND="${MSVS_PATH}:${PATH_PREPEND}"
+      export PATH_PREPEND="${MSVS_PATH}${PATH_PREPEND}"
       # Note that we put ${MSVS_PATH} here NOT ${PATH_PREPEND} so that the bootstrap path isn't repeated
-      export PATH="${MSVS_PATH}:$PATH"
-      LIB_PREPEND="${MSVS_LIB};"
-      INC_PREPEND="${MSVS_INC};"
-      export Lib="${MSVS_LIB};$LIB"
-      export Include="${MSVS_INC};$INCLUDE"
+      export PATH="${MSVS_PATH}$PATH"
+      LIB_PREPEND="${MSVS_LIB}"
+      INC_PREPEND="${MSVS_INC}"
+      export Lib="${MSVS_LIB}$LIB"
+      export Include="${MSVS_INC}$INCLUDE"
     ])
   ])
 ])
@@ -163,9 +163,9 @@ AS_IF([test "${OCAML_OS_TYPE}" = "Win32"],[
 AC_SUBST(LN_S)
 
 if test x"$FETCH" = x"curl" ; then
-  AC_SUBST(fetch, "curl $curl_certificate_check -OLSs")
+  AC_SUBST(fetch, "curl $curl_certificate_check -LSs -o \$(2) \$(1)")
 elif test x"$FETCH" = x"wget" ; then
-  AC_SUBST(fetch, "wget $wget_certificate_check")
+  AC_SUBST(fetch, "wget $wget_certificate_check -O \$(2) \$(1)")
 elif test x"${enable_checks}" != x"no" ; then
   AC_MSG_ERROR([You must have either curl or wget installed.])
 fi

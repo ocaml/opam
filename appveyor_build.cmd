@@ -82,7 +82,7 @@ set INSTALLED_URL=
 for /f "tokens=3" %%U in ('findstr /C:"URL_ocaml = " src_ext\Makefile') do set OCAML_URL=%%U
 for /f "tokens=3" %%U in ('findstr /C:"URL_flexdll = " src_ext\Makefile') do set FLEXDLL_URL=%%U
 if exist bootstrap\installed-tarball for /f "delims=" %%U in ('type bootstrap\installed-tarball') do set INSTALLED_URL=%%U
-if "%INSTALLED_URL%" neq "%OCAML_URL% %FLEXDLL_URL%" if exist bootstrap\nul (
+if "%INSTALLED_URL%" neq "%OCAML_URL% %FLEXDLL_URL% %DEP_MODE%" if exist bootstrap\nul (
   echo Required: %OCAML_URL% %FLEXDLL_URL%
   echo Compiled: %INSTALLED_URL%
   echo Re-building bootstrap compiling
@@ -94,6 +94,7 @@ if "%INSTALLED_URL%" neq "%OCAML_URL% %FLEXDLL_URL%" if exist bootstrap\nul (
 
 if not exist bootstrap\nul (
   "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make compiler" || exit /b 1
+  for /f "delims=" %%U in ('type bootstrap\installed-tarball') do echo %%U %DEP_MODE%> bootstrap\installed-tarball
   if "%CYG_ARCH%%OCAML_PORT%" equ "x86_64" (
     "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && rebase -b 0x7cd20000 bootstrap/ocaml/lib/ocaml/stublibs/dllunix.so" || exit /b 1
     "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && rebase -b 0x7cd20000 bootstrap/ocaml/lib/ocaml/stublibs/dllthreads.so" || exit /b 1
@@ -113,6 +114,7 @@ if not exist bootstrap\nul (
       md bootstrap\%%D
     )
   )
+  if "%DEP_MODE%" equ "lib-pkg" "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make lib-pkg" || exit /b 1
 )
 
 goto :EOF
@@ -122,7 +124,9 @@ if "%OCAML_PORT%" equ "" (
   rem make install doesn't yet work for the native Windows builds
   set POST_COMMAND=^&^& make opam-installer install
 )
-"%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && ./configure && make lib-ext && make opam %POST_COMMAND%" || exit /b 1
+set LIB_EXT=
+if "%DEP_MODE%" equ "lib-ext" set LIB_EXT=^&^& make lib-ext
+"%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER %LIB_PKG% && ./configure %LIB_EXT% && make opam %POST_COMMAND%" || exit /b 1
 goto :EOF
 
 :test

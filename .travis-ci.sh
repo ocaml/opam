@@ -26,7 +26,19 @@ install-bootstrap () {
 
 case "$TARGET" in
     prepare)
-        mkdir -p ~/local/bin
+      mkdir -p ~/local/bin
+
+      if [ "$COLD" = "1" ]; then
+        wget http://ftpmirror.gnu.org/gnu/make/make-4.2.tar.gz
+        tar -xzf make-4.2.tar.gz
+        mkdir make-4.2-build
+        cd make-4.2-build
+        ../make-4.2/configure --prefix ~/local
+        make
+        make install
+        cd ..
+        make compiler
+      else
         wget -q -O ~/local/bin/opam \
              "https://github.com/ocaml/opam/releases/download/$OPAMBSVERSION/opam-$OPAMBSVERSION-$(uname -m)-$(uname -s)"
         chmod a+x ~/local/bin/opam
@@ -35,21 +47,26 @@ case "$TARGET" in
             rvm --default use 2.3.3
             brew install "$EXTERNAL_SOLVER"
         fi
-        exit 0
-        ;;
+      fi
+      exit 0
+      ;;
     install)
+      if [ "$COLD" = "1" ]; then
+        make lib-pkg
+      else
         # Note: this part is cached, and must be idempotent
         # Re-init opam from scratch if the install fails
         if [ -d $OPAMBSROOT ]
         then install-bootstrap || { rm -rf $OPAMBSROOT; install-bootstrap; }
         else install-bootstrap
         fi
-        exit 0
-        ;;
+      fi
+      exit 0
+      ;;
     build)
-        ;;
+      ;;
     *)
-        echo "bad command $TARGET"; exit 1
+      echo "bad command $TARGET"; exit 1
 esac
 
 export OPAMYES=1
@@ -60,14 +77,16 @@ git config --global user.email "travis@example.com"
 git config --global user.name "Travis CI"
 
 ( # Run subshell in bootstrap root env to build
+  if [ "$COLD" != "1" ]; then
     export OPAMROOT="$OPAMBSROOT"
     eval $(opam config env)
 
     [ "$(ocaml -vnum)" = "$OCAML_VERSION" ] || exit 12
+  fi
 
     ./configure --prefix ~/local --with-mccs
 
-    if [ "$OPAM_TEST" != "1" ]; then make lib-ext; fi
+    if [ "$OPAM_TEST" != "1" -a "$COLD" != "1"  ]; then make lib-ext; fi
     make all
 
     rm -f ~/local/bin/opam
@@ -96,6 +115,9 @@ git config --global user.name "Travis CI"
         cd ~/build/opam-rt-*
         OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make KINDS="local git" run
     else
+        if [ "$COLD" = "1" ]; then
+          export PATH=`pwd`/bootstrap/ocaml/bin:$PATH
+        fi
         # Test basic actions
         opam init
         eval $(opam config env)

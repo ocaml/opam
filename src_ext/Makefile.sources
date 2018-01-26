@@ -1,0 +1,63 @@
+URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.0.tar.gz
+MD5_cppo = aee411b3546bc5d198c71ae9185cade4
+
+$(call PKG_SAME,cppo)
+
+URL_extlib = https://github.com/ygrek/ocaml-extlib/releases/download/1.7.2/extlib-1.7.2.tar.gz
+MD5_extlib = 0f550dd06242828399a73387c49e0eed
+
+$(call PKG_SAME,extlib)
+
+URL_re = https://github.com/ocaml/ocaml-re/archive/1.7.1.tar.gz
+MD5_re = 0e45743512b7ab5e6b175f955dc72002
+
+$(call PKG_SAME,re)
+
+URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.0.2.tbz
+MD5_cmdliner = ab2f0130e88e8dcd723ac6154c98a881
+
+$(call PKG_SAME,cmdliner)
+
+URL_ocamlgraph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.8.tar.gz
+MD5_ocamlgraph = 9d71ca69271055bd22d0dfe4e939831a
+
+$(call PKG_SAME,ocamlgraph)
+
+URL_cudf = https://gforge.inria.fr/frs/download.php/file/36602/cudf-0.9.tar.gz
+MD5_cudf = a4c0e652e56e74c7b388a43f9258d119
+
+$(call PKG_SAME,cudf)
+
+URL_dose3 = https://gforge.inria.fr/frs/download.php/file/36063/dose3-5.0.1.tar.gz
+MD5_dose3 = e7d4b1840383c6732f29a47c08ba5650
+
+$(call PKG_SAME,dose3)
+
+URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+5.tar.gz
+MD5_mccs = 8a569a8f31969805da236471f4c0811d
+
+$(call PKG_SAME,mccs)
+
+URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.0.0-beta5.tar.gz
+MD5_opam-file-format = 5408798ca3af6e36379dd34b1b618b9c
+
+$(call PKG_SAME,opam-file-format)
+
+URL_result = https://github.com/janestreet/result/archive/1.2.tar.gz
+MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
+
+$(call PKG_SAME,result)
+
+URL_jbuilder = https://github.com/janestreet/jbuilder/archive/1.0+beta16.tar.gz
+MD5_jbuilder = baef04fc99d52e98736db9e53a72bfce
+
+$(call PKG_SAME,jbuilder)
+
+URL_PKG_findlib = http://download.camlcity.org/download/findlib-1.7.3.tar.gz
+MD5_PKG_findlib = 7d57451218359f7b7dfc969e3684a6da
+
+URL_PKG_ocamlbuild = https://github.com/ocaml/ocamlbuild/archive/0.12.0.tar.gz
+MD5_PKG_ocamlbuild = 442baa19470bd49150f153122e22907b
+
+URL_PKG_topkg = http://erratique.ch/software/topkg/releases/topkg-0.9.1.tbz
+MD5_PKG_topkg = 8978a0595db1a22e4251ec62735d4b84

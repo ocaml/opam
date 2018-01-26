@@ -61,13 +61,16 @@ The following Cygwin packages are required:
 * From Devel - `make`
 * From Devel - `patch` (not required if OCaml and all required packages are
                         pre-installed)
+* From Interpreters - `m4` (unless required packages are pre-installed or built
+                            using `make lib-ext` rather than `make lib-pkg` - `m4`
+                            is required by findlib's build system)
 * From Devel - `mingw64-i686-gcc-core` & `mingw64-x86_64-gcc-core` (not required if
                                                                  building with MSVC)
 
 Alternatively, having downloaded Cygwin's setup program, Cygwin can be installed
 using the following command line:
 
-`setup-x86_64 --root=C:\cygwin64 --quiet-mode --no-desktop --no-startmenu --packages=make,mingw64-i686-gcc-core,mingw64-x86_64-gcc-core,patch`
+`setup-x86_64 --root=C:\cygwin64 --quiet-mode --no-desktop --no-startmenu --packages=make,mingw64-i686-gcc-core,mingw64-x86_64-gcc-core,m4,patch`
 
 The `--no-desktop` and `--no-startmenu` switches may be omitted in order to create
 shortcuts on the Desktop and Start Menu respectively. Executed this way, setup will
@@ -113,7 +116,17 @@ make compiler [OCAML_PORT=mingw64|mingw|msvc64|msvc|auto]
 The `OCAML_PORT` variable determines which flavour of Windows OCaml is compiled -
 `auto` will attempt to guess. As long as `gcc` is **not** installed in Cygwin
 (i.e. the native C compiler *for Cygwin*), `OCAML_PORT` does not need to be
-specified and `auto` will be assumed.
+specified and `auto` will be assumed. Once the compiler is built, you may run:
+```
+make lib-pkg
+```
+to install the dependencies as findlib packages to the compiler. Building `lib-pkg`
+requires the ability to create native symbolic links (and the `CYGWIN` variable
+*must* include `winsymlinks:native`) - this means that either Cygwin must be run
+elevated from an account with administrative privileges or your user account must be
+granted the SeCreateSymbolicLinkPrivilege either by enabling Developer mode on
+Windows 10, or using Local Security Policy on earlier versions of Windows.
+Alternatively, you may run `configure` and use `make lib-ext`, as advised.
 
 You can then `configure` and build opam as above.
 

@@ -1,0 +1,37 @@
+From 441cd1403081099ded532119cd195b3c27e36392 Mon Sep 17 00:00:00 2001
+From: David Allsopp <david.allsopp@metastack.com>
+Date: Thu, 23 Jul 2015 17:53:05 +0100
+Subject: [PATCH] Fix compilation using Microsoft C Compiler
+
+---
+ Makefile | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index edf24c4..9e1f7b0 100644
+--- a/Makefile
++++ b/Makefile
+@@ -2,6 +2,8 @@ include Makefile.config
+ 
+ NAME = cudf
+ 
++EXT_LIB=$(shell ocamlc -config | fgrep ext_lib | sed -e "s/ext_lib: \.//")
++
+ ifeq ("$(shell (ocamlc -config 2>/dev/null || ocamlopt -config) | fgrep os_type)","os_type: Win32")
+ EXE=.exe
+ OCAMLLIBDIR := $(shell cygpath $(OCAMLLIBDIR))
+@@ -81,9 +83,9 @@ TAGS: $(SOURCES)
+ 	otags $^
+ 
+ INSTALL_STUFF = META
+-INSTALL_STUFF += $(wildcard _build/*.cma _build/*.cmxa _build/cudf.a)
++INSTALL_STUFF += $(wildcard _build/*.cma _build/*.cmxa _build/cudf.$(EXT_LIB))
+ INSTALL_STUFF += $(wildcard _build/cudf_*.cmi) $(wildcard _build/*.mli)
+-INSTALL_STUFF += $(wildcard _build/cudf_*.cmx _build/cudf_*.o _build/cudf_*.a)
++INSTALL_STUFF += $(wildcard _build/cudf_*.cmx _build/cudf_*.o _build/cudf_*.$(EXT_LIB))
+ INSTALL_STUFF += $(wildcard _build/cudf.o _build/cudf.cmx _build/cudf.cmi)
+ 
+ install:
+-- 
+2.4.4.windows.2
+

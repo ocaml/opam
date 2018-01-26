@@ -46,8 +46,14 @@ opam-admin.top: $(JBUILDER_DEP)
 lib-ext:
 	$(MAKE) -j -C src_ext lib-ext
 
+lib-pkg:
+	$(MAKE) -j -C src_ext lib-pkg
+
 download-ext:
 	$(MAKE) -C src_ext cache-archives
+
+download-pkg:
+	$(MAKE) -C src_ext archives-pkg
 
 clean-ext:
 	$(MAKE) -C src_ext distclean
