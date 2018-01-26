@@ -24,6 +24,8 @@ let packages st = st.pinned
 let possible_definition_filenames dir name = [
   dir / (OpamPackage.Name.to_string name ^ ".opam") // "opam";
   dir // (OpamPackage.Name.to_string name ^ ".opam");
+  dir / "opam" / (OpamPackage.Name.to_string name ^ ".opam") // "opam";
+  dir / "opam" // (OpamPackage.Name.to_string name ^ ".opam");
   dir / "opam" // "opam";
   dir // "opam"
 ]
@@ -48,7 +50,7 @@ let name_of_opam_filename dir file =
 
 let files_in_source d =
   let baseopam = OpamFilename.Base.of_string "opam" in
-  let files =
+  let files d =
     List.filter (fun f ->
         OpamFilename.basename f = baseopam ||
         OpamFilename.check_suffix f ".opam")
@@ -61,6 +63,7 @@ let files_in_source d =
         else None)
       (OpamFilename.dirs d)
   in
+  files d @ files (d / "opam") |>
   OpamStd.List.filter_map
     (fun f ->
        try
@@ -71,7 +74,6 @@ let files_in_source d =
          OpamConsole.error "Can not read %s, ignored."
            (OpamFilename.to_string f);
          None)
-    files
 
 let orig_opam_file opam =
   let open OpamStd.Option.Op in

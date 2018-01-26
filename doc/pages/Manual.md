@@ -179,17 +179,23 @@ existing package). `opam pin edit <package>` provides a way to directly pin and
 edit the metadata of the given package, locally to the current switch, for
 example to tweak a dependency.
 
-`opam pin` can further be used to divert the source of a package, or even create
-a new package, using `opam pin <package> <URL>` ; this is also very useful to
-point to a local path containing a development or patched version of the package
-source. If the source you are pointing to contains a matching `<pkgname>.opam/`
-or `opam/` directory, a matching `<pkgname>.opam` or `opam` file, that will be
-used as the initial package metadata.
+`opam pin [package] <URL>` can further be used to divert the source of a
+package, or even create a new package ; this is very useful to point to a local
+path containing a development or patched version of the package source. When
+pinning a package, the source is searched for metadata in an `opam` or
+`<pkgname>.opam` file, either at the root of the source tree or in an `opam`
+directory. You can also replace that file by a directory containing an `opam`
+file and optionally other metadata, like a `files/` subdirectory.
 
 Whenever an install, reinstall or upgrade command-line refers to a pinned
 package, <span class="opam">opam</span> first fetches its latest source. `opam
 update [--development]` is otherwise the standard way to update the sources of
 all the packages pinned in the current switch.
+
+`opam install <DIR>` is an automatic way to handle pinning packages whose
+definitions are found in `<DIR>`, synchronise and install them. The `upgrade`,
+`reinstall` and `remove` commands can likewise be used with a directory argument
+to refer to pinned packages.
 
 ## Common file format
 
