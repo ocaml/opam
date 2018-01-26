@@ -246,10 +246,16 @@ let pinned_package st ?version ?(working_dir=false) name =
     in
     let equal_opam a b =
       let cleanup_opam o =
+        let v =
+          OpamStd.Option.default (OpamPackage.Version.of_string "~dev")
+            (OpamFile.OPAM.version_opt o)
+        in
         OpamFile.OPAM.effective_part
-          (OpamFile.OPAM.with_url_opt None o)
+          (o |> OpamFile.OPAM.with_url_opt None
+           |> OpamFile.OPAM.with_version v)
       in
-      cleanup_opam (OpamFormatUpgrade.opam_file a) = cleanup_opam b
+      cleanup_opam (OpamFormatUpgrade.opam_file a) =
+      cleanup_opam (OpamFormatUpgrade.opam_file b)
     in
     let changed_opam old new_ = match old, new_ with
       | None, Some _ -> true
@@ -329,14 +335,15 @@ let pinned_package st ?version ?(working_dir=false) name =
       Done (interactive_part, true)
     | (Up_to_date _ | Not_available _), _ ->
       Done ((fun st -> st), false)
-    | Result  (), Some new_opam ->
+    | Result  (), Some new_opam
+      when not (changed_opam old_source_opam overlay_opam) ->
       (* The new opam is not _effectively_ different from the old, so no need to
          confirm, but use it still (e.g. descr may have changed) *)
       let opam = save_overlay new_opam in
       Done
         ((fun st -> {st with opams = OpamPackage.Map.add nv opam st.opams}),
          true)
-    | Result  (), None ->
+    | Result  (), _ ->
       Done ((fun st -> st), true)
 
 let dev_package st ?working_dir nv =
