@@ -19,6 +19,7 @@ Either from an existing opam installation, use `opam pin add opam-devel
 
 * Make sure you have the required dependencies installed:
   - GNU make
+  - GNU C++ compiler
   - OCaml >= 4.02.3 (or see [below](#compiling-without-ocaml))
   - The `glpk` library (or see [below](#integrated-solver))
 * Run `./configure`
