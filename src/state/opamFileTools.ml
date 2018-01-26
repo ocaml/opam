@@ -392,7 +392,7 @@ let lint t =
       (t.bug_reports = []);
     cond 37 `Warning
       "Missing field 'dev-repo'"
-      (t.dev_repo = None);
+      (t.dev_repo = None && t.url <> None);
 (*
         cond 38 `Warning
           "Package declares 'depexts', but has no 'post-messages' to help \
