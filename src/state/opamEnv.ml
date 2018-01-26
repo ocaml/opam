@@ -217,24 +217,21 @@ let compute_updates ?(force_path=false) st =
         | None -> acc)
       st.installed []
   in
+  switch_env @ pkg_env @ man_path @ [path]
+
+let updates ~set_opamroot ~set_opamswitch ?force_path st =
+  let update = compute_updates ?force_path st in
   let root =
-    let current = st.switch_global.root in
-    let default = OpamStateConfig.(default.root_dir) in
-    let current_string = OpamFilename.Dir.to_string current in
-    let env = OpamStd.Env.getopt "OPAMROOT" in
-    if current <> default || (env <> None && env <> Some current_string)
-    then [ "OPAMROOT", Eq, current_string, Some "Opam root in use" ]
+    if set_opamroot then
+      [ "OPAMROOT", Eq, OpamFilename.Dir.to_string st.switch_global.root,
+        Some "Opam root in use" ]
     else []
   in
-  root @ switch_env @ pkg_env @ man_path @ [path]
-
-let updates ~opamswitch ?force_path st =
-  let update = compute_updates ?force_path st in
   let switch =
-    if opamswitch then
+    if set_opamswitch then
       [ "OPAMSWITCH", Eq, OpamSwitch.to_string st.switch, None ]
     else [] in
-  switch @ update
+  root @ switch @ update
 
 let get_pure ?(updates=[]) () =
   let env = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
@@ -248,13 +245,14 @@ let get_pure ?(updates=[]) () =
 
    Note: when we do the later command with --switch=SWITCH, this mean
    we really want to get the environment for this switch. *)
-let get_opam ~force_path st =
-  let opamswitch = OpamStateConfig.(!r.switch_from <> `Default) in
-  add [] (updates ~opamswitch ~force_path st)
+let get_opam ?(set_opamroot=false) ?(set_opamswitch=false) ~force_path st =
+  add [] (updates ~set_opamroot ~set_opamswitch ~force_path st)
 
-let get_full ?(opamswitch=true) ~force_path ?updates:(u=[]) st =
+let get_full
+    ?(set_opamroot=false) ?(set_opamswitch=false) ~force_path ?updates:(u=[])
+    st =
   let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
-  let updates = u @ updates ~opamswitch ~force_path st in
+  let updates = u @ updates ~set_opamroot ~set_opamswitch ~force_path st in
   add env0 updates
 
 let is_up_to_date_raw updates =
@@ -306,13 +304,10 @@ let full_with_path ~force_path ?(updates=[]) root switch =
   add env0 (switch_path_update ~force_path root switch @ updates)
 
 let is_up_to_date st =
-  let opamswitch =
-    OpamStateConfig.(!r.switch_from = `Env) ||
-    Some st.switch <> OpamFile.Config.switch st.switch_global.config
-  in
-  is_up_to_date_raw (updates ~opamswitch ~force_path:false st)
+  is_up_to_date_raw
+    (updates ~set_opamroot:false ~set_opamswitch:false ~force_path:false st)
 
-let eval_string gt switch =
+let eval_string gt ?(set_opamswitch=false) switch =
   let root =
     let opamroot_cur = OpamFilename.Dir.to_string gt.root in
     let opamroot_env =
@@ -332,17 +327,20 @@ let eval_string gt switch =
       let sw_env =
         OpamStd.Option.Op.(
           OpamStd.Env.getopt "OPAMSWITCH" ++
+          (OpamStateConfig.get_current_switch_from_cwd gt.root >>|
+           OpamSwitch.to_string) ++
           (OpamFile.Config.switch gt.config >>| OpamSwitch.to_string)
         )
       in
       if Some sw_cur <> sw_env then Printf.sprintf " --switch=%s" sw_cur
       else ""
   in
+  let setswitch = if set_opamswitch then " --set-switch" else "" in
   match OpamStd.Sys.guess_shell_compat () with
   | `fish ->
-    Printf.sprintf "eval (opam env%s%s)" root switch
+    Printf.sprintf "eval (opam env%s%s%s)" root switch setswitch
   | _ ->
-    Printf.sprintf "eval $(opam env%s%s)" root switch
+    Printf.sprintf "eval $(opam env%s%s%s)" root switch setswitch
 
 
 
@@ -482,7 +480,7 @@ let write_static_init_scripts root ~completion =
   List.iter (write_script root) scripts
 
 let write_dynamic_init_scripts st =
-  let updates = updates ~opamswitch:false st in
+  let updates = updates ~set_opamroot:false ~set_opamswitch:false st in
   try
     OpamFilename.with_flock_upgrade `Lock_write ~dontblock:true
       st.switch_global.global_lock

@@ -17,15 +17,19 @@ open OpamStateTypes
 (** {2 Environment handling} *)
 
 (** Get the current environment with OPAM specific additions. If [force_path],
-    the PATH is modified to ensure opam dirs are leading. If [opamswitch],
-    the OPAMSWITCH environment variable is included (default true). *)
+    the PATH is modified to ensure opam dirs are leading. [set_opamroot] and
+    [set_opamswitch] can be additionally used to set the [OPAMROOT] and
+    [OPAMSWITCH] variables. *)
 val get_full:
-  ?opamswitch:bool -> force_path:bool -> ?updates:env_update list ->
-  'a switch_state -> env
+  ?set_opamroot:bool -> ?set_opamswitch:bool -> force_path:bool ->
+  ?updates:env_update list -> 'a switch_state -> env
 
 (** Get only environment modified by OPAM. If [force_path], the PATH is modified
-    to ensure opam dirs are leading. *)
-val get_opam: force_path:bool -> 'a switch_state -> env
+    to ensure opam dirs are leading. [set_opamroot] and [set_opamswitch] can be
+    additionally used to set the [OPAMROOT] and [OPAMSWITCH] variables. *)
+val get_opam:
+  ?set_opamroot:bool -> ?set_opamswitch:bool -> force_path:bool ->
+  'a switch_state -> env
 
 (** Returns the running environment, with any opam modifications cleaned out,
     and optionally the given updates *)
@@ -48,9 +52,9 @@ val is_up_to_date_switch: dirname -> switch -> bool
 val compute_updates: ?force_path:bool -> 'a switch_state -> env_update list
 
 (** The shell command to run by the user to set his OPAM environment, adapted to
-    the current environment (OPAMROOT, OPAMSWITCH variables) and shell (as
-    returned by [eval `opam config env`]) *)
-val eval_string: 'a global_state -> switch option -> string
+    the current shell (as returned by [eval `opam config env`]) *)
+val eval_string:
+  'a global_state -> ?set_opamswitch:bool -> switch option -> string
 
 (** Returns the updated contents of the PATH variable for the given opam root
     and switch (set [force_path] to ensure the opam path is leading) *)

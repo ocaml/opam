@@ -9,8 +9,9 @@ TARGET="$1"; shift
 # Install the build requirements into $OPAMBSROOT using the opam binary from the
 # prepare step
 install-bootstrap () {
-    opam init --root=$OPAMBSROOT --yes --no-setup --compiler=$OCAML_VERSION
-    eval $(opam config env --root=$OPAMBSROOT)
+    export OPAMROOT="$OPAMBSROOT"
+    opam init --yes --no-setup --compiler=$OCAML_VERSION
+    eval $(opam config env)
     if [ "$OPAM_TEST" = "1" ]; then
         opam pin add jbuilder --dev-repo --yes
         opam install ocamlfind ocamlbuild cohttp cohttp-lwt-unix 'lwt>=3.1.0' ssl cmdliner dose3 opam-file-format re 'jbuilder>=1.0+beta14' 'mccs>=1.1+4' --yes
@@ -59,7 +60,8 @@ git config --global user.email "travis@example.com"
 git config --global user.name "Travis CI"
 
 ( # Run subshell in bootstrap root env to build
-    eval $(opam config env --root=$OPAMBSROOT)
+    export OPAMROOT="$OPAMBSROOT"
+    eval $(opam config env)
 
     [ "$(ocaml -vnum)" = "$OCAML_VERSION" ] || exit 12
 
