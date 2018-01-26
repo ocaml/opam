@@ -20,7 +20,7 @@ Either from an existing opam installation, use `opam pin add opam-devel
 * Make sure you have the required dependencies installed:
   - GNU make
   - OCaml >= 4.02.3 (or see [below](#compiling-without-ocaml))
-  - The `glpk` library (or see [below](#integrated-solver))
+  - A C++ compiler (unless building without a solver, see `./configure --without-mccs`)
 * Run `./configure`
 * Run `make lib-ext` as advertised by `./configure` if you don't have the
   dependencies installed. This will locally take care of all OCaml dependencies
@@ -142,18 +142,6 @@ make cold-install
 ```
 
 NOTE: You'll still need GNU make.
-
-## Integrated solver
-
-Having the `glpk` library and headers installed enables compilation of opam with
-a built-in solver. Without it, the compiled opam will require an
-[external solver](http://opam.ocaml.org/doc/Install.html#ExternalSolvers), such
-as `aspcud`, at runtime.
-
-You can compile `glpk` locally and install it to a custom prefix, then run
-`./configure LIB_PREFIX=custom_prefix`. To avoid dynamically depending on it,
-some options need to be specified at link-time, which can be done through file
-`src/client/linking.sexp`. See `release/Makefile` for examples.
 
 ## Bug tracker
 
