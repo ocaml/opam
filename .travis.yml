@@ -39,6 +39,9 @@ matrix:
       env: OCAML_VERSION=4.06.0 OPAM_TEST=1 EXTERNAL_SOLVER=
     - os: osx
       env: OCAML_VERSION=4.03.0 OPAM_TEST=
+  allow_failures:
+    - os: osx
+  fast_finish: true
 notifications:
   email:
     - opam-commits@lists.ocaml.org
