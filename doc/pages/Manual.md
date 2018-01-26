@@ -965,11 +965,15 @@ files.
   contents in the same format as the [`url`](#url) file, and has the same effect
   as using a separate `url` file.
 
-- <a id="opamfield-setenv">`setenv: [ <environment-update> ... ]`</a>:
-  defines environment variables updates that will be applied upon installing the
+- <a id="opamfield-setenv">`setenv: [ <environment-update> ... ]`</a>: defines
+  environment variables updates that will be applied upon installing the
   package. The updates will be visible to any dependent package, as well as
-  exported to the shell environment through `opam env` and
-  `~/.opam/opam-init/` scripts.
+  exported to the shell environment through `opam env` and `~/.opam/opam-init/`
+  scripts. Note that while it is guaranteed that dependents will see the
+  environment updates, and dependencies won't, other cases are unspecified. The
+  order in which `setenv:` updates done by different packages are applied is
+  deterministic, but also unspecified. In particular, it is not currently
+  guaranteed to follow dependency order.
 
 - <a id="opamfield-build-env">`build-env: [ <environment-update> ... ]`</a>:
   defines environment updates that will be applied when running the package's
