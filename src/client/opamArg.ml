@@ -855,15 +855,16 @@ let global_options =
        This is equivalent to setting $(b,\\$OPAMDEBUG) to \"true\"." in
   let debug_level =
     mk_opt ~section ["debug-level"] "LEVEL"
-      "Like `--debug', but allows specifying the debug level (`--debug' \
+      "Like $(b,--debug), but allows specifying the debug level ($(b,--debug) \
        sets it to 1). Equivalent to setting $(b,\\$OPAMDEBUG) to a positive \
        integer."
       Arg.(some int) None in
   let verbose =
     Arg.(value & flag_all & info ~docs:section ["v";"verbose"] ~doc:
-           "Be more verbose, show package sub-commands and their output. \
-            Repeat to see more. Repeating $(i,n) times is equivalent to \
-            setting $(b,\\$OPAMVERBOSE) to \"$(i,n)\".") in
+           "Be more verbose. One $(b,-v) shows all package commands, repeat to \
+            also display commands called internally (e.g. $(i,tar), $(i,curl), \
+            $(i,patch) etc.) Repeating $(i,n) times is equivalent to setting \
+            $(b,\\$OPAMVERBOSE) to \"$(i,n)\".") in
   let quiet =
     mk_flag ~section ["q";"quiet"] "Disables $(b,--verbose)." in
   let color =
