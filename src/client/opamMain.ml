@@ -32,7 +32,7 @@ let check_and_run_external_commands () =
       let command = plugin_prefix ^ name in
       let answer = match Sys.argv.(1) with
         | "-y" | "--yes" -> Some true
-        | _ -> None
+        | _ -> OpamStd.Config.env_bool "YES"
       in
       OpamStd.Config.init ~answer ();
       OpamFormatConfig.init ();
