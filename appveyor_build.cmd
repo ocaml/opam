@@ -82,15 +82,32 @@ set INSTALLED_URL=
 for /f "tokens=3" %%U in ('findstr /C:"URL_ocaml = " src_ext\Makefile') do set OCAML_URL=%%U
 for /f "tokens=3" %%U in ('findstr /C:"URL_flexdll = " src_ext\Makefile') do set FLEXDLL_URL=%%U
 if exist bootstrap\installed-tarball for /f "delims=" %%U in ('type bootstrap\installed-tarball') do set INSTALLED_URL=%%U
+
 if "%INSTALLED_URL%" neq "%OCAML_URL% %FLEXDLL_URL% %DEP_MODE%" if exist bootstrap\nul (
-  echo Required: %OCAML_URL% %FLEXDLL_URL%
+  echo Required: %OCAML_URL% %FLEXDLL_URL% %DEP_MODE%
   echo Compiled: %INSTALLED_URL%
-  echo Re-building bootstrap compiling
+  echo Re-building bootstrap compiler
   rd /s/q bootstrap
   if exist src_ext\archives\nul rd /s/q src_ext\archives
 )
 
-"%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make -C src_ext cache-archives" || exit /b 1
+if "%DEP_MODE%" equ "lib-pkg" "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make --no-print-directory -C src_ext lib-pkg-urls | head -n -1 | sort | uniq" > current-lib-pkg-list
+if not exist bootstrap\installed-packages goto SkipCheck
+
+fc bootstrap\installed-packages current-lib-pkg-list > nul
+if %ERRORLEVEL% equ 1 (
+  echo lib-pkg packages changed:
+  "%CYG_ROOT%\bin\diff.exe" bootstrap/installed-packages current-lib-pkg-list | "%CYG_ROOT%\bin\sed.exe" -ne "s/</Remove/p" -e "s/>/Add/p" | "%CYG_ROOT%\bin\gawk.exe" "BEGIN{FS="" ""}$2!=k{if(k!="""")print o==f?w:o;w=$0;k=$2;f=o=$2"" ""$3;next}{o=""Switch ""o"" --> ""$3}END{print o==f?w:o}"
+  echo lib-pkg will be re-built
+  "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make --no-print-directory -C src_ext reset-lib-pkg"
+  del bootstrap\installed-packages
+) else (
+  del current-lib-pkg-list
+)
+
+:SkipCheck
+
+"%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make --no-print-directory -C src_ext cache-archives" || exit /b 1
 
 if not exist bootstrap\nul (
   "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make compiler" || exit /b 1
@@ -109,12 +126,19 @@ if not exist bootstrap\nul (
   )
   for /f %%D in ('dir /b/ad bootstrap\ocaml-*') do (
     rd /s/q bootstrap\%%D
-    if "%OCAML_PORT%" equ "" (
-      rem Directory needs to exist, as the Cygwin bootstraps OCAMLLIB refers to it
-      md bootstrap\%%D
-    )
+    rem Directory needs to exist, as the Cygwin bootstraps OCAMLLIB refers to it
+    rem and bootstrap-ocaml.sh assumes it will exist even when regenerating the
+    rem config.
+    md bootstrap\%%D
   )
-  if "%DEP_MODE%" equ "lib-pkg" "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make lib-pkg" || exit /b 1
+) else (
+  if not exist bootstrap\installed-packages "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make --no-print-directory -C src_ext reset-lib-pkg"
+  if exist current-lib-pkg-list "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && GEN_CONFIG_ONLY=1 shell/bootstrap-ocaml.sh %OCAML_PORT%" || exit /b 1
+)
+
+if exist current-lib-pkg-list (
+  "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make lib-pkg" || exit /b 1
+  move current-lib-pkg-list bootstrap\installed-packages
 )
 
 goto :EOF

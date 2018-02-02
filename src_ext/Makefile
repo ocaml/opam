@@ -70,6 +70,10 @@ lib-pkg:
 	@false
 endif
 
+.PHONY: lib-pkg-urls
+lib-pkg-urls:
+	@$(foreach i,$(PKG_EXTS),$(info $i $(URL_PKG_$i)))
+
 reset-lib-pkg:
 	@rm -f ../bootstrap/ocaml/bin/ocamlbuild* ../bootstrap/ocaml/bin/ocamlfind* `ls ../bootstrap/ocaml/bin/* | grep -v "flexlink\|\/ocaml[^\/]*$$"` ../bootstrap/ocaml/lib/topfind
 	@rm -rf ../bootstrap/ocaml/lib/site-lib ../bootstrap/ocaml/etc *.pkgbuild
