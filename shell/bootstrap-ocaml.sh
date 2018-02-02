@@ -101,7 +101,7 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
   PREFIX=`cd .. ; pwd`/ocaml
   WINPREFIX=`echo ${PREFIX} | cygpath -f - -m`
   if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
-    sed -e "s|^PREFIX=.*|PREFIX=${WINPREFIX}|" config/Makefile.${BUILD} > config/Makefile
+    sed -e "s|^PREFIX=.*|PREFIX=${WINPREFIX}|" -e "s|/lib|/lib/ocaml|" config/Makefile.${BUILD} > config/Makefile
     cp config/s-nt.h byterun/caml/s.h
     cp config/m-nt.h byterun/caml/m.h
   fi
@@ -116,7 +116,7 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
     mv flexdll-* flexdll
     PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make flexdll world.opt install
   fi
-  OCAMLLIB=${WINPREFIX}/lib
+  OCAMLLIB=${WINPREFIX}/lib/ocaml
 else
   PREFIX=`cd .. ; pwd`/ocaml
   if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then

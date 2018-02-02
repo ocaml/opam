@@ -81,6 +81,10 @@ if "%OCAML_PORT%" neq "" git apply appveyor.patch
 set INSTALLED_URL=
 for /f "tokens=3" %%U in ('findstr /C:"URL_ocaml = " src_ext\Makefile') do set OCAML_URL=%%U
 for /f "tokens=3" %%U in ('findstr /C:"URL_flexdll = " src_ext\Makefile') do set FLEXDLL_URL=%%U
+if exist bootstrap\ocaml\lib\stdlib.cmxa (
+  echo Deleting out-of-date bootstrap compiler
+  rd /s/q bootstrap
+)
 if exist bootstrap\installed-tarball for /f "delims=" %%U in ('type bootstrap\installed-tarball') do set INSTALLED_URL=%%U
 
 if "%INSTALLED_URL%" neq "%OCAML_URL% %FLEXDLL_URL% %DEP_MODE%" if exist bootstrap\nul (

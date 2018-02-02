@@ -76,7 +76,7 @@ lib-pkg-urls:
 
 reset-lib-pkg:
 	@rm -f ../bootstrap/ocaml/bin/ocamlbuild* ../bootstrap/ocaml/bin/ocamlfind* `ls ../bootstrap/ocaml/bin/* | grep -v "flexlink\|\/ocaml[^\/]*$$"` ../bootstrap/ocaml/lib/topfind
-	@rm -rf ../bootstrap/ocaml/lib/ocaml/site-lib ../bootstrap/ocaml/lib/site-lib ../bootstrap/ocaml/etc *.pkgbuild
+	@rm -rf ../bootstrap/ocaml/lib/ocaml/site-lib ../bootstrap/ocaml/etc *.pkgbuild
 
 ifeq ($(JBUILDER),)
 JBUILDER_DEP=jbuilder/_build/install/default/bin/jbuilder$(EXE)
