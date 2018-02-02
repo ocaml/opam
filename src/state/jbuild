@@ -11,7 +11,7 @@
 (rule
   ((targets (opamScript.ml))
    (deps    (../../shell/crunch.ml complete.sh complete.zsh prompt.sh))
-   (action  (with-stdout-to ${@} (run ocaml ${!^})))))
+   (action  (with-stdout-to ${@} (run ocaml ${^})))))
 
 (rule
   (with-stdout-to opamStateTypes.ml

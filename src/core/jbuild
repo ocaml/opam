@@ -13,9 +13,9 @@
 (rule
   ((targets (opamVersion.ml))
    (deps (opamVersion.ml.in ../../shell/subst_var.ml))
-   (action (with-stdout-to ${@} (run ocaml ../../shell/subst_var.ml PACKAGE_VERSION "<error>" ${!^})))))
+   (action (with-stdout-to ${@} (run ocaml ../../shell/subst_var.ml PACKAGE_VERSION "<error>" ${^})))))
 
 (rule
   ((targets (opamCoreConfig.ml))
    (deps (opamCoreConfig.ml.in ../../shell/subst_var.ml))
-   (action (with-stdout-to ${@} (run ocaml ../../shell/subst_var.ml DEVELOPER false ${!^})))))
+   (action (with-stdout-to ${@} (run ocaml ../../shell/subst_var.ml DEVELOPER false ${^})))))
