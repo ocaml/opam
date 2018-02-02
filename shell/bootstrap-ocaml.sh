@@ -21,6 +21,8 @@ if [ ! -e ${V}.tar.gz ]; then
 fi
 if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
   tar -zxf ${V}.tar.gz
+else
+  mkdir -p ${V}
 fi
 cd ${V}
 PATH_PREPEND=
@@ -125,7 +127,9 @@ else
   OCAMLLIB=${PREFIX}/lib/ocaml
 fi
 
-echo "${URL} ${FV_URL}" > ../installed-tarball
+if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
+  echo "${URL} ${FV_URL}" > ../installed-tarball
+fi
 
 # Generate src_ext/Makefile.config
 PATH_PREPEND=`echo "${PATH_PREPEND}" | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
