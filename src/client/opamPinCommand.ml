@@ -337,6 +337,10 @@ exception Nothing_to_do
 end
 include Exns
 
+let default_version st name =
+  try OpamPackage.version (OpamSwitchState.get_package st name)
+  with Not_found -> OpamPackage.Version.of_string "~dev"
+
 let rec handle_pin_depends st nv opam =
   let extra_pins = OpamFile.OPAM.pin_depends opam in
   let extra_pins =
@@ -373,12 +377,6 @@ and source_pin
     (slog OpamPackage.Name.to_string) name
     (slog (OpamStd.Option.to_string OpamPackage.Version.to_string)) version
     (slog (OpamStd.Option.to_string ~none:"none" OpamUrl.to_string)) target_url;
-  let installed_version =
-    try
-      Some (OpamPackage.version
-              (OpamSwitchState.find_installed_package_by_name st name))
-    with Not_found -> None
-  in
 
   let cur_version, cur_urlf =
     try
@@ -413,12 +411,7 @@ and source_pin
             "Are you sure you want to override this and pin it anyway ?"
         then raise Exns.Aborted
       );
-      let version =
-        try OpamPackage.version (OpamSwitchState.get_package st name)
-        with Not_found ->
-          OpamStd.Option.Op.(installed_version +!
-                             OpamPackage.Version.of_string "~dev")
-      in
+      let version = default_version st name in
       version, None
   in
 

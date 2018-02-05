@@ -276,7 +276,7 @@ let simulate_local_pinnings st to_pin =
           let opam, version = match OpamFile.OPAM.version_opt opam with
             | Some v -> opam, v
             | None ->
-              let v = OpamPackage.Version.of_string "~dev" in
+              let v = OpamPinCommand.default_version st name in
               OpamFile.OPAM.with_version v opam, v
           in
           OpamPackage.Map.add (OpamPackage.create name version) opam map)
@@ -388,6 +388,9 @@ let autopin st ?(simulate=false) ?quiet ?locked atom_or_local_list =
 
 let get_compatible_compiler ?repos ?locked rt dir =
   let gt = rt.repos_global in
+  let virt_st =
+    OpamSwitchState.load_virtual ?repos_list:repos gt rt
+  in
   let local_files = opams_of_dir ?locked dir in
   let local_opams =
     List.fold_left (fun acc (name, f) ->
@@ -397,7 +400,7 @@ let get_compatible_compiler ?repos ?locked rt dir =
           match OpamFile.OPAM.version_opt opam with
           | Some v -> OpamPackage.create name v, opam
           | None ->
-            let v = OpamPackage.Version.of_string "~dev" in
+            let v = OpamPinCommand.default_version virt_st name in
             OpamPackage.create name v,
             OpamFile.OPAM.with_version v opam
         in
@@ -416,9 +419,6 @@ let get_compatible_compiler ?repos ?locked rt dir =
     OpamSolution.eq_atoms_of_packages local_packages
   in
   let virt_st =
-    let virt_st =
-      OpamSwitchState.load_virtual ?repos_list:repos gt rt
-    in
     let opams =
       OpamPackage.Map.union (fun _ x -> x) virt_st.opams local_opams
     in

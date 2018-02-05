@@ -63,3 +63,7 @@ val list: 'a switch_state -> short:bool -> unit
     it *)
 val read_opam_file_for_pinning:
   name -> OpamFile.OPAM.t OpamFile.t -> url -> OpamFile.OPAM.t option
+
+(** The default version for pinning a package: depends on the state, what is
+    installed and available, and defaults to [~dev]. *)
+val default_version: 'a switch_state -> name -> version
