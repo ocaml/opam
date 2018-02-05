@@ -3,7 +3,7 @@ FROM multiarch/debian-debootstrap:%TARGET_TAG%
 #    docker run --rm --privileged multiarch/qemu-user-static:register --reset
 LABEL Description="opam release builds" Vendor="OCamlPro" Version="1.0"
 
-RUN apt-get update && apt-get install bzip2 g++ make patch wget libglpk-dev libltdl-dev --yes && apt-get clean --yes
+RUN apt-get update && apt-get install bzip2 g++ make patch wget libltdl-dev --yes && apt-get clean --yes
 RUN useradd -U --create-home opam
 
 ADD https://caml.inria.fr/pub/distrib/ocaml-4.04/ocaml-4.04.2.tar.gz /root/

@@ -2,7 +2,7 @@
 
 # This script is expected to run on Linux with docker available, and to have two
 # remotes "some-osx" and "some-openbsd", with the corresponding OSes, ocaml deps
-# and glpk installed
+# installed
 
 DIR=$(dirname $0)
 cd "$DIR"
