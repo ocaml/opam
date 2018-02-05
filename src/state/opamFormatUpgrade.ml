@@ -15,6 +15,7 @@ open OpamStd.Op
 open OpamFilename.Op
 
 let log fmt = OpamConsole.log "FMT_UPG" fmt
+let slog = OpamConsole.slog
 
 (* - Package and aux functions - *)
 
@@ -1079,9 +1080,10 @@ let opam_file ?(quiet=false) ?filename opam =
   then
     ((match filename with
         | Some f when not quiet ->
-          OpamConsole.note "Converting format of %s from %s to %s"
-            (OpamFile.to_string f) (OpamVersion.to_string v)
-            (OpamVersion.to_string latest_version)
+          log "Internally converting format of %a from %a to %a"
+            (slog OpamFile.to_string) f
+            (slog OpamVersion.to_string) v
+            (slog OpamVersion.to_string) latest_version
         | _ -> ());
      opam_file_from_1_2_to_2_0 ?filename opam)
   else opam
