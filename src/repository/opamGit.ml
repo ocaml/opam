@@ -143,7 +143,7 @@ module VCS : OpamVCS.VCS = struct
     (* Git diff is to the working dir, but doesn't work properly for
        unregistered directories. *)
     OpamSystem.raise_on_process_error r;
-    git repo_root ~stdout:patch_file [ "diff" ; "-R" ; "-p" ; rref; "--" ]
+    git repo_root ~stdout:patch_file [ "diff" ; "--no-ext-diff" ; "-R" ; "-p" ; rref; "--" ]
     @@> fun r ->
     if not (OpamProcess.check_success_and_cleanup r) then
       (finalise ();
@@ -155,7 +155,7 @@ module VCS : OpamVCS.VCS = struct
 
   let is_up_to_date repo_root repo_url =
     let rref = remote_ref repo_url in
-    git repo_root [ "diff" ; "--quiet" ; rref; "--" ]
+    git repo_root [ "diff" ; "--no-ext-diff" ; "--quiet" ; rref; "--" ]
     @@> function
     | { OpamProcess.r_code = 0; _ } -> Done true
     | { OpamProcess.r_code = 1; _ } as r ->
@@ -178,7 +178,7 @@ module VCS : OpamVCS.VCS = struct
       Done (Some "HEAD")
 
   let is_dirty dir =
-    git dir [ "diff"; "--quiet" ]
+    git dir [ "diff" ; "--no-ext-diff" ; "--quiet" ]
     @@> function
     | { OpamProcess.r_code = 0; _ } -> Done false
     | { OpamProcess.r_code = 1; _ } as r ->
