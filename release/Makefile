@@ -45,13 +45,13 @@ build/%.image: build/Dockerfile.%
 # Actually, this is for debian 8 jessie, and varies wildly
 CLINKING_linux = \
 -Wl,-Bstatic \
--lunix -lbigarray -lmccs_stubs \
+-lunix -lbigarray -lmccs_stubs -lmccs_glpk_stubs \
 -lstdc++ \
 -Wl,-Bdynamic \
 -static-libgcc
 
 CLINKING_darwin = \
--lunix -lbigarray -lmccs_stubs \
+-lunix -lbigarray -lmccs_stubs -lmccs_glpk_stubs \
 -lstdc++
 
 CLINKING_openbsd = $(CLINKING_darwin)
