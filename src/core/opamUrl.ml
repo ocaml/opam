@@ -88,6 +88,7 @@ let looks_like_ssh_path =
     Re.(compile @@ seq [
         group @@ repn (diff any (set "/:")) 2 None;
         char ':';
+        opt @@ char '/';
         opt @@ group @@ seq [
           alt [
             diff any digit;
