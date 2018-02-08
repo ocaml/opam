@@ -927,8 +927,9 @@ module OpamFormat = struct
     Buffer.contents buf
 
   let itemize ?(bullet="  - ") f =
+    let indent = visual_length bullet in
     OpamList.concat_map ~left:bullet ~right:"\n" ~nil:"" ("\n"^bullet)
-      (fun s -> reformat ~indent:(String.length bullet) (f s))
+      (fun s -> reformat ~start_column:indent ~indent (f s))
 
   let rec pretty_list ?(last="and") = function
     | []    -> ""

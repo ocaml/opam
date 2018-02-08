@@ -271,7 +271,9 @@ module Format : sig
   val reformat:
     ?start_column:int -> ?indent:int -> ?width:int -> string -> string
 
-  (** Convert a list of items to string as a dashed list *)
+  (** Convert a list of items to string as a dashed list (already reformats
+      supposes no additional left margin: don't use within OpamConsole.error or
+      similar) *)
   val itemize: ?bullet:string -> ('a -> string) -> 'a list -> string
 
   (** Display a pretty list: ["x";"y";"z"] -> "x, y and z".
