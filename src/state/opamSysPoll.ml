@@ -11,9 +11,9 @@
 open OpamCompat
 open OpamStd.Option.Op
 
-let command_output c =
+let command_output c args =
   match List.filter (fun s -> String.trim s <> "")
-          (OpamSystem.read_command_output c)
+          (OpamSystem.read_command_output c args)
   with
   | [""] -> None
   | [s] -> Some s
@@ -36,7 +36,7 @@ let normalise_arch raw =
 
 let arch_lazy = lazy (
   let raw = match Sys.os_type with
-    | "Unix" | "Cygwin" -> OpamStd.Sys.uname "-m"
+    | "Unix" | "Cygwin" -> OpamStd.Sys.uname OpamExternalTools.Uname.arch
     | "Win32" ->
       (match OpamStd.Env.getopt "PROCESSOR_ARCHITECTURE" with
        | Some "X86" as a -> OpamStd.Env.getopt "PROCESSOR_ARCHITEW6432" ++ a
@@ -52,7 +52,7 @@ let arch () = Lazy.force arch_lazy
 let os_lazy = lazy (
   match Sys.os_type with
   | "Unix" ->
-    (match OpamStd.Sys.uname "-s" with
+    (match OpamStd.Sys.uname OpamExternalTools.Uname.kern_name with
       | Some "Darwin" -> Some "macos"
       | Some s -> norm s
       | None -> None)
@@ -79,7 +79,7 @@ let os_release_field =
     with Not_found -> None
 
 let is_android, android_release =
-  let prop = lazy (command_output ["getprop"; "ro.build.version.release"]) in
+  let prop = lazy (OpamExternalTools.Getprop.get_os_version command_output) in
   (fun () -> Lazy.force prop <> None),
   (fun () -> Lazy.force prop)
 
@@ -92,7 +92,7 @@ let os_distribution_lazy = lazy (
   | Some "linux" as linux ->
     (if is_android () then Some "android" else
      os_release_field "ID" >>= norm >>+ fun () ->
-     command_output ["lsb_release"; "-i"; "-s"] >>= norm >>+ fun () ->
+     OpamExternalTools.Lsb_release.get_id command_output >>= norm >>+ fun () ->
      try
        List.find Sys.file_exists ["/etc/redhat-release";
                                   "/etc/centos-release";
@@ -108,19 +108,19 @@ let os_version_lazy = lazy (
   match os () with
   | Some "linux" ->
     android_release () >>= norm >>+ fun () ->
-    command_output ["lsb_release"; "-s"; "-r"] >>= norm >>+ fun () ->
+    OpamExternalTools.Lsb_release.get_release command_output >>= norm >>+ fun () ->
     os_release_field "VERSION_ID" >>= norm
   | Some "macos" ->
-    command_output ["sw_vers"; "-productVersion"] >>= norm
+    OpamExternalTools.Sw_vers.get_os_version command_output >>= norm
   | Some ("win32" | "cygwin") ->
     (try
-       command_output ["cmd"; "/C"; "ver"] >>= fun s ->
+       OpamExternalTools.Cmd.get_os_version command_output >>= fun s ->
        Scanf.sscanf s "%_s@[ Version %s@]" norm
      with Scanf.Scan_failure _ | End_of_file -> None)
   | Some "freebsd" ->
-    OpamStd.Sys.uname "-U" >>= norm
+    OpamStd.Sys.uname OpamExternalTools.Uname.freebsd_version >>= norm
   | _ ->
-    OpamStd.Sys.uname "-r" >>= norm
+    OpamStd.Sys.uname OpamExternalTools.Uname.kern_version >>= norm
 )
 let os_version () = Lazy.force os_version_lazy
 

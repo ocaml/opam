@@ -73,7 +73,7 @@ let load lock_kind =
   let eval_variables = OpamFile.Config.eval_variables config in
   let global_variables =
     let env = lazy (OpamEnv.get_pure () |> OpamTypesBase.env_array) in
-    List.fold_left (fun acc (v, cmd, doc) ->
+    List.fold_left (fun acc (v, (cmd, args), doc) ->
         OpamVariable.Map.update v
           (fun previous_value ->
              (lazy
@@ -82,7 +82,7 @@ let load lock_kind =
                     OpamSystem.read_command_output
                       ~env:(Lazy.force env)
                       ~allow_stdin:false
-                      cmd
+                      cmd args
                   in
                   Some (S (OpamStd.String.strip (String.concat "\n" ret)))
                 with e ->

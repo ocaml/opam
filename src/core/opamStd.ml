@@ -583,16 +583,20 @@ module OpamSys = struct
     let fallback = 80 in
     let cols =
       try (* terminfo *)
-        with_process_in "tput" "cols"
-          (fun ic -> int_of_string (input_line ic))
+        OpamExternalTools.Tput.cols
+          (fun cmd args ->
+             with_process_in cmd (String.concat " " args)
+               (fun ic -> int_of_string (input_line ic)))
       with
       | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
         try (* GNU stty *)
-          with_process_in "stty" "size"
-            (fun ic ->
-               match OpamString.split (input_line ic) ' ' with
-               | [_ ; v] -> int_of_string v
-               | _ -> failwith "stty")
+          OpamExternalTools.Stty.size
+            (fun cmd args ->
+               with_process_in cmd (String.concat " " args)
+                 (fun ic ->
+                    match OpamString.split (input_line ic) ' ' with
+                    | [_ ; v] -> int_of_string v
+                    | _ -> failwith "stty"))
         with
         | Unix.Unix_error _ | Sys_error _ | Failure _
         | End_of_file | Not_found -> fallback
@@ -620,15 +624,16 @@ module OpamSys = struct
 
   let uname =
     let memo = Hashtbl.create 7 in
-    fun arg ->
-      try Hashtbl.find memo arg with Not_found ->
+    fun f ->
+      try Hashtbl.find memo f with Not_found ->
         let r =
           try
-            with_process_in "uname" arg
-              (fun ic -> Some (OpamString.strip (input_line ic)))
+            f (fun cmd args ->
+                with_process_in cmd (String.concat " " args)
+                  (fun ic -> Some (OpamString.strip (input_line ic))))
           with Unix.Unix_error _ | Sys_error _ | Not_found -> None
         in
-        Hashtbl.add memo arg r;
+        Hashtbl.add memo f r;
         r
 
   type os =
@@ -647,7 +652,7 @@ module OpamSys = struct
     let os = lazy (
       match Sys.os_type with
       | "Unix" -> begin
-          match uname "-s" with
+          match uname OpamExternalTools.Uname.kern_name with
           | Some "Darwin"    -> Darwin
           | Some "Linux"     -> Linux
           | Some "FreeBSD"   -> FreeBSD

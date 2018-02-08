@@ -56,7 +56,7 @@ let fetch_from_cache =
   let currently_downloading = ref [] in
   let rec no_concurrent_dls key f x =
     if List.mem key !currently_downloading then
-      Run (OpamProcess.command "sleep" ["1"],
+      Run (OpamExternalTools.Sleep.one_second OpamProcess.command,
            (fun _ -> no_concurrent_dls key f x))
     else
       (currently_downloading := key :: !currently_downloading;

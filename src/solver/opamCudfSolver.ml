@@ -27,7 +27,7 @@ module type ExternalArg = sig
   val default_criteria: criteria_def
 end
 
-let call_external_solver command ~criteria ?timeout (_, universe,_ as cudf) =
+let call_external_solver command args ~criteria ?timeout (_, universe,_ as cudf) =
   let solver_in =
     OpamFilename.of_string (OpamSystem.temp_file "solver-in") in
   let solver_out =
@@ -39,7 +39,7 @@ let call_external_solver command ~criteria ?timeout (_, universe,_ as cudf) =
       close_out oc
     in
     let () =
-      let cmd =
+      let args =
         OpamFilter.single_command (fun v ->
             if not (OpamVariable.Full.is_global v) then None else
             match OpamVariable.to_string (OpamVariable.Full.variable v) with
@@ -49,11 +49,12 @@ let call_external_solver command ~criteria ?timeout (_, universe,_ as cudf) =
             | "timeout" ->
               Some (S (string_of_float (OpamStd.Option.default 0. timeout)))
             | _ -> None)
-          command
+          args
       in
       OpamSystem.command
         ~verbose:(OpamCoreConfig.(!r.debug_level >= 2))
-        cmd
+        command
+        args
     in
     OpamFilename.remove solver_in;
     if not (OpamFilename.exists solver_out) then
@@ -87,7 +88,7 @@ module External (E: ExternalArg) : S = struct
   let default_criteria = E.default_criteria
 
   let call =
-    call_external_solver ((CString E.command_name, None) :: E.command_args)
+    call_external_solver E.command_name E.command_args
 end
 
 module Aspcud_def = struct
@@ -102,7 +103,7 @@ module Aspcud_def = struct
     try
       match
         OpamSystem.read_command_output ~verbose:false ~allow_stdin:false
-          [cmd; "-v"]
+          cmd ["-v"]
       with
       | [] -> false
       | s::_ ->

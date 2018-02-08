@@ -379,7 +379,7 @@ module Sys : sig
   val os: unit -> os
 
   (** The output of the command "uname", with the given argument. Memoised. *)
-  val uname: string -> string option
+  val uname: ((string -> string list -> string option) -> string option) -> string option
 
   (** Append .exe (only if missing) to executable filenames on Windows *)
   val executable_name : string -> string
