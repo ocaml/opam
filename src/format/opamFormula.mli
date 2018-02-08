@@ -154,7 +154,7 @@ val to_atom_formula: t -> atom formula
 (** Convert an atom-formula to a t-formula *)
 val of_atom_formula: atom formula -> t
 
-(** [simplify_ineq_formula comp f] eturns a canonical version of inequality
+(** [simplify_ineq_formula comp f] returns a canonical version of inequality
     formula [f], based on comparison function [comp], where each version appears
     at most once, and in increasing order. Returns [Some Empty] if the formula
     is always [true], [None] if it is always false *)

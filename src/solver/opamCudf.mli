@@ -23,9 +23,12 @@ module Map: OpamStd.MAP with type key = Cudf.package
 (** Cudf graph *)
 module Graph: sig
   (** Graph of cudf packages *)
-  type t
 
-  (** Build a graph from a CUDF universe *)
+  include module type of Algo.Defaultgraphs.PackageGraph.G
+
+  (** Build a graph from a CUDF universe. Warning: dependency edges are towards
+      the dependency, which is the reverse of what happens in the action
+      graph. *)
   val of_universe: Cudf.universe -> t
 
   (** Return the transitive closure of [g] *)
@@ -34,6 +37,9 @@ module Graph: sig
   (** Return the transitive closure of dependencies of [set],
       sorted in topological order. *)
   val close_and_linearize: t -> Set.t -> Cudf.package list
+
+  (** Reverse the direction of all edges *)
+  val mirror: t -> t
 end
 
 (** Computation of differences between universe. Returns the sets of packages to
