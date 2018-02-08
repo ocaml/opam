@@ -1,5 +1,5 @@
-URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.0.tar.gz
-MD5_cppo = aee411b3546bc5d198c71ae9185cade4
+URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.1.tar.gz
+MD5_cppo = b376e0f063f82daf5b1530479f5bcc5f
 
 $(call PKG_SAME,cppo)
 
@@ -43,8 +43,8 @@ MD5_opam-file-format = 5408798ca3af6e36379dd34b1b618b9c
 
 $(call PKG_SAME,opam-file-format)
 
-URL_result = https://github.com/janestreet/result/archive/1.2.tar.gz
-MD5_result = 3d5b66c5526918f0f2ca9d6811ef09c8
+URL_result = https://github.com/janestreet/result/archive/1.3.tar.gz
+MD5_result = 2061d323b8b319de6f9605f63a54af56
 
 $(call PKG_SAME,result)
 
