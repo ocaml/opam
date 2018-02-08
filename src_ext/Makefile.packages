@@ -25,7 +25,8 @@ re.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild
 
 ocamlgraph.pkgbuild: findlib.pkgbuild
 
-result.pkgbuild: findlib.pkgbuild
+# result.pkgbuild depends on findlib because the files are explicitly installed using it
+result.pkgbuild: jbuilder.pkgbuild findlib.pkgbuild
 
 topkg.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild result.pkgbuild
 
@@ -68,7 +69,8 @@ ocamlgraph-pkg-build:
 	make all install-findlib
 
 result-pkg-build:
-	make byte native install
+	jbuilder build @install --root=.
+	ocamlfind install result $(addprefix _build/install/default/lib/result/,META result.*)
 
 EXTS1=$(EXT_LIB) mli
 EXTS2=a i ti xa xs

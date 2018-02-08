@@ -39,3 +39,8 @@ build_script:
 
 test_script:
   - call "%APPVEYOR_BUILD_FOLDER%\appveyor_build.cmd" test
+
+# Uncomment this to enable Remote Desktop on the build worker at the end of the
+# build. The worker is available for the remainder of the allocated hour.
+#on_finish:
+#    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

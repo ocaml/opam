@@ -22,6 +22,6 @@ depends: [
   "opam-state" {= "2.0.0~rc"}
   "opam-solver" {= "2.0.0~rc"}
   "cmdliner" {>= "0.9.8"}
-  "jbuilder" {build & >= "1.0+beta12"}
+  "jbuilder" {build & >= "1.0+beta17"}
 ]
 available: ocaml-version >= "4.02.3"
