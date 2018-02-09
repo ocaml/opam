@@ -560,7 +560,7 @@ module OpamSys = struct
     let cmd =
       List.find Sys.file_exists (List.map (fun d -> Filename.concat d cmd) path)
     in
-    let ic = Unix.open_process_in (cmd^" "^String.concat " " args) in
+    let ic = Unix.open_process_in (String.concat " " (cmd::args)) in
     try
       let r = f ic in
       ignore (Unix.close_process_in ic) ; r

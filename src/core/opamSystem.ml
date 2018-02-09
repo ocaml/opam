@@ -412,6 +412,7 @@ let run_process
     ?verbose ?(env=default_env) ~name ?metadata ?stdout ?allow_stdin cmd =
   let chrono = OpamConsole.timer () in
   runs := cmd :: !runs;
+
   if OpamExternalTools.has_space cmd then
     OpamConsole.warning "Command %S contains space characters" (OpamExternalTools.cmd_to_string cmd);
 
@@ -578,11 +579,11 @@ module Tar = struct
     in
     let ext =
       List.fold_left
-        (fun acc (ext, cmd) -> match acc with
+        (fun acc (ext, c) -> match acc with
           | Some f -> Some f
           | None   ->
             if match_ext file ext
-            then Some (command cmd)
+            then Some (command c)
             else None)
         None
         extensions in
@@ -591,7 +592,7 @@ module Tar = struct
     | None   ->
       match guess_type file with
       | None   -> None
-      | Some cmd -> Some (command cmd)
+      | Some c -> Some (command c)
 
 end
 
