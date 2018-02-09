@@ -541,56 +541,153 @@ let check_command =
 
     (* Cyclic dependency checks *)
     let cycle_packages =
-      if cycles then
-        let cudf_univ =
-          OpamSolver.load_cudf_universe
-            ~depopts:true ~build:true ~post:false univ packages
-        in
-        let graph =
-          OpamCudf.Graph.of_universe cudf_univ |>
-          OpamCudf.Graph.mirror
-        in
-        (* conflicts break cycles *)
-        let conflicts =
-          Algo.Defaultgraphs.PackageGraph.conflict_graph cudf_univ
-        in
-        Algo.Defaultgraphs.PackageGraph.UG.iter_edges (fun nv1 nv2 ->
-            OpamCudf.Graph.remove_edge graph nv1 nv2;
-            OpamCudf.Graph.remove_edge graph nv2 nv1)
-          conflicts;
-        let cy =
-          let module Comp = Graph.Components.Make(OpamCudf.Graph) in
-          Comp.scc_list graph |>
-          List.filter (function [] | [_] -> false | _ -> true) |>
-          List.map (List.map OpamCudf.cudf2opam)
-        in
-        let rec clean_cy = function
-          | [] -> []
-          | nv :: r ->
-            let ns, r = List.partition (fun {name; _} -> name = nv.name) r in
-            Atom (nv.name,
-                  OpamFormula.formula_of_version_set
-                    (OpamPackage.versions_of_name packages nv.name)
-                    (OpamPackage.versions_of_packages
-                       (OpamPackage.Set.of_list (nv::ns)))) ::
-            clean_cy r
-        in
-        if not print_short && cy <> [] then
-          (OpamConsole.error "Dependency cycles detected:";
-           OpamConsole.errmsg "%s"
-             (OpamStd.Format.itemize
-                ~bullet:(OpamConsole.colorise `bold "  * ")
-                (fun c ->
-                   OpamStd.List.concat_map (OpamConsole.colorise `yellow ", ")
-                     OpamFormula.to_string
-                     (clean_cy c))
-                cy));
-        List.fold_left
-          (List.fold_left (fun acc nv ->
-               OpamPackage.Set.add nv acc))
-          OpamPackage.Set.empty cy
-      else
-        OpamPackage.Set.empty
+      if not cycles then OpamPackage.Set.empty else
+      let cudf_univ =
+        OpamSolver.load_cudf_universe
+          ~depopts:true ~build:true ~post:false univ packages
+      in
+      let graph =
+        OpamCudf.Graph.of_universe cudf_univ |>
+        OpamCudf.Graph.mirror
+      in
+      (* conflicts break cycles *)
+      let conflicts =
+        Algo.Defaultgraphs.PackageGraph.conflict_graph cudf_univ
+      in
+      let module CGraph = Algo.Defaultgraphs.PackageGraph.UG in
+      CGraph.iter_edges (fun nv1 nv2 ->
+          OpamCudf.Graph.remove_edge graph nv1 nv2;
+          OpamCudf.Graph.remove_edge graph nv2 nv1)
+        conflicts;
+      let scc =
+        let module Comp = Graph.Components.Make(OpamCudf.Graph) in
+        Comp.scc_list graph |>
+        List.filter (function [] | [_] -> false | _ -> true)
+      in
+      let node_map, cy =
+        List.fold_left (fun (node_map, acc) pkgs ->
+            let univ = Cudf.load_universe pkgs in
+            let g = OpamCudf.Graph.of_universe univ in
+            let conflicts =
+              Algo.Defaultgraphs.PackageGraph.conflict_graph univ
+            in
+            (* Simplify the graph by merging all equivalent versions of each
+               package *)
+            (* (note: this is not completely accurate, as dependencies might be
+               conjunctions or disjunctions, information which is lost in the
+               dependency graph) *)
+            (* let count = OpamCudf.Graph.nb_vertex g in *)
+            let node_map =
+              Cudf.fold_packages_by_name (fun node_map _ pkgs ->
+                  let id p =
+                    let f pl =
+                      List.sort compare @@
+                      List.map (Cudf.uid_by_package univ) pl
+                    in
+                    f (OpamCudf.Graph.pred g p),
+                    f (OpamCudf.Graph.succ g p),
+                    f (CGraph.succ conflicts p)
+                  in
+                  let ids =
+                    List.fold_left (fun acc p ->
+                        OpamCudf.Map.add p (id p) acc)
+                      OpamCudf.Map.empty pkgs
+                  in
+                  let rec gather node_map = function
+                    | [] -> node_map
+                    | p::pkgs ->
+                      let pid = OpamCudf.Map.find p ids in
+                      let ps, pkgs =
+                        List.partition
+                          (fun p1 -> OpamCudf.Map.find p1 ids = pid)
+                          pkgs
+                      in
+                      List.iter (OpamCudf.Graph.remove_vertex g) ps;
+                      let node_map = OpamCudf.Map.add p (p::ps) node_map in
+                      gather node_map pkgs
+                  in
+                  gather node_map pkgs)
+                node_map univ
+            in
+            (* OpamConsole.msg
+             *   "Number of vertices: before merge %d, after merge %d\n"
+             *   count (OpamCudf.Graph.nb_vertex g); *)
+            let it = ref 0 in
+            let rec extract_cycles acc rpath v g =
+              incr it;
+              let rec find_pref acc v = function
+                | [] -> None
+                | v1::r ->
+                  if Cudf.(=%) v v1 then Some (v1::acc)
+                  else if CGraph.mem_edge conflicts v v1 then None
+                  else find_pref (v1::acc) v r
+              in
+              match find_pref [] v rpath with
+              | Some cy -> cy :: acc
+              | None ->
+                let rpath = v::rpath in
+                (* split into sub-graphs for each successor *)
+                List.fold_left
+                  (fun acc s -> extract_cycles acc rpath s g)
+                  acc (OpamCudf.Graph.succ g v)
+            in
+            let p0 = List.find (OpamCudf.Graph.mem_vertex g) pkgs in
+            let r = extract_cycles acc [] p0 g in
+            (* OpamConsole.msg "Iterations: %d\n" !it; *)
+            node_map, r
+          )
+          (OpamCudf.Map.empty, []) scc
+      in
+      (* OpamConsole.msg "all cycles: %d\n" (List.length cy); *)
+      let rec has_conflict = function
+        | [] | [_] -> false
+        | p::r ->
+          List.exists
+            (CGraph.mem_edge conflicts p)
+            r
+          || has_conflict r
+      in
+      let cy =
+        List.rev cy |>
+        List.filter (fun c -> not (has_conflict c))
+      in
+      let formula_of_pkglist = function
+        | [] -> OpamFormula.Empty
+        | [p] ->
+          let nv = OpamCudf.cudf2opam p in
+          Atom (nv.name, Atom (`Eq, nv.version))
+        | p::ps ->
+          let name = (OpamCudf.cudf2opam p).name in
+          let nvs = List.map OpamCudf.cudf2opam (p::ps) in
+          Atom
+            (name,
+             OpamFormula.formula_of_version_set
+               (OpamPackage.versions_of_name packages name)
+               (OpamPackage.versions_of_packages
+                  (OpamPackage.Set.of_list nvs)))
+      in
+      (* OpamConsole.msg "non-conflicting cycles: %d\n" (List.length cy); *)
+      if not print_short && cy <> [] then
+        (let arrow =
+           OpamConsole.colorise `yellow @@
+           if OpamConsole.utf8 () then " \xe2\x86\x92 " (* U+2192 *)
+           else " -> "
+         in
+         OpamConsole.error "Dependency cycles detected:";
+         OpamConsole.errmsg "%s"
+           (OpamStd.Format.itemize
+              ~bullet:(OpamConsole.colorise `bold "  * ")
+              (OpamStd.List.concat_map arrow
+                 (fun p ->
+                    OpamFormula.to_string
+                      (formula_of_pkglist (OpamCudf.Map.find p node_map))))
+              cy));
+      List.fold_left
+        (List.fold_left (fun acc p ->
+             List.fold_left (fun acc p ->
+                 OpamPackage.Set.add (OpamCudf.cudf2opam p) acc)
+               acc (OpamCudf.Map.find p node_map)))
+        OpamPackage.Set.empty cy
     in
 
     let all_ok =
@@ -602,7 +699,7 @@ let check_command =
         (OpamStd.List.concat_map "\n" OpamPackage.to_string
            (OpamPackage.Set.elements (uninstallable ++ cycle_packages)))
     else if all_ok then
-      OpamConsole.msg "No issues detected on this repository"
+      OpamConsole.msg "No issues detected on this repository\n"
     else if installability && cycles then
       OpamConsole.msg "Summary:\n\
                        - %d uninstallable roots\n\
