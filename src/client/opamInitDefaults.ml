@@ -26,7 +26,7 @@ let default_compiler =
   ]
 
 let eval_variables = [
-  OpamVariable.of_string "sys-ocaml-version", OpamExternalTools.OCaml.vnum (fun cmd args -> (cmd, args)),
+  OpamVariable.of_string "sys-ocaml-version", OpamExternalTools.OCaml.vnum,
   "OCaml version present on your system independently of opam, if any";
 ]
 

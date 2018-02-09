@@ -11,9 +11,9 @@
 open OpamCompat
 open OpamStd.Option.Op
 
-let command_output c args =
+let command_output c =
   match List.filter (fun s -> String.trim s <> "")
-          (OpamSystem.read_command_output c args)
+          (OpamSystem.read_command_output c)
   with
   | [""] -> None
   | [s] -> Some s
@@ -79,7 +79,7 @@ let os_release_field =
     with Not_found -> None
 
 let is_android, android_release =
-  let prop = lazy (OpamExternalTools.Getprop.get_os_version command_output) in
+  let prop = lazy (command_output OpamExternalTools.Getprop.get_os_version) in
   (fun () -> Lazy.force prop <> None),
   (fun () -> Lazy.force prop)
 
@@ -92,7 +92,7 @@ let os_distribution_lazy = lazy (
   | Some "linux" as linux ->
     (if is_android () then Some "android" else
      os_release_field "ID" >>= norm >>+ fun () ->
-     OpamExternalTools.Lsb_release.get_id command_output >>= norm >>+ fun () ->
+     command_output OpamExternalTools.Lsb_release.get_id >>= norm >>+ fun () ->
      try
        List.find Sys.file_exists ["/etc/redhat-release";
                                   "/etc/centos-release";
@@ -108,13 +108,13 @@ let os_version_lazy = lazy (
   match os () with
   | Some "linux" ->
     android_release () >>= norm >>+ fun () ->
-    OpamExternalTools.Lsb_release.get_release command_output >>= norm >>+ fun () ->
+    command_output OpamExternalTools.Lsb_release.get_release >>= norm >>+ fun () ->
     os_release_field "VERSION_ID" >>= norm
   | Some "macos" ->
-    OpamExternalTools.Sw_vers.get_os_version command_output >>= norm
+    command_output OpamExternalTools.Sw_vers.get_os_version >>= norm
   | Some ("win32" | "cygwin") ->
     (try
-       OpamExternalTools.Cmd.get_os_version command_output >>= fun s ->
+       command_output OpamExternalTools.Cmd.get_os_version >>= fun s ->
        Scanf.sscanf s "%_s@[ Version %s@]" norm
      with Scanf.Scan_failure _ | End_of_file -> None)
   | Some "freebsd" ->

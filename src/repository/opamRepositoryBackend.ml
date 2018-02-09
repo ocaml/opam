@@ -87,10 +87,9 @@ let get_diff parent_dir dir1 dir2 =
   OpamSystem.make_command
     ~verbose:OpamCoreConfig.(!r.verbose_level >= 2)
     ~dir:(OpamFilename.Dir.to_string parent_dir) ~stdout:patch
-    "diff"
-    [ "-ruaN";
-      OpamFilename.Base.to_string dir1;
-      OpamFilename.Base.to_string dir2; ]
+    (OpamExternalTools.Diff.dirs
+       ~dir1:(OpamFilename.Base.to_string dir1)
+       ~dir2:(OpamFilename.Base.to_string dir2))
   @@> function
   | { OpamProcess.r_code = 0; _ } -> finalise(); Done None
   | { OpamProcess.r_code = 1; _ } as r ->

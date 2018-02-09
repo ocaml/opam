@@ -751,7 +751,7 @@ let run_hook_job t name ?(local=[]) w =
            OpamSystem.make_command
              ~verbose:(OpamConsole.verbose ())
              ~env:(OpamTypesBase.env_array shell_env)
-             ~name ~text cmd args)
+             ~name ~text (OpamExternalTools.custom (cmd, args)))
     | [] -> None
   in
   let env v =

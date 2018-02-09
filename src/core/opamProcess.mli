@@ -34,8 +34,7 @@ val command:
   ?allow_stdin:bool ->
   ?stdout:string ->
   ?text:string ->
-  string ->
-  string list ->
+  OpamExternalTools.t ->
   command
 
 val string_of_command: command -> string

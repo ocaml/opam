@@ -94,7 +94,7 @@ let tool_return url ret =
       else Done ()
 
 let download_command ~compress ?checksum ~url ~dst =
-  let cmd, args =
+  let cmd =
     match
       download_args
         ~url
@@ -108,7 +108,7 @@ let download_command ~compress ?checksum ~url ~dst =
       OpamConsole.error_and_exit `Configuration_error
         "Empty custom download command"
   in
-  OpamSystem.make_command cmd args @@> tool_return url
+  OpamSystem.make_command (OpamExternalTools.custom cmd) @@> tool_return url
 
 let really_download
     ?(quiet=false) ~overwrite ?(compress=false) ?checksum ?(validate=true)

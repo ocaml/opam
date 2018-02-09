@@ -22,7 +22,7 @@ module VCS = struct
   let hg repo_root =
     let dir = OpamFilename.Dir.to_string repo_root in
     fun ?verbose ?env ?stdout args ->
-      OpamSystem.make_command ~dir ?verbose ?env ?stdout "hg" args
+      OpamSystem.make_command ~dir ?verbose ?env ?stdout (OpamExternalTools.custom ("hg", args))
 
   let init repo_root _repo_url =
     OpamFilename.mkdir repo_root;

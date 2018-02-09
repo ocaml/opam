@@ -92,7 +92,7 @@ let compute ?(kind=default_kind) file = match kind with
     try
       if not OpamCoreConfig.(!r.use_openssl) then raise Exit else
       match
-        command_of_kind kind OpamSystem.read_command_output ~file
+       OpamSystem.read_command_output (command_of_kind kind ~file)
       with
       | [l] ->
         let len = len kind in

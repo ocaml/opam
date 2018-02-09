@@ -22,7 +22,7 @@ module VCS = struct
   let darcs repo_root =
     let dir = OpamFilename.Dir.to_string repo_root in
     fun ?verbose ?env ?stdout args ->
-      OpamSystem.make_command ~dir ?verbose ?env ?stdout "darcs" args
+      OpamSystem.make_command ~dir ?verbose ?env ?stdout (OpamExternalTools.custom ("darcs", args))
 
   let with_tag repo_url = match repo_url.OpamUrl.hash with
     | None -> fun cmd -> cmd

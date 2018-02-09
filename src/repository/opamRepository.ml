@@ -56,7 +56,7 @@ let fetch_from_cache =
   let currently_downloading = ref [] in
   let rec no_concurrent_dls key f x =
     if List.mem key !currently_downloading then
-      Run (OpamExternalTools.Sleep.one_second OpamProcess.command,
+      Run (OpamProcess.command OpamExternalTools.Sleep.one_second,
            (fun _ -> no_concurrent_dls key f x))
     else
       (currently_downloading := key :: !currently_downloading;
@@ -355,7 +355,7 @@ let validate_repo_update repo update =
         OpamSystem.make_command
           ~name:"validation-hook"
           ~verbose:OpamCoreConfig.(!r.verbose_level >= 2)
-          cmd args
+          (OpamExternalTools.custom (cmd, args))
       | [] -> failwith "Empty validation hook"
     in
     cmd @@> fun r ->

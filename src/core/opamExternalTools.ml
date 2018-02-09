@@ -8,96 +8,118 @@
 (*                                                                        *)
 (**************************************************************************)
 
+type t = (string * string list)
+
+let unpack x = x
+let custom x = x
+
+let has_space (cmd, _) = String.contains cmd ' '
+let cmd_to_string (cmd, _) = cmd
+
+let to_string (cmd, args) =
+  (* TODO: Add backslashs to quotes for each args *)
+  let quote x = if String.contains x ' ' then "'" ^ x ^ "'" else x in
+  let args = List.map quote args in
+  String.concat " " (cmd::args)
+
 module Unzip = struct
-  let extract cmd ~file ~dir = cmd "unzip" [file; "-d"; dir]
+  let extract ~file ~dir = ("unzip", [file; "-d"; dir])
 end
 
 module Tar = struct
-  let extract_gzip cmd ~file ~dir = cmd "tar" ["xfz"; file; "-C"; dir]
-  let extract_bzip2 cmd ~file ~dir = cmd "tar" ["xfj"; file; "-C"; dir]
-  let extract_xz cmd ~file ~dir = cmd "tar" ["xfJ"; file; "-C"; dir]
-  let extract_lzma cmd ~file ~dir = cmd "tar" ["xfY"; file; "-C"; dir]
+  let extract_gzip ~file ~dir = ("tar", ["xfz"; file; "-C"; dir])
+  let extract_bzip2 ~file ~dir = ("tar", ["xfj"; file; "-C"; dir])
+  let extract_xz ~file ~dir = ("tar", ["xfJ"; file; "-C"; dir])
+  let extract_lzma ~file ~dir = ("tar", ["xfY"; file; "-C"; dir])
 
-  let create_gzip cmd ~output ~inputs = cmd "tar" ("czhf" :: output :: inputs)
+  let create_gzip ~output ~inputs = ("tar", ("czhf" :: output :: inputs))
 end
 
 module Patch = struct
-  let apply cmd ~file = cmd "patch" ["-p1"; "-i"; file]
+  let apply ~file = ("patch", ["-p1"; "-i"; file])
+end
+
+module Diff = struct
+  let dirs ~dir1 ~dir2 = ("diff", ["-ruaN"; dir1; dir2])
 end
 
 module Rm = struct
-  let recursive cmd ~dir = cmd "rm" ["-rf"; dir]
+  let recursive ~dir = ("rm", ["-rf"; dir])
 end
 
 module Cmd = struct
-  let rm_recursive cmd ~dir = cmd "cmd" ["/d"; "/v:off"; "/c"; "rd"; "/s"; "/q"; dir]
-  let get_os_version cmd = cmd "cmd" ["/C"; "ver"]
+  let rm_recursive ~dir = ("cmd", ["/d"; "/v:off"; "/c"; "rd"; "/s"; "/q"; dir])
+  let get_os_version = ("cmd", ["/C"; "ver"])
 end
 
 module Sw_vers = struct
-  let get_os_version cmd = cmd "sw_vers" ["-productVersion"]
+  let get_os_version = ("sw_vers", ["-productVersion"])
 end
 
 module Getprop = struct
-  let get_os_version cmd = cmd "getprop" ["ro.build.version.release"]
+  let get_os_version = ("getprop", ["ro.build.version.release"])
 end
 
 module Sleep = struct
-  let one_second cmd = cmd "sleep" ["1"]
+  let one_second = ("sleep", ["1"])
 end
 
 module Cp = struct
-  let cp cmd ~src ~dst = cmd "cp" [src; dst]
-  let recursive cmd ~srcs ~dst = cmd "cp" ("-PRp" :: srcs @ [dst])
+  let cp ~src ~dst = ("cp", [src; dst])
+  let recursive ~srcs ~dst = ("cp", ("-PRp" :: srcs @ [dst]))
 end
 
 module Mv = struct
-  let mv cmd ~src ~dst = cmd "mv" [src; dst]
+  let mv ~src ~dst = ("mv", [src; dst])
 end
 
 module Install = struct
-  let exec cmd ~src ~dst = cmd "install" ["-m"; "0755"; src; dst]
-  let file cmd ~src ~dst = cmd "install" ["-m"; "0644"; src; dst]
+  let exec ~src ~dst = ("install", ["-m"; "0755"; src; dst])
+  let file ~src ~dst = ("install", ["-m"; "0644"; src; dst])
 end
 
 module Sysctl = struct
-  let get_hw_ncpu cmd = cmd "sysctl" ["-n"; "hw.ncpu"]
+  let get_hw_ncpu = ("sysctl", ["-n"; "hw.ncpu"])
 end
 
 module Getconf = struct
-  let get_nproc cmd = cmd "getconf" ["_NPROCESSORS_ONLN"]
+  let get_nproc = ("getconf", ["_NPROCESSORS_ONLN"])
 end
 
 module Lsb_release = struct
-  let get_id cmd = cmd "lsb_release" ["-i"; "-s"]
-  let get_release cmd = cmd "lsb_release" ["-s"; "-r"]
+  let get_id = ("lsb_release", ["-i"; "-s"])
+  let get_release = ("lsb_release", ["-s"; "-r"])
 end
 
 module Tput = struct
-  let cols cmd = cmd "tput" ["cols"]
+  let cols = ("tput", ["cols"])
 end
 
 module Stty = struct
-  let size cmd = cmd "stty" ["size"]
+  let size = ("stty", ["size"])
 end
 
 module Uname = struct
-  let kern_name cmd = cmd "uname" ["-s"]
-  let kern_version cmd = cmd "uname" ["-r"]
-  let arch cmd = cmd "uname" ["-m"]
-  let freebsd_version cmd = cmd "uname" ["-U"]
+  let kern_name = ("uname", ["-s"])
+  let kern_version = ("uname", ["-r"])
+  let arch = ("uname", ["-m"])
+  let freebsd_version = ("uname", ["-U"])
 end
 
 module Openssl = struct
-  let sha256 cmd ~file = cmd "openssl" ["sha256"; file]
-  let sha512 cmd ~file = cmd "openssl" ["sha512"; file]
+  let sha256 ~file = ("openssl", ["sha256"; file])
+  let sha512 ~file = ("openssl", ["sha512"; file])
 end
 
 module Git = struct
-  let get_user_name cmd = cmd "git" ["config"; "--get"; "user.name"]
-  let get_user_email cmd = cmd "git" ["config"; "--get"; "user.email"]
+  let get_user_name = ("git", ["config"; "--get"; "user.name"])
+  let get_user_email = ("git", ["config"; "--get"; "user.email"])
 end
 
 module OCaml = struct
-  let vnum cmd = cmd "ocaml" ["-vnum"]
+  let vnum = ("ocaml", ["-vnum"])
+end
+
+module Command = struct
+  let lookup ~cmd = ("/bin/sh", ["-c"; "command -v "^cmd])
 end

@@ -203,8 +203,8 @@ let template nv =
   let maintainer =
     let from_git = try
         match
-          OpamExternalTools.Git.get_user_name OpamSystem.read_command_output,
-          OpamExternalTools.Git.get_user_email OpamSystem.read_command_output
+          OpamSystem.read_command_output OpamExternalTools.Git.get_user_name,
+          OpamSystem.read_command_output OpamExternalTools.Git.get_user_email
         with
         | [name], [email] ->
           Some [Printf.sprintf "%s <%s>" name email]

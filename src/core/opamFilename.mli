@@ -50,7 +50,7 @@ val env_of_list: (string * string) list -> string array
 (** Execute a list of commands in a given directory *)
 val exec: Dir.t -> ?env:(string * string) list -> ?name:string ->
   ?metadata:(string * string) list -> ?keep_going:bool ->
-  (OpamSystem.command * OpamSystem.args) list -> unit
+  OpamExternalTools.t list -> unit
 
 (** Move a directory *)
 val move_dir: src:Dir.t -> dst:Dir.t -> unit

@@ -1038,7 +1038,7 @@ module ConfigSyntax = struct
     best_effort_prefix : string option;
     solver : arg list option;
     global_variables : (variable * variable_contents * string) list;
-    eval_variables : (variable * (string * string list) * string) list;
+    eval_variables : (variable * OpamExternalTools.t * string) list;
     validation_hook : arg list option;
     default_compiler : formula;
   }
@@ -1171,7 +1171,7 @@ module ConfigSyntax = struct
         (Pp.V.map_list ~depth:2
            (Pp.V.map_triple
               (Pp.V.ident -| Pp.of_module "variable" (module OpamVariable))
-              (Pp.V.map_pair Pp.V.string (Pp.V.map_list Pp.V.string))
+              (assert false)
               Pp.V.string));
       "repository-validation-command", Pp.ppacc_opt
         with_validation_hook validation_hook
@@ -1224,7 +1224,7 @@ module InitConfigSyntax = struct
     solver : arg list option;
     wrappers : Wrappers.t;
     global_variables : (variable * variable_contents * string) list;
-    eval_variables : (variable * (string * string list) * string) list;
+    eval_variables : (variable * OpamExternalTools.t * string) list;
   }
 
   let opam_version t = t.opam_version
@@ -1346,7 +1346,7 @@ module InitConfigSyntax = struct
         (Pp.V.map_list ~depth:2
            (Pp.V.map_triple
               (Pp.V.ident -| Pp.of_module "variable" (module OpamVariable))
-              (Pp.V.map_pair Pp.V.string (Pp.V.map_list Pp.V.string))
+              (assert false)
               Pp.V.string));
     ] @
     List.map

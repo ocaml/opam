@@ -19,7 +19,7 @@ val repository_url: url
 
 val default_compiler: formula
 
-val eval_variables: (OpamVariable.t * (string * string list) * string) list
+val eval_variables: (OpamVariable.t * OpamExternalTools.t * string) list
 
 (** Default initial configuration file for use by [opam init] if nothing is
     supplied. *)

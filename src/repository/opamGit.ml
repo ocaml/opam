@@ -25,7 +25,7 @@ module VCS : OpamVCS.VCS = struct
   let git repo_root =
     let dir = OpamFilename.Dir.to_string repo_root in
     fun ?verbose ?env ?stdout args ->
-      OpamSystem.make_command ~dir ?verbose ?env ?stdout "git" args
+      OpamSystem.make_command ~dir ?verbose ?env ?stdout (OpamExternalTools.custom ("git", args))
 
   let init repo_root repo_url =
     OpamFilename.mkdir repo_root;

@@ -33,6 +33,7 @@ let raise_on_process_error r =
   if OpamProcess.is_failure r then raise (Process_error r)
 
 let command_not_found cmd =
+  let cmd, _ = OpamExternalTools.unpack cmd in
   raise (Command_not_found cmd)
 
 module Sys2 = struct
@@ -82,8 +83,8 @@ let rm_command =
 let remove_dir dir =
   log "rmdir %s" dir;
   if Sys.file_exists dir then (
-    let command cmd args = Sys.command (cmd ^ " " ^ String.concat " " args) in
-    let err = rm_command command ~dir in
+    let command (cmd, args) = Sys.command (String.concat " " (cmd::args)) in
+    let err = command (OpamExternalTools.unpack (rm_command ~dir)) in
       if err <> 0 then
         internal_error "Cannot remove %s (error %d)." dir err
   )
@@ -295,9 +296,6 @@ let real_path p =
       | base -> dir / base
   (* else p *)
 
-type command = string
-type args = string list
-
 let default_env =
   Unix.environment ()
 
@@ -355,12 +353,11 @@ let resolve_command =
           check_perms (Filename.concat path name))
         path
     else
-    let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
     let r =
       OpamProcess.run
         (OpamProcess.command ~env ?dir
            ~name:(temp_file ("command-"^(Filename.basename name)))
-           ~verbose:false cmd args)
+           ~verbose:false (OpamExternalTools.Command.lookup ~cmd:name))
     in
     if OpamProcess.check_success_and_cleanup r then
       match r.OpamProcess.r_stdout with
@@ -373,47 +370,52 @@ let resolve_command =
   fun ?(env=default_env) ?dir name ->
     resolve env ?dir name
 
+let resolve_ext_cmd ?env ?dir name =
+  let name, args = OpamExternalTools.unpack name in
+  OpamStd.Option.map
+    (fun name -> OpamExternalTools.custom (name, args))
+    (resolve_command ?env ?dir name)
+
 let runs = ref []
 let print_stats () =
   match !runs with
   | [] -> ()
   | l  ->
     OpamConsole.msg "%d external processes called:\n%s%!"
-      (List.length l) (OpamStd.Format.itemize ~bullet:"  " (fun (cmd, args) -> cmd ^ " " ^ String.concat " " args) l)
+      (List.length l) (OpamStd.Format.itemize ~bullet:"  " OpamExternalTools.to_string l)
 
 let log_file ?dir name = temp_file ?dir (OpamStd.Option.default "log" name)
 
 let make_command
     ?verbose ?(env=default_env) ?name ?text ?metadata ?allow_stdin ?stdout
     ?dir ?(resolve_path=true)
-    cmd args =
+    cmd =
   let name = log_file name in
   let verbose =
     OpamStd.Option.default OpamCoreConfig.(!r.verbose_level >= 2) verbose
   in
-  (* Check that the command doesn't contain whitespaces *)
-  if None <> try Some (String.index cmd ' ') with Not_found -> None then
-    OpamConsole.warning "Command %S contains space characters" cmd;
+  if OpamExternalTools.has_space cmd then
+    OpamConsole.warning "Command %S contains space characters" (OpamExternalTools.cmd_to_string cmd);
   let full_cmd =
-    if resolve_path then resolve_command ~env ?dir cmd
+    if resolve_path then resolve_ext_cmd ~env ?dir cmd
     else Some cmd
   in
   match full_cmd with
   | Some cmd ->
     OpamProcess.command
       ~env ~name ?text ~verbose ?metadata ?allow_stdin ?stdout ?dir
-      cmd args
+      cmd
   | None ->
     command_not_found cmd
 
 let run_process
-    ?verbose ?(env=default_env) ~name ?metadata ?stdout ?allow_stdin cmd args =
+    ?verbose ?(env=default_env) ~name ?metadata ?stdout ?allow_stdin cmd =
   let chrono = OpamConsole.timer () in
-  runs := (cmd, args) :: !runs;
-  if OpamStd.String.contains_char cmd ' ' then
-    OpamConsole.warning "Command %S contains space characters" cmd;
+  runs := cmd :: !runs;
+  if OpamExternalTools.has_space cmd then
+    OpamConsole.warning "Command %S contains space characters" (OpamExternalTools.cmd_to_string cmd);
 
-  match resolve_command ~env cmd with
+  match resolve_ext_cmd ~env cmd with
   | Some full_cmd ->
     let verbose = match verbose with
       | None   -> OpamCoreConfig.(!r.verbose_level) >= 2
@@ -423,9 +425,9 @@ let run_process
       OpamProcess.run
         (OpamProcess.command
            ~env ~name ~verbose ?metadata ?allow_stdin ?stdout
-           full_cmd args)
+           full_cmd)
     in
-    let str = String.concat " " (cmd :: args) in
+    let str = OpamExternalTools.to_string cmd in
     log "[%a] (in %.3fs) %s"
       (OpamConsole.slog Filename.basename) name
       (chrono ()) str;
@@ -433,15 +435,15 @@ let run_process
   | None ->
     command_not_found cmd
 
-let command ?verbose ?env ?name ?metadata ?allow_stdin cmd args =
+let command ?verbose ?env ?name ?metadata ?allow_stdin cmd =
   let name = log_file name in
-  let r = run_process ?verbose ?env ~name ?metadata ?allow_stdin cmd args in
+  let r = run_process ?verbose ?env ~name ?metadata ?allow_stdin cmd in
   OpamProcess.cleanup r;
   raise_on_process_error r
 
 let commands ?verbose ?env ?name ?metadata ?(keep_going=false) commands =
   let name = log_file name in
-  let run (cmd, args) = run_process ?verbose ?env ~name ?metadata cmd args in
+  let run = run_process ?verbose ?env ~name ?metadata in
   let command r0 c =
     match r0, keep_going with
     | (`Error _ | `Exception _), false -> r0
@@ -459,12 +461,12 @@ let commands ?verbose ?env ?name ?metadata ?(keep_going=false) commands =
   | `Error e -> process_error e
   | `Exception e -> raise e
 
-let read_command_output ?verbose ?env ?metadata ?allow_stdin cmd args =
+let read_command_output ?verbose ?env ?metadata ?allow_stdin cmd =
   let name = log_file None in
   let r =
     run_process ?verbose ?env ~name ?metadata ?allow_stdin
       ~stdout:(name^".stdout")
-      cmd args
+      cmd
   in
   OpamProcess.cleanup r;
   raise_on_process_error r;
@@ -482,7 +484,7 @@ let copy_file src dst =
   if file_or_symlink_exists dst
   then remove_file dst;
   mkdir (Filename.dirname dst);
-  OpamExternalTools.Cp.cp (command ~verbose:(verbose_for_base_commands ())) ~src ~dst
+  command ~verbose:(verbose_for_base_commands ()) (OpamExternalTools.Cp.cp ~src ~dst)
 
 let copy_dir src dst =
   if Sys.file_exists dst then
@@ -490,23 +492,20 @@ let copy_dir src dst =
       match ls src with
       | [] -> ()
       | srcfiles ->
-        OpamExternalTools.Cp.recursive
-          (command ~verbose:(verbose_for_base_commands ()))
-          ~srcs:srcfiles ~dst
+        command ~verbose:(verbose_for_base_commands ())
+          (OpamExternalTools.Cp.recursive ~srcs:srcfiles ~dst)
     else internal_error "Can not copy dir %s to %s, which is not a directory"
         src dst
   else
     (mkdir (Filename.dirname dst);
-     OpamExternalTools.Cp.recursive
-       (command ~verbose:(verbose_for_base_commands ()))
-       ~srcs:[src] ~dst)
+     command ~verbose:(verbose_for_base_commands ())
+       (OpamExternalTools.Cp.recursive ~srcs:[src] ~dst))
 
 let mv src dst =
   if file_or_symlink_exists dst then remove_file dst;
   mkdir (Filename.dirname dst);
-  OpamExternalTools.Mv.mv
-    (command ~verbose:(verbose_for_base_commands ()))
-    ~src ~dst
+  command ~verbose:(verbose_for_base_commands ())
+    (OpamExternalTools.Mv.mv ~src ~dst)
 
 let is_exec file =
   let stat = Unix.stat file in
@@ -524,7 +523,7 @@ let install ?exec src dst =
   let exec = match exec with
     | Some e -> e
     | None -> is_exec src in
-  OpamExternalTools.(if exec then Install.exec else Install.file) command ~src ~dst
+  command (OpamExternalTools.(if exec then Install.exec else Install.file) ~src ~dst)
 
 let cpu_count () =
   try
@@ -532,10 +531,10 @@ let cpu_count () =
       let open OpamStd in
       match Sys.os () with
       | Sys.Win32 -> [Env.get "NUMBER_OF_PROCESSORS"]
-      | Sys.FreeBSD -> OpamExternalTools.Sysctl.get_hw_ncpu
-                         (read_command_output ~verbose:(verbose_for_base_commands ()))
-      | _ -> OpamExternalTools.Getconf.get_nproc
-               (read_command_output ~verbose:(verbose_for_base_commands ()))
+      | Sys.FreeBSD -> read_command_output ~verbose:(verbose_for_base_commands ())
+                         OpamExternalTools.Sysctl.get_hw_ncpu
+      | _ -> read_command_output ~verbose:(verbose_for_base_commands ())
+               OpamExternalTools.Getconf.get_nproc
     in
     int_of_string (List.hd ans)
   with Not_found | Process_error _ | Failure _ -> 1
@@ -575,7 +574,7 @@ module Tar = struct
 
   let extract_command file =
     let command extract dir =
-      extract (fun cmd args -> make_command cmd args) ~file ~dir
+      make_command (extract ~file ~dir)
     in
     let ext =
       List.fold_left
@@ -611,7 +610,7 @@ module Zip = struct
     with Sys_error _ | End_of_file -> false
 
   let extract_command file =
-    Some (fun dir -> OpamExternalTools.Unzip.extract make_command ~file ~dir)
+    Some (fun dir -> make_command (OpamExternalTools.Unzip.extract ~file ~dir))
 end
 
 let is_tar_archive = Tar.is_archive
@@ -789,7 +788,7 @@ let patch ~dir p =
   if not (Sys.file_exists p) then
     (OpamConsole.error "Patch file %S not found." p;
      raise Not_found);
-  OpamExternalTools.Patch.apply (make_command ~name:"patch" ~dir) ~file:p @@> fun r ->
+  make_command ~name:"patch" ~dir (OpamExternalTools.Patch.apply ~file:p) @@> fun r ->
   if OpamProcess.is_success r then Done None
   else Done (Some (Process_error r))
 

@@ -126,7 +126,7 @@ module Config: sig
   val with_global_variables:
     (variable * variable_contents * string) list -> t -> t
   val with_eval_variables:
-    (variable * (string * string list) * string) list -> t -> t
+    (variable * OpamExternalTools.t * string) list -> t -> t
   val with_validation_hook_opt:
     arg list option -> t -> t
   val with_default_compiler:
@@ -165,7 +165,7 @@ module Config: sig
   val global_variables: t -> (variable * variable_contents * string) list
 
   (** variable, command, docstring *)
-  val eval_variables: t -> (variable * (string * string list) * string) list
+  val eval_variables: t -> (variable * OpamExternalTools.t * string) list
 
   val validation_hook: t -> arg list option
 
@@ -188,7 +188,7 @@ module InitConfig: sig
   val solver: t -> arg list option
   val wrappers: t -> Wrappers.t
   val global_variables: t -> (variable * variable_contents * string) list
-  val eval_variables: t -> (variable * (string * string list) * string) list
+  val eval_variables: t -> (variable * OpamExternalTools.t * string) list
 
   val with_opam_version: opam_version -> t -> t
   val with_repositories:
@@ -202,7 +202,7 @@ module InitConfig: sig
   val with_solver: arg list option -> t -> t
   val with_wrappers: Wrappers.t -> t -> t
   val with_global_variables: (variable * variable_contents * string) list -> t -> t
-  val with_eval_variables: (variable * (string * string list) * string) list -> t -> t
+  val with_eval_variables: (variable * OpamExternalTools.t * string) list -> t -> t
 
   (** [add t1 t2] is [t2], with the field values falling back to those of [t1]
       when not set in [t2] *)
