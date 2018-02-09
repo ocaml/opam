@@ -216,7 +216,20 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_dose3_common" = "xno" ||
        test "x$OCAML_PKG_opam_file_format" = "xno" ||
        test "x$OCAML_PKG_cppo" = "xno" ||
-       test "x$OCAML_PKG_mccs$MCCS_DISABLED$MCCS_DEFAULT" = "xnofalse"; }],[
+       test "x$OCAML_PKG_mccs$MCCS_ENABLED$MCCS_DEFAULT" = "xnotrue"; }],[
+  AS_IF([test "x$MCCS_ENABLED" = "xtrue"],[
+    AC_PROG_CXX
+    # Curiously, CXX=g++ && GXX= seems to be how autoconf "signals" that no C++
+    # compiler was found.
+    AS_IF([test "x$CXX" = "xg++" -a "x$GXX" != "xyes"],[
+      AS_IF([test "x$MCCS_DEFAULT" = "xyes"],[
+        AC_SUBST(MCCS_ENABLED,false)
+      ],[
+        AC_MSG_ERROR([A C++ compiler is required to build mccs])
+      ])
+    ])
+  ])
+
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"
   echo "'opam' binary, run 'make lib-ext' to download and include them."
