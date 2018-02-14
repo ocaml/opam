@@ -6,6 +6,7 @@
 opam 2.0 DOCUMENTATION (work in progress)
 
 Install.md
+Upgrade_guide.md
 Usage.md
 
 FAQ.md

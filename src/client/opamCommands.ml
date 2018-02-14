@@ -1795,7 +1795,8 @@ let switch =
      switch, and none of these options are present, the compiler is chosen \
      according to the configuration default (see opam-init(1)). If the chosen \
      directory contains package definitions, a compatible compiler is searched \
-     within the default selection.";
+     within the default selection, and the packages will automatically get \
+     installed.";
     "set", `set, ["SWITCH"],
     "Set the currently active switch, among the installed switches.";
     "remove", `remove, ["SWITCH"], "Remove the given switch from disk.";
@@ -1844,7 +1845,7 @@ let switch =
     `P "$(b,opam switch set) sets the default switch globally, but it is also \
         possible to select a switch in a given shell session, using the \
         environment. For that, use $(i,eval \\$(opam env \
-        --switch=SWITCH\\)).";
+        --switch=SWITCH --set-switch\\)).";
   ] @ mk_subdoc ~defaults:["","list";"SWITCH","set"] commands
     @ [`S "OPTIONS"]
     @ [`S OpamArg.build_option_section]
