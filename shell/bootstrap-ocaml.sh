@@ -3,7 +3,7 @@
 GEN_CONFIG_ONLY=${GEN_CONFIG_ONLY:-0}
 
 if command -v curl > /dev/null; then
-  CURL="curl -OLSs"
+  CURL="curl -OLSfs"
 elif command -v wget > /dev/null; then
   CURL=wget
 else

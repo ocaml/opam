@@ -17,7 +17,7 @@ MD5_flexdll = cc456a89382e60d84130cddd53977486
 
 ifndef FETCH
   ifneq ($(shell command -v curl 2>/dev/null),)
-    FETCH = curl -LSs -o $(2) $(1)
+    FETCH = curl -LSfs -o $(2) $(1)
   else
     FETCH = wget -O $(2) $(1)
   endif
@@ -139,7 +139,7 @@ cache-archives: $(SRC_EXTS:=.cache) $(PKG_EXTS:=.pkgcache) ocaml.cache flexdll.c
 		($(call FETCH,$(URL_PKG_$*),$(notdir $(URL_PKG_$*))) && mv $(notdir $(URL_PKG_$*)) archives/)
 
 define cache_url
-https://opam.ocaml.org/2.0~dev/cache/md5/$(shell echo $(MD5_$(2)$(1)) | cut -c -2)/$(MD5_$(2)$(1))
+https://opam.ocaml.org/2.0/cache/md5/$(shell echo $(MD5_$(2)$(1)) | cut -c -2)/$(MD5_$(2)$(1))
 endef
 
 define get_from_cache
