@@ -17,22 +17,37 @@ open OpamTypes
 val template: package -> OpamFile.OPAM.t
 
 (** Runs several sanity checks on the opam file; returns a list of warnings.
-    [`Error] level should be considered unfit for publication, while
-    [`Warning] are advisory but may be accepted. The int is an identifier for
-    this specific warning/error. *)
-val lint: OpamFile.OPAM.t -> (int * [`Warning|`Error] * string) list
+   [`Error] level should be considered unfit for publication, while [`Warning]
+   are advisory but may be accepted. The int is an identifier for this specific
+   warning/error. If [check_extra_files] is unspecified, warning 52 won't be
+   checked. *)
+val lint:
+  ?check_extra_files:(basename * (OpamHash.t -> bool)) list ->
+  OpamFile.OPAM.t -> (int * [`Warning|`Error] * string) list
 
-(** Same as [lint], but operates on a file, which allows catching parse
-    errors too. You can specify an expected name and version *)
-val lint_file: OpamFile.OPAM.t OpamFile.typed_file ->
+(** Same as [lint], but operates on a file, which allows catching parse errors
+   too. You can specify an expected name and version. [check_extra_files]
+   defaults to a function that will look for a [files/] directory besides
+   [filename] *)
+val lint_file:
+  ?check_extra_files:(basename * (OpamHash.t -> bool)) list ->
+  OpamFile.OPAM.t OpamFile.typed_file ->
   (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
 
-(** Same as [lint_file], but taking input from a channel *)
-val lint_channel: OpamFile.OPAM.t OpamFile.typed_file -> in_channel ->
+(** Same as [lint_file], but taking input from a channel. [check_extra_files]
+   defaults to a function that will look for a [files/] directory besides
+   [filename] *)
+val lint_channel:
+  ?check_extra_files:(basename * (OpamHash.t -> bool)) list ->
+  OpamFile.OPAM.t OpamFile.typed_file -> in_channel ->
   (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
 
-(** Like [lint_file], but takes the file contents as a string *)
-val lint_string: OpamFile.OPAM.t OpamFile.typed_file -> string ->
+(** Like [lint_file], but takes the file contents as a string.
+   [check_extra_files] defaults to a function that will look for a [files/]
+   directory besides [filename] *)
+val lint_string:
+  ?check_extra_files:(basename * (OpamHash.t -> bool)) list ->
+  OpamFile.OPAM.t OpamFile.typed_file -> string ->
   (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
 
 (** Utility function to print validation results *)

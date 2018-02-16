@@ -250,7 +250,7 @@ let template nv =
   |> with_bug_reports [""]
   |> with_synopsis ""
 
-let lint t =
+let lint ?check_extra_files t =
   let format_errors =
     List.map (fun (field, (pos, msg)) ->
         3, `Error,
@@ -563,12 +563,40 @@ let lint t =
       "Package is needlessly flagged \"light-uninstall\", since it has no \
        remove instructions"
       (has_flag Pkgflag_Conf t && t.remove = []);
+    (let mismatching_extra_files =
+       match t.extra_files, check_extra_files with
+       | None, _ | _, None -> []
+       | Some fs, Some [] -> List.map fst fs
+       | Some efiles, Some ffiles ->
+         OpamStd.List.filter_map (fun (n, _) ->
+             if List.mem_assoc n ffiles then None else Some n)
+           efiles @
+         OpamStd.List.filter_map (fun (n, check_f) ->
+             try if check_f (List.assoc n efiles) then None else Some n
+             with Not_found -> Some n)
+           ffiles
+     in
+     cond 52 `Error
+       "Mismatching 'extra-files:' field"
+       ~detail:(List.map OpamFilename.Base.to_string mismatching_extra_files)
+       (mismatching_extra_files <> []))
   ]
   in
   format_errors @
   OpamStd.List.filter_map (fun x -> x) warnings
 
-let lint_gen reader filename =
+let extra_files_default filename =
+  let dir =
+    OpamFilename.Op.(OpamFilename.dirname
+                       (OpamFile.filename filename) / "files")
+  in
+  List.map
+    (fun f ->
+       OpamFilename.Base.of_string (OpamFilename.remove_prefix dir f),
+       OpamHash.check_file (OpamFilename.to_string f))
+    (OpamFilename.rec_files dir)
+
+let lint_gen ?check_extra_files reader filename =
   let warnings, t =
     let warn_of_bad_format (pos, msg) =
       2, `Error, Printf.sprintf "File format error%s: %s"
@@ -620,7 +648,9 @@ let lint_gen reader filename =
           in
           t, name_warn @ version_warn
       in
-      warnings, Some t
+      warnings,
+      Some (OpamFile.OPAM.with_metadata_dir
+              (Some (OpamFilename.dirname (OpamFile.filename filename))) t)
     with
     | OpamSystem.File_not_found _ ->
       OpamConsole.error "%s not found" (OpamFile.to_string filename);
@@ -630,10 +660,15 @@ let lint_gen reader filename =
     | OpamPp.Bad_format bf -> [warn_of_bad_format bf], None
     | OpamPp.Bad_format_list bfl -> List.map warn_of_bad_format bfl, None
   in
-  warnings @ (match t with Some t -> lint t | None -> []),
+  let check_extra_files = match check_extra_files with
+    | None -> extra_files_default filename
+    | Some f -> f
+  in
+  warnings @ (match t with Some t -> lint ~check_extra_files t | None -> []),
   t
 
-let lint_file filename =
+
+let lint_file ?check_extra_files filename =
   let reader filename =
     try
       let ic = OpamFilename.open_in (OpamFile.filename filename) in
@@ -645,15 +680,15 @@ let lint_file filename =
       OpamConsole.error_and_exit `Bad_arguments "File %s not found"
         (OpamFile.to_string filename)
   in
-  lint_gen reader filename
+  lint_gen ?check_extra_files reader filename
 
-let lint_channel filename ic =
+let lint_channel ?check_extra_files filename ic =
   let reader filename = OpamFile.Syntax.of_channel filename ic in
-  lint_gen reader filename
+  lint_gen ?check_extra_files reader filename
 
-let lint_string filename string =
+let lint_string ?check_extra_files filename string =
   let reader filename = OpamFile.Syntax.of_string filename string in
-  lint_gen reader filename
+  lint_gen ?check_extra_files reader filename
 
 let warns_to_string ws =
   OpamStd.List.concat_map "\n"
