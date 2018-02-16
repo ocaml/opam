@@ -310,7 +310,7 @@ let lint t =
       "Field 'maintainer' has the old default value"
       (List.mem "contact@ocamlpro.com" t.maintainer &&
        not (List.mem "org:ocamlpro" t.tags));
-    cond 25 `Error
+    cond 25 `Warning
       "Missing field 'authors'"
       (t.author = []);
     cond 26 `Warning
@@ -382,7 +382,7 @@ let lint t =
         It should only be determined from global configuration variables"
        ~detail:(List.map OpamVariable.Full.to_string pkg_vars)
        (pkg_vars <> []));
-    cond 35 `Error
+    cond 35 `Warning
       "Missing field 'homepage'"
       (t.homepage = []);
     (* cond (t.doc = []) *)
