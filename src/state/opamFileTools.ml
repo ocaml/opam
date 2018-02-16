@@ -585,30 +585,40 @@ let lint_gen reader filename =
         OpamPp.parse ~pos:(pos_file (OpamFile.filename filename))
           (OpamFormat.I.map_file OpamFile.OPAM.pp_raw_fields) f
       in
-      let warnings =
+      let t, warnings =
         match OpamPackage.of_filename (OpamFile.filename filename) with
-        | None -> []
+        | None -> t, []
         | Some nv ->
-          let name = nv.OpamPackage.name in
-          let version = nv.OpamPackage.version in
-          (match t.OpamFile.OPAM.name with
-           | Some tname when tname <> name ->
-             [ 4, `Warning,
-               Printf.sprintf
-                 "Field 'name: %S' while the directory name or pinning \
-                  implied %S"
-                 (OpamPackage.Name.to_string tname)
-                 (OpamPackage.Name.to_string name) ]
-           | _ -> []) @
-          (match t.OpamFile.OPAM.version with
-           | Some tversion when tversion <> version ->
-             [ 4, `Warning,
-               Printf.sprintf
-                 "Field 'version: %S' while the directory name or pinning \
-                  implied %S"
-                 (OpamPackage.Version.to_string tversion)
-                 (OpamPackage.Version.to_string version) ]
-           | _ -> [])
+          let fname = nv.OpamPackage.name in
+          let fversion = nv.OpamPackage.version in
+          let t, name_warn =
+            match t.OpamFile.OPAM.name with
+            | Some tname ->
+              if tname = fname then t, [] else
+                t,
+                [ 4, `Warning,
+                  Printf.sprintf
+                    "Field 'name: %S' while the directory name or pinning \
+                     implied %S"
+                    (OpamPackage.Name.to_string tname)
+                    (OpamPackage.Name.to_string fname) ]
+            | None ->
+              OpamFile.OPAM.with_name fname t, []
+          in
+          let t, version_warn =
+            match t.OpamFile.OPAM.version with
+            | Some tversion ->
+              if tversion = fversion then t, [] else
+                t,
+                [ 4, `Warning,
+                  Printf.sprintf
+                    "Field 'version: %S' while the directory name or pinning \
+                     implied %S"
+                    (OpamPackage.Version.to_string tversion)
+                    (OpamPackage.Version.to_string fversion) ]
+            | None -> OpamFile.OPAM.with_version fversion t, []
+          in
+          t, name_warn @ version_warn
       in
       warnings, Some t
     with
