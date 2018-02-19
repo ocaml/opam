@@ -141,7 +141,7 @@ uninstall: opam-actual.install
 
 .PHONY: tests tests-local tests-git
 tests: $(JBUILDER_DEP)
-	$(JBUILDER) runtest $(JBUILDER_ARGS)
+	$(JBUILDER) runtest $(JBUILDER_ARGS) src/ tests/
 
 # tests-local, tests-git
 tests-%:

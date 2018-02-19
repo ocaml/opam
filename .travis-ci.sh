@@ -117,10 +117,13 @@ git config --global user.name "Travis CI"
     else
         if [ "$COLD" = "1" ]; then
           export PATH=`pwd`/bootstrap/ocaml/bin:$PATH
+        else
+          export PATH="$OPAMBSROOT/$OCAML_VERSION/bin":$PATH
         fi
         # Test basic actions
-        opam init
-        eval $(opam config env)
+        opam init --bare
+        opam switch create default ocaml-system
+        # eval $(opam config env)
         opam install lwt
         opam list
         opam config report

@@ -372,7 +372,7 @@ let resolve universe ~orphans request =
     let all_packages =
       universe.u_available ++ orphans in
     let simple_universe =
-      load_cudf_universe universe ~depopts:true ~build:false ~post:true
+      load_cudf_universe universe ~depopts:true ~build:false ~post:false
         ~version_map all_packages in
     let complete_universe =
       load_cudf_universe universe ~depopts:true ~build:true ~post:false

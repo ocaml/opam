@@ -30,7 +30,7 @@ Some commands have changed syntax:
 
 
 The `opam-admin` tool, for repository operations, is now built into opam, use
-the [`opam admin`](man/opam-admin.html) command instead
+the [`opam admin`](man/opam-admin.html) command instead.
 
 Opam now comes with [a solver built-in](https://github.com/AltGr/ocaml-mccs),
 which means that installing `aspcud` alongside opam is no longer required.
@@ -49,34 +49,34 @@ doesn't affect the pinned package.
 
 ### New features
 
-- new command aliases: [`opam var`](man/opam-var.html),
+- __new command aliases__: [`opam var`](man/opam-var.html),
   [`opam exec`](man/opam-exec.html), [`opam env`](man/opam-env.html) can be used
   in place of the corresponding [`opam config`](man/opam-config.html)
   subcommands
 
-- new command: [`opam clean`](man/opam-clean.html) to clear caches, logs, etc.
+- __new command__: [`opam clean`](man/opam-clean.html) to clear caches, logs, etc.
 
-- local switches: use _e.g._
-  [`opam switch create .`](man/opam-switch.html#lbAE)
-  to create a switch in the current directory. The switch contents will be in a
-  `_opam` directory, which can be safely removed once done. The switch path name
-  can then be used as handle to refer to the switch. Additionally, the above
-  command will install any packages which definitions are found in the selected
-  directory into the local switch.
+- __local switches__: use _e.g._
+  [`opam switch create .`](man/opam-switch.html#lbAE) to create a switch in the
+  current directory. The switch contents will be in a `_opam` directory, which
+  can be safely removed once done. The switch path can then be used as a handle
+  to refer to the switch. Additionally, the above command will install any
+  packages which definitions are found in the selected directory into the local
+  switch.
 
-- automatic pinning: use _e.g._ [`opam install .`](man/opam-install.html#lbAD)
+- __automatic pinning__: use _e.g._ [`opam install .`](man/opam-install.html#lbAD)
   to pin and install any packages found in the current directory. `opam install
   . --deps-only` can also be used to prepare a switch for working with a source
   tree. This extension also concerns the `remove`, `upgrade`, `reinstall` and
   `show` commands, and specifying the path to a specific `opam` file is also
   supported.
 
-- archive caching: opam now uses a much better caching mechanism, both locally
+- __archive caching__: opam now uses a much better caching mechanism, both locally
   and on the opam-repository. In particular, upstream repositories being down
   should no longer prevent package installation (even for older or removed
   packages). Git repositories are also cached.
 
-- better error mitigation, messages and recovery.
+- __better error mitigation__, messages and recovery.
   [`opam install --restore`](man/opam-install.html#lbAF) can be used to retry
   after a failed operation.
 
@@ -154,10 +154,10 @@ doesn't affect the pinned package.
 - `opam switch export/import` format has been changed (but files in the 1.2
   format can still be read)
 
-- __the conversion from the 1.2 format is automatic, both for repositories and
-  when pinning.__ Be careful, however, not to submit 2.0 format files if they
-  are to be used by opam 1.2, or published to the main repository before it
-  makes the transition.
+- __the conversion from the 1.2 format is done internally and automatic, both
+  for repositories and when pinning.__ Be careful, however, not to submit 2.0
+  format files if they are to be used by opam 1.2, or published to the main
+  repository before it makes the transition.
 
 ### New features
 
