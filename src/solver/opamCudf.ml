@@ -521,7 +521,7 @@ let is_pinned = check s_pinned
 
 let default_preamble =
   let l = [
-    (s_source,         `String None) ;
+    (s_source,         `String None);
     (s_source_number,  `String None);
     (s_reinstall,      `Bool (Some false));
     (s_installed_root, `Bool (Some false));
@@ -594,7 +594,8 @@ let dump_cudf_request ~version_map (_, univ,_ as cudf) criteria =
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
     let module Solver = (val OpamSolverConfig.(Lazy.force !r.solver)) in
-    Printf.fprintf oc "# Solver: %s\n" Solver.name;
+    Printf.fprintf oc "# Solver: %s\n"
+      (OpamCudfSolver.get_name (module Solver));
     Printf.fprintf oc "# Criteria: %s\n" criteria;
     Cudf_printer.pp_cudf oc cudf;
     OpamPackage.Map.iter (fun (pkg:OpamPackage.t) (vnum: int) ->

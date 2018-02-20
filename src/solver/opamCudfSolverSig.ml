@@ -21,7 +21,10 @@ module type S = sig
 
   val name: string
 
-  val is_present: bool Lazy.t
+  (** extra configurable solver parameters *)
+  val ext: string option ref
+
+  val is_present: unit -> bool
 
   val command_name: string option
   (** None means the solver is built-in *)
