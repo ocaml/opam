@@ -187,40 +187,40 @@ let print_eval_env ~csh ~sexp ~fish env =
   else
     print_env env
 
-let env st ?(set_opamroot=false) ?(set_opamswitch=false)
+let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
     ~csh ~sexp ~fish ~inplace_path =
   log "config-env";
   let opamroot_not_current =
-    let current = st.switch_global.root in
+    let current = gt.root in
     let default = OpamStateConfig.(default.root_dir) in
     match OpamStd.Env.getopt "OPAMROOT" with
     | None -> current <> default
     | Some r -> r <> OpamFilename.Dir.to_string current
   in
   let opamswitch_not_current =
-    let current = st.switch in
-    let default = OpamFile.Config.switch st.switch_global.config in
+    let default = OpamFile.Config.switch gt.config in
     match OpamStd.Env.getopt "OPAMSWITCH" with
-    | None -> Some current <> default
-    | Some s -> s <> OpamSwitch.to_string current
+    | None -> Some switch <> default
+    | Some s -> s <> OpamSwitch.to_string switch
   in
   if opamroot_not_current && not set_opamroot then
     OpamConsole.note
       "To make opam select %s as its root in the current shell, add %s or set \
        %s"
-      (OpamFilename.Dir.to_string st.switch_global.root)
+      (OpamFilename.Dir.to_string gt.root)
       (OpamConsole.colorise `bold "--set-root")
       (OpamConsole.colorise `bold "OPAMROOT");
   if opamswitch_not_current && not set_opamswitch then
     OpamConsole.note
       "To make opam select the switch %s in the current shell, add %s or set \
        %s"
-      (OpamSwitch.to_string st.switch)
+      (OpamSwitch.to_string switch)
       (OpamConsole.colorise `bold "--set-switch")
       (OpamConsole.colorise `bold "OPAMSWITCH");
   let env =
-    OpamEnv.get_opam
-      ~set_opamroot ~set_opamswitch ~force_path:(not inplace_path) st
+    OpamEnv.get_opam_raw
+      ~set_opamroot ~set_opamswitch ~force_path:(not inplace_path)
+      gt.root switch
   in
   print_eval_env ~csh ~sexp ~fish env
 

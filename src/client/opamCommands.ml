@@ -753,11 +753,12 @@ let config =
     match command, params with
     | Some `env, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      if OpamStateConfig.(!r.current_switch) = None then `Ok () else
-        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-        `Ok (OpamConfigCommand.env st
-               ~set_opamroot ~set_opamswitch
-               ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path)
+      (match OpamStateConfig.(!r.current_switch) with
+       | None -> `Ok ()
+       | Some sw ->
+         `Ok (OpamConfigCommand.env gt sw
+                ~set_opamroot ~set_opamswitch
+                ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path))
     | Some `revert_env, [] ->
        `Ok (OpamConfigCommand.print_eval_env
               ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish)
@@ -1041,11 +1042,12 @@ let env =
     match revert with
     | false ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      if OpamStateConfig.(!r.current_switch) <> None then
-        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-        OpamConfigCommand.env st
-          ~set_opamroot ~set_opamswitch
-          ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path
+      (match OpamStateConfig.(!r.current_switch) with
+       | None -> ()
+       | Some sw ->
+         OpamConfigCommand.env gt sw
+           ~set_opamroot ~set_opamswitch
+           ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path)
     | true ->
       OpamConfigCommand.print_eval_env
         ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish)

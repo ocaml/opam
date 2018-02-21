@@ -19,7 +19,7 @@ open OpamStateTypes
     [inplace_path] changes how the PATH variable is updated when there is already
     an opam entry: either at the same rank, or pushed in front. *)
 val env:
-  'a switch_state ->
+  'a global_state -> switch ->
   ?set_opamroot:bool -> ?set_opamswitch:bool ->
   csh:bool -> sexp:bool -> fish:bool -> inplace_path:bool ->
   unit
