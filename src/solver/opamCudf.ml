@@ -138,7 +138,7 @@ module Graph = struct
 end
 
 (** Special package used by Dose internally, should generally be filtered out *)
-let dose_dummy_request = "dose-dummy-request"
+let dose_dummy_request = Algo.Depsolver.dummy_request.Cudf.package
 let is_dose_request cpkg = cpkg.Cudf.package = dose_dummy_request
 
 let filter_dependencies f_direction universe packages =
@@ -608,7 +608,8 @@ let check_request ?(explain=true) ~version_map univ req =
   | Algo.Depsolver.Unsat
       (Some ({Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _} as r)) ->
     make_conflicts ~version_map univ r
-  | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
+  | Algo.Depsolver.Sat (_,u) ->
+    Success (remove u dose_dummy_request None)
   | Algo.Depsolver.Error msg ->
     let f = dump_cudf_error ~version_map univ req in
     let msg =
@@ -629,7 +630,7 @@ let get_final_universe ~version_map univ req =
     in
     raise (Solver_failure msg) in
   match call_external_solver ~version_map univ req with
-  | Algo.Depsolver.Sat (_,u) -> Success (remove u "dose-dummy-request" None)
+  | Algo.Depsolver.Sat (_,u) -> Success (remove u dose_dummy_request None)
   | Algo.Depsolver.Error "(CRASH) Solution file is empty" ->
     (* XXX Is this still needed with latest dose ? *)
     Success (Cudf.load_universe [])
