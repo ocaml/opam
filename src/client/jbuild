@@ -1,41 +1,10 @@
-(* -*- tuareg -*- *)
-
-module J = Jbuild_plugin.V1
-
-let (sha, version) =
-  let remove () =
-    try
-      Sys.remove "current-git-sha"
-    with _ ->
-      ()
-  in
-  try
-    let _ = if Sys.command "git rev-parse --quiet --verify HEAD > current-git-sha" <> 0 then raise Exit in
-    let c = open_in "current-git-sha" in
-    let sha =
-      try
-        input_line c
-      with _ ->
-        ""
-    in
-    close_in c;
-    remove ();
-    if sha = "" then
-      raise Exit
-    else
-      (sha, Printf.sprintf "let version = Some \\\"%s\\\"" sha)
-  with _ ->
-    remove ();
-    ("", "let version = None")
-
-let () = Printf.ksprintf J.send {|
 (jbuild_version 1)
 
 (library
   ((name opam_client)
    (public_name opam-client)
    (synopsis "OCaml Package Manager client and CLI library")
-   (modules (:standard \ opamMain))
+   (modules (:standard \ opamMain get-git-version run-number))
    (libraries (opam-state opam-solver re.glob cmdliner))
    (flags (:standard
            (:include ../ocaml-flags-standard.sexp)
@@ -54,12 +23,21 @@ let () = Printf.ksprintf J.send {|
    (libraries (opam-client))))
 
 (rule
-  (with-stdout-to opamGitVersion.ml (echo ${read-lines:git-sha-%s})))
+  (with-stdout-to .head-check (echo 0)))
 
 (rule
-  (with-stdout-to git-sha-%s (echo "%s")))
+  ((targets (git-sha))
+   (deps    (.head-check run-number.ml))
+   (action  (progn (run ocaml run-number.ml) (ignore-stderr (with-stdout-to ${@} (system "git rev-parse --quiet --verify HEAD || echo .")))))))
 
 (rule
-  ((targets (linking.sexp))
-   (action  (with-stdout-to ${@} (run echo "()")))))
-|} sha sha version
+  (with-stdout-to get-git-version.ml (echo "print_string @@ let v = \"${read-lines:git-sha}\" in if v = \".\" then \"let version = None\" else \"let version = Some \\\"\" ^ v ^ \"\\\"\"")))
+
+(rule
+  (with-stdout-to run-number.ml (echo "Printf.fprintf (open_out \".head-check\") \"%d\" (match open_in \".head-check\" with c -> let r = try input_line c |> int_of_string |> succ with _ -> 0 in close_in c; r | exception _ -> 0)")))
+
+(rule
+  (with-stdout-to opamGitVersion.ml (run ocaml ${path:get-git-version.ml})))
+
+(rule
+  (with-stdout-to linking.sexp (run echo "()")))
