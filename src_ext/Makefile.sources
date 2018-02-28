@@ -1,5 +1,5 @@
-URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.1.tar.gz
-MD5_cppo = b376e0f063f82daf5b1530479f5bcc5f
+URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.2.tar.gz
+MD5_cppo = 0c4f7b7f29b819bfd5b28200de67b3f5
 
 $(call PKG_SAME,cppo)
 
