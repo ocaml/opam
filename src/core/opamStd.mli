@@ -433,6 +433,11 @@ module Sys : sig
   (** Raises [Exit], with the code associated to the exit reason *)
   val exit_because: exit_reason -> 'a
 
+  (**/**)
+
+  type warning_printer =
+    {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
+  val set_warning_printer : warning_printer -> unit
 end
 
 (** {2 General use infix function combinators} *)

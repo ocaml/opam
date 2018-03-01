@@ -504,6 +504,9 @@ module OpamString = struct
 
 end
 
+type warning_printer =
+  {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
+let console = ref {warning = fun fmt -> Printf.ksprintf prerr_string fmt}
 
 
 module Env = struct
@@ -792,6 +795,15 @@ module OpamSys = struct
 
   let exit_because reason = exit (get_exit_code reason)
 
+  type nonrec warning_printer = warning_printer =
+    {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
+
+  let set_warning_printer =
+    let called = ref false in
+    fun printer ->
+      if !called then invalid_arg "Just what do you think you're doing, Dave?";
+      called := true;
+      console := printer
 end
 
 
@@ -1107,9 +1119,8 @@ module Config = struct
     try Option.map conv (Env.getopt ("OPAM"^var))
     with Failure _ ->
       flush stdout;
-      Printf.eprintf
-        "[WARNING] Invalid value for environment variable OPAM%s, ignored."
-        var;
+      !console.warning
+        "Invalid value for environment variable OPAM%s, ignored." var;
       None
 
   let env_bool var =

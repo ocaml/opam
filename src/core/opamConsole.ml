@@ -321,3 +321,7 @@ let read fmt =
       ) else
         None
     ) fmt
+
+(* This allows OpamStd.Config.env to display warning messages *)
+let () =
+  OpamStd.Sys.(set_warning_printer {warning})
