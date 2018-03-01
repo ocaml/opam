@@ -103,3 +103,15 @@ val parent_putenv : string -> string -> bool
     also be called to update the value in the current process). This function
     must not be called if the parent process is 32-bit and the current process
     is 64-bit or vice versa (outcomes vary from a no-op to a segfault). *)
+
+val shGetFolderPath : int -> shGFP_type -> string
+(** Windows only. [shGetFolderPath nFolder dwFlags] retrieves the location of a special
+    folder by CSIDL value. See https://msdn.microsoft.com/en-us/library/windows/desktop/bb762181.aspx *)
+
+val sendMessageTimeout :
+  nativeint -> int -> int -> ('a, 'b, 'c) winmessage -> 'a -> 'b -> int * 'c
+(** Windows only. [sendMessageTimeout hwnd timeout flags message wParam lParam]
+    sends a message to the given handle, but is guaranteed to return within
+    [timeout] milliseconds. The result consists of two parts, [fst]  is the
+    return value from SendMessageTimeout, [snd] depends on both the message and
+    [fst]. See https://msdn.microsoft.com/en-us/library/windows/desktop/ms644952.aspx *)

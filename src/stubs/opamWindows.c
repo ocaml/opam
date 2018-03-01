@@ -28,6 +28,7 @@
 #ifdef _WIN32
 
 #include <Windows.h>
+#include <Shlobj.h>
 #include <TlHelp32.h>
 
 static struct custom_operations HandleOps =
@@ -631,4 +632,93 @@ CAMLprim value OPAMW_GetMismatchedWoW64PPID(value unit)
 #endif
 
   OPAMreturn(Val_int((pidWoW64 != ppidWoW64 ? entry.th32ParentProcessID : 0)));
+}
+
+/*
+ * Somewhat against my better judgement, wrap SHGetFolderPath rather than
+ * SHGetKnownFolderPath to maintain XP compatibility. OPAM already requires
+ * Windows Vista+ because of GetCurrentConsoleFontEx, but there may be a
+ * workaround for that for XP lusers.
+ */
+CAMLprim value OPAMW_SHGetFolderPath(value nFolder, value dwFlags)
+{
+  CAMLparam2(nFolder, dwFlags);
+#ifdef _WIN32
+  CAMLlocal1(result);
+  TCHAR szPath[MAX_PATH];
+
+  if (SUCCEEDED(SHGetFolderPath(NULL,
+                                Int_val(nFolder),
+                                NULL,
+                                Int_val(dwFlags),
+                                szPath)))
+    result = caml_copy_string(szPath);
+  else
+    caml_failwith("OPAMW_SHGetFolderPath");
+#endif
+
+  OPAMreturn(result);
+}
+
+CAMLprim value OPAMW_SendMessageTimeout(value hWnd,
+                                        value uTimeout,
+                                        value fuFlags,
+                                        value vmsg,
+                                        value vwParam,
+                                        value vlParam)
+{
+  CAMLparam5(hWnd, vmsg, vwParam, vlParam, fuFlags);
+  CAMLxparam1(uTimeout);
+#ifdef _WIN32
+  CAMLlocal1(result);
+
+  DWORD_PTR dwReturnValue;
+  HRESULT lResult;
+  WPARAM wParam;
+  LPARAM lParam;
+  UINT msg;
+
+  switch (Int_val(vmsg))
+  {
+    case 0:
+      {
+        msg = WM_SETTINGCHANGE;
+        wParam = Int_val(vwParam);
+        lParam = (LPARAM)String_val(vlParam);
+        break;
+      }
+    default:
+      {
+        caml_failwith("OPAMW_SendMessageTimeout: message not implemented");
+        break;
+      }
+  }
+
+  lResult =
+    SendMessageTimeout((HWND)Nativeint_val(hWnd),
+                        msg,
+                        wParam,
+                        lParam,
+                        Int_val(fuFlags),
+                        Int_val(uTimeout),
+                        &dwReturnValue);
+
+  switch (Int_val(vmsg))
+  {
+    case 0:
+      {
+        result = caml_alloc(2, 0);
+        Store_field(result, 0, Val_int(lResult));
+        Store_field(result, 1, Val_int(dwReturnValue));
+        break;
+      }
+  }
+#endif
+
+  OPAMreturn(result);
+}
+
+CAMLprim value OPAMW_SendMessageTimeout_byte(value * v, int n)
+{
+  return OPAMW_SendMessageTimeout(v[0], v[1], v[2], v[3], v[4], v[5]);
 }

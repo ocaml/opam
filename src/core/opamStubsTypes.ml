@@ -66,3 +66,15 @@ type registry_root =
     https://msdn.microsoft.com/en-us/library/windows/desktop/ms724884.aspx *)
 type _ registry_value =
 | REG_SZ : string registry_value
+
+(** SHGetFolderPath flags *)
+type shGFP_type =
+| SHGFP_TYPE_CURRENT
+  (** Retrieve the current path *)
+| SHGFP_TYPE_DEFAULT
+  (** Retrieve the default path *)
+
+(** Windows Messages (at least, one of them!) *)
+type ('a, 'b, 'c) winmessage =
+| WM_SETTINGCHANGE : (int, string, int) winmessage
+  (** See https://msdn.microsoft.com/en-us/library/windows/desktop/ms725497.aspx *)

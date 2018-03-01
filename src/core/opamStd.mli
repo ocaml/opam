@@ -443,6 +443,11 @@ module Win32 : sig
   val parent_putenv : string -> string -> bool
   (** Update an environment variable in the parent (i.e. shell) process's
       environment. *)
+
+  val persistHomeDirectory : string -> unit
+  (** [persistHomeDirectory value] sets the HOME environment variable in this
+      and the parent process and also persists the setting to the user's
+      registry and broadcasts the change to other processes. *)
 end
 
 (** {2 General use infix function combinators} *)

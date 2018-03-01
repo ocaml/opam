@@ -894,6 +894,20 @@ module Win32 = struct
     else
       function "::QUIT" -> fun _ -> true
         | key -> OpamStubs.parent_putenv key
+
+  let persistHomeDirectory dir =
+    (* Update our environment *)
+    Unix.putenv "HOME" dir;
+    (* Update our parent's environment *)
+    ignore (parent_putenv "HOME" dir);
+    (* Persist the value to the user's environment *)
+    OpamStubs.(writeRegistry HKEY_CURRENT_USER "Environment" "HOME" REG_SZ dir);
+    (* Broadcast the change (or a reboot would be required) *)
+    (* These constants are defined in WinUser.h *)
+    let hWND_BROADCAST = 0xffffn in
+    let sMTO_ABORTIFHUNG = 0x2 in
+    OpamStubs.(sendMessageTimeout hWND_BROADCAST 5000 sMTO_ABORTIFHUNG
+                                  WM_SETTINGCHANGE 0 "Environment") |> ignore
 end
 
 

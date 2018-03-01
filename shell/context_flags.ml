@@ -10,7 +10,7 @@ match Sys.argv.(1) with
   Printf.printf "()"
 | "clibs" ->
     if Sys.win32 then
-      Printf.printf "(-ladvapi32 -lgdi32 -luser32)"
+      Printf.printf "(-ladvapi32 -lgdi32 -luser32 -lshell32)"
     else
       Printf.printf "()"
 | _ ->
