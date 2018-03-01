@@ -538,7 +538,7 @@ module Env = struct
     fun () -> Lazy.force lazy_env
 
   let get =
-    if Sys.os_type = "Win32" then
+    if Sys.win32 then
       fun n ->
         let n = String.uppercase_ascii n in
         snd (List.find (fun (k,_) -> String.uppercase_ascii k = n) (list ()))
@@ -558,12 +558,10 @@ end
 
 module OpamSys = struct
 
-  let is_windows = Sys.os_type = "Win32"
-
-  let path_sep = if is_windows then ';' else ':'
+  let path_sep = if Sys.win32 then ';' else ':'
 
   let split_path_variable =
-    if is_windows then fun path ->
+    if Sys.win32 then fun path ->
       let length = String.length path in
       let rec f acc index current last normal =
         if index = length
@@ -701,7 +699,7 @@ module OpamSys = struct
     | _      -> `sh
 
   let executable_name =
-    if is_windows then
+    if Sys.win32 then
       fun name ->
         if Filename.check_suffix name ".exe" then
           name

@@ -74,7 +74,7 @@ let mkdir dir =
   aux dir
 
 let rm_command =
-  if OpamStd.Sys.is_windows then
+  if Sys.win32 then
     "cmd /d /v:off /c rd /s /q"
   else
     "rm -rf"
@@ -301,7 +301,7 @@ let default_env =
 
 let env_var env var =
   let len = Array.length env in
-  let f = if OpamStd.Sys.is_windows then String.uppercase_ascii else fun x -> x in
+  let f = if Sys.win32 then String.uppercase_ascii else fun x -> x in
   let prefix = f var^"=" in
   let pfxlen = String.length prefix in
   let rec aux i =
@@ -320,7 +320,7 @@ let resolve_command =
     OpamStd.String.contains_char name Filename.dir_sep.[0]
   in
   let check_perms =
-    if OpamStd.Sys.is_windows then fun f ->
+    if Sys.win32 then fun f ->
       try (Unix.stat f).Unix.st_kind = Unix.S_REG
       with e -> OpamStd.Exn.fatal e; false
     else fun f ->
@@ -344,7 +344,7 @@ let resolve_command =
       in
       if check_perms cmd then Some cmd else None
     else (* bare command, lookup in PATH *)
-    if OpamStd.Sys.is_windows then
+    if Sys.win32 then
       let path = OpamStd.Sys.split_path_variable (env_var env "PATH") in
       let name =
         if Filename.check_suffix name ".exe" then name else name ^ ".exe"

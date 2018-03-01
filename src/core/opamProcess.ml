@@ -250,7 +250,7 @@ let read_lines f =
 
 (* Compat function (Windows) *)
 let interrupt p =
-  if OpamStd.Sys.is_windows then Unix.kill p.p_pid Sys.sigkill
+  if Sys.win32 then Unix.kill p.p_pid Sys.sigkill
   else Unix.kill p.p_pid Sys.sigint
 
 let run_background command =
@@ -338,7 +338,7 @@ let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =
     stop ();
     (* implem relies on sigalrm, not implemented on win32.
        This will fall back to buffered output. *)
-    if OpamStd.Sys.is_windows then () else
+    if Sys.win32 then () else
     let files = OpamStd.List.sort_nodup compare files in
     let ics =
       List.map
@@ -443,7 +443,7 @@ let dontwait p =
 let dead_childs = Hashtbl.create 13
 let wait_one processes =
   if processes = [] then raise (Invalid_argument "wait_one");
-  if OpamStd.Sys.is_windows then
+  if Sys.win32 then
     (* No waiting for any child pid on Windows, this is highly sub-optimal
        but should at least work. Todo: C binding for better behaviour *)
     let p = List.hd processes in

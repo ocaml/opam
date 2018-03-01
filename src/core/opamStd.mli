@@ -359,9 +359,6 @@ module Sys : sig
   (** Queried lazily, but may change on SIGWINCH *)
   val terminal_columns : unit -> int
 
-  (** True only if the host OS is Win32 (not cygwin) *)
-  val is_windows: bool
-
   (** The user's home directory. Queried lazily *)
   val home: unit -> string
 

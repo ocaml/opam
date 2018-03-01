@@ -59,7 +59,7 @@ let do_commands project_root =
       OpamConsole.error "Could not find %S" (OpamFilename.to_string src)
   in
   let cp =
-    if OpamStd.Sys.is_windows then
+    if Sys.win32 then
       fun ?exec ~opt ~src ~dst ->
         let (src, dst) =
           if not (OpamFilename.exists src) then
@@ -85,7 +85,7 @@ let do_commands project_root =
       OpamConsole.warning "%S doesn't exist" (OpamFilename.to_string f)
   in
   let rm =
-    if OpamStd.Sys.is_windows then
+    if Sys.win32 then
       fun ~opt f ->
         let f =
           if OpamFilename.exists f then
