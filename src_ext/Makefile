@@ -108,7 +108,7 @@ ext-ignore:
 	@for l in $(filter-out jbuilder $(SRC_EXTS),$(PKG_EXTS)) ; do echo $$l >> jbuild-ignore ; done
 
 clone: $(JBUILDER_CLONE) $(SRC_EXTS:=.stamp) | ext-ignore
-	@
+	@rm -f cppo/ocamlbuild_plugin/jbuild
 
 .PHONY: pkg-ignore
 pkg-ignore:

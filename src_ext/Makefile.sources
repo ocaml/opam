@@ -1,9 +1,9 @@
-URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.1.tar.gz
-MD5_cppo = b376e0f063f82daf5b1530479f5bcc5f
+URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.2.tar.gz
+MD5_cppo = 0c4f7b7f29b819bfd5b28200de67b3f5
 
 $(call PKG_SAME,cppo)
 
-URL_extlib = https://github.com/ygrek/ocaml-extlib/releases/download/1.7.2/extlib-1.7.2.tar.gz
+URL_extlib = http://ygrek.org.ua/p/release/ocaml-extlib/extlib-1.7.2.tar.gz
 MD5_extlib = 0f550dd06242828399a73387c49e0eed
 
 $(call PKG_SAME,extlib)
@@ -23,7 +23,7 @@ MD5_ocamlgraph = 9d71ca69271055bd22d0dfe4e939831a
 
 $(call PKG_SAME,ocamlgraph)
 
-URL_cudf = https://gforge.inria.fr/frs/download.php/file/36602/cudf-0.9.tar.gz
+URL_cudf = https://gforge.inria.fr/frs/download.php/36602/cudf-0.9.tar.gz
 MD5_cudf = a4c0e652e56e74c7b388a43f9258d119
 
 $(call PKG_SAME,cudf)
@@ -43,13 +43,13 @@ MD5_opam-file-format = 5408798ca3af6e36379dd34b1b618b9c
 
 $(call PKG_SAME,opam-file-format)
 
-URL_result = https://github.com/janestreet/result/archive/1.3.tar.gz
-MD5_result = 2061d323b8b319de6f9605f63a54af56
+URL_result = https://github.com/janestreet/result/releases/download/1.3/result-1.3.tbz
+MD5_result = 4beebefd41f7f899b6eeba7414e7ae01
 
 $(call PKG_SAME,result)
 
-URL_jbuilder = https://github.com/ocaml/dune/archive/1.0+beta17.tar.gz
-MD5_jbuilder = c734e716e4fdb7e3564ed19b6eba2a1b
+URL_jbuilder = https://github.com/ocaml/dune/releases/download/1.0+beta17/jbuilder-1.0.beta17.tbz
+MD5_jbuilder = 03f11f4c6851d799ec7051ff48510ed4
 
 $(call PKG_SAME,jbuilder)
 
