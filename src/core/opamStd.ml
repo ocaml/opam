@@ -844,56 +844,57 @@ module Win32 = struct
     | _                     -> failwith "RegistryHive.of_string"
   end
 
-  let parent_putenv =
-    let ppid =
-      if Sys.win32 then
-        OpamStubs.get_mismatched_WoW64_ppid ()
-      else
-        0 in
-    if ppid > 0 then
-      (*
-       * Expect to see opam-putenv.exe in the same directory as opam.exe, rather
-       * than PATH (allow for crazy users like developers who may have both
-       * builds of opam)
-       *)
-      let putenv_exe =
-        Filename.concat (Filename.dirname Sys.executable_name) "opam-putenv.exe"
-      in
-      let ppid = string_of_int ppid in
-      let ctrl = ref stdout in
-      let quit_putenv () =
-        if !ctrl <> stdout then
-          let () = Printf.fprintf !ctrl "::QUIT\n%!" in
-          ctrl := stdout
-      in
-      at_exit quit_putenv;
-      if Sys.file_exists putenv_exe then
-        fun key value ->
-          if !ctrl = stdout then begin
-            let (inCh, outCh) = Unix.pipe () in
-            let _ =
-              Unix.create_process putenv_exe [| putenv_exe; ppid |]
-                                  inCh Unix.stdout Unix.stderr
-            in
-            ctrl := (Unix.out_channel_of_descr outCh);
-            set_binary_mode_out !ctrl true;
-          end;
-          Printf.fprintf !ctrl "%s\n%s\n%!" key value;
-          if key = "::QUIT" then ctrl := stdout;
-          true
-      else
-        let shownWarning = ref false in
-        fun _ _ ->
-          if not !shownWarning then begin
-            shownWarning := true;
+  let (set_parent_pid, parent_putenv) =
+    let ppid = ref (lazy (OpamStubs.(getCurrentProcessID () |> getParentProcessID))) in
+    let parent_putenv = lazy (
+      let ppid = Lazy.force !ppid in
+      if OpamStubs.isWoW64 () <> OpamStubs.isWoW64Process ppid then
+        (*
+         * Expect to see opam-putenv.exe in the same directory as opam.exe,
+         * rather than PATH (allow for crazy users like developers who may have
+         * both builds of opam)
+         *)
+        let putenv_exe =
+          Filename.(concat (dirname Sys.executable_name) "opam-putenv.exe")
+        in
+        let ctrl = ref stdout in
+        let quit_putenv () =
+          if !ctrl <> stdout then
+            let () = Printf.fprintf !ctrl "::QUIT\n%!" in
+            ctrl := stdout
+        in
+        at_exit quit_putenv;
+        if Sys.file_exists putenv_exe then
+          fun key value ->
+            if !ctrl = stdout then begin
+              let (inCh, outCh) = Unix.pipe () in
+              let _ =
+                Unix.create_process putenv_exe
+                                    [| putenv_exe; Int32.to_string ppid |]
+                                    inCh Unix.stdout Unix.stderr
+              in
+              ctrl := (Unix.out_channel_of_descr outCh);
+              set_binary_mode_out !ctrl true;
+            end;
+            Printf.fprintf !ctrl "%s\n%s\n%!" key value;
+            if key = "::QUIT" then ctrl := stdout;
+            true
+        else
+          let warning = lazy (
             !console.warning "opam-putenv was not found - \
                               OPAM is unable to alter environment variables";
-            false
-          end else
-            false
-    else
-      function "::QUIT" -> fun _ -> true
-        | key -> OpamStubs.parent_putenv key
+            false)
+          in
+          fun _ _ -> Lazy.force warning
+      else
+        function "::QUIT" -> fun _ -> true
+        | key -> OpamStubs.process_putenv ppid key)
+    in
+      ((fun pid ->
+          if Lazy.is_val parent_putenv then
+            failwith "Target parent already known";
+          ppid := Lazy.from_val pid),
+       (fun key -> (Lazy.force parent_putenv) key))
 
   let persistHomeDirectory dir =
     (* Update our environment *)

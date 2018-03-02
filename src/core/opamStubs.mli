@@ -22,6 +22,10 @@ val getpid : unit -> int
 
       On all other platforms, this is just an alias for [Unix.getpid]. *)
 
+val getCurrentProcessID : unit -> int32
+  (** Windows only. As {!getpid}, but without the possibility of truncating the
+      ID on 32-bit platforms. *)
+
 val getStdHandle : stdhandle -> handle
   (** Windows only. Return a standard handle. *)
 
@@ -91,18 +95,16 @@ val has_glyph : handle * handle -> OpamCompat.Uchar.t -> bool
 
     @raise Failure If the call to [GetGlyphIndicesW] fails. *)
 
-val get_mismatched_WoW64_ppid : unit -> int
-(** Windows only. If the parent and current processes are 32-bit or both 64-bit,
-    returns [0], otherwise it returns the ID of the parent process.
+val isWoW64Process : int32 -> bool
+(** Windows only. General version of {!isWoW64} for any given process ID. See
+    https://msdn.microsoft.com/en-us/library/windows/desktop/ms684139.aspx *)
 
-    @raise Failure If walking the process tree fails to find the process. *)
-
-val parent_putenv : string -> string -> bool
-(** Windows only. [parent_putenv name value] sets the environment variable
-    [name] to [value] in the parent of the current process ([Unix.putenv] must
-    also be called to update the value in the current process). This function
-    must not be called if the parent process is 32-bit and the current process
-    is 64-bit or vice versa (outcomes vary from a no-op to a segfault). *)
+val process_putenv : int32 -> string -> string -> bool
+(** Windows only. [process_putenv pid name value] sets the environment variable
+    [name] to [value] in given process ID ([Unix.putenv] must also be called to
+    update the value in the current process). This function must not be called
+    if the target process is 32-bit and the current process is 64-bit or vice
+    versa (outcomes vary from a no-op to a segfault). *)
 
 val shGetFolderPath : int -> shGFP_type -> string
 (** Windows only. [shGetFolderPath nFolder dwFlags] retrieves the location of a special
@@ -115,3 +117,14 @@ val sendMessageTimeout :
     [timeout] milliseconds. The result consists of two parts, [fst]  is the
     return value from SendMessageTimeout, [snd] depends on both the message and
     [fst]. See https://msdn.microsoft.com/en-us/library/windows/desktop/ms644952.aspx *)
+
+val getParentProcessID : int32 -> int32
+(** Windows only. [getParentProcessID pid] returns the process ID of the parent
+    of [pid].
+
+    @raise Failure If walking the process tree fails to find the process. *)
+
+val getConsoleAlias : string -> string -> string
+(** Windows only. [getConsoleAlias alias exeName] retrieves the value for a
+    given executable or [""] if the alias is not defined. See
+    https://docs.microsoft.com/en-us/windows/console/getconsolealias *)

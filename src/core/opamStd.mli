@@ -440,6 +440,10 @@ module Win32 : sig
     val of_string : string -> OpamStubs.registry_root
   end
 
+  val set_parent_pid : int32 -> unit
+  (** Change which the pid written to by {!parent_putenv}. This function cannot
+      be called after [parent_putenv]. *)
+
   val parent_putenv : string -> string -> bool
   (** Update an environment variable in the parent (i.e. shell) process's
       environment. *)

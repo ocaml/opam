@@ -47,25 +47,12 @@ typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 
 static LPFN_ISWOW64PROCESS IsWoW64Process = NULL;
 
-static BOOL CurrentProcessIsWoW64(void)
+static inline BOOL has_IsWoW64Process(void)
 {
-  /*
-   * 32-bit versions may or may not have IsWow64Process (depends on age).
-   * Recommended way is to use GetProcAddress to obtain IsWow64Process, rather
-   * than relying on Windows.h.
-   * See http://msdn.microsoft.com/en-gb/library/windows/desktop/ms684139.aspx
-   */
-  if (IsWoW64Process
-      || (IsWoW64Process =
-           (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle("kernel32"),
-                                               "IsWow64Process")))
-  {
-    BOOL output;
-    if (IsWoW64Process(GetCurrentProcess(), &output))
-      return output;
-  }
-
-  return FALSE;
+  return (IsWoW64Process
+          || (IsWoW64Process =
+               (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle("kernel32"),
+                                                   "IsWow64Process")));
 }
 
 /*
@@ -95,22 +82,20 @@ static HKEY roots[] =
    HKEY_USERS};
 
 /*
- * OPAMW_parent_putenv is implemented using Process Injection.
+ * OPAMW_process_putenv is implemented using Process Injection.
  * Idea inspired by Bill Stewart's editvar
  *   (see http://www.westmesatech.com/editv.html)
  * Full technical details at http://www.codeproject.com/Articles/4610/Three-Ways-to-Inject-Your-Code-into-Another-Proces#section_3
  */
 
-static char* getCurrentProcess(PROCESSENTRY32 *entry)
+static char* getProcessInfo(HANDLE hProcessSnapshot,
+                            DWORD processId,
+                            PROCESSENTRY32 *entry)
 {
-  /*
-   * Create a Toolhelp Snapshot of running processes
-   */
-  HANDLE hProcessSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   entry->dwSize = sizeof(PROCESSENTRY32);
 
   if (hProcessSnapshot == INVALID_HANDLE_VALUE)
-    return "getCurrentProcess: could not create snapshot";
+    return "getProcessInfo: could not create snapshot";
 
   /*
    * Locate our process
@@ -118,26 +103,19 @@ static char* getCurrentProcess(PROCESSENTRY32 *entry)
   if (!Process32First(hProcessSnapshot, entry))
   {
     CloseHandle(hProcessSnapshot);
-    return "getCurrentProcess: could not walk process tree";
+    return "getProcessInfo: could not walk process tree";
   }
   else
   {
-    DWORD processId = GetCurrentProcessId();
-
     while (entry->th32ProcessID != processId)
     {
       if (!Process32Next(hProcessSnapshot, entry))
       {
         CloseHandle(hProcessSnapshot);
-        return "getCurrentProcess: could not find process!";
+        return "getProcessInfo: could not find process!";
       }
     }
   }
-
-  /*
-   * Finished with the snapshot
-   */
-  CloseHandle(hProcessSnapshot);
 
   return NULL;
 }
@@ -157,7 +135,7 @@ CAMLprim value OPAMW_GetCurrentProcessID(value unit)
 {
   CAMLparam1(unit);
 
-  OPAMreturn(Val_int(GetCurrentProcessId()));
+  OPAMreturn(caml_copy_int32(GetCurrentProcessId()));
 }
 
 CAMLprim value OPAMW_GetStdHandle(value nStdHandle)
@@ -316,7 +294,19 @@ CAMLprim value OPAMW_IsWoW64(value unit)
 {
   CAMLparam1(unit);
 
-  OPAMreturn(Val_bool(CurrentProcessIsWoW64()));
+#ifdef _WIN32
+  BOOL result = FALSE;
+  /*
+   * 32-bit versions may or may not have IsWow64Process (depends on age).
+   * Recommended way is to use GetProcAddress to obtain IsWow64Process, rather
+   * than relying on Windows.h.
+   * See http://msdn.microsoft.com/en-gb/library/windows/desktop/ms684139.aspx
+   */
+  if (has_IsWoW64Process() && !IsWoW64Process(GetCurrentProcess(), &result))
+    result = FALSE;
+#endif
+
+  OPAMreturn(Val_bool(result));
 }
 
 /*
@@ -561,14 +551,12 @@ CAMLprim value OPAMW_HasGlyph(value checker, value scalar)
   OPAMreturn(Val_bool(test != 0xffff));
 }
 
-CAMLprim value OPAMW_parent_putenv(value key, value val)
+CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
 {
-  CAMLparam2(key, val);
+  CAMLparam3(pid, key, val);
 #ifdef _WIN32
   CAMLlocal1(res);
 
-  PROCESSENTRY32 entry;
-  char* msg;
   char* result;
 
   /*
@@ -579,12 +567,8 @@ CAMLprim value OPAMW_parent_putenv(value key, value val)
   if (caml_string_length(key) > 4095 || caml_string_length(val) > 4095)
     caml_invalid_argument("Strings too long");
 
-  msg = getCurrentProcess(&entry);
-  if (msg)
-    caml_failwith(msg);
-
   result =
-    InjectSetEnvironmentVariable(entry.th32ParentProcessID,
+    InjectSetEnvironmentVariable(Int32_val(pid),
                                  String_val(key),
                                  String_val(val));
 
@@ -605,33 +589,28 @@ CAMLprim value OPAMW_parent_putenv(value key, value val)
   OPAMreturn(res);
 }
 
-CAMLprim value OPAMW_GetMismatchedWoW64PPID(value unit)
+CAMLprim value OPAMW_IsWoW64Process(value pid)
 {
-  CAMLparam1(unit);
+  CAMLparam1(pid);
 
 #ifdef _WIN32
-  PROCESSENTRY32 entry;
-  char* msg = getCurrentProcess(&entry);
-  BOOL pidWoW64 = CurrentProcessIsWoW64();
-  BOOL ppidWoW64 = FALSE;
-  HANDLE hProcess;
+  BOOL result = FALSE;
 
-  if (msg)
-    caml_failwith(msg);
-
-  if (IsWoW64Process)
+  if (has_IsWoW64Process())
   {
-    hProcess =
-      OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, entry.th32ParentProcessID);
+    HANDLE hProcess =
+      OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, Int32_val(pid));
+
     if (hProcess)
     {
-      IsWoW64Process(hProcess, &ppidWoW64);
+      if (!IsWoW64Process(hProcess, &result))
+        result = FALSE;
       CloseHandle(hProcess);
     }
   }
 #endif
 
-  OPAMreturn(Val_int((pidWoW64 != ppidWoW64 ? entry.th32ParentProcessID : 0)));
+  OPAMreturn(Val_bool(result));
 }
 
 /*
@@ -721,4 +700,55 @@ CAMLprim value OPAMW_SendMessageTimeout(value hWnd,
 CAMLprim value OPAMW_SendMessageTimeout_byte(value * v, int n)
 {
   return OPAMW_SendMessageTimeout(v[0], v[1], v[2], v[3], v[4], v[5]);
+}
+
+CAMLprim value OPAMW_GetParentProcessID(value processId)
+{
+  CAMLparam1(processId);
+
+#ifdef _WIN32
+  PROCESSENTRY32 entry;
+  char* msg;
+  /*
+   * Create a Toolhelp Snapshot of running processes
+   */
+  HANDLE hProcessSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+  if ((msg = getProcessInfo(hProcessSnapshot, Int32_val(processId), &entry)))
+    caml_failwith(msg);
+
+  /*
+   * Finished with the snapshot
+   */
+  CloseHandle(hProcessSnapshot);
+#endif
+
+  OPAMreturn(caml_copy_int32(entry.th32ParentProcessID));
+}
+
+CAMLprim value OPAMW_GetConsoleAlias(value alias, value exeName)
+{
+  CAMLparam2(alias, exeName);
+#ifdef _WIN32
+  CAMLlocal1(result);
+
+  DWORD nLength = 8192;
+  LPTSTR buffer = (LPTSTR)malloc(nLength);
+
+  if (!buffer)
+    caml_raise_out_of_memory();
+
+  if (GetConsoleAlias(String_val(alias), buffer, nLength, String_val(exeName)))
+  {
+    result = caml_copy_string(buffer);
+  }
+  else
+  {
+    result = caml_copy_string("");
+  }
+
+  free(buffer);
+#endif
+
+  OPAMreturn(result);
 }

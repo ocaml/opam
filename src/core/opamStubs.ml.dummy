@@ -12,6 +12,7 @@ include OpamStubsTypes
 
 let that's_a_no_no _ = failwith "Windows only. This function isn't implemented."
 
+let getCurrentProcessID = that's_a_no_no
 let getpid = Unix.getpid
 let getStdHandle = that's_a_no_no
 let getConsoleScreenBufferInfo = that's_a_no_no
@@ -28,7 +29,9 @@ let getCurrentConsoleFontEx _ = that's_a_no_no
 let create_glyph_checker = that's_a_no_no
 let delete_glyph_checker = that's_a_no_no
 let has_glyph _ = that's_a_no_no
-let get_mismatched_WoW64_pid = that's_a_no_no
-let parent_putenv _ = that's_a_no_no
+let isWoW64Process = that's_a_no_no
+let process_putenv _ = that's_a_no_no
 let shGetFolderPath _ = that's_a_no_no
 let sendMessageTimeout _ _ _ _ _ = that's_a_no_no
+let getParentProcessID = that's_a_no_no
+let getConsoleAlias _ = that's_a_no_no

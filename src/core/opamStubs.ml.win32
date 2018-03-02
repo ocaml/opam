@@ -10,3 +10,4 @@
 
 include OpamStubsTypes
 include OpamWin32Stubs
+let getpid () = Int32.to_int (getCurrentProcessID ())

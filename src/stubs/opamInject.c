@@ -65,7 +65,7 @@ char* InjectSetEnvironmentVariable(DWORD pid, char* key, char* val)
   HANDLE hThread;
 
   if (!hProcess)
-    return "OPAMW_parent_putenv: could not open parent process";
+    return "OPAMW_process_putenv: could not open parent process";
 
   payload.SetEnvironmentVariable =
     (SETENVIRONMENTVARIABLE)GetProcAddress(GetModuleHandle("kernel32"),
@@ -90,13 +90,13 @@ char* InjectSetEnvironmentVariable(DWORD pid, char* key, char* val)
   if (!pData)
   {
     CloseHandle(hProcess);
-    return "OPAMW_parent_putenv: VirtualAllocEx (data) in parent failed";
+    return "OPAMW_process_putenv: VirtualAllocEx (data) in parent failed";
   }
   if (!WriteProcessMemory(hProcess, pData, &payload, sizeof(INJDATA), NULL))
   {
     VirtualFreeEx(hProcess, pData, 0, MEM_RELEASE);
     CloseHandle(hProcess);
-    return "OPAMW_parent_putenv: could not copy data to parent process";
+    return "OPAMW_process_putenv: could not copy data to parent process";
   }
 
   /*
@@ -113,14 +113,14 @@ char* InjectSetEnvironmentVariable(DWORD pid, char* key, char* val)
   {
     VirtualFreeEx(hProcess, pData, 0, MEM_RELEASE);
     CloseHandle(hProcess);
-    return "OPAMW_parent_putenv: VirtualAllocEx (exec) in parent failed";
+    return "OPAMW_process_putenv: VirtualAllocEx (exec) in parent failed";
   }
   if (!WriteProcessMemory(hProcess, pCode, &ThreadFunc, codeSize, NULL))
   {
     VirtualFreeEx(hProcess, pCode, 0, MEM_RELEASE);
     VirtualFreeEx(hProcess, pData, 0, MEM_RELEASE);
     CloseHandle(hProcess);
-    return "OPAMW_parent_putenv: could not copy code to parent process";
+    return "OPAMW_process_putenv: could not copy code to parent process";
   }
 
   /*
@@ -139,7 +139,7 @@ char* InjectSetEnvironmentVariable(DWORD pid, char* key, char* val)
     VirtualFreeEx(hProcess, pCode, 0, MEM_RELEASE);
     VirtualFreeEx(hProcess, pData, 0, MEM_RELEASE);
     CloseHandle(hProcess);
-    return "OPAMW_parent_putenv: could not start remote thread in parent";
+    return "OPAMW_process_putenv: could not start remote thread in parent";
   }
 
   /*
