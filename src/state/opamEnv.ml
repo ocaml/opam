@@ -219,34 +219,50 @@ let compute_updates ?(force_path=false) st =
   in
   switch_env @ pkg_env @ man_path @ [path]
 
-let updates ~set_opamroot ~set_opamswitch ?force_path st =
-  let update = compute_updates ?force_path st in
+let updates_common ~set_opamroot ~set_opamswitch root switch =
   let root =
     if set_opamroot then
-      [ "OPAMROOT", Eq, OpamFilename.Dir.to_string st.switch_global.root,
+      [ "OPAMROOT", Eq, OpamFilename.Dir.to_string root,
         Some "Opam root in use" ]
     else []
   in
   let switch =
     if set_opamswitch then
-      [ "OPAMSWITCH", Eq, OpamSwitch.to_string st.switch, None ]
+      [ "OPAMSWITCH", Eq, OpamSwitch.to_string switch, None ]
     else [] in
-  root @ switch @ update
+  root @ switch
+
+let updates ~set_opamroot ~set_opamswitch ?force_path st =
+  updates_common ~set_opamroot ~set_opamswitch st.switch_global.root st.switch @
+  compute_updates ?force_path st
 
 let get_pure ?(updates=[]) () =
   let env = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
   add env updates
 
-(* This function is used by 'opam config env' and 'opam switch' to
-   display the environment variables. We have to make sure that
-   OPAMSWITCH is always the one being reported in '~/.opam/config'
-   otherwise we can have very weird results (as the inability to switch
-   between compilers).
-
-   Note: when we do the later command with --switch=SWITCH, this mean
-   we really want to get the environment for this switch. *)
 let get_opam ?(set_opamroot=false) ?(set_opamswitch=false) ~force_path st =
   add [] (updates ~set_opamroot ~set_opamswitch ~force_path st)
+
+let get_opam_raw ?(set_opamroot=false) ?(set_opamswitch=false) ~force_path
+    root switch =
+  let env_file = OpamPath.Switch.environment root switch in
+  let upd = OpamFile.Environment.safe_read env_file in
+  let upd =
+    if force_path then
+      List.map (function
+          | "PATH", EqPlusEq, v, doc -> "PATH", PlusEq, v, doc
+          | e -> e)
+        upd
+    else
+      List.map (function
+          | "PATH", PlusEq, v, doc -> "PATH", EqPlusEq, v, doc
+          | e -> e)
+        upd
+
+  in
+  add []
+    (updates_common ~set_opamroot ~set_opamswitch root switch @
+     upd)
 
 let get_full
     ?(set_opamroot=false) ?(set_opamswitch=false) ~force_path ?updates:(u=[])

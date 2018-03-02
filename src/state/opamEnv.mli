@@ -31,6 +31,12 @@ val get_opam:
   ?set_opamroot:bool -> ?set_opamswitch:bool -> force_path:bool ->
   'a switch_state -> env
 
+(** Like [get_opam], but reads the cache file from the given opam root and
+    switch instead of computing the environment from a switch state *)
+val get_opam_raw:
+  ?set_opamroot:bool -> ?set_opamswitch:bool -> force_path:bool ->
+  dirname -> switch -> env
+
 (** Returns the running environment, with any opam modifications cleaned out,
     and optionally the given updates *)
 val get_pure: ?updates:env_update list -> unit -> env
