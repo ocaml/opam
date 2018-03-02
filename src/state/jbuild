@@ -9,9 +9,7 @@
    (wrapped false)))
 
 (rule
-  ((targets (opamScript.ml))
-   (deps    (../../shell/crunch.ml complete.sh complete.zsh prompt.sh))
-   (action  (with-stdout-to ${@} (run ocaml ${^})))))
+  (with-stdout-to opamScript.ml (run ocaml ${path:../../shell/crunch.ml} ${path:complete.sh} ${path:complete.zsh} ${path:prompt.sh})))
 
 (rule
   (with-stdout-to opamStateTypes.ml
