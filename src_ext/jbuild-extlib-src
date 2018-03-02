@@ -10,4 +10,4 @@
 (rule
   ((targets (compat-level))
    (deps    (configure.ml))
-   (action  (with-stdout-to ${@} (run ocaml ${<})))))
+   (action  (with-stdout-to ${@} (run ocaml ${<} -cppo-args)))))

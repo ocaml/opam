@@ -1,0 +1,34 @@
+diff -Naur extlib-1.7.2/src/configure.ml extlib/src/configure.ml
+--- extlib-1.7.2/src/configure.ml	2017-03-29 12:08:59.000000000 +0200
++++ extlib/src/configure.ml	2017-06-26 09:35:02.551200600 +0200
+@@ -1,16 +1,22 @@
+ let show_bytes s =
+-    let (_:int) = Sys.command (Printf.sprintf "ocamlfind query -format %s bytes" (Filename.quote s)) in ()
++  if Sys.command (Printf.sprintf "ocamlfind query -format %s bytes" (Filename.quote s)) <> 0 then
++    print_endline "WITH_DUMMY"
++
++let define v =
++  print_endline "-D";
++  print_endline (v ^ " ")
+ 
+ let () =
+   match Sys.argv with
+   | [|_;"-cppo-args"|] ->
+-    print_endline (if Sys.ocaml_version >= "4.00.0" then "-D OCAML4 " else "");
+-    print_endline (if Sys.ocaml_version >= "4.02.0" then "-D OCAML4_02 " else "");
+-    print_endline (if Sys.ocaml_version >= "4.03.0" then "-D OCAML4_03 " else "");
+-    print_endline (if Sys.ocaml_version >= "4.04.0" then "-D OCAML4_04 " else "");
+-    print_endline (if Sys.ocaml_version >= "4.05.0" then "-D OCAML4_05 " else "");
+-    print_endline (if Sys.ocaml_version >= "4.06.0" then "-D OCAML4_06 " else "");
+-    show_bytes "-D WITH_BYTES";
++    if Sys.ocaml_version >= "4.00.0" then define "OCAML4";
++    if Sys.ocaml_version >= "4.02.0" then define "OCAML4_02";
++    if Sys.ocaml_version >= "4.03.0" then define "OCAML4_03";
++    if Sys.ocaml_version >= "4.04.0" then define "OCAML4_04";
++    if Sys.ocaml_version >= "4.05.0" then define "OCAML4_05";
++    if Sys.ocaml_version >= "4.06.0" then define "OCAML4_06";
++    print_endline "-D";
++    show_bytes "WITH_BYTES";
+     exit 0
+   | [|_;"-compile-args"|] ->
+     if Sys.ocaml_version >= "4.00.0" then print_endline "-bin-annot";
