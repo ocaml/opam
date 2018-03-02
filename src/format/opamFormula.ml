@@ -125,6 +125,16 @@ let rec map_formula f t =
   | Or(x,y)  -> make_or (map_formula f x) (map_formula f y)
   | x -> x
 
+let rec map_up_formula f t =
+  let t = match t with
+    | Block x -> f (Block (map_up_formula f x))
+    | And(x,y) -> f (make_and (map_up_formula f x) (map_up_formula f y))
+    | Or(x,y) -> f (make_or (map_up_formula f x) (map_up_formula f y))
+    | Atom x -> f (Atom x)
+    | Empty -> Empty
+  in
+  f t
+
 let neg neg_atom =
   map_formula
     (function

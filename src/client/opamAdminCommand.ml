@@ -418,47 +418,61 @@ let check_command =
     OpamArg.mk_flag ["cycles"]
       "Do the cycles check (and disable the others by default)"
   in
-  let cmd global_options ignore_test print_short installability cycles =
+  let obsolete_arg =
+    OpamArg.mk_flag ["obsolete"]
+      "Analyse for obsolete packages"
+  in
+  let cmd global_options ignore_test print_short
+      installability cycles obsolete =
     OpamArg.apply_global_options global_options;
     let repo_root = OpamFilename.cwd () in
-    let installability, cycles =
-      if installability || cycles then installability, cycles
-      else true, true
+    let installability, cycles, obsolete =
+      if installability || cycles || obsolete
+      then installability, cycles, obsolete
+      else true, true, false
     in
     if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
     then
       OpamConsole.error_and_exit `Bad_arguments
         "No repository found in current directory.\n\
          Please make sure there is a \"packages\" directory";
-    let unav_roots, uninstallable, cycle_packages =
+    let pkgs, unav_roots, uninstallable, cycle_packages, obsolete =
       OpamAdminCheck.check
-        ~quiet:print_short ~installability ~cycles ~ignore_test
+        ~quiet:print_short ~installability ~cycles ~obsolete ~ignore_test
         repo_root
     in
     let all_ok =
       OpamPackage.Set.is_empty uninstallable &&
-      OpamPackage.Set.is_empty cycle_packages
+      OpamPackage.Set.is_empty cycle_packages &&
+      OpamPackage.Set.is_empty obsolete
     in
     let open OpamPackage.Set.Op in
-    if print_short then
-      OpamConsole.msg "%s\n"
-        (OpamStd.List.concat_map "\n" OpamPackage.to_string
-           (OpamPackage.Set.elements (uninstallable ++ cycle_packages)))
-    else if all_ok then
-      OpamConsole.msg "No issues detected on this repository\n"
-    else if installability && cycles then
-      OpamConsole.msg "Summary:\n\
-                       - %d uninstallable roots\n\
-                       - %d uninstallable dependent packages\n\
-                       - %d packages are part of dependency cycles\n"
-        (OpamPackage.Set.cardinal unav_roots)
-        (OpamPackage.Set.cardinal (uninstallable -- unav_roots))
-        (OpamPackage.Set.cardinal (cycle_packages -- uninstallable));
-
+    (if print_short then
+       OpamConsole.msg "%s\n"
+         (OpamStd.List.concat_map "\n" OpamPackage.to_string
+            (OpamPackage.Set.elements
+               (uninstallable ++ cycle_packages ++ obsolete)))
+     else if all_ok then
+       OpamConsole.msg "No issues detected on this repository's %d packages\n"
+         (OpamPackage.Set.cardinal pkgs)
+     else
+     let pr set msg =
+       if OpamPackage.Set.is_empty set then ""
+       else Printf.sprintf "- %d %s\n" (OpamPackage.Set.cardinal set) msg
+     in
+     OpamConsole.msg "Summary: out of %d packages (%d distinct names)\n\
+                      %s%s%s%s\n"
+       (OpamPackage.Set.cardinal pkgs)
+       (OpamPackage.Name.Set.cardinal (OpamPackage.names_of_packages pkgs))
+       (pr unav_roots "uninstallable roots")
+       (pr (uninstallable -- unav_roots) "uninstallable dependent packages")
+       (pr (cycle_packages -- uninstallable)
+          "packages part of dependency cycles")
+       (pr obsolete "obsolete packages"));
     OpamStd.Sys.exit_because (if all_ok then `Success else `False)
   in
   Term.(const cmd $ OpamArg.global_options $ ignore_test_arg $ print_short_arg
-        $ installability_arg $ cycles_arg),
+        $ installability_arg $ cycles_arg $ obsolete_arg),
   OpamArg.term_info command ~doc ~man
 
 let pattern_list_arg =

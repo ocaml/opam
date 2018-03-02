@@ -234,7 +234,174 @@ let print_cycles cy =
     (OpamStd.List.concat_map arrow OpamFormula.to_string)
     cy
 
-let check ~quiet ~installability ~cycles ~ignore_test repo_root =
+(* Obsolete packages check *)
+
+module PkgSet = OpamPackage.Set
+module PkgMap = OpamPackage.Map
+module PkgSetSet = OpamStd.Set.Make(PkgSet)
+(* module PkgSetMap = OpamStd.Map.Make(PkgSet) *)
+
+let pkg_deps univ package =
+  let deps =
+    try OpamFilter.filter_deps ~build:true ~post:true ~default:true
+          (OpamPackage.Map.find package univ.u_depends)
+    with Not_found -> Empty
+  in
+  let sets_formula =
+    OpamFormula.map (fun (name, vconstr) ->
+        OpamPackage.Version.Set.filter
+          (OpamFormula.check_version_formula vconstr)
+          (OpamPackage.versions_of_name univ.u_packages name)
+        |> OpamPackage.Name.Map.singleton name
+        |> OpamPackage.of_map
+        |> fun s -> Atom (PkgSetSet.singleton s))
+      deps
+  in
+  let product ss1 ss2 =
+    PkgSetSet.fold (fun s1 ->
+        PkgSetSet.union (PkgSetSet.map (PkgSet.union s1) ss2))
+      ss1 PkgSetSet.empty
+  in
+  let depsets = (* PkgSetSet-encoded CNF *)
+    match
+      OpamFormula.map_up_formula (function
+          | Atom s -> Atom s
+          | And (Atom s1, Atom s2) -> Atom (PkgSetSet.union s1 s2)
+          | Or (Atom s1, Atom s2) -> Atom (product s1 s2)
+          | And _ | Or _ -> assert false
+          | Block x -> x
+          | Empty -> Atom (PkgSetSet.empty))
+        sets_formula
+    with
+    | And _ | Or _ | Block _ | Empty -> assert false
+    | Atom depsets ->
+      depsets
+  in
+  let inferred_conflicts =
+    (* Versions that may be present in some disjunctions but will always be
+       rejected. We filter them out to get more accurate reverse deps *)
+    PkgSetSet.fold (fun dset acc ->
+        try
+          let n = (PkgSet.choose dset).name in
+          if PkgSet.for_all (fun p -> p.name = n) dset then
+            acc ++ (OpamPackage.packages_of_name univ.u_packages n -- dset)
+          else acc
+        with Not_found -> acc)
+      depsets PkgSet.empty
+  in
+  PkgSetSet.map (fun s -> s -- inferred_conflicts) depsets
+
+let more_restrictive_deps_than deps1 deps2 =
+  PkgSetSet.for_all (fun disj2 ->
+      PkgSetSet.exists (fun disj1 -> PkgSet.subset disj1 disj2) deps1)
+    deps2
+
+(* Aggregates all versionned packages with an exclusive version relationship
+   (when b.vb1 can only be installed with a.va1, and the only version of b that
+   can be installed with a.va1 is vb1). An aggregate should not contain more
+   than one version per package name. *)
+let aggregate packages deps revdeps =
+  if OpamStd.Config.env_bool "NOAGGREGATE" = Some true then
+    PkgSet.fold (fun nv -> PkgSetSet.add (PkgSet.singleton nv))
+      packages PkgSetSet.empty
+  else
+  let friends p (deps, revdeps) =
+    (* dependencies which have a 1-1 version relationship *)
+    try
+      PkgMap.find p deps |>
+      OpamPackage.to_map |>
+      OpamPackage.Name.Map.filter
+        (fun _ vs -> OpamPackage.Version.Set.is_singleton vs) |>
+      OpamPackage.of_map |>
+      PkgSet.filter (fun d ->
+          OpamPackage.packages_of_name (PkgMap.find d revdeps) p.name =
+          PkgSet.singleton p)
+    with Not_found -> PkgSet.empty
+  in
+  let rec all_friends acc p =
+    let acc = PkgSet.add p acc in
+    PkgSet.fold (fun p acc -> all_friends acc p)
+      (friends p (deps, revdeps) ++
+       friends p (revdeps, deps) --
+       acc)
+      acc
+  in
+  let rec aux acc packages =
+    if PkgSet.is_empty packages then acc else
+    let p = PkgSet.choose packages in
+    let fr = all_friends PkgSet.empty p in
+    aux (PkgSetSet.add fr acc) (packages -- fr)
+  in
+  aux PkgSetSet.empty packages
+
+(* we work on aggregates of packages (expected to be a.g. different names with
+   the same version), encode their dependencies as CNF mapped to sets, i.e. sets
+   of sets from each of which one package must be present.
+
+   Then, we detect aggregates with an inferior version, and equivalent or less
+   restrictive dependencies: their members are obsolete *)
+let get_obsolete univ opams =
+  let deps_map = (* pkg -> setset-encoded CNF *)
+    PkgSet.fold (fun p -> PkgMap.add p (pkg_deps univ p))
+      univ.u_packages PkgMap.empty
+  in
+  let simple_deps = (* pkg -> set *)
+    PkgMap.map (fun deps -> PkgSetSet.fold PkgSet.union deps PkgSet.empty)
+      deps_map
+  in
+  let revdeps_map = (* pkg -> set *)
+    PkgMap.fold (fun pkg ->
+        PkgSet.fold (fun d ->
+            PkgMap.update d (PkgSet.add pkg) PkgSet.empty))
+      simple_deps PkgMap.empty
+  in
+  let aggregates =
+    aggregate univ.u_packages simple_deps revdeps_map
+  in
+  let aggregate_deps pkgs =
+    PkgSet.fold (fun pkg -> PkgSetSet.union (PkgMap.find pkg deps_map))
+      pkgs PkgSetSet.empty
+    |> PkgSetSet.map (fun ps -> ps -- pkgs)
+  in
+  let aggregate_revdeps pkgs =
+    PkgSet.fold (fun pkg acc ->
+        try PkgSet.union (PkgMap.find pkg revdeps_map) acc
+        with Not_found -> acc)
+      pkgs PkgSet.empty
+    -- pkgs
+  in
+  let aggregate_nextv pkgs =
+    let ps =
+      OpamPackage.packages_of_names univ.u_packages
+        (OpamPackage.names_of_packages pkgs)
+    in
+    PkgSet.map (fun p -> match PkgSet.split p ps with
+        | (_, true, s1) ->
+          let next = PkgSet.min_elt s1 in
+          if next.name = p.name then next
+          else raise Not_found
+        | _ -> raise Not_found)
+      pkgs
+  in
+  PkgSetSet.fold (fun pkgs acc ->
+      let is_obsolete =
+        not @@ PkgSet.exists (fun p ->
+            OpamFile.OPAM.has_flag Pkgflag_Compiler
+              (OpamPackage.Map.find p opams)) pkgs &&
+        try
+          let next = aggregate_nextv pkgs in
+          more_restrictive_deps_than
+            (aggregate_deps pkgs)
+            (aggregate_deps next) &&
+          let next_rd = aggregate_revdeps next in
+          not (OpamPackage.Set.is_empty next_rd) &&
+          PkgSet.subset (aggregate_revdeps pkgs) next_rd
+        with Not_found -> false
+      in
+      if is_obsolete then acc ++ pkgs else acc)
+    aggregates PkgSet.empty
+
+let check ~quiet ~installability ~cycles ~obsolete ~ignore_test repo_root =
   let repo = OpamRepositoryBackend.local repo_root in
   let pkg_prefixes = OpamRepository.packages_with_prefixes repo in
   let opams =
@@ -258,7 +425,7 @@ let check ~quiet ~installability ~cycles ~ignore_test repo_root =
   (* Installability check *)
   let unav_roots, uninstallable =
     if not installability then
-      OpamPackage.Set.empty, OpamPackage.Set.empty
+      PkgSet.empty, PkgSet.empty
     else (
       if not quiet then
         OpamConsole.msg "Checking installability of every package. This may \
@@ -267,22 +434,44 @@ let check ~quiet ~installability ~cycles ~ignore_test repo_root =
     )
   in
   if not quiet then
-    if not (OpamPackage.Set.is_empty uninstallable) then
+    if not (PkgSet.is_empty uninstallable) then
       OpamConsole.error "These packages are not installable (%d):\n%s%s"
-        (OpamPackage.Set.cardinal unav_roots)
+        (PkgSet.cardinal unav_roots)
         (OpamStd.List.concat_map " " OpamPackage.to_string
-           (OpamPackage.Set.elements unav_roots))
+           (PkgSet.elements unav_roots))
         (let unav_others = uninstallable -- unav_roots in
-         if OpamPackage.Set.is_empty unav_others then "" else
+         if PkgSet.is_empty unav_others then "" else
            "\n(the following depend on them and are also unavailable:\n"^
            (OpamStd.List.concat_map " " OpamPackage.to_string
-              (OpamPackage.Set.elements unav_others))^")");
+              (PkgSet.elements unav_others))^")");
+
   (* Cyclic dependency checks *)
   let cycle_packages, cycle_formulas =
-    if not cycles then OpamPackage.Set.empty, []
+    if not cycles then PkgSet.empty, []
     else cycle_check univ
   in
   if not quiet && cycle_formulas <> [] then
     (OpamConsole.error "Dependency cycles detected:";
      OpamConsole.errmsg "%s" @@ print_cycles cycle_formulas);
-  unav_roots, uninstallable, cycle_packages
+
+
+  (* Obsolescence checks *)
+  let obsolete_packages =
+    if not obsolete then PkgSet.empty
+    else get_obsolete univ opams
+  in
+  if not quiet && not( PkgSet.is_empty obsolete_packages) then
+    (OpamConsole.error "Obsolete packages detected:";
+     OpamConsole.errmsg "%s"
+       (OpamStd.Format.itemize
+          (fun (n, vs) ->
+             Printf.sprintf "%s %s"
+               (OpamConsole.colorise `bold (OpamPackage.Name.to_string n))
+               (OpamStd.List.concat_map ", "
+                  (fun v -> OpamConsole.colorise `magenta
+                      (OpamPackage.Version.to_string v))
+                  (OpamPackage.Version.Set.elements vs)))
+          (OpamPackage.Name.Map.bindings
+             (OpamPackage.to_map obsolete_packages))));
+
+  univ.u_packages, unav_roots, uninstallable, cycle_packages, obsolete_packages

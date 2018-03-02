@@ -20,7 +20,14 @@ val installability_check: universe -> package_set * package_set
 val cycle_check: universe -> package_set * formula list list
 
 (** Runs checks on the repository at the given repository. Returns
-    [uninstallable_roots], [uninstallable], [cycle_packages]. *)
+    [all_packages], [uninstallable_roots], [uninstallable], [cycle_packages],
+    [obsolete_packages]. If the corresponding option was disabled, the returned
+    sets are empty. *)
 val check:
-  quiet:bool -> installability:bool -> cycles:bool -> ignore_test:bool ->
-  dirname -> package_set * package_set * package_set
+  quiet:bool -> installability:bool -> cycles:bool -> obsolete:bool ->
+  ignore_test:bool ->
+  dirname -> package_set * package_set * package_set * package_set * package_set
+
+(** Returns a subset of "obsolete" packages, i.e. packages for which a strictly
+    better version exists *)
+val get_obsolete: universe -> OpamFile.OPAM.t package_map -> package_set
