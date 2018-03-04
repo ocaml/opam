@@ -109,6 +109,7 @@ ext-ignore:
 
 clone: $(JBUILDER_CLONE) $(SRC_EXTS:=.stamp) | ext-ignore
 	@rm -f cppo/ocamlbuild_plugin/jbuild
+	@sed -i -e "s/bytes//" re/lib/jbuild
 
 .PHONY: pkg-ignore
 pkg-ignore:
