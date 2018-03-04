@@ -21,6 +21,10 @@ script:
 
 matrix:
   include:
+    - os: osx
+      env: OCAML_VERSION=4.06.0 OPAM_TEST=1 EXTERNAL_SOLVER=
+    - os: osx
+      env: OCAML_VERSION=4.03.0 OPAM_TEST=
     - os: linux
       env: OCAML_VERSION=4.06.0 OPAM_TEST=1 EXTERNAL_SOLVER=
     - os: linux
@@ -35,12 +39,6 @@ matrix:
       env: OCAML_VERSION=4.06.0 OPAM_TEST=
     - os: linux
       env: COLD=1
-    - os: osx
-      env: OCAML_VERSION=4.06.0 OPAM_TEST=1 EXTERNAL_SOLVER=
-    - os: osx
-      env: OCAML_VERSION=4.03.0 OPAM_TEST=
-  allow_failures:
-    - os: osx
   fast_finish: true
 notifications:
   email:
