@@ -4,7 +4,7 @@
   ((name opam_admin_top)
    (modules (opam_admin_top))
    (ocamlc_flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp) -linkall))
-   (libraries (opam-client opam-file-format compiler-libs.toplevel re.glob))))
+   (libraries (opam-client opam-file-format compiler-libs.toplevel re))))
 
 (install
   ((section bin)

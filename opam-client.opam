@@ -21,6 +21,7 @@ build: [
 depends: [
   "opam-state" {= "2.0.0~rc"}
   "opam-solver" {= "2.0.0~rc"}
+  "re" {>= "1.7.2"}
   "cmdliner" {>= "0.9.8"}
   "jbuilder" {build & >= "1.0+beta17"}
 ]

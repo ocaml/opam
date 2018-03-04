@@ -5,7 +5,7 @@
    (public_name opam-client)
    (synopsis "OCaml Package Manager client and CLI library")
    (modules (:standard \ opamMain get-git-version run-number))
-   (libraries (opam-state opam-solver re.glob cmdliner))
+   (libraries (opam-state opam-solver re cmdliner))
    (flags (:standard
            (:include ../ocaml-flags-standard.sexp)
            (:include ../ocaml-context-flags.sexp)))
