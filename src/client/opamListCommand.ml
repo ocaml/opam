@@ -235,9 +235,8 @@ let apply_selector ~base st = function
   | Depends_on (tog, atoms) ->
     let packages = packages_of_atoms st atoms in
     OpamPackage.Set.filter (fun nv ->
-        let deps = package_dependencies st tog nv |> OpamFormula.atoms in
         OpamPackage.Set.exists
-          (fun nv -> List.exists (fun at -> OpamFormula.check at nv) deps)
+          (OpamFormula.verifies (package_dependencies st tog nv))
           packages)
       base
   | Conflicts_with packages ->
