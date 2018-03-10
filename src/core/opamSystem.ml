@@ -821,13 +821,320 @@ let lock_none = {
 let lock_isatleast flag lock =
   lock_max flag lock.kind = lock.kind
 
+(* read_lines processes the lines of a text file in a platform-agnostic manner
+   (which is to say that it preserves '\r' on all platforms). It has two modes
+   of operation - in the Lines mode, it returns a string list of the lines, in
+   CrLf mode, it returns true if every line ends "\r\n". *)
+type _ read_return = Lines : string list read_return
+                   | CrLf  : bool read_return
+
+let read_lines : type s . s read_return -> string -> s = fun mode file ->
+  let ch =
+    try open_in_bin file
+    with Sys_error _ -> raise (File_not_found file)
+  in
+  let read_lines f =
+    let rec read_lines cr acc =
+      match input_line ch with
+      | line ->
+          let length = String.length line in
+          let acc = f line acc in
+          read_lines (cr && length > 0 && line.[length - 1] = '\r') acc
+      | exception End_of_file ->
+          close_in ch;
+          let acc =
+            if cr then
+              List.rev_map (fun s -> String.sub s 0 (String.length s - 1)) acc
+            else
+              List.rev acc
+          in
+          (acc, cr)
+    in
+    read_lines true []
+  in
+  match mode with
+  | Lines ->
+      read_lines OpamStd.List.cons |> fst
+  | CrLf ->
+      read_lines (fun _ _ -> []) |> snd
+
+let translate_patch ~dir orig corrected =
+  (* CRLF detection with patching can be more complicated than that used here,
+     especially in the presence of files with mixed LF/CRLF endings. The
+     processing done here aims to allow patching to succeed on files which are
+     wholly encoded CRLF or LF against patches which may have been translated to
+     be the opposite.
+
+     The resulting patch will *always* have LF line endings for the patch
+     metadata (headers, chunk locations, etc.) but uses either CRLF or LF
+     depending on the target file. Endings in the patch are always preserved for
+     new files. The benefit of always using LF endings for the metadata is that
+     patch's "Stripping trailing CRs from patch" behaviour won't be triggered.
+
+     There are various patch formats, though only the Unified and Context
+     formats allow multiple files to be patched. I tired of trying to get
+     sufficient documented detail of Context diffs to be able to parse them
+     without resorting to reverse-engineering code. It is unusual to see them
+     these days, so for now opam just emits a warning if a Context diff file is
+     encountered and does no processing to it.
+
+     There are various semantic aspects of Unified diffs which are not handled
+     (at least at present) by this function which are documented in the code
+     with the marker "Weakness". *)
+  let process_chunk_header result line =
+    match OpamStd.String.split line ' ' with
+    | "@@"::a::b::"@@"::_ ->
+        (* Weakness: for a new file [a] should always be -0,0 (not checked) *)
+        let l_a = String.length a in
+        let l_b = String.length b in
+        if l_a > 1 && l_b > 1 && a.[0] = '-' && b.[0] = '+' then
+          try
+            let f (_, v) = int_of_string v in
+            let neg =
+              OpamStd.String.cut_at (String.sub a 1 (l_a - 1)) ','
+                      |> OpamStd.Option.map_default f 1
+            in
+            let pos =
+              OpamStd.String.cut_at (String.sub b 1 (l_b - 1)) ','
+                      |> OpamStd.Option.map_default f 1
+            in
+            result neg pos
+          with e ->
+            OpamStd.Exn.fatal e;
+            (* TODO Should display some kind of re-sync warning *)
+            `Header
+        else
+          (* TODO Should display some kind of re-sync warning *)
+          `Header
+    | _ ->
+        (* TODO Should display some kind of warning that there were no chunks *)
+        `Header
+  in
+  let process ch (state, file_mode) line =
+    let length = String.length line in
+    let next_state =
+      let state =
+        match state with
+          (* Weakness: no effort is made to identify the diff or Index: lines *)
+        | `Header ->
+            begin
+              let marker = if length > 4 then String.sub line 0 4 else "" in
+              match marker with
+              | "--- " ->
+                  (* Start of a unified diff header. Determine what needs to
+                     happen to the line endings of the chunks. *)
+                  let file =
+                    let file = String.sub line 4 (length - 4) in
+                    let open OpamStd in
+                    Option.map_default fst file (String.cut_at file '\t')
+                  in
+                  (* Weakness: new files are also marked with a time-stamp at
+                               the start of the epoch, however it's localised,
+                               making it a bit tricky to identify! New files are
+                               also identified by their absence on disk, so this
+                               weakness isn't particularly critical. *)
+                  if file = "/dev/null" then
+                    `NewHeader `Unified
+                  else
+                    (* @@DRA This doesn't handle renaming *)
+                    (* @@DRA We could ensure that renaming takes place here, too *)
+                    let target =
+                      OpamStd.String.cut_at (back_to_forward file) '/'
+                      |> OpamStd.Option.map_default snd file
+                      |> Filename.concat dir
+                    in
+                    if Sys.file_exists target then
+                      let crlf = read_lines CrLf target in
+                      `Patching (`Unified, file, crlf)
+                    else
+                      `NewHeader `Unified
+              | "*** " ->
+                  OpamConsole.warning "File %s uses context diffs which are \
+                                       less portable; consider using unified \
+                                       diffs" orig;
+                  (* Context diffs are not implemented: if they are, this
+                     becomes `NewHeader `Context or
+                     `Patching (`Context, file, crlf) *)
+                  `SkipFile
+              | _ ->
+                  (* Headers will contain other lines, which are ignored (e.g.
+                     the diff command which generated the diff, or Git commit
+                     messages) *)
+                  `Header
+            end
+        | `NewHeader mode ->
+            begin
+              let marker = if length > 4 then String.sub line 0 4 else "" in
+              match marker with
+              | "+++ " when mode = `Unified ->
+                  `New `Unified
+              | "--- " when mode = `Context ->
+                  `New `Context
+              | _ ->
+                  (* TODO Should display some kind of re-sync warning *)
+                  `Header
+            end
+        | `New `Context ->
+            (* Context diff scanning is not implemented; this branch is
+               unreachable. *)
+            assert false
+        | `New `Unified ->
+            process_chunk_header (fun neg pos -> `NewChunk (`Unified, neg, pos))
+                                 line
+        | `NewChunk (`Unified, neg, pos) ->
+            (* Weakness: new files should only have + lines *)
+            let neg =
+              if line = "" || line.[0] = ' ' || line.[0] = '-' then
+                neg - 1
+              else
+                neg
+            in
+            let pos =
+              if line = "" || line.[0] = ' ' || line.[0] = '+' then
+                pos - 1
+              else
+                pos
+            in
+            if neg = 0 && pos = 0 then
+              `New `Unified
+            else
+              (* Weakness: there should only be one chunk for a new file *)
+              `NewChunk (`Unified, neg, pos)
+        | `Patching (mode, orig, crlf) ->
+            begin
+              let marker = if length > 4 then String.sub line 0 4 else "" in
+              match marker with
+              | "+++ " when mode = `Unified ->
+                  let file =
+                    let file = String.sub line 4 (length - 4) in
+                    let open OpamStd in
+                    Option.map_default fst file (String.cut_at file '\t')
+                  in
+                  `Processing (`Unified, orig, file, crlf, `Head)
+              | "--- " when mode = `Context ->
+                  (* Context diff scanning is not implemented; this branch is
+                     unreachable. *)
+                  assert false
+              | _ ->
+                  `Header
+            end
+        | `Processing (`Context, _, _, _, _) ->
+            (* Context diff scanning is not implemented; this branch is
+               unreachable. *)
+            assert false
+        | `Processing (`Unified, orig, target, crlf, `Head) ->
+            (* Weakness: previous chunks will be processed even if an error is
+                         encountered in a subsequent one. After an error, all
+                         remaining chunks are ignored. *)
+            process_chunk_header
+              (fun neg pos -> `Processing (`Unified, orig, target, crlf,
+                                            `Chunk (neg, pos))) line
+        | `Processing (`Unified, orig, target, crlf, `Chunk (neg, pos)) ->
+            let neg =
+              if line = "" || line.[0] = ' ' || line.[0] = '-' then
+                neg - 1
+              else
+                neg
+            in
+            let pos =
+              if line = "" || line.[0] = ' ' || line.[0] = '+' then
+                pos - 1
+              else
+                pos
+            in
+            if neg = 0 && pos = 0 then
+              `Processing (`Unified, orig, target, crlf, `Head)
+            else
+              `Processing (`Unified, orig, target, crlf, `Chunk (neg, pos))
+        | `SkipFile ->
+            `SkipFile
+      in
+      let file_mode =
+        if file_mode = `Surprising then
+          `Surprising
+        else
+          let expected_mode =
+            match state with
+            | `New mode
+            | `NewHeader mode
+            | `NewChunk (mode, _, _)
+            | `Patching (mode, _, _)
+            | `Processing (mode, _, _, _, _) ->
+                mode
+            | `Header
+            | `SkipFile ->
+                file_mode
+          in
+          if file_mode = `Unknown || file_mode = expected_mode then
+            expected_mode
+          else begin
+            OpamConsole.warning "Patch file %s appears to be contain both \
+                                 Unified and Context diffs!" orig;
+            `Surprising
+          end
+      in
+      (state, file_mode)
+    in
+    (* Having determined next_state, now emit the line *)
+    let (line, chars) =
+      (* The line is either:
+           - emitted unaltered (skipping, or for chunks of new files)
+           - guaranteed to be CRLF (if the target file has CRLF endings)
+           - guaranteed to be LF (if line is metadata or the target file has LF
+                                  endings) *)
+      let crlf_mode =
+        match state with
+        | `Processing (_, _, _, crlf, `Chunk _) ->
+            Some crlf
+        | `Header
+        | `NewHeader _
+        | `New _
+        | `Patching _
+        | `Processing (_, _, _, _, `Head) ->
+            Some false
+        | `NewChunk _
+        | `SkipFile ->
+            None
+      in
+      let process_crlf target_is_crlf =
+        let last_char =
+          if length > 0 then
+            line.[length - 1]
+          else
+            (* This sentinel value ensures "\r" gets added to blank lines *)
+            '\000'
+        in
+        if target_is_crlf && last_char <> '\r' then
+          (line ^ "\r", length + 1)
+        else if not target_is_crlf && last_char = '\r' then
+          (line, length - 1)
+        else
+          (line, length)
+      in
+      OpamStd.Option.map_default process_crlf (line, length) crlf_mode
+    in
+    output_substring ch line 0 chars;
+    output_char ch '\n';
+    next_state
+  in
+  let ch =
+    try open_out_bin corrected
+    with Sys_error _ -> raise (File_not_found corrected)
+  in
+  List.fold_left (process ch) (`Header, `Unknown) (read_lines Lines orig)
+    |> ignore;
+  close_out ch
+
 let patch ~dir p =
   if not (Sys.file_exists p) then
     (OpamConsole.error "Patch file %S not found." p;
      raise Not_found);
-  make_command ~name:"patch" ~dir "patch" ["-p1"; "-i"; p] @@> fun r ->
-  if OpamProcess.is_success r then Done None
-  else Done (Some (Process_error r))
+  let p' = temp_file ~auto_clean:false "processed-patch" in
+  translate_patch ~dir p p';
+  make_command ~name:"patch" ~dir "patch" ["-p1"; "-i"; p'] @@> fun r ->
+    if not (OpamConsole.debug ()) then Sys.remove p';
+    if OpamProcess.is_success r then Done None
+    else Done (Some (Process_error r))
 
 let register_printer () =
   Printexc.register_printer (function

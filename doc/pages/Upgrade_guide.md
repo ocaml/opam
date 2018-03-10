@@ -157,7 +157,7 @@ doesn't affect the pinned package.
 
 - Any specified
   [`patches:`](Manual.html#opamfield-patches)
-  must now apply with `patch -p1`
+  must now apply with `patch -p1` and use unified, rather than context, diffs.
 
 - `opam switch export/import` format has been changed (but files in the 1.2
   format can still be read)
