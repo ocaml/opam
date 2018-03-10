@@ -43,14 +43,14 @@ printf = /usr/bin/printf
 define RUN
 @COUNT=$$(ls -1 $(REPOKIND)-*.log 2>/dev/null | wc -l); \
 LOG=$$($(printf) "$(REPOKIND)-%02d-$(1).log" $$COUNT); \
-$(printf) "  %02d \e[1m%-20s\e[m ..................................... " \
+$(printf) "  %02d \e[1m%-20s\e[0m ..................................... " \
   $$COUNT $(1); \
 if $(MAKE) $(1) >$$LOG 2>&1; then \
-  $(printf) "\e[32m[ OK ]\e[m\n"; \
+  $(printf) "\e[32m[ OK ]\e[0m\n"; \
 else \
-  $(printf) "\e[31m$(1) FAILED\e[m\n\n" >>$$LOG; \
-  $(printf) "\e[31m[FAIL]\e[m\n"; \
-  { $(printf) "\e[31m>> %s FAILED <<\e[m\n" $(1); cat $$LOG; } \
+  $(printf) "\e[31m$(1) FAILED\e[0m\n\n" >>$$LOG; \
+  $(printf) "\e[31m[FAIL]\e[0m\n"; \
+  { $(printf) "\e[31m>> %s FAILED <<\e[0m\n" $(1); cat $$LOG; } \
 	>> failed-$(REPOKIND).log; \
 fi; \
 cat $$LOG >> fulltest-$(REPOKIND).log

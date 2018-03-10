@@ -209,11 +209,11 @@ let style_code (c: text_style) = match c with
 (* not nestable *)
 let colorise style s =
   if not (color ()) then s else
-    Printf.sprintf "\027[%sm%s\027[m" (style_code style) s
+    Printf.sprintf "\027[%sm%s\027[0m" (style_code style) s
 
 let colorise' styles s =
   if not (color ()) then s else
-    Printf.sprintf "\027[%sm%s\027[m"
+    Printf.sprintf "\027[%sm%s\027[0m"
       (String.concat ";" (List.map style_code styles))
       s
 
