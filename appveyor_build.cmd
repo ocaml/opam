@@ -154,10 +154,15 @@ if "%DEP_MODE%" equ "lib-pkg" set WITH_MCCS=
 goto :EOF
 
 :test
-if "%OCAML_PORT%" neq "" (
-  echo Running the opam command...
-  opam || exit /b 1
-)
+rem Configure Git for Windows (for the testsuite, this isn't strictly necessary
+rem as Git-for-Windows will pick up $HOME/.gitconfig for Cygwin's git)
+git config --global user.email travis@example.com
+git config --global user.name Travis
+rem Configure Cygwin's Git
+"%CYG_ROOT%\bin\bash.exe" -lc "git config --global user.email travis@example.com"
+"%CYG_ROOT%\bin\bash.exe" -lc "git config --global user.name Travis"
+set OPAMCOLOR=always
+"%CYG_ROOT%\bin\bash.exe" -lc "make -C $APPVEYOR_BUILD_FOLDER tests" || (for %%I in (%APPVEYOR_BUILD_FOLDER%\_build\default\tests\failed-*.log) do appveyor PushArtifact %%I) && exit /b 1
 rem Can't yet do an opam init with the native Windows builds
 if "%OCAML_PORT%" equ "" "%CYG_ROOT%\bin\bash.exe" -lc "make -C $APPVEYOR_BUILD_FOLDER run-appveyor-test" || exit /b 1
 goto :EOF
