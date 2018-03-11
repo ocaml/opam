@@ -4945,7 +4945,7 @@ if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_cppo" = "xno" ||
        test "x$OCAML_PKG_mccs$MCCS_ENABLED$MCCS_DEFAULT" = "xnotrue"; }; then :
 
-  if test "x$MCCS_ENABLED" = "xtrue"; then :
+  if test "x$MCCS_ENABLED" = "xtrue" -a "x${CCOMP_TYPE}" != "xmsvc"; then :
 
     ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
