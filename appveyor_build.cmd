@@ -217,7 +217,7 @@ rem system-installed MSVC OCaml, so the scripts have to be spawned directly.
 if "%OCAML_PORT%" equ "msvc" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
 if "%OCAML_PORT%" equ "msvc64" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
 echo Before test OPAM_SWITCH_PREFIX=%OPAM_SWITCH_PREFIX%
-opam init -y -a || exit /b 1
+opam init -y -a git+https://github.com/dra27/opam-repository.git#windows || exit /b 1
 echo After init OPAM_SWITCH_PREFIX=%OPAM_SWITCH_PREFIX%
 opam install -y ocamlfind || exit /b 1
 opam switch list || exit /b 1
