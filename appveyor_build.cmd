@@ -53,8 +53,8 @@ rem in the list just so that the Cygwin version is always displayed on the log).
 rem CYGWIN_COMMANDS is a corresponding command to run with --version to test
 rem whether the package works. This is used to verify whether the installation
 rem needs upgrading.
-set CYGWIN_PACKAGES=cygwin make patch curl diffutils tar unzip
-set CYGWIN_COMMANDS=cygcheck make patch curl diff tar unzip
+set CYGWIN_PACKAGES=cygwin make patch curl diffutils tar unzip git
+set CYGWIN_COMMANDS=cygcheck make patch curl diff tar unzip git
 
 if "%OCAML_PORT%" equ "mingw" (
   set CYGWIN_PACKAGES=%CYGWIN_PACKAGES% mingw64-i686-gcc-g++
@@ -162,7 +162,14 @@ rem Configure Cygwin's Git
 "%CYG_ROOT%\bin\bash.exe" -lc "git config --global user.email travis@example.com"
 "%CYG_ROOT%\bin\bash.exe" -lc "git config --global user.name Travis"
 set OPAMCOLOR=always
-"%CYG_ROOT%\bin\bash.exe" -lc "make -C $APPVEYOR_BUILD_FOLDER tests" || (for %%I in (%APPVEYOR_BUILD_FOLDER%\_build\default\tests\failed-*.log) do appveyor PushArtifact %%I) && exit /b 1
+set PATH_SHIM=
+if "%OCAML_PORT%" neq "" if "%GIT_FOR_WINDOWS%" equ "1" (
+  set PATH_SHIM=PATH=/cygdrive/c/Program\ Files/Git/cmd:$PATH
+  "C:\Program Files\Git\cmd\git.exe" config --global core.autocrlf
+  "C:\Program Files\Git\cmd\git.exe" config --global core.autocrlf true
+  "C:\Program Files\Git\cmd\git.exe" config --global core.autocrlf
+)
+"%CYG_ROOT%\bin\bash.exe" -lc "%PATH_SHIM% make -C $APPVEYOR_BUILD_FOLDER tests" || (for %%I in (%APPVEYOR_BUILD_FOLDER%\_build\default\tests\failed-*.log) do appveyor PushArtifact %%I) && exit /b 1
 rem Can't yet do an opam init with the native Windows builds
 if "%OCAML_PORT%" equ "" "%CYG_ROOT%\bin\bash.exe" -lc "make -C $APPVEYOR_BUILD_FOLDER run-appveyor-test" || exit /b 1
 goto :EOF

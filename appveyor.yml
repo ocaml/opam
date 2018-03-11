@@ -19,10 +19,12 @@ environment:
 #      DEP_MODE: lib-pkg
     - OCAML_PORT: msvc
       DEP_MODE: lib-pkg
+      GIT_FOR_WINDOWS: 1
     - OCAML_PORT: msvc64
     - OCAML_PORT: mingw
     - OCAML_PORT: mingw64
       DEP_MODE: lib-pkg
+      GIT_FOR_WINDOWS: 1
 
 cache:
   - C:\projects\opam\bootstrap
