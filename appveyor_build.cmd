@@ -202,6 +202,24 @@ if "%OCAML_PORT%" neq "" if "%GIT_FOR_WINDOWS%" equ "1" (
   "C:\Program Files\Git\cmd\git.exe" config --global core.autocrlf
 )
 "%CYG_ROOT%\bin\bash.exe" -lc "%PATH_SHIM% make -C $APPVEYOR_BUILD_FOLDER tests" || exit /b 1
-rem Can't yet do an opam init with the native Windows builds
-if "%OCAML_PORT%" equ "" "%CYG_ROOT%\bin\bash.exe" -lc "make -C $APPVEYOR_BUILD_FOLDER run-appveyor-test" || exit /b 1
+if "%OCAML_PORT%" equ "" (
+  "%CYG_ROOT%\bin\bash.exe" -lc "make -C $APPVEYOR_BUILD_FOLDER run-appveyor-test" || exit /b 1
+) else (
+  call :TestWindows
+)
+goto :EOF
+
+:TestWindows
+set PATH=%APPVEYOR_BUILD_FOLDER%\bootstrap\ocaml\bin;C:\cygwin64\bin;%PATH%
+if "%OCAML_PORT%" neq "" if "%GIT_FOR_WINDOWS%" equ "1" set PATH=C:\Program Files\Git\cmd;%PATH%
+rem opam is not responsible for configuring the environment for a
+rem system-installed MSVC OCaml, so the scripts have to be spawned directly.
+if "%OCAML_PORT%" equ "msvc" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+if "%OCAML_PORT%" equ "msvc64" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+echo Before test OPAM_SWITCH_PREFIX=%OPAM_SWITCH_PREFIX%
+opam init -y -a || exit /b 1
+echo After init OPAM_SWITCH_PREFIX=%OPAM_SWITCH_PREFIX%
+opam install -y ocamlfind || exit /b 1
+opam switch list || exit /b 1
+opam list || exit /b 1
 goto :EOF
