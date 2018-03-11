@@ -152,8 +152,8 @@ checker:
 
 .PHONY: tests tests-local tests-git
 tests: $(JBUILDER_DEP)
-	$(JBUILDER) build src/client/opamMain.exe src/tools/opam_check.exe
-	$(JBUILDER) runtest --no-buffer $(JBUILDER_ARGS) src/ tests/
+	$(JBUILDER) build opam.install src/tools/opam_check.exe
+	$(JBUILDER) runtest --force --no-buffer $(JBUILDER_ARGS) src/ tests/
 
 # tests-local, tests-git
 tests-%:
