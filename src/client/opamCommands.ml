@@ -2268,7 +2268,7 @@ let pin ?(unpin_only=false) () =
   in
   let pin_target kind target =
     let looks_like_version_re =
-      Re.(compile @@ seq [bos; digit; rep @@ diff any (set "/\\"); eos])
+      Re.(compile @@ seq [bos; opt @@ char 'v'; digit; rep @@ diff any (set "/\\"); eos])
     in
     let auto () =
       if target = "-" then
