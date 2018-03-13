@@ -298,7 +298,7 @@ let packages pkgset f =
 let to_atom_formula (t:t): atom formula =
   let atom (r,v) = Atom (r, v) in
   let atoms (x, c) =
-    match cnf_of_formula (map atom c) with
+    match map atom c with
     | Empty -> Atom (x, None)
     | cs    -> map (fun c -> Atom (x, Some c)) cs in
   map atoms t
