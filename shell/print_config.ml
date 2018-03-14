@@ -7,5 +7,6 @@ match List.tl (Array.to_list Sys.argv) with
 | ["lib"] -> print_endline Config.ext_lib
 | ["arch"] -> print_endline Config.architecture
 | ["ccomp_type"] -> print_endline Config.ccomp_type
+| ["system"] -> print_endline Config.system
 | ["os_type"] -> print_endline Sys.os_type
 | _ -> prerr_endline "print_config.ml: wrong usage"; exit 2

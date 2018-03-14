@@ -603,6 +603,10 @@ OCAML_PKG_re
 OCAML_PKG_extlib
 OCAML_PKG_bigarray
 OCAML_PKG_unix
+CONF_MANIFEST_O
+RUNTIME_GCC_S
+MANIFEST_ARCH
+TOOL_ARCH
 fetch
 LN_S
 JBUILDER
@@ -625,6 +629,7 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
+SYSTEM
 AWK
 LIBRARY_PATH
 CPATH
@@ -693,6 +698,7 @@ enable_version_check
 enable_checks
 enable_developer_mode
 with_mccs
+with_private_runtime
 enable_certificate_check
 '
       ac_precious_vars='build_alias
@@ -1342,6 +1348,8 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --without-mccs          Compile without a built-in Cudf solver (only works
                           if 'mccs' is not otherwise installed)
+  --with-private-runtime  For a mingw-w64 build, manifest the runtime DLLs
+                          locally in Opam.Runtime.arch
 
 Some influential environment variables:
   CC          C compiler command
@@ -3150,6 +3158,16 @@ else
 fi
 
 
+
+# Check whether --with-private_runtime was given.
+if test "${with_private_runtime+set}" = set; then :
+  withval=$with_private_runtime;
+else
+  with_private_runtime=no
+
+fi
+
+
 if test "x" != "x$LIB_PREFIX"; then :
 
   CPATH=$CPATH:$LIB_PREFIX/include
@@ -3273,6 +3291,12 @@ else
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ARCH" >&5
 $as_echo "$ARCH" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for compiler system" >&5
+$as_echo_n "checking for compiler system... " >&6; }
+SYSTEM=`$OCAML shell/print_config.ml system 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/system: //p"`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $SYSTEM" >&5
+$as_echo "$SYSTEM" >&6; }
+
 
 LIB_PREPEND=
 INC_PREPEND=
@@ -4546,6 +4570,46 @@ elif test x"${enable_checks}" != x"no" ; then
   as_fn_error $? "You must have either curl or wget installed." "$LINENO" 5
 fi
 
+if test "x${with_private_runtime}" != "xno"; then :
+
+  if test ${WIN32} -eq 1 -a "x${CCOMP_TYPE}" = "xcc"; then :
+
+    CONF_MANIFEST_O=opam-manifest.o
+    if  test "$ARCH" = "i386" ; then :
+
+      TOOL_ARCH=i686
+      MANIFEST_ARCH=x86
+      RUNTIME_GCC_S=libgcc_s_sjlj-1
+
+else
+
+      TOOL_ARCH=x86_64
+      MANIFEST_ARCH=amd64
+      RUNTIME_GCC_S=libgcc_s_seh-1
+
+fi
+    RUNTIME=`${TOOL_ARCH}-w64-mingw32-gcc -print-sysroot`/mingw/bin
+    echo Linking ${SYSTEM} runtime DLLs
+    ${LN_S} -fv ${RUNTIME}/${RUNTIME_GCC_S}.dll src/client/${RUNTIME_GCC_S}.dll
+    ${LN_S} -fv ${RUNTIME}/libstdc++-6.dll src/client/libstdc++-6.dll
+    ${LN_S} -fv ${RUNTIME}/libwinpthread-1.dll src/client/libwinpthread-1.dll
+
+
+
+
+else
+
+    CONF_MANIFEST_O=
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: --with-private-runtime ignored (not building on mingw)" >&5
+$as_echo "$as_me: WARNING: --with-private-runtime ignored (not building on mingw)" >&2;}
+
+fi
+
+else
+  CONF_MANIFEST_O=
+fi
+
+
 echo
 
 
@@ -5188,7 +5252,17 @@ else
   > src/tools/opam-putenv.inc
 
 fi
-ac_config_files="$ac_config_files Makefile.config"
+if  test -n "${CONF_MANIFEST_O}" ; then :
+
+  ac_config_files="$ac_config_files src/client/manifest.inc"
+
+
+else
+
+  > src/client/manifest.inc
+
+fi
+ac_config_files="$ac_config_files Makefile.config src/client/opamManifest.inc"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5897,7 +5971,9 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "src/tools/opam-putenv.inc") CONFIG_FILES="$CONFIG_FILES src/tools/opam-putenv.inc" ;;
+    "src/client/manifest.inc") CONFIG_FILES="$CONFIG_FILES src/client/manifest.inc" ;;
     "Makefile.config") CONFIG_FILES="$CONFIG_FILES Makefile.config" ;;
+    "src/client/opamManifest.inc") CONFIG_FILES="$CONFIG_FILES src/client/opamManifest.inc" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

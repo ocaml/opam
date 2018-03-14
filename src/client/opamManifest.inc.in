@@ -1,0 +1,4 @@
+(rule
+  ((targets (opamManifest.ml))
+   (deps    (@CONF_MANIFEST_O@))
+   (action  (with-stdout-to ${@} (echo "")))))

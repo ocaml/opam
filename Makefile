@@ -34,6 +34,13 @@ jbuilder: $(JBUILDER_DEP)
 
 opam: $(JBUILDER_DEP) opam.install
 	$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
+ifneq ($(MANIFEST_ARCH),)
+	@mkdir -p Opam.Runtime.$(MANIFEST_ARCH)
+	@cp -f src/client/Opam.Runtime.$(MANIFEST_ARCH).manifest Opam.Runtime.$(MANIFEST_ARCH)/
+	@cd Opam.Runtime.$(MANIFEST_ARCH) && $(LN_S) -f ../src/client/libstdc++-6.dll .
+	@cd Opam.Runtime.$(MANIFEST_ARCH) && $(LN_S) -f ../src/client/libwinpthread-1.dll .
+	@cd Opam.Runtime.$(MANIFEST_ARCH) && $(LN_S) -f ../src/client/$(RUNTIME_GCC_S).dll .
+endif
 
 opam-installer: $(JBUILDER_DEP)
 	$(JBUILDER) build $(JBUILDER_ARGS) src/tools/opam_installer.exe
@@ -61,12 +68,13 @@ clean-ext:
 clean:
 	$(MAKE) -C doc $@
 	rm -f *.install *.env *.err *.info *.out opam$(EXE) opam-admin.top$(EXE) opam-installer$(EXE)
-	rm -rf _build
+	rm -rf _build Opam.Runtime.*
 
 distclean: clean clean-ext
 	rm -rf autom4te.cache bootstrap
 	rm -f Makefile.config config.log config.status aclocal.m4
-	rm -f src/*.META src/*/.merlin src/stubs/jbuild src/tools/opam-putenv.inc
+	rm -f src/*.META src/*/.merlin src/stubs/jbuild src/client/*.dll
+	rm -f src/tools/opam-putenv.inc src/client/manifest.inc src/client/opamManifest.inc
 
 OPAMINSTALLER_FLAGS = --prefix "$(DESTDIR)$(prefix)"
 OPAMINSTALLER_FLAGS += --mandir "$(DESTDIR)$(mandir)"
