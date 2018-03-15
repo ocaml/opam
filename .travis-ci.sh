@@ -43,6 +43,7 @@ install-bootstrap () {
         #      If using --dev-repo, you may need to manually specify a version
         #      to force a recompile.
         pin_package jbuilder --kind=version '1.0+beta18.1'
+        pin_package re --kind=version 1.7.2
         check_pins
         opam install ocamlfind ocamlbuild cohttp cohttp-lwt-unix 'lwt>=3.1.0' ssl cmdliner dose3 opam-file-format re 'jbuilder>=1.0+beta18' 'mccs>=1.1+4' --yes
         # Allow use of ocamlfind packages in ~/local/lib
