@@ -45,7 +45,7 @@ install-bootstrap () {
         pin_package jbuilder --kind=version '1.0+beta18.1'
         pin_package re --kind=version 1.7.2
         check_pins
-        opam install ocamlfind ocamlbuild cohttp cohttp-lwt-unix 'lwt>=3.1.0' ssl cmdliner dose3 opam-file-format re 'jbuilder>=1.0+beta18' 'mccs>=1.1+4' --yes
+        opam install cohttp-lwt-unix ssl cmdliner dose3 opam-file-format re 'jbuilder>=1.0+beta18' 'mccs>=1.1+5' --yes
         # Allow use of ocamlfind packages in ~/local/lib
         FINDCONF=$(ocamlfind printconf conf)
         sed "s%^path=.*%path=\"$HOME/local/lib:$(opam config var lib)\"%" $FINDCONF >$FINDCONF.1
