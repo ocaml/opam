@@ -45,6 +45,7 @@ install-bootstrap () {
         pin_package jbuilder --kind=version '1.0+beta18.1'
         pin_package re --kind=version 1.7.2
         check_pins
+        opam update --upgrade --yes
         opam install cohttp-lwt-unix ssl cmdliner dose3 opam-file-format re 'jbuilder>=1.0+beta18' 'mccs>=1.1+5' --yes
         # Allow use of ocamlfind packages in ~/local/lib
         FINDCONF=$(ocamlfind printconf conf)
