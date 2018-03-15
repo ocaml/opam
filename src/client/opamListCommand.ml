@@ -748,6 +748,7 @@ let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
   in
   OpamPackage.names_of_packages packages |>
   OpamPackage.Name.Set.iter (fun name ->
+      (* Like OpamSwitchState.get_package, but restricted to [packages] *)
       let nvs = OpamPackage.packages_of_name packages name in
       let choose =
         try OpamPackage.Set.choose (nvs %% st.pinned) with Not_found ->

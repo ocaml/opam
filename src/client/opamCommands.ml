@@ -561,8 +561,11 @@ let show =
       "Print the values of opam fields normalised (no newlines, no implicit \
        brackets)"
   in
+  let no_lint = mk_flag ["no-lint"]
+      "Don't output linting warnings or errors when reading from files"
+  in
   let pkg_info global_options fields show_empty raw where
-      list_files file normalise atom_locs =
+      list_files file normalise no_lint atom_locs =
     apply_global_options global_options;
     match file, atom_locs with
     | None, [] ->
@@ -579,7 +582,9 @@ let show =
       in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       let st = OpamListCommand.get_switch_state gt in
-      let st, atoms = OpamAuxCommands.simulate_autopin st atom_locs in
+      let st, atoms =
+        OpamAuxCommands.simulate_autopin ~quiet:no_lint ~keep_url:true st atom_locs
+      in
       OpamListCommand.info st
         ~fields ~raw_opam:raw ~where ~normalise ~show_empty atoms;
       `Ok ()
@@ -588,7 +593,7 @@ let show =
         | Some f -> OpamFile.OPAM.read (OpamFile.make f)
         | None -> OpamFile.OPAM.read_from_channel stdin
       in
-      OpamFile.OPAM.print_errors opam;
+      if not no_lint then OpamFile.OPAM.print_errors opam;
       if where then
         (OpamConsole.msg "%s\n"
            (match f with Some f -> OpamFilename.(Dir.to_string (dirname f))
@@ -621,7 +626,7 @@ let show =
   in
   Term.(ret
           (const pkg_info $global_options $fields $show_empty $raw $where $list_files
-           $file $normalise $atom_or_local_list)),
+           $file $normalise $no_lint $atom_or_local_list)),
   term_info "show" ~doc ~man
 
 module Common_config_flags = struct

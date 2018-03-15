@@ -551,7 +551,7 @@ let filter_deps ~build ~post ?test ?doc ?dev ?default_version ?default deps =
   let env var =
     let get_opt = function
       | Some b -> Some (B b)
-      | None -> assert false
+      | None -> invalid_arg "filter_deps"
     in
     match OpamVariable.Full.to_string var with
     | "build" -> Some (B build)

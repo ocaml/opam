@@ -24,7 +24,7 @@ let string_of_pinned opam =
        (OpamFile.OPAM.url opam))
     (bold (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
 
-let read_opam_file_for_pinning name f url =
+let read_opam_file_for_pinning ?(quiet=false) name f url =
   match OpamFileTools.lint_file f with
   | warns, None ->
     OpamConsole.error
@@ -36,7 +36,7 @@ let read_opam_file_for_pinning name f url =
   | warns, Some opam0 ->
     let opam = OpamFormatUpgrade.opam_file ~filename:f opam0 in
     let warns = if opam <> opam0 then OpamFileTools.lint opam else warns in
-    if warns <> [] then
+    if not quiet && warns <> [] then
       (OpamConsole.warning
          "Failed checks on %s package definition from source at %s:"
          (OpamPackage.Name.to_string name)
