@@ -6,6 +6,20 @@ PATH=~/local/bin:$PATH; export PATH
 
 TARGET="$1"; shift
 
+rm -f ~/pins-required
+
+pin_package () {
+  echo ${1%%.*} >> ~/pins-required
+  eval opam pin add $* --no-action --yes
+}
+
+check_pins () {
+  sort ~/pins-required > ~/sorted-pins
+  for removed in $(diff ~/pins-current ~/sorted-pins | sed -ne "s/^< //p") ; do
+    opam pin remove $removed --no-action --yes
+  done
+}
+
 # Install the build requirements into $OPAMBSROOT using the opam binary from the
 # prepare step
 install-bootstrap () {
@@ -23,6 +37,13 @@ install-bootstrap () {
     if [ "$OPAM_TEST" = "1" ]; then
         opam pin list
         opam list
+        opam pin list --short | sort > ~/pins-current
+        # Packages to be pinned MUST be added using pin_package
+        # e.g. pin_package jbuilder --dev-repo
+        #      If using --dev-repo, you may need to manually specify a version
+        #      to force a recompile.
+        pin_package 'jbuilder.1.0+beta19.2' --dev-repo
+        check_pins
         opam install ocamlfind ocamlbuild cohttp cohttp-lwt-unix 'lwt>=3.1.0' ssl cmdliner dose3 opam-file-format re 'jbuilder>=1.0+beta14' 'mccs>=1.1+4' --yes
         # Allow use of ocamlfind packages in ~/local/lib
         FINDCONF=$(ocamlfind printconf conf)
