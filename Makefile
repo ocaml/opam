@@ -147,6 +147,9 @@ libuninstall: $(OPAMLIBS:%=uninstalllib-%)
 uninstall: opam-actual.install
 	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) $<
 
+checker:
+	$(JBUILDER) build src/tools/opam_check.exe
+
 .PHONY: tests tests-local tests-git
 tests: $(JBUILDER_DEP)
 	$(JBUILDER) runtest $(JBUILDER_ARGS) src/ tests/

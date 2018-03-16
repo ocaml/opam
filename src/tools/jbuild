@@ -15,7 +15,7 @@
   ((name opam_check)
    (modules (opam_check))
    (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))
-   (libraries (opam-client))))
+   (libraries (opam-state))))
 
 (include opam-putenv.inc)
 
