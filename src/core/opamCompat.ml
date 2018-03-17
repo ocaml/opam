@@ -92,3 +92,20 @@ struct
   | _ -> assert false
 end
 #endif
+
+module Filename =
+#if OCAML_VERSION >= (4, 4, 0)
+  Filename
+#else
+struct
+  include Filename
+
+  let extension fn =
+    match Filename.chop_extension fn with
+    | base ->
+        let l = String.length base in
+        String.sub fn l (String.length fn - l)
+    | exception Invalid_argument _ ->
+        ""
+end
+#endif
