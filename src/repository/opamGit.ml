@@ -22,10 +22,15 @@ module VCS : OpamVCS.VCS = struct
     OpamFilename.exists_dir (repo_root / ".git") ||
     OpamFilename.exists (repo_root // ".git")
 
+  let cygpath = OpamSystem.get_cygpath_function ~command:"git"
+
   let git repo_root =
     let dir = OpamFilename.Dir.to_string repo_root in
-    fun ?verbose ?env ?stdout args ->
-      OpamSystem.make_command ~dir ?verbose ?env ?stdout "git" args
+    (* If the ?env arg is restored here, then the caching for the Cygwin-ness
+       of git will need to change, as altering PATH could select a different
+       Git *)
+    fun ?verbose ?stdout args ->
+      OpamSystem.make_command ~dir ?verbose ?stdout "git" args
 
   let init repo_root repo_url =
     OpamFilename.mkdir repo_root;
@@ -56,6 +61,7 @@ module VCS : OpamVCS.VCS = struct
        else Done (Some dir)
      | _ -> Done None)
     @@+ fun global_cache ->
+    let repo_url = OpamUrl.map_file_url (Lazy.force cygpath) repo_url in
     let origin = OpamUrl.base_url repo_url in
     let branch = OpamStd.Option.default "HEAD" repo_url.OpamUrl.hash in
     let opam_ref = remote_ref repo_url in

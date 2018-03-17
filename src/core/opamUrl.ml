@@ -238,6 +238,12 @@ let to_json url = `String (to_string url)
 
 type url = t
 
+let map_file_url f url =
+  if url.transport = "file" then
+    {url with path = f url.path}
+  else
+    url
+
 module O = struct
   type t = url
   let to_string = to_string

@@ -66,6 +66,10 @@ val local_file: t -> OpamFilename.t option
     to an existing local path, check for version-control clues at that path *)
 val guess_version_control: string -> [> version_control ] option
 
+(** [map_file_url f url] applies [f] to the [path] portion of [url] if
+    [transport] is ["file"]. *)
+val map_file_url : (string -> string) -> t -> t
+
 module Op: sig
 
   (** Appends at the end of an URL path with '/' separator. Gets back to the
