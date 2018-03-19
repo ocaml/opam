@@ -114,12 +114,16 @@ let acolor_w width c oc s =
   output_string oc (acolor_with_width (Some width) c () s)
 
 let print_message ch fmt =
-  let ch =
+  let output_string =
+    let output_string ch s =
+      output_string ch s;
+      flush ch
+    in
     match ch with
-    | `stdout -> flush stderr; stdout
-    | `stderr -> flush stdout; stderr
+    | `stdout -> flush stderr; output_string stdout
+    | `stderr -> flush stdout; output_string stderr
   in
-  Printf.ksprintf (output_string ch) (fmt ^^ "%!")
+  Printf.ksprintf output_string fmt
 
 let timestamp () =
   let time = Unix.gettimeofday () -. global_start_time in
@@ -186,7 +190,12 @@ let status_line fmt =
       (fun s -> if s <> !last_status then (last_status := s; print_endline s))
       fmt
   else
-    Printf.ksprintf print_string ("\r\027[K" ^^ fmt ^^ "%!\r\027[K")
+    let print_string s =
+      print_string s;
+      flush stdout;
+      carriage_delete ()
+    in
+    Printf.ksprintf print_string ("\r\027[K" ^^ fmt)
 
 let header_width () = min 80 (OpamStd.Sys.terminal_columns ())
 
