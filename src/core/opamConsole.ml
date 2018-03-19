@@ -353,7 +353,8 @@ let print_message =
     fun ch fmt ->
       flush (if ch = `stdout then stderr else stdout);
       clear_status ();
-      Printf.ksprintf (win32_print_message ch) (fmt ^^ "%!")
+      (* win32_print_message *always* flushes *)
+      Printf.ksprintf (win32_print_message ch) fmt
   else
     fun ch fmt ->
       let output_string =
