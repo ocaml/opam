@@ -308,7 +308,7 @@ let confirm ?(default=true) fmt =
 
 let read fmt =
   Printf.ksprintf (fun s ->
-      formatted_msg "%s %!" s;
+      formatted_msg "%s " s;
       if OpamCoreConfig.(!r.answer = None && not !r.safe_mode) then (
         try match read_line () with
           | "" -> None

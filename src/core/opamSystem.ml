@@ -376,7 +376,7 @@ let print_stats () =
   match !runs with
   | [] -> ()
   | l  ->
-    OpamConsole.msg "%d external processes called:\n%s%!"
+    OpamConsole.msg "%d external processes called:\n%s"
       (List.length l) (OpamStd.Format.itemize ~bullet:"  " (String.concat " ") l)
 
 let log_file ?dir name = temp_file ?dir (OpamStd.Option.default "log" name)

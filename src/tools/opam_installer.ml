@@ -35,7 +35,7 @@ type commands = {
 let do_commands project_root =
   let mkdir d =
     if not (OpamFilename.exists_dir d) then
-      (OpamConsole.msg "Creating directory %s\n%!" (OpamFilename.Dir.to_string d);
+      (OpamConsole.msg "Creating directory %s\n" (OpamFilename.Dir.to_string d);
        OpamFilename.mkdir d)
   in
   let rec rmdir ~opt d =
