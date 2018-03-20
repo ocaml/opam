@@ -60,7 +60,10 @@ let load lock_kind =
   let config = OpamFile.Config.with_installed_switches switches config in
   let global_variables =
     List.fold_left (fun acc (v,value) ->
-        OpamVariable.Map.add v (value, "Inferred from system") acc)
+        OpamVariable.Map.add v
+          (lazy (Some (OpamStd.Option.default (S "unknown") (Lazy.force value))),
+           "Inferred from system")
+          acc)
       OpamVariable.Map.empty
       (OpamSysPoll.variables)
   in
