@@ -8,16 +8,16 @@ addons:
     - libglpk-dev
 
 before_install:
-    - bash -ex .travis-ci.sh prepare
+    - bash -exu .travis-ci.sh prepare
 install:
-    - bash -ex .travis-ci.sh install
+    - bash -exu .travis-ci.sh install
 
 cache:
     directories:
     - $HOME/.opam.bootstrap
 
 script:
-    - bash -ex .travis-ci.sh build
+    - bash -exu .travis-ci.sh build
 
 matrix:
   include:
