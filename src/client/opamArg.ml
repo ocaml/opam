@@ -243,8 +243,7 @@ let help_sections = [
       available (e.g. for `opam install`).";
   `P "$(i,OPAMRETRY) sets the number of tries before failing downloads.";
   `P "$(i,OPAMROOT) see option `--root'. This is automatically set by \
-      `opam env --root=DIR' when DIR is non-default or OPAMROOT is \
-      already defined.";
+      `opam env --root=DIR --set-root'.";
   `P "$(i,OPAMROOTISOK) don't complain when running as root.";
   `P "$(i,OPAMSAFE) see option `--safe'";
   `P "$(i,OPAMSKIPVERSIONCHECKS) bypasses some version checks. Unsafe, for \
@@ -258,7 +257,7 @@ let help_sections = [
        currently going on on the terminal. \
        (one of "^Arg.doc_alts_enum when_enum^")");
   `P "$(i,OPAMSWITCH) see option `--switch'. Automatically set by \
-      `opam env --switch=SWITCH'.";
+      `opam env --switch=SWITCH --set-switch'.";
   `P ("$(i,OPAMUPGRADECRITERIA) specifies user $(i,preferences) for dependency \
        solving when performing an upgrade. Overrides $(i,OPAMCRITERIA) in \
        upgrades if both are set. See also option --criteria");

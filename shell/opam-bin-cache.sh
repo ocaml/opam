@@ -16,7 +16,7 @@ case $COMMAND in
         NAME=$1; shift
         if [ -d "$CACHE_DIR" ]; then
             rm -f "$NAME.install"
-            cp -aT "$CACHE_DIR" "$OPAM_SWITCH_PREFIX"
+            cp -aT "$CACHE_DIR/" "$OPAM_SWITCH_PREFIX/"
         else exit 0
         fi;;
     wrap)
