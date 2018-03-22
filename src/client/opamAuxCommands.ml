@@ -255,7 +255,7 @@ let autopin_aux st ?quiet ?locked atom_or_local_list =
   in
   atoms, to_pin, obsolete_pins, already_pinned_set
 
-let simulate_local_pinnings st to_pin =
+let simulate_local_pinnings ?quiet ?(keep_url=false) st to_pin =
   let local_names =
     List.fold_left (fun set (name, _, _) ->
         OpamPackage.Name.Set.add name set)
@@ -264,14 +264,14 @@ let simulate_local_pinnings st to_pin =
   let local_opams =
     List.fold_left (fun map (name, target, file) ->
         match
-          OpamPinCommand.read_opam_file_for_pinning name file target
+          OpamPinCommand.read_opam_file_for_pinning ?quiet name file target
         with
         | None -> map
         | Some opam ->
+          let opam = OpamFile.OPAM.with_name name opam in
           let opam =
-            opam |>
-            OpamFile.OPAM.with_name name |>
-            OpamFile.OPAM.with_url (OpamFile.URL.create target)
+            if keep_url then opam
+            else OpamFile.OPAM.with_url (OpamFile.URL.create target) opam
           in
           let opam, version = match OpamFile.OPAM.version_opt opam with
             | Some v -> opam, v
@@ -298,10 +298,11 @@ let simulate_local_pinnings st to_pin =
            st.switch_global st.switch st.switch_config ~pinned:st.pinned
            ~opams:local_opams)
     );
+    pinned = local_packages;
   } in
   st, local_packages
 
-let simulate_autopin st ?quiet ?locked atom_or_local_list =
+let simulate_autopin st ?quiet ?keep_url ?locked atom_or_local_list =
   let atoms, to_pin, obsolete_pins, already_pinned_set =
     autopin_aux st ?quiet ?locked atom_or_local_list
   in
@@ -310,7 +311,7 @@ let simulate_autopin st ?quiet ?locked atom_or_local_list =
     OpamPackage.Set.fold (fun nv st -> OpamPinCommand.unpin_one st nv)
       obsolete_pins st
   in
-  let st, pins = simulate_local_pinnings st to_pin in
+  let st, pins = simulate_local_pinnings ?quiet ?keep_url st to_pin in
   let pins = OpamPackage.Set.union pins already_pinned_set in
   let pin_depends =
     OpamPackage.Set.fold (fun nv acc ->
@@ -362,10 +363,10 @@ let autopin st ?(simulate=false) ?quiet ?locked atom_or_local_list =
     st
   in
   let st, pins =
-    if simulate then simulate_local_pinnings st to_pin else
+    if simulate then simulate_local_pinnings ?quiet st to_pin else
     try
       List.fold_left (fun (st, pins) (name, target, file) ->
-          match OpamPinCommand.read_opam_file_for_pinning name file target with
+          match OpamPinCommand.read_opam_file_for_pinning ?quiet name file target with
           | None -> st, pins
           | Some opam ->
             let st =

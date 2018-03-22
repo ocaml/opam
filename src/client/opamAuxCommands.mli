@@ -76,10 +76,13 @@ val autopin:
   rw switch_state * atom list
 
 (** The read-only version of [autopin ~simulate:true]: this doesn't require a
-    write-locked switch, and doesn't update the local packages *)
+    write-locked switch, and doesn't update the local packages. [keep_url] can
+    be used to not update the opam files' [url] section (useful when just
+    querying the files, rather than really using the pinnings) *)
 val simulate_autopin:
   'a switch_state ->
   ?quiet:bool ->
+  ?keep_url:bool ->
   ?locked:bool ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   'a switch_state * atom list
