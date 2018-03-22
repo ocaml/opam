@@ -48,8 +48,8 @@ MD5_result = 4beebefd41f7f899b6eeba7414e7ae01
 
 $(call PKG_SAME,result)
 
-URL_jbuilder = https://github.com/ocaml/dune/releases/download/1.0+beta18.1/jbuilder-1.0.beta18.1.tbz
-MD5_jbuilder = 81571d6761fb19ba9f9b62572d05da16
+URL_jbuilder = https://github.com/ocaml/dune/releases/download/1.0+beta19.1/jbuilder-1.0.beta19.1.tbz
+MD5_jbuilder = 456b4aa804d46d84d132230b3db9ff4a
 
 $(call PKG_SAME,jbuilder)
 

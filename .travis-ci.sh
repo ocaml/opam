@@ -27,7 +27,6 @@ init-bootstrap () {
   if [ "$OPAM_TEST" = "1" ]; then
     opam switch create $OPAMBSSWITCH ocaml-system
     eval $(opam env)
-    opam pin add jbuilder --kind=version '1.0+beta18.1' --no-action --yes
     opam install cohttp-lwt-unix ssl cmdliner dose3 opam-file-format re 'jbuilder>=1.0+beta18' 'mccs>=1.1+5' --yes
   fi
   rm -f "$OPAMBSROOT"/log/*
