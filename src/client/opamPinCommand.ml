@@ -306,10 +306,12 @@ let version_pin st name version =
          OpamPackage.Map.find_opt pinned_nv st.repos_package_index
       then (* already version-pinned *)
         (if pinned_nv <> nv then
-           OpamConsole.note
-             "Package %s used to be pinned to version %s"
-             (OpamPackage.Name.to_string name)
-             (OpamPackage.Version.to_string version)
+           (OpamConsole.note
+              "Package %s used to be pinned to version %s"
+              (OpamPackage.Name.to_string name)
+              (OpamPackage.Version.to_string pinned_nv.version);
+            OpamFilename.rmdir
+              (OpamPath.Switch.Overlay.package root st.switch name))
          else OpamConsole.note "Pinning unchanged")
       else if OpamConsole.confirm
           "Package %s is already %s. Unpin and continue ?"
@@ -329,13 +331,8 @@ let version_pin st name version =
     (OpamPackage.Version.to_string version);
   st
 
-(* These constructors raise Warning 41 prior to OCaml 4.02.2
-   See https://caml.inria.fr/mantis/view.php?id=6872 *)
-module Exns = struct
 exception Aborted
 exception Nothing_to_do
-end
-include Exns
 
 let default_version st name =
   try OpamPackage.version (OpamSwitchState.get_package st name)
@@ -409,7 +406,7 @@ and source_pin
           (OpamPackage.Name.to_string name);
         if not @@ OpamConsole.confirm
             "Are you sure you want to override this and pin it anyway ?"
-        then raise Exns.Aborted
+        then raise Aborted
       );
       let version = default_version st name in
       version, None
@@ -421,7 +418,7 @@ and source_pin
             "Package %s does not exist, create as a %s package ?"
             (OpamPackage.Name.to_string name)
             (OpamConsole.colorise `bold "NEW"))
-  then raise Exns.Aborted;
+  then raise Aborted;
 
   (match OpamStd.Option.map OpamFile.URL.url cur_urlf, target_url with
    | Some u, Some target when OpamUrl.(
