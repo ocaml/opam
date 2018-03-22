@@ -10,10 +10,19 @@ TARGET="$1"; shift
 # prepare step
 install-bootstrap () {
     export OPAMROOT="$OPAMBSROOT"
+    if [ -e $OPAMBSROOT/config ] ; then
+      CACHED_SWITCH=$(sed -ne 's/switch: .\(.*\)./\1/p' $OPAMBSROOT/config)
+      if [ "$CACHED_SWITCH" != "$OCAML_VERSION" ] ; then
+        echo "Cached switch is $CACHED_SWITCH not $OCAML_VERSION"
+        echo "Resetting bootstrap"
+        rm -rf $OPAMBSROOT
+      fi
+    fi
     opam init --yes --no-setup --compiler=$OCAML_VERSION
     eval $(opam config env)
     if [ "$OPAM_TEST" = "1" ]; then
-        opam pin add jbuilder --dev-repo --yes
+        opam pin list
+        opam list
         opam install ocamlfind ocamlbuild cohttp cohttp-lwt-unix 'lwt>=3.1.0' ssl cmdliner dose3 opam-file-format re 'jbuilder>=1.0+beta14' 'mccs>=1.1+4' --yes
         # Allow use of ocamlfind packages in ~/local/lib
         FINDCONF=$(ocamlfind printconf conf)

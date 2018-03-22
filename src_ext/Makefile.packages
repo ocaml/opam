@@ -21,7 +21,7 @@ extlib.pkgbuild: findlib.pkgbuild cppo.pkgbuild
 
 ocamlbuild.pkgbuild: findlib.pkgbuild
 
-re.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild
+re.pkgbuild: jbuilder.pkgbuild findlib.pkgbuild
 
 ocamlgraph.pkgbuild: findlib.pkgbuild
 
@@ -60,9 +60,8 @@ ocamlbuild-pkg-build:
 	make all findlib-install
 
 re-pkg-build:
-	ocaml setup.ml -configure --prefix $(OCAMLROOT)
-	ocaml setup.ml -build
-	ocaml setup.ml -install
+	jbuilder build @install -p re
+	cp -LR _build/install/default/lib/re $(SITELIB)/re/
 
 ocamlgraph-pkg-build:
 	./configure

@@ -115,7 +115,7 @@ let regexps_of_patterns patterns =
       if contains_dot pattern then pattern
       else pattern ^ ".*"
     ) patterns
-  |> List.map (fun pattern -> Re.compile (Re_glob.globx pattern))
+  |> List.map (fun pattern -> Re.compile (Re.Glob.globx pattern))
 
 let filter fn patterns =
   let regexps = regexps_of_patterns patterns in

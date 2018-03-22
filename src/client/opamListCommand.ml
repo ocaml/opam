@@ -267,7 +267,7 @@ let apply_selector ~base st = function
            (OpamSwitchState.unavailable_reason st) cs))
   | Pattern (psel, pat) ->
     let re =
-      if psel.glob then Re_glob.glob ~expand_braces:true pat
+      if psel.glob then Re.Glob.glob ~expand_braces:true pat
       else Re.str pat
     in
     let re = if psel.case_sensitive then Re.case re else Re.no_case re in
