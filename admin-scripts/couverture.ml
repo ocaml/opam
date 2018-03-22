@@ -102,7 +102,7 @@ let () =
   OpamStateConfig.init ();
   let t =
     OpamState.load_state ~save_cache:false "couverture"
-      OpamStateConfig.(!r.current_switch)
+      (OpamStateConfig.get_switch_opt ())
   in
   let avail = Lazy.force t.OpamState.Types.available_packages in
   let wanted = match Array.to_list Sys.argv with

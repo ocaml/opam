@@ -679,7 +679,7 @@ let display st format packages =
 
 let get_switch_state gt =
   let rt = OpamRepositoryState.load `Lock_none gt in
-  match OpamStateConfig.(!r.current_switch) with
+  match OpamStateConfig.get_switch_opt () with
   | None -> OpamSwitchState.load_virtual gt rt
   | Some sw -> OpamSwitchState.load `Lock_none gt rt sw
 

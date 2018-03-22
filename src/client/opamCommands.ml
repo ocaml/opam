@@ -414,7 +414,7 @@ let list ?(force_search=false) () =
       owns_file disjunction search format packages =
     apply_global_options global_options;
     let no_switch =
-      no_switch || OpamStateConfig.(!r.current_switch) = None
+      no_switch || OpamStateConfig.get_switch_opt () = None
     in
     let format =
       let force_all_versions =
@@ -758,7 +758,7 @@ let config =
     match command, params with
     | Some `env, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      (match OpamStateConfig.(!r.current_switch) with
+      (match OpamStateConfig.get_switch_opt () with
        | None -> `Ok ()
        | Some sw ->
          `Ok (OpamConfigCommand.env gt sw
@@ -1047,7 +1047,7 @@ let env =
     match revert with
     | false ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      (match OpamStateConfig.(!r.current_switch) with
+      (match OpamStateConfig.get_switch_opt () with
        | None -> ()
        | Some sw ->
          OpamConfigCommand.env gt sw
@@ -1599,7 +1599,7 @@ let repository =
             else if List.mem sw acc then acc
             else acc @ [sw]
           | `Current_switch ->
-            match OpamStateConfig.(!r.current_switch) with
+            match OpamStateConfig.get_switch_opt () with
             | None ->
               OpamConsole.warning "No switch is currently set, maybe you meant \
                                    '--set-default' ?";
@@ -2753,7 +2753,7 @@ let clean =
     in
     let switches =
       if all_switches then OpamGlobalState.switches gt
-      else if switch then match OpamStateConfig.(!r.current_switch) with
+      else if switch then match OpamStateConfig.get_switch_opt () with
         | Some s -> [s]
         | None -> []
       else []

@@ -408,11 +408,9 @@ let update
   log "UPDATE %a" (slog @@ String.concat ", ") names;
   let rt = OpamRepositoryState.load `Lock_none gt in
   let st, repos_only =
-    if OpamStateConfig.(!r.current_switch) = None then
-      OpamSwitchState.load_virtual gt rt, true
-    else
-      OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ()),
-      repos_only
+    match OpamStateConfig.get_switch_opt () with
+    | None -> OpamSwitchState.load_virtual gt rt, true
+    | Some sw -> OpamSwitchState.load `Lock_none gt rt sw, repos_only
   in
   let repo_names =
     let all_repos = OpamRepositoryName.Map.keys rt.repositories in

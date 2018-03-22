@@ -33,5 +33,5 @@ let of_dirname d =
 
 let get_root root s =
   if is_external s
-  then OpamFilename.Op.(OpamFilename.Dir.of_string s / external_dirname)
+  then OpamFilename.Dir.of_string (Filename.concat s external_dirname)
   else OpamFilename.Op.(root / s)

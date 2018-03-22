@@ -207,6 +207,9 @@ val starts_with: Dir.t -> t -> bool
 (** Check whether a filename ends with a given suffix *)
 val ends_with: string -> t -> bool
 
+(** [dir starts_with pfx dir] Check whether [dir] starts with [pfx] *)
+val dir_starts_with: Dir.t -> Dir.t -> bool
+
 (** Check whether a dirname ends with a given suffix *)
 val dir_ends_with: string -> Dir.t -> bool
 
