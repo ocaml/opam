@@ -555,7 +555,8 @@ end
 module OpamSys = struct
 
   let with_process_in cmd args f =
-    let path = ["/bin";"/usr/bin"] in
+    let pathext = if Sys.win32 then ';' else ':' in
+    let path = OpamString.split (Sys.getenv "PATH") pathext in
     let cmd =
       List.find Sys.file_exists (List.map (fun d -> Filename.concat d cmd) path)
     in
