@@ -392,24 +392,127 @@ three scopes:
      `_:bar`, always refers to the version being defined.
 
 3. Some fields define their own local variables, like `success` in the field
-   [`post-messages`](#opamfield-post-messages). Common examples of this include
-   the following variables, available in the `depends:`, `depopts:`, `build:` and
-   `install:` fields:
-
-    * `with-test`: `true` when testing has been turned on for the package
-      (through the `--with-test` flag)
-    * `with-doc`: similarly for documentation.
+   [`post-messages`](#opamfield-post-messages). Other examples of this include
+   the [`with-test`](#pkgvar-with-test) and [`with-doc`](#pkgvar-with-doc)
+   variables, available in the `depends:`, `depopts:`, `build:`, `install:` and
+   `remove:` fields.
 
     Within package definition files, the variables `name` and `version`, as
     shortcuts to `_:name` and `_:version`, corresponding to the package being
     defined, are always available.
 
-For a comprehensive list of predefined variables, and their current local
-values, run:
+#### Pre-defined variables
+
+The following variables are dynamically defined by opam, but can still be
+overriden from configuration. You can get the list of currently defined
+variables by running:
 
 ```
 opam config list
 ```
+
+#### Global variables
+
+- <a id="opamvar-opam-version">`opam-version`</a>:
+  the version of the running opam
+- <a id="opamvar-root">`root`</a>:
+  the current opam root (e.g. `~/.opam`)
+- <a id="opamvar-jobs">`jobs`</a>:
+  opam's `jobs` (`-j`) parameter, i.e. the number of parallel builds opam is
+  allowed to run
+- <a id="opamvar-make">`make`</a>:
+  the system's `make` command to use
+- <a id="opamvar-arch">`arch`</a>:
+  the host architecture, typically one of `"x86_32"`, `"x86_64"`, `"ppc32"`,
+  `"ppc64"`, `"arm32"` or `"arm64"`, or the lowercased output of `uname -m`, or
+  `"unknown"`
+- <a id="opamvar-os">`os`</a>:
+  the running OS, typically one of `"linux"`, `"macos"`, `"win32"`, `"cygwin"`,
+  `"freebsd"`, `"openbsd"`, `"netbsd"` or `"dragonfly"`, or the lowercased
+  output of `uname -s`, or `"unknown"`
+- <a id="opamvar-os-distribution">`os-distribution`</a>:
+  the distribution of the OS, one of `"homebrew"`, `"macports"` on `"macos"`, or
+  `"android"` or the Linux distribution name on Linux. Equal to the value of
+  `os` in other cases or if it can't be detected
+- <a id="opamvar-os-family">`os-family`</a>:
+  the more general distribution family, _e.g._ `"debian"` on Ubuntu, `"windows"`
+  on Win32 or Cygwin, `"bsd"` on all bsds. Useful _e.g._ to detect the main
+  package manager
+- <a id="opamvar-os-version">`os-version`</a>:
+  the release id of the distribution when applicable, or system otherwise
+
+Extra variables can be defined in the file `~/.opam/config`, using the
+[`global-variables:`](#configfield-global-variables) (static) or
+[`eval-variables`](#configfield-eval-variables) (dynamic) fields.
+
+#### Switch variables
+
+The following standard paths are defined as variables in the global scope and
+depend on the current switch:
+
+- <a id="opamvar-switch">`switch`</a>:
+  the name of the selected switch (or absolute directory, for local switches)
+- <a id="opamvar-dirs">`prefix`, `lib`, `bin`, `sbin`, `share`, `doc`, `etc`, `man`, `toplevel`, `stublibs`</a>:
+  the standard directories for this switch, as configured
+
+Additionally, two variables `user` and `group` are statically set at switch
+creation time.
+
+Extra variables can be defined in the file
+`<switch-prefix>/.opam-switch/switch-config`, using the
+[`variables {}`](#switchconfigsection-variables) section.
+
+#### Package variables
+
+These variables need to be prefixed with `<pkgname>:`, or `_:`, except for
+`name` and `version`, or if they can unambiguously be resolved as variables of
+the package being defined.
+
+- <a id="pkgvar-name">`name`</a>: name of the package
+- <a id="pkgvar-version">`version`</a>: version of the package
+- <a id="pkgvar-depends">`depends`</a>:
+  resolved direct dependencies of the package
+- <a id="pkgvar-installed">`installed`</a>:
+  whether the package is installed
+- <a id="pkgvar-enable">`enable`</a>:
+  takes the value "enable" or "disable" depending on whether the package is
+  installed
+- <a id="pkgvar-pinned">`pinned`</a>: whether the package is pinned
+- <a id="pkgvar-dirs">`bin`, `sbin`, `lib`, `man`, `doc`, `share`, `etc`</a>:
+  the corresponding directories for this package (similar to
+  [`<pkgname>.install`](#packagenameinstall))
+- <a id="pkgvar-build">`build`</a>: directory where the package was built
+- <a id="pkgvar-hash">`hash`</a>: hash of the package archive
+- <a id="pkgvar-dev">`dev`</a>:
+  true if this is a development package, _i.e._ it was not built from a release
+  archive
+- <a id="pkgvar-build-id">`build-id`</a>:
+  a hash identifying the precise package version and metadata, and that of all
+  its dependencies
+
+Extra variables can be defined by any package at installation time, using a
+[`<pkgname>.config`](#lt-pkgname-gt-config) file with a
+[`variables {}`](#dotconfigsection-variables) field.
+
+Additionally, the following are limited to some package fields (`depends:`,
+`depopts:`, `build:`, `install:`, `remove:`, `run-test:`):
+
+- <a id="pkgvar-with-test">`with-test`</a>: only true if tests have been
+  enabled for this specific package
+- <a id="pkgvar-with-doc">`with-doc`</a>: similarly for documentation
+
+The following are only available in the `depends:` and `depopts:` fields, and
+are used as dependency flags (they don't have a defined `true` or `false` value
+outside of a given operation):
+
+- <a id="pkgvar-build">`build`</a>:
+  limits the dependency to a build-time one, avoiding recompilation if it
+  changes
+- <a id="pkgvar-post">`post`</a>:
+  marks the dependency as unordered, i.e. to be ignored when computing the order
+  of compilations. In other words, this ensures the package will get installed
+  along with the current one, but not that it will be compiled and installed
+  before. This flag can be used to break dependency cycles.
 
 ### Filters
 
@@ -762,15 +865,11 @@ files.
     expected to be produced within the source directory subtree, _i.e._ below
     the command's `$PWD`, during this step.
 
-    The following filter variables are available in the scope of this field:
-
-    * `with-test`: this is set to true when the user asked for the tests of
-      this package to be built. Use it to filter testing commands (_e.g._ `[make
-      "test"] {with-test}`).
-    * `with-doc`: likewise for documentation.
-    * not limited to this scope, but the `dev` variable can be useful here to
-      detect that the package is not installed from a release tarball, and may
-      need additional preprocessing (_e.g._ `automake`).
+    The [`with-test`](#pkgvar-with-test) and [`with-doc`](#pkgvar-with-doc)
+    variables are available in the scope of this field: filter testing commands
+    with _e.g._ `[make "test"] {with-test}`. The `dev` variable can also be
+    useful here to detect that the package is not installed from a release
+    tarball, and may need additional preprocessing (_e.g._ `automake`).
 
     If a term is undefined (_e.g._ an undefined variable), the empty string is
     used as positional argument.
@@ -793,8 +892,9 @@ files.
     according to its instructions after calling the commands specified in the
     `install:` field have been run, if any.
 
-    Variables `with-test` and `with-doc` are also available to the filters used
-    in this field, to run specific installation commands when tests or
+    Variables [`with-test`](#pkgvar-with-test) and
+    [`with-doc`](#pkgvar-with-doc) are also available to the filters used in
+    this field, to run specific installation commands when tests or
     documentation have been requested.
 
 - <a id="opamfield-build-doc">
@@ -802,10 +902,11 @@ files.
   <a id="opamfield-build-test">
   `build-test: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a> (__deprecated__):
   you should use the [`build:`](#opamfield-build) and
-  [`install:`](#opamfield-install) fields with filters based on the `with-test`
-  and `with-doc` variables, to specify test and documentation specific
-  instructions. The instructions in the deprecated `build-test:` are currently
-  understood as part of the [`run-test:`](#opamfield-run-test) field.
+  [`install:`](#opamfield-install) fields with filters based on the
+  [`with-test`](#pkgvar-with-test) and [`with-doc`](#pkgvar-with-doc) variables,
+  to specify test and documentation specific instructions. The instructions in
+  the deprecated `build-test:` are currently understood as part of the
+  [`run-test:`](#opamfield-run-test) field.
 
 - <a id="opamfield-run-test">
   `run-test: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>:
@@ -833,8 +934,9 @@ files.
 
     The filtered package formula can access the global and switch variables, but
     not variables from other packages. Additionally, special boolean variables
-    `build`, `with-test` and `with-doc` are defined to allow limiting the scope
-    of the dependency.
+    [`build`](#pkgvar-build), [`post`](#pkgvar-post),
+    [`with-test`](#pkgvar-with-test) and [`with-doc`](#pkgvar-with-doc) are
+    defined to allow limiting the scope of the dependency.
 
     * `build` dependencies are no longer needed at run-time: they won't trigger
       recompilations of your package.
@@ -890,11 +992,13 @@ files.
   identifiers to required system-managed packages, while the filter to the right
   allows to select the systems they will be active on.
 
-    The filters typically use variables `arch`, `os`, `os-distribution`,
-    `os-version`, `os-family`. The `depexts` information can be retrieved
-    through the `opam list --depexts` command (which can be targeted to a
-    specific system other than the host by using the appropriate `--vars`
-    bindings).
+    The filters typically use variables [`arch`](#opamvar-arch),
+    [`os`](#opamvar-os), [`os-distribution`](#opamvar-os-distribution),
+    [`os-version`](#opamvar-os-version), [`os-family`](#opamvar-os-family). The
+    `depexts` information can be retrieved through the `opam list --depexts`
+    command (which can be targeted to a specific system other than the host by
+    using the appropriate `--vars` bindings). These variables are guaranteed to
+    be defined, and are set to the string `"unknown"` if the detection failed.
 
     The `depexts:` field should preferably be used on [`conf`](#opamflag-conf)
     packages, which makes the dependencies clearer and avoids duplicating the
