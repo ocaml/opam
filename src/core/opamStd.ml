@@ -558,8 +558,34 @@ end
 
 module OpamSys = struct
 
+  let is_windows = Sys.os_type = "Win32"
+
+  let path_sep = if is_windows then ';' else ':'
+
+  let split_path_variable =
+    if is_windows then fun path ->
+      let length = String.length path in
+      let rec f acc index current last normal =
+        if index = length
+        then let current = current ^ String.sub path last (index - last) in
+          if current <> "" then current::acc else acc
+        else let c = path.[index]
+          and next = succ index in
+          if c = ';' && normal || c = '"' then
+            let current = current ^ String.sub path last (index - last) in
+            if c = '"' then
+              f acc next current next (not normal)
+            else
+            let acc = if current = "" then acc else current::acc in
+            f acc next "" next true
+          else
+            f acc next current last normal in
+      f [] 0 "" 0 true
+    else fun path ->
+      OpamString.split_delim path path_sep
+
   let with_process_in cmd args f =
-    let path = ["/bin";"/usr/bin"] in
+    let path = split_path_variable (Env.get "PATH") in
     let cmd =
       List.find Sys.file_exists (List.map (fun d -> Filename.concat d cmd) path)
     in
@@ -674,8 +700,6 @@ module OpamSys = struct
     | "fish" -> `fish
     | _      -> `sh
 
-  let is_windows = Sys.os_type = "Win32"
-
   let executable_name =
     if is_windows then
       fun name ->
@@ -730,30 +754,6 @@ module OpamSys = struct
     List.iter
       (fun f -> try f () with _ -> ())
       !registered_at_exit
-
-  let path_sep = if is_windows then ';' else ':'
-
-  let split_path_variable =
-    if is_windows then fun path ->
-      let length = String.length path in
-      let rec f acc index current last normal =
-        if index = length
-        then let current = current ^ String.sub path last (index - last) in
-          if current <> "" then current::acc else acc
-        else let c = path.[index]
-          and next = succ index in
-          if c = ';' && normal || c = '"' then
-            let current = current ^ String.sub path last (index - last) in
-            if c = '"' then
-              f acc next current next (not normal)
-            else
-            let acc = if current = "" then acc else current::acc in
-            f acc next "" next true
-          else
-            f acc next current last normal in
-      f [] 0 "" 0 true
-    else fun path ->
-      OpamString.split_delim path path_sep
 
   exception Exit of int
   exception Exec of string * string array * string array
