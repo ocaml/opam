@@ -26,7 +26,7 @@ let rsync_trim = function
     | _ -> []
 
 let call_rsync check args =
-  OpamSystem.make_command "rsync" args
+  OpamSystem.make_command (OpamExternalTools.custom ("rsync", args))
   @@> fun r ->
   match r.OpamProcess.r_code with
   | 0 -> Done (Some (rsync_trim r.OpamProcess.r_stdout))

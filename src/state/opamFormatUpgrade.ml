@@ -588,7 +588,7 @@ let from_1_3_dev2_to_1_3_dev5 root conf =
               | Some ocamlc ->
                 let vnum =
                   OpamSystem.read_command_output ~verbose:false
-                    [ OpamFilename.to_string ocamlc ; "-vnum" ]
+                    (OpamExternalTools.custom (OpamFilename.to_string ocamlc, ["-vnum" ]))
                 in
                 config |>
                 OpamFile.Dot_config.with_file_depends
@@ -871,7 +871,7 @@ let from_2_0_alpha_to_2_0_alpha2 root conf =
     )
     (OpamFile.Config.installed_switches conf);
   OpamFile.Config.with_eval_variables [
-    OpamVariable.of_string "sys-ocaml-version", ["ocamlc"; "-vnum"],
+    OpamVariable.of_string "sys-ocaml-version", OpamExternalTools.OCaml.vnum,
     "OCaml version present on your system independently of opam, if any";
   ] conf
 
@@ -960,7 +960,7 @@ let from_2_0_alpha3_to_2_0_beta root conf =
          ])
        conf) |>
   OpamFile.Config.with_eval_variables
-    ((OpamVariable.of_string "arch", ["uname"; "-m"],
+    ((OpamVariable.of_string "arch", OpamExternalTools.Uname.arch,
       "Host architecture, as returned by 'uname -m'")
      :: OpamFile.Config.eval_variables conf)
 

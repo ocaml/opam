@@ -554,12 +554,13 @@ end
 
 module OpamSys = struct
 
-  let with_process_in cmd args f =
+  let with_process_in cmd f =
+    let cmd, args = OpamExternalTools.unpack cmd in
     let path = ["/bin";"/usr/bin"] in
     let cmd =
       List.find Sys.file_exists (List.map (fun d -> Filename.concat d cmd) path)
     in
-    let ic = Unix.open_process_in (cmd^" "^args) in
+    let ic = Unix.open_process_in (String.concat " " (cmd::args)) in
     try
       let r = f ic in
       ignore (Unix.close_process_in ic) ; r
@@ -583,12 +584,12 @@ module OpamSys = struct
     let fallback = 80 in
     let cols =
       try (* terminfo *)
-        with_process_in "tput" "cols"
+        with_process_in OpamExternalTools.Tput.cols
           (fun ic -> int_of_string (input_line ic))
       with
       | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
         try (* GNU stty *)
-          with_process_in "stty" "size"
+          with_process_in OpamExternalTools.Stty.size
             (fun ic ->
                match OpamString.split (input_line ic) ' ' with
                | [_ ; v] -> int_of_string v
@@ -620,15 +621,15 @@ module OpamSys = struct
 
   let uname =
     let memo = Hashtbl.create 7 in
-    fun arg ->
-      try Hashtbl.find memo arg with Not_found ->
+    fun cmd ->
+      try Hashtbl.find memo cmd with Not_found ->
         let r =
           try
-            with_process_in "uname" arg
+            with_process_in cmd
               (fun ic -> Some (OpamString.strip (input_line ic)))
           with Unix.Unix_error _ | Sys_error _ | Not_found -> None
         in
-        Hashtbl.add memo arg r;
+        Hashtbl.add memo cmd r;
         r
 
   type os =
@@ -647,7 +648,7 @@ module OpamSys = struct
     let os = lazy (
       match Sys.os_type with
       | "Unix" -> begin
-          match uname "-s" with
+          match uname OpamExternalTools.Uname.kern_name with
           | Some "Darwin"    -> Darwin
           | Some "Linux"     -> Linux
           | Some "FreeBSD"   -> FreeBSD

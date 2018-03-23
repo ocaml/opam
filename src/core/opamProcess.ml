@@ -14,8 +14,7 @@ let log ?level fmt =
 
 (** Shell commands *)
 type command = {
-  cmd: string;
-  args: string list;
+  cmd: OpamExternalTools.t;
   cmd_text: string option;
   cmd_dir: string option;
   cmd_env: string array option;
@@ -26,7 +25,9 @@ type command = {
   cmd_metadata: (string * string) list option;
 }
 
-let string_of_command c = String.concat " " (c.cmd::c.args)
+let string_of_command c =
+  let cmd, args = OpamExternalTools.unpack c.cmd in
+  String.concat " " (cmd::args)
 let text_of_command c = c.cmd_text
 let default_verbose () = OpamCoreConfig.(!r.verbose_level) >= 2
 let is_verbose_command c =
@@ -46,8 +47,8 @@ let make_command_text ?(color=`green) str ?(args=[]) cmd =
   Printf.sprintf "[%s: %s]" (OpamConsole.colorise color str) summary
 
 let command ?env ?verbose ?name ?metadata ?dir ?allow_stdin ?stdout ?text
-    cmd args =
-  { cmd; args;
+    cmd =
+  { cmd;
     cmd_env=env; cmd_verbose=verbose; cmd_name=name; cmd_metadata=metadata;
     cmd_dir=dir; cmd_stdin=allow_stdin; cmd_stdout=stdout; cmd_text=text; }
 
@@ -135,7 +136,8 @@ let string_of_info ?(color=`yellow) info =
     which is used to run the process is recorded into [env_file] (if
     set). *)
 let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?env ?(metadata=[]) ?dir
-    ~verbose ~tmp_files cmd args =
+    ~verbose ~tmp_files cmd =
+  let cmd, args = OpamExternalTools.unpack cmd in
   let nothing () = () in
   let tee f =
     let fd = Unix.openfile f open_flags 0o644 in
@@ -254,7 +256,7 @@ let interrupt p =
   else Unix.kill p.p_pid Sys.sigint
 
 let run_background command =
-  let { cmd; args;
+  let { cmd;
         cmd_env=env; cmd_verbose=_; cmd_name=name; cmd_text=_;
         cmd_metadata=metadata; cmd_dir=dir;
         cmd_stdin=allow_stdin; cmd_stdout } =
@@ -293,11 +295,12 @@ let run_background command =
     ]
   in
   create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose ?metadata
-    ~allow_stdin ?dir ~tmp_files cmd args
+    ~allow_stdin ?dir ~tmp_files cmd
 
-let dry_run_background c = {
-  p_name   = c.cmd;
-  p_args   = c.args;
+let dry_run_background c =
+  let cmd, args = OpamExternalTools.unpack c.cmd in {
+  p_name   = cmd;
+  p_args   = args;
   p_pid    = -1;
   p_cwd    = OpamStd.Option.default (Sys.getcwd ()) c.cmd_dir;
   p_time   = Unix.gettimeofday ();

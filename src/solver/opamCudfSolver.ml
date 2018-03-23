@@ -53,7 +53,7 @@ let call_external_solver command ~criteria ?timeout (_, universe,_ as cudf) =
       in
       OpamSystem.command
         ~verbose:(OpamCoreConfig.(!r.debug_level >= 2))
-        cmd
+        (OpamExternalTools.custom (List.hd cmd, List.tl cmd))
     in
     OpamFilename.remove solver_in;
     if not (OpamFilename.exists solver_out) then
@@ -102,7 +102,7 @@ module Aspcud_def = struct
     try
       match
         OpamSystem.read_command_output ~verbose:false ~allow_stdin:false
-          [cmd; "-v"]
+          (OpamExternalTools.custom (cmd, ["-v"]))
       with
       | [] -> false
       | s::_ ->

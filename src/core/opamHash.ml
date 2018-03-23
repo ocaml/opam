@@ -82,13 +82,17 @@ let to_json s = `String (to_string s)
 let to_path (kind,s) =
   [string_of_kind kind; String.sub s 0 2; s]
 
+let command_of_kind = function
+  | `SHA256 -> OpamExternalTools.Openssl.sha256
+  | `SHA512 -> OpamExternalTools.Openssl.sha512
+
 let compute ?(kind=default_kind) file = match kind with
   | `MD5 -> md5 (Digest.to_hex (Digest.file file))
   | (`SHA256 | `SHA512) as kind ->
     try
       if not OpamCoreConfig.(!r.use_openssl) then raise Exit else
       match
-        OpamSystem.read_command_output ["openssl"; string_of_kind kind; file]
+       OpamSystem.read_command_output (command_of_kind kind ~file)
       with
       | [l] ->
         let len = len kind in

@@ -416,7 +416,7 @@ let make_command st opam ?dir ?text_command (cmd, args) =
     ~resolve_path:OpamStateConfig.(not !r.dryrun)
     ~metadata:["context", context]
     ~verbose:(OpamConsole.verbose ())
-    cmd args
+    (OpamExternalTools.custom (cmd, args))
 
 let remove_commands t nv =
   match installed_opam_opt t nv with
