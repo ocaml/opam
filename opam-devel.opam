@@ -22,7 +22,7 @@ build-test: [make "tests"]
 depends: [
   "opam-client" {= "2.0.0~rc"}
   "cmdliner" {>= "0.9.8"}
-  "jbuilder" {build & >= "1.0+beta17"}
+  "jbuilder" {build & >= "1.0+beta18"}
 ]
 post-messages: [
 "The development version of opam has been successfuly compiled into %{lib}%/%{name}%. You should not run it from there, please install the binaries to your PATH, e.g. with

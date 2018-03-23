@@ -5,14 +5,8 @@
    (public_name opam-format)
    (synopsis "OCaml Package Manager file format handling library")
    (libraries (opam-core opam-file-format re))
+   (modules_without_implementation (OpamTypes))
    (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))
    (wrapped false)))
 
 (ocamllex (opamLineLexer))
-
-(rule
-  (with-stdout-to opamTypes.ml
-    (progn
-      (echo "module rec OpamTypes : sig\n")
-      (cat opamTypes.mli)
-      (echo "\nend = OpamTypes\ninclude OpamTypes\n"))))

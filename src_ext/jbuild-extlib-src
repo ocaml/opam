@@ -3,11 +3,11 @@
 (library
   ((name extlib)
    (public_name extlib)
-   (modules (:standard \ configure install))
+   (modules (:standard \ configure install uChar uTF8))
    (preprocess (action (run ${bin:cppo} ${read-lines:compat-level} ${<})))
    (wrapped false)))
 
 (rule
   ((targets (compat-level))
    (deps    (configure.ml))
-   (action  (with-stdout-to ${@} (run ocaml ${<})))))
+   (action  (with-stdout-to ${@} (run ocaml ${<} -cppo-args)))))

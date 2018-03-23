@@ -5,17 +5,9 @@
    (public_name opam-state)
    (libraries (opam-repository))
    (synopsis "OCaml Package Manager instance management library")
+   (modules_without_implementation (OpamStateTypes))
    (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))
    (wrapped false)))
 
 (rule
-  ((targets (opamScript.ml))
-   (deps    (../../shell/crunch.ml complete.sh complete.zsh prompt.sh))
-   (action  (with-stdout-to ${@} (run ocaml ${^})))))
-
-(rule
-  (with-stdout-to opamStateTypes.ml
-    (progn
-      (echo "[@@@warning \"-a\"]\nmodule rec OpamStateTypes : sig\n")
-      (cat opamStateTypes.mli)
-      (echo "\nend = OpamStateTypes\ninclude OpamStateTypes\n"))))
+  (with-stdout-to opamScript.ml (run ocaml ${path:../../shell/crunch.ml} ${path:complete.sh} ${path:complete.zsh} ${path:prompt.sh})))

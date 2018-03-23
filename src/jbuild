@@ -1,11 +1,7 @@
 (jbuild_version 1)
 
 (rule
-  ((targets (ocaml-flags-standard.sexp))
-   (deps (ocaml-flags-standard.sexp.in ../shell/subst_var.ml))
-   (action (with-stdout-to ${@} (run ocaml ../shell/subst_var.ml CONF_OCAMLFLAGS "" ${^})))))
+  (with-stdout-to ocaml-flags-standard.sexp (run ocaml ${path:../shell/subst_var.ml} CONF_OCAMLFLAGS "" ${path:ocaml-flags-standard.sexp.in})))
 
 (rule
-  ((targets (ocaml-context-flags.sexp))
-   (deps (../shell/context_flags.ml))
-   (action (with-stdout-to ${@} (run ocaml ${^} flags)))))
+  (with-stdout-to ocaml-context-flags.sexp (run ocaml ${path:../shell/context_flags.ml} flags)))

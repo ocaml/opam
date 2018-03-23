@@ -8,40 +8,50 @@ addons:
     - libglpk-dev
 
 before_install:
-    - bash -ex .travis-ci.sh prepare
+    - bash -exu .travis-ci.sh prepare
 install:
-    - bash -ex .travis-ci.sh install
+    - bash -exu .travis-ci.sh install
 
 cache:
     directories:
-    - $HOME/.opam.bootstrap
+    - $HOME/.opam.cached
+    - $HOME/local
 
 script:
-    - bash -ex .travis-ci.sh build
+    - bash -exu .travis-ci.sh build
 
 matrix:
   include:
     - os: linux
-      env: OCAML_VERSION=4.06.0 OPAM_TEST=1 EXTERNAL_SOLVER=
+      env: OCAML_VERSION=4.02.3
+      stage: Build
     - os: linux
-      env: OCAML_VERSION=4.06.0 OPAM_TEST=1 EXTERNAL_SOLVER=aspcud
+      env: OCAML_VERSION=4.03.0
+      stage: Build
     - os: linux
-      env: OCAML_VERSION=4.02.3 OPAM_TEST=
+      env: OCAML_VERSION=4.04.2
+      stage: Build
     - os: linux
-      env: OCAML_VERSION=4.03.0 OPAM_TEST=
+      env: OCAML_VERSION=4.05.0
+      stage: Build
     - os: linux
-      env: OCAML_VERSION=4.05.0 OPAM_TEST=
+      env: OCAML_VERSION=4.06.1
+      stage: Build
+    - os: osx
+      env: OCAML_VERSION=4.06.1 OPAM_TEST=1
+      stage: Test
+    - os: osx
+      env: OCAML_VERSION=4.03.0
+      stage: Test
     - os: linux
-      env: OCAML_VERSION=4.06.0 OPAM_TEST=
+      env: OCAML_VERSION=4.06.1 OPAM_TEST=1
+      stage: Test
+    - os: linux
+      env: OCAML_VERSION=4.06.1 OPAM_TEST=1 EXTERNAL_SOLVER=aspcud
+      stage: Test
     - os: linux
       env: COLD=1
-    - os: osx
-      env: OCAML_VERSION=4.06.0 OPAM_TEST=1 EXTERNAL_SOLVER=
-    - os: osx
-      env: OCAML_VERSION=4.03.0 OPAM_TEST=
-  allow_failures:
-    - os: osx
-  fast_finish: true
+      stage: Test
 notifications:
   email:
     - opam-commits@lists.ocaml.org

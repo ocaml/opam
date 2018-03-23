@@ -1,15 +1,15 @@
-URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.2.tar.gz
-MD5_cppo = 0c4f7b7f29b819bfd5b28200de67b3f5
+URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.4.tar.gz
+MD5_cppo = f7a4a6a0e83b76562b45db3a93ffd204
 
 $(call PKG_SAME,cppo)
 
-URL_extlib = http://ygrek.org.ua/p/release/ocaml-extlib/extlib-1.7.2.tar.gz
-MD5_extlib = 0f550dd06242828399a73387c49e0eed
+URL_extlib = http://ygrek.org.ua/p/release/ocaml-extlib/extlib-1.7.4.tar.gz
+MD5_extlib = 25f982e2716b70cbc9ecb4beaf509889
 
 $(call PKG_SAME,extlib)
 
-URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.7.2/re-1.7.2.tbz
-MD5_re = d7c94a401d03f4688aabc60cd40217aa
+URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.7.3/re-1.7.3.tbz
+MD5_re = d2a74ca77216861bce4449600a132de9
 
 $(call PKG_SAME,re)
 
@@ -48,8 +48,8 @@ MD5_result = 4beebefd41f7f899b6eeba7414e7ae01
 
 $(call PKG_SAME,result)
 
-URL_jbuilder = https://github.com/ocaml/dune/releases/download/1.0+beta17/jbuilder-1.0.beta17.tbz
-MD5_jbuilder = 03f11f4c6851d799ec7051ff48510ed4
+URL_jbuilder = https://github.com/ocaml/dune/releases/download/1.0+beta19.1/jbuilder-1.0.beta19.1.tbz
+MD5_jbuilder = 456b4aa804d46d84d132230b3db9ff4a
 
 $(call PKG_SAME,jbuilder)
 
