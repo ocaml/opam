@@ -169,8 +169,22 @@ let load_defaults root_dir =
     update ?current_switch ();
     Some conf
 
-let get_switch () =
+let get_switch_opt () =
   match !r.current_switch with
+  | Some s ->
+    if OpamSwitch.is_external s then
+      let root = !r.root_dir in
+      let switch_root = OpamSwitch.get_root root s in
+      if OpamFilename.dir_starts_with root switch_root then
+        (* actually symlinked to a global switch *)
+        Some (OpamSwitch.of_string
+                (OpamFilename.remove_prefix_dir root switch_root))
+      else Some s
+    else Some s
+  | None -> None
+
+let get_switch () =
+  match get_switch_opt () with
   | Some s -> s
   | None ->
     OpamConsole.error_and_exit `Configuration_error

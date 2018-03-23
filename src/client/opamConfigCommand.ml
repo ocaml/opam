@@ -301,7 +301,7 @@ let variable gt v =
   | Some c ->
     OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
   | None ->
-    match OpamStateConfig.(!r.current_switch) with
+    match OpamStateConfig.get_switch_opt () with
     | None ->
       OpamConsole.error_and_exit `Not_found
         "Variable %s not found"

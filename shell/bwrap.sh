@@ -27,7 +27,7 @@ add_mounts() {
     done
 }
 
-add_mounts ro /usr /bin /lib /lib32 /lib64 /etc /opt /opt /nix/store /home
+add_mounts ro /usr /bin /lib /lib32 /lib64 /etc /opt /nix/store /home
 
 COMMAND="$1"; shift
 case "$COMMAND" in

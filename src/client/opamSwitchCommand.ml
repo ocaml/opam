@@ -70,7 +70,7 @@ let list gt ~print_short =
     List.map (OpamConsole.colorise `blue)
       ["#"; "switch"; "compiler"; "description" ] ::
     List.map (fun (switch, (packages, descr)) ->
-        let current = Some switch = OpamStateConfig.(!r.current_switch) in
+        let current = Some switch = OpamStateConfig.get_switch_opt () in
         List.map
           (if current then OpamConsole.colorise `bold else fun s -> s)
           [ if current then if OpamConsole.utf8 ()
@@ -86,7 +86,7 @@ let list gt ~print_short =
   OpamStd.Format.print_table stdout ~sep:"  "
     (OpamStd.Format.align_table table);
 
-  match OpamStateConfig.(!r.current_switch), OpamStateConfig.(!r.switch_from)
+  match OpamStateConfig.get_switch_opt (), OpamStateConfig.(!r.switch_from)
   with
   | None, _ when OpamFile.Config.installed_switches gt.config <> [] ->
     OpamConsole.note

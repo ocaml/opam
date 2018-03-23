@@ -45,7 +45,7 @@ let check_and_run_external_commands () =
             ["PATH", PlusEq, OpamFilename.Dir.to_string plugins_bin, None]
           in
           OpamStateConfig.init ~root_dir ();
-          match OpamStateConfig.(!r.current_switch) with
+          match OpamStateConfig.get_switch_opt () with
           | None -> env_array (OpamEnv.get_pure ~updates ())
           | Some sw ->
             env_array
@@ -60,7 +60,7 @@ let check_and_run_external_commands () =
       | None when not has_init -> ()
       | None ->
         (* Look for a corresponding package *)
-        match OpamStateConfig.(!r.current_switch) with
+        match OpamStateConfig.get_switch_opt () with
         | None -> ()
         | Some sw ->
           OpamGlobalState.with_ `Lock_none @@ fun gt ->
