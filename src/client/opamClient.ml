@@ -617,6 +617,19 @@ let init
                    missing);
               true
           in
+          let fail =
+            if OpamStd.Sys.(os () = Linux) && not (check_external_dep "bwrap")
+            then
+              (OpamConsole.error
+                 "Sandboxing tool %s was not found. You should install \
+                  \"Bubblewrap\", or manually disable package build sandboxing \
+                  in %s (at your own risk)."
+                 (OpamConsole.colorise `bold "bwrap")
+                 (OpamFile.to_string (OpamPath.config root));
+               fail ||
+               not (OpamConsole.confirm "Continue initialisation anyway ?"))
+            else fail
+          in
           if fail then OpamStd.Sys.exit_because `Configuration_error);
 
         (* Create ~/.opam/config *)

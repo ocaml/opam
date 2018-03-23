@@ -49,8 +49,11 @@ val repos_lock: t -> filename
     {i $opam/repo/repos-config} *)
 val repos_config: t -> OpamFile.Repos_config.t OpamFile.t
 
-(** Init scripts *)
+(** Init scripts location: {i $opam/opam-init} *)
 val init: t -> dirname
+
+(** Installation dir for configured hooks: ${i $opam/opam-init/hooks} *)
+val hooks_dir: t -> dirname
 
 (** Log dir {i $opam/log} *)
 val log: t -> dirname

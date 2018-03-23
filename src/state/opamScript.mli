@@ -14,3 +14,4 @@
 val complete : string
 val complete_zsh : string
 val prompt : string
+val bwrap : string

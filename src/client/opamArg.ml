@@ -1202,7 +1202,7 @@ let package_listing_section = "OUTPUT FORMAT OPTIONS"
 
 let package_listing =
   let section = package_listing_section in
-  let all_versions = mk_flag ["all-versions"] ~section
+  let all_versions = mk_flag ["all-versions";"V"] ~section
       "Normally, when multiple versions of a package match, only one is shown \
        in the output (the installed one, the pinned-to one, or, failing that, \
        the highest one available or the highest one). This flag disables this \

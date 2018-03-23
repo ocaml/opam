@@ -39,7 +39,9 @@ let repos_lock t = t / "repo" // "lock"
 
 let repos_config t = t / "repo" /- "repos-config"
 
-let init  t = t / "opam-init"
+let init t = t / "opam-init"
+
+let hooks_dir t = init t / "hooks"
 
 let log t = t / "log"
 

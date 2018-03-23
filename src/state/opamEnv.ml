@@ -377,6 +377,7 @@ let init_file = function
   | `zsh  -> init_zsh
   | `bash -> init_sh
   | `fish -> init_fish
+let sandbox_script = "sandbox.sh"
 
 let source root ~shell ?(interactive_only=false) f =
   let file f = OpamFilename.to_string (OpamPath.init root // f) in
@@ -473,8 +474,8 @@ let init_script root ~completion ~shell
   append "Load the auto-complete scripts" complete;
   Buffer.contents buf
 
-let write_script root (name, body) =
-  let file = OpamPath.init root // name in
+let write_script dir (name, body) =
+  let file = dir // name in
   try OpamFilename.write file body
   with e ->
     OpamStd.Exn.fatal e;
@@ -493,7 +494,16 @@ let write_static_init_scripts root ~completion =
       complete_zsh, OpamScript.complete_zsh;
     ]
   in
-  List.iter (write_script root) scripts
+  List.iter (write_script (OpamPath.init root)) scripts;
+  let sandbox =
+    if OpamStd.Sys.(os () = Linux) then Some OpamScript.bwrap
+    else None
+  in
+  match sandbox with
+  | Some s ->
+    write_script (OpamPath.hooks_dir root) (sandbox_script, s);
+    OpamFilename.chmod (OpamPath.hooks_dir root // sandbox_script) 0o777
+  | None -> ()
 
 let write_dynamic_init_scripts st =
   let updates = updates ~set_opamroot:false ~set_opamswitch:false st in
@@ -501,7 +511,7 @@ let write_dynamic_init_scripts st =
     OpamFilename.with_flock_upgrade `Lock_write ~dontblock:true
       st.switch_global.global_lock
     @@ fun () ->
-    List.iter (write_script st.switch_global.root) [
+    List.iter (write_script (OpamPath.init st.switch_global.root)) [
       variables_sh, string_of_update st `sh updates;
       variables_csh, string_of_update st `csh updates;
       variables_fish, string_of_update st `fish updates;
