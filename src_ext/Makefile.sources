@@ -8,8 +8,8 @@ MD5_extlib = 25f982e2716b70cbc9ecb4beaf509889
 
 $(call PKG_SAME,extlib)
 
-URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.7.2/re-1.7.2.tbz
-MD5_re = d7c94a401d03f4688aabc60cd40217aa
+URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.7.3/re-1.7.3.tbz
+MD5_re = d2a74ca77216861bce4449600a132de9
 
 $(call PKG_SAME,re)
 
