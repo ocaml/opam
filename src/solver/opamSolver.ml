@@ -134,6 +134,13 @@ let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
           | `Leq -> Some (`Lt, 1)
         else Some (result_op, sign (fst (OpamStd.IntMap.min_binding map)))
 
+let lag_function =
+  let exp =
+    OpamStd.Option.default 1 (OpamStd.Config.env_int "VERSIONLAGPOWER")
+  in
+  let rec power n x = if n <= 0 then 1 else x * power (n-1) x in
+  power exp
+
 let opam2cudf universe ?(depopts=false) ~build ~post version_map package =
   let name = OpamPackage.name package in
   let version = OpamPackage.version package in
@@ -185,8 +192,7 @@ let opam2cudf universe ?(depopts=false) ~build ~post version_map package =
         (fun v (i,r) -> if v = version then i,i else i+1, r)
         all_versions (0,0)
     in
-    let linear_lag = (count - i) in
-    linear_lag * linear_lag * linear_lag
+    lag_function (count - i)
   in
   let extras =
     let e = [

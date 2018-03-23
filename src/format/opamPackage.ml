@@ -171,6 +171,10 @@ let to_map nv =
       with Not_found -> Name.Map.add name (Version.Set.singleton version) map
     ) nv Name.Map.empty
 
+let of_map nvm =
+  Name.Map.fold (fun n -> Version.Set.fold (fun v -> Set.add (create n v)))
+    nvm Set.empty
+
 let keys map =
   Map.fold (fun nv _ set -> Set.add nv set) map Set.empty
 

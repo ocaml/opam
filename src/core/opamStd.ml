@@ -14,6 +14,7 @@ open OpamCompat
 module type SET = sig
   include Set.S
   val map: (elt -> elt) -> t -> t
+  val is_singleton: t -> bool
   val choose_one : t -> elt
   val of_list: elt list -> t
   val to_string: t -> string
@@ -167,11 +168,14 @@ module Set = struct
         ) set;
       !r
 
+    let is_singleton s =
+      not (is_empty s) &&
+      min_elt s == max_elt s
+
     let choose_one s =
-      match elements s with
-      | [x] -> x
-      | [] -> raise Not_found
-      | _  -> failwith "choose_one"
+      if is_empty s then raise Not_found
+      else if is_singleton s then choose s
+      else failwith "choose_one"
 
     let of_list l =
       List.fold_left (fun set e -> add e set) empty l

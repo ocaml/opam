@@ -20,6 +20,8 @@ module type SET = sig
 
   val map: (elt -> elt) -> t -> t
 
+  val is_singleton: t -> bool
+
   (** Returns one element, assuming the set is a singleton. Raises [Not_found]
       on an empty set, [Failure] on a non-singleton. *)
   val choose_one : t -> elt

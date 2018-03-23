@@ -418,204 +418,61 @@ let check_command =
     OpamArg.mk_flag ["cycles"]
       "Do the cycles check (and disable the others by default)"
   in
-  let cmd global_options ignore_test print_short installability cycles =
+  let obsolete_arg =
+    OpamArg.mk_flag ["obsolete"]
+      "Analyse for obsolete packages"
+  in
+  let cmd global_options ignore_test print_short
+      installability cycles obsolete =
     OpamArg.apply_global_options global_options;
     let repo_root = OpamFilename.cwd () in
-    let installability, cycles =
-      if installability || cycles then installability, cycles
-      else true, true
+    let installability, cycles, obsolete =
+      if installability || cycles || obsolete
+      then installability, cycles, obsolete
+      else true, true, false
     in
     if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
     then
       OpamConsole.error_and_exit `Bad_arguments
         "No repository found in current directory.\n\
          Please make sure there is a \"packages\" directory";
-    let repo = OpamRepositoryBackend.local repo_root in
-    let pkg_prefixes = OpamRepository.packages_with_prefixes repo in
-    let opams =
-      OpamPackage.Map.fold (fun nv prefix acc ->
-          let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
-          match OpamFile.OPAM.read_opt opam_file with
-          | Some o -> OpamPackage.Map.add nv o acc
-          | None ->
-            OpamConsole.warning "Error while reading %s"
-              (OpamFile.to_string opam_file);
-            acc)
-        pkg_prefixes
-        OpamPackage.Map.empty
+    let pkgs, unav_roots, uninstallable, cycle_packages, obsolete =
+      OpamAdminCheck.check
+        ~quiet:print_short ~installability ~cycles ~obsolete ~ignore_test
+        repo_root
     in
-    let packages = OpamPackage.keys opams in
-    let env ~with_test ~with_doc ~dev nv v =
-      match OpamVariable.Full.scope v,
-            OpamVariable.(to_string (Full.variable v))
-      with
-      | (OpamVariable.Full.Global | OpamVariable.Full.Self), "name" ->
-        Some (S (OpamPackage.Name.to_string nv.name))
-      | (OpamVariable.Full.Global | OpamVariable.Full.Self), "version" ->
-        Some (S (OpamPackage.Version.to_string nv.version))
-      | OpamVariable.Full.Global, "opam-version" ->
-        Some (S OpamVersion.(to_string current))
-      | OpamVariable.Full.Global, "with-test" ->
-        Some (B with_test)
-      | OpamVariable.Full.Global, "dev" ->
-        Some (B dev)
-      | OpamVariable.Full.Global, "with-doc" ->
-        Some (B with_doc)
-      | _ -> None
-    in
-    let universe ~with_test ~with_doc ~dev =
-      let env = env ~with_test ~with_doc ~dev in {
-        u_packages = packages;
-        u_action = Query;
-        u_installed = OpamPackage.Set.empty;
-        u_available = packages;
-        u_depends =
-          OpamPackage.Map.mapi
-            (fun nv o ->
-               OpamFile.OPAM.depends o |>
-               OpamFilter.partial_filter_formula (env nv))
-            opams;
-        u_depopts =
-          OpamPackage.Map.mapi
-            (fun nv o ->
-               OpamFile.OPAM.depopts o |>
-               OpamFilter.partial_filter_formula (env nv))
-            opams;
-        u_conflicts =
-          OpamPackage.Map.mapi
-            (fun nv o ->
-               OpamFile.OPAM.conflicts o |>
-               OpamFilter.filter_formula ~default:false (env nv))
-            opams;
-        u_installed_roots = OpamPackage.Set.empty;
-        u_pinned = OpamPackage.Set.empty;
-        u_base = OpamPackage.Set.empty;
-        u_attrs = [];
-        u_reinstall = OpamPackage.Set.empty;
-      }
-    in
-    let univ =
-      universe
-        ~with_test:(not ignore_test) ~with_doc:(not ignore_test) ~dev:false
-    in
-    let open OpamPackage.Set.Op in
-
-    (* Installability check *)
-    let uninstallable, unav_roots, unav_others =
-      if installability then
-        let graph =
-          OpamCudf.Graph.of_universe @@
-          OpamSolver.load_cudf_universe
-            ~depopts:false ~build:true ~post:true univ packages
-        in
-        let filter_roots g packages =
-          let has_pkg p = OpamPackage.Set.mem (OpamCudf.cudf2opam p) packages in
-          OpamCudf.Graph.fold_vertex (fun p acc ->
-              if has_pkg p &&
-                 not (List.exists has_pkg (OpamCudf.Graph.succ g p))
-              then OpamPackage.Set.add (OpamCudf.cudf2opam p) acc
-              else acc)
-            g OpamPackage.Set.empty
-        in
-        if not print_short then
-          OpamConsole.msg "Checking installability of every package. This may \
-                           take a few minutes...\n";
-        let installable = OpamSolver.installable univ in
-        let uninstallable = packages -- installable in
-        let unav_roots = filter_roots graph uninstallable in
-        let unav_others = uninstallable -- unav_roots in
-        if print_short then () else
-        if not (OpamPackage.Set.is_empty uninstallable) then
-          OpamConsole.error "These packages are not installable (%d):\n%s%s"
-            (OpamPackage.Set.cardinal unav_roots)
-            (OpamStd.List.concat_map " " OpamPackage.to_string
-               (OpamPackage.Set.elements unav_roots))
-            (if OpamPackage.Set.is_empty unav_others then "" else
-               "\n(the following depend on them and are also unavailable:\n"^
-               (OpamStd.List.concat_map " " OpamPackage.to_string
-                  (OpamPackage.Set.elements unav_others))^")");
-        uninstallable, unav_roots, unav_others
-      else
-        OpamPackage.Set.empty, OpamPackage.Set.empty, OpamPackage.Set.empty
-    in
-
-    (* Cyclic dependency checks *)
-    let cycle_packages =
-      if cycles then
-        let cudf_univ =
-          OpamSolver.load_cudf_universe
-            ~depopts:true ~build:true ~post:false univ packages
-        in
-        let graph =
-          OpamCudf.Graph.of_universe cudf_univ |>
-          OpamCudf.Graph.mirror
-        in
-        (* conflicts break cycles *)
-        let conflicts =
-          Algo.Defaultgraphs.PackageGraph.conflict_graph cudf_univ
-        in
-        Algo.Defaultgraphs.PackageGraph.UG.iter_edges (fun nv1 nv2 ->
-            OpamCudf.Graph.remove_edge graph nv1 nv2;
-            OpamCudf.Graph.remove_edge graph nv2 nv1)
-          conflicts;
-        let cy =
-          let module Comp = Graph.Components.Make(OpamCudf.Graph) in
-          Comp.scc_list graph |>
-          List.filter (function [] | [_] -> false | _ -> true) |>
-          List.map (List.map OpamCudf.cudf2opam)
-        in
-        let rec clean_cy = function
-          | [] -> []
-          | nv :: r ->
-            let ns, r = List.partition (fun {name; _} -> name = nv.name) r in
-            Atom (nv.name,
-                  OpamFormula.formula_of_version_set
-                    (OpamPackage.versions_of_name packages nv.name)
-                    (OpamPackage.versions_of_packages
-                       (OpamPackage.Set.of_list (nv::ns)))) ::
-            clean_cy r
-        in
-        if not print_short && cy <> [] then
-          (OpamConsole.error "Dependency cycles detected:";
-           OpamConsole.errmsg "%s"
-             (OpamStd.Format.itemize
-                ~bullet:(OpamConsole.colorise `bold "  * ")
-                (fun c ->
-                   OpamStd.List.concat_map (OpamConsole.colorise `yellow ", ")
-                     OpamFormula.to_string
-                     (clean_cy c))
-                cy));
-        List.fold_left
-          (List.fold_left (fun acc nv ->
-               OpamPackage.Set.add nv acc))
-          OpamPackage.Set.empty cy
-      else
-        OpamPackage.Set.empty
-    in
-
     let all_ok =
       OpamPackage.Set.is_empty uninstallable &&
-      OpamPackage.Set.is_empty cycle_packages
+      OpamPackage.Set.is_empty cycle_packages &&
+      OpamPackage.Set.is_empty obsolete
     in
-    if print_short then
-      OpamConsole.msg "%s\n"
-        (OpamStd.List.concat_map "\n" OpamPackage.to_string
-           (OpamPackage.Set.elements (uninstallable ++ cycle_packages)))
-    else if all_ok then
-      OpamConsole.msg "No issues detected on this repository"
-    else if installability && cycles then
-      OpamConsole.msg "Summary:\n\
-                       - %d uninstallable roots\n\
-                       - %d uninstallable dependent packages\n\
-                       - %d packages are part of dependency cycles\n"
-        (OpamPackage.Set.cardinal unav_roots)
-        (OpamPackage.Set.cardinal unav_others)
-        (OpamPackage.Set.cardinal (cycle_packages -- uninstallable));
-
+    let open OpamPackage.Set.Op in
+    (if print_short then
+       OpamConsole.msg "%s\n"
+         (OpamStd.List.concat_map "\n" OpamPackage.to_string
+            (OpamPackage.Set.elements
+               (uninstallable ++ cycle_packages ++ obsolete)))
+     else if all_ok then
+       OpamConsole.msg "No issues detected on this repository's %d packages\n"
+         (OpamPackage.Set.cardinal pkgs)
+     else
+     let pr set msg =
+       if OpamPackage.Set.is_empty set then ""
+       else Printf.sprintf "- %d %s\n" (OpamPackage.Set.cardinal set) msg
+     in
+     OpamConsole.msg "Summary: out of %d packages (%d distinct names)\n\
+                      %s%s%s%s\n"
+       (OpamPackage.Set.cardinal pkgs)
+       (OpamPackage.Name.Set.cardinal (OpamPackage.names_of_packages pkgs))
+       (pr unav_roots "uninstallable roots")
+       (pr (uninstallable -- unav_roots) "uninstallable dependent packages")
+       (pr (cycle_packages -- uninstallable)
+          "packages part of dependency cycles")
+       (pr obsolete "obsolete packages"));
     OpamStd.Sys.exit_because (if all_ok then `Success else `False)
   in
   Term.(const cmd $ OpamArg.global_options $ ignore_test_arg $ print_short_arg
-        $ installability_arg $ cycles_arg),
+        $ installability_arg $ cycles_arg $ obsolete_arg),
   OpamArg.term_info command ~doc ~man
 
 let pattern_list_arg =

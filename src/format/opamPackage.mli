@@ -73,6 +73,9 @@ val of_archive: OpamFilename.t -> t option
 (** Convert a set of pairs to a map [name -> versions] *)
 val to_map: Set.t -> Version.Set.t Name.Map.t
 
+(** The converse of [to_map] *)
+val of_map: Version.Set.t Name.Map.t -> Set.t
+
 (** Returns the keys in a package map as a package set *)
 val keys: 'a Map.t -> Set.t
 

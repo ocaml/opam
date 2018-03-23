@@ -125,6 +125,16 @@ let rec map_formula f t =
   | Or(x,y)  -> make_or (map_formula f x) (map_formula f y)
   | x -> x
 
+let rec map_up_formula f t =
+  let t = match t with
+    | Block x -> f (Block (map_up_formula f x))
+    | And(x,y) -> f (make_and (map_up_formula f x) (map_up_formula f y))
+    | Or(x,y) -> f (make_or (map_up_formula f x) (map_up_formula f y))
+    | Atom x -> f (Atom x)
+    | Empty -> Empty
+  in
+  f t
+
 let neg neg_atom =
   map_formula
     (function
@@ -298,7 +308,7 @@ let packages pkgset f =
 let to_atom_formula (t:t): atom formula =
   let atom (r,v) = Atom (r, v) in
   let atoms (x, c) =
-    match cnf_of_formula (map atom c) with
+    match map atom c with
     | Empty -> Atom (x, None)
     | cs    -> map (fun c -> Atom (x, Some c)) cs in
   map atoms t

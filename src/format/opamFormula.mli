@@ -111,13 +111,16 @@ val map: ('a -> 'b formula) -> 'a formula -> 'b formula
 (** Maps top-down on a formula *)
 val map_formula: ('a formula -> 'a formula) -> 'a formula -> 'a formula
 
+(** Maps bottom-up on a formula (atoms first) *)
+val map_up_formula: ('a formula -> 'a formula) -> 'a formula -> 'a formula
+
 (** Negates a formula (given the function to negate atoms) *)
 val neg: ('a -> 'a) -> 'a formula -> 'a formula
 
 (** Iter function *)
 val iter: ('a -> unit) -> 'a formula -> unit
 
-(** Fold function *)
+(** Fold function (bottom-up, left-to-right) *)
 val fold_left: ('a -> 'b -> 'a) -> 'a -> 'b formula -> 'a
 
 (** Expressions composed entirely of version constraints *)
