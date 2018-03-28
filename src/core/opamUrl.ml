@@ -32,20 +32,25 @@ let empty = {
 let split_url =
   let re =
     let (@@) f x = f x in
-    Re.(compile @@ seq [
-        bos;
+    Re.(compile @@ whole_string @@ seq [
+        (* Parse the scheme, which is either backend+protocol or just a protocol *)
         opt @@ seq [
+          (* Backend *)
           opt @@ seq [ group @@ rep @@ diff any (set "+:");
-                       alt [ char '+'; str "://"] ];
+                       char '+' ];
+          (* Protocol *)
           group @@ rep @@ diff any (char ':');
+          (* Separator *)
           str "://"
         ];
+        (* Parse the path, with is either path or path.suffix (suffix contains no .) *)
         group @@ seq [
           non_greedy @@ rep @@ diff any (char '#');
-          opt @@ seq [ char '.'; group @@ rep1 @@ diff any (set ".#")]
+          (* If there's a .suffix, group it separately (used for backend guessing) *)
+          opt @@ seq [ char '.'; group @@ rep1 @@ diff any (set "\\/.#")]
         ];
+        (* Parse the fragment (git branch, etc.) *)
         opt @@ seq [ char '#'; group @@ rep any ];
-        eos;
       ])
   in
   fun u ->
