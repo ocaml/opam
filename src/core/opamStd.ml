@@ -337,6 +337,10 @@ module Option = struct
     | None -> dft
     | some -> some
 
+  let replace f = function
+    | None -> None
+    | Some x -> f x
+
   let compare cmp o1 o2 = match o1,o2 with
     | None, None -> 0
     | Some _, None -> 1
@@ -558,6 +562,13 @@ module Env = struct
 end
 
 
+(** To use when catching default exceptions: ensures we don't catch fatal errors
+    like C-c *)
+let fatal e = match e with
+  | Sys.Break -> prerr_newline (); raise e
+  | Assert_failure _ | Match_failure _ -> raise e
+  | _ -> ()
+
 module OpamSys = struct
 
   let path_sep = if Sys.win32 then ';' else ':'
@@ -709,11 +720,12 @@ module OpamSys = struct
 
   let shell_of_string = function
     | "tcsh"
-    | "csh"  -> `csh
-    | "zsh"  -> `zsh
-    | "bash" -> `bash
-    | "fish" -> `fish
-    | _      -> `sh
+    | "csh"  -> Some `csh
+    | "zsh"  -> Some `zsh
+    | "bash" -> Some `bash
+    | "fish" -> Some `fish
+    | "sh"   -> Some `sh
+    | _      -> None
 
   let executable_name =
     if Sys.win32 then
@@ -726,8 +738,36 @@ module OpamSys = struct
       fun x -> x
 
   let guess_shell_compat () =
-    try shell_of_string (Filename.basename (Env.get "SHELL"))
-    with Not_found -> `sh
+    let parent_guess =
+      if Sys.win32 then
+        None
+      else
+        let ppid = Unix.getppid () in
+        try
+          let c = open_in_bin ("/proc/" ^ string_of_int ppid ^ "/cmdline") in
+          begin try
+            let s = input_line c in
+            close_in c;
+            Some (String.sub s 0 (String.index s '\000'))
+          with
+          | Not_found ->
+              None
+          | _ ->
+              close_in c;
+              None
+          end
+        with e ->
+          fatal e; None
+    in
+    let test shell = shell_of_string (Filename.basename shell) in
+    let shell =
+      match Option.replace test parent_guess with
+      | None ->
+          Option.of_Not_found Env.get "SHELL" |> Option.replace test
+      | some ->
+          some
+    in
+    Option.default `sh shell
 
   let guess_dot_profile shell =
     let home f =
@@ -1060,12 +1100,7 @@ end
 
 module Exn = struct
 
-  (** To use when catching default exceptions: ensures we don't catch fatal errors
-      like C-c *)
-  let fatal e = match e with
-    | Sys.Break -> prerr_newline (); raise e
-    | Assert_failure _ | Match_failure _ -> raise e
-    | _ -> ()
+  let fatal = fatal
 
   let register_backtrace, get_backtrace =
     let registered_backtrace = ref None in

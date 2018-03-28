@@ -125,6 +125,8 @@ module Option: sig
 
   val default_map: 'a option -> 'a option -> 'a option
 
+  val replace : ('a -> 'b option) -> 'a option -> 'b option
+
   val compare: ('a -> 'a -> int) -> 'a option -> 'a option -> int
 
   val to_string: ?none:string -> ('a -> string) -> 'a option -> string
