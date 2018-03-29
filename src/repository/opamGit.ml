@@ -99,8 +99,16 @@ module VCS : OpamVCS.VCS = struct
         (* the above might still fail on raw, untracked hashes: try to bind to
            the direct refspec, if found *)
         (git repo_root [ "update-ref" ; opam_ref; branch ] @@> fun r ->
-         OpamSystem.raise_on_process_error r;
-         Done ())
+          if OpamProcess.check_success_and_cleanup r then
+            Done()
+          else
+            (* check if the commit exists *)
+            (git repo_root [ "fetch"; "-q" ] @@> fun r ->
+            OpamSystem.raise_on_process_error r;
+            git repo_root [ "show"; "-s"; "--format=%H"; branch ] @@> fun r ->
+            if OpamProcess.check_success_and_cleanup r then
+              failwith "Commit found, but unreachable: enable uploadpack.allowReachableSHA1InWant on server"
+            else failwith "Commit not found on repository"))
       else OpamSystem.process_error r
 
   let revision repo_root =

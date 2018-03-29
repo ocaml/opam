@@ -70,8 +70,8 @@ module Make (VCS: VCS) = struct
          OpamConsole.error "Could not synchronize %s from %S:\n%s"
            (OpamFilename.Dir.to_string dirname)
            (OpamUrl.to_string url)
-           (Printexc.to_string e);
-         Done (Not_available (Printexc.to_string e)))
+           (match e with Failure fw -> fw | _ -> Printexc.to_string e);
+         Done (Not_available (OpamUrl.to_string url)))
     @@ fun () ->
     if VCS.exists dirname then
       VCS.fetch ?cache_dir dirname url @@+ fun () ->
