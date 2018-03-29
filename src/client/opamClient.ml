@@ -538,7 +538,8 @@ let init
           OpamStd.Sys.exit_because `Aborted);
       try
 
-        if bypass_checks then () else (
+        let dontswitch =
+          not bypass_checks &&
 
           (* Check for the external dependencies *)
           let check_external_dep name =
@@ -562,7 +563,7 @@ let init
                       install the %s command on your system."
                      msg (OpamConsole.colorise `bold cmd))
                  unavailable_repos);
-          let fail =
+          let soft_fail =
             if OpamCudfSolver.has_builtin_solver () then false else
             let external_solvers = ["aspcud"; "packup"; "mccs"] in
             if not (List.exists check_external_dep external_solvers) then
@@ -606,9 +607,9 @@ let init
              "tar", check_external_dep "tar";
              "unzip", check_external_dep "unzip"]
           in
-          let fail =
+          let hard_fail =
             match List.filter (not @* snd) required_deps with
-            | [] -> fail
+            | [] -> false
             | missing ->
               OpamConsole.error
                 "Missing dependencies -- \
@@ -617,20 +618,27 @@ let init
                    missing);
               true
           in
-          let fail =
+          let soft_fail =
             if OpamStd.Sys.(os () = Linux) && not (check_external_dep "bwrap")
             then
               (OpamConsole.error
                  "Sandboxing tool %s was not found. You should install \
-                  \"Bubblewrap\", or manually disable package build sandboxing \
-                  in %s (at your own risk)."
+                  'bubblewrap', or manually disable package build sandboxing \
+                  in %s (at your own risk). See \
+                  https://github.com/projectatomic/bubblewrap for details."
                  (OpamConsole.colorise `bold "bwrap")
                  (OpamFile.to_string (OpamPath.config root));
-               fail ||
-               not (OpamConsole.confirm "Continue initialisation anyway ?"))
-            else fail
+               true)
+            else soft_fail
           in
-          if fail then OpamStd.Sys.exit_because `Configuration_error);
+          if hard_fail ||
+             soft_fail &&
+             not (OpamConsole.confirm "Continue initialisation anyway ?")
+          then OpamStd.Sys.exit_because `Configuration_error
+          else soft_fail
+        in (* was: dont_switch *)
+
+
 
         (* Create ~/.opam/config *)
         let repos = match repo with
@@ -680,7 +688,8 @@ let init
           OpamConsole.error_and_exit `Sync_error
             "Initial download of repository failed";
         gt, OpamRepositoryState.unlock rt,
-        OpamFile.InitConfig.default_compiler init_config
+        if dontswitch then OpamFormula.Empty
+        else OpamFile.InitConfig.default_compiler init_config
       with e ->
         OpamStd.Exn.finalise e @@ fun () ->
         if not (OpamConsole.debug ()) && root_empty then
