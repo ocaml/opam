@@ -635,7 +635,6 @@ let setup_interactive root ~dot_profile shell =
   let update dot_profile =
     OpamConsole.msg "\n";
     update_user_setup root ?dot_profile shell;
-    write_static_init_scripts root ~completion:true;
     dot_profile <> None in
 
   OpamConsole.msg "\n";

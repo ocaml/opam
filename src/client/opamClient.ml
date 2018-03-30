@@ -718,13 +718,11 @@ let init
         if not (OpamConsole.debug ()) && root_empty then
           OpamFilename.rmdir root)
   in
+  OpamEnv.write_static_init_scripts root ~completion:true;
   let _updated = match update_config with
     | `no  -> false
     | `ask -> OpamEnv.setup_interactive root ~dot_profile shell
-    | `yes ->
-      OpamEnv.update_user_setup root ~dot_profile shell;
-      OpamEnv.write_static_init_scripts root ~completion:true;
-      true
+    | `yes -> OpamEnv.update_user_setup root ~dot_profile shell; true
   in
   gt, rt, default_compiler
 
