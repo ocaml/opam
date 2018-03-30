@@ -132,35 +132,20 @@ let check_and_run_external_commands () =
               let argv = Array.of_list (command :: args) in
               raise (OpamStd.Sys.Exec (command, argv, env))
 
-let run default commands =
-  OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
-  OpamSystem.init ();
-  try
-    check_and_run_external_commands ();
-    let admin, argv1 =
-      if Array.length Sys.argv > 1 && Sys.argv.(1) = "admin" then
-        true,
-        Array.init (Array.length Sys.argv - 1) (function
-            | 0 -> Sys.argv.(0)
-            | i -> Sys.argv.(i+1))
-      else false, Sys.argv
-    in
-    let eval () =
-      if admin then
-        Term.eval_choice ~catch:false ~argv:argv1
-          OpamAdminCommand.default_subcommand OpamAdminCommand.admin_subcommands
-      else
-        Term.eval_choice ~catch:false ~argv:argv1 default commands
-    in
-    match eval () with
-    | `Error _ -> exit (OpamStd.Sys.get_exit_code `Bad_arguments)
-    | _        -> exit (OpamStd.Sys.get_exit_code `Success)
-  with
+let rec main_catch_all f =
+  try f () with
   | OpamStd.Sys.Exit 0 -> ()
   | OpamStd.Sys.Exec (cmd,args,env) ->
     OpamStd.Sys.exec_at_exit ();
     Unix.execvpe cmd args env
-  | e                  ->
+  | OpamFormatUpgrade.Upgrade_done conf ->
+    main_catch_all @@ fun () ->
+    OpamConsole.header_msg "Rerunning init and update";
+    let _gt, _rt = OpamClient.reinit conf in
+    OpamConsole.msg
+        "Update done, please now retry your command.\n";
+    exit (OpamStd.Sys.get_exit_code `Aborted)
+  | e ->
     flush stdout;
     flush stderr;
     if (OpamConsole.verbose ()) then
@@ -198,6 +183,30 @@ let run default commands =
         OpamStd.Sys.get_exit_code `Internal_error
     in
     exit exit_code
+
+let run default commands =
+  OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
+  OpamSystem.init ();
+  main_catch_all @@ fun () ->
+  check_and_run_external_commands ();
+  let admin, argv1 =
+    if Array.length Sys.argv > 1 && Sys.argv.(1) = "admin" then
+      true,
+      Array.init (Array.length Sys.argv - 1) (function
+          | 0 -> Sys.argv.(0)
+          | i -> Sys.argv.(i+1))
+    else false, Sys.argv
+  in
+  let eval () =
+    if admin then
+      Term.eval_choice ~catch:false ~argv:argv1
+        OpamAdminCommand.default_subcommand OpamAdminCommand.admin_subcommands
+    else
+      Term.eval_choice ~catch:false ~argv:argv1 default commands
+  in
+  match eval () with
+  | `Error _ -> exit (OpamStd.Sys.get_exit_code `Bad_arguments)
+  | _        -> exit (OpamStd.Sys.get_exit_code `Success)
 
 let json_out () =
   match OpamClientConfig.(!r.json_out) with

@@ -23,6 +23,14 @@ val init:
   shell -> filename -> [`ask|`yes|`no] ->
   rw global_state * unlocked repos_state * formula
 
+(** Re-runs the extra tools checks, updates the configuration from [init_config]
+   (defaults to [OpamInitDefaults.init_config]) for the settings that are unset,
+   and updates all repositories *)
+val reinit:
+  ?init_config:OpamFile.InitConfig.t ->
+  OpamFile.Config.t ->
+  rw global_state * unlocked repos_state
+
 (** Install the given list of packages. [add_to_roots], if given, specifies that
     given packages should be added or removed from the roots. [autoupdate]
     defaults to the list of atoms, and can be used to restrict the atoms which
