@@ -289,7 +289,7 @@ let init =
           OpamConsole.header_msg "Creating initial switch (%s)"
             (OpamFormula.string_of_atoms packages);
           OpamSwitchCommand.install
-            gt ~rt ~packages ~update_config:true
+            ~shell gt ~rt ~packages ~update_config:true
             (OpamSwitch.of_string "default")
           |> ignore
         | None ->
@@ -1129,7 +1129,7 @@ let install =
   in
   let install
       global_options build_options add_to_roots deps_only restore destdir locked
-      atoms_or_locals =
+      atoms_or_locals shell =
     apply_global_options global_options;
     apply_build_options build_options;
     if atoms_or_locals = [] && not restore then
@@ -1163,7 +1163,7 @@ let install =
       (OpamConsole.msg "Nothing to do\n";
        OpamStd.Sys.exit_because `Success);
     let st =
-      OpamClient.install st atoms
+      OpamClient.install ~shell st atoms
         ~autoupdate:pure_atoms ?add_to_roots ~deps_only
     in
     match destdir with
@@ -1176,7 +1176,7 @@ let install =
   Term.ret
     Term.(const install $global_options $build_options
           $add_to_roots $deps_only $restore $destdir $locked
-          $atom_or_local_list),
+          $atom_or_local_list $shell_opt),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
@@ -1218,7 +1218,8 @@ let remove =
        specified."
       Arg.(some dirname) None
   in
-  let remove global_options build_options autoremove force destdir atom_locs =
+  let remove global_options build_options autoremove force destdir atom_locs
+      shell =
     apply_global_options global_options;
     apply_build_options build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1251,10 +1252,10 @@ let remove =
         List.map (function `Atom a -> a | _ -> assert false) pure_atoms
         @ pin_atoms
       in
-      ignore @@ OpamClient.remove st ~autoremove ~force atoms
+      ignore @@ OpamClient.remove st ~shell ~autoremove ~force atoms
   in
   Term.(const remove $global_options $build_options $autoremove $force $destdir
-        $atom_or_dir_list),
+        $atom_or_dir_list $shell_opt),
   term_info "remove" ~doc ~man
 
 (* REINSTALL *)
@@ -1439,7 +1440,7 @@ let upgrade =
        $(i,PACKAGES) was not specified, and can be useful with $(i,PACKAGES) \
        to upgrade while ensuring that some packages get or remain installed."
   in
-  let upgrade global_options build_options fixup check all atom_locs =
+  let upgrade global_options build_options fixup check all atom_locs shell =
     apply_global_options global_options;
     apply_build_options build_options;
     let all = all || atom_locs = [] in
@@ -1454,11 +1455,11 @@ let upgrade =
     else
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       let atoms = OpamAuxCommands.resolve_locals_pinned st atom_locs in
-      ignore @@ OpamClient.upgrade st ~check ~all atoms;
+      ignore @@ OpamClient.upgrade st ~shell ~check ~all atoms;
       `Ok ()
   in
   Term.(ret (const upgrade $global_options $build_options $fixup $check $all
-             $atom_or_dir_list)),
+             $atom_or_dir_list $shell_opt)),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)
@@ -1917,7 +1918,7 @@ let switch =
   let switch
       global_options build_options command print_short
       no_switch packages empty descr full no_install deps_only locked repos
-      params =
+      params shell =
     apply_global_options global_options;
     apply_build_options build_options;
     let packages =
@@ -1955,7 +1956,7 @@ let switch =
     | None      , []
     | Some `list, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchCommand.list gt ~print_short;
+      OpamSwitchCommand.list ~shell gt ~print_short;
       `Ok ()
     | Some `list_available, pattlist ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -2005,7 +2006,7 @@ let switch =
         compiler_packages rt ?repos switch (param_compiler params)
       in
       let _gt, st =
-        OpamSwitchCommand.install gt ~rt
+        OpamSwitchCommand.install ~shell gt ~rt
           ?synopsis:descr ?repos
           ~update_config:(not no_switch)
           ~packages
@@ -2017,7 +2018,7 @@ let switch =
             OpamAuxCommands.autopin st ~simulate:deps_only ~locked ~quiet:true
               [`Dirname (OpamFilename.Dir.of_string switch_arg)]
           in
-          OpamClient.install st atoms
+          OpamClient.install ~shell st atoms
             ~autoupdate:[] ~add_to_roots:true ~deps_only
         else st
       in
@@ -2051,7 +2052,7 @@ let switch =
       OpamSwitchState.with_ `Lock_write gt ~rt ~switch @@ fun st ->
       let _st =
         try
-          OpamSwitchCommand.import st
+          OpamSwitchCommand.import st ~shell
             (if filename = "-" then None
              else Some (OpamFile.make (OpamFilename.of_string filename)))
         with e ->
@@ -2082,7 +2083,7 @@ let switch =
       in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
-      let _st = OpamSwitchCommand.reinstall st in
+      let _st = OpamSwitchCommand.reinstall ~shell st in
       `Ok ()
     | Some `current, [] ->
       OpamSwitchCommand.show ();
@@ -2091,7 +2092,7 @@ let switch =
     | Some `default switch, [] ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       let switch_name = OpamSwitch.of_string switch in
-      OpamSwitchCommand.switch `Lock_none gt switch_name |> ignore;
+      OpamSwitchCommand.switch ~shell `Lock_none gt switch_name |> ignore;
       `Ok ()
     | Some `set_compiler, packages ->
       (try
@@ -2121,7 +2122,7 @@ let switch =
              $print_short_flag
              $no_switch
              $packages $empty $descr $full $no_install $deps_only $locked
-             $repos $params)),
+             $repos $params $shell_opt)),
   term_info "switch" ~doc ~man
 
 (* PIN *)
@@ -2300,7 +2301,7 @@ let pin ?(unpin_only=false) () =
   in
   let pin
       global_options build_options
-      kind edit no_act dev_repo print_short command params =
+      kind edit no_act dev_repo print_short command params shell =
     apply_global_options global_options;
     apply_build_options build_options;
     let action = not no_act in
@@ -2342,14 +2343,14 @@ let pin ?(unpin_only=false) () =
       in
       if err then OpamStd.Sys.exit_because `Bad_arguments
       else
-        (ignore @@ OpamClient.PIN.unpin st ~action to_unpin;
+        (ignore @@ OpamClient.PIN.unpin ~shell st ~action to_unpin;
          `Ok ())
     | Some `edit, [nv]  ->
       (match (fst package) nv with
        | `Ok (name, version) ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-         ignore @@ OpamClient.PIN.edit st ~action ?version name;
+         ignore @@ OpamClient.PIN.edit ~shell st ~action ?version name;
          `Ok ()
        | `Error e -> `Error (false, e))
     | Some `add, [nv] | Some `default nv, [] when dev_repo ->
@@ -2358,7 +2359,7 @@ let pin ?(unpin_only=false) () =
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let name = OpamSolution.fuzzy_name st name in
-         ignore @@ OpamClient.PIN.pin st name ~edit ?version ~action
+         ignore @@ OpamClient.PIN.pin ~shell st name ~edit ?version ~action
            `Dev_upstream;
          `Ok ()
        | `Error e ->
@@ -2395,8 +2396,8 @@ let pin ?(unpin_only=false) () =
          if action then
            let _st =
              OpamClient.upgrade_t
-               ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
-               (List.map (fun n -> n, None) names) st
+               ~shell ~strict_upgrade:false ~auto_install:true ~ask:true
+               ~all:false (List.map (fun n -> n, None) names) st
            in
            `Ok ()
          else `Ok ())
@@ -2407,15 +2408,15 @@ let pin ?(unpin_only=false) () =
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          ignore @@
-         OpamClient.PIN.pin st name ?version ~edit ~action pin;
+         OpamClient.PIN.pin ~shell st name ?version ~edit ~action pin;
          `Ok ()
        | `Error e -> `Error (false, e))
     | command, params -> bad_subcommand commands ("pin", command, params)
   in
   Term.ret
     Term.(const pin
-          $global_options $build_options
-          $kind $edit $no_act $dev_repo $print_short_flag $command $params),
+          $global_options $build_options $kind $edit $no_act $dev_repo
+          $print_short_flag $command $params $shell_opt),
   term_info "pin" ~doc ~man
 
 (* SOURCE *)

@@ -30,23 +30,23 @@ val init:
 val install:
   rw switch_state ->
   ?autoupdate:atom list -> ?add_to_roots:bool -> ?deps_only:bool ->
-  atom list -> rw switch_state
+  atom list -> shell:shell -> rw switch_state
 
 (** Low-level version of [reinstall], bypassing the package name sanitization
     and dev package update, and offering more control *)
 val install_t:
-  rw switch_state -> ?ask:bool ->
+  rw switch_state -> ?ask:bool -> shell:shell ->
   atom list -> bool option -> deps_only:bool ->
   rw switch_state
 
 (** Reinstall the given set of packages. *)
 val reinstall:
-  rw switch_state -> atom list -> rw switch_state
+  rw switch_state -> atom list -> shell:shell -> rw switch_state
 
 (** Low-level version of [reinstall], bypassing the package name sanitization
     and dev package update, and offering more control *)
 val reinstall_t:
-  rw switch_state -> ?ask:bool -> ?force:bool -> atom list -> rw switch_state
+  rw switch_state -> ?ask:bool -> ?force:bool -> shell:shell -> atom list -> rw switch_state
 
 (** Update the local mirrors for the repositories and/or development packages.
     Returns [(success, changes, rt)], where [success] is [true] only if all
@@ -62,21 +62,21 @@ val update:
     versions. The specified atoms are kept installed (or newly installed after a
     confirmation). The upgrade concerns them only unless [all] is specified. *)
 val upgrade:
-  rw switch_state -> ?check:bool -> all:bool -> atom list -> rw switch_state
+  rw switch_state -> ?check:bool -> all:bool -> atom list -> shell:shell -> rw switch_state
 
 (** Low-level version of [upgrade], bypassing the package name sanitization
     and dev package update, and offering more control *)
 val upgrade_t:
   ?strict_upgrade:bool -> ?auto_install:bool -> ?ask:bool -> ?check:bool ->
-  all:bool -> atom list -> rw switch_state -> rw switch_state
+  shell:shell -> all:bool -> atom list -> rw switch_state -> rw switch_state
 
 (** Recovers from an inconsistent universe *)
-val fixup: rw switch_state -> rw switch_state
+val fixup: shell:shell -> rw switch_state -> rw switch_state
 
 (** Remove the given list of packages. *)
 val remove:
   rw switch_state -> autoremove:bool -> force:bool -> atom list ->
-  rw switch_state
+  shell:shell -> rw switch_state
 
 module PIN: sig
 
@@ -86,15 +86,16 @@ module PIN: sig
     rw switch_state ->
     OpamPackage.Name.t ->
     ?edit:bool -> ?version:version -> ?action:bool ->
+    shell:shell ->
     [< `Source of url | `Version of version | `Dev_upstream | `None ] ->
     rw switch_state
 
   val edit:
-    rw switch_state -> ?action:bool -> ?version:version -> OpamPackage.Name.t ->
-    rw switch_state
+    rw switch_state -> ?action:bool -> ?version:version -> shell:shell ->
+    OpamPackage.Name.t -> rw switch_state
 
   val unpin:
-    rw switch_state ->
+    shell:shell -> rw switch_state ->
     ?action:bool -> OpamPackage.Name.t list -> rw switch_state
 
   (** List the current pinned packages. *)

@@ -323,7 +323,7 @@ let is_up_to_date st =
   is_up_to_date_raw
     (updates ~set_opamroot:false ~set_opamswitch:false ~force_path:false st)
 
-let eval_string gt ?(set_opamswitch=false) switch =
+let eval_string shell gt ?(set_opamswitch=false) switch =
   let root =
     let opamroot_cur = OpamFilename.Dir.to_string gt.root in
     let opamroot_env =
@@ -352,7 +352,7 @@ let eval_string gt ?(set_opamswitch=false) switch =
       else ""
   in
   let setswitch = if set_opamswitch then " --set-switch" else "" in
-  match OpamStd.Sys.guess_shell_compat () with
+  match shell with
   | `fish ->
     Printf.sprintf "eval (opam env%s%s%s)" root switch setswitch
   | _ ->
@@ -612,13 +612,13 @@ let display_setup root ~dot_profile shell =
   OpamConsole.msg "Global configuration:\n";
   List.iter print global_setup
 
-let check_and_print_env_warning st =
+let check_and_print_env_warning shell st =
   if (OpamFile.Config.switch st.switch_global.config = Some st.switch ||
       OpamStateConfig.(!r.switch_from <> `Command_line)) &&
      not (is_up_to_date st) then
     OpamConsole.formatted_msg
       "# Run %s to update the current shell environment\n"
-      (OpamConsole.colorise `bold (eval_string st.switch_global
+      (OpamConsole.colorise `bold (eval_string shell st.switch_global
                                      (Some st.switch)))
 
 let setup_interactive root ~dot_profile shell =

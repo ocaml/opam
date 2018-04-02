@@ -236,7 +236,7 @@ let compute_upgrade_t
        ~upgrade:upgrade_atoms
        ())
 
-let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
+let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~shell ~all atoms t =
   log "UPGRADE %a"
     (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
     atoms;
@@ -328,7 +328,7 @@ let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
                  (OpamPackage.Set.elements unopt)));
         )
     );
-    OpamSolution.check_solution t result;
+    OpamSolution.check_solution shell t result;
     t
 
 let upgrade t ?check ~all names =
@@ -336,7 +336,7 @@ let upgrade t ?check ~all names =
   let t = update_dev_packages_t atoms t in
   upgrade_t ?check ~strict_upgrade:(not all) ~all atoms t
 
-let fixup t =
+let fixup ~shell t =
   log "FIXUP";
   let t, full_orphans, orphan_versions = orphans ~transitive:true t in
   let all_orphans = full_orphans ++ orphan_versions in
@@ -400,7 +400,7 @@ let fixup t =
         ~requested:(OpamPackage.names_of_packages (requested ++ req_rm))
         solution
   in
-  OpamSolution.check_solution t result;
+  OpamSolution.check_solution shell t result;
   t
 
 let update
@@ -726,7 +726,7 @@ let check_conflicts t atoms =
     full_orphans,
     orphan_versions
 
-let install_t t ?ask atoms add_to_roots ~deps_only =
+let install_t t ?ask ~shell atoms add_to_roots ~deps_only =
   log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
   let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
@@ -853,7 +853,7 @@ let install_t t ?ask atoms add_to_roots ~deps_only =
       in
       OpamSolution.apply ?ask t Install ~requested:names ?add_roots solution
   in
-  OpamSolution.check_solution t solution;
+  OpamSolution.check_solution shell t solution;
   t
 
 let install t ?autoupdate ?add_to_roots ?(deps_only=false) names =
@@ -865,7 +865,7 @@ let install t ?autoupdate ?add_to_roots ?(deps_only=false) names =
   let t = update_dev_packages_t autoupdate_atoms t in
   install_t t atoms add_to_roots ~deps_only
 
-let remove_t ?ask ~autoremove ~force atoms t =
+let remove_t ?ask ~shell ~autoremove ~force atoms t =
   log "REMOVE autoremove:%b %a" autoremove
     (slog OpamFormula.string_of_atoms) atoms;
 
@@ -943,7 +943,7 @@ let remove_t ?ask ~autoremove ~force atoms t =
            ~remove:(OpamSolution.atoms_of_packages to_remove)
            ())
     in
-    OpamSolution.check_solution t solution;
+    OpamSolution.check_solution shell t solution;
     t
   ) else if !nothing_to_do then (
     OpamConsole.msg "Nothing to do.\n";
@@ -954,7 +954,7 @@ let remove t ~autoremove ~force names =
   let atoms = OpamSolution.sanitize_atom_list t names in
   remove_t ~autoremove ~force atoms t
 
-let reinstall_t t ?ask ?(force=false) atoms =
+let reinstall_t t ?ask ?(force=false) ~shell atoms =
   log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
 
   let reinstall, not_installed =
@@ -992,7 +992,7 @@ let reinstall_t t ?ask ?(force=false) atoms =
       ~requested
       request in
 
-  OpamSolution.check_solution t solution;
+  OpamSolution.check_solution shell t solution;
   t
 
 let reinstall t names =
@@ -1003,9 +1003,9 @@ let reinstall t names =
 module PIN = struct
   open OpamPinCommand
 
-  let post_pin_action st name =
+  let post_pin_action ~shell st name =
     try
-      upgrade_t ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
+      upgrade_t ~shell ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
         [name, None] st
     with e ->
       OpamConsole.note
@@ -1032,7 +1032,7 @@ module PIN = struct
         "No package named %S found"
         (OpamPackage.Name.to_string name)
 
-  let pin st name ?(edit=false) ?version ?(action=true) target =
+  let pin st name ?(edit=false) ?version ?(action=true) ~shell target =
     try
       let st =
         match target with
@@ -1045,13 +1045,13 @@ module PIN = struct
         | `None -> source_pin st name ?version ~edit None
       in
       if action then
-        (OpamConsole.msg "\n"; post_pin_action st name)
+        (OpamConsole.msg "\n"; post_pin_action ~shell st name)
       else st
     with
     | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
     | OpamPinCommand.Nothing_to_do -> st
 
-  let edit st ?(action=true) ?version name =
+  let edit st ?(action=true) ?version ~shell name =
     let st =
       if OpamPackage.has_name st.pinned name then
         edit st ?version name
@@ -1084,9 +1084,9 @@ module PIN = struct
         OpamConsole.error_and_exit `Not_found
           "Package is not pinned, and no existing version was supplied."
     in
-    if action then post_pin_action st name else st
+    if action then post_pin_action ~shell st name else st
 
-  let unpin st ?(action=true) names =
+  let unpin ~shell st ?(action=true) names =
     let pinned_before = st.pinned in
     let st = unpin st names in
     let available = Lazy.force st.available_packages in
@@ -1099,8 +1099,8 @@ module PIN = struct
             else (nv.name, None) :: acc)
           installed_unpinned []
       in
-      upgrade_t ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
-        atoms st
+      upgrade_t ~shell ~strict_upgrade:false ~auto_install:true ~ask:true
+        ~all:false atoms st
     else st
 
   let list = list

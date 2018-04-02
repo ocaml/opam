@@ -60,7 +60,7 @@ val compute_updates: ?force_path:bool -> 'a switch_state -> env_update list
 (** The shell command to run by the user to set his OPAM environment, adapted to
     the current shell (as returned by [eval `opam config env`]) *)
 val eval_string:
-  'a global_state -> ?set_opamswitch:bool -> switch option -> string
+  shell -> 'a global_state -> ?set_opamswitch:bool -> switch option -> string
 
 (** Returns the updated contents of the PATH variable for the given opam root
     and switch (set [force_path] to ensure the opam path is leading) *)
@@ -102,4 +102,4 @@ val clear_dynamic_init_scripts: rw global_state -> unit
 
 (** Print a warning if the environment is not set-up properly.
     (General message) *)
-val check_and_print_env_warning: 'a switch_state -> unit
+val check_and_print_env_warning: shell -> 'a switch_state -> unit

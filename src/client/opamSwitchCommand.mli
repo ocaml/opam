@@ -23,16 +23,18 @@ val install:
   ?rt:'a repos_state ->
   ?synopsis:string ->
   ?repos:repository_name list ->
+  shell:shell ->
   update_config:bool ->
   packages:atom conjunction -> switch ->
   unlocked global_state * rw switch_state
 
 (** Install a compiler's base packages *)
 val install_compiler_packages:
-  rw switch_state -> atom conjunction -> rw switch_state
+  shell:shell -> rw switch_state -> atom conjunction -> rw switch_state
 
 (** Import a file which contains the packages to install.  *)
 val import:
+  shell:shell ->
   rw switch_state ->
   OpamFile.SwitchExport.t OpamFile.t option ->
   rw switch_state
@@ -47,10 +49,10 @@ val export: ?full:bool -> OpamFile.SwitchExport.t OpamFile.t option -> unit
 val remove: rw global_state -> ?confirm:bool -> switch -> rw global_state
 
 (** Changes the currently active switch *)
-val switch: 'a lock -> rw global_state -> switch -> 'a switch_state
+val switch: shell:shell -> 'a lock -> rw global_state -> switch -> 'a switch_state
 
 (** Reinstall the given compiler switch. *)
-val reinstall: rw switch_state -> rw switch_state
+val reinstall: shell:shell -> rw switch_state -> rw switch_state
 
 (** Sets the packages configured as the current switch compiler base *)
 val set_compiler:
@@ -60,7 +62,7 @@ val set_compiler:
 val show: unit -> unit
 
 (** List all the available compiler switches. *)
-val list: 'a global_state -> print_short:bool -> unit
+val list: shell:shell -> 'a global_state -> print_short:bool -> unit
 
 (** Returns all available compiler packages from a repo state *)
 val get_compiler_packages:

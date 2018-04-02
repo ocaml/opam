@@ -122,13 +122,13 @@ let add_to_reinstall st ~unpinned_only packages =
     OpamFile.PkgList.write reinstall_file reinstall;
   { st with reinstall = st.reinstall ++ add_reinst_packages }
 
-let set_current_switch lock gt ?rt switch =
+let set_current_switch shell lock gt ?rt switch =
   if OpamSwitch.is_external switch then
     OpamConsole.error_and_exit `Bad_arguments
       "Can not set external switch '%s' globally. To set it in the current \
        shell use:\n %s"
       (OpamSwitch.to_string switch)
-      (OpamEnv.eval_string gt ~set_opamswitch:true (Some switch));
+      (OpamEnv.eval_string shell gt ~set_opamswitch:true (Some switch));
   let config = OpamFile.Config.with_switch switch gt.config in
   let gt = { gt with config } in
   OpamGlobalState.write gt;

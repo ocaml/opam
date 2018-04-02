@@ -73,7 +73,7 @@ let print_depexts_helper st actions =
          (OpamStd.String.Set.elements depexts))
   )
 
-let check_solution ?(quiet=false) st = function
+let check_solution ?(quiet=false) shell st = function
   | No_solution ->
     OpamConsole.msg "No solution found, exiting\n";
     OpamStd.Sys.exit_because `No_solution
@@ -81,14 +81,14 @@ let check_solution ?(quiet=false) st = function
     List.iter (post_message st) success;
     List.iter (post_message ~failed:true st) failed;
     print_depexts_helper st failed;
-    OpamEnv.check_and_print_env_warning st;
+    OpamEnv.check_and_print_env_warning shell st;
     OpamStd.Sys.exit_because `Package_operation_error
   | OK actions ->
     List.iter (post_message st) actions;
-    OpamEnv.check_and_print_env_warning st
+    OpamEnv.check_and_print_env_warning shell st
   | Nothing_to_do ->
     if not quiet then OpamConsole.msg "Nothing to do.\n";
-    OpamEnv.check_and_print_env_warning st
+    OpamEnv.check_and_print_env_warning shell st
   | Aborted     ->
     if not OpamClientConfig.(!r.show) then
       OpamStd.Sys.exit_because `Aborted

@@ -19,7 +19,7 @@ module S = OpamFile.SwitchSelections
 let log fmt = OpamConsole.log "SWITCH" fmt
 let slog = OpamConsole.slog
 
-let list gt ~print_short =
+let list ~shell gt ~print_short =
   log "list";
   if print_short then
     List.iter (OpamConsole.msg "%s\n" @* OpamSwitch.to_string)
@@ -122,14 +122,14 @@ let list gt ~print_short =
       OpamConsole.warning
         "The environment is not in sync with the current switch.\n\
          You should run: %s"
-        (OpamEnv.eval_string gt (Some switch))
+        (OpamEnv.eval_string shell gt (Some switch))
   | Some switch, `Default ->
     if not (OpamEnv.is_up_to_date_switch gt.root switch) then
       (OpamConsole.msg "\n";
        OpamConsole.warning
          "The environment is not in sync with the current switch.\n\
           You should run: %s"
-         (OpamEnv.eval_string gt (Some switch)))
+         (OpamEnv.eval_string shell gt (Some switch)))
   | _ -> ()
 
 let clear_switch ?(keep_debug=false) gt switch =
@@ -171,7 +171,7 @@ let remove gt ?(confirm = true) switch =
     clear_switch gt switch
   else gt
 
-let install_compiler_packages t atoms =
+let install_compiler_packages ~shell t atoms =
   (* install the compiler packages *)
   if atoms = [] then t else
   let roots = OpamPackage.Name.Set.of_list (List.map fst atoms) in
@@ -252,10 +252,10 @@ let install_compiler_packages t atoms =
     OpamSolution.apply ~ask:OpamClientConfig.(!r.show) t Switch
       ~requested:roots
       solution in
-  OpamSolution.check_solution ~quiet:OpamClientConfig.(not !r.show) t result;
+  OpamSolution.check_solution ~quiet:OpamClientConfig.(not !r.show) shell t result;
   t
 
-let install gt ?rt ?synopsis ?repos ~update_config ~packages switch =
+let install gt ?rt ?synopsis ?repos ~shell ~update_config ~packages switch =
   let update_config = update_config && not (OpamSwitch.is_external switch) in
   let old_switch_opt = OpamFile.Config.switch gt.config in
   let comp_dir = OpamPath.Switch.root gt.root switch in
@@ -273,7 +273,7 @@ let install gt ?rt ?synopsis ?repos ~update_config ~packages switch =
         OpamSwitchAction.create_empty_switch gt ?synopsis ?repos switch
       in
       if update_config then
-        gt, OpamSwitchAction.set_current_switch `Lock_write gt ?rt switch
+        gt, OpamSwitchAction.set_current_switch shell `Lock_write gt ?rt switch
       else
       let rt = match rt with
         | None -> OpamRepositoryState.load `Lock_none gt
@@ -304,13 +304,13 @@ let install gt ?rt ?synopsis ?repos ~update_config ~packages switch =
       if update_config then
         (OpamEnv.clear_dynamic_init_scripts gt;
          OpamStd.Option.iter
-           (ignore @* OpamSwitchAction.set_current_switch `Lock_write gt)
+           (ignore @* OpamSwitchAction.set_current_switch shell `Lock_write gt)
            old_switch_opt);
       ignore (clear_switch gt switch)
   in
   let gt = OpamGlobalState.unlock gt in
   try
-    gt, install_compiler_packages st packages
+    gt, install_compiler_packages ~shell st packages
   with e ->
     if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
       ((try OpamStd.Exn.fatal e with e ->
@@ -322,18 +322,18 @@ let install gt ?rt ?synopsis ?repos ~update_config ~packages switch =
        then ignore (clear_switch gt switch));
     raise e
 
-let switch lock gt switch =
+let switch ~shell lock gt switch =
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
   let installed_switches = OpamFile.Config.installed_switches gt.config in
   if List.mem switch installed_switches then
     let st =
       if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
-        OpamSwitchAction.set_current_switch lock gt switch
+        OpamSwitchAction.set_current_switch shell lock gt switch
       else
       let rt = OpamRepositoryState.load `Lock_none gt in
       OpamSwitchState.load lock gt rt switch
     in
-    OpamEnv.check_and_print_env_warning st;
+    OpamEnv.check_and_print_env_warning shell st;
     st
   else
     OpamConsole.error_and_exit `Not_found
@@ -343,7 +343,7 @@ let switch lock gt switch =
       (OpamSwitch.to_string switch) (OpamSwitch.to_string switch)
       (OpamStd.Format.itemize OpamSwitch.to_string installed_switches)
 
-let import_t ?ask importfile t =
+let import_t ?ask ~shell importfile t =
   log "import switch";
 
   let import_sel = importfile.OpamFile.SwitchExport.selections in
@@ -427,7 +427,7 @@ let import_t ?ask importfile t =
         criteria = `Default;
         extra_attributes = []; }
   in
-  OpamSolution.check_solution t solution;
+  OpamSolution.check_solution shell t solution;
   if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show))
   then begin
     (* Put imported overlays in place *)
@@ -498,7 +498,7 @@ let show () =
   OpamConsole.msg "%s\n"
     (OpamSwitch.to_string (OpamStateConfig.get_switch ()))
 
-let reinstall init_st =
+let reinstall ~shell init_st =
   let switch = init_st.switch in
   log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
   let gt = init_st.switch_global in
@@ -518,12 +518,12 @@ let reinstall init_st =
       installed_roots = OpamPackage.Set.empty;
       reinstall = OpamPackage.Set.empty; }
   in
-  import_t { OpamFile.SwitchExport.
-             selections = OpamSwitchState.selections init_st;
-             overlays = OpamPackage.Name.Map.empty; }
+  import_t ~shell { OpamFile.SwitchExport.
+                    selections = OpamSwitchState.selections init_st;
+                    overlays = OpamPackage.Name.Map.empty; }
     st
 
-let import st filename =
+let import ~shell st filename =
   let import_str = match filename with
     | None   -> OpamSystem.string_of_channel stdin
     | Some f -> OpamFilename.read (OpamFile.filename f)
@@ -538,7 +538,7 @@ let import st filename =
           overlays = OpamPackage.Name.Map.empty }
       with e1 -> OpamStd.Exn.fatal e1; raise e
   in
-  import_t importfile st
+  import_t importfile st ~shell
 
 let set_compiler st namesv =
   let name_unknown =
