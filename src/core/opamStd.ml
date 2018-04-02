@@ -750,20 +750,25 @@ module OpamSys = struct
         with e ->
           fatal e;
           try
-            let c = open_in_bin ("/proc/" ^ string_of_int ppid ^ "/cmdline") in
-            begin try
-              let s = input_line c in
-              close_in c;
-              Some (String.sub s 0 (String.index s '\000'))
-            with
-            | Not_found ->
-                None
-            | e ->
-                close_in c;
+            with_process_in "ps" (Printf.sprintf "-p %d -o comm=" ppid)
+              (fun ic -> Some (input_line ic))
+          with
+          | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
+              try
+                let c = open_in_bin ("/proc/" ^ string_of_int ppid ^ "/cmdline") in
+                begin try
+                  let s = input_line c in
+                  close_in c;
+                  Some (String.sub s 0 (String.index s '\000'))
+                with
+                | Not_found ->
+                    None
+                | e ->
+                    close_in c;
+                    fatal e; None
+                end
+              with e ->
                 fatal e; None
-            end
-          with e ->
-            fatal e; None
     in
     let test shell = shell_of_string (Filename.basename shell) in
     let shell =
