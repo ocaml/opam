@@ -743,21 +743,26 @@ module OpamSys = struct
         None
       else
         let ppid = Unix.getppid () in
+        let dir = Filename.concat "/proc" (string_of_int ppid) in
         try
-          let c = open_in_bin ("/proc/" ^ string_of_int ppid ^ "/cmdline") in
-          begin try
-            let s = input_line c in
-            close_in c;
-            Some (String.sub s 0 (String.index s '\000'))
-          with
-          | Not_found ->
-              None
-          | _ ->
-              close_in c;
-              None
-          end
+          Some (Unix.readlink (Filename.concat dir "exe"))
         with e ->
-          fatal e; None
+          fatal e;
+          try
+            let c = open_in_bin ("/proc/" ^ string_of_int ppid ^ "/cmdline") in
+            begin try
+              let s = input_line c in
+              close_in c;
+              Some (String.sub s 0 (String.index s '\000'))
+            with
+            | Not_found ->
+                None
+            | e ->
+                close_in c;
+                fatal e; None
+            end
+          with e ->
+            fatal e; None
     in
     let test shell = shell_of_string (Filename.basename shell) in
     let shell =
