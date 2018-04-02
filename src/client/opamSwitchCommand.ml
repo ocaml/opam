@@ -122,14 +122,14 @@ let list ~shell gt ~print_short =
       OpamConsole.warning
         "The environment is not in sync with the current switch.\n\
          You should run: %s"
-        (OpamEnv.eval_string shell gt (Some switch))
+        OpamEnv.(eval_string shell Root gt switch)
   | Some switch, `Default ->
     if not (OpamEnv.is_up_to_date_switch gt.root switch) then
       (OpamConsole.msg "\n";
        OpamConsole.warning
          "The environment is not in sync with the current switch.\n\
           You should run: %s"
-         (OpamEnv.eval_string shell gt (Some switch)))
+         OpamEnv.(eval_string shell Root gt switch))
   | _ -> ()
 
 let clear_switch ?(keep_debug=false) gt switch =

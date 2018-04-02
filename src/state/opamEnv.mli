@@ -57,10 +57,14 @@ val is_up_to_date_switch: dirname -> switch -> bool
     its set of installed packages *)
 val compute_updates: ?force_path:bool -> 'a switch_state -> env_update list
 
+type _ eval_string = Root : ('a global_state -> switch -> string) eval_string
+                   | Manpage : (string -> string) eval_string
+                   | ManSwitch : (string -> string) eval_string
+
 (** The shell command to run by the user to set his OPAM environment, adapted to
     the current shell (as returned by [eval `opam config env`]) *)
 val eval_string:
-  shell -> 'a global_state -> ?set_opamswitch:bool -> switch option -> string
+  shell -> ?set_opamswitch:bool -> 'a eval_string -> 'a
 
 (** Returns the updated contents of the PATH variable for the given opam root
     and switch (set [force_path] to ensure the opam path is leading) *)

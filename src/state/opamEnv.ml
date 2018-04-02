@@ -323,43 +323,54 @@ let is_up_to_date st =
   is_up_to_date_raw
     (updates ~set_opamroot:false ~set_opamswitch:false ~force_path:false st)
 
-let eval_string shell gt ?(set_opamswitch=false) switch =
-  let root =
-    let opamroot_cur = OpamFilename.Dir.to_string gt.root in
-    let opamroot_env =
-      OpamStd.Option.Op.(
-        OpamStd.Env.getopt "OPAMROOT" +!
-        OpamFilename.Dir.to_string OpamStateConfig.(default.root_dir)
-      ) in
-    if opamroot_cur <> opamroot_env then
-      Printf.sprintf " --root=%s" opamroot_cur
-    else
-      "" in
-  let switch =
-    match switch with
-    | None -> ""
-    | Some sw ->
-      let sw_cur = OpamSwitch.to_string sw in
-      let sw_env =
-        OpamStd.Option.Op.(
-          OpamStd.Env.getopt "OPAMSWITCH" ++
-          (OpamStateConfig.get_current_switch_from_cwd gt.root >>|
-           OpamSwitch.to_string) ++
-          (OpamFile.Config.switch gt.config >>| OpamSwitch.to_string)
-        )
-      in
-      if Some sw_cur <> sw_env then Printf.sprintf " --switch=%s" sw_cur
-      else ""
-  in
+let eval_string_t shell cmd set_opamswitch root switch =
+  let root = if root = "" then "" else " --root=" ^ root in
+  let switch = if switch = "" then "" else " --switch=" ^ switch in
   let setswitch = if set_opamswitch then " --set-switch" else "" in
   match shell with
   | `fish ->
-    Printf.sprintf "eval (opam env%s%s%s)" root switch setswitch
+    Printf.sprintf "eval (opam %s%s%s%s)" cmd root switch setswitch
   | `csh ->
-    Printf.sprintf "eval `opam env%s%s%s`" root switch setswitch
+    Printf.sprintf "eval `opam %s%s%s%s`" cmd root switch setswitch
   | _ ->
-    Printf.sprintf "eval $(opam env%s%s%s)" root switch setswitch
+    Printf.sprintf "eval $(opam %s%s%s%s)" cmd root switch setswitch
 
+type _ eval_string = Root : ('a global_state -> switch -> string) eval_string
+                   | Manpage : (string -> string) eval_string
+                   | ManSwitch : (string -> string) eval_string
+
+let eval_string : type s . shell -> ?set_opamswitch:bool -> s eval_string -> s = fun shell ?(set_opamswitch=false) ->
+  function
+  | Root ->
+      fun gt sw ->
+        let root =
+          let opamroot_cur = OpamFilename.Dir.to_string gt.root in
+          let opamroot_env =
+            OpamStd.Option.Op.(
+              OpamStd.Env.getopt "OPAMROOT" +!
+              OpamFilename.Dir.to_string OpamStateConfig.(default.root_dir)
+            ) in
+          if opamroot_cur <> opamroot_env then opamroot_cur
+          else ""
+        in
+        let switch =
+          let sw_cur = OpamSwitch.to_string sw in
+          let sw_env =
+            OpamStd.Option.Op.(
+              OpamStd.Env.getopt "OPAMSWITCH" ++
+              (OpamStateConfig.get_current_switch_from_cwd gt.root >>|
+               OpamSwitch.to_string) ++
+              (OpamFile.Config.switch gt.config >>| OpamSwitch.to_string)
+            )
+          in
+          if Some sw_cur <> sw_env then sw_cur
+          else ""
+        in
+        eval_string_t shell "env" set_opamswitch root switch
+  | Manpage ->
+      fun cmd -> eval_string_t shell cmd set_opamswitch "" ""
+  | ManSwitch ->
+      fun switch -> eval_string_t shell "env" set_opamswitch "" switch
 
 
 (* -- Shell and init scripts handling -- *)
@@ -620,8 +631,7 @@ let check_and_print_env_warning shell st =
      not (is_up_to_date st) then
     OpamConsole.formatted_msg
       "# Run %s to update the current shell environment\n"
-      (OpamConsole.colorise `bold (eval_string shell st.switch_global
-                                     (Some st.switch)))
+      (OpamConsole.colorise `bold (eval_string shell Root st.switch_global st.switch))
 
 let setup_interactive root ~dot_profile shell =
   let update dot_profile =
@@ -633,12 +643,6 @@ let setup_interactive root ~dot_profile shell =
   OpamConsole.msg "\n";
 
   OpamConsole.header_msg "Required setup - please read";
-  let fake_gt =
-    {global_lock = OpamSystem.lock_none;
-     root;
-     config = OpamFile.Config.empty;
-     global_variables = OpamVariable.Map.empty}
-  in
   OpamConsole.msg
     "\n\
     \  In normal operation, opam only alters files within ~/.opam.\n\
@@ -658,7 +662,7 @@ let setup_interactive root ~dot_profile shell =
     (OpamConsole.colorise `bold @@ string_of_shell shell)
     (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
     (OpamConsole.colorise `bold @@ source root ~shell (init_file shell))
-    (OpamConsole.colorise `bold @@ eval_string shell fake_gt None);
+    (OpamConsole.colorise `bold @@ eval_string shell Manpage "env");
   match
     OpamConsole.read
       "Do you want opam to modify %s ? [N/y/f]\n\

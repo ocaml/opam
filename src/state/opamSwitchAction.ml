@@ -128,7 +128,7 @@ let set_current_switch shell lock gt ?rt switch =
       "Can not set external switch '%s' globally. To set it in the current \
        shell use:\n %s"
       (OpamSwitch.to_string switch)
-      (OpamEnv.eval_string shell gt ~set_opamswitch:true (Some switch));
+      OpamEnv.(eval_string shell ~set_opamswitch:true Root gt switch);
   let config = OpamFile.Config.with_switch switch gt.config in
   let gt = { gt with config } in
   OpamGlobalState.write gt;

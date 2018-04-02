@@ -659,18 +659,23 @@ end
 let config_doc = "Display configuration options for packages."
 let config =
   let doc = config_doc in
+  let shell_help = OpamStd.Sys.guess_shell_compat () in
   let commands = [
     "env", `env, [],
-    "Returns the bindings for the environment variables set in the current \
-     switch, e.g. PATH, in a format intended to be evaluated by a shell. With \
-     $(i,-v), add comments documenting the reason or package of origin for \
-     each binding. This is most usefully used as $(b,eval \\$(opam config \
-     env\\)) to have further shell commands be evaluated in the proper opam \
-     context. Can also be accessed through $(b,opam env).";
+    Printf.sprintf
+      "Returns the bindings for the environment variables set in the current \
+       switch, e.g. PATH, in a format intended to be evaluated by a shell. \
+       With $(i,-v), add comments documenting the reason or package of origin \
+       for each binding. This is most usefully used as $(b,%s) to have further \
+       shell commands be evaluated in the proper opam context. Can also be \
+       accessed through $(b,opam env)."
+      OpamEnv.(eval_string shell_help Manpage "config env" |> Manpage.escape);
     "revert-env", `revert_env, [],
-    "Reverts environment changes made by opam, e.g. $(b,eval \\$(opam config \
-     revert-env)) undoes what $(b,eval \\$(opam config env\\)) did, as much as \
-     possible.";
+    Printf.sprintf
+      "Reverts environment changes made by opam, e.g. $(b,%s) undoes what \
+       $(b,%s) did, as much as possible."
+      OpamEnv.(eval_string shell_help Manpage "config revert-env" |> Manpage.escape)
+      OpamEnv.(eval_string shell_help Manpage "config env" |> Manpage.escape);
     "setup", `setup, [],
     "Configure global and user parameters for opam. Use $(b, opam config \
      setup) to display more options. Use $(b,--list) to display the current \
@@ -1026,14 +1031,17 @@ let exec =
 let env_doc = "Prints appropriate shell variable assignments to stdout"
 let env =
   let doc = env_doc in
+  let shell_help = OpamStd.Sys.guess_shell_compat () in
   let man = [
     `S "DESCRIPTION";
-    `P "Returns the bindings for the environment variables set in the current \
-        switch, e.g. PATH, in a format intended to be evaluated by a shell. \
-        With $(i,-v), add comments documenting the reason or package of origin \
-        for each binding. This is most usefully used as $(b,eval \\$(opam \
-        env\\)) to have further shell commands be evaluated in the proper opam \
-        context.";
+    `P (Printf.sprintf
+          "Returns the bindings for the environment variables set in the \
+           current switch, e.g. PATH, in a format intended to be evaluated by \
+           a shell. With $(i,-v), add comments documenting the reason or \
+           package of origin for each binding. This is most usefully used as \
+           $(b,%s) to have further shell commands be evaluated in the proper \
+           opam context."
+          OpamEnv.(eval_string shell_help Manpage "env" |> Manpage.escape));
     `P "This is a shortcut, and equivalent to $(b,opam config env).";
   ] in
   let revert =
@@ -1830,6 +1838,7 @@ let switch =
     "install", `install, ["SWITCH"],
     "Deprecated alias for 'create'."
   ] in
+  let shell_help = OpamStd.Sys.guess_shell_compat () in
   let man = [
     `S "DESCRIPTION";
     `P "This command is used to manage \"switches\", which are independent \
@@ -1850,10 +1859,11 @@ let switch =
          package definitions are found locally, the user is automatically \
          prompted to install them after the switch is created unless \
          $(b,--no-install) is specified.");
-    `P "$(b,opam switch set) sets the default switch globally, but it is also \
-        possible to select a switch in a given shell session, using the \
-        environment. For that, use $(i,eval \\$(opam env \
-        --switch=SWITCH --set-switch\\)).";
+    `P (Printf.sprintf
+          "$(b,opam switch set) sets the default switch globally, but it is \
+           also possible to select a switch in a given shell session, using \
+           the environment. For that, use $(b,%s)."
+        OpamEnv.(eval_string shell_help ~set_opamswitch:true ManSwitch "SWITCH"));
   ] @ mk_subdoc ~defaults:["","list";"SWITCH","set"] commands
     @ [`S "OPTIONS"]
     @ [`S OpamArg.build_option_section]
