@@ -631,6 +631,12 @@ let setup_interactive root ~dot_profile shell =
   OpamConsole.msg "\n";
 
   OpamConsole.header_msg "Required setup - please read";
+  let fake_gt =
+    {global_lock = OpamSystem.lock_none;
+     root;
+     config = OpamFile.Config.empty;
+     global_variables = OpamVariable.Map.empty}
+  in
   OpamConsole.msg
     "\n\
     \  In normal operation, opam only alters files within ~/.opam.\n\
@@ -650,7 +656,7 @@ let setup_interactive root ~dot_profile shell =
     (OpamConsole.colorise `bold @@ string_of_shell shell)
     (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
     (OpamConsole.colorise `bold @@ source root ~shell (init_file shell))
-    (OpamConsole.colorise `bold @@ "eval $(opam env)");
+    (OpamConsole.colorise `bold @@ eval_string shell fake_gt None);
   match
     OpamConsole.read
       "Do you want opam to modify %s ? [N/y/f]\n\
