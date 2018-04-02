@@ -720,6 +720,7 @@ module OpamSys = struct
 
   let shell_of_string = function
     | "tcsh"
+    | "bsd-csh"
     | "csh"  -> Some `csh
     | "zsh"  -> Some `zsh
     | "bash" -> Some `bash
