@@ -170,7 +170,7 @@ let sanitize_atom_list ?(permissive=false) t atoms =
   atoms
 
 (* Pretty-print errors *)
-let display_error (n, error) =
+let display_error t (n, error) =
   let f action nv =
     let disp =
       OpamConsole.header_error "while %s %s" action (OpamPackage.to_string nv) in
@@ -189,7 +189,12 @@ let display_error (n, error) =
   | `Install nv        -> f "installing" nv
   | `Reinstall nv      -> f "recompiling" nv
   | `Remove nv         -> f "removing" nv
-  | `Build nv          -> f "compiling" nv
+  | `Build nv          ->
+    (f "compiling" nv;
+    let bugreports = OpamFile.OPAM.bug_reports (OpamSwitchState.opam t nv) in
+    OpamConsole.errmsg "You can check if there is an open issue for %s at:\n%s\n"
+      (OpamConsole.colorise `bold (OpamPackage.name_to_string nv))
+      (OpamStd.Format.itemize (fun x -> x) bugreports))
   | `Fetch nv          -> f "fetching sources for" nv
 
 module Json = struct
@@ -590,7 +595,7 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
       } in
       if failure = [] && aborted = [] then `Successful success
       else (
-        List.iter display_error failure;
+        List.iter (display_error t) failure;
         `Error (Partial_error actions_result)
       )
     with
@@ -600,7 +605,7 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
         actions_errors = errors;
         actions_aborted = remaining;
       } in
-      List.iter display_error errors;
+      List.iter (display_error t) errors;
       `Error (Partial_error actions_result)
     | e -> `Exception e
   in
