@@ -40,6 +40,13 @@ case "$TARGET" in
     git config --global user.email "travis@example.com"
     git config --global user.name "Travis CI"
 
+  # Disable bubblewrap wrapping, it's not available within Docker
+  cat <<EOF >>~/.opamrc
+wrap-build-commands: []
+wrap-install-commands: []
+wrap-remove-commands: []
+EOF
+
     if [[ $COLD -eq 1 ]] ; then
       if [ ! -x ~/local/bin/make ] ; then
         wget http://ftpmirror.gnu.org/gnu/make/make-4.2.tar.gz
