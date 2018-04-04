@@ -559,7 +559,7 @@ let lint ?check_extra_files t =
              false f)
           false
           (OpamFormula.ands [t.depends; t.depopts]));
-    cond 46 `Error
+    cond 52 `Error
       "Package is needlessly flagged \"light-uninstall\", since it has no \
        remove instructions"
       (has_flag Pkgflag_Conf t && t.remove = []);
@@ -576,7 +576,7 @@ let lint ?check_extra_files t =
              with Not_found -> Some n)
            ffiles
      in
-     cond 52 `Error
+     cond 53 `Error
        "Mismatching 'extra-files:' field"
        ~detail:(List.map OpamFilename.Base.to_string mismatching_extra_files)
        (mismatching_extra_files <> []))
