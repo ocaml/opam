@@ -515,6 +515,141 @@ let update
   repo_changed || dev_changed,
   rt
 
+let init_checks root =
+  (* Check for the external dependencies *)
+  let check_external_dep name =
+    OpamSystem.resolve_command name <> None
+  in
+  OpamConsole.msg "Checking for available remotes: ";
+  let repo_types =
+    ["rsync", "rsync and local";
+     "git", "git"; "hg", "mercurial"; "darcs", "darcs"]
+  in
+  let available_repos, unavailable_repos =
+    List.partition (check_external_dep @* fst) repo_types in
+  OpamConsole.msg "%s.%s\n"
+    (match available_repos with
+     | [] -> "none"
+     | r -> String.concat ", " (List.map snd r))
+    (if unavailable_repos = [] then " Perfect!" else
+       "\n" ^ OpamStd.Format.itemize (fun (cmd,msg) ->
+           Printf.sprintf
+             "you won't be able to use %s repositories unless you \
+              install the %s command on your system."
+             msg (OpamConsole.colorise `bold cmd))
+         unavailable_repos);
+  let soft_fail =
+    if OpamCudfSolver.has_builtin_solver () then false else
+    let external_solvers = ["aspcud"; "packup"; "mccs"] in
+    if not (List.exists check_external_dep external_solvers) then
+      (OpamConsole.error
+         "No external solver found. You should get one of %s, or use a \
+          version of opam compiled with a built-in solver (see \
+          http://opam.ocaml.org/doc/Install.html#ExternalSolvers for \
+          details)"
+         (OpamStd.Format.pretty_list ~last:"or"
+            (List.map (OpamConsole.colorise `bold) external_solvers));
+       true)
+    else false
+  in
+  let advised_deps =
+    [OpamStateConfig.(Lazy.force !r.makecmd); "m4"; "cc"]
+  in
+  (match List.filter (not @* check_external_dep) advised_deps with
+   | [] -> ()
+   | missing ->
+     OpamConsole.warning
+       "Recommended dependencies -- \
+        most packages rely on these:\n%s"
+       (OpamStd.Format.itemize (OpamConsole.colorise `bold) missing));
+  let fetch_cmd_user =
+    let open OpamStd.Option.Op in
+    match
+      OpamStd.Env.getopt "OPAMCURL",
+      OpamStd.Env.getopt "OPAMFETCH" >>| fun s ->
+      OpamStd.String.split s ' '
+    with
+    | Some cmd, _ | _, Some (cmd::_) -> check_external_dep cmd
+    | _ -> false
+  in
+  let required_deps =
+    ["curl or wget",
+     fetch_cmd_user ||
+     check_external_dep "curl" ||
+     check_external_dep "wget";
+     "diff", check_external_dep "diff";
+     "patch", check_external_dep "patch";
+     "tar", check_external_dep "tar";
+     "unzip", check_external_dep "unzip"]
+  in
+  let hard_fail =
+    match List.filter (not @* snd) required_deps with
+    | [] -> false
+    | missing ->
+      OpamConsole.error
+        "Missing dependencies -- \
+         the following commands are required for opam to operate:\n%s"
+        (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst)
+           missing);
+      true
+  in
+  let soft_fail =
+    if OpamStd.Sys.(os () = Linux) && not (check_external_dep "bwrap")
+    then
+      (OpamConsole.error
+         "Sandboxing tool %s was not found. You should install \
+          'bubblewrap', or manually disable package build sandboxing \
+          in %s (at your own risk). See \
+          https://github.com/projectatomic/bubblewrap for details."
+         (OpamConsole.colorise `bold "bwrap")
+         (OpamFile.to_string (OpamPath.config root));
+       true)
+    else soft_fail
+  in
+  if hard_fail then OpamStd.Sys.exit_because `Configuration_error
+  else not soft_fail
+
+let update_with_init_config ?(overwrite=false) config init_config =
+  let module I = OpamFile.InitConfig in
+  let module C = OpamFile.Config in
+  let setifnew getter setter v conf =
+    if overwrite then setter v conf
+    else if getter conf = getter C.empty then setter v conf
+    else conf
+  in
+  config |>
+  setifnew C.jobs C.with_jobs (match I.jobs init_config with
+      | Some j -> j
+      | None -> Lazy.force OpamStateConfig.(default.jobs)) |>
+  setifnew C.dl_tool C.with_dl_tool_opt (I.dl_tool init_config) |>
+  setifnew C.dl_jobs C.with_dl_jobs
+    (OpamStd.Option.default OpamStateConfig.(default.dl_jobs)
+       (I.dl_jobs init_config)) |>
+  setifnew C.criteria C.with_criteria (I.solver_criteria init_config) |>
+  setifnew C.solver C.with_solver_opt (I.solver init_config) |>
+  setifnew C.wrappers C.with_wrappers (I.wrappers init_config) |>
+  setifnew C.global_variables C.with_global_variables
+    (I.global_variables init_config) |>
+  setifnew C.eval_variables C.with_eval_variables
+    (I.eval_variables init_config) |>
+  setifnew C.default_compiler C.with_default_compiler
+    (I.default_compiler init_config)
+
+let reinit ?(init_config=OpamInitDefaults.init_config) config =
+  let root = OpamStateConfig.(!r.root_dir) in
+  let _all_ok = init_checks root in
+  let config = update_with_init_config config init_config in
+  OpamFile.Config.write (OpamPath.config root) config;
+  let gt = OpamGlobalState.load `Lock_write in
+  let rt = OpamRepositoryState.load `Lock_write gt in
+  OpamConsole.header_msg "Updating repositories";
+  let _failed, rt =
+    OpamRepositoryCommand.update_with_auto_upgrade rt
+      (OpamRepositoryName.Map.keys rt.repos_definitions)
+  in
+  let rt = OpamRepositoryState.unlock rt in
+  gt, rt
+
 let init
     ?(init_config=OpamInitDefaults.init_config) ?repo ?(bypass_checks=false)
     shell dot_profile update_config =
@@ -537,87 +672,14 @@ let init
         if not (OpamConsole.confirm "Proceed ?") then
           OpamStd.Sys.exit_because `Aborted);
       try
-
-        if bypass_checks then () else (
-
-          (* Check for the external dependencies *)
-          let check_external_dep name =
-            OpamSystem.resolve_command name <> None
-          in
-          OpamConsole.msg "Checking for available remotes: ";
-          let repo_types =
-            ["rsync", "rsync and local";
-             "git", "git"; "hg", "mercurial"; "darcs", "darcs"]
-          in
-          let available_repos, unavailable_repos =
-            List.partition (check_external_dep @* fst) repo_types in
-          OpamConsole.msg "%s.%s\n"
-            (match available_repos with
-             | [] -> "none"
-             | r -> String.concat ", " (List.map snd r))
-            (if unavailable_repos = [] then " Perfect!" else
-               "\n" ^ OpamStd.Format.itemize (fun (cmd,msg) ->
-                   Printf.sprintf
-                     "you won't be able to use %s repositories unless you \
-                      install the %s command on your system."
-                     msg (OpamConsole.colorise `bold cmd))
-                 unavailable_repos);
-          let fail =
-            if OpamCudfSolver.has_builtin_solver () then false else
-            let external_solvers = ["aspcud"; "packup"; "mccs"] in
-            if not (List.exists check_external_dep external_solvers) then
-              (OpamConsole.error
-                 "No external solver found. You should get one of %s, or use a \
-                  version of opam compiled with a built-in solver (see \
-                  http://opam.ocaml.org/doc/Install.html#ExternalSolvers for \
-                  details)"
-                 (OpamStd.Format.pretty_list ~last:"or"
-                    (List.map (OpamConsole.colorise `bold) external_solvers));
-               true)
-            else false
-          in
-          let advised_deps =
-            [OpamStateConfig.(Lazy.force !r.makecmd); "m4"; "cc"]
-          in
-          (match List.filter (not @* check_external_dep) advised_deps with
-           | [] -> ()
-           | missing ->
-             OpamConsole.warning
-               "Recommended dependencies -- \
-                most packages rely on these:\n%s"
-               (OpamStd.Format.itemize (OpamConsole.colorise `bold) missing));
-          let fetch_cmd_user =
-            let open OpamStd.Option.Op in
-            match
-              OpamStd.Env.getopt "OPAMCURL",
-              OpamStd.Env.getopt "OPAMFETCH" >>| fun s ->
-              OpamStd.String.split s ' '
-            with
-            | Some cmd, _ | _, Some (cmd::_) -> check_external_dep cmd
-            | _ -> false
-          in
-          let required_deps =
-            ["curl or wget",
-             fetch_cmd_user ||
-             check_external_dep "curl" ||
-             check_external_dep "wget";
-             "diff", check_external_dep "diff";
-             "patch", check_external_dep "patch";
-             "tar", check_external_dep "tar";
-             "unzip", check_external_dep "unzip"]
-          in
-          let fail =
-            match List.filter (not @* snd) required_deps with
-            | [] -> fail
-            | missing ->
-              OpamConsole.error
-                "Missing dependencies -- \
-                 the following commands are required for opam to operate:\n%s"
-                (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst)
-                   missing);
-              true
-          in
-          if fail then OpamStd.Sys.exit_because `Configuration_error);
+        let dontswitch =
+          if bypass_checks then false else
+            let all_ok = init_checks root in
+            if not all_ok &&
+               not (OpamConsole.confirm "Continue initialisation anyway ?")
+            then OpamStd.Sys.exit_because `Configuration_error
+            else not all_ok
+        in
 
         (* Create ~/.opam/config *)
         let repos = match repo with
@@ -625,28 +687,10 @@ let init
           | None -> OpamFile.InitConfig.repositories init_config
         in
         let config =
-          let module I = OpamFile.InitConfig in
-          let module C = OpamFile.Config in
-          C.empty |>
-          C.with_repositories (List.map fst repos) |>
-          C.with_jobs (match I.jobs init_config with
-              | Some j -> j
-              | None -> Lazy.force OpamStateConfig.(default.jobs)) |>
-          C.with_dl_tool_opt (I.dl_tool init_config) |>
-          C.with_dl_jobs
-            (OpamStd.Option.default OpamStateConfig.(default.dl_jobs)
-               (I.dl_jobs init_config)) |>
-          C.with_criteria (I.solver_criteria init_config) |>
-          C.with_solver_opt (I.solver init_config) |>
-          C.with_wrappers (I.wrappers init_config) |>
-          C.with_global_variables
-            (I.global_variables init_config) |>
-          C.with_eval_variables
-            (I.eval_variables init_config) |>
-          C.with_default_compiler
-            (I.default_compiler init_config)
+          update_with_init_config OpamFile.Config.empty init_config |>
+          OpamFile.Config.with_repositories (List.map fst repos)
         in
-        OpamFile.Config.write (OpamPath.config root) config;
+        OpamFile.Config.write config_f config;
 
         let repos_config =
           OpamRepositoryName.Map.of_list repos |>
@@ -667,19 +711,18 @@ let init
           OpamConsole.error_and_exit `Sync_error
             "Initial download of repository failed";
         gt, OpamRepositoryState.unlock rt,
-        OpamFile.InitConfig.default_compiler init_config
+        if dontswitch then OpamFormula.Empty
+        else OpamFile.InitConfig.default_compiler init_config
       with e ->
         OpamStd.Exn.finalise e @@ fun () ->
         if not (OpamConsole.debug ()) && root_empty then
           OpamFilename.rmdir root)
   in
+  OpamEnv.write_static_init_scripts root ~completion:true;
   let _updated = match update_config with
     | `no  -> false
     | `ask -> OpamEnv.setup_interactive root ~dot_profile shell
-    | `yes ->
-      OpamEnv.update_user_setup root ~dot_profile shell;
-      OpamEnv.write_static_init_scripts root ~completion:true;
-      true
+    | `yes -> OpamEnv.update_user_setup root ~dot_profile shell; true
   in
   gt, rt, default_compiler
 

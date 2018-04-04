@@ -731,50 +731,6 @@ The default, built-in initial config of <span class="opam">opam</span> can be se
   [`default-compiler:`](#configfield-default-compiler) is additionally used to
   select the switch that will be created by `opam init` without `--bare`.
 
-#### switch-config
-
-This file is located in `<switch-prefix>/.opam-switch/switch-config` and
-contains configuration options specific to that switch:
-
-- <a id="switchconfigfield-opam-version">`opam-version: <string>`</a>:
-  the file format version.
-- <a id="switchconfigfield-synopsis">`synopsis: <string>`</a>:
-  a short description for the switch, shown when listing. By default, this is
-  initialised to the synopsis of the chosen compiler package.
-- <a id="switchconfigfield-repos">`repositories: [ <string> ... ]`</a>:
-  lists the repositories in use in this switch, higher priority first. The
-  repository names should correspond to configured repositories in
-  `~/.opam/repo` (they are otherwise ignored). If unset, the
-  [set of repositories](#configfield-repositories) from the global configuration
-  is used.
-- <a id="switchconfigfield-opam-root">`opam-root: <string>`</a>:
-  the opam root the switch belongs to. Used for local switches, to avoid
-  automatically selecting a switch belonging to a different opam root.
-- <a id="switchconfigfield-setenv">`setenv: [ <environment-update> ... ]`</a>:
-  defines environment variable updates that will be applied whenever in this
-  switch (both in the environment where packages are built, and in the
-  environment exported by opam through `opam env`)
-- [`pre-build-commands:`](#configfield-pre-build-commands),
-  [`pre-install-commands:`](#configfield-pre-install-commands),
-  [`pre-remove-commands:`](#configfield-pre-remove-commands),
-  [`pre-session-commands:`](#configfield-pre-session-commands):
-  as the corresponding [global config](#config) fields.
-- [`wrap-build-commands:`](#configfield-wrap-build-commands),
-  [`wrap-install-commands:`](#configfield-wrap-install-commands),
-  [`wrap-remove-commands:`](#configfield-wrap-remove-commands):
-  as the corresponding [global config](#config) fields.
-- [`post-build-commands:`](#configfield-post-build-commands),
-  [`post-install-commands:`](#configfield-post-install-commands),
-  [`post-remove-commands:`](#configfield-post-remove-commands),
-  [`post-session-commands:`](#configfield-post-session-commands):
-  as the corresponding [global config](#config) fields.
-- <a id="switchconfigsection-paths">`paths: "{" { <ident>: <string> ... } "}"`</a>:
-  defines the standard paths within the switch: recognised fields include
-  `prefix:`, `bin:`, `sbin:`, `lib:`, `share:`, `etc:`, `doc:`, `man:`,
-  `stublibs:`, `toplevel:`.
-- <a id="switchconfigsection-variables">`variables: "{" { <ident>: ( <string> | [ <string> ... ] | <bool> ) ... } "}"`</a>:
-  allows the definition of variables local to the switch.
-
 ### Package definitions
 
 Package definitions can be a single [`opam`](#opam) file. A [`files/`](#files)
@@ -1425,6 +1381,50 @@ for <span class="opam">opam</span>.
   a list of compiler package choices. On `opam init`, the first available
   compiler in the list will be chosen for creating the initial switch if
   `--bare` wasn't specified.
+
+#### switch-config
+
+This file is located in `<switch-prefix>/.opam-switch/switch-config` and
+contains configuration options specific to that switch:
+
+- <a id="switchconfigfield-opam-version">`opam-version: <string>`</a>:
+  the file format version.
+- <a id="switchconfigfield-synopsis">`synopsis: <string>`</a>:
+  a short description for the switch, shown when listing. By default, this is
+  initialised to the synopsis of the chosen compiler package.
+- <a id="switchconfigfield-repos">`repositories: [ <string> ... ]`</a>:
+  lists the repositories in use in this switch, higher priority first. The
+  repository names should correspond to configured repositories in
+  `~/.opam/repo` (they are otherwise ignored). If unset, the
+  [set of repositories](#configfield-repositories) from the global configuration
+  is used.
+- <a id="switchconfigfield-opam-root">`opam-root: <string>`</a>:
+  the opam root the switch belongs to. Used for local switches, to avoid
+  automatically selecting a switch belonging to a different opam root.
+- <a id="switchconfigfield-setenv">`setenv: [ <environment-update> ... ]`</a>:
+  defines environment variable updates that will be applied whenever in this
+  switch (both in the environment where packages are built, and in the
+  environment exported by opam through `opam env`)
+- [`pre-build-commands:`](#configfield-pre-build-commands),
+  [`pre-install-commands:`](#configfield-pre-install-commands),
+  [`pre-remove-commands:`](#configfield-pre-remove-commands),
+  [`pre-session-commands:`](#configfield-pre-session-commands):
+  as the corresponding [global config](#config) fields.
+- [`wrap-build-commands:`](#configfield-wrap-build-commands),
+  [`wrap-install-commands:`](#configfield-wrap-install-commands),
+  [`wrap-remove-commands:`](#configfield-wrap-remove-commands):
+  as the corresponding [global config](#config) fields.
+- [`post-build-commands:`](#configfield-post-build-commands),
+  [`post-install-commands:`](#configfield-post-install-commands),
+  [`post-remove-commands:`](#configfield-post-remove-commands),
+  [`post-session-commands:`](#configfield-post-session-commands):
+  as the corresponding [global config](#config) fields.
+- <a id="switchconfigsection-paths">`paths: "{" { <ident>: <string> ... } "}"`</a>:
+  defines the standard paths within the switch: recognised fields include
+  `prefix:`, `bin:`, `sbin:`, `lib:`, `share:`, `etc:`, `doc:`, `man:`,
+  `stublibs:`, `toplevel:`.
+- <a id="switchconfigsection-variables">`variables: "{" { <ident>: ( <string> | [ <string> ... ] | <bool> ) ... } "}"`</a>:
+  allows the definition of variables local to the switch.
 
 #### switch-state
 

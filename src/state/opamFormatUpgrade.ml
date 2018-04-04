@@ -17,6 +17,8 @@ open OpamFilename.Op
 let log fmt = OpamConsole.log "FMT_UPG" fmt
 let slog = OpamConsole.slog
 
+exception Upgrade_done of OpamFile.Config.t
+
 (* - Package and aux functions - *)
 
 let upgrade_depexts_to_2_0_beta5 filename depexts =
@@ -1006,19 +1008,23 @@ let from_2_0_beta_to_2_0_beta5 root conf =
        (OpamFile.Config.eval_variables conf))
     conf
 
-let latest_version = v2_0_beta5
+let v2_0 = OpamVersion.of_string "2.0"
+
+let from_2_0_beta5_to_2_0 _ conf = conf
+
+let latest_version = v2_0
 
 let as_necessary global_lock root config =
   let config_version = OpamFile.Config.opam_version config in
   let cmp = OpamVersion.(compare current_nopatch config_version) in
-  if cmp = 0 then config
+  if cmp = 0 then ()
   else if cmp < 0 then
-    if OpamFormatConfig.(!r.skip_version_checks) then config else
+    if OpamFormatConfig.(!r.skip_version_checks) then () else
       OpamConsole.error_and_exit `Configuration_error
         "%s reports a newer opam version, aborting."
         (OpamFilename.Dir.to_string root)
   else
-  if OpamVersion.compare config_version latest_version >= 0 then config else
+  if OpamVersion.compare config_version latest_version >= 0 then () else
   let is_dev = OpamVersion.git () <> None in
   OpamConsole.formatted_msg
     "This %sversion of opam requires an update to the layout of %s \
@@ -1043,7 +1049,7 @@ let as_necessary global_lock root config =
     then
       let update_to v f config =
         if OpamVersion.compare config_version v < 0 then
-          let config = f root config in
+          let config = f root config |> OpamFile.Config.with_opam_version v in
           (* save the current version to mitigate damage is the upgrade goes
              wrong afterwards *)
           OpamFile.Config.write (OpamPath.config root)
@@ -1051,7 +1057,7 @@ let as_necessary global_lock root config =
           config
         else config
       in
-      let _config =
+      let config =
         config |>
         update_to v1_1       from_1_0_to_1_1 |>
         update_to v1_2       from_1_1_to_1_2 |>
@@ -1062,12 +1068,12 @@ let as_necessary global_lock root config =
         update_to v2_0_alpha from_1_3_dev7_to_2_0_alpha |>
         update_to v2_0_alpha2 from_2_0_alpha_to_2_0_alpha2 |>
         update_to v2_0_alpha3 from_2_0_alpha2_to_2_0_alpha3 |>
-        update_to v2_0_beta from_2_0_alpha3_to_2_0_beta |>
-        update_to v2_0_beta5 from_2_0_beta_to_2_0_beta5
+        update_to v2_0_beta  from_2_0_alpha3_to_2_0_beta |>
+        update_to v2_0_beta5 from_2_0_beta_to_2_0_beta5 |>
+        update_to v2_0       from_2_0_beta5_to_2_0
       in
-      OpamConsole.msg
-        "Update done, please run 'opam update' and retry your command\n";
-      OpamStd.Sys.exit_because `Success;
+      OpamConsole.msg "Format upgrade done.\n";
+      raise (Upgrade_done config)
     else
       OpamStd.Sys.exit_because `Aborted
   with OpamSystem.Locked ->

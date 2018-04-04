@@ -14,14 +14,18 @@
 
 open OpamTypes
 
+(** Raised when the opam root has been updated to a newer format, and further
+    action (opam init/update) is needed. *)
+exception Upgrade_done of OpamFile.Config.t
+
 (** The latest version of the opam root format, that normal operation of this
     instance of opam requires *)
 val latest_version: OpamVersion.t
 
 (** Runs the upgrade from its current format to the latest version for the opam
-    root at the given directory. A global write lock must be supplied, and the
-    updated global config is returned. *)
-val as_necessary: OpamSystem.lock -> dirname -> OpamFile.Config.t -> OpamFile.Config.t
+   root at the given directory. A global write lock must be supplied. If an
+   upgrade has been done, raises [Upgrade_done updated_config]. *)
+val as_necessary: OpamSystem.lock -> dirname -> OpamFile.Config.t -> unit
 
 (** Converts the opam file format, including rewriting availabillity conditions
     based on OCaml-related variables into dependencies. The filename is used to

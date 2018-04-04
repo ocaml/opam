@@ -34,7 +34,8 @@ let load_config global_lock root =
         OpamConsole.error_and_exit `Configuration_error
           "Opam has not been initialised, please run `opam init'"
   in
-  OpamFormatUpgrade.as_necessary global_lock root config
+  OpamFormatUpgrade.as_necessary global_lock root config;
+  config
 
 let load lock_kind =
   let root = OpamStateConfig.(!r.root_dir) in

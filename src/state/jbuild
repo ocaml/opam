@@ -10,4 +10,9 @@
    (wrapped false)))
 
 (rule
-  (with-stdout-to opamScript.ml (run ocaml ${path:../../shell/crunch.ml} ${path:complete.sh} ${path:complete.zsh} ${path:prompt.sh})))
+  (with-stdout-to opamScript.ml
+   (run ocaml ${path:../../shell/crunch.ml}
+     ${path:complete.sh}
+     ${path:complete.zsh}
+     ${path:prompt.sh}
+     ${path:bwrap.sh})))

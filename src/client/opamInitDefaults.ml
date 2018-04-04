@@ -8,6 +8,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamTypes
+
 let repository_url = {
   OpamUrl.
   transport = "https";
@@ -30,6 +32,21 @@ let eval_variables = [
   "OCaml version present on your system independently of opam, if any";
 ]
 
+let wrappers =
+  let cmd t = [
+    CString "%{root}%/opam-init/hooks/sandbox.sh", None;
+    CString t, None;
+  ] in
+  let w = OpamFile.Wrappers.empty in
+  if OpamStd.Sys.(os () = Linux) then (* Sandboxing scripts only available there *)
+    { w with
+      OpamFile.Wrappers.
+      wrap_build = [cmd "build", None];
+      wrap_install = [cmd "install", None];
+      wrap_remove = [cmd "remove", None];
+    }
+  else w
+
 module I = OpamFile.InitConfig
 
 let init_config =
@@ -37,4 +54,5 @@ let init_config =
   I.with_repositories
     [OpamRepositoryName.of_string "default", (repository_url, None)] |>
   I.with_default_compiler default_compiler |>
-  I.with_eval_variables eval_variables
+  I.with_eval_variables eval_variables |>
+  I.with_wrappers wrappers
