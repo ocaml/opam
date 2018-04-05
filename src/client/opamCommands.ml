@@ -226,9 +226,15 @@ let init =
     in
     let init_config =
       try
-        OpamConsole.note "Will configure from built-in defaults%s."
-          (OpamStd.List.concat_map ~nil:"" ~left:", " ~last_sep:" and " ", "
-             OpamFile.to_string config_files);
+        let others =
+          match config_files with
+          | [] -> ""
+          | [file] -> OpamFile.to_string file ^ " and then from "
+          | _ ->
+              (OpamStd.List.concat_map ~nil:"" ~right:", and finally from " ", then "
+               OpamFile.to_string (List.rev config_files))
+        in
+        OpamConsole.note "Will configure from %sbuilt-in defaults." others;
         List.fold_left (fun acc f ->
             OpamFile.InitConfig.add acc (OpamFile.InitConfig.read f))
           OpamInitDefaults.init_config
