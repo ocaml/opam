@@ -79,6 +79,12 @@ td.sublib {
 <tr><th><a href="ocamldoc/OpamUrl.html">opamUrl.ml</a></th>
   <td>URL parsing and printing, with support for our different backends</td></tr>
 
+<tr><td colspan="2" class="sublib">Windows support</td></tr>
+<tr><th><a href="ocamldoc/OpamStubsTypes.html">opamStubsTypes.ml</a></th>
+  <td>Types in the stubs definitions (shared between both implementations)</td></tr>
+<tr><th><a href="ocamldoc/OpamStubs.html">opamStubs.ml</a></th>
+  <td>C stubs for Windows. A &ldquo;dummy&rdquo; alternate is provided for Unix, which doesn&rsquo;t require any C code</td></tr>
+
 <tr class="lib">
   <th><code>src/format</code></th>
   <td><em>opam-format</em> library</td>
@@ -218,6 +224,22 @@ td.sublib {
   <td>Synchronisation and downloading of repositories and package sources</td></tr>
 
 <tr class="lib">
+  <th><code>src/stubs</code></th>
+  <td><em>opam-stubs</em> library</td>
+</tr>
+
+<tr><td colspan="2" class="libnote">
+    C stubs. This library is built on Windows-only and automatically pulled into opam-core if needed
+</td></tr>
+
+<tr><th><a>opamInject.c</a></th>
+  <td>Code for process injection shared between <a>opamWindows.c</a> and <a>opam-putenv.c</a></td></tr>
+<tr><th><a>opamWindows.c</a></th>
+  <td>C stubs themselves</td></tr>
+<tr><th><a href="ocamldoc/OpamWin32Stubs.html">opamWin32Stubs.ml</a></th>
+  <td>OCaml <code>external</code> declarations for the stubs</td></tr>
+
+<tr class="lib">
   <th><code>src/client</code></th>
   <td><em>opam-client</em> library and exec</td>
 </tr>
@@ -278,6 +300,8 @@ td.sublib {
 
 <tr><th><a href="ocamldoc/Opam_admin_top.html">opam_admin_top.ml</a></th>
   <td>Tiny library for admin-scripts, included in opam-admin.top</td></tr>
+<tr><th><a>opam-putenv.c</a></th>
+  <td>Tiny C tool used on Windows for cross-architecture process injection</td></tr>
 <tr><th><a href="ocamldoc/Opam_check.html">opam_check.ml</a></th>
   <td>Tiny tool used in internal checks ("make tests")</td></tr>
 <tr><th><a href="ocamldoc/Opam_installer.html">opam_installer.ml</a></th>

@@ -18,10 +18,20 @@ if test "x$OCAMLC" = "xno"; then
    AC_MSG_ERROR([You must install the OCaml compiler])
 fi
 AC_CHECK_OCAML_OS_TYPE
-if test "${OCAML_OS_TYPE}" = "Win32" ; then
+AS_IF([ test "${OCAML_OS_TYPE}" = "Win32"],[
   OCAMLLIB="$(echo "${OCAMLLIB}" | tr -d '\015' | sed -e 's|\\|/|g')"
-fi
+  WIN32=1
+  EXE=.exe
+],[
+  EXE=
+  WIN32=0
+])
 
+AC_SUBST(WIN32)
+AC_SUBST(EXE)
+
+# AC_PREFIX_DEFAULT must be at the top level, which is the reason for the
+# somewhat convoluted pair of sed expressions...
 AC_PREFIX_DEFAULT([`echo "os_type: ${OCAML_OS_TYPE}" | sed -e "s;^os_type: Win32;C:/OPAM;" -e "s;^os_type:.*;/usr/local;"`])
 
 AC_ARG_ENABLE([version_check],
@@ -54,9 +64,11 @@ AC_SUBST(CPATH,$CPATH)
 AC_SUBST(LIBRARY_PATH,$LIBRARY_PATH)
 
 # Check that OCaml version is greater or equal to 4.02.3
+# Native Windows builds require at least 4.06.0 for the Unicode runtime.
 AS_IF([test "x${enable_version_check}" != "xno"], [
+  AS_IF([ test ${WIN32} -eq 1 ],[MIN_OCAML_VERSION=4.06.0],[MIN_OCAML_VERSION=4.02.3])
   AX_COMPARE_VERSION(
-    [$OCAMLVERSION], [lt], [4.02.3],
+    [$OCAMLVERSION], [lt], [$MIN_OCAML_VERSION],
     AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported]))
 ])
 
@@ -109,32 +121,74 @@ AS_IF([test "x${CI}" != "x"], [
 ],[
   CONF_OCAMLFLAGS=
 ])
-AC_SUBST(CONF_OCAMLFLAGS)
-
-AS_IF([ test "${OCAML_OS_TYPE}" = "Win32"],[
-  WIN32=1
-  EXE=.exe
+AS_IF([test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"],[
+  AS_IF([test "x${CCOMP_TYPE}" = "xmsvc"],[
+    CONF_CFLAGS="/WX"
+  ],[
+    CONF_CFLAGS="-Werror"
+  ])
 ],[
-  EXE=
-  WIN32=0
+  CONF_CFLAGS=
+])
+AC_SUBST(CONF_OCAMLFLAGS)
+AC_SUBST(CONF_CFLAGS)
+
+AS_IF([ test ${WIN32} -eq 1 -a "$GCC" = "yes"],[
+  # Pre-Visual Studio 2013 Microsoft C compiler adhere to the C89 standard, well
+  # at least the bit of it which requires variable declarations to appear before
+  # statements. Adding this warning to GCC prevents accidentally using C99 and
+  # then getting unexpected C2143 errors from older Microsoft C compilers. I'm
+  # not aware of an equivalent option for the Microsoft C compiler.
+  CC="$CC -Wdeclaration-after-statement"
+  AC_SUBST(CC)
 ])
 
-AC_SUBST(WIN32)
-AC_SUBST(EXE)
-
-AS_IF([ test ${WIN32} -eq 1 -a "$GCC" != "yes" ],[
-  AC_MSG_CHECKING([whether Microsoft Linker needs a PATH shim])
-  PREV_PREPEND="$PATH_PREPEND"
-  PATH_PREPEND=$(bash ./shell/check_linker)
-  AS_IF([test "x${PATH_PREPEND}" = "x${PREV_PREPEND}" ],[PATH_PREPEND_RESULT=no],[PATH_PREPEND_RESULT=yes])
-  PATH_PREPEND=`echo "${PATH_PREPEND}" | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
-  LIB_PREPEND=`echo ${LIB_PREPEND} | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
-  INC_PREPEND=`echo ${INC_PREPEND} | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
-  AC_SUBST(PATH_PREPEND)
-  AC_SUBST(LIB_PREPEND)
-  AC_SUBST(INC_PREPEND)
-  AC_MSG_RESULT([$PATH_PREPEND_RESULT])
+AS_IF([ test ${WIN32} -eq 1 ],[
+  AS_IF([ test "$GCC" = "yes"], [
+    AS_IF([ test "x${CC64}" = "x" ], [
+      AS_IF([ test "$ARCH" = "i386" ],[T_CC64=x86_64-w64-mingw32-gcc],[T_CC64=i686-w64-mingw32-gcc])])
+    AC_CHECK_TOOL(CC64,[${T_CC64}],[no])
+    AS_IF([ test "x${CC64}" != "xno" ],[
+      CC64_JBUILD="(run ${CC64} -o \"\${@}\" -I ../core -Wdeclaration-after-statement \${<})"
+    ])
+  ],[
+    AC_MSG_CHECKING([whether Microsoft Linker needs a PATH shim])
+    PREV_PREPEND="$PATH_PREPEND"
+    PATH_PREPEND=$(bash ./shell/check_linker)
+    AS_IF([test "x${PATH_PREPEND}" = "x${PREV_PREPEND}" ],[PATH_PREPEND_RESULT=no],[PATH_PREPEND_RESULT=yes])
+    PATH_PREPEND=`echo "${PATH_PREPEND}" | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+    LIB_PREPEND=`echo ${LIB_PREPEND} | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+    INC_PREPEND=`echo ${INC_PREPEND} | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+    AC_SUBST(PATH_PREPEND)
+    AC_SUBST(LIB_PREPEND)
+    AC_SUBST(INC_PREPEND)
+    AC_MSG_RESULT([$PATH_PREPEND_RESULT])
+    AS_IF([ test "$ARCH" = "i386" ],[COMP_ARCH=x64],[COMP_ARCH=x86])
+    AC_MSG_CHECKING([for a way to invoke an $COMP_ARCH C compiler])
+    eval `PATH="$PRE_BOOTSTRAP_PATH" ./shell/msvs-detect --arch=$COMP_ARCH`
+    AS_IF([ test "x$MSVS_NAME" = "x" ], [
+      AC_MSG_RESULT([no])
+      CC64=no
+    ],[
+      AC_MSG_RESULT([from $MSVS_NAME])
+      CL_FULL="`PATH="${MSVS_PATH}:${PATH}" which cl | cygpath -f - -w`"
+      MSVS_PATH="`echo "${MSVS_PATH}" | cygpath -f - -wp`"
+      CC64_JBUILD="(setenv PATH \"${MSVS_PATH}\" (setenv LIB \"${MSVS_LIB};${LIB}\" (setenv INCLUDE \"${MSVS_INC};${INCLUDE}\" (run \"${CL_FULL}\" /nologo \"/Fe\${@}\" /I../core \${<}))))"
+      CC64_JBUILD="$(echo $CC64_JBUILD|sed -e 's/\\/\\\\/g')"
+    ])
+  ])
+  AS_IF([ test "x${CC64}" = "xno" ],[
+    AC_MSG_WARN([Complementary C compiler not found - opam-putenv will not be built])
+    BUILD_PUTENV=0
+    CC64_JBUILD=
+  ],[
+    BUILD_PUTENV=1
+  ])
+],[
+  BUILD_PUTENV=0
+  CC64_JBUILD=
 ])
+AC_SUBST(CC64_JBUILD)
 
 AC_PROG_FINDLIB
 
@@ -244,10 +298,21 @@ if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
 fi
 
-AC_CONFIG_FILES(
-  Makefile.config
-)
+AS_IF([ test ${BUILD_PUTENV} -eq 1],[
+  AC_CONFIG_FILES(src/tools/opam-putenv.inc)
+],[
+  > src/tools/opam-putenv.inc
+])
+AC_CONFIG_FILES(Makefile.config)
 AC_OUTPUT
+
+AS_IF([ test ${WIN32} -eq 1],[
+  cd src/stubs
+  ${LN_S} -f jbuild-win32 jbuild
+  cd ../..
+],[
+  rm -f src/stubs/jbuild
+])
 
 echo
 

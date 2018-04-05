@@ -250,7 +250,7 @@ let read_lines f =
 
 (* Compat function (Windows) *)
 let interrupt p =
-  if OpamStd.Sys.is_windows then Unix.kill p.p_pid Sys.sigkill
+  if Sys.win32 then Unix.kill p.p_pid Sys.sigkill
   else Unix.kill p.p_pid Sys.sigint
 
 let run_background command =
@@ -321,9 +321,7 @@ let verbose_print_cmd p =
 let verbose_print_out =
   let pfx = OpamConsole.colorise `yellow "- " in
   fun s ->
-    print_string pfx;
-    print_string s;
-    print_char '\n'
+    OpamConsole.msg "%s%s\n" pfx s
 
 (** Semi-synchronous printing of the output of a command *)
 let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =
@@ -338,7 +336,7 @@ let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =
     stop ();
     (* implem relies on sigalrm, not implemented on win32.
        This will fall back to buffered output. *)
-    if OpamStd.Sys.is_windows then () else
+    if Sys.win32 then () else
     let files = OpamStd.List.sort_nodup compare files in
     let ics =
       List.map
@@ -443,12 +441,6 @@ let dontwait p =
 let dead_childs = Hashtbl.create 13
 let wait_one processes =
   if processes = [] then raise (Invalid_argument "wait_one");
-  if OpamStd.Sys.is_windows then
-    (* No waiting for any child pid on Windows, this is highly sub-optimal
-       but should at least work. Todo: C binding for better behaviour *)
-    let p = List.hd processes in
-    p, wait p
-  else
   try
     let p =
       List.find (fun p -> Hashtbl.mem dead_childs p.p_pid) processes
@@ -458,7 +450,17 @@ let wait_one processes =
     p, exit_status p return
   with Not_found ->
     let rec aux () =
-      let pid, return = safe_wait (List.hd processes).p_pid Unix.wait () in
+      let pid, return =
+        if Sys.win32 then
+          (* No Unix.wait on Windows, so use a stub wrapping
+             WaitForMultipleObjects *)
+          let pids, len =
+            let f (l, n) t = (t.p_pid::l, succ n) in
+            List.fold_left f ([], 0) processes
+          in
+          OpamStubs.waitpids pids len
+        else
+          safe_wait (List.hd processes).p_pid Unix.wait () in
       try
         let p = List.find (fun p -> p.p_pid = pid) processes in
         p, exit_status p return
@@ -621,8 +623,15 @@ module Job = struct
            else OpamConsole.msg "%s\n")
           (text_of_command cmd);
         let r = run cmd in
-        let k = try cont r with e -> cleanup r; raise e in
+        let k =
+          try cont r
+          with e ->
+            cleanup r;
+            OpamConsole.clear_status ();
+            raise e
+        in
         cleanup r;
+        OpamConsole.clear_status ();
         aux k
     in
     aux

@@ -363,7 +363,7 @@ let lint_command =
           in
           if w <> [] then
             if list then
-              print_endline (OpamPackage.to_string nv)
+              OpamConsole.msg "%s\n" (OpamPackage.to_string nv)
             else if short then
               OpamConsole.msg "%s %s\n" (OpamPackage.to_string nv)
                 (OpamStd.List.concat_map " " (fun (n,k,_) ->
@@ -371,10 +371,12 @@ let lint_command =
                        (match k with `Warning -> `yellow | `Error -> `red)
                        (string_of_int n))
                     w)
-            else
-              OpamConsole.msg "\r\027[KIn %s:\n%s\n"
+            else begin
+              OpamConsole.carriage_delete ();
+              OpamConsole.msg "In %s:\n%s\n"
                 (OpamPackage.to_string nv)
-                (OpamFileTools.warns_to_string w);
+                (OpamFileTools.warns_to_string w)
+            end;
           ret && not (warn_error && w <> [] ||
                       List.exists (fun (_,k,_) -> k = `Error) w))
         pkg_prefixes

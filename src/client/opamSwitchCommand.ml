@@ -73,8 +73,8 @@ let list gt ~print_short =
         let current = Some switch = OpamStateConfig.get_switch_opt () in
         List.map
           (if current then OpamConsole.colorise `bold else fun s -> s)
-          [ if current then if OpamConsole.utf8 ()
-              then "\xe2\x86\x92" (* U+2192 *) else "->"
+          [ if current then
+              OpamConsole.(utf8_symbol Symbols.rightwards_arrow "->")
             else "";
             OpamSwitch.to_string switch;
             OpamStd.List.concat_map ","
@@ -83,7 +83,7 @@ let list gt ~print_short =
             descr ])
       list
   in
-  OpamStd.Format.print_table stdout ~sep:"  "
+  OpamConsole.print_table stdout ~sep:"  "
     (OpamStd.Format.align_table table);
 
   match OpamStateConfig.get_switch_opt (), OpamStateConfig.(!r.switch_from)

@@ -625,7 +625,7 @@ let print_solution ~messages ~append ~requested ~reinstall t =
       else [String.concat "\n" messages]
     ) details |>
   OpamStd.Format.align_table |>
-  OpamStd.Format.print_table ~sep:" " stdout
+  OpamConsole.print_table ~sep:" " stdout
 
 let dump_universe universe oc =
   let version_map = cudf_versions_map universe universe.u_packages in

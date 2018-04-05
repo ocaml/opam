@@ -27,7 +27,9 @@ init-bootstrap () {
   if [ "$OPAM_TEST" = "1" ]; then
     opam switch create $OPAMBSSWITCH ocaml-system
     eval $(opam env)
-    opam install cohttp-lwt-unix ssl cmdliner dose3 opam-file-format re 'jbuilder>=1.0+beta19' 'mccs>=1.1+5' --yes
+    # extlib is installed, since UChar.cmi causes problems with the search
+    # order. See also the removal of uChar and uTF8 in src_ext/jbuild-extlib-src
+    opam install cohttp-lwt-unix ssl cmdliner dose3 opam-file-format re extlib 'jbuilder>=1.0+beta19' 'mccs>=1.1+5' --yes
   fi
   rm -f "$OPAMBSROOT"/log/*
 }

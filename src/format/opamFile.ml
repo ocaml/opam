@@ -86,7 +86,7 @@ module Stats = struct
     let aux kind = function
       | [] -> ()
       | l  ->
-        OpamConsole.msg "%d files %s:\n  %s\n%!"
+        OpamConsole.msg "%d files %s:\n  %s\n"
           (List.length !read_files) kind (String.concat "\n  " l)
     in
     aux "read" !read_files;

@@ -290,6 +290,7 @@ let do_upgrade repo_root =
       )
     compilers OpamStd.String.Set.empty
   in
+  OpamConsole.clear_status ();
   save_cache ();
 
   (* Generate "ocaml" package wrappers depending on one of the implementations
@@ -381,6 +382,7 @@ let do_upgrade repo_root =
            OpamConsole.status_line "Updated %s" (OpamFile.to_string opam_file))
     )
     packages;
+  OpamConsole.clear_status ();
 
   let repo_file = OpamRepositoryPath.repo repo.repo_root in
   OpamFile.Repo.write repo_file

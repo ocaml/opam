@@ -1,0 +1,9 @@
+(rule
+  ((targets (opam-putenv.exe))
+   (deps    (opam-putenv.c ../stubs/opamInject.c))
+   (action  @CC64_JBUILD@)))
+
+(install
+  ((section bin)
+   (package opam)
+   (files (opam-putenv.exe))))

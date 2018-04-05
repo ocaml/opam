@@ -37,7 +37,7 @@ let help t =
       ])
     (OpamVariable.Map.bindings all_global_vars) |>
   OpamStd.Format.align_table |>
-  OpamStd.Format.print_table stdout ~sep:" ";
+  OpamConsole.print_table stdout ~sep:" ";
 
   OpamConsole.header_msg "Configuration variables from the current switch";
   let global = t.switch_config in
@@ -55,7 +55,7 @@ let help t =
       ])
     (global.OpamFile.Switch_config.variables) |>
   OpamStd.Format.align_table |>
-  OpamStd.Format.print_table stdout ~sep:" ";
+  OpamConsole.print_table stdout ~sep:" ";
 
   OpamConsole.header_msg "Package variables ('opam config list PKG' to show)";
   List.map (fun (var, doc) -> [
@@ -65,7 +65,7 @@ let help t =
       ])
     OpamPackageVar.package_variable_names |>
   OpamStd.Format.align_table |>
-  OpamStd.Format.print_table stdout ~sep:" "
+  OpamConsole.print_table stdout ~sep:" "
 
 (* List all the available variables *)
 let list gt ns =
@@ -113,7 +113,7 @@ let list gt ns =
         if descr = "" then "" else "# "^descr;
       ]) vars |>
   OpamStd.Format.align_table |>
-  OpamStd.Format.print_table stdout ~sep:" "
+  OpamConsole.print_table stdout ~sep:" "
 
 let rec print_env = function
   | [] -> ()

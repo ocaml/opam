@@ -124,7 +124,7 @@ let expand (updates: env_update list) : env =
     | (var, op, arg, doc) :: updates ->
       let zip, reverts =
         let f, var =
-          if OpamStd.Sys.is_windows then
+          if Sys.win32 then
             String.uppercase_ascii, String.uppercase_ascii var
           else (fun x -> x), var
         in
@@ -154,7 +154,7 @@ let expand (updates: env_update list) : env =
 
 let add (env: env) (updates: env_update list) =
   let env =
-    if OpamStd.Sys.is_windows then
+    if Sys.win32 then
       (*
        * Environment variable names are case insensitive on Windows
        *)

@@ -220,8 +220,7 @@ let cycle_conflict ~version_map univ cycle =
 
 let arrow_concat sl =
   let arrow =
-    if OpamConsole.utf8 () then " \xe2\x86\x92 " (* U+2192 *)
-    else " -> "
+    OpamConsole.utf8_symbol OpamConsole.Symbols.rightwards_arrow " -> "
   in
   String.concat (OpamConsole.colorise `yellow arrow) sl
 
@@ -550,7 +549,7 @@ let dump_cudf_error ~version_map univ req =
     | None ->
       let (/) = Filename.concat in
       OpamCoreConfig.(!r.log_dir) /
-      ("solver-error-"^string_of_int (Unix.getpid())) in
+      ("solver-error-"^string_of_int (OpamStubs.getpid())) in
   match
     dump_cudf_request (to_cudf univ req) ~version_map
       (OpamSolverConfig.criteria req.criteria)

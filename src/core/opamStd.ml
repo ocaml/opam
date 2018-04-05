@@ -504,6 +504,9 @@ module OpamString = struct
 
 end
 
+type warning_printer =
+  {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
+let console = ref {warning = fun fmt -> Printf.ksprintf prerr_string fmt}
 
 
 module Env = struct
@@ -538,7 +541,7 @@ module Env = struct
     fun () -> Lazy.force lazy_env
 
   let get =
-    if Sys.os_type = "Win32" then
+    if Sys.win32 then
       fun n ->
         let n = String.uppercase_ascii n in
         snd (List.find (fun (k,_) -> String.uppercase_ascii k = n) (list ()))
@@ -555,15 +558,12 @@ module Env = struct
 end
 
 
-
 module OpamSys = struct
 
-  let is_windows = Sys.os_type = "Win32"
-
-  let path_sep = if is_windows then ';' else ':'
+  let path_sep = if Sys.win32 then ';' else ':'
 
   let split_path_variable =
-    if is_windows then fun path ->
+    if Sys.win32 then fun path ->
       let length = String.length path in
       let rec f acc index current last normal =
         if index = length
@@ -585,6 +585,8 @@ module OpamSys = struct
       OpamString.split_delim path path_sep
 
   let with_process_in cmd args f =
+    if Sys.win32 then
+      assert false;
     let path = split_path_variable (Env.get "PATH") in
     let cmd =
       List.find Sys.file_exists (List.map (fun d -> Filename.concat d cmd) path)
@@ -629,6 +631,13 @@ module OpamSys = struct
     in
     if cols > 0 then cols else fallback
 
+  let win32_get_console_width () =
+    let hConsoleOutput = OpamStubs.(getStdHandle STD_OUTPUT_HANDLE) in
+    let {OpamStubs.size = (width, _); _} =
+      OpamStubs.getConsoleScreenBufferInfo hConsoleOutput
+    in
+    width
+
   let terminal_columns =
     let v = ref (lazy (get_terminal_columns ())) in
     let () =
@@ -637,10 +646,16 @@ module OpamSys = struct
                (fun _ -> v := lazy (get_terminal_columns ())))
       with Invalid_argument _ -> ()
     in
-    fun () ->
-      if tty_out
-      then Lazy.force !v
-      else default_columns
+    if Sys.win32 then
+      fun () ->
+        if tty_out
+        then win32_get_console_width ()
+        else default_columns
+    else
+      fun () ->
+        if tty_out
+        then Lazy.force !v
+        else default_columns
 
   let home =
     let home = lazy (try Env.get "HOME" with Not_found -> Sys.getcwd ()) in
@@ -701,7 +716,7 @@ module OpamSys = struct
     | _      -> `sh
 
   let executable_name =
-    if is_windows then
+    if Sys.win32 then
       fun name ->
         if Filename.check_suffix name ".exe" then
           name
@@ -794,8 +809,107 @@ module OpamSys = struct
 
   let exit_because reason = exit (get_exit_code reason)
 
+  type nonrec warning_printer = warning_printer =
+    {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
+
+  let set_warning_printer =
+    let called = ref false in
+    fun printer ->
+      if !called then invalid_arg "Just what do you think you're doing, Dave?";
+      called := true;
+      console := printer
 end
 
+
+module Win32 = struct
+  module RegistryHive = struct
+    let to_string = function
+    | OpamStubs.HKEY_CLASSES_ROOT   -> "HKEY_CLASSES_ROOT"
+    | OpamStubs.HKEY_CURRENT_CONFIG -> "HKEY_CURRENT_CONFIG"
+    | OpamStubs.HKEY_CURRENT_USER   -> "HKEY_CURRENT_USER"
+    | OpamStubs.HKEY_LOCAL_MACHINE  -> "HKEY_LOCAL_MACHINE"
+    | OpamStubs.HKEY_USERS          -> "HKEY_USERS"
+
+    let of_string = function
+    | "HKCR"
+    | "HKEY_CLASSES_ROOT"   -> OpamStubs.HKEY_CLASSES_ROOT
+    | "HKCC"
+    | "HKEY_CURRENT_CONFIG" -> OpamStubs.HKEY_CURRENT_CONFIG
+    | "HKCU"
+    | "HKEY_CURRENT_USER"   -> OpamStubs.HKEY_CURRENT_USER
+    | "HKLM"
+    | "HKEY_LOCAL_MACHINE"  -> OpamStubs.HKEY_LOCAL_MACHINE
+    | "HKU"
+    | "HKEY_USERS"          -> OpamStubs.HKEY_USERS
+    | _                     -> failwith "RegistryHive.of_string"
+  end
+
+  let (set_parent_pid, parent_putenv) =
+    let ppid = ref (lazy (OpamStubs.(getCurrentProcessID () |> getParentProcessID))) in
+    let parent_putenv = lazy (
+      let ppid = Lazy.force !ppid in
+      if OpamStubs.isWoW64 () <> OpamStubs.isWoW64Process ppid then
+        (*
+         * Expect to see opam-putenv.exe in the same directory as opam.exe,
+         * rather than PATH (allow for crazy users like developers who may have
+         * both builds of opam)
+         *)
+        let putenv_exe =
+          Filename.(concat (dirname Sys.executable_name) "opam-putenv.exe")
+        in
+        let ctrl = ref stdout in
+        let quit_putenv () =
+          if !ctrl <> stdout then
+            let () = Printf.fprintf !ctrl "::QUIT\n%!" in
+            ctrl := stdout
+        in
+        at_exit quit_putenv;
+        if Sys.file_exists putenv_exe then
+          fun key value ->
+            if !ctrl = stdout then begin
+              let (inCh, outCh) = Unix.pipe () in
+              let _ =
+                Unix.create_process putenv_exe
+                                    [| putenv_exe; Int32.to_string ppid |]
+                                    inCh Unix.stdout Unix.stderr
+              in
+              ctrl := (Unix.out_channel_of_descr outCh);
+              set_binary_mode_out !ctrl true;
+            end;
+            Printf.fprintf !ctrl "%s\n%s\n%!" key value;
+            if key = "::QUIT" then ctrl := stdout;
+            true
+        else
+          let warning = lazy (
+            !console.warning "opam-putenv was not found - \
+                              OPAM is unable to alter environment variables";
+            false)
+          in
+          fun _ _ -> Lazy.force warning
+      else
+        function "::QUIT" -> fun _ -> true
+        | key -> OpamStubs.process_putenv ppid key)
+    in
+      ((fun pid ->
+          if Lazy.is_val parent_putenv then
+            failwith "Target parent already known";
+          ppid := Lazy.from_val pid),
+       (fun key -> (Lazy.force parent_putenv) key))
+
+  let persistHomeDirectory dir =
+    (* Update our environment *)
+    Unix.putenv "HOME" dir;
+    (* Update our parent's environment *)
+    ignore (parent_putenv "HOME" dir);
+    (* Persist the value to the user's environment *)
+    OpamStubs.(writeRegistry HKEY_CURRENT_USER "Environment" "HOME" REG_SZ dir);
+    (* Broadcast the change (or a reboot would be required) *)
+    (* These constants are defined in WinUser.h *)
+    let hWND_BROADCAST = 0xffffn in
+    let sMTO_ABORTIFHUNG = 0x2 in
+    OpamStubs.(sendMessageTimeout hWND_BROADCAST 5000 sMTO_ABORTIFHUNG
+                                  WM_SETTINGCHANGE 0 "Environment") |> ignore
+end
 
 
 module OpamFormat = struct
@@ -941,97 +1055,6 @@ module OpamFormat = struct
     | [a;b] -> Printf.sprintf "%s %s %s" a last b
     | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
 
-  let print_table ?cut oc ~sep table =
-    let cut =
-      match cut with
-      | None -> if oc = stdout || oc = stderr then `Wrap "" else `None
-      | Some c -> c
-    in
-    let replace_newlines by =
-      Re.(replace_string (compile (char '\n')) ~by)
-    in
-    let print_line l = match cut with
-      | `None ->
-        let s = List.map (replace_newlines "\\n") l |> String.concat sep in
-        output_string oc s;
-        output_char oc '\n'
-      | `Truncate ->
-        let s = List.map (replace_newlines " ") l |> String.concat sep in
-        output_string oc (cut_at_visual s (OpamSys.terminal_columns ()));
-        output_char oc '\n'
-      | `Wrap wrap_sep ->
-        let width = OpamSys.terminal_columns () in
-        let base_indent = 10 in
-        let sep_len = visual_length sep in
-        let wrap_sep_len = visual_length wrap_sep in
-        let max_sep_len = max sep_len wrap_sep_len in
-        let indent_string =
-          String.make (max 0 (base_indent - wrap_sep_len)) ' ' ^ wrap_sep
-        in
-        let margin = visual_length indent_string in
-        let min_reformat_width = 30 in
-        let rec split_at_overflows start_col acc cur =
-          let append = function
-            | [] -> acc
-            | last::r -> List.rev (OpamString.strip last :: r) :: acc
-          in
-          function
-          | [] -> List.rev (append cur)
-          | cell::rest ->
-            let multiline = String.contains cell '\n' in
-            let cell_width =
-              List.fold_left max 0
-                (List.map visual_length (OpamString.split cell '\n'))
-            in
-            let end_col = start_col + sep_len + cell_width in
-            let indent ~sep n cell =
-              let spc =
-                if sep then
-                  String.make (max 0 (if sep then n - wrap_sep_len else n)) ' ' ^ wrap_sep
-                else String.make n ' '
-              in
-              OpamList.concat_map ("\n"^spc)
-                OpamString.strip_right
-                (OpamString.split cell '\n')
-            in
-            if end_col < width then
-              if multiline then
-                let cell = indent ~sep:true start_col (OpamString.strip cell) in
-                split_at_overflows margin (append (cell::cur)) [] rest
-              else
-                split_at_overflows end_col acc (cell::cur) rest
-            else if rest = [] && acc = [] && not multiline &&
-                    width - start_col - max_sep_len >= min_reformat_width
-            then
-              let cell =
-                OpamString.strip cell |> fun cell ->
-                reformat ~width:(width - start_col - max_sep_len) cell |>
-                indent ~sep:true start_col
-              in
-              split_at_overflows margin acc (cell::cur) []
-            else if multiline || margin + cell_width >= width then
-              let cell =
-                OpamString.strip cell |> fun cell ->
-                reformat ~width:(width - margin) cell |> fun cell ->
-                OpamString.split cell '\n' |>
-                OpamList.concat_map ("\n"^indent_string) OpamString.strip_right
-              in
-              split_at_overflows margin ([cell]::append cur) [] rest
-            else
-              split_at_overflows (margin + cell_width) (append cur) [cell] rest
-        in
-        let splits = split_at_overflows 0 [] [] l in
-        let str =
-          OpamList.concat_map
-            ("\n" ^ String.make base_indent ' ')
-            (String.concat sep)
-            splits
-        in
-        output_string oc str;
-        output_char oc '\n'
-    in
-    List.iter print_line table
-
 end
 
 
@@ -1109,9 +1132,8 @@ module Config = struct
     try Option.map conv (Env.getopt ("OPAM"^var))
     with Failure _ ->
       flush stdout;
-      Printf.eprintf
-        "[WARNING] Invalid value for environment variable OPAM%s, ignored."
-        var;
+      !console.warning
+        "Invalid value for environment variable OPAM%s, ignored." var;
       None
 
   let env_bool var =

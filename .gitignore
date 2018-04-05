@@ -65,6 +65,8 @@ config.status
 aclocal.m4
 autom4te.cache
 src/*/.merlin
+src/stubs/jbuild
+src/tools/opam-putenv.inc
 # doc
 doc/dev-manual/*aux
 doc/dev-manual/*.html
