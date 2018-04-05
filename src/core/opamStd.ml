@@ -62,15 +62,17 @@ module OpamList = struct
 
   let cons x xs = x :: xs
 
-  let concat_map ?(left="") ?(right="") ?nil sep f =
+  let concat_map ?(left="") ?(right="") ?nil ?last_sep sep f =
+    let last_sep = match last_sep with None -> sep | Some sep -> sep in
     function
     | [] -> (match nil with Some s -> s | None -> left^right)
     | l ->
       let seplen = String.length sep in
+      let lastlen = String.length last_sep - seplen in
       let strs,len =
         List.fold_left (fun (strs,len) x ->
             let s = f x in s::strs, String.length s + seplen + len)
-          ([],String.length left + String.length right - seplen)
+          ([], String.length left + String.length right - seplen + lastlen)
           l
       in
       let buf = Bytes.create len in
@@ -82,8 +84,8 @@ module OpamList = struct
       let pos = prepend len right in
       let pos = prepend pos (List.hd strs) in
       let pos =
-        List.fold_left (fun pos s -> prepend (prepend pos sep) s)
-          pos (List.tl strs)
+        List.fold_left (fun (pos, cur_sep) s -> (prepend (prepend pos cur_sep) s, sep))
+          (pos, last_sep) (List.tl strs) |> fst
       in
       let pos = prepend pos left in
       assert (pos = 0);
