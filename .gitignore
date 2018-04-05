@@ -28,6 +28,7 @@ src_ext/archives/*
 src_ext/*.*download
 src_ext/*.pkgbuild
 src_ext/jbuild-ignore
+Opam.Runtime.*/
 *.tar.bz2
 *.annot
 *.tar.gz
@@ -65,6 +66,9 @@ config.status
 aclocal.m4
 autom4te.cache
 src/*/.merlin
+src/client/manifest.inc
+src/client/opamManifest.inc
+src/client/*.dll
 src/stubs/jbuild
 src/tools/opam-putenv.inc
 # doc

@@ -54,6 +54,11 @@ AC_ARG_WITH([mccs],
                  [Compile without a built-in Cudf solver (only works if 'mccs' is not otherwise installed)]),[],[MCCS_DEFAULT=yes]
 )
 
+AC_ARG_WITH([private_runtime],
+  AC_HELP_STRING([--with-private-runtime],
+                 [For a mingw-w64 build, manifest the runtime DLLs locally in Opam.Runtime.arch]),,[with_private_runtime=no]
+)
+
 AS_IF([test "x" != "x$LIB_PREFIX"], [
   CPATH=$CPATH:$LIB_PREFIX/include
   LIBRARY_PATH=$LIBRARY_PATH:$LIB_PREFIX/lib
@@ -80,6 +85,10 @@ AC_MSG_CHECKING([for compiler architecture])
 ARCH=`$OCAML shell/print_config.ml arch 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/architecture: //p"`
 AS_IF([ test "$?" -eq 0 ],,[AC_MSG_ERROR([failed])] )
 AC_MSG_RESULT([$ARCH])
+AC_MSG_CHECKING([for compiler system])
+SYSTEM=`$OCAML shell/print_config.ml system 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/system: //p"`
+AC_MSG_RESULT([$SYSTEM])
+AC_SUBST(SYSTEM)
 
 LIB_PREPEND=
 INC_PREPEND=
@@ -224,6 +233,33 @@ elif test x"${enable_checks}" != x"no" ; then
   AC_MSG_ERROR([You must have either curl or wget installed.])
 fi
 
+AS_IF([test "x${with_private_runtime}" != "xno"],[
+  AS_IF([test ${WIN32} -eq 1 -a "x${CCOMP_TYPE}" = "xcc"],[
+    CONF_MANIFEST_O=opam-manifest.o
+    AS_IF([ test "$ARCH" = "i386" ],[
+      TOOL_ARCH=i686
+      MANIFEST_ARCH=x86
+      RUNTIME_GCC_S=libgcc_s_sjlj-1
+    ],[
+      TOOL_ARCH=x86_64
+      MANIFEST_ARCH=amd64
+      RUNTIME_GCC_S=libgcc_s_seh-1
+    ])
+    RUNTIME=`${TOOL_ARCH}-w64-mingw32-gcc -print-sysroot`/mingw/bin
+    echo Linking ${SYSTEM} runtime DLLs
+    ${LN_S} -fv ${RUNTIME}/${RUNTIME_GCC_S}.dll src/client/${RUNTIME_GCC_S}.dll
+    ${LN_S} -fv ${RUNTIME}/libstdc++-6.dll src/client/libstdc++-6.dll
+    ${LN_S} -fv ${RUNTIME}/libwinpthread-1.dll src/client/libwinpthread-1.dll
+    AC_SUBST(TOOL_ARCH)
+    AC_SUBST(MANIFEST_ARCH)
+    AC_SUBST(RUNTIME_GCC_S)
+  ],[
+    CONF_MANIFEST_O=
+    AC_MSG_WARN([--with-private-runtime ignored (not building on mingw)])
+  ])
+],[CONF_MANIFEST_O=])
+AC_SUBST(CONF_MANIFEST_O)
+
 echo
 
 AC_CHECK_OCAML_PKG([unix])
@@ -303,7 +339,15 @@ AS_IF([ test ${BUILD_PUTENV} -eq 1],[
 ],[
   > src/tools/opam-putenv.inc
 ])
-AC_CONFIG_FILES(Makefile.config)
+AS_IF([ test -n "${CONF_MANIFEST_O}" ],[
+  AC_CONFIG_FILES(src/client/manifest.inc)
+],[
+  > src/client/manifest.inc
+])
+AC_CONFIG_FILES(
+  Makefile.config
+  src/client/opamManifest.inc
+)
 AC_OUTPUT
 
 AS_IF([ test ${WIN32} -eq 1],[
