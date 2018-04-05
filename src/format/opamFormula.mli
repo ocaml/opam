@@ -12,7 +12,7 @@
 (** Formulas on packages, opt. with sub-formulas on versions, and conversion
     functions *)
 
-(** binary operations (compatible with the Dose type for Cudf operators !) *)
+(** binary operations (compatible with the Dose type for Cudf operators!) *)
 type relop = OpamParserTypes.relop (* = [ `Eq | `Neq | `Geq | `Gt | `Leq | `Lt ] *)
 
 (** Version constraints for OPAM *)

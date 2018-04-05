@@ -11,7 +11,7 @@
 
 (** Small lib for writing opam-repo admin scripts *)
 
-(** The current repo (taken from CWD !) *)
+(** The current repo (taken from CWD!) *)
 val repo : OpamTypes.repository
 
 (** All defined packages in the current repo *)

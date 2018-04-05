@@ -175,7 +175,7 @@ let edit_raw name temp_file =
       | ws ->
         OpamConsole.warning "The opam file didn't pass validation:";
         OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string ws);
-        if OpamConsole.confirm "Continue anyway ('no' will reedit) ?"
+        if OpamConsole.confirm "Proceed anyway ('no' will re-edit)?"
         then Some opam
         else edit ()
     with e ->
@@ -184,7 +184,7 @@ let edit_raw name temp_file =
        | Failure _ -> ()
        | e -> OpamConsole.error "%s" (Printexc.to_string e));
       if OpamStd.Sys.tty_in &&
-         OpamConsole.confirm "Errors in %s, retry editing ?"
+         OpamConsole.confirm "Errors in %s, edit again?"
            (OpamFile.to_string temp_file)
       then edit ()
       else None
@@ -276,7 +276,7 @@ let edit st ?version name =
           if (current_opam >>| fun o ->
               OpamFile.OPAM.equal (clean_opam opam) (clean_opam o))
              <> Some true &&
-             OpamConsole.confirm "Save the new opam file back to %S ?"
+             OpamConsole.confirm "Save the new opam file back to %S?"
                (OpamFile.to_string src_opam) then
             OpamFile.OPAM.write_with_preserved_format src_opam
               (clean_opam opam)
@@ -314,7 +314,7 @@ let version_pin st name version =
               (OpamPath.Switch.Overlay.package root st.switch name))
          else OpamConsole.note "Pinning unchanged")
       else if OpamConsole.confirm
-          "Package %s is already %s. Unpin and continue ?"
+          "Package %s is already %s. Unpin and continue?"
           (OpamPackage.Name.to_string name)
           (string_of_pinned opam)
       then
@@ -356,7 +356,7 @@ let rec handle_pin_depends st nv opam =
               (OpamConsole.colorise `bold (OpamPackage.to_string nv))
               (OpamConsole.colorise `underline (OpamUrl.to_string url)))
           extra_pins);
-     if not (OpamConsole.confirm "Continue ?") then
+     if not (OpamConsole.confirm "Continue?") then
        (OpamConsole.msg "You can specify --ignore-pin-depends to bypass\n";
         OpamStd.Sys.exit_because `Aborted);
      List.fold_left (fun st (nv, url) ->
@@ -392,7 +392,7 @@ and source_pin
           (if no_changes then "already" else "currently")
           (string_of_pinned cur_opam);
       if no_changes then ()
-      else (* if OpamConsole.confirm "Proceed and change pinning target ?" then *)
+      else (* if OpamConsole.confirm "Proceed and change pinning target?" then *)
         OpamFilename.remove
           (OpamFile.filename
              (OpamPath.Switch.Overlay.tmp_opam
@@ -405,7 +405,7 @@ and source_pin
           "Package %s is part of the base packages of this compiler."
           (OpamPackage.Name.to_string name);
         if not @@ OpamConsole.confirm
-            "Are you sure you want to override this and pin it anyway ?"
+            "Are you sure you want to override this and pin it anyway?"
         then raise Aborted
       );
       let version = default_version st name in
@@ -415,7 +415,7 @@ and source_pin
   if not (OpamPackage.has_name st.packages name) &&
      opam_opt = None &&
      not (OpamConsole.confirm
-            "Package %s does not exist, create as a %s package ?"
+            "Package %s does not exist, create as a %s package?"
             (OpamPackage.Name.to_string name)
             (OpamConsole.colorise `bold "NEW"))
   then raise Aborted;

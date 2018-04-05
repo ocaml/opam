@@ -208,8 +208,8 @@ module B = struct
       else
         Not_available
           (Printf.sprintf
-             "Could not find target file %s after rsync of %s. \
-              Maybe you meant %s/ ?"
+             "Could not find target file %s after rsync with %s. \
+              Perhaps you meant %s/ ?"
              (OpamUrl.basename remote_url)
              (OpamUrl.to_string remote_url)
              (OpamUrl.to_string remote_url))

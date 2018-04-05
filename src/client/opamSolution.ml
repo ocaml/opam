@@ -112,7 +112,7 @@ let atoms_of_packages set =
   List.rev_map (fun n -> n, None)
     (OpamPackage.Name.Set.elements (OpamPackage.names_of_packages set))
 
-(* unused ?
+(* unused?
 let atom_of_name name =
   name, None
 *)
@@ -730,7 +730,7 @@ let confirmation ?ask requested solution =
   OpamCoreConfig.(!r.answer = Some true) ||
   match ask with
   | Some false -> true
-  | Some true -> OpamConsole.confirm "Do you want to continue ?"
+  | Some true -> OpamConsole.confirm "Do you want to continue?"
   | None ->
     let open PackageActionGraph in
     let solution_packages =
@@ -739,7 +739,7 @@ let confirmation ?ask requested solution =
         solution
         OpamPackage.Name.Set.empty in
     OpamPackage.Name.Set.equal requested solution_packages
-    || OpamConsole.confirm "Do you want to continue ?"
+    || OpamConsole.confirm "Do you want to continue?"
 
 let run_hook_job t name ?(local=[]) w =
   let shell_env = OpamEnv.get_full ~force_path:true t in

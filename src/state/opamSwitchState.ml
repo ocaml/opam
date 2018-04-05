@@ -27,7 +27,7 @@ let load_switch_config gt switch =
   | Some c -> c
   | None ->
     OpamConsole.error
-      "No config file found for switch %s. Switch broken ?"
+      "No config file found for switch %s. Switch broken?"
       (OpamSwitch.to_string switch);
     OpamFile.Switch_config.empty
 

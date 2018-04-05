@@ -167,7 +167,7 @@ let add (env: env) (updates: env_update list) =
   env @ expand updates
 
 let compute_updates ?(force_path=false) st =
-  (* Todo: put these back into their packages !
+  (* Todo: put these back into their packages!
   let perl5 = OpamPackage.Name.of_string "perl5" in
   let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch t.switch_config perl5 in
   let new_perl5lib = "PERL5LIB", "+=", OpamFilename.Dir.to_string add_to_perl5lib in
@@ -210,7 +210,7 @@ let compute_updates ?(force_path=false) st =
      Some "Prefix of the current opam switch") ::
     List.map env_expansion st.switch_config.OpamFile.Switch_config.env
   in
-  let pkg_env = (* XXX: Does this need a (costly) topological sort ? *)
+  let pkg_env = (* XXX: Does this need a (costly) topological sort? *)
     OpamPackage.Set.fold (fun nv acc ->
         match OpamPackage.Map.find_opt nv st.opams with
         | Some opam -> List.map (env_expansion ~opam) (OpamFile.OPAM.env opam) @ acc
@@ -662,7 +662,7 @@ let setup_interactive root ~dot_profile shell =
     (OpamConsole.colorise `bold @@ "eval $(opam env)");
   match
     OpamConsole.read
-      "Do you want opam to modify %s ? [N/y/f]\n\
+      "Do you want opam to modify %s? [N/y/f]\n\
        (default is 'no', use 'f' to choose a different file)"
       (OpamFilename.prettify dot_profile)
   with

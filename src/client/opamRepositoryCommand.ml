@@ -92,7 +92,7 @@ let add rt name url trust_anchors =
        = None &&
        not (OpamConsole.confirm
               "%S doesn't contain a \"packages\" directory.\n\
-               Is it really the directory of your repo ?"
+               Is it really the directory of your repo?"
               (OpamUrl.to_string url))
     then OpamStd.Sys.exit_because `Aborted;
     OpamProcess.Job.run (OpamRepository.init root name);

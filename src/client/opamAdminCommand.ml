@@ -687,7 +687,7 @@ let filter_command =
     let packages =
       if remove then packages else OpamPackage.Set.Op.(st.packages -- packages)
     in
-    if not (dryrun || OpamConsole.confirm "Confirm ?") then
+    if not (dryrun || OpamConsole.confirm "Confirm?") then
       OpamStd.Sys.exit_because `Aborted
     else
     let repo = OpamRepositoryBackend.local repo_root in

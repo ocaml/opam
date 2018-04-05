@@ -1045,7 +1045,7 @@ let as_necessary global_lock root config =
        Some "yes" =
        OpamConsole.read "Type \"yes\" to perform the update and continue:" ||
        not is_dev &&
-       OpamConsole.confirm "Perform the update and continue ?"
+       OpamConsole.confirm "Perform the update and continue?"
     then
       let update_to v f config =
         if OpamVersion.compare config_version v < 0 then

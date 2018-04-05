@@ -212,7 +212,7 @@ let install options =
     (fun (src, dst) ->
        let src_file = OpamFilename.create (OpamFilename.cwd ()) src.c in
        cmd.confirm
-         (Printf.sprintf "Do you want to install %s to %s ?"
+         (Printf.sprintf "Do you want to install %s to %s?"
             (OpamFilename.Base.to_string src.c) (OpamFilename.to_string dst))
          (fun () -> cmd.cp ~opt:false ~src:src_file ~dst ())
     ) (OpamFile.Dot_install.misc instfile)
@@ -244,7 +244,7 @@ let uninstall options =
   List.iter
     (fun (_src, dst) ->
        cmd.confirm
-         (Printf.sprintf "Remove %s ?" (OpamFilename.to_string dst))
+         (Printf.sprintf "Remove %s?" (OpamFilename.to_string dst))
          (fun () -> cmd.rm ~opt:false dst))
     (OpamFile.Dot_install.misc instfile)
 

@@ -114,12 +114,12 @@ let process_dot_install st nv build_dir =
         (fun (src, dst) ->
           let src_file = OpamFilename.create (OpamFilename.cwd ()) src.c in
           if OpamFilename.exists dst
-          && OpamConsole.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
+          && OpamConsole.confirm "Overwriting %s?" (OpamFilename.to_string dst) then
             OpamFilename.install ~src:src_file ~dst ()
           else begin
             OpamConsole.msg "Installing %s to %s.\n"
               (OpamFilename.Base.to_string src.c) (OpamFilename.to_string dst);
-            if OpamConsole.confirm "Continue ?" then
+            if OpamConsole.confirm "Continue?" then
               OpamFilename.install ~src:src_file ~dst ()
           end
         ) (I.misc install);
@@ -530,7 +530,7 @@ let remove_package_aux
     List.iter (fun (_,dst) ->
         if OpamFilename.exists dst then begin
           OpamConsole.msg "Removing %s." (OpamFilename.to_string dst);
-          if OpamConsole.confirm "Continue ?" then
+          if OpamConsole.confirm "Continue?" then
             OpamFilename.remove dst
         end
       ) (OpamFile.Dot_install.misc install);
@@ -703,7 +703,7 @@ let build_package t ?(test=false) ?(doc=false) build_dir nv =
     Done None
 
 (* Assumes the package has already been compiled in its build dir.
-   Does not register the installation in the metadata ! *)
+   Does not register the installation in the metadata! *)
 let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
   let opam = OpamSwitchState.opam t nv in
   let commands =

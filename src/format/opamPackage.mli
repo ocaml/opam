@@ -113,7 +113,7 @@ val max_version: Set.t -> Name.t -> t
 (** Compare two packages *)
 val compare: t -> t -> int
 
-(** Are two packages equal ? *)
+(** Are two packages equal? *)
 val equal: t -> t -> bool
 
 (** Hash a package *)

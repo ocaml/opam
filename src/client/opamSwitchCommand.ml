@@ -165,7 +165,7 @@ let remove gt ?(confirm = true) switch =
   );
   if not confirm ||
      OpamConsole.confirm
-       "Switch %s and all its packages will be wiped. Are you sure ?"
+       "Switch %s and all its packages will be wiped. Are you sure?"
        (OpamSwitch.to_string switch)
   then
     clear_switch gt switch
@@ -221,7 +221,7 @@ let install_compiler_packages t atoms =
   if not (OpamPackage.Set.is_empty non_comp) &&
      not (OpamConsole.confirm ~default:false
             "Packages %s don't have the 'compiler' flag set. Are you sure \
-             you want to set them as the compiler base for this switch ?"
+             you want to set them as the compiler base for this switch?"
             (OpamPackage.Set.to_string non_comp))
   then
     OpamConsole.error_and_exit `Aborted
@@ -317,7 +317,7 @@ let install gt ?rt ?synopsis ?repos ~update_config ~packages switch =
            OpamConsole.warning "Switch %s left partially installed"
              (OpamSwitch.to_string switch);
            raise e);
-       if OpamConsole.confirm "Switch initialisation failed, clean up ? \
+       if OpamConsole.confirm "Switch initialisation failed: clean up? \
                                ('n' will leave the switch partially installed)"
        then ignore (clear_switch gt switch));
     raise e
@@ -338,7 +338,7 @@ let switch lock gt switch =
   else
     OpamConsole.error_and_exit `Not_found
       "No switch %s is currently installed. Did you mean \
-       'opam switch create %s' ?\n\
+       'opam switch create %s'?\n\
        Installed switches are:\n%s"
       (OpamSwitch.to_string switch) (OpamSwitch.to_string switch)
       (OpamStd.Format.itemize OpamSwitch.to_string installed_switches)
@@ -563,7 +563,7 @@ let set_compiler st namesv =
        "These packages are not installed:\n%s"
        (OpamStd.List.concat_map ", " OpamPackage.to_string uninstalled);
      if not (OpamConsole.confirm
-               "Set them as compilers at the proposed versions anyways ?")
+               "Set them as compilers at the proposed versions regardless?")
      then OpamStd.Sys.exit_because `Aborted);
   let st = { st with compiler_packages = OpamPackage.Set.of_list packages } in
   OpamSwitchAction.write_selections st;

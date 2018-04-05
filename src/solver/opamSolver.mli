@@ -38,7 +38,7 @@ val all_packages: solution -> package_set
 (** Pretty-printing of statistics *)
 val string_of_stats: stats -> string
 
-(** Is the solution empty ? *)
+(** Is the solution empty? *)
 val solution_is_empty: solution -> bool
 
 (** Display a solution *)

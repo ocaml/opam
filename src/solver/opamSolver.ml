@@ -283,7 +283,7 @@ let string_of_request r =
     (to_string r.wish_remove)
     (to_string r.wish_upgrade)
 
-(* Unused ?
+(* Unused?
 let map_cause f = function
   | Upstream_changes -> Upstream_changes
   | Use l            -> Use (List.rev_map f l)

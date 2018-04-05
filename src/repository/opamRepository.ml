@@ -69,7 +69,7 @@ let fetch_from_cache =
   fun cache_dir cache_urls checksums ->
   let mismatch file =
     OpamConsole.error
-      "Conflicting file hashes, or broken or compromised cache !\n%s"
+      "Conflicting file hashes, or broken or compromised cache!\n%s"
       (OpamStd.Format.itemize (fun ck ->
            OpamHash.to_string ck ^
            if OpamHash.check_file (OpamFilename.to_string file) ck
@@ -151,7 +151,7 @@ let validate_and_add_to_cache label url cache_dir file checksums =
     (match cache_dir, checksums with
      | Some dir, ck::_ ->
        OpamFilename.copy ~src:file ~dst:(cache_file dir ck)
-       (* idea: hardlink to the other checksums ? *)
+       (* idea: hardlink to the other checksums? *)
      | _ -> ());
     true
 

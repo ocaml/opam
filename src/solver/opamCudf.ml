@@ -632,7 +632,7 @@ let get_final_universe ~version_map univ req =
   match call_external_solver ~version_map univ req with
   | Algo.Depsolver.Sat (_,u) -> Success (remove u dose_dummy_request None)
   | Algo.Depsolver.Error "(CRASH) Solution file is empty" ->
-    (* XXX Is this still needed with latest dose ? *)
+    (* XXX Is this still needed with latest dose? *)
     Success (Cudf.load_universe [])
   | Algo.Depsolver.Error str -> fail str
   | Algo.Depsolver.Unsat r   ->
@@ -774,7 +774,7 @@ let compute_root_causes g requested reinstall =
       (* Removal caused by conflict *)
       Conflicts_with [p]
     | (`Install _ | `Change _), `Before, `Reinstall p ->
-      (* New dependency of p ? *)
+      (* New dependency of p? *)
       Required_by [p]
     | `Change _, _, _ ->
       (* The only remaining cause for changes is upstream *)
@@ -835,7 +835,7 @@ let compute_root_causes g requested reinstall =
   let causes =
     (* Compute causes for remaining upgrades
        (maybe these could be removed from the actions altogether since they are
-       unrelated to the request ?) *)
+       unrelated to the request?) *)
     let roots = make_roots causes Unknown (function
         | `Change _ as act ->
           List.for_all

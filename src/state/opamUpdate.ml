@@ -316,7 +316,7 @@ let pinned_package st ?version ?(working_dir=false) name =
             "[%s] Conflicting update of the metadata from %s."
             (OpamConsole.colorise `green (OpamPackage.Name.to_string name))
             (OpamUrl.to_string url);
-          OpamConsole.confirm "\nOverride files in %s (there will be a backup) ?"
+          OpamConsole.confirm "\nOverride files in %s (there will be a backup)?"
             (OpamFilename.Dir.to_string overlay_dir)
         then (
           let bak =

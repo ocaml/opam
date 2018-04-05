@@ -114,10 +114,10 @@ val dry_wait_one: t list -> t * result
 (** Send SIGINT to a process (or SIGKILL on Windows) *)
 val interrupt: t -> unit
 
-(** Is the process result a success ? *)
+(** Is the process result a success? *)
 val is_success : result -> bool
 
-(** Is the process result a failure ? *)
+(** Is the process result a failure? *)
 val is_failure : result -> bool
 
 (** Should be called after process termination, to cleanup temporary files.

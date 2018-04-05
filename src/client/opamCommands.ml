@@ -218,7 +218,7 @@ let init =
             if OpamConsole.confirm
                 "Using configuration file from %s. \
                  Please verify the following SHA256:\n    %s\n\
-                 Is this correct ?"
+                 Is this correct?"
                 (OpamUrl.to_string url) (OpamHash.contents hash)
             then OpamFile.make f
             else OpamStd.Sys.exit_because `Aborted
@@ -1327,8 +1327,8 @@ let reinstall =
             let upstream = OpamPackage.Map.find nv st.opams in
             if not (OpamFile.OPAM.effectively_equal installed upstream) &&
                OpamConsole.confirm
-                 "Metadata of %s was updated. Force-update, without performing \
-                  the reinstallation ?" (OpamPackage.to_string nv)
+                 "Metadata of %s were updated. Force-update, without performing \
+                  the reinstallation?" (OpamPackage.to_string nv)
             then OpamSwitchAction.install_metadata st nv
           with Not_found -> ())
         to_forget;
@@ -1601,8 +1601,8 @@ let repository =
           | `Current_switch ->
             match OpamStateConfig.get_switch_opt () with
             | None ->
-              OpamConsole.warning "No switch is currently set, maybe you meant \
-                                   '--set-default' ?";
+              OpamConsole.warning "No switch is currently set, perhaps you meant \
+                                   '--set-default'?";
               acc
             | Some sw ->
               if List.mem sw acc then acc
@@ -2377,7 +2377,7 @@ let pin ?(unpin_only=false) () =
          let names = match names with
            | _::_::_ ->
              if OpamConsole.confirm
-                 "This will pin the following packages: %s. Continue ?"
+                 "This will pin the following packages: %s. Continue?"
                  (OpamStd.List.concat_map ", " OpamPackage.Name.to_string names)
              then names
              else OpamStd.Sys.exit_because `Aborted
