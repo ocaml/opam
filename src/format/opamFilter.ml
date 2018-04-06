@@ -547,21 +547,21 @@ let variables_of_filtered_formula ff =
          acc f)
     [] ff
 
-let filter_deps ~build ~post ?test ?doc ?dev ?default_version ?default deps =
-  let env var =
-    let get_opt = function
-      | Some b -> Some (B b)
-      | None -> invalid_arg "filter_deps"
-    in
-    match OpamVariable.Full.to_string var with
-    | "build" -> Some (B build)
-    | "post" -> Some (B post)
-    | "with-test" -> get_opt test
-    | "with-doc" -> get_opt doc
-    | "dev" -> get_opt dev
-    | _ -> None
+let deps_var_env ~build ~post ?test ?doc ?dev var =
+  let get_opt = function
+    | Some b -> Some (B b)
+    | None -> invalid_arg "filter_deps"
   in
-  filter_formula ?default_version ?default env deps
+  match OpamVariable.Full.to_string var with
+  | "build" -> Some (B build)
+  | "post" -> Some (B post)
+  | "with-test" -> get_opt test
+  | "with-doc" -> get_opt doc
+  | "dev" -> get_opt dev
+  | _ -> None
+
+let filter_deps ~build ~post ?test ?doc ?dev ?default_version ?default deps =
+  filter_formula ?default_version ?default (deps_var_env ~build ~post ?test ?doc ?dev) deps
 
 let rec simplify_extended_version_formula ef =
   let to_pure ef =
@@ -608,3 +608,45 @@ let rec simplify_extended_version_formula ef =
        with Failure _ -> None)
     | Block ef -> simplify_extended_version_formula ef
     | atom -> Some atom
+
+let atomise_extended =
+  OpamFormula.map (fun (x, c) ->
+      match c with
+      | Empty -> Atom (x, (FBool true, None))
+      | cs ->
+        let rec aux filters = function
+          | Atom (Filter f) -> Atom (x, (FAnd (f,filters), None))
+          | Atom (Constraint c) -> Atom (x, (filters, Some c))
+          | Empty ->
+            (match filters with FBool true -> Empty | f -> Atom (x, (f, None)))
+          | Block f -> aux filters f
+          | And _ as f ->
+            let filters, constraints =
+              let rec split filters conj = function
+                | Atom (Filter f) :: r -> split (FAnd (f,filters)) conj r
+                | cstr :: r -> split filters (cstr::conj) r
+                | [] -> filters, conj
+              in
+              split filters [] (OpamFormula.ands_to_list f)
+            in
+            OpamFormula.ands (List.rev_map (aux filters) constraints)
+          | Or (a, b) -> Or (aux filters a, aux filters b)
+        in
+        aux (FBool true) cs)
+
+
+(*
+  OpamFormula.map (fun (x, (flt, c)) ->
+      match c with
+      | Empty -> Atom (x, (flt, None))
+      | cs ->
+        OpamFormula.map (fun c ->
+            let c = OpamFormula.map (function
+                | Constraint (op, FString v) ->
+                  Atom (op, OpamPackage.Version.of_string v)
+                | _ -> invalid_arg "atomise_extended")
+            in
+            Atom (x, (flt, Some c)))
+          cs)
+    ff
+*)

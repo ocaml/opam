@@ -154,6 +154,14 @@ val filter_formula:
     formula *)
 val partial_filter_formula: env -> filtered_formula -> filtered_formula
 
+(** A more generic formula reduction function, that takes a "partial resolver"
+    as argument *)
+val gen_filter_formula:
+  ('a -> [< `True | `False | `Formula of 'b OpamTypes.generic_formula ]) ->
+  ('c * 'a) OpamFormula.formula ->
+  ('c * 'b OpamTypes.generic_formula) OpamFormula.formula
+
+
 val string_of_filtered_formula: filtered_formula -> string
 
 val variables_of_filtered_formula: filtered_formula -> full_variable list
@@ -170,9 +178,18 @@ val filter_deps:
   ?default_version:version -> ?default:bool ->
   filtered_formula -> formula
 
+(** The environment used in resolving the dependency filters, as per
+    [filter_deps]. *)
+val deps_var_env:
+  build:bool -> post:bool -> ?test:bool -> ?doc:bool -> ?dev:bool -> env
 
 (** Like [OpamFormula.simplify_version_formula], but on filtered formulas
     (filters are kept unchanged, but put in front) *)
 val simplify_extended_version_formula:
   filter filter_or_constraint OpamFormula.formula ->
   filter filter_or_constraint OpamFormula.formula option
+
+val atomise_extended:
+  filtered_formula ->
+  (OpamPackage.Name.t * (filter * (relop * filter) option))
+    OpamFormula.formula

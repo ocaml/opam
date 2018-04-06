@@ -36,15 +36,6 @@ let empty_universe =
     u_attrs = [];
   }
 
-(* Get the optional dependencies of a package *)
-let depopts_of_package universe ~build package =
-  let opts =
-    try
-      OpamFilter.filter_deps ~build ~post:false ~default:false
-        (OpamPackage.Map.find package universe.u_depopts)
-    with Not_found -> Empty in
-  OpamFormula.to_dnf opts
-
 let is_installed universe (name,_) =
   OpamPackage.Set.exists (fun pkg ->
       OpamPackage.name pkg = name
@@ -95,44 +86,44 @@ let cudf_versions_map universe packages =
 let name_to_cudf name =
   Common.CudfAdd.encode (OpamPackage.Name.to_string name)
 
+let constraint_to_cudf version_map name (op,v) =
+  let nv = OpamPackage.create name v in
+  try
+    Some (op, OpamPackage.Map.find nv version_map)
+  with Not_found ->
+    (* The version for comparison doesn't exist: match to the closest
+       existing version according to the direction of the comparison
+       (this shouldn't happen for any constraint in the universe, now that we
+       compute a full version map, but may still happen for user-provided
+       constraints) *)
+    let all_versions =
+      OpamPackage.Map.filter (fun nv _ -> nv.name = name)
+        version_map in
+    match op with
+    | `Neq -> None (* Always true *)
+    | `Eq -> (* Always false *)
+      Some (`Gt, OpamPackage.Map.cardinal all_versions)
+    | (`Geq | `Gt | `Leq | `Lt) as op ->
+      let sign, result_op =  match op with
+        | `Geq | `Gt -> (fun x -> x), `Geq
+        | `Leq | `Lt -> (fun x -> -x), `Leq in
+      let rev_version_map =
+        OpamPackage.Map.fold (fun nv cv acc ->
+            OpamStd.IntMap.add (sign cv) nv.version acc)
+          all_versions OpamStd.IntMap.empty in
+      let map =
+        OpamStd.IntMap.filter
+          (fun _ v1 -> sign (OpamPackage.Version.compare v v1) < 0)
+          rev_version_map in
+      if OpamStd.IntMap.is_empty map then
+        match result_op with
+        | `Geq -> Some (`Gt, max 1 (OpamPackage.Map.cardinal all_versions))
+        | `Leq -> Some (`Lt, 1)
+      else Some (result_op, sign (fst (OpamStd.IntMap.min_binding map)))
+
 let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
-  name_to_cudf name, match cstr with
-  | None -> None
-  | Some (op,v) ->
-    let nv = OpamPackage.create name v in
-    try
-      let cv = OpamPackage.Map.find nv version_map in
-      Some (op, cv)
-    with Not_found ->
-      (* The version for comparison doesn't exist: match to the closest
-         existing version according to the direction of the comparison
-         (this shouldn't happen for any constraint in the universe, now that we
-         compute a full version map, but may still happen for user-provided
-         constraints) *)
-      let all_versions =
-        OpamPackage.Map.filter (fun nv _ -> nv.name = name)
-          version_map in
-      match op with
-      | `Neq -> None (* Always true *)
-      | `Eq -> (* Always false *)
-        Some (`Gt, OpamPackage.Map.cardinal all_versions)
-      | (`Geq | `Gt | `Leq | `Lt) as op ->
-        let sign, result_op =  match op with
-          | `Geq | `Gt -> (fun x -> x), `Geq
-          | `Leq | `Lt -> (fun x -> -x), `Leq in
-        let rev_version_map =
-          OpamPackage.Map.fold (fun nv cv acc ->
-              OpamStd.IntMap.add (sign cv) nv.version acc)
-            all_versions OpamStd.IntMap.empty in
-        let map =
-          OpamStd.IntMap.filter
-            (fun _ v1 -> sign (OpamPackage.Version.compare v v1) < 0)
-            rev_version_map in
-        if OpamStd.IntMap.is_empty map then
-          match result_op with
-          | `Geq -> Some (`Gt, max 1 (OpamPackage.Map.cardinal all_versions))
-          | `Leq -> Some (`Lt, 1)
-        else Some (result_op, sign (fst (OpamStd.IntMap.min_binding map)))
+  name_to_cudf name,
+  OpamStd.Option.Op.(cstr >>= constraint_to_cudf version_map name)
 
 let lag_function =
   let exp =
@@ -140,10 +131,6 @@ let lag_function =
   in
   let rec power n x = if n <= 0 then 1 else x * power (n-1) x in
   power exp
-
-let formula_to_cudf universe version_map f =
-  List.map (List.map (atom2cudf universe version_map))
-    (OpamFormula.to_cnf f)
 
 let opam2cudf universe version_map packages =
   let chrono = OpamConsole.timer () in
@@ -247,50 +234,66 @@ let opam2cudf universe version_map packages =
       extras_maps
   in
   t 8;
-  fun ~depopts ~build ~post ->
-    ti := chrono ();
-    let depends_map =
-      OpamPackage.Map.map (fun f ->
-          OpamFilter.filter_deps ~build ~post ~default:false f)
-        (only_packages universe.u_depends)
-    in
-    t 10;
-    let depopts_map =
-      OpamPackage.Map.map (fun f ->
-          OpamFilter.filter_deps ~build ~post:false ~default:false f)
-        (only_packages universe.u_depopts)
-    in
-    t 11;
-    let all_depends_map =
-      if depopts then
-        OpamPackage.Map.merge (fun _ d dopts ->
-            let d = OpamStd.Option.default Empty d in
-            let dopts = OpamStd.Option.default Empty dopts in
-            Some OpamFormula.(ands [d; dopts]))
-          depends_map depopts_map
-      else depends_map
-    in
-    t 12;
+  ti := chrono ();
+  let preresolve_deps f =
+    OpamFilter.atomise_extended f |>
+    OpamFormula.map
+      (fun (name, (filter, cstr)) ->
+         let cstr = match cstr with
+           | None -> None
+           | Some (op, FString v) ->
+             let v = OpamPackage.Version.of_string v in
+             constraint_to_cudf version_map name (op, v)
+           | _ -> assert false
+         in
+         Atom (name_to_cudf name, (filter, cstr))) |>
+    OpamFormula.cnf_of_formula
+  in
+  let depends_map =
+    OpamPackage.Map.map preresolve_deps
+      (only_packages universe.u_depends)
+  in
+  let depopts_map =
+    OpamPackage.Map.map preresolve_deps
+      (only_packages universe.u_depopts)
+  in
+  t 201;
     let conflicts_map =
       OpamPackage.Map.mapi
         (fun nv conflicts ->
            (nv.name, None) ::
            (* prevents install of multiple versions of the same pkg *)
-           OpamFormula.set_to_disjunction universe.u_packages
-             (* OpamFormula.to_disjunction *) conflicts)
+           OpamFormula.set_to_disjunction universe.u_packages conflicts)
         (only_packages universe.u_conflicts)
     in
     t 13;
-    let depends_map_resolved =
-      OpamPackage.Map.map (formula_to_cudf universe version_map)
-        all_depends_map
-    in
-    t 14;
     let conflicts_map_resolved =
       OpamPackage.Map.map (List.rev_map (atom2cudf universe version_map))
         conflicts_map
     in
     t 15;
+  fun ~depopts ~build ~post ->
+    ti := chrono ();
+    let all_depends_map =
+      if depopts then
+        OpamPackage.Map.union (fun d dopts -> OpamFormula.(ands [d; dopts]))
+          depends_map depopts_map
+      else depends_map
+    in
+    t 1001;
+    let depends_map_resolved =
+      OpamPackage.Map.map (fun f ->
+          f
+          |> OpamFormula.map (fun (name, (filter, cstr)) ->
+              if OpamFilter.eval_to_bool ~default:false
+                  (OpamFilter.deps_var_env ~build ~post) filter
+              then Atom (name, cstr)
+              else Empty)
+          |> OpamFormula.ands_to_list
+          |> List.map (OpamFormula.fold_right (fun acc x -> x::acc) []))
+        all_depends_map
+    in
+    t 1002;
     univ0
     |> add depends_map_resolved (fun _ depends cp -> {cp with Cudf.depends})
     |> add conflicts_map_resolved (fun _ conflicts cp -> {cp with Cudf.conflicts})

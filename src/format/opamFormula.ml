@@ -161,6 +161,13 @@ let rec fold_left f i = function
   | And(x,y) -> fold_left f (fold_left f i x) y
   | Or(x,y)  -> fold_left f (fold_left f i x) y
 
+let rec fold_right f i = function
+  | Empty    -> i
+  | Atom x   -> f i x
+  | Block x  -> fold_right f i x
+  | And(x,y) -> fold_right f (fold_right f i y) x
+  | Or(x,y)  -> fold_right f (fold_right f i y) x
+
 type version_formula = version_constraint formula
 
 type t = (OpamPackage.Name.t * version_formula) formula
@@ -310,12 +317,10 @@ let packages pkgset f =
 
 (* Convert a t an atom formula *)
 let to_atom_formula (t:t): atom formula =
-  let atom (r,v) = Atom (r, v) in
-  let atoms (x, c) =
-    match map atom c with
-    | Empty -> Atom (x, None)
-    | cs    -> map (fun c -> Atom (x, Some c)) cs in
-  map atoms t
+  map (fun (x, c) -> match c with
+      | Empty -> Atom (x, None)
+      | cs    -> map (fun c -> Atom (x, Some c)) cs)
+    t
 
 (* Convert an atom formula to a t-formula *)
 let of_atom_formula (a:atom formula): t =
@@ -409,7 +414,10 @@ let of_disjunction d =
   of_atom_formula (ors (List.rev_map (fun x -> Atom x) d))
 
 let get_disjunction_formula version_set cstr =
-  List.map (fun ff ->
+  (* rev_ors_to_list cstr |>
+   * List.fold_left *)
+
+  List.rev_map (fun ff ->
       match ands_to_list ff with
       | [] -> assert false
       | [Atom _] as at -> at
@@ -417,7 +425,7 @@ let get_disjunction_formula version_set cstr =
         OpamPackage.Version.Set.filter (check_version_formula ff) version_set |>
         OpamPackage.Version.Set.elements |>
         List.map (fun v -> Atom (`Eq, v)))
-    (ors_to_list cstr) |>
+    (rev_ors_to_list cstr) |>
   List.flatten
 
 let set_to_disjunction set t =
