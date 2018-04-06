@@ -471,7 +471,7 @@ let export ?(full=false) filename =
   let root = OpamStateConfig.(!r.root_dir) in
   let export =
     OpamFilename.with_flock `Lock_none (OpamPath.Switch.lock root switch)
-    @@ fun () ->
+    @@ fun _ ->
     let selections = S.safe_read (OpamPath.Switch.selections root switch) in
     let overlays =
       read_overlays (fun nv ->

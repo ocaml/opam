@@ -207,7 +207,8 @@ type lock
 
 (** The different kinds of unix advisory locks available (`Lock_none doesn't
     actually lock anything, or even create the lock file) *)
-type lock_flag = [ `Lock_none | `Lock_read | `Lock_write ]
+type actual_lock_flag = [ `Lock_read | `Lock_write ]
+type lock_flag = [ `Lock_none | actual_lock_flag ]
 
 (** Dummy lock *)
 val lock_none: lock
@@ -237,6 +238,9 @@ val lock_isatleast: [< lock_flag ] -> lock -> bool
 
 (** Returns the current kind of the lock *)
 val get_lock_flag: lock -> lock_flag
+
+(** Returns the underlying fd for the lock or raises Not_found for `No_lock *)
+val get_lock_fd: lock -> Unix.file_descr
 
 (** {2 Misc} *)
 

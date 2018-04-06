@@ -510,7 +510,7 @@ let write_dynamic_init_scripts st =
   try
     OpamFilename.with_flock_upgrade `Lock_write ~dontblock:true
       st.switch_global.global_lock
-    @@ fun () ->
+    @@ fun _ ->
     List.iter (write_script (OpamPath.init st.switch_global.root)) [
       variables_sh, string_of_update st `sh updates;
       variables_csh, string_of_update st `csh updates;

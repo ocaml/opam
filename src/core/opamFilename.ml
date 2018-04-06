@@ -361,20 +361,35 @@ let flock flag ?dontblock file = OpamSystem.flock flag ?dontblock (to_string fil
 let with_flock flag ?dontblock file f =
   let lock = OpamSystem.flock flag ?dontblock (to_string file) in
   try
-    let r = f () in
+    let (fd, ch) =
+      match OpamSystem.get_lock_fd lock with
+      | exception Not_found ->
+        let null =
+          if OpamStd.Sys.(os () = Win32) then
+            "nul"
+          else
+            "/dev/null"
+        in
+        let ch = Pervasives.open_out null in
+        Unix.descr_of_out_channel ch, Some ch
+      | fd ->
+        fd, None
+    in
+    let r = f fd in
     OpamSystem.funlock lock;
+    OpamStd.Option.iter Pervasives.close_out ch;
     r
   with e ->
     OpamStd.Exn.finalise e @@ fun () ->
     OpamSystem.funlock lock
 
 let with_flock_upgrade flag ?dontblock lock f =
-  if OpamSystem.lock_isatleast flag lock then f ()
+  if OpamSystem.lock_isatleast flag lock then f (OpamSystem.get_lock_fd lock)
   else (
     let old_flag = OpamSystem.get_lock_flag lock in
     OpamSystem.flock_update flag ?dontblock lock;
     try
-      let r = f () in
+      let r = f (OpamSystem.get_lock_fd lock) in
       OpamSystem.flock_update old_flag lock;
       r
     with e ->
@@ -385,7 +400,7 @@ let with_flock_upgrade flag ?dontblock lock f =
 let with_flock_write_then_read ?dontblock file write read =
   let lock = OpamSystem.flock `Lock_write ?dontblock (to_string file) in
   try
-    let r = write () in
+    let r = write (OpamSystem.get_lock_fd lock) in
     OpamSystem.flock_update `Lock_read lock;
     let r = read r in
     OpamSystem.funlock lock;

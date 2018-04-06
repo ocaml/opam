@@ -334,7 +334,7 @@ let unlock st =
 let with_write_lock ?dontblock st f =
   let ret, st =
     OpamFilename.with_flock_upgrade `Lock_write ?dontblock st.switch_lock
-    @@ fun () -> f ({ st with switch_lock = st.switch_lock } : rw switch_state)
+    @@ fun _ -> f ({ st with switch_lock = st.switch_lock } : rw switch_state)
     (* We don't actually change the field value, but this makes restricting the
        phantom lock type possible*)
   in
@@ -797,7 +797,7 @@ let with_ lock ?rt ?(switch=OpamStateConfig.get_switch ()) gt f =
 
 let update_repositories gt update_fun switch =
   OpamFilename.with_flock `Lock_write (OpamPath.Switch.lock gt.root switch)
-  @@ fun () ->
+  @@ fun _ ->
   let conf = load_switch_config gt switch in
   let repos =
     match conf.OpamFile.Switch_config.repos with

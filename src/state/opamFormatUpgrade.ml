@@ -1040,7 +1040,7 @@ let as_necessary global_lock root config =
   in
   try
     OpamFilename.with_flock_upgrade `Lock_write ?dontblock global_lock
-    @@ fun () ->
+    @@ fun _ ->
     if is_dev &&
        Some "yes" =
        OpamConsole.read "Type \"yes\" to perform the update and continue:" ||
