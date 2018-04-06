@@ -146,6 +146,13 @@ let formula_to_cudf universe version_map f =
     (OpamFormula.to_cnf f)
 
 let opam2cudf universe version_map packages =
+  let chrono = OpamConsole.timer () in
+  let ti = ref (chrono()) in
+  let t x =
+    let t = chrono () in
+    OpamConsole.msg "t%d: %.3fs\n" x (t -. !ti);
+    ti := t
+  in
   let set_to_bool_map set =
     OpamPackage.Set.fold (fun nv -> OpamPackage.Map.add nv true)
       (packages %% set) OpamPackage.Map.empty
@@ -162,12 +169,15 @@ let opam2cudf universe version_map packages =
           })
       packages OpamPackage.Map.empty
   in
+  t 1;
   let only_packages m =
     OpamPackage.Map.merge
       (fun _ -> function None -> fun _ -> None | Some _ -> fun x -> x)
       base_map m
   in
+  t 2;
   let installed_map = set_to_bool_map universe.u_installed in
+  t 3;
   let keep_map =
     OpamPackage.Set.fold (fun nv acc ->
         if OpamPackage.Set.mem nv universe.u_available
@@ -177,9 +187,11 @@ let opam2cudf universe version_map packages =
         else acc)
       (packages %% universe.u_base) OpamPackage.Map.empty
   in
+  t 4;
   let reinstall_map = set_to_bool_map universe.u_reinstall in
   let installed_root_map = set_to_bool_map universe.u_installed_roots in
   let pinned_to_current_version_map = set_to_bool_map universe.u_pinned in
+  t 5;
   let version_lag_map =
     OpamPackage.Name.Map.fold (fun name version_set acc ->
         let nvers, vs =
@@ -196,6 +208,7 @@ let opam2cudf universe version_map packages =
       (OpamPackage.to_map packages)
       OpamPackage.Map.empty
   in
+  t 6;
   let extras_maps =
     List.map (fun (label, set) ->
         OpamPackage.Set.fold (fun nv ->
@@ -203,6 +216,7 @@ let opam2cudf universe version_map packages =
           (packages %% set) OpamPackage.Map.empty)
       universe.u_attrs
   in
+  t 7;
   let add elts f map =
     OpamPackage.Map.merge (fun nv a b ->
         match a, b with
@@ -232,17 +246,21 @@ let opam2cudf universe version_map packages =
         add m (fun _ x cp -> {cp with Cudf.pkg_extra = x :: cp.Cudf.pkg_extra}))
       extras_maps
   in
+  t 8;
   fun ~depopts ~build ~post ->
+    ti := chrono ();
     let depends_map =
       OpamPackage.Map.map (fun f ->
           OpamFilter.filter_deps ~build ~post ~default:false f)
         (only_packages universe.u_depends)
     in
+    t 10;
     let depopts_map =
       OpamPackage.Map.map (fun f ->
           OpamFilter.filter_deps ~build ~post:false ~default:false f)
         (only_packages universe.u_depopts)
     in
+    t 11;
     let all_depends_map =
       if depopts then
         OpamPackage.Map.merge (fun _ d dopts ->
@@ -252,6 +270,7 @@ let opam2cudf universe version_map packages =
           depends_map depopts_map
       else depends_map
     in
+    t 12;
     let conflicts_map =
       OpamPackage.Map.mapi
         (fun nv conflicts ->
@@ -261,14 +280,17 @@ let opam2cudf universe version_map packages =
              (* OpamFormula.to_disjunction *) conflicts)
         (only_packages universe.u_conflicts)
     in
+    t 13;
     let depends_map_resolved =
       OpamPackage.Map.map (formula_to_cudf universe version_map)
         all_depends_map
     in
+    t 14;
     let conflicts_map_resolved =
       OpamPackage.Map.map (List.rev_map (atom2cudf universe version_map))
         conflicts_map
     in
+    t 15;
     univ0
     |> add depends_map_resolved (fun _ depends cp -> {cp with Cudf.depends})
     |> add conflicts_map_resolved (fun _ conflicts cp -> {cp with Cudf.conflicts})
