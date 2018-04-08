@@ -27,6 +27,7 @@ module type S = sig
   val fetch_repo_update:
     repository_name -> ?cache_dir:dirname -> dirname -> url ->
     update OpamProcess.job
+  val repo_update_complete: dirname -> url -> unit OpamProcess.job
   val revision: dirname -> version option OpamProcess.job
   val sync_dirty: dirname -> url -> filename option download OpamProcess.job
 end

@@ -63,6 +63,10 @@ module Make (VCS: VCS) = struct
       VCS.reset tmpdir repo_url @@| fun () ->
       OpamRepositoryBackend.Update_full tmpdir
 
+  let repo_update_complete dirname url =
+    VCS.reset dirname url @@+ fun () ->
+    Done ()
+
   let pull_url ?cache_dir dirname checksum url =
     if checksum <> None then invalid_arg "VC pull_url doesn't allow checksums";
     OpamProcess.Job.catch
