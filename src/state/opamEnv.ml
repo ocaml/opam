@@ -377,7 +377,6 @@ let init_file = function
   | `zsh  -> init_zsh
   | `bash -> init_sh
   | `fish -> init_fish
-let sandbox_script = "sandbox.sh"
 
 let source root ~shell ?(interactive_only=false) f =
   let file f = OpamFilename.to_string (OpamPath.init root // f) in
@@ -499,16 +498,7 @@ let write_static_init_scripts root ~completion custom =
   List.iter (fun (name, script) ->
       write_script (OpamPath.hooks_dir root) (name, script);
       OpamFilename.chmod (OpamPath.hooks_dir root // name) 0o777
-    ) custom;
-  let sandbox =
-    if OpamStd.Sys.(os () = Linux) then Some OpamScript.bwrap
-    else None
-  in
-  match sandbox with
-  | Some s ->
-    write_script (OpamPath.hooks_dir root) (sandbox_script, s);
-    OpamFilename.chmod (OpamPath.hooks_dir root // sandbox_script) 0o777
-  | None -> ()
+    ) custom
 
 let write_dynamic_init_scripts st =
   let updates = updates ~set_opamroot:false ~set_opamswitch:false st in

@@ -53,6 +53,11 @@ let recommended_tools =
     ((["cc"], ""), None);
   ]
 
+let init_scripts =
+  [ (("sandbox.sh", OpamScript.bwrap),
+     (Some (FOp (FIdent ([], OpamVariable.of_string "os", None), `Eq, FString "linux"))))
+  ]
+
 module I = OpamFile.InitConfig
 
 let init_config =
@@ -62,4 +67,5 @@ let init_config =
   I.with_default_compiler default_compiler |>
   I.with_eval_variables eval_variables |>
   I.with_wrappers wrappers |>
-  I.with_recommended_tools recommended_tools
+  I.with_recommended_tools recommended_tools |>
+  I.with_init_scripts init_scripts
