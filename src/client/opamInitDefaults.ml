@@ -47,6 +47,12 @@ let wrappers =
     }
   else w
 
+let recommended_tools =
+  [
+    ((["m4"], ""), None);
+    ((["cc"], ""), None);
+  ]
+
 module I = OpamFile.InitConfig
 
 let init_config =
@@ -55,4 +61,5 @@ let init_config =
     [OpamRepositoryName.of_string "default", (repository_url, None)] |>
   I.with_default_compiler default_compiler |>
   I.with_eval_variables eval_variables |>
-  I.with_wrappers wrappers
+  I.with_wrappers wrappers |>
+  I.with_recommended_tools recommended_tools
