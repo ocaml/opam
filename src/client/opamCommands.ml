@@ -1635,10 +1635,15 @@ let repository =
           (update_repos name)
       in
       if scope = [`Current_switch] then
-        OpamConsole.msg
-          "Repository %s has been added to the selections of switch %s.\n"
+        OpamConsole.note
+          "Repository %s has been added to the selections of switch %s \
+           only.\n\
+           Run `opam repository add %s --all-switches|--set-default' to use it \
+           in all existing switches, or in newly created switches, \
+           respectively.\n"
           (OpamRepositoryName.to_string name)
-          (OpamSwitch.to_string (OpamStateConfig.get_switch ()));
+          (OpamSwitch.to_string (OpamStateConfig.get_switch ()))
+          (OpamRepositoryName.to_string name);
       `Ok ()
     | Some `remove, names ->
       let names = List.map OpamRepositoryName.of_string names in
