@@ -56,7 +56,7 @@ val pp :
   ('b -> 'a) ->
   ('a, 'b) t
 
-(** Constructor fof Pp.t from a name and a pair *)
+(** Constructor of Pp.t from a name and a pair *)
 val of_pair :
   string ->
   ('a -> 'b) * ('b -> 'a) ->
