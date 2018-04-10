@@ -62,6 +62,8 @@ module type MAP = sig
       using the function given as argument. *)
   val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
 
+  val is_singleton: 'a t -> bool
+
   val of_list: (key * 'a) list -> 'a t
 
   (** Raises Failure in case the element is already present *)
