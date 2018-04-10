@@ -266,7 +266,7 @@ let opam2cudf universe version_map packages =
         OpamPackage.Map.merge (fun _ d dopts ->
             let d = OpamStd.Option.default Empty d in
             let dopts = OpamStd.Option.default Empty dopts in
-            Some OpamFormula.(ands [d; ors [d; dopts]]))
+            Some OpamFormula.(ands [d; dopts]))
           depends_map depopts_map
       else depends_map
     in
