@@ -354,7 +354,10 @@ let get_wrapper t opam wrappers ?local getter =
       | cmd::args -> Some (cmd, args))
 
 let cmd_wrapper t opam wrappers getter cmd args =
-  match get_wrapper t opam wrappers getter @ [cmd, args] with
+  let root = t.switch_global.root in
+  let local = OpamVariable.Map.singleton (OpamVariable.of_string "hooks")
+      (Some (OpamVariable.dirname (OpamPath.hooks_dir root))) in
+  match get_wrapper t opam wrappers ~local getter @ [cmd, args] with
   | (cmd, args) :: r -> cmd, args @ List.concat (List.map (fun (c, a) -> c::a) r)
   | [] -> assert false
 

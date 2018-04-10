@@ -481,7 +481,7 @@ let write_script dir (name, body) =
     OpamStd.Exn.fatal e;
     OpamConsole.error "Could not write %s" (OpamFilename.to_string file)
 
-let write_static_init_scripts root ~completion =
+let write_static_init_scripts root ~completion custom =
   let scripts =
     List.map (fun (shell, init, scripts) ->
         init, init_script root ~shell ~completion scripts) [
@@ -495,6 +495,11 @@ let write_static_init_scripts root ~completion =
     ]
   in
   List.iter (write_script (OpamPath.init root)) scripts;
+  (* Complete with init_scripts to generate, mainly sandboxes *)
+  List.iter (fun (name, script) ->
+      write_script (OpamPath.hooks_dir root) (name, script);
+      OpamFilename.chmod (OpamPath.hooks_dir root // name) 0o777
+    ) custom;
   let sandbox =
     if OpamStd.Sys.(os () = Linux) then Some OpamScript.bwrap
     else None
