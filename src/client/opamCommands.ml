@@ -192,6 +192,10 @@ let init =
       "Don't read `/etc/opamrc' or `~/.opamrc': use the default settings and \
        the files specified through $(b,--config) only"
   in
+  let show_default_opamrc =
+    mk_flag ["show-default-opamrc"]
+      "Print the built-in default configuration to stdout and exit"
+  in
   let bypass_checks =
     mk_flag ["bypass-checks"]
       "Skip checks on required or recommended tools, and assume everything is \
@@ -200,7 +204,7 @@ let init =
   let init global_options
       build_options repo_kind repo_name repo_url
       no_setup auto_setup shell dot_profile_o
-      compiler no_compiler config_file no_config_file bypass_checks =
+      compiler no_compiler config_file no_config_file show_opamrc bypass_checks =
     apply_global_options global_options;
     apply_build_options build_options;
     if compiler <> None && no_compiler then
@@ -258,7 +262,7 @@ let init =
     let dot_profile = init_dot_profile shell dot_profile_o in
     let gt, rt, default_compiler =
       OpamClient.init
-        ~init_config ?repo ~bypass_checks
+        ~init_config ~show_opamrc ?repo ~bypass_checks
         shell dot_profile update_config
     in
     if not no_compiler &&
@@ -302,7 +306,7 @@ let init =
   Term.(const init
         $global_options $build_options $repo_kind_flag $repo_name $repo_url
         $no_setup $auto_setup $shell_opt $dot_profile_flag $compiler $no_compiler
-        $config_file $no_config_file $bypass_checks),
+        $config_file $no_config_file $show_default_opamrc $bypass_checks),
   term_info "init" ~doc ~man
 
 (* LIST *)

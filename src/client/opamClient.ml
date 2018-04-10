@@ -651,8 +651,8 @@ let reinit ?(init_config=OpamInitDefaults.init_config) config =
   gt, rt
 
 let init
-    ?(init_config=OpamInitDefaults.init_config) ?repo ?(bypass_checks=false)
-    shell dot_profile update_config =
+    ?(init_config=OpamInitDefaults.init_config) ?(show_opamrc=false)
+    ?repo ?(bypass_checks=false) shell dot_profile update_config =
   log "INIT %a"
     (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
   let root = OpamStateConfig.(!r.root_dir) in
@@ -672,16 +672,7 @@ let init
         if not (OpamConsole.confirm "Proceed ?") then
           OpamStd.Sys.exit_because `Aborted);
       try
-        let dontswitch =
-          if bypass_checks then false else
-            let all_ok = init_checks root in
-            if not all_ok &&
-               not (OpamConsole.confirm "Continue initialisation anyway ?")
-            then OpamStd.Sys.exit_because `Configuration_error
-            else not all_ok
-        in
-
-        (* Create ~/.opam/config *)
+        (* Create the content of ~/.opam/config *)
         let repos = match repo with
           | Some r -> [r.repo_name, (r.repo_url, r.repo_trust)]
           | None -> OpamFile.InitConfig.repositories init_config
@@ -690,8 +681,25 @@ let init
           update_with_init_config OpamFile.Config.empty init_config |>
           OpamFile.Config.with_repositories (List.map fst repos)
         in
+        (* If dump-only option is set, dump it and exit *)
+        if show_opamrc then
+          (OpamConsole.msg "%s\n\n" (OpamConsole.colorise `bold
+                                       "The config file (`~/.opam/config`):");
+           OpamConsole.msg "-------------------------------------\n";
+           OpamFile.Config.write_to_channel ~filename:config_f stdout config;
+           OpamConsole.msg "-------------------------------------\n";
+           OpamStd.Sys.exit_because `Success);
+        (* Else write the config file and continue init *)
         OpamFile.Config.write config_f config;
 
+        let dontswitch =
+          if bypass_checks then false else
+          let all_ok = init_checks root in
+          if not all_ok &&
+             not (OpamConsole.confirm "Continue initialisation anyway ?")
+          then OpamStd.Sys.exit_because `Configuration_error
+          else not all_ok
+        in
         let repos_config =
           OpamRepositoryName.Map.of_list repos |>
           OpamRepositoryName.Map.map OpamStd.Option.some

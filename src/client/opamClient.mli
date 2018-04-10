@@ -18,6 +18,7 @@ open OpamStateTypes
 (** Initialize the client to a consistent state. *)
 val init:
   ?init_config:OpamFile.InitConfig.t ->
+  ?show_opamrc:bool ->
   ?repo:repository ->
   ?bypass_checks:bool ->
   shell -> filename -> [`ask|`yes|`no] ->
