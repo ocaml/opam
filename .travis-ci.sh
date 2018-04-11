@@ -44,6 +44,16 @@ case "$TARGET" in
 
   # Disable bubblewrap wrapping, it's not available within Docker
   cat <<EOF >>~/.opamrc
+required-tools: [
+  [
+    ["curl" "wget"]
+    "A download tool is required, check env variables OPAMCURL or OPAMFETCH"
+  ]
+  [["diff"] ""]
+  [["patch"] ""]
+  [["tar"] ""]
+  [["unzip"] ""]
+]
 wrap-build-commands: []
 wrap-install-commands: []
 wrap-remove-commands: []
