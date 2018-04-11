@@ -576,25 +576,8 @@ let init_checks root config =
               (OpamStd.List.concat_map " or " (OpamConsole.colorise `bold) miss)
               (if msg <> "" then ": " else "") msg)
           missing));
-  let fetch_cmd_user =
-    let open OpamStd.Option.Op in
-    match
-      OpamStd.Env.getopt "OPAMCURL",
-      OpamStd.Env.getopt "OPAMFETCH" >>| fun s ->
-      OpamStd.String.split s ' '
-    with
-    | Some cmd, _ | _, Some (cmd::_) -> check_external_dep cmd
-    | _ -> false
-  in
+
   let required_deps =
-    ["curl or wget",
-     fetch_cmd_user ||
-     check_external_dep "curl" ||
-     check_external_dep "wget", "";
-     "diff", check_external_dep "diff", "";
-     "patch", check_external_dep "patch", "";
-     "tar", check_external_dep "tar", "";
-     "unzip", check_external_dep "unzip", ""] @
     let required = OpamFile.Config.required_tools config in
     OpamStd.List.filter_map (fun ((cmd,str),oflt) ->
         let some = fun () ->
