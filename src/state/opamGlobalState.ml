@@ -24,15 +24,12 @@ let load_config global_lock root =
     | None ->
       if OpamFilename.exists (root // "aliases") then
         OpamFile.Config.(with_opam_version (OpamVersion.of_string "1.1") empty)
-      else if OpamFilename.exists_dir root then
+      else
         OpamConsole.error_and_exit `Configuration_error
           "%s exists, but does not appear to be a valid opam root. Please \
            remove it and use `opam init', or specify a different `--root' \
            argument"
           (OpamFilename.Dir.to_string root)
-      else
-        OpamConsole.error_and_exit `Configuration_error
-          "Opam has not been initialised, please run `opam init'"
   in
   OpamFormatUpgrade.as_necessary global_lock root config;
   config
@@ -42,14 +39,18 @@ let load lock_kind =
   log "LOAD-GLOBAL-STATE @ %a" (slog OpamFilename.Dir.to_string) root;
   (* Always take a global read lock, this is only used to prevent concurrent
      ~/.opam format changes *)
+  let has_root = OpamFilename.exists_dir root in
   let global_lock =
-    if OpamFilename.exists_dir root then
+    if has_root then
       OpamFilename.flock `Lock_read (OpamPath.lock root)
     else OpamSystem.lock_none
   in
   (* The global_state lock actually concerns the global config file only (and
      the consistence thereof with the repository and switch sets, and the
      currently installed shell init scripts) *)
+  if not has_root then
+    OpamConsole.error_and_exit `Configuration_error
+      "Opam has not been initialised, please run `opam init'";
   let config_lock = OpamFilename.flock lock_kind (OpamPath.config_lock root) in
   let config = load_config global_lock root in
   let switches =
