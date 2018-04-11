@@ -556,7 +556,6 @@ let init_checks root config =
     OpamPackageVar.resolve_global (OpamGlobalState.load `Lock_none)
   in
   let advised_deps =
-    [ [OpamStateConfig.(Lazy.force !r.makecmd)], "" ] @
     let recommended = OpamFile.Config.recommended_tools config in
     OpamStd.List.filter_map (fun ((cmd,str),oflt) ->
         match oflt with

@@ -48,10 +48,13 @@ let wrappers =
   else w
 
 let recommended_tools =
+  let make = OpamStateConfig.(Lazy.force !r.makecmd) in
   [
+    (([make], ""), None);
     ((["m4"], ""), None);
     ((["cc"], ""), None);
   ]
+
 
 let init_scripts =
   [ (("sandbox.sh", OpamScript.bwrap),
