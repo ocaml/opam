@@ -629,6 +629,17 @@ let reinit ?(init_config=OpamInitDefaults.init_config) config =
   let config = update_with_init_config config init_config in
   let _all_ok = init_checks config in
   OpamFile.Config.write (OpamPath.config root) config;
+  let init_scripts =
+    let gst_env =
+      OpamPackageVar.resolve_global (OpamGlobalState.load `Lock_none)
+    in
+    OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
+        | None -> Some (nam,scr)
+        | Some flt -> if OpamFilter.eval_to_bool gst_env flt then
+            Some (nam,scr) else None) (OpamFile.Config.init_scripts config)
+  in
+  OpamEnv.write_static_init_scripts root ~completion:true init_scripts;
+
   let gt = OpamGlobalState.load `Lock_write in
   let rt = OpamRepositoryState.load `Lock_write gt in
   OpamConsole.header_msg "Updating repositories";
