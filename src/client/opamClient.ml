@@ -515,7 +515,7 @@ let update
   repo_changed || dev_changed,
   rt
 
-let init_checks config =
+let init_checks ?(hard_fail_exn=true) config =
   (* Check for the external dependencies *)
   let check_external_dep name =
     OpamSystem.resolve_command name <> None
@@ -589,8 +589,8 @@ let init_checks config =
         OpamConsole.errmsg "%s" s)
       required_deps in
 
-  if hard_fail then OpamStd.Sys.exit_because `Configuration_error
-  else not soft_fail
+  if hard_fail && hard_fail_exn then OpamStd.Sys.exit_because `Configuration_error
+  else not (soft_fail || hard_fail)
 
 let update_with_init_config ?(overwrite=false) config init_config =
   let module I = OpamFile.InitConfig in
@@ -627,7 +627,7 @@ let update_with_init_config ?(overwrite=false) config init_config =
 let reinit ?(init_config=OpamInitDefaults.init_config) config =
   let root = OpamStateConfig.(!r.root_dir) in
   let config = update_with_init_config config init_config in
-  let _all_ok = init_checks config in
+  let _all_ok = init_checks ~hard_fail_exn:false config in
   OpamFile.Config.write (OpamPath.config root) config;
   let init_scripts =
     let gst_env =
@@ -639,7 +639,6 @@ let reinit ?(init_config=OpamInitDefaults.init_config) config =
             Some (nam,scr) else None) (OpamFile.Config.init_scripts config)
   in
   OpamEnv.write_static_init_scripts root ~completion:true init_scripts;
-
   let gt = OpamGlobalState.load `Lock_write in
   let rt = OpamRepositoryState.load `Lock_write gt in
   OpamConsole.header_msg "Updating repositories";
