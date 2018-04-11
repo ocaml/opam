@@ -61,6 +61,20 @@ let bwrap_string =
     (OpamConsole.colorise `bold "opam init --show-default-opamrc")
     (OpamConsole.colorise `underline "opamrc")
 
+let dl_tools, dl_tool =
+  let fetch_cmd_user =
+    let open OpamStd.Option.Op in
+    match
+      OpamStd.Env.getopt "OPAMCURL",
+      OpamStd.Env.getopt "OPAMFETCH" >>| fun s ->
+      OpamStd.String.split s ' '
+    with
+    | Some cmd, _ | _, Some (cmd::_) -> Some cmd
+    | _ -> None
+  in match fetch_cmd_user with
+  | None -> ["curl"; "wget"], None
+  | Some cmd -> [cmd], Some [(CString cmd), None]
+
 let recommended_tools =
   let make = OpamStateConfig.(Lazy.force !r.makecmd) in
   [
@@ -70,18 +84,10 @@ let recommended_tools =
   ]
 
 let required_tools =
-  let fetch_cmd_user =
-    let open OpamStd.Option.Op in
-    match
-      OpamStd.Env.getopt "OPAMCURL",
-      OpamStd.Env.getopt "OPAMFETCH" >>| fun s ->
-      OpamStd.String.split s ' '
-    with
-    | Some cmd, _ | _, Some (cmd::_) -> [cmd]
-    | _ -> []
-  in
   [
-    ((["curl"; "wget"] @ fetch_cmd_user, ""), None);
+    ((dl_tools,
+      "A download tool is required, check env variables OPAMCURL or OPAMFETCH"),
+     None);
     ((["diff"], ""), None);
     ((["patch"], ""), None);
     ((["tar"], ""), None);
@@ -105,4 +111,5 @@ let init_config =
   I.with_wrappers wrappers |>
   I.with_recommended_tools recommended_tools |>
   I.with_required_tools required_tools |>
-  I.with_init_scripts init_scripts
+  I.with_init_scripts init_scripts |>
+  I.with_dl_tool dl_tool
