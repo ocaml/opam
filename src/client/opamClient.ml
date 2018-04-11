@@ -555,55 +555,40 @@ let init_checks root config =
   let gst_env =
     OpamPackageVar.resolve_global (OpamGlobalState.load `Lock_none)
   in
-  let advised_deps =
-    let recommended = OpamFile.Config.recommended_tools config in
+  let filter_tools =
     OpamStd.List.filter_map (fun ((cmd,str),oflt) ->
         match oflt with
         | None -> Some (cmd,str)
-        | Some flt ->
-          if (OpamFilter.eval_to_bool gst_env flt) then
-            Some (cmd,str) else None
-      ) recommended
+        | Some flt -> if (OpamFilter.eval_to_bool gst_env flt) then
+            Some (cmd,str) else None)
   in
-  (match List.filter (not @* (List.exists check_external_dep) @* fst) advised_deps with
-   | [] -> ()
-   | missing ->
-     OpamConsole.warning
-       "Recommended dependencies -- \
-        most packages rely on these:\n%s"
-       (OpamStd.Format.itemize
-          (fun (miss,msg) -> Printf.sprintf "%s%s%s"
-              (OpamStd.List.concat_map " or " (OpamConsole.colorise `bold) miss)
-              (if msg <> "" then ": " else "") msg)
-          missing));
-
-  let required_deps =
-    let required = OpamFile.Config.required_tools config in
-    OpamStd.List.filter_map (fun ((cmd,str),oflt) ->
-        let some = fun () ->
-          Some (OpamStd.List.concat_map " or " (fun x->x) cmd,
-                List.exists check_external_dep cmd,
-                str) in
-        match oflt with
-        | None -> some ()
-        | Some flt ->
-          if (OpamFilter.eval_to_bool gst_env flt) then
-            some () else None
-      ) required
-  in
-  let hard_fail =
-    match List.filter (not @* (fun (_,x,_) -> x)) required_deps with
+  let check_tool logf tools =
+    match List.filter (not @* (List.exists check_external_dep) @* fst) tools with
     | [] -> false
-    | missing ->
-      OpamConsole.error
-        "Missing dependencies -- \
-         the following commands are required for opam to operate:\n%s"
-        (OpamStd.Format.itemize
-           (fun (miss,_,msg) -> Printf.sprintf "%s%s%s"
-               (OpamConsole.colorise `bold miss) (if msg <> "" then ": " else "") msg)
-           missing);
-      true
+    | missing -> (logf
+                    (OpamStd.Format.itemize
+                       (fun (miss,msg) -> Printf.sprintf "%s%s%s"
+                           (OpamStd.List.concat_map " or "
+                              (OpamConsole.colorise `bold) miss)
+                           (if msg <> "" then ": " else "") msg)
+                       missing);
+                  true)
   in
+  let advised_deps = filter_tools (OpamFile.Config.recommended_tools config) in
+  let _ = check_tool
+      (fun s -> OpamConsole.warning
+          "Recommended dependencies -- most packages rely on these:";
+        OpamConsole.errmsg "%s" s)
+      advised_deps in
+
+  let required_deps = filter_tools (OpamFile.Config.required_tools config) in
+  let hard_fail = check_tool
+      (fun s -> OpamConsole.error
+          "Missing dependencies -- \
+           the following commands are required for opam to operate:";
+        OpamConsole.errmsg "%s" s)
+      required_deps in
+
   let soft_fail =
     if OpamStd.Sys.(os () = Linux) && not (check_external_dep "bwrap")
     then
