@@ -47,6 +47,20 @@ let wrappers =
     }
   else w
 
+let bwrap_cmd = "bwrap"
+let bwrap_filter =
+  Some (FOp (FIdent ([], OpamVariable.of_string "os", None), `Eq, FString "linux"))
+let bwrap_string =
+  Printf.sprintf "Sandboxing tool %s was not found. You should install \
+                  'bubblewrap', or manually disable package build sandboxing \
+                  and remove bwrap from required dependencies(at your own risk). \
+                  You can display the built-in configuration with %s to set \
+                  up an %s file. See \
+                  https://github.com/projectatomic/bubblewrap for details."
+    (OpamConsole.colorise `bold bwrap_cmd)
+    (OpamConsole.colorise `bold "opam init --show-default-opamrc")
+    (OpamConsole.colorise `underline "opamrc")
+
 let recommended_tools =
   let make = OpamStateConfig.(Lazy.force !r.makecmd) in
   [
@@ -71,13 +85,13 @@ let required_tools =
     ((["diff"], ""), None);
     ((["patch"], ""), None);
     ((["tar"], ""), None);
-    ((["unzip"], ""), None)
+    ((["unzip"], ""), None);
+    (([bwrap_cmd], bwrap_string), bwrap_filter);
   ]
 
 
 let init_scripts =
-  [ (("sandbox.sh", OpamScript.bwrap),
-     (Some (FOp (FIdent ([], OpamVariable.of_string "os", None), `Eq, FString "linux"))))
+  [ (("sandbox.sh", OpamScript.bwrap), bwrap_filter);
   ]
 
 module I = OpamFile.InitConfig

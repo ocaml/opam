@@ -515,7 +515,7 @@ let update
   repo_changed || dev_changed,
   rt
 
-let init_checks root config =
+let init_checks config =
   (* Check for the external dependencies *)
   let check_external_dep name =
     OpamSystem.resolve_command name <> None
@@ -589,19 +589,6 @@ let init_checks root config =
         OpamConsole.errmsg "%s" s)
       required_deps in
 
-  let soft_fail =
-    if OpamStd.Sys.(os () = Linux) && not (check_external_dep "bwrap")
-    then
-      (OpamConsole.error
-         "Sandboxing tool %s was not found. You should install \
-          'bubblewrap', or manually disable package build sandboxing \
-          in %s (at your own risk). See \
-          https://github.com/projectatomic/bubblewrap for details."
-         (OpamConsole.colorise `bold "bwrap")
-         (OpamFile.to_string (OpamPath.config root));
-       true)
-    else soft_fail
-  in
   if hard_fail then OpamStd.Sys.exit_because `Configuration_error
   else not soft_fail
 
@@ -640,7 +627,7 @@ let update_with_init_config ?(overwrite=false) config init_config =
 let reinit ?(init_config=OpamInitDefaults.init_config) config =
   let root = OpamStateConfig.(!r.root_dir) in
   let config = update_with_init_config config init_config in
-  let _all_ok = init_checks root config in
+  let _all_ok = init_checks config in
   OpamFile.Config.write (OpamPath.config root) config;
   let gt = OpamGlobalState.load `Lock_write in
   let rt = OpamRepositoryState.load `Lock_write gt in
@@ -696,7 +683,7 @@ let init
 
         let dontswitch =
           if bypass_checks then false else
-          let all_ok = init_checks root config in
+          let all_ok = init_checks config in
           if not all_ok &&
              not (OpamConsole.confirm "Continue initialisation anyway ?")
           then OpamStd.Sys.exit_because `Configuration_error
