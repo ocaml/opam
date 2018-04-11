@@ -32,24 +32,24 @@ let eval_variables = [
   "OCaml version present on your system independently of opam, if any";
 ]
 
+let linux_filter =
+  Some (FOp (FIdent ([], OpamVariable.of_string "os", None), `Eq, FString "linux"))
+
 let wrappers =
   let cmd t = [
     CString "%{hooks}%/sandbox.sh", None;
     CString t, None;
   ] in
   let w = OpamFile.Wrappers.empty in
-  if OpamStd.Sys.(os () = Linux) then (* Sandboxing scripts only available there *)
-    { w with
-      OpamFile.Wrappers.
-      wrap_build = [cmd "build", None];
-      wrap_install = [cmd "install", None];
-      wrap_remove = [cmd "remove", None];
-    }
-  else w
+  { w with
+    OpamFile.Wrappers.
+    wrap_build = [cmd "build", linux_filter];
+    wrap_install = [cmd "install", linux_filter];
+    wrap_remove = [cmd "remove", linux_filter];
+  }
 
 let bwrap_cmd = "bwrap"
-let bwrap_filter =
-  Some (FOp (FIdent ([], OpamVariable.of_string "os", None), `Eq, FString "linux"))
+let bwrap_filter = linux_filter
 let bwrap_string =
   Printf.sprintf "Sandboxing tool %s was not found. You should install \
                   'bubblewrap', or manually disable package build sandboxing \
