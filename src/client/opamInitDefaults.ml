@@ -34,7 +34,7 @@ let eval_variables = [
 
 let wrappers =
   let cmd t = [
-    CString "%{root}%/opam-init/hooks/sandbox.sh", None;
+    CString "%{hooks}%/sandbox.sh", None;
     CString t, None;
   ] in
   let w = OpamFile.Wrappers.empty in
