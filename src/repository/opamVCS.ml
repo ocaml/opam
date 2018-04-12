@@ -18,11 +18,12 @@ module type VCS = sig
   val exists: dirname -> bool
   val init: dirname -> url -> unit OpamProcess.job
   val fetch: ?cache_dir:dirname -> dirname -> url -> unit OpamProcess.job
-  val reset: dirname -> url -> unit OpamProcess.job
+  val reset_tree: dirname -> url -> unit OpamProcess.job
+  val patch_applied: dirname -> url -> unit OpamProcess.job
   val diff: dirname -> url -> filename option OpamProcess.job
   val is_up_to_date: dirname -> url -> bool OpamProcess.job
   val revision: dirname -> string option OpamProcess.job
-  val versionned_files: dirname -> string list OpamProcess.job
+  val versioned_files: dirname -> string list OpamProcess.job
   val vc_dir: dirname -> dirname
   val current_branch: dirname -> string option OpamProcess.job
   val is_dirty: dirname -> bool OpamProcess.job
@@ -60,11 +61,11 @@ module Make (VCS: VCS) = struct
       OpamFilename.copy_dir ~src:repo_root ~dst:tmpdir;
       OpamProcess.Job.catch (fun e -> OpamFilename.rmdir tmpdir; raise e)
       @@ fun () ->
-      VCS.reset tmpdir repo_url @@| fun () ->
+      VCS.reset_tree tmpdir repo_url @@| fun () ->
       OpamRepositoryBackend.Update_full tmpdir
 
   let repo_update_complete dirname url =
-    VCS.reset dirname url @@+ fun () ->
+    VCS.patch_applied dirname url @@+ fun () ->
     Done ()
 
   let pull_url ?cache_dir dirname checksum url =
@@ -82,13 +83,13 @@ module Make (VCS: VCS) = struct
       VCS.is_up_to_date dirname url @@+ function
       | true -> Done (Up_to_date None)
       | false ->
-        VCS.reset dirname url @@+ fun () ->
+        VCS.reset_tree dirname url @@+ fun () ->
         Done (Result None)
     else
       (OpamFilename.mkdir dirname;
        VCS.init dirname url @@+ fun () ->
        VCS.fetch ?cache_dir dirname url @@+ fun () ->
-       VCS.reset dirname url @@+ fun () ->
+       VCS.reset_tree dirname url @@+ fun () ->
        Done (Result None))
 
   let revision repo_root =
@@ -99,7 +100,7 @@ module Make (VCS: VCS) = struct
     match OpamUrl.local_dir repo_url with
     | None -> pull_url repo_root None repo_url
     | Some dir ->
-      VCS.versionned_files dir
+      VCS.versioned_files dir
       @@+ fun files ->
       let files =
         List.map OpamFilename.(remove_prefix dir)

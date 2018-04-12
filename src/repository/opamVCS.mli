@@ -33,7 +33,11 @@ module type VCS = sig
   (** Reset the master branch of the repository to match the remote repository
       state. This might still fetch more data (git submodules...), so is
       unsuitable for running after validation. *)
-  val reset: dirname -> url -> unit OpamProcess.job
+  val reset_tree: dirname -> url -> unit OpamProcess.job
+
+  (** Confirm that applying the patch results in a clean synchronization of
+      the working tree with its repository state. *)
+  val patch_applied: dirname -> url -> unit OpamProcess.job
 
   (** Returns the pending modifications in the form of a patch file, or None if
       [dirname] is up to date with what was last fetched. *)
@@ -47,7 +51,7 @@ module type VCS = sig
   val revision: dirname -> string option OpamProcess.job
 
   (** Returns the list of files under version control *)
-  val versionned_files: dirname -> string list OpamProcess.job
+  val versioned_files: dirname -> string list OpamProcess.job
 
   (** Returns the absolute directory name for vc data (e.g.
       [.../project/.git]) *)
