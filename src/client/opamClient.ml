@@ -442,9 +442,16 @@ let update
     if names <> [] && not (OpamPackage.Set.is_empty nondev_packages) then
       OpamConsole.warning
         "The following are not development packages (no dynamic or version \
-         controlled upstream) and can't be updated individually. What you \
-         want is probably to update your repositories: %s"
-        (OpamPackage.Set.to_string nondev_packages);
+         controlled upstream) and can't be updated individually: %s\nYou may \
+         want to update your repositories with just %s or to upgrade your \
+         package%s with %s %s"
+        (OpamPackage.Set.to_string nondev_packages)
+        (OpamConsole.colorise `bold "opam update")
+        (if OpamPackage.Set.cardinal nondev_packages = 1 then "" else "s")
+        (OpamConsole.colorise `bold "opam upgrade")
+        (OpamConsole.colorise `bold
+           (OpamStd.List.concat_map " " OpamPackage.name_to_string
+              (OpamPackage.Set.elements nondev_packages)));
     let dirty_dev_packages, dev_packages =
       if names <> [] then OpamPackage.Set.empty, dev_packages else
         OpamPackage.Set.partition
