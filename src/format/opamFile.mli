@@ -131,8 +131,8 @@ module Config: sig
     arg list option -> t -> t
   val with_default_compiler:
     formula -> t -> t
-  val with_recommended_tools: (((string list) * string) * filter option) list -> t -> t
-  val with_required_tools: (((string list) * string) * filter option) list -> t -> t
+  val with_recommended_tools: (string list * string option * filter option) list -> t -> t
+  val with_required_tools: (string list * string option * filter option) list -> t -> t
   val with_init_scripts: ((string * string) * filter option) list -> t -> t
 
   (** Return the OPAM version *)
@@ -174,8 +174,8 @@ module Config: sig
 
   val default_compiler: t -> formula
 
-  val recommended_tools: t -> (((string list) * string) * filter option) list
-  val required_tools: t -> (((string list) * string) * filter option) list
+  val recommended_tools: t -> (string list * string option * filter option) list
+  val required_tools: t -> (string list * string option * filter option) list
   val init_scripts: t -> ((string * string) * filter option) list
 end
 
@@ -195,8 +195,8 @@ module InitConfig: sig
   val wrappers: t -> Wrappers.t
   val global_variables: t -> (variable * variable_contents * string) list
   val eval_variables: t -> (variable * string list * string) list
-  val recommended_tools: t -> (((string list) * string) * filter option) list
-  val required_tools: t -> (((string list) * string) * filter option) list
+  val recommended_tools: t -> (string list * string option * filter option) list
+  val required_tools: t -> (string list * string option * filter option) list
   val init_scripts: t -> ((string * string) * filter option) list
 
   val with_opam_version: opam_version -> t -> t
@@ -212,8 +212,8 @@ module InitConfig: sig
   val with_wrappers: Wrappers.t -> t -> t
   val with_global_variables: (variable * variable_contents * string) list -> t -> t
   val with_eval_variables: (variable * string list * string) list -> t -> t
-  val with_recommended_tools: (((string list) * string) * filter option) list -> t -> t
-  val with_required_tools: (((string list) * string) * filter option) list -> t -> t
+  val with_recommended_tools: (string list * string option * filter option) list -> t -> t
+  val with_required_tools: (string list * string option * filter option) list -> t -> t
   val with_init_scripts: ((string * string) * filter option) list -> t -> t
 
   (** [add t1 t2] is [t2], with the field values falling back to those of [t1]

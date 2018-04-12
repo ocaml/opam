@@ -558,7 +558,7 @@ let init_checks ?(hard_fail_exn=true) config =
            OpamSysPoll.variables)
   in
   let filter_tools =
-    OpamStd.List.filter_map (fun ((cmd,str),oflt) ->
+    OpamStd.List.filter_map (fun (cmd,str,oflt) ->
         match oflt with
         | None -> Some (cmd,str)
         | Some flt -> if (OpamFilter.eval_to_bool env flt) then
@@ -569,10 +569,10 @@ let init_checks ?(hard_fail_exn=true) config =
     | [] -> false
     | missing -> (logf
                     (OpamStd.Format.itemize
-                       (fun (miss,msg) -> Printf.sprintf "%s%s%s"
+                       (fun (miss,msg) -> Printf.sprintf "%s%s"
                            (OpamStd.List.concat_map " or "
                               (OpamConsole.colorise `bold) miss)
-                           (if msg <> "" then ": " else "") msg)
+                           (match msg with | None -> "" | Some m -> ": "^m))
                        missing);
                   true)
   in

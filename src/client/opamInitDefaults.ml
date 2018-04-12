@@ -84,21 +84,21 @@ let dl_tool () =
 let recommended_tools () =
   let make = OpamStateConfig.(Lazy.force !r.makecmd) in
   [
-    (([make], ""), None);
-    ((["m4"], ""), None);
-    ((["cc"], ""), None);
+    [make], None, None;
+    ["m4"], None, None;
+    ["cc"], None, None;
   ]
 
 let required_tools () =
   [
-    ((dl_tools(),
-      "A download tool is required, check env variables OPAMCURL or OPAMFETCH"),
-     None);
-    ((["diff"], ""), None);
-    ((["patch"], ""), None);
-    ((["tar"], ""), None);
-    ((["unzip"], ""), None);
-    (([bwrap_cmd], bwrap_string()), bwrap_filter);
+    dl_tools(),
+    Some "A download tool is required, check env variables OPAMCURL or OPAMFETCH",
+    None;
+    ["diff"], None, None;
+    ["patch"], None, None;
+    ["tar"], None, None;
+    ["unzip"], None, None;
+    [bwrap_cmd], Some (bwrap_string()), bwrap_filter;
   ]
 
 let init_scripts () =

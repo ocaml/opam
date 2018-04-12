@@ -1041,8 +1041,8 @@ module ConfigSyntax = struct
     eval_variables : (variable * string list * string) list;
     validation_hook : arg list option;
     default_compiler : formula;
-    recommended_tools : (((string list) * string) * filter option) list;
-    required_tools : (((string list) * string) * filter option) list;
+    recommended_tools : (string list * string option * filter option) list;
+    required_tools : (string list * string option * filter option) list;
     init_scripts : ((string * string) * filter option) list;
   }
 
@@ -1210,19 +1210,17 @@ module ConfigSyntax = struct
       (* system check & wrapper script fields *)
       "recommended-tools", Pp.ppacc
         with_recommended_tools recommended_tools
-        (Pp.V.map_list ~depth:2
-           (Pp.V.map_option
-              (Pp.V.map_pair
-                 (Pp.V.map_list Pp.V.string)
-                 (Pp.V.string))
+        (Pp.V.map_list
+           (Pp.V.map_options_2
+              (Pp.V.map_list ~depth:1 Pp.V.string)
+              (Pp.opt @@ Pp.singleton -| Pp.V.string)
               (Pp.opt Pp.V.filter)));
       "required-tools", Pp.ppacc
         with_required_tools required_tools
-        (Pp.V.map_list ~depth:2
-           (Pp.V.map_option
-              (Pp.V.map_pair
-                 (Pp.V.map_list Pp.V.string)
-                 (Pp.V.string))
+        (Pp.V.map_list
+           (Pp.V.map_options_2
+              (Pp.V.map_list ~depth:1 Pp.V.string)
+              (Pp.opt @@ Pp.singleton -| Pp.V.string)
               (Pp.opt Pp.V.filter)));
       "init-scripts", Pp.ppacc
         with_init_scripts init_scripts
@@ -1265,8 +1263,8 @@ module InitConfigSyntax = struct
     wrappers : Wrappers.t;
     global_variables : (variable * variable_contents * string) list;
     eval_variables : (variable * string list * string) list;
-    recommended_tools : (((string list) * string) * filter option) list;
-    required_tools : (((string list) * string) * filter option) list;
+    recommended_tools : (string list * string option * filter option) list;
+    required_tools : (string list * string option * filter option) list;
     init_scripts : ((string * string) * filter option) list;
   }
 
@@ -1402,19 +1400,17 @@ module InitConfigSyntax = struct
               Pp.V.string));
       "recommended-tools", Pp.ppacc
         with_recommended_tools recommended_tools
-        (Pp.V.map_list ~depth:2
-           (Pp.V.map_option
-              (Pp.V.map_pair
-                 (Pp.V.map_list Pp.V.string)
-                 (Pp.V.string))
+        (Pp.V.map_list
+           (Pp.V.map_options_2
+              (Pp.V.map_list ~depth:1 Pp.V.string)
+              (Pp.opt @@ Pp.singleton -| Pp.V.string)
               (Pp.opt Pp.V.filter)));
       "required-tools", Pp.ppacc
         with_required_tools required_tools
-        (Pp.V.map_list ~depth:2
-           (Pp.V.map_option
-              (Pp.V.map_pair
-                 (Pp.V.map_list Pp.V.string)
-                 (Pp.V.string))
+        (Pp.V.map_list
+           (Pp.V.map_options_2
+              (Pp.V.map_list ~depth:1 Pp.V.string)
+              (Pp.opt @@ Pp.singleton -| Pp.V.string)
               (Pp.opt Pp.V.filter)));
       "init-scripts", Pp.ppacc
         with_init_scripts init_scripts
