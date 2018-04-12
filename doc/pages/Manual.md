@@ -1391,11 +1391,11 @@ for <span class="opam">opam</span>.
   a list of compiler package choices. On `opam init`, the first available
   compiler in the list will be chosen for creating the initial switch if
   `--bare` wasn't specified.
-- <a id="configfield-recommended-tools">`recommended-tools: [ [ [ <string> ... ] <string ] {filter} ]`</a>,
-  <a id="configfield-required-tools">`required-tools: [ [ [ <string> ... ] <string ] {filter} ]`</a>:
+- <a id="configfield-recommended-tools">`recommended-tools: [ [ <string> ... ] {<string>}  {filter} ]`</a>,
+  <a id="configfield-required-tools">`required-tools: [ [ <string> ... ] {<string>} {filter} ]`</a>:
 	The recommended and required tools that are checked at init step. The first
   string list are the tools that will be checked, if one of them is present. If a
-  tool is missing, the second string is displayed on the warning or error
+  tool is missing, the optional string is displayed on the warning or error
   message. The filter field allow to check tools according a given configuration.
 - <a id="configfield-init-scripts">`init-scripts: [ [ <string> <string> ] {filter} ]`</a>:
 	These init script are written in the hook directory
