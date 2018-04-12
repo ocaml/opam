@@ -552,14 +552,16 @@ let init_checks ?(hard_fail_exn=true) config =
        true)
     else false
   in
-  let gst_env =
-    OpamPackageVar.resolve_global (OpamGlobalState.load `Lock_none)
+  let env =
+    fun fvar-> List.assoc fvar
+        (List.map (fun (v,l) -> OpamVariable.Full.global v, Lazy.force l)
+           OpamSysPoll.variables)
   in
   let filter_tools =
     OpamStd.List.filter_map (fun ((cmd,str),oflt) ->
         match oflt with
         | None -> Some (cmd,str)
-        | Some flt -> if (OpamFilter.eval_to_bool gst_env flt) then
+        | Some flt -> if (OpamFilter.eval_to_bool env flt) then
             Some (cmd,str) else None)
   in
   let check_tool logf tools =
@@ -630,12 +632,14 @@ let reinit ?(init_config=OpamInitDefaults.init_config) config =
   let _all_ok = init_checks ~hard_fail_exn:false config in
   OpamFile.Config.write (OpamPath.config root) config;
   let init_scripts =
-    let gst_env =
-      OpamPackageVar.resolve_global (OpamGlobalState.load `Lock_none)
+    let env =
+      fun fvar-> List.assoc fvar
+          (List.map (fun (v,l) -> OpamVariable.Full.global v, Lazy.force l)
+             OpamSysPoll.variables)
     in
     OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
         | None -> Some (nam,scr)
-        | Some flt -> if OpamFilter.eval_to_bool gst_env flt then
+        | Some flt -> if OpamFilter.eval_to_bool env flt then
             Some (nam,scr) else None) (OpamFile.Config.init_scripts config)
   in
   OpamEnv.write_static_init_scripts root ~completion:true init_scripts;
@@ -700,13 +704,15 @@ let init
           else not all_ok
         in
         let custom_scripts =
-          let gst_env =
-            OpamPackageVar.resolve_global (OpamGlobalState.load `Lock_none)
+          let env =
+            fun fvar-> List.assoc fvar
+                (List.map (fun (v,l) -> OpamVariable.Full.global v, Lazy.force l)
+                   OpamSysPoll.variables)
           in
           let scripts = OpamFile.Config.init_scripts config in
           OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
               | None -> Some (nam,scr)
-              | Some flt -> if OpamFilter.eval_to_bool gst_env flt then
+              | Some flt -> if OpamFilter.eval_to_bool env flt then
                   Some (nam,scr) else None) scripts
         in
         let repos_config =
