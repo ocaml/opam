@@ -684,13 +684,9 @@ let init
           update_with_init_config OpamFile.Config.empty init_config |>
           OpamFile.Config.with_repositories (List.map fst repos)
         in
-        (* If dump-only option is set, dump it and exit *)
+        (* If show option is set, dump it and exit *)
         if show_opamrc then
-          (OpamConsole.msg "%s\n\n" (OpamConsole.colorise `bold
-                                       "The config file (`~/.opam/config`):");
-           OpamConsole.msg "-------------------------------------\n";
-           OpamFile.Config.write_to_channel ~filename:config_f stdout config;
-           OpamConsole.msg "-------------------------------------\n";
+          (OpamFile.InitConfig.write_to_channel stdout init_config;
            OpamStd.Sys.exit_because `Success);
         (* Else write the config file and continue init *)
         OpamFile.Config.write config_f config;
