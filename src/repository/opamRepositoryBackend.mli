@@ -56,6 +56,13 @@ module type S = sig
     repository_name -> ?cache_dir:dirname -> dirname -> url ->
     update OpamProcess.job
 
+  (** [repo_update_complete dirname url] finalizes the update of the repository
+      after verification of the patch returned from [pull_repo_update] with
+      [Update_patch file] is applied. Version control systems, e.g. Mercurial,
+      that track the state of the working directory automatically use this to
+      update internal caches. *)
+  val repo_update_complete: dirname -> url -> unit OpamProcess.job
+
   (** Return the (optional) revision of a given repository. Only useful for VCS
       backends. Is not expected to work with [pull_repo_update], which doesn't
       update the VCS commit information. *)
