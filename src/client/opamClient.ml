@@ -626,7 +626,7 @@ let update_with_init_config ?(overwrite=false) config init_config =
   setifnew C.init_scripts C.with_init_scripts
     (I.init_scripts init_config)
 
-let reinit ?(init_config=OpamInitDefaults.init_config) config =
+let reinit ?(init_config=OpamInitDefaults.init_config()) config =
   let root = OpamStateConfig.(!r.root_dir) in
   let config = update_with_init_config config init_config in
   let _all_ok = init_checks ~hard_fail_exn:false config in
@@ -654,7 +654,7 @@ let reinit ?(init_config=OpamInitDefaults.init_config) config =
   gt, rt
 
 let init
-    ?(init_config=OpamInitDefaults.init_config) ?(show_opamrc=false)
+    ?(init_config=OpamInitDefaults.init_config()) ?(show_opamrc=false)
     ?repo ?(bypass_checks=false) shell dot_profile update_config =
   log "INIT %a"
     (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;

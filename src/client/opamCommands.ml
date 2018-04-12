@@ -144,7 +144,7 @@ let init =
     `P "Any field from the built-in initial configuration can be overriden \
         through $(i,~/.opamrc), $(i,/etc/opamrc), or a file supplied with \
         $(i,--config). The default configuration for this version of opam is:";
-    `Pre (OpamFile.InitConfig.write_to_string (OpamInitDefaults.init_config));
+    `Pre (OpamFile.InitConfig.write_to_string (OpamInitDefaults.init_config()));
     `P "Additional fields in the same format as for the $(i,~/.opam/config) \
         file are also supported: $(b,jobs:), $(b,download-command:), \
         $(b,download-jobs:), $(b,solver-criteria:), \
@@ -236,7 +236,7 @@ let init =
              OpamFile.to_string config_files);
         List.fold_left (fun acc f ->
             OpamFile.InitConfig.add acc (OpamFile.InitConfig.read f))
-          OpamInitDefaults.init_config
+          (OpamInitDefaults.init_config ())
           config_files
       with e ->
         OpamConsole.error

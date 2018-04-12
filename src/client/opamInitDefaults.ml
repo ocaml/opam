@@ -35,7 +35,7 @@ let eval_variables = [
 let linux_filter =
   Some (FOp (FIdent ([], OpamVariable.of_string "os", None), `Eq, FString "linux"))
 
-let wrappers =
+let wrappers () =
   let cmd t = [
     CString "%{hooks}%/sandbox.sh", None;
     CString t, None;
@@ -50,7 +50,7 @@ let wrappers =
 
 let bwrap_cmd = "bwrap"
 let bwrap_filter = linux_filter
-let bwrap_string =
+let bwrap_string () =
   Printf.sprintf "Sandboxing tool %s was not found. You should install \
                   'bubblewrap', or manually disable package build sandboxing \
                   and remove bwrap from required dependencies(at your own risk). \
@@ -61,21 +61,27 @@ let bwrap_string =
     (OpamConsole.colorise `bold "opam init --show-default-opamrc")
     (OpamConsole.colorise `underline "opamrc")
 
-let dl_tools, dl_tool =
-  let fetch_cmd_user =
-    let open OpamStd.Option.Op in
-    match
-      OpamStd.Env.getopt "OPAMCURL",
-      OpamStd.Env.getopt "OPAMFETCH" >>| fun s ->
-      OpamStd.String.split s ' '
-    with
-    | Some cmd, _ | _, Some (cmd::_) -> Some cmd
-    | _ -> None
-  in match fetch_cmd_user with
-  | None -> ["curl"; "wget"], None
-  | Some cmd -> [cmd], Some [(CString cmd), None]
+let fetch_cmd_user () =
+  let open OpamStd.Option.Op in
+  match
+    OpamStd.Env.getopt "OPAMCURL",
+    OpamStd.Env.getopt "OPAMFETCH" >>| fun s ->
+    OpamStd.String.split s ' '
+  with
+  | Some cmd, _ | _, Some (cmd::_) -> Some cmd
+  | _ -> None
 
-let recommended_tools =
+let dl_tools () =
+  match fetch_cmd_user () with
+  | None -> ["curl"; "wget"]
+  | Some cmd -> [cmd]
+
+let dl_tool () =
+  match fetch_cmd_user () with
+  | None ->  None
+  | Some cmd -> Some [(CString cmd), None]
+
+let recommended_tools () =
   let make = OpamStateConfig.(Lazy.force !r.makecmd) in
   [
     (([make], ""), None);
@@ -83,33 +89,34 @@ let recommended_tools =
     ((["cc"], ""), None);
   ]
 
-let required_tools =
+let required_tools () =
   [
-    ((dl_tools,
+    ((dl_tools(),
       "A download tool is required, check env variables OPAMCURL or OPAMFETCH"),
      None);
     ((["diff"], ""), None);
     ((["patch"], ""), None);
     ((["tar"], ""), None);
     ((["unzip"], ""), None);
-    (([bwrap_cmd], bwrap_string), bwrap_filter);
+    (([bwrap_cmd], bwrap_string()), bwrap_filter);
   ]
 
-
-let init_scripts =
+let init_scripts () =
   [ (("sandbox.sh", OpamScript.bwrap), bwrap_filter);
   ]
 
 module I = OpamFile.InitConfig
 
-let init_config =
+let (@|) g f = OpamStd.Op.(g @* f) ()
+
+let init_config () =
   I.empty |>
   I.with_repositories
     [OpamRepositoryName.of_string "default", (repository_url, None)] |>
   I.with_default_compiler default_compiler |>
   I.with_eval_variables eval_variables |>
-  I.with_wrappers wrappers |>
-  I.with_recommended_tools recommended_tools |>
-  I.with_required_tools required_tools |>
-  I.with_init_scripts init_scripts |>
-  I.with_dl_tool dl_tool
+  I.with_wrappers @| wrappers |>
+  I.with_recommended_tools @| recommended_tools |>
+  I.with_required_tools @| required_tools |>
+  I.with_init_scripts @| init_scripts |>
+  I.with_dl_tool @| dl_tool
