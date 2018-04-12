@@ -147,6 +147,7 @@ export OCAMLRUNPARAM=b
     make lib-ext
   fi
   make all
+  if [ $? -ne 0 ]; then cat boot.ml; exit 1; fi
 
   rm -f ~/local/bin/opam
   make install
