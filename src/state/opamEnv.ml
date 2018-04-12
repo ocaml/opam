@@ -494,7 +494,8 @@ let write_static_init_scripts root ~completion custom =
     ]
   in
   List.iter (write_script (OpamPath.init root)) scripts;
-  (* Complete with init_scripts to generate, mainly sandboxes *)
+  (* Complete with init_scripts (from config or opamrc) to generate,
+     mainly sandboxes *)
   List.iter (fun (name, script) ->
       write_script (OpamPath.hooks_dir root) (name, script);
       OpamFilename.chmod (OpamPath.hooks_dir root // name) 0o777
