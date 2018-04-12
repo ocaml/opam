@@ -518,7 +518,7 @@ let update
           (OpamPackage.Set.to_json updates);
       (success, not (OpamPackage.Set.is_empty updates)), st
   in
-  repo_update_failure = [] && dev_update_success,
+  repo_update_failure = [] && dev_update_success && remaining = [],
   repo_changed || dev_changed,
   rt
 
