@@ -87,9 +87,9 @@ doesn't affect the pinned package.
 - [`opam install --destdir`](man/opam-install.html#lbAF) can be used to copy
   build artefacts of given packages to an external prefix
 
-- __sandboxing__ of package build/install/remove commands is enabled by default
-  on Linux. You may need to install the
-  [bubblewrap](https://github.com/projectatomic/bubblewrap) tool for this.
+- __sandboxing__: on Linux, all package commands will now be sandboxed by
+  default. The [`bubblewrap`](https://github.com/projectatomic/bubblewrap) tool
+  is now required to this end.
 
 ## File formats
 

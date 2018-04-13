@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0.0~rc"
+version: "2.0.0~rc2"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
@@ -19,8 +19,8 @@ build: [
   [make "%{name}%.install"]
 ]
 depends: [
-  "opam-core" {= "2.0.0~rc"}
-  "opam-file-format" {>= "2.0.0~beta5"}
+  "opam-core" {= "2.0.0~rc2"}
+  "opam-file-format" {>= "2.0.0~rc2"}
   "jbuilder" {build & >= "1.0+beta18"}
 ]
 available: ocaml-version >= "4.02.3"
