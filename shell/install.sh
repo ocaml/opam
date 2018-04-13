@@ -57,14 +57,16 @@ fi
 
 FRESH=${FRESH:-0}
 
+OPAMROOT=${OPAMROOT:-$HOME/.opam}
+
+if [ ! -d "$OPAMROOT" ]; then FRESH=1; fi
+
 if [ -z "$NOBACKUP" ] && [ ! "$FRESH" = 1 ] && [ -z "$RESTORE" ]; then
     case "$EXISTING_OPAMV" in
         2.*) NOBACKUP=1;;
         *) NOBACKUP=0;;
     esac
 fi
-
-OPAMROOT=${OPAMROOT:-$HOME/.opam}
 
 xsudo() {
     local CMD=$1; shift

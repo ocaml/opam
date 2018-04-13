@@ -450,13 +450,13 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
     else
     match action with
     | `Build nv ->
-      let build_dir =
-        try OpamPackage.Map.find nv inplace
+      let is_inplace, build_dir =
+        try true, OpamPackage.Map.find nv inplace
         with Not_found ->
           let dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
           if not OpamClientConfig.(!r.reuse_build_dir) then
             OpamFilename.rmdir dir;
-          dir
+          false, dir
       in
       let test =
         OpamStateConfig.(!r.build_test) && OpamPackage.Set.mem nv requested
@@ -465,7 +465,8 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
         OpamStateConfig.(!r.build_doc) && OpamPackage.Set.mem nv requested
       in
       (if OpamFilename.exists_dir source_dir
-       then OpamFilename.copy_dir ~src:source_dir ~dst:build_dir
+       then (if not is_inplace then
+               OpamFilename.copy_dir ~src:source_dir ~dst:build_dir)
        else OpamFilename.mkdir build_dir;
        OpamAction.prepare_package_source t nv build_dir @@+ function
        | Some exn -> store_time (); Done (`Exception exn)
