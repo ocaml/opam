@@ -20,6 +20,11 @@ val os_family: unit -> string option
 val variables: (OpamVariable.t * OpamTypes.variable_contents option Lazy.t) list
 
 (** The function used internally to get our canonical names for architectures
-    (returns its input unchanged if not a recognised arch). This is typically
+    (returns its input lowercased if not a recognised arch). This is typically
     called on the output of [uname -m] *)
 val normalise_arch: string -> string
+
+(** The function used internally to get our canonical names for OSes (returns
+    its input lowercased if not a recognised OS). This is typically called on
+    the output of [uname -s] *)
+val normalise_os: string -> string

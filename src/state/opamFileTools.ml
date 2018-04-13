@@ -586,7 +586,30 @@ let lint ?check_extra_files t =
      cond 54 `Warning
        "External dependencies should not contain spaces nor empty string"
        ~detail:spaced_depexts
-       (spaced_depexts <> []))
+       (spaced_depexts <> []));
+    (let bad_os_arch_values =
+       List.fold_left
+         (OpamFilter.fold_down_left (fun acc -> function
+              | FOp (FIdent ([],vname,None), _, FString value)
+              | FOp (FString value, _, FIdent ([],vname,None)) ->
+                (match OpamVariable.to_string vname with
+                 | "os" ->
+                   let norm = OpamSysPoll.normalise_os value in
+                   if value <> norm then (value, norm)::acc else acc
+                 | "arch" ->
+                   let norm = OpamSysPoll.normalise_arch value in
+                   if value <> norm then (value, norm)::acc else acc
+                 | _ -> acc)
+              | _ -> acc))
+         [] (all_filters t)
+     in
+     cond 55 `Error
+       "Non-normalised OS or arch string being tested"
+       ~detail:(List.map
+                  (fun (used,norm) -> Printf.sprintf "%s (use %s instead)"
+                      used norm)
+                  bad_os_arch_values)
+       (bad_os_arch_values <> []));
   ]
   in
   format_errors @

@@ -307,10 +307,7 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
   let depexts =
     upgrade_depexts_to_2_0_beta5 filename (OpamFile.OPAM.depexts opam)
   in
-  let rwr_os_filters = function
-    | "darwin" | "osx" -> "macos"
-    | s -> s
-  in
+  let rwr_os_filters = OpamSysPoll.normalise_os in
   let rwr_arch_filters = OpamSysPoll.normalise_arch in
   let rewrite_filter =
     OpamFilter.map_up (function
