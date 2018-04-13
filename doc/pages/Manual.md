@@ -1328,8 +1328,9 @@ for <span class="opam">opam</span>.
   command, so for example command `[ make "install" ]` with wrapper
   `[ "time" "-o" "/tmp/timings" "-a" ]` will result in the command
   `[ "time" "-o" "/tmp/timings" "-a" make "install" ]`.
-	If a script is used as a wrapper and defined using `init-scripts` field, it
-  is stored on the `%{hook}%` directory.
+  As `init-scripts:` are stored in the hook directory, when using a wrapper
+  script defined by `init-scripts:`, use the variable `%{hook}%` as prefix for
+  you script filename.
   The filters are evaluated in the same scope as the package commands.
 - <a id="configfield-post-build-commands">`post-build-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
   <a id="configfield-post-install-commands">`post-install-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
@@ -1391,17 +1392,17 @@ for <span class="opam">opam</span>.
   a list of compiler package choices. On `opam init`, the first available
   compiler in the list will be chosen for creating the initial switch if
   `--bare` wasn't specified.
-- <a id="configfield-recommended-tools">`recommended-tools: [ [ <string> ... ] {<string>}  {filter} ]`</a>,
-  <a id="configfield-required-tools">`required-tools: [ [ <string> ... ] {<string>} {filter} ]`</a>:
-	The recommended and required tools that are checked at init step. The first
-  string list are the tools that will be checked, if one of them is present. If a
-  tool is missing, the optional string is displayed on the warning or error
-  message. The filter field allow to check tools according a given configuration.
-- <a id="configfield-init-scripts">`init-scripts: [ [ <string> <string> ] {filter} ]`</a>:
-	These init script are written in the hook directory
+- <a id="configfield-recommended-tools">`recommended-tools: [ [ <string> ... ] { <string> }  { <filter> } ]`</a>,
+  <a id="configfield-required-tools">`required-tools: [ [ <string> ... ] { <string> } { <filter> } ]`</a>:
+  The tools to be checked at `opam init`. Each one of them is defined as a list
+  of alternative commands to look for in the `PATH`, optionally a specific error
+  message to display if none of them is found, and a filter that can make the
+  check conditional.
+- <a id="configfield-init-scripts">`init-scripts: [ [ <string> <string> ] { <filter> } ]`</a>:
+  These init script are written in the hook directory
 	`~/.opam/opam-init/hooks` (local variable `%{hook}%`. The first string is the
-  name of the script, the second the contents, and the filter allow to restrain
-  script to a configuration.
+  name of the script, the second the contents, and the filter allows to limit
+  the creation of the script to specific configurations.
 
 #### switch-config
 
