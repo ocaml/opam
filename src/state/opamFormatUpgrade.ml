@@ -307,14 +307,20 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
   let depexts =
     upgrade_depexts_to_2_0_beta5 filename (OpamFile.OPAM.depexts opam)
   in
+  let rwr_os_filters = OpamSysPoll.normalise_os in
+  let rwr_arch_filters = OpamSysPoll.normalise_arch in
   let rewrite_filter =
     OpamFilter.map_up (function
-        | FOp (FIdent ([],v,None), op, FString ("darwin"|"osx"))
-          when v = OpamVariable.of_string "os" ->
-          FOp (FIdent ([],v,None), op, FString "macos")
-        | FOp (FString ("darwin"|"osx"), op, FIdent ([],v,None))
-          when v = OpamVariable.of_string "os" ->
-          FOp (FString "macos", op, FIdent ([],v,None))
+        | FOp (FIdent ([],vname,None) as v, op, FString value) as ft ->
+          (match OpamVariable.to_string vname with
+           | "os" -> FOp (v, op, FString (rwr_os_filters value))
+           | "arch" -> FOp (v, op, FString (rwr_arch_filters value))
+           | _ -> ft)
+        | FOp (FString value, op, (FIdent ([],vname,None) as v)) as ft ->
+          (match OpamVariable.to_string vname with
+           | "os" -> FOp (FString (rwr_os_filters value), op, v)
+           | "arch" -> FOp (FString (rwr_arch_filters value), op, v)
+           | _ -> ft)
         | ft -> ft)
   in
   opam |>

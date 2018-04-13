@@ -50,14 +50,20 @@ let arch_lazy = lazy (
 )
 let arch () = Lazy.force arch_lazy
 
+let normalise_os raw =
+  match String.lowercase_ascii raw with
+  | "darwin" | "osx" -> "macos"
+  | s -> s
+
 let os_lazy = lazy (
-  match Sys.os_type with
-  | "Unix" ->
-    (match OpamStd.Sys.uname "-s" with
-      | Some "Darwin" -> Some "macos"
-      | Some s -> norm s
-      | None -> None)
-  | s -> norm s
+  let raw =
+    match Sys.os_type with
+    | "Unix" -> OpamStd.Sys.uname "-s"
+    | s -> norm s
+  in
+  match raw with
+  | None | Some "" -> None
+  | Some s -> Some (normalise_os s)
 )
 let os () = Lazy.force os_lazy
 
