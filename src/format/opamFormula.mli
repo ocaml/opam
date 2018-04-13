@@ -123,6 +123,9 @@ val iter: ('a -> unit) -> 'a formula -> unit
 (** Fold function (bottom-up, left-to-right) *)
 val fold_left: ('a -> 'b -> 'a) -> 'a -> 'b formula -> 'a
 
+(** Fold function (bottom-up, right-to-left) *)
+val fold_right: ('a -> 'b -> 'a) -> 'a -> 'b formula -> 'a
+
 (** Expressions composed entirely of version constraints *)
 type version_formula = version_constraint formula
 

@@ -60,15 +60,19 @@ type 'a cnf = 'a list list
 
 let string_of_cnf string_of_atom cnf =
   let string_of_clause c =
-    Printf.sprintf "(%s)" (OpamStd.List.concat_map " | " string_of_atom c) in
-  Printf.sprintf "(%s)" (OpamStd.List.concat_map " & " string_of_clause cnf)
+    let left, right = match c with [_] -> "", "" | _ -> "(", ")" in
+    OpamStd.List.concat_map ~left ~right " | " string_of_atom c
+  in
+  OpamStd.List.concat_map " & " string_of_clause cnf
 
 type 'a dnf = 'a list list
 
 let string_of_dnf string_of_atom cnf =
   let string_of_clause c =
-    Printf.sprintf "(%s)" (OpamStd.List.concat_map " & " string_of_atom c) in
-  Printf.sprintf "(%s)" (OpamStd.List.concat_map " | " string_of_clause cnf)
+    let left, right = match c with [_] -> "", "" | _ -> "(", ")" in
+    OpamStd.List.concat_map ~left ~right " & " string_of_atom c
+  in
+  OpamStd.List.concat_map " | " string_of_clause cnf
 
 type 'a formula =
   | Empty
@@ -156,6 +160,13 @@ let rec fold_left f i = function
   | Block x  -> fold_left f i x
   | And(x,y) -> fold_left f (fold_left f i x) y
   | Or(x,y)  -> fold_left f (fold_left f i x) y
+
+let rec fold_right f i = function
+  | Empty    -> i
+  | Atom x   -> f i x
+  | Block x  -> fold_right f i x
+  | And(x,y) -> fold_right f (fold_right f i y) x
+  | Or(x,y)  -> fold_right f (fold_right f i y) x
 
 type version_formula = version_constraint formula
 
@@ -306,12 +317,10 @@ let packages pkgset f =
 
 (* Convert a t an atom formula *)
 let to_atom_formula (t:t): atom formula =
-  let atom (r,v) = Atom (r, v) in
-  let atoms (x, c) =
-    match map atom c with
-    | Empty -> Atom (x, None)
-    | cs    -> map (fun c -> Atom (x, Some c)) cs in
-  map atoms t
+  map (fun (x, c) -> match c with
+      | Empty -> Atom (x, None)
+      | cs    -> map (fun c -> Atom (x, Some c)) cs)
+    t
 
 (* Convert an atom formula to a t-formula *)
 let of_atom_formula (a:atom formula): t =
@@ -321,79 +330,94 @@ let of_atom_formula (a:atom formula): t =
     | Some (r,v) -> Atom (n, Atom (r,v)) in
   map atom a
 
-(* Convert a formula to CNF *)
-let to_cnf (t : t) =
-  let rec or_formula = function
-    | Atom (x,None)      -> [x, None]
-    | Atom (x,Some(r,v)) -> [x, Some(r,v)]
-    | Or(x,y)            -> or_formula x @ or_formula y
-    | Empty
-    | Block _
-    | And _      -> assert false in
-  let rec aux t = match t with
-    | Empty    -> []
-    | Block _  -> assert false
-    | Atom _
-    | Or _     -> [or_formula t]
-    | And(x,y) -> aux x @ aux y in
-  aux (cnf_of_formula (to_atom_formula t))
-
-(* Convert a formula to DNF *)
-let to_dnf t =
-  let rec and_formula = function
-    | Atom (x,None)      -> [x, None]
-    | Atom (x,Some(r,v)) -> [x, Some(r,v)]
-    | And(x,y)           -> and_formula x @ and_formula y
-    | Empty
-    | Block _
-    | Or _      -> assert false in
-  let rec aux t = match t with
-    | Empty   -> []
-    | Block _ -> assert false
-    | Atom _
-    | And _   -> [and_formula t]
-    | Or(x,y) -> aux x @ aux y in
-  aux (dnf_of_formula (to_atom_formula t))
-
-let to_conjunction t =
-  match to_dnf t with
-  | []  -> []
-  | [x] -> x
-  | _   ->
-    failwith (Printf.sprintf "%s is not a valid conjunction" (to_string t))
-
 let ands l = List.fold_left make_and Empty l
 
 let rec ands_to_list = function
   | Empty -> []
-  | And (e,f) | Block (And (e,f)) -> ands_to_list e @ ands_to_list f
+  | And (e,f) ->
+    List.rev_append (rev_ands_to_list e) (ands_to_list f)
+  | Block f -> ands_to_list f
+  | x -> [x]
+and rev_ands_to_list = function
+  | Empty -> []
+  | Block f -> rev_ands_to_list f
+  | And (e,f) ->
+    List.rev_append (ands_to_list f) (rev_ands_to_list e)
   | x -> [x]
 
 let of_conjunction c =
   of_atom_formula (ands (List.rev_map (fun x -> Atom x) c))
 
-let to_disjunction t =
-  match to_cnf t with
-  | []  -> []
-  | [x] -> x
-  | _   ->
-    failwith (Printf.sprintf "%s is not a valid disjunction" (to_string t))
-
 let ors l = List.fold_left make_or Empty l
 
 let rec ors_to_list = function
   | Empty -> []
-  | Or (e,f) | Block (Or (e,f)) -> ors_to_list e @ ors_to_list f
+  | Or (e,f) ->
+    List.rev_append (rev_ors_to_list e) (ors_to_list f)
+  | Block f -> ors_to_list f
   | x -> [x]
+and rev_ors_to_list = function
+  | Empty -> []
+  | Or (e,f) ->
+    List.rev_append (ors_to_list f) (rev_ors_to_list e)
+  | Block f -> rev_ors_to_list f
+  | x -> [x]
+
+let is_conjunction t =
+  let rec aux = function
+    | Or _ -> false
+    | And (a,b) -> aux a && aux b
+    | Block a -> aux a
+    | _ -> true
+  in
+  aux t
+
+let is_disjunction t =
+  let rec aux = function
+    | And _ -> false
+    | Or (a,b) -> aux a && aux b
+    | Block a -> aux a
+    | _ -> true
+  in
+  aux t
+
+let atoms t =
+  fold_right (fun accu x -> x::accu) [] (to_atom_formula t)
+
+let to_cnf t =
+  let atf = to_atom_formula t in
+  let atoms = fold_right (fun acc a -> a::acc) [] in
+  let conj = rev_ands_to_list atf in
+  if List.for_all is_disjunction conj then
+    List.rev_map atoms conj (* this gives a nice speedup *)
+  else
+    List.rev_map atoms @@ rev_ands_to_list @@ cnf_of_formula atf
+
+let to_dnf t =
+  let atf = to_atom_formula t in
+  let atoms = fold_right (fun acc a -> a::acc) [] in
+  let disj = rev_ors_to_list atf in
+  if List.for_all is_conjunction disj then
+    List.rev_map atoms disj
+  else
+    List.rev_map atoms @@ rev_ors_to_list @@ dnf_of_formula atf
+
+let to_conjunction t =
+  if is_conjunction t then atoms t
+  else failwith (Printf.sprintf "%s is not a valid conjunction" (to_string t))
+
+let to_disjunction t =
+  if is_disjunction t then atoms t
+  else failwith (Printf.sprintf "%s is not a valid disjunction" (to_string t))
 
 let of_disjunction d =
   of_atom_formula (ors (List.rev_map (fun x -> Atom x) d))
 
-let atoms t =
-  fold_left (fun accu x -> x::accu) [] (to_atom_formula t)
-
 let get_disjunction_formula version_set cstr =
-  List.map (fun ff ->
+  (* rev_ors_to_list cstr |>
+   * List.fold_left *)
+
+  List.rev_map (fun ff ->
       match ands_to_list ff with
       | [] -> assert false
       | [Atom _] as at -> at
@@ -401,7 +425,7 @@ let get_disjunction_formula version_set cstr =
         OpamPackage.Version.Set.filter (check_version_formula ff) version_set |>
         OpamPackage.Version.Set.elements |>
         List.map (fun v -> Atom (`Eq, v)))
-    (ors_to_list cstr) |>
+    (rev_ors_to_list cstr) |>
   List.flatten
 
 let set_to_disjunction set t =
@@ -410,6 +434,7 @@ let set_to_disjunction set t =
         failwith (Printf.sprintf "%s is not a valid disjunction" (to_string t))
       | Or _ | Block _ | Empty -> assert false
       | Atom (name, Empty) -> [name, None]
+      | Atom (name, Atom a) -> [name, Some a]
       | Atom (name, cstr) ->
         get_disjunction_formula
           (OpamPackage.versions_of_name set name)

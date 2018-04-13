@@ -37,6 +37,7 @@ module type MAP = sig
   val values: 'a t -> 'a list
   val find_opt: key -> 'a t -> 'a option
   val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
+  val is_singleton: 'a t -> bool
   val of_list: (key * 'a) list -> 'a t
   val safe_add: key -> 'a -> 'a t -> 'a t
   val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
@@ -257,6 +258,10 @@ module Map = struct
           | Some v1, Some v2 -> Some (f v1 v2)
           | None, None -> assert false)
         m1 m2
+
+    let is_singleton s =
+      not (is_empty s) &&
+      fst (min_binding s) == fst (max_binding s)
 
     let to_string string_of_value m =
       if M.cardinal m > max_print then

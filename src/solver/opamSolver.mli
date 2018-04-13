@@ -51,11 +51,13 @@ val print_solution:
 (** Computes an opam->cudf version map from a set of package *)
 val cudf_versions_map: universe -> package_set -> int OpamPackage.Map.t
 
-(** Creates a CUDF universe from an OPAM universe, including the given
-    packages *)
+(** Creates a CUDF universe from an OPAM universe, including the given packages.
+    Evaluation of the first 3 arguments is staged. Warning: when [depopts] is
+    [true], the optional dependencies may become strong dependencies. *)
 val load_cudf_universe:
-  ?depopts:bool -> build:bool -> post:bool ->
-  universe -> ?version_map:int package_map -> package_set -> Cudf.universe
+  universe -> ?version_map:int package_map -> package_set ->
+  ?depopts:bool -> build:bool -> post:bool -> unit ->
+  Cudf.universe
 
 (**  Build a request *)
 val request:
