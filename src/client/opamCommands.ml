@@ -1477,6 +1477,14 @@ let repository =
      address. The quorum is a positive integer that determines the validation \
      threshold for signed repositories, with fingerprints the trust anchors \
      for said validation.";
+    " ", `add, [],
+    (* using an unbreakable space here will indent the text paragraph at the level
+       of the previous labelled paragraph, which is what we want for our note. *)
+    "$(b,Note:) By default, the repository is only be added to the current switch. \
+     To add a switch to other repositories, you need to use the $(b,--all) or \
+     $(b,--set-default) options (see below). If you want to enable a repository \
+     only to install of of its switches, you may be looking for \
+     $(b,opam switch create --repositories=REPOS).";
     "remove", `remove, ["NAME..."],
     "Unselects the given repositories so that they will not be used to get \
      package definitions anymore. With $(b,--all), makes opam forget about \
