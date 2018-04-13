@@ -143,15 +143,8 @@ let init =
     `S "CONFIGURATION FILE";
     `P "Any field from the built-in initial configuration can be overriden \
         through $(i,~/.opamrc), $(i,/etc/opamrc), or a file supplied with \
-        $(i,--config). The default configuration for this version of opam is:";
-    `Pre (OpamFile.InitConfig.write_to_string (OpamInitDefaults.init_config()));
-    `P "Additional fields in the same format as for the $(i,~/.opam/config) \
-        file are also supported: $(b,jobs:), $(b,download-command:), \
-        $(b,download-jobs:), $(b,solver-criteria:), \
-        $(b,solver-upgrade-criteria:), \
-        $(b,solver-fixup-criteria:), $(b,solver:), $(b,wrap-build-commands:), \
-        $(b,wrap-install-commands:), $(b,wrap-remove-commands:), \
-        $(b,global-variables:).";
+        $(i,--config). The default configuration for this version of opam \
+        can be obtained using $(b,--show-default-opamrc).";
     `S OpamArg.build_option_section;
   ] in
   let compiler =
