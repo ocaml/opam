@@ -125,6 +125,18 @@ let get_installed_atoms t atoms =
 (* Check atoms for pinned packages, and update them. Returns the state that
    may have been reloaded if there were changes *)
 let update_dev_packages_t atoms t =
+  (* Check last update of the repo *)
+  let last_update =
+    (Unix.stat (OpamFilename.to_string
+                  (OpamPath.state_cache
+                     (OpamStateConfig.(!r.root_dir))))).Unix.st_mtime
+  in
+  let too_old = float_of_int (3600*24*21) in
+  if (Unix.time () -. last_update) > too_old then
+    OpamConsole.note "It seems you have not updated your repositories \
+                      for a while. Consider updating them with:\n%s\n"
+      (OpamConsole.colorise `bold "opam update");
+
   if OpamClientConfig.(!r.skip_dev_update) then t else
   let working_dir = OpamClientConfig.(!r.working_dir) in
   let to_update =
@@ -442,9 +454,16 @@ let update
     if names <> [] && not (OpamPackage.Set.is_empty nondev_packages) then
       OpamConsole.warning
         "The following are not development packages (no dynamic or version \
-         controlled upstream) and can't be updated individually. What you \
-         want is probably to update your repositories: %s"
-        (OpamPackage.Set.to_string nondev_packages);
+         controlled upstream) and can't be updated individually: %s\nYou may \
+         want to update your repositories with just %s or to upgrade your \
+         package%s with %s %s"
+        (OpamPackage.Set.to_string nondev_packages)
+        (OpamConsole.colorise `bold "opam update")
+        (if OpamPackage.Set.cardinal nondev_packages = 1 then "" else "s")
+        (OpamConsole.colorise `bold "opam upgrade")
+        (OpamConsole.colorise `bold
+           (OpamStd.List.concat_map " " OpamPackage.name_to_string
+              (OpamPackage.Set.elements nondev_packages)));
     let dirty_dev_packages, dev_packages =
       if names <> [] then OpamPackage.Set.empty, dev_packages else
         OpamPackage.Set.partition
@@ -511,7 +530,7 @@ let update
           (OpamPackage.Set.to_json updates);
       (success, not (OpamPackage.Set.is_empty updates)), st
   in
-  repo_update_failure = [] && dev_update_success,
+  repo_update_failure = [] && dev_update_success && remaining = [],
   repo_changed || dev_changed,
   rt
 
