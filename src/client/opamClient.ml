@@ -459,7 +459,7 @@ let update
          package%s with %s %s"
         (OpamPackage.Set.to_string nondev_packages)
         (OpamConsole.colorise `bold "opam update")
-        (if OpamPackage.Set.cardinal nondev_packages = 1 then "" else "s")
+        (if OpamPackage.Set.is_singleton nondev_packages then "" else "s")
         (OpamConsole.colorise `bold "opam upgrade")
         (OpamConsole.colorise `bold
            (OpamStd.List.concat_map " " OpamPackage.name_to_string
