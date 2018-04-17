@@ -244,6 +244,11 @@ let init =
         OpamConsole.errmsg "%s\n" (Printexc.to_string e);
         OpamStd.Sys.exit_because `Configuration_error
     in
+    (* If show option is set, dump it and exit *)
+    if show_opamrc then
+      (OpamFile.InitConfig.write_to_channel stdout init_config;
+       OpamStd.Sys.exit_because `Success);
+    (* Else continue init *)
     let repo =
       OpamStd.Option.map (fun url ->
         let repo_url = OpamUrl.parse ?backend:repo_kind url in
@@ -261,7 +266,7 @@ let init =
     let dot_profile = init_dot_profile shell dot_profile_o in
     let gt, rt, default_compiler =
       OpamClient.init
-        ~init_config ~show_opamrc ?repo ~bypass_checks
+        ~init_config ?repo ~bypass_checks
         shell dot_profile update_config
     in
     if not no_compiler &&

@@ -673,7 +673,7 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) config =
   gt, rt
 
 let init
-    ?(init_config=OpamInitDefaults.init_config()) ?(show_opamrc=false)
+    ?(init_config=OpamInitDefaults.init_config())
     ?repo ?(bypass_checks=false) shell dot_profile update_config =
   log "INIT %a"
     (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
@@ -703,11 +703,6 @@ let init
           update_with_init_config OpamFile.Config.empty init_config |>
           OpamFile.Config.with_repositories (List.map fst repos)
         in
-        (* If show option is set, dump it and exit *)
-        if show_opamrc then
-          (OpamFile.InitConfig.write_to_channel stdout init_config;
-           OpamStd.Sys.exit_because `Success);
-        (* Else write the config file and continue init *)
         OpamFile.Config.write config_f config;
 
         let dontswitch =
