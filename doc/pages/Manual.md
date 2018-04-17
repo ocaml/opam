@@ -1291,7 +1291,7 @@ for <span class="opam">opam</span>.
 - <a id="configfield-solver-criteria">`solver-criteria: <string>`</a>: can be
   used to tweak the solver criteria used for the resolution of operations. These
   depend on the solver used, see the
-  [Solver Criteria](Specifying_Solver_Preferences.html) page for details.
+  [Solver Criteria](External_solvers.html) page for details.
 - <a id="configfield-solver-upgrade-criteria">`solver-upgrade-criteria: `</a>,
   <a id="configfield-solver-fixup-criteria">`solver-fixup-criteria: `</a>:
   similar to [`solver-criteria`](#configfield-solver-criteria), but specific to

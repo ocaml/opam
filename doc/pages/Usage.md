@@ -21,8 +21,6 @@ details.
 ```
 # ** Get started **
 opam init            # Initialize ~/.opam
-opam init --compiler=ocaml-base-compiler.4.04.0
-                     # Initialize with a freshly compiled OCaml 4.04.0
 
 # ** Lookup **
 opam list -a         # List all available packages
@@ -32,6 +30,7 @@ opam show PACKAGE    # Display information about PACKAGE
 # ** Install **
 opam install PACKAGE # Download, build and install the latest version of PACKAGE
                      # and all its dependencies
+opam remove PACKAGE  # Uninstall the given package
 
 # ** Upgrade **
 opam update          # Update the packages database
@@ -69,28 +68,23 @@ It will also update any packages that are bound to version-controlled sources.
 
 ### Looking up packages
 
-There are three useful commands for that:
+There are three commands for that:
 * `opam list` List installed packages, or packages matching various selection
-  criteria
-* `opam search` Search in package descriptions
+  criteria.
+* `opam search` Search in package descriptions.
 * `opam show` Print details on a given package.
 
 ### opam install
 
-This command installs packages along with all their dependencies. You can
-specify one or several packages, along with version constraints. E.g:
+This command downloads, builds and installs packages along with all their
+dependencies. You can specify one or several packages, along with version
+constraints. E.g:
 
 ```
 opam install lwt
 opam install ocp-indent ocp-index.1.0.2
 opam install "ocamlfind>=1.4.0"
 ```
-
-If opam seems unable to fulfill very simple installation requests or
-propose non-sensical install plans, it may be due to limitations of
-its internal dependency solver; you should check that you have an
-[External dependency solver](Install.html#ExternalSolvers) on your
-system.
 
 ### opam upgrade
 
@@ -101,24 +95,24 @@ packages from being upgraded.
 ### opam switch
 
 This command enables the user to have several installations on disk, each with
-their own prefix, set of installed packages, and OCaml version. Use cases
+their own prefix, set of installed packages, compiler version, etc.. Use cases
 include having to work or test with different OCaml versions, keeping separate
 development environments for specific projects, etc.
 
 Use `opam switch create [name] <package-or-version>` to _switch_ to a different
 compiler. Don't forget to run the advertised `eval $(opam env)` to update your
 PATH accordingly. Replace `[name]` with a directory name to have the switch
-bound to that directory, and automatically selected when opam is run from there:
-this is typically done within projects that require a specific compiler or set
-of opam packages.
+created in that directory, and automatically selected when opam is run from
+there: this is typically done within projects that require a specific compiler
+or set of opam packages.
 
 Creating a new switch requires re-compiling OCaml, unless you use the
 `ocaml-system` package, that relies on the global OCaml installation.
 
 ### opam pin
 
-This command allows to pin a package to a specific version, but in fact, as you
-know if you've read the [Packaging guide](Packaging.html), it can do much more.
+This command allows to pin a package to a specific version, but has been
+extended to allow much more than that.
 
 The syntax is
 
@@ -126,9 +120,9 @@ The syntax is
 opam pin add <package name> <target>
 ```
 
-Where `<target>` may be a version, but also a local path, an http address or
-even a git, mercurial or darcs URL. The package will be kept up-to-date with its
-origin on `opam update` and when explicitly mentioned in a command, so that
+Where `<target>` may be a version, but also a local path, the URL of an archive,
+or even a git, mercurial or darcs URL. The package will be kept up-to-date with
+its origin on `opam update` and when explicitly mentioned in a command, so that
 you can simply run `opam upgrade <package name>` to re-compile it from its
 upstream. If the upstream includes opam metadata, that will be used as well.
 
@@ -139,26 +133,42 @@ opam pin add opam-lib https://github.com/ocaml/opam.git#1.2   # specific branch 
 opam pin add opam-lib --dev-repo                              # upstream repository
 ```
 
-This can be used in conjunction with `opam source` to start and hack an existing
-package before you know it:
+This actually a powerful mechanism to divert any package definition, and can
+even be used to locally create packages that don't have entries in the
+repositories.
+
+This can be used in conjunction with `opam source` to patch an existing package
+in a breeze:
 
 ```
 opam source <package> --dev-repo --pin
 cd <package>; hack hack hack;
-opam upgrade <package>
+opam upgrade .
 ```
 
 ### opam repo
 
 opam is configured by default to use the community's software repository at
-[opam.ocaml.org](https://opam.ocaml.org), but this can easily be
-changed at `opam init` time or later.
+[opam.ocaml.org](https://opam.ocaml.org), but third-party repositories can
+easily be used in addition, or in replacement.
 
-`opam repo add <name> <address>` will make opam use the definitions of any
-package versions defined at `<address>`, falling back to the previously defined
-repositories for those which aren't defined. The `<address>` may point to an
-http, local or version-controlled repository. The newly configured repository is
-only selected for the current switch (since opam 2.0), unless you add `--all`.
+```
+opam repo add <name> <address>
+```
+
+defines the alias `<name>` to refer to the package repository found at
+`<address>`. Without further options, that repository will be set to lookup for
+package definitions over what was already defined **in the current switch
+only**. See options `--all` and `--set-default` to affect other and newly
+created switches, respectively.
+
+The `<address>` may point to an HTTP, local or version-controlled repository. To
+create a new switch bound to specific repositories, it's easier to use instead:
+
+```
+opam switch create --repos <name>=<address>,default
+```
+
 
 Defining your own repository, either locally or online, is quite easy: you can
 start off by cloning

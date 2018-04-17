@@ -4,18 +4,6 @@
 > interested in the more advanced [Tricks](Tricks.html) for specific use-cases
 > or advanced users.
 
-#### 🐫  opam fails, trying to reinstall already installed packages at first upgrade ?
-
-It might be that you are still using Ubuntu "utopic", that shipped with a broken
-opam package. That shouldn't happen and didn't in any stable opam release. See
-[the bug-report on Ubuntu's launchpad](https://bugs.launchpad.net/ubuntu/+source/opam/+bug/1401346)
-for the details.
-
-The best fix is to upgrade your [opam](Install.html) using the community
-packages.
-
----
-
 #### 🐫  What is opam for ?
 
 Easily installing, upgrading and managing your OCaml compiler(s), tools and
@@ -33,19 +21,23 @@ used for different systems using specific repositories (e.g. for the
 #### 🐫  How to get, install and upgrade opam ?
 
 See the [install guide](Install.html).
-If upgrading, you can bootstrap using `opam install opam-devel`.
+
+If upgrading, you can bootstrap using `opam install opam-devel`, and follow the
+instructions.
 
 ---
 
 #### 🐫  Where is the manual ?
 
-opam has git-like, hierarchical manpages. Try `opam --help` for a starting point.
+opam has git-like, hierarchical
+[manpages](https://opam.ocaml.org/doc/2.0/man/opam.html). Try `opam --help` for
+a starting point.
 
 Or get started from the [Usage](Usage.html) guide.
 
 If you want to know more about opam packages, see the [Packaging Howto](Packaging.html).
 
-The reference on the internals and file formats is in the [Manual](Manual.html).
+The full reference on the internals and file formats is in the [Manual](Manual.html).
 
 You may also want to browse the [library APIs](api/).
 
@@ -61,8 +53,12 @@ installations.
 
 If you choose to create "local switches", the installation prefix will be put in
 the specified directory with `/_opam/` appended. Nothing else will be changed.
-The `opam build` command creates a local switch in the current directory, in the
-form of a `_opam/` subdirectory.
+
+Please note, however, that programs you install using opam won't themselves be
+bound by any restrictions.
+
+On Linux, and since opam 2.0.0~rc2, package instructions (build, install,
+remove) are also run in a sandbox and guaranteed not to affect your system.
 
 ---
 
@@ -134,6 +130,10 @@ opam switch import <file.export> --switch <new switch>
 The file format is human-readable, so you are free to edit the file before doing
 the `import` if you need to customise the installation.
 
+You may also want to have a look at the `opam lock` plugin, that can memorise
+the precise set of installed dependencies for a local package, and the
+associated `opam install DIR --locked` command that can restore them.
+
 ---
 
 #### 🐫  I installed a package by hand / used ``ocamlfind remove`` / fiddled with the installed packages and opam is out of sync. Help !
@@ -161,8 +161,8 @@ there are several ways you can recover:
 #### 🐫  What are the minimum requirements ?
 
 1GB of memory should be all you need. It was reported that you may run into
-problems with 512MB of RAM and no swap. Of course, software packages themselves
-may be more greedy.
+problems with 512MB of RAM and no swap. Of course, compiling the packages may
+need more.
 
 ---
 
@@ -173,30 +173,34 @@ using your system package manager (apt-get, yum, pacman, homebrew, etc.) since
 they are outside the scope of opam.
 
 opam metadata includes documentation about these external dependencies, on a
-variety of systems/distributions, in the form of a `depext:` field. The `depext`
-opam plugin can take care of them for you:
+variety of systems/distributions, in the form of a
+[`depexts:`](https://opam.ocaml.org/doc/2.0/Manual.html#opamfield-depexts)
+field. Opam should print the required system dependencies, as documented for
+your OS, upon failure, and the `depext` opam plugin can take care of installing
+them for you:
 
 ```
 opam depext <opam-packages>
 ```
 
-This should install `opam-depext` if needed, check your OS, and prompt to
-install the system packages required by your packages or their dependencies,
-through your OS's packaging system.
+This should install `opam-depext` if needed and prompt to install the system
+packages required by your opam packages or their dependencies, through your OS's
+packaging system.
 
 If that doesn't work...
 * Check for hints printed by the failing package
-* Dependencies for your specific system may not be known, but check the output
-  of `opam list --rec --required-by <package>,<package>... --external`: it will
-  list dependencies on all known systems and may get you in the right direction.
 * Lookup the development packages corresponding to the error in your system's
   package repositories.
+* Dependencies for your specific system may not be known, but check the output
+  of `opam list --rec --resolve <package>,<package>... --columns name,depexts:`:
+  it will list dependencies on all known systems and may get you in the right
+  direction.
 
 In any of these cases, that's useful information that was missing from the opam
 repository: we would really appreciate that you take a minute to save others the
 trouble of looking by filling an issue in
 [the opam-repository tracker](https://github.com/ocaml/opam-repository/issues),
-with your system details, the output of `opam depext --flags`, and the solution,
+with your system details, the output of `opam config report`, and the solution,
 if you found it. Thanks!
 
 ---
@@ -221,13 +225,10 @@ As a last resort, you can bypass the checksum checks using `--no-checksums`.
 #### 🐫  opam is prompting me to install or upgrade packages that I am not interested in, or doesn't install the latest version by default. Why ? What can I do ?
 
 * You can be more explicit in your request (`opam upgrade PACKAGES`, `opam
-  install 'PACKAGE>=VERSION' PACKAGE...`, etc.)
-* Action resolution in a package set is known to be a NP-complete problem; opam
-  uses state-of-the-art algorithms through an external, dedicated solver: make
-  sure you have a recent
-  [external solver installed](Install.html#ExternalSolvers)
-* Another benefit of the external solvers is that they allow to be [quite
-  expressive](Specifying_Solver_Preferences.html) on your expectations.
+  install 'PACKAGE>=VERSION' PACKAGE...`, etc.). The latest version may not be
+  available on your system, in this case this will tell you why.
+* See how to set [solver preferences](External_solvers.html) that could match your intentions better than the defaults
+* Check for pending reinstallations `opam reinstall --list-pending`
 
 ---
 
@@ -241,15 +242,12 @@ requesting, here is how to find out. We'll suppose you were trying to install
 * The above may find a solution by using older version of the packages, in that
   case try and force the latest versions thusly: `opam install foo.2.0 bar.1.1`
   (you can also use constraints like `'foo>=2.0'`).
-* Like in the previous question, make sure you have
-  [aspcud](http://potassco.sourceforge.net/) or another supported solver
-  installed, the proposed solutions may not be as accurate without it.
 
 ---
 
 #### 🐫  Where do I report Bugs, Issues and Feature Requests?
 
-- Bug reports and feature requests for the opam tool should be reported on
+- Bug reports and feature requests for the opam **tool** should be reported on
 [opam's issue-tracker](https://github.com/ocaml/opam/issues). Please include the
 output of `opam config report` whenever applicable.
 
@@ -262,20 +260,21 @@ issue-tracker](https://github.com/ocaml/opam-repository/issues).
 insights and evolution of opam internals can discussed on the [opam-devel
 mailing-list](http://lists.ocaml.org/listinfo/opam-devel).
 
-- You may also try IRC channel `#opam` on Freenode.
+- You may also try IRC channel `#ocaml` on Freenode.
 
 ---
 
 #### 🐫  How to link to libraries installed with opam ?
 
 The standard way of doing this is to use
-[ocamlfind](https://opam.ocaml.org/packages/ocamlfind), which is
-orthogonal to opam: `ocamlfind query <lib>`.
+[ocamlfind](https://opam.ocaml.org/packages/ocamlfind), which is orthogonal to
+opam: `ocamlfind query <lib>`. If you use [dune](https://github.com/ocaml/dune),
+this should be completely transparent.
 
-Your libraries are installed to the directory returned by ``opam config var
-lib``, which is by default `~/.opam/<switch>/lib`. Note that using `ocamlc`'s
-option `-I +dir` will make `dir` relative to `lib/ocaml`, and will only work for
-the libraries that ship with the compiler. Also, remember to add the dependency when
+Your libraries are installed to the directory returned by ``opam var lib``,
+which is by default `~/.opam/<switch>/lib`. Note that using `ocamlc`'s option
+`-I +dir` will make `dir` relative to `lib/ocaml`, and will only work for the
+libraries that ship with the compiler. Also, remember to add the dependency when
 you package your project !
 
 ---
