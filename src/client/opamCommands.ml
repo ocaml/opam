@@ -2415,7 +2415,7 @@ let pin ?(unpin_only=false) () =
          let st =
            List.fold_left (fun st name ->
                try OpamPinCommand.source_pin st name ~edit (Some url)
-               with OpamPinCommand.Aborted
+               with OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
                   | OpamPinCommand.Nothing_to_do -> st)
              st names
          in
