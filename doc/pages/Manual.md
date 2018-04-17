@@ -725,11 +725,19 @@ The default, built-in initial config of <span class="opam">opam</span> can be se
   [`best-effort-prefix-criteria:`](#configfield-best-effort-prefix-criteria),
   [`solver:`](#configfield-solver),
   [`global-variables:`](#configfield-global-variables),
-  [`default-compiler:`](#configfield-default-compiler): these have the same
+  [`default-compiler:`](#configfield-default-compiler),
+  [`recommended-tools:`](#configfield-recommended-tools),
+  [`required-tools:`](#configfield-required-tools),
+  [`init-scripts`](#configfield-init-scripts): these have the same
   format as the same-named fields in the [config](#config) file, and will be
   imported to that file on `opam init`.
   [`default-compiler:`](#configfield-default-compiler) is additionally used to
   select the switch that will be created by `opam init` without `--bare`.
+  Note that [`recommended-tools:`](#configfield-recommended-tools),
+  [`required-tools:`](#configfield-required-tools), and
+	[`init-scripts`](#configfield-init-scripts) will override those defined on
+	config. Use the option `opam init --show-default-opamrc` to see the content of
+	the built-in configuration.
 
 ### Package definitions
 
@@ -1320,6 +1328,9 @@ for <span class="opam">opam</span>.
   command, so for example command `[ make "install" ]` with wrapper
   `[ "time" "-o" "/tmp/timings" "-a" ]` will result in the command
   `[ "time" "-o" "/tmp/timings" "-a" make "install" ]`.
+  As `init-scripts:` are stored in the hook directory, when using a wrapper
+  script defined by `init-scripts:`, use the variable `%{hook}%` as prefix for
+  you script filename.
   The filters are evaluated in the same scope as the package commands.
 - <a id="configfield-post-build-commands">`post-build-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
   <a id="configfield-post-install-commands">`post-install-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
@@ -1381,6 +1392,17 @@ for <span class="opam">opam</span>.
   a list of compiler package choices. On `opam init`, the first available
   compiler in the list will be chosen for creating the initial switch if
   `--bare` wasn't specified.
+- <a id="configfield-recommended-tools">`recommended-tools: [ [ <string> ... ] { <string> }  { <filter> } ]`</a>,
+  <a id="configfield-required-tools">`required-tools: [ [ <string> ... ] { <string> } { <filter> } ]`</a>:
+  The tools to be checked at `opam init`. Each one of them is defined as a list
+  of alternative commands to look for in the `PATH`, optionally a specific error
+  message to display if none of them is found, and a filter that can make the
+  check conditional.
+- <a id="configfield-init-scripts">`init-scripts: [ [ <string> <string> ] { <filter> } ]`</a>:
+  These init script are written in the hook directory
+	`~/.opam/opam-init/hooks` (local variable `%{hook}%`. The first string is the
+  name of the script, the second the contents, and the filter allows to limit
+  the creation of the script to specific configurations.
 
 #### switch-config
 

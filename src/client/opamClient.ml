@@ -534,7 +534,7 @@ let update
   repo_changed || dev_changed,
   rt
 
-let init_checks root =
+let init_checks ?(hard_fail_exn=true) config =
   (* Check for the external dependencies *)
   let check_external_dep name =
     OpamSystem.resolve_command name <> None
@@ -571,62 +571,47 @@ let init_checks root =
        true)
     else false
   in
-  let advised_deps =
-    [OpamStateConfig.(Lazy.force !r.makecmd); "m4"; "cc"]
+  let env v =
+    let vs = OpamVariable.Full.variable v in
+    OpamStd.Option.Op.(OpamStd.Option.of_Not_found (List.assoc vs)
+                         OpamSysPoll.variables >>= Lazy.force)
   in
-  (match List.filter (not @* check_external_dep) advised_deps with
-   | [] -> ()
-   | missing ->
-     OpamConsole.warning
-       "Recommended dependencies -- \
-        most packages rely on these:\n%s"
-       (OpamStd.Format.itemize (OpamConsole.colorise `bold) missing));
-  let fetch_cmd_user =
-    let open OpamStd.Option.Op in
-    match
-      OpamStd.Env.getopt "OPAMCURL",
-      OpamStd.Env.getopt "OPAMFETCH" >>| fun s ->
-      OpamStd.String.split s ' '
-    with
-    | Some cmd, _ | _, Some (cmd::_) -> check_external_dep cmd
-    | _ -> false
+  let filter_tools =
+    OpamStd.List.filter_map (fun (cmd,str,oflt) ->
+        match oflt with
+        | None -> Some (cmd,str)
+        | Some flt -> if (OpamFilter.eval_to_bool env flt) then
+            Some (cmd,str) else None)
   in
-  let required_deps =
-    ["curl or wget",
-     fetch_cmd_user ||
-     check_external_dep "curl" ||
-     check_external_dep "wget";
-     "diff", check_external_dep "diff";
-     "patch", check_external_dep "patch";
-     "tar", check_external_dep "tar";
-     "unzip", check_external_dep "unzip"]
-  in
-  let hard_fail =
-    match List.filter (not @* snd) required_deps with
+  let check_tool logf tools =
+    match List.filter (not @* (List.exists check_external_dep) @* fst) tools with
     | [] -> false
-    | missing ->
-      OpamConsole.error
-        "Missing dependencies -- \
-         the following commands are required for opam to operate:\n%s"
-        (OpamStd.Format.itemize (OpamConsole.colorise `bold @* fst)
-           missing);
-      true
+    | missing -> (logf
+                    (OpamStd.Format.itemize
+                       (fun (miss,msg) -> Printf.sprintf "%s%s"
+                           (OpamStd.List.concat_map " or "
+                              (OpamConsole.colorise `bold) miss)
+                           (match msg with | None -> "" | Some m -> ": "^m))
+                       missing);
+                  true)
   in
-  let soft_fail =
-    if OpamStd.Sys.(os () = Linux) && not (check_external_dep "bwrap")
-    then
-      (OpamConsole.error
-         "Sandboxing tool %s was not found. You should install \
-          'bubblewrap', or manually disable package build sandboxing \
-          in %s (at your own risk). See \
-          https://github.com/projectatomic/bubblewrap for details."
-         (OpamConsole.colorise `bold "bwrap")
-         (OpamFile.to_string (OpamPath.config root));
-       true)
-    else soft_fail
-  in
-  if hard_fail then OpamStd.Sys.exit_because `Configuration_error
-  else not soft_fail
+  let advised_deps = filter_tools (OpamFile.Config.recommended_tools config) in
+  let _ = check_tool
+      (fun s -> OpamConsole.warning
+          "Recommended dependencies -- most packages rely on these:";
+        OpamConsole.errmsg "%s" s)
+      advised_deps in
+
+  let required_deps = filter_tools (OpamFile.Config.required_tools config) in
+  let hard_fail = check_tool
+      (fun s -> OpamConsole.error
+          "Missing dependencies -- \
+           the following commands are required for opam to operate:";
+        OpamConsole.errmsg "%s" s)
+      required_deps in
+
+  if hard_fail && hard_fail_exn then OpamStd.Sys.exit_because `Configuration_error
+  else not (soft_fail || hard_fail)
 
 let update_with_init_config ?(overwrite=false) config init_config =
   let module I = OpamFile.InitConfig in
@@ -652,13 +637,31 @@ let update_with_init_config ?(overwrite=false) config init_config =
   setifnew C.eval_variables C.with_eval_variables
     (I.eval_variables init_config) |>
   setifnew C.default_compiler C.with_default_compiler
-    (I.default_compiler init_config)
+    (I.default_compiler init_config) |>
+  setifnew C.recommended_tools C.with_recommended_tools
+    (I.recommended_tools init_config) |>
+  setifnew C.required_tools C.with_required_tools
+    (I.required_tools init_config) |>
+  setifnew C.init_scripts C.with_init_scripts
+    (I.init_scripts init_config)
 
-let reinit ?(init_config=OpamInitDefaults.init_config) config =
+let reinit ?(init_config=OpamInitDefaults.init_config()) config =
   let root = OpamStateConfig.(!r.root_dir) in
-  let _all_ok = init_checks root in
   let config = update_with_init_config config init_config in
+  let _all_ok = init_checks ~hard_fail_exn:false config in
   OpamFile.Config.write (OpamPath.config root) config;
+  let init_scripts =
+    let env v =
+      let vs = OpamVariable.Full.variable v in
+      OpamStd.Option.Op.(OpamStd.Option.of_Not_found
+                           (List.assoc vs) OpamSysPoll.variables >>= Lazy.force)
+    in
+    OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
+        | None -> Some (nam,scr)
+        | Some flt -> if OpamFilter.eval_to_bool env flt then
+            Some (nam,scr) else None) (OpamFile.Config.init_scripts config)
+  in
+  OpamEnv.write_static_init_scripts root ~completion:true init_scripts;
   let gt = OpamGlobalState.load `Lock_write in
   let rt = OpamRepositoryState.load `Lock_write gt in
   OpamConsole.header_msg "Updating repositories";
@@ -670,8 +673,8 @@ let reinit ?(init_config=OpamInitDefaults.init_config) config =
   gt, rt
 
 let init
-    ?(init_config=OpamInitDefaults.init_config) ?repo ?(bypass_checks=false)
-    shell dot_profile update_config =
+    ?(init_config=OpamInitDefaults.init_config()) ?(show_opamrc=false)
+    ?repo ?(bypass_checks=false) shell dot_profile update_config =
   log "INIT %a"
     (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
   let root = OpamStateConfig.(!r.root_dir) in
@@ -679,11 +682,11 @@ let init
   let root_empty =
     not (OpamFilename.exists_dir root) || OpamFilename.dir_is_empty root in
 
-  let gt, rt, default_compiler =
+  let gt, rt, default_compiler, custom_scripts =
     if OpamFile.exists config_f then (
       OpamConsole.msg "Opam has already been initialized.\n";
       let gt = OpamGlobalState.load `Lock_write in
-      gt, OpamRepositoryState.load `Lock_none gt, OpamFormula.Empty
+      gt, OpamRepositoryState.load `Lock_none gt, OpamFormula.Empty, []
     ) else (
       if not root_empty then (
         OpamConsole.warning "%s exists and is not empty"
@@ -691,16 +694,7 @@ let init
         if not (OpamConsole.confirm "Proceed ?") then
           OpamStd.Sys.exit_because `Aborted);
       try
-        let dontswitch =
-          if bypass_checks then false else
-            let all_ok = init_checks root in
-            if not all_ok &&
-               not (OpamConsole.confirm "Continue initialisation anyway ?")
-            then OpamStd.Sys.exit_because `Configuration_error
-            else not all_ok
-        in
-
-        (* Create ~/.opam/config *)
+        (* Create the content of ~/.opam/config *)
         let repos = match repo with
           | Some r -> [r.repo_name, (r.repo_url, r.repo_trust)]
           | None -> OpamFile.InitConfig.repositories init_config
@@ -709,8 +703,33 @@ let init
           update_with_init_config OpamFile.Config.empty init_config |>
           OpamFile.Config.with_repositories (List.map fst repos)
         in
+        (* If show option is set, dump it and exit *)
+        if show_opamrc then
+          (OpamFile.InitConfig.write_to_channel stdout init_config;
+           OpamStd.Sys.exit_because `Success);
+        (* Else write the config file and continue init *)
         OpamFile.Config.write config_f config;
 
+        let dontswitch =
+          if bypass_checks then false else
+          let all_ok = init_checks config in
+          if not all_ok &&
+             not (OpamConsole.confirm "Continue initialisation anyway ?")
+          then OpamStd.Sys.exit_because `Configuration_error
+          else not all_ok
+        in
+        let custom_scripts =
+          let env v =
+            let vs = OpamVariable.Full.variable v in
+            OpamStd.Option.Op.(OpamStd.Option.of_Not_found (List.assoc vs)
+                                 OpamSysPoll.variables >>= Lazy.force)
+          in
+          let scripts = OpamFile.Config.init_scripts config in
+          OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
+              | None -> Some (nam,scr)
+              | Some flt -> if OpamFilter.eval_to_bool env flt then
+                  Some (nam,scr) else None) scripts
+        in
         let repos_config =
           OpamRepositoryName.Map.of_list repos |>
           OpamRepositoryName.Map.map OpamStd.Option.some
@@ -730,14 +749,14 @@ let init
           OpamConsole.error_and_exit `Sync_error
             "Initial download of repository failed";
         gt, OpamRepositoryState.unlock rt,
-        if dontswitch then OpamFormula.Empty
-        else OpamFile.InitConfig.default_compiler init_config
+        (if dontswitch then OpamFormula.Empty
+         else OpamFile.InitConfig.default_compiler init_config), custom_scripts
       with e ->
         OpamStd.Exn.finalise e @@ fun () ->
         if not (OpamConsole.debug ()) && root_empty then
           OpamFilename.rmdir root)
   in
-  OpamEnv.write_static_init_scripts root ~completion:true;
+  OpamEnv.write_static_init_scripts root ~completion:true custom_scripts;
   let _updated = match update_config with
     | `no  -> false
     | `ask -> OpamEnv.setup_interactive root ~dot_profile shell

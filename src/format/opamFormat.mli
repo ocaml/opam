@@ -95,7 +95,7 @@ module V : sig
     (value, 'a) t -> (value list, 'b) t -> (value list, 'c) t ->
     (value, 'a * 'b * 'c) t
 
-  (** Maps over two options (e.g. [v {op1} {op2}]) *)
+  (** Maps over three options (e.g. [v {op1} {op2} {op3}]) *)
   val map_options_3 :
     (value, 'a) t ->
     (value list, 'b) t -> (value list, 'c) t -> (value list, 'd) t ->
