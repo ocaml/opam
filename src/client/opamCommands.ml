@@ -2265,7 +2265,12 @@ let pin ?(unpin_only=false) () =
         (OpamPinned.files_in_source dir)
     in
     let basename =
-      List.hd (OpamStd.String.split (OpamUrl.basename url) '.')
+      match OpamStd.String.split (OpamUrl.basename url) '.' with
+      | [] ->
+        OpamConsole.error_and_exit `Bad_arguments
+          "Can not retrieve a path from '%s'"
+          (OpamUrl.to_string url)
+      | b::_ -> b
     in
     let found =
       match OpamUrl.local_dir url with
