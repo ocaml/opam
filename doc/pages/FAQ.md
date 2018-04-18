@@ -260,6 +260,8 @@ issue-tracker](https://github.com/ocaml/opam-repository/issues).
 insights and evolution of opam internals can discussed on the [opam-devel
 mailing-list](http://lists.ocaml.org/listinfo/opam-devel).
 
+- https://discuss.ocaml.org is a good place for community assistance.
+
 - You may also try IRC channel `#ocaml` on Freenode.
 
 ---
