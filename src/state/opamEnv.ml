@@ -371,6 +371,35 @@ let init_sh        = "init.sh"
 let init_zsh       = "init.zsh"
 let init_csh       = "init.csh"
 let init_fish      = "init.fish"
+let opam_env_sh    =
+  "\
+\  _opam_env_hook() {\n\
+\    local previous_exit_status=$?;\n\
+\    eval \"$(opam env --shell=bash)\";\n\
+\    return $previous_exit_status;\n\
+\  };\n\
+\  if ! [[ \"$PROMPT_COMMAND\" =~ _opam_env_hook ]]; then\n\
+\    PROMPT_COMMAND=\"_opam_env_hook;$PROMPT_COMMAND\";\n\
+\  fi\n\
+"
+let opam_env_zsh   =
+  "\
+\  _opam_env_hook() {\n\
+\    eval \"$(opam env --shell=zsh)\";\n\
+\  }\n\
+\  typeset -ag precmd_functions;\n\
+\  if [[ -z ${precmd_functions[(r)_opam_env_hook]} ]]; then\n\
+\    precmd_functions+=_opam_env_hook;\n\
+\  fi\n\
+"
+let opam_env_fish  =
+  "\
+\  function __opam_env_export_eval --on-event fish_prompt;\n\
+\    eval (opam env --shell=fish);\n\
+\  end\n\
+"
+let opam_env_csh   = "  alias precmd 'eval `opam env --shell=csh`'\n"
+
 let init_file = function
   | `sh   -> init_sh
   | `csh  -> init_csh
@@ -378,27 +407,35 @@ let init_file = function
   | `bash -> init_sh
   | `fish -> init_fish
 
-let source root ~shell ?(interactive_only=false) f =
+let source root ~shell f =
   let file f = OpamFilename.to_string (OpamPath.init root // f) in
-  let s =
-    match shell with
-    | `csh ->
-      Printf.sprintf "source %s >& /dev/null || true\n" (file f)
-    | `fish ->
-      Printf.sprintf "source %s > /dev/null 2> /dev/null; or true\n" (file f)
-    | _ ->
-      Printf.sprintf "test -r %s && . %s > /dev/null 2> /dev/null || true\n"
-        (file f) (file f)
+  match shell with
+  | `csh ->
+    Printf.sprintf "source %s >& /dev/null || true\n" (file f)
+  | `fish ->
+    Printf.sprintf "source %s > /dev/null 2> /dev/null; or true\n" (file f)
+  | _ ->
+    Printf.sprintf "test -r %s && . %s > /dev/null 2> /dev/null || true\n"
+      (file f) (file f)
+
+let get_shell_content root ~shell fvar fcomplete =
+  let if_csh t e  = Printf.sprintf "if ( { [ -t 0 ] } ) then\n%selse\n  %sendif\n" t e in
+  let if_fish t e = Printf.sprintf "if [ -t 0 ]\n%selse\n  %send\n" t e in
+  let if_sh t e   = Printf.sprintf "if [ -t 0 ]; then\n%selse\n  %sfi\n" t e in
+  let variables = source root ~shell fvar in
+  let if_st, opam_env = match shell with
+    | `csh -> if_csh, opam_env_csh
+    | `fish -> if_fish, opam_env_fish
+    | `zsh -> if_sh, opam_env_zsh
+    | `sh | `bash -> if_sh, opam_env_sh
   in
-  if interactive_only then
-    match shell with
-    | `csh ->
-      Printf.sprintf "if ([ -t 0 ]) then\n  %sendif\n" s
-    | `fish ->
-      Printf.sprintf "if [ -t 0 ]\n %send\n" s
-    | _ ->
-      Printf.sprintf "if [ -t 0 ]; then\n  %sfi\n" s
-  else s
+  let thenn =
+    match fcomplete with
+    | None -> opam_env
+    | Some fcplt -> Printf.sprintf "%s\n  %s" opam_env
+                      (source root ~shell fcplt)
+  in
+  if_st thenn variables
 
 let string_of_update st shell updates =
   let fenv = OpamPackageVar.resolve st in
@@ -457,20 +494,12 @@ let string_of_update st shell updates =
 
 let init_script root ~completion ~shell
     (variables_sh, complete_sh) =
-  let variables =
-    Some (source root ~shell variables_sh) in
-  let complete =
-    if completion then
-      OpamStd.Option.map (source root ~shell ~interactive_only:true) complete_sh
-    else
-      None in
+  let shell_content =
+    get_shell_content root ~shell variables_sh
+      (if completion then complete_sh else None)
+  in
   let buf = Buffer.create 128 in
-  let append name = function
-    | None   -> ()
-    | Some c ->
-      Printf.bprintf buf "# %s\n%s\n" name c in
-  append "Load the environment variables" variables;
-  append "Load the auto-complete scripts" complete;
+  Printf.bprintf buf "%s\n" shell_content;
   Buffer.contents buf
 
 let write_script dir (name, body) =
