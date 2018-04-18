@@ -59,17 +59,10 @@ man-html: man
 dev:
 	$(MAKE) -C dev-manual
 
-ODOC_PFX = _build/default/_doc
-
 html:
 	rm -rf html
-	mkdir -p html
 	cd .. && $(JBUILDER) build @doc
-	cp ../$(ODOC_PFX)/odoc.css html/
-	for f in ../$(ODOC_PFX)/*/*.html ../$(ODOC_PFX)/*/*/*.html; do\
-	  mkdir -p $$(dirname html/$${f#../$(ODOC_PFX)/});\
-	  cp $$f html/$${f#../$(ODOC_PFX)/};\
-	done
+	cp -r ../_build/default/_doc/_html html
 	sed 's/%{OPAMVERSION}%/'$(version)'/g' index.html > html/index.html
 # Not to break older links, add manpages to the `ocamldoc` dir
 	mkdir -p html/ocamldoc
