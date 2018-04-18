@@ -160,6 +160,10 @@ remove the others rather than leave them empty.
   https://opam.ocaml.org, it is quite unlikely that you don't need at least
   `"ocaml"` there.
 
+> Note: when running local shell scripts during _e.g._ `build:`, it is
+> preferable to use `build: ["sh" "-exc" "./SCRIPT"]` than call the script
+> directly.
+
 A few other fields are available, but that should be enough to get started. Like
 `install`, most fields may contain lists in square brackets rather than a single
 element: `maintainer`, `author`, `homepage`, `bug-reports`, `license` and
