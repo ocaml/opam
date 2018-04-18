@@ -8,7 +8,7 @@ This manual gathers reference information on <span class="opam">opam</span> and 
 primarily of use for packagers, package maintainers and repository maintainers.
 
 * For simple usage of <span class="opam">opam</span>, see the [Usage](Usage.html) page, and the
-  comprehensive built-in documentation `opam [command] --help`.
+  comprehensive built-in documentation [`opam [command] --help`](man/index.html).
 * For a gentler introduction to packaging, see the
   [Packaging guide](Packaging.html)
 * If you want to hack on <span class="opam">opam</span> or build related tools, the API documentation can
