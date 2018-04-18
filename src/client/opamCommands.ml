@@ -2150,8 +2150,8 @@ let pin ?(unpin_only=false) () =
     "add", `add, ["PACKAGE"; "TARGET"],
     "Pins package $(i,PACKAGE) to $(i,TARGET), which may be a version, a path, \
      or a URL.\n\
-     $(i,PACKAGE) can be omitted if $(i,TARGET) is a local path containing a \
-     package description with a name. $(i,TARGET) can be replaced by \
+     $(i,PACKAGE) can be omitted if $(i,TARGET) contains one or more \
+     package descriptions. $(i,TARGET) can be replaced by \
      $(b,--dev-repo) if a package by that name is already known. If \
      $(i,TARGET) is $(b,-), the package is pinned as a virtual package, \
      without any source. opam will infer the kind of pinning from the format \
@@ -2161,9 +2161,9 @@ let pin ?(unpin_only=false) () =
      using $(b,#branch) e.g. $(b,git://host/me/pkg#testing).\n\
      If $(i,PACKAGE) is not a known package name, a new package by that name \
      will be locally created.\n\
-     The package version may be specified by using the format \
-     $(i,NAME).$(i,VERSION) for $(i,PACKAGE), in the source opam file, or with \
-     $(b,edit).";
+     For source pinnings, the package version may be specified by using the \
+     format $(i,NAME).$(i,VERSION) for $(i,PACKAGE), in the source opam file, \
+     or with $(b,edit).";
     "remove", `remove, ["NAMES...|TARGET"],
     "Unpins packages $(i,NAMES), restoring their definition from the \
      repository, if any. With a $(i,TARGET), unpins everything that is \

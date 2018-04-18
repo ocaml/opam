@@ -7,7 +7,7 @@
 - `opam upgrade --dry-run` (display only)
 - if you really want to try out the results:
     * `opam switch export testing-state.export`
-    * `opam switch tmp-testing --alias-of system`
+    * `opam switch create tmp-testing --empty`
     * `opam switch import testing-state.export --fake`
     * try actions with `--fake` (registers them in opam, but doesn't actually
       run the build/install commands)
@@ -16,7 +16,6 @@
     * `opam <request> --cudf=cudf-file`
     * or `opam config cudf-universe >cudf-file-1.cudf`
     * run e.g. aspcud with `aspcud cudf-file-1.cudf /dev/stdout CRITERIA`
-    * `admin-scripts/cudf-debug.ml cudf-file-1.cudf` may help with conflicts
 
 ---
 

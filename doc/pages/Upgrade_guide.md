@@ -87,6 +87,9 @@ doesn't affect the pinned package.
 - [`opam install --destdir`](man/opam-install.html#lbAF) can be used to copy
   build artefacts of given packages to an external prefix
 
+- __sandboxing__ of package build/install/remove commands is enabled by default
+  on Linux. You may need to install the
+  [bubblewrap](https://github.com/projectatomic/bubblewrap) tool for this.
 
 ## File formats
 
@@ -94,24 +97,29 @@ doesn't affect the pinned package.
 
 > #### Repositories and migration
 >
-> Repositories for 1.2 and 2.0 have a different format.
+> **Repositories for 1.2 and 2.0 have a different format**, but everything
+> should be transparent unless you publish packages:
 >
-> - the `master` branch of the
->   [main repository](https://github.com/ocaml/opam-repository/tree/master)
->   remains in 1.2 format for now
+> - [**The main repository**](https://github.com/ocaml/opam-repository/tree/master)
+>   remains in format **1.2** for now. This means the the `master` branch, and
+>   the contents of https://opam.ocaml.org/packages.
+> - [**There is a 2.0.0 branch**](https://github.com/ocaml/opam-repository/tree/master)
+>   that is served at `opam.ocaml.org/2.0`.
 >
-> - opam can do the conversion (1.2 → 2.0) on the fly
+> Everything from 1.2 is converted to 2.0 when needed (on the fly by opam,
+> [automatically](https://github.com/AltGr/camelus/tree/2.0) on the git
+> repository, or manually using
+> [`opam admin upgrade`](man/opam-admin-upgrade.html)).
 >
-> - the repository has a
->   [`2.0.0` branch](https://github.com/ocaml/opam-repository/tree/2.0.0) that has
->   all patches to the `master` branch ported automatically
+
+> When publishing packages, remember that:
 >
-> - opam 2.0 will be redirected to the repository at https://opam.ocaml.org/2.0,
->   which is based on the `2.0.0` branch, automatically
->
-> - you can use
->   [`opam admin upgrade [--mirror=BASEURL]`](man/opam-admin-upgrade.html)
->   to manually upgrade a repository to the 2.0 format
+> - packages in **1.2 format** must be published to `master`, and they will be
+>   available to **everyone**
+> - packages in **2.0 format** must be published to the `2.0.0` branch — e.g.
+>   using the new
+>   [opam-publish.2.0](https://github.com/ocaml/opam-publish/tree/2.0). They
+>   will **only** be available to opam 2.0 users.
 
 - compiler definition files: these no longer exist, as compilers have been
   replaced by normal package definitions (that should have
