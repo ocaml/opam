@@ -595,8 +595,8 @@ let header_width () = min 80 (OpamStd.Sys.terminal_columns ())
 
 let header_msg fmt =
   let utf8camel = "\xF0\x9F\x90\xAB " in (* UTF-8 <U+1F42B, U+0020> *)
-  let padding = "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\
-                 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=" in
+  let padding = "-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_\
+                 -_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-" in
   Printf.ksprintf (fun str ->
       let wpad = header_width () - String.length str - 2 in
       let wpadl = 4 in
