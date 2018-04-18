@@ -278,7 +278,8 @@ let cycle_conflict ~version_map univ cycle =
 
 let arrow_concat sl =
   let arrow =
-    OpamConsole.utf8_symbol OpamConsole.Symbols.rightwards_arrow " -> "
+    Printf.sprintf " %s "
+      (OpamConsole.utf8_symbol OpamConsole.Symbols.rightwards_arrow "->")
   in
   String.concat (OpamConsole.colorise `yellow arrow) sl
 
