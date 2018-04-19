@@ -1830,7 +1830,8 @@ let switch =
     "Set the currently active switch, among the installed switches.";
     "remove", `remove, ["SWITCH"], "Remove the given switch from disk.";
     "export", `export, ["FILE"],
-    "Save the current switch state to a file.";
+    "Save the current switch state to a file. If $(b,--full) is specified, it \
+     includes the metadata of all installed packages";
     "import", `import, ["FILE"],
     "Import a saved switch state. If $(b,--switch) is specified and doesn't \
      point to an existing switch, the switch will be created for the import.";
@@ -1840,8 +1841,8 @@ let switch =
     "Lists installed switches.";
     "list-available", `list_available, ["[PATTERN]"],
     "Lists base packages that can be used to create a new switch, i.e. \
-     packages with the $(i,compiler) flag set. Only standard versions are \
-     shown by default if no pattern is supplied, use $(b,--all) to show all.";
+     packages with the $(i,compiler) flag set. If no pattern is supplied, \
+     all versions are shown.";
     "show", `current, [], "Prints the name of the current switch.";
     "set-base", `set_compiler, ["PACKAGES"],
     "Sets the packages forming the immutable base for the selected switch, \
@@ -1883,7 +1884,7 @@ let switch =
   let command, params = mk_subcommands_with_default commands in
   let no_switch =
     mk_flag ["no-switch"]
-      "Don't automatically select newly installed switches" in
+      "Don't automatically select newly installed switches." in
   let packages =
     mk_opt ["packages"] "PACKAGES"
       "When installing a switch, explicitely define the set of packages to set \
@@ -1915,7 +1916,7 @@ let switch =
     mk_flag ["full"]
       "When exporting, include the metadata of all installed packages, \
        allowing to re-import even if they don't exist in the repositories (the \
-       default is to include only the metadata of pinned packages)"
+       default is to include only the metadata of pinned packages)."
   in
   let no_install =
     mk_flag ["no-install"]
