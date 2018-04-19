@@ -373,31 +373,31 @@ let init_csh       = "init.csh"
 let init_fish      = "init.fish"
 let opam_env_sh    =
   "\
-\  _opam_env_hook() {\n\
-\    local previous_exit_status=$?;\n\
-\    eval \"$(opam env --shell=bash)\";\n\
-\    return $previous_exit_status;\n\
-\  };\n\
-\  if ! [[ \"$PROMPT_COMMAND\" =~ _opam_env_hook ]]; then\n\
-\    PROMPT_COMMAND=\"_opam_env_hook;$PROMPT_COMMAND\";\n\
-\  fi\n\
-"
+  \  _opam_env_hook() {\n\
+  \    local previous_exit_status=$?;\n\
+  \    eval \"$(opam env --shell=bash)\";\n\
+  \    return $previous_exit_status;\n\
+  \  };\n\
+  \  if ! [[ \"$PROMPT_COMMAND\" =~ _opam_env_hook ]]; then\n\
+  \    PROMPT_COMMAND=\"_opam_env_hook;$PROMPT_COMMAND\";\n\
+  \  fi\n\
+  "
 let opam_env_zsh   =
   "\
-\  _opam_env_hook() {\n\
-\    eval \"$(opam env --shell=zsh)\";\n\
-\  }\n\
-\  typeset -ag precmd_functions;\n\
-\  if [[ -z ${precmd_functions[(r)_opam_env_hook]} ]]; then\n\
-\    precmd_functions+=_opam_env_hook;\n\
-\  fi\n\
-"
+  \  _opam_env_hook() {\n\
+  \    eval \"$(opam env --shell=zsh)\";\n\
+  \  }\n\
+  \  typeset -ag precmd_functions;\n\
+  \  if [[ -z ${precmd_functions[(r)_opam_env_hook]} ]]; then\n\
+  \    precmd_functions+=_opam_env_hook;\n\
+  \  fi\n\
+  "
 let opam_env_fish  =
   "\
-\  function __opam_env_export_eval --on-event fish_prompt;\n\
-\    eval (opam env --shell=fish);\n\
-\  end\n\
-"
+  \  function __opam_env_export_eval --on-event fish_prompt;\n\
+  \    eval (opam env --shell=fish);\n\
+  \  end\n\
+  "
 let opam_env_csh   = "  alias precmd 'eval `opam env --shell=csh`'\n"
 
 let init_file = function
@@ -419,8 +419,8 @@ let source root ~shell f =
       (file f) (file f)
 
 let get_shell_content root ~shell fvar fcomplete =
-  let if_csh t e  = Printf.sprintf "if ( { [ -t 0 ] } ) then\n%selse\n  %sendif\n" t e in
-  let if_fish t e = Printf.sprintf "if [ -t 0 ]\n%selse\n  %send\n" t e in
+  let if_csh t e  = Printf.sprintf "if ( $?prompt ) then\n%selse\n  %sendif\n" t e in
+  let if_fish t e = Printf.sprintf "if isatty\n%selse\n  %send\n" t e in
   let if_sh t e   = Printf.sprintf "if [ -t 0 ]; then\n%selse\n  %sfi\n" t e in
   let variables = source root ~shell fvar in
   let if_st, opam_env = match shell with
