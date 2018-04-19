@@ -585,8 +585,14 @@ let dot_profile_needs_update root dot_profile =
 
 let update_dot_profile root dot_profile shell =
   let pretty_dot_profile = OpamFilename.prettify dot_profile in
+  let bash_src () =
+    if shell = `bash || shell = `sh then
+      OpamConsole.note "Make sure that %s is well %s in your ~/.bashrc.\n"
+        pretty_dot_profile
+        (OpamConsole.colorise `underline "sourced")
+  in
   match dot_profile_needs_update root dot_profile with
-  | `no        -> OpamConsole.msg "  %s is already up-to-date.\n" pretty_dot_profile
+  | `no        -> OpamConsole.msg "  %s is already up-to-date.\n" pretty_dot_profile; bash_src()
   | `otherroot ->
     OpamConsole.msg
       "  %s is already configured for another opam root.\n"
@@ -599,6 +605,7 @@ let update_dot_profile root dot_profile shell =
       else
         "" in
     OpamConsole.msg "  Updating %s.\n" pretty_dot_profile;
+    bash_src();
     let body =
       Printf.sprintf
         "%s\n\n\
