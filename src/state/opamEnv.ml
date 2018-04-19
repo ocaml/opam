@@ -650,7 +650,11 @@ let display_setup root ~dot_profile shell =
 let check_and_print_env_warning st =
   if (OpamFile.Config.switch st.switch_global.config = Some st.switch ||
       OpamStateConfig.(!r.switch_from <> `Command_line)) &&
-     not (is_up_to_date st) then
+     (not (is_up_to_date st) &&
+      (dot_profile_needs_update OpamStateConfig.(!r.root_dir)
+         (OpamFilename.of_string @@
+          OpamStd.Sys.(guess_dot_profile @@ guess_shell_compat ()))) = `yes)
+  then
     OpamConsole.formatted_msg
       "# Run %s to update the current shell environment\n"
       (OpamConsole.colorise `bold (eval_string st.switch_global
