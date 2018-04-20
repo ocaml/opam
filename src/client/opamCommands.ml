@@ -244,6 +244,11 @@ let init =
         OpamConsole.errmsg "%s\n" (Printexc.to_string e);
         OpamStd.Sys.exit_because `Configuration_error
     in
+    (* If show option is set, dump it and exit *)
+    if show_opamrc then
+      (OpamFile.InitConfig.write_to_channel stdout init_config;
+       OpamStd.Sys.exit_because `Success);
+    (* Else continue init *)
     let repo =
       OpamStd.Option.map (fun url ->
         let repo_url = OpamUrl.parse ?backend:repo_kind url in
@@ -261,7 +266,7 @@ let init =
     let dot_profile = init_dot_profile shell dot_profile_o in
     let gt, rt, default_compiler =
       OpamClient.init
-        ~init_config ~show_opamrc ?repo ~bypass_checks
+        ~init_config ?repo ~bypass_checks
         shell dot_profile update_config
     in
     if not no_compiler &&
@@ -1825,7 +1830,8 @@ let switch =
     "Set the currently active switch, among the installed switches.";
     "remove", `remove, ["SWITCH"], "Remove the given switch from disk.";
     "export", `export, ["FILE"],
-    "Save the current switch state to a file.";
+    "Save the current switch state to a file. If $(b,--full) is specified, it \
+     includes the metadata of all installed packages";
     "import", `import, ["FILE"],
     "Import a saved switch state. If $(b,--switch) is specified and doesn't \
      point to an existing switch, the switch will be created for the import.";
@@ -1835,8 +1841,8 @@ let switch =
     "Lists installed switches.";
     "list-available", `list_available, ["[PATTERN]"],
     "Lists base packages that can be used to create a new switch, i.e. \
-     packages with the $(i,compiler) flag set. Only standard versions are \
-     shown by default if no pattern is supplied, use $(b,--all) to show all.";
+     packages with the $(i,compiler) flag set. If no pattern is supplied, \
+     all versions are shown.";
     "show", `current, [], "Prints the name of the current switch.";
     "set-base", `set_compiler, ["PACKAGES"],
     "Sets the packages forming the immutable base for the selected switch, \
@@ -1878,7 +1884,7 @@ let switch =
   let command, params = mk_subcommands_with_default commands in
   let no_switch =
     mk_flag ["no-switch"]
-      "Don't automatically select newly installed switches" in
+      "Don't automatically select newly installed switches." in
   let packages =
     mk_opt ["packages"] "PACKAGES"
       "When installing a switch, explicitely define the set of packages to set \
@@ -1910,7 +1916,7 @@ let switch =
     mk_flag ["full"]
       "When exporting, include the metadata of all installed packages, \
        allowing to re-import even if they don't exist in the repositories (the \
-       default is to include only the metadata of pinned packages)"
+       default is to include only the metadata of pinned packages)."
   in
   let no_install =
     mk_flag ["no-install"]
@@ -2260,7 +2266,12 @@ let pin ?(unpin_only=false) () =
         (OpamPinned.files_in_source dir)
     in
     let basename =
-      List.hd (OpamStd.String.split (OpamUrl.basename url) '.')
+      match OpamStd.String.split (OpamUrl.basename url) '.' with
+      | [] ->
+        OpamConsole.error_and_exit `Bad_arguments
+          "Can not retrieve a path from '%s'"
+          (OpamUrl.to_string url)
+      | b::_ -> b
     in
     let found =
       match OpamUrl.local_dir url with
@@ -2405,7 +2416,7 @@ let pin ?(unpin_only=false) () =
          let st =
            List.fold_left (fun st name ->
                try OpamPinCommand.source_pin st name ~edit (Some url)
-               with OpamPinCommand.Aborted
+               with OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
                   | OpamPinCommand.Nothing_to_do -> st)
              st names
          in

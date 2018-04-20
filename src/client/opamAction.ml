@@ -347,17 +347,21 @@ let get_wrappers t =
     ~inner:(OpamFile.Switch_config.wrappers t.switch_config)
 
 let get_wrapper t opam wrappers ?local getter =
-  OpamFilter.commands (OpamPackageVar.resolve ?local ~opam t)
+  let root = t.switch_global.root in
+  let hook_vnam = OpamVariable.of_string "hooks" in
+  let hook_vval = Some (OpamVariable.dirname (OpamPath.hooks_dir root)) in
+  let local_env = match local with
+    | Some e -> OpamVariable.Map.add hook_vnam hook_vval e
+    | None ->OpamVariable.Map.singleton hook_vnam hook_vval
+  in
+  OpamFilter.commands (OpamPackageVar.resolve ~local:local_env ~opam t)
     (getter wrappers) |>
   OpamStd.List.filter_map (function
       | [] -> None
       | cmd::args -> Some (cmd, args))
 
 let cmd_wrapper t opam wrappers getter cmd args =
-  let root = t.switch_global.root in
-  let local = OpamVariable.Map.singleton (OpamVariable.of_string "hooks")
-      (Some (OpamVariable.dirname (OpamPath.hooks_dir root))) in
-  match get_wrapper t opam wrappers ~local getter @ [cmd, args] with
+  match get_wrapper t opam wrappers getter @ [cmd, args] with
   | (cmd, args) :: r -> cmd, args @ List.concat (List.map (fun (c, a) -> c::a) r)
   | [] -> assert false
 
