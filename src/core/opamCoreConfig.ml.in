@@ -52,7 +52,7 @@ let default = {
   safe_mode = false;
   log_dir =
     (let user = try Unix.getlogin() with Unix.Unix_error _ -> "xxx" in
-     let base = Printf.sprintf "opam-%s-%d" user (Unix.getpid()) in
+     let base = Printf.sprintf "opam-%s-%d" user (OpamStubs.getpid()) in
      Filename.(concat (get_temp_dir_name ()) base));
   keep_log_dir = false;
   errlog_length = 12;

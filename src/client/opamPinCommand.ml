@@ -50,6 +50,8 @@ let read_opam_file_for_pinning ?(quiet=false) name f url =
     in
     Some opam
 
+exception Fetch_Fail of string
+
 let get_source_definition ?version st nv url =
   let root = st.switch_global.root in
   let srcdir = OpamPath.Switch.pinned_package root st.switch nv.name in
@@ -62,7 +64,7 @@ let get_source_definition ?version st nv url =
   in
   let open OpamProcess.Job.Op in
   OpamUpdate.fetch_dev_package url srcdir nv @@| function
-  | Not_available _ -> raise Not_found
+  | Not_available s -> raise (Fetch_Fail s)
   | Up_to_date _ | Result _ ->
     match OpamPinned.find_opam_file_in_source nv.name srcdir with
     | None -> None
@@ -449,11 +451,12 @@ and source_pin
         urlf >>= fun url ->
         OpamProcess.Job.run @@ get_source_definition ?version st nv url
       )
-    with Not_found ->
+    with Fetch_Fail err ->
       if force then None else
-        OpamConsole.error_and_exit `Sync_error
-          "Error getting source from %s"
-          (OpamStd.Option.to_string OpamUrl.to_string target_url)
+        (OpamConsole.error_and_exit `Sync_error
+           "Error getting source from %s:\n%s"
+           (OpamStd.Option.to_string OpamUrl.to_string target_url)
+           (OpamStd.Format.itemize (fun x -> x) [err]));
   in
 
   let nv =
@@ -636,4 +639,4 @@ let list st ~short =
         OpamConsole.colorise `red " (no definition found)" ]
   in
   let table = List.map lines (OpamPackage.Set.elements st.pinned) in
-  OpamStd.Format.print_table stdout ~sep:"  " (OpamStd.Format.align_table table)
+  OpamConsole.print_table stdout ~sep:"  " (OpamStd.Format.align_table table)

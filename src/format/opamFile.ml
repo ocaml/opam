@@ -86,7 +86,7 @@ module Stats = struct
     let aux kind = function
       | [] -> ()
       | l  ->
-        OpamConsole.msg "%d files %s:\n  %s\n%!"
+        OpamConsole.msg "%d files %s:\n  %s\n"
           (List.length !read_files) kind (String.concat "\n  " l)
     in
     aux "read" !read_files;
@@ -1041,6 +1041,9 @@ module ConfigSyntax = struct
     eval_variables : (variable * string list * string) list;
     validation_hook : arg list option;
     default_compiler : formula;
+    recommended_tools : (string list * string option * filter option) list;
+    required_tools : (string list * string option * filter option) list;
+    init_scripts : ((string * string) * filter option) list;
   }
 
   let opam_version t = t.opam_version
@@ -1064,6 +1067,10 @@ module ConfigSyntax = struct
 
   let validation_hook t = t.validation_hook
   let default_compiler t = t.default_compiler
+
+  let recommended_tools t = t.recommended_tools
+  let required_tools t = t.required_tools
+  let init_scripts t = t.init_scripts
 
   let with_opam_version opam_version t = { t with opam_version }
   let with_repositories repositories t = { t with repositories }
@@ -1091,6 +1098,10 @@ module ConfigSyntax = struct
   let with_validation_hook_opt validation_hook t = { t with validation_hook }
   let with_default_compiler default_compiler t = { t with default_compiler }
 
+  let with_recommended_tools recommended_tools t = {t with recommended_tools}
+  let with_required_tools required_tools t = {t with required_tools}
+  let with_init_scripts init_scripts t = {t with init_scripts}
+
   let empty = {
     opam_version = OpamVersion.current_nopatch;
     repositories = [];
@@ -1108,6 +1119,9 @@ module ConfigSyntax = struct
     eval_variables = [];
     validation_hook = None;
     default_compiler = OpamFormula.Empty;
+    recommended_tools = [];
+    required_tools = [];
+    init_scripts = [];
   }
 
   let fields =
@@ -1192,6 +1206,30 @@ module ConfigSyntax = struct
         Pp.V.pos_int;
       "system_ocaml-version", Pp.ppacc_ignore;
       "system-ocaml-version", Pp.ppacc_ignore;
+
+      (* system check & wrapper script fields *)
+      "recommended-tools", Pp.ppacc
+        with_recommended_tools recommended_tools
+        (Pp.V.map_list
+           (Pp.V.map_options_2
+              (Pp.V.map_list ~depth:1 Pp.V.string)
+              (Pp.opt @@ Pp.singleton -| Pp.V.string)
+              (Pp.opt Pp.V.filter)));
+      "required-tools", Pp.ppacc
+        with_required_tools required_tools
+        (Pp.V.map_list
+           (Pp.V.map_options_2
+              (Pp.V.map_list ~depth:1 Pp.V.string)
+              (Pp.opt @@ Pp.singleton -| Pp.V.string)
+              (Pp.opt Pp.V.filter)));
+      "init-scripts", Pp.ppacc
+        with_init_scripts init_scripts
+        (Pp.V.map_list ~depth:2
+           (Pp.V.map_option
+              (Pp.V.map_pair
+                 (Pp.V.string)
+                 (Pp.V.string_tr))
+              (Pp.opt Pp.V.filter)));
     ] @
     List.map
       (fun (fld, ppacc) -> fld, Pp.embed with_wrappers wrappers ppacc)
@@ -1225,6 +1263,9 @@ module InitConfigSyntax = struct
     wrappers : Wrappers.t;
     global_variables : (variable * variable_contents * string) list;
     eval_variables : (variable * string list * string) list;
+    recommended_tools : (string list * string option * filter option) list;
+    required_tools : (string list * string option * filter option) list;
+    init_scripts : ((string * string) * filter option) list;
   }
 
   let opam_version t = t.opam_version
@@ -1239,6 +1280,9 @@ module InitConfigSyntax = struct
   let wrappers t = t.wrappers
   let global_variables t = t.global_variables
   let eval_variables t = t.eval_variables
+  let recommended_tools t = t.recommended_tools
+  let required_tools t = t.required_tools
+  let init_scripts t = t.init_scripts
 
   let with_opam_version opam_version t = {t with opam_version}
   let with_repositories repositories t = {t with repositories}
@@ -1252,6 +1296,9 @@ module InitConfigSyntax = struct
   let with_wrappers wrappers t = {t with wrappers}
   let with_global_variables global_variables t = {t with global_variables}
   let with_eval_variables eval_variables t = {t with eval_variables}
+  let with_recommended_tools recommended_tools t = {t with recommended_tools}
+  let with_required_tools required_tools t = {t with required_tools}
+  let with_init_scripts init_scripts t = {t with init_scripts}
 
   let criterion kind t =
     try Some (List.assoc kind t.solver_criteria)
@@ -1274,6 +1321,9 @@ module InitConfigSyntax = struct
     wrappers = Wrappers.empty;
     global_variables = [];
     eval_variables = [];
+    recommended_tools = [];
+    required_tools = [];
+    init_scripts = [];
   }
 
   let pp_repository_def =
@@ -1348,6 +1398,28 @@ module InitConfigSyntax = struct
               (Pp.V.ident -| Pp.of_module "variable" (module OpamVariable))
               (Pp.V.map_list Pp.V.string)
               Pp.V.string));
+      "recommended-tools", Pp.ppacc
+        with_recommended_tools recommended_tools
+        (Pp.V.map_list
+           (Pp.V.map_options_2
+              (Pp.V.map_list ~depth:1 Pp.V.string)
+              (Pp.opt @@ Pp.singleton -| Pp.V.string)
+              (Pp.opt Pp.V.filter)));
+      "required-tools", Pp.ppacc
+        with_required_tools required_tools
+        (Pp.V.map_list
+           (Pp.V.map_options_2
+              (Pp.V.map_list ~depth:1 Pp.V.string)
+              (Pp.opt @@ Pp.singleton -| Pp.V.string)
+              (Pp.opt Pp.V.filter)));
+      "init-scripts", Pp.ppacc
+        with_init_scripts init_scripts
+        (Pp.V.map_list ~depth:2
+           (Pp.V.map_option
+              (Pp.V.map_pair
+                 (Pp.V.string)
+                 (Pp.V.string_tr))
+              (Pp.opt Pp.V.filter)));
     ] @
     List.map
       (fun (fld, ppacc) -> fld, Pp.embed with_wrappers wrappers ppacc)
@@ -1383,6 +1455,9 @@ module InitConfigSyntax = struct
       wrappers = Wrappers.with_default ~default:t1.wrappers t2.wrappers;
       global_variables = list t2.global_variables t1.global_variables;
       eval_variables = list t2.eval_variables t1.eval_variables;
+      recommended_tools = list t2.recommended_tools t1.recommended_tools;
+      required_tools = list t2.required_tools t1.required_tools;
+      init_scripts = list t2.init_scripts t1.init_scripts;
     }
 
 end

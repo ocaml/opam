@@ -420,10 +420,12 @@ let update repo =
         raise exn)
     @@ fun () ->
     validate_repo_update repo upd @@+ function
-    | true -> apply_repo_update repo upd
     | false ->
       cleanup_repo_update upd;
       failwith "Invalid repository signatures, update aborted"
+    | true ->
+      apply_repo_update repo upd @@+ fun () ->
+      B.repo_update_complete repo.repo_root repo.repo_url
 
 let on_local_version_control url ~default f =
   match url.OpamUrl.backend with

@@ -57,7 +57,7 @@ let nopatch v =
 let current_nopatch = nopatch current_raw
 
 let message () =
-  Printf.printf "\n\
+  OpamConsole.msg "\n\
     %s version %s\n\
     \n\
     Copyright (C) 2012 OCamlPro - INRIA, 2013-2015 OCamlPro\n\

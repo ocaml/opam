@@ -37,7 +37,7 @@ let help t =
       ])
     (OpamVariable.Map.bindings all_global_vars) |>
   OpamStd.Format.align_table |>
-  OpamStd.Format.print_table stdout ~sep:" ";
+  OpamConsole.print_table stdout ~sep:" ";
 
   OpamConsole.header_msg "Configuration variables from the current switch";
   let global = t.switch_config in
@@ -55,7 +55,7 @@ let help t =
       ])
     (global.OpamFile.Switch_config.variables) |>
   OpamStd.Format.align_table |>
-  OpamStd.Format.print_table stdout ~sep:" ";
+  OpamConsole.print_table stdout ~sep:" ";
 
   OpamConsole.header_msg "Package variables ('opam config list PKG' to show)";
   List.map (fun (var, doc) -> [
@@ -65,7 +65,7 @@ let help t =
       ])
     OpamPackageVar.package_variable_names |>
   OpamStd.Format.align_table |>
-  OpamStd.Format.print_table stdout ~sep:" "
+  OpamConsole.print_table stdout ~sep:" "
 
 (* List all the available variables *)
 let list gt ns =
@@ -113,7 +113,7 @@ let list gt ns =
         if descr = "" then "" else "# "^descr;
       ]) vars |>
   OpamStd.Format.align_table |>
-  OpamStd.Format.print_table stdout ~sep:" "
+  OpamConsole.print_table stdout ~sep:" "
 
 let rec print_env = function
   | [] -> ()
@@ -249,7 +249,7 @@ let set var value =
   let root = OpamStateConfig.(!r.root_dir) in
   let switch = OpamStateConfig.get_switch () in
   OpamFilename.with_flock `Lock_write (OpamPath.Switch.lock root switch)
-  @@ fun () ->
+  @@ fun _ ->
   let var = OpamVariable.Full.variable var in
   let config_f = OpamPath.Switch.switch_config root switch in
   let config = OpamFile.Switch_config.read config_f in
@@ -330,7 +330,7 @@ let setup gt ?dot_profile ~completion ~shell
   if user then
     OpamEnv.update_user_setup gt.root ?dot_profile shell;
   if global then (
-    OpamEnv.write_static_init_scripts gt.root ~completion;
+    OpamEnv.write_static_init_scripts gt.root ~completion [];
     match OpamFile.Config.switch gt.config with
     | Some sw ->
       OpamSwitchState.with_ `Lock_none gt ~switch:sw @@ fun st ->

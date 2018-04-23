@@ -11,12 +11,9 @@ else
   JBUILDER_FILE=
 endif
 
-BASESRC=../_build/default/src
-
 ifndef OPAM
   OPAM = $(JBUILDER) exec -- opam
 endif
-SRCDIR = $(sort $(foreach x,$(wildcard $(BASESRC)/*/*),$(dir $x)))
 
 TOPICS  = $(shell $(OPAM) help topics)
 TOPICS_ADMIN = cache filter index lint list upgrade
@@ -25,14 +22,6 @@ HELPFMT = --help=groff
 
 ifndef OPAM_INSTALLER
   OPAM_INSTALLER = $(JBUILDER) exec -- opam-installer
-endif
-
-SRCEXTDIR = ../src_ext/lib
-
-ifneq ($(wildcard $(SRCEXTDIR)),)
-  OCAMLDOC = ocamldoc $(patsubst %,-I %,$(SRCDIR) $(SRCEXTDIR) +compiler-libs)
-else
-  OCAMLDOC = ocamlfind ocamldoc $(patsubst %,-package %,$(PACKS) compiler-libs.toplevel) $(patsubst %,-I %,$(SRCDIR))
 endif
 
 .PHONY: man html dev-manual pages
@@ -52,25 +41,34 @@ man:
 	$(OPAM_INSTALLER) $(HELPFMT) > man/opam-installer.1
 
 man-html: man
-	rm -rf $@
+	rm -rf man-html
 	mkdir -p $@
-	for f in $(wildcard man/*); do\
-	  man2html -r $$f > man-html/$$(basename $$f .1).html;\
+	echo '<!DOCTYPE html>' >$@/index.html
+	echo '<html><head>' >>$@/index.html
+	echo '  <title>Opam man-pages index</title>' >>$@/index.html
+	echo '</head><body>' >>$@/index.html
+	echo '<h1>Opam $(version) man-pages index</h1>' >>$@/index.html
+	echo '<ul>' >>$@/index.html
+	for f in man/*; do\
+	  man2html -r $$f | sed 1,2d > $@/$$(basename $$f .1).html;\
+	  echo "  <li><a href=\"$$(basename $$f .1).html\">$$(basename $$f .1)</a></li>" >>$@/index.html;\
 	done
+	echo '</ul>' >>$@/index.html
+	echo '</body></html>' >>$@/index.html
 
 dev:
 	$(MAKE) -C dev-manual
 
 html:
-	rm -rf html/ocamldoc
-	mkdir -p html/ocamldoc
+	rm -rf html
+	cd .. && $(JBUILDER) build @doc
+	cp -r ../_build/default/_doc/_html html
 	sed 's/%{OPAMVERSION}%/'$(version)'/g' index.html > html/index.html
-	$(OCAMLDOC) $(wildcard $(BASESRC)/*/*.mli) $(wildcard $(BASESRC)/*/*.ml) -html -d html/ocamldoc || true
-	$(OCAMLDOC) $(wildcard $(BASESRC)/*/*.mli) $(wildcard $(BASESRC)/*/*.ml) -dot -o dependencies.dot || true
-	tred dependencies.dot | \
-	  dot -Tsvg > \
-	    html/ocamldoc/dependencies.svg \
-	|| true
+# Not to break older links, add manpages to the `ocamldoc` dir
+	mkdir -p html/ocamldoc
+	cd html/ocamldoc && for f in ../*/*/index.html; do\
+	  ln -sf $$f $$(basename $$(dirname $$f)).html;\
+	done
 
 pages/%.html: pages/%.md
 	omd $^ -o $@

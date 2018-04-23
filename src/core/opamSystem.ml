@@ -49,7 +49,7 @@ let file_or_symlink_exists f =
 let (/) = Filename.concat
 
 let temp_basename prefix =
-  Printf.sprintf "%s-%d-%06x" prefix (Unix.getpid ()) (Random.int 0xFFFFFF)
+  Printf.sprintf "%s-%d-%06x" prefix (OpamStubs.getpid ()) (Random.int 0xFFFFFF)
 
 let rec mk_temp_dir () =
   let s = Filename.get_temp_dir_name () / temp_basename "opam" in
@@ -74,7 +74,7 @@ let mkdir dir =
   aux dir
 
 let rm_command =
-  if OpamStd.Sys.is_windows then
+  if Sys.win32 then
     "cmd /d /v:off /c rd /s /q"
   else
     "rm -rf"
@@ -301,7 +301,7 @@ let default_env =
 
 let env_var env var =
   let len = Array.length env in
-  let f = if OpamStd.Sys.is_windows then String.uppercase_ascii else fun x -> x in
+  let f = if Sys.win32 then String.uppercase_ascii else fun x -> x in
   let prefix = f var^"=" in
   let pfxlen = String.length prefix in
   let rec aux i =
@@ -320,7 +320,7 @@ let resolve_command =
     OpamStd.String.contains_char name Filename.dir_sep.[0]
   in
   let check_perms =
-    if OpamStd.Sys.is_windows then fun f ->
+    if Sys.win32 then fun f ->
       try (Unix.stat f).Unix.st_kind = Unix.S_REG
       with e -> OpamStd.Exn.fatal e; false
     else fun f ->
@@ -344,7 +344,7 @@ let resolve_command =
       in
       if check_perms cmd then Some cmd else None
     else (* bare command, lookup in PATH *)
-    if OpamStd.Sys.is_windows then
+    if Sys.win32 then
       let path = OpamStd.Sys.split_path_variable (env_var env "PATH") in
       let name =
         if Filename.check_suffix name ".exe" then name else name ^ ".exe"
@@ -376,7 +376,7 @@ let print_stats () =
   match !runs with
   | [] -> ()
   | l  ->
-    OpamConsole.msg "%d external processes called:\n%s%!"
+    OpamConsole.msg "%d external processes called:\n%s"
       (List.length l) (OpamStd.Format.itemize ~bullet:"  " (String.concat " ") l)
 
 let log_file ?dir name = temp_file ?dir (OpamStd.Option.default "log" name)
@@ -693,7 +693,8 @@ let link src dst =
     else
       copy_file src dst
 
-type lock_flag = [ `Lock_none | `Lock_read | `Lock_write ]
+type actual_lock_flag = [ `Lock_read | `Lock_write ]
+type lock_flag = [ `Lock_none | actual_lock_flag ]
 
 type lock = {
   mutable fd: Unix.file_descr option;
@@ -769,6 +770,11 @@ and flock: 'a. ([< lock_flag ] as 'a) -> ?dontblock:bool -> string -> lock =
 let funlock lock = flock_update `Lock_none lock
 
 let get_lock_flag lock = lock.kind
+
+let get_lock_fd lock =
+  match lock.fd with
+    Some fd -> fd
+  | None -> raise Not_found
 
 let lock_max flag1 flag2 = match flag1, flag2 with
   | `Lock_write, _ | _, `Lock_write -> `Lock_write

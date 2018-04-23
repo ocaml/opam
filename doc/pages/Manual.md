@@ -8,7 +8,7 @@ This manual gathers reference information on <span class="opam">opam</span> and 
 primarily of use for packagers, package maintainers and repository maintainers.
 
 * For simple usage of <span class="opam">opam</span>, see the [Usage](Usage.html) page, and the
-  comprehensive built-in documentation `opam [command] --help`.
+  comprehensive built-in documentation [`opam [command] --help`](man/index.html).
 * For a gentler introduction to packaging, see the
   [Packaging guide](Packaging.html)
 * If you want to hack on <span class="opam">opam</span> or build related tools, the API documentation can
@@ -715,6 +715,17 @@ The default, built-in initial config of <span class="opam">opam</span> can be se
   the trusted signing identities, see
   [repository-validation-command](#configfield-repository-validation-command)) and the
   quorum, _i.e._ how many of them are required for a signature to be accepted.
+- <a id="opamrcfield-recommended-tools">`recommended-tools: [ [ <string> ... ] { <string> }  { <filter> } ... ]`</a>,
+  <a id="opamrcfield-required-tools">`required-tools: [ [ <string> ... ] { <string> } { <filter> } ... ]`</a>:
+  The tools to be checked at `opam init`. Each one of them is defined as a list
+  of alternative commands to look for in the `PATH`, optionally a specific error
+  message to display if none of them is found, and a filter that can make the
+  check conditional.
+- <a id="configfield-init-scripts">`init-scripts: [ [ <string> <string> ] { <filter> } ... ]`</a>:
+  These scripts will be written verbatim into the hook directory
+  (`~/.opam/opam-init/hooks`) upon initialisation. The first string is the file
+  name of the script, the second its raw contents, and the filter allows to
+  limit the creation of the script to specific configurations.
 - [`jobs:`](#configfield-jobs),
   [`download-command:`](#configfield-download-command),
   [`download-jobs:`](#configfield-download-jobs),
@@ -725,9 +736,9 @@ The default, built-in initial config of <span class="opam">opam</span> can be se
   [`best-effort-prefix-criteria:`](#configfield-best-effort-prefix-criteria),
   [`solver:`](#configfield-solver),
   [`global-variables:`](#configfield-global-variables),
-  [`default-compiler:`](#configfield-default-compiler): these have the same
-  format as the same-named fields in the [config](#config) file, and will be
-  imported to that file on `opam init`.
+  [`default-compiler:`](#configfield-default-compiler):
+  these have the same format as the same-named fields in the [config](#config)
+  file, and will be imported to that file on `opam init`.
   [`default-compiler:`](#configfield-default-compiler) is additionally used to
   select the switch that will be created by `opam init` without `--bare`.
 
@@ -1280,7 +1291,7 @@ for <span class="opam">opam</span>.
 - <a id="configfield-solver-criteria">`solver-criteria: <string>`</a>: can be
   used to tweak the solver criteria used for the resolution of operations. These
   depend on the solver used, see the
-  [Solver Criteria](Specifying_Solver_Preferences.html) page for details.
+  [Solver Criteria](External_solvers.html) page for details.
 - <a id="configfield-solver-upgrade-criteria">`solver-upgrade-criteria: `</a>,
   <a id="configfield-solver-fixup-criteria">`solver-fixup-criteria: `</a>:
   similar to [`solver-criteria`](#configfield-solver-criteria), but specific to
@@ -1320,6 +1331,9 @@ for <span class="opam">opam</span>.
   command, so for example command `[ make "install" ]` with wrapper
   `[ "time" "-o" "/tmp/timings" "-a" ]` will result in the command
   `[ "time" "-o" "/tmp/timings" "-a" make "install" ]`.
+  As `init-scripts:` are stored in the hook directory, when using a wrapper
+  script defined by `init-scripts:`, use the variable `%{hook}%` as prefix for
+  you script filename.
   The filters are evaluated in the same scope as the package commands.
 - <a id="configfield-post-build-commands">`post-build-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
   <a id="configfield-post-install-commands">`post-install-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
@@ -1329,7 +1343,9 @@ for <span class="opam">opam</span>.
   install and remove, on any package. The post commands are run wether or not
   the package script succeeded. The filters are evaluated in the same scope as
   the package commands, with the addition of the variable `error-code`, which is
-  the return value of the package script.
+  the return value of the package script, and `hooks` which is the directory
+  where scripts created using `opamrc`'s
+  [`init-scripts:`](#opamrcfield-init-scripts) field are created.
 
     The `post-install-commands` hook also has access to an extra variable
     `installed-files` which expands to the list of files and directories added or
@@ -1358,6 +1374,8 @@ for <span class="opam">opam</span>.
     - `depexts`: for `pre-session`, the list of
       [`depexts:`](#opamfield-depexts) inferred for the host system on
       `installed`.
+    - `hooks`: the directory where scripts created using `opamrc`'s
+      [`init-scripts:`](#opamrcfield-init-scripts) field are created.
 
 - <a id="configfield-repository-validation-command">`repository-validation-command: [ <term> { <filter> } ... ]`</a>:
   defines a command to run on the upstream repositories to validate their
@@ -1377,6 +1395,7 @@ for <span class="opam">opam</span>.
 
     Since there are two modes (initial and incremental), all variables may not be
     defined in all cases.
+
 - <a id="configfield-default-compiler">`default-compiler: [ <package-formula> ... ]`</a>:
   a list of compiler package choices. On `opam init`, the first available
   compiler in the list will be chosen for creating the initial switch if

@@ -15,7 +15,7 @@
     basic OPAM types present in OpamTypes.ml *)
 open OpamTypes
 
-include module type of OpamCompat
+include module type of struct include OpamCompat end
 
 val string_of_std_path: std_path -> string
 val std_path_of_string: string -> std_path
@@ -74,3 +74,4 @@ val all_package_flags: package_flag list
 
 (** Map on a solver result *)
 val map_success: ('a -> 'b) -> ('a,'fail) result -> ('b,'fail) result
+val iter_success: ('a -> unit) -> ('a, 'b) result -> unit

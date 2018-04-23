@@ -1,0 +1,7 @@
+  <assemblyIdentity type="win32" name="opam" version="1.0.0.0" processorArchitecture="amd64"/>
+  <description>OCaml Package Manager</description>
+  <dependency>
+    <dependentAssembly>
+      <assemblyIdentity type="win32" name="Opam.Runtime.amd64" version="1.0.0.0" language="*" processorArchitecture="amd64"/>
+    </dependentAssembly>
+  </dependency>

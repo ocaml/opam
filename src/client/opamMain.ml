@@ -149,22 +149,23 @@ let rec main_catch_all f =
     flush stdout;
     flush stderr;
     if (OpamConsole.verbose ()) then
-      Printf.eprintf "'%s' failed.\n" (String.concat " " (Array.to_list Sys.argv));
+      OpamConsole.errmsg "'%s' failed.\n"
+        (String.concat " " (Array.to_list Sys.argv));
     let exit_code = match e with
       | OpamStd.Sys.Exit i ->
         if (OpamConsole.debug ()) && i <> 0 then
-          Printf.eprintf "%s" (OpamStd.Exn.pretty_backtrace e);
+          OpamConsole.errmsg "%s" (OpamStd.Exn.pretty_backtrace e);
         i
       | OpamSystem.Internal_error _ ->
-        Printf.eprintf "%s\n" (Printexc.to_string e);
+        OpamConsole.errmsg "%s\n" (Printexc.to_string e);
         OpamStd.Sys.get_exit_code `Internal_error
       | OpamSystem.Process_error result ->
-        Printf.eprintf "%s Command %S failed:\n%s\n"
+        OpamConsole.errmsg "%s Command %S failed:\n%s\n"
           (OpamConsole.colorise `red "[ERROR]")
           (try List.assoc "command" result.OpamProcess.r_info with
            | Not_found -> "")
           (Printexc.to_string e);
-        Printf.eprintf "%s" (OpamStd.Exn.pretty_backtrace e);
+        OpamConsole.errmsg "%s" (OpamStd.Exn.pretty_backtrace e);
         OpamStd.Sys.get_exit_code `Internal_error
       | Sys.Break
       | OpamParallel.Errors (_, (_, Sys.Break)::_, _) ->
@@ -174,12 +175,12 @@ let rec main_catch_all f =
            signal) and there is no way around at the moment *)
         141
       | Failure msg ->
-        Printf.eprintf "Fatal error: %s\n" msg;
-        Printf.eprintf "%s" (OpamStd.Exn.pretty_backtrace e);
+        OpamConsole.errmsg "Fatal error: %s\n" msg;
+        OpamConsole.errmsg "%s" (OpamStd.Exn.pretty_backtrace e);
         OpamStd.Sys.get_exit_code `Internal_error
       | _ ->
-        Printf.eprintf "Fatal error:\n%s\n" (Printexc.to_string e);
-        Printf.eprintf "%s" (OpamStd.Exn.pretty_backtrace e);
+        OpamConsole.errmsg "Fatal error:\n%s\n" (Printexc.to_string e);
+        OpamConsole.errmsg "%s" (OpamStd.Exn.pretty_backtrace e);
         OpamStd.Sys.get_exit_code `Internal_error
     in
     exit exit_code

@@ -179,6 +179,8 @@ module B = struct
         | None -> OpamRepositoryBackend.Update_empty
         | Some p -> OpamRepositoryBackend.Update_patch p
 
+  let repo_update_complete _ _ = Done ()
+
   let pull_url ?cache_dir:_ local_dirname _checksum remote_url =
     OpamFilename.mkdir local_dirname;
     let dir = OpamFilename.Dir.to_string local_dirname in

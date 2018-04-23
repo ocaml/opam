@@ -154,10 +154,16 @@ if "%OCAML_PORT%" equ "" (
 )
 set LIB_EXT=
 if "%DEP_MODE%" equ "lib-ext" set LIB_EXT=^&^& make lib-ext
-"%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER %LIB_PKG% && ./configure %LIB_EXT% && make opam %POST_COMMAND%" || exit /b 1
+set PRIVATE_RUNTIME=
+if "%OCAML_PORT:~0,5%" equ "mingw" set PRIVATE_RUNTIME=--with-private-runtime
+"%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER %LIB_PKG% && ./configure %PRIVATE_RUNTIME% %LIB_EXT% && make opam %POST_COMMAND%" || exit /b 1
 goto :EOF
 
 :test
+if "%OCAML_PORT%" neq "" (
+  echo Running the opam command...
+  opam || exit /b 1
+)
 rem Can't yet do an opam init with the native Windows builds
 if "%OCAML_PORT%" equ "" "%CYG_ROOT%\bin\bash.exe" -lc "make -C $APPVEYOR_BUILD_FOLDER run-appveyor-test" || exit /b 1
 goto :EOF

@@ -124,7 +124,7 @@ let expand (updates: env_update list) : env =
     | (var, op, arg, doc) :: updates ->
       let zip, reverts =
         let f, var =
-          if OpamStd.Sys.is_windows then
+          if Sys.win32 then
             String.uppercase_ascii, String.uppercase_ascii var
           else (fun x -> x), var
         in
@@ -154,7 +154,7 @@ let expand (updates: env_update list) : env =
 
 let add (env: env) (updates: env_update list) =
   let env =
-    if OpamStd.Sys.is_windows then
+    if Sys.win32 then
       (*
        * Environment variable names are case insensitive on Windows
        *)
@@ -377,7 +377,6 @@ let init_file = function
   | `zsh  -> init_zsh
   | `bash -> init_sh
   | `fish -> init_fish
-let sandbox_script = "sandbox.sh"
 
 let source root ~shell ?(interactive_only=false) f =
   let file f = OpamFilename.to_string (OpamPath.init root // f) in
@@ -481,7 +480,7 @@ let write_script dir (name, body) =
     OpamStd.Exn.fatal e;
     OpamConsole.error "Could not write %s" (OpamFilename.to_string file)
 
-let write_static_init_scripts root ~completion =
+let write_static_init_scripts root ~completion custom =
   let scripts =
     List.map (fun (shell, init, scripts) ->
         init, init_script root ~shell ~completion scripts) [
@@ -495,22 +494,19 @@ let write_static_init_scripts root ~completion =
     ]
   in
   List.iter (write_script (OpamPath.init root)) scripts;
-  let sandbox =
-    if OpamStd.Sys.(os () = Linux) then Some OpamScript.bwrap
-    else None
-  in
-  match sandbox with
-  | Some s ->
-    write_script (OpamPath.hooks_dir root) (sandbox_script, s);
-    OpamFilename.chmod (OpamPath.hooks_dir root // sandbox_script) 0o777
-  | None -> ()
+  (* Complete with init_scripts (from config or opamrc) to generate,
+     mainly sandboxes *)
+  List.iter (fun (name, script) ->
+      write_script (OpamPath.hooks_dir root) (name, script);
+      OpamFilename.chmod (OpamPath.hooks_dir root // name) 0o777
+    ) custom
 
 let write_dynamic_init_scripts st =
   let updates = updates ~set_opamroot:false ~set_opamswitch:false st in
   try
     OpamFilename.with_flock_upgrade `Lock_write ~dontblock:true
       st.switch_global.global_lock
-    @@ fun () ->
+    @@ fun _ ->
     List.iter (write_script (OpamPath.init st.switch_global.root)) [
       variables_sh, string_of_update st `sh updates;
       variables_csh, string_of_update st `csh updates;

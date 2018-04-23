@@ -54,7 +54,8 @@ let switch_to_updated_self debug opamroot =
           (OpamVersion.to_string update_version)
           (OpamVersion.to_string (OpamVersion.full ()));
       (if debug || (OpamConsole.debug ()) then
-         Printf.eprintf "!! %s found, switching to it !!\n%!" updated_self_str;
+         OpamConsole.errmsg "!! %s found, switching to it !!\n"
+           updated_self_str;
        let env =
          Array.append
            [|"OPAMNOSELFUPGRADE="^ self_upgrade_bootstrapping_value|]
@@ -142,15 +143,8 @@ let init =
     `S "CONFIGURATION FILE";
     `P "Any field from the built-in initial configuration can be overriden \
         through $(i,~/.opamrc), $(i,/etc/opamrc), or a file supplied with \
-        $(i,--config). The default configuration for this version of opam is:";
-    `Pre (OpamFile.InitConfig.write_to_string (OpamInitDefaults.init_config));
-    `P "Additional fields in the same format as for the $(i,~/.opam/config) \
-        file are also supported: $(b,jobs:), $(b,download-command:), \
-        $(b,download-jobs:), $(b,solver-criteria:), \
-        $(b,solver-upgrade-criteria:), \
-        $(b,solver-fixup-criteria:), $(b,solver:), $(b,wrap-build-commands:), \
-        $(b,wrap-install-commands:), $(b,wrap-remove-commands:), \
-        $(b,global-variables:).";
+        $(i,--config). The default configuration for this version of opam \
+        can be obtained using $(b,--show-default-opamrc).";
     `S OpamArg.build_option_section;
   ] in
   let compiler =
@@ -191,6 +185,10 @@ let init =
       "Don't read `/etc/opamrc' or `~/.opamrc': use the default settings and \
        the files specified through $(b,--config) only"
   in
+  let show_default_opamrc =
+    mk_flag ["show-default-opamrc"]
+      "Print the built-in default configuration to stdout and exit"
+  in
   let bypass_checks =
     mk_flag ["bypass-checks"]
       "Skip checks on required or recommended tools, and assume everything is \
@@ -199,7 +197,7 @@ let init =
   let init global_options
       build_options repo_kind repo_name repo_url
       no_setup auto_setup shell dot_profile_o
-      compiler no_compiler config_file no_config_file bypass_checks =
+      compiler no_compiler config_file no_config_file show_opamrc bypass_checks =
     apply_global_options global_options;
     apply_build_options build_options;
     if compiler <> None && no_compiler then
@@ -226,12 +224,18 @@ let init =
     in
     let init_config =
       try
-        OpamConsole.note "Will configure from built-in defaults%s."
-          (OpamStd.List.concat_map ~nil:"" ~left:", " ", "
-             OpamFile.to_string config_files);
+        let others =
+          match config_files with
+          | [] -> ""
+          | [file] -> OpamFile.to_string file ^ " and then from "
+          | _ ->
+              (OpamStd.List.concat_map ~nil:"" ~right:", and finally from " ", then "
+               OpamFile.to_string (List.rev config_files))
+        in
+        OpamConsole.note "Will configure from %sbuilt-in defaults." others;
         List.fold_left (fun acc f ->
             OpamFile.InitConfig.add acc (OpamFile.InitConfig.read f))
-          OpamInitDefaults.init_config
+          (OpamInitDefaults.init_config ())
           config_files
       with e ->
         OpamConsole.error
@@ -240,6 +244,11 @@ let init =
         OpamConsole.errmsg "%s\n" (Printexc.to_string e);
         OpamStd.Sys.exit_because `Configuration_error
     in
+    (* If show option is set, dump it and exit *)
+    if show_opamrc then
+      (OpamFile.InitConfig.write_to_channel stdout init_config;
+       OpamStd.Sys.exit_because `Success);
+    (* Else continue init *)
     let repo =
       OpamStd.Option.map (fun url ->
         let repo_url = OpamUrl.parse ?backend:repo_kind url in
@@ -301,7 +310,7 @@ let init =
   Term.(const init
         $global_options $build_options $repo_kind_flag $repo_name $repo_url
         $no_setup $auto_setup $shell_opt $dot_profile_flag $compiler $no_compiler
-        $config_file $no_config_file $bypass_checks),
+        $config_file $no_config_file $show_default_opamrc $bypass_checks),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -621,7 +630,7 @@ let show =
             flds
         in
         OpamStd.Format.align_table tbl |>
-        OpamStd.Format.print_table stdout ~sep:" ";
+        OpamConsole.print_table stdout ~sep:" ";
         `Ok ()
   in
   Term.(ret
@@ -856,8 +865,8 @@ let config =
        | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
        | _ -> bad_subcommand commands ("config", command, params))
     | Some `report, [] -> (
-        let print label fmt = Printf.printf ("# %-17s "^^fmt^^"\n") label in
-        Printf.printf "# opam config report\n";
+        let print label fmt = OpamConsole.msg ("# %-17s "^^fmt^^"\n") label in
+        OpamConsole.msg "# opam config report\n";
         print "opam-version" "%s " (OpamVersion.to_string (OpamVersion.full ()));
         print "self-upgrade" "%s"
           (if self_upgrade_status global_options = `Running then
@@ -1476,6 +1485,14 @@ let repository =
      address. The quorum is a positive integer that determines the validation \
      threshold for signed repositories, with fingerprints the trust anchors \
      for said validation.";
+    " ", `add, [],
+    (* using an unbreakable space here will indent the text paragraph at the level
+       of the previous labelled paragraph, which is what we want for our note. *)
+    "$(b,Note:) By default, the repository is only be added to the current switch. \
+     To add a switch to other repositories, you need to use the $(b,--all) or \
+     $(b,--set-default) options (see below). If you want to enable a repository \
+     only to install of of its switches, you may be looking for \
+     $(b,opam switch create --repositories=REPOS).";
     "remove", `remove, ["NAME..."],
     "Unselects the given repositories so that they will not be used to get \
      package definitions anymore. With $(b,--all), makes opam forget about \
@@ -1635,10 +1652,15 @@ let repository =
           (update_repos name)
       in
       if scope = [`Current_switch] then
-        OpamConsole.msg
-          "Repository %s has been added to the selections of switch %s.\n"
+        OpamConsole.note
+          "Repository %s has been added to the selections of switch %s \
+           only.\n\
+           Run `opam repository add %s --all-switches|--set-default' to use it \
+           in all existing switches, or in newly created switches, \
+           respectively.\n"
           (OpamRepositoryName.to_string name)
-          (OpamSwitch.to_string (OpamStateConfig.get_switch ()));
+          (OpamSwitch.to_string (OpamStateConfig.get_switch ()))
+          (OpamRepositoryName.to_string name);
       `Ok ()
     | Some `remove, names ->
       let names = List.map OpamRepositoryName.of_string names in
@@ -1808,7 +1830,8 @@ let switch =
     "Set the currently active switch, among the installed switches.";
     "remove", `remove, ["SWITCH"], "Remove the given switch from disk.";
     "export", `export, ["FILE"],
-    "Save the current switch state to a file.";
+    "Save the current switch state to a file. If $(b,--full) is specified, it \
+     includes the metadata of all installed packages";
     "import", `import, ["FILE"],
     "Import a saved switch state. If $(b,--switch) is specified and doesn't \
      point to an existing switch, the switch will be created for the import.";
@@ -1818,8 +1841,8 @@ let switch =
     "Lists installed switches.";
     "list-available", `list_available, ["[PATTERN]"],
     "Lists base packages that can be used to create a new switch, i.e. \
-     packages with the $(i,compiler) flag set. Only standard versions are \
-     shown by default if no pattern is supplied, use $(b,--all) to show all.";
+     packages with the $(i,compiler) flag set. If no pattern is supplied, \
+     all versions are shown.";
     "show", `current, [], "Prints the name of the current switch.";
     "set-base", `set_compiler, ["PACKAGES"],
     "Sets the packages forming the immutable base for the selected switch, \
@@ -1861,7 +1884,7 @@ let switch =
   let command, params = mk_subcommands_with_default commands in
   let no_switch =
     mk_flag ["no-switch"]
-      "Don't automatically select newly installed switches" in
+      "Don't automatically select newly installed switches." in
   let packages =
     mk_opt ["packages"] "PACKAGES"
       "When installing a switch, explicitely define the set of packages to set \
@@ -1893,7 +1916,7 @@ let switch =
     mk_flag ["full"]
       "When exporting, include the metadata of all installed packages, \
        allowing to re-import even if they don't exist in the repositories (the \
-       default is to include only the metadata of pinned packages)"
+       default is to include only the metadata of pinned packages)."
   in
   let no_install =
     mk_flag ["no-install"]
@@ -2133,8 +2156,8 @@ let pin ?(unpin_only=false) () =
     "add", `add, ["PACKAGE"; "TARGET"],
     "Pins package $(i,PACKAGE) to $(i,TARGET), which may be a version, a path, \
      or a URL.\n\
-     $(i,PACKAGE) can be omitted if $(i,TARGET) is a local path containing a \
-     package description with a name. $(i,TARGET) can be replaced by \
+     $(i,PACKAGE) can be omitted if $(i,TARGET) contains one or more \
+     package descriptions. $(i,TARGET) can be replaced by \
      $(b,--dev-repo) if a package by that name is already known. If \
      $(i,TARGET) is $(b,-), the package is pinned as a virtual package, \
      without any source. opam will infer the kind of pinning from the format \
@@ -2144,9 +2167,9 @@ let pin ?(unpin_only=false) () =
      using $(b,#branch) e.g. $(b,git://host/me/pkg#testing).\n\
      If $(i,PACKAGE) is not a known package name, a new package by that name \
      will be locally created.\n\
-     The package version may be specified by using the format \
-     $(i,NAME).$(i,VERSION) for $(i,PACKAGE), in the source opam file, or with \
-     $(b,edit).";
+     For source pinnings, the package version may be specified by using the \
+     format $(i,NAME).$(i,VERSION) for $(i,PACKAGE), in the source opam file, \
+     or with $(b,edit).";
     "remove", `remove, ["NAMES...|TARGET"],
     "Unpins packages $(i,NAMES), restoring their definition from the \
      repository, if any. With a $(i,TARGET), unpins everything that is \
@@ -2243,7 +2266,12 @@ let pin ?(unpin_only=false) () =
         (OpamPinned.files_in_source dir)
     in
     let basename =
-      List.hd (OpamStd.String.split (OpamUrl.basename url) '.')
+      match OpamStd.String.split (OpamUrl.basename url) '.' with
+      | [] ->
+        OpamConsole.error_and_exit `Bad_arguments
+          "Can not retrieve a path from '%s'"
+          (OpamUrl.to_string url)
+      | b::_ -> b
     in
     let found =
       match OpamUrl.local_dir url with
@@ -2388,7 +2416,7 @@ let pin ?(unpin_only=false) () =
          let st =
            List.fold_left (fun st name ->
                try OpamPinCommand.source_pin st name ~edit (Some url)
-               with OpamPinCommand.Aborted
+               with OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
                   | OpamPinCommand.Nothing_to_do -> st)
              st names
          in
@@ -2862,7 +2890,8 @@ let help =
       let conv, _ = Cmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
       match conv topic with
       | `Error e -> `Error (false, e)
-      | `Ok t when t = "topics" -> List.iter print_endline cmds; `Ok ()
+      | `Ok t when t = "topics" ->
+          List.iter (OpamConsole.msg "%s\n") cmds; `Ok ()
       | `Ok t -> `Help (man_format, Some t) in
 
   Term.(ret (const help $Term.man_format $Term.choice_names $topic)),

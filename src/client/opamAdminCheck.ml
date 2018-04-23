@@ -67,7 +67,7 @@ let installability_check univ =
   let graph =
     OpamCudf.Graph.of_universe @@
     OpamSolver.load_cudf_universe
-      ~depopts:false ~build:true ~post:true univ packages
+      ~depopts:false ~build:true ~post:true univ packages ()
   in
   let filter_roots g packages =
     let has_pkg p = OpamPackage.Set.mem (OpamCudf.cudf2opam p) packages in
@@ -101,7 +101,7 @@ let formula_of_pkglist packages = function
 let cycle_check univ =
   let cudf_univ =
     OpamSolver.load_cudf_universe
-      ~depopts:true ~build:true ~post:false univ univ.u_packages
+      ~depopts:true ~build:true ~post:false univ univ.u_packages ()
   in
   let graph =
     OpamCudf.Graph.of_universe cudf_univ |>

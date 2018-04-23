@@ -55,7 +55,7 @@ let apply_global_options o =
   if o.git_version then (
     begin match OpamGitVersion.version with
       | None   -> ()
-      | Some v -> OpamConsole.msg "%s\n%!" v
+      | Some v -> OpamConsole.msg "%s\n" v
     end;
     OpamStd.Sys.exit_because `Success
   );

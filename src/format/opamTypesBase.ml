@@ -188,3 +188,7 @@ let string_of_cause to_string =
 let map_success f = function
   | Success x -> Success (f x)
   | Conflicts c -> Conflicts c
+
+let iter_success f = function
+  | Success x -> f x
+  | Conflicts _ -> ()

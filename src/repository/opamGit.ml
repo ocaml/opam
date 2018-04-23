@@ -126,7 +126,7 @@ module VCS : OpamVCS.VCS = struct
          else
            Done (Some full))
 
-  let reset repo_root repo_url =
+  let reset_tree repo_root repo_url =
     let rref = remote_ref repo_url in
     git repo_root [ "reset" ; "--hard"; rref; "--" ]
     @@> fun r ->
@@ -141,6 +141,11 @@ module VCS : OpamVCS.VCS = struct
             (OpamFilename.Dir.to_string repo_root);
         Done ()
       else Done ()
+
+  let patch_applied _ _ =
+    (* This might be a good place to do 'git reset --soft' and check for
+       unstaged changes. See <https://github.com/ocaml/opam/pull/3283>. *)
+    Done ()
 
   let diff repo_root repo_url =
     let rref = remote_ref repo_url in
@@ -170,7 +175,7 @@ module VCS : OpamVCS.VCS = struct
       OpamProcess.cleanup ~force:true r; Done false
     | r -> OpamSystem.process_error r
 
-  let versionned_files repo_root =
+  let versioned_files repo_root =
     git repo_root ~verbose:false [ "ls-files" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done r.OpamProcess.r_stdout

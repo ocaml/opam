@@ -1,0 +1,26 @@
+(rule
+  ((targets (opam-manifest.o))
+   (deps    (opam.rc))
+   (action  (run @TOOL_ARCH@-w64-mingw32-windres ${^} ${@}))))
+
+(rule
+  (with-stdout-to opam.exe.manifest
+    (progn (echo "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n")
+           (echo "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">\n")
+           (cat opam-@SYSTEM@.xmlf)
+           (cat default-manifest.xmlf)
+           (echo "</assembly>"))))
+
+(rule
+  ((targets (opam.rc))
+   (deps    (opam.exe.manifest))
+   (action  (with-stdout-to opam.rc (echo "#include <winuser.h>\nCREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST opam.exe.manifest")))))
+
+(install
+  ((section bin)
+   (files   ((Opam.Runtime.@MANIFEST_ARCH@.manifest as Opam.Runtime.@MANIFEST_ARCH@\Opam.Runtime.@MANIFEST_ARCH@.manifest)
+             (libstdc++-6.dll as Opam.Runtime.@MANIFEST_ARCH@\libstdc++-6.dll)
+             (libwinpthread-1.dll as Opam.Runtime.@MANIFEST_ARCH@\libwinpthread-1.dll)
+             (@RUNTIME_GCC_S@.dll as Opam.Runtime.@MANIFEST_ARCH@\@RUNTIME_GCC_S@.dll)))
+   (package opam)))
+

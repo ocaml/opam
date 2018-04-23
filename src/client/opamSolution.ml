@@ -450,13 +450,13 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
     else
     match action with
     | `Build nv ->
-      let build_dir =
-        try OpamPackage.Map.find nv inplace
+      let is_inplace, build_dir =
+        try true, OpamPackage.Map.find nv inplace
         with Not_found ->
           let dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
           if not OpamClientConfig.(!r.reuse_build_dir) then
             OpamFilename.rmdir dir;
-          dir
+          false, dir
       in
       let test =
         OpamStateConfig.(!r.build_test) && OpamPackage.Set.mem nv requested
@@ -465,7 +465,8 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
         OpamStateConfig.(!r.build_doc) && OpamPackage.Set.mem nv requested
       in
       (if OpamFilename.exists_dir source_dir
-       then OpamFilename.copy_dir ~src:source_dir ~dst:build_dir
+       then (if not is_inplace then
+               OpamFilename.copy_dir ~src:source_dir ~dst:build_dir)
        else OpamFilename.mkdir build_dir;
        OpamAction.prepare_package_source t nv build_dir @@+ function
        | Some exn -> store_time (); Done (`Exception exn)
@@ -656,7 +657,7 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
       cleanup_artefacts successful;
       let successful = PackageActionGraph.reduce successful in
       let failed = PackageActionGraph.reduce (filter_graph failed) in
-      let print_actions filter color header ?empty actions =
+      let print_actions filter tint header ?empty actions =
         let actions =
           PackageActionGraph.fold_vertex (fun v acc ->
               if filter v then v::acc else acc)
@@ -664,32 +665,31 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
         in
         let actions = List.sort PackageAction.compare actions in
         if actions <> [] then
-          OpamConsole.msg "%s%s\n%s%s\n"
-            (OpamConsole.colorise color
-               (if OpamConsole.utf8 ()
-                then "\xe2\x94\x8c\xe2\x94\x80 " (* U+250C U+2500 *)
-                else "+- "))
+          OpamConsole.(msg "%s%s\n%s%s\n"
+            (colorise tint
+               (Printf.sprintf "%s%s "
+                  (utf8_symbol Symbols.box_drawings_light_down_and_right "+")
+                  (utf8_symbol Symbols.box_drawings_light_horizontal "-")))
             header
             (OpamStd.Format.itemize
-               ~bullet:(OpamConsole.colorise color
-                          (if OpamConsole.utf8 ()
-                           then "\xe2\x94\x82 " (* U+2503 *) else "| "))
+               ~bullet:(colorise tint
+                 (utf8_symbol Symbols.box_drawings_light_vertical "|" ^ " "))
                (fun x -> x)
                (List.map (String.concat " ") @@
                 OpamStd.Format.align_table
                   (PackageAction.to_aligned_strings actions)))
-            (OpamConsole.colorise color
-               (if OpamConsole.utf8 ()
-                then "\xe2\x94\x94\xe2\x94\x80 " (* U+2514 U+2500 *)
-                else "+- "))
+            (colorise tint
+               (Printf.sprintf "%s%s "
+                  (utf8_symbol Symbols.box_drawings_light_up_and_right "+")
+                  (utf8_symbol Symbols.box_drawings_light_horizontal "-"))))
         else match empty with
           | Some s ->
-            OpamConsole.msg "%s%s\n"
-              (OpamConsole.colorise color
-                 (if OpamConsole.utf8 ()
-                  then "\xe2\x95\xb6\xe2\x94\x80 " (* U+2576 U+2500 *)
-                  else "- "))
-              s
+            OpamConsole.(msg "%s%s\n"
+              (colorise tint
+                 (Printf.sprintf "%s%s "
+                    (utf8_symbol Symbols.box_drawings_light_right "-")
+                    (utf8_symbol Symbols.box_drawings_light_horizontal "")))
+              s)
           | None -> ()
       in
       OpamConsole.msg "\n";

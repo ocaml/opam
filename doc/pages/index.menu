@@ -3,7 +3,7 @@
 # <string>.md -> A markdown page
 # empty <string> -> A menu divider
 #source: https://github.com/ocaml/opam/tree/master/doc/pages
-opam 2.0 DOCUMENTATION (work in progress)
+opam 2.0 documentation
 
 Install.md
 Upgrade_guide.md
@@ -12,6 +12,6 @@ Usage.md
 FAQ.md
 Tricks.md
 Packaging.md
-Specifying_Solver_Preferences.md
+External_solvers.md
 
 Manual.md

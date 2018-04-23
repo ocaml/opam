@@ -2,9 +2,9 @@
 
 # Configure with the following lines in ~/.opam/config:
 #
-#   wrap-build-commands:   ["%{root}%/opam-init/hooks/bwrap.sh" "build"]
-#   wrap-install-commands: ["%{root}%/opam-init/hooks/bwrap.sh" "install"]
-#   wrap-remove-commands:  ["%{root}%/opam-init/hooks/bwrap.sh" "remove"]
+#   wrap-build-commands:   ["%{hooks}%/bwrap.sh" "build"]
+#   wrap-install-commands: ["%{hooks}%/bwrap.sh" "install"]
+#   wrap-remove-commands:  ["%{hooks}%/bwrap.sh" "remove"]
 
 if ! command -v bwrap >/dev/null; then
     echo "The 'bwrap' command was not found. Install 'bubblewrap' on your system, or" >&2
@@ -32,6 +32,7 @@ add_mounts ro /usr /bin /lib /lib32 /lib64 /etc /opt /nix/store /home
 COMMAND="$1"; shift
 case "$COMMAND" in
     build)
+        add_mounts ro "$OPAM_SWITCH_PREFIX"
         add_mounts rw "$PWD"
         ;;
     install)

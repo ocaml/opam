@@ -4,14 +4,21 @@
   ((name opam_core)
    (public_name opam-core)
    (synopsis "OCaml Package Manager core internal stdlib")
-   (libraries (re ocamlgraph unix bigarray))
+   (libraries (re ocamlgraph unix bigarray
+               (select opamStubs.ml from
+                      (opam-core.stubs -> opamStubs.ml.win32)
+                      ( -> opamStubs.ml.dummy))))
    (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))
    (preprocess (per_module
                   ((action (run ${bin:cppo} -V OCAML:${ocaml_version} ${<})) (opamCompat))))
    (wrapped false)))
 
 (rule
-  (with-stdout-to opamVersion.ml (run ocaml ${path:../../shell/subst_var.ml} PACKAGE_VERSION "<error>" ${path:opamVersion.ml.in})))
+  ((targets (opamVersion.ml))
+   (deps (opamVersion.ml.in ../../shell/subst_var.ml ../../config.status))
+   (action (with-stdout-to ${@} (run ocaml ../../shell/subst_var.ml PACKAGE_VERSION "<error>" opamVersion.ml.in)))))
 
 (rule
-  (with-stdout-to opamCoreConfig.ml (run ocaml ${path:../../shell/subst_var.ml} DEVELOPER false ${path:opamCoreConfig.ml.in})))
+  ((targets (opamCoreConfig.ml))
+   (deps (opamCoreConfig.ml.in ../../shell/subst_var.ml ../../config.status))
+   (action (with-stdout-to ${@} (run ocaml ../../shell/subst_var.ml DEVELOPER false opamCoreConfig.ml.in)))))

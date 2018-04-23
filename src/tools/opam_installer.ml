@@ -35,7 +35,7 @@ type commands = {
 let do_commands project_root =
   let mkdir d =
     if not (OpamFilename.exists_dir d) then
-      (OpamConsole.msg "Creating directory %s\n%!" (OpamFilename.Dir.to_string d);
+      (OpamConsole.msg "Creating directory %s\n" (OpamFilename.Dir.to_string d);
        OpamFilename.mkdir d)
   in
   let rec rmdir ~opt d =
@@ -59,7 +59,7 @@ let do_commands project_root =
       OpamConsole.error "Could not find %S" (OpamFilename.to_string src)
   in
   let cp =
-    if OpamStd.Sys.is_windows then
+    if Sys.win32 then
       fun ?exec ~opt ~src ~dst ->
         let (src, dst) =
           if not (OpamFilename.exists src) then
@@ -85,7 +85,7 @@ let do_commands project_root =
       OpamConsole.warning "%S doesn't exist" (OpamFilename.to_string f)
   in
   let rm =
-    if OpamStd.Sys.is_windows then
+    if Sys.win32 then
       fun ~opt f ->
         let f =
           if OpamFilename.exists f then
@@ -390,8 +390,8 @@ let () =
     | _ -> exit 0
   with
   | Invalid_argument s ->
-    prerr_string "ERROR: "; prerr_endline s; exit 2
+    OpamConsole.error "%s" s; exit 2
   | OpamStd.Sys.Exit i -> exit i
   | e ->
     OpamConsole.error "Failure during install";
-    Printf.eprintf "%s\n" (Printexc.to_string e); exit 1
+    OpamConsole.errmsg "%s\n" (Printexc.to_string e); exit 1

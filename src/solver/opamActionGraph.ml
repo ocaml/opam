@@ -30,13 +30,27 @@ let name_of_action = function
   | `Reinstall _ -> "recompile"
   | `Build _ -> "build"
 
-let symbol_of_action = function
-  | `Remove _ -> "\xe2\x8a\x98 " (* U+2298 *)
-  | `Install _ -> "\xe2\x88\x97 " (* U+2217 *)
-  | `Change (`Up,_,_) -> "\xe2\x86\x97 " (* U+2197 *)
-  | `Change (`Down,_,_) -> "\xe2\x86\x98 " (* U+2198 *)
-  | `Reinstall _ -> "\xe2\x86\xbb " (* U+21BB *)
-  | `Build _ -> "\xce\xbb " (* U+03BB *)
+let symbol_of_action =
+  let open OpamConsole in
+  function
+  | `Remove _ ->
+      utf8_symbol Symbols.circled_division_slash
+                  ~alternates:[Symbols.greek_small_letter_lambda] "X"
+  | `Install _ ->
+      utf8_symbol Symbols.asterisk_operator
+                  ~alternates:[Symbols.six_pointed_black_star] "*"
+  | `Change (`Up,_,_) ->
+      utf8_symbol Symbols.north_east_arrow
+                  ~alternates:[Symbols.upwards_arrow] "U"
+  | `Change (`Down,_,_) ->
+      utf8_symbol Symbols.south_east_arrow
+                  ~alternates:[Symbols.downwards_arrow] "D"
+  | `Reinstall _ ->
+      utf8_symbol Symbols.clockwise_open_circle_arrow
+                  ~alternates:[Symbols.up_down_arrow] "R"
+  | `Build _ ->
+      utf8_symbol Symbols.greek_small_letter_lambda
+                  ~alternates:[Symbols.six_pointed_black_star] "B"
 
 let action_strings ?utf8 a =
   if utf8 = None && (OpamConsole.utf8 ()) || utf8 = Some true

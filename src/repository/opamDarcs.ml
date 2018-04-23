@@ -76,7 +76,7 @@ module VCS = struct
     OpamSystem.raise_on_process_error r;
     Done ()
 
-  let reset repo_root _repo_url =
+  let reset_tree repo_root _repo_url =
     darcs repo_root [ "obliterate"; "--all"; "-t"; opam_local_tag ]
     @@> fun r ->
     OpamSystem.raise_on_process_error r;
@@ -85,6 +85,8 @@ module VCS = struct
     (* returns 0 even if patch doesn't exist *)
     OpamSystem.raise_on_process_error r;
     Done ()
+
+  let patch_applied _ _ = Done ()
 
   let revision repo_root =
     (* 'Weak hash' is only supported from 2.10.3, so provide a fallback *)
@@ -142,7 +144,7 @@ module VCS = struct
       else
         Done (Some (OpamFilename.of_string patch_file))
 
-  let versionned_files repo_root =
+  let versioned_files repo_root =
     darcs repo_root [ "show" ; "files" ]
     @@> fun r ->
     OpamSystem.raise_on_process_error r;

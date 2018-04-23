@@ -109,7 +109,62 @@ module Graph = struct
   module Topo = Graph.Topological.Make (PG)
 
   let of_universe u =
-    Algo.Defaultgraphs.PackageGraph.dependency_graph u
+    (* {[Algo.Defaultgraphs.PackageGraph.dependency_graph u]}
+       -> doesn't handle conjunctive dependencies correctly
+       (e.g. (a>3 & a<=4) is considered as (a>3 | a<=4) and results in extra
+       edges).
+       Here we handle the fact that a conjunction with the same pkgname is an
+       intersection, while a conjunction between different names is an union *)
+    let t = OpamConsole.timer () in
+    let g = PG.create ~size:(Cudf.universe_size u) () in
+    let iter_deps f deps =
+      (* List.iter (fun d -> List.iter f (Common.CudfAdd.resolve_deps u d)) deps *)
+      let strong_deps, weak_deps =
+        (* strong deps are mandatory (constraint appearing in the top
+           conjunction)
+           weak deps correspond to optional occurences of a package, as part of
+           a disjunction: e.g. in (A>=4 & (B | A<5)), A>=4 is strong, and the
+           other two are weak. In the end we want to retain B and A>=4. *)
+        List.fold_left (fun (strong_deps, weak_deps) l ->
+            let names =
+              List.fold_left (fun acc (n, _) ->
+                  OpamStd.String.Map.add n Set.empty acc)
+                OpamStd.String.Map.empty l
+            in
+            let set =
+              List.fold_left (fun acc (n, cstr) ->
+                  List.fold_left (fun s x -> Set.add x s)
+                    acc (Cudf.lookup_packages ~filter:cstr u n))
+                Set.empty l
+            in
+            let by_name =
+              Set.fold (fun p ->
+                  OpamStd.String.Map.update
+                    p.Cudf.package (Set.add p) Set.empty)
+                set names
+            in
+            if OpamStd.String.Map.is_singleton by_name then
+              let name, versions = OpamStd.String.Map.choose by_name in
+              OpamStd.String.Map.update name (Set.inter versions) versions
+                strong_deps,
+              OpamStd.String.Map.remove name weak_deps
+            else
+              strong_deps, OpamStd.String.Map.union Set.union weak_deps by_name)
+          (OpamStd.String.Map.empty, OpamStd.String.Map.empty) deps
+      in
+      OpamStd.String.Map.iter (fun _ p -> Set.iter f p) strong_deps;
+      OpamStd.String.Map.iter (fun name p ->
+          if not (OpamStd.String.Map.mem name strong_deps)
+          then Set.iter f p)
+        weak_deps
+    in
+    Cudf.iter_packages
+      (fun p ->
+         PG.add_vertex g p;
+         iter_deps (PG.add_edge g p) p.Cudf.depends)
+      u;
+    log ~level:3 "Graph generation: %.3f" (t ());
+    g
 
   let output g filename =
     let fd = open_out (filename ^ ".dot") in
@@ -151,8 +206,11 @@ let filter_dependencies f_direction universe packages =
   r
 
 let dependencies = filter_dependencies (fun x -> x)
+(* similar to Algo.Depsolver.dependency_closure but with finer results on
+   version sets *)
 
 let reverse_dependencies = filter_dependencies Graph.mirror
+(* similar to Algo.Depsolver.reverse_dependency_closure but more reliable *)
 
 let string_of_atom (p, c) =
   let const = function
@@ -220,8 +278,7 @@ let cycle_conflict ~version_map univ cycle =
 
 let arrow_concat sl =
   let arrow =
-    if OpamConsole.utf8 () then " \xe2\x86\x92 " (* U+2192 *)
-    else " -> "
+    OpamConsole.utf8_symbol OpamConsole.Symbols.rightwards_arrow " -> "
   in
   String.concat (OpamConsole.colorise `yellow arrow) sl
 
@@ -550,7 +607,7 @@ let dump_cudf_error ~version_map univ req =
     | None ->
       let (/) = Filename.concat in
       OpamCoreConfig.(!r.log_dir) /
-      ("solver-error-"^string_of_int (Unix.getpid())) in
+      ("solver-error-"^string_of_int (OpamStubs.getpid())) in
   match
     dump_cudf_request (to_cudf univ req) ~version_map
       (OpamSolverConfig.criteria req.criteria)

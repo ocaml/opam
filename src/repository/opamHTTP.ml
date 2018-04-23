@@ -66,6 +66,7 @@ module B = struct
       | None -> OpamRepositoryBackend.Update_empty
       | Some patch -> OpamRepositoryBackend.Update_patch patch
 
+  let repo_update_complete _ _ = Done ()
 
   let pull_url ?cache_dir:_ dirname checksum remote_url =
     log "pull-file into %a: %a"

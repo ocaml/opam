@@ -16,6 +16,8 @@ module VCS = struct
 
   let name = `hg
 
+  let mark_prefix = "opam-mark"
+
   let exists repo_root =
     OpamFilename.exists_dir (repo_root / ".hg")
 
@@ -30,19 +32,23 @@ module VCS = struct
     OpamSystem.raise_on_process_error r;
     Done ()
 
-  let withrev url = match url.OpamUrl.hash with
-    | None -> fun cmd -> cmd
-    | Some r -> fun cmd -> cmd @ ["--rev"; r]
+  let mark_from_url url =
+    match url.OpamUrl.hash with
+    | None -> mark_prefix
+    | Some fragment -> mark_prefix ^ "-" ^ fragment
 
   let fetch ?cache_dir:_ repo_root repo_url =
-    hg repo_root
-      (withrev repo_url [ "pull"; "-f"; OpamUrl.base_url repo_url ])
-    @@> fun r ->
+    let src = OpamUrl.base_url repo_url in
+    let rev = OpamStd.Option.default "default" repo_url.OpamUrl.hash in
+    let mark = mark_from_url repo_url in
+    hg repo_root [ "pull"; "--rev"; rev; src ] @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    hg repo_root [ "bookmark"; "--force"; "--rev"; rev; mark ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done ()
 
   let revision repo_root =
-    hg repo_root [ "id"; "-i" ] @@> fun r ->
+    hg repo_root [ "identify"; "--id" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     match r.OpamProcess.r_stdout with
     | [] -> Done None
@@ -50,57 +56,63 @@ module VCS = struct
       if String.length full > 8 then Done (Some (String.sub full 0 8))
       else Done (Some full)
 
-  let get_id repo_root repo_url =
-    hg repo_root
-      (withrev repo_url [ "id" ; "-i" ; OpamUrl.base_url repo_url])
-    @@> fun r ->
-    OpamSystem.raise_on_process_error r;
-    match r.OpamProcess.r_stdout with
-    | [] -> failwith "unfound mercurial revision"
-    | id::_ -> Done id
-
-  let reset repo_root repo_url =
-    get_id repo_root repo_url @@+ fun id ->
-    hg repo_root [ "update" ; "--clean" ; "--rev" ; id ]
-    @@> fun r ->
+  let reset_tree repo_root repo_url =
+    let mark = mark_from_url repo_url in
+    hg repo_root [ "update"; "--clean"; "--rev"; mark ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done ()
+
+  let patch_applied = reset_tree
 
   let diff repo_root repo_url =
     let patch_file = OpamSystem.temp_file ~auto_clean:false "hg-diff" in
     let finalise () = OpamSystem.remove_file patch_file in
     OpamProcess.Job.catch (fun e -> finalise (); raise e) @@ fun () ->
-    get_id repo_root repo_url @@+ fun id ->
-    hg repo_root ~stdout:patch_file [ "diff"; "--reverse"; "--rev"; id ]
-    @@> fun r ->
+    let mark = mark_from_url repo_url in
+    hg repo_root ~stdout:patch_file [ "diff"; "--subrepos"; "--reverse";
+        "--rev"; mark ] @@> fun r ->
     if OpamProcess.is_failure r then
       (finalise ();
-       OpamSystem.internal_error "Hg error: %s not found." id)
+       OpamSystem.internal_error "Hg error: '%s' not found." mark)
     else if OpamSystem.file_is_empty patch_file then
       (finalise (); Done None)
     else
       Done (Some (OpamFilename.of_string patch_file))
 
   let is_up_to_date repo_root repo_url =
-    get_id repo_root repo_url @@+ fun id ->
-    hg repo_root [ "stat"; "--rev"; id ] @@> fun r ->
+    let mark = mark_from_url repo_url in
+    hg repo_root [ "status"; "--subrepos"; "--rev"; mark ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done (r.OpamProcess.r_stdout = [])
 
-  let versionned_files repo_root =
+  let versioned_files repo_root =
     hg repo_root [ "locate" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done r.OpamProcess.r_stdout
 
   let vc_dir repo_root = OpamFilename.Op.(repo_root / ".hg")
 
-  let current_branch dir =
-    hg dir [ "branch" ] @@> function
-    | { OpamProcess.r_code = 0; OpamProcess.r_stdout = [b]; _ } -> Done (Some b)
-    | _ -> Done None
+  let current_branch repo_root =
+    hg repo_root [ "identify"; "--bookmarks" ] @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    match r.OpamProcess.r_stdout with
+    | [] -> Done None
+    | marks::_ ->
+        let marks = OpamStd.String.split marks ' ' in
+        let marks =
+            List.filter (OpamStd.String.starts_with ~prefix:mark_prefix) marks
+        in
+        match marks with
+        | mark::_ -> Done (Some mark)
+        | [] ->
+            hg repo_root [ "identify"; "--branch" ] @@> fun r ->
+            OpamSystem.raise_on_process_error r;
+            match r.OpamProcess.r_stdout with
+            | branch::_ when branch <> "default" -> Done (Some branch)
+            | _ -> Done None
 
-  let is_dirty dir =
-    hg dir [ "stat" ] @@> fun r ->
+  let is_dirty repo_root =
+    hg repo_root [ "status"; "--subrepos" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done (r.OpamProcess.r_stdout = [])
 

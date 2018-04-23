@@ -17,7 +17,10 @@ src
 │   ├── opamSystem.ml                   Bindings of lots of filesystem and system operations
 │   ├── opamFilename.ml                 Higher level file and directory name manipulation AND file operations, wrappers on OpamSystem using the filename type
 │   ├── opamParallel.ml                 Parallel execution of jobs following a directed graph
-│   └── opamUrl.ml                      URL parsing and printing, with support for our different backends
+│   ├── opamUrl.ml                      URL parsing and printing, with support for our different backends
+|   |   # Windows support
+│   ├── opamStubsTypes.ml               Types in the stubs definitions (shared between both implementations)
+│   └── opamStubs.ml                    C stubs for Windows. A "dummy" alternate is provided for Unix, which doesn't require any C code
 │
 ├── format                              Definition of OPAM datastructures and its file interface
 │   │   [ opam-format lib ]
@@ -80,6 +83,11 @@ src
 │   ├── opamSolution.ml                 Interface with the solver, processing of full solutions through actions
 │   └── opamAction.ml                   Handles concrete actions on packages, like installations and removals
 │
+├── stubs                               C stubs. This library is built on Windows-only and automatically pulled into opam-core if needed
+│   ├── opamInject.c                    Code for process injection shared between opamWindows.c and opam-putenv.c
+│   ├── opamWindows.c                   C stubs themselves
+│   └── opamWin32Stubs.ml               OCaml external declarations for the stubs
+│
 ├── client                              Everything related to the OPAM state, installation and front-end
 │   │   [ opam-client lib ]
 │   ├── opamClientConfig.ml             Configuration options for this lib (record, global reference, setter, initialisation), plus helper for global setup
@@ -105,6 +113,7 @@ src
     ├── opam_admin.ml                   Source of the opam-admin tool, main
     │   [ other stand-alone tools ]
     ├── opam_admin_top.ml               Tiny library for admin-scripts, included in opam-admin.top
+    ├── opam-putenv.c                   Tiny C tool used on Windows for cross-architecture process injection
     ├── opam_check.ml                   Tiny tool used in internal checks ("make tests")
     ├── opam_installer.ml               Handles OPAM's ".install" files
     └── opamlfind.ml                    Experimental ocamlfind wrapper tool

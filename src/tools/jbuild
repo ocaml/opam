@@ -17,6 +17,8 @@
    (flags (:standard (:include ../ocaml-flags-standard.sexp) (:include ../ocaml-context-flags.sexp)))
    (libraries (opam-client))))
 
+(include opam-putenv.inc)
+
 (executable
   ((name opam_installer)
    (package opam-installer)

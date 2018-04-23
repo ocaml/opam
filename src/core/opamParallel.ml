@@ -237,7 +237,9 @@ module Make (G : G) = struct
         (fun n roots -> if G.in_degree g n = 0 then S.add n roots else roots)
         g S.empty
     in
-    loop jobs M.empty M.empty roots
+    let r = loop jobs M.empty M.empty roots in
+    OpamConsole.clear_status ();
+    r
 
   let iter ~jobs ~command ?dry_run ?mutually_exclusive g =
     ignore (aux_map ~jobs ~command ?dry_run ?mutually_exclusive g)
