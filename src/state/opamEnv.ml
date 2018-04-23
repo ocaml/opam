@@ -656,8 +656,14 @@ let display_setup root ~dot_profile shell =
         && not complete_zsh then
           not_set
         else ok in
-      [ ("init-script"     , Printf.sprintf "%s" pretty_init_file);
-        ("auto-completion" , completion);
+      let eval_env =
+        try
+          if bool_of_string @@ OpamStd.Config.env_bool "NOEVALENV" then ok else not_set
+        with Not_found -> not_set
+      in
+      [ ("init-script"         , Printf.sprintf "%s" pretty_init_file);
+        ("auto-completion"     , completion);
+        ("opam env evalutation", eval_env);
       ]
   in
   OpamConsole.msg "User configuration:\n";
