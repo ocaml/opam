@@ -786,7 +786,8 @@ let config =
       let user        = all || user in
       let global      = all || global in
       let profile     = user  || profile in
-      let completion    = global && not no_complete in
+      let completion  = global && not no_complete in
+      let eval_env    = global && eval_env in
       let dot_profile = init_dot_profile shell dot_profile_o in
       if list then
         `Ok (OpamConfigCommand.setup_list shell dot_profile)
@@ -794,7 +795,7 @@ let config =
         let dot_profile = if profile then Some dot_profile else None in
         OpamGlobalState.with_ `Lock_write @@ fun gt ->
         `Ok (OpamConfigCommand.setup gt
-               ?dot_profile ~completion ~shell
+               ?dot_profile ~completion ~eval_env ~shell
                ~user ~global)
       else
         `Ok (OpamConsole.msg

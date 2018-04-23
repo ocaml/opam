@@ -53,6 +53,7 @@ val setup:
   rw global_state ->
   ?dot_profile:OpamTypes.filename ->
   completion:bool ->
+  eval_env:bool ->
   shell:OpamTypes.shell ->
   user:bool -> global:bool -> unit
 
