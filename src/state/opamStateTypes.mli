@@ -139,5 +139,5 @@ type +'lock switch_state = {
 
   (* Missing: a cache for
      - switch-global and package variables
-     - the solver universe ? *)
+     - the solver universe? *)
 } constraint 'lock = 'lock lock

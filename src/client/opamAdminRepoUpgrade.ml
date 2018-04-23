@@ -273,7 +273,7 @@ let do_upgrade repo_root =
             (FOp (FIdent ([],OpamVariable.of_string "sys-ocaml-version",None),
                   `Eq,
                   FString (OpamPackage.Version.to_string nv.version)))
-            (* add depext towards an 'ocaml' package ? *)
+            (* add depext towards an 'ocaml' package? *)
         in
         write_opam ~add_files:[conf_script_name^".in", system_conf_script]
           system_opam

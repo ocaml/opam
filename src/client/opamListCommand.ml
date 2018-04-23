@@ -448,7 +448,7 @@ let field_of_string =
         (if not (OpamStd.String.ends_with ~suffix:":" s) &&
             List.mem_assoc s (OpamFile.OPAM.fields)
          then Printf.sprintf ". Did you mean the opam field \"%s:\" \
-                              (with a colon) ?" s
+                              (with a colon)?" s
          else "")
 
 let version_color st nv =

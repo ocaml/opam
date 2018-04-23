@@ -61,7 +61,7 @@ val copy_dir: src:Dir.t -> dst:Dir.t -> unit
 (** Link a directory *)
 val link_dir: target:Dir.t -> link:Dir.t -> unit
 
-(** Does the directory exist ? *)
+(** Does the directory exist? *)
 val exists_dir: Dir.t -> bool
 
 (** Returns the argument as option, if the directory exists *)
@@ -166,12 +166,12 @@ val move: src:t -> dst:t -> unit
 (** Read a symlinked file *)
 val readlink: t -> t
 
-(** Is a symlink ? *)
+(** Is a symlink? *)
 val is_symlink: t -> bool
 
 val is_symlink_dir: Dir.t -> bool
 
-(** Is an executable ? *)
+(** Is an executable? *)
 val is_exec: t -> bool
 
 (** Copy a file *)

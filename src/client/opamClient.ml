@@ -203,7 +203,7 @@ let compute_upgrade_t
   let to_install =
     if not_installed = [] then [] else
     if auto_install ||
-       OpamConsole.confirm "%s %s not installed. Install %s ?"
+       OpamConsole.confirm "%s %s not installed. Install %s?"
          (OpamStd.Format.pretty_list
             (List.rev_map OpamFormula.short_string_of_atom not_installed))
          (match not_installed with [_] -> "is" | _ -> "are")
@@ -699,7 +699,7 @@ let init
       if not root_empty then (
         OpamConsole.warning "%s exists and is not empty"
           (OpamFilename.Dir.to_string root);
-        if not (OpamConsole.confirm "Proceed ?") then
+        if not (OpamConsole.confirm "Proceed?") then
           OpamStd.Sys.exit_because `Aborted);
       try
         (* Create the content of ~/.opam/config *)
@@ -1054,7 +1054,7 @@ let reinstall_t t ?ask ?(force=false) atoms =
     if not_installed <> [] then
       if
         force ||
-        OpamConsole.confirm "%s %s not installed. Install %s ?"
+        OpamConsole.confirm "%s %s not installed. Install %s?"
           (OpamStd.Format.pretty_list
              (List.rev_map OpamFormula.short_string_of_atom not_installed))
           (match not_installed with [_] -> "is" | _ -> "are")
@@ -1158,7 +1158,7 @@ module PIN = struct
       match pin_nv with
       | Some nv ->
         if OpamConsole.confirm
-            "Package %s is not pinned. Edit as a new pinning to version %s ?"
+            "Package %s is not pinned. Edit as a new pinning to version %s?"
             (OpamPackage.Name.to_string name)
             (OpamPackage.version_to_string nv)
         then

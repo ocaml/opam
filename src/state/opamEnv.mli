@@ -43,7 +43,7 @@ val get_pure: ?updates:env_update list -> unit -> env
 
 (** Update an environment, including reverting opam changes that could have been
     previously applied (therefore, don't apply to an already updated env as
-    returned by e.g. [get_full] !) *)
+    returned by e.g. [get_full]!) *)
 val add: env -> env_update list -> env
 
 (** Check if the shell environment is in sync with the current OPAM switch *)

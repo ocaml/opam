@@ -472,7 +472,7 @@ let get_compatible_compiler ?repos ?locked rt dir =
        "The following local packages don't appear to be installable:\n%s"
        (OpamStd.Format.itemize OpamPackage.to_string
           (OpamPackage.Set.elements local_packages));
-     if OpamConsole.confirm "Do you want to create an empty switch nonetheless ?"
+     if OpamConsole.confirm "Do you want to create an empty switch regardless?"
      then []
      else OpamStd.Sys.exit_because `Aborted)
   else
@@ -488,7 +488,7 @@ let get_compatible_compiler ?repos ?locked rt dir =
     if OpamClientConfig.(!r.show) ||
        OpamConsole.confirm
          "Create the switch with no specific compiler selected, and attempt to \
-          continue anyway ?"
+          continue?"
     then []
     else OpamStd.Sys.exit_because `Aborted
  | Failure _ ->
@@ -515,6 +515,6 @@ let get_compatible_compiler ?repos ?locked rt dir =
         (OpamFormula.to_string default_compiler)
         (OpamFilename.Dir.to_string dir);
       if OpamConsole.confirm
-          "Continue anyway, with no specific compiler selected ?"
+          "Proceed, with no specific compiler selected?"
       then []
       else OpamStd.Sys.exit_because `Aborted
