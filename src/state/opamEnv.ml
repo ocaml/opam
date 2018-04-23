@@ -666,12 +666,19 @@ let display_setup root ~dot_profile shell =
   List.iter print global_setup
 
 let check_and_print_env_warning st =
+  let outdated_env = not (is_up_to_date st) in
+  let dot_profile_not_configured =
+    (dot_profile_needs_update OpamStateConfig.(!r.root_dir)
+       (OpamFilename.of_string @@
+        OpamStd.Sys.(guess_dot_profile @@ guess_shell_compat ()))) = `yes
+  in
+  let opam_noeval_env =
+    try bool_of_string @@ OpamStd.Config.env_bool "NOEVALENV"
+    with Not_found -> false
+  in
   if (OpamFile.Config.switch st.switch_global.config = Some st.switch ||
       OpamStateConfig.(!r.switch_from <> `Command_line)) &&
-     (not (is_up_to_date st) &&
-      (dot_profile_needs_update OpamStateConfig.(!r.root_dir)
-         (OpamFilename.of_string @@
-          OpamStd.Sys.(guess_dot_profile @@ guess_shell_compat ()))) = `yes)
+     (outdated_env && (dot_profile_not_configured || opam_noeval_env))
   then
     OpamConsole.formatted_msg
       "# Run %s to update the current shell environment\n"
