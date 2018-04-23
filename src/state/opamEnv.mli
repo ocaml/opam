@@ -87,7 +87,7 @@ val update_user_setup:
 
 (** Write the generic scripts in ~/.opam/opam-init needed to import state for
     various shells. *)
-val write_static_init_shell_scripts:
+val write_init_shell_scripts:
   dirname -> completion:bool -> eval_env:bool -> unit
 
 (** Write the generic scripts in ~/.opam/opam-init needed to import state for
