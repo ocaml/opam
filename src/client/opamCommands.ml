@@ -244,7 +244,7 @@ let init =
         OpamConsole.errmsg "%s\n" (Printexc.to_string e);
         OpamStd.Sys.exit_because `Configuration_error
     in
-    (* If show option is set, dump it and exit *)
+    (* If show option is set, dump opamrc and exit *)
     if show_opamrc then
       (OpamFile.InitConfig.write_to_channel stdout init_config;
        OpamStd.Sys.exit_because `Success);

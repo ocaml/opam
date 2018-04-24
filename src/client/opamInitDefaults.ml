@@ -50,16 +50,10 @@ let wrappers () =
 
 let bwrap_cmd = "bwrap"
 let bwrap_filter = linux_filter
-let bwrap_string () =
-  Printf.sprintf "Sandboxing tool %s was not found. You should install \
-                  'bubblewrap', or manually disable package build sandboxing \
-                  and remove bwrap from required dependencies(at your own risk). \
-                  You can display the built-in configuration with %s to set \
-                  up an %s file. See \
-                  https://github.com/projectatomic/bubblewrap for details."
-    (OpamConsole.colorise `bold bwrap_cmd)
-    (OpamConsole.colorise `bold "opam init --show-default-opamrc")
-    (OpamConsole.colorise `underline "opamrc")
+let bwrap_string () = Printf.sprintf
+    "Sandboxing tool %s was not found. You should install 'bubblewrap'. \
+     See http://opam.ocaml.org/doc/2.0/FAQ.html#Why-opam-asks-me-to-install-bwrap."
+    bwrap_cmd
 
 let fetch_cmd_user () =
   let open OpamStd.Option.Op in
