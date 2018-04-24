@@ -62,6 +62,35 @@ remove) are also run in a sandbox and guaranteed not to affect your system.
 
 ---
 
+#### 🐫  Why does opam require ``bwrap`` ?
+
+Since opam 2.0.0~rc2, opam uses `bwrap` on Linux to run package instructions in
+a sandbox. See the [bubblewrap page](https://github.com/projectatomic/bubblewrap)
+for details.
+
+These sandboxing instructions are specified in the built-in configuration, that
+you can display with `opam init --show-default-opamrc`:
+
+```
+init-scripts: ["sandbox.sh" """ [...] """] {os = "linux"}
+
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux"}
+```
+
+You can manually disable package build sandboxing and remove bwrap from
+the required dependencies (at your own risk). You can use the built-in
+configuration as a template to create or update an `opamrc` file: run `opam
+init --show-default-opamrc >~/.opamrc`, then edit that file and remove or
+modify the `init-scripts:` and `wrap-*:` fields as well as the `bwrap` line
+from the `required-tools:` field, and finally retry `opam init`
+
+See also the [wrap entry](Manual.html#configfield-wrap-build-commands) section
+in the manual.
+
+---
+
 #### 🐫  Why does ``opam init`` need to add stuff to my init scripts / why is ``eval $(opam env)`` needed ?
 
 This is not strictly needed, but by updating your `PATH` and a few specific
