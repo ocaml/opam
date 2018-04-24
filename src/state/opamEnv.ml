@@ -355,6 +355,8 @@ let eval_string gt ?(set_opamswitch=false) switch =
   match OpamStd.Sys.guess_shell_compat () with
   | `fish ->
     Printf.sprintf "eval (opam env%s%s%s)" root switch setswitch
+  | `csh ->
+    Printf.sprintf "eval `opam env%s%s%s`" root switch setswitch
   | _ ->
     Printf.sprintf "eval $(opam env%s%s%s)" root switch setswitch
 
