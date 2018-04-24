@@ -200,6 +200,13 @@ let init =
       compiler no_compiler config_file no_config_file show_opamrc bypass_checks =
     apply_global_options global_options;
     apply_build_options build_options;
+    let builtin_config = OpamInitDefaults.init_config () in
+    (* If show option is set, dump opamrc and exit *)
+    if show_opamrc then
+      (OpamConsole.note "Display built-in configuration.\n";
+       OpamFile.InitConfig.write_to_channel stdout builtin_config ;
+       OpamStd.Sys.exit_because `Success);
+    (* Else continue init *)
     if compiler <> None && no_compiler then
       OpamConsole.error_and_exit `Bad_arguments
         "Options --bare and --compiler are incompatible";
@@ -235,8 +242,7 @@ let init =
         OpamConsole.note "Will configure from %sbuilt-in defaults." others;
         List.fold_left (fun acc f ->
             OpamFile.InitConfig.add acc (OpamFile.InitConfig.read f))
-          (OpamInitDefaults.init_config ())
-          config_files
+          builtin_config config_files
       with e ->
         OpamConsole.error
           "Error in configuration file, fix it, use '--no-opamrc', or check \
@@ -244,11 +250,6 @@ let init =
         OpamConsole.errmsg "%s\n" (Printexc.to_string e);
         OpamStd.Sys.exit_because `Configuration_error
     in
-    (* If show option is set, dump opamrc and exit *)
-    if show_opamrc then
-      (OpamFile.InitConfig.write_to_channel stdout init_config;
-       OpamStd.Sys.exit_because `Success);
-    (* Else continue init *)
     let repo =
       OpamStd.Option.map (fun url ->
         let repo_url = OpamUrl.parse ?backend:repo_kind url in
