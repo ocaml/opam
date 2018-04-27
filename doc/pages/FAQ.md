@@ -65,11 +65,15 @@ remove) are also run in a sandbox and guaranteed not to affect your system.
 #### 🐫  Why does opam require ``bwrap``?
 
 Since opam 2.0.0~rc2, opam uses `bwrap` on Linux to run package instructions in
-a sandbox. See the [bubblewrap page](https://github.com/projectatomic/bubblewrap)
-for details.
+a sandbox. This restricts their access to parts of the system (e.g., forbid
+access to operating system, user data, or network).  See the [bubblewrap
+page](https://github.com/projectatomic/bubblewrap) for details.
 
-These sandboxing instructions are specified in the built-in configuration, that
-you can display with `opam init --show-default-opamrc`:
+We use `bwrap` to prevent packages from writing outside their allotted
+filesystem space, use network. For example, build commands have restricted
+write access, restrained to their dedicated build directory and `/tmp`. These
+sandboxing instructions are specified in the built-in configuration, that you
+can display with `opam init --show-default-opamrc`:
 
 ```
 init-scripts: ["sandbox.sh" """ [...] """] {os = "linux"}
