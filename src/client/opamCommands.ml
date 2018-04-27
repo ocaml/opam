@@ -2283,17 +2283,22 @@ let pin ?(unpin_only=false) () =
       match OpamUrl.local_dir url with
       | Some d -> from_opam_files d
       | None ->
+        let pin_cache_dir = OpamRepositoryPath.pin_cache url in
+        (* We will use pin cache directory from this point, it will be created
+           by the download job. To be sure that it will be cleaned, add an
+           `at_exit` handler. *)
+        OpamStd.Sys.at_exit
+          (fun () -> OpamFilename.rmdir @@ OpamRepositoryPath.pin_cache_dir ());
         let open OpamProcess.Job.Op in
         OpamProcess.Job.run @@
-        OpamFilename.with_tmp_dir_job @@ fun dir ->
         OpamRepository.pull_tree
           ~cache_dir:(OpamRepositoryPath.download_cache
                         OpamStateConfig.(!r.root_dir))
-          basename dir [] [url] @@| function
+          basename pin_cache_dir [] [url] @@| function
         | Not_available u ->
           OpamConsole.error_and_exit `Sync_error
             "Could not retrieve %s" u
-        | Result _ | Up_to_date _ -> from_opam_files dir
+        | Result _ | Up_to_date _ -> from_opam_files pin_cache_dir
     in
     match found with
     | _::_ -> found

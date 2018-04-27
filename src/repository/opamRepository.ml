@@ -166,7 +166,26 @@ let pull_from_upstream
   in
   OpamProcess.Job.with_text text @@
   (if working_dir then B.sync_dirty destdir url
-   else B.pull_url ?cache_dir destdir cksum url)
+   else
+   let pin_cache_dir = OpamRepositoryPath.pin_cache url in
+   let url, pull =
+     if OpamFilename.exists_dir pin_cache_dir then
+       (log "Pin cache existing for %s : %s\n"
+          (OpamUrl.to_string url) @@ OpamFilename.Dir.to_string pin_cache_dir;
+        let rsync =
+          OpamUrl.parse ~backend:`rsync
+          @@ OpamFilename.Dir.to_string pin_cache_dir
+        in
+        let pull =
+          let module BR = (val url_backend rsync: OpamRepositoryBackend.S) in
+          BR.pull_url
+        in
+        rsync, pull
+       )
+     else url, B.pull_url
+   in
+   pull ?cache_dir destdir cksum url
+  )
   @@| function
   | (Result (Some file) | Up_to_date (Some file)) as ret ->
     if validate_and_add_to_cache label url cache_dir file checksums then
