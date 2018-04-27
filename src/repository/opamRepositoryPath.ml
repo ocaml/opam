@@ -15,6 +15,18 @@ let create root name = root / "repo" / OpamRepositoryName.to_string name
 
 let download_cache root = root / "download-cache"
 
+let pin_cache_dir =
+  let dir =
+    lazy (OpamFilename.Dir.of_string (OpamSystem.temp_basename "opam-pin-cache"))
+  in
+  fun () -> Lazy.force dir
+
+let pin_cache u =
+  pin_cache_dir () /
+  (OpamHash.contents @@
+   OpamHash.compute_from_string ~kind:`SHA512 @@
+   OpamUrl.to_string u)
+
 let repo repo_root = repo_root // "repo" |> OpamFile.make
 
 let packages_dir repo_root = repo_root / "packages"

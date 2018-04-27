@@ -20,6 +20,12 @@ val create: dirname -> repository_name -> dirname
     Warning, this is relative to the opam root, not a repository root. *)
 val download_cache: dirname -> dirname
 
+(** Pin global cache, located in temporary directory, cleaned at end of process *)
+val pin_cache_dir: unit -> dirname
+
+(** Pin cache for a given download url. *)
+val pin_cache: OpamUrl.t -> dirname
+
 (** Return the repo file *)
 val repo: dirname -> OpamFile.Repo.t OpamFile.t
 
