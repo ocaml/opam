@@ -31,7 +31,6 @@ let empty = {
 
 let split_url =
   let re =
-    let (@@) f x = f x in
     Re.(compile @@ whole_string @@ seq [
         (* Parse the scheme, which is either backend+protocol or just a protocol *)
         opt @@ seq [
