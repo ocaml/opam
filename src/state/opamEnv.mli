@@ -86,9 +86,15 @@ val update_user_setup:
   dirname -> ?dot_profile:filename -> shell -> unit
 
 (** Write the generic scripts in ~/.opam/opam-init needed to import state for
+    various shells. *)
+val write_init_shell_scripts:
+  dirname -> completion:bool -> eval_env:bool -> unit
+
+(** Write the generic scripts in ~/.opam/opam-init needed to import state for
     various shells, and custom scripts defined in the built-in configuration or
     `opamrc` file. The last argument is a list of (name, script content). *)
-val write_static_init_scripts: dirname -> completion:bool -> (string * string) list -> unit
+val write_static_init_scripts:
+  dirname -> completion:bool -> eval_env:bool -> (string * string) list -> unit
 
 (** Update the shell scripts containing the current switch configuration in
     ~/.opam/opam-init ; prints a warning and skips if a write lock on the global

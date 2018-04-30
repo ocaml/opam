@@ -669,7 +669,8 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) config =
         | Some flt -> if OpamFilter.eval_to_bool env flt then
             Some (nam,scr) else None) (OpamFile.Config.init_scripts config)
   in
-  OpamEnv.write_static_init_scripts root ~completion:true init_scripts;
+  OpamEnv.write_static_init_scripts root ~completion:true ~eval_env:false
+    init_scripts;
   let gt = OpamGlobalState.load `Lock_write in
   let rt = OpamRepositoryState.load `Lock_write gt in
   OpamConsole.header_msg "Updating repositories";
@@ -766,7 +767,8 @@ let init
         if not (OpamConsole.debug ()) && root_empty then
           OpamFilename.rmdir root)
   in
-  OpamEnv.write_static_init_scripts root ~completion:true custom_scripts;
+  OpamEnv.write_static_init_scripts root ~completion:true ~eval_env:false
+    custom_scripts;
   let _updated = match update_config with
     | `no  -> false
     | `ask -> OpamEnv.setup_interactive root ~dot_profile shell
