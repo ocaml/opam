@@ -308,7 +308,10 @@ let load_virtual ?repos_list gt rt =
     switch_lock = OpamSystem.lock_none;
     switch = OpamSwitch.unset;
     compiler_packages = OpamPackage.Set.empty;
-    switch_config = OpamFile.Switch_config.empty;
+    switch_config = {
+      OpamFile.Switch_config.empty
+      with OpamFile.Switch_config.repos = Some repos_list;
+    };
     installed = OpamPackage.Set.empty;
     installed_opams = OpamPackage.Map.empty;
     pinned = OpamPackage.Set.empty;
