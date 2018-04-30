@@ -4,7 +4,7 @@
 > interested in the more advanced [Tricks](Tricks.html) for specific use-cases
 > or advanced users.
 
-#### 🐫  What is opam for ?
+#### 🐫  What is opam for?
 
 Easily installing, upgrading and managing your OCaml compiler(s), tools and
 libraries. It's made of a tool, the
@@ -18,7 +18,7 @@ used for different systems using specific repositories (e.g. for the
 
 ---
 
-#### 🐫  How to get, install and upgrade opam ?
+#### 🐫  How to get, install and upgrade opam?
 
 See the [install guide](Install.html).
 
@@ -27,7 +27,7 @@ instructions.
 
 ---
 
-#### 🐫  Where is the manual ?
+#### 🐫  Where is the manual?
 
 opam has git-like, hierarchical
 [manpages](https://opam.ocaml.org/doc/2.0/man/opam.html). Try `opam --help` for
@@ -43,7 +43,7 @@ You may also want to browse the [library APIs](api/).
 
 ---
 
-#### 🐫  What changes does opam do to my filesystem ?
+#### 🐫  What changes does opam do to my filesystem?
 
 opam is designed to be run strictly as user (non-root), and apart for the
 explicit options provided during `opam init`, only writes within `~/.opam` (and
@@ -62,7 +62,40 @@ remove) are also run in a sandbox and guaranteed not to affect your system.
 
 ---
 
-#### 🐫  Why does ``opam init`` need to add stuff to my init scripts / why is ``eval $(opam env)`` needed ?
+#### 🐫  Why does opam require ``bwrap``?
+
+Since opam 2.0.0~rc2, opam uses `bwrap` on Linux to run package instructions in
+a sandbox. This restricts their access to parts of the system (e.g., forbid
+access to operating system, user data, or network).  See the [bubblewrap
+page](https://github.com/projectatomic/bubblewrap) for details.
+
+We use `bwrap` to prevent packages from writing outside their allotted
+filesystem space, use network. For example, build commands have restricted
+write access, restrained to their dedicated build directory and `/tmp`. These
+sandboxing instructions are specified in the built-in configuration, that you
+can display with `opam init --show-default-opamrc`:
+
+```
+init-scripts: ["sandbox.sh" """ [...] """] {os = "linux"}
+
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux"}
+```
+
+You can manually disable package build sandboxing and remove bwrap from
+the required dependencies (at your own risk). You can use the built-in
+configuration as a template to create or update an `opamrc` file: run `opam
+init --show-default-opamrc >~/.opamrc`, then edit that file and remove or
+modify the `init-scripts:` and `wrap-*:` fields as well as the `bwrap` line
+from the `required-tools:` field, and finally retry `opam init`.
+
+See also the [wrap entry](Manual.html#configfield-wrap-build-commands) section
+in the manual.
+
+---
+
+#### 🐫  Why does ``opam init`` need to add stuff to my init scripts / why is ``eval $(opam env)`` needed?
 
 This is not strictly needed, but by updating your `PATH` and a few specific
 environment variables, allows to:
@@ -84,7 +117,7 @@ conflict (and typically trigger "Inconsistent assumptions" errors in OCaml).
 
 ---
 
-#### 🐫  What is a "switch" ?
+#### 🐫  What is a "switch"?
 
 An OCaml installation and a set of installed packages within an opam
 installation. This can be used to keep different OCaml versions side-by-side, or
@@ -105,7 +138,7 @@ this case, and it is safe to just remove that subdirectory to clear the switch.
 
 ---
 
-#### 🐫  Can I work on different switches at the same time in different shells ?
+#### 🐫  Can I work on different switches at the same time in different shells?
 
 Yes. Use one of:
 
@@ -118,7 +151,7 @@ This only affects the environment.
 
 ---
 
-#### 🐫  Can I get a new switch with the same packages installed ?
+#### 🐫  Can I get a new switch with the same packages installed?
 
 Yes. Use:
 
@@ -136,7 +169,7 @@ associated `opam install DIR --locked` command that can restore them.
 
 ---
 
-#### 🐫  I installed a package by hand / used ``ocamlfind remove`` / fiddled with the installed packages and opam is out of sync. Help !
+#### 🐫  I installed a package by hand / used ``ocamlfind remove`` / fiddled with the installed packages and opam is out of sync. Help!
 
 Don't panic. opam assumes it's controlling what's below `~/.opam/<switch>`, but
 there are several ways you can recover:
@@ -158,7 +191,7 @@ there are several ways you can recover:
 
 ---
 
-#### 🐫  What are the minimum requirements ?
+#### 🐫  What are the minimum requirements?
 
 1GB of memory should be all you need. It was reported that you may run into
 problems with 512MB of RAM and no swap. Of course, compiling the packages may
@@ -205,7 +238,7 @@ if you found it. Thanks!
 
 ---
 
-#### 🐫  I have weird checksum errors: where do they come from ?
+#### 🐫  I have weird checksum errors: where do they come from?
 
 First of all, you should make sure your repositories are up-to-date:
 
@@ -222,7 +255,7 @@ As a last resort, you can bypass the checksum checks using `--no-checksums`.
 
 ---
 
-#### 🐫  opam is prompting me to install or upgrade packages that I am not interested in, or doesn't install the latest version by default. Why ? What can I do ?
+#### 🐫  opam is prompting me to install or upgrade packages that I am not interested in, or doesn't install the latest version by default. Why? What can I do?
 
 * You can be more explicit in your request (`opam upgrade PACKAGES`, `opam
   install 'PACKAGE>=VERSION' PACKAGE...`, etc.). The latest version may not be
@@ -232,7 +265,7 @@ As a last resort, you can bypass the checksum checks using `--no-checksums`.
 
 ---
 
-#### 🐫  When trying to install a new package, opam wants to remove or downgrade packages that I have installed. How to know why ?
+#### 🐫  When trying to install a new package, opam wants to remove or downgrade packages that I have installed. How to know why?
 
 There is likely a conflict between them or their dependencies and what you are
 requesting, here is how to find out. We'll suppose you were trying to install
@@ -266,7 +299,7 @@ mailing-list](http://lists.ocaml.org/listinfo/opam-devel).
 
 ---
 
-#### 🐫  How to link to libraries installed with opam ?
+#### 🐫  How to link to libraries installed with opam?
 
 The standard way of doing this is to use
 [ocamlfind](https://opam.ocaml.org/packages/ocamlfind), which is orthogonal to
@@ -277,11 +310,11 @@ Your libraries are installed to the directory returned by ``opam var lib``,
 which is by default `~/.opam/<switch>/lib`. Note that using `ocamlc`'s option
 `-I +dir` will make `dir` relative to `lib/ocaml`, and will only work for the
 libraries that ship with the compiler. Also, remember to add the dependency when
-you package your project !
+you package your project!
 
 ---
 
-#### 🐫  How does opam tell which version of a package is newer ?
+#### 🐫  How does opam tell which version of a package is newer?
 
 We use the basics of the [version
 ordering](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version)
@@ -300,7 +333,7 @@ Here is an example of an ordered sequence: `~~`, `~`, `~beta2`, `~beta10`, `0.1`
 
 ---
 
-#### 🐫  What does the `--jobs` option do ? It doesn't seem to enable parallel builds.
+#### 🐫  What does the `--jobs` option do? It doesn't seem to enable parallel builds.
 
 It does, but at the _package_ granularity: it will only be noticeable if you
 build independent packages in the same command. Each package has its own build
@@ -311,7 +344,7 @@ If you are a packager, you may use the `jobs` opam variable, e.g. `make
 
 ---
 
-#### 🐫  opam wants to do reinstallations after update. Can I skip them ?
+#### 🐫  opam wants to do reinstallations after update. Can I skip them?
 
 When opam detects meaningful changes in upstream packages, it marks them for
 reinstallation, to be sure you get the latest fixes — repository managers
