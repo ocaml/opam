@@ -278,7 +278,8 @@ let cycle_conflict ~version_map univ cycle =
 
 let arrow_concat sl =
   let arrow =
-    OpamConsole.utf8_symbol OpamConsole.Symbols.rightwards_arrow " -> "
+    Printf.sprintf " %s "
+      (OpamConsole.utf8_symbol OpamConsole.Symbols.rightwards_arrow "->")
   in
   String.concat (OpamConsole.colorise `yellow arrow) sl
 
@@ -332,7 +333,8 @@ let strings_of_reasons packages cudfnv2opam unav_reasons rs =
       in
       let str = Printf.sprintf "%s is in conflict with %s"
           (OpamFormula.to_string (Atom (nva.name, formula)))
-          (OpamFormula.short_string_of_atom (vpkg2atom cudfnv2opam jc))
+          (OpamFormula.to_string
+             (OpamFormula.of_atom_formula (Atom (vpkg2atom cudfnv2opam jc))))
       in
       str :: aux rs
     | Missing (p,missing) :: rs when is_dose_request p ->
@@ -448,11 +450,14 @@ let strings_of_chains packages cudfnv2opam unav_reasons reasons =
   let chains = make_chains packages cudfnv2opam reasons in
   let string_of_chain c =
     match List.rev c with
-    | (name, vform) :: _ ->
+    | (name, vform) :: r ->
       let all_versions = OpamPackage.versions_of_name packages name in
       let formula = OpamFormula.simplify_version_set all_versions vform in
-      arrow_concat (List.map (fun c -> OpamFormula.to_string (Atom c)) c)
-      ^ (match unav_reasons (name, formula) with "" -> "" | s -> "\n" ^ s)
+      arrow_concat
+        (List.rev_map (fun c -> OpamFormula.to_string (Atom c)) r @
+         [OpamConsole.colorise' [`red;`bold]
+            (OpamFormula.to_string (Atom (name, vform)))])
+      ^ (match unav_reasons (name, formula) with "" -> "" | s -> "\n  " ^ s)
     | [] -> ""
   in
   List.map string_of_chain chains

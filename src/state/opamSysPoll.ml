@@ -142,7 +142,7 @@ let os_family_lazy = lazy (
     >>+ os_distribution
   | Some ("freebsd" | "openbsd" | "netbsd" | "dragonfly") -> Some "bsd"
   | Some ("win32" | "cygwin") -> Some "windows"
-  | os -> os
+  | _ -> os_distribution ()
 )
 let os_family () = Lazy.force os_family_lazy
 

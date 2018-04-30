@@ -706,7 +706,7 @@ let unavailable_reason st ?(default="") (name, vformula) =
       "conflict with the base packages of this switch"
     else if OpamPackage.has_name st.compiler_packages name &&
             not OpamStateConfig.(!r.unlock_base) then
-      "base of this switch, can't be changed (use `--unlock-base' to force)"
+      "base of this switch (use `--unlock-base' to force)"
     else
       default
 

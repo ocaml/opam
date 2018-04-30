@@ -694,17 +694,19 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
       in
       OpamConsole.msg "\n";
       OpamConsole.header_msg "Error report";
-      print_actions (fun _ -> true) `yellow
-        (Printf.sprintf "The following actions were %s"
-           (OpamConsole.colorise `yellow "aborted"))
-        (PackageActionGraph.reduce (filter_graph remaining));
+      if OpamConsole.debug () || OpamConsole.verbose () then
+        print_actions (fun _ -> true) `yellow
+          (Printf.sprintf "The following actions were %s"
+             (OpamConsole.colorise `yellow "aborted"))
+          (PackageActionGraph.reduce (filter_graph remaining));
       print_actions (fun _ -> true) `red
         (Printf.sprintf "The following actions %s"
            (OpamConsole.colorise `red "failed"))
         failed;
       print_actions
         (function `Build _ -> false | _ -> true) `cyan
-        "The following changes have been performed"
+        ("The following changes have been performed"
+         ^ if remaining <> [] then " (the rest was aborted)" else "")
         ~empty:"No changes have been performed"
         successful;
       t, err
