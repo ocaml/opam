@@ -35,7 +35,7 @@ Except in explicit cases, <span class="opam">opam</span> only alters files withi
 organised as follows:
 - [`~/.opam/config`](#config): the global <span class="opam">opam</span> configuration file
 - `~/.opam/repo/`: contains the mirrors of the configured package repositories
-- [`~/.opam/repo/repos-config`](#reposconfig): lists the configured package repositories and their URLs
+- [`~/.opam/repo/repos-config`](#repos-config): lists the configured package repositories and their URLs
 - `~/.opam/repo/<repo>`: mirror of the given repository
 - `~/.opam/opam-init/`: contains <span class="opam">opam</span> configuration scripts for the outside world, e.g. shell environment initialisation
 - `~/.opam/download-cache/`: caches of downloaded files
@@ -138,16 +138,16 @@ Switches are laid out thusly:
   `doc`, `etc`...)
 - `<switch-prefix>/.opam-switch/`: holds all <span class="opam">opam</span> data regarding this switch
 - [`<switch-prefix>/.opam-switch/switch-config`: switch-specific
-  configuration](#switchconfig)
+  configuration](#switch-config)
 - [`<switch-prefix>/.opam-switch/switch-state`: stores the sets
-  of installed, base, pinned packages](#switchstate)
+  of installed, base, pinned packages](#switch-state)
 - `<switch-prefix>/.opam-switch/environment`: contains the environment variable
   settings for this switch
 - `<switch-prefix>/.opam-switch/reinstall`: list of packages marked for
   reinstallation (development packages where changes have been detected)
-- [`<switch-prefix>/.opam-switch/config/<pkgname>.config`](#ltpkgnamegtconfig):
+- [`<switch-prefix>/.opam-switch/config/<pkgname>.config`](#lt-pkgname-gt-config):
   installed package's, opam specific configuration
-- [`<switch-prefix>/.opam-switch/install/<pkgname>.install`](#ltpkgnamegtinstall):
+- [`<switch-prefix>/.opam-switch/install/<pkgname>.install`](#lt-pkgname-gt-install):
   `.install` files used to install the given package
 - `<switch-prefix>/.opam-switch/install/<pkgname>.changes`: file system changes
   done by the installation of the given package, as tracked by <span
@@ -751,8 +751,8 @@ versions of <span class="opam">opam</span> used [`descr`](#descr) and
 the preferred way is now to include their information into the `opam` file
 instead.
 
-[`<pkgname>.install`](#ltpkgnamegtinstall) and
-[`<pkgname>.config`](#ltpkgnamegtconfig), on the other hand, are metadata files
+[`<pkgname>.install`](#lt-pkgname-gt-install) and
+[`<pkgname>.config`](#lt-pkgname-gt-config), on the other hand, are metadata files
 used by opam but that are found in the package source directory, after it has
 been built.
 
@@ -919,7 +919,7 @@ files.
 
 - <a id="opamfield-depopts">
   `depopts: [ <pkgname> { <filtered-package-formula> } ... ]`</a>:
-  the package optional dependencies. This flag is similar to
+  the package optional dependencies. This field is similar to
   [`depends:`](#opamfield-depends) in format. It contains packages that will be
   _used_, if present, by the package being defined, either during build or
   runtime, but that are not _required_ for its installation. The implementation
@@ -945,7 +945,7 @@ files.
 
 - <a id="opamfield-conflict-class">`conflict-class: [ <pkgname> ... ]`</a>:
   an alternate, symmetric way of defining package conflicts. Conflict classes
-  defined by this flag have the same constraints as package names, but occupy a
+  defined by this field have the same constraints as package names, but occupy a
   different namespace. Any two packages having a common conflict class will be
   considered incompatible. This is useful to define sets of mutually conflicting
   packages.
@@ -1232,9 +1232,9 @@ source tree after its installation instructions have been run.
 ### Local configuration files
 
 These files are local to the opam root, and managed by <span class="opam">opam</span>. [`config`](#config)
-and [`switch-config`](#switchconfig) can be manually edited to set configuration
-options when <span class="opam">opam</span> isn't running. [`switch-state`](#switchstate) and
-[`repos-config`](#reposconfig) store internal state and are documented here, but
+and [`switch-config`](#switch-config) can be manually edited to set configuration
+options when <span class="opam">opam</span> isn't running. [`switch-state`](#switch-state) and
+[`repos-config`](#repos-config) store internal state and are documented here, but
 shouldn't be edited except by <span class="opam">opam</span>.
 
 #### config
@@ -1286,7 +1286,7 @@ for <span class="opam">opam</span>.
   hexadecimal. Proxies are tried in order, and the file is looked up from
   upstream if not found. They can also be configured
   [per-repository](#repofield-archive-mirrors). The command `opam admin cache`
-  generates a suitable cache in `./cache`, see the [Repositories](#repositories)
+  generates a suitable cache in `./cache`, see the [Repositories](#Repositories)
   section.
 - <a id="configfield-solver-criteria">`solver-criteria: <string>`</a>: can be
   used to tweak the solver criteria used for the resolution of operations. These
@@ -1296,7 +1296,7 @@ for <span class="opam">opam</span>.
   <a id="configfield-solver-fixup-criteria">`solver-fixup-criteria: `</a>:
   similar to [`solver-criteria`](#configfield-solver-criteria), but specific to
   some actions.
-- <a id="best-effort-prefix-criteria">`best-effort-prefix-criteria: `</a>, this
+- <a id="configfield-best-effort-prefix-criteria">`best-effort-prefix-criteria: `</a>, this
   is the string that must be prepended to the criteria when the `--best-effort`
   option is set, and is expected to maximise the `opam-query` property in the
   solution. For recent `aspcud`, this can be e.g. `+sum(solution,opam-query),` ;

@@ -47,7 +47,7 @@ use:
 build: ["dune" "build" "-p" name]
 ```
 
-See [below](The-file-format-in-more-detail) for more on the format.
+See [below](#The-file-format-in-more-detail) for more on the format.
 
 ## Testing
 
