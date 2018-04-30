@@ -39,6 +39,10 @@ val with_tmp_dir_job: (string -> 'a OpamProcess.job) -> 'a OpamProcess.job
     is reached *)
 val verbose_for_base_commands: unit -> bool
 
+(** Returns a directory name, in the temporary directory, composed by [prefix],
+    pid, and random number. *)
+val temp_basename: string -> string
+
 (** [copy_file src dst] copies [src] to [dst]. Remove [dst] before the copy
     if it is a link. *)
 val copy_file: string -> string -> unit
