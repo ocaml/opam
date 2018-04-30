@@ -25,6 +25,7 @@ type t = private {
   makecmd: string Lazy.t;
   ignore_constraints_on: name_set;
   unlock_base: bool;
+  noeval_env: bool;
 }
 
 type 'a options_fun =
@@ -39,6 +40,7 @@ type 'a options_fun =
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:name_set ->
   ?unlock_base:bool ->
+  ?noeval_env:bool ->
   'a
 
 include OpamStd.Config.Sig

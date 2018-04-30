@@ -659,9 +659,7 @@ let display_setup root ~dot_profile shell =
           not_set
         else ok in
       let eval_env =
-        try
-          if bool_of_string @@ OpamStd.Config.env_bool "NOEVALENV" then ok else not_set
-        with Not_found -> not_set
+        if OpamStateConfig.(!r.noeval_env) then ok else not_set
       in
       [ ("init-script"         , Printf.sprintf "%s" pretty_init_file);
         ("auto-completion"     , completion);
@@ -680,10 +678,7 @@ let check_and_print_env_warning st =
        (OpamFilename.of_string @@
         OpamStd.Sys.(guess_dot_profile @@ guess_shell_compat ()))) = `yes
   in
-  let opam_noeval_env =
-    try bool_of_string @@ OpamStd.Config.env_bool "NOEVALENV"
-    with Not_found -> false
-  in
+  let opam_noeval_env = OpamStateConfig.(!r.noeval_env) in
   if (OpamFile.Config.switch st.switch_global.config = Some st.switch ||
       OpamStateConfig.(!r.switch_from <> `Command_line)) &&
      (outdated_env && (dot_profile_not_configured || opam_noeval_env))
