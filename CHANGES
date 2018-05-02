@@ -2,6 +2,17 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+2.0.0~rc2
+* Fixes
+* Much faster CUDF universe loading
+* Much faster `opam env` and similar commands
+* Added `opam admin check` for integrity checks on package repositories
+* Added the ability to setup scripts on `opam init` from `.opamrc`
+* Setup wrappers to sandbox builds based on `bubblewrap` by default, on Linux
+* Windows support for many aspects including parallel processes, environment
+  variables setup, color console and utf8 (using specific C stubs)
+* Better detection of the running shell
+
 2.0.0~rc
 * Fixes
 * Support compiling on OCaml 4.06.0

@@ -190,7 +190,7 @@ let compute_updates ?(force_path=false) st =
   let man_path =
     let open OpamStd.Sys in
     match os () with
-    | OpenBSD | NetBSD | FreeBSD ->
+    | OpenBSD | NetBSD | FreeBSD | Darwin | DragonFly ->
       [] (* MANPATH is a global override on those, so disabled for now *)
     | _ ->
       ["MANPATH", EqColon,
