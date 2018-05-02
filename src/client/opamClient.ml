@@ -534,7 +534,7 @@ let update
   repo_changed || dev_changed,
   rt
 
-let init_checks ?(hard_fail_exn=true) config =
+let init_checks ?(hard_fail_exn=true) init_config =
   (* Check for the external dependencies *)
   let check_external_dep name =
     OpamSystem.resolve_command name <> None
@@ -595,14 +595,18 @@ let init_checks ?(hard_fail_exn=true) config =
                        missing);
                   true)
   in
-  let advised_deps = filter_tools (OpamFile.Config.recommended_tools config) in
+  let advised_deps =
+    filter_tools (OpamFile.InitConfig.recommended_tools init_config)
+  in
   let _ = check_tool
       (fun s -> OpamConsole.warning
           "Recommended dependencies -- most packages rely on these:";
         OpamConsole.errmsg "%s" s)
       advised_deps in
 
-  let required_deps = filter_tools (OpamFile.Config.required_tools config) in
+  let required_deps =
+    filter_tools (OpamFile.InitConfig.required_tools init_config)
+  in
   let hard_fail = check_tool
       (fun s -> OpamConsole.error
           "Missing dependencies -- \
@@ -613,50 +617,36 @@ let init_checks ?(hard_fail_exn=true) config =
   if hard_fail && hard_fail_exn then OpamStd.Sys.exit_because `Configuration_error
   else not (soft_fail || hard_fail)
 
-let update_with_init_config_without_scripts, update_with_init_config =
+let update_with_init_config ?(overwrite=false) config init_config =
   let module I = OpamFile.InitConfig in
   let module C = OpamFile.Config in
-  let setifnew overwrite getter setter v conf =
+  let setifnew getter setter v conf =
     if overwrite then setter v conf
     else if getter conf = getter C.empty then setter v conf
     else conf
   in
-  let write ?(overwrite=false) config init_config =
-    let setifnew g = setifnew overwrite g in
-    config |>
-    setifnew C.jobs C.with_jobs (match I.jobs init_config with
-        | Some j -> j
-        | None -> Lazy.force OpamStateConfig.(default.jobs)) |>
-    setifnew C.dl_tool C.with_dl_tool_opt (I.dl_tool init_config) |>
-    setifnew C.dl_jobs C.with_dl_jobs
-      (OpamStd.Option.default OpamStateConfig.(default.dl_jobs)
-         (I.dl_jobs init_config)) |>
-    setifnew C.criteria C.with_criteria (I.solver_criteria init_config) |>
-    setifnew C.solver C.with_solver_opt (I.solver init_config) |>
-    setifnew C.wrappers C.with_wrappers (I.wrappers init_config) |>
-    setifnew C.global_variables C.with_global_variables
-      (I.global_variables init_config) |>
-    setifnew C.eval_variables C.with_eval_variables
-      (I.eval_variables init_config) |>
-    setifnew C.default_compiler C.with_default_compiler
-      (I.default_compiler init_config)
-  in
-  let full ?(overwrite=false) config init_config =
-    let setifnew g = setifnew overwrite g in
-    config |>
-    setifnew C.recommended_tools C.with_recommended_tools
-      (I.recommended_tools init_config) |>
-    setifnew C.required_tools C.with_required_tools
-      (I.required_tools init_config) |>
-    setifnew C.init_scripts C.with_init_scripts
-      (I.init_scripts init_config)
-  in
-  write,full
+  config |>
+  setifnew C.jobs C.with_jobs (match I.jobs init_config with
+      | Some j -> j
+      | None -> Lazy.force OpamStateConfig.(default.jobs)) |>
+  setifnew C.dl_tool C.with_dl_tool_opt (I.dl_tool init_config) |>
+  setifnew C.dl_jobs C.with_dl_jobs
+    (OpamStd.Option.default OpamStateConfig.(default.dl_jobs)
+       (I.dl_jobs init_config)) |>
+  setifnew C.criteria C.with_criteria (I.solver_criteria init_config) |>
+  setifnew C.solver C.with_solver_opt (I.solver init_config) |>
+  setifnew C.wrappers C.with_wrappers (I.wrappers init_config) |>
+  setifnew C.global_variables C.with_global_variables
+    (I.global_variables init_config) |>
+  setifnew C.eval_variables C.with_eval_variables
+    (I.eval_variables init_config) |>
+  setifnew C.default_compiler C.with_default_compiler
+    (I.default_compiler init_config)
 
 let reinit ?(init_config=OpamInitDefaults.init_config()) config =
   let root = OpamStateConfig.(!r.root_dir) in
   let config = update_with_init_config config init_config in
-  let _all_ok = init_checks ~hard_fail_exn:false config in
+  let _all_ok = init_checks ~hard_fail_exn:false init_config in
   OpamFile.Config.write (OpamPath.config root) config;
   let init_scripts =
     let env v =
@@ -667,7 +657,7 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) config =
     OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
         | None -> Some (nam,scr)
         | Some flt -> if OpamFilter.eval_to_bool env flt then
-            Some (nam,scr) else None) (OpamFile.Config.init_scripts config)
+            Some (nam,scr) else None) (OpamFile.InitConfig.init_scripts init_config)
   in
   OpamEnv.write_static_init_scripts root ~completion:true ~eval_env:false
     init_scripts;
@@ -708,22 +698,15 @@ let init
           | Some r -> [r.repo_name, (r.repo_url, r.repo_trust)]
           | None -> OpamFile.InitConfig.repositories init_config
         in
-        let config_repo =
+        let config =
+          update_with_init_config OpamFile.Config.empty init_config |>
           OpamFile.Config.with_repositories (List.map fst repos)
         in
-        let w_config =
-          update_with_init_config_without_scripts OpamFile.Config.empty
-            init_config |> config_repo
-        in
-        OpamFile.Config.write config_f w_config;
+        OpamFile.Config.write config_f config;
 
-        let config =
-          update_with_init_config w_config init_config |>
-          config_repo
-        in
         let dontswitch =
           if bypass_checks then false else
-          let all_ok = init_checks config in
+          let all_ok = init_checks init_config in
           if not all_ok &&
              not (OpamConsole.confirm "Continue initialisation anyway ?")
           then OpamStd.Sys.exit_because `Configuration_error
@@ -735,7 +718,7 @@ let init
             OpamStd.Option.Op.(OpamStd.Option.of_Not_found (List.assoc vs)
                                  OpamSysPoll.variables >>= Lazy.force)
           in
-          let scripts = OpamFile.Config.init_scripts config in
+          let scripts = OpamFile.InitConfig.init_scripts init_config in
           OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
               | None -> Some (nam,scr)
               | Some flt -> if OpamFilter.eval_to_bool env flt then

@@ -698,13 +698,6 @@ let setup_interactive root ~dot_profile shell =
 
   OpamConsole.header_msg "Required setup - please read";
 
-  let eval_env =
-    OpamConsole.confirm ~default:false
-      "Additionally, a hook can be added to your shell to ensure that \
-       the opam environement remains in sync. Add a hook?"
-  in
-  if eval_env then write_init_shell_scripts root ~completion:true ~eval_env;
-
   OpamConsole.msg
     "\n\
     \  In normal operation, opam only alters files within ~/.opam.\n\
@@ -725,19 +718,29 @@ let setup_interactive root ~dot_profile shell =
     (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
     (OpamConsole.colorise `bold @@ source root ~shell (init_file shell))
     (OpamConsole.colorise `bold @@ "eval $(opam env)");
-  match
-    OpamConsole.read
-      "Do you want opam to modify %s? [N/y/f]\n\
-       (default is 'no', use 'f' to choose a different file)"
-      (OpamFilename.prettify dot_profile)
-  with
-  | Some ("y" | "Y" | "yes"  | "YES" ) -> update (Some dot_profile)
-  | Some ("f" | "F" | "file" | "FILE") ->
-    begin match OpamConsole.read "  Enter the name of the file to update:" with
-      | None   ->
-        OpamConsole.msg "Alright, assuming you changed your mind, \
-                         not performing any changes.\n";
-        false
-      | Some f -> update (Some (OpamFilename.of_string f))
-    end
-  | _ -> update None
+  let update =
+    match
+      OpamConsole.read
+        "Do you want opam to modify %s? [N/y/f]\n\
+         (default is 'no', use 'f' to choose a different file)"
+        (OpamFilename.prettify dot_profile)
+    with
+    | Some ("y" | "Y" | "yes"  | "YES" ) -> update (Some dot_profile)
+    | Some ("f" | "F" | "file" | "FILE") ->
+      begin match OpamConsole.read "  Enter the name of the file to update:" with
+        | None   ->
+          OpamConsole.msg "Alright, assuming you changed your mind, \
+                           not performing any changes.\n";
+          false
+        | Some f -> update (Some (OpamFilename.of_string f))
+      end
+    | _ -> update None
+  in
+  let eval_env =
+    OpamConsole.confirm ~default:false
+      "A hook can be added to opam's init script to ensure that the shell \
+       remains in sync with the opam environment when it is loaded. Add a hook?"
+  in
+  (* Ovewrite init-scripts with hook *)
+  if eval_env then write_init_shell_scripts root ~completion:true ~eval_env;
+  update

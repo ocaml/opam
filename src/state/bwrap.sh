@@ -1,11 +1,5 @@
 #!/bin/bash -ue
 
-# Configure with the following lines in ~/.opam/config:
-#
-#   wrap-build-commands:   ["%{hooks}%/bwrap.sh" "build"]
-#   wrap-install-commands: ["%{hooks}%/bwrap.sh" "install"]
-#   wrap-remove-commands:  ["%{hooks}%/bwrap.sh" "remove"]
-
 if ! command -v bwrap >/dev/null; then
     echo "The 'bwrap' command was not found. Install 'bubblewrap' on your system, or" >&2
     echo "disable sandboxing in $OPAMROOT/config at your own risk." >&2
