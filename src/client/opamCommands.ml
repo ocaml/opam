@@ -2263,7 +2263,7 @@ let pin ?(unpin_only=false) () =
     mk_flag ["dev-repo"] "Pin to the upstream package source for the latest \
                           development version"
   in
-  let guess_names url =
+  let guess_names url k =
     let from_opam_files dir =
       OpamStd.List.filter_map
         (fun (nameopt, f) -> match nameopt with
@@ -2279,31 +2279,41 @@ let pin ?(unpin_only=false) () =
           (OpamUrl.to_string url)
       | b::_ -> b
     in
-    let found =
+    let found, cleanup =
       match OpamUrl.local_dir url with
-      | Some d -> from_opam_files d
+      | Some d -> from_opam_files d, None
       | None ->
-        let open OpamProcess.Job.Op in
-        OpamProcess.Job.run @@
-        OpamFilename.with_tmp_dir_job @@ fun dir ->
-        OpamRepository.pull_tree
-          ~cache_dir:(OpamRepositoryPath.download_cache
-                        OpamStateConfig.(!r.root_dir))
-          basename dir [] [url] @@| function
-        | Not_available u ->
-          OpamConsole.error_and_exit `Sync_error
-            "Could not retrieve %s" u
-        | Result _ | Up_to_date _ -> from_opam_files dir
+        let pin_cache_dir = OpamRepositoryPath.pin_cache url in
+        let cleanup = fun () ->
+          OpamFilename.rmdir @@ OpamRepositoryPath.pin_cache_dir ()
+        in
+        try
+          let open OpamProcess.Job.Op in
+          OpamProcess.Job.run @@
+          OpamRepository.pull_tree
+            ~cache_dir:(OpamRepositoryPath.download_cache
+                          OpamStateConfig.(!r.root_dir))
+            basename pin_cache_dir [] [url] @@| function
+          | Not_available u ->
+            OpamConsole.error_and_exit `Sync_error
+              "Could not retrieve %s" u
+          | Result _ | Up_to_date _ -> from_opam_files pin_cache_dir, Some cleanup
+        with e -> OpamStd.Exn.finalise e cleanup
     in
-    match found with
-    | _::_ -> found
-    | [] ->
-      try [OpamPackage.Name.of_string basename] with
-      | Failure _ ->
-        OpamConsole.error_and_exit `Bad_arguments
-          "Could not infer a package name from %s, please specify it on the \
-           command-line, e.g. 'opam pin NAME TARGET'"
-          (OpamUrl.to_string url)
+    let finalise = OpamStd.Option.default (fun () -> ()) cleanup in
+    OpamStd.Exn.finally finalise @@ fun () ->
+    let names_found =
+      match found with
+      | _::_ -> found
+      | [] ->
+        try [OpamPackage.Name.of_string basename] with
+        | Failure _ ->
+          OpamConsole.error_and_exit `Bad_arguments
+            "Could not infer a package name from %s, please specify it on the \
+             command-line, e.g. 'opam pin NAME TARGET'"
+            (OpamUrl.to_string url)
+    in
+    k names_found
   in
   let pin_target kind target =
     let looks_like_version_re =
@@ -2407,7 +2417,7 @@ let pin ?(unpin_only=false) () =
          in
          `Error (true, msg)
        | `Source url ->
-         let names = guess_names url in
+         guess_names url @@ fun names ->
          let names = match names with
            | _::_::_ ->
              if OpamConsole.confirm

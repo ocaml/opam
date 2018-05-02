@@ -1146,6 +1146,10 @@ module Exn = struct
     f ();
     Printexc.raise_with_backtrace e bt
 
+  let finally f k =
+    match k () with
+    | r -> f (); r
+    | exception e -> finalise e f
 end
 
 

@@ -309,6 +309,11 @@ module Exn : sig
       preserving backtraces (when the OCaml version permits, e.g. >= 4.05.0) *)
   val finalise: exn -> (unit -> unit) -> 'a
 
+  (** Execute the given continuation, then run the finaliser before returning
+      the result. If an exception is raised, call [finalise] with the given
+      finaliser. *)
+  val finally: (unit -> unit) -> (unit -> 'a) -> 'a
+
 end
 
 (** {2 Manipulation and query of environment variables} *)
