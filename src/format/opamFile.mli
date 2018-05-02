@@ -131,9 +131,6 @@ module Config: sig
     arg list option -> t -> t
   val with_default_compiler:
     formula -> t -> t
-  val with_recommended_tools: (string list * string option * filter option) list -> t -> t
-  val with_required_tools: (string list * string option * filter option) list -> t -> t
-  val with_init_scripts: ((string * string) * filter option) list -> t -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> opam_version
@@ -174,9 +171,6 @@ module Config: sig
 
   val default_compiler: t -> formula
 
-  val recommended_tools: t -> (string list * string option * filter option) list
-  val required_tools: t -> (string list * string option * filter option) list
-  val init_scripts: t -> ((string * string) * filter option) list
 end
 
 (** Init config file [/etc/opamrc] *)

@@ -1041,9 +1041,6 @@ module ConfigSyntax = struct
     eval_variables : (variable * string list * string) list;
     validation_hook : arg list option;
     default_compiler : formula;
-    recommended_tools : (string list * string option * filter option) list;
-    required_tools : (string list * string option * filter option) list;
-    init_scripts : ((string * string) * filter option) list;
   }
 
   let opam_version t = t.opam_version
@@ -1067,10 +1064,6 @@ module ConfigSyntax = struct
 
   let validation_hook t = t.validation_hook
   let default_compiler t = t.default_compiler
-
-  let recommended_tools t = t.recommended_tools
-  let required_tools t = t.required_tools
-  let init_scripts t = t.init_scripts
 
   let with_opam_version opam_version t = { t with opam_version }
   let with_repositories repositories t = { t with repositories }
@@ -1098,10 +1091,6 @@ module ConfigSyntax = struct
   let with_validation_hook_opt validation_hook t = { t with validation_hook }
   let with_default_compiler default_compiler t = { t with default_compiler }
 
-  let with_recommended_tools recommended_tools t = {t with recommended_tools}
-  let with_required_tools required_tools t = {t with required_tools}
-  let with_init_scripts init_scripts t = {t with init_scripts}
-
   let empty = {
     opam_version = OpamVersion.current_nopatch;
     repositories = [];
@@ -1119,9 +1108,6 @@ module ConfigSyntax = struct
     eval_variables = [];
     validation_hook = None;
     default_compiler = OpamFormula.Empty;
-    recommended_tools = [];
-    required_tools = [];
-    init_scripts = [];
   }
 
   let fields =
@@ -1206,30 +1192,6 @@ module ConfigSyntax = struct
         Pp.V.pos_int;
       "system_ocaml-version", Pp.ppacc_ignore;
       "system-ocaml-version", Pp.ppacc_ignore;
-
-      (* system check & wrapper script fields *)
-      "recommended-tools", Pp.ppacc
-        with_recommended_tools recommended_tools
-        (Pp.V.map_list
-           (Pp.V.map_options_2
-              (Pp.V.map_list ~depth:1 Pp.V.string)
-              (Pp.opt @@ Pp.singleton -| Pp.V.string)
-              (Pp.opt Pp.V.filter)));
-      "required-tools", Pp.ppacc
-        with_required_tools required_tools
-        (Pp.V.map_list
-           (Pp.V.map_options_2
-              (Pp.V.map_list ~depth:1 Pp.V.string)
-              (Pp.opt @@ Pp.singleton -| Pp.V.string)
-              (Pp.opt Pp.V.filter)));
-      "init-scripts", Pp.ppacc
-        with_init_scripts init_scripts
-        (Pp.V.map_list ~depth:2
-           (Pp.V.map_option
-              (Pp.V.map_pair
-                 (Pp.V.string)
-                 (Pp.V.string_tr))
-              (Pp.opt Pp.V.filter)));
     ] @
     List.map
       (fun (fld, ppacc) -> fld, Pp.embed with_wrappers wrappers ppacc)
