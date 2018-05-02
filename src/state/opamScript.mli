@@ -15,3 +15,4 @@ val complete : string
 val complete_zsh : string
 val prompt : string
 val bwrap : string
+val sandbox_exec : string

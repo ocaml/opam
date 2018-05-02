@@ -25,6 +25,7 @@ add_mounts() {
 
 add_mounts ro /usr /bin /lib /lib32 /lib64 /etc /opt /nix/store /home
 
+# This case-switch should remain identical between the different sandbox implems
 COMMAND="$1"; shift
 case "$COMMAND" in
     build)
@@ -39,7 +40,7 @@ case "$COMMAND" in
     remove)
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
-        [ "X${PWD#$OPAM_SWITCH_PREFIX}" != "X${PWD}" ] && add_mounts rw "$PWD"
+        [ "X${PWD#$OPAM_SWITCH_PREFIX}/.opam-switch/" != "X${PWD}" ] && add_mounts rw "$PWD"
         ;;
     *)
         echo "bwrap.sh: unknown command $COMMAND, must be one of 'build', 'install' or 'remove'" >&2

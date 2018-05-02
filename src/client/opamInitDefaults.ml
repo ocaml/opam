@@ -32,8 +32,12 @@ let eval_variables = [
   "OCaml version present on your system independently of opam, if any";
 ]
 
-let linux_filter =
-  Some (FOp (FIdent ([], OpamVariable.of_string "os", None), `Eq, FString "linux"))
+let os_filter os =
+  FOp (FIdent ([], OpamVariable.of_string "os", None), `Eq, FString os)
+
+let linux_filter = os_filter "linux"
+let macos_filter = os_filter "macos"
+let sandbox_filter = FOr (linux_filter, macos_filter)
 
 let wrappers () =
   let cmd t = [
@@ -43,9 +47,9 @@ let wrappers () =
   let w = OpamFile.Wrappers.empty in
   { w with
     OpamFile.Wrappers.
-    wrap_build = [cmd "build", linux_filter];
-    wrap_install = [cmd "install", linux_filter];
-    wrap_remove = [cmd "remove", linux_filter];
+    wrap_build = [cmd "build", Some sandbox_filter];
+    wrap_install = [cmd "install", Some sandbox_filter];
+    wrap_remove = [cmd "remove", Some sandbox_filter];
   }
 
 let bwrap_cmd = "bwrap"
@@ -92,12 +96,14 @@ let required_tools () =
     ["patch"], None, None;
     ["tar"], None, None;
     ["unzip"], None, None;
-    [bwrap_cmd], Some (bwrap_string()), bwrap_filter;
+    [bwrap_cmd], Some (bwrap_string()), Some bwrap_filter;
+    ["sandbox-exec"], None, Some macos_filter;
   ]
 
-let init_scripts () =
-  [ (("sandbox.sh", OpamScript.bwrap), bwrap_filter);
-  ]
+let init_scripts () = [
+  ("sandbox.sh", OpamScript.bwrap), Some bwrap_filter;
+  ("sandbox.sh", OpamScript.sandbox_exec), Some macos_filter;
+]
 
 module I = OpamFile.InitConfig
 

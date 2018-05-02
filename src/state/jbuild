@@ -15,4 +15,5 @@
      ${path:complete.sh}
      ${path:complete.zsh}
      ${path:prompt.sh}
-     ${path:bwrap.sh})))
+     ${path:bwrap.sh}
+     ${path:sandbox_exec.sh})))
