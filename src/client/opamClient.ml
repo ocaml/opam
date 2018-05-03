@@ -434,8 +434,8 @@ let update
     else if all then all_repos
     else OpamSwitchState.repos_list st
   in
-  let packages =
-    if repos_only then OpamPackage.Set.empty else
+  let packages, ignore_packages =
+    if repos_only then OpamPackage.Set.empty, OpamPackage.Set.empty else
     let packages = st.installed ++ st.pinned in
     let packages =
       if names = [] then packages else
@@ -451,19 +451,25 @@ let update
       OpamPackage.Set.partition (OpamSwitchState.is_dev_package st) packages
     in
     let dev_packages = dev_packages -- (st.compiler_packages -- st.pinned) in
-    if names <> [] && not (OpamPackage.Set.is_empty nondev_packages) then
-      OpamConsole.warning
-        "The following are not development packages (no dynamic or version \
-         controlled upstream) and can't be updated individually: %s\nYou may \
-         want to update your repositories with just %s or to upgrade your \
-         package%s with %s %s"
-        (OpamPackage.Set.to_string nondev_packages)
-        (OpamConsole.colorise `bold "opam update")
-        (if OpamPackage.Set.is_singleton nondev_packages then "" else "s")
-        (OpamConsole.colorise `bold "opam upgrade")
-        (OpamConsole.colorise `bold
-           (OpamStd.List.concat_map " " OpamPackage.name_to_string
-              (OpamPackage.Set.elements nondev_packages)));
+    let nondev_packages =
+      if names = [] || OpamPackage.Set.is_empty nondev_packages then
+        OpamPackage.Set.empty
+      else
+        (OpamConsole.warning
+           "The following are not development packages (no dynamic or version \
+            controlled upstream) and can't be updated individually: %s\n\
+            You may want to update your repositories with just %s or to \
+            upgrade your package%s with %s %s"
+           (OpamStd.List.concat_map ", " ~last_sep:"and" OpamPackage.to_string
+              (OpamPackage.Set.elements nondev_packages))
+           (OpamConsole.colorise `bold "opam update")
+           (if OpamPackage.Set.is_singleton nondev_packages then "" else "s")
+           (OpamConsole.colorise `bold "opam upgrade")
+           (OpamConsole.colorise `bold
+              (OpamStd.List.concat_map " " OpamPackage.name_to_string
+                 (OpamPackage.Set.elements nondev_packages)));
+         nondev_packages)
+    in
     let dirty_dev_packages, dev_packages =
       if names <> [] then OpamPackage.Set.empty, dev_packages else
         OpamPackage.Set.partition
@@ -484,15 +490,16 @@ let update
                           not resetting unless explicitely selected"
           (OpamPackage.to_string nv))
       dirty_dev_packages;
-    dev_packages
+    dev_packages, nondev_packages
   in
 
   let remaining =
+    let ps = packages ++ ignore_packages in
     List.filter (fun n -> not (
         List.mem (OpamRepositoryName.of_string n) repo_names ||
-        (try OpamPackage.has_name packages (OpamPackage.Name.of_string n)
+        (try OpamPackage.has_name ps (OpamPackage.Name.of_string n)
          with Failure _ -> false) ||
-        (try OpamPackage.Set.mem (OpamPackage.of_string n) packages
+        (try OpamPackage.Set.mem (OpamPackage.of_string n) ps
          with Failure _ -> false)
       )) names
   in
@@ -530,7 +537,8 @@ let update
           (OpamPackage.Set.to_json updates);
       (success, not (OpamPackage.Set.is_empty updates)), st
   in
-  repo_update_failure = [] && dev_update_success && remaining = [],
+  repo_update_failure = [] && dev_update_success && remaining = [] &&
+  OpamPackage.Set.is_empty ignore_packages,
   repo_changed || dev_changed,
   rt
 

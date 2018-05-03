@@ -1415,7 +1415,7 @@ let update =
       ignore @@ OpamClient.upgrade st ~check ~all:true []
     else if check then
       OpamStd.Sys.exit_because (if changed then `Success else `False)
-    else
+    else if changed then
       OpamConsole.msg "Now run 'opam upgrade' to apply any package updates.\n";
     if not success then OpamStd.Sys.exit_because `Sync_error
   in
