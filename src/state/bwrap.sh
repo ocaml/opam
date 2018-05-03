@@ -43,7 +43,7 @@ case "$COMMAND" in
         [ "X${PWD#$OPAM_SWITCH_PREFIX}/.opam-switch/" != "X${PWD}" ] && add_mounts rw "$PWD"
         ;;
     *)
-        echo "bwrap.sh: unknown command $COMMAND, must be one of 'build', 'install' or 'remove'" >&2
+        echo "$0: unknown command $COMMAND, must be one of 'build', 'install' or 'remove'" >&2
         exit 2
 esac
 
