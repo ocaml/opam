@@ -69,12 +69,15 @@ module OpamList = struct
     | [] -> (match nil with Some s -> s | None -> left^right)
     | l ->
       let seplen = String.length sep in
-      let lastlen = String.length last_sep - seplen in
       let strs,len =
         List.fold_left (fun (strs,len) x ->
             let s = f x in s::strs, String.length s + seplen + len)
-          ([], String.length left + String.length right - seplen + lastlen)
+          ([], String.length left + String.length right - seplen)
           l
+      in
+      let len = match l with
+        | _::_::_ -> len + String.length last_sep - seplen
+        | _ -> len
       in
       let buf = Bytes.create len in
       let prepend i s =
