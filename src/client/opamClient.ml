@@ -680,8 +680,8 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) config =
   gt, rt
 
 let init
-    ?(init_config=OpamInitDefaults.init_config())
-    ?repo ?(bypass_checks=false) shell dot_profile update_config =
+    ~init_config
+    ?repo ?(bypass_checks=false) ?update_config shell dot_profile =
   log "INIT %a"
     (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
   let root = OpamStateConfig.(!r.root_dir) in
@@ -761,9 +761,9 @@ let init
   OpamEnv.write_static_init_scripts root ~completion:true ~eval_env:false
     custom_scripts;
   let _updated = match update_config with
-    | `no  -> false
-    | `ask -> OpamEnv.setup_interactive root ~dot_profile shell
-    | `yes -> OpamEnv.update_user_setup root ~dot_profile shell; true
+    | Some false  -> false
+    | None -> OpamEnv.setup_interactive root ~dot_profile shell
+    | Some true -> OpamEnv.update_user_setup root ~dot_profile shell; true
   in
   gt, rt, default_compiler
 

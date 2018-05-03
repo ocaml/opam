@@ -163,20 +163,19 @@ let init =
   let repo_url =
     let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
     Arg.(value & pos ~rev:true 0 (some string) None & doc) in
-  let no_setup   =
-    mk_flag ["n";"no-setup"]
-      "Do not update the global and user configuration options to setup opam."
-  in
-  let auto_setup =
-    mk_flag ["a";"auto-setup"]
-      "Automatically setup all the global and user configuration options for \
-       opam."
+  let update_config =
+    Arg.(value & vflag None [
+        Some true, info ["a";"auto-setup"] ~doc:
+          "Automatically setup the user shell configuration for opam.";
+        Some false, info ["n";"no-setup"] ~doc:
+          "Do not update the user shell configuration to setup opam.";
+      ])
   in
   let config_file =
     mk_opt_all ["config"] "FILE"
       "Use the given init config file. If repeated, latest has the highest \
        priority ($(b,i.e.) each field gets its value from where it was defined \
-       latest). Specifying a URL pointing to a config file instead is \
+       last). Specifying a URL pointing to a config file instead is \
        allowed."
       OpamArg.url
   in
@@ -194,17 +193,24 @@ let init =
       "Skip checks on required or recommended tools, and assume everything is \
        fine"
   in
+  let no_sandboxing =
+    mk_flag ["disable-sandboxing"]
+      "Use a default configuration with sandboxing disabled (note that this \
+       may be overriden by `opamrc' if $(b,--no-opamrc) is not specified or \
+       $(b,--config) is used). Use this at your own risk!"
+  in
   let init global_options
       build_options repo_kind repo_name repo_url
-      no_setup auto_setup shell dot_profile_o
+      update_config no_sandboxing shell dot_profile_o
       compiler no_compiler config_file no_config_file show_opamrc bypass_checks =
     apply_global_options global_options;
     apply_build_options build_options;
-    let builtin_config = OpamInitDefaults.init_config () in
+    let builtin_config =
+      OpamInitDefaults.init_config ~sandboxing:(not no_sandboxing) ()
+    in
     (* If show option is set, dump opamrc and exit *)
     if show_opamrc then
-      (OpamConsole.note "Display built-in configuration.\n";
-       OpamFile.InitConfig.write_to_channel stdout builtin_config ;
+      (OpamFile.InitConfig.write_to_channel stdout builtin_config ;
        OpamStd.Sys.exit_because `Success);
     (* Else continue init *)
     if compiler <> None && no_compiler then
@@ -260,15 +266,11 @@ let init =
         { repo_root; repo_name; repo_url; repo_trust = None })
         repo_url
     in
-    let update_config =
-      if no_setup then `no
-      else if auto_setup then `yes
-      else `ask in
     let dot_profile = init_dot_profile shell dot_profile_o in
     let gt, rt, default_compiler =
       OpamClient.init
-        ~init_config ?repo ~bypass_checks
-        shell dot_profile update_config
+        ~init_config ?repo ~bypass_checks ?update_config
+        shell dot_profile
     in
     if not no_compiler &&
        OpamFile.Config.installed_switches gt.config = [] then
@@ -310,7 +312,8 @@ let init =
   in
   Term.(const init
         $global_options $build_options $repo_kind_flag $repo_name $repo_url
-        $no_setup $auto_setup $shell_opt $dot_profile_flag $compiler $no_compiler
+        $update_config $no_sandboxing $shell_opt $dot_profile_flag
+        $compiler $no_compiler
         $config_file $no_config_file $show_default_opamrc $bypass_checks),
   term_info "init" ~doc ~man
 
