@@ -39,18 +39,20 @@ let linux_filter = os_filter "linux"
 let macos_filter = os_filter "macos"
 let sandbox_filter = FOr (linux_filter, macos_filter)
 
-let wrappers () =
+let wrappers ~sandboxing () =
   let cmd t = [
     CString "%{hooks}%/sandbox.sh", None;
     CString t, None;
   ] in
   let w = OpamFile.Wrappers.empty in
-  { w with
-    OpamFile.Wrappers.
-    wrap_build = [cmd "build", Some sandbox_filter];
-    wrap_install = [cmd "install", Some sandbox_filter];
-    wrap_remove = [cmd "remove", Some sandbox_filter];
-  }
+  if sandboxing then
+    { w with
+      OpamFile.Wrappers.
+      wrap_build = [cmd "build", Some sandbox_filter];
+      wrap_install = [cmd "install", Some sandbox_filter];
+      wrap_remove = [cmd "remove", Some sandbox_filter];
+    }
+  else w
 
 let bwrap_cmd = "bwrap"
 let bwrap_filter = linux_filter
@@ -87,7 +89,7 @@ let recommended_tools () =
     ["cc"], None, None;
   ]
 
-let required_tools () =
+let required_tools ~sandboxing () =
   [
     dl_tools(),
     Some "A download tool is required, check env variables OPAMCURL or OPAMFETCH",
@@ -96,9 +98,11 @@ let required_tools () =
     ["patch"], None, None;
     ["tar"], None, None;
     ["unzip"], None, None;
+  ] @
+  if sandboxing then [
     [bwrap_cmd], Some (bwrap_string()), Some bwrap_filter;
     ["sandbox-exec"], None, Some macos_filter;
-  ]
+  ] else []
 
 let init_scripts () = [
   ("sandbox.sh", OpamScript.bwrap), Some bwrap_filter;
@@ -109,14 +113,14 @@ module I = OpamFile.InitConfig
 
 let (@|) g f = OpamStd.Op.(g @* f) ()
 
-let init_config () =
+let init_config ?(sandboxing=true) () =
   I.empty |>
   I.with_repositories
     [OpamRepositoryName.of_string "default", (repository_url, None)] |>
   I.with_default_compiler default_compiler |>
   I.with_eval_variables eval_variables |>
-  I.with_wrappers @| wrappers |>
+  I.with_wrappers @| wrappers ~sandboxing |>
   I.with_recommended_tools @| recommended_tools |>
-  I.with_required_tools @| required_tools |>
+  I.with_required_tools @| required_tools ~sandboxing |>
   I.with_init_scripts @| init_scripts |>
   I.with_dl_tool @| dl_tool

@@ -23,4 +23,4 @@ val eval_variables: (OpamVariable.t * string list * string) list
 
 (** Default initial configuration file for use by [opam init] if nothing is
     supplied. *)
-val init_config: unit -> OpamFile.InitConfig.t
+val init_config: ?sandboxing:bool -> unit -> OpamFile.InitConfig.t

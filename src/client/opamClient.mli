@@ -17,10 +17,11 @@ open OpamStateTypes
 
 (** Initialize the client to a consistent state. *)
 val init:
-  ?init_config:OpamFile.InitConfig.t ->
+  init_config:OpamFile.InitConfig.t ->
   ?repo:repository ->
   ?bypass_checks:bool ->
-  shell -> filename -> [`ask|`yes|`no] ->
+  ?update_config:bool ->
+  shell -> filename ->
   rw global_state * unlocked repos_state * formula
 
 (** Re-runs the extra tools checks, updates the configuration from [init_config]
