@@ -44,10 +44,18 @@ let wrapper_conf_script =
   \     exit 1)\n\
   \  else\n\
   \  let oc = open_out \"%{_:name}%.config\" in\n\
-  \  let ocaml = Sys.executable_name in\n\
-  \  let ocamlc = ocaml^\"c\" in\n\
+  \  let exe = \".exe\" in\n\
+  \  let (ocaml, suffix) =\n\
+  \    let s = Sys.executable_name in\n\
+  \    if Filename.check_suffix s exe then\n\
+  \      (Filename.chop_suffix s exe, exe)\n\
+  \    else\n\
+  \      (s, \"\")\n\
+  \  in\n\
+  \  let ocamlc = ocaml^\"c\"^suffix in\n\
   \  let libdir =\n\
   \    let ic = Unix.open_process_in (ocamlc^\" -where\") in\n\
+  \    set_binary_mode_in ic false;\n\
   \    let r = input_line ic in\n\
   \    if Unix.close_process_in ic <> Unix.WEXITED 0 then \n\
   \      failwith \"Bad return from 'ocamlc -where'\";\n\
@@ -65,9 +73,9 @@ let wrapper_conf_script =
   "\\\"\";\n\
   \  p \"variables {\";\n\
   \  p \"  native: %%b\"\n\
-  \    (Sys.file_exists (ocaml^\"opt\"));\n\
+  \    (Sys.file_exists (ocaml^\"opt\"^suffix));\n\
   \  p \"  native-tools: %%b\"\n\
-  \    (Sys.file_exists (ocamlc^\".opt\"));\n\
+  \    (Sys.file_exists (ocamlc^\".opt\"^suffix));\n\
   \  p \"  native-dynlink: %%b\"\n\
   \    (Sys.file_exists (Filename.concat libdir \"dynlink.cmxa\"));\n\
   \  p \"  stubsdir: %%S\"\n\
@@ -82,7 +90,15 @@ let wrapper_conf_script =
 
 let system_conf_script =
   "let () =\n\
-  \  let ocamlc = Sys.executable_name ^ \"c\" in\n\
+  \  let exe = \".exe\" in\n\
+  \  let ocamlc =\n\
+  \    let (base, suffix) =\n\
+  \      let s = Sys.executable_name in\n\
+  \      if Filename.check_suffix s exe then\n\
+  \        (Filename.chop_suffix s exe, exe)\n\
+  \      else\n\
+  \        (s, \"\") in\n\
+  \    base ^ \"c\" ^ suffix in\n\
   \  if Sys.ocaml_version <> \"%{_:version}%\" then\n\
   \    (Printf.eprintf\n\
   \       \"ERROR: The compiler found at %%s has version %%s,\\n\\\n\
