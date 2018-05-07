@@ -386,11 +386,14 @@ module Sys : sig
   (** Append .exe (only if missing) to executable filenames on Windows *)
   val executable_name : string -> string
 
+  (** The different families of shells we know about *)
+  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
+
   (** Guess the shell compat-mode *)
-  val guess_shell_compat: unit -> [`csh|`zsh|`sh|`bash|`fish]
+  val guess_shell_compat: unit -> shell
 
   (** Guess the location of .profile *)
-  val guess_dot_profile: [`csh|`zsh|`sh|`bash|`fish] -> string
+  val guess_dot_profile: shell -> string
 
   (** The separator character used in the PATH variable (varies depending on
       OS) *)

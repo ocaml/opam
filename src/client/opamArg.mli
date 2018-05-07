@@ -36,7 +36,7 @@ val print_short_flag: bool Term.t
 val installed_roots_flag: bool Term.t
 
 (** --shell *)
-val shell_opt: shell Term.t
+val shell_opt: shell option Term.t
 
 (** --dot-profile *)
 val dot_profile_flag: filename option Term.t

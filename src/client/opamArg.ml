@@ -766,17 +766,19 @@ let installed_roots_flag =
 
 let shell_opt =
   let enum = [
-      "bash",`bash;
-      "sh",`sh;
-      "csh",`csh;
-      "zsh",`zsh;
-      "fish",`fish;
+      "bash",SH_bash;
+      "sh",SH_sh;
+      "csh",SH_csh;
+      "zsh",SH_zsh;
+      "fish",SH_fish;
     ] in
   mk_opt ["shell"] "SHELL"
     (Printf.sprintf
        "Sets the configuration mode for opam environment appropriate for \
-        $(docv). One of %s." (Arg.doc_alts_enum enum))
-    (Arg.enum enum) (OpamStd.Sys.guess_shell_compat ())
+        $(docv). One of %s. Guessed from the parent processes and the \\$SHELL \
+        variable by default."
+       (Arg.doc_alts_enum enum))
+    (Arg.some (Arg.enum enum)) None
 
 let dot_profile_flag =
   mk_opt ["dot-profile"]

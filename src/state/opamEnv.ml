@@ -353,9 +353,9 @@ let eval_string gt ?(set_opamswitch=false) switch =
   in
   let setswitch = if set_opamswitch then " --set-switch" else "" in
   match OpamStd.Sys.guess_shell_compat () with
-  | `fish ->
+  | SH_fish ->
     Printf.sprintf "eval (opam env%s%s%s)" root switch setswitch
-  | `csh ->
+  | SH_csh ->
     Printf.sprintf "eval `opam env%s%s%s`" root switch setswitch
   | _ ->
     Printf.sprintf "eval $(opam env%s%s%s)" root switch setswitch
@@ -364,47 +364,42 @@ let eval_string gt ?(set_opamswitch=false) switch =
 
 (* -- Shell and init scripts handling -- *)
 
-let complete_sh    = "complete.sh"
-let complete_zsh   = "complete.zsh"
-let variables_sh   = "variables.sh"
-let variables_csh  = "variables.csh"
-let variables_fish = "variables.fish"
-let init_sh        = "init.sh"
-let init_zsh       = "init.zsh"
-let init_csh       = "init.csh"
-let init_fish      = "init.fish"
-let opam_env_sh    =
-  "_opam_env_hook() {\n\
-  \    local previous_exit_status=$?;\n\
-  \    eval \"$(opam env --shell=bash)\";\n\
-  \    return $previous_exit_status;\n\
-  \  };\n\
-  \  if ! [[ \"$PROMPT_COMMAND\" =~ _opam_env_hook ]]; then\n\
-  \    PROMPT_COMMAND=\"_opam_env_hook;$PROMPT_COMMAND\";\n\
-  \  fi\n\
-  "
-let opam_env_zsh   =
-  "_opam_env_hook() {\n\
-  \    eval \"$(opam env --shell=zsh)\";\n\
-  \  }\n\
-  \  typeset -ag precmd_functions;\n\
-  \  if [[ -z ${precmd_functions[(r)_opam_env_hook]} ]]; then\n\
-  \    precmd_functions+=_opam_env_hook;\n\
-  \  fi\n\
-  "
-let opam_env_fish  =
-  "function __opam_env_export_eval --on-event fish_prompt;\n\
-  \    eval (opam env --shell=fish);\n\
-  \  end\n\
-  "
-let opam_env_csh   = "alias precmd 'eval `opam env --shell=csh`'\n"
+(** The shells for which we generate init scripts (bash and sh are the same
+    entry) *)
+let shells_list = [ SH_sh; SH_zsh; SH_csh; SH_fish ]
+
+let complete_file = function
+  | SH_sh -> Some "complete.sh"
+  | SH_zsh -> Some "complete.zsh"
+  | _ -> None
+
+let env_hook_file = function
+  | SH_sh | SH_bash -> Some "env_hook.sh"
+  | SH_zsh -> Some "env_hook.zsh"
+  | SH_csh -> Some "env_hook.csh"
+  | SH_fish -> Some "env_hook.fish"
+
+let variables_file = function
+  | SH_sh | SH_bash | SH_zsh -> "variables.sh"
+  | SH_csh -> "variables.csh"
+  | SH_fish -> "variables.fish"
 
 let init_file = function
-  | `sh   -> init_sh
-  | `csh  -> init_csh
-  | `zsh  -> init_zsh
-  | `bash -> init_sh
-  | `fish -> init_fish
+  | SH_sh | SH_bash -> "init.sh"
+  | SH_zsh -> "init.zsh"
+  | SH_csh -> "init.csh"
+  | SH_fish -> "init.fish"
+
+let complete_script = function
+  | SH_bash -> Some OpamScript.complete
+  | SH_zsh -> Some OpamScript.complete_zsh
+  | _ -> None
+
+let env_hook_script_base = function
+  | SH_sh | SH_bash -> Some OpamScript.env_hook
+  | SH_zsh -> Some OpamScript.env_hook_zsh
+  | SH_csh -> Some OpamScript.env_hook_csh
+  | SH_fish -> Some OpamScript.env_hook_fish
 
 let export_in_shell shell =
   let make_comment comment_opt =
@@ -419,7 +414,7 @@ let export_in_shell shell =
   let fish (k,v,comment) =
     (* Fish converts some colon-separated vars to arrays, which have to be
        treated differently. MANPATH is handled automatically, so better not to
-       set it at all when not already defined*)
+       set it at all when not already defined *)
     let to_arr_string v =
       OpamStd.List.concat_map " "
         (fun v ->
@@ -441,55 +436,57 @@ let export_in_shell shell =
         (make_comment comment) k v
   in
   match shell with
-  | `zsh | `sh  -> sh
-  | `fish -> fish
-  | `csh -> csh
+  | SH_zsh | SH_bash | SH_sh -> sh
+  | SH_fish -> fish
+  | SH_csh -> csh
 
-let source root ~shell f =
+let env_hook_script shell =
+  OpamStd.Option.map (fun script ->
+      export_in_shell shell ("OPAMNOENVNOTICE", "true", None)
+      ^ script)
+    (env_hook_script_base shell)
+
+let source root shell f =
   let file f = OpamFilename.to_string (OpamPath.init root // f) in
   match shell with
-  | `csh ->
+  | SH_csh ->
     Printf.sprintf "source %s >& /dev/null || true\n" (file f)
-  | `fish ->
+  | SH_fish ->
     Printf.sprintf "source %s > /dev/null 2> /dev/null; or true\n" (file f)
-  | _ ->
+  | SH_sh | SH_bash | SH_zsh ->
     Printf.sprintf "test -r %s && . %s > /dev/null 2> /dev/null || true\n"
       (file f) (file f)
 
-let get_shell_content root ~shell ~eval_env fvar fcomplete =
-  let ielse else_opt = match else_opt with  None -> "" | Some e -> Printf.sprintf "else\n  %s" e in
-  let if_csh t e  = Printf.sprintf "if ( $?prompt ) then\n  %s%sendif\n" t @@ ielse e in
-  let if_fish t e = Printf.sprintf "if isatty\n  %s%send\n" t @@ ielse e in
-  let if_sh t e   = Printf.sprintf "if [ -t 0 ]; then\n  %s%sfi\n" t @@ ielse e in
-  let if_st, opam_env = match shell with
-    | `csh -> if_csh, opam_env_csh
-    | `fish -> if_fish, opam_env_fish
-    | `zsh -> if_sh, opam_env_zsh
-    | `sh -> if_sh, opam_env_sh
+let if_interactive_script shell t e =
+  let ielse else_opt = match else_opt with
+    |  None -> ""
+    | Some e -> Printf.sprintf "else\n  %s" e
   in
-  let variables = source root ~shell fvar in
-  let complete = OpamStd.Option.map (source root ~shell) fcomplete in
-  if eval_env then
-    let thenn =
-      match complete with
-      | None -> opam_env
-      | Some cplt -> Printf.sprintf "%s\n  %s" opam_env cplt
-    in
-    if_st thenn (Some variables)
-  else
-    Printf.sprintf "%s\n%s"
-      (export_in_shell shell ("OPAMNOEVALENV", string_of_bool @@ not eval_env,
-                              Some "Disable opam environment sync"))
-      (match complete with
-       | None -> variables
-       | Some cplt -> Printf.sprintf "%s\n%s" variables @@ if_sh cplt None)
+  match shell with
+  | SH_sh | SH_zsh | SH_bash ->
+    Printf.sprintf "if [ -t 0 ]; then\n  %s%sfi\n" t @@ ielse e
+  | SH_csh ->
+    Printf.sprintf "if ( $?prompt ) then\n  %s%sendif\n" t @@ ielse e
+  | SH_fish ->
+    Printf.sprintf "if isatty\n  %s%send\n" t @@ ielse e
+
+let init_script root shell =
+  let interactive =
+    List.map (source root shell) @@
+    OpamStd.List.filter_some [complete_file shell; env_hook_file shell]
+  in
+  String.concat "\n" @@
+  (if interactive <> [] then
+     [if_interactive_script shell (String.concat "\n  " interactive) None]
+   else []) @
+  [source root shell (variables_file shell)]
 
 let string_of_update st shell updates =
   let fenv = OpamPackageVar.resolve st in
   let aux (ident, symbol, string, comment) =
     let string =
       OpamFilter.expand_string ~default:(fun _ -> "") fenv string |>
-      OpamStd.Env.escape_single_quotes ~using_backslashes:(shell = `fish)
+      OpamStd.Env.escape_single_quotes ~using_backslashes:(shell = SH_fish)
     in
     let key, value =
       ident, match symbol with
@@ -502,16 +499,6 @@ let string_of_update st shell updates =
     export_in_shell shell (key, value, comment) in
   OpamStd.List.concat_map "" aux updates
 
-let init_script root ~completion ~shell ~eval_env
-    (variables_sh, complete_sh) =
-  let shell_content =
-    get_shell_content root ~shell ~eval_env variables_sh
-      (if completion then complete_sh else None)
-  in
-  let buf = Buffer.create 128 in
-  Printf.bprintf buf "%s\n" shell_content;
-  Buffer.contents buf
-
 let write_script dir (name, body) =
   let file = dir // name in
   try OpamFilename.write file body
@@ -519,25 +506,34 @@ let write_script dir (name, body) =
     OpamStd.Exn.fatal e;
     OpamConsole.error "Could not write %s" (OpamFilename.to_string file)
 
-let write_init_shell_scripts root ~completion ~eval_env =
+let write_init_shell_scripts root =
   let scripts =
-    List.map (fun (shell, init, scripts) ->
-        init, init_script root ~shell ~completion ~eval_env scripts) [
-      `sh, init_sh, (variables_sh, Some complete_sh);
-      `zsh, init_zsh, (variables_sh, Some complete_zsh);
-      `csh, init_csh, (variables_csh, None);
-      `fish, init_fish, (variables_fish, None);
-    ] @ [
-      complete_sh, OpamScript.complete;
-      complete_zsh, OpamScript.complete_zsh;
-    ]
+    List.map (fun shell -> init_file shell, init_script root shell) shells_list
   in
   List.iter (write_script (OpamPath.init root)) scripts
 
-let write_static_init_scripts root ~completion ~eval_env custom =
-  write_init_shell_scripts root ~completion ~eval_env;
-  (* Complete with init_scripts (from config or opamrc) to generate,
-     mainly sandboxes *)
+let write_static_init_scripts root ?completion ?env_hook () =
+  write_init_shell_scripts root;
+  let update_scripts filef scriptf enable =
+    let scripts =
+      OpamStd.List.filter_map (fun shell ->
+          match filef shell, scriptf shell with
+          | Some f, Some s -> Some (f, s)
+          | _ -> None)
+        shells_list
+    in
+    match enable with
+    | Some true ->
+      List.iter (write_script (OpamPath.init root)) scripts
+    | Some false ->
+      List.iter (fun (f,_) -> OpamFilename.remove (OpamPath.init root // f))
+        scripts
+    | None -> ()
+  in
+  update_scripts complete_file complete_script completion;
+  update_scripts env_hook_file env_hook_script env_hook
+
+let write_custom_init_scripts root custom =
   List.iter (fun (name, script) ->
       write_script (OpamPath.hooks_dir root) (name, script);
       OpamFilename.chmod (OpamPath.hooks_dir root // name) 0o777
@@ -549,34 +545,19 @@ let write_dynamic_init_scripts st =
     OpamFilename.with_flock_upgrade `Lock_write ~dontblock:true
       st.switch_global.global_lock
     @@ fun _ ->
-    List.iter (write_script (OpamPath.init st.switch_global.root)) [
-      variables_sh, string_of_update st `sh updates;
-      variables_csh, string_of_update st `csh updates;
-      variables_fish, string_of_update st `fish updates;
-    ]
+    List.iter
+      (fun shell ->
+         write_script (OpamPath.init st.switch_global.root)
+           (variables_file shell, string_of_update st shell updates))
+      [SH_sh; SH_csh; SH_fish]
   with OpamSystem.Locked ->
     OpamConsole.warning
       "Global shell init scripts not installed (could not acquire lock)"
 
 let clear_dynamic_init_scripts gt =
-  List.iter (fun f -> OpamFilename.remove (OpamPath.init gt.root // f)) [
-    variables_sh;
-    variables_csh;
-    variables_fish;
-  ]
-
-let status_of_init_file root init_sh =
-  let init_sh = OpamPath.init root // init_sh in
-  if OpamFilename.exists init_sh then (
-    let init = OpamFilename.read init_sh in
-    if OpamFilename.exists init_sh then
-      let complete_sh = OpamStd.String.contains ~sub:complete_sh init in
-      let complete_zsh = OpamStd.String.contains ~sub:complete_zsh init in
-      Some (complete_sh, complete_zsh)
-    else
-      None
-  ) else
-    None
+  List.iter (fun shell ->
+      OpamFilename.remove (OpamPath.init gt.root // variables_file shell))
+    [SH_sh; SH_csh; SH_fish]
 
 let dot_profile_needs_update root dot_profile =
   if not (OpamFilename.exists dot_profile) then `yes else
@@ -599,7 +580,7 @@ let dot_profile_needs_update root dot_profile =
 let update_dot_profile root dot_profile shell =
   let pretty_dot_profile = OpamFilename.prettify dot_profile in
   let bash_src () =
-    if shell = `bash || shell = `sh then
+    if shell = SH_bash || shell = SH_sh then
       OpamConsole.note "Make sure that %s is well %s in your ~/.bashrc.\n"
         pretty_dot_profile
         (OpamConsole.colorise `underline "sourced")
@@ -624,7 +605,7 @@ let update_dot_profile root dot_profile shell =
         "%s\n\n\
          # opam configuration\n\
          %s"
-        (OpamStd.String.strip body) (source root ~shell init_file) in
+        (OpamStd.String.strip body) (source root shell init_file) in
     OpamFilename.write dot_profile body
 
 
@@ -634,113 +615,80 @@ let update_user_setup root ?dot_profile shell =
     OpamStd.Option.iter (fun f -> update_dot_profile root f shell) dot_profile
   )
 
-let display_setup root ~dot_profile shell =
-  let print (k,v) = OpamConsole.msg "  %-25s - %s\n" k v in
-  let not_set = "not set" in
-  let ok      = "string is already present so file unchanged" in
-  let error   = "error" in
-  let user_setup =
-    let dot_profile_status =
-      match dot_profile_needs_update root dot_profile with
-      | `no        -> ok
-      | `yes       -> not_set
-      | `otherroot -> error in
-    [ (OpamFilename.prettify dot_profile, dot_profile_status); ]
-  in
-  let init_file = init_file shell in
-  let pretty_init_file = OpamFilename.prettify (OpamPath.init root // init_file) in
-  let global_setup =
-    match status_of_init_file root init_file with
-    | None -> [pretty_init_file, not_set ]
-    | Some(complete_sh, complete_zsh) ->
-      let completion =
-        if not complete_sh
-        && not complete_zsh then
-          not_set
-        else ok in
-      let eval_env =
-        if OpamStateConfig.(!r.noeval_env) then ok else not_set
-      in
-      [ ("init-script"         , Printf.sprintf "%s" pretty_init_file);
-        ("auto-completion"     , completion);
-        ("opam env evalutation", eval_env);
-      ]
-  in
-  OpamConsole.msg "User configuration:\n";
-  List.iter print user_setup;
-  OpamConsole.msg "Global configuration:\n";
-  List.iter print global_setup
-
 let check_and_print_env_warning st =
-  let outdated_env = not (is_up_to_date st) in
-  let dot_profile_not_configured =
-    (dot_profile_needs_update OpamStateConfig.(!r.root_dir)
-       (OpamFilename.of_string @@
-        OpamStd.Sys.(guess_dot_profile @@ guess_shell_compat ()))) = `yes
-  in
-  let opam_noeval_env = OpamStateConfig.(!r.noeval_env) in
-  if (OpamFile.Config.switch st.switch_global.config = Some st.switch ||
-      OpamStateConfig.(!r.switch_from <> `Command_line)) &&
-     (outdated_env && (dot_profile_not_configured || opam_noeval_env))
+  if not OpamStateConfig.(!r.no_env_notice) &&
+     not (is_up_to_date st) &&
+     (OpamFile.Config.switch st.switch_global.config = Some st.switch ||
+      OpamStateConfig.(!r.switch_from <> `Command_line))
   then
     OpamConsole.formatted_msg
       "# Run %s to update the current shell environment\n"
       (OpamConsole.colorise `bold (eval_string st.switch_global
                                      (Some st.switch)))
 
-let setup_interactive root ~dot_profile shell =
-  let update dot_profile =
-    OpamConsole.msg "\n";
-    update_user_setup root ?dot_profile shell;
-    dot_profile <> None in
+let setup
+    root ~interactive ?dot_profile ?update_config ?env_hook ?completion
+    shell =
+  let update_dot_profile =
+    match update_config, dot_profile, interactive with
+    | Some false, _, _ -> None
+    | _, None, _ -> invalid_arg "OpamEnv.setup"
+    | Some true, Some dot_profile, _ -> Some dot_profile
+    | None, _, false -> None
+    | None, Some dot_profile, true ->
+      OpamConsole.msg "\n";
 
+      OpamConsole.header_msg "Required setup - please read";
+
+      OpamConsole.msg
+        "\n\
+        \  In normal operation, opam only alters files within ~/.opam.\n\
+         \n\
+        \  However, to best integrate with your system, some environment variables\n\
+        \  should be set. If you allow it to, this initialisation step will update\n\
+        \  your %s configuration by adding the following line to %s:\n\
+         \n\
+        \    %s\
+         \n\
+        \  Otherwise, every time you want to access your opam installation, you will\n\
+        \  need to run:\n\
+         \n\
+        \    %s\n\
+         \n\
+        \  You can always re-run this setup with 'opam init' later.\n\n"
+        (OpamConsole.colorise `bold @@ string_of_shell shell)
+        (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
+        (OpamConsole.colorise `bold @@ source root shell (init_file shell))
+        (OpamConsole.colorise `bold @@ "eval $(opam env)");
+      match
+        OpamConsole.read
+          "Do you want opam to modify %s? [N/y/f]\n\
+           (default is 'no', use 'f' to choose a different file)"
+          (OpamFilename.prettify dot_profile)
+      with
+      | Some ("y" | "Y" | "yes"  | "YES" ) -> Some dot_profile
+      | Some ("f" | "F" | "file" | "FILE") ->
+        begin
+          match OpamConsole.read "  Enter the name of the file to update:"
+          with
+          | None   ->
+            OpamConsole.msg "Alright, assuming you changed your mind, not \
+                             performing any changes.\n";
+            None
+          | Some f -> Some (OpamFilename.of_string f)
+        end
+      | _ -> None
+  in
+  let env_hook = match env_hook, interactive with
+    | Some b, _ -> Some b
+    | None, false -> None
+    | None, true ->
+      Some
+        (OpamConsole.confirm ~default:false
+           "A hook can be added to opam's init scripts to ensure that the \
+            shell remains in sync with the opam environment when they are \
+            loaded. Set that up?")
+  in
   OpamConsole.msg "\n";
-
-  OpamConsole.header_msg "Required setup - please read";
-
-  OpamConsole.msg
-    "\n\
-    \  In normal operation, opam only alters files within ~/.opam.\n\
-     \n\
-    \  However, to best integrate with your system, some environment variables\n\
-    \  should be set. If you allow it to, this initialisation step will update\n\
-    \  your %s configuration by adding the following line to %s:\n\
-     \n\
-    \    %s\
-     \n\
-    \  Otherwise, every time you want to access your opam installation, you will\n\
-    \  need to run:\n\
-     \n\
-    \    %s\n\
-     \n\
-    \  You can always re-run this setup with 'opam init' later.\n\n"
-    (OpamConsole.colorise `bold @@ string_of_shell shell)
-    (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
-    (OpamConsole.colorise `bold @@ source root ~shell (init_file shell))
-    (OpamConsole.colorise `bold @@ "eval $(opam env)");
-  let update =
-    match
-      OpamConsole.read
-        "Do you want opam to modify %s? [N/y/f]\n\
-         (default is 'no', use 'f' to choose a different file)"
-        (OpamFilename.prettify dot_profile)
-    with
-    | Some ("y" | "Y" | "yes"  | "YES" ) -> update (Some dot_profile)
-    | Some ("f" | "F" | "file" | "FILE") ->
-      begin match OpamConsole.read "  Enter the name of the file to update:" with
-        | None   ->
-          OpamConsole.msg "Alright, assuming you changed your mind, \
-                           not performing any changes.\n";
-          false
-        | Some f -> update (Some (OpamFilename.of_string f))
-      end
-    | _ -> update None
-  in
-  let eval_env =
-    OpamConsole.confirm ~default:false
-      "A hook can be added to opam's init script to ensure that the shell \
-       remains in sync with the opam environment when it is loaded. Add a hook?"
-  in
-  (* Ovewrite init-scripts with hook *)
-  if eval_env then write_init_shell_scripts root ~completion:true ~eval_env;
-  update
+  update_user_setup root ?dot_profile:update_dot_profile shell;
+  write_static_init_scripts root ?completion ?env_hook ()

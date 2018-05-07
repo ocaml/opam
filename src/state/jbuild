@@ -10,10 +10,6 @@
    (wrapped false)))
 
 (rule
-  (with-stdout-to opamScript.ml
-   (run ocaml ${path:../../shell/crunch.ml}
-     ${path:complete.sh}
-     ${path:complete.zsh}
-     ${path:prompt.sh}
-     ${path:bwrap.sh}
-     ${path:sandbox_exec.sh})))
+  ((targets (opamScript.ml))
+   (deps (../../shell/crunch.ml (glob_files shellscripts/*.*sh)))
+   (action (with-stdout-to ${@} (run ocaml ${^})))))

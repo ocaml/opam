@@ -728,14 +728,16 @@ module OpamSys = struct
     ) in
     fun () -> Lazy.force os
 
+  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
+
   let shell_of_string = function
     | "tcsh"
     | "bsd-csh"
-    | "csh"  -> Some `csh
-    | "zsh"  -> Some `zsh
-    | "bash" -> Some `bash
-    | "fish" -> Some `fish
-    | "sh"   -> Some `sh
+    | "csh"  -> Some SH_csh
+    | "zsh"  -> Some SH_zsh
+    | "bash" -> Some SH_bash
+    | "fish" -> Some SH_fish
+    | "sh"   -> Some SH_sh
     | _      -> None
 
   let executable_name =
@@ -788,17 +790,17 @@ module OpamSys = struct
       | some ->
           some
     in
-    Option.default `sh shell
+    Option.default SH_sh shell
 
   let guess_dot_profile shell =
     let home f =
       try Filename.concat (home ()) f
       with Not_found -> f in
     match shell with
-    | `fish ->
+    | SH_fish ->
       List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"]
-    | `zsh  -> home ".zshrc"
-    | `bash ->
+    | SH_zsh  -> home ".zshrc"
+    | SH_bash ->
       (try
          List.find Sys.file_exists [
            (* Bash looks up these 3 files in order and only loads the first,
@@ -815,11 +817,11 @@ module OpamSys = struct
        with Not_found ->
          (* iff none of the above exist, creating this should be safe *)
          home ".bash_profile")
-    | `csh ->
+    | SH_csh ->
       let cshrc = home ".cshrc" in
       let tcshrc = home ".tcshrc" in
       if Sys.file_exists cshrc then cshrc else tcshrc
-    | _     -> home ".profile"
+    | SH_sh -> home ".profile"
 
 
   let registered_at_exit = ref []

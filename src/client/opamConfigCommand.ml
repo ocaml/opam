@@ -324,24 +324,6 @@ let variable gt v =
             "Variable %s not found"
             (OpamVariable.Full.to_string v)
 
-let setup gt ?dot_profile ~completion ~eval_env ~shell
-    ~user ~global =
-  log "config-setup";
-  if user then
-    OpamEnv.update_user_setup gt.root ?dot_profile shell;
-  if global then (
-    OpamEnv.write_init_shell_scripts gt.root ~completion ~eval_env;
-    match OpamFile.Config.switch gt.config with
-    | Some sw ->
-      OpamSwitchState.with_ `Lock_none gt ~switch:sw @@ fun st ->
-      OpamEnv.write_dynamic_init_scripts st
-    | None -> ()
-  )
-
-let setup_list shell dot_profile =
-  log "config-setup-list";
-  OpamEnv.display_setup OpamStateConfig.(!r.root_dir) ~dot_profile shell
-
 let exec gt ?set_opamroot ?set_opamswitch ~inplace_path command =
   log "config-exec command=%a" (slog (String.concat " ")) command;
   OpamSwitchState.with_ `Lock_none gt @@ fun st ->

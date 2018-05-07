@@ -73,13 +73,15 @@ val full_with_path:
 
 (** {2 Shell and initialisation support} *)
 
-(** Details the process to the user, and interactively update the global and
-    user configurations. Returns [true] if the update was confirmed and
-    successful *)
-val setup_interactive: dirname -> dot_profile:filename -> shell -> bool
+(** Sets the opam configuration in the user shell, after detailing the process
+    and asking the user if either [update_config] or [shell_hook] are unset *)
+val setup:
+  dirname -> interactive:bool -> ?dot_profile:filename ->
+  ?update_config:bool -> ?env_hook:bool -> ?completion:bool ->
+  shell -> unit
 
-(** Display the global and user configuration for OPAM. *)
-val display_setup: dirname -> dot_profile:filename -> shell -> unit
+(* (\** Display the global and user configuration for OPAM. *\)
+ * val display_setup: dirname -> dot_profile:filename -> shell -> unit *)
 
 (** Update the user configuration in $HOME for good opam integration. *)
 val update_user_setup:
@@ -87,14 +89,18 @@ val update_user_setup:
 
 (** Write the generic scripts in ~/.opam/opam-init needed to import state for
     various shells. *)
-val write_init_shell_scripts:
-  dirname -> completion:bool -> eval_env:bool -> unit
+val write_init_shell_scripts: dirname -> unit
 
 (** Write the generic scripts in ~/.opam/opam-init needed to import state for
-    various shells, and custom scripts defined in the built-in configuration or
-    `opamrc` file. The last argument is a list of (name, script content). *)
+    various shells. If specified, completion and env_hook files can also be
+    written or removed (the default is to keep them as they are) *)
 val write_static_init_scripts:
-  dirname -> completion:bool -> eval_env:bool -> (string * string) list -> unit
+  dirname -> ?completion:bool -> ?env_hook:bool -> unit -> unit
+
+(** Write into [OpamPath.hooks_dir] the given custom scripts (listed as
+    (filename, content)), normally provided by opamrc ([OpamFile.InitConfig]) *)
+val write_custom_init_scripts:
+  dirname -> (string * string) list -> unit
 
 (** Update the shell scripts containing the current switch configuration in
     ~/.opam/opam-init ; prints a warning and skips if a write lock on the global

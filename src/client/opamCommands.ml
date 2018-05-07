@@ -114,30 +114,70 @@ let apply_global_options (options,self_upgrade) =
 
 let self_upgrade_status global_options = snd global_options
 
-let init_dot_profile shell dot_profile =
-  match dot_profile with
-  | Some n -> n
-  | None   -> OpamFilename.of_string (OpamStd.Sys.guess_dot_profile shell)
-
 type command = unit Term.t * Term.info
 
+let get_init_config ~no_sandboxing ~no_default_config_file ~add_config_file =
+  let builtin_config =
+    OpamInitDefaults.init_config ~sandboxing:(not no_sandboxing) ()
+  in
+  let config_files =
+    (if no_default_config_file then []
+     else List.filter OpamFile.exists (OpamPath.init_config_files ()))
+    @ List.map (fun url ->
+        match OpamUrl.local_file url with
+        | Some f -> OpamFile.make f
+        | None ->
+          let f = OpamFilename.of_string (OpamSystem.temp_file "conf") in
+          OpamProcess.Job.run (OpamDownload.download_as ~overwrite:false url f);
+          let hash = OpamHash.compute ~kind:`SHA256 (OpamFilename.to_string f) in
+          if OpamConsole.confirm
+              "Using configuration file from %s. \
+               Please verify the following SHA256:\n    %s\n\
+               Is this correct?"
+              (OpamUrl.to_string url) (OpamHash.contents hash)
+          then OpamFile.make f
+          else OpamStd.Sys.exit_because `Aborted
+      ) add_config_file
+  in
+  try
+    let others =
+      match config_files with
+      | [] -> ""
+      | [file] -> OpamFile.to_string file ^ " and then from "
+      | _ ->
+        (OpamStd.List.concat_map ~nil:"" ~right:", and finally from " ", then "
+           OpamFile.to_string (List.rev config_files))
+    in
+    OpamConsole.note "Will configure from %sbuilt-in defaults." others;
+    List.fold_left (fun acc f ->
+        OpamFile.InitConfig.add acc (OpamFile.InitConfig.read f))
+      builtin_config config_files
+  with e ->
+    OpamConsole.error
+      "Error in configuration file, fix it, use '--no-opamrc', or check \
+       your '--config FILE' arguments:";
+    OpamConsole.errmsg "%s\n" (Printexc.to_string e);
+    OpamStd.Sys.exit_because `Configuration_error
+
 (* INIT *)
-let init_doc = "Initialize opam state."
+let init_doc = "Initialize opam state, or set init options."
 let init =
   let doc = init_doc in
   let man = [
     `S "DESCRIPTION";
+    `P "Initialise the opam state, or update opam init options";
     `P "The $(b,init) command initialises a local \"opam root\" (by default, \
         $(i,~/.opam/)) that holds opam's data and packages. This is a \
-        necessary step for normal operation of opam.";
-    `P "Additionally, it prompts the user with the option to add a \
-        configuration hook in their shell init files. The initial software \
+        necessary step for normal operation of opam. The initial software \
         repositories are fetched, and an initial 'switch' can also be \
-        installed, according to the configuration and options.";
+        installed, according to the configuration and options. These can be \
+        afterwards configured using $(b,opam switch) and $(b,opam \
+        repository).";
     `P "The initial repository and defaults can be set through a \
         configuration file found at $(i,~/.opamrc) or $(i,/etc/opamrc).";
-    `P "For further customisation once opam has been initialised, see \
-        $(b,opam switch) and $(b,opam repository).";
+    `P "Additionally, this command allows to customise some aspects of opam's \
+        shell integration, when run initially (avoiding the interactive \
+        dialog), but also at any later time.";
     `S "ARGUMENTS";
     `S "OPTIONS";
     `S "CONFIGURATION FILE";
@@ -148,7 +188,8 @@ let init =
     `S OpamArg.build_option_section;
   ] in
   let compiler =
-    mk_opt ["c";"compiler"] "PACKAGE" "Set the compiler to install"
+    mk_opt ["c";"compiler"] "PACKAGE"
+      "Set the compiler to install (when creating an initial switch)"
       Arg.(some string) None
   in
   let no_compiler =
@@ -156,19 +197,57 @@ let init =
       "Initialise the opam state, but don't setup any compiler switch yet."
   in
   let repo_name =
-    let doc = Arg.info ~docv:"NAME" ~doc:"Name of the repository." [] in
+    let doc =
+      Arg.info [] ~docv:"NAME" ~doc:
+        "Name of the initial repository, when creating a new opam root."
+    in
     Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default
          & doc)
   in
   let repo_url =
-    let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
-    Arg.(value & pos ~rev:true 0 (some string) None & doc) in
+    let doc =
+      Arg.info [] ~docv:"ADDRESS" ~doc:
+        "Address of the initial package repository, when creating a new opam \
+         root."
+    in
+    Arg.(value & pos ~rev:true 0 (some string) None & doc)
+  in
+  let interactive =
+    Arg.(value & vflag None [
+        Some false, info ["a";"auto-setup"] ~doc:
+          "Automatically do a full setup, including adding a line to your \
+           shell init files.";
+        Some true, info ["i";"interactive"] ~doc:
+          "Run the setup interactively (this is the default for an initial \
+           run, or when no more specific options are specified";
+      ])
+  in
   let update_config =
     Arg.(value & vflag None [
-        Some true, info ["a";"auto-setup"] ~doc:
-          "Automatically setup the user shell configuration for opam.";
+        Some true, info ["shell-setup"] ~doc:
+          "Automatically setup the user shell configuration for opam, e.g. \
+           adding a line to the `~/.profile' file.";
         Some false, info ["n";"no-setup"] ~doc:
           "Do not update the user shell configuration to setup opam.";
+      ])
+  in
+  let setup_completion =
+    Arg.(value & vflag None [
+        Some true, info ["enable-completion"] ~doc:
+          "Setup shell completion in opam init scripts, for supported \
+           shells.";
+        Some false, info ["disable-completion"] ~doc:
+          "Disable shell completion in opam init scripts.";
+      ])
+  in
+  let env_hook =
+    Arg.(value & vflag None [
+        Some true, info ["enable-shell-hook"] ~doc:
+          "Setup opam init scripts to register a shell hook that will \
+           automatically keep the shell environment up-to-date at every \
+           prompt.";
+        Some false, info ["disable-shell-hook"] ~doc:
+          "Disable registration of a shell hook in opam init scripts.";
       ])
   in
   let config_file =
@@ -184,6 +263,11 @@ let init =
       "Don't read `/etc/opamrc' or `~/.opamrc': use the default settings and \
        the files specified through $(b,--config) only"
   in
+  let reinit =
+    mk_flag ["reinit"]
+      "Re-run the initial checks and setup, according to opamrc, even if this \
+       is not a new opam root"
+  in
   let show_default_opamrc =
     mk_flag ["show-default-opamrc"]
       "Print the built-in default configuration to stdout and exit"
@@ -197,124 +281,129 @@ let init =
     mk_flag ["disable-sandboxing"]
       "Use a default configuration with sandboxing disabled (note that this \
        may be overriden by `opamrc' if $(b,--no-opamrc) is not specified or \
-       $(b,--config) is used). Use this at your own risk!"
+       $(b,--config) is used). Use this at your own risk, without sandboxing \
+       it is possible for a broken package script to delete all your files."
   in
   let init global_options
       build_options repo_kind repo_name repo_url
-      update_config no_sandboxing shell dot_profile_o
-      compiler no_compiler config_file no_config_file show_opamrc bypass_checks =
+      interactive update_config completion env_hook no_sandboxing shell
+      dot_profile_o compiler no_compiler config_file no_config_file reinit
+      show_opamrc bypass_checks =
     apply_global_options global_options;
     apply_build_options build_options;
-    let builtin_config =
-      OpamInitDefaults.init_config ~sandboxing:(not no_sandboxing) ()
-    in
     (* If show option is set, dump opamrc and exit *)
     if show_opamrc then
-      (OpamFile.InitConfig.write_to_channel stdout builtin_config ;
+      (OpamFile.InitConfig.write_to_channel stdout @@
+         OpamInitDefaults.init_config ~sandboxing:(not no_sandboxing) ();
        OpamStd.Sys.exit_because `Success);
     (* Else continue init *)
     if compiler <> None && no_compiler then
       OpamConsole.error_and_exit `Bad_arguments
         "Options --bare and --compiler are incompatible";
-    let config_files =
-      (if no_config_file then []
-       else List.filter OpamFile.exists (OpamPath.init_config_files ()))
-      @ List.map (fun url ->
-          match OpamUrl.local_file url with
-          | Some f -> OpamFile.make f
-          | None ->
-            let f = OpamFilename.of_string (OpamSystem.temp_file "conf") in
-            OpamProcess.Job.run (OpamDownload.download_as ~overwrite:false url f);
-            let hash = OpamHash.compute ~kind:`SHA256 (OpamFilename.to_string f) in
-            if OpamConsole.confirm
-                "Using configuration file from %s. \
-                 Please verify the following SHA256:\n    %s\n\
-                 Is this correct?"
-                (OpamUrl.to_string url) (OpamHash.contents hash)
-            then OpamFile.make f
-            else OpamStd.Sys.exit_because `Aborted
-        ) config_file
+
+    let root = OpamStateConfig.(!r.root_dir) in
+    let config_f = OpamPath.config root in
+    let already_init = OpamFile.exists config_f in
+    let interactive, update_config, completion, env_hook =
+      match interactive with
+      | Some false ->
+        OpamStd.Option.Op.(
+          false,
+          update_config ++ Some true,
+          completion ++ Some true,
+          env_hook ++ Some true
+        )
+      | None ->
+        (not already_init ||
+         update_config = None && completion = None && env_hook = None),
+        update_config, completion, env_hook
+      | Some true -> true, update_config, completion, env_hook
     in
-    let init_config =
-      try
-        let others =
-          match config_files with
-          | [] -> ""
-          | [file] -> OpamFile.to_string file ^ " and then from "
-          | _ ->
-              (OpamStd.List.concat_map ~nil:"" ~right:", and finally from " ", then "
-               OpamFile.to_string (List.rev config_files))
+    let shell = match shell with
+      | Some s -> s
+      | None -> OpamStd.Sys.guess_shell_compat ()
+    in
+    let dot_profile = match dot_profile_o with
+      | Some n -> n
+      | None ->
+        OpamFilename.of_string (OpamStd.Sys.guess_dot_profile shell)
+    in
+    if already_init then
+      if reinit then
+        let init_config =
+          get_init_config ~no_sandboxing
+            ~no_default_config_file:no_config_file ~add_config_file:config_file
         in
-        OpamConsole.note "Will configure from %sbuilt-in defaults." others;
-        List.fold_left (fun acc f ->
-            OpamFile.InitConfig.add acc (OpamFile.InitConfig.read f))
-          builtin_config config_files
-      with e ->
-        OpamConsole.error
-          "Error in configuration file, fix it, use '--no-opamrc', or check \
-           your '--config FILE' arguments:";
-        OpamConsole.errmsg "%s\n" (Printexc.to_string e);
-        OpamStd.Sys.exit_because `Configuration_error
+        OpamClient.reinit ~init_config ~interactive ~dot_profile
+          ?update_config ?env_hook ?completion
+          (OpamFile.Config.safe_read config_f) shell
+      else
+        OpamEnv.setup root
+          ~interactive ~dot_profile ?update_config ?env_hook ?completion shell
+    else
+    let init_config =
+      get_init_config ~no_sandboxing
+        ~no_default_config_file:no_config_file ~add_config_file:config_file
     in
     let repo =
       OpamStd.Option.map (fun url ->
-        let repo_url = OpamUrl.parse ?backend:repo_kind url in
-        let repo_root =
-          OpamRepositoryPath.create (OpamStateConfig.(!r.root_dir))
-            repo_name
-        in
-        { repo_root; repo_name; repo_url; repo_trust = None })
+          let repo_url = OpamUrl.parse ?backend:repo_kind url in
+          let repo_root =
+            OpamRepositoryPath.create (OpamStateConfig.(!r.root_dir))
+              repo_name
+          in
+          { repo_root; repo_name; repo_url; repo_trust = None })
         repo_url
     in
-    let dot_profile = init_dot_profile shell dot_profile_o in
     let gt, rt, default_compiler =
       OpamClient.init
-        ~init_config ?repo ~bypass_checks ?update_config
-        shell dot_profile
+        ~init_config ~interactive
+        ?repo ~bypass_checks ~dot_profile
+        ?update_config ?env_hook ?completion shell
     in
-    if not no_compiler &&
-       OpamFile.Config.installed_switches gt.config = [] then
-      match compiler with
-      | Some comp ->
-        let packages =
-          OpamSwitchCommand.guess_compiler_package rt comp
-        in
+    if no_compiler then () else
+    match compiler with
+    | Some comp ->
+      let packages =
+        OpamSwitchCommand.guess_compiler_package rt comp
+      in
+      OpamConsole.header_msg "Creating initial switch (%s)"
+        (OpamFormula.string_of_atoms packages);
+      OpamSwitchCommand.install
+        gt ~rt ~packages ~update_config:true (OpamSwitch.of_string comp)
+      |> ignore
+    | None ->
+      let candidates = OpamFormula.to_dnf default_compiler in
+      let all_packages = OpamSwitchCommand.get_compiler_packages rt in
+      let compiler_packages =
+        try
+          Some (List.find (fun atoms ->
+              let names = List.map fst atoms in
+              let pkgs = OpamFormula.packages_of_atoms all_packages atoms in
+              List.for_all (OpamPackage.has_name pkgs) names)
+              candidates)
+        with Not_found -> None
+      in
+      match compiler_packages with
+      | Some packages ->
         OpamConsole.header_msg "Creating initial switch (%s)"
           (OpamFormula.string_of_atoms packages);
         OpamSwitchCommand.install
-          gt ~rt ~packages ~update_config:true (OpamSwitch.of_string comp)
+          gt ~rt ~packages ~update_config:true
+          (OpamSwitch.of_string "default")
         |> ignore
       | None ->
-        let candidates = OpamFormula.to_dnf default_compiler in
-        let all_packages = OpamSwitchCommand.get_compiler_packages rt in
-        let compiler_packages =
-          try
-            Some (List.find (fun atoms ->
-                let names = List.map fst atoms in
-                let pkgs = OpamFormula.packages_of_atoms all_packages atoms in
-                List.for_all (OpamPackage.has_name pkgs) names)
-                candidates)
-          with Not_found -> None
-        in
-        match compiler_packages with
-        | Some packages ->
-          OpamConsole.header_msg "Creating initial switch (%s)"
-            (OpamFormula.string_of_atoms packages);
-          OpamSwitchCommand.install
-            gt ~rt ~packages ~update_config:true
-            (OpamSwitch.of_string "default")
-          |> ignore
-        | None ->
-          OpamConsole.note
-            "No compiler selected, and no available default switch found: \
-             no switch has been created.\n\
-             Use 'opam switch create <compiler>' to get started."
+        OpamConsole.note
+          "No compiler selected, and no available default switch found: \
+           no switch has been created.\n\
+           Use 'opam switch create <compiler>' to get started."
   in
   Term.(const init
         $global_options $build_options $repo_kind_flag $repo_name $repo_url
-        $update_config $no_sandboxing $shell_opt $dot_profile_flag
+        $interactive $update_config $setup_completion $env_hook $no_sandboxing
+        $shell_opt $dot_profile_flag
         $compiler $no_compiler
-        $config_file $no_config_file $show_default_opamrc $bypass_checks),
+        $config_file $no_config_file $reinit $show_default_opamrc $bypass_checks),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -685,18 +774,6 @@ let config =
     "Reverts environment changes made by opam, e.g. $(b,eval \\$(opam config \
      revert-env)) undoes what $(b,eval \\$(opam config env\\)) did, as much as \
      possible.";
-    "setup", `setup, [],
-    "Configure global and user parameters for opam. Use $(b, opam config \
-     setup) to display more options. Use $(b,--list) to display the current \
-     configuration options. You can use this command to automatically update: \
-     (i) user-configuration files such as ~/.profile; and (ii) \
-     global-configuration files controlling which shell scripts are loaded on \
-     startup, such as auto-completion and automatic evaluation of $(b,opam env). \
-     These configuration options can be updated using $(b,opam config setup \
-     --global) to setup the global configuration files stored in \
-     $(b,~/.opam/opam-init/) and $(b,opam config setup --user) to setup the user \
-     ones. To modify both the global and user configuration, use $(b,opam config \
-     setup --all).";
     "exec", `exec, ["[--] COMMAND"; "[ARG]..."],
     "Execute $(i,COMMAND) with the correct environment variables. This command \
      can be used to cross-compile between switches using $(b,opam config exec \
@@ -709,9 +786,9 @@ let config =
      be accessed with the syntax $(i,pkg:var). Can also be accessed through \
      $(b,opam var)";
     "list", `list, ["[PACKAGE]..."],
-    "Without argument, prints a documented list of all available variables. With \
-     $(i,PACKAGE), lists all the variables available for these packages. Use \
-     $(i,-) to include global configuration variables for this switch.";
+    "Without argument, prints a documented list of all available variables. \
+     With $(i,PACKAGE), lists all the variables available for these packages. \
+     Use $(i,-) to include global configuration variables for this switch.";
     "set", `set, ["VAR";"VALUE"],
     "Set the given opam variable for the current switch. Warning: changing a \
      configured path will not move any files! This command does not perform \
@@ -749,30 +826,16 @@ let config =
   in
 
   let command, params = mk_subcommands commands in
-  let all_doc         = "Enable all the global and user configuration options." in
-  let global_doc      = "Enable all the global configuration options." in
-  let user_doc        = "Enable all the user configuration options." in
-  let profile_doc     = "Modify ~/.profile (or ~/.zshrc, etc., depending on your shell) to \
-                         setup an opam-friendly environment when starting a new shell." in
-  let no_complete_doc = "Do not load the auto-completion scripts in the environment." in
-  let eval_env_doc    = "Add to your shell a hook to ensure that the opam \
-                         environement remains in sync." in
-  let dot_profile_doc = "Select which configuration file to update (default is ~/.profile)." in
-  let list_doc        = "List the current configuration." in
-  let profile         = mk_flag ["profile"]        profile_doc in
-  let no_complete     = mk_flag ["no-complete"]    no_complete_doc in
-  let eval_env        = mk_flag ["eval-env"]       eval_env_doc in
-  let all             = mk_flag ["a";"all"]        all_doc in
-  let user            = mk_flag ["u";"user"]       user_doc in
-  let global          = mk_flag ["g";"global"]     global_doc in
-  let list            = mk_flag ["l";"list"]       list_doc in
   let open Common_config_flags in
 
   let config global_options
       command shell sexp inplace_path
-      dot_profile_o list all global user
-      profile no_complete eval_env set_opamroot set_opamswitch params =
+      set_opamroot set_opamswitch params =
     apply_global_options global_options;
+    let shell = match shell with
+      | Some s -> s
+      | None -> OpamStd.Sys.guess_shell_compat ()
+    in
     match command, params with
     | Some `env, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -781,47 +844,11 @@ let config =
        | Some sw ->
          `Ok (OpamConfigCommand.env gt sw
                 ~set_opamroot ~set_opamswitch
-                ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path))
+                ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish) ~inplace_path))
     | Some `revert_env, [] ->
        `Ok (OpamConfigCommand.print_eval_env
-              ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish)
+              ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
               (OpamEnv.add [] []))
-    | Some `setup, [] ->
-      let user        = all || user in
-      let global      = all || global in
-      let profile     = user  || profile in
-      let completion  = global && not no_complete in
-      let eval_env    = global && eval_env in
-      let dot_profile = init_dot_profile shell dot_profile_o in
-      if list then
-        `Ok (OpamConfigCommand.setup_list shell dot_profile)
-      else if profile || completion then
-        let dot_profile = if profile then Some dot_profile else None in
-        OpamGlobalState.with_ `Lock_write @@ fun gt ->
-        `Ok (OpamConfigCommand.setup gt
-               ?dot_profile ~completion ~eval_env ~shell
-               ~user ~global)
-      else
-        `Ok (OpamConsole.msg
-               "usage: opam config setup [options]\n\
-                \n\
-                Main options\n\
-               \    -l, --list           %s\n\
-               \    -a, --all            %s\n\
-               \    --shell=<bash|sh|csh|zsh|fish>\n\
-               \                         Configure assuming the given shell.\n\
-                \n\
-                User configuration\n\
-               \    -u, --user           %s\n\
-               \    --profile            %s\n\
-               \    --dot-profile FILE   %s\n\
-                \n\
-                Global configuration\n\
-               \    -g,--global          %s\n\
-               \    --no-complete        %s\n\n"
-               list_doc all_doc
-               user_doc profile_doc dot_profile_doc
-               global_doc no_complete_doc)
     | Some `exec, (_::_ as c) ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.exec
@@ -877,10 +904,12 @@ let config =
     | Some `report, [] -> (
         let print label fmt = OpamConsole.msg ("# %-17s "^^fmt^^"\n") label in
         OpamConsole.msg "# opam config report\n";
-        print "opam-version" "%s " (OpamVersion.to_string (OpamVersion.full ()));
+        print "opam-version" "%s "
+          (OpamVersion.to_string (OpamVersion.full ()));
         print "self-upgrade" "%s"
           (if self_upgrade_status global_options = `Running then
-             OpamFilename.prettify (fst (self_upgrade_exe (OpamStateConfig.(!r.root_dir))))
+             OpamFilename.prettify
+               (fst (self_upgrade_exe (OpamStateConfig.(!r.root_dir))))
            else "no");
         print "system" "arch=%s os=%s os-distribution=%s os-version=%s"
           OpamStd.Option.Op.(OpamSysPoll.arch () +! "unknown")
@@ -963,8 +992,6 @@ let config =
     Term.(const config
           $global_options $command $shell_opt $sexp
           $inplace_path
-          $dot_profile_flag $list $all $global $user
-          $profile $no_complete $eval_env
           $set_opamroot $set_opamswitch
           $params)
   ),
@@ -1063,6 +1090,10 @@ let env =
       global_options shell sexp inplace_path set_opamroot set_opamswitch
       revert =
     apply_global_options global_options;
+    let shell = match shell with
+      | Some s -> s
+      | None -> OpamStd.Sys.guess_shell_compat ()
+    in
     match revert with
     | false ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1071,10 +1102,10 @@ let env =
        | Some sw ->
          OpamConfigCommand.env gt sw
            ~set_opamroot ~set_opamswitch
-           ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish) ~inplace_path)
+           ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish) ~inplace_path)
     | true ->
       OpamConfigCommand.print_eval_env
-        ~csh:(shell=`csh) ~sexp ~fish:(shell=`fish)
+        ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
         (OpamEnv.add [] [])
   in
   let open Common_config_flags in
