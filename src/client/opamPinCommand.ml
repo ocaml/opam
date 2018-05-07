@@ -345,8 +345,7 @@ let rec handle_pin_depends st nv opam =
   let extra_pins =
     List.filter (fun (nv, url) ->
         not (OpamPackage.Set.mem nv st.pinned &&
-             OpamStd.Option.map OpamFile.URL.url (OpamSwitchState.url st nv)
-             = Some url))
+             OpamSwitchState.primary_url st nv = Some url))
       extra_pins
   in
   if extra_pins = [] then st else

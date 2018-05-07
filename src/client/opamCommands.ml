@@ -596,7 +596,8 @@ let show =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       let st = OpamListCommand.get_switch_state gt in
       let st, atoms =
-        OpamAuxCommands.simulate_autopin ~quiet:no_lint ~keep_url:true st atom_locs
+        OpamAuxCommands.simulate_autopin ~quiet:no_lint ~for_view:true st
+          atom_locs
       in
       OpamListCommand.info st
         ~fields ~raw_opam:raw ~where ~normalise ~show_empty atoms;
