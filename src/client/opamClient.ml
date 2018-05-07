@@ -619,12 +619,14 @@ let init_checks ?(hard_fail_exn=true) init_config =
   let required_deps =
     filter_tools (OpamFile.InitConfig.required_tools init_config)
   in
-  let hard_fail = check_tool
-      (fun s -> OpamConsole.error
-          "Missing dependencies -- \
-           the following commands are required for opam to operate:";
-        OpamConsole.errmsg "%s" s)
-      required_deps in
+  let hard_fail =
+    let msg = if hard_fail_exn then OpamConsole.error else OpamConsole.warning in
+    check_tool (fun s -> msg
+                   "Missing dependencies -- \
+                    the following commands are required for opam to operate:";
+                 OpamConsole.errmsg "%s" s)
+      required_deps
+  in
 
   if hard_fail && hard_fail_exn then OpamStd.Sys.exit_because `Configuration_error
   else not (soft_fail || hard_fail)
