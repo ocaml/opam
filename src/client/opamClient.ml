@@ -334,8 +334,12 @@ let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
              "%s (run with --verbose to show unavailable upgrades).\n" hdmsg;
          if not (OpamPackage.Set.is_empty unopt) then
            (OpamConsole.formatted_msg
-              "The following would require downgrades or uninstalls, but \
-               you may upgrade them explicitly:\n%s"
+              "The following packages are not being upgraded because the \
+               new versions conflict with other installed packages that \
+               would need to be downgraded or uninstalled. However, you \
+               may \"opam upgrade\" these packages explicitly, which \
+               will ask permission to downgrade or uninstall the \
+               conflicting packages.\n%s"
               (OpamStd.Format.itemize OpamPackage.to_string
                  (OpamPackage.Set.elements unopt)));
         )
