@@ -255,7 +255,9 @@ let autopin_aux st ?quiet ?locked atom_or_local_list =
   in
   atoms, to_pin, obsolete_pins, already_pinned_set
 
-let simulate_local_pinnings ?quiet ?(keep_url=false) st to_pin =
+let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
+  assert (not (for_view &&
+               OpamSystem.get_lock_flag st.switch_lock = `Lock_write));
   let local_names =
     List.fold_left (fun set (name, _, _) ->
         OpamPackage.Name.Set.add name set)
@@ -270,7 +272,7 @@ let simulate_local_pinnings ?quiet ?(keep_url=false) st to_pin =
         | Some opam ->
           let opam = OpamFile.OPAM.with_name name opam in
           let opam =
-            if keep_url then opam
+            if for_view then opam
             else OpamFile.OPAM.with_url (OpamFile.URL.create target) opam
           in
           let opam, version = match OpamFile.OPAM.version_opt opam with
@@ -283,6 +285,15 @@ let simulate_local_pinnings ?quiet ?(keep_url=false) st to_pin =
       OpamPackage.Map.empty to_pin
   in
   let local_packages = OpamPackage.keys local_opams in
+  let pinned =
+    if for_view then
+      let open OpamPackage.Set.Op in
+      st.pinned ++
+      (local_packages --
+       OpamPackage.packages_of_names st.pinned
+         (OpamPackage.names_of_packages local_packages))
+    else st.pinned
+  in
   let st = {
     st with
     opams =
@@ -298,11 +309,11 @@ let simulate_local_pinnings ?quiet ?(keep_url=false) st to_pin =
            st.switch_global st.switch st.switch_config ~pinned:st.pinned
            ~opams:local_opams)
     );
-    pinned = local_packages;
+    pinned;
   } in
   st, local_packages
 
-let simulate_autopin st ?quiet ?keep_url ?locked atom_or_local_list =
+let simulate_autopin st ?quiet ?for_view ?locked atom_or_local_list =
   let atoms, to_pin, obsolete_pins, already_pinned_set =
     autopin_aux st ?quiet ?locked atom_or_local_list
   in
@@ -311,7 +322,7 @@ let simulate_autopin st ?quiet ?keep_url ?locked atom_or_local_list =
     OpamPackage.Set.fold (fun nv st -> OpamPinCommand.unpin_one st nv)
       obsolete_pins st
   in
-  let st, pins = simulate_local_pinnings ?quiet ?keep_url st to_pin in
+  let st, pins = simulate_local_pinnings ?quiet ?for_view st to_pin in
   let pins = OpamPackage.Set.union pins already_pinned_set in
   let pin_depends =
     OpamPackage.Set.fold (fun nv acc ->
@@ -328,8 +339,8 @@ let simulate_autopin st ?quiet ?keep_url ?locked atom_or_local_list =
               (OpamConsole.colorise `bold (OpamPackage.to_string nv))
               (OpamConsole.colorise `underline (OpamUrl.to_string url)))
            (OpamPackage.Map.bindings pin_depends));
-     OpamConsole.note "The following may not reflect the above pinnings \
-                       (package definitions are not available yet)";
+     OpamConsole.note "The following may not reflect the above pinnings (their \
+                       package definitions are not available at this stage)";
      OpamConsole.msg "\n");
   st, atoms
 
