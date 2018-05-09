@@ -243,14 +243,20 @@ let load lock_kind gt rt switch =
     OpamPackage.Map.fold (fun nv conf acc ->
         if
           List.exists (fun (file, hash) ->
-              let deleted = not (OpamFilename.exists file) in
+              let exists = OpamFilename.exists file in
+              let should_exist =
+                let count_not_zero c =
+                  function '0' -> c | _ -> succ c
+                in
+                OpamStd.String.fold_left count_not_zero 0 (OpamHash.contents hash) <> 0
+              in
               let changed =
-                deleted ||
-                not (OpamHash.check_file (OpamFilename.to_string file) hash)
+                exists <> should_exist ||
+                exists && not (OpamHash.check_file (OpamFilename.to_string file) hash)
               in
               (* /!\ fixme: the package removal instructions won't actually ever
                  be called in this case *)
-              if deleted then
+              if not exists && should_exist then
                 OpamConsole.error
                   "System file %s, which package %s depends upon, \
                    no longer exists.\n\
