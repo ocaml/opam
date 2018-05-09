@@ -8,10 +8,11 @@ are not marked).
 * Much faster `opam env` and similar commands
 * Added `opam admin check` for integrity checks on package repositories
 * Added the ability to setup scripts on `opam init` from `.opamrc`
-* Setup wrappers to sandbox builds based on `bubblewrap` by default, on Linux
+* Setup wrappers to sandbox builds by default, based on `bubblewrap` on Linux and `sandbox-exec` on MacOS
 * Windows support for many aspects including parallel processes, environment
   variables setup, color console and utf8 (using specific C stubs)
 * Better detection of the running shell
+* Added shell helpers to automatically sync the environment on every prompt
 
 2.0.0~rc
 * Fixes
