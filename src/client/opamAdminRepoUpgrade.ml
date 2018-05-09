@@ -108,12 +108,30 @@ let system_conf_script =
   \       ocamlc Sys.ocaml_version Sys.ocaml_version;\n\
   \     exit 1)\n\
   \  else\n\
+  \  let ocamlc_digest = Digest.to_hex (Digest.file ocamlc) in\n\
+  \  let libdir =\n\
+  \    if Sys.command (ocamlc^\" -where > %{_:name}%.config\") = 0 then\n\
+  \      let ic = open_in \"%{_:name}%.config\" in\n\
+  \      let r = input_line ic in\n\
+  \      close_in ic;\n\
+  \      Sys.remove \"%{_:name}%.config\";\n\
+  \      r\n\
+  \    else\n\
+  \      failwith \"Bad return from 'ocamlc -where'\"\n\
+  \  in\n\
+  \  let graphics = Filename.concat libdir \"graphics.cmi\" in\n\
+  \  let graphics_digest =\n\
+  \    if Sys.file_exists graphics then\n\
+  \      Digest.to_hex (Digest.file graphics)\n\
+  \    else\n\
+  \      String.make 32 '0'\n\
+  \  in\n\
   \  let oc = open_out \"%{_:name}%.config\" in\n\
   \  Printf.fprintf oc \"opam-version: \\\"" ^ upgradeto_version_string ^
   "\\\"\\n\\\n\
-  \                     file-depends: [ %%S %%S ]\\n\\\n\
+  \                     file-depends: [ [ %%S %%S ] [ %%S %%S ] ]\\n\\\n\
   \                     variables { path: %%S }\\n\"\n\
-  \    ocamlc (Digest.to_hex (Digest.file ocamlc)) (Filename.dirname ocamlc);\n\
+  \    ocamlc ocamlc_digest graphics graphics_digest (Filename.dirname ocamlc);\n\
   \  close_out oc\n\
   "
 
