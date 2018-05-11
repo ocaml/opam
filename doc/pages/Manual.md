@@ -721,7 +721,7 @@ The default, built-in initial config of <span class="opam">opam</span> can be se
   of alternative commands to look for in the `PATH`, optionally a specific error
   message to display if none of them is found, and a filter that can make the
   check conditional.
-- <a id="configfield-init-scripts">`init-scripts: [ [ <string> <string> ] { <filter> } ... ]`</a>:
+- <a id="opamrcfield-init-scripts">`init-scripts: [ [ <string> <string> ] { <filter> } ... ]`</a>:
   These scripts will be written verbatim into the hook directory
   (`~/.opam/opam-init/hooks`) upon initialisation. The first string is the file
   name of the script, the second its raw contents, and the filter allows to
@@ -1331,12 +1331,14 @@ for <span class="opam">opam</span>.
   specify wrappers around every command executed during the corresponding action
   of any package. The command-line elements will be prefixed to the package
   command, so for example command `[ make "install" ]` with wrapper
-  `[ "time" "-o" "/tmp/timings" "-a" ]` will result in the command
-  `[ "time" "-o" "/tmp/timings" "-a" make "install" ]`.
-  As `init-scripts:` are stored in the hook directory, when using a wrapper
-  script defined by `init-scripts:`, use the variable `%{hook}%` as prefix for
-  you script filename.
-  The filters are evaluated in the same scope as the package commands.
+  `[ "time" "-o" "/tmp/timings" "-a" ]` will result in the command `[ "time"
+  "-o" "/tmp/timings" "-a" make "install" ]`. The filters are evaluated in the
+  same scope as the package commands.
+
+    As [`init-scripts:`](#opamrcfield-init-scripts) are stored in the hook
+    directory, when using a wrapper script defined by
+    [`init-scripts:`](#opamrcfield-init-scripts), use the variable `%{hook}%` as
+    prefix for you script filename.
 - <a id="configfield-post-build-commands">`post-build-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
   <a id="configfield-post-install-commands">`post-install-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
   <a id="configfield-post-remove-commands">`post-remove-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>:
