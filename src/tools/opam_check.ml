@@ -34,7 +34,6 @@ let () =
   OpamStd.Config.init();
   OpamFormatConfig.init();
   OpamRepositoryConfig.init();
-  OpamSolverConfig.init();
   OpamStateConfig.init
     ?root_dir
     ()

@@ -307,7 +307,7 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_opam_file_format" = "xno" ||
        test "x$OCAML_PKG_cppo" = "xno" ||
        test "x$OCAML_PKG_mccs$MCCS_ENABLED$MCCS_DEFAULT" = "xnotrue"; }],[
-  AS_IF([test "x$MCCS_ENABLED" = "xtrue"],[
+  AS_IF([test "x$MCCS_ENABLED" = "xtrue" -a "x${CCOMP_TYPE}" != "xmsvc"],[
     AC_PROG_CXX
     # Curiously, CXX=g++ && GXX= seems to be how autoconf "signals" that no C++
     # compiler was found.

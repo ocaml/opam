@@ -313,10 +313,23 @@ let env_var env var =
   in
   aux 0
 
+let forward_to_back =
+  if Sys.win32 then
+    String.map (function '/' -> '\\' | c -> c)
+  else
+    fun x -> x
+
+let back_to_forward =
+  if Sys.win32 then
+    String.map (function '\\' -> '/' | c -> c)
+  else
+    fun x -> x
+
 (* OCaml 4.05.0 no longer follows the updated PATH to resolve commands. This
    makes unqualified commands absolute as a workaround. *)
 let resolve_command =
   let is_external_cmd name =
+    let name = forward_to_back name in
     OpamStd.String.contains_char name Filename.dir_sep.[0]
   in
   let check_perms =
@@ -349,9 +362,9 @@ let resolve_command =
       let name =
         if Filename.check_suffix name ".exe" then name else name ^ ".exe"
       in
-      OpamStd.List.find_opt (fun path ->
+      OpamStd.(List.find_opt (fun path ->
           check_perms (Filename.concat path name))
-        path
+        path |> Option.map (fun path -> Filename.concat path name))
     else
     let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
     let r =

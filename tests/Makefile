@@ -14,7 +14,7 @@ PACKAGES  = P1-0 P1-1 P1-2 P2 P3 P4 P5
 unexport OCAMLLIB
 
 ifndef OPAM
-  OPAM = $(firstword $(realpath ../src/client/opamMain.exe ../_build/default/src/client/opamMain.exe))
+  OPAM = $(firstword $(realpath ../../install/default/bin/opam$(EXE) ../_build/install/default/bin/opamMain.exe))
 endif
 ENV   = PATH=$(PATH) $(DEBUG) OPAMKEEPBUILDDIR=1 OPAMROOT=$(OPAM_ROOT) OPAMSWITCH= OPAMNOBASEPACKAGES=1 OPAMYES=1 OPAM=$(OPAM)
 OPAMBIN  = $(ENV) $(OPAM)
@@ -43,14 +43,14 @@ printf = /usr/bin/printf
 define RUN
 @COUNT=$$(ls -1 $(REPOKIND)-*.log 2>/dev/null | wc -l); \
 LOG=$$($(printf) "$(REPOKIND)-%02d-$(1).log" $$COUNT); \
-$(printf) "  %02d \e[1m%-20s\e[m ..................................... " \
+$(printf) "  %02d \e[1m%-20s\e[0m ..................................... " \
   $$COUNT $(1); \
 if $(MAKE) $(1) >$$LOG 2>&1; then \
-  $(printf) "\e[32m[ OK ]\e[m\n"; \
+  $(printf) "\e[32m[ OK ]\e[0m\n"; \
 else \
-  $(printf) "\e[31m$(1) FAILED\e[m\n\n" >>$$LOG; \
-  $(printf) "\e[31m[FAIL]\e[m\n"; \
-  { $(printf) "\e[31m>> %s FAILED <<\e[m\n" $(1); cat $$LOG; } \
+  $(printf) "\e[31m$(1) FAILED\e[0m\n\n" >>$$LOG; \
+  $(printf) "\e[31m[FAIL]\e[0m\n"; \
+  { $(printf) "\e[31m>> %s FAILED <<\e[0m\n" $(1); cat $$LOG; } \
 	>> failed-$(REPOKIND).log; \
 fi; \
 cat $$LOG >> fulltest-$(REPOKIND).log
@@ -85,20 +85,23 @@ run:
 	else echo "SUCCESS!"; fi
 
 local:
-	$(MAKE) clean
-	$(MAKE) REPOKIND=local run
+	@$(MAKE) --silent --no-print-directory clean
+	$(MAKE) --no-print-directory REPOKIND=local run
 
 git:
-	$(MAKE) clean
-	$(MAKE) REPOKIND=git run
+	@$(MAKE) --silent --no-print-directory clean
+	$(MAKE) --no-print-directory REPOKIND=git run
+
+define GIT_INIT
+  git init && echo '*.sh text eol=lf'> .gitattributes && $(if $1,touch $1 && )\
+	git add -A && git commit -m "Initial commit"
+endef
 
 init:
 	rm -rf $(OPAM_REPO)
 	mkdir -p $(OPAM_REPO)
 ifeq ($(REPOKIND), git)
-	cd $(OPAM_REPO) && git init && \
-	  touch README && git add README && \
-	  git commit -a -m "Initial commit"
+	cd $(OPAM_REPO) && $(call GIT_INIT,README)
 endif
 	$(OPAMBIN) init --bare --no-setup $(REPO) $(OPAM_REPO) -k $(REPOKIND)
 
@@ -133,21 +136,21 @@ upload: $(ARCHIVES)
 	cp packages/P5/README     $(OPAM_REPO)/packages/P5.1/descr
 	$(call mkurl,P5.1,P5.tar.gz)
 ifeq ($(REPOKIND), git)
-	cd $(OPAM_REPO)/packages/ocaml.system && git add * && git commit -a -m "Adding ocaml.system"
-	cd $(OPAM_REPO)/packages/ocaml.20 && git add * && git commit -a -m "Adding ocaml.20"
-	cd $(OPAM_REPO)/packages/ocaml.10+a+b && git add * && git commit -a -m "Adding ocaml.10+a+b"
+	cd $(OPAM_REPO)/packages/ocaml.system && git add * && git commit -m "Adding ocaml.system"
+	cd $(OPAM_REPO)/packages/ocaml.20 && git add * && git commit -m "Adding ocaml.20"
+	cd $(OPAM_REPO)/packages/ocaml.10+a+b && git add * && git commit -m "Adding ocaml.10+a+b"
 	echo 'git: "$(OPAM_GIT)/P1-0"' > $(OPAM_REPO)/packages/P1.0/url
-	cd $(OPAM_REPO)/packages/P1.0/ && git add * && git commit -a -m "Adding P0"
+	cd $(OPAM_REPO)/packages/P1.0/ && git add * && git commit -m "Adding P0"
 	echo 'git: "$(OPAM_GIT)/P1-1"' > $(OPAM_REPO)/packages/P1.1/url
-	cd $(OPAM_REPO)/packages/P1.1/ && git add * && git commit -a -m "Adding P1"
+	cd $(OPAM_REPO)/packages/P1.1/ && git add * && git commit -m "Adding P1"
 	echo 'git: "$(OPAM_GIT)/P2"'   > $(OPAM_REPO)/packages/P2.1/url
-	cd $(OPAM_REPO)/packages/P2.1/ && git add * && git commit -a -m "Adding P2"
+	cd $(OPAM_REPO)/packages/P2.1/ && git add * && git commit -m "Adding P2"
 	echo 'git: "$(OPAM_GIT)/P3"'   > $(OPAM_REPO)/packages/P3.1~weird-version.test/url
-	cd $(OPAM_REPO)/packages/P3.1~weird-version.test/ && git add * && git commit -a -m "Adding P3"
+	cd $(OPAM_REPO)/packages/P3.1~weird-version.test/ && git add * && git commit -m "Adding P3"
 	echo 'git: "$(OPAM_GIT)/P4"'   > $(OPAM_REPO)/packages/P4.1/url
-	cd $(OPAM_REPO)/packages/P4.1/ && git add * && git commit -a -m "Adding P4"
+	cd $(OPAM_REPO)/packages/P4.1/ && git add * && git commit -m "Adding P4"
 	echo 'git: "$(OPAM_GIT)/P5"'   > $(OPAM_REPO)/packages/P5.1/url
-	cd $(OPAM_REPO)/packages/P5.1/ && git add * && git commit -a -m "Adding P5"
+	cd $(OPAM_REPO)/packages/P5.1/ && git add * && git commit -m "Adding P5"
 	rm -rf $(OPAM_GIT) && mkdir -p $(OPAM_GIT)
 	mkdir $(OPAM_GIT)/P1-0 && cp packages/P1-0/* $(OPAM_GIT)/P1-0/
 	mkdir $(OPAM_GIT)/P1-1 && cp packages/P1-1/* $(OPAM_GIT)/P1-1/
@@ -155,12 +158,12 @@ ifeq ($(REPOKIND), git)
 	mkdir $(OPAM_GIT)/P3   && cp packages/P3/*   $(OPAM_GIT)/P3/
 	mkdir $(OPAM_GIT)/P4   && cp packages/P4/*   $(OPAM_GIT)/P4/
 	mkdir $(OPAM_GIT)/P5   && cp packages/P5/*   $(OPAM_GIT)/P5/
-	cd $(OPAM_GIT)/P1-0 && git init && git add * && git commit -a -m "initial commit"
-	cd $(OPAM_GIT)/P1-1 && git init && git add * && git commit -a -m "initial commit"
-	cd $(OPAM_GIT)/P2   && git init && git add * && git commit -a -m "initial commit"
-	cd $(OPAM_GIT)/P3   && git init && git add * && git commit -a -m "initial commit"
-	cd $(OPAM_GIT)/P4   && git init && git add * && git commit -a -m "initial commit"
-	cd $(OPAM_GIT)/P5   && git init && git add * && git commit -a -m "initial commit"
+	cd $(OPAM_GIT)/P1-0 && $(call GIT_INIT)
+	cd $(OPAM_GIT)/P1-1 && $(call GIT_INIT)
+	cd $(OPAM_GIT)/P2   && $(call GIT_INIT)
+	cd $(OPAM_GIT)/P3   && $(call GIT_INIT)
+	cd $(OPAM_GIT)/P4   && $(call GIT_INIT)
+	cd $(OPAM_GIT)/P5   && $(call GIT_INIT)
 else
 	mkdir -p $(OPAM_REPO)/cache
 	for p in P1-0 P1-1 P1-2 P2 P3 P4 P5; do \
@@ -244,7 +247,7 @@ ifeq ($(REPOKIND), git)
 	cd $(OPAM_GIT)/P1-1 && git commit -a -m "a small change"
 	echo 'git: "$(OPAM_GIT)/P4"' > $(OPAM_REPO)/packages/P4.2/url
 	echo 'git: "$(OPAM_GIT)/P4"' > $(OPAM_REPO)/packages/P4.3/url
-	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P4.2 and P4.3"
+	cd $(OPAM_REPO) && git add * && git commit -m "Adding P4.2 and P4.3"
 else
 	mkdir $(OPAM_REPO)/packages/P1.2
 	cp packages/P1-2.opam   $(OPAM_REPO)/packages/P1.2/opam

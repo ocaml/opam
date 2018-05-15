@@ -78,3 +78,14 @@ module Buffer
   val add_utf_8_uchar : t -> Uchar.t -> unit
 end
 #endif
+
+module Filename
+#if OCAML_VERSION >= (4, 4, 0)
+= Filename
+#else
+: sig
+  include module type of struct include Filename end
+
+  val extension : string -> string
+end
+#endif
