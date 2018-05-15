@@ -1225,6 +1225,8 @@ source tree after its installation instructions have been run.
   consistency of packages that rely on system-wide files or system packages when
   those are changed, _e.g._ by `apt-get upgrade`. The user will be warned if the
   file was removed, and the package marked for reinstallation if it was changed.
+  If the checksum is zero, then the file is assumed not to exist and opam will
+  detect its appearance as requiring the package to be marked for reinstallation.
 - <a id="dotconfigsection-variables">`variables: "{" { <ident>: ( <string> | [ <string> ... ] | <bool> ) ... }
   "}"`</a>: allows the definition of package variables, that will be available
   as `<pkgname>:<varname>` to dependent packages.
