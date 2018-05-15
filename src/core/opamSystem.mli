@@ -220,6 +220,10 @@ val lock_none: lock
 (** Raised when locks can't be acquired and [dontblock] was specified) *)
 exception Locked
 
+(** Force releases all open locks in the process. Required for Windows if an exception
+    has been raised, since Windows doesn't permit unlinking while handles are open. *)
+val release_all_locks: unit -> unit
+
 (** Acquires a lock on the given file.
     Raises [Locked] if the lock can't be acquired and [dontblock] is set. Raises
     [OpamStd.Sys.Exit] if [safe_mode] is set and a write lock is required. Also

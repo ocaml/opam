@@ -761,8 +761,10 @@ let init
          else OpamFile.InitConfig.default_compiler init_config), custom_scripts
       with e ->
         OpamStd.Exn.finalise e @@ fun () ->
-        if not (OpamConsole.debug ()) && root_empty then
-          OpamFilename.rmdir root)
+        if not (OpamConsole.debug ()) && root_empty then begin
+          OpamSystem.release_all_locks ();
+          OpamFilename.rmdir root
+        end)
   in
   OpamEnv.write_static_init_scripts root ~completion:true ~eval_env:false
     custom_scripts;
