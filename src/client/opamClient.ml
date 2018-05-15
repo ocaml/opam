@@ -678,7 +678,6 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
   OpamEnv.write_custom_init_scripts root custom_init_scripts;
   OpamEnv.setup root ~interactive
     ?dot_profile ?update_config ?env_hook ?completion shell;
-  OpamEnv.write_static_init_scripts root ();
   let gt = OpamGlobalState.load `Lock_write in
   let rt = OpamRepositoryState.load `Lock_write gt in
   OpamConsole.header_msg "Updating repositories";

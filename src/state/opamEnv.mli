@@ -88,10 +88,6 @@ val update_user_setup:
   dirname -> ?dot_profile:filename -> shell -> unit
 
 (** Write the generic scripts in ~/.opam/opam-init needed to import state for
-    various shells. *)
-val write_init_shell_scripts: dirname -> unit
-
-(** Write the generic scripts in ~/.opam/opam-init needed to import state for
     various shells. If specified, completion and env_hook files can also be
     written or removed (the default is to keep them as they are) *)
 val write_static_init_scripts:

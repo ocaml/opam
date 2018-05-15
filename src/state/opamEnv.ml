@@ -611,7 +611,7 @@ let update_dot_profile root dot_profile shell =
 
 let update_user_setup root ?dot_profile shell =
   if dot_profile <> None then (
-    OpamConsole.msg "User configuration:\n";
+    OpamConsole.msg "\nUser configuration:\n";
     OpamStd.Option.iter (fun f -> update_dot_profile root f shell) dot_profile
   )
 
@@ -636,8 +636,6 @@ let setup
     | Some true, Some dot_profile, _ -> Some dot_profile
     | None, _, false -> None
     | None, Some dot_profile, true ->
-      OpamConsole.msg "\n";
-
       OpamConsole.header_msg "Required setup - please read";
 
       OpamConsole.msg
@@ -689,6 +687,5 @@ let setup
             shell remains in sync with the opam environment when they are \
             loaded. Set that up?")
   in
-  OpamConsole.msg "\n";
   update_user_setup root ?dot_profile:update_dot_profile shell;
   write_static_init_scripts root ?completion ?env_hook ()
