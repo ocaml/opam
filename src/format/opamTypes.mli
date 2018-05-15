@@ -300,7 +300,8 @@ type universe = {
 type pin_kind = [ `version | OpamUrl.backend ]
 
 (** Shell compatibility modes *)
-type shell = [`fish|`csh|`zsh|`sh|`bash]
+type shell = OpamStd.Sys.shell =
+    SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
 
 (** {2 Generic command-line definitions with filters} *)
 

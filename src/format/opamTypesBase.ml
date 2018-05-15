@@ -42,11 +42,11 @@ let all_std_paths =
   [ Prefix; Lib; Bin; Sbin; Share; Doc; Etc; Man; Toplevel; Stublibs ]
 
 let string_of_shell = function
-  | `fish -> "fish"
-  | `csh  -> "csh"
-  | `zsh  -> "zsh"
-  | `sh   -> "sh"
-  | `bash -> "bash"
+  | SH_fish -> "fish"
+  | SH_csh  -> "csh"
+  | SH_zsh  -> "zsh"
+  | SH_sh   -> "sh"
+  | SH_bash -> "bash"
 
 let file_null = ""
 let pos_file filename = OpamFilename.to_string filename, -1, -1

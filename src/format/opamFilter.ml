@@ -633,20 +633,3 @@ let atomise_extended =
           | Or (a, b) -> Or (aux filters a, aux filters b)
         in
         aux (FBool true) cs)
-
-
-(*
-  OpamFormula.map (fun (x, (flt, c)) ->
-      match c with
-      | Empty -> Atom (x, (flt, None))
-      | cs ->
-        OpamFormula.map (fun c ->
-            let c = OpamFormula.map (function
-                | Constraint (op, FString v) ->
-                  Atom (op, OpamPackage.Version.of_string v)
-                | _ -> invalid_arg "atomise_extended")
-            in
-            Atom (x, (flt, Some c)))
-          cs)
-    ff
-*)

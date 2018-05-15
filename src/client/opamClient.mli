@@ -18,19 +18,30 @@ open OpamStateTypes
 (** Initialize the client to a consistent state. *)
 val init:
   init_config:OpamFile.InitConfig.t ->
+  interactive:bool ->
   ?repo:repository ->
   ?bypass_checks:bool ->
+  ?dot_profile:filename ->
   ?update_config:bool ->
-  shell -> filename ->
+  ?env_hook:bool ->
+  ?completion:bool ->
+  shell ->
   rw global_state * unlocked repos_state * formula
+
+(* (\** Gets the initial config (opamrc) to be used *\)
+ * val get_init_config:
+ *   no_default_config_file:bool ->
+ *   add_config_file:OpamUrl.t ->
+ *   OpamFile.InitConfig.t *)
 
 (** Re-runs the extra tools checks, updates the configuration from [init_config]
    (defaults to [OpamInitDefaults.init_config]) for the settings that are unset,
    and updates all repositories *)
 val reinit:
   ?init_config:OpamFile.InitConfig.t ->
-  OpamFile.Config.t ->
-  rw global_state * unlocked repos_state
+  interactive:bool ->
+  ?dot_profile:filename -> ?update_config:bool -> ?env_hook:bool -> ?completion:bool ->
+  OpamFile.Config.t -> shell -> unit
 
 (** Install the given list of packages. [add_to_roots], if given, specifies that
     given packages should be added or removed from the roots. [autoupdate]

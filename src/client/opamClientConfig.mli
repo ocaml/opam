@@ -89,7 +89,7 @@ val opam_init:
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:OpamPackage.Name.Set.t ->
   ?unlock_base:bool ->
-  ?noeval_env:bool ->
+  ?no_env_notice:bool ->
   ?cudf_file:string option ->
   ?solver:(module OpamCudfSolver.S) Lazy.t ->
   ?best_effort:bool ->

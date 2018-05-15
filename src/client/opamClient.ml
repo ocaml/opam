@@ -657,12 +657,13 @@ let update_with_init_config ?(overwrite=false) config init_config =
   setifnew C.default_compiler C.with_default_compiler
     (I.default_compiler init_config)
 
-let reinit ?(init_config=OpamInitDefaults.init_config()) config =
+let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
+    ?dot_profile ?update_config ?env_hook ?completion config shell =
   let root = OpamStateConfig.(!r.root_dir) in
   let config = update_with_init_config config init_config in
   let _all_ok = init_checks ~hard_fail_exn:false init_config in
   OpamFile.Config.write (OpamPath.config root) config;
-  let init_scripts =
+  let custom_init_scripts =
     let env v =
       let vs = OpamVariable.Full.variable v in
       OpamStd.Option.Op.(OpamStd.Option.of_Not_found
@@ -670,11 +671,13 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) config =
     in
     OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
         | None -> Some (nam,scr)
-        | Some flt -> if OpamFilter.eval_to_bool env flt then
-            Some (nam,scr) else None) (OpamFile.InitConfig.init_scripts init_config)
+        | Some flt ->
+          if OpamFilter.eval_to_bool env flt then Some (nam,scr) else None)
+      (OpamFile.InitConfig.init_scripts init_config)
   in
-  OpamEnv.write_static_init_scripts root ~completion:true ~eval_env:false
-    init_scripts;
+  OpamEnv.write_custom_init_scripts root custom_init_scripts;
+  OpamEnv.setup root ~interactive
+    ?dot_profile ?update_config ?env_hook ?completion shell;
   let gt = OpamGlobalState.load `Lock_write in
   let rt = OpamRepositoryState.load `Lock_write gt in
   OpamConsole.header_msg "Updating repositories";
@@ -682,12 +685,14 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) config =
     OpamRepositoryCommand.update_with_auto_upgrade rt
       (OpamRepositoryName.Map.keys rt.repos_definitions)
   in
-  let rt = OpamRepositoryState.unlock rt in
-  gt, rt
+  let _rt = OpamRepositoryState.unlock rt in
+  ()
 
 let init
-    ~init_config
-    ?repo ?(bypass_checks=false) ?update_config shell dot_profile =
+    ~init_config ~interactive
+    ?repo ?(bypass_checks=false)
+    ?dot_profile ?update_config ?env_hook ?(completion=true)
+    shell =
   log "INIT %a"
     (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
   let root = OpamStateConfig.(!r.root_dir) in
@@ -695,11 +700,11 @@ let init
   let root_empty =
     not (OpamFilename.exists_dir root) || OpamFilename.dir_is_empty root in
 
-  let gt, rt, default_compiler, custom_scripts =
+  let gt, rt, default_compiler =
     if OpamFile.exists config_f then (
       OpamConsole.msg "Opam has already been initialized.\n";
       let gt = OpamGlobalState.load `Lock_write in
-      gt, OpamRepositoryState.load `Lock_none gt, OpamFormula.Empty, []
+      gt, OpamRepositoryState.load `Lock_none gt, OpamFormula.Empty
     ) else (
       if not root_empty then (
         OpamConsole.warning "%s exists and is not empty"
@@ -738,6 +743,7 @@ let init
               | Some flt -> if OpamFilter.eval_to_bool env flt then
                   Some (nam,scr) else None) scripts
         in
+        OpamEnv.write_custom_init_scripts root custom_scripts;
         let repos_config =
           OpamRepositoryName.Map.of_list repos |>
           OpamRepositoryName.Map.map OpamStd.Option.some
@@ -758,7 +764,7 @@ let init
             "Initial download of repository failed";
         gt, OpamRepositoryState.unlock rt,
         (if dontswitch then OpamFormula.Empty
-         else OpamFile.InitConfig.default_compiler init_config), custom_scripts
+         else OpamFile.InitConfig.default_compiler init_config)
       with e ->
         OpamStd.Exn.finalise e @@ fun () ->
         if not (OpamConsole.debug ()) && root_empty then begin
@@ -766,13 +772,8 @@ let init
           OpamFilename.rmdir root
         end)
   in
-  OpamEnv.write_static_init_scripts root ~completion:true ~eval_env:false
-    custom_scripts;
-  let _updated = match update_config with
-    | Some false  -> false
-    | None -> OpamEnv.setup_interactive root ~dot_profile shell
-    | Some true -> OpamEnv.update_user_setup root ~dot_profile shell; true
-  in
+  OpamEnv.setup root ~interactive
+    ?dot_profile ?update_config ?env_hook ~completion shell;
   gt, rt, default_compiler
 
 

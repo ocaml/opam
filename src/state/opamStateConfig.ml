@@ -22,7 +22,7 @@ type t = {
   makecmd: string Lazy.t;
   ignore_constraints_on: name_set;
   unlock_base: bool;
-  noeval_env: bool;
+  no_env_notice: bool;
 }
 
 let default = {
@@ -43,7 +43,7 @@ let default = {
     );
   ignore_constraints_on = OpamPackage.Name.Set.empty;
   unlock_base = false;
-  noeval_env = false;
+  no_env_notice = false;
 }
 
 type 'a options_fun =
@@ -58,7 +58,7 @@ type 'a options_fun =
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:name_set ->
   ?unlock_base:bool ->
-  ?noeval_env:bool ->
+  ?no_env_notice:bool ->
   'a
 
 let setk k t
@@ -73,7 +73,7 @@ let setk k t
     ?makecmd
     ?ignore_constraints_on
     ?unlock_base
-    ?noeval_env
+    ?no_env_notice
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -89,7 +89,7 @@ let setk k t
     makecmd = t.makecmd + makecmd;
     ignore_constraints_on = t.ignore_constraints_on + ignore_constraints_on;
     unlock_base = t.unlock_base + unlock_base;
-    noeval_env = t.noeval_env + noeval_env
+    no_env_notice = t.no_env_notice + no_env_notice
   }
 
 let set t = setk (fun x () -> x) t
@@ -122,7 +122,7 @@ let initk k =
        List.map OpamPackage.Name.of_string |>
        OpamPackage.Name.Set.of_list)
     ?unlock_base:(env_bool "UNLOCKBASE")
-    ?noeval_env:(env_bool "NOEVALENV")
+    ?no_env_notice:(env_bool "NOENVNOTICE")
 
 let init ?noop:_ = initk (fun () -> ())
 

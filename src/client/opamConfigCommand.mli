@@ -48,18 +48,6 @@ val set: full_variable -> string option -> unit
 (** Sets or unsets global config variables *)
 val set_global: full_variable -> string option -> unit
 
-(** Update the global and user configuration to use OPAM. *)
-val setup:
-  rw global_state ->
-  ?dot_profile:OpamTypes.filename ->
-  completion:bool ->
-  eval_env:bool ->
-  shell:OpamTypes.shell ->
-  user:bool -> global:bool -> unit
-
-(** Display the global and user configuration for OPAM. *)
-val setup_list: shell -> filename -> unit
-
 (** Execute a command in a subshell, after variable expansion *)
 val exec:
   [< unlocked ] global_state ->
