@@ -66,11 +66,12 @@ remove) are also run in a sandbox and guaranteed not to affect your system.
 
 Since opam 2.0.0~rc2, opam uses `bwrap` on Linux to run package instructions in
 a sandbox. This restricts their access to parts of the system (e.g., forbid
-access to operating system, user data, or network).  See the [bubblewrap
-page](https://github.com/projectatomic/bubblewrap) for details.
+access to operating system, user data, or network). See the
+[bubblewrap page](https://github.com/projectatomic/bubblewrap) for details. A
+similar mechanism is used on macOS, using the `sandbox-exec` command.
 
 We use `bwrap` to prevent packages from writing outside their allotted
-filesystem space, use network. For example, build commands have restricted
+filesystem space or use the network. For example, build commands have restricted
 write access, restrained to their dedicated build directory and `/tmp`. These
 sandboxing instructions are specified in the built-in configuration, that you
 can display with `opam init --show-default-opamrc`:
@@ -83,16 +84,16 @@ wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux"}
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux"}
 ```
 
-You can manually disable package build sandboxing and remove bwrap from
-the required dependencies (at your own risk). You can use the built-in
-configuration as a template to create or update an `opamrc` file: run `opam
-init --show-default-opamrc >~/.opamrc`, then edit that file and remove or
-modify the [`init-scripts:`](Manual.html#opamrcfield-init-scripts) and
-`wrap-*:` fields as well as the `bwrap` line from the `required-tools:` field,
-and finally retry `opam init`.
-
-See also the [wrap entry](Manual.html#configfield-wrap-build-commands) section
-in the manual.
+Sandboxing provides an important level of security, and should always be kept
+enabled. Note, however, that:
+- Only the _package_ build/install/remove commands are protected: if you install
+  a program using opam and execute it, it will run with your standard user
+  rights.
+- If needed, for special cases like unprivileged containers, sandboxing can be
+  disabled on `opam init` with the `--disable-sandboxing` flag. Or by using a
+  [custom `opamrc`](Manual.html#configfield-wrap-build-commands). Use wisely,
+  broken Makefiles that run `rm -rf /`
+  [__do__ happen](https://github.com/ocaml/opam/issues/3231).
 
 ---
 
