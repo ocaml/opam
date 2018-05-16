@@ -87,8 +87,9 @@ You can manually disable package build sandboxing and remove bwrap from
 the required dependencies (at your own risk). You can use the built-in
 configuration as a template to create or update an `opamrc` file: run `opam
 init --show-default-opamrc >~/.opamrc`, then edit that file and remove or
-modify the `init-scripts:` and `wrap-*:` fields as well as the `bwrap` line
-from the `required-tools:` field, and finally retry `opam init`.
+modify the [`init-scripts:`](Manual.html#opamrcfield-init-scripts) and
+`wrap-*:` fields as well as the `bwrap` line from the `required-tools:` field,
+and finally retry `opam init`.
 
 See also the [wrap entry](Manual.html#configfield-wrap-build-commands) section
 in the manual.

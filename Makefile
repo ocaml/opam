@@ -103,9 +103,9 @@ opam-%.install: $(JBUILDER_DEP)
 opam.install: $(JBUILDER_DEP)
 	$(JBUILDER) build $(JBUILDER_ARGS) opam-installer.install opam.install
 
-opam-actual.install: opam.install
+opam-actual.install: opam.install man
 	@echo 'bin: [' > $@
-	@grep -h 'bin/[^/]*' $^ >> $@
+	@grep -h 'bin/[^/]*' $< >> $@
 	@echo ']' >> $@
 	@echo 'man: [' >>$@
 	@$(patsubst %,echo '  "'%'"' >>$@;,$(wildcard doc/man/*.1))

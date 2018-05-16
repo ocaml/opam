@@ -315,6 +315,65 @@ let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
              (OpamPackage.names_of_packages t.compiler_packages)
          in
          let unopt = unopt -- base in
+         let conflicts =
+           let get_formula pkg =
+             OpamStd.Option.map
+               (fun opam ->
+                  OpamFilter.filter_formula ~default:false
+                    (OpamPackageVar.resolve_switch ~package:pkg t)
+                    (OpamFile.OPAM.conflicts opam))
+               (OpamSwitchState.opam_opt t pkg)
+           in
+           OpamPackage.Set.fold (fun unopt_pkg map ->
+               let set =
+                 OpamSwitchState.conflicts_with t
+                   (OpamPackage.Set.singleton unopt_pkg) latest in
+               OpamPackage.Set.fold (fun installed_pkg map ->
+                   match get_formula installed_pkg with
+                   | None -> map
+                   | Some conflicts_formula ->
+                     OpamFormula.fold_left
+                       (fun map (n,formula) ->
+                          if OpamPackage.name unopt_pkg = n &&
+                             OpamFormula.check_version_formula formula
+                               (OpamPackage.version unopt_pkg)
+                          then
+                            OpamPackage.Map.update unopt_pkg
+                              (OpamStd.List.cons (installed_pkg, formula)) [] map
+                          else map
+                       ) map conflicts_formula
+                 ) set map
+             ) unopt OpamPackage.Map.empty
+         in
+         (* First, folding on [latest] packages: for each one, check if
+            a [unopt] package does not verify [latest] package
+            dependency formula *)
+         let incompatibilities =
+           let get_formula pkg =
+             OpamStd.Option.map (OpamPackageVar.all_depends t)
+               (OpamSwitchState.opam_opt t pkg)
+           in
+           OpamPackage.Set.fold (fun latest_pkg map ->
+               match get_formula latest_pkg with
+               | None -> map
+               | Some depends_formula ->
+                 OpamPackage.Set.fold
+                   (fun unopt_pkg map ->
+                      OpamFormula.fold_left
+                        (fun map (n, formula) ->
+                           if OpamPackage.name unopt_pkg = n &&
+                              formula <> OpamFormula.Empty &&
+                              not (OpamFormula.check_version_formula formula
+                                     (OpamPackage.version unopt_pkg))
+                           then
+                             OpamPackage.Map.update unopt_pkg
+                               (OpamStd.List.cons (latest_pkg, formula)) [] map
+                           else map
+                        ) map depends_formula
+                   ) unopt map
+             ) latest OpamPackage.Map.empty
+         in
+
          if (OpamConsole.verbose ()) && not (OpamPackage.Set.is_empty unav) then
            OpamConsole.formatted_msg
              "%s.\n\
@@ -333,15 +392,40 @@ let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
            OpamConsole.formatted_msg
              "%s (run with --verbose to show unavailable upgrades).\n" hdmsg;
          if not (OpamPackage.Set.is_empty unopt) then
-           (OpamConsole.formatted_msg
+           (let bullet =
+              OpamConsole.(colorise `red
+                             (utf8_symbol Symbols.asterisk_operator "--"))
+              ^ " "
+            in
+            let string_dep pkg map reason =
+              OpamStd.Format.itemize ~bullet
+                (fun (p,f) ->
+                   Printf.sprintf "%s is installed and %s %s"
+                     (OpamPackage.to_string p)
+                     reason
+                     (OpamFormula.string_of_formula
+                        (fun (op,version) ->
+                           Printf.sprintf "%s %s %s"
+                             (OpamPackage.name_to_string pkg)
+                             (OpamPrinter.relop op)
+                             (OpamPackage.Version.to_string version)) f)
+                ) (OpamStd.Option.default []
+                     (OpamPackage.Map.find_opt pkg map))
+            in
+            OpamConsole.formatted_msg
               "The following packages are not being upgraded because the \
                new versions conflict with other installed packages that \
                would need to be downgraded or uninstalled. However, you \
                may \"opam upgrade\" these packages explicitly, which \
                will ask permission to downgrade or uninstall the \
                conflicting packages.\n%s"
-              (OpamStd.Format.itemize OpamPackage.to_string
-                 (OpamPackage.Set.elements unopt)));
+              (OpamStd.Format.itemize
+                 (fun pkg -> Printf.sprintf "%s\n%s%s"
+                     (OpamPackage.to_string pkg)
+                     (string_dep pkg incompatibilities "requires")
+                     (string_dep pkg conflicts "conflicts with")
+                 ) (OpamPackage.Set.elements unopt))
+           );
         )
     );
     OpamSolution.check_solution t result;

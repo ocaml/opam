@@ -462,10 +462,37 @@ module V = struct
   let package_atom constraints =
     map_option pkgname constraints
 
+  (* These two functions are duplicated from [OpamFormula] but we need to have a
+     it here because of a change on [Block] handling: to have a coherent
+     printing, we must not always discard them *)
+  let rec ands_to_list = function
+    | Empty -> []
+    | And (e,f) ->
+      List.rev_append (rev_ands_to_list e) (ands_to_list f)
+    | x -> [x]
+  and rev_ands_to_list = function
+    | Empty -> []
+    | And (e,f) ->
+      List.rev_append (ands_to_list f) (rev_ands_to_list e)
+    | x -> [x]
+
+  let rec ors_to_list = function
+    | Empty -> []
+    | Or (e,f)
+    | Block (Or (e,f)) ->
+      List.rev_append (rev_ors_to_list e) (ors_to_list f)
+    | x -> [x]
+  and rev_ors_to_list = function
+    | Empty -> []
+    | Or (e,f)
+    | Block (Or (e,f)) ->
+      List.rev_append (ors_to_list f) (rev_ors_to_list e)
+    | x -> [x]
+
   let package_formula_items kind constraints =
     let split, join = match kind with
-      | `Conj -> OpamFormula.(ands_to_list, ands)
-      | `Disj -> OpamFormula.(ors_to_list, ors)
+      | `Conj -> ands_to_list, OpamFormula.ands
+      | `Disj -> ors_to_list, OpamFormula.ors
     in
     let rec parse_formula ~pos:_ l =
       let rec aux = function
@@ -478,7 +505,7 @@ module V = struct
       in
       join (List.map aux l)
     in
-    let rec print_formula f =
+    let rec print_formula ?(inner=false) f =
       let rec aux ?(in_and=false) f =
         let group_if ?(cond=false) f =
           if cond || OpamFormatConfig.(!r.all_parens)
@@ -487,7 +514,7 @@ module V = struct
         in
         match f with
         | Empty -> assert false
-        | Block f -> Group (pos_null, print_formula f)
+        | Block f -> Group (pos_null, print_formula ~inner:true f)
         | And (e,f) ->
           group_if
             (Logop (pos_null, `And, aux ~in_and:true e, aux ~in_and:true f))
@@ -496,7 +523,8 @@ module V = struct
             (Logop (pos_null, `Or, aux e, aux f))
         | Atom at -> group_if (print (package_atom constraints) at)
       in
-      List.map (aux ~in_and:false) (split f)
+      let fl = if inner then [f] else split f in
+      List.map (aux ~in_and:false) fl
     in
     pp ~name:"pkg-formula" parse_formula print_formula
 
