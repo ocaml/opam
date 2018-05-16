@@ -920,7 +920,8 @@ let config =
           OpamGlobalState.with_ `Lock_none @@ fun gt ->
           OpamSwitchState.with_ `Lock_none gt @@ fun state ->
           let module Solver = (val OpamSolverConfig.(Lazy.force !r.solver)) in
-          print "solver" "%s" Solver.name;
+          print "solver" "%s"
+            (OpamCudfSolver.get_name (module Solver));
           print "install-criteria" "%s"
             (OpamSolverConfig.criteria `Default);
           print "upgrade-criteria" "%s"

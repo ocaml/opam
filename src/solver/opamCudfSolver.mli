@@ -38,3 +38,6 @@ val solver_of_string : string -> (module S)
 val get_solver : ?internal:bool -> (module S) list -> (module S)
 
 val has_builtin_solver : unit -> bool
+
+(** Gets the full solver name with params *)
+val get_name : (module S) -> string

@@ -80,7 +80,9 @@ let call_external_solver command ~criteria ?timeout (_, universe,_ as cudf) =
 module External (E: ExternalArg) : S = struct
   let name = E.name
 
-  let is_present = E.is_present
+  let ext = ref None
+
+  let is_present () = Lazy.force E.is_present
 
   let command_name = Some E.command_name
 
@@ -211,20 +213,32 @@ let make_custom_solver name args criteria =
     : S)
 
 
-let default_solver_selection = [
-  (module OpamBuiltinMccs: S);
-  (module Aspcud: S);
-  (module Mccs: S);
-  (module Aspcud_old: S);
-  (module Packup: S);
-]
+let default_solver_selection =
+  OpamBuiltinMccs.all_backends @ [
+    (module Aspcud: S);
+    (module Mccs: S);
+    (module Aspcud_old: S);
+    (module Packup: S);
+  ]
+
+let extract_solver_param name =
+  if OpamStd.String.ends_with ~suffix:")" name then
+    match OpamStd.String.cut_at name '(' with
+    | Some (xname, ext2) ->
+      xname, Some (OpamStd.String.remove_suffix ~suffix:")" ext2)
+    | None -> name, None
+  else name, None
 
 let custom_solver cmd = match cmd with
   | [ CIdent name, _ ] | [ CString name, _ ] ->
     (try
+       let xname, ext = extract_solver_param name in
        List.find (fun (module S: S) ->
-           (S.name = Filename.basename name || S.command_name = Some name)
-           && Lazy.force S.is_present)
+           let n, _ = extract_solver_param S.name in
+           (n = xname || n = Filename.basename xname ||
+            S.command_name = Some name) &&
+           (if ext <> None then S.ext := ext;
+            S.is_present ()))
          default_solver_selection
      with Not_found ->
        OpamConsole.error_and_exit `Configuration_error
@@ -236,7 +250,7 @@ let custom_solver cmd = match cmd with
         let corresponding_module =
           List.find (fun (module S: S) ->
               S.command_name =
-              Some (Filename.basename name) && Lazy.force S.is_present)
+              Some (Filename.basename name) && S.is_present ())
             default_solver_selection
         in
         let module S = (val corresponding_module) in
@@ -255,7 +269,7 @@ let solver_of_string s =
 
 let has_builtin_solver () =
   List.exists
-    (fun (module S: S) -> S.command_name = None && Lazy.force S.is_present)
+    (fun (module S: S) -> S.command_name = None && S.is_present ())
     default_solver_selection
 
 let get_solver ?internal l =
@@ -263,7 +277,7 @@ let get_solver ?internal l =
     List.find
       (fun (module S: S) ->
          (internal = None || internal = Some (S.command_name = None)) &&
-         Lazy.force S.is_present)
+         S.is_present ())
       l
   with Not_found ->
     OpamConsole.error_and_exit `Configuration_error
@@ -276,3 +290,9 @@ let get_solver ?internal l =
          "This opam has been compiled without a built-in solver, so you need \
           to install and configure an external one. See \
           http://opam.ocaml.org/doc/Install.html#ExternalSolvers for details.")
+
+let get_name (module S: S) =
+  let name, ext0 = extract_solver_param S.name in
+  match !S.ext, ext0 with
+  | Some e, _ | None, Some e -> Printf.sprintf "%s(%s)" name e
+  | None, None -> name

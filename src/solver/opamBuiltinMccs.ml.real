@@ -10,11 +10,7 @@
 
 open OpamCudfSolverSig
 
-let name = "builtin-"^Mccs.solver_id
-
-let is_present = lazy true
-
-let command_name = None
+let name solver_backend = "builtin-"^Mccs.get_solver_id ~solver:solver_backend ()
 
 let default_criteria = {
   crit_default = "-removed,\
@@ -28,11 +24,35 @@ let default_criteria = {
   crit_best_effort_prefix = Some "+count[opam-query:,false],";
 }
 
-let call ~criteria ?timeout cudf =
+let call solver_backend ext ~criteria ?timeout cudf =
+  let solver = match solver_backend, ext with
+    | `LP _, Some ext -> `LP ext
+    | _ -> solver_backend
+  in
   match
-    Mccs.resolve_cudf ~verbose:OpamCoreConfig.(!r.debug_level >= 2)
+    Mccs.resolve_cudf
+      ~solver
+      ~verbose:OpamCoreConfig.(!r.debug_level >= 2)
       ?timeout criteria cudf
   with
   | None -> raise Common.CudfSolver.Unsat
   | Some (preamble, univ) -> Some preamble, univ
   | exception Mccs.Timeout -> raise Timeout
+
+let of_backend backend : (module OpamCudfSolverSig.S) =
+  (module struct
+    let name = name backend
+    let ext = ref None
+    let is_present () =
+      match backend, !ext with
+      | `LP "", None -> false
+      | `LP cmd, None | `LP _, Some cmd ->
+        OpamSystem.resolve_command cmd <> None
+      | _ -> true
+    let command_name = None
+    let default_criteria = default_criteria
+    let call = call backend !ext
+  end)
+
+let all_backends =
+  List.map of_backend Mccs.supported_backends

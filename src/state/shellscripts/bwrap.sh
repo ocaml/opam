@@ -1,16 +1,11 @@
 #!/bin/bash -ue
 
-ROOT="~/.opam"
-if [ -v OPAMROOT ]; then
-	ROOT=$OPAMROOT
-fi
-
 if ! command -v bwrap >/dev/null; then
     echo "The 'bwrap' command was not found. Install 'bubblewrap' on your system, or" >&2
-    echo "disable sandboxing in $ROOT/config at your own risk." >&2
+    echo "disable sandboxing in ${OPAMROOT:-~/.opam}/config at your own risk." >&2
     echo "See https://github.com/projectatomic/bubblewrap for bwrap details." >&2
     echo "For 'bwrap' use in opam, see the FAQ:" >&2
-    echo "  https://opam.ocaml.org/doc/2.0/FAQ.html#Why-does-opam-require-bwrap." >&2
+    echo "  https://opam.ocaml.org/doc/2.0/FAQ.html#Why-does-opam-require-bwrap" >&2
     exit 10
 fi
 

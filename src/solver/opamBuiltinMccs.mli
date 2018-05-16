@@ -8,4 +8,4 @@
 (*                                                                        *)
 (**************************************************************************)
 
-include OpamCudfSolverSig.S
+val all_backends: (module OpamCudfSolverSig.S) list
