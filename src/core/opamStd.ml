@@ -766,7 +766,8 @@ module OpamSys = struct
         with e ->
           fatal e;
           try
-            with_process_in "ps" (Printf.sprintf "-p %d -o comm=" ppid)
+            with_process_in "ps"
+              (Printf.sprintf "-p %d -o comm= 2>/dev/null" ppid)
               (fun ic -> Some (input_line ic))
           with
           | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
