@@ -121,5 +121,5 @@ remote: out/opam-full-$(VERSION).tar.gz
 	ssh "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/out"
 	scp Makefile "$(REMOTE):$(REMOTE_DIR)/"
 	scp "$^" "$(REMOTE):$(REMOTE_DIR)/$^"
-	ssh "$(REMOTE)" 'sh -c "cd $(REMOTE_DIR) && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
+	ssh "$(REMOTE)" 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
 	scp "$(REMOTE):$(REMOTE_DIR)/out/opam-$(VERSION)*" out/

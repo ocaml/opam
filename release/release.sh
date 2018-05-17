@@ -4,6 +4,7 @@
 # remotes "some-osx" and "some-openbsd", with the corresponding OSes, ocaml deps
 # installed
 
+LC_ALL=C
 DIR=$(dirname $0)
 cd "$DIR"
 if [[ $# -eq 0 || "x$1" =~ "x-" ]]; then
