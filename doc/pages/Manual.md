@@ -945,7 +945,7 @@ files.
 
 - <a id="opamfield-conflict-class">`conflict-class: [ <pkgname> ... ]`</a>:
   an alternate, symmetric way of defining package conflicts. Conflict classes
-  defined by this field have the same constraints as package names, but occupy a
+  defined by this field have the same syntactic constraints as package names, but occupy a
   different namespace. Any two packages having a common conflict class will be
   considered incompatible. This is useful to define sets of mutually conflicting
   packages.

@@ -737,6 +737,15 @@ let print_table ?cut oc ~sep table =
   let replace_newlines by =
     Re.(replace_string (compile (char '\n')) ~by)
   in
+  let cleanup_trailing sl =
+    let rec clean acc = function
+      | s::r ->
+        let s' = OpamStd.String.strip_right s in
+        if s' = "" then clean acc r else List.rev_append r (s'::acc)
+      | [] -> acc
+    in
+    clean [] (List.rev sl)
+  in
   let print_line l = match cut with
     | `None ->
       let s = List.map (replace_newlines "\\n") l |> String.concat sep in
@@ -758,15 +767,20 @@ let print_table ?cut oc ~sep table =
       let rec split_at_overflows start_col acc cur =
         let append = function
           | [] -> acc
-          | last::r -> List.rev (OpamStd.String.strip last :: r) :: acc
+          | last::r -> List.rev (OpamStd.String.strip_right last :: r) :: acc
         in
         function
         | [] -> List.rev (append cur)
         | cell::rest ->
           let multiline = String.contains cell '\n' in
+          let cell_lines = OpamStd.String.split cell '\n' in
           let cell_width =
+            List.fold_left max 0 (List.map visual_length cell_lines)
+          in
+          let text_width =
             List.fold_left max 0
-              (List.map visual_length (OpamStd.String.split cell '\n'))
+              (List.map (fun s -> visual_length (OpamStd.String.strip_right s))
+                 cell_lines)
           in
           let end_col = start_col + sep_len + cell_width in
           let indent ~sep n cell =
@@ -779,10 +793,10 @@ let print_table ?cut oc ~sep table =
               OpamStd.String.strip_right
               (OpamStd.String.split cell '\n')
           in
-          if end_col < width then
+          if start_col + sep_len + text_width <= width then
             if multiline then
               let cell =
-                indent ~sep:true start_col (OpamStd.String.strip cell)
+                indent ~sep:true start_col (OpamStd.String.strip_right cell)
               in
               split_at_overflows margin (append (cell::cur)) [] rest
             else
@@ -791,14 +805,14 @@ let print_table ?cut oc ~sep table =
                   width - start_col - max_sep_len >= min_reformat_width
           then
             let cell =
-              OpamStd.String.strip cell |> fun cell ->
+              OpamStd.String.strip_right cell |> fun cell ->
               reformat ~width:(width - start_col - max_sep_len) cell |>
               indent ~sep:true start_col
             in
             split_at_overflows margin acc (cell::cur) []
           else if multiline || margin + cell_width >= width then
             let cell =
-              OpamStd.String.strip cell |> fun cell ->
+              OpamStd.String.strip_right cell |> fun cell ->
               reformat ~width:(width - margin) cell |> fun cell ->
               OpamStd.String.split cell '\n' |>
               OpamStd.List.concat_map ("\n" ^ indent_string)
@@ -817,7 +831,7 @@ let print_table ?cut oc ~sep table =
       in
       output_string str;
   in
-  List.iter print_line table
+  List.iter (fun l -> print_line (cleanup_trailing l)) table
 
 (* This allows OpamStd.Config.env to display warning messages *)
 let () =

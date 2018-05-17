@@ -728,7 +728,7 @@ let warns_to_string ws =
          | `Error -> OpamConsole.colorise `red "error"
        in
        OpamStd.Format.reformat ~indent:14
-         (Printf.sprintf "  %15s %2d: %s" ws n s))
+         (Printf.sprintf "  %16s %2d: %s" ws n s))
     ws
 
 (* Package definition loading *)

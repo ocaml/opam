@@ -616,7 +616,7 @@ module OpamSys = struct
     let cmd =
       List.find Sys.file_exists (List.map (fun d -> Filename.concat d cmd) path)
     in
-    let ic = Unix.open_process_in (cmd^" "^args^" 2>/dev/null") in
+    let ic = Unix.open_process_in (cmd^" "^args) in
     try
       let r = f ic in
       ignore (Unix.close_process_in ic) ; r
@@ -766,7 +766,8 @@ module OpamSys = struct
         with e ->
           fatal e;
           try
-            with_process_in "ps" (Printf.sprintf "-p %d -o comm=" ppid)
+            with_process_in "ps"
+              (Printf.sprintf "-p %d -o comm= 2>/dev/null" ppid)
               (fun ic -> Some (input_line ic))
           with
           | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->

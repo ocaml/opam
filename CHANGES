@@ -13,6 +13,7 @@ are not marked).
   variables setup, color console and utf8 (using specific C stubs)
 * Better detection of the running shell
 * Added shell helpers to automatically sync the environment on every prompt
+* Support for selecting different backends if compiled in the `ocaml-mccs` solver lib
 
 2.0.0~rc
 * Fixes
