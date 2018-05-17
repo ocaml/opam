@@ -126,3 +126,16 @@ to rename `foo` to `bar`:
 
 This ensures at the same time that users upgrading will get the new package
 `bar`, and that the package can't be installed twice under the two names.
+
+
+---
+
+#### Display the current "opam switch" in the prompt ?
+
+This can get quite handy if you have many switches you use in parallel.
+You can use e.g. the command `opam switch show --safe 2>/dev/null | sed
+'s|.*/|*|'` to return a (shortened) switch name.
+
+For `bash`, just include `$(COMMAND)` in your definition of `PS1` (making sure the `$` is escaped).
+
+For `zsh`, use `setopt prompt_subst`, and include `$(COMMAND)` in the definition of `prompt`.
