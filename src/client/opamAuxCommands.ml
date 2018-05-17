@@ -427,9 +427,6 @@ let get_compatible_compiler ?repos ?locked rt dir =
           acc (OpamFile.OPAM.pin_depends opam))
       local_opams OpamPackage.Set.empty
   in
-  let local_atoms =
-    OpamSolution.eq_atoms_of_packages local_packages
-  in
   let virt_st =
     let opams =
       OpamPackage.Map.union (fun _ x -> x) virt_st.opams local_opams
@@ -512,10 +509,29 @@ let get_compatible_compiler ?repos ?locked rt dir =
    else
    let candidates = OpamFormula.to_dnf default_compiler in
    try
-     List.find
+     OpamStd.List.find_map
        (fun atoms ->
-          OpamSolver.atom_coinstallability_check univ
-            (local_atoms @ atoms))
+          let has_all compiler_packages =
+            List.for_all (fun at ->
+                OpamPackage.Set.exists (OpamFormula.check at) compiler_packages)
+              atoms
+          in
+          let compiler =
+            OpamFormula.packages_of_atoms
+              (Lazy.force virt_st.available_packages)
+              atoms
+          in
+          if not (has_all compiler) then None else
+          (* fake universe with `local_packages` as base, just to check
+             coinstallability *)
+          let univ =
+            { univ with u_base = local_packages; u_installed = local_packages }
+          in
+          let compiler = OpamSolver.installable_subset univ compiler in
+          if has_all compiler then
+            Some (OpamSolution.eq_atoms_of_packages compiler)
+          else None
+       )
        candidates
    with Not_found ->
       OpamConsole.warning
