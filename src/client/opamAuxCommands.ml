@@ -475,7 +475,9 @@ let get_compatible_compiler ?repos ?locked rt dir =
       {univ with u_base = local_packages; u_installed = local_packages}
       (OpamPackage.Set.union local_packages compilers)
   in
-  if OpamPackage.Set.is_empty installable then
+  if not (OpamPackage.Set.is_empty local_packages) &&
+     OpamPackage.Set.is_empty installable
+  then
     (OpamConsole.error
        "The following local packages don't appear to be installable:\n%s"
        (OpamStd.Format.itemize OpamPackage.to_string
