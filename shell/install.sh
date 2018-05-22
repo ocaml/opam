@@ -226,10 +226,8 @@ xsudo install -m 755 "$TMP/$OPAM_BIN" "$BINDIR/opam"
 echo "## opam $VERSION installed to $BINDIR"
 
 if [ ! "$FRESH" = 1 ]; then
-    echo "## Converting the opam root format"
-    "$BINDIR/opam" update --yes >/dev/null
-    echo "## Updating the repositories"
-    "$BINDIR/opam" update
+    echo "## Converting the opam root format & updating"
+    "$BINDIR/opam" init --reinit -nc
 fi
 
 WHICH=$(command -v opam || echo notfound)
