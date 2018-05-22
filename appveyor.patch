@@ -3,8 +3,6 @@ From: David Allsopp <david.allsopp@metastack.com>
 Date: Fri, 19 Jan 2018 09:32:57 +0000
 Subject: [PATCH] Use dra27 jbuilder/ocaml-mccs/flexdll
 
- - Need unreleased ocaml-mccs 1.1+5 to build mccs on Windows.
- - Need unreleased jbuilder beta17 to build mccs on MSVC.
  - Need unreleased flexdll 0.38 to build mccs on mingw.
 ---
  src_ext/Makefile         | 4 ++--
