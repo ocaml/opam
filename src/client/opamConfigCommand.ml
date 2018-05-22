@@ -193,9 +193,9 @@ let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
   let opamroot_not_current =
     let current = gt.root in
     let default = OpamStateConfig.(default.root_dir) in
-    match OpamStd.Env.getopt "OPAMROOT" with
+    match OpamStd.Config.env_string "ROOT" with
     | None -> current <> default
-    | Some r -> r <> OpamFilename.Dir.to_string current
+    | Some r -> OpamFilename.Dir.of_string r <> current
   in
   let opamswitch_not_current =
     let default =
@@ -203,9 +203,9 @@ let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
         (OpamStateConfig.get_current_switch_from_cwd gt.root)
         (OpamFile.Config.switch gt.config)
     in
-    match OpamStd.Env.getopt "OPAMSWITCH" with
+    match OpamStd.Config.env_string "SWITCH" with
     | None -> Some switch <> default
-    | Some s -> s <> OpamSwitch.to_string switch
+    | Some s -> OpamSwitch.of_string s <> switch
   in
   if opamroot_not_current && not set_opamroot then
     OpamConsole.note
