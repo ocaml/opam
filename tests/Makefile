@@ -103,7 +103,7 @@ init:
 ifeq ($(REPOKIND), git)
 	cd $(OPAM_REPO) && $(call GIT_INIT,README)
 endif
-	$(OPAMBIN) init --bare --no-setup $(REPO) $(OPAM_REPO) -k $(REPOKIND)
+	$(OPAMBIN) init --bare --no-setup --disable-sandboxing $(REPO) $(OPAM_REPO) -k $(REPOKIND)
 
 define mkurl
   echo 'src: "http://dev.null" checksum: "'`openssl md5 packages/$(2) |cut -d' ' -f2`'"' \
