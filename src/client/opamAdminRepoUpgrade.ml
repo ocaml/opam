@@ -195,8 +195,13 @@ let do_upgrade repo_root =
     (fun () ->
        Hashtbl.fold
          (fun url hash l -> [OpamUrl.to_string url; OpamHash.to_string hash]::l)
-         url_md5 [] |>
-       OpamFile.Lines.write cache_file)
+         url_md5 [] |> fun lines ->
+       try OpamFile.Lines.write cache_file lines with e ->
+         OpamStd.Exn.fatal e;
+         OpamConsole.log "REPO_UPGRADE"
+           "Could not write archive hash cache to %s, skipping (%s)"
+           (OpamFile.to_string cache_file)
+           (Printexc.to_string e))
   in
   let ocaml_versions =
     OpamStd.String.Map.fold (fun c comp_file ocaml_versions ->
