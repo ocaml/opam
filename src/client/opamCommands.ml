@@ -219,7 +219,7 @@ let init =
            shell init files.";
         Some true, info ["i";"interactive"] ~doc:
           "Run the setup interactively (this is the default for an initial \
-           run, or when no more specific options are specified";
+           run, or when no more specific options are specified)";
       ])
   in
   let update_config =
@@ -228,7 +228,9 @@ let init =
           "Automatically setup the user shell configuration for opam, e.g. \
            adding a line to the `~/.profile' file.";
         Some false, info ["n";"no-setup"] ~doc:
-          "Do not update the user shell configuration to setup opam.";
+          "Do not update the user shell configuration to setup opam. Also \
+           implies $(--disable-shell-hook), unless $(--interactive) or \
+           specified otherwise";
       ])
   in
   let setup_completion =
@@ -316,7 +318,7 @@ let init =
       | None ->
         (not already_init ||
          update_config = None && completion = None && env_hook = None),
-        update_config, completion, env_hook
+        update_config, completion, OpamStd.Option.Op.(env_hook ++ update_config)
       | Some true -> true, update_config, completion, env_hook
     in
     let shell = match shell with
