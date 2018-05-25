@@ -68,7 +68,7 @@ module B = struct
 
   let repo_update_complete _ _ = Done ()
 
-  let pull_url ?cache_dir:_ dirname checksum remote_url =
+  let pull_url ?cache_dir:_ ?subpath:_ dirname checksum remote_url =
     log "pull-file into %a: %a"
       (slog OpamFilename.Dir.to_string) dirname
       (slog OpamUrl.to_string) remote_url;

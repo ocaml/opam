@@ -192,9 +192,17 @@ module B = struct
 
   let repo_update_complete _ _ = Done ()
 
-  let pull_url ?cache_dir:_ local_dirname _checksum remote_url =
+  let pull_url ?cache_dir:_ ?subpath local_dirname _checksum remote_url =
+    let local_dirname =
+      OpamStd.Option.map_default (fun x -> OpamFilename.Op.(local_dirname / x))
+        local_dirname subpath
+    in
     OpamFilename.mkdir local_dirname;
     let dir = OpamFilename.Dir.to_string local_dirname in
+    let remote_url =
+      OpamStd.Option.map_default (fun x -> OpamUrl.Op.(remote_url / x))
+        remote_url subpath
+    in
     let remote_url =
       match OpamUrl.local_dir remote_url with
       | Some _ ->

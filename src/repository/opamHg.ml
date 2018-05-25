@@ -37,7 +37,7 @@ module VCS = struct
     | None -> mark_prefix
     | Some fragment -> mark_prefix ^ "-" ^ fragment
 
-  let fetch ?cache_dir:_ repo_root repo_url =
+  let fetch ?cache_dir:_ ?subpath:_ repo_root repo_url =
     let src = OpamUrl.base_url repo_url in
     let rev = OpamStd.Option.default "default" repo_url.OpamUrl.hash in
     let mark = mark_from_url repo_url in

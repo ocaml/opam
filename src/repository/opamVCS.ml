@@ -17,7 +17,7 @@ module type VCS = sig
   val name: OpamUrl.backend
   val exists: dirname -> bool
   val init: dirname -> url -> unit OpamProcess.job
-  val fetch: ?cache_dir:dirname -> dirname -> url -> unit OpamProcess.job
+  val fetch: ?cache_dir:dirname -> ?subpath:string -> dirname -> url -> unit OpamProcess.job
   val reset_tree: dirname -> url -> unit OpamProcess.job
   val patch_applied: dirname -> url -> unit OpamProcess.job
   val diff: dirname -> url -> filename option OpamProcess.job
@@ -72,7 +72,7 @@ module Make (VCS: VCS) = struct
     VCS.patch_applied dirname url @@+ fun () ->
     Done ()
 
-  let pull_url ?cache_dir dirname checksum url =
+  let pull_url ?cache_dir ?subpath dirname checksum url =
     if checksum <> None then invalid_arg "VC pull_url doesn't allow checksums";
     OpamProcess.Job.catch
       (fun e ->
@@ -83,7 +83,7 @@ module Make (VCS: VCS) = struct
          Done (Not_available (None, OpamUrl.to_string url)))
     @@ fun () ->
     if VCS.exists dirname then
-      VCS.fetch ?cache_dir dirname url @@+ fun () ->
+      VCS.fetch ?cache_dir ?subpath dirname url @@+ fun () ->
       VCS.is_up_to_date dirname url @@+ function
       | true -> Done (Up_to_date None)
       | false ->
@@ -92,7 +92,7 @@ module Make (VCS: VCS) = struct
     else
       (OpamFilename.mkdir dirname;
        VCS.init dirname url @@+ fun () ->
-       VCS.fetch ?cache_dir dirname url @@+ fun () ->
+       VCS.fetch ?cache_dir ?subpath dirname url @@+ fun () ->
        VCS.reset_tree dirname url @@+ fun () ->
        Done (Result None))
 

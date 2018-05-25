@@ -48,7 +48,7 @@ module VCS = struct
   (* Marks the current state, in the form of a reversing patch on top of the
      fetched state *)
 
-  let fetch ?cache_dir:_ repo_root repo_url =
+  let fetch ?cache_dir:_ ?subpath:_ repo_root repo_url =
     (* Just do a fresh pull into a temp directory, and replace _darcs/
        There is no easy way to diff or make sure darcs forgets about local
        patches otherwise. *)

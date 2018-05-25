@@ -54,7 +54,7 @@ let read_opam_file_for_pinning ?(quiet=false) name f url =
 
 exception Fetch_Fail of string
 
-let get_source_definition ?version st nv url =
+let get_source_definition ?version ?subpath st nv url =
   let root = st.switch_global.root in
   let srcdir = OpamPath.Switch.pinned_package root st.switch nv.name in
   let fix opam =
@@ -65,7 +65,7 @@ let get_source_definition ?version st nv url =
     opam
   in
   let open OpamProcess.Job.Op in
-  OpamUpdate.fetch_dev_package url srcdir nv @@| function
+  OpamUpdate.fetch_dev_package url srcdir ?subpath nv @@| function
   | Not_available (_,s) -> raise (Fetch_Fail s)
   | Up_to_date _ | Result _ ->
     let subsrcdir =
@@ -473,7 +473,7 @@ and source_pin
       OpamStd.Option.Op.(
         opam_opt >>+ fun () ->
         urlf >>= fun url ->
-        OpamProcess.Job.run @@ get_source_definition ?version st nv url
+        OpamProcess.Job.run @@ get_source_definition ?version ?subpath st nv url
       )
     with Fetch_Fail err ->
       if force then None else

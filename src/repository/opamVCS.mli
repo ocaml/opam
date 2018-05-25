@@ -28,7 +28,7 @@ module type VCS = sig
       in a staging area.
       Be aware that the remote URL might have been changed, so make sure
       to update accordingly. *)
-  val fetch: ?cache_dir:dirname -> dirname -> url -> unit OpamProcess.job
+  val fetch: ?cache_dir:dirname -> ?subpath:string -> dirname -> url -> unit OpamProcess.job
 
   (** Reset the master branch of the repository to match the remote repository
       state. This might still fetch more data (git submodules...), so is

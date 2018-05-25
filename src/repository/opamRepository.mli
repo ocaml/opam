@@ -33,7 +33,7 @@ val update: repository -> dirname -> unit OpamProcess.job
     or synchronised directly if local and [working_dir] was set. *)
 val pull_tree:
   string -> ?cache_dir:dirname -> ?cache_urls:url list -> ?working_dir:bool ->
-  dirname -> OpamHash.t list -> url list ->
+  ?subpath:string -> dirname -> OpamHash.t list -> url list ->
   string download OpamProcess.job
 
 (** Same as [pull_tree], but for fetching a single file. *)
