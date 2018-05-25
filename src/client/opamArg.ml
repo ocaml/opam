@@ -1167,6 +1167,12 @@ let assume_built =
      packages that are being worked on. Implies $(i,--inplace-build). \
      No locally-pinned packages will be skipped."
 
+let subpath =
+  mk_opt ["subpath"] "PATH"
+    ".opam files are retrieved from the given subpath. It can be combined with \
+    $(i,--recursive) to have a recursive lookup on the subpath."
+    Arg.(some string) None
+
 let package_selection_section = "PACKAGE SELECTION OPTIONS"
 
 let package_selection =

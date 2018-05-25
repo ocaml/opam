@@ -2683,7 +2683,7 @@ let pin ?(unpin_only=false) () =
   in
   let pin
       global_options build_options
-      kind edit no_act dev_repo print_short recurse command params =
+      kind edit no_act dev_repo print_short recurse subpath command params =
     apply_global_options global_options;
     apply_build_options build_options;
     let action = not no_act in
@@ -2801,7 +2801,7 @@ let pin ?(unpin_only=false) () =
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          OpamSwitchState.drop @@
-         OpamClient.PIN.pin st name ?version ~edit ~action pin;
+         OpamClient.PIN.pin st name ?version ~edit ~action ?subpath pin;
          `Ok ()
        | `Error e -> `Error (false, e))
     | command, params -> bad_subcommand commands ("pin", command, params)
@@ -2809,7 +2809,7 @@ let pin ?(unpin_only=false) () =
   Term.ret
     Term.(const pin
           $global_options $build_options
-          $kind $edit $no_act $dev_repo $print_short_flag $recurse
+          $kind $edit $no_act $dev_repo $print_short_flag $recurse $subpath
           $command $params),
   term_info "pin" ~doc ~man
 

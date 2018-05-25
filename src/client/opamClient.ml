@@ -1392,12 +1392,12 @@ module PIN = struct
         "No package named %S found"
         (OpamPackage.Name.to_string name)
 
-  let pin st name ?(edit=false) ?version ?(action=true) target =
+  let pin st name ?(edit=false) ?version ?(action=true) ?subpath target =
     try
       let pinned = st.pinned in
       let st =
         match target with
-        | `Source url -> source_pin st name ?version ~edit (Some url)
+        | `Source url -> source_pin st name ?version ~edit ?subpath (Some url)
         | `Version v ->
           let st = version_pin st name v in
           if edit then OpamPinCommand.edit st name else st

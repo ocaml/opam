@@ -117,7 +117,7 @@ module PIN: sig
   val pin:
     rw switch_state ->
     OpamPackage.Name.t ->
-    ?edit:bool -> ?version:version -> ?action:bool ->
+    ?edit:bool -> ?version:version -> ?action:bool -> ?subpath:string ->
     [< `Source of url | `Version of version | `Dev_upstream | `None ] ->
     rw switch_state
 
