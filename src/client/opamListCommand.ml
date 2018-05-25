@@ -470,7 +470,7 @@ let version_color st nv =
 let mini_field_printer ?(prettify=false) ?(normalise=false) =
   if normalise then OpamPrinter.Normalise.value else
   function
-  | String (_, s) -> s
+  | String (_, s) when prettify -> s
   | List (_, l) when prettify &&
                      List.for_all (function String _ -> true | _ -> false) l ->
     OpamStd.List.concat_map ", " (function String (_, s) -> s | _ -> assert false) l
