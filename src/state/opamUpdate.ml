@@ -283,7 +283,8 @@ let pinned_package st ?version ?(working_dir=false) name =
         else opam
       in
       List.iter (fun (file, rel_file, hash) ->
-          if OpamHash.check_file (OpamFilename.to_string file) hash then
+          if OpamFilename.exists file &&
+             OpamHash.check_file (OpamFilename.to_string file) hash then
             OpamFilename.copy ~src:file
               ~dst:(OpamFilename.create files_dir rel_file)
           else
