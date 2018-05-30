@@ -72,8 +72,7 @@ module V : sig
   val group : (value, value list) t
 
   (** Options in the [value] type sense, i.e. a value with an optional list
-      of parameters in braces:
-      "value {op1 op2}" *)
+      of parameters in braces: ["value {op1 op2}"] *)
   val option :
     (value, value * value list) t
 

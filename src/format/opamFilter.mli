@@ -9,9 +9,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Formulas on variables, as used in opam files build scripts *)
+(** Formulas on variables, as used in opam files build scripts
 
-(** Filters are a small language of formulas over strings and booleans used for
+    Filters are a small language of formulas over strings and booleans used for
     conditions and text replacements. It has relational operators over strings
     (using version-number comparison), And, Or and Not boolean operations,
     dynamic casting (using strings "true" and "false"), and string
@@ -20,7 +20,9 @@
 
     String interpolation uses the syntax [%{identifier}%]
 
-    Identifiers have the form {v[package:]var[?str_if_true:str_if_false_or_undef]v}.
+    Identifiers have the form
+    {v [package:]var[?str_if_true:str_if_false_or_undef] v}
+
     The last optional part specifies a conversion from boolean to static strings.
 
     The syntax [pkg1+pkg2+pkgn:var] is allowed as a shortcut to
