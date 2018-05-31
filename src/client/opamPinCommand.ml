@@ -20,7 +20,10 @@ let string_of_pinned opam =
   let bold = OpamConsole.colorise `bold in
   Printf.sprintf "pinned %s (version %s)"
     (OpamStd.Option.to_string ~none:(bold "locally")
-       (fun u -> "to " ^ (bold (OpamUrl.to_string (OpamFile.URL.url u))))
+       (fun u -> Printf.sprintf "to %s%s"
+           (bold (OpamUrl.to_string (OpamFile.URL.url u)))
+           (OpamStd.Option.map_default (fun s -> bold (" ("^s^")"))
+              "" (OpamFile.URL.subpath u)))
        (OpamFile.OPAM.url opam))
     (bold (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
 
