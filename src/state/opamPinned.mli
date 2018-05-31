@@ -38,6 +38,7 @@ val find_opam_file_in_source: name -> dirname -> OpamFile.OPAM.t OpamFile.t opti
     [OpamStateConfig.(!r.locked)] *)
 val files_in_source:
   ?recurse:bool ->
+  ?subpath:string ->
   dirname -> (name option * OpamFile.OPAM.t OpamFile.t * string option) list
 
 (** From an opam file location, sitting below the given project directory, find

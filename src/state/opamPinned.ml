@@ -163,13 +163,19 @@ let name_of_opam_filename dir file =
   try Some (OpamPackage.Name.of_string name)
   with Failure _ -> None
 
-let files_in_source ?(recurse = false) d =
+let files_in_source ?(recurse=false) ?subpath d =
   let baseopam = OpamFilename.Base.of_string "opam" in
   let rec files acc base d =
     let acc =
       OpamStd.List.filter_map (fun f ->
           if OpamFilename.basename f = baseopam ||
              OpamFilename.check_suffix f ".opam" then
+            let base =
+              match base, subpath with
+              | Some b, Some sp -> Some (Filename.concat sp b)
+              | Some b, _ | _, Some b -> Some b
+              | None, None -> None
+            in
             Some (f, base)
           else
             None)
@@ -191,8 +197,10 @@ let files_in_source ?(recurse = false) d =
            files acc base d
          else
            acc)
-      acc
-      (OpamFilename.dirs d)
+      acc (OpamFilename.dirs d)
+  in
+  let d =
+    (OpamStd.Option.map_default (fun sp -> OpamFilename.Op.(d / sp)) d subpath)
   in
   files [] None d @ files [] None (d / "opam") |>
   List.map
