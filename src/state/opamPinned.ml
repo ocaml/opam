@@ -165,44 +165,48 @@ let name_of_opam_filename dir file =
 
 let files_in_source ?(recurse=false) ?subpath d =
   let baseopam = OpamFilename.Base.of_string "opam" in
-  let rec files acc base d =
-    let acc =
-      OpamStd.List.filter_map (fun f ->
-          if OpamFilename.basename f = baseopam ||
-             OpamFilename.check_suffix f ".opam" then
-            let base =
-              match base, subpath with
-              | Some b, Some sp -> Some (Filename.concat sp b)
-              | Some b, _ | _, Some b -> Some b
-              | None, None -> None
-            in
-            Some (f, base)
-          else
-            None)
-        (OpamFilename.files d) @ acc in
-    List.fold_left
-      (fun acc d ->
-         if OpamFilename.(basename_dir d = Base.of_string "opam") ||
-            OpamStd.String.ends_with ~suffix:".opam"
-              (OpamFilename.Dir.to_string d)
-         then
-           match OpamFilename.opt_file OpamFilename.Op.(d//"opam") with
-           | None -> acc
-           | Some f -> (f, base) :: acc
-         else if recurse then
-           let basename = OpamFilename.(Base.to_string (basename_dir d)) in
-           let base = match base with
-             | None -> Some basename
-             | Some base -> Some (Filename.concat base basename) in
-           files acc base d
-         else
-           acc)
-      acc (OpamFilename.dirs d)
+  let files =
+    let rec files_aux acc base d =
+      let acc =
+        OpamStd.List.filter_map (fun f ->
+            if OpamFilename.basename f = baseopam ||
+               OpamFilename.check_suffix f ".opam" then
+              let base =
+                match base, subpath with
+                | Some b, Some sp -> Some (Filename.concat sp b)
+                | Some b, _ | _, Some b -> Some b
+                | None, None -> None
+              in
+              Some (f, base)
+            else
+              None)
+          (OpamFilename.files d) @ acc
+      in
+      List.fold_left
+        (fun acc d ->
+           if OpamFilename.(basename_dir d = Base.of_string "opam") ||
+              OpamStd.String.ends_with ~suffix:".opam"
+                (OpamFilename.Dir.to_string d)
+           then
+             match OpamFilename.opt_file OpamFilename.Op.(d//"opam") with
+             | None -> acc
+             | Some f -> (f, base) :: acc
+           else if recurse then
+             let basename = OpamFilename.(Base.to_string (basename_dir d)) in
+             let base = match base with
+               | None -> Some basename
+               | Some base -> Some (Filename.concat base basename) in
+             files_aux acc base d
+           else
+             acc)
+        acc (OpamFilename.dirs d)
+    in
+    files_aux [] None
   in
   let d =
     (OpamStd.Option.map_default (fun sp -> OpamFilename.Op.(d / sp)) d subpath)
   in
-  files [] None d @ files [] None (d / "opam") |>
+  files d @ files (d / "opam") |>
   List.map
     (fun (f, s) ->
        match OpamStateConfig.(!r.locked) with
