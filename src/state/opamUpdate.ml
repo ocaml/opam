@@ -210,8 +210,13 @@ let pinned_package st ?version ?(working_dir=false) name =
       then OpamFileTools.add_aux_files ~files_subdir_hashes:true opam
       else opam
     in
+    (* append subpath to source dir to retrieve opam files *)
+    let srcdir_find =
+      OpamStd.Option.map_default
+        (fun x -> OpamFilename.Op.(srcdir / x)) srcdir subpath
+    in
     let old_source_opam_hash, old_source_opam =
-      match OpamPinned.find_opam_file_in_source name srcdir with
+      match OpamPinned.find_opam_file_in_source name srcdir_find with
       | None -> None, None
       | Some f ->
         Some (OpamHash.compute (OpamFile.to_string f)),
@@ -247,9 +252,9 @@ let pinned_package st ?version ?(working_dir=false) name =
              (match subpath with None -> "" | Some s -> "/" ^ s))
     @@+ fun () ->
     (* Do the update *)
-    fetch_dev_package urlf srcdir ~working_dir nv @@+ fun result ->
+    fetch_dev_package urlf srcdir ~working_dir ?subpath nv @@+ fun result ->
     let new_source_opam =
-      OpamPinned.find_opam_file_in_source name srcdir >>= fun f ->
+      OpamPinned.find_opam_file_in_source name srcdir_find >>= fun f ->
       let warns, opam_opt = OpamFileTools.lint_file f in
       let warns, opam_opt = match opam_opt with
         | Some opam0 ->
