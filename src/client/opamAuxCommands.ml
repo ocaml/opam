@@ -146,7 +146,7 @@ let resolve_locals_pinned st atom_or_local_list =
           if OpamPackage.Set.is_empty pkgs then
             OpamConsole.warning "No pinned packages found at %s"
               (OpamFilename.Dir.to_string d);
-          List.rev_append (OpamSolution.eq_atoms_of_packages pkgs) acc
+          List.rev_append (OpamSolution.atoms_of_packages pkgs) acc
         | `Filename f ->
           OpamConsole.error_and_exit `Bad_arguments
             "This command doesn't support specifying a file name (%S)"
