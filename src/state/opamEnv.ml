@@ -369,9 +369,9 @@ let eval_string gt ?(set_opamswitch=false) switch =
 let shells_list = [ SH_sh; SH_zsh; SH_csh; SH_fish ]
 
 let complete_file = function
-  | SH_sh -> Some "complete.sh"
+  | SH_sh | SH_bash -> Some "complete.sh"
   | SH_zsh -> Some "complete.zsh"
-  | _ -> None
+  | SH_csh | SH_fish -> None
 
 let env_hook_file = function
   | SH_sh | SH_bash -> Some "env_hook.sh"
@@ -391,9 +391,9 @@ let init_file = function
   | SH_fish -> "init.fish"
 
 let complete_script = function
-  | SH_bash -> Some OpamScript.complete
+  | SH_sh | SH_bash -> Some OpamScript.complete
   | SH_zsh -> Some OpamScript.complete_zsh
-  | _ -> None
+  | SH_csh | SH_fish -> None
 
 let env_hook_script_base = function
   | SH_sh | SH_bash -> Some OpamScript.env_hook
