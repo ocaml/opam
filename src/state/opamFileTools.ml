@@ -610,6 +610,9 @@ let lint ?check_extra_files t =
                       used norm)
                   bad_os_arch_values)
        (bad_os_arch_values <> []));
+    cond 56 `Warning
+      "It is discouraged for non-compiler packages to use 'setenv:'"
+      (t.env <> [] && not (has_flag Pkgflag_Compiler t));
   ]
   in
   format_errors @
