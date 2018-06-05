@@ -75,10 +75,7 @@ let repos_list st =
 let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
   log "LOAD-SWITCH-STATE @ %a" (slog OpamSwitch.to_string) switch;
-  if not @@ match OpamSwitch.is_external switch with
-    | true -> OpamFilename.exists_dir (OpamSwitch.get_root gt.root switch)
-    | false -> List.mem switch (OpamFile.Config.installed_switches gt.config)
-  then
+  if not (OpamGlobalState.switch_exists gt switch) then
     (log "The switch %a does not appear to be installed according to %a"
        (slog OpamSwitch.to_string) switch
        (slog @@ OpamFile.to_string @* OpamPath.config) gt.root;
@@ -97,6 +94,7 @@ let load lock_kind gt rt switch =
        " Please fix the value of the OPAMSWITCH environment variable, or use \
         the '--switch <name>' flag")
   else
+  let gt = OpamGlobalState.fix_switch_list gt in
   let lock =
     OpamFilename.flock lock_kind (OpamPath.Switch.lock gt.root switch)
   in

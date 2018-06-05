@@ -21,6 +21,7 @@ let slog = OpamConsole.slog
 
 let list gt ~print_short =
   log "list";
+  let gt = OpamGlobalState.fix_switch_list gt in
   if print_short then
     List.iter (OpamConsole.msg "%s\n" @* OpamSwitch.to_string)
       (List.sort compare (OpamFile.Config.installed_switches gt.config))
@@ -94,7 +95,12 @@ let list gt ~print_short =
        to set an active switch"
   | Some switch, `Env ->
     let sys = OpamFile.Config.switch gt.config in
-    if sys <> Some switch then
+    if not (OpamGlobalState.switch_exists gt switch) then
+      (OpamConsole.msg "\n";
+       OpamConsole.warning
+         "The OPAMSWITCH variable does not point to a valid switch: %S"
+         (OpamSwitch.to_string switch))
+    else if sys <> Some switch then
       (OpamConsole.msg "\n";
        OpamConsole.note
          "Current switch is set locally through the OPAMSWITCH variable.\n\
@@ -110,6 +116,14 @@ let list gt ~print_short =
            "Current switch is set globally and through the OPAMSWITCH variable.\n\
             Thus, the local switch found at %s was ignored."
            (OpamConsole.colorise `bold (OpamSwitch.to_string sw)))
+  | Some switch, `Default when not (OpamGlobalState.switch_exists gt switch) ->
+    OpamConsole.msg "\n";
+    OpamConsole.warning
+      "The currently selected switch (%S) is invalid.\n%s"
+      (OpamSwitch.to_string switch)
+      (if OpamSwitch.is_external switch
+       then "Stale '_opam' directory or link ?"
+       else "Fix the selection with 'opam switch set SWITCH'.")
   | Some switch, `Default when OpamSwitch.is_external switch ->
     OpamConsole.msg "\n";
     OpamConsole.note
