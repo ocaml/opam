@@ -647,7 +647,12 @@ let extract_job ~dir file =
     else if try not (Sys.is_directory dir) with Sys_error _ -> false then
       internal_error "Extracting the archive would overwrite %s." dir
     else
-    match files_all_not_dir tmp_dir with
+    let flist =
+      OpamStd.Op.(
+        files_all_not_dir tmp_dir |>
+        List.filter (not @* OpamStd.String.contains ~sub:"pax_global_header"))
+    in
+    match flist with
     | [] ->
       begin match directories_strict tmp_dir with
         | [x] ->

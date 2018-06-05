@@ -229,7 +229,7 @@ let init =
            adding a line to the `~/.profile' file.";
         Some false, info ["n";"no-setup"] ~doc:
           "Do not update the user shell configuration to setup opam. Also \
-           implies $(--disable-shell-hook), unless $(--interactive) or \
+           implies $(b,--disable-shell-hook), unless $(b,--interactive) or \
            specified otherwise";
       ])
   in
