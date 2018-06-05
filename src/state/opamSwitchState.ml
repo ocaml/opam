@@ -91,10 +91,10 @@ let load lock_kind gt rt switch =
      @@ match OpamStateConfig.(!r.switch_from) with
      | `Command_line -> ""
      | `Default ->
-       "Please choose a different one using 'opam switch <name>', or use the \
+       " Please choose a different one using 'opam switch <name>', or use the \
         '--switch <name>' flag."
      | `Env ->
-       "Please fix the value of the OPAMSWITCH environment variable, or use \
+       " Please fix the value of the OPAMSWITCH environment variable, or use \
         the '--switch <name>' flag")
   else
   let lock =

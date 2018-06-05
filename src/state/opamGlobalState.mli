@@ -30,6 +30,10 @@ val switches: 'a global_state -> switch list
 val fold_switches:
   (switch -> switch_selections -> 'a -> 'a) -> 'b global_state -> 'a -> 'a
 
+(** Checks a switch for existence: either configured in the opam root, or an existing
+    local switch with a configuration file pointing to the current root *)
+val switch_exists: 'a global_state -> switch -> bool
+
 (** Returns the map of installed instances of the package name towards the list
     of switches they are installed in *)
 val installed_versions: 'a global_state -> name -> switch list package_map

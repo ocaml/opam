@@ -2099,8 +2099,7 @@ let switch =
     | Some `import, [filename] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       let switch = OpamStateConfig.get_switch () in
-      let installed_switches = OpamFile.Config.installed_switches gt.config in
-      let is_new_switch = not (List.mem switch installed_switches) in
+      let is_new_switch = not (OpamGlobalState.switch_exists gt switch) in
       let gt, rt =
         if is_new_switch then
           let repos, rt = get_repos_rt gt repos in
@@ -2134,7 +2133,13 @@ let switch =
       let _gt =
         List.fold_left
           (fun gt switch ->
-             OpamSwitchCommand.remove gt (OpamSwitch.of_string switch))
+             let opam_dir = OpamFilename.Op.(
+                 OpamFilename.Dir.of_string switch / OpamSwitch.external_dirname
+               ) in
+             if OpamFilename.is_symlink_dir opam_dir then
+               (OpamFilename.rmdir opam_dir;
+                gt)
+             else OpamSwitchCommand.remove gt (OpamSwitch.of_string switch))
           gt
           switches
       in

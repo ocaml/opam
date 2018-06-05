@@ -117,6 +117,10 @@ let fold_switches f gt acc =
         acc
     ) acc (OpamFile.Config.installed_switches gt.config)
 
+let switch_exists gt switch =
+  if OpamSwitch.is_external switch then OpamStateConfig.local_switch_exists gt.root switch
+  else List.mem switch (switches gt)
+
 let all_installed gt =
   fold_switches (fun _ sel acc ->
       OpamPackage.Set.union acc sel.sel_installed)

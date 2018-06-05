@@ -272,6 +272,7 @@ let get_full
   add env0 updates
 
 let is_up_to_date_raw updates =
+  OpamStateConfig.(!r.no_env_notice) ||
   let not_utd =
     List.fold_left (fun notutd (var, op, arg, _doc as upd) ->
         match OpamStd.Env.getopt var with
@@ -616,8 +617,7 @@ let update_user_setup root ?dot_profile shell =
   )
 
 let check_and_print_env_warning st =
-  if not OpamStateConfig.(!r.no_env_notice) &&
-     not (is_up_to_date st) &&
+  if not (is_up_to_date st) &&
      (OpamFile.Config.switch st.switch_global.config = Some st.switch ||
       OpamStateConfig.(!r.switch_from <> `Command_line))
   then

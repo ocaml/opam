@@ -158,7 +158,7 @@ let clear_switch ?(keep_debug=false) gt switch =
 
 let remove gt ?(confirm = true) switch =
   log "remove switch=%a" (slog OpamSwitch.to_string) switch;
-  if not (List.mem switch (OpamFile.Config.installed_switches gt.config)) then (
+  if not (OpamGlobalState.switch_exists gt switch) then (
     OpamConsole.msg "The compiler switch %s does not exist.\n"
       (OpamSwitch.to_string switch);
     OpamStd.Sys.exit_because `Not_found;
@@ -259,9 +259,9 @@ let install gt ?rt ?synopsis ?repos ~update_config ~packages switch =
   let update_config = update_config && not (OpamSwitch.is_external switch) in
   let old_switch_opt = OpamFile.Config.switch gt.config in
   let comp_dir = OpamPath.Switch.root gt.root switch in
-  if List.mem switch (OpamFile.Config.installed_switches gt.config) then
+  if OpamGlobalState.switch_exists gt switch then
     OpamConsole.error_and_exit `Bad_arguments
-      "There already is an installed compiler switch named %s"
+      "There already is an installed switch named %s"
       (OpamSwitch.to_string switch);
   if Sys.file_exists (OpamFilename.Dir.to_string comp_dir) then
     OpamConsole.error_and_exit `Bad_arguments
@@ -328,8 +328,7 @@ let install gt ?rt ?synopsis ?repos ~update_config ~packages switch =
 
 let switch lock gt switch =
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
-  let installed_switches = OpamFile.Config.installed_switches gt.config in
-  if List.mem switch installed_switches then
+  if OpamGlobalState.switch_exists gt switch then
     let st =
       if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
         OpamSwitchAction.set_current_switch lock gt switch
@@ -340,12 +339,13 @@ let switch lock gt switch =
     OpamEnv.check_and_print_env_warning st;
     st
   else
-    OpamConsole.error_and_exit `Not_found
-      "No switch %s is currently installed. Did you mean \
-       'opam switch create %s'?\n\
-       Installed switches are:\n%s"
-      (OpamSwitch.to_string switch) (OpamSwitch.to_string switch)
-      (OpamStd.Format.itemize OpamSwitch.to_string installed_switches)
+  let installed_switches = OpamFile.Config.installed_switches gt.config in
+  OpamConsole.error_and_exit `Not_found
+    "No switch %s is currently installed. Did you mean \
+     'opam switch create %s'?\n\
+     Installed switches are:\n%s"
+    (OpamSwitch.to_string switch) (OpamSwitch.to_string switch)
+    (OpamStd.Format.itemize OpamSwitch.to_string installed_switches)
 
 let import_t ?ask importfile t =
   log "import switch";
