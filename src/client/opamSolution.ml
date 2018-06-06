@@ -368,8 +368,9 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
   if fatal_dl_error then
     OpamConsole.error_and_exit `Sync_error
       "The sources of the following couldn't be obtained, aborting:\n%s"
-      (OpamStd.Format.itemize OpamPackage.to_string
-         (OpamPackage.Map.keys failed_downloads))
+      (OpamStd.Format.itemize
+      (fun (p,s) -> Printf.sprintf "%s:\n%s" (OpamPackage.to_string p) s)
+         (OpamPackage.Map.bindings failed_downloads))
   else if not (OpamPackage.Map.is_empty failed_downloads) then
     OpamConsole.warning
       "The sources of the following couldn't be obtained, they may be \
