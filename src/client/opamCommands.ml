@@ -1182,7 +1182,7 @@ let install =
   in
   let install
       global_options build_options add_to_roots deps_only restore destdir locked
-      atoms_or_locals =
+      assume_built atoms_or_locals =
     apply_global_options global_options;
     apply_build_options build_options;
     if atoms_or_locals = [] && not restore then
@@ -1217,7 +1217,7 @@ let install =
        OpamStd.Sys.exit_because `Success);
     let st =
       OpamClient.install st atoms
-        ~autoupdate:pure_atoms ?add_to_roots ~deps_only
+        ~autoupdate:pure_atoms ?add_to_roots ~deps_only ~assume_built
     in
     match destdir with
     | None -> `Ok ()
@@ -1228,7 +1228,7 @@ let install =
   in
   Term.ret
     Term.(const install $global_options $build_options
-          $add_to_roots $deps_only $restore $destdir $locked
+          $add_to_roots $deps_only $restore $destdir $locked $assume_built
           $atom_or_local_list),
   term_info "install" ~doc ~man
 

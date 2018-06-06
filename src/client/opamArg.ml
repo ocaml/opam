@@ -1059,6 +1059,16 @@ let build_options =
     $skip_update $fake $jobs_flag $ignore_constraints_on
     $unlock_base)
 
+(* Option common to install commands *)
+let assume_built =
+  Arg.(value & flag & info ["assume-built"]
+         ~doc:"For use on locally-pinned packages: assume they have already \
+               been correctly built, and only run their installation \
+               instructions, directly from their source directory. This \
+               skips the build instructions and can be useful to install \
+               packages that are being worked on. Implies $(i,--inplace-build). \
+               No locally-pinned packages will be skipped.")
+
 let package_selection_section = "PACKAGE SELECTION OPTIONS"
 
 let package_selection =
