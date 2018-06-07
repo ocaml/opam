@@ -348,14 +348,14 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
     in
     List.fold_left2 (fun failed nv -> function
         | None -> failed
-        | Some e -> OpamPackage.Map.add nv e failed)
+        | Some (s,l) -> OpamPackage.Map.add nv (s,l) failed)
       OpamPackage.Map.empty sources_list results
   in
 
   if OpamClientConfig.(!r.json_out <> None) &&
      not (OpamPackage.Map.is_empty failed_downloads) then
     OpamJson.append "download-failures"
-      (`O (List.map (fun (nv,err) -> OpamPackage.to_string nv, `String err)
+      (`O (List.map (fun (nv,(_,err)) -> OpamPackage.to_string nv, `String err)
              (OpamPackage.Map.bindings failed_downloads)));
 
   let fatal_dl_error =
@@ -369,7 +369,10 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
     OpamConsole.error_and_exit `Sync_error
       "The sources of the following couldn't be obtained, aborting:\n%s"
       (OpamStd.Format.itemize
-      (fun (p,s) -> Printf.sprintf "%s:\n%s" (OpamPackage.to_string p) s)
+         (fun (p, (s,l)) ->
+            Printf.sprintf "%s:%s" (OpamPackage.to_string p)
+              (if OpamConsole.verbose () then "\n" ^ l
+               else " " ^  OpamStd.Option.default l s))
          (OpamPackage.Map.bindings failed_downloads))
   else if not (OpamPackage.Map.is_empty failed_downloads) then
     OpamConsole.warning

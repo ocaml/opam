@@ -71,19 +71,19 @@ let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
     ]
   in
   if not(remote || Sys.file_exists src) then
-    Done (Not_available src)
+    Done (Not_available (None, src))
   else if src = dst then
     Done (Up_to_date [])
   else if overlap src dst then
     (OpamConsole.error "Cannot sync %s into %s: they overlap" src dst;
-     Done (Not_available src))
+     Done (Not_available (None, src)))
   else (
     OpamSystem.mkdir dst;
     call_rsync (fun () -> not (OpamSystem.dir_is_empty dst))
       ( rsync_arg :: args @ exclude_args @
         [ "--delete"; "--delete-excluded"; src; dst; ])
     @@| function
-    | None -> Not_available src
+    | None -> Not_available (None, src)
     | Some [] -> Up_to_date []
     | Some lines -> Result lines
   )
@@ -96,13 +96,13 @@ let rsync_dirs ?args ?exclude_vcdirs url dst =
   if not (is_remote url) &&
      not (OpamFilename.exists_dir (OpamFilename.Dir.of_string src_s))
   then
-    Done (Not_available (Printf.sprintf "Directory %s does not exist" src_s))
+    Done (Not_available (None, Printf.sprintf "Directory %s does not exist" src_s))
   else
   rsync ?args ?exclude_vcdirs src_s dst_s @@| function
-  | Not_available s -> Not_available s
+  | Not_available _ as na -> na
   | Result _ ->
     if OpamFilename.exists_dir dst then Result dst
-    else Not_available dst_s
+    else Not_available (None, dst_s)
   | Up_to_date _ -> Up_to_date dst
 
 let rsync_file ?(args=[]) url dst =
@@ -110,7 +110,7 @@ let rsync_file ?(args=[]) url dst =
   let dst_s = OpamFilename.to_string dst in
   log "rsync_file src=%s dst=%s" src_s dst_s;
   if not (is_remote url || OpamFilename.(exists (of_string src_s))) then
-    Done (Not_available src_s)
+    Done (Not_available (None, src_s))
   else if src_s = dst_s then
     Done (Up_to_date dst)
   else
@@ -118,11 +118,11 @@ let rsync_file ?(args=[]) url dst =
      call_rsync (fun () -> Sys.file_exists dst_s)
        ( rsync_arg :: args @ [ src_s; dst_s ])
      @@| function
-     | None -> Not_available src_s
+     | None -> Not_available (None, src_s)
      | Some [] -> Up_to_date dst
      | Some [_] ->
        if OpamFilename.exists dst then Result dst
-       else Not_available src_s
+       else Not_available (None, src_s)
      | Some l ->
        OpamSystem.internal_error
          "unknown rsync output: {%s}"
@@ -193,7 +193,7 @@ module B = struct
     in
     rsync remote_url.OpamUrl.path dir
     @@| function
-    | Not_available d -> Not_available d
+    | Not_available _ as na -> na
     | (Result _ | Up_to_date _) as r ->
       let res x = match r with
         | Result _ -> Result x
@@ -209,7 +209,7 @@ module B = struct
       if OpamFilename.exists filename then res (Some filename)
       else
         Not_available
-          (Printf.sprintf
+          (None, Printf.sprintf
              "Could not find target file %s after rsync with %s. \
               Perhaps you meant %s/ ?"
              (OpamUrl.basename remote_url)

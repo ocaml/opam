@@ -64,7 +64,7 @@ let get_source_definition ?version st nv url =
   in
   let open OpamProcess.Job.Op in
   OpamUpdate.fetch_dev_package url srcdir nv @@| function
-  | Not_available s -> raise (Fetch_Fail s)
+  | Not_available (_,s) -> raise (Fetch_Fail s)
   | Up_to_date _ | Result _ ->
     match OpamPinned.find_opam_file_in_source nv.name srcdir with
     | None -> None

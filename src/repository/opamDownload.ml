@@ -14,6 +14,9 @@ open OpamProcess.Job.Op
 
 let log fmt = OpamConsole.log "CURL" fmt
 
+exception Download_fail of string option * string
+let fail (s,l) = raise (Download_fail (s,l))
+
 let user_agent =
   CString (Printf.sprintf "opam/%s" (OpamVersion.(to_string current)))
 
@@ -74,22 +77,25 @@ let tool_return url ret =
   match Lazy.force OpamRepositoryConfig.(!r.download_tool) with
   | _, `Default ->
     if OpamProcess.is_failure ret then
-      Printf.ksprintf failwith "Download command failed: %s"
-        (OpamProcess.result_summary ret)
+      fail (Some "Download command failed",
+                Printf.sprintf "Download command failed: %s"
+                  (OpamProcess.result_summary ret))
     else Done ()
   | _, `Curl ->
     if OpamProcess.is_failure ret then
-      Printf.ksprintf failwith "Curl failed: %s"
-        (OpamProcess.result_summary ret);
+      fail (Some "Curl failed", Printf.sprintf "Curl failed: %s"
+                  (OpamProcess.result_summary ret));
     match ret.OpamProcess.r_stdout with
     | [] ->
-      failwith (Printf.sprintf "curl: empty response while downloading %s"
+      fail (Some "curl empty response",
+                Printf.sprintf "curl: empty response while downloading %s"
                   (OpamUrl.to_string url))
     | l  ->
       let code = List.hd (List.rev l) in
       let num = try int_of_string code with Failure _ -> 999 in
       if num >= 400 then
-        failwith (Printf.sprintf "curl: code %s while downloading %s"
+        fail (Some ("curl error code " ^ code),
+                  Printf.sprintf "curl: code %s while downloading %s"
                     code (OpamUrl.to_string url))
       else Done ()
 
@@ -131,14 +137,15 @@ let really_download
   download_command ~compress ?checksum ~url ~dst:tmp_dst
   @@+ fun () ->
   if not (Sys.file_exists tmp_dst) then
-    failwith "Download command succeeded, but resulting file not found"
+    fail (None, "Download command succeeded, but resulting file not found")
   else if Sys.file_exists dst && not overwrite then
     OpamSystem.internal_error "The downloaded file will overwrite %s." dst;
   if validate &&
      OpamRepositoryConfig.(!r.force_checksums <> Some false) then
     OpamStd.Option.iter (fun cksum ->
         if not (OpamHash.check_file tmp_dst cksum) then
-          failwith (Printf.sprintf "Bad checksum, expected %s"
+          fail (Some "Bad checksum",
+                    Printf.sprintf "Bad checksum, expected %s"
                       (OpamHash.to_string cksum)))
       checksum;
   OpamSystem.mv tmp_dst dst;

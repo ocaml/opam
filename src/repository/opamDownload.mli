@@ -11,6 +11,8 @@
 
 (** Configuration init and handling of downloading commands *)
 
+exception Download_fail of string option * string
+
 (** downloads a file from an URL, using Curl, Wget, or a custom configured
     tool, to the given directory. Returns the downloaded filename.
     @raise Failure if the download failed or if the checksum is specified and

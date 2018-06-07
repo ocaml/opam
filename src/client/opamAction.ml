@@ -154,10 +154,10 @@ let download_package st nv =
     (OpamUpdate.cleanup_source st
        (OpamPackage.Map.find_opt nv st.installed_opams)
        (OpamSwitchState.opam st nv);
-     OpamProcess.Job.catch (fun e -> Done (Some (Printexc.to_string e)))
+     OpamProcess.Job.catch (fun e -> Done (Some (None, Printexc.to_string e)))
      @@ fun () ->
      OpamUpdate.download_package_source st nv dir @@| function
-     | Some (Not_available s) -> Some s
+     | Some (Not_available (s,l)) -> Some (s,l)
      | None | Some (Up_to_date () | Result ()) -> None)
 
 (* Prepare the package build:
@@ -279,7 +279,7 @@ let prepare_package_source st nv dir =
         (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
       @@| function
       | Result () | Up_to_date () -> None
-      | Not_available msg -> Some (Failure msg)
+      | Not_available (_,msg) -> Some (Failure msg)
     in
     List.fold_left (fun job dl ->
         job @@+ function
