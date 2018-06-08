@@ -50,6 +50,7 @@ val resolve_and_apply:
   ?reinstall:package_set ->
   requested:OpamPackage.Name.Set.t ->
   ?add_roots:OpamPackage.Name.Set.t ->
+  ?assume_built:bool ->
   atom request ->
   rw switch_state * solver_result
 

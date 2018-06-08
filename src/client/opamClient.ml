@@ -1197,15 +1197,20 @@ let remove t ~autoremove ~force names =
   let atoms = OpamSolution.sanitize_atom_list t names in
   remove_t ~autoremove ~force atoms t
 
-let reinstall_t t ?ask ?(force=false) atoms =
+let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
   log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
+
+  let atoms =
+    if assume_built then filter_unpinned_locally t atoms (fun x -> x)
+    else atoms
+  in
 
   let reinstall, not_installed =
     get_installed_atoms t atoms in
   let to_install =
     if not_installed <> [] then
       if
-        force ||
+        force || assume_built ||
         OpamConsole.confirm "%s %s not installed. Install %s?"
           (OpamStd.Format.pretty_list
              (List.rev_map OpamFormula.short_string_of_atom not_installed))
@@ -1226,6 +1231,12 @@ let reinstall_t t ?ask ?(force=false) atoms =
   let requested =
     OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
+  let t, atoms =
+    if assume_built then
+      assume_built_restrictions t atoms
+    else t, atoms
+  in
+
   let request = OpamSolver.request ~install:atoms ~criteria:`Fixup () in
 
   let t, solution =
@@ -1233,15 +1244,16 @@ let reinstall_t t ?ask ?(force=false) atoms =
       ~orphans:(full_orphans ++ orphan_versions)
       ~reinstall:(OpamPackage.packages_of_names t.installed requested)
       ~requested
+      ~assume_built
       request in
 
   OpamSolution.check_solution t solution;
   t
 
-let reinstall t names =
+let reinstall t ?(assume_built=false) names =
   let atoms = OpamSolution.sanitize_atom_list t names in
   let t = update_dev_packages_t atoms t in
-  reinstall_t t atoms
+  reinstall_t t ~assume_built atoms
 
 module PIN = struct
   open OpamPinCommand

@@ -908,7 +908,8 @@ let resolve t action ~orphans ?reinstall ~requested request =
   Json.output_solution t r;
   r
 
-let resolve_and_apply ?ask t action ~orphans ?reinstall ~requested ?add_roots request =
+let resolve_and_apply ?ask t action ~orphans ?reinstall ~requested ?add_roots
+    ?(assume_built=false) request =
   match resolve t action ~orphans ?reinstall ~requested request with
   | Conflicts cs ->
     log "conflict!";
@@ -916,4 +917,4 @@ let resolve_and_apply ?ask t action ~orphans ?reinstall ~requested ?add_roots re
       (OpamCudf.string_of_conflict t.packages
          (OpamSwitchState.unavailable_reason t) cs);
     t, No_solution
-  | Success solution -> apply ?ask t action ~requested ?add_roots solution
+  | Success solution -> apply ?ask t action ~requested ?add_roots ~assume_built solution

@@ -61,12 +61,13 @@ val install_t:
 
 (** Reinstall the given set of packages. *)
 val reinstall:
-  rw switch_state -> atom list -> rw switch_state
+  rw switch_state -> ?assume_built:bool -> atom list -> rw switch_state
 
 (** Low-level version of [reinstall], bypassing the package name sanitization
     and dev package update, and offering more control *)
 val reinstall_t:
-  rw switch_state -> ?ask:bool -> ?force:bool -> atom list -> rw switch_state
+  rw switch_state -> ?ask:bool -> ?force:bool -> assume_built:bool -> atom list
+  -> rw switch_state
 
 (** Update the local mirrors for the repositories and/or development packages.
     Returns [(success, changes, rt)], where [success] is [true] only if all

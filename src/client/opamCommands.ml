@@ -1340,14 +1340,14 @@ let reinstall =
                 overriding."
       ])
   in
-  let reinstall global_options build_options atoms_locs cmd =
+  let reinstall global_options build_options assume_built atoms_locs cmd =
     apply_global_options global_options;
     apply_build_options build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     match cmd, atoms_locs with
     | `Default, (_::_ as atom_locs) ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      ignore @@ OpamClient.reinstall st
+      ignore @@ OpamClient.reinstall st ~assume_built
         (OpamAuxCommands.resolve_locals_pinned st atom_locs);
       `Ok ()
     | `Pending, [] | `Default, [] ->
@@ -1391,8 +1391,8 @@ let reinstall =
     | _, _::_ ->
       `Error (true, "Package arguments not allowed with this option")
   in
-  Term.(ret (const reinstall $global_options $build_options $atom_or_dir_list
-             $cmd)),
+  Term.(ret (const reinstall $global_options $build_options $assume_built
+             $atom_or_dir_list $cmd)),
   term_info "reinstall" ~doc ~man
 
 (* UPDATE *)
