@@ -151,7 +151,7 @@ let print_sexp_env env =
 
 let rec print_fish_env env =
   let set_arr_cmd k v =
-    let v = OpamStd.String.split_delim v ':' in
+    let v = OpamStd.String.split v ':' in
     OpamConsole.msg "set -gx %s %s;\n" k
       (OpamStd.List.concat_map " "
          (fun v ->

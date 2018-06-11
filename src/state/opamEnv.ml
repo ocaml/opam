@@ -422,7 +422,7 @@ let export_in_shell shell =
            if v = Printf.sprintf "\"$%s\"" k then
              "$"^k (* remove quotes *)
            else v)
-        (OpamStd.String.split_delim v ':')
+        (OpamStd.String.split v ':')
     in
     match k with
     | "PATH" ->
