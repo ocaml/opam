@@ -593,7 +593,7 @@ module OpamSys = struct
 
   let path_sep = if Sys.win32 then ';' else ':'
 
-  let split_path_variable =
+  let split_path_variable ?(clean=true) =
     if Sys.win32 then fun path ->
       let length = String.length path in
       let rec f acc index current last normal =
@@ -613,7 +613,8 @@ module OpamSys = struct
             f acc next current last normal in
       f [] 0 "" 0 true
     else fun path ->
-      OpamString.split_delim path path_sep
+      let split = if clean then OpamString.split else OpamString.split_delim in
+      split path path_sep
 
   let with_process_in cmd args f =
     if Sys.win32 then
