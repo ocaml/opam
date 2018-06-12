@@ -1,4 +1,4 @@
-#!/bin/bash -uex
+#!/usr/bin/env bash -uex
 
 COMMAND=$1; shift
 ID=$1; shift

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Ensure that the Microsoft Linker isn't being messed up by /usr/bin/link
 FIRST=1

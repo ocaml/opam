@@ -1,4 +1,4 @@
-#!/bin/bash -uex
+#!/usr/bin/env bash -uex
 
 # This script is expected to run on Linux with docker available, and to have two
 # remotes "some-osx" and "some-openbsd", with the corresponding OSes, ocaml deps

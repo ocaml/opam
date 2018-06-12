@@ -109,7 +109,7 @@ let do_commands project_root =
 
 let script_commands project_root ochan =
   let made_dirs = ref [] in
-  Printf.fprintf ochan "#!/bin/bash\n";
+  Printf.fprintf ochan "#!/bin/sh\n";
   let mkdir d =
     if not (List.mem d !made_dirs) then (
       Printf.fprintf ochan "mkdir -p %S\n" (OpamFilename.Dir.to_string d);
