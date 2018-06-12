@@ -441,6 +441,7 @@ and source_pin
     OpamPath.Switch.Overlay.tmp_opam st.switch_global.root st.switch name
   in
 
+  let opam_local = OpamFile.OPAM.read_opt temp_file in
   OpamFilename.remove (OpamFile.filename temp_file);
 
   let opam_opt =
@@ -472,6 +473,20 @@ and source_pin
       opam_opt >>+ fun () ->
       OpamPackage.Map.find_opt nv st.installed_opams >>+ fun () ->
       OpamSwitchState.opam_opt st nv)
+  in
+
+  let opam_opt =
+    match opam_local, opam_opt with
+    | Some local, None ->
+      OpamConsole.warning
+        "Couldn't retrieve opam file from versioned source, \
+         using the one found locally.";
+      Some local
+    | Some local, Some vers when not (OpamFile.OPAM.effectively_equal local vers) ->
+      OpamConsole.warning
+        "Opam file have significant uncommitted changes, using the versioned one";
+      opam_opt
+    | _ -> opam_opt
   in
 
   if not need_edit && opam_opt = None then

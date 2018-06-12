@@ -2350,9 +2350,14 @@ let pin ?(unpin_only=false) () =
   let guess_names url k =
     let from_opam_files dir =
       OpamStd.List.filter_map
-        (fun (nameopt, f) -> match nameopt with
-           | None -> OpamFile.OPAM.(name_opt (safe_read f))
-           | some -> some)
+        (fun (nameopt, f) ->
+           let opam_opt = OpamFile.OPAM.read_opt f in
+           let name =
+             match nameopt with
+             | None -> OpamStd.Option.replace OpamFile.OPAM.name_opt opam_opt
+             | some -> some
+           in
+           OpamStd.Option.map (fun n -> n, opam_opt) name)
         (OpamPinned.files_in_source dir)
     in
     let basename =
@@ -2390,7 +2395,7 @@ let pin ?(unpin_only=false) () =
       match found with
       | _::_ -> found
       | [] ->
-        try [OpamPackage.Name.of_string basename] with
+        try [OpamPackage.Name.of_string basename, None] with
         | Failure _ ->
           OpamConsole.error_and_exit `Bad_arguments
             "Could not infer a package name from %s, please specify it on the \
@@ -2506,7 +2511,7 @@ let pin ?(unpin_only=false) () =
            | _::_::_ ->
              if OpamConsole.confirm
                  "This will pin the following packages: %s. Continue?"
-                 (OpamStd.List.concat_map ", " OpamPackage.Name.to_string names)
+                 (OpamStd.List.concat_map ", " (fst @> OpamPackage.Name.to_string) names)
              then names
              else OpamStd.Sys.exit_because `Aborted
            | _ -> names
@@ -2514,7 +2519,14 @@ let pin ?(unpin_only=false) () =
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let st =
-           List.fold_left (fun st name ->
+           List.fold_left (fun st (name, opam_opt) ->
+               OpamStd.Option.iter (fun opam ->
+                   let opam_localf =
+                     OpamPath.Switch.Overlay.tmp_opam
+                       st.switch_global.root st.switch name
+                   in
+                   if not (OpamFilename.exists (OpamFile.filename opam_localf)) then
+                     OpamFile.OPAM.write opam_localf opam) opam_opt;
                try OpamPinCommand.source_pin st name ~edit (Some url)
                with OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
                   | OpamPinCommand.Nothing_to_do -> st)
@@ -2524,7 +2536,7 @@ let pin ?(unpin_only=false) () =
            let _st =
              OpamClient.upgrade_t
                ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
-               (List.map (fun n -> n, None) names) st
+               (List.map (fun (n,_) -> n, None) names) st
            in
            `Ok ()
          else `Ok ())
