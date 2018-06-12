@@ -49,7 +49,9 @@ type std_path =
 (** Download result *)
 type 'a download =
   | Up_to_date of 'a
-  | Not_available of string
+  | Not_available of string option * string
+  (** Arguments are respectively the short (if relevant) and long error message.
+      The usage is: the second argument is the default one when the first one is [None] *)
   | Result of 'a
 
 (** {2 Packages} *)
