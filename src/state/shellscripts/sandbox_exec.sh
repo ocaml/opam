@@ -1,4 +1,4 @@
-#!/bin/sh -ue
+#!/bin/bash -ue
 
 POL='(version 1)(allow default)(deny network*)(deny file-write*)'
 POL="$POL"'(allow file-write* (literal "/dev/null"))'
