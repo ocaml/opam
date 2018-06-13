@@ -1,6 +1,6 @@
-#!/usr/bin/env bash -ue
+#!/bin/sh -ue
 
-if ! OCAMLC=$(which ocamlc); then
+if ! OCAMLC=$(command -v ocamlc); then
     echo "No OCaml compiler was found on the system" >&2
     exit 2
 fi

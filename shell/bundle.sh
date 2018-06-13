@@ -1,4 +1,5 @@
-#!/usr/bin/env bash -ue
+#!/usr/bin/env bash
+set -ue
 
 OCAMLV=4.04.1
 OPAMV=2.0.0~beta5
