@@ -26,8 +26,11 @@ let of_string s =
 let of_dirname d =
   let s = OpamFilename.Dir.to_string d in
   try
-    let swdir = Filename.concat s external_dirname in
-    let r = OpamSystem.real_path Filename.(concat s (Unix.readlink swdir)) in
+    let swdir = Unix.readlink (Filename.concat s external_dirname) in
+    let swdir =
+      if Filename.is_relative swdir then Filename.concat s swdir else swdir
+    in
+    let r = OpamSystem.real_path swdir in
     if Filename.basename r = external_dirname then Filename.dirname r else s
   with Unix.Unix_error _ -> s
 

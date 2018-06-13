@@ -204,8 +204,11 @@ let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
         (OpamFile.Config.switch gt.config)
     in
     match OpamStd.Config.env_string "SWITCH" with
-    | None -> Some switch <> default
-    | Some s -> OpamSwitch.of_string s <> switch
+    | None ->
+      Some (OpamStateConfig.resolve_local_switch gt.root switch) <> default
+    | Some s ->
+      OpamStateConfig.resolve_local_switch gt.root (OpamSwitch.of_string s) <>
+      OpamStateConfig.resolve_local_switch gt.root switch
   in
   if opamroot_not_current && not set_opamroot then
     OpamConsole.note

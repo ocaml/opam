@@ -30,6 +30,10 @@ val switches: 'a global_state -> switch list
 val fold_switches:
   (switch -> switch_selections -> 'a -> 'a) -> 'b global_state -> 'a -> 'a
 
+(** Checks a switch for existence: either configured in the opam root, or an existing
+    local switch with a configuration file pointing to the current root *)
+val switch_exists: 'a global_state -> switch -> bool
+
 (** Returns the map of installed instances of the package name towards the list
     of switches they are installed in *)
 val installed_versions: 'a global_state -> name -> switch list package_map
@@ -43,7 +47,7 @@ val repos_list: 'a global_state -> repository_name list
 val unlock: 'a global_state -> unlocked global_state
 
 (** Calls the provided function, ensuring a temporary write lock on the given
-    global state*)
+    global state *)
 val with_write_lock:
   ?dontblock:bool -> 'a global_state ->
   (rw global_state -> 'b * 'c global_state) ->
@@ -51,3 +55,8 @@ val with_write_lock:
 
 (** Writes back the global configuration file ~/.opam/config *)
 val write: rw global_state -> unit
+
+(** Updates the configured list of switches, making sure the current switch is
+    registered if it is set and exists, and removing any non-existing switches.
+    Writes back to disk if possible (ie lock is available) *)
+val fix_switch_list: 'a global_state -> 'a global_state

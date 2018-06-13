@@ -117,6 +117,10 @@ let fold_switches f gt acc =
         acc
     ) acc (OpamFile.Config.installed_switches gt.config)
 
+let switch_exists gt switch =
+  if OpamSwitch.is_external switch then OpamStateConfig.local_switch_exists gt.root switch
+  else List.mem switch (switches gt)
+
 let all_installed gt =
   fold_switches (fun _ sel acc ->
       OpamPackage.Set.union acc sel.sel_installed)
@@ -156,3 +160,27 @@ let with_ lock f =
 
 let write gt =
   OpamFile.Config.write (OpamPath.config gt.root) gt.config
+
+let fix_switch_list gt =
+  let known_switches0 = switches gt in
+  let known_switches =
+    match OpamStateConfig.get_switch_opt () with
+    | None -> known_switches0
+    | Some sw ->
+      if List.mem sw known_switches0 || not (switch_exists gt sw)
+      then known_switches0
+      else sw::known_switches0
+  in
+  let known_switches = List.filter (switch_exists gt) known_switches in
+  if known_switches = known_switches0 then gt else
+  let config =
+    OpamFile.Config.with_installed_switches known_switches gt.config
+  in
+  let gt = { gt with config } in
+  if not OpamCoreConfig.(!r.safe_mode) then
+    try
+      snd @@ with_write_lock ~dontblock:true gt @@ fun gt ->
+      write gt, gt
+    with OpamSystem.Locked -> gt
+  else gt
+

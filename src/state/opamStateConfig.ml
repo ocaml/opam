@@ -135,17 +135,26 @@ let opamroot ?root_dir () =
 let load opamroot =
   OpamFile.Config.read_opt (OpamPath.config opamroot)
 
+let local_switch_exists root switch =
+  OpamPath.Switch.switch_config root switch |>
+  OpamFile.Switch_config.read_opt |> function
+  | None -> false
+  | Some conf -> conf.OpamFile.Switch_config.opam_root = Some root
+
+let resolve_local_switch root s =
+  let switch_root = OpamSwitch.get_root root s in
+  if OpamSwitch.is_external s && OpamFilename.dirname_dir switch_root = root
+  then OpamSwitch.of_string (OpamFilename.remove_prefix_dir root switch_root)
+  else s
+
 let get_current_switch_from_cwd root =
   let open OpamStd.Option.Op in
-  OpamFilename.find_in_parents
-    (fun d ->
-       OpamSwitch.of_string (OpamFilename.Dir.to_string d) |>
-       OpamPath.Switch.switch_config root |>
-       OpamFile.Switch_config.read_opt |> function
-       | None -> false
-       | Some conf -> conf.OpamFile.Switch_config.opam_root = Some root)
+  OpamFilename.find_in_parents (fun dir ->
+      OpamSwitch.of_string (OpamFilename.Dir.to_string dir) |>
+      local_switch_exists root)
     (OpamFilename.cwd ())
   >>| OpamSwitch.of_dirname
+  >>| resolve_local_switch root
 
 let load_defaults root_dir =
   let current_switch =
@@ -178,15 +187,7 @@ let load_defaults root_dir =
 let get_switch_opt () =
   match !r.current_switch with
   | Some s ->
-    if OpamSwitch.is_external s then
-      let root = !r.root_dir in
-      let switch_root = OpamSwitch.get_root root s in
-      if OpamFilename.dir_starts_with root switch_root then
-        (* actually symlinked to a global switch *)
-        Some (OpamSwitch.of_string
-                (OpamFilename.remove_prefix_dir root switch_root))
-      else Some s
-    else Some s
+    Some (resolve_local_switch !r.root_dir s)
   | None -> None
 
 let get_switch () =

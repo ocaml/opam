@@ -46,11 +46,14 @@ val get_pure: ?updates:env_update list -> unit -> env
     returned by e.g. [get_full]!) *)
 val add: env -> env_update list -> env
 
-(** Check if the shell environment is in sync with the current OPAM switch *)
+(** Check if the shell environment is in sync with the current OPAM switch (or
+    if OPAMNOENVNOTICE has been set, in which case we just assume it's up to
+    date) *)
 val is_up_to_date: 'a switch_state -> bool
 
 (** Check if the shell environment is in sync with the given opam root and
-    switch *)
+    switch (or if OPAMNOENVNOTICE has been set, in which case we just assume
+    it's up to date) *)
 val is_up_to_date_switch: dirname -> switch -> bool
 
 (** Returns the current environment updates to configure the current switch with

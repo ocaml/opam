@@ -1893,6 +1893,9 @@ let switch =
      overriding the current setting.";
     "set-description", `set_description, ["STRING"],
     "Sets the description for the selected switch";
+    "link", `link, ["SWITCH";"[DIR]"],
+    "Sets a local alias for a given switch, so that the switch gets \
+     automatically selected whenever in that directory or a descendant.";
     "install", `install, ["SWITCH"],
     "Deprecated alias for 'create'."
   ] in
@@ -2099,8 +2102,7 @@ let switch =
     | Some `import, [filename] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       let switch = OpamStateConfig.get_switch () in
-      let installed_switches = OpamFile.Config.installed_switches gt.config in
-      let is_new_switch = not (List.mem switch installed_switches) in
+      let is_new_switch = not (OpamGlobalState.switch_exists gt switch) in
       let gt, rt =
         if is_new_switch then
           let repos, rt = get_repos_rt gt repos in
@@ -2134,7 +2136,13 @@ let switch =
       let _gt =
         List.fold_left
           (fun gt switch ->
-             OpamSwitchCommand.remove gt (OpamSwitch.of_string switch))
+             let opam_dir = OpamFilename.Op.(
+                 OpamFilename.Dir.of_string switch / OpamSwitch.external_dirname
+               ) in
+             if OpamFilename.is_symlink_dir opam_dir then
+               (OpamFilename.rmdir opam_dir;
+                gt)
+             else OpamSwitchCommand.remove gt (OpamSwitch.of_string switch))
           gt
           switches
       in
@@ -2172,6 +2180,44 @@ let switch =
          let _st = OpamSwitchCommand.set_compiler st namesv in
          `Ok ()
        with Failure e -> `Error (false, e))
+    | Some `link, args ->
+      (try
+         let switch, dir = match args with
+           | switch::dir::[] ->
+             OpamSwitch.of_string switch,
+             OpamFilename.Dir.of_string dir
+           | switch::[] ->
+             OpamSwitch.of_string switch,
+             OpamFilename.cwd ()
+           | [] -> failwith "Missing SWITCH argument"
+           | _::_::_::_ -> failwith "Extra argument"
+         in
+         let open OpamFilename.Op in
+         let linkname = dir / OpamSwitch.external_dirname in
+         OpamGlobalState.with_ `Lock_none @@ fun gt ->
+         if not (OpamGlobalState.switch_exists gt switch) then
+           OpamConsole.error_and_exit `Not_found
+             "The switch %s was not found"
+             (OpamSwitch.to_string switch);
+         if OpamFilename.is_symlink_dir linkname then
+           OpamFilename.rmdir linkname;
+         if OpamFilename.exists_dir linkname then
+           OpamConsole.error_and_exit `Bad_arguments
+             "There already is a local switch in %s. Remove it and try again."
+             (OpamFilename.Dir.to_string dir);
+         if OpamFilename.exists (dir // OpamSwitch.external_dirname) then
+           OpamConsole.error_and_exit `Bad_arguments
+             "There is a '%s' file in the way. Remove it and try again."
+             (OpamFilename.Dir.to_string linkname);
+         OpamFilename.link_dir ~link:linkname
+           ~target:(OpamPath.Switch.root gt.root switch);
+         OpamConsole.msg "Directory %s set to use switch %s.\n\
+                          Just remove %s to unlink.\n"
+           (OpamConsole.colorise `cyan (OpamFilename.Dir.to_string dir))
+           (OpamConsole.colorise `bold (OpamSwitch.to_string switch))
+           (OpamConsole.colorise `cyan (OpamFilename.Dir.to_string linkname));
+         `Ok ()
+       with Failure e -> `Error (true, e))
     | Some `set_description, text ->
       let synopsis = String.concat " " text in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
