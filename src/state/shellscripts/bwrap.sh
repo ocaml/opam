@@ -25,12 +25,29 @@ add_mounts() {
 
 add_mounts ro /usr /bin /lib /lib32 /lib64 /etc /opt /nix/store /home
 
+# C compilers using `ccache` will write to a shared cache directory
+# that remain writeable. ccache seems widespread in some Fedora systems.
+add_ccache_mount() {
+  if command -v ccache > /dev/null; then
+      CCACHE_DIR=$HOME/.ccache
+      ccache_dir_regex='cache_dir = (.*)$'
+      local IFS=$'\n'
+      for f in $(ccache --print-config); do
+        if [[ $f =~ $ccache_dir_regex ]]; then
+          CCACHE_DIR=${BASH_REMATCH[1]}
+        fi
+      done
+      add_mounts rw $CCACHE_DIR
+  fi
+}
+
 # This case-switch should remain identical between the different sandbox implems
 COMMAND="$1"; shift
 case "$COMMAND" in
     build)
         add_mounts ro "$OPAM_SWITCH_PREFIX"
         add_mounts rw "$PWD"
+        add_ccache_mount
         ;;
     install)
         add_mounts rw "$OPAM_SWITCH_PREFIX"
