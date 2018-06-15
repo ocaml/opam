@@ -101,7 +101,7 @@ let compute ?target ?(kind=default_kind) file =
         make kind (OpamSHA.hash kind file)
   in
   let probably_binary name =
-    List.mem (Filename.extension name) [".zip"; ".tar"; ".gz"; ".tgz"; ".tbz"; ".txz"; ".tlz"]
+    List.mem (Filename.extension name) [".zip"; ".tar"; ".xz"; ".lz"; ".gz"; ".tgz"; ".tbz"; ".txz"; ".tlz"]
   in
   if target = None || target = Some primary || probably_binary file then
     primary
