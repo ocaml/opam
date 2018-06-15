@@ -103,10 +103,11 @@ let compute ?target ?(kind=default_kind) file =
   let probably_binary name =
     List.mem (Filename.extension name) [".zip"; ".tar"; ".xz"; ".lz"; ".gz"; ".tgz"; ".tbz"; ".txz"; ".tlz"]
   in
-  if target = None || target = Some primary || probably_binary file then
+  let size = Unix.((stat file).st_size) in
+  if target = None || target = Some primary || size = 0 || probably_binary file then
     primary
   else
-    let buffer = Buffer.create (Unix.((stat file).st_size)) in
+    let buffer = Buffer.create size in
     let ch = open_in_bin file in
     let no_eol_at_eof ch =
       seek_in ch (in_channel_length ch - 1);
