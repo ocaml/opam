@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 cd $(dirname $0)
 echo -n "Checking packages for new versions in opam: "
