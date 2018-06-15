@@ -903,27 +903,85 @@ let check_conflicts t atoms =
     full_orphans,
     orphan_versions
 
-let install_t t ?ask atoms add_to_roots ~deps_only =
+let assume_built_restrictions t atoms =
+  let installed_fixed, not_installed_fixed =
+    let rec all_deps set pkgs =
+      let universe =
+        OpamSwitchState.universe t
+          ~requested:(OpamPackage.names_of_packages pkgs)
+          Install
+      in
+      let deps =
+        OpamPackage.Set.of_list
+          (OpamSolver.dependencies ~build:false ~post:true
+             ~depopts:false ~installed:false ~unavailable:true universe pkgs)
+      in
+      let deps = deps -- pkgs in
+      if OpamPackage.Set.is_empty deps then set
+      else all_deps (set ++ deps) deps
+    in
+    let pkg_of_atoms =
+      OpamPackage.Set.filter
+        (fun p -> List.exists (fun a -> OpamFormula.check a p) atoms)
+        t.packages
+    in
+    let all_fixed = all_deps OpamPackage.Set.empty pkg_of_atoms in
+    OpamSolution.eq_atoms_of_packages all_fixed |> get_installed_atoms t
+  in
+  let atoms =
+      atoms @ OpamSolution.eq_atoms_of_packages
+        (OpamPackage.Set.of_list installed_fixed)
+  in
+  let t =
+      let avp =
+        OpamPackage.Set.filter
+          (fun p -> not (List.exists (fun a -> OpamFormula.check a p)
+                           not_installed_fixed))
+          (Lazy.force t.available_packages)
+      in
+      { t with available_packages = lazy avp}
+  in
+  t, atoms
+
+let filter_unpinned_locally t atoms f =
+  OpamStd.List.filter_map (fun at ->
+      let n,_ = at in
+      if OpamSwitchState.is_pinned t n &&
+         OpamStd.Option.Op.(OpamPinned.package_opt t n >>=
+                            OpamSwitchState.primary_url t >>=
+                            OpamUrl.local_dir) <> None
+      then
+        Some (f at)
+      else
+        (log "Package %a is not pinned locally and assume built \
+              option is set, skipping"
+           (slog OpamPackage.Name.to_string) n;
+         None))
+    atoms
+
+let install_t t ?ask atoms add_to_roots ~deps_only ~assume_built =
   log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
   let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
   let t, full_orphans, orphan_versions = check_conflicts t atoms in
 
   let atoms =
-    List.map (function
-        | (_, Some _) as at -> at
-        | (name, None) as at ->
-          match OpamPinned.package_opt t name with
-          | Some nv -> OpamSolution.eq_atom_of_package nv
-          | None -> at)
-      atoms
+    let compl = function
+      | (_, Some _) as at -> at
+      | (name, None) as at ->
+        match OpamPinned.package_opt t name with
+        | Some nv -> OpamSolution.eq_atom_of_package nv
+        | None -> at
+    in
+    if assume_built then filter_unpinned_locally t atoms compl
+    else List.map compl atoms
   in
   let pkg_skip, pkg_new =
     get_installed_atoms t atoms in
   let pkg_reinstall =
-    t.reinstall %% OpamPackage.Set.of_list pkg_skip
+    if assume_built then OpamPackage.Set.of_list pkg_skip
+    else t.reinstall %% OpamPackage.Set.of_list pkg_skip
   in
-
   (* Add the packages to the list of package roots and display a
      warning for already installed package roots. *)
   let current_roots = t.installed_roots in
@@ -1001,12 +1059,18 @@ let install_t t ?ask atoms add_to_roots ~deps_only =
   let t = {t with available_packages = lazy available_packages} in
 
   if pkg_new = [] && OpamPackage.Set.is_empty pkg_reinstall then t else
-
+  let t, atoms =
+    if assume_built then
+      assume_built_restrictions t atoms
+    else t, atoms
+  in
   let request = OpamSolver.request ~install:atoms () in
   let solution =
+    let reinstall = if assume_built then Some pkg_reinstall else None in
     OpamSolution.resolve t Install
       ~orphans:(full_orphans ++ orphan_versions)
       ~requested:names
+      ?reinstall
       request in
   let t, solution = match solution with
     | Conflicts cs ->
@@ -1028,19 +1092,21 @@ let install_t t ?ask atoms add_to_roots ~deps_only =
             | false -> OpamPackage.Name.Set.empty)
           add_to_roots
       in
-      OpamSolution.apply ?ask t Install ~requested:names ?add_roots solution
+      OpamSolution.apply ?ask t Install ~requested:names ?add_roots
+        ~assume_built solution
   in
   OpamSolution.check_solution t solution;
   t
 
-let install t ?autoupdate ?add_to_roots ?(deps_only=false) names =
+let install t ?autoupdate ?add_to_roots
+    ?(deps_only=false) ?(assume_built=false) names =
   let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
   let autoupdate_atoms = match autoupdate with
     | None -> atoms
     | Some a -> OpamSolution.sanitize_atom_list ~permissive:true t a
   in
   let t = update_dev_packages_t autoupdate_atoms t in
-  install_t t atoms add_to_roots ~deps_only
+  install_t t atoms add_to_roots ~deps_only ~assume_built
 
 let remove_t ?ask ~autoremove ~force atoms t =
   log "REMOVE autoremove:%b %a" autoremove
@@ -1131,15 +1197,20 @@ let remove t ~autoremove ~force names =
   let atoms = OpamSolution.sanitize_atom_list t names in
   remove_t ~autoremove ~force atoms t
 
-let reinstall_t t ?ask ?(force=false) atoms =
+let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
   log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
+
+  let atoms =
+    if assume_built then filter_unpinned_locally t atoms (fun x -> x)
+    else atoms
+  in
 
   let reinstall, not_installed =
     get_installed_atoms t atoms in
   let to_install =
     if not_installed <> [] then
       if
-        force ||
+        force || assume_built ||
         OpamConsole.confirm "%s %s not installed. Install %s?"
           (OpamStd.Format.pretty_list
              (List.rev_map OpamFormula.short_string_of_atom not_installed))
@@ -1160,6 +1231,12 @@ let reinstall_t t ?ask ?(force=false) atoms =
   let requested =
     OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
+  let t, atoms =
+    if assume_built then
+      assume_built_restrictions t atoms
+    else t, atoms
+  in
+
   let request = OpamSolver.request ~install:atoms ~criteria:`Fixup () in
 
   let t, solution =
@@ -1167,15 +1244,16 @@ let reinstall_t t ?ask ?(force=false) atoms =
       ~orphans:(full_orphans ++ orphan_versions)
       ~reinstall:(OpamPackage.packages_of_names t.installed requested)
       ~requested
+      ~assume_built
       request in
 
   OpamSolution.check_solution t solution;
   t
 
-let reinstall t names =
+let reinstall t ?(assume_built=false) names =
   let atoms = OpamSolution.sanitize_atom_list t names in
   let t = update_dev_packages_t atoms t in
-  reinstall_t t atoms
+  reinstall_t t ~assume_built atoms
 
 module PIN = struct
   open OpamPinCommand

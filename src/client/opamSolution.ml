@@ -260,7 +260,7 @@ end
 
 (* Process the atomic actions in a graph in parallel, respecting graph order,
    and report to user. Takes a graph of atomic actions *)
-let parallel_apply t _action ~requested ?add_roots action_graph =
+let parallel_apply t _action ~requested ?add_roots ~assume_built action_graph =
   log "parallel_apply";
 
   let remove_action_packages =
@@ -313,7 +313,7 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
   in
 
   let inplace =
-    if OpamClientConfig.(!r.inplace_build) then
+    if OpamClientConfig.(!r.inplace_build) || assume_built then
       OpamPackage.Set.fold (fun nv acc ->
           match
             OpamStd.Option.Op.(OpamSwitchState.url t nv >>| OpamFile.URL.url >>=
@@ -454,6 +454,14 @@ let parallel_apply t _action ~requested ?add_roots action_graph =
     else
     match action with
     | `Build nv ->
+      if assume_built && OpamPackage.Set.mem nv requested then
+        (log "Skipping build for %s, just install%s"
+           (OpamPackage.to_string nv)
+           (OpamStd.Option.map_default
+              (fun p -> " from " ^ OpamFilename.Dir.to_string p)
+              "" (OpamPackage.Map.find_opt nv inplace));
+         Done (`Successful (installed, removed)))
+      else
       let is_inplace, build_dir =
         try true, OpamPackage.Map.find nv inplace
         with Not_found ->
@@ -776,7 +784,7 @@ let run_hook_job t name ?(local=[]) w =
     Done true
 
 (* Apply a solution *)
-let apply ?ask t action ~requested ?add_roots solution =
+let apply ?ask t action ~requested ?add_roots ?(assume_built=false) solution =
   log "apply";
   if OpamSolver.solution_is_empty solution then
     (* The current state satisfies the request contraints *)
@@ -863,7 +871,9 @@ let apply ?ask t action ~requested ?add_roots solution =
       if not pre_session then
         OpamStd.Sys.exit_because `Configuration_error;
       let t0 = t in
-      let t, r = parallel_apply t action ~requested ?add_roots action_graph in
+      let t, r =
+        parallel_apply t action ~requested ?add_roots ~assume_built action_graph
+      in
       let success = match r with | OK _ -> true | _ -> false in
       let post_session =
         let open OpamPackage.Set.Op in
@@ -902,7 +912,8 @@ let resolve t action ~orphans ?reinstall ~requested request =
   Json.output_solution t r;
   r
 
-let resolve_and_apply ?ask t action ~orphans ?reinstall ~requested ?add_roots request =
+let resolve_and_apply ?ask t action ~orphans ?reinstall ~requested ?add_roots
+    ?(assume_built=false) request =
   match resolve t action ~orphans ?reinstall ~requested request with
   | Conflicts cs ->
     log "conflict!";
@@ -910,4 +921,4 @@ let resolve_and_apply ?ask t action ~orphans ?reinstall ~requested ?add_roots re
       (OpamCudf.string_of_conflict t.packages
          (OpamSwitchState.unavailable_reason t) cs);
     t, No_solution
-  | Success solution -> apply ?ask t action ~requested ?add_roots solution
+  | Success solution -> apply ?ask t action ~requested ?add_roots ~assume_built solution
