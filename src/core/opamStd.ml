@@ -508,12 +508,18 @@ module OpamString = struct
     Re.(split (compile (rep1 (char c)))) s
 
   let split_delim s c =
-    (* old compat version (Re 1.2.0)
-       {[Re_str.split_delim (Re_str.regexp (Printf.sprintf "[%c]" c)) s]} *)
-    let s = if String.length s <> 0
-      then Printf.sprintf "%c%s%c" c s c
-      else s in
-    Re.(split (compile (rep1 (char c))) s)
+    let tokens = Re.(split_full (compile (char c)) s) in
+    let rec aux acc = function
+      | [] -> acc
+      | (`Delim _)::[] -> ""::acc
+      | (`Text s)::tl -> aux (s::acc) tl
+      | (`Delim _)::tl -> aux acc tl
+    in
+    let acc0 =
+      match tokens with
+      | (`Delim _)::_ -> [""]
+      |_ -> []
+    in List.rev (aux acc0 tokens)
 
   let fold_left f acc s =
     let acc = ref acc in
@@ -531,14 +537,14 @@ module Env = struct
 
   (* Remove from a c-separated list of string the one with the given prefix *)
   let reset_value ~prefix c v =
-    let v = OpamString.split_delim v c in
+    let v = OpamString.split v c in
     List.filter (fun v -> not (OpamString.starts_with ~prefix v)) v
 
   (* Split the list in two according to the first occurrence of the string
      starting with the given prefix.
   *)
   let cut_value ~prefix c v =
-    let v = OpamString.split_delim v c in
+    let v = OpamString.split v c in
     let rec aux before =
       function
       | [] -> [], List.rev before
@@ -587,7 +593,7 @@ module OpamSys = struct
 
   let path_sep = if Sys.win32 then ';' else ':'
 
-  let split_path_variable =
+  let split_path_variable ?(clean=true) =
     if Sys.win32 then fun path ->
       let length = String.length path in
       let rec f acc index current last normal =
@@ -607,7 +613,8 @@ module OpamSys = struct
             f acc next current last normal in
       f [] 0 "" 0 true
     else fun path ->
-      OpamString.split_delim path path_sep
+      let split = if clean then OpamString.split else OpamString.split_delim in
+      split path path_sep
 
   let with_process_in cmd args f =
     if Sys.win32 then
@@ -1059,7 +1066,7 @@ module OpamFormat = struct
       else s ^ (String.make (n - sn) ' ')
     in
     let pad_multi n s =
-      match OpamString.split_delim s '\n' with
+      match OpamString.split s '\n' with
       | [] | [_] -> pad n s ^"\n"
       | ls -> String.concat "\n" (List.map (pad n) ls)
     in

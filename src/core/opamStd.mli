@@ -402,8 +402,10 @@ module Sys : sig
   val path_sep: char
 
   (** Splits a PATH-like variable separated with [path_sep]. More involved than
-      it seems, because there may be quoting on Windows. *)
-  val split_path_variable: string -> string list
+      it seems, because there may be quoting on Windows. By default, it returns
+      the path cleaned (remove trailing, leading, contiguous delimiters).
+      Optional argument [clean] permits to keep those empty strings. *)
+  val split_path_variable: ?clean:bool -> string -> string list
 
   (** {3 Exit handling} *)
 

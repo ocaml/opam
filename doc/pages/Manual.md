@@ -187,6 +187,12 @@ pinning a package, the source is searched for metadata in an `opam` or
 directory. You can also replace that file by a directory containing an `opam`
 file and optionally other metadata, like a `files/` subdirectory.
 
+As the `package` argument is optional, `opam` guesses package name from the
+`<URL>` or the `opam` file found. Note that for local VCS pinning, when given
+without package name, `opam` retrieves the locally found `opam` file, even if not
+versioned. If this file is versioned, `opam` relies on the versioned
+version.
+
 Whenever an install, reinstall or upgrade command-line refers to a pinned
 package, <span class="opam">opam</span> first fetches its latest source. `opam
 update [--development]` is otherwise the standard way to update the sources of

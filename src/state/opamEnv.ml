@@ -20,7 +20,7 @@ let slog = OpamConsole.slog
 
 (* - Environment and updates handling - *)
 
-let split_var v = OpamStd.Sys.split_path_variable v
+let split_var v = OpamStd.Sys.split_path_variable ~clean:false v
 
 let join_var l =
   String.concat (String.make 1 OpamStd.Sys.path_sep) l
@@ -44,9 +44,11 @@ let rezip_to_string ?insert z =
   join_var (rezip ?insert z)
 
 let apply_op_zip op arg (rl1,l2 as zip) =
-  let colon_eq = function (* prepend a, but keep ":"s *)
+  let colon_eq ?(eqcol=false) = function (* prepend a, but keep ":"s *)
     | [] | [""] -> [], [arg; ""]
-    | "" :: l -> l, [""; arg] (* keep leading colon *)
+    | "" :: l ->
+      (* keep surrounding colons *)
+      if eqcol then l@[""], [arg] else l, [""; arg]
     | l -> l, [arg]
   in
   match op with
@@ -57,7 +59,7 @@ let apply_op_zip op arg (rl1,l2 as zip) =
   | ColonEq ->
     let l, add = colon_eq (rezip zip) in [], add @ l
   | EqColon ->
-    let l, add = colon_eq (List.rev_append l2 rl1) in
+    let l, add = colon_eq ~eqcol:true (List.rev_append l2 rl1) in
     l, List.rev add
 
 (** Undoes previous updates done by opam, useful for not duplicating already
@@ -422,7 +424,7 @@ let export_in_shell shell =
            if v = Printf.sprintf "\"$%s\"" k then
              "$"^k (* remove quotes *)
            else v)
-        (OpamStd.String.split_delim v ':')
+        (OpamStd.String.split v ':')
     in
     match k with
     | "PATH" ->
