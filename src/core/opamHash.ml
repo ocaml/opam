@@ -109,53 +109,67 @@ let compute ?target ?(kind=default_kind) file =
   else
     let buffer = Buffer.create size in
     let ch = open_in_bin file in
-    let no_eol_at_eof ch =
+    let has_eol_at_eof = lazy (
       seek_in ch (in_channel_length ch - 1);
-      input_char ch <> '\n'
+      input_char ch <> '\n')
     in
-    let rec add_cr line buffer =
+    let rec add_cr line =
       Buffer.add_string buffer line;
-      Buffer.add_string buffer "\r\n";
-      process 2
-    and rem_cr line buffer =
-      let l = String.length line in
-      if l = 0 || line.[l - 1] <> '\r' then
-        primary
-      else begin
-        Buffer.add_substring buffer line 0 (l - 1);
-        Buffer.add_char buffer '\n';
-        process 1
-      end
-    and process strip =
+      match input_line ch with
+      | line ->
+          Buffer.add_string buffer "\r\n";
+          add_cr line
+      | exception End_of_file ->
+          if Lazy.force has_eol_at_eof then
+            Buffer.add_string buffer "\r\n";
+          complete ()
+    and rem_cr line =
+      Buffer.add_substring buffer line 0 (String.length line - 1);
+      Buffer.add_char buffer '\n';
       match input_line ch with
       | line ->
           let l = String.length line in
-          if l = 0 || line.[l - 1] <> '\r' then
-            add_cr line buffer
-          else
-            rem_cr line buffer
+          if l = 0 || line.[l - 1] <> '\r' then begin
+            match input_line ch with
+            | _ ->
+                (* A line didn't end with '\r' - try again adding '\r' instead *)
+                seek_in ch 0;
+                Buffer.clear buffer;
+                add_cr (input_line ch)
+            | exception End_of_file ->
+                if Lazy.force has_eol_at_eof then begin
+                  (* The file should have ended with '\r' - try again *)
+                  seek_in ch 0;
+                  Buffer.clear buffer;
+                  add_cr (input_line ch)
+                end else
+                  complete ()
+          end else
+            rem_cr line
       | exception End_of_file ->
-          let contents =
-            let offset =
-              if no_eol_at_eof ch then
-                strip
-              else
-                0
-            in
-            let reqd = Buffer.length buffer - offset in
-            let result = Bytes.create reqd in
-            Buffer.blit buffer 0 result 0 reqd;
-            result
-          in
-          match kind with
-          | `MD5 ->
-              md5 (Digest.to_hex (Digest.bytes contents))
-          | (`SHA256 | `SHA512) as kind ->
-              make kind (OpamSHA.hash_bytes kind contents)
+          complete ()
+    and complete () =
+      let content = Buffer.to_bytes buffer in
+      match kind with
+      | `MD5 ->
+          md5 (Digest.to_hex (Digest.bytes content))
+      | (`SHA256 | `SHA512) as kind ->
+          make kind (OpamSHA.hash_bytes kind content)
     in
-    let result = process 0 in
+    (* Already checked above that the file is non-empty *)
+    let line = input_line ch in
+    let l = String.length line in
+    let result =
+      if l > 0 && line.[l - 1] = '\r' then
+        rem_cr line
+      else
+        add_cr line
+    in
     close_in ch;
-    result
+    if Some result = target then
+      result
+    else
+      primary
 
 let compute_from_string ?(kind=default_kind) str = match kind with
   | `MD5 -> md5 (Digest.to_hex (Digest.string str))
