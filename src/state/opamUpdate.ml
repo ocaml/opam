@@ -247,15 +247,18 @@ let pinned_package st ?version ?(working_dir=false) name =
     let equal_opam a b =
       let cleanup_opam o =
         let v =
-          OpamStd.Option.default (OpamPackage.Version.of_string "~dev")
-            (OpamFile.OPAM.version_opt o)
+          (try
+             Some ((OpamFile.OPAM.version_opt o)
+                   +! (OpamSwitchState.get_package st name |> OpamPackage.version))
+           with Not_found -> None)
+          +! (OpamPackage.Version.of_string "~dev")
         in
-        OpamFile.OPAM.effective_part
-          (o |> OpamFile.OPAM.with_url_opt None
-           |> OpamFile.OPAM.with_version v)
+        o |> OpamFile.OPAM.with_url_opt None
+        |> OpamFile.OPAM.with_version v
       in
-      cleanup_opam (OpamFormatUpgrade.opam_file a) =
-      cleanup_opam (OpamFormatUpgrade.opam_file b)
+      OpamFile.OPAM.effectively_equal
+        (cleanup_opam (OpamFormatUpgrade.opam_file a))
+        (cleanup_opam (OpamFormatUpgrade.opam_file b))
     in
     let changed_opam old new_ = match old, new_ with
       | None, Some _ -> true
