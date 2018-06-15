@@ -250,6 +250,13 @@ let get_opam_raw ?(set_opamroot=false) ?(set_opamswitch=false) ~force_path
   let env_file = OpamPath.Switch.environment root switch in
   let upd = OpamFile.Environment.safe_read env_file in
   let upd =
+    ("OPAM_SWITCH_PREFIX", Eq,
+     OpamFilename.Dir.to_string (OpamPath.Switch.root root switch),
+     Some "Prefix of the current opam switch") ::
+    List.filter (function ("OPAM_SWITCH_PREFIX", Eq, _, _) -> false | _ -> true)
+      upd
+  in
+  let upd =
     if force_path then
       List.map (function
           | "PATH", EqPlusEq, v, doc -> "PATH", PlusEq, v, doc
