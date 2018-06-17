@@ -19,7 +19,7 @@ val template: package -> OpamFile.OPAM.t
 (** Runs several sanity checks on the opam file; returns a list of warnings.
    [`Error] level should be considered unfit for publication, while [`Warning]
    are advisory but may be accepted. The int is an identifier for this specific
-   warning/error. If [check_extra_files] is unspecified, warning 52 won't be
+   warning/error. If [check_extra_files] is unspecified, warning 53 won't be
    checked. *)
 val lint:
   ?check_extra_files:(basename * (OpamHash.t -> bool)) list ->
