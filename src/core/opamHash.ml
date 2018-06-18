@@ -82,93 +82,31 @@ let to_json s = `String (to_string s)
 let to_path (kind,s) =
   [string_of_kind kind; String.sub s 0 2; s]
 
-let compute ?target ?(kind=default_kind) file =
-  (* TODO This process is woefully inefficient. *)
-  let primary =
-    match kind with
-    | `MD5 -> md5 (Digest.to_hex (Digest.file file))
-    | (`SHA256 | `SHA512) as kind ->
-      try
-        if not OpamCoreConfig.(!r.use_openssl) then raise Exit else
-        match
-          OpamSystem.read_command_output ["openssl"; string_of_kind kind; file]
-        with
-        | [l] ->
-          let len = len kind in
-          make kind (String.sub l (String.length l - len) len)
-        | _ -> failwith "openssl error"
-      with OpamSystem.Command_not_found _ | Exit ->
-        make kind (OpamSHA.hash kind file)
-  in
-  let probably_binary name =
-    List.mem (Filename.extension name) [".zip"; ".tar"; ".gz"; ".tgz"; ".tbz"; ".txz"; ".tlz"]
-  in
-  if target = None || target = Some primary || probably_binary file then
-    primary
-  else
-    let buffer = Buffer.create (Unix.((stat file).st_size)) in
-    let ch = open_in_bin file in
-    let no_eol_at_eof ch =
-      seek_in ch (in_channel_length ch - 1);
-      input_char ch <> '\n'
-    in
-    let rec add_cr line buffer =
-      Buffer.add_string buffer line;
-      Buffer.add_string buffer "\r\n";
-      process 2
-    and rem_cr line buffer =
-      let l = String.length line in
-      if l = 0 || line.[l - 1] <> '\r' then
-        primary
-      else begin
-        Buffer.add_substring buffer line 0 (l - 1);
-        Buffer.add_char buffer '\n';
-        process 1
-      end
-    and process strip =
-      match input_line ch with
-      | line ->
-          let l = String.length line in
-          if l = 0 || line.[l - 1] <> '\r' then
-            add_cr line buffer
-          else
-            rem_cr line buffer
-      | exception End_of_file ->
-          let contents =
-            let offset =
-              if no_eol_at_eof ch then
-                strip
-              else
-                0
-            in
-            let reqd = Buffer.length buffer - offset in
-            let result = Bytes.create reqd in
-            Buffer.blit buffer 0 result 0 reqd;
-            result
-          in
-          match kind with
-          | `MD5 ->
-              md5 (Digest.to_hex (Digest.bytes contents))
-          | (`SHA256 | `SHA512) as kind ->
-              make kind (OpamSHA.hash_bytes kind contents)
-    in
-    let result = process 0 in
-    close_in ch;
-    result
+let compute ?(kind=default_kind) file = match kind with
+  | `MD5 -> md5 (Digest.to_hex (Digest.file file))
+  | (`SHA256 | `SHA512) as kind ->
+    try
+      if not OpamCoreConfig.(!r.use_openssl) then raise Exit else
+      match
+        OpamSystem.read_command_output ["openssl"; string_of_kind kind; file]
+      with
+      | [l] ->
+        let len = len kind in
+        make kind (String.sub l (String.length l - len) len)
+      | _ -> failwith "openssl error"
+    with OpamSystem.Command_not_found _ | Exit ->
+      make kind (OpamSHA.hash kind file)
 
 let compute_from_string ?(kind=default_kind) str = match kind with
   | `MD5 -> md5 (Digest.to_hex (Digest.string str))
   | (`SHA256 | `SHA512) as kind ->
     make kind (OpamSHA.hash_bytes kind (Bytes.of_string str))
 
-let check_file f (kind, _ as target) =
-  compute ~target ~kind f = target
+let check_file f (kind, _ as h) = compute ~kind f = h
 
-let mismatch f (kind, _ as target) =
-  let hf = compute ~target ~kind f in
-  if hf = target then None else Some hf
-
-let compute = compute ?target:None
+let mismatch f (kind, _ as h) =
+  let hf = compute ~kind f in
+  if hf = h then None else Some hf
 
 module O = struct
   type _t = t
