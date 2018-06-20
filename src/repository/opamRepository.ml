@@ -89,7 +89,7 @@ let fetch_from_cache =
     | `rsync ->
       (OpamLocal.rsync_file url file @@| function
         | Result _ | Up_to_date _-> ()
-        | Not_available (_,m) -> failwith m)
+        | Not_available (s,l) -> raise (OpamDownload.Download_fail (s,l)))
     | #OpamUrl.version_control ->
       failwith "Version control not allowed as cache URL"
   in

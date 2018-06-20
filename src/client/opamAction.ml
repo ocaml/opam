@@ -154,7 +154,13 @@ let download_package st nv =
     (OpamUpdate.cleanup_source st
        (OpamPackage.Map.find_opt nv st.installed_opams)
        (OpamSwitchState.opam st nv);
-     OpamProcess.Job.catch (fun e -> Done (Some (None, Printexc.to_string e)))
+     OpamProcess.Job.catch (fun e ->
+         let na =
+           match e with
+           | OpamDownload.Download_fail (s,l) -> (s,l)
+           | e -> (None, Printexc.to_string e)
+         in
+         Done (Some na))
      @@ fun () ->
      OpamUpdate.download_package_source st nv dir @@| function
      | Some (Not_available (s,l)) -> Some (s,l)
