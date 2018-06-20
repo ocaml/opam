@@ -77,7 +77,8 @@ let fetch_from_cache =
            else OpamConsole.colorise `red " (MISMATCH)")
           checksums);
     OpamFilename.remove file;
-    Done (Not_available (None, "cache CONFLICT"))
+    let m = "cache CONFLICT" in
+    Done (Not_available (Some m, m))
   in
   let dl_from_cache_job root_cache_url checksum file =
     let url = cache_url root_cache_url checksum in
@@ -107,13 +108,13 @@ let fetch_from_cache =
     then Done (Up_to_date (hit_file, OpamUrl.empty))
     else mismatch hit_file
   with Not_found -> match checksums with
-    | [] -> Done (Not_available (None, "cache miss"))
+    | [] -> let m = "cache miss" in Done (Not_available (Some m, m))
     | checksum::_ ->
       (* Try all cache urls in order, but only the first checksum *)
       let local_file = cache_file cache_dir checksum in
       let tmpfile = OpamFilename.add_extension local_file "tmp" in
       let rec try_cache_dl = function
-        | [] -> Done (Not_available (None, "cache miss"))
+        | [] -> let m = "cache miss" in Done (Not_available (Some m, m))
         | root_cache_url::other_caches ->
           OpamProcess.Job.catch
             (function Failure _ -> try_cache_dl other_caches
@@ -195,7 +196,8 @@ let pull_from_upstream
          (OpamUrl.to_string url);
        ret)
     else
-      Not_available (None, "Checksum mismatch")
+    let m = "Checksum mismatch" in
+    Not_available (Some m, m)
   | (Result None | Up_to_date None) as ret ->
     if checksums = [] then
       (OpamConsole.msg "[%s] %s from %s\n"
@@ -208,7 +210,8 @@ let pull_from_upstream
                           retrieved from %s"
          label (OpamUrl.to_string url);
        OpamFilename.rmdir destdir;
-       Not_available (None, "can't check directory checksum"))
+       let m = "can't check directory checksum" in
+       Not_available (Some m, m))
   | Not_available _ as na -> na
 
 let rec pull_from_mirrors label ?working_dir cache_dir destdir checksums = function
@@ -244,7 +247,8 @@ let pull_tree
      fetch_from_cache cache_dir cache_urls checksums
    | None ->
      assert (cache_urls = []);
-     Done (Not_available (None, "no cache")))
+     let m = "no cache" in
+     Done (Not_available (Some m, m)))
   @@+ function
   | Up_to_date (archive, _) ->
     OpamConsole.msg "[%s] found in cache\n"
@@ -290,7 +294,8 @@ let pull_file label ?cache_dir ?(cache_urls=[])  ?(silent_hits=false)
      fetch_from_cache cache_dir cache_urls checksums
    | None ->
      assert (cache_urls = []);
-     Done (Not_available (None, "no cache")))
+     let m = "no cache" in
+     Done (Not_available (Some m, m)))
   @@+ function
   | Up_to_date (f, _) ->
     if not silent_hits then
@@ -315,7 +320,7 @@ let pull_file label ?cache_dir ?(cache_urls=[])  ?(silent_hits=false)
         @@| function
         | Up_to_date _ -> assert false
         | Result (Some f) -> OpamFilename.move ~src:f ~dst:file; Result ()
-        | Result None -> Not_available (None, "is a directory")
+        | Result None -> let m = "is a directory" in Not_available (Some m, m)
         | Not_available _ as na -> na)
 
 let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums remote_urls =
@@ -334,7 +339,7 @@ let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums remote_urls =
         @@| function
         | Up_to_date _ -> assert false
         | Result (Some _) -> Result ()
-        | Result None -> Not_available (None, "is a directory")
+        | Result None -> let m = "is a directory" in Not_available (Some m, m)
         | Not_available _ as na -> na)
 
 let packages r =
