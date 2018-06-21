@@ -175,7 +175,9 @@ while true; do
         printf "## $BINDIR does not exist. Create ? [Y/n] "
         read R
         case "$R" in
-            ""|"y"|"Y"|"yes") break;;
+            ""|"y"|"Y"|"yes")
+            mkdir -p $BINDIR
+            break;;
         esac
     fi
 done
