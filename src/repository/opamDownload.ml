@@ -137,7 +137,8 @@ let really_download
   download_command ~compress ?checksum ~url ~dst:tmp_dst
   @@+ fun () ->
   if not (Sys.file_exists tmp_dst) then
-    fail (None, "Download command succeeded, but resulting file not found")
+    fail (Some "Downloaded file not found",
+          "Download command succeeded, but resulting file not found")
   else if Sys.file_exists dst && not overwrite then
     OpamSystem.internal_error "The downloaded file will overwrite %s." dst;
   if validate &&

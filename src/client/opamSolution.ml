@@ -372,7 +372,7 @@ let parallel_apply t _action ~requested ?add_roots ~assume_built action_graph =
          (fun (p, (s,l)) ->
             Printf.sprintf "%s:%s" (OpamPackage.to_string p)
               (if OpamConsole.verbose () then "\n" ^ l
-               else " " ^  OpamStd.Option.default l s))
+               else  OpamStd.Option.map_default (fun x -> " " ^ x) "" s))
          (OpamPackage.Map.bindings failed_downloads))
   else if not (OpamPackage.Map.is_empty failed_downloads) then
     OpamConsole.warning
