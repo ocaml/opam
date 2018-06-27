@@ -319,7 +319,18 @@ let init =
         (not already_init ||
          update_config = None && completion = None && env_hook = None),
         update_config, completion, OpamStd.Option.Op.(env_hook ++ update_config)
-      | Some true -> true, update_config, completion, env_hook
+      | Some true ->
+        if update_config = None && completion = None && env_hook = None then
+          true, None, None, None
+        else
+        let reconfirm = function
+          | None | Some false -> Some false
+          | Some true -> None
+        in
+        true,
+        reconfirm update_config,
+        reconfirm completion,
+        reconfirm env_hook
     in
     let shell = match shell with
       | Some s -> s
