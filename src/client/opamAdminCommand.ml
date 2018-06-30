@@ -319,7 +319,7 @@ let add_hashes_command =
             (Printexc.to_string e))
       hash_tables
   in
-  let get_hash kind known_hashes url =
+  let get_hash cache_urls kind known_hashes url =
     let found =
       List.fold_left (fun result hash ->
           match result with
@@ -336,10 +336,19 @@ let add_hashes_command =
       let h =
         OpamProcess.Job.run @@
         OpamFilename.with_tmp_dir_job @@ fun dir ->
+        let f = OpamFilename.Op.(dir // OpamUrl.basename url) in
         OpamProcess.Job.ignore_errors ~default:None
           (fun () ->
-             OpamDownload.download ~overwrite:false url dir @@| fun f ->
-             OpamHash.compute (OpamFilename.to_string f) |> OpamStd.Option.some)
+             OpamRepository.pull_file (OpamUrl.to_string url)
+               ~cache_dir:(OpamRepositoryPath.download_cache
+                             OpamStateConfig.(!r.root_dir))
+               ~cache_urls
+               f known_hashes [url]
+             @@| function
+             | Result () | Up_to_date () ->
+               OpamHash.compute ~kind (OpamFilename.to_string f)
+               |> OpamStd.Option.some
+             | Not_available _ -> None)
       in
       (match h with
        | Some h ->
@@ -360,6 +369,15 @@ let add_hashes_command =
         "No repository found in current directory.\n\
          Please make sure there is a \"packages\" directory";
     let repo = OpamRepositoryBackend.local repo_root in
+    let cache_urls =
+      let repo_file = OpamRepositoryPath.repo repo_root in
+      List.map (fun rel ->
+          if OpamStd.String.contains ~sub:"://" rel
+          then OpamUrl.of_string rel
+          else OpamUrl.Op.(OpamUrl.of_string
+                             (OpamFilename.Dir.to_string repo_root) / rel))
+        (OpamFile.Repo.dl_cache (OpamFile.Repo.safe_read repo_file))
+    in
     let pkg_prefixes = OpamRepository.packages_with_prefixes repo in
     let has_error =
       OpamPackage.Map.fold (fun nv prefix has_error ->
@@ -387,7 +405,9 @@ let add_hashes_command =
                 List.fold_left (fun (has_error, hashes) kind ->
                     if List.exists (fun h -> OpamHash.kind h = kind) hashes
                     then has_error, hashes else
-                    match get_hash kind hashes (OpamFile.URL.url urlf) with
+                    match get_hash cache_urls kind hashes
+                            (OpamFile.URL.url urlf)
+                    with
                     | Some h -> has_error, hashes @ [h]
                     | None ->
                       OpamConsole.error "Could not get hash for %s: %s"
