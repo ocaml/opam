@@ -956,9 +956,9 @@ let global_options =
     mk_flag ~section ["working-dir"; "w"]
       "Whenever updating packages that are bound to a local, \
        version-controlled directory, update to the current working state of \
-       their source instead of the last commited state, or the ref they are \
+       their source instead of the last committed state, or the ref they are \
        pointing to. \
-       This only affects packages explicitely listed on the command-line."
+       This only affects packages explicitly listed on the command-line."
   in
   let ignore_pin_depends =
     mk_flag ~section ["ignore-pin-depends"]
@@ -994,7 +994,7 @@ let build_options =
       "When compiling a package which has its source bound to a local \
        directory, process the build and install actions directly in that \
        directory, rather than in a clean copy handled by opam. This only \
-       affects packages that are explicitely listed on the command-line. \
+       affects packages that are explicitly listed on the command-line. \
        This is equivalent to setting $(b,\\$OPAMINPLACEBUILD) to \"true\"."
   in
   let no_checksums =
