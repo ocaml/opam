@@ -50,8 +50,9 @@ type std_path =
 type 'a download =
   | Up_to_date of 'a
   | Not_available of string option * string
-  (** Arguments are respectively the short (if relevant) and long error message.
-      The usage is: the second argument is the default one when the first one is [None] *)
+  (** Arguments are respectively the short and long version of an error message.
+      The usage is: the first argument is displayed on normal mode (nothing
+      if [None]), and the second one on verbose mode. *)
   | Result of 'a
 
 (** {2 Packages} *)
