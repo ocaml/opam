@@ -117,7 +117,9 @@ let fetch_from_cache =
         | [] -> let m = "cache miss" in Done (Not_available (Some m, m))
         | root_cache_url::other_caches ->
           OpamProcess.Job.catch
-            (function Failure _ -> try_cache_dl other_caches
+            (function Failure _
+                    | OpamDownload.Download_fail _ ->
+                      try_cache_dl other_caches
                     | e -> raise e)
           @@ fun () ->
           dl_from_cache_job root_cache_url checksum tmpfile
