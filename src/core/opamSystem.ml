@@ -826,7 +826,7 @@ let lock_isatleast flag lock =
    of operation - in the Lines mode, it returns a string list of the lines, in
    CrLf mode, it returns true if every line ends "\r\n". *)
 type _ read_return = Lines : string list read_return
-                   | CrLf  : bool read_return
+                   | CrLf  : bool option read_return
 
 let read_lines : type s . s read_return -> string -> s = fun mode file ->
   let ch =
@@ -839,22 +839,36 @@ let read_lines : type s . s read_return -> string -> s = fun mode file ->
       | line ->
           let length = String.length line in
           let acc = f line acc in
-          read_lines (cr && length > 0 && line.[length - 1] = '\r') acc
+          let cr =
+            let has_cr = length > 0 && line.[length - 1] = '\r' in
+            match cr with
+            | None ->
+                Some (Some has_cr)
+            | Some (Some think_cr) when think_cr <> has_cr ->
+                Some None
+            | _ ->
+                cr
+          in
+          read_lines cr acc
       | exception End_of_file ->
           close_in ch;
+          let cr = OpamStd.Option.default None cr in
           let acc =
-            if cr then
+            if cr = Some true then
               List.rev_map (fun s -> String.sub s 0 (String.length s - 1)) acc
             else
               List.rev acc
           in
           (acc, cr)
     in
-    read_lines true []
+    read_lines None []
   in
   match mode with
   | Lines ->
-      read_lines OpamStd.List.cons |> fst
+      let (lines, cr) = read_lines OpamStd.List.cons in
+      if cr = Some true then
+        log "Stripped trailing \\r from %s" file;
+      lines
   | CrLf ->
       read_lines (fun _ _ -> []) |> snd
 
@@ -909,6 +923,46 @@ let translate_patch ~dir orig corrected =
     | _ ->
         (* TODO Should display some kind of warning that there were no chunks *)
         `Header
+  in
+  let emit_patch_section ch (next_state, _) ?line state =
+    match (state, next_state) with
+    | (`Processing _, `Processing _) ->
+        ()
+    | (`Processing (_, _, target, crlf, patch_crlf, lines, _), _) ->
+        let patch_crlf = OpamStd.Option.default None patch_crlf in
+        (* Emit the patch *)
+        let lines =
+          match (crlf, patch_crlf) with
+          | (None, _)
+          | (_, None) ->
+              List.rev_map fst lines
+          | (Some crlf, Some patch_crlf) ->
+              (* Determine the function for transforming the patch line pairs *)
+              let f =
+                if crlf = patch_crlf then
+                  fst
+                else if crlf then begin
+                  log ~level:2 "Adding \\r to patch chunks for %s" target;
+                  fun (line, patch) ->
+                    if patch then
+                      line ^ "\r"
+                    else
+                      line
+                end else begin
+                  log ~level:3 "Stripping \\r to patch chunks for %s" target;
+                  fun (line, patch) ->
+                    if patch then
+                      String.sub line 0 (String.length line - 1)
+                    else
+                      line
+                end
+              in
+              List.rev_map f lines
+        in
+        List.iter (Printf.fprintf ch "%s\n") lines;
+        OpamStd.Option.iter (Printf.fprintf ch "%s\n") line
+     | _ ->
+        OpamStd.Option.iter (Printf.fprintf ch "%s\n") line
   in
   let process ch (state, file_mode) line =
     let length = String.length line in
@@ -1010,7 +1064,7 @@ let translate_patch ~dir orig corrected =
                     let open OpamStd in
                     Option.map_default fst file (String.cut_at file '\t')
                   in
-                  `Processing (`Unified, orig, file, crlf, `Head)
+                  `Processing (`Unified, orig, file, crlf, None, [], `Head)
               | "--- " when mode = `Context ->
                   (* Context diff scanning is not implemented; this branch is
                      unreachable. *)
@@ -1018,18 +1072,16 @@ let translate_patch ~dir orig corrected =
               | _ ->
                   `Header
             end
-        | `Processing (`Context, _, _, _, _) ->
+        | `Processing (`Context, _, _, _, _, _, _) ->
             (* Context diff scanning is not implemented; this branch is
                unreachable. *)
             assert false
-        | `Processing (`Unified, orig, target, crlf, `Head) ->
-            (* Weakness: previous chunks will be processed even if an error is
-                         encountered in a subsequent one. After an error, all
-                         remaining chunks are ignored. *)
+        | `Processing (`Unified, orig, target, crlf, patch_crlf, lines, `Head) ->
             process_chunk_header
-              (fun neg pos -> `Processing (`Unified, orig, target, crlf,
-                                            `Chunk (neg, pos))) line
-        | `Processing (`Unified, orig, target, crlf, `Chunk (neg, pos)) ->
+              (fun neg pos ->
+                 `Processing (`Unified, orig, target, crlf, patch_crlf,
+                              (line, false)::lines, `Chunk (neg, pos))) line
+        | `Processing (`Unified, orig, target, crlf, patch_crlf, lines, `Chunk (neg, pos)) ->
             let neg =
               if line = "" || line.[0] = ' ' || line.[0] = '-' then
                 neg - 1
@@ -1042,10 +1094,22 @@ let translate_patch ~dir orig corrected =
               else
                 pos
             in
+            let patch_crlf =
+              let has_cr = length > 0 && line.[length - 1] = '\r' in
+              match patch_crlf with
+              | None ->
+                  Some (Some has_cr)
+              | Some (Some think_cr) when think_cr <> has_cr ->
+                  log ~level:2 "Patch adaptation disabled for %s: mixed endings or binary file" target;
+                  Some None
+              | _ ->
+                  patch_crlf
+            in
+            let lines = (line, true)::lines in
             if neg = 0 && pos = 0 then
-              `Processing (`Unified, orig, target, crlf, `Head)
+              `Processing (`Unified, orig, target, crlf, patch_crlf, lines, `Head)
             else
-              `Processing (`Unified, orig, target, crlf, `Chunk (neg, pos))
+              `Processing (`Unified, orig, target, crlf, patch_crlf, lines, `Chunk (neg, pos))
         | `SkipFile ->
             `SkipFile
       in
@@ -1059,7 +1123,7 @@ let translate_patch ~dir orig corrected =
             | `NewHeader mode
             | `NewChunk (mode, _, _)
             | `Patching (mode, _, _)
-            | `Processing (mode, _, _, _, _) ->
+            | `Processing (mode, _, _, _, _, _, _) ->
                 mode
             | `Header
             | `SkipFile ->
@@ -1075,46 +1139,10 @@ let translate_patch ~dir orig corrected =
       in
       (state, file_mode)
     in
-    (* Having determined next_state, now emit the line *)
-    let (line, chars) =
-      (* The line is either:
-           - emitted unaltered (skipping, or for chunks of new files)
-           - guaranteed to be CRLF (if the target file has CRLF endings)
-           - guaranteed to be LF (if line is metadata or the target file has LF
-                                  endings) *)
-      let crlf_mode =
-        match state with
-        | `Processing (_, _, _, crlf, `Chunk _) ->
-            Some crlf
-        | `Header
-        | `NewHeader _
-        | `New _
-        | `Patching _
-        | `Processing (_, _, _, _, `Head) ->
-            Some false
-        | `NewChunk _
-        | `SkipFile ->
-            None
-      in
-      let process_crlf target_is_crlf =
-        let last_char =
-          if length > 0 then
-            line.[length - 1]
-          else
-            (* This sentinel value ensures "\r" gets added to blank lines *)
-            '\000'
-        in
-        if target_is_crlf && last_char <> '\r' then
-          (line ^ "\r", length + 1)
-        else if not target_is_crlf && last_char = '\r' then
-          (line, length - 1)
-        else
-          (line, length)
-      in
-      OpamStd.Option.map_default process_crlf (line, length) crlf_mode
+    (* Having determined next_state, now emit the line(s) *)
+    let () =
+      emit_patch_section ch next_state ~line state
     in
-    output_substring ch line 0 chars;
-    output_char ch '\n';
     next_state
   in
   let ch =
@@ -1122,7 +1150,7 @@ let translate_patch ~dir orig corrected =
     with Sys_error _ -> raise (File_not_found corrected)
   in
   List.fold_left (process ch) (`Header, `Unknown) (read_lines Lines orig)
-    |> ignore;
+    |> fst |> emit_patch_section ch (`Header, `Unknown);
   close_out ch
 
 let patch ?(preprocess=true) ~dir p =
