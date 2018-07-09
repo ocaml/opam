@@ -1125,12 +1125,18 @@ let translate_patch ~dir orig corrected =
     |> ignore;
   close_out ch
 
-let patch ~dir p =
+let patch ?(preprocess=true) ~dir p =
   if not (Sys.file_exists p) then
     (OpamConsole.error "Patch file %S not found." p;
      raise Not_found);
-  let p' = temp_file ~auto_clean:false "processed-patch" in
-  translate_patch ~dir p p';
+  let p' =
+    if preprocess then
+      let p' = temp_file ~auto_clean:false "processed-patch" in
+      translate_patch ~dir p p';
+      p'
+    else
+      p
+  in
   make_command ~name:"patch" ~dir "patch" ["-p1"; "-i"; p'] @@> fun r ->
     if not (OpamConsole.debug ()) then Sys.remove p';
     if OpamProcess.is_success r then Done None

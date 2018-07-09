@@ -229,9 +229,9 @@ val remove_prefix_dir: Dir.t -> Dir.t -> string
 (** Remove a suffix from a filename *)
 val remove_suffix: Base.t -> t -> string
 
-(** Apply a patch in a directory. Returns [None] on success, the process error
-    otherwise *)
-val patch: t -> Dir.t -> exn option OpamProcess.job
+(** Apply a patch in a directory. If [preprocess] is set to false, there is no
+    CRLF translation. Returns [None] on success, the process error otherwise *)
+val patch: ?preprocess:bool -> t -> Dir.t -> exn option OpamProcess.job
 
 (** Create an empty file *)
 val touch: t -> unit

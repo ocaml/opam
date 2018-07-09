@@ -252,9 +252,10 @@ val get_lock_fd: lock -> Unix.file_descr
 
 (** {2 Misc} *)
 
-(** Apply a patch file in the current directory. Returns the error if the patch
-    didn't apply. *)
-val patch: dir:string -> string -> exn option OpamProcess.job
+(** Apply a patch file in the current directory. If [preprocess] is set to
+    false, there is no CRLF translation. Returns the error if the patch didn't
+    apply. *)
+val patch: ?preprocess:bool -> dir:string -> string -> exn option OpamProcess.job
 
 (** Create a tempory file in {i ~/.opam/logs/<name>XXX}. ?auto_clean controls
     whether the file is automatically deleted when opam terminates
