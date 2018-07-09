@@ -37,7 +37,12 @@ let os_filter os =
 
 let linux_filter = os_filter "linux"
 let macos_filter = os_filter "macos"
+let openbsd_filter = os_filter "openbsd"
+let freebsd_filter = os_filter "freebsd"
 let sandbox_filter = FOr (linux_filter, macos_filter)
+
+let gpatch_filter = FOr (openbsd_filter, freebsd_filter)
+let patch_filter = FNot gpatch_filter
 
 let wrappers ~sandboxing () =
   let cmd t = [
@@ -95,7 +100,8 @@ let required_tools ~sandboxing () =
     Some "A download tool is required, check env variables OPAMCURL or OPAMFETCH",
     None;
     ["diff"], None, None;
-    ["patch"], None, None;
+    ["patch"], None, Some patch_filter;
+    ["gpatch"], None, Some gpatch_filter;
     ["tar"], None, None;
     ["unzip"], None, None;
   ] @

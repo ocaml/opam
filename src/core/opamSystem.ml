@@ -1137,7 +1137,13 @@ let patch ?(preprocess=true) ~dir p =
     else
       p
   in
-  make_command ~name:"patch" ~dir "patch" ["-p1"; "-i"; p'] @@> fun r ->
+  let patch_cmd =
+    match OpamStd.Sys.os () with
+    | OpamStd.Sys.OpenBSD
+    | OpamStd.Sys.FreeBSD -> "gpatch"
+    | _ -> "patch"
+  in
+  make_command ~name:"patch" ~dir patch_cmd ["-p1"; "-i"; p'] @@> fun r ->
     if not (OpamConsole.debug ()) then Sys.remove p';
     if OpamProcess.is_success r then Done None
     else Done (Some (Process_error r))
