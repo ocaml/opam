@@ -1684,7 +1684,12 @@ let repository =
     match command, params with
     | Some `add, name :: url :: security ->
       let name = OpamRepositoryName.of_string name in
-      let url = OpamUrl.parse ?backend:kind url in
+      let backend =
+        match kind with
+        | Some _ -> kind
+        | None -> OpamUrl.guess_version_control url
+      in
+      let url = OpamUrl.parse ?backend url in
       let trust_anchors = match security with
         | [] -> None
         | quorum::fingerprints ->
@@ -1752,7 +1757,12 @@ let repository =
       `Ok ()
     | Some `set_url, (name :: url :: security) ->
       let name = OpamRepositoryName.of_string name in
-      let url = OpamUrl.parse ?backend:kind url in
+      let backend =
+        match kind with
+        | Some _ -> kind
+        | None -> OpamUrl.guess_version_control url
+      in
+      let url = OpamUrl.parse ?backend url in
       let trust_anchors = match security with
         | [] -> None
         | quorum::fingerprints ->
