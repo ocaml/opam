@@ -23,7 +23,7 @@ add_mounts() {
     done
 }
 
-add_mounts ro /usr /bin /lib /lib32 /lib64 /etc /opt /nix/store /home
+add_mounts ro /usr /bin /lib /lib32 /lib64 /etc /opt /nix/store /rw/usrlocal /home
 
 # C compilers using `ccache` will write to a shared cache directory
 # that remain writeable. ccache seems widespread in some Fedora systems.
