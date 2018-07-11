@@ -52,7 +52,7 @@ let call_external_solver command ~criteria ?timeout (_, universe,_ as cudf) =
           command
       in
       OpamSystem.command
-        ~verbose:(OpamCoreConfig.(!r.debug_level >= 2))
+        ~verbose:(OpamCoreConfig.(abs !r.debug_level >= 2))
         cmd
     in
     OpamFilename.remove solver_in;
