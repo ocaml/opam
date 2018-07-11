@@ -236,6 +236,9 @@ let help_sections = [
   `P "$(i,OPAMCURL) can be used to select a given 'curl' program. See \
       $(i,OPAMFETCH) for more options.";
   `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
+  `P "$(i,OPAMDEBUGSECTIONS) if set, limits debug messages to the space-separated \
+      list of sections. Sections can optionally have a specific debug level \
+      (for example, $(b,CLIENT:2) or $(b,CLIENT CUDF:2), but otherwise use `--debug-level'.";
   `P "$(i,OPAMDOWNLOADJOBS) sets the maximum number of simultaneous downloads.";
   `P "$(i,OPAMDRYRUN) see option `--dry-run`";
   `P "$(i,OPAMEDITOR) sets the editor to use for opam file editing, overrides \

@@ -496,7 +496,17 @@ let timestamp () =
     (int_of_float (1000.0 *. msec))
 
 let log section ?(level=1) fmt =
-  let debug_level = OpamCoreConfig.(!r.debug_level) in
+  let debug_level =
+    let debug_level = OpamCoreConfig.(!r.debug_level) in
+    let sections = OpamCoreConfig.(!r.debug_sections) in
+    if OpamCoreConfig.StringMap.is_empty sections then
+      debug_level
+    else
+      match OpamCoreConfig.StringMap.find section sections with
+      | Some level -> level
+      | None -> debug_level
+      | exception Not_found -> 0
+  in
   if level <= abs debug_level then
     let () = clear_status () in
     let timestamp = if debug_level < 0 then "" else timestamp () ^ "  " in

@@ -10,8 +10,11 @@
 
 open OpamCompat
 
+module StringMap = Map.Make(String)
+
 type t = {
   debug_level: int;
+  debug_sections: int option StringMap.t;
   verbose_level: int;
   color: [ `Always | `Never | `Auto ];
   utf8: [ `Extended | `Always | `Never | `Auto ];
@@ -28,6 +31,7 @@ type t = {
 
 type 'a options_fun =
   ?debug_level:int ->
+  ?debug_sections:int option StringMap.t ->
   ?verbose_level:int ->
   ?color:[ `Always | `Never | `Auto ] ->
   ?utf8:[ `Extended | `Always | `Never | `Auto ] ->
@@ -44,6 +48,7 @@ type 'a options_fun =
 
 let default = {
   debug_level = 0;
+  debug_sections = StringMap.empty;
   verbose_level = 0;
   color = `Auto;
   utf8 = `Auto;
@@ -63,6 +68,7 @@ let default = {
 
 let setk k t
     ?debug_level
+    ?debug_sections
     ?verbose_level
     ?color
     ?utf8
@@ -79,6 +85,7 @@ let setk k t
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
     debug_level = t.debug_level + debug_level;
+    debug_sections = t.debug_sections + debug_sections;
     verbose_level = t.verbose_level + verbose_level;
     color = t.color + color;
     utf8 = t.utf8 + utf8;
