@@ -145,7 +145,31 @@ download() {
     fi
 }
 
-if [ ! -e "$TMP/$OPAM_BIN" ]; then
+bin_sha512() {
+  case "x$OPAM_BIN" in
+    opam-2.0.0-rc3-amd64-openbsd) echo "7313cd2c39dc28fa9c3de47ed2274ceee48865d74a4a9315dc120459cf57c9b3a5262b343412149cda5379b2ac2eb7cfb387764c8ca5b4e1e0831b275c4acf6f";;
+    opam-2.0.0-rc3-amd64-openbsd.1) echo "7313cd2c39dc28fa9c3de47ed2274ceee48865d74a4a9315dc120459cf57c9b3a5262b343412149cda5379b2ac2eb7cfb387764c8ca5b4e1e0831b275c4acf6f";;
+    opam-2.0.0-rc3-arm64-linux) echo "589a8c1842c636caabf9108f95b5f288261f5e621b74b1afa731333f0d5010c10a967153f9c4ca5828ecd4e66326b0b1d679ccb8ad92d07aefc66ae85ea10971";;
+    opam-2.0.0-rc3-armhf-linux) echo "0ebd8662b2d1972b12e38245d3625867fb173bf6939a8c728e0cc349867d5b31103488674665d77be9ad2dc881b3508a947640019b6b48c6821ccece481cf2bc";;
+    opam-2.0.0-rc3-i686-linux) echo "18da8fb4ce5270e51becbde47e8b5b6a855a970820f85f01fcdca1a28cef1ad5b51f0c53f60f89f45192d0f310c4e441da267f2dbc3616e16f68128bb86af2ae";;
+    opam-2.0.0-rc3-x86_64-darwin) echo "229c0623df54561285182570a72c7860f5398532fbfb33d7c90d345fba25fcd43f13e806aa232089da9303481f6c65535dedfff0077ba1d4b96f76b191ca24c6";;
+    opam-2.0.0-rc3-x86_64-linux) echo "f479ec7dd891bb200376fd674a02ff5283c9ca812be5a83138739d39f9d7221ac920c530937573cf789d976b60c822efa49066cdf2b34f61e740835e6fb1a37c";;
+    *) echo "no sha";;
+  esac
+}
+
+check_sha512() {
+  if command -v openssl > /dev/null; then
+    sha512=`openssl sha512 "$TMP/$OPAM_BIN" 2> /dev/null | cut -f 2 -d ' '`
+    check=`bin_sha512`
+    test "x$sha512" = "x$check"
+  else
+    echo "openssl not found, binary integrity check can't be performed."
+    return 0
+  fi
+}
+
+if [ -e "$TMP/$OPAM_BIN" ] && ! check_sha512 || [ ! -e "$TMP/$OPAM_BIN" ]; then
     echo "## Downloading opam $VERSION for $OS on $ARCH..."
 
     if ! download "$TMP/$OPAM_BIN" "$OPAM_BIN_URL"; then
@@ -155,7 +179,12 @@ if [ ! -e "$TMP/$OPAM_BIN" ]; then
         echo "to build from scratch"
         exit 10
     else
-        echo "## Downloaded."
+        if check_sha512; then
+            echo "## Downloaded."
+        else
+            echo "Checksum mismatch, a problem occured during download."
+            exit 10
+        fi
     fi
 else
     echo "## Using already downloaded \"$TMP/$OPAM_BIN\""
