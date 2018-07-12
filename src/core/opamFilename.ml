@@ -359,8 +359,8 @@ let link ?(relative=false) ~target ~link =
   in
   OpamSystem.link target (to_string link)
 
-let patch filename dirname =
-  OpamSystem.patch ~dir:(Dir.to_string dirname) (to_string filename)
+let patch ?preprocess filename dirname =
+  OpamSystem.patch ?preprocess ~dir:(Dir.to_string dirname) (to_string filename)
 
 let flock flag ?dontblock file = OpamSystem.flock flag ?dontblock (to_string file)
 
