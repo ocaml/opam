@@ -222,6 +222,7 @@ if [ -d "$OPAMROOT" ]; then
         cp -a "$OPAMROOT" "$OPAMROOT.$EXISTING_OPAMV"
         echo "## $OPAMROOT backed up as $(basename $OPAMROOT).$EXISTING_OPAMV"
     fi
+    rm -f "$OPAMROOT"/repo/*/*.tar.gz*
 fi
 
 xsudo install -m 755 "$TMP/$OPAM_BIN" "$BINDIR/opam"
