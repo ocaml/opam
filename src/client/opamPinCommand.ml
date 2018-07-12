@@ -441,7 +441,10 @@ and source_pin
     OpamPath.Switch.Overlay.tmp_opam st.switch_global.root st.switch name
   in
 
-  let opam_local = OpamFile.OPAM.read_opt temp_file in
+  let opam_local =
+    OpamFile.OPAM.read_opt temp_file
+    |> OpamStd.Option.map (OpamFormatUpgrade.opam_file)
+  in
   OpamFilename.remove (OpamFile.filename temp_file);
 
   let opam_opt =
@@ -482,9 +485,13 @@ and source_pin
         "Couldn't retrieve opam file from versioned source, \
          using the one found locally.";
       Some local
-    | Some local, Some vers when not (OpamFile.OPAM.effectively_equal local vers) ->
+    | Some local, Some vers when
+        not OpamFile.(OPAM.effectively_equal
+                        (OPAM.with_url URL.empty local)
+                        (OPAM.with_url URL.empty vers)) ->
       OpamConsole.warning
-        "Opam file have significant uncommitted changes, using the versioned one";
+        "%s opam file have non-trivial uncommitted changes, using the versioned one"
+        (OpamPackage.Name.to_string name);
       opam_opt
     | _ -> opam_opt
   in
