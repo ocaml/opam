@@ -23,6 +23,7 @@ type t = {
   ignore_constraints_on: name_set;
   unlock_base: bool;
   no_env_notice: bool;
+  locked: string option;
 }
 
 let default = {
@@ -44,6 +45,7 @@ let default = {
   ignore_constraints_on = OpamPackage.Name.Set.empty;
   unlock_base = false;
   no_env_notice = false;
+  locked = None;
 }
 
 type 'a options_fun =
@@ -59,6 +61,7 @@ type 'a options_fun =
   ?ignore_constraints_on:name_set ->
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
+  ?locked:string option ->
   'a
 
 let setk k t
@@ -74,6 +77,7 @@ let setk k t
     ?ignore_constraints_on
     ?unlock_base
     ?no_env_notice
+    ?locked
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -89,7 +93,8 @@ let setk k t
     makecmd = t.makecmd + makecmd;
     ignore_constraints_on = t.ignore_constraints_on + ignore_constraints_on;
     unlock_base = t.unlock_base + unlock_base;
-    no_env_notice = t.no_env_notice + no_env_notice
+    no_env_notice = t.no_env_notice + no_env_notice;
+    locked = t.locked + locked;
   }
 
 let set t = setk (fun x () -> x) t
@@ -123,6 +128,7 @@ let initk k =
        OpamPackage.Name.Set.of_list)
     ?unlock_base:(env_bool "UNLOCKBASE")
     ?no_env_notice:(env_bool "NOENVNOTICE")
+    ?locked:(env_string "LOCKED" >>| function "" -> None | s -> Some s)
 
 let init ?noop:_ = initk (fun () -> ())
 

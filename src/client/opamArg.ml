@@ -149,19 +149,21 @@ type build_options = {
   jobs          : int option;
   ignore_constraints_on: name list option;
   unlock_base   : bool;
+  locked: string option;
 }
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
     req_checksums build_test build_doc show dryrun skip_update
-    fake jobs ignore_constraints_on unlock_base = {
+    fake jobs ignore_constraints_on unlock_base locked = {
   keep_build_dir; reuse_build_dir; inplace_build; make;
   no_checksums; req_checksums; build_test; build_doc; show; dryrun;
-  skip_update; fake; jobs; ignore_constraints_on; unlock_base;
+  skip_update; fake; jobs; ignore_constraints_on; unlock_base; locked;
 }
 
 let apply_build_options b =
   let flag f = if f then Some true else None in
+  let some x = match x with None -> None | some -> Some some in
   OpamRepositoryConfig.update
     (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
     (* ?retries:int *)
@@ -182,6 +184,7 @@ let apply_build_options b =
       OpamStd.Option.Op.(b.ignore_constraints_on >>|
                          OpamPackage.Name.Set.of_list)
     ?unlock_base:(flag b.unlock_base)
+    ?locked:(some b.locked)
     ();
   OpamClientConfig.update
     ?keep_build_dir:(flag b.keep_build_dir)
@@ -226,6 +229,7 @@ let help_sections = [
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
   `P "$(i,OPAMJSON) log json output to the given file (use character `%' to \
       index the files)";
+  `P "$(i,OPAMLOCK) see option `--lock'.";
   `P "$(i,OPAMNOAUTOUPGRADE) disables automatic internal upgrade of \
       repositories in an earlier format to the current one, on 'update' or \
       'init'.";
@@ -970,8 +974,8 @@ let global_options =
         $git_version $debug $debug_level $verbose $quiet $color $switch $yes
         $strict $root $external_solver
         $use_internal_solver $cudf_file $solver_preferences $best_effort
-        $safe_mode $json_flag $no_auto_upgrade $ working_dir
-        $ ignore_pin_depends)
+        $safe_mode $json_flag $no_auto_upgrade $working_dir
+        $ignore_pin_depends)
 
 (* Options common to all build commands *)
 let build_option_section = "PACKAGE BUILD OPTIONS"
@@ -1053,11 +1057,24 @@ let build_options =
     mk_flag ~section ["unlock-base"]
       "Allow changes to the packages set as switch base (typically, the main \
        compiler). Use with caution." in
+  let locked =
+    let open Arg in
+    value & opt ~vopt:(Some "locked") (some string) None &
+    info ~docs:section ~docv:"SUFFIX" ["locked"] ~doc:
+      "In commands that use opam files found from pinned sources, if a variant \
+       of the file with an added .$(i,SUFFIX) extension is found (e.g. \
+       $(b,foo.opam.locked) besides $(b,foo.opam)), that will be used instead. \
+       This is typically useful to offer a more specific set of dependencies \
+       and reproduce similar build contexts, hence the name. The $(i,opam \
+       lock) plugin can be used to generate such files, based on the versions \
+       of the dependencies currently installed on the host. This is equivalent \
+       to setting the $(b,\\$OPAMLOCK) environment variable."
+  in
   Term.(const create_build_options
     $keep_build_dir $reuse_build_dir $inplace_build $make
     $no_checksums $req_checksums $build_test $build_doc $show $dryrun
     $skip_update $fake $jobs_flag $ignore_constraints_on
-    $unlock_base)
+    $unlock_base $locked)
 
 (* Option common to install commands *)
 let assume_built =

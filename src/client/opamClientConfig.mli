@@ -90,6 +90,7 @@ val opam_init:
   ?ignore_constraints_on:OpamPackage.Name.Set.t ->
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
+  ?locked:string option ->
   ?cudf_file:string option ->
   ?solver:(module OpamCudfSolver.S) Lazy.t ->
   ?best_effort:bool ->
