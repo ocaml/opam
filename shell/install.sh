@@ -146,7 +146,7 @@ download() {
 }
 
 bin_sha512() {
-  case "x$OPAM_BIN" in
+  case "$OPAM_BIN" in
     opam-2.0.0-rc3-amd64-openbsd) echo "7313cd2c39dc28fa9c3de47ed2274ceee48865d74a4a9315dc120459cf57c9b3a5262b343412149cda5379b2ac2eb7cfb387764c8ca5b4e1e0831b275c4acf6f";;
     opam-2.0.0-rc3-amd64-openbsd.1) echo "7313cd2c39dc28fa9c3de47ed2274ceee48865d74a4a9315dc120459cf57c9b3a5262b343412149cda5379b2ac2eb7cfb387764c8ca5b4e1e0831b275c4acf6f";;
     opam-2.0.0-rc3-arm64-linux) echo "589a8c1842c636caabf9108f95b5f288261f5e621b74b1afa731333f0d5010c10a967153f9c4ca5828ecd4e66326b0b1d679ccb8ad92d07aefc66ae85ea10971";;
