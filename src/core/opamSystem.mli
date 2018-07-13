@@ -257,9 +257,9 @@ val get_lock_fd: lock -> Unix.file_descr
     apply. *)
 val patch: ?preprocess:bool -> dir:string -> string -> exn option OpamProcess.job
 
-(** Create a tempory file in {i ~/.opam/logs/<name>XXX}. ?auto_clean controls
-    whether the file is automatically deleted when opam terminates
-    (default: [true]). *)
+(** Create a temporary file in {i ~/.opam/logs/<name>XXX}, if [dir] is not set.
+    ?auto_clean controls whether the file is automatically deleted when opam
+    terminates (default: [true]). *)
 val temp_file: ?auto_clean:bool -> ?dir:string -> string -> string
 
 (** Print stats *)
