@@ -172,7 +172,8 @@ let pull_from_upstream
    else
    let pin_cache_dir = OpamRepositoryPath.pin_cache url in
    let url, pull =
-     if OpamFilename.exists_dir pin_cache_dir then
+     if OpamUrl.(match url.backend with | #version_control -> false | _ -> true)
+     && OpamFilename.exists_dir pin_cache_dir then
        (log "Pin cache existing for %s : %s\n"
           (OpamUrl.to_string url) @@ OpamFilename.Dir.to_string pin_cache_dir;
         let rsync =

@@ -17,7 +17,8 @@ let download_cache root = root / "download-cache"
 
 let pin_cache_dir =
   let dir =
-    lazy (OpamFilename.Dir.of_string (OpamSystem.temp_basename "opam-pin-cache"))
+    lazy (OpamFilename.Dir.of_string (Filename.get_temp_dir_name ())
+          / (OpamSystem.temp_basename "opam-pin-cache"))
   in
   fun () -> Lazy.force dir
 
