@@ -51,8 +51,8 @@ let (/) = Filename.concat
 let temp_basename prefix =
   Printf.sprintf "%s-%d-%06x" prefix (OpamStubs.getpid ()) (Random.int 0xFFFFFF)
 
-let rec mk_temp_dir () =
-  let s = Filename.get_temp_dir_name () / temp_basename "opam" in
+let rec mk_temp_dir ?(prefix="opam") () =
+  let s = Filename.get_temp_dir_name () / temp_basename prefix in
   if Sys.file_exists s then
     mk_temp_dir ()
   else
