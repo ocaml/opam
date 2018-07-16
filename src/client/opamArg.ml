@@ -1068,7 +1068,8 @@ let build_options =
        and reproduce similar build contexts, hence the name. The $(i,opam \
        lock) plugin can be used to generate such files, based on the versions \
        of the dependencies currently installed on the host. This is equivalent \
-       to setting the $(b,\\$OPAMLOCK) environment variable."
+       to setting the $(b,\\$OPAMLOCK) environment variable. Note that this \
+       option doesn't generally affect already pinned packages."
   in
   Term.(const create_build_options
     $keep_build_dir $reuse_build_dir $inplace_build $make
