@@ -810,8 +810,9 @@ let repo_kind_flag =
 
 let jobs_flag =
   mk_opt ["j";"jobs"] "JOBS"
-    "Set the maximal number of concurrent jobs to use. You can also set it using \
-     the $(b,\\$OPAMJOBS) environment variable."
+    "Set the maximal number of concurrent jobs to use. The default value is \
+    calculated from the number of cores. You can also set it using the \
+    $(b,\\$OPAMJOBS) environment variable."
     Arg.(some positive_integer) None
 
 let name_list =

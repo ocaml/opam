@@ -1266,9 +1266,10 @@ for <span class="opam">opam</span>.
 - <a id="configfield-switch">`switch: <string>`</a>:
   the currently globally selected switch.
 - <a id="configfield-jobs">`jobs: <int>`</a>:
-  the number of concurrent jobs to run for build processes.
+  the number of concurrent jobs to run for build processes. The default value is
+  calculated from the number of cores.
 - <a id="configfield-download-jobs">`download-jobs: <int>`</a>:
-  the maximum number of concurrent downloads.
+  the maximum number of concurrent downloads. The default value is 3.
 - <a id="configfield-download-command">`download-command: [ ( <string> | <ident> ) { <filter> } ... ]`</a>:
   the command to use for downloading packages. If set to a single element, will
   use the `curl` and `wget` presets if set to those idents, and use the named
