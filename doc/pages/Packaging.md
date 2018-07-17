@@ -7,7 +7,7 @@ definition, testing it, and publishing to the
 
 ## Creating a package definition file
 
-For complete documentation of the format, see [the manual]((Manual.html#Packagedefinitions).
+For complete documentation of the format, see [the manual](Manual.html#Packagedefinitions).
 
 If your project does not yet have a package definition, get to the root of its
 source, and then either

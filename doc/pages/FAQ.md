@@ -47,7 +47,7 @@ You may also want to browse the [library APIs](api/).
 
 opam is designed to be run strictly as user (non-root), and apart for the
 explicit options provided during `opam init`, only writes within `~/.opam` (and
-`/tmp`). This directory -- the default "opam root" -- contains configuration,
+`/tmp`). This directory — the default "opam root" — contains configuration,
 various internal data, a cache of downloaded archives, and your OCaml
 installations.
 

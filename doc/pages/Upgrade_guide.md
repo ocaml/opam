@@ -102,7 +102,7 @@ doesn't affect the pinned package.
 >
 > - [**The main repository**](https://github.com/ocaml/opam-repository/tree/master)
 >   remains in format **1.2** for now. This means the the `master` branch, and
->   the contents of https://opam.ocaml.org/packages.
+>   the contents of `https://opam.ocaml.org/packages`.
 > - [**There is a 2.0.0 branch**](https://github.com/ocaml/opam-repository/tree/master)
 >   that is served at `opam.ocaml.org/2.0`.
 >
@@ -111,7 +111,7 @@ doesn't affect the pinned package.
 > repository, or manually using
 > [`opam admin upgrade`](man/opam-admin-upgrade.html)).
 >
-
+>
 > When publishing packages, remember that:
 >
 > - packages in **1.2 format** must be published to `master`, and they will be
@@ -160,7 +160,7 @@ doesn't affect the pinned package.
   must now apply with `patch -p1` and use unified, rather than context, diffs.
 
 - `opam switch export/import` format has been changed (but files in the 1.2
-  format can still be read)
+  format can still be read).
 
 - __the conversion from the 1.2 format is done internally and automatic, both
   for repositories and when pinning.__ Be careful, however, not to submit 2.0
