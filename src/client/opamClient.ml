@@ -1157,6 +1157,7 @@ let remove_t ?ask ~autoremove ~force atoms t =
            ~depopts:false ~installed:true universe packages) in
     let to_keep =
       (if autoremove then t.installed_roots %% t.installed else t.installed)
+      ++ universe.u_base
       -- to_remove -- full_orphans -- orphan_versions
     in
     let to_keep =
