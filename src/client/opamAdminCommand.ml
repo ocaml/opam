@@ -390,10 +390,7 @@ let add_hashes_command =
                true)
             else has_error
           in
-          let has_error, urlf =
-            match OpamFile.OPAM.url opam with
-            | None -> has_error, None
-            | Some urlf ->
+          let process_url has_error urlf =
               let hashes = OpamFile.URL.checksum urlf in
               let hashes =
                 if replace then
@@ -414,12 +411,27 @@ let add_hashes_command =
                         (OpamPackage.to_string nv)
                         (OpamUrl.to_string (OpamFile.URL.url urlf));
                       true, hashes)
-                  (false, hashes)
+                  (has_error, hashes)
                   hash_types
               in
-              has_error, Some (OpamFile.URL.with_checksum hashes urlf)
+              has_error, OpamFile.URL.with_checksum hashes urlf
           in
-          let opam1 = OpamFile.OPAM.with_url_opt urlf opam in
+          let has_error, url_opt =
+            match OpamFile.OPAM.url opam with
+            | None -> has_error, None
+            | Some urlf ->
+              let has_error, urlf = process_url has_error urlf in
+              has_error, Some urlf
+          in
+          let has_error, extra_sources =
+            List.fold_right (fun (basename, urlf) (has_error, acc) ->
+                let has_error, urlf = process_url has_error urlf in
+                has_error, (basename, urlf) :: acc)
+              (OpamFile.OPAM.extra_sources opam)
+              (has_error, [])
+          in
+          let opam1 = OpamFile.OPAM.with_url_opt url_opt opam in
+          let opam1 = OpamFile.OPAM.with_extra_sources extra_sources opam1 in
           if opam1 <> opam then
             OpamFile.OPAM.write_with_preserved_format opam_file opam1;
           has_error
