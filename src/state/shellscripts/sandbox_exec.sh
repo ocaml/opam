@@ -21,7 +21,7 @@ add_ccache_mount() {
       CCACHE_DIR=$HOME/.ccache
       ccache_dir_regex='cache_dir = (.*)$'
       local IFS=$'\n'
-      for f in $(ccache --print-config); do
+      for f in $(ccache --print-config 2>/dev/null); do
         if [[ $f =~ $ccache_dir_regex ]]; then
           CCACHE_DIR=${BASH_REMATCH[1]}
         fi
