@@ -142,26 +142,6 @@ Ubuntu has native packages for opam:
 apt install opam
 ```
 
-We also provide our own for the latest versions opam version, if not yet
-available on your Ubuntu release:
-
-```
-add-apt-repository ppa:avsm/ppa
-apt-get update
-apt-get install ocaml ocaml-native-compilers camlp4-extra opam
-```
-
-There are also PPAs available that are
-[pinned to specific revisions](http://launchpad.net/~avsm) of OCaml and opam --
-we use them for our
-[automated testing](http://anil.recoil.org/2013/09/30/travis-and-ocaml.html).
-
-If the command `add-apt-repository` is not available, you can install the
-package `software-properties-common` with `apt-get install
-software-properties-common`. Alternatively, you may manually edit the file
-`/etc/apt/sources.list` to add the PPA for your Ubuntu release.
-
-
 ## From Sources
 
 #### Getting the Sources
