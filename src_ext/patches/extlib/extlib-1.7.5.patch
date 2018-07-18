@@ -1,0 +1,29 @@
+diff -Naur extlib-1.7.5/src/configure.ml extlib/src/configure.ml
+--- extlib-1.7.5/src/configure.ml	2018-07-09 01:54:13.000000000 +0100
++++ extlib/src/configure.ml	2018-07-16 21:09:16.147453999 +0100
+@@ -1,15 +1,21 @@
+ open Printf
+ 
+ let show_bytes s =
+-    let (_:int) = Sys.command (sprintf "ocamlfind query -format %s bytes" (Filename.quote s)) in ()
++  if Sys.command (sprintf "ocamlfind query -format %s bytes" (Filename.quote s)) <> 0 then
++    print_endline "WITH_DUMMY"
++
++let define v =
++  print_endline "-D";
++  print_endline v
+ 
+ let () =
+   match Sys.argv with
+   | [|_;"-cppo-args"|] ->
+     let version = Scanf.sscanf Sys.ocaml_version "%d.%d." (fun major minor -> major * 100 + minor) in
+-    printf "-D \\\"OCAML %d\\\"\n" version;
+-    print_endline (if Sys.word_size = 32 then "-D WORD_SIZE_32 " else "");
+-    show_bytes "-D WITH_BYTES";
++    define (Printf.sprintf "OCAML %d" version);
++    if Sys.word_size = 32 then define "WORD_SIZE_32";
++    print_endline "-D";
++    show_bytes "WITH_BYTES";
+     exit 0
+   | [|_;"-compile-args"|] ->
+     if Sys.ocaml_version >= "4.00.0" then print_endline "-bin-annot";
