@@ -319,6 +319,7 @@ let add_hashes_command =
             (Printexc.to_string e))
       hash_tables
   in
+  let additions_count = ref 0 in
   let get_hash cache_urls kind known_hashes url =
     let found =
       List.fold_left (fun result hash ->
@@ -356,7 +357,9 @@ let add_hashes_command =
              Hashtbl.replace
                (snd (Hashtbl.find hash_tables (OpamHash.kind h0, kind)))
                h0 h
-           ) known_hashes
+           ) known_hashes;
+         incr additions_count;
+         if !additions_count mod 20 = 0 then save_hashes ()
        | None -> ());
       h
   in
