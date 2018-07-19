@@ -490,7 +490,7 @@ and source_pin
                         (OPAM.with_url URL.empty local)
                         (OPAM.with_url URL.empty vers)) ->
       OpamConsole.warning
-        "%s opam file have non-trivial uncommitted changes, using the versioned one"
+        "%s's opam file has uncommitted changes, using the versioned one"
         (OpamPackage.Name.to_string name);
       opam_opt
     | _ -> opam_opt

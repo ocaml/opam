@@ -31,18 +31,35 @@ let possible_definition_filenames dir name = [
 ]
 
 let find_opam_file_in_source name dir =
-  OpamStd.Option.map OpamFile.make
-    (OpamStd.List.find_opt OpamFilename.exists
-       (possible_definition_filenames dir name))
+  let opt =
+    OpamStd.List.find_opt OpamFilename.exists
+      (possible_definition_filenames dir name)
+  in
+  (match opt, OpamStateConfig.(!r.locked) with
+   | Some base, Some ext ->
+     let fl = OpamFilename.add_extension base ext in
+     if OpamFilename.exists fl then Some fl else opt
+   | _ -> opt)
+  |> OpamStd.Option.map OpamFile.make
 
 let name_of_opam_filename dir file =
   let open OpamStd.Option.Op in
+  let suffix = ".opam" in
   let get_name s =
-    if Filename.check_suffix s ".opam"
-    then Some Filename.(chop_suffix (basename s) ".opam")
+    if Filename.check_suffix s suffix
+    then Some Filename.(chop_suffix (basename s) suffix)
     else None
   in
   let rel = OpamFilename.remove_prefix dir file in
+  let rel =
+    match OpamStateConfig.(!r.locked) with
+    | None -> rel
+    | Some suf ->
+      let ext = "."^suf in
+      if OpamStd.String.ends_with ~suffix:(suffix^ext) rel then
+        OpamStd.String.remove_suffix ~suffix:ext rel
+      else rel
+  in
   (get_name (Filename.basename rel) >>+ fun () ->
    get_name (Filename.dirname rel)) >>= fun name ->
   try Some (OpamPackage.Name.of_string name)
@@ -64,6 +81,13 @@ let files_in_source d =
       (OpamFilename.dirs d)
   in
   files d @ files (d / "opam") |>
+  List.map
+    (fun f ->
+       match OpamStateConfig.(!r.locked) with
+       | None -> f
+       | Some ext ->
+         let fl = OpamFilename.add_extension f ext in
+         if OpamFilename.exists fl then fl else f) |>
   OpamStd.List.filter_map
     (fun f ->
        try

@@ -26,6 +26,7 @@ type t = private {
   ignore_constraints_on: name_set;
   unlock_base: bool;
   no_env_notice: bool;
+  locked: string option;
 }
 
 type 'a options_fun =
@@ -41,6 +42,7 @@ type 'a options_fun =
   ?ignore_constraints_on:name_set ->
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
+  ?locked:string option ->
   'a
 
 include OpamStd.Config.Sig
