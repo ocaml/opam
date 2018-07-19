@@ -44,12 +44,22 @@ let find_opam_file_in_source name dir =
 
 let name_of_opam_filename dir file =
   let open OpamStd.Option.Op in
+  let suffix = ".opam" in
   let get_name s =
-    if Filename.check_suffix s ".opam"
-    then Some Filename.(chop_suffix (basename s) ".opam")
+    if Filename.check_suffix s suffix
+    then Some Filename.(chop_suffix (basename s) suffix)
     else None
   in
   let rel = OpamFilename.remove_prefix dir file in
+  let rel =
+    match OpamStateConfig.(!r.locked) with
+    | None -> rel
+    | Some suf ->
+      let ext = "."^suf in
+      if OpamStd.String.ends_with ~suffix:(suffix^ext) rel then
+        OpamStd.String.remove_suffix ~suffix:ext rel
+      else rel
+  in
   (get_name (Filename.basename rel) >>+ fun () ->
    get_name (Filename.dirname rel)) >>= fun name ->
   try Some (OpamPackage.Name.of_string name)
