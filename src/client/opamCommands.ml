@@ -2935,16 +2935,16 @@ let clean =
            List.iter (fun d ->
                if not (List.mem d pinning_overlay_dirs) then rmdir d)
              (OpamFilename.dirs (OpamPath.Switch.Overlay.dir root sw));
-           let installed_dev_dirs =
-             OpamPackage.Set.fold (fun nv acc ->
-                 if OpamSwitchState.is_dev_package st nv
-                 then OpamSwitchState.source_dir st nv :: acc
-                 else acc)
-               st.installed []
+           let keep_sources_dir =
+             OpamPackage.Set.elements
+               (OpamPackage.Set.union st.pinned
+                  (OpamPackage.Set.filter (OpamSwitchState.is_dev_package st)
+                     st.installed))
+             |> List.map (OpamSwitchState.source_dir st)
            in
            OpamFilename.dirs (OpamPath.Switch.sources_dir root sw) |>
            List.iter (fun d ->
-               if not (List.mem d installed_dev_dirs) then rmdir d))
+               if not (List.mem d keep_sources_dir) then rmdir d))
          switches);
     if repos then
       (OpamFilename.with_flock `Lock_write (OpamPath.repos_lock gt.root)
