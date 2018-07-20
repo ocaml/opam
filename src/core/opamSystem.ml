@@ -821,44 +821,69 @@ let lock_none = {
 let lock_isatleast flag lock =
   lock_max flag lock.kind = lock.kind
 
-(* read_lines processes the lines of a text file in a platform-agnostic manner
-   (which is to say that it preserves '\r' on all platforms). It has two modes
-   of operation - in the Lines mode, it returns a string list of the lines, in
-   CrLf mode, it returns true if every line ends "\r\n". *)
-type _ read_return = Lines : string list read_return
-                   | CrLf  : bool read_return
-
-let read_lines : type s . s read_return -> string -> s = fun mode file ->
+let get_eol_encoding file =
   let ch =
     try open_in_bin file
     with Sys_error _ -> raise (File_not_found file)
   in
-  let read_lines f =
-    let rec read_lines cr acc =
-      match input_line ch with
-      | line ->
-          let length = String.length line in
-          let acc = f line acc in
-          read_lines (cr && length > 0 && line.[length - 1] = '\r') acc
-      | exception End_of_file ->
-          close_in ch;
-          let acc =
-            if cr then
-              List.rev_map (fun s -> String.sub s 0 (String.length s - 1)) acc
-            else
-              List.rev acc
-          in
-          (acc, cr)
-    in
-    read_lines true []
+  let has_cr line =
+    let length = String.length line in
+    length > 0 && line.[length - 1] = '\r'
   in
-  match mode with
-  | Lines ->
-      read_lines OpamStd.List.cons |> fst
-  | CrLf ->
-      read_lines (fun _ _ -> []) |> snd
+  let last_char ch = seek_in ch (in_channel_length ch - 1); input_char ch in
+  let rec read_lines cr line =
+    let has_cr = has_cr line in
+    match input_line ch with
+    | line ->
+        if has_cr = cr then
+          read_lines cr line
+        else begin
+          close_in ch;
+          None
+        end
+    | exception End_of_file ->
+        let result =
+          if cr = has_cr then
+            Some cr
+          else
+            if cr && last_char ch <> '\n' then
+              Some true
+            else
+              None
+        in
+        close_in ch;
+        result
+  in
+  match input_line ch with
+  | line_one ->
+      let has_cr = has_cr line_one in
+      begin match input_line ch with
+      | line_two ->
+          read_lines has_cr line_two
+      | exception End_of_file ->
+          let result =
+            if last_char ch = '\n' then
+              Some has_cr
+            else
+              None
+          in
+          close_in ch;
+          result
+      end
+  | exception End_of_file ->
+      close_in ch;
+      None
 
 let translate_patch ~dir orig corrected =
+  (* It's unnecessarily complicated to infer whether the entire file is CRLF
+     encoded and also the status of individual files, so accept scanning the
+     file three times instead of two. *)
+  let log ?level fmt = OpamConsole.log "PATCH" ?level fmt in
+  let strip_cr = get_eol_encoding orig = Some true in
+  let ch =
+    try open_in_bin orig
+    with Sys_error _ -> raise (File_not_found orig)
+  in
   (* CRLF detection with patching can be more complicated than that used here,
      especially in the presence of files with mixed LF/CRLF endings. The
      processing done here aims to allow patching to succeed on files which are
@@ -910,19 +935,60 @@ let translate_patch ~dir orig corrected =
         (* TODO Should display some kind of warning that there were no chunks *)
         `Header
   in
-  let process ch (state, file_mode) line =
-    let length = String.length line in
-    let next_state =
-      let state =
-        match state with
-          (* Weakness: no effort is made to identify the diff or Index: lines *)
-        | `Header ->
+  let process_state_transition next_state state transforms =
+    match (state, next_state) with
+    | (`Processing _, `Processing _) ->
+        transforms
+    | (`Processing (_, target, crlf, patch_crlf, chunks, _), _) ->
+        let compute_transform patch_crlf =
+          (* Emit the patch *)
+          let transform =
+            match (crlf, patch_crlf) with
+            | (None, _)
+            | (_, None) ->
+                log ~level:3 "CRLF adaptation skipped for %s" target;
+                None
+            | (Some crlf, Some patch_crlf) ->
+                if crlf = patch_crlf then begin
+                  log ~level:3 "No CRLF adaptation necessary for %s" target;
+                  None
+                end else if crlf then begin
+                  log ~level:3 "Adding \\r to patch chunks for %s" target;
+                  Some true
+                end else begin
+                  log ~level:3 "Stripping \\r to patch chunks for %s" target;
+                  Some false
+                end
+          in
+          let record_transform transform =
+            let augment_record (first_line, last_line) =
+              (first_line, last_line, transform)
+            in
+            List.rev_append (List.rev_map augment_record chunks) transforms
+          in
+          OpamStd.Option.map_default record_transform transforms transform
+        in
+        OpamStd.Option.map_default compute_transform transforms patch_crlf
+     | _ ->
+        transforms
+  in
+  let rec fold_lines state n transforms =
+    match input_line ch with
+    | line ->
+        let line =
+          if strip_cr then
+            String.sub line 0 (String.length line - 1)
+          else
+            line
+        in
+        let length = String.length line in
+        let next_state =
+          match state with
+          | `Header ->
             begin
-              let marker = if length > 4 then String.sub line 0 4 else "" in
-              match marker with
+              match (if length > 4 then String.sub line 0 4 else "") with
               | "--- " ->
-                  (* Start of a unified diff header. Determine what needs to
-                     happen to the line endings of the chunks. *)
+                  (* Start of a unified diff header. *)
                   let file =
                     let file = String.sub line 4 (length - 4) in
                     let open OpamStd in
@@ -934,27 +1000,22 @@ let translate_patch ~dir orig corrected =
                                also identified by their absence on disk, so this
                                weakness isn't particularly critical. *)
                   if file = "/dev/null" then
-                    `NewHeader `Unified
+                    `NewHeader
                   else
-                    (* @@DRA This doesn't handle renaming *)
-                    (* @@DRA We could ensure that renaming takes place here, too *)
                     let target =
                       OpamStd.String.cut_at (back_to_forward file) '/'
                       |> OpamStd.Option.map_default snd file
                       |> Filename.concat dir
                     in
                     if Sys.file_exists target then
-                      let crlf = read_lines CrLf target in
-                      `Patching (`Unified, file, crlf)
+                      let crlf = get_eol_encoding target in
+                      `Patching (file, crlf)
                     else
-                      `NewHeader `Unified
+                      `NewHeader
               | "*** " ->
                   OpamConsole.warning "File %s uses context diffs which are \
                                        less portable; consider using unified \
                                        diffs" orig;
-                  (* Context diffs are not implemented: if they are, this
-                     becomes `NewHeader `Context or
-                     `Patching (`Context, file, crlf) *)
                   `SkipFile
               | _ ->
                   (* Headers will contain other lines, which are ignored (e.g.
@@ -962,168 +1023,164 @@ let translate_patch ~dir orig corrected =
                      messages) *)
                   `Header
             end
-        | `NewHeader mode ->
-            begin
-              let marker = if length > 4 then String.sub line 0 4 else "" in
-              match marker with
-              | "+++ " when mode = `Unified ->
-                  `New `Unified
-              | "--- " when mode = `Context ->
-                  `New `Context
-              | _ ->
-                  (* TODO Should display some kind of re-sync warning *)
-                  `Header
-            end
-        | `New `Context ->
-            (* Context diff scanning is not implemented; this branch is
-               unreachable. *)
-            assert false
-        | `New `Unified ->
-            process_chunk_header (fun neg pos -> `NewChunk (`Unified, neg, pos))
-                                 line
-        | `NewChunk (`Unified, neg, pos) ->
-            (* Weakness: new files should only have + lines *)
-            let neg =
-              if line = "" || line.[0] = ' ' || line.[0] = '-' then
-                neg - 1
+          | `NewHeader ->
+              if (if length > 4 then String.sub line 0 4 else "") = "+++ " then
+                `New
               else
-                neg
-            in
-            let pos =
-              if line = "" || line.[0] = ' ' || line.[0] = '+' then
-                pos - 1
+                (* TODO Should display some kind of re-sync warning *)
+                `Header
+          | `New ->
+              process_chunk_header (fun neg pos -> `NewChunk (neg, pos))
+                                   line
+          | `NewChunk (neg, pos) ->
+              (* Weakness: new files should only have + lines *)
+              let neg =
+                if line = "" || line.[0] = ' ' || line.[0] = '-' then
+                  neg - 1
+                else
+                  neg
+              in
+              let pos =
+                if line = "" || line.[0] = ' ' || line.[0] = '+' then
+                  pos - 1
+                else
+                  pos
+              in
+              if neg = 0 && pos = 0 then
+                `New
               else
-                pos
-            in
-            if neg = 0 && pos = 0 then
-              `New `Unified
-            else
-              (* Weakness: there should only be one chunk for a new file *)
-              `NewChunk (`Unified, neg, pos)
-        | `Patching (mode, orig, crlf) ->
-            begin
-              let marker = if length > 4 then String.sub line 0 4 else "" in
-              match marker with
-              | "+++ " when mode = `Unified ->
-                  let file =
-                    let file = String.sub line 4 (length - 4) in
-                    let open OpamStd in
-                    Option.map_default fst file (String.cut_at file '\t')
-                  in
-                  `Processing (`Unified, orig, file, crlf, `Head)
-              | "--- " when mode = `Context ->
-                  (* Context diff scanning is not implemented; this branch is
-                     unreachable. *)
-                  assert false
-              | _ ->
-                  `Header
-            end
-        | `Processing (`Context, _, _, _, _) ->
-            (* Context diff scanning is not implemented; this branch is
-               unreachable. *)
-            assert false
-        | `Processing (`Unified, orig, target, crlf, `Head) ->
-            (* Weakness: previous chunks will be processed even if an error is
-                         encountered in a subsequent one. After an error, all
-                         remaining chunks are ignored. *)
-            process_chunk_header
-              (fun neg pos -> `Processing (`Unified, orig, target, crlf,
-                                            `Chunk (neg, pos))) line
-        | `Processing (`Unified, orig, target, crlf, `Chunk (neg, pos)) ->
-            let neg =
-              if line = "" || line.[0] = ' ' || line.[0] = '-' then
-                neg - 1
+                (* Weakness: there should only be one chunk for a new file *)
+                `NewChunk (neg, pos)
+          | `Patching (orig, crlf) ->
+              if (if length > 4 then String.sub line 0 4 else "") = "+++ " then
+                let file =
+                  let file = String.sub line 4 (length - 4) in
+                  let open OpamStd in
+                  Option.map_default fst file (String.cut_at file '\t')
+                in
+                `Processing (orig, file, crlf, None, [], `Head)
               else
-                neg
-            in
-            let pos =
-              if line = "" || line.[0] = ' ' || line.[0] = '+' then
-                pos - 1
+                `Header
+          | `Processing (orig, target, crlf, patch_crlf, chunks, `Head) ->
+              if line = "\\ No newline at end of file" then
+                (* If the no eol-at-eof indicator is found, never add \r to
+                   final chunk line *)
+                let chunks =
+                  match chunks with
+                  | (a, b)::chunks ->
+                      (a, b - 1)::chunks
+                  | _ ->
+                      chunks
+                in
+                `Processing (orig, target, crlf, patch_crlf, chunks, `Head)
+             else
+                process_chunk_header
+                  (fun neg pos ->
+                     `Processing (orig, target, crlf, patch_crlf, chunks,
+                                  `Chunk (succ n, neg, pos)))
+                  line
+          | `Processing (orig, target, crlf, patch_crlf, chunks,
+                         `Chunk (first_line, neg, pos)) ->
+              let neg =
+                if line = "" || line.[0] = ' ' || line.[0] = '-' then
+                  neg - 1
+                else
+                  neg
+              in
+              let pos =
+                if line = "" || line.[0] = ' ' || line.[0] = '+' then
+                  pos - 1
+                else
+                  pos
+              in
+              let patch_crlf =
+                let has_cr = (length > 0 && line.[length - 1] = '\r') in
+                match patch_crlf with
+                | None ->
+                    Some (Some has_cr)
+                | Some (Some think_cr) when think_cr <> has_cr ->
+                    log ~level:2 "Patch adaptation disabled for %s: \
+                                  mixed endings or binary file" target;
+                    Some None
+                | _ ->
+                    patch_crlf
+              in
+              if neg = 0 && pos = 0 then
+                let chunks = (first_line, n)::chunks in
+                `Processing (orig, target, crlf, patch_crlf, chunks, `Head)
               else
-                pos
-            in
-            if neg = 0 && pos = 0 then
-              `Processing (`Unified, orig, target, crlf, `Head)
-            else
-              `Processing (`Unified, orig, target, crlf, `Chunk (neg, pos))
-        | `SkipFile ->
-            `SkipFile
-      in
-      let file_mode =
-        if file_mode = `Surprising then
-          `Surprising
-        else
-          let expected_mode =
-            match state with
-            | `New mode
-            | `NewHeader mode
-            | `NewChunk (mode, _, _)
-            | `Patching (mode, _, _)
-            | `Processing (mode, _, _, _, _) ->
-                mode
-            | `Header
-            | `SkipFile ->
-                file_mode
-          in
-          if file_mode = `Unknown || file_mode = expected_mode then
-            expected_mode
-          else begin
-            OpamConsole.warning "Patch file %s appears to be contain both \
-                                 Unified and Context diffs!" orig;
-            `Surprising
-          end
-      in
-      (state, file_mode)
-    in
-    (* Having determined next_state, now emit the line *)
-    let (line, chars) =
-      (* The line is either:
-           - emitted unaltered (skipping, or for chunks of new files)
-           - guaranteed to be CRLF (if the target file has CRLF endings)
-           - guaranteed to be LF (if line is metadata or the target file has LF
-                                  endings) *)
-      let crlf_mode =
-        match state with
-        | `Processing (_, _, _, crlf, `Chunk _) ->
-            Some crlf
-        | `Header
-        | `NewHeader _
-        | `New _
-        | `Patching _
-        | `Processing (_, _, _, _, `Head) ->
-            Some false
-        | `NewChunk _
-        | `SkipFile ->
-            None
-      in
-      let process_crlf target_is_crlf =
-        let last_char =
-          if length > 0 then
-            line.[length - 1]
-          else
-            (* This sentinel value ensures "\r" gets added to blank lines *)
-            '\000'
+                `Processing (orig, target, crlf, patch_crlf, chunks,
+                             `Chunk (first_line, neg, pos))
+          | `SkipFile ->
+              `SkipFile
         in
-        if target_is_crlf && last_char <> '\r' then
-          (line ^ "\r", length + 1)
-        else if not target_is_crlf && last_char = '\r' then
-          (line, length - 1)
+        if next_state = `SkipFile then
+          []
         else
-          (line, length)
-      in
-      OpamStd.Option.map_default process_crlf (line, length) crlf_mode
+          process_state_transition next_state state transforms
+            |> fold_lines next_state (succ n)
+    | exception End_of_file ->
+        process_state_transition `Header state transforms |> List.rev
+  in
+  let transforms = fold_lines `Header 1 [] in
+  if transforms = [] then
+    copy_file orig corrected
+  else begin
+    seek_in ch 0;
+    let ch_out =
+      try open_out_bin corrected
+      with Sys_error _ ->
+        close_in ch;
+        raise (File_not_found corrected)
     in
-    output_substring ch line 0 chars;
-    output_char ch '\n';
-    next_state
-  in
-  let ch =
-    try open_out_bin corrected
-    with Sys_error _ -> raise (File_not_found corrected)
-  in
-  List.fold_left (process ch) (`Header, `Unknown) (read_lines Lines orig)
-    |> ignore;
-  close_out ch
+    let (normal, add_cr, strip_cr) =
+      let strip n s = String.sub s 0 (String.length s - n) in
+      let id x = x in
+      if strip_cr then
+        (strip 1, id, strip 2)
+      else
+        (id, (fun s -> s ^ "\r"), strip 1)
+    in
+    if OpamConsole.debug () then
+      let log_transform (first_line, last_line, add_cr) =
+         let indicator = if add_cr then '+' else '-' in
+         log ~level:3 "Transform %d-%d %c\\r" first_line last_line indicator
+      in
+      List.iter log_transform transforms;
+    let rec fold_lines n transforms =
+      match input_line ch with
+      | line ->
+          let (f, transforms) =
+            match transforms with
+            | (first_line, last_line, add_cr_to_chunks)::next_transforms ->
+                let transforms =
+                  if n = last_line then
+                    next_transforms
+                  else
+                    transforms
+                in
+                let f =
+                  if n >= first_line then
+                    if add_cr_to_chunks then
+                      add_cr
+                    else
+                      strip_cr
+                  else
+                    normal
+                in
+                (f, transforms)
+             | [] ->
+                 (normal, [])
+          in
+          output_string ch_out (f line);
+          output_char ch_out '\n';
+          fold_lines (succ n) transforms
+      | exception End_of_file ->
+          close_out ch_out
+    in
+    fold_lines 1 transforms
+  end;
+  close_in ch
 
 let patch ?(preprocess=true) ~dir p =
   if not (Sys.file_exists p) then
