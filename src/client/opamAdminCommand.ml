@@ -252,6 +252,202 @@ let cache_command =
         cache_dir_arg $ no_repo_update_arg $ link_arg $ jobs_arg),
   OpamArg.term_info command ~doc ~man
 
+let add_hashes_command_doc =
+  "Add archive hashes to an opam repository."
+let add_hashes_command =
+  let command = "add-hashes" in
+  let doc = add_hashes_command_doc in
+  let cache_dir = OpamFilename.Dir.of_string "~/.cache/opam-hash-cache" in
+  let man = [
+    `S "DESCRIPTION";
+    `P (Printf.sprintf
+          "This command scans through package definitions, and add hashes as \
+           requested (fetching the archives if required). A cache is generated \
+           in %s for subsequent runs."
+          (OpamFilename.Dir.to_string cache_dir));
+  ]
+  in
+  let hash_kinds = [`MD5; `SHA256; `SHA512] in
+  let hash_types_arg =
+    let hash_kind_conv =
+      Arg.enum
+        (List.map (fun k -> OpamHash.string_of_kind k, k)
+           hash_kinds)
+    in
+    Arg.(non_empty & pos_all hash_kind_conv [] & info [] ~docv:"HASH_ALGO" ~doc:
+           "The hash, or hashes to be added")
+  in
+  let replace_arg =
+    Arg.(value & flag & info ["replace"] ~doc:
+           "Replace the existing hashes rather than adding to them")
+  in
+  let hash_tables =
+    let t = Hashtbl.create (List.length hash_kinds) in
+    List.iter (fun k1 ->
+        List.iter (fun k2 ->
+            if k1 <> k2 then (
+              let cache_file : string list list OpamFile.t =
+                OpamFile.make @@ OpamFilename.Op.(
+                    cache_dir //
+                    (OpamHash.string_of_kind k1 ^ "_to_" ^
+                     OpamHash.string_of_kind k2))
+              in
+              let t_mapping = Hashtbl.create 187 in
+              (OpamStd.Option.default [] (OpamFile.Lines.read_opt cache_file)
+               |> List.iter @@ function
+                | [src; dst] ->
+                  Hashtbl.add t_mapping
+                    (OpamHash.of_string src) (OpamHash.of_string dst)
+                | _ -> failwith ("Bad cache at "^OpamFile.to_string cache_file));
+              Hashtbl.add t (k1,k2) (cache_file, t_mapping);
+            ))
+          hash_kinds
+      )
+      hash_kinds;
+    t
+  in
+  let save_hashes () =
+    Hashtbl.iter (fun _ (file, tbl) ->
+        Hashtbl.fold
+          (fun src dst l -> [OpamHash.to_string src; OpamHash.to_string dst]::l)
+          tbl [] |> fun lines ->
+        try OpamFile.Lines.write file lines with e ->
+          OpamStd.Exn.fatal e;
+          OpamConsole.log "ADMIN"
+            "Could not write hash cache to %s, skipping (%s)"
+            (OpamFile.to_string file)
+            (Printexc.to_string e))
+      hash_tables
+  in
+  let additions_count = ref 0 in
+  let get_hash cache_urls kind known_hashes url =
+    let found =
+      List.fold_left (fun result hash ->
+          match result with
+          | None ->
+            let known_kind = OpamHash.kind hash in
+            let _, tbl = Hashtbl.find hash_tables (known_kind, kind) in
+            (try Some (Hashtbl.find tbl hash) with Not_found -> None)
+          | some -> some)
+        None known_hashes
+    in
+    match found with
+    | Some h -> Some h
+    | None ->
+      let h =
+        OpamProcess.Job.run @@
+        OpamFilename.with_tmp_dir_job @@ fun dir ->
+        let f = OpamFilename.Op.(dir // OpamUrl.basename url) in
+        OpamProcess.Job.ignore_errors ~default:None
+          (fun () ->
+             OpamRepository.pull_file (OpamUrl.to_string url)
+               ~cache_dir:(OpamRepositoryPath.download_cache
+                             OpamStateConfig.(!r.root_dir))
+               ~cache_urls
+               f known_hashes [url]
+             @@| function
+             | Result () | Up_to_date () ->
+               OpamHash.compute ~kind (OpamFilename.to_string f)
+               |> OpamStd.Option.some
+             | Not_available _ -> None)
+      in
+      (match h with
+       | Some h ->
+         List.iter (fun h0 ->
+             Hashtbl.replace
+               (snd (Hashtbl.find hash_tables (OpamHash.kind h0, kind)))
+               h0 h
+           ) known_hashes;
+         incr additions_count;
+         if !additions_count mod 20 = 0 then save_hashes ()
+       | None -> ());
+      h
+  in
+  let cmd global_options hash_types replace =
+    OpamArg.apply_global_options global_options;
+    let repo_root = OpamFilename.cwd () in
+    if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
+    then
+      OpamConsole.error_and_exit `Bad_arguments
+        "No repository found in current directory.\n\
+         Please make sure there is a \"packages\" directory";
+    let repo = OpamRepositoryBackend.local repo_root in
+    let cache_urls =
+      let repo_file = OpamRepositoryPath.repo repo_root in
+      List.map (fun rel ->
+          if OpamStd.String.contains ~sub:"://" rel
+          then OpamUrl.of_string rel
+          else OpamUrl.Op.(OpamUrl.of_string
+                             (OpamFilename.Dir.to_string repo_root) / rel))
+        (OpamFile.Repo.dl_cache (OpamFile.Repo.safe_read repo_file))
+    in
+    let pkg_prefixes = OpamRepository.packages_with_prefixes repo in
+    let has_error =
+      OpamPackage.Map.fold (fun nv prefix has_error ->
+          let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
+          let opam = OpamFile.OPAM.read opam_file in
+          let has_error =
+            if OpamFile.exists (OpamRepositoryPath.url repo_root prefix nv) then
+              (OpamConsole.warning "Not updating external URL file at %s"
+                 (OpamFile.to_string (OpamRepositoryPath.url repo_root prefix nv));
+               true)
+            else has_error
+          in
+          let process_url has_error urlf =
+              let hashes = OpamFile.URL.checksum urlf in
+              let hashes =
+                if replace then
+                  List.filter (fun h -> List.mem (OpamHash.kind h) hash_types)
+                    hashes
+                else hashes
+              in
+              let has_error, hashes =
+                List.fold_left (fun (has_error, hashes) kind ->
+                    if List.exists (fun h -> OpamHash.kind h = kind) hashes
+                    then has_error, hashes else
+                    match get_hash cache_urls kind hashes
+                            (OpamFile.URL.url urlf)
+                    with
+                    | Some h -> has_error, hashes @ [h]
+                    | None ->
+                      OpamConsole.error "Could not get hash for %s: %s"
+                        (OpamPackage.to_string nv)
+                        (OpamUrl.to_string (OpamFile.URL.url urlf));
+                      true, hashes)
+                  (has_error, hashes)
+                  hash_types
+              in
+              has_error, OpamFile.URL.with_checksum hashes urlf
+          in
+          let has_error, url_opt =
+            match OpamFile.OPAM.url opam with
+            | None -> has_error, None
+            | Some urlf ->
+              let has_error, urlf = process_url has_error urlf in
+              has_error, Some urlf
+          in
+          let has_error, extra_sources =
+            List.fold_right (fun (basename, urlf) (has_error, acc) ->
+                let has_error, urlf = process_url has_error urlf in
+                has_error, (basename, urlf) :: acc)
+              (OpamFile.OPAM.extra_sources opam)
+              (has_error, [])
+          in
+          let opam1 = OpamFile.OPAM.with_url_opt url_opt opam in
+          let opam1 = OpamFile.OPAM.with_extra_sources extra_sources opam1 in
+          if opam1 <> opam then
+            OpamFile.OPAM.write_with_preserved_format opam_file opam1;
+          has_error
+        )
+        pkg_prefixes false
+    in
+    save_hashes ();
+    if has_error then OpamStd.Sys.exit_because `Sync_error
+    else OpamStd.Sys.exit_because `Success
+  in
+  Term.(const cmd $ OpamArg.global_options $
+        hash_types_arg $ replace_arg),
+  OpamArg.term_info command ~doc ~man
 
 let upgrade_command_doc =
   "Upgrades repository from earlier opam versions."
@@ -804,6 +1000,7 @@ let admin_subcommands = [
   list_command;
   filter_command;
   add_constraint_command;
+  add_hashes_command;
 ]
 
 let default_subcommand =
