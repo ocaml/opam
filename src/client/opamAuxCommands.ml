@@ -484,7 +484,7 @@ let get_compatible_compiler ?repos rt dir =
     [OpamSolution.eq_atom_of_package
        (OpamPackage.Set.choose_one compilers)]
   with
-  | Not_found ->
+  | Not_found when not (OpamPackage.Set.is_empty local_packages) ->
     OpamConsole.warning
       "No possible installation was found including a compiler and the \
        selected packages.";
@@ -494,7 +494,7 @@ let get_compatible_compiler ?repos rt dir =
           continue?"
     then []
     else OpamStd.Sys.exit_because `Aborted
- | Failure _ ->
+ | Failure _ | Not_found ->
    (* Find a matching compiler from the default selection *)
    let default_compiler =
      OpamFile.Config.default_compiler gt.config
@@ -517,6 +517,9 @@ let get_compatible_compiler ?repos rt dir =
               atoms
           in
           if not (has_all compiler) then None else
+          if OpamPackage.Set.is_empty local_packages then
+            Some (OpamSolution.eq_atoms_of_packages compiler)
+          else
           (* fake universe with `local_packages` as base, just to check
              coinstallability *)
           let univ =
@@ -537,6 +540,7 @@ let get_compatible_compiler ?repos rt dir =
         (OpamFormula.to_string default_compiler)
         (OpamFilename.Dir.to_string dir);
       if OpamConsole.confirm
-          "Proceed, with no specific compiler selected?"
+          "You may also proceed, with no specific compiler selected. \
+           Do you want to?"
       then []
       else OpamStd.Sys.exit_because `Aborted
