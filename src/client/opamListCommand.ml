@@ -451,7 +451,7 @@ let field_of_string =
                               (with a colon)?" s
          else "")
 
-let version_color st nv =
+let version_color ?lopam st nv =
   let installed = (* (in any switch) *)
     OpamGlobalState.installed_versions st.switch_global nv.name
   in
@@ -460,7 +460,8 @@ let version_color st nv =
       OpamFilter.eval_to_bool ~default:false
         (OpamPackageVar.resolve_switch_raw ~package:nv st.switch_global
            st.switch st.switch_config)
-        (OpamFile.OPAM.available (get_opam st nv))
+        (OpamFile.OPAM.available
+           OpamStd.Option.Op.(lopam +! get_opam st nv))
     with Not_found -> false
   in
   if OpamPackage.Set.mem nv st.installed then [`bold;`magenta] else
@@ -477,7 +478,7 @@ let mini_field_printer ?(prettify=false) ?(normalise=false) =
   | List (_, l) -> OpamPrinter.value_list l
   | f -> OpamPrinter.Normalise.value f
 
-let detail_printer ?prettify ?normalise st nv =
+let detail_printer ?prettify ?normalise ?lopam st nv =
   let open OpamStd.Option.Op in
   let (%) s cols = OpamConsole.colorise' cols s in
   let root_sty =
@@ -486,18 +487,18 @@ let detail_printer ?prettify ?normalise st nv =
   in
   function
   | Name -> OpamPackage.Name.to_string nv.name % (`bold :: root_sty)
-  | Version -> OpamPackage.Version.to_string nv.version % version_color st nv
+  | Version -> OpamPackage.Version.to_string nv.version % version_color ?lopam st nv
   | Package ->
     (OpamPackage.name_to_string nv % (`bold :: root_sty)) ^
     ("." ^ OpamPackage.version_to_string nv) % root_sty
   | Synopsis ->
-    (get_opam st nv |>
+    (lopam +! get_opam st nv |>
      OpamFile.OPAM.descr >>| OpamFile.Descr.synopsis)
     +! ""
   | Synopsis_or_target ->
     (match OpamPinned.package_opt st nv.name with
      | Some nv ->
-       let opam = get_opam st nv in
+       let opam = lopam +! (get_opam st nv) in
        if Some opam = OpamPackage.Map.find_opt nv st.repos_package_index then
          Printf.sprintf "pinned to version %s"
            (OpamPackage.Version.to_string nv.version % [`blue])
@@ -508,17 +509,32 @@ let detail_printer ?prettify ?normalise st nv =
               (fun u -> OpamUrl.to_string u % [`underline])
               (OpamFile.OPAM.get_url opam))
      | None ->
-       (get_opam st nv |>
+       (lopam +! get_opam st nv |>
         OpamFile.OPAM.descr >>| OpamFile.Descr.synopsis)
        +! "")
   | Description ->
-    (get_opam st nv |>
+    (lopam +! get_opam st nv |>
      OpamFile.OPAM.descr >>|
      OpamFile.Descr.body)
     +! ""
   | Field f ->
     (try
-       List.assoc f (OpamFile.OPAM.to_list (get_opam st nv)) |>
+       OpamFile.OPAM.to_list (lopam +! get_opam st nv) |>
+       (* In case name & version fields are not present in opam file, add them *)
+       (fun l ->
+          let l =
+            if List.mem_assoc "name" l then l
+            else
+              ("name", (String (OpamTypesBase.pos_null,
+                                OpamPackage.Name.to_string nv.name)))::l
+          in
+          let l =
+            if List.mem_assoc "version" l then l
+            else
+              ("version", (String (OpamTypesBase.pos_null,
+                                   OpamPackage.Version.to_string nv.version)))::l
+          in l )|>
+       List.assoc f |>
        mini_field_printer ?prettify ?normalise
      with Not_found -> "")
   | Installed_version ->
@@ -533,7 +549,7 @@ let detail_printer ?prettify ?normalise st nv =
      with Not_found -> "--" % [`cyan])
   | Pinning_target ->
     if OpamPackage.Set.mem nv st.pinned then
-      let opam = get_opam st nv in
+      let opam = lopam +! get_opam st nv in
       OpamStd.Option.to_string ~none:"--" OpamUrl.to_string
         (OpamFile.OPAM.get_url opam)
     else ""
@@ -547,7 +563,7 @@ let detail_printer ?prettify ?normalise st nv =
       OpamPackage.Version.to_string
     in
     OpamStd.Option.default "" hash_opt
-  | Raw -> OpamFile.OPAM.write_to_string (get_opam st nv)
+  | Raw -> OpamFile.OPAM.write_to_string (lopam +! get_opam st nv)
   | All_installed_versions ->
     OpamGlobalState.installed_versions st.switch_global nv.name |>
     OpamPackage.Map.mapi (fun nv switches ->
@@ -565,6 +581,11 @@ let detail_printer ?prettify ?normalise st nv =
       (OpamPackage.Set.elements available)
   | All_versions ->
     let pkgs = OpamPackage.packages_of_name st.packages nv.name in
+    let pkgs =
+      (lopam >>= OpamFile.OPAM.version_opt >>= fun v ->
+       Some (OpamPackage.Set.add (OpamPackage.create nv.name v) pkgs))
+      +! pkgs
+    in
     OpamStd.List.concat_map "  " (fun nv ->
         OpamPackage.Version.to_string nv.version % version_color st nv)
       (OpamPackage.Set.elements pkgs)
@@ -696,11 +717,11 @@ let print_depexts st packages =
     OpamStd.String.Set.empty
   |> OpamStd.String.Set.iter (OpamConsole.msg "%s\n")
 
-let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
+let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms locals =
   let packages =
     OpamFormula.packages_of_atoms (st.packages ++ st.installed) atoms
   in
-  if OpamPackage.Set.is_empty packages then
+  if OpamPackage.Set.is_empty packages && OpamPackage.Name.Map.is_empty locals then
     (OpamConsole.error "No package matching %s found"
        (OpamStd.List.concat_map " or " OpamFormula.short_string_of_atom atoms);
      OpamStd.Sys.exit_because `Not_found);
@@ -732,10 +753,10 @@ let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
     Synopsis;
     Description;
   ] in
-  let output_table fields nv =
+  let output_table fields ?lopam nv =
     let tbl =
       List.fold_left (fun acc item ->
-          let contents = detail_printer ?normalise st nv item in
+          let contents = detail_printer ?normalise ?lopam st nv item in
           if show_empty || contents <> "" then
             [ OpamConsole.colorise `blue (string_of_field item); contents ]
             :: acc
@@ -744,6 +765,28 @@ let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
     in
     OpamStd.Format.align_table tbl |>
     OpamConsole.print_table stdout ~sep:" ";
+  in
+  let printer_call local choose opam =
+    OpamFile.OPAM.print_errors opam;
+      if where then
+        OpamConsole.msg "%s\n"
+          (match OpamFile.OPAM.metadata_dir opam with
+           | Some dir ->
+             OpamFilename.Dir.to_string OpamFilename.Op.(dir / "opam")
+           | None -> "<nowhere>")
+      else if raw_opam then
+        OpamFile.OPAM.write_to_channel stdout opam
+      else
+      let lopam = if local then  Some opam else None in
+      match fields with
+      | [] ->
+        OpamConsole.header_msg "%s: information on all versions"
+          (OpamPackage.Name.to_string choose.name);
+        output_table ?lopam all_versions_fields choose;
+        OpamConsole.header_msg "Version-specific details";
+        output_table ?lopam one_version_fields choose
+      | [f] -> OpamConsole.msg "%s\n" (detail_printer ?normalise ?lopam st choose f)
+      | fields -> output_table ?lopam fields choose
   in
   OpamPackage.names_of_packages packages |>
   OpamPackage.Name.Set.iter (fun name ->
@@ -756,24 +799,15 @@ let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
         with Not_found ->
           OpamPackage.Set.max_elt nvs
       in
-      let opam = get_opam st choose in
-      OpamFile.OPAM.print_errors opam;
-      if where then
-        OpamConsole.msg "%s\n"
-          (match OpamFile.OPAM.metadata_dir opam with
-           | Some dir ->
-             OpamFilename.Dir.to_string OpamFilename.Op.(dir / "opam")
-           | None -> "<nowhere>")
-      else if raw_opam then
-        OpamFile.OPAM.write_to_channel stdout opam
-      else
-      match fields with
-      | [] ->
-        OpamConsole.header_msg "%s: information on all versions"
-          (OpamPackage.Name.to_string choose.name);
-        output_table all_versions_fields choose;
-        OpamConsole.header_msg "Version-specific details";
-        output_table one_version_fields choose
-      | [f] -> OpamConsole.msg "%s\n" (detail_printer ?normalise st choose f)
-      | fields -> output_table fields choose
+      let opam =  get_opam st choose in
+      printer_call false choose opam
+    );
+  locals |>
+  OpamPackage.Name.Map.iter (fun name opam ->
+      let version =
+        OpamStd.Option.default (OpamPackage.Version.of_string "~dev")
+          (OpamFile.OPAM.version_opt opam)
+      in
+      let choose = OpamPackage.create name version in
+      printer_call true choose opam
     )

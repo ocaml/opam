@@ -138,7 +138,7 @@ val info:
   'a switch_state ->
   fields:string list -> raw_opam:bool -> where:bool ->
   ?normalise:bool -> ?show_empty:bool ->
-  atom list -> unit
+  atom list -> OpamFile.OPAM.t OpamPackage.Name.Map.t -> unit
 
 (** Prints the value of an opam field in a shortened way (with [prettify] -- the
     default -- puts lists of strings in a format that is easier to read *)
