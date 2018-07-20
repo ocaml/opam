@@ -378,3 +378,15 @@ opam install <package>
 This will process the uninstall instructions, even if opam has no knowledge of
 the package being installed. You may also try to uninstall directly with
 ocamlfind, or just remove the problematic files.
+
+---
+
+#### 🐫  opam is slow on top of NFS. How can I make it faster?
+
+opam root is usually located in the `home` directory, which, on top of NFS,
+slow down opam operations. Locating opam root in `/tmp` is neither a solution,
+you could loose your opam configuration at each reboot.
+
+You can use the [`nfsopam`](https://github.com/UnixJunkie/nfsopam) script to
+have the best of both world: persistence of NFS directory and fast operation of
+local directory.
