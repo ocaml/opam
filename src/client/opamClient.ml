@@ -575,7 +575,7 @@ let update
     in
     OpamPackage.Set.iter (fun nv ->
         OpamConsole.note "%s has previously been updated with --working-dir, \
-                          not resetting unless explicitely selected"
+                          not resetting unless explicitly selected"
           (OpamPackage.to_string nv))
       dirty_dev_packages;
     dev_packages, nondev_packages

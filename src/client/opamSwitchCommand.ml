@@ -656,7 +656,7 @@ let guess_compiler_package ?repos rt name =
     OpamConsole.error_and_exit `Not_found
       "No compiler matching '%s' found, use 'opam switch list-available' \
        to see what is available, or use '--packages' to select packages \
-       explicitely."
+       explicitly."
       name
   in
   match OpamPackage.of_string_opt name with

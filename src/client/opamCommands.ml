@@ -461,7 +461,7 @@ let list ?(force_search=false) () =
           ~doc:"List installed packages only. This is the default when no \
                 further arguments are supplied";
         OpamListCommand.Root, info ~docs ["roots";"installed-roots"]
-          ~doc:"List only packages that were explicitely installed, excluding \
+          ~doc:"List only packages that were explicitly installed, excluding \
                 the ones installed as dependencies";
         OpamListCommand.Available, info ~docs ["a";"available"]
           ~doc:"List only packages that are available on the current system";
@@ -1616,7 +1616,7 @@ let repository =
             repositories. Package definitions are looked in the repositories \
             in increasing rank order, therefore 1 is the highest priority. \
             Negative ints can be used to select from the lowest priority, -1 \
-            being last. $(b,set-repos) can otherwise be used to explicitely \
+            being last. $(b,set-repos) can otherwise be used to explicitly \
             set the repository list at once.")
   in
   let repository global_options command kind short scope rank params =
@@ -1947,7 +1947,7 @@ let switch =
       "Don't automatically select newly installed switches." in
   let packages =
     mk_opt ["packages"] "PACKAGES"
-      "When installing a switch, explicitely define the set of packages to set \
+      "When installing a switch, explicitly define the set of packages to set \
        as the compiler."
       Arg.(some (list atom)) None in
   let empty =
