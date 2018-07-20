@@ -375,19 +375,22 @@ let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
          in
 
          if (OpamConsole.verbose ()) && not (OpamPackage.Set.is_empty unav) then
-           OpamConsole.formatted_msg
-             "%s.\n\
-              The following newer versions couldn't be installed:\n%s"
-             hdmsg
-             (OpamStd.Format.itemize (fun p ->
-                  Printf.sprintf "%s: %s"
-                    (OpamPackage.to_string p)
-                    (OpamSwitchState.unavailable_reason t
-                       ~default:"unavailable for unknown reasons (this may \
-                                 be a bug in opam)"
-                       (OpamPackage.name p,
-                        Atom (`Eq, OpamPackage.version p))))
-                 (OpamPackage.Set.elements unav))
+           (OpamConsole.formatted_msg
+              "%s.\n\
+               The following newer versions couldn't be installed:\n"
+              hdmsg;
+            OpamConsole.msg "%s"
+              (OpamStd.Format.itemize (fun p ->
+                   Printf.sprintf "%s.%s: %s"
+                     (OpamConsole.colorise `bold
+                        (OpamPackage.name_to_string p))
+                     (OpamPackage.version_to_string p)
+                     (OpamSwitchState.unavailable_reason t
+                        ~default:"unavailable for unknown reasons (this may \
+                                  be a bug in opam)"
+                        (OpamPackage.name p,
+                         Atom (`Eq, OpamPackage.version p))))
+                  (OpamPackage.Set.elements unav)))
          else
            OpamConsole.formatted_msg
              "%s (run with --verbose to show unavailable upgrades).\n" hdmsg;
@@ -398,34 +401,34 @@ let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
               ^ " "
             in
             let string_dep pkg map reason =
-              OpamStd.Format.itemize ~bullet
-                (fun (p,f) ->
-                   Printf.sprintf "%s is installed and %s %s"
+              List.fold_right (fun (p, f) acc ->
+                   Printf.sprintf "%s\n%s%s is installed and %s %s"
+                     acc bullet
                      (OpamPackage.to_string p)
                      reason
-                     (OpamFormula.string_of_formula
-                        (fun (op,version) ->
-                           Printf.sprintf "%s %s %s"
-                             (OpamPackage.name_to_string pkg)
-                             (OpamPrinter.relop op)
-                             (OpamPackage.Version.to_string version)) f)
-                ) (OpamStd.Option.default []
-                     (OpamPackage.Map.find_opt pkg map))
+                     (OpamFormula.to_string (Atom (pkg.name, f)))
+                )
+                (OpamStd.Option.default [] (OpamPackage.Map.find_opt pkg map))
+                ""
             in
             OpamConsole.formatted_msg
-              "The following packages are not being upgraded because the \
-               new versions conflict with other installed packages that \
-               would need to be downgraded or uninstalled. However, you \
-               may \"opam upgrade\" these packages explicitly, which \
-               will ask permission to downgrade or uninstall the \
-               conflicting packages.\n%s"
+              "\nThe following packages are not being upgraded because the new \
+               versions conflict with other installed packages:\n";
+            OpamConsole.msg "%s"
               (OpamStd.Format.itemize
-                 (fun pkg -> Printf.sprintf "%s\n%s%s"
-                     (OpamPackage.to_string pkg)
+                 (fun pkg -> Printf.sprintf "%s.%s%s%s"
+                     (OpamConsole.colorise `bold
+                        (OpamPackage.name_to_string pkg))
+                     (OpamPackage.version_to_string pkg)
                      (string_dep pkg incompatibilities "requires")
                      (string_dep pkg conflicts "conflicts with")
                  ) (OpamPackage.Set.elements unopt))
            );
+         OpamConsole.formatted_msg
+           "However, you may \"opam upgrade\" these packages explicitly, \
+            which will ask permission to downgrade or uninstall the \
+            conflicting packages.\n";
+
         )
     );
     OpamSolution.check_solution t result;
