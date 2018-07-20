@@ -334,14 +334,16 @@ let help_sections = [
   `P (Printf.sprintf "See https://opam.ocaml.org/doc.");
 
   `S "AUTHORS";
-  `P "Thomas Gazagnaire   <thomas@gazagnaire.org>"; `Noblank;
-  `P "Anil Madhavapeddy   <anil@recoil.org>"; `Noblank;
-  `P "Fabrice Le Fessant  <Fabrice.Le_fessant@inria.fr>"; `Noblank;
-  `P "Frederic Tuong      <tuong@users.gforge.inria.fr>"; `Noblank;
-  `P "Louis Gesbert       <louis.gesbert@ocamlpro.com>"; `Noblank;
-  `P "Vincent Bernardoff  <vb@luminar.eu.org>"; `Noblank;
-  `P "Guillem Rieu        <guillem.rieu@ocamlpro.com>"; `Noblank;
-  `P "Roberto Di Cosmo    <roberto@dicosmo.org>";
+  `P "Vincent Bernardoff <vb@luminar.eu.org>"; `Noblank;
+  `P "Raja Boujbel       <raja.boujbel@ocamlpro.com>"; `Noblank;
+  `P "Roberto Di Cosmo   <roberto@dicosmo.org>"; `Noblank;
+  `P "Thomas Gazagnaire  <thomas@gazagnaire.org>"; `Noblank;
+  `P "Louis Gesbert      <louis.gesbert@ocamlpro.com>"; `Noblank;
+  `P "Fabrice Le Fessant <Fabrice.Le_fessant@inria.fr>"; `Noblank;
+  `P "Anil Madhavapeddy  <anil@recoil.org>"; `Noblank;
+  `P "Guillem Rieu       <guillem.rieu@ocamlpro.com>"; `Noblank;
+  `P "Ralf Treinen       <ralf.treinen@pps.jussieu.fr>"; `Noblank;
+  `P "Frederic Tuong     <tuong@users.gforge.inria.fr>";
 
   `S "BUGS";
   `P "Check bug reports at https://github.com/ocaml/opam/issues.";
@@ -810,8 +812,9 @@ let repo_kind_flag =
 
 let jobs_flag =
   mk_opt ["j";"jobs"] "JOBS"
-    "Set the maximal number of concurrent jobs to use. You can also set it using \
-     the $(b,\\$OPAMJOBS) environment variable."
+    "Set the maximal number of concurrent jobs to use. The default value is \
+    calculated from the number of cores. You can also set it using the \
+    $(b,\\$OPAMJOBS) environment variable."
     Arg.(some positive_integer) None
 
 let name_list =

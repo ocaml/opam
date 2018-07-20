@@ -4,7 +4,7 @@ This document starts with a quick introduction, then covers most commonly-used
 opam features.
 
 If you are a developer and want to get a project packaged or change an existing
-package, see the step-by-step [packaging guide](Packaging.html)
+package, see the step-by-step [packaging guide](Packaging.html).
 
 The full documentation is available inline, using
 
@@ -43,7 +43,7 @@ opam CMD --help      # Command-specific manpage
 You may prefer to [browse packages online](https://opam.ocaml.org/packages). If
 you find a package there but not on your computer, either it has been recently
 added and you should simply run `opam update`, or it's not available on your
-system or OCaml version -- `opam install PACKAGE` will give you the reason.
+system or OCaml version — `opam install PACKAGE` will give you the reason.
 
 ## Details on commands
 
@@ -95,7 +95,7 @@ packages from being upgraded.
 ### opam switch
 
 This command enables the user to have several installations on disk, each with
-their own prefix, set of installed packages, compiler version, etc.. Use cases
+their own prefix, set of installed packages, compiler version, etc. Use cases
 include having to work or test with different OCaml versions, keeping separate
 development environments for specific projects, etc.
 

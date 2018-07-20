@@ -47,7 +47,7 @@ You may also want to browse the [library APIs](api/).
 
 opam is designed to be run strictly as user (non-root), and apart for the
 explicit options provided during `opam init`, only writes within `~/.opam` (and
-`/tmp`). This directory -- the default "opam root" -- contains configuration,
+`/tmp`). This directory — the default "opam root" — contains configuration,
 various internal data, a cache of downloaded archives, and your OCaml
 installations.
 
@@ -378,3 +378,15 @@ opam install <package>
 This will process the uninstall instructions, even if opam has no knowledge of
 the package being installed. You may also try to uninstall directly with
 ocamlfind, or just remove the problematic files.
+
+---
+
+#### 🐫  opam is slow on top of NFS. How can I make it faster?
+
+opam root is usually located in the `home` directory, which, on top of NFS,
+slow down opam operations. Locating opam root in `/tmp` is neither a solution,
+you could loose your opam configuration at each reboot.
+
+You can use the [`nfsopam`](https://github.com/UnixJunkie/nfsopam) script to
+have the best of both world: persistence of NFS directory and fast operation of
+local directory.
