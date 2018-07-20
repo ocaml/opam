@@ -120,6 +120,15 @@ cd /usr/ports/sysutils/opam
 make install
 ```
 
+#### FreeBSD
+
+Opam is available in the ports and packages tree on FreeBSD 11 or higher.
+
+```
+cd /usr/ports/devel/ocaml-opam
+make install
+```
+
 #### OSX
 
 Opam packages for [homebrew](http://mxcl.github.com/homebrew/) and
