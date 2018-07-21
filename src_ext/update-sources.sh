@@ -8,7 +8,7 @@ while read name prefix version url; do
   if [[ $package = "findlib" ]] ; then package=ocamlfind ; fi
   latest=$(opam show $package -f all-versions)
   latest=${latest##* }
-  package_url=$(opam show $package.$latest -f url.src:)
+  package_url=$(opam show $package.$latest -f url.src: | sed -e 's/"//g')
   md5=$(sed -n -e "s/MD5$prefix$name *= *\(.*\)/\1/p" Makefile.sources)
   package_md5=$(opam show $package.$latest -f url.checksum: | sed -e "s/.*md5=\([a-fA-F0-9]\{32\}\).*/\1/")
   if [[ $package_url = $url ]] ; then
