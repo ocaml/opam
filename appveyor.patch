@@ -14,8 +14,8 @@ index 1a350068..964a818c 100644
 --- a/src_ext/Makefile
 +++ b/src_ext/Makefile
 @@ -12,8 +12,8 @@ endif
- URL_ocaml = http://caml.inria.fr/pub/distrib/ocaml-4.06/ocaml-4.06.0.tar.gz
- MD5_ocaml = 66e5439eb63dbb8b8224cba5d1b20947
+ URL_ocaml = http://caml.inria.fr/pub/distrib/ocaml-4.07/ocaml-4.07.1.tar.gz
+ MD5_ocaml = 0b180b273ce5cc2ac68f347c9b06d06f
  
 -URL_flexdll = https://github.com/alainfrisch/flexdll/archive/0.37.tar.gz
 -MD5_flexdll = cc456a89382e60d84130cddd53977486
