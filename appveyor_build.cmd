@@ -116,10 +116,6 @@ if %ERRORLEVEL% equ 1 (
 if not exist bootstrap\nul (
   "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make compiler" || exit /b 1
   for /f "delims=" %%U in ('type bootstrap\installed-tarball') do echo %%U %DEP_MODE%> bootstrap\installed-tarball
-  if "%CYG_ARCH%%OCAML_PORT%" equ "x86_64" (
-    "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && rebase -b 0x7cd20000 bootstrap/ocaml/lib/ocaml/stublibs/dllunix.so" || exit /b 1
-    "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && rebase -b 0x7cd20000 bootstrap/ocaml/lib/ocaml/stublibs/dllthreads.so" || exit /b 1
-  )
   if exist bootstrap\ocaml-*.tar.gz del bootstrap\ocaml-*.tar.gz
   if "%OCAML_PORT%" neq "" if exist bootstrap\flexdll-*.tar.gz del bootstrap\flexdll-*.tar.gz
   del bootstrap\ocaml\bin\*.byte.exe
