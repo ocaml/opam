@@ -373,6 +373,7 @@ let win32_print_message ch msg =
                 blend 0b011
             | "37" ->
                 blend 0b111
+            | "0"
             | "" ->
                 blend ~inheritbold:false 0b0111
             | _ -> assert false
