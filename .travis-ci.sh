@@ -106,7 +106,7 @@ EOF
         fi
         ./configure --prefix ~/local -no-graph -no-debugger ${CONFIGURE_SWITCHES:-}
         if [[ $OPAM_TEST -eq 1 ]] ; then
-          make -j world.opt
+          make -j 4 world.opt
         else
           make world.opt
         fi
