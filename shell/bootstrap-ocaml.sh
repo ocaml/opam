@@ -13,12 +13,22 @@ fi
 mkdir -p bootstrap
 cd bootstrap
 URL=`sed -ne 's/URL_ocaml *= *//p' ../src_ext/Makefile | tr -d '\r'`
+MD5=`sed -ne 's/MD5_ocaml *= *//p' ../src_ext/Makefile | tr -d '\r'`
 V=`echo ${URL}| sed -e 's/.*\/\([^\/]\+\)\.tar\.gz/\1/'`
 FV_URL=`sed -ne 's/URL_flexdll *= *//p' ../src_ext/Makefile | tr -d '\r'`
 FLEXDLL=`echo ${FV_URL}| sed -e 's/.*\/\([^\/]*\)/\1/'`
 if [ ! -e ${V}.tar.gz ]; then
   cp ../src_ext/archives/${V}.tar.gz . 2>/dev/null || ${CURL} ${URL}
 fi
+
+ACTUALMD5=`openssl md5 ${V}.tar.gz  2> /dev/null | cut -f 2 -d ' '`
+if [ "$ACTUALMD5" != "$MD5" ]; then
+  echo "Bad checksum for ${V}.tar.gz:"
+  echo "- expected: $MD5"
+  echo "- actual:   $ACTUALMD5"
+  exit 2
+fi
+
 if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
   tar -zxf ${V}.tar.gz
 else
