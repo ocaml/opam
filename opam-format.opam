@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0.0~rc3"
+version: "2.0.0"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Vincent Bernardoff <vb@luminar.eu.org>"
@@ -21,7 +21,7 @@ build: [
   [make "%{name}%.install"]
 ]
 depends: [
-  "opam-core" {= "2.0.0~rc3"}
+  "opam-core" {= "2.0.0"}
   "opam-file-format" {>= "2.0.0~rc2"}
   "jbuilder" {build & >= "1.0+beta18"}
 ]

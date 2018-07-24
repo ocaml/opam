@@ -2,6 +2,10 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+2.0.0
+* Fixes and documentation
+* Add `opam admin add-hashes` helper to add more secure hashes to the repository
+
 2.0.0~rc3
 * Fixes
 * Added subcommand `switch link` to link a local switch to a defined one
