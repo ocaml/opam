@@ -353,19 +353,21 @@ let packages_with_prefixes r =
 
 let validate_repo_update repo update =
   match
+    update,
     repo.repo_trust,
     OpamRepositoryConfig.(!r.validation_hook),
     OpamRepositoryConfig.(!r.force_checksums)
   with
-  | None, Some _, Some true ->
+  | OpamRepositoryBackend.Update_empty, _, _, _ -> Done true
+  | _, None, Some _, Some true ->
     OpamConsole.error
       "No trust anchors for repository %s, and security was enforced: \
        not updating"
       (OpamRepositoryName.to_string repo.repo_name);
     Done false
-  | None, _, _ | _, None, _ | _, _, Some false ->
+  | _, None, _, _ | _, _, None, _ | _, _, _, Some false ->
     Done true
-  | Some ta, Some hook, _ ->
+  | _, Some ta, Some hook, _ ->
     let cmd =
       let open OpamRepositoryBackend in
       let env v = match OpamVariable.Full.to_string v, update with
