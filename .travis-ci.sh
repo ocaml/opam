@@ -177,7 +177,7 @@ export OCAMLRUNPARAM=b
   else
     # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
     OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make tests ||
-      (tail -2000 _build/default/tests/fulltest-*.log; echo "-- TESTS FAILED --"; exit 1)
+      (tail -n 2000 _build/default/tests/fulltest-*.log; echo "-- TESTS FAILED --"; exit 1)
   fi
 )
 
