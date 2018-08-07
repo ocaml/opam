@@ -41,6 +41,7 @@ case "$TARGET" in
     # Git should be configured properly to run the tests
     git config --global user.email "travis@example.com"
     git config --global user.name "Travis CI"
+    git config --global gc.autoDetach false
 
   # Disable bubblewrap wrapping, it's not available within Docker
   cat <<EOF >>~/.opamrc
