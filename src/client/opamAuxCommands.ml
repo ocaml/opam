@@ -126,16 +126,29 @@ let name_and_dir_of_opam_file f =
   in
   name, srcdir
 
-let resolve_locals_pinned st atom_or_local_list =
+let resolve_locals_pinned st ?(recurse=false) ?subpath atom_or_local_list =
   let pinned_packages_of_dir st dir =
     OpamPackage.Set.filter
       (fun nv ->
-         match
-           OpamStd.Option.Op.(OpamSwitchState.primary_url_with_subpath st nv >>=
-                              OpamUrl.local_dir)
-         with
-         | None -> false
-         | Some suburl -> OpamFilename.dir_starts_with dir suburl)
+         let open OpamStd.Option.Op in
+         match subpath with
+         | Some sp ->
+           let dir_sp = OpamFilename.Op.(dir / sp) in
+           let url_sp_dir =
+             OpamSwitchState.primary_url_with_subpath st nv >>= OpamUrl.local_dir
+           in
+           if recurse then
+             (url_sp_dir >>| OpamFilename.dir_starts_with dir_sp) +! false
+           else
+             url_sp_dir = Some dir_sp
+         | None ->
+           if recurse then
+             (OpamSwitchState.primary_url st nv >>= OpamUrl.local_dir)
+             = Some dir
+           else
+             (OpamSwitchState.primary_url_with_subpath st nv >>= OpamUrl.local_dir)
+             = Some dir
+      )
       st.pinned
   in
   let atoms =

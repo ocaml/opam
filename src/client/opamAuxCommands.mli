@@ -49,7 +49,7 @@ val resolve_locals:
     is pinned, or opam files corresponding to no pinned package.
 *)
 val resolve_locals_pinned:
-  'a switch_state ->
+  'a switch_state -> ?recurse:bool -> ?subpath:string ->
   [ `Atom of atom | `Dirname of dirname ] list ->
   atom list
 

@@ -1460,7 +1460,8 @@ let remove =
        specified."
       Arg.(some dirname) None
   in
-  let remove global_options build_options autoremove force destdir atom_locs =
+  let remove global_options build_options autoremove force destdir recurse
+      subpath atom_locs =
     apply_global_options global_options;
     apply_build_options build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1484,7 +1485,9 @@ let remove =
       let pure_atoms, pin_atoms =
         List.partition (function `Atom _ -> true | _ -> false) atom_locs
       in
-      let pin_atoms = OpamAuxCommands.resolve_locals_pinned st pin_atoms in
+      let pin_atoms =
+        OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath pin_atoms
+      in
       let st =
         if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) then st
         else OpamPinCommand.unpin st (List.map fst pin_atoms)
@@ -1496,7 +1499,7 @@ let remove =
       OpamSwitchState.drop (OpamClient.remove st ~autoremove ~force atoms)
   in
   Term.(const remove $global_options $build_options $autoremove $force $destdir
-        $atom_or_dir_list),
+        $recurse $subpath $atom_or_dir_list),
   term_info "remove" ~doc ~man
 
 (* REINSTALL *)
@@ -1688,7 +1691,8 @@ let upgrade =
     mk_flag ["installed"]
       "When a directory is provided as argument, do not install pinned package \
        that are not yet installed." in
-  let upgrade global_options build_options fixup check only_installed all atom_locs =
+  let upgrade global_options build_options fixup check only_installed all recurse
+      subpath atom_locs =
     apply_global_options global_options;
     apply_build_options build_options;
     let all = all || atom_locs = [] in
@@ -1702,12 +1706,12 @@ let upgrade =
         `Ok ()
     else
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let atoms = OpamAuxCommands.resolve_locals_pinned st atom_locs in
+      let atoms = OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath atom_locs in
       OpamSwitchState.drop @@ OpamClient.upgrade st ~check ~only_installed ~all atoms;
       `Ok ()
   in
   Term.(ret (const upgrade $global_options $build_options $fixup $check
-             $installed $all $atom_or_dir_list)),
+             $installed $all $recurse $subpath $atom_or_dir_list)),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)
