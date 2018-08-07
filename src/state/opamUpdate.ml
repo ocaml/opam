@@ -520,7 +520,7 @@ let download_package_source st nv dirname =
     | None   -> Done None
     | Some u ->
       (OpamRepository.pull_tree (OpamPackage.to_string nv)
-        ~cache_dir ~cache_urls
+        ~cache_dir ~cache_urls ?subpath:(OpamFile.URL.subpath u)
         dirname
         (OpamFile.URL.checksum u)
         (OpamFile.URL.url u :: OpamFile.URL.mirrors u))
