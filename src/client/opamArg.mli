@@ -114,7 +114,7 @@ val build_option_section: string
 (** Build options *)
 val build_options: build_options Term.t
 
-(** Instal and reinstall options *)
+(** Install and reinstall options *)
 val assume_built: bool Term.t
 
 (** Applly build options *)

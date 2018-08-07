@@ -186,9 +186,9 @@ end
 
 (** I - Raw text files (no parsing) *)
 
-(** Compiler and package description files
-    (<repo>/packages/.../descr, <repo>/compilers/.../<v>.descr):
-    one-line title and content *)
+(** Compiler and package description opam file fields: one-line title and
+    content. Formerly, (<repo>/packages/.../descr,
+    <repo>/compilers/.../<v>.descr) *)
 
 module DescrIO = struct
 
@@ -1849,7 +1849,8 @@ module Repo = struct
 end
 
 
-(** Package url files (<repo>/packages/.../url) *)
+(** Package url field in opam file. Formerly, file
+    (<repo>/packages/.../url) *)
 
 module URLSyntax = struct
 
