@@ -1352,9 +1352,6 @@ let install =
        it will ask if you want them installed and launch install of \
        $(i,PACKAGES) with option $(b,deps-only) enabled."
   in
-  let recurse =
-    mk_flag ["r";"rec"]
-      "Allow recursive lookups of .opam files." in
   let install
       global_options build_options add_to_roots deps_only ignore_conflicts
       restore destdir assume_built check recurse atoms_or_locals =
@@ -2546,9 +2543,6 @@ let pin ?(unpin_only=false) () =
     mk_flag ["e";"edit"]
       "With $(i,opam pin add), edit the opam file as with `opam pin edit' \
        after pinning." in
-  let recurse =
-    mk_flag ["r";"rec"]
-      "Allow recursive lookups of .opam files." in
   let kind =
     let main_kinds = [
       "version", `version;
@@ -2987,10 +2981,6 @@ let lint =
   let check_upstream =
     mk_flag ["check-upstream"]
       "Check upstream, archive availability and checksum(s)"
-  in
-  let recurse =
-    mk_flag ["r";"rec"]
-      "Allow recursive lookups of .opam files."
   in
   let lint global_options files package normalise short warnings_sel
       check_upstream recurse =

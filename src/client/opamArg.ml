@@ -1167,6 +1167,12 @@ let assume_built =
      packages that are being worked on. Implies $(i,--inplace-build). \
      No locally-pinned packages will be skipped."
 
+(* Options common to all path based/related commands, e.g. (un)pin, upgrade,
+   remove, (re)install *)
+let recurse =
+  mk_flag ["recursive"]
+    "Allow recursive lookups of .opam files. Cf. $(i,--subpath) also."
+
 let subpath =
   mk_opt ["subpath"] "PATH"
     ".opam files are retrieved from the given subpath. It can be combined with \
