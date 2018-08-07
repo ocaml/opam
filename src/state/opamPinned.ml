@@ -191,8 +191,13 @@ let files_in_source ?(recurse=false) ?subpath d =
              match OpamFilename.opt_file OpamFilename.Op.(d//"opam") with
              | None -> acc
              | Some f -> (f, base) :: acc
-           else if recurse then
-             let basename = OpamFilename.(Base.to_string (basename_dir d)) in
+           else
+           let base_dir = OpamFilename.basename_dir d in
+           let basename = OpamFilename.Base.to_string base_dir in
+           if recurse &&
+              base_dir <> OpamFilename.Base.of_string OpamSwitch.external_dirname &&
+              not (OpamStd.String.starts_with ~prefix:"." basename)
+           then
              let base = match base with
                | None -> Some basename
                | Some base -> Some (Filename.concat base basename) in
