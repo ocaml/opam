@@ -556,11 +556,29 @@ open OpamProcess.Job.Op
 
 module Tar = struct
 
+  type extract =
+    | Bzip2
+    | Gzip
+    | Lzma
+    | Xz
+
+  let extract_command = function
+    | Bzip2 -> "bzip2"
+    | Gzip -> "gzip"
+    | Lzma -> "lzma"
+    | Xz -> "xz"
+
+  let extract_option = function
+    | Bzip2 -> 'j'
+    | Gzip -> 'z'
+    | Lzma -> 'Y'
+    | Xz -> 'J'
+
   let extensions =
-    [ [ "tar.gz" ; "tgz" ], 'z'
-    ; [ "tar.bz2" ; "tbz" ], 'j'
-    ; [ "tar.xz" ; "txz" ], 'J'
-    ; [ "tar.lzma" ; "tlz" ], 'Y'
+    [ [ "tar.gz" ; "tgz" ], Gzip
+    ; [ "tar.bz2" ; "tbz" ], Bzip2
+    ; [ "tar.xz" ; "txz" ], Xz
+    ; [ "tar.lzma" ; "tlz" ], Lzma
     ]
 
   let guess_type f =
@@ -570,42 +588,53 @@ module Tar = struct
       let c2 = input_char ic in
       close_in ic;
       match c1, c2 with
-      | '\031', '\139' -> Some 'z'
-      | 'B'   , 'Z'    -> Some 'j'
-      | '\xfd', '\x37' -> Some 'J'
-      | '\x5d', '\x00' -> Some 'Y'
+      | '\031', '\139' -> Some Gzip
+      | 'B'   , 'Z'    -> Some Bzip2
+      | '\xfd', '\x37' -> Some Xz
+      | '\x5d', '\x00' -> Some Lzma
       | _              -> None
     with Sys_error _ -> None
 
   let match_ext file ext =
     List.exists (Filename.check_suffix file) ext
 
-  let is_archive f =
-    List.exists
-      (fun suff -> Filename.check_suffix f suff)
-      (List.concat (List.rev_map fst extensions))
-
-  let extract_command file =
-    let command c dir =
-      make_command "tar" [ Printf.sprintf "xf%c" c ; file; "-C" ; dir ]
-    in
+  let get_type file =
     let ext =
       List.fold_left
-        (fun acc (ext, c) -> match acc with
-          | Some f -> Some f
-          | None   ->
-            if match_ext file ext
-            then Some (command c)
-            else None)
+        (fun acc (ext, t) -> match acc with
+           | Some t -> Some t
+           | None   ->
+             if match_ext file ext
+             then Some t
+             else None)
         None
         extensions in
     match ext with
-    | Some f -> Some f
+    | Some t -> Some t
     | None   ->
       match guess_type file with
-      | None   -> None
-      | Some c -> Some (command c)
+      | Some t -> Some t
+      | _ -> None
 
+  let is_archive file =
+    get_type file <> None
+
+  let check_extract file =
+    OpamStd.Option.Op.(
+      get_type file >>= fun typ ->
+      let cmd = extract_command typ in
+      let res = resolve_command cmd <> None in
+      if not res then
+        Some (Printf.sprintf "Tar needs %s to extract the archive" cmd)
+      else None)
+
+  let extract_command file =
+    OpamStd.Option.Op.(
+      get_type file >>| fun typ ->
+      let command c dir =
+        make_command "tar" [ Printf.sprintf "xf%c" c ; file; "-C" ; dir ]
+      in
+      command (extract_option typ))
 end
 
 module Zip = struct
@@ -643,7 +672,11 @@ let extract_job ~dir file =
   | Some cmd ->
     cmd tmp_dir @@> fun r ->
     if not (OpamProcess.is_success r) then
-      Done (Some (Process_error r))
+      if Zip.is_archive file then
+        Done (Some (Process_error r))
+      else match Tar.check_extract file with
+        | None -> Done (Some (Process_error r))
+        | Some s -> Done (Some (Failure s))
     else if try not (Sys.is_directory dir) with Sys_error _ -> false then
       internal_error "Extracting the archive would overwrite %s." dir
     else
@@ -683,9 +716,14 @@ let extract_in_job ~dir file =
   | Some cmd ->
     cmd dir @@> fun r ->
     if not (OpamProcess.is_success r) then
-      Done (Some (Failure
-                    (Printf.sprintf "Failed to extract archive %s: %s" file
-                       (OpamProcess.result_summary r))))
+      if Zip.is_archive file then
+        Done (Some (Process_error r))
+      else match Tar.check_extract file with
+        | None ->
+          Done (Some (Failure
+                        (Printf.sprintf "Failed to extract archive %s: %s" file
+                           (OpamProcess.result_summary r))))
+        | Some s -> Done (Some (Failure s))
     else Done None
 
 let extract_in ~dir file =
