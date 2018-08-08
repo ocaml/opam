@@ -178,6 +178,20 @@ let pull_from_upstream
         in
         rsync, pull
        )
+     else if OpamUrl.(match url.backend with | `git -> true | _ -> false)
+          && OpamFilename.exists_dir pin_cache_dir then
+       (log "Pin cache (git) existing for %s : %s\n"
+          (OpamUrl.to_string url) @@ OpamFilename.Dir.to_string pin_cache_dir;
+        let git_cached =
+          OpamUrl.parse ~backend:`git
+          @@ OpamFilename.Dir.to_string pin_cache_dir
+        in
+        let pull =
+          let module BR = (val url_backend git_cached: OpamRepositoryBackend.S) in
+          BR.pull_url
+        in
+        git_cached, pull
+       )
      else url, B.pull_url
    in
    pull ?cache_dir ?subpath destdir cksum url
