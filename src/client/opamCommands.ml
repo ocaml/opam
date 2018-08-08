@@ -3011,10 +3011,10 @@ let lint =
       "Check upstream, archive availability and checksum(s)"
   in
   let lint global_options files package normalise short warnings_sel
-      check_upstream recurse =
+      check_upstream recurse subpath =
     apply_global_options global_options;
     let opam_files_in_dir d =
-      match OpamPinned.files_in_source ~recurse d with
+      match OpamPinned.files_in_source ~recurse ?subpath d with
       | [] ->
         OpamConsole.warning "No opam files found in %s"
           (OpamFilename.Dir.to_string d);
@@ -3129,7 +3129,7 @@ let lint =
     if err then OpamStd.Sys.exit_because `False
   in
   Term.(const lint $global_options $files $package $normalise $short
-        $warnings $check_upstream $recurse),
+        $warnings $check_upstream $recurse $subpath),
   term_info "lint" ~doc ~man
 
 (* CLEAN *)
