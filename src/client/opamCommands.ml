@@ -2704,8 +2704,25 @@ let pin ?(unpin_only=false) () =
                 (fun nv ->
                    match OpamSwitchState.url st nv with
                    | Some u ->
+                     let spu = OpamFile.URL.subpath u in
                      let u = OpamFile.URL.url u in
-                     OpamUrl.(u.transport = url.transport && u.path = url.path)
+                     let path_equality () =
+                       let open OpamUrl in
+                       match subpath, recurse with
+                       | Some sp, false ->
+                         u.path = url.path && spu = Some sp
+                       | Some sp, true ->
+                         (match spu with
+                          | Some spp ->
+                            OpamUrl.Op.(OpamStd.String.starts_with
+                                          ~prefix:(url / sp).path (u / spp).path)
+                          | None -> false)
+                       | None, true ->
+                         u.path = url.path
+                       | None, false ->
+                         spu = None && u.path = url.path
+                     in
+                     OpamUrl.(u.transport = url.transport) && path_equality ()
                    | None -> false)
                 st.pinned |>
               OpamPackage.names_of_packages |>
