@@ -39,7 +39,7 @@ val name_and_dir_of_opam_file: filename -> name option * dirname
     the same package name appears multiple times.
 *)
 val resolve_locals:
-  ?quiet:bool -> ?recurse:bool ->
+  ?quiet:bool -> ?recurse:bool -> ?subpath:string ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   (name * OpamUrl.t * string option * OpamFile.OPAM.t OpamFile.t) list * atom list
 
@@ -69,6 +69,7 @@ val autopin:
   ?simulate:bool ->
   ?quiet:bool ->
   ?recurse:bool ->
+  ?subpath:string ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   rw switch_state * atom list
 
@@ -83,6 +84,7 @@ val simulate_autopin:
   ?quiet:bool ->
   ?for_view:bool ->
   ?recurse:bool ->
+  ?subpath:string ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   'a switch_state * atom list
 
