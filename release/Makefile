@@ -13,7 +13,7 @@ OCAMLV = 4.04.2
 OCAML_URL = https://caml.inria.fr/pub/distrib/ocaml-$(basename $(OCAMLV))/ocaml-$(OCAMLV).tar.gz
 
 HOST_OS = $(shell uname -s | tr A-Z a-z)
-HOST = $(shell uname -m)-$(HOST_OS)
+HOST = $(shell uname -m | sed 's/amd64/x86_64/')-$(HOST_OS)
 
 all: $(patsubst %,out/opam-$(VERSION)-%,$(TARGETS))
 
