@@ -42,7 +42,8 @@ could become puzzling _e.g._ when opam didn't see an added source file). The
 option
 [`--working-dir`](man/opam-install.html#lbAH) can
 be used to temporarily make opam fetch uncommitted changes (see also
-[`--inplace-build`](man/opam-install.html#lbAG)).
+[`--inplace-build`](man/opam-install.html#lbAG)),  and [`--assume-built`](man/opam-install.html#lbAG)
+to run only installation instructions, assuming that build has been done locally.
 Upon pinning, opam 2.0 will also select the current branch by default if
 unspecified, so that later running `git checkout BRANCH` in the source tree
 doesn't affect the pinned package.
@@ -87,9 +88,10 @@ doesn't affect the pinned package.
 - [`opam install --destdir`](man/opam-install.html#lbAF) can be used to copy
   build artefacts of given packages to an external prefix
 
-- __sandboxing__: on Linux, all package commands will now be sandboxed by
+- __sandboxing__: on Linux and MacOS, all package commands will now be sandboxed by
   default. The [`bubblewrap`](https://github.com/projectatomic/bubblewrap) tool
-  is now required to this end.
+  is now required to this end on Linux, and the `sandbox_exec` command is used
+  on MacOS.
 
 ## File formats
 

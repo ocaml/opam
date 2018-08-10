@@ -77,16 +77,16 @@ val opam: 'a switch_state -> package -> OpamFile.OPAM.t
     any *)
 val opam_opt: 'a switch_state -> package -> OpamFile.OPAM.t option
 
-(** Return the URL file for the given package *)
+(** Return the URL field for the given package *)
 val url: 'a switch_state -> package -> OpamFile.URL.t option
 
-(** Returns the primary URL from the URL file of the given package *)
+(** Returns the primary URL from the URL field of the given package *)
 val primary_url: 'a switch_state -> package -> url option
 
-(** Return the Descr file for the given package (or an empty descr if none) *)
+(** Return the descr field for the given package (or an empty descr if none) *)
 val descr: 'a switch_state -> package -> OpamFile.Descr.t
 
-(** Return the Descr file for the given package *)
+(** Return the descr field for the given package *)
 val descr_opt: 'a switch_state -> package -> OpamFile.Descr.t option
 
 (** Returns the full paths of overlay files under the files/ directory *)

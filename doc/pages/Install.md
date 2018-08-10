@@ -46,6 +46,9 @@ sudo cp <downloaded file> /usr/local/bin/opam
 sudo chmod a+x /usr/local/bin/opam
 ```
 
+> Note that this script is intended for end-users, not CI. For that purpose,
+> you can use pre-built [Docker images for various
+> configurations](https://hub.docker.com/r/ocaml/opam2/).
 
 ## Using your distribution's package system
 
