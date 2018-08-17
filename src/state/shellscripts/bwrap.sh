@@ -1,4 +1,6 @@
-#!/bin/bash -ue
+#!/usr/bin/env bash
+
+set -ue
 
 if ! command -v bwrap >/dev/null; then
     echo "The 'bwrap' command was not found. Install 'bubblewrap' on your system, or" >&2
