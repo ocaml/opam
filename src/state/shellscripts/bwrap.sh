@@ -11,9 +11,9 @@ fi
 
 ARGS=(--unshare-net --new-session)
 ARGS=("${ARGS[@]}" --proc /proc --dev /dev)
-ARGS=("${ARGS[@]}" --bind "$TMPDIR" /tmp \
-                   --setenv TMPDIR /tmp --setenv TMP /tmp --setenv TEMPDIR /tmp --setenv TEMP /tmp \
-                   --tmpfs /run --tmpfs /var)
+ARGS=("${ARGS[@]}" --bind "${TMPDIR:-/tmp}" /tmp)
+ARGS=("${ARGS[@]}" --setenv TMPDIR /tmp --setenv TMP /tmp --setenv TEMPDIR /tmp --setenv TEMP /tmp)
+ARGS=("${ARGS[@]}" --tmpfs /run --tmpfs /var)
 
 add_mounts() {
     case "$1" in
