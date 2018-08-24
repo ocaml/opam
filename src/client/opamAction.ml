@@ -492,16 +492,19 @@ let make_command st opam ?dir ?text_command (cmd, args) =
          OpamPackage.Set.(elements @@
                           inter st.compiler_packages st.installed_roots));
       if OpamPackage.Set.mem nv st.pinned then
-        match OpamFile.OPAM.get_url opam with
+        match OpamFile.OPAM.url opam with
         | None -> "pinned"
-        | Some u ->
+        | Some url ->
+          let u = OpamFile.URL.url url in
           let src =
             OpamPath.Switch.pinned_package st.switch_global.root st.switch
               nv.name
           in
           let rev = OpamProcess.Job.run (OpamRepository.revision src u) in
-          Printf.sprintf "pinned(%s%s)"
+          Printf.sprintf "pinned(%s%s%s)"
             (OpamUrl.to_string u)
+            (OpamStd.Option.to_string (fun s -> "("^s^")")
+               (OpamFile.URL.subpath url))
             (OpamStd.Option.to_string
                (fun r -> "#"^OpamPackage.Version.to_string r) rev)
       else
