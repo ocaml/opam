@@ -158,7 +158,7 @@ bin_sha512() {
 }
 
 check_sha512() {
-  if command -v openssl > /dev/null; then
+  if command -v openssl > /dev/null && ! openssl sha512 2>&1 < /dev/null | grep Error > /dev/null; then
     sha512=`openssl sha512 "$TMP/$OPAM_BIN" 2> /dev/null | cut -f 2 -d ' '`
     check=`bin_sha512`
     test "x$sha512" = "x$check"
