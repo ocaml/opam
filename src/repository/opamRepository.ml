@@ -353,21 +353,19 @@ let packages_with_prefixes r =
 
 let validate_repo_update repo update =
   match
-    update,
     repo.repo_trust,
     OpamRepositoryConfig.(!r.validation_hook),
     OpamRepositoryConfig.(!r.force_checksums)
   with
-  | OpamRepositoryBackend.Update_empty, _, _, _ -> Done true
-  | _, None, Some _, Some true ->
+  | None, Some _, Some true ->
     OpamConsole.error
       "No trust anchors for repository %s, and security was enforced: \
        not updating"
       (OpamRepositoryName.to_string repo.repo_name);
     Done false
-  | _, None, _, _ | _, _, None, _ | _, _, _, Some false ->
+  | None, _, _ | _, None, _ | _, _, Some false ->
     Done true
-  | _, Some ta, Some hook, _ ->
+  | Some ta, Some hook, _ ->
     let cmd =
       let open OpamRepositoryBackend in
       let env v = match OpamVariable.Full.to_string v, update with
@@ -449,7 +447,10 @@ let update repo =
   let module B = (val find_backend repo: OpamRepositoryBackend.S) in
   B.fetch_repo_update repo.repo_name repo.repo_root repo.repo_url @@+ function
   | Update_err e -> raise e
-  | (Update_empty | Update_full _ | Update_patch _) as upd ->
+  | Update_empty ->
+    log "update empty, no validation performed";
+    OpamProcess.Job.Op.Done ()
+  | (Update_full _ | Update_patch _) as upd ->
     OpamProcess.Job.catch (fun exn ->
         cleanup_repo_update upd;
         raise exn)
