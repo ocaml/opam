@@ -78,7 +78,7 @@ xsudo() {
         echo "Write access to $DSTDIR required, using 'sudo'."
         echo "Command: $CMD $@"
         if [ "$CMD" = "install" ]; then
-            sudo "$CMD" -g root -o root "$@"
+            sudo "$CMD" -g 0 -o root "$@"
         else
             sudo "$CMD" "$@"
         fi
