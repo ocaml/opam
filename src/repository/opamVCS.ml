@@ -100,16 +100,27 @@ module Make (VCS: VCS) = struct
     VCS.revision repo_root @@+ fun r ->
     Done (OpamStd.Option.map OpamPackage.Version.of_string r)
 
-  let sync_dirty repo_root repo_url =
-    pull_url repo_root None repo_url @@+ fun result ->
+  let sync_dirty ?subpath repo_root repo_url =
+    let filter_subpath files =
+      match subpath with
+      | None -> files
+      | Some sp ->
+        OpamStd.List.filter_map
+          (fun f ->
+             if OpamStd.String.remove_prefix ~prefix:(sp ^ Filename.dir_sep) f
+                <> f then Some f else None)
+          files
+    in
+    pull_url ?subpath repo_root None repo_url @@+ fun result ->
     match OpamUrl.local_dir repo_url with
     | None -> Done (result)
     | Some dir ->
       VCS.versioned_files dir @@+ fun vc_files ->
       VCS.modified_files dir @@+ fun vc_dirty_files ->
       let files =
-        List.map OpamFilename.(remove_prefix dir)
-          (OpamFilename.rec_files dir)
+        filter_subpath
+          (List.map OpamFilename.(remove_prefix dir)
+             (OpamFilename.rec_files dir))
       in
       (* Remove non-listed files from destination *)
       (* fixme: doesn't clean directories *)
@@ -135,8 +146,8 @@ module Make (VCS: VCS) = struct
               exc)
           fset
       in
-      let vcset = OpamStd.String.Set.of_list vc_files in
-      let vc_dirty_set = OpamStd.String.Set.of_list vc_dirty_files in
+      let vcset = OpamStd.String.Set.of_list (filter_subpath vc_files) in
+      let vc_dirty_set = OpamStd.String.Set.of_list (filter_subpath vc_dirty_files) in
       let final_set =
         OpamStd.String.Set.Op.(fset -- vcset ++ vc_dirty_set -- excluded)
       in

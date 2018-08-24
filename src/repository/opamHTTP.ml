@@ -89,7 +89,8 @@ module B = struct
   let revision _ =
     Done None
 
-  let sync_dirty dir url = pull_url dir None url
+  let sync_dirty ?subpath:_ dir url = pull_url dir None url
+  (* do not propagate *)
 
   let get_remote_url ?hash:_ _ =
     Done None

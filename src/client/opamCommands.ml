@@ -722,7 +722,7 @@ let show =
       OpamConsole.warning "No opam files found in %s"
         (OpamFilename.Dir.to_string d);
       []
-    | l -> List.map (fun (_,f) -> Some f) l
+    | l -> List.map (fun (_,f,_) -> Some f) l
   in
   let pkg_info global_options fields show_empty raw where
       list_files file normalise no_lint just_file all_versions sort atom_locs =

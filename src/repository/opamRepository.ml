@@ -160,7 +160,7 @@ let pull_from_upstream
       (OpamUrl.string_of_backend url.OpamUrl.backend)
   in
   OpamProcess.Job.with_text text @@
-  (if working_dir then B.sync_dirty destdir url
+  (if working_dir then B.sync_dirty ?subpath destdir url
    else
    let pin_cache_dir = OpamRepositoryPath.pin_cache url in
    let url, pull =
