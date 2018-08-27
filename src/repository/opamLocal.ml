@@ -62,9 +62,7 @@ let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
   let overlap src dst =
     let norm d = Filename.concat d "" in
     OpamStd.String.starts_with ~prefix:(norm src) (norm dst) &&
-    not (OpamStd.String.starts_with
-           ~prefix:(norm (Filename.concat src OpamSwitch.external_dirname))
-           (norm dst)) ||
+    not (OpamStd.String.contains ~sub:OpamSwitch.external_dirname (norm dst)) ||
     OpamStd.String.starts_with ~prefix:(norm dst) (norm src)
   in
   (* See also OpamVCS.sync_dirty *)
