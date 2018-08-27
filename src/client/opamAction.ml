@@ -500,7 +500,7 @@ let remove_package_aux
         (OpamPath.Switch.bin root t.switch t.switch_config)
         (OpamFilename.basename link)
     in
-    if OpamFilename.readlink link = bin then
+    if OpamFilename.exists link && OpamFilename.readlink link = bin then
       OpamFilename.remove link
   );
 
