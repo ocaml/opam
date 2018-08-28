@@ -449,7 +449,8 @@ let update repo =
   | Update_err e -> raise e
   | Update_empty ->
     log "update empty, no validation performed";
-    OpamProcess.Job.Op.Done ()
+    apply_repo_update repo Update_empty @@+ fun () ->
+    B.repo_update_complete repo.repo_root repo.repo_url
   | (Update_full _ | Update_patch _) as upd ->
     OpamProcess.Job.catch (fun exn ->
         cleanup_repo_update upd;
