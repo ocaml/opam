@@ -13,6 +13,7 @@ endif
 
 ifndef OPAM
   OPAM = $(JBUILDER) exec -- opam
+  OPAM_DEP := $(shell $(JBUILDER) exec -- which opam)
 endif
 
 TOPICS  = $(shell $(OPAM) help topics)
@@ -22,12 +23,16 @@ HELPFMT = --help=groff
 
 ifndef OPAM_INSTALLER
   OPAM_INSTALLER = $(JBUILDER) exec -- opam-installer
+  OPAM_INSTALLER_DEP := $(shell $(JBUILDER) exec -- which opam-installer)
 endif
 
 .PHONY: man html dev-manual pages
 all: man dev html pages
 
-man:
+man: man.build
+	@
+
+man.build: $(OPAM_DEP) $(OPAM_INSTALLER_DEP)
 	rm -rf man
 	mkdir -p man
 	$(OPAM) $(HELPFMT) > man/opam.1
@@ -39,6 +44,7 @@ man:
 	  $(OPAM) admin $$i $(HELPFMT) > man/opam-admin-$$i.1;\
 	done
 	$(OPAM_INSTALLER) $(HELPFMT) > man/opam-installer.1
+	touch $@
 
 man-html: man
 	rm -rf man-html
@@ -78,5 +84,5 @@ PAGES=$(wildcard pages/*.md)
 pages: $(PAGES:.md=.html)
 
 clean:
-	rm -rf dependencies.dot man html/ocamldoc man-html pages/*.html html/index.html
+	rm -rf dependencies.dot man html/ocamldoc man-html pages/*.html html/index.html man.build
 	$(MAKE) -C dev-manual clean
