@@ -877,6 +877,20 @@ let from_2_0_alpha_to_2_0_alpha2 root conf =
       in
       OpamFile.SwitchSelections.write selections_file selections;
 
+      (* Update pinned overlay opam files *)
+      OpamPackage.Set.iter (fun nv ->
+          let pkg_dir =
+            meta_dir / "overlay" / OpamPackage.Name.to_string nv.name
+          in
+          let opamf = pkg_dir // "opam" in
+          let opam0 = OpamFile.make opamf in
+          OpamStd.Option.iter (fun opam ->
+              opam_file_from_1_2_to_2_0 ~filename:opam0 opam
+              |> OpamFile.OPAM.write_with_preserved_format opam0;
+              OpamFilename.remove (pkg_dir // "descr");
+              OpamFilename.remove (pkg_dir // "url")
+            ) (OpamFileTools.read_opam pkg_dir)
+        ) selections.sel_pinned;
     )
     (OpamFile.Config.installed_switches conf);
   OpamFile.Config.with_eval_variables [
