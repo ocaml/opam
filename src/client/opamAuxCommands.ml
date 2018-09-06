@@ -205,7 +205,7 @@ let resolve_locals ?(quiet=false) atom_or_local_list =
            (OpamUrl.to_string t))
           duplicates)
 
-let autopin_aux st ?quiet atom_or_local_list =
+let autopin_aux st ?quiet ?(for_view=false) atom_or_local_list =
   let to_pin, atoms = resolve_locals ?quiet atom_or_local_list in
   if to_pin = [] then
     atoms, to_pin, OpamPackage.Set.empty, OpamPackage.Set.empty
@@ -234,10 +234,21 @@ let autopin_aux st ?quiet atom_or_local_list =
       st.pinned
   in
   let already_pinned, to_pin =
-    List.partition (fun (name, target, _) ->
+    List.partition (fun (name, target, opam) ->
         try
-          OpamSwitchState.primary_url st (OpamPinned.package st name)
-          = Some target
+          (* check of the target to avoid repin of pin to update with `opam
+             install .` and loose edited opams *)
+          let pinned_pkg = OpamPinned.package st name in
+          OpamSwitchState.primary_url st pinned_pkg = Some target
+          &&
+          (* For `opam show`, we need to check is the opam file changed to
+             perform a simulated pin if so *)
+          (not for_view ||
+           match
+             OpamSwitchState.opam_opt st pinned_pkg, OpamFile.OPAM.read_opt opam
+           with
+           | Some opam0, Some opam -> OpamFile.OPAM.equal opam0 opam
+           | _, _ -> false)
         with Not_found -> false)
       to_pin
   in
@@ -280,11 +291,14 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
   let local_packages = OpamPackage.keys local_opams in
   let pinned =
     if for_view then
+      (* For `opam show`, to display local files instead of the stored on, we
+         need to have on the pinned set only the new simulated pinned ones instead
+         of really pinned ones. *)
       let open OpamPackage.Set.Op in
-      st.pinned ++
-      (local_packages --
-       OpamPackage.packages_of_names st.pinned
-         (OpamPackage.names_of_packages local_packages))
+      st.pinned
+      -- OpamPackage.packages_of_names st.pinned
+        (OpamPackage.names_of_packages local_packages)
+      ++ local_packages
     else st.pinned
   in
   let st = {
@@ -308,7 +322,7 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
 
 let simulate_autopin st ?quiet ?for_view atom_or_local_list =
   let atoms, to_pin, obsolete_pins, already_pinned_set =
-    autopin_aux st ?quiet atom_or_local_list
+    autopin_aux st ?quiet ?for_view atom_or_local_list
   in
   if to_pin = [] then st, atoms else
   let st =
