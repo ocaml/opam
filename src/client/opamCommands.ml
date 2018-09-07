@@ -2769,7 +2769,7 @@ let lint =
              | name, None -> OpamSwitchState.get_package st name
            in
            let opam = OpamSwitchState.opam st nv in
-           match OpamPinned.orig_opam_file opam with
+           match OpamPinned.orig_opam_file (OpamPackage.name nv) opam with
            | None -> raise Not_found
            | some -> [some]
          with Not_found ->

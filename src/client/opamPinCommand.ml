@@ -223,7 +223,7 @@ let edit st ?version name =
         | Some o -> OpamFile.OPAM.with_version new_nv.version o
      in
      OpamFile.OPAM.write_with_preserved_format
-       ?format_from:(OpamPinned.orig_opam_file base_opam)
+       ?format_from:(OpamPinned.orig_opam_file name base_opam)
        temp_file base_opam);
   match edit_raw name temp_file with
   | None -> st
@@ -514,7 +514,7 @@ and source_pin
     if need_edit then
       (if not (OpamFile.exists temp_file) then
          OpamFile.OPAM.write_with_preserved_format
-           ?format_from:(OpamPinned.orig_opam_file opam_base)
+           ?format_from:(OpamPinned.orig_opam_file name opam_base)
            temp_file opam_base;
        OpamStd.Option.Op.(
          edit_raw name temp_file >>|
@@ -553,7 +553,7 @@ and source_pin
     let opam = copy_files st opam in
 
     OpamFile.OPAM.write_with_preserved_format
-      ?format_from:(OpamPinned.orig_opam_file opam)
+      ?format_from:(OpamPinned.orig_opam_file name opam)
       (OpamPath.Switch.Overlay.opam st.switch_global.root st.switch nv.name)
       opam;
 
