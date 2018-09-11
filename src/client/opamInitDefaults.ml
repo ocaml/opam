@@ -44,6 +44,9 @@ let sandbox_filter = FOr (linux_filter, macos_filter)
 let gpatch_filter = FOr (openbsd_filter, freebsd_filter)
 let patch_filter = FNot gpatch_filter
 
+let gtar_filter = openbsd_filter
+let tar_filter = FNot gtar_filter
+
 let wrappers ~sandboxing () =
   let cmd t = [
     CString "%{hooks}%/sandbox.sh", None;
@@ -102,7 +105,8 @@ let required_tools ~sandboxing () =
     ["diff"], None, None;
     ["patch"], None, Some patch_filter;
     ["gpatch"], None, Some gpatch_filter;
-    ["tar"], None, None;
+    ["tar"], None, Some tar_filter;
+    ["gtar"], None, Some gtar_filter;
     ["unzip"], None, None;
   ] @
   if sandboxing then [
