@@ -816,7 +816,10 @@ let rec flock_update
            Unix.(lockf fd F_ULOCK 0);
          Unix.lockf fd (unix_lock_op ~dontblock:true flag) 0
        with Unix.Unix_error (Unix.EAGAIN,_,_) ->
-         if dontblock then raise Locked;
+         if dontblock then
+           OpamConsole.error_and_exit `Locked
+             "Another process has locked %s and non blocking mode enabled"
+             file;
          OpamConsole.formatted_msg
            "Another process has locked %s, waiting (%s to abort)... "
            file (if Sys.win32 then "CTRL+C" else "C-c");
