@@ -1114,3 +1114,7 @@ let opam_file ?(quiet=false) ?filename opam =
         | _ -> ());
      opam_file_from_1_2_to_2_0 ?filename opam)
   else opam
+
+let comp_file ?package ?descr comp =
+  OpamFile.Comp.to_package ?package comp descr
+  |> opam_file_from_1_2_to_2_0

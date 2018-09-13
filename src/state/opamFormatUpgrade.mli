@@ -38,3 +38,9 @@ val opam_file_from_1_2_to_2_0:
 val opam_file:
   ?quiet:bool -> ?filename:OpamFile.OPAM.t OpamFile.t ->
   OpamFile.OPAM.t -> OpamFile.OPAM.t
+
+(** Convert the comp file to an opam one, using [OpamFile.Comp.to_package] and
+    applying filter rewriting *)
+val comp_file:
+  ?package:package -> ?descr:OpamFile.Descr.t -> OpamFile.Comp.t ->
+  OpamFile.OPAM.t
