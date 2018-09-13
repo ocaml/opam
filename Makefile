@@ -21,7 +21,7 @@ OPAMINSTALLER = ./opam-installer$(EXE)
 ALWAYS:
 	@
 
-JBUILDER_DEP = ALWAYS $(JBUILDER_FILE)
+JBUILDER_DEP = $(JBUILDER_FILE)
 
 src_ext/jbuilder/_build/install/default/bin/jbuilder$(EXE): src_ext/jbuilder.stamp
 	cd src_ext/jbuilder && ocaml bootstrap.ml && ./boot.exe
