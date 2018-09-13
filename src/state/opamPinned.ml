@@ -99,11 +99,11 @@ let files_in_source d =
            (OpamFilename.to_string f);
          None)
 
-let orig_opam_file opam =
+let orig_opam_file name opam =
   let open OpamStd.Option.Op in
   OpamFile.OPAM.metadata_dir opam >>= fun dir ->
   OpamStd.List.find_opt OpamFilename.exists [
-    dir // (OpamPackage.Name.to_string (OpamFile.OPAM.name opam) ^ ".opam");
+    dir // (OpamPackage.Name.to_string name ^ ".opam");
     dir // "opam"
   ] >>|
   OpamFile.make
