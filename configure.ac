@@ -214,6 +214,8 @@ AS_IF([test "x${enable_certificate_check}" = "xno"], [
 AC_CHECK_PROGS(FETCH,[curl wget],no)
 
 AC_CHECK_TOOL(JBUILDER,jbuilder)
+AC_CHECK_TOOL(PATCH,patch)
+AC_CHECK_TOOL(BUNZIP2,bunzip2)
 
 AS_IF([test "${OCAML_OS_TYPE}" = "Win32"],[
   AC_MSG_CHECKING([for a workable solution for ln -s])
