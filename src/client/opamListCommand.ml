@@ -703,7 +703,7 @@ let get_switch_state gt =
   | None -> OpamSwitchState.load_virtual gt rt
   | Some sw -> OpamSwitchState.load `Lock_none gt rt sw
 
-let print_depexts st packages =
+let get_depexts st packages =
   OpamPackage.Name.Set.fold
     (fun name acc ->
        let nv = OpamSwitchState.get_package st name in
@@ -715,7 +715,9 @@ let print_depexts st packages =
          (OpamSwitchState.depexts st nv))
     (OpamPackage.names_of_packages packages)
     OpamStd.String.Set.empty
-  |> OpamStd.String.Set.iter (OpamConsole.msg "%s\n")
+
+let print_depexts =
+  OpamStd.String.Set.iter (OpamConsole.msg "%s\n")
 
 let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms locals =
   let packages =
