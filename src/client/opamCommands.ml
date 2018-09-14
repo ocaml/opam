@@ -524,9 +524,14 @@ let list ?(force_search=false) () =
        $(i,os-distribution), $(i,os-version), $(i,os-family)."
       OpamArg.variable_bindings []
   in
+  let silent =
+    mk_flag ["silent"]
+      "Don't write anything in the output, exit with return code 0 if the list \
+       is not empty, 1 otherwise."
+  in
   let list
       global_options selection state_selector no_switch depexts vars repos
-      owns_file disjunction search format packages =
+      owns_file disjunction search silent format packages =
     apply_global_options global_options;
     let no_switch =
       no_switch || OpamStateConfig.get_switch_opt () = None
@@ -595,7 +600,8 @@ let list ?(force_search=false) () =
     in
     if not depexts &&
        not format.OpamListCommand.short &&
-       filter <> OpamFormula.Empty
+       filter <> OpamFormula.Empty &&
+       not silent
     then
       OpamConsole.msg "# Packages matching: %s\n"
         (OpamListCommand.string_of_formula filter);
@@ -604,13 +610,20 @@ let list ?(force_search=false) () =
       OpamListCommand.filter ~base:all st filter
     in
     if not depexts then
-      OpamListCommand.display st format results
+      if not silent then
+        OpamListCommand.display st format results
+      else if OpamPackage.Set.is_empty results then
+        OpamStd.Sys.exit_because `False
     else
-      OpamListCommand.print_depexts st results
+      let results_depexts = OpamListCommand.get_depexts st results in
+      if not silent then
+        OpamListCommand.print_depexts results_depexts
+      else if OpamStd.String.Set.is_empty results_depexts then
+        OpamStd.Sys.exit_because `False
   in
   Term.(const list $global_options $package_selection $state_selector
         $no_switch $depexts $vars $repos $owns_file $disjunction $search
-        $package_listing $pattern_list),
+        $silent $package_listing $pattern_list),
   term_info "list" ~doc ~man
 
 
