@@ -19,6 +19,8 @@ type t = kind * string
 let kind = fst
 let contents = snd
 
+let log msg = OpamConsole.log "HASH" msg
+
 let pfx_sep_char = '='
 let pfx_sep_str = String.make 1 pfx_sep_char
 
@@ -85,17 +87,25 @@ let to_path (kind,s) =
 let compute ?(kind=default_kind) file = match kind with
   | `MD5 -> md5 (Digest.to_hex (Digest.file file))
   | (`SHA256 | `SHA512) as kind ->
-    try
-      if not OpamCoreConfig.(!r.use_openssl) then raise Exit else
-      match
-        OpamSystem.read_command_output ["openssl"; string_of_kind kind; file]
-      with
-      | [l] ->
-        let len = len kind in
-        make kind (String.sub l (String.length l - len) len)
-      | _ -> failwith "openssl error"
-    with OpamSystem.Command_not_found _ | Exit ->
-      make kind (OpamSHA.hash kind file)
+    let sha =
+      if not OpamCoreConfig.(!r.use_openssl) then
+        OpamSHA.hash kind file
+      else
+      try
+        match
+          OpamSystem.read_command_output ["openssl"; string_of_kind kind; file]
+        with
+        | [l] ->
+          let len = len kind in
+          String.sub l (String.length l - len) len
+        | _ ->
+          log "openssl error, use internal sha library";
+          OpamSHA.hash kind file
+      with OpamSystem.Command_not_found _ | OpamSystem.Process_error _ ->
+        log "openssl not found, use internal sha library";
+        OpamSHA.hash kind file
+    in
+    make kind sha
 
 let compute_from_string ?(kind=default_kind) str = match kind with
   | `MD5 -> md5 (Digest.to_hex (Digest.string str))
