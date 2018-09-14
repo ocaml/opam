@@ -41,7 +41,7 @@ it as a second step.
   `./configure` once done
 * Run `make libinstall` at the end
 
-_Note_: If you install on your system (without changeing the prefix), you will
+_Note_: If you install on your system (without changing the prefix), you will
 need to install as root (`sudo`). As sudo do not propagate environment
 variables, there wil be some errors. You can use `sudo -E "PATH=$PATH" in order
 to be sure to have the good environment for install.
