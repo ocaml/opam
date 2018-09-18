@@ -211,7 +211,7 @@ while true; do
         read R
         case "$R" in
             ""|"y"|"Y"|"yes")
-            mkdir -p $BINDIR
+            xsudo mkdir -p $BINDIR
             break;;
         esac
     fi
