@@ -232,8 +232,7 @@ let do_upgrade repo_root =
            (OpamFormula.atoms (OpamFile.Comp.packages comp));
       *)
 
-      let opam = OpamFile.Comp.to_package ~package:nv comp descr in
-      let opam = OpamFormatUpgrade.opam_file_from_1_2_to_2_0 opam in
+      let opam = OpamFormatUpgrade.comp_file ~package:nv ?descr comp in
       let opam = O.with_conflict_class [ocaml_conflict_class] opam in
       let opam =
         match OpamFile.OPAM.url opam with
