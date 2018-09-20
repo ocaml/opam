@@ -708,26 +708,14 @@ let show =
           show_empty
         else fields, show_empty || fields <> []
       in
-      let atom_locs, locals =
-        List.partition (fun al -> match al with
-            | `Filename _ -> false
-            | _ -> true) atom_locs
-      in
-      let locals, _ = OpamAuxCommands.resolve_locals locals in
-      let mlocals =
-        List.fold_left (fun map (n, _, o) ->
-            OpamPackage.Name.Map.add n (OpamFile.OPAM.read o) map)
-          OpamPackage.Name.Map.empty locals
-      in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       let st = OpamListCommand.get_switch_state gt in
       let st, atoms =
-        if atom_locs = [] then st, [] else
-          OpamAuxCommands.simulate_autopin ~quiet:no_lint ~for_view:true st
-            atom_locs
+        OpamAuxCommands.simulate_autopin ~quiet:no_lint ~for_view:true st
+          atom_locs
       in
       OpamListCommand.info st
-        ~fields ~raw_opam:raw ~where ~normalise ~show_empty atoms mlocals;
+        ~fields ~raw_opam:raw ~where ~normalise ~show_empty atoms;
       `Ok ()
     | Some f, [] ->
       let opam = match f with
