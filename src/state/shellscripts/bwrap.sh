@@ -27,7 +27,11 @@ add_mounts() {
     done
 }
 
-add_mounts ro /usr /bin /lib /lib32 /lib64 /etc /opt /nix/store /rw/usrlocal /home
+# remove some unusual pathes (/nix/stored and /rw/usrlocal )
+# use OPAM_USER_PATH_RO variable to add them
+# the OPAM_USER_PATH_RO format is the same as PATH
+# ie: export OPAM_USER_PATH_RO=/nix/store:/rw/usrlocal
+add_mounts ro /usr /bin /lib /lib32 /lib64 /etc /opt /home
 
 # C compilers using `ccache` will write to a shared cache directory
 # that remain writeable. ccache seems widespread in some Fedora systems.
@@ -49,16 +53,28 @@ add_ccache_mount() {
 COMMAND="$1"; shift
 case "$COMMAND" in
     build)
+        # mount unusual path in ro
+        if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
+           add_mounts ro $(echo ${OPAM_USER_PATH_RO} | sed 's|:| |g')
+        fi
         add_mounts ro "$OPAM_SWITCH_PREFIX"
         add_mounts rw "$PWD"
         add_ccache_mount
         ;;
     install)
+        # mount unusual path in ro
+        if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
+           add_mounts ro  $(echo ${OPAM_USER_PATH_RO} | sed 's|:| |g')
+        fi
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
         add_mounts rw "$PWD"
         ;;
     remove)
+        # mount unusual path in ro
+        if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
+           add_mounts ro $(echo ${OPAM_USER_PATH_RO} | sed 's|:| |g')
+        fi
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
         [ "X${PWD#$OPAM_SWITCH_PREFIX}/.opam-switch/" != "X${PWD}" ] && add_mounts rw "$PWD"
