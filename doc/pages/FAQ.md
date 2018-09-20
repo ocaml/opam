@@ -89,6 +89,12 @@ enabled. Note, however, that:
 - Only the _package_ build/install/remove commands are protected: if you install
   a program using opam and execute it, it will run with your standard user
   rights.
+- If your installation uses unusual paths (opam root outside `HOME`, system
+  folder, etc.), since `2.0.1` you can use the environment variable
+  `OPAM_USER_PATH_RO` to have them handled by then sandbox script, e.g. This
+  variable format is the same as `PATH`, you can add it in your shell
+  configuration file, e.g `export OPAM_USER_PATH_RO=/rw/usrlocal:/media`.
+  Contained paths are added as read-only.
 - If needed, for special cases like unprivileged containers, sandboxing can be
   disabled on `opam init` with the `--disable-sandboxing` flag. Or by using a
   [custom `opamrc`](Manual.html#configfield-wrap-build-commands). Use wisely,
