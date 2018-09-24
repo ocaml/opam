@@ -103,25 +103,38 @@ doesn't affect the pinned package.
 > should be transparent unless you publish packages:
 >
 > - [**The main repository**](https://github.com/ocaml/opam-repository/tree/master)
->   remains in format **1.2** for now. This means the the `master` branch, and
->   the contents of `https://opam.ocaml.org/packages`.
-> - [**There is a 2.0.0 branch**](https://github.com/ocaml/opam-repository/tree/master)
->   that is served at `opam.ocaml.org/2.0`.
->
-> Everything from 1.2 is converted to 2.0 when needed (on the fly by opam,
-> [automatically](https://github.com/AltGr/camelus/tree/2.0) on the git
-> repository, or manually using
-> [`opam admin upgrade`](man/opam-admin-upgrade.html)).
->
+>   is now in format **2.0**. This means the `master` branch, and the
+>   contents of `https://opam.ocaml.org/packages`.
+> - [**There is a 1.2 branch**](https://github.com/ocaml/opam-repository/tree/1.2)
+>   that is served at `opam.ocaml.org/1.2.2`.
 >
 > When publishing packages, remember that:
 >
-> - packages in **1.2 format** must be published to `master`, and they will be
->   available to **everyone**
 > - packages in **2.0 format** must be published to the `2.0.0` branch — e.g.
 >   using the new
 >   [opam-publish.2.0](https://github.com/ocaml/opam-publish/tree/2.0). They
 >   will **only** be available to opam 2.0 users.
+> - packages in **1.2 format** are no more accepted, expect for relevant fixes.
+>   In that case they must be published to `1.2` branch.
+>
+> - [`opam-publish.2.0.0`](https://github.com/ocaml/opam-publish/tree/2.0) has
+>   a fully revamped interface, and many new features, like filing a single PR
+>   for multiple packages. It files pull-request in 2.0 format only to master
+>   branch of the repository. The new version of
+>   [`dune-release.1.0.1`](https://github.com/samoht/dune-release/tree/master)
+>   handles the new format.
+>
+> - It is also advised to keep in-source opam files in 1.2 format until that
+> date, so as not to break uses of `opam pin add --dev-repo` by opam 1.2 users.
+>
+> - The small `opam-package-upgrade` plugin can be used to upgrade single 1.2
+> opam files to 2.0 format. You can also use API to upgrade you opam files,
+> using
+> [`OpamFormatUpgrade.opam_file`](https://opam.ocaml.org/doc/api/opam-state/OpamFormatUpgrade/#val-opam_file),
+> available in package `opam-state`.
+>
+> - More advice for package maintainers and custom repositories in this [blog
+> post](https://opam.ocaml.org/blog/opam-2-0-0-repo-upgrade-roadmap/#Advice-for-package-maintainers).
 
 - compiler definition files: these no longer exist, as compilers have been
   replaced by normal package definitions (that should have
@@ -166,8 +179,7 @@ doesn't affect the pinned package.
 
 - __the conversion from the 1.2 format is done internally and automatic, both
   for repositories and when pinning.__ Be careful, however, not to submit 2.0
-  format files if they are to be used by opam 1.2, or published to the main
-  repository before it makes the transition.
+  format files if they are to be used by opam 1.2.
 
 ### New features
 

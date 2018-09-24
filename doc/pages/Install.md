@@ -52,8 +52,9 @@ sudo chmod a+x /usr/local/bin/opam
 
 ## Using your distribution's package system
 
-This is generally the recommended way, when available and up-to-date. Here is a
-list of supported distributions:
+This is generally the recommended way, **when available and up-to-date** (you
+can check [here](https://github.com/ocaml/opam/wiki/Distributions) the latest
+available release per distribution). Here is a list of supported distributions:
 
 #### Archlinux
 
@@ -166,12 +167,12 @@ You can also download the full archives, including opam dependencies (these
 don't require any extra downloads, just the OCaml compiler -- 4.02.3 or later
 for the latest version):
 
-* [2.0.0~rc](https://github.com/ocaml/opam/releases/download/2.0.0-rc/opam-full-2.0.0-rc.tar.gz)
-  MD5: 6e89905dbe9203dee3e883b70e210285
-  SHA384: 8a9ee03cdcd78a7d44e92c9b1c6e841605a49ecff4ebd977a632708ef6250f9f3ec488ecd1852f76d1b6cfc2d8ad9117
+* [2.0.0](https://github.com/ocaml/opam/releases/download/2.0.0/opam-full-2.0.0.tar.gz)
+ - MD5: 316415b67acc95384619317fd365c2cc
+ - SHA384: 6dd6f5ddb2a3a0ad4d97e9cc2c7499bd97dc0c9c639ae7d023c8a62409ef08075df415a1f84ca2223bba4e1936af0627
 * [1.2.2](https://github.com/ocaml/opam/releases/download/1.2.2/opam-full-1.2.2.tar.gz)
-  MD5: 7d348c2898795e9f325fb80eaaf5eae8
-  SHA384: 3a0a7868b5f510c1248959ed350eecacfe1abd886e373fd31066ce10871354010ef057934df026e5fad389ead6c2857d
+ - MD5: 7d348c2898795e9f325fb80eaaf5eae8
+ - SHA384: 3a0a7868b5f510c1248959ed350eecacfe1abd886e373fd31066ce10871354010ef057934df026e5fad389ead6c2857d
 
 Follow the instructions in the included
 [`README.md`](https://github.com/ocaml/opam#readme) to get opam built and
@@ -181,16 +182,3 @@ installed from there.
 > ```
 > OCAMLPARAM="safe-string=0,_" make lib-ext
 > ```
-
-
-#### Using ocamlbrew
-
-[ocamlbrew](https://github.com/hcarty/ocamlbrew) is a script that can bootstrap
-an OCaml environment including opam, from source. This option does not require
-an existing OCaml installation, or a pre-compiled opam binary for your platform.
-To bootstrap a new OCaml environment including opam, make sure that you have the
-necessary pre-requisites installed to run ocamlbrew, and then run:
-
-```
-curl -kL https://raw.github.com/hcarty/ocamlbrew/master/ocamlbrew-install | env OCAMLBREW_FLAGS="-r" bash
-```
