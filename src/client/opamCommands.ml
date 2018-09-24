@@ -610,16 +610,16 @@ let list ?(force_search=false) () =
       OpamListCommand.filter ~base:all st filter
     in
     if not depexts then
-      if not silent then
-        OpamListCommand.display st format results
-      else if OpamPackage.Set.is_empty results then
-        OpamStd.Sys.exit_because `False
+      (if not silent then
+         OpamListCommand.display st format results
+       else if OpamPackage.Set.is_empty results then
+         OpamStd.Sys.exit_because `False)
     else
-      let results_depexts = OpamListCommand.get_depexts st results in
-      if not silent then
-        OpamListCommand.print_depexts results_depexts
-      else if OpamStd.String.Set.is_empty results_depexts then
-        OpamStd.Sys.exit_because `False
+    let results_depexts = OpamListCommand.get_depexts st results in
+    if not silent then
+      OpamListCommand.print_depexts results_depexts
+    else if OpamStd.String.Set.is_empty results_depexts then
+      OpamStd.Sys.exit_because `False
   in
   Term.(const list $global_options $package_selection $state_selector
         $no_switch $depexts $vars $repos $owns_file $disjunction $search
