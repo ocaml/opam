@@ -5116,22 +5116,9 @@ if test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"; then :
 fi
 
 
+if test "x$MCCS_ENABLED" = "xtrue"; then :
 
-echo
-
-
-if test "x${enable_checks}" != "xno" && {
-       test "x$OCAML_PKG_extlib" = "xno" ||
-       test "x$OCAML_PKG_re" = "xno" ||
-       test "x$OCAML_PKG_cmdliner" = "xno" ||
-       test "x$OCAML_PKG_ocamlgraph" = "xno" ||
-       test "x$OCAML_PKG_cudf" = "xno" ||
-       test "x$OCAML_PKG_dose3_common" = "xno" ||
-       test "x$OCAML_PKG_opam_file_format" = "xno" ||
-       test "x$OCAML_PKG_cppo" = "xno" ||
-       test "x$OCAML_PKG_mccs$MCCS_ENABLED$MCCS_DEFAULT" = "xnotrue"; }; then :
-
-  if test "x$MCCS_ENABLED" = "xtrue" -a "x${CCOMP_TYPE}" != "xmsvc"; then :
+  if test "x${CCOMP_TYPE}" != "xmsvc"; then :
 
     ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
@@ -5401,13 +5388,34 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 else
 
-        as_fn_error $? "A C++ compiler is required to build mccs" "$LINENO" 5
+        if test "x${enable_checks}" != "xno"; then :
+
+          as_fn_error $? "A C++ compiler is required to build mccs" "$LINENO" 5
 
 fi
 
 fi
 
 fi
+
+fi
+
+fi
+
+
+echo
+
+
+if test "x${enable_checks}" != "xno" && {
+       test "x$OCAML_PKG_extlib" = "xno" ||
+       test "x$OCAML_PKG_re" = "xno" ||
+       test "x$OCAML_PKG_cmdliner" = "xno" ||
+       test "x$OCAML_PKG_ocamlgraph" = "xno" ||
+       test "x$OCAML_PKG_cudf" = "xno" ||
+       test "x$OCAML_PKG_dose3_common" = "xno" ||
+       test "x$OCAML_PKG_opam_file_format" = "xno" ||
+       test "x$OCAML_PKG_cppo" = "xno" ||
+       test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue";}; then :
 
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"
