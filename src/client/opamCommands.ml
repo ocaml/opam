@@ -1549,9 +1549,9 @@ let repository =
     (* using an unbreakable space here will indent the text paragraph at the level
        of the previous labelled paragraph, which is what we want for our note. *)
     "$(b,Note:) By default, the repository is only added to the current \
-     switch. To add a switch to other repositories, you need to use the \
+     switch. To add a repository to other switches, you need to use the \
      $(b,--all) or $(b,--set-default) options (see below). If you want to \
-     enable a repository only to install of of its switches, you may be \
+     enable a repository only to install its switches, you may be \
      looking for $(b,opam switch create --repositories=REPOS).";
     "remove", `remove, ["NAME..."],
     "Unselects the given repositories so that they will not be used to get \
