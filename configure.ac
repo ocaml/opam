@@ -371,10 +371,11 @@ bindir="`eval echo ${bindir}`"
 mandir="`eval echo ${mandir}`"
 mandir="`eval echo ${mandir}`"
 
-AS_IF([{ test "x$MCCS_ENABLED" = "xfalse" && test "x${hasalldeps}" = "x"; } ||
-       { test "x$OCAML_PKG_mccs" = "xno" && test "x${hasalldeps}" = "xtrue"; }],
-      [echo "Opam will be built WITHOUT a built-in solver"],
-      [echo "Opam will be built WITH a built-in solver"])
+AS_IF([test "x$MCCS_ENABLED" = "xfalse"],[
+  echo "Opam will be built WITHOUT a built-in solver"
+],[
+  echo "Opam will be built WITH a built-in solver"
+])
 echo
 echo Executables will be installed in ${bindir}
 echo Manual pages will be installed in ${mandir}
