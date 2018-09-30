@@ -5112,7 +5112,7 @@ $as_echo "not found" >&6; }
 
 
 if test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"; then :
-  as_fn_error $? "Option --without-mccs is not supported. You need to uninstall the 'mccs' package" "$LINENO" 5
+  as_fn_error $? "Option --without-mccs is not available without uninstalling the 'mccs' package" "$LINENO" 5
 fi
 
 

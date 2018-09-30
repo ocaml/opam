@@ -279,7 +279,7 @@ AC_CHECK_OCAML_PKG([mccs])
 AC_CHECK_OCAML_PKG([cppo])
 
 AS_IF([test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"],
-      [AC_MSG_ERROR([Option --without-mccs is not supported. You need to uninstall the 'mccs' package])])
+      [AC_MSG_ERROR([Option --without-mccs is not available without uninstalling the 'mccs' package])])
 
 dnl -- that's what we would like to do, but no way to disable mccs in jbuilder
 dnl -- if it's installed, at the moment
