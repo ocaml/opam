@@ -232,7 +232,9 @@ if test x"$FETCH" = x"curl" ; then
 elif test x"$FETCH" = x"wget" ; then
   AC_SUBST(fetch, "wget $wget_certificate_check -O \$(2) \$(1)")
 elif test x"${enable_checks}" != x"no" ; then
-  AC_MSG_ERROR([You must have either curl or wget installed.])
+  if ! ${MAKE:-make} -q -C src_ext has-archives 2>/dev/null ; then
+    AC_MSG_ERROR([You must have either curl or wget installed.])
+  fi
 fi
 
 AS_IF([test "x${with_private_runtime}" != "xno"],[
