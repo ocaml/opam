@@ -55,7 +55,7 @@ case "$COMMAND" in
     build)
         # mount unusual path in ro
         if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
-           add_mounts ro $(echo ${OPAM_USER_PATH_RO} | sed 's|:| |g')
+           add_mounts ro ${OPAM_USER_PATH_RO://:/ }
         fi
         add_mounts ro "$OPAM_SWITCH_PREFIX"
         add_mounts rw "$PWD"
@@ -64,7 +64,7 @@ case "$COMMAND" in
     install)
         # mount unusual path in ro
         if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
-           add_mounts ro  $(echo ${OPAM_USER_PATH_RO} | sed 's|:| |g')
+           add_mounts ro ${OPAM_USER_PATH_RO://:/ }
         fi
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
@@ -73,7 +73,7 @@ case "$COMMAND" in
     remove)
         # mount unusual path in ro
         if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
-           add_mounts ro $(echo ${OPAM_USER_PATH_RO} | sed 's|:| |g')
+           add_mounts ro ${OPAM_USER_PATH_RO://:/ }
         fi
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
