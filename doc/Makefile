@@ -26,8 +26,8 @@ ifndef OPAM_INSTALLER
   OPAM_INSTALLER_DEP := $(shell $(JBUILDER) exec -- which opam-installer)
 endif
 
-.PHONY: man html dev-manual pages
-all: man dev html pages
+.PHONY: man html pages
+all: man html pages
 
 man: man.build
 	@
@@ -62,9 +62,6 @@ man-html: man
 	echo '</ul>' >>$@/index.html
 	echo '</body></html>' >>$@/index.html
 
-dev:
-	$(MAKE) -C dev-manual
-
 html:
 	rm -rf html
 	cd .. && $(JBUILDER) build @doc
@@ -85,4 +82,3 @@ pages: $(PAGES:.md=.html)
 
 clean:
 	rm -rf dependencies.dot man html/ocamldoc man-html pages/*.html html/index.html man.build
-	$(MAKE) -C dev-manual clean
