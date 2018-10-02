@@ -8,12 +8,14 @@ FULL_ARCHIVE_URL = https://github.com/ocaml/opam/releases/download/$(VERSION)/op
 TARGETS = x86_64-linux i686-linux armhf-linux arm64-linux
 # todo: x86_64-darwin
 
+SED ?= sed
+
 OCAMLV = 4.04.2
 # currently hardcoded in Dockerfile.in
 OCAML_URL = https://caml.inria.fr/pub/distrib/ocaml-$(basename $(OCAMLV))/ocaml-$(OCAMLV).tar.gz
 
 HOST_OS = $(shell uname -s | tr A-Z a-z)
-HOST = $(shell uname -m | sed 's/amd64/x86_64/')-$(HOST_OS)
+HOST = $(shell uname -m | $(SED) 's/amd64/x86_64/')-$(HOST_OS)
 
 all: $(patsubst %,out/opam-$(VERSION)-%,$(TARGETS))
 
@@ -21,7 +23,7 @@ out/opam-full-$(VERSION).tar.gz:
 	mkdir -p out
 	cd out && curl -OfL $(FULL_ARCHIVE_URL) || { \
 	  git clone $(GIT_URL) -b $(TAG) --depth 1 opam-full-$(VERSION); \
-	  sed -i 's/^AC_INIT(opam,.*)/AC_INIT(opam,$(OPAM_VERSION))/' \
+	  $(SED) -i 's/^AC_INIT(opam,.*)/AC_INIT(opam,$(OPAM_VERSION))/' \
 	    opam-full-$(VERSION)/configure.ac; \
 	  $(MAKE) -C opam-full-$(VERSION) configure download-ext; \
 	  tar cz --exclude-vcs opam-full-$(VERSION) -f $(notdir $@); \
@@ -29,13 +31,13 @@ out/opam-full-$(VERSION).tar.gz:
 	}
 
 build/Dockerfile.x86_64-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/amd64-jessie/g' $^ | sed 's/%CONF%//g' >$@
+	mkdir -p build && $(SED) 's/%TARGET_TAG%/amd64-jessie/g' $^ | $(SED) 's/%CONF%//g' >$@
 build/Dockerfile.i686-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/i386-jessie/g' $^ | sed 's/%CONF%/-host i686-linux/g' >$@
+	mkdir -p build && $(SED) 's/%TARGET_TAG%/i386-jessie/g' $^ | $(SED) 's/%CONF%/-host i686-linux/g' >$@
 build/Dockerfile.armhf-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/armhf-jessie/g' $^ | sed 's/%CONF%//g' >$@
+	mkdir -p build && $(SED) 's/%TARGET_TAG%/armhf-jessie/g' $^ | $(SED) 's/%CONF%//g' >$@
 build/Dockerfile.arm64-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/arm64-jessie/g' $^ | sed 's/%CONF%//g' >$@
+	mkdir -p build && $(SED) 's/%TARGET_TAG%/arm64-jessie/g' $^ | $(SED) 's/%CONF%//g' >$@
 
 
 build/%.image: build/Dockerfile.%

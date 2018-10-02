@@ -25,7 +25,8 @@ Either from an existing opam installation, use `opam pin add opam-devel
 * Run `make lib-ext` as advertised by `./configure` if you don't have the
   dependencies installed. This will locally take care of all OCaml dependencies
   for you (downloading them, unless you used the inclusive archive we provide
-  for each release).
+  for each release). This step requires GNU 'sed' and assumes it's named 'sed'.
+  To specify a different path or name, define the variable 'SED'.
 * Run `make`
 * Run `make install`
 

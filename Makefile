@@ -17,6 +17,7 @@ else
 endif
 
 OPAMINSTALLER = ./opam-installer$(EXE)
+SED ?= sed
 
 ALWAYS:
 	@
@@ -95,7 +96,7 @@ endif
 
 opam-devel.install: $(JBUILDER_DEP)
 	$(JBUILDER) build $(JBUILDER_ARGS) -p opam opam.install
-	sed -e "s/bin:/libexec:/" opam.install > $@
+	$(SED) -e "s/bin:/libexec:/" opam.install > $@
 
 opam-%.install: $(JBUILDER_DEP)
 	$(JBUILDER) build $(JBUILDER_ARGS) -p opam-$* $@
