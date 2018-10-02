@@ -103,8 +103,14 @@ cave resolve -x repository/ocaml-unofficial
 
 #### [Fedora](http://fedoraproject.org), [CentOS](http://centos.org) and RHEL
 
-No native packages at the moment, you will need to use our pre-built binaries,
-or build from sources.
+The opam package for Fedora can be installed with the command:
+
+```
+dnf install opam
+```
+
+There is not currently a package for CentOS/RHEL. You will need to use our
+pre-built binaries, or build from sources.
 
 #### Mageia
 
