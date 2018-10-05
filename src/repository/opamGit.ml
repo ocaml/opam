@@ -85,7 +85,7 @@ module VCS : OpamVCS.VCS = struct
          on 'fetch HASH' when HASH isn't available locally already).
          Also, remove the [--update-shallow] option in case git is so old that
          it didn't exist yet, as that is not needed in the general case *)
-      git repo_root [ "fetch" ; "-q"; origin ] @@> fun r ->
+      git repo_root [ "fetch" ; "-q" ] @@> fun r ->
       OpamSystem.raise_on_process_error r;
       (* retry to fetch the specific branch *)
       git repo_root [ "fetch" ; "-q"; origin; refspec ] @@> fun r ->
