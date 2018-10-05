@@ -613,7 +613,10 @@ let lint ?check_extra_files t =
     cond 56 `Warning
       "It is discouraged for non-compiler packages to use 'setenv:'"
       (t.env <> [] && not (has_flag Pkgflag_Compiler t));
-  ]
+    cond 57 `Error
+      "Synopsis and description must not be both empty"
+      (t.descr = None || t.descr = Some OpamFile.Descr.empty);
+   ]
   in
   format_errors @
   OpamStd.List.filter_map (fun x -> x) warnings
