@@ -33,8 +33,8 @@ MD5_dose3 = e7d4b1840383c6732f29a47c08ba5650
 
 $(call PKG_SAME,dose3)
 
-URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+8.tar.gz
-MD5_mccs = 987c4970715713f21e6c79b4f3cba430
+URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+9.tar.gz
+MD5_mccs = 95aabb806fe6cbfab92a98b2a88d79c3
 
 $(call PKG_SAME,mccs)
 
