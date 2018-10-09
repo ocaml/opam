@@ -45,9 +45,9 @@ You may also want to browse the [library APIs](api/).
 
 #### 🐫  What changes does opam do to my filesystem?
 
-opam is designed to be run strictly as user (non-root), and apart for the
-explicit options provided during `opam init`, only writes within `~/.opam` (and
-`/tmp`). This directory — the default "opam root" — contains configuration,
+opam is designed to be run strictly as user (non-root), and except for the
+explicit options provided during `opam init`, opam only writes within `~/.opam`
+(and `/tmp`). This directory — the default "opam root" — contains configuration,
 various internal data, a cache of downloaded archives, and your OCaml
 installations.
 
@@ -201,7 +201,7 @@ need more.
 
 ---
 
-#### 🐫  Some package fail during compilation, complaining about missing dependencies ("m4", "libgtk", etc.)
+#### 🐫  Some packages fail during compilation, complaining about missing dependencies ("m4", "libgtk", etc.)
 
 They probably depend on system, non-OCaml libraries: they need to be installed
 using your system package manager (apt-get, yum, pacman, homebrew, etc.) since
@@ -384,9 +384,9 @@ ocamlfind, or just remove the problematic files.
 #### 🐫  opam is slow on top of NFS. How can I make it faster?
 
 opam root is usually located in the `home` directory, which, on top of NFS,
-slow down opam operations. Locating opam root in `/tmp` is neither a solution,
-you could loose your opam configuration at each reboot.
+slows down opam operations. Locating opam root in `/tmp` is not a solution:
+you could lose your opam configuration at each reboot.
 
 You can use the [`nfsopam`](https://github.com/UnixJunkie/nfsopam) script to
-have the best of both world: persistence of NFS directory and fast operation of
-local directory.
+have the best of both worlds: persistence of NFS directories and fast operations
+of local directories.
