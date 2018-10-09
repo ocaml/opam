@@ -128,6 +128,9 @@ archives-pkg: $(PKG_EXTS:=.pkgdownload)
 cache-archives: $(SRC_EXTS:=.cache) $(PKG_EXTS:=.pkgcache) ocaml.cache flexdll.cache
 	@
 
+has-archives: $(addprefix archives/, $(notdir $(URL_ocaml)) $(notdir $(URL_flexdll)) $(ARCHIVES) $(filter-out $(ARCHIVES), $(foreach pkg,$(PKG_EXTS), $(notdir $(URL_PKG_$(pkg))))))
+	@
+
 %.cache:
 	@mkdir -p archives
 	@[ -e archives/$(notdir $(URL_$*)) ] || \

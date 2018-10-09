@@ -4753,7 +4753,9 @@ elif test x"$FETCH" = x"wget" ; then
   fetch="wget $wget_certificate_check -O \$(2) \$(1)"
 
 elif test x"${enable_checks}" != x"no" ; then
-  as_fn_error $? "You must have either curl or wget installed." "$LINENO" 5
+  if ! ${MAKE:-make} -q -C src_ext has-archives 2>/dev/null ; then
+    as_fn_error $? "You must have either curl or wget installed." "$LINENO" 5
+  fi
 fi
 
 if test "x${with_private_runtime}" != "xno"; then :
@@ -5112,26 +5114,13 @@ $as_echo "not found" >&6; }
 
 
 if test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"; then :
-  as_fn_error $? "Option --without-mccs is not supported. You need to uninstall the 'mccs' package" "$LINENO" 5
+  as_fn_error $? "Option --without-mccs is not available without uninstalling the 'mccs' package" "$LINENO" 5
 fi
 
 
+if test "x$MCCS_ENABLED" = "xtrue"; then :
 
-echo
-
-
-if test "x${enable_checks}" != "xno" && {
-       test "x$OCAML_PKG_extlib" = "xno" ||
-       test "x$OCAML_PKG_re" = "xno" ||
-       test "x$OCAML_PKG_cmdliner" = "xno" ||
-       test "x$OCAML_PKG_ocamlgraph" = "xno" ||
-       test "x$OCAML_PKG_cudf" = "xno" ||
-       test "x$OCAML_PKG_dose3_common" = "xno" ||
-       test "x$OCAML_PKG_opam_file_format" = "xno" ||
-       test "x$OCAML_PKG_cppo" = "xno" ||
-       test "x$OCAML_PKG_mccs$MCCS_ENABLED$MCCS_DEFAULT" = "xnotrue"; }; then :
-
-  if test "x$MCCS_ENABLED" = "xtrue" -a "x${CCOMP_TYPE}" != "xmsvc"; then :
+  if test "x${CCOMP_TYPE}" != "xmsvc"; then :
 
     ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
@@ -5401,13 +5390,34 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 else
 
-        as_fn_error $? "A C++ compiler is required to build mccs" "$LINENO" 5
+        if test "x${enable_checks}" != "xno"; then :
+
+          as_fn_error $? "A C++ compiler is required to build mccs" "$LINENO" 5
 
 fi
 
 fi
 
 fi
+
+fi
+
+fi
+
+
+echo
+
+
+if test "x${enable_checks}" != "xno" && {
+       test "x$OCAML_PKG_extlib" = "xno" ||
+       test "x$OCAML_PKG_re" = "xno" ||
+       test "x$OCAML_PKG_cmdliner" = "xno" ||
+       test "x$OCAML_PKG_ocamlgraph" = "xno" ||
+       test "x$OCAML_PKG_cudf" = "xno" ||
+       test "x$OCAML_PKG_dose3_common" = "xno" ||
+       test "x$OCAML_PKG_opam_file_format" = "xno" ||
+       test "x$OCAML_PKG_cppo" = "xno" ||
+       test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue";}; then :
 
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"
@@ -6629,11 +6639,14 @@ bindir="`eval echo ${bindir}`"
 mandir="`eval echo ${mandir}`"
 mandir="`eval echo ${mandir}`"
 
-if { test "x$MCCS_ENABLED" = "xfalse" && test "x${hasalldeps}" = "x"; } ||
-       { test "x$OCAML_PKG_mccs" = "xno" && test "x${hasalldeps}" = "xtrue"; }; then :
+if test "x$MCCS_ENABLED" = "xfalse"; then :
+
   echo "Opam will be built WITHOUT a built-in solver"
+
 else
+
   echo "Opam will be built WITH a built-in solver"
+
 fi
 echo
 echo Executables will be installed in ${bindir}

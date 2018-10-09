@@ -232,7 +232,9 @@ if test x"$FETCH" = x"curl" ; then
 elif test x"$FETCH" = x"wget" ; then
   AC_SUBST(fetch, "wget $wget_certificate_check -O \$(2) \$(1)")
 elif test x"${enable_checks}" != x"no" ; then
-  AC_MSG_ERROR([You must have either curl or wget installed.])
+  if ! ${MAKE:-make} -q -C src_ext has-archives 2>/dev/null ; then
+    AC_MSG_ERROR([You must have either curl or wget installed.])
+  fi
 fi
 
 AS_IF([test "x${with_private_runtime}" != "xno"],[
@@ -279,7 +281,7 @@ AC_CHECK_OCAML_PKG([mccs])
 AC_CHECK_OCAML_PKG([cppo])
 
 AS_IF([test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"],
-      [AC_MSG_ERROR([Option --without-mccs is not supported. You need to uninstall the 'mccs' package])])
+      [AC_MSG_ERROR([Option --without-mccs is not available without uninstalling the 'mccs' package])])
 
 dnl -- that's what we would like to do, but no way to disable mccs in jbuilder
 dnl -- if it's installed, at the moment
@@ -287,6 +289,23 @@ dnl AS_IF([test "x${with_mccs}" != "xno"],
 dnl      AC_CHECK_OCAML_PKG([mccs]),
 dnl      [echo "checking for OCaml findlib package mccs... disabled"
 dnl       AC_SUBST(OCAML_PKG_mccs,"no")])
+
+AS_IF([test "x$MCCS_ENABLED" = "xtrue"],[
+  AS_IF([test "x${CCOMP_TYPE}" != "xmsvc"],[
+    AC_PROG_CXX
+    # Curiously, CXX=g++ && GXX= seems to be how autoconf "signals" that no C++
+    # compiler was found.
+    AS_IF([test "x$CXX" = "xg++" -a "x$GXX" != "xyes"],[
+      AS_IF([test "x$MCCS_DEFAULT" = "xyes"],[
+        AC_SUBST(MCCS_ENABLED,false)
+      ],[
+        AS_IF([test "x${enable_checks}" != "xno"],[
+          AC_MSG_ERROR([A C++ compiler is required to build mccs])
+        ])
+      ])
+    ])
+  ])
+])
 
 
 dnl echo
@@ -308,20 +327,7 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_dose3_common" = "xno" ||
        test "x$OCAML_PKG_opam_file_format" = "xno" ||
        test "x$OCAML_PKG_cppo" = "xno" ||
-       test "x$OCAML_PKG_mccs$MCCS_ENABLED$MCCS_DEFAULT" = "xnotrue"; }],[
-  AS_IF([test "x$MCCS_ENABLED" = "xtrue" -a "x${CCOMP_TYPE}" != "xmsvc"],[
-    AC_PROG_CXX
-    # Curiously, CXX=g++ && GXX= seems to be how autoconf "signals" that no C++
-    # compiler was found.
-    AS_IF([test "x$CXX" = "xg++" -a "x$GXX" != "xyes"],[
-      AS_IF([test "x$MCCS_DEFAULT" = "xyes"],[
-        AC_SUBST(MCCS_ENABLED,false)
-      ],[
-        AC_MSG_ERROR([A C++ compiler is required to build mccs])
-      ])
-    ])
-  ])
-
+       test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue";}],[
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"
   echo "'opam' binary, run 'make lib-ext' to download and include them."
@@ -367,10 +373,11 @@ bindir="`eval echo ${bindir}`"
 mandir="`eval echo ${mandir}`"
 mandir="`eval echo ${mandir}`"
 
-AS_IF([{ test "x$MCCS_ENABLED" = "xfalse" && test "x${hasalldeps}" = "x"; } ||
-       { test "x$OCAML_PKG_mccs" = "xno" && test "x${hasalldeps}" = "xtrue"; }],
-      [echo "Opam will be built WITHOUT a built-in solver"],
-      [echo "Opam will be built WITH a built-in solver"])
+AS_IF([test "x$MCCS_ENABLED" = "xfalse"],[
+  echo "Opam will be built WITHOUT a built-in solver"
+],[
+  echo "Opam will be built WITH a built-in solver"
+])
 echo
 echo Executables will be installed in ${bindir}
 echo Manual pages will be installed in ${mandir}
