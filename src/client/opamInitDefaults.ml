@@ -66,7 +66,7 @@ let bwrap_cmd = "bwrap"
 let bwrap_filter = linux_filter
 let bwrap_string () = Printf.sprintf
     "Sandboxing tool %s was not found. You should install 'bubblewrap'. \
-     See http://opam.ocaml.org/doc/2.0/FAQ.html#Why-opam-asks-me-to-install-bwrap."
+     See https://opam.ocaml.org/doc/FAQ.html#Why-does-opam-require-bwrap."
     bwrap_cmd
 
 let fetch_cmd_user () =
