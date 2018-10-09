@@ -616,7 +616,23 @@ let lint ?check_extra_files t =
     cond 57 `Error
       "Synopsis and description must not be both empty"
       (t.descr = None || t.descr = Some OpamFile.Descr.empty);
-   ]
+    let vars = all_variables ~exclude_post:false t in
+    let exists svar =
+      List.exists (fun v -> v = OpamVariable.Full.of_string svar) vars
+    in
+    let rem_test = exists "test" in
+    let rem_doc = exists "doc" in
+    cond 58 `Warning
+      (let var, s_, nvar =
+         match rem_test, rem_doc with
+         | true, true -> "`test` and `doc`", "s", "s are `with-test` and `with-doc`"
+         | true, false -> "`test`", "", " is `with-test`"
+         | false, true -> "`doc`", "", " is `with-doc`"
+         | _ -> "","",""
+       in
+       Printf.sprintf "Found %s variable%s, predefined one%s" var s_ nvar)
+      (rem_test || rem_doc);
+  ]
   in
   format_errors @
   OpamStd.List.filter_map (fun x -> x) warnings
