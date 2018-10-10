@@ -12,7 +12,20 @@ add_mounts() {
     esac
 }
 
-add_mounts rw "${TMPDIR:-/tmp}"
+if [ -z ${TMPDIR+x} ]; then
+  # If $TMPDIR is not set, some applications use /tmp, so
+  # /tmp must be made readable/writable
+  add_mounts rw /tmp
+  # However, others applications obtain the per-user temporary
+  # directory differently; the latter should be made readable/writable
+  # too and getconf seems to be a robust way to get it
+  if [ -z /usr/bin/getconf ]; then
+    TMP=`getconf DARWIN_USER_TEMP_DIR`
+    add_mounts rw $TMP
+  fi
+else
+  add_mounts rw $TMPDIR
+fi
 
 # C compilers using `ccache` will write to a shared cache directory
 # that remain writeable. ccache seems widespread in some Fedora systems.
