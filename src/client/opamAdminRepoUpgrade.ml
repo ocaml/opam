@@ -237,12 +237,17 @@ let do_upgrade repo_root =
       let opam =
         match OpamFile.OPAM.url opam with
         | Some urlf when OpamFile.URL.checksum urlf = [] ->
-          (match OpamProcess.Job.run (get_url_md5 (OpamFile.URL.url urlf)) with
-           | None -> None
-           | Some hash ->
-             Some
-               (OpamFile.OPAM.with_url (OpamFile.URL.with_checksum [hash] urlf)
-                  opam))
+          let url = OpamFile.URL.url urlf in
+          (match url.OpamUrl.backend with
+           | #OpamUrl.version_control -> Some opam
+           | `rsync when OpamUrl.local_dir url <> None -> Some opam
+           | _ ->
+             (match OpamProcess.Job.run (get_url_md5 url) with
+              | None -> None
+              | Some hash ->
+                Some
+                  (OpamFile.OPAM.with_url (OpamFile.URL.with_checksum [hash] urlf)
+                     opam)))
         | _ -> Some opam
       in
       match opam with
