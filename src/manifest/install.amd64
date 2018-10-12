@@ -1,0 +1,12 @@
+(rule
+  (targets libstdc++-6.dll libwinpthread-1.dll libgcc_s_seh-1.dll)
+  (deps    (:link ../../shell/link_runtime.ml))
+  (action  (run ocaml %{link} %{targets})))
+
+(install
+  (section bin)
+  (files   (Opam.Runtime.amd64.manifest as Opam.Runtime.amd64\Opam.Runtime.amd64.manifest)
+           (libstdc++-6.dll as Opam.Runtime.amd64\libstdc++-6.dll)
+           (libwinpthread-1.dll as Opam.Runtime.amd64\libwinpthread-1.dll)
+           (libgcc_s_seh-1.dll as Opam.Runtime.amd64\libgcc_s_seh-1.dll))
+  (package opam))

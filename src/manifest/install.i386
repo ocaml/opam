@@ -1,0 +1,12 @@
+(rule
+  (targets libstdc++-6.dll libwinpthread-1.dll libgcc_s_sjlj-1.dll)
+  (deps    (:link ../../shell/link_runtime.ml))
+  (action  (run ocaml %{link} %{targets})))
+
+(install
+  (section bin)
+  (files   (Opam.Runtime.x86.manifest as Opam.Runtime.x86\Opam.Runtime.x86.manifest)
+           (libstdc++-6.dll as Opam.Runtime.x86\libstdc++-6.dll)
+           (libwinpthread-1.dll as Opam.Runtime.x86\libwinpthread-1.dll)
+           (libgcc_s_sjlj-1.dll as Opam.Runtime.x86\libgcc_s_sjlj-1.dll))
+  (package opam))

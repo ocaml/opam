@@ -1,6 +1,0 @@
-(jbuild_version 1)
-
-(alias
-  ((name runtest)
-   (deps ((files_recursively_in .) ../src/client/opamMain.exe ../src/tools/opam_check.exe))
-   (action (run make all))))

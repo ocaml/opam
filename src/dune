@@ -1,0 +1,7 @@
+(rule
+  (targets ocaml-flags-configure.sexp)
+  (mode    fallback)
+  (action  (with-stdout-to %{targets} (echo "()"))))
+
+(rule
+  (with-stdout-to ocaml-context-flags.sexp (run ocaml %{dep:../shell/context_flags.ml} flags)))

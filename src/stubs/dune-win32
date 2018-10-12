@@ -1,0 +1,39 @@
+(library
+  (name            opam_stubs)
+  (public_name     opam-core.stubs)
+  (synopsis        "OCaml Package Manager C stubs")
+  (libraries       unix)
+  (flags           (:standard
+                   (:include ../ocaml-flags-standard.sexp)
+                   (:include ../ocaml-flags-configure.sexp)
+                   (:include ../ocaml-context-flags.sexp)))
+  (modules         opamWin32Stubs)
+  (c_names         opamInject opamWindows)
+  (c_flags         (:standard
+                   (:include c-flags.sexp)))
+  (c_library_flags (:standard
+                   (:include c-libraries.sexp)))
+  (wrapped         false))
+
+(rule
+  (targets opam-putenv.exe)
+  (deps    opamInject.c)
+  (action  (run ocaml %{dep:build-putenv.ml} %{targets} %{dep:opam-putenv.c} %{dep:cc64})))
+
+(rule
+  (targets cc64)
+  (mode    fallback)
+  (action  (with-stdout-to %{targets} (echo ""))))
+
+(install
+  (section bin)
+  (package opam)
+  (files   opam-putenv.exe))
+
+(rule
+  (targets c-flags.sexp)
+  (mode    fallback)
+  (action  (with-stdout-to %{targets} (echo "()"))))
+
+(rule
+  (with-stdout-to c-libraries.sexp (run ocaml %{dep:../../shell/context_flags.ml} clibs)))
