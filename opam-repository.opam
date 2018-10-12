@@ -22,6 +22,6 @@ build: [
 ]
 depends: [
   "opam-format" {= "2.0.0"}
-  "jbuilder" {build & >= "1.0+beta17"}
+  "dune" {build & >= "1.2.1"}
 ]
 available: ocaml-version >= "4.02.3"

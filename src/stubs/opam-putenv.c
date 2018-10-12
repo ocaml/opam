@@ -15,7 +15,7 @@
  * #include the code, rather than having to deal with .o(obj) files for
  * different architectures.
  */
-#include "../stubs/opamInject.c"
+#include "opamInject.c"
 
 /*
  * This trivially simple utility takes a single PID and then reads CRLF

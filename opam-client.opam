@@ -25,6 +25,6 @@ depends: [
   "opam-solver" {= "2.0.0"}
   "re" {>= "1.7.2"}
   "cmdliner" {>= "0.9.8"}
-  "jbuilder" {build & >= "1.0+beta20"}
+  "dune" {build & >= "1.2.1"}
 ]
 available: ocaml-version >= "4.02.3"

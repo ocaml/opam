@@ -1,0 +1,6 @@
+(alias
+  (name runtest)
+  (deps (source_tree .) ../src/client/opamMain.exe ../src/tools/opam_check.exe)
+  (action (run make all)))
+
+(ignored_subdirs (packages))

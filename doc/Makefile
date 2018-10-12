@@ -1,19 +1,22 @@
 -include ../Makefile.config
 
-ifeq ($(JBUILDER),)
-  JBUILDER_FILE = ../src_ext/jbuilder/_build/install/default/bin/jbuilder$(EXE)
+ifeq ($(DUNE),)
+  DUNE_EXE = ../src_ext/dune-local/_build/install/default/bin/dune$(EXE)
   ifeq ($(shell command -v cygpath 2>/dev/null),)
-    JBUILDER := $(JBUILDER_FILE)
+    DUNE := $(DUNE_EXE)
   else
-    JBUILDER := $(shell echo "$(JBUILDER_FILE)" | cygpath -f - -a)
+    DUNE := $(shell echo "$(DUNE_EXE)" | cygpath -f - -a)
   endif
 else
-  JBUILDER_FILE=
+  DUNE_EXE=
 endif
 
+DUNE_PROFILE ?= release
+DUNE_ARGS ?= 
+
 ifndef OPAM
-  OPAM = $(JBUILDER) exec -- opam
-  OPAM_DEP := $(shell $(JBUILDER) exec -- which opam)
+  OPAM = $(DUNE) exec --profile=$(DUNE_PROFILE) -- opam
+  OPAM_DEP := $(shell $(DUNE) exec -- which opam)
 endif
 
 TOPICS  = $(shell $(OPAM) help topics)
@@ -22,8 +25,8 @@ TOPICS_ADMIN = cache filter index lint list upgrade
 HELPFMT = --help=groff
 
 ifndef OPAM_INSTALLER
-  OPAM_INSTALLER = $(JBUILDER) exec -- opam-installer
-  OPAM_INSTALLER_DEP := $(shell $(JBUILDER) exec -- which opam-installer)
+  OPAM_INSTALLER = $(DUNE) exec --profile=$(DUNE_PROFILE) -- opam-installer
+  OPAM_INSTALLER_DEP := $(shell $(DUNE) exec -- which opam-installer)
 endif
 
 .PHONY: man html pages
@@ -64,7 +67,7 @@ man-html: man
 
 html:
 	rm -rf html
-	cd .. && $(JBUILDER) build @doc
+	cd .. && $(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) @doc
 	cp -r ../_build/default/_doc/_html html
 	sed 's/%{OPAMVERSION}%/'$(version)'/g' index.html > html/index.html
 # Not to break older links, add manpages to the `ocamldoc` dir

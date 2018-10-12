@@ -48,10 +48,10 @@ MD5_result = 4beebefd41f7f899b6eeba7414e7ae01
 
 $(call PKG_SAME,result)
 
-URL_jbuilder = https://github.com/ocaml/dune/releases/download/1.0+beta20/jbuilder-1.0.beta20.tbz
-MD5_jbuilder = 09b8a90c6e3333aef2cac947424c1d66
+URL_dune-local = https://github.com/ocaml/dune/releases/download/1.2.1/dune-1.2.1.tbz
+MD5_dune-local = f96bdf1a893a2178c2ad9c388439bd18
 
-$(call PKG_SAME,jbuilder)
+$(call PKG_SAME,dune-local)
 
 URL_PKG_findlib = http://download.camlcity.org/download/findlib-1.8.0.tar.gz
 MD5_PKG_findlib = a710c559667672077a93d34eb6a42e5b

@@ -1,0 +1,27 @@
+(library
+  (name        opam_core)
+  (public_name opam-core)
+  (synopsis    "OCaml Package Manager core internal stdlib")
+  (libraries   re ocamlgraph unix bigarray
+               (select opamStubs.ml from
+                       (opam-core.stubs -> opamStubs.ml.win32)
+                       (                -> opamStubs.ml.dummy)))
+  (flags       (:standard
+               (:include ../ocaml-flags-standard.sexp)
+               (:include ../ocaml-flags-configure.sexp)
+               (:include ../ocaml-context-flags.sexp)))
+  (preprocess  (per_module
+                  ((action (run %{bin:cppo} -V OCAML:%{ocaml_version} %{input-file})) opamCompat)
+                  ((action (run %{bin:cppo} %{read-lines:developer} %{input-file})) opamCoreConfig)
+                  ((action (run %{bin:cppo} -D "VERSION %{read-lines:version}" %{input-file})) opamVersion)))
+  (wrapped     false))
+
+(rule
+  (targets version)
+  (deps    ../../shell/get_version.ml ../../configure.ac)
+  (action  (with-stdout-to %{targets} (run ocaml ../../shell/get_version.ml ../../configure.ac))))
+
+(rule
+  (targets developer)
+  (mode    fallback)
+  (action  (with-stdout-to %{targets} (echo ""))))

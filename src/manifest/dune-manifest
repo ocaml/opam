@@ -1,0 +1,36 @@
+(library
+  (name            opam_manifest)
+  (public_name     opam-client.manifest)
+  (c_names         dummy)
+  (c_library_flags ("src/manifest/opam-manifest.o"))
+  (synopsis        "mingw-w64 runtime manifest"))
+
+(rule
+  (targets dummy.c)
+  (deps    opam-manifest.o)
+  (action  (with-stdout-to %{targets} (echo ""))))
+
+(rule
+  (targets opam-manifest.o)
+  (deps    (:rcfile opam.rc))
+  (action  (system "%{read-lines:tool-arch}-w64-mingw32-windres %{rcfile} %{targets}")))
+
+(rule
+  (with-stdout-to tool-arch (run ocaml %{dep:../../shell/context_flags.ml} mingw-arch)))
+
+(rule
+  (targets opam.exe.manifest)
+  (deps    opam-mingw.xmlf opam-mingw64.xmlf)
+  (action  (with-stdout-to %{targets}
+             (progn (echo "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n")
+                    (echo "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">\n")
+                    (system "cat opam-%{ocaml-config:system}.xmlf 2> %{null} || type opam-%{ocaml-config:system}.xmlf")
+                    (cat default-manifest.xmlf)
+                    (echo "</assembly>")))))
+
+(rule
+  (targets opam.rc)
+  (deps    (:manifest opam.exe.manifest))
+  (action  (with-stdout-to opam.rc (echo "#include <winuser.h>\nCREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST %{manifest}"))))
+
+(include install.inc)

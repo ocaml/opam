@@ -606,16 +606,14 @@ OCAML_PKG_unix
 CONF_MANIFEST_O
 RUNTIME_GCC_S
 MANIFEST_ARCH
-TOOL_ARCH
 fetch
 LN_S
 BUNZIP2
 PATCH
-JBUILDER
+DUNE
 FETCH
 OCAMLFIND
 OCAMLOBJINFO
-CC64_JBUILD
 INC_PREPEND
 LIB_PREPEND
 PATH_PREPEND
@@ -1343,7 +1341,6 @@ Optional Features:
   --disable-certificate-check
                           Do not check the certificate of opam's dependency
                           archives
-
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -3951,10 +3948,16 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 if test "x${enable_developer_mode}" = "xyes"; then :
+
   DEVELOPER=true
 
+  echo "-D DEVELOPER" > src/core/developer
+
 else
+
   DEVELOPER=false
+
+  rm -f src/core/developer
 
 fi
 
@@ -3979,7 +3982,7 @@ if test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"; then :
 
   if test "x${CCOMP_TYPE}" = "xmsvc"; then :
 
-    CONF_CFLAGS="/WX"
+    CONF_CFLAGS="\"/WX\""
 
 else
 
@@ -4113,7 +4116,8 @@ fi
 
     if  test "x${CC64}" != "xno" ; then :
 
-      CC64_JBUILD="(run ${CC64} -o \"\${@}\" -I ../core -Wdeclaration-after-statement \${<})"
+      echo "${CC64} -o " > src/stubs/cc64
+      echo " -Wdeclaration-after-statement " >> src/stubs/cc64
 
 fi
 
@@ -4156,8 +4160,14 @@ else
 $as_echo "from $MSVS_NAME" >&6; }
       CL_FULL="`PATH="${MSVS_PATH}:${PATH}" which cl | cygpath -f - -w`"
       MSVS_PATH="`echo "${MSVS_PATH}" | cygpath -f - -wp`"
-      CC64_JBUILD="(setenv PATH \"${MSVS_PATH}\" (setenv LIB \"${MSVS_LIB};${LIB}\" (setenv INCLUDE \"${MSVS_INC};${INCLUDE}\" (run \"${CL_FULL}\" /nologo \"/Fe\${@}\" /I../core \${<}))))"
-      CC64_JBUILD="$(echo $CC64_JBUILD|sed -e 's/\\/\\\\/g')"
+      echo "cl /nologo /Fe" > src/stubs/cc64
+      echo " " >> src/stubs/cc64
+      echo "PATH" >> src/stubs/cc64
+      echo "${MSVS_PATH}" >> src/stubs/cc64
+      echo "LIB" >> src/stubs/cc64
+      echo "${MSVS_LIB}" >> src/stubs/cc64
+      echo "INCLUDE" >> src/stubs/cc64
+      echo "${MSVS_INC}" >> src/stubs/cc64
 
 fi
 
@@ -4166,22 +4176,10 @@ fi
 
     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Complementary C compiler not found - opam-putenv will not be built" >&5
 $as_echo "$as_me: WARNING: Complementary C compiler not found - opam-putenv will not be built" >&2;}
-    BUILD_PUTENV=0
-    CC64_JBUILD=
-
-else
-
-    BUILD_PUTENV=1
 
 fi
 
-else
-
-  BUILD_PUTENV=0
-  CC64_JBUILD=
-
 fi
-
 
   if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ocamlobjinfo", so it can be a program name with args.
@@ -4450,15 +4448,15 @@ test -n "$FETCH" || FETCH="no"
 
 
 if test -n "$ac_tool_prefix"; then
-  # Extract the first word of "${ac_tool_prefix}jbuilder", so it can be a program name with args.
-set dummy ${ac_tool_prefix}jbuilder; ac_word=$2
+  # Extract the first word of "${ac_tool_prefix}dune", so it can be a program name with args.
+set dummy ${ac_tool_prefix}dune; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_JBUILDER+:} false; then :
+if ${ac_cv_prog_DUNE+:} false; then :
   $as_echo_n "(cached) " >&6
 else
-  if test -n "$JBUILDER"; then
-  ac_cv_prog_JBUILDER="$JBUILDER" # Let the user override the test.
+  if test -n "$DUNE"; then
+  ac_cv_prog_DUNE="$DUNE" # Let the user override the test.
 else
 as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
 for as_dir in $PATH
@@ -4467,7 +4465,7 @@ do
   test -z "$as_dir" && as_dir=.
     for ac_exec_ext in '' $ac_executable_extensions; do
   if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_JBUILDER="${ac_tool_prefix}jbuilder"
+    ac_cv_prog_DUNE="${ac_tool_prefix}dune"
     $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
     break 2
   fi
@@ -4477,10 +4475,10 @@ IFS=$as_save_IFS
 
 fi
 fi
-JBUILDER=$ac_cv_prog_JBUILDER
-if test -n "$JBUILDER"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $JBUILDER" >&5
-$as_echo "$JBUILDER" >&6; }
+DUNE=$ac_cv_prog_DUNE
+if test -n "$DUNE"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $DUNE" >&5
+$as_echo "$DUNE" >&6; }
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
@@ -4488,17 +4486,17 @@ fi
 
 
 fi
-if test -z "$ac_cv_prog_JBUILDER"; then
-  ac_ct_JBUILDER=$JBUILDER
-  # Extract the first word of "jbuilder", so it can be a program name with args.
-set dummy jbuilder; ac_word=$2
+if test -z "$ac_cv_prog_DUNE"; then
+  ac_ct_DUNE=$DUNE
+  # Extract the first word of "dune", so it can be a program name with args.
+set dummy dune; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_ac_ct_JBUILDER+:} false; then :
+if ${ac_cv_prog_ac_ct_DUNE+:} false; then :
   $as_echo_n "(cached) " >&6
 else
-  if test -n "$ac_ct_JBUILDER"; then
-  ac_cv_prog_ac_ct_JBUILDER="$ac_ct_JBUILDER" # Let the user override the test.
+  if test -n "$ac_ct_DUNE"; then
+  ac_cv_prog_ac_ct_DUNE="$ac_ct_DUNE" # Let the user override the test.
 else
 as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
 for as_dir in $PATH
@@ -4507,7 +4505,7 @@ do
   test -z "$as_dir" && as_dir=.
     for ac_exec_ext in '' $ac_executable_extensions; do
   if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_ac_ct_JBUILDER="jbuilder"
+    ac_cv_prog_ac_ct_DUNE="dune"
     $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
     break 2
   fi
@@ -4517,17 +4515,17 @@ IFS=$as_save_IFS
 
 fi
 fi
-ac_ct_JBUILDER=$ac_cv_prog_ac_ct_JBUILDER
-if test -n "$ac_ct_JBUILDER"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_JBUILDER" >&5
-$as_echo "$ac_ct_JBUILDER" >&6; }
+ac_ct_DUNE=$ac_cv_prog_ac_ct_DUNE
+if test -n "$ac_ct_DUNE"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_DUNE" >&5
+$as_echo "$ac_ct_DUNE" >&6; }
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 
-  if test "x$ac_ct_JBUILDER" = x; then
-    JBUILDER=""
+  if test "x$ac_ct_DUNE" = x; then
+    DUNE=""
   else
     case $cross_compiling:$ac_tool_warned in
 yes:)
@@ -4535,10 +4533,10 @@ yes:)
 $as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
 ac_tool_warned=yes ;;
 esac
-    JBUILDER=$ac_ct_JBUILDER
+    DUNE=$ac_ct_DUNE
   fi
 else
-  JBUILDER="$ac_cv_prog_JBUILDER"
+  DUNE="$ac_cv_prog_DUNE"
 fi
 
 if test -n "$ac_tool_prefix"; then
@@ -4765,23 +4763,15 @@ if test "x${with_private_runtime}" != "xno"; then :
     CONF_MANIFEST_O=opam-manifest.o
     if  test "$ARCH" = "i386" ; then :
 
-      TOOL_ARCH=i686
       MANIFEST_ARCH=x86
       RUNTIME_GCC_S=libgcc_s_sjlj-1
 
 else
 
-      TOOL_ARCH=x86_64
       MANIFEST_ARCH=amd64
       RUNTIME_GCC_S=libgcc_s_seh-1
 
 fi
-    RUNTIME=`${TOOL_ARCH}-w64-mingw32-gcc -print-sysroot`/mingw/bin
-    echo Linking ${SYSTEM} runtime DLLs
-    ${LN_S} -fv ${RUNTIME}/${RUNTIME_GCC_S}.dll src/client/${RUNTIME_GCC_S}.dll
-    ${LN_S} -fv ${RUNTIME}/libstdc++-6.dll src/client/libstdc++-6.dll
-    ${LN_S} -fv ${RUNTIME}/libwinpthread-1.dll src/client/libwinpthread-1.dll
-
 
 
 
@@ -5438,27 +5428,7 @@ if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
 fi
 
-if  test ${BUILD_PUTENV} -eq 1; then :
-
-  ac_config_files="$ac_config_files src/tools/opam-putenv.inc"
-
-
-else
-
-  > src/tools/opam-putenv.inc
-
-fi
-if  test -n "${CONF_MANIFEST_O}" ; then :
-
-  ac_config_files="$ac_config_files src/client/manifest.inc"
-
-
-else
-
-  > src/client/manifest.inc
-
-fi
-ac_config_files="$ac_config_files Makefile.config src/client/opamManifest.inc"
+ac_config_files="$ac_config_files Makefile.config src/ocaml-flags-configure.sexp src/stubs/c-flags.sexp"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6166,10 +6136,9 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
-    "src/tools/opam-putenv.inc") CONFIG_FILES="$CONFIG_FILES src/tools/opam-putenv.inc" ;;
-    "src/client/manifest.inc") CONFIG_FILES="$CONFIG_FILES src/client/manifest.inc" ;;
     "Makefile.config") CONFIG_FILES="$CONFIG_FILES Makefile.config" ;;
-    "src/client/opamManifest.inc") CONFIG_FILES="$CONFIG_FILES src/client/opamManifest.inc" ;;
+    "src/ocaml-flags-configure.sexp") CONFIG_FILES="$CONFIG_FILES src/ocaml-flags-configure.sexp" ;;
+    "src/stubs/c-flags.sexp") CONFIG_FILES="$CONFIG_FILES src/stubs/c-flags.sexp" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -6620,15 +6589,31 @@ $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
 
 
-if  test ${WIN32} -eq 1; then :
+rm -f src/manifest/dune src/manifest/install.inc
+if test "x${with_private_runtime}" != "xno"; then :
 
-  cd src/stubs
-  ${LN_S} -f jbuild-win32 jbuild
-  cd ../..
+  if test ${WIN32} -eq 1 -a "x${CCOMP_TYPE}" = "xcc"; then :
+
+    cd src/manifest
+    ${LN_S} -f dune-manifest dune
+    ${LN_S} -f install.${ARCH} install.inc
+    cd ../..
 
 else
 
-  rm -f src/stubs/jbuild
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: --with-private-runtime ignored (not building on mingw)" >&5
+$as_echo "$as_me: WARNING: --with-private-runtime ignored (not building on mingw)" >&2;}
+
+fi
+
+fi
+
+rm -f src/stubs/dune
+if  test ${WIN32} -eq 1; then :
+
+  cd src/stubs
+  ${LN_S} -f dune-win32 dune
+  cd ../..
 
 fi
 

@@ -18,13 +18,11 @@ bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "https://github.com/ocaml/opam.git"
 build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
-  ["touch" "src/tools/.merlin-exists"]
-  # ^ see https://github.com/janestreet/jbuilder/issues/257
   [make "%{name}%.install"]
 ]
 depends: [
   "opam-format" {= "2.0.0"}
   "cmdliner" {>= "0.9.8"}
-  "jbuilder" {build & >= "1.0+beta17"}
+  "dune" {build & >= "1.2.1"}
 ]
 available: ocaml-version >= "4.02.3"
