@@ -10,7 +10,7 @@ while read name prefix version url; do
   latest=${latest##* }
   package_url=$(opam show $package.$latest -f url.src: | sed -e 's/"//g')
   md5=$(sed -n -e "s/MD5$prefix$name *= *\(.*\)/\1/p" Makefile.sources)
-  package_md5=$(opam show $package.$latest -f url.checksum: | sed -e "s/.*md5=\([a-fA-F0-9]\{32\}\).*/\1/")
+  package_md5=$(opam show $package.$latest -f url.checksum: | sed -n -e "/md5/s/.*md5=\([a-fA-F0-9]\{32\}\).*/\1/p")
   if [[ $package_url = $url ]] ; then
     if [[ $package_md5 = $md5 ]] ; then
       echo -ne "[\033[0;32m$name\033[m] "
