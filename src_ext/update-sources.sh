@@ -18,7 +18,7 @@ while read name prefix version url; do
         DISAGREEMENTS+=" $name ($version vs $latest in opam)"
       fi
     else
-      echo "\n$name: [\033[1;33mWARN\033[m] MD5 is wrong for (should be $package_md5 according to opam)"
+      echo -e "\n$name: [\033[1;33mWARN\033[m] MD5 is wrong for (should be $package_md5 according to opam)"
     fi
   else
     if [[ $package_md5 = $md5 ]] ; then
