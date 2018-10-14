@@ -1,0 +1,14 @@
+(jbuild_version 1)
+
+(library
+ ((name        seq)
+  (public_name seq)
+  (synopsis    seq)
+  (modules     (seq))))
+
+(rule
+ (with-stdout-to selected
+  (run ${OCAML} ${path:../select_version.ml} ${ocaml_version})))
+
+(rule (copy# ${read:selected} seq.ml))
+(rule (copy# "${read:selected}i" seq.mli))

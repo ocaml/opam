@@ -30,7 +30,7 @@ URL_PKG_$(1) = $(URL_$(1))
 MD5_PKG_$(1) = $(MD5_$(1))
 endef
 
-SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result
+SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result seq
 PKG_EXTS = $(SRC_EXTS) jbuilder findlib ocamlbuild topkg mccs
 
 ifeq ($(MCCS_ENABLED),true)

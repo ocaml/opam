@@ -1,0 +1,136 @@
+From 048e95da1f0899ce77b1f28c324b1a96fc1d5da5 Mon Sep 17 00:00:00 2001
+From: Simon Cruanes <simon.cruanes.2007@m4x.org>
+Date: Thu, 19 Apr 2018 00:08:23 -0500
+Subject: [PATCH] seq 0.2 for jbuilder
+
+---
+ .gitignore                     |  2 ++
+ Makefile                       | 11 ++++++++++-
+ select_version.ml              | 14 ++++++++++++++
+ seq.opam                       |  8 ++++----
+ src/seq_alias.ml               |  1 +
+ src/seq_alias.mli              |  2 ++
+ src/{seq.ml => seq_redef.ml}   |  0
+ src/{seq.mli => seq_redef.mli} |  2 --
+ 8 files changed, 33 insertions(+), 7 deletions(-)
+ create mode 100644 select_version.ml
+ create mode 100644 src/seq_alias.ml
+ create mode 100644 src/seq_alias.mli
+ rename src/{seq.ml => seq_redef.ml} (100%)
+ rename src/{seq.mli => seq_redef.mli} (99%)
+
+diff --git a/.gitignore b/.gitignore
+index e35d885..487f91e 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1 +1,3 @@
+ _build
++src/seq.ml
++src/seq.mli
+diff --git a/Makefile b/Makefile
+index fbf5dc9..c3048a5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,9 +1,18 @@
+ 
++all: build
++
++OCAML_VERSION=$(shell ocaml -vnum)
++SELECT_CMD=$(shell ocaml select_version.ml $(OCAML_VERSION))
++
++select:
++	$(SELECT_CMD)
++
+ TARGETS=$(addprefix src/, seq.cma seq.cmxa seq.cmxs)
+-build:
++build: select
+ 	ocamlbuild $(TARGETS)
+ 
+ clean:
++	rm src/seq.ml src/seq.mli || true
+ 	ocamlbuild -clean
+ 
+ TOINSTALL=$(wildcard _build/src/*)
+diff --git a/select_version.ml b/select_version.ml
+new file mode 100644
+index 0000000..a5c25ac
+--- /dev/null
++++ b/select_version.ml
+@@ -0,0 +1,14 @@
++
++let () =
++  let version =
++    Scanf.sscanf Sys.argv.(1) "%d.%d" (fun major minor -> (major, minor))
++  in
++  let file =
++    if version < (4, 07) then
++      "seq_redef.ml"
++    else
++      "seq_alias.ml"
++  in
++  print_string file;
++  flush stdout
++
+diff --git a/seq.opam b/seq.opam
+index 8d3569c..d8f19cf 100644
+--- a/seq.opam
++++ b/seq.opam
+@@ -3,7 +3,7 @@ name: "seq"
+ version: "0.1"
+ author: "Simon Cruanes"
+ maintainer: "simon.cruanes.2007@m4x.org"
+-license: "GPL"
++license: "LGPL2.1"
+ build: [
+   [make "build"]
+ ]
+@@ -21,8 +21,8 @@ tags: [ "iterator" "seq" "pure" "list" "compatibility" "cascade" ]
+ homepage: "https://github.com/c-cube/seq/"
+ bug-reports: "https://github.com/c-cube/seq/issues"
+ dev-repo: "https://github.com/c-cube/seq.git"
+-available: [
+-  ocaml-version < "4.07.0"
+-]
+ 
++# opam-repo contains a version for 4.07 and above that does nothing,
++# because OCaml starts having a `Seq` module in the stdlib
++available: [ocaml-version < "4.07.0"]
+ 
+diff --git a/src/seq_alias.ml b/src/seq_alias.ml
+new file mode 100644
+index 0000000..49d3313
+--- /dev/null
++++ b/src/seq_alias.ml
+@@ -0,0 +1 @@
++include Stdlib.Seq
+diff --git a/src/seq_alias.mli b/src/seq_alias.mli
+new file mode 100644
+index 0000000..8872dd5
+--- /dev/null
++++ b/src/seq_alias.mli
+@@ -0,0 +1,2 @@
++
++include module type of Stdlib.Seq
+diff --git a/src/seq.ml b/src/seq_redef.ml
+similarity index 100%
+rename from src/seq.ml
+rename to src/seq_redef.ml
+diff --git a/src/seq.mli b/src/seq_redef.mli
+similarity index 99%
+rename from src/seq.mli
+rename to src/seq_redef.mli
+index f33c19a..c22dff9 100644
+--- a/src/seq.mli
++++ b/src/seq_redef.mli
+@@ -23,8 +23,6 @@
+     them in a lazy fashion rather than upfront.
+ *)
+ 
+-(** @since 4.07 *)
+-
+ type 'a t = unit -> 'a node
+ (** The type of delayed lists containing elements of type ['a].
+     Note that the concrete list node ['a node] is delayed under a closure,
+-- 
+2.17.1
+

@@ -21,7 +21,9 @@ extlib.pkgbuild: findlib.pkgbuild cppo.pkgbuild
 
 ocamlbuild.pkgbuild: findlib.pkgbuild
 
-re.pkgbuild: jbuilder.pkgbuild findlib.pkgbuild
+re.pkgbuild: jbuilder.pkgbuild seq.pkgbuild findlib.pkgbuild
+
+seq.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild
 
 ocamlgraph.pkgbuild: findlib.pkgbuild
 
@@ -99,3 +101,7 @@ mccs-pkg-build:
 	jbuilder build @install --root=.
 	ocamlfind install mccs $(addprefix _build/install/default/lib/,$(addprefix mccs/,META libmccs_stubs.$(EXT_LIB) mccs.*) stublibs/*.$(EXT_DLL))
 	cp -RL _build/install/default/lib/mccs/glpk $(SITELIB)/mccs/
+
+seq-pkg-build:
+	make all
+	make install
