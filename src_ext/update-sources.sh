@@ -28,7 +28,8 @@ while read name prefix version url; do
         echo -e "\n$name: [\033[1;33mWARN\033[m] URL and MD5 are wrong for $name (should be $package_url (md5=$package_md5) according to opam)"
       else
         echo -ne "[\033[0;31m$name\033[m: \033[1m$latest\033[m] "
-        sed -i -e "s/\(URL$prefix$name *= *\).*/\1${package_url////\\/}/" -e "s/\(MD5$prefix$name *= *\).*/\1$package_md5/" Makefile.sources
+        sed -e "s/\(URL$prefix$name *= *\).*/\1${package_url////\\/}/" -e "s/\(MD5$prefix$name *= *\).*/\1$package_md5/" Makefile.sources > Makefile.sources.tmp
+        mv Makefile.sources.tmp Makefile.sources
       fi
     fi
   fi
