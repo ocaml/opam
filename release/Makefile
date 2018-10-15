@@ -21,7 +21,9 @@ out/opam-full-$(VERSION).tar.gz:
 	mkdir -p out
 	cd out && curl -OfL $(FULL_ARCHIVE_URL) || { \
 	  git clone $(GIT_URL) -b $(TAG) --depth 1 opam-full-$(VERSION); \
-	  sed -i 's/^AC_INIT(opam,.*)/AC_INIT(opam,$(OPAM_VERSION))/' \
+	  sed 's/^AC_INIT(opam,.*)/AC_INIT(opam,$(OPAM_VERSION))/' > \
+	    opam-full-$(VERSION)/configure.ac.tmp; \
+	  mv opam-full-$(VERSION)/configure.ac.tmp \
 	    opam-full-$(VERSION)/configure.ac; \
 	  $(MAKE) -C opam-full-$(VERSION) configure download-ext; \
 	  tar cz --exclude-vcs opam-full-$(VERSION) -f $(notdir $@); \

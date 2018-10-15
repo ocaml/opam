@@ -188,7 +188,8 @@ endef
    done
 	@touch $*/$*.opam
 	@for i in `find $* -name jbuild`; do \
-     sed -i -e "s/name \+runtest/name disabled-runtest/g" $$i; \
+     sed -e "s/name \+runtest/name disabled-runtest/g" $$i > $$i.tmp ; \
+     mv $$i.tmp $$i ; \
    done
 	@touch $@ && rm -f $*.pkgstamp $*.pkgbuild
 
