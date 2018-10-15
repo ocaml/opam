@@ -9,8 +9,8 @@ else
 CAN_PKG=0
 endif
 
-URL_ocaml = http://caml.inria.fr/pub/distrib/ocaml-4.06/ocaml-4.06.0.tar.gz
-MD5_ocaml = 66e5439eb63dbb8b8224cba5d1b20947
+URL_ocaml = http://caml.inria.fr/pub/distrib/ocaml-4.07/ocaml-4.07.1.tar.gz
+MD5_ocaml = 0b180b273ce5cc2ac68f347c9b06d06f
 
 URL_flexdll = https://github.com/alainfrisch/flexdll/archive/0.37.tar.gz
 MD5_flexdll = cc456a89382e60d84130cddd53977486
@@ -30,7 +30,7 @@ URL_PKG_$(1) = $(URL_$(1))
 MD5_PKG_$(1) = $(MD5_$(1))
 endef
 
-SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result
+SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result seq
 PKG_EXTS = $(SRC_EXTS) jbuilder findlib ocamlbuild topkg mccs
 
 ifeq ($(MCCS_ENABLED),true)

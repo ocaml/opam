@@ -1,5 +1,5 @@
-URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.4.tar.gz
-MD5_cppo = f7a4a6a0e83b76562b45db3a93ffd204
+URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.5.tar.gz
+MD5_cppo = 1cd25741d31417995b0973fe0b6f6c82
 
 $(call PKG_SAME,cppo)
 
@@ -8,8 +8,8 @@ MD5_extlib = d989951536077563bf4c5e3479c3866f
 
 $(call PKG_SAME,extlib)
 
-URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.7.3/re-1.7.3.tbz
-MD5_re = d2a74ca77216861bce4449600a132de9
+URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.8.0/re-1.8.0.tbz
+MD5_re = 765f6f8d3e6ab200866e719ed7e5178d
 
 $(call PKG_SAME,re)
 
@@ -61,3 +61,8 @@ MD5_PKG_ocamlbuild = 442baa19470bd49150f153122e22907b
 
 URL_PKG_topkg = http://erratique.ch/software/topkg/releases/topkg-0.9.1.tbz
 MD5_PKG_topkg = 8978a0595db1a22e4251ec62735d4b84
+
+URL_seq = https://github.com/c-cube/seq/archive/0.1.tar.gz
+MD5_seq = 0e87f9709541ed46ecb6f414bc31458c
+
+$(call PKG_SAME,seq)

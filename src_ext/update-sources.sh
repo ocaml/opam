@@ -8,9 +8,9 @@ while read name prefix version url; do
   if [[ $package = "findlib" ]] ; then package=ocamlfind ; fi
   latest=$(opam show $package -f all-versions)
   latest=${latest##* }
-  package_url=$(opam show $package.$latest -f url.src:)
+  package_url=$(opam show $package.$latest -f url.src: | sed -e 's/"//g')
   md5=$(sed -n -e "s/MD5$prefix$name *= *\(.*\)/\1/p" Makefile.sources)
-  package_md5=$(opam show $package.$latest -f url.checksum: | sed -e "s/.*md5=\([a-fA-F0-9]\{32\}\).*/\1/")
+  package_md5=$(opam show $package.$latest -f url.checksum: | sed -n -e "/md5/s/.*md5=\([a-fA-F0-9]\{32\}\).*/\1/p")
   if [[ $package_url = $url ]] ; then
     if [[ $package_md5 = $md5 ]] ; then
       echo -ne "[\033[0;32m$name\033[m] "
@@ -18,7 +18,7 @@ while read name prefix version url; do
         DISAGREEMENTS+=" $name ($version vs $latest in opam)"
       fi
     else
-      echo "\n$name: [\033[1;33mWARN\033[m] MD5 is wrong for (should be $package_md5 according to opam)"
+      echo -e "\n$name: [\033[1;33mWARN\033[m] MD5 is wrong for (should be $package_md5 according to opam)"
     fi
   else
     if [[ $package_md5 = $md5 ]] ; then
@@ -32,7 +32,7 @@ while read name prefix version url; do
       fi
     fi
   fi
-done < <(fgrep URL_ Makefile.sources | sed -e "s/URL\(_\(PKG_\)\?\)\([^ =]*\) *= *\(.*\/\([^0-9][^-]*-\)\?v\?\)\([0-9.]\+\([-+.][^\/]*\)\?\)\(\.tbz\|\.tar\.gz\)/\3 \1 \6 \4\6\8/" | sort)
+done < <(fgrep URL_ Makefile.sources | fgrep -v "URL_jbuilder" | sed -e "s/URL\(_\(PKG_\)\?\)\([^ =]*\) *= *\(.*\/\([^0-9][^-]*-\)\?v\?\)\([0-9.]\+\([-+.][^\/]*\)\?\)\(\.tbz\|\.tar\.gz\)/\3 \1 \6 \4\6\8/" | sort)
 echo -e "\nComplete."
 if [[ ${#DISAGREEMENTS[@]} -gt 0 ]] ; then
   echo "Disagreements over version:${DISAGREEMENTS[@]}"

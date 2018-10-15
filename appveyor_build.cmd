@@ -119,11 +119,7 @@ if not exist bootstrap\nul (
   if exist bootstrap\ocaml-*.tar.gz del bootstrap\ocaml-*.tar.gz
   if "%OCAML_PORT%" neq "" if exist bootstrap\flexdll-*.tar.gz del bootstrap\flexdll-*.tar.gz
   del bootstrap\ocaml\bin\*.byte.exe
-  if "%OCAML_PORT%" equ "" (
-    del bootstrap\ocaml\lib\ocaml\expunge.exe
-  ) else (
-    del bootstrap\ocaml\lib\expunge.exe
-  )
+  del bootstrap\ocaml\lib\ocaml\expunge.exe
   for /f %%D in ('dir /b/ad bootstrap\ocaml-*') do (
     rd /s/q bootstrap\%%D
     rem Directory needs to exist, as the Cygwin bootstraps OCAMLLIB refers to it
