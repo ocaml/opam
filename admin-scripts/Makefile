@@ -4,8 +4,10 @@ INCLUDE = $(patsubst %,-I ../src/%,$(DEPS)) -I ../src/tools
 
 LIBS = $(patsubst %,../src/opam-%.cma,$(DEPS))
 
+SED ?= sed
+
 %: %.ml
-	sed 's/^#.*//' $< >$*-tmp.ml
+	$(SED) 's/^#.*//' $< >$*-tmp.ml
 	ocamlfind ocamlc -package unix,re.glob,ocamlgraph -linkpkg $(INCLUDE) $(LIBS) ../src/tools/opam_admin_top.ml $*-tmp.ml -o $@
 	rm $*-tmp.ml
 
@@ -13,6 +15,6 @@ LIBS = $(patsubst %,../src/opam-%.cma,$(DEPS))
 	cp $< $@
 
 couverture: couverture.ml
-	sed 's/^#.*//' $< >couverture-tmp.ml
+	$(SED) 's/^#.*//' $< >couverture-tmp.ml
 	ocamlfind ocamlopt -package re.glob,opam-lib.state -linkpkg ../src/tools/opam_admin_top.ml couverture-tmp.ml -o $@
 	rm couverture-tmp.ml

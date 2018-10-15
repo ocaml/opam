@@ -16,6 +16,8 @@ ifndef OPAM
   OPAM_DEP := $(shell $(JBUILDER) exec -- which opam)
 endif
 
+SED ?= sed
+
 TOPICS  = $(shell $(OPAM) help topics)
 TOPICS_ADMIN = cache filter index lint list upgrade
 
@@ -56,7 +58,7 @@ man-html: man
 	echo '<h1>Opam $(version) man-pages index</h1>' >>$@/index.html
 	echo '<ul>' >>$@/index.html
 	for f in man/*; do\
-	  man2html -r $$f | sed 1,2d > $@/$$(basename $$f .1).html;\
+	  man2html -r $$f | $(SED) 1,2d > $@/$$(basename $$f .1).html;\
 	  echo "  <li><a href=\"$$(basename $$f .1).html\">$$(basename $$f .1)</a></li>" >>$@/index.html;\
 	done
 	echo '</ul>' >>$@/index.html
@@ -66,7 +68,7 @@ html:
 	rm -rf html
 	cd .. && $(JBUILDER) build @doc
 	cp -r ../_build/default/_doc/_html html
-	sed 's/%{OPAMVERSION}%/'$(version)'/g' index.html > html/index.html
+	$(SED) 's/%{OPAMVERSION}%/'$(version)'/g' index.html > html/index.html
 # Not to break older links, add manpages to the `ocamldoc` dir
 	mkdir -p html/ocamldoc
 	cd html/ocamldoc && for f in ../*/*/index.html; do\

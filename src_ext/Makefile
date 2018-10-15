@@ -2,6 +2,8 @@ ifneq ($(filter-out archives cache-archives lib-pkg,$(MAKECMDGOALS)),)
 -include ../Makefile.config
 endif
 
+SED ?= sed
+
 ifneq ($(wildcard Makefile.config),)
 include Makefile.config
 CAN_PKG=1
@@ -54,7 +56,7 @@ ifdef OCAML
 # Portable md5check
 MD5CHECK = $(OCAML) ../shell/md5check.ml $(1) $(2)
 else
-MD5CHECK = test "`md5sum $(1) | sed -e 's/^[^a-f0-9]*\([a-f0-9]*\).*/\1/'`" = "$(2)" || (rm $(1) && false)
+MD5CHECK = test "`md5sum $(1) | $(SED) -e 's/^[^a-f0-9]*\([a-f0-9]*\).*/\1/'`" = "$(2)" || (rm $(1) && false)
 endif
 
 lib-ext: clone
@@ -184,11 +186,11 @@ endef
 	  done; \
         fi
 	@for j in $(wildcard jbuild-$* jbuild-$*-*); do \
-     cp $$j $*$$(echo "$$j" | sed -e "s/jbuild-$*//" -e "s|-|/|g")/jbuild; \
+     cp $$j $*$$(echo "$$j" | $(SED) -e "s/jbuild-$*//" -e "s|-|/|g")/jbuild; \
    done
 	@touch $*/$*.opam
 	@for i in `find $* -name jbuild`; do \
-     sed -i -e "s/name \+runtest/name disabled-runtest/g" $$i; \
+     $(SED) -i -e "s/name \+runtest/name disabled-runtest/g" $$i; \
    done
 	@touch $@ && rm -f $*.pkgstamp $*.pkgbuild
 
