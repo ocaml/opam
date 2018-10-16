@@ -685,7 +685,8 @@ module Zip = struct
     Some (fun dir -> make_command "unzip" [ file; "-d"; dir ])
 end
 
-let is_tar_archive = Tar.is_archive
+let is_archive file =
+  Tar.is_archive file || Zip.is_archive file
 
 let extract_command file =
   if Zip.is_archive file then Zip.extract_command file

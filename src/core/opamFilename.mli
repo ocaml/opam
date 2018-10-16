@@ -194,6 +194,9 @@ val install: ?exec:bool -> src:t -> dst:t -> unit -> unit
     directory if possible. Otherwise, the symlink is absolute. *)
 val link: ?relative:bool -> target:t -> link:t -> unit
 
+(** Returns true if the given file is an archive (zip or tar) *)
+val is_archive: t -> bool
+
 (** Extract an archive in a given directory (it rewrites the root to
     match [Dir.t] dir if needed) *)
 val extract: t -> Dir.t -> unit
