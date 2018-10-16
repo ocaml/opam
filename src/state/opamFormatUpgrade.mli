@@ -27,7 +27,7 @@ val latest_version: OpamVersion.t
    upgrade has been done, raises [Upgrade_done updated_config]. *)
 val as_necessary: OpamSystem.lock -> dirname -> OpamFile.Config.t -> unit
 
-(** Converts the opam file format, including rewriting availabillity conditions
+(** Converts the opam file format, including rewriting availability conditions
     based on OCaml-related variables into dependencies. The filename is used to
     report errors *)
 val opam_file_from_1_2_to_2_0:
