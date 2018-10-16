@@ -291,6 +291,9 @@ let process_in ?root fn src dst =
 
 let copy_in ?root = process_in ?root copy
 
+let is_archive filename =
+  OpamSystem.is_archive (to_string filename)
+
 let extract filename dirname =
   OpamSystem.extract (to_string filename) ~dir:(Dir.to_string dirname)
 
