@@ -28,7 +28,7 @@ This will simply check your architecture, download and install the proper
 pre-compiled binary, backup your opam data if from an older version, and run
 `opam init`.
 
-(If you have troule with `curl`, just
+(If you have trouble with `curl`, just
 [download the script](https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)
 and run `sh install.sh`)
 
