@@ -958,13 +958,19 @@ let from_2_0_alpha3_to_2_0_beta root conf =
               OpamPackage.Name.of_string
                 OpamFilename.(Base.to_string (basename_dir d))
             in
-            if OpamPackage.has_name state.sel_pinned name then
-              OpamFilename.move_dir ~src:d
-                ~dst:(sources_dir / OpamPackage.Name.to_string name)
-            else
-              let nv = OpamPackage.package_of_name state.sel_installed name in
-              OpamFilename.move_dir ~src:d
-                ~dst:(sources_dir / OpamPackage.to_string nv)
+            let dst =
+              if OpamPackage.has_name state.sel_pinned name then
+                sources_dir / OpamPackage.Name.to_string name
+              else
+                let nv = OpamPackage.package_of_name state.sel_installed name in
+                sources_dir / OpamPackage.to_string nv
+            in
+            (* Extract version-pinned archives to source dirs *)
+            match OpamFilename.files d with
+            | file::[] when OpamFilename.is_archive file ->
+              OpamFilename.extract_in file dst;
+              OpamFilename.remove file
+            | _ -> ()
           with Failure _ | Not_found -> ()
         )
         (OpamFilename.dirs packages_dev_dir);
