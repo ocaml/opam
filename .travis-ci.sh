@@ -41,6 +41,7 @@ case "$TARGET" in
     # Git should be configured properly to run the tests
     git config --global user.email "travis@example.com"
     git config --global user.name "Travis CI"
+    git config --global gc.autoDetach false
 
   # Disable bubblewrap wrapping, it's not available within Docker
   cat <<EOF >>~/.opamrc
@@ -105,7 +106,7 @@ EOF
         fi
         ./configure --prefix ~/local -no-graph -no-debugger ${CONFIGURE_SWITCHES:-}
         if [[ $OPAM_TEST -eq 1 ]] ; then
-          make -j world.opt
+          make -j 4 world.opt
         else
           make world.opt
         fi
@@ -177,7 +178,7 @@ export OCAMLRUNPARAM=b
   else
     # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
     OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make tests ||
-      (tail -2000 _build/default/tests/fulltest-*.log; echo "-- TESTS FAILED --"; exit 1)
+      (tail -n 2000 _build/default/tests/fulltest-*.log; echo "-- TESTS FAILED --"; exit 1)
   fi
 )
 

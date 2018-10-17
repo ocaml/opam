@@ -22,7 +22,7 @@ build: [
 ]
 depends: [
   "opam-format" {= "2.0.0"}
-  "mccs" {>= "1.1+8"}
+  "mccs" {>= "1.1+9"}
   "dose3" {>= "5"}
   "cudf" {>= "0.7"}
   "jbuilder" {build & >= "1.0+beta17"}

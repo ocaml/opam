@@ -94,7 +94,8 @@ git:
 
 define GIT_INIT
   git init && echo '*.sh text eol=lf'> .gitattributes && $(if $1,touch $1 && )\
-	git add -A && git commit -m "Initial commit"
+	git add -A && git config --local user.name 'OPAM test environment' &&\
+	git config --local user.email noreply@ocaml.org && git commit -m "Initial commit"
 endef
 
 init:

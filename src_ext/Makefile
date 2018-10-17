@@ -30,7 +30,7 @@ URL_PKG_$(1) = $(URL_$(1))
 MD5_PKG_$(1) = $(MD5_$(1))
 endef
 
-SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result
+SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result seq
 PKG_EXTS = $(SRC_EXTS) jbuilder findlib ocamlbuild topkg mccs
 
 ifeq ($(MCCS_ENABLED),true)
@@ -128,6 +128,9 @@ archives-pkg: $(PKG_EXTS:=.pkgdownload)
 cache-archives: $(SRC_EXTS:=.cache) $(PKG_EXTS:=.pkgcache) ocaml.cache flexdll.cache
 	@
 
+has-archives: $(addprefix archives/, $(notdir $(URL_ocaml)) $(notdir $(URL_flexdll)) $(ARCHIVES) $(filter-out $(ARCHIVES), $(foreach pkg,$(PKG_EXTS), $(notdir $(URL_PKG_$(pkg))))))
+	@
+
 %.cache:
 	@mkdir -p archives
 	@[ -e archives/$(notdir $(URL_$*)) ] || \
@@ -185,7 +188,8 @@ endef
    done
 	@touch $*/$*.opam
 	@for i in `find $* -name jbuild`; do \
-     sed -i -e "s/name \+runtest/name disabled-runtest/g" $$i; \
+     sed -e "s/name \+runtest/name disabled-runtest/g" $$i > $$i.tmp ; \
+     mv $$i.tmp $$i ; \
    done
 	@touch $@ && rm -f $*.pkgstamp $*.pkgbuild
 

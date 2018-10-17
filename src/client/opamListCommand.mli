@@ -68,8 +68,11 @@ val filter:
 (** Or-filter on package patterns (NAME or NAME.VERSION) *)
 val pattern_selector: string list -> selector OpamFormula.formula
 
-(** Lists the aggregated active external dependencies of the given packages *)
-val print_depexts: 'a switch_state -> package_set -> unit
+(** Get the aggregated active external dependencies of the given packages *)
+val get_depexts: 'a switch_state -> package_set -> OpamStd.String.Set.t
+
+(** Lists the given aggregated active external dependencies of the given packages *)
+val print_depexts: OpamStd.String.Set.t -> unit
 
 (** Element of package information to be printed. Fixme: should be part of the
     run-time man! *)
@@ -138,7 +141,7 @@ val info:
   'a switch_state ->
   fields:string list -> raw_opam:bool -> where:bool ->
   ?normalise:bool -> ?show_empty:bool ->
-  atom list -> OpamFile.OPAM.t OpamPackage.Name.Map.t -> unit
+  atom list -> unit
 
 (** Prints the value of an opam field in a shortened way (with [prettify] -- the
     default -- puts lists of strings in a format that is easier to read *)
