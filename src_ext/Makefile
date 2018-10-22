@@ -57,7 +57,7 @@ else
 MD5CHECK = test "`md5sum $(1) | sed -e 's/^[^a-f0-9]*\([a-f0-9]*\).*/\1/'`" = "$(2)" || (rm $(1) && false)
 endif
 
-lib-ext: clone
+lib-ext: clone ensure-seq-patched.stamp
 	@
 
 ifeq ($(CAN_PKG),1)
