@@ -174,13 +174,13 @@ endef
 	@if [ -d patches/$*.common ]; then \
           cd $* && \
 	  for p in ../patches/$*.common/*.patch; do \
-	    patch -p1 < $$p; \
+	    patch -E -p1 < $$p; \
 	  done; \
         fi
 	@if [ -d patches/$* ]; then \
           cd $* && \
 	  for p in ../patches/$*/*.patch; do \
-	    patch -p1 < $$p; \
+	    patch -E -p1 < $$p; \
 	  done; \
         fi
 	@for j in $(wildcard jbuild-$* jbuild-$*-*); do \
@@ -203,13 +203,13 @@ endef
 	@if [ -d patches/$*.common ]; then \
           cd $* && \
 	  for p in ../patches/$*.common/*.patch; do \
-	    patch -p1 < $$p; \
+	    patch -E -p1 < $$p; \
 	  done; \
         fi
 	@if [ -d patches/$*.pkg ]; then \
           cd $* && \
 	  for p in ../patches/$*.pkg/*.patch; do \
-	    patch -p1 < $$p; \
+	    patch -E -p1 < $$p; \
 	  done; \
         fi
 	@touch $@ && rm -f $*.stamp
