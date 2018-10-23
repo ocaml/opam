@@ -65,4 +65,8 @@ MD5_PKG_topkg = 8978a0595db1a22e4251ec62735d4b84
 URL_seq = https://github.com/c-cube/seq/archive/0.1.tar.gz
 MD5_seq = 0e87f9709541ed46ecb6f414bc31458c
 
+# This is necessary as long as a patch is used to rename seq.ml and seq.mli
+ensure-seq-patched.stamp: seq.stamp
+	rm -f seq/src/seq.ml seq/src/seq.mli
+
 $(call PKG_SAME,seq)
