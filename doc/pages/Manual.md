@@ -1077,13 +1077,15 @@ files.
 - <a id="opamfield-pin-depends">`pin-depends: [ [ <package> <URL> ] ... ]`</a>:
   this field has no effect on the package repository, but is useful for
   in-source specification of development packages. When source-pinning the
-  package, either through `opam pin` or `opam install <DIR>`, <span
-  class="opam">opam</span> will prompt to pin every specified `<package>` to the
-  associated `<URL>`. There are two important limitations:
+  package, either through `opam pin` or `opam install <DIR>`, <span class="opam">opam</span>
+  will prompt to pin every specified `<package>` to the associated `<URL>`.
+  There are two important limitations:
 
-    1. `pin-depends:` are NOT transitive, that is, `pin-depends:` of packages
+    1. If you want the pinned package be a dependency you need to add its
+       `<pkgname>` to `depends:` field.
+    2. `pin-depends:` are NOT transitive, that is, `pin-depends:` of packages
        getting pinned through `pin-depends:` are ignored
-    2. they won't get updated on `opam update`, the users will need to use `opam
+    3. they won't get updated on `opam update`, the users will need to use `opam
        pin` or `opam install|upgrade DIR` again to get the new pins if the field
        has changed. Even then, this won't unpin any packages that would have
        been removed from `pin-depends:`.
