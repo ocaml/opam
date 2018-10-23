@@ -4,20 +4,24 @@ Date: Thu, 19 Apr 2018 00:08:23 -0500
 Subject: [PATCH] seq 0.2 for jbuilder
 
 ---
- .gitignore                     |  2 ++
- Makefile                       | 11 ++++++++++-
- select_version.ml              | 14 ++++++++++++++
- seq.opam                       |  8 ++++----
- src/seq_alias.ml               |  1 +
- src/seq_alias.mli              |  2 ++
- src/{seq.ml => seq_redef.ml}   |  0
- src/{seq.mli => seq_redef.mli} |  2 --
- 8 files changed, 33 insertions(+), 7 deletions(-)
+ .gitignore        |  2 ++
+ Makefile          | 11 ++++++-
+ select_version.ml | 14 +++++++++
+ seq.opam          |  8 ++---
+ src/seq.ml        | 73 --------------------------------------------
+ src/seq.mli       | 77 -----------------------------------------------
+ src/seq_alias.ml  |  1 +
+ src/seq_alias.mli |  2 ++
+ src/seq_redef.ml  | 73 ++++++++++++++++++++++++++++++++++++++++++++
+ src/seq_redef.mli | 75 +++++++++++++++++++++++++++++++++++++++++++++
+ 10 files changed, 181 insertions(+), 155 deletions(-)
  create mode 100644 select_version.ml
+ delete mode 100644 src/seq.ml
+ delete mode 100644 src/seq.mli
  create mode 100644 src/seq_alias.ml
  create mode 100644 src/seq_alias.mli
- rename src/{seq.ml => seq_redef.ml} (100%)
- rename src/{seq.mli => seq_redef.mli} (99%)
+ create mode 100644 src/seq_redef.ml
+ create mode 100644 src/seq_redef.mli
 
 diff --git a/.gitignore b/.gitignore
 index e35d885..487f91e 100644
@@ -96,6 +100,168 @@ index 8d3569c..d8f19cf 100644
 +# because OCaml starts having a `Seq` module in the stdlib
 +available: [ocaml-version < "4.07.0"]
  
+diff --git a/src/seq.ml b/src/seq.ml
+deleted file mode 100644
+index ccdbfde..0000000
+--- a/src/seq.ml
++++ /dev/null
+@@ -1,73 +0,0 @@
+-(**************************************************************************)
+-(*                                                                        *)
+-(*                                 OCaml                                  *)
+-(*                                                                        *)
+-(*                 Simon Cruanes                                          *)
+-(*                                                                        *)
+-(*   Copyright 2017 Institut National de Recherche en Informatique et     *)
+-(*     en Automatique.                                                    *)
+-(*                                                                        *)
+-(*   All rights reserved.  This file is distributed under the terms of    *)
+-(*   the GNU Lesser General Public License version 2.1, with the          *)
+-(*   special exception on linking described in the file LICENSE.          *)
+-(*                                                                        *)
+-(**************************************************************************)
+-
+-(* Module [Seq]: functional iterators *)
+-
+-type +'a node =
+-  | Nil
+-  | Cons of 'a * 'a t
+-
+-and 'a t = unit -> 'a node
+-
+-let empty () = Nil
+-
+-let return x () = Cons (x, empty)
+-
+-let rec map f seq () = match seq() with
+-  | Nil -> Nil
+-  | Cons (x, next) -> Cons (f x, map f next)
+-
+-let rec filter_map f seq () = match seq() with
+-  | Nil -> Nil
+-  | Cons (x, next) ->
+-      match f x with
+-        | None -> filter_map f next ()
+-        | Some y -> Cons (y, filter_map f next)
+-
+-let rec filter f seq () = match seq() with
+-  | Nil -> Nil
+-  | Cons (x, next) ->
+-      if f x
+-      then Cons (x, filter f next)
+-      else filter f next ()
+-
+-let rec flat_map f seq () = match seq () with
+-  | Nil -> Nil
+-  | Cons (x, next) ->
+-    flat_map_app f (f x) next ()
+-
+-(* this is [append seq (flat_map f tail)] *)
+-and flat_map_app f seq tail () = match seq () with
+-  | Nil -> flat_map f tail ()
+-  | Cons (x, next) ->
+-    Cons (x, flat_map_app f next tail)
+-
+-let fold_left f acc seq =
+-  let rec aux f acc seq = match seq () with
+-    | Nil -> acc
+-    | Cons (x, next) ->
+-        let acc = f acc x in
+-        aux f acc next
+-  in
+-  aux f acc seq
+-
+-let iter f seq =
+-  let rec aux seq = match seq () with
+-    | Nil -> ()
+-    | Cons (x, next) ->
+-        f x;
+-        aux next
+-  in
+-  aux seq
+diff --git a/src/seq.mli b/src/seq.mli
+deleted file mode 100644
+index f33c19a..0000000
+--- a/src/seq.mli
++++ /dev/null
+@@ -1,77 +0,0 @@
+-(**************************************************************************)
+-(*                                                                        *)
+-(*                                 OCaml                                  *)
+-(*                                                                        *)
+-(*                 Simon Cruanes                                          *)
+-(*                                                                        *)
+-(*   Copyright 2017 Institut National de Recherche en Informatique et     *)
+-(*     en Automatique.                                                    *)
+-(*                                                                        *)
+-(*   All rights reserved.  This file is distributed under the terms of    *)
+-(*   the GNU Lesser General Public License version 2.1, with the          *)
+-(*   special exception on linking described in the file LICENSE.          *)
+-(*                                                                        *)
+-(**************************************************************************)
+-
+-(* Module [Seq]: functional iterators *)
+-
+-(** {1 Functional Iterators} *)
+-
+-(** The type ['a t] is a {b delayed list}, i.e. a list where some evaluation
+-    is needed to access the next element. This makes it possible to build
+-    infinite sequences, to build sequences as we traverse them, and to transform
+-    them in a lazy fashion rather than upfront.
+-*)
+-
+-(** @since 4.07 *)
+-
+-type 'a t = unit -> 'a node
+-(** The type of delayed lists containing elements of type ['a].
+-    Note that the concrete list node ['a node] is delayed under a closure,
+-    not a [lazy] block, which means it might be recomputed every time
+-    we access it. *)
+-
+-and +'a node =
+-  | Nil
+-  | Cons of 'a * 'a t
+-(** A fully-evaluated list node, either empty or containing an element
+-    and a delayed tail. *)
+-
+-val empty : 'a t
+-(** The empty sequence, containing no elements. *)
+-
+-val return : 'a -> 'a t
+-(** The singleton sequence containing only the given element. *)
+-
+-val map : ('a -> 'b) -> 'a t -> 'b t
+-(** [map f seq] returns a new sequence whose elements are the elements of
+-    [seq], transformed by [f].
+-    This transformation is lazy, it only applies when the result is traversed.
+-
+-    If [seq = [1;2;3]], then [map f seq = [f 1; f 2; f 3]]. *)
+-
+-val filter : ('a -> bool) -> 'a t -> 'a t
+-(** Remove from the sequence the elements that do not satisfy the
+-    given predicate.
+-    This transformation is lazy, it only applies when the result is traversed. *)
+-
+-val filter_map : ('a -> 'b option) -> 'a t -> 'b t
+-(** Apply the function to every element; if [f x = None] then [x] is dropped;
+-    if [f x = Some y] then [y] is returned.
+-    This transformation is lazy, it only applies when the result is traversed. *)
+-
+-val flat_map : ('a -> 'b t) -> 'a t -> 'b t
+-(** Map each element to a subsequence, then return each element of this
+-    sub-sequence in turn.
+-    This transformation is lazy, it only applies when the result is traversed. *)
+-
+-val fold_left : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
+-(** Traverse the sequence from left to right, combining each element with the
+-    accumulator using the given function.
+-    The traversal happens immediately and will not terminate on infinite sequences.
+-
+-    Also see {!List.fold_left} *)
+-
+-val iter : ('a -> unit) -> 'a t -> unit
+-(** Iterate on the sequence, calling the (imperative) function on every element.
+-    The traversal happens immediately and will not terminate on infinite sequences. *)
 diff --git a/src/seq_alias.ml b/src/seq_alias.ml
 new file mode 100644
 index 0000000..49d3313
@@ -111,26 +277,166 @@ index 0000000..8872dd5
 @@ -0,0 +1,2 @@
 +
 +include module type of Stdlib.Seq
-diff --git a/src/seq.ml b/src/seq_redef.ml
-similarity index 100%
-rename from src/seq.ml
-rename to src/seq_redef.ml
-diff --git a/src/seq.mli b/src/seq_redef.mli
-similarity index 99%
-rename from src/seq.mli
-rename to src/seq_redef.mli
-index f33c19a..c22dff9 100644
---- a/src/seq.mli
+diff --git a/src/seq_redef.ml b/src/seq_redef.ml
+new file mode 100644
+index 0000000..ccdbfde
+--- /dev/null
++++ b/src/seq_redef.ml
+@@ -0,0 +1,73 @@
++(**************************************************************************)
++(*                                                                        *)
++(*                                 OCaml                                  *)
++(*                                                                        *)
++(*                 Simon Cruanes                                          *)
++(*                                                                        *)
++(*   Copyright 2017 Institut National de Recherche en Informatique et     *)
++(*     en Automatique.                                                    *)
++(*                                                                        *)
++(*   All rights reserved.  This file is distributed under the terms of    *)
++(*   the GNU Lesser General Public License version 2.1, with the          *)
++(*   special exception on linking described in the file LICENSE.          *)
++(*                                                                        *)
++(**************************************************************************)
++
++(* Module [Seq]: functional iterators *)
++
++type +'a node =
++  | Nil
++  | Cons of 'a * 'a t
++
++and 'a t = unit -> 'a node
++
++let empty () = Nil
++
++let return x () = Cons (x, empty)
++
++let rec map f seq () = match seq() with
++  | Nil -> Nil
++  | Cons (x, next) -> Cons (f x, map f next)
++
++let rec filter_map f seq () = match seq() with
++  | Nil -> Nil
++  | Cons (x, next) ->
++      match f x with
++        | None -> filter_map f next ()
++        | Some y -> Cons (y, filter_map f next)
++
++let rec filter f seq () = match seq() with
++  | Nil -> Nil
++  | Cons (x, next) ->
++      if f x
++      then Cons (x, filter f next)
++      else filter f next ()
++
++let rec flat_map f seq () = match seq () with
++  | Nil -> Nil
++  | Cons (x, next) ->
++    flat_map_app f (f x) next ()
++
++(* this is [append seq (flat_map f tail)] *)
++and flat_map_app f seq tail () = match seq () with
++  | Nil -> flat_map f tail ()
++  | Cons (x, next) ->
++    Cons (x, flat_map_app f next tail)
++
++let fold_left f acc seq =
++  let rec aux f acc seq = match seq () with
++    | Nil -> acc
++    | Cons (x, next) ->
++        let acc = f acc x in
++        aux f acc next
++  in
++  aux f acc seq
++
++let iter f seq =
++  let rec aux seq = match seq () with
++    | Nil -> ()
++    | Cons (x, next) ->
++        f x;
++        aux next
++  in
++  aux seq
+diff --git a/src/seq_redef.mli b/src/seq_redef.mli
+new file mode 100644
+index 0000000..c22dff9
+--- /dev/null
 +++ b/src/seq_redef.mli
-@@ -23,8 +23,6 @@
-     them in a lazy fashion rather than upfront.
- *)
- 
--(** @since 4.07 *)
--
- type 'a t = unit -> 'a node
- (** The type of delayed lists containing elements of type ['a].
-     Note that the concrete list node ['a node] is delayed under a closure,
+@@ -0,0 +1,75 @@
++(**************************************************************************)
++(*                                                                        *)
++(*                                 OCaml                                  *)
++(*                                                                        *)
++(*                 Simon Cruanes                                          *)
++(*                                                                        *)
++(*   Copyright 2017 Institut National de Recherche en Informatique et     *)
++(*     en Automatique.                                                    *)
++(*                                                                        *)
++(*   All rights reserved.  This file is distributed under the terms of    *)
++(*   the GNU Lesser General Public License version 2.1, with the          *)
++(*   special exception on linking described in the file LICENSE.          *)
++(*                                                                        *)
++(**************************************************************************)
++
++(* Module [Seq]: functional iterators *)
++
++(** {1 Functional Iterators} *)
++
++(** The type ['a t] is a {b delayed list}, i.e. a list where some evaluation
++    is needed to access the next element. This makes it possible to build
++    infinite sequences, to build sequences as we traverse them, and to transform
++    them in a lazy fashion rather than upfront.
++*)
++
++type 'a t = unit -> 'a node
++(** The type of delayed lists containing elements of type ['a].
++    Note that the concrete list node ['a node] is delayed under a closure,
++    not a [lazy] block, which means it might be recomputed every time
++    we access it. *)
++
++and +'a node =
++  | Nil
++  | Cons of 'a * 'a t
++(** A fully-evaluated list node, either empty or containing an element
++    and a delayed tail. *)
++
++val empty : 'a t
++(** The empty sequence, containing no elements. *)
++
++val return : 'a -> 'a t
++(** The singleton sequence containing only the given element. *)
++
++val map : ('a -> 'b) -> 'a t -> 'b t
++(** [map f seq] returns a new sequence whose elements are the elements of
++    [seq], transformed by [f].
++    This transformation is lazy, it only applies when the result is traversed.
++
++    If [seq = [1;2;3]], then [map f seq = [f 1; f 2; f 3]]. *)
++
++val filter : ('a -> bool) -> 'a t -> 'a t
++(** Remove from the sequence the elements that do not satisfy the
++    given predicate.
++    This transformation is lazy, it only applies when the result is traversed. *)
++
++val filter_map : ('a -> 'b option) -> 'a t -> 'b t
++(** Apply the function to every element; if [f x = None] then [x] is dropped;
++    if [f x = Some y] then [y] is returned.
++    This transformation is lazy, it only applies when the result is traversed. *)
++
++val flat_map : ('a -> 'b t) -> 'a t -> 'b t
++(** Map each element to a subsequence, then return each element of this
++    sub-sequence in turn.
++    This transformation is lazy, it only applies when the result is traversed. *)
++
++val fold_left : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
++(** Traverse the sequence from left to right, combining each element with the
++    accumulator using the given function.
++    The traversal happens immediately and will not terminate on infinite sequences.
++
++    Also see {!List.fold_left} *)
++
++val iter : ('a -> unit) -> 'a t -> unit
++(** Iterate on the sequence, calling the (imperative) function on every element.
++    The traversal happens immediately and will not terminate on infinite sequences. *)
 -- 
 2.17.1
 
