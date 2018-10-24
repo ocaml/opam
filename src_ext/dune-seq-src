@@ -1,0 +1,12 @@
+(library
+ (name        seq)
+ (public_name seq)
+ (synopsis    seq)
+ (modules     seq))
+
+(rule
+ (with-stdout-to selected
+  (run %{ocaml} %{dep:../select_version.ml} %{ocaml_version})))
+
+(rule (copy# %{read:selected} seq.ml))
+(rule (copy# "%{read:selected}i" seq.mli))
