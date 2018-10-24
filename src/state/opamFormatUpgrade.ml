@@ -1121,6 +1121,10 @@ let opam_file ?(quiet=false) ?filename opam =
      opam_file_from_1_2_to_2_0 ?filename opam)
   else opam
 
+let opam_file_with_aux ?(quiet=false) ?dir ~files ?filename opam =
+  let opam = OpamFileTools.add_aux_files ?dir ~files_subdir_hashes:files opam in
+  opam_file ~quiet ?filename opam
+
 let comp_file ?package ?descr comp =
   OpamFile.Comp.to_package ?package comp descr
   |> opam_file_from_1_2_to_2_0
