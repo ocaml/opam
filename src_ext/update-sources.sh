@@ -33,7 +33,7 @@ while read name prefix version url; do
       fi
     fi
   fi
-done < <(fgrep URL_ Makefile.sources | fgrep -v "URL_jbuilder" | sed -e "s/URL\(_\(PKG_\)\?\)\([^ =]*\) *= *\(.*\/\([^0-9][^-]*-\)\?v\?\)\([0-9.]\+\([-+.][^\/]*\)\?\)\(\.tbz\|\.tar\.gz\)/\3 \1 \6 \4\6\8/" | sort)
+done < <(fgrep URL_ Makefile.sources | sed -e "s/URL\(_\(PKG_\)\?\)\([^ =]*\) *= *\(.*\/\([^0-9][^-]*-\)\?v\?\)\([0-9.]\+\([-+.][^\/]*\)\?\)\(\.tbz\|\.tar\.gz\)/\3 \1 \6 \4\6\8/" | sort)
 echo -e "\nComplete."
 if [[ ${#DISAGREEMENTS[@]} -gt 0 ]] ; then
   echo "Disagreements over version:${DISAGREEMENTS[@]}"
