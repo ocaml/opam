@@ -1,0 +1,10 @@
+(library
+  (name common)
+  (public_name dose3.common)
+  (libraries extlib re.pcre cudf)
+  (modules (:standard \ extBenchmark minisatSolver tests))
+  (preprocess (action (run %{bin:cppo} -V OCAML:%{ocaml_version} %{input-file}))))
+
+(ocamllex criteria_lexer format822_lexer shell_lexer)
+
+(ocamlyacc criteria_parser format822_parser)

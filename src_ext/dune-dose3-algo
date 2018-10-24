@@ -1,0 +1,6 @@
+(library
+  (name algo)
+  (public_name dose3.algo)
+  (modules (:standard \ tests bench))
+  (libraries dose3.common ocamlgraph)
+  (preprocess (action (run %{bin:cppo} -D "OCAMLGRAPHVERSION 187" -V OCAML:%{ocaml_version} %{input-file}))))
