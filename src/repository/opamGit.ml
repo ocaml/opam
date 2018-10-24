@@ -156,7 +156,8 @@ module VCS : OpamVCS.VCS = struct
     (* Git diff is to the working dir, but doesn't work properly for
        unregistered directories. *)
     OpamSystem.raise_on_process_error r;
-    git repo_root ~stdout:patch_file [ "diff" ; "--no-ext-diff" ; "-R" ; "-p" ; rref; "--" ]
+    (* We reset diff.noprefix to ensure we get a `-p1` patch and avoid <https://github.com/ocaml/opam/issues/3627>. *)
+    git repo_root ~stdout:patch_file [ "-c" ; "diff.noprefix=false" ; "diff" ; "--no-ext-diff" ; "-R" ; "-p" ; rref; "--" ]
     @@> fun r ->
     if not (OpamProcess.check_success_and_cleanup r) then
       (finalise ();
