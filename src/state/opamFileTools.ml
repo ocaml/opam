@@ -562,7 +562,7 @@ let lint ?check_extra_files t =
     cond 52 `Error
       "Package is needlessly flagged \"light-uninstall\", since it has no \
        remove instructions"
-      (has_flag Pkgflag_Conf t && t.remove = []);
+      (has_flag Pkgflag_LightUninstall t && t.remove = []);
     (let mismatching_extra_files =
        match t.extra_files, check_extra_files with
        | None, _ | _, None -> []
