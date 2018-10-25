@@ -70,7 +70,6 @@ src/ocaml-flags-configure.sexp
 src/*/.merlin
 src/client/linking.sexp
 src/core/developer
-src/core/version
 src/manifest/dune
 src/manifest/install.inc
 src/stubs/cc64
