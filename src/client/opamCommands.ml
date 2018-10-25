@@ -376,7 +376,7 @@ let init =
     in
     if no_compiler then () else
     match compiler with
-    | Some comp ->
+    | Some comp when String.length comp <> 0->
       let packages =
         OpamSwitchCommand.guess_compiler_package rt comp
       in
@@ -385,7 +385,10 @@ let init =
       OpamSwitchCommand.install
         gt ~rt ~packages ~update_config:true (OpamSwitch.of_string comp)
       |> ignore
-    | None ->
+    | _ as nocomp ->
+      if nocomp <> None then
+        OpamConsole.warning
+          "No compiler specified, a default compiler will be selected.";
       let candidates = OpamFormula.to_dnf default_compiler in
       let all_packages = OpamSwitchCommand.get_compiler_packages rt in
       let compiler_packages =
