@@ -1,3 +1,4 @@
+dnl The line below must be formatted AC_INIT(opam,VERSION) with no extra spaces
 AC_INIT(opam,2.0.0)
 AC_COPYRIGHT(Copyright 2012-2017 OcamlPro SAS)
 
@@ -121,7 +122,13 @@ AS_IF([test ! -x ${OCAML_TEST_CC}],[
 ])
 AC_PROG_CC(["${OCAML_CC}" gcc cc])
 
-AS_IF([test "x${enable_developer_mode}" = "xyes"], [AC_SUBST(DEVELOPER,true)], [AC_SUBST(DEVELOPER,false)])
+AS_IF([test "x${enable_developer_mode}" = "xyes"],[
+  AC_SUBST(DEVELOPER,true)
+  echo "-D DEVELOPER" > src/core/developer
+],[
+  AC_SUBST(DEVELOPER,false)
+  rm -f src/core/developer
+])
 
 AS_IF([test "x${with_mccs}" = "xno"], [AC_SUBST(MCCS_ENABLED,false)], [AC_SUBST(MCCS_ENABLED,true)])
 
@@ -132,7 +139,7 @@ AS_IF([test "x${CI}" != "x"], [
 ])
 AS_IF([test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"],[
   AS_IF([test "x${CCOMP_TYPE}" = "xmsvc"],[
-    CONF_CFLAGS="/WX"
+    CONF_CFLAGS="\"/WX\""
   ],[
     CONF_CFLAGS="-Werror"
   ])
@@ -158,7 +165,8 @@ AS_IF([ test ${WIN32} -eq 1 ],[
       AS_IF([ test "$ARCH" = "i386" ],[T_CC64=x86_64-w64-mingw32-gcc],[T_CC64=i686-w64-mingw32-gcc])])
     AC_CHECK_TOOL(CC64,[${T_CC64}],[no])
     AS_IF([ test "x${CC64}" != "xno" ],[
-      CC64_JBUILD="(run ${CC64} -o \"\${@}\" -I ../core -Wdeclaration-after-statement \${<})"
+      echo "${CC64} -o " > src/stubs/cc64
+      echo " -Wdeclaration-after-statement " >> src/stubs/cc64
     ])
   ],[
     AC_MSG_CHECKING([whether Microsoft Linker needs a PATH shim])
@@ -182,28 +190,26 @@ AS_IF([ test ${WIN32} -eq 1 ],[
       AC_MSG_RESULT([from $MSVS_NAME])
       CL_FULL="`PATH="${MSVS_PATH}:${PATH}" which cl | cygpath -f - -w`"
       MSVS_PATH="`echo "${MSVS_PATH}" | cygpath -f - -wp`"
-      CC64_JBUILD="(setenv PATH \"${MSVS_PATH}\" (setenv LIB \"${MSVS_LIB};${LIB}\" (setenv INCLUDE \"${MSVS_INC};${INCLUDE}\" (run \"${CL_FULL}\" /nologo \"/Fe\${@}\" /I../core \${<}))))"
-      CC64_JBUILD="$(echo $CC64_JBUILD|sed -e 's/\\/\\\\/g')"
+      echo "cl /nologo /Fe" > src/stubs/cc64
+      echo " " >> src/stubs/cc64
+      echo "PATH" >> src/stubs/cc64
+      echo "${MSVS_PATH}" >> src/stubs/cc64
+      echo "LIB" >> src/stubs/cc64
+      echo "${MSVS_LIB}" >> src/stubs/cc64
+      echo "INCLUDE" >> src/stubs/cc64
+      echo "${MSVS_INC}" >> src/stubs/cc64
     ])
   ])
   AS_IF([ test "x${CC64}" = "xno" ],[
     AC_MSG_WARN([Complementary C compiler not found - opam-putenv will not be built])
-    BUILD_PUTENV=0
-    CC64_JBUILD=
-  ],[
-    BUILD_PUTENV=1
   ])
-],[
-  BUILD_PUTENV=0
-  CC64_JBUILD=
 ])
-AC_SUBST(CC64_JBUILD)
 
 AC_PROG_FINDLIB
 
 AC_ARG_ENABLE([certificate_check],
   AS_HELP_STRING([--disable-certificate-check],
-                 [Do not check the certificate of opam's dependency archives])
+                 [Do not check the certificate of opam's dependency archives])dnl '
 )
 
 AS_IF([test "x${enable_certificate_check}" = "xno"], [
@@ -213,7 +219,7 @@ AS_IF([test "x${enable_certificate_check}" = "xno"], [
 
 AC_CHECK_PROGS(FETCH,[curl wget],no)
 
-AC_CHECK_TOOL(JBUILDER,jbuilder)
+AC_CHECK_TOOL(DUNE,dune)
 AC_CHECK_TOOL(PATCH,patch)
 AC_CHECK_TOOL(BUNZIP2,bunzip2)
 
@@ -241,20 +247,12 @@ AS_IF([test "x${with_private_runtime}" != "xno"],[
   AS_IF([test ${WIN32} -eq 1 -a "x${CCOMP_TYPE}" = "xcc"],[
     CONF_MANIFEST_O=opam-manifest.o
     AS_IF([ test "$ARCH" = "i386" ],[
-      TOOL_ARCH=i686
       MANIFEST_ARCH=x86
       RUNTIME_GCC_S=libgcc_s_sjlj-1
     ],[
-      TOOL_ARCH=x86_64
       MANIFEST_ARCH=amd64
       RUNTIME_GCC_S=libgcc_s_seh-1
     ])
-    RUNTIME=`${TOOL_ARCH}-w64-mingw32-gcc -print-sysroot`/mingw/bin
-    echo Linking ${SYSTEM} runtime DLLs
-    ${LN_S} -fv ${RUNTIME}/${RUNTIME_GCC_S}.dll src/client/${RUNTIME_GCC_S}.dll
-    ${LN_S} -fv ${RUNTIME}/libstdc++-6.dll src/client/libstdc++-6.dll
-    ${LN_S} -fv ${RUNTIME}/libwinpthread-1.dll src/client/libwinpthread-1.dll
-    AC_SUBST(TOOL_ARCH)
     AC_SUBST(MANIFEST_ARCH)
     AC_SUBST(RUNTIME_GCC_S)
   ],[
@@ -342,28 +340,30 @@ if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
 fi
 
-AS_IF([ test ${BUILD_PUTENV} -eq 1],[
-  AC_CONFIG_FILES(src/tools/opam-putenv.inc)
-],[
-  > src/tools/opam-putenv.inc
-])
-AS_IF([ test -n "${CONF_MANIFEST_O}" ],[
-  AC_CONFIG_FILES(src/client/manifest.inc)
-],[
-  > src/client/manifest.inc
-])
 AC_CONFIG_FILES(
   Makefile.config
-  src/client/opamManifest.inc
+  src/ocaml-flags-configure.sexp
+  src/stubs/c-flags.sexp
 )
 AC_OUTPUT
 
+rm -f src/manifest/dune src/manifest/install.inc
+AS_IF([test "x${with_private_runtime}" != "xno"],[
+  AS_IF([test ${WIN32} -eq 1 -a "x${CCOMP_TYPE}" = "xcc"],[
+    cd src/manifest
+    ${LN_S} -f dune-manifest dune
+    ${LN_S} -f install.${ARCH} install.inc
+    cd ../..
+  ],[
+    AC_MSG_WARN([--with-private-runtime ignored (not building on mingw)])
+  ])
+])
+
+rm -f src/stubs/dune
 AS_IF([ test ${WIN32} -eq 1],[
   cd src/stubs
-  ${LN_S} -f jbuild-win32 jbuild
+  ${LN_S} -f dune-win32 dune
   cd ../..
-],[
-  rm -f src/stubs/jbuild
 ])
 
 echo

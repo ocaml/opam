@@ -15,20 +15,20 @@ endif
 # Package dependencies
 opam-file-format.pkgbuild: findlib.pkgbuild
 
-cppo.pkgbuild: jbuilder.pkgbuild
+cppo.pkgbuild: dune-local.pkgbuild
 
 extlib.pkgbuild: findlib.pkgbuild cppo.pkgbuild
 
 ocamlbuild.pkgbuild: findlib.pkgbuild
 
-re.pkgbuild: jbuilder.pkgbuild seq.pkgbuild findlib.pkgbuild
+re.pkgbuild: dune-local.pkgbuild seq.pkgbuild findlib.pkgbuild
 
 seq.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild
 
 ocamlgraph.pkgbuild: findlib.pkgbuild
 
 # result.pkgbuild depends on findlib because the files are explicitly installed using it
-result.pkgbuild: jbuilder.pkgbuild findlib.pkgbuild
+result.pkgbuild: dune-local.pkgbuild findlib.pkgbuild
 
 topkg.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild result.pkgbuild
 
@@ -39,7 +39,7 @@ cudf.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild extlib.pkgbuild
 dose3.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild cppo.pkgbuild extlib.pkgbuild re.pkgbuild ocamlgraph.pkgbuild cudf.pkgbuild
 
 # mccs.pkgbuild depends on findlib because the files are explicitly installed using it
-mccs.pkgbuild: jbuilder.pkgbuild cudf.pkgbuild findlib.pkgbuild
+mccs.pkgbuild: dune-local.pkgbuild cudf.pkgbuild findlib.pkgbuild
 
 opam-file-format-pkg-build:
 	make LIBDIR=$(SITELIB) all install
@@ -49,7 +49,7 @@ findlib-pkg-build:
 	make all opt install
 
 cppo-pkg-build:
-	jbuilder build @install -p cppo
+	dune build @install -p cppo
 	cp _build/install/default/bin/cppo$(EXT_EXE) $(OCAMLBIN)/
 	mkdir -p $(SITELIB)/cppo
 	cp _build/install/default/lib/cppo/META $(SITELIB)/cppo/
@@ -62,7 +62,7 @@ ocamlbuild-pkg-build:
 	make all findlib-install
 
 re-pkg-build:
-	jbuilder build @install -p re
+	dune build @install -p re
 	cp -LR _build/install/default/lib/re $(SITELIB)/re/
 
 ocamlgraph-pkg-build:
@@ -70,7 +70,7 @@ ocamlgraph-pkg-build:
 	make all install-findlib
 
 result-pkg-build:
-	jbuilder build @install --root=.
+	dune build @install --root=.
 	ocamlfind install result $(addprefix _build/install/default/lib/result/,META result.*)
 
 EXTS1=$(EXT_LIB) mli
@@ -92,13 +92,13 @@ dose3-pkg-build:
 	make libs apps
 	make install
 
-jbuilder-pkg-build:
+dune-local-pkg-build:
 	ocaml bootstrap.ml
-	./boot.exe
-	cp _build/default/bin/main.exe $(OCAMLBIN)/jbuilder$(EXT_EXE)
+	./boot.exe --release
+	cp _build/default/bin/main_dune.exe $(OCAMLBIN)/dune$(EXT_EXE)
 
 mccs-pkg-build:
-	jbuilder build @install --root=.
+	dune build @install --root=.
 	ocamlfind install mccs $(addprefix _build/install/default/lib/,$(addprefix mccs/,META libmccs_stubs.$(EXT_LIB) mccs.*) stublibs/*.$(EXT_DLL))
 	cp -RL _build/install/default/lib/mccs/glpk $(SITELIB)/mccs/
 

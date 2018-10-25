@@ -1,0 +1,34 @@
+(executable
+  (name         opam_admin_top)
+  (modules      opam_admin_top)
+  (ocamlc_flags (:standard
+                (:include ../ocaml-flags-standard.sexp)
+                (:include ../ocaml-flags-configure.sexp)
+                (:include ../ocaml-context-flags.sexp)
+                -linkall))
+  (libraries    opam-client opam-file-format compiler-libs.toplevel re))
+
+(install
+  (section bin)
+  (package opam-admin)
+  (files   (opam_admin_top.bc as opam-admin.top)))
+
+(executable
+  (name    opam_check)
+  (modules opam_check)
+  (flags   (:standard
+           (:include ../ocaml-flags-standard.sexp)
+           (:include ../ocaml-flags-configure.sexp)
+           (:include ../ocaml-context-flags.sexp)))
+  (libraries opam-state))
+
+(executable
+  (name        opam_installer)
+  (package     opam-installer)
+  (public_name opam-installer)
+  (modules     opam_installer)
+  (libraries   opam-format cmdliner)
+  (flags       (:standard
+               (:include ../ocaml-flags-standard.sexp)
+               (:include ../ocaml-flags-configure.sexp)
+               (:include ../ocaml-context-flags.sexp))))
