@@ -277,7 +277,7 @@ module Op: sig
 
 end
 
-(** Simple structure to hanle file attributes *)
+(** Simple structure to handle file attributes *)
 module Attribute: sig
 
   include OpamStd.ABSTRACT

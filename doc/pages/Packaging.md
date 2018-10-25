@@ -48,6 +48,8 @@ build: ["dune" "build" "-p" name]
 ```
 
 See [below](#The-file-format-in-more-detail) for more on the format.
+It is recommended to use [`opam lint`](man/opam-lint.html) to check the
+validity of your opam file.
 
 ## Testing
 
@@ -136,7 +138,8 @@ remove the others rather than leave them empty.
 * `synopsis` should be a one-line description of what your package does, used in
   listings. It is recommended to also add a `description` field for a longer
   explanation (hint: you may delimit long strings with triple-quotation mark
-  delimiters `"""` to avoid escaping issues).
+  delimiters `"""` to avoid escaping issues). Since opam2.0.1, linting requires
+  to have at least synopsis or description filled.
 * You'll probably be the `maintainer` for now, so give a way to contact you in
   case your package needs maintenance.
 * Most interesting is the `build` field, that tells opam how to compile the
