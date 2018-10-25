@@ -14,7 +14,7 @@ binary installer. Opam will automatically update its internal repository at
 made automatically).
 
 To upgrade shell scripts, and enable sandboxing, don't forget to run `opam init
---reinint -ni`.
+--reinit -ni`.
 
 Then see the [Upgrade guide](Upgrade_guide.html) to check the changes.
 
