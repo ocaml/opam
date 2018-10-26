@@ -1,0 +1,12 @@
+(library
+  (name        opam_solver)
+  (public_name opam-solver)
+  (synopsis    "OCaml Package Manager solver interaction library")
+  (libraries   opam-format cudf dose3.algo
+               (select opamBuiltinMccs.ml from
+                 (mccs -> opamBuiltinMccs.ml.real)
+                 (     -> opamBuiltinMccs.ml.dummy)))
+  (flags       (:standard
+               (:include ../ocaml-flags-standard.sexp)
+               (:include ../ocaml-context-flags.sexp)))
+  (wrapped     false))

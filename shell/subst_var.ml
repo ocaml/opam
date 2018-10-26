@@ -34,7 +34,7 @@ let value =
       if line_l > magic_l then
         if String.sub line 0 magic_l = magic then begin
           close_in c;
-          String.sub line magic_l (line_l - magic_l - 1)
+          Scanf.unescaped @@ String.sub line magic_l (line_l - magic_l - 1)
         end else
           process ()
       else

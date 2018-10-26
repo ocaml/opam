@@ -1,3 +1,4 @@
+dnl The line below must be formatted AC_INIT(opam,VERSION) with no extra spaces
 AC_INIT(opam,2.0.1)
 AC_COPYRIGHT(Copyright 2012-2017 OcamlPro SAS)
 
@@ -132,7 +133,7 @@ AS_IF([test "x${CI}" != "x"], [
 ])
 AS_IF([test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"],[
   AS_IF([test "x${CCOMP_TYPE}" = "xmsvc"],[
-    CONF_CFLAGS="/WX"
+    CONF_CFLAGS="\"/WX\""
   ],[
     CONF_CFLAGS="-Werror"
   ])
@@ -158,7 +159,7 @@ AS_IF([ test ${WIN32} -eq 1 ],[
       AS_IF([ test "$ARCH" = "i386" ],[T_CC64=x86_64-w64-mingw32-gcc],[T_CC64=i686-w64-mingw32-gcc])])
     AC_CHECK_TOOL(CC64,[${T_CC64}],[no])
     AS_IF([ test "x${CC64}" != "xno" ],[
-      CC64_JBUILD="(run ${CC64} -o \"\${@}\" -I ../core -Wdeclaration-after-statement \${<})"
+      CC64_JBUILD="(run ${CC64} -o \"%{targets}\" -I ../core -Wdeclaration-after-statement %{source})"
     ])
   ],[
     AC_MSG_CHECKING([whether Microsoft Linker needs a PATH shim])
@@ -182,7 +183,7 @@ AS_IF([ test ${WIN32} -eq 1 ],[
       AC_MSG_RESULT([from $MSVS_NAME])
       CL_FULL="`PATH="${MSVS_PATH}:${PATH}" which cl | cygpath -f - -w`"
       MSVS_PATH="`echo "${MSVS_PATH}" | cygpath -f - -wp`"
-      CC64_JBUILD="(setenv PATH \"${MSVS_PATH}\" (setenv LIB \"${MSVS_LIB};${LIB}\" (setenv INCLUDE \"${MSVS_INC};${INCLUDE}\" (run \"${CL_FULL}\" /nologo \"/Fe\${@}\" /I../core \${<}))))"
+      CC64_JBUILD="(setenv PATH \"${MSVS_PATH}\" (setenv LIB \"${MSVS_LIB};${LIB}\" (setenv INCLUDE \"${MSVS_INC};${INCLUDE}\" (run \"${CL_FULL}\" /nologo \"/Fe%{targets}\" /I../core %{source}))))"
       CC64_JBUILD="$(echo $CC64_JBUILD|sed -e 's/\\/\\\\/g')"
     ])
   ])
@@ -203,7 +204,7 @@ AC_PROG_FINDLIB
 
 AC_ARG_ENABLE([certificate_check],
   AS_HELP_STRING([--disable-certificate-check],
-                 [Do not check the certificate of opam's dependency archives])
+                 [Do not check the certificate of opam's dependency archives])dnl '
 )
 
 AS_IF([test "x${enable_certificate_check}" = "xno"], [
@@ -213,7 +214,7 @@ AS_IF([test "x${enable_certificate_check}" = "xno"], [
 
 AC_CHECK_PROGS(FETCH,[curl wget],no)
 
-AC_CHECK_TOOL(JBUILDER,jbuilder)
+AC_CHECK_TOOL(DUNE,dune)
 AC_CHECK_TOOL(PATCH,patch)
 AC_CHECK_TOOL(BUNZIP2,bunzip2)
 
@@ -239,7 +240,7 @@ fi
 
 AS_IF([test "x${with_private_runtime}" != "xno"],[
   AS_IF([test ${WIN32} -eq 1 -a "x${CCOMP_TYPE}" = "xcc"],[
-    CONF_MANIFEST_O=opam-manifest.o
+    CONF_MANIFEST_O="\"opam-manifest.o\""
     AS_IF([ test "$ARCH" = "i386" ],[
       TOOL_ARCH=i686
       MANIFEST_ARCH=x86
@@ -358,12 +359,12 @@ AC_CONFIG_FILES(
 )
 AC_OUTPUT
 
+
+rm -f src/stubs/dune
 AS_IF([ test ${WIN32} -eq 1],[
   cd src/stubs
-  ${LN_S} -f jbuild-win32 jbuild
+  ${LN_S} -f dune-win32 dune
   cd ../..
-],[
-  rm -f src/stubs/jbuild
 ])
 
 echo

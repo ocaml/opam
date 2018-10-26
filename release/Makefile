@@ -96,8 +96,8 @@ host: out/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	  cd build/opam-full-$(VERSION) && \
 	  ./configure && \
 	  echo "$(call LINKING,$(HOST_OS))" >src/client/linking.sexp && \
-	  $(MAKE) lib-ext JBUILDER_ARGS="--root=`pwd`"; \
-	  $(MAKE) opam JBUILDER_ARGS="--root=`pwd`"; \
+	  $(MAKE) lib-ext DUNE_ARGS="--root=`pwd`"; \
+	  $(MAKE) opam DUNE_ARGS="--root=`pwd`"; \
 	)
 	cp build/opam-full-$(VERSION)/opam out/opam-$(VERSION)-$(HOST)
 	strip out/opam-$(VERSION)-$(HOST)

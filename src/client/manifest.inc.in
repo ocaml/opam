@@ -1,7 +1,7 @@
 (rule
-  ((targets (opam-manifest.o))
-   (deps    (opam.rc))
-   (action  (run @TOOL_ARCH@-w64-mingw32-windres ${^} ${@}))))
+  (targets opam-manifest.o)
+  (deps    (:rc opam.rc))
+  (action  (run @TOOL_ARCH@-w64-mingw32-windres %{rc} %{targets})))
 
 (rule
   (with-stdout-to opam.exe.manifest
@@ -12,15 +12,14 @@
            (echo "</assembly>"))))
 
 (rule
-  ((targets (opam.rc))
-   (deps    (opam.exe.manifest))
-   (action  (with-stdout-to opam.rc (echo "#include <winuser.h>\nCREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST opam.exe.manifest")))))
+  (targets opam.rc)
+  (deps    (:manifest opam.exe.manifest))
+  (action  (with-stdout-to %{targets} (echo "#include <winuser.h>\nCREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST %{manifest}"))))
 
 (install
-  ((section bin)
-   (files   ((Opam.Runtime.@MANIFEST_ARCH@.manifest as Opam.Runtime.@MANIFEST_ARCH@\Opam.Runtime.@MANIFEST_ARCH@.manifest)
-             (libstdc++-6.dll as Opam.Runtime.@MANIFEST_ARCH@\libstdc++-6.dll)
-             (libwinpthread-1.dll as Opam.Runtime.@MANIFEST_ARCH@\libwinpthread-1.dll)
-             (@RUNTIME_GCC_S@.dll as Opam.Runtime.@MANIFEST_ARCH@\@RUNTIME_GCC_S@.dll)))
-   (package opam)))
-
+  (section bin)
+  (files   (Opam.Runtime.@MANIFEST_ARCH@.manifest as Opam.Runtime.@MANIFEST_ARCH@\Opam.Runtime.@MANIFEST_ARCH@.manifest)
+           (libstdc++-6.dll as Opam.Runtime.@MANIFEST_ARCH@\libstdc++-6.dll)
+           (libwinpthread-1.dll as Opam.Runtime.@MANIFEST_ARCH@\libwinpthread-1.dll)
+           (@RUNTIME_GCC_S@.dll as Opam.Runtime.@MANIFEST_ARCH@\@RUNTIME_GCC_S@.dll))
+  (package opam))

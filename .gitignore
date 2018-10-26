@@ -14,7 +14,7 @@ src_ext/extlib/
 src_ext/mccs/
 src_ext/re/
 src_ext/ocamlgraph/
-src_ext/jbuilder/
+src_ext/dune-local/
 src_ext/result/
 src_ext/opam-file-format/
 src_ext/camlp4
@@ -28,7 +28,7 @@ src_ext/*.tar.gz
 src_ext/archives/*
 src_ext/*.*download
 src_ext/*.pkgbuild
-src_ext/jbuild-ignore
+src_ext/dune
 Opam.Runtime.*/
 *.tar.bz2
 *.annot
@@ -70,7 +70,7 @@ src/*/.merlin
 src/client/manifest.inc
 src/client/opamManifest.inc
 src/client/*.dll
-src/stubs/jbuild
+src/stubs/dune
 src/tools/opam-putenv.inc
 # doc
 doc/dev-manual/*aux

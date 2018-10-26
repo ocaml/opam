@@ -5,15 +5,15 @@ endif
 all: opam opam-installer
 	@
 
-ifeq ($(JBUILDER),)
-  JBUILDER_FILE = src_ext/jbuilder/_build/install/default/bin/jbuilder$(EXE)
+ifeq ($(DUNE),)
+  DUNE_EXE = src_ext/dune-local/_build/install/default/bin/dune$(EXE)
   ifeq ($(shell command -v cygpath 2>/dev/null),)
-    JBUILDER := $(JBUILDER_FILE)
+    DUNE := $(DUNE_EXE)
   else
-    JBUILDER := $(shell echo "$(JBUILDER_FILE)" | cygpath -f - -a)
+    DUNE := $(shell echo "$(DUNE_EXE)" | cygpath -f - -a)
   endif
 else
-  JBUILDER_FILE=
+  DUNE_EXE=
 endif
 
 OPAMINSTALLER = ./opam-installer$(EXE)
@@ -21,18 +21,21 @@ OPAMINSTALLER = ./opam-installer$(EXE)
 ALWAYS:
 	@
 
-JBUILDER_DEP = ALWAYS $(JBUILDER_FILE)
+DUNE_DEP = ALWAYS $(DUNE_EXE)
+JBUILDER_ARGS ?= 
+DUNE_ARGS ?= $(JBUILDER_ARGS)
+DUNE_PROFILE ?= release
 
-src_ext/jbuilder/_build/install/default/bin/jbuilder$(EXE): src_ext/jbuilder.stamp
-	cd src_ext/jbuilder && ocaml bootstrap.ml && ./boot.exe
+src_ext/dune-local/_build/install/default/bin/dune$(EXE): src_ext/dune-local.stamp
+	cd src_ext/dune-local && ocaml bootstrap.ml && ./boot.exe --release
 
-src_ext/jbuilder.stamp:
-	$(MAKE) -C src_ext jbuilder.stamp
+src_ext/dune-local.stamp:
+	$(MAKE) -C src_ext dune-local.stamp
 
-jbuilder: $(JBUILDER_DEP)
-	@$(JBUILDER) build $(JBUILDER_ARGS) @install
+dune: $(DUNE_DEP)
+	@$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) @install
 
-opam: $(JBUILDER_DEP) opam.install
+opam: $(DUNE_DEP) opam.install
 	$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
 ifneq ($(MANIFEST_ARCH),)
 	@mkdir -p Opam.Runtime.$(MANIFEST_ARCH)
@@ -42,12 +45,12 @@ ifneq ($(MANIFEST_ARCH),)
 	@cd Opam.Runtime.$(MANIFEST_ARCH) && $(LN_S) -f ../src/client/$(RUNTIME_GCC_S).dll .
 endif
 
-opam-installer: $(JBUILDER_DEP)
-	$(JBUILDER) build $(JBUILDER_ARGS) src/tools/opam_installer.exe
+opam-installer: $(DUNE_DEP)
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/tools/opam_installer.exe
 	$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
 
-opam-admin.top: $(JBUILDER_DEP)
-	$(JBUILDER) build $(JBUILDER_ARGS) src/tools/opam_admin_top.bc
+opam-admin.top: $(DUNE_DEP)
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/tools/opam_admin_top.bc
 	$(LN_S) -f _build/default/src/tools/opam_admin_top.bc $@$(EXE)
 
 lib-ext:
@@ -73,7 +76,7 @@ clean:
 distclean: clean clean-ext
 	rm -rf autom4te.cache bootstrap
 	rm -f Makefile.config config.log config.status aclocal.m4
-	rm -f src/*.META src/*/.merlin src/stubs/jbuild src/client/*.dll
+	rm -f src/*.META src/*/.merlin src/stubs/dune src/client/*.dll
 	rm -f src/tools/opam-putenv.inc src/client/manifest.inc src/client/opamManifest.inc
 
 OPAMINSTALLER_FLAGS = --prefix "$(DESTDIR)$(prefix)"
@@ -93,15 +96,15 @@ ifneq ($(LIBINSTALL_DIR),)
     OPAMINSTALLER_FLAGS += --libdir "$(LIBINSTALL_DIR)"
 endif
 
-opam-devel.install: $(JBUILDER_DEP)
-	$(JBUILDER) build $(JBUILDER_ARGS) -p opam opam.install
+opam-devel.install: $(DUNE_DEP)
+	$(DUNE) build $(DUNE_ARGS) -p opam opam.install
 	sed -e "s/bin:/libexec:/" opam.install > $@
 
-opam-%.install: $(JBUILDER_DEP)
-	$(JBUILDER) build $(JBUILDER_ARGS) -p opam-$* $@
+opam-%.install: $(DUNE_DEP)
+	$(DUNE) build $(DUNE_ARGS) -p opam-$* $@
 
-opam.install: $(JBUILDER_DEP)
-	$(JBUILDER) build $(JBUILDER_ARGS) opam-installer.install opam.install
+opam.install: ALWAYS $(DUNE_DEP)
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-installer.install opam.install
 
 opam-actual.install: opam.install man
 	@echo 'bin: [' > $@
@@ -119,11 +122,11 @@ opam-actual.install: opam.install man
 
 OPAMLIBS = core format solver repository state client
 
-opam-%: $(JBUILDER_DEP)
-	$(JBUILDER) build $(JBUILDER_ARGS) opam-$*.install
+opam-%: $(DUNE_DEP)
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-$*.install
 
-opam-lib: $(JBUILDER_DEP)
-	$(JBUILDER) build $(JBUILDER_ARGS) $(patsubst %,opam-%.install,$(OPAMLIBS))
+opam-lib: $(DUNE_DEP)
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) $(patsubst %,opam-%.install,$(OPAMLIBS))
 
 installlib-%: opam-installer opam-%.install
 	$(if $(wildcard src_ext/lib/*),\
@@ -134,7 +137,7 @@ installlib-%: opam-installer opam-%.install
 uninstalllib-%: opam-installer opam-%.install
 	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) opam-$*.install
 
-libinstall: $(JBUILDER_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
+libinstall: $(DUNE_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
 	@
 
 install: opam-actual.install
@@ -148,12 +151,12 @@ uninstall: opam-actual.install
 	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) $<
 
 checker:
-	$(JBUILDER) build src/tools/opam_check.exe
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/tools/opam_check.exe
 
 .PHONY: tests tests-local tests-git
-tests: $(JBUILDER_DEP)
-	$(JBUILDER) build opam.install src/tools/opam_check.exe
-	$(JBUILDER) runtest --force --no-buffer $(JBUILDER_ARGS) src/ tests/
+tests: $(DUNE_DEP)
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam.install src/tools/opam_check.exe
+	$(DUNE) runtest --force --no-buffer --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/ tests/
 
 # tests-local, tests-git
 tests-%:
