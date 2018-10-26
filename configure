@@ -606,6 +606,7 @@ OCAML_PKG_unix
 CONF_MANIFEST_O
 RUNTIME_GCC_S
 MANIFEST_ARCH
+TOOL_ARCH
 fetch
 LN_S
 BUNZIP2
@@ -614,6 +615,7 @@ DUNE
 FETCH
 OCAMLFIND
 OCAMLOBJINFO
+CC64_JBUILD
 INC_PREPEND
 LIB_PREPEND
 PATH_PREPEND
@@ -3948,16 +3950,10 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 if test "x${enable_developer_mode}" = "xyes"; then :
-
   DEVELOPER=true
 
-  echo "-D DEVELOPER" > src/core/developer
-
 else
-
   DEVELOPER=false
-
-  rm -f src/core/developer
 
 fi
 
@@ -4116,8 +4112,7 @@ fi
 
     if  test "x${CC64}" != "xno" ; then :
 
-      echo "${CC64} -o " > src/stubs/cc64
-      echo " -Wdeclaration-after-statement " >> src/stubs/cc64
+      CC64_JBUILD="(run ${CC64} -o \"%{targets}\" -I ../core -Wdeclaration-after-statement %{source})"
 
 fi
 
@@ -4160,14 +4155,8 @@ else
 $as_echo "from $MSVS_NAME" >&6; }
       CL_FULL="`PATH="${MSVS_PATH}:${PATH}" which cl | cygpath -f - -w`"
       MSVS_PATH="`echo "${MSVS_PATH}" | cygpath -f - -wp`"
-      echo "cl /nologo /Fe" > src/stubs/cc64
-      echo " " >> src/stubs/cc64
-      echo "PATH" >> src/stubs/cc64
-      echo "${MSVS_PATH}" >> src/stubs/cc64
-      echo "LIB" >> src/stubs/cc64
-      echo "${MSVS_LIB}" >> src/stubs/cc64
-      echo "INCLUDE" >> src/stubs/cc64
-      echo "${MSVS_INC}" >> src/stubs/cc64
+      CC64_JBUILD="(setenv PATH \"${MSVS_PATH}\" (setenv LIB \"${MSVS_LIB};${LIB}\" (setenv INCLUDE \"${MSVS_INC};${INCLUDE}\" (run \"${CL_FULL}\" /nologo \"/Fe%{targets}\" /I../core %{source}))))"
+      CC64_JBUILD="$(echo $CC64_JBUILD|sed -e 's/\\/\\\\/g')"
 
 fi
 
@@ -4176,10 +4165,22 @@ fi
 
     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Complementary C compiler not found - opam-putenv will not be built" >&5
 $as_echo "$as_me: WARNING: Complementary C compiler not found - opam-putenv will not be built" >&2;}
+    BUILD_PUTENV=0
+    CC64_JBUILD=
+
+else
+
+    BUILD_PUTENV=1
 
 fi
 
+else
+
+  BUILD_PUTENV=0
+  CC64_JBUILD=
+
 fi
+
 
   if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ocamlobjinfo", so it can be a program name with args.
@@ -4760,18 +4761,26 @@ if test "x${with_private_runtime}" != "xno"; then :
 
   if test ${WIN32} -eq 1 -a "x${CCOMP_TYPE}" = "xcc"; then :
 
-    CONF_MANIFEST_O=opam-manifest.o
+    CONF_MANIFEST_O="\"opam-manifest.o\""
     if  test "$ARCH" = "i386" ; then :
 
+      TOOL_ARCH=i686
       MANIFEST_ARCH=x86
       RUNTIME_GCC_S=libgcc_s_sjlj-1
 
 else
 
+      TOOL_ARCH=x86_64
       MANIFEST_ARCH=amd64
       RUNTIME_GCC_S=libgcc_s_seh-1
 
 fi
+    RUNTIME=`${TOOL_ARCH}-w64-mingw32-gcc -print-sysroot`/mingw/bin
+    echo Linking ${SYSTEM} runtime DLLs
+    ${LN_S} -fv ${RUNTIME}/${RUNTIME_GCC_S}.dll src/client/${RUNTIME_GCC_S}.dll
+    ${LN_S} -fv ${RUNTIME}/libstdc++-6.dll src/client/libstdc++-6.dll
+    ${LN_S} -fv ${RUNTIME}/libwinpthread-1.dll src/client/libwinpthread-1.dll
+
 
 
 
@@ -5428,7 +5437,27 @@ if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
 fi
 
-ac_config_files="$ac_config_files Makefile.config src/ocaml-flags-configure.sexp src/stubs/c-flags.sexp"
+if  test ${BUILD_PUTENV} -eq 1; then :
+
+  ac_config_files="$ac_config_files src/tools/opam-putenv.inc"
+
+
+else
+
+  > src/tools/opam-putenv.inc
+
+fi
+if  test -n "${CONF_MANIFEST_O}" ; then :
+
+  ac_config_files="$ac_config_files src/client/manifest.inc"
+
+
+else
+
+  > src/client/manifest.inc
+
+fi
+ac_config_files="$ac_config_files Makefile.config src/client/opamManifest.inc"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6136,9 +6165,10 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
+    "src/tools/opam-putenv.inc") CONFIG_FILES="$CONFIG_FILES src/tools/opam-putenv.inc" ;;
+    "src/client/manifest.inc") CONFIG_FILES="$CONFIG_FILES src/client/manifest.inc" ;;
     "Makefile.config") CONFIG_FILES="$CONFIG_FILES Makefile.config" ;;
-    "src/ocaml-flags-configure.sexp") CONFIG_FILES="$CONFIG_FILES src/ocaml-flags-configure.sexp" ;;
-    "src/stubs/c-flags.sexp") CONFIG_FILES="$CONFIG_FILES src/stubs/c-flags.sexp" ;;
+    "src/client/opamManifest.inc") CONFIG_FILES="$CONFIG_FILES src/client/opamManifest.inc" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -6589,24 +6619,6 @@ $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
 
 
-rm -f src/manifest/dune src/manifest/install.inc
-if test "x${with_private_runtime}" != "xno"; then :
-
-  if test ${WIN32} -eq 1 -a "x${CCOMP_TYPE}" = "xcc"; then :
-
-    cd src/manifest
-    ${LN_S} -f dune-manifest dune
-    ${LN_S} -f install.${ARCH} install.inc
-    cd ../..
-
-else
-
-    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: --with-private-runtime ignored (not building on mingw)" >&5
-$as_echo "$as_me: WARNING: --with-private-runtime ignored (not building on mingw)" >&2;}
-
-fi
-
-fi
 
 rm -f src/stubs/dune
 if  test ${WIN32} -eq 1; then :

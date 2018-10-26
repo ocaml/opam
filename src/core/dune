@@ -8,20 +8,17 @@
                        (                -> opamStubs.ml.dummy)))
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
-               (:include ../ocaml-flags-configure.sexp)
                (:include ../ocaml-context-flags.sexp)))
   (preprocess  (per_module
-                  ((action (run %{bin:cppo} -V OCAML:%{ocaml_version} %{input-file})) opamCompat)
-                  ((action (run %{bin:cppo} %{read-lines:developer} %{input-file})) opamCoreConfig)
-                  ((action (run %{bin:cppo} -D "VERSION %{read-lines:version}" %{input-file})) opamVersion)))
+                  ((action (run %{bin:cppo} -V OCAML:%{ocaml_version} %{input-file})) opamCompat)))
   (wrapped     false))
 
 (rule
-  (targets version)
-  (deps    ../../shell/get_version.ml ../../configure.ac)
-  (action  (with-stdout-to %{targets} (run ocaml ../../shell/get_version.ml ../../configure.ac))))
+  (targets opamVersion.ml)
+  (deps    (:input opamVersion.ml.in) (:script ../../shell/subst_var.ml) ../../config.status)
+  (action  (with-stdout-to %{targets} (run ocaml %{script} PACKAGE_VERSION "<error>" %{input}))))
 
 (rule
-  (targets developer)
-  (mode    fallback)
-  (action  (with-stdout-to %{targets} (echo ""))))
+  (targets opamCoreConfig.ml)
+  (deps    (:input opamCoreConfig.ml.in) (:script ../../shell/subst_var.ml) ../../config.status)
+  (action  (with-stdout-to %{targets} (run ocaml %{script} DEVELOPER false %{input}))))

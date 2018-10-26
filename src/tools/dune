@@ -3,7 +3,6 @@
   (modules      opam_admin_top)
   (ocamlc_flags (:standard
                 (:include ../ocaml-flags-standard.sexp)
-                (:include ../ocaml-flags-configure.sexp)
                 (:include ../ocaml-context-flags.sexp)
                 -linkall))
   (libraries    opam-client opam-file-format compiler-libs.toplevel re))
@@ -18,9 +17,10 @@
   (modules opam_check)
   (flags   (:standard
            (:include ../ocaml-flags-standard.sexp)
-           (:include ../ocaml-flags-configure.sexp)
            (:include ../ocaml-context-flags.sexp)))
   (libraries opam-state))
+
+(include opam-putenv.inc)
 
 (executable
   (name        opam_installer)
@@ -30,5 +30,4 @@
   (libraries   opam-format cmdliner)
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
-               (:include ../ocaml-flags-configure.sexp)
                (:include ../ocaml-context-flags.sexp))))

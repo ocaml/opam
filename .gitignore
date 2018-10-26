@@ -66,16 +66,12 @@ config.log
 config.status
 aclocal.m4
 autom4te.cache
-src/ocaml-flags-configure.sexp
 src/*/.merlin
-src/client/linking.sexp
-src/core/developer
-src/core/version
-src/manifest/dune
-src/manifest/install.inc
-src/stubs/cc64
+src/client/manifest.inc
+src/client/opamManifest.inc
+src/client/*.dll
 src/stubs/dune
-src/stubs/c-flags.sexp
+src/tools/opam-putenv.inc
 # doc
 doc/dev-manual/*aux
 doc/dev-manual/*.html

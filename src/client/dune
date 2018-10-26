@@ -2,11 +2,10 @@
   (name        opam_client)
   (public_name opam-client)
   (synopsis    "OCaml Package Manager client and CLI library")
-  (modules     (:standard \ opamMain get-git-version))
+  (modules     (:standard \ opamMain opamManifest get-git-version))
   (libraries   opam-state opam-solver re cmdliner)
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
-               (:include ../ocaml-flags-configure.sexp)
                (:include ../ocaml-context-flags.sexp)))
   (wrapped     false))
 
@@ -14,26 +13,22 @@
   (name        opamMain)
   (public_name opam)
   (package     opam)
-  (modules     opamMain)
+  (modules     opamMain opamManifest)
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
-               (:include ../ocaml-flags-configure.sexp)
                (:include ../ocaml-context-flags.sexp)
                (:include linking.sexp)))
-  (libraries   opam-client
-               (select link-opam-manifest from
-                       (opam-client.manifest -> pull-manifest)
-                       (                     -> dummy)
-               )))
+  (link_flags  (:include manifest.sexp))
+  (libraries   opam-client))
 
 (rule
-  (with-stdout-to dummy (echo "")))
+  (targets manifest.sexp)
+  (deps    (:script ../../shell/subst_var.ml) ../../config.status (:input manifest.sexp.in))
+  (action  (with-stdout-to %{targets} (run ocaml %{script} CONF_MANIFEST_O "" %{input}))))
 
-(rule
-  (targets pull-manifest)
-  (deps    (:obj ../manifest/opam-manifest.o))
-  (action  (progn (system "cp %{obj} opam-manifest.o 2> %{null} || copy %{obj} opam-manifest.o")
-                  (with-stdout-to %{targets} (echo "")))))
+(include opamManifest.inc)
+
+(include manifest.inc)
 
 (rule
   (targets git-sha)
@@ -47,6 +42,4 @@
   (with-stdout-to opamGitVersion.ml (run ocaml %{dep:get-git-version.ml})))
 
 (rule
-  (targets linking.sexp)
-  (mode    fallback)
-  (action  (with-stdout-to %{targets} (echo "()"))))
+  (with-stdout-to linking.sexp (run echo "()")))

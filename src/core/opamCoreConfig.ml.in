@@ -101,8 +101,4 @@ let r = ref default
 
 let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 
-#ifdef DEVELOPER
-let developer = true
-#else
-let developer = false
-#endif
+let developer = @DEVELOPER@

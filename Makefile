@@ -39,10 +39,10 @@ opam: $(DUNE_DEP) opam.install
 	$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
 ifneq ($(MANIFEST_ARCH),)
 	@mkdir -p Opam.Runtime.$(MANIFEST_ARCH)
-	@cp -f src/manifest/Opam.Runtime.$(MANIFEST_ARCH).manifest Opam.Runtime.$(MANIFEST_ARCH)/
-	@cd Opam.Runtime.$(MANIFEST_ARCH) && $(LN_S) -f ../_build/install/default/bin/Opam.Runtime.$(MANIFEST_ARCH)/libstdc++-6.dll .
-	@cd Opam.Runtime.$(MANIFEST_ARCH) && $(LN_S) -f ../_build/install/default/bin/Opam.Runtime.$(MANIFEST_ARCH)/libwinpthread-1.dll .
-	@cd Opam.Runtime.$(MANIFEST_ARCH) && $(LN_S) -f ../_build/install/default/bin/Opam.Runtime.$(MANIFEST_ARCH)/$(RUNTIME_GCC_S).dll .
+	@cp -f src/client/Opam.Runtime.$(MANIFEST_ARCH).manifest Opam.Runtime.$(MANIFEST_ARCH)/
+	@cd Opam.Runtime.$(MANIFEST_ARCH) && $(LN_S) -f ../src/client/libstdc++-6.dll .
+	@cd Opam.Runtime.$(MANIFEST_ARCH) && $(LN_S) -f ../src/client/libwinpthread-1.dll .
+	@cd Opam.Runtime.$(MANIFEST_ARCH) && $(LN_S) -f ../src/client/$(RUNTIME_GCC_S).dll .
 endif
 
 opam-installer: $(DUNE_DEP)
@@ -76,8 +76,8 @@ clean:
 distclean: clean clean-ext
 	rm -rf autom4te.cache bootstrap
 	rm -f Makefile.config config.log config.status aclocal.m4
-	rm -f src/*.META src/*/.merlin src/manifest/dune src/manifest/install.inc src/stubs/dune src/stubs/cc64 src/ocaml-flags-configure.sexp
-	rm -f src/client/linking.sexp src/stubs/c-flags.sexp src/core/developer src/core/version
+	rm -f src/*.META src/*/.merlin src/stubs/dune src/client/*.dll
+	rm -f src/tools/opam-putenv.inc src/client/manifest.inc src/client/opamManifest.inc
 
 OPAMINSTALLER_FLAGS = --prefix "$(DESTDIR)$(prefix)"
 OPAMINSTALLER_FLAGS += --mandir "$(DESTDIR)$(mandir)"

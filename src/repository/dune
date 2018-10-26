@@ -5,6 +5,5 @@
   (libraries   opam-format)
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
-               (:include ../ocaml-flags-configure.sexp)
                (:include ../ocaml-context-flags.sexp)))
   (wrapped     false))
