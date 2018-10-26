@@ -435,6 +435,21 @@ module OpamString = struct
     with Not_found ->
       false
 
+  let find_from f s i =
+    let l = String.length s in
+    if i < 0 || i > l then
+      invalid_arg "find_from"
+    else
+      let rec g i =
+        if i < l then
+          if f s.[i] then
+            i
+          else
+            g (succ i)
+        else
+          raise Not_found in
+      g i
+
   let map f s =
     let len = String.length s in
     let b = Bytes.create len in
@@ -597,9 +612,9 @@ module OpamSys = struct
     if Sys.win32 then fun path ->
       let length = String.length path in
       let rec f acc index current last normal =
-        if index = length
-        then let current = current ^ String.sub path last (index - last) in
-          if current <> "" then current::acc else acc
+        if index = length then
+          let current = current ^ String.sub path last (index - last) in
+          List.rev (if current <> "" then current::acc else acc)
         else let c = path.[index]
           and next = succ index in
           if c = ';' && normal || c = '"' then
@@ -707,6 +722,10 @@ module OpamSys = struct
         in
         Hashtbl.add memo arg r;
         r
+
+  let system () =
+    (* CSIDL_SYSTEM = 0x25 *)
+    OpamStubs.(shGetFolderPath 0x25 SHGFP_TYPE_CURRENT)
 
   type os =
     | Darwin
@@ -844,6 +863,44 @@ module OpamSys = struct
     List.iter
       (fun f -> try f () with _ -> ())
       !registered_at_exit
+
+  let is_cygwin_variant =
+    if Sys.win32 then
+      let results = Hashtbl.create 17 in
+      let requires_cygwin name =
+        let cmd = Printf.sprintf "cygcheck \"%s\"" name in
+        let ((c, _, _) as process) = Unix.open_process_full cmd (Unix.environment ()) in
+        let rec f a =
+          match input_line c with
+          | x ->
+              if OpamString.ends_with ~suffix:"cygwin1.dll" (String.trim x) then
+                if OpamString.starts_with ~prefix:"  " x then
+                  f `Cygwin
+                else if a <> `Cygwin then
+                  f `CygLinked
+                else
+                  f a
+              else
+                f a
+          | exception _ ->
+              Unix.close_process_full process |> ignore;
+              a
+        in
+        f `Native
+      in
+      fun name ->
+        if Filename.is_relative name then
+          requires_cygwin name
+        else
+          try
+            Hashtbl.find results name
+          with Not_found ->
+            let result = requires_cygwin name
+            in
+              Hashtbl.add results name result;
+              result
+    else
+      fun _ -> `Native
 
   exception Exit of int
   exception Exec of string * string array * string array

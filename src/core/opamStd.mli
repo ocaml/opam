@@ -224,6 +224,7 @@ module String : sig
   val contains_char: string -> char -> bool
   val contains: sub:string -> string -> bool
   val exact_match: Re.re -> string -> bool
+  val find_from: (char -> bool) -> string -> int -> int
 
   (** {3 Manipulation} *)
 
@@ -368,6 +369,9 @@ module Sys : sig
   (** The /etc directory *)
   val etc: unit -> string
 
+  (** The system directory (Windows only) *)
+  val system: unit -> string
+
   type os = Darwin
           | Linux
           | FreeBSD
@@ -406,6 +410,12 @@ module Sys : sig
       the path cleaned (remove trailing, leading, contiguous delimiters).
       Optional argument [clean] permits to keep those empty strings. *)
   val split_path_variable: ?clean:bool -> string -> string list
+
+  (** For native Windows builds, returns [`Cygwin] if the command is a Cygwin-
+      compiled executable, [`CygLinked] if the command links to a library which is
+      itself Cygwin-compiled or [`Native] otherwise.
+      Note that this returns [`Native] on a Cygwin-build of opam! *)
+  val is_cygwin_variant: string -> [ `Native | `Cygwin | `CygLinked ]
 
   (** {3 Exit handling} *)
 

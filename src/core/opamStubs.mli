@@ -128,3 +128,7 @@ val getConsoleAlias : string -> string -> string
 (** Windows only. [getConsoleAlias alias exeName] retrieves the value for a
     given executable or [""] if the alias is not defined. See
     https://docs.microsoft.com/en-us/windows/console/getconsolealias *)
+
+val win_create_process : string -> string -> string option -> Unix.file_descr ->
+                         Unix.file_descr -> Unix.file_descr -> int
+(** Windows only. Provided by OCaml's win32unix library. *)

@@ -384,6 +384,28 @@ let resolve_command =
   fun ?(env=default_env) ?dir name ->
     resolve env ?dir name
 
+let apply_cygpath name =
+  let r =
+    OpamProcess.run
+      (OpamProcess.command ~name:(temp_file "command") ~verbose:false "cygpath" [name])
+  in
+  OpamProcess.cleanup ~force:true r;
+  if OpamProcess.is_success r then
+    List.hd r.OpamProcess.r_stdout
+  else
+    OpamConsole.error_and_exit `Internal_error "Could not apply cygpath to %s" name
+
+let get_cygpath_function =
+  if Sys.win32 then
+    fun ~command ->
+      lazy (if OpamStd.(Option.map_default Sys.is_cygwin_variant `Native (resolve_command command)) = `Cygwin then
+              apply_cygpath
+            else
+              fun x -> x)
+  else
+    let f = Lazy.from_val (fun x -> x) in
+    fun ~command:_ -> f
+
 let runs = ref []
 let print_stats () =
   match !runs with
@@ -628,18 +650,21 @@ module Tar = struct
         Some (Printf.sprintf "Tar needs %s to extract the archive" cmd)
       else None)
 
-  let extract_command file =
-    OpamStd.Option.Op.(
-      get_type file >>| fun typ ->
-      let tar_cmd =
-        match OpamStd.Sys.os () with
-        | OpamStd.Sys.OpenBSD -> "gtar"
-        | _ -> "tar"
-      in
-      let command c dir =
-        make_command tar_cmd [ Printf.sprintf "xf%c" c ; file; "-C" ; dir ]
-      in
-      command (extract_option typ))
+  let extract_command =
+    let tar_cmd =
+      match OpamStd.Sys.os () with
+      | OpamStd.Sys.OpenBSD -> "gtar"
+      | _ -> "tar"
+    in
+    let f = get_cygpath_function ~command:tar_cmd in
+    fun file ->
+      OpamStd.Option.Op.(
+        get_type file >>| fun typ ->
+        let f = Lazy.force f in
+        let command c dir =
+          make_command tar_cmd [ Printf.sprintf "xf%c" c ; f file; "-C" ; f dir ]
+        in
+        command (extract_option typ))
 end
 
 module Zip = struct
@@ -1267,3 +1292,6 @@ let init () =
   Sys.catch_break true;
   try Sys.set_signal Sys.sigpipe (Sys.Signal_handle (fun _ -> ()))
   with Invalid_argument _ -> ()
+
+let () =
+  OpamProcess.set_resolve_command resolve_command
