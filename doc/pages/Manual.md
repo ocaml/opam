@@ -710,8 +710,8 @@ define an initial setup for <span class="opam">opam</span>. When running `opam i
 `/etc/opamrc` is present, or if `--config` was specified, the configuration
 options from that file will be used, overriding the defaults.
 
-The default, built-in initial config of <span class="opam">opam</span> can be seen with `opam init
---help`.
+The default, built-in initial config of <span class="opam">opam</span> can be
+seen with `opam init --show-default-opamrc`.
 
 - <a id="opamrcfield-opam-version">`opam-version: <string>`</a>:
   the file format version.
