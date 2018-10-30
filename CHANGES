@@ -3,7 +3,19 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
 2.0.1:
-* Fixes and documentation
+* Cold boot for MacOS/CentOS/Alpine
+* Install checksum validation on MacOS
+* Archive extraction for OpenBSD now defaults to using gtar
+* Fix compilation of mccs on MacOS and Nix platforms
+* Do not use GNU-sed specific features in the release Makefile, to fix build on OpenBSD/FreeBSD
+* Cleaning to enable reproducible builds
+* Update configure scripts
+* git: fix git fetch by sha1 for git < 2.14
+* linting: add test variable warning and empty description error
+* upgrade: convert pinned but not installed opam files
+* error reporting: more comprehensible error message for tar extraction, and upgrade of git-url compilers
+* opam show: upgrade given local files
+* list: as opam 2.0.0 list doesn't return non-zero code if list is empty, add --silent option for a silent output and returns 1 if list is empty
 
 2.0.0
 * Fixes and documentation
