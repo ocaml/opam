@@ -2,7 +2,7 @@
 set -ue
 
 OCAMLV=4.04.1
-OPAMV=2.0.1
+OPAMV=2.0.2
 OPAM_REPO=https://opam.ocaml.org/2.0
 DEBUG=
 MAKESELF=
