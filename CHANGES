@@ -2,6 +2,32 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+2.0.2:
+* Doc:
+  * update man page
+  * add message for deprecated options
+  * reinsert removed ones
+  * deprecate `no-aspcud`
+* Pin:
+  * upgrade pin depends on pinning
+  * include descr & url files on pinning 1.2 opam files
+* Sandbox:
+  * handle symlinks in bwrap
+  * allow use of internal sockets on
+  * change one-line conditional to if statement which was incompatible with set -e
+  * make /var readonly instead of empty and rw
+* Path: resolve default opam root path
+* System: suffix .out for read_command_output stdout files (#3644)
+* Locked: check consistency with opam file when reading lock file to suggest regeneration message
+* Show: remove pin depends messages
+* Cudf: Fix closure computation in the presence of cycles
+* List: Fix some cases of listing coinstallable packages
+* Format upgrade: extract archived source files of version-pinned packages
+* Core: add is_archive in OpamSystem and OpamFilename
+* Init: don't fail if empty compiler given
+* Lint: fix light_uninstall flag for error 52
+* Update cold compiler to 4.07.1
+
 2.0.1:
 * Cold boot for MacOS/CentOS/Alpine
 * Install checksum validation on MacOS
