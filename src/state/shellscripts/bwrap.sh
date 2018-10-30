@@ -23,7 +23,9 @@ add_mounts() {
         rw) B="--bind";;
     esac
     for dir in "$@"; do
-        [ -d "$dir" ] && ARGS=("${ARGS[@]}" "$B" "$dir" "$dir")
+      if [ -d "$dir" ]; then
+        ARGS=("${ARGS[@]}" "$B" "$dir" "$dir")
+      fi
     done
 }
 
@@ -77,7 +79,9 @@ case "$COMMAND" in
         fi
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
-        [ "X${PWD#$OPAM_SWITCH_PREFIX}/.opam-switch/" != "X${PWD}" ] && add_mounts rw "$PWD"
+        if [ "X${PWD#$OPAM_SWITCH_PREFIX}/.opam-switch/" != "X${PWD}" ]; then
+          add_mounts rw "$PWD"
+        fi
         ;;
     *)
         echo "$0: unknown command $COMMAND, must be one of 'build', 'install' or 'remove'" >&2
