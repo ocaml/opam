@@ -124,7 +124,8 @@ AC_PROG_CC(["${OCAML_CC}" gcc cc])
 
 AS_IF([test "x${enable_developer_mode}" = "xyes"],[
   AC_SUBST(DEVELOPER,true)
-  echo "-D DEVELOPER" > src/core/developer
+  echo "-D" > src/core/developer
+  echo "DEVELOPER" >> src/core/developer
 ],[
   AC_SUBST(DEVELOPER,false)
   rm -f src/core/developer

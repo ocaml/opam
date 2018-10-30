@@ -3951,7 +3951,8 @@ if test "x${enable_developer_mode}" = "xyes"; then :
 
   DEVELOPER=true
 
-  echo "-D DEVELOPER" > src/core/developer
+  echo "-D" > src/core/developer
+  echo "DEVELOPER" >> src/core/developer
 
 else
 
