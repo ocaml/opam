@@ -2387,8 +2387,18 @@ let pin ?(unpin_only=false) () =
     mk_flag ["dev-repo"] "Pin to the upstream package source for the latest \
                           development version"
   in
-  let guess_names url k =
-    let from_opam_files dir =
+  let guess_names kind url k =
+    let keep_opam url =
+      match kind, url.OpamUrl.backend with
+      | (None | Some `auto), _
+      | Some `rsync, `rsync
+      | Some `http, `http -> true
+      | Some (#OpamUrl.version_control as vc1), (#OpamUrl.version_control as vc2) ->
+        vc1 = vc2
+      | Some (`none | `version), _ -> assert false
+      | _ -> false
+    in
+    let from_opam_files ?(local=false) dir =
       OpamStd.List.filter_map
         (fun (nameopt, f) ->
            let opam_opt = OpamFile.OPAM.read_opt f in
@@ -2397,7 +2407,38 @@ let pin ?(unpin_only=false) () =
              | None -> OpamStd.Option.replace OpamFile.OPAM.name_opt opam_opt
              | some -> some
            in
-           OpamStd.Option.map (fun n -> n, opam_opt) name)
+           let url =
+             if local then
+               match url.OpamUrl.backend with
+               | #OpamUrl.version_control as vc ->
+                 let module VCS =
+                   (val match vc with
+                      | `git -> (module OpamGit.VCS: OpamVCS.VCS)
+                      | `hg -> (module OpamHg.VCS: OpamVCS.VCS)
+                      | `darcs -> (module OpamDarcs.VCS: OpamVCS.VCS)
+                      : OpamVCS.VCS)
+                 in
+                 let open OpamProcess.Job.Op in
+                 let files =
+                   OpamProcess.Job.run @@
+                   VCS.versioned_files dir @@| fun files -> files
+                 in
+                 let versioned =
+                   OpamFilename.remove_prefix dir (OpamFile.filename f)
+                 in
+                 if List.mem versioned files then url
+                 else
+                   { url with
+                     transport = "file";
+                     hash = None;
+                     backend = `rsync}
+               | _ -> url
+             else url
+           in
+           if keep_opam url then
+             OpamStd.Option.map (fun n -> n, opam_opt, url) name
+           else None
+        )
         (OpamPinned.files_in_source dir)
     in
     let basename =
@@ -2410,7 +2451,7 @@ let pin ?(unpin_only=false) () =
     in
     let found, cleanup =
       match OpamUrl.local_dir url with
-      | Some d -> from_opam_files d, None
+      | Some d -> from_opam_files ~local:true d, None
       | None ->
         let pin_cache_dir = OpamRepositoryPath.pin_cache url in
         let cleanup = fun () ->
@@ -2435,7 +2476,7 @@ let pin ?(unpin_only=false) () =
       match found with
       | _::_ -> found
       | [] ->
-        try [OpamPackage.Name.of_string basename, None] with
+        try [OpamPackage.Name.of_string basename, None, url] with
         | Failure _ ->
           OpamConsole.error_and_exit `Bad_arguments
             "Could not infer a package name from %s, please specify it on the \
@@ -2546,12 +2587,12 @@ let pin ?(unpin_only=false) () =
          in
          `Error (true, msg)
        | `Source url ->
-         guess_names url @@ fun names ->
+         guess_names kind url @@ fun names ->
          let names = match names with
            | _::_::_ ->
              if OpamConsole.confirm
                  "This will pin the following packages: %s. Continue?"
-                 (OpamStd.List.concat_map ", " (fst @> OpamPackage.Name.to_string) names)
+                 (OpamStd.List.concat_map ", " (fun (n,_,_) -> OpamPackage.Name.to_string n) names)
              then names
              else OpamStd.Sys.exit_because `Aborted
            | _ -> names
@@ -2560,7 +2601,7 @@ let pin ?(unpin_only=false) () =
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let pinned = st.pinned in
          let st =
-           List.fold_left (fun st (name, opam_opt) ->
+           List.fold_left (fun st (name, opam_opt, url) ->
                OpamStd.Option.iter (fun opam ->
                    let opam_localf =
                      OpamPath.Switch.Overlay.tmp_opam
