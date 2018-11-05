@@ -144,12 +144,16 @@ make install
 
 #### OSX
 
-Opam packages for [homebrew](http://mxcl.github.com/homebrew/) and
-[MacPorts](http://www.macports.org/) are available:
+Opam packages for [homebrew](http://mxcl.github.com/homebrew/) and [MacPorts](http://www.macports.org/) are available.
+homebrew need a prior installation of `gpatch`, as opam uses gnu-specific options.
 
 ```
-brew install opam                   # Homebrew
-port install opam                   # MacPort
+# Homebrew
+brew install gpatch
+brew install opam
+
+# MacPort
+port install opam
 ```
 
 See also
