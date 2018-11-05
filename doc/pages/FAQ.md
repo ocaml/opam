@@ -96,10 +96,11 @@ enabled. Note, however, that:
   configuration file, e.g `export OPAM_USER_PATH_RO=/rw/usrlocal:/media`.
   Contained paths are added as read-only.
 - If needed, for special cases like unprivileged containers, sandboxing can be
-  disabled on `opam init` with the `--disable-sandboxing` flag. Or by using a
-  [custom `opamrc`](Manual.html#configfield-wrap-build-commands). Use wisely,
-  broken Makefiles that run `rm -rf /`
-  [__do__ happen](https://github.com/ocaml/opam/issues/3231).
+  disabled on `opam init` with the `--disable-sandboxing` flag (only for
+  non-initialised opam). Or by using a [custom
+  `opamrc`](Manual.html#configfield-wrap-build-commands). Use wisely, broken
+  Makefiles that run `rm -rf /` [__do__
+  happen](https://github.com/ocaml/opam/issues/3231).
 
 ---
 
