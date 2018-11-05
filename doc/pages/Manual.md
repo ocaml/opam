@@ -501,7 +501,7 @@ Extra variables can be defined by any package at installation time, using a
 [`variables {}`](#dotconfigsection-variables) field.
 
 Additionally, the following are limited to some package fields (`depends:`,
-`depopts:`, `build:`, `install:`, `remove:`, `run-test:`):
+`depopts:`, `build:`, `install:`, `remove:`):
 
 - <a id="pkgvar-with-test">`with-test`</a>: only true if tests have been
   enabled for this specific package
@@ -884,7 +884,8 @@ files.
 - <a id="opamfield-run-test">
   `run-test: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>:
   specific instructions for running the package tests, in a format similar to
-  the [`build:`](#opamfield-build) field.
+  the [`build:`](#opamfield-build) field. Run only when the package is
+  explicitly installed with `--with-test`.
 
 - <a id="opamfield-remove"> `remove: [ [ <term> { <filter> } ... ] { <filter>
   } ... ]`</a>: commands to run before removing the package, in the same format
