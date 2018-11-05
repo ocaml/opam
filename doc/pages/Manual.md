@@ -92,7 +92,7 @@ selected.
 
 The current switch can be selected in the following ways:
 - globally, using `opam switch <switch>`. <span class="opam">opam</span> will use that switch for all
-  further commands, except when overriden in one of the following ways.
+  further commands, except when overridden in one of the following ways.
 - for local switches, which are external to the opam root, when in the directory
   where the switch resides or a descendant.
 - by setting the `OPAMSWITCH=<switch>` environment variable, to set it within a
@@ -101,7 +101,7 @@ The current switch can be selected in the following ways:
 - through the `--switch <switch>` command-line flag, for a single command.
 
 Switches have their own prefix, normally `~/.opam/<switch>`, where packages get
-intalled ; to use what is installed in a switch, some environment variables need
+installed ; to use what is installed in a switch, some environment variables need
 to be set, _e.g._ to make executables installed into `~/.opam/<switch>/bin`
 visible, that directory needs to be added to `PATH`, but individual packages can
 define their own settings as well.
@@ -210,7 +210,7 @@ to refer to pinned packages.
 Syntax is given in a BNF-like notation. Non-terminals are written `<like this>`,
 terminals are either plain text or written in double-quotes (`"terminal"`),
 curly brackets denote zero or more repetitions when suffixed with `*`, or one or
-more when suffixed with `+`, and square brackets denote zero or one occurence.
+more when suffixed with `+`, and square brackets denote zero or one occurrence.
 Parentheses are for grouping. `(")` and `(""")` respectively mean one and three
 quotation mark characters.
 
@@ -410,7 +410,7 @@ three scopes:
 #### Pre-defined variables
 
 The following variables are dynamically defined by opam, but can still be
-overriden from configuration. You can get the list of currently defined
+overridden from configuration. You can get the list of currently defined
 variables by running:
 
 ```
@@ -575,7 +575,7 @@ evaluated as a first pass, before any action is taken, to deduce a concrete
 package formula.
 
 The definition is similar to that of `<package-formula>`, except that two cases
-`<filter>` and `<relop> <filter>` ar added to `<version-formula>`
+`<filter>` and `<relop> <filter>` are added to `<version-formula>`
 
 ```BNF
 <filtered-package-formula> ::= <filtered-package-formula> <logop> <filtered-package-formula>
@@ -895,7 +895,7 @@ files.
   should not be needed anymore in most cases (and may even be harmful if files
   from different packages overlap, which remove scripts generally don't handle).
   Use it for special actions, like reverting updates to files, or stopping
-  daemons: removing what was just added is alredy taken care of.
+  daemons: removing what was just added is already taken care of.
 
     The commands are run from the root of a fresh copy of the package source,
     unless the [`light-uninstall`](#opamflag-light-uninstall) package flag is
@@ -920,8 +920,8 @@ files.
       Note that, in case of failed or interrupted builds, opam can not guarantee
       the invariant that `!build` dependencies are always installed.
     * `with-test` dependencies are only needed when building tests (when the
-      package is explicitely installed with `--with-test`)
-    * likewise, `with-doc` dependecies are only required when building the
+      package is explicitly installed with `--with-test`)
+    * likewise, `with-doc` dependencies are only required when building the
       package documentation
 
 - <a id="opamfield-depopts">
@@ -995,7 +995,7 @@ files.
 
 - <a id="opamfield-available">`available: [ <filter> ]`</a>:
   can be used to add constraints on the OS and other global variables.
-  In case the filter doesn't evaluete to `true`, the package is disabled.
+  In case the filter doesn't evaluate to `true`, the package is disabled.
 
     This field is evaluated before request solving or any actions take place ;
     it can only refer to global variables, since it shouldn't depend on the
@@ -1086,7 +1086,7 @@ files.
        `<pkgname>` to `depends:` field.
     2. `pin-depends:` are NOT transitive, that is, `pin-depends:` of packages
        getting pinned through `pin-depends:` are ignored
-    3. they won't get updated on `opam update`, the users will need to use `opam
+    3. They won't get updated on `opam update`, the users will need to use `opam
        pin` or `opam install|upgrade DIR` again to get the new pins if the field
        has changed. Even then, this won't unpin any packages that would have
        been removed from `pin-depends:`.
@@ -1376,7 +1376,7 @@ for <span class="opam">opam</span>.
   expected final state for `pre-session`, and to the actually reached state
   for `post-session`.
     - `installed`: all installed packages with versions.
-    - `new`: all packages or versions that are geting installed but wheren't
+    - `new`: all packages or versions that are getting installed but weren't
       present before the session.
     - `removed`: all packages or versions that were installed before, but no
       longer after the session. Note that an upgrade of `foo.0.1` to `foo.0.2` is considered
