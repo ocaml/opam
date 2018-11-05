@@ -2388,74 +2388,37 @@ let pin ?(unpin_only=false) () =
                           development version"
   in
   let guess_names kind url k =
-    let keep_opam url =
-      match kind, url.OpamUrl.backend with
-      | (None | Some `auto), _
-      | Some `rsync, `rsync
-      | Some `http, `http -> true
-      | Some (#OpamUrl.version_control as vc1), (#OpamUrl.version_control as vc2) ->
-        vc1 = vc2
-      | Some (`none | `version), _ -> assert false
-      | _ -> false
-    in
-    let from_opam_files ?(local=false) dir =
-      OpamStd.List.filter_map
-        (fun (nameopt, f) ->
-           let opam_opt = OpamFile.OPAM.read_opt f in
-           let name =
-             match nameopt with
-             | None -> OpamStd.Option.replace OpamFile.OPAM.name_opt opam_opt
-             | some -> some
-           in
-           let url =
-             if local then
-               match url.OpamUrl.backend with
-               | #OpamUrl.version_control as vc ->
-                 let module VCS =
-                   (val match vc with
-                      | `git -> (module OpamGit.VCS: OpamVCS.VCS)
-                      | `hg -> (module OpamHg.VCS: OpamVCS.VCS)
-                      | `darcs -> (module OpamDarcs.VCS: OpamVCS.VCS)
-                      : OpamVCS.VCS)
-                 in
-                 let open OpamProcess.Job.Op in
-                 let files =
-                   OpamProcess.Job.run @@
-                   VCS.versioned_files dir @@| fun files -> files
-                 in
-                 let versioned =
-                   OpamFilename.remove_prefix dir (OpamFile.filename f)
-                 in
-                 if List.mem versioned files then url
-                 else
-                   { url with
-                     transport = "file";
-                     hash = None;
-                     backend = `rsync}
-               | _ -> url
-             else url
-           in
-           if keep_opam url then
-             OpamStd.Option.map (fun n -> n, opam_opt, url) name
-           else None
-        )
-        (OpamPinned.files_in_source dir)
-    in
-    let basename =
-      match OpamStd.String.split (OpamUrl.basename url) '.' with
-      | [] ->
-        OpamConsole.error_and_exit `Bad_arguments
-          "Can not retrieve a path from '%s'"
-          (OpamUrl.to_string url)
-      | b::_ -> b
-    in
     let found, cleanup =
       match OpamUrl.local_dir url with
-      | Some d -> from_opam_files ~local:true d, None
+      | Some d ->
+        let same_kind url =
+          match kind, url.OpamUrl.backend with
+          | (None | Some `auto), _
+          | Some `rsync, `rsync
+          | Some `http, `http -> true
+          | Some (#OpamUrl.version_control as vc1),
+            (#OpamUrl.version_control as vc2) ->
+            vc1 = vc2
+          | Some (`none | `version), _ -> assert false
+          | _ -> false
+        in
+        let pkgs =
+          OpamAuxCommands.opams_of_dir_w_target ~same_kind url d
+          |> List.map (fun (n,o,u) -> (n, OpamFile.OPAM.read_opt o, u))
+        in
+        pkgs, None
       | None ->
         let pin_cache_dir = OpamRepositoryPath.pin_cache url in
         let cleanup = fun () ->
           OpamFilename.rmdir @@ OpamRepositoryPath.pin_cache_dir ()
+        in
+        let basename =
+          match OpamStd.String.split (OpamUrl.basename url) '.' with
+          | [] ->
+            OpamConsole.error_and_exit `Bad_arguments
+              "Can not retrieve a path from '%s'"
+              (OpamUrl.to_string url)
+          | b::_ -> b
         in
         try
           let open OpamProcess.Job.Op in
@@ -2467,23 +2430,16 @@ let pin ?(unpin_only=false) () =
           | Not_available (_,u) ->
             OpamConsole.error_and_exit `Sync_error
               "Could not retrieve %s" u
-          | Result _ | Up_to_date _ -> from_opam_files pin_cache_dir, Some cleanup
+          | Result _ | Up_to_date _ ->
+            let pkgs =
+              OpamAuxCommands.opams_of_dir pin_cache_dir
+              |> List.map (fun (n,o) -> (n, OpamFile.OPAM.read_opt o, url))
+            in
+            pkgs, Some cleanup
         with e -> OpamStd.Exn.finalise e cleanup
     in
     let finalise = OpamStd.Option.default (fun () -> ()) cleanup in
-    OpamStd.Exn.finally finalise @@ fun () ->
-    let names_found =
-      match found with
-      | _::_ -> found
-      | [] ->
-        try [OpamPackage.Name.of_string basename, None, url] with
-        | Failure _ ->
-          OpamConsole.error_and_exit `Bad_arguments
-            "Could not infer a package name from %s, please specify it on the \
-             command-line, e.g. 'opam pin NAME TARGET'"
-            (OpamUrl.to_string url)
-    in
-    k names_found
+    OpamStd.Exn.finally finalise @@ fun () -> k found
   in
   let pin_target kind target =
     let looks_like_version_re =

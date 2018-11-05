@@ -109,6 +109,40 @@ let opams_of_dir d =
         acc)
     [] files
 
+let opams_of_dir_w_target
+    ?(same_kind=fun _ -> OpamClientConfig.(!r.pin_kind_auto)) url dir =
+  OpamStd.List.filter_map (fun (name, file) ->
+      let url =
+        match url.OpamUrl.backend with
+        | #OpamUrl.version_control as vc ->
+          let module VCS =
+            (val match vc with
+               | `git -> (module OpamGit.VCS: OpamVCS.VCS)
+               | `hg -> (module OpamHg.VCS: OpamVCS.VCS)
+               | `darcs -> (module OpamDarcs.VCS: OpamVCS.VCS)
+               : OpamVCS.VCS)
+          in
+          let open OpamProcess.Job.Op in
+          let versioned_files =
+            OpamProcess.Job.run @@
+            VCS.versioned_files dir @@| fun files -> files
+          in
+          let opam_file =
+            OpamFilename.remove_prefix dir (OpamFile.filename file)
+          in
+          if List.mem opam_file versioned_files then url
+          else
+            { url with
+              transport = "file";
+              hash = None;
+              backend = `rsync}
+        | _ -> url
+      in
+      if same_kind url then
+        Some (name, file, url)
+      else None)
+    (opams_of_dir dir)
+
 let name_and_dir_of_opam_file f =
   let srcdir = OpamFilename.dirname f in
   let srcdir =
@@ -163,16 +197,16 @@ let resolve_locals ?(quiet=false) atom_or_local_list =
     List.fold_left (fun (to_pin, atoms) -> function
         | `Atom a -> to_pin, a :: atoms
         | `Dirname d ->
-          let names_files = opams_of_dir d in
+          let target = target_dir d in
+          let names_files = opams_of_dir_w_target target d in
           if names_files = [] && not quiet then
             OpamConsole.warning "No package definitions found at %s"
               (OpamFilename.Dir.to_string d);
-          let target = target_dir d in
           let to_pin =
-            List.map (fun (n,f) -> n, target, f) names_files @ to_pin
+            List.map (fun (n,f,u) -> n, u, f) names_files @ to_pin
           in
           let atoms =
-            List.map (fun (n,_) -> n, None) names_files @ atoms
+            List.map (fun (n,_,_) -> n, None) names_files @ atoms
           in
           to_pin, atoms
         | `Filename f ->
