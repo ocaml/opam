@@ -17,15 +17,37 @@ ARGS=("${ARGS[@]}" --bind "${TMPDIR:-/tmp}" /tmp)
 ARGS=("${ARGS[@]}" --setenv TMPDIR /tmp --setenv TMP /tmp --setenv TEMPDIR /tmp --setenv TEMP /tmp)
 ARGS=("${ARGS[@]}" --tmpfs /run)
 
-add_mounts() {
+add_mount() {
     case "$1" in
         ro) B="--ro-bind";;
         rw) B="--bind";;
+        sym) B="--symlink";;
     esac
+    ARGS=("${ARGS[@]}" "$B" "$2" "$3")
+}
+
+add_mounts() {
+    local flag="$1"; shift
     for dir in "$@"; do
       if [ -d "$dir" ]; then
-        ARGS=("${ARGS[@]}" "$B" "$dir" "$dir")
+        add_mount "$flag" "$dir" "$dir"
       fi
+    done
+}
+
+# Mounts the standard system paths. Maintains symlinks, to handle cases
+# like `/bin` -> `usr/bin`, where `/bin/../foo` resolves to `/usr/foo`,
+# not `/foo`. We handle symlinks here but not in `add_mounts` because
+# system paths are pretty much guaranteed not to accidentally escape into
+# off-limits directories.
+add_sys_mounts() {
+    for dir in "$@"; do
+        if [ -L "$dir" ]; then
+            local src=$(readlink -f "$dir")
+            add_mount sym "$src" "$dir"
+        else
+            add_mounts ro "$dir"
+        fi
     done
 }
 
@@ -33,7 +55,7 @@ add_mounts() {
 # use OPAM_USER_PATH_RO variable to add them
 # the OPAM_USER_PATH_RO format is the same as PATH
 # ie: export OPAM_USER_PATH_RO=/nix/store:/rw/usrlocal
-add_mounts ro /usr /bin /lib /lib32 /lib64 /etc /opt /home /var
+add_sys_mounts /usr /bin /lib /lib32 /lib64 /etc /opt /home /var
 
 # C compilers using `ccache` will write to a shared cache directory
 # that remain writeable. ccache seems widespread in some Fedora systems.
