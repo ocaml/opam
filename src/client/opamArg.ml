@@ -240,6 +240,7 @@ let help_sections = [
       acquiring its lock and fails. <= 0 means infinite wait.";
   `P "$(i,OPAMNO) answer no to any question asked.";
   `P "$(i,OPAMNOASPCUD) see option `--no-aspcud'.";
+  `P "$(i,OPAMNOCHECKSUMS) enables option --no-checksums when available.";
   `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
   `P "$(i,OPAMPINKINDAUTO) sets whether version control systems should be \
       detected when pinning to a local path. Enabled by default since 1.3.0.";
