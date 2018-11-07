@@ -783,6 +783,45 @@ let run_hook_job t name ?(local=[]) w =
   | None ->
     Done true
 
+(* Add base packages new dependencies to switch state *)
+let add_new_compiler_packages solution t =
+  let open OpamPackage.Set.Op in
+  let universe =
+    OpamSwitchState.universe t
+      ~requested:(OpamPackage.names_of_packages t.compiler_packages) Upgrade
+  in
+  let comp_deps =
+    OpamSolver.dependencies ~depopts:true ~build:true ~post:true
+      ~installed:false universe t.compiler_packages
+    |> OpamPackage.Set.of_list in
+  let new_pkgs = OpamSolver.new_packages solution -- t.installed in
+  let new_deps = new_pkgs %% comp_deps in
+  if OpamPackage.Set.is_empty new_deps then t
+  else
+  (* Remove duplicated, in case of inconsistency *)
+  let already_present =
+    let new_dep_names = OpamPackage.names_of_packages new_deps in
+    OpamPackage.Set.filter
+      (fun p -> OpamPackage.Name.Set.mem (OpamPackage.name p) new_dep_names)
+      t.compiler_packages
+  in
+  log "Add %s to base packages%s" (OpamPackage.Set.to_string new_deps)
+    (if OpamPackage.Set.is_empty already_present then ""
+     else
+     let single = OpamPackage.Set.is_singleton already_present in
+     Printf.sprintf ", %s %s already recorded as base but not installed, replaced by %s"
+       (OpamPackage.Set.to_string already_present)
+       (if single then "is" else "are")
+       (let n = OpamPackage.names_of_packages already_present in
+        OpamPackage.Set.to_string
+          (OpamPackage.Set.filter
+             (fun p -> OpamPackage.Name.Set.mem (OpamPackage.name p) n)
+             new_deps)));
+  let compiler_packages =
+    t.compiler_packages -- already_present ++ new_deps
+  in
+  { t with compiler_packages }
+
 (* Apply a solution *)
 let apply ?ask t action ~requested ?add_roots ?(assume_built=false) solution =
   log "apply";
@@ -790,6 +829,7 @@ let apply ?ask t action ~requested ?add_roots ?(assume_built=false) solution =
     (* The current state satisfies the request contraints *)
     t, Nothing_to_do
   else (
+    let t = add_new_compiler_packages solution t in
     (* Otherwise, compute the actions to perform *)
     let stats = OpamSolver.stats solution in
     let show_solution = ask <> Some false in
