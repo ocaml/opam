@@ -2,7 +2,8 @@
 set -ue
 
 POL='(version 1)(allow default)(deny network*)(deny file-write*)'
-POL="$POL"'(allow file-write* (literal "/dev/null"))'
+POL="$POL"'(allow network* (remote unix))'
+POL="$POL"'(allow file-write* (literal "/dev/null") (literal "/dev/dtracehelper"))'
 
 add_mounts() {
     local DIR="$(cd "$2" && pwd -P)"
