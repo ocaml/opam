@@ -178,11 +178,12 @@ module Graph = struct
     let _, l =
       Topo.fold
         (fun pkg (closure, topo) ->
-          if Set.mem pkg closure then
-            Set.union closure (Set.of_list (PG.succ g pkg)),
-            pkg :: topo
-          else
-            closure, topo)
+           if Set.mem pkg closure then
+             closure, pkg :: topo
+           else if List.exists (fun p -> Set.mem p closure) (PG.pred g pkg) then
+             Set.add pkg closure, pkg :: topo
+           else
+             closure, topo)
         g
         (pkgs, []) in
     l
