@@ -1158,9 +1158,23 @@ let remove_t ?ask ~autoremove ~force atoms t =
       OpamPackage.Set.of_list
         (OpamSolver.reverse_dependencies ~build:true ~post:true
            ~depopts:false ~installed:true universe packages) in
+    let base =
+      (* It is possible, either through unintended behaviour (fixed in PR#3667),
+         or by manual configuration, to end up with dependencies of the base
+         which are not themselves in the base. These packages will cause
+         auto-remove to fail (Issue #3662). Augment the base package with their
+         dependencies in order to prevent this. Note that we use universe.u_base
+         rather than t.compiler_packages since the former respects the
+         --unlock-base setting. *)
+      let full_base =
+        OpamSolver.dependencies ~build:true ~post:true ~depopts:true
+                                ~installed:false universe universe.u_base
+      in
+      OpamPackage.Set.of_list full_base
+    in
     let to_keep =
       (if autoremove then t.installed_roots %% t.installed else t.installed)
-      ++ universe.u_base
+      ++ base
       -- to_remove -- full_orphans -- orphan_versions
     in
     let to_keep =
