@@ -7,7 +7,7 @@ definition, testing it, and publishing to the
 
 ## Creating a package definition file
 
-For complete documentation of the format, see [the manual](Manual.html#Packagedefinitions).
+For complete documentation of the format, see [the manual](Manual.html#Package-definitions).
 
 If your project does not yet have a package definition, get to the root of its
 source, and then either
@@ -179,15 +179,15 @@ installed files is done automatically, so that should only be needed if your
 This is just a very short introduction, don't be afraid to consult
 [the reference](Manual.html#opam) for details and more:
 
-* [**Version constraints**](Manual.html#PackageFormulas): an optional version
+* [**Version constraints**](Manual.html#Package-Formulas): an optional version
   constraint can be added after any package name in `depends`: simply write
   `"package" {>= "3.2"}`. Warning, versions are strings too, don't forget the
   quotes.
-* [**Formulas**](Manual.html#PackageFormulas): depends are by default a
+* [**Formulas**](Manual.html#Package-Formulas): depends are by default a
   conjunction (all of them are required), but you can use the logical "and" `&`
   and "or" `|` operators, and even group with parentheses. The same is true for
   version constraints: `("pkg1" & "pkg2") | "pkg3" {>= "3.2" & != "3.7"}`.
-* [**Build depends**](Manual.html#Filteredpackageformulas): you may add, among
+* [**Build depends**](Manual.html#Filtered-package-formulas): you may add, among
   others, the key `build` in the version constraints, _e.g._
   `"package" {build & >= "3.2"}`, to indicate that there is no run-time
   dependency to this package: it is required but won't trigger rebuilds of your
