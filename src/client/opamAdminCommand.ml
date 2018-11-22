@@ -14,6 +14,16 @@ open OpamProcess.Job.Op
 open OpamStateTypes
 open Cmdliner
 
+let checked_repo_root () =
+  let repo_root = OpamFilename.cwd () in
+  if not (OpamFilename.exists_dir (OpamRepositoryPath.packages_dir repo_root))
+  then
+    OpamConsole.error_and_exit `Bad_arguments
+      "No repository found in current directory.\n\
+       Please make sure there is a \"packages/\" directory";
+  repo_root
+
+
 let admin_command_doc =
   "Tools for repository administrators"
 
@@ -59,12 +69,7 @@ let index_command =
   in
   let cmd global_options urls_txt =
     OpamArg.apply_global_options global_options;
-    let repo_root = OpamFilename.cwd () in
-    if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
-    then
-      OpamConsole.error_and_exit `Bad_arguments
-        "No repository found in current directory.\n\
-         Please make sure there is a \"packages/\" directory";
+    let repo_root = checked_repo_root ()  in
     let repo_file = OpamRepositoryPath.repo repo_root in
     let repo_def =
       match OpamFile.Repo.read_opt repo_file with
@@ -199,12 +204,7 @@ let cache_command =
   in
   let cmd global_options cache_dir no_repo_update link jobs =
     OpamArg.apply_global_options global_options;
-    let repo_root = OpamFilename.cwd () in
-    if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
-    then
-        OpamConsole.error_and_exit `Bad_arguments
-          "No repository found in current directory.\n\
-           Please make sure there is a \"packages\" directory";
+    let repo_root = checked_repo_root () in
     let repo_file = OpamRepositoryPath.repo repo_root in
     let repo_def = OpamFile.Repo.safe_read repo_file in
 
@@ -365,12 +365,7 @@ let add_hashes_command =
   in
   let cmd global_options hash_types replace =
     OpamArg.apply_global_options global_options;
-    let repo_root = OpamFilename.cwd () in
-    if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
-    then
-      OpamConsole.error_and_exit `Bad_arguments
-        "No repository found in current directory.\n\
-         Please make sure there is a \"packages\" directory";
+    let repo_root = checked_repo_root () in
     let repo = OpamRepositoryBackend.local repo_root in
     let cache_urls =
       let repo_file = OpamRepositoryPath.repo repo_root in
@@ -623,17 +618,12 @@ let check_command =
   let cmd global_options ignore_test print_short
       installability cycles obsolete =
     OpamArg.apply_global_options global_options;
-    let repo_root = OpamFilename.cwd () in
+    let repo_root = checked_repo_root () in
     let installability, cycles, obsolete =
       if installability || cycles || obsolete
       then installability, cycles, obsolete
       else true, true, false
     in
-    if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
-    then
-      OpamConsole.error_and_exit `Bad_arguments
-        "No repository found in current directory.\n\
-         Please make sure there is a \"packages\" directory";
     let pkgs, unav_roots, uninstallable, cycle_packages, obsolete =
       OpamAdminCheck.check
         ~quiet:print_short ~installability ~cycles ~obsolete ~ignore_test
@@ -939,12 +929,7 @@ let add_constraint_command =
   in
   let cmd global_options force atom =
     OpamArg.apply_global_options global_options;
-    let repo_root = OpamFilename.cwd () in
-    if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
-    then
-      OpamConsole.error_and_exit `Not_found
-        "No repository found in current directory.\n\
-         Please make sure there is a \"packages\" directory";
+    let repo_root = checked_repo_root () in
     let repo = OpamRepositoryBackend.local repo_root in
     let pkg_prefixes = OpamRepository.packages_with_prefixes repo in
     let name, cstr = atom in
