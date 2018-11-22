@@ -27,8 +27,8 @@ type t = {
 }
 
 let default = {
-  root_dir = OpamFilename.Op.(
-      OpamFilename.Dir.of_string (OpamStd.Sys.home ()) / ".opam"
+  root_dir = OpamFilename.(
+      concat_and_resolve (Dir.of_string (OpamStd.Sys.home ())) ".opam"
     );
   current_switch = None;
   switch_from = `Default;
