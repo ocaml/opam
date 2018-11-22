@@ -129,6 +129,10 @@ let (/) d1 s2 =
   let s1 = Dir.to_string d1 in
   raw_dir (Filename.concat s1 s2)
 
+let concat_and_resolve d1 s2 =
+  let s1 = Dir.to_string d1 in
+  Dir.of_string (Filename.concat s1 s2)
+
 type t = {
   dirname:  Dir.t;
   basename: Base.t;
