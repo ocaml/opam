@@ -30,15 +30,113 @@ let possible_definition_filenames dir name = [
   dir // "opam"
 ]
 
+let check_locked default =
+  match OpamStateConfig.(!r.locked) with
+  | None -> default
+  | Some ext ->
+    let fl = OpamFilename.add_extension default ext in
+    if OpamFilename.exists fl then
+      (let base_depends =
+         OpamFile.make default
+         |> OpamFile.OPAM.read
+         |> OpamFile.OPAM.depends
+       in
+       let lock_depends =
+         OpamFile.make fl
+         |> OpamFile.OPAM.read
+         |> OpamFile.OPAM.depends
+       in
+       let ldep_names =
+         OpamFormula.fold_left
+           (fun acc (n,_) -> OpamPackage.Name.Set.add n acc)
+           OpamPackage.Name.Set.empty lock_depends
+       in
+       let base_formula =
+         OpamFilter.filter_deps ~build:true ~post:true ~test:true ~doc:true
+           ~dev:true base_depends
+       in
+       let lock_formula =
+         OpamFilter.filter_deps ~build:true ~post:true ~test:true ~doc:true
+           ~dev:true lock_depends
+       in
+       let lpkg_f =
+         lock_formula
+         |> OpamFormula.atoms
+         |> OpamPackage.Name.Map.of_list
+       in
+       (* Check consistency between them. It is based on the fact that locked file
+          dependencies are an and list with precise version, i.e., pkg { =v0.1}.
+          Construction of a two list: missing dependencies and inconsistent ones
+          (version mismatch) *)
+       let (@) = List.rev_append in
+       let rec fold formula =
+         List.fold_left cross ([],[]) (OpamFormula.ands_to_list formula)
+       and cross (cont,cons) formula =
+         match formula with
+         | Atom (bn, bvf) ->
+           ( let cont =
+               if OpamPackage.Name.Set.mem bn ldep_names then cont
+               else bn::cont
+             in
+             let cons =
+               match OpamPackage.Name.Map.find_opt bn lpkg_f with
+               | Some (Some (`Eq, lv)) ->
+                 if OpamFormula.check_version_formula bvf lv then cons
+                 else (bn, lv, bvf)::cons
+               | _ -> cons
+             in
+             (cont,cons))
+         | Or (or1, or2) ->
+           let or1_cont, or1_cons = fold or1 in
+           let or2_cont, or2_cons = fold or2 in
+           let cont =
+             if or1_cont = [] || or2_cont = [] then cont
+             else or1_cont @ or2_cont @ cont
+           in
+           let cons =
+             if or1_cons = [] || or2_cons = [] then cons
+             else or1_cons @ or2_cons @ cons
+           in
+           (cont,cons)
+         | And (and1, and2) ->
+           let and1_cont, and1_cons = fold and1 in
+           let and2_cont, and2_cons = fold and2 in
+           ((and1_cont @ and2_cont @ cont), (and1_cons @ and2_cons @ cons))
+         | Block f -> cross (cont,cons) f
+         | Empty -> (cont,cons)
+       in
+       let contains, consistent = fold base_formula in
+       if contains <> [] || consistent <> [] then
+         (OpamConsole.warning "Lock file %s is outdated, you may want to re-run opam lock:\n%s"
+            (OpamConsole.colorise `underline (OpamFilename.Base.to_string (OpamFilename.basename fl)))
+            ((if contains <> [] then
+                Printf.sprintf "Dependencies present in opam file not in lock file:\n%s"
+                  (OpamStd.Format.itemize OpamPackage.Name.to_string contains)
+              else "")
+             ^
+             (if consistent <> [] then
+                Printf.sprintf "Dependencies in lock file not consistent wit opam file filter:\n%s"
+                  (OpamStd.Format.itemize (fun (n,lv,(bv: OpamFormula.version_formula)) ->
+                       Printf.sprintf "%s: %s in not contained in {%s}"
+                         (OpamPackage.Name.to_string n)
+                         (OpamPackage.Version.to_string lv)
+                         (OpamFormula.string_of_formula
+                            (fun (op, vc) ->
+                               Printf.sprintf "%s %s"
+                                 (OpamPrinter.relop op) (OpamPackage.Version.to_string vc))
+                            bv))
+                      consistent)
+              else "")));
+       fl)
+    else default
+
 let find_opam_file_in_source name dir =
   let opt =
     OpamStd.List.find_opt OpamFilename.exists
       (possible_definition_filenames dir name)
   in
-  (match opt, OpamStateConfig.(!r.locked) with
-   | Some base, Some ext ->
-     let fl = OpamFilename.add_extension base ext in
-     if OpamFilename.exists fl then Some fl else opt
+  (match opt with
+   | Some base -> Some (check_locked base)
    | _ -> opt)
   |> OpamStd.Option.map OpamFile.make
 
@@ -81,13 +179,7 @@ let files_in_source d =
       (OpamFilename.dirs d)
   in
   files d @ files (d / "opam") |>
-  List.map
-    (fun f ->
-       match OpamStateConfig.(!r.locked) with
-       | None -> f
-       | Some ext ->
-         let fl = OpamFilename.add_extension f ext in
-         if OpamFilename.exists fl then fl else f) |>
+  List.map check_locked |>
   OpamStd.List.filter_map
     (fun f ->
        try
