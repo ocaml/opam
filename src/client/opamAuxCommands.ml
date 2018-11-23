@@ -320,35 +320,36 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
   } in
   st, local_packages
 
-let simulate_autopin st ?quiet ?for_view atom_or_local_list =
+let simulate_autopin st ?quiet ?(for_view=false) atom_or_local_list =
   let atoms, to_pin, obsolete_pins, already_pinned_set =
-    autopin_aux st ?quiet ?for_view atom_or_local_list
+    autopin_aux st ?quiet ~for_view atom_or_local_list
   in
   if to_pin = [] then st, atoms else
   let st =
     OpamPackage.Set.fold (fun nv st -> OpamPinCommand.unpin_one st nv)
       obsolete_pins st
   in
-  let st, pins = simulate_local_pinnings ?quiet ?for_view st to_pin in
-  let pins = OpamPackage.Set.union pins already_pinned_set in
-  let pin_depends =
-    OpamPackage.Set.fold (fun nv acc ->
-        List.fold_left (fun acc (nv,target) ->
-            OpamPackage.Map.add nv target acc)
-          acc
-          (OpamFile.OPAM.pin_depends (OpamSwitchState.opam st nv)))
-      pins OpamPackage.Map.empty
-  in
-  if not (OpamPackage.Map.is_empty pin_depends) then
-    (OpamConsole.msg "Would pin the following:\n%s"
-       (OpamStd.Format.itemize (fun (nv, url) ->
-            Printf.sprintf "%s to %s"
-              (OpamConsole.colorise `bold (OpamPackage.to_string nv))
-              (OpamConsole.colorise `underline (OpamUrl.to_string url)))
-           (OpamPackage.Map.bindings pin_depends));
-     OpamConsole.note "The following may not reflect the above pinnings (their \
-                       package definitions are not available at this stage)";
-     OpamConsole.msg "\n");
+  let st, pins = simulate_local_pinnings ?quiet ~for_view st to_pin in
+  if not for_view then
+    (let pins = OpamPackage.Set.union pins already_pinned_set in
+     let pin_depends =
+       OpamPackage.Set.fold (fun nv acc ->
+           List.fold_left (fun acc (nv,target) ->
+               OpamPackage.Map.add nv target acc)
+             acc
+             (OpamFile.OPAM.pin_depends (OpamSwitchState.opam st nv)))
+         pins OpamPackage.Map.empty
+     in
+     if not (OpamPackage.Map.is_empty pin_depends) then
+       (OpamConsole.msg "Would pin the following:\n%s"
+          (OpamStd.Format.itemize (fun (nv, url) ->
+               Printf.sprintf "%s to %s"
+                 (OpamConsole.colorise `bold (OpamPackage.to_string nv))
+                 (OpamConsole.colorise `underline (OpamUrl.to_string url)))
+              (OpamPackage.Map.bindings pin_depends));
+        OpamConsole.note "The following may not reflect the above pinnings (their \
+                          package definitions are not available at this stage)";
+        OpamConsole.msg "\n"));
   st, atoms
 
 let autopin st ?(simulate=false) ?quiet atom_or_local_list =
