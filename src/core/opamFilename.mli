@@ -185,7 +185,7 @@ val is_exec: t -> bool
 (** Copy a file *)
 val copy: src:t -> dst:t -> unit
 
-(** Installs a file to a destination. Optionnally set if the destination should
+(** Installs a file to a destination. Optionally set if the destination should
     be set executable *)
 val install: ?exec:bool -> src:t -> dst:t -> unit -> unit
 
