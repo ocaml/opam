@@ -663,7 +663,7 @@ let init_checks ?(hard_fail_exn=true) init_config =
       (OpamConsole.error
          "No external solver found. You should get one of %s, or use a \
           version of opam compiled with a built-in solver (see \
-          http://opam.ocaml.org/doc/Install.html#ExternalSolvers for \
+          http://opam.ocaml.org/doc/External_solvers.html for \
           details)"
          (OpamStd.Format.pretty_list ~last:"or"
             (List.map (OpamConsole.colorise `bold) external_solvers));
