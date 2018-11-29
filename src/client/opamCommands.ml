@@ -2005,10 +2005,24 @@ let switch =
        containing opam package definitions), install the dependencies of the \
        project but not the project itself."
   in
+  (* Deprecated options *)
+  let d_alias_of =
+    mk_opt ["A";"alias-of"]
+      "COMP"
+      "This option is deprecated."
+      Arg.(some string) None
+  in
+  let d_no_autoinstall =
+    mk_flag ["no-autoinstall"]
+      "This option is deprecated."
+  in
   let switch
       global_options build_options command print_short
       no_switch packages empty descr full no_install deps_only repos
-      params =
+      d_alias_of d_no_autoinstall params =
+   OpamArg.deprecated_option d_alias_of None
+   "alias-of" (Some "opam switch <switch-name> <compiler>");
+   OpamArg.deprecated_option d_no_autoinstall false "no-autoinstall" None;
     apply_global_options global_options;
     apply_build_options build_options;
     let packages =
@@ -2255,7 +2269,7 @@ let switch =
              $print_short_flag
              $no_switch
              $packages $empty $descr $full $no_install $deps_only
-             $repos $params)),
+             $repos $d_alias_of $d_no_autoinstall $params)),
   term_info "switch" ~doc ~man
 
 (* PIN *)
