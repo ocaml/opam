@@ -37,6 +37,14 @@ type global_options = {
   ignore_pin_depends : bool;
 }
 
+let deprecated_option option absent name instead =
+  if option <> absent then
+    OpamConsole.warning
+      "Option %s is deprecated, ignoring it.%s" name
+      (match instead with
+      | None -> ""
+      | Some instead -> Printf.sprintf " You can use %s instead." instead)
+
 let create_global_options
     git_version debug debug_level verbose quiet color opt_switch yes strict
     opt_root external_solver use_internal_solver
