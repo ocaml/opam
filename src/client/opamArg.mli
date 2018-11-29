@@ -228,6 +228,10 @@ val mk_subdoc :
 
 (** {2 Misc} *)
 
+val deprecated_option: 'a -> 'a -> string -> string option -> unit
+(** [deprecated_option option default name instead] displays a message if
+    [option] if set to its non [default] value. [instead], if present, is the new
+    option/command to launch *)
 
 (** {2 Documentation} *)
 
