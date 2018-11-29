@@ -49,7 +49,9 @@ let create_global_options
     git_version debug debug_level verbose quiet color opt_switch yes strict
     opt_root external_solver use_internal_solver
     cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade
-    working_dir ignore_pin_depends =
+    working_dir ignore_pin_depends
+    d_no_aspcud =
+  deprecated_option d_no_aspcud false "no-aspcud" None;
   let debug_level = OpamStd.Option.Op.(
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
@@ -267,7 +269,7 @@ let help_sections = [
       acquiring its lock and fails. <= 0 means infinite wait.";
   `P "$(i,OPAMMERGEOUT) merge process outputs, stderr on stdout";
   `P "$(i,OPAMNO) answer no to any question asked.";
-  `P "$(i,OPAMNOASPCUD) see option `--no-aspcud'.";
+  `P "$(i,OPAMNOASPCUD) Deprecated.";
   `P "$(i,OPAMNOCHECKSUMS) enables option --no-checksums when available.";
   `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
   `P "$(i,OPAMPINKINDAUTO) sets whether version control systems should be \
@@ -937,8 +939,12 @@ let global_options =
       "ROOT" "Use $(docv) as the current root path. \
               This is equivalent to setting $(b,\\$OPAMROOT) to $(i,ROOT)."
       Arg.(some dirname) None in
+  let d_no_aspcud =
+    mk_flag ~section ["no-aspcud"]
+    "Deprecated."
+  in
   let use_internal_solver =
-    mk_flag ~section ["no-aspcud"; "use-internal-solver"]
+    mk_flag ~section ["use-internal-solver"]
       "Disable any external solver, and use the built-in one (this requires \
        that opam has been compiled with a built-in solver). This is equivalent \
        to setting $(b,\\$OPAMNOASPCUD) or $(b,\\$OPAMUSEINTERNALSOLVER)." in
@@ -1021,7 +1027,8 @@ let global_options =
         $strict $root $external_solver
         $use_internal_solver $cudf_file $solver_preferences $best_effort
         $safe_mode $json_flag $no_auto_upgrade $working_dir
-        $ignore_pin_depends)
+        $ignore_pin_depends
+        $d_no_aspcud)
 
 (* Options common to all build commands *)
 let build_option_section = "PACKAGE BUILD OPTIONS"
