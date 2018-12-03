@@ -25,30 +25,32 @@ let string_of_pinned opam =
     (bold (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
 
 let read_opam_file_for_pinning ?(quiet=false) name f url =
-  match OpamFileTools.lint_file f with
-  | warns, None ->
-    OpamConsole.error
-      "Invalid opam file in %s source from %s:"
-      (OpamPackage.Name.to_string name)
-      (OpamUrl.to_string url);
-    OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string warns);
-    None
-  | warns, Some opam0 ->
-    let opam = OpamFormatUpgrade.opam_file ~filename:f opam0 in
-    let warns = if opam <> opam0 then OpamFileTools.lint opam else warns in
-    if not quiet && warns <> [] then
-      (OpamConsole.warning
-         "Failed checks on %s package definition from source at %s:"
-         (OpamPackage.Name.to_string name)
-         (OpamUrl.to_string url);
-       OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string warns));
-    let opam =
-      if OpamUrl.local_dir url =
-         Some (OpamFilename.dirname (OpamFile.filename f))
-      then opam (* don't add aux files for [project/opam] *)
-      else OpamFileTools.add_aux_files ~files_subdir_hashes:true opam
-    in
-    Some opam
+  let opam0 =
+    let dir = OpamFilename.dirname (OpamFile.filename f) in
+    (* don't add aux files for [project/opam] *)
+    let add_files = OpamUrl.local_dir url = Some dir in
+    OpamStd.Option.map
+      (OpamFormatUpgrade.opam_file_with_aux ~quiet ~dir ~files:add_files
+         ~filename:f) (OpamFile.OPAM.read_opt f)
+  in
+  (match opam0 with
+   | None ->
+     let warns, _ = OpamFileTools.lint_file f in
+     OpamConsole.error
+       "Invalid opam file in %s source from %s:"
+       (OpamPackage.Name.to_string name)
+       (OpamUrl.to_string url);
+     OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string warns)
+   | Some opam ->
+     let warns =  OpamFileTools.lint opam in
+     if not quiet && warns <> [] then
+       (OpamConsole.warning
+          "Failed checks on %s package definition from source at %s:"
+          (OpamPackage.Name.to_string name)
+          (OpamUrl.to_string url);
+        OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string warns)));
+  opam0
+
 
 exception Fetch_Fail of string
 
