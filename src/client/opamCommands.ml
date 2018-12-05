@@ -2539,6 +2539,7 @@ let pin ?(unpin_only=false) () =
          in
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+         let pinned = st.pinned in
          let st =
            List.fold_left (fun st (name, opam_opt) ->
                OpamStd.Option.iter (fun opam ->
@@ -2553,11 +2554,17 @@ let pin ?(unpin_only=false) () =
                   | OpamPinCommand.Nothing_to_do -> st)
              st names
          in
+         (* names are in newly pinned packages *)
+         let atoms =
+           OpamPackage.Set.Op.(st.pinned -- pinned)
+           |> OpamPackage.Set.elements
+           |> List.map (fun p -> (OpamPackage.name p, None))
+         in
          if action then
            let _st =
              OpamClient.upgrade_t
                ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
-               (List.map (fun (n,_) -> n, None) names) st
+               atoms st
            in
            `Ok ()
          else `Ok ())
