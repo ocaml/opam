@@ -500,7 +500,7 @@ let read_command_output ?verbose ?env ?metadata ?allow_stdin cmd =
   let name = log_file None in
   let r =
     run_process ?verbose ?env ~name ?metadata ?allow_stdin
-      ~stdout:(name^".stdout")
+      ~stdout:(name^".out")
       cmd
   in
   OpamProcess.cleanup r;
