@@ -234,7 +234,7 @@ let updates_common ~set_opamroot ~set_opamswitch root switch =
     else [] in
   root @ switch
 
-let updates ~set_opamroot ~set_opamswitch ?force_path st =
+let updates ?(set_opamroot=false) ?(set_opamswitch=false) ?force_path st =
   updates_common ~set_opamroot ~set_opamswitch st.switch_global.root st.switch @
   compute_updates ?force_path st
 
