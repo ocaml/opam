@@ -478,7 +478,7 @@ let read_command_output ?verbose ?env ?metadata ?allow_stdin cmd =
   let name = log_file None in
   let r =
     run_process ?verbose ?env ~name ?metadata ?allow_stdin
-      ~stdout:(name^".stdout")
+      ~stdout:(name^".out")
       cmd
   in
   OpamProcess.cleanup r;
@@ -660,7 +660,8 @@ module Zip = struct
     Some (fun dir -> make_command "unzip" [ file; "-d"; dir ])
 end
 
-let is_tar_archive = Tar.is_archive
+let is_archive file =
+  Tar.is_archive file || Zip.is_archive file
 
 let extract_command file =
   if Zip.is_archive file then Zip.extract_command file

@@ -2,7 +2,8 @@
 set -ue
 
 POL='(version 1)(allow default)(deny network*)(deny file-write*)'
-POL="$POL"'(allow file-write* (literal "/dev/null"))'
+POL="$POL"'(allow network* (remote unix))'
+POL="$POL"'(allow file-write* (literal "/dev/null") (literal "/dev/dtracehelper"))'
 
 add_mounts() {
     local DIR="$(cd "$2" && pwd -P)"
@@ -46,7 +47,9 @@ case "$COMMAND" in
     remove)
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
-        [ "X${PWD#$OPAM_SWITCH_PREFIX/.opam-switch}" != "X${PWD}" ] && add_mounts rw "$PWD"
+        if [ "X${PWD#$OPAM_SWITCH_PREFIX/.opam-switch}" != "X${PWD}" ]; then
+          add_mounts rw "$PWD"
+        fi
         ;;
     *)
         echo "$0: unknown command $COMMAND, must be one of 'build', 'install' or 'remove'" >&2

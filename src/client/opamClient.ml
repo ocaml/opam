@@ -663,7 +663,7 @@ let init_checks ?(hard_fail_exn=true) init_config =
       (OpamConsole.error
          "No external solver found. You should get one of %s, or use a \
           version of opam compiled with a built-in solver (see \
-          http://opam.ocaml.org/doc/Install.html#ExternalSolvers for \
+          http://opam.ocaml.org/doc/External_solvers.html for \
           details)"
          (OpamStd.Format.pretty_list ~last:"or"
             (List.map (OpamConsole.colorise `bold) external_solvers));
@@ -1262,10 +1262,10 @@ let reinstall t ?(assume_built=false) names =
 module PIN = struct
   open OpamPinCommand
 
-  let post_pin_action st name =
+  let post_pin_action st names =
     try
       upgrade_t ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
-        [name, None] st
+       (List.map (fun name -> name, None) names) st
     with e ->
       OpamConsole.note
         "Pinning command successful, but your installed packages \
@@ -1293,6 +1293,7 @@ module PIN = struct
 
   let pin st name ?(edit=false) ?version ?(action=true) target =
     try
+      let pinned = st.pinned in
       let st =
         match target with
         | `Source url -> source_pin st name ?version ~edit (Some url)
@@ -1304,13 +1305,19 @@ module PIN = struct
         | `None -> source_pin st name ?version ~edit None
       in
       if action then
-        (OpamConsole.msg "\n"; post_pin_action st name)
+        let names =
+          OpamPackage.Set.Op.(st.pinned -- pinned)
+          |> OpamPackage.Set.elements
+          |> List.map OpamPackage.name
+        in
+        (OpamConsole.msg "\n"; post_pin_action st names)
       else st
     with
     | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
     | OpamPinCommand.Nothing_to_do -> st
 
   let edit st ?(action=true) ?version name =
+    let pinned = st.pinned in
     let st =
       if OpamPackage.has_name st.pinned name then
         edit st ?version name
@@ -1343,7 +1350,14 @@ module PIN = struct
         OpamConsole.error_and_exit `Not_found
           "Package is not pinned, and no existing version was supplied."
     in
-    if action then post_pin_action st name else st
+    if action then
+      let names =
+        OpamPackage.Set.Op.(st.pinned -- pinned)
+        |> OpamPackage.Set.elements
+        |> List.map OpamPackage.name
+      in
+      post_pin_action st names
+    else st
 
   let unpin st ?(action=true) names =
     let pinned_before = st.pinned in

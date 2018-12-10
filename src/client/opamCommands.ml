@@ -376,7 +376,7 @@ let init =
     in
     if no_compiler then () else
     match compiler with
-    | Some comp ->
+    | Some comp when String.length comp <> 0->
       let packages =
         OpamSwitchCommand.guess_compiler_package rt comp
       in
@@ -385,7 +385,10 @@ let init =
       OpamSwitchCommand.install
         gt ~rt ~packages ~update_config:true (OpamSwitch.of_string comp)
       |> ignore
-    | None ->
+    | _ as nocomp ->
+      if nocomp <> None then
+        OpamConsole.warning
+          "No compiler specified, a default compiler will be selected.";
       let candidates = OpamFormula.to_dnf default_compiler in
       let all_packages = OpamSwitchCommand.get_compiler_packages rt in
       let compiler_packages =
@@ -2002,10 +2005,24 @@ let switch =
        containing opam package definitions), install the dependencies of the \
        project but not the project itself."
   in
+  (* Deprecated options *)
+  let d_alias_of =
+    mk_opt ["A";"alias-of"]
+      "COMP"
+      "This option is deprecated."
+      Arg.(some string) None
+  in
+  let d_no_autoinstall =
+    mk_flag ["no-autoinstall"]
+      "This option is deprecated."
+  in
   let switch
       global_options build_options command print_short
       no_switch packages empty descr full no_install deps_only repos
-      params =
+      d_alias_of d_no_autoinstall params =
+   OpamArg.deprecated_option d_alias_of None
+   "alias-of" (Some "opam switch <switch-name> <compiler>");
+   OpamArg.deprecated_option d_no_autoinstall false "no-autoinstall" None;
     apply_global_options global_options;
     apply_build_options build_options;
     let packages =
@@ -2252,7 +2269,7 @@ let switch =
              $print_short_flag
              $no_switch
              $packages $empty $descr $full $no_install $deps_only
-             $repos $params)),
+             $repos $d_alias_of $d_no_autoinstall $params)),
   term_info "switch" ~doc ~man
 
 (* PIN *)
@@ -2536,6 +2553,7 @@ let pin ?(unpin_only=false) () =
          in
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+         let pinned = st.pinned in
          let st =
            List.fold_left (fun st (name, opam_opt) ->
                OpamStd.Option.iter (fun opam ->
@@ -2550,11 +2568,17 @@ let pin ?(unpin_only=false) () =
                   | OpamPinCommand.Nothing_to_do -> st)
              st names
          in
+         (* names are in newly pinned packages *)
+         let atoms =
+           OpamPackage.Set.Op.(st.pinned -- pinned)
+           |> OpamPackage.Set.elements
+           |> List.map (fun p -> (OpamPackage.name p, None))
+         in
          if action then
            let _st =
              OpamClient.upgrade_t
                ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
-               (List.map (fun (n,_) -> n, None) names) st
+               atoms st
            in
            `Ok ()
          else `Ok ())

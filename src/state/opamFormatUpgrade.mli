@@ -44,3 +44,12 @@ val opam_file:
 val comp_file:
   ?package:package -> ?descr:OpamFile.Descr.t -> OpamFile.Comp.t ->
   OpamFile.OPAM.t
+
+(** Runs the opam file format from the file's format to current, and adds data
+    from 'url' and 'descr' files found in the specified dir or the opam file's
+    metadata dir, if not already present in the opam file. If [files] is [true],
+    also adds the names and hashes of files found below 'files/'. Supplying
+    [filename] enables additional notification messages *)
+val opam_file_with_aux:
+  ?quiet:bool -> ?dir:dirname -> files:bool -> ?filename:OpamFile.OPAM.t OpamFile.t ->
+  OpamFile.OPAM.t -> OpamFile.OPAM.t

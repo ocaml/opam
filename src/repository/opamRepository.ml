@@ -192,7 +192,8 @@ let pull_from_upstream
   )
   @@| function
   | (Result (Some file) | Up_to_date (Some file)) as ret ->
-    if validate_and_add_to_cache label url cache_dir file checksums then
+    if OpamRepositoryConfig.(!r.force_checksums) = Some false
+    || validate_and_add_to_cache label url cache_dir file checksums then
       (OpamConsole.msg "[%s] %s from %s\n"
          (OpamConsole.colorise `green label)
          (match ret with Up_to_date _ -> "no changes" | _ -> "downloaded")

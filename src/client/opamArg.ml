@@ -37,11 +37,21 @@ type global_options = {
   ignore_pin_depends : bool;
 }
 
+let deprecated_option option absent name instead =
+  if option <> absent then
+    OpamConsole.warning
+      "Option %s is deprecated, ignoring it.%s" name
+      (match instead with
+      | None -> ""
+      | Some instead -> Printf.sprintf " You can use %s instead." instead)
+
 let create_global_options
     git_version debug debug_level verbose quiet color opt_switch yes strict
     opt_root external_solver use_internal_solver
     cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade
-    working_dir ignore_pin_depends =
+    working_dir ignore_pin_depends
+    d_no_aspcud =
+  deprecated_option d_no_aspcud false "no-aspcud" None;
   let debug_level = OpamStd.Option.Op.(
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
@@ -209,47 +219,71 @@ let help_sections = [
       to disable, \"1\", \"yes\" or \"true\" to enable.";
 
   (* Alphabetical order *)
+  `P "$(i,OPAMALLPARENS) surround all filters with parenthesis";
+  `P "$(i,OPAMAUTOREMOVE) see remove option `--auto-remove`";
+  `P "$(i,OPAMBESTEFFORT) see option `--best-effort`";
+  `P "$(i,OPAMBESTEFFORTPREFIXCRITERIA) sets the string that must be prepended \
+      to the criteria when the `--best-effort` option is set, and is expected \
+      to maximise the `opam-query` property in the solution ";
   `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
       value for the --color option.";
-  `P ("$(i,OPAMCRITERIA) specifies user $(i,preferences) for dependency \
+  `P "$(i,OPAMCRITERIA) specifies user $(i,preferences) for dependency \
        solving. The default value depends on the solver version, use `config \
-       report` to know the current setting. See also option --criteria");
+       report` to know the current setting. See also option --criteria";
+  `P "$(i,OPAMCUDFFILE file) save the cudf graph to \
+      $(i,file)-actions-explicit.dot";
   `P "$(i,OPAMCURL) can be used to select a given 'curl' program. See \
       $(i,OPAMFETCH) for more options.";
   `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
   `P "$(i,OPAMDOWNLOADJOBS) sets the maximum number of simultaneous downloads.";
+  `P "$(i,OPAMDRYRUN) see option `--dry-run`";
+  `P "$(i,OPAMEDITOR) sets the editor to use for opam file editing, overrides \
+      $(i,\\$EDITOR) and $(i,\\$VISUAL)";
   `P "$(i,OPAMERRLOGLEN) sets the number of log lines printed when a \
       sub-process fails. 0 to print all.";
   `P "$(i,OPAMEXTERNALSOLVER) see option `--solver'.";
+  `P "$(i,OPAMFAKE) see option `--fake`";
   `P "$(i,OPAMFETCH) specifies how to download files: either `wget', `curl' or \
       a custom command where variables $(b,%{url}%), $(b,%{out}%), \
       $(b,%{retry}%), $(b,%{compress}%) and $(b,%{checksum}%) will \
       be replaced. Overrides the \
       'download-command' value from the main config file.";
+  `P "$(i,OPAMFIXUPCRITERIA) same as $(i,OPAMUPGRADECRITERIA), but specific \
+      to fixup";
+  `P "$(i,OPAMIGNORECONSTRAINTS) see install option `--ignore-constraints-on`";
+  `P "$(i,OPAMIGNOREPINDEPENDS) see option `--ignore-pin-depends`";
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
   `P "$(i,OPAMJSON) log json output to the given file (use character `%' to \
       index the files)";
-  `P "$(i,OPAMLOCK) see option `--lock'.";
+  `P "$(i,OPAMLOCKED) see install option `--locked`";
+  `P "$(i,OPAMLOGS logdir) sets log directory, default is a temporary directory \
+      in /tmp";
+  `P "$(i,OPAMMAKECMD) set the system make command to use";
   `P "$(i,OPAMNOAUTOUPGRADE) disables automatic internal upgrade of \
       repositories in an earlier format to the current one, on 'update' or \
       'init'.";
   `P "$(i,OPAMKEEPLOGS) tells opam to not remove some temporary command logs \
       and some backups. This skips some finalisers and may also help to get \
       more reliable backtraces";
-  `P "$(i,OPAMLOCKRETRIES) sets the number of tries after which OPAM gives up \
+  `P "$(i,OPAMLOCKRETRIES) sets the number of tries after which opam gives up \
       acquiring its lock and fails. <= 0 means infinite wait.";
+  `P "$(i,OPAMMERGEOUT) merge process outputs, stderr on stdout";
   `P "$(i,OPAMNO) answer no to any question asked.";
-  `P "$(i,OPAMNOASPCUD) see option `--no-aspcud'.";
+  `P "$(i,OPAMNOASPCUD) Deprecated.";
+  `P "$(i,OPAMNOCHECKSUMS) enables option --no-checksums when available.";
   `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
   `P "$(i,OPAMPINKINDAUTO) sets whether version control systems should be \
       detected when pinning to a local path. Enabled by default since 1.3.0.";
+  `P "$(i,OPAMPRECISETRACKING) fine grain tracking of directories";
   `P "$(i,OPAMREQUIRECHECKSUMS) Enables option `--require-checksums' when \
       available (e.g. for `opam install`).";
-  `P "$(i,OPAMRETRY) sets the number of tries before failing downloads.";
+  `P "$(i,OPAMRETRES) sets the number of tries before failing downloads.";
   `P "$(i,OPAMROOT) see option `--root'. This is automatically set by \
       `opam env --root=DIR --set-root'.";
   `P "$(i,OPAMROOTISOK) don't complain when running as root.";
   `P "$(i,OPAMSAFE) see option `--safe'";
+  `P "$(i,OPAMSHOW) see option `--show`";
+  `P "$(i,OPAMSKIPUPDATE) see option `--skip-updates`";
   `P "$(i,OPAMSKIPVERSIONCHECKS) bypasses some version checks. Unsafe, for \
       compatibility testing only.";
   `P (Printf.sprintf
@@ -260,23 +294,30 @@ let help_sections = [
   `P ("$(i,OPAMSTATUSLINE) display a dynamic status line showing what's \
        currently going on on the terminal. \
        (one of "^Arg.doc_alts_enum when_enum^")");
+  `P "$(i,OPAMSTATS) display stats at the end of command";
+  `P "$(i,OPAMSTRICT) fail on inconsistencies (file reading, switch import, etc.)";
   `P "$(i,OPAMSWITCH) see option `--switch'. Automatically set by \
       `opam env --switch=SWITCH --set-switch'.";
+  `P "$(i,OPAMUNLOCKBASE) see install option `--unlock-base`";
   `P ("$(i,OPAMUPGRADECRITERIA) specifies user $(i,preferences) for dependency \
        solving when performing an upgrade. Overrides $(i,OPAMCRITERIA) in \
        upgrades if both are set. See also option --criteria");
   `P "$(i,OPAMUSEINTERNALSOLVER) see option `--use-internal-solver'.";
+  `P "$(i,OPAMUSEOPENSSL) force openssl use for hash computing";
   `P ("$(i,OPAMUTF8) use UTF8 characters in output \
        (one of "^Arg.doc_alts_enum when_enum^
       "). By default `auto', which is determined from the locale).");
   `P "$(i,OPAMUTF8MSGS) use extended UTF8 characters (camels) in opam \
       messages. Implies $(i,OPAMUTF8). This is set by default on OSX only.";
+  `P "$(i,OPAMVALIDATIONHOOK hook) if set, uses the `%{hook%}` command to \
+      validate an opam repository update";
   `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
       substituting `%{var}%` strings in `opam` files.";
   `P "$(i,OPAMVAR_package_var) overrides the contents of the variable \
       $(i,package:var) when substituting `%{package:var}%` strings in \
       `opam` files.";
   `P "$(i,OPAMVERBOSE) see option `--verbose'.";
+  `P "$(i,OPAMWORKINGDIR) see option `--working-dir`";
   `P "$(i,OPAMYES) see option `--yes'.";
 
   `S "EXIT STATUS";
@@ -898,10 +939,15 @@ let global_options =
       "ROOT" "Use $(docv) as the current root path. \
               This is equivalent to setting $(b,\\$OPAMROOT) to $(i,ROOT)."
       Arg.(some dirname) None in
+  let d_no_aspcud =
+    mk_flag ~section ["no-aspcud"]
+    "Deprecated."
+  in
   let use_internal_solver =
-    mk_flag ~section ["no-aspcud"; "use-internal-solver"]
+    mk_flag ~section ["use-internal-solver"]
       "Disable any external solver, and use the built-in one (this requires \
-       that opam has been compiled with a built-in solver)." in
+       that opam has been compiled with a built-in solver). This is equivalent \
+       to setting $(b,\\$OPAMNOASPCUD) or $(b,\\$OPAMUSEINTERNALSOLVER)." in
   let external_solver =
     mk_opt ~section ["solver"] "CMD"
       (Printf.sprintf
@@ -909,7 +955,7 @@ let global_options =
           problems. This is either a predefined solver (this version of opam \
           supports %s), or a custom command that should contain the variables \
           %%{input}%%, %%{output}%%, %%{criteria}%%, and optionally \
-          %%{timeout}%%."
+          %%{timeout}%%. This is equivalent to setting $(b,\\$OPAMEXTERNALSOLVER)."
          (OpamStd.List.concat_map ", "
             (fun (module S : OpamCudfSolver.S) -> S.name)
             (OpamCudfSolver.default_solver_selection)))
@@ -919,7 +965,7 @@ let global_options =
       ("Specify user $(i,preferences) for dependency solving for this run. \
         Overrides both $(b,\\$OPAMCRITERIA) and $(b,\\$OPAMUPGRADECRITERIA). \
         For details on the supported language, and the external solvers available, see \
-        $(i,  http://opam.ocaml.org/doc/Specifying_Solver_Preferences.html). \
+        $(i, http://opam.ocaml.org/doc/External_solvers.html). \
         A general guide to using solver preferences can be found at \
         $(i,  http://www.dicosmo.org/Articles/usercriteria.pdf).")
       Arg.(some string) None in
@@ -932,14 +978,16 @@ let global_options =
     mk_flag ~section ["best-effort"]
       "Don't fail if all requested packages can't be installed: try to install \
        as many as possible. Note that not all external solvers may support \
-       this option (recent versions of $(i,aspcud) or $(i,mccs) should)."
+       this option (recent versions of $(i,aspcud) or $(i,mccs) should). This \
+       is equivalent to setting $($b,\\$OPAMBESTEFFORT) environment variable."
   in
   let safe_mode =
     mk_flag ~section ["readonly"; "safe"]
       "Make sure nothing will be automatically updated or rewritten. Useful \
        for calling from completion scripts, for example. Will fail whenever \
        such an operation is needed ; also avoids waiting for locks, skips \
-       interactive questions and overrides the $(b,\\$OPAMDEBUG) variable."
+       interactive questions and overrides the $(b,\\$OPAMDEBUG) variable. \
+       This is equivalent to set environment variable $(b,\\$OPAMSAFE)."
   in
   let json_flag =
     mk_opt ~section ["json"] "FILENAME"
@@ -965,7 +1013,8 @@ let global_options =
        version-controlled directory, update to the current working state of \
        their source instead of the last committed state, or the ref they are \
        pointing to. \
-       This only affects packages explicitly listed on the command-line."
+       This only affects packages explicitly listed on the command-line.\
+       It can also be set with $(b,\\$OPAMWORKINGDIR). "
   in
   let ignore_pin_depends =
     mk_flag ~section ["ignore-pin-depends"]
@@ -978,7 +1027,8 @@ let global_options =
         $strict $root $external_solver
         $use_internal_solver $cudf_file $solver_preferences $best_effort
         $safe_mode $json_flag $no_auto_upgrade $working_dir
-        $ignore_pin_depends)
+        $ignore_pin_depends
+        $d_no_aspcud)
 
 (* Options common to all build commands *)
 let build_option_section = "PACKAGE BUILD OPTIONS"
@@ -1033,33 +1083,38 @@ let build_options =
       Arg.(some string) None in
   let show =
     mk_flag ~section ["show-actions"]
-      "Call the solver and display the actions. Don't perform any changes." in
+      "Call the solver and display the actions. Don't perform any changes. \
+      This is equivalent to setting $(b,\\$OPAMSHOW)." in
   let dryrun =
     mk_flag ~section ["dry-run"]
-      "Simulate the command, but don't actually perform any changes." in
+      "Simulate the command, but don't actually perform any changes. This also \
+       can be set with environment variable $(b,\\$OPAMDEBUG)." in
   let skip_update =
     mk_flag ~section ["skip-updates"]
       "When running an install, upgrade or reinstall on source-pinned \
        packages, they are normally updated from their origin first. This flag \
-       disables that behaviour and will keep them to their version in cache."
+       disables that behaviour and will keep them to their version in cache. \
+       This is equivalent to setting $(b,\\$OPAMSKIPUPDATE)."
   in
   let fake =
     mk_flag ~section ["fake"]
       "This option registers the actions into the opam database, without \
        actually performing them. \
        WARNING: This option is dangerous and likely to break your opam \
-       environment. You probably want `--dry-run'. You've been warned." in
+       environment. You probably want `--dry-run'. You've been $(i,warned)." in
   let ignore_constraints_on =
     mk_opt ~section ["ignore-constraints-on"] "PACKAGES"
       "Forces opam to ignore version constraints on all dependencies to the \
        listed packages. This can be used to test compatibility, but expect \
        builds to break when using this. Note that version constraints on \
-       optional dependencies and conflicts are unaffected."
+       optional dependencies and conflicts are unaffected. This is equivalent \
+       to setting $(b,\\$OPAMIGNORECONSTRAINTS)."
       Arg.(some (list package_name)) None ~vopt:(Some []) in
   let unlock_base =
     mk_flag ~section ["unlock-base"]
       "Allow changes to the packages set as switch base (typically, the main \
-       compiler). Use with caution." in
+       compiler). Use with caution. This is equivalent to setting the \
+       $(b,\\$OPAMUNLOCKBASE) environment variable" in
   let locked =
     let open Arg in
     value & opt ~vopt:(Some "locked") (some string) None &
@@ -1071,7 +1126,7 @@ let build_options =
        and reproduce similar build contexts, hence the name. The $(i,opam \
        lock) plugin can be used to generate such files, based on the versions \
        of the dependencies currently installed on the host. This is equivalent \
-       to setting the $(b,\\$OPAMLOCK) environment variable. Note that this \
+       to setting the $(b,\\$OPAMLOCKED) environment variable. Note that this \
        option doesn't generally affect already pinned packages."
   in
   Term.(const create_build_options

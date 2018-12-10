@@ -473,8 +473,9 @@ let installable_subset universe packages =
       universe.u_available ()
   in
   let cudf_packages =
-    opam2cudf universe ~depopts:false ~build:true ~post:true
-      version_map packages
+    Cudf.get_packages
+      ~filter:(fun p -> OpamPackage.Set.mem (OpamCudf.cudf2opam p) packages)
+      simple_universe
   in
   let trimmed_universe =
     (* Algo.Depsolver.trimlist simple_universe with [~explain:false] *)

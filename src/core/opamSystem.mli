@@ -180,7 +180,7 @@ val read_command_output: ?verbose:bool -> ?env:string array ->
 (** END *)
 
 (** Test whether the file is an archive, by looking as its extension *)
-val is_tar_archive: string -> bool
+val is_archive: string -> bool
 
 (** [extract ~dir:dirname filename] extracts the archive [filename] into
     [dirname]. [dirname] should not exists and [filename] should

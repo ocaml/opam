@@ -129,6 +129,10 @@ let (/) d1 s2 =
   let s1 = Dir.to_string d1 in
   raw_dir (Filename.concat s1 s2)
 
+let concat_and_resolve d1 s2 =
+  let s1 = Dir.to_string d1 in
+  Dir.of_string (Filename.concat s1 s2)
+
 type t = {
   dirname:  Dir.t;
   basename: Base.t;
@@ -290,6 +294,9 @@ let process_in ?root fn src dst =
   fn ~src ~dst:(of_string dst)
 
 let copy_in ?root = process_in ?root copy
+
+let is_archive filename =
+  OpamSystem.is_archive (to_string filename)
 
 let extract filename dirname =
   OpamSystem.extract (to_string filename) ~dir:(Dir.to_string dirname)
