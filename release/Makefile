@@ -12,7 +12,7 @@ OCAMLV = 4.04.2
 # currently hardcoded in Dockerfile.in
 OCAML_URL = https://caml.inria.fr/pub/distrib/ocaml-$(basename $(OCAMLV))/ocaml-$(OCAMLV).tar.gz
 
-HOST_OS = $(shell uname -s | tr A-Z a-z)
+HOST_OS = $(shell uname -s | tr A-Z a-z | sed 's/darwin/macos/')
 HOST = $(shell uname -m | sed 's/amd64/x86_64/')-$(HOST_OS)
 
 all: $(patsubst %,out/opam-$(VERSION)-%,$(TARGETS))
@@ -21,7 +21,7 @@ out/opam-full-$(VERSION).tar.gz:
 	mkdir -p out
 	cd out && curl -OfL $(FULL_ARCHIVE_URL) || { \
 	  git clone $(GIT_URL) -b $(TAG) --depth 1 opam-full-$(VERSION); \
-	  sed 's/^AC_INIT(opam,.*)/AC_INIT(opam,$(OPAM_VERSION))/' > \
+	  sed 's/^AC_INIT(opam,.*)/AC_INIT(opam,$(OPAM_VERSION))/' opam-full-$(VERSION)/configure.ac > \
 	    opam-full-$(VERSION)/configure.ac.tmp; \
 	  mv opam-full-$(VERSION)/configure.ac.tmp \
 	    opam-full-$(VERSION)/configure.ac; \
@@ -52,11 +52,11 @@ CLINKING_linux = \
 -Wl,-Bdynamic \
 -static-libgcc
 
-CLINKING_darwin = \
+CLINKING_macos = \
 -lunix -lbigarray -lmccs_stubs -lmccs_glpk_stubs \
 -lstdc++
 
-CLINKING_openbsd = $(CLINKING_darwin)
+CLINKING_openbsd = $(CLINKING_macos)
 
 LINKING = (-noautolink $(patsubst %,-cclib %,$(CLINKING_$(1))))
 
