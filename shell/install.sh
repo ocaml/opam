@@ -132,7 +132,7 @@ esac
 
 OS=$(uname -s || echo unknown)
 case "$OS" in
-    darwin|macos) OS=darwin;;
+    darwin|macos) OS=macos;;
     *) OS=$(echo "$OS" | awk '{print tolower($0)}')
 esac
 
@@ -150,7 +150,7 @@ bin_sha512() {
     opam-2.0.2-arm64-linux)    echo "cd5fb60bc5fba3046af1133d69880df929a34fd641ea3f74d92638c6708a334f7f1b2905e2cbb8b1bc896607aa2a75a14e12fba2fbad6f9da5ba5d0f8806987f";;
     opam-2.0.2-armhf-linux)    echo "5a3f4c1cefff50acbd5de5da6e5358f25573d7aab703dd8a68b2cc0b1ae73dd8518381b2a2984ad697c090e37fdd76ffb9d8fa3190205e7ac9453fad5b07eb19";;
     opam-2.0.2-i686-linux)     echo "b2f8259625fea0171ff229238364c14e98f26cc77d694138459a267a95541873b91cf0609d39214198d9d6362d477463847314ff25c0c79e80b7e1108bc42edc";;
-    opam-2.0.2-x86_64-darwin)  echo "No build yet";;
+    opam-2.0.2-x86_64-macos)   echo "e111633b4bcac56c7a813fef141080ef0a9701f7945c59d123d7667b92b4fb9c080ff703e9ceee8451aee4ee9ad8ea0ed3a63c13911a9cc394eb304fa81d0935";;
     opam-2.0.2-x86_64-linux)   echo "b69ac93da26ac4aa8aa4f24b934f1e5ec29b8e07505ab0586ef97d9a713efae969ffb881953d565132a25158ba1e34fe38b51afb3b51f06b8d65e20ca8fd7e2b";;
     opam-2.0.2-x86_64-openbsd) echo "6d5a6505feb371da151a9ea950ea5adfab11b36ec349ee25973c2e60a8a513fe4e6576399ebbbb69ac56d431dae0e708ed6b995c06987aac0812a1d9090f1317";;
     *) echo "no sha";;
