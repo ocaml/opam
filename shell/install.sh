@@ -130,7 +130,7 @@ case "$ARCH" in
     *) ARCH=$(echo "$ARCH" | awk '{print tolower($0)}')
 esac
 
-OS=$(uname -s || echo unknown)
+OS=$(uname -s | awk '{print tolower($0)}' || echo unknown)
 case "$OS" in
     darwin|macos) OS=macos;;
     *) OS=$(echo "$OS" | awk '{print tolower($0)}')
