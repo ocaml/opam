@@ -130,11 +130,11 @@ case "$ARCH" in
     *) ARCH=$(echo "$ARCH" | awk '{print tolower($0)}')
 esac
 
-OS=$(uname -s | awk '{print tolower($0)}' || echo unknown)
-case "$OS" in
-    darwin|macos) OS=macos;;
-    *) OS=$(echo "$OS" | awk '{print tolower($0)}')
-esac
+OS=$((uname -s || echo unknown) | awk '{print tolower($0)}')
+
+if [ "$OS" = "darwin" ] ; then
+  OS=macos
+fi
 
 OPAM_BIN="opam-${TAG}-${ARCH}-${OS}"
 OPAM_BIN_URL="https://github.com/ocaml/opam/releases/download/${TAG}/${OPAM_BIN}"
