@@ -132,7 +132,7 @@ esac
 
 OS=$(uname -s || echo unknown)
 case "$OS" in
-    darwin|macos) OS=darwin;;
+    darwin|macos) OS=macos;;
     *) OS=$(echo "$OS" | awk '{print tolower($0)}')
 esac
 
@@ -147,12 +147,12 @@ download() {
 
 bin_sha512() {
   case "$OPAM_BIN" in
-    opam-2.0.1-arm64-linux)    echo "5231ea96f19328c42d3f207de76121c8c84887810087dd21f9703ec619045f5a2323e20b15e6c69fd95c784e5438514088418146d6f9f61fca391d4507724c94";;
-    opam-2.0.1-armhf-linux)    echo "5c7f8c38c0bbad503046fb7a443c6425cf122658c6f1d8dd21a980d840da19baf9d318659dbe27a5c05022a480648e128a1df00d30a32538351c1fee9a63215d";;
-    opam-2.0.1-i686-linux)     echo "10e93a82e2ff31415cd0e92fc452fc9c303968e50aa4062585fe02cc1ab60c440ef805e911bbba9eca7ff14b47443c71156ecb69d77f2b9454be25f113d81010";;
-    opam-2.0.1-x86_64-darwin)  echo "f49b4658e37932b3f1541e70d885b0a53e9da973080554bebc1f090f68597172a5b4686ef61b59fcb728e1e83b6800fe171ddcf4fcceeacd49d7a4bc9e22bc70";;
-    opam-2.0.1-x86_64-linux)   echo "13064bcf5ad7dfd2cef1f5dc1a5f9b0614b9ca261e8531923aa841ee20fb430dfd826e9732b314d8d0e5b16b8d3000b0e16e0a33a0f3aae2d1e28b317e97a0ed";;
-    opam-2.0.1-x86_64-openbsd) echo "a7ddb28e0b46320634f1bf8af96e54b2508eab21d6041f7ab9e42dc6d59f8de8328c8bee78965095d46331105a73610782f664a34b758afc50d850fc332fb98c";;
+    opam-2.0.2-arm64-linux)    echo "cd5fb60bc5fba3046af1133d69880df929a34fd641ea3f74d92638c6708a334f7f1b2905e2cbb8b1bc896607aa2a75a14e12fba2fbad6f9da5ba5d0f8806987f";;
+    opam-2.0.2-armhf-linux)    echo "5a3f4c1cefff50acbd5de5da6e5358f25573d7aab703dd8a68b2cc0b1ae73dd8518381b2a2984ad697c090e37fdd76ffb9d8fa3190205e7ac9453fad5b07eb19";;
+    opam-2.0.2-i686-linux)     echo "b2f8259625fea0171ff229238364c14e98f26cc77d694138459a267a95541873b91cf0609d39214198d9d6362d477463847314ff25c0c79e80b7e1108bc42edc";;
+    opam-2.0.2-x86_64-macos)   echo "e111633b4bcac56c7a813fef141080ef0a9701f7945c59d123d7667b92b4fb9c080ff703e9ceee8451aee4ee9ad8ea0ed3a63c13911a9cc394eb304fa81d0935";;
+    opam-2.0.2-x86_64-linux)   echo "b69ac93da26ac4aa8aa4f24b934f1e5ec29b8e07505ab0586ef97d9a713efae969ffb881953d565132a25158ba1e34fe38b51afb3b51f06b8d65e20ca8fd7e2b";;
+    opam-2.0.2-x86_64-openbsd) echo "6d5a6505feb371da151a9ea950ea5adfab11b36ec349ee25973c2e60a8a513fe4e6576399ebbbb69ac56d431dae0e708ed6b995c06987aac0812a1d9090f1317";;
     *) echo "no sha";;
   esac
 }
