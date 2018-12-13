@@ -130,7 +130,7 @@ case "$ARCH" in
     *) ARCH=$(echo "$ARCH" | awk '{print tolower($0)}')
 esac
 
-OS=$((uname -s || echo unknown) | awk '{print tolower($0)}')
+OS=$( (uname -s || echo unknown) | awk '{print tolower($0)}')
 
 if [ "$OS" = "darwin" ] ; then
   OS=macos
