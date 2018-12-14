@@ -91,7 +91,10 @@ let global_options =
         OpamStd.Option.Op.(options.debug_level ++
                            OpamStd.Config.env_level "DEBUG" +! 0 > 0)
         (OpamStateConfig.opamroot ?root_dir:options.opt_root ());
-    if not (options.safe_mode || OpamClientConfig.(!r.root_is_ok)) &&
+    let root_is_ok =
+      OpamStd.Option.default false (OpamStd.Config.env_bool "ROOTISOK")
+    in
+    if not (options.safe_mode || root_is_ok) &&
        Unix.getuid () = 0 then
       OpamConsole.warning "Running as root is not recommended";
     options, self_upgrade_status
