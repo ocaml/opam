@@ -33,15 +33,17 @@ all: man html pages
 man:
 	rm -rf man
 	mkdir -p man
-	$(OPAM) $(HELPFMT) > man/opam.1
+	$(OPAM) $(HELPFMT) > man/opam.1 2> man/err
 	for i in $(TOPICS); do\
-	  $(OPAM) $$i $(HELPFMT) > man/opam-$$i.1;\
+	  $(OPAM) $$i $(HELPFMT) > man/opam-$$i.1 2>> man/err ; \
 	done
-	$(OPAM) admin $(HELPFMT) > man/opam-admin.1
+	$(OPAM) admin $(HELPFMT) > man/opam-admin.1 2>> man/err
 	for i in $(TOPICS_ADMIN); do\
-	  $(OPAM) admin $$i $(HELPFMT) > man/opam-admin-$$i.1;\
+	  $(OPAM) admin $$i $(HELPFMT) > man/opam-admin-$$i.1 2>> man/err ; \
 	done
-	$(OPAM_INSTALLER) $(HELPFMT) > man/opam-installer.1
+	$(OPAM_INSTALLER) $(HELPFMT) > man/opam-installer.1 2>> man/err
+# Dune doesn't (yet) support --no-print-directory
+	@if grep -v "^Entering directory '" man/err > man/err2 ; then cat man/err2 ; false ; fi
 
 man-html: man
 	rm -rf man-html
