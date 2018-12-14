@@ -173,6 +173,15 @@ apt install opam
 ##### Versions older than 18.04
 Use the binary distribution. Instructions provided at https://opam.ocaml.org/doc/Install.html#Binary-distribution
 
+#### Guix & GuixSD
+
+The opam package for [guix](https://www.gnu.org/software/guix/) can be installed with the command:
+
+```
+# Guix
+guix package -i opam
+```
+
 ## From Sources
 
 #### Getting the Sources
