@@ -156,6 +156,7 @@ export OCAMLRUNPARAM=b
     make lib-ext
   fi
   make all
+  make man
 
   rm -f ~/local/bin/opam
   make install
