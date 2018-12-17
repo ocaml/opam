@@ -979,7 +979,7 @@ let global_options =
       "Don't fail if all requested packages can't be installed: try to install \
        as many as possible. Note that not all external solvers may support \
        this option (recent versions of $(i,aspcud) or $(i,mccs) should). This \
-       is equivalent to setting $($b,\\$OPAMBESTEFFORT) environment variable."
+       is equivalent to setting $(b,\\$OPAMBESTEFFORT) environment variable."
   in
   let safe_mode =
     mk_flag ~section ["readonly"; "safe"]
