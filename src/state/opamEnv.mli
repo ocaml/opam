@@ -46,6 +46,12 @@ val get_pure: ?updates:env_update list -> unit -> env
     returned by e.g. [get_full]!) *)
 val add: env -> env_update list -> env
 
+(** Like [get_opam] computes environment modification by OPAM , but returns
+    these [updates] instead of the new environment. *)
+val updates:
+  ?set_opamroot:bool -> ?set_opamswitch:bool -> ?force_path:bool ->
+  'a switch_state -> env_update list
+
 (** Check if the shell environment is in sync with the current OPAM switch (or
     if OPAMNOENVNOTICE has been set, in which case we just assume it's up to
     date) *)
