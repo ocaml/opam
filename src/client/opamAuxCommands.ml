@@ -491,13 +491,13 @@ let get_compatible_compiler ?repos rt dir =
        (OpamStd.Format.itemize OpamPackage.to_string
           (OpamPackage.Set.elements local_packages));
      if OpamConsole.confirm "Do you want to create an empty switch regardless?"
-     then []
+     then [], false
      else OpamStd.Sys.exit_because `Aborted)
   else
   let compilers = OpamPackage.Set.inter compilers installable in
   try
     [OpamSolution.eq_atom_of_package
-       (OpamPackage.Set.choose_one compilers)]
+       (OpamPackage.Set.choose_one compilers)], true
   with
   | Not_found when not (OpamPackage.Set.is_empty local_packages) ->
     OpamConsole.warning
@@ -507,7 +507,7 @@ let get_compatible_compiler ?repos rt dir =
        OpamConsole.confirm
          "Create the switch with no specific compiler selected, and attempt to \
           continue?"
-    then []
+    then [], false
     else OpamStd.Sys.exit_because `Aborted
  | Failure _ | Not_found ->
    (* Find a matching compiler from the default selection *)
@@ -515,7 +515,7 @@ let get_compatible_compiler ?repos rt dir =
      OpamFile.Config.default_compiler gt.config
    in
    if default_compiler = Empty then
-     (OpamConsole.warning "No compiler selected"; [])
+     (OpamConsole.warning "No compiler selected"; [], false)
    else
    let candidates = OpamFormula.to_dnf default_compiler in
    try
@@ -545,7 +545,7 @@ let get_compatible_compiler ?repos rt dir =
             Some (OpamSolution.eq_atoms_of_packages compiler)
           else None
        )
-       candidates
+       candidates, false
    with Not_found ->
       OpamConsole.warning
         "The default compiler selection: %s\n\
@@ -557,5 +557,5 @@ let get_compatible_compiler ?repos rt dir =
       if OpamConsole.confirm
           "You may also proceed, with no specific compiler selected. \
            Do you want to?"
-      then []
+      then [], false
       else OpamStd.Sys.exit_because `Aborted
