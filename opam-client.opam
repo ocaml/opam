@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0.2"
+version: "2.0.3"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Vincent Bernardoff <vb@luminar.eu.org>"
@@ -21,8 +21,8 @@ build: [
   [make "%{name}%.install"]
 ]
 depends: [
-  "opam-state" {= "2.0.2"}
-  "opam-solver" {= "2.0.2"}
+  "opam-state" {= "2.0.3"}
+  "opam-solver" {= "2.0.3"}
   "re" {>= "1.7.2"}
   "cmdliner" {>= "0.9.8"}
   "dune" {build & >= "1.2.1"}

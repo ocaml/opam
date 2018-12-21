@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0.2"
+version: "2.0.3"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Vincent Bernardoff <vb@luminar.eu.org>"
@@ -21,7 +21,7 @@ build: [
   [make "%{name}%.install"]
 ]
 depends: [
-  "opam-format" {= "2.0.2"}
+  "opam-format" {= "2.0.3"}
   "mccs" {>= "1.1+9"}
   "dose3" {>= "5"}
   "cudf" {>= "0.7"}

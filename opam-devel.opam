@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0.2"
+version: "2.0.3"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Vincent Bernardoff <vb@luminar.eu.org>"
@@ -22,7 +22,7 @@ build: [
 ]
 build-test: [make "tests"]
 depends: [
-  "opam-client" {= "2.0.2"}
+  "opam-client" {= "2.0.3"}
   "cmdliner" {>= "0.9.8"}
   "dune" {build & >= "1.2.1"}
 ]
