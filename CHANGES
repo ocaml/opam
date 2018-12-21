@@ -3,6 +3,7 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
 2.0.2:
+* Update build from jbuilder to dune
 * Doc:
   * update man page
   * add message for deprecated options
