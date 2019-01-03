@@ -29,10 +29,25 @@ let help t =
       all_global_vars
       (OpamVariable.Map.map snd t.switch_global.global_variables)
   in
-  List.map (fun (var, doc) -> [
+  let env = OpamPackageVar.resolve t in
+  List.map (fun (var, doc) ->
+      let content =
+        OpamFilter.ident_string env ~default:"" ([],var,None)
+      in
+      let doc =
+        if doc = OpamGlobalState.inferred_from_system then
+          match OpamStd.Option.Op.(
+              OpamVariable.Map.find_opt var t.switch_global.global_variables
+              >>| fst
+              >>= Lazy.force) with
+          | Some c when (OpamVariable.string_of_variable_contents c) <> content ->
+            "Set throught local opam config or env"
+          | _ -> doc
+        else doc
+      in
+      [
         OpamVariable.to_string var % `bold;
-        OpamFilter.ident_string (OpamPackageVar.resolve t) ~default:""
-          ([],var,None) % `blue;
+        content % `blue;
         "#"; doc
       ])
     (OpamVariable.Map.bindings all_global_vars) |>
