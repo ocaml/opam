@@ -60,3 +60,6 @@ val write: rw global_state -> unit
     registered if it is set and exists, and removing any non-existing switches.
     Writes back to disk if possible (ie lock is available) *)
 val fix_switch_list: 'a global_state -> 'a global_state
+
+(** Description used for system inferred variables *)
+val inferred_from_system: string
