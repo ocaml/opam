@@ -1,0 +1,364 @@
+(**************************************************************************)
+(*                                                                        *)
+(*    Copyright 2017 OCamlPro                                             *)
+(*                                                                        *)
+(*  All rights reserved. This file is distributed under the terms of the  *)
+(*  GNU Lesser General Public License version 2.1, with the special       *)
+(*  exception on linking described in the file LICENSE.                   *)
+(*                                                                        *)
+(**************************************************************************)
+
+open OpamCudfSolverSig
+
+let log f = OpamConsole.log "Z3" f
+
+let name = "builtin-z3"
+
+let ext = ref None
+
+let is_present () = true
+
+let command_name = None
+
+let default_criteria = {
+  crit_default = "-removed,\
+                  -count[version-lag,request],\
+                  -count[version-lag,changed],\
+                  -changed";
+  crit_upgrade = "-removed,\
+                  -count[version-lag,solution],\
+                  -new";
+  crit_fixup = "-changed,-count[version-lag,solution]";
+  crit_best_effort_prefix = Some "+count[opam-query,solution],";
+}
+
+let mk_or ctx = function
+  | [] -> Z3.Boolean.mk_false ctx
+  | [p] -> p
+  | l -> Z3.Boolean.mk_or ctx l
+
+let mk_and ctx = function
+  | [] -> Z3.Boolean.mk_true ctx
+  | [p] -> p
+  | l -> Z3.Boolean.mk_and ctx l
+
+let def_packages ctx (_preamble, universe, _request) =
+  let syms = Hashtbl.create 4289 in
+  let psym p = Z3.Boolean.mk_const ctx (Hashtbl.find syms p) in
+  (* variable definitions *)
+  Cudf.iter_packages (fun pkg ->
+      let sym =
+        Z3.Symbol.mk_string ctx
+          (Printf.sprintf "%s.%d" pkg.Cudf.package pkg.Cudf.version)
+      in
+      Hashtbl.add syms pkg sym)
+    universe;
+  let def_exprs = [] in
+  let def_exprs =
+    (* "keep" flags *)
+    Cudf.fold_packages_by_name (fun e _name pkgs ->
+        match List.find (fun p -> p.Cudf.keep = `Keep_version) pkgs with
+        | p -> psym p :: e
+        | exception Not_found ->
+          if List.exists (fun p -> p.Cudf.keep = `Keep_package) pkgs then
+            mk_or ctx (List.map psym pkgs) :: e
+          else e)
+      def_exprs
+      universe
+  in
+  let expand_constraint pkg (name, constr) =
+    mk_or ctx
+      (List.map psym
+         (List.filter (fun p -> not (Cudf.( =% ) pkg p))
+            (Cudf.lookup_packages universe ~filter:constr name)))
+  in
+  let def_exprs =
+    Cudf.fold_packages (fun e pkg ->
+        Z3.Boolean.mk_implies ctx (psym pkg)
+          (mk_and ctx
+             (* dependencies *)
+             (List.map (fun disj ->
+                  mk_or ctx
+                    (List.map (expand_constraint pkg) disj))
+                 pkg.Cudf.depends @
+              (* conflicts *)
+              (List.map (fun c -> Z3.Boolean.mk_not ctx ((expand_constraint pkg) c))
+                 pkg.Cudf.conflicts)))
+        :: e)
+      def_exprs
+      universe
+  in
+  List.rev def_exprs,
+  psym
+
+let def_request ctx (_preamble, universe, request) psym =
+  let expand_constraint (name, constr) =
+    mk_or ctx
+      (List.map psym
+         (Cudf.lookup_packages universe ~filter:constr name))
+  in
+  let inst =
+    List.rev_map expand_constraint request.Cudf.install
+  in
+  let rem =
+    List.rev_map (fun vpkg -> Z3.Boolean.mk_not ctx (expand_constraint vpkg))
+      request.Cudf.remove
+  in
+  let up =
+    List.rev_map (fun (name, constr) ->
+        match Cudf.get_installed universe name with
+        | [] ->
+          Cudf.lookup_packages universe ~filter:constr name |>
+          List.map psym |>
+          mk_or ctx
+        | p::l ->
+          let vmin =
+            List.fold_left (fun vmin p -> max vmin p.Cudf.version) p.Cudf.version l
+          in
+          Cudf.lookup_packages universe ~filter:constr name |>
+          List.filter (fun p -> p.Cudf.version > vmin) |>
+          List.map psym |>
+          (* fixme: the spec states that an 'upgrade' request should guarantee
+             that only one version of the package will be installed. Since it's
+             already a constraint in opam, and it's non trivial to encode, we
+             ignore it here. *)
+          mk_or ctx)
+      request.Cudf.upgrade
+  in
+  List.rev_append inst @@
+  List.rev_append rem @@
+  List.rev_append up @@
+  []
+
+let sum ctx (_, universe, _) filter value =
+  Cudf.fold_packages (fun e pkg ->
+      match filter pkg with
+      | None -> e
+      | Some filt ->
+        match value pkg with
+        | 0 -> e
+        | n ->
+          Z3.Boolean.mk_ite ctx filt
+            (Z3.Arithmetic.Integer.mk_numeral_i ctx n)
+            (Z3.Arithmetic.Integer.mk_numeral_i ctx 0)
+          :: e)
+    []
+    universe
+
+type filter = Installed | Changed | Removed | New | Upgraded | Downgraded | Requested
+type property = string option
+type sign = Plus | Minus
+
+type criterion = sign * filter * property
+
+let def_criterion ctx opt (preamble, universe, request as cudf) psym
+    (sign, filter, property : criterion) =
+  let filter_f = match filter with
+    | Installed -> fun p -> Some (psym p)
+    | Changed ->
+      fun p ->
+        if p.Cudf.installed then Some (Z3.Boolean.mk_not ctx (psym p))
+        else Some (psym p)
+    | Removed ->
+      fun p ->
+        if p.Cudf.installed then Some (Z3.Boolean.mk_not ctx (psym p))
+        else None
+    | New ->
+      fun p ->
+        if p.Cudf.installed then None
+        else Some (psym p)
+    | Upgraded ->
+      fun p ->
+        if p.Cudf.installed then None
+        else (match Cudf.get_installed universe p.Cudf.package with
+            | [] -> None
+            | l when List.for_all (fun p1 -> p1.Cudf.version < p.Cudf.version) l
+              -> Some (psym p)
+            | _ -> None)
+    | Downgraded ->
+      fun p ->
+        if p.Cudf.installed then None
+        else (match Cudf.get_installed universe p.Cudf.package with
+            | [] -> None
+            | l when List.exists (fun p1 -> p1.Cudf.version > p.Cudf.version) l
+              -> Some (psym p)
+            | _ -> None)
+    | Requested ->
+      fun p ->
+        if
+          List.exists (fun (name, cstr) ->
+              p.Cudf.package = name && Cudf.version_matches p.Cudf.version cstr)
+            request.Cudf.install ||
+          List.exists (fun (name, cstr) ->
+              p.Cudf.package = name && Cudf.version_matches p.Cudf.version cstr)
+            request.Cudf.upgrade
+        then Some (psym p)
+        else None
+  in
+  let value_f = match property with
+    | None -> fun _ -> 1
+    | Some prop ->
+      fun p ->
+        match Cudf.lookup_typed_package_property p prop with
+        | `Int n | `Nat n -> n
+        | `Bool true -> 1
+        | `Bool false -> 0
+        | _ -> 0
+        | exception Not_found ->
+          match List.assoc prop preamble.Cudf.property with
+          | `Int (Some n) | `Nat (Some n) -> n
+          | `Bool (Some true) -> 1
+          | `Bool (Some false) -> 0
+          | _ -> 0
+          | exception Not_found ->
+            log "%s" (OpamStd.List.concat_map ", " fst preamble.Cudf.property);
+            failwith ("Undefined CUDF property: "^prop)
+  in
+  match sum ctx cudf filter_f value_f with
+  | [] -> None
+  | sum ->
+    OpamStd.Option.some @@
+    (match sign with Plus -> Z3.Optimize.maximize | Minus -> Z3.Optimize.minimize)
+      opt
+      (Z3.Arithmetic.mk_add ctx sum)
+
+let def_criteria ctx opt cudf psym crits =
+  List.map (def_criterion ctx opt cudf psym) crits
+
+module Syntax = struct
+
+  let criterion_of_string (s,params) =
+    let sign = match s.[0] with
+      | '+' -> Plus
+      | '-' -> Minus
+      | c -> failwith (Printf.sprintf "criteria_of_string sign=%c" c)
+      | exception Invalid_argument _ ->
+        failwith "criteria_of_string sign=EOF"
+    in
+    let s = String.sub s 1 (String.length s - 1) in
+    let subset_of_string = function
+      | "new" -> New
+      | "removed" -> Removed
+      | "changed" -> Changed
+      | "up" -> Upgraded
+      | "down" -> Downgraded
+      | "installed" | "solution" -> Installed
+      | "request" -> Requested
+      | s -> failwith ("criteria_of_string subset="^s)
+    in
+    match s, params with
+    | "count", [field; subset] ->
+      sign, subset_of_string subset, Some field
+    | s, [] -> sign, subset_of_string s, None
+    | s, _ -> failwith ("criteria_of_string s="^s)
+
+  let string_of_criterion (sign, filter, property: criterion) =
+    Printf.sprintf "%c%s%s"
+      (match sign with Plus -> '+' | Minus -> '-')
+      (match filter with
+       | Installed -> "installed"
+       | Changed -> "changed"
+       | Removed -> "removed"
+       | New -> "new"
+       | Upgraded -> "up"
+       | Downgraded -> "down"
+       | Requested -> "request")
+      (match property with None -> "" | Some p -> "["^p^"]")
+
+  let criteria_of_string s =
+    let start = ref 0 in
+    let crits = ref [] in
+    let params = ref None in
+    for i = 0 to String.length s - 1 do
+      match s.[i] with
+      | ',' ->
+        let sub = String.sub s !start (i - !start) in
+        start := i + 1;
+        if sub <> "" then
+          (match !params with
+           | None -> crits := (sub, []) :: !crits
+           | Some (name, ps) -> params := Some (name, sub :: ps))
+      | '[' ->
+        let sub = String.sub s !start (i - !start) in
+        start := i + 1;
+        if !params <> None then failwith "criteria_of_string";
+        params := Some (sub, [])
+      | ']' ->
+        let sub = String.sub s !start (i - !start) in
+        start := i + 1;
+        (match !params with
+         | None -> failwith "criteria_of_string"
+         | Some (name, ps) ->
+           params := None;
+           crits := (name, List.rev (sub::ps)) :: !crits)
+      | _ -> ()
+    done;
+    if !start < String.length s then
+      crits := (String.sub s !start (String.length s - !start), []) :: !crits;
+    if !params <> None then failwith "criteria_of_string";
+    let r = List.rev_map criterion_of_string !crits in
+    log "criteria_of_string: %s" (OpamStd.List.concat_map " " string_of_criterion r);
+    r
+
+end
+
+
+let call ~criteria ?timeout (preamble, universe, _ as cudf) =
+  (* try *)
+  log "Generating problem...";
+  let cfg = [] in
+  let ctx = Z3.mk_context cfg in
+  let opt = Z3.Optimize.mk_opt ctx in
+  log "Generating package definitions";
+  let expr, psym = def_packages ctx cudf in
+  Z3.Optimize.add opt expr;
+  log "Generating request";
+  Z3.Optimize.add opt (def_request ctx cudf psym);
+  log "Generating optimization criteria";
+  let _objs =
+    def_criteria ctx opt cudf psym (Syntax.criteria_of_string criteria)
+  in
+  log "Resolving...";
+  (match OpamStd.Env.getopt "Z3DEBUG" with
+   | None -> ()
+   | Some f ->
+     let debug = open_out (f^".smt2") in
+     output_string debug (Z3.Optimize.to_string opt);
+     close_out debug);
+  match Z3.Optimize.check opt with
+  | UNSATISFIABLE ->
+    log "UNSAT";
+    raise Common.CudfSolver.Unsat
+  | UNKNOWN ->
+    log "UNKNOWN";
+    raise Timeout
+  | SATISFIABLE ->
+    log "SAT: extracting model";
+    match Z3.Optimize.get_model opt with
+    | Some model ->
+      Z3.Model.get_const_decls model |>
+      List.fold_left (fun pkgs decl ->
+          match Z3.Model.get_const_interp model decl with
+          | Some p when Z3.Boolean.is_true p ->
+            (match OpamStd.String.cut_at
+                     (Z3.Symbol.get_string (Z3.FuncDecl.get_name decl))
+                     '.'
+             with
+             | None -> pkgs
+             | Some (p, v) ->
+               let p = Cudf.lookup_package universe (p, int_of_string v) in
+               {p with
+                Cudf.was_installed = p.installed;
+                Cudf.installed = true}
+               :: pkgs)
+          | _ -> pkgs)
+        [] |>
+      Cudf.load_universe |>
+      fun u -> Some preamble, u
+    | None -> failwith "no model ??"
+  (* with
+   * | (Timeout | Common.CudfSolver.Unsat | Failure _) as e -> raise e
+   * | e ->
+   *   OpamConsole.error "Z3 error: %s" (Printexc.to_string e);
+   *   OpamConsole.errmsg "%s" (Printexc.get_backtrace ());
+   *   raise e *)
