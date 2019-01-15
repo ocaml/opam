@@ -33,18 +33,36 @@ let default_criteria = {
 }
 
 let mk_or ctx = function
-  | [] -> Z3.Boolean.mk_false ctx
-  | [p] -> p
-  | l -> Z3.Boolean.mk_or ctx l
+  | None -> None
+  | Some [] -> None
+  | Some [p] -> Some p
+  | Some l -> Some (Z3.Boolean.mk_or ctx l)
 
 let mk_and ctx = function
-  | [] -> Z3.Boolean.mk_true ctx
-  | [p] -> p
-  | l -> Z3.Boolean.mk_and ctx l
+  | None -> None
+  | Some [] -> None
+  | Some [p] -> Some p
+  | Some l -> Some (Z3.Boolean.mk_and ctx l)
+
+let ( @^ ) opt l = match opt with
+  | None -> l
+  | Some x -> x :: l
+
+let xrmap f l =
+  match List.fold_left (fun acc x -> f x @^ acc) [] l with
+  | [] -> None
+  | l -> Some l
+
+let xmap f l = match xrmap f l with
+  | Some l -> Some (List.rev l)
+  | None -> None
+
+open OpamStd.Option.Op
 
 let def_packages ctx (_preamble, universe, _request) =
   let syms = Hashtbl.create 4289 in
-  let psym p = Z3.Boolean.mk_const ctx (Hashtbl.find syms p) in
+  let psym p = Hashtbl.find_opt syms p >>| Z3.Boolean.mk_const ctx in
+  let psym_exn p = match psym p with None -> raise Not_found | Some p -> p in
   (* variable definitions *)
   Cudf.iter_packages (fun pkg ->
       let sym =
@@ -57,34 +75,35 @@ let def_packages ctx (_preamble, universe, _request) =
   let def_exprs =
     (* "keep" flags *)
     Cudf.fold_packages_by_name (fun e _name pkgs ->
-        match List.find (fun p -> p.Cudf.keep = `Keep_version) pkgs with
-        | p -> psym p :: e
-        | exception Not_found ->
-          if List.exists (fun p -> p.Cudf.keep = `Keep_package) pkgs then
-            mk_or ctx (List.map psym pkgs) :: e
-          else e)
+        let keep =
+          match List.find (fun p -> p.Cudf.keep = `Keep_version) pkgs with
+          | p -> psym p
+          | exception Not_found ->
+            if List.exists (fun p -> p.Cudf.keep = `Keep_package) pkgs then
+              mk_or ctx @@ xrmap psym pkgs
+            else None
+        in
+        keep @^ e)
       def_exprs
       universe
   in
   let expand_constraint pkg (name, constr) =
     mk_or ctx
-      (List.map psym
-         (List.filter (fun p -> not (Cudf.( =% ) pkg p))
-            (Cudf.lookup_packages universe ~filter:constr name)))
+      (xrmap (fun p -> if Cudf.( =% ) pkg p then None else psym p)
+         (Cudf.lookup_packages universe ~filter:constr name))
   in
   let def_exprs =
     Cudf.fold_packages (fun e pkg ->
-        Z3.Boolean.mk_implies ctx (psym pkg)
-          (mk_and ctx
-             (* dependencies *)
-             (List.map (fun disj ->
-                  mk_or ctx
-                    (List.map (expand_constraint pkg) disj))
-                 pkg.Cudf.depends @
-              (* conflicts *)
-              (List.map (fun c -> Z3.Boolean.mk_not ctx ((expand_constraint pkg) c))
-                 pkg.Cudf.conflicts)))
-        :: e)
+        (mk_and ctx @@ xrmap
+           (fun disj -> mk_or ctx @@ xrmap (expand_constraint pkg) disj)
+           pkg.Cudf.depends
+         >>| Z3.Boolean.mk_implies ctx (psym_exn pkg)) @^
+        (mk_or ctx @@ xrmap
+           (expand_constraint pkg)
+           pkg.Cudf.conflicts
+         >>| fun c ->
+         Z3.Boolean.mk_implies ctx (psym_exn pkg) (Z3.Boolean.mk_not ctx c)) @^
+        e)
       def_exprs
       universe
   in
@@ -93,31 +112,30 @@ let def_packages ctx (_preamble, universe, _request) =
 
 let def_request ctx (_preamble, universe, request) psym =
   let expand_constraint (name, constr) =
-    mk_or ctx
-      (List.map psym
-         (Cudf.lookup_packages universe ~filter:constr name))
+    mk_or ctx @@ xrmap psym
+      (Cudf.lookup_packages universe ~filter:constr name)
   in
   let inst =
-    List.rev_map expand_constraint request.Cudf.install
+    xrmap expand_constraint request.Cudf.install
   in
   let rem =
-    List.rev_map (fun vpkg -> Z3.Boolean.mk_not ctx (expand_constraint vpkg))
+    xrmap
+      (fun vpkg -> expand_constraint vpkg >>| Z3.Boolean.mk_not ctx)
       request.Cudf.remove
   in
   let up =
-    List.rev_map (fun (name, constr) ->
+    xrmap (fun (name, constr) ->
         match Cudf.get_installed universe name with
         | [] ->
-          Cudf.lookup_packages universe ~filter:constr name |>
-          List.map psym |>
-          mk_or ctx
+          mk_or ctx @@ xrmap psym
+            (Cudf.lookup_packages universe ~filter:constr name)
         | p::l ->
           let vmin =
             List.fold_left (fun vmin p -> max vmin p.Cudf.version) p.Cudf.version l
           in
           Cudf.lookup_packages universe ~filter:constr name |>
           List.filter (fun p -> p.Cudf.version > vmin) |>
-          List.map psym |>
+          xrmap psym |>
           (* fixme: the spec states that an 'upgrade' request should guarantee
              that only one version of the package will be installed. Since it's
              already a constraint in opam, and it's non trivial to encode, we
@@ -125,10 +143,8 @@ let def_request ctx (_preamble, universe, request) psym =
           mk_or ctx)
       request.Cudf.upgrade
   in
-  List.rev_append inst @@
-  List.rev_append rem @@
-  List.rev_append up @@
-  []
+  let (@@^) o l = match o with None -> l | Some l1 -> List.rev_append l1 l in
+  inst @@^ rem @@^ up @@^ []
 
 let sum ctx (_, universe, _) filter value =
   Cudf.fold_packages (fun e pkg ->
@@ -154,26 +170,26 @@ type criterion = sign * filter * property
 let def_criterion ctx opt (preamble, universe, request as cudf) psym
     (sign, filter, property : criterion) =
   let filter_f = match filter with
-    | Installed -> fun p -> Some (psym p)
+    | Installed -> fun p -> psym p
     | Changed ->
       fun p ->
-        if p.Cudf.installed then Some (Z3.Boolean.mk_not ctx (psym p))
-        else Some (psym p)
+        if p.Cudf.installed then psym p >>| Z3.Boolean.mk_not ctx
+        else psym p
     | Removed ->
       fun p ->
-        if p.Cudf.installed then Some (Z3.Boolean.mk_not ctx (psym p))
+        if p.Cudf.installed then psym p >>| Z3.Boolean.mk_not ctx
         else None
     | New ->
       fun p ->
         if p.Cudf.installed then None
-        else Some (psym p)
+        else psym p
     | Upgraded ->
       fun p ->
         if p.Cudf.installed then None
         else (match Cudf.get_installed universe p.Cudf.package with
             | [] -> None
             | l when List.for_all (fun p1 -> p1.Cudf.version < p.Cudf.version) l
-              -> Some (psym p)
+              -> psym p
             | _ -> None)
     | Downgraded ->
       fun p ->
@@ -181,7 +197,7 @@ let def_criterion ctx opt (preamble, universe, request as cudf) psym
         else (match Cudf.get_installed universe p.Cudf.package with
             | [] -> None
             | l when List.exists (fun p1 -> p1.Cudf.version > p.Cudf.version) l
-              -> Some (psym p)
+              -> psym p
             | _ -> None)
     | Requested ->
       fun p ->
@@ -192,7 +208,7 @@ let def_criterion ctx opt (preamble, universe, request as cudf) psym
           List.exists (fun (name, cstr) ->
               p.Cudf.package = name && Cudf.version_matches p.Cudf.version cstr)
             request.Cudf.upgrade
-        then Some (psym p)
+        then psym p
         else None
   in
   let value_f = match property with
