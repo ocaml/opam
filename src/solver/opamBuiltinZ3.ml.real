@@ -48,6 +48,10 @@ let ( @^ ) opt l = match opt with
   | None -> l
   | Some x -> x :: l
 
+let (@@^) o l = match o with
+  | None -> l
+  | Some l1 -> List.rev_append l1 l
+
 let xrmap f l =
   match List.fold_left (fun acc x -> f x @^ acc) [] l with
   | [] -> None
@@ -94,16 +98,46 @@ let def_packages ctx (_preamble, universe, _request) =
   in
   let def_exprs =
     Cudf.fold_packages (fun e pkg ->
-        (mk_and ctx @@ xrmap
-           (fun disj -> mk_or ctx @@ xrmap (expand_constraint pkg) disj)
-           pkg.Cudf.depends
-         >>| Z3.Boolean.mk_implies ctx (psym_exn pkg)) @^
-        (mk_or ctx @@ xrmap
-           (expand_constraint pkg)
-           pkg.Cudf.conflicts
-         >>| fun c ->
-         Z3.Boolean.mk_implies ctx (psym_exn pkg) (Z3.Boolean.mk_not ctx c)) @^
-        e)
+        let module SM = OpamStd.String.Map in
+        let cudf_depends, cudf_depends_map =
+          List.fold_left (fun (rem, map) -> function
+              | (name, _) :: r as disj
+                when List.for_all (fun (n1, _) -> n1 = name) r ->
+                rem, SM.update name (fun conj -> disj :: conj) [] map
+              | disj -> disj :: rem, map)
+            ([], SM.empty)
+            pkg.Cudf.depends
+        in
+        let depends =
+          xrmap
+            (fun disj -> mk_or ctx @@ xrmap (expand_constraint pkg) disj)
+            cudf_depends @@^
+          SM.fold (fun name conj e ->
+              (mk_or ctx @@ xrmap psym @@
+               List.fold_left (fun plist disj ->
+                   List.filter (fun p ->
+                       List.exists
+                         (fun (_, cstr) ->
+                            Cudf.version_matches p.Cudf.version cstr)
+                         disj)
+                     plist)
+                 (Cudf.lookup_packages universe name)
+                 conj)
+              @^ e)
+            cudf_depends_map
+            []
+          |> OpamStd.Option.some
+          |> mk_and ctx
+          >>| Z3.Boolean.mk_implies ctx (psym_exn pkg)
+        in
+        let conflicts =
+          mk_or ctx @@ xrmap
+             (expand_constraint pkg)
+             pkg.Cudf.conflicts
+          >>| fun c ->
+          Z3.Boolean.mk_implies ctx (psym_exn pkg) (Z3.Boolean.mk_not ctx c)
+        in
+        depends @^ conflicts @^ e)
       def_exprs
       universe
   in
@@ -143,10 +177,14 @@ let def_request ctx (_preamble, universe, request) psym =
           mk_or ctx)
       request.Cudf.upgrade
   in
-  let (@@^) o l = match o with None -> l | Some l1 -> List.rev_append l1 l in
   inst @@^ rem @@^ up @@^ []
 
 let sum ctx (_, universe, _) filter value =
+  let ite filt iftrue iffalse =
+    Z3.Boolean.mk_ite ctx filt
+      (Z3.Arithmetic.Integer.mk_numeral_i ctx iftrue)
+      (Z3.Arithmetic.Integer.mk_numeral_i ctx iffalse)
+  in
   Cudf.fold_packages (fun e pkg ->
       match filter pkg with
       | None -> e
@@ -154,10 +192,12 @@ let sum ctx (_, universe, _) filter value =
         match value pkg with
         | 0 -> e
         | n ->
-          Z3.Boolean.mk_ite ctx filt
-            (Z3.Arithmetic.Integer.mk_numeral_i ctx n)
-            (Z3.Arithmetic.Integer.mk_numeral_i ctx 0)
-          :: e)
+          if Z3.Boolean.is_not filt then
+            match Z3.Expr.get_args filt with
+            | [filt] -> ite filt 0 n :: e
+            | _ -> assert false
+          else
+            ite filt n 0 :: e)
     []
     universe
 
