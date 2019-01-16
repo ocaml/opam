@@ -30,14 +30,19 @@ let possible_definition_filenames dir name = [
   dir // "opam"
 ]
 
-let check_locked default =
+let check_locked ?subpath default =
   match OpamStateConfig.(!r.locked) with
   | None -> default
   | Some ext ->
-    let fl = OpamFilename.add_extension default ext in
+    let flo =
+      match subpath with
+      | Some s -> OpamFilename.(Op.(Dir.of_string s // to_string default))
+      | None -> default
+    in
+    let fl = OpamFilename.add_extension flo ext in
     if OpamFilename.exists fl then
       (let base_depends =
-         OpamFile.make default
+         OpamFile.make flo
          |> OpamFile.OPAM.read
          |> OpamFile.OPAM.depends
        in
@@ -127,7 +132,7 @@ let check_locked default =
                             bv))
                       consistent)
               else "")));
-       fl)
+       OpamFilename.add_extension default ext)
     else default
 
 let find_opam_file_in_source name dir =
@@ -212,13 +217,7 @@ let files_in_source ?(recurse=false) ?subpath d =
     (OpamStd.Option.map_default (fun sp -> OpamFilename.Op.(d / sp)) d subpath)
   in
   files d @ files (d / "opam") |>
-  List.map
-    (fun (f, s) ->
-       match OpamStateConfig.(!r.locked) with
-       | None -> f, s
-       | Some ext ->
-         (let fl = OpamFilename.add_extension f ext in
-          if OpamFilename.exists fl then fl else f), s) |>
+  List.map (fun (f,s) -> (check_locked ?subpath:s f), s) |>
   OpamStd.List.filter_map
     (fun (f, subpath) ->
        try
