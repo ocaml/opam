@@ -2040,7 +2040,7 @@ let switch =
       match packages, compiler_opt, OpamSwitch.is_external switch with
       | None, None, false ->
         OpamSwitchCommand.guess_compiler_package ?repos rt
-          (OpamSwitch.to_string switch)
+          (OpamSwitch.to_string switch), false
       | None, None, true ->
         OpamAuxCommands.get_compatible_compiler ?repos rt
           (OpamFilename.dirname_dir
@@ -2049,7 +2049,7 @@ let switch =
         OpamStd.Option.Op.(
           ((compiler_opt >>|
             OpamSwitchCommand.guess_compiler_package ?repos rt) +! []) @
-          packages +! [])
+          packages +! []), false
     in
     let param_compiler = function
       | [] -> None
@@ -2109,7 +2109,7 @@ let switch =
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       let repos, rt = get_repos_rt gt repos in
       let switch = OpamSwitch.of_string switch_arg in
-      let packages =
+      let packages, local_compiler =
         compiler_packages rt ?repos switch (param_compiler params)
       in
       let _gt, st =
@@ -2117,10 +2117,12 @@ let switch =
           ?synopsis:descr ?repos
           ~update_config:(not no_switch)
           ~packages
+          ~local_compiler
           switch
       in
       let st =
-        if not no_install && not empty && OpamSwitch.is_external switch then
+        if not no_install && not empty &&
+           OpamSwitch.is_external switch && not local_compiler then
           let st, atoms =
             OpamAuxCommands.autopin st ~simulate:deps_only ~quiet:true
               [`Dirname (OpamFilename.Dir.of_string switch_arg)]
