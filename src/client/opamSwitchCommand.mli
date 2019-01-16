@@ -24,7 +24,9 @@ val install:
   ?synopsis:string ->
   ?repos:repository_name list ->
   update_config:bool ->
-  packages:atom conjunction -> switch ->
+  packages:atom conjunction -> 
+  ?local_compiler:bool ->
+  switch ->
   unlocked global_state * rw switch_state
 
 (** Install a compiler's base packages *)
