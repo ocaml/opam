@@ -274,7 +274,6 @@ let def_criterion ctx opt (preamble, universe, request as cudf) psym
           | `Bool (Some false) -> 0
           | _ -> 0
           | exception Not_found ->
-            log "%s" (OpamStd.List.concat_map ", " fst preamble.Cudf.property);
             failwith ("Undefined CUDF property: "^prop)
   in
   match sum ctx cudf filter_f value_f with
@@ -360,7 +359,6 @@ module Syntax = struct
       crits := (String.sub s !start (String.length s - !start), []) :: !crits;
     if !params <> None then failwith "criteria_of_string";
     let r = List.rev_map criterion_of_string !crits in
-    log "criteria_of_string: %s" (OpamStd.List.concat_map " " string_of_criterion r);
     r
 
 end
@@ -369,7 +367,10 @@ end
 let call ~criteria ?timeout (preamble, universe, _ as cudf) =
   (* try *)
   log "Generating problem...";
-  let cfg = [] in
+  let cfg = match timeout with
+    | None -> []
+    | Some secs -> ["timeout", string_of_int (int_of_float (1000. *. secs))]
+  in
   let ctx = Z3.mk_context cfg in
   let opt = Z3.Optimize.mk_opt ctx in
   log "Generating package definitions";
