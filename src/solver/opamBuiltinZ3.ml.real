@@ -113,16 +113,23 @@ let def_packages ctx (_preamble, universe, _request) =
             (fun disj -> mk_or ctx @@ xrmap (expand_constraint pkg) disj)
             cudf_depends @@^
           SM.fold (fun name conj e ->
-              (mk_or ctx @@ xrmap psym @@
-               List.fold_left (fun plist disj ->
-                   List.filter (fun p ->
-                       List.exists
-                         (fun (_, cstr) ->
-                            Cudf.version_matches p.Cudf.version cstr)
-                         disj)
-                     plist)
-                 (Cudf.lookup_packages universe name)
-                 conj)
+              (match
+                 xrmap psym @@
+                 List.fold_left (fun plist disj ->
+                     let r =
+                       List.filter (fun p ->
+                           List.exists
+                             (fun (_, cstr) ->
+                                Cudf.version_matches p.Cudf.version cstr)
+                             disj)
+                         plist
+                     in
+                     r)
+                   (Cudf.lookup_packages universe name)
+                   conj
+               with
+               | None -> Some (Z3.Boolean.mk_false ctx)
+               | some -> mk_or ctx some)
               @^ e)
             cudf_depends_map
             []
