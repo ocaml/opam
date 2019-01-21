@@ -64,16 +64,14 @@ let xmap f l = match xrmap f l with
 open OpamStd.Option.Op
 
 let def_packages ctx (_preamble, universe, _request) =
-  let syms = Hashtbl.create 4289 in
-  let psym p = Hashtbl.find_opt syms p >>| Z3.Boolean.mk_const ctx in
+  let syms = Hashtbl.create 2731 in
+  let psym p = Hashtbl.find_opt syms p in
   let psym_exn p = match psym p with None -> raise Not_found | Some p -> p in
   (* variable definitions *)
   Cudf.iter_packages (fun pkg ->
-      let sym =
-        Z3.Symbol.mk_string ctx
-          (Printf.sprintf "%s.%d" pkg.Cudf.package pkg.Cudf.version)
-      in
-      Hashtbl.add syms pkg sym)
+      Hashtbl.add syms pkg
+        (Z3.Boolean.mk_const_s ctx
+           (Printf.sprintf "%s.%d" pkg.Cudf.package pkg.Cudf.version)))
     universe;
   let def_exprs = [] in
   let def_exprs =
