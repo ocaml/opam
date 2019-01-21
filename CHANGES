@@ -2,7 +2,13 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+2.0.3:
+* Fix manpage remaining $ (OPAMBESTEFFORT)
+* Fix OPAMROOTISOK handling
+* Regenerate missing environment file
+
 2.0.2:
+* Update build from jbuilder to dune
 * Doc:
   * update man page
   * add message for deprecated options

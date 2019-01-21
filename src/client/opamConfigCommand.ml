@@ -224,10 +224,25 @@ let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
       (OpamSwitch.to_string switch)
       (OpamConsole.colorise `bold "--set-switch")
       (OpamConsole.colorise `bold "OPAMSWITCH");
+  let force_path = not inplace_path in
   let env =
-    OpamEnv.get_opam_raw
-      ~set_opamroot ~set_opamswitch ~force_path:(not inplace_path)
-      gt.root switch
+    let env_file = OpamPath.Switch.environment gt.root switch in
+    if not (OpamFile.exists env_file) then
+      (OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+       let upd =
+         OpamEnv.updates ~set_opamroot ~set_opamswitch ~force_path st
+       in
+       log "Missing environment file, regenerates it";
+       if not (OpamCoreConfig.(!r.safe_mode)) then
+         (let _st =
+            OpamSwitchState.with_write_lock st @@ fun _st ->
+            (OpamFile.Environment.write env_file upd), _st
+          in ());
+       OpamEnv.add [] upd)
+    else
+      OpamEnv.get_opam_raw
+        ~set_opamroot ~set_opamswitch ~force_path
+        gt.root switch
   in
   print_eval_env ~csh ~sexp ~fish env
 
