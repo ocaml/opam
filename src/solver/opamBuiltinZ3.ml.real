@@ -224,12 +224,15 @@ let def_criterion ctx opt (preamble, universe, request as cudf) psym
         else psym p
     | Removed ->
       fun p ->
-        if p.Cudf.installed then psym p >>| Z3.Boolean.mk_not ctx
+        if p.Cudf.installed then
+          mk_or ctx @@ xrmap psym (Cudf.lookup_packages universe p.Cudf.package)
+          >>| Z3.Boolean.mk_not ctx
         else None
     | New ->
       fun p ->
         if p.Cudf.installed then None
-        else psym p
+        else
+          mk_or ctx @@ xrmap psym (Cudf.lookup_packages universe p.Cudf.package)
     | Upgraded ->
       fun p ->
         if p.Cudf.installed then None
