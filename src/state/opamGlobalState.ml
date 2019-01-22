@@ -34,6 +34,8 @@ let load_config global_lock root =
   OpamFormatUpgrade.as_necessary global_lock root config;
   config
 
+let inferred_from_system = "Inferred from system"
+
 let load lock_kind =
   let root = OpamStateConfig.(!r.root_dir) in
   log "LOAD-GLOBAL-STATE @ %a" (slog OpamFilename.Dir.to_string) root;
@@ -64,7 +66,9 @@ let load lock_kind =
     List.fold_left (fun acc (v,value) ->
         OpamVariable.Map.add v
           (lazy (Some (OpamStd.Option.default (S "unknown") (Lazy.force value))),
-           "Inferred from system")
+          (* Careful on changing it, it is used to determine user defined
+             variables on `config report`. See [OpamConfigCommand.help]. *)
+           inferred_from_system)
           acc)
       OpamVariable.Map.empty
       (OpamSysPoll.variables)
