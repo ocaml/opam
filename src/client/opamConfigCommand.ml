@@ -174,6 +174,14 @@ let rec print_fish_env env =
               (OpamStd.Env.escape_single_quotes ~using_backslashes:true v))
          v)
   in
+  (* set manpath if and only if fish version >= 2.6 *)
+  let manpath_cmd v =
+    OpamConsole.msg "%s" (
+      "awk -v f=$FISH_VERSION " ^
+      "'BEGIN { split(f, fs, \".\"); goodfish = fs[1] > 2 || (fs[1] == 2 && fs[2] >= 6); if (goodfish) { exit 0 } else { exit 1 } }' " ^
+      "; and "
+    ) ;
+    set_arr_cmd "MANPATH" v in
   match env with
   | [] -> ()
   | (k, v, _) :: r ->
@@ -185,8 +193,7 @@ let rec print_fish_env env =
           * opamState.ml for details *)
          set_arr_cmd k v
        | "MANPATH" ->
-         if OpamStd.Env.getopt k <> None then
-           set_arr_cmd k v
+         manpath_cmd v
        | _ ->
          OpamConsole.msg "set -gx %s '%s';\n"
            k (OpamStd.Env.escape_single_quotes ~using_backslashes:true v));
