@@ -322,7 +322,7 @@ let resolve_command cmd = !resolve_command_fn cmd
     [cmd] with arguments [args]. If [stdout_file] or [stderr_file] are
     set, the channels are redirected to the corresponding files.  The
     outputs are discarded is [verbose] is set to false. The current
-    environment can also be overriden if [env] is set. The environment
+    environment can also be overridden if [env] is set. The environment
     which is used to run the process is recorded into [env_file] (if
     set). *)
 let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?env ?(metadata=[]) ?dir

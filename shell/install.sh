@@ -120,7 +120,7 @@ fi
 
 TMP=${TMPDIR:-/tmp}
 
-ARCH=$(uname -m || echo unknwon)
+ARCH=$(uname -m || echo unknown)
 case "$ARCH" in
     x86|i?86) ARCH="i686";;
     x86_64|amd64) ARCH="x86_64";;
@@ -188,7 +188,7 @@ if [ -e "$TMP/$OPAM_BIN" ] && ! check_sha512 || [ ! -e "$TMP/$OPAM_BIN" ]; then
         if check_sha512; then
             echo "## Downloaded."
         else
-            echo "Checksum mismatch, a problem occured during download."
+            echo "Checksum mismatch, a problem occurred during download."
             exit 10
         fi
     fi

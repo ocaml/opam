@@ -35,7 +35,7 @@ versions.
 
 The feature provided can already be encoded without an extra field: given a list
 of packages that `provide` a given name, a package by this name can be added
-with a dependency towards either of those. However, on a repository maintainance
+with a dependency towards either of those. However, on a repository maintenance
 point of view, having to list all the alternatives adds much more burden.
 
 Besides, it's not possible, using pinning or an additional repository, to

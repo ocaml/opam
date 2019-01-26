@@ -47,7 +47,7 @@ val dev_packages:
 
 (** Updates a single dev or pinned package from its upstream. If [working_dir]
     is set, and the package is bound to a local, version-controlled dir, use the
-    working dir state instead of what has been commited to version control.
+    working dir state instead of what has been committed to version control.
 
     Returns true if changed, false otherwise, and a switch_state update
     function, applying possible changes in packages metadata *)

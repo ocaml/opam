@@ -39,7 +39,7 @@ val switch_exists: 'a global_state -> switch -> bool
 val installed_versions: 'a global_state -> name -> switch list package_map
 
 (** Default list of repositories to get packages from, ordered by decreasing
-    priority. This can be overriden by switch-specific selections, and does not
+    priority. This can be overridden by switch-specific selections, and does not
     have to include all configured repositories. *)
 val repos_list: 'a global_state -> repository_name list
 

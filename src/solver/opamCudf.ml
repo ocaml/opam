@@ -122,7 +122,7 @@ module Graph = struct
       let strong_deps, weak_deps =
         (* strong deps are mandatory (constraint appearing in the top
            conjunction)
-           weak deps correspond to optional occurences of a package, as part of
+           weak deps correspond to optional occurrences of a package, as part of
            a disjunction: e.g. in (A>=4 & (B | A<5)), A>=4 is strong, and the
            other two are weak. In the end we want to retain B and A>=4. *)
         List.fold_left (fun (strong_deps, weak_deps) l ->

@@ -505,12 +505,12 @@ are not marked).
 * Improve the syntax of filters
 * Add a `messages` field
 * Add a `--jobs` command line option and add `%{jobs}%` to be used in OPAM files
-* Various improvments in the solver heuristics
+* Various improvements in the solver heuristics
 * By default, turn-on checking of certificates for downloaded dependency archives: use `./configure --disable-certificate-check` to go back to the previous behavior
 * Check the md5sum of downloaded archives when compiling OPAM
 * Improved `opam info` command (more information, non-zero error code when no patterns match)
 * Display OS and OPAM version on internal errors to ease error reporting
-* Fix `opam reinstall` when reinstalling a package wich is a dependency of installed packages (regression introduced in 0.9.5)
+* Fix `opam reinstall` when reinstalling a package which is a dependency of installed packages (regression introduced in 0.9.5)
 * Export and read `OPAMSWITCH` to be able to call OPAM in different switches
 * `opam-client` can now be used in a toplevel
 * `-n` now means `--no-setup` and not `--no-checksums` anymore
@@ -653,7 +653,7 @@ are not marked).
 * improve opam-mk-repo
 * fix `opam search` to be caseless
 * ability to filter some commands (depending on some predicates) in opam file
-* improvments when packages disapear upstream
+* improvements when packages disappear upstream
 * check for ocaml 3.12.1 on configure
 * tell the user to unset some potentially dangerous variables when running opam
 * fix few git backend issues

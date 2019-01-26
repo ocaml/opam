@@ -237,13 +237,13 @@ module String : sig
 
   (** {4 Transformations} *)
 
-  (** Cut a string at the first occurence of the given char *)
+  (** Cut a string at the first occurrence of the given char *)
   val cut_at: string -> char -> (string * string) option
 
   (** Same as [cut_at], but starts from the right *)
   val rcut_at: string -> char -> (string * string) option
 
-  (** Split a string at occurences of a given characters. Empty strings are
+  (** Split a string at occurrences of a given characters. Empty strings are
       skipped. *)
   val split: string -> char -> string list
 
@@ -429,7 +429,7 @@ module Sys : sig
   (** Indicates intention to exit the program with given exit code *)
   exception Exit of int
 
-  (** Indicates intention to exec() the given command (paramters as per
+  (** Indicates intention to exec() the given command (parameters as per
       [Unix.execvpe]), after proper finalisations. It's the responsibility of
       the main function to catch this, call [exec_at_exit], and
       [Unix.execvpe]. *)

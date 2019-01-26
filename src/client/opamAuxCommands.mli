@@ -21,7 +21,7 @@ open OpamStateTypes
 val copy_files_to_destdir: 'a switch_state -> dirname -> package_set -> unit
 
 (** Removes all files that may have been installed by [copy_files_to_destdir];
-    it's more agressive than [OpamDirTrack.revert] and doesn't check if the
+    it's more aggressive than [OpamDirTrack.revert] and doesn't check if the
     files are current. *)
 val remove_files_from_destdir: 'a switch_state -> dirname -> package_set -> unit
 
