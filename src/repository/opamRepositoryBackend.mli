@@ -69,7 +69,7 @@ module type S = sig
   val revision: dirname -> version option OpamProcess.job
 
   (** Like [pull_url], except for locally-bound version control backends, where
-      it should get the latest, uncommited source. *)
+      it should get the latest, uncommitted source. *)
   val sync_dirty:
     dirname -> url -> filename option download OpamProcess.job
 
@@ -90,7 +90,7 @@ val local: dirname -> repository
     one [expected]. *)
 val check_digest: filename -> OpamHash.t option -> bool
 
-(** Adds a label to the given job, for the correspondig repository name and
+(** Adds a label to the given job, for the corresponding repository name and
     action *)
 val job_text:
   repository_name -> string -> 'a OpamProcess.job -> 'a OpamProcess.job

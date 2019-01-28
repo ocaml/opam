@@ -675,7 +675,7 @@ let env_arg =
           comma-separated 'var=value' bindings, when resolving variables. \
           This is used e.g. when computing available packages: if undefined, \
           availability of packages is not taken into account. Note that, \
-          unless overriden, variables like 'root' or 'opam-version' may be \
+          unless overridden, variables like 'root' or 'opam-version' may be \
           taken from the current opam installation. What is defined in \
           $(i,~/.opam/config) is always ignored.")
 

@@ -75,7 +75,7 @@ let skip_zeros x xi xl = skip_while_from xi (fun c -> c = '0') x xl;;
 
 (* compare versions chunks, that is parts of version strings that are
  * epoch, upstream version, or revisision. Alternates string comparison
- * and numerical comaprison.  *)
+ * and numerical comparison.  *)
 let compare_chunks x y =
   (* x and y may be empty *)
   let xl = String.length x

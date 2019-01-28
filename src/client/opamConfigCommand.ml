@@ -41,7 +41,7 @@ let help t =
               >>| fst
               >>= Lazy.force) with
           | Some c when (OpamVariable.string_of_variable_contents c) <> content ->
-            "Set throught local opam config or env"
+            "Set through local opam config or env"
           | _ -> doc
         else doc
       in

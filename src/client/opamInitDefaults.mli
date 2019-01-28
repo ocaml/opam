@@ -9,7 +9,7 @@
 (**************************************************************************)
 
 (** This module defines a few defaults, used at 'opam init', that bind opam to
-    its default OCaml repository at https://opam.ocaml.org. All can be overriden
+    its default OCaml repository at https://opam.ocaml.org. All can be overridden
     through the init command flags or an init config file. *)
 
 open OpamTypes
