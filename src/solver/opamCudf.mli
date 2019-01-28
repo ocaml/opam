@@ -143,7 +143,7 @@ val remove: Cudf.universe -> Cudf_types.pkgname -> Cudf_types.constr -> Cudf.uni
 val uninstall_all: Cudf.universe -> Cudf.universe
 
 (** Install a package in the universe. We don't care about any
-    invariant here (eg. the resulting universe can have mutliple
+    invariant here (eg. the resulting universe can have multiple
     versions of the same package installed). *)
 val install: Cudf.universe -> Cudf.package -> Cudf.universe
 

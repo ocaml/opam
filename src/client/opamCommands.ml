@@ -184,7 +184,7 @@ let init =
     `S "ARGUMENTS";
     `S "OPTIONS";
     `S "CONFIGURATION FILE";
-    `P "Any field from the built-in initial configuration can be overriden \
+    `P "Any field from the built-in initial configuration can be overridden \
         through $(i,~/.opamrc), $(i,/etc/opamrc), or a file supplied with \
         $(i,--config). The default configuration for this version of opam \
         can be obtained using $(b,--show-default-opamrc).";
@@ -285,7 +285,7 @@ let init =
   let no_sandboxing =
     mk_flag ["disable-sandboxing"]
       "Use a default configuration with sandboxing disabled (note that this \
-       may be overriden by `opamrc' if $(b,--no-opamrc) is not specified or \
+       may be overridden by `opamrc' if $(b,--no-opamrc) is not specified or \
        $(b,--config) is used). Use this at your own risk, without sandboxing \
        it is possible for a broken package script to delete all your files."
   in
@@ -1564,7 +1564,7 @@ let repository =
      package definitions anymore. With $(b,--all), makes opam forget about \
      these repositories completely.";
     "set-repos", `set_repos, ["NAME..."],
-    "Explicitely selects the list of repositories to look up package \
+    "Explicitly selects the list of repositories to look up package \
      definitions from, in the specified priority order (overriding previous \
      selection and ranks), according to the specified scope.";
     "set-url", `set_url, ["NAME"; "ADDRESS"; "[QUORUM]"; "[FINGERPRINTS]"],

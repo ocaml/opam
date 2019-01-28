@@ -103,7 +103,7 @@ to:
   is to use the `conflict-class:` field: add _e.g._ `conflict-class:
   "foo-implementation"` to all versions of both `a` and `b`.
 
-The need to define the virtual package explicitely also ensures that a third
+The need to define the virtual package explicitly also ensures that a third
 package can't inject a new implementation without that being visible in `foo`:
 it would otherwise be a security hole when we deploy end-to-end signing of
 packages.

@@ -9,7 +9,7 @@
 
       ./init-repo.sh -i
 
-* load a inital scenario (this command can be invoked multiple times): 
+* load an initial scenario (this command can be invoked multiple times):
 
       ./init-repo.sh -s 1
       ./init-repo.sh -s 2

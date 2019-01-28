@@ -75,7 +75,7 @@ but presented in order of increased implementation complexity
         package is scheduled.
 
         The depopts: field is not used at all by the package dependencies
-        resolution phase, and must not be transalted into CUDF.
+        resolution phase, and must not be translated into CUDF.
 
         After the solver returns a solution, packages in this list that are
         present in the system are added with all their dependencies to the
