@@ -685,10 +685,7 @@ let show =
     let doc =
       Arg.info
         ~docv:"FILE"
-        ~doc:"DEPRECATED: use an explicit path argument as package instead. \
-              Get package information from the given FILE instead of from \
-              known packages. This implies $(b,--raw) unless $(b,--fields) is \
-              used. Only raw opam-file fields can be queried."
+        ~doc:"DEPRECATED: see $(i,--just-file)"
         ["file"] in
     Arg.(value & opt (some existing_filename_or_dash) None & doc) in
   let normalise = mk_flag ["normalise"]
@@ -698,16 +695,68 @@ let show =
   let no_lint = mk_flag ["no-lint"]
       "Don't output linting warnings or errors when reading from files"
   in
+  let just_file = mk_flag ["just-file"]
+      "Load and display information from the given files (allowed \
+       $(i,PACKAGES) are file or directory paths), without consideration for \
+       the repositories or state of the package. This implies $(b,--raw) unless \
+       $(b,--fields) is used. Only raw opam-file fields can be queried. If no \
+       PACKAGES argument is given, read opam file from stdin."
+  in
+  let opam_files_in_dir d =
+    match OpamPinned.files_in_source d with
+    | [] ->
+      OpamConsole.warning "No opam files found in %s"
+        (OpamFilename.Dir.to_string d);
+      []
+    | l -> List.map (fun (_,f) -> Some f) l
+  in
   let pkg_info global_options fields show_empty raw where
-      list_files file normalise no_lint atom_locs =
+      list_files file normalise no_lint just_file atom_locs =
+    let print_just_file f =
+      let opam = match f with
+        | Some f -> OpamFile.OPAM.read f
+        | None -> OpamFile.OPAM.read_from_channel stdin
+      in
+      if not no_lint then OpamFile.OPAM.print_errors opam;
+      if where then
+        OpamConsole.msg "%s\n"
+          (match f with
+           | Some f ->
+             OpamFilename.(Dir.to_string (dirname (OpamFile.filename f)))
+           | None -> ".")
+      else
+      let opam_content_list = OpamFile.OPAM.to_list opam in
+      let get_field f =
+        let f = OpamStd.String.remove_suffix ~suffix:":" f in
+        try OpamListCommand.mini_field_printer ~prettify:true ~normalise
+              (List.assoc f opam_content_list)
+        with Not_found -> ""
+      in
+      match fields with
+      | [] ->
+        OpamFile.OPAM.write_to_channel stdout opam
+      | [f] ->
+        OpamConsole.msg "%s\n" (get_field f)
+      | flds ->
+        let tbl =
+          List.map (fun fld ->
+              [ OpamConsole.colorise `blue
+                  (OpamStd.String.remove_suffix ~suffix:":" fld ^ ":");
+                get_field fld ])
+            flds
+        in
+        OpamStd.Format.align_table tbl |>
+        OpamConsole.print_table stdout ~sep:" "
+    in
+    OpamArg.deprecated_option file None "file" (Some "--just-file");
     apply_global_options global_options;
-    match file, atom_locs with
-    | None, [] ->
+    match atom_locs, just_file with
+    | [], false ->
       `Error (true, "required argument PACKAGES is missing")
-    | Some _, _::_ ->
-      `Error (true,
-              "arguments PACKAGES and `--file' can't be specified together")
-    | None, atom_locs ->
+    | [], true ->
+      print_just_file None;
+      `Ok ()
+    | atom_locs, false ->
       let fields, show_empty =
         if list_files then
           fields @ [OpamListCommand.(string_of_field Installed_files)],
@@ -723,45 +772,24 @@ let show =
       OpamListCommand.info st
         ~fields ~raw_opam:raw ~where ~normalise ~show_empty atoms;
       `Ok ()
-    | Some f, [] ->
-      let opam = match f with
-        | Some f -> OpamFile.OPAM.read (OpamFile.make f)
-        | None -> OpamFile.OPAM.read_from_channel stdin
-      in
-      if not no_lint then OpamFile.OPAM.print_errors opam;
-      if where then
-        (OpamConsole.msg "%s\n"
-           (match f with Some f -> OpamFilename.(Dir.to_string (dirname f))
-                       | None -> ".");
-         `Ok ())
+    | atom_locs, true ->
+      if List.exists (function `Atom _ -> true | _ -> false) atom_locs then
+        `Error (true, "packages can't be specified with --just-file")
       else
-      let opam_content_list = OpamFile.OPAM.to_list opam in
-      let get_field f =
-        let f = OpamStd.String.remove_suffix ~suffix:":" f in
-        try OpamListCommand.mini_field_printer ~prettify:true ~normalise
-              (List.assoc f opam_content_list)
-        with Not_found -> ""
+      let opams =
+        List.fold_left (fun acc al ->
+            match al with
+            | `Filename f -> Some (OpamFile.make f) :: acc
+            | `Dirname d -> opam_files_in_dir d @ acc
+            | _ -> acc)
+          [] atom_locs
       in
-      match fields with
-      | [] ->
-        OpamFile.OPAM.write_to_channel stdout opam; `Ok ()
-      | [f] ->
-        OpamConsole.msg "%s\n" (get_field f); `Ok ()
-      | flds ->
-        let tbl =
-          List.map (fun fld ->
-              [ OpamConsole.colorise `blue
-                  (OpamStd.String.remove_suffix ~suffix:":" fld ^ ":");
-                get_field fld ])
-            flds
-        in
-        OpamStd.Format.align_table tbl |>
-        OpamConsole.print_table stdout ~sep:" ";
-        `Ok ()
+      List.iter print_just_file opams;
+      `Ok ()
   in
   Term.(ret
           (const pkg_info $global_options $fields $show_empty $raw $where $list_files
-           $file $normalise $no_lint $atom_or_local_list)),
+           $file $normalise $no_lint $just_file $atom_or_local_list)),
   term_info "show" ~doc ~man
 
 module Common_config_flags = struct
