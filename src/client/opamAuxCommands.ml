@@ -400,6 +400,7 @@ let autopin st ?(simulate=false) ?quiet atom_or_local_list =
       OpamStd.Sys.exit_because `Aborted
   in
   let st =
+    if OpamClientConfig.(!r.ignore_pin_depends) then st else
     OpamPackage.Set.fold (fun nv st ->
         OpamPinCommand.handle_pin_depends st nv (OpamSwitchState.opam st nv))
       (OpamPackage.Set.union pins already_pinned_set) st
