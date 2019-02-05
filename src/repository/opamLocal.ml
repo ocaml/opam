@@ -226,4 +226,7 @@ module B = struct
 
   let sync_dirty dir url = pull_url dir None url
 
+  let get_remote_url ?hash:_ _ =
+    Done None
+
 end

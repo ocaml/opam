@@ -204,6 +204,79 @@ module VCS : OpamVCS.VCS = struct
       OpamProcess.cleanup ~force:true r; Done true
     | r -> OpamSystem.process_error r
 
+  let origin = "origin"
+
+  (** check if a hash or branch is present in remote origin and returns  *)
+  let check_remote repo_root hash_or_b =
+    let is_hex str =
+      OpamStd.String.fold_left (fun hex ch ->
+          hex && match ch with
+          | '0'..'9' | 'A'..'F' | 'a'..'f' -> true
+          | _ -> false
+        ) true str
+    in
+    (* get the hash of the branch *)
+    let hash =
+      git repo_root ["branch"] @@> fun r ->
+      if OpamProcess.is_success r then
+        let is_branch =
+          List.exists (OpamStd.String.contains ~sub:hash_or_b) r.r_stdout
+        in
+        if is_branch then
+          git repo_root [ "rev-list"; hash_or_b; "-1" ] @@> fun r ->
+          if OpamProcess.is_success r then
+            (match List.filter is_hex r.r_stdout with
+             | [hash] ->
+               Done (Some hash)
+             | _ -> Done None)
+          else Done None
+        else
+        if is_hex hash_or_b then
+          Done (Some hash_or_b)
+        else Done None
+      else
+        Done None
+    in
+    hash @@+ function
+    | Some hash ->
+      (* check if hash / branch is present in remote *)
+      (git repo_root ["branch"; "-r"; "--contains"; hash]
+       @@> function
+       | { OpamProcess.r_code = 0; _ } as r ->
+         if r.r_stdout <> [] &&
+            (List.exists (OpamStd.String.contains ~sub:origin) r.r_stdout) then
+           Done (Some hash_or_b)
+         else
+           Done None
+       | { OpamProcess.r_code = 1; _ } ->
+         Done None
+       | r -> OpamSystem.process_error r)
+    | None -> Done None
+
+  let get_remote_url ?hash repo_root =
+    git repo_root ["remote"; "get-url"; origin]
+    @@> function
+    | { OpamProcess.r_code = 0; OpamProcess.r_stdout = [url]; _ } ->
+      (let u = OpamUrl.parse url in
+       if OpamUrl.local_dir u <> None then Done None else
+       let hash_in_remote =
+         match hash with
+         | None ->
+           (current_branch repo_root @@+ function
+             | None | Some "HEAD" -> Done None
+             | Some hash -> check_remote repo_root hash)
+         | Some hash -> check_remote repo_root hash
+       in
+       hash_in_remote @@+ function
+       | Some _ as hash ->
+         Done (Some { u with OpamUrl.hash = hash })
+       | None ->
+         Done (Some { u with OpamUrl.hash = None })
+      )
+    | { OpamProcess.r_code = 0; _ }
+    | { OpamProcess.r_code = 1; _ } -> Done None
+    | r -> OpamSystem.process_error r
+
 end
 
 module B = OpamVCS.Make(VCS)

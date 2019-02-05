@@ -30,6 +30,9 @@ module type S = sig
   val repo_update_complete: dirname -> url -> unit OpamProcess.job
   val revision: dirname -> version option OpamProcess.job
   val sync_dirty: dirname -> url -> filename option download OpamProcess.job
+  val get_remote_url:
+    ?hash:string -> dirname ->
+    url option OpamProcess.job
 end
 
 let compare r1 r2 = compare r1.repo_name r2.repo_name

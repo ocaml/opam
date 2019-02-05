@@ -116,6 +116,35 @@ module VCS = struct
     OpamSystem.raise_on_process_error r;
     Done (r.OpamProcess.r_stdout = [])
 
+  let get_remote_url ?hash repo_root =
+    hg repo_root [ "paths"; "default" ]
+    @@> function
+    | { OpamProcess.r_code = 0; _ } as r ->
+      (match r.r_stdout with
+       | [url] ->
+         (let url = OpamUrl.parse ~backend:`hg url in
+       if OpamUrl.local_dir url <> None then Done None else
+          let check_remote hash =
+            hg repo_root [ "id"; "-r"; hash; "default" ]
+            @@> fun r ->
+            if OpamProcess.is_success r then
+              Done (Some { url with hash = Some hash })
+              (* default branch of hg is default *)
+            else Done (Some { url with hash = None})
+          in
+          match hash with
+          | None ->
+            (hg repo_root ["branch"] @@> function
+              | { OpamProcess.r_code = 0; OpamProcess.r_stdout = [hash]; _ } ->
+                check_remote hash
+              | { OpamProcess.r_code = 0; _ }
+              | { OpamProcess.r_code = 1; _ } -> Done (Some url)
+              | r -> OpamSystem.process_error r)
+          | Some hash -> check_remote hash)
+       | _ -> Done None)
+    | { OpamProcess.r_code = 1; _ } -> Done None
+    | r -> OpamSystem.process_error r
+
 end
 
 module B = OpamVCS.Make(VCS)
