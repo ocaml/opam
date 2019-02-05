@@ -2958,14 +2958,16 @@ let clean =
         OpamConsole.msg "rm -rf \"%s\"/*\n"
           (OpamFilename.Dir.to_string d)
       else
-        OpamFilename.cleandir d
+      try OpamFilename.cleandir d
+      with OpamSystem.Internal_error msg -> OpamConsole.warning "Error ignored: %s" msg
     in
     let rmdir d =
       if dry_run then
         OpamConsole.msg "rm -rf \"%s\"\n"
           (OpamFilename.Dir.to_string d)
       else
-        OpamFilename.rmdir d
+      try OpamFilename.rmdir d
+      with OpamSystem.Internal_error msg -> OpamConsole.warning "Error ignored: %s" msg
     in
     let switches =
       if all_switches then OpamGlobalState.switches gt
