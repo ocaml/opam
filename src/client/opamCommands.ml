@@ -3103,42 +3103,21 @@ let lock =
            "Only lock direct dependencies, rather than the whole dependency tree")
   in
   let get_git_url url nv dir =
-    OpamFilename.in_dir dir @@ fun () ->
-    try
-      match OpamSystem.read_command_output ["git";"remote";"get-url";"origin"] with
-      | [url0] ->
-        let u = OpamUrl.parse ~backend:`git url0 in
-        if OpamUrl.local_dir u <> None then None else
-        let hash =
-          match url.OpamUrl.hash with
-          | None ->
-            OpamProcess.Job.run (OpamGit.VCS.current_branch dir)
-          | Some hash ->
-            match OpamSystem.read_command_output
-                    ["git"; "branch"; "-r"; "--contains"; hash] with
-            | _::_ -> Some hash
-            | [] ->
-              (let b_default =
-                 match List.map (fun x -> OpamStd.String.split x '/')
-                         (OpamSystem.read_command_output
-                            ["git"; "symbolic-re"; "refs/remotes/origin/HEAD"]) with
-                 | [_::_::_::b::[]] -> Some b
-                 | _ -> None
-               in
-               OpamConsole.warning
-                 "Referenced git branch for %s is not available in remote: %s.%s"
-                 (OpamConsole.colorise `underline (OpamPackage.to_string nv))
-                 (OpamUrl.to_string u)
-                 (OpamStd.Option.to_string
-                    (fun b ->
-                       Printf.sprintf "\nReplace it by default remote branch %s."
-                         (OpamConsole.colorise `underline b))
-                    b_default);
-               b_default)
-        in
-        Some { u with OpamUrl.hash = hash }
-      | _ -> None
-    with OpamSystem.Command_not_found _ | OpamSystem.Process_error _ ->
+    let module VCS =
+      (val OpamRepository.find_backend_by_kind url.OpamUrl.backend)
+    in
+    let open OpamProcess.Job.Op in
+    OpamProcess.Job.run @@
+    VCS.get_remote_url ?hash:url.OpamUrl.hash dir @@| function
+    | Some u ->
+      (if u.OpamUrl.hash = None then
+         OpamConsole.warning
+           "Referenced git branch for %s is not available in remote: %s, \
+           use default branch instead."
+           (OpamConsole.colorise `underline (OpamPackage.to_string nv))
+           (OpamUrl.to_string u);
+       Some u)
+    | _ ->
       (OpamConsole.error "Can't retrieve remote informations for %s"
          (OpamPackage.to_string nv);
        None)
@@ -3204,19 +3183,20 @@ let lock =
           | Some u ->
             match OpamUrl.local_dir u with
             | Some d ->
-              let err () =
+              let local_warn () =
                 OpamConsole.warning "Dependency %s is pinned to local target %s"
                   (OpamPackage.to_string nv) (OpamUrl.to_string u);
                 None
               in
-              if u.OpamUrl.backend = `git then
-                match get_git_url u nv d with
-                | Some resolved_u ->
-                  OpamConsole.note "Local pin %s resolved to %s"
-                    (OpamUrl.to_string u) (OpamUrl.to_string resolved_u);
-                  Some (nv, resolved_u)
-                | None -> err ()
-              else err ()
+              (match u.OpamUrl.backend with
+               | #OpamUrl.version_control ->
+                 (match get_git_url u nv d with
+                  | Some resolved_u ->
+                    OpamConsole.note "Local pin %s resolved to %s"
+                      (OpamUrl.to_string u) (OpamUrl.to_string resolved_u);
+                    Some (nv, resolved_u)
+                  | None -> local_warn ())
+               | _ -> local_warn ())
             | None -> Some (nv, u))
         all_depends
     in
