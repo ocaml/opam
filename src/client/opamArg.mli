@@ -120,6 +120,9 @@ val assume_built: bool Term.t
 (** Applly build options *)
 val apply_build_options: build_options -> unit
 
+(** Lock options *)
+val locked: string -> bool Term.t
+val lock_suffix: string -> string Term.t
 
 (** {3 Package listing and filtering options} *)
 
