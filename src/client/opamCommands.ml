@@ -3084,23 +3084,29 @@ let clean =
   term_info "clean" ~doc ~man
 
 (* LOCK *)
+let lock_doc = "Create locked opam files to share build environments across hosts."
 let lock =
-  let doc = "Create locked opam files to share build environments across hosts." in
+  let doc = lock_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This utility reads opam package definitions files, checks the current \
+    `P "Generates a lock file of a package: checks the current \
         state of their installed dependencies, and outputs modified versions of \
-        the files with a $(i,.locked) suffix, where all the (transitive) \
+        the opam file with a $(i,.locked) suffix, where all the (transitive) \
         dependencies and pinnings have been bound strictly to the currently \
         installed version.";
     `P "By using these locked opam files, it is then possible to recover the \
         precise build environment that was setup when they were generated.";
+    `P "If paths (filename or directory) are given, those opam files are locked. \
+        If package is given, installed one is locked, otherwise its latest version.";
+    `P "Fails if all mandatory dependencies are not installed in the switch.";
+    `S "ARGUMENTS";
+    `S "OPTIONS";
     `S OpamArg.build_option_section;
   ]
   in
   let only_direct_flag =
     Arg.(value & flag & info ["direct-only"] ~doc:
-           "Only lock direct dependencies, rather than the whole dependency tree")
+           "Only lock direct dependencies, rather than the whole dependency tree.")
   in
   let get_git_url url nv dir =
     let module VCS =
