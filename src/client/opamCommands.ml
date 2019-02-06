@@ -3094,17 +3094,12 @@ let lock =
         dependencies and pinnings have been bound strictly to the currently \
         installed version.";
     `P "By using these locked opam files, it is then possible to recover the \
-        precise build environment that was setup when they were generated."
+        precise build environment that was setup when they were generated.";
+    `S OpamArg.build_option_section;
   ]
   in
-  let file =
-    Arg.(value & pos_all file ["."] & info [] ~docv:"FILE" ~doc:
-           "Select opam files to rewrite. the output will be put in \
-            $(i,FILE).locked. If a directory is specified, all package \
-            definitions in this directory will be processed.")
-  in
   let only_direct_flag =
-    Arg.(value & flag & info ["direct-only"; "d"] ~doc:
+    Arg.(value & flag & info ["direct-only"] ~doc:
            "Only lock direct dependencies, rather than the whole dependency tree")
   in
   let get_git_url url nv dir =
@@ -3149,11 +3144,7 @@ let lock =
        None)
   in
   let lock_opam ?(only_direct=false) st opam =
-    let opam = OpamFormatUpgrade.opam_file opam in
     let nv = OpamFile.OPAM.package opam in
-    let st =
-      { st with opams = OpamPackage.Map.add nv opam st.opams }
-    in
     let univ =
       OpamSwitchState.universe st
         ~requested:(OpamPackage.Name.Set.singleton nv.name)
@@ -3175,6 +3166,9 @@ let lock =
         in
         List.filter (fun nv -> OpamPackage.Name.Set.mem nv.name names) all_depends
       else all_depends
+    in
+    let depends =
+      List.sort (fun nv nv' -> OpamPackage.Name.compare nv'.name nv.name) depends
     in
     let depends_formula =
       OpamFormula.ands
@@ -3199,7 +3193,7 @@ let lock =
     let conflicts =
       OpamFormula.ors
         (OpamFile.OPAM.conflicts opam ::
-         List.map (fun _ -> Atom (nv.name, Empty))
+         List.map (fun _-> Atom (nv.name, Empty))
            (OpamPackage.Name.Set.elements uninstalled_depopts))
     in
     let pin_depends =
@@ -3232,44 +3226,99 @@ let lock =
     OpamFile.OPAM.with_conflicts conflicts |>
     OpamFile.OPAM.with_pin_depends pin_depends
   in
-  let lock global_options only_direct files =
+  let lock global_options build_options only_direct atom_locs =
     apply_global_options global_options;
-    let files =
-      List.fold_left (fun acc f ->
-          if Sys.is_directory f then
-            let d = OpamFilename.Dir.of_string f in
-            let fs = OpamPinned.files_in_source d in
-            if fs = [] then
-              OpamConsole.error_and_exit `Bad_arguments
-                "No package definition files found at %s"
-                OpamFilename.Dir.(to_string d);
-            List.rev_append fs acc
-          else (None, OpamFile.make (OpamFilename.of_string f)) :: acc)
-        [] files
-      |> List.rev
-    in
-    let opams =
-      List.map (fun (nameopt, f) ->
-          let opam = OpamFile.OPAM.read f in
-          f, match nameopt with
-          | None -> opam
-          | Some n -> OpamFile.OPAM.with_name n opam)
-        files
-    in
+    apply_build_options build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-    List.iter (fun (f, opam) ->
-        let locked = lock_opam ~only_direct st opam in
-        let ext = OpamStd.Option.default "lock" OpamStateConfig.(!r.locked) in
-        let locked_file =
-          OpamFile.(make (OpamFilename.add_extension (filename f) ext))
-        in
-        OpamFile.OPAM.write_with_preserved_format ~format_from:f locked_file locked;
-        OpamConsole.msg "Wrote %s\n" (OpamFile.to_string locked_file))
-      opams
+    let st, atoms =
+      OpamAuxCommands.simulate_autopin ~quiet:true ~for_view:true st atom_locs
+    in
+    let packages =
+      OpamFormula.packages_of_atoms OpamPackage.Set.Op.(st.packages ++ st.installed) atoms
+    in
+    if OpamPackage.Set.is_empty packages then
+      OpamConsole.error_and_exit `Not_found "No package matching %s"
+        (OpamFormula.string_of_atoms atoms)
+    else
+      (let names = OpamPackage.names_of_packages packages in
+       let missing =
+         OpamStd.List.filter_map (fun (n,vc) ->
+             if OpamPackage.Name.Set.mem n names then None
+             else Some (n,vc)) atoms
+       in
+       if missing <> [] then
+         OpamConsole.error "No package matching %s"
+           (OpamFormula.string_of_atoms missing);
+       (* we keep only one version of each package, the pinned or installed one,
+          the latest version otherwise ; and the one that have their dependencies \
+          installed *)
+       let packages =
+         OpamPackage.Name.Set.fold (fun name acc ->
+             let pkgs = OpamPackage.packages_of_name packages name in
+             let pkg =
+               let open OpamPackage.Set.Op in
+               let pinned = pkgs %% st.pinned in
+               if OpamPackage.Set.is_empty pinned then
+                 pkgs %% st.installed
+               else pinned
+             in
+             let nv =
+               match OpamPackage.Set.elements pkg with
+               | [nv] -> nv
+               | _ ->
+                 (let nv = OpamPackage.Set.max_elt pkgs in
+                  OpamConsole.note "Package %s is not installed nor pinned, generating lock \
+                                    file for its latest version %s"
+                    (OpamConsole.colorise `underline (OpamPackage.Name.to_string name))
+                    (OpamConsole.colorise `underline (OpamPackage.version_to_string nv));
+                  nv)
+             in
+             let atoms =
+               OpamFormula.atoms (OpamPackageVar.all_depends st (OpamSwitchState.opam st nv))
+             in
+             let missing =
+               List.filter (fun (n,vc) ->
+                   OpamPackage.Set.fold (fun nv satisf ->
+                       satisf || not (OpamFormula.check (n,vc) nv))
+                     (OpamPackage.packages_of_name st.installed n) false)
+                 atoms
+             in
+             if missing <> [] then
+               (OpamConsole.error
+                  "Skipping %s, dependencies are not satisfied in this switch, \
+                   not installed packages are:\n%s"
+                  (OpamPackage.to_string nv)
+                  (OpamStd.Format.itemize OpamFormula.string_of_atom missing);
+                acc)
+             else
+               OpamPackage.Set.add nv acc)
+           names OpamPackage.Set.empty
+       in
+       let pkg_done =
+         OpamPackage.Set.fold (fun nv msgs ->
+             let opam = OpamSwitchState.opam st nv in
+             let locked = lock_opam ~only_direct st opam in
+             let ext = OpamStd.Option.default "locked" OpamStateConfig.(!r.locked) in
+             let locked_fname =
+               OpamFilename.add_extension
+                 (OpamFilename.of_string (OpamPackage.name_to_string nv))
+                 ext
+             in
+             OpamFile.OPAM.write_with_preserved_format
+               (OpamFile.make locked_fname) locked;
+             (nv, locked_fname)::msgs
+           ) packages []
+       in
+       OpamConsole.msg "Generated lock files for:\n%s"
+         (OpamStd.Format.itemize (fun (nv, file) ->
+              Printf.sprintf "%s: %s"
+                (OpamPackage.to_string nv)
+                (OpamFilename.to_string file)) pkg_done)
+      )
   in
-  Term.(pure lock $global_options $only_direct_flag $file),
-  Term.info "opam-lock" ~doc ~man
+  Term.(pure lock $global_options $build_options $only_direct_flag $atom_or_local_list),
+  Term.info "lock" ~doc ~man
 
 (* HELP *)
 let help =
