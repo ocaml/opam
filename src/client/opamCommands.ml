@@ -3101,13 +3101,13 @@ let lock =
     `P "Fails if all mandatory dependencies are not installed in the switch.";
     `S "ARGUMENTS";
     `S "OPTIONS";
-    `S OpamArg.build_option_section;
   ]
   in
   let only_direct_flag =
     Arg.(value & flag & info ["direct-only"] ~doc:
            "Only lock direct dependencies, rather than the whole dependency tree.")
   in
+  let lock_suffix = OpamArg.lock_suffix "OPTIONS" in
   let get_git_url url nv dir =
     let module VCS =
       (val OpamRepository.find_backend_by_kind url.OpamUrl.backend)
@@ -3212,9 +3212,8 @@ let lock =
     OpamFile.OPAM.with_conflicts conflicts |>
     OpamFile.OPAM.with_pin_depends pin_depends
   in
-  let lock global_options build_options only_direct atom_locs =
+  let lock global_options only_direct lock_suffix atom_locs =
     apply_global_options global_options;
-    apply_build_options build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_none gt @@ fun st ->
     let st, atoms =
@@ -3285,11 +3284,10 @@ let lock =
          OpamPackage.Set.fold (fun nv msgs ->
              let opam = OpamSwitchState.opam st nv in
              let locked = lock_opam ~only_direct st opam in
-             let ext = OpamStd.Option.default "locked" OpamStateConfig.(!r.locked) in
              let locked_fname =
                OpamFilename.add_extension
                  (OpamFilename.of_string (OpamPackage.name_to_string nv))
-                 ext
+                 lock_suffix 
              in
              OpamFile.OPAM.write_with_preserved_format
                (OpamFile.make locked_fname) locked;
@@ -3303,7 +3301,8 @@ let lock =
                 (OpamFilename.to_string file)) pkg_done)
       )
   in
-  Term.(pure lock $global_options $build_options $only_direct_flag $atom_or_local_list),
+  Term.(pure lock $global_options $only_direct_flag $lock_suffix
+        $atom_or_local_list),
   Term.info "lock" ~doc ~man
 
 (* HELP *)
