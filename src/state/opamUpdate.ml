@@ -80,6 +80,16 @@ let repository gt repo =
         job { r with repo_url = new_url } (n-1)
   in
   job repo max_loop @@+ fun repo ->
+  OpamFilename.make_tar_gz_job
+    (OpamRepositoryPath.tar gt.root repo.repo_name)
+    repo.repo_root
+  @@+ function
+  | Some e ->
+    OpamConsole.error_and_exit `Configuration_error
+      "Failed to regenerate local repository archive: %s"
+      (Printexc.to_string e)
+  | None ->
+  OpamStd.Sys.at_exit (fun () -> OpamFilename.rmdir repo.repo_root);
   let repo_file_path = OpamRepositoryPath.repo repo.repo_root in
   if not (OpamFile.exists repo_file_path) then
     OpamConsole.warning
