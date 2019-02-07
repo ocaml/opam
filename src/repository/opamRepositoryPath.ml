@@ -13,6 +13,8 @@ open OpamFilename.Op
 
 let create root name = root / "repo" / OpamRepositoryName.to_string name
 
+let tar root name = root / "repo" // (OpamRepositoryName.to_string name ^ ".tar.gz")
+
 let download_cache root = root / "download-cache"
 
 let pin_cache_dir =

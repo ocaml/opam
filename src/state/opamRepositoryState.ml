@@ -169,12 +169,28 @@ let load lock_kind gt =
   let repos_map =
     OpamFile.Repos_config.safe_read (OpamPath.repos_config gt.root)
   in
-  let mk_repo name url_opt = {
-    repo_root = OpamRepositoryPath.create gt.root name;
-    repo_name = name;
-    repo_url = OpamStd.Option.Op.((url_opt >>| fst) +! OpamUrl.empty);
-    repo_trust = OpamStd.Option.Op.((url_opt >>= snd));
-  } in
+  let mk_repo name url_opt =
+    let root = OpamRepositoryPath.create gt.root name in
+    let tar = OpamRepositoryPath.tar gt.root name in
+    if not (OpamFilename.exists_dir root) && OpamFilename.exists tar then
+      let d = OpamSystem.mk_temp_dir () in
+      let dd = OpamFilename.Dir.of_string d in
+      OpamStd.Sys.at_exit (fun () -> OpamSystem.remove_dir d);
+      OpamFilename.extract tar dd;
+      {
+        repo_root = dd;
+        repo_name = name;
+        repo_url = OpamStd.Option.Op.((url_opt >>| fst) +! OpamUrl.empty);
+        repo_trust = OpamStd.Option.Op.((url_opt >>= snd));
+      }
+    else
+      {
+        repo_root = OpamRepositoryPath.create gt.root name;
+        repo_name = name;
+        repo_url = OpamStd.Option.Op.((url_opt >>| fst) +! OpamUrl.empty);
+        repo_trust = OpamStd.Option.Op.((url_opt >>= snd));
+      }
+  in
   let uncached =
     (* Don't cache repositories without remote, as they should be editable
        in-place *)
@@ -183,8 +199,7 @@ let load lock_kind gt =
   let repositories = OpamRepositoryName.Map.mapi mk_repo repos_map in
   let load_repos_definitions repositories =
     OpamRepositoryName.Map.map (fun r ->
-        OpamFile.Repo.safe_read
-          OpamRepositoryPath.(repo (create gt.root r.repo_name)) |>
+        OpamFile.Repo.safe_read (OpamRepositoryPath.repo r.repo_root) |>
         OpamFile.Repo.with_root_url r.repo_url)
       repositories
   in

@@ -365,8 +365,9 @@ let init =
       OpamStd.Option.map (fun url ->
           let repo_url = OpamUrl.parse ?backend:repo_kind url in
           let repo_root =
-            OpamRepositoryPath.create (OpamStateConfig.(!r.root_dir))
-              repo_name
+            let d = OpamSystem.mk_temp_dir () in
+            OpamStd.Sys.at_exit (fun () -> OpamSystem.remove_dir d);
+            OpamFilename.Dir.of_string d
           in
           { repo_root; repo_name; repo_url; repo_trust = None })
         repo_url
@@ -2975,6 +2976,13 @@ let clean =
       try OpamFilename.rmdir d
       with OpamSystem.Internal_error msg -> OpamConsole.warning "Error ignored: %s" msg
     in
+    let rm f =
+      if dry_run then
+        OpamConsole.msg "rm -f \"%s\"\n"
+          (OpamFilename.to_string f)
+      else
+        OpamFilename.remove f
+    in
     let switches =
       if all_switches then OpamGlobalState.switches gt
       else if switch then match OpamStateConfig.get_switch_opt () with
@@ -3041,7 +3049,8 @@ let clean =
        OpamRepositoryName.Set.iter (fun r ->
            OpamConsole.msg "Removing repository %s\n"
              (OpamRepositoryName.to_string r);
-           rmdir (OpamRepositoryPath.create root r))
+           rmdir (OpamRepositoryPath.create root r);
+           rm (OpamRepositoryPath.tar root r))
          unused_repos;
        let repos_config =
          OpamRepositoryName.Map.filter

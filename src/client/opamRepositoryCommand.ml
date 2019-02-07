@@ -77,24 +77,34 @@ let add rt name url trust_anchors =
                 ta.fingerprints)
              ta.quorum)
   | None ->
-    let repo = { repo_name = name; repo_url = url;
-                 repo_root = OpamRepositoryPath.create root name;
+    let repo_root =
+      let d = OpamSystem.mk_temp_dir () in
+      OpamStd.Sys.at_exit (fun () -> OpamSystem.remove_dir d);
+      OpamFilename.Dir.of_string d
+    in
+    let repo = { repo_name = name; repo_url = url; repo_root;
                  repo_trust = trust_anchors; }
     in
-    if OpamFilename.exists OpamFilename.(of_string (Dir.to_string repo.repo_root))
+    if OpamFilename.exists_dir (OpamRepositoryPath.create root name) ||
+       OpamFilename.exists (OpamRepositoryPath.tar root name)
     then
       OpamConsole.error_and_exit `Bad_arguments
         "Invalid repository name, %s exists"
-        (OpamFilename.Dir.to_string repo.repo_root);
+        (OpamFilename.Dir.to_string (OpamRepositoryPath.create root name));
     if url.OpamUrl.backend = `rsync &&
        OpamUrl.local_dir url <> None &&
-       OpamUrl.local_dir (OpamRepositoryPath.Remote.packages_url repo.repo_url)
+       OpamUrl.local_dir (OpamRepositoryPath.Remote.packages_url url)
        = None &&
        not (OpamConsole.confirm
               "%S doesn't contain a \"packages\" directory.\n\
                Is it really the directory of your repo?"
               (OpamUrl.to_string url))
     then OpamStd.Sys.exit_because `Aborted;
+    let root =
+      let d = OpamSystem.mk_temp_dir () in
+      OpamStd.Sys.at_exit (fun () -> OpamSystem.remove_dir d);
+      OpamFilename.Dir.of_string d
+    in
     OpamProcess.Job.run (OpamRepository.init root name);
     update_repos_config rt
       (OpamRepositoryName.Map.add name repo rt.repositories)
@@ -106,6 +116,8 @@ let remove rt name =
   in
   OpamRepositoryState.Cache.save rt;
   OpamFilename.rmdir (OpamRepositoryPath.create rt.repos_global.root name);
+  OpamFilename.remove (OpamRepositoryPath.tar rt.repos_global.root name);
+  OpamFilename.remove (OpamRepositoryPath.tar rt.repos_global.root name);
   rt
 
 let set_url rt name url trust_anchors =
@@ -117,6 +129,7 @@ let set_url rt name url trust_anchors =
         (OpamRepositoryName.to_string name);
   in
   OpamFilename.cleandir (OpamRepositoryPath.create rt.repos_global.root name);
+  OpamFilename.remove (OpamRepositoryPath.tar rt.repos_global.root name);
   let repo = { repo with repo_url = url; repo_trust = trust_anchors; } in
   update_repos_config rt (OpamRepositoryName.Map.add name repo rt.repositories)
 
