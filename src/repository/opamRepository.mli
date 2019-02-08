@@ -15,19 +15,16 @@
 open OpamTypes
 
 (** Get the list of packages *)
-val packages: repository -> package_set
+val packages: dirname -> package_set
 
 (** Get the list of packages (and their possible prefix) *)
-val packages_with_prefixes: repository -> string option package_map
+val packages_with_prefixes: dirname -> string option package_map
 
 (** {2 Repository backends} *)
 
-(** Initialize {i $opam/repo/$repo} *)
-val init: dirname -> repository_name -> unit OpamProcess.job
-
 (** Update {i $opam/repo/$repo}. Raises [Failure] in case the update couldn't be
     achieved. *)
-val update: repository -> unit OpamProcess.job
+val update: repository -> dirname -> unit OpamProcess.job
 
 (** Fetch an URL and put the resulting tree into the supplied directory. The URL
     must either point to a tree (VCS, rsync) or to a known archive type. In case

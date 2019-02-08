@@ -127,8 +127,34 @@ module Cache = struct
 
 end
 
-let load_repo_opams repo =
-  let t = OpamConsole.timer () in
+let with_repo_root gt repo f =
+  let uncompressed_root = OpamRepositoryPath.root gt.root repo.repo_name in
+  let tar = OpamRepositoryPath.tar gt.root repo.repo_name in
+  if OpamFilename.exists tar &&
+     not (OpamFilename.exists_dir uncompressed_root) then
+    OpamFilename.with_tmp_dir @@ fun tmp ->
+    OpamFilename.extract_in
+      (OpamRepositoryPath.tar gt.root repo.repo_name)
+      tmp;
+    f OpamFilename.Op.(tmp / OpamRepositoryName.to_string repo.repo_name)
+  else
+    f uncompressed_root
+
+let with_repo_root_job gt repo fjob =
+  let uncompressed_root = OpamRepositoryPath.root gt.root repo.repo_name in
+  let tar = OpamRepositoryPath.tar gt.root repo.repo_name in
+  if OpamFilename.exists tar &&
+     not (OpamFilename.exists_dir uncompressed_root) then
+    OpamFilename.with_tmp_dir_job @@ fun tmp ->
+    OpamFilename.extract_in
+      (OpamRepositoryPath.tar gt.root repo.repo_name)
+      tmp;
+    fjob OpamFilename.Op.(tmp / OpamRepositoryName.to_string repo.repo_name)
+  else
+    fjob uncompressed_root
+
+let load_opams_from_dir repo_root =
+  (* FIXME: why is this different from OpamPackage.list ? *)
   let rec aux r dir =
     if OpamFilename.exists_dir dir then
       let fnames = Sys.readdir (OpamFilename.Dir.to_string dir) in
@@ -154,14 +180,20 @@ let load_repo_opams repo =
           r fnames
     else r
   in
-  let r =
-    aux OpamPackage.Map.empty
-      (OpamRepositoryPath.packages_dir repo.repo_root)
+  aux OpamPackage.Map.empty (OpamRepositoryPath.packages_dir repo_root)
+
+let load_repo gt repo =
+  let t = OpamConsole.timer () in
+  with_repo_root gt repo @@ fun repo_root ->
+  let repo_def =
+    OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo_root)
+    |> OpamFile.Repo.with_root_url repo.repo_url
   in
+  let opams = load_opams_from_dir repo_root in
   log "loaded opam files from repo %s in %.3fs"
     (OpamRepositoryName.to_string repo.repo_name)
     (t ());
-  r
+  repo_def, opams
 
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE @ %a" (slog OpamFilename.Dir.to_string) gt.root;
@@ -169,40 +201,17 @@ let load lock_kind gt =
   let repos_map =
     OpamFile.Repos_config.safe_read (OpamPath.repos_config gt.root)
   in
-  let mk_repo name url_opt =
-    let root = OpamRepositoryPath.create gt.root name in
-    let tar = OpamRepositoryPath.tar gt.root name in
-    if not (OpamFilename.exists_dir root) && OpamFilename.exists tar then
-      let d = OpamSystem.mk_temp_dir () in
-      let dd = OpamFilename.Dir.of_string d in
-      OpamStd.Sys.at_exit (fun () -> OpamSystem.remove_dir d);
-      OpamFilename.extract tar dd;
-      {
-        repo_root = dd;
-        repo_name = name;
-        repo_url = OpamStd.Option.Op.((url_opt >>| fst) +! OpamUrl.empty);
-        repo_trust = OpamStd.Option.Op.((url_opt >>= snd));
-      }
-    else
-      {
-        repo_root = OpamRepositoryPath.create gt.root name;
-        repo_name = name;
-        repo_url = OpamStd.Option.Op.((url_opt >>| fst) +! OpamUrl.empty);
-        repo_trust = OpamStd.Option.Op.((url_opt >>= snd));
-      }
-  in
+  let mk_repo name url_opt = {
+    repo_name = name;
+    repo_url = OpamStd.Option.Op.((url_opt >>| fst) +! OpamUrl.empty);
+    repo_trust = OpamStd.Option.Op.(url_opt >>= snd);
+  } in
   let uncached =
     (* Don't cache repositories without remote, as they should be editable
        in-place *)
     OpamRepositoryName.Map.filter (fun _ url -> url = None) repos_map
   in
   let repositories = OpamRepositoryName.Map.mapi mk_repo repos_map in
-  let load_repos_definitions repositories =
-    OpamRepositoryName.Map.map (fun r ->
-        OpamFile.Repo.safe_read (OpamRepositoryPath.repo r.repo_root) |>
-        OpamFile.Repo.with_root_url r.repo_url)
-      repositories
-  in
   let make_rt repos_definitions opams =
     { repos_global = (gt :> unlocked global_state);
       repos_lock = lock;
@@ -217,23 +226,27 @@ let load lock_kind gt =
   | Some (repofiles, opams) ->
     log "Cache found, loading repositories without remote only";
     OpamFilename.with_flock_upgrade `Lock_read lock @@ fun _ ->
-    let uncached_repos = OpamRepositoryName.Map.mapi mk_repo uncached in
-    let uncached_repofiles = load_repos_definitions uncached_repos in
-    let uncached_opams =
-      OpamRepositoryName.Map.map load_repo_opams uncached_repos
+    let repofiles, opams =
+      OpamRepositoryName.Map.fold (fun name url (defs, opams) ->
+          let repo = mk_repo name url in
+          let repo_def, repo_opams = load_repo gt repo in
+          OpamRepositoryName.Map.add name repo_def defs,
+          OpamRepositoryName.Map.add name repo_opams opams)
+        uncached (repofiles, opams)
     in
-    make_rt
-      (OpamRepositoryName.Map.union (fun _ x -> x) repofiles uncached_repofiles)
-      (OpamRepositoryName.Map.union (fun _ x -> x) opams uncached_opams)
+    make_rt repofiles opams
   | None ->
     log "No cache found";
     OpamFilename.with_flock_upgrade `Lock_read lock @@ fun _ ->
-    let repos = OpamRepositoryName.Map.mapi mk_repo repos_map in
-    let rt =
-      make_rt
-        (load_repos_definitions repos)
-        (OpamRepositoryName.Map.map load_repo_opams repos)
+    let repofiles, opams =
+      OpamRepositoryName.Map.fold (fun name url (defs, opams) ->
+          let repo = mk_repo name url in
+          let repo_def, repo_opams = load_repo gt repo in
+          OpamRepositoryName.Map.add name repo_def defs,
+          OpamRepositoryName.Map.add name repo_opams opams)
+        repos_map (OpamRepositoryName.Map.empty, OpamRepositoryName.Map.empty)
     in
+    let rt = make_rt repofiles opams in
     Cache.save rt;
     rt
 

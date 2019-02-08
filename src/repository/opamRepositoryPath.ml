@@ -11,7 +11,7 @@
 
 open OpamFilename.Op
 
-let create root name = root / "repo" / OpamRepositoryName.to_string name
+let root root name = root / "repo" / OpamRepositoryName.to_string name
 
 let tar root name = root / "repo" // (OpamRepositoryName.to_string name ^ ".tar.gz")
 

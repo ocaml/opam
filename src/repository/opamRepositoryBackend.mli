@@ -82,10 +82,6 @@ val to_json: repository -> json
 (** Compare repositories *)
 val compare: repository -> repository -> int
 
-(** Create a local repository on a given path, without remote (only for external
-    tools, not to be mistaken for an opam repo with a local url) *)
-val local: dirname -> repository
-
 (** [check_digest file expected] check that the [file] digest is the
     one [expected]. *)
 val check_digest: filename -> OpamHash.t option -> bool

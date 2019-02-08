@@ -49,9 +49,25 @@ val build_index:
     ROOT/repos/) *)
 val get_repo: 'a repos_state -> repository_name -> repository
 
+val load_opams_from_dir: OpamFilename.Dir.t -> OpamFile.OPAM.t OpamPackage.Map.t
+
 (** Load all the metadata within the local mirror of the given repository,
     without cache *)
-val load_repo_opams: repository -> OpamFile.OPAM.t OpamPackage.Map.t
+val load_repo:
+  'a global_state -> repository ->
+  OpamFile.Repo.t * OpamFile.OPAM.t OpamPackage.Map.t
+
+(** Runs the given function with access to a (possibly temporary) directory
+    containing the extracted structure of the given repository, and cleans it up
+    afterwards if temporary. The basename of the directory is guaranteed to
+    match the repository name (this is important for e.g. [tar]) *)
+val with_repo_root:
+  'a global_state -> repository -> (OpamFilename.Dir.t -> 'b) -> 'b
+
+(** As [with_repo_root], but on jobs *)
+val with_repo_root_job:
+  'a global_state -> repository ->
+  (OpamFilename.Dir.t -> 'b OpamProcess.job) -> 'b OpamProcess.job
 
 (** Releases any locks on the given repos_state *)
 val unlock: 'a repos_state -> unlocked repos_state
@@ -59,8 +75,8 @@ val unlock: 'a repos_state -> unlocked repos_state
 (** Calls the provided function, ensuring a temporary write lock on the given
     repository state*)
 val with_write_lock:
-  ?dontblock:bool -> 'a repos_state -> (rw repos_state -> 'b * rw repos_state) ->
-  'b * 'a repos_state
+  ?dontblock:bool -> 'a repos_state -> (rw repos_state -> 'b * rw repos_state)
+  -> 'b * 'a repos_state
 
 (** Writes the repositories config file back to disk *)
 val write_config: rw repos_state -> unit

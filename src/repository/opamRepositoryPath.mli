@@ -14,7 +14,7 @@
 open OpamTypes
 
 (** Repository local path: {i $opam/repo/<name>} *)
-val create: dirname -> repository_name -> dirname
+val root: dirname -> repository_name -> dirname
 
 val tar: dirname -> repository_name -> filename
 

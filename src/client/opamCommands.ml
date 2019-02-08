@@ -364,12 +364,7 @@ let init =
     let repo =
       OpamStd.Option.map (fun url ->
           let repo_url = OpamUrl.parse ?backend:repo_kind url in
-          let repo_root =
-            let d = OpamSystem.mk_temp_dir () in
-            OpamStd.Sys.at_exit (fun () -> OpamSystem.remove_dir d);
-            OpamFilename.Dir.of_string d
-          in
-          { repo_root; repo_name; repo_url; repo_trust = None })
+          { repo_name; repo_url; repo_trust = None })
         repo_url
     in
     let gt, rt, default_compiler =
@@ -1000,8 +995,9 @@ let config =
                       if OpamUrl.root repo.repo_url =
                          OpamUrl.root OpamInitDefaults.repository_url
                       then
-                        OpamFile.Repo.safe_read
-                          (OpamRepositoryPath.repo repo.repo_root) |>
+                        OpamRepositoryName.Map.find
+                          repo.repo_name
+                          state.switch_repos.repos_definitions |>
                         OpamFile.Repo.stamp
                       else dft
                     in
@@ -3049,7 +3045,7 @@ let clean =
        OpamRepositoryName.Set.iter (fun r ->
            OpamConsole.msg "Removing repository %s\n"
              (OpamRepositoryName.to_string r);
-           rmdir (OpamRepositoryPath.create root r);
+           rmdir (OpamRepositoryPath.root root r);
            rm (OpamRepositoryPath.tar root r))
          unused_repos;
        let repos_config =
