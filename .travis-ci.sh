@@ -29,7 +29,7 @@ init-bootstrap () {
     eval $(opam env)
     # extlib is installed, since UChar.cmi causes problems with the search
     # order. See also the removal of uChar and uTF8 in src_ext/jbuild-extlib-src
-    opam install cohttp-lwt-unix ssl cmdliner dose3 cudf.0.9 opam-file-format re extlib dune 'mccs>=1.1+5' --yes
+    opam install ssl cmdliner dose3 cudf.0.9 opam-file-format re extlib dune 'mccs>=1.1+5' --yes
   fi
   rm -f "$OPAMBSROOT"/log/*
 }
@@ -171,6 +171,7 @@ export OCAMLRUNPARAM=b
     wget https://github.com/ocaml/opam-rt/archive/master.tar.gz -O opam-rt.tar.gz
     tar -xzf opam-rt.tar.gz
     cd opam-rt-*
+    opam install ./opam-rt.opam --deps-only -y
     make
 
     opam switch default
