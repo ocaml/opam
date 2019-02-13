@@ -36,7 +36,7 @@ let split_url =
         opt @@ seq [
           (* Backend *)
           opt @@ seq [ group @@ rep @@ diff any (set "+:");
-                       char '+' ];
+                       alt [ char '+'; str "://"] ];
           (* Protocol *)
           group @@ rep @@ diff any (char ':');
           (* Separator *)
