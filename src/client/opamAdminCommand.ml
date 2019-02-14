@@ -716,12 +716,17 @@ let get_virtual_switch_state repo_root env =
     global_variables = OpamVariable.Map.empty;
   } in
   let singl x = OpamRepositoryName.Map.singleton repo.repo_name x in
+  let repos_tmp =
+    let t = Hashtbl.create 1 in
+    Hashtbl.add t repo.repo_name (lazy repo_root); t
+  in
   let rt = {
     repos_global = gt;
     repos_lock = OpamSystem.lock_none;
     repositories = singl repo;
     repos_definitions = singl repo_def;
     repo_opams = singl opams;
+    repos_tmp;
   } in
   let st = OpamSwitchState.load_virtual ~repos_list:[repo.repo_name] gt rt in
   if env = [] then st else

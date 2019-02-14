@@ -54,23 +54,31 @@ val load_opams_from_dir: OpamFilename.Dir.t -> OpamFile.OPAM.t OpamPackage.Map.t
 (** Load all the metadata within the local mirror of the given repository,
     without cache *)
 val load_repo:
-  'a global_state -> repository ->
+  repository -> OpamFilename.Dir.t ->
   OpamFile.Repo.t * OpamFile.OPAM.t OpamPackage.Map.t
 
-(** Runs the given function with access to a (possibly temporary) directory
-    containing the extracted structure of the given repository, and cleans it up
-    afterwards if temporary. The basename of the directory is guaranteed to
-    match the repository name (this is important for e.g. [tar]) *)
-val with_repo_root:
-  'a global_state -> repository -> (OpamFilename.Dir.t -> 'b) -> 'b
+(** Get the (lazily extracted) repository root for the given repository *)
+val get_root: 'a repos_state -> repository -> OpamFilename.Dir.t
 
-(** As [with_repo_root], but on jobs *)
-val with_repo_root_job:
-  'a global_state -> repository ->
-  (OpamFilename.Dir.t -> 'b OpamProcess.job) -> 'b OpamProcess.job
+(* (\** Runs the given function with access to a (possibly temporary) directory
+ *     containing the extracted structure of the given repository, and cleans it up
+ *     afterwards if temporary. The basename of the directory is guaranteed to
+ *     match the repository name (this is important for e.g. [tar]) *\)
+ * val with_repo_root:
+ *   'a global_state -> repository -> (OpamFilename.Dir.t -> 'b) -> 'b
+ * 
+ * (\** As [with_repo_root], but on jobs *\)
+ * val with_repo_root_job:
+ *   'a global_state -> repository ->
+ *   (OpamFilename.Dir.t -> 'b OpamProcess.job) -> 'b OpamProcess.job *)
 
-(** Releases any locks on the given repos_state *)
-val unlock: 'a repos_state -> unlocked repos_state
+(** Releases any locks on the given repos_state, and cleans the tmp extracted
+    tree if any unless [cleanup=false] *)
+val unlock: ?cleanup:bool -> 'a repos_state -> unlocked repos_state
+
+(** Clears tmp files corresponding to a repo state (uncompressed repository
+    contents) *)
+val cleanup: 'a repos_state -> unit
 
 (** Calls the provided function, ensuring a temporary write lock on the given
     repository state*)

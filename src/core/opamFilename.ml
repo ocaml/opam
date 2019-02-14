@@ -44,6 +44,9 @@ end
 
 let raw_dir s = s
 
+let mk_tmp_dir () =
+  Dir.of_string @@ OpamSystem.mk_temp_dir ()
+
 let with_tmp_dir fn =
   OpamSystem.with_tmp_dir (fun dir -> fn (Dir.of_string dir))
 

@@ -246,8 +246,7 @@ let update_with_auto_upgrade rt repo_names =
            OpamConsole.msg "Upgrading repository \"%s\"...\n"
              (OpamRepositoryName.to_string r.repo_name);
            let open OpamProcess.Job.Op in
-           OpamRepositoryState.with_repo_root rt.repos_global r @@
-           fun repo_root ->
+           let repo_root = OpamRepositoryState.get_root rt r in
            OpamAdminRepoUpgrade.do_upgrade repo_root;
            OpamProcess.Job.run
              (OpamFilename.make_tar_gz_job

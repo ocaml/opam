@@ -127,31 +127,18 @@ module Cache = struct
 
 end
 
-let with_repo_root gt repo f =
+let get_repo_root gt repo repos_tmp =
   let uncompressed_root = OpamRepositoryPath.root gt.root repo.repo_name in
   let tar = OpamRepositoryPath.tar gt.root repo.repo_name in
   if OpamFilename.exists tar &&
      not (OpamFilename.exists_dir uncompressed_root) then
-    OpamFilename.with_tmp_dir @@ fun tmp ->
+    let open OpamFilename.Op in
     OpamFilename.extract_in
       (OpamRepositoryPath.tar gt.root repo.repo_name)
-      tmp;
-    f OpamFilename.Op.(tmp / OpamRepositoryName.to_string repo.repo_name)
+      (Lazy.force repos_tmp);
+    Lazy.force repos_tmp / OpamRepositoryName.to_string repo.repo_name
   else
-    f uncompressed_root
-
-let with_repo_root_job gt repo fjob =
-  let uncompressed_root = OpamRepositoryPath.root gt.root repo.repo_name in
-  let tar = OpamRepositoryPath.tar gt.root repo.repo_name in
-  if OpamFilename.exists tar &&
-     not (OpamFilename.exists_dir uncompressed_root) then
-    OpamFilename.with_tmp_dir_job @@ fun tmp ->
-    OpamFilename.extract_in
-      (OpamRepositoryPath.tar gt.root repo.repo_name)
-      tmp;
-    fjob OpamFilename.Op.(tmp / OpamRepositoryName.to_string repo.repo_name)
-  else
-    fjob uncompressed_root
+    uncompressed_root
 
 let load_opams_from_dir repo_root =
   (* FIXME: why is this different from OpamPackage.list ? *)
@@ -182,9 +169,8 @@ let load_opams_from_dir repo_root =
   in
   aux OpamPackage.Map.empty (OpamRepositoryPath.packages_dir repo_root)
 
-let load_repo gt repo =
+let load_repo repo repo_root =
   let t = OpamConsole.timer () in
-  with_repo_root gt repo @@ fun repo_root ->
   let repo_def =
     OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo_root)
     |> OpamFile.Repo.with_root_url repo.repo_url
@@ -194,6 +180,16 @@ let load_repo gt repo =
     (OpamRepositoryName.to_string repo.repo_name)
     (t ());
   repo_def, opams
+
+let cleanup rt =
+  Hashtbl.iter (fun _ tmp_dir ->
+      if Lazy.is_val tmp_dir then
+        OpamFilename.rmdir_cleanup (Lazy.force tmp_dir)
+    ) rt.repos_tmp;
+  Hashtbl.clear rt.repos_tmp
+
+let get_root rt repo =
+  Lazy.force (Hashtbl.find rt.repos_tmp repo.repo_name)
 
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE @ %a" (slog OpamFilename.Dir.to_string) gt.root;
@@ -212,12 +208,23 @@ let load lock_kind gt =
     OpamRepositoryName.Map.filter (fun _ url -> url = None) repos_map
   in
   let repositories = OpamRepositoryName.Map.mapi mk_repo repos_map in
+  let repos_tmp_root = lazy (OpamFilename.mk_tmp_dir ()) in
+  let repos_tmp = Hashtbl.create 23 in
+  OpamRepositoryName.Map.iter (fun name repo ->
+      Hashtbl.add repos_tmp name
+        (lazy (get_repo_root gt repo repos_tmp_root))
+    ) repositories;
   let make_rt repos_definitions opams =
-    { repos_global = (gt :> unlocked global_state);
+    let rt = {
+      repos_global = (gt :> unlocked global_state);
       repos_lock = lock;
+      repos_tmp;
       repositories;
       repos_definitions;
-      repo_opams = opams; }
+      repo_opams = opams;
+    } in
+    OpamStd.Sys.at_exit (fun () -> cleanup rt);
+    rt
   in
   match Cache.load gt.root with
   | Some (repofiles, opams) when OpamRepositoryName.Map.is_empty uncached ->
@@ -229,7 +236,9 @@ let load lock_kind gt =
     let repofiles, opams =
       OpamRepositoryName.Map.fold (fun name url (defs, opams) ->
           let repo = mk_repo name url in
-          let repo_def, repo_opams = load_repo gt repo in
+          let repo_def, repo_opams =
+            load_repo repo (Lazy.force (Hashtbl.find repos_tmp name))
+          in
           OpamRepositoryName.Map.add name repo_def defs,
           OpamRepositoryName.Map.add name repo_opams opams)
         uncached (repofiles, opams)
@@ -241,7 +250,9 @@ let load lock_kind gt =
     let repofiles, opams =
       OpamRepositoryName.Map.fold (fun name url (defs, opams) ->
           let repo = mk_repo name url in
-          let repo_def, repo_opams = load_repo gt repo in
+          let repo_def, repo_opams =
+            load_repo repo (Lazy.force (Hashtbl.find repos_tmp name))
+          in
           OpamRepositoryName.Map.add name repo_def defs,
           OpamRepositoryName.Map.add name repo_opams opams)
         repos_map (OpamRepositoryName.Map.empty, OpamRepositoryName.Map.empty)
@@ -275,7 +286,8 @@ let build_index rt repo_list =
 
 let get_repo rt name = OpamRepositoryName.Map.find name rt.repositories
 
-let unlock rt =
+let unlock ?cleanup:(cln=true) rt =
+  if cln then cleanup rt;
   OpamSystem.funlock rt.repos_lock;
   (rt :> unlocked repos_state)
 
@@ -299,3 +311,16 @@ let write_config rt =
          if r.repo_url = OpamUrl.empty then None
          else Some (r.repo_url, r.repo_trust))
         rt.repositories)
+
+let get_metadata_dir rt opam =
+  match OpamFile.OPAM.metadata_dir opam with
+  | None -> None
+  | Some (None, abs_d) ->
+    Some (OpamFilename.Dir.of_string abs_d)
+  | Some (Some r, rel_d) ->
+    try
+      Some OpamFilename.Op.(
+          OpamFilename.Dir.of_string (Hashtbl.find rt.repos_tmp r) /
+          rel_d
+        )
+    with Not_found -> None

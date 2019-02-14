@@ -41,10 +41,11 @@ let eval_redirect gt repo repo_root =
     if redirect_url = repo.repo_url then None
     else Some (redirect_url, f)
 
-let repository gt repo =
+let repository rt repo =
   let max_loop = 10 in
+  let gt = rt.repos_global in
   if repo.repo_url = OpamUrl.empty then Done (fun rt -> rt) else
-  OpamRepositoryState.with_repo_root_job gt repo @@ fun repo_root ->
+  let repo_root = OpamRepositoryState.get_root rt repo in
   (* Recursively traverse redirection links, but stop after 10 steps or if
      we cycle back to the initial repo. *)
   let rec job r n =
@@ -144,7 +145,7 @@ let repositories rt repos =
            (OpamRepositoryName.to_string repo.repo_name)
            (match ex with Failure s -> s | ex -> Printexc.to_string ex);
          Done ([repo], fun t -> t)) @@
-    fun () -> repository rt.repos_global repo @@|
+    fun () -> repository rt repo @@|
     fun f -> [], f
   in
   let failed, rt_update =
