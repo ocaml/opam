@@ -2482,7 +2482,7 @@ module OPAMSyntax = struct
         (OpamFormat.V.map_list ~depth:2
            (OpamFormat.V.map_pair
               (OpamFormat.V.string -|
-               OpamPp.of_module "package" (module OpamPackage))
+               OpamPp.of_module "versioned package" (module OpamPackage))
               (OpamFormat.V.string -|
                OpamPp.of_module "URL" (module OpamUrl))));
 
