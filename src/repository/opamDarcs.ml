@@ -52,11 +52,16 @@ module VCS = struct
     (* Just do a fresh pull into a temp directory, and replace _darcs/
        There is no easy way to diff or make sure darcs forgets about local
        patches otherwise. *)
+    let repo_str =
+      match OpamUrl.local_dir repo_url with
+      | Some path -> OpamFilename.Dir.to_string path
+      | None -> OpamUrl.base_url repo_url
+    in
     OpamFilename.with_tmp_dir_job @@ fun d ->
     let repodir = d / "repo" in
     darcs repo_root
       (with_tag repo_url
-         [ "get"; OpamUrl.base_url repo_url;
+         [ "get"; repo_str;
            "--repodir"; OpamFilename.Dir.to_string repodir;
            "--quiet"; "--lazy" ])
       (* --no-working-dir would be fine, except it is stored in _darcs/format *)
