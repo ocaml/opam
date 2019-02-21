@@ -45,7 +45,7 @@ let repository rt repo =
   let max_loop = 10 in
   let gt = rt.repos_global in
   if repo.repo_url = OpamUrl.empty then Done (fun rt -> rt) else
-  let repo_root = OpamRepositoryState.get_root rt repo in
+  let repo_root = OpamRepositoryState.get_repo_root rt repo in
   (* Recursively traverse redirection links, but stop after 10 steps or if
      we cycle back to the initial repo. *)
   let rec job r n =
@@ -118,10 +118,14 @@ let repository rt repo =
       "Failed to regenerate local repository archive: %s"
       (Printexc.to_string e)
   | None ->
-    let opams = OpamRepositoryState.load_opams_from_dir repo_root in
+    let opams =
+      OpamRepositoryState.load_opams_from_dir repo.repo_name repo_root
+    in
     let local_dir = OpamRepositoryPath.root gt.root repo.repo_name in
     if OpamFilename.exists_dir local_dir then
-      OpamFilename.rmdir local_dir;
+      (* Mark the obsolete local directory for deletion once we complete: it's
+         no longer needed once we have a tar.gz *)
+      Hashtbl.add rt.repos_tmp repo.repo_name (lazy local_dir);
     Done (
       (* Return an update function to make parallel execution possible *)
       fun rt ->
@@ -307,7 +311,9 @@ let pinned_package st ?version ?(working_dir=false) name =
           else
             OpamConsole.warning "Ignoring file %s with invalid hash"
               (OpamFilename.to_string file))
-        (OpamFile.OPAM.get_extra_files opam);
+        (OpamFile.OPAM.get_extra_files
+           ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+           opam);
       OpamFile.OPAM.write opam_file
         (OpamFile.OPAM.with_extra_files_opt None opam);
       opam

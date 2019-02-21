@@ -763,8 +763,18 @@ let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
       if where then
         OpamConsole.msg "%s\n"
           (match OpamFile.OPAM.metadata_dir opam with
-           | Some dir ->
-             OpamFilename.Dir.to_string OpamFilename.Op.(dir / "opam")
+           | Some (None, dir) -> Filename.concat dir "opam"
+           | Some (Some repo, rdir) ->
+             let repo_dir = OpamRepositoryPath.root st.switch_global.root repo in
+             let tar = OpamRepositoryPath.tar st.switch_global.root repo in
+             if OpamFilename.exists tar &&
+                not (OpamFilename.exists_dir repo_dir) then
+               Printf.sprintf "<%s>%s%s"
+                 (OpamFilename.to_string tar)
+                 Filename.dir_sep
+                 rdir
+             else
+               OpamFilename.Dir.to_string OpamFilename.Op.(repo_dir / rdir)
            | None -> "<nowhere>")
       else if raw_opam then
         OpamFile.OPAM.write_to_channel stdout opam

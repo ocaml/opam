@@ -154,7 +154,9 @@ let install_metadata st nv =
       in
       OpamFilename.mkdir (OpamFilename.dirname dst);
       OpamFilename.copy ~src:f ~dst)
-    (OpamFile.OPAM.get_extra_files opam)
+    (OpamFile.OPAM.get_extra_files
+       ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+       opam)
 
 let remove_metadata st packages =
   OpamPackage.Set.iter (fun nv ->

@@ -127,26 +127,13 @@ module Cache = struct
 
 end
 
-let get_repo_root gt repo repos_tmp =
-  let uncompressed_root = OpamRepositoryPath.root gt.root repo.repo_name in
-  let tar = OpamRepositoryPath.tar gt.root repo.repo_name in
-  if OpamFilename.exists tar &&
-     not (OpamFilename.exists_dir uncompressed_root) then
-    let open OpamFilename.Op in
-    OpamFilename.extract_in
-      (OpamRepositoryPath.tar gt.root repo.repo_name)
-      (Lazy.force repos_tmp);
-    Lazy.force repos_tmp / OpamRepositoryName.to_string repo.repo_name
-  else
-    uncompressed_root
-
-let load_opams_from_dir repo_root =
+let load_opams_from_dir repo_name repo_root =
   (* FIXME: why is this different from OpamPackage.list ? *)
   let rec aux r dir =
     if OpamFilename.exists_dir dir then
       let fnames = Sys.readdir (OpamFilename.Dir.to_string dir) in
       if Array.fold_left (fun a f -> a || f = "opam") false fnames then
-        match OpamFileTools.read_opam dir with
+        match OpamFileTools.read_repo_opam ~repo_name ~repo_root dir with
         | Some opam ->
           (try
              let nv =
@@ -175,7 +162,7 @@ let load_repo repo repo_root =
     OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo_root)
     |> OpamFile.Repo.with_root_url repo.repo_url
   in
-  let opams = load_opams_from_dir repo_root in
+  let opams = load_opams_from_dir repo.repo_name repo_root in
   log "loaded opam files from repo %s in %.3fs"
     (OpamRepositoryName.to_string repo.repo_name)
     (t ());
@@ -188,8 +175,16 @@ let cleanup rt =
     ) rt.repos_tmp;
   Hashtbl.clear rt.repos_tmp
 
-let get_root rt repo =
-  Lazy.force (Hashtbl.find rt.repos_tmp repo.repo_name)
+let get_root_raw root repos_tmp name =
+  match Hashtbl.find_opt repos_tmp name with
+  | Some (lazy repo_root) -> repo_root
+  | None -> OpamRepositoryPath.root root name
+
+let get_root rt name =
+  get_root_raw rt.repos_global.root rt.repos_tmp name
+
+let get_repo_root rt repo =
+  get_root_raw rt.repos_global.root rt.repos_tmp repo.repo_name
 
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE @ %a" (slog OpamFilename.Dir.to_string) gt.root;
@@ -211,8 +206,17 @@ let load lock_kind gt =
   let repos_tmp_root = lazy (OpamFilename.mk_tmp_dir ()) in
   let repos_tmp = Hashtbl.create 23 in
   OpamRepositoryName.Map.iter (fun name repo ->
-      Hashtbl.add repos_tmp name
-        (lazy (get_repo_root gt repo repos_tmp_root))
+      let uncompressed_root = OpamRepositoryPath.root gt.root repo.repo_name in
+      let tar = OpamRepositoryPath.tar gt.root repo.repo_name in
+      if not (OpamFilename.exists_dir uncompressed_root) &&
+         OpamFilename.exists tar
+      then
+        let tmp = lazy (
+          let tmp_root = Lazy.force repos_tmp_root in
+          OpamFilename.extract_in tar tmp_root;
+          OpamFilename.Op.(tmp_root / OpamRepositoryName.to_string name)
+        ) in
+        Hashtbl.add repos_tmp name tmp
     ) repositories;
   let make_rt repos_definitions opams =
     let rt = {
@@ -237,7 +241,7 @@ let load lock_kind gt =
       OpamRepositoryName.Map.fold (fun name url (defs, opams) ->
           let repo = mk_repo name url in
           let repo_def, repo_opams =
-            load_repo repo (Lazy.force (Hashtbl.find repos_tmp name))
+            load_repo repo (get_root_raw gt.root repos_tmp name)
           in
           OpamRepositoryName.Map.add name repo_def defs,
           OpamRepositoryName.Map.add name repo_opams opams)
@@ -251,7 +255,7 @@ let load lock_kind gt =
       OpamRepositoryName.Map.fold (fun name url (defs, opams) ->
           let repo = mk_repo name url in
           let repo_def, repo_opams =
-            load_repo repo (Lazy.force (Hashtbl.find repos_tmp name))
+            load_repo repo (get_root_raw gt.root repos_tmp name)
           in
           OpamRepositoryName.Map.add name repo_def defs,
           OpamRepositoryName.Map.add name repo_opams opams)
@@ -311,16 +315,3 @@ let write_config rt =
          if r.repo_url = OpamUrl.empty then None
          else Some (r.repo_url, r.repo_trust))
         rt.repositories)
-
-let get_metadata_dir rt opam =
-  match OpamFile.OPAM.metadata_dir opam with
-  | None -> None
-  | Some (None, abs_d) ->
-    Some (OpamFilename.Dir.of_string abs_d)
-  | Some (Some r, rel_d) ->
-    try
-      Some OpamFilename.Op.(
-          OpamFilename.Dir.of_string (Hashtbl.find rt.repos_tmp r) /
-          rel_d
-        )
-    with Not_found -> None

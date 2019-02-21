@@ -83,7 +83,11 @@ let get_source_definition ?version st nv url =
 
 let copy_files st opam =
   let name = OpamFile.OPAM.name opam in
-  let files = OpamFile.OPAM.get_extra_files opam in
+  let files =
+    OpamFile.OPAM.get_extra_files
+      ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+      opam
+  in
   if files = [] then
     (match OpamFile.OPAM.extra_files opam with
      | Some [] | None -> ()

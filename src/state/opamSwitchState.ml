@@ -368,7 +368,9 @@ let files st nv =
   | None -> []
   | Some opam ->
     List.map (fun (file,_base,_hash) -> file)
-      (OpamFile.OPAM.get_extra_files opam)
+      (OpamFile.OPAM.get_extra_files
+         ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+         opam)
 
 let package_config st name =
   OpamPackage.Map.find
