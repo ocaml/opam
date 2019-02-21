@@ -23,6 +23,7 @@ val template: package -> OpamFile.OPAM.t
    checked. *)
 val lint:
   ?check_extra_files:(basename * (OpamHash.t -> bool)) list ->
+  ?check_upstream: bool ->
   OpamFile.OPAM.t -> (int * [`Warning|`Error] * string) list
 
 (** Same as [lint], but operates on a file, which allows catching parse errors
@@ -31,6 +32,7 @@ val lint:
    [filename] *)
 val lint_file:
   ?check_extra_files:(basename * (OpamHash.t -> bool)) list ->
+  ?check_upstream: bool ->
   OpamFile.OPAM.t OpamFile.typed_file ->
   (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
 
@@ -39,6 +41,7 @@ val lint_file:
    [filename] *)
 val lint_channel:
   ?check_extra_files:(basename * (OpamHash.t -> bool)) list ->
+  ?check_upstream: bool ->
   OpamFile.OPAM.t OpamFile.typed_file -> in_channel ->
   (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
 
@@ -47,6 +50,7 @@ val lint_channel:
    directory besides [filename] *)
 val lint_string:
   ?check_extra_files:(basename * (OpamHash.t -> bool)) list ->
+  ?check_upstream: bool ->
   OpamFile.OPAM.t OpamFile.typed_file -> string ->
   (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
 
