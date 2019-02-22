@@ -1060,7 +1060,8 @@ let as_necessary global_lock root config =
         "%s reports a newer opam version, aborting."
         (OpamFilename.Dir.to_string root)
   else
-  if OpamVersion.compare config_version latest_version >= 0 then () else
+  if OpamVersion.compare config_version lastest_compatible_switch_version >= 0 then ()
+  else
   let is_dev = OpamVersion.git () <> None in
   OpamConsole.formatted_msg
     "This %sversion of opam requires an update to the layout of %s \

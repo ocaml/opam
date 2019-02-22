@@ -23,9 +23,9 @@ exception Upgrade_done of OpamFile.Config.t
 val latest_version: OpamVersion.t
 val lastest_compatible_switch_version: OpamVersion.t
 
-(** Runs the upgrade from its current format to the latest version for the opam
-   root at the given directory. A global write lock must be supplied. If an
-   upgrade has been done, raises [Upgrade_done updated_config]. *)
+(** Runs the upgrade from its current format to the latest compatible version
+    for the opam root at the given directory. A global write lock must be supplied.
+    If an upgrade has been done, raises [Upgrade_done updated_config]. *)
 val as_necessary: OpamSystem.lock -> dirname -> OpamFile.Config.t -> unit
 
 (** Converts the opam file format, including rewriting availability conditions
