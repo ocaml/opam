@@ -108,7 +108,7 @@ val default_list_format: output_format list
 
 (** Gets either the current switch state, if a switch is selected, or a virtual
     state corresponding to the configured repos *)
-val get_switch_state: 'a global_state -> unlocked switch_state
+val get_switch_state: 'a global_state -> 'a repos_state -> unlocked switch_state
 
 (** For documentation, includes a dummy '<field>:' for the [Field] format *)
 val field_names: (output_format * string) list

@@ -171,14 +171,16 @@ let load_repo repo repo_root =
 let cleanup rt =
   Hashtbl.iter (fun _ tmp_dir ->
       if Lazy.is_val tmp_dir then
-        OpamFilename.rmdir_cleanup (Lazy.force tmp_dir)
+        let d = Lazy.force tmp_dir in
+        OpamFilename.cleandir d;
+        OpamFilename.rmdir_cleanup d
     ) rt.repos_tmp;
   Hashtbl.clear rt.repos_tmp
 
 let get_root_raw root repos_tmp name =
-  match Hashtbl.find_opt repos_tmp name with
-  | Some (lazy repo_root) -> repo_root
-  | None -> OpamRepositoryPath.root root name
+  match Hashtbl.find repos_tmp name with
+  | lazy repo_root -> repo_root
+  | exception Not_found -> OpamRepositoryPath.root root name
 
 let get_root rt name =
   get_root_raw rt.repos_global.root rt.repos_tmp name
@@ -306,8 +308,7 @@ let with_write_lock ?dontblock rt f =
 
 let with_ lock gt f =
   let rt = load lock gt in
-  try let r = f rt in ignore (unlock rt); r
-  with e -> OpamStd.Exn.finalise e (fun () -> ignore (unlock rt))
+  OpamStd.Exn.finally (fun () -> ignore (unlock rt)) (fun () -> f rt)
 
 let write_config rt =
   OpamFile.Repos_config.write (OpamPath.repos_config rt.repos_global.root)
