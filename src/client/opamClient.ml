@@ -564,7 +564,9 @@ let update
          nondev_packages)
     in
     let dirty_dev_packages, dev_packages =
-      if names <> [] then OpamPackage.Set.empty, dev_packages else
+      if names <> [] || OpamClientConfig.(!r.drop_working_dir) then
+        OpamPackage.Set.empty, dev_packages
+      else
         OpamPackage.Set.partition
           (fun nv ->
              let src_cache = OpamSwitchState.source_dir st nv in
