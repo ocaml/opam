@@ -177,9 +177,9 @@ let rec print_fish_env env =
   (* set manpath if and only if fish version >= 2.6 *)
   let manpath_cmd v =
     OpamConsole.msg "%s" (
-      "awk -v f=$FISH_VERSION " ^
-      "'BEGIN { split(f, fs, \".\"); goodfish = fs[1] > 2 || (fs[1] == 2 && fs[2] >= 6); if (goodfish) { exit 0 } else { exit 1 } }' " ^
-      "; and "
+      (* test for existence of disown builtin, introduced in fish 2.7 *)
+      (* depends on `string' builtin, introduced in fish 2.3 *)
+      "builtin string match -q disown (builtin -n); and "
     ) ;
     set_arr_cmd "MANPATH" v in
   match env with
