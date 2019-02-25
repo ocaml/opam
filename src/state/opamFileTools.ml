@@ -250,7 +250,7 @@ let template nv =
   |> with_bug_reports [""]
   |> with_synopsis ""
 
-let lint ?check_extra_files t =
+let lint ?check_extra_files ?(check_upstream=false) t =
   let format_errors =
     List.map (fun (field, (pos, msg)) ->
         3, `Error,
@@ -617,22 +617,62 @@ let lint ?check_extra_files t =
     cond 57 `Error
       "Synopsis and description must not be both empty"
       (t.descr = None || t.descr = Some OpamFile.Descr.empty);
-    let vars = all_variables ~exclude_post:false t in
-    let exists svar =
-      List.exists (fun v -> v = OpamVariable.Full.of_string svar) vars
-    in
-    let rem_test = exists "test" in
-    let rem_doc = exists "doc" in
-    cond 58 `Warning
-      (let var, s_, nvar =
-         match rem_test, rem_doc with
-         | true, true -> "`test` and `doc`", "s", "s are `with-test` and `with-doc`"
-         | true, false -> "`test`", "", " is `with-test`"
-         | false, true -> "`doc`", "", " is `with-doc`"
-         | _ -> "","",""
-       in
-       Printf.sprintf "Found %s variable%s, predefined one%s" var s_ nvar)
-      (rem_test || rem_doc);
+    (let vars = all_variables ~exclude_post:false t in
+     let exists svar =
+       List.exists (fun v -> v = OpamVariable.Full.of_string svar) vars
+     in
+     let rem_test = exists "test" in
+     let rem_doc = exists "doc" in
+     cond 58 `Warning
+       (let var, s_, nvar =
+          match rem_test, rem_doc with
+          | true, true -> "`test` and `doc`", "s", "s are `with-test` and `with-doc`"
+          | true, false -> "`test`", "", " is `with-test`"
+          | false, true -> "`doc`", "", " is `with-doc`"
+          | _ -> "","",""
+        in
+        Printf.sprintf "Found %s variable%s, predefined one%s" var s_ nvar)
+       (rem_test || rem_doc));
+    cond 59 `Warning "url don't contain a checksum"
+      (check_upstream &&
+       OpamStd.Option.map OpamFile.URL.checksum t.url = Some []);
+    (let upstream_error =
+       if not check_upstream then None
+       else
+       match t.url with
+       | None -> Some "No url defined"
+       | Some url ->
+         let open OpamProcess.Job.Op in
+         OpamProcess.Job.run @@
+         OpamFilename.with_tmp_dir_job @@ fun dir ->
+         OpamProcess.Job.catch (function
+               Failure msg -> Done (Some msg)
+             | OpamDownload.Download_fail (s,l) ->
+               Done (Some (OpamStd.Option.default l s))
+             | e -> Done (Some (Printexc.to_string e)))
+         @@ fun () ->
+         OpamDownload.download ~overwrite:false (OpamFile.URL.url url) dir
+         @@| fun f ->
+         (match OpamFile.URL.checksum url with
+          | [] -> None
+          | chks ->
+            let not_corresponding =
+              List.filter (fun chk ->
+                  not (OpamHash.check_file (OpamFilename.to_string f) chk))
+                chks
+            in
+            if not_corresponding = [] then None
+            else
+            let msg =
+              Printf.sprintf "Cheksum%s %s don't verify archive"
+                (if List.length chks = 1 then "" else "s")
+                (OpamStd.List.to_string OpamHash.to_string not_corresponding)
+            in
+            Some msg)
+     in
+     cond 60 `Error "Upstream check failed"
+       ~detail:[OpamStd.Option.default "" upstream_error]
+       (upstream_error <> None));
   ]
   in
   format_errors @
@@ -649,7 +689,7 @@ let extra_files_default filename =
        OpamHash.check_file (OpamFilename.to_string f))
     (OpamFilename.rec_files dir)
 
-let lint_gen ?check_extra_files reader filename =
+let lint_gen ?check_extra_files ?check_upstream reader filename =
   let warnings, t =
     let warn_of_bad_format (pos, msg) =
       2, `Error, Printf.sprintf "File format error%s: %s"
@@ -717,11 +757,10 @@ let lint_gen ?check_extra_files reader filename =
     | None -> extra_files_default filename
     | Some f -> f
   in
-  warnings @ (match t with Some t -> lint ~check_extra_files t | None -> []),
+  warnings @ (match t with Some t -> lint ~check_extra_files ?check_upstream t | None -> []),
   t
 
-
-let lint_file ?check_extra_files filename =
+let lint_file ?check_extra_files ?check_upstream filename =
   let reader filename =
     try
       let ic = OpamFilename.open_in (OpamFile.filename filename) in
@@ -733,15 +772,15 @@ let lint_file ?check_extra_files filename =
       OpamConsole.error_and_exit `Bad_arguments "File %s not found"
         (OpamFile.to_string filename)
   in
-  lint_gen ?check_extra_files reader filename
+  lint_gen ?check_extra_files ?check_upstream reader filename
 
-let lint_channel ?check_extra_files filename ic =
+let lint_channel ?check_extra_files ?check_upstream filename ic =
   let reader filename = OpamFile.Syntax.of_channel filename ic in
-  lint_gen ?check_extra_files reader filename
+  lint_gen ?check_extra_files ?check_upstream reader filename
 
-let lint_string ?check_extra_files filename string =
+let lint_string ?check_extra_files ?check_upstream filename string =
   let reader filename = OpamFile.Syntax.of_string filename string in
-  lint_gen ?check_extra_files reader filename
+  lint_gen ?check_extra_files ?check_upstream reader filename
 
 let warns_to_string ws =
   OpamStd.List.concat_map "\n"
