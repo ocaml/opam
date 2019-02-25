@@ -2759,7 +2759,12 @@ let lint =
        an opam file directly."
       Arg.(some package) None
   in
-  let lint global_options files package normalise short warnings_sel =
+  let check_upstream =
+    mk_flag ["check-upstream"]
+      "Check upstream, archive availability and checksum(s)"
+  in
+  let lint global_options files package normalise short warnings_sel
+      check_upstream =
     apply_global_options global_options;
     let opam_files_in_dir d =
       match OpamPinned.files_in_source d with
@@ -2809,9 +2814,9 @@ let lint =
           try
             let warnings,opam =
               match opam_f with
-              | Some f -> OpamFileTools.lint_file f
+              | Some f -> OpamFileTools.lint_file ~check_upstream f
               | None ->
-                OpamFileTools.lint_channel
+                OpamFileTools.lint_channel ~check_upstream
                   (OpamFile.make (OpamFilename.of_string "-")) stdin
             in
             let enabled =
@@ -2862,7 +2867,8 @@ let lint =
     in
     if err then OpamStd.Sys.exit_because `False
   in
-  Term.(const lint $global_options $files $package $normalise $short $warnings),
+  Term.(const lint $global_options $files $package $normalise $short $warnings
+        $check_upstream),
   term_info "lint" ~doc ~man
 
 (* CLEAN *)
