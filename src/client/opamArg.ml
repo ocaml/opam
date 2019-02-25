@@ -1012,7 +1012,8 @@ let global_options =
       "Whenever updating packages that are bound to a local, \
        version-controlled directory, update to the current working state of \
        their source instead of the last committed state, or the ref they are \
-       pointing to. \
+       pointing to. As source directory is copied as it is, it it isn't clean \
+       it may result on a opam build failure.\
        This only affects packages explicitly listed on the command-line.\
        It can also be set with $(b,\\$OPAMWORKINGDIR). "
   in

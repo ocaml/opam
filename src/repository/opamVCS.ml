@@ -102,21 +102,11 @@ module Make (VCS: VCS) = struct
     match OpamUrl.local_dir repo_url with
     | None -> pull_url repo_root None repo_url
     | Some dir ->
-      VCS.versioned_files dir
-      @@+ fun files ->
       let files =
         List.map OpamFilename.(remove_prefix dir)
-          (OpamFilename.rec_files (VCS.vc_dir dir))
-        @ files
+          (OpamFilename.rec_files dir)
       in
-      let stdout_file =
-        let f = OpamSystem.temp_file "rsync-files" in
-        let fd = open_out f in
-        List.iter (fun s -> output_string fd s; output_char fd '\n') files;
-        close_out fd;
-        f
-      in
-      (* Remove non-versionned files from destination *)
+      (* Remove non-listed files from destination *)
       (* fixme: doesn't clean directories *)
       let fset = OpamStd.String.Set.of_list files in
       List.iter (fun f ->
@@ -125,9 +115,18 @@ module Make (VCS: VCS) = struct
                   OpamStd.String.Set.mem basename fset)
           then OpamFilename.remove f)
         (OpamFilename.rec_files repo_root);
-      OpamLocal.rsync_dirs ~args:["--files-from"; (Lazy.force convert_path) stdout_file]
-        ~exclude_vcdirs:false
-        repo_url repo_root
+      let stdout_file =
+        let f = OpamSystem.temp_file "rsync-files" in
+        let fd = open_out f in
+        List.iter (fun s -> output_string fd s; output_char fd '\n') files;
+        close_out fd;
+        f
+      in
+      let args = [
+        "--files-from"; (Lazy.force convert_path) stdout_file;
+        "--exclude"; "_build"; (* tiny clean: exclude _build directory *)
+      ] in
+      OpamLocal.rsync_dirs ~args ~exclude_vcdirs:false repo_url repo_root
       @@+ fun result ->
       OpamSystem.remove stdout_file;
       Done (match result with
