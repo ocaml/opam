@@ -111,8 +111,13 @@ let map_all_filters f t =
   with_deprecated_build_test (map_commands t.deprecated_build_test) |>
   with_deprecated_build_doc (map_commands t.deprecated_build_doc)
 
-let all_variables ?exclude_post t =
-  OpamFilter.commands_variables (all_commands t) @
+let all_variables ?exclude_post ?command t =
+  let commands =
+    match command with
+    | Some cmd -> cmd
+    | None -> all_commands t
+  in
+  OpamFilter.commands_variables commands @
   List.fold_left (fun acc f -> OpamFilter.variables f @ acc)
     [] (all_filters ?exclude_post t)
 
@@ -673,6 +678,13 @@ let lint ?check_extra_files ?(check_upstream=false) t =
      cond 60 `Error "Upstream check failed"
        ~detail:[OpamStd.Option.default "" upstream_error]
        (upstream_error <> None));
+    (let with_test =
+       List.exists ((=) (OpamVariable.Full.of_string "with-test"))
+         (all_variables ~exclude_post:true ~command:(t.run_test) t)
+     in
+     cond 61 `Warning
+       "`with-test` variable in `run-test` is out of scope, it will be ignored"
+       with_test);
   ]
   in
   format_errors @
