@@ -13,11 +13,11 @@ add_mounts() {
     esac
 }
 
+# Even if TMPDIR is set, some applications uses /tmp directly
+add_mounts rw /tmp
+
 if [ -z ${TMPDIR+x} ]; then
-  # If $TMPDIR is not set, some applications use /tmp, so
-  # /tmp must be made readable/writable
-  add_mounts rw /tmp
-  # However, others applications obtain the per-user temporary
+  # Others applications obtain the per-user temporary
   # directory differently; the latter should be made readable/writable
   # too and getconf seems to be a robust way to get it
   if [ -z /usr/bin/getconf ]; then
