@@ -273,6 +273,8 @@ module URL: sig
 
   (** Constructor *)
   val with_checksum: OpamHash.t list -> t -> t
+  val with_subpath: string -> t -> t
+  val with_subpath_opt: string option -> t -> t
 
   val subpath: t -> string option
 

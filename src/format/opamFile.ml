@@ -1918,6 +1918,7 @@ module URLSyntax = struct
   let with_mirrors mirrors t = { t with mirrors }
   let with_checksum checksum t = { t with checksum = checksum }
   let with_subpath subpath t = { t with subpath = Some subpath }
+  let with_subpath_opt subpath t = { t with subpath = subpath }
 
   let fields =
     let with_url url t =
