@@ -139,3 +139,17 @@ You can use e.g. the command `opam switch show --safe 2>/dev/null | sed
 For `bash`, just include `$(COMMAND)` in your definition of `PS1` (making sure the `$` is escaped).
 
 For `zsh`, use `setopt prompt_subst`, and include `$(COMMAND)` in the definition of `prompt`.
+
+---
+
+#### How to install a maximum number of packages ?
+
+The following sequence of commands tries to install as much packages as possible in a local switch with OCaml `$(VERSION)`.
+
+```shell
+opam update
+opam switch create . ocaml-base-compiler.$(VERSION)
+export OPAMSOLVERTIMEOUT=3600
+opam list --available -s | xargs opam install --best-effort --yes
+# Be patient
+```
