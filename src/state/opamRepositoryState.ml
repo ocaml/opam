@@ -32,8 +32,7 @@ module Cache = struct
       let b = Bytes.create magic_len in
       really_input ic b 0 magic_len;
       Bytes.to_string b in
-    if not OpamCoreConfig.developer &&
-      file_magic <> this_magic then (
+    if file_magic <> this_magic then (
       log "Bad cache: incompatible magic string %S (expected %S)."
         file_magic this_magic;
       None
