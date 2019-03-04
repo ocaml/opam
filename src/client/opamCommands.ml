@@ -3108,198 +3108,30 @@ let lock =
            "Only lock direct dependencies, rather than the whole dependency tree.")
   in
   let lock_suffix = OpamArg.lock_suffix "OPTIONS" in
-  let get_git_url url nv dir =
-    let module VCS =
-      (val OpamRepository.find_backend_by_kind url.OpamUrl.backend)
-    in
-    let open OpamProcess.Job.Op in
-    OpamProcess.Job.run @@
-    VCS.get_remote_url ?hash:url.OpamUrl.hash dir @@| function
-    | Some u ->
-      (if u.OpamUrl.hash = None then
-         OpamConsole.warning
-           "Referenced git branch for %s is not available in remote: %s, \
-           use default branch instead."
-           (OpamConsole.colorise `underline (OpamPackage.to_string nv))
-           (OpamUrl.to_string u);
-       Some u)
-    | _ ->
-      (OpamConsole.error "Can't retrieve remote informations for %s"
-         (OpamPackage.to_string nv);
-       None)
-  in
-  let lock_opam ?(only_direct=false) st opam =
-    let nv = OpamFile.OPAM.package opam in
-    let univ =
-      OpamSwitchState.universe st
-        ~requested:(OpamPackage.Name.Set.singleton nv.name)
-        Query
-    in
-    let all_depends =
-      OpamSolver.dependencies
-        ~depopts:true ~build:true ~post:true ~installed:true
-        univ (OpamPackage.Set.singleton nv) |>
-      List.filter (fun nv1 -> nv1 <> nv)
-    in
-    let depends =
-      if only_direct then
-        let names =
-          OpamFilter.filter_formula ~default:true (fun _ -> None)
-            (OpamFile.OPAM.depends opam) |>
-          OpamFormula.fold_left (fun acc (n,_) -> OpamPackage.Name.Set.add n acc)
-            OpamPackage.Name.Set.empty
-        in
-        List.filter (fun nv -> OpamPackage.Name.Set.mem nv.name names) all_depends
-      else all_depends
-    in
-    let depends =
-      List.sort (fun nv nv' -> OpamPackage.Name.compare nv'.name nv.name) depends
-    in
-    let depends_formula =
-      OpamFormula.ands
-        (List.rev_map (fun nv ->
-             Atom (nv.name, Atom
-                     (Constraint
-                        (`Eq, FString (OpamPackage.version_to_string nv)))))
-            depends)
-    in
-    let all_depopts =
-      OpamFormula.packages st.packages
-        (OpamFilter.filter_deps
-           ~build:true ~test:true ~doc:true ~dev:true ~default:true ~post:false
-           (OpamFile.OPAM.depopts opam))
-    in
-    let installed_depopts = OpamPackage.Set.inter all_depopts st.installed in
-    let uninstalled_depopts =
-      OpamPackage.(Name.Set.diff
-                     (names_of_packages all_depopts)
-                     (names_of_packages installed_depopts))
-    in
-    let conflicts =
-      OpamFormula.ors
-        (OpamFile.OPAM.conflicts opam ::
-         List.map (fun _-> Atom (nv.name, Empty))
-           (OpamPackage.Name.Set.elements uninstalled_depopts))
-    in
-    let pin_depends =
-      OpamStd.List.filter_map (fun nv ->
-          if not (OpamSwitchState.is_pinned st nv.name) then None else
-          match OpamSwitchState.primary_url st nv with
-          | None -> None
-          | Some u ->
-            match OpamUrl.local_dir u with
-            | Some d ->
-              let local_warn () =
-                OpamConsole.warning "Dependency %s is pinned to local target %s"
-                  (OpamPackage.to_string nv) (OpamUrl.to_string u);
-                None
-              in
-              (match u.OpamUrl.backend with
-               | #OpamUrl.version_control ->
-                 (match get_git_url u nv d with
-                  | Some resolved_u ->
-                    OpamConsole.note "Local pin %s resolved to %s"
-                      (OpamUrl.to_string u) (OpamUrl.to_string resolved_u);
-                    Some (nv, resolved_u)
-                  | None -> local_warn ())
-               | _ -> local_warn ())
-            | None -> Some (nv, u))
-        all_depends
-    in
-    opam |>
-    OpamFile.OPAM.with_depopts OpamFormula.Empty |>
-    OpamFile.OPAM.with_depends depends_formula |>
-    OpamFile.OPAM.with_conflicts conflicts |>
-    OpamFile.OPAM.with_pin_depends pin_depends
-  in
   let lock global_options only_direct lock_suffix atom_locs =
     apply_global_options global_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-    let st, atoms =
-      OpamAuxCommands.simulate_autopin ~quiet:true ~for_view:true st atom_locs
+    let st, packages = OpamLockCommand.select_packages atom_locs st in
+    let pkg_done =
+      OpamPackage.Set.fold (fun nv msgs ->
+          let opam = OpamSwitchState.opam st nv in
+          let locked = OpamLockCommand.lock_opam ~only_direct st opam in
+          let locked_fname =
+            OpamFilename.add_extension
+              (OpamFilename.of_string (OpamPackage.name_to_string nv))
+              lock_suffix
+          in
+          OpamFile.OPAM.write_with_preserved_format
+            (OpamFile.make locked_fname) locked;
+          (nv, locked_fname)::msgs
+        ) packages []
     in
-    let packages =
-      OpamFormula.packages_of_atoms OpamPackage.Set.Op.(st.packages ++ st.installed) atoms
-    in
-    if OpamPackage.Set.is_empty packages then
-      OpamConsole.error_and_exit `Not_found "No package matching %s"
-        (OpamFormula.string_of_atoms atoms)
-    else
-      (let names = OpamPackage.names_of_packages packages in
-       let missing =
-         OpamStd.List.filter_map (fun (n,vc) ->
-             if OpamPackage.Name.Set.mem n names then None
-             else Some (n,vc)) atoms
-       in
-       if missing <> [] then
-         OpamConsole.error "No package matching %s"
-           (OpamFormula.string_of_atoms missing);
-       (* we keep only one version of each package, the pinned or installed one,
-          the latest version otherwise ; and the one that have their dependencies \
-          installed *)
-       let packages =
-         OpamPackage.Name.Set.fold (fun name acc ->
-             let pkgs = OpamPackage.packages_of_name packages name in
-             let pkg =
-               let open OpamPackage.Set.Op in
-               let pinned = pkgs %% st.pinned in
-               if OpamPackage.Set.is_empty pinned then
-                 pkgs %% st.installed
-               else pinned
-             in
-             let nv =
-               match OpamPackage.Set.elements pkg with
-               | [nv] -> nv
-               | _ ->
-                 (let nv = OpamPackage.Set.max_elt pkgs in
-                  OpamConsole.note "Package %s is not installed nor pinned, generating lock \
-                                    file for its latest version %s"
-                    (OpamConsole.colorise `underline (OpamPackage.Name.to_string name))
-                    (OpamConsole.colorise `underline (OpamPackage.version_to_string nv));
-                  nv)
-             in
-             let atoms =
-               OpamFormula.atoms (OpamPackageVar.all_depends st (OpamSwitchState.opam st nv))
-             in
-             let missing =
-               List.filter (fun (n,vc) ->
-                   OpamPackage.Set.fold (fun nv satisf ->
-                       satisf || not (OpamFormula.check (n,vc) nv))
-                     (OpamPackage.packages_of_name st.installed n) false)
-                 atoms
-             in
-             if missing <> [] then
-               (OpamConsole.error
-                  "Skipping %s, dependencies are not satisfied in this switch, \
-                   not installed packages are:\n%s"
-                  (OpamPackage.to_string nv)
-                  (OpamStd.Format.itemize OpamFormula.string_of_atom missing);
-                acc)
-             else
-               OpamPackage.Set.add nv acc)
-           names OpamPackage.Set.empty
-       in
-       let pkg_done =
-         OpamPackage.Set.fold (fun nv msgs ->
-             let opam = OpamSwitchState.opam st nv in
-             let locked = lock_opam ~only_direct st opam in
-             let locked_fname =
-               OpamFilename.add_extension
-                 (OpamFilename.of_string (OpamPackage.name_to_string nv))
-                 lock_suffix 
-             in
-             OpamFile.OPAM.write_with_preserved_format
-               (OpamFile.make locked_fname) locked;
-             (nv, locked_fname)::msgs
-           ) packages []
-       in
-       OpamConsole.msg "Generated lock files for:\n%s"
-         (OpamStd.Format.itemize (fun (nv, file) ->
-              Printf.sprintf "%s: %s"
-                (OpamPackage.to_string nv)
-                (OpamFilename.to_string file)) pkg_done)
-      )
+    OpamConsole.msg "Generated lock files for:\n%s"
+      (OpamStd.Format.itemize (fun (nv, file) ->
+           Printf.sprintf "%s: %s"
+             (OpamPackage.to_string nv)
+             (OpamFilename.to_string file)) pkg_done)
   in
   Term.(pure lock $global_options $only_direct_flag $lock_suffix
         $atom_or_local_list),
