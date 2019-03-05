@@ -97,6 +97,7 @@ let lock_opam ?(only_direct=false) st opam =
       ~requested:(OpamPackage.Name.Set.singleton nv.name)
       Query
   in
+  (* Depends *)
   let all_depends =
     OpamSolver.dependencies
       ~depopts:true ~build:true ~post:true ~installed:true
@@ -114,16 +115,96 @@ let lock_opam ?(only_direct=false) st opam =
       List.filter (fun nv -> OpamPackage.Name.Set.mem nv.name names) all_depends
     else all_depends
   in
+  let map_of_set x set =
+    OpamPackage.Map.of_list (List.map (fun nv -> nv, x)
+                               (OpamPackage.Set.elements set))
+  in
+  let depends_map = map_of_set `version (OpamPackage.Set.of_list depends) in
+  (* others: dev, test, doc *)
+  let open OpamPackage.Set.Op in
+  let select ?(build=false) ?(test=false) ?(doc=false) ?(dev=false)
+      ?(default=false) ?(post=false) () =
+    OpamFormula.packages st.packages
+      (OpamFilter.filter_deps
+         ~build ~test ~doc ~dev ~default ~post
+         (OpamFile.OPAM.depends opam))
+  in
+  let default = select () in
+  let select_depends typ selection =
+    let depends = selection -- default in
+    let installed = depends %% st.installed in
+    let uninstalled =
+      OpamPackage.(Name.Set.diff
+                     (names_of_packages depends)
+                     (names_of_packages installed))
+    in
+    if OpamPackage.Name.Set.is_empty uninstalled then
+      let depends_map = map_of_set `other installed in
+      if only_direct then depends_map
+      else
+        ((OpamPackage.Set.of_list
+           (OpamSolver.dependencies
+              ~depopts:false ~build:true ~post:true ~installed:true
+              univ installed))
+        -- (OpamPackage.Set.of_list all_depends))
+        |> map_of_set (`other_dep typ)
+        |> OpamPackage.Map.union (fun _v _o -> `other_dep typ) depends_map
+    else
+      (OpamConsole.msg "Not all dependencies are satisfied, won't include them\n";
+       OpamPackage.Map.empty)
+  in
+  let dev_depends_map =
+    select_depends "dev" (select ~dev:true ~build:true () -- select ~build:true ())
+  in
+  let test_depends_map = select_depends "with-test" (select ~test:true ()) in
+  let doc_depends_map = select_depends "with-doc" (select ~doc:true ()) in
   let depends =
-    List.sort (fun nv nv' -> OpamPackage.Name.compare nv'.name nv.name) depends
+    let f _v o = o in
+    OpamPackage.Map.(
+      depends_map
+      |> union f dev_depends_map
+      |> union f test_depends_map
+      |> union f doc_depends_map
+    )
+  in
+  (* formulas *)
+  let filters =
+    OpamFormula.fold_left (fun acc form ->
+        let n, vc = form in
+        OpamPackage.Name.Map.add n vc acc)
+      OpamPackage.Name.Map.empty (OpamFile.OPAM.depends opam)
   in
   let depends_formula =
     OpamFormula.ands
-      (List.rev_map (fun nv ->
-           Atom (nv.name, Atom
-                   (Constraint
-                      (`Eq, FString (OpamPackage.version_to_string nv)))))
-          depends)
+      (List.rev (OpamPackage.Map.fold (fun nv cst acc ->
+           let filter =
+             let cst_v =
+               Atom (
+                 Constraint (`Eq, FString (OpamPackage.version_to_string nv)))
+             in
+             match cst with
+             | `version -> cst_v
+             | `other_dep typ ->
+               And (cst_v,
+                    Atom (Filter
+                            (FIdent ([],
+                                     OpamVariable.of_string typ, None))))
+             | `other ->
+               let orig_deps_formula =
+                 OpamPackage.Name.Map.find (OpamPackage.name nv) filters
+               in
+               let new_formula =
+                 OpamFormula.map (function
+                     | Constraint _ -> cst_v
+                     | Filter _ as f ->  Atom f
+                   ) orig_deps_formula
+               in
+               if new_formula = orig_deps_formula then
+                 And (cst_v, new_formula)
+               else new_formula
+           in
+           Atom (nv.name, filter)::acc)
+           depends []))
   in
   (* keep installed depopts in depends and set as conflicting uninstalled ones *)
   let all_depopts =
