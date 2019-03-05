@@ -125,6 +125,7 @@ let lock_opam ?(only_direct=false) st opam =
                       (`Eq, FString (OpamPackage.version_to_string nv)))))
           depends)
   in
+  (* keep installed depopts in depends and set as conflicting uninstalled ones *)
   let all_depopts =
     OpamFormula.packages st.packages
       (OpamFilter.filter_deps
@@ -140,7 +141,7 @@ let lock_opam ?(only_direct=false) st opam =
   let conflicts =
     OpamFormula.ors
       (OpamFile.OPAM.conflicts opam ::
-       List.map (fun _-> Atom (nv.name, Empty))
+       List.map (fun n -> Atom (n, Empty))
          (OpamPackage.Name.Set.elements uninstalled_depopts))
   in
   let pin_depends =
