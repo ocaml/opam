@@ -3113,6 +3113,9 @@ let lock =
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_none gt @@ fun st ->
     let st, packages = OpamLockCommand.select_packages atom_locs st in
+    if OpamPackage.Set.is_empty packages then
+      OpamConsole.msg "No lock file generated\n"
+    else
     let pkg_done =
       OpamPackage.Set.fold (fun nv msgs ->
           let opam = OpamSwitchState.opam st nv in
