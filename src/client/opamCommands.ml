@@ -3123,7 +3123,7 @@ let lock =
           let locked_fname =
             OpamFilename.add_extension
               (OpamFilename.of_string (OpamPackage.name_to_string nv))
-              lock_suffix
+              ("opam." ^ lock_suffix)
           in
           OpamFile.OPAM.write_with_preserved_format
             (OpamFile.make locked_fname) locked;
