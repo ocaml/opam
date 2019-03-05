@@ -143,23 +143,31 @@ let lock_opam ?(only_direct=false) st opam =
       if only_direct then depends_map
       else
         ((OpamPackage.Set.of_list
-           (OpamSolver.dependencies
-              ~depopts:false ~build:true ~post:true ~installed:true
-              univ installed))
-        -- (OpamPackage.Set.of_list all_depends))
+            (OpamSolver.dependencies
+               ~depopts:false ~build:true ~post:true ~installed:true
+               univ installed))
+         -- (OpamPackage.Set.of_list all_depends))
         |> map_of_set (`other_dep typ)
         |> OpamPackage.Map.union (fun _v _o -> `other_dep typ) depends_map
     else
       (OpamConsole.msg "Not all dependencies are satisfied, won't include them\n";
        OpamPackage.Map.empty)
   in
+  (* variables are set here as a string *)
   let dev_depends_map =
     select_depends "dev" (select ~dev:true ~build:true () -- select ~build:true ())
   in
   let test_depends_map = select_depends "with-test" (select ~test:true ()) in
   let doc_depends_map = select_depends "with-doc" (select ~doc:true ()) in
   let depends =
-    let f _v o = o in
+    let f a b =
+      match a,b with
+      | _, (`other_dep _ as ot)
+      | (`other_dep _ as ot), _ -> ot
+      | _, `other
+      | `other, _ -> `other
+      |  `version, `version -> `version
+    in
     OpamPackage.Map.(
       depends_map
       |> union f dev_depends_map
