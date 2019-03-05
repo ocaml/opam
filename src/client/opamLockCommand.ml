@@ -45,13 +45,16 @@ let select_packages atom_locs st =
                 nv)
            in
            let atoms =
-             OpamFormula.atoms (OpamPackageVar.all_depends st (OpamSwitchState.opam st nv))
+             OpamFormula.atoms (OpamPackageVar.all_depends ~depopts:false st
+                                  (OpamSwitchState.opam st nv))
            in
            let missing =
              List.filter (fun (n,vc) ->
+                 let pkgs = (OpamPackage.packages_of_name st.installed n) in
+                 OpamPackage.Set.is_empty pkgs ||
                  OpamPackage.Set.fold (fun nv satisf ->
                      satisf || not (OpamFormula.check (n,vc) nv))
-                   (OpamPackage.packages_of_name st.installed n) false)
+                   pkgs false)
                atoms
            in
            if missing <> [] then
