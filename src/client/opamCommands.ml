@@ -3099,6 +3099,19 @@ let lock =
     `P "If paths (filename or directory) are given, those opam files are locked. \
         If package is given, installed one is locked, otherwise its latest version.";
     `P "Fails if all mandatory dependencies are not installed in the switch.";
+    `S "What is changed in the locked file?";
+    `P "- $(i,depends) are fixed to their specific versions, with all filters \
+        removed (except for the exceptions below";
+    `P "- $(i,depopts) that are installed in the current switch are turned into \
+        depends, with their version set. Others are set in the $(i,conflict) field";
+    `P "- `{dev}`, `{with-test}, and `{with-doc}` filters are kept if all \
+        packages of a specific filters are installed in the switch. Versions are \
+        fixed and the same filter is on all dependencies that are added from \
+        them";
+    `P "- $(i,pin-depends) are kept and new ones are added if in the \
+        dependencies some packages are pinned ";
+    `P "- pins are resolved: if a package is locally pinned, opam tries to get \
+        its remote url and branch, and sets this as the target URL";
     `S "ARGUMENTS";
     `S "OPTIONS";
   ]
