@@ -274,13 +274,23 @@ let names_of_packages nvset =
     nvset
     Name.Set.empty
 
-let packages_of_name nvset n =
-  if n = "" then Set.empty else
+let package_of_name_aux empty split filter nv n =
+  if n = "" then empty else
   let inf = {name = String.sub n 0 (String.length n - 1); version= ""} in
   let sup = {name = n^"\000"; version = ""} in
-  let _, _, nvset = Set.split inf nvset in
-  let nvset, _, _ = Set.split sup nvset in
-  Set.filter (fun nv -> nv.name = n) nvset
+  let _, _, nv = split inf nv in
+  let nv, _, _ = split sup nv in
+  filter nv
+
+let packages_of_name nv n =
+  package_of_name_aux Set.empty Set.split
+    (Set.filter (fun nv -> nv.name = n))
+    nv n
+
+let packages_of_name_map nv n =
+  package_of_name_aux Map.empty Map.split
+    (Map.filter (fun nv _ -> nv.name = n))
+    nv n
 
 let package_of_name nvset n =
   Set.choose (packages_of_name nvset n)

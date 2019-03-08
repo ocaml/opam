@@ -93,6 +93,7 @@ val has_name: Set.t -> Name.t -> bool
 
 (** Return all the packages with the given name *)
 val packages_of_name: Set.t -> Name.t -> Set.t
+val packages_of_name_map: 'a Map.t -> Name.t -> 'a Map.t
 
 (** Return a package with the given name *)
 val package_of_name: Set.t -> Name.t -> t
