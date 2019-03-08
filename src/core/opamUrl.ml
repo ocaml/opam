@@ -235,6 +235,9 @@ let has_trailing_slash url =
   OpamStd.String.ends_with ~suffix:"/" url.path
 
 let to_json url = `String (to_string url)
+let of_json = function
+| `String s -> (try Some (of_string s) with _ -> None)
+| _ -> None
 
 type url = t
 

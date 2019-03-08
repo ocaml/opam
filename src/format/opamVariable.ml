@@ -104,6 +104,10 @@ module Full = struct
   let to_json x =
     `String (to_string x)
 
+  let of_json = function
+    | `String s -> (try Some (of_string s) with _ -> None)
+    | _ -> None
+
   module O = struct
     type tmp = t
     type t = tmp

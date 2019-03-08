@@ -38,6 +38,9 @@ module Version = struct
 
   let to_json x =
     `String (to_string x)
+  let of_json = function
+    | `String x -> (try Some (of_string x) with _ -> None)
+    | _ -> None
 
   module O = struct
     type t = version
@@ -82,6 +85,9 @@ module Name = struct
     | i -> i
 
   let to_json x = `String x
+  let of_json = function
+    | `String s -> (try Some (of_string s) with _ -> None)
+    | _ -> None
 
   module O = struct
     type t = string
@@ -145,6 +151,16 @@ let to_json nv =
   `O [ ("name", Name.to_json (name nv));
        ("version", Version.to_json (version nv));
      ]
+let of_json = function
+  | `O dict ->
+    begin try
+        let open OpamStd.Option.Op in
+        Name.of_json (List.assoc "name" dict) >>= fun name ->
+        Version.of_json (List.assoc "version" dict) >>= fun version ->
+        Some {name; version}
+      with Not_found -> None
+    end
+  | _ -> None
 
 module O = struct
   type tmp = t

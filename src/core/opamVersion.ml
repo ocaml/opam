@@ -17,6 +17,10 @@ let of_string x = x
 
 let to_json x = `String x
 
+let of_json = function
+| `String x -> Some x
+| _ -> None
+
 let compare v w = OpamVersionCompare.compare v w
 
 module O = struct

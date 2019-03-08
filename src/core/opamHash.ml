@@ -80,6 +80,9 @@ let to_string (kind,s) =
   String.concat pfx_sep_str [string_of_kind kind; s]
 
 let to_json s = `String (to_string s)
+let of_json = function
+| `String s -> of_string_opt s
+| _ -> None
 
 let to_path (kind,s) =
   [string_of_kind kind; String.sub s 0 2; s]

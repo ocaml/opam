@@ -47,6 +47,7 @@ module type ABSTRACT = sig
   val of_string: string -> t
   val to_string: t -> string
   val to_json: t -> OpamJson.t
+  val of_json: OpamJson.t -> t option
   module Set: SET with type elt = t
   module Map: MAP with type key = t
 end
@@ -307,6 +308,9 @@ module AbstractString = struct
   let of_string x = x
   let to_string x = x
   let to_json x = `String x
+  let of_json = function
+    | `String x -> Some x
+    | _ -> None
   module O = struct
     type t = string
     let to_string = to_string

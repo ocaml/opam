@@ -82,6 +82,7 @@ module type ABSTRACT = sig
   val of_string: string -> t
   val to_string: t -> string
   val to_json: t -> OpamJson.t
+  val of_json: OpamJson.t -> t option
 
   module Set: SET with type elt = t
   module Map: MAP with type key = t
