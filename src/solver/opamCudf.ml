@@ -66,6 +66,36 @@ let to_json p =
        ("installed", `String (string_of_bool p.Cudf.installed));
      ]
 
+let of_json = function
+  | `O dict ->
+    begin try
+        begin match
+            List.assoc "name" dict,
+            List.assoc "version" dict,
+            List.assoc "installed" dict
+          with
+          | `String p, `String v, `String i ->
+            let package = p in
+            let version = try int_of_string v with _ -> raise Not_found in
+            let installed = try bool_of_string i with _ -> raise Not_found in
+            Some {
+              Cudf.package = package;
+              version;
+              installed;
+
+              depends = [];
+              conflicts = [];
+              provides = [];
+              was_installed = false;
+              keep = `Keep_none;
+              pkg_extra = [];
+            }
+          | _ -> raise Not_found
+        end
+      with Not_found -> None
+    end
+  | _ -> None
+
 (* Graph of cudf packages *)
 module Pkg = struct
   type t = Cudf.package
@@ -74,6 +104,7 @@ module Pkg = struct
   let name_to_string t = t.Cudf.package
   let version_to_string t = string_of_int t.Cudf.version
   let to_json = to_json
+  let of_json = of_json
 end
 
 module Action = OpamActionGraph.MakeAction(Pkg)

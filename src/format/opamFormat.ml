@@ -635,6 +635,23 @@ module I = struct
           let to_json (s,o) =
             `O (("kind", `String s) ::
                 match o with None -> [] | Some s -> ["name", `String s])
+          let of_json = function
+            | `O dict ->
+              begin try
+                  match List.assoc "kind" dict with
+                  | `String s ->
+                    begin
+                      let o =
+                        if not (List.mem_assoc "name" dict) then None
+                        else match List.assoc "name" dict with
+                          | `String s -> Some s
+                          | _ -> raise Not_found
+                      in Some (s, o)
+                    end
+                  | _ -> raise Not_found
+                with Not_found -> None
+              end
+            | _ -> None
         end)
       in
       let errs, section_map, field_map =

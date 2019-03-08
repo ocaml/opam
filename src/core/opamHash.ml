@@ -126,6 +126,7 @@ module O = struct
   type t = _t
   let to_string = to_string
   let to_json = to_json
+  let of_json = of_json
   let compare = compare
 end
 

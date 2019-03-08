@@ -29,6 +29,7 @@ module type SET = sig
   val of_list: elt list -> t
   val to_string: t -> string
   val to_json: t -> OpamJson.t
+  val of_json: OpamJson.t -> t option
   val find: (elt -> bool) -> t -> elt
   val find_opt: (elt -> bool) -> t -> elt option
 
@@ -52,6 +53,7 @@ module type MAP = sig
 
   val to_string: ('a -> string) -> 'a t  -> string
   val to_json: ('a -> OpamJson.t) -> 'a t -> OpamJson.t
+  val of_json: (OpamJson.t -> 'a option) -> OpamJson.t -> 'a t option
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
   val find_opt: key -> 'a t -> 'a option
@@ -97,6 +99,7 @@ module type OrderedType = sig
   include Set.OrderedType
   val to_string: t -> string
   val to_json: t -> OpamJson.t
+  val of_json: OpamJson.t -> t option
 end
 
 module Set: sig
