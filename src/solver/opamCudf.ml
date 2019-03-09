@@ -377,7 +377,7 @@ let to_json = CudfJson.package_to_json
 let of_json = CudfJson.package_of_json
 
 (* Graph of cudf packages *)
-module Pkg = struct
+module Package = struct
   type t = Cudf.package
   include Common.CudfAdd
   let to_string = string_of_package
@@ -387,7 +387,7 @@ module Pkg = struct
   let of_json = of_json
 end
 
-module Action = OpamActionGraph.MakeAction(Pkg)
+module Action = OpamActionGraph.MakeAction(Package)
 module ActionGraph = OpamActionGraph.Make(Action)
 
 let string_of_action = Action.to_string
@@ -404,8 +404,8 @@ type conflict_case =
 type conflict =
   Cudf.universe * int package_map * conflict_case
 
-module Map = OpamStd.Map.Make(Pkg)
-module Set = OpamStd.Set.Make(Pkg)
+module Map = OpamStd.Map.Make(Package)
+module Set = OpamStd.Set.Make(Package)
 module Graph = struct
 
   module PG = struct

@@ -14,11 +14,19 @@
 
 open OpamTypes
 
+module Package : sig
+  type t = Cudf.package
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+  val to_json : t -> OpamJson.t
+  val of_json : OpamJson.t -> t option
+end
+
 (** Cudf sets *)
-module Set: OpamStd.SET with type elt = Cudf.package
+module Set: OpamStd.SET with type elt = Package.t
 
 (** Cudf maps *)
-module Map: OpamStd.MAP with type key = Cudf.package
+module Map: OpamStd.MAP with type key = Package.t
 
 (** Cudf graph *)
 module Graph: sig
