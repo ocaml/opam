@@ -14,8 +14,9 @@ let nice_int = int8
 let nice_uint = uint8
 let nice_string =
   let letter = map [range ~min:0 25] (fun n -> char_of_int (int_of_char 'a' + n)) in
-  map [letter; letter; letter; letter; letter]
-    (fun a b c d e -> String.of_seq (List.to_seq [a;b;c;d;e]))
+  with_printer Format.pp_print_string @@
+  map [letter; letter; letter; letter; letter] @@
+  fun a b c d e -> String.of_seq (List.to_seq [a;b;c;d;e])
 
 let check_json_roundtrip ~name gen equal to_json of_json =
   let pp ppf = function

@@ -12,3 +12,4 @@ let () =
   OpamCudf_crowbar.check ();
   OpamFilename_crowbar.check ();
   OpamHash_crowbar.check ();
+  OpamUrl_crowbar.check ();

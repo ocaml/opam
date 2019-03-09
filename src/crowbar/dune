@@ -5,6 +5,7 @@
   (modules     opamCrowbar
                opamFilename_crowbar
                opamHash_crowbar
+               opamUrl_crowbar
                opamCudf_crowbar
                test)
   (libraries   crowbar opam-core opam-format opam-solver)
