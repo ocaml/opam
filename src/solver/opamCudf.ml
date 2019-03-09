@@ -201,6 +201,80 @@ module CudfJson = struct
   let stanza_of_json value_of_json json =
     list_of_json (binding_of_json value_of_json) json
 
+  let type_schema_to_json tag value_to_json value =
+    pair_to_json
+      "type" string_to_json
+      "default" (option_to_json value_to_json)
+      (tag, value)
+  let rec typedecl1_to_json = function
+    | `Int n ->
+      type_schema_to_json "int" int_to_json n
+    | `Posint n ->
+      type_schema_to_json "posint" int_to_json n
+    | `Nat n ->
+      type_schema_to_json "nat" int_to_json n
+    | `Bool b ->
+      type_schema_to_json "bool" bool_to_json b
+    | `String s ->
+      type_schema_to_json "string" string_to_json s
+    | `Pkgname s ->
+      type_schema_to_json "pkgname" pkgname_to_json s
+    | `Ident s ->
+      type_schema_to_json "ident" string_to_json s
+    | `Enum (enums, v) ->
+      pair_to_json
+        "type" string_to_json
+        "default" (pair_to_json
+                     "set" (list_to_json string_to_json)
+                     "default" (option_to_json string_to_json))
+        ("enum", (enums, v))
+    | `Vpkg v ->
+      type_schema_to_json "vpkg" vpkg_to_json v
+    | `Vpkgformula v ->
+      type_schema_to_json "vpkgformula" vpkgformula_to_json v
+    | `Vpkglist v ->
+      type_schema_to_json "vpkglist" vpkglist_to_json v
+    | `Veqpkg v ->
+      type_schema_to_json "veqpkg" veqpkg_to_json v
+    | `Veqpkglist v ->
+      type_schema_to_json "veqpkglist" veqpkglist_to_json v
+    | `Typedecl td ->
+      type_schema_to_json "typedecl" typedecl_to_json td
+  and typedecl_to_json td =
+    stanza_to_json typedecl1_to_json td
+
+  let rec typedecl1_of_json json =
+    pair_of_json "type" string_of_json "default" (fun x -> Some x) json >>=
+    fun (tag, json) ->
+    match tag with
+    | "int" -> option_of_json int_of_json json >>= fun x -> Some (`Int x)
+    | "posint" -> option_of_json int_of_json json >>= fun x -> Some (`Posint x)
+    | "nat" -> option_of_json int_of_json json >>= fun x -> Some (`Nat x)
+    | "bool" -> option_of_json bool_of_json json >>= fun x -> Some (`Bool x)
+    | "string" -> option_of_json string_of_json json >>= fun x -> Some (`String x)
+    | "pkgname" -> option_of_json string_of_json json >>= fun x -> Some (`Pkgname x)
+    | "ident" -> option_of_json string_of_json json >>= fun x -> Some (`Ident x)
+    | "enum" ->
+      pair_of_json
+        "set" (list_of_json string_of_json)
+        "default" (option_of_json string_of_json)
+        json >>= fun x -> Some (`Enum x)
+    | "vpkg" ->
+      option_of_json vpkg_of_json json >>= fun x -> Some (`Vpkg x)
+    | "vpkgformula" ->
+      option_of_json vpkgformula_of_json json >>= fun x -> Some (`Vpkgformula x)
+    | "vpkglist" ->
+      option_of_json vpkglist_of_json json >>= fun x -> Some (`Vpkglist x)
+    | "veqpkg" ->
+      option_of_json veqpkg_of_json json >>= fun x -> Some (`Veqpkg x)
+    | "veqpkglist" ->
+      option_of_json veqpkglist_of_json json >>= fun x -> Some (`Veqpkglist x)
+    | "typedecl" ->
+      option_of_json typedecl_of_json json >>= fun x -> Some (`Typedecl x)
+    | _ -> None
+  and typedecl_of_json json =
+    stanza_of_json typedecl1_of_json json
+
   let type_tagged_to_json tag value_to_json value =
     pair_to_json "type" string_to_json "value" value_to_json (tag, value)
 
@@ -234,11 +308,11 @@ module CudfJson = struct
       type_tagged_to_json "veqpkg" veqpkg_to_json veqpkg
     | `Veqpkglist veqpkglist ->
       type_tagged_to_json "veqpkglist" veqpkglist_to_json veqpkglist
-    | `Typedecl _typedecl ->
-      `Null (* FIXME *)
+    | `Typedecl typedecl ->
+      type_tagged_to_json "typedecl" typedecl_to_json typedecl
 
   let typed_value_of_json json : Cudf_types.typed_value option =
-    pair_of_json "typed" string_of_json "value" (fun x -> Some x) json >>=
+    pair_of_json "type" string_of_json "value" (fun x -> Some x) json >>=
     fun (tag, json) ->
     match tag with
     | "int" -> int_of_json json >>= fun x -> Some (`Int x)
@@ -257,7 +331,7 @@ module CudfJson = struct
     | "vpkglist" -> vpkglist_of_json json >>= fun x -> Some (`Vpkglist x)
     | "veqpkg" -> veqpkg_of_json json >>= fun x -> Some (`Veqpkg x)
     | "veqpkglist" -> veqpkglist_of_json json >>= fun x -> Some (`Veqpkglist x)
-    | "typedecl" -> None (* FIXME *)
+    | "typedecl" -> typedecl_of_json json >>= fun x -> Some (`Typedecl x)
     | _ -> None
 
   let package_to_json p =
