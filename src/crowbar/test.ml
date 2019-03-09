@@ -10,3 +10,4 @@
 
 let () =
   OpamCudf_crowbar.check ();
+  OpamFilename_crowbar.check ();
