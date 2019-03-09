@@ -60,7 +60,7 @@ let string_of_package p =
 let string_of_packages l =
   OpamStd.List.to_string string_of_package l
 
-module CudfJson = struct
+module Json = struct
 
   let (>>=) = OpamStd.Option.Op.(>>=)
 
@@ -373,8 +373,8 @@ module CudfJson = struct
     | _ -> None
 end
 
-let to_json = CudfJson.package_to_json
-let of_json = CudfJson.package_of_json
+let to_json = Json.package_to_json
+let of_json = Json.package_of_json
 
 (* Graph of cudf packages *)
 module Package = struct

@@ -50,6 +50,7 @@ module Graph: sig
   val mirror: t -> t
 end
 
+
 (** Computation of differences between universe. Returns the sets of packages to
     install and remove respectively. *)
 val diff: Cudf.universe -> Cudf.universe -> (Set.t * Set.t)
@@ -236,3 +237,44 @@ val packages: Cudf.universe -> Cudf.package list
 (** Converts an OPAM request to a Cudf request *)
 val to_cudf: Cudf.universe -> Cudf_types.vpkg request
   -> Cudf.preamble * Cudf.universe * Cudf.request
+
+
+module Json: sig
+  open Cudf_types
+
+  val version_to_json : version OpamJson.encoder
+  val version_of_json : version OpamJson.decoder
+
+  val relop_to_json : relop OpamJson.encoder
+  val relop_of_json : relop OpamJson.decoder
+
+  val enum_keep_to_json : enum_keep OpamJson.encoder
+  val enum_keep_of_json : enum_keep OpamJson.decoder
+
+  val constr_to_json : constr OpamJson.encoder
+  val constr_of_json : constr OpamJson.decoder
+
+  val vpkg_to_json : vpkg OpamJson.encoder
+  val vpkg_of_json : vpkg OpamJson.decoder
+  val vpkglist_to_json : vpkglist OpamJson.encoder
+  val vpkglist_of_json : vpkglist OpamJson.decoder
+
+  val veqpkg_to_json : veqpkg OpamJson.encoder
+  val veqpkg_of_json : veqpkg OpamJson.decoder
+  val veqpkglist_to_json : veqpkglist OpamJson.encoder
+  val veqpkglist_of_json : veqpkglist OpamJson.decoder
+
+  val vpkgformula_to_json : vpkgformula OpamJson.encoder
+  val vpkgformula_of_json : vpkgformula OpamJson.decoder
+
+  val typedecl1_to_json : typedecl1 OpamJson.encoder
+  val typedecl1_of_json : typedecl1 OpamJson.decoder
+  val typedecl_to_json : typedecl OpamJson.encoder
+  val typedecl_of_json : typedecl OpamJson.decoder
+
+  val typed_value_to_json : typed_value OpamJson.encoder
+  val typed_value_of_json : typed_value OpamJson.decoder
+
+  val package_to_json : Cudf.package OpamJson.encoder
+  val package_of_json : Cudf.package OpamJson.decoder
+end
