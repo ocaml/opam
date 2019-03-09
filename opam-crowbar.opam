@@ -1,0 +1,19 @@
+opam-version: "1.2"
+version: "2.0.0"
+maintainer: "opam-devel@lists.ocaml.org"
+authors: [
+  "Gabriel Scherer <gabriel.scherer@gmail.com>"
+]
+homepage: "https://opam.ocaml.org"
+bug-reports: "https://github.com/ocaml/opam/issues"
+dev-repo: "https://github.com/ocaml/opam.git"
+build: [
+  ["./configure" "--disable-checks" "--prefix" prefix]
+  [make "%{name}%.install"]
+]
+depends: [
+  "opam-core" {= "2.0.0"}
+  "opam-format" {= "2.0.0"}
+  "opam-solver" {= "2.0.0"}
+]
+available: ocaml-version >= "4.02.3"

@@ -1,0 +1,11 @@
+(executable
+  (name        test)
+  (public_name opam-crowbar)
+  (package     opam-crowbar)
+  (modules     opamCrowbar opamCudf_crowbar test)
+  (libraries   crowbar opam-core opam-format opam-solver)
+  (flags       (:standard
+               (:include ../ocaml-flags-standard.sexp)
+               (:include ../ocaml-flags-configure.sexp)
+               (:include ../ocaml-context-flags.sexp)))
+)
