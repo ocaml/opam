@@ -14,3 +14,4 @@ let () =
   OpamHash_crowbar.check ();
   OpamUrl_crowbar.check ();
   OpamVersion_crowbar.check ();
+  OpamPackage_crowbar.check ();
