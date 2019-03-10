@@ -56,7 +56,8 @@ end
 val diff: Cudf.universe -> Cudf.universe -> (Set.t * Set.t)
 
 (** Cudf action graph *)
-module ActionGraph: OpamActionGraph.SIG with type package = Cudf.package
+module Action: OpamActionGraph.ACTION with type package = Package.t
+module ActionGraph: OpamActionGraph.SIG with type package = Package.t
 
 (** Abstract type that may be returned in case of conflicts *)
 type conflict
