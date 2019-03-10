@@ -42,8 +42,14 @@ module type SIG = sig
   (** Expand install actions, adding a build action preceding them.
       The argument [noop_remove] is a function that should return `true`
       for package where the `remove` action is known not to modify the
-      filesystem (such as `conf-*` package). *)
-  val explicit: ?noop_remove:(package -> bool) -> t -> t
+      filesystem (such as `conf-*` package).
+      The argument [sources_needed] is a function that should return `true`
+      for packages that require fetching sources (packages that do not
+      require it are typically up-to-date pins or "in-place" builds). *)
+  val explicit:
+    ?noop_remove:(package -> bool) ->
+    sources_needed:(package -> bool) ->
+    t -> t
 
   (** Folds on all recursive successors of the given action, including itself,
       depth-first. *)

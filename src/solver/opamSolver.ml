@@ -576,7 +576,7 @@ let new_packages sol =
       match action with
       | `Install p | `Change (_,_,p) ->
         OpamPackage.Set.add (OpamCudf.cudf2opam p) packages
-      | `Reinstall _ | `Remove _ | `Build _ -> packages
+      | `Reinstall _ | `Remove _ | `Build _ | `Fetch _ -> packages
   ) sol OpamPackage.Set.empty
 
 let all_packages sol =
@@ -594,7 +594,7 @@ let stats sol =
       | `Change (`Down,_,_) -> {stats with s_downgrade = stats.s_downgrade+1}
       | `Reinstall _ -> {stats with s_reinstall = stats.s_reinstall+1}
       | `Remove _ -> {stats with s_remove = stats.s_remove+1}
-      | `Build _ -> stats)
+      | `Build _ | `Fetch _ -> stats)
     (OpamCudf.ActionGraph.reduce sol)
     { s_install=0; s_reinstall=0; s_upgrade=0; s_downgrade=0; s_remove=0 }
 
@@ -660,7 +660,7 @@ let print_solution ~messages ~append ~requested ~reinstall t =
           match a with
           | `Install p | `Change (_,_,p) | `Reinstall p ->
             messages (OpamCudf.cudf2opam p)
-          | `Remove _ | `Build _ -> []
+          | `Remove _ | `Build _ | `Fetch _ -> []
         in
         action :: actions, (cause, messages) :: details
       ) t ([],[])
