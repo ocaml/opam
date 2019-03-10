@@ -20,6 +20,5 @@ let version = choose [
 ]
 
 let check () =
-  let equal v1 v2 = OpamVersion.compare v1 v2 = 0 in
   check_json_roundtrip ~name:"OpamVersion.t"
-    version equal OpamVersion.to_json OpamVersion.of_json;
+    version (eq_of_comp OpamVersion.compare) to_json of_json;

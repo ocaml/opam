@@ -41,6 +41,5 @@ let name =
 let package = map [name; version] create
   
 let check () =
-  let equal v1 v2 = OpamPackage.compare v1 v2 = 0 in
   check_json_roundtrip ~name:"OpamPackage.t"
-    package equal OpamPackage.to_json OpamPackage.of_json;
+    package (eq_of_comp OpamPackage.compare) to_json of_json;

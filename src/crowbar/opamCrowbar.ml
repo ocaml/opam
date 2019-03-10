@@ -18,6 +18,8 @@ let nice_string =
   map [letter; letter; letter; letter; letter] @@
   fun a b c d e -> String.of_seq (List.to_seq [a;b;c;d;e])
 
+let eq_of_comp comp v1 v2 = (comp v1 v2 = 0)
+
 let check_json_roundtrip ~name gen equal to_json of_json =
   let pp ppf = function
     | None -> assert false
