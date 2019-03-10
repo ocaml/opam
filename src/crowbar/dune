@@ -10,6 +10,7 @@
                opamCudf_crowbar
                opamPackage_crowbar
                opamVariable_crowbar
+               opamActionGraph_crowbar
                test)
   (libraries   crowbar opam-core opam-format opam-solver)
   (flags       (:standard

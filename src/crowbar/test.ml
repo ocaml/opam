@@ -16,3 +16,4 @@ let () =
   OpamVersion_crowbar.check ();
   OpamPackage_crowbar.check ();
   OpamVariable_crowbar.check ();
+  OpamActionGraph_crowbar.check ();
