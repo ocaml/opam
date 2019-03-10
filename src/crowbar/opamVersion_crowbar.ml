@@ -8,9 +8,18 @@
 (*                                                                        *)
 (**************************************************************************)
 
-let () =
-  OpamCudf_crowbar.check ();
-  OpamFilename_crowbar.check ();
-  OpamHash_crowbar.check ();
-  OpamUrl_crowbar.check ();
-  OpamVersion_crowbar.check ();
+open OpamVersion
+open! Crowbar
+open OpamCrowbar
+
+let version = choose [
+    const current;
+    const (major current);
+    const current_nopatch;
+    const (full ());
+]
+
+let check () =
+  let equal v1 v2 = OpamVersion.compare v1 v2 = 0 in
+  check_json_roundtrip ~name:"OpamVersion.t"
+    version equal OpamVersion.to_json OpamVersion.of_json;
