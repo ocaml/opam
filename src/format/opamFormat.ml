@@ -635,6 +635,10 @@ module I = struct
           let to_json (s,o) =
             `O (("kind", `String s) ::
                 match o with None -> [] | Some s -> ["name", `String s])
+         (* these serializers/deserializers are not accessible
+            from the OpamFormat.mli interface, so there are not currently
+            tested -- it's not clear if usage of the SEM functor touches
+            them in any way... *)
           let of_json = function
             | `O dict ->
               begin try
