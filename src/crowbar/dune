@@ -9,6 +9,7 @@
                opamVersion_crowbar
                opamCudf_crowbar
                opamPackage_crowbar
+               opamVariable_crowbar
                test)
   (libraries   crowbar opam-core opam-format opam-solver)
   (flags       (:standard

@@ -8,11 +8,19 @@
 (*                                                                        *)
 (**************************************************************************)
 
-let () =
-  OpamCudf_crowbar.check ();
-  OpamFilename_crowbar.check ();
-  OpamHash_crowbar.check ();
-  OpamUrl_crowbar.check ();
-  OpamVersion_crowbar.check ();
-  OpamPackage_crowbar.check ();
-  OpamVariable_crowbar.check ();
+open OpamVariable
+open! Crowbar
+open OpamCrowbar
+
+let variable = map [nice_string] @@ of_string
+
+let full = choose [
+    map [variable] @@ Full.global;
+    map [variable] @@ Full.self;
+    map [OpamPackage_crowbar.name; variable] @@ Full.create;
+]
+
+let check () =
+  let equal v1 v2 = Full.to_string v1 = Full.to_string v2 in
+  check_json_roundtrip ~name:"OpamVariable.t"
+    full equal Full.to_json Full.of_json;
