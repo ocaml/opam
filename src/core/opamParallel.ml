@@ -40,7 +40,7 @@ module type SIG = sig
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
     ?dry_run:bool ->
-    ?mutually_exclusive:(G.V.t list list) ->
+    ?pools:((G.V.t list * int) list) ->
     G.t ->
     unit
 
@@ -48,7 +48,7 @@ module type SIG = sig
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
     ?dry_run:bool ->
-    ?mutually_exclusive:(G.V.t list list) ->
+    ?pools:((G.V.t list * int) list) ->
     G.t ->
     (G.V.t * 'a) list
 
@@ -64,27 +64,37 @@ module Make (G : G) = struct
   module M = OpamStd.Map.Make (V)
   module S = OpamStd.Set.Make (V)
 
-  let map_keys m = M.fold (fun k _ s -> S.add k s) m S.empty
-
   exception Errors of G.V.t list * (G.V.t * exn) list * G.V.t list
   exception Cyclic of V.t list list
 
   open S.Op
 
   (* Returns a map (node -> return value) *)
-  let aux_map ~jobs ~command ?(dry_run=false) ?(mutually_exclusive=[]) g =
+  let aux_map ~jobs ~command ?(dry_run=false) ?(pools=[]) g =
     log "Iterate over %a task(s) with %d process(es)"
       (slog @@ G.nb_vertex @> string_of_int) g jobs;
 
-    let mutually_exclusive = List.map S.of_list mutually_exclusive in
+    let njobs = G.nb_vertex g in
+
+    let all_jobs = G.fold_vertex S.add g S.empty in
+
+    let pools =
+      let defined =
+        List.map (fun (elts, jobs) -> S.of_list elts, jobs)
+          pools
+      in
+      let default =
+        List.fold_left (fun acc (pool, _) -> acc -- pool)
+          all_jobs defined, jobs
+      in
+      default :: defined
+    in
 
     if G.has_cycle g then (
       let sccs = G.scc_list g in
       let sccs = List.filter (function _::_::_ -> true | _ -> false) sccs in
       raise (Cyclic sccs)
     );
-
-    let njobs = G.nb_vertex g in
 
     let print_status
         (finished: int)
@@ -119,14 +129,25 @@ module Make (G : G) = struct
 
     (* nslots is the number of free slots *)
     let rec loop
-        (nslots: int) (* number of free slots *)
+        (nslots: (S.t * int) list) (* number of free slots *)
         (results: 'b M.t)
         (running: (OpamProcess.t * 'a * string option) M.t)
         (ready: S.t)
       =
-      let mutual_exclusion_set n =
-        List.fold_left (fun acc s -> if S.mem n s then acc ++ s else acc)
-          S.empty mutually_exclusive
+      let get_slots nslots n =
+        List.filter (fun (pool, _) -> S.mem n pool) nslots
+      in
+      let take_slot nslots n =
+        List.map (fun (pool, slots) ->
+            if S.mem n pool then (assert (slots > 0); pool, slots - 1)
+            else pool, slots)
+          nslots
+      in
+      let release_slot nslots n =
+        List.map (fun (pool, slots) ->
+            if S.mem n pool then (pool, slots + 1)
+            else pool, slots)
+          nslots
       in
       let run_seq_command nslots ready n = function
         | Done r ->
@@ -135,15 +156,21 @@ module Make (G : G) = struct
           let running = M.remove n running in
           if not (M.is_empty running) then
             print_status (M.cardinal results) running;
+          let nslots = release_slot nslots n in
           let new_ready =
             S.filter
               (fun n ->
-                 List.for_all (fun n -> M.mem n results) (G.pred g n) &&
+                 not (M.mem n running) &&
                  not (M.mem n results) &&
-                 S.is_empty (mutual_exclusion_set n %% map_keys running))
-              (S.of_list (G.succ g n) ++ mutual_exclusion_set n)
+                 List.for_all (fun n -> M.mem n results) (G.pred g n) &&
+                 List.for_all (fun (_, slots) -> slots > 0)
+                   (get_slots nslots n))
+              (List.fold_left (fun acc (pool, slots) ->
+                   if slots = 1 then acc ++ pool else acc)
+                  (S.of_list (G.succ g n))
+                  (get_slots nslots n))
           in
-          loop (nslots + 1) results running (ready ++ new_ready)
+          loop nslots results running (ready ++ new_ready)
         | Run (cmd, cont) ->
           log "Next task in job %a: %a" (slog (string_of_int @* V.hash)) n
             (slog OpamProcess.string_of_command) cmd;
@@ -198,17 +225,36 @@ module Make (G : G) = struct
 
       if M.is_empty running && S.is_empty ready then
         results
-      else if nslots > 0 && not (S.is_empty ready) then
+      else if
+        not (S.is_empty ready) &&
+        List.exists (fun (_, slots) -> slots > 0) nslots
+      then
         (* Start a new process *)
         let n = S.choose ready in
-        log "Starting job %a (worker %d/%d): %a"
-          (slog (string_of_int @* V.hash)) n (jobs - nslots + 1) jobs
+        log "Starting job %a (worker%s): %a"
+          (slog (string_of_int @* V.hash)) n
+          (OpamStd.List.concat_map " " (fun (pool, jobs) ->
+               let nslots =
+                 OpamStd.Option.of_Not_found (List.assoc pool) nslots
+               in
+               Printf.sprintf "%s/%d"
+                 (match nslots with None -> "-"
+                                  | Some n -> string_of_int (jobs - n))
+                 jobs)
+              pools)
           (slog V.to_string) n;
         let pred = G.pred g n in
         let pred = List.map (fun n -> n, M.find n results) pred in
         let cmd = try command ~pred n with e -> fail n e in
-        let ready = S.remove n ready -- mutual_exclusion_set n in
-        run_seq_command (nslots - 1) ready n cmd
+        let nslots = take_slot nslots n in
+        let ready =
+          List.fold_left
+            (fun acc (pool, slots) ->
+               if slots = 0 then acc -- pool else acc)
+            (S.remove n ready)
+            (get_slots nslots n)
+        in
+        run_seq_command nslots ready n cmd
       else
       (* Wait for a process to end *)
       let processes =
@@ -237,15 +283,15 @@ module Make (G : G) = struct
         (fun n roots -> if G.in_degree g n = 0 then S.add n roots else roots)
         g S.empty
     in
-    let r = loop jobs M.empty M.empty roots in
+    let r = loop pools M.empty M.empty roots in
     OpamConsole.clear_status ();
     r
 
-  let iter ~jobs ~command ?dry_run ?mutually_exclusive g =
-    ignore (aux_map ~jobs ~command ?dry_run ?mutually_exclusive g)
+  let iter ~jobs ~command ?dry_run ?pools g =
+    ignore (aux_map ~jobs ~command ?dry_run ?pools g)
 
-  let map ~jobs ~command ?dry_run ?mutually_exclusive g =
-    M.bindings (aux_map ~jobs ~command ?dry_run ?mutually_exclusive g)
+  let map ~jobs ~command ?dry_run ?pools g =
+    M.bindings (aux_map ~jobs ~command ?dry_run ?pools g)
 
   (* Only print the originally raised exception, which should come first. Ignore
      Aborted exceptions due to other commands termination, and simultaneous

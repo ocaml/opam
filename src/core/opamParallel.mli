@@ -53,13 +53,17 @@ module type SIG = sig
   module G : G
 
   (** Runs the job [command ~pred v] for every node [v] in a graph, in
-      topological order, using [jobs] concurrent processes. [pred] is the
-      associative list of job results on direct predecessors of [v]. *)
+      topological order using [jobs] concurrent processes. Separate (possibly
+      intersecting) node pools can be specified, with a separate number of
+      allowed processes. The [jobs] maximum applies to the remaining nodes.
+
+      The [pred] argument provided to the [command] function is the associative
+      list of job results on direct predecessors of [v]. *)
   val iter:
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
     ?dry_run:bool ->
-    ?mutually_exclusive:(G.V.t list list) ->
+    ?pools:((G.V.t list * int) list) ->
     G.t ->
     unit
 
@@ -69,7 +73,7 @@ module type SIG = sig
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
     ?dry_run:bool ->
-    ?mutually_exclusive:(G.V.t list list) ->
+    ?pools:((G.V.t list * int) list) ->
     G.t ->
     (G.V.t * 'a) list
 
