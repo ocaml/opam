@@ -14,6 +14,8 @@ val nice_string : string Crowbar.gen
 
 val eq_of_comp : ('a -> 'a -> int) -> ('a -> 'a -> bool)
 
+val pair : 'a Crowbar.gen -> 'b Crowbar.gen -> ('a * 'b) Crowbar.gen
+
 val check_json_roundtrip :
   name:string -> 'a Crowbar.gen ->
   ('a -> 'a -> bool) -> 'a OpamJson.encoder -> 'a OpamJson.decoder -> unit

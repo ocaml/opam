@@ -10,10 +10,14 @@
 
 open! Crowbar
 
+(* this 'pair' combinator exists in crowbar master but not 0.1 *)
+let pair gena genb =
+  map [gena; genb] (fun a b -> (a,b))
+
 let nice_int = int8
 let nice_uint = uint8
 let nice_string =
-  let letter = map [range ~min:0 25] (fun n -> char_of_int (int_of_char 'a' + n)) in
+  let letter = map [range 25] (fun n -> char_of_int (int_of_char 'a' + n)) in
   with_printer Format.pp_print_string @@
   map [letter; letter; letter; letter; letter] @@
   fun a b c d e -> String.of_seq (List.to_seq [a;b;c;d;e])
