@@ -54,7 +54,7 @@ let install_packages_commands ~interactive packages =
   | "bsd" ->
     if distribution = "freebsd" then ["pkg"::"install"::packages]
     else ["pkg_add"::packages]
-  | "archlinux" ->
+  | "archlinux" | "arch" ->
     ["pacman"::"-S"::packages]
   | "gentoo" ->
     ["emerge"::packages]
@@ -73,7 +73,7 @@ let update_command =
     ["brew"; "update"]
   | "rhel" | "centos" | "fedora" | "mageia" | "oraclelinux" ->
     ["yum"; "-y"; "update"]
-  | "archlinux" ->
+  | "archlinux" | "arch" ->
     ["pacman"; "-S"]
   | "gentoo" ->
     ["emerge"; "-u"]
@@ -178,8 +178,8 @@ let get_installed_packages packages =
             | None -> acc)
          | _ -> acc)
       installed lines
-  | "amzn" | "centos" | "fedora" | "mageia" | "archlinux" | "gentoo" | "alpine"
-  | "rhel" | "oraclelinux" ->
+  | "amzn" | "centos" | "fedora" | "mageia" | "archlinux" | "arch" | "gentoo"
+  | "alpine" | "rhel" | "oraclelinux" ->
     let cmd, args =
       match distribution with
       | "amzn" | "centos" | "fedora" | "mageia" | "rhel" | "oraclelinux" ->
