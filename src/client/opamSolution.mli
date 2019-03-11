@@ -36,7 +36,7 @@ val apply:
   ?add_roots:OpamPackage.Name.Set.t ->
   ?assume_built:bool ->
   OpamSolver.solution ->
-  rw switch_state * solver_result
+  rw switch_state * solution_result
 
 (** Call the solver to get a solution and then call [apply]. If [ask] is not
     specified, prompts the user whenever the solution isn't obvious from the
@@ -52,12 +52,15 @@ val resolve_and_apply:
   ?add_roots:OpamPackage.Name.Set.t ->
   ?assume_built:bool ->
   atom request ->
-  rw switch_state * solver_result
+  rw switch_state * (solution_result, OpamCudf.conflict) result
 
 (** Raise an error if no solution is found or in case of error. Unless [quiet]
     is set, print a message indicating that nothing was done on an empty
     solution. *)
-val check_solution: ?quiet:bool -> 'a switch_state -> solver_result -> unit
+val check_solution:
+  ?quiet:bool -> 'a switch_state ->
+  (solution_result, 'conflict) result ->
+  unit
 
 (** {2 Atoms} *)
 

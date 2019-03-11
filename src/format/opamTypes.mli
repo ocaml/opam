@@ -251,14 +251,17 @@ type 'a cause =
   | Unknown
 
 (** Solver result *)
-type solver_result =
+type actions_result = {
+  actions_successes : package action list;
+  actions_errors : (package action * exn) list;
+  actions_aborted : package action list;
+}
+
+type solution_result =
   | Nothing_to_do
   | OK of package action list (** List of successful actions *)
   | Aborted
-  | No_solution
-  | Partial_error of package action list * package action list * package action list
-  (** List of successful actions, list of actions with errors,
-      list of remaining undone actions *)
+  | Partial_error of actions_result
 
 (** Solver result *)
 type ('a, 'b) result =

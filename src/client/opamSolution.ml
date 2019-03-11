@@ -74,22 +74,22 @@ let print_depexts_helper st actions =
   )
 
 let check_solution ?(quiet=false) st = function
-  | No_solution ->
+  | Conflicts _ ->
     OpamConsole.msg "No solution found, exiting\n";
     OpamStd.Sys.exit_because `No_solution
-  | Partial_error (success, failed, _remaining) ->
-    List.iter (post_message st) success;
-    List.iter (post_message ~failed:true st) failed;
-    print_depexts_helper st failed;
+  | Success (Partial_error { actions_successes; actions_errors; _ }) ->
+    List.iter (post_message st) actions_successes;
+    List.iter (fun (a, _) -> post_message ~failed:true st a) actions_errors;
+    print_depexts_helper st (List.map fst actions_errors);
     OpamEnv.check_and_print_env_warning st;
     OpamStd.Sys.exit_because `Package_operation_error
-  | OK actions ->
+  | Success (OK actions) ->
     List.iter (post_message st) actions;
     OpamEnv.check_and_print_env_warning st
-  | Nothing_to_do ->
+  | Success Nothing_to_do ->
     if not quiet then OpamConsole.msg "Nothing to do.\n";
     OpamEnv.check_and_print_env_warning st
-  | Aborted     ->
+  | Success Aborted ->
     if not OpamClientConfig.(!r.show) then
       OpamStd.Sys.exit_because `Aborted
 
@@ -586,15 +586,25 @@ let parallel_apply t _action ~requested ?add_roots ~assume_built action_graph =
             | a, `Error (`Aborted _) -> success, failure, a::aborted
           ) ([], [], []) results
       in
-      if failure = [] && aborted = [] then `Successful ()
+      let actions_result = {
+        actions_successes = success;
+        actions_errors = failure;
+        actions_aborted = aborted;
+      } in
+      if failure = [] && aborted = [] then `Successful success
       else (
         List.iter display_error failure;
-        `Error (Partial_error (success, List.map fst failure, aborted))
+        `Error (Partial_error actions_result)
       )
     with
     | PackageActionGraph.Parallel.Errors (success, errors, remaining) ->
+      let actions_result = {
+        actions_successes = success;
+        actions_errors = errors;
+        actions_aborted = remaining;
+      } in
       List.iter display_error errors;
-      `Error (Partial_error (success, List.map fst errors, remaining))
+      `Error (Partial_error actions_result)
     | e -> `Exception e
   in
   let t = !t_ref in
@@ -618,10 +628,10 @@ let parallel_apply t _action ~requested ?add_roots ~assume_built action_graph =
       graph
   in
   match action_results with
-  | `Successful () ->
+  | `Successful successful ->
     cleanup_artefacts action_graph;
     OpamConsole.msg "Done.\n";
-    t, OK (PackageActionGraph.fold_vertex (fun a b -> a::b) action_graph [])
+    t, OK successful
   | `Exception (OpamStd.Sys.Exit _ | Sys.Break as e) ->
     OpamConsole.msg "Aborting.\n";
     raise e
@@ -642,7 +652,10 @@ let parallel_apply t _action ~requested ?add_roots ~assume_built action_graph =
   | `Error err ->
     match err with
     | Aborted -> t, err
-    | Partial_error (successful, failed, remaining) ->
+    | Partial_error solution_res ->
+      let successful = solution_res.actions_successes in
+      let failed = List.map fst solution_res.actions_errors in
+      let remaining = solution_res.actions_aborted in
       (* Cleanup build/install actions when one of them failed, it's verbose and
          doesn't add information *)
       let successful =
@@ -920,5 +933,7 @@ let resolve_and_apply ?ask t action ~orphans ?reinstall ~requested ?add_roots
     OpamConsole.msg "%s"
       (OpamCudf.string_of_conflict t.packages
          (OpamSwitchState.unavailable_reason t) cs);
-    t, No_solution
-  | Success solution -> apply ?ask t action ~requested ?add_roots ~assume_built solution
+    t, Conflicts cs
+  | Success solution ->
+    let t, res = apply ?ask t action ~requested ?add_roots ~assume_built solution in
+    t, Success res

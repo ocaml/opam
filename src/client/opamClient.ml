@@ -431,7 +431,7 @@ let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
 
         )
     );
-    OpamSolution.check_solution t result;
+    OpamSolution.check_solution t (Success result);
     t
 
 let upgrade t ?check ~all names =
@@ -496,12 +496,14 @@ let fixup t =
       OpamConsole.errmsg "%s"
         (OpamCudf.string_of_conflict t.packages
            (OpamSwitchState.unavailable_reason t) cs);
-      t, No_solution
+      t, Conflicts cs
     | Success solution ->
       let _, req_rm, _ = orphans ~transitive:false t in
-      OpamSolution.apply ~ask:true t Upgrade
-        ~requested:(OpamPackage.names_of_packages (requested ++ req_rm))
-        solution
+      let t, res =
+        OpamSolution.apply ~ask:true t Upgrade
+          ~requested:(OpamPackage.names_of_packages (requested ++ req_rm))
+          solution in
+      t, Success res
   in
   OpamSolution.check_solution t result;
   t
@@ -1081,7 +1083,7 @@ let install_t t ?ask atoms add_to_roots ~deps_only ~assume_built =
       OpamConsole.msg "%s"
         (OpamCudf.string_of_conflict t.packages
            (OpamSwitchState.unavailable_reason t) cs);
-      t, No_solution
+      t, Conflicts cs
     | Success solution ->
       let solution =
         if deps_only then
@@ -1095,8 +1097,10 @@ let install_t t ?ask atoms add_to_roots ~deps_only ~assume_built =
             | false -> OpamPackage.Name.Set.empty)
           add_to_roots
       in
-      OpamSolution.apply ?ask t Install ~requested:names ?add_roots
-        ~assume_built solution
+      let t, res =
+        OpamSolution.apply ?ask t Install ~requested:names ?add_roots
+          ~assume_built solution in
+      t, Success res
   in
   OpamSolution.check_solution t solution;
   t
