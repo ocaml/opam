@@ -292,7 +292,7 @@ let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
          then `False
          else `Success)
     else
-    let t, result = OpamSolution.apply ?ask t Upgrade ~requested solution in
+    let t, result = OpamSolution.apply ?ask t ~requested solution in
     if result = Nothing_to_do then (
       let to_check =
         if OpamPackage.Name.Set.is_empty requested then t.installed
@@ -500,7 +500,7 @@ let fixup t =
     | Success solution ->
       let _, req_rm, _ = orphans ~transitive:false t in
       let t, res =
-        OpamSolution.apply ~ask:true t Upgrade
+        OpamSolution.apply ~ask:true t
           ~requested:(OpamPackage.names_of_packages (requested ++ req_rm))
           solution in
       t, Success res
@@ -1098,7 +1098,7 @@ let install_t t ?ask atoms add_to_roots ~deps_only ~assume_built =
           add_to_roots
       in
       let t, res =
-        OpamSolution.apply ?ask t Install ~requested:names ?add_roots
+        OpamSolution.apply ?ask t ~requested:names ?add_roots
           ~assume_built solution in
       t, Success res
   in

@@ -31,7 +31,6 @@ val resolve:
 val apply:
   ?ask:bool ->
   rw switch_state ->
-  user_action ->
   requested:OpamPackage.Name.Set.t ->
   ?add_roots:OpamPackage.Name.Set.t ->
   ?assume_built:bool ->

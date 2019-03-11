@@ -260,7 +260,7 @@ end
 
 (* Process the atomic actions in a graph in parallel, respecting graph order,
    and report to user. Takes a graph of atomic actions *)
-let parallel_apply t _action ~requested ?add_roots ~assume_built action_graph =
+let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
   log "parallel_apply";
 
   let remove_action_packages =
@@ -797,7 +797,7 @@ let run_hook_job t name ?(local=[]) w =
     Done true
 
 (* Apply a solution *)
-let apply ?ask t action ~requested ?add_roots ?(assume_built=false) solution =
+let apply ?ask t ~requested ?add_roots ?(assume_built=false) solution =
   log "apply";
   if OpamSolver.solution_is_empty solution then
     (* The current state satisfies the request contraints *)
@@ -885,7 +885,7 @@ let apply ?ask t action ~requested ?add_roots ?(assume_built=false) solution =
         OpamStd.Sys.exit_because `Configuration_error;
       let t0 = t in
       let t, r =
-        parallel_apply t action ~requested ?add_roots ~assume_built action_graph
+        parallel_apply t ~requested ?add_roots ~assume_built action_graph
       in
       let success = match r with | OK _ -> true | _ -> false in
       let post_session =
@@ -935,5 +935,5 @@ let resolve_and_apply ?ask t action ~orphans ?reinstall ~requested ?add_roots
          (OpamSwitchState.unavailable_reason t) cs);
     t, Conflicts cs
   | Success solution ->
-    let t, res = apply ?ask t action ~requested ?add_roots ~assume_built solution in
+    let t, res = apply ?ask t ~requested ?add_roots ~assume_built solution in
     t, Success res
