@@ -42,7 +42,7 @@ let upgrade_depexts_to_2_0_beta5 filename depexts =
       | "nixpkgs"     -> eq distro "nixos"
       | "arch"        -> eq distro "archlinux"
       | "homebrew" | "macports" | "debian" | "ubuntu" | "centos" | "fedora"
-      | "rhel" | "opensuse" | "oraclelinux" | "mageia" | "alpine"
+      | "rhel" | "opensuse" | "oraclelinux" | "ol" | "mageia" | "alpine"
       | "archlinux" | "gentoo" | "nixos" as d -> eq distro d
 
       | "bsd"         -> eq os_family "bsd"

@@ -38,7 +38,7 @@ let install_packages_commands ~interactive packages =
     ["port"::"install"::packages]
   | "debian" ->
     ["apt-get"::"install"::yes ["-qq"; "-yy"] packages]
-  | "rhel" | "centos" | "fedora" | "mageia" | "oraclelinux" ->
+  | "rhel" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol" ->
     (* todo: check if they all declare "rhel" as primary family *)
     (* When opem-packages specify the epel-release package, usually it
        means that other dependencies require the EPEL repository to be
@@ -55,7 +55,7 @@ let install_packages_commands ~interactive packages =
     if distribution = "freebsd" then ["pkg"::"install"::packages]
     else ["pkg_add"::packages]
   | "archlinux" | "arch" ->
-    ["pacman"::"-S"::packages]
+    ["pacman"::"-S"::"--noconfirm"::packages]
   | "gentoo" ->
     ["emerge"::packages]
   | "alpine" ->
@@ -71,12 +71,12 @@ let update_command =
     ["apt-get";"update"]
   | "homebrew" ->
     ["brew"; "update"]
-  | "rhel" | "centos" | "fedora" | "mageia" | "oraclelinux" ->
-    ["yum"; "-y"; "update"]
+  | "rhel" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol" ->
+    ["yum"; "makecache"]
   | "archlinux" | "arch" ->
-    ["pacman"; "-S"]
+    ["pacman"; "-Sy"]
   | "gentoo" ->
-    ["emerge"; "-u"]
+    ["emerge"; "--sync"]
   | "alpine" ->
     ["apk"; "update"]
   | "suse" | "opensuse" ->
@@ -179,19 +179,19 @@ let get_installed_packages packages =
          | _ -> acc)
       installed lines
   | "amzn" | "centos" | "fedora" | "mageia" | "archlinux" | "arch" | "gentoo"
-  | "alpine" | "rhel" | "oraclelinux" ->
-    let cmd, args =
+  | "alpine" | "rhel" | "oraclelinux" | "ol" ->
+    let cmd, get_args =
       match distribution with
-      | "amzn" | "centos" | "fedora" | "mageia" | "rhel" | "oraclelinux" ->
-        "rpm", ["-qi"]
-      | "archlinux" | "arch" -> "pacman", ["-Q"]
-      | "gentoo" -> "equery", ["list"]
-      | "alpine" -> "apk", ["info"; "-e"]
+      | "amzn" | "centos" | "fedora" | "mageia" | "rhel" | "oraclelinux" | "ol" ->
+        "rpm", fun pkg_name -> ["-qi"; pkg_name]
+      | "archlinux" | "arch" -> "pacman", fun pkg_name -> ["-Q"; pkg_name]
+      | "gentoo" -> "sh", fun pkg_name -> ["-c"; "ls -d /var/db/pkg/*/* | cut -f5- -d/ | grep -q '^"^pkg_name^"-[0-9].*$'"]
+      | "alpine" -> "apk", fun pkg_name -> ["info"; "-e"; pkg_name]
       | _ -> fatal_error "Distribution %s is not supported" distribution
     in
     SSet.filter
       (fun pkg_name ->
-         let args = args @ [pkg_name] in
+         let args = get_args pkg_name in
          run_command cmd args @@ fun r ->
          match r.r_code with
          | 0 -> true (* installed *)
