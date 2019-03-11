@@ -365,9 +365,25 @@ let parallel_apply t _action ~requested ?add_roots ~assume_built action_graph =
         (OpamPackage.Set.empty, OpamPackage.Set.empty, PackageAction.Set.empty)
         pred
     in
-    if not (PackageAction.Set.is_empty failed) then
-      Done (`Error (`Aborted failed)) (* prerequisite failed *)
-    else
+    (* Check whether prerequisites failed *)
+    let failed_fetch, failed_not_fetch =
+      PackageAction.Set.fold (fun a (failed_fetch, failed_not_fetch) ->
+        match a with
+        | `Fetch pkg -> (OpamPackage.Set.add pkg failed_fetch, failed_not_fetch)
+        | _ -> (failed_fetch, PackageAction.Set.add a failed_not_fetch)
+      ) failed (OpamPackage.Set.empty, PackageAction.Set.empty) in
+    let action_is_remove = match action with `Remove _ -> true | _ -> false in
+    if not (PackageAction.Set.is_empty failed_not_fetch) then
+      (* fatal error *)
+      Done (`Error (`Aborted failed))
+    else begin
+    if action_is_remove && not (OpamPackage.Set.is_empty failed_fetch) then
+      (* Print a warning, but still do the remove *)
+      OpamConsole.warning
+        "The sources of the following couldn't be obtained, they may be \
+         uncleanly installed:\n%s"
+        (OpamStd.Format.itemize OpamPackage.to_string
+           (OpamPackage.Set.elements failed_fetch));
     let store_time =
       let t0 = Unix.gettimeofday () in
       fun () -> Hashtbl.add timings action (Unix.gettimeofday () -. t0)
@@ -481,6 +497,7 @@ let parallel_apply t _action ~requested ?add_roots ~assume_built action_graph =
       store_time ();
       `Successful (installed, OpamPackage.Set.add nv removed)
     | _ -> assert false
+  end
   in
 
   let action_results =
