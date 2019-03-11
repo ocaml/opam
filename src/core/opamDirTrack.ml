@@ -31,12 +31,17 @@ type change =
 
 type t = change SM.t
 
-let string_of_change = function
-  | Added _ -> "addition"
+let string_of_change ?(full=false) =
+  let str s d =
+    if not full then s else
+      Printf.sprintf "%s %s" s (string_of_digest d)
+  in
+  function
+  | Added d -> str "addition" d
   | Removed -> "removal"
-  | Contents_changed _ -> "modifications"
-  | Perm_changed _ -> "permission change"
-  | Kind_changed _ -> "kind change"
+  | Contents_changed d -> str "modifications" d
+  | Perm_changed d -> str "permission change" d
+  | Kind_changed d -> str "kind change" d
 
 let to_string t =
   OpamStd.Format.itemize (fun (f, change) ->

@@ -31,6 +31,9 @@ val to_string: t -> string
 val digest_of_string: string -> digest
 val string_of_digest: digest -> string
 
+(** Return the [change] action, with digest if [full] is set to true *)
+val string_of_change: ?full:bool -> change -> string
+
 (** Wraps a job to track the changes that happened under [dirname] during its
     execution (changes done by the application of the job function to [()] are
     tracked too, for consistency with jobs without commands) *)
