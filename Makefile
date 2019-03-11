@@ -158,6 +158,19 @@ tests: $(DUNE_DEP)
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam.install src/tools/opam_check.exe
 	$(DUNE) runtest --force --no-buffer --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/ tests/
 
+.PHONY: crowbar
+# only run the quickcheck-style tests, not very covering
+crowbar: $(DUNE_DEP)
+	dune exec src/crowbar/test.exe
+
+.PHONY: crowbar-afl
+# runs the real AFL deal, but needs to be done in a +afl switch
+crowbar-afl: $(DUNE_DEP)
+	dune build src/crowbar/test.exe
+	mkdir -p /tmp/opam-crowbar-input -p /tmp/opam-crowbar-output
+	echo foo > /tmp/opam-crowbar-input/foo
+	afl-fuzz -i /tmp/opam-crowbar-input -o /tmp/opam-crowbar-output dune exec src/crowbar/test.exe @@
+
 # tests-local, tests-git
 tests-%:
 	$(MAKE) -C tests $*

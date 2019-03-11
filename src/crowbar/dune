@@ -1,7 +1,5 @@
 (executable
   (name        test)
-  (public_name opam-crowbar)
-  (package     opam-crowbar)
   (modules     opamCrowbar
                opamFilename_crowbar
                opamHash_crowbar
