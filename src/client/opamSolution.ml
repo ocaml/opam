@@ -381,7 +381,7 @@ let parallel_apply t _action ~requested ?add_roots ~assume_built action_graph =
       (* Print a warning, but still do the remove *)
       OpamConsole.warning
         "The sources of the following couldn't be obtained, they may be \
-         uncleanly installed:\n%s"
+         uncleanly removed:\n%s"
         (OpamStd.Format.itemize OpamPackage.to_string
            (OpamPackage.Set.elements failed_fetch));
     let store_time =
