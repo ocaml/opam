@@ -402,8 +402,7 @@ let get_obsolete univ opams =
     aggregates PkgSet.empty
 
 let check ~quiet ~installability ~cycles ~obsolete ~ignore_test repo_root =
-  let repo = OpamRepositoryBackend.local repo_root in
-  let pkg_prefixes = OpamRepository.packages_with_prefixes repo in
+  let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
   let opams =
     OpamPackage.Map.fold (fun nv prefix acc ->
         let opam_file = OpamRepositoryPath.opam repo_root prefix nv in

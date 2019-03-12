@@ -78,7 +78,11 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
   let filename = match filename with
     | Some f -> OpamFile.to_string f
     | None -> match OpamFile.OPAM.metadata_dir opam with
-      | Some d -> OpamFilename.to_string (d // "opam")
+      | Some (Some r, rel_d) ->
+        Printf.sprintf "<%s>/%s/opam" (OpamRepositoryName.to_string r) rel_d
+      | Some (None, abs_d) ->
+        let d = OpamFilename.Dir.of_string abs_d in
+        OpamFilename.to_string (d // "opam")
       | None -> "opam file"
   in
   let available =

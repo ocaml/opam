@@ -59,8 +59,16 @@ val warns_to_string: (int * [`Warning|`Error] * string) list -> string
 
 (** Read the opam metadata from a given directory (opam file, with possible
     overrides from url and descr files). Also includes the names and hashes
-    of files below files/ *)
+    of files below files/
+    Warning: use [read_repo_opam] instead for correctly reading files from
+    repositories!*)
 val read_opam: dirname -> OpamFile.OPAM.t option
+
+(** Like [read_opam], but additionally fills in the [metadata_dir] info
+    correctly for the given repository. *)
+val read_repo_opam:
+  repo_name:repository_name -> repo_root:dirname ->
+  dirname -> OpamFile.OPAM.t option
 
 (** Adds data from 'url' and 'descr' files found in the specified dir or the
     opam file's metadata dir, if not already present in the opam file. if

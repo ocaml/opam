@@ -20,7 +20,7 @@ open OpamStateTypes
     globally, unless it is external *)
 val install:
   rw global_state ->
-  ?rt:'a repos_state ->
+  rt:'a repos_state ->
   ?synopsis:string ->
   ?repos:repository_name list ->
   update_config:bool ->
@@ -49,7 +49,7 @@ val export: ?full:bool -> OpamFile.SwitchExport.t OpamFile.t option -> unit
 val remove: rw global_state -> ?confirm:bool -> switch -> rw global_state
 
 (** Changes the currently active switch *)
-val switch: 'a lock -> rw global_state -> switch -> 'a switch_state
+val switch: 'a lock -> rw global_state -> switch -> unit
 
 (** Reinstall the given compiler switch. *)
 val reinstall: rw switch_state -> rw switch_state

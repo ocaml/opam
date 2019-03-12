@@ -191,9 +191,11 @@ let files_in_source d =
            (OpamFilename.to_string f);
          None)
 
-let orig_opam_file name opam =
+let orig_opam_file st name opam =
   let open OpamStd.Option.Op in
-  OpamFile.OPAM.metadata_dir opam >>= fun dir ->
+  OpamFile.OPAM.get_metadata_dir
+    ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+    opam >>= fun dir ->
   OpamStd.List.find_opt OpamFilename.exists [
     dir // (OpamPackage.Name.to_string name ^ ".opam");
     dir // "opam"

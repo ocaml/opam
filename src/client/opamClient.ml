@@ -849,7 +849,7 @@ let init
         if failed <> [] then
           OpamConsole.error_and_exit `Sync_error
             "Initial download of repository failed";
-        gt, OpamRepositoryState.unlock rt,
+        gt, OpamRepositoryState.unlock ~cleanup:false rt,
         (if dontswitch then OpamFormula.Empty
          else OpamFile.InitConfig.default_compiler init_config)
       with e ->

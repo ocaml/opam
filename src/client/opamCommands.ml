@@ -364,11 +364,7 @@ let init =
     let repo =
       OpamStd.Option.map (fun url ->
           let repo_url = OpamUrl.parse ?backend:repo_kind url in
-          let repo_root =
-            OpamRepositoryPath.create (OpamStateConfig.(!r.root_dir))
-              repo_name
-          in
-          { repo_root; repo_name; repo_url; repo_trust = None })
+          { repo_name; repo_url; repo_trust = None })
         repo_url
     in
     let gt, rt, default_compiler =
@@ -377,6 +373,8 @@ let init =
         ?repo ~bypass_checks ~dot_profile
         ?update_config ?env_hook ?completion shell
     in
+    OpamStd.Exn.finally (fun () -> ignore (OpamRepositoryState.unlock rt))
+    @@ fun () ->
     if no_compiler then () else
     match compiler with
     | Some comp when String.length comp <> 0->
@@ -592,8 +590,8 @@ let list ?(force_search=false) () =
       ]
     in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
     let st =
-      let rt = OpamRepositoryState.load `Lock_none gt in
       if no_switch then OpamSwitchState.load_virtual ?repos_list:repos gt rt
       else OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ())
     in
@@ -764,7 +762,8 @@ let show =
         else fields, show_empty || fields <> []
       in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      let st = OpamListCommand.get_switch_state gt in
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      let st = OpamListCommand.get_switch_state gt rt in
       let st, atoms =
         OpamAuxCommands.simulate_autopin ~quiet:no_lint ~for_view:true st
           atom_locs
@@ -999,8 +998,9 @@ let config =
                       if OpamUrl.root repo.repo_url =
                          OpamUrl.root OpamInitDefaults.repository_url
                       then
-                        OpamFile.Repo.safe_read
-                          (OpamRepositoryPath.repo repo.repo_root) |>
+                        OpamRepositoryName.Map.find
+                          repo.repo_name
+                          state.switch_repos.repos_definitions |>
                         OpamFile.Repo.stamp
                       else dft
                     in
@@ -1497,6 +1497,8 @@ let update =
         ~all
         names
     in
+    OpamStd.Exn.finally (fun () -> ignore (OpamRepositoryState.unlock rt))
+    @@ fun () ->
     if upgrade then
       OpamSwitchState.with_ `Lock_write gt ~rt @@ fun st ->
       OpamConsole.msg "\n";
@@ -1868,8 +1870,9 @@ let repository =
 (* From a list of strings (either "repo_name" or "repo_name=URL"), configure the
    repos with URLs if possible, and return the updated repos_state and selection of
    repositories *)
-let get_repos_rt gt repos =
+let with_repos_rt gt repos f =
   OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+  let repos, rt =
   match repos with
   | None -> None, rt
   | Some repos ->
@@ -1914,6 +1917,8 @@ let get_repos_rt gt repos =
           (OpamStd.List.concat_map ", " OpamRepositoryName.to_string failed)
       else
         Some (List.map fst repos), rt
+  in
+  f (repos, rt)
 
 let switch_doc = "Manage multiple installation prefixes."
 let switch =
@@ -2095,7 +2100,7 @@ let switch =
       `Ok ()
     | Some `list_available, pattlist ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      let repos, rt = get_repos_rt gt repos in
+      with_repos_rt gt repos @@ fun (repos, rt) ->
       let compilers = OpamSwitchCommand.get_compiler_packages ?repos rt in
       let st = OpamSwitchState.load_virtual ?repos_list:repos gt rt in
       OpamConsole.msg "# Listing available compilers from repositories: %s\n"
@@ -2135,7 +2140,7 @@ let switch =
       `Ok ()
     | Some `install, switch_arg::params ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      let repos, rt = get_repos_rt gt repos in
+      with_repos_rt gt repos @@ fun (repos, rt) ->
       let switch = OpamSwitch.of_string switch_arg in
       let packages, local_compiler =
         compiler_packages rt ?repos switch (param_compiler params)
@@ -2171,20 +2176,22 @@ let switch =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       let switch = OpamStateConfig.get_switch () in
       let is_new_switch = not (OpamGlobalState.switch_exists gt switch) in
-      let gt, rt =
+      let with_gt_rt f =
         if is_new_switch then
-          let repos, rt = get_repos_rt gt repos in
+          with_repos_rt gt repos @@ fun (repos, rt) ->
           let (), gt =
             OpamGlobalState.with_write_lock gt @@ fun gt ->
             (), OpamSwitchAction.create_empty_switch gt ?repos switch
           in
-          gt, rt
+          f (gt, rt)
         else
           (if repos <> None then
              OpamConsole.warning
                "Switch exists, '--repositories' argument ignored";
-           gt, OpamRepositoryState.load `Lock_none gt)
+           OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+           f (gt, rt))
       in
+      with_gt_rt @@ fun (gt, rt) ->
       OpamSwitchState.with_ `Lock_write gt ~rt ~switch @@ fun st ->
       let _st =
         try
@@ -2234,7 +2241,7 @@ let switch =
     | Some `default switch, [] ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       let switch_name = OpamSwitch.of_string switch in
-      OpamSwitchCommand.switch `Lock_none gt switch_name |> ignore;
+      OpamSwitchCommand.switch `Lock_none gt switch_name;
       `Ok ()
     | Some `set_compiler, packages ->
       (try
@@ -2832,7 +2839,7 @@ let lint =
              | name, None -> OpamSwitchState.get_package st name
            in
            let opam = OpamSwitchState.opam st nv in
-           match OpamPinned.orig_opam_file (OpamPackage.name nv) opam with
+           match OpamPinned.orig_opam_file st (OpamPackage.name nv) opam with
            | None -> raise Not_found
            | some -> [some]
          with Not_found ->
@@ -2975,6 +2982,13 @@ let clean =
       try OpamFilename.rmdir d
       with OpamSystem.Internal_error msg -> OpamConsole.warning "Error ignored: %s" msg
     in
+    let rm f =
+      if dry_run then
+        OpamConsole.msg "rm -f \"%s\"\n"
+          (OpamFilename.to_string f)
+      else
+        OpamFilename.remove f
+    in
     let switches =
       if all_switches then OpamGlobalState.switches gt
       else if switch then match OpamStateConfig.get_switch_opt () with
@@ -3041,7 +3055,8 @@ let clean =
        OpamRepositoryName.Set.iter (fun r ->
            OpamConsole.msg "Removing repository %s\n"
              (OpamRepositoryName.to_string r);
-           rmdir (OpamRepositoryPath.create root r))
+           rmdir (OpamRepositoryPath.root root r);
+           rm (OpamRepositoryPath.tar root r))
          unused_repos;
        let repos_config =
          OpamRepositoryName.Map.filter

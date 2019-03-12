@@ -307,7 +307,9 @@ let prepare_package_source st nv dir =
               (Printf.sprintf "Bad hash for %s" (OpamFilename.to_string src))
           else
             OpamFilename.copy ~src ~dst:(OpamFilename.create dir base))
-        (OpamFile.OPAM.get_extra_files opam);
+        (OpamFile.OPAM.get_extra_files
+           ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+           opam);
       None
     with e -> Some e
   in

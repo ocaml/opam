@@ -18,11 +18,10 @@ open OpamFilename.Op
 let log fmt = OpamConsole.log "UPDATE" fmt
 let slog = OpamConsole.slog
 
-let eval_redirect gt repo =
+let eval_redirect gt repo repo_root =
   if repo.repo_url.OpamUrl.backend <> `http then None else
   let redirect =
-    repo.repo_root
-    |> OpamRepositoryPath.repo
+    OpamRepositoryPath.repo repo_root
     |> OpamFile.Repo.safe_read
     |> OpamFile.Repo.redirect
   in
@@ -42,9 +41,11 @@ let eval_redirect gt repo =
     if redirect_url = repo.repo_url then None
     else Some (redirect_url, f)
 
-let repository gt repo =
+let repository rt repo =
   let max_loop = 10 in
+  let gt = rt.repos_global in
   if repo.repo_url = OpamUrl.empty then Done (fun rt -> rt) else
+  let repo_root = OpamRepositoryState.get_repo_root rt repo in
   (* Recursively traverse redirection links, but stop after 10 steps or if
      we cycle back to the initial repo. *)
   let rec job r n =
@@ -59,15 +60,15 @@ let repository gt repo =
         OpamUrl.(string_of_backend repo.repo_url.backend)
     in
     OpamProcess.Job.with_text text @@
-    OpamRepository.update r @@+ fun () ->
+    OpamRepository.update r repo_root @@+ fun () ->
     if n <> max_loop && r = repo then
       (OpamConsole.warning "%s: Cyclic redirections, stopping."
          (OpamRepositoryName.to_string repo.repo_name);
        Done r)
-    else match eval_redirect gt r with
+    else match eval_redirect gt r repo_root with
       | None -> Done r
       | Some (new_url, f) ->
-        OpamFilename.cleandir repo.repo_root;
+        OpamFilename.cleandir repo_root;
         let reason = match f with
           | None   -> ""
           | Some f -> Printf.sprintf " (%s)" (OpamFilter.to_string f) in
@@ -80,7 +81,7 @@ let repository gt repo =
         job { r with repo_url = new_url } (n-1)
   in
   job repo max_loop @@+ fun repo ->
-  let repo_file_path = OpamRepositoryPath.repo repo.repo_root in
+  let repo_file_path = OpamRepositoryPath.repo repo_root in
   if not (OpamFile.exists repo_file_path) then
     OpamConsole.warning
       "The repository '%s' at %s doesn't have a 'repo' file, and might not be \
@@ -91,7 +92,8 @@ let repository gt repo =
   let repo_file = OpamFile.Repo.with_root_url repo.repo_url repo_file in
   let repo_vers =
     OpamStd.Option.default OpamVersion.current_nopatch @@
-    OpamFile.Repo.opam_version repo_file in
+    OpamFile.Repo.opam_version repo_file
+  in
   if not OpamFormatConfig.(!r.skip_version_checks) &&
      OpamVersion.compare repo_vers OpamVersion.current > 0 then
     Printf.ksprintf failwith
@@ -107,20 +109,36 @@ let repository gt repo =
           (OpamConsole.colorise `bold (OpamUrl.to_string repo.repo_url))
           msg)
     (OpamFile.Repo.announce repo_file);
-  let opams = OpamRepositoryState.load_repo_opams repo in
-  Done (
-    (* Return an update function to make parallel execution possible *)
-    fun rt ->
-      { rt with
-        repositories =
-          OpamRepositoryName.Map.add repo.repo_name repo rt.repositories;
-        repos_definitions =
-          OpamRepositoryName.Map.add repo.repo_name repo_file
-            rt.repos_definitions;
-        repo_opams =
-          OpamRepositoryName.Map.add repo.repo_name opams rt.repo_opams;
-      }
-  )
+  OpamFilename.make_tar_gz_job
+    (OpamRepositoryPath.tar gt.root repo.repo_name)
+    repo_root
+  @@+ function
+  | Some e ->
+    Printf.ksprintf failwith
+      "Failed to regenerate local repository archive: %s"
+      (Printexc.to_string e)
+  | None ->
+    let opams =
+      OpamRepositoryState.load_opams_from_dir repo.repo_name repo_root
+    in
+    let local_dir = OpamRepositoryPath.root gt.root repo.repo_name in
+    if OpamFilename.exists_dir local_dir then
+      (* Mark the obsolete local directory for deletion once we complete: it's
+         no longer needed once we have a tar.gz *)
+      Hashtbl.add rt.repos_tmp repo.repo_name (lazy local_dir);
+    Done (
+      (* Return an update function to make parallel execution possible *)
+      fun rt ->
+        { rt with
+          repositories =
+            OpamRepositoryName.Map.add repo.repo_name repo rt.repositories;
+          repos_definitions =
+            OpamRepositoryName.Map.add repo.repo_name repo_file
+              rt.repos_definitions;
+          repo_opams =
+            OpamRepositoryName.Map.add repo.repo_name opams rt.repo_opams;
+        }
+    )
 
 let repositories rt repos =
   let command repo =
@@ -131,7 +149,7 @@ let repositories rt repos =
            (OpamRepositoryName.to_string repo.repo_name)
            (match ex with Failure s -> s | ex -> Printexc.to_string ex);
          Done ([repo], fun t -> t)) @@
-    fun () -> repository rt.repos_global repo @@|
+    fun () -> repository rt repo @@|
     fun f -> [], f
   in
   let failed, rt_update =
@@ -293,7 +311,9 @@ let pinned_package st ?version ?(working_dir=false) name =
           else
             OpamConsole.warning "Ignoring file %s with invalid hash"
               (OpamFilename.to_string file))
-        (OpamFile.OPAM.get_extra_files opam);
+        (OpamFile.OPAM.get_extra_files
+           ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+           opam);
       OpamFile.OPAM.write opam_file
         (OpamFile.OPAM.with_extra_files_opt None opam);
       opam

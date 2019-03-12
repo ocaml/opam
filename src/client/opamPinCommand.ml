@@ -83,7 +83,11 @@ let get_source_definition ?version st nv url =
 
 let copy_files st opam =
   let name = OpamFile.OPAM.name opam in
-  let files = OpamFile.OPAM.get_extra_files opam in
+  let files =
+    OpamFile.OPAM.get_extra_files
+      ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+      opam
+  in
   if files = [] then
     (match OpamFile.OPAM.extra_files opam with
      | Some [] | None -> ()
@@ -225,7 +229,7 @@ let edit st ?version name =
         | Some o -> OpamFile.OPAM.with_version new_nv.version o
      in
      OpamFile.OPAM.write_with_preserved_format
-       ?format_from:(OpamPinned.orig_opam_file name base_opam)
+       ?format_from:(OpamPinned.orig_opam_file st name base_opam)
        temp_file base_opam);
   match edit_raw name temp_file with
   | None -> st
@@ -516,7 +520,7 @@ and source_pin
     if need_edit then
       (if not (OpamFile.exists temp_file) then
          OpamFile.OPAM.write_with_preserved_format
-           ?format_from:(OpamPinned.orig_opam_file name opam_base)
+           ?format_from:(OpamPinned.orig_opam_file st name opam_base)
            temp_file opam_base;
        OpamStd.Option.Op.(
          edit_raw name temp_file >>|
@@ -555,7 +559,7 @@ and source_pin
     let opam = copy_files st opam in
 
     OpamFile.OPAM.write_with_preserved_format
-      ?format_from:(OpamPinned.orig_opam_file name opam)
+      ?format_from:(OpamPinned.orig_opam_file st name opam)
       (OpamPath.Switch.Overlay.opam st.switch_global.root st.switch nv.name)
       opam;
 

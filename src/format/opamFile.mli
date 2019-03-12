@@ -314,8 +314,10 @@ module OPAM: sig
     descr      : Descr.t option;
 
     (* Related metadata directory (not an actual field of the file)
-       This can be used to locate e.g. the files/ overlays *)
-    metadata_dir: dirname option;
+       This can be used to locate e.g. the files/ overlays.
+       If the repository is specified, the string is a relative path from its
+       root. It should otherwise be an absolute path. *)
+    metadata_dir: (repository_name option * string) option;
 
     (* Names and hashes of the files below files/ *)
     extra_files: (OpamFilename.Base.t * OpamHash.t) list option;
@@ -477,17 +479,25 @@ module OPAM: sig
 
   val get_url: t -> url option
 
-  (** Related metadata directory (not an actual field of the file, linked to the
-      file location).
+  (** Related metadata directory (either repository name + relative path, or
+      absolute path; not an actual field of the file, linked to the file
+      location).
       This can be used to locate e.g. the files/ overlays *)
-  val metadata_dir: t -> dirname option
+  val metadata_dir: t -> (repository_name option * string) option
+
+  (** Gets the resolved metadata dir, given a mapping of repository names to
+      their roots *)
+  val get_metadata_dir:
+    repos_roots:(repository_name -> dirname) -> t -> dirname option
 
   (** Names and hashes of the files below files/ *)
   val extra_files: t -> (OpamFilename.Base.t * OpamHash.t) list option
 
   (** Looks up the extra files, and returns their full paths, relative path to
       the package source, and hash. Doesn't check the hashes. *)
-  val get_extra_files: t -> (filename * basename * OpamHash.t) list
+  val get_extra_files:
+    repos_roots:(repository_name -> dirname) ->
+    t -> (filename * basename * OpamHash.t) list
 
   (** Returns the errors that were found when parsing the file, associated to
       their fields (that were consequently ignored) *)
@@ -597,7 +607,7 @@ module OPAM: sig
   val with_url: URL.t -> t -> t
   val with_url_opt: URL.t option -> t -> t
 
-  val with_metadata_dir: dirname option -> t -> t
+  val with_metadata_dir: (repository_name option * string) option -> t -> t
 
   val with_extra_files: (OpamFilename.Base.t * OpamHash.t) list -> t -> t
   val with_extra_files_opt: (OpamFilename.Base.t * OpamHash.t) list option -> t -> t

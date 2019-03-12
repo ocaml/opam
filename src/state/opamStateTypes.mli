@@ -79,6 +79,10 @@ type +'lock repos_state = {
 
   repo_opams: OpamFile.OPAM.t package_map repository_name_map;
   (** All opam files that can be found in the configured repositories *)
+
+  repos_tmp: (OpamRepositoryName.t, OpamFilename.Dir.t Lazy.t) Hashtbl.t;
+  (** Temporary directories containing the uncompressed contents of the
+      repositories *)
 } constraint 'lock = 'lock lock
 
 (** State of a given switch: options, available and installed packages, etc.*)

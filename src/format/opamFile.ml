@@ -1994,7 +1994,7 @@ module OPAMSyntax = struct
 
     (* Related metadata directory (not an actual field of the file)
        This can be used to locate e.g. the files/ overlays *)
-    metadata_dir: dirname option;
+    metadata_dir: (repository_name option * string) option;
 
     (* Names and hashes of the files below files/ *)
     extra_files: (OpamFilename.Base.t * OpamHash.t) list option;
@@ -2074,8 +2074,12 @@ module OPAMSyntax = struct
   let check t name = function
     | None ->
       let pos =
-        OpamStd.Option.Op.(OpamFilename.Op.(
-            t.metadata_dir >>| fun d -> pos_file (d // "opam")))
+        OpamStd.Option.Op.(>>|) t.metadata_dir @@ function
+        | Some r, rel ->
+          (Printf.sprintf "<%s>/%s/opam" (OpamRepositoryName.to_string r) rel,
+           -1, -1)
+        | None, d ->
+          pos_file OpamFilename.Op.(OpamFilename.Dir.of_string d // "opam")
       in
       Pp.bad_format ?pos "Field '%s:' is required" name
     | Some n -> n
@@ -2647,7 +2651,8 @@ module OPAMSyntax = struct
       (fun ~pos:_ (filename, t) ->
          filename,
          let metadata_dir =
-           if filename <> dummy_file then Some (OpamFilename.dirname filename)
+           if filename <> dummy_file
+           then Some (None, OpamFilename.(Dir.to_string (dirname filename)))
            else None
          in
          let t = { t with metadata_dir } in
@@ -2686,7 +2691,10 @@ module OPAMSyntax = struct
 
   let write_with_preserved_format
       ?format_from ?format_from_string filename t =
-    let s = to_string_with_preserved_format ?format_from ?format_from_string filename t in
+    let s =
+      to_string_with_preserved_format ?format_from ?format_from_string
+        filename t
+    in
     OpamFilename.write filename s
 
   let contents ?(filename=dummy_file) t =
@@ -2807,9 +2815,17 @@ module OPAM = struct
   let equal o1 o2 =
     with_metadata_dir None o1 = with_metadata_dir None o2
 
-  let get_extra_files o =
+  let get_metadata_dir ~repos_roots o =
+      match metadata_dir o with
+      | None -> None
+      | Some (None, abs) ->
+        Some (OpamFilename.Dir.of_string abs)
+      | Some (Some r, rel) ->
+        Some OpamFilename.Op.(repos_roots r / rel)
+
+  let get_extra_files ~repos_roots o =
     OpamStd.Option.Op.(
-      (metadata_dir o >>= fun mdir ->
+      (get_metadata_dir ~repos_roots o >>= fun mdir ->
        let files_dir = OpamFilename.Op.(mdir / "files") in
        extra_files o >>| List.map @@ fun (basename, hash) ->
        OpamFilename.create files_dir basename,
@@ -2827,8 +2843,12 @@ module OPAM = struct
              (OpamPackage.to_string (OpamPackage.create n v))
          | _, _, Some f, _ ->
            Printf.sprintf " at %s" (to_string f)
-         | _, _, _, Some dir ->
-           Printf.sprintf " in %s" (OpamFilename.Dir.to_string dir)
+         | _, _, _, Some (None, dir) ->
+           Printf.sprintf " in %s" dir
+         | _, _, _, Some (Some repo, dir) ->
+           Printf.sprintf " %s from repository %s"
+             (Filename.concat dir "opam")
+             (OpamRepositoryName.to_string repo)
          | _ -> "")
         (OpamStd.Format.itemize
            (fun (_, bf) -> Pp.string_of_bad_format (OpamPp.Bad_format bf))

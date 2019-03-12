@@ -170,7 +170,6 @@ type trust_anchors = {
 (** Repositories *)
 type repository = {
   repo_name    : repository_name;
-  repo_root    : dirname; (** The root of opam's local mirror for this repo *)
   repo_url     : url;
   repo_trust   : trust_anchors option;
 }

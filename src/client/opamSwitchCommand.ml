@@ -269,7 +269,7 @@ let install_compiler_packages t atoms =
   OpamSolution.check_solution ~quiet:OpamClientConfig.(not !r.show) t result;
   t
 
-let install gt ?rt ?synopsis ?repos ~update_config ~packages ?(local_compiler=false) switch =
+let install gt ~rt ?synopsis ?repos ~update_config ~packages ?(local_compiler=false) switch =
   let update_config = update_config && not (OpamSwitch.is_external switch) in
   let old_switch_opt = OpamFile.Config.switch gt.config in
   let comp_dir = OpamPath.Switch.root gt.root switch in
@@ -287,21 +287,16 @@ let install gt ?rt ?synopsis ?repos ~update_config ~packages ?(local_compiler=fa
         OpamSwitchAction.create_empty_switch gt ?synopsis ?repos switch
       in
       if update_config then
-        gt, OpamSwitchAction.set_current_switch `Lock_write gt ?rt switch
+        gt, OpamSwitchAction.set_current_switch `Lock_write gt ~rt switch
       else
-      let rt = match rt with
-        | None -> OpamRepositoryState.load `Lock_none gt
-        | Some rt ->
-          ({ rt with repos_global = (gt :> unlocked global_state)  }
-           :> unlocked repos_state)
+      let rt =
+        ({ rt with repos_global = (gt :> unlocked global_state)  }
+         :> unlocked repos_state)
       in
       gt, OpamSwitchState.load `Lock_write gt rt switch
     else
       gt,
-      let rt = match rt with
-        | None -> OpamRepositoryState.load `Lock_none gt
-        | Some rt -> (rt :> unlocked repos_state)
-      in
+      let rt = (rt :> unlocked repos_state) in
       let st = OpamSwitchState.load_virtual ?repos_list:repos gt rt in
       let available_packages =
         lazy (OpamSwitchState.compute_available_packages gt switch
@@ -325,7 +320,8 @@ let install gt ?rt ?synopsis ?repos ~update_config ~packages ?(local_compiler=fa
       if update_config then
         (OpamEnv.clear_dynamic_init_scripts gt;
          OpamStd.Option.iter
-           (ignore @* OpamSwitchAction.set_current_switch `Lock_write gt)
+           (ignore @* OpamSwitchAction.set_current_switch
+              `Lock_write ~rt:st.switch_repos gt)
            old_switch_opt);
       ignore (OpamSwitchState.unlock st);
       ignore (clear_switch gt switch)
@@ -350,15 +346,14 @@ let install gt ?rt ?synopsis ?repos ~update_config ~packages ?(local_compiler=fa
 let switch lock gt switch =
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
   if OpamGlobalState.switch_exists gt switch then
+    OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
     let st =
       if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
-        OpamSwitchAction.set_current_switch lock gt switch
+        OpamSwitchAction.set_current_switch lock gt ~rt switch
       else
-      let rt = OpamRepositoryState.load `Lock_none gt in
-      OpamSwitchState.load lock gt rt switch
+        OpamSwitchState.load lock gt rt switch
     in
-    OpamEnv.check_and_print_env_warning st;
-    st
+    OpamEnv.check_and_print_env_warning st
   else
   let installed_switches = OpamFile.Config.installed_switches gt.config in
   OpamConsole.error_and_exit `Not_found

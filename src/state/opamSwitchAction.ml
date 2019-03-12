@@ -122,7 +122,7 @@ let add_to_reinstall st ~unpinned_only packages =
     OpamFile.PkgList.write reinstall_file reinstall;
   { st with reinstall = st.reinstall ++ add_reinst_packages }
 
-let set_current_switch lock gt ?rt switch =
+let set_current_switch lock gt ~rt switch =
   if OpamSwitch.is_external switch then
     OpamConsole.error_and_exit `Bad_arguments
       "Can not set external switch '%s' globally. To set it in the current \
@@ -132,10 +132,7 @@ let set_current_switch lock gt ?rt switch =
   let config = OpamFile.Config.with_switch switch gt.config in
   let gt = { gt with config } in
   OpamGlobalState.write gt;
-  let rt = match rt with
-    | Some rt -> { rt with repos_global = gt }
-    | None -> OpamRepositoryState.load `Lock_none gt
-  in
+  let rt = { rt with repos_global = gt } in
   let st = OpamSwitchState.load lock gt rt switch in
   OpamEnv.write_dynamic_init_scripts st;
   st
@@ -154,7 +151,9 @@ let install_metadata st nv =
       in
       OpamFilename.mkdir (OpamFilename.dirname dst);
       OpamFilename.copy ~src:f ~dst)
-    (OpamFile.OPAM.get_extra_files opam)
+    (OpamFile.OPAM.get_extra_files
+       ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+       opam)
 
 let remove_metadata st packages =
   OpamPackage.Set.iter (fun nv ->

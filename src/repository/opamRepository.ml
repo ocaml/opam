@@ -32,14 +32,6 @@ let url_backend url = find_backend_by_kind url.OpamUrl.backend
 
 let find_backend r = url_backend r.repo_url
 
-(* initialize the current directory *)
-let init root name =
-  log "init local repo mirror at %s" (OpamRepositoryName.to_string name);
-  (* let module B = (val find_backend repo: OpamRepositoryBackend.S) in *)
-  let dir = OpamRepositoryPath.create root name in
-  OpamFilename.cleandir dir;
-  Done ()
-
 let cache_url root_cache_url checksum =
   List.fold_left OpamUrl.Op.(/) root_cache_url
     (OpamHash.to_path checksum)
@@ -344,13 +336,13 @@ let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums remote_urls =
         | Result None -> let m = "is a directory" in Not_available (Some m, m)
         | Not_available _ as na -> na)
 
-let packages r =
-  OpamPackage.list (OpamRepositoryPath.packages_dir r.repo_root)
+let packages repo_root =
+  OpamPackage.list (OpamRepositoryPath.packages_dir repo_root)
 
-let packages_with_prefixes r =
-  OpamPackage.prefixes (OpamRepositoryPath.packages_dir r.repo_root)
+let packages_with_prefixes repo_root =
+  OpamPackage.prefixes (OpamRepositoryPath.packages_dir repo_root)
 
-let validate_repo_update repo update =
+let validate_repo_update repo repo_root update =
   match
     repo.repo_trust,
     OpamRepositoryConfig.(!r.validation_hook),
@@ -370,7 +362,7 @@ let validate_repo_update repo update =
       let env v = match OpamVariable.Full.to_string v, update with
         | "anchors", _ -> Some (S (String.concat "," ta.fingerprints))
         | "quorum", _ -> Some (S (string_of_int ta.quorum))
-        | "repo", _ -> Some (S (OpamFilename.Dir.to_string repo.repo_root))
+        | "repo", _ -> Some (S (OpamFilename.Dir.to_string repo_root))
         | "patch", Update_patch f -> Some (S (OpamFilename.to_string f))
         | "incremental", Update_patch _ -> Some (B true)
         | "incremental", _ -> Some (B false)
@@ -391,17 +383,17 @@ let validate_repo_update repo update =
 
 open OpamRepositoryBackend
 
-let apply_repo_update repo = function
+let apply_repo_update repo repo_root = function
   | Update_full d ->
     log "%a: applying update from scratch at %a"
       (slog OpamRepositoryName.to_string) repo.repo_name
       (slog OpamFilename.Dir.to_string) d;
-    OpamFilename.rmdir repo.repo_root;
+    OpamFilename.rmdir repo_root;
     if OpamFilename.is_symlink_dir d then
-      (OpamFilename.copy_dir ~src:d ~dst:repo.repo_root;
+      (OpamFilename.copy_dir ~src:d ~dst:repo_root;
        OpamFilename.rmdir d)
     else
-      OpamFilename.move_dir ~src:d ~dst:repo.repo_root;
+      OpamFilename.move_dir ~src:d ~dst:repo_root;
     OpamConsole.msg "[%s] Initialised\n"
       (OpamConsole.colorise `green
          (OpamRepositoryName.to_string repo.repo_name));
@@ -419,7 +411,7 @@ let apply_repo_update repo = function
       | `http | `rsync -> false
       | _ -> true
     in
-    (OpamFilename.patch ~preprocess f repo.repo_root @@+ function
+    (OpamFilename.patch ~preprocess f repo_root @@+ function
       | Some e ->
         if not (OpamConsole.debug ()) then OpamFilename.remove f;
         raise e
@@ -441,27 +433,27 @@ let cleanup_repo_update upd =
     | Update_patch f -> OpamFilename.remove f
     | _ -> ()
 
-let update repo =
+let update repo repo_root =
   log "update %a" (slog OpamRepositoryBackend.to_string) repo;
   let module B = (val find_backend repo: OpamRepositoryBackend.S) in
-  B.fetch_repo_update repo.repo_name repo.repo_root repo.repo_url @@+ function
+  B.fetch_repo_update repo.repo_name repo_root repo.repo_url @@+ function
   | Update_err e -> raise e
   | Update_empty ->
     log "update empty, no validation performed";
-    apply_repo_update repo Update_empty @@+ fun () ->
-    B.repo_update_complete repo.repo_root repo.repo_url
+    apply_repo_update repo repo_root Update_empty @@+ fun () ->
+    B.repo_update_complete repo_root repo.repo_url
   | (Update_full _ | Update_patch _) as upd ->
     OpamProcess.Job.catch (fun exn ->
         cleanup_repo_update upd;
         raise exn)
     @@ fun () ->
-    validate_repo_update repo upd @@+ function
+    validate_repo_update repo repo_root upd @@+ function
     | false ->
       cleanup_repo_update upd;
       failwith "Invalid repository signatures, update aborted"
     | true ->
-      apply_repo_update repo upd @@+ fun () ->
-      B.repo_update_complete repo.repo_root repo.repo_url
+      apply_repo_update repo repo_root upd @@+ fun () ->
+      B.repo_update_complete repo_root repo.repo_url
 
 let on_local_version_control url ~default f =
   match url.OpamUrl.backend with

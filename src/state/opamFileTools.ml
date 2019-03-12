@@ -755,7 +755,10 @@ let lint_gen ?check_extra_files ?check_upstream reader filename =
       in
       warnings,
       Some (OpamFile.OPAM.with_metadata_dir
-              (Some (OpamFilename.dirname (OpamFile.filename filename))) t)
+              (Some (None,
+                     OpamFilename.Dir.to_string
+                       (OpamFilename.dirname
+                          (OpamFile.filename filename)))) t)
     with
     | OpamSystem.File_not_found _ ->
       OpamConsole.error "%s not found" (OpamFile.to_string filename);
@@ -833,7 +836,11 @@ let try_read rd f =
 
 let add_aux_files ?dir ~files_subdir_hashes opam =
   let dir = match dir with
-    | None -> OpamFile.OPAM.metadata_dir opam
+    | None ->
+      OpamFile.OPAM.get_metadata_dir ~repos_roots:(fun r ->
+          failwith ("Repository "^OpamRepositoryName.to_string r^
+                    " not registered for add_aux_files!"))
+        opam
     | some -> some
   in
   match dir with
@@ -918,3 +925,9 @@ let read_opam dir =
       (OpamPp.string_of_bad_format (OpamPp.Bad_format (snd err)));
     None
   | None, None -> None
+
+let read_repo_opam ~repo_name ~repo_root dir =
+  let open OpamStd.Option.Op in
+  read_opam dir >>|
+  OpamFile.OPAM.with_metadata_dir
+    (Some (Some repo_name, OpamFilename.remove_prefix_dir repo_root dir))

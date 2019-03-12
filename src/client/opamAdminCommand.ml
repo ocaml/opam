@@ -208,8 +208,7 @@ let cache_command =
     let repo_file = OpamRepositoryPath.repo repo_root in
     let repo_def = OpamFile.Repo.safe_read repo_file in
 
-    let repo = OpamRepositoryBackend.local repo_root in
-    let pkg_prefixes = OpamRepository.packages_with_prefixes repo in
+    let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
 
     let errors =
       OpamParallel.reduce ~jobs
@@ -366,7 +365,6 @@ let add_hashes_command =
   let cmd global_options hash_types replace =
     OpamArg.apply_global_options global_options;
     let repo_root = checked_repo_root () in
-    let repo = OpamRepositoryBackend.local repo_root in
     let cache_urls =
       let repo_file = OpamRepositoryPath.repo repo_root in
       List.map (fun rel ->
@@ -376,7 +374,7 @@ let add_hashes_command =
                              (OpamFilename.Dir.to_string repo_root) / rel))
         (OpamFile.Repo.dl_cache (OpamFile.Repo.safe_read repo_file))
     in
-    let pkg_prefixes = OpamRepository.packages_with_prefixes repo in
+    let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
     let has_error =
       OpamPackage.Map.fold (fun nv prefix has_error ->
           let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
@@ -540,8 +538,7 @@ let lint_command =
         OpamConsole.error_and_exit `Bad_arguments
           "No repository found in current directory.\n\
            Please make sure there is a \"packages\" directory";
-    let repo = OpamRepositoryBackend.local repo_root in
-    let pkg_prefixes = OpamRepository.packages_with_prefixes repo in
+    let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
     let ret =
       OpamPackage.Map.fold (fun nv prefix ret ->
           let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
@@ -703,10 +700,16 @@ let get_virtual_switch_state repo_root env =
         | None -> OpamVariable.of_string s, B true)
       env
   in
-  let repo = OpamRepositoryBackend.local repo_root in
+  let repo = {
+    repo_name = OpamRepositoryName.of_string "local";
+    repo_url = OpamUrl.empty;
+    repo_trust = None;
+  } in
   let repo_file = OpamRepositoryPath.repo repo_root in
   let repo_def = OpamFile.Repo.safe_read repo_file in
-  let opams = OpamRepositoryState.load_repo_opams repo in
+  let opams =
+    OpamRepositoryState.load_opams_from_dir repo.repo_name repo_root
+  in
   let gt = {
     global_lock = OpamSystem.lock_none;
     root = OpamStateConfig.(!r.root_dir);
@@ -715,12 +718,17 @@ let get_virtual_switch_state repo_root env =
     global_variables = OpamVariable.Map.empty;
   } in
   let singl x = OpamRepositoryName.Map.singleton repo.repo_name x in
+  let repos_tmp =
+    let t = Hashtbl.create 1 in
+    Hashtbl.add t repo.repo_name (lazy repo_root); t
+  in
   let rt = {
     repos_global = gt;
     repos_lock = OpamSystem.lock_none;
     repositories = singl repo;
     repos_definitions = singl repo_def;
     repo_opams = singl opams;
+    repos_tmp;
   } in
   let st = OpamSwitchState.load_virtual ~repos_list:[repo.repo_name] gt rt in
   if env = [] then st else
@@ -878,8 +886,7 @@ let filter_command =
     if not (dryrun || OpamConsole.confirm "Confirm?") then
       OpamStd.Sys.exit_because `Aborted
     else
-    let repo = OpamRepositoryBackend.local repo_root in
-    let pkg_prefixes = OpamRepository.packages_with_prefixes repo in
+    let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
     OpamPackage.Map.iter (fun nv prefix ->
         if OpamPackage.Set.mem nv packages then
           let d = OpamRepositoryPath.packages repo_root prefix nv in
@@ -930,8 +937,7 @@ let add_constraint_command =
   let cmd global_options force atom =
     OpamArg.apply_global_options global_options;
     let repo_root = checked_repo_root () in
-    let repo = OpamRepositoryBackend.local repo_root in
-    let pkg_prefixes = OpamRepository.packages_with_prefixes repo in
+    let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
     let name, cstr = atom in
     let cstr = match cstr with
       | Some (relop, v) ->

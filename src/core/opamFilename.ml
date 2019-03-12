@@ -44,6 +44,9 @@ end
 
 let raw_dir s = s
 
+let mk_tmp_dir () =
+  Dir.of_string @@ OpamSystem.mk_temp_dir ()
+
 let with_tmp_dir fn =
   OpamSystem.with_tmp_dir (fun dir -> fn (Dir.of_string dir))
 
@@ -309,6 +312,9 @@ let extract_in filename dirname =
 
 let extract_in_job filename dirname =
   OpamSystem.extract_in_job (to_string filename) ~dir:(Dir.to_string dirname)
+
+let make_tar_gz_job filename dirname =
+  OpamSystem.make_tar_gz_job (to_string filename) ~dir:(Dir.to_string dirname)
 
 type generic_file =
   | D of Dir.t

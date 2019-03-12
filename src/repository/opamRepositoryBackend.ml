@@ -35,17 +35,9 @@ end
 let compare r1 r2 = compare r1.repo_name r2.repo_name
 
 let to_string r =
-  Printf.sprintf "%s at %s from %s"
+  Printf.sprintf "%s from %s"
     (OpamRepositoryName.to_string r.repo_name)
-    (OpamFilename.Dir.to_string r.repo_root)
     (OpamUrl.to_string r.repo_url)
-
-let local dirname = {
-  repo_name     = OpamRepositoryName.of_string "local";
-  repo_root     = dirname;
-  repo_url      = OpamUrl.empty;
-  repo_trust    = None;
-}
 
 let to_json r =
   `O  [ ("name", OpamRepositoryName.to_json r.repo_name);
