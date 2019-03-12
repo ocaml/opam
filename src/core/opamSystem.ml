@@ -463,7 +463,7 @@ let run_process
              full_cmd args)
       in
       let str = String.concat " " (cmd :: args) in
-      log "[%a] (in %.3fs) %s"
+      log ~level:2 "[%a] (in %.3fs) %s"
         (OpamConsole.slog Filename.basename) name
         (chrono ()) str;
       r
