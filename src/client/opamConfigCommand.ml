@@ -174,6 +174,17 @@ let rec print_fish_env env =
               (OpamStd.Env.escape_single_quotes ~using_backslashes:true v))
          v)
   in
+  (* set manpath if and only if fish version >= 2.7 *)
+  let manpath_cmd v =
+    OpamConsole.msg "%s" (
+      (* test for existence of `argparse` builtin, introduced in fish 2.7 .
+       * use `grep' instead of `builtin string match' so that old fish versions do not
+       *     produce unwanted error messages on stderr.
+       * use `grep' inside a `/bin/sh' fragment so that nothing is written to stdout or
+       *     stderr if `grep' does not exist. *)
+      "builtin -n | /bin/sh -c 'grep -q \\'^argparse$\\'' 1>/dev/null 2>/dev/null; and "
+    ) ;
+    set_arr_cmd "MANPATH" v in
   match env with
   | [] -> ()
   | (k, v, _) :: r ->
@@ -185,8 +196,7 @@ let rec print_fish_env env =
           * opamState.ml for details *)
          set_arr_cmd k v
        | "MANPATH" ->
-         if OpamStd.Env.getopt k <> None then
-           set_arr_cmd k v
+         manpath_cmd v
        | _ ->
          OpamConsole.msg "set -gx %s '%s';\n"
            k (OpamStd.Env.escape_single_quotes ~using_backslashes:true v));
