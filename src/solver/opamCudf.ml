@@ -60,23 +60,334 @@ let string_of_package p =
 let string_of_packages l =
   OpamStd.List.to_string string_of_package l
 
-let to_json p =
-  `O [ ("name", `String p.Cudf.package);
-       ("version", `String (string_of_int p.Cudf.version));
-       ("installed", `String (string_of_bool p.Cudf.installed));
-     ]
+module Json = struct
+
+  let (>>=) = OpamStd.Option.Op.(>>=)
+
+  let int_to_json n : OpamJson.t = `Float (float_of_int n)
+  let int_of_json = function
+    | `Float x -> Some (int_of_float x)
+    | _ -> None
+
+  let string_to_json s : OpamJson.t = `String s
+  let string_of_json = function
+    | `String s -> Some s
+    | _ -> None
+
+  let pkgname_to_json name : OpamJson.t = string_to_json name
+  let pkgname_of_json json = string_of_json json
+
+  let bool_to_json bool : OpamJson.t = `Bool bool
+  let bool_of_json = function
+    | `Bool b -> Some b
+    | _ -> None
+
+  let list_to_json elem_to_json li : OpamJson.t =
+    `A (List.map elem_to_json li)
+  let list_of_json elem_of_json = function
+    | `A jsons ->
+      begin try
+          let get = function
+            | None -> raise Not_found
+            | Some v -> v
+          in
+          Some (List.map (fun json -> get (elem_of_json json)) jsons)
+        with Not_found -> None
+      end
+    | _ -> None
+
+  let option_to_json elem_to_json = function
+    | None -> `Null
+    | Some elem ->
+      let json = elem_to_json elem in
+      assert (json <> `Null);
+      json
+  let option_of_json elem_of_json = function
+    | `Null -> Some None
+    | other ->
+      elem_of_json other >>= fun elem -> Some (Some elem)
+
+  let pair_to_json
+      fst_field fst_to_json
+      snd_field snd_to_json (fst, snd) =
+    `O [(fst_field, fst_to_json fst);
+        (snd_field, snd_to_json snd)]
+
+  let pair_of_json
+      fst_field fst_of_json
+      snd_field snd_of_json : OpamJson.t -> _ = function
+    | `O dict ->
+      begin try
+          fst_of_json (List.assoc fst_field dict) >>= fun fst ->
+          snd_of_json (List.assoc snd_field dict) >>= fun snd ->
+          Some (fst, snd)
+        with Not_found -> None
+      end
+    | _ -> None
+
+  let version_to_json n = int_to_json n
+  let version_of_json json = int_of_json json
+
+  let relop_to_json : Cudf_types.relop -> _ = function
+    | `Eq -> `String "eq"
+    | `Neq -> `String "neq"
+    | `Geq -> `String "geq"
+    | `Gt -> `String "gt"
+    | `Leq -> `String "leq"
+    | `Lt -> `String "lt"
+
+  let relop_of_json : _ -> Cudf_types.relop option = function
+    | `String "eq" -> Some `Eq
+    | `String "neq" -> Some `Neq
+    | `String "geq" -> Some `Geq
+    | `String "gt" -> Some `Gt
+    | `String "leq" -> Some `Leq
+    | `String "lt" -> Some `Lt
+    | _ -> None
+
+  let enum_keep_to_json = function
+    | `Keep_version -> `String "keep_version"
+    | `Keep_package -> `String "keep_package"
+    | `Keep_feature -> `String "keep_feature"
+    | `Keep_none -> `String "keep_none"
+  let enum_keep_of_json = function
+    | `String "keep_version" -> Some (`Keep_version)
+    | `String "keep_package" -> Some (`Keep_package)
+    | `String "keep_feature" -> Some (`Keep_feature)
+    | `String "keep_none" -> Some (`Keep_none)
+    | _ -> None
+
+  let constr_to_json constr =
+    option_to_json
+      (pair_to_json "relop" relop_to_json "version" version_to_json)
+      constr
+  let constr_of_json json =
+    option_of_json
+      (pair_of_json "relop" relop_of_json "version" version_of_json)
+      json
+
+  let vpkg_to_json v =
+    pair_to_json "pkgname" pkgname_to_json "constr" constr_to_json v
+  let vpkg_of_json json =
+    pair_of_json "pkgname" pkgname_of_json "constr" constr_of_json json
+
+  let vpkglist_to_json (vpkglist : Cudf_types.vpkglist) =
+    list_to_json vpkg_to_json vpkglist
+  let vpkglist_of_json jsons : Cudf_types.vpkglist option =
+    list_of_json vpkg_of_json jsons
+
+  let veqpkg_to_json veqpkg = vpkg_to_json (veqpkg :> Cudf_types.vpkg)
+  let veqpkg_of_json json =
+    vpkg_of_json json >>= function
+    | (pkgname, None) -> Some (pkgname, None)
+    | (pkgname, Some (`Eq, version)) -> Some (pkgname, Some (`Eq, version))
+    | (_pkgname, Some (_, _version)) -> None
+
+  let veqpkglist_to_json veqpkglist = list_to_json veqpkg_to_json veqpkglist
+  let veqpkglist_of_json jsons = list_of_json veqpkg_of_json jsons
+
+  let vpkgformula_to_json formula =
+    list_to_json (list_to_json vpkg_to_json) formula
+  let vpkgformula_of_json json =
+    list_of_json (list_of_json vpkg_of_json) json
+
+  let binding_to_json value_to_json v =
+    pair_to_json "key" string_to_json "value" value_to_json v
+  let binding_of_json value_of_json v =
+    pair_of_json "key" string_of_json "value" value_of_json v
+
+  let stanza_to_json value_to_json stanza =
+    list_to_json (binding_to_json value_to_json) stanza
+  let stanza_of_json value_of_json json =
+    list_of_json (binding_of_json value_of_json) json
+
+  let type_schema_to_json tag value_to_json value =
+    pair_to_json
+      "type" string_to_json
+      "default" (option_to_json value_to_json)
+      (tag, value)
+  let rec typedecl1_to_json = function
+    | `Int n ->
+      type_schema_to_json "int" int_to_json n
+    | `Posint n ->
+      type_schema_to_json "posint" int_to_json n
+    | `Nat n ->
+      type_schema_to_json "nat" int_to_json n
+    | `Bool b ->
+      type_schema_to_json "bool" bool_to_json b
+    | `String s ->
+      type_schema_to_json "string" string_to_json s
+    | `Pkgname s ->
+      type_schema_to_json "pkgname" pkgname_to_json s
+    | `Ident s ->
+      type_schema_to_json "ident" string_to_json s
+    | `Enum (enums, v) ->
+      pair_to_json
+        "type" string_to_json
+        "default" (pair_to_json
+                     "set" (list_to_json string_to_json)
+                     "default" (option_to_json string_to_json))
+        ("enum", (enums, v))
+    | `Vpkg v ->
+      type_schema_to_json "vpkg" vpkg_to_json v
+    | `Vpkgformula v ->
+      type_schema_to_json "vpkgformula" vpkgformula_to_json v
+    | `Vpkglist v ->
+      type_schema_to_json "vpkglist" vpkglist_to_json v
+    | `Veqpkg v ->
+      type_schema_to_json "veqpkg" veqpkg_to_json v
+    | `Veqpkglist v ->
+      type_schema_to_json "veqpkglist" veqpkglist_to_json v
+    | `Typedecl td ->
+      type_schema_to_json "typedecl" typedecl_to_json td
+  and typedecl_to_json td =
+    stanza_to_json typedecl1_to_json td
+
+  let rec typedecl1_of_json json =
+    pair_of_json "type" string_of_json "default" (fun x -> Some x) json >>=
+    fun (tag, json) ->
+    match tag with
+    | "int" -> option_of_json int_of_json json >>= fun x -> Some (`Int x)
+    | "posint" -> option_of_json int_of_json json >>= fun x -> Some (`Posint x)
+    | "nat" -> option_of_json int_of_json json >>= fun x -> Some (`Nat x)
+    | "bool" -> option_of_json bool_of_json json >>= fun x -> Some (`Bool x)
+    | "string" -> option_of_json string_of_json json >>= fun x -> Some (`String x)
+    | "pkgname" -> option_of_json string_of_json json >>= fun x -> Some (`Pkgname x)
+    | "ident" -> option_of_json string_of_json json >>= fun x -> Some (`Ident x)
+    | "enum" ->
+      pair_of_json
+        "set" (list_of_json string_of_json)
+        "default" (option_of_json string_of_json)
+        json >>= fun x -> Some (`Enum x)
+    | "vpkg" ->
+      option_of_json vpkg_of_json json >>= fun x -> Some (`Vpkg x)
+    | "vpkgformula" ->
+      option_of_json vpkgformula_of_json json >>= fun x -> Some (`Vpkgformula x)
+    | "vpkglist" ->
+      option_of_json vpkglist_of_json json >>= fun x -> Some (`Vpkglist x)
+    | "veqpkg" ->
+      option_of_json veqpkg_of_json json >>= fun x -> Some (`Veqpkg x)
+    | "veqpkglist" ->
+      option_of_json veqpkglist_of_json json >>= fun x -> Some (`Veqpkglist x)
+    | "typedecl" ->
+      option_of_json typedecl_of_json json >>= fun x -> Some (`Typedecl x)
+    | _ -> None
+  and typedecl_of_json json =
+    stanza_of_json typedecl1_of_json json
+
+  let type_tagged_to_json tag value_to_json value =
+    pair_to_json "type" string_to_json "value" value_to_json (tag, value)
+
+  let typed_value_to_json : Cudf_types.typed_value -> _ = function
+    | `Int n ->
+      type_tagged_to_json "int" int_to_json n
+    | `Posint n ->
+      type_tagged_to_json "posint" int_to_json n
+    | `Nat n ->
+      type_tagged_to_json "nat" int_to_json n
+    | `Bool b ->
+      type_tagged_to_json "bool" bool_to_json b
+    | `String s ->
+      type_tagged_to_json "string" string_to_json s
+    | `Pkgname name ->
+      type_tagged_to_json "pkgname" pkgname_to_json name
+    | `Ident id ->
+      type_tagged_to_json "ident" string_to_json id
+    | `Enum (enums, value) ->
+      type_tagged_to_json "enum"
+        (pair_to_json
+           "set" (list_to_json string_to_json)
+           "choice" string_to_json) (enums, value)
+    | `Vpkg vpkg ->
+      type_tagged_to_json "vpkg" vpkg_to_json vpkg
+    | `Vpkgformula vpkgformula ->
+      type_tagged_to_json "vpkgformula" vpkgformula_to_json vpkgformula
+    | `Vpkglist vpkglist ->
+      type_tagged_to_json "vpkglist" vpkglist_to_json vpkglist
+    | `Veqpkg veqpkg ->
+      type_tagged_to_json "veqpkg" veqpkg_to_json veqpkg
+    | `Veqpkglist veqpkglist ->
+      type_tagged_to_json "veqpkglist" veqpkglist_to_json veqpkglist
+    | `Typedecl typedecl ->
+      type_tagged_to_json "typedecl" typedecl_to_json typedecl
+
+  let typed_value_of_json json : Cudf_types.typed_value option =
+    pair_of_json "type" string_of_json "value" (fun x -> Some x) json >>=
+    fun (tag, json) ->
+    match tag with
+    | "int" -> int_of_json json >>= fun x -> Some (`Int x)
+    | "posint" -> int_of_json json >>= fun x -> Some (`Posint x)
+    | "nat" -> int_of_json json >>= fun x -> Some (`Nat x)
+    | "bool" -> bool_of_json json >>= fun x -> Some (`Bool x)
+    | "string" -> string_of_json json >>= fun x -> Some (`String x)
+    | "pkgname" -> string_of_json json >>= fun x -> Some (`Pkgname x)
+    | "ident" -> string_of_json json >>= fun x -> Some (`Ident x)
+    | "enum" -> pair_of_json
+                     "set" (list_of_json string_of_json)
+                     "choice" string_of_json
+                     json >>= fun p -> Some (`Enum p)
+    | "vpkg" -> vpkg_of_json json >>= fun x -> Some (`Vpkg x)
+    | "vpkgformula" -> vpkgformula_of_json json >>= fun x -> Some (`Vpkgformula x)
+    | "vpkglist" -> vpkglist_of_json json >>= fun x -> Some (`Vpkglist x)
+    | "veqpkg" -> veqpkg_of_json json >>= fun x -> Some (`Veqpkg x)
+    | "veqpkglist" -> veqpkglist_of_json json >>= fun x -> Some (`Veqpkglist x)
+    | "typedecl" -> typedecl_of_json json >>= fun x -> Some (`Typedecl x)
+    | _ -> None
+
+  let package_to_json p =
+    `O [ ("name", pkgname_to_json p.Cudf.package);
+         ("version", version_to_json p.Cudf.version);
+         ("depends", vpkgformula_to_json p.Cudf.depends);
+         ("conflicts", vpkglist_to_json p.Cudf.conflicts);
+         ("provides", veqpkglist_to_json p.Cudf.provides);
+         ("installed", bool_to_json p.Cudf.installed);
+         ("was_installed", bool_to_json p.Cudf.was_installed);
+         ("keep", enum_keep_to_json p.Cudf.keep);
+         ("pkg_extra", stanza_to_json typed_value_to_json p.Cudf.pkg_extra);
+       ]
+
+  let package_of_json = function
+    | `O dict ->
+      begin try
+          pkgname_of_json (List.assoc "name" dict) >>= fun package ->
+          version_of_json (List.assoc "version" dict) >>= fun version ->
+          vpkgformula_of_json (List.assoc "depends" dict) >>= fun depends ->
+          vpkglist_of_json (List.assoc "conflicts" dict) >>= fun conflicts ->
+          veqpkglist_of_json (List.assoc "provides" dict) >>= fun provides ->
+          bool_of_json (List.assoc "installed" dict) >>= fun installed ->
+          bool_of_json (List.assoc "was_installed" dict) >>= fun was_installed ->
+          enum_keep_of_json (List.assoc "keep" dict) >>= fun keep ->
+          stanza_of_json typed_value_of_json (List.assoc "pkg_extra" dict) >>= fun pkg_extra ->
+          Some { Cudf.package = package;
+            version;
+            depends;
+            conflicts;
+            provides;
+            installed;
+            was_installed;
+            keep;
+            pkg_extra;
+          }
+        with Not_found -> None
+      end
+    | _ -> None
+end
+
+let to_json = Json.package_to_json
+let of_json = Json.package_of_json
 
 (* Graph of cudf packages *)
-module Pkg = struct
+module Package = struct
   type t = Cudf.package
   include Common.CudfAdd
   let to_string = string_of_package
   let name_to_string t = t.Cudf.package
   let version_to_string t = string_of_int t.Cudf.version
   let to_json = to_json
+  let of_json = of_json
 end
 
-module Action = OpamActionGraph.MakeAction(Pkg)
+module Action = OpamActionGraph.MakeAction(Package)
 module ActionGraph = OpamActionGraph.Make(Action)
 
 let string_of_action = Action.to_string
@@ -93,8 +404,8 @@ type conflict_case =
 type conflict =
   Cudf.universe * int package_map * conflict_case
 
-module Map = OpamStd.Map.Make(Pkg)
-module Set = OpamStd.Set.Make(Pkg)
+module Map = OpamStd.Map.Make(Package)
+module Set = OpamStd.Set.Make(Package)
 module Graph = struct
 
   module PG = struct

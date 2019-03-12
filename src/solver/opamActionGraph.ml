@@ -126,16 +126,38 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
   let to_json = function
     | `Remove p -> `O ["remove", P.to_json p]
     | `Install p -> `O ["install", P.to_json p]
-    | `Change (_, o, p) ->
-      `O ["change", `A [P.to_json o;P.to_json p]]
+    | `Change (d, o, p) ->
+      let dir_to_json = function
+          | `Up -> `String "up"
+          | `Down -> `String "down" in
+      `O ["change", `A [dir_to_json d; P.to_json o;P.to_json p]]
     | `Reinstall p -> `O ["recompile", P.to_json p]
     | `Build p -> `O ["build", P.to_json p]
+
+  let of_json =
+    let open OpamStd.Option.Op in
+    function
+    | `O ["remove", p] -> P.of_json p >>= (fun p -> Some (`Remove p))
+    | `O ["install", p] -> P.of_json p >>= (fun p -> Some (`Install p))
+    | `O ["change", `A [dj; oj; pj]] ->
+      let json_of_dir = function
+        | `String "up" -> Some `Up
+        | `String "down" -> Some `Down
+        | _ -> None in
+      json_of_dir dj >>= fun d ->
+      P.of_json oj >>= fun o ->
+      P.of_json pj >>= fun p ->
+      Some (`Change(d, o, p))
+    | `O ["recompile", p] -> P.of_json p >>= (fun p -> Some (`Reinstall p))
+    | `O ["build", p] -> P.of_json p >>= (fun p -> Some (`Build p))
+    | _ -> None
 
   module O = struct
       type t = package action
       let compare = compare
       let to_string = to_string
       let to_json = to_json
+      let of_json = of_json
     end
 
   module Set = OpamStd.Set.Make(O)

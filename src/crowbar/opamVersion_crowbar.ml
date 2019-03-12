@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2019 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -8,20 +8,17 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Json encoder; only needed for some debug options
+open OpamVersion
+open! Crowbar
+open OpamCrowbar
 
-    {b Warning.} Assumes given strings are UTF-8 encoded this is
-    not checked by the module. *)
+let version = choose [
+    const current;
+    const (major current);
+    const current_nopatch;
+    const (full ());
+]
 
-type t =
-  [ `Null | `Bool of bool | `Float of float| `String of string
-  | `A of t list | `O of (string * t) list ]
-
-type 'a encoder = 'a -> t
-type 'a decoder = t -> 'a option
-
-val to_string : t -> string
-
-val append: string -> t -> unit
-
-val flush: out_channel -> unit
+let check () =
+  check_json_roundtrip ~name:"OpamVersion.t"
+    version (eq_of_comp OpamVersion.compare) to_json of_json;

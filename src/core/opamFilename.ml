@@ -443,6 +443,9 @@ let prettify s =
   prettify_path (to_string s)
 
 let to_json x = `String (to_string x)
+let of_json = function
+  | `String x -> (try Some (of_string x) with _ -> None)
+  | _ -> None
 
 module O = struct
   type tmp = t
@@ -450,6 +453,7 @@ module O = struct
   let compare = compare
   let to_string = to_string
   let to_json = to_json
+  let of_json = of_json
 end
 
 module Map = OpamStd.Map.Make(O)
@@ -513,12 +517,31 @@ module Attribute = struct
           | None   -> []
           | Some p -> ["perm", `String (string_of_int p)])
 
+  let of_json = function
+    | `O dict ->
+      begin try
+          let open OpamStd.Option.Op in
+          Base.of_json (List.assoc "base" dict) >>= fun base ->
+          OpamHash.of_json (List.assoc "md5" dict) >>= fun md5 ->
+          let perm =
+            if not (List.mem_assoc "perm" dict) then None
+            else match List.assoc "perm" dict with
+            | `String hash ->
+              (try Some (int_of_string hash) with _ -> raise Not_found)
+            | _ -> raise Not_found
+          in
+          Some { base; md5; perm }
+        with Not_found -> None
+      end
+    | _ -> None
+
   module O = struct
     type tmp = t
     type t = tmp
     let to_string = to_string
     let compare = compare
     let to_json = to_json
+    let of_json = of_json
   end
 
   module Set = OpamStd.Set.Make(O)

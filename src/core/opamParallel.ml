@@ -309,6 +309,9 @@ module IntGraph = MakeGraph(struct
     let equal x y = x = y
     let to_string = string_of_int
     let to_json x = `Float (float_of_int x)
+    let of_json = function
+      | `Float x -> (try Some (int_of_float x) with _ -> None)
+      | _ -> None
   end)
 
 let flat_graph_of_array a =

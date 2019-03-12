@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2019 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -8,20 +8,19 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Json encoder; only needed for some debug options
+open OpamVariable
+open! Crowbar
+open OpamCrowbar
 
-    {b Warning.} Assumes given strings are UTF-8 encoded this is
-    not checked by the module. *)
+let variable = map [nice_string] @@ of_string
 
-type t =
-  [ `Null | `Bool of bool | `Float of float| `String of string
-  | `A of t list | `O of (string * t) list ]
+let full = choose [
+    map [variable] @@ Full.global;
+    map [variable] @@ Full.self;
+    map [OpamPackage_crowbar.name; variable] @@ Full.create;
+]
 
-type 'a encoder = 'a -> t
-type 'a decoder = t -> 'a option
-
-val to_string : t -> string
-
-val append: string -> t -> unit
-
-val flush: out_channel -> unit
+let check () =
+  let equal v1 v2 = Full.to_string v1 = Full.to_string v2 in
+  check_json_roundtrip ~name:"OpamVariable.t"
+    full equal Full.to_json Full.of_json;

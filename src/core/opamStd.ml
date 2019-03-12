@@ -19,6 +19,7 @@ module type SET = sig
   val of_list: elt list -> t
   val to_string: t -> string
   val to_json: t -> OpamJson.t
+  val of_json: OpamJson.t -> t option
   val find: (elt -> bool) -> t -> elt
   val find_opt: (elt -> bool) -> t -> elt option
   val safe_add: elt -> t -> t
@@ -33,6 +34,7 @@ module type MAP = sig
   include Map.S
   val to_string: ('a -> string) -> 'a t -> string
   val to_json: ('a -> OpamJson.t) -> 'a t -> OpamJson.t
+  val of_json: (OpamJson.t -> 'a option) -> OpamJson.t -> 'a t option
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
   val find_opt: key -> 'a t -> 'a option
@@ -47,6 +49,7 @@ module type ABSTRACT = sig
   val of_string: string -> t
   val to_string: t -> string
   val to_json: t -> OpamJson.t
+  val of_json: OpamJson.t -> t option
   module Set: SET with type elt = t
   module Map: MAP with type key = t
 end
@@ -55,6 +58,7 @@ module type OrderedType = sig
   include Set.OrderedType
   val to_string: t -> string
   val to_json: t -> OpamJson.t
+  val of_json: OpamJson.t -> t option
 end
 
 let max_print = 100
@@ -212,6 +216,18 @@ module Set = struct
       let jsons = List.map O.to_json elements in
       `A jsons
 
+    let of_json = function
+      | `A jsons ->
+        begin try
+            let get = function
+              | None -> raise Not_found
+              | Some v -> v in
+            let elems = List.map get (List.map O.of_json jsons) in
+            Some (S.of_list elems)
+          with Not_found -> None
+        end
+      | _ -> None
+
     module Op = struct
       let (++) = union
       let (--) = diff
@@ -287,6 +303,25 @@ module Map = struct
         ) bindings in
       `A jsons
 
+    let of_json value_of_json = function
+      | `A jsons ->
+        begin try
+            let get_pair = function
+              | `O binding ->
+                begin match
+                    O.of_json (List.assoc "key" binding),
+                    value_of_json (List.assoc "value" binding)
+                  with
+                  | Some key, Some value -> (key, value)
+                  | _ -> raise Not_found
+                end
+              | _ -> raise Not_found in
+            let pairs = List.map get_pair jsons in
+            Some (of_list pairs)
+          with Not_found -> None
+        end
+      | _ -> None
+
     let find_opt k map = try Some (find k map) with Not_found -> None
 
     let safe_add k v map =
@@ -307,11 +342,15 @@ module AbstractString = struct
   let of_string x = x
   let to_string x = x
   let to_json x = `String x
+  let of_json = function
+    | `String x -> Some x
+    | _ -> None
   module O = struct
     type t = string
     let to_string = to_string
     let compare = compare
     let to_json = to_json
+    let of_json = of_json
   end
   module Set = Set.Make(O)
   module Map = Map.Make(O)
@@ -323,6 +362,9 @@ module OInt = struct
   let compare = compare
   let to_string = string_of_int
   let to_json i = `String (string_of_int i)
+  let of_json = function
+    | `String s -> (try Some (int_of_string s) with _ -> None)
+    | _ -> None
 end
 
 module IntMap = Map.Make(OInt)
@@ -395,6 +437,9 @@ module OpamString = struct
     let compare = compare
     let to_string x = x
     let to_json x = `String x
+    let of_json = function
+      | `String s -> Some s
+      | _ -> None
   end
 
   module StringSet = Set.Make(OString)

@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2019 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -8,20 +8,12 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Json encoder; only needed for some debug options
-
-    {b Warning.} Assumes given strings are UTF-8 encoded this is
-    not checked by the module. *)
-
-type t =
-  [ `Null | `Bool of bool | `Float of float| `String of string
-  | `A of t list | `O of (string * t) list ]
-
-type 'a encoder = 'a -> t
-type 'a decoder = t -> 'a option
-
-val to_string : t -> string
-
-val append: string -> t -> unit
-
-val flush: out_channel -> unit
+let () =
+  OpamCudf_crowbar.check ();
+  OpamFilename_crowbar.check ();
+  OpamHash_crowbar.check ();
+  OpamUrl_crowbar.check ();
+  OpamVersion_crowbar.check ();
+  OpamPackage_crowbar.check ();
+  OpamVariable_crowbar.check ();
+  OpamActionGraph_crowbar.check ();
