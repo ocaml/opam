@@ -626,6 +626,9 @@ let update_user_setup root ?dot_profile shell =
   )
 
 let check_and_print_env_warning st =
+  (* if you are trying to silence this warning,
+     set the ~no_env_notice:true flag from OpamStateConfig,
+     which is checked by (is_up_to_date st). *)
   if not (is_up_to_date st) &&
      (OpamFile.Config.switch st.switch_global.config = Some st.switch ||
       OpamStateConfig.(!r.switch_from <> `Command_line))
