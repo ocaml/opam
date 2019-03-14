@@ -311,7 +311,7 @@ let with_write_lock ?dontblock rt f =
 
 let with_ lock gt f =
   let rt = load lock gt in
-  OpamStd.Exn.finally (fun () -> ignore (unlock rt)) (fun () -> f rt)
+  OpamStd.Exn.finally (fun () -> drop rt) (fun () -> f rt)
 
 let write_config rt =
   OpamFile.Repos_config.write (OpamPath.repos_config rt.repos_global.root)

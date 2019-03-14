@@ -162,8 +162,8 @@ let with_write_lock ?dontblock gt f =
 
 let with_ lock f =
   let gt = load lock in
-  try let r = f gt in ignore (unlock gt); r
-  with e -> OpamStd.Exn.finalise e (fun () -> ignore (unlock gt))
+  try let r = f gt in drop gt; r
+  with e -> OpamStd.Exn.finalise e (fun () -> drop gt)
 
 let write gt =
   OpamFile.Config.write (OpamPath.config gt.root) gt.config

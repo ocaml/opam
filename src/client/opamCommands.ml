@@ -373,7 +373,7 @@ let init =
         ?repo ~bypass_checks ~dot_profile
         ?update_config ?env_hook ?completion shell
     in
-    OpamStd.Exn.finally (fun () -> ignore (OpamRepositoryState.unlock rt))
+    OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
     @@ fun () ->
     if no_compiler then () else
     match compiler with
@@ -1354,7 +1354,7 @@ let remove =
         List.map (function `Atom a -> a | _ -> assert false) pure_atoms
         @ pin_atoms
       in
-      ignore @@ OpamClient.remove st ~autoremove ~force atoms
+      OpamSwitchState.drop (OpamClient.remove st ~autoremove ~force atoms)
   in
   Term.(const remove $global_options $build_options $autoremove $force $destdir
         $atom_or_dir_list),
@@ -1397,13 +1397,13 @@ let reinstall =
     match cmd, atoms_locs with
     | `Default, (_::_ as atom_locs) ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      ignore @@ OpamClient.reinstall st ~assume_built
+      OpamSwitchState.drop @@ OpamClient.reinstall st ~assume_built
         (OpamAuxCommands.resolve_locals_pinned st atom_locs);
       `Ok ()
     | `Pending, [] | `Default, [] ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       let atoms = OpamSolution.eq_atoms_of_packages st.reinstall in
-      ignore @@ OpamClient.reinstall st atoms;
+      OpamSwitchState.drop @@ OpamClient.reinstall st atoms;
       `Ok ()
     | `List_pending, [] ->
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
@@ -1436,7 +1436,7 @@ let reinstall =
           with Not_found -> ())
         to_forget;
       let reinstall = OpamPackage.Set.Op.(st.reinstall -- to_forget) in
-      ignore @@ OpamSwitchAction.update_switch_state ~reinstall st;
+      OpamSwitchState.drop @@ OpamSwitchAction.update_switch_state ~reinstall st;
       `Ok ()
     | _, _::_ ->
       `Error (true, "Package arguments not allowed with this option")
@@ -1497,12 +1497,12 @@ let update =
         ~all
         names
     in
-    OpamStd.Exn.finally (fun () -> ignore (OpamRepositoryState.unlock rt))
+    OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
     @@ fun () ->
     if upgrade then
       OpamSwitchState.with_ `Lock_write gt ~rt @@ fun st ->
       OpamConsole.msg "\n";
-      ignore @@ OpamClient.upgrade st ~check ~all:true []
+      OpamSwitchState.drop @@ OpamClient.upgrade st ~check ~all:true []
     else if check then
       OpamStd.Sys.exit_because (if changed then `Success else `False)
     else if changed then
@@ -1554,12 +1554,12 @@ let upgrade =
         `Error (true, Printf.sprintf "--fixup doesn't allow extra arguments")
       else
         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-        ignore @@ OpamClient.fixup st;
+        OpamSwitchState.drop @@ OpamClient.fixup st;
         `Ok ()
     else
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       let atoms = OpamAuxCommands.resolve_locals_pinned st atom_locs in
-      ignore @@ OpamClient.upgrade st ~check ~all atoms;
+      OpamSwitchState.drop @@ OpamClient.upgrade st ~check ~all atoms;
       `Ok ()
   in
   Term.(ret (const upgrade $global_options $build_options $fixup $check $all
@@ -2164,7 +2164,7 @@ let switch =
             ~autoupdate:[] ~add_to_roots:true ~deps_only
         else st
       in
-      ignore (OpamSwitchState.unlock st);
+      OpamSwitchState.drop st;
       `Ok ()
     | Some `export, [filename] ->
       OpamSwitchCommand.export
@@ -2550,14 +2550,14 @@ let pin ?(unpin_only=false) () =
       in
       if err then OpamStd.Sys.exit_because `Bad_arguments
       else
-        (ignore @@ OpamClient.PIN.unpin st ~action to_unpin;
+        (OpamSwitchState.drop @@ OpamClient.PIN.unpin st ~action to_unpin;
          `Ok ())
     | Some `edit, [nv]  ->
       (match (fst package) nv with
        | `Ok (name, version) ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-         ignore @@ OpamClient.PIN.edit st ~action ?version name;
+         OpamSwitchState.drop @@ OpamClient.PIN.edit st ~action ?version name;
          `Ok ()
        | `Error e -> `Error (false, e))
     | Some `add, [nv] | Some `default nv, [] when dev_repo ->
@@ -2566,7 +2566,7 @@ let pin ?(unpin_only=false) () =
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let name = OpamSolution.fuzzy_name st name in
-         ignore @@ OpamClient.PIN.pin st name ~edit ?version ~action
+         OpamSwitchState.drop @@ OpamClient.PIN.pin st name ~edit ?version ~action
            `Dev_upstream;
          `Ok ()
        | `Error e ->
@@ -2628,7 +2628,7 @@ let pin ?(unpin_only=false) () =
          let pin = pin_target kind target in
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-         ignore @@
+         OpamSwitchState.drop @@
          OpamClient.PIN.pin st name ?version ~edit ~action pin;
          `Ok ()
        | `Error e -> `Error (false, e))
@@ -2757,7 +2757,8 @@ let source =
         `Source (OpamUrl.parse ~backend
                    ("file://"^OpamFilename.Dir.to_string dir))
       in
-      ignore @@ OpamClient.PIN.pin t nv.name ~version:nv.version target
+      OpamSwitchState.drop
+        (OpamClient.PIN.pin t nv.name ~version:nv.version target)
   in
   Term.(const source
         $global_options $atom $dev_repo $pin $dir),

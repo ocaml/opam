@@ -801,10 +801,10 @@ let with_ lock ?rt ?(switch=OpamStateConfig.get_switch ()) gt f =
   @@ fun rt ->
   let st = load lock gt rt switch in
   let cleanup_backup = do_backup lock st in
-  try let r = f st in ignore (unlock st); cleanup_backup true; r
+  try let r = f st in drop st; cleanup_backup true; r
   with e ->
     OpamStd.Exn.finalise e @@ fun () ->
-    ignore (unlock st);
+    drop st;
     if not OpamCoreConfig.(!r.keep_log_dir) then cleanup_backup false
 
 let update_repositories gt update_fun switch =
