@@ -54,6 +54,15 @@ val compute_available_packages:
 (** Releases any locks on the given switch_state *)
 val unlock: 'a switch_state -> unlocked switch_state
 
+(** Releases any locks on the given switch state and then ignores it.
+
+    Using [drop st] is equivalent to [ignore (unlock st)],
+    and safer than other uses of [ignore]
+    where it is not enforced by the type-system
+    that the value is unlocked before it is lost.
+*)
+val drop: 'a switch_state -> unit
+
 (** Calls the provided function, ensuring a temporary write lock on the given
     switch state *)
 val with_write_lock:

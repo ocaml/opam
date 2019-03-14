@@ -79,6 +79,15 @@ val get_repo_root: 'a repos_state -> repository -> OpamFilename.Dir.t
     tree if any unless [cleanup=false] *)
 val unlock: ?cleanup:bool -> 'a repos_state -> unlocked repos_state
 
+(** Releases any locks on the given repos_state and then ignores it.
+
+    Using [drop ?cleanup rt] is equivalent to [ignore (unlock ?cleanup rt)],
+    and safer than other uses of [ignore]
+    where it is not enforced by the type-system
+    that the value is unlocked before it is lost.
+*)
+val drop: ?cleanup:bool -> 'a repos_state -> unit
+
 (** Clears tmp files corresponding to a repo state (uncompressed repository
     contents) *)
 val cleanup: 'a repos_state -> unit

@@ -338,6 +338,9 @@ let unlock st =
   OpamSystem.funlock st.switch_lock;
   (st :> unlocked switch_state)
 
+let drop st =
+  let _ = unlock st in ()
+
 let with_write_lock ?dontblock st f =
   let ret, st =
     OpamFilename.with_flock_upgrade `Lock_write ?dontblock st.switch_lock

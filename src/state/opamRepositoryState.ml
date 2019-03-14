@@ -297,6 +297,9 @@ let unlock ?cleanup:(cln=true) rt =
   OpamSystem.funlock rt.repos_lock;
   (rt :> unlocked repos_state)
 
+let drop ?cleanup rt =
+  let _ = unlock ?cleanup rt in ()
+
 let with_write_lock ?dontblock rt f =
   let ret, rt =
     OpamFilename.with_flock_upgrade `Lock_write ?dontblock rt.repos_lock

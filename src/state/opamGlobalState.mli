@@ -46,6 +46,15 @@ val repos_list: 'a global_state -> repository_name list
 (** Releases any locks on the given global_state *)
 val unlock: 'a global_state -> unlocked global_state
 
+(** Releases any locks on the given global state and then ignores it.
+
+    Using [drop gt] is equivalent to [ignore (unlock gt)],
+    and safer than other uses of [ignore]
+    where it is not enforced by the type-system
+    that the value is unlocked before it is lost.
+*)
+val drop: 'a global_state -> unit
+
 (** Calls the provided function, ensuring a temporary write lock on the given
     global state *)
 val with_write_lock:
