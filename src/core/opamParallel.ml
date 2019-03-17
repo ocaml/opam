@@ -271,6 +271,8 @@ module type GRAPH = sig
                          and type G.V.t = vertex
   module Dot : sig val output_graph : out_channel -> t -> unit end
   val transitive_closure:  ?reflexive:bool -> t -> unit
+  val to_json : t OpamJson.encoder
+  val of_json : t OpamJson.decoder
 end
 
 module MakeGraph (X: VERTEX) = struct
@@ -298,8 +300,76 @@ module MakeGraph (X: VERTEX) = struct
     end)
   include PG
   include Graph.Oper.I (PG)
+
   let transitive_closure ?reflexive g =
     ignore (add_transitive_closure ?reflexive g)
+
+  let to_json (graph : t) : OpamJson.t =
+    let vertex_map =
+      (* we ensure that the map indexing respects the vertex ordering *)
+       let module Vertices = Set.Make(Vertex) in
+       let vertices = fold_vertex Vertices.add graph Vertices.empty in
+       List.mapi (fun i v -> (i, v)) (Vertices.elements vertices)
+    in
+    let vertices =
+      let vertex_to_json (i, v) = (string_of_int i, X.to_json v) in
+      `O (List.map vertex_to_json vertex_map) in
+    let edges =
+      let vertex_inv_map = List.map (fun (i, v) -> (v, i)) vertex_map in
+      let index v = List.assoc v vertex_inv_map in
+      let index_to_json v = `String (string_of_int (index v)) in
+      let edge_to_json edge =
+        let () = E.label edge in
+        (* labels carry no information; if this changes,
+           we should add a "label" field in the JSON output *)
+        `O [
+          ("src", index_to_json (E.src edge));
+          ("dst", index_to_json (E.dst edge));
+        ] in
+      `A (fold_edges_e (fun edge li -> edge_to_json edge :: li) graph [])
+    in
+    `O [
+      ("vertices", vertices);
+      ("edges", edges);
+    ]
+
+  let of_json : t OpamJson.decoder = function
+    | `O dict ->
+      begin try
+          let vertices_json = match List.assoc "vertices" dict with
+            | `O vertices -> vertices
+            | _ -> raise Not_found in
+          let edges_json = match List.assoc "edges" dict with
+            | `A edges -> edges
+            | _ -> raise Not_found in
+          let vertex_map =
+            let vertex_of_json (ij, vj) =
+              let i = try int_of_string ij with _ -> raise Not_found in
+              let v = match X.of_json vj with
+                  | None -> raise Not_found
+                  | Some v -> v in
+              (i, v) in
+            List.map vertex_of_json vertices_json
+          in
+          let edges =
+            let int_of_jsonstring = function
+              | `String s -> (try int_of_string s with _ -> raise Not_found)
+              | _ -> raise Not_found in
+            let find kj = List.assoc (int_of_jsonstring kj) vertex_map in
+            let edge_of_json = function
+              | `O dict ->
+                (find (List.assoc "src" dict),
+                 find (List.assoc "dst" dict))
+              | _ -> raise Not_found
+            in List.map edge_of_json edges_json
+          in
+          let graph = create ~size:(List.length vertex_map) () in
+          List.iter (fun (_i, v) -> add_vertex graph v) vertex_map;
+          List.iter (fun (src, dst) -> add_edge graph src dst) edges;
+          Some graph
+        with Not_found -> None
+      end
+    | _ -> None
 end
 
 (* Simple polymorphic implem on lists when we don't need full graphs.

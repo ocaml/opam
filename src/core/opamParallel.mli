@@ -98,6 +98,8 @@ module type GRAPH = sig
                          and type G.V.t = vertex
   module Dot : sig val output_graph : out_channel -> t -> unit end
   val transitive_closure:  ?reflexive:bool -> t -> unit
+  val to_json : t OpamJson.encoder
+  val of_json : t OpamJson.decoder
 end
 
 module MakeGraph (V: VERTEX) : GRAPH with type V.t = V.t
