@@ -148,6 +148,9 @@ let unlock gt =
   OpamSystem.funlock gt.global_lock;
   (gt :> unlocked global_state)
 
+let drop gt =
+  let _ = unlock gt in ()
+
 let with_write_lock ?dontblock gt f =
   let ret, gt =
     OpamFilename.with_flock_upgrade `Lock_write ?dontblock gt.global_lock
@@ -159,8 +162,8 @@ let with_write_lock ?dontblock gt f =
 
 let with_ lock f =
   let gt = load lock in
-  try let r = f gt in ignore (unlock gt); r
-  with e -> OpamStd.Exn.finalise e (fun () -> ignore (unlock gt))
+  try let r = f gt in drop gt; r
+  with e -> OpamStd.Exn.finalise e (fun () -> drop gt)
 
 let write gt =
   OpamFile.Config.write (OpamPath.config gt.root) gt.config

@@ -115,7 +115,7 @@ let check_and_run_external_commands () =
             OpamSolverConfig.init ();
             OpamClientConfig.init ();
             OpamSwitchState.with_ `Lock_write gt (fun st ->
-                ignore @@
+                OpamSwitchState.drop @@
                 OpamClient.install st [OpamSolution.eq_atom_of_package nv]
               );
             match OpamSystem.resolve_command ~env command with

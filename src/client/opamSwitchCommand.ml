@@ -319,12 +319,13 @@ let install gt ~rt ?synopsis ?repos ~update_config ~packages ?(local_compiler=fa
       OpamStd.Exn.finalise e @@ fun () ->
       if update_config then
         (OpamEnv.clear_dynamic_init_scripts gt;
-         OpamStd.Option.iter
-           (ignore @* OpamSwitchAction.set_current_switch
-              `Lock_write ~rt:st.switch_repos gt)
+         OpamStd.Option.iter (fun switch ->
+             OpamSwitchState.drop
+               (OpamSwitchAction.set_current_switch
+                  `Lock_write ~rt:st.switch_repos gt switch))
            old_switch_opt);
-      ignore (OpamSwitchState.unlock st);
-      ignore (clear_switch gt switch)
+      OpamSwitchState.drop st;
+      OpamGlobalState.drop (clear_switch gt switch)
   in
   let gt = OpamGlobalState.unlock gt in
   try
@@ -338,8 +339,8 @@ let install gt ~rt ?synopsis ?repos ~update_config ~packages ?(local_compiler=fa
        if OpamConsole.confirm "Switch initialisation failed: clean up? \
                                ('n' will leave the switch partially installed)"
        then begin
-         ignore (OpamSwitchState.unlock st);
-         ignore (clear_switch gt switch)
+         OpamSwitchState.drop st;
+         OpamGlobalState.drop (clear_switch gt switch)
        end);
     raise e
 
