@@ -271,6 +271,7 @@ module type GRAPH = sig
                          and type G.V.t = vertex
   module Dot : sig val output_graph : out_channel -> t -> unit end
   val transitive_closure:  ?reflexive:bool -> t -> unit
+  val build: V.t list -> E.t list -> t
   val to_json : t OpamJson.encoder
   val of_json : t OpamJson.decoder
 end
@@ -303,6 +304,12 @@ module MakeGraph (X: VERTEX) = struct
 
   let transitive_closure ?reflexive g =
     ignore (add_transitive_closure ?reflexive g)
+
+  let build vertices edges =
+    let graph = create ~size:(List.length vertices) () in
+    List.iter (add_vertex graph) vertices;
+    List.iter (add_edge_e graph) edges;
+    graph
 
   let to_json (graph : t) : OpamJson.t =
     let vertex_map =
@@ -358,15 +365,14 @@ module MakeGraph (X: VERTEX) = struct
             let find kj = List.assoc (int_of_jsonstring kj) vertex_map in
             let edge_of_json = function
               | `O dict ->
-                (find (List.assoc "src" dict),
-                 find (List.assoc "dst" dict))
+                let src = find (List.assoc "src" dict) in
+                let label = () in
+                let dst = find (List.assoc "dst" dict) in
+                E.create src label dst
               | _ -> raise Not_found
             in List.map edge_of_json edges_json
           in
-          let graph = create ~size:(List.length vertex_map) () in
-          List.iter (fun (_i, v) -> add_vertex graph v) vertex_map;
-          List.iter (fun (src, dst) -> add_edge graph src dst) edges;
-          Some graph
+          Some (build (List.map snd vertex_map) edges)
         with Not_found -> None
       end
     | _ -> None
