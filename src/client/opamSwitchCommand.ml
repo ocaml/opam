@@ -263,10 +263,11 @@ let install_compiler_packages t atoms =
   in
   let t = { t with compiler_packages = to_install_pkgs } in
   let t, result =
-    OpamSolution.apply ~ask:OpamClientConfig.(!r.show) t Switch
+    OpamSolution.apply ~ask:OpamClientConfig.(!r.show) t
       ~requested:roots
       solution in
-  OpamSolution.check_solution ~quiet:OpamClientConfig.(not !r.show) t result;
+  OpamSolution.check_solution ~quiet:OpamClientConfig.(not !r.show) t
+    (Success result);
   t
 
 let install gt ~rt ?synopsis ?repos ~update_config ~packages ?(local_compiler=false) switch =
