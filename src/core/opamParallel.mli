@@ -99,6 +99,7 @@ module type GRAPH = sig
   module Dot : sig val output_graph : out_channel -> t -> unit end
   val transitive_closure:  ?reflexive:bool -> t -> unit
   val build: V.t list -> E.t list -> t
+  val compare : t -> t -> int
   val to_json : t OpamJson.encoder
   val of_json : t OpamJson.decoder
 end

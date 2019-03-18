@@ -272,6 +272,7 @@ module type GRAPH = sig
   module Dot : sig val output_graph : out_channel -> t -> unit end
   val transitive_closure:  ?reflexive:bool -> t -> unit
   val build: V.t list -> E.t list -> t
+  val compare : t -> t -> int
   val to_json : t OpamJson.encoder
   val of_json : t OpamJson.decoder
 end
@@ -310,6 +311,15 @@ module MakeGraph (X: VERTEX) = struct
     List.iter (add_vertex graph) vertices;
     List.iter (add_edge_e graph) edges;
     graph
+
+  let compare g1 g2 =
+    let module Vertices = Set.Make(Vertex) in
+    let module Edges = Set.Make(E) in
+    let vertices g = fold_vertex Vertices.add g Vertices.empty in
+    let edges g = fold_edges_e Edges.add g Edges.empty in
+    match Vertices.compare (vertices g1) (vertices g2) with
+    | 0 -> Edges.compare (edges g1) (edges g2)
+    | n -> n
 
   let to_json (graph : t) : OpamJson.t =
     let vertex_map =
