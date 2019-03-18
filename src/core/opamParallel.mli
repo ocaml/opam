@@ -16,8 +16,10 @@ module type VERTEX = sig
   include Graph.Sig.COMPARABLE with type t := t
 end
 
+type dependency_label = unit
+
 module type G = sig
-  include Graph.Sig.I
+  include Graph.Sig.I with type E.label = dependency_label
   module Vertex: VERTEX with type t = V.t
   module Topological: sig
     val fold: (V.t -> 'a -> 'a) -> t -> 'a -> 'a
@@ -86,7 +88,7 @@ module Make (G : G) : SIG with module G = G
                            and type G.V.t = G.V.t
 
 module type GRAPH = sig
-  include Graph.Sig.I
+  include Graph.Sig.I with type E.label = dependency_label
   include Graph.Oper.S with type g = t
   module Topological : sig
     val fold : (V.t -> 'a -> 'a) -> t -> 'a -> 'a
