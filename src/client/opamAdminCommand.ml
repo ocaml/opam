@@ -276,6 +276,12 @@ let add_hashes_command =
     Arg.(non_empty & pos_all hash_kind_conv [] & info [] ~docv:"HASH_ALGO" ~doc:
            "The hash, or hashes to be added")
   in
+  let packages =
+    Arg.(value & opt (list OpamArg.package) [] & info
+           ~docv:"PACKAGES"
+           ~doc:"Only add hashes for the given packages"
+           ["p";"packages"])
+  in
   let replace_arg =
     Arg.(value & flag & info ["replace"] ~doc:
            "Replace the existing hashes rather than adding to them")
@@ -362,7 +368,7 @@ let add_hashes_command =
        | None -> ());
       h
   in
-  let cmd global_options hash_types replace =
+  let cmd global_options hash_types replace packages =
     OpamArg.apply_global_options global_options;
     let repo_root = checked_repo_root () in
     let cache_urls =
@@ -374,7 +380,38 @@ let add_hashes_command =
                              (OpamFilename.Dir.to_string repo_root) / rel))
         (OpamFile.Repo.dl_cache (OpamFile.Repo.safe_read repo_file))
     in
-    let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
+    let pkg_prefixes =
+      let pkgs_map = OpamRepository.packages_with_prefixes repo_root in
+      if packages = [] then pkgs_map
+      else
+        (let pkgs_map, missing_pkgs =
+           List.fold_left (fun ((map: string option OpamPackage.Map.t),error)  (n,vo)->
+               match vo with
+               | Some v ->
+                 let nv = OpamPackage.create n v in
+                 (match OpamPackage.Map.find_opt nv pkgs_map with
+                  | Some pre ->( OpamPackage.Map.add nv pre map), error
+                  | None -> map, (n,vo)::error)
+               | None ->
+                 let n_map = OpamPackage.packages_of_name_map pkgs_map n in
+                 if OpamPackage.Map.is_empty n_map then
+                   map, (n,vo)::error
+                 else
+                   (OpamPackage.Map.union (fun _nv _nv' -> assert false) n_map map),
+                   error
+             ) (OpamPackage.Map.empty, []) packages
+         in
+         if missing_pkgs <> [] then
+           OpamConsole.warning "Not found package%s %s. Ignoring them."
+             (if List.length missing_pkgs = 1 then "" else "s")
+             (OpamStd.List.concat_map ~left:"" ~right:"" ~last_sep:" and " ", "
+                (fun (n,vo) ->
+                   OpamConsole.colorise `underline
+                     (match vo with
+                      | Some v -> OpamPackage.to_string (OpamPackage.create n v)
+                      | None -> OpamPackage.Name.to_string n)) missing_pkgs);
+         pkgs_map)
+    in
     let has_error =
       OpamPackage.Map.fold (fun nv prefix has_error ->
           let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
@@ -439,7 +476,7 @@ let add_hashes_command =
     else OpamStd.Sys.exit_because `Success
   in
   Term.(const cmd $ OpamArg.global_options $
-        hash_types_arg $ replace_arg),
+        hash_types_arg $ replace_arg $ packages),
   OpamArg.term_info command ~doc ~man
 
 let upgrade_command_doc =
