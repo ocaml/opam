@@ -159,21 +159,22 @@ type build_options = {
   jobs          : int option;
   ignore_constraints_on: name list option;
   unlock_base   : bool;
-  locked: string option;
+  locked        : bool;
+  lock_suffix   : string;
 }
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
     req_checksums build_test build_doc show dryrun skip_update
-    fake jobs ignore_constraints_on unlock_base locked = {
+    fake jobs ignore_constraints_on unlock_base locked lock_suffix = {
   keep_build_dir; reuse_build_dir; inplace_build; make;
   no_checksums; req_checksums; build_test; build_doc; show; dryrun;
-  skip_update; fake; jobs; ignore_constraints_on; unlock_base; locked;
+  skip_update; fake; jobs; ignore_constraints_on; unlock_base;
+  locked; lock_suffix
 }
 
 let apply_build_options b =
   let flag f = if f then Some true else None in
-  let some x = match x with None -> None | some -> Some some in
   OpamRepositoryConfig.update
     (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
     (* ?retries:int *)
@@ -194,7 +195,7 @@ let apply_build_options b =
       OpamStd.Option.Op.(b.ignore_constraints_on >>|
                          OpamPackage.Name.Set.of_list)
     ?unlock_base:(flag b.unlock_base)
-    ?locked:(some b.locked)
+    ?locked:(if b.locked then Some (Some b.lock_suffix) else None)
     ();
   OpamClientConfig.update
     ?keep_build_dir:(flag b.keep_build_dir)
@@ -255,7 +256,7 @@ let help_sections = [
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
   `P "$(i,OPAMJSON) log json output to the given file (use character `%' to \
       index the files)";
-  `P "$(i,OPAMLOCKED) see install option `--locked`";
+  `P "$(i,OPAMLOCKED) combination of `--locked` and `--lock-suffix` options";
   `P "$(i,OPAMLOGS logdir) sets log directory, default is a temporary directory \
       in /tmp";
   `P "$(i,OPAMMAKECMD) set the system make command to use";
@@ -1031,6 +1032,23 @@ let global_options =
         $ignore_pin_depends
         $d_no_aspcud)
 
+(* lock options *)
+let locked section =
+  mk_flag ~section ["locked"]
+    "In commands that use opam files found from pinned sources, if a variant \
+     of the file with an added .$(i,locked) extension is found (e.g. \
+     $(b,foo.opam.locked) besides $(b,foo.opam)), that will be used instead. \
+     This is typically useful to offer a more specific set of dependencies \
+     and reproduce similar build contexts, hence the name. The $(i, lock)\
+     option can be used to generate such files, based on the versions \
+     of the dependencies currently installed on the host. This is equivalent \
+     to setting the $(b,\\$OPAMLOCKED) environment variable. Note that this \
+     option doesn't generally affect already pinned packages."
+let lock_suffix section =
+  mk_opt ~section ["lock-suffix"] "SUFFIX"
+    "Set locked files suffix to $(i,SUFFIX)."
+    Arg.(string) ("locked")
+
 (* Options common to all build commands *)
 let build_option_section = "PACKAGE BUILD OPTIONS"
 let build_options =
@@ -1116,25 +1134,13 @@ let build_options =
       "Allow changes to the packages set as switch base (typically, the main \
        compiler). Use with caution. This is equivalent to setting the \
        $(b,\\$OPAMUNLOCKBASE) environment variable" in
-  let locked =
-    let open Arg in
-    value & opt ~vopt:(Some "locked") (some string) None &
-    info ~docs:section ~docv:"SUFFIX" ["locked"] ~doc:
-      "In commands that use opam files found from pinned sources, if a variant \
-       of the file with an added .$(i,SUFFIX) extension is found (e.g. \
-       $(b,foo.opam.locked) besides $(b,foo.opam)), that will be used instead. \
-       This is typically useful to offer a more specific set of dependencies \
-       and reproduce similar build contexts, hence the name. The $(i,opam \
-       lock) plugin can be used to generate such files, based on the versions \
-       of the dependencies currently installed on the host. This is equivalent \
-       to setting the $(b,\\$OPAMLOCKED) environment variable. Note that this \
-       option doesn't generally affect already pinned packages."
-  in
+  let locked = locked section in
+  let lock_suffix = lock_suffix section in
   Term.(const create_build_options
     $keep_build_dir $reuse_build_dir $inplace_build $make
     $no_checksums $req_checksums $build_test $build_doc $show $dryrun
     $skip_update $fake $jobs_flag $ignore_constraints_on
-    $unlock_base $locked)
+    $unlock_base $locked $lock_suffix)
 
 (* Option common to install commands *)
 let assume_built =

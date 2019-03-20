@@ -66,6 +66,8 @@ module type VCS = sig
       compares specifically to the last fetched state. This should always be
       [false] after [reset] has been called. *)
   val is_dirty: dirname -> bool OpamProcess.job
+
+  val get_remote_url: ?hash:string -> dirname -> url option OpamProcess.job
 end
 
 (** Create a backend from a [VCS] implementation. *)

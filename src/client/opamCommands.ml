@@ -3083,6 +3083,76 @@ let clean =
         $logs $switch $all_switches),
   term_info "clean" ~doc ~man
 
+(* LOCK *)
+let lock_doc = "Create locked opam files to share build environments across hosts."
+let lock =
+  let doc = lock_doc in
+  let man = [
+    `S "DESCRIPTION";
+    `P "Generates a lock file of a package: checks the current \
+        state of their installed dependencies, and outputs modified versions of \
+        the opam file with a $(i,.locked) suffix, where all the (transitive) \
+        dependencies and pinnings have been bound strictly to the currently \
+        installed version.";
+    `P "By using these locked opam files, it is then possible to recover the \
+        precise build environment that was setup when they were generated.";
+    `P "If paths (filename or directory) are given, those opam files are locked. \
+        If package is given, installed one is locked, otherwise its latest version.";
+    `P "Fails if all mandatory dependencies are not installed in the switch.";
+    `S "What is changed in the locked file?";
+    `P "- $(i,depends) are fixed to their specific versions, with all filters \
+        removed (except for the exceptions below";
+    `P "- $(i,depopts) that are installed in the current switch are turned into \
+        depends, with their version set. Others are set in the $(i,conflict) field";
+    `P "- `{dev}`, `{with-test}, and `{with-doc}` filters are kept if all \
+        packages of a specific filters are installed in the switch. Versions are \
+        fixed and the same filter is on all dependencies that are added from \
+        them";
+    `P "- $(i,pin-depends) are kept and new ones are added if in the \
+        dependencies some packages are pinned ";
+    `P "- pins are resolved: if a package is locally pinned, opam tries to get \
+        its remote url and branch, and sets this as the target URL";
+    `S "ARGUMENTS";
+    `S "OPTIONS";
+  ]
+  in
+  let only_direct_flag =
+    Arg.(value & flag & info ["direct-only"] ~doc:
+           "Only lock direct dependencies, rather than the whole dependency tree.")
+  in
+  let lock_suffix = OpamArg.lock_suffix "OPTIONS" in
+  let lock global_options only_direct lock_suffix atom_locs =
+    apply_global_options global_options;
+    OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+    let st, packages = OpamLockCommand.select_packages atom_locs st in
+    if OpamPackage.Set.is_empty packages then
+      OpamConsole.msg "No lock file generated\n"
+    else
+    let pkg_done =
+      OpamPackage.Set.fold (fun nv msgs ->
+          let opam = OpamSwitchState.opam st nv in
+          let locked = OpamLockCommand.lock_opam ~only_direct st opam in
+          let locked_fname =
+            OpamFilename.add_extension
+              (OpamFilename.of_string (OpamPackage.name_to_string nv))
+              ("opam." ^ lock_suffix)
+          in
+          OpamFile.OPAM.write_with_preserved_format
+            (OpamFile.make locked_fname) locked;
+          (nv, locked_fname)::msgs
+        ) packages []
+    in
+    OpamConsole.msg "Generated lock files for:\n%s"
+      (OpamStd.Format.itemize (fun (nv, file) ->
+           Printf.sprintf "%s: %s"
+             (OpamPackage.to_string nv)
+             (OpamFilename.to_string file)) pkg_done)
+  in
+  Term.(pure lock $global_options $only_direct_flag $lock_suffix
+        $atom_or_local_list),
+  Term.info "lock" ~doc ~man
+
 (* HELP *)
 let help =
   let doc = "Display help about opam and opam commands." in
@@ -3183,6 +3253,7 @@ let commands = [
   source;
   lint;
   clean;
+  lock;
   admin;
   help;
 ]

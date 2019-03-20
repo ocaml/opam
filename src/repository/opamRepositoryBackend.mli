@@ -73,6 +73,12 @@ module type S = sig
   val sync_dirty:
     dirname -> url -> filename option download OpamProcess.job
 
+  (** [get_remote_url ?hash dirname] return the distant url of repo [dirname], \
+      if found. When [hash] is specified, it checks that this hash (branch or \
+      commit) is present in the distant repository and returns the url with \
+      this hash. If the hash is absent it returns the remote url with no hash. *)
+  val get_remote_url:
+    ?hash:string -> dirname -> url option OpamProcess.job
 end
 
 (** Pretty-print *)

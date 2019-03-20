@@ -161,6 +161,32 @@ module VCS = struct
     darcs dir [ "whatsnew"; "--quiet"; "--summary" ]
     @@> fun r -> Done (OpamProcess.check_success_and_cleanup r)
 
+  let get_remote_url ?hash:_ repo_root =
+    darcs repo_root [ "show"; "repo" ]
+    @@> function
+    | { OpamProcess.r_code = 0; _ } as r ->
+      let res =
+        (let valid c e =
+           match OpamStd.String.cut_at (OpamStd.String.strip e) ':' with
+           | Some (p,rhs) when p = c -> Some rhs
+           | _ -> None
+         in
+         match OpamStd.List.filter_map (valid "Cache") r.r_stdout with
+         | [line] ->
+           (let repo =
+              OpamStd.List.filter_map (valid "repo")
+              (OpamStd.String.split line ',')
+            in
+            match repo with
+            | [repo] -> Some repo
+            | _ -> None)
+         | _ -> None)
+      in
+      Done (OpamStd.Option.map (fun u ->
+          OpamUrl.parse ~backend:`darcs u) res)
+    | { OpamProcess.r_code = 1; _ } -> Done None
+    | r -> OpamSystem.process_error r
+
 end
 
 module B = OpamVCS.Make(VCS)

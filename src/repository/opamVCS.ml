@@ -27,6 +27,7 @@ module type VCS = sig
   val vc_dir: dirname -> dirname
   val current_branch: dirname -> string option OpamProcess.job
   val is_dirty: dirname -> bool OpamProcess.job
+  val get_remote_url: ?hash:string -> dirname -> url option OpamProcess.job
 end
 
 let convert_path =
@@ -133,5 +134,7 @@ module Make (VCS: VCS) = struct
           | Up_to_date _ -> Up_to_date None
           | Result _ -> Result None
           | Not_available _ as na -> na)
+
+  let get_remote_url = VCS.get_remote_url
 
 end
