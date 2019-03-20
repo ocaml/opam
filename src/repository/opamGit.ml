@@ -38,6 +38,8 @@ module VCS : OpamVCS.VCS = struct
       git repo_root [ "init" ];
       (* Enforce this option, it can break our use of git if set *)
       git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"];
+      (* We reset diff.noprefix to ensure we get a `-p1` patch and avoid <https://github.com/ocaml/opam/issues/3627>. *)
+      git repo_root [ "config" ; "--local" ; "diff.noprefix"; "false"];
       (* Document the remote for user-friendliness (we don't use it) *)
       git repo_root [ "remote"; "add"; "origin"; OpamUrl.base_url repo_url ];
     ] @@+ function
@@ -162,7 +164,8 @@ module VCS : OpamVCS.VCS = struct
     (* Git diff is to the working dir, but doesn't work properly for
        unregistered directories. *)
     OpamSystem.raise_on_process_error r;
-    git repo_root ~stdout:patch_file [ "diff" ; "--no-ext-diff" ; "-R" ; "-p" ; rref; "--" ]
+    (* We also reset diff.noprefix here to handle already existing repo. *)
+    git repo_root ~stdout:patch_file [ "-c" ; "diff.noprefix=false" ; "diff" ; "--no-ext-diff" ; "-R" ; "-p" ; rref; "--" ]
     @@> fun r ->
     if not (OpamProcess.check_success_and_cleanup r) then
       (finalise ();
