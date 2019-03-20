@@ -85,10 +85,12 @@ val update:
 val upgrade:
   rw switch_state -> ?check:bool -> all:bool -> atom list -> rw switch_state
 
-(** Low-level version of [upgrade], bypassing the package name sanitization
-    and dev package update, and offering more control *)
+(** Low-level version of [upgrade], bypassing the package name sanitization and
+   dev package update, and offering more control. [terse] avoids the verbose
+   message when we are at a local maximum, but there are possible upgrades *)
 val upgrade_t:
   ?strict_upgrade:bool -> ?auto_install:bool -> ?ask:bool -> ?check:bool ->
+  ?terse:bool ->
   all:bool -> atom list -> rw switch_state -> rw switch_state
 
 (** Recovers from an inconsistent universe *)
