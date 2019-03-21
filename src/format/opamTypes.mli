@@ -233,6 +233,7 @@ type 'a inst_action = [
 type 'a concrete_action = [
   | 'a atomic_action
   | `Build of 'a
+  | `Fetch of 'a
 ]
 
 type 'a action = [

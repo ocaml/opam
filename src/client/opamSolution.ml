@@ -21,7 +21,7 @@ module PackageActionGraph = OpamSolver.ActionGraph
 
 let post_message ?(failed=false) st action =
   match action, failed with
-  | `Remove _, _ | `Reinstall _, _ | `Build _, false -> ()
+  | `Remove _, _ | `Reinstall _, _ | `Build _, false | `Fetch _, _ -> ()
   | `Build pkg, true | `Install pkg, _ | `Change (_,_,pkg), _ ->
     let opam = OpamSwitchState.opam st pkg in
     let messages = OpamFile.OPAM.post_messages opam in
@@ -190,6 +190,8 @@ let display_error (n, error) =
   | `Reinstall nv      -> f "recompiling" nv
   | `Remove nv         -> f "removing" nv
   | `Build nv          -> f "compiling" nv
+  | `Fetch nv          ->
+    if OpamConsole.verbose () then f "fetching sources for" nv
 
 module Json = struct
   let output_request request user_action =
@@ -326,68 +328,20 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
     else OpamPackage.Map.empty
   in
 
-  (* 1/ fetch needed package archives *)
-
-  let failed_downloads =
-    let sources_needed =
-      OpamPackage.Set.Op.
-        (OpamAction.sources_needed t action_graph -- OpamPackage.keys inplace)
-    in
-    let sources_list = OpamPackage.Set.elements sources_needed in
-    if OpamPackage.Set.exists (fun nv ->
-        not (OpamPackage.Set.mem nv t.pinned &&
-             OpamFilename.exists_dir (OpamSwitchState.source_dir t nv)))
-        sources_needed
-    then OpamConsole.header_msg "Gathering sources";
-    let results =
-      OpamParallel.map
-        ~jobs:OpamStateConfig.(!r.dl_jobs)
-        ~command:(OpamAction.download_package t)
-        ~dry_run:OpamStateConfig.(!r.dryrun)
-        sources_list
-    in
-    List.fold_left2 (fun failed nv -> function
-        | None -> failed
-        | Some (s,l) -> OpamPackage.Map.add nv (s,l) failed)
-      OpamPackage.Map.empty sources_list results
+  let sources_needed =
+    OpamPackage.Set.Op.
+      (OpamAction.sources_needed t action_graph -- OpamPackage.keys inplace)
   in
 
-  if OpamClientConfig.(!r.json_out <> None) &&
-     not (OpamPackage.Map.is_empty failed_downloads) then
-    OpamJson.append "download-failures"
-      (`O (List.map (fun (nv,(_,err)) -> OpamPackage.to_string nv, `String err)
-             (OpamPackage.Map.bindings failed_downloads)));
-
-  let fatal_dl_error =
-    PackageActionGraph.fold_vertex
-      (fun a acc -> acc || match a with
-         | `Remove _ -> false
-         | _ -> OpamPackage.Map.mem (action_contents a) failed_downloads)
-      action_graph false
-  in
-  if fatal_dl_error then
-    OpamConsole.error_and_exit `Sync_error
-      "The sources of the following couldn't be obtained, aborting:\n%s"
-      (OpamStd.Format.itemize
-         (fun (p, (s,l)) ->
-            Printf.sprintf "%s%s" (OpamPackage.to_string p)
-              (if OpamConsole.verbose () then ":\n" ^ l
-               else OpamStd.Option.map_default (fun x -> ": " ^ x) "" s))
-         (OpamPackage.Map.bindings failed_downloads))
-  else if not (OpamPackage.Map.is_empty failed_downloads) then
-    OpamConsole.warning
-      "The sources of the following couldn't be obtained, they may be \
-       uncleanly uninstalled:\n%s"
-      (OpamStd.Format.itemize OpamPackage.to_string
-         (OpamPackage.Map.keys failed_downloads));
-
-
-  (* 2/ process the package actions (installations and removals) *)
+  (* 1/ process the package actions (fetch, build, installations and removals) *)
 
   let action_graph = (* Add build actions *)
     let noop_remove nv =
       OpamAction.noop_remove_package t nv in
-    PackageActionGraph.explicit ~noop_remove action_graph
+    PackageActionGraph.explicit
+      ~noop_remove
+      ~sources_needed:(fun p -> OpamPackage.Set.mem p sources_needed)
+      action_graph
   in
   (match OpamSolverConfig.(!r.cudf_file) with
    | None -> ()
@@ -411,9 +365,25 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
         (OpamPackage.Set.empty, OpamPackage.Set.empty, PackageAction.Set.empty)
         pred
     in
-    if not (PackageAction.Set.is_empty failed) then
-      Done (`Error (`Aborted failed)) (* prerequisite failed *)
-    else
+    (* Check whether prerequisites failed *)
+    let failed_fetch, failed_not_fetch =
+      PackageAction.Set.fold (fun a (failed_fetch, failed_not_fetch) ->
+        match a with
+        | `Fetch pkg -> (OpamPackage.Set.add pkg failed_fetch, failed_not_fetch)
+        | _ -> (failed_fetch, PackageAction.Set.add a failed_not_fetch)
+      ) failed (OpamPackage.Set.empty, PackageAction.Set.empty) in
+    let action_is_remove = match action with `Remove _ -> true | _ -> false in
+    if not (PackageAction.Set.is_empty failed_not_fetch) then
+      (* fatal error *)
+      Done (`Error (`Aborted failed))
+    else begin
+    if action_is_remove && not (OpamPackage.Set.is_empty failed_fetch) then
+      (* Print a warning, but still do the remove *)
+      OpamConsole.warning
+        "The sources of the following couldn't be obtained, they may be \
+         uncleanly removed:\n%s"
+        (OpamStd.Format.itemize OpamPackage.to_string
+           (OpamPackage.Set.elements failed_fetch));
     let store_time =
       let t0 = Unix.gettimeofday () in
       fun () -> Hashtbl.add timings action (Unix.gettimeofday () -. t0)
@@ -441,7 +411,7 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
     let source_dir = OpamSwitchState.source_dir t nv in
     if OpamClientConfig.(!r.fake) then
       match action with
-      | `Build _ -> Done (`Successful (installed, removed))
+      | `Build _ | `Fetch _ -> Done (`Successful (installed, removed))
       | `Install nv ->
         OpamConsole.msg "Faking installation of %s\n"
           (OpamPackage.to_string nv);
@@ -453,6 +423,14 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
       | _ -> assert false
     else
     match action with
+    | `Fetch nv ->
+      log "Fetching sources for %s" (OpamPackage.to_string nv);
+      (OpamAction.download_package t nv @@+ function
+        | None ->
+          store_time (); Done (`Successful (installed, removed))
+        | Some (_short_error, long_error) ->
+          Done (`Exception (Failure long_error)))
+
     | `Build nv ->
       if assume_built && OpamPackage.Set.mem nv requested then
         (log "Skipping build for %s, just install%s"
@@ -519,6 +497,7 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
       store_time ();
       `Successful (installed, OpamPackage.Set.add nv removed)
     | _ -> assert false
+  end
   in
 
   let action_results =
@@ -558,27 +537,47 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
           ~pools
           action_graph
       in
-      if OpamClientConfig.(!r.json_out <> None) then
-        (let j =
-           PackageActionGraph.Topological.fold (fun a acc ->
-               let r = match List.assoc a results with
-                 | `Successful _ -> `String "OK"
-                 | `Exception e -> Json.exc e
-                 | `Error (`Aborted deps) ->
-                   let deps = OpamSolver.Action.Set.elements deps in
-                   `O ["aborted", `A (List.map OpamSolver.Action.to_json deps)]
-               in
-               let duration =
-                 try [ "duration", `Float (Hashtbl.find timings a) ]
-                 with Not_found -> []
-               in
-               `O ([ "action", PackageAction.to_json a;
-                     "result", r ] @
-                   duration)
-               :: acc
-             ) action_graph []
-         in
-         OpamJson.append "results" (`A (List.rev j)));
+      (* For backwards-compatibility reasons, we separate the json report for
+         download failures from the json report for the rest *)
+      if OpamClientConfig.(!r.json_out <> None) then begin
+        (* Report download failures *)
+        let failed_downloads = List.fold_left (fun failed (a, err) ->
+            match (a, err) with
+            | `Fetch pkg, `Exception (Failure long_error) ->
+              OpamPackage.Map.add pkg long_error failed
+            | _ ->
+              failed
+          ) OpamPackage.Map.empty results in
+        if not (OpamPackage.Map.is_empty failed_downloads) then
+          OpamJson.append "download-failures"
+            (`O (List.map (fun (nv, err) -> OpamPackage.to_string nv, `String err)
+                   (OpamPackage.Map.bindings failed_downloads)));
+        (* Report build/install/remove failures *)
+        let j =
+          PackageActionGraph.Topological.fold (fun a acc ->
+              match a with
+              | `Fetch _ -> acc
+              | _ ->
+                let r = match List.assoc a results with
+                  | `Successful _ -> `String "OK"
+                  | `Exception e -> Json.exc e
+                  | `Error (`Aborted deps) ->
+                    let deps = OpamSolver.Action.Set.elements deps in
+                    `O ["aborted", `A (List.map OpamSolver.Action.to_json deps)]
+                in
+                let duration =
+                  try [ "duration", `Float (Hashtbl.find timings a) ]
+                  with Not_found -> []
+                in
+                `O ([ "action", PackageAction.to_json a;
+                      "result", r ] @
+                    duration)
+                :: acc
+            ) action_graph []
+        in
+        OpamJson.append "results" (`A (List.rev j))
+      end;
+
       let success, failure, aborted =
         List.fold_left (fun (success, failure, aborted) -> function
             | a, `Successful _ -> a::success, failure, aborted
@@ -609,7 +608,7 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
   in
   let t = !t_ref in
 
-  (* 3/ Display errors and finalize *)
+  (* 2/ Display errors and finalize *)
 
   let cleanup_artefacts graph =
     PackageActionGraph.iter_vertex (function
@@ -623,7 +622,7 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
             OpamPath.Switch.build t.switch_global.root t.switch nv in
           if not OpamClientConfig.(!r.keep_build_dir) then
             OpamFilename.rmdir build_dir
-        | `Remove _ | `Install _ | `Build _ -> ()
+        | `Remove _ | `Install _ | `Build _ | `Fetch _ -> ()
         | _ -> assert false)
       graph
   in
@@ -729,7 +728,7 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
            (OpamConsole.colorise `red "failed"))
         failed;
       print_actions
-        (function `Build _ -> false | _ -> true) `cyan
+        (function `Build _ | `Fetch _ -> false | _ -> true) `cyan
         ("The following changes have been performed"
          ^ if remaining <> [] then " (the rest was aborted)" else "")
         ~empty:"No changes have been performed"
@@ -746,7 +745,7 @@ let simulate_new_state state t =
           OpamPackage.Set.add p installed
         | `Remove p ->
           OpamPackage.Set.remove p installed
-        | `Build _ -> installed
+        | `Build _ | `Fetch _ -> installed
       )
       t state.installed in
   { state with installed }

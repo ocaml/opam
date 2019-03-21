@@ -1158,10 +1158,11 @@ let compute_root_causes g requested reinstall =
       (* Nothing can cause these actions after itself *)
       Unknown
     | (`Install _ | `Reinstall _), `Before, _ ->
-      (* An install or reinstall doesn't cause any oter actions on its
+      (* An install or reinstall doesn't cause any other actions on its
          dependendants *)
       Unknown
     | `Build _, _, _ | _, _, `Build _ -> assert false
+    | `Fetch _, _, _ | _, _, `Fetch _ -> assert false (* XXX CHECK *)
   in
   let get_causes acc roots =
     let rec aux seen depth pkgname causes =

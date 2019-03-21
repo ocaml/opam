@@ -166,6 +166,14 @@ let repositories rt repos =
   OpamRepositoryState.Cache.save rt;
   failed, rt
 
+let report_fetch_failure pkg = function
+  | Not_available (s, l) ->
+    let msg = match s with None -> l | Some s -> s in
+    OpamConsole.msg "[%s] fetching sources failed: %s\n"
+      (OpamConsole.colorise `red (OpamPackage.to_string pkg)) msg;
+    Not_available (s, l)
+  | res -> res
+
 let fetch_dev_package url srcdir ?(working_dir=false) nv =
   let remote_url = OpamFile.URL.url url in
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
@@ -174,6 +182,8 @@ let fetch_dev_package url srcdir ?(working_dir=false) nv =
   OpamRepository.pull_tree
     ~cache_dir:(OpamRepositoryPath.download_cache OpamStateConfig.(!r.root_dir))
     (OpamPackage.to_string nv) srcdir checksum ~working_dir mirrors
+  @@| report_fetch_failure nv
+
 
 let pinned_package st ?version ?(working_dir=false) name =
   log "update-pinned-package %s%a" (OpamPackage.Name.to_string name)
@@ -500,22 +510,23 @@ let download_package_source st nv dirname =
     match OpamFile.OPAM.url opam with
     | None   -> Done None
     | Some u ->
-      OpamRepository.pull_tree (OpamPackage.to_string nv)
+      (OpamRepository.pull_tree (OpamPackage.to_string nv)
         ~cache_dir ~cache_urls
         dirname
         (OpamFile.URL.checksum u)
         (OpamFile.URL.url u :: OpamFile.URL.mirrors u)
+       @@| report_fetch_failure nv)
       @@| OpamStd.Option.some
   in
   let fetch_extra_source_job (name, u) = function
     | Some (Not_available _) as err -> Done err
     | ret ->
-      OpamRepository.pull_file_to_cache
-        (OpamPackage.to_string nv ^"/"^ OpamFilename.Base.to_string name)
-        ~cache_dir ~cache_urls
-        (OpamFile.URL.checksum u)
-        (OpamFile.URL.url u :: OpamFile.URL.mirrors u)
-      @@| function
+      (OpamRepository.pull_file_to_cache
+         (OpamPackage.to_string nv ^"/"^ OpamFilename.Base.to_string name)
+         ~cache_dir ~cache_urls
+         (OpamFile.URL.checksum u)
+         (OpamFile.URL.url u :: OpamFile.URL.mirrors u)
+       @@| report_fetch_failure nv) @@| function
       | Not_available _ as na -> Some na
       | _ -> ret
   in

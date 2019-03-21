@@ -63,6 +63,8 @@ module Symbols : sig
   val upwards_arrow : OpamCompat.Uchar.t
   val downwards_arrow : OpamCompat.Uchar.t
   val up_down_arrow : OpamCompat.Uchar.t
+  val downwards_double_arrow : OpamCompat.Uchar.t
+  val downwards_black_arrow : OpamCompat.Uchar.t
 end
 
 val utf8_symbol:

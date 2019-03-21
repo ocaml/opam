@@ -259,20 +259,22 @@ let pull_tree
   | Not_available _ ->
     if checksums = [] && OpamRepositoryConfig.(!r.force_checksums = Some true)
     then
-      OpamConsole.error_and_exit `File_error
-        "%s: Missing checksum, and `--require-checksums` was set."
-        label;
-    pull_from_mirrors label ?working_dir cache_dir local_dirname checksums
-      remote_urls
-    @@+ function
-    | Up_to_date None -> Done (Up_to_date ())
-    | Up_to_date (Some archive) | Result (Some archive) ->
-      OpamFilename.with_tmp_dir_job @@ fun tmpdir ->
-      let tmp_archive = OpamFilename.(create tmpdir (basename archive)) in
-      OpamFilename.move ~src:archive ~dst:tmp_archive;
-      extract_archive tmp_archive
-    | Result None -> Done (Result ())
-    | Not_available _ as na -> Done na
+      Done (
+        Not_available (
+          Some ("missing checksum"),
+          label ^ ": Missing checksum, and `--require-checksums` was set."))
+    else
+      pull_from_mirrors label ?working_dir cache_dir local_dirname checksums
+        remote_urls
+      @@+ function
+      | Up_to_date None -> Done (Up_to_date ())
+      | Up_to_date (Some archive) | Result (Some archive) ->
+        OpamFilename.with_tmp_dir_job @@ fun tmpdir ->
+        let tmp_archive = OpamFilename.(create tmpdir (basename archive)) in
+        OpamFilename.move ~src:archive ~dst:tmp_archive;
+        extract_archive tmp_archive
+      | Result None -> Done (Result ())
+      | Not_available _ as na -> Done na
 
 let revision dirname url =
   let kind = url.OpamUrl.backend in
@@ -306,16 +308,18 @@ let pull_file label ?cache_dir ?(cache_urls=[])  ?(silent_hits=false)
   | Not_available _ ->
     if checksums = [] && OpamRepositoryConfig.(!r.force_checksums = Some true)
     then
-      OpamConsole.error_and_exit `File_error
-        "%s: Missing checksum, and `--require-checksums` was set."
-        label;
-    OpamFilename.with_tmp_dir_job (fun tmpdir ->
-        pull_from_mirrors label cache_dir tmpdir checksums remote_urls
-        @@| function
-        | Up_to_date _ -> assert false
-        | Result (Some f) -> OpamFilename.move ~src:f ~dst:file; Result ()
-        | Result None -> let m = "is a directory" in Not_available (Some m, m)
-        | Not_available _ as na -> na)
+      Done (
+        Not_available
+          (Some "missing checksum",
+           label ^ ": Missing checksum, and `--require-checksums` was set."))
+    else
+      OpamFilename.with_tmp_dir_job (fun tmpdir ->
+          pull_from_mirrors label cache_dir tmpdir checksums remote_urls
+          @@| function
+          | Up_to_date _ -> assert false
+          | Result (Some f) -> OpamFilename.move ~src:f ~dst:file; Result ()
+          | Result None -> let m = "is a directory" in Not_available (Some m, m)
+          | Not_available _ as na -> na)
 
 let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums remote_urls =
   let text = OpamProcess.make_command_text label "dl" in

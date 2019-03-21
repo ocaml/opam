@@ -97,6 +97,8 @@ module Symbols = struct
   let upwards_arrow = Uchar.of_int 0x2191
   let downwards_arrow = Uchar.of_int 0x2193
   let up_down_arrow = Uchar.of_int 0x2195
+  let downwards_double_arrow = Uchar.of_int 0x21d3
+  let downwards_black_arrow = Uchar.of_int 0x2b07
 end
 
 type win32_glyph_checker = {
