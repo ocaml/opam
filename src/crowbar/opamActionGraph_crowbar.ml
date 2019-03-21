@@ -37,6 +37,27 @@ module Action = OpamCudf.Action
 
 let cudf_action = action OpamCudf_crowbar.package
 
+module ActionGraph = OpamCudf.ActionGraph
+
+let cudf_graph =
+  map [list cudf_action; list (pair int int)] @@ fun vertices edge_codes ->
+    if vertices = [] then ActionGraph.build [] []
+    else begin
+      let get_vertex =
+        let array = Array.of_list vertices in
+        fun i -> array.((abs i) mod Array.length array) in
+      let get_edge (i, j) =
+        let src = get_vertex i in
+        let dst = get_vertex j in
+        ActionGraph.E.create src () dst
+      in
+      let edges = List.map get_edge edge_codes in
+      ActionGraph.build vertices edges
+    end
+
 let check () =
-  check_json_roundtrip ~name:"OpamACtionGraph.Make(OpamCudf).t"
+  check_json_roundtrip ~name:"OpamActionGraph.Make(OpamCudf).t"
     cudf_action (eq_of_comp Action.compare) Action.to_json Action.of_json;
+  check_json_roundtrip ~name:"OpamActionGraph.Make(OpamCudf).g"
+    cudf_graph (eq_of_comp ActionGraph.compare)
+    ActionGraph.to_json ActionGraph.of_json;

@@ -48,6 +48,10 @@ val print_solution:
   requested:name_set -> reinstall:package_set ->
   solution -> unit
 
+(** Serialize a solution *)
+val solution_to_json : solution OpamJson.encoder
+val solution_of_json : solution OpamJson.decoder
+
 (** Computes an opam->cudf version map from a set of package *)
 val cudf_versions_map: universe -> package_set -> int OpamPackage.Map.t
 

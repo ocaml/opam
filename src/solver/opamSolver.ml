@@ -55,6 +55,11 @@ let is_available universe wish_remove (name, _ as c) =
   &&
   List.for_all (fun (n, _) -> n <> name) wish_remove
 
+let solution_to_json solution =
+  OpamCudf.ActionGraph.to_json solution
+let solution_of_json json =
+  OpamCudf.ActionGraph.of_json json
+
 let cudf_versions_map universe packages =
   log ~level:3 "cudf_versions_map";
   let add_referred_to_packages filt acc refmap =
