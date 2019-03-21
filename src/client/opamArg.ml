@@ -272,6 +272,9 @@ let help_sections = [
   `P "$(i,OPAMNO) answer no to any question asked.";
   `P "$(i,OPAMNOASPCUD) Deprecated.";
   `P "$(i,OPAMNOCHECKSUMS) enables option --no-checksums when available.";
+  `P "$(i,OPAMDROPWORKINGDIR) overrides packages previously updated with \
+      $(b,--working-dir) on update. Without this variable set, opam would keep them \
+      unchanged unless explicitely named on the command-line.";
   `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
   `P "$(i,OPAMPINKINDAUTO) sets whether version control systems should be \
       detected when pinning to a local path. Enabled by default since 1.3.0.";
