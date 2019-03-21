@@ -536,8 +536,8 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
           inplace OpamFilename.Dir.Map.empty |>
         OpamFilename.Dir.Map.values
       in
-      let mutually_exclusive =
-        installs_removes ::
+      let pools =
+        (installs_removes, 1) ::
         OpamStd.List.filter_map
           (fun excl ->
              match
@@ -547,7 +547,7 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
                     if PackageActionGraph.mem_vertex action_graph act
                     then Some act else None)
                  excl
-             with [] | [_] -> None | l -> Some l)
+             with [] | [_] -> None | l -> Some (l,1))
           same_inplace_source
       in
       let results =
@@ -555,7 +555,7 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
           ~jobs:(Lazy.force OpamStateConfig.(!r.jobs))
           ~command:job
           ~dry_run:OpamStateConfig.(!r.dryrun)
-          ~mutually_exclusive
+          ~pools
           action_graph
       in
       if OpamClientConfig.(!r.json_out <> None) then
