@@ -503,11 +503,13 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
   let action_results =
     OpamConsole.header_msg "Processing actions";
     try
-      let installs_removes =
+      let installs_removes, fetches =
         PackageActionGraph.fold_vertex
-          (fun a acc -> match a with `Install _ | `Remove _ as i -> i::acc
-                                   | _ -> acc)
-          action_graph []
+          (fun a (installs_removes, fetches as acc) -> match a with
+             | `Install _ | `Remove _ as i -> (i::installs_removes, fetches)
+             | `Fetch _ as i -> (installs_removes, i::fetches)
+             | _ -> acc)
+          action_graph ([],[])
       in
       let same_inplace_source =
         OpamPackage.Map.fold (fun nv dir acc ->
@@ -517,6 +519,7 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
       in
       let pools =
         (installs_removes, 1) ::
+        (fetches, OpamStateConfig.(!r.dl_jobs)) ::
         OpamStd.List.filter_map
           (fun excl ->
              match
