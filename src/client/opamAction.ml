@@ -154,23 +154,52 @@ let download_package st nv =
        OpamFile.OPAM.read_opt >>=
        OpamFile.OPAM.version_opt)
      = Some nv.version
-  then
-    Done None
+  then Done None
   else
-    (OpamUpdate.cleanup_source st
-       (OpamPackage.Map.find_opt nv st.installed_opams)
-       (OpamSwitchState.opam st nv);
-     OpamProcess.Job.catch (fun e ->
-         let na =
-           match e with
-           | OpamDownload.Download_fail (s,l) -> (s,l)
-           | e -> (None, Printexc.to_string e)
-         in
-         Done (Some na))
-     @@ fun () ->
-     OpamUpdate.download_package_source st nv dir @@| function
-     | Some (Not_available (s,l)) -> Some (s,l)
-     | None | Some (Up_to_date () | Result ()) -> None)
+  let print_action msg =
+    OpamConsole.msg "%s retrieved %s.%s  (%s)\n"
+      (if not (OpamConsole.utf8 ()) then "->"
+       else OpamActionGraph.
+              (action_color (`Fetch ()) (action_strings (`Fetch ()))))
+      (OpamConsole.colorise `bold (OpamPackage.name_to_string nv))
+      (OpamPackage.version_to_string nv)
+      msg;
+  in
+  OpamUpdate.cleanup_source st
+    (OpamPackage.Map.find_opt nv st.installed_opams)
+    (OpamSwitchState.opam st nv);
+  OpamProcess.Job.catch (fun e ->
+      let na =
+        match e with
+        | OpamDownload.Download_fail (s,l) -> (s,l)
+        | e -> (None, Printexc.to_string e)
+      in
+      Done (Some na))
+  @@ fun () ->
+  OpamUpdate.download_package_source st nv dir @@| function
+  | Some (Not_available (s, l)), _ ->
+    let msg = match s with None -> l | Some s -> s in
+    OpamConsole.error "Failed to fetch sources of %s: %s"
+      (OpamPackage.to_string nv) msg;
+    Some (s, l)
+  | _, ((name, Not_available (s, l)) :: _) ->
+    let msg = match s with None -> l | Some s -> s in
+    OpamConsole.error "Failed to fetch extra source \"%s\" of %s: %s"
+      name (OpamPackage.to_string nv) msg;
+    Some (s, l)
+  | Some (Result msg), _ ->
+    print_action msg; None
+  | Some (Up_to_date msg), _ ->
+    print_action msg; None
+  | None, [] -> None
+  | None, (e :: es as extras) ->
+    if List.for_all (function _, Up_to_date _ -> true | _ -> false) extras then
+      print_action "cached"
+    else begin match e, es with
+      | (_, Result msg), [] -> print_action msg
+      | _, _ -> print_action (Printf.sprintf "%d extra sources" (List.length extras))
+    end;
+    None
 
 (* Prepare the package build:
    * apply the patches
