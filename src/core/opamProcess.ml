@@ -482,6 +482,16 @@ type result = {
   r_cleanup  : string list;
 }
 
+let empty_result = {
+  r_code = 0;
+  r_signal = None;
+  r_duration = 0.;
+  r_info = [];
+  r_stdout = [];
+  r_stderr = [];
+  r_cleanup = [];
+}
+
 (* XXX: the function might block for ever for some channels kinds *)
 let read_lines f =
   try
@@ -724,14 +734,7 @@ let wait_one processes =
 let dry_wait_one = function
   | {p_pid = -1; _} as p :: _ ->
     if p.p_verbose then (verbose_print_cmd p; flush stdout);
-    p,
-    { r_code = 0;
-      r_signal = None;
-      r_duration = 0.;
-      r_info = [];
-      r_stdout = [];
-      r_stderr = [];
-      r_cleanup = []; }
+    p, empty_result
   | _ -> raise (Invalid_argument "dry_wait_one")
 
 let run command =
@@ -890,14 +893,7 @@ module Job = struct
   let rec dry_run = function
     | Done x -> x
     | Run (_command,cont) ->
-      let result = { r_code = 0;
-                     r_signal = None;
-                     r_duration = 0.;
-                     r_info = [];
-                     r_stdout = [];
-                     r_stderr = [];
-                     r_cleanup = []; }
-      in dry_run (cont result)
+      dry_run (cont empty_result)
 
   let rec catch handler fjob =
     try match fjob () with

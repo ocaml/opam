@@ -721,23 +721,33 @@ let build_package t ?(test=false) ?(doc=false) build_dir nv =
   let name = OpamPackage.name_to_string nv in
   let wrappers = get_wrappers t in
   let mk_cmd = make_command t opam ~dir:build_dir in
-  OpamProcess.Job.of_fun_list
-    (List.map (fun cmd () -> mk_cmd cmd)
-       (get_wrapper t opam wrappers OpamFile.Wrappers.pre_build) @
-     List.map (fun ((cmd,args) as ca) () ->
-         mk_cmd ~text_command:ca @@
-         cmd_wrapper t opam wrappers OpamFile.Wrappers.wrap_build cmd args)
-       commands)
-  @@+ fun result ->
-  let local =
-    opam_local_env_of_status OpamStd.Option.Op.(result >>| snd)
+  let jobs =
+    let check_result cmd r =
+      if OpamProcess.is_success r then Done None else Done (Some (cmd, r))
+    in
+    List.map (fun cmd -> function
+        | None -> let cmd = mk_cmd cmd in cmd @@> check_result cmd
+        | some -> Done some)
+      (get_wrapper t opam wrappers OpamFile.Wrappers.pre_build)
+    @
+    List.map (fun ((cmd,args) as cmd_args) -> function
+        | None ->
+          let base_cmd = OpamProcess.command cmd args in
+          (mk_cmd ~text_command:cmd_args @@
+           cmd_wrapper t opam wrappers OpamFile.Wrappers.wrap_build cmd args)
+          @@> check_result base_cmd
+        | some -> Done some)
+      commands
   in
+  OpamProcess.Job.seq jobs None @@+
+  fun result ->
+  let local = opam_local_env_of_status OpamStd.Option.Op.(result >>| snd) in
   OpamProcess.Job.of_fun_list ~keep_going:true
     (List.map (fun cmd () -> mk_cmd cmd)
        (get_wrapper t opam wrappers ~local OpamFile.Wrappers.post_build))
   @@+ fun post_result ->
   match result, post_result with
-  | Some (cmd, result), _ | None, Some (cmd, result) ->
+  | Some (cmd, result), _ | _, Some (cmd, result) ->
     OpamConsole.error
       "The compilation of %s failed at %S."
       name (OpamProcess.string_of_command cmd);
