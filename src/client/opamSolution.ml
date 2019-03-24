@@ -403,8 +403,8 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
     let t =
       { !t_ref with
         installed = visible_installed;
-        conf_files = OpamPackage.Map.filter
-            (fun nv _ -> OpamPackage.Set.mem nv visible_installed)
+        conf_files = OpamPackage.Name.Map.filter
+            (fun name _ -> OpamPackage.Set.exists (fun pkg -> OpamPackage.Name.equal name pkg.name) visible_installed)
             !t_ref.conf_files; }
     in
     let nv = action_contents action in
