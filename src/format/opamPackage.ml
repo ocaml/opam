@@ -36,6 +36,9 @@ module Version = struct
 
   let compare = OpamVersionCompare.compare
 
+  let equal v1 v2 =
+    compare v1 v2 = 0
+
   let to_json x =
     `String (to_string x)
   let of_json = function
@@ -84,6 +87,9 @@ module Name = struct
     match compare (String.lowercase_ascii n1) (String.lowercase_ascii n2) with
     | 0 -> compare n1 n2
     | i -> i
+
+  let equal n1 n2 =
+    compare n1 n2 = 0
 
   let to_json x = `String x
   let of_json = function
