@@ -17,6 +17,7 @@ type t = {
   reuse_build_dir: bool;
   inplace_build: bool;
   working_dir: bool;
+  drop_working_dir: bool;
   ignore_pin_depends: bool;
   show: bool;
   fake: bool;
@@ -35,6 +36,7 @@ let default = {
   reuse_build_dir = false;
   inplace_build = false;
   working_dir = false;
+  drop_working_dir = false;
   ignore_pin_depends = false;
   show = false;
   fake = false;
@@ -53,6 +55,7 @@ type 'a options_fun =
   ?reuse_build_dir:bool ->
   ?inplace_build:bool ->
   ?working_dir:bool ->
+  ?drop_working_dir:bool ->
   ?ignore_pin_depends:bool ->
   ?show:bool ->
   ?fake:bool ->
@@ -71,6 +74,7 @@ let setk k t
     ?reuse_build_dir
     ?inplace_build
     ?working_dir
+    ?drop_working_dir
     ?ignore_pin_depends
     ?show
     ?fake
@@ -96,6 +100,7 @@ let setk k t
     json_out = t.json_out + json_out;
     root_is_ok = t.root_is_ok + root_is_ok;
     no_auto_upgrade = t.no_auto_upgrade + no_auto_upgrade;
+    drop_working_dir = t.drop_working_dir + drop_working_dir;
   }
 
 let set t = setk (fun x () -> x) t
@@ -119,6 +124,7 @@ let initk k =
     ?reuse_build_dir:(env_bool "REUSEBUILDDIR")
     ?inplace_build:(env_bool "INPLACEBUILD")
     ?working_dir:(env_bool "WORKINGDIR")
+    ?drop_working_dir:(env_bool "DROPWORKINGDIR")
     ?ignore_pin_depends:(env_bool "IGNOREPINDEPENDS")
     ?show:(env_bool "SHOW")
     ?fake:(env_bool "FAKE")
