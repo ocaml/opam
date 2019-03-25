@@ -961,7 +961,7 @@ let config =
        | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
        | _ -> bad_subcommand commands ("config", command, params))
     | Some `report, [] -> (
-        let print label fmt = OpamConsole.msg ("# %-17s "^^fmt^^"\n") label in
+        let print label fmt = OpamConsole.msg ("# %-20s "^^fmt^^"\n") label in
         OpamConsole.msg "# opam config report\n";
         print "opam-version" "%s "
           (OpamVersion.to_string (OpamVersion.full ()));
@@ -1041,6 +1041,22 @@ let config =
             );
           print "current-switch" "%s"
             (OpamSwitch.to_string state.switch);
+          let process nv =
+            let conf = OpamSwitchState.package_config state nv.name in
+            let bindings =
+              let f (name, value) =
+                (OpamVariable.Full.create nv.name name,
+                 OpamVariable.string_of_variable_contents value)
+              in
+              List.map f (OpamFile.Dot_config.bindings conf)
+            in
+            let print (name, value) =
+              let name = OpamVariable.Full.to_string name in
+              print name "%s" value
+            in
+            List.iter print bindings
+          in
+          List.iter process (OpamPackage.Set.elements state.compiler_packages);
           if List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
           then OpamConsole.warning
               "PATH contains '.' : this is a likely cause of trouble.";
