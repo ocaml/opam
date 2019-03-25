@@ -99,6 +99,10 @@ package definitions in the current directory rather than in the archive.
 > `opam publish` can be re-run any number of times to update an existing
 > submission, or propose changes to an already released package.
 
+> To fill the pull request, `opam publish` clones _opam repository_ over ssh,
+> you need to have your *ssh keys* registered in your [Github
+> account](https://help.github.com/en/articles/connecting-to-github-with-ssh).
+
 ### Without opam-publish
 
 First, you will need to add a section in the following format to the package
