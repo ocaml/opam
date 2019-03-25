@@ -231,14 +231,15 @@ let load lock_kind gt rt switch =
   in
   let conf_files =
     OpamPackage.Set.fold (fun nv acc ->
-        OpamPackage.Map.add nv
+        OpamPackage.Name.Map.add nv.name
           (OpamFile.Dot_config.safe_read
              (OpamPath.Switch.config gt.root switch nv.name))
           acc)
-      installed OpamPackage.Map.empty
+      installed OpamPackage.Name.Map.empty
   in
   let ext_files_changed =
-    OpamPackage.Map.fold (fun nv conf acc ->
+    OpamPackage.Name.Map.fold (fun name conf acc ->
+        let nv = OpamPackage.package_of_name installed name in
         if
           List.exists (fun (file, hash) ->
               let exists = OpamFilename.exists file in
@@ -322,7 +323,7 @@ let load_virtual ?repos_list gt rt =
     installed_roots = OpamPackage.Set.empty;
     repos_package_index = opams;
     opams;
-    conf_files = OpamPackage.Map.empty;
+    conf_files = OpamPackage.Name.Map.empty;
     packages;
     available_packages = lazy packages;
     reinstall = OpamPackage.Set.empty;
@@ -376,9 +377,7 @@ let files st nv =
          opam)
 
 let package_config st name =
-  OpamPackage.Map.find
-    (OpamPackage.package_of_name st.installed name)
-    st.conf_files
+  OpamPackage.Name.Map.find name st.conf_files
 
 let is_name_installed st name =
   OpamPackage.has_name st.installed name

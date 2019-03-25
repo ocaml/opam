@@ -21,6 +21,9 @@ module Version: sig
 
   (** Compare two versions using the Debian version scheme *)
   val compare: t -> t -> int
+
+  (** Are two package versions equal? *)
+  val equal: t -> t -> bool
 end
 
 (** Names *)
@@ -30,6 +33,8 @@ module Name: sig
   (** Compare two package names *)
   val compare: t -> t -> int
 
+  (** Are two package names equal? *)
+  val equal: t -> t -> bool
 end
 
 type t = private {
