@@ -141,7 +141,7 @@ let package_files_to_cache repo_root cache_dir ?link (nv, prefix) =
           ~cache_dir
           checksums
           (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
-        @@| function
+        @@| fun r -> match OpamRepository.report_fetch_result nv r with
         | Not_available (_,m) ->
           OpamPackage.Map.update nv (fun l -> m::l) [] errors
         | Up_to_date () | Result () ->

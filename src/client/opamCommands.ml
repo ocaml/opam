@@ -2722,9 +2722,9 @@ let source =
       let job =
         let open OpamProcess.Job.Op in
         OpamUpdate.download_package_source t nv dir @@+ function
-        | Some (Not_available (_,s)) ->
+        | Some (Not_available (_,s)), _ | _, (_, Not_available (_, s)) :: _ ->
           OpamConsole.error_and_exit `Sync_error "Download failed: %s" s
-        | None | Some (Result () | Up_to_date ()) ->
+        | None, _ | Some (Result _ | Up_to_date _), _ ->
           OpamAction.prepare_package_source t nv dir @@| function
           | None ->
             OpamConsole.formatted_msg "Successfully extracted to %s\n"

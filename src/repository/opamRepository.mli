@@ -34,7 +34,7 @@ val update: repository -> dirname -> unit OpamProcess.job
 val pull_tree:
   string -> ?cache_dir:dirname -> ?cache_urls:url list -> ?working_dir:bool ->
   dirname -> OpamHash.t list -> url list ->
-  unit download OpamProcess.job
+  string download OpamProcess.job
 
 (** Same as [pull_tree], but for fetching a single file. *)
 val pull_file:
@@ -46,7 +46,7 @@ val pull_file:
     is present in the cache. *)
 val pull_file_to_cache:
   string -> cache_dir:dirname -> ?cache_urls:url list ->
-  OpamHash.t list -> url list -> unit download OpamProcess.job
+  OpamHash.t list -> url list -> string download OpamProcess.job
 
 (** The file where the file with the given hash is stored under cache at given
     dirname. *)
@@ -66,3 +66,6 @@ val is_dirty: url -> bool OpamProcess.job
 (** Find a backend *)
 val find_backend: repository -> (module OpamRepositoryBackend.S)
 val find_backend_by_kind: OpamUrl.backend -> (module OpamRepositoryBackend.S)
+
+(** Prints user messages upon the result of a download *)
+val report_fetch_result: package -> string download -> unit download

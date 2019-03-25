@@ -166,14 +166,6 @@ let repositories rt repos =
   OpamRepositoryState.Cache.save rt;
   failed, rt
 
-let report_fetch_failure pkg = function
-  | Not_available (s, l) ->
-    let msg = match s with None -> l | Some s -> s in
-    OpamConsole.msg "[%s] fetching sources failed: %s\n"
-      (OpamConsole.colorise `red (OpamPackage.to_string pkg)) msg;
-    Not_available (s, l)
-  | res -> res
-
 let fetch_dev_package url srcdir ?(working_dir=false) nv =
   let remote_url = OpamFile.URL.url url in
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
@@ -182,7 +174,7 @@ let fetch_dev_package url srcdir ?(working_dir=false) nv =
   OpamRepository.pull_tree
     ~cache_dir:(OpamRepositoryPath.download_cache OpamStateConfig.(!r.root_dir))
     (OpamPackage.to_string nv) srcdir checksum ~working_dir mirrors
-  @@| report_fetch_failure nv
+  @@| OpamRepository.report_fetch_result nv
 
 
 let pinned_package st ?version ?(working_dir=false) name =
@@ -329,7 +321,7 @@ let pinned_package st ?version ?(working_dir=false) name =
       opam
     in
     match result, new_source_opam with
-    | Result (), Some new_opam
+    | Result _, Some new_opam
       when changed_opam old_source_opam new_source_opam &&
            changed_opam overlay_opam new_source_opam ->
       log "Metadata from the package source of %s changed"
@@ -369,7 +361,7 @@ let pinned_package st ?version ?(working_dir=false) name =
       Done (interactive_part, true)
     | (Up_to_date _ | Not_available _), _ ->
       Done ((fun st -> st), false)
-    | Result  (), Some new_opam
+    | Result _, Some new_opam
       when not (changed_opam old_source_opam overlay_opam) ->
       (* The new opam is not _effectively_ different from the old, so no need to
          confirm, but use it still (e.g. descr may have changed) *)
@@ -377,7 +369,7 @@ let pinned_package st ?version ?(working_dir=false) name =
       Done
         ((fun st -> {st with opams = OpamPackage.Map.add nv opam st.opams}),
          true)
-    | Result  (), _ ->
+    | Result  _, _ ->
       Done ((fun st -> st), true)
 
 let dev_package st ?working_dir nv =
@@ -514,23 +506,24 @@ let download_package_source st nv dirname =
         ~cache_dir ~cache_urls
         dirname
         (OpamFile.URL.checksum u)
-        (OpamFile.URL.url u :: OpamFile.URL.mirrors u)
-       @@| report_fetch_failure nv)
-      @@| OpamStd.Option.some
+        (OpamFile.URL.url u :: OpamFile.URL.mirrors u))
+      @@| fun r -> Some r
   in
   let fetch_extra_source_job (name, u) = function
-    | Some (Not_available _) as err -> Done err
+    | (_, Not_available _) :: _ as err -> Done err
     | ret ->
       (OpamRepository.pull_file_to_cache
          (OpamPackage.to_string nv ^"/"^ OpamFilename.Base.to_string name)
          ~cache_dir ~cache_urls
          (OpamFile.URL.checksum u)
-         (OpamFile.URL.url u :: OpamFile.URL.mirrors u)
-       @@| report_fetch_failure nv) @@| function
-      | Not_available _ as na -> Some na
-      | _ -> ret
+         (OpamFile.URL.url u :: OpamFile.URL.mirrors u))
+      @@| fun r -> (OpamFilename.Base.to_string name, r) :: ret
   in
-  fetch_source_job @@+
-  OpamProcess.Job.seq
-    (List.map fetch_extra_source_job
-       (OpamFile.OPAM.extra_sources opam))
+  fetch_source_job @@+ function
+  | Some (Not_available _) as r -> Done (r, [])
+  | r ->
+    OpamProcess.Job.seq
+      (List.map fetch_extra_source_job
+         (OpamFile.OPAM.extra_sources opam))
+      []
+    @@| fun r1 -> r, r1
