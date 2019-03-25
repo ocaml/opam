@@ -1271,7 +1271,16 @@ let reinstall t ?(assume_built=false) names =
 module PIN = struct
   open OpamPinCommand
 
-  let post_pin_action st names =
+  let post_pin_action st was_pinned names =
+    let names =
+      OpamPackage.Set.Op.(st.pinned -- was_pinned)
+      |> OpamPackage.names_of_packages
+      |> (fun s ->
+          List.fold_left
+            (fun s p -> OpamPackage.Name.Set.add p s)
+            s names)
+      |> OpamPackage.Name.Set.elements
+    in
     try
       upgrade_t
         ~strict_upgrade:false ~auto_install:true ~ask:true ~terse:true
@@ -1315,13 +1324,7 @@ module PIN = struct
           source_pin st name ?version ~edit (Some (get_upstream st name))
         | `None -> source_pin st name ?version ~edit None
       in
-      if action then
-        let names =
-          OpamPackage.Set.Op.(st.pinned -- pinned)
-          |> OpamPackage.Set.elements
-          |> List.map OpamPackage.name
-        in
-        (OpamConsole.msg "\n"; post_pin_action st names)
+      if action then (OpamConsole.msg "\n"; post_pin_action st pinned [name])
       else st
     with
     | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
@@ -1361,13 +1364,7 @@ module PIN = struct
         OpamConsole.error_and_exit `Not_found
           "Package is not pinned, and no existing version was supplied."
     in
-    if action then
-      let names =
-        OpamPackage.Set.Op.(st.pinned -- pinned)
-        |> OpamPackage.Set.elements
-        |> List.map OpamPackage.name
-      in
-      post_pin_action st names
+    if action then post_pin_action st pinned [name]
     else st
 
   let unpin st ?(action=true) names =
