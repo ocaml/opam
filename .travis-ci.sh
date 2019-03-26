@@ -102,7 +102,10 @@ EOF
         tar -xzf ocaml-$OCAML_VERSION.tar.gz
         cd ocaml-$OCAML_VERSION
         if [[ $OPAM_TEST -ne 1 ]] ; then
-          CONFIGURE_SWITCHES="-no-ocamldoc -no-ocamlbuild"
+          CONFIGURE_SWITCHES="-no-ocamldoc"
+          if [[ "$OCAML_VERSION" != "4.02.3" ]] ; then
+            CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-ocamlbuild"
+          fi
         fi
         ./configure --prefix ~/local -no-graph -no-debugger ${CONFIGURE_SWITCHES:-}
         if [[ $OPAM_TEST -eq 1 ]] ; then
