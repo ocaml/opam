@@ -35,26 +35,31 @@ let symbol_of_action =
   let open OpamConsole in
   function
   | `Remove _ ->
-      utf8_symbol Symbols.circled_division_slash
-                  ~alternates:[Symbols.greek_small_letter_lambda] "X"
+      utf8_symbol Symbols.white_diamond
+                  ~alternates:[Symbols.circled_division_slash] "X"
   | `Install _ ->
-      utf8_symbol Symbols.asterisk_operator
-                  ~alternates:[Symbols.six_pointed_black_star] "*"
+      utf8_symbol Symbols.black_diamond
+                  ~alternates:[Symbols.asterisk_operator;
+                               Symbols.six_pointed_black_star] "*"
   | `Change (`Up,_,_) ->
-      utf8_symbol Symbols.north_east_arrow
-                  ~alternates:[Symbols.upwards_arrow] "U"
+      utf8_symbol Symbols.black_up_pointing_triangle
+                  ~alternates:[Symbols.north_east_arrow;
+                               Symbols.upwards_arrow] "U"
   | `Change (`Down,_,_) ->
-      utf8_symbol Symbols.south_east_arrow
-                  ~alternates:[Symbols.downwards_arrow] "D"
+      utf8_symbol Symbols.black_down_pointing_triangle
+                  ~alternates:[Symbols.south_east_arrow;
+                               Symbols.downwards_arrow] "D"
   | `Reinstall _ ->
-      utf8_symbol Symbols.clockwise_open_circle_arrow
-                  ~alternates:[Symbols.up_down_arrow] "R"
+      utf8_symbol Symbols.white_diamond_containing_black_small_diamond
+                  ~alternates:[Symbols.clockwise_open_circle_arrow;
+                               Symbols.up_down_arrow] "R"
   | `Build _ ->
       utf8_symbol Symbols.greek_small_letter_lambda
                   ~alternates:[Symbols.six_pointed_black_star] "B"
   | `Fetch _ ->
-    utf8_symbol Symbols.downwards_double_arrow
-      ~alternates:[Symbols.downwards_black_arrow] "F"
+    utf8_symbol Symbols.downwards_black_arrow
+      ~alternates:[Symbols.downwards_double_arrow;
+                   Symbols.black_down_pointing_triangle] "F"
 
 let action_strings ?utf8 a =
   if utf8 = None && (OpamConsole.utf8 ()) || utf8 = Some true
