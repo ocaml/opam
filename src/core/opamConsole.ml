@@ -98,6 +98,7 @@ module Symbols = struct
   let downwards_arrow = Uchar.of_int 0x2193
   let up_down_arrow = Uchar.of_int 0x2195
   let downwards_double_arrow = Uchar.of_int 0x21d3
+  let black_down_pointing_triangle = Uchar.of_int 0x25bc
   let downwards_black_arrow = Uchar.of_int 0x2b07
 end
 
