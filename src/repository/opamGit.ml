@@ -202,7 +202,16 @@ module VCS : OpamVCS.VCS = struct
   let is_dirty dir =
     git dir [ "diff" ; "--no-ext-diff" ; "--quiet" ]
     @@> function
-    | { OpamProcess.r_code = 0; _ } -> Done false
+    | { OpamProcess.r_code = 0; _ } ->
+      (git dir ["ls-files"; "--others"; "--exclude-standard"]
+       @@> function
+       | { OpamProcess.r_code = 0; OpamProcess.r_stdout = []; _ } ->
+         Done false
+       | { OpamProcess.r_code = 0; _ }
+       | { OpamProcess.r_code = 1; _ } as r ->
+         OpamProcess.cleanup ~force:true r; Done true
+       | r -> OpamSystem.process_error r
+      )
     | { OpamProcess.r_code = 1; _ } as r ->
       OpamProcess.cleanup ~force:true r; Done true
     | r -> OpamSystem.process_error r
