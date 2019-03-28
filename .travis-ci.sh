@@ -171,8 +171,7 @@ export OCAMLRUNPARAM=b
     done
     # Compile and run opam-rt
     cd ~/build
-    wget https://github.com/ocaml/opam-rt/archive/$TRAVIS_PULL_REQUEST_BRANCH.tar.gz -O opam-rt.tar.gz || \
-    wget https://github.com/ocaml/opam-rt/archive/master.tar.gz -O opam-rt.tar.gz
+    wget https://github.com/ocaml/opam-rt/archive/opam2.0.tar.gz -O opam-rt.tar.gz
     tar -xzf opam-rt.tar.gz
     cd opam-rt-*
     opam install ./opam-rt.opam --deps-only -y
