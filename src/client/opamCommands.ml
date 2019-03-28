@@ -2575,7 +2575,7 @@ let pin ?(unpin_only=false) () =
              st names
          in
          if action then
-           (OpamSwitchState.drop @@
+           (ignore @@
             OpamClient.PIN.post_pin_action st pinned (List.map fst names);
             `Ok ())
          else `Ok ())
