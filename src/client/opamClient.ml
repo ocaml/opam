@@ -248,7 +248,10 @@ let compute_upgrade_t
        ~upgrade:upgrade_atoms
        ())
 
-let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
+let upgrade_t
+    ?strict_upgrade ?auto_install ?ask ?(check=false) ?(terse=false) ~all
+    atoms t
+  =
   log "UPGRADE %a"
     (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
     atoms;
@@ -306,6 +309,8 @@ let upgrade_t ?strict_upgrade ?auto_install ?ask ?(check=false) ~all atoms t =
       let notuptodate = latest -- to_check in
       if OpamPackage.Set.is_empty notuptodate then
         OpamConsole.msg "Already up-to-date.\n"
+      else if terse then
+        OpamConsole.msg "No package build needed.\n"
       else
         (let hdmsg = "Everything as up-to-date as possible" in
          let unav = notuptodate -- Lazy.force t.available_packages in
@@ -1268,9 +1273,20 @@ let reinstall t ?(assume_built=false) names =
 module PIN = struct
   open OpamPinCommand
 
-  let post_pin_action st names =
+  let post_pin_action st was_pinned names =
+    let names =
+      OpamPackage.Set.Op.(st.pinned -- was_pinned)
+      |> OpamPackage.names_of_packages
+      |> (fun s ->
+          List.fold_left
+            (fun s p -> OpamPackage.Name.Set.add p s)
+            s names)
+      |> OpamPackage.Name.Set.elements
+    in
     try
-      upgrade_t ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
+      upgrade_t
+        ~strict_upgrade:false ~auto_install:true ~ask:true ~terse:true
+        ~all:false
        (List.map (fun name -> name, None) names) st
     with e ->
       OpamConsole.note
@@ -1310,13 +1326,7 @@ module PIN = struct
           source_pin st name ?version ~edit (Some (get_upstream st name))
         | `None -> source_pin st name ?version ~edit None
       in
-      if action then
-        let names =
-          OpamPackage.Set.Op.(st.pinned -- pinned)
-          |> OpamPackage.Set.elements
-          |> List.map OpamPackage.name
-        in
-        (OpamConsole.msg "\n"; post_pin_action st names)
+      if action then (OpamConsole.msg "\n"; post_pin_action st pinned [name])
       else st
     with
     | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
@@ -1356,13 +1366,7 @@ module PIN = struct
         OpamConsole.error_and_exit `Not_found
           "Package is not pinned, and no existing version was supplied."
     in
-    if action then
-      let names =
-        OpamPackage.Set.Op.(st.pinned -- pinned)
-        |> OpamPackage.Set.elements
-        |> List.map OpamPackage.name
-      in
-      post_pin_action st names
+    if action then post_pin_action st pinned [name]
     else st
 
   let unpin st ?(action=true) names =
@@ -1378,7 +1382,9 @@ module PIN = struct
             else (nv.name, None) :: acc)
           installed_unpinned []
       in
-      upgrade_t ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
+      upgrade_t
+        ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
+        ~terse:true
         atoms st
     else st
 

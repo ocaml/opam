@@ -233,17 +233,22 @@ module Make (G : G) = struct
       then
         (* Start a new process *)
         let n = S.choose ready in
-        log "Starting job %a (worker%s): %a"
+        log "Starting job %a (worker %a): %a"
           (slog (string_of_int @* V.hash)) n
-          (OpamStd.List.concat_map " " (fun (pool, jobs) ->
-               let nslots =
-                 OpamStd.Option.of_Not_found (List.assoc pool) nslots
-               in
-               Printf.sprintf "%s/%d"
-                 (match nslots with None -> "-"
-                                  | Some n -> string_of_int (jobs - n))
-                 jobs)
-              pools)
+          (slog
+             (fun pools ->
+                let slots = get_slots nslots n in
+                OpamStd.List.concat_map " " (fun (pool, jobs) ->
+                  let nslots =
+                    OpamStd.Option.of_Not_found (List.assoc pool) slots
+                  in
+                  Printf.sprintf "%s/%d"
+                    (match nslots with
+                     | None -> "-"
+                     | Some n -> string_of_int (jobs - n + 1))
+                    jobs)
+                  pools))
+          pools
           (slog V.to_string) n;
         let pred = G.pred g n in
         let pred = List.map (fun n -> n, M.find n results) pred in
@@ -262,7 +267,7 @@ module Make (G : G) = struct
       let processes =
         M.fold (fun n (p,x,_) acc -> (p,(n,x)) :: acc) running []
       in
-      let process,result =
+      let process, result =
         if dry_run then
           OpamProcess.dry_wait_one (List.map fst processes)
         else try match processes with

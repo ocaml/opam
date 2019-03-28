@@ -85,10 +85,12 @@ val update:
 val upgrade:
   rw switch_state -> ?check:bool -> all:bool -> atom list -> rw switch_state
 
-(** Low-level version of [upgrade], bypassing the package name sanitization
-    and dev package update, and offering more control *)
+(** Low-level version of [upgrade], bypassing the package name sanitization and
+   dev package update, and offering more control. [terse] avoids the verbose
+   message when we are at a local maximum, but there are possible upgrades *)
 val upgrade_t:
   ?strict_upgrade:bool -> ?auto_install:bool -> ?ask:bool -> ?check:bool ->
+  ?terse:bool ->
   all:bool -> atom list -> rw switch_state -> rw switch_state
 
 (** Recovers from an inconsistent universe *)
@@ -120,5 +122,10 @@ module PIN: sig
 
   (** List the current pinned packages. *)
   val list: 'a switch_state -> short:bool -> unit
+
+  (** Runs an install/upgrade on the listed packages if necessary.
+      [post_pin_action st was_pinned names] takes the set of packages pinned
+      beforehand, and a list of newly pinned packages *)
+  val post_pin_action: rw switch_state -> package_set -> name list -> rw switch_state
 
 end

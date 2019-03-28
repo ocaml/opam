@@ -2617,26 +2617,18 @@ let pin ?(unpin_only=false) () =
                      OpamPath.Switch.Overlay.tmp_opam
                        st.switch_global.root st.switch name
                    in
-                   if not (OpamFilename.exists (OpamFile.filename opam_localf)) then
-                     OpamFile.OPAM.write opam_localf opam) opam_opt;
-               try OpamPinCommand.source_pin st name ~edit (Some url)
-               with OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
-                  | OpamPinCommand.Nothing_to_do -> st)
+                   if not (OpamFilename.exists (OpamFile.filename opam_localf))
+                   then OpamFile.OPAM.write opam_localf opam)
+                 opam_opt;
+               try OpamPinCommand.source_pin st name ~edit (Some url) with
+               | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
+               | OpamPinCommand.Nothing_to_do -> st)
              st names
          in
-         (* names are in newly pinned packages *)
-         let atoms =
-           OpamPackage.Set.Op.(st.pinned -- pinned)
-           |> OpamPackage.Set.elements
-           |> List.map (fun p -> (OpamPackage.name p, None))
-         in
          if action then
-           let _st =
-             OpamClient.upgrade_t
-               ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
-               atoms st
-           in
-           `Ok ()
+           (OpamSwitchState.drop @@
+            OpamClient.PIN.post_pin_action st pinned (List.map fst names);
+            `Ok ())
          else `Ok ())
     | Some `add, [n; target] | Some `default n, [target] ->
       (match (fst package) n with
