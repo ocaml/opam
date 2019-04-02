@@ -1761,13 +1761,11 @@ let repository =
             OpamRepositoryCommand.update_with_auto_upgrade rt [name]
           in
           if failed <> [] then
-            (let _rt = OpamRepositoryCommand.remove rt name in
+            (OpamRepositoryState.drop @@ OpamRepositoryCommand.remove rt name;
              OpamConsole.error_and_exit `Sync_error
                "Initial repository fetch failed"));
-      let _gt =
-        OpamRepositoryCommand.update_selection gt ~global ~switches
-          (update_repos name)
-      in
+      OpamGlobalState.drop @@ OpamRepositoryCommand.update_selection gt ~global
+        ~switches (update_repos name);
       if scope = [`Current_switch] then
         OpamConsole.note
           "Repository %s has been added to the selections of switch %s \
@@ -1793,8 +1791,8 @@ let repository =
         check_for_repos rt names
           (OpamConsole.warning
              "No configured repositories by these names found: %s");
-        let _rt = List.fold_left OpamRepositoryCommand.remove rt names in
-        ()
+        OpamRepositoryState.drop @@
+        List.fold_left OpamRepositoryCommand.remove rt names
       else if scope = [`Current_switch] then
         OpamConsole.msg
           "Repositories removed from the selections of switch %s. \
@@ -1807,10 +1805,9 @@ let repository =
           check_for_repos rt [name]
             (OpamConsole.error_and_exit `Not_found
                "No configured repository '%s' found, you must specify an URL"));
-      let _gt =
-        OpamRepositoryCommand.update_selection gt ~global ~switches
-          (update_repos name)
-      in
+      OpamGlobalState.drop @@
+      OpamRepositoryCommand.update_selection gt ~global ~switches
+        (update_repos name);
       `Ok ()
     | Some `set_url, (name :: url :: security) ->
       let name = OpamRepositoryName.of_string name in
@@ -1845,11 +1842,10 @@ let repository =
         List.filter (fun r -> not (OpamRepositoryName.Map.mem r repos)) names
       in
       if not_found = [] then
-        let _gt =
-          OpamRepositoryCommand.update_selection gt ~global ~switches
-            (fun _ -> names)
-        in
-        `Ok ()
+        (OpamGlobalState.drop @@
+         OpamRepositoryCommand.update_selection gt ~global ~switches
+           (fun _ -> names);
+         `Ok ())
       else
         OpamConsole.error_and_exit `Bad_arguments
           "No configured repositories by these names found: %s"
@@ -1927,10 +1923,11 @@ let with_repos_rt gt repos f =
           (List.map fst new_defs)
       in
       if failed <> [] then
-        let _rt = List.fold_left OpamRepositoryCommand.remove rt failed in
-        OpamConsole.error_and_exit `Sync_error
-          "Initial fetch of these repositories failed: %s"
-          (OpamStd.List.concat_map ", " OpamRepositoryName.to_string failed)
+        (OpamRepositoryState.drop @@ List.fold_left
+           OpamRepositoryCommand.remove rt failed;
+         OpamConsole.error_and_exit `Sync_error
+           "Initial fetch of these repositories failed: %s"
+           (OpamStd.List.concat_map ", " OpamRepositoryName.to_string failed))
       else
         Some (List.map fst repos), rt
   in
@@ -2169,6 +2166,7 @@ let switch =
           ~local_compiler
           switch
       in
+      OpamGlobalState.drop _gt;
       let st =
         if not no_install && not empty &&
            OpamSwitch.is_external switch && not local_compiler then
@@ -2248,7 +2246,7 @@ let switch =
       in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
-      let _st = OpamSwitchCommand.reinstall st in
+      OpamSwitchState.drop @@ OpamSwitchCommand.reinstall st;
       `Ok ()
     | Some `current, [] ->
       OpamSwitchCommand.show ();
@@ -2268,7 +2266,7 @@ let switch =
          let namesv = List.map parse_namev packages in
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-         let _st = OpamSwitchCommand.set_compiler st namesv in
+         OpamSwitchState.drop @@ OpamSwitchCommand.set_compiler st namesv;
          `Ok ()
        with Failure e -> `Error (false, e))
     | Some `link, args ->

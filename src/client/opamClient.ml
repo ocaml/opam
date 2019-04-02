@@ -637,6 +637,7 @@ let update
           (OpamPackage.Set.to_json updates);
       (success, not (OpamPackage.Set.is_empty updates)), st
   in
+  OpamSwitchState.drop _st;
   repo_update_failure = [] && dev_update_success && remaining = [] &&
   OpamPackage.Set.is_empty ignore_packages,
   repo_changed || dev_changed,
@@ -781,8 +782,7 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
     OpamRepositoryCommand.update_with_auto_upgrade rt
       (OpamRepositoryName.Map.keys rt.repos_definitions)
   in
-  let _rt = OpamRepositoryState.unlock rt in
-  ()
+  OpamRepositoryState.drop rt
 
 let init
     ~init_config ~interactive

@@ -259,10 +259,10 @@ let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
        in
        log "Missing environment file, regenerates it";
        if not (OpamCoreConfig.(!r.safe_mode)) then
-         (let _st =
+         (let _, _st =
             OpamSwitchState.with_write_lock st @@ fun _st ->
             (OpamFile.Environment.write env_file upd), _st
-          in ());
+          in OpamSwitchState.drop _st);
        OpamEnv.add [] upd)
     else
       OpamEnv.get_opam_raw
