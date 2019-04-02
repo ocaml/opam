@@ -278,9 +278,7 @@ let load lock_kind gt rt switch =
       conf_files
       OpamPackage.Set.empty
   in
-  let installed =
-    installed -- ext_files_changed
-  in
+  let remove = ext_files_changed in
   let reinstall =
     OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall gt.root switch) ++
     changed
@@ -293,7 +291,8 @@ let load lock_kind gt rt switch =
     repos_package_index; installed_opams;
     installed; pinned; installed_roots;
     opams; conf_files;
-    packages; available_packages; reinstall;
+    packages; available_packages;
+    reinstall; remove;
   } in
   log "Switch state loaded in %.3fs" (chrono ());
   st
@@ -327,6 +326,7 @@ let load_virtual ?repos_list gt rt =
     packages;
     available_packages = lazy packages;
     reinstall = OpamPackage.Set.empty;
+    remove = OpamPackage.Set.empty;
   }
 
 let selections st =
