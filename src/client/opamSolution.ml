@@ -366,24 +366,19 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
         pred
     in
     (* Check whether prerequisites failed *)
-    let failed_fetch, failed_not_fetch =
-      PackageAction.Set.fold (fun a (failed_fetch, failed_not_fetch) ->
-        match a with
-        | `Fetch pkg -> (OpamPackage.Set.add pkg failed_fetch, failed_not_fetch)
-        | _ -> (failed_fetch, PackageAction.Set.add a failed_not_fetch)
-      ) failed (OpamPackage.Set.empty, PackageAction.Set.empty) in
     let action_is_remove = match action with `Remove _ -> true | _ -> false in
-    if not (PackageAction.Set.is_empty failed_not_fetch) then
+    let has_failure = not (PackageAction.Set.is_empty failed) in
+    let has_nonfetch_failure =
+      List.exists (function
+          | (_, `Successful _) | (`Fetch _, _) -> false
+          | _ -> true)
+        pred
+    in
+    if has_failure && (not action_is_remove || has_nonfetch_failure)
+    then
       (* fatal error *)
       Done (`Error (`Aborted failed))
-    else begin
-    if action_is_remove && not (OpamPackage.Set.is_empty failed_fetch) then
-      (* Print a warning, but still do the remove *)
-      OpamConsole.warning
-        "The sources of the following couldn't be obtained, they may be \
-         uncleanly removed:\n%s"
-        (OpamStd.Format.itemize OpamPackage.to_string
-           (OpamPackage.Set.elements failed_fetch));
+    else
     let store_time =
       let t0 = Unix.gettimeofday () in
       fun () -> Hashtbl.add timings action (Unix.gettimeofday () -. t0)
@@ -497,7 +492,6 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
       store_time ();
       `Successful (installed, OpamPackage.Set.add nv removed)
     | _ -> assert false
-  end
   in
 
   let action_results =
@@ -662,15 +656,39 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
          doesn't add information *)
       let successful =
         List.filter (function
-            | `Build p when List.mem (`Install p) failed -> false
+            | `Fetch p | `Build p when List.mem (`Install p) failed -> false
             | _ -> true)
           successful
       in
       let remaining =
         List.filter (function
-            | `Remove p | `Install p when List.mem (`Build p) failed -> false
+            | `Remove p | `Install p
+              when List.mem (`Build p) failed -> false
+            | `Remove p | `Install p | `Build p
+              when List.mem (`Fetch p) failed -> false
             | _ -> true)
           remaining
+      in
+      let removes_missing_source =
+        List.filter (function
+            | `Remove p as rem ->
+              let fetch = `Fetch p in
+              List.mem fetch failed &&
+              PackageActionGraph.mem_edge action_graph fetch rem
+            | _ -> false
+          )
+          successful
+      in
+      let failed =
+        (* Filter out failed fetches that were just for removals, there is a
+           shorter message for them *)
+        List.filter (function
+            | `Fetch _ as a ->
+              let succ = PackageActionGraph.succ action_graph a in
+              not (List.for_all (fun a -> List.mem a removes_missing_source)
+                     succ)
+            | _ -> true)
+          failed
       in
       let filter_graph l =
         if l = [] then PackageActionGraph.create () else
@@ -719,6 +737,14 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
               s)
           | None -> ()
       in
+      if removes_missing_source <> [] then
+        (OpamConsole.msg "\n";
+         OpamConsole.warning
+                 "The sources of the following couldn't be obtained, they may be \
+                  uncleanly removed:\n%s"
+                 (OpamStd.Format.itemize
+                    (fun rm -> OpamPackage.to_string (action_contents rm))
+                    removes_missing_source));
       OpamConsole.msg "\n";
       OpamConsole.header_msg "Error report";
       if OpamConsole.debug () || OpamConsole.verbose () then
