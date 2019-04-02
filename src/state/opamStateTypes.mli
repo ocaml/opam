@@ -141,6 +141,9 @@ type +'lock switch_state = {
   reinstall: package_set;
   (** The set of packages which needs to be reinstalled *)
 
+  remove: package_set;
+  (** The set of packages which need to be removed *)
+
   (* Missing: a cache for
      - switch-global and package variables
      - the solver universe? *)
