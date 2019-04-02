@@ -226,7 +226,10 @@ let pull_tree
     OpamFilename.extract_job f local_dirname @@+ function
     | None -> Done (Up_to_date s)
     | Some (Failure s) ->
-      Done (Not_available (Some "Could not extract archive", s))
+      Done (Not_available (Some s, "Could not extract archive:\n"^s))
+    | Some (OpamSystem.Process_error pe) ->
+      Done (Not_available (Some (OpamProcess.result_summary pe),
+                           OpamProcess.string_of_result pe))
     | Some e -> Done (Not_available (None, Printexc.to_string e))
   in
   (match cache_dir with
