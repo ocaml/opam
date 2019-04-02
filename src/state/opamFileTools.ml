@@ -497,7 +497,8 @@ let lint ?check_extra_files t =
        (t.install <> [] || t.remove <> [] || t.url <> None ||
         t.extra_sources <> []));
     cond 47 `Warning
-      "Synopsis should start with a capital and not end with a dot"
+      "Synopsis (or description first line) should start with a capital and \
+       not end with a dot"
       (let valid_re =
          Re.(compile (seq [bos; diff any (alt [blank; lower]); rep any;
                            diff any (alt [blank; char '.']); eos]))
@@ -845,7 +846,8 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
           (OpamFilename.Dir.to_string dir);
         opam
       | Some oef, Some ef ->
-        if oef <> ef then
+        let sort = List.sort (fun (b, _) (b', _) -> compare b b') in
+        if sort oef <> sort ef then
           log "Mismatching extra-files at %s"
             (OpamFilename.Dir.to_string dir);
         opam

@@ -29,7 +29,7 @@ init-bootstrap () {
     eval $(opam env)
     # extlib is installed, since UChar.cmi causes problems with the search
     # order. See also the removal of uChar and uTF8 in src_ext/jbuild-extlib-src
-    opam install cohttp-lwt-unix ssl cmdliner dose3 cudf.0.9 opam-file-format re extlib dune 'mccs>=1.1+5' --yes
+    opam install ssl cmdliner dose3 cudf.0.9 opam-file-format re extlib dune 'mccs>=1.1+5' --yes
   fi
   rm -f "$OPAMBSROOT"/log/*
 }
@@ -102,7 +102,10 @@ EOF
         tar -xzf ocaml-$OCAML_VERSION.tar.gz
         cd ocaml-$OCAML_VERSION
         if [[ $OPAM_TEST -ne 1 ]] ; then
-          CONFIGURE_SWITCHES="-no-ocamldoc -no-ocamlbuild"
+          CONFIGURE_SWITCHES="-no-ocamldoc"
+          if [[ "$OCAML_VERSION" != "4.02.3" ]] ; then
+            CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-ocamlbuild"
+          fi
         fi
         ./configure --prefix ~/local -no-graph -no-debugger ${CONFIGURE_SWITCHES:-}
         if [[ $OPAM_TEST -eq 1 ]] ; then
@@ -156,6 +159,7 @@ export OCAMLRUNPARAM=b
     make lib-ext
   fi
   make all
+  make man
 
   rm -f ~/local/bin/opam
   make install
@@ -167,10 +171,10 @@ export OCAMLRUNPARAM=b
     done
     # Compile and run opam-rt
     cd ~/build
-    wget https://github.com/ocaml/opam-rt/archive/$TRAVIS_PULL_REQUEST_BRANCH.tar.gz -O opam-rt.tar.gz || \
-    wget https://github.com/ocaml/opam-rt/archive/master.tar.gz -O opam-rt.tar.gz
+    wget https://github.com/ocaml/opam-rt/archive/opam2.0.tar.gz -O opam-rt.tar.gz
     tar -xzf opam-rt.tar.gz
     cd opam-rt-*
+    opam install ./opam-rt.opam --deps-only -y
     make
 
     opam switch default

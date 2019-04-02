@@ -25,7 +25,7 @@ For example, the preference  `-removed`  tells the solver that among all possibl
 These combinators can be combined in a comma separated sequence, that is treated in lexicographic order by the solver.
 
 ### Default preferences for an upgrade
-For example, the preference  `-removed,-notuptodate,-changed`  tells the solver that after ensuring that removals are minimised, it should look for a solution that minimises also the number of packages wich are not at their latest version, and then reduce the changes to a minimum.
+For example, the preference  `-removed,-notuptodate,-changed`  tells the solver that after ensuring that removals are minimised, it should look for a solution that minimises also the number of packages which are not at their latest version, and then reduce the changes to a minimum.
 
 This is the default preference setting used by `opam` when you perform an update or an upgrade, and in practice it tries to bring _all_ your packages to the latest version available, as far as this does not implies removing too many packages. It can be set using the environment variable `OPAMUPGRADECRITERIA`
 
@@ -35,7 +35,7 @@ When you request to install a (set of) package(s), in general you do not expect 
 ### Specifying preferences for opam
 
 Recent versions of `opam` allow to specify your criteria on the command line, using the `--criteria` option, that will apply only to the current command.
-For example if you are a very conservative user, you might try issueing the following command:
+For example, if you are a very conservative user, you might try issuing the following command:
 ```
 opam install --criteria="-removed,-changed" ...
 ```

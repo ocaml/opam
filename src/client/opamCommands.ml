@@ -184,7 +184,7 @@ let init =
     `S "ARGUMENTS";
     `S "OPTIONS";
     `S "CONFIGURATION FILE";
-    `P "Any field from the built-in initial configuration can be overriden \
+    `P "Any field from the built-in initial configuration can be overridden \
         through $(i,~/.opamrc), $(i,/etc/opamrc), or a file supplied with \
         $(i,--config). The default configuration for this version of opam \
         can be obtained using $(b,--show-default-opamrc).";
@@ -285,7 +285,7 @@ let init =
   let no_sandboxing =
     mk_flag ["disable-sandboxing"]
       "Use a default configuration with sandboxing disabled (note that this \
-       may be overriden by `opamrc' if $(b,--no-opamrc) is not specified or \
+       may be overridden by `opamrc' if $(b,--no-opamrc) is not specified or \
        $(b,--config) is used). Use this at your own risk, without sandboxing \
        it is possible for a broken package script to delete all your files."
   in
@@ -1564,7 +1564,7 @@ let repository =
      package definitions anymore. With $(b,--all), makes opam forget about \
      these repositories completely.";
     "set-repos", `set_repos, ["NAME..."],
-    "Explicitely selects the list of repositories to look up package \
+    "Explicitly selects the list of repositories to look up package \
      definitions from, in the specified priority order (overriding previous \
      selection and ranks), according to the specified scope.";
     "set-url", `set_url, ["NAME"; "ADDRESS"; "[QUORUM]"; "[FINGERPRINTS]"],
@@ -2040,7 +2040,7 @@ let switch =
       match packages, compiler_opt, OpamSwitch.is_external switch with
       | None, None, false ->
         OpamSwitchCommand.guess_compiler_package ?repos rt
-          (OpamSwitch.to_string switch)
+          (OpamSwitch.to_string switch), false
       | None, None, true ->
         OpamAuxCommands.get_compatible_compiler ?repos rt
           (OpamFilename.dirname_dir
@@ -2049,7 +2049,7 @@ let switch =
         OpamStd.Option.Op.(
           ((compiler_opt >>|
             OpamSwitchCommand.guess_compiler_package ?repos rt) +! []) @
-          packages +! [])
+          packages +! []), false
     in
     let param_compiler = function
       | [] -> None
@@ -2109,7 +2109,7 @@ let switch =
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       let repos, rt = get_repos_rt gt repos in
       let switch = OpamSwitch.of_string switch_arg in
-      let packages =
+      let packages, local_compiler =
         compiler_packages rt ?repos switch (param_compiler params)
       in
       let _gt, st =
@@ -2117,10 +2117,12 @@ let switch =
           ?synopsis:descr ?repos
           ~update_config:(not no_switch)
           ~packages
+          ~local_compiler
           switch
       in
       let st =
-        if not no_install && not empty && OpamSwitch.is_external switch then
+        if not no_install && not empty &&
+           OpamSwitch.is_external switch && not local_compiler then
           let st, atoms =
             OpamAuxCommands.autopin st ~simulate:deps_only ~quiet:true
               [`Dirname (OpamFilename.Dir.of_string switch_arg)]
@@ -2564,26 +2566,18 @@ let pin ?(unpin_only=false) () =
                      OpamPath.Switch.Overlay.tmp_opam
                        st.switch_global.root st.switch name
                    in
-                   if not (OpamFilename.exists (OpamFile.filename opam_localf)) then
-                     OpamFile.OPAM.write opam_localf opam) opam_opt;
-               try OpamPinCommand.source_pin st name ~edit (Some url)
-               with OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
-                  | OpamPinCommand.Nothing_to_do -> st)
+                   if not (OpamFilename.exists (OpamFile.filename opam_localf))
+                   then OpamFile.OPAM.write opam_localf opam)
+                 opam_opt;
+               try OpamPinCommand.source_pin st name ~edit (Some url) with
+               | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
+               | OpamPinCommand.Nothing_to_do -> st)
              st names
          in
-         (* names are in newly pinned packages *)
-         let atoms =
-           OpamPackage.Set.Op.(st.pinned -- pinned)
-           |> OpamPackage.Set.elements
-           |> List.map (fun p -> (OpamPackage.name p, None))
-         in
          if action then
-           let _st =
-             OpamClient.upgrade_t
-               ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
-               atoms st
-           in
-           `Ok ()
+           (ignore @@
+            OpamClient.PIN.post_pin_action st pinned (List.map fst names);
+            `Ok ())
          else `Ok ())
     | Some `add, [n; target] | Some `default n, [target] ->
       (match (fst package) n with
@@ -2928,14 +2922,16 @@ let clean =
         OpamConsole.msg "rm -rf \"%s\"/*\n"
           (OpamFilename.Dir.to_string d)
       else
-        OpamFilename.cleandir d
+      try OpamFilename.cleandir d
+      with OpamSystem.Internal_error msg -> OpamConsole.warning "Error ignored: %s" msg
     in
     let rmdir d =
       if dry_run then
         OpamConsole.msg "rm -rf \"%s\"\n"
           (OpamFilename.Dir.to_string d)
       else
-        OpamFilename.rmdir d
+      try OpamFilename.rmdir d
+      with OpamSystem.Internal_error msg -> OpamConsole.warning "Error ignored: %s" msg
     in
     let switches =
       if all_switches then OpamGlobalState.switches gt

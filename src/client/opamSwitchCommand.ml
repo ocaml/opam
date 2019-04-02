@@ -269,7 +269,7 @@ let install_compiler_packages t atoms =
   OpamSolution.check_solution ~quiet:OpamClientConfig.(not !r.show) t result;
   t
 
-let install gt ?rt ?synopsis ?repos ~update_config ~packages switch =
+let install gt ?rt ?synopsis ?repos ~update_config ~packages ?(local_compiler=false) switch =
   let update_config = update_config && not (OpamSwitch.is_external switch) in
   let old_switch_opt = OpamFile.Config.switch gt.config in
   let comp_dir = OpamPath.Switch.root gt.root switch in
@@ -310,6 +310,13 @@ let install gt ?rt ?synopsis ?repos ~update_config ~packages switch =
                 ~opams:st.opams)
       in
       { st with switch; available_packages }
+  in
+  let st =
+    if OpamSwitch.is_external switch && local_compiler then
+      OpamAuxCommands.autopin st ~quiet:true
+        [`Dirname (OpamFilename.Dir.of_string (OpamSwitch.to_string switch))]
+      |> fst
+    else st
   in
   let packages =
     try OpamSolution.sanitize_atom_list st packages

@@ -57,7 +57,7 @@ module Full = struct
     in
     { scope; variable }
 
-  (* Read the variables overriden through the environment *)
+  (* Read the variables overridden through the environment *)
   let read_from_env v =
     let var_str = to_string (variable v) in
     let undash = OpamStd.String.map (function '-' -> '_' | c -> c) in

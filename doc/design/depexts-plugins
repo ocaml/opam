@@ -67,7 +67,7 @@ cases outlined above:
    or an explanation for the failure, while perform executes the actions (typically
    after user confirmation)
 
-The proposed module interface is purposedly incomplete, as it makes no assumption
+The proposed module interface is intentionally incomplete, as it makes no assumption
 on the way in which plugins are identified, and registered, which is an orthogonal
 issue.
 
