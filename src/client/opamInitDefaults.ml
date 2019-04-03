@@ -39,6 +39,7 @@ let linux_filter = os_filter "linux"
 let macos_filter = os_filter "macos"
 let openbsd_filter = os_filter "openbsd"
 let freebsd_filter = os_filter "freebsd"
+let win32_filter = os_filter "win32"
 let sandbox_filter = FOr (linux_filter, macos_filter)
 
 let gpatch_filter = FOr (openbsd_filter, freebsd_filter)
@@ -46,6 +47,8 @@ let patch_filter = FNot gpatch_filter
 
 let gtar_filter = openbsd_filter
 let tar_filter = FNot gtar_filter
+
+let getconf_filter = FNot (FOr (win32_filter, freebsd_filter))
 
 let wrappers ~sandboxing () =
   let cmd t = [
@@ -108,6 +111,7 @@ let required_tools ~sandboxing () =
     ["tar"], None, Some tar_filter;
     ["gtar"], None, Some gtar_filter;
     ["unzip"], None, None;
+    ["getconf"], None, Some getconf_filter;
   ] @
   if sandboxing then [
     [bwrap_cmd], Some (bwrap_string()), Some bwrap_filter;
