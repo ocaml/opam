@@ -442,7 +442,31 @@ let upgrade_t
 let upgrade t ?check ~all names =
   let atoms = OpamSolution.sanitize_atom_list t names in
   let t = update_dev_packages_t atoms t in
-  upgrade_t ?check ~strict_upgrade:(not all) ~all atoms t
+  let unlocked_base, t =
+    let base_to_update = t.compiler_packages %% t.remove in
+    if OpamPackage.Set.is_empty base_to_update then
+      None, t
+    else
+      (log "unlocking base packages to fix  %s"
+         (OpamPackage.Set.to_string base_to_update);
+       Some t.compiler_packages,
+       { t with compiler_packages = OpamPackage.Set.empty })
+  in
+  let t = upgrade_t ?check ~strict_upgrade:(not all) ~all atoms t in
+  match unlocked_base with
+  | None -> t
+  | Some unlocked ->
+    (* we put back updated base package *)
+    let compiler_packages =
+      t.compiler_packages ++
+      (OpamPackage.Set.map
+         (fun p ->  OpamSwitchState.get_package t (OpamPackage.name p))
+         unlocked)
+    in
+    let diff = compiler_packages -- unlocked in
+    if not (OpamPackage.Set.is_empty diff) then
+      log "new base packages are %s" (OpamPackage.Set.to_string diff);
+    { t with compiler_packages }
 
 let fixup t =
   log "FIXUP";
