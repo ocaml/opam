@@ -1070,7 +1070,8 @@ let install_t t ?ask atoms add_to_roots ~deps_only ~assume_built =
        available_packages) in
   let t = {t with available_packages = lazy available_packages} in
 
-  if pkg_new = [] && OpamPackage.Set.is_empty pkg_reinstall then t else
+  if pkg_new = [] && OpamPackage.Set.is_empty pkg_reinstall
+     && OpamPackage.Set.is_empty t.remove then t else
   let t, atoms =
     if assume_built then
       assume_built_restrictions t atoms
