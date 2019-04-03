@@ -943,6 +943,15 @@ let resolve t action ~orphans ?reinstall ~requested request =
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));
     OpamJson.append "switch" (OpamSwitch.to_json t.switch)
   );
+  let reinstall =
+    match reinstall with
+    | Some set -> Some (OpamPackage.Set.union set t.remove)
+    | None ->
+      if OpamPackage.Set.is_empty t.remove then
+        None
+      else
+        Some t.remove
+  in
   Json.output_request request action;
   let r =
     OpamSolver.resolve
