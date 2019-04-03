@@ -338,8 +338,14 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
   let action_graph = (* Add build actions *)
     let noop_remove nv =
       OpamAction.noop_remove_package t nv in
+    let need_remove =
+      if OpamPackage.Set.is_empty t.remove then None
+      else
+      let n_remove = OpamPackage.names_of_packages t.remove in
+      Some (fun p -> OpamPackage.(Name.Set.mem (name p) n_remove))
+    in
     PackageActionGraph.explicit
-      ~noop_remove
+      ?need_remove ~noop_remove
       ~sources_needed:(fun p -> OpamPackage.Set.mem p sources_needed)
       action_graph
   in

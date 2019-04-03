@@ -176,6 +176,7 @@ module type SIG = sig
   include OpamParallel.GRAPH with type V.t = package OpamTypes.action
   val reduce: t -> t
   val explicit:
+    ?need_remove:(package -> bool) ->
     ?noop_remove:(package -> bool) -> sources_needed:(package -> bool) -> t -> t
   val fold_descendants: (V.t -> 'a -> 'a) -> 'a -> t -> V.t -> 'a
 end
@@ -277,7 +278,8 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
     | None -> []
     | Some pred -> pred
 
-  let explicit ?(noop_remove = (fun _ -> false)) ~sources_needed g0 =
+  let explicit ?need_remove ?(noop_remove=(fun _ -> false))
+      ~sources_needed g0 =
     let g = copy g0 in
     let same_name p1 p2 = A.Pkg.(name_to_string p1 = name_to_string p2) in
     (* We insert a "build" action before any "install" action.
@@ -300,12 +302,29 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
        of "A" that do not have dependencies.
 
        For adding a little bit more delay, we ignore dependencies that do not
-       modify the prefix (see [OpamAction.noop_remove]) *)
-    let closed_predecessors = compute_closed_predecessors noop_remove g in
+       modify the prefix (see [OpamAction.noop_remove]) and don't need to be
+       removed.
+
+       This delay is not applied to package that need to be imperatively
+       removed (e.g. missing system dependency), using he [need_remove], it is
+       an remove -> build edge which is added.*)
+    let closed_predecessors =
+      compute_closed_predecessors
+        (match need_remove with
+         | None -> noop_remove
+         | Some need_remove -> fun p -> noop_remove p && not (need_remove p))
+        g
+    in
     iter_vertex (function
         | `Remove p as a ->
           List.iter
-            (fun b -> add_edge g b a)
+            (match need_remove with
+             | None -> fun b -> add_edge g b a
+             | Some need_remove ->
+               (function
+                 | (`Build p1 as b) when need_remove p1 ->
+                   add_edge g a b
+                 | b -> add_edge g b a))
             (closed_predecessors p)
         | `Install _ | `Reinstall _ | `Change _ | `Build _ | `Fetch _ -> ())
       g;

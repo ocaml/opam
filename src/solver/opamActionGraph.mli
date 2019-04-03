@@ -45,8 +45,13 @@ module type SIG = sig
       filesystem (such as `conf-*` package).
       The argument [sources_needed] is a function that should return `true`
       for packages that require fetching sources (packages that do not
-      require it are typically up-to-date pins or "in-place" builds). *)
+      require it are typically up-to-date pins or "in-place" builds).
+      The argument [need_remove] is a function that should return `true` for
+      the package that need to be mandatory removed. It is used to add the
+      remove action as a predecessor of the build action, in order to prevent
+      non removal because of build fail.*)
   val explicit:
+    ?need_remove:(package -> bool) ->
     ?noop_remove:(package -> bool) ->
     sources_needed:(package -> bool) ->
     t -> t
