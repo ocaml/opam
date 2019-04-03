@@ -179,12 +179,12 @@ let download_package st nv =
   OpamUpdate.download_package_source st nv dir @@| function
   | Some (Not_available (s, l)), _ ->
     let msg = match s with None -> l | Some s -> s in
-    OpamConsole.error "Failed to fetch sources of %s: %s"
+    OpamConsole.error "Failed to get sources of %s: %s"
       (OpamPackage.to_string nv) msg;
     Some (s, l)
   | _, ((name, Not_available (s, l)) :: _) ->
     let msg = match s with None -> l | Some s -> s in
-    OpamConsole.error "Failed to fetch extra source \"%s\" of %s: %s"
+    OpamConsole.error "Failed to get extra source \"%s\" of %s: %s"
       name (OpamPackage.to_string nv) msg;
     Some (s, l)
   | Some (Result msg), _ ->
