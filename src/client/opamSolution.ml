@@ -943,13 +943,67 @@ let resolve t action ~orphans ?reinstall ~requested request =
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));
     OpamJson.append "switch" (OpamSwitch.to_json t.switch)
   );
-  Json.output_request request action;
-  let r =
-    OpamSolver.resolve
-      (OpamSwitchState.universe t ~requested ?reinstall action)
-      ~orphans
-      request
+  let universe =
+    OpamSwitchState.universe t ~requested ?reinstall action
   in
+  let request =
+    let remove =
+      OpamPackage.Set.filter (fun pkg ->
+          let n = OpamPackage.name pkg in
+          let f (n',_) = OpamPackage.Name.compare n n' = 0 in
+          not ((List.exists f request.wish_install)
+               || (List.exists f request.wish_upgrade)))
+        t.remove
+    in
+    if OpamPackage.Set.is_empty remove || action = Remove then request
+    else
+    let forbidden =
+      OpamSolver.reverse_dependencies ~depopts:true ~build:true ~post:true
+        ~installed:false universe remove
+      |> OpamPackage.Set.of_list
+      |> (fun f -> OpamPackage.Set.diff f t.remove)
+      |> OpamPackage.names_of_packages
+    in
+    log "Forbidden install or update operation on packages %s, \
+         derived from packages to remove or update %s"
+      (OpamPackage.Name.Set.to_string forbidden)
+      (OpamPackage.Set.to_string remove);
+    let filter wish =
+      List.fold_left (fun (keep,rem) atom ->
+          let n,_ = atom in
+          if OpamPackage.Name.Set.mem n forbidden then
+            keep, n::rem
+          else atom::keep, rem)
+        ([], []) wish
+    in
+    let wish_install, forbid_inst = filter request.wish_install in
+    let wish_upgrade, forbid_upg  = filter request.wish_upgrade in
+    if forbid_inst = [] && forbid_upg = [] then request
+    else
+      (let lst =
+         OpamStd.List.concat_map ~left:"" ~right:"" ~last_sep:"and" ", "
+           (fun n ->
+              OpamConsole.colorise `underline (OpamPackage.Name.to_string n))
+       in
+       let sgl_rem = OpamPackage.Set.cardinal t.remove = 1 in
+       let sgl_op = List.length (forbid_inst @ forbid_upg) = 1 in
+       OpamConsole.warning
+         "Packages %s depends on a changed or missing system dependency. \
+          As %s depend%s on %s, %s won't be %s."
+         (lst OpamPackage.(Name.Set.elements (names_of_packages remove)))
+         (lst (forbid_inst @ forbid_upg))
+         (if sgl_op then "" else "s")
+         (if sgl_rem then "it" else "them")
+         (if sgl_op then "it" else "they")
+         (match forbid_inst, forbid_upg with
+          | [], [] -> assert false
+          | [], _ -> "upgraded"
+          | _, [] -> "installed"
+          | _ , _ -> "installed nor upgraded.");
+       { request with wish_install ; wish_upgrade })
+  in
+  Json.output_request request action;
+  let r = OpamSolver.resolve universe ~orphans request in
   Json.output_solution t r;
   r
 
