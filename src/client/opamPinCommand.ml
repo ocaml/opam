@@ -556,7 +556,11 @@ and source_pin
     let opam =
       match OpamFile.OPAM.get_url opam with
       | Some _ -> opam
-      | None -> OpamFile.OPAM.with_url_opt urlf opam
+      | None ->
+        (let opam = OpamFile.OPAM.with_url_opt urlf opam in
+         match subpath with
+         | None -> opam
+         | Some _ -> OpamFile.OPAM.with_opam2_1_restriction opam)
     in
     let version =
       OpamStd.Option.Op.(OpamFile.OPAM.version_opt opam +! nv.version)
