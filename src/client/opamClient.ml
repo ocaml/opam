@@ -630,8 +630,14 @@ let update
       (true, false), st
     else
       OpamSwitchState.with_write_lock st @@ fun st ->
+      let working_dir =
+        if OpamClientConfig.(!r.working_dir) && names <> [] then
+          Some (OpamPackage.packages_of_names packages
+                  (OpamPackage.Name.(Set.of_list (List.map of_string names))))
+        else None
+      in
       OpamConsole.header_msg "Synchronising development packages";
-      let success, st, updates = OpamUpdate.dev_packages st packages in
+      let success, st, updates = OpamUpdate.dev_packages st ?working_dir packages in
       if OpamClientConfig.(!r.json_out <> None) then
         OpamJson.append "dev-packages-updates"
           (OpamPackage.Set.to_json updates);
