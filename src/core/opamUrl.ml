@@ -53,7 +53,7 @@ let split_url =
       ])
   in
   fun u ->
-    match Re.get_all (Re.exec re u) with
+    match Re.Group.all (Re.exec re u) with
     | [| _; vc; transport; path; suffix; hash |] ->
       let opt = function "" -> None | s -> Some s in
       opt vc, opt transport, path, opt suffix, opt hash
@@ -106,7 +106,8 @@ let looks_like_ssh_path =
   fun path ->
     try
       let sub = Re.exec re path in
-      Some (Re.get sub 1 ^ try "/" ^ Re.get sub 2 with Not_found -> "")
+      Some (Re.Group.get sub 1 ^
+            try "/" ^ Re.Group.get sub 2 with Not_found -> "")
     with Not_found -> None
 
 let parse ?backend ?(handle_suffix=true) s =
@@ -216,7 +217,7 @@ let basename =
   in
   fun t ->
     try
-      Re.get (Re.exec re t.path) 1
+      Re.Group.get (Re.exec re t.path) 1
     with Not_found -> ""
 
 let root =
