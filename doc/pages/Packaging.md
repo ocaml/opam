@@ -119,7 +119,7 @@ top-right. Clone the resulting repository, add your package definition, and
 push back, as such:
 
 ```
-git clone git@github.com:USER/opam-repository --branch 2.0.0
+git clone git@github.com:USER/opam-repository
 cd opam-repository
 cp OPAM_FILE packages/NAME/NAME.VERSION/opam
 git add packages
@@ -129,9 +129,6 @@ git push origin HEAD:add-pkg-NAME
 
 Then, back to the web UI, Github should propose to file a pull-request for your
 newly pushed branch. If not, select the `new pull request` button on the left.
-Make sure to file your pull-request against the `2.0.0` base branch, since
-package definitions in 1.2 format are not yet accepted on `master`.
-
 
 ## The file format in more detail
 
