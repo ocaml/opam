@@ -119,7 +119,7 @@ top-right. Clone the resulting repository, add your package definition, and
 push back, as such:
 
 ```
-git clone git@github.com:USER/opam-repository --branch 2.0.0
+git clone git@github.com:USER/opam-repository
 cd opam-repository
 cp OPAM_FILE packages/NAME/NAME.VERSION/opam
 git add packages
@@ -129,9 +129,6 @@ git push origin HEAD:add-pkg-NAME
 
 Then, back to the web UI, Github should propose to file a pull-request for your
 newly pushed branch. If not, select the `new pull request` button on the left.
-Make sure to file your pull-request against the `2.0.0` base branch, since
-package definitions in 1.2 format are not yet accepted on `master`.
-
 
 ## The file format in more detail
 
@@ -142,7 +139,7 @@ remove the others rather than leave them empty.
 * `synopsis` should be a one-line description of what your package does, used in
   listings. It is recommended to also add a `description` field for a longer
   explanation (hint: you may delimit long strings with triple-quotation mark
-  delimiters `"""` to avoid escaping issues). Since opam2.0.1, linting requires
+  delimiters `"""` to avoid escaping issues). Since opam 2.0.1, linting requires
   to have at least synopsis or description filled.
 * You'll probably be the `maintainer` for now, so give a way to contact you in
   case your package needs maintenance.
