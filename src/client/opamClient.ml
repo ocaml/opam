@@ -447,7 +447,7 @@ let upgrade t ?check ~all names =
     if OpamPackage.Set.is_empty base_to_update then
       None, t
     else
-      (log "unlocking base packages to fix  %s"
+      (log "unlocking base packages to fix %s"
          (OpamPackage.Set.to_string base_to_update);
        Some t.compiler_packages,
        { t with compiler_packages = OpamPackage.Set.empty })
