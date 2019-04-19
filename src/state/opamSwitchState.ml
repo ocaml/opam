@@ -259,16 +259,19 @@ let load lock_kind gt rt switch =
                 OpamConsole.error
                   "System file %s, which package %s depends upon, \
                    no longer exists.\n\
-                   The package has been marked as removed, and opam will \
-                   try to reinstall it if necessary, but you should reinstall \
+                   %s has been marked to be ignored on coming \
+                   operations (as well its reverse dependencies), unless it \
+                   is directly reinstalled. You should reinstall \
                    its system dependencies first."
                   (OpamFilename.to_string file) (OpamPackage.to_string nv)
+                  (OpamPackage.name_to_string nv)
               else if changed then
                 OpamConsole.warning
                   "File %s, which package %s depends upon, \
                    was changed on your system. \
-                   %s has been marked as removed, and will be reinstalled if \
-                   necessary."
+                   %s has been marked to be ignored on coming \
+                   operations (as well its reverse dependencies), unless it \
+                   is directly reinstalled."
                   (OpamFilename.to_string file) (OpamPackage.to_string nv)
                   (OpamPackage.name_to_string nv);
               changed)
