@@ -3022,7 +3022,14 @@ let clean =
     if download_cache then
       (OpamConsole.msg "Clearing cache of downloaded files\n";
        rmdir (OpamPath.archives_dir root);
-       cleandir (OpamRepositoryPath.download_cache root));
+       List.iter (fun dir ->
+           match OpamFilename.(Base.to_string (basename_dir dir)) with
+           | "git" ->
+             (try OpamFilename.exec dir ~name:"git gc" [["git"; "gc"]]
+              with e -> OpamStd.Exn.fatal e)
+           | _ -> cleandir dir
+         )
+         (OpamFilename.dirs (OpamRepositoryPath.download_cache root)));
     if logs then
       (OpamConsole.msg "Clearing logs\n";
        cleandir (OpamPath.log root))
