@@ -590,7 +590,8 @@ let dot_profile_needs_update root dot_profile =
 let update_dot_profile root dot_profile shell =
   let pretty_dot_profile = OpamFilename.prettify dot_profile in
   let bash_src () =
-    if shell = SH_bash || shell = SH_sh then
+    if (shell = SH_bash || shell = SH_sh)
+    && OpamFilename.(Base.to_string (basename dot_profile)) <> ".bashrc" then
       OpamConsole.note "Make sure that %s is well %s in your ~/.bashrc.\n"
         pretty_dot_profile
         (OpamConsole.colorise `underline "sourced")
