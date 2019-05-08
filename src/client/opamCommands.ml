@@ -2158,7 +2158,7 @@ let switch =
       let packages, local_compiler =
         compiler_packages rt ?repos switch (param_compiler params)
       in
-      let _gt, st =
+      let gt, st =
         OpamSwitchCommand.install gt ~rt
           ?synopsis:descr ?repos
           ~update_config:(not no_switch)
@@ -2166,7 +2166,7 @@ let switch =
           ~local_compiler
           switch
       in
-      OpamGlobalState.drop _gt;
+      OpamGlobalState.drop gt;
       let st =
         if not no_install && not empty &&
            OpamSwitch.is_external switch && not local_compiler then

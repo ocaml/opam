@@ -625,7 +625,7 @@ let update
 
   (* st is still based on the old rt, it's not a problem at this point, but
      don't return it *)
-  let (dev_update_success, dev_changed), _st =
+  let (dev_update_success, dev_changed), st =
     if OpamPackage.Set.is_empty packages then
       (true, false), st
     else
@@ -637,7 +637,7 @@ let update
           (OpamPackage.Set.to_json updates);
       (success, not (OpamPackage.Set.is_empty updates)), st
   in
-  OpamSwitchState.drop _st;
+  OpamSwitchState.drop st;
   repo_update_failure = [] && dev_update_success && remaining = [] &&
   OpamPackage.Set.is_empty ignore_packages,
   repo_changed || dev_changed,
