@@ -473,7 +473,7 @@ module OpamString = struct
   let exact_match re s =
     try
       let subs = Re.exec re s in
-      let subs = Array.to_list (Re.get_all_ofs subs) in
+      let subs = Array.to_list (Re.Group.all_offset subs) in
       let n = String.length s in
       let subs = List.filter (fun (s,e) -> s=0 && e=n) subs in
       List.length subs > 0

@@ -106,9 +106,9 @@ let string_variables s =
     let rec aux acc pos =
       try
         let ss = Re.exec ~pos string_interp_regex s in
-        if Re.test ss 2 then
-          aux (Re.get ss 1 :: acc)
-            (fst (Re.get_ofs ss 0) + String.length (Re.get ss 0))
+        if Re.Group.test ss 2 then
+          aux (Re.Group.get ss 1 :: acc)
+            (fst (Re.Group.offset ss 0) + String.length (Re.Group.get ss 0))
         else
           aux acc (pos+1)
       with Not_found -> acc

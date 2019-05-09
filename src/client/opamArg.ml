@@ -477,9 +477,9 @@ let package =
       ]) in
     try
       let sub = Re.exec re str in
-      let name = OpamPackage.Name.of_string (Re.get sub 1) in
+      let name = OpamPackage.Name.of_string (Re.Group.get sub 1) in
       let version_opt =
-        try Some (OpamPackage.Version.of_string (Re.get sub 2))
+        try Some (OpamPackage.Version.of_string (Re.Group.get sub 2))
         with Not_found -> None in
       `Ok (name, version_opt)
     with Not_found | Failure _ -> `Error "bad package format"
@@ -515,9 +515,9 @@ let atom =
       ]) in
     try
       let sub = Re.exec re str in
-      let sname = Re.get sub 1 in
-      let sop = Re.get sub 2 in
-      let sversion = Re.get sub 3 in
+      let sname = Re.Group.get sub 1 in
+      let sop = Re.Group.get sub 2 in
+      let sversion = Re.Group.get sub 3 in
       let name = OpamPackage.Name.of_string sname in
       let sop = if sop = "." then "=" else sop in
       let op = OpamLexer.relop sop in
