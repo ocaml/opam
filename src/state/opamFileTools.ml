@@ -682,8 +682,8 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
             else
             let msg =
               let is_singular = function [_] -> true | _ -> false in
-              Printf.sprintf "Checksum%s match the archive: %s."
-                (if is_singular not_corresponding then " doesn't" else "s don't")
+              Printf.sprintf "The archive doesn't match checksum%s: %s."
+                (if is_singular not_corresponding then "" else "s")
                 (OpamStd.List.to_string OpamHash.to_string not_corresponding)
             in
             Some msg)

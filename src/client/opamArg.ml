@@ -1171,12 +1171,14 @@ let assume_built =
    remove, (re)install *)
 let recurse =
   mk_flag ["recursive"]
-    "Allow recursive lookups of .opam files. Cf. $(i,--subpath) also."
+    "Allow recursive lookups of (b,*.opam) files. Cf. $(i,--subpath) also."
 
 let subpath =
   mk_opt ["subpath"] "PATH"
-    ".opam files are retrieved from the given subpath. It can be combined with \
-    $(i,--recursive) to have a recursive lookup on the subpath."
+    "$(b,*.opam) files are retrieved from the given sub directory instead of \
+      top directory. Sources are then taken from the targeted sub directory, \
+      internally only this subdirectory is copied/fetched.  It can be combined \
+      with $(i,--recursive) to have a recursive lookup on the subpath."
     Arg.(some string) None
 
 let package_selection_section = "PACKAGE SELECTION OPTIONS"

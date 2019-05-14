@@ -640,7 +640,9 @@ module OPAM: sig
 
   val with_format_errors: (string * OpamPp.bad_format) list -> t -> t
 
-  val with_opam2_1_restriction: t -> t (* x-subpath 2.1 restriction *)
+  (** `x-subpath` restriction: add 2.1 (or further) opam version restriction on
+      file when `x-subpath` field is used *)
+  val with_opam2_1_restriction: t -> t (*  *)
 
   (** Prints to a string, while keeping the format of the original file as much
       as possible. The original format is read from the given
