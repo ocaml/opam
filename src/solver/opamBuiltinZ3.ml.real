@@ -57,10 +57,11 @@ let xrmap f l =
   | [] -> None
   | l -> Some l
 
+(*
 let xmap f l = match xrmap f l with
   | Some l -> Some (List.rev l)
   | None -> None
-
+*)
 open OpamStd.Option.Op
 
 let def_packages ctx (_preamble, universe, _request) =
@@ -314,7 +315,7 @@ module Syntax = struct
       sign, subset_of_string subset, Some field
     | s, [] -> sign, subset_of_string s, None
     | s, _ -> failwith ("criteria_of_string s="^s)
-
+(*
   let string_of_criterion (sign, filter, property: criterion) =
     Printf.sprintf "%c%s%s"
       (match sign with Plus -> '+' | Minus -> '-')
@@ -327,7 +328,7 @@ module Syntax = struct
        | Downgraded -> "down"
        | Requested -> "request")
       (match property with None -> "" | Some p -> "["^p^"]")
-
+*)
   let criteria_of_string s =
     let start = ref 0 in
     let crits = ref [] in
