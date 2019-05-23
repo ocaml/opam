@@ -22,9 +22,11 @@ build: [
 ]
 depends: [
   "opam-format" {= "2.0.0"}
-  "mccs" {>= "1.1+9"} | "z3" {= "4.8.4"}
+  "mccs" {>= "1.1+9"}
   "dose3" {>= "5"}
   "cudf" {>= "0.7"}
   "dune" {build & >= "1.2.1"}
 ]
+depopts: "z3"
+conflicts: [ "z3" {< "4.8.4"} ]
 available: ocaml-version >= "4.02.3"
