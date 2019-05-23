@@ -808,6 +808,35 @@ let warns_to_string ws =
          (Printf.sprintf "  %16s %2d: %s" ws n s))
     ws
 
+let warns_to_json ?filename ws =
+  let filename =
+  match filename with
+  | Some f -> f
+  | None -> "stdout"
+  in
+  let warn, err =
+    List.fold_left (fun (w,e) (n,we,s) ->
+        let arr =
+          `O [ "id", `Float (float_of_int n);
+               "message", `String s]
+        in
+        match we with
+        | `Warning -> arr::w, e
+        | `Error -> w, arr::e) ([],[]) ws
+  in
+  let result =
+  match warn,err with
+  | [],[] -> "passed"
+  | _, _::_ -> "error"
+  | _::_, [] -> "warning"
+  in
+  `O [
+    "file", `String filename;
+    "result", `String result;
+     "warnings", `A warn;
+     "errors", `A err
+  ]
+
 (* Package definition loading *)
 
 open OpamFilename.Op

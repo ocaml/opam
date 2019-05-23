@@ -57,6 +57,25 @@ val lint_string:
 (** Utility function to print validation results *)
 val warns_to_string: (int * [`Warning|`Error] * string) list -> string
 
+(** Utility function to construct a json of validation results.
+    The format is as follow:
+    { "file"     : string <filename>,
+      "result"   : string (passed | error | warning),
+      "warnings" :
+        [ { "id"      : int,
+            "message" : string <warning message> },
+          ...
+        ],
+      "errors"   :
+        [ { "id"      : int,
+            "message" : string <error message> },
+          ...
+        ]
+    }
+*)
+val warns_to_json:
+  ?filename:string -> (int * [`Warning|`Error] * string) list -> OpamJson.t
+
 (** Read the opam metadata from a given directory (opam file, with possible
     overrides from url and descr files). Also includes the names and hashes
     of files below files/
