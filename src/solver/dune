@@ -5,7 +5,10 @@
   (libraries   opam-format cudf dose3.algo
                (select opamBuiltinMccs.ml from
                  (mccs -> opamBuiltinMccs.ml.real)
-                 (     -> opamBuiltinMccs.ml.dummy)))
+                 (     -> opamBuiltinMccs.ml.dummy))
+               (select opamBuiltinZ3.ml from
+                 (z3 -> opamBuiltinZ3.ml.real)
+                 (   -> opamBuiltinZ3.ml.dummy)))
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
                (:include ../ocaml-flags-configure.sexp)

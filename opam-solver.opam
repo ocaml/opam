@@ -27,4 +27,6 @@ depends: [
   "cudf" {>= "0.7"}
   "dune" {build & >= "1.2.1"}
 ]
+depopts: "z3"
+conflicts: [ "z3" {< "4.8.4"} ]
 available: ocaml-version >= "4.02.3"
