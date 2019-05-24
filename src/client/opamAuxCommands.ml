@@ -328,7 +328,6 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
           let opam =
             if for_view then opam else
               OpamFile.OPAM.with_url (OpamFile.URL.create ?subpath target) opam
-            |> OpamFile.OPAM.with_opam2_1_restriction
           in
           let opam, version = match OpamFile.OPAM.version_opt opam with
             | Some v -> opam, v
