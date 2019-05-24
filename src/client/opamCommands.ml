@@ -2913,7 +2913,7 @@ let lint =
               OpamStd.Option.iter (OpamFile.OPAM.write_to_channel stdout) opam;
             let json =
               OpamStd.Option.map
-                (List.cons
+                (OpamStd.List.cons
                    (OpamFileTools.warns_to_json
                       ?filename:(OpamStd.Option.map OpamFile.to_string opam_f)
                       warnings))
