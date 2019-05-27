@@ -370,11 +370,10 @@ let rec handle_pin_depends st nv opam =
           without installing pin-depends, 'no' to abort."
      with
      | Some ("s" | "S" | "skip"  | "SKIP" ) ->
-       OpamConsole.msg "Skipping pin-depends.\n";
+       OpamConsole.msg "Skipping pin-depends, continue install\n";
        st
      | Some ("n" | "N" | "no"  | "NO" ) ->
-       (OpamConsole.msg "You can specify --ignore-pin-depends to bypass\n";
-        OpamStd.Sys.exit_because `Aborted)
+        OpamStd.Sys.exit_because `Aborted
      | _ ->
        List.fold_left (fun st (nv, url) ->
            source_pin st nv.name ~version:nv.version (Some url)
