@@ -1077,8 +1077,21 @@ let install_t t ?ask atoms add_to_roots ~deps_only ~assume_built =
         available_packages atoms
     else
       (OpamSolution.check_availability t available_packages atoms;
-       available_packages) in
-  let t = {t with available_packages = lazy available_packages} in
+       available_packages)
+  in
+  let opams =
+    if deps_only then
+      (let pkgs = OpamFormula.packages_of_atoms available_packages atoms in
+       log "removing conflicts from %s" (OpamPackage.Set.to_string pkgs);
+       OpamPackage.Set.fold (fun pkg opams ->
+           let opam =
+             OpamFile.OPAM.with_conflicts Empty (OpamSwitchState.opam t pkg)
+           in
+           OpamPackage.Map.add pkg opam opams
+         ) pkgs t.opams)
+    else t.opams
+  in
+  let t = {t with available_packages = lazy available_packages; opams} in
 
   if pkg_new = [] && OpamPackage.Set.is_empty pkg_reinstall then t else
   let t, atoms =
