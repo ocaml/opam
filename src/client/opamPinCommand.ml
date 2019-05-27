@@ -363,13 +363,23 @@ let rec handle_pin_depends st nv opam =
               (OpamConsole.colorise `bold (OpamPackage.to_string nv))
               (OpamConsole.colorise `underline (OpamUrl.to_string url)))
           extra_pins);
-     if not (OpamConsole.confirm "Continue?") then
+     match
+       OpamConsole.read
+         "Continue? [Y/s/n]\n\
+          (default is 'yes' to continue, use 'skip' do continue install \
+          without installing pin-depends, 'no' to abort."
+     with
+     | Some ("s" | "S" | "skip"  | "SKIP" ) ->
+       OpamConsole.msg "Skipping pin-depends.\n";
+       st
+     | Some ("n" | "N" | "no"  | "NO" ) ->
        (OpamConsole.msg "You can specify --ignore-pin-depends to bypass\n";
-        OpamStd.Sys.exit_because `Aborted);
-     List.fold_left (fun st (nv, url) ->
-         source_pin st nv.name ~version:nv.version (Some url)
-           ~ignore_extra_pins:true)
-       st extra_pins)
+        OpamStd.Sys.exit_because `Aborted)
+     | _ ->
+       List.fold_left (fun st (nv, url) ->
+           source_pin st nv.name ~version:nv.version (Some url)
+             ~ignore_extra_pins:true)
+         st extra_pins)
 
 and source_pin
     st name
