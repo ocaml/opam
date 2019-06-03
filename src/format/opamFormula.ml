@@ -403,6 +403,21 @@ let is_disjunction t =
   in
   aux t
 
+let rec sort comp f=
+  match f with
+  | (Empty | Atom _) as f -> f
+  | Block f -> Block (sort comp f)
+  | And _ as f ->
+    ands_to_list f
+    |> List.rev_map (sort comp)
+    |> List.sort (compare_formula comp)
+    |> ands
+  | Or _ as f ->
+    ors_to_list f
+    |> List.rev_map (sort comp)
+    |> List.sort (compare_formula comp)
+    |> ors
+
 let atoms t =
   fold_right (fun accu x -> x::accu) [] (to_atom_formula t)
 
