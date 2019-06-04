@@ -985,3 +985,39 @@ let read_repo_opam ~repo_name ~repo_root dir =
   read_opam dir >>|
   OpamFile.OPAM.with_metadata_dir
     (Some (Some repo_name, OpamFilename.remove_prefix_dir repo_root dir))
+
+let sort_opam opam =
+  log "sorting %s" (OpamPackage.to_string (package opam));
+  let sort_ff =
+    let compare_filters filter filter' =
+      let get_vars = function
+        | Constraint _ -> []
+        | Filter filter ->
+          List.sort compare (OpamFilter.variables filter)
+      in
+      match get_vars filter, get_vars filter' with
+      | v::_, v'::_ -> compare v v'
+      | [], _::_ -> 1
+      | _::_, [] -> -1
+      | [],[] -> 0
+    in
+    OpamFilter.sort_filtered_formula
+      (fun (n,filter) (n',filter') ->
+         let cmp = OpamFormula.compare_formula compare_filters filter filter' in
+         if cmp <> 0 then cmp else
+           OpamPackage.Name.compare n n')
+  in
+  let fst_sort ?comp =
+    let comp = OpamStd.Option.default compare comp in
+    fun l -> List.sort (fun (e,_) (e',_) -> comp e e') l
+  in
+  opam
+  |> with_author @@ List.sort compare opam.author
+  |> with_tags @@ List.sort compare opam.tags
+  |> with_depends @@ sort_ff opam.depends
+  |> with_depopts @@ sort_ff opam.depopts
+  |> with_depexts @@ fst_sort opam.depexts
+  |> with_conflicts @@ sort_ff opam.conflicts
+  |> with_pin_depends @@ fst_sort ~comp:OpamPackage.compare opam.pin_depends
+  |> with_extra_files_opt @@ OpamStd.Option.map fst_sort opam.extra_files
+  |> with_extra_sources @@ fst_sort opam.extra_sources
