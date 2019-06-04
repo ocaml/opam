@@ -710,6 +710,7 @@ let show =
       "Display information of all packages matching $(i,PACKAGES), not \
        restrained to a single package matching $(i,PACKAGES) constraints."
   in
+  let sort = mk_flag ["sort"] "Sort opam fields" in
   let opam_files_in_dir d =
     match OpamPinned.files_in_source d with
     | [] ->
@@ -719,13 +720,17 @@ let show =
     | l -> List.map (fun (_,f) -> Some f) l
   in
   let pkg_info global_options fields show_empty raw where
-      list_files file normalise no_lint just_file all_versions atom_locs =
+      list_files file normalise no_lint just_file all_versions sort atom_locs =
     let print_just_file f =
       let opam = match f with
         | Some f -> OpamFile.OPAM.read f
         | None -> OpamFile.OPAM.read_from_channel stdin
       in
       if not no_lint then OpamFile.OPAM.print_errors opam;
+      let opam =
+        if not sort then opam else
+          OpamFileTools.sort_opam opam
+      in
       if where then
         OpamConsole.msg "%s\n"
           (match f with
@@ -796,7 +801,7 @@ let show =
   Term.(ret
           (const pkg_info $global_options $fields $show_empty $raw $where
            $list_files $file $normalise $no_lint $just_file $all_versions
-           $atom_or_local_list)),
+           $sort $atom_or_local_list)),
   term_info "show" ~doc ~man
 
 module Common_config_flags = struct
