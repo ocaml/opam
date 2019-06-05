@@ -172,6 +172,27 @@ type version_formula = version_constraint formula
 
 type t = (OpamPackage.Name.t * version_formula) formula
 
+let rec compare_formula f x y =
+  let rec compare_atom x = function
+    | Empty -> 1
+    | Atom y -> f x y
+    | Block y -> compare_atom x y
+    | And (y,z) | Or (y,z) ->
+      let r = compare_atom x y in
+      if r <> 0 then r else compare_atom x z
+  in
+  match x, y with
+  | Empty, Empty -> 0
+  | Empty, _ -> -1
+  | _ , Empty -> 1
+  | Atom x, Atom y -> f x y
+  | Atom x, y -> compare_atom x y
+  | x , Atom y -> -1 * (compare_atom y x)
+  | Block x, y | x, Block y -> compare_formula f x y
+  | (And (x,y) | Or (x,y)), (And (x',y') | Or (x',y')) ->
+    let r = compare_formula f x x' in
+    if r <> 0 then r else compare_formula f y y'
+
 let rec eval atom = function
   | Empty    -> true
   | Atom x   -> atom x

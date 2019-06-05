@@ -74,6 +74,8 @@ type 'a formula =
   | And of 'a formula * 'a formula
   | Or of 'a formula * 'a formula
 
+val compare_formula: ('a -> 'a -> int) -> 'a formula -> 'a formula -> int
+
 (** Eval a formula *)
 val eval: ('a -> bool) -> 'a formula -> bool
 
