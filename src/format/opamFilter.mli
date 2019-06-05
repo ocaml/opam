@@ -199,3 +199,10 @@ val atomise_extended:
   filtered_formula ->
   (OpamPackage.Name.t * (filter * (relop * filter) option))
     OpamFormula.formula
+
+(* Uses [OpamFormula.sort] to sort on names, and sort version formulas with
+   [simplify_extended_version_formula]. *)
+val sort_filtered_formula:
+  ((name * filter filter_or_constraint OpamFormula.formula)
+  -> (name * filter filter_or_constraint OpamFormula.formula) -> int)
+  -> filtered_formula -> filtered_formula
