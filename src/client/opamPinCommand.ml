@@ -363,35 +363,19 @@ let rec handle_pin_depends st nv opam =
               (OpamConsole.colorise `bold (OpamPackage.to_string nv))
               (OpamConsole.colorise `underline (OpamUrl.to_string url)))
           extra_pins);
-     match
-       OpamConsole.read
-         "Continue? [Y/s/n]\n\
-          (default is 'yes' to continue, use 'skip' do continue install \
-          without installing pin-depends, 'no' to abort.\n \
-          You can specify --ignore-pin-depends to bypass automatically"
-     with
-     | Some ("s" | "S" | "skip"  | "SKIP" ) ->
-       OpamConsole.msg "Skipping pin-depends, continue install\n";
-       st
-     | Some ("n" | "N" | "no"  | "NO" ) ->
-       (OpamConsole.msg "You can specify --ignore-pin-depends to bypass\n";
-        OpamStd.Sys.exit_because `Aborted)
-     | _ ->
+     if OpamConsole.confirm "Pin and install them?" then
        List.fold_left (fun st (nv, url) ->
            source_pin st nv.name ~version:nv.version (Some url)
              ~ignore_extra_pins:true)
-         st extra_pins)
-
-and source_pin
-    st name
-    ?version ?edit:(need_edit=false) ?opam:opam_opt ?(quiet=false)
-    ?(force=false) ?(ignore_extra_pins=OpamClientConfig.(!r.ignore_pin_depends))
-    target_url
-  =
-  log "pin %a to %a %a"
-    (slog OpamPackage.Name.to_string) name
-    (slog (OpamStd.Option.to_string OpamPackage.Version.to_string)) version
-    (slog (OpamStd.Option.to_string ~none:"none" OpamUrl.to_string)) target_url;
+         st extra_pins
+     else
+     if
+       OpamConsole.confirm
+         "Try to install anyway, assuming `--ignore-depends`?"
+     then
+       st
+     else
+       OpamStd.Sys.exit_because `Aborted
 
   let cur_version, cur_urlf =
     try
