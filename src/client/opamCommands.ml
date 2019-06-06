@@ -2859,8 +2859,13 @@ let lint =
           "--package and a file argument are incompatible"
     in
     let msg = if normalise then OpamConsole.errmsg else OpamConsole.msg in
-    let err =
-      List.fold_left (fun err opam_f ->
+    let json =
+      match OpamClientConfig.(!r.json_out) with
+      | None -> None
+      | Some _ -> Some []
+    in
+    let err,json =
+      List.fold_left (fun (err,json) opam_f ->
           try
             let warnings,opam =
               match opam_f with
@@ -2906,15 +2911,24 @@ let lint =
                 (OpamFileTools.warns_to_string warnings);
             if normalise then
               OpamStd.Option.iter (OpamFile.OPAM.write_to_channel stdout) opam;
-            err || failed
+            let json =
+              OpamStd.Option.map
+                (OpamStd.List.cons
+                   (OpamFileTools.warns_to_json
+                      ?filename:(OpamStd.Option.map OpamFile.to_string opam_f)
+                      warnings))
+                json
+            in
+            (err || failed), json
           with
           | Parsing.Parse_error
           | OpamLexer.Error _
           | OpamPp.Bad_format _ ->
             msg "File format error\n";
-            true)
-        false files
+            (true, json))
+        (false, json) files
     in
+    OpamStd.Option.iter (fun json -> OpamJson.append "lint" (`A json)) json;
     if err then OpamStd.Sys.exit_because `False
   in
   Term.(const lint $global_options $files $package $normalise $short $warnings
