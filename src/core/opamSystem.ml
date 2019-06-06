@@ -704,10 +704,14 @@ let extract_command file =
   else Tar.extract_command file
 
 let make_tar_gz_job ~dir file =
-  Tar.compress_command file dir @@> fun r ->
+  let tmpfile = file ^ ".tmp" in
+  remove_file tmpfile;
+  Tar.compress_command tmpfile dir @@> fun r ->
   OpamProcess.cleanup r;
-  Done (if OpamProcess.is_success r then None
-        else Some (Process_error r))
+  if OpamProcess.is_success r then
+    (mv tmpfile file; Done None)
+  else
+    (remove_file tmpfile; Done (Some (Process_error r)))
 
 let extract_job ~dir file =
   if not (Sys.file_exists file) then

@@ -114,6 +114,7 @@ let repository rt repo =
     repo_root
   @@+ function
   | Some e ->
+    OpamStd.Exn.fatal e;
     Printf.ksprintf failwith
       "Failed to regenerate local repository archive: %s"
       (Printexc.to_string e)
