@@ -111,6 +111,7 @@ let map_all_filters f t =
   with_deprecated_build_test (map_commands t.deprecated_build_test) |>
   with_deprecated_build_doc (map_commands t.deprecated_build_doc)
 
+(* Returns all variables from all commands (or on given [command]) and all filters *)
 let all_variables ?exclude_post ?command t =
   let commands =
     match command with
@@ -680,7 +681,7 @@ let lint ?check_extra_files ?(check_upstream=false) t =
        (upstream_error <> None));
     (let with_test =
        List.exists ((=) (OpamVariable.Full.of_string "with-test"))
-         (all_variables ~exclude_post:true ~command:(t.run_test) t)
+         (OpamFilter.commands_variables t.run_test)
      in
      cond 61 `Warning
        "`with-test` variable in `run-test` is out of scope, it will be ignored"
