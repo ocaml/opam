@@ -372,10 +372,19 @@ let rec handle_pin_depends st nv opam =
      if
        OpamConsole.confirm
          "Try to install anyway, assuming `--ignore-depends`?"
-     then
-       st
-     else
-       OpamStd.Sys.exit_because `Aborted
+     then st else
+       OpamStd.Sys.exit_because `Aborted)
+
+and source_pin
+    st name
+    ?version ?edit:(need_edit=false) ?opam:opam_opt ?(quiet=false)
+    ?(force=false) ?(ignore_extra_pins=OpamClientConfig.(!r.ignore_pin_depends))
+    target_url
+  =
+  log "pin %a to %a %a"
+    (slog OpamPackage.Name.to_string) name
+    (slog (OpamStd.Option.to_string OpamPackage.Version.to_string)) version
+    (slog (OpamStd.Option.to_string ~none:"none" OpamUrl.to_string)) target_url;
 
   let cur_version, cur_urlf =
     try
