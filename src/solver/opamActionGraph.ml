@@ -53,8 +53,9 @@ let symbol_of_action =
       utf8_symbol Symbols.greek_small_letter_lambda
                   ~alternates:[Symbols.six_pointed_black_star] "B"
   | `Fetch _ ->
-    utf8_symbol Symbols.black_down_pointing_triangle
-      ~alternates:[Symbols.downwards_black_arrow] "F"
+    utf8_symbol Symbols.downwards_black_arrow
+      ~alternates:[Symbols.downwards_double_arrow;
+                   Symbols.black_down_pointing_triangle] "F"
 
 let action_strings ?utf8 a =
   if utf8 = None && (OpamConsole.utf8 ()) || utf8 = Some true
