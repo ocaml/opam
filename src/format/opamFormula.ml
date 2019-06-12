@@ -214,9 +214,10 @@ let check (name,cstr) package =
   | None -> true
   | Some (relop, v) -> eval_relop relop (OpamPackage.version package) v
 
-let packages_of_atoms pkgset atoms =
-  (* Conjunction for constraints over the same name, but disjunction on the
-     package names *)
+let packages_of_atoms ?(disj=false) pkgset atoms =
+  (* Conjunction for constraints over the same name (unless [disj@ is
+     specified), but disjunction on the package names *)
+  let ffilter = if disj then List.exists else List.for_all in
   let by_name =
     List.fold_left (fun acc (n,_ as atom) ->
         OpamPackage.Name.Map.update n (fun a -> atom::a) [] acc)
@@ -225,7 +226,7 @@ let packages_of_atoms pkgset atoms =
   OpamPackage.Name.Map.fold (fun name atoms acc ->
       OpamPackage.Set.union acc @@
       OpamPackage.Set.filter
-        (fun nv -> List.for_all (fun a -> check a nv) atoms)
+        (fun nv -> ffilter (fun a -> check a nv) atoms)
         (OpamPackage.packages_of_name pkgset name))
     by_name OpamPackage.Set.empty
 
