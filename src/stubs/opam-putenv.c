@@ -2,10 +2,9 @@
 /*                                                                        */
 /*    Copyright 2015, 2016, 2017, 2018 MetaStack Solutions Ltd.           */
 /*                                                                        */
-/*  OPAM is distributed in the hope that it will be useful, but WITHOUT   */
-/*  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY    */
-/*  or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public       */
-/*  License for more details.                                             */
+/*  All rights reserved. This file is distributed under the terms of the  */
+/*  GNU Lesser General Public License version 2.1, with the special       */
+/*  exception on linking described in the file LICENSE.                   */
 /*                                                                        */
 /**************************************************************************/
 
