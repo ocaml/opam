@@ -4,7 +4,7 @@
 # ################################################################################################ #
 # Microsoft C Compiler Environment Detection Script                                                #
 # ################################################################################################ #
-# Copyright (c) 2016, 2017, 2018 MetaStack Solutions Ltd.                                          #
+# Copyright (c) 2016, 2017, 2018, 2019 MetaStack Solutions Ltd.                                    #
 # ################################################################################################ #
 # Author: David Allsopp                                                                            #
 # 16-Feb-2016                                                                                      #
@@ -24,10 +24,10 @@
 # limited to, procurement of substitute goods or services; loss of use, data, or profits; or       #
 # business interruption) however caused and on any theory of liability, whether in contract,       #
 # strict liability, or tort (including negligence or otherwise) arising in any way out of the use  #
-# use of this software, even if advised of the possibility of such damage.                         #
+# of this software, even if advised of the possibility of such damage.                             #
 # ################################################################################################ #
 
-VERSION=0.3.2
+VERSION=0.4.0
 
 # debug [level=2] message
 debug ()
@@ -70,7 +70,7 @@ reg64_string ()
 # Increments $RET if file does not exist in any of the directories in the *-separated list
 find_in ()
 {
-  debug 4 "Looking for $2"
+  debug 4 "Looking for $2 in $1"
   if [[ -z $1 ]] ; then
     STATUS=1
   else
@@ -109,6 +109,7 @@ find_in ()
 # entire runtime if only some options (e.g. Dynamic Runtime and not Static) are selected.
 check_environment ()
 {
+  debug 4 "Checking $4 ($5)"
   for tool in cl rc link ; do
     find_in "$1" $tool.exe
   done
@@ -199,6 +200,13 @@ MT_REQUIRED=0
 ML_REQUIRED=0
 TARGET_ARCH=
 SCAN_ENV=0
+
+if [[ $(uname --operating-system 2>/dev/null) = "Msys" ]] ; then
+  # Prevent MSYS from translating command line switches to paths
+  SWITCH_PREFIX='//'
+else
+  SWITCH_PREFIX='/'
+fi
 
 # Parse command-line. At the moment, the short option which usefully combines with anything is -d,
 # so for the time being, combining short options is not permitted, as the loop becomes even less
@@ -326,7 +334,7 @@ if [[ $MODE -eq 1 ]] ; then
   MSVS_PREFERENCE=
   SCAN_ENV=1
 elif [[ -z ${MSVS_PREFERENCE+x} ]] ; then
-  MSVS_PREFERENCE='@;VS15.*;VS14.0;VS12.0;VS11.0;10.0;9.0;8.0;7.1;7.0'
+  MSVS_PREFERENCE='@;VS16.*;VS15.*;VS14.0;VS12.0;VS11.0;10.0;9.0;8.0;7.1;7.0'
 fi
 
 MSVS_PREFERENCE=${MSVS_PREFERENCE//;/ }
@@ -466,6 +474,9 @@ COMPILERS=(
   ["VS15.*"]='(
     ["NAME"]="Visual Studio 2017"
     ["VSWHERE"]="1")'
+  ["VS16.*"]='(
+    ["NAME"]="Visual Studio 2019"
+    ["VSWHERE"]="1")'
   ["SDK5.2"]='(
     ["NAME"]="Windows Server 2003 SP1 SDK"
     ["VC_VER"]="8.0"
@@ -547,21 +558,26 @@ if [[ $SCAN_ENV -eq 1 ]] ; then
       RET=0
       ENV_INC=$(env | sed -ne 's/^\(INCLUDE\)=.*/\1/pi')
       ENV_LIB=$(env | sed -ne 's/^\(LIB\)=.*/\1/pi')
-      if check_environment "${PATH//:/*}" \
-                           "${!ENV_INC//;/*}" \
-                           "${!ENV_LIB//;/*}" \
-                           "Environment C compiler" \
-                           "$ENV_ARCH" ; then
-        ENV_CL=$(which cl)
-        ENV_cl=${ENV_CL,,}
-        ENV_cl=${ENV_cl/bin\/*_/bin\/}
-        debug "Environment appears to include a compiler at $ENV_CL"
-        if [[ -n $TARGET_ARCH && $TARGET_ARCH != $ENV_ARCH ]] ; then
-          debug "But architecture doesn't match required value"
+      if [[ -z $ENV_INC || -z $ENV_LIB ]] ; then
+        warning "Microsoft C Compiler Include and/or Lib not set - Environment C compiler ($ENV_ARCH) excluded"
+        unset ENV_ARCH
+      else
+        if check_environment "${PATH//:/*}" \
+                             "${!ENV_INC//;/*}" \
+                             "${!ENV_LIB//;/*}" \
+                             "Environment C compiler" \
+                             "$ENV_ARCH" ; then
+          ENV_CL=$(which cl)
+          ENV_cl=${ENV_CL,,}
+          ENV_cl=${ENV_cl/bin\/*_/bin\/}
+          debug "Environment appears to include a compiler at $ENV_CL"
+          if [[ -n $TARGET_ARCH && $TARGET_ARCH != $ENV_ARCH ]] ; then
+            debug "But architecture doesn't match required value"
+            unset ENV_ARCH
+          fi
+        else
           unset ENV_ARCH
         fi
-      else
-        unset ENV_ARCH
       fi
     fi
   fi
@@ -914,7 +930,7 @@ for i in "${TEST[@]}" ; do
       ((num++))
     done < <(INCLUDE= LIB= PATH="$DIR:$PATH" \
              EXEC_SCRIPT="$(basename "$SCRIPT") $ARCH_SWITCHES $SCRIPT_SWITCHES" \
-             cmd /v:on /c $COMMAND 2>/dev/null | fgrep XMARKER -A 3 | tr -d '\015' | tail -3)
+             $(cygpath "$COMSPEC") ${SWITCH_PREFIX}v:on ${SWITCH_PREFIX}c $COMMAND 2>/dev/null | fgrep XMARKER -A 3 | tr -d '\015' | tail -3)
     if [[ $DEBUG -gt 3 ]] ; then
       echo done>&2
     fi
