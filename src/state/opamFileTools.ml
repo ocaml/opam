@@ -623,7 +623,7 @@ let lint ?check_extra_files ?(check_upstream=false) t =
     cond 57 `Error
       "Synopsis and description must not be both empty"
       (t.descr = None || t.descr = Some OpamFile.Descr.empty);
-    (let vars = all_variables ~exclude_post:false t in
+    (let vars = all_variables ~exclude_post:false ~command:[] t in
      let exists svar =
        List.exists (fun v -> v = OpamVariable.Full.of_string svar) vars
      in
