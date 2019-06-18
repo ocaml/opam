@@ -72,25 +72,25 @@ let bwrap_string () = Printf.sprintf
      See https://opam.ocaml.org/doc/FAQ.html#Why-does-opam-require-bwrap."
     bwrap_cmd
 
-let fetch_cmd_user () =
+let req_dl_tools () =
   let open OpamStd.Option.Op in
-  match
-    OpamStd.Env.getopt "OPAMCURL",
-    OpamStd.Env.getopt "OPAMFETCH" >>| fun s ->
-    OpamStd.String.split s ' '
-  with
-  | Some cmd, _ | _, Some (cmd::_) -> Some cmd
-  | _ -> None
-
-let dl_tools () =
-  match fetch_cmd_user () with
-  | None -> ["curl"; "wget"]
+  let cmd =
+    (OpamStd.Env.getopt "OPAMFETCH"
+     >>= fun s ->
+     match OpamStd.String.split s ' ' with
+     | c::_ -> Some c
+     | _ -> None)
+    >>+ fun () -> OpamStd.Env.getopt "OPAMCURL"
+  in
+  match cmd with
   | Some cmd -> [cmd]
+  | None -> ["curl"; "wget"]
 
 let dl_tool () =
-  match fetch_cmd_user () with
-  | None ->  None
-  | Some cmd -> Some [(CString cmd), None]
+  let open OpamStd.Option.Op in
+    (OpamStd.Env.getopt "OPAMFETCH"
+     >>+ fun () -> OpamStd.Env.getopt "OPAMCURL")
+    >>| fun cmd -> [(CString cmd), None]
 
 let recommended_tools () =
   let make = OpamStateConfig.(Lazy.force !r.makecmd) in
@@ -102,7 +102,7 @@ let recommended_tools () =
 
 let required_tools ~sandboxing () =
   [
-    dl_tools(),
+    req_dl_tools(),
     Some "A download tool is required, check env variables OPAMCURL or OPAMFETCH",
     None;
     ["diff"], None, None;
