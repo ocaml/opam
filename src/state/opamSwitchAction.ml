@@ -16,7 +16,7 @@ open OpamPackage.Set.Op
 let log fmt = OpamConsole.log "SWACT" fmt
 let slog = OpamConsole.slog
 
-let gen_switch_config root ?(synopsis="") ?repos _switch =
+let gen_switch_config root ?(synopsis="") ?repos ?(configure_switch = fun x -> x) _switch =
   let vars =
     List.map (fun (s,p) -> OpamVariable.of_string s, S p) [
       ("user" ,
@@ -27,6 +27,7 @@ let gen_switch_config root ?(synopsis="") ?repos _switch =
        with Not_found -> "group");
     ]
   in
+  configure_switch
   { OpamFile.Switch_config.
     opam_version = OpamVersion.current_nopatch;
     synopsis;
@@ -43,7 +44,7 @@ let install_switch_config root switch config =
     (OpamPath.Switch.switch_config root switch)
     config
 
-let create_empty_switch gt ?synopsis ?repos switch =
+let create_empty_switch gt ?synopsis ?repos ?configure_switch switch =
   log "create_empty_switch at %a" (slog OpamSwitch.to_string) switch;
   let root = gt.root in
   let switch_dir = OpamPath.Switch.root root switch in
@@ -57,7 +58,9 @@ let create_empty_switch gt ?synopsis ?repos switch =
     (* Create base directories *)
     OpamFilename.mkdir switch_dir;
 
-    let config = gen_switch_config root ?synopsis ?repos switch in
+    let config =
+      gen_switch_config root ?synopsis ?repos ?configure_switch switch
+    in
 
     OpamFilename.mkdir (OpamPath.Switch.lib_dir root switch config);
     OpamFilename.mkdir (OpamPath.Switch.stublibs root switch config);

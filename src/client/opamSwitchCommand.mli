@@ -25,6 +25,7 @@ val install:
   ?repos:repository_name list ->
   update_config:bool ->
   packages:atom conjunction -> 
+  switch_defaults: OpamFile.SwitchDefaults.t ->
   ?local_compiler:bool ->
   switch ->
   unlocked global_state * rw switch_state

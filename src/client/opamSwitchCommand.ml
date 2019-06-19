@@ -270,7 +270,8 @@ let install_compiler_packages t atoms =
     (Success result);
   t
 
-let install gt ~rt ?synopsis ?repos ~update_config ~packages ?(local_compiler=false) switch =
+let install gt ~rt ?synopsis ?repos ~update_config ~packages ~switch_defaults
+                   ?(local_compiler=false) switch =
   let update_config = update_config && not (OpamSwitch.is_external switch) in
   let old_switch_opt = OpamFile.Config.switch gt.config in
   let comp_dir = OpamPath.Switch.root gt.root switch in
@@ -285,7 +286,53 @@ let install gt ~rt ?synopsis ?repos ~update_config ~packages ?(local_compiler=fa
   let gt, st =
     if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
       let gt =
-        OpamSwitchAction.create_empty_switch gt ?synopsis ?repos switch
+        let env full_var =
+          let open OpamVariable.Full in
+          match scope full_var with
+          | Global ->
+              OpamPackageVar.resolve_global gt full_var
+          | Self ->
+              None
+          | Package name ->
+              match variable full_var |> OpamVariable.to_string with
+              | "installed" ->
+                  let f (package, _) =
+                    OpamPackage.Name.compare name package = 0
+                  in
+                  Some (B (List.exists f packages))
+              | _ ->
+                  None
+        in
+        let configure_switch conf =
+          let variables =
+            (* XXX Should be able to use description in the same way as for
+                   eval_variables *)
+            let f ((name, value, _description), filter) =
+              let eval = OpamFilter.eval_to_bool ~default:false env in
+              let expand = OpamFilter.expand_string (OpamPackageVar.resolve_global gt) in
+              if OpamStd.Option.map_default eval true filter then
+                let value =
+                  match value with
+                  | B _ ->
+                      value
+                  | S value ->
+                      S (expand value)
+                  | L values ->
+                      L (List.map expand values)
+                in
+                Some (name, value)
+              else
+                None
+            in
+            let switch_variables =
+              OpamFile.SwitchDefaults.switch_variables switch_defaults
+            in
+            OpamFile.Switch_config.(conf.variables)
+              @ OpamStd.List.filter_map f switch_variables
+          in
+          {conf with OpamFile.Switch_config.variables}
+        in
+        OpamSwitchAction.create_empty_switch gt ?synopsis ?repos ~configure_switch switch
       in
       if update_config then
         gt, OpamSwitchAction.set_current_switch `Lock_write gt ~rt switch

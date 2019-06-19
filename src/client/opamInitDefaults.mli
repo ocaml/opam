@@ -21,6 +21,10 @@ val default_compiler: formula
 
 val eval_variables: (OpamVariable.t * string list * string) list
 
+(** Default switch defaults configuration file (also embedded in
+    {!init_config}). *)
+val switch_defaults: OpamFile.SwitchDefaults.t
+
 (** Default initial configuration file for use by [opam init] if nothing is
     supplied. *)
 val init_config: ?sandboxing:bool -> unit -> OpamFile.InitConfig.t
