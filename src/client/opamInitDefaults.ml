@@ -39,6 +39,8 @@ let linux_filter = os_filter "linux"
 let macos_filter = os_filter "macos"
 let openbsd_filter = os_filter "openbsd"
 let freebsd_filter = os_filter "freebsd"
+let not_open_free_bsd_filter =
+  FNot (FOr (openbsd_filter,  freebsd_filter))
 let win32_filter = os_filter "win32"
 let sandbox_filter = FOr (linux_filter, macos_filter)
 
@@ -73,6 +75,16 @@ let bwrap_string () = Printf.sprintf
     bwrap_cmd
 
 let req_dl_tools () =
+  let msg =
+    Some "A download tool is required, check env variables OPAMCURL or OPAMFETCH"
+  in
+  let default =
+    [
+      ["curl"; "wget"], msg, Some not_open_free_bsd_filter;
+      ["fetch"], msg, Some freebsd_filter;
+      ["ftp"], msg, Some openbsd_filter
+    ]
+  in
   let open OpamStd.Option.Op in
   let cmd =
     (OpamStd.Env.getopt "OPAMFETCH"
@@ -83,14 +95,15 @@ let req_dl_tools () =
     >>+ fun () -> OpamStd.Env.getopt "OPAMCURL"
   in
   match cmd with
-  | Some cmd -> [cmd]
-  | None -> ["curl"; "wget"]
+  | Some cmd ->
+    [[cmd], Some "Custom download tool, check OPAMCURL or OPAMFETCH", None]
+  | None -> default
 
 let dl_tool () =
   let open OpamStd.Option.Op in
-    (OpamStd.Env.getopt "OPAMFETCH"
-     >>+ fun () -> OpamStd.Env.getopt "OPAMCURL")
-    >>| fun cmd -> [(CString cmd), None]
+  (OpamStd.Env.getopt "OPAMFETCH"
+   >>+ fun () -> OpamStd.Env.getopt "OPAMCURL")
+  >>| fun cmd -> [(CString cmd), None]
 
 let recommended_tools () =
   let make = OpamStateConfig.(Lazy.force !r.makecmd) in
@@ -101,10 +114,8 @@ let recommended_tools () =
   ]
 
 let required_tools ~sandboxing () =
+  req_dl_tools () @
   [
-    req_dl_tools(),
-    Some "A download tool is required, check env variables OPAMCURL or OPAMFETCH",
-    None;
     ["diff"], None, None;
     ["patch"], None, Some patch_filter;
     ["gpatch"], None, Some gpatch_filter;
