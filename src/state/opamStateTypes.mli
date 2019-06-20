@@ -138,7 +138,7 @@ type +'lock switch_state = {
       happen not to be installed at some point, but this indicates that the
       user would like them installed. *)
 
-  reinstall: package_set;
+  reinstall: package_set Lazy.t;
   (** The set of packages which needs to be reinstalled *)
 
   (* Missing: a cache for

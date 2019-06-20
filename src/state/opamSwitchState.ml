@@ -187,26 +187,29 @@ let load lock_kind gt rt switch =
       "No definition found for the following installed packages: %s\n\
        This switch may need to be reinstalled"
       (OpamPackage.Set.to_string installed_without_def);
-  let changed =
+  let changed = lazy (
     (* Note: This doesn't detect changed _dev_ packages, since it's based on the
        metadata or the archive hash changing and they don't have an archive
        hash. Therefore, dev package update needs to add to the reinstall file *)
-    OpamPackage.Map.merge (fun _ opam_new opam_installed ->
-        match opam_new, opam_installed with
-        | Some r, Some i when not (OpamFile.OPAM.effectively_equal i r) ->
-          Some ()
-        | _ -> None)
-      opams installed_opams
-    |> OpamPackage.keys
-  in
-  let changed =
-    changed --
-    OpamPackage.Set.filter
-      (fun nv -> not (OpamPackage.has_name pinned nv.name))
-      compiler_packages
-  in
-  log "Detected changed packages (marked for reinstall): %a"
-    (slog OpamPackage.Set.to_string) changed;
+    let changed =
+      OpamPackage.Map.merge (fun _ opam_new opam_installed ->
+          match opam_new, opam_installed with
+          | Some r, Some i when not (OpamFile.OPAM.effectively_equal i r) ->
+            Some ()
+          | _ -> None)
+        opams installed_opams
+      |> OpamPackage.keys
+    in
+    let changed =
+      changed --
+      OpamPackage.Set.filter
+        (fun nv -> not (OpamPackage.has_name pinned nv.name))
+        compiler_packages
+    in
+    log "Detected changed packages (marked for reinstall): %a"
+      (slog OpamPackage.Set.to_string) changed;
+    changed
+  ) in
   (* Detect and initialise missing switch description *)
   let switch_config =
     if switch_config <> OpamFile.Switch_config.empty &&
@@ -281,10 +284,10 @@ let load lock_kind gt rt switch =
   let installed =
     installed -- ext_files_changed
   in
-  let reinstall =
+  let reinstall = lazy (
     OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall gt.root switch) ++
-    changed
-  in
+    Lazy.force changed
+  ) in
   let st = {
     switch_global = (gt :> unlocked global_state);
     switch_repos = (rt :> unlocked repos_state);
@@ -334,7 +337,7 @@ let load_virtual ?repos_list ?(avail_default=true) gt rt =
     conf_files = OpamPackage.Name.Map.empty;
     packages;
     available_packages;
-    reinstall = OpamPackage.Set.empty;
+    reinstall = lazy OpamPackage.Set.empty;
   }
 
 let selections st =
@@ -615,7 +618,7 @@ let universe st
     let requested_deps =
       OpamPackage.Set.fixpoint resolve_deps requested_allpkgs
     in
-    requested_deps %% st.reinstall ++
+    requested_deps %% Lazy.force st.reinstall ++
     match reinstall with
     | Some set -> set
     | None -> OpamPackage.Set.empty
@@ -648,7 +651,7 @@ let dump_pef_state st oc =
     let base = OpamPackage.Set.mem nv st.compiler_packages in
     let pinned = OpamPackage.Set.mem nv st.pinned in
     let available = OpamPackage.Set.mem nv (Lazy.force st.available_packages) in
-    let reinstall = OpamPackage.Set.mem nv st.reinstall in
+    let reinstall = OpamPackage.Set.mem nv (Lazy.force st.reinstall) in
     let dev = OpamPackageVar.is_dev_package st opam in
     (* current state *)
     Printf.fprintf oc "available: %b\n" available;
@@ -768,13 +771,13 @@ let update_package_metadata nv opam st =
       then OpamPackage.Set.add nv (Lazy.force st.available_packages)
       else OpamPackage.Set.remove nv (Lazy.force st.available_packages)
     );
-    reinstall =
+    reinstall = lazy
       (match OpamPackage.Map.find_opt nv st.installed_opams with
        | Some inst ->
          if OpamFile.OPAM.effectively_equal inst opam
-         then OpamPackage.Set.remove nv (st.reinstall)
-         else OpamPackage.Set.add nv (st.reinstall)
-       | _ -> st.reinstall);
+         then OpamPackage.Set.remove nv (Lazy.force st.reinstall)
+         else OpamPackage.Set.add nv (Lazy.force st.reinstall)
+       | _ -> Lazy.force st.reinstall);
   }
 
 let remove_package_metadata nv st =

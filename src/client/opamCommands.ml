@@ -1537,6 +1537,7 @@ let reinstall =
       atoms_locs cmd =
     apply_global_options global_options;
     apply_build_options build_options;
+    let open OpamPackage.Set.Op in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     match cmd, atoms_locs with
     | `Default, (_::_ as atom_locs) ->
@@ -1546,7 +1547,7 @@ let reinstall =
       `Ok ()
     | `Pending, [] | `Default, [] ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let atoms = OpamSolution.eq_atoms_of_packages st.reinstall in
+      let atoms = OpamSolution.eq_atoms_of_packages (Lazy.force st.reinstall) in
       OpamSwitchState.drop @@ OpamClient.reinstall st atoms;
       `Ok ()
     | `List_pending, [] ->
@@ -1559,14 +1560,15 @@ let reinstall =
             header = false;
             order = `Dependency;
         }
-        st.reinstall;
+        (Lazy.force st.reinstall);
       `Ok ()
     | `Forget_pending, atom_locs ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       let atoms = OpamAuxCommands.resolve_locals_pinned ~recurse ?subpath st atom_locs in
+      let reinstall = Lazy.force st.reinstall in
       let to_forget = match atoms with
-        | [] -> st.reinstall
-        | atoms -> OpamFormula.packages_of_atoms st.reinstall atoms
+        | [] -> reinstall
+        | atoms -> OpamFormula.packages_of_atoms reinstall atoms
       in
       OpamPackage.Set.iter (fun nv ->
           try
@@ -1579,7 +1581,7 @@ let reinstall =
             then OpamSwitchAction.install_metadata st nv
           with Not_found -> ())
         to_forget;
-      let reinstall = OpamPackage.Set.Op.(st.reinstall -- to_forget) in
+      let reinstall = reinstall -- to_forget in
       OpamSwitchState.drop @@ OpamSwitchAction.update_switch_state ~reinstall st;
       `Ok ()
     | _, _::_ ->

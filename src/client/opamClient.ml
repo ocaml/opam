@@ -182,7 +182,7 @@ let compute_upgrade_t
              let nv = OpamSwitchState.find_installed_package_by_name t n in
              if OpamSwitchState.is_dev_package t nv ||
                 OpamPackage.has_name t.pinned n ||
-                OpamPackage.Set.mem nv t.reinstall
+                OpamPackage.Set.mem nv (Lazy.force t.reinstall)
              then (n, None)
              else
              let atom = (n, Some (`Gt, nv.version)) in
@@ -221,7 +221,7 @@ let compute_upgrade_t
     OpamSolution.resolve t Upgrade
       ~orphans:(full_orphans ++ orphan_versions)
       ~requested:names
-      ~reinstall:t.reinstall
+      ~reinstall:(Lazy.force t.reinstall)
       (OpamSolver.request
          ~install:to_install
          ~upgrade:(OpamSolution.atoms_of_packages to_upgrade)
@@ -1006,7 +1006,7 @@ let install_t t ?ask atoms add_to_roots
     get_installed_atoms t atoms in
   let pkg_reinstall =
     if assume_built then OpamPackage.Set.of_list pkg_skip
-    else t.reinstall %% OpamPackage.Set.of_list pkg_skip
+    else Lazy.force t.reinstall %% OpamPackage.Set.of_list pkg_skip
   in
   (* Add the packages to the list of package roots and display a
      warning for already installed package roots. *)

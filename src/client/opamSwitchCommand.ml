@@ -622,7 +622,7 @@ let reinstall init_st =
     { init_st with
       installed = OpamPackage.Set.empty;
       installed_roots = OpamPackage.Set.empty;
-      reinstall = OpamPackage.Set.empty; }
+      reinstall = lazy OpamPackage.Set.empty; }
   in
   import_t { OpamFile.SwitchExport.
              selections = OpamSwitchState.selections init_st;

@@ -120,7 +120,7 @@ let add_to_reinstall st ~unpinned_only packages =
     OpamFilename.remove (OpamFile.filename reinstall_file)
   else
     OpamFile.PkgList.write reinstall_file reinstall;
-  { st with reinstall = st.reinstall ++ add_reinst_packages }
+  { st with reinstall = lazy (Lazy.force st.reinstall ++ add_reinst_packages) }
 
 let set_current_switch lock gt ~rt switch =
   if OpamSwitch.is_external switch then
@@ -166,7 +166,7 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
   let open OpamStd.Option.Op in
   let open OpamPackage.Set.Op in
   let installed = installed +! st.installed in
-  let reinstall0 = st.reinstall in
+  let reinstall0 = Lazy.force st.reinstall in
   let reinstall = (reinstall +! reinstall0) %% installed in
   let compiler_packages =
     if OpamPackage.Set.is_empty (st.compiler_packages -- installed) then
@@ -185,7 +185,7 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
     { st with
       installed;
       installed_roots = installed_roots +! st.installed_roots;
-      reinstall;
+      reinstall = lazy reinstall;
       pinned = pinned +! st.pinned;
       compiler_packages; }
   in
@@ -202,7 +202,7 @@ let add_to_installed st ?(root=false) nv =
   let st =
     update_switch_state st
       ~installed:(OpamPackage.Set.add nv st.installed)
-      ~reinstall:(OpamPackage.Set.remove nv st.reinstall)
+      ~reinstall:(OpamPackage.Set.remove nv (Lazy.force st.reinstall))
       ~installed_roots:
         (let roots =
            OpamPackage.Set.filter (fun nv1 -> nv1.name <> nv.name)
@@ -232,7 +232,7 @@ let remove_from_installed ?(keep_as_root=false) st nv =
       ~installed:(rm st.installed)
       ?installed_roots:(if keep_as_root then None
                         else Some (rm st.installed_roots))
-      ~reinstall:(rm st.reinstall)
+      ~reinstall:(rm (Lazy.force st.reinstall))
   in
   let has_setenv =
     match OpamStd.Option.map OpamFile.OPAM.env (OpamSwitchState.opam_opt st nv)
