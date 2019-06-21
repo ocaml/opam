@@ -28,11 +28,15 @@ type 'a options_fun =
 
 let default = {
   download_tool = lazy (
+    let os = OpamStd.Sys.os () in
     try
+      let curl = "curl", `Curl in
       let tools =
-        if OpamStd.Sys.(os () = Darwin)
-        then ["wget", `Default; "curl", `Curl]
-        else ["curl", `Curl; "wget", `Default]
+        match os with
+        | Darwin  -> ["wget", `Default; curl]
+        | FreeBSD -> ["fetch", `Default ; curl]
+        | OpenBSD -> ["ftp", `Default; curl]
+        | _ -> [curl; "wget", `Default]
       in
       let cmd, kind =
         List.find (fun (c,_) -> OpamSystem.resolve_command c <> None) tools
@@ -41,8 +45,12 @@ let default = {
     with Not_found ->
       OpamConsole.error_and_exit `Configuration_error
         "Could not find a suitable download command. Please make sure you \
-         have either \"curl\" or \"wget\" installed, or specify a custom \
-         command through variable OPAMFETCH."
+         have %s installed, or specify a custom command through variable \
+         OPAMFETCH."
+        (match os with
+         | FreeBSD -> "fetch"
+         | OpenBSD -> "ftp"
+         | _ -> "either \"curl\" or \"wget\"")
   );
   validation_hook = None;
   retries = 3;
