@@ -69,7 +69,7 @@ module VCS = struct
     let finalise () = OpamSystem.remove_file patch_file in
     OpamProcess.Job.catch (fun e -> finalise (); raise e) @@ fun () ->
     let mark = mark_from_url repo_url in
-    hg repo_root ~stdout:patch_file [ "diff"; "--subrepos"; "--reverse";
+    hg repo_root ~stdout:patch_file [ "diff"; "--text"; "--subrepos"; "--reverse";
         "--rev"; mark ] @@> fun r ->
     if OpamProcess.is_failure r then
       (finalise ();
