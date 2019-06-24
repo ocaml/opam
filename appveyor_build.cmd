@@ -219,7 +219,7 @@ if "%OCAML_PORT%" equ "msvc64" call "C:\Program Files (x86)\Microsoft Visual Stu
 echo Before test OPAM_SWITCH_PREFIX=%OPAM_SWITCH_PREFIX%
 opam init -y -a git+https://github.com/dra27/opam-repository.git#windows || exit /b 1
 echo After init OPAM_SWITCH_PREFIX=%OPAM_SWITCH_PREFIX%
-opam install -y ocamlfind || exit /b 1
+opam install --strict -y ocamlfind || exit /b 1
 opam switch list || exit /b 1
 opam list || exit /b 1
 goto :EOF
