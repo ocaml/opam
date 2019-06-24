@@ -1499,6 +1499,7 @@ module Switch_configSyntax = struct
     opam_root: dirname option;
     wrappers: Wrappers.t;
     env: env_update list;
+    invariant: OpamFormula.t;
   }
 
   let empty = {
@@ -1510,6 +1511,7 @@ module Switch_configSyntax = struct
     opam_root = None;
     wrappers = Wrappers.empty;
     env = [];
+    invariant = OpamFormula.Empty;
   }
 
   (* When adding a field or section, make sure to add it in
@@ -1548,6 +1550,10 @@ module Switch_configSyntax = struct
     "setenv", Pp.ppacc
       (fun env t -> {t with env}) (fun t -> t.env)
       (Pp.V.map_list ~depth:2 Pp.V.env_binding);
+    "invariant", Pp.ppacc
+      (fun invariant t -> {t with invariant}) (fun t -> t.invariant)
+      (Pp.V.package_formula `Conj Pp.V.(constraints version));
+
   ] @
     List.map
       (fun (fld, ppacc) ->

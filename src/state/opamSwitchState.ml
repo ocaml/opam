@@ -233,6 +233,9 @@ let load lock_kind gt rt switch =
       conf
     else switch_config
   in
+  let switch_invariant =
+    switch_config.OpamFile.Switch_config.invariant
+  in
   let conf_files =
     OpamPackage.Set.fold (fun nv acc ->
         OpamPackage.Name.Map.add nv.name
@@ -293,7 +296,7 @@ let load lock_kind gt rt switch =
     switch_global = (gt :> unlocked global_state);
     switch_repos = (rt :> unlocked repos_state);
     switch_lock = lock;
-    switch; compiler_packages; switch_config;
+    switch; switch_invariant; compiler_packages; switch_config;
     repos_package_index; installed_opams;
     installed; pinned; installed_roots;
     opams; conf_files;
@@ -324,6 +327,7 @@ let load_virtual ?repos_list ?(avail_default=true) gt rt =
     switch_repos = (rt :> unlocked repos_state);
     switch_lock = OpamSystem.lock_none;
     switch = OpamSwitch.unset;
+    switch_invariant = OpamFormula.Empty;
     compiler_packages = OpamPackage.Set.empty;
     switch_config = {
       OpamFile.Switch_config.empty
@@ -636,6 +640,7 @@ let universe st
   u_installed_roots = st.installed_roots;
   u_pinned    = OpamPinned.packages st;
   u_base      = base;
+  u_invariant = st.switch_invariant;
   u_reinstall;
   u_attrs     = ["opam-query", requested_allpkgs];
 }

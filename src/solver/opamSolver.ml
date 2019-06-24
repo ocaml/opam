@@ -32,6 +32,7 @@ let empty_universe =
     u_installed_roots = OpamPackage.Set.empty;
     u_pinned = OpamPackage.Set.empty;
     u_base = OpamPackage.Set.empty;
+    u_invariant = OpamFormula.Empty;
     u_reinstall = OpamPackage.Set.empty;
     u_attrs = [];
   }
@@ -129,6 +130,26 @@ let constraint_to_cudf version_map name (op,v) =
 let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
   name_to_cudf name,
   OpamStd.Option.Op.(cstr >>= constraint_to_cudf version_map name)
+
+let opam_invariant_package version_map invariant =
+  let depends =
+    OpamFormula.to_atom_formula invariant
+    |> OpamFormula.map (fun at -> Atom (atom2cudf () version_map at))
+    |> OpamFormula.cnf_of_formula
+    |> OpamFormula.ands_to_list
+    |> List.map (OpamFormula.fold_right (fun acc x -> x::acc) [])
+  in {
+    Cudf.
+    package = OpamCudf.opam_invariant_package_name;
+    version = 0;
+    depends;
+    conflicts = [];
+    provides = [];
+    installed = true;
+    was_installed = true;
+    keep = `Keep_version;
+    pkg_extra = [];
+  }
 
 let lag_function =
   let exp =
@@ -314,9 +335,7 @@ let load_cudf_universe
     post;
   let chrono = OpamConsole.timer () in
   let cudf_universe =
-    let cudf_packages =
-      univ_gen ~depopts ~build ~post
-    in
+    let cudf_packages = univ_gen ~depopts ~build ~post in
     log ~level:3 "opam2cudf: done in %.3fs" (chrono ());
     try Cudf.load_universe cudf_packages
     with Cudf.Constraint_violation s ->
@@ -424,7 +443,13 @@ let resolve universe ~orphans request =
   let cudf_request = map_request (atom2cudf universe version_map) request in
   let resolve u req =
     try
+      let invariant_pkg =
+        opam_invariant_package version_map universe.u_invariant
+      in
+      Cudf.add_package u invariant_pkg;
       let resp = OpamCudf.resolve ~extern:true ~version_map u req in
+      Cudf.remove_package u
+        (invariant_pkg.Cudf.package, invariant_pkg.Cudf.version);
       OpamCudf.to_actions add_orphan_packages u resp
     with OpamCudf.Solver_failure msg ->
       OpamConsole.error_and_exit `Solver_failure "%s" msg

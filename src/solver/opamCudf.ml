@@ -23,7 +23,19 @@ let s_installed_root = "installed-root"
 let s_pinned = "pinned"
 let s_version_lag = "version-lag"
 
+let opam_invariant_package_name =
+  Common.CudfAdd.encode "=opam-invariant"
+
+let opam_invariant_package_version = 0
+
+let is_opam_invariant p =
+  p.Cudf.package = opam_invariant_package_name
+
 let cudf2opam cpkg =
+  if is_opam_invariant cpkg then
+    OpamConsole.error_and_exit `Internal_error
+      "Internal error: tried to access the CUDF opam invariant as an opam \
+       package";
   let sname = Cudf.lookup_package_property cpkg s_source in
   let name = OpamPackage.Name.of_string sname in
   let sver = Cudf.lookup_package_property cpkg s_source_number in
@@ -506,7 +518,9 @@ end
 
 (** Special package used by Dose internally, should generally be filtered out *)
 let dose_dummy_request = Algo.Depsolver.dummy_request.Cudf.package
-let is_dose_request cpkg = cpkg.Cudf.package = dose_dummy_request
+let is_artefact cpkg =
+  is_opam_invariant cpkg ||
+  cpkg.Cudf.package = dose_dummy_request
 
 let filter_dependencies f_direction universe packages =
   log ~level:3 "filter deps: build graph";
@@ -601,9 +615,12 @@ let strings_of_reasons packages cudfnv2opam unav_reasons rs =
   let rec aux = function
     | [] -> []
     | Conflict (i,j,jc)::rs ->
-      if is_dose_request i || is_dose_request j then
-        let a = if is_dose_request i then j else i in
-        if is_dose_request a then aux rs else
+      if is_artefact i && is_artefact j then
+        let str = "The request is conflicting with the switch" in
+        str :: aux rs
+      else if is_artefact i || is_artefact j then
+        let a = if is_artefact i then j else i in
+        if is_artefact a then aux rs else
         if is_base a then
           let str =
             Printf.sprintf "Package %s is part of the base for this compiler \
@@ -652,7 +669,7 @@ let strings_of_reasons packages cudfnv2opam unav_reasons rs =
              (OpamFormula.of_atom_formula (Atom (vpkg2atom cudfnv2opam jc))))
       in
       str :: aux rs
-    | Missing (p,missing) :: rs when is_dose_request p ->
+    | Missing (p,missing) :: rs when is_artefact p ->
       (* Requested pkg missing *)
       let atoms =
         List.map (fun vp ->
@@ -687,12 +704,12 @@ let make_chains packages cudfnv2opam depends =
     with Not_found -> Map.add k v map in
   let roots,notroots,deps,vpkgs =
     List.fold_left (fun (roots,notroots,deps,vpkgs) -> function
-        | Dependency (i, vpkgl, jl) when not (is_dose_request i) ->
+        | Dependency (i, vpkgl, jl) when not (is_artefact i) ->
           Set.add i roots,
           List.fold_left (fun notroots j -> Set.add j notroots) notroots jl,
           map_addlist i jl deps,
           map_addlist i vpkgl vpkgs
-        | Missing (i, vpkgl) when not (is_dose_request i) ->
+        | Missing (i, vpkgl) when not (is_artefact i) ->
           let jl =
             List.map (fun (package,_) ->
                 {Cudf.default_package with Cudf.package})
@@ -1049,8 +1066,19 @@ let actions_of_diff (install, remove) =
 
 let resolve ~extern ~version_map universe request =
   log "resolve request=%a" (slog string_of_request) request;
-  if extern then get_final_universe ~version_map universe request
-  else check_request ~version_map universe request
+  let resp =
+    if extern then get_final_universe ~version_map universe request
+    else check_request ~version_map universe request
+  in
+  let cleanup univ =
+    Cudf.remove_package univ
+      (opam_invariant_package_name, opam_invariant_package_version)
+  in
+  let () = match resp with
+    | Success univ -> cleanup univ
+    | Conflicts (univ, _, _) -> cleanup univ
+  in
+  resp
 
 let to_actions f universe result =
   let aux u1 u2 =

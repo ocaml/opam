@@ -183,6 +183,12 @@ val s_pinned: string
 (** the number of versions of the package since this one, cubed *)
 val s_version_lag: string
 
+(** valid cudf name for the dummy package used for enforcing opam's switch
+    invariants *)
+val opam_invariant_package_name: string
+
+val is_opam_invariant: Cudf.package -> bool
+
 (** {2 Pretty-printing} *)
 
 (** Convert a package constraint to something readable. *)

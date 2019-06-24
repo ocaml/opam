@@ -96,8 +96,13 @@ type +'lock switch_state = {
   switch: switch;
   (** The current active switch *)
 
+  switch_invariant: formula;
+  (** Defines the "base" of the switch, e.g. what compiler is desired *)
+
   compiler_packages: package_set;
-  (** The packages that form the base of the current compiler *)
+  (** The packages that form the base of the current compiler. Normally equal to
+      the subset of installed packages matching the invariant defined in
+      switch_config *)
 
   switch_config: OpamFile.Switch_config.t;
   (** The configuration file for this switch *)
