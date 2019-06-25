@@ -105,6 +105,14 @@ val reverse_dependencies :
   package_set ->
   package list
 
+module PkgGraph: Graph.Sig.I
+  with type V.t = OpamPackage.t
+val dependency_graph :
+  depopts:bool -> build:bool -> post:bool ->
+  installed:bool ->
+  ?unavailable:bool ->
+  universe -> PkgGraph.t
+
 (** Check the current set of installed packages in a universe for
     inconsistencies *)
 val check_for_conflicts : universe -> OpamCudf.conflict option
