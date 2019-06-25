@@ -520,33 +520,50 @@ let get_compatible_compiler ?repos rt dir =
    else
    let candidates = OpamFormula.to_dnf default_compiler in
    try
-     OpamStd.List.find_map
-       (fun atoms ->
-          let has_all compiler_packages =
-            List.for_all (fun at ->
-                OpamPackage.Set.exists (OpamFormula.check at) compiler_packages)
-              atoms
-          in
-          let compiler =
-            OpamFormula.packages_of_atoms
-              (Lazy.force virt_st.available_packages)
-              atoms
-          in
-          if not (has_all compiler) then None else
-          if OpamPackage.Set.is_empty local_packages then
-            Some (OpamSolution.eq_atoms_of_packages compiler)
-          else
-          (* fake universe with `local_packages` as base, just to check
-             coinstallability *)
-          let univ =
-            { univ with u_base = local_packages; u_installed = local_packages }
-          in
-          let compiler = OpamSolver.installable_subset univ compiler in
-          if has_all compiler then
-            Some (OpamSolution.eq_atoms_of_packages compiler)
-          else None
-       )
-       candidates, false
+     let candidates =
+       OpamStd.List.find_map
+         (fun atoms ->
+            let has_all compiler_packages =
+              List.for_all (fun at ->
+                  OpamPackage.Set.exists (OpamFormula.check at) compiler_packages)
+                atoms
+            in
+            let compiler =
+              OpamFormula.packages_of_atoms
+                (Lazy.force virt_st.available_packages)
+                atoms
+            in
+            if not (has_all compiler) then None else
+            if OpamPackage.Set.is_empty local_packages then
+              Some (OpamSolution.eq_atoms_of_packages compiler)
+            else
+            (* fake universe with `local_packages` as base, just to check
+               coinstallability *)
+            let univ =
+              { univ with u_base = local_packages; u_installed = local_packages }
+            in
+            let compiler = OpamSolver.installable_subset univ compiler in
+            if has_all compiler then
+              Some (OpamSolution.eq_atoms_of_packages compiler)
+            else None
+         ) candidates
+     in
+     let candidate =
+       candidates
+       |> List.map (fun (n,vc) ->
+           OpamPackage.create n
+             (match vc with
+              | Some (`Eq, v) -> v
+              (* all atoms are from [OpamFormula.eq_atoms_of_packages] *)
+              | _ -> assert false))
+       |> OpamPackage.Set.of_list
+       |> (fun s ->
+           OpamPackage.(max_version s
+                          (names_of_packages s
+                           |> Name.Set.choose)))
+       |> fun p -> [OpamSolution.eq_atom_of_package p]
+     in
+     candidate,false
    with Not_found ->
       OpamConsole.warning
         "The default compiler selection: %s\n\
