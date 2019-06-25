@@ -72,4 +72,4 @@ val get_compiler_packages:
     match [name] against "pkg.version", "pkg", and, as a last resort,
     "version" (for compat with older opams, eg. 'opam switch 4.02.3') *)
 val guess_compiler_package:
-  ?repos:repository_name list -> 'a repos_state -> string -> atom list
+  ?repos:repository_name list -> 'a repos_state -> string -> atom option

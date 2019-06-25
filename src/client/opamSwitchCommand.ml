@@ -665,7 +665,7 @@ let guess_compiler_package ?repos rt name =
   in
   match OpamPackage.of_string_opt name with
   | Some nv when OpamPackage.Set.mem nv compiler_packages ->
-    [OpamSolution.eq_atom_of_package nv]
+    Some (OpamSolution.eq_atom_of_package nv)
   | Some nv when OpamRepositoryState.find_package_opt rt repos nv <> None ->
     advise_compiler_dependencies rt opams compiler_packages name
       [OpamSolution.eq_atom_of_package nv];
@@ -677,7 +677,7 @@ let guess_compiler_package ?repos rt name =
     in
     match pkgname with
     | Some pkgname when OpamPackage.has_name compiler_packages pkgname ->
-      [pkgname, None]
+      Some (pkgname, None)
     | Some pkgname when
         OpamPackage.Map.exists (fun nv _ -> OpamPackage.name nv = pkgname) opams
       ->
@@ -691,8 +691,8 @@ let guess_compiler_package ?repos rt name =
           compiler_packages
       in
       try
-        [OpamSolution.eq_atom_of_package
-           (OpamPackage.Set.choose_one has_version)]
+        Some (OpamSolution.eq_atom_of_package
+           (OpamPackage.Set.choose_one has_version))
       with
       | Not_found -> no_compiler_error ()
       | Failure _ ->

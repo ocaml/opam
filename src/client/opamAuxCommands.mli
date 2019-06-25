@@ -91,4 +91,4 @@ val simulate_autopin:
     warning, and returns the empty list after user confirmation. *)
 val get_compatible_compiler:
   ?repos:repository_name list ->
-  'a repos_state -> dirname -> atom list * bool
+  'a repos_state -> dirname -> atom option * bool
