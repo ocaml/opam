@@ -66,7 +66,7 @@ val check_solution:
 (** Return an atom with a strict version constraint *)
 val eq_atom: name -> version -> atom
 
-(** Return a simple atom, with no version constrain, from a package*)
+(** Return a simple atom, with no version constraint, from a package*)
 val atom_of_package: package -> atom
 
 (** Returns an atom with a strict version constraint from a package *)
