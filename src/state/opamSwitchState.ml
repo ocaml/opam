@@ -72,6 +72,75 @@ let repos_list_raw rt switch_config =
 let repos_list st =
   repos_list_raw st.switch_repos st.switch_config
 
+let infer_switch_invariant_raw
+    gt switch switch_config opams
+    packages compiler_packages installed_roots available_packages
+  =
+  let compiler = compiler_packages %% installed_roots in
+  let compiler =
+    if OpamPackage.Set.is_empty compiler then compiler_packages
+    else compiler
+  in
+  let env nv v =
+    if List.mem v OpamPackageVar.predefined_depends_variables then
+      match OpamVariable.Full.to_string v with
+      | "dev" | "with-test" | "with-doc" -> Some (B false)
+      | _ -> None
+    else
+      OpamPackageVar.resolve_switch_raw ~package:nv gt switch switch_config v
+  in
+  let resolve_deps nv =
+    let opam = OpamPackage.Map.find nv opams in
+    OpamPackageVar.filter_depends_formula
+      ~build:true ~post:true ~default:true ~env:(env nv)
+      (OpamFormula.ands [
+          OpamFile.OPAM.depends opam;
+          OpamFile.OPAM.depopts opam
+        ])
+    |> OpamFormula.packages packages
+  in
+  let dmap =
+    OpamPackage.Set.fold (fun nv dmap ->
+        let deps = resolve_deps nv in
+        let dmap =
+          OpamPackage.Map.update nv ((++) deps) OpamPackage.Set.empty dmap
+        in
+        let dmap =
+          OpamPackage.Set.fold (fun d dmap ->
+              OpamPackage.Map.update d (OpamPackage.Set.add nv)
+                OpamPackage.Set.empty dmap)
+            deps dmap
+        in
+        dmap)
+      (OpamPackage.packages_of_names (Lazy.force available_packages) @@
+       OpamPackage.names_of_packages @@
+       compiler)
+      OpamPackage.Map.empty
+  in
+  let counts =
+    OpamPackage.Set.fold (fun nv counts ->
+        let count =
+          try OpamPackage.Set.cardinal (OpamPackage.Map.find nv dmap)
+          with Not_found -> 0
+        in
+        (nv, count) :: counts
+      )
+      compiler []
+  in
+  match List.sort (fun (_, c1) (_, c2) -> compare c1 c2) counts with
+  | (nv, _) :: _ ->
+    let versions =
+      OpamPackage.packages_of_name (Lazy.force available_packages) nv.name
+    in
+    let n = OpamPackage.Set.cardinal versions in
+    if n <= 1 then
+      OpamFormula.Atom (nv.name, Empty)
+    else if nv = OpamPackage.Set.max_elt versions then
+      OpamFormula.Atom (nv.name, Atom (`Geq, nv.version))
+    else
+      OpamFormula.Atom (nv.name, Atom (`Eq, nv.version))
+  | [] -> OpamFormula.Empty
+
 let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
   log "LOAD-SWITCH-STATE @ %a" (slog OpamSwitch.to_string) switch;
@@ -233,8 +302,32 @@ let load lock_kind gt rt switch =
       conf
     else switch_config
   in
-  let switch_invariant =
-    switch_config.OpamFile.Switch_config.invariant
+  let switch_config, switch_invariant =
+    if OpamVersion.compare
+        switch_config.OpamFile.Switch_config.opam_version
+        (OpamVersion.of_string "2.1")
+       >= 0
+    || switch_config.OpamFile.Switch_config.invariant <> OpamFormula.Empty
+    then switch_config, switch_config.OpamFile.Switch_config.invariant
+    else
+      let invariant =
+        infer_switch_invariant_raw
+          gt switch switch_config opams
+          packages compiler_packages installed_roots available_packages
+      in
+      log "Inferred invariant: from base packages %a, (roots %a) => %a"
+        (slog OpamPackage.Set.to_string) compiler_packages
+        (slog @@ fun () ->
+         OpamPackage.Set.to_string (compiler_packages %% installed_roots)) ()
+        (slog OpamFileTools.dep_formula_to_string) invariant;
+      let min_opam_version = OpamVersion.of_string "2.1" in
+      let opam_version =
+        if OpamVersion.compare switch_config.opam_version min_opam_version < 0
+        then min_opam_version
+        else switch_config.opam_version
+      in
+      {switch_config with invariant; opam_version},
+      invariant
   in
   let conf_files =
     OpamPackage.Set.fold (fun nv acc ->
