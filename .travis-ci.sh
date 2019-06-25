@@ -158,7 +158,7 @@ export OCAMLRUNPARAM=b
   if [[ $OPAM_TEST$COLD -eq 0 ]] ; then
     make lib-ext
   fi
-  make all
+  make all admin
 
   rm -f ~/local/bin/opam
   make install
