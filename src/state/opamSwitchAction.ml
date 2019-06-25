@@ -170,16 +170,7 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
   let reinstall0 = Lazy.force st.reinstall in
   let reinstall = (reinstall +! reinstall0) %% installed in
   let compiler_packages =
-    if OpamPackage.Set.is_empty (st.compiler_packages -- installed) then
-      st.compiler_packages
-    else (* adjust version of installed compiler packages *)
-      let names = OpamPackage.names_of_packages st.compiler_packages in
-      let installed_base = OpamPackage.packages_of_names installed names in
-      installed_base ++
-      (* keep version of uninstalled compiler packages *)
-      OpamPackage.packages_of_names st.compiler_packages
-        (OpamPackage.Name.Set.diff names
-           (OpamPackage.names_of_packages installed_base))
+    OpamPackage.Set.filter (OpamFormula.verifies st.switch_invariant) installed
   in
   let old_selections = OpamSwitchState.selections st in
   let st =

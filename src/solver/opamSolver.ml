@@ -181,15 +181,6 @@ let opam2cudf universe version_map packages =
       base_map m
   in
   let installed_map = set_to_bool_map universe.u_installed in
-  let keep_map =
-    OpamPackage.Set.fold (fun nv acc ->
-        if OpamPackage.Set.mem nv universe.u_available
-        then OpamPackage.Map.add nv `Keep_version acc
-        else if OpamPackage.has_name universe.u_available nv.name
-        then OpamPackage.Map.add nv `Keep_package acc
-        else acc)
-      (packages %% universe.u_base) OpamPackage.Map.empty
-  in
   let reinstall_map = set_to_bool_map universe.u_reinstall in
   let installed_root_map = set_to_bool_map universe.u_installed_roots in
   let pinned_to_current_version_map = set_to_bool_map universe.u_pinned in
@@ -228,7 +219,6 @@ let opam2cudf universe version_map packages =
     base_map
     |> add version_map (fun _ version cp -> {cp with Cudf.version})
     |> add installed_map (fun _ installed cp -> {cp with Cudf.installed})
-    |> add keep_map (fun _ keep cp -> {cp with Cudf.keep})
     |> add reinstall_map (fun _ x cp ->
         {cp with Cudf.pkg_extra =
                    (OpamCudf.s_reinstall, `Bool x) :: cp.Cudf.pkg_extra})
