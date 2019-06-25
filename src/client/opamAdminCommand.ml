@@ -75,7 +75,7 @@ let index_command =
       match OpamFile.Repo.read_opt repo_file with
       | None ->
         OpamConsole.warning "No \"repo\" file found. Creating a minimal one.";
-        OpamFile.Repo.create ~opam_version:OpamVersion.current_nopatch ()
+        OpamFile.Repo.create ()
       | Some r -> r
     in
     let repo_stamp =

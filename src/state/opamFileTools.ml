@@ -292,7 +292,7 @@ let lint ?check_extra_files ?(check_upstream=false) t =
       "Field 'opam-version' doesn't match the current version, \
        validation may not be accurate"
       ~detail:[OpamVersion.to_string t.opam_version]
-      (OpamVersion.compare t.opam_version OpamVersion.current_nopatch <> 0);
+      (OpamVersion.compare t.opam_version OpamFile.OPAM.format_version <> 0);
 (*
           cond (t.name = None)
             "Missing field 'name' or directory in the form 'name.version'";

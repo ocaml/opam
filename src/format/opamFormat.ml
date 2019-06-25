@@ -805,7 +805,8 @@ module I = struct
 
   let check_opam_version
       ?(optional=false)
-      ?(f=fun v -> OpamVersion.(compare current_nopatch (nopatch v) >= 0))
+      ~format_version
+      ?(f=fun v -> OpamVersion.(compare format_version (nopatch v) >= 0))
       ()
     =
     let name = "opam-version" in
@@ -815,8 +816,12 @@ module I = struct
       | Some v -> f v
       | None -> optional
     in
+    let errmsg =
+      Printf.sprintf "unsupported or missing file format version; should be %s or older"
+        (OpamVersion.to_string format_version)
+    in
     field name (parse opam_v) -|
-    map_fst (check ~name ~errmsg:"unsupported or missing file format version" f)  -|
+    map_fst (check ~name ~errmsg f) -|
     pp
       (fun ~pos:_ (_,x) -> x)
       (fun x ->

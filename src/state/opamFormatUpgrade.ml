@@ -1047,12 +1047,14 @@ let v2_1 = OpamVersion.of_string "2.1"
 
 let from_2_0_to_2_1 _ conf = conf
 
-let lastest_compatible_switch_version = v2_0
+let lastest_compatible_switch_version = OpamFile.Switch_config.format_version
 let latest_version = v2_1
 
 let as_necessary global_lock root config =
   let config_version = OpamFile.Config.opam_version config in
-  let cmp = OpamVersion.(compare current_nopatch config_version) in
+  let cmp =
+    OpamVersion.(compare OpamFile.Config.format_version config_version)
+  in
   if cmp = 0 then ()
   else if cmp < 0 then
     if OpamFormatConfig.(!r.skip_version_checks) then () else
@@ -1060,7 +1062,7 @@ let as_necessary global_lock root config =
         "%s reports a newer opam version, aborting."
         (OpamFilename.Dir.to_string root)
   else
-  if OpamVersion.compare config_version lastest_compatible_switch_version >= 0 then ()
+  if OpamVersion.compare config_version OpamFile.Config.format_version >= 0 then ()
   else
   let is_dev = OpamVersion.git () <> None in
   OpamConsole.formatted_msg
