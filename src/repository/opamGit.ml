@@ -40,6 +40,16 @@ module VCS : OpamVCS.VCS = struct
       git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"];
       (* We reset diff.noprefix to ensure we get a `-p1` patch and avoid <https://github.com/ocaml/opam/issues/3627>. *)
       git repo_root [ "config" ; "--local" ; "diff.noprefix"; "false"];
+      (* Disable automatic line-ending conversion and switch core.eol to Unix.
+         THIS DOES NOT MEAN ALL FILES GET LF-ONLY LINE-ENDINGS!
+         This combination of settings means that files will be checked out
+         exactly as they appear in the repository, so if files are checked in
+         with CRLF line-endings (either by not having .gitattributes with
+         core.autocrlf = false, or having an explicit eol=crlf in
+         .gitattributes), then they will still be checked out with CRLF endings.
+       *)
+      git repo_root [ "config" ; "--local" ; "core.autocrlf"; "false"];
+      git repo_root [ "config" ; "--local" ; "core.eol"; "lf"];
       (* Document the remote for user-friendliness (we don't use it) *)
       git repo_root [ "remote"; "add"; "origin"; OpamUrl.base_url repo_url ];
     ] @@+ function
