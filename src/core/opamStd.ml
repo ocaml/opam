@@ -407,6 +407,10 @@ module Option = struct
     | Some x -> f x
     | None -> none
 
+  let to_list = function
+    | None -> []
+    | Some x -> [x]
+
   let some x = Some x
   let none _ = None
 

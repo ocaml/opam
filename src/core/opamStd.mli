@@ -139,6 +139,8 @@ module Option: sig
 
   val to_string: ?none:string -> ('a -> string) -> 'a option -> string
 
+  val to_list: 'a option -> 'a list
+
   val some: 'a -> 'a option
 
   val none: 'a -> 'b option
