@@ -1,7 +1,7 @@
 -include ../Makefile.config
 
 ifeq ($(DUNE),)
-  DUNE_EXE = ../src_ext/dune-local/_build/install/default/bin/dune$(EXE)
+  DUNE_EXE = ../src_ext/dune-local/_build_bootstrap/install/default/bin/dune$(EXE)
   ifeq ($(shell command -v cygpath 2>/dev/null),)
     DUNE := $(DUNE_EXE)
   else
