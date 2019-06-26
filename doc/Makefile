@@ -38,15 +38,17 @@ man: man.build
 man.build: $(OPAM_DEP) $(OPAM_INSTALLER_DEP)
 	rm -rf man
 	mkdir -p man
-	$(OPAM) $(HELPFMT) > man/opam.1
+	$(OPAM) $(HELPFMT) > man/opam.1 2> man/err
 	for i in $(TOPICS); do\
-	  $(OPAM) $$i $(HELPFMT) > man/opam-$$i.1;\
+	  $(OPAM) $$i $(HELPFMT) > man/opam-$$i.1 2>> man/err ; \
 	done
 	$(OPAM) admin $(HELPFMT) > man/opam-admin.1
 	for i in $(TOPICS_ADMIN); do\
-	  $(OPAM) admin $$i $(HELPFMT) > man/opam-admin-$$i.1;\
+	  $(OPAM) admin $$i $(HELPFMT) > man/opam-admin-$$i.1 2>> man/err ; \
 	done
-	$(OPAM_INSTALLER) $(HELPFMT) > man/opam-installer.1
+	$(OPAM_INSTALLER) $(HELPFMT) > man/opam-installer.1 2>> man/err
+	@sed -f man.sed man/err > man/err2
+	@if test -s man/err2 ; then cat man/err2 ; false ; fi
 	touch $@
 
 man-html: man
