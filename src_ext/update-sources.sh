@@ -5,7 +5,10 @@ echo -n "Checking packages for new versions in opam: "
 DISAGREEMENTS=()
 while read name prefix version url; do
   package=$name
-  if [[ $package = "findlib" ]] ; then package=ocamlfind ; fi
+  case "$package" in
+    findlib) package=ocamlfind;;
+    dune-local) package=dune;;
+  esac
   latest=$(opam show $package -f all-versions)
   latest=${latest##* }
   package_url=$(opam show $package.$latest -f url.src: | sed -e 's/"//g')
