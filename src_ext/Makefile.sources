@@ -13,8 +13,8 @@ MD5_re = bddaed4f386a22cace7850c9c7dac296
 
 $(call PKG_SAME,re)
 
-URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.0.2.tbz
-MD5_cmdliner = ab2f0130e88e8dcd723ac6154c98a881
+URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.0.4.tbz
+MD5_cmdliner = fe2213d0bc63b1e10a2d0aa66d2fc8d9
 
 $(call PKG_SAME,cmdliner)
 
