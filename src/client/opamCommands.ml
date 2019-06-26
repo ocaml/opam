@@ -2084,23 +2084,23 @@ let switch =
       | packages, _ -> packages
     in
     let compiler_packages rt ?repos switch compiler_opt =
-      let open OpamStd.Option.Op in
-      let single_lst p = (p >>| (fun x -> [x])) +! [] in
       match packages, compiler_opt, OpamSwitch.is_external switch with
       | None, None, false ->
-        OpamSwitchCommand.guess_compiler_package ?repos rt
-          (OpamSwitch.to_string switch)
-        |> single_lst, false
+        OpamStd.Option.to_list
+          (OpamSwitchCommand.guess_compiler_package ?repos rt
+             (OpamSwitch.to_string switch)), false
       | None, None, true ->
         let p, local =
           OpamAuxCommands.get_compatible_compiler ?repos rt
             (OpamFilename.dirname_dir
                (OpamSwitch.get_root rt.repos_global.root switch))
         in
-        single_lst p, local
+        OpamStd.Option.to_list p, local
       | _ ->
-        ((compiler_opt >>=
-          OpamSwitchCommand.guess_compiler_package ?repos rt) |> single_lst)
+        let open OpamStd.Option.Op in
+        (OpamStd.Option.to_list
+           (compiler_opt >>=
+            OpamSwitchCommand.guess_compiler_package ?repos rt))
         @ packages +! [], false
     in
     let param_compiler = function
