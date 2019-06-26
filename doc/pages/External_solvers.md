@@ -70,7 +70,7 @@ When you request to install a (set of) package(s), in general you do not expect 
 
 ### Specifying preferences for opam
 
-`opam` allows to specify your criteria on the command line, using the `--criteria` option, that will apply only to the current command.
+`opam` allows one to specify criteria on the command line, using the `--criteria` option, that will apply only to the current command.
 For example, if you are a very conservative user, you might try issuing the following command:
 ```
 opam install --criteria="-removed,-changed" ...

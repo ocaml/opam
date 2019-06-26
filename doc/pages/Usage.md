@@ -111,7 +111,7 @@ Creating a new switch requires re-compiling OCaml, unless you use the
 
 ### opam pin
 
-This command allows to pin a package to a specific version, but has been
+This command allows one to pin a package to a specific version, but has been
 extended to allow much more than that.
 
 The syntax is

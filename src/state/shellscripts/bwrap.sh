@@ -51,7 +51,7 @@ add_sys_mounts() {
     done
 }
 
-# remove some unusual pathes (/nix/stored and /rw/usrlocal )
+# remove some unusual paths (/nix/stored and /rw/usrlocal )
 # use OPAM_USER_PATH_RO variable to add them
 # the OPAM_USER_PATH_RO format is the same as PATH
 # ie: export OPAM_USER_PATH_RO=/nix/store:/rw/usrlocal

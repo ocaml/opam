@@ -24,7 +24,7 @@ val env:
   csh:bool -> sexp:bool -> fish:bool -> inplace_path:bool ->
   unit
 
-(** Like [env] but allows to specify the precise env to print rather than
+(** Like [env] but allows one to specify the precise env to print rather than
     compute it from a switch state *)
 val print_eval_env: csh:bool -> sexp:bool -> fish:bool -> env -> unit
 

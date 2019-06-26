@@ -679,7 +679,7 @@ repositories or initial distributions or packages.
 #### repo
 <a id="Repospecification"></a>
 
-The `repo` file is placed at the root of a repository, and allows to specify
+The `repo` file is placed at the root of a repository, and allows one to specify
 some specifics of the repository. It has the following optional fields:
 
 * <a id="repofield-opam-version">`opam-version: <string>`</a>:
@@ -730,7 +730,7 @@ seen with `opam init --show-default-opamrc`.
 - <a id="opamrcfield-init-scripts">`init-scripts: [ [ <string> <string> ] { <filter> } ... ]`</a>:
   These scripts will be written verbatim into the hook directory
   (`~/.opam/opam-init/hooks`) upon initialisation. The first string is the file
-  name of the script, the second its raw contents, and the filter allows to
+  name of the script, the second its raw contents, and the filter allows one to
   limit the creation of the script to specific configurations.
 - [`jobs:`](#configfield-jobs),
   [`download-command:`](#configfield-download-command),
@@ -964,7 +964,7 @@ files.
   class="opam">opam</span> ecosystem, for various systems. Each
   `[ <string> ... ] { <filter> }` element declares the strings to the left as
   identifiers to required system-managed packages, while the filter to the right
-  allows to select the systems they will be active on.
+  allows one to select the systems they will be active on.
 
     The filters typically use variables [`arch`](#opamvar-arch),
     [`os`](#opamvar-os), [`os-distribution`](#opamvar-os-distribution),
@@ -987,7 +987,7 @@ files.
 
 - <a id="opamfield-post-messages">
   `post-messages: [ <string> { <filter> } ... ]`</a>:
-  allows to print specific messages to the user after the end of installation.
+  allows one to print specific messages to the user after the end of installation.
   The special boolean variable `failure` is defined in the scope of the filter,
   and can be used to print messages in case there was an error (typically, a
   hint on how it can be resolved, or a link to an open issue). `success` is also
