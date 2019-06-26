@@ -15,6 +15,7 @@ exception Process_error of OpamProcess.result
 exception Internal_error of string
 exception Command_not_found of string
 exception File_not_found of string
+exception Permission_denied of string
 
 let log ?level fmt = OpamConsole.log "SYSTEM" ?level fmt
 let slog = OpamConsole.slog
@@ -34,6 +35,9 @@ let raise_on_process_error r =
 
 let command_not_found cmd =
   raise (Command_not_found cmd)
+
+let permission_denied cmd =
+  raise (Permission_denied cmd)
 
 module Sys2 = struct
   (* same as [Sys.is_directory] except for symlinks, which returns always [false]. *)
@@ -327,7 +331,7 @@ let back_to_forward =
 
 (* OCaml 4.05.0 no longer follows the updated PATH to resolve commands. This
    makes unqualified commands absolute as a workaround. *)
-let resolve_command =
+let t_resolve_command =
   let is_external_cmd name =
     let name = forward_to_back name in
     OpamStd.String.contains_char name Filename.dir_sep.[0]
@@ -349,22 +353,27 @@ let resolve_command =
   in
   let resolve ?dir env name =
     if not (Filename.is_relative name) then (* absolute path *)
-      if check_perms name then Some name else None
+      if check_perms name then `Cmd name else `Denied
     else if is_external_cmd name then (* relative *)
       let cmd = match dir with
         | None -> name
         | Some d -> Filename.concat d name
       in
-      if check_perms cmd then Some cmd else None
+      if check_perms cmd then `Cmd cmd else `Denied
     else (* bare command, lookup in PATH *)
     if Sys.win32 then
       let path = OpamStd.Sys.split_path_variable (env_var env "PATH") in
       let name =
         if Filename.check_suffix name ".exe" then name else name ^ ".exe"
       in
-      OpamStd.(List.find_opt (fun path ->
-          check_perms (Filename.concat path name))
-        path |> Option.map (fun path -> Filename.concat path name))
+      let cmdname =
+        OpamStd.(List.find_opt (fun path ->
+            check_perms (Filename.concat path name))
+            path |> Option.map (fun path -> Filename.concat path name))
+      in
+      match cmdname with
+      | Some cmd -> `Cmd cmd
+      | None -> `Denied
     else
     let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
     let r =
@@ -375,14 +384,21 @@ let resolve_command =
     in
     if OpamProcess.check_success_and_cleanup r then
       match r.OpamProcess.r_stdout with
-      | cmdname::_ when cmdname = name || check_perms cmdname ->
+      | cmdname::_ ->
         (* "command -v echo" returns just echo, hence the first when check *)
-        Some cmdname
-      | _ -> None
-    else None
+        if cmdname = name || check_perms cmdname then `Cmd cmdname
+        else if check_perms cmdname then `Not_found
+        else `Denied
+      | _ -> `Not_found
+    else `Not_found
   in
   fun ?(env=default_env) ?dir name ->
     resolve env ?dir name
+
+let resolve_command ?env ?dir name =
+  match t_resolve_command ?env ?dir name with
+  | `Cmd cmd -> Some cmd
+  | `Denied | `Not_found -> None
 
 let apply_cygpath name =
   let r =
@@ -428,16 +444,16 @@ let make_command
   if None <> try Some (String.index cmd ' ') with Not_found -> None then
     OpamConsole.warning "Command %S contains space characters" cmd;
   let full_cmd =
-    if resolve_path then resolve_command ~env ?dir cmd
-    else Some cmd
+    if resolve_path then t_resolve_command ~env ?dir cmd
+    else `Cmd cmd
   in
   match full_cmd with
-  | Some cmd ->
+  | `Cmd cmd ->
     OpamProcess.command
       ~env ~name ?text ~verbose ?metadata ?allow_stdin ?stdout ?dir
       cmd args
-  | None ->
-    command_not_found cmd
+  | `Not_found -> command_not_found cmd
+  | `Denied -> permission_denied cmd
 
 let run_process
     ?verbose ?(env=default_env) ~name ?metadata ?stdout ?allow_stdin command =
@@ -450,8 +466,8 @@ let run_process
     if OpamStd.String.contains_char cmd ' ' then
       OpamConsole.warning "Command %S contains space characters" cmd;
 
-    match resolve_command ~env cmd with
-    | Some full_cmd ->
+    match t_resolve_command ~env cmd with
+    | `Cmd full_cmd ->
       let verbose = match verbose with
         | None   -> OpamCoreConfig.(!r.verbose_level) >= 2
         | Some b -> b in
@@ -467,8 +483,8 @@ let run_process
         (OpamConsole.slog Filename.basename) name
         (chrono ()) str;
       r
-    | None ->
-      command_not_found cmd
+    | `Not_found -> command_not_found cmd
+    | `Denied -> permission_denied cmd
 
 let command ?verbose ?env ?name ?metadata ?allow_stdin cmd =
   let name = log_file name in
@@ -1306,6 +1322,7 @@ let register_printer () =
     | Process_error r     -> Some (OpamProcess.result_summary r)
     | Internal_error m    -> Some m
     | Command_not_found c -> Some (Printf.sprintf "%S: command not found." c)
+    | Permission_denied c -> Some (Printf.sprintf "%S: permission denied." c)
     | Sys.Break           -> Some "User interruption"
     | Unix.Unix_error (e, fn, msg) ->
       let msg = if msg = "" then "" else " on " ^ msg in
