@@ -103,5 +103,5 @@ let make_index_tar_gz repo_root =
     let to_include = [ "version"; "packages"; "repo" ] in
     match List.filter Sys.file_exists to_include with
     | [] -> ()
-    | d  -> OpamSystem.command ("tar" :: "czhf" :: "index.tar.gz" :: d)
+    | d  -> OpamSystem.command ("tar" :: "czhf" :: "index.tar.gz" :: "--exclude=.git*" :: d)
   )
