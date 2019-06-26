@@ -1,4 +1,3 @@
-/^Entering directory '/d
 /^File .*jbuild", line 1, characters 0-0:/{
   :a
   N

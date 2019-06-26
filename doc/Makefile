@@ -1,7 +1,7 @@
 -include ../Makefile.config
 
 ifeq ($(DUNE),)
-  DUNE_EXE = ../src_ext/dune-local/_build/install/default/bin/dune$(EXE)
+  DUNE_EXE = ../src_ext/dune-local/_boot/install/default/bin/dune$(EXE)
   ifeq ($(shell command -v cygpath 2>/dev/null),)
     DUNE := $(DUNE_EXE)
   else
@@ -15,7 +15,7 @@ DUNE_PROFILE ?= release
 DUNE_ARGS ?= 
 
 ifndef OPAM
-  OPAM = $(DUNE) exec --profile=$(DUNE_PROFILE) -- opam
+  OPAM = $(DUNE) exec --no-print-directory --profile=$(DUNE_PROFILE) -- opam
   OPAM_DEP := $(shell $(DUNE) exec -- which opam)
 endif
 
@@ -25,7 +25,7 @@ TOPICS_ADMIN = cache filter index lint list upgrade
 HELPFMT = --help=groff
 
 ifndef OPAM_INSTALLER
-  OPAM_INSTALLER = $(DUNE) exec --profile=$(DUNE_PROFILE) -- opam-installer
+  OPAM_INSTALLER = $(DUNE) exec --no-print-directory --profile=$(DUNE_PROFILE) -- opam-installer
   OPAM_INSTALLER_DEP := $(shell $(DUNE) exec -- which opam-installer)
 endif
 

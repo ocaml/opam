@@ -48,8 +48,8 @@ MD5_result = d3162dbc501a2af65c8c71e0866541da
 
 $(call PKG_SAME,result)
 
-URL_dune-local = https://github.com/ocaml/dune/releases/download/1.2.1/dune-1.2.1.tbz
-MD5_dune-local = f96bdf1a893a2178c2ad9c388439bd18
+URL_dune-local = https://github.com/ocaml/dune/releases/download/1.10.0/dune-1.10.0.tbz
+MD5_dune-local = 36c5cdffdf4db63022b3b05ee1a0251e
 
 $(call PKG_SAME,dune-local)
 

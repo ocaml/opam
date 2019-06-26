@@ -79,7 +79,7 @@ reset-lib-pkg:
 	@rm -rf ../bootstrap/ocaml/lib/ocaml/site-lib ../bootstrap/ocaml/etc *.pkgbuild
 
 ifeq ($(DUNE),)
-DUNE_DEP=dune-local/_build/install/default/bin/dune$(EXE)
+DUNE_DEP=dune-local/_boot/install/default/bin/dune$(EXE)
 DUNE_CLONE=dune-local.stamp
 ifeq ($(shell command -v cygpath 2>/dev/null),)
 DUNE:=$(DUNE_DEP)
@@ -91,7 +91,7 @@ DUNE_DEP=
 DUNE_CLONE=
 endif
 
-dune-local/_build/install/default/bin/dune$(EXE): $(DUNE_CLONE)
+dune-local/_boot/install/default/bin/dune$(EXE): $(DUNE_CLONE)
 	cd dune-local && ocaml bootstrap.ml && ./boot.exe --release
 
 build-pkg: clone-pkg $(PKG_EXTS:=.pkgbuild)

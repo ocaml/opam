@@ -6,7 +6,7 @@ all: opam opam-installer
 	@
 
 ifeq ($(DUNE),)
-  DUNE_EXE = src_ext/dune-local/_build/install/default/bin/dune$(EXE)
+  DUNE_EXE = src_ext/dune-local/_boot/install/default/bin/dune$(EXE)
   ifeq ($(shell command -v cygpath 2>/dev/null),)
     DUNE := $(DUNE_EXE)
   else
@@ -26,7 +26,7 @@ JBUILDER_ARGS ?=
 DUNE_ARGS ?= $(JBUILDER_ARGS)
 DUNE_PROFILE ?= release
 
-src_ext/dune-local/_build/install/default/bin/dune$(EXE): src_ext/dune-local.stamp
+src_ext/dune-local/_boot/install/default/bin/dune$(EXE): src_ext/dune-local.stamp
 	cd src_ext/dune-local && ocaml bootstrap.ml && ./boot.exe --release
 
 src_ext/dune-local.stamp:
