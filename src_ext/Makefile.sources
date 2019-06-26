@@ -1,10 +1,10 @@
-URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.5.tar.gz
-MD5_cppo = 1cd25741d31417995b0973fe0b6f6c82
+URL_cppo = https://github.com/ocaml-community/cppo/releases/download/v1.6.6/cppo-v1.6.6.tbz
+MD5_cppo = b13afeea6631d7c9b61f95bfd984a542
 
 $(call PKG_SAME,cppo)
 
-URL_extlib = http://ygrek.org.ua/p/release/ocaml-extlib/extlib-1.7.5.tar.gz
-MD5_extlib = d989951536077563bf4c5e3479c3866f
+URL_extlib = https://ygrek.org.ua/p/release/ocaml-extlib/extlib-1.7.6.tar.gz
+MD5_extlib = b976093ef23b7d60fc1c8f0380c4f76a
 
 $(call PKG_SAME,extlib)
 
@@ -43,8 +43,8 @@ MD5_opam-file-format = d7852cb63df0f442bed14ba2c5740135
 
 $(call PKG_SAME,opam-file-format)
 
-URL_result = https://github.com/janestreet/result/releases/download/1.3/result-1.3.tbz
-MD5_result = 4beebefd41f7f899b6eeba7414e7ae01
+URL_result = https://github.com/janestreet/result/archive/1.4.tar.gz
+MD5_result = d3162dbc501a2af65c8c71e0866541da
 
 $(call PKG_SAME,result)
 
@@ -56,11 +56,11 @@ $(call PKG_SAME,dune-local)
 URL_PKG_findlib = http://download.camlcity.org/download/findlib-1.8.0.tar.gz
 MD5_PKG_findlib = a710c559667672077a93d34eb6a42e5b
 
-URL_PKG_ocamlbuild = https://github.com/ocaml/ocamlbuild/archive/0.12.0.tar.gz
-MD5_PKG_ocamlbuild = 442baa19470bd49150f153122e22907b
+URL_PKG_ocamlbuild = https://github.com/ocaml/ocamlbuild/archive/0.14.0.tar.gz
+MD5_PKG_ocamlbuild = a7bf2fe594cd16907807c756b14d501f
 
-URL_PKG_topkg = http://erratique.ch/software/topkg/releases/topkg-0.9.1.tbz
-MD5_PKG_topkg = 8978a0595db1a22e4251ec62735d4b84
+URL_PKG_topkg = http://erratique.ch/software/topkg/releases/topkg-1.0.0.tbz
+MD5_PKG_topkg = e3d76bda06bf68cb5853caf6627da603
 
 URL_seq = https://github.com/c-cube/seq/archive/0.1.tar.gz
 MD5_seq = 0e87f9709541ed46ecb6f414bc31458c
