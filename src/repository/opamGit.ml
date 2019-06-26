@@ -165,7 +165,7 @@ module VCS : OpamVCS.VCS = struct
        unregistered directories. *)
     OpamSystem.raise_on_process_error r;
     (* We also reset diff.noprefix here to handle already existing repo. *)
-    git repo_root ~stdout:patch_file [ "-c" ; "diff.noprefix=false" ; "diff" ; "--no-ext-diff" ; "-R" ; "-p" ; rref; "--" ]
+    git repo_root ~stdout:patch_file [ "-c" ; "diff.noprefix=false" ; "diff" ; "--text" ; "--no-ext-diff" ; "-R" ; "-p" ; rref; "--" ]
     @@> fun r ->
     if not (OpamProcess.check_success_and_cleanup r) then
       (finalise ();
