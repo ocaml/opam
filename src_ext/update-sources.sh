@@ -9,6 +9,7 @@ while read name prefix version url; do
     findlib) package=ocamlfind;;
     dune-local) package=dune;;
   esac
+  latest=$(opam show $package -f all-versions | sed -e 's/  base//')
   latest=${latest##* }
   package_url=$(opam show $package.$latest -f url.src: | sed -e 's/"//g')
   md5=$(sed -n -e "s/MD5$prefix$name *= *\(.*\)/\1/p" Makefile.sources)
