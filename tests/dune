@@ -4,3 +4,15 @@
   (action (run make all)))
 
 (ignored_subdirs (packages))
+
+(executable
+  (name      patcher)
+  (modules   patcher)
+  (libraries opam-core))
+
+(rule
+  (with-stdout-to patcher-test.result (run %{exe:patcher.exe})))
+
+(alias
+  (name runtest)
+  (action (system "diff %{dep:patcher-test.result} %{dep:patcher-test.reference}")))

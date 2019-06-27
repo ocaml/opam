@@ -11,9 +11,14 @@
 (** Configuration options for the core lib (record, global reference and
     setter) *)
 
+module StringMap : Map.S with type key = string
+
 type t = private {
   debug_level : int;
   (** Controls debug messages, 0 to disable *)
+  debug_sections : int option StringMap.t;
+  (** Controls which sections display debugging messages. If empty, all messages
+      are displayed. *)
   verbose_level : int;
   (** Controls printing of external commands and output, 0 to disable, more
       means print more low-level commands *)
@@ -49,6 +54,7 @@ type t = private {
 
 type 'a options_fun =
   ?debug_level:int ->
+  ?debug_sections:int option StringMap.t ->
   ?verbose_level:int ->
   ?color:[ `Always | `Never | `Auto ] ->
   ?utf8:[ `Extended | `Always | `Never | `Auto ] ->

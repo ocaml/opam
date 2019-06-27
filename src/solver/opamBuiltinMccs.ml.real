@@ -32,7 +32,7 @@ let call solver_backend ext ~criteria ?timeout cudf =
   match
     Mccs.resolve_cudf
       ~solver
-      ~verbose:OpamCoreConfig.(!r.debug_level >= 2)
+      ~verbose:OpamCoreConfig.(abs !r.debug_level >= 2)
       ?timeout criteria cudf
   with
   | None -> raise Common.CudfSolver.Unsat

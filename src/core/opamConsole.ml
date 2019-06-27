@@ -13,7 +13,7 @@ open OpamCompat
 
 (* Global configuration *)
 
-let debug () = OpamCoreConfig.(!r.debug_level) > 0
+let debug () = abs OpamCoreConfig.(!r.debug_level) > 0
 
 let verbose () = OpamCoreConfig.(!r.verbose_level) > 0
 
@@ -496,19 +496,31 @@ let timestamp () =
     (int_of_float (1000.0 *. msec))
 
 let log section ?(level=1) fmt =
-  if level <= OpamCoreConfig.(!r.debug_level) then
+  let debug_level =
+    let debug_level = OpamCoreConfig.(!r.debug_level) in
+    let sections = OpamCoreConfig.(!r.debug_sections) in
+    if OpamCoreConfig.StringMap.is_empty sections then
+      debug_level
+    else
+      match OpamCoreConfig.StringMap.find section sections with
+      | Some level -> level
+      | None -> debug_level
+      | exception Not_found -> 0
+  in
+  if level <= abs debug_level then
     let () = clear_status () in
+    let timestamp = if debug_level < 0 then "" else timestamp () ^ "  " in
     if Sys.win32 then begin
       (*
        * In order not to break [slog], split the output into two. A side-effect
        * of this is that logging lines may not use colour.
        *)
-      win32_print_message `stderr (Printf.sprintf "%s  %a  "
-        (timestamp ()) (acolor_with_width (Some 30) `yellow) section);
+      win32_print_message `stderr (Printf.sprintf "%s%a  "
+        timestamp (acolor_with_width (Some 30) `yellow) section);
       Printf.fprintf stderr (fmt ^^ "\n%!") end
     else
-      Printf.fprintf stderr ("%s  %a  " ^^ fmt ^^ "\n%!")
-        (timestamp ()) (acolor_w 30 `yellow) section
+      Printf.fprintf stderr ("%s%a  " ^^ fmt ^^ "\n%!")
+        timestamp (acolor_w 30 `yellow) section
   else
     Printf.ifprintf stderr fmt
 

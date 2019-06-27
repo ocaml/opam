@@ -89,7 +89,7 @@ let global_options =
     if self_upgrade_status = `None then
       switch_to_updated_self
         OpamStd.Option.Op.(options.debug_level ++
-                           OpamStd.Config.env_level "DEBUG" +! 0 > 0)
+                           OpamStd.Config.env_level "DEBUG" +! 0 |> abs > 0)
         (OpamStateConfig.opamroot ?root_dir:options.opt_root ());
     let root_is_ok =
       OpamStd.Option.default false (OpamStd.Config.env_bool "ROOTISOK")

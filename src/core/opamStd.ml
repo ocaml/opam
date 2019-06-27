@@ -1332,6 +1332,22 @@ module Config = struct
         | s -> int_of_string s)
       var
 
+  let env_sections var =
+    env (fun s ->
+      let f map elt =
+        let parse_value (section, value) =
+          try
+            (section, Some (int_of_string value))
+          with Failure _ ->
+            (section, None)
+        in
+        let (section, level) =
+          Option.map_default parse_value (elt, None) (OpamString.cut_at elt ':')
+        in
+        OpamCoreConfig.StringMap.add section level map
+      in
+      List.fold_left f OpamCoreConfig.StringMap.empty (OpamString.split s ' ')) var
+
   let env_string var =
     env (fun s -> s) var
 
@@ -1374,6 +1390,7 @@ module Config = struct
     in
     OpamCoreConfig.(setk (setk (fun c -> r := c; k)) !r)
       ?debug_level:(env_level "DEBUG")
+      ?debug_sections:(env_sections "DEBUGSECTIONS")
       ?verbose_level:(env_level "VERBOSE")
       ?color:(env_when "COLOR")
       ?utf8

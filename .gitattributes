@@ -10,6 +10,9 @@ msvs-detect text eol=lf
 check_linker text eol=lf
 *.m4 text eol=lf
 
+# For diffing simplicity, the patch re-write test uses LF endings on Windows
+tests/patcher-test.reference text eol=lf
+
 # Treat patches as binary for safety
 *.patch binary
 

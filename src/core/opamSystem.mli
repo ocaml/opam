@@ -278,6 +278,21 @@ val get_lock_fd: lock -> Unix.file_descr
     apply. *)
 val patch: ?preprocess:bool -> dir:string -> string -> exn option OpamProcess.job
 
+(** Returns the end-of-line encoding style for the given file. [None] means that
+    either the encoding of line endings is mixed, or the file contains no line
+    endings at all (an empty file, or a file with one line and no EOL at EOF).
+    Otherwise it returns [Some true] if all endings are encoded CRLF. *)
+val get_eol_encoding : string -> bool option
+
+(** [translate_patch ~dir input_patch output_patch] writes a copy of
+    [input_patch] to [output_patch] as though [input_patch] had been applied in
+    [dir]. The patch is rewritten such that if text files have different line
+    endings then the patch is transformed to patch using the encoding on disk.
+    In particular, this means that patches generated against Unix checkouts of
+    Git sources will correctly apply to Windows checkouts of the same sources.
+*)
+val translate_patch: dir:string -> string -> string -> unit
+
 (** Create a temporary file in {i ~/.opam/logs/<name>XXX}, if [dir] is not set.
     ?auto_clean controls whether the file is automatically deleted when opam
     terminates (default: [true]). *)

@@ -1,0 +1,77 @@
+PATCH                           No CRLF adaptation necessary for b/always-crlf
+PATCH                           No CRLF adaptation necessary for b/always-lf
+PATCH                           CRLF adaptation skipped for b/no-eol-at-all
+PATCH                           No CRLF adaptation necessary for b/no-eol-at-eof
+PATCH                           CRLF adaptation skipped for b/null-file
+PATCH                           No CRLF adaptation necessary for b/test1
+PATCH                           No CRLF adaptation necessary for b/test2
+PATCH                           No CRLF adaptation necessary for b/test3
+PATCH                           No CRLF adaptation necessary for b/will-null-file
+Before patch state of c:
+  ./always-crlf: CRLF
+  ./always-lf: LF
+  ./no-eol-at-all: mixed (no eol-at-eof)
+  ./no-eol-at-eof: LF (no eol-at-eof)
+  ./null-file: mixed (no eol-at-eof)
+  ./test1: LF
+  ./test2: LF
+  ./test3: LF
+  ./will-null-file: LF
+patching file always-crlf
+patching file always-lf
+patching file no-eol-at-all
+patching file no-eol-at-eof
+patching file null-file
+patching file test1
+patching file test2
+patching file test3
+patching file will-null-file
+After patch state of c:
+  ./always-crlf: CRLF
+  ./always-lf: LF
+  ./no-eol-at-all: mixed (no eol-at-eof)
+  ./no-eol-at-eof: LF (no eol-at-eof)
+  ./null-file: LF
+  ./test1: LF
+  ./test2: LF
+  ./will-null-file: mixed (no eol-at-eof)
+PATCH                           No CRLF adaptation necessary for b/always-crlf
+PATCH                           No CRLF adaptation necessary for b/always-lf
+PATCH                           CRLF adaptation skipped for b/no-eol-at-all
+PATCH                           Adding \r to patch chunks for b/no-eol-at-eof
+PATCH                           CRLF adaptation skipped for b/null-file
+PATCH                           No CRLF adaptation necessary for b/test1
+PATCH                           Adding \r to patch chunks for b/test2
+PATCH                           No CRLF adaptation necessary for b/test3
+PATCH                           Adding \r to patch chunks for b/will-null-file
+PATCH                           Transform 32-36 +\r
+PATCH                           Transform 62-67 +\r
+PATCH                           Transform 82-87 +\r
+Before patch state of c:
+  ./always-crlf: CRLF
+  ./always-lf: LF
+  ./no-eol-at-all: mixed (no eol-at-eof)
+  ./no-eol-at-eof: CRLF (no eol-at-eof)
+  ./null-file: mixed (no eol-at-eof)
+  ./test1: LF
+  ./test2: CRLF
+  ./test3: LF
+  ./will-null-file: CRLF
+patching file always-crlf
+patching file always-lf
+patching file no-eol-at-all
+patching file no-eol-at-eof
+patching file null-file
+patching file test1
+patching file test2
+patching file test3
+patching file will-null-file
+After patch state of c:
+  ./always-crlf: CRLF
+  ./always-lf: LF
+  ./no-eol-at-all: mixed (no eol-at-eof)
+  ./no-eol-at-eof: CRLF (no eol-at-eof)
+  ./null-file: LF
+  ./test1: LF
+  ./test2: CRLF
+  ./will-null-file: mixed (no eol-at-eof)
