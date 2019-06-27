@@ -438,13 +438,11 @@ let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?e
       else
         cmd, args in
     let create_process, cmd, args =
-      if Sys.win32 then
-        if OpamStd.Sys.is_cygwin_variant cmd = `Cygwin then
-          cygwin_create_process_env, cmd, args
-        else
-          Unix.create_process_env, cmd, args
+      if Sys.win32 && OpamStd.Sys.is_cygwin_variant cmd = `Cygwin then
+        cygwin_create_process_env, cmd, args
       else
-        Unix.create_process_env, cmd, args in
+        Unix.create_process_env, cmd, args
+    in
     try
       create_process
         cmd
