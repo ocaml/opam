@@ -13,8 +13,8 @@ check_linker text eol=lf
 # For diffing simplicity, the patch re-write test uses LF endings on Windows
 tests/patcher-test.reference text eol=lf
 
-# Treat patches as binary for safety
-*.patch binary
+# Don't normalise patch files
+*.patch -text
 
 # Actual binary files
 *.pdf binary
