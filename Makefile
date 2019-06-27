@@ -5,6 +5,9 @@ endif
 all: opam opam-installer
 	@
 
+admin:
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-admin.install
+
 ifeq ($(DUNE),)
   DUNE_EXE = src_ext/dune-local/_build/install/default/bin/dune$(EXE)
   ifeq ($(shell command -v cygpath 2>/dev/null),)
