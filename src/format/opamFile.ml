@@ -1487,7 +1487,8 @@ end
 module Switch_configSyntax = struct
 
   let internal = "switch-config"
-  let format_version = OpamVersion.of_string "2.0"
+  let format_version = OpamVersion.of_string "2.1"
+  let oldest_compatible_format_version = OpamVersion.of_string "2.0"
 
   type t = {
     opam_version: OpamVersion.t;

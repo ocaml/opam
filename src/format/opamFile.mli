@@ -915,6 +915,7 @@ module Switch_config: sig
   val sections: (string * (t, (string option * opamfile_item list) list) OpamPp.field_parser) list
   val fields: (string * (t, value) OpamPp.field_parser) list
   include IO_FILE with type t := t
+  val oldest_compatible_format_version: OpamVersion.t
 end
 
 (** Pinned package files (only used for migration from 1.2, the inclusive State

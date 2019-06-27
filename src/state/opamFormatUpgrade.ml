@@ -1044,12 +1044,11 @@ let from_2_0_beta_to_2_0_beta5 root conf =
 
 let from_2_0_beta5_to_2_0 _ conf = conf
 
-let v2_1 = OpamVersion.of_string "2.1"
+let _v2_1 = OpamVersion.of_string "2.1"
 
 let _from_2_0_to_2_1 _ conf = conf
 
-let lastest_compatible_switch_version = OpamFile.Switch_config.format_version
-let latest_version = v2_1
+let latest_version = OpamFile.Config.format_version
 
 let as_necessary global_lock root config =
   let config_version = OpamFile.Config.opam_version config in

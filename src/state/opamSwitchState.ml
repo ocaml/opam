@@ -100,16 +100,17 @@ let load lock_kind gt rt switch =
   in
   let switch_config = load_switch_config gt switch in
   if OpamVersion.compare
-      (OpamVersion.nopatch (switch_config.OpamFile.Switch_config.opam_version))
-      (OpamVersion.nopatch OpamFormatUpgrade.lastest_compatible_switch_version)
+      switch_config.OpamFile.Switch_config.opam_version
+      OpamFile.Switch_config.oldest_compatible_format_version
      < 0 then
     OpamConsole.error_and_exit `Configuration_error
-      "Could not load opam switch %s: it reports version %s while > %s was \
+      "Could not load opam switch %s: it reports version %s while >= %s was \
        expected"
       (OpamSwitch.to_string switch)
       (OpamVersion.to_string
          (switch_config.OpamFile.Switch_config.opam_version))
-      (OpamVersion.to_string OpamFormatUpgrade.lastest_compatible_switch_version);
+      (OpamVersion.to_string
+         OpamFile.Switch_config.oldest_compatible_format_version);
   let { sel_installed = installed; sel_roots = installed_roots;
         sel_pinned = pinned; sel_compiler = compiler_packages; } =
     load_selections gt switch
