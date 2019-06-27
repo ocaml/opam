@@ -298,7 +298,7 @@ let load lock_kind gt rt switch =
   log "Switch state loaded in %.3fs" (chrono ());
   st
 
-let load_virtual ?repos_list gt rt =
+let load_virtual ?repos_list ?(avail_default=true) gt rt =
   let repos_list = match repos_list with
     | Some rl -> rl
     | None -> OpamGlobalState.repos_list gt
@@ -307,6 +307,14 @@ let load_virtual ?repos_list gt rt =
     OpamRepositoryState.build_index rt repos_list
   in
   let packages = OpamPackage.keys opams in
+  let available_packages = lazy (
+    OpamPackage.Map.filter (fun _ opam ->
+        OpamFilter.eval_to_bool ~default:avail_default
+          (OpamPackageVar.resolve_global gt)
+          (OpamFile.OPAM.available opam))
+      opams
+    |> OpamPackage.keys
+  ) in
   {
     switch_global = (gt :> unlocked global_state);
     switch_repos = (rt :> unlocked repos_state);
@@ -325,7 +333,7 @@ let load_virtual ?repos_list gt rt =
     opams;
     conf_files = OpamPackage.Name.Map.empty;
     packages;
-    available_packages = lazy packages;
+    available_packages;
     reinstall = OpamPackage.Set.empty;
   }
 

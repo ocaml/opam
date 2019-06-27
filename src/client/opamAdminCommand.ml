@@ -706,11 +706,12 @@ let pattern_list_arg =
 let env_arg =
   Arg.(value & opt (list string) [] & info ["environment"] ~doc:
          "Use the given opam environment, in the form of a list \
-          comma-separated 'var=value' bindings, when resolving variables. \
-          This is used e.g. when computing available packages: if undefined, \
-          availability of packages is not taken into account. Note that, \
-          unless overridden, variables like 'root' or 'opam-version' may be \
-          taken from the current opam installation. What is defined in \
+          comma-separated 'var=value' bindings, when resolving variables. This \
+          is used e.g. when computing available packages: if undefined, \
+          availability of packages will be assumed as soon as it can not be \
+          resolved purely from globally defined variables. Note that, unless \
+          overridden, variables like 'root' or 'opam-version' may be taken \
+          from the current opam installation. What is defined in \
           $(i,~/.opam/config) is always ignored.")
 
 let state_selection_arg =
@@ -720,13 +721,14 @@ let state_selection_arg =
         ~doc:"Include all, even uninstalled or unavailable packages";
       OpamListCommand.Available, info ~docs ["a";"available"]
         ~doc:"List only packages that are available according to the defined \
-              $(b,environment). Without $(b,--environment), equivalent to \
-              $(b,--all).";
+              $(b,environment). Without $(b,--environment), this will include \
+              any packages for which availability is not resolvable at this \
+              point.";
       OpamListCommand.Installable, info ~docs ["installable"]
-        ~doc:"List only packages that are installable according to the \
-              defined $(b,environment) (this calls the solver and may be \
-              more costly; a package depending on an unavailable may be \
-              available, but is never installable)";
+        ~doc:"List only packages that are installable according to the defined \
+              $(b,environment) (this calls the solver and may be more costly; \
+              a package depending on an unavailable one may be available, but \
+              is never installable)";
     ])
 
 let get_virtual_switch_state repo_root env =
@@ -767,8 +769,6 @@ let get_virtual_switch_state repo_root env =
     repo_opams = singl opams;
     repos_tmp;
   } in
-  let st = OpamSwitchState.load_virtual ~repos_list:[repo.repo_name] gt rt in
-  if env = [] then st else
   let gt =
     {gt with global_variables =
                OpamVariable.Map.of_list @@
@@ -776,17 +776,10 @@ let get_virtual_switch_state repo_root env =
                    var, (lazy (Some value), "Manually defined"))
                  env }
   in
-  {st with
-   switch_global = gt;
-   available_packages = lazy (
-     OpamPackage.keys @@
-     OpamPackage.Map.filter (fun package opam ->
-         OpamFilter.eval_to_bool ~default:false
-           (OpamPackageVar.resolve_switch_raw ~package gt
-              OpamSwitch.unset OpamFile.Switch_config.empty)
-           (OpamFile.OPAM.available opam))
-       st.opams
-   )}
+  OpamSwitchState.load_virtual
+    ~repos_list:[repo.repo_name]
+    ~avail_default:(env = [])
+    gt rt
 
 let or_arg =
   Arg.(value & flag & info ~docs:OpamArg.package_selection_section ["or"]

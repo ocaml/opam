@@ -32,11 +32,14 @@ val with_:
   [< unlocked ] global_state ->
   ('a switch_state -> 'b) -> 'b
 
-(** Creates a virtual state with all package available and nothing installed.
+(** Creates a virtual state with nothing installed.
+    Availability is computed just from the global state, and [avail_default]
+    (default [true]) controls the result when the availability can't be computed
+    due to undefined variables.
     Useful for querying and simulating actions when no switch is yet
     configured, or querying packages directly from the repos *)
 val load_virtual:
-  ?repos_list: repository_name list ->
+  ?repos_list: repository_name list -> ?avail_default: bool ->
   'a global_state -> 'b repos_state -> unlocked switch_state
 
 (** Load the switch's state file, without constructing the package maps: much
