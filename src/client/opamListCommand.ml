@@ -745,8 +745,13 @@ let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false)
           else acc)
         [] (List.rev fields)
     in
+    let cut =
+      match normalise with
+      | Some true -> Some `None
+      | _  -> None
+    in
     OpamStd.Format.align_table tbl |>
-    OpamConsole.print_table stdout ~sep:" ";
+    OpamConsole.print_table ?cut stdout ~sep:" ";
   in
   let header pkg =
     if fields = [] && not raw_opam && not where then
