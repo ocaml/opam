@@ -107,7 +107,7 @@ enabled. Note, however, that:
 #### 🐫  Why does ``opam init`` need to add stuff to my init scripts / why is ``eval $(opam env)`` needed?
 
 This is not strictly needed, but by updating your `PATH` and a few specific
-environment variables, allows to:
+environment variables, one can:
 
 1. Automatically find executables installed in opam (current switch)
 2. Ensure the OCaml tools are going to look at the right places for installed

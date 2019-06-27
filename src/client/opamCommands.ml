@@ -178,7 +178,7 @@ let init =
         repository).";
     `P "The initial repository and defaults can be set through a \
         configuration file found at $(i,~/.opamrc) or $(i,/etc/opamrc).";
-    `P "Additionally, this command allows to customise some aspects of opam's \
+    `P "Additionally, this command allows one to customise some aspects of opam's \
         shell integration, when run initially (avoiding the interactive \
         dialog), but also at any later time.";
     `S "ARGUMENTS";
@@ -1644,7 +1644,7 @@ let repository =
         repositories, or all configured repositories with $(b,--all).";
   ] @ mk_subdoc ~defaults:["","list"] commands @ [
       `S scope_section;
-      `P "These flags allow to choose what selections are changed by $(b,add), \
+      `P "These flags allow one to choose which selections are changed by $(b,add), \
           $(b,remove), $(b,set-repos). If no flag in this section is specified \
           the updated selections default to the current switch. Multiple scopes \
           can be selected, e.g. $(b,--this-switch --set-default).";
@@ -2388,7 +2388,7 @@ let pin ?(unpin_only=false) () =
         used locally.";
     `P "If (or $(i,-)) is specified, the package is pinned without a source \
         archive. The package name can be omitted if the target is a directory \
-        containing one or more valid package definitions (this allows to do \
+        containing one or more valid package definitions (this allows one to do \
         e.g. $(i,opam pin add .) from a source directory.";
     `P "If $(i,PACKAGE) has the form $(i,name.version), the pinned package \
         will be considered as version $(i,version) by opam. Beware that this \

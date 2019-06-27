@@ -50,7 +50,7 @@ include OpamStd.Config.Sig
    and type 'a options_fun := 'a options_fun
 
 (** Get the initial opam root value (from default, env or optional argument).
-    This allows to get it before doing the init, which is useful to get the
+    This allows one to get it before doing the init, which is useful to get the
     configuration file used to fill some options to init() *)
 val opamroot: ?root_dir:dirname -> unit -> dirname
 

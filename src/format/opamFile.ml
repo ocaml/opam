@@ -2262,7 +2262,7 @@ module OPAMSyntax = struct
 
   (* Post-processing functions used for some fields (optional, because we
      don't want them when linting). It's better to do them in the same pass
-     as parsing, because it allows to get file positions, which we lose
+     as parsing, because it allows one to get file positions, which we lose
      afterwards *)
 
   (* Allow 'flag:xxx' tags as flags, for compat *)

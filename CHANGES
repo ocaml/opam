@@ -284,7 +284,7 @@ are not marked).
 
 1.2.1
 * Non-system compiler definitions without source are now allowed
-* Better handling of compiler "base" packages allows to move build instructions
+* Better handling of compiler "base" packages allows one to move build instructions
   from compiler definitions to packages
 * Rewritten action resolution mechanism to be based on atomic actions.
   Actions are not aborted anymore on first failure when there is no
