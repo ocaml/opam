@@ -470,7 +470,7 @@ let resolve_command ?env ?dir name =
 let apply_cygpath name =
   let r =
     OpamProcess.run
-      (OpamProcess.command ~name:(temp_file "command") ~verbose:false "cygpath" ["--"; name])
+      (OpamProcess.command ~name:(temp_file "command") ~allow_stdin:false ~verbose:false "cygpath" ["--"; name])
   in
   OpamProcess.cleanup ~force:true r;
   if OpamProcess.is_success r then
