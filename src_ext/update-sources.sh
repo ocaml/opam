@@ -5,12 +5,19 @@ echo -n "Checking packages for new versions in opam: "
 DISAGREEMENTS=()
 while read name prefix version url; do
   package=$name
-  if [[ $package = "findlib" ]] ; then package=ocamlfind ; fi
-  latest=$(opam show $package -f all-versions)
+  case "$package" in
+    findlib) package=ocamlfind;;
+    dune-local) package=dune;;
+  esac
+  latest=$(opam show $package -f all-versions | sed -e 's/  base//')
   latest=${latest##* }
   package_url=$(opam show $package.$latest -f url.src: | sed -e 's/"//g')
   md5=$(sed -n -e "s/MD5$prefix$name *= *\(.*\)/\1/p" Makefile.sources)
   package_md5=$(opam show $package.$latest -f url.checksum: | sed -n -e "/md5/s/.*md5=\([a-fA-F0-9]\{32\}\).*/\1/p")
+  if [[ -z $package_md5 ]] ; then
+    echo -e "\n$name: [\033[1;33mWARN\033[m] no md5 given in opam, downloading $package_url to check"
+    package_md5=$(curl -LSs $package_url | md5sum | cut -f1 -d' ')
+  fi
   if [[ $package_url = $url ]] ; then
     if [[ $package_md5 = $md5 ]] ; then
       echo -ne "[\033[0;32m$name\033[m] "

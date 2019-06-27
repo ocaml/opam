@@ -1,0 +1,245 @@
+From 76f429d87cbdb29a23d2b95d52b8daf31b074ecb Mon Sep 17 00:00:00 2001
+From: David Allsopp <david.allsopp@metastack.com>
+Date: Wed, 26 Jun 2019 16:55:56 +0100
+Subject: [PATCH] Restore 4.02.3 support
+
+---
+ _tags                   |  4 ++--
+ pkg/META                |  2 +-
+ src/cmdliner.ml         |  6 +++---
+ src/cmdliner.mli        |  3 +++
+ src/cmdliner_arg.ml     |  2 ++
+ src/cmdliner_arg.mli    |  2 ++
+ src/cmdliner_base.ml    |  2 +-
+ src/cmdliner_cline.ml   |  2 ++
+ src/cmdliner_cline.mli  |  2 ++
+ src/cmdliner_docgen.ml  | 10 +++++-----
+ src/cmdliner_manpage.ml |  2 ++
+ src/cmdliner_term.ml    |  2 ++
+ src/cmdliner_term.mli   |  2 ++
+ src/dune                |  1 +
+ 14 files changed, 30 insertions(+), 12 deletions(-)
+
+diff --git a/_tags b/_tags
+index 71bfd61..9e91836 100644
+--- a/_tags
++++ b/_tags
+@@ -1,3 +1,3 @@
+-true : bin_annot, safe_string
++true : bin_annot, safe_string, package(bytes), package(result)
+ <src> : include
+-<test> : include
+\ No newline at end of file
++<test> : include
+diff --git a/pkg/META b/pkg/META
+index 81671c5..4e9237a 100644
+--- a/pkg/META
++++ b/pkg/META
+@@ -1,6 +1,6 @@
+ version = "%%VERSION%%"
+ description = "Declarative definition of command line interfaces"
+-requires = ""
++requires = "bytes result"
+ archive(byte) = "cmdliner.cma"
+ archive(native) = "cmdliner.cmxa"
+ plugin(byte) = "cmdliner.cma"
+diff --git a/src/cmdliner.ml b/src/cmdliner.ml
+index 40afd52..c06538e 100644
+--- a/src/cmdliner.ml
++++ b/src/cmdliner.ml
+@@ -4,11 +4,11 @@
+    %%NAME%% %%VERSION%%
+   ---------------------------------------------------------------------------*)
+ 
++open Result
++
+ module Manpage = Cmdliner_manpage
+ module Arg = Cmdliner_arg
+ module Term = struct
+-  type ('a, 'b) stdlib_result = ('a, 'b) result
+-
+   include Cmdliner_term
+ 
+   (* Deprecated *)
+@@ -112,7 +112,7 @@ module Term = struct
+     ('a, [ term_escape
+          | `Exn of exn * Printexc.raw_backtrace
+          | `Parse of string
+-         | `Std_help of Manpage.format | `Std_version ]) stdlib_result
++         | `Std_help of Manpage.format | `Std_version ]) Result.result
+ 
+   let run ~catch ei cl f = try (f ei cl :> 'a eval_result) with
+   | exn when catch ->
+diff --git a/src/cmdliner.mli b/src/cmdliner.mli
+index a993e83..ee8e6af 100644
+--- a/src/cmdliner.mli
++++ b/src/cmdliner.mli
+@@ -26,6 +26,8 @@
+ 
+ (** {1:top Interface} *)
+ 
++open Result
++
+ (** Man page specification.
+ 
+     Man page generation is automatically handled by [Cmdliner],
+@@ -1373,6 +1375,7 @@ let tail lines follow verb pid files =
+ 
+ (* Command line interface *)
+ 
++open Result
+ open Cmdliner
+ 
+ let lines =
+diff --git a/src/cmdliner_arg.ml b/src/cmdliner_arg.ml
+index 589f2eb..0c60450 100644
+--- a/src/cmdliner_arg.ml
++++ b/src/cmdliner_arg.ml
+@@ -4,6 +4,8 @@
+    %%NAME%% %%VERSION%%
+   ---------------------------------------------------------------------------*)
+ 
++open Result
++
+ let rev_compare n0 n1 = compare n1 n0
+ 
+ (* Invalid_argument strings **)
+diff --git a/src/cmdliner_arg.mli b/src/cmdliner_arg.mli
+index 725f923..eee0bb7 100644
+--- a/src/cmdliner_arg.mli
++++ b/src/cmdliner_arg.mli
+@@ -4,6 +4,8 @@
+    %%NAME%% %%VERSION%%
+   ---------------------------------------------------------------------------*)
+ 
++open Result
++
+ (** Command line arguments as terms. *)
+ 
+ type 'a parser = string -> [ `Ok of 'a | `Error of string ]
+diff --git a/src/cmdliner_base.ml b/src/cmdliner_base.ml
+index 24ad20c..543cf7c 100644
+--- a/src/cmdliner_base.ml
++++ b/src/cmdliner_base.ml
+@@ -280,7 +280,7 @@ let t4 ?(sep = ',') (pa0, pr0) (pa1, pr1) (pa2, pr2) (pa3, pr3) =
+   in
+   parse, print
+ 
+-let env_bool_parse s = match String.lowercase_ascii s with
++let env_bool_parse s = match String.lowercase s with
+ | "" | "false" | "no" | "n" | "0" -> `Ok false
+ | "true" | "yes" | "y" | "1" -> `Ok true
+ | s -> `Error (err_invalid_val s (alts_str ["true"; "yes"; "false"; "no" ]))
+diff --git a/src/cmdliner_cline.ml b/src/cmdliner_cline.ml
+index e305d39..1009101 100644
+--- a/src/cmdliner_cline.ml
++++ b/src/cmdliner_cline.ml
+@@ -4,6 +4,8 @@
+    %%NAME%% %%VERSION%%
+   ---------------------------------------------------------------------------*)
+ 
++open Result
++
+ (* A command line stores pre-parsed information about the command
+    line's arguments in a more structured way. Given the
+    Cmdliner_info.arg values mentioned in a term and Sys.argv
+diff --git a/src/cmdliner_cline.mli b/src/cmdliner_cline.mli
+index 63dad28..77f8aa5 100644
+--- a/src/cmdliner_cline.mli
++++ b/src/cmdliner_cline.mli
+@@ -4,6 +4,8 @@
+    %%NAME%% %%VERSION%%
+   ---------------------------------------------------------------------------*)
+ 
++open Result
++
+ (** Command lines. *)
+ 
+ type t
+diff --git a/src/cmdliner_docgen.ml b/src/cmdliner_docgen.ml
+index 054164f..94ed2e1 100644
+--- a/src/cmdliner_docgen.ml
++++ b/src/cmdliner_docgen.ml
+@@ -170,7 +170,7 @@ let arg_docs ~errs ~subst ~buf ei =
+     | true, true -> (* optional by name *)
+         let key names =
+           let k = List.hd (List.sort rev_compare names) in
+-          let k = String.lowercase_ascii k in
++          let k = String.lowercase k in
+           if k.[1] = '-' then String.sub k 1 (String.length k - 1) else k
+         in
+         compare
+@@ -178,8 +178,8 @@ let arg_docs ~errs ~subst ~buf ei =
+           (key @@ Cmdliner_info.arg_opt_names a1)
+     | false, false -> (* positional by variable *)
+         compare
+-          (String.lowercase_ascii @@ Cmdliner_info.arg_docv a0)
+-          (String.lowercase_ascii @@ Cmdliner_info.arg_docv a1)
++          (String.lowercase @@ Cmdliner_info.arg_docv a0)
++          (String.lowercase @@ Cmdliner_info.arg_docv a1)
+     | true, false -> -1 (* positional first *)
+     | false, true -> 1  (* optional after *)
+   in
+@@ -310,8 +310,8 @@ let text ~errs ei =
+ 
+ let title ei =
+   let main = Cmdliner_info.eval_main ei in
+-  let exec = String.capitalize_ascii (Cmdliner_info.term_name main) in
+-  let name = String.uppercase_ascii (invocation ~sep:'-' ei) in
++  let exec = String.capitalize (Cmdliner_info.term_name main) in
++  let name = String.uppercase (invocation ~sep:'-' ei) in
+   let center_header = esc @@ strf "%s Manual" exec in
+   let left_footer =
+     let version = match Cmdliner_info.term_version main with
+diff --git a/src/cmdliner_manpage.ml b/src/cmdliner_manpage.ml
+index 2dbd1f6..eecf5da 100644
+--- a/src/cmdliner_manpage.ml
++++ b/src/cmdliner_manpage.ml
+@@ -4,6 +4,8 @@
+    %%NAME%% %%VERSION%%
+   ---------------------------------------------------------------------------*)
+ 
++open Result
++
+ (* Manpages *)
+ 
+ type block =
+diff --git a/src/cmdliner_term.ml b/src/cmdliner_term.ml
+index 2e405ba..8458e7b 100644
+--- a/src/cmdliner_term.ml
++++ b/src/cmdliner_term.ml
+@@ -4,6 +4,8 @@
+    %%NAME%% %%VERSION%%
+   ---------------------------------------------------------------------------*)
+ 
++open Result
++
+ type term_escape =
+   [ `Error of bool * string
+   | `Help of Cmdliner_manpage.format * string option ]
+diff --git a/src/cmdliner_term.mli b/src/cmdliner_term.mli
+index e9472f7..f41818c 100644
+--- a/src/cmdliner_term.mli
++++ b/src/cmdliner_term.mli
+@@ -4,6 +4,8 @@
+    %%NAME%% %%VERSION%%
+   ---------------------------------------------------------------------------*)
+ 
++open Result
++
+ (** Terms *)
+ 
+ type term_escape =
+diff --git a/src/dune b/src/dune
+index b9ef5c9..7393e80 100644
+--- a/src/dune
++++ b/src/dune
+@@ -1,4 +1,5 @@
+ (library
+  (public_name cmdliner)
++ (libraries result)
+  (flags :standard -w -3-6-27-32-35)
+  (wrapped false))
+-- 
+2.19.1
+
