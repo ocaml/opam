@@ -22,6 +22,23 @@ module PackageActionGraph = OpamSolver.ActionGraph
 (* Install the package files *)
 let process_dot_install st nv build_dir =
   let root = st.switch_global.root in
+  let (warning, had_windows_warnings) =
+    if OpamFormatConfig.(!r.strict) then
+      let had_warnings = ref false in
+      let install_warning dst warning =
+        let () =
+          match warning with
+          | `Add_exe | `Install_script | `Cygwin | `Cygwin_libraries ->
+            had_warnings := true
+          | _ ->
+            ()
+        in
+        OpamSystem.default_install_warning dst warning
+      in
+      (install_warning, (fun () -> !had_warnings))
+    else
+      (OpamSystem.default_install_warning, (fun () -> false))
+  in
   if OpamStateConfig.(!r.dryrun) then
     OpamConsole.msg "Installing %s.\n" (OpamPackage.to_string nv)
   else
@@ -66,12 +83,28 @@ let process_dot_install st nv build_dir =
           OpamFilename.mkdir dst_dir;
         );
         List.iter (fun (base, dst) ->
+            let (base, append) =
+              if exec && not (OpamFilename.exists (OpamFilename.create build_dir base.c)) then
+                let base' =
+                  {base with c = OpamFilename.Base.add_extension base.c "exe"} in
+                if OpamFilename.exists (OpamFilename.create build_dir base'.c) then begin
+                  OpamConsole.warning ".install file is missing .exe extension for %s" (OpamFilename.Base.to_string base.c);
+                  (base', true)
+                end else
+                  (base, false)
+              else
+                (base, false) in
             let src_file = OpamFilename.create build_dir base.c in
+            if append then warning (OpamFilename.to_string src_file) `Add_exe;
             let dst_file = match dst with
               | None   -> OpamFilename.create dst_dir (OpamFilename.basename src_file)
-              | Some d -> OpamFilename.create dst_dir d in
+              | Some d ->
+                  if append && not (OpamFilename.Base.check_suffix d ".exe") then
+                    OpamFilename.create dst_dir (OpamFilename.Base.add_extension d "exe")
+                  else
+                    OpamFilename.create dst_dir d in
             if check ~src:build_dir ~dst:dst_dir base then
-              OpamFilename.install ~exec ~src:src_file ~dst:dst_file ();
+              OpamFilename.install ~warning ~exec ~src:src_file ~dst:dst_file ();
           ) files in
 
       let module P = OpamPath.Switch in
@@ -115,12 +148,12 @@ let process_dot_install st nv build_dir =
           let src_file = OpamFilename.create (OpamFilename.cwd ()) src.c in
           if OpamFilename.exists dst
           && OpamConsole.confirm "Overwriting %s?" (OpamFilename.to_string dst) then
-            OpamFilename.install ~src:src_file ~dst ()
+            OpamFilename.install ~warning ~src:src_file ~dst ()
           else begin
             OpamConsole.msg "Installing %s to %s.\n"
               (OpamFilename.Base.to_string src.c) (OpamFilename.to_string dst);
             if OpamConsole.confirm "Continue?" then
-              OpamFilename.install ~src:src_file ~dst ()
+              OpamFilename.install ~warning ~src:src_file ~dst ()
           end
         ) (I.misc install);
 
@@ -138,7 +171,10 @@ let process_dot_install st nv build_dir =
             (String.concat "" (List.map print !warnings))
         in
         failwith msg
-      )
+      );
+
+      if had_windows_warnings () then
+        failwith "Strict mode is enabled - previous warnings considered fatal"
     )
 
 let download_package st nv =

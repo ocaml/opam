@@ -136,7 +136,9 @@ val read: t -> string
 
 (** Open a channel from a given file. *)
 val open_in: t -> in_channel
+val open_in_bin: t -> in_channel
 val open_out: t -> out_channel
+val open_out_bin: t -> out_channel
 
 (** Removes everything in [filename] if existed. *)
 val remove: t -> unit
@@ -193,7 +195,7 @@ val copy: src:t -> dst:t -> unit
 
 (** Installs a file to a destination. Optionally set if the destination should
     be set executable *)
-val install: ?exec:bool -> src:t -> dst:t -> unit -> unit
+val install: ?warning:OpamSystem.install_warning_fn -> ?exec:bool -> src:t -> dst:t -> unit -> unit
 
 (** Symlink a file. If symlink is not possible on the system, use copy instead.
     With [relative], creates a relative link through the closest common ancestor

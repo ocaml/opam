@@ -186,8 +186,16 @@ let open_in filename =
   try open_in (to_string filename)
   with Sys_error _ -> raise (OpamSystem.File_not_found (to_string filename))
 
+let open_in_bin filename =
+  try open_in_bin (to_string filename)
+  with Sys_error _ -> raise (OpamSystem.File_not_found (to_string filename))
+
 let open_out filename =
   try open_out (to_string filename)
+  with Sys_error _ -> raise (OpamSystem.File_not_found (to_string filename))
+
+let open_out_bin filename =
+  try open_out_bin (to_string filename)
   with Sys_error _ -> raise (OpamSystem.File_not_found (to_string filename))
 
 let write filename raw =
@@ -229,8 +237,8 @@ let copy ~src ~dst =
 let copy_dir ~src ~dst =
   if src <> dst then OpamSystem.copy_dir (Dir.to_string src) (Dir.to_string dst)
 
-let install ?exec ~src ~dst () =
-  if src <> dst then OpamSystem.install ?exec (to_string src) (to_string dst)
+let install ?warning ?exec ~src ~dst () =
+  if src <> dst then OpamSystem.install ?warning ?exec (to_string src) (to_string dst)
 
 let move ~src ~dst =
   if src <> dst then

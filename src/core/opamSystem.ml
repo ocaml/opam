@@ -11,6 +11,10 @@
 
 open OpamCompat
 
+type install_warning =
+  [ `Add_exe | `Install_dll | `Install_script | `Install_unknown | `Cygwin | `Cygwin_libraries ]
+type install_warning_fn = string -> install_warning -> unit
+
 exception Process_error of OpamProcess.result
 exception Internal_error of string
 exception Command_not_found of string
@@ -526,7 +530,13 @@ let read_command_output ?verbose ?env ?metadata ?allow_stdin cmd =
 let verbose_for_base_commands () =
   OpamCoreConfig.(!r.verbose_level) >= 3
 
-let copy_file src dst =
+let cygify f =
+  if Sys.win32 then
+    List.map (Lazy.force f)
+  else
+    fun x -> x
+
+let copy_file_aux f src dst =
   if (try Sys.is_directory src
       with Sys_error _ -> raise (File_not_found src))
   then internal_error "Cannot copy %s: it is a directory." src;
@@ -535,7 +545,9 @@ let copy_file src dst =
   if file_or_symlink_exists dst
   then remove_file dst;
   mkdir (Filename.dirname dst);
-  command ~verbose:(verbose_for_base_commands ()) ["cp"; src; dst ]
+  command ~verbose:(verbose_for_base_commands ()) ("cp"::(cygify f [src; dst]))
+
+let copy_file = copy_file_aux (get_cygpath_function ~command:"cp")
 
 let copy_dir src dst =
   if Sys.file_exists dst then
@@ -552,10 +564,12 @@ let copy_dir src dst =
      command ~verbose:(verbose_for_base_commands ())
        [ "cp"; "-PRp"; src; dst ])
 
-let mv src dst =
+let mv_aux f src dst =
   if file_or_symlink_exists dst then remove_file dst;
   mkdir (Filename.dirname dst);
-  command ~verbose:(verbose_for_base_commands ()) ["mv"; src; dst ]
+  command ~verbose:(verbose_for_base_commands ()) ("mv"::(cygify f [src; dst]))
+
+let mv = mv_aux (get_cygpath_function ~command:"mv")
 
 let is_exec file =
   let stat = Unix.stat file in
@@ -564,7 +578,90 @@ let is_exec file =
 
 let file_is_empty f = Unix.((stat f).st_size = 0)
 
-let install ?exec src dst =
+let classify_executable file =
+  let c = open_in file in
+  (* On a 32-bit system, this could fail for a PE image with a 2GB+ DOS header =-o *)
+  let input_int_little c =
+    let b1 = input_byte c in
+    let b2 = input_byte c in
+    let b3 = input_byte c in
+    let b4 = input_byte c in
+    b1 lor (b2 lsl 8) lor (b3 lsl 16) lor (b4 lsl 24) in
+  let input_short_little c =
+    let b1 = input_byte c in
+    let b2 = input_byte c in
+    b1 lor (b2 lsl 8) in
+  set_binary_mode_in c true;
+  try
+    match really_input_string c 2 with
+      "#!" ->
+        close_in c;
+        `Script
+    | "MZ" ->
+        let is_pe =
+          try
+            (* Offset to PE header at 0x3c (but we've already read two bytes) *)
+            ignore (really_input_string c 0x3a);
+            ignore (really_input_string c (input_int_little c - 0x40));
+            let magic = really_input_string c 4 in
+            magic = "PE\000\000"
+          with End_of_file ->
+            close_in c;
+            false in
+        if is_pe then
+          try
+            let arch =
+              (* NB It's not necessary to determine PE/PE+ headers for x64/x86 determination *)
+              match input_short_little c with
+                0x8664 ->
+                  `x86_64
+              | 0x14c ->
+                  `x86
+              | _ ->
+                  raise End_of_file
+            in
+            ignore (really_input_string c 14);
+            let size_of_opt_header = input_short_little c in
+            let characteristics = input_short_little c in
+            (* Executable images must have a PE "optional" header and be marked executable *)
+            (* Could also validate IMAGE_FILE_32BIT_MACHINE (0x100) for x86 and IMAGE_FILE_LARGE_ADDRESS_AWARE (0x20) for x64 *)
+            if size_of_opt_header <= 0 || characteristics land 0x2 = 0 then
+              raise End_of_file;
+            close_in c;
+            if characteristics land 0x2000 <> 0 then
+              `Dll arch
+            else
+              `Exe arch
+          with End_of_file ->
+            close_in c;
+            `Unknown
+        else
+          `Exe `i386
+    | _ ->
+        close_in c;
+        `Unknown
+  with End_of_file ->
+    close_in c;
+    `Unknown
+
+let default_install_warning dst = function
+| `Add_exe ->
+    OpamConsole.warning "Automatically adding .exe to %s" dst
+| `Install_dll ->
+    (* TODO Installation of .dll to bin is unfortunate, but not sure if it should be a warning *)
+    ()
+| `Install_script ->
+    (* TODO Generate a .cmd wrapper (and warn about it - they're not perfect) *)
+    OpamConsole.warning "%s is a script; the command won't be available" dst;
+| `Install_unknown ->
+    (* TODO Installation of a non-executable file is unexpected, but not sure if it should be a warning/error *)
+    ()
+| `Cygwin ->
+    OpamConsole.warning "%s is a Cygwin-linked executable" dst
+| `Cygwin_libraries ->
+    OpamConsole.warning "%s links with a Cygwin-compiled DLL (almost certainly a packaging or environment error)" dst
+
+let install ?(warning=default_install_warning) ?exec src dst =
   if Sys.is_directory src then
     internal_error "Cannot install %s: it is a directory." src;
   if (try Sys.is_directory dst with Sys_error _ -> false) then
@@ -573,8 +670,42 @@ let install ?exec src dst =
   let exec = match exec with
     | Some e -> e
     | None -> is_exec src in
-  command ("install" :: "-m" :: (if exec then "0755" else "0644") ::
-     [ src; dst ])
+  begin
+    if Sys.win32 then
+      if exec then begin
+        let (dst, cygcheck) =
+          match classify_executable src with
+            `Exe _ ->
+              if not (Filename.check_suffix dst ".exe") && not (Filename.check_suffix dst ".dll") then begin
+                warning dst `Add_exe;
+                (dst ^ ".exe", true)
+              end else
+                (dst, true)
+          | `Dll _ ->
+              warning dst `Install_dll;
+              (dst, true)
+          | `Script ->
+              warning dst `Install_script;
+              (dst, false)
+          | `Unknown ->
+              warning dst `Install_unknown;
+              (dst, false)
+        in
+        copy_file src dst;
+        if cygcheck then
+          match OpamStd.Sys.is_cygwin_variant dst with
+            `Native ->
+              ()
+          | `Cygwin ->
+              warning dst `Cygwin
+          | `CygLinked ->
+              warning dst `Cygwin_libraries
+      end else
+        copy_file src dst
+    else
+      command ("install" :: "-m" :: (if exec then "0755" else "0644") ::
+         [ src; dst ])
+  end
 
 let cpu_count () =
   try

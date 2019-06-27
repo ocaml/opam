@@ -86,6 +86,10 @@ let string_interp_regex =
       seq [str "%{"; group (greedy notclose); opt (group (str "}%"))];
     ])
 
+let escape_value =
+  let rex = Re.(compile @@ set "\\\"") in
+  Re.Pcre.substitute ~rex ~subst:(fun s -> "\\"^s)
+
 let escape_expansions =
   Re.replace_string Re.(compile @@ char '%') ~by:"%%"
 
@@ -214,7 +218,7 @@ let resolve_ident ?no_undef_expand env fident =
   | None -> FUndef (FIdent fident)
 
 (* Resolves ["%{x}%"] string interpolations *)
-let expand_string ?(partial=false) ?default env text =
+let expand_string_aux ?(partial=false) ?(escape_value=fun x -> x) ?default env text =
   let default fident = match default, partial with
     | None, false -> None
     | Some df, false -> Some (df fident)
@@ -237,9 +241,11 @@ let expand_string ?(partial=false) ?default env text =
     else
     let fident = String.sub str 2 (String.length str - 4) in
     resolve_ident ~no_undef_expand:partial env (filter_ident_of_string fident)
-    |> value_string ?default:(default fident)
+    |> value_string ?default:(default fident) |> escape_value
   in
   Re.replace string_interp_regex ~f text
+
+let expand_string = expand_string_aux ?escape_value:None
 
 let unclosed_expansions text =
   let re =
@@ -400,17 +406,37 @@ let ident_bool ?default env id = value_bool ?default (resolve_ident env id)
 let expand_interpolations_in_file env file =
   let f = OpamFilename.of_basename file in
   let src = OpamFilename.add_extension f "in" in
-  let ic = OpamFilename.open_in src in
-  let oc = OpamFilename.open_out f in
-  let rec aux () =
-    match try Some (input_line ic) with End_of_file -> None with
-    | Some s ->
-      output_string oc (expand_string ~default:(fun _ -> "") env s);
-      output_char oc '\n';
-      aux ()
-    | None -> ()
+  let ic = OpamFilename.open_in_bin src in
+  let oc = OpamFilename.open_out_bin f in
+  (* Determine if the input file parses in opam-file-format *)
+  let is_opam_format =
+    try
+      let _ =
+        OpamParser.channel ic (OpamFilename.to_string src)
+      in
+      true
+    with e ->
+      OpamStd.Exn.fatal e;
+      false
   in
-  aux ();
+  (* Reset the input for processing *)
+  seek_in ic 0;
+  let default _ = "" in
+  let write = output_string oc in
+  let unquoted s = write @@ expand_string ~default env s in
+  let quoted s = write @@ expand_string_aux ~escape_value ~default env s in
+  let process =
+    if is_opam_format then
+      fun () -> OpamInterpLexer.main unquoted quoted (Lexing.from_channel ic)
+    else
+      let rec aux () =
+        match input_line ic with
+        | s -> unquoted s; output_char oc '\n'; aux ()
+        | exception End_of_file -> ()
+      in
+        aux
+  in
+  process ();
   close_in ic;
   close_out oc
 
