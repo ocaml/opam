@@ -697,9 +697,11 @@ let get_depexts st packages =
 let print_depexts =
   OpamStd.String.Set.iter (OpamConsole.msg "%s\n")
 
-let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
+let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false)
+    ?(all_versions=false) atoms =
   let packages =
-    OpamFormula.packages_of_atoms (st.packages ++ st.installed) atoms
+    OpamFormula.packages_of_atoms ~disj:all_versions
+      (st.packages ++ st.installed) atoms
   in
   if OpamPackage.Set.is_empty packages then
     (OpamConsole.error "No package matching %s found"
@@ -746,45 +748,56 @@ let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false) atoms =
     OpamStd.Format.align_table tbl |>
     OpamConsole.print_table stdout ~sep:" ";
   in
+  let header pkg =
+    if fields = [] && not raw_opam && not where then
+      (OpamConsole.header_msg "%s: information on all versions"
+         (OpamPackage.Name.to_string pkg.name);
+       output_table all_versions_fields pkg)
+  in
+  let output_package pkg =
+    let opam = get_opam st pkg in
+    OpamFile.OPAM.print_errors opam;
+    if where then
+      OpamConsole.msg "%s\n"
+        (match OpamFile.OPAM.metadata_dir opam with
+         | Some (None, dir) -> Filename.concat dir "opam"
+         | Some (Some repo, rdir) ->
+           let repo_dir = OpamRepositoryPath.root st.switch_global.root repo in
+           let tar = OpamRepositoryPath.tar st.switch_global.root repo in
+           if OpamFilename.exists tar &&
+              not (OpamFilename.exists_dir repo_dir) then
+             Printf.sprintf "<%s>%s%s"
+               (OpamFilename.to_string tar)
+               Filename.dir_sep
+               rdir
+           else
+             OpamFilename.Dir.to_string OpamFilename.Op.(repo_dir / rdir)
+         | None -> "<nowhere>")
+    else if raw_opam then
+      OpamFile.OPAM.write_to_channel stdout opam
+    else
+    match fields with
+    | [] ->
+      OpamConsole.header_msg "Version-specific details";
+      output_table one_version_fields pkg
+    | [f] -> OpamConsole.msg "%s\n" (detail_printer ?normalise st pkg f)
+    | fields -> output_table fields pkg
+  in
   OpamPackage.names_of_packages packages |>
   OpamPackage.Name.Set.iter (fun name ->
       (* Like OpamSwitchState.get_package, but restricted to [packages] *)
       let nvs = OpamPackage.packages_of_name packages name in
-      let choose =
-        try OpamPackage.Set.choose (nvs %% st.pinned) with Not_found ->
-        try OpamPackage.Set.choose (nvs %% st.installed) with Not_found ->
-        try OpamPackage.Set.max_elt (nvs %% Lazy.force st.available_packages)
-        with Not_found ->
-          OpamPackage.Set.max_elt nvs
-      in
-      let opam = get_opam st choose in
-      OpamFile.OPAM.print_errors opam;
-      if where then
-        OpamConsole.msg "%s\n"
-          (match OpamFile.OPAM.metadata_dir opam with
-           | Some (None, dir) -> Filename.concat dir "opam"
-           | Some (Some repo, rdir) ->
-             let repo_dir = OpamRepositoryPath.root st.switch_global.root repo in
-             let tar = OpamRepositoryPath.tar st.switch_global.root repo in
-             if OpamFilename.exists tar &&
-                not (OpamFilename.exists_dir repo_dir) then
-               Printf.sprintf "<%s>%s%s"
-                 (OpamFilename.to_string tar)
-                 Filename.dir_sep
-                 rdir
-             else
-               OpamFilename.Dir.to_string OpamFilename.Op.(repo_dir / rdir)
-           | None -> "<nowhere>")
-      else if raw_opam then
-        OpamFile.OPAM.write_to_channel stdout opam
+      if all_versions then
+        (header (OpamPackage.Set.max_elt nvs);
+         OpamPackage.Set.iter output_package nvs)
       else
-      match fields with
-      | [] ->
-        OpamConsole.header_msg "%s: information on all versions"
-          (OpamPackage.Name.to_string choose.name);
-        output_table all_versions_fields choose;
-        OpamConsole.header_msg "Version-specific details";
-        output_table one_version_fields choose
-      | [f] -> OpamConsole.msg "%s\n" (detail_printer ?normalise st choose f)
-      | fields -> output_table fields choose
+        (let choose =
+           try OpamPackage.Set.choose (nvs %% st.pinned) with Not_found ->
+           try OpamPackage.Set.choose (nvs %% st.installed) with Not_found ->
+           try OpamPackage.Set.max_elt (nvs %% Lazy.force st.available_packages)
+           with Not_found ->
+             OpamPackage.Set.max_elt nvs
+         in
+         header choose;
+         output_package choose)
     )

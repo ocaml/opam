@@ -701,6 +701,10 @@ let show =
        $(b,--fields) is used. Only raw opam-file fields can be queried. If no \
        PACKAGES argument is given, read opam file from stdin."
   in
+  let all_versions = mk_flag ["all-versions"]
+      "Display information of all packages matching $(i,PACKAGES), not \
+       restrained to a single package matching $(i,PACKAGES) constraints."
+  in
   let opam_files_in_dir d =
     match OpamPinned.files_in_source d with
     | [] ->
@@ -710,7 +714,7 @@ let show =
     | l -> List.map (fun (_,f) -> Some f) l
   in
   let pkg_info global_options fields show_empty raw where
-      list_files file normalise no_lint just_file atom_locs =
+      list_files file normalise no_lint just_file all_versions atom_locs =
     let print_just_file f =
       let opam = match f with
         | Some f -> OpamFile.OPAM.read f
@@ -770,7 +774,7 @@ let show =
           atom_locs
       in
       OpamListCommand.info st
-        ~fields ~raw_opam:raw ~where ~normalise ~show_empty atoms;
+        ~fields ~raw_opam:raw ~where ~normalise ~show_empty ~all_versions atoms;
       `Ok ()
     | atom_locs, true ->
       if List.exists (function `Atom _ -> true | _ -> false) atom_locs then
@@ -788,8 +792,9 @@ let show =
       `Ok ()
   in
   Term.(ret
-          (const pkg_info $global_options $fields $show_empty $raw $where $list_files
-           $file $normalise $no_lint $just_file $atom_or_local_list)),
+          (const pkg_info $global_options $fields $show_empty $raw $where
+           $list_files $file $normalise $no_lint $just_file $all_versions
+           $atom_or_local_list)),
   term_info "show" ~doc ~man
 
 module Common_config_flags = struct

@@ -36,8 +36,11 @@ val check: atom -> OpamPackage.t -> bool
 
 (** Return all packages satisfying the given atoms from a set (i.e. name
     matching at least one of the atoms, version matching all atoms with the
-    appropriate name) *)
-val packages_of_atoms: OpamPackage.Set.t -> atom list -> OpamPackage.Set.t
+    appropriate name). If [disj] is true, returns packages that satisfy at
+    least one of the constraint of a given name, otherwise that satisfy all
+    constraints. *)
+val packages_of_atoms:
+  ?disj:bool -> OpamPackage.Set.t -> atom list -> OpamPackage.Set.t
 
 (** AND formulas *)
 type 'a conjunction = 'a list
