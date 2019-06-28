@@ -54,6 +54,8 @@ val lint_string:
   OpamFile.OPAM.t OpamFile.typed_file -> string ->
   (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
 
+val all_lint_warnings: unit -> (int * [`Warning|`Error] * string) list
+
 (** Utility function to print validation results *)
 val warns_to_string: (int * [`Warning|`Error] * string) list -> string
 

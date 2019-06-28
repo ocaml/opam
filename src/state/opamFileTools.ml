@@ -256,7 +256,7 @@ let template nv =
   |> with_bug_reports [""]
   |> with_synopsis ""
 
-let lint ?check_extra_files ?(check_upstream=false) t =
+let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
   let format_errors =
     List.map (fun (field, (pos, msg)) ->
         3, `Error,
@@ -270,7 +270,7 @@ let lint ?check_extra_files ?(check_upstream=false) t =
       (OpamFile.OPAM.format_errors t)
   in
   let cond num level msg ?detail cd =
-    if cd then
+    if cd || all then
       let msg = match detail with
         | Some d ->
           Printf.sprintf "%s: \"%s\"" msg (String.concat "\", \"" d)
@@ -691,6 +691,8 @@ let lint ?check_extra_files ?(check_upstream=false) t =
   format_errors @
   OpamStd.List.filter_map (fun x -> x) warnings
 
+let lint = t_lint ~all:false
+
 let extra_files_default filename =
   let dir =
     OpamFilename.Op.(OpamFilename.dirname
@@ -797,6 +799,9 @@ let lint_channel ?check_extra_files ?check_upstream filename ic =
 let lint_string ?check_extra_files ?check_upstream filename string =
   let reader filename = OpamFile.Syntax.of_string filename string in
   lint_gen ?check_extra_files ?check_upstream reader filename
+
+let all_lint_warnings () =
+  t_lint ~all:true OpamFile.OPAM.empty
 
 let warns_to_string ws =
   OpamStd.List.concat_map "\n"
