@@ -217,6 +217,25 @@ let print_eval_env ~csh ~sexp ~fish env =
   else
     print_env env
 
+let ensure_env_aux ?(set_opamroot=false) ?(set_opamswitch=false) ?(force_path=true) gt switch =
+  let env_file = OpamPath.Switch.environment gt.root switch in
+  if not (OpamFile.exists env_file) then
+    Some (OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+          let upd =
+            OpamEnv.updates ~set_opamroot ~set_opamswitch ~force_path st
+          in
+          log "Missing environment file, regenerate it";
+          if not (OpamCoreConfig.(!r.safe_mode)) then
+            (let _, st =
+               OpamSwitchState.with_write_lock st @@ fun st ->
+               (OpamFile.Environment.write env_file upd), st
+             in OpamSwitchState.drop st);
+          OpamEnv.add [] upd)
+  else
+    None
+
+let ensure_env gt switch = ignore (ensure_env_aux gt switch)
+
 let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
     ~csh ~sexp ~fish ~inplace_path =
   log "config-env";
@@ -256,23 +275,12 @@ let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
       (OpamConsole.colorise `bold "OPAMSWITCH");
   let force_path = not inplace_path in
   let env =
-    let env_file = OpamPath.Switch.environment gt.root switch in
-    if not (OpamFile.exists env_file) then
-      (OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-       let upd =
-         OpamEnv.updates ~set_opamroot ~set_opamswitch ~force_path st
-       in
-       log "Missing environment file, regenerates it";
-       if not (OpamCoreConfig.(!r.safe_mode)) then
-         (let _, st =
-            OpamSwitchState.with_write_lock st @@ fun st ->
-            (OpamFile.Environment.write env_file upd), st
-          in OpamSwitchState.drop st);
-       OpamEnv.add [] upd)
-    else
-      OpamEnv.get_opam_raw
-        ~set_opamroot ~set_opamswitch ~force_path
-        gt.root switch
+    match ensure_env_aux ~set_opamroot ~set_opamswitch ~force_path gt switch with
+    | Some env -> env
+    | None ->
+        OpamEnv.get_opam_raw
+          ~set_opamroot ~set_opamswitch ~force_path
+          gt.root switch
   in
   print_eval_env ~csh ~sexp ~fish env
 

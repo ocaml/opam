@@ -919,9 +919,14 @@ let config =
                 ~set_opamroot ~set_opamswitch
                 ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish) ~inplace_path))
     | Some `revert_env, [] ->
-       `Ok (OpamConfigCommand.print_eval_env
-              ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
-              (OpamEnv.add [] []))
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      (match OpamStateConfig.get_switch_opt () with
+       | None -> `Ok ()
+       | Some sw ->
+         `Ok (OpamConfigCommand.ensure_env gt sw;
+              OpamConfigCommand.print_eval_env
+                ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
+                (OpamEnv.add [] [])))
     | Some `exec, (_::_ as c) ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.exec
