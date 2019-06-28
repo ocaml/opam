@@ -106,20 +106,6 @@ opam-%.install: $(DUNE_DEP)
 opam.install: ALWAYS $(DUNE_DEP)
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-installer.install opam.install
 
-opam-actual.install: opam.install man
-	@echo 'bin: [' > $@
-	@grep -h 'bin/[^/]*' $< >> $@
-	@echo ']' >> $@
-	@echo 'man: [' >>$@
-	@$(patsubst %,echo '  "'%'"' >>$@;,$(wildcard doc/man/*.1))
-	@echo ']' >>$@
-	@echo 'doc: [' >>$@
-	@$(foreach x,$(wildcard doc/man-html/*.html),\
-	  echo '  "$x" {"man/$(notdir $x)"}' >>$@;)
-	@$(foreach x,$(wildcard doc/pages/*.html),\
-	  echo '  "$x" {"$(notdir $x)"}' >>$@;)
-	@echo ']' >>$@
-
 OPAMLIBS = core format solver repository state client
 
 opam-%: $(DUNE_DEP)
@@ -140,15 +126,16 @@ uninstalllib-%: opam-installer opam-%.install
 libinstall: $(DUNE_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
 	@
 
-install: opam-actual.install
+install: opam.install
 	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) $<
 	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) opam-installer.install
 
 libuninstall: $(OPAMLIBS:%=uninstalllib-%)
 	@
 
-uninstall: opam-actual.install
+uninstall: opam.install
 	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) $<
+	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) opam-installer.install
 
 checker:
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/tools/opam_check.exe
@@ -156,6 +143,7 @@ checker:
 .PHONY: tests tests-local tests-git
 tests: $(DUNE_DEP)
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam.install src/tools/opam_check.exe
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) @update-topics
 	$(DUNE) runtest --force --no-buffer --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/ tests/
 
 # tests-local, tests-git
@@ -166,8 +154,8 @@ tests-%:
 doc: all
 	$(MAKE) -C doc
 
-.PHONY: man man-html
-man man-html: opam opam-installer
+.PHONY: man-html
+man-html: opam opam-installer
 	$(MAKE) -C doc $@
 
 configure: configure.ac m4/*.m4
