@@ -30,28 +30,12 @@ ifndef OPAM_INSTALLER
 endif
 
 .PHONY: man html pages
-all: man html pages
+all: html pages
 
-man: man.build
-	@
+MANDIR = ../_build/default/doc/man
 
-man.build: $(OPAM_DEP) $(OPAM_INSTALLER_DEP)
-	rm -rf man
-	mkdir -p man
-	$(OPAM) $(HELPFMT) > man/opam.1 2> man/err
-	for i in $(TOPICS); do\
-	  $(OPAM) $$i $(HELPFMT) > man/opam-$$i.1 2>> man/err ; \
-	done
-	$(OPAM) admin $(HELPFMT) > man/opam-admin.1
-	for i in $(TOPICS_ADMIN); do\
-	  $(OPAM) admin $$i $(HELPFMT) > man/opam-admin-$$i.1 2>> man/err ; \
-	done
-	$(OPAM_INSTALLER) $(HELPFMT) > man/opam-installer.1 2>> man/err
-	@sed -f man.sed man/err > man/err2
-	@if test -s man/err2 ; then cat man/err2 ; false ; fi
-	touch $@
-
-man-html: man
+.PHONY: man-html
+man-html:
 	rm -rf man-html
 	mkdir -p $@
 	echo '<!DOCTYPE html>' >$@/index.html
@@ -60,7 +44,7 @@ man-html: man
 	echo '</head><body>' >>$@/index.html
 	echo '<h1>Opam $(version) man-pages index</h1>' >>$@/index.html
 	echo '<ul>' >>$@/index.html
-	for f in man/*; do\
+	for f in ${MANDIR}/*; do\
 	  man2html -r $$f | sed 1,2d > $@/$$(basename $$f .1).html;\
 	  echo "  <li><a href=\"$$(basename $$f .1).html\">$$(basename $$f .1)</a></li>" >>$@/index.html;\
 	done
@@ -86,4 +70,4 @@ PAGES=$(wildcard pages/*.md)
 pages: $(PAGES:.md=.html)
 
 clean:
-	rm -rf dependencies.dot man html/ocamldoc man-html pages/*.html html/index.html man.build
+	rm -rf dependencies.dot html/ocamldoc man-html pages/*.html html/index.html

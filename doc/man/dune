@@ -1,0 +1,26 @@
+(rule
+  (with-stdout-to opam.1 (run %{opam} --help=groff)))
+
+(include opam-topics.inc)
+
+(executable
+  (name dune_man)
+  (libraries unix))
+
+(rule
+  (with-stdout-to opam-topics.inc.gen
+    (run %{exe:dune_man.exe} opam)))
+
+(include opam-admin-topics.inc)
+
+(rule
+  (with-stdout-to opam-admin-topics.inc.gen
+    (run %{exe:dune_man.exe} %{bin:opam} admin)))
+
+(alias
+  (name update-topics)
+  (action
+    (progn
+      (diff opam-topics.inc opam-topics.inc.gen)
+      (diff opam-admin-topics.inc opam-admin-topics.inc.gen))))
+
