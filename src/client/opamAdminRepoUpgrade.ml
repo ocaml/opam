@@ -480,7 +480,7 @@ let do_upgrade_mirror repo_root base_url =
                             FString (upgradeto_version_string ^ "~"))))
     in
     repo0 |>
-    OpamFile.Repo.with_opam_version (OpamVersion.current_nopatch) |>
+    OpamFile.Repo.with_opam_version OpamFile.Repo.format_version |>
     OpamFile.Repo.with_redirect (redir :: OpamFile.Repo.redirect repo0)
   in
   OpamFile.Repo.write repo_file repo_12;

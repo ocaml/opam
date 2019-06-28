@@ -260,7 +260,8 @@ sig
 
   (** Checks the [opam_version] field; otherwise the identity *)
   val check_opam_version :
-    ?optional:bool -> ?f:(opam_version -> bool) -> unit ->
+    ?optional:bool -> format_version:opam_version -> ?f:(opam_version -> bool)
+    -> unit ->
     (opamfile_item list, opamfile_item list) t
 
   (** Signature handling (wip) *)

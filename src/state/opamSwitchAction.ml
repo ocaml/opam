@@ -28,7 +28,7 @@ let gen_switch_config root ?(synopsis="") ?repos _switch =
     ]
   in
   { OpamFile.Switch_config.
-    opam_version = OpamVersion.current_nopatch;
+    opam_version = OpamFile.Switch_config.format_version;
     synopsis;
     variables = vars;
     paths = [];

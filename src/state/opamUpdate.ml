@@ -91,7 +91,7 @@ let repository rt repo =
   let repo_file = OpamFile.Repo.safe_read repo_file_path in
   let repo_file = OpamFile.Repo.with_root_url repo.repo_url repo_file in
   let repo_vers =
-    OpamStd.Option.default OpamVersion.current_nopatch @@
+    OpamStd.Option.default OpamFile.Repo.format_version @@
     OpamFile.Repo.opam_version repo_file
   in
   if not OpamFormatConfig.(!r.skip_version_checks) &&

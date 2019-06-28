@@ -32,6 +32,8 @@ module type IO_FILE = sig
   (** File contents *)
   type t
 
+  val format_version: OpamVersion.t
+
   (** Empty file *)
   val empty: t
 
@@ -987,6 +989,7 @@ end
 
 module type SyntaxFileArg = sig
   val internal: string
+  val format_version: OpamVersion.t
   type t
   val empty: t
   val pp: (opamfile, filename * t) OpamPp.t
