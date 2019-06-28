@@ -2,7 +2,7 @@ opam-version: "1"
 name: "P2"
 version:    "1"
 maintainer: "contact@ocamlpro.com"
-substs:     [ "config" "P2.config" ]
+substs:     [ "config" "P2.config" "P2.install" ]
 depends: ["ocaml" "P1"]
 libraries:  [ "p2" ]
 build: [ "./build.sh" ]

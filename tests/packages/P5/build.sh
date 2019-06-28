@@ -1,6 +1,6 @@
 #! /bin/sh -eu
 
-FLAGS="-I `${OPAM} config var P1:lib`"
+FLAGS="-I `${OPAM} config var P1:lib | tr -d '\r'`"
 
 echo "Bytecode Compilation"
 ocamlc ${FLAGS} -a p5.ml -o p5.cma

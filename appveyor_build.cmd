@@ -53,8 +53,8 @@ rem in the list just so that the Cygwin version is always displayed on the log).
 rem CYGWIN_COMMANDS is a corresponding command to run with --version to test
 rem whether the package works. This is used to verify whether the installation
 rem needs upgrading.
-set CYGWIN_PACKAGES=cygwin make patch curl diffutils tar unzip
-set CYGWIN_COMMANDS=cygcheck make patch curl diff tar unzip
+set CYGWIN_PACKAGES=cygwin make patch curl diffutils tar unzip git
+set CYGWIN_COMMANDS=cygcheck make patch curl diff tar unzip git
 
 if "%OCAML_PORT%" equ "mingw" (
   set CYGWIN_PACKAGES=%CYGWIN_PACKAGES% mingw64-i686-gcc-g++
@@ -148,14 +148,28 @@ set LIB_EXT=
 if "%DEP_MODE%" equ "lib-ext" set LIB_EXT=^&^& make lib-ext
 set PRIVATE_RUNTIME=
 if "%OCAML_PORT:~0,5%" equ "mingw" set PRIVATE_RUNTIME=--with-private-runtime
-"%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER %LIB_PKG% && ./configure %PRIVATE_RUNTIME% %LIB_EXT% && make opam %POST_COMMAND%" || exit /b 1
+set WITH_MCCS=--with-mccs
+if "%DEP_MODE%" equ "lib-pkg" set WITH_MCCS=
+"%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER %LIB_PKG% && ./configure %PRIVATE_RUNTIME% %WITH_MCCS% %LIB_EXT% && make opam %POST_COMMAND%" || exit /b 1
 goto :EOF
 
 :test
-if "%OCAML_PORT%" neq "" (
-  echo Running the opam command...
-  opam || exit /b 1
+rem Configure Git for Windows (for the testsuite, this isn't strictly necessary
+rem as Git-for-Windows will pick up $HOME/.gitconfig for Cygwin's git)
+git config --global user.email travis@example.com
+git config --global user.name Travis
+rem Configure Cygwin's Git
+"%CYG_ROOT%\bin\bash.exe" -lc "git config --global user.email travis@example.com"
+"%CYG_ROOT%\bin\bash.exe" -lc "git config --global user.name Travis"
+set OPAMCOLOR=always
+set PATH_SHIM=
+if "%OCAML_PORT%" neq "" if "%GIT_FOR_WINDOWS%" equ "1" (
+  set PATH_SHIM=PATH=/cygdrive/c/Program\ Files/Git/cmd:$PATH
+  "C:\Program Files\Git\cmd\git.exe" config --global core.autocrlf
+  "C:\Program Files\Git\cmd\git.exe" config --global core.autocrlf true
+  "C:\Program Files\Git\cmd\git.exe" config --global core.autocrlf
 )
+"%CYG_ROOT%\bin\bash.exe" -lc "%PATH_SHIM% make -C $APPVEYOR_BUILD_FOLDER tests" || (for %%I in (%APPVEYOR_BUILD_FOLDER%\_build\default\tests\failed-*.log) do appveyor PushArtifact %%I) && exit /b 1
 rem Can't yet do an opam init with the native Windows builds
 if "%OCAML_PORT%" equ "" "%CYG_ROOT%\bin\bash.exe" -lc "make -C $APPVEYOR_BUILD_FOLDER run-appveyor-test" || exit /b 1
 goto :EOF

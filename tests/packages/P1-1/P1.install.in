@@ -2,8 +2,8 @@ lib: [
   "p1.cmi"
   "p1.cma"
   "p1.cmxa"
-  "p1.a"
-  "?this_file_will_not_exits_but_that's_ok"
+  "p1.%{ext_lib}%"
+  "?this_file_will_not_exist_but_that's_ok"
 ]
 share: [ "build.sh" ]
 doc: [

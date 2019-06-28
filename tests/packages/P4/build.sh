@@ -13,7 +13,7 @@ else
 fi
 
 echo "Building P4 with ${OPAM}"
-LIBDIR="`${OPAM} config var lib`"
+LIBDIR="`${OPAM} config var lib | tr -d '\r'`"
 COMP="-I ${LIBDIR}/P1 -I ${LIBDIR}/P2 -I ${LIBDIR}/P3"
 LINK="p1.cmxa p2.cmxa p3.cmxa p3_bar.cmxa"
 

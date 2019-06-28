@@ -1,4 +1,13 @@
-TMP_DIR   = $(realpath .)/tmp
+OCAMLC = ocamlc
+OS_TYPE := $(shell $(OCAMLC) -config | sed -ne "s/os_type: //p" | tr -d '\r')
+EXT_LIB := $(shell $(OCAMLC) -config | sed -ne "s/ext_lib: .//p" | tr -d '\r')
+
+TMP_DIR_ACT = $(realpath .)/tmp
+ifeq ($(OS_TYPE),Win32)
+  TMP_DIR := $(shell echo $(TMP_DIR_ACT)| cygpath -m -f -)
+else
+  TMP_DIR=$(TMP_DIR_ACT)
+endif
 OPAM_ROOT = $(TMP_DIR)/OPAM.ROOT
 OPAM_REPO = $(TMP_DIR)/OPAM.REPO
 
@@ -16,7 +25,7 @@ unexport OCAMLLIB
 ifndef OPAM
   OPAM = $(firstword $(realpath ../../install/default/bin/opam$(EXE) ../_build/install/default/bin/opamMain.exe))
 endif
-ENV   = PATH=$(PATH) $(DEBUG) OPAMKEEPBUILDDIR=1 OPAMROOT=$(OPAM_ROOT) OPAMSWITCH= OPAMNOBASEPACKAGES=1 OPAMYES=1 OPAM=$(OPAM)
+ENV   = PATH="$(PATH)" $(DEBUG) OPAMKEEPBUILDDIR=1 OPAMROOT=$(OPAM_ROOT) OPAMSWITCH= OPAMNOBASEPACKAGES=1 OPAMYES=1 OPAM=$(OPAM)
 OPAMBIN  = $(ENV) $(OPAM)
 ifndef CHECK
   CHECK = $(ENV) $(firstword $(realpath ../src/tools/opam_check.exe ../_build/default/src/tools/opam_check.exe))
@@ -174,10 +183,15 @@ else
 	  mkdir -p $$dir; \
 	  cp $$f $$dir/$$md5; \
 	done
+ifeq ($(OS_TYPE),Win32)
+	echo 'archive-mirrors: "$(shell echo "$(OPAM_REPO)" | cygpath -w -f - | sed -e 's/\\/\\\\/g')\\cache"' >> $(OPAM_REPO)/repo
+else
 	echo 'archive-mirrors: "$(OPAM_REPO)/cache"' >> $(OPAM_REPO)/repo
+endif
 endif
 	$(OPAMBIN) update
 	$(OPAMBIN) switch create system --packages ocaml.system
+	$(OPAMBIN) config set ext_lib $(EXT_LIB)
 
 list:
 	$(OPAMBIN) list -A
@@ -259,13 +273,13 @@ endif
 
 upgrade:
 	$(CHECK) -l upgrade-1 ocaml.system P1.1 P2.1 P3.1~weird-version.test P4.1
-	eval `$(OPAMBIN) config env`; [ "X$$P1" = "Xversion1" ]
+	eval `$(OPAMBIN) config env | tr -d '\r'`; [ "X$$P1" = "Xversion1" ]
 	$(OPAMBIN) upgrade
 ifeq ($(REPOKIND), git)
 	$(CHECK) -l upgrade-2 ocaml.system P1.1 P2.1 P3.1~weird-version.test P4.3
 else
 	$(CHECK) -l upgrade-2 ocaml.system P1.2 P2.1 P3.1~weird-version.test P4.3
-	eval `$(OPAMBIN) config env`; [ "X$$P1" = "Xversion2" ]
+	eval `$(OPAMBIN) config env | tr -d '\r'`; [ "X$$P1" = "Xversion2" ]
 endif
 
 downgrade:
@@ -283,10 +297,12 @@ switch-alias:
 	$(CHECK) -l switch-alias-2 ocaml.system P1.1 P2.1
 	$(OPAMBIN) switch export $(TMP_DIR)/export
 	$(OPAMBIN) switch create test system
+	$(OPAMBIN) config set ext_lib $(EXT_LIB)
 	$(CHECK) -l switch-alias-3 ocaml.system
 	$(OPAMBIN)	switch import $(TMP_DIR)/export
 	$(CHECK) -l switch-alias-4 ocaml.system P1.1 P2.1
 	$(OPAMBIN) switch create test2 20
+	$(OPAMBIN) config set ext_lib $(EXT_LIB)
 	$(CHECK) -l switch-alias-5 ocaml.20
 	$(OPAMBIN) install P1
 	$(CHECK) -l switch-alias-6 ocaml.20 P1.1
@@ -296,7 +312,9 @@ switch-alias:
 
 switch-env-packages:
 	$(CHECK) -l switch-env-packages-1 ocaml.system P1.1 P2.1
-	$(OPAMBIN) switch install 10+a+b --packages=ocaml.10+a+b,P1,P2,P3,P4
+	$(OPAMBIN) switch create 10+a+b --empty
+	$(OPAMBIN) config set ext_lib $(EXT_LIB)
+	$(OPAMBIN) install ocaml.10+a+b P1 P2 P3 P4
 	$(CHECK) -l switch-env-packages-2 ocaml.10+a+b P1.1 P2.1 P3.1~weird-version.test P4.3
 	./test-TEST.sh $(wildcard $(OPAM_ROOT)/10+a+b/build/P4.3/P4*.env) "1"
 
@@ -311,4 +329,4 @@ packages/%.tar.gz: packages/%
 clean:
 	rm -f test.log fulltest.log
 	rm -f $(ARCHIVES)
-	rm -rf $(TMP_DIR)
+	rm -rf $(TMP_DIR_ACT)
