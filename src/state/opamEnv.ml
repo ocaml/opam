@@ -672,24 +672,28 @@ let setup
         (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
         (OpamConsole.colorise `bold @@ source root shell (init_file shell))
         (OpamConsole.colorise `bold @@ "eval $(opam env)");
-      match
-        OpamConsole.read
-          "Do you want opam to modify %s? [N/y/f]\n\
-           (default is 'no', use 'f' to choose a different file)"
-          (OpamFilename.prettify dot_profile)
-      with
-      | Some ("y" | "Y" | "yes"  | "YES" ) -> Some dot_profile
-      | Some ("f" | "F" | "file" | "FILE") ->
-        begin
-          match OpamConsole.read "  Enter the name of the file to update:"
-          with
-          | None   ->
-            OpamConsole.msg "Alright, assuming you changed your mind, not \
-                             performing any changes.\n";
-            None
-          | Some f -> Some (OpamFilename.of_string f)
-        end
-      | _ -> None
+      if OpamCoreConfig.(!r.answer = Some true) then begin
+        OpamConsole.warning "Shell not updated in non-interactive mode: use --shell-setup";
+        None
+      end else
+        match
+          OpamConsole.read
+            "Do you want opam to modify %s? [N/y/f]\n\
+             (default is 'no', use 'f' to choose a different file)"
+            (OpamFilename.prettify dot_profile)
+        with
+        | Some ("y" | "Y" | "yes"  | "YES" ) -> Some dot_profile
+        | Some ("f" | "F" | "file" | "FILE") ->
+          begin
+            match OpamConsole.read "  Enter the name of the file to update:"
+            with
+            | None   ->
+              OpamConsole.msg "Alright, assuming you changed your mind, not \
+                               performing any changes.\n";
+              None
+            | Some f -> Some (OpamFilename.of_string f)
+          end
+        | _ -> None
   in
   let env_hook = match env_hook, interactive with
     | Some b, _ -> Some b
