@@ -548,7 +548,7 @@ CAMLprim value OPAMW_HasGlyph(value checker, value scalar)
   }
 #endif
 
-  OPAMreturn(Val_bool(test != 0xffff));
+  OPAMreturn(Val_bool(index != 0xffff));
 }
 
 CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
