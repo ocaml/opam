@@ -75,8 +75,9 @@ let switch_to_updated_self debug opamroot =
 let global_options =
   let no_self_upgrade =
     mk_flag ~section:global_option_section ["no-self-upgrade"]
-      "Opam will replace itself with a newer binary found \
-       at $(b,OPAMROOT/opam) if present. This disables this behaviour." in
+      (Printf.sprintf
+        "Opam will replace itself with a newer binary found \
+         at $(b,OPAMROOT%sopam) if present. This disables this behaviour." Filename.dir_sep) in
   let self_upgrade no_self_upgrade options =
     let self_upgrade_status =
       if OpamStd.Config.env_string "NOSELFUPGRADE" =
@@ -169,25 +170,31 @@ let init =
   let man = [
     `S "DESCRIPTION";
     `P "Initialise the opam state, or update opam init options";
-    `P "The $(b,init) command initialises a local \"opam root\" (by default, \
-        $(i,~/.opam/)) that holds opam's data and packages. This is a \
-        necessary step for normal operation of opam. The initial software \
-        repositories are fetched, and an initial 'switch' can also be \
-        installed, according to the configuration and options. These can be \
-        afterwards configured using $(b,opam switch) and $(b,opam \
-        repository).";
-    `P "The initial repository and defaults can be set through a \
-        configuration file found at $(i,~/.opamrc) or $(i,/etc/opamrc).";
+    `P (Printf.sprintf
+         "The $(b,init) command initialises a local \"opam root\" (by default, \
+          $(i,~%s.opam%s)) that holds opam's data and packages. This is a \
+          necessary step for normal operation of opam. The initial software \
+          repositories are fetched, and an initial 'switch' can also be \
+          installed, according to the configuration and options. These can be \
+          afterwards configured using $(b,opam switch) and $(b,opam \
+          repository)."
+         Filename.dir_sep Filename.dir_sep);
+    `P (Printf.sprintf
+         "The initial repository and defaults can be set through a \
+          configuration file found at $(i,~%s.opamrc) or $(i,/etc/opamrc)."
+         Filename.dir_sep);
     `P "Additionally, this command allows one to customise some aspects of opam's \
         shell integration, when run initially (avoiding the interactive \
         dialog), but also at any later time.";
     `S "ARGUMENTS";
     `S "OPTIONS";
     `S "CONFIGURATION FILE";
-    `P "Any field from the built-in initial configuration can be overridden \
-        through $(i,~/.opamrc), $(i,/etc/opamrc), or a file supplied with \
-        $(i,--config). The default configuration for this version of opam \
-        can be obtained using $(b,--show-default-opamrc).";
+    `P (Printf.sprintf
+         "Any field from the built-in initial configuration can be overridden \
+          through $(i,~%s.opamrc), $(i,/etc/opamrc), or a file supplied with \
+          $(i,--config). The default configuration for this version of opam \
+          can be obtained using $(b,--show-default-opamrc)."
+         Filename.dir_sep);
     `S OpamArg.build_option_section;
   ] in
   let compiler =
@@ -265,8 +272,9 @@ let init =
   in
   let no_config_file =
     mk_flag ["no-opamrc"]
-      "Don't read `/etc/opamrc' or `~/.opamrc': use the default settings and \
-       the files specified through $(b,--config) only"
+      (Printf.sprintf
+      "Don't read `/etc/opamrc' or `~%s.opamrc': use the default settings and \
+       the files specified through $(b,--config) only" Filename.dir_sep)
   in
   let reinit =
     mk_flag ["reinit"]
@@ -1993,16 +2001,17 @@ let switch =
         switch set) to set the currently active switch. Without argument, \
         lists installed switches, with one switch argument, defaults to \
         $(b,set).";
-    `P ("Switch handles $(i,SWITCH) can be either a plain name, for switches \
-         that will be held inside $(i,~/.opam), or a directory name, which in \
-         that case is the directory where the switch prefix will be installed, as "
-        ^ OpamSwitch.external_dirname ^
-        ". Opam will automatically select a switch by that name found in the \
+    `P (Printf.sprintf
+         "Switch handles $(i,SWITCH) can be either a plain name, for switches \
+         that will be held inside $(i,~%s.opam), or a directory name, which in \
+         that case is the directory where the switch prefix will be installed, as \
+         %s. Opam will automatically select a switch by that name found in the \
          current directory or its parents, unless $(i,OPAMSWITCH) is set or \
          $(b,--switch) is specified. When creating a directory switch, if \
          package definitions are found locally, the user is automatically \
          prompted to install them after the switch is created unless \
-         $(b,--no-install) is specified.");
+         $(b,--no-install) is specified."
+        Filename.dir_sep OpamSwitch.external_dirname);
     `P "$(b,opam switch set) sets the default switch globally, but it is also \
         possible to select a switch in a given shell session, using the \
         environment. For that, use $(i,eval \\$(opam env \
@@ -2733,8 +2742,8 @@ let source =
           OpamConsole.error_and_exit `Sync_error "%s is not available" u
         | Result _ | Up_to_date _ ->
           OpamConsole.formatted_msg
-            "Successfully fetched %s development repo to ./%s/\n"
-            (OpamPackage.name_to_string nv) (OpamPackage.name_to_string nv)
+            "Successfully fetched %s development repo to .%s%s%s\n"
+            (OpamPackage.name_to_string nv) Filename.dir_sep (OpamPackage.name_to_string nv) Filename.dir_sep
     ) else (
       let job =
         let open OpamProcess.Job.Op in
@@ -2962,8 +2971,9 @@ let clean =
   in
   let download_cache =
     mk_flag ["c"; "download-cache"]
-      "Clear the cache of downloaded files (\\$OPAMROOT/download-cache), as \
-       well as the obsolete \\$OPAMROOT/archives, if that exists."
+      (Printf.sprintf
+        "Clear the cache of downloaded files (\\$OPAMROOT%sdownload-cache), as \
+         well as the obsolete \\$OPAMROOT%sarchives, if that exists." Filename.dir_sep Filename.dir_sep)
   in
   let repos =
     mk_flag ["unused-repositories"]

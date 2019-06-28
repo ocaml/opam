@@ -36,7 +36,7 @@ module Dir = struct
           (OpamStd.String.remove_prefix ~prefix:("~"^Filename.dir_sep) dirname)
       else dirname
     in
-    OpamSystem.real_path dirname
+    OpamSystem.real_path (OpamSystem.forward_to_back dirname)
 
   let to_string dirname = dirname
 
@@ -142,8 +142,9 @@ type t = {
 }
 
 let create dirname basename =
-  let b1 = Filename.dirname (Base.to_string basename) in
+  let b1 = OpamSystem.forward_to_back (Filename.dirname (Base.to_string basename)) in
   let b2 = Base.of_string (Filename.basename (Base.to_string basename)) in
+  let dirname = OpamSystem.forward_to_back dirname in
   if basename = b2 then
     { dirname; basename }
   else
