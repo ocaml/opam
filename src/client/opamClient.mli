@@ -59,6 +59,11 @@ val install_t:
   atom list -> bool option -> deps_only:bool -> assume_built:bool ->
   rw switch_state
 
+(** Check that the given list of packages [atoms] have their dependencies
+    satisfied, without calling the solver. *)
+val check_installed:
+  rw switch_state -> atom list -> OpamPackage.Name.Set.t OpamPackage.Map.t
+
 (** Reinstall the given set of packages. *)
 val reinstall:
   rw switch_state -> ?assume_built:bool -> atom list -> rw switch_state

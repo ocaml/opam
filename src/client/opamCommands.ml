@@ -1260,9 +1260,15 @@ let install =
        --destdir) to revert."
       Arg.(some dirname) None
   in
+  let check =
+    mk_flag ["check"]
+      "Check if dependencies are installed. If some packages are missing, \
+       it will ask if you want them installed and launch install of \
+       $(i,PACKAGES) with option $(b,deps-only) enabled."
+  in
   let install
       global_options build_options add_to_roots deps_only restore destdir
-      assume_built atoms_or_locals =
+      assume_built check atoms_or_locals =
     apply_global_options global_options;
     apply_build_options build_options;
     if atoms_or_locals = [] && not restore then
@@ -1290,11 +1296,27 @@ let install =
     in
     if atoms_or_locals = [] then `Ok () else
     let st, atoms =
-      OpamAuxCommands.autopin st ~simulate:deps_only atoms_or_locals
+      OpamAuxCommands.autopin st ~quiet:check ~simulate:(deps_only||check)
+        atoms_or_locals
     in
     if atoms = [] then
       (OpamConsole.msg "Nothing to do\n";
        OpamStd.Sys.exit_because `Success);
+    if check then
+      (let missing = OpamClient.check_installed st atoms in
+       if OpamPackage.Map.is_empty missing then
+         (OpamConsole.errmsg "All dependencies installed\n";
+          OpamStd.Sys.exit_because `Success)
+       else
+         (OpamConsole.errmsg "Missing dependencies\n";
+          OpamConsole.msg "%s\n"
+            (OpamStd.List.concat_map "\n" (fun (pkg, names) ->
+                 Printf.sprintf "%s: %s"
+                   (OpamConsole.colorise `underline (OpamPackage.to_string pkg))
+                   (OpamStd.List.concat_map ", " OpamPackage.Name.to_string
+                      (OpamPackage.Name.Set.elements names)))
+                (OpamPackage.Map.bindings missing));
+          OpamStd.Sys.exit_because `False));
     let st =
       OpamClient.install st atoms
         ~autoupdate:pure_atoms ?add_to_roots ~deps_only ~assume_built
@@ -1308,7 +1330,7 @@ let install =
   in
   Term.ret
     Term.(const install $global_options $build_options
-          $add_to_roots $deps_only $restore $destdir $assume_built
+          $add_to_roots $deps_only $restore $destdir $assume_built $check
           $atom_or_local_list),
   term_info "install" ~doc ~man
 
