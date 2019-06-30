@@ -44,10 +44,13 @@ let wget_args = [
 let fetch_args = [
   CIdent "url", None;
   CString "-o", None; CIdent "out", None;
+  CString "--user-agent", None; user_agent, None;
 ]
 
 let ftp_args = [
   CIdent "url", None;
+  CString "-o", None; CIdent "out", None;
+  CString "-U", None; user_agent, None;
 ]
 
 let download_args ~url ~out ~retry ?checksum ~compress =
