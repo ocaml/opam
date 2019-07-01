@@ -840,7 +840,7 @@ let dot_profile_flag =
     (Printf.sprintf
       "Name of the configuration file to update instead of \
        $(i,~%s.profile) or $(i,~%s.zshrc) based on shell detection."
-      Filename.dir_sep Filename.dir_sep)
+      Filename.dir_sep Filename.dir_sep |> Cmdliner.Manpage.escape)
     (Arg.some filename) None
 
 let repo_kind_flag =
@@ -882,7 +882,7 @@ let atom_or_local_list =
     (Printf.sprintf
       "List of package names, with an optional version or constraint, e.g `pkg', \
        `pkg.1.0' or `pkg>=0.5' ; or files or directory names containing package \
-       description, with explicit directory (e.g. `.%sfoo.opam' or `.')" Filename.dir_sep)
+       description, with explicit directory (e.g. `.%sfoo.opam' or `.')" Filename.dir_sep |> Cmdliner.Manpage.escape)
     atom_or_local
 
 let atom_or_dir_list =
@@ -890,7 +890,7 @@ let atom_or_dir_list =
     (Printf.sprintf
       "List of package names, with an optional version or constraint, e.g `pkg', \
        `pkg.1.0' or `pkg>=0.5' ; or directory names containing package \
-       description, with explicit directory (e.g. `.%ssrcdir' or `.')" Filename.dir_sep)
+       description, with explicit directory (e.g. `.%ssrcdir' or `.')" Filename.dir_sep |> Cmdliner.Manpage.escape)
     atom_or_dir
 
 let nonempty_atom_list =

@@ -77,7 +77,7 @@ let global_options =
     mk_flag ~section:global_option_section ["no-self-upgrade"]
       (Printf.sprintf
         "Opam will replace itself with a newer binary found \
-         at $(b,OPAMROOT%sopam) if present. This disables this behaviour." Filename.dir_sep) in
+         at $(b,OPAMROOT%sopam) if present. This disables this behaviour." Filename.dir_sep |> Cmdliner.Manpage.escape) in
   let self_upgrade no_self_upgrade options =
     let self_upgrade_status =
       if OpamStd.Config.env_string "NOSELFUPGRADE" =
@@ -178,11 +178,11 @@ let init =
           installed, according to the configuration and options. These can be \
           afterwards configured using $(b,opam switch) and $(b,opam \
           repository)."
-         Filename.dir_sep Filename.dir_sep);
+         Filename.dir_sep Filename.dir_sep |> Cmdliner.Manpage.escape);
     `P (Printf.sprintf
          "The initial repository and defaults can be set through a \
           configuration file found at $(i,~%s.opamrc) or $(i,/etc/opamrc)."
-         Filename.dir_sep);
+         Filename.dir_sep |> Cmdliner.Manpage.escape);
     `P "Additionally, this command allows one to customise some aspects of opam's \
         shell integration, when run initially (avoiding the interactive \
         dialog), but also at any later time.";
@@ -194,7 +194,7 @@ let init =
           through $(i,~%s.opamrc), $(i,/etc/opamrc), or a file supplied with \
           $(i,--config). The default configuration for this version of opam \
           can be obtained using $(b,--show-default-opamrc)."
-         Filename.dir_sep);
+         Filename.dir_sep |> Cmdliner.Manpage.escape);
     `S OpamArg.build_option_section;
   ] in
   let compiler =
@@ -274,7 +274,7 @@ let init =
     mk_flag ["no-opamrc"]
       (Printf.sprintf
       "Don't read `/etc/opamrc' or `~%s.opamrc': use the default settings and \
-       the files specified through $(b,--config) only" Filename.dir_sep)
+       the files specified through $(b,--config) only" Filename.dir_sep |> Cmdliner.Manpage.escape)
   in
   let reinit =
     mk_flag ["reinit"]
@@ -2033,7 +2033,7 @@ let switch =
          package definitions are found locally, the user is automatically \
          prompted to install them after the switch is created unless \
          $(b,--no-install) is specified."
-        Filename.dir_sep OpamSwitch.external_dirname);
+        Filename.dir_sep OpamSwitch.external_dirname |> Cmdliner.Manpage.escape);
     `P "$(b,opam switch set) sets the default switch globally, but it is also \
         possible to select a switch in a given shell session, using the \
         environment. For that, use $(i,eval \\$(opam env \
@@ -3004,7 +3004,7 @@ let clean =
     mk_flag ["c"; "download-cache"]
       (Printf.sprintf
         "Clear the cache of downloaded files (\\$OPAMROOT%sdownload-cache), as \
-         well as the obsolete \\$OPAMROOT%sarchives, if that exists." Filename.dir_sep Filename.dir_sep)
+         well as the obsolete \\$OPAMROOT%sarchives, if that exists." Filename.dir_sep Filename.dir_sep |> Cmdliner.Manpage.escape)
   in
   let repos =
     mk_flag ["unused-repositories"]
