@@ -2819,8 +2819,17 @@ let lint =
   let man = [
     `S "DESCRIPTION";
     `P "Given an $(i,opam) file, performs several quality checks on it and \
-        outputs recommendations, warnings or errors on stderr."
-  ] in
+        outputs recommendations, warnings or errors on stderr.";
+    `S "ARGUMENTS";
+    `S "OPTIONS";
+    `S "LINT CODES"
+  ] @
+    List.map (fun (c,t,s) ->
+        `P (Printf.sprintf "%s$(b,%d): %s"
+              (match t with | `Warning -> "W"  | `Error -> "$(i,E)")
+              c s))
+      (OpamFileTools.all_lint_warnings ())
+  in
   let files =
     Arg.(value & pos_all (existing_filename_dirname_or_dash) [] &
          info ~docv:"FILES" []
