@@ -1960,7 +1960,7 @@ end
 module OPAMSyntax = struct
 
   let internal = "opam"
-  let format_version = OpamVersion.of_string "2.1"
+  let format_version = OpamVersion.of_string "2.0"
 
   type t = {
     opam_version: opam_version;
