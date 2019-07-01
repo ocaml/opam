@@ -261,7 +261,10 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath atom_or_local_list
   else
   let pinning_dirs =
     OpamStd.List.filter_map (function
-        | `Dirname d -> Some d
+        | `Dirname d ->
+          (match subpath with
+           | Some s -> Some OpamFilename.Op.(d/s)
+           | None -> Some d)
         | _ -> None)
       atom_or_local_list
   in
@@ -276,10 +279,15 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath atom_or_local_list
     (* Packages not current but pinned to the same dirs *)
     OpamPackage.Set.filter (fun nv ->
         not (List.exists (fun (n,_,_,_) -> n = nv.name) to_pin) &&
-        match OpamStd.Option.Op.(OpamSwitchState.primary_url st nv >>=
-                                 OpamUrl.local_dir)
-        with
-        | Some d -> List.mem d pinning_dirs
+        let primary_url =
+          if recurse = Some true then
+            OpamSwitchState.primary_url
+          else
+            OpamSwitchState.primary_url_with_subpath
+        in
+        match OpamStd.Option.Op.( primary_url st nv >>= OpamUrl.local_dir) with
+        | Some d ->
+          List.mem d pinning_dirs
         | None -> false)
       st.pinned
   in
