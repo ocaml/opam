@@ -36,6 +36,10 @@ module type SET = sig
   (** Raises Failure in case the element is already present *)
   val safe_add: elt -> t -> t
 
+  (** Accumulates the resulting sets of a function of elements until a fixpoint
+      is reached *)
+  val fixpoint: (elt -> t) -> t -> t
+
   module Op : sig
     val (++): t -> t -> t (** Infix set union *)
 

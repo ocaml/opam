@@ -23,6 +23,7 @@ module type SET = sig
   val find: (elt -> bool) -> t -> elt
   val find_opt: (elt -> bool) -> t -> elt option
   val safe_add: elt -> t -> t
+  val fixpoint: (elt -> t) -> t -> t
 
   module Op : sig
     val (++): t -> t -> t
@@ -238,6 +239,16 @@ module Set = struct
       if mem elt t
       then failwith (Printf.sprintf "duplicate entry %s" (O.to_string elt))
       else add elt t
+
+    let fixpoint f =
+      let open Op in
+      let rec aux fullset curset =
+        if is_empty curset then fullset else
+        let newset = fold (fun nv set -> set ++ f nv) curset empty in
+        aux (fullset ++ curset) (newset -- fullset)
+      in
+      aux empty
+
   end
 
 end
