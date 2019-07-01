@@ -41,19 +41,32 @@ let wget_args = [
   CString "-U", None; user_agent, None;
 ]
 
+let fetch_args = [
+  CIdent "url", None;
+  CString "-o", None; CIdent "out", None;
+  CString "--user-agent", None; user_agent, None;
+]
+
+let ftp_args = [
+  CIdent "url", None;
+  CString "-o", None; CIdent "out", None;
+  CString "-U", None; user_agent, None;
+]
+
 let download_args ~url ~out ~retry ?checksum ~compress =
   let cmd, _ = Lazy.force OpamRepositoryConfig.(!r.download_tool) in
   let cmd =
     match cmd with
     | [(CIdent "wget"), _] -> cmd @ wget_args
+    | [(CIdent "fetch"), _] -> cmd @ fetch_args
+    | [(CIdent "ftp"), _] -> cmd @ ftp_args
     | [_] -> cmd @ curl_args (* Assume curl if the command is a single arg *)
     | _ -> cmd
   in
   OpamFilter.single_command (fun v ->
       if not (OpamVariable.Full.is_global v) then None else
       match OpamVariable.to_string (OpamVariable.Full.variable v) with
-      | "curl" -> Some (S "curl")
-      | "wget" -> Some (S "wget")
+      | ("curl" | "wget" | "fetch" | "ftp") as dl_tool-> Some (S dl_tool)
       | "url" -> Some (S (OpamUrl.to_string url))
       | "out" -> Some (S out)
       | "retry" -> Some (S (string_of_int retry))
