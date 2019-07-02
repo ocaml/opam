@@ -15,7 +15,7 @@
 
 (rule
   (with-stdout-to opam-admin-topics.inc.gen
-    (run %{exe:dune_man.exe} %{bin:opam} admin)))
+    (run %{exe:dune_man.exe} opam admin)))
 
 (alias
   (name update-topics)
