@@ -37,20 +37,20 @@ let wget_args = [
   CString "--content-disposition", None;
   CString "-t", None; CIdent "retry", None;
   CString "-O", None; CIdent "out", None;
-  CIdent "url", None;
   CString "-U", None; user_agent, None;
+  CIdent "url", None;
 ]
 
 let fetch_args = [
-  CIdent "url", None;
   CString "-o", None; CIdent "out", None;
   CString "--user-agent", None; user_agent, None;
+  CIdent "url", None;
 ]
 
 let ftp_args = [
-  CIdent "url", None;
   CString "-o", None; CIdent "out", None;
   CString "-U", None; user_agent, None;
+  CIdent "url", None;
 ]
 
 let download_args ~url ~out ~retry ?checksum ~compress =
