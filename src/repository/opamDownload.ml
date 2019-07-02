@@ -30,6 +30,7 @@ let curl_args = [
   CString "--user-agent", None; user_agent, None;
   CString "-L", None;
   CString "-o", None; CIdent "out", None;
+  CString "--", None; (* End list of options *)
   CIdent "url", None;
 ]
 
@@ -38,18 +39,21 @@ let wget_args = [
   CString "-t", None; CIdent "retry", None;
   CString "-O", None; CIdent "out", None;
   CString "-U", None; user_agent, None;
+  CString "--", None; (* End list of options *)
   CIdent "url", None;
 ]
 
 let fetch_args = [
   CString "-o", None; CIdent "out", None;
   CString "--user-agent", None; user_agent, None;
+  CString "--", None; (* End list of options *)
   CIdent "url", None;
 ]
 
 let ftp_args = [
   CString "-o", None; CIdent "out", None;
   CString "-U", None; user_agent, None;
+  CString "--", None; (* End list of options *)
   CIdent "url", None;
 ]
 
