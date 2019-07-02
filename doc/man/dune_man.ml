@@ -13,6 +13,7 @@ let () =
   let cline = String.concat " " (cmd :: args) ^ " help topics" in
   let topics =
     let ic = Unix.open_process_in cline in
+    set_binary_mode_in ic false;
     let rec aux () =
       match input_line ic with
       | "" -> aux ()
