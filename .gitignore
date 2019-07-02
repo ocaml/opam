@@ -80,6 +80,7 @@ doc/dev-manual/*aux
 doc/dev-manual/*.html
 doc/dev-manual/*toc
 doc/html
+doc/man/.merlin
 doc/man-html
 doc/tutorials/opam.wiki
 doc/dev-manual/*.out
