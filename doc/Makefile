@@ -43,7 +43,8 @@ man:
 	done
 	$(OPAM_INSTALLER) $(HELPFMT) > man/opam-installer.1 2>> man/err
 # Dune doesn't (yet) support --no-print-directory
-	@if grep -v "^Entering directory '" man/err > man/err2 ; then cat man/err2 ; false ; fi
+	@sed -f man.sed man/err > man/err2
+	@if test -s man/err2 ; then cat man/err2 ; false ; fi
 
 man-html: man
 	rm -rf man-html
