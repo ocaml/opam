@@ -30,6 +30,12 @@ let default_compiler =
 let eval_variables = [
   OpamVariable.of_string "sys-ocaml-version", ["ocamlc"; "-vnum"],
   "OCaml version present on your system independently of opam, if any";
+  OpamVariable.of_string "sys-ocaml-arch", ["sh"; "-c"; "ocamlc -config | tr -d '\\r' | grep '^architecture: ' | sed -e 's/.*: //' -e 's/i386/i686/' -e 's/amd64/x86_64/'"],
+  "Target architecture of the OCaml compiler present on your system";
+  OpamVariable.of_string "sys-ocaml-cc", ["sh"; "-c"; "ocamlc -config | tr -d '\\r' | grep '^ccomp_type: ' | sed -e 's/.*: //'"],
+  "Host C Compiler type of the OCaml compiler present on your system";
+  OpamVariable.of_string "sys-ocaml-libc", ["sh"; "-c"; "ocamlc -config | tr -d '\\r' | grep '^os_type: ' | sed -e 's/.*: //' -e 's/Win32/msvc/' -e '/^msvc$/!s/.*/libc/'"],
+  "Host C Runtime Library type of the OCaml compiler present on your system";
 ]
 
 let os_filter os =

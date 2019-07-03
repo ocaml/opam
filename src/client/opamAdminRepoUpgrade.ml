@@ -186,7 +186,14 @@ let do_upgrade repo_root =
          OpamFilename.with_tmp_dir_job @@ fun dir ->
          OpamProcess.Job.ignore_errors ~default:None
            (fun () ->
-              OpamDownload.download ~overwrite:false url dir @@| fun f ->
+                (* Download to package.patch, rather than allowing the name to be
+                   guessed since, on Windows, some of the characters which are
+                   valid in URLs are not valid in filenames *)
+              let f =
+                let base = OpamFilename.Base.of_string "package.patch" in
+                OpamFilename.create dir base
+              in
+              OpamDownload.download_as ~overwrite:false url f @@| fun () ->
               let hash = OpamHash.compute (OpamFilename.to_string f) in
               Hashtbl.add url_md5 url hash;
               Some hash)),
