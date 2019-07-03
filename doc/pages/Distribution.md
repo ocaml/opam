@@ -16,7 +16,7 @@ get an up-to-date overview of official packages on most Linux distributions.
 
 | Distribution/OS               | Latest OPAM | Maintainer                                                                                                        | Notes |
 |-------------                  |-------------|-----------                                                                                                        |-------|
-| Arch Linux                    | 2.0.4       | Alexander F. Rødseth [@xyproto](https://github.com/xyproto)                                                       | [Package search](https://www.archlinux.org/packages/?sort=&q=opam)
+| Arch Linux                    | 2.0.4       | Alexander F. Rødseth [@xyproto](https://github.com/xyproto)                                                       | [Package search](https://www.archlinux.org/packages/community/x86_64/opam/)
 | Debian Linux (8,jessie)       | 1.2.0       | Mehdi Dogguy [@mehdid](https://github.com/mehdid), Nicolas Braud-Santoni [@nbraud](https://www.github.com/nbraud) | [Package search](https://packages.debian.org/search?keywords=opam&searchon=names&suite=all&section=all)
 | Debian Linux (9,stretch)      | 1.2.2       | Mehdi Dogguy [@mehdid](https://github.com/mehdid), Nicolas Braud-Santoni [@nbraud](https://www.github.com/nbraud) | [Package search](https://packages.debian.org/search?keywords=opam&searchon=names&suite=all&section=all)
 | Debian Linux (10,buster)      | 2.0.3       | Mehdi Dogguy [@mehdid](https://github.com/mehdid), Nicolas Braud-Santoni [@nbraud](https://www.github.com/nbraud) | [Package search](https://packages.debian.org/search?keywords=opam&searchon=names&suite=all&section=all)
