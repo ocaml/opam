@@ -36,7 +36,7 @@ let admin_command_man = [
         holding package definition within subdirectories. A 'compilers%s' \
         subdirectory (opam repository format version < 2) will also be used by \
         the $(b,upgrade-format) subcommand."
-       Filename.dir_sep Filename.dir_sep)
+       Filename.dir_sep Filename.dir_sep |> Cmdliner.Manpage.escape)
 ]
 
 let index_command_doc =
@@ -198,7 +198,7 @@ let cache_command =
          info ["link"] ~docv:"DIR" ~doc:
            (Printf.sprintf
              "Create reverse symbolic links to the archives within $(i,DIR), in \
-              the form $(b,DIR%sPKG.VERSION%sFILENAME)." Filename.dir_sep Filename.dir_sep))
+              the form $(b,DIR%sPKG.VERSION%sFILENAME)." Filename.dir_sep Filename.dir_sep |> Cmdliner.Manpage.escape))
   in
   let jobs_arg =
     Arg.(value & opt OpamArg.positive_integer 8 &
@@ -266,7 +266,7 @@ let add_hashes_command =
           "This command scans through package definitions, and add hashes as \
            requested (fetching the archives if required). A cache is generated \
            in %s for subsequent runs."
-          (OpamFilename.Dir.to_string cache_dir));
+          (OpamFilename.Dir.to_string cache_dir |> Cmdliner.Manpage.escape));
   ]
   in
   let hash_kinds = [`MD5; `SHA256; `SHA512] in
@@ -494,7 +494,7 @@ let upgrade_command =
           converts them to repositories suitable for the current opam version. \
           Packages might be created or renamed, and any compilers defined in the \
           old format ('compilers%s' directory) will be turned into packages, \
-          using a pre-defined hierarchy that assumes OCaml compilers." Filename.dir_sep)
+          using a pre-defined hierarchy that assumes OCaml compilers." Filename.dir_sep |> Cmdliner.Manpage.escape)
   ]
   in
   let clear_cache_arg =
@@ -502,7 +502,7 @@ let upgrade_command =
       Printf.sprintf
        "Instead of running the upgrade, clear the cache of archive hashes (held \
         in ~%s.cache), that is used to avoid re-downloading files to obtain \
-        their hashes at every run." Filename.dir_sep
+        their hashes at every run." Filename.dir_sep |> Cmdliner.Manpage.escape
     in
     Arg.(value & flag & info ["clear-cache"] ~doc)
   in
@@ -718,7 +718,7 @@ let env_arg =
            resolved purely from globally defined variables. Note that, unless \
            overridden, variables like 'root' or 'opam-version' may be taken \
            from the current opam installation. What is defined in \
-           $(i,~%s.opam%sconfig) is always ignored." Filename.dir_sep Filename.dir_sep))
+           $(i,~%s.opam%sconfig) is always ignored." Filename.dir_sep Filename.dir_sep |> Cmdliner.Manpage.escape))
 
 let state_selection_arg =
   let docs = OpamArg.package_selection_section in
