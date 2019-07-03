@@ -24,6 +24,10 @@ val env:
   csh:bool -> sexp:bool -> fish:bool -> inplace_path:bool ->
   unit
 
+(** Ensures that the environment file exists in the given switch, regenerating
+    it, if necessary. *)
+val ensure_env: 'a global_state -> switch -> unit
+
 (** Like [env] but allows one to specify the precise env to print rather than
     compute it from a switch state *)
 val print_eval_env: csh:bool -> sexp:bool -> fish:bool -> env -> unit

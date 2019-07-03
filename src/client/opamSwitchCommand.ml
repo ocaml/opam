@@ -187,7 +187,11 @@ let remove gt ?(confirm = true) switch =
 
 let install_compiler_packages t atoms =
   (* install the compiler packages *)
-  if atoms = [] then t else
+  if atoms = [] then begin
+    OpamFile.Environment.write (OpamPath.Switch.environment t.switch_global.root t.switch) (OpamEnv.compute_updates t);
+    OpamEnv.check_and_print_env_warning t;
+    t
+  end else
   let roots = OpamPackage.Name.Set.of_list (List.map fst atoms) in
   let not_found =
     OpamPackage.Name.Set.diff roots @@
