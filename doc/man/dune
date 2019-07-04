@@ -1,5 +1,10 @@
 (rule
-  (with-stdout-to opam.1 (run %{opam} --help=groff)))
+  (with-stdout-to opam.1 (run %{bin:opam} --help=groff)))
+
+(install
+  (section man)
+  (package opam)
+  (files opam.1))
 
 (include opam-topics.inc)
 
