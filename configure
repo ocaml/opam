@@ -9,7 +9,7 @@
 # This configure script is free software; the Free Software Foundation
 # gives unlimited permission to copy, distribute and modify it.
 #
-# Copyright 2012-2018 OcamlPro SAS
+# Copyright 2012-2019 OcamlPro SAS
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -590,7 +590,6 @@ hasalldeps
 ac_ct_CXX
 CXXFLAGS
 CXX
-OCAML_PKG_cppo
 OCAML_PKG_mccs
 OCAML_PKG_opam_file_format
 OCAML_PKG_dose3_algo
@@ -610,6 +609,7 @@ fetch
 LN_S
 BUNZIP2
 PATCH
+CPPO
 DUNE
 FETCH
 OCAMLFIND
@@ -1434,7 +1434,7 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This configure script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it.
 
-Copyright 2012-2018 OcamlPro SAS
+Copyright 2012-2019 OcamlPro SAS
 _ACEOF
   exit
 fi
@@ -4541,6 +4541,98 @@ else
 fi
 
 if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}cppo", so it can be a program name with args.
+set dummy ${ac_tool_prefix}cppo; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_CPPO+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$CPPO"; then
+  ac_cv_prog_CPPO="$CPPO" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_CPPO="${ac_tool_prefix}cppo"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+CPPO=$ac_cv_prog_CPPO
+if test -n "$CPPO"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $CPPO" >&5
+$as_echo "$CPPO" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_CPPO"; then
+  ac_ct_CPPO=$CPPO
+  # Extract the first word of "cppo", so it can be a program name with args.
+set dummy cppo; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_ac_ct_CPPO+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$ac_ct_CPPO"; then
+  ac_cv_prog_ac_ct_CPPO="$ac_ct_CPPO" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_ac_ct_CPPO="cppo"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_CPPO=$ac_cv_prog_ac_ct_CPPO
+if test -n "$ac_ct_CPPO"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_CPPO" >&5
+$as_echo "$ac_ct_CPPO" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+  if test "x$ac_ct_CPPO" = x; then
+    CPPO=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    CPPO=$ac_ct_CPPO
+  fi
+else
+  CPPO="$ac_cv_prog_CPPO"
+fi
+
+if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}patch", so it can be a program name with args.
 set dummy ${ac_tool_prefix}patch; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
@@ -5080,30 +5172,6 @@ $as_echo "not found" >&6; }
 
 
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package cppo" >&5
-$as_echo_n "checking for OCaml findlib package cppo... " >&6; }
-
-  unset found
-  unset pkg
-  found=no
-  for pkg in cppo  ; do
-    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
-$as_echo "found" >&6; }
-      OCAML_PKG_cppo=$pkg
-      found=yes
-      break
-    fi
-  done
-  if test "$found" = "no" ; then
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-$as_echo "not found" >&6; }
-    OCAML_PKG_cppo=no
-  fi
-
-
-
-
 if test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"; then :
   as_fn_error $? "Option --without-mccs is not available without uninstalling the 'mccs' package" "$LINENO" 5
 fi
@@ -5398,7 +5466,6 @@ fi
 
 echo
 
-
 if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_extlib" = "xno" ||
        test "x$OCAML_PKG_re" = "xno" ||
@@ -5407,7 +5474,7 @@ if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_cudf" = "xno" ||
        test "x$OCAML_PKG_dose3_common" = "xno" ||
        test "x$OCAML_PKG_opam_file_format" = "xno" ||
-       test "x$OCAML_PKG_cppo" = "xno" ||
+       test "x$CPPO" = "x" ||
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue";}; then :
 
   echo "============================================================================"
