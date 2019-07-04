@@ -38,7 +38,7 @@ src_ext/dune-local.stamp:
 dune: $(DUNE_DEP)
 	@$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) @install
 
-opam: $(DUNE_DEP) opam.install
+opam: $(DUNE_DEP) opam-processed.install
 	$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
 ifneq ($(MANIFEST_ARCH),)
 	@mkdir -p Opam.Runtime.$(MANIFEST_ARCH)
@@ -48,8 +48,7 @@ ifneq ($(MANIFEST_ARCH),)
 	@cd Opam.Runtime.$(MANIFEST_ARCH) && $(LN_S) -f ../_build/install/default/bin/Opam.Runtime.$(MANIFEST_ARCH)/$(RUNTIME_GCC_S).dll .
 endif
 
-opam-installer: $(DUNE_DEP)
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/tools/opam_installer.exe
+opam-installer: $(DUNE_DEP) opam-installer-processed.install
 	$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
 
 opam-admin.top: $(DUNE_DEP)
@@ -106,6 +105,9 @@ opam-devel.install: $(DUNE_DEP)
 opam-%.install: $(DUNE_DEP)
 	$(DUNE) build $(DUNE_ARGS) -p opam-$* $@
 
+opam-installer.install: ALWAYS $(DUNE_DEP)
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-installer.install
+
 opam.install: ALWAYS $(DUNE_DEP)
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-installer.install opam.install
 
@@ -129,9 +131,12 @@ uninstalllib-%: opam-installer opam-%.install
 libinstall: $(DUNE_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
 	@
 
-install: opam.install
-	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) $<
-	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) opam-installer.install
+%-processed.install: %.install
+	sed -e '/^\(doc\|lib\):/{:a;N;/]/!ba;};/^\(doc\|lib\):/d' $^ > $@
+
+install: opam-processed.install opam-installer-processed.install
+	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) opam-processed.install
+	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) opam-installer-processed.install
 
 libuninstall: $(OPAMLIBS:%=uninstalllib-%)
 	@
