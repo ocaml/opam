@@ -501,6 +501,28 @@ let installable_subset universe packages =
     OpamPackage.Set.empty
     trimmed_universe
 
+module PkgGraph = Graph.Imperative.Digraph.ConcreteBidirectional(OpamPackage)
+
+let dependency_graph
+    ~depopts ~build ~post ~installed ?(unavailable=false)
+    universe =
+  let u_packages =
+    if installed then universe.u_installed else
+    if unavailable then universe.u_packages else
+      universe.u_available in
+  let cudf_graph =
+    load_cudf_universe ~depopts ~build ~post universe u_packages () |>
+    OpamCudf.Graph.of_universe
+  in
+  let g = PkgGraph.create ~size:(OpamCudf.Graph.nb_vertex cudf_graph) () in
+  OpamCudf.Graph.iter_vertex (fun v ->
+      PkgGraph.add_vertex g (OpamCudf.cudf2opam v))
+    cudf_graph;
+  OpamCudf.Graph.iter_edges (fun v1 v2 ->
+      PkgGraph.add_edge g (OpamCudf.cudf2opam v1) (OpamCudf.cudf2opam v2))
+    cudf_graph;
+  g
+
 let filter_dependencies
     f_direction ~depopts ~build ~post ~installed
     ?(unavailable=false) universe packages =

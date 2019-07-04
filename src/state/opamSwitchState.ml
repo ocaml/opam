@@ -578,6 +578,7 @@ let universe st
     in
     get_deps depend st.opams
   in
+  let u_depopts = get_deps OpamFile.OPAM.depopts st.opams in
   let u_conflicts = get_conflicts st st.packages st.opams in
   let base =
     if OpamStateConfig.(!r.unlock_base) then OpamPackage.Set.empty
@@ -586,12 +587,23 @@ let universe st
   let u_available =
     remove_conflicts st base (Lazy.force st.available_packages)
   in
-  let u_reinstall = match reinstall with
+  let u_reinstall =
+    (* Ignore reinstalls outside of the dependency cone of
+       [requested_allpkgs] *)
+    let resolve_deps nv =
+      OpamPackageVar.filter_depends_formula
+        ~build:true ~post:true ~default:true ~env:(env nv)
+        (OpamFormula.ands [ OpamPackage.Map.find nv u_depends;
+                            OpamPackage.Map.find nv u_depopts ])
+      |> OpamFormula.packages st.packages
+    in
+    let requested_deps =
+      OpamPackage.Set.fixpoint resolve_deps requested_allpkgs
+    in
+    requested_deps %% st.reinstall ++
+    match reinstall with
     | Some set -> set
-    | None ->
-      OpamPackage.Set.filter
-        (fun nv -> OpamPackage.Name.Set.mem nv.name requested)
-        st.reinstall
+    | None -> OpamPackage.Set.empty
   in
   let u =
 {
@@ -600,7 +612,7 @@ let universe st
   u_installed = st.installed;
   u_available;
   u_depends;
-  u_depopts = get_deps OpamFile.OPAM.depopts st.opams;
+  u_depopts;
   u_conflicts;
   u_installed_roots = st.installed_roots;
   u_pinned    = OpamPinned.packages st;
