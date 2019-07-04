@@ -143,7 +143,7 @@ checker:
 .PHONY: tests tests-local tests-git
 tests: $(DUNE_DEP)
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam.install src/tools/opam_check.exe
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) @update-topics
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) doc/man/opam-topics.inc doc/man/opam-admin-topics.inc
 	$(DUNE) runtest --force --no-buffer --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/ tests/
 
 # tests-local, tests-git

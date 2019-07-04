@@ -27,11 +27,3 @@
 (include opam-topics.inc)
 
 (include opam-admin-topics.inc)
-
-(alias
-  (name update-topics)
-  (action
-    (progn
-      (diff opam-topics.inc opam-topics.inc.gen)
-      (diff opam-admin-topics.inc opam-admin-topics.inc.gen))))
-
