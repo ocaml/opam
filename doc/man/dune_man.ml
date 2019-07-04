@@ -1,9 +1,14 @@
 let gen_topic target_basename dline t =
   Printf.printf "\n\
                  (rule\n\
-                \  (with-stdout-to %s-%s.1 (run %s %s --help=groff)))\n\
+                \  (with-stdout-to %s-%s.0 (echo \"\")))\n\
+                 (rule\n\
+                \  (targets %s-%s.1 %s-%s.err)\n\
+                \  (action (progn (with-stderr-to %s-%s.err\n\
+                \                   (with-stdout-to %s-%s.1 (run %s %s --help=groff)))\n\
+                \                 (diff %s-%s.err %%{dep:%s-%s.0}))))\n\
                 "
-    target_basename t dline t
+    target_basename t target_basename t target_basename t target_basename t target_basename t dline t target_basename t target_basename t
 
 let () =
   let cmd,args = match Array.to_list Sys.argv with
@@ -13,6 +18,7 @@ let () =
   let cline = String.concat " " (cmd :: args) ^ " help topics" in
   let topics =
     let ic = Unix.open_process_in cline in
+    set_binary_mode_in ic false;
     let rec aux () =
       match input_line ic with
       | "" -> aux ()
