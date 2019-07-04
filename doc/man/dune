@@ -1,26 +1,32 @@
 (rule
-  (with-stdout-to opam.1 (run %{bin:opam} --help=groff)))
+  (targets opam.1)
+  (deps opam-topics.inc opam-admin-topics.inc)
+  (action (with-stdout-to %{targets} (run %{bin:opam} --help=groff))))
 
 (install
   (section man)
   (package opam)
   (files opam.1))
 
-(include opam-topics.inc)
-
 (executable
   (name dune_man)
   (libraries unix))
 
 (rule
-  (with-stdout-to opam-topics.inc.gen
-    (run %{exe:dune_man.exe} opam)))
-
-(include opam-admin-topics.inc)
+  (targets opam-topics.inc)
+  (deps %{bin:opam})
+  (mode promote)
+  (action (with-stdout-to %{targets} (run %{exe:dune_man.exe} opam))))
 
 (rule
-  (with-stdout-to opam-admin-topics.inc.gen
-    (run %{exe:dune_man.exe} opam admin)))
+  (targets opam-admin-topics.inc)
+  (deps %{bin:opam})
+  (mode promote)
+  (action (with-stdout-to %{targets} (run %{exe:dune_man.exe} opam admin))))
+
+(include opam-topics.inc)
+
+(include opam-admin-topics.inc)
 
 (alias
   (name update-topics)
