@@ -107,7 +107,7 @@ opam-%.install: $(DUNE_DEP)
 	$(DUNE) build $(DUNE_ARGS) -p opam-$* $@
 
 opam.install: ALWAYS $(DUNE_DEP)
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam.install
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-installer.install opam.install
 
 OPAMLIBS = core format solver repository state client
 
@@ -129,8 +129,9 @@ uninstalllib-%: opam-installer opam-%.install
 libinstall: $(DUNE_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
 	@
 
-install: $(DUNE_DEP) opam.install
-	$(DUNE) install --profile=$(DUNE_PROFILE) --prefix "$(DESTDIR)$(prefix)" $(DUNE_ARGS) opam
+install: opam.install
+	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) $<
+	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) opam-installer.install
 
 libuninstall: $(OPAMLIBS:%=uninstalllib-%)
 	@
