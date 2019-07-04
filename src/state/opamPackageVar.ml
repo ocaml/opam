@@ -64,7 +64,7 @@ let resolve_global gt full_var =
     | _ ->
       match V.to_string var with
       | "opam-version"  -> Some (V.string OpamVersion.(to_string current))
-      | "jobs"          -> Some (V.int (OpamFile.Config.jobs gt.config))
+      | "jobs"          -> Some (V.int (OpamStateConfig.(Lazy.force !r.jobs)))
       | "root"          -> Some (V.string (OpamFilename.Dir.to_string gt.root))
       | "make"          -> Some (V.string OpamStateConfig.(Lazy.force !r.makecmd))
       | _               -> None
