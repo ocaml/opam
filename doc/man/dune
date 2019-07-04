@@ -8,6 +8,14 @@
   (package opam)
   (files opam.1))
 
+(rule
+  (with-stdout-to opam-installer.1 (run %{bin:opam-installer} --help=groff)))
+
+(install
+  (section man)
+  (package opam-installer)
+  (files opam-installer.1))
+
 (executable
   (name dune_man)
   (libraries unix))
