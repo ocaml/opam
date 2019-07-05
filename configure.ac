@@ -215,6 +215,7 @@ AS_IF([test "x${enable_certificate_check}" = "xno"], [
 AC_CHECK_PROGS(FETCH,[curl wget],no)
 
 AC_CHECK_TOOL(DUNE,dune)
+AC_CHECK_TOOL(CPPO,cppo)
 AC_CHECK_TOOL(PATCH,patch)
 AC_CHECK_TOOL(BUNZIP2,bunzip2)
 
@@ -279,7 +280,6 @@ AC_CHECK_OCAML_PKG(dose3.common,dose.common)
 AC_CHECK_OCAML_PKG(dose3.algo,dose.algo)
 AC_CHECK_OCAML_PKG([opam-file-format])
 AC_CHECK_OCAML_PKG([mccs])
-AC_CHECK_OCAML_PKG([cppo])
 
 AS_IF([test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"],
       [AC_MSG_ERROR([Option --without-mccs is not available without uninstalling the 'mccs' package])])
@@ -318,7 +318,6 @@ dnl echo "cudf.......................... ${OCAML_PKG_cudf}"
 dnl echo "dose3......................... ${OCAML_PKG_dose3}"
 echo
 
-
 AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_extlib" = "xno" ||
        test "x$OCAML_PKG_re" = "xno" ||
@@ -327,7 +326,7 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_cudf" = "xno" ||
        test "x$OCAML_PKG_dose3_common" = "xno" ||
        test "x$OCAML_PKG_opam_file_format" = "xno" ||
-       test "x$OCAML_PKG_cppo" = "xno" ||
+       test "x$CPPO" = "x" ||
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue";}],[
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"
