@@ -2,6 +2,18 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+2.0.5:
+* Bump src_ext Dune to 1.6.3, allows compilation with OCaml 4.08.0. [#3887 @dra27]
+* Support Dune 1.7.0 and later [#3888 @dra27 - fix #3870]
+* Bump the ocaml_mccs lib-ext, to include latest changes [#3896 @AltGr]
+* Fix cppo detection in configure [#3917 @dra27]
+* Read jobs variable from OpamStateConfig [#3916 @dra27]
+* Linting:
+  * add check upstream option [#3758 @rjbou]
+    * add warning for with-test in run-test field [#3765, #3860 @rjbou]
+      * fix misleading `doc` filter warning [#3871 @rjbou]
+* Fix typos [#3891 @dra27, @mehdid]
+
 2.0.4:
 * Add (rudimentary) error handling to `make man`
 * Sandboxing on MacOS: considering the possibility that TMPDIR in unset
