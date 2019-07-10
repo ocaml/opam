@@ -10,8 +10,8 @@ are not marked).
 * Read jobs variable from OpamStateConfig [#3916 @dra27]
 * Linting:
   * add check upstream option [#3758 @rjbou]
-    * add warning for with-test in run-test field [#3765, #3860 @rjbou]
-      * fix misleading `doc` filter warning [#3871 @rjbou]
+  * add warning for with-test in run-test field [#3765, #3860 @rjbou]
+  * fix misleading `doc` filter warning [#3871 @rjbou]
 * Fix typos [#3891 @dra27, @mehdid]
 
 2.0.4:
