@@ -40,6 +40,8 @@ matrix:
     - os: linux
       env: OCAML_VERSION=4.07.1
       stage: Build
+    - os: linux
+      stage: Hygiene
     - os: osx
       env: OCAML_VERSION=4.07.1 OPAM_TEST=1
       stage: Test

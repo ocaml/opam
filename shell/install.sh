@@ -148,8 +148,9 @@ case "$OS" in
     *) OS=$(echo "$OS" | awk '{print tolower($0)}')
 esac
 
+OPAM_BIN_URL_BASE='https://github.com/ocaml/opam/releases/download/'
 OPAM_BIN="opam-${TAG}-${ARCH}-${OS}"
-OPAM_BIN_URL="https://github.com/ocaml/opam/releases/download/${TAG}/${OPAM_BIN}"
+OPAM_BIN_URL="${OPAM_BIN_URL_BASE}${TAG}/${OPAM_BIN}"
 
 download() {
     if command -v wget >/dev/null; then wget -q -O "$@"
