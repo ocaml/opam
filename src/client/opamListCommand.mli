@@ -84,6 +84,7 @@ type output_format =
   | Synopsis_or_target (** Pinning target if pinned, synopsis otherwise *)
   | Description        (** The package description, excluding synopsis *)
   | Field of string    (** The value of the given opam-file field *)
+  | Raw_field of string   (** The raw value of the given opam-file field *)
   | Installed_version  (** Installed version or "--" if none *)
   | Pinning_target     (** Empty string if not pinned *)
   | Source_hash        (** The VC-reported ident of current version, for dev
@@ -113,9 +114,9 @@ val get_switch_state: 'a global_state -> 'a repos_state -> unlocked switch_state
 (** For documentation, includes a dummy '<field>:' for the [Field] format *)
 val field_names: (output_format * string) list
 
-val string_of_field: output_format -> string
+val string_of_field: ?raw:bool -> output_format -> string
 
-val field_of_string: string -> output_format
+val field_of_string: raw:bool -> string -> output_format
 
 type package_listing_format = {
   short: bool;
@@ -139,7 +140,7 @@ val display: 'a switch_state -> package_listing_format -> package_set -> unit
 (** Display a general summary of a collection of packages. *)
 val info:
   'a switch_state ->
-  fields:string list -> raw_opam:bool -> where:bool ->
+  fields:string list -> raw:bool -> where:bool ->
   ?normalise:bool -> ?show_empty:bool -> ?all_versions:bool ->
   atom list -> unit
 

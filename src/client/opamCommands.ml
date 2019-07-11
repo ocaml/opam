@@ -668,8 +668,9 @@ let show =
                 OpamListCommand.field_names
               ^". Multiple fields can be separated with commas, in which case \
                 field titles will be printed; the raw value of any opam-file \
-                field can be queried by suffixing a colon character (:), e.g. \
-                $(b,--field=depopts:).")
+                field can be queried by combinig with $(b,--raw). For backward \
+                compatibilty, it is possible to query field ending with a colon \
+                (:), it is the same than without.")
         ["f";"field"] in
     Arg.(value & opt (list string) [] & doc) in
   let show_empty =
@@ -738,7 +739,6 @@ let show =
       else
       let opam_content_list = OpamFile.OPAM.to_list opam in
       let get_field f =
-        let f = OpamStd.String.remove_suffix ~suffix:":" f in
         try OpamListCommand.mini_field_printer ~prettify:true ~normalise
               (List.assoc f opam_content_list)
         with Not_found -> ""
@@ -751,9 +751,7 @@ let show =
       | flds ->
         let tbl =
           List.map (fun fld ->
-              [ OpamConsole.colorise `blue
-                  (OpamStd.String.remove_suffix ~suffix:":" fld ^ ":");
-                get_field fld ])
+              [ OpamConsole.colorise `blue (fld ^ ":"); get_field fld ])
             flds
         in
         OpamStd.Format.align_table tbl |>
@@ -782,7 +780,7 @@ let show =
           atom_locs
       in
       OpamListCommand.info st
-        ~fields ~raw_opam:raw ~where ~normalise ~show_empty ~all_versions atoms;
+        ~fields ~raw ~where ~normalise ~show_empty ~all_versions atoms;
       `Ok ()
     | atom_locs, true ->
       if List.exists (function `Atom _ -> true | _ -> false) atom_locs then
