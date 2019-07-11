@@ -162,11 +162,15 @@ let atom_dependencies st tog atoms =
       OpamFormula.ors [acc; package_dependencies st tog nv])
     pkgs OpamFormula.Empty
 
-let get_universe st tog =
+let get_universe st ?requested tog =
+  let requested =
+    match requested with
+    | Some r -> r
+    | None -> OpamPackage.names_of_packages st.packages
+  in
   OpamSwitchState.universe st
     ~test:tog.test ~doc:tog.doc ~force_dev_deps:tog.dev
-    ~requested:(OpamPackage.names_of_packages st.packages)
-    Query
+    ~requested Query
 
 let rec value_strings value =
   let module SS = OpamStd.String.Set in
@@ -248,7 +252,13 @@ let apply_selector ~base st = function
     let universe = { universe with u_base = set; u_installed = set } in
     OpamSolver.installable_subset universe base
   | Solution (tog, atoms) ->
-    let universe = get_universe st tog in
+    let universe =
+      let requested =
+        OpamFormula.packages_of_atoms st.packages atoms
+        |> OpamPackage.names_of_packages
+      in
+      get_universe st tog ~requested
+    in
     let universe =
       { universe
         with u_installed = OpamPackage.Set.empty;
