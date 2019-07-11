@@ -707,15 +707,11 @@ let show =
       OpamConsole.warning "No opam files found in %s"
         (OpamFilename.Dir.to_string d);
       []
-    | l -> List.map (fun (_,f,_) -> Some f) l
+    | l -> List.map (fun (_,f,_) -> f) l
   in
   let pkg_info global_options fields show_empty raw where
       list_files file normalise no_lint just_file all_versions sort atom_locs =
-    let print_just_file f =
-      let opam = match f with
-        | Some f -> OpamFile.OPAM.read f
-        | None -> OpamFile.OPAM.read_from_channel stdin
-      in
+    let print_just_file opamf opam =
       if not no_lint then OpamFile.OPAM.print_errors opam;
       let opam =
         if not sort then opam else
@@ -723,9 +719,9 @@ let show =
       in
       if where then
         OpamConsole.msg "%s\n"
-          (match f with
-           | Some f ->
-             OpamFilename.(Dir.to_string (dirname (OpamFile.filename f)))
+          (match opamf with
+           | Some opamf ->
+             OpamFilename.(Dir.to_string (dirname (OpamFile.filename opamf)))
            | None -> ".")
       else
       let opam_content_list = OpamFile.OPAM.to_list opam in
@@ -754,8 +750,12 @@ let show =
     | [], false ->
       `Error (true, "required argument PACKAGES is missing")
     | [], true ->
-      print_just_file None;
-      `Ok ()
+      (try
+         let opam = OpamFile.OPAM.read_from_channel stdin in
+         print_just_file None opam;
+         `Ok ()
+       with | Parsing.Parse_error | OpamLexer.Error _ | OpamPp.Bad_format _  ->
+         OpamConsole.error_and_exit `File_error "Stdin parsing failed")
     | atom_locs, false ->
       let fields, show_empty =
         if list_files then
@@ -777,16 +777,35 @@ let show =
       if List.exists (function `Atom _ -> true | _ -> false) atom_locs then
         `Error (true, "packages can't be specified with --just-file")
       else
-      let opams =
+      let opamfs =
         List.fold_left (fun acc al ->
             match al with
-            | `Filename f -> Some (OpamFile.make f) :: acc
+            | `Filename f -> (OpamFile.make f) :: acc
             | `Dirname d -> opam_files_in_dir d @ acc
             | _ -> acc)
           [] atom_locs
       in
-      List.iter print_just_file opams;
-      `Ok ()
+      let errors, opams =
+        List.fold_left (fun (errors,opams) opamf ->
+            try
+              errors, (Some opamf, (OpamFile.OPAM.read opamf))::opams
+            with
+            | Parsing.Parse_error | OpamLexer.Error _ | OpamPp.Bad_format _  ->
+              opamf::errors, opams)
+          ([],[]) opamfs
+      in
+      List.iter (fun (f,o) -> print_just_file f o) opams;
+      if errors = [] then
+        `Ok ()
+      else
+      let sgl = List.length errors = 1 in
+      let files = List.map (OpamFile.filename @> OpamFilename.to_string) errors in
+      OpamConsole.error_and_exit `File_error "%s file%s failed to parse:%s"
+        (if sgl then "A" else "Some")
+        (if sgl then "" else "s")
+        (match files with
+         | [f] -> " "^ f
+         | fs -> "\n"^OpamStd.Format.itemize (fun x -> x) fs)
   in
   Term.(ret
           (const pkg_info $global_options $fields $show_empty $raw $where
