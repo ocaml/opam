@@ -32,9 +32,11 @@ let read_opam_file_for_pinning ?(quiet=false) name f url =
     let dir = OpamFilename.dirname (OpamFile.filename f) in
     (* don't add aux files for [project/opam] *)
     let add_files = OpamUrl.local_dir url = Some dir in
-    OpamStd.Option.map
+    let opam =
       (OpamFormatUpgrade.opam_file_with_aux ~quiet ~dir ~files:add_files
-         ~filename:f) (OpamFile.OPAM.read_opt f)
+         ~filename:f) (OpamFile.OPAM.safe_read f)
+    in
+    if opam = OpamFile.OPAM.empty then None else Some opam
   in
   (match opam0 with
    | None ->
