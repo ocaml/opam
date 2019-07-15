@@ -668,9 +668,7 @@ let show =
                 OpamListCommand.field_names
               ^". Multiple fields can be separated with commas, in which case \
                 field titles will be printed; the raw value of any opam-file \
-                field can be queried by combinig with $(b,--raw). For backward \
-                compatibilty, it is possible to query field ending with a colon \
-                (:), it is the same than without.")
+                field can be queried by combinig with $(b,--raw)")
         ["f";"field"] in
     Arg.(value & opt (list string) [] & doc) in
   let show_empty =
