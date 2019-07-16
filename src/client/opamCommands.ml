@@ -804,15 +804,17 @@ let show =
       in
       List.iter (fun (f,o) -> print_just_file f o) opams;
       (if errors <> [] then
-        let sgl = List.length errors = 1 in
-        let files = List.map (OpamFile.filename @> OpamFilename.to_string) errors in
-        OpamConsole.error "%s file%s failed to parse:%s"
-          (if sgl then "A" else "Some")
-          (if sgl then "" else "s")
-          (match files with
-           | [f] -> " "^ f
-           | fs -> "\n"^OpamStd.Format.itemize (fun x -> x) fs));
-      `Ok ()
+         let sgl = match errors with [_] -> true | _ -> false in
+         let files = List.map (OpamFile.filename @> OpamFilename.to_string) errors in
+         OpamConsole.error "Parsing error on%s:%s"
+           (if sgl then "" else "some opam files")
+           (match files with
+            | [f] -> " " ^ f
+            | fs -> "\n"^OpamStd.Format.itemize (fun x -> x) fs));
+      if opams = [] then
+        OpamStd.Sys.exit_because `File_error
+      else
+        `Ok ()
   in
   Term.(ret
           (const pkg_info $global_options $fields $show_empty $raw $where
