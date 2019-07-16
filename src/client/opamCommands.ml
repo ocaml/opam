@@ -703,10 +703,7 @@ let show =
   let sort = mk_flag ["sort"] "Sort opam fields" in
   let opam_files_in_dir d =
     match OpamPinned.files_in_source d with
-    | [] ->
-      OpamConsole.warning "No opam files found in %s"
-        (OpamFilename.Dir.to_string d);
-      []
+    | [] -> []
     | l -> List.map (fun (_,f,_) -> f) l
   in
   let pkg_info global_options fields show_empty raw where
@@ -785,6 +782,17 @@ let show =
             | _ -> acc)
           [] atom_locs
       in
+      if opamfs = [] then
+        let dirnames =
+          OpamStd.List.filter_map (function
+              | `Dirname d -> Some (OpamFilename.Dir.to_string d)
+              | _ -> None)
+            atom_locs
+        in
+        OpamConsole.error_and_exit `Not_found "No opam files found at %s"
+          (OpamStd.List.concat_map ", " ~last_sep:" and "
+             (fun x -> x) dirnames )
+      else
       let errors, opams =
         List.fold_left (fun (errors,opams) opamf ->
             try
