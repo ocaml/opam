@@ -11,6 +11,34 @@ COLD=${COLD:-0}
 OPAM_TEST=${OPAM_TEST:-0}
 EXTERNAL_SOLVER=${EXTERNAL_SOLVER:-}
 
+set +x
+echo "TRAVIS_COMMIT_RANGE=$TRAVIS_COMMIT_RANGE"
+echo "TRAVIS_COMMIT=$TRAVIS_COMMIT"
+if [[ $TRAVIS_EVENT_TYPE = 'pull_request' ]] ; then
+  FETCH_HEAD=$(git rev-parse FETCH_HEAD)
+  echo "FETCH_HEAD=$FETCH_HEAD"
+else
+  FETCH_HEAD=$TRAVIS_COMMIT
+fi
+
+if [[ $TRAVIS_EVENT_TYPE = 'push' ]] ; then
+  if ! git cat-file -e "$TRAVIS_COMMIT" 2> /dev/null ; then
+    echo 'TRAVIS_COMMIT does not exist - CI failure'
+    exit 1
+  fi
+else
+  if [[ $TRAVIS_COMMIT != $(git rev-parse FETCH_HEAD) ]] ; then
+    echo 'WARNING! Travis TRAVIS_COMMIT and FETCH_HEAD do not agree!'
+    if git cat-file -e "$TRAVIS_COMMIT" 2> /dev/null ; then
+      echo 'TRAVIS_COMMIT exists, so going with it'
+    else
+      echo 'TRAVIS_COMMIT does not exist; setting to FETCH_HEAD'
+      TRAVIS_COMMIT=$FETCH_HEAD
+    fi
+  fi
+fi
+set -x
+
 init-bootstrap () {
   export OPAMROOT=$OPAMBSROOT
   # The system compiler will be picked up
@@ -32,6 +60,32 @@ init-bootstrap () {
     opam install ssl cmdliner dose3 cudf.0.9 opam-file-format re extlib dune 'mccs>=1.1+5' --yes
   fi
   rm -f "$OPAMBSROOT"/log/*
+}
+
+CheckConfigure () {
+  GIT_INDEX_FILE=tmp-index git read-tree --reset -i "$1"
+  git diff-tree --diff-filter=d --no-commit-id --name-only -r "$1" \
+    | (while IFS= read -r path
+  do
+    case "$path" in
+      configure|configure.ac|m4/*)
+        touch CHECK_CONFIGURE;;
+    esac
+  done)
+  rm -f tmp-index
+  if [[ -e CHECK_CONFIGURE ]] ; then
+    echo "configure generation altered in $1"
+    echo 'Verifying that configure.ac generates configure'
+    git clean -dfx
+    git checkout -f "$1"
+    mv configure configure.ref
+    make configure
+    if ! diff -q configure configure.ref >/dev/null ; then
+      echo -e "[\e[31mERROR\e[0m] configure.ac in $1 doesn't generate configure, \
+please run make configure and fixup the commit"
+      exit 1
+    fi
+  fi
 }
 
 case "$TARGET" in
@@ -192,6 +246,17 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
         exit 1
       fi
     fi
+  fi
+  if [[ -z $TRAVIS_COMMIT_RANGE ]]
+  then CheckConfigure "$TRAVIS_COMMIT"
+  else
+    if [[ $TRAVIS_EVENT_TYPE = 'pull_request' ]]
+    then TRAVIS_COMMIT_RANGE=$TRAVIS_MERGE_BASE..$TRAVIS_PULL_REQUEST_SHA
+    fi
+    for commit in $(git rev-list "$TRAVIS_COMMIT_RANGE" --reverse)
+    do
+      CheckConfigure "$commit"
+    done
   fi
   exit 0
 fi
