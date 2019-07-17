@@ -83,7 +83,7 @@ CheckConfigure () {
     if ! diff -q configure configure.ref >/dev/null ; then
       echo -e "[\e[31mERROR\e[0m] configure.ac in $1 doesn't generate configure, \
 please run make configure and fixup the commit"
-      exit 1
+      ERROR=1
     fi
   fi
 }
@@ -206,6 +206,7 @@ esac
 
 set +x
 if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
+  ERROR=0
   if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ] ; then
     TRAVIS_CUR_HEAD=${TRAVIS_COMMIT_RANGE%%...*}
     TRAVIS_PR_HEAD=${TRAVIS_COMMIT_RANGE##*...}
@@ -223,7 +224,6 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
       echo "TAG = $TAG"
       echo "OPAM_BIN_URL_BASE=$OPAM_BIN_URL_BASE"
       ARCHES=0
-      ERROR=0
       while read -r key sha
       do
         ARCHES=1
@@ -241,9 +241,7 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
       if [ $ARCHES -eq 0 ] ; then
         echo "[\e[31mERROR\e[0m] No sha512 checksums were detected in shell/install.sh"
         echo "That can't be right..."
-        exit 1
-      elif [ $ERROR -eq 1 ] ; then
-        exit 1
+        ERROR=1
       fi
     fi
   fi
@@ -258,7 +256,7 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
       CheckConfigure "$commit"
     done
   fi
-  exit 0
+  exit $ERROR
 fi
 set -x
 
