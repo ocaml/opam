@@ -239,7 +239,7 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
         fi
       done < <(sed -ne 's/.*opam-\$TAG-\([^)]*\).*"\([^"]*\)".*/\1 \2/p' shell/install.sh)
       if [ $ARCHES -eq 0 ] ; then
-        echo "No sha512 checksums were detected in shell/install.sh"
+        echo "[\e[31mERROR\e[0m] No sha512 checksums were detected in shell/install.sh"
         echo "That can't be right..."
         exit 1
       elif [ $ERROR -eq 1 ] ; then
