@@ -457,7 +457,7 @@ let get_compatible_compiler ?repos rt dir =
             OpamPackage.Map.add nv (OpamFile.OPAM.create nv) acc)
           pin_depends opams;
       packages =
-         virt_st.packages ++ local_packages ++ pin_depends;
+        virt_st.packages ++ local_packages ++ pin_depends;
       available_packages =
         lazy (Lazy.force available ++ local_packages ++ pin_depends);
     }
@@ -498,7 +498,9 @@ let get_compatible_compiler ?repos rt dir =
   let compilers = OpamPackage.Set.inter compilers installable in
   try
     Some (OpamSolution.eq_atom_of_package
-       (OpamPackage.Set.choose_one compilers)), true
+            (OpamPackage.Set.choose_one compilers)),
+    List.exists (OpamFile.OPAM.has_flag Pkgflag_Compiler)
+      (OpamPackage.Map.values local_opams)
   with
   | Not_found when not (OpamPackage.Set.is_empty local_packages) ->
     OpamConsole.warning
@@ -515,8 +517,12 @@ let get_compatible_compiler ?repos rt dir =
    let default_compiler =
      OpamFile.Config.default_compiler gt.config
    in
+   let no_compiler () =
+     OpamConsole.warning "No compiler selected";
+     None
+   in
    if default_compiler = Empty then
-     (OpamConsole.warning "No compiler selected"; None, false)
+     no_compiler(), false
    else
    let candidates = OpamFormula.to_dnf default_compiler in
    try
@@ -533,7 +539,8 @@ let get_compatible_compiler ?repos rt dir =
                 (Lazy.force virt_st.available_packages)
                 atoms
             in
-            if not (has_all compiler) then None else
+            if not (has_all compiler) then no_compiler()
+            else
             if OpamPackage.Set.is_empty local_packages then
               Some (OpamSolution.eq_atoms_of_packages compiler)
             else
@@ -545,7 +552,7 @@ let get_compatible_compiler ?repos rt dir =
             let compiler = OpamSolver.installable_subset univ compiler in
             if has_all compiler then
               Some (OpamSolution.eq_atoms_of_packages compiler)
-            else None
+            else no_compiler ()
          ) candidates
      in
      let candidate =
@@ -563,7 +570,7 @@ let get_compatible_compiler ?repos rt dir =
                            |> Name.Set.choose)))
        |> fun p -> Some (OpamSolution.eq_atom_of_package p)
      in
-     candidate,false
+     candidate, false
    with Not_found ->
       OpamConsole.warning
         "The default compiler selection: %s\n\
