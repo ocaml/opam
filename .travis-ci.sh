@@ -36,6 +36,7 @@ init-bootstrap () {
 
 case "$TARGET" in
   prepare)
+    make --version
     mkdir -p ~/local/bin
 
     # Git should be configured properly to run the tests
