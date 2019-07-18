@@ -132,7 +132,7 @@ libinstall: $(DUNE_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
 	@
 
 processed-%.install: %.install
-	sed -e '/^\(doc\|lib\):/{:a;N;/]/!ba;};/^\(doc\|lib\):/d' $^ > $@
+	sed -f process.sed $^ > $@
 
 install: processed-opam.install processed-opam-installer.install
 	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) processed-opam.install
