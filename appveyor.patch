@@ -1,16 +1,21 @@
-From 9ef1fc2a03a4a34067b3a7d4f70507cf9326387e Mon Sep 17 00:00:00 2001
+From c4d7bfa9bee7b62f6121a7993c6be2071d6bde34 Mon Sep 17 00:00:00 2001
 From: David Allsopp <david.allsopp@metastack.com>
-Date: Fri, 19 Jan 2018 09:32:57 +0000
-Subject: [PATCH] Use dra27 jbuilder/ocaml-mccs/flexdll
+Date: Fri, 19 Jul 2019 13:14:44 +0100
+Subject: [PATCH] AppVeyor src_ext patches
 
- - Need unreleased flexdll 0.38 to build mccs on mingw.
+- Need unreleased flexdll 0.38 to build mccs on mingw.
+- Need unreleased cmdliner 1.0.5 to build man pages on Windows.
 ---
- src_ext/Makefile         | 4 ++--
- src_ext/Makefile.sources | 8 ++++----
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ src_ext/Makefile                                  |   4 ++--
+ src_ext/Makefile.sources                          |   4 ++--
+ src_ext/dune-cmdliner-src                         |   5 -----
+ .../0001-Escape-default-values.patch              | Bin 0 -> 920 bytes
+ 4 files changed, 4 insertions(+), 9 deletions(-)
+ delete mode 100644 src_ext/dune-cmdliner-src
+ create mode 100644 src_ext/patches/cmdliner.common/0001-Escape-default-values.patch
 
 diff --git a/src_ext/Makefile b/src_ext/Makefile
-index 1a350068..964a818c 100644
+index b83b9029..7154900b 100644
 --- a/src_ext/Makefile
 +++ b/src_ext/Makefile
 @@ -12,8 +12,8 @@ endif
@@ -24,6 +29,51 @@ index 1a350068..964a818c 100644
  
  ifndef FETCH
    ifneq ($(shell command -v curl 2>/dev/null),)
+diff --git a/src_ext/Makefile.sources b/src_ext/Makefile.sources
+index f21ca4b3..e9830a7b 100644
+--- a/src_ext/Makefile.sources
++++ b/src_ext/Makefile.sources
+@@ -13,8 +13,8 @@ MD5_re = 765f6f8d3e6ab200866e719ed7e5178d
+ 
+ $(call PKG_SAME,re)
+ 
+-URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.0.2.tbz
+-MD5_cmdliner = ab2f0130e88e8dcd723ac6154c98a881
++URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.0.4.tbz
++MD5_cmdliner = fe2213d0bc63b1e10a2d0aa66d2fc8d9
+ 
+ $(call PKG_SAME,cmdliner)
+ 
+diff --git a/src_ext/dune-cmdliner-src b/src_ext/dune-cmdliner-src
+deleted file mode 100644
+index 0bdeb4e4..00000000
+--- a/src_ext/dune-cmdliner-src
++++ /dev/null
+@@ -1,5 +0,0 @@
+-(library
+-  (name cmdliner)
+-  (public_name cmdliner)
+-  (libraries result)
+-  (wrapped false))
+diff --git a/src_ext/patches/cmdliner.common/0001-Escape-default-values.patch b/src_ext/patches/cmdliner.common/0001-Escape-default-values.patch
+new file mode 100644
+index 0000000000000000000000000000000000000000..0f351f96db7f93511854788e960909fb578db9e7
+GIT binary patch
+literal 920
+zcmb7CU2EJh5Pa9K7!CqC96OS+or`HgLefx5OA9IOLn()>kBb^xIxN{~O1R%%`Eq$^
+z;3zdVW;Hv*&a7^F*P-OBqKiVD(y~}^UI?|2JTF*TEz0t=$XO}NMoWs1&f-?B!A?MF
+zy?v2W%E(QWsd3FmBXQZb-mTYoBd0Rs&*ep@0{4N7`%Jj*oLuvuYJ5}j2ziC~gN;J$
+z6l_t`vd$MsD5I3z4$V&`LXGdAFTY&9`+>J!@U?<enh$Nj$lF1ALT=5<Dw#U1)8_I2
+z21(PD!1v-<bh0&8^-Jl*O4+Py@q`>ngc-DH6~rC4t7&2eW4-EwarQ8oPqkF7+Lq~@
+z5NWhVnyyR$Ki(tV>;Z_eQvE{Q1gi?2WvXDDR}?XgswhaDcCRK$k_3BoFD{U>qB=T3
+z^8AYjac1y-wG3|Aal14@b=auB_t^NM@d2A=(BL>DKn&yRB_U(A%f9j!BhvE;o1Tsb
+zafc85_hY7AFH{5{Ot^c2pD>%nZurn^%ntkvhpt~LJ7TllVy$`W75JQ_&w5W=^<6)2
+zyt3i!z)!^SH8u3ZmYMvEd8oX=IN!&QbYrK1r(oPVjPb+S&e`AYr`RI8ypQ{e3B5Rd
+k9nz=RvQ?Rq+IiVs-e@LTi5msUvz%rudx%=@!Doz+KYk7!^#A|>
+
+literal 0
+HcmV?d00001
+
 -- 
-2.12.0.windows.1
+2.19.1
 
