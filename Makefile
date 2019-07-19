@@ -21,7 +21,7 @@ OPAMINSTALLER = ./opam-installer$(EXE)
 ALWAYS:
 	@
 
-DUNE_DEP = ALWAYS $(DUNE_EXE)
+DUNE_DEP = $(DUNE_EXE)
 JBUILDER_ARGS ?= 
 DUNE_ARGS ?= $(JBUILDER_ARGS)
 DUNE_PROFILE ?= release
@@ -35,7 +35,7 @@ src_ext/dune-local.stamp:
 dune: $(DUNE_DEP)
 	@$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) @install
 
-opam: $(DUNE_DEP) processed-opam.install
+opam: $(DUNE_DEP) build-opam processed-opam.install
 	$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
 ifneq ($(MANIFEST_ARCH),)
 	@mkdir -p Opam.Runtime.$(MANIFEST_ARCH)
@@ -45,10 +45,10 @@ ifneq ($(MANIFEST_ARCH),)
 	@cd Opam.Runtime.$(MANIFEST_ARCH) && $(LN_S) -f ../src/client/$(RUNTIME_GCC_S).dll .
 endif
 
-opam-installer: $(DUNE_DEP) processed-opam-installer.install
+opam-installer: $(DUNE_DEP) build-opam-installer processed-opam-installer.install
 	$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
 
-opam-admin.top: $(DUNE_DEP)
+opam-admin.top: ALWAYS $(DUNE_DEP)
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/tools/opam_admin_top.bc
 	$(LN_S) -f _build/default/src/tools/opam_admin_top.bc $@$(EXE)
 
@@ -102,10 +102,16 @@ opam-devel.install: $(DUNE_DEP)
 opam-%.install: $(DUNE_DEP)
 	$(DUNE) build $(DUNE_ARGS) -p opam-$* $@
 
-opam-installer.install: ALWAYS $(DUNE_DEP)
+.PHONY: build-opam-installer
+build-opam-installer: $(DUNE_DEP) 
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-installer.install
+opam-installer.install: $(DUNE_DEP)
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-installer.install
 
-opam.install: ALWAYS $(DUNE_DEP)
+.PHONY: build-opam
+build-opam: $(DUNE_DEP)
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-installer.install opam.install
+opam.install: $(DUNE_DEP)
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-installer.install opam.install
 
 OPAMLIBS = core format solver repository state client
