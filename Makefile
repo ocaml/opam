@@ -38,7 +38,7 @@ src_ext/dune-local.stamp:
 dune: $(DUNE_DEP)
 	@$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) @install
 
-opam: $(DUNE_DEP) opam.install
+opam: $(DUNE_DEP) build-opam processed-opam.install
 	$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
 ifneq ($(MANIFEST_ARCH),)
 	@mkdir -p Opam.Runtime.$(MANIFEST_ARCH)
@@ -48,8 +48,7 @@ ifneq ($(MANIFEST_ARCH),)
 	@cd Opam.Runtime.$(MANIFEST_ARCH) && $(LN_S) -f ../_build/install/default/bin/Opam.Runtime.$(MANIFEST_ARCH)/$(RUNTIME_GCC_S).dll .
 endif
 
-opam-installer: $(DUNE_DEP)
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/tools/opam_installer.exe
+opam-installer: $(DUNE_DEP) build-opam-installer processed-opam-installer.install
 	$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
 
 opam-admin.top: $(DUNE_DEP)
@@ -106,22 +105,17 @@ opam-devel.install: $(DUNE_DEP)
 opam-%.install: $(DUNE_DEP)
 	$(DUNE) build $(DUNE_ARGS) -p opam-$* $@
 
-opam.install: ALWAYS $(DUNE_DEP)
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-installer.install opam.install
+.PHONY: build-opam-installer
+build-opam-installer: $(DUNE_DEP) 
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-installer.install
+opam-installer.install: $(DUNE_DEP)
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-installer.install
 
-opam-actual.install: opam.install man
-	@echo 'bin: [' > $@
-	@grep -h 'bin/[^/]*' $< >> $@
-	@echo ']' >> $@
-	@echo 'man: [' >>$@
-	@$(patsubst %,echo '  "'%'"' >>$@;,$(wildcard doc/man/*.1))
-	@echo ']' >>$@
-	@echo 'doc: [' >>$@
-	@$(foreach x,$(wildcard doc/man-html/*.html),\
-	  echo '  "$x" {"man/$(notdir $x)"}' >>$@;)
-	@$(foreach x,$(wildcard doc/pages/*.html),\
-	  echo '  "$x" {"$(notdir $x)"}' >>$@;)
-	@echo ']' >>$@
+.PHONY: build-opam
+build-opam: $(DUNE_DEP)
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-installer.install opam.install
+opam.install: $(DUNE_DEP)
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-installer.install opam.install
 
 OPAMLIBS = core format solver repository state client
 
@@ -143,15 +137,19 @@ uninstalllib-%: opam-installer opam-%.install
 libinstall: $(DUNE_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
 	@
 
-install: opam-actual.install
-	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) $<
-	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) opam-installer.install
+processed-%.install: %.install
+	sed -f process.sed $^ > $@
+
+install: processed-opam.install processed-opam-installer.install
+	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) processed-opam.install
+	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) processed-opam-installer.install
 
 libuninstall: $(OPAMLIBS:%=uninstalllib-%)
 	@
 
-uninstall: opam-actual.install
+uninstall: opam.install
 	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) $<
+	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) opam-installer.install
 
 checker:
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/tools/opam_check.exe
@@ -159,6 +157,7 @@ checker:
 .PHONY: tests tests-local tests-git
 tests: $(DUNE_DEP)
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam.install src/tools/opam_check.exe tests/patcher.exe
+	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) doc/man/opam-topics.inc doc/man/opam-admin-topics.inc
 	$(DUNE) runtest --force --no-buffer --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/ tests/
 
 .PHONY: crowbar
@@ -182,8 +181,8 @@ tests-%:
 doc: all
 	$(MAKE) -C doc
 
-.PHONY: man man-html
-man man-html: opam opam-installer
+.PHONY: man-html
+man-html: opam opam-installer
 	$(MAKE) -C doc $@
 
 configure: configure.ac m4/*.m4

@@ -39,6 +39,7 @@ case "$TARGET" in
     if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
       exit 0
     fi
+    make --version
     mkdir -p ~/local/bin
 
     # Git should be configured properly to run the tests
