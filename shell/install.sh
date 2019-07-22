@@ -9,6 +9,18 @@ VERSION='2.0.0~rc3'
 TAG=$(echo "$VERSION" | tr '~' '-')
 DEFAULT_BINDIR=/usr/local/bin
 
+bin_sha512() {
+  case "$OPAM_BIN" in
+    opam-$TAG-amd64-openbsd) echo "7313cd2c39dc28fa9c3de47ed2274ceee48865d74a4a9315dc120459cf57c9b3a5262b343412149cda5379b2ac2eb7cfb387764c8ca5b4e1e0831b275c4acf6f";;
+    opam-$TAG-arm64-linux) echo "589a8c1842c636caabf9108f95b5f288261f5e621b74b1afa731333f0d5010c10a967153f9c4ca5828ecd4e66326b0b1d679ccb8ad92d07aefc66ae85ea10971";;
+    opam-$TAG-armhf-linux) echo "0ebd8662b2d1972b12e38245d3625867fb173bf6939a8c728e0cc349867d5b31103488674665d77be9ad2dc881b3508a947640019b6b48c6821ccece481cf2bc";;
+    opam-$TAG-i686-linux) echo "18da8fb4ce5270e51becbde47e8b5b6a855a970820f85f01fcdca1a28cef1ad5b51f0c53f60f89f45192d0f310c4e441da267f2dbc3616e16f68128bb86af2ae";;
+    opam-$TAG-x86_64-darwin) echo "229c0623df54561285182570a72c7860f5398532fbfb33d7c90d345fba25fcd43f13e806aa232089da9303481f6c65535dedfff0077ba1d4b96f76b191ca24c6";;
+    opam-$TAG-x86_64-linux) echo "f479ec7dd891bb200376fd674a02ff5283c9ca812be5a83138739d39f9d7221ac920c530937573cf789d976b60c822efa49066cdf2b34f61e740835e6fb1a37c";;
+    *) echo "no sha";;
+  esac
+}
+
 usage() {
     echo "opam binary installer v.$VERSION"
     echo "Downloads and installs a pre-compiled binary of opam $VERSION to the system."
@@ -136,25 +148,14 @@ case "$OS" in
     *) OS=$(echo "$OS" | awk '{print tolower($0)}')
 esac
 
+OPAM_BIN_URL_BASE='https://github.com/ocaml/opam/releases/download/'
 OPAM_BIN="opam-${TAG}-${ARCH}-${OS}"
-OPAM_BIN_URL="https://github.com/ocaml/opam/releases/download/${TAG}/${OPAM_BIN}"
+OPAM_BIN_URL="${OPAM_BIN_URL_BASE}${TAG}/${OPAM_BIN}"
 
 download() {
     if command -v wget >/dev/null; then wget -q -O "$@"
     else curl -s -L -o "$@"
     fi
-}
-
-bin_sha512() {
-  case "$OPAM_BIN" in
-    opam-2.0.0-rc3-amd64-openbsd) echo "7313cd2c39dc28fa9c3de47ed2274ceee48865d74a4a9315dc120459cf57c9b3a5262b343412149cda5379b2ac2eb7cfb387764c8ca5b4e1e0831b275c4acf6f";;
-    opam-2.0.0-rc3-arm64-linux) echo "589a8c1842c636caabf9108f95b5f288261f5e621b74b1afa731333f0d5010c10a967153f9c4ca5828ecd4e66326b0b1d679ccb8ad92d07aefc66ae85ea10971";;
-    opam-2.0.0-rc3-armhf-linux) echo "0ebd8662b2d1972b12e38245d3625867fb173bf6939a8c728e0cc349867d5b31103488674665d77be9ad2dc881b3508a947640019b6b48c6821ccece481cf2bc";;
-    opam-2.0.0-rc3-i686-linux) echo "18da8fb4ce5270e51becbde47e8b5b6a855a970820f85f01fcdca1a28cef1ad5b51f0c53f60f89f45192d0f310c4e441da267f2dbc3616e16f68128bb86af2ae";;
-    opam-2.0.0-rc3-x86_64-darwin) echo "229c0623df54561285182570a72c7860f5398532fbfb33d7c90d345fba25fcd43f13e806aa232089da9303481f6c65535dedfff0077ba1d4b96f76b191ca24c6";;
-    opam-2.0.0-rc3-x86_64-linux) echo "f479ec7dd891bb200376fd674a02ff5283c9ca812be5a83138739d39f9d7221ac920c530937573cf789d976b60c822efa49066cdf2b34f61e740835e6fb1a37c";;
-    *) echo "no sha";;
-  esac
 }
 
 check_sha512() {

@@ -11,6 +11,34 @@ COLD=${COLD:-0}
 OPAM_TEST=${OPAM_TEST:-0}
 EXTERNAL_SOLVER=${EXTERNAL_SOLVER:-}
 
+set +x
+echo "TRAVIS_COMMIT_RANGE=$TRAVIS_COMMIT_RANGE"
+echo "TRAVIS_COMMIT=$TRAVIS_COMMIT"
+if [[ $TRAVIS_EVENT_TYPE = 'pull_request' ]] ; then
+  FETCH_HEAD=$(git rev-parse FETCH_HEAD)
+  echo "FETCH_HEAD=$FETCH_HEAD"
+else
+  FETCH_HEAD=$TRAVIS_COMMIT
+fi
+
+if [[ $TRAVIS_EVENT_TYPE = 'push' ]] ; then
+  if ! git cat-file -e "$TRAVIS_COMMIT" 2> /dev/null ; then
+    echo 'TRAVIS_COMMIT does not exist - CI failure'
+    exit 1
+  fi
+else
+  if [[ $TRAVIS_COMMIT != $(git rev-parse FETCH_HEAD) ]] ; then
+    echo 'WARNING! Travis TRAVIS_COMMIT and FETCH_HEAD do not agree!'
+    if git cat-file -e "$TRAVIS_COMMIT" 2> /dev/null ; then
+      echo 'TRAVIS_COMMIT exists, so going with it'
+    else
+      echo 'TRAVIS_COMMIT does not exist; setting to FETCH_HEAD'
+      TRAVIS_COMMIT=$FETCH_HEAD
+    fi
+  fi
+fi
+set -x
+
 init-bootstrap () {
   export OPAMROOT=$OPAMBSROOT
   # The system compiler will be picked up
@@ -34,8 +62,37 @@ init-bootstrap () {
   rm -f "$OPAMBSROOT"/log/*
 }
 
+CheckConfigure () {
+  GIT_INDEX_FILE=tmp-index git read-tree --reset -i "$1"
+  git diff-tree --diff-filter=d --no-commit-id --name-only -r "$1" \
+    | (while IFS= read -r path
+  do
+    case "$path" in
+      configure|configure.ac|m4/*)
+        touch CHECK_CONFIGURE;;
+    esac
+  done)
+  rm -f tmp-index
+  if [[ -e CHECK_CONFIGURE ]] ; then
+    echo "configure generation altered in $1"
+    echo 'Verifying that configure.ac generates configure'
+    git clean -dfx
+    git checkout -f "$1"
+    mv configure configure.ref
+    make configure
+    if ! diff -q configure configure.ref >/dev/null ; then
+      echo -e "[\e[31mERROR\e[0m] configure.ac in $1 doesn't generate configure, \
+please run make configure and fixup the commit"
+      ERROR=1
+    fi
+  fi
+}
+
 case "$TARGET" in
   prepare)
+    if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
+      exit 0
+    fi
     mkdir -p ~/local/bin
 
     # Git should be configured properly to run the tests
@@ -92,6 +149,9 @@ EOF
     exit 0
     ;;
   install)
+    if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
+      exit 0
+    fi
     if [[ $COLD -eq 1 ]] ; then
       make compiler
       make lib-pkg
@@ -143,6 +203,62 @@ EOF
   *)
     echo "bad command $TARGET"; exit 1
 esac
+
+set +x
+if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
+  ERROR=0
+  if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ] ; then
+    TRAVIS_CUR_HEAD=${TRAVIS_COMMIT_RANGE%%...*}
+    TRAVIS_PR_HEAD=${TRAVIS_COMMIT_RANGE##*...}
+    DEEPEN=50
+    while ! git merge-base "$TRAVIS_CUR_HEAD" "$TRAVIS_PR_HEAD" >& /dev/null
+    do
+      echo "Deepening $TRAVIS_BRANCH by $DEEPEN commits"
+      git fetch origin --deepen=$DEEPEN "$TRAVIS_BRANCH"
+      ((DEEPEN*=2))
+    done
+    TRAVIS_MERGE_BASE=$(git merge-base "$TRAVIS_CUR_HEAD" "$TRAVIS_PR_HEAD")
+    if ! git diff "$TRAVIS_MERGE_BASE..$TRAVIS_PR_HEAD" --name-only --exit-code -- shell/install.sh > /dev/null ; then
+      echo "shell/install.sh updated - checking it"
+      eval $(grep '^\(VERSION\|TAG\|OPAM_BIN_URL_BASE\)=' shell/install.sh)
+      echo "TAG = $TAG"
+      echo "OPAM_BIN_URL_BASE=$OPAM_BIN_URL_BASE"
+      ARCHES=0
+      while read -r key sha
+      do
+        ARCHES=1
+        URL="$OPAM_BIN_URL_BASE$TAG/opam-$TAG-$key"
+        echo "Checking $URL"
+        check=$(curl -Ls "$URL" | sha512sum | cut -d' ' -f1)
+        if [ "$check" = "$sha" ] ; then
+          echo "Checksum as expected ($sha)"
+        else
+          echo -e "[\e[31mERROR\e[0m] Checksum downloaded: $check"
+          echo -e "[\e[31mERROR\e[0m] Checksum install.sh: $sha"
+          ERROR=1
+        fi
+      done < <(sed -ne 's/.*opam-\$TAG-\([^)]*\).*"\([^"]*\)".*/\1 \2/p' shell/install.sh)
+      if [ $ARCHES -eq 0 ] ; then
+        echo "[\e[31mERROR\e[0m] No sha512 checksums were detected in shell/install.sh"
+        echo "That can't be right..."
+        ERROR=1
+      fi
+    fi
+  fi
+  if [[ -z $TRAVIS_COMMIT_RANGE ]]
+  then CheckConfigure "$TRAVIS_COMMIT"
+  else
+    if [[ $TRAVIS_EVENT_TYPE = 'pull_request' ]]
+    then TRAVIS_COMMIT_RANGE=$TRAVIS_MERGE_BASE..$TRAVIS_PULL_REQUEST_SHA
+    fi
+    for commit in $(git rev-list "$TRAVIS_COMMIT_RANGE" --reverse)
+    do
+      CheckConfigure "$commit"
+    done
+  fi
+  exit $ERROR
+fi
+set -x
 
 export OPAMYES=1
 export OCAMLRUNPARAM=b
