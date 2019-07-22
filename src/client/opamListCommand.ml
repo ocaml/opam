@@ -387,6 +387,7 @@ type output_format =
   | Synopsis_or_target
   | Description
   | Field of string
+  | Raw_field of string
   | Installed_version
   | Pinning_target
   | Source_hash
@@ -407,7 +408,7 @@ let disp_header = function
   | Package -> "Package"
   | Synopsis | Synopsis_or_target -> "Synopsis"
   | Description -> "Description"
-  | Field s -> String.capitalize_ascii s
+  | Field s | Raw_field s -> String.capitalize_ascii s
   | Installed_version -> "Installed"
   | Pinning_target -> "Pin"
   | Source_hash -> "Source hash"
@@ -427,7 +428,8 @@ let field_names = [
   Synopsis, "synopsis";
   Synopsis_or_target, "synopsis-or-target";
   Description, "description";
-  Field "<field>", "<field>:";
+  Field "<field>", "<field>";
+  Raw_field "<field>:", "<field>:";
   Installed_version, "installed-version";
   Pinning_target, "pin";
   Source_hash, "source-hash";
@@ -441,25 +443,27 @@ let field_names = [
   Depexts, "depexts";
 ]
 
-let string_of_field = function
-  | Field s -> s^":"
+let string_of_field ?(raw=false) = function
+  | Field s -> if raw then s ^":" else s
+  | Raw_field s -> s ^":"
   | f -> List.assoc f field_names
 
-let field_of_string =
+let field_of_string ~raw =
   let names_fields = List.map (fun (a,b) -> b, a) field_names in
+  let opam_fields = List.map fst OpamFile.OPAM.fields in
+  if raw then
+    fun s -> Raw_field s
+  else
   fun s ->
     if OpamStd.String.ends_with ~suffix:":" s then
-      Field (OpamStd.String.remove_suffix ~suffix:":" s)
+      Raw_field (OpamStd.String.remove_suffix ~suffix:":" s)
     else
-    try List.assoc s names_fields
+    try
+      List.assoc s names_fields
     with Not_found ->
-      OpamConsole.error_and_exit `Bad_arguments
-        "No printer for %S%s" s
-        (if not (OpamStd.String.ends_with ~suffix:":" s) &&
-            List.mem_assoc s (OpamFile.OPAM.fields)
-         then Printf.sprintf ". Did you mean the opam field \"%s:\" \
-                              (with a colon)?" s
-         else "")
+    match OpamStd.List.find_opt (fun x -> s = x) opam_fields with
+    | Some f -> Field f
+    | None -> OpamConsole.error_and_exit `Bad_arguments "No printer for %S" s
 
 let version_color st nv =
   let installed = (* (in any switch) *)
@@ -526,7 +530,7 @@ let detail_printer ?prettify ?normalise st nv =
      OpamFile.OPAM.descr >>|
      OpamFile.Descr.body)
     +! ""
-  | Field f ->
+  | Raw_field f | Field f ->
     (try
        List.assoc f (OpamFile.OPAM.to_list (get_opam st nv)) |>
        mini_field_printer ?prettify ?normalise
@@ -707,7 +711,7 @@ let get_depexts st packages =
 let print_depexts =
   OpamStd.String.Set.iter (OpamConsole.msg "%s\n")
 
-let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false)
+let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
     ?(all_versions=false) atoms =
   let packages =
     OpamFormula.packages_of_atoms ~disj:all_versions
@@ -717,7 +721,7 @@ let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false)
     (OpamConsole.error "No package matching %s found"
        (OpamStd.List.concat_map " or " OpamFormula.short_string_of_atom atoms);
      OpamStd.Sys.exit_because `Not_found);
-  let fields = List.map field_of_string fields in
+  let fields = List.map (field_of_string ~raw) fields in
   let all_versions_fields = [
     Name;
     All_installed_versions;
@@ -750,7 +754,7 @@ let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false)
       List.fold_left (fun acc item ->
           let contents = detail_printer ?normalise st nv item in
           if show_empty || contents <> "" then
-            [ OpamConsole.colorise `blue (string_of_field item); contents ]
+            [ OpamConsole.colorise `blue (string_of_field ~raw item); contents ]
             :: acc
           else acc)
         [] (List.rev fields)
@@ -764,7 +768,7 @@ let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false)
     OpamConsole.print_table ?cut stdout ~sep:" ";
   in
   let header pkg =
-    if fields = [] && not raw_opam && not where then
+    if fields = [] && not raw && not where then
       (OpamConsole.header_msg "%s: information on all versions"
          (OpamPackage.Name.to_string pkg.name);
        output_table all_versions_fields pkg)
@@ -788,7 +792,7 @@ let info st ~fields ~raw_opam ~where ?normalise ?(show_empty=false)
            else
              OpamFilename.Dir.to_string OpamFilename.Op.(repo_dir / rdir)
          | None -> "<nowhere>")
-    else if raw_opam then
+    else if raw && fields = [] then
       OpamFile.OPAM.write_to_channel stdout opam
     else
     match fields with
