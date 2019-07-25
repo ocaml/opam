@@ -128,7 +128,11 @@ let check_locked default =
                       consistent)
               else "")));
        fl)
-    else default
+    else
+      (OpamConsole.warning "Lock-file %s doesn't exist, using %s instead."
+         (OpamConsole.colorise `underline (OpamFilename.to_string fl))
+         (OpamFilename.to_string default);
+       default)
 
 let find_opam_file_in_source name dir =
   let opt =
