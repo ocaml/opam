@@ -284,7 +284,7 @@ let help_sections = [
   `P "$(i,OPAMPRECISETRACKING) fine grain tracking of directories";
   `P "$(i,OPAMREQUIRECHECKSUMS) Enables option `--require-checksums' when \
       available (e.g. for `opam install`).";
-  `P "$(i,OPAMRETRES) sets the number of tries before failing downloads.";
+  `P "$(i,OPAMRETRIES) sets the number of tries before failing downloads.";
   `P "$(i,OPAMROOT) see option `--root'. This is automatically set by \
       `opam env --root=DIR --set-root'.";
   `P "$(i,OPAMROOTISOK) don't complain when running as root.";
