@@ -161,17 +161,26 @@ type build_options = {
   unlock_base   : bool;
   locked        : bool;
   lock_suffix   : string;
+  depext_bypass : string list * string list;
+  depext_enable: bool;
+  depext_no_consistency_checks: bool;
+  depext_no_root: bool;
+  depext_print_only: bool;
 }
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
     req_checksums build_test build_doc show dryrun skip_update
-    fake jobs ignore_constraints_on unlock_base locked lock_suffix = {
-  keep_build_dir; reuse_build_dir; inplace_build; make;
-  no_checksums; req_checksums; build_test; build_doc; show; dryrun;
-  skip_update; fake; jobs; ignore_constraints_on; unlock_base;
-  locked; lock_suffix
-}
+    fake jobs ignore_constraints_on unlock_base locked lock_suffix
+    depext_bypass depext_enable depext_no_consistency_checks depext_no_root
+    depext_print_only =
+  {
+    keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
+    req_checksums; build_test; build_doc; show; dryrun; skip_update; fake;
+    jobs; ignore_constraints_on; unlock_base; locked; lock_suffix;
+    depext_bypass; depext_enable; depext_no_consistency_checks;
+    depext_no_root; depext_print_only
+  }
 
 let apply_build_options b =
   let flag f = if f then Some true else None in
@@ -196,6 +205,11 @@ let apply_build_options b =
                          OpamPackage.Name.Set.of_list)
     ?unlock_base:(flag b.unlock_base)
     ?locked:(if b.locked then Some (Some b.lock_suffix) else None)
+    ~depext_bypass:b.depext_bypass
+    ?depext_enable:(flag b.depext_enable)
+    ?depext_no_consistency_checks:(flag b.depext_no_consistency_checks)
+    ?depext_no_root:(flag b.depext_no_root)
+    ?depext_print_only:(flag b.depext_print_only)
     ();
   OpamClientConfig.update
     ?keep_build_dir:(flag b.keep_build_dir)
@@ -238,7 +252,14 @@ let help_sections = [
   `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
   `P "$(i,OPAMDEBUGSECTIONS) if set, limits debug messages to the space-separated \
       list of sections. Sections can optionally have a specific debug level \
-      (for example, $(b,CLIENT:2) or $(b,CLIENT CUDF:2), but otherwise use `--debug-level'.";
+      (for example, $(b,CLIENT:2) or $(b,CLIENT CUDF:2), but otherwise use \
+      `--debug-level'.";
+  `P "$(i,OPAMDEPEXTS) enalbe or disable depext mechanism, see option \
+      `--depext-enable`.";
+  `P "$(i,OPAMDEPEXTBYPASS) set system package to not check, same as \
+      `--depext-bypass` with a list of packages to add.";
+  `P "$(i,OPAMDEPEXTPRINTONLY) see option `--depext-print-only`.";
+  `P "$(i,OPAMDEPEXTNOROOT) see option `--depext-no-root";
   `P "$(i,OPAMDOWNLOADJOBS) sets the maximum number of simultaneous downloads.";
   `P "$(i,OPAMDRYRUN) see option `--dry-run`";
   `P "$(i,OPAMEDITOR) sets the editor to use for opam file editing, overrides \
@@ -255,6 +276,7 @@ let help_sections = [
   `P "$(i,OPAMFIXUPCRITERIA) same as $(i,OPAMUPGRADECRITERIA), but specific \
       to fixup";
   `P "$(i,OPAMIGNORECONSTRAINTS) see install option `--ignore-constraints-on`";
+  `P "$(i,OPAMDEPEXTNOCONSISTENCYCHECK) see option `--depext-no-consistency-checks`";
   `P "$(i,OPAMIGNOREPINDEPENDS) see option `--ignore-pin-depends`";
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
   `P "$(i,OPAMJSON) log json output to the given file (use character `%' to \
@@ -624,6 +646,28 @@ let warn_selector =
     OpamStd.List.concat_map "" (fun (num,enable) ->
         Printf.sprintf "%c%d" (if enable then '+' else '-') num)
       warns
+  in
+  parse, print
+
+let selector =
+  let parse str =
+    let r =
+      List.fold_left (fun (plus, minus) elem ->
+          match OpamStd.String.sub_at 1 elem with
+          | "+" as prefix ->
+            (OpamStd.String.remove_prefix ~prefix elem)::plus, minus
+          | "-" as prefix ->
+            plus, (OpamStd.String.remove_prefix ~prefix elem)::minus
+          |  _ ->  elem::plus, minus)
+        ([],[]) (OpamStd.String.split str ',')
+    in
+    `Ok r
+  in
+  let print ppf (plus,minus) =
+    let concat c =
+      OpamStd.List.concat_map ~nil:"" "," (fun x -> c^x)
+    in
+    pr_str ppf @@ Printf.sprintf "%s,%s" (concat "+" plus) (concat "-" minus)
   in
   parse, print
 
@@ -1063,6 +1107,18 @@ let lock_suffix section =
 
 (* Options common to all build commands *)
 let build_option_section = "PACKAGE BUILD OPTIONS"
+let depext_section = "EXTERNAL DEPENDENCIES MANAGEMENT OPTIONS"
+let man_build_option_section =
+  [
+    `S build_option_section;
+    `S depext_section;
+    `P "Opam needs to interact with the system-wide package manager in some \
+        cases: packages can declare dependencies on system packages (typically, \
+        bindings to C libraries, e.g. SDL, require the library to be \
+        installed), in an OS-dependent way. Then, opam will do its best to \
+        interact with your system, checking their availability, and triggering \
+        their installation if needed.";
+  ]
 let build_options =
   let section = build_option_section in
   let keep_build_dir =
@@ -1148,11 +1204,40 @@ let build_options =
        $(b,\\$OPAMUNLOCKBASE) environment variable" in
   let locked = locked section in
   let lock_suffix = lock_suffix section in
+  let depext_enable =
+    mk_flag ~section:depext_section ["depext-enable"]
+      "Enable the depext mechanism."
+  in
+  let depext_no_consistency_checks =
+    mk_flag ~section:depext_section ["--depext-no-consistency-checks"]
+      "Only handle depexts when installing packages, do not check already \
+       installed ones."
+  in
+  let depext_print_only =
+    mk_flag ~section:depext_section ["--depext-print-only"]
+      "Don't run any system-related commands, instead print them and pause. \
+       Useful if you don't use $(b,sudo)."
+  in
+  let depext_no_root =
+    mk_flag ~section:depext_section ["--depext-no-root"]
+      "Mark all external dependencies that are not already installed as \
+       unavailable. This can make a lot of packages uninstallable."
+  in
+  let depext_bypass =
+    mk_opt ~section:depext_section ["depext-bypass-packages"] "SYSPACKAGE"
+      "Assume the listed system packages to be already installed, so they will \
+       not be searched for using the package manager of your system. This is \
+       persistent, and stored in the switch configuration. Prefix packages with \
+       a $(b,-) minus to disable a bypass. Without argument, lists the \
+       currently configured bypasses."
+      selector ([],[])
+  in
   Term.(const create_build_options
-    $keep_build_dir $reuse_build_dir $inplace_build $make
-    $no_checksums $req_checksums $build_test $build_doc $show $dryrun
-    $skip_update $fake $jobs_flag $ignore_constraints_on
-    $unlock_base $locked $lock_suffix)
+        $keep_build_dir $reuse_build_dir $inplace_build $make
+        $no_checksums $req_checksums $build_test $build_doc $show $dryrun
+        $skip_update $fake $jobs_flag $ignore_constraints_on
+        $unlock_base $locked $lock_suffix $depext_bypass $depext_enable
+        $depext_no_consistency_checks $depext_no_root $depext_print_only)
 
 (* Option common to install commands *)
 let assume_built =

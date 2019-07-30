@@ -94,6 +94,11 @@ val opam_init:
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
   ?locked:string option ->
+  ?depext_bypass: string list * string list ->
+  ?depext_enable: bool ->
+  ?depext_no_consistency_checks: bool ->
+  ?depext_no_root: bool ->
+  ?depext_print_only: bool ->
   ?cudf_file:string option ->
   ?solver:(module OpamCudfSolver.S) Lazy.t ->
   ?best_effort:bool ->
