@@ -1155,48 +1155,43 @@ let build_options =
 
 (* Option common to install commands *)
 let assume_built =
-  Arg.(value & flag & info ["assume-built"]
-         ~doc:"For use on locally-pinned packages: assume they have already \
-               been correctly built, and only run their installation \
-               instructions, directly from their source directory. This \
-               skips the build instructions and can be useful to install \
-               packages that are being worked on. Implies $(i,--inplace-build). \
-               No locally-pinned packages will be skipped.")
+  mk_flag  ["assume-built"]
+    "For use on locally-pinned packages: assume they have already \
+     been correctly built, and only run their installation \
+     instructions, directly from their source directory. This \
+     skips the build instructions and can be useful to install \
+     packages that are being worked on. Implies $(i,--inplace-build). \
+     No locally-pinned packages will be skipped."
 
 let package_selection_section = "PACKAGE SELECTION OPTIONS"
 
 let package_selection =
   let section = package_selection_section in
-  let docs = section in
   let depends_on =
-    let doc =
-      "List only packages that depend on one of (comma-separated) $(docv)."
-    in
-    Arg.(value & opt_all (list atom) [] &
-         info ~doc ~docs ~docv:"PACKAGES" ["depends-on"])
+    mk_opt_all ["depends-on"] "PACKAGES" ~section
+      "List only packages that depend on one of (comma-separated) $(b,PACKAGES)."
+      Arg.(list atom)
   in
   let required_by =
-    let doc = "List only the dependencies of (comma-separated) $(docv)." in
-    Arg.(value & opt_all (list atom) [] &
-         info ~doc ~docs ~docv:"PACKAGES" ["required-by"])
+    mk_opt_all ["required-by"] "PACKAGES" ~section
+      "List only the dependencies of (comma-separated) $(b,PACKAGES)."
+      Arg.(list atom)
   in
   let conflicts_with =
-    let doc =
+    mk_opt_all ["conflicts-with"] "PACKAGES" ~section
       "List packages that have declared conflicts with at least one of the \
        given list. This includes conflicts defined from the packages in the \
        list, from the other package, or by a common $(b,conflict-class:) \
        field."
-    in
-    Arg.(value & opt_all (list package_with_version) [] &
-         info ~doc ~docs ~docv:"PACKAGES" ["conflicts-with"])
+      Arg.(list package_with_version)
   in
   let coinstallable_with =
-    let doc = "Only list packages that are compatible with all of $(docv)." in
-    Arg.(value & opt_all (list package_with_version) [] &
-         info ~doc ~docs ~docv:"PACKAGES" ["coinstallable-with"])
+    mk_opt_all ["coinstallable-with"] "PACKAGES" ~section
+      "Only list packages that are compatible with all of $(b,PACKAGES)."
+      Arg.(list package_with_version)
   in
   let resolve =
-    let doc =
+    mk_opt_all ["resolve"] "PACKAGES" ~section
       "Restrict to a solution to install (comma-separated) $(docv), $(i,i.e.) \
        a consistent set of packages including those. This is subtly different \
        from `--required-by --recursive`, which is more predictable and can't \
@@ -1208,9 +1203,7 @@ let package_selection =
        `--no-switch` further makes the solution independent from the \
        currently pinned packages, architecture, and compiler version. \
        The combination with `--depopts' is not supported."
-    in
-    Arg.(value & opt_all (list atom) [] &
-         info ~doc ~docs ~docv:"PACKAGES" ["resolve"])
+      Arg.(list atom)
   in
   let recursive =
     mk_flag ["recursive"] ~section
@@ -1349,9 +1342,8 @@ let package_listing =
        terminal, or to keep as is otherwise"
   in
   let separator =
-    Arg.(value & opt string " " & info ["separator"]
-           ~docv:"STRING" ~docs:package_listing_section
-           ~doc:"Set the column-separator string")
+    mk_opt ["separator"] "STRING" ~section "Set the column-separator string"
+      Arg.string " "
   in
   let format all_versions short sort columns normalise wrap separator =
   fun ~force_all_versions ->

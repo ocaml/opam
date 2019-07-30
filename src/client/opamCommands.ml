@@ -490,26 +490,25 @@ let list ?(force_search=false) () =
           ~doc:"List only the pinned packages";
       ])
   in
+  let section = selection_docs in
   let search =
     if force_search then Term.const true else
-      mk_flag ["search"] ~section:selection_docs
+      mk_flag ["search"] ~section
         "Match $(i,PATTERNS) against the full descriptions of packages, and \
          require all of them to match, instead of requiring at least one to \
          match against package names (unless $(b,--or) is also specified)."
   in
   let repos =
-    mk_opt ["repos"] "REPOS" ~section:selection_docs
+    mk_opt ["repos"] "REPOS" ~section
       "Include only packages that took their origin from one of the given \
        repositories (unless $(i,no-switch) is also specified, this excludes \
        pinned packages)."
       Arg.(some & list & repository_name) None
   in
   let owns_file =
-    let doc =
+    mk_opt ["owns-file"] "FILE" ~section
       "Finds installed packages responsible for installing the given file"
-    in
-    Arg.(value & opt (some OpamArg.filename) None &
-         info ~doc ~docv:"FILE" ~docs:selection_docs ["owns-file"])
+      Arg.(some OpamArg.filename) None
   in
   let no_switch =
     mk_flag ["no-switch"] ~section:selection_docs
@@ -659,18 +658,16 @@ let show =
         metadata will be shown."
   ] in
   let fields =
-    let doc =
-      Arg.info
-        ~docv:"FIELDS"
-        ~doc:("Only display the values of these fields. Fields can be selected \
-               among "^
-              OpamStd.List.concat_map ", " (Printf.sprintf "$(i,%s)" @* snd)
-                OpamListCommand.field_names
-              ^". Multiple fields can be separated with commas, in which case \
-                field titles will be printed; the raw value of any opam-file \
-                field can be queried by combinig with $(b,--raw)")
-        ["f";"field"] in
-    Arg.(value & opt (list string) [] & doc) in
+    mk_opt ["f";"field"] "FIELDS"
+      (Printf.sprintf
+         "Only display the values of these fields. Fields can be selected \
+          among %s. Multiple fields can be separated with commas, in which case \
+          field titles will be printed; the raw value of any opam-file \
+          field can be queried by combinig with $(b,--raw)"
+         (OpamStd.List.concat_map ", " (Printf.sprintf "$(i,%s)" @* snd)
+            OpamListCommand.field_names))
+      Arg.(list string) []
+  in
   let show_empty =
     mk_flag ["empty-fields"]
       "Show fields that are empty. This is implied when $(b,--field) is \
@@ -688,27 +685,28 @@ let show =
        packages"
   in
   let file =
-    let doc =
-      Arg.info
-        ~docv:"FILE"
-        ~doc:"DEPRECATED: see $(i,--just-file)"
-        ["file"] in
-    Arg.(value & opt (some existing_filename_or_dash) None & doc) in
-  let normalise = mk_flag ["normalise"]
+    mk_opt ["file"] "FILE" "DEPRECATED: see $(i,--just-file)"
+      Arg.(some existing_filename_or_dash) None
+  in
+  let normalise =
+    mk_flag ["normalise"]
       "Print the values of opam fields normalised (no newlines, no implicit \
        brackets)"
   in
-  let no_lint = mk_flag ["no-lint"]
+  let no_lint =
+    mk_flag ["no-lint"]
       "Don't output linting warnings or errors when reading from files"
   in
-  let just_file = mk_flag ["just-file"]
+  let just_file =
+    mk_flag ["just-file"]
       "Load and display information from the given files (allowed \
        $(i,PACKAGES) are file or directory paths), without consideration for \
        the repositories or state of the package. This implies $(b,--raw) unless \
        $(b,--fields) is used. Only raw opam-file fields can be queried. If no \
        PACKAGES argument is given, read opam file from stdin."
   in
-  let all_versions = mk_flag ["all-versions"]
+  let all_versions =
+    mk_flag ["all-versions"]
       "Display information of all packages matching $(i,PACKAGES), not \
        restrained to a single package matching $(i,PACKAGES) constraints."
   in
@@ -1103,9 +1101,9 @@ let var =
     Arg.(value & pos 0 (some string) None & info ~docv:"VAR" [])
   in
   let package =
-    Arg.(value & opt (some package_name) None &
-         info ~docv:"PACKAGE" ["package"]
-           ~doc:"List all variables defined for the given package")
+    mk_opt ["package"] "PACKAGE"
+      "List all variables defined for the given package"
+      Arg.(some package_name) None
   in
   let print_var global_options package var =
     apply_global_options global_options;
@@ -1244,13 +1242,14 @@ let install =
     Arg.(value & vflag None[root; unroot])
   in
   let deps_only =
-    Arg.(value & flag & info ["deps-only"]
-           ~doc:"Install all its dependencies, but don't actually install the \
-                 package.") in
+    mk_flag  ["deps-only"]
+      "Install all its dependencies, but don't actually install the package."
+  in
   let restore =
-    Arg.(value & flag & info ["restore"]
-           ~doc:"Attempt to restore packages that were marked for installation \
-                 but have been removed due to errors") in
+    mk_flag ["restore"]
+      "Attempt to restore packages that were marked for installation but have \
+       been removed due to errors"
+  in
   let destdir =
     mk_opt ["destdir"] "DIR"
       "Copy the files installed by the given package within the current opam \
@@ -1714,13 +1713,13 @@ let repository =
           $ Arg.value flags $ switches)
   in
   let rank =
-    Arg.(value & opt int 1 & info ~docv:"RANK" ["rank"] ~doc:
-           "Set the rank of the repository in the list of configured \
-            repositories. Package definitions are looked in the repositories \
-            in increasing rank order, therefore 1 is the highest priority. \
-            Negative ints can be used to select from the lowest priority, -1 \
-            being last. $(b,set-repos) can otherwise be used to explicitly \
-            set the repository list at once.")
+    mk_opt ["rank"] "RANK"
+      "Set the rank of the repository in the list of configured repositories. \
+      Package definitions are looked in the repositories in increasing rank \
+      order, therefore 1 is the highest priority.  Negative ints can be used to \
+      select from the lowest priority, -1 being last. $(b,set-repos) can \
+      otherwise be used to explicitly set the repository list at once."
+      Arg.(int) 1
   in
   let repository global_options command kind short scope rank params =
     apply_global_options global_options;
@@ -3198,8 +3197,8 @@ let lock =
   ]
   in
   let only_direct_flag =
-    Arg.(value & flag & info ["direct-only"] ~doc:
-           "Only lock direct dependencies, rather than the whole dependency tree.")
+    mk_flag ["direct-only"]
+      "Only lock direct dependencies, rather than the whole dependency tree."
   in
   let lock_suffix = OpamArg.lock_suffix "OPTIONS" in
   let lock global_options only_direct lock_suffix atom_locs =
