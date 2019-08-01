@@ -40,7 +40,7 @@ dune: $(DUNE_DEP)
 	@$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) @install
 
 opam: $(DUNE_DEP) build-opam processed-opam.install
-	$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
+	@$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
 ifneq ($(MANIFEST_ARCH),)
 	@mkdir -p Opam.Runtime.$(MANIFEST_ARCH)
 	@cp -f src/manifest/Opam.Runtime.$(MANIFEST_ARCH).manifest Opam.Runtime.$(MANIFEST_ARCH)/
@@ -50,7 +50,7 @@ ifneq ($(MANIFEST_ARCH),)
 endif
 
 opam-installer: $(DUNE_DEP) build-opam-installer processed-opam-installer.install
-	$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
+	@$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
 
 opam-admin.top: $(DUNE_DEP)
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/tools/opam_admin_topstart.bc
