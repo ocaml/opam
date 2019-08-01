@@ -1,0 +1,63 @@
+c7f8804c
+### opam switch create camelus ocaml-base-compiler.4.08.0 --fake
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.08.0
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.08.0
+Done.
+### <camelus.opam>
+opam-version: "2.0"
+synopsis: "Test"
+authors: "x"
+homepage: "x"
+bug-reports: "x"
+maintainer: "Louis Gesbert <louis.gesbert@ocamlpro.com>"
+depends: [
+  "cohttp-lwt-unix" { < "2.0.0" }
+  "dune"
+  "git-unix" {>= "1.13" & < "2.0" | = "1.11.5" }
+  "github"
+  "github-unix"
+  "opam-format" {>= "2.0.0~beta5"}
+  "opam-solver" {>= "2.0.0~beta5"}
+  "opam-state" { >= "2.0.1"}
+  "tls"
+  "yojson"
+  ("ago" | ("utop"))
+  ("fpath" | "abella")
+  "lwt_ppx" { build }
+  "fpath" ]
+### opam install . --deps-only --show
+The following dependencies couldn't be met:
+  - camelus → tls → sexplib < 113.01.00 → ocaml < 4.03.0
+      base of this switch (use `--unlock-base' to force)
+  - camelus → tls → ppx_sexp_conv < v0.11.0 → ocaml < 4.03
+      base of this switch (use `--unlock-base' to force)
+  - camelus → tls → ppx_sexp_conv < v0.11.0 → ppx_core < v0.11 → ppx_ast → ocaml < 4.08.0
+      base of this switch (use `--unlock-base' to force)
+  - camelus → tls → ppx_sexp_conv < v0.11.0 → ppx_core < v0.11 → ppx_ast → ppxlib < 0.3.0 → ocaml < 4.08.0
+      base of this switch (use `--unlock-base' to force)
+  - camelus → tls → ppx_sexp_conv < v0.11.0 → ppx_core < v0.11 → ocaml < 4.06.0
+      base of this switch (use `--unlock-base' to force)
+  - camelus → tls → ppx_sexp_conv < v0.11.0 → ppx_core < v0.11 → base < v0.10 → ocaml < 4.07.0
+      base of this switch (use `--unlock-base' to force)
+  - camelus → tls → nocrypto >= 0.5.4 → ppx_sexp_conv < v0.11.0 → ppx_core < v0.11 → base < v0.10 → ocaml < 4.07.0
+      base of this switch (use `--unlock-base' to force)
+  - camelus → tls → nocrypto >= 0.5.4 → ppx_sexp_conv < v0.11.0 → ppx_core < v0.11 → ocaml < 4.06.0
+      base of this switch (use `--unlock-base' to force)
+  - camelus → tls → nocrypto >= 0.5.4 → ppx_sexp_conv < v0.11.0 → ppx_core < v0.11 → ppx_ast → ppxlib < 0.3.0 → ocaml < 4.08.0
+      base of this switch (use `--unlock-base' to force)
+  - camelus → tls → nocrypto >= 0.5.4 → ppx_sexp_conv < v0.11.0 → ppx_core < v0.11 → ppx_ast → ocaml < 4.08.0
+      base of this switch (use `--unlock-base' to force)
+  - camelus → tls → nocrypto >= 0.5.4 → ppx_sexp_conv < v0.11.0 → ocaml < 4.03
+      base of this switch (use `--unlock-base' to force)
+  - camelus → tls → camlp4 → ocaml < 4.08
+      base of this switch (use `--unlock-base' to force)
+  - camelus → tls → camlp4 → ocaml-variants (= 4.02.0+modular-implicits & = 4.02.1+modular-implicits-ber)
+      no matching version
+
+No solution found, exiting

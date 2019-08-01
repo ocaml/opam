@@ -216,3 +216,9 @@ cold-%:
 .PHONY: run-appveyor-test
 run-appveyor-test:
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" ./appveyor_test.sh
+
+.PHONY: reftests%
+reftests: opam
+	make -C tests $@
+reftests-%: opam
+	make -C tests $@

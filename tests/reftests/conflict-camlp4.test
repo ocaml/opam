@@ -1,0 +1,16 @@
+f372039d
+### opam switch create test --packages=camlp4,ocaml-system --show --yes
+[ERROR] Could not resolve set of base packages:
+        The following dependencies couldn't be met:
+          - camlp4 → ocaml < 4.08 → ocaml-variants < 4.07.2~
+          - camlp4 → ocaml < 4.08 → ocaml-base-compiler < 4.08.0
+          - camlp4 → ocaml-variants (= 4.02.0+modular-implicits & = 4.02.1+modular-implicits-ber)
+              no matching version
+        Your request can't be satisfied:
+          - camlp4 (!= 4.01+system & < 4.02+system | = 4.03+1 | = 4.04+1 | = 4.05+1 | = 4.06+1 | = 4.07+1) is in conflict with ocaml-system
+          - ocaml-base-compiler (< 3.07+2 | >= 3.08.1 & < 3.09.2 | >= 3.10.0 & < 3.10.2 | >= 3.11.1 & != 4.04.1 & < 4.07.1) is in conflict with ocaml-system
+          - ocaml-system = 4.08.0 is in conflict with ocaml-base-compiler
+          - ocaml-system = 4.08.0 is in conflict with ocaml-variants
+          - ocaml-variants (!= 4.00.1+mirage-unix & < 4.01.0+lsb | >= 4.01.0+musl+static & != 4.02.0+trunk & != 4.02.1+musl & != 4.02.3+buckle-1 & != 4.02.3+musl+static & != 4.03.0+fp & != 4.04.0+32bit & != 4.04.0+spacetime & != 4.04.2+safe-string & != 4.05.0+bytecode-only & != 4.06.0+beta2+force-safe-string & != 4.06.0+flambda & != 4.06.0+no-flat-float-array & < 4.06.0+rc1+afl | >= 4.06.0+rc1+force-safe-string & != 4.06.1+lto & < 4.06.1+rc2+default-unsafe-string | >= 4.06.1+rc2+force-safe-string & != 4.06.1+statistical-memprof & != 4.06.1+trunk+force-safe-string & != 4.07.0+32bit & != 4.07.0+beta2+flambda & != 4.07.0+fp & != 4.07.0+no-flat-float-array & != 4.07.0+rc2+flambda & < 4.07.0+trunk+afl | >= 4.07.0+trunk+flambda & != 4.07.1+rc1+32bit & < 4.08.0+32bit) is in conflict with ocaml-system
+
+
