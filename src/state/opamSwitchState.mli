@@ -153,6 +153,11 @@ val source_dir: 'a switch_state -> package -> dirname
     from the values of the system-specific variables *)
 val depexts: 'a switch_state -> package -> OpamSysPkg.Set.t
 
+(** Returns the ordered [sys_packages] of the given [package] set *)
+val system_packages:
+  depexts:(package -> OpamSysPkg.Set.t) -> package_set ->
+  OpamSysPkg.status package_map
+
 (** [conflicts_with st subset pkgs] returns all packages declared in conflict
     with at least one element of [subset] within [pkgs], through forward or
     backward conflict definition or common conflict-class. Packages in [subset]

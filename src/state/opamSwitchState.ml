@@ -146,6 +146,49 @@ let infer_switch_invariant st =
     st.switch_global st.switch st.switch_config st.opams
     st.packages st.compiler_packages st.installed_roots st.available_packages
 
+let depexts_raw ~env nv opams =
+  try
+    let opam = OpamPackage.Map.find nv opams in
+    List.fold_left (fun depexts (names, filter) ->
+        if OpamFilter.eval_to_bool ~default:false env filter then
+          OpamSysPkg.Set.Op.(names ++ depexts)
+        else depexts)
+      OpamSysPkg.Set.empty
+      (OpamFile.OPAM.depexts opam)
+  with Not_found -> OpamSysPkg.Set.empty
+
+let system_packages ~depexts packages =
+  let nv_syspkg =
+    OpamPackage.Set.fold (fun nv map ->
+        let s = depexts nv in
+        if OpamSysPkg.Set.is_empty s then map
+        else OpamPackage.Map.add nv s map)
+      packages OpamPackage.Map.empty
+  in
+  let all_syspkgs =
+    nv_syspkg
+    |> OpamPackage.Map.values
+    |> List.fold_left (fun set values ->
+        OpamSysPkg.Set.union set values) OpamSysPkg.Set.empty
+  in
+  let chronos = OpamConsole.timer () in
+  let os_pkgs = OpamSysInteract.packages_status all_syspkgs in
+  let s =
+    let open OpamSysPkg in
+    OpamPackage.Map.map (fun set ->
+        OpamSysPkg.Set.fold (fun spkg sps ->
+            match OpamSysPkg.Map.find_opt spkg os_pkgs with
+            | Some `installed -> sps
+            | Some `available ->
+              {sps with s_available = OpamSysPkg.Set.add spkg sps.s_available}
+            | Some `not_found ->
+              {sps with s_not_found = OpamSysPkg.Set.add spkg sps.s_not_found}
+            | None -> assert false
+          ) set OpamSysPkg.status_empty
+      ) nv_syspkg
+  in
+  log "depexts loaded in %.3fs" (chronos());
+  s
 
 let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
@@ -389,7 +432,19 @@ let load lock_kind gt rt switch =
   let invalidated = lazy (
     Lazy.force ext_files_changed -- Lazy.force available_packages
   ) in
-  let sys_packages = OpamPackage.Map.empty in
+  (* depext check *)
+  let sys_packages =
+    if OpamStateConfig.(not !r.depext_enable
+                        || !r.depext_no_consistency_checks) then
+      OpamPackage.Map.empty
+    else
+      system_packages packages
+        ~depexts:(fun package ->
+            let env =
+              OpamPackageVar.resolve_switch_raw ~package gt switch switch_config
+            in
+            depexts_raw ~env package opams)
+  in
   let st = {
     switch_global = (gt :> unlocked global_state);
     switch_repos = (rt :> unlocked repos_state);
@@ -549,15 +604,7 @@ let source_dir st nv =
 
 let depexts st nv =
   let env v = OpamPackageVar.resolve_switch ~package:nv st v in
-  match opam_opt st nv with
-  | None -> OpamSysPkg.Set.empty
-  | Some opam ->
-    List.fold_left (fun depexts (names, filter) ->
-        if OpamFilter.eval_to_bool ~default:false env filter then
-          OpamSysPkg.Set.union depexts names
-        else depexts)
-      OpamSysPkg.Set.empty
-      (OpamFile.OPAM.depexts opam)
+ depexts_raw ~env nv st.opams
 
 let dev_packages st =
   OpamPackage.Set.filter (is_dev_package st)
