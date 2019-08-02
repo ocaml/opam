@@ -868,6 +868,90 @@ let run_hook_job t name ?(local=[]) w =
   | None ->
     Done true
 
+let rec check_and_install_depexts t packages =
+  let sys_packages =
+    if OpamStateConfig.(!r.depext_no_consistency_checks) then
+      OpamSwitchState.system_packages packages
+        ~depexts:(OpamSwitchState.depexts t)
+    else t.sys_packages
+  in
+  let avail, nf =
+    let add pkg sys_set set =
+      if not (OpamSysPkg.Set.is_empty sys_set) then
+        OpamPackage.Map.add pkg
+          (OpamSysPkg.Set.elements sys_set) set
+      else set
+    in
+    OpamPackage.Map.fold (fun pkg sys (avail,nf) ->
+        if OpamPackage.Set.mem pkg packages then
+          add pkg sys.OpamSysPkg.s_available avail,
+          add pkg sys.OpamSysPkg.s_not_found nf
+        else
+          avail,nf)
+      sys_packages (OpamPackage.Map.empty, OpamPackage.Map.empty)
+  in
+  let print_dep pkgs msg =
+    let lst =
+      OpamPackage.Map.bindings
+        (OpamPackage.Map.map (List.map OpamSysPkg.to_string) pkgs)
+    in
+    if lst = [] then "" else
+      OpamStd.Format.itemize (fun lst ->
+          Printf.sprintf "%s\n%s"
+            msg
+            (OpamStd.Format.itemize (fun (p,s) ->
+                 Printf.sprintf "%s: %s"
+                   (OpamPackage.to_string p)
+                   (OpamStd.Format.pretty_list s))
+                lst)
+        ) [lst]
+  in
+  if not (OpamPackage.Map.is_empty avail && OpamPackage.Map.is_empty nf) then
+    (OpamConsole.error "Some external dependencies are missing:\n%s%s"
+       (print_dep avail "available to install:")
+       (print_dep nf
+          (Printf.sprintf "not available on %s:"
+             (match OpamSysPoll.os_family () with
+                Some o -> o | None -> assert false)
+          ));
+     if not (OpamPackage.Map.is_empty avail
+             || OpamStateConfig.(!r.depext_no_root)) then
+       let packages =
+         OpamPackage.Map.values avail
+         |> List.flatten
+         |> OpamSysPkg.Set.of_list
+       in
+       if OpamStateConfig.(!r.depext_print_only && not !r.depext_no_root) then
+         let commands =
+           OpamSysInteract.install_packages_commands packages
+         in
+         OpamConsole.msg "Run %s command%s to install missing packages:\n%s\n"
+           (if List.length commands = 1 then "this" else "these")
+           (if List.length commands = 1 then "" else "s")
+           (OpamStd.Format.itemize ~bullet:"  "
+              (OpamStd.List.concat_map " " (fun x -> x))
+              commands)
+       else
+       match
+         OpamConsole.read
+           "Do you want to let opam run available packages install or install \
+            them yourself and retry depext check? [N/i/r]\n \
+            default is 'no' to abort, use 'i' for install, and 'r' for retry\n"
+       with
+       | Some ("i" | "I" | "install" | "INSTALL") | None ->
+         OpamSysInteract.install packages
+       | Some ("r" | "R" | "retry" | "RETRY") ->
+         let missing =
+           OpamPackage.Set.union
+             (OpamPackage.Set.of_list (OpamPackage.Map.keys avail))
+             (OpamPackage.Set.of_list (OpamPackage.Map.keys nf))
+         in
+         check_and_install_depexts t missing
+       | _ -> OpamStd.Sys.exit_because `Aborted
+    )
+  else
+    log "No missing depexts for %s" (OpamPackage.Set.to_string packages)
+
 (* Apply a solution *)
 let apply ?ask t ~requested ?add_roots ?(assume_built=false) ?force_remove
     solution =
@@ -960,6 +1044,13 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false) ?force_remove
       in
       if not pre_session then
         OpamStd.Sys.exit_because `Configuration_error;
+      (* depexts handling *)
+      if OpamStateConfig.(not !r.depext_enable) then
+        log "Skipping depexts"
+      else
+        check_and_install_depexts t
+          OpamPackage.Set.Op.(OpamSolver.new_packages solution
+          ++ Lazy.force t.reinstall);
       let t0 = t in
       let t, r =
         parallel_apply t ~requested ?add_roots ~assume_built ?force_remove
