@@ -151,7 +151,7 @@ val source_dir: 'a switch_state -> package -> dirname
 
 (** Returns the set of active external dependencies for the package, computed
     from the values of the system-specific variables *)
-val depexts: 'a switch_state -> package -> OpamStd.String.Set.t
+val depexts: 'a switch_state -> package -> OpamSysPkg.Set.t
 
 (** [conflicts_with st subset pkgs] returns all packages declared in conflict
     with at least one element of [subset] within [pkgs], through forward or

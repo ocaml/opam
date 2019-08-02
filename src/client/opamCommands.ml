@@ -620,7 +620,7 @@ let list ?(force_search=false) () =
     let results_depexts = OpamListCommand.get_depexts st results in
     if not silent then
       OpamListCommand.print_depexts results_depexts
-    else if OpamStd.String.Set.is_empty results_depexts then
+    else if OpamSysPkg.Set.is_empty results_depexts then
       OpamStd.Sys.exit_because `False
   in
   Term.(const list $global_options $package_selection $state_selector

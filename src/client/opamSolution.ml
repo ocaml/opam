@@ -59,18 +59,19 @@ let print_depexts_helper st actions =
   let depexts =
     List.fold_left (fun depexts -> function
         | `Build nv ->
-          OpamStd.String.Set.union depexts (OpamSwitchState.depexts st nv)
+          OpamSysPkg.Set.union depexts (OpamSwitchState.depexts st nv)
         | _ -> depexts)
-      OpamStd.String.Set.empty
+      OpamSysPkg.Set.empty
       actions
   in
-  if not (OpamStd.String.Set.is_empty depexts) then (
+  if not (OpamSysPkg.Set.is_empty depexts) then (
     OpamConsole.formatted_msg
       "\nThe packages you requested declare the following system dependencies. \
        Please make sure they are installed before retrying:\n";
     OpamConsole.formatted_msg ~indent:4 "    %s\n\n"
-      (OpamStd.List.concat_map " " (OpamConsole.colorise `bold)
-         (OpamStd.String.Set.elements depexts))
+      (OpamStd.List.concat_map " " (fun s ->
+           OpamConsole.colorise `bold (OpamSysPkg.to_string s))
+          (OpamSysPkg.Set.elements depexts))
   )
 
 let check_solution ?(quiet=false) st = function
@@ -930,23 +931,27 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false) ?force_remove
       let var_def name l =
         OpamVariable.Full.of_string name, L l
       in
-      let var_def_set name set =
+      let var_def_pset name set =
         var_def name
           (List.map OpamPackage.to_string (OpamPackage.Set.elements set))
       in
+      let var_def_spset name set =
+        var_def name
+          (List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements set))
+      in
       let depexts =
         OpamPackage.Set.fold (fun nv depexts ->
-            OpamStd.String.Set.union depexts
+            OpamSysPkg.Set.union depexts
               (OpamSwitchState.depexts t nv))
-          new_state.installed OpamStd.String.Set.empty
+          new_state.installed OpamSysPkg.Set.empty
       in
       let pre_session =
         let open OpamPackage.Set.Op in
         let local = [
-          var_def_set "installed" new_state.installed;
-          var_def_set "new" (new_state.installed -- t.installed);
-          var_def_set "removed" (t.installed -- new_state.installed);
-          var_def "depexts" (OpamStd.String.Set.elements depexts);
+          var_def_pset "installed" new_state.installed;
+          var_def_pset "new" (new_state.installed -- t.installed);
+          var_def_pset "removed" (t.installed -- new_state.installed);
+          var_def_spset "depexts" depexts;
         ] in
         run_job @@
         run_hook_job t "pre-session" ~local
@@ -964,9 +969,9 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false) ?force_remove
       let post_session =
         let open OpamPackage.Set.Op in
         let local = [
-          var_def_set "installed" t.installed;
-          var_def_set "new" (t.installed -- t0.installed);
-          var_def_set "removed" (t0.installed -- t.installed);
+          var_def_pset "installed" t.installed;
+          var_def_pset "new" (t.installed -- t0.installed);
+          var_def_pset "removed" (t0.installed -- t.installed);
           OpamVariable.Full.of_string "success", B (success);
           OpamVariable.Full.of_string "failure", B (not success);
         ] in

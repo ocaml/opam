@@ -402,3 +402,7 @@ type checksums = string list
 
 (** {2 JSON} *)
 type json = OpamJson.t
+
+type sys_package = OpamSysPkg.t
+
+type sys_pkg_status = OpamSysPkg.status

@@ -2044,7 +2044,7 @@ module OPAMSyntax = struct
     (* User-facing data used by opam *)
     messages   : (string * filter option) list;
     post_messages: (string * filter option) list;
-    depexts    : (string list * filter) list;
+    depexts    : (OpamSysPkg.Set.t * filter) list;
     libraries  : (string * filter option) list;
     syntax     : (string * filter option) list;
     dev_repo   : url option;
@@ -2594,20 +2594,25 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:1 @@
          Pp.V.map_option Pp.V.string_tr (Pp.opt Pp.V.filter));
       "depexts", no_cleanup Pp.ppacc with_depexts depexts
-        (Pp.fallback
+        (let map_syspkg =
+           (Pp.V.map_list
+              (Pp.V.string -| Pp.of_module "sys-package" (module OpamSysPkg))
+            -| Pp.pp (fun ~pos:_ -> OpamSysPkg.Set.of_list) OpamSysPkg.Set.elements)
+         in
+         Pp.fallback
            (Pp.V.map_list ~depth:2 @@
-            Pp.V.map_option (Pp.V.map_list Pp.V.string) (Pp.V.filter))
+            Pp.V.map_option map_syspkg (Pp.V.filter))
            (Pp.V.map_list ~depth:3
               (let rec filter_of_taglist = function
-                 | [] -> FBool true
-                 | [v] -> FString v
-                 | v :: r -> FAnd (FString v, filter_of_taglist r)
+                  | [] -> FBool true
+                  | [v] -> FString v
+                  | v :: r -> FAnd (FString v, filter_of_taglist r)
                in
                Pp.V.map_pair
                  (Pp.V.map_list Pp.V.string -|
                   Pp.of_pair "tag-list"
                     (filter_of_taglist, fun _ -> assert false))
-                 (Pp.V.map_list Pp.V.string) -|
+                 map_syspkg -|
                Pp.pp (fun ~pos:_ (a,b) -> b,a) (fun (b,a) -> a,b))));
       "libraries", no_cleanup Pp.ppacc with_libraries libraries
         (Pp.V.map_list ~depth:1 @@

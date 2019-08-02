@@ -598,9 +598,16 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        "Mismatching 'extra-files:' field"
        ~detail:(List.map OpamFilename.Base.to_string mismatching_extra_files)
        (mismatching_extra_files <> []));
-    (let spaced_depexts = List.concat (List.map (fun (dl,_) ->
-         List.filter (fun d -> String.contains d ' ' || String.length d = 0) dl)
-         t.depexts) in
+    (let spaced_depexts =
+       List.concat (List.map (fun (dl,_) ->
+           OpamStd.List.filter_map
+             (fun s ->
+                let d = OpamSysPkg.to_string s in
+                if String.contains d ' ' || String.length d = 0 then
+                  Some d
+                else None)
+             (OpamSysPkg.Set.elements dl))
+           t.depexts) in
      cond 54 `Warning
        "External dependencies should not contain spaces nor empty string"
        ~detail:spaced_depexts

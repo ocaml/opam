@@ -161,7 +161,7 @@ type build_options = {
   unlock_base   : bool;
   locked        : bool;
   lock_suffix   : string;
-  depext_bypass : string list * string list;
+  depext_bypass : sys_package list * sys_package list;
   depext_enable: bool;
   depext_no_consistency_checks: bool;
   depext_no_root: bool;
@@ -668,6 +668,17 @@ let selector =
       OpamStd.List.concat_map ~nil:"" "," (fun x -> c^x)
     in
     pr_str ppf @@ Printf.sprintf "%s,%s" (concat "+" plus) (concat "-" minus)
+  in
+  parse, print
+
+let combine_selector of_str to_str =
+  let parse, print = selector in
+  let parse str =
+    match parse str with
+    | `Ok (p,m) -> `Ok (List.map of_str p, List.map of_str m)
+  in
+  let print ppf (p,m) =
+    print ppf (List.map to_str p, List.map to_str m)
   in
   parse, print
 
@@ -1230,7 +1241,8 @@ let build_options =
        persistent, and stored in the switch configuration. Prefix packages with \
        a $(b,-) minus to disable a bypass. Without argument, lists the \
        currently configured bypasses."
-      selector ([],[])
+      (combine_selector OpamSysPkg.of_string OpamSysPkg.to_string)
+      ([],[])
   in
   Term.(const create_build_options
         $keep_build_dir $reuse_build_dir $inplace_build $make

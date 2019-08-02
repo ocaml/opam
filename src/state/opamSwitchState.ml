@@ -550,14 +550,13 @@ let source_dir st nv =
 let depexts st nv =
   let env v = OpamPackageVar.resolve_switch ~package:nv st v in
   match opam_opt st nv with
-  | None -> OpamStd.String.Set.empty
+  | None -> OpamSysPkg.Set.empty
   | Some opam ->
     List.fold_left (fun depexts (names, filter) ->
         if OpamFilter.eval_to_bool ~default:false env filter then
-          List.fold_left (fun depexts n -> OpamStd.String.Set.add n depexts)
-            depexts names
+          OpamSysPkg.Set.union depexts names
         else depexts)
-      OpamStd.String.Set.empty
+      OpamSysPkg.Set.empty
       (OpamFile.OPAM.depexts opam)
 
 let dev_packages st =

@@ -24,7 +24,7 @@ type t = {
   unlock_base: bool;
   no_env_notice: bool;
   locked: string option;
-  depext_bypass: OpamStd.String.Set.t * OpamStd.String.Set.t;
+  depext_bypass: OpamSysPkg.Set.t * OpamSysPkg.Set.t;
   depext_enable: bool;
   depext_no_consistency_checks : bool;
   depext_no_root : bool;
@@ -51,7 +51,7 @@ let default = {
   unlock_base = false;
   no_env_notice = false;
   locked = None;
-  depext_bypass = OpamStd.String.Set.empty, OpamStd.String.Set.empty;
+  depext_bypass = OpamSysPkg.Set.empty, OpamSysPkg.Set.empty;
   depext_enable = false;
   depext_no_consistency_checks = false;
   depext_no_root = false;
@@ -72,7 +72,7 @@ type 'a options_fun =
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
   ?locked:string option ->
-  ?depext_bypass: string list * string list ->
+  ?depext_bypass: sys_package list * sys_package list ->
   ?depext_enable: bool ->
   ?depext_no_consistency_checks: bool ->
   ?depext_no_root: bool ->
@@ -118,8 +118,8 @@ let setk k t
     depext_bypass =
       (match depext_bypass with
        | Some (ad,rm) ->
-         OpamStd.String.Set.(Op.(of_list ad ++ fst t.depext_bypass)),
-         OpamStd.String.Set.(Op.(of_list rm ++ snd t.depext_bypass))
+         OpamSysPkg.Set.(Op.(of_list ad ++ fst t.depext_bypass)),
+         OpamSysPkg.Set.(Op.(of_list rm ++ snd t.depext_bypass))
        | None -> t.depext_bypass);
     depext_enable = t.depext_enable + depext_enable;
     depext_no_consistency_checks =
@@ -161,7 +161,9 @@ let initk k =
     ?no_env_notice:(env_bool "NOENVNOTICE")
     ?locked:(env_string "LOCKED" >>| function "" -> None | s -> Some s)
     ?depext_bypass:(env_string "DEPEXTBYPASS" >>| fun s ->
-                    (OpamStd.String.split s ',', []))
+                    (List.map OpamSysPkg.of_string
+                       (OpamStd.String.split s ','),
+                     []))
     ?depext_enable:(env_bool "DEPEXTS")
     ?depext_no_consistency_checks:(env_bool "DEPEXTNOCONSISTENCYCHECK")
     ?depext_no_root:(env_bool "DEPEXTNOROOT")

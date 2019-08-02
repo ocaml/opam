@@ -320,7 +320,7 @@ module OPAM: sig
     (* User-facing data used by opam *)
     messages   : (string * filter option) list;
     post_messages: (string * filter option) list;
-    depexts    : (string list * filter) list;
+    depexts    : (OpamSysPkg.Set.t * filter) list;
     libraries  : (string * filter option) list;
     syntax     : (string * filter option) list;
     dev_repo   : url option;
@@ -425,7 +425,7 @@ module OPAM: sig
   val depopts: t -> filtered_formula
 
   (** External dependencies *)
-  val depexts: t -> (string list * filter) list
+  val depexts: t -> (OpamSysPkg.Set.t * filter) list
 
   val extra_sources: t -> (basename * URL.t) list
 
@@ -599,7 +599,7 @@ module OPAM: sig
   val with_bug_reports: string list -> t -> t
 
   (** Construct using [depexts] *)
-  val with_depexts: (string list * filter) list -> t -> t
+  val with_depexts: (OpamSysPkg.Set.t * filter) list -> t -> t
 
   val with_flags: package_flag list -> t -> t
 
