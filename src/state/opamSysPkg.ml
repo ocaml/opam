@@ -8,6 +8,22 @@
 (*                                                                        *)
 (**************************************************************************)
 
+type status =
+  {
+    s_available : OpamStd.String.Set.t;
+    (** Package available but not installed *)
+
+    s_not_found : OpamStd.String.Set.t;
+    (** Package unavailable on this system *)
+  }
+
+
+let status_empty =
+  {
+    s_available  = OpamStd.String.Set.empty;
+    s_not_found  = OpamStd.String.Set.empty;
+  }
+
 module SMap = OpamStd.String.Map
 module SSet = OpamStd.String.Set
 

@@ -85,6 +85,7 @@ type +'lock repos_state = {
       repositories *)
 } constraint 'lock = 'lock lock
 
+
 (** State of a given switch: options, available and installed packages, etc.*)
 type +'lock switch_state = {
   switch_lock: OpamSystem.lock;
@@ -123,6 +124,9 @@ type +'lock switch_state = {
 
   packages: package_set;
   (** The set of all known packages *)
+
+  sys_packages: OpamSysPkg.status package_map;
+  (** Map of package and their system dependencies packages status *)
 
   available_packages: package_set Lazy.t;
   (** The set of available packages, filtered by their [available:] field *)

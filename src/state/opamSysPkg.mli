@@ -11,3 +11,15 @@
 val get_installed_packages: OpamStd.String.Set.t -> OpamStd.String.Set.t
 val update : su:bool -> interactive:bool -> unit
 val install: su:bool -> interactive:bool -> OpamStd.String.Set.t -> unit
+
+(** System packages status *)
+type status =
+  {
+    s_available : OpamStd.String.Set.t;
+    (** Package available but not installed *)
+
+    s_not_found : OpamStd.String.Set.t;
+    (** Package unavailable on this system *)
+  }
+
+val status_empty: status
