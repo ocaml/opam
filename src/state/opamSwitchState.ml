@@ -424,14 +424,6 @@ let load lock_kind gt rt switch =
       OpamPackage.Set.empty
     |> fun inv -> log "Invalidated packages: %a" (slog OpamPackage.Set.to_string) inv; inv
   ) in
-  let reinstall = lazy (
-    OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall gt.root switch) ++
-    Lazy.force changed ++
-    (Lazy.force ext_files_changed %% Lazy.force available_packages)
-  ) in
-  let invalidated = lazy (
-    Lazy.force ext_files_changed -- Lazy.force available_packages
-  ) in
   (* depext check *)
   let sys_packages =
     if OpamStateConfig.(not !r.depext_enable
@@ -445,6 +437,72 @@ let load lock_kind gt rt switch =
             in
             depexts_raw ~env package opams)
   in
+  let sys_packages_changed =
+    if OpamStateConfig.(not !r.depext_enable
+                        || !r.depext_no_consistency_checks) then
+      OpamPackage.Set.empty
+    else
+    let sys_packages =
+      OpamPackage.Map.filter (fun pkg spkg ->
+          OpamPackage.Set.mem pkg installed
+          && not (OpamSysPkg.Set.is_empty spkg.OpamSysPkg.s_available
+                  && OpamSysPkg.Set.is_empty spkg.OpamSysPkg.s_not_found))
+        sys_packages
+    in
+    if OpamPackage.Map.is_empty sys_packages then
+      OpamPackage.Set.empty
+    else
+      (let lchanged = OpamPackage.Map.keys sys_packages in
+       let changed = OpamPackage.Set.of_list lchanged in
+       let sgl_pkg = OpamPackage.Set.cardinal changed = 1 in
+       let open OpamSysPkg.Set.Op in
+       let missing =
+         OpamPackage.Map.map (fun sys ->
+             sys.OpamSysPkg.s_available ++ sys.OpamSysPkg.s_not_found)
+           sys_packages
+       in
+       let sgl_spkg =
+         try
+           OpamSysPkg.Set.cardinal
+             (OpamPackage.Map.fold (fun _ sp acc ->
+                  let acc = acc ++ sp in
+                  if OpamSysPkg.Set.cardinal acc > 1 then
+                    raise Not_found
+                  else acc)
+                 missing OpamSysPkg.Set.empty) <=  1
+         with Not_found -> false
+       in
+       OpamConsole.error
+         "System package%s from which depends installed opam package%s no \
+          more installed on you system:\n%s\n \
+          %s %s been marked as removed, and opam will try to \
+          reinstall %s. You should reinstall system package first."
+         (if sgl_spkg then "" else "s")
+         (if sgl_pkg then " is" else "s are")
+         (OpamStd.Format.itemize (fun (pkg, spkg) ->
+              Printf.sprintf "%s: %s"
+                (OpamPackage.to_string pkg)
+                (OpamStd.Format.pretty_list spkg))
+             (OpamPackage.Map.bindings
+                (OpamPackage.Map.map (fun s ->
+                     List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements s))
+                    missing)))
+         (OpamStd.Format.pretty_list (List.map OpamPackage.to_string lchanged))
+         (if sgl_pkg then "has" else "have")
+         (if sgl_pkg then "it" else "them")
+       ;
+       changed)
+  in
+  let reinstall = lazy (
+    OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall gt.root switch) ++
+    Lazy.force changed ++
+    (Lazy.force ext_files_changed %% Lazy.force available_packages) ++
+    sys_packages_changed
+  ) in
+  let invalidated = lazy (
+    Lazy.force ext_files_changed ++ sys_packages_changed
+    -- Lazy.force available_packages
+  ) in
   let st = {
     switch_global = (gt :> unlocked global_state);
     switch_repos = (rt :> unlocked repos_state);
