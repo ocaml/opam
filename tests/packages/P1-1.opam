@@ -30,8 +30,8 @@ libraries: [ "p1" ]
 
 (* External dependencies *)
 depexts: [
-  [ ["debian" "amd64"] ["foo" "bar"] ]
-  [ ["osx" ]           ["foobar"]    ]
+  [ ["debian" "amd64"] ["apt" "dpkg"] ]
+  [ ["osx" ]           ["curl"]    ]
 ]
 
 messages: [ "I'll always bother you displaying this message" ]
