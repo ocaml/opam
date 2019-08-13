@@ -913,6 +913,7 @@ module Switch_config: sig
     wrappers: Wrappers.t;
     env: env_update list;
     invariant: OpamFormula.t;
+    depext_bypass: OpamSysPkg.Set.t;
   }
   val variable: t -> variable -> variable_contents option
   val path: t -> std_path -> string option
