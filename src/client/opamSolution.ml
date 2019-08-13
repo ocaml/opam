@@ -871,7 +871,7 @@ let run_hook_job t name ?(local=[]) w =
 let rec check_and_install_depexts t packages =
   let sys_packages =
     if OpamStateConfig.(!r.depext_no_consistency_checks) then
-      OpamSwitchState.system_packages packages
+      OpamSwitchState.system_packages t.switch_config packages
         ~depexts:(OpamSwitchState.depexts t)
     else t.sys_packages
   in
