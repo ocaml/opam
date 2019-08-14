@@ -245,8 +245,11 @@ module Json = struct
       let chains = OpamCudf.conflict_chains t.packages cs in
       let jchains =
         `A (List.map (fun c ->
-            `A ((List.map (fun f ->
-                `String (OpamFormula.to_string (Atom f))) c)))
+            `A ((List.map (function
+                | Some f ->
+                  `String (OpamFormula.to_string (Atom f))
+                | None -> `String "The switch invariant")
+                c)))
             chains)
       in
       let toj l = `A (List.map (fun s -> `String s) l) in
