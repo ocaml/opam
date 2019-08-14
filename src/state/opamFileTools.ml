@@ -670,9 +670,11 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
             if not_corresponding = [] then None
             else
             let msg =
-              Printf.sprintf "Cheksum%s %s don't verify archive"
-                (if List.length chks = 1 then "" else "s")
+              let singular = match chks with _::[] -> true | _ -> false in
+              Printf.sprintf "Checksum%s %s %s match the archive."
+                (if singular then "" else "s")
                 (OpamStd.List.to_string OpamHash.to_string not_corresponding)
+                (if singular then "doesn't" else "do not")
             in
             Some msg)
      in
