@@ -141,6 +141,12 @@ let infer_switch_invariant_raw
       OpamFormula.Atom (nv.name, Atom (`Eq, nv.version))
   | [] -> OpamFormula.Empty
 
+let infer_switch_invariant st =
+  infer_switch_invariant_raw
+    st.switch_global st.switch st.switch_config st.opams
+    st.packages st.compiler_packages st.installed_roots st.available_packages
+
+
 let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
   log "LOAD-SWITCH-STATE @ %a" (slog OpamSwitch.to_string) switch;

@@ -305,6 +305,12 @@ let packages_of_atoms ?(disj=false) pkgset atoms =
         (OpamPackage.packages_of_name pkgset name))
     by_name OpamPackage.Set.empty
 
+let satisfies_depends pkgset f =
+  eval (fun (name, cstr) ->
+      OpamPackage.Set.exists (fun nv -> check_version_formula cstr nv.version)
+        (OpamPackage.packages_of_name pkgset name))
+    f
+
 let to_string t =
   let string_of_constraint (relop, version) =
     Printf.sprintf "%s %s" (OpamPrinter.relop relop)

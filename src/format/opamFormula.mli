@@ -158,6 +158,9 @@ val compare: t -> t -> int
     formula) *)
 val verifies: t -> OpamPackage.t -> bool
 
+(** Checks if a given set of (installed) packages satisfies a formula *)
+val satisfies_depends: OpamPackage.Set.t -> t -> bool
+
 (** Returns the subset of packages possibly matching the formula (i.e. including
     all disjunction cases) *)
 val packages: OpamPackage.Set.t -> t -> OpamPackage.Set.t

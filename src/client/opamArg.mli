@@ -186,6 +186,9 @@ val atom_or_local:
 val atom_or_dir:
   [ `Atom of atom | `Dirname of dirname ] Arg.converter
 
+(** Formula, in the same format as [depends:] in opam files *)
+val dep_formula: formula Arg.converter
+
 (** [var=value,...] argument *)
 val variable_bindings: (OpamVariable.t * string) list Arg.converter
 

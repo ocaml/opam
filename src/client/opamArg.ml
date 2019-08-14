@@ -558,6 +558,19 @@ let atom_or_dir =
   let print ppf = snd atom_or_local ppf in
   parse, print
 
+let dep_formula =
+  let pp = OpamFormat.V.(package_formula `Conj (constraints version)) in
+  let parse str =
+    try
+      let v = OpamParser.value_from_string str "<command-line>" in
+      `Ok (OpamPp.parse pp ~pos:pos_null v)
+    with e -> OpamStd.Exn.fatal e; `Error (Printexc.to_string e)
+  in
+  let print ppf f =
+    pr_str ppf (OpamPrinter.value (OpamPp.print pp f))
+  in
+  parse, print
+
 let variable_bindings =
   let parse str =
     try

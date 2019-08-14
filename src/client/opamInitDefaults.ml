@@ -19,13 +19,10 @@ let repository_url = {
 }
 
 let default_compiler =
-  OpamFormula.ors [
-    OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-system",
-                      OpamFormula.Atom
-                        (`Geq, OpamPackage.Version.of_string "4.02.3"));
-    OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-base-compiler",
-                      OpamFormula.Empty);
-  ]
+  OpamFormula.Atom
+    (OpamPackage.Name.of_string "ocaml",
+     OpamFormula.Atom
+       (`Geq, OpamPackage.Version.of_string "4.05.0"))
 
 let eval_variables = [
   OpamVariable.of_string "sys-ocaml-version", ["ocamlc"; "-vnum"],
