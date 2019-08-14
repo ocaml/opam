@@ -46,6 +46,27 @@ let short_string_of_atom = function
 let string_of_atoms atoms =
   OpamStd.List.concat_map " & " short_string_of_atom atoms
 
+let atom_of_string str =
+  let re = lazy Re.(compile @@ whole_string @@ seq [
+      group @@ rep1 @@ diff any (set ">=<.!");
+      group @@ alt [ seq [ set "<>"; opt @@ char '=' ];
+                     set "=."; str "!="; ];
+      group @@ rep1 any;
+    ])
+  in
+  try
+    let sub = Re.exec (Lazy.force re) str in
+    let sname = Re.Group.get sub 1 in
+    let sop = Re.Group.get sub 2 in
+    let sversion = Re.Group.get sub 3 in
+    let name = OpamPackage.Name.of_string sname in
+    let sop = if sop = "." then "=" else sop in
+    let op = OpamLexer.relop sop in
+    let version = OpamPackage.Version.of_string sversion in
+    name, Some (op, version)
+  with Not_found | Failure _ | OpamLexer.Error _ ->
+    OpamPackage.Name.of_string str, None
+
 type 'a conjunction = 'a list
 
 let string_of_conjunction string_of_atom c =

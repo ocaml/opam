@@ -515,27 +515,8 @@ let package_with_version =
 (* name * version constraint *)
 let atom =
   let parse str =
-    let re = Re.(compile @@ seq [
-        bos;
-        group @@ rep1 @@ diff any (set ">=<.!");
-        group @@ alt [ seq [ set "<>"; opt @@ char '=' ];
-                       set "=."; str "!="; ];
-        group @@ rep1 any;
-        eos;
-      ]) in
-    try
-      let sub = Re.exec re str in
-      let sname = Re.Group.get sub 1 in
-      let sop = Re.Group.get sub 2 in
-      let sversion = Re.Group.get sub 3 in
-      let name = OpamPackage.Name.of_string sname in
-      let sop = if sop = "." then "=" else sop in
-      let op = OpamLexer.relop sop in
-      let version = OpamPackage.Version.of_string sversion in
-      `Ok (name, Some (op, version))
-    with Not_found | Failure _ | OpamLexer.Error _ ->
-      try `Ok (OpamPackage.Name.of_string str, None)
-      with Failure msg -> `Error msg
+    try `Ok (OpamFormula.atom_of_string str)
+    with Failure msg -> `Error msg
   in
   let print ppf atom =
     pr_str ppf (OpamFormula.short_string_of_atom atom) in

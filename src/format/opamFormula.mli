@@ -24,9 +24,13 @@ type atom = OpamPackage.Name.t * version_constraint option
 (** Pretty-printing of atoms *)
 val string_of_atom: atom -> string
 
-(** The compact atom format used in requests, "pkgOPvers", with '.' allowed instead
-    of '=' *)
+(** The compact atom format used in requests, "pkgOPvers", with '.' allowed
+    instead of '=' *)
 val short_string_of_atom: atom -> string
+
+(** Parses a package or atom, in a format similar to [short_string_of_atom].
+    @raise [Failure] if the format is incorrect *)
+val atom_of_string: string -> atom
 
 (** Prints atoms as a conjunction ("&") using the short format *)
 val string_of_atoms: atom list -> string
