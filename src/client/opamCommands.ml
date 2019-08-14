@@ -1535,7 +1535,7 @@ let update =
        changes, 1 if there were none. Repositories or development packages \
        that failed to update are considered without changes. With \
        $(b,--upgrade), behaves like $(b,opam upgrade --check), that is, \
-       returns 0 only if there are currently availbale updates." in
+       returns 0 only if there currently are available updates." in
   let update global_options jobs names repos_only dev_only all check upgrade =
     apply_global_options global_options;
     OpamStateConfig.update
