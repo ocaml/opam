@@ -305,9 +305,37 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
      as an operation terminates *)
   let t_ref = ref t in
 
+  (* only needed when --update-invariant is set. Use the configured invariant,
+     not the current one which will be empty. *)
+  let original_invariant = t.switch_config.OpamFile.Switch_config.invariant in
+  let invariant_ref = ref original_invariant in
+
   let add_to_install nv =
     let root = OpamPackage.Name.Set.mem nv.name root_installs in
-    t_ref := OpamSwitchAction.add_to_installed !t_ref ~root nv
+    t_ref := OpamSwitchAction.add_to_installed !t_ref ~root nv;
+    if OpamStateConfig.(!r.unlock_base) then
+      let invariant =
+        OpamFormula.map (fun (n, cstr as at) ->
+            if n <> nv.name || OpamFormula.check_version_formula cstr nv.version
+            then Atom at else
+            let cstr =
+              OpamFormula.map (fun (relop, _ as vat) ->
+                  if OpamFormula.check_version_formula (Atom vat) nv.version
+                  then Atom vat
+                  else match relop with
+                    | `Neq | `Gt | `Lt -> OpamFormula.Empty
+                    | `Eq | `Geq | `Leq -> Atom (relop, nv.version))
+                cstr
+            in
+            Atom (n, cstr))
+          !invariant_ref
+      in
+      if invariant <> !invariant_ref then
+        (invariant_ref := invariant;
+         let switch_config = {!t_ref.switch_config with invariant} in
+         t_ref := {!t_ref with switch_config};
+         OpamSwitchAction.install_switch_config t.switch_global.root t.switch
+           switch_config)
   in
 
   let remove_from_install ?keep_as_root nv =
@@ -632,6 +660,12 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
         | _ -> assert false)
       graph
   in
+  if !invariant_ref <> original_invariant then
+    OpamConsole.note "Switch invariant was updated to %s\n\
+                      Use `opam switch set-invariant' to change it."
+      (match !invariant_ref with
+       | OpamFormula.Empty -> "<empty>"
+       | f -> OpamFileTools.dep_formula_to_string f);
   match action_results with
   | `Successful successful ->
     cleanup_artefacts action_graph;

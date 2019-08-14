@@ -696,12 +696,18 @@ let universe st
   in
   let u_depopts = get_deps OpamFile.OPAM.depopts st.opams in
   let u_conflicts = get_conflicts st st.packages st.opams in
-  let base =
-    if OpamStateConfig.(!r.unlock_base) then OpamPackage.Set.empty
-    else st.compiler_packages
+  let base = st.compiler_packages in
+  let u_invariant =
+    if OpamStateConfig.(!r.unlock_base) then OpamFormula.Empty
+    else st.switch_invariant
   in
   let u_available =
-    remove_conflicts st base (Lazy.force st.available_packages)
+    (* TODO: removing what conflicts with the base is no longer correct now that
+       we use invariants instead. Removing what conflicts with the invariant
+       would be much more involved, but some solvers might struggle without any
+       cleanup at this point *)
+    (* remove_conflicts st base *)
+    (Lazy.force st.available_packages)
   in
   let u_reinstall =
     (* Ignore reinstalls outside of the dependency cone of
@@ -733,7 +739,7 @@ let universe st
   u_installed_roots = st.installed_roots;
   u_pinned    = OpamPinned.packages st;
   u_base      = base;
-  u_invariant = st.switch_invariant;
+  u_invariant;
   u_reinstall;
   u_attrs     = ["opam-query", requested_allpkgs];
 }
@@ -854,7 +860,11 @@ let unavailable_reason st ?(default="") (name, vformula) =
       "conflict with the base packages of this switch"
     else if OpamPackage.has_name st.compiler_packages name &&
             not OpamStateConfig.(!r.unlock_base) then
-      "base of this switch (use `--unlock-base' to force)"
+      Printf.sprintf
+        "incompatible with the switch invariant %s (use `--update-invariant' \
+         to force)"
+        (OpamConsole.colorise `bold
+           (OpamFileTools.dep_formula_to_string st.switch_invariant))
     else
       default
 

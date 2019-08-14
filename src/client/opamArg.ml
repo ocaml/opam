@@ -1129,7 +1129,7 @@ let build_options =
        to setting $(b,\\$OPAMIGNORECONSTRAINTS)."
       Arg.(some (list package_name)) None ~vopt:(Some []) in
   let unlock_base =
-    mk_flag ~section ["unlock-base"]
+    mk_flag ~section ["update-invariant"; "unlock-base"]
       "Allow changes to the packages set as switch base (typically, the main \
        compiler). Use with caution. This is equivalent to setting the \
        $(b,\\$OPAMUNLOCKBASE) environment variable" in
