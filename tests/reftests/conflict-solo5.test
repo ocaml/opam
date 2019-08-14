@@ -12,7 +12,6 @@ Faking installation of base-ocamlbuild.base
 Done.
 ### opam install --show solo5-kernel-virtio solo5-kernel-ukvm
 Your request can't be satisfied:
-  - solo5-kernel-ukvm != 0.2.2-1 is in conflict with solo5-kernel-virtio
   - solo5-kernel-virtio is in conflict with solo5-kernel-ukvm
 
 No solution found, exiting

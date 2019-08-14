@@ -635,6 +635,9 @@ let strings_of_reasons packages cudfnv2opam unav_reasons rs =
             | Conflict (i1, _, jc1) when
                 (cudf2opam i1).name = nva.name && jc1 = jc ->
               OpamPackage.Version.Set.add (cudf2opam i1).version versions, rs
+            | Conflict (_, i2, (_, cstr)) when
+                (cudf2opam i2).name = nva.name && Cudf.(|=) i.version cstr ->
+              OpamPackage.Version.Set.add (cudf2opam i2).version versions, rs
             | r -> versions, r::rs)
           (OpamPackage.Version.Set.singleton nva.version, []) rs
       in
