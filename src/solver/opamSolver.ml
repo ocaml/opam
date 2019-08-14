@@ -516,6 +516,14 @@ let installable_subset universe packages =
     OpamPackage.Set.empty
     trimmed_universe
 
+let coinstallable_subset universe set packages =
+  let u_invariant =
+    OpamPackage.Set.fold (fun p acc ->
+        OpamFormula.ands [acc; Atom (p.name, Atom (`Eq, p.version))])
+      set OpamFormula.Empty
+  in
+  installable_subset {universe with u_invariant} packages
+
 module PkgGraph = Graph.Imperative.Digraph.ConcreteBidirectional(OpamPackage)
 
 let dependency_graph

@@ -131,6 +131,12 @@ val coinstallability_check : universe -> package_set -> OpamCudf.conflict option
     universe *)
 val atom_coinstallability_check : universe -> atom list -> bool
 
+(** [coinstallable_subset univ set packages] returns the subset of [packages]
+    which are individually co-installable with [set], i.e. that can be installed
+    if [set] while [set] remains installed. This returns the empty set if [set]
+    is already not coinstallable. *)
+val coinstallable_subset : universe -> package_set -> package_set -> package_set
+
 (** Dumps a cudf file containing all available packages in the given universe,
     plus version bindings (as '#v2v' comments) for the other ones. *)
 val dump_universe: universe -> out_channel -> unit
