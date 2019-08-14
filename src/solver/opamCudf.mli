@@ -187,6 +187,10 @@ val s_version_lag: string
     invariants *)
 val opam_invariant_package_name: string
 
+(** valid cudf name and version for the dummy package used for enforcing opam's
+    switch invariants *)
+val opam_invariant_package: string * int
+
 val is_opam_invariant: Cudf.package -> bool
 
 (** {2 Pretty-printing} *)

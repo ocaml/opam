@@ -295,25 +295,12 @@ let opam2cudf universe version_map packages =
 
 (* load a cudf universe from an opam one *)
 let load_cudf_universe
-    opam_universe ?version_map opam_packages =
+    opam_universe ?version_map ?(add_invariant=false) opam_packages =
   let chrono = OpamConsole.timer () in
   let version_map = match version_map with
     | Some vm -> vm
     | None -> cudf_versions_map opam_universe opam_packages in
   log ~level:3 "Load cudf universe: opam2cudf";
-  let opam_packages =
-    if OpamPackage.Set.subset opam_universe.u_base opam_universe.u_available
-    then
-      (* Filter out extra compiler versions, they add too much cost to the
-         solver and are not needed *)
-      opam_packages --
-      (OpamPackage.packages_of_names opam_packages
-         OpamPackage.Name.Set.Op.(
-           OpamPackage.names_of_packages opam_universe.u_base
-           -- OpamPackage.names_of_packages opam_universe.u_pinned)
-       -- opam_universe.u_base)
-    else opam_packages
-  in
   let univ_gen =
     opam2cudf opam_universe version_map opam_packages
   in
@@ -326,6 +313,12 @@ let load_cudf_universe
   let chrono = OpamConsole.timer () in
   let cudf_universe =
     let cudf_packages = univ_gen ~depopts ~build ~post in
+    let cudf_packages =
+      if add_invariant then
+        opam_invariant_package version_map opam_universe.u_invariant
+        :: cudf_packages
+      else cudf_packages
+    in
     log ~level:3 "opam2cudf: done in %.3fs" (chrono ());
     try Cudf.load_universe cudf_packages
     with Cudf.Constraint_violation s ->
@@ -463,7 +456,8 @@ let get_atomic_action_graph t =
 let installable universe =
   log "trim";
   let simple_universe =
-    load_cudf_universe universe universe.u_available ~build:true ~post:true ()
+    load_cudf_universe universe ~add_invariant:true
+      universe.u_available ~build:true ~post:true ()
   in
   let trimmed_universe =
     (* Algo.Depsolver.trim simple_universe => this can explode memory, we need
@@ -481,7 +475,9 @@ let installable universe =
     Cudf.load_universe !trimmed_pkgs
   in
   Cudf.fold_packages
-    (fun universe pkg -> OpamPackage.Set.add (OpamCudf.cudf2opam pkg) universe)
+    (fun universe pkg ->
+       if pkg.package = OpamCudf.opam_invariant_package_name then universe
+       else OpamPackage.Set.add (OpamCudf.cudf2opam pkg) universe)
     OpamPackage.Set.empty
     trimmed_universe
 
@@ -489,12 +485,15 @@ let installable_subset universe packages =
   log "trim-subset";
   let version_map = cudf_versions_map universe universe.u_available in
   let simple_universe =
-    load_cudf_universe ~build:true ~post:true universe ~version_map
+    load_cudf_universe ~build:true ~post:true universe
+      ~version_map ~add_invariant:true
       universe.u_available ()
   in
   let cudf_packages =
     Cudf.get_packages
-      ~filter:(fun p -> OpamPackage.Set.mem (OpamCudf.cudf2opam p) packages)
+      ~filter:(fun p ->
+          p.package <> OpamCudf.opam_invariant_package_name &&
+          OpamPackage.Set.mem (OpamCudf.cudf2opam p) packages)
       simple_universe
   in
   let trimmed_universe =
@@ -511,6 +510,7 @@ let installable_subset universe packages =
     ignore (listcheck ~callback ~explain:false simple_universe cudf_packages);
     Cudf.load_universe !trimmed_pkgs
   in
+  Cudf.remove_package trimmed_universe OpamCudf.opam_invariant_package;
   Cudf.fold_packages
     (fun universe pkg -> OpamPackage.Set.add (OpamCudf.cudf2opam pkg) universe)
     OpamPackage.Set.empty
