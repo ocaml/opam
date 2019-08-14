@@ -659,3 +659,16 @@ let atomise_extended =
           | Or (a, b) -> Or (aux filters a, aux filters b)
         in
         aux (FBool true) cs)
+
+let sort_filtered_formula compare ff =
+  let f = OpamFormula.sort compare ff in
+  let rec vc_sort = function
+    | Empty -> Empty
+    | Atom (n,vf) ->
+      Atom (n, (OpamStd.Option.default vf
+                  (simplify_extended_version_formula vf)))
+    | Block f -> Block (vc_sort f)
+    | And (f,f') -> And (vc_sort f, vc_sort f')
+    | Or (f,f') -> Or (vc_sort f, vc_sort f')
+  in
+  vc_sort f
