@@ -147,6 +147,8 @@ val check_version_formula: version_formula -> OpamPackage.Version.t -> bool
     - "foo" \{= "1" | > "4"\} | ("bar" "bouh") *)
 type t = (OpamPackage.Name.t * version_formula) formula
 
+val compare: t -> t -> int
+
 (** Returns [true] if [package] verifies [formula] (i.e. it is within at least
     one package set that is a solution of the formula, and is named in the
     formula) *)
