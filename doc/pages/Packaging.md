@@ -44,7 +44,7 @@ your project uses [`dune`](https://github.com/ocaml/dune), skip `install:` and
 use:
 
 ```
-build: ["dune" "build" "-p" name]
+build: ["dune" "build" "-p" name "-j" jobs]
 ```
 
 See [below](#The-file-format-in-more-detail) for more on the format.
