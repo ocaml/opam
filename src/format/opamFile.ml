@@ -3222,6 +3222,8 @@ module Dot_installSyntax = struct
     share   : (basename optional * basename option) list;
     share_root: (basename optional * basename option) list;
     etc     : (basename optional * basename option) list;
+    etc_root: (basename optional * basename option) list;
+    etcexec_root: (basename optional * basename option) list;
     doc     : (basename optional * basename option) list;
     man     : (basename optional * basename option) list;
     libexec : (basename optional * basename option) list;
@@ -3240,6 +3242,8 @@ module Dot_installSyntax = struct
     share    = [];
     share_root = [];
     etc      = [];
+    etc_root = [];
+    etcexec_root = [];
     man      = [];
     libexec  = [];
     lib_root = [];
@@ -3256,6 +3260,8 @@ module Dot_installSyntax = struct
   let share t = t.share
   let share_root t = t.share_root
   let etc t = t.etc
+  let etc_root t = t.etc_root
+  let etcexec_root t = t.etcexec_root
   let raw_man t = t.man
   let doc t = t.doc
   let libexec t = t.libexec
@@ -3271,6 +3277,8 @@ module Dot_installSyntax = struct
   let with_share share t = { t with share }
   let with_share_root share_root t = { t with share_root }
   let with_etc etc t = { t with etc }
+  let with_etc_root etc_root t = { t with etc_root }
+  let with_etcexec_root etcexec_root t = { t with etcexec_root }
   let with_man man t = { t with man }
   let with_doc doc t = { t with doc }
   let with_libexec libexec t = { t with libexec }
@@ -3348,6 +3356,8 @@ module Dot_installSyntax = struct
       "share", Pp.ppacc with_share share pp_field;
       "share_root", Pp.ppacc with_share_root share_root pp_field;
       "etc", Pp.ppacc with_etc etc pp_field;
+      "etc_root", Pp.ppacc with_etc_root etc_root pp_field;
+      "etcexec_root", Pp.ppacc with_etcexec_root etcexec_root pp_field;
       "doc", Pp.ppacc with_doc doc pp_field;
       "man", Pp.ppacc with_man raw_man pp_field;
       "libexec", Pp.ppacc with_libexec libexec pp_field;
