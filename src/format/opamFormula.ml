@@ -189,9 +189,16 @@ let rec compare_formula f x y =
   | Atom x, y -> compare_atom x y
   | x , Atom y -> -1 * (compare_atom y x)
   | Block x, y | x, Block y -> compare_formula f x y
-  | (And (x,y) | Or (x,y)), (And (x',y') | Or (x',y')) ->
-    let r = compare_formula f x x' in
-    if r <> 0 then r else compare_formula f y y'
+  | (And (x,y) | Or (x,y)) as lhs, ((And (x',y') | Or (x',y')) as rhs) ->
+    let l = compare_formula f x x' in
+    if l <> 0 then l else
+    let r = compare_formula f y y' in
+    if r <> 0 then r else
+      (match lhs, rhs with
+       | And _, And _ | Or _, Or _ -> 0
+       | And _, Or _ -> 1
+       | Or _, And _ -> -1
+       | _ -> assert false)
 
 let compare_relop op1 op2 =
   match op1, op2 with
