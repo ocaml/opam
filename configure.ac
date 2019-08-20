@@ -101,7 +101,7 @@ AS_IF([test ! -x ${OCAML_TEST_CC}],[
   AS_IF([test "x${CCOMP_TYPE}" = "xmsvc"],[
     AS_IF([test "${ARCH}" = "i386"],[SDK_ARCH=x86],[SDK_ARCH=x64])
     AC_MSG_CHECKING([for an installed Microsoft C Compiler for ${SDK_ARCH}])
-    eval `PATH="$PRE_BOOTSTRAP_PATH" ./shell/msvs-detect --arch=$SDK_ARCH; echo RESULT=$?`
+    eval `PATH="$PRE_BOOTSTRAP_PATH" bash ./shell/msvs-detect --arch=$SDK_ARCH; echo RESULT=$?`
     AS_IF([ test "x$MSVS_NAME" = "x" ], [
       AS_IF([ test ${RESULT} -eq 0 ], [
         AC_MSG_RESULT([from PATH])
@@ -183,7 +183,7 @@ AS_IF([ test ${WIN32} -eq 1 ],[
     AC_MSG_RESULT([$PATH_PREPEND_RESULT])
     AS_IF([ test "$ARCH" = "i386" ],[COMP_ARCH=x64],[COMP_ARCH=x86])
     AC_MSG_CHECKING([for a way to invoke an $COMP_ARCH C compiler])
-    eval `PATH="$PRE_BOOTSTRAP_PATH" ./shell/msvs-detect --arch=$COMP_ARCH`
+    eval `PATH="$PRE_BOOTSTRAP_PATH" bash ./shell/msvs-detect --arch=$COMP_ARCH`
     AS_IF([ test "x$MSVS_NAME" = "x" ], [
       AC_MSG_RESULT([no])
       CC64=no

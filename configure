@@ -3318,7 +3318,7 @@ else
 fi
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for an installed Microsoft C Compiler for ${SDK_ARCH}" >&5
 $as_echo_n "checking for an installed Microsoft C Compiler for ${SDK_ARCH}... " >&6; }
-    eval `PATH="$PRE_BOOTSTRAP_PATH" ./shell/msvs-detect --arch=$SDK_ARCH; echo RESULT=$?`
+    eval `PATH="$PRE_BOOTSTRAP_PATH" bash ./shell/msvs-detect --arch=$SDK_ARCH; echo RESULT=$?`
     if  test "x$MSVS_NAME" = "x" ; then :
 
       if  test ${RESULT} -eq 0 ; then :
@@ -4148,7 +4148,7 @@ else
 fi
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for a way to invoke an $COMP_ARCH C compiler" >&5
 $as_echo_n "checking for a way to invoke an $COMP_ARCH C compiler... " >&6; }
-    eval `PATH="$PRE_BOOTSTRAP_PATH" ./shell/msvs-detect --arch=$COMP_ARCH`
+    eval `PATH="$PRE_BOOTSTRAP_PATH" bash ./shell/msvs-detect --arch=$COMP_ARCH`
     if  test "x$MSVS_NAME" = "x" ; then :
 
       { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
