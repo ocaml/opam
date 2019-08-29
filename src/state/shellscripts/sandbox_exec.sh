@@ -6,11 +6,13 @@ POL="$POL"'(allow network* (remote unix))'
 POL="$POL"'(allow file-write* (literal "/dev/null") (literal "/dev/dtracehelper"))'
 
 add_mounts() {
-    local DIR="$(cd "$2" && pwd -P)"
-    case "$1" in
-        ro) POL="$POL"'(deny file-write* (subpath "'"$DIR"'"))';;
-        rw) POL="$POL"'(allow file-write* (subpath "'"$DIR"'"))';;
-    esac
+    if [ -d "$2" ]; then
+      local DIR="$(cd "$2" && pwd -P)"
+      case "$1" in
+          ro) POL="$POL"'(deny file-write* (subpath "'"$DIR"'"))';;
+          rw) POL="$POL"'(allow file-write* (subpath "'"$DIR"'"))';;
+      esac
+    fi
 }
 
 # Even if TMPDIR is set, some applications uses /tmp directly
@@ -31,7 +33,7 @@ fi
 # C compilers using `ccache` will write to a shared cache directory
 # that remain writeable. ccache seems widespread in some Fedora systems.
 add_ccache_mount() {
-  if command -v ccache > /dev/null && [ -d "$HOME/.ccache" ]; then
+  if command -v ccache > /dev/null; then
       CCACHE_DIR=$HOME/.ccache
       ccache_dir_regex='cache_dir = (.*)$'
       local IFS=$'\n'

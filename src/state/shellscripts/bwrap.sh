@@ -60,7 +60,7 @@ add_sys_mounts /usr /bin /lib /lib32 /lib64 /etc /opt /home /var
 # C compilers using `ccache` will write to a shared cache directory
 # that remain writeable. ccache seems widespread in some Fedora systems.
 add_ccache_mount() {
-  if command -v ccache > /dev/null && [ -d "$HOME/.ccache" ]; then
+  if command -v ccache > /dev/null; then
       CCACHE_DIR=$HOME/.ccache
       ccache_dir_regex='cache_dir = (.*)$'
       local IFS=$'\n'
