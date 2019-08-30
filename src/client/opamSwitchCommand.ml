@@ -245,19 +245,29 @@ let install_compiler ?(additional_installs=[]) ?(deps_only=false) t =
   in
   let to_install_pkgs = OpamSolver.new_packages solution in
   let base_comp = OpamPackage.packages_of_names to_install_pkgs comp_roots in
-  let non_comp =
+  let has_comp_flag =
+    let is_comp nv =
+      try OpamFile.OPAM.has_flag Pkgflag_Compiler (OpamSwitchState.opam t nv)
+      with Not_found -> false
+    in
+    (* Packages with the Compiler flag, or with a direct dependency with that
+       flag (just for the warning) *)
     OpamPackage.Set.filter
       (fun nv ->
-         not (OpamFile.OPAM.has_flag Pkgflag_Compiler
-                (OpamSwitchState.opam t nv)))
+         is_comp nv ||
+         OpamPackage.Set.exists is_comp
+           (OpamFormula.packages t.packages
+              (OpamPackageVar.all_depends ~filter_default:true t
+                 (OpamSwitchState.opam t nv))))
       base_comp
   in
-  if not (OpamPackage.Set.is_empty non_comp) &&
+  if OpamPackage.Set.is_empty has_comp_flag &&
      not (OpamConsole.confirm ~default:false
-            "Packages %s don't have the 'compiler' flag set. Are you sure you \
-             want to define them as the invariant base for this switch?"
+            "Packages %s don't have the 'compiler' flag set (nor any of their \
+             dependencies). Are you sure you want to define them as the \
+             invariant base for this switch?"
             (OpamStd.List.concat_map ", " OpamPackage.to_string
-               (OpamPackage.Set.elements non_comp)))
+               (OpamPackage.Set.elements base_comp)))
   then
     OpamConsole.error_and_exit `Aborted
       "Aborted installation of non-compiler packages \
