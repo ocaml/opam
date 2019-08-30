@@ -16,6 +16,17 @@ let log fmt = OpamConsole.log "opam-file" fmt
 
 open OpamFile.OPAM
 
+let is_valid_license_id s =
+  let memplus s =
+    let s = OpamStd.String.remove_suffix ~suffix:"+" s in
+    OpamStd.String.Set.mem s OpamSpdxList.licenses
+  in
+  match OpamStd.String.split (String.lowercase_ascii s) ' ' with
+  | [s] -> memplus s
+  | [s; "with"; e] ->
+    memplus s && OpamStd.String.Set.mem e OpamSpdxList.exceptions
+  | _ -> false
+
 (** manipulation utilities *)
 
 let names_of_formula flag f =
@@ -686,6 +697,13 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
      cond 61 `Warning
        "`with-test` variable in `run-test` is out of scope, it will be ignored"
        with_test);
+    (let bad_licenses =
+       List.filter (fun s -> not (is_valid_license_id s)) t.license
+     in
+     cond 62 `Warning
+       "License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/"
+       ~detail:bad_licenses
+       (bad_licenses <> []));
   ]
   in
   format_errors @
