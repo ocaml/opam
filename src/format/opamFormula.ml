@@ -189,9 +189,42 @@ let rec compare_formula f x y =
   | Atom x, y -> compare_atom x y
   | x , Atom y -> -1 * (compare_atom y x)
   | Block x, y | x, Block y -> compare_formula f x y
-  | (And (x,y) | Or (x,y)), (And (x',y') | Or (x',y')) ->
-    let r = compare_formula f x x' in
-    if r <> 0 then r else compare_formula f y y'
+  | (And (x,y) | Or (x,y)) as lhs, ((And (x',y') | Or (x',y')) as rhs) ->
+    let l = compare_formula f x x' in
+    if l <> 0 then l else
+    let r = compare_formula f y y' in
+    if r <> 0 then r else
+      (match lhs, rhs with
+       | And _, And _ | Or _, Or _ -> 0
+       | And _, Or _ -> 1
+       | Or _, And _ -> -1
+       | _ -> assert false)
+
+let compare_relop op1 op2 =
+  match op1, op2 with
+  | `Lt,`Lt | `Leq,`Leq | `Neq,`Neq | `Eq,`Eq | `Geq,`Geq | `Gt,`Gt -> 0
+  | `Lt, _ -> -1
+  | _, `Lt -> 1
+  | `Leq, _ -> -1
+  | _, `Leq -> 1
+  | `Neq, _ -> -1
+  | _, `Neq -> 1
+  | `Eq, _ -> -1
+  | _, `Eq -> 1
+  | `Geq, _ -> -1
+  | _, `Geq -> 1
+
+let compare_version_formula =
+  compare_formula (fun (op1,v1) (op2,v2) ->
+      let c = compare v1 v2 in
+      if c <> 0 then c else
+        compare_relop op1 op2)
+
+let compare_nc (n1, c1) (n2, c2) =
+  let c = OpamPackage.Name.compare n1 n2 in
+  if c <> 0 then c else compare_version_formula c1 c2
+
+let compare = compare_formula compare_nc
 
 let rec eval atom = function
   | Empty    -> true
