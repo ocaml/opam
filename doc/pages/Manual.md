@@ -787,8 +787,8 @@ files.
   a list of strings listing the original authors of the software.
 
 - <a id="opamfield-license">`license: [ <string> ... ]`</a>:
-  the abbreviated name(s) of the license(s) under which the source software is
-  available.
+  The SPDX ID of the license(s) under which the source software is available
+  (see http://spdx.org/licenses/).
 
 - <a id="opamfield-homepage">`homepage: [ <string> ... ]`</a>,
   <a id="opamfield-doc">`doc: [ <string> ... ]`</a>,
