@@ -15,7 +15,14 @@ open OpamProcess.Job.Op
 
 let log fmt = OpamConsole.log "RSYNC" fmt
 
-let rsync_arg = "-rLptgoDrvc"
+(* Rsync args recap:
+  - recurse into directories (r)
+  - skip based on checksum, not mod-time & size (c)
+  - preserve permissions (p), times (t), group (g), owner (o),
+    device & special files (D)
+  - transform symlink into referent file/dir (L)
+  *)
+let rsync_arg = "-rLptgoDvc"
 
 (* if rsync -arv return 4 lines, this means that no files have changed *)
 let rsync_trim = function
@@ -60,15 +67,14 @@ let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
            (norm dst)) ||
     OpamStd.String.starts_with ~prefix:(norm dst) (norm src)
   in
+  (* See also OpamVCS.sync_dirty *)
   let exclude_args =
-    if exclude_vcdirs then [
-      "--exclude"; ".git";
-      "--exclude"; "_darcs";
-      "--exclude"; ".hg";
-      "--exclude"; ".#*";
-      "--exclude"; OpamSwitch.external_dirname ^ "*";
-    ]
-    else [
+    (if not exclude_vcdirs then [] else
+       [ "--exclude"; ".git";
+         "--exclude"; "_darcs";
+         "--exclude"; ".hg";
+       ])
+    @ [
       "--exclude"; ".#*";
       "--exclude"; OpamSwitch.external_dirname ^ "*";
     ]

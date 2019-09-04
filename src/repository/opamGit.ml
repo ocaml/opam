@@ -151,6 +151,11 @@ module VCS : OpamVCS.VCS = struct
     if OpamProcess.is_failure r then
       OpamSystem.internal_error "Git error: %s not found." rref
     else
+      git repo_root [ "clean"; "-fdx" ]
+      @@> fun r ->
+      if OpamProcess.is_failure r then
+        OpamSystem.internal_error "Git error: %s not found." rref
+      else
       if OpamFilename.exists (repo_root // ".gitmodules") then
         git repo_root [ "submodule"; "update"; "--init"; "--recursive" ]
         @@> fun r ->

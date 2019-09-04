@@ -373,7 +373,7 @@ let autopin st ?(simulate=false) ?quiet atom_or_local_list =
   in
   let st =
     let working_dir =
-      if OpamClientConfig.(!r.working_dir) then already_pinned_set
+      if OpamClientConfig.(!r.working_dir || !r.inplace_build) then already_pinned_set
       else OpamPackage.Set.empty
     in
     let _result, st, _updated =

@@ -100,9 +100,11 @@ module Make (VCS: VCS) = struct
     Done (OpamStd.Option.map OpamPackage.Version.of_string r)
 
   let sync_dirty repo_root repo_url =
+    pull_url repo_root None repo_url @@+ fun result ->
     match OpamUrl.local_dir repo_url with
-    | None -> pull_url repo_root None repo_url
+    | None -> Done (result)
     | Some dir ->
+      VCS.versioned_files dir @@+ fun vc_files ->
       let files =
         List.map OpamFilename.(remove_prefix dir)
           (OpamFilename.rec_files dir)
@@ -110,29 +112,45 @@ module Make (VCS: VCS) = struct
       (* Remove non-listed files from destination *)
       (* fixme: doesn't clean directories *)
       let fset = OpamStd.String.Set.of_list files in
-      List.iter (fun f ->
-          let basename = OpamFilename.remove_prefix repo_root f in
-          if not (OpamFilename.(starts_with (VCS.vc_dir repo_root) f) ||
-                  OpamStd.String.Set.mem basename fset)
-          then OpamFilename.remove f)
-        (OpamFilename.rec_files repo_root);
+      let rm_list =
+        List.filter (fun f ->
+            let basename = OpamFilename.remove_prefix repo_root f in
+            not (OpamFilename.(starts_with (VCS.vc_dir repo_root) f)
+                 || OpamStd.String.Set.mem basename fset))
+          (OpamFilename.rec_files repo_root)
+      in
+      List.iter OpamFilename.remove rm_list;
+      (* We do the list cleaning here becuse of rsync options: `--exclude` need
+         to be explicitely given directory descendants, e.g `--exclude
+         _build/**`
+      *)
+      let excluded =
+        (* from [OpamGit.rsync] exclude list *)
+        let exc = [ "_opam"; "_build"; ".git"; "_darcs"; ".hg" ] in
+        OpamStd.String.Set.filter (fun f ->
+            List.exists (fun prefix ->
+                OpamStd.String.starts_with ~prefix f)
+              exc)
+          fset
+      in
+      let vcset = OpamStd.String.Set.of_list vc_files in
+      let final_set = OpamStd.String.Set.Op.(fset -- vcset -- excluded) in
       let stdout_file =
         let f = OpamSystem.temp_file "rsync-files" in
         let fd = open_out f in
-        List.iter (fun s -> output_string fd s; output_char fd '\n') files;
+        (* Using the set here to keep the list file sorted, it helps rsync *)
+        OpamStd.String.Set.iter (fun s -> output_string fd s; output_char fd '\n') final_set;
         close_out fd;
         f
       in
       let args = [
         "--files-from"; (Lazy.force convert_path) stdout_file;
-        "--exclude"; "_build"; (* tiny clean: exclude _build directory *)
       ] in
-      OpamLocal.rsync_dirs ~args ~exclude_vcdirs:false repo_url repo_root
-      @@+ fun result ->
+      OpamLocal.rsync_dirs ~args repo_url repo_root @@+ fun result ->
       OpamSystem.remove stdout_file;
       Done (match result with
-          | Up_to_date _ -> Up_to_date None
-          | Result _ -> Result None
+          | Up_to_date _ when rm_list = [] -> Up_to_date None
+          | Up_to_date _ | Result _ -> Result None
           | Not_available _ as na -> na)
 
   let get_remote_url = VCS.get_remote_url
