@@ -280,11 +280,7 @@ let packages_status packages =
          Re-run your command with `--ignore-depexts` option to bypass this step."
         family
   in
-  OpamSysPkg.Map.empty
-  |> OpamSysPkg.Set.fold (fun p -> OpamSysPkg.Map.add p `installed) installed
-  |> OpamSysPkg.Set.fold (fun p -> OpamSysPkg.Map.add p `available) available
-  |> OpamSysPkg.Set.fold (fun p -> OpamSysPkg.Map.add p `not_found) not_found
-
+  available, not_found
 
 (* Install *)
 
@@ -413,7 +409,7 @@ let install packages =
   in
   match ok with
   | Some (cmd, code) ->
-    OpamConsole.error_and_exit `False
+    OpamConsole.warning
       "System packages install failed with exit code %d at command:\n  %s"
       code cmd
-  | None -> OpamConsole.note "System packages installed succesfully"
+  | None -> OpamConsole.msg "System packages installed succesfully\n"

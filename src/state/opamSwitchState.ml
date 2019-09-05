@@ -166,27 +166,18 @@ let system_packages ~depexts config packages =
       packages OpamPackage.Map.empty
   in
   let all_syspkgs =
-    nv_syspkg
-    |> OpamPackage.Map.values
-    |> List.fold_left (fun set values ->
-        OpamSysPkg.Set.union set values) OpamSysPkg.Set.empty
+    OpamPackage.Map.fold (fun _ -> OpamSysPkg.Set.union)
+      nv_syspkg OpamSysPkg.Set.empty
   in
   let chronos = OpamConsole.timer () in
-  let os_pkgs = OpamSysInteract.packages_status all_syspkgs in
   let bypass = OpamFile.Config.depext_bypass config in
+  let syspkgs = OpamSysPkg.Set.Op.(all_syspkgs -- bypass) in
+  let avail, not_found = OpamSysInteract.packages_status syspkgs in
   let s =
-    let open OpamSysPkg in
+    let open OpamSysPkg.Set.Op in
     OpamPackage.Map.map (fun set ->
-        OpamSysPkg.Set.fold (fun spkg sps ->
-            if OpamSysPkg.Set.mem spkg bypass then sps else
-            match OpamSysPkg.Map.find_opt spkg os_pkgs with
-            | Some `installed -> sps
-            | Some `available ->
-              {sps with s_available = OpamSysPkg.Set.add spkg sps.s_available}
-            | Some `not_found ->
-              {sps with s_not_found = OpamSysPkg.Set.add spkg sps.s_not_found}
-            | None -> assert false
-          ) set OpamSysPkg.status_empty
+        { OpamSysPkg.s_available = set %% avail;
+          OpamSysPkg.s_not_found = set %% not_found}
       ) nv_syspkg
   in
   log "depexts loaded in %.3fs" (chronos());
