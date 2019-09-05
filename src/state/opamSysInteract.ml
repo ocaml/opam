@@ -365,25 +365,15 @@ let sudo_run_command cmd =
     | c::a -> c, a
     | _  -> assert false
   in
-  let check_sudo sudo cmd =
-    OpamConsole.warning
-      "The following command needs to be run through %S:\n    %s\n%!"
-      sudo  (String.concat " " cmd);
-    assert OpamStateConfig.(not (!r.depext_print_only || !r.depext_no_root));
-    if not (OpamConsole.confirm "Allow & continue?") then
-      OpamStd.Sys.exit_because `Aborted
-  in
   let cmd, args =
     match spv OpamSysPoll.os, spv OpamSysPoll.os_distribution with
     | "openbsd", _ ->
       if Unix.getuid () <> 0 then (
-        check_sudo "doas" cmd;
         "doas", cmd
       ) else get_cmd cmd
     | ("linux" | "unix" | "freebsd" | "netbsd" | "dragonfly"), _
     | "macos", "macports" ->
       if Unix.getuid () <> 0 then (
-        check_sudo (if su then "su" else "sudo") cmd;
         if su then
           "su", ["root"; "-c"; Printf.sprintf "%S" (String.concat " " cmd)]
         else
