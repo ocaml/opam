@@ -31,3 +31,7 @@ val normalise_os: string -> string
 
 (* Number of cores *)
 val cores: unit -> int
+
+(** Returns a string containing arch, os, os-distribution & os-version values,
+    unknown if they are not available *)
+val to_string: unit -> string

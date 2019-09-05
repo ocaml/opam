@@ -161,3 +161,11 @@ let variables =
 
 let cores_lazy = lazy (OpamSystem.cpu_count ())
 let cores () = Lazy.force cores_lazy
+
+let to_string () =
+  let open OpamStd.Option.Op in
+  Printf.sprintf "arch=%s os=%s os-distribution=%s os-version=%s"
+    (arch () +! "unknown")
+    (os () +! "unknown")
+    (os_distribution () +! "unknown")
+    (os_version () +! "unknown")
