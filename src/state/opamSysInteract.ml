@@ -51,7 +51,8 @@ let packages_status packages =
     let not_found = packages -- installed -- available in
     installed, available, not_found
   in
-  let installed, available, not_found =
+  (* keep tracking installed ones ?? *)
+  let _installed, available, not_found =
     match spv OpamSysPoll.os_family with
     | "alpine" ->
       let lines =
