@@ -343,7 +343,7 @@ let load lock_kind gt rt switch =
           acc)
       installed OpamPackage.Name.Map.empty
   in
-  let ext_files_changed =
+  let ext_files_changed = lazy (
     OpamPackage.Name.Map.fold (fun name conf acc ->
         let nv = OpamPackage.package_of_name installed name in
         if
@@ -359,37 +359,35 @@ let load lock_kind gt rt switch =
                 exists <> should_exist ||
                 exists && not (OpamHash.check_file (OpamFilename.to_string file) hash)
               in
-              (* /!\ fixme: the package removal instructions won't actually ever
-                 be called in this case *)
               if not exists && should_exist then
-                OpamConsole.error
-                  "System file %s, which package %s depends upon, \
-                   no longer exists.\n\
-                   The package has been marked as removed, and opam will \
-                   try to reinstall it if necessary, but you should reinstall \
-                   its system dependencies first."
+                OpamConsole.warning
+                  "System file %s, which package %s depends upon, no longer \
+                   exists.\n\
+                   The package will need to either be removed, or reinstalled. \
+                   You may need to restore its system dependencies for the \
+                   latter."
                   (OpamFilename.to_string file) (OpamPackage.to_string nv)
               else if changed then
                 OpamConsole.warning
-                  "File %s, which package %s depends upon, \
-                   was changed on your system. \
-                   %s has been marked as removed, and will be reinstalled if \
-                   necessary."
-                  (OpamFilename.to_string file) (OpamPackage.to_string nv)
-                  (OpamPackage.name_to_string nv);
+                  "File %s, which package %s depends upon, was changed on your \
+                   system.\n\
+                   The package will need to be reinstalled."
+                  (OpamFilename.to_string file) (OpamPackage.to_string nv);
               changed)
             (OpamFile.Dot_config.file_depends conf)
         then OpamPackage.Set.add nv acc
         else acc)
       conf_files
       OpamPackage.Set.empty
-  in
-  let installed =
-    installed -- ext_files_changed
-  in
+    |> fun inv -> log "Invalidated packages: %a" (slog OpamPackage.Set.to_string) inv; inv
+  ) in
   let reinstall = lazy (
     OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall gt.root switch) ++
-    Lazy.force changed
+    Lazy.force changed ++
+    (Lazy.force ext_files_changed %% Lazy.force available_packages)
+  ) in
+  let invalidated = lazy (
+    Lazy.force ext_files_changed -- Lazy.force available_packages
   ) in
   let st = {
     switch_global = (gt :> unlocked global_state);
@@ -399,7 +397,7 @@ let load lock_kind gt rt switch =
     repos_package_index; installed_opams;
     installed; pinned; installed_roots;
     opams; conf_files;
-    packages; available_packages; reinstall;
+    packages; available_packages; reinstall; invalidated;
   } in
   log "Switch state loaded in %.3fs" (chrono ());
   st
@@ -442,6 +440,7 @@ let load_virtual ?repos_list ?(avail_default=true) gt rt =
     packages;
     available_packages;
     reinstall = lazy OpamPackage.Set.empty;
+    invalidated = lazy (OpamPackage.Set.empty);
   }
 
 let selections st =

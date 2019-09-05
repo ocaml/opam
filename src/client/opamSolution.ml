@@ -988,13 +988,11 @@ let resolve t action ~orphans ?reinstall ~requested request =
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));
     OpamJson.append "switch" (OpamSwitch.to_json t.switch)
   );
-  Json.output_request request action;
-  let r =
-    OpamSolver.resolve
-      (OpamSwitchState.universe t ~requested ?reinstall action)
-      ~orphans
-      request
+  let universe =
+    OpamSwitchState.universe t ~requested ?reinstall action
   in
+  Json.output_request request action;
+  let r = OpamSolver.resolve universe ~orphans request in
   Json.output_solution t r;
   r
 

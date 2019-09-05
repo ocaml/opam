@@ -146,6 +146,11 @@ type +'lock switch_state = {
   reinstall: package_set Lazy.t;
   (** The set of packages which needs to be reinstalled *)
 
+  invalidated: package_set Lazy.t;
+  (** The set of packages which are installed but no longer valid, e.g. because
+      of removed system dependencies. Only packages which are unavailable end up
+      in this set, they are otherwise put in [reinstall]. *)
+
   (* Missing: a cache for
      - switch-global and package variables
      - the solver universe? *)
