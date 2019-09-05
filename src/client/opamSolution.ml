@@ -315,7 +315,9 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
   in
 
   let inplace =
-    if OpamClientConfig.(!r.inplace_build) || assume_built then
+    if OpamClientConfig.(!r.inplace_build)
+    || assume_built
+    || OpamClientConfig.(!r.working_dir) then
       OpamPackage.Set.fold (fun nv acc ->
           match
             OpamStd.Option.Op.(OpamSwitchState.url t nv >>| OpamFile.URL.url >>=
