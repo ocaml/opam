@@ -147,6 +147,11 @@ module Config: sig
     arg list option -> t -> t
   val with_default_compiler:
     formula -> t -> t
+  val with_depext_bypass: OpamSysPkg.Set.t -> t -> t
+  val with_depext_enable: bool -> t -> t
+  val with_depext_no_consistency_checks: bool -> t -> t
+  val with_depext_no_root: bool -> t -> t
+  val with_depext_print_only: bool -> t -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> opam_version
@@ -186,6 +191,12 @@ module Config: sig
   val validation_hook: t -> arg list option
 
   val default_compiler: t -> formula
+
+  val depext_bypass: t -> OpamSysPkg.Set.t
+  val depext_enable: t -> bool
+  val depext_no_consistency_checks: t -> bool
+  val depext_no_root: t -> bool
+  val depext_print_only: t -> bool
 
   val fields: (string * (t, value) OpamPp.field_parser) list
 
@@ -913,7 +924,6 @@ module Switch_config: sig
     wrappers: Wrappers.t;
     env: env_update list;
     invariant: OpamFormula.t;
-    depext_bypass: OpamSysPkg.Set.t;
   }
   val variable: t -> variable -> variable_contents option
   val path: t -> std_path -> string option

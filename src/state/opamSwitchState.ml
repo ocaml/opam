@@ -157,7 +157,7 @@ let depexts_raw ~env nv opams =
       (OpamFile.OPAM.depexts opam)
   with Not_found -> OpamSysPkg.Set.empty
 
-let system_packages ~depexts switch_config packages =
+let system_packages ~depexts config packages =
   let nv_syspkg =
     OpamPackage.Set.fold (fun nv map ->
         let s = depexts nv in
@@ -173,7 +173,7 @@ let system_packages ~depexts switch_config packages =
   in
   let chronos = OpamConsole.timer () in
   let os_pkgs = OpamSysInteract.packages_status all_syspkgs in
-  let bypass = switch_config.OpamFile.Switch_config.depext_bypass in
+  let bypass = OpamFile.Config.depext_bypass config in
   let s =
     let open OpamSysPkg in
     OpamPackage.Map.map (fun set ->
@@ -380,21 +380,6 @@ let load lock_kind gt rt switch =
       {switch_config with invariant; opam_version},
       invariant
   in
-  let switch_config =
-    let add_db, remove_db = OpamStateConfig.(!r.depext_bypass) in
-    if not OpamSysPkg.Set.(is_empty add_db && is_empty remove_db) then
-      (let depext_bypass =
-         OpamSysPkg.Set.Op.(switch_config.depext_bypass ++ add_db -- remove_db)
-       in
-       let switch_config = {switch_config with depext_bypass} in
-       if lock_kind = `Lock_write then (* auto-repair *)
-         OpamFile.Switch_config.write
-         (OpamPath.Switch.switch_config gt.root switch)
-         switch_config;
-       switch_config)
-    else
-      switch_config
-  in
   let conf_files =
     OpamPackage.Set.fold (fun nv acc ->
         OpamPackage.Name.Map.add nv.name
@@ -447,7 +432,7 @@ let load lock_kind gt rt switch =
                         || !r.depext_no_consistency_checks) then
       OpamPackage.Map.empty
     else
-      system_packages switch_config packages
+      system_packages gt.config packages
         ~depexts:(fun package ->
             let env =
               OpamPackageVar.resolve_switch_raw ~package gt switch switch_config

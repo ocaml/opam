@@ -155,7 +155,7 @@ val depexts: 'a switch_state -> package -> OpamSysPkg.Set.t
 
 (** Returns the ordered [sys_packages] of the given [package] set *)
 val system_packages:
-  depexts:(package -> OpamSysPkg.Set.t) -> OpamFile.Switch_config.t ->
+  depexts:(package -> OpamSysPkg.Set.t) -> OpamFile.Config.t ->
   package_set ->
   OpamSysPkg.status package_map
 

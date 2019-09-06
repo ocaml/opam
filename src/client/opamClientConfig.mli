@@ -94,7 +94,7 @@ val opam_init:
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
   ?locked:string option ->
-  ?depext_bypass: OpamTypes.sys_package list * OpamTypes.sys_package list ->
+  ?depext_bypass: OpamSysPkg.Set.t ->
   ?depext_enable: bool ->
   ?depext_no_consistency_checks: bool ->
   ?depext_no_root: bool ->

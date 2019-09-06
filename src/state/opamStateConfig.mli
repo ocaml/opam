@@ -29,7 +29,7 @@ type t = private {
   locked: string option;
   (* System packages to add (fst) and remove (snd) from the bypass list stored
      in the switch config.*)
-  depext_bypass: OpamSysPkg.Set.t * OpamSysPkg.Set.t;
+  depext_bypass: OpamSysPkg.Set.t;
   depext_enable: bool;
   depext_no_consistency_checks : bool;
   depext_no_root : bool;
@@ -50,7 +50,7 @@ type 'a options_fun =
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
   ?locked:string option ->
-  ?depext_bypass: sys_package list * sys_package list ->
+  ?depext_bypass: OpamSysPkg.Set.t ->
   ?depext_enable: bool ->
   ?depext_no_consistency_checks: bool ->
   ?depext_no_root: bool ->

@@ -169,6 +169,13 @@ let opam_init ?root_dir ?strict =
         ?solver_preferences_fixup:(criteria `Fixup >>| fun s -> lazy (Some s))
         ?solver_preferences_best_effort_prefix:
           (OpamFile.Config.best_effort_prefix conf >>| fun s -> lazy (Some s))
+        ();
+      OpamStateConfig.update
+        ~depext_bypass:(OpamFile.Config.depext_bypass conf)
+        ~depext_enable:(OpamFile.Config.depext_enable conf)
+        ~depext_no_consistency_checks:(OpamFile.Config.depext_no_consistency_checks conf)
+        ~depext_no_root:(OpamFile.Config.depext_no_root conf)
+        ~depext_print_only:(OpamFile.Config.depext_print_only conf)
         ()
   end;
 

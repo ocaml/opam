@@ -1074,6 +1074,11 @@ module ConfigSyntax = struct
     eval_variables : (variable * string list * string) list;
     validation_hook : arg list option;
     default_compiler : formula;
+    depext_bypass: OpamSysPkg.Set.t;
+    depext_enable: bool;
+    depext_no_consistency_checks : bool;
+    depext_no_root : bool;
+    depext_print_only : bool;
   }
 
   let opam_version t = t.opam_version
@@ -1097,6 +1102,13 @@ module ConfigSyntax = struct
 
   let validation_hook t = t.validation_hook
   let default_compiler t = t.default_compiler
+
+  let depext_bypass t = t.depext_bypass
+  let depext_enable t = t.depext_enable
+  let depext_no_consistency_checks t = t.depext_no_consistency_checks
+  let depext_no_root t = t.depext_no_root
+  let depext_print_only t = t.depext_print_only
+
 
   let with_opam_version opam_version t = { t with opam_version }
   let with_repositories repositories t = { t with repositories }
@@ -1125,6 +1137,12 @@ module ConfigSyntax = struct
     { t with validation_hook = Some validation_hook}
   let with_validation_hook_opt validation_hook t = { t with validation_hook }
   let with_default_compiler default_compiler t = { t with default_compiler }
+  let with_depext_bypass depext_bypass t = { t with depext_bypass }
+  let with_depext_enable depext_enable t = { t with depext_enable }
+  let with_depext_no_consistency_checks depext_no_consistency_checks t =
+    { t with depext_no_consistency_checks }
+  let with_depext_no_root depext_no_root t = { t with depext_no_root }
+  let with_depext_print_only depext_print_only t = { t with depext_print_only }
 
   let empty = {
     opam_version = format_version;
@@ -1143,6 +1161,11 @@ module ConfigSyntax = struct
     eval_variables = [];
     validation_hook = None;
     default_compiler = OpamFormula.Empty;
+    depext_bypass = OpamSysPkg.Set.empty;
+    depext_enable = false;
+    depext_no_consistency_checks = false;
+    depext_no_root = false;
+    depext_print_only = false;
   }
 
   (* When adding a field, make sure to add it in
@@ -1219,6 +1242,24 @@ module ConfigSyntax = struct
       "default-compiler", Pp.ppacc
         with_default_compiler default_compiler
         (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
+      (* depext fields *)
+      "depext-bypass", Pp.ppacc
+        (fun depext_bypass t -> { t with depext_bypass}) (fun t -> t.depext_bypass)
+        (Pp.V.map_list
+           (Pp.V.string -| Pp.of_module "sys-package" (module OpamSysPkg))
+         -| Pp.pp (fun ~pos:_ -> OpamSysPkg.Set.of_list) OpamSysPkg.Set.elements);
+      "depext-enable", Pp.ppacc
+        with_depext_enable depext_enable
+        Pp.V.bool;
+      "depext-no-consistency_checks", Pp.ppacc
+        with_depext_no_consistency_checks depext_no_consistency_checks
+        Pp.V.bool;
+      "depext-no-root", Pp.ppacc
+        with_depext_no_root depext_no_root
+        Pp.V.bool;
+      "depext-print-only", Pp.ppacc
+        with_depext_print_only depext_print_only
+        Pp.V.bool;
 
       (* deprecated fields *)
       "alias", Pp.ppacc_opt
@@ -1525,7 +1566,6 @@ module Switch_configSyntax = struct
     wrappers: Wrappers.t;
     env: env_update list;
     invariant: OpamFormula.t;
-    depext_bypass: OpamSysPkg.Set.t;
   }
 
   let empty = {
@@ -1538,7 +1578,6 @@ module Switch_configSyntax = struct
     wrappers = Wrappers.empty;
     env = [];
     invariant = OpamFormula.Empty;
-    depext_bypass = OpamSysPkg.Set.empty;
   }
 
   (* When adding a field or section, make sure to add it in
@@ -1582,11 +1621,6 @@ module Switch_configSyntax = struct
     "invariant", Pp.ppacc
       (fun invariant t -> {t with invariant}) (fun t -> t.invariant)
       (Pp.V.package_formula `Conj Pp.V.(constraints version));
-    "depext-bypass", Pp.ppacc
-      (fun depext_bypass t -> { t with depext_bypass}) (fun t -> t.depext_bypass)
-      (Pp.V.map_list
-         (Pp.V.string -| Pp.of_module "sys-package" (module OpamSysPkg))
-       -| Pp.pp (fun ~pos:_ -> OpamSysPkg.Set.of_list) OpamSysPkg.Set.elements);
   ] @
     List.map
       (fun (fld, ppacc) ->
