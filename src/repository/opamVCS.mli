@@ -67,6 +67,10 @@ module type VCS = sig
       [false] after [reset] has been called. *)
   val is_dirty: dirname -> bool OpamProcess.job
 
+  (** Returns the list of files under version control, modified in the working
+      tree but not comitted *)
+  val modified_files: dirname -> string list OpamProcess.job
+
   val get_remote_url: ?hash:string -> dirname -> url option OpamProcess.job
 end
 

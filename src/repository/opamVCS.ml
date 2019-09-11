@@ -27,6 +27,7 @@ module type VCS = sig
   val vc_dir: dirname -> dirname
   val current_branch: dirname -> string option OpamProcess.job
   val is_dirty: dirname -> bool OpamProcess.job
+  val modified_files: dirname -> string list OpamProcess.job
   val get_remote_url: ?hash:string -> dirname -> url option OpamProcess.job
 end
 
@@ -105,6 +106,7 @@ module Make (VCS: VCS) = struct
     | None -> Done (result)
     | Some dir ->
       VCS.versioned_files dir @@+ fun vc_files ->
+      VCS.modified_files dir @@+ fun vc_dirty_files ->
       let files =
         List.map OpamFilename.(remove_prefix dir)
           (OpamFilename.rec_files dir)
@@ -134,12 +136,17 @@ module Make (VCS: VCS) = struct
           fset
       in
       let vcset = OpamStd.String.Set.of_list vc_files in
-      let final_set = OpamStd.String.Set.Op.(fset -- vcset -- excluded) in
+      let vc_dirty_set = OpamStd.String.Set.of_list vc_dirty_files in
+      let final_set =
+        OpamStd.String.Set.Op.(fset -- vcset ++ vc_dirty_set -- excluded)
+      in
       let stdout_file =
         let f = OpamSystem.temp_file "rsync-files" in
         let fd = open_out f in
         (* Using the set here to keep the list file sorted, it helps rsync *)
-        OpamStd.String.Set.iter (fun s -> output_string fd s; output_char fd '\n') final_set;
+        OpamStd.String.Set.iter (fun s ->
+            output_string fd s; output_char fd '\n')
+          final_set;
         close_out fd;
         f
       in
