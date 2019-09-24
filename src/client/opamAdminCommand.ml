@@ -376,11 +376,11 @@ let add_hashes_command =
     let repo_root = checked_repo_root () in
     let cache_urls =
       let repo_file = OpamRepositoryPath.repo repo_root in
-      List.map (fun rel ->
+      OpamStd.List.filter_map (fun rel ->
           if OpamStd.String.contains ~sub:"://" rel
-          then OpamUrl.of_string rel
-          else OpamUrl.Op.(OpamUrl.of_string
-                             (OpamFilename.Dir.to_string repo_root) / rel))
+          then OpamUrl.parse_opt ~handle_suffix:false rel
+          else Some OpamUrl.Op.(OpamUrl.of_string
+                                  (OpamFilename.Dir.to_string repo_root) / rel))
         (OpamFile.Repo.dl_cache (OpamFile.Repo.safe_read repo_file))
     in
     let pkg_prefixes =

@@ -35,11 +35,17 @@ let eval_redirect gt repo repo_root =
   | (redirect, f) :: _ ->
     let redirect_url =
       if OpamStd.String.contains ~sub:"://" redirect
-      then OpamUrl.of_string redirect
-      else OpamUrl.Op.(repo.repo_url / redirect)
+      then
+        let red = OpamUrl.parse_opt ~handle_suffix:false redirect in
+        if red = None then
+          OpamConsole.error "Ignoring malformed redirection url %s" redirect;
+        red
+      else Some OpamUrl.Op.(repo.repo_url / redirect)
     in
-    if redirect_url = repo.repo_url then None
-    else Some (redirect_url, f)
+    match redirect_url with
+    | Some ru when ru = repo.repo_url -> None
+    | Some ru -> Some (ru, f)
+    | None -> None
 
 let repository rt repo =
   let max_loop = 10 in
@@ -475,10 +481,14 @@ let active_caches st nv =
         | None -> OpamSystem.internal_error "repo file of unknown origin"
         | Some u -> u
       in
-      List.map (fun rel ->
+      OpamStd.List.filter_map (fun rel ->
           if OpamStd.String.contains ~sub:"://" rel
-          then OpamUrl.of_string rel
-          else OpamUrl.Op.(root_url / rel))
+          then
+            let r = OpamUrl.parse_opt ~handle_suffix:false rel in
+            if r = None then
+              OpamConsole.warning "Invalid cache url %s, skipping" rel;
+            r
+          else Some OpamUrl.Op.(root_url / rel))
         (OpamFile.Repo.dl_cache repo_def)
   in
   repo_cache @ global_cache

@@ -1935,7 +1935,14 @@ let with_repos_rt gt repos f =
     let new_defs =
       OpamStd.List.filter_map (function
           | (_, None) -> None
-          | (n, Some u) -> Some (n, OpamUrl.of_string u))
+          | (n, Some url) ->
+            let repo =
+              OpamStd.Option.Op.(
+                OpamUrl.parse_opt ~handle_suffix:false url >>| fun u -> n, u)
+            in
+            if repo = None then
+              OpamConsole.warning "Skipping %s, malformed url" url;
+            repo)
         repos
     in
     if List.for_all
@@ -2538,7 +2545,20 @@ let pin ?(unpin_only=false) () =
   in
   let pin_target kind target =
     let looks_like_version_re =
-      Re.(compile @@ seq [bos; opt @@ char 'v'; digit; rep @@ diff any (set "/\\"); eos])
+      Re.(compile @@
+          seq [
+            bos;
+            opt @@ char 'v';
+            digit;
+            rep @@ diff any (set "/\\");
+            eos])
+    in
+    let parse ?backend ?handle_suffix target =
+      match OpamUrl.parse_opt ?backend ?handle_suffix target with
+      | Some url -> `Source url
+      | None ->
+        OpamConsole.error_and_exit `Bad_arguments
+          "No package pinned, invalid url"
     in
     let auto () =
       if target = "-" then
@@ -2547,17 +2567,16 @@ let pin ?(unpin_only=false) () =
         `Version (OpamPackage.Version.of_string target)
       else
       let backend = OpamUrl.guess_version_control target in
-      `Source (OpamUrl.parse ?backend ~handle_suffix:true target)
+      parse ?backend ~handle_suffix:true target
     in
     let target =
       match kind with
       | Some `version -> `Version (OpamPackage.Version.of_string target)
-      | Some (#OpamUrl.backend as k) ->
-        `Source (OpamUrl.parse ~backend:k target)
+      | Some (#OpamUrl.backend as k) -> parse ~backend:k target
       | Some `none -> `None
       | Some `auto -> auto ()
       | None when OpamClientConfig.(!r.pin_kind_auto) -> auto ()
-      | None -> `Source (OpamUrl.parse ~handle_suffix:false target)
+      | None -> parse ~handle_suffix:false target
     in
     match target with
     | `Source url -> `Source (OpamAuxCommands.url_with_local_branch url)
@@ -2579,9 +2598,11 @@ let pin ?(unpin_only=false) () =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       let err, to_unpin =
+        let open OpamStd.Option.Op in
         List.fold_left (fun (err, acc) arg ->
             let as_url =
-              let url = OpamUrl.of_string arg in
+              OpamUrl.parse_opt ~handle_suffix:false arg
+              >>| fun url ->
               OpamPackage.Set.filter
                 (fun nv ->
                    match OpamSwitchState.url st nv with
@@ -2594,14 +2615,14 @@ let pin ?(unpin_only=false) () =
               OpamPackage.Name.Set.elements
             in
             match as_url with
-            | _::_ -> err, as_url @ acc
-            | [] ->
+            | Some ((_::_) as url) -> err, url @ acc
+            | _->
               match (fst package_name) arg with
               | `Ok name -> err, name::acc
               | `Error _ ->
                 OpamConsole.error
                   "No package pinned to this target found, or invalid package \
-                   name: %s" arg;
+                   name/url: %s" arg;
                 true, acc)
           (false,[]) arg
       in
