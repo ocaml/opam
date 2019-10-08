@@ -60,6 +60,11 @@ AC_ARG_WITH([private_runtime],
                  [For a mingw-w64 build, manifest the runtime DLLs locally in Opam.Runtime.arch]),,[with_private_runtime=no]
 )
 
+AC_ARG_ENABLE([cold_check],
+  AC_HELP_STRING([--enable-cold-check],
+                 [Fail on some check necessary for make cold]),[COLD_CHECK=yes],[]
+)
+
 AS_IF([test "x" != "x$LIB_PREFIX"], [
   CPATH=$CPATH:$LIB_PREFIX/include
   LIBRARY_PATH=$LIBRARY_PATH:$LIB_PREFIX/lib
@@ -224,6 +229,15 @@ AC_CHECK_TOOL(DUNE,dune)
 AC_CHECK_TOOL(CPPO,cppo)
 AC_CHECK_TOOL(PATCH,patch)
 AC_CHECK_TOOL(BUNZIP2,bunzip2)
+
+if test "x${COLD_CHECK}" = "xyes" ; then
+  if test "x$PATCH"  = "x" ; then
+    AC_MSG_ERROR([You must have patch installed.])
+  fi
+  if test "x$BUNZIP2"  = "x" ; then
+    AC_MSG_ERROR([You must have bunzip2 installed.])
+  fi
+fi
 
 AS_IF([test "${OCAML_OS_TYPE}" = "Win32"],[
   AC_MSG_CHECKING([for a workable solution for ln -s])
