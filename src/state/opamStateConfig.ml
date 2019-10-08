@@ -32,7 +32,7 @@ let default = {
     );
   current_switch = None;
   switch_from = `Default;
-  jobs = lazy (max 1 (OpamSystem.cpu_count () - 1));
+  jobs = lazy (max 1 (OpamSysPoll.cores () - 1));
   dl_jobs = 3;
   build_test = false;
   build_doc = false;
@@ -184,7 +184,7 @@ let load_defaults root_dir =
     update
       ?current_switch:(OpamFile.Config.switch conf)
       ~switch_from:`Default
-      ~jobs:(lazy (OpamFile.Config.jobs conf))
+      ?jobs:(OpamFile.Config.jobs conf >>| fun s -> lazy s)
       ~dl_jobs:(OpamFile.Config.dl_jobs conf)
       ();
     update ?current_switch ();
