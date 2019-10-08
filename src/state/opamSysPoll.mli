@@ -28,3 +28,6 @@ val normalise_arch: string -> string
     its input lowercased if not a recognised OS). This is typically called on
     the output of [uname -s] *)
 val normalise_os: string -> string
+
+(* Number of cores *)
+val cores: unit -> int

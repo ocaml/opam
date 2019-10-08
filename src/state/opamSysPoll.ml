@@ -158,3 +158,6 @@ let variables =
       "os-version", os_version_lazy;
       "os-family", os_family_lazy;
     ]
+
+let cores_lazy = lazy (OpamSystem.cpu_count ())
+let cores () = Lazy.force cores_lazy
