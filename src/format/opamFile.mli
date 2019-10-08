@@ -145,8 +145,8 @@ module Config: sig
 
   val installed_switches: t -> switch list
 
-  (** Return the number of jobs *)
-  val jobs: t -> int
+  (** Return the number of jobs defined *)
+  val jobs: t -> int option
 
   val dl_tool: t -> arg list option
 

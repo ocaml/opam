@@ -1039,7 +1039,7 @@ module ConfigSyntax = struct
     repositories : repository_name list;
     installed_switches : switch list;
     switch : switch option;
-    jobs : int;
+    jobs : int option;
     dl_tool : arg list option;
     dl_jobs : int;
     dl_cache : url list option;
@@ -1081,7 +1081,7 @@ module ConfigSyntax = struct
     { t with installed_switches }
   let with_switch_opt switch t = { t with switch }
   let with_switch switch t = { t with switch = Some switch }
-  let with_jobs jobs t = { t with jobs }
+  let with_jobs jobs t = { t with jobs = Some jobs}
   let with_dl_tool dl_tool t = { t with dl_tool = Some dl_tool }
   let with_dl_tool_opt dl_tool t = { t with dl_tool }
   let with_dl_jobs dl_jobs t = { t with dl_jobs }
@@ -1106,7 +1106,7 @@ module ConfigSyntax = struct
     repositories = [];
     installed_switches = [];
     switch = None;
-    jobs = 1;
+    jobs = None;
     dl_tool = None;
     dl_jobs = 1;
     dl_cache = None;
@@ -1142,7 +1142,7 @@ module ConfigSyntax = struct
       "switch", Pp.ppacc_opt
         with_switch switch
         (Pp.V.string -| Pp.of_module "switch" (module OpamSwitch));
-      "jobs", Pp.ppacc
+      "jobs", Pp.ppacc_opt
         with_jobs jobs
         Pp.V.pos_int;
       "download-command", Pp.ppacc_opt
