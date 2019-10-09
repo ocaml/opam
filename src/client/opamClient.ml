@@ -580,8 +580,12 @@ let update
              in
              match OpamSwitchState.primary_url st nv with
              | Some { OpamUrl.backend = #OpamUrl.version_control as vc; _ } ->
-               OpamProcess.Job.run @@
-               OpamRepository.is_dirty { cache_url with OpamUrl.backend = vc }
+               (try
+                  OpamProcess.Job.run @@
+                  OpamRepository.is_dirty { cache_url with OpamUrl.backend = vc }
+                with OpamSystem.Process_error _ ->
+                  log "Skipping %s, not a git repo" (OpamPackage.to_string nv);
+                  false)
              | _ -> false)
           dev_packages
     in
