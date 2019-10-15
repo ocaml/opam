@@ -265,6 +265,7 @@ export OPAMYES=1
 export OCAMLRUNPARAM=b
 
 ( # Run subshell in bootstrap root env to build
+  echo -en "travis_fold:start:build\r"
   if [[ $OPAM_TEST -eq 1 ]] ; then
     export OPAMROOT=$OPAMBSROOT
     eval $(opam env)
@@ -274,6 +275,10 @@ export OCAMLRUNPARAM=b
 
   if [[ $OPAM_TEST$COLD -eq 0 ]] ; then
     make lib-ext
+  fi
+  if [ "$TRAVIS_BUILD_STAGE_NAME" = "Upgrade" ]; then
+    # unset git versionning to allow OPAMYES use for upgrade
+    sed -i  -e 's/\(.*with-stdout-to get-git-version.ml.*@@\).*/\1 \\"let version = None\\"")))/' src/client/dune
   fi
   make all admin
 
@@ -296,12 +301,58 @@ export OCAMLRUNPARAM=b
 
     opam switch default
     opam switch remove $OPAMBSSWITCH --yes
-  else
+  elif [ "$TRAVIS_BUILD_STAGE_NAME" != "Upgrade" ]; then
     # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
     OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make tests ||
       (tail -n 2000 _build/default/tests/fulltest-*.log; echo "-- TESTS FAILED --"; exit 1)
   fi
+  echo -en "travis_fold:end:build\r"
 )
+
+if [ "$TRAVIS_BUILD_STAGE_NAME" = "Upgrade" ]; then
+  OPAM12DIR=~/opam1.2
+  CACHE=$OPAM12DIR/cache
+  export OPAMROOT=$CACHE/root20
+  if [[ ! -f $CACHE/bin/opam ]]; then
+    cd $OPAM12DIR
+    echo -en "travis_fold:start:opam12\r"
+    opam init --bare default git+https://github.com/ocaml/opam-repository#8be4290a
+    opam switch create opam12 --empty
+    eval `opam env`
+    OPAMEDITOR="sed -i -e 's/printconf/\"printconf\"/'" opam pin -n --edit dose 3.4.2 << EOF
+EOF
+    mkdir -p $CACHE/sources
+    cd $CACHE/sources
+    wget https://github.com/ocaml/opam/archive/1.2.2.tar.gz -O opam1.2.tar.gz
+    tar -xzf opam1.2.tar.gz
+    cd opam-1.2.2
+    sed -i -e 's/cmdliner"/cmdliner" { <= "0.9.8" }/' opam
+    opam install ./opam --deps-only
+    grep -r "Debian.Version" * -l | xargs sed -i -e "s/Debian.Version.//"
+    cd $CACHE/sources/opam-1.2.2
+    ./configure --prefix $CACHE
+    make clean
+    make
+    make install
+    echo -en "travis_fold:end:opam12\r"
+  fi
+  export OPAMROOT=/tmp/opamroot
+  rm -rf $OPAMROOT
+  if [[ ! -d $CACHE/root ]]; then
+    $CACHE/bin/opam init
+    cp -r /tmp/opamroot/ $CACHE/root
+  else
+    cp -r $CACHE/root /tmp/opamroot
+  fi
+  set +e
+  opam update
+  rcode=$?
+  if [ $rcode -ne 10 ]; then
+    echo "[31mBad return code $rcode, should be 10[0m";
+    exit $rcode
+  fi
+  exit 0
+fi
 
 ( # Finally run the tests, in a clean environment
   export OPAMKEEPLOGS=1
