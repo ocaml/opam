@@ -544,9 +544,22 @@ let write_static_init_scripts root ?completion ?env_hook () =
   update_scripts env_hook_file env_hook_script env_hook
 
 let write_custom_init_scripts root custom =
+  let hookdir = OpamPath.hooks_dir root in
+  let kind = `MD5 in
   List.iter (fun (name, script) ->
-      write_script (OpamPath.hooks_dir root) (name, script);
-      OpamFilename.chmod (OpamPath.hooks_dir root // name) 0o777
+      let script_file = hookdir // name in
+      let hash = OpamHash.compute_from_string ~kind script in
+      let hash_name = name ^ ".hash" in
+      let hash_file = hookdir // hash_name in
+      if not (OpamFilename.exists hash_file)
+      || OpamHash.of_string_opt (OpamFilename.read hash_file) <>
+         Some (OpamHash.compute ~kind (OpamFilename.to_string script_file))
+         && OpamConsole.confirm ~default:false
+           "%s contains local modification, overwrite ?"
+           (OpamFilename.to_string script_file) then
+        (write_script hookdir (name, script);
+         OpamFilename.chmod script_file 0o777;
+         write_script hookdir (hash_name, OpamHash.to_string hash))
     ) custom
 
 let write_dynamic_init_scripts st =
