@@ -262,14 +262,6 @@ let output_lines oc lines =
   output_string oc "\n";
   flush oc
 
-let option_map fn = function
-  | None   -> None
-  | Some o -> Some (fn o)
-
-let option_default d = function
-  | None   -> d
-  | Some v -> v
-
 let make_info ?code ?signal
     ~cmd ~args ~cwd ~env_file ~stdout_file ~stderr_file ~metadata () =
   let b = ref [] in
@@ -289,8 +281,8 @@ let make_info ?code ?signal
   List.iter (fun (k,v) -> print k v) metadata;
   print     "path"         cwd;
   print     "command"      (String.concat " " (cmd :: args));
-  print_opt "exit-code"    (option_map string_of_int code);
-  print_opt "signalled"    (option_map string_of_int signal);
+  print_opt "exit-code"    (OpamStd.Option.map string_of_int code);
+  print_opt "signalled"    (OpamStd.Option.map string_of_int signal);
   print_opt "env-file"     env_file;
   if stderr_file = stdout_file then
     print_opt "output-file"  stdout_file
@@ -630,8 +622,8 @@ let set_verbose_process p =
 
 let exit_status p return =
   let duration = Unix.gettimeofday () -. p.p_time in
-  let stdout = option_default [] (option_map read_lines p.p_stdout) in
-  let stderr = option_default [] (option_map read_lines p.p_stderr) in
+  let stdout = OpamStd.Option.default [] (OpamStd.Option.map read_lines p.p_stdout) in
+  let stderr = OpamStd.Option.default [] (OpamStd.Option.map read_lines p.p_stderr) in
   let cleanup = p.p_tmp_files in
   let code,signal = match return with
     | Unix.WEXITED r -> Some r, None
