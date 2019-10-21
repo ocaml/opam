@@ -69,11 +69,22 @@ remote (ssh) paths, HTTP URLs, or one of the supported version control systems
 (git, Mercurial, Darcs). A repository is set up using
 
 ```
-opam repository add <name> <URL>
+opam repository add <name> <URL> [--this-switch|--all-switches|--set-default]
 ```
 
-and can subsequently be then selected for use in specific switches using `opam
-repository select <name>`. Use `opam repository list --all` for an overview of
+The last flag sets what switches are affected by the new repository:
+- `--this-switch` (**default**) selects only the current switch
+- `--all-switches` affects all the currently existing switches
+- `--set-default` affects all switches created in the future
+
+Creating a new switch using e.g. a custom repository overlay on the default
+repository can be done in a single call using:
+```
+opam switch create --repos=<name>=<URL>,default
+```
+which will define the new repository `<name>` at `<URL>` if needed.
+
+Use `opam repository list --all` for an overview of
 configured repositories. Repository selection is always ordered, with the
 definition of a given version of a package being taken from the repository with
 the lowest index where it is found.
