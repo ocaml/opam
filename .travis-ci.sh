@@ -313,28 +313,11 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Upgrade" ]; then
   OPAM12DIR=~/opam1.2
   CACHE=$OPAM12DIR/cache
   export OPAMROOT=$CACHE/root20
+  echo -en "travis_fold:start:opam12\r"
   if [[ ! -f $CACHE/bin/opam ]]; then
-    cd $OPAM12DIR
-    echo -en "travis_fold:start:opam12\r"
-    opam init --bare default git+https://github.com/ocaml/opam-repository#8be4290a
-    opam switch create opam12 --empty
-    eval `opam env`
-    OPAMEDITOR="sed -i -e 's/printconf/\"printconf\"/'" opam pin -n --edit dose 3.4.2 << EOF
-EOF
-    mkdir -p $CACHE/sources
-    cd $CACHE/sources
-    wget https://github.com/ocaml/opam/archive/1.2.2.tar.gz -O opam1.2.tar.gz
-    tar -xzf opam1.2.tar.gz
-    cd opam-1.2.2
-    sed -i -e 's/cmdliner"/cmdliner" { <= "0.9.8" }/' opam
-    opam install ./opam --deps-only
-    grep -r "Debian.Version" * -l | xargs sed -i -e "s/Debian.Version.//"
-    cd $CACHE/sources/opam-1.2.2
-    ./configure --prefix $CACHE
-    make clean
-    make
-    make install
-    echo -en "travis_fold:end:opam12\r"
+    mkdir -p $CACHE/bin
+    wget https://github.com/ocaml/opam/releases/download/1.2.2/opam-1.2.2-x86_64-Linux -O $CACHE/bin/opam
+    chmod +x $CACHE/bin/opam
   fi
   export OPAMROOT=/tmp/opamroot
   rm -rf $OPAMROOT
@@ -344,6 +327,7 @@ EOF
   else
     cp -r $CACHE/root /tmp/opamroot
   fi
+  echo -en "travis_fold:end:opam12\r"
   set +e
   opam update
   rcode=$?
