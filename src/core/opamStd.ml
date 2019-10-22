@@ -245,7 +245,8 @@ module Set = struct
       let rec aux fullset curset =
         if is_empty curset then fullset else
         let newset = fold (fun nv set -> set ++ f nv) curset empty in
-        aux (fullset ++ curset) (newset -- fullset)
+        let fullset = fullset ++ curset in
+        aux fullset (newset -- fullset)
       in
       aux empty
 
