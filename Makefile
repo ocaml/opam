@@ -206,7 +206,7 @@ compiler:
 	env MAKE=$(MAKE) ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
 
 cold: compiler
-	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" ./configure $(CONFIGURE_ARGS)
+	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" ./configure --enable-cold-check $(CONFIGURE_ARGS)
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE) lib-ext
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE)
 
