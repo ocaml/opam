@@ -69,7 +69,9 @@ module type S = sig
   val revision: dirname -> version option OpamProcess.job
 
   (** Like [pull_url], except for locally-bound version control backends, where
-      it should get the latest, uncommitted source. *)
+      it should get the latest, uncommitted source. First, it performs a
+      [pull_url], then remove deleted files, and finally copy via rsync
+      unversioned & modified-uncommitted files. *)
   val sync_dirty:
     dirname -> url -> filename option download OpamProcess.job
 
