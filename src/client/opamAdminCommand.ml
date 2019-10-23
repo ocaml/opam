@@ -974,16 +974,16 @@ let add_constraint_command =
     OpamArg.apply_global_options global_options;
     let repo_root = checked_repo_root () in
     let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
-    let name, cstr = atom in
-    let cstr = match cstr with
+    let name, cstr_opt = atom in
+    let cstr = match cstr_opt with
       | Some (relop, v) ->
         OpamFormula.Atom
           (Constraint (relop, FString (OpamPackage.Version.to_string v)))
       | None ->
         OpamFormula.Empty
     in
-    let add_cstr nv n c =
-      let f = OpamFormula.ands [c; cstr] in
+    let add_cstr op cstr nv n c =
+      let f = op [ cstr; c] in
       match OpamFilter.simplify_extended_version_formula f with
       | Some f -> f
       | None -> (* conflicting constraint *)
@@ -1005,13 +1005,40 @@ let add_constraint_command =
         let deps =
           OpamFormula.map (function
               | (n,c as atom) ->
-                if n = name then Atom (n, (add_cstr nv n c))
+                if n = name then Atom (n, (add_cstr OpamFormula.ands cstr nv n c))
                 else Atom atom)
             deps0
         in
-        if deps <> deps0 then
+        let depopts0 = OpamFile.OPAM.depopts opam in
+        let conflicts0 = OpamFile.OPAM.conflicts opam in
+        let contains name =
+          OpamFormula.fold_left (fun contains (n,_) ->
+              contains || n = name) false
+        in
+        let conflicts =
+          if contains name depopts0 then
+            match cstr_opt with
+            | Some (relop, v) ->
+              let icstr =
+                OpamFormula.Atom
+                  (Constraint (OpamFormula.neg_relop relop,
+                               FString (OpamPackage.Version.to_string v)))
+              in
+              if contains name conflicts0 then
+                OpamFormula.map (function
+                    | (n,c as atom) ->
+                      if n = name then Atom (n, (add_cstr OpamFormula.ors icstr nv n c))
+                      else Atom atom)
+                  conflicts0
+              else
+                OpamFormula.ors [ conflicts0; Atom (name, icstr) ]
+            | None -> conflicts0
+          else conflicts0
+        in
+        if deps <> deps0 || conflicts <> conflicts0 then
           OpamFile.OPAM.write_with_preserved_format opam_file
-            (OpamFile.OPAM.with_depends deps opam))
+            (OpamFile.OPAM.with_depends deps opam
+             |> OpamFile.OPAM.with_conflicts conflicts))
       pkg_prefixes
   in
   Term.(pure cmd $ OpamArg.global_options $ force_arg $ atom_arg),
