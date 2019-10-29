@@ -231,6 +231,18 @@ module VCS : OpamVCS.VCS = struct
       OpamProcess.cleanup ~force:true r; Done true
     | r -> OpamSystem.process_error r
 
+  let modified_files repo_root =
+    git repo_root ~verbose:false [ "status" ; "--short" ] @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    let files =
+      OpamStd.List.filter_map (fun line ->
+          match OpamStd.String.split line ' ' with
+          | ("A" | "M" | "AM")::file::[]
+          | ("R"|"RM"|"C"|"CM")::_::"->"::file::[] -> Some file
+          | _ -> None) r.OpamProcess.r_stdout
+    in
+    Done files
+
   let origin = "origin"
 
   (** check if a hash or branch is present in remote origin and returns  *)

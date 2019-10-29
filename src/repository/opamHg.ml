@@ -116,6 +116,17 @@ module VCS = struct
     OpamSystem.raise_on_process_error r;
     Done (r.OpamProcess.r_stdout = [])
 
+  let modified_files repo_root =
+    hg repo_root [ "status"; "--subrepos" ] @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    let files =
+      OpamStd.List.filter_map (fun line ->
+          match OpamStd.String.split line ' ' with
+          | ("A" | "M")::file::[] -> Some file
+          | _ -> None) r.OpamProcess.r_stdout
+    in
+    Done files
+
   let get_remote_url ?hash repo_root =
     hg repo_root [ "paths"; "default" ]
     @@> function
