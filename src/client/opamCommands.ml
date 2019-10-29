@@ -1534,8 +1534,9 @@ let update =
       "Do the update, then return with code 0 if there were any upstream \
        changes, 1 if there were none. Repositories or development packages \
        that failed to update are considered without changes. With \
-       $(b,--upgrade), behaves like $(b,opam upgrade --check), that is, \
-       returns 0 only if there currently are available updates." in
+       $(b,--upgrade), applies to the upgrade step: that is $(b,opam update \
+       --upgrade --check) behaves like $(b,opam update && opam upgrade --check), \
+       returning 0 if there are available upgrades, rather than upstream updates." in
   let update global_options jobs names repos_only dev_only all check upgrade =
     apply_global_options global_options;
     OpamStateConfig.update
