@@ -177,9 +177,9 @@ let cleanup rt =
   Hashtbl.clear rt.repos_tmp
 
 let get_root_raw root repos_tmp name =
-  try
-    Lazy.force (Hashtbl.find repos_tmp name)
-  with Not_found -> OpamRepositoryPath.root root name
+  match Hashtbl.find repos_tmp name with
+  | lazy repo_root -> repo_root
+  | exception Not_found -> OpamRepositoryPath.root root name
 
 let get_root rt name =
   get_root_raw rt.repos_global.root rt.repos_tmp name
@@ -214,12 +214,8 @@ let load lock_kind gt =
       then
         let tmp = lazy (
           let tmp_root = Lazy.force repos_tmp_root in
-          if OpamFilename.exists tar then
-            (OpamFilename.extract_in tar tmp_root;
-             OpamFilename.Op.(tmp_root / OpamRepositoryName.to_string name))
-          else
-            (log "Missing repository archive %s" (OpamFilename.to_string tar);
-             raise Not_found)
+          OpamFilename.extract_in tar tmp_root;
+          OpamFilename.Op.(tmp_root / OpamRepositoryName.to_string name)
         ) in
         Hashtbl.add repos_tmp name tmp
     ) repositories;
