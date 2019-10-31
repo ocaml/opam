@@ -265,6 +265,7 @@ export OPAMYES=1
 export OCAMLRUNPARAM=b
 
 ( # Run subshell in bootstrap root env to build
+  echo -en "travis_fold:start:build\r"
   if [[ $OPAM_TEST -eq 1 ]] ; then
     export OPAMROOT=$OPAMBSROOT
     eval $(opam env)
@@ -274,6 +275,10 @@ export OCAMLRUNPARAM=b
 
   if [[ $OPAM_TEST$COLD -eq 0 ]] ; then
     make lib-ext
+  fi
+  if [ "$TRAVIS_BUILD_STAGE_NAME" = "Upgrade" ]; then
+    # unset git versionning to allow OPAMYES use for upgrade
+    sed -i  -e 's/\(.*with-stdout-to get-git-version.ml.*@@\).*/\1 \\"let version = None\\"")))/' src/client/dune
   fi
   make all admin
 
@@ -296,12 +301,42 @@ export OCAMLRUNPARAM=b
 
     opam switch default
     opam switch remove $OPAMBSSWITCH --yes
-  else
+  elif [ "$TRAVIS_BUILD_STAGE_NAME" != "Upgrade" ]; then
     # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
     OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make tests ||
       (tail -n 2000 _build/default/tests/fulltest-*.log; echo "-- TESTS FAILED --"; exit 1)
   fi
+  echo -en "travis_fold:end:build\r"
 )
+
+if [ "$TRAVIS_BUILD_STAGE_NAME" = "Upgrade" ]; then
+  OPAM12DIR=~/opam1.2
+  CACHE=$OPAM12DIR/cache
+  export OPAMROOT=$CACHE/root20
+  echo -en "travis_fold:start:opam12\r"
+  if [[ ! -f $CACHE/bin/opam ]]; then
+    mkdir -p $CACHE/bin
+    wget https://github.com/ocaml/opam/releases/download/1.2.2/opam-1.2.2-x86_64-Linux -O $CACHE/bin/opam
+    chmod +x $CACHE/bin/opam
+  fi
+  export OPAMROOT=/tmp/opamroot
+  rm -rf $OPAMROOT
+  if [[ ! -d $CACHE/root ]]; then
+    $CACHE/bin/opam init
+    cp -r /tmp/opamroot/ $CACHE/root
+  else
+    cp -r $CACHE/root /tmp/opamroot
+  fi
+  echo -en "travis_fold:end:opam12\r"
+  set +e
+  opam update
+  rcode=$?
+  if [ $rcode -ne 10 ]; then
+    echo "[31mBad return code $rcode, should be 10[0m";
+    exit $rcode
+  fi
+  exit 0
+fi
 
 ( # Finally run the tests, in a clean environment
   export OPAMKEEPLOGS=1
