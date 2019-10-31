@@ -39,6 +39,8 @@ val with_tmp_dir_job: (string -> 'a OpamProcess.job) -> 'a OpamProcess.job
     is reached *)
 val verbose_for_base_commands: unit -> bool
 
+(** {2 Filesystem management} *)
+
 (** Returns a directory name, in the temporary directory, composed by {i opam}
     (if [prefix] is not set), pid, and random number. *)
 val mk_temp_dir: ?prefix:string -> unit -> string
