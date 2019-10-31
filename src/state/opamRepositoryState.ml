@@ -174,10 +174,10 @@ let clean_repo_tmp tmp_dir =
     OpamFilename.rmdir_cleanup d
 
 let remove_from_repos_tmp rt name =
-  OpamStd.Option.iter (fun tmp_dir ->
-      clean_repo_tmp tmp_dir;
-      Hashtbl.remove rt.repos_tmp name)
-    (Hashtbl.find_opt rt.repos_tmp name)
+  try
+    clean_repo_tmp (Hashtbl.find rt.repos_tmp name);
+    Hashtbl.remove rt.repos_tmp name
+  with Not_found -> ()
 
 let cleanup rt =
   Hashtbl.iter (fun _ tmp_dir -> clean_repo_tmp tmp_dir) rt.repos_tmp;
