@@ -4828,6 +4828,10 @@ fi
 if test "x${COLD_CHECK}" = "xyes" ; then
   if test "x$PATCH"  = "x" ; then
     as_fn_error $? "You must have patch installed." "$LINENO" 5
+  else
+    if test "x`patch --version 2>&1 | grep BusyBox`" != "x" ; then
+      as_fn_error $? "You must have a standalone patch installed, not from BusyBox." "$LINENO" 5
+    fi
   fi
   if test "x$BUNZIP2"  = "x" ; then
     as_fn_error $? "You must have bunzip2 installed." "$LINENO" 5

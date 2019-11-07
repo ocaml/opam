@@ -233,6 +233,10 @@ AC_CHECK_TOOL(BUNZIP2,bunzip2)
 if test "x${COLD_CHECK}" = "xyes" ; then
   if test "x$PATCH"  = "x" ; then
     AC_MSG_ERROR([You must have patch installed.])
+  else
+    if test "x`patch --version 2>&1 | grep BusyBox`" != "x" ; then
+      AC_MSG_ERROR([You must have a standalone patch installed, not from BusyBox.])
+    fi
   fi
   if test "x$BUNZIP2"  = "x" ; then
     AC_MSG_ERROR([You must have bunzip2 installed.])
