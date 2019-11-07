@@ -88,6 +88,9 @@ val unlock: ?cleanup:bool -> 'a repos_state -> unlocked repos_state
 *)
 val drop: ?cleanup:bool -> 'a repos_state -> unit
 
+(** Cleanup before removing the repository from temporary table *)
+val remove_from_repos_tmp: 'a repos_state -> repository_name -> unit
+
 (** Clears tmp files corresponding to a repo state (uncompressed repository
     contents) *)
 val cleanup: 'a repos_state -> unit

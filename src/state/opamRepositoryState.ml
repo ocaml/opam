@@ -167,13 +167,20 @@ let load_repo repo repo_root =
     (t ());
   repo_def, opams
 
+let clean_repo_tmp tmp_dir =
+  if Lazy.is_val tmp_dir then
+    let d = Lazy.force tmp_dir in
+    OpamFilename.cleandir d;
+    OpamFilename.rmdir_cleanup d
+
+let remove_from_repos_tmp rt name =
+  try
+    clean_repo_tmp (Hashtbl.find rt.repos_tmp name);
+    Hashtbl.remove rt.repos_tmp name
+  with Not_found -> ()
+
 let cleanup rt =
-  Hashtbl.iter (fun _ tmp_dir ->
-      if Lazy.is_val tmp_dir then
-        let d = Lazy.force tmp_dir in
-        OpamFilename.cleandir d;
-        OpamFilename.rmdir_cleanup d
-    ) rt.repos_tmp;
+  Hashtbl.iter (fun _ tmp_dir -> clean_repo_tmp tmp_dir) rt.repos_tmp;
   Hashtbl.clear rt.repos_tmp
 
 let get_root_raw root repos_tmp name =
