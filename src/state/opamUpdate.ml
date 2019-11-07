@@ -446,7 +446,7 @@ let pinned_packages st ?(working_dir=OpamPackage.Name.Set.empty) names =
   in
   let st_update, updates =
     OpamParallel.reduce
-      ~jobs:(OpamFile.Config.jobs st.switch_global.config)
+      ~jobs:(Lazy.force OpamStateConfig.(!r.jobs))
       ~command
       ~merge
       ~nil:((fun st -> st), OpamPackage.Name.Set.empty)
