@@ -868,12 +868,12 @@ let run_hook_job t name ?(local=[]) w =
   | None ->
     Done true
 
-let rec check_and_install_depexts t packages =
+let rec check_and_install_depexts ?(retry=false) t packages =
   let sys_packages =
-    if OpamStateConfig.(!r.depext_no_consistency_checks) then
+    if OpamStateConfig.(!r.depext_no_consistency_checks) || retry then
       OpamSwitchState.system_packages t.switch_global.config packages
         ~depexts:(OpamSwitchState.depexts t)
-    else t.sys_packages
+    else Lazy.force t.sys_packages
   in
   let avail, nf =
     let add pkg sys_set map =
@@ -950,7 +950,7 @@ let rec check_and_install_depexts t packages =
              (OpamPackage.Set.of_list (OpamPackage.Map.keys avail))
              (OpamPackage.Set.of_list (OpamPackage.Map.keys nf))
          in
-         check_and_install_depexts t missing
+         check_and_install_depexts ~retry:true t missing
        | _ ->
          OpamConsole.error_and_exit `Aborted
            "You can use `opam set-opt global depext-bypass <packages>' to \

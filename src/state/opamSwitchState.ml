@@ -418,19 +418,19 @@ let load lock_kind gt rt switch =
     |> fun inv -> log "Invalidated packages: %a" (slog OpamPackage.Set.to_string) inv; inv
   ) in
   (* depext check *)
-  let sys_packages =
+  let sys_packages = lazy (
     if OpamStateConfig.(not !r.depext_enable
                         || !r.depext_no_consistency_checks) then
       OpamPackage.Map.empty
     else
-      system_packages gt.config packages
+      system_packages gt.config (Lazy.force available_packages)
         ~depexts:(fun package ->
             let env =
               OpamPackageVar.resolve_switch_raw ~package gt switch switch_config
             in
             depexts_raw ~env package opams)
-  in
-  let sys_packages_changed =
+  ) in
+  let sys_packages_changed = lazy (
     if OpamStateConfig.(not !r.depext_enable
                         || !r.depext_no_consistency_checks) then
       OpamPackage.Set.empty
@@ -440,7 +440,7 @@ let load lock_kind gt rt switch =
           OpamPackage.Set.mem pkg installed
           && not (OpamSysPkg.Set.is_empty spkg.OpamSysPkg.s_available
                   && OpamSysPkg.Set.is_empty spkg.OpamSysPkg.s_not_found))
-        sys_packages
+        (Lazy.force sys_packages)
     in
     if OpamPackage.Map.is_empty sys_packages then
       OpamPackage.Set.empty
@@ -485,15 +485,15 @@ let load lock_kind gt rt switch =
          (if sgl_pkg then "it" else "them")
        ;
        changed)
-  in
+  ) in
   let reinstall = lazy (
     OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall gt.root switch) ++
     Lazy.force changed ++
     (Lazy.force ext_files_changed %% Lazy.force available_packages) ++
-    sys_packages_changed
+    Lazy.force sys_packages_changed
   ) in
   let invalidated = lazy (
-    Lazy.force ext_files_changed ++ sys_packages_changed
+    Lazy.force ext_files_changed ++ Lazy.force sys_packages_changed
     -- Lazy.force available_packages
   ) in
   let st = {
@@ -545,7 +545,7 @@ let load_virtual ?repos_list ?(avail_default=true) gt rt =
     opams;
     conf_files = OpamPackage.Name.Map.empty;
     packages;
-    sys_packages = OpamPackage.Map.empty;
+    sys_packages = lazy OpamPackage.Map.empty;
     available_packages;
     reinstall = lazy OpamPackage.Set.empty;
     invalidated = lazy (OpamPackage.Set.empty);
