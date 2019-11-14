@@ -167,18 +167,18 @@ EOF
         wget "http://caml.inria.fr/pub/distrib/ocaml-${OCAML_VERSION%.*}/ocaml-$OCAML_VERSION.tar.gz"
         tar -xzf "ocaml-$OCAML_VERSION.tar.gz"
         cd "ocaml-$OCAML_VERSION"
+        CONFIGURE_SWITCHES=""
         if [[ $OPAM_TEST -ne 1 ]] ; then
-          CONFIGURE_SWITCHES="-no-ocamldoc"
-          if [[ "$OCAML_VERSION" != "4.02.3" ]] ; then
-            CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-ocamlbuild"
-          fi
           if [[ $(version "$OCAML_VERSION") -lt $(version "4.08.0") ]]; then
-            CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-graph -no-debugger"
+            if [[ $(version "$OCAML_VERSION") -gt $(version "4.02.3") ]] ; then
+              CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-ocamlbuild"
+            fi
+            CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-graph -no-debugger -no-ocamldoc"
           else
-            CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES --disable-debugger"
+            CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES --disable-debugger --disable-ocamldoc"
           fi
         fi
-        ./configure --prefix ~/local "${CONFIGURE_SWITCHES:-}"
+        ./configure --prefix ~/local ${CONFIGURE_SWITCHES:-}
         if [[ $OPAM_TEST -eq 1 ]] ; then
           make -j 4 world.opt
         else
