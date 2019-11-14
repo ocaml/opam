@@ -173,10 +173,12 @@ EOF
             CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-ocamlbuild"
           fi
           if [[ $(version "$OCAML_VERSION") -lt $(version "4.08.0") ]]; then
-            CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-graph"
+            CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-graph -no-debugger"
+          else
+            CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES --disable-debugger"
           fi
         fi
-        ./configure --prefix ~/local -no-debugger "${CONFIGURE_SWITCHES:-}"
+        ./configure --prefix ~/local "${CONFIGURE_SWITCHES:-}"
         if [[ $OPAM_TEST -eq 1 ]] ; then
           make -j 4 world.opt
         else
