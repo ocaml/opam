@@ -39,11 +39,6 @@ else
 fi
 set -x
 
-# version comparison helper
-version () {
-	echo "$@" | awk -F. '{ printf("%d%02d%d\n", $1,$2,$3); }'
-}
-
 init-bootstrap () {
   export OPAMROOT=$OPAMBSROOT
   # The system compiler will be picked up
@@ -169,13 +164,14 @@ EOF
         cd "ocaml-$OCAML_VERSION"
         CONFIGURE_SWITCHES=""
         if [[ $OPAM_TEST -ne 1 ]] ; then
-          if [[ $(version "$OCAML_VERSION") -lt $(version "4.08.0") ]]; then
-            if [[ $(version "$OCAML_VERSION") -gt $(version "4.02.3") ]] ; then
+          if [[ -e configure.ac ]]; then
+            CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES --disable-debugger --disable-ocamldoc --disable-graphics-libs"
+          else
+            if [[ "$OCAML_VERSION" != "4.02.3" ]] ; then
               CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-ocamlbuild"
             fi
             CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-graph -no-debugger -no-ocamldoc"
-          else
-            CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES --disable-debugger --disable-ocamldoc"
+
           fi
         fi
         ./configure --prefix ~/local ${CONFIGURE_SWITCHES:-}
