@@ -5,9 +5,8 @@ diff -Naur a/_tags b/_tags
 -true : bin_annot, safe_string
 +true : bin_annot, safe_string, package(bytes), package(result)
  <src> : include
--<test> : include
+ <test> : include
 \ No newline at end of file
-+<test> : include
 diff -Naur a/pkg/META b/pkg/META
 --- a/pkg/META	2019-06-14 09:55:03.000000000 +0000
 +++ b/pkg/META	2019-11-21 14:29:33.236981936 +0000
