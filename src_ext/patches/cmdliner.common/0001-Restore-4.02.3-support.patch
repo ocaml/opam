@@ -28,15 +28,14 @@ index 71bfd61..9e91836 100644
 -true : bin_annot, safe_string
 +true : bin_annot, safe_string, package(bytes), package(result)
  <src> : include
--<test> : include
+ <test> : include
 \ No newline at end of file
-+<test> : include
 diff --git a/pkg/META b/pkg/META
 index 81671c5..4e9237a 100644
 --- a/pkg/META
 +++ b/pkg/META
 @@ -1,6 +1,6 @@
- version = "%%VERSION%%"
+ version = "v1.0.4"
  description = "Declarative definition of command line interfaces"
 -requires = ""
 +requires = "bytes result"
@@ -48,7 +47,7 @@ index 40afd52..c06538e 100644
 --- a/src/cmdliner.ml
 +++ b/src/cmdliner.ml
 @@ -4,11 +4,11 @@
-    %%NAME%% %%VERSION%%
+    cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
  
 +open Result
@@ -61,7 +60,7 @@ index 40afd52..c06538e 100644
    include Cmdliner_term
  
    (* Deprecated *)
-@@ -112,7 +112,7 @@ module Term = struct
+@@ -112,7 +112,7 @@
      ('a, [ term_escape
           | `Exn of exn * Printexc.raw_backtrace
           | `Parse of string
@@ -83,7 +82,7 @@ index a993e83..ee8e6af 100644
  (** Man page specification.
  
      Man page generation is automatically handled by [Cmdliner],
-@@ -1373,6 +1375,7 @@ let tail lines follow verb pid files =
+@@ -1373,6 +1375,7 @@
  
  (* Command line interface *)
  
@@ -96,7 +95,7 @@ index 589f2eb..0c60450 100644
 --- a/src/cmdliner_arg.ml
 +++ b/src/cmdliner_arg.ml
 @@ -4,6 +4,8 @@
-    %%NAME%% %%VERSION%%
+    cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
  
 +open Result
@@ -109,7 +108,7 @@ index 725f923..eee0bb7 100644
 --- a/src/cmdliner_arg.mli
 +++ b/src/cmdliner_arg.mli
 @@ -4,6 +4,8 @@
-    %%NAME%% %%VERSION%%
+    cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
  
 +open Result
@@ -121,7 +120,7 @@ diff --git a/src/cmdliner_base.ml b/src/cmdliner_base.ml
 index 24ad20c..543cf7c 100644
 --- a/src/cmdliner_base.ml
 +++ b/src/cmdliner_base.ml
-@@ -280,7 +280,7 @@ let t4 ?(sep = ',') (pa0, pr0) (pa1, pr1) (pa2, pr2) (pa3, pr3) =
+@@ -280,7 +280,7 @@
    in
    parse, print
  
@@ -135,7 +134,7 @@ index e305d39..1009101 100644
 --- a/src/cmdliner_cline.ml
 +++ b/src/cmdliner_cline.ml
 @@ -4,6 +4,8 @@
-    %%NAME%% %%VERSION%%
+    cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
  
 +open Result
@@ -148,7 +147,7 @@ index 63dad28..77f8aa5 100644
 --- a/src/cmdliner_cline.mli
 +++ b/src/cmdliner_cline.mli
 @@ -4,6 +4,8 @@
-    %%NAME%% %%VERSION%%
+    cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
  
 +open Result
@@ -160,7 +159,7 @@ diff --git a/src/cmdliner_docgen.ml b/src/cmdliner_docgen.ml
 index 054164f..94ed2e1 100644
 --- a/src/cmdliner_docgen.ml
 +++ b/src/cmdliner_docgen.ml
-@@ -170,7 +170,7 @@ let arg_docs ~errs ~subst ~buf ei =
+@@ -170,7 +170,7 @@
      | true, true -> (* optional by name *)
          let key names =
            let k = List.hd (List.sort rev_compare names) in
@@ -169,7 +168,7 @@ index 054164f..94ed2e1 100644
            if k.[1] = '-' then String.sub k 1 (String.length k - 1) else k
          in
          compare
-@@ -178,8 +178,8 @@ let arg_docs ~errs ~subst ~buf ei =
+@@ -178,8 +178,8 @@
            (key @@ Cmdliner_info.arg_opt_names a1)
      | false, false -> (* positional by variable *)
          compare
@@ -180,7 +179,7 @@ index 054164f..94ed2e1 100644
      | true, false -> -1 (* positional first *)
      | false, true -> 1  (* optional after *)
    in
-@@ -310,8 +310,8 @@ let text ~errs ei =
+@@ -310,8 +310,8 @@
  
  let title ei =
    let main = Cmdliner_info.eval_main ei in
@@ -196,7 +195,7 @@ index 2dbd1f6..eecf5da 100644
 --- a/src/cmdliner_manpage.ml
 +++ b/src/cmdliner_manpage.ml
 @@ -4,6 +4,8 @@
-    %%NAME%% %%VERSION%%
+    cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
  
 +open Result
@@ -209,7 +208,7 @@ index 2e405ba..8458e7b 100644
 --- a/src/cmdliner_term.ml
 +++ b/src/cmdliner_term.ml
 @@ -4,6 +4,8 @@
-    %%NAME%% %%VERSION%%
+    cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
  
 +open Result
@@ -222,7 +221,7 @@ index e9472f7..f41818c 100644
 --- a/src/cmdliner_term.mli
 +++ b/src/cmdliner_term.mli
 @@ -4,6 +4,8 @@
-    %%NAME%% %%VERSION%%
+    cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
  
 +open Result
