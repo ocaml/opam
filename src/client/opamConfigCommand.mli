@@ -46,11 +46,23 @@ val subst: 'a global_state -> basename list -> unit
 (** Prints expansion of variables in string *)
 val expand: 'a global_state -> string -> unit
 
+(*
 (** Sets or unsets switch config variables *)
 val set: full_variable -> string option -> unit
 
 (** Sets or unsets global config variables *)
 val set_global: full_variable -> string option -> unit
+*)
+
+(** [set_opt_global gt field value] sets global config [field] to [value] in
+    <opamroot>/config file. Modifiable fields are a subset of all defined file
+    in [OpamFile.Config.t]. If the given [value] is [None], [field] is reverted
+    to its initial value as defined in [OpamInitDefaults.init_config], to
+    default value otherwise ([OpamFile.Config.empty]).*)
+val set_opt_global: rw global_state -> string -> string option -> rw global_state
+val set_opt_switch: rw switch_state -> string -> string option -> rw switch_state
+val set_var_global: rw global_state -> OpamVariable.Full.t -> string option -> rw global_state
+val set_var_switch: rw switch_state -> OpamVariable.Full.t -> string option -> rw switch_state
 
 (** Execute a command in a subshell, after variable expansion *)
 val exec:
