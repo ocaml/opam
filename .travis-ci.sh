@@ -266,6 +266,9 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
       CheckConfigure "$commit"
     done
   fi
+  # Check that the lib-ext/lib-pkg patches are "simple"
+  make -C src_ext PATCH="busybox patch" clone
+  make -C src_ext PATCH="busybox patch" clone-pkg
   exit $ERROR
 fi
 set -x
