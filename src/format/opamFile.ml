@@ -1084,6 +1084,7 @@ module ConfigSyntax = struct
   let with_switch_opt switch t = { t with switch }
   let with_switch switch t = { t with switch = Some switch }
   let with_jobs jobs t = { t with jobs = Some jobs}
+  let with_jobs_opt jobs t = { t with jobs }
   let with_dl_tool dl_tool t = { t with dl_tool = Some dl_tool }
   let with_dl_tool_opt dl_tool t = { t with dl_tool }
   let with_dl_jobs dl_jobs t = { t with dl_jobs }
@@ -1093,8 +1094,9 @@ module ConfigSyntax = struct
     { t with solver_criteria =
                (kind,criterion)::List.remove_assoc kind t.solver_criteria }
   let with_best_effort_prefix s t = { t with best_effort_prefix = Some s }
+  let with_best_effort_prefix_opt s t = { t with best_effort_prefix = s }
   let with_solver solver t = { t with solver = Some solver }
-  let with_solver_opt solver t = { t with solver = solver }
+  let with_solver_opt solver t = { t with solver }
   let with_wrappers wrappers t = { t with wrappers }
   let with_global_variables global_variables t = { t with global_variables }
   let with_eval_variables eval_variables t = { t with eval_variables }
@@ -1122,6 +1124,8 @@ module ConfigSyntax = struct
     default_compiler = OpamFormula.Empty;
   }
 
+  (* When adding a field, make sure to add it in
+     [OpamConfigCommand.set_config_field] if it is a user modifiable field *)
   let fields =
     let with_switch sw t =
       if t.switch = None then with_switch sw t
@@ -1202,7 +1206,6 @@ module ConfigSyntax = struct
       "cores", Pp.ppacc_opt
         with_jobs OpamStd.Option.none
         Pp.V.pos_int;
-      "system_ocaml-version", Pp.ppacc_ignore;
       "system-ocaml-version", Pp.ppacc_ignore;
     ] @
     List.map
