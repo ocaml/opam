@@ -146,6 +146,15 @@ EOF
           rm -f ~/local/bin/opam-bootstrap
         fi
       fi
+
+      if ! diff -q src_ext/Makefile src_ext/archives/Makefile 2>/dev/null || \
+         ! diff -q src_ext/Makefile.sources src_ext/archives/Makefile.sources 2>/dev/null ; then
+        echo "lib-ext/lib-pkg package may have been altered - resetting cache"
+        rm -rf src_ext/archives
+        make -C src_ext cache-archives
+        cp src_ext/Makefile src_ext/archives/Makefile
+        cp src_ext/Makefile.sources src_ext/archives/Makefile.sources
+      fi
     fi
     exit 0
     ;;
