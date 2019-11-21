@@ -583,6 +583,22 @@ let global_allowed_fields, global_allowed_sections =
         Config.with_eval_variables (InitConfig.eval_variables in_config);
         "repository-validation-command", Atomic,
         Config.with_validation_hook_opt (Config.validation_hook Config.empty);
+        "depext-bypass", OpamSysPkg.Set.Op.(Modifiable (
+            (fun nc c -> Config.with_depext_bypass
+                (Config.depext_bypass nc ++ Config.depext_bypass c) c),
+            (fun nc c -> Config.with_depext_bypass
+                (Config.depext_bypass c -- Config.depext_bypass nc) c)
+          )),
+        Config.with_depext_bypass (Config.depext_bypass Config.empty);
+        "depext-enable", Atomic,
+        Config.with_depext_enable (Config.depext_enable Config.empty);
+        "depext-no-consistency-checks", Atomic,
+        Config.with_depext_no_consistency_checks
+          (Config.depext_no_consistency_checks Config.empty);
+        "depext-no-root", Atomic,
+        Config.with_depext_no_root (Config.depext_no_root Config.empty);
+        "depext-print-only", Atomic,
+        Config.with_depext_print_only (Config.depext_print_only Config.empty);
       ] @ List.map (fun f ->
         f, Atomic, Config.with_criteria
           (Config.criteria Config.empty))
