@@ -1,18 +1,7 @@
-From 5a16084c90548aa4ce8da2415685594215d5bfd0 Mon Sep 17 00:00:00 2001
-From: David Allsopp <david.allsopp@metastack.com>
-Date: Wed, 26 Jun 2019 18:05:28 +0100
-Subject: [PATCH] Escape default values
-
-Signed-off-by: David Allsopp <david.allsopp@metastack.com>
----
- src/cmdliner_docgen.ml | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/src/cmdliner_docgen.ml b/src/cmdliner_docgen.ml
-index 054164f..e41aa60 100644
---- a/src/cmdliner_docgen.ml
-+++ b/src/cmdliner_docgen.ml
-@@ -146,7 +146,7 @@ let arg_to_man_item ~errs ~subst ~buf a =
+diff -Naur a/src/cmdliner_docgen.ml b/src/cmdliner_docgen.ml
+--- a/src/cmdliner_docgen.ml	2019-06-14 09:55:03.000000000 +0000
++++ b/src/cmdliner_docgen.ml	2019-11-21 14:29:33.193003934 +0000
+@@ -146,7 +146,7 @@
    | Cmdliner_info.Val v ->
        match Lazy.force v with
        | "" -> strf "%s" (or_env ~value:false a)
@@ -21,6 +10,3 @@ index 054164f..e41aa60 100644
    in
    let optvopt = match Cmdliner_info.arg_opt_kind a with
    | Cmdliner_info.Opt_vopt v -> strf "default=%s" v
--- 
-2.20.1.windows.1
-
