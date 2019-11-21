@@ -381,6 +381,7 @@ type 'config fld_updater =  ('config -> 'config -> 'config)
 type 'config fld_policy =
   | Fixed
   | Modifiable of 'config fld_updater * 'config fld_updater
+  | InModifiable of 'config fld_updater * 'config fld_updater
 
 type 'config confset =
   {
@@ -410,7 +411,7 @@ let kind_req value =
          | exception Invalid_argument _ -> `over value))
     +! `revert)
 
-let set_opt field value conf =
+let set_opt ?(inner=false) field value conf =
   let open OpamStd.Op in
   let wrap allowed all parse =
     List.map (fun (field, pp) ->
@@ -446,6 +447,12 @@ let set_opt field value conf =
       OpamConsole.error_and_exit `Bad_arguments
         "Field %s can't be %s" (OpamConsole.colorise `underline field)
         (match ar with `add _ -> "appended" | `rem _ -> "substracted")
+    | Some (_, Some (_, InModifiable (_,_), _)), ((`add _ | `rem _) as ar)
+      when not inner ->
+      OpamConsole.error_and_exit `Bad_arguments
+        "Field %s can't be directly %s, use instead `opam config set-var`"
+        (OpamConsole.colorise `underline field)
+        (match ar with `add _ -> "appended" | `rem _ -> "substracted")
     | Some (_, Some (_, _, set_default)), `revert ->
       if OpamConsole.confirm ~default:false
           "Are you sure you want to revert %s value"
@@ -458,9 +465,9 @@ let set_opt field value conf =
       (try
          let updf v = parse v conf.stg_config in
          match req_value, fix_app with
-         | `add value, Modifiable (add, _) ->
+         | `add value, (Modifiable (add, _) | InModifiable (add, _))  ->
            add (updf value) conf.stg_config
-         | `rem value, Modifiable (_, rem) ->
+         | `rem value, (Modifiable (_, rem) | InModifiable (_, rem)) ->
            rem (updf value) conf.stg_config
          | `over value, _ -> (updf value)
          | _,_ -> assert false
@@ -527,7 +534,7 @@ let allwd_wrappers wdef wrappers with_wrappers =
       Wrappers.with_post_session, Wrappers.post_session;
     ]
 
-let set_opt_switch st field value =
+let set_opt_switch_t ?inner st field value =
   let allowed_fields =
     OpamFile.Switch_config.(
       [
@@ -559,7 +566,7 @@ let set_opt_switch st field value =
   let config_f = OpamPath.Switch.switch_config root st.switch in
   let write new_config = OpamFile.Switch_config.write config_f new_config in
   let switch_config =
-    set_opt field value
+    set_opt ?inner field value
       { stg_fields = OpamFile.Switch_config.fields;
         stg_allwd_fields = allowed_fields;
         stg_sections = OpamFile.Switch_config.sections;
@@ -571,7 +578,9 @@ let set_opt_switch st field value =
   in
   { st with switch_config }
 
-let set_opt_global gt field value =
+let set_opt_switch = set_opt_switch_t ~inner:false
+
+let set_opt_global_t ?inner gt field value =
   let allowed_fields =
     let open OpamStd.Option.Op in
     let open OpamFile in
@@ -604,13 +613,13 @@ let set_opt_global gt field value =
       (let add, rem =
          upd_vars Config.global_variables Config.with_global_variables
        in
-       Modifiable (add, rem)),
+       InModifiable (add, rem)),
       Config.with_global_variables (InitConfig.global_variables in_config);
       "eval-variables",
       (let add, rem =
          upd_vars Config.eval_variables Config.with_eval_variables
        in
-       Modifiable (add, rem)),
+       InModifiable (add, rem)),
       Config.with_eval_variables (InitConfig.eval_variables in_config);
       "repository-validation-command", Fixed,
       Config.with_validation_hook_opt (Config.validation_hook Config.empty);
@@ -624,7 +633,7 @@ let set_opt_global gt field value =
   in
   let write new_config = OpamGlobalState.write {gt with config = new_config} in
   let config =
-    set_opt field value
+    set_opt ?inner field value
       { stg_fields = OpamFile.Config.fields;
         stg_allwd_fields = allowed_fields;
         stg_sections = [];
@@ -635,6 +644,8 @@ let set_opt_global gt field value =
       }
   in
   { gt with config }
+
+let set_opt_global = set_opt_global_t ~inner:false
 
 type ('var,'t) var_confset =
   {
@@ -665,8 +676,7 @@ let set_var var value conf =
   | `add _ | `rem _ ->
     OpamConsole.error_and_exit `Bad_arguments "Variables are not appendable"
   | `over value -> conf.stv_set_opt ("+=" ^ conf.stv_varstr value)
-  | `revert ->
-    conf.stv_revert t
+  | `revert -> conf.stv_revert t
 
 let set_var_global gt var value =
   set_var var value
@@ -679,7 +689,8 @@ let set_var_global gt var value =
            Printf.sprintf
              "[%s \"%s\" \"Set through 'opam config set-var global'\"]"
              (OpamVariable.to_string var) v);
-       stv_set_opt = (fun s -> set_opt_global gt "global-variables" (Some s));
+       stv_set_opt = (fun s ->
+           set_opt_global_t ~inner:true gt "global-variables" (Some s));
        stv_remove_elem = (fun rest gt ->
            let config =
              OpamFile.Config.with_global_variables rest gt.config
@@ -700,7 +711,8 @@ let set_var_switch st var value =
        stv_state = st;
        stv_varstr = (fun v ->
            Printf.sprintf "%s: \"%s\"" (OpamVariable.to_string var) v);
-       stv_set_opt = (fun s -> set_opt_switch st "variables" (Some s));
+       stv_set_opt = (fun s ->
+           set_opt_switch_t ~inner:true st "variables" (Some s));
        stv_remove_elem = (fun rest st ->
            { st with switch_config = { st.switch_config with variables = rest }});
        stv_revert = (fun st ->
