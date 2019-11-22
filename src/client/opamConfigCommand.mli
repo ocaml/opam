@@ -54,13 +54,21 @@ val set: full_variable -> string option -> unit
 val set_global: full_variable -> string option -> unit
 *)
 
-(** [set_opt_global gt field value] sets global config [field] to [value] in
-    <opamroot>/config file. Modifiable fields are a subset of all defined file
-    in [OpamFile.Config.t]. If the given [value] is [None], [field] is reverted
-    to its initial value as defined in [OpamInitDefaults.init_config], to
-    default value otherwise ([OpamFile.Config.empty]).*)
+(** [set_opt_global gt field value] updates global config [field] with [value]
+    (using prefix '+=', '_=', '=', or nothing) in <opamroot>/config file.
+    Modifiable fields are a subset of all defined file in [OpamFile.Config.t].
+    If the given [value] is [None], [field] is reverted to its initial value as
+    defined in [OpamInitDefaults.init_config], to default value otherwise
+    ([OpamFile.Config.empty]).*)
 val set_opt_global: rw global_state -> string -> string option -> rw global_state
+
+(** As [set_opt_global], [set_opt_switch] updates switch config file in
+    <opamroot>/<switch>/.opam-switch/switch-config. *)
 val set_opt_switch: rw switch_state -> string -> string option -> rw switch_state
+
+(** [set_var_global] and [set_var_switch] update respectively
+    `global-variables` field in global config and `variables` field in switch
+    config, by appending the new variables to current set *)
 val set_var_global: rw global_state -> OpamVariable.Full.t -> string option -> rw global_state
 val set_var_switch: rw switch_state -> OpamVariable.Full.t -> string option -> rw switch_state
 

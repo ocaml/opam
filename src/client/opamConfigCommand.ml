@@ -377,12 +377,22 @@ let variable gt v =
       "Variable %s not found"
       (OpamVariable.Full.to_string v)
 
+(* For function that takes two config and update (add or remove) elements in a
+   field. Used for appending or deleting element in config file fields *)
 type 'config fld_updater =  ('config -> 'config -> 'config)
+(* Only some field can be modifiable. [Modifiable] is for user modifiable
+   field,  [InModifiable] for fields that can only be modified from inner opam
+   code (see [set_var_global]).
+   First argument is the addition function, the second the remove one. *)
 type 'config fld_policy =
   | Fixed
   | Modifiable of 'config fld_updater * 'config fld_updater
   | InModifiable of 'config fld_updater * 'config fld_updater
 
+(* "Configuration" of the [set_opt] function. As modification can be on global
+   or config switch, on normal fields and sections, adding, removing, or
+   overwritng values, this record type permits to aggregate all needed inputs.
+   See [set_opt_global] and [set_opt_switch]. *)
 type 'config confset =
   {
     stg_fields: (string * ('config, value) OpamPp.field_parser) list;
