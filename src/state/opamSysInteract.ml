@@ -54,6 +54,7 @@ let packages_status packages =
   in
   (* keep tracking installed ones ?? *)
   let _installed, available, not_found =
+    if OpamStateConfig.(!r.dryrun) then OpamSysPkg.Set.(empty, empty, empty) else
     match spv OpamSysPoll.os_family with
     | "alpine" ->
       let lines =
