@@ -924,7 +924,10 @@ let rec check_and_install_depexts ?(retry=false) t packages =
          OpamStd.Format.itemize ~bullet:"  "
            (OpamStd.List.concat_map " " (fun x -> x)) cmd
        in
-       if OpamStateConfig.(!r.depext_print_only && not !r.depext_no_root) then
+       if OpamStateConfig.(!r.depext_print_only && not !r.depext_no_root)
+       || OpamClientConfig.(!r.show)
+       || OpamClientConfig.(!r.fake) then
+       (* dry_run is handled in OpamSysInteract *)
          let single_spkg = OpamSysPkg.Set.cardinal packages = 1 in
          OpamConsole.msg "%s are missing on your system. You can install %s \
                           using the following command%s:\n%s\n"
@@ -1007,14 +1010,12 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false) ?force_remove
         OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
     );
     (* depexts handling *)
-    if OpamStateConfig.(not !r.depext_enable)
-    || OpamStateConfig.(!r.dryrun)
-    || OpamClientConfig.(!r.fake) then
+    if OpamStateConfig.(not !r.depext_enable) then
       log "Skipping depexts"
     else
       check_and_install_depexts t
         OpamPackage.Set.Op.(OpamSolver.new_packages solution ++
-        Lazy.force t.reinstall);
+                            Lazy.force t.reinstall);
 
     if not OpamClientConfig.(!r.show) &&
        confirmation ?ask requested action_graph

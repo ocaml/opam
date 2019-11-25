@@ -9,6 +9,7 @@
 (**************************************************************************)
 
 (* Run commands *)
+(* Always call this function to run a command, as it handles `dryrun` option *)
 let run_command
     ?(discard_err=false) ?allow_stdin ?verbose cmd args =
   let clean_output =
