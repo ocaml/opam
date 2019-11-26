@@ -54,6 +54,13 @@ val compute_available_packages:
   pinned:package_set -> opams:OpamFile.OPAM.t package_map ->
   package_set
 
+(** Raw function to compute the conflicts for all packages, given
+    the set of available packages and the corresponding opam files.
+    the `u_conflicts` field when building a universe manually. *)
+val get_conflicts:
+  (package -> OpamFilter.env) -> package_set ->
+  OpamFile.OPAM.t package_map -> formula package_map
+
 (** Releases any locks on the given switch_state *)
 val unlock: 'a switch_state -> unlocked switch_state
 
