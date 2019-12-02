@@ -418,12 +418,7 @@ let cleanup_request universe (req:atom request) =
   { req with wish_install; wish_upgrade }
 
 let cycle_conflict ~version_map univ cycles =
-  OpamCudf.cycle_conflict ~version_map univ
-    (List.map
-       (List.map
-          (fun a ->
-             Action.to_string (map_action OpamCudf.cudf2opam a)))
-       cycles)
+  OpamCudf.cycle_conflict ~version_map univ cycles
 
 let resolve universe request =
   log "resolve request=%a" (slog string_of_request) request;

@@ -213,7 +213,7 @@ val make_conflicts:
   Dose_algo.Diagnostic.diagnosis -> ('a, conflict) result
 val cycle_conflict:
   version_map:int package_map -> Cudf.universe ->
-  string list list -> ('a, conflict) result
+  Cudf.package action list list -> ('a, conflict) result
 
 type explanation =
   [ `Conflict of string option * string list * bool
@@ -232,7 +232,7 @@ val string_of_conflicts:
 
 val string_of_explanations:
   (name * OpamFormula.version_formula -> string) ->
-  explanation list * string list list ->
+  explanation list * Action.t list list ->
   string
 
 (** Returns two lists:
@@ -247,12 +247,14 @@ val string_of_explanation:
   string * string list * string list
 
 val conflict_explanations_raw:
-  package_set -> conflict -> explanation list * string list list
+  package_set -> conflict -> explanation list * Action.t list list
 
 (** Properly concat a single conflict as returned by [conflict_explanations] for
    display *)
 val string_of_conflict:
   ?start_column:int -> string * string list * string list -> string
+
+val conflict_cycles : conflict -> package action list list option
 
 (** Dumps the given cudf universe to the given channel *)
 val dump_universe: out_channel -> Cudf.universe -> unit
