@@ -366,15 +366,30 @@ let prepare_package_source st nv dir =
   in
   let check_extra_files =
     try
-      List.iter (fun (src,base,hash) ->
-          if not (OpamHash.check_file (OpamFilename.to_string src) hash) then
-            failwith
-              (Printf.sprintf "Bad hash for %s" (OpamFilename.to_string src))
-          else
-            OpamFilename.copy ~src ~dst:(OpamFilename.create dir base))
-        (OpamFile.OPAM.get_extra_files
-           ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
-           opam);
+      List.iter (fun (base, hash) ->
+          let dst = OpamFilename.create dir base in
+          let name = "x-extra-file-" ^ OpamHash.contents hash in
+          match OpamStd.String.Map.find_opt name opam.OpamFile.OPAM.extensions with
+          | Some (_, String (_, value)) ->
+            let value' = Base64.decode_string value in
+            let my = OpamHash.compute_from_string ~kind:(OpamHash.kind hash) value' in
+            if String.equal (OpamHash.contents my) (OpamHash.contents hash) then
+              OpamFilename.write dst value'
+            else
+              failwith "Bad hash for inline extra-files"
+          | _ ->
+            let repos_roots = OpamRepositoryState.get_root st.switch_repos in
+            match OpamFile.OPAM.get_metadata_dir ~repos_roots opam with
+            | None -> assert false
+            | Some mdir ->
+              let files_dir = OpamFilename.Op.(mdir / "files") in
+              let src = OpamFilename.create files_dir base in
+              if OpamHash.check_file (OpamFilename.to_string src) hash then
+                OpamFilename.copy ~src ~dst
+              else
+                failwith
+                  (Printf.sprintf "Bad hash for %s" (OpamFilename.to_string src)))
+        (match OpamFile.OPAM.extra_files opam with None -> [] | Some xs -> xs);
       None
     with e -> Some e
   in

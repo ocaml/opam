@@ -2245,10 +2245,14 @@ let switch =
       OpamSwitchState.drop st;
       `Ok ()
     | Some `export, [filename] ->
-      OpamSwitchCommand.export
+      OpamGlobalState.with_ `Lock_write @@ fun gt ->
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      OpamSwitchCommand.export rt
         ~full
         (if filename = "-" then None
          else Some (OpamFile.make (OpamFilename.of_string filename)));
+      OpamRepositoryState.drop rt;
+      OpamGlobalState.drop gt;
       `Ok ()
     | Some `import, [filename] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
