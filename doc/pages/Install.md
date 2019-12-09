@@ -45,8 +45,7 @@ If you don't like scripts, you can just pick your download
 `opam`, and set it as executable, e.g.
 
 ```
-sudo cp <downloaded file> /usr/local/bin/opam
-sudo chmod a+x /usr/local/bin/opam
+sudo install <downloaded file> /usr/local/bin/opam
 ```
 
 > Note that this script is intended for end-users, not CI. For that purpose,
