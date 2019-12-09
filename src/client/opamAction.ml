@@ -373,7 +373,7 @@ let prepare_package_source st nv dir =
           | Some (_, String (_, value)) ->
             let value' = Base64.decode_string value in
             let my = OpamHash.compute_from_string ~kind:(OpamHash.kind hash) value' in
-            if String.equal (OpamHash.contents my) (OpamHash.contents hash) then
+            if OpamHash.contents my = OpamHash.contents hash then
               OpamFilename.write dst value'
             else
               failwith "Bad hash for inline extra-files"
