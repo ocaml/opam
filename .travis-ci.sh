@@ -176,7 +176,7 @@ EOF
 
           fi
         fi
-        ./configure --prefix ~/local $CONFIGURE_SWITCHES
+        ./configure --prefix ~/local ${CONFIGURE_SWITCHES:-}
         if [[ $OPAM_TEST -eq 1 ]] ; then
           make -j 4 world.opt
         else
