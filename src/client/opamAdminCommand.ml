@@ -264,7 +264,7 @@ let add_hashes_command =
           "This command scans through package definitions, and add hashes as \
            requested (fetching the archives if required). A cache is generated \
            in %s for subsequent runs."
-          (OpamFilename.Dir.to_string cache_dir));
+          (OpamFilename.Dir.to_string cache_dir |> Cmdliner.Manpage.escape));
   ]
   in
   let hash_kinds = [`MD5; `SHA256; `SHA512] in
@@ -990,6 +990,31 @@ let add_constraint_command =
   Term.(pure cmd $ OpamArg.global_options $ force_arg $ atom_arg),
   OpamArg.term_info command ~doc ~man
 
+(* HELP *)
+let help =
+  let doc = "Display help about opam admin and opam admin subcommands." in
+  let man = [
+    `S "DESCRIPTION";
+    `P "Prints help about opam admin commands.";
+    `P "Use `$(mname) help topics' to get the full list of help topics.";
+  ] in
+  let topic =
+    let doc = Arg.info [] ~docv:"TOPIC" ~doc:"The topic to get help on." in
+    Arg.(value & pos 0 (some string) None & doc )
+  in
+  let help man_format cmds topic = match topic with
+    | None       -> `Help (`Pager, None)
+    | Some topic ->
+      let topics = "topics" :: cmds in
+      let conv, _ = Cmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
+      match conv topic with
+      | `Error e -> `Error (false, e)
+      | `Ok t when t = "topics" ->
+          List.iter (OpamConsole.msg "%s\n") cmds; `Ok ()
+      | `Ok t -> `Help (man_format, Some t) in
+
+  Term.(ret (const help $Term.man_format $Term.choice_names $topic)),
+  Term.info "help" ~doc ~man
 
 let admin_subcommands = [
   index_command; OpamArg.make_command_alias index_command "make";
@@ -1001,6 +1026,7 @@ let admin_subcommands = [
   filter_command;
   add_constraint_command;
   add_hashes_command;
+  help;
 ]
 
 let default_subcommand =
