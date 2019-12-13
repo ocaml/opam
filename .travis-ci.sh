@@ -146,6 +146,15 @@ EOF
           rm -f ~/local/bin/opam-bootstrap
         fi
       fi
+
+      if ! diff -q src_ext/Makefile src_ext/archives/Makefile 2>/dev/null || \
+         ! diff -q src_ext/Makefile.sources src_ext/archives/Makefile.sources 2>/dev/null ; then
+        echo "lib-ext/lib-pkg package may have been altered - resetting cache"
+        rm -rf src_ext/archives
+        make -C src_ext cache-archives
+        cp src_ext/Makefile src_ext/archives/Makefile
+        cp src_ext/Makefile.sources src_ext/archives/Makefile.sources
+      fi
     fi
     exit 0
     ;;
@@ -265,6 +274,18 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
       CheckConfigure "$commit"
     done
   fi
+  # Check that the lib-ext/lib-pkg patches are "simple"
+  make -C src_ext PATCH="busybox patch" clone
+  make -C src_ext PATCH="busybox patch" clone-pkg
+  # Check that the lib-ext/lib-pkg patches have been re-packaged
+  cd src_ext
+  ../shell/re-patch.sh
+  if [[ $(find patches -name \*.old | wc -l) -ne 0 ]] ; then
+    echo -e "[\e[31mERROR\e[0m] ../shell/re-patch.sh should be run from src_ext"
+    git diff
+    ERROR=1
+  fi
+  cd ..
   exit $ERROR
 fi
 set -x

@@ -7,6 +7,7 @@ addons:
     packages:
     - aspcud
     - libglpk-dev
+    - busybox
 
 before_install:
     - bash -exu .travis-ci.sh prepare
@@ -18,6 +19,7 @@ cache:
     - $HOME/.opam.cached
     - $HOME/local
     - $HOME/opam1.2/cache
+    - $HOME/build/ocaml/opam/src_ext/archives
 
 script:
     - bash -exu .travis-ci.sh build

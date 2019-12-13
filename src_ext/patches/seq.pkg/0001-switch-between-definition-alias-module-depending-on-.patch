@@ -1,41 +1,13 @@
-From 2d608bd49647a4a6d0ec51c61cf63678212ea185 Mon Sep 17 00:00:00 2001
-From: Simon Cruanes <simon.cruanes.2007@m4x.org>
-Date: Thu, 19 Apr 2018 00:08:23 -0500
-Subject: [PATCH] switch between definition/alias module depending on ocaml's
- version
-
----
- .gitignore        |  2 ++
- Makefile          | 11 ++++++-
- select_version.ml | 14 +++++++++
- seq.opam          |  3 --
- src/seq.ml        | 73 --------------------------------------------
- src/seq.mli       | 77 -----------------------------------------------
- src/seq_alias.ml  |  1 +
- src/seq_alias.mli |  2 ++
- src/seq_redef.ml  | 73 ++++++++++++++++++++++++++++++++++++++++++++
- src/seq_redef.mli | 75 +++++++++++++++++++++++++++++++++++++++++++++
- 10 files changed, 177 insertions(+), 154 deletions(-)
- create mode 100644 select_version.ml
- delete mode 100644 src/seq.ml
- delete mode 100644 src/seq.mli
- create mode 100644 src/seq_alias.ml
- create mode 100644 src/seq_alias.mli
- create mode 100644 src/seq_redef.ml
- create mode 100644 src/seq_redef.mli
-
-diff --git a/.gitignore b/.gitignore
-index e35d885..487f91e 100644
---- a/.gitignore
-+++ b/.gitignore
+diff -Naur a/.gitignore b/.gitignore
+--- a/.gitignore	2018-04-19 02:18:40.000000000 +0000
++++ b/.gitignore	2019-11-21 14:29:35.307946047 +0000
 @@ -1 +1,3 @@
  _build
 +src/seq.ml
 +src/seq.mli
-diff --git a/Makefile b/Makefile
-index fbf5dc9..c3048a5 100644
---- a/Makefile
-+++ b/Makefile
+diff -Naur a/Makefile b/Makefile
+--- a/Makefile	2018-04-19 02:18:40.000000000 +0000
++++ b/Makefile	2019-11-21 14:29:35.307946047 +0000
 @@ -1,9 +1,18 @@
  
 +all: build
@@ -56,11 +28,9 @@ index fbf5dc9..c3048a5 100644
  	ocamlbuild -clean
  
  TOINSTALL=$(wildcard _build/src/*)
-diff --git a/select_version.ml b/select_version.ml
-new file mode 100644
-index 0000000..f92c665
---- /dev/null
-+++ b/select_version.ml
+diff -Naur a/select_version.ml b/select_version.ml
+--- a/select_version.ml	1970-01-01 00:00:00.000000000 +0000
++++ b/select_version.ml	2019-11-21 14:29:35.307946047 +0000
 @@ -0,0 +1,14 @@
 +
 +let () =
@@ -76,11 +46,10 @@ index 0000000..f92c665
 +  print_string file;
 +  flush stdout
 +
-diff --git a/seq.opam b/seq.opam
-index 8d3569c..b75ca84 100644
---- a/seq.opam
-+++ b/seq.opam
-@@ -21,8 +21,5 @@ tags: [ "iterator" "seq" "pure" "list" "compatibility" "cascade" ]
+diff -Naur a/seq.opam b/seq.opam
+--- a/seq.opam	2018-04-19 02:18:40.000000000 +0000
++++ b/seq.opam	2019-11-21 14:29:35.307946047 +0000
+@@ -21,8 +21,5 @@
  homepage: "https://github.com/c-cube/seq/"
  bug-reports: "https://github.com/c-cube/seq/issues"
  dev-repo: "https://github.com/c-cube/seq.git"
@@ -89,11 +58,9 @@ index 8d3569c..b75ca84 100644
 -]
  
  
-diff --git a/src/seq.ml b/src/seq.ml
-deleted file mode 100644
-index ccdbfde..0000000
---- a/src/seq.ml
-+++ /dev/null
+diff -Naur a/src/seq.ml b/src/seq.ml
+--- a/src/seq.ml	2018-04-19 02:18:40.000000000 +0000
++++ b/src/seq.ml	1970-01-01 00:00:00.000000000 +0000
 @@ -1,73 +0,0 @@
 -(**************************************************************************)
 -(*                                                                        *)
@@ -168,11 +135,9 @@ index ccdbfde..0000000
 -        aux next
 -  in
 -  aux seq
-diff --git a/src/seq.mli b/src/seq.mli
-deleted file mode 100644
-index f33c19a..0000000
---- a/src/seq.mli
-+++ /dev/null
+diff -Naur a/src/seq.mli b/src/seq.mli
+--- a/src/seq.mli	2018-04-19 02:18:40.000000000 +0000
++++ b/src/seq.mli	1970-01-01 00:00:00.000000000 +0000
 @@ -1,77 +0,0 @@
 -(**************************************************************************)
 -(*                                                                        *)
@@ -251,26 +216,20 @@ index f33c19a..0000000
 -val iter : ('a -> unit) -> 'a t -> unit
 -(** Iterate on the sequence, calling the (imperative) function on every element.
 -    The traversal happens immediately and will not terminate on infinite sequences. *)
-diff --git a/src/seq_alias.ml b/src/seq_alias.ml
-new file mode 100644
-index 0000000..49d3313
---- /dev/null
-+++ b/src/seq_alias.ml
+diff -Naur a/src/seq_alias.ml b/src/seq_alias.ml
+--- a/src/seq_alias.ml	1970-01-01 00:00:00.000000000 +0000
++++ b/src/seq_alias.ml	2019-11-21 14:29:35.307946047 +0000
 @@ -0,0 +1 @@
 +include Stdlib.Seq
-diff --git a/src/seq_alias.mli b/src/seq_alias.mli
-new file mode 100644
-index 0000000..8872dd5
---- /dev/null
-+++ b/src/seq_alias.mli
+diff -Naur a/src/seq_alias.mli b/src/seq_alias.mli
+--- a/src/seq_alias.mli	1970-01-01 00:00:00.000000000 +0000
++++ b/src/seq_alias.mli	2019-11-21 14:29:35.307946047 +0000
 @@ -0,0 +1,2 @@
 +
 +include module type of Stdlib.Seq
-diff --git a/src/seq_redef.ml b/src/seq_redef.ml
-new file mode 100644
-index 0000000..ccdbfde
---- /dev/null
-+++ b/src/seq_redef.ml
+diff -Naur a/src/seq_redef.ml b/src/seq_redef.ml
+--- a/src/seq_redef.ml	1970-01-01 00:00:00.000000000 +0000
++++ b/src/seq_redef.ml	2019-11-21 14:29:35.307946047 +0000
 @@ -0,0 +1,73 @@
 +(**************************************************************************)
 +(*                                                                        *)
@@ -345,11 +304,9 @@ index 0000000..ccdbfde
 +        aux next
 +  in
 +  aux seq
-diff --git a/src/seq_redef.mli b/src/seq_redef.mli
-new file mode 100644
-index 0000000..c22dff9
---- /dev/null
-+++ b/src/seq_redef.mli
+diff -Naur a/src/seq_redef.mli b/src/seq_redef.mli
+--- a/src/seq_redef.mli	1970-01-01 00:00:00.000000000 +0000
++++ b/src/seq_redef.mli	2019-11-21 14:29:35.307946047 +0000
 @@ -0,0 +1,75 @@
 +(**************************************************************************)
 +(*                                                                        *)
@@ -426,6 +383,3 @@ index 0000000..c22dff9
 +val iter : ('a -> unit) -> 'a t -> unit
 +(** Iterate on the sequence, calling the (imperative) function on every element.
 +    The traversal happens immediately and will not terminate on infinite sequences. *)
--- 
-2.17.1
-

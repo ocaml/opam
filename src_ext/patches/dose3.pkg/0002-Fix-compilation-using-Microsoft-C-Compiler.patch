@@ -1,22 +1,7 @@
-From 0cb15311dee5101729918bc93dbb586577fb0e7d Mon Sep 17 00:00:00 2001
-From: David Allsopp <david.allsopp@metastack.com>
-Date: Thu, 23 Jul 2015 16:45:59 +0100
-Subject: [PATCH 2/2] Fix compilation using Microsoft C Compiler
-
-Assumption that libraries have a .a extension replaced with a test for
-ext_lib from the compiler.
----
- Makefile           | 2 +-
- Makefile.config.in | 6 ++++--
- configure          | 3 +++
- configure.ac       | 2 ++
- 4 files changed, 10 insertions(+), 3 deletions(-)
-
-diff --git a/Makefile b/Makefile
-index 09464ff..226590a 100644
---- a/Makefile
-+++ b/Makefile
-@@ -222,7 +222,7 @@ DIST_EXCLUDE = cudf tests $(wildcard */tests) experimental doc/webpages
+diff -Naur a/Makefile b/Makefile
+--- a/Makefile	2016-07-20 11:45:05.000000000 +0000
++++ b/Makefile	2019-11-21 14:29:34.552324006 +0000
+@@ -222,7 +222,7 @@
  INSTALL_STUFF_ = META
  INSTALL_STUFF_ += $(wildcard _build/doselibs/*.cma _build/doselibs/*.cmi)
  INSTALL_STUFF_ += $(wildcard _build/doselibs/*.cmxa _build/doselibs/*.cmxs)
@@ -25,11 +10,10 @@ index 09464ff..226590a 100644
  #INSTALL_STUFF_ += $(wildcard _build/*/*.mli)
  INSTALL_STUFF_ += $(wildcard _build/rpm/*.so)
  
-diff --git a/Makefile.config.in b/Makefile.config.in
-index f9f1e6f..c401df4 100644
---- a/Makefile.config.in
-+++ b/Makefile.config.in
-@@ -134,12 +134,14 @@ uninstallcudf:
+diff -Naur a/Makefile.config.in b/Makefile.config.in
+--- a/Makefile.config.in	2019-11-21 14:29:34.508346003 +0000
++++ b/Makefile.config.in	2019-11-21 14:29:34.552324006 +0000
+@@ -134,12 +134,14 @@
  endif
  
  ifeq ("@OCAMLEXT@","native")
@@ -46,11 +30,10 @@ index f9f1e6f..c401df4 100644
  ifeq ("@HAS_XML@","yes")
  ifeq ("@HAS_CURL@","yes")
    EXPERIMENTAL += experimental/dudftocudf/deb-dudftocudf.@OCAMLEXT@
-diff --git a/configure b/configure
-index 49c02df..26bdfa8 100755
---- a/configure
-+++ b/configure
-@@ -648,6 +648,7 @@ PKG_ZIP
+diff -Naur a/configure b/configure
+--- a/configure	2016-07-20 11:45:05.000000000 +0000
++++ b/configure	2019-11-21 14:29:34.552324006 +0000
+@@ -648,6 +648,7 @@
  CONFIG_ZIP
  CPPOFLAGS
  LN
@@ -58,7 +41,7 @@ index 49c02df..26bdfa8 100755
  OCAML_SYSTEM
  EGREP
  GREP
-@@ -5317,6 +5318,8 @@ fi
+@@ -5317,6 +5318,8 @@
  
  OCAML_SYSTEM="$($OCAMLBESTCC -config | fgrep system | sed -e "s/system: \(.*\)/\1/")"
  
@@ -67,11 +50,10 @@ index 49c02df..26bdfa8 100755
  
  if test "${OCAML_OS_TYPE}" = "Win32"; then :
  
-diff --git a/configure.ac b/configure.ac
-index d73d724..6935fa6 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -256,6 +256,8 @@ fi
+diff -Naur a/configure.ac b/configure.ac
+--- a/configure.ac	2016-07-20 11:45:05.000000000 +0000
++++ b/configure.ac	2019-11-21 14:29:34.552324006 +0000
+@@ -256,6 +256,8 @@
  
  OCAML_SYSTEM="$($OCAMLBESTCC -config | fgrep system | sed -e "s/system: \(.*\)/\1/")"
  AC_SUBST(OCAML_SYSTEM)
@@ -80,6 +62,3 @@ index d73d724..6935fa6 100644
  
  AS_IF([test "${OCAML_OS_TYPE}" = "Win32"],[
    AC_MSG_CHECKING([for a workable solution for ln -s])
--- 
-2.12.0.windows.1
-
