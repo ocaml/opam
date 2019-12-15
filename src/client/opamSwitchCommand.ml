@@ -494,8 +494,44 @@ let import_t ?ask importfile t =
   end;
   t
 
-let export rt ?(full=false) filename =
-  let switch = OpamStateConfig.get_switch () in
+let freeze_opam src_dir nv = function
+  | None -> None
+  | Some opam ->
+    match OpamFile.OPAM.url opam with
+    | None -> Some opam
+    | Some url ->
+      let url_t = OpamFile.URL.url url in
+      match url_t.backend with
+      | #OpamUrl.version_control ->
+        begin match OpamProcess.Job.run (OpamGit.VCS.revision (src_dir nv)) with
+          | None ->
+            OpamConsole.warning "couldn't figure revision of %s"
+              (OpamPackage.Name.to_string nv.name);
+            None
+          | Some hash ->
+            let url_with_hash =
+              let url_t = { url_t with hash = Some hash } in
+              let checksum, mirrors =
+                OpamFile.URL.checksum url, OpamFile.URL.mirrors url
+              in
+              OpamFile.URL.create ~mirrors ~checksum url_t
+            in
+            Some (OpamFile.OPAM.with_url url_with_hash opam)
+        end
+      | `http ->
+        begin match OpamFile.URL.checksum url with
+          | [] ->
+            OpamConsole.warning "Ignoring package %s, no checksum"
+              (OpamPackage.Name.to_string nv.name);
+            None
+          | _ -> Some opam
+        end
+      | `rsync ->
+        OpamConsole.warning "Ignoring package %s, which uses an rsync pin"
+          (OpamPackage.Name.to_string nv.name);
+        None
+
+let export rt ?(freeze=false) ?(full=false) ?(switch=OpamStateConfig.get_switch ()) filename =
   let root = OpamStateConfig.(!r.root_dir) in
   let export =
     OpamFilename.with_flock `Lock_none (OpamPath.Switch.lock root switch)
@@ -503,8 +539,12 @@ let export rt ?(full=false) filename =
     let selections = S.safe_read (OpamPath.Switch.selections root switch) in
     let opams =
       let read_opams read pkgs =
+        let src_dir = OpamPath.Switch.sources root switch in
         OpamPackage.Set.fold (fun nv map ->
-            match read nv with
+            let opam =
+              if freeze then freeze_opam src_dir nv (read nv) else read nv
+            in
+            match opam with
             | Some opam -> OpamPackage.Map.add nv opam map
             | None -> map) pkgs OpamPackage.Map.empty
       in
