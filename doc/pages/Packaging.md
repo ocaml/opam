@@ -218,6 +218,6 @@ This is just a very short introduction, don't be afraid to consult
 
     ```
     ["./configure" "--with-foo" {ocaml-version > "3.12"} "--prefix=%{prefix}%"]
-    [make "byte"] { !ocaml-native }
-    [make "native"] { ocaml-native }
+    [make "byte"] { !ocaml:native }
+    [make "native"] { ocaml:native }
     ```
