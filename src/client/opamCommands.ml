@@ -1181,10 +1181,21 @@ let env =
     mk_flag ["revert"]
       "Output the environment with updates done by opam reverted instead."
   in
+  let check =
+    mk_flag ["check"]
+      "Exits with 0 if the environment is already up-to-date, 1 otherwise, after \
+       printing the list of not up-to-date variables."
+  in
   let env
       global_options shell sexp inplace_path set_opamroot set_opamswitch
-      revert =
+      revert check =
     apply_global_options global_options;
+    if check then
+      (OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+      if not (OpamEnv.is_up_to_date ~skip:false st) then
+        OpamStd.Sys.exit_because `False)
+    else
     let shell = match shell with
       | Some s -> s
       | None -> OpamStd.Sys.guess_shell_compat ()
@@ -1197,7 +1208,7 @@ let env =
        | Some sw ->
          OpamConfigCommand.env gt sw
            ~set_opamroot ~set_opamswitch
-           ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish) ~inplace_path)
+           ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish) ~inplace_path);
     | true ->
       OpamConfigCommand.print_eval_env
         ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
@@ -1206,7 +1217,7 @@ let env =
   let open Common_config_flags in
   Term.(const env
         $global_options $shell_opt $sexp $inplace_path
-        $set_opamroot $set_opamswitch$revert),
+        $set_opamroot $set_opamswitch $revert $check),
   term_info "env" ~doc ~man
 
 (* INSTALL *)
