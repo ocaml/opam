@@ -594,6 +594,8 @@ module OPAM: sig
 
   val add_extension: t -> string -> value -> t
 
+  val remove_extension: t -> string -> t
+
   val with_deprecated_build_doc: command list -> t -> t
 
   val with_deprecated_build_test: command list -> t -> t

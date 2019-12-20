@@ -2252,6 +2252,9 @@ module OPAMSyntax = struct
     if not (is_ext_field fld) then invalid_arg "OpamFile.OPAM.add_extension";
     {t with
      extensions = OpamStd.String.Map.add fld (pos_null,syn) t.extensions }
+  let remove_extension t fld =
+    if not (is_ext_field fld) then invalid_arg "OpamFile.OPAM.remove_extension";
+    {t with extensions = OpamStd.String.Map.remove fld t.extensions }
 
   let with_url url t =
     let format_errors =
