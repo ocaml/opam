@@ -124,12 +124,10 @@ urpmi opam
 
 #### OpenBSD
 
-Opam builds via sources fine on OpenBSD 5.6 or earlier, and is available in the
-ports and packages tree on OpenBSD 5.7 or higher.
+The opam package for OpenBSD can be installed with the command (since OpenBSD 5.7):
 
 ```
-cd /usr/ports/sysutils/opam
-make install
+pkg_add opam
 ```
 
 #### FreeBSD
