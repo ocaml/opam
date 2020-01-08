@@ -786,7 +786,7 @@ let build_package t ?(test=false) ?(doc=false) build_dir nv =
   | Some (cmd, result), _ | _, Some (cmd, result) ->
     OpamConsole.error
       "The compilation of %s failed at %S."
-      name (OpamProcess.string_of_command cmd);
+      (OpamPackage.to_string nv) (OpamProcess.string_of_command cmd);
     Done (Some (OpamSystem.Process_error result))
   | None, None ->
     if commands <> [] && OpamConsole.verbose () then
