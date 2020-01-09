@@ -117,6 +117,10 @@ module Switch = struct
 
   let sources_dir t a = meta t a / "sources"
 
+  let extra_files_dir t a = sources_dir t a / "extra-files"
+
+  let extra_file t a h = extra_files_dir t a / OpamHash.contents h
+
   let sources t a nv = sources_dir t a / OpamPackage.to_string nv
 
   let pinned_package t a name = sources_dir t a / OpamPackage.Name.to_string name

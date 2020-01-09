@@ -153,6 +153,10 @@ module Switch: sig
       $meta/sources/$name.$version/} *)
   val sources: t -> switch -> package -> dirname
 
+  val extra_files_dir: t -> switch -> dirname
+
+  val extra_file: t -> switch -> OpamHash.t -> dirname
+
   (** Mirror of the sources for a given pinned package: {i
       $meta/sources/$name/} (without version) *)
   val pinned_package: t -> switch -> name -> dirname
