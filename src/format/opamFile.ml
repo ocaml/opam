@@ -2663,16 +2663,16 @@ module OPAMSyntax = struct
   (* Doesn't handle package name encoded in directory name *)
   let pp_raw_fields =
     Pp.I.check_opam_version ~format_version () -|
-    Pp.I.partition_fields is_ext_field -| Pp.map_pair
-      (Pp.I.items -|
-       OpamStd.String.Map.(Pp.pp (fun ~pos:_ -> of_list) bindings))
+    Pp.I.partition_fields ~section:true (is_ext_field @> not) -| Pp.map_pair
       (Pp.I.fields ~name:"opam-file" ~empty ~sections fields -|
        Pp.I.on_errors (fun t e -> {t with format_errors=e::t.format_errors}) -|
        handle_flags_in_tags -|
-       handle_deprecated_available) -|
+       handle_deprecated_available)
+      (Pp.I.items -|
+       OpamStd.String.Map.(Pp.pp (fun ~pos:_ -> of_list) bindings)) -|
     Pp.pp
-      (fun ~pos:_ (extensions, t) -> with_extensions extensions t)
-      (fun t -> extensions t, t)
+      (fun ~pos:_ (t, extensions) -> with_extensions extensions t)
+      (fun t -> t, extensions t)
 
   let pp_raw = Pp.I.map_file @@ pp_raw_fields
 
