@@ -528,7 +528,10 @@ let export rt ?(full=false) filename =
           (selections.sel_installed -- selections.sel_pinned)
       else overlays
     in
-    { OpamFile.SwitchExport.selections; overlays }
+    let extra_files =
+      OpamHash.Map.empty
+    in
+    { OpamFile.SwitchExport.selections; extra_files; overlays }
   in
   match filename with
   | None   -> OpamFile.SwitchExport.write_to_channel stdout export
@@ -560,6 +563,7 @@ let reinstall init_st =
   in
   import_t { OpamFile.SwitchExport.
              selections = OpamSwitchState.selections init_st;
+             extra_files = OpamHash.Map.empty;
              overlays = OpamPackage.Name.Map.empty; }
     st
 
@@ -575,6 +579,7 @@ let import st filename =
       try
         let selections = OpamFile.LegacyState.read_from_string import_str in
         { OpamFile.SwitchExport.selections;
+          extra_files = OpamHash.Map.empty;
           overlays = OpamPackage.Name.Map.empty }
       with e1 -> OpamStd.Exn.fatal e1; raise e
   in
