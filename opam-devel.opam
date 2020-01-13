@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.0.5"
+version: "2.0.6"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Vincent Bernardoff <vb@luminar.eu.org>"
@@ -22,13 +22,13 @@ build: [
 ]
 build-test: [make "tests"]
 depends: [
-  "opam-client" {= "2.0.5"}
+  "opam-client" {= "2.0.6"}
   "cmdliner" {>= "0.9.8"}
   "dune" {build & >= "1.2.1"}
 ]
 post-messages: [
 "The development version of opam has been successfully compiled into %{lib}%/%{name}%. You should not run it from there, please install the binaries to your PATH, e.g. with
-    sudo cp %{lib}%/%{name}%/* /usr/local/bin
+    sudo cp %{lib}%/%{name}%/opam /usr/local/bin
 
 If you just want to give it a try without altering your current installation, you could use instead:
     alias opam2=\"OPAMROOT=~/.opam2 %{lib}%/%{name}%/opam\""

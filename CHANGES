@@ -2,6 +2,25 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+
+2.0.6:
+* Don't remove git cache objects that may be used [#3831 @AltGr]
+* Don't include .gitattributes in index.tar.gz [#3873 @dra27]
+* Update FAQ uri [#3941 @dra27]
+* Lock: add warning in case of missing locked file [#3939 @rjbou]
+* Directory tracking: fix cached entries retrieving with precise
+  tracking [#4038 @hannesm]
+* Build:
+  * Add sanity checks [#3934 @dra27]
+  * Build man pages using dune [#3902] #dra27]
+  * Add patch and bunzip check for make cold [#4006 @rjbou - fix #3842]
+* Shell:
+  * fish: add colon for fish manpath [#3886 @rjbou - fix #3878]
+* Sandbox:
+    * Add dune cache as rw [#4019 @rjbou - fix #4012]
+    * Do not fail if $HOME/.ccache is missing [#3957 @mseri]
+* opam-devel file: avoid copying extraneous files in opam-devel example [#3999 @maroneze]
+
 2.0.5:
 * Bump src_ext Dune to 1.6.3, allows compilation with OCaml 4.08.0. [#3887 @dra27]
 * Support Dune 1.7.0 and later [#3888 @dra27 - fix #3870]

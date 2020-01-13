@@ -6,11 +6,13 @@ POL="$POL"'(allow network* (remote unix))'
 POL="$POL"'(allow file-write* (literal "/dev/null") (literal "/dev/dtracehelper"))'
 
 add_mounts() {
-    local DIR="$(cd "$2" && pwd -P)"
-    case "$1" in
-        ro) POL="$POL"'(deny file-write* (subpath "'"$DIR"'"))';;
-        rw) POL="$POL"'(allow file-write* (subpath "'"$DIR"'"))';;
-    esac
+    if [ -d "$2" ]; then
+      local DIR="$(cd "$2" && pwd -P)"
+      case "$1" in
+          ro) POL="$POL"'(deny file-write* (subpath "'"$DIR"'"))';;
+          rw) POL="$POL"'(allow file-write* (subpath "'"$DIR"'"))';;
+      esac
+    fi
 }
 
 if [ -z ${TMPDIR+x} ]; then
@@ -44,6 +46,12 @@ add_ccache_mount() {
   fi
 }
 
+add_dune_cache_mount() {
+  DUNE_CACHE=${XDG_CACHE_HOME:-$HOME/.cache}/dune
+  mkdir -p ${DUNE_CACHE}
+  add_mounts rw $DUNE_CACHE
+ }
+
 # This case-switch should remain identical between the different sandbox implems
 COMMAND="$1"; shift
 case "$COMMAND" in
@@ -51,6 +59,7 @@ case "$COMMAND" in
         add_mounts ro "$OPAM_SWITCH_PREFIX"
         add_mounts rw "$PWD"
         add_ccache_mount
+        add_dune_cache_mount
         ;;
     install)
         add_mounts rw "$OPAM_SWITCH_PREFIX"
