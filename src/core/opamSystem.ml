@@ -175,6 +175,45 @@ let write file contents =
   output_string oc contents;
   close_out oc
 
+let setup_copy ?(chmod = fun x -> x) ~src ~dst () =
+  let ic = open_in_bin src in
+  let oc =
+    try
+      let perm =
+        (Unix.fstat (Unix.descr_of_in_channel ic)).st_perm |> chmod
+      in
+      open_out_gen
+        [ Open_wronly; Open_creat; Open_trunc; Open_binary ]
+        perm dst
+    with exn ->
+      OpamStd.Exn.finalise exn (fun () -> close_in ic)
+  in
+  (ic, oc)
+
+let copy_channels =
+  let buf_len = 4096 in
+  let buf = Bytes.create buf_len in
+  let rec loop ic oc =
+    match input ic buf 0 buf_len with
+    | 0 -> ()
+    | n ->
+      output oc buf 0 n;
+      loop ic oc
+  in
+  loop
+
+let copy_file_aux ?chmod ~src ~dst () =
+  let close_channels ic oc =
+    OpamStd.Exn.finally (fun () -> close_in ic) (fun () -> close_out oc) in
+  try
+    let ic, oc = setup_copy ?chmod ~src ~dst () in
+    OpamStd.Exn.finally (fun () -> close_channels ic oc)
+      (fun () -> copy_channels ic oc);
+  with Unix.Unix_error _ as e ->
+    (* Remove the partial destination file, if any. *)
+    (try Unix.unlink dst with Unix.Unix_error _ -> ());
+    internal_error "Cannot copy %s to %s (%s)." src dst (Printexc.to_string e)
+
 let chdir dir =
   try Unix.chdir dir
   with Unix.Unix_error _ -> raise (File_not_found dir)
@@ -532,7 +571,7 @@ let cygify f =
   else
     fun x -> x
 
-let copy_file_aux f src dst =
+let copy_file src dst =
   if (try Sys.is_directory src
       with Sys_error _ -> raise (File_not_found src))
   then internal_error "Cannot copy %s: it is a directory." src;
@@ -541,9 +580,8 @@ let copy_file_aux f src dst =
   if file_or_symlink_exists dst
   then remove_file dst;
   mkdir (Filename.dirname dst);
-  command ~verbose:(verbose_for_base_commands ()) ("cp"::(cygify f [src; dst]))
-
-let copy_file = copy_file_aux (get_cygpath_function ~command:"cp")
+  log "copy %s -> %s" src dst;
+  copy_file_aux ~src ~dst ()
 
 let copy_dir src dst =
   if Sys.file_exists dst then
@@ -687,7 +725,7 @@ let install ?(warning=default_install_warning) ?exec src dst =
               warning dst `Install_unknown;
               (dst, false)
         in
-        copy_file src dst;
+        copy_file_aux ~src ~dst ();
         if cygcheck then
           match OpamStd.Sys.is_cygwin_variant dst with
             `Native ->
@@ -697,10 +735,12 @@ let install ?(warning=default_install_warning) ?exec src dst =
           | `CygLinked ->
               warning dst `Cygwin_libraries
       end else
-        copy_file src dst
-    else
-      command ("install" :: "-m" :: (if exec then "0755" else "0644") ::
-         [ src; dst ])
+        copy_file_aux ~src ~dst ()
+    else (
+      let perm = if exec then 0o755 else 0o644 in
+      log "install %s -> %s (%o)" src dst perm;
+      copy_file_aux ~chmod:(fun _ -> perm) ~src ~dst ()
+    )
   end
 
 let cpu_count () =
