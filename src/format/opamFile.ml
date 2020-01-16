@@ -824,7 +824,9 @@ module Syntax = struct
                    OpamPrinter.items [f] :: strs
                  with Not_found -> strs
              with Not_found | OpamPp.Bad_format _ ->
-               if OpamStd.String.starts_with ~prefix:"x-" name then
+               if OpamStd.String.starts_with ~prefix:"x-" name &&
+                  OpamStd.List.find_opt (fun i -> it_ident i = `Var name)
+                    syn_t.file_contents <> None then
                  field_str (`Var name) :: strs
                else strs)
           | Section (pos, {section_kind; section_name; section_items}) ->
@@ -2252,6 +2254,9 @@ module OPAMSyntax = struct
     if not (is_ext_field fld) then invalid_arg "OpamFile.OPAM.add_extension";
     {t with
      extensions = OpamStd.String.Map.add fld (pos_null,syn) t.extensions }
+  let remove_extension t fld =
+    if not (is_ext_field fld) then invalid_arg "OpamFile.OPAM.remove_extension";
+    {t with extensions = OpamStd.String.Map.remove fld t.extensions }
 
   let with_url url t =
     let format_errors =
