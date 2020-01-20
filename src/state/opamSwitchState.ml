@@ -403,7 +403,13 @@ let get_package st name =
     OpamPackage.max_version st.packages name
 
 let is_dev_package st nv =
-  match opam_opt st nv with
+  let opam_opt =
+    if OpamPackage.Set.mem nv st.pinned then
+      opam_opt st nv
+    else
+      OpamPackage.Map.find_opt nv st.repos_package_index
+  in
+  match opam_opt with
   | Some opam -> OpamPackageVar.is_dev_package st opam
   | None -> false
 
