@@ -775,10 +775,10 @@ module I = struct
       (fun ~pos:_ -> List.partition filter)
       (fun (a,b) -> a @ b)
 
-  let partition_fields filter =
+  let partition_fields ?(section=false) filter =
     partition @@ function
     | Variable (_,k,_) -> filter k
-    | _ -> false
+    | Section _ -> section
 
   let field name parse =
     pp

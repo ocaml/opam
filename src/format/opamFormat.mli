@@ -227,9 +227,10 @@ sig
     ('a * (string * bad_format) list, 'a) t
 
   (** Partitions items in an opamfile base on a condition on the variable
-      names *)
+      names. If a section is encountered, it is kept in the second list (as
+      filter returning false), unless [section] is true. *)
   val partition_fields :
-    (string -> bool) ->
+    ?section:bool -> (string -> bool) ->
     (opamfile_item list, opamfile_item list * opamfile_item list) t
 
   (** Partitions items in an opamfile base on a generic condition on the
