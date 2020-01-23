@@ -870,9 +870,9 @@ let config ?(setopt=false) () =
     "Set the given variable globally or in the current switch. Warning: \
      changing a configured path will not move any files! This command does not \
      perform any variable expansion.";
-    "set-opt", `set_opt, ["[switch|global]"; "NAME"; "[VALUE]"],
+    "set-opt", `set_opt, ["[switch|global]"; "FIELD[(+=|-=|=)VALUE]"],
     "Set the given opam configuration field in the global configuration file.\
-     If $(b,VALUE) is omitted, $(b,FIELD) is set to its default initial \
+     If $(b,op VALUE) is omitted, $(b,FIELD) is set to its default initial \
      configuration, as after a fresh init (use `opam init \
      show-default-opamrc` to display it)";
     "expand", `expand, ["STRING"],
@@ -959,43 +959,31 @@ let config ?(setopt=false) () =
     | Some `list, params ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       (try `Ok (OpamConfigCommand.list gt
-      (List.map OpamPackage.Name.of_string params))
+                  (List.map OpamPackage.Name.of_string params))
        with Failure msg -> `Error (false, msg))
     | Some `set_var, ["sw"|"switch"; var; value] ->
       (wrap_st @@ fun st ->
-      OpamConfigCommand.set_var_switch st
-        (OpamVariable.Full.of_string var) (Some value));
+      OpamConfigCommand.set_var_switch st var (Some value));
       `Ok ()
     | Some `set_var, ["sw"|"switch"; var] ->
       (wrap_st @@ fun st ->
-      OpamConfigCommand.set_var_switch st
-        (OpamVariable.Full.of_string var) None);
+      OpamConfigCommand.set_var_switch st var None);
       `Ok ()
     | Some `set_var, ["gl"|"global"; var; value] ->
       (wrap_gt @@ fun gt ->
-      OpamConfigCommand.set_var_global gt
-        (OpamVariable.Full.of_string var) (Some value));
+      OpamConfigCommand.set_var_global gt var (Some value));
       `Ok ()
     | Some `set_var, ["gl"|"global"; var] ->
       (wrap_gt @@ fun gt ->
-      OpamConfigCommand.set_var_global gt
-        (OpamVariable.Full.of_string var) None);
+      OpamConfigCommand.set_var_global gt var None);
       `Ok ()
-    | Some `set_opt, ["sw"|"switch"; field; value] ->
+    | Some `set_opt, ("sw"|"switch")::fvs ->
       (wrap_st @@ fun st ->
-      OpamConfigCommand.set_opt_switch st field (Some value));
+       List.fold_left OpamConfigCommand.set_opt_switch st fvs);
       `Ok ()
-    | Some `set_opt, ["sw"|"switch"; field] ->
-      (wrap_st @@ fun st ->
-      OpamConfigCommand.set_opt_switch st field None);
-      `Ok ()
-    | Some `set_opt, ["gl"|"global"; field; value] ->
+    | Some `set_opt, ("gl"|"global")::fvs ->
       (wrap_gt @@ fun gt ->
-      OpamConfigCommand.set_opt_global gt field (Some value));
-      `Ok ()
-    | Some `set_opt, ["gl"|"global"; field] ->
-      (wrap_gt @@ fun gt ->
-      OpamConfigCommand.set_opt_global gt field None);
+       List.fold_left OpamConfigCommand.set_opt_global gt fvs);
       `Ok ()
     | Some `expand, [str] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1141,31 +1129,26 @@ let config ?(setopt=false) () =
         "Subcommand set is deprecated. Use set-var switch %s %s instead."
         var value;
       (wrap_st @@ fun st ->
-      OpamConfigCommand.set_var_switch st
-        (OpamVariable.Full.of_string var) (Some value));
+      OpamConfigCommand.set_var_switch st var (Some value));
       `Ok ()
     | Some `unset, [var] ->
       OpamConsole.warning
         "Subcommand set is deprecated. Use set-var switch %s instead." var;
       (wrap_st @@ fun st ->
-      OpamConfigCommand.set_var_switch st
-        (OpamVariable.Full.of_string var) None);
+      OpamConfigCommand.set_var_switch st var None);
       `Ok ()
     | Some `set_global, [var; value] ->
       OpamConsole.warning
         "Subcommand set-global is deprecated. Use set-var global %s %s instead."
         var value;
       (wrap_gt @@ fun gt ->
-      OpamConfigCommand.set_var_global gt
-        (OpamVariable.Full.of_string var) (Some value));
+       OpamConfigCommand.set_var_global gt var (Some value));
       `Ok ()
     | Some `unset_global, [var] ->
       OpamConsole.warning
         "Subcommand set-global is deprecated. Use set-var global %s instead."
         var;
-      (wrap_gt @@ fun gt ->
-      OpamConfigCommand.set_var_global gt
-        (OpamVariable.Full.of_string var) None);
+      (wrap_gt @@ fun gt -> OpamConfigCommand.set_var_global gt var None);
       `Ok ()
     | command, params -> bad_subcommand commands ("config", command, params)
   in
