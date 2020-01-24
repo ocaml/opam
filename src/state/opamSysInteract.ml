@@ -295,18 +295,13 @@ let install_packages_commands s_packages =
   let packages =
     List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements s_packages)
   in
-  let y_answer opt r =
-    if OpamCoreConfig.(!r.answer) = Some true then
-      opt@r
-    else r
-  in
   match spv OpamSysPoll.os_family with
   | "homebrew" ->
     ["brew"::"install"::packages]
   | "macports" ->
     ["port"::"install"::packages]
   | "debian" ->
-    ["apt-get"::"install"::y_answer ["-qq"; "-yy"] packages]
+    ["apt-get"::"install"::packages]
   | "rhel" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol" ->
     (* todo: check if they all declare "rhel" as primary family *)
     (* When opam-packages specify the epel-release package, usually it
@@ -315,14 +310,14 @@ let install_packages_commands s_packages =
     let epel_release = "epel-release" in
     let install_epel =
       if List.mem epel_release packages then
-        ["yum"::"install"::y_answer ["-y"] [epel_release]]
+        ["yum"::"install"::[epel_release]]
       else []
     in
     install_epel @
-    ["yum"::"install"::y_answer ["-y"]
-       (OpamSysPkg.Set.remove (OpamSysPkg.of_string epel_release) s_packages
-        |> OpamSysPkg.Set.elements
-        |> List.map OpamSysPkg.to_string);
+    ["yum"::"install"::
+     (OpamSysPkg.Set.remove (OpamSysPkg.of_string epel_release) s_packages
+      |> OpamSysPkg.Set.elements
+      |> List.map OpamSysPkg.to_string);
      "rpm"::"-q"::"--whatprovides"::packages]
   | "bsd" ->
     if spv OpamSysPoll.os_distribution = "freebsd" then
@@ -336,7 +331,7 @@ let install_packages_commands s_packages =
   | "alpine" ->
     ["apk"::"add"::packages]
   | "suse" | "opensuse" ->
-    ["zypper"::y_answer ["--non-interactive"] ("install"::packages)]
+    ["zypper"::("install"::packages)]
   | family ->
     OpamConsole.error_and_exit `Not_found
       "opam doesn't handle system %s for system packages install commands.\n \
