@@ -981,7 +981,8 @@ let filter_unpinned_locally t atoms f =
          None))
     atoms
 
-let install_t t ?ask atoms add_to_roots ~deps_only ~assume_built =
+let install_t t ?ask atoms add_to_roots
+    ~deps_only ?(ignore_conflicts=false) ~assume_built =
   log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
   let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
@@ -1080,15 +1081,15 @@ let install_t t ?ask atoms add_to_roots ~deps_only ~assume_built =
        available_packages)
   in
   let opams =
-    if deps_only then
+    if deps_only && ignore_conflicts then
       (let pkgs = OpamFormula.packages_of_atoms available_packages atoms in
        log "removing conflicts from %s" (OpamPackage.Set.to_string pkgs);
        OpamPackage.Set.fold (fun pkg opams ->
            let opam =
              OpamFile.OPAM.with_conflicts Empty (OpamSwitchState.opam t pkg)
            in
-           OpamPackage.Map.add pkg opam opams
-         ) pkgs t.opams)
+           OpamPackage.Map.add pkg opam opams)
+         pkgs t.opams)
     else t.opams
   in
   let t = {t with available_packages = lazy available_packages; opams} in
@@ -1136,14 +1137,14 @@ let install_t t ?ask atoms add_to_roots ~deps_only ~assume_built =
   t
 
 let install t ?autoupdate ?add_to_roots
-    ?(deps_only=false) ?(assume_built=false) names =
+    ?(deps_only=false) ?(ignore_conflicts=false) ?(assume_built=false) names =
   let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
   let autoupdate_atoms = match autoupdate with
     | None -> atoms
     | Some a -> OpamSolution.sanitize_atom_list ~permissive:true t a
   in
   let t = update_dev_packages_t autoupdate_atoms t in
-  install_t t atoms add_to_roots ~deps_only ~assume_built
+  install_t t atoms add_to_roots ~deps_only ~ignore_conflicts ~assume_built
 
 let check_installed t atoms =
   let available = (Lazy.force t.available_packages) in
