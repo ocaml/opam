@@ -415,8 +415,11 @@ let install packages =
       None cmds
   in
   match ok with
-  | Some (cmd, code) ->
-    OpamConsole.warning
-      "System packages install failed with exit code %d at command:\n  %s"
-      code cmd
+  | Some (_cmd, code) ->
+    if not
+        (OpamConsole.confirm ~default:false
+           "System packages install failed with exit code %d at command:\n  %s\n \
+            Do you want to pause opam and try to install yourself?"
+           code (OpamStd.Format.itemize (String.concat " ") cmds)) then
+      OpamStd.Sys.exit_because `Aborted
   | None -> OpamConsole.msg "System packages installed succesfully\n"
