@@ -372,6 +372,19 @@ let switch lock gt switch =
 let import_t ?ask importfile t =
   log "import switch";
 
+  let extra_files = importfile.OpamFile.SwitchExport.extra_files in
+  let dir = OpamPath.Switch.extra_files_dir t.switch_global.root t.switch in
+  OpamHash.Map.iter (fun hash content ->
+      let value = Base64.decode_string content in
+      let my = OpamHash.compute_from_string ~kind:(OpamHash.kind hash) value in
+      if OpamHash.contents my = OpamHash.contents hash then
+        let dst =
+          let base = OpamFilename.Base.of_string (OpamHash.contents hash) in
+          OpamFilename.create dir base in
+          OpamFilename.write dst value
+      else
+        failwith "Bad hash for inline extra-files") extra_files;
+
   let import_sel = importfile.OpamFile.SwitchExport.selections in
   let import_opams = importfile.OpamFile.SwitchExport.overlays in
 
