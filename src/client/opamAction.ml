@@ -368,20 +368,26 @@ let prepare_package_source st nv dir =
     try
       let extra_files_dir =
         OpamPath.Switch.extra_files_dir st.switch_global.root st.switch
+      and repos_roots = OpamRepositoryState.get_root st.switch_repos
       in
       List.iter (fun (base, hash) ->
-          let dst = OpamFilename.create dir base in
-          let repos_roots = OpamRepositoryState.get_root st.switch_repos in
+          let internal_extra_file =
+            let base = OpamFilename.Base.of_string (OpamHash.contents hash) in
+            OpamFilename.create extra_files_dir base
+          in
           let src =
-            match OpamFile.OPAM.get_metadata_dir ~repos_roots opam with
-            | None ->
-              let base = OpamFilename.Base.of_string (OpamHash.contents hash) in
-              OpamFilename.create extra_files_dir base
-            | Some mdir ->
-              let files_dir = OpamFilename.Op.(mdir / "files") in
-              OpamFilename.create files_dir base
+            if OpamFilename.exists internal_extra_file then
+              internal_extra_file
+            else match OpamFile.OPAM.get_metadata_dir ~repos_roots opam with
+              | Some mdir ->
+                let files_dir = OpamFilename.Op.(mdir / "files") in
+                OpamFilename.create files_dir base
+              | None ->
+                failwith (Printf.sprintf "couldn't find %s"
+                            (OpamFilename.Base.to_string base))
           in
           if OpamHash.check_file (OpamFilename.to_string src) hash then
+            let dst = OpamFilename.create dir base in
             OpamFilename.copy ~src ~dst
           else
             failwith
