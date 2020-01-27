@@ -41,14 +41,12 @@ val import:
 
 (** Export a file which contains the installed packages. If [full] is specified
     and true, export metadata of all installed packages (excluding overlay
-    files) as part of the export. If [freeze] is specified and true, the export
-    will be extended with a map of all extra-files. The option [freeze] implies
-    [full]. If [None] is provided as file argument, the export is done to
+    files) as part of the export. The export will be extended with a map of all
+    extra-files. If [None] is provided as file argument, the export is done to
     stdout. *)
 val export:
   'a repos_state ->
   ?full:bool ->
-  ?freeze:bool ->
   OpamFile.SwitchExport.t OpamFile.t option ->
   unit
 

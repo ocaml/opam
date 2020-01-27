@@ -529,7 +529,7 @@ let read_extra_files ~repos_roots (read: package -> OpamFile.OPAM.t option) data
             acc files)
     packages data
 
-let export rt ?(full=false) ?(freeze = false) filename =
+let export rt ?(full=false) filename =
   let switch = OpamStateConfig.get_switch () in
   let root = OpamStateConfig.(!r.root_dir) in
   let export =
@@ -537,15 +537,15 @@ let export rt ?(full=false) ?(freeze = false) filename =
     @@ fun _ ->
     let selections = S.safe_read (OpamPath.Switch.selections root switch) in
     let overlays =
-        read_overlays (not freeze) (fun nv ->
+        read_overlays (not full) (fun nv ->
             OpamFileTools.read_opam
               (OpamPath.Switch.Overlay.package root switch nv.name))
           selections.sel_pinned
     in
     let overlays =
-      if full || freeze then
+      if full then
         OpamPackage.Name.Map.union (fun a _ -> a) overlays @@
-        read_overlays (not freeze) (fun nv ->
+        read_overlays (not full) (fun nv ->
             OpamFile.OPAM.read_opt
               (OpamPath.Switch.installed_opam root switch nv))
           (selections.sel_installed -- selections.sel_pinned)
@@ -553,7 +553,7 @@ let export rt ?(full=false) ?(freeze = false) filename =
         overlays
     in
     let extra_files =
-      if freeze then
+      if full then
         let repos_roots = OpamRepositoryState.get_root rt in
         let data =
           read_extra_files ~repos_roots (fun nv ->
