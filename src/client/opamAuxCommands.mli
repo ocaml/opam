@@ -87,8 +87,9 @@ val simulate_autopin:
 (** Scans for package definition files in a directory, and selects a compiler
     that is compatible with them from the configured default compiler list, or
     that is unambiguously selected by the package definitions.
-    Returns the corresponding atoms. If no compiler matches, prints a
-    warning, and returns the empty list after user confirmation. *)
+    Returns a pair: the corresponding atom and if it is a local compiler
+    (current directory). If no compiler matches, prints a warning, and returns
+    the empty list after user confirmation. *)
 val get_compatible_compiler:
   ?repos:repository_name list ->
   'a repos_state -> dirname -> atom option * bool
