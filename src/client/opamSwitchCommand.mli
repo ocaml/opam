@@ -39,10 +39,18 @@ val import:
   OpamFile.SwitchExport.t OpamFile.t option ->
   rw switch_state
 
-(** Export a file which contains the installed packages. If full is specified
+(** Export a file which contains the installed packages. If [full] is specified
     and true, export metadata of all installed packages (excluding overlay
-    files) as part of the export. [None] means export to stdout. *)
-val export: 'a repos_state -> ?full:bool -> OpamFile.SwitchExport.t OpamFile.t option -> unit
+    files) as part of the export. If [freeze] is specified and true, the export
+    will be extended with a map of all extra-files. The option [freeze] implies
+    [full]. If [None] is provided as file argument, the export is done to
+    stdout. *)
+val export:
+  'a repos_state ->
+  ?full:bool ->
+  ?freeze:bool ->
+  OpamFile.SwitchExport.t OpamFile.t option ->
+  unit
 
 (** Remove the given compiler switch, and returns the updated state (unchanged
     in case [confirm] is [true] and the user didn't confirm) *)
