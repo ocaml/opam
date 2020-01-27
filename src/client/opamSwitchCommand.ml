@@ -380,7 +380,8 @@ let import_t ?ask importfile t =
       if OpamHash.contents my = OpamHash.contents hash then
         let dst =
           let base = OpamFilename.Base.of_string (OpamHash.contents hash) in
-          OpamFilename.create dir base in
+          OpamFilename.create dir base
+        in
           OpamFilename.write dst value
       else
         failwith "Bad hash for inline extra-files") extra_files;
