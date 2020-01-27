@@ -506,7 +506,7 @@ let read_overlays warn (read: package -> OpamFile.OPAM.t option) packages =
     packages
     OpamPackage.Name.Map.empty
 
-let read_extra_files ~repos_roots (read: package -> OpamFile.OPAM.t option) data packages =
+let read_extra_files ~repos_roots (read: package -> OpamFile.OPAM.t option) packages =
   OpamPackage.Set.fold (fun nv acc ->
       match read nv with
       | None -> acc
@@ -527,7 +527,7 @@ let read_extra_files ~repos_roots (read: package -> OpamFile.OPAM.t option) data
                 acc
               end)
             acc files)
-    packages data
+    packages OpamHash.Map.empty
 
 let export rt ?(full=false) filename =
   let switch = OpamStateConfig.get_switch () in
@@ -555,16 +555,18 @@ let export rt ?(full=false) filename =
     let extra_files =
       if full then
         let repos_roots = OpamRepositoryState.get_root rt in
-        let data =
+        let extra_pinned =
           read_extra_files ~repos_roots (fun nv ->
               OpamFileTools.read_opam
                 (OpamPath.Switch.Overlay.package root switch nv.name))
-            OpamHash.Map.empty selections.sel_pinned
+            selections.sel_pinned
+        and extra_installed =
+          read_extra_files ~repos_roots (fun nv ->
+              OpamFile.OPAM.read_opt
+                (OpamPath.Switch.installed_opam root switch nv))
+            (selections.sel_installed -- selections.sel_pinned)
         in
-        read_extra_files ~repos_roots (fun nv ->
-            OpamFile.OPAM.read_opt
-              (OpamPath.Switch.installed_opam root switch nv))
-          data (selections.sel_installed -- selections.sel_pinned)
+        OpamHash.Map.union (fun a _ -> a) extra_pinned extra_installed
       else
         OpamHash.Map.empty
     in
