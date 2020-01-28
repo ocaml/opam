@@ -519,13 +519,7 @@ let export rt ?(full=false) filename =
     in
     let overlays =
       OpamPackage.Map.fold (fun nv opam nmap ->
-          if (not full) && OpamFile.OPAM.extra_files opam <> None then
-            (OpamConsole.warning
-               "Metadata of package %s uses a files%s subdirectory, it may not be \
-                re-imported correctly (skipping definition)"
-               (OpamPackage.to_string nv) Filename.dir_sep;
-             nmap)
-          else OpamPackage.Name.Map.add nv.name opam nmap)
+          OpamPackage.Name.Map.add nv.name opam nmap)
         opams OpamPackage.Name.Map.empty
     in
     let extra_files =
