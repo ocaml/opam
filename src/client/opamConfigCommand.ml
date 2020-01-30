@@ -165,13 +165,8 @@ let print_sexp_env env =
   OpamConsole.msg ")\n"
 
 let rec print_fish_env env =
-  let set_arr_cmd k v =
-    let v =
-      OpamStd.String.split v ':'
-      |> function
-      | x::v' -> (":"^x)::v'
-      | v -> v
-    in
+  let set_arr_cmd ?(modf=fun x -> x) k v =
+    let v = modf @@ OpamStd.String.split v ':' in
     OpamConsole.msg "set -gx %s %s;\n" k
       (OpamStd.List.concat_map " "
          (fun v ->
@@ -189,7 +184,8 @@ let rec print_fish_env env =
        *     stderr if `grep' does not exist. *)
       "builtin -n | /bin/sh -c 'grep -q \\'^argparse$\\'' 1>/dev/null 2>/dev/null; and "
     ) ;
-    set_arr_cmd "MANPATH" v in
+    let modf = function | x::v' -> (":"^x)::v' | v -> v in
+    set_arr_cmd ~modf "MANPATH" v in
   match env with
   | [] -> ()
   | (k, v, _) :: r ->
