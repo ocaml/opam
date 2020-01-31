@@ -1,0 +1,92 @@
+(**************************************************************************)
+(*                                                                        *)
+(*    Copyright 2017 OCamlPro                                             *)
+(*                                                                        *)
+(*  All rights reserved. This file is distributed under the terms of the  *)
+(*  GNU Lesser General Public License version 2.1, with the special       *)
+(*  exception on linking described in the file LICENSE.                   *)
+(*                                                                        *)
+(**************************************************************************)
+
+open OpamCudfSolverSig
+
+let log f = OpamConsole.log "0install" f
+
+let name = "builtin-0install"
+
+let ext = ref None
+
+let is_present () = true
+
+let command_name = None
+
+let default_criteria = {
+  crit_default = "";
+  crit_upgrade = "";
+  crit_fixup = "";
+  crit_best_effort_prefix = None;
+}
+
+let not_relop = function
+  | `Eq -> `Neq
+  | `Neq -> `Eq
+  | `Geq -> `Lt
+  | `Gt -> `Leq
+  | `Leq -> `Gt
+  | `Lt -> `Geq
+
+let if_not_already_in_spec f ((pkgs, _) as spec) ((pkgname, _) as vpkg) =
+  if not (List.exists (fun (pkg, _) -> String.equal pkg pkgname) pkgs)
+  then f spec vpkg
+  else spec
+
+let add_spec pkg req f_relop c (pkgs, constraints) =
+  let pkgs = (pkg, req) :: pkgs in
+  let constraints = match c with
+    | None -> constraints
+    | Some (relop, v) -> (pkg, (f_relop relop, v)) :: constraints
+  in
+  (pkgs, constraints)
+
+let essential spec (pkg, c) = add_spec pkg `Essential (fun x -> x) c spec
+let recommended spec (pkg, c) = add_spec pkg `Recommended (fun x -> x) c spec
+let restricts spec (pkg, c) = add_spec pkg `Restricts not_relop c spec
+
+let create_spec universe request =
+  let spec = ([], []) in
+  let spec = List.fold_left essential spec request.Cudf.install in
+  let spec = List.fold_left essential spec request.Cudf.upgrade in
+  let spec = List.fold_left restricts spec request.Cudf.remove in
+  Cudf.fold_packages_by_name (fun spec pkgname pkgs ->
+      match List.find_opt (fun pkg -> pkg.Cudf.installed) pkgs with
+      | Some {Cudf.keep = `Keep_version; version; _} -> essential spec (pkgname, Some (`Eq, version))
+      | Some {Cudf.keep = `Keep_package; _} -> essential spec (pkgname, None)
+      | Some {Cudf.keep = `Keep_feature; _} -> assert false (* TODO: Is this used? *)
+      | Some {Cudf.keep = `Keep_none; _} -> if_not_already_in_spec recommended spec (pkgname, None)
+      | None -> spec
+    ) spec universe
+
+let reconstruct_universe universe selections =
+  Opam_0install_cudf.packages_of_result selections |>
+  List.fold_left (fun pkgs (pkg, v) ->
+      let pkg = Cudf.lookup_package universe (pkg, v) in
+      {pkg with was_installed = pkg.installed; installed = true} :: pkgs
+    ) [] |>
+  Cudf.load_universe
+
+let call ~criteria:_ ?timeout:_ (preamble, universe, request) =
+  let t0 = Unix.gettimeofday () in
+  let pkgs, constraints = create_spec universe request in
+  let context = Opam_0install_cudf.create ~constraints universe in
+  match Opam_0install_cudf.solve context pkgs with
+  | Ok selections ->
+    let universe = reconstruct_universe universe selections in
+    let t1 = Unix.gettimeofday () in
+    log "Solution found. Solve took %.2f s" (t1 -. t0);
+    (Some preamble, universe)
+  | Error _problem ->
+    let t1 = Unix.gettimeofday () in
+    log "No solution. Solve took %.2f s" (t1 -. t0);
+    (* Diagnostics disabled. Feel free to enable again for debug *)
+    (* print_endline (Opam_0install_cudf.diagnostics problem); *)
+    raise Common.CudfSolver.Unsat

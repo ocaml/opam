@@ -27,6 +27,12 @@ depends: [
   "cudf" {>= "0.7"}
   "dune" {>= "1.5.0"}
 ]
-depopts: "z3"
-conflicts: [ "z3" {< "4.8.4"} ]
+depopts: [
+  "z3"
+  "opam-0install-cudf"
+]
+conflicts: [
+  "z3" {< "4.8.4"}
+  "opam-0install-cudf" {< "0.3"}
+]
 available: ocaml-version >= "4.02.3"

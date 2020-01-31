@@ -1068,10 +1068,12 @@ let get_final_universe ~version_map univ req =
     match r with
     | Some ({Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _} as r) ->
       make_conflicts ~version_map univ r
-    | Some {Algo.Diagnostic.result = Algo.Diagnostic.Success _; _}(*  -> *)
-      (* fail "inconsistent return value." *)
+    | Some {Algo.Diagnostic.result = Algo.Diagnostic.Success _; _}
     | None ->
-      raise (Solver_failure "Unsat")
+      raise (Solver_failure
+        "The current solver could not find a solution but dose3 could. \
+         This is probably a bug in the current solver. Please file a bug-report \
+         on the opam bug tracker: https://github.com/ocaml/opam/issues/")
 
 let diff univ sol =
   let before =
