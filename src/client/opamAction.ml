@@ -368,31 +368,31 @@ let prepare_package_source st nv dir =
     try
       let extra_files_dir =
         OpamPath.Switch.extra_files_dir st.switch_global.root st.switch
-      and repos_roots = OpamRepositoryState.get_root st.switch_repos
-      in
-      List.iter (fun (base, hash) ->
-          let internal_extra_file =
-            let base = OpamFilename.Base.of_string (OpamHash.contents hash) in
-            OpamFilename.create extra_files_dir base
-          in
-          let src =
-            if OpamFilename.exists internal_extra_file then
-              internal_extra_file
-            else match OpamFile.OPAM.get_metadata_dir ~repos_roots opam with
-              | Some mdir ->
-                let files_dir = OpamFilename.Op.(mdir / "files") in
-                OpamFilename.create files_dir base
-              | None ->
-                failwith (Printf.sprintf "couldn't find %s"
-                            (OpamFilename.Base.to_string base))
-          in
+      and metadata_dir = OpamFile.OPAM.metadata_dir opam
+      and extra_files =
+        OpamFile.OPAM.get_extra_files
+          ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+          opam
+      and copy_if_hash_matches (src, base, hash) =
           if OpamHash.check_file (OpamFilename.to_string src) hash then
             let dst = OpamFilename.create dir base in
             OpamFilename.copy ~src ~dst
           else
             failwith
-              (Printf.sprintf "Bad hash for %s" (OpamFilename.to_string src)))
-        (match OpamFile.OPAM.extra_files opam with None -> [] | Some xs -> xs);
+              (Printf.sprintf "Bad hash for %s" (OpamFilename.to_string src))
+      in
+      (match metadata_dir with
+       | None ->
+         (* lookup in switch-local hashmap overlay *)
+         List.iter (fun (base, hash) ->
+             let src =
+               let base = OpamFilename.Base.of_string (OpamHash.contents hash) in
+               OpamFilename.create extra_files_dir base
+             in
+             copy_if_hash_matches (src, base, hash))
+           (match OpamFile.OPAM.extra_files opam with None -> [] | Some xs -> xs)
+       | Some _ ->
+         List.iter copy_if_hash_matches extra_files);
       None
     with e -> Some e
   in
