@@ -365,36 +365,41 @@ let prepare_package_source st nv dir =
       (Done None) (OpamFile.OPAM.extra_sources opam)
   in
   let check_extra_files =
-    try
-      let extra_files_dir =
-        OpamPath.Switch.extra_files_dir st.switch_global.root st.switch
-      and metadata_dir = OpamFile.OPAM.metadata_dir opam
-      and extra_files =
+    let extra_files =
+      let extra_files =
         OpamFile.OPAM.get_extra_files
           ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
           opam
-      and copy_if_hash_matches (src, base, hash) =
-          if OpamHash.check_file (OpamFilename.to_string src) hash then
-            let dst = OpamFilename.create dir base in
-            OpamFilename.copy ~src ~dst
-          else
-            failwith
-              (Printf.sprintf "Bad hash for %s" (OpamFilename.to_string src))
       in
-      (match metadata_dir with
-       | None ->
-         (* lookup in switch-local hashmap overlay *)
-         List.iter (fun (base, hash) ->
-             let src =
-               let base = OpamFilename.Base.of_string (OpamHash.contents hash) in
-               OpamFilename.create extra_files_dir base
-             in
-             copy_if_hash_matches (src, base, hash))
-           (match OpamFile.OPAM.extra_files opam with None -> [] | Some xs -> xs)
-       | Some _ ->
-         List.iter copy_if_hash_matches extra_files);
-      None
-    with e -> Some e
+      if extra_files <> [] then extra_files else
+      match OpamFile.OPAM.extra_files opam with
+      | None -> []
+      | Some xs ->
+        (* lookup in switch-local hashmap overlay *)
+        let extra_files_dir =
+          OpamPath.Switch.extra_files_dir st.switch_global.root st.switch
+        in
+        OpamStd.List.filter_map (fun (base, hash) ->
+            let src =
+              OpamFilename.create extra_files_dir
+                (OpamFilename.Base.of_string (OpamHash.contents hash))
+            in
+            if OpamFilename.exists src then
+              Some (src, base, hash)
+            else None)
+          xs
+    in
+    let bad_hash =
+      OpamStd.List.filter_map (fun (src, base, hash) ->
+          if OpamHash.check_file (OpamFilename.to_string src) hash then
+            (OpamFilename.copy ~src ~dst:(OpamFilename.create dir base); None)
+          else
+            Some src) extra_files
+    in
+    if bad_hash = [] then None else
+      Some (Failure
+              (Printf.sprintf "Bad hash for %s"
+                 (OpamStd.Format.itemize OpamFilename.to_string bad_hash)));
   in
   OpamFilename.mkdir dir;
   get_extra_sources_job @@+ function Some _ as err -> Done err | None ->
