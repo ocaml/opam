@@ -77,7 +77,7 @@ publish --help` for more options.
 First tag the project. Assuming this is version 0.1:
 ```
 git tag -a 0.1
-git push 0.1
+git push origin 0.1
 ```
 Alternatively, you can create a release using the web UI
 (https://github.com/USER/REPO/releases/new).
