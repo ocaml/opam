@@ -190,8 +190,7 @@ let display_error (n, error) =
   | `Reinstall nv      -> f "recompiling" nv
   | `Remove nv         -> f "removing" nv
   | `Build nv          -> f "compiling" nv
-  | `Fetch nv          ->
-    if OpamConsole.verbose () then f "fetching sources for" nv
+  | `Fetch nv          -> f "fetching sources for" nv
 
 module Json = struct
   let output_request request user_action =
