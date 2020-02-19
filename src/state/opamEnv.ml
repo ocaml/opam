@@ -552,14 +552,18 @@ let write_custom_init_scripts root custom =
       let hash_name = name ^ ".hash" in
       let hash_file = hookdir // hash_name in
       if not (OpamFilename.exists hash_file)
-      || OpamHash.of_string_opt (OpamFilename.read hash_file) <>
-         Some (OpamHash.compute ~kind (OpamFilename.to_string script_file))
-         && OpamConsole.confirm ~default:false
-           "%s contains local modification, overwrite ?"
-           (OpamFilename.to_string script_file) then
-        (write_script hookdir (name, script);
-         OpamFilename.chmod script_file 0o777;
-         write_script hookdir (hash_name, OpamHash.to_string hash))
+      || (let same_hash =
+          OpamHash.of_string_opt (OpamFilename.read hash_file) =
+          Some (OpamHash.compute ~kind (OpamFilename.to_string script_file))
+        in
+        same_hash
+        || not same_hash
+           && OpamConsole.confirm ~default:false
+             "%s contains local modification, overwrite ?"
+             (OpamFilename.to_string script_file)) then
+            (write_script hookdir (name, script);
+            OpamFilename.chmod script_file 0o777;
+            write_script hookdir (hash_name, OpamHash.to_string hash))
     ) custom
 
 let write_dynamic_init_scripts st =
