@@ -231,7 +231,31 @@ let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
     OpamConsole.note "%snot removing non-empty directories:\n%s" title
       (OpamStd.Format.itemize (fun s -> s) (List.rev nonempty));
   if cannot <> [] && verbose then
-    OpamConsole.warning "%scannot revert:\n%s" title
-      (OpamStd.Format.itemize
-         (fun (op,f) -> string_of_change op ^" of "^ f)
-         (List.rev cannot))
+    let cannot =
+      let rem, modf, perm =
+        List.fold_left (fun (rem, modf, perm as acc) (op,f) ->
+            match op with
+            | Removed -> (None, f)::rem, modf, perm
+            | Contents_changed dg ->
+              let precise = Some (is_precise_digest dg) in
+              rem, (precise, f)::modf, perm
+            | Perm_changed dg ->
+              let precise = Some (is_precise_digest dg) in
+              rem, modf, (precise, f)::perm
+            |  _ -> acc)
+          ([],[],[]) cannot
+      in
+      (if rem = [] then [] else [Removed, rem])
+      @ (if modf = [] then [] else [Contents_changed "_", modf])
+      @ (if perm = [] then [] else [Perm_changed "_", perm])
+    in
+    (OpamConsole.warning "%scannot revert:" title;
+     OpamConsole.errmsg "%s"
+       (OpamStd.Format.itemize
+          (fun (op,lf) ->
+             Printf.sprintf "%s of:\n%s"
+               (string_of_change op)
+               (OpamStd.Format.itemize (fun (pre,x) ->
+                    (OpamStd.Option.to_string (fun pr ->
+                         if pr then "[hash] " else "[tms] ") pre) ^ x) lf))
+          cannot))
