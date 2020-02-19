@@ -522,7 +522,7 @@ let write_init_shell_scripts root =
   in
   List.iter (write_script (OpamPath.init root)) scripts
 
-let write_static_init_scripts root ?completion ?env_hook () =
+let write_static_init_scripts root ?completion ?env_hook ?(inplace=false) () =
   write_init_shell_scripts root;
   let update_scripts filef scriptf enable =
     let scripts =
@@ -532,13 +532,18 @@ let write_static_init_scripts root ?completion ?env_hook () =
           | _ -> None)
         shells_list
     in
-    match enable with
-    | Some true ->
+    match enable, inplace with
+    | Some true, _ ->
       List.iter (write_script (OpamPath.init root)) scripts
-    | Some false ->
-      List.iter (fun (f,_) -> OpamFilename.remove (OpamPath.init root // f))
+    | _, true ->
+      List.iter (fun ((f,_) as fs) ->
+          if OpamFilename.exists (OpamPath.init root // f) then
+            write_script (OpamPath.init root) fs)
         scripts
-    | None -> ()
+    | Some false, _ ->
+      List.iter (fun (f,_) ->
+          OpamFilename.remove (OpamPath.init root // f)) scripts
+    | None, _ -> ()
   in
   update_scripts complete_file complete_script completion;
   update_scripts env_hook_file env_hook_script env_hook
@@ -658,7 +663,7 @@ let check_and_print_env_warning st =
 
 let setup
     root ~interactive ?dot_profile ?update_config ?env_hook ?completion
-    shell =
+    ?inplace shell =
   let update_dot_profile =
     match update_config, dot_profile, interactive with
     | Some false, _, _ -> None
@@ -716,11 +721,13 @@ let setup
     | Some b, _ -> Some b
     | None, false -> None
     | None, true ->
-      Some
-        (OpamConsole.confirm ~default:false
-           "A hook can be added to opam's init scripts to ensure that the \
-            shell remains in sync with the opam environment when they are \
-            loaded. Set that up?")
+      (* not just interactive mode *)
+      if update_config <> None || completion <> None then None else
+          Some
+          (OpamConsole.confirm ~default:false
+             "A hook can be added to opam's init scripts to ensure that the \
+              shell remains in sync with the opam environment when they are \
+              loaded. Set that up?")
   in
   update_user_setup root ?dot_profile:update_dot_profile shell;
-  write_static_init_scripts root ?completion ?env_hook ()
+  write_static_init_scripts root ?completion ?env_hook ?inplace ()

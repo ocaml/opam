@@ -38,9 +38,8 @@ val init:
    (defaults to [OpamInitDefaults.init_config]) for the settings that are unset,
    and updates all repositories *)
 val reinit:
-  ?init_config:OpamFile.InitConfig.t ->
-  interactive:bool ->
-  ?dot_profile:filename -> ?update_config:bool -> ?env_hook:bool -> ?completion:bool ->
+  ?init_config:OpamFile.InitConfig.t -> interactive:bool -> ?dot_profile:filename ->
+  ?update_config:bool -> ?env_hook:bool -> ?completion:bool -> ?inplace:bool ->
   OpamFile.Config.t -> shell -> unit
 
 (** Install the given list of packages. [add_to_roots], if given, specifies that

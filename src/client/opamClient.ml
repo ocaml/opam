@@ -765,7 +765,7 @@ let update_with_init_config ?(overwrite=false) config init_config =
     (I.default_compiler init_config)
 
 let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
-    ?dot_profile ?update_config ?env_hook ?completion config shell =
+    ?dot_profile ?update_config ?env_hook ?completion ?inplace config shell =
   let root = OpamStateConfig.(!r.root_dir) in
   let config = update_with_init_config config init_config in
   let _all_ok = init_checks ~hard_fail_exn:false init_config in
@@ -784,7 +784,7 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
   in
   OpamEnv.write_custom_init_scripts root custom_init_scripts;
   OpamEnv.setup root ~interactive
-    ?dot_profile ?update_config ?env_hook ?completion shell;
+    ?dot_profile ?update_config ?env_hook ?completion ?inplace shell;
   let gt = OpamGlobalState.load `Lock_write in
   let rt = OpamRepositoryState.load `Lock_write gt in
   OpamConsole.header_msg "Updating repositories";
