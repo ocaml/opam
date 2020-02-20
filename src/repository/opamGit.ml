@@ -135,7 +135,17 @@ module VCS : OpamVCS.VCS = struct
             if OpamProcess.check_success_and_cleanup r then
               failwith "Commit found, but unreachable: enable uploadpack.allowReachableSHA1InWant on server"
             else failwith "Commit not found on repository"))
-      else OpamSystem.process_error r
+      else
+      let error = r in
+      git repo_root ["ls-files"] @@> function
+      | { OpamProcess.r_code = 0; OpamProcess.r_stdout = []; _ } ->
+        git repo_root ["show"] @@> fun r ->
+        if OpamProcess.is_failure r then
+          failwith "Git repository seems just initialized, \
+                    try again after your first commit"
+        else
+          OpamSystem.process_error error
+      | _ -> OpamSystem.process_error error
 
   let revision repo_root =
     git repo_root ~verbose:false [ "rev-parse"; "HEAD" ] @@>
