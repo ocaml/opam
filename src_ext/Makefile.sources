@@ -13,7 +13,7 @@ MD5_re = bddaed4f386a22cace7850c9c7dac296
 
 $(call PKG_SAME,re)
 
-URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.0.4.tbz
+URL_cmdliner = https://erratique.ch/software/cmdliner/releases/cmdliner-1.0.4.tbz
 MD5_cmdliner = fe2213d0bc63b1e10a2d0aa66d2fc8d9
 
 $(call PKG_SAME,cmdliner)
@@ -59,8 +59,8 @@ MD5_PKG_findlib = a710c559667672077a93d34eb6a42e5b
 URL_PKG_ocamlbuild = https://github.com/ocaml/ocamlbuild/archive/0.14.0.tar.gz
 MD5_PKG_ocamlbuild = a7bf2fe594cd16907807c756b14d501f
 
-URL_PKG_topkg = http://erratique.ch/software/topkg/releases/topkg-1.0.0.tbz
-MD5_PKG_topkg = e3d76bda06bf68cb5853caf6627da603
+URL_PKG_topkg = https://erratique.ch/software/topkg/releases/topkg-1.0.1.tbz
+MD5_PKG_topkg = 16b90e066d8972a5ef59655e7c28b3e9
 
 URL_seq = https://github.com/c-cube/seq/archive/0.1.tar.gz
 MD5_seq = 0e87f9709541ed46ecb6f414bc31458c
