@@ -1,5 +1,5 @@
-URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.5.tar.gz
-MD5_cppo = 1cd25741d31417995b0973fe0b6f6c82
+URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.6.tar.gz
+MD5_cppo = 2258f90f3b7f0190bda76b710df0af56
 
 $(call PKG_SAME,cppo)
 
@@ -8,13 +8,13 @@ MD5_extlib = d989951536077563bf4c5e3479c3866f
 
 $(call PKG_SAME,extlib)
 
-URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.8.0/re-1.8.0.tbz
-MD5_re = 765f6f8d3e6ab200866e719ed7e5178d
+URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.9.0/re-1.9.0.tbz
+MD5_re = bddaed4f386a22cace7850c9c7dac296
 
 $(call PKG_SAME,re)
 
-URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.0.2.tbz
-MD5_cmdliner = ab2f0130e88e8dcd723ac6154c98a881
+URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.0.4.tbz
+MD5_cmdliner = fe2213d0bc63b1e10a2d0aa66d2fc8d9
 
 $(call PKG_SAME,cmdliner)
 
@@ -43,8 +43,8 @@ MD5_opam-file-format = d7852cb63df0f442bed14ba2c5740135
 
 $(call PKG_SAME,opam-file-format)
 
-URL_result = https://github.com/janestreet/result/releases/download/1.3/result-1.3.tbz
-MD5_result = 4beebefd41f7f899b6eeba7414e7ae01
+URL_result = https://github.com/janestreet/result/releases/download/1.5/result-1.5.tbz
+MD5_result = 1b82dec78849680b49ae9a8a365b831b
 
 $(call PKG_SAME,result)
 
