@@ -3,8 +3,8 @@ MD5_cppo = 2258f90f3b7f0190bda76b710df0af56
 
 $(call PKG_SAME,cppo)
 
-URL_extlib = http://ygrek.org.ua/p/release/ocaml-extlib/extlib-1.7.5.tar.gz
-MD5_extlib = d989951536077563bf4c5e3479c3866f
+URL_extlib = https://ygrek.org.ua/p/release/ocaml-extlib/extlib-1.7.6.tar.gz
+MD5_extlib = b976093ef23b7d60fc1c8f0380c4f76a
 
 $(call PKG_SAME,extlib)
 
@@ -13,7 +13,7 @@ MD5_re = bddaed4f386a22cace7850c9c7dac296
 
 $(call PKG_SAME,re)
 
-URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.0.4.tbz
+URL_cmdliner = https://erratique.ch/software/cmdliner/releases/cmdliner-1.0.4.tbz
 MD5_cmdliner = fe2213d0bc63b1e10a2d0aa66d2fc8d9
 
 $(call PKG_SAME,cmdliner)
@@ -59,8 +59,8 @@ MD5_PKG_findlib = a710c559667672077a93d34eb6a42e5b
 URL_PKG_ocamlbuild = https://github.com/ocaml/ocamlbuild/archive/0.12.0.tar.gz
 MD5_PKG_ocamlbuild = 442baa19470bd49150f153122e22907b
 
-URL_PKG_topkg = http://erratique.ch/software/topkg/releases/topkg-0.9.1.tbz
-MD5_PKG_topkg = 8978a0595db1a22e4251ec62735d4b84
+URL_PKG_topkg = https://erratique.ch/software/topkg/releases/topkg-1.0.1.tbz
+MD5_PKG_topkg = 16b90e066d8972a5ef59655e7c28b3e9
 
 URL_seq = https://github.com/c-cube/seq/archive/0.1.tar.gz
 MD5_seq = 0e87f9709541ed46ecb6f414bc31458c
