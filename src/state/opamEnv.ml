@@ -463,9 +463,11 @@ let source root shell f =
     Printf.sprintf "source %s >& /dev/null || true\n" (file f)
   | SH_fish ->
     Printf.sprintf "source %s > /dev/null 2> /dev/null; or true\n" (file f)
-  | SH_sh | SH_bash | SH_zsh ->
+  | SH_sh | SH_bash ->
     Printf.sprintf "test -r %s && . %s > /dev/null 2> /dev/null || true\n"
       (file f) (file f)
+  | SH_zsh ->
+    Printf.sprintf "[[ ! -r %s ]] || source %s  > /dev/null 2> /dev/null" (file f) (file f)
 
 let if_interactive_script shell t e =
   let ielse else_opt = match else_opt with
@@ -473,8 +475,10 @@ let if_interactive_script shell t e =
     | Some e -> Printf.sprintf "else\n  %s" e
   in
   match shell with
-  | SH_sh | SH_zsh | SH_bash ->
+  | SH_sh| SH_bash ->
     Printf.sprintf "if [ -t 0 ]; then\n  %s%sfi\n" t @@ ielse e
+  | SH_zsh ->
+    Printf.sprintf "if [[ -o interactive ]]; then\n  %s%sfi\n" t @@ ielse e
   | SH_csh ->
     Printf.sprintf "if ( $?prompt ) then\n  %s%sendif\n" t @@ ielse e
   | SH_fish ->
