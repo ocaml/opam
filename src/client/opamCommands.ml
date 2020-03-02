@@ -317,6 +317,11 @@ let init =
     let root = OpamStateConfig.(!r.root_dir) in
     let config_f = OpamPath.config root in
     let already_init = OpamFile.exists config_f in
+    (* handling of `-ni` option *)
+    let inplace =
+      interactive = Some true && update_config = Some false
+      && env_hook = None && completion = None
+    in
     let interactive, update_config, completion, env_hook =
       match interactive with
       | Some false ->
@@ -335,11 +340,11 @@ let init =
           true, None, None, None
         else
         let reconfirm = function
-          | None | Some false -> Some false
-          | Some true -> None
+          | None | Some false -> None
+          | Some true -> Some true
         in
         true,
-        reconfirm update_config,
+        (if update_config = Some true then update_config else Some false),
         reconfirm completion,
         reconfirm env_hook
     in
@@ -359,11 +364,11 @@ let init =
             ~no_default_config_file:no_config_file ~add_config_file:config_file
         in
         OpamClient.reinit ~init_config ~interactive ~dot_profile
-          ?update_config ?env_hook ?completion
+          ?update_config ?env_hook ?completion ~inplace
           (OpamFile.Config.safe_read config_f) shell
       else
-        OpamEnv.setup root
-          ~interactive ~dot_profile ?update_config ?env_hook ?completion shell
+        OpamEnv.setup root ~interactive ~dot_profile ?update_config ?env_hook
+          ?completion ~inplace shell
     else
     let init_config =
       get_init_config ~no_sandboxing

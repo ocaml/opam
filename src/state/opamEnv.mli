@@ -86,7 +86,7 @@ val full_with_path:
     and asking the user if either [update_config] or [shell_hook] are unset *)
 val setup:
   dirname -> interactive:bool -> ?dot_profile:filename ->
-  ?update_config:bool -> ?env_hook:bool -> ?completion:bool ->
+  ?update_config:bool -> ?env_hook:bool -> ?completion:bool -> ?inplace:bool ->
   shell -> unit
 
 (* (\** Display the global and user configuration for OPAM. *\)
@@ -98,9 +98,10 @@ val update_user_setup:
 
 (** Write the generic scripts in ~/.opam/opam-init needed to import state for
     various shells. If specified, completion and env_hook files can also be
-    written or removed (the default is to keep them as they are) *)
+    written or removed (the default is to keep them as they are). If [inplace]
+    is true, they are updated if they exist. *)
 val write_static_init_scripts:
-  dirname -> ?completion:bool -> ?env_hook:bool -> unit -> unit
+  dirname -> ?completion:bool -> ?env_hook:bool -> ?inplace:bool -> unit -> unit
 
 (** Write into [OpamPath.hooks_dir] the given custom scripts (listed as
     (filename, content)), normally provided by opamrc ([OpamFile.InitConfig]) *)
