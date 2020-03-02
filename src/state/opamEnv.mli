@@ -52,10 +52,9 @@ val updates:
   ?set_opamroot:bool -> ?set_opamswitch:bool -> ?force_path:bool ->
   'a switch_state -> env_update list
 
-(** Check if the shell environment is in sync with the current OPAM switch (or
-    if OPAMNOENVNOTICE has been set, in which case we just assume it's up to
-    date) *)
-val is_up_to_date: 'a switch_state -> bool
+(** Check if the shell environment is in sync with the current OPAM switch,
+    unless [skip] is true (it's default value is OPAMNOENVNOTICE *)
+val is_up_to_date: ?skip:bool -> 'a switch_state -> bool
 
 (** Check if the shell environment is in sync with the given opam root and
     switch (or if OPAMNOENVNOTICE has been set, in which case we just assume

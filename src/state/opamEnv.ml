@@ -280,8 +280,8 @@ let get_full
   let updates = u @ updates ~set_opamroot ~set_opamswitch ~force_path st in
   add env0 updates
 
-let is_up_to_date_raw updates =
-  OpamStateConfig.(!r.no_env_notice) ||
+let is_up_to_date_raw ?(skip=OpamStateConfig.(!r.no_env_notice)) updates =
+  skip ||
   let not_utd =
     List.fold_left (fun notutd (var, op, arg, _doc as upd) ->
         match OpamStd.Env.getopt var with
@@ -329,8 +329,8 @@ let full_with_path ~force_path ?(updates=[]) root switch =
   let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
   add env0 (switch_path_update ~force_path root switch @ updates)
 
-let is_up_to_date st =
-  is_up_to_date_raw
+let is_up_to_date ?skip st =
+  is_up_to_date_raw ?skip
     (updates ~set_opamroot:false ~set_opamswitch:false ~force_path:false st)
 
 let eval_string gt ?(set_opamswitch=false) switch =
