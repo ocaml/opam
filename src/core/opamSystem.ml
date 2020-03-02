@@ -356,45 +356,41 @@ let t_resolve_command =
       with e -> OpamStd.Exn.fatal e; false
   in
   let resolve ?dir env name =
-    if not (Filename.is_relative name) then (* absolute path *)
-      if check_perms name then `Cmd name else `Denied
-    else if is_external_cmd name then (* relative *)
+    if not (Filename.is_relative name) then begin
+      (* absolute path *)
+      if not (Sys.file_exists name) then `Not_found
+      else if not (check_perms name) then `Denied
+      else `Cmd name
+    end else if is_external_cmd name then begin
+      (* relative path *)
       let cmd = match dir with
         | None -> name
         | Some d -> Filename.concat d name
       in
-      if check_perms cmd then `Cmd cmd else `Denied
-    else (* bare command, lookup in PATH *)
-    if Sys.win32 then
-      let path = OpamStd.Sys.split_path_variable (env_var env "PATH") in
-      let name =
-        if Filename.check_suffix name ".exe" then name else name ^ ".exe"
-      in
-      let cmdname =
-        OpamStd.(List.find_opt (fun path ->
-            check_perms (Filename.concat path name))
-            path |> Option.map (fun path -> Filename.concat path name))
-      in
-      match cmdname with
-      | Some cmd -> `Cmd cmd
-      | None -> `Denied
-    else
-    let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
-    let r =
-      OpamProcess.run
-        (OpamProcess.command ~env ?dir
-           ~name:(temp_file ("command-"^(Filename.basename name)))
-           ~verbose:false cmd args)
+      if not (Sys.file_exists cmd) then `Not_found
+      else if not (check_perms cmd) then `Denied
+      else `Cmd cmd
+    end else
+    (* bare command, lookup in PATH *)
+    (* Following the shell sematics for looking up PATH, programs with the
+       expected name but not the right permissions are skipped silently.
+       Therefore, only two outcomes are possible in that case, [`Cmd ..] or
+       [`Not_found]. *)
+    let path = OpamStd.Sys.split_path_variable (env_var env "PATH") in
+    let name =
+      if Sys.win32 && not (Filename.check_suffix name ".exe") then
+        name ^ ".exe"
+      else name
     in
-    if OpamProcess.check_success_and_cleanup r then
-      match r.OpamProcess.r_stdout with
-      | cmdname::_ ->
-        (* "command -v echo" returns just echo, hence the first when check *)
-        if cmdname = name || check_perms cmdname then `Cmd cmdname
-        else if check_perms cmdname then `Not_found
-        else `Denied
-      | _ -> `Not_found
-    else `Not_found
+    let cmdname =
+      let open OpamStd in
+      List.find_opt (fun path ->
+          check_perms (Filename.concat path name)
+        ) path |> Option.map (fun path -> Filename.concat path name)
+    in
+    match cmdname with
+    | Some cmd -> `Cmd cmd
+    | None -> `Not_found
   in
   fun ?(env=default_env) ?dir name ->
     resolve env ?dir name
