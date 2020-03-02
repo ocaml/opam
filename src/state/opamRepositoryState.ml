@@ -221,8 +221,14 @@ let load lock_kind gt =
       then
         let tmp = lazy (
           let tmp_root = Lazy.force repos_tmp_root in
-          OpamFilename.extract_in tar tmp_root;
-          OpamFilename.Op.(tmp_root / OpamRepositoryName.to_string name)
+          try
+            OpamFilename.extract_in tar tmp_root;
+            OpamFilename.Op.(tmp_root / OpamRepositoryName.to_string name)
+          with Failure s ->
+            OpamFilename.remove tar;
+            OpamConsole.error_and_exit `Aborted
+              "%s.\nRun `opam update --repositories %s` to fix the issue"
+              s (OpamRepositoryName.to_string name);
         ) in
         Hashtbl.add repos_tmp name tmp
     ) repositories;
