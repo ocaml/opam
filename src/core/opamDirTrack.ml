@@ -224,9 +224,13 @@ let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
   if already <> [] then
     log ~level:2 "%sfiles %s were already removed" title
       (String.concat ", " (List.rev already));
-  if modified <> [] && verbose then
-    OpamConsole.warning "%snot removing files that changed since:\n%s" title
-      (OpamStd.Format.itemize (fun s -> s) (List.rev modified));
+  if modified <> [] then
+    if OpamConsole.confirm ~default:false
+        "%sthese files have been modified since installation:\n%s\
+         Remove them anyway?" title
+        (OpamStd.Format.itemize (fun s -> s) (List.rev modified)) then
+      List.iter (fun f -> OpamFilename.remove (OpamFilename.Op.(prefix // f)))
+        modified;
   if nonempty <> [] && verbose then
     OpamConsole.note "%snot removing non-empty directories:\n%s" title
       (OpamStd.Format.itemize (fun s -> s) (List.rev nonempty));
