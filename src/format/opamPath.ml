@@ -117,9 +117,9 @@ module Switch = struct
 
   let sources_dir t a = meta t a / "sources"
 
-  let extra_files_dir t a = sources_dir t a / "extra-files"
+  let extra_files_dir t a = meta t a / "extra-files-cache"
 
-  let extra_file t a h = extra_files_dir t a / OpamHash.contents h
+  let extra_file t a h = extra_files_dir t a // OpamHash.contents h
 
   let sources t a nv = sources_dir t a / OpamPackage.to_string nv
 
