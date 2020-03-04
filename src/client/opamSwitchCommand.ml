@@ -373,14 +373,16 @@ let import_t ?ask importfile t =
   log "import switch";
 
   let extra_files = importfile.OpamFile.SwitchExport.extra_files in
-  let dir = OpamPath.Switch.extra_files_dir t.switch_global.root t.switch in
+  let xfiles_dir =
+    OpamPath.Switch.extra_files_dir t.switch_global.root t.switch
+  in
   OpamHash.Map.iter (fun hash content ->
       let value = Base64.decode_string content in
       let my = OpamHash.compute_from_string ~kind:(OpamHash.kind hash) value in
       if OpamHash.contents my = OpamHash.contents hash then
         let dst =
           let base = OpamFilename.Base.of_string (OpamHash.contents hash) in
-          OpamFilename.create dir base
+          OpamFilename.create xfiles_dir base
         in
           OpamFilename.write dst value
       else
@@ -468,6 +470,7 @@ let import_t ?ask importfile t =
         extra_attributes = []; }
   in
   OpamSolution.check_solution t solution;
+  OpamFilename.rmdir xfiles_dir;
   if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show))
   then begin
     (* Put imported overlays in place *)
