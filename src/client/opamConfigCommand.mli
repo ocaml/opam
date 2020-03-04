@@ -46,14 +46,6 @@ val subst: 'a global_state -> basename list -> unit
 (** Prints expansion of variables in string *)
 val expand: 'a global_state -> string -> unit
 
-(*
-(** Sets or unsets switch config variables *)
-val set: full_variable -> string option -> unit
-
-(** Sets or unsets global config variables *)
-val set_global: full_variable -> string option -> unit
-*)
-
 (** [set_opt_global gt field_value] updates global config field with value
     (using prefix '+=', '-=', '=') in <opamroot>/config file.
     Modifiable fields are a subset of all defined fields in [OpamFile.Config.t].

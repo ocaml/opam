@@ -294,59 +294,6 @@ let expand gt str =
     (OpamFilter.expand_string ~default:(fun _ -> "")
        (OpamPackageVar.resolve st) str)
 
-let _set_var_switch st var value =
-  if not (OpamVariable.Full.is_global var) then
-    OpamConsole.error_and_exit `Bad_arguments
-      "Only global variables may be set using this command";
-  let root = st.switch_global.root in
-  let config_f = OpamPath.Switch.switch_config root st.switch in
-  let var = OpamVariable.Full.variable var in
-  let oldval = OpamFile.Switch_config.variable st.switch_config var in
-  let newval = OpamStd.Option.map (fun s -> S s) value in
-  if oldval = newval then
-    (OpamConsole.note "No change for \"%s\"" (OpamVariable.to_string var);
-     st)
-  else
-  let () = match oldval, newval with
-    | Some old, Some _ ->
-      OpamConsole.note "Overriding value of \"%s\": was \"%s\""
-        (OpamVariable.to_string var)
-        (OpamVariable.string_of_variable_contents old)
-    | _ -> ()
-  in
-  let variables = st.switch_config.OpamFile.Switch_config.variables in
-  let variables =
-    match newval with
-    | None -> List.remove_assoc var variables
-    | Some v -> OpamStd.List.update_assoc var v variables
-  in
-  let switch_config = { st.switch_config with OpamFile.Switch_config.variables} in
-  OpamFile.Switch_config.write config_f switch_config;
-  { st with switch_config }
-
-let _set_var_global gt var value =
-  if not (OpamVariable.Full.is_global var) then
-    OpamConsole.error_and_exit `Bad_arguments
-      "Only global variables may be set using this command";
-  let var = OpamVariable.Full.variable var in
-  let config =
-    gt.config |>
-    OpamFile.Config.with_global_variables
-      (let vars =
-         List.filter (fun (k,_,_) -> k <> var)
-           (OpamFile.Config.global_variables gt.config)
-       in
-       match value with
-       | Some v -> (var, S v, "Set through 'opam config set-global'") :: vars
-       | None -> vars) |>
-    OpamFile.Config.with_eval_variables
-      (List.filter (fun (k,_,_) -> k <> var)
-         (OpamFile.Config.eval_variables gt.config))
-  in
-  let gt = { gt with config } in
-  OpamGlobalState.write gt;
-  gt
-
 let variable gt v =
   let raw_switch_content =
     match OpamStateConfig.get_switch_opt () with
