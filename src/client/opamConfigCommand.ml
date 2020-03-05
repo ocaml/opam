@@ -364,10 +364,19 @@ type 'config confset =
     (* Filename of the config file *)
   }
 
+type 'a update_op =
+  | Add of 'a
+  | Remove of 'a
+  | Overwrite of 'a
+  | Revert
+
 let parse_upd fv =
   let reg =
     Re.(compile @@ seq [
-        group @@ rep1 @@  alt [ wordc ; char '-' ];
+        group @@ seq [
+          wordc;
+          opt @@ (seq [ rep @@ alt [ wordc ; char '-' ]; wordc ])
+        ];
         (opt @@ seq [
             (group @@ (alt [
                  str "+=";
@@ -385,11 +394,11 @@ let parse_upd fv =
     try
       let value = Re.Group.get grs 3 in
       match Re.Group.get grs 2 with
-      | "+=" -> `add value
-      | "-=" -> `rem value
-      | "=" | "==" -> `over value
+      | "+=" -> Add value
+      | "-=" -> Remove value
+      | "=" | "==" -> Overwrite value
       | _ -> raise (Invalid_argument "set-opt: illegal operator")
-    with Not_found -> `revert
+    with Not_found -> Revert
   in
   var, value
 
@@ -430,33 +439,30 @@ let set_opt ?(inner=false) field_value conf =
     | Some (_, None), _ ->
       OpamConsole.error_and_exit `Bad_arguments
         "Field %s is not modifiable" (OpamConsole.colorise `underline field)
-    | Some (_, Some (_, Fixed, _)), ((`add _ | `rem _) as ar) ->
+    | Some (_, Some (_, Fixed, _)), ((Add _ | Remove _) as ar) ->
       OpamConsole.error_and_exit `Bad_arguments
         "Field %s can't be %s" (OpamConsole.colorise `underline field)
-        (match ar with `add _ -> "appended" | `rem _ -> "substracted")
-    | Some (_, Some (_, InModifiable (_,_), _)), ((`add _ | `rem _) as ar)
+        (match ar with Add _ -> "appended" | Remove _ -> "substracted"
+                     | _ -> assert false)
+    | Some (_, Some (_, InModifiable (_,_), _)), ((Add _ | Remove _) as ar)
       when not inner ->
       OpamConsole.error_and_exit `Bad_arguments
         "Field %s can't be directly %s, use instead `opam config set-var`"
         (OpamConsole.colorise `underline field)
-        (match ar with `add _ -> "appended" | `rem _ -> "substracted")
-    | Some (_, Some (_, _, set_default)), `revert ->
-      if OpamConsole.confirm ~default:false
-          "Are you sure you want to revert %s value"
-          (OpamConsole.colorise `underline field)
-      then
-        set_default conf.stg_config
-      else conf.stg_config
+        (match ar with Add _ -> "appended" | Remove _ -> "substracted"
+                     | _ -> assert false)
+    | Some (_, Some (_, _, set_default)), Revert ->
+      set_default conf.stg_config
     | Some (_, Some (parse, fix_app, _)),
-      ((`add v | `rem v | `over v) as req_value) ->
+      ((Add v | Remove v | Overwrite v) as req_value) ->
       (try
          let updf v = parse v conf.stg_config in
          match req_value, fix_app with
-         | `add value, (Modifiable (add, _) | InModifiable (add, _))  ->
+         | Add value, (Modifiable (add, _) | InModifiable (add, _))  ->
            add (updf value) conf.stg_config
-         | `rem value, (Modifiable (_, rem) | InModifiable (_, rem)) ->
+         | Remove value, (Modifiable (_, rem) | InModifiable (_, rem)) ->
            rem (updf value) conf.stg_config
-         | `over value, _ -> (updf value)
+         | Overwrite value, _ -> (updf value)
          | _,_ -> assert false
        with
        | (OpamPp.Bad_format (_,_) | Parsing.Parse_error) as e ->
@@ -468,10 +474,10 @@ let set_opt ?(inner=false) field_value conf =
   conf.stg_write_config new_config;
   OpamConsole.msg "%s field %s in %s.\n"
     (match value with
-     | `add value ->  Printf.sprintf "Added %s to" value
-     | `rem value ->  Printf.sprintf "Removed %s from" value
-     | `over value -> Printf.sprintf "Overwritted %s from" value
-     | `revert -> "Reverted")
+     | Add value ->  Printf.sprintf "Added %s to" value
+     | Remove value ->  Printf.sprintf "Removed %s from" value
+     | Overwrite value -> Printf.sprintf "Overwritted %s from" value
+     | Revert -> "Reverted")
     (OpamConsole.colorise `underline field)
     (OpamFilename.to_string conf.stg_file);
   new_config
@@ -658,16 +664,18 @@ type ('var,'t) var_confset =
 let set_var var value conf =
   let value =
     match value with
-    | None -> `revert
+    | None -> Revert
     | Some value ->
       (match String.get value 0, String.get value 1 with
        | '+', '=' | '-', '=' ->
-         OpamConsole.error_and_exit `Bad_arguments "Variables are not appendable"
+         OpamConsole.error_and_exit `Bad_arguments
+           "Variables are not appendable"
        | '=', '=' | '=', _ ->
-         OpamConsole.error_and_exit `Bad_arguments "set-var don't take operators"
+         OpamConsole.error_and_exit `Bad_arguments
+           "set-var doesn't take operators"
        | _,_ -> ()
        | exception Invalid_argument _ -> ());
-      `over value
+      Overwrite value
   in
   let var = OpamVariable.Full.of_string var in
   let conf = conf (OpamVariable.Full.variable var) in
@@ -679,8 +687,8 @@ let set_var var value conf =
   let t = conf.stv_state in
   let t = conf.stv_remove_elem rest t in
   match value with
-  | `over value -> conf.stv_set_opt t ("+=" ^ conf.stv_varstr value)
-  | `revert -> conf.stv_revert t
+  | Overwrite value -> conf.stv_set_opt t ("+=" ^ conf.stv_varstr value)
+  | Revert -> conf.stv_revert t
   | _ -> assert false
 
 let set_var_global gt var value =
