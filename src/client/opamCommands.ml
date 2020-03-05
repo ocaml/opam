@@ -871,9 +871,9 @@ let config ?(setopt=false) () =
      changing a configured path will not move any files! This command does not \
      perform any variable expansion.";
     "set-opt", `set_opt, ["[switch|global]"; "FIELD[(+=|-=|=)VALUE]"],
-    "Set the given opam configuration field in the global configuration file.\
-     If $(b,op VALUE) is omitted, $(b,FIELD) is set to its default initial \
-     configuration, as after a fresh init (use `opam init \
+    "Set the given opam configuration field in the global/switch configuration \
+     file.  If $(b,op VALUE) is omitted, $(b,FIELD) is reset to its default \
+     initial configuration, as after a fresh init (use `opam init \
      show-default-opamrc` to display it)";
     "expand", `expand, ["STRING"],
     "Expand variable interpolations in the given string";

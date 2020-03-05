@@ -327,8 +327,9 @@ let variable gt v =
 (* For function that takes two config and update (add or remove) elements in a
    field. Used for appending or deleting element in config file fields *)
 type 'config fld_updater =  ('config -> 'config -> 'config)
-(* Only some field can be modifiable. [Modifiable] is for user modifiable
-   field,  [InModifiable] for fields that can only be modified from inner opam
+
+(* Only some field can be modifiied. [Modifiable] is for user modifiable
+   field, [InModifiable] for fields that can only be modified from inner opam
    code (see [set_var_global]).
    First argument is the addition function, the second the remove one. *)
 type 'config fld_policy =
@@ -343,16 +344,24 @@ type 'config fld_policy =
 type 'config confset =
   {
     stg_fields: (string * ('config, value) OpamPp.field_parser) list;
+    (* Config file fields: field name and parser *)
     stg_allwd_fields:
       (string * 'config fld_policy * ('config -> 'config)) list;
+    (* Config file updatable fields: field name, update policy, and function to
+       update the given field in config file *)
     stg_sections:
       (string * ('config, (string option * opamfile_item list) list)
          OpamPp.field_parser) list;
+    (* Same as [stg_field] but for sections *)
     stg_allwd_sections:
       ((string * 'config fld_policy * ('config -> 'config)) list);
+    (* Same as [stg_allwd_fields] but for sections *)
     stg_config: 'config;
+    (* The config *)
     stg_write_config: 'config -> unit;
+    (* Function to write the config file *)
     stg_file: filename;
+    (* Filename of the config file *)
   }
 
 let parse_upd fv =
@@ -384,6 +393,10 @@ let parse_upd fv =
   in
   var, value
 
+(* General setting option function. Takes [field_value], a string of the field
+   and its value update, [conf] the configuration according the config file
+   (['config confest]). If [inner] is set, it allows the modification of
+   [InModificable] fields *)
 let set_opt ?(inner=false) field_value conf =
   let field, value = parse_upd field_value in
   let open OpamStd.Op in
@@ -621,15 +634,25 @@ let set_opt_global_t ?inner gt field_value =
 
 let set_opt_global = set_opt_global_t ~inner:false
 
+(* "Configuration" of the [set_var] function. As these modification can be on
+   global and switch config, this record aggregates all needed inputs. *)
 type ('var,'t) var_confset =
   {
     stv_vars: 'var list;
+    (* Variables list *)
     stv_find: 'var -> bool;
+    (* Find function embedding a wanted var *)
     stv_state: 't;
+    (* State to use *)
     stv_varstr: string -> string;
+    (* [stv_vars value] returns the string of the variable with the new value.
+       It is used to give the overall value to [set_opt] functions. *)
     stv_set_opt: 't -> string -> 't;
+    (* The [set_opt] function call [stv_set_opt state var_value] *)
     stv_remove_elem: 'var list -> 't -> 't;
+    (* As variable can't be duplicated, a function to remove it from the list *)
     stv_revert: 't -> 't;
+    (* The revert variable function *)
   }
 
 let set_var var value conf =
