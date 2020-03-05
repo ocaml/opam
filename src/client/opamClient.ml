@@ -1255,8 +1255,9 @@ let remove_t ?ask ~autoremove ~force atoms t =
                 ~depopts:true ~installed:true universe to_remove))
       else to_remove in
     let t, solution =
-      OpamSolution.resolve_and_apply ?ask t Remove ~requested
-        ~orphans:(full_orphans ++ orphan_versions)
+      OpamSolution.resolve_and_apply ?ask t Remove
+        ~force_remove:force
+        ~requested ~orphans:(full_orphans ++ orphan_versions)
         (OpamSolver.request
            ~install:(OpamSolution.eq_atoms_of_packages to_keep)
            ~remove:(OpamSolution.atoms_of_packages to_remove)

@@ -261,7 +261,8 @@ end
 
 (* Process the atomic actions in a graph in parallel, respecting graph order,
    and report to user. Takes a graph of atomic actions *)
-let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
+let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
+    action_graph =
   log "parallel_apply";
 
   let remove_action_packages =
@@ -485,7 +486,7 @@ let parallel_apply t ~requested ?add_roots ~assume_built action_graph =
          OpamAction.prepare_package_source t nv d
        else Done None) @@+ fun _ ->
       OpamProcess.Job.ignore_errors ~default:()
-        (fun () -> OpamAction.remove_package t nv) @@| fun () ->
+        (fun () -> OpamAction.remove_package ~force:force_remove t nv) @@| fun () ->
       remove_from_install
         ~keep_as_root:(not (OpamPackage.Set.mem nv wished_removed))
         nv;
@@ -825,7 +826,8 @@ let run_hook_job t name ?(local=[]) w =
     Done true
 
 (* Apply a solution *)
-let apply ?ask t ~requested ?add_roots ?(assume_built=false) solution =
+let apply ?ask t ~requested ?add_roots ?(assume_built=false) ?force_remove
+    solution =
   log "apply";
   if OpamSolver.solution_is_empty solution then
     (* The current state satisfies the request contraints *)
@@ -913,7 +915,8 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false) solution =
         OpamStd.Sys.exit_because `Configuration_error;
       let t0 = t in
       let t, r =
-        parallel_apply t ~requested ?add_roots ~assume_built action_graph
+        parallel_apply t ~requested ?add_roots ~assume_built ?force_remove
+          action_graph
       in
       let success = match r with | OK _ -> true | _ -> false in
       let post_session =
@@ -954,7 +957,7 @@ let resolve t action ~orphans ?reinstall ~requested request =
   r
 
 let resolve_and_apply ?ask t action ~orphans ?reinstall ~requested ?add_roots
-    ?(assume_built=false) request =
+    ?(assume_built=false) ?force_remove request =
   match resolve t action ~orphans ?reinstall ~requested request with
   | Conflicts cs ->
     log "conflict!";
@@ -963,5 +966,7 @@ let resolve_and_apply ?ask t action ~orphans ?reinstall ~requested ?add_roots
          (OpamSwitchState.unavailable_reason t) cs);
     t, Conflicts cs
   | Success solution ->
-    let t, res = apply ?ask t ~requested ?add_roots ~assume_built solution in
+    let t, res =
+      apply ?ask t ~requested ?add_roots ~assume_built ?force_remove solution
+    in
     t, Success res
