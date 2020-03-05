@@ -406,7 +406,8 @@ let set_opt ?(inner=false) field_value conf =
           OpamParser.value_from_string str_value "<command-line>"))
     @ (wrap conf.stg_allwd_sections conf.stg_sections
          (fun str_value ->
-            [None, (OpamParser.string str_value "<command-line>").file_contents]))
+            [None,
+             (OpamParser.string str_value "<command-line>").file_contents]))
   in
   let new_config =
     match OpamStd.List.find_opt ((=) field @* fst) fields, value with
@@ -626,7 +627,7 @@ type ('var,'t) var_confset =
     stv_find: 'var -> bool;
     stv_state: 't;
     stv_varstr: string -> string;
-    stv_set_opt: string -> 't;
+    stv_set_opt: 't -> string -> 't;
     stv_remove_elem: 'var list -> 't -> 't;
     stv_revert: 't -> 't;
   }
@@ -651,17 +652,11 @@ let set_var var value conf =
     OpamConsole.error_and_exit `Bad_arguments
       "Only global variables may be set using this command";
   let global_vars = conf.stv_vars in
-  let found_var, rest =
-    List.fold_left (fun (var, rest) v ->
-        match var with
-        | Some _ -> var, v::rest
-        | None -> if conf.stv_find v then (Some v), rest else var, v::rest)
-      (None, []) global_vars
-  in
+  let rest = List.filter (fun v -> not (conf.stv_find v)) global_vars in
   let t = conf.stv_state in
-  let t = if found_var = None then t else conf.stv_remove_elem rest t in
+  let t = conf.stv_remove_elem rest t in
   match value with
-  | `over value -> conf.stv_set_opt ("+=" ^ conf.stv_varstr value)
+  | `over value -> conf.stv_set_opt t ("+=" ^ conf.stv_varstr value)
   | `revert -> conf.stv_revert t
   | _ -> assert false
 
@@ -676,7 +671,7 @@ let set_var_global gt var value =
         Printf.sprintf
           "[%s \"%s\" \"Set through 'opam config set-var global'\"]"
           (OpamVariable.to_string var) v);
-    stv_set_opt = (fun s ->
+    stv_set_opt = (fun gt s ->
         set_opt_global_t ~inner:true gt ("global-variables"^s));
     stv_remove_elem = (fun rest gt ->
         let config =
@@ -698,7 +693,7 @@ let set_var_switch st var value =
     stv_state = st;
     stv_varstr = (fun v ->
         Printf.sprintf "%s: \"%s\"" (OpamVariable.to_string var) v);
-    stv_set_opt = (fun s ->
+    stv_set_opt = (fun st s ->
         set_opt_switch_t ~inner:true st ("variables"^s));
     stv_remove_elem = (fun rest st ->
         { st with switch_config = { st.switch_config with variables = rest }});
