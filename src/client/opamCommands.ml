@@ -2245,7 +2245,9 @@ let switch =
       OpamSwitchState.drop st;
       `Ok ()
     | Some `export, [filename] ->
-      OpamSwitchCommand.export
+      OpamGlobalState.with_ `Lock_write @@ fun gt ->
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      OpamSwitchCommand.export rt
         ~full
         (if filename = "-" then None
          else Some (OpamFile.make (OpamFilename.of_string filename)));
@@ -3099,6 +3101,7 @@ let clean =
            cleandir (OpamPath.Switch.backup_dir root sw);
            cleandir (OpamPath.Switch.build_dir root sw);
            cleandir (OpamPath.Switch.remove_dir root sw);
+           cleandir (OpamPath.Switch.extra_files_dir root sw);
            let pinning_overlay_dirs =
              List.map
                (fun nv -> OpamPath.Switch.Overlay.package root sw nv.name)

@@ -683,6 +683,7 @@ end
 module SwitchExport: sig
   type t = {
     selections: switch_selections;
+    extra_files: string OpamHash.Map.t;
     overlays: OPAM.t OpamPackage.Name.Map.t;
   }
   include IO_FILE with type t := t

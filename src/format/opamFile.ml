@@ -3127,19 +3127,35 @@ end
 module SwitchExportSyntax = struct
 
   let internal = "switch-export"
-  let format_version = OpamVersion.of_string "2.0"
+  let format_version = OpamVersion.of_string "2.1"
 
   type t = {
     selections: switch_selections;
+    extra_files: string OpamHash.Map.t;
     overlays: OPAM.t OpamPackage.Name.Map.t;
   }
 
   let empty = {
     selections = SwitchSelectionsSyntax.empty;
+    extra_files = OpamHash.Map.empty;
     overlays = OpamPackage.Name.Map.empty;
   }
 
-  let fields = SwitchSelectionsSyntax.fields
+
+  let fields =
+    [ "extra-files", Pp.ppacc (fun extra_files t -> { t with extra_files })
+        (fun t -> t.extra_files)
+        ((Pp.V.map_list ~depth:2 @@
+          (Pp.V.map_pair
+             (Pp.V.string -| Pp.of_module "checksum" (module OpamHash))
+             Pp.V.string)) -|
+         Pp.of_pair "HashMap" OpamHash.Map.(of_list, bindings))
+    ] @
+    List.map
+      (fun (fld, ppacc) ->
+         fld, Pp.embed (fun selections t -> { t with selections })
+           (fun t -> t.selections) ppacc)
+      SwitchSelectionsSyntax.fields
 
   let pp =
     let name = "export-file" in
@@ -3150,8 +3166,7 @@ module SwitchExportSyntax = struct
           false
         | _ -> true) -|
     Pp.map_pair
-      (Pp.I.fields ~name
-         ~empty:SwitchSelectionsSyntax.empty fields -|
+      (Pp.I.fields ~name ~empty fields -|
        Pp.I.show_errors ~name ())
       (Pp.map_list
          (Pp.I.section "package" -|
@@ -3169,14 +3184,15 @@ module SwitchExportSyntax = struct
        Pp.of_pair "package-metadata-map"
          OpamPackage.Name.Map.(of_list,bindings)) -|
     Pp.pp
-      (fun ~pos:_ (selections, overlays) -> {selections; overlays})
-      (fun {selections; overlays} -> (selections, overlays))
+      (fun ~pos:_ (t, overlays) -> {t with overlays})
+      (fun t -> t, t.overlays)
 
 end
 
 module SwitchExport = struct
   type t = SwitchExportSyntax.t = {
     selections: switch_selections;
+    extra_files: string OpamHash.Map.t;
     overlays: OPAM.t OpamPackage.Name.Map.t;
   }
 

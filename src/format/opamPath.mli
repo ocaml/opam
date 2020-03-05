@@ -153,6 +153,14 @@ module Switch: sig
       $meta/sources/$name.$version/} *)
   val sources: t -> switch -> package -> dirname
 
+  (** Temporary switch-local directory where a by-hash map of extra files may be stored.
+      This is used for switch-imports: {i $meta/extra-files-cache} *)
+  val extra_files_dir: t -> switch -> dirname
+
+  (** Extra file with the given hash from the temporary switch-import cache:
+      {i $meta/extra-files-cache/HASH} *)
+  val extra_file: t -> switch -> OpamHash.t -> filename
+
   (** Mirror of the sources for a given pinned package: {i
       $meta/sources/$name/} (without version) *)
   val pinned_package: t -> switch -> name -> dirname
