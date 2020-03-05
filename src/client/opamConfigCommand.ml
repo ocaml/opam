@@ -13,6 +13,7 @@ let log fmt = OpamConsole.log "CONFIG" fmt
 let slog = OpamConsole.slog
 
 open OpamTypes
+open OpamTypesBase
 open OpamStateTypes
 
 let help t =
@@ -699,9 +700,11 @@ let set_var_global gt var value =
     stv_find = (fun (k,_,_) -> k = var);
     stv_state = gt;
     stv_varstr = (fun v ->
-        Printf.sprintf
-          "[%s \"%s\" \"Set through 'opam config set-var global'\"]"
-          (OpamVariable.to_string var) v);
+        OpamPrinter.value (List (pos_null, [
+            Ident (pos_null, OpamVariable.to_string var);
+            String (pos_null, v);
+            String (pos_null, "Set through 'opam config set-var global'")
+          ])));
     stv_set_opt = (fun gt s ->
         set_opt_global_t ~inner:true gt ("global-variables"^s));
     stv_remove_elem = (fun rest gt ->
@@ -723,7 +726,9 @@ let set_var_switch st var value =
     stv_find = (fun (k,_) -> k = var);
     stv_state = st;
     stv_varstr = (fun v ->
-        Printf.sprintf "%s: \"%s\"" (OpamVariable.to_string var) v);
+        OpamPrinter.items
+          [Variable
+             (pos_null, OpamVariable.to_string var, String (pos_null, v))]);
     stv_set_opt = (fun st s ->
         set_opt_switch_t ~inner:true st ("variables"^s));
     stv_remove_elem = (fun rest st ->
