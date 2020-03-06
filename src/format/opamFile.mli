@@ -270,6 +270,7 @@ module URL: sig
   val checksum: t -> OpamHash.t list
 
   (** Constructor *)
+  val with_url: url -> t -> t
   val with_checksum: OpamHash.t list -> t -> t
 
 end
