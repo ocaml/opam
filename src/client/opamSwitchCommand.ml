@@ -494,44 +494,42 @@ let import_t ?ask importfile t =
   end;
   t
 
-let freeze_opam src_dir nv = function
-  | None -> None
-  | Some opam ->
-    match OpamFile.OPAM.url opam with
-    | None -> Some opam
-    | Some url ->
-      let url_t = OpamFile.URL.url url in
-      match url_t.backend with
-      | #OpamUrl.version_control ->
-        begin match OpamProcess.Job.run (OpamGit.VCS.revision (src_dir nv)) with
-          | None ->
-            OpamConsole.warning "couldn't figure revision of %s"
-              (OpamPackage.Name.to_string nv.name);
-            None
-          | Some hash ->
-            let url_with_hash =
-              let url_t = { url_t with hash = Some hash } in
-              let checksum, mirrors =
-                OpamFile.URL.checksum url, OpamFile.URL.mirrors url
-              in
-              OpamFile.URL.create ~mirrors ~checksum url_t
-            in
-            Some (OpamFile.OPAM.with_url url_with_hash opam)
-        end
-      | `http ->
-        begin match OpamFile.URL.checksum url with
-          | [] ->
-            OpamConsole.warning "Ignoring package %s, no checksum"
-              (OpamPackage.Name.to_string nv.name);
-            None
-          | _ -> Some opam
-        end
-      | `rsync ->
-        OpamConsole.warning "Ignoring package %s, which uses an rsync pin"
-          (OpamPackage.Name.to_string nv.name);
-        None
+let freeze_opam src_dir nv opam =
+  match OpamFile.OPAM.url opam with
+  | None -> opam
+  | Some url ->
+    let url_t = OpamFile.URL.url url in
+    match url_t.backend with
+    | #OpamUrl.version_control ->
+      (match OpamProcess.Job.run
+               (OpamRepository.revision (src_dir nv) url_t) with
+      | None ->
+        OpamConsole.error_and_exit `Not_found
+          "Unable to retrieve %s url revision: %s, \
+           it can't be exported with --freeze."
+          (OpamPackage.to_string nv)
+          (OpamUrl.to_string url_t)
+      | Some hash ->
+        OpamFile.OPAM.with_url
+          (OpamFile.URL.with_url
+             { url_t with hash = Some (OpamPackage.Version.to_string hash) }
+             url)
+          opam)
+    | `http ->
+      (match OpamFile.URL.checksum url with
+       | [] ->
+         OpamConsole.error_and_exit `Not_found
+           "%s url doesn't have an associated checksum, \
+            it can't be exported with --freeze."
+           (OpamPackage.Name.to_string nv.name)
+       | _ -> opam)
+    | `rsync ->
+      OpamConsole.error_and_exit `Not_found
+        "%s is path pinned, it can't be exported with --freeze."
+        (OpamPackage.Name.to_string nv.name)
 
-let export rt ?(freeze=false) ?(full=false) ?(switch=OpamStateConfig.get_switch ()) filename =
+let export rt ?(freeze=false) ?(full=false)
+    ?(switch=OpamStateConfig.get_switch ()) filename =
   let root = OpamStateConfig.(!r.root_dir) in
   let export =
     OpamFilename.with_flock `Lock_none (OpamPath.Switch.lock root switch)
@@ -539,13 +537,20 @@ let export rt ?(freeze=false) ?(full=false) ?(switch=OpamStateConfig.get_switch 
     let selections = S.safe_read (OpamPath.Switch.selections root switch) in
     let opams =
       let read_opams read pkgs =
-        let src_dir = OpamPath.Switch.sources root switch in
+        let src_dir nv =
+          if OpamPackage.Set.mem nv selections.sel_pinned then
+            OpamPath.Switch.pinned_package root switch nv.name
+          else
+            OpamPath.Switch.sources root switch nv
+        in
         OpamPackage.Set.fold (fun nv map ->
-            let opam =
-              if freeze then freeze_opam src_dir nv (read nv) else read nv
-            in
-            match opam with
-            | Some opam -> OpamPackage.Map.add nv opam map
+            match read nv with
+            | Some opam ->
+              let opam =
+                if not freeze then opam else
+                  freeze_opam src_dir nv opam
+              in
+              OpamPackage.Map.add nv opam map
             | None -> map) pkgs OpamPackage.Map.empty
       in
       let overlays =
