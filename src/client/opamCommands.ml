@@ -2328,7 +2328,7 @@ let switch =
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
       OpamSwitchCommand.export rt
-        ~full ~freeze
+        ~full:(full || freeze) ~freeze
         (if filename = "-" then None
          else Some (OpamFile.make (OpamFilename.of_string filename)));
       `Ok ()
