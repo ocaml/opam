@@ -2084,7 +2084,8 @@ let switch =
     "remove", `remove, ["SWITCH"], "Remove the given switch from disk.";
     "export", `export, ["FILE"],
     "Save the current switch state to a file. If $(b,--full) is specified, it \
-     includes the metadata of all installed packages";
+     includes the metadata of all installed packages, and if $(b,--freeze) is \
+     specified, it freezes all vcs to their current commit.";
     "import", `import, ["FILE"],
     "Import a saved switch state. If $(b,--switch) is specified and doesn't \
      point to an existing switch, the switch will be created for the import.";
@@ -2175,6 +2176,12 @@ let switch =
        allowing to re-import even if they don't exist in the repositories (the \
        default is to include only the metadata of pinned packages)."
   in
+  let freeze =
+    mk_flag ["freeze"]
+      "When exporting, locks all VCS urls to their current commit, failing if \
+       it can not be retrieved. This ensures that an import will restore the \
+       exact state. Implies $(b,--full)."
+  in
   let no_install =
     mk_flag ["no-install"]
       "When creating a local switch, don't look for any local package \
@@ -2199,7 +2206,7 @@ let switch =
   in
   let switch
       global_options build_options command print_short
-      no_switch packages empty descr full no_install deps_only repos
+      no_switch packages empty descr full freeze no_install deps_only repos
       d_alias_of d_no_autoinstall params =
    OpamArg.deprecated_option d_alias_of None
    "alias-of" (Some "opam switch <switch-name> <compiler>");
@@ -2321,7 +2328,7 @@ let switch =
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
       OpamSwitchCommand.export rt
-        ~full
+        ~full ~freeze
         (if filename = "-" then None
          else Some (OpamFile.make (OpamFilename.of_string filename)));
       `Ok ()
@@ -2461,7 +2468,7 @@ let switch =
              $global_options $build_options $command
              $print_short_flag
              $no_switch
-             $packages $empty $descr $full $no_install $deps_only
+             $packages $empty $descr $full $freeze $no_install $deps_only
              $repos $d_alias_of $d_no_autoinstall $params)),
   term_info "switch" ~doc ~man
 
