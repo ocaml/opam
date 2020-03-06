@@ -90,6 +90,18 @@ module Wrappers: sig
   val pre_session: t -> command list
   val post_session: t -> command list
 
+  val with_pre_build: command list -> t -> t
+  val with_wrap_build: command list -> t -> t
+  val with_post_build: command list -> t -> t
+  val with_pre_install: command list -> t -> t
+  val with_wrap_install: command list -> t -> t
+  val with_post_install: command list -> t -> t
+  val with_pre_remove: command list -> t -> t
+  val with_wrap_remove: command list -> t -> t
+  val with_post_remove: command list -> t -> t
+  val with_pre_session: command list -> t -> t
+  val with_post_session: command list -> t -> t
+
   val empty : t
 
   val add: outer:t -> inner:t -> t
@@ -114,11 +126,13 @@ module Config: sig
 
   val with_criteria: (solver_criteria * string) list -> t -> t
   val with_best_effort_prefix: string -> t -> t
+  val with_best_effort_prefix_opt: string option-> t -> t
 
   val with_solver: arg list -> t -> t
   val with_solver_opt: arg list option -> t -> t
 
   val with_jobs: int -> t -> t
+  val with_jobs_opt: int option -> t -> t
   val with_dl_tool: arg list -> t -> t
   val with_dl_tool_opt: arg list option -> t -> t
   val with_dl_jobs: int -> t -> t
@@ -172,6 +186,8 @@ module Config: sig
   val validation_hook: t -> arg list option
 
   val default_compiler: t -> formula
+
+  val fields: (string * (t, value) OpamPp.field_parser) list
 
 end
 
@@ -889,6 +905,8 @@ module Switch_config: sig
   val variable: t -> variable -> variable_contents option
   val path: t -> std_path -> string option
   val wrappers: t -> Wrappers.t
+  val sections: (string * (t, (string option * opamfile_item list) list) OpamPp.field_parser) list
+  val fields: (string * (t, value) OpamPp.field_parser) list
   include IO_FILE with type t := t
 end
 
