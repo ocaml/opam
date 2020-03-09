@@ -406,7 +406,11 @@ let repository_name =
   parse, print
 
 let url =
-  let parse str = `Ok (OpamUrl.parse str) in
+  let parse str =
+    match OpamUrl.parse_opt str with
+    | Some url -> `Ok url
+    | None -> `Error ("malformed url "^str)
+  in
   let print ppf url = pr_str ppf (OpamUrl.to_string url) in
   parse, print
 

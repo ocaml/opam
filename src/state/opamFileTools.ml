@@ -530,7 +530,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
       (t.deprecated_build_test <> [] || t.deprecated_build_doc <> []);
     (let suspicious_urls =
        List.filter (fun u ->
-           OpamUrl.parse ~handle_suffix:true (OpamUrl.to_string u) <> u)
+           OpamUrl.parse_opt ~handle_suffix:true (OpamUrl.to_string u) <> Some u)
          (all_urls t)
      in
      cond 49 `Warning
