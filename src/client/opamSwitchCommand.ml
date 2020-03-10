@@ -494,8 +494,42 @@ let import_t ?ask importfile t =
   end;
   t
 
-let export rt ?(full=false) filename =
-  let switch = OpamStateConfig.get_switch () in
+let freeze_opam src_dir nv opam =
+  match OpamFile.OPAM.url opam with
+  | None -> opam
+  | Some url ->
+    let url_t = OpamFile.URL.url url in
+    match url_t.backend with
+    | #OpamUrl.version_control ->
+      (match OpamProcess.Job.run
+               (OpamRepository.revision (src_dir nv) url_t) with
+      | None ->
+        OpamConsole.error_and_exit `Not_found
+          "Unable to retrieve %s url revision: %s, \
+           it can't be exported with --freeze."
+          (OpamPackage.to_string nv)
+          (OpamUrl.to_string url_t)
+      | Some hash ->
+        OpamFile.OPAM.with_url
+          (OpamFile.URL.with_url
+             { url_t with hash = Some (OpamPackage.Version.to_string hash) }
+             url)
+          opam)
+    | `http ->
+      (match OpamFile.URL.checksum url with
+       | [] ->
+         OpamConsole.error_and_exit `Not_found
+           "%s url doesn't have an associated checksum, \
+            it can't be exported with --freeze."
+           (OpamPackage.Name.to_string nv.name)
+       | _ -> opam)
+    | `rsync ->
+      OpamConsole.error_and_exit `Not_found
+        "%s is path pinned, it can't be exported with --freeze."
+        (OpamPackage.Name.to_string nv.name)
+
+let export rt ?(freeze=false) ?(full=false)
+    ?(switch=OpamStateConfig.get_switch ()) filename =
   let root = OpamStateConfig.(!r.root_dir) in
   let export =
     OpamFilename.with_flock `Lock_none (OpamPath.Switch.lock root switch)
@@ -503,9 +537,20 @@ let export rt ?(full=false) filename =
     let selections = S.safe_read (OpamPath.Switch.selections root switch) in
     let opams =
       let read_opams read pkgs =
+        let src_dir nv =
+          if OpamPackage.Set.mem nv selections.sel_pinned then
+            OpamPath.Switch.pinned_package root switch nv.name
+          else
+            OpamPath.Switch.sources root switch nv
+        in
         OpamPackage.Set.fold (fun nv map ->
             match read nv with
-            | Some opam -> OpamPackage.Map.add nv opam map
+            | Some opam ->
+              let opam =
+                if not freeze then opam else
+                  freeze_opam src_dir nv opam
+              in
+              OpamPackage.Map.add nv opam map
             | None -> map) pkgs OpamPackage.Map.empty
       in
       let overlays =

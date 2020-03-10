@@ -42,11 +42,14 @@ val import:
 (** Export a file which contains the installed packages. If [full] is specified
     and true, export metadata of all installed packages (excluding overlay
     files) as part of the export. The export will be extended with a map of all
-    extra-files. If [None] is provided as file argument, the export is done to
-    stdout. *)
+    extra-files. If [freeze] is specified and true, VCS urls will be frozen to
+    the specific commit ID. If [None] is provided as file argument, the export
+    is done to stdout. *)
 val export:
   'a repos_state ->
+  ?freeze:bool ->
   ?full:bool ->
+  ?switch:switch ->
   OpamFile.SwitchExport.t OpamFile.t option ->
   unit
 
