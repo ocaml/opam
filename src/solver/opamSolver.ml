@@ -141,7 +141,7 @@ let opam_invariant_package version_map invariant =
   in {
     Cudf.
     package = OpamCudf.opam_invariant_package_name;
-    version = 0;
+    version = snd OpamCudf.opam_invariant_package;
     depends;
     conflicts = [];
     provides = [];

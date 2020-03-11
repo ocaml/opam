@@ -26,7 +26,7 @@ let s_version_lag = "version-lag"
 let opam_invariant_package_name =
   Common.CudfAdd.encode "=opam-invariant"
 
-let opam_invariant_package_version = 0
+let opam_invariant_package_version = 1
 
 let opam_invariant_package =
   opam_invariant_package_name, opam_invariant_package_version
