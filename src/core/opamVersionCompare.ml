@@ -18,7 +18,7 @@ let is_digit = function
 ;;
 
 (* [skip_while_from i f w m] yields the index of the leftmost character
- * in the string [s], starting from [i], end ending at  [m], that does
+ * in the string [s], starting from [i], and ending at [m], that does
  * not satisfy the predicate [f], or [length w] if no such index exists.  *)
 let skip_while_from i f w m =
   let rec loop i =
