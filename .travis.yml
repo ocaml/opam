@@ -61,9 +61,9 @@ matrix:
     - os: linux
       env: OCAML_VERSION=4.07.1 OPAM_TEST=1
       stage: Test
-    - os: linux
-      env: OCAML_VERSION=4.07.1 OPAM_TEST=1 EXTERNAL_SOLVER=aspcud
-      stage: Test
+#    - os: linux
+#      env: OCAML_VERSION=4.07.1 OPAM_TEST=1 EXTERNAL_SOLVER=aspcud
+#      stage: Test
     - os: linux
       env: COLD=1
       stage: Test
