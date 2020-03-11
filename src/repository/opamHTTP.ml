@@ -68,7 +68,7 @@ module B = struct
 
   let repo_update_complete _ _ = Done ()
 
-  let pull_url ?cache_dir:_ dirname checksum remote_url =
+  let pull_url ?cache_dir:_ ?subpath:_ dirname checksum remote_url =
     log "pull-file into %a: %a"
       (slog OpamFilename.Dir.to_string) dirname
       (slog OpamUrl.to_string) remote_url;
@@ -89,7 +89,8 @@ module B = struct
   let revision _ =
     Done None
 
-  let sync_dirty dir url = pull_url dir None url
+  let sync_dirty ?subpath:_ dir url = pull_url dir None url
+  (* do not propagate *)
 
   let get_remote_url ?hash:_ _ =
     Done None

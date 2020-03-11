@@ -1104,7 +1104,9 @@ files.
 
 - <a id="opamfield-extra-fields">`x-*: <value>`</a>:
   extra fields prefixed with `x-` can be defined for use by external tools. <span class="opam">opam</span>
-  will ignore them except for some search operations.
+  will ignore them except for some search operations. _Note that_ on 2.1.0, the
+  field `x-subpath` is reserved to specify the subpath of the package (cf.
+  [install manpage](man/opam-install.html#lbAF)).
 
 #### descr
 

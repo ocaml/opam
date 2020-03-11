@@ -1893,11 +1893,12 @@ module URLSyntax = struct
     mirrors : url list;
     checksum: OpamHash.t list;
     errors  : (string * Pp.bad_format) list;
+    subpath : string option;
   }
 
-  let create ?(mirrors=[]) ?(checksum=[]) url =
+  let create ?(mirrors=[]) ?(checksum=[]) ?subpath url =
     {
-      url; mirrors; checksum; errors = [];
+      url; mirrors; checksum; errors = []; subpath;
     }
 
   let empty = {
@@ -1905,15 +1906,19 @@ module URLSyntax = struct
     mirrors = [];
     checksum= [];
     errors  = [];
+    subpath = None;
   }
 
   let url t = t.url
   let mirrors t = t.mirrors
   let checksum t = t.checksum
+  let subpath t = t.subpath
 
   let with_url url t = { t with url }
   let with_mirrors mirrors t = { t with mirrors }
   let with_checksum checksum t = { t with checksum = checksum }
+  let with_subpath subpath t = { t with subpath = Some subpath }
+  let with_subpath_opt subpath t = { t with subpath = subpath }
 
   let fields =
     let with_url url t =
@@ -1940,6 +1945,9 @@ module URLSyntax = struct
            (Pp.V.string -| Pp.of_module "checksum" (module OpamHash)));
       "mirrors", Pp.ppacc with_mirrors mirrors
         (Pp.V.map_list ~depth:1 Pp.V.url);
+      "subpath", Pp.ppacc_opt
+        with_subpath subpath
+        Pp.V.string;
     ]
 
   let pp_contents =
@@ -2295,6 +2303,64 @@ module OPAMSyntax = struct
   let with_ocaml_version ocaml_version t =
     { t with ocaml_version = Some ocaml_version }
   let with_os os t = { t with os }
+
+  (* Adds an opam constraint as an 'available' constraint, without restricting
+     the file format compatibility *)
+  let pp_minimal_opam_version min_version =
+    let opam_version_var = OpamVariable.of_string "opam-version" in
+    let add_avail_constr t =
+      if OpamVersion.compare t.opam_version min_version >= 0 then t else
+      let available =
+        let opam_restricted =
+          OpamFilter.fold_down_left (fun acc filter ->
+              acc ||
+              match filter with
+              | FOp (FIdent ([], var, None), (`Eq|`Geq), FString version)
+              | FOp (FString version, (`Eq|`Leq), FIdent ([], var, None)) ->
+                var = opam_version_var &&
+                OpamVersion.(compare (of_string version) min_version) >= 0
+              | _ -> false)
+            false t.available
+        in
+        if opam_restricted then t.available else
+        let opam_restriction =
+          FOp (FIdent ([], opam_version_var, None), `Geq,
+               FString (OpamVersion.to_string min_version))
+        in
+        match t.available with
+        | FBool true -> opam_restriction
+        | available -> FAnd (available, opam_restriction)
+      in
+      { t with available }
+    in
+    let parse ~pos:_ t =
+      add_avail_constr t
+      (* This is not strictly needed since we know the constraint will be
+         verified for the running opam version, but avoids a discrepency if
+         re-parsing a printed file. *)
+    in
+    let print t =
+      (* remove constraints that are already implied by the file format
+         version *)
+      let available =
+        OpamFilter.map_up (function
+            | FOp (FIdent ([], var, None), (`Eq|`Geq), FString version)
+            | FOp (FString version, (`Eq|`Leq), FIdent ([], var, None))
+              when var = opam_version_var &&
+                   OpamVersion.compare (OpamVersion.of_string version)
+                     t.opam_version <= 0
+              -> FBool true
+            | FAnd (FBool true, f) | FAnd (f, FBool true) -> f
+            | FOr (FBool true, _) | FOr (_, FBool true) -> FBool true
+            | f -> f
+          )
+          t.available
+      in
+      add_avail_constr { t with available }
+      (* The constraint needs to be added here as well, in case the file was
+         just generated and has a subpath without the constraint already *)
+    in
+    Pp.pp parse print
 
   (* Post-processing functions used for some fields (optional, because we
      don't want them when linting). It's better to do them in the same pass
@@ -2665,6 +2731,39 @@ module OPAMSyntax = struct
     in
     Pp.pp parse (fun x -> x)
 
+  let handle_subpath_2_0 =
+    let subpath_xfield = "x-subpath" in
+    let pp_constraint =
+      pp_minimal_opam_version (OpamVersion.of_string "2.1")
+    in
+    let parse ~pos t =
+      if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
+      else
+      match OpamStd.String.Map.find_opt subpath_xfield t.extensions with
+      | Some (_, String (_,subpath)) ->
+        let url = match t.url with
+          | Some u -> Some (URL.with_subpath subpath u)
+          | None -> None
+        in
+        { t with url }
+        |> Pp.parse ~pos pp_constraint
+      | Some (pos, _) ->
+        Pp.bad_format ~pos "Field %s must be a string"
+          (OpamConsole.colorise `underline subpath_xfield)
+      | None -> t
+    in
+    let print t =
+      match t.url with
+      | Some ({ URL.subpath = Some sb ; _ } as url) ->
+        if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
+        else
+          add_extension t subpath_xfield (String (pos_null, sb))
+          |> with_url (URL.with_subpath_opt None url)
+          |> Pp.print pp_constraint
+      | _ -> t
+    in
+    Pp.pp parse print
+
   (* Doesn't handle package name encoded in directory name *)
   let pp_raw_fields =
     Pp.I.check_opam_version ~format_version () -|
@@ -2677,7 +2776,13 @@ module OPAMSyntax = struct
        OpamStd.String.Map.(Pp.pp (fun ~pos:_ -> of_list) bindings)) -|
     Pp.pp
       (fun ~pos:_ (t, extensions) -> with_extensions extensions t)
-      (fun t -> t, extensions t)
+      (fun t -> t, extensions t) -|
+    Pp.check (fun t ->
+        OpamVersion.(compare t.opam_version (of_string "2.0") > 0) ||
+        OpamStd.Option.Op.(t.url >>= URL.subpath) = None)
+      ~errmsg:"The url.subpath field is not allowed in files with \
+               `opam-version` <= 2.0" -|
+    handle_subpath_2_0
 
   let pp_raw = Pp.I.map_file @@ pp_raw_fields
 
@@ -2717,7 +2822,8 @@ module OPAMSyntax = struct
                   (OpamStd.Option.default (nv.OpamPackage.name) t.name)
                   (OpamStd.Option.default (nv.OpamPackage.version) t.version))
                (OpamFilename.prettify filename);
-           {t with name = None; version = None})
+           {t with name = None; version = None}
+      )
 
   let to_string_with_preserved_format
       ?format_from ?format_from_string filename t =

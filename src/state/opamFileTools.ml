@@ -682,8 +682,8 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
             else
             let msg =
               let is_singular = function [_] -> true | _ -> false in
-              Printf.sprintf "Checksum%s match the archive: %s."
-                (if is_singular not_corresponding then " doesn't" else "s don't")
+              Printf.sprintf "The archive doesn't match checksum%s: %s."
+                (if is_singular not_corresponding then "" else "s")
                 (OpamStd.List.to_string OpamHash.to_string not_corresponding)
             in
             Some msg)
@@ -705,6 +705,35 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        "License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/"
        ~detail:bad_licenses
        (bad_licenses <> []));
+    (let subpath =
+       match OpamStd.String.Map.find_opt "x-subpath" (extensions t) with
+       | Some (String (_,_)) -> true
+       | _ -> false
+     in
+     let opam_restriction =
+       OpamFilter.fold_down_left (fun acc filter ->
+           acc ||
+           match filter with
+           | FOp (FIdent (_, var, _), op, FString version)
+             when OpamVariable.to_string var = "opam-version" ->
+             OpamFormula.simplify_version_formula
+               (OpamFormula.ands
+                  [ Atom (`Lt, OpamPackage.Version.of_string "2.1");
+                    Atom (op, OpamPackage.Version.of_string version) ])
+             = None
+           | _ -> false) false t.available
+     in
+     cond 63 `Error
+       "`subpath` field need `opam-version = 2.1` restriction"
+       (subpath && not opam_restriction));
+    (let subpath_string =
+       match OpamStd.String.Map.find_opt "x-subpath" (extensions t) with
+       | Some (String (_,_)) | None -> false
+       | _ -> true
+     in
+     cond 64 `Warning
+       "`x-subpath` must be a simple string to be considered as a subpath`"
+       subpath_string);
   ]
   in
   format_errors @

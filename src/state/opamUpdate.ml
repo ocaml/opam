@@ -173,16 +173,16 @@ let repositories rt repos =
   OpamRepositoryState.Cache.save rt;
   failed, rt
 
-let fetch_dev_package url srcdir ?(working_dir=false) nv =
+let fetch_dev_package url srcdir ?(working_dir=false) ?subpath nv =
   let remote_url = OpamFile.URL.url url in
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
   let checksum = OpamFile.URL.checksum url in
-  log "updating %a" (slog OpamUrl.to_string) remote_url;
+  log "updating %a%a" (slog OpamUrl.to_string) remote_url
+    (slog (OpamStd.Option.map_default (fun s -> " ("^s^")") "")) subpath;
   OpamRepository.pull_tree
     ~cache_dir:(OpamRepositoryPath.download_cache OpamStateConfig.(!r.root_dir))
-    (OpamPackage.to_string nv) srcdir checksum ~working_dir mirrors
+    (OpamPackage.to_string nv) srcdir checksum ~working_dir ?subpath mirrors
   @@| OpamRepository.report_fetch_result nv
-
 
 let pinned_package st ?version ?(working_dir=false) name =
   log "update-pinned-package %s%a" (OpamPackage.Name.to_string name)
@@ -195,6 +195,7 @@ let pinned_package st ?version ?(working_dir=false) name =
   | None | Some (_, None) -> Done ((fun st -> st), false)
   | Some (opam, Some urlf) ->
     let url = OpamFile.URL.url urlf in
+    let subpath = OpamFile.URL.subpath urlf in
     let version =
       OpamFile.OPAM.version_opt opam ++
       version +!
@@ -210,8 +211,13 @@ let pinned_package st ?version ?(working_dir=false) name =
       then OpamFileTools.add_aux_files ~files_subdir_hashes:true opam
       else opam
     in
+    (* append subpath to source dir to retrieve opam files *)
+    let srcdir_find =
+      OpamStd.Option.map_default
+        (fun x -> OpamFilename.Op.(srcdir / x)) srcdir subpath
+    in
     let old_source_opam_hash, old_source_opam =
-      match OpamPinned.find_opam_file_in_source name srcdir with
+      match OpamPinned.find_opam_file_in_source name srcdir_find with
       | None -> None, None
       | Some f ->
         Some (OpamHash.compute (OpamFile.to_string f)),
@@ -239,16 +245,17 @@ let pinned_package st ?version ?(working_dir=false) name =
         | Some h ->
           OpamRepository.current_branch url @@| fun branch -> branch = Some h)
        @@+ function false -> Done () | true ->
-         OpamRepository.is_dirty url
+         OpamRepository.is_dirty ?subpath url
          @@| function false -> () | true ->
            OpamConsole.note
-             "Ignoring uncommitted changes in %s (`--working-dir' not active)."
-             url.OpamUrl.path)
+             "Ignoring uncommitted changes in %s%s (`--working-dir' not active)."
+             url.OpamUrl.path
+             (match subpath with None -> "" | Some s -> "/" ^ s))
     @@+ fun () ->
     (* Do the update *)
-    fetch_dev_package urlf srcdir ~working_dir nv @@+ fun result ->
+    fetch_dev_package urlf srcdir ~working_dir ?subpath nv @@+ fun result ->
     let new_source_opam =
-      OpamPinned.find_opam_file_in_source name srcdir >>= fun f ->
+      OpamPinned.find_opam_file_in_source name srcdir_find >>= fun f ->
       let warns, opam_opt = OpamFileTools.lint_file f in
       let warns, opam_opt = match opam_opt with
         | Some opam0 ->
@@ -514,7 +521,7 @@ let download_package_source st nv dirname =
     | None   -> Done None
     | Some u ->
       (OpamRepository.pull_tree (OpamPackage.to_string nv)
-        ~cache_dir ~cache_urls
+        ~cache_dir ~cache_urls ?subpath:(OpamFile.URL.subpath u)
         dirname
         (OpamFile.URL.checksum u)
         (OpamFile.URL.url u :: OpamFile.URL.mirrors u))

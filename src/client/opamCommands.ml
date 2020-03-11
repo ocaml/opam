@@ -722,7 +722,7 @@ let show =
       OpamConsole.warning "No opam files found in %s"
         (OpamFilename.Dir.to_string d);
       []
-    | l -> List.map (fun (_,f) -> Some f) l
+    | l -> List.map (fun (_,f,_) -> Some f) l
   in
   let pkg_info global_options fields show_empty raw where
       list_files file normalise no_lint just_file all_versions sort atom_locs =
@@ -1354,7 +1354,7 @@ let install =
   in
   let install
       global_options build_options add_to_roots deps_only ignore_conflicts
-      restore destdir assume_built check atoms_or_locals =
+      restore destdir assume_built check recurse subpath atoms_or_locals =
     apply_global_options global_options;
     apply_build_options build_options;
     if atoms_or_locals = [] && not restore then
@@ -1382,7 +1382,8 @@ let install =
     in
     if atoms_or_locals = [] then `Ok () else
     let st, atoms =
-      OpamAuxCommands.autopin st ~quiet:check ~simulate:(deps_only||check)
+      OpamAuxCommands.autopin
+        st ~recurse ?subpath ~quiet:check ~simulate:(deps_only||check)
         atoms_or_locals
     in
     if atoms = [] then
@@ -1418,7 +1419,7 @@ let install =
   Term.ret
     Term.(const install $global_options $build_options
           $add_to_roots $deps_only $ignore_conflicts $restore $destdir
-          $assume_built $check $atom_or_local_list),
+          $assume_built $check $recurse $subpath $atom_or_local_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
@@ -1460,7 +1461,8 @@ let remove =
        specified."
       Arg.(some dirname) None
   in
-  let remove global_options build_options autoremove force destdir atom_locs =
+  let remove global_options build_options autoremove force destdir recurse
+      subpath atom_locs =
     apply_global_options global_options;
     apply_build_options build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1484,7 +1486,9 @@ let remove =
       let pure_atoms, pin_atoms =
         List.partition (function `Atom _ -> true | _ -> false) atom_locs
       in
-      let pin_atoms = OpamAuxCommands.resolve_locals_pinned st pin_atoms in
+      let pin_atoms =
+        OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath pin_atoms
+      in
       let st =
         if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) then st
         else OpamPinCommand.unpin st (List.map fst pin_atoms)
@@ -1496,7 +1500,7 @@ let remove =
       OpamSwitchState.drop (OpamClient.remove st ~autoremove ~force atoms)
   in
   Term.(const remove $global_options $build_options $autoremove $force $destdir
-        $atom_or_dir_list),
+        $recurse $subpath $atom_or_dir_list),
   term_info "remove" ~doc ~man
 
 (* REINSTALL *)
@@ -1529,7 +1533,8 @@ let reinstall =
                 overriding."
       ])
   in
-  let reinstall global_options build_options assume_built atoms_locs cmd =
+  let reinstall global_options build_options assume_built recurse subpath
+      atoms_locs cmd =
     apply_global_options global_options;
     apply_build_options build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1537,7 +1542,7 @@ let reinstall =
     | `Default, (_::_ as atom_locs) ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       OpamSwitchState.drop @@ OpamClient.reinstall st ~assume_built
-        (OpamAuxCommands.resolve_locals_pinned st atom_locs);
+        (OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath atom_locs);
       `Ok ()
     | `Pending, [] | `Default, [] ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
@@ -1558,7 +1563,7 @@ let reinstall =
       `Ok ()
     | `Forget_pending, atom_locs ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let atoms = OpamAuxCommands.resolve_locals_pinned st atom_locs in
+      let atoms = OpamAuxCommands.resolve_locals_pinned ~recurse ?subpath st atom_locs in
       let to_forget = match atoms with
         | [] -> st.reinstall
         | atoms -> OpamFormula.packages_of_atoms st.reinstall atoms
@@ -1581,7 +1586,7 @@ let reinstall =
       `Error (true, "Package arguments not allowed with this option")
   in
   Term.(ret (const reinstall $global_options $build_options $assume_built
-             $atom_or_dir_list $cmd)),
+             $recurse $subpath $atom_or_dir_list $cmd)),
   term_info "reinstall" ~doc ~man
 
 (* UPDATE *)
@@ -1684,7 +1689,12 @@ let upgrade =
        $(i,PACKAGES) was not specified, and can be useful with $(i,PACKAGES) \
        to upgrade while ensuring that some packages get or remain installed."
   in
-  let upgrade global_options build_options fixup check all atom_locs =
+  let installed =
+    mk_flag ["installed"]
+      "When a directory is provided as argument, do not install pinned package \
+       that are not yet installed." in
+  let upgrade global_options build_options fixup check only_installed all recurse
+      subpath atom_locs =
     apply_global_options global_options;
     apply_build_options build_options;
     let all = all || atom_locs = [] in
@@ -1698,12 +1708,12 @@ let upgrade =
         `Ok ()
     else
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let atoms = OpamAuxCommands.resolve_locals_pinned st atom_locs in
-      OpamSwitchState.drop @@ OpamClient.upgrade st ~check ~all atoms;
+      let atoms = OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath atom_locs in
+      OpamSwitchState.drop @@ OpamClient.upgrade st ~check ~only_installed ~all atoms;
       `Ok ()
   in
-  Term.(ret (const upgrade $global_options $build_options $fixup $check $all
-             $atom_or_dir_list)),
+  Term.(ret (const upgrade $global_options $build_options $fixup $check
+             $installed $all $recurse $subpath $atom_or_dir_list)),
   term_info "upgrade" ~doc ~man
 
 (* REPOSITORY *)
@@ -2582,34 +2592,37 @@ let pin ?(unpin_only=false) () =
     mk_flag ["dev-repo"] "Pin to the upstream package source for the latest \
                           development version"
   in
-  let guess_names url k =
-    let from_opam_files dir =
-      OpamStd.List.filter_map
-        (fun (nameopt, f) ->
-           let opam_opt = OpamFile.OPAM.read_opt f in
-           let name =
-             match nameopt with
-             | None -> OpamStd.Option.replace OpamFile.OPAM.name_opt opam_opt
-             | some -> some
-           in
-           OpamStd.Option.map (fun n -> n, opam_opt) name)
-        (OpamPinned.files_in_source dir)
-    in
-    let basename =
-      match OpamStd.String.split (OpamUrl.basename url) '.' with
-      | [] ->
-        OpamConsole.error_and_exit `Bad_arguments
-          "Can not retrieve a path from '%s'"
-          (OpamUrl.to_string url)
-      | b::_ -> b
-    in
+  let guess_names kind ~recurse ?subpath url k =
     let found, cleanup =
       match OpamUrl.local_dir url with
-      | Some d -> from_opam_files d, None
+      | Some d ->
+        let same_kind url =
+          match kind, url.OpamUrl.backend with
+          | (None | Some `auto), _
+          | Some `rsync, `rsync
+          | Some `http, `http -> true
+          | Some (#OpamUrl.version_control as vc1), (#OpamUrl.version_control as vc2) ->
+            vc1 = vc2
+          | Some (`none | `version), _ -> assert false
+          | _ -> false
+        in
+        let pkgs =
+          OpamAuxCommands.opams_of_dir_w_target ~recurse ?subpath ~same_kind url d
+          |> List.map (fun (n,o,u,b) -> (n, OpamFile.OPAM.read_opt o, b, u))
+        in
+        pkgs, None
       | None ->
         let pin_cache_dir = OpamRepositoryPath.pin_cache url in
         let cleanup = fun () ->
           OpamFilename.rmdir @@ OpamRepositoryPath.pin_cache_dir ()
+        in
+        let basename =
+          match OpamStd.String.split (OpamUrl.basename url) '.' with
+          | [] ->
+            OpamConsole.error_and_exit `Bad_arguments
+              "Can not retrieve a path from '%s'"
+              (OpamUrl.to_string url)
+          | b::_ -> b
         in
         try
           let open OpamProcess.Job.Op in
@@ -2621,23 +2634,16 @@ let pin ?(unpin_only=false) () =
           | Not_available (_,u) ->
             OpamConsole.error_and_exit `Sync_error
               "Could not retrieve %s" u
-          | Result _ | Up_to_date _ -> from_opam_files pin_cache_dir, Some cleanup
+          | Result _ | Up_to_date _ ->
+            let pkgs =
+              OpamAuxCommands.opams_of_dir ~recurse ?subpath pin_cache_dir
+              |> List.map (fun (n,o,b) -> (n, OpamFile.OPAM.read_opt o, b, url))
+            in
+            pkgs, Some cleanup
         with e -> OpamStd.Exn.finalise e cleanup
     in
     let finalise = OpamStd.Option.default (fun () -> ()) cleanup in
-    OpamStd.Exn.finally finalise @@ fun () ->
-    let names_found =
-      match found with
-      | _::_ -> found
-      | [] ->
-        try [OpamPackage.Name.of_string basename, None] with
-        | Failure _ ->
-          OpamConsole.error_and_exit `Bad_arguments
-            "Could not infer a package name from %s, please specify it on the \
-             command-line, e.g. 'opam pin NAME TARGET'"
-            (OpamUrl.to_string url)
-    in
-    k names_found
+    OpamStd.Exn.finally finalise @@ fun () -> k found
   in
   let pin_target kind target =
     let looks_like_version_re =
@@ -2680,7 +2686,7 @@ let pin ?(unpin_only=false) () =
   in
   let pin
       global_options build_options
-      kind edit no_act dev_repo print_short command params =
+      kind edit no_act dev_repo print_short recurse subpath command params =
     apply_global_options global_options;
     apply_build_options build_options;
     let action = not no_act in
@@ -2703,8 +2709,25 @@ let pin ?(unpin_only=false) () =
                 (fun nv ->
                    match OpamSwitchState.url st nv with
                    | Some u ->
+                     let spu = OpamFile.URL.subpath u in
                      let u = OpamFile.URL.url u in
-                     OpamUrl.(u.transport = url.transport && u.path = url.path)
+                     let path_equality () =
+                       let open OpamUrl in
+                       match subpath, recurse with
+                       | Some sp, false ->
+                         u.path = url.path && spu = Some sp
+                       | Some sp, true ->
+                         (match spu with
+                          | Some spp ->
+                            OpamUrl.Op.(OpamStd.String.starts_with
+                                          ~prefix:(url / sp).path (u / spp).path)
+                          | None -> false)
+                       | None, true ->
+                         u.path = url.path
+                       | None, false ->
+                         spu = None && u.path = url.path
+                     in
+                     OpamUrl.(u.transport = url.transport) && path_equality ()
                    | None -> false)
                 st.pinned |>
               OpamPackage.names_of_packages |>
@@ -2755,12 +2778,14 @@ let pin ?(unpin_only=false) () =
          in
          `Error (true, msg)
        | `Source url ->
-         guess_names url @@ fun names ->
+         guess_names kind ~recurse ?subpath url @@ fun names ->
          let names = match names with
            | _::_::_ ->
              if OpamConsole.confirm
                  "This will pin the following packages: %s. Continue?"
-                 (OpamStd.List.concat_map ", " (fst @> OpamPackage.Name.to_string) names)
+                 (OpamStd.List.concat_map ", "
+                    (fun (n, _, _, _) -> OpamPackage.Name.to_string n)
+                    names)
              then names
              else OpamStd.Sys.exit_because `Aborted
            | _ -> names
@@ -2769,7 +2794,7 @@ let pin ?(unpin_only=false) () =
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let pinned = st.pinned in
          let st =
-           List.fold_left (fun st (name, opam_opt) ->
+           List.fold_left (fun st (name, opam_opt, subpath,  url) ->
                OpamStd.Option.iter (fun opam ->
                    let opam_localf =
                      OpamPath.Switch.Overlay.tmp_opam
@@ -2778,14 +2803,15 @@ let pin ?(unpin_only=false) () =
                    if not (OpamFilename.exists (OpamFile.filename opam_localf))
                    then OpamFile.OPAM.write opam_localf opam)
                  opam_opt;
-               try OpamPinCommand.source_pin st name ~edit (Some url) with
+               try OpamPinCommand.source_pin st name ~edit ?subpath (Some url) with
                | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
                | OpamPinCommand.Nothing_to_do -> st)
              st names
          in
          if action then
            (OpamSwitchState.drop @@
-            OpamClient.PIN.post_pin_action st pinned (List.map fst names);
+            OpamClient.PIN.post_pin_action st pinned
+              (List.map (fun (n,_,_,_) -> n) names);
             `Ok ())
          else `Ok ())
     | Some `add, [n; target] | Some `default n, [target] ->
@@ -2795,7 +2821,7 @@ let pin ?(unpin_only=false) () =
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          OpamSwitchState.drop @@
-         OpamClient.PIN.pin st name ?version ~edit ~action pin;
+         OpamClient.PIN.pin st name ?version ~edit ~action ?subpath pin;
          `Ok ()
        | `Error e -> `Error (false, e))
     | command, params -> bad_subcommand commands ("pin", command, params)
@@ -2803,7 +2829,7 @@ let pin ?(unpin_only=false) () =
   Term.ret
     Term.(const pin
           $global_options $build_options
-          $kind $edit $no_act $dev_repo $print_short_flag
+          $kind $edit $no_act $dev_repo $print_short_flag $recurse $subpath
           $command $params),
   term_info "pin" ~doc ~man
 
@@ -2861,6 +2887,10 @@ let source =
          (see option `--dir')"
         (Dir.to_string dir);
     let opam = OpamSwitchState.opam t nv in
+    let subpath =
+      OpamStd.Option.map_default OpamFile.URL.subpath
+        None (OpamFile.OPAM.url opam)
+    in
     if dev_repo then (
       match OpamFile.OPAM.dev_repo opam with
       | None ->
@@ -2875,6 +2905,7 @@ let source =
             (OpamRepository.pull_tree
                ~cache_dir:(OpamRepositoryPath.download_cache
                              OpamStateConfig.(!r.root_dir))
+               ?subpath
                (OpamPackage.to_string nv) dir []
                [url])
         with
@@ -2900,7 +2931,9 @@ let source =
               (Dir.to_string dir) (Printexc.to_string e)
       in
       OpamProcess.Job.run job;
-      if OpamPinned.find_opam_file_in_source nv.name dir = None
+      if OpamPinned.find_opam_file_in_source nv.name
+          (OpamStd.Option.map_default (fun sp -> Op.(dir / sp)) dir subpath)
+         = None
       then
         let f =
           if OpamFilename.exists_dir Op.(dir / "opam")
@@ -2983,16 +3016,16 @@ let lint =
       "Check upstream, archive availability and checksum(s)"
   in
   let lint global_options files package normalise short warnings_sel
-      check_upstream =
+      check_upstream recurse subpath =
     apply_global_options global_options;
     let opam_files_in_dir d =
-      match OpamPinned.files_in_source d with
+      match OpamPinned.files_in_source ~recurse ?subpath d with
       | [] ->
         OpamConsole.warning "No opam files found in %s"
           (OpamFilename.Dir.to_string d);
         []
       | l ->
-        List.map (fun (_name,f) -> Some f) l
+        List.map (fun (_name,f,_) -> Some f) l
     in
     let files = match files, package with
       | [], None -> (* Lookup in cwd if nothing was specified *)
@@ -3100,8 +3133,8 @@ let lint =
     OpamStd.Option.iter (fun json -> OpamJson.append "lint" (`A json)) json;
     if err then OpamStd.Sys.exit_because `False
   in
-  Term.(const lint $global_options $files $package $normalise $short $warnings
-        $check_upstream),
+  Term.(const lint $global_options $files $package $normalise $short
+        $warnings $check_upstream $recurse $subpath),
   term_info "lint" ~doc ~man
 
 (* CLEAN *)

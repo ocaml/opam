@@ -91,5 +91,5 @@ val cleanup_source:
 
 (** Low-level function to retrieve the package source into its local cache *)
 val fetch_dev_package:
-  OpamFile.URL.t -> dirname -> ?working_dir:bool -> package ->
+  OpamFile.URL.t -> dirname -> ?working_dir:bool -> ?subpath:string -> package ->
   unit download OpamProcess.job
