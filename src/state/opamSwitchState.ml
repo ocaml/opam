@@ -157,31 +157,40 @@ let depexts_raw ~env nv opams =
       (OpamFile.OPAM.depexts opam)
   with Not_found -> OpamSysPkg.Set.empty
 
-let system_packages ~depexts config packages =
-  let nv_syspkg =
-    OpamPackage.Set.fold (fun nv map ->
+let get_sysdeps_map ~depexts config packages =
+  let open OpamSysPkg.Set.Op in
+  let syspkg_set, syspkg_map =
+    OpamPackage.Set.fold (fun nv (set, map) ->
         let s = depexts nv in
+        s ++ set,
         if OpamSysPkg.Set.is_empty s then map
         else OpamPackage.Map.add nv s map)
-      packages OpamPackage.Map.empty
-  in
-  let all_syspkgs =
-    OpamPackage.Map.fold (fun _ -> OpamSysPkg.Set.union)
-      nv_syspkg OpamSysPkg.Set.empty
+      packages (OpamSysPkg.Set.empty, OpamPackage.Map.empty)
   in
   let chronos = OpamConsole.timer () in
   let bypass = OpamFile.Config.depext_bypass config in
-  let syspkgs = OpamSysPkg.Set.Op.(all_syspkgs -- bypass) in
-  let avail, not_found = OpamSysInteract.packages_status syspkgs in
-  let s =
-    let open OpamSysPkg.Set.Op in
-    OpamPackage.Map.map (fun set ->
-        { OpamSysPkg.s_available = set %% avail;
-          OpamSysPkg.s_not_found = set %% not_found}
-      ) nv_syspkg
+  let syspkg_set = syspkg_set -- bypass in
+  let ret =
+    match OpamSysInteract.packages_status syspkg_set with
+    | avail, not_found ->
+      let avail, not_found =
+        if OpamStateConfig.(!r.depext_no_root)
+        then OpamSysPkg.Set.empty, avail ++ not_found
+        else avail, not_found
+      in
+      OpamPackage.Map.map (fun set ->
+          { OpamSysPkg.s_available = set %% avail;
+            OpamSysPkg.s_not_found = set %% not_found}
+        ) syspkg_map
+    | exception (Failure msg) ->
+      OpamConsole.note "%s\nYou can disable this check using 'opam config \
+                        set-opt depext-enable=false'"
+        msg;
+      OpamPackage.Map.empty
   in
   log "depexts loaded in %.3fs" (chronos());
-  s
+  ret
+
 
 let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
@@ -415,15 +424,13 @@ let load lock_kind gt rt switch =
         else acc)
       conf_files
       OpamPackage.Set.empty
-    |> fun inv -> log "Invalidated packages: %a" (slog OpamPackage.Set.to_string) inv; inv
   ) in
   (* depext check *)
   let sys_packages = lazy (
-    if OpamStateConfig.(not !r.depext_enable
-                        || !r.depext_no_consistency_checks) then
+    if OpamStateConfig.(not !r.depext_enable) then
       OpamPackage.Map.empty
     else
-      system_packages gt.config (Lazy.force available_packages)
+      get_sysdeps_map gt.config (Lazy.force available_packages)
         ~depexts:(fun package ->
             let env =
               OpamPackageVar.resolve_switch_raw ~package gt switch switch_config
@@ -431,8 +438,7 @@ let load lock_kind gt rt switch =
             depexts_raw ~env package opams)
   ) in
   let sys_packages_changed = lazy (
-    if OpamStateConfig.(not !r.depext_enable
-                        || !r.depext_no_consistency_checks) then
+    if OpamStateConfig.(!r.depext_no_consistency_checks) then
       OpamPackage.Set.empty
     else
     let sys_packages =
@@ -445,46 +451,46 @@ let load lock_kind gt rt switch =
     if OpamPackage.Map.is_empty sys_packages then
       OpamPackage.Set.empty
     else
-      (let lchanged = OpamPackage.Map.keys sys_packages in
-       let changed = OpamPackage.Set.of_list lchanged in
-       let sgl_pkg = OpamPackage.Set.cardinal changed = 1 in
-       let open OpamSysPkg.Set.Op in
-       let missing =
-         OpamPackage.Map.map (fun sys ->
-             sys.OpamSysPkg.s_available ++ sys.OpamSysPkg.s_not_found)
-           sys_packages
-       in
-       let sgl_spkg =
-         try
-           OpamSysPkg.Set.cardinal
-             (OpamPackage.Map.fold (fun _ sp acc ->
-                  let acc = acc ++ sp in
-                  if OpamSysPkg.Set.cardinal acc > 1 then
-                    raise Not_found
-                  else acc)
-                 missing OpamSysPkg.Set.empty) <=  1
-         with Not_found -> false
-       in
-       OpamConsole.error
-         "System package%s from which depends installed opam package%s no \
-          more installed on you system:\n%s\n \
-          %s %s been marked as removed, and opam will try to \
-          reinstall %s. You should reinstall system package first."
-         (if sgl_spkg then "" else "s")
-         (if sgl_pkg then " is" else "s are")
-         (OpamStd.Format.itemize (fun (pkg, spkg) ->
-              Printf.sprintf "%s: %s"
-                (OpamPackage.to_string pkg)
-                (OpamStd.Format.pretty_list spkg))
-             (OpamPackage.Map.bindings
-                (OpamPackage.Map.map (fun s ->
-                     List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements s))
-                    missing)))
+    let lchanged = OpamPackage.Map.keys sys_packages in
+    let changed = OpamPackage.Set.of_list lchanged in
+    let sgl_pkg = OpamPackage.Set.is_singleton changed in
+    let open OpamSysPkg.Set.Op in
+    let missing_map =
+      OpamPackage.Map.map (fun sys ->
+          sys.OpamSysPkg.s_available ++ sys.OpamSysPkg.s_not_found)
+        sys_packages
+    in
+    let missing_set =
+      OpamPackage.Map.fold (fun _ -> OpamSysPkg.Set.union)
+        missing_map
+        OpamSysPkg.Set.empty
+    in
+    let sgl_spkg = OpamSysPkg.Set.is_singleton missing_set in
+    if sgl_pkg then
+      OpamConsole.warning
+        "Opam package %s depends on the following system package%s that can \
+         no longer be found: %s"
+        (OpamPackage.to_string (OpamPackage.Set.choose_one changed))
+        (if sgl_spkg then "" else "s")
+        (OpamStd.List.concat_map " " OpamSysPkg.to_string
+           (OpamSysPkg.Set.elements missing_set))
+    else
+      (OpamConsole.warning
+         "Opam packages %s depend on the following system package%s that are \
+          no longer installed: %s"
          (OpamStd.Format.pretty_list (List.map OpamPackage.to_string lchanged))
-         (if sgl_pkg then "has" else "have")
-         (if sgl_pkg then "it" else "them")
-       ;
-       changed)
+         (if sgl_spkg then "" else "s")
+         (OpamStd.List.concat_map " " OpamSysPkg.to_string
+            (OpamSysPkg.Set.elements missing_set));
+       if OpamConsole.verbose () then
+         OpamConsole.errmsg "%s"
+           (OpamStd.Format.itemize (fun (pkg, spkg) ->
+                Printf.sprintf "%s: depends on %s"
+                  (OpamPackage.to_string pkg)
+                  (OpamStd.List.concat_map ", " OpamSysPkg.to_string
+                     (OpamSysPkg.Set.elements spkg)))
+               (OpamPackage.Map.bindings missing_map)));
+    changed
   ) in
   let reinstall = lazy (
     OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall gt.root switch) ++

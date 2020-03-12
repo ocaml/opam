@@ -153,8 +153,9 @@ val source_dir: 'a switch_state -> package -> dirname
     from the values of the system-specific variables *)
 val depexts: 'a switch_state -> package -> OpamSysPkg.Set.t
 
-(** Returns the ordered [sys_packages] of the given [package] set *)
-val system_packages:
+(** Returns required system packages of each of the given packages (elements are
+    not added to the map  if they don't have system dependencies) *)
+val get_sysdeps_map:
   depexts:(package -> OpamSysPkg.Set.t) -> OpamFile.Config.t ->
   package_set ->
   OpamSysPkg.status package_map

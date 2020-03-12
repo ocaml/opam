@@ -8,6 +8,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+let log = OpamConsole.log "XSYS"
+
 (* Run commands *)
 (* Always call this function to run a command, as it handles `dryrun` option *)
 let run_command
@@ -54,7 +56,6 @@ let packages_status packages =
   in
   (* keep tracking installed ones ?? *)
   let _installed, available, not_found =
-    if OpamStateConfig.(!r.dryrun) then OpamSysPkg.Set.(empty, empty, empty) else
     match spv OpamSysPoll.os_family with
     | "alpine" ->
       let lines =
@@ -249,7 +250,7 @@ let packages_status packages =
          |> OpamSysPkg.Set.of_list)
       in
       installed, packages -- installed, OpamSysPkg.Set.empty
-    | "macports" -> OpamSysPkg.Set.(empty,empty,empty) (* Why ? *)
+    (* | "macports" -> OpamSysPkg.Set.(empty,empty,empty) (\* Why ? *\) *)
     | "archlinux" | "arch" ->
       let sys_query arg =
         run_query_command "pacman" [arg]
@@ -283,9 +284,8 @@ let packages_status packages =
                inst, OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) avail
            | _ -> inst, avail)
     | family ->
-      OpamConsole.error_and_exit `Not_found
-        "opam doesn't handle system %s for system packages detection.\n \
-         Re-run your command with `--ignore-depexts` option to bypass this step."
+      Printf.ksprintf failwith
+        "External dependency handling not supported for OS family '%s'."
         family
   in
   available, not_found
@@ -333,11 +333,7 @@ let install_packages_commands s_packages =
     ["apk"::"add"::packages]
   | "suse" | "opensuse" ->
     ["zypper"::("install"::packages)]
-  | family ->
-    OpamConsole.error_and_exit `Not_found
-      "opam doesn't handle system %s for system packages install commands.\n \
-       Re-run your command with `--i-am-not-root` option to bypass this step"
-      family
+  | _ -> []
 
 let update_command () =
   match spv OpamSysPoll.os_family with
@@ -362,7 +358,7 @@ let sudo_run_command cmd =
   let su = OpamSystem.resolve_command "sudo" = None in
   let get_cmd = function
     | c::a -> c, a
-    | _  -> assert false
+    | _  -> invalid_arg "sudo_run_command"
   in
   let cmd, args =
     match spv OpamSysPoll.os, spv OpamSysPoll.os_distribution with
@@ -380,42 +376,27 @@ let sudo_run_command cmd =
       ) else get_cmd cmd
     | _ -> get_cmd cmd
   in
-  let code = run_command_exit_code ~allow_stdin:true ~verbose:true cmd args in
-  if code <> 0 then Some (cmd,code)
-  else None
+  match run_command_exit_code ~allow_stdin:true ~verbose:true cmd args with
+  | 0 -> ()
+  | code ->
+    Printf.ksprintf failwith
+      "failed with exit code %d at command:\n    %s"
+      code (String.concat " " (cmd::args))
 
 let update () =
   match update_command () with
   | Some cmd ->
-    (match sudo_run_command cmd with
-     | Some (cmd, code) ->
-       OpamConsole.error_and_exit `False
-         "System update failed with exit code %d: %s" code cmd
-     | None ->
-       OpamConsole.note "System updated succesfully")
+    (try sudo_run_command cmd
+     with Failure msg -> failwith ("System package update " ^ msg))
   | None ->
-    OpamConsole.warning "Unknown system %s, skipping system update"
+    log "Unknown system %s, skipping system update"
       (spv OpamSysPoll.os_family)
 
 let install packages =
   if OpamSysPkg.Set.is_empty packages then ()
   else
-  let cmds =
-    install_packages_commands packages
-  in
-  let ok =
-    List.fold_left (fun ok cmd ->
-        match ok with
-        | None -> sudo_run_command cmd
-        | Some _ as s -> s)
-      None cmds
-  in
-  match ok with
-  | Some (_cmd, code) ->
-    if not
-        (OpamConsole.confirm ~default:false
-           "System packages install failed with exit code %d at command:\n  %s\n \
-            Do you want to pause opam and try to install yourself?"
-           code (OpamStd.Format.itemize (String.concat " ") cmds)) then
-      OpamStd.Sys.exit_because `Aborted
-  | None -> OpamConsole.msg "System packages installed succesfully\n"
+    List.iter
+      (fun c ->
+         try sudo_run_command c
+         with Failure msg -> failwith ("System package install " ^ msg))
+      (install_packages_commands packages)

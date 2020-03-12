@@ -26,9 +26,9 @@ type t = {
   locked: string option;
   depext_bypass: OpamSysPkg.Set.t;
   depext_enable: bool;
-  depext_no_consistency_checks : bool;
-  depext_no_root : bool;
-  depext_print_only : bool;
+  depext_no_consistency_checks: bool;
+  depext_no_root: bool;
+  depext_print_only: bool;
 }
 
 let default = {
