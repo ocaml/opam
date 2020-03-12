@@ -1369,9 +1369,8 @@ let install =
   in
   let check =
     mk_flag ["check"]
-      "Check if dependencies are installed. If some packages are missing, \
-       it will ask if you want them installed and launch install of \
-       $(i,PACKAGES) with option $(b,deps-only) enabled."
+      "Exits with 0 Check if $(b,PACKAGE) dependencies are installed, 1 \
+       otherwise. In the latter case, it also list missing packages."
   in
   let install
       global_options build_options add_to_roots deps_only ignore_conflicts
