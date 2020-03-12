@@ -406,10 +406,9 @@ let parse_upd fv =
 (* General setting option function. Takes [field_value], a string of the field
    and its value update, [conf] the configuration according the config file
    (['config confest]). If [inner] is set, it allows the modification of
-   [InModificable] fields *)
+   [InModifiable] fields *)
 let set_opt ?(inner=false) field_value conf =
   let field, value = parse_upd field_value in
-  let open OpamStd.Op in
   let wrap allowed all parse =
     List.map (fun (field, pp) ->
         match OpamStd.List.find_opt (fun (x,_,_) -> x = field) allowed with
@@ -433,28 +432,35 @@ let set_opt ?(inner=false) field_value conf =
              (OpamParser.string str_value "<command-line>").file_contents]))
   in
   let new_config =
-    match OpamStd.List.find_opt ((=) field @* fst) fields, value with
+    match OpamStd.List.assoc_opt field fields, value with
     | None, _ ->
-      OpamConsole.error_and_exit `Bad_arguments
-        "Field %s doesn't exist" (OpamConsole.colorise `underline field)
-    | Some (_, None), _ ->
+      OpamConsole.error
+        "There is no option named '%s'. The allowed options are:"
+        (OpamConsole.colorise `underline field);
+      OpamConsole.print_table stderr ~sep:" "
+        (OpamStd.Format.as_aligned_table
+           (OpamStd.List.filter_map
+              (function fl, Some _ -> Some fl | _ -> None)
+              fields));
+      OpamStd.Sys.exit_because `Bad_arguments
+    | Some None, _ ->
       OpamConsole.error_and_exit `Bad_arguments
         "Field %s is not modifiable" (OpamConsole.colorise `underline field)
-    | Some (_, Some (_, Fixed, _)), ((Add _ | Remove _) as ar) ->
+    | Some (Some (_, Fixed, _)), ((Add _ | Remove _) as ar) ->
       OpamConsole.error_and_exit `Bad_arguments
         "Field %s can't be %s" (OpamConsole.colorise `underline field)
         (match ar with Add _ -> "appended" | Remove _ -> "substracted"
                      | _ -> assert false)
-    | Some (_, Some (_, InModifiable (_,_), _)), ((Add _ | Remove _) as ar)
+    | Some (Some (_, InModifiable (_,_), _)), (Add _ | Remove _ as ar)
       when not inner ->
       OpamConsole.error_and_exit `Bad_arguments
-        "Field %s can't be directly %s, use instead `opam config set-var`"
+        "Field %s can't be directly %s, use `opam config set-var` instead"
         (OpamConsole.colorise `underline field)
-        (match ar with Add _ -> "appended" | Remove _ -> "substracted"
+        (match ar with Add _ -> "appended to" | Remove _ -> "substracted from"
                      | _ -> assert false)
-    | Some (_, Some (_, _, set_default)), Revert ->
+    | Some (Some (_, _, set_default)), Revert ->
       set_default conf.stg_config
-    | Some (_, Some (parse, fix_app, _)),
+    | Some (Some (parse, fix_app, _)),
       ((Add v | Remove v | Overwrite v) as req_value) ->
       (try
          let updf v = parse v conf.stg_config in
@@ -468,7 +474,7 @@ let set_opt ?(inner=false) field_value conf =
        with
        | (OpamPp.Bad_format (_,_) | Parsing.Parse_error) as e ->
          OpamConsole.error_and_exit `Bad_arguments
-           "Parse error on %s value '%s': %s"
+           "Parse error on the value of %s '%s': %s"
            (OpamConsole.colorise `underline field) v
            (OpamPp.string_of_bad_format e))
   in
@@ -477,7 +483,7 @@ let set_opt ?(inner=false) field_value conf =
     (match value with
      | Add value ->  Printf.sprintf "Added %s to" value
      | Remove value ->  Printf.sprintf "Removed %s from" value
-     | Overwrite value -> Printf.sprintf "Overwritted %s from" value
+     | Overwrite value -> Printf.sprintf "Set to %s the" value
      | Revert -> "Reverted")
     (OpamConsole.colorise `underline field)
     (OpamFilename.to_string conf.stg_file);

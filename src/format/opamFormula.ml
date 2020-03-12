@@ -637,9 +637,7 @@ let gen_formula l f =
 let formula_of_version_set set subset =
   let module S = OpamPackage.Version.Set in
   match
-    gen_formula
-      (OpamPackage.Version.Set.elements set)
-      (fun x -> OpamPackage.Version.Set.mem x subset)
+    gen_formula (S.elements set) (fun x -> S.mem x subset)
   with
   | Some f -> f
   | None -> invalid_arg "Empty subset"

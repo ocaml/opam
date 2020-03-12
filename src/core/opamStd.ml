@@ -1256,6 +1256,23 @@ module OpamFormat = struct
     | [a;b] -> Printf.sprintf "%s %s %s" a last b
     | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
 
+  let as_aligned_table ?(width=OpamSys.terminal_columns ()) l =
+    let itlen =
+      List.fold_left (fun acc s -> max acc (visual_length s))
+        0 l
+    in
+    let by_line = (width + 1) / (itlen + 1) in
+    if by_line <= 1 then
+      List.map (fun x -> [x]) l
+    else
+    let rec aux rline n = function
+      | [] -> [List.rev rline]
+      | x::r ->
+        if n = 0 then List.rev rline :: aux [] by_line r
+        else aux (x :: rline) (n-1) r
+    in
+    align_table (aux [] by_line l)
+
 end
 
 

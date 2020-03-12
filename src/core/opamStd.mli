@@ -302,6 +302,10 @@ module Format : sig
   (** Display a pretty list: ["x";"y";"z"] -> "x, y and z".
       "and" can be changed by specifying [last] *)
   val pretty_list: ?last:string -> string list -> string
+
+  (** Splits a list of strings so that it can be printed as a table that should
+      fit on screen *)
+  val as_aligned_table: ?width:int -> string list -> string list list
 end
 
 module Exn : sig

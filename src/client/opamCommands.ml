@@ -887,11 +887,11 @@ let config ?(setopt=false) () =
     "Without argument, prints a documented list of all available variables. \
      With $(i,PACKAGE), lists all the variables available for these packages. \
      Use $(i,-) to include global configuration variables for this switch.";
-    "set-var", `set_var, ["[switch|global]"; "NAME"; "[VALUE]"],
+    "set-var", `set_var, ["<switch|global>"; "NAME"; "[VALUE]"],
     "Set the given variable globally or in the current switch. Warning: \
      changing a configured path will not move any files! This command does not \
      perform any variable expansion.";
-    "set-opt", `set_opt, ["[switch|global]"; "FIELD[(+=|-=|=)VALUE]"],
+    "set-opt", `set_opt, ["<switch|global>"; "FIELD[(=|+=|-=)VALUE]"],
     "Set the given opam configuration field in the global/switch configuration \
      file.  If $(b,op VALUE) is omitted, $(b,FIELD) is reset to its default \
      initial configuration, as after a fresh init (use `opam init \
@@ -972,33 +972,35 @@ let config ?(setopt=false) () =
       (try `Ok (OpamConfigCommand.list gt
                   (List.map OpamPackage.Name.of_string params))
        with Failure msg -> `Error (false, msg))
-    | Some `set_var, ["sw"|"switch"; var; value] ->
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let _st = OpamConfigCommand.set_var_switch st var (Some value) in
-      `Ok ()
-    | Some `set_var, ["sw"|"switch"; var] ->
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let _st = OpamConfigCommand.set_var_switch st var None in
-      `Ok ()
-    | Some `set_var, ["gl"|"global"; var; value] ->
-      OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      let _gt = OpamConfigCommand.set_var_global gt var (Some value) in
-      `Ok ()
-    | Some `set_var, ["gl"|"global"; var] ->
-      OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      let _gt = OpamConfigCommand.set_var_global gt var None in
-      `Ok ()
-    | Some `set_opt, ("sw"|"switch")::fvs ->
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let _st = List.fold_left OpamConfigCommand.set_opt_switch st fvs in
-      `Ok ()
-    | Some `set_opt, ("gl"|"global")::fvs ->
-      OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      let _gt = List.fold_left OpamConfigCommand.set_opt_global gt fvs in
-      `Ok ()
+    | Some (`set_var | `set_opt as cmd), scope::var::args ->
+      let scope =
+        if String.length scope < 1 then `None
+        else if OpamStd.String.starts_with ~prefix:scope "switch" then `Switch
+        else if OpamStd.String.starts_with ~prefix:scope "global" then `Global
+        else `None
+      in
+      let opt_value = match args with [] -> None | x::_ -> Some x in
+      (match scope, cmd, opt_value with
+       | `None, _, _ ->
+         `Error (true, "no scope ('switch' or 'global') specified")
+       | _, `set_opt, Some _ ->
+         `Error (true, "too many arguments")
+       | `Switch, _, _ ->
+         OpamGlobalState.with_ `Lock_none @@ fun gt ->
+         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+         let _st = match cmd with
+           | `set_var -> OpamConfigCommand.set_var_switch st var opt_value
+           | `set_opt -> OpamConfigCommand.set_opt_switch st var
+         in
+         `Ok ()
+       | `Global, _, _ ->
+         OpamGlobalState.with_ `Lock_write @@ fun gt ->
+         let _st =
+           match cmd with
+           | `set_var -> OpamConfigCommand.set_var_global gt var opt_value
+           | `set_opt -> OpamConfigCommand.set_opt_global gt var
+         in
+         `Ok ())
     | Some `expand, [str] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.expand gt str)
