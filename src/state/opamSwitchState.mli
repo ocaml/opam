@@ -54,6 +54,10 @@ val compute_available_packages:
   pinned:package_set -> opams:OpamFile.OPAM.t package_map ->
   package_set
 
+(** Infer a switch invariant from a switch state with compiler_packages and
+    roots set, using some heuristics. Useful for migration from pre-2.1 opam *)
+val infer_switch_invariant: 'a switch_state -> OpamFormula.t
+
 (** Releases any locks on the given switch_state *)
 val unlock: 'a switch_state -> unlocked switch_state
 

@@ -1015,6 +1015,12 @@ let read_repo_opam ~repo_name ~repo_root dir =
   OpamFile.OPAM.with_metadata_dir
     (Some (Some repo_name, OpamFilename.remove_prefix_dir repo_root dir))
 
+let dep_formula_to_string f =
+  let pp =
+    OpamFormat.V.(package_formula `Conj (constraints version))
+  in
+  OpamPrinter.value (OpamPp.print pp f)
+
 let sort_opam opam =
   log "sorting %s" (OpamPackage.to_string (package opam));
   let sort_ff =

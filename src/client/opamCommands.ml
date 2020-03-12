@@ -389,45 +389,30 @@ let init =
     OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
     @@ fun () ->
     if no_compiler then () else
-    match compiler with
-    | Some comp when String.length comp <> 0->
-      let packages =
-        OpamSwitchCommand.guess_compiler_package rt comp
-        |> OpamStd.Option.map_default (fun x -> [x]) []
-      in
-      OpamConsole.header_msg "Creating initial switch (%s)"
-        (OpamFormula.string_of_atoms packages);
-      OpamSwitchCommand.install
-        gt ~rt ~packages ~update_config:true (OpamSwitch.of_string comp)
-      |> ignore
-    | _ as nocomp ->
-      if nocomp <> None then
-        OpamConsole.warning
-          "No compiler specified, a default compiler will be selected.";
-      let candidates = OpamFormula.to_dnf default_compiler in
-      let all_packages = OpamSwitchCommand.get_compiler_packages rt in
-      let compiler_packages =
-        try
-          Some (List.find (fun atoms ->
-              let names = List.map fst atoms in
-              let pkgs = OpamFormula.packages_of_atoms all_packages atoms in
-              List.for_all (OpamPackage.has_name pkgs) names)
-              candidates)
-        with Not_found -> None
-      in
-      match compiler_packages with
-      | Some packages ->
-        OpamConsole.header_msg "Creating initial switch (%s)"
-          (OpamFormula.string_of_atoms packages);
-        OpamSwitchCommand.install
-          gt ~rt ~packages ~update_config:true
-          (OpamSwitch.of_string "default")
-        |> ignore
-      | None ->
+    let invariant, name =
+      match compiler with
+      | Some comp when String.length comp > 0 ->
+        OpamSwitchCommand.guess_compiler_invariant rt [comp], comp
+      | _ -> default_compiler, "default"
+    in
+    OpamConsole.header_msg "Creating initial switch %s (%s)"
+      name
+      (match invariant with
+       | OpamFormula.Empty -> "empty"
+       | c -> OpamFileTools.dep_formula_to_string c);
+    let st =
+      try
+        OpamSwitchCommand.create
+          gt ~rt ~invariant ~update_config:true (OpamSwitch.of_string name) @@
+        OpamSwitchCommand.install_compiler
+      with e ->
+        OpamStd.Exn.finalise e @@ fun () ->
         OpamConsole.note
-          "No compiler selected, and no available default switch found: \
-           no switch has been created.\n\
+          "Opam has been initialised, but the initial switch creation \
+           failed.\n\
            Use 'opam switch create <compiler>' to get started."
+    in
+    OpamSwitchState.drop st
   in
   Term.(const init
         $global_options $build_options $repo_kind_flag $repo_name $repo_url
@@ -1537,6 +1522,7 @@ let reinstall =
       atoms_locs cmd =
     apply_global_options global_options;
     apply_build_options build_options;
+    let open OpamPackage.Set.Op in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     match cmd, atoms_locs with
     | `Default, (_::_ as atom_locs) ->
@@ -1546,7 +1532,7 @@ let reinstall =
       `Ok ()
     | `Pending, [] | `Default, [] ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let atoms = OpamSolution.eq_atoms_of_packages st.reinstall in
+      let atoms = OpamSolution.eq_atoms_of_packages (Lazy.force st.reinstall) in
       OpamSwitchState.drop @@ OpamClient.reinstall st atoms;
       `Ok ()
     | `List_pending, [] ->
@@ -1559,14 +1545,15 @@ let reinstall =
             header = false;
             order = `Dependency;
         }
-        st.reinstall;
+        (Lazy.force st.reinstall);
       `Ok ()
     | `Forget_pending, atom_locs ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       let atoms = OpamAuxCommands.resolve_locals_pinned ~recurse ?subpath st atom_locs in
+      let reinstall = Lazy.force st.reinstall in
       let to_forget = match atoms with
-        | [] -> st.reinstall
-        | atoms -> OpamFormula.packages_of_atoms st.reinstall atoms
+        | [] -> reinstall
+        | atoms -> OpamFormula.packages_of_atoms reinstall atoms
       in
       OpamPackage.Set.iter (fun nv ->
           try
@@ -1579,7 +1566,7 @@ let reinstall =
             then OpamSwitchAction.install_metadata st nv
           with Not_found -> ())
         to_forget;
-      let reinstall = OpamPackage.Set.Op.(st.reinstall -- to_forget) in
+      let reinstall = reinstall -- to_forget in
       OpamSwitchState.drop @@ OpamSwitchAction.update_switch_state ~reinstall st;
       `Ok ()
     | _, _::_ ->
@@ -2083,12 +2070,12 @@ let switch =
      can be a plain name, or a directory, absolute or relative, in which case \
      a local switch is created below the given directory. $(i,COMPILER), if \
      omitted, defaults to $(i,SWITCH) if it is a plain name, unless \
-     $(b,--packages) or $(b,--empty) is specified. When creating a local \
-     switch, and none of these options are present, the compiler is chosen \
-     according to the configuration default (see opam-init(1)). If the chosen \
-     directory contains package definitions, a compatible compiler is searched \
-     within the default selection, and the packages will automatically get \
-     installed.";
+     $(b,--packages), $(b,--formula) or $(b,--empty) is specified. When \
+     creating a local switch, and none of these options are present, the \
+     compiler is chosen according to the configuration default (see \
+     opam-init(1)). If the chosen directory contains package definitions, a \
+     compatible compiler is searched within the default selection, and the \
+     packages will automatically get installed.";
     "set", `set, ["SWITCH"],
     "Set the currently active switch, among the installed switches.";
     "remove", `remove, ["SWITCH"], "Remove the given switch from disk.";
@@ -2104,20 +2091,26 @@ let switch =
     "list", `list, [],
     "Lists installed switches.";
     "list-available", `list_available, ["[PATTERN]"],
-    "Lists base packages that can be used to create a new switch, i.e. \
-     packages with the $(i,compiler) flag set. If no pattern is supplied, \
-     all versions are shown.";
+    "Lists all the possible packages that are advised for installation when \
+     creating a new switch, i.e. packages with the $(i,compiler) flag set. If \
+     no pattern is supplied, all versions are shown.";
     "show", `current, [], "Prints the name of the current switch.";
-    "set-base", `set_compiler, ["PACKAGES"],
-    "Sets the packages forming the immutable base for the selected switch, \
-     overriding the current setting.";
+    "invariant", `show_invariant, [],
+    "Prints the active switch invariant.";
+    "set-invariant", `set_invariant, ["PACKAGES"],
+    "Updates the switch invariant, that is, the formula that the switch must \
+     keep verifying throughout all operations. The previous setting is \
+     overriden. See also options $(b,--force) and $(b,--no-action). Without \
+     arguments, an invariant is chosen automatically.";
     "set-description", `set_description, ["STRING"],
-    "Sets the description for the selected switch";
+    "Sets the description for the selected switch.";
     "link", `link, ["SWITCH";"[DIR]"],
     "Sets a local alias for a given switch, so that the switch gets \
      automatically selected whenever in that directory or a descendant.";
     "install", `install, ["SWITCH"],
-    "Deprecated alias for 'create'."
+    "Deprecated alias for 'create'.";
+    "set-base", `set_invariant, ["PACKAGES"],
+    "Deprecated alias for 'set-invariant'.";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -2145,6 +2138,24 @@ let switch =
         environment. For that, use $(i,eval \\$(opam env \
         --switch=SWITCH --set-switch\\)).";
   ] @ mk_subdoc ~defaults:["","list";"SWITCH","set"] commands
+    @ [
+      `S "EXAMPLES";
+      `Pre "    opam switch create 4.08.0";
+      `P "Create a new switch called \"4.08.0\" and select it, with a compiler \
+          automatically selected at version 4.08.0 (note that this can fail in \
+          case there is more than one compiler matching that version).";
+      `Pre "    opam switch create ./ --deps-only";
+      `P "Prepare a local switch for building the packages defined in $(i,./). \
+          This scans the current directory for package definitions, chooses a \
+          compatible compiler, creates a local switch and installs the local \
+          package dependencies.";
+      `Pre "    opam switch create trunk --repos \
+            default,beta=https://github.com/ocaml/ocaml-beta-repository.git \
+            ocaml-variants.4.10.0+trunk";
+      `P "Create a new switch called \"trunk\", with \
+          $(b,ocaml-variants.4.10.0+trunk) as compiler, with a new $(i,beta) \
+          repository bound to the given URL selected besides the default one."
+    ]
     @ [`S "OPTIONS"]
     @ [`S OpamArg.build_option_section]
   in
@@ -2155,12 +2166,17 @@ let switch =
       "Don't automatically select newly installed switches." in
   let packages =
     mk_opt ["packages"] "PACKAGES"
-      "When installing a switch, explicitly define the set of packages to set \
-       as the compiler."
+      "When installing a switch, explicitly define the set of packages to \
+       enforce as the switch invariant."
       Arg.(some (list atom)) None in
+  let formula =
+    mk_opt ["formula"] "FORMULA"
+      "Allows specifying a complete \"dependency formula\", possibly including \
+       disjunction cases, as the switch invariant."
+      Arg.(some OpamArg.dep_formula) None in
   let empty =
     mk_flag ["empty"]
-      "Allow creating an empty (without compiler) switch." in
+      "Allow creating an empty switch, with no invariant." in
   let repos =
     mk_opt ["repositories"] "REPOS"
       "When creating a new switch, use the given selection of repositories \
@@ -2203,6 +2219,17 @@ let switch =
        containing opam package definitions), install the dependencies of the \
        project but not the project itself."
   in
+  let force =
+    mk_flag ["force"]
+      "Only for $(i,set-invariant): force setting the invariant, bypassing \
+       consistency checks."
+  in
+  let no_action =
+    mk_flag ["no-action"]
+      "Only for $(i,set-invariant): set the invariant, but don't enforce it \
+       right away: wait for the next $(i,install), $(i,upgrade) or similar \
+       command."
+  in
   (* Deprecated options *)
   let d_alias_of =
     mk_opt ["A";"alias-of"]
@@ -2216,48 +2243,29 @@ let switch =
   in
   let switch
       global_options build_options command print_short
-      no_switch packages empty descr full freeze no_install deps_only repos
+      no_switch packages formula empty descr full freeze no_install deps_only repos
+      force no_action
       d_alias_of d_no_autoinstall params =
    OpamArg.deprecated_option d_alias_of None
    "alias-of" (Some "opam switch <switch-name> <compiler>");
    OpamArg.deprecated_option d_no_autoinstall false "no-autoinstall" None;
     apply_global_options global_options;
     apply_build_options build_options;
-    let packages =
-      match packages, empty with
-      | None, true -> Some []
-      | Some packages, true when packages <> [] ->
-        OpamConsole.error_and_exit `Bad_arguments
-          "Options --packages and --empty may not be specified at the same time"
-      | packages, _ -> packages
-    in
-    let compiler_packages rt ?repos switch compiler_opt =
-      match packages, compiler_opt, OpamSwitch.is_external switch with
-      | None, None, false ->
-        OpamStd.Option.to_list
-          (OpamSwitchCommand.guess_compiler_package ?repos rt
-             (OpamSwitch.to_string switch)), false
-      | None, None, true ->
-        let p, local =
-          OpamAuxCommands.get_compatible_compiler ?repos rt
-            (OpamFilename.dirname_dir
-               (OpamSwitch.get_root rt.repos_global.root switch))
-        in
-        OpamStd.Option.to_list p, local
+    let invariant_arg ?repos rt args =
+      match args, packages, formula, empty with
+      | [], None, None, false ->
+        OpamFile.Config.default_compiler rt.repos_global.config
+      | _::_ as packages, None, None, false ->
+        OpamSwitchCommand.guess_compiler_invariant ?repos rt packages
+      | [], Some atoms, None, false ->
+        let atoms = List.map (fun p -> Atom p) atoms in
+        OpamFormula.of_atom_formula (OpamFormula.ands atoms)
+      | [], None, (Some f), false -> f
+      | [], None, None, true -> OpamFormula.Empty
       | _ ->
-        let open OpamStd.Option.Op in
-        (OpamStd.Option.to_list
-           (compiler_opt >>=
-            OpamSwitchCommand.guess_compiler_package ?repos rt))
-        @ packages +! [], false
-    in
-    let param_compiler = function
-      | [] -> None
-      | [comp] -> Some comp
-      | args ->
         OpamConsole.error_and_exit `Bad_arguments
-          "Invalid extra arguments %s"
-          (String.concat " " args)
+          "Individual packages, options --packages, --formula and --empty may \
+           not be specified at the same time"
     in
     match command, params with
     | None      , []
@@ -2309,31 +2317,57 @@ let switch =
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       with_repos_rt gt repos @@ fun (repos, rt) ->
       let switch = OpamSwitch.of_string switch_arg in
-      let packages, local_compiler =
-        compiler_packages rt ?repos switch (param_compiler params)
+      let use_local =
+        not no_install && not empty && OpamSwitch.is_external switch
       in
-      let gt, st =
-        OpamSwitchCommand.install gt ~rt
-          ?synopsis:descr ?repos
-          ~update_config:(not no_switch)
-          ~packages
-          ~local_compiler
-          switch
+      let is_implicit =
+        params = [] && packages = None && formula = None && not empty
       in
-      OpamGlobalState.drop gt;
-      let st =
-        if not no_install && not empty &&
-           OpamSwitch.is_external switch && not local_compiler then
-          let st, atoms =
-            OpamAuxCommands.autopin st ~simulate:deps_only ~quiet:true
-              [`Dirname (OpamFilename.Dir.of_string switch_arg)]
-          in
-          OpamClient.install st atoms
-            ~autoupdate:[] ~add_to_roots:true ~deps_only
-        else st
+      let pkg_params =
+        if is_implicit && not (OpamSwitch.is_external switch) then [switch_arg]
+        else params
       in
-      OpamSwitchState.drop st;
-      `Ok ()
+      (match invariant_arg ?repos rt pkg_params with
+       | exception Failure e -> `Error (false, e)
+       | invariant ->
+         let st =
+           OpamSwitchCommand.create gt ~rt
+             ?synopsis:descr ?repos
+             ~update_config:(not no_switch)
+             ~invariant
+             switch
+           @@ fun st ->
+           let st, additional_installs =
+             if use_local then
+               let st, atoms =
+                 OpamAuxCommands.autopin st ~simulate:deps_only ~quiet:true
+                   [`Dirname (OpamFilename.Dir.of_string switch_arg)]
+               in
+               let st =
+                 if is_implicit then
+                   let local_compilers =
+                     OpamStd.List.filter_map
+                       (fun (name, _) ->
+                          if OpamFile.OPAM.has_flag Pkgflag_Compiler
+                              (OpamSwitchState.opam st
+                                 (OpamPinned.package st name))
+                          then Some (Atom (name, None))
+                          else None)
+                       atoms
+                   in
+                   if local_compilers <> [] then
+                     OpamSwitchCommand.set_invariant_raw st
+                       OpamFormula.(of_atom_formula (ands local_compilers))
+                   else st
+                 else st
+               in
+               st, atoms
+             else st, []
+           in
+           OpamSwitchCommand.install_compiler st ~additional_installs ~deps_only
+         in
+         OpamSwitchState.drop st;
+         `Ok ())
     | Some `export, [filename] ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
@@ -2346,35 +2380,31 @@ let switch =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       let switch = OpamStateConfig.get_switch () in
       let is_new_switch = not (OpamGlobalState.switch_exists gt switch) in
-      let with_gt_rt f =
-        if is_new_switch then
-          with_repos_rt gt repos @@ fun (repos, rt) ->
-          let (), gt =
-            OpamGlobalState.with_write_lock gt @@ fun gt ->
-            (), OpamSwitchAction.create_empty_switch gt ?repos switch
-          in
-          f (gt, rt)
-        else
-          (if repos <> None then
-             OpamConsole.warning
-               "Switch exists, '--repositories' argument ignored";
-           OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-           f (gt, rt))
+      let import_source =
+        if filename = "-" then None
+        else Some (OpamFile.make (OpamFilename.of_string filename))
       in
-      with_gt_rt @@ fun (gt, rt) ->
-      OpamSwitchState.with_ `Lock_write gt ~rt ~switch @@ fun st ->
-      let _st =
-        try
-          OpamSwitchCommand.import st
-            (if filename = "-" then None
-             else Some (OpamFile.make (OpamFilename.of_string filename)))
-        with e ->
-          if is_new_switch then
-            OpamConsole.warning
-              "Switch %s may have been left partially installed"
-              (OpamSwitch.to_string switch);
-          raise e
-      in
+      if is_new_switch then
+        with_repos_rt gt repos @@ fun (repos, rt) ->
+        let synopsis = "Import from " ^ Filename.basename filename in
+        ignore @@ OpamGlobalState.with_write_lock gt @@ fun gt ->
+        OpamSwitchCommand.create gt ~rt
+          ~synopsis ?repos ~invariant:OpamFormula.Empty
+          ~update_config:(not no_switch)
+          switch
+        @@ fun st ->
+        let st = OpamSwitchCommand.import st import_source in
+        let invariant = OpamSwitchState.infer_switch_invariant st in
+        let st = OpamSwitchCommand.set_invariant_raw st invariant in
+        OpamSwitchState.drop st;
+        (), gt
+      else begin
+        if repos <> None then
+          OpamConsole.warning
+            "Switch exists, '--repositories' argument ignored";
+        OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
+        OpamSwitchState.drop @@ OpamSwitchCommand.import st import_source
+      end;
       `Ok ()
     | Some `remove, switches ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
@@ -2413,18 +2443,28 @@ let switch =
       let switch_name = OpamSwitch.of_string switch in
       OpamSwitchCommand.switch `Lock_none gt switch_name;
       `Ok ()
-    | Some `set_compiler, packages ->
-      (try
-         let parse_namev s = match fst OpamArg.package s with
-           | `Ok (name, version_opt) -> name, version_opt
-           | `Error e -> failwith e
-         in
-         let namesv = List.map parse_namev packages in
-         OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    | Some `show_invariant, [] ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+      OpamConsole.msg "%s\n"
+        (OpamFileTools.dep_formula_to_string st.switch_invariant);
+      `Ok ()
+    | Some `set_invariant, params ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      (match invariant_arg rt params with
+       | exception Failure e -> `Error (false, e)
+       | invariant ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-         OpamSwitchState.drop @@ OpamSwitchCommand.set_compiler st namesv;
-         `Ok ()
-       with Failure e -> `Error (false, e))
+         let st = OpamSwitchCommand.set_invariant ~force st invariant in
+         let st =
+           if no_action || OpamFormula.satisfies_depends st.installed invariant
+           then st
+           else OpamClient.install_t
+               st ~ask:true [] None ~deps_only:false ~assume_built:false
+         in
+         OpamSwitchState.drop st;
+         `Ok ())
     | Some `link, args ->
       (try
          let switch, dir = match args with
@@ -2478,8 +2518,9 @@ let switch =
              $global_options $build_options $command
              $print_short_flag
              $no_switch
-             $packages $empty $descr $full $freeze $no_install $deps_only
-             $repos $d_alias_of $d_no_autoinstall $params)),
+             $packages $formula $empty $descr $full $freeze $no_install
+             $deps_only $repos $force $no_action $d_alias_of $d_no_autoinstall
+             $params)),
   term_info "switch" ~doc ~man
 
 (* PIN *)

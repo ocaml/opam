@@ -377,7 +377,7 @@ let rec handle_pin_depends st nv opam =
          st extra_pins
      else
      if OpamConsole.confirm
-         "Try to install anyway, assuming `--ignore-depends`?"
+         "Try to install anyway, assuming `--ignore-pin-depends'?"
      then st else
        OpamStd.Sys.exit_because `Aborted)
 

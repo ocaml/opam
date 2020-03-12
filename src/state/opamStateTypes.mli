@@ -96,8 +96,13 @@ type +'lock switch_state = {
   switch: switch;
   (** The current active switch *)
 
+  switch_invariant: formula;
+  (** Defines the "base" of the switch, e.g. what compiler is desired *)
+
   compiler_packages: package_set;
-  (** The packages that form the base of the current compiler *)
+  (** The packages that form the base of the current compiler. Normally equal to
+      the subset of installed packages matching the invariant defined in
+      switch_config *)
 
   switch_config: OpamFile.Switch_config.t;
   (** The configuration file for this switch *)
@@ -138,8 +143,13 @@ type +'lock switch_state = {
       happen not to be installed at some point, but this indicates that the
       user would like them installed. *)
 
-  reinstall: package_set;
+  reinstall: package_set Lazy.t;
   (** The set of packages which needs to be reinstalled *)
+
+  invalidated: package_set Lazy.t;
+  (** The set of packages which are installed but no longer valid, e.g. because
+      of removed system dependencies. Only packages which are unavailable end up
+      in this set, they are otherwise put in [reinstall]. *)
 
   (* Missing: a cache for
      - switch-global and package variables

@@ -67,8 +67,6 @@ For example, you could use
 
 to instruct a solver to minimise downgrades, and mininise the installed size, among other criteria.
 
-The `aspcud` solver supports this extended language starting from its version 1.8.0, which unfortunately is not the version shipped by default with Ubuntu precise or Debian Wheezy.
-
 ### News in aspcud 1.9.x
 
 Starting from version 1.9.0,  `aspcud`  adds support for three extra selectors, that are particularly useful to perform local upgrades. Here they are:
@@ -80,12 +78,3 @@ Starting from version 1.9.0,  `aspcud`  adds support for three extra selectors, 
 Using this extended set of package selector, it is now finally possible to specify user preferences that describe optimisations to be applied only to the packages explicitly mentioned in the request. For example, `-notuptodate(request),-count(changed)` would find a solution that tries to bring all packages mentioned in the request to their latest version, while leaving all the rest as untouched as possible.
 
 And if we have added to each package a `priority` value, we could also play with preferences like `+sum(upgraderequest,priority),-count(changed)` to get the packages mentioned in the upgrade request to the version with the highest possible priority, while leaving all the rest as untouched as possible.
-
-## Preferences only work with the external solvers
-
-For portability reasons, `opam` also embarks an ad-hoc solver module that is built by wrapping a set of heuristics around the code of the SAT-solver which is used in the [Dose Library](http://dose.gforge.inria.fr/public_html/) for detecting broken packages. This solver module has no support for user preferences, and is not able to manage correctly large package repositories: it is highly recommended that you install an external CUDF solver (`aspcud` is the one best supported today).
-
-## Using external solvers in the Cloud
-
-Thanks to support from [Irill](http://www.irill.org/), it is now possible to use an external solver for `opam` on any platform, over the network. See the [CUDF solver farm](http://cudf-solvers.irill.org/) for instructions.
-The latest version of the solver is on the farm, so you can use the full preferences language with it.

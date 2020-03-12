@@ -305,9 +305,37 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
      as an operation terminates *)
   let t_ref = ref t in
 
+  (* only needed when --update-invariant is set. Use the configured invariant,
+     not the current one which will be empty. *)
+  let original_invariant = t.switch_config.OpamFile.Switch_config.invariant in
+  let invariant_ref = ref original_invariant in
+
   let add_to_install nv =
     let root = OpamPackage.Name.Set.mem nv.name root_installs in
-    t_ref := OpamSwitchAction.add_to_installed !t_ref ~root nv
+    t_ref := OpamSwitchAction.add_to_installed !t_ref ~root nv;
+    if OpamStateConfig.(!r.unlock_base) then
+      let invariant =
+        OpamFormula.map (fun (n, cstr as at) ->
+            if n <> nv.name || OpamFormula.check_version_formula cstr nv.version
+            then Atom at else
+            let cstr =
+              OpamFormula.map (fun (relop, _ as vat) ->
+                  if OpamFormula.check_version_formula (Atom vat) nv.version
+                  then Atom vat
+                  else match relop with
+                    | `Neq | `Gt | `Lt -> OpamFormula.Empty
+                    | `Eq | `Geq | `Leq -> Atom (relop, nv.version))
+                cstr
+            in
+            Atom (n, cstr))
+          !invariant_ref
+      in
+      if invariant <> !invariant_ref then
+        (invariant_ref := invariant;
+         let switch_config = {!t_ref.switch_config with invariant} in
+         t_ref := {!t_ref with switch_config};
+         OpamSwitchAction.install_switch_config t.switch_global.root t.switch
+           switch_config)
   in
 
   let remove_from_install ?keep_as_root nv =
@@ -632,6 +660,12 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
         | _ -> assert false)
       graph
   in
+  if !invariant_ref <> original_invariant then
+    OpamConsole.note "Switch invariant was updated to %s\n\
+                      Use `opam switch set-invariant' to change it."
+      (match !invariant_ref with
+       | OpamFormula.Empty -> "<empty>"
+       | f -> OpamFileTools.dep_formula_to_string f);
   match action_results with
   | `Successful successful ->
     cleanup_artefacts action_graph;
@@ -875,7 +909,7 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false) ?force_remove
         else ""
       in
       OpamSolver.print_solution ~messages ~append
-        ~requested ~reinstall:t.reinstall
+        ~requested ~reinstall:(Lazy.force t.reinstall)
         solution;
       let total_actions = sum stats in
       if total_actions >= 2 then
@@ -954,13 +988,11 @@ let resolve t action ~orphans ?reinstall ~requested request =
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));
     OpamJson.append "switch" (OpamSwitch.to_json t.switch)
   );
-  Json.output_request request action;
-  let r =
-    OpamSolver.resolve
-      (OpamSwitchState.universe t ~requested ?reinstall action)
-      ~orphans
-      request
+  let universe =
+    OpamSwitchState.universe t ~requested ?reinstall action
   in
+  Json.output_request request action;
+  let r = OpamSolver.resolve universe ~orphans request in
   Json.output_solution t r;
   r
 

@@ -515,27 +515,8 @@ let package_with_version =
 (* name * version constraint *)
 let atom =
   let parse str =
-    let re = Re.(compile @@ seq [
-        bos;
-        group @@ rep1 @@ diff any (set ">=<.!");
-        group @@ alt [ seq [ set "<>"; opt @@ char '=' ];
-                       set "=."; str "!="; ];
-        group @@ rep1 any;
-        eos;
-      ]) in
-    try
-      let sub = Re.exec re str in
-      let sname = Re.Group.get sub 1 in
-      let sop = Re.Group.get sub 2 in
-      let sversion = Re.Group.get sub 3 in
-      let name = OpamPackage.Name.of_string sname in
-      let sop = if sop = "." then "=" else sop in
-      let op = OpamLexer.relop sop in
-      let version = OpamPackage.Version.of_string sversion in
-      `Ok (name, Some (op, version))
-    with Not_found | Failure _ | OpamLexer.Error _ ->
-      try `Ok (OpamPackage.Name.of_string str, None)
-      with Failure msg -> `Error msg
+    try `Ok (OpamFormula.atom_of_string str)
+    with Failure msg -> `Error msg
   in
   let print ppf atom =
     pr_str ppf (OpamFormula.short_string_of_atom atom) in
@@ -575,6 +556,19 @@ let atom_or_dir =
     | `Error e -> `Error e
   in
   let print ppf = snd atom_or_local ppf in
+  parse, print
+
+let dep_formula =
+  let pp = OpamFormat.V.(package_formula `Conj (constraints version)) in
+  let parse str =
+    try
+      let v = OpamParser.value_from_string str "<command-line>" in
+      `Ok (OpamPp.parse pp ~pos:pos_null v)
+    with e -> OpamStd.Exn.fatal e; `Error (Printexc.to_string e)
+  in
+  let print ppf f =
+    pr_str ppf (OpamPrinter.value (OpamPp.print pp f))
+  in
   parse, print
 
 let variable_bindings =
@@ -1148,7 +1142,7 @@ let build_options =
        to setting $(b,\\$OPAMIGNORECONSTRAINTS)."
       Arg.(some (list package_name)) None ~vopt:(Some []) in
   let unlock_base =
-    mk_flag ~section ["unlock-base"]
+    mk_flag ~section ["update-invariant"; "unlock-base"]
       "Allow changes to the packages set as switch base (typically, the main \
        compiler). Use with caution. This is equivalent to setting the \
        $(b,\\$OPAMUNLOCKBASE) environment variable" in

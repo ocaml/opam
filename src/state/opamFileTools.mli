@@ -105,6 +105,10 @@ val map_all_variables:
 val map_all_filters:
   (filter -> filter) -> OpamFile.OPAM.t -> OpamFile.OPAM.t
 
-(* Sort opam fields: author, tags, depexts, depends, depopts, conflicts,
-   pin_depends, extra_files, extra_sources *)
+(** Converts a dependency formula to the same format as used in opam package
+    definition files. *)
+val dep_formula_to_string: formula -> string
+
+(** Sort opam fields: author, tags, depexts, depends, depopts, conflicts,
+    pin_depends, extra_files, extra_sources *)
 val sort_opam: OpamFile.OPAM.t -> OpamFile.OPAM.t

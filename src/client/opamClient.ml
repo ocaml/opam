@@ -23,20 +23,28 @@ let slog = OpamConsole.slog
    - they are checked for conflicts with the user request
    - they are re-added to the universe if (transitively) unrelated to the
      request (the [changes] parameter)
-   - they are otherwise put in [wish_remove] in case we use the internal
-     solver
    This function separates full orphans (no version of the package available
    anymore) from orphan versions, because they have a different impact on
    the request (needs version change VS needs uninstall).
-   See also preprocess_request and check_conflicts *)
+
+   Orphan packages include both installed packages that are no longer available,
+   and packages that are "invalidated", i.e. their system dependencies are no
+   longer up-to-date: in this case they might still be available for reinstall..
+
+   See also check_conflicts. *)
 let orphans ?changes ?(transitive=false) t =
   let all = t.packages ++ t.installed in
+  let available = Lazy.force t.available_packages in
   let allnames = OpamPackage.names_of_packages all in
+  let invalidated = Lazy.force t.invalidated in
   let universe =
     OpamSwitchState.universe t ~requested:OpamPackage.Name.Set.empty Reinstall
   in
   (* Basic definition of orphan packages *)
-  let orphans = t.installed -- Lazy.force t.available_packages in
+  let orphans =
+    t.installed -- available
+  in
+  log "Base orphans: %a" (slog OpamPackage.Set.to_string) orphans;
   (* Restriction to the request-related packages *)
   let changes = match changes with
     | None -> None
@@ -63,14 +71,17 @@ let orphans ?changes ?(transitive=false) t =
       in
       orphans %% recompile_cone
   in
+  (* invalidated packages forbid changes of their reverse dependencies, while
+     basic orphans do not *)
+  let orphans = orphans ++ invalidated in
   (* Pinned versions of packages remain always available *)
   let orphans = orphans -- OpamPinned.packages t in
   (* Splits between full orphans (no version left) and partial ones *)
   let full_partition orphans =
-    let orphan_names = (* names for which there is no version left *)
+    let orphan_names = (* names for which there is no available version left *)
       OpamPackage.Name.Set.diff
         allnames
-        (OpamPackage.names_of_packages (all -- orphans)) in
+        (OpamPackage.names_of_packages (available -- orphans)) in
     OpamPackage.Set.partition
       (fun nv -> OpamPackage.Name.Set.mem nv.name orphan_names)
       orphans
@@ -99,10 +110,9 @@ let orphans ?changes ?(transitive=false) t =
      re-add them to the universe *)
   let t =
     if changes = None then t else
-    let available_packages =
-      lazy (Lazy.force t.available_packages ++
-            (t.installed -- orphans)) in
-    { t with available_packages } in
+    let available_packages = lazy (available ++ (t.installed -- orphans)) in
+    { t with available_packages }
+  in
   log "Orphans: (changes: %a, transitive: %b) -> full %a, versions %a"
     (slog @@ OpamStd.Option.to_string OpamPackage.Set.to_string) changes
     transitive
@@ -182,7 +192,7 @@ let compute_upgrade_t
              let nv = OpamSwitchState.find_installed_package_by_name t n in
              if OpamSwitchState.is_dev_package t nv ||
                 OpamPackage.has_name t.pinned n ||
-                OpamPackage.Set.mem nv t.reinstall
+                OpamPackage.Set.mem nv (Lazy.force t.reinstall)
              then (n, None)
              else
              let atom = (n, Some (`Gt, nv.version)) in
@@ -221,7 +231,7 @@ let compute_upgrade_t
     OpamSolution.resolve t Upgrade
       ~orphans:(full_orphans ++ orphan_versions)
       ~requested:names
-      ~reinstall:t.reinstall
+      ~reinstall:(Lazy.force t.reinstall)
       (OpamSolver.request
          ~install:to_install
          ~upgrade:(OpamSolution.atoms_of_packages to_upgrade)
@@ -890,41 +900,55 @@ let init
 let check_conflicts t atoms =
   let changes = OpamSwitchState.packages_of_atoms t atoms in
   let t, full_orphans, orphan_versions = orphans ~changes t in
-  let available_changes = changes %% Lazy.force t.available_packages in
-  (* packages which still have local data are OK for install/reinstall *)
-  let has_no_local_data nv =
-    not (OpamFile.exists
-           (OpamPath.Switch.installed_opam t.switch_global.root t.switch nv))
+  let available = Lazy.force t.available_packages in
+  let available_changes = changes %% available in
+  (* packages which still have local data are OK for install/reinstall if still
+     "available" *)
+  let full_orphans_reinstallable, full_orphans =
+    OpamPackage.Set.partition (fun nv ->
+        match OpamPackage.Map.find_opt nv t.opams with
+        | None -> false
+        | Some opam ->
+          OpamFilter.eval_to_bool ~default:false
+            (OpamPackageVar.resolve_switch ~package:nv t)
+            (OpamFile.OPAM.available opam))
+      full_orphans
   in
-  let full_orphans, full_orphans_with_local_data =
-    OpamPackage.Set.partition has_no_local_data
-      full_orphans in
-  let orphan_versions, orphan_versions_with_local_data =
-    OpamPackage.Set.partition
-      (fun nv -> has_no_local_data nv ||
-                 OpamPackage.has_name available_changes nv.name)
-      orphan_versions in
-  let available = lazy (t.packages -- full_orphans -- orphan_versions) in
+  let orphan_versions_reinstallable, orphan_versions =
+    OpamPackage.Set.partition (fun nv ->
+        not (OpamPackage.has_name available_changes nv.name) &&
+        match OpamPackage.Map.find_opt nv t.opams with
+        | None -> false
+        | Some opam ->
+          OpamFilter.eval_to_bool ~default:false
+            (OpamPackageVar.resolve_switch ~package:nv t)
+            (OpamFile.OPAM.available opam))
+      orphan_versions
+  in
   let orphans = full_orphans ++ orphan_versions in
   let conflict_atoms =
+    let non_orphans = lazy (t.packages -- full_orphans -- orphan_versions) in
     List.filter
       (fun (name,_ as a) ->
          not (OpamPackage.has_name t.pinned name) &&
          OpamPackage.Set.exists (OpamFormula.check a) orphans && (*optim*)
          not (OpamPackage.Set.exists (OpamFormula.check a) (* real check *)
-                (Lazy.force available)))
-      atoms in
+                (Lazy.force non_orphans)))
+      atoms
+  in
   if conflict_atoms <> [] then
+    (* Atoms that were unavailable to begin with should be already filtered out
+       at this point (by [sanitize_atom_list]) *)
     OpamConsole.error_and_exit `Not_found
-      "Sorry, these packages are no longer available \
-       from the repositories: %s"
+      "Sorry, these packages are no longer available from the repositories: \
+       %s"
       (OpamStd.Format.pretty_list
          (List.map OpamFormula.string_of_atom conflict_atoms))
   else
     {t with available_packages = lazy
-              (Lazy.force t.available_packages ++
-               full_orphans_with_local_data ++
-               orphan_versions_with_local_data )},
+              (available ++
+               full_orphans_reinstallable ++
+               orphan_versions_reinstallable)},
     full_orphans,
     orphan_versions
 
@@ -984,8 +1008,8 @@ let filter_unpinned_locally t atoms f =
          None))
     atoms
 
-let install_t t ?ask atoms add_to_roots
-    ~deps_only ?(ignore_conflicts=false) ~assume_built =
+let install_t t ?ask ?(ignore_conflicts=false) atoms add_to_roots
+    ~deps_only ~assume_built =
   log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
   let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
@@ -1006,7 +1030,7 @@ let install_t t ?ask atoms add_to_roots
     get_installed_atoms t atoms in
   let pkg_reinstall =
     if assume_built then OpamPackage.Set.of_list pkg_skip
-    else t.reinstall %% OpamPackage.Set.of_list pkg_skip
+    else Lazy.force t.reinstall %% OpamPackage.Set.of_list pkg_skip
   in
   (* Add the packages to the list of package roots and display a
      warning for already installed package roots. *)
@@ -1147,7 +1171,7 @@ let install t ?autoupdate ?add_to_roots
     | Some a -> OpamSolution.sanitize_atom_list ~permissive:true t a
   in
   let t = update_dev_packages_t autoupdate_atoms t in
-  install_t t atoms add_to_roots ~deps_only ~ignore_conflicts ~assume_built
+  install_t t ~ignore_conflicts atoms add_to_roots ~deps_only ~assume_built
 
 let check_installed t atoms =
   let available = (Lazy.force t.available_packages) in

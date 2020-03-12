@@ -17,7 +17,8 @@ open OpamStateTypes
 (** Initialises a new switch with the given name in the given opam root,
     registers it in the global config and returns the updated global state *)
 val create_empty_switch:
-  rw global_state -> ?synopsis:string -> ?repos:repository_name list ->
+  rw global_state ->
+  ?synopsis:string -> ?repos:repository_name list -> ?invariant:formula ->
   switch -> rw global_state
 
 (** Writes the current state file to disk (installed, pinned, root packages etc.).
@@ -32,7 +33,8 @@ val set_current_switch:
 (** Create the default global_config structure for a switch, including default
     prefix *)
 val gen_switch_config:
-  dirname -> ?synopsis:string -> ?repos:repository_name list ->
+  dirname ->
+  ?synopsis:string -> ?repos:repository_name list -> ?invariant:formula ->
   switch -> OpamFile.Switch_config.t
 
 (** (Re-)install the configuration for a given root and switch *)
