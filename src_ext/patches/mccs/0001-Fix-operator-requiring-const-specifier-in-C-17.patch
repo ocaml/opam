@@ -1,0 +1,23 @@
+From 8b037cbf9f1bd93543573a2420bb6a804d3a8d86 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Antonin=20D=C3=A9cimo?= <antonin.decimo@gmail.com>
+Date: Sat, 14 Mar 2020 17:27:25 +0100
+Subject: [PATCH] Fix operator requiring const specifier in C++17
+
+Close #27
+---
+ src/cudf.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/cudf.h b/src/cudf.h
+index c68753c..23d4ae8 100644
+--- a/src/cudf.h
++++ b/src/cudf.h
+@@ -118,7 +118,7 @@ class CUDFVersionedPackage: public CUDFPackage {
+ // Compares two versioned package (used by ordered set packages likes CUDFVersionedPackageSet)
+ class CUDFPackage_comparator {
+ public:
+-  bool operator()(CUDFVersionedPackage *p1, CUDFVersionedPackage *p2) {
++  bool operator()(CUDFVersionedPackage *p1, CUDFVersionedPackage *p2) const {
+     if (p1->version < p2->version)
+       return true;
+     else
