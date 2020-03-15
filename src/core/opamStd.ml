@@ -607,7 +607,6 @@ type warning_printer =
   {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
 let console = ref {warning = fun fmt -> Printf.ksprintf prerr_string fmt}
 
-
 module Env = struct
 
   (* Remove from a c-separated list of string the one with the given prefix *)
@@ -709,7 +708,7 @@ module OpamSys = struct
 
   let tty_in = Unix.isatty Unix.stdin
 
-  let default_columns =
+  let default_columns = lazy (
     let default = 16_000_000 in
     let cols =
       try int_of_string (Env.get "COLUMNS") with
@@ -717,6 +716,7 @@ module OpamSys = struct
       | Failure _ -> default
     in
     if cols > 0 then cols else default
+  )
 
   let get_terminal_columns () =
     let fallback = 80 in
@@ -757,15 +757,19 @@ module OpamSys = struct
       fun () ->
         if tty_out
         then win32_get_console_width ()
-        else default_columns
+        else Lazy.force default_columns
     else
       fun () ->
         if tty_out
         then Lazy.force !v
-        else default_columns
+        else Lazy.force default_columns
 
   let home =
-    let home = lazy (try Env.get "HOME" with Not_found -> Sys.getcwd ()) in
+    (* Note: we ask Unix.getenv instead of Env.get to avoid
+       forcing the environment in this function that is used
+       before the .init() functions are called -- see
+       OpamStateConfig.default. *)
+    let home = lazy (try Unix.getenv "HOME" with Not_found -> Sys.getcwd ()) in
     fun () -> Lazy.force home
 
   let etc () = "/etc"
