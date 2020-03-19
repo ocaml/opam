@@ -211,8 +211,9 @@ all the packages pinned in the current switch.
 
 `opam install <DIR>` is an automatic way to handle pinning packages whose
 definitions are found in `<DIR>`, synchronise and install them. The `upgrade`,
-`reinstall` and `remove` commands can likewise be used with a directory argument
-to refer to pinned packages.
+`reinstall` and `remove` commands can likewise be used with a directory
+argument to refer to pinned packages. Since `2.1.0~beta`, opam handles lookup
+in subdirectories with `--recurse` and `--subpath` options.
 
 ## Common file format
 
@@ -1427,6 +1428,28 @@ for <span class="opam">opam</span>.
   a list of compiler package choices. On `opam init`, the first available
   compiler in the list will be chosen for creating the initial switch if
   `--bare` wasn't specified.
+
+- <a id="configfield-depext-enable">`depext-enable: <bool>`</a>:
+	enable the depext mechanism. Opam needs to interact with the system-wide
+	package manager in some cases: packages can declare dependencies on system
+  packages (typically, bindings to C libraries, e.g. SDL, require the library to
+  be installed), in an OS-dependent way. Then, opam will do its best to interact
+  with your system, checking their availability, and triggering their
+  installation if needed.";
+
+- <a id="configfield-depext-no-consistency-checks">`depext-no-consistency-checks: <bool>`</a>:
+  check that the system dependencies of already installed packages are still present
+
+- <a id="configfield-depext-print-only">`depext-print-only: <cool>`</a>:
+  don't run any system-related commands, instead print them and pause. Useful if you don't or can't use `sudo`.
+
+- <a id="configfield-depext-no-root">`depext-no-root: <bool>`</a>:
+	mark all external dependencies that are not already installed as
+  unavailable. This can make a lot of packages uninstallable.
+
+- <a id="configfield-depext-bypass">`depext-bypass: [ <string> ... ] `</a>:
+	assume the listed system packages to be already installed, so they will not
+  be searched for using the package manager of your system.
 
 #### switch-config
 
