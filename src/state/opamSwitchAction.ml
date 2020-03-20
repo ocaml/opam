@@ -38,6 +38,7 @@ let gen_switch_config
     wrappers = OpamFile.Wrappers.empty;
     env = [];
     invariant;
+    depext_bypass = OpamSysPkg.Set.empty;
   }
 
 let install_switch_config root switch config =

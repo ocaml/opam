@@ -311,11 +311,21 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
   let original_invariant = t.switch_config.OpamFile.Switch_config.invariant in
   let invariant_ref = ref original_invariant in
 
+  let bypass_ref = ref (t.switch_config.OpamFile.Switch_config.depext_bypass) in
+
   let add_to_install nv =
     let root = OpamPackage.Name.Set.mem nv.name root_installs in
     t_ref := OpamSwitchAction.add_to_installed !t_ref ~root nv;
-    if OpamStateConfig.(!r.unlock_base) then
-      let invariant =
+    let missing_depexts =
+      (* Turns out these depexts wheren't needed after all. Remember that and
+         make the bypass permanent. *)
+      try
+        (OpamPackage.Map.find nv (Lazy.force !t_ref.sys_packages)).s_available
+      with Not_found -> OpamSysPkg.Set.empty
+    in
+    let bypass = OpamSysPkg.Set.union missing_depexts !bypass_ref in
+    let invariant =
+      if OpamStateConfig.(!r.unlock_base) then
         OpamFormula.map (fun (n, cstr as at) ->
             if n <> nv.name || OpamFormula.check_version_formula cstr nv.version
             then Atom at else
@@ -330,13 +340,17 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
             in
             Atom (n, cstr))
           !invariant_ref
-      in
-      if invariant <> !invariant_ref then
-        (invariant_ref := invariant;
-         let switch_config = {!t_ref.switch_config with invariant} in
-         t_ref := {!t_ref with switch_config};
-         OpamSwitchAction.install_switch_config t.switch_global.root t.switch
-           switch_config)
+      else !invariant_ref
+    in
+    if bypass <> !bypass_ref || invariant <> !invariant_ref then
+      (bypass_ref := bypass;
+       invariant_ref := invariant;
+       let switch_config =
+         {!t_ref.switch_config with invariant; depext_bypass = bypass }
+       in
+       t_ref := {!t_ref with switch_config};
+       OpamSwitchAction.install_switch_config t.switch_global.root t.switch
+         switch_config)
   in
 
   let remove_from_install ?keep_as_root nv =
@@ -902,7 +916,7 @@ let get_depexts t packages =
   print_depext_msg (avail, nf);
   avail
 
-let install_depexts t sys_packages =
+let install_depexts t packages sys_packages =
   if OpamSysPkg.Set.is_empty sys_packages ||
      OpamClientConfig.(!r.show)
   then t else
@@ -910,10 +924,30 @@ let install_depexts t sys_packages =
     let commands = OpamSysInteract.install_packages_commands sys_packages in
     OpamConsole.formatted_msg
       (match commands with
-       | [_] -> "This command should get you the requirements installed:\n"
-       | _ -> "These commands should get you the requirements installed:\n");
+       | [_] -> "This command should get the requirements installed:\n"
+       | _ -> "These commands should get the requirements installed:\n");
     OpamConsole.msg "\n    %s\n\n"
       (OpamStd.List.concat_map "\n    " (String.concat " ") commands)
+  in
+  let map_sysmap f t =
+    let sys_packages =
+      OpamPackage.Set.fold (fun nv sys_map ->
+          match OpamPackage.Map.find_opt nv sys_map with
+          | Some status ->
+            OpamPackage.Map.add
+              nv { status with OpamSysPkg.s_available =
+                                 f status.OpamSysPkg.s_available }
+              sys_map
+          | None -> sys_map)
+        packages
+        (Lazy.force t.sys_packages)
+    in
+    { t with sys_packages = lazy sys_packages }
+  in
+  let recheck t sys_packages =
+    let needed, _notfound = OpamSysInteract.packages_status sys_packages in
+    let installed = OpamSysPkg.Set.diff sys_packages needed in
+    map_sysmap (fun sysp -> OpamSysPkg.Set.diff sysp installed) t, needed
   in
   let rec wait msg sys_packages =
     let give_up () =
@@ -931,25 +965,18 @@ let install_depexts t sys_packages =
         "%s\nWhen you are done: check again and continue?"
         msg
     then
-      let to_install, _ = OpamSysInteract.packages_status sys_packages in
+      let t, to_install = recheck t sys_packages in
       if OpamSysPkg.Set.is_empty to_install then t else
-        let msg =
-          Printf.sprintf
-            "\nThe following remain to be installed: %s"
-            (syspkgs_to_string to_install)
-        in
-        wait msg to_install
+      let msg =
+        Printf.sprintf
+          "\nThe following remain to be installed: %s"
+          (syspkgs_to_string to_install)
+      in
+      wait msg to_install
     else if
       OpamConsole.confirm ~default:false
         "Do you want to attempt to proceed anyway?"
     then t
-    (* TODO: when the actions succeed, add the sys_pkgs to the switch's
-       depext_bypass:
-       { t with switch_config = OpamFile.Config.with_depext_bypass
-                 (OpamSysPkg.union
-                    (OpamFile.Config.depext_bypass)
-                    sys_packages)
-                 t.switch_config } *)
     else give_up ()
   in
   OpamConsole.header_msg "Handling external dependencies";
@@ -965,12 +992,14 @@ let install_depexts t sys_packages =
   then
     try
       OpamSysInteract.install sys_packages; (* handles dry_run *)
-      t
+      map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
     with Failure msg ->
       OpamConsole.error "%s" msg;
       wait "You can now try to get them installed manually."
         sys_packages
-  else (* TODO: Print a hint: `You can run opam config depexts-print-only to disable this question` *)
+  else
+    (* TODO: Print a hint: `You can run opam config depexts-print-only to
+       disable this question` *)
     (print ();
      wait
        "You may now install the packages manually on your system."
@@ -1034,7 +1063,7 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false) ?force_remove
     if not OpamClientConfig.(!r.show) &&
        confirmation ?ask requested action_graph
     then (
-      let t = install_depexts t sys_packages in
+      let t = install_depexts t new_state.installed sys_packages in
       let requested =
         OpamPackage.packages_of_names new_state.installed requested
       in

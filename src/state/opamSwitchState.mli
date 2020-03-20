@@ -156,7 +156,9 @@ val depexts: 'a switch_state -> package -> OpamSysPkg.Set.t
 (** Returns required system packages of each of the given packages (elements are
     not added to the map  if they don't have system dependencies) *)
 val get_sysdeps_map:
-  depexts:(package -> OpamSysPkg.Set.t) -> OpamFile.Config.t ->
+  depexts:(package -> OpamSysPkg.Set.t) ->
+  OpamFile.Config.t ->
+  OpamFile.Switch_config.t ->
   package_set ->
   OpamSysPkg.status package_map
 

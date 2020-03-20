@@ -157,7 +157,7 @@ let depexts_raw ~env nv opams =
       (OpamFile.OPAM.depexts opam)
   with Not_found -> OpamSysPkg.Set.empty
 
-let get_sysdeps_map ~depexts config packages =
+let get_sysdeps_map ~depexts global_config switch_config packages =
   let open OpamSysPkg.Set.Op in
   let syspkg_set, syspkg_map =
     OpamPackage.Set.fold (fun nv (set, map) ->
@@ -168,7 +168,11 @@ let get_sysdeps_map ~depexts config packages =
       packages (OpamSysPkg.Set.empty, OpamPackage.Map.empty)
   in
   let chronos = OpamConsole.timer () in
-  let bypass = OpamFile.Config.depext_bypass config in
+  let bypass =
+    OpamSysPkg.Set.union
+      (OpamFile.Config.depext_bypass global_config)
+      (switch_config.OpamFile.Switch_config.depext_bypass)
+  in
   let syspkg_set = syspkg_set -- bypass in
   let ret =
     match OpamSysInteract.packages_status syspkg_set with
@@ -430,7 +434,7 @@ let load lock_kind gt rt switch =
     if OpamStateConfig.(not !r.depext_enable) then
       OpamPackage.Map.empty
     else
-      get_sysdeps_map gt.config (Lazy.force available_packages)
+      get_sysdeps_map gt.config switch_config (Lazy.force available_packages)
         ~depexts:(fun package ->
             let env =
               OpamPackageVar.resolve_switch_raw ~package gt switch switch_config

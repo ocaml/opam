@@ -938,6 +938,7 @@ let from_2_0_alpha2_to_2_0_alpha3 root conf =
             opam_root; paths; variables; wrappers = OpamFile.Wrappers.empty;
             env = [];
             invariant = OpamFormula.Empty;
+            depext_bypass = OpamSysPkg.Set.empty;
           }
         in
         OpamFile.Switch_config.write (OpamFile.make new_config_file) new_config;
