@@ -998,9 +998,9 @@ let install_depexts t packages sys_packages =
       wait "You can now try to get them installed manually."
         sys_packages
   else
-    (* TODO: Print a hint: `You can run opam config depexts-print-only to
-       disable this question` *)
-    (print ();
+    (OpamConsole.note "Use `opam config set-opt global depext-print-only=true' \
+                       if you don't want to be prompted anymore.";
+     print ();
      wait
        "You may now install the packages manually on your system."
        sys_packages)
