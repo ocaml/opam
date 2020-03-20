@@ -334,7 +334,7 @@ type 'config fld_updater =  ('config -> 'config -> 'config)
    code (see [set_var_global]).
    First argument is the addition function, the second the remove one. *)
 type 'config fld_policy =
-  | Fixed
+  | Atomic
   | Modifiable of 'config fld_updater * 'config fld_updater
   | InModifiable of 'config fld_updater * 'config fld_updater
 
@@ -446,7 +446,7 @@ let set_opt ?(inner=false) field_value conf =
     | Some None, _ ->
       OpamConsole.error_and_exit `Bad_arguments
         "Field %s is not modifiable" (OpamConsole.colorise `underline field)
-    | Some (Some (_, Fixed, _)), ((Add _ | Remove _) as ar) ->
+    | Some (Some (_, Atomic, _)), ((Add _ | Remove _) as ar) ->
       OpamConsole.error_and_exit `Bad_arguments
         "Field %s can't be %s" (OpamConsole.colorise `underline field)
         (match ar with Add _ -> "appended" | Remove _ -> "substracted"
@@ -538,7 +538,7 @@ let set_opt_switch_t ?inner st field_value =
   let allowed_fields =
     OpamFile.Switch_config.(
       [
-        ("synopsis", Fixed,
+        ("synopsis", Atomic,
          fun t -> { t with synopsis = empty.synopsis });
       ] @ allwd_wrappers empty.wrappers wrappers
         (fun wrappers t -> { t with wrappers }))
@@ -594,19 +594,19 @@ let set_opt_global_t ?inner gt field_value =
              None = OpamStd.List.find_opt (fun (k',v',_) -> k = k' && v = v') gv)
              (get c)) c)
     in
-    [ "download-command", Fixed,
+    [ "download-command", Atomic,
       Config.with_dl_tool_opt
         (InitConfig.dl_tool in_config ++ Config.dl_tool Config.empty);
-      "download-jobs", Fixed,
+      "download-jobs", Atomic,
       Config.with_dl_jobs
         (InitConfig.dl_jobs in_config +! Config.dl_jobs Config.empty);
-      "jobs", Fixed,
+      "jobs", Atomic,
       Config.with_jobs_opt
         (InitConfig.jobs in_config ++ Config.jobs Config.empty);
-      "best-effort-prefix-criteria", Fixed,
+      "best-effort-prefix-criteria", Atomic,
       Config.with_best_effort_prefix_opt
         (Config.best_effort_prefix Config.empty);
-      "solver", Fixed,
+      "solver", Atomic,
       Config.with_solver_opt
         (InitConfig.solver in_config ++ Config.solver Config.empty);
       "global-variables",
@@ -621,10 +621,10 @@ let set_opt_global_t ?inner gt field_value =
        in
        InModifiable (add, rem)),
       Config.with_eval_variables (InitConfig.eval_variables in_config);
-      "repository-validation-command", Fixed,
+      "repository-validation-command", Atomic,
       Config.with_validation_hook_opt (Config.validation_hook Config.empty);
     ] @ List.map (fun f ->
-        f, Fixed, Config.with_criteria
+        f, Atomic, Config.with_criteria
           (Config.criteria Config.empty))
       [ "solver-criteria";
         "solver-upgrade-criteria";
