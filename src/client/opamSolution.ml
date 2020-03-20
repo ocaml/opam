@@ -121,6 +121,24 @@ let atom_of_name name =
 
 let check_availability ?permissive t set atoms =
   let available = OpamPackage.to_map set in
+  let check_depexts atom =
+    let pkgs = OpamFormula.packages_of_atoms t.packages [atom] in
+    try
+      let depexts_missing =
+        (OpamPackage.Map.find (OpamPackage.Set.max_elt pkgs)
+           (Lazy.force t.sys_packages))
+        .OpamSysPkg.s_not_found
+      in
+      if OpamSysPkg.Set.is_empty depexts_missing then None
+      else
+        Some
+          (Printf.sprintf
+             "Package %s depends on the unavailable system package '%s'"
+             (OpamFormula.short_string_of_atom atom)
+             (OpamStd.List.concat_map " " OpamSysPkg.to_string
+                (OpamSysPkg.Set.elements depexts_missing)))
+    with Not_found -> None
+  in
   let check_atom (name, cstr as atom) =
     let exists =
       try
@@ -130,7 +148,10 @@ let check_availability ?permissive t set atoms =
       with Not_found -> false
     in
     if exists then None
-    else if permissive = Some true
+    else match check_depexts atom with
+      | Some _ as some -> some
+      | None ->
+    if permissive = Some true
     then Some (OpamSwitchState.not_found_message t atom)
     else
     let f = name, match cstr with None -> Empty | Some c -> Atom c in

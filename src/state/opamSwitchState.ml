@@ -430,17 +430,30 @@ let load lock_kind gt rt switch =
       OpamPackage.Set.empty
   ) in
   (* depext check *)
-  let sys_packages = lazy (
+  let sys_packages =
     if OpamStateConfig.(not !r.depext_enable) then
-      OpamPackage.Map.empty
-    else
+      lazy OpamPackage.Map.empty
+    else lazy (
       get_sysdeps_map gt.config switch_config (Lazy.force available_packages)
         ~depexts:(fun package ->
             let env =
               OpamPackageVar.resolve_switch_raw ~package gt switch switch_config
             in
             depexts_raw ~env package opams)
-  ) in
+    )
+  in
+  let available_packages =
+    if OpamStateConfig.(not !r.depext_enable) then available_packages
+    else lazy (
+      let sys_packages = Lazy.force sys_packages in
+      OpamPackage.Set.filter (fun nv ->
+          match OpamPackage.Map.find_opt nv sys_packages with
+          | Some { OpamSysPkg.s_not_found; _ }
+            when not (OpamSysPkg.Set.is_empty s_not_found) -> false
+          | _ -> true)
+        (Lazy.force available_packages)
+    )
+  in
   let sys_packages_changed = lazy (
     if OpamStateConfig.(!r.depext_no_consistency_checks) then
       OpamPackage.Set.empty

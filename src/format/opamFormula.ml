@@ -290,7 +290,7 @@ let check (name,cstr) package =
   | Some (relop, v) -> eval_relop relop (OpamPackage.version package) v
 
 let packages_of_atoms ?(disj=false) pkgset atoms =
-  (* Conjunction for constraints over the same name (unless [disj@ is
+  (* Conjunction for constraints over the same name (unless [disj] is
      specified), but disjunction on the package names *)
   let ffilter = if disj then List.exists else List.for_all in
   let by_name =
