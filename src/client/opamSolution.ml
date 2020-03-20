@@ -56,6 +56,7 @@ let post_message ?(failed=false) st action =
     )
 
 let print_depexts_helper st actions =
+  if OpamStateConfig.(!r.depext_enable) then () else
   let depexts =
     List.fold_left (fun depexts -> function
         | `Build nv ->
