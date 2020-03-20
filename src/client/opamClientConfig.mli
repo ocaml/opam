@@ -28,6 +28,7 @@ type t = private {
   json_out: string option;
   root_is_ok: bool;
   no_auto_upgrade: bool;
+  skip_depexts: bool;
 }
 
 type 'a options_fun =
@@ -48,6 +49,7 @@ type 'a options_fun =
   ?json_out:string option ->
   ?root_is_ok:bool ->
   ?no_auto_upgrade:bool ->
+  ?skip_depexts:bool ->
   'a
   (* constraint 'a = 'b -> 'c *)
 
@@ -82,6 +84,7 @@ val opam_init:
   ?json_out:string option ->
   ?root_is_ok:bool ->
   ?no_auto_upgrade:bool ->
+  ?skip_depexts:bool ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:[ `Command_line | `Default | `Env ] ->
   ?jobs:int Lazy.t ->

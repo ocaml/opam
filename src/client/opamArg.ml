@@ -161,17 +161,20 @@ type build_options = {
   unlock_base   : bool;
   locked        : bool;
   lock_suffix   : string;
+  skip_depexts: bool;
 }
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
     req_checksums build_test build_doc show dryrun skip_update
     fake jobs ignore_constraints_on unlock_base locked lock_suffix
+    skip_depexts
     =
   {
     keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
     req_checksums; build_test; build_doc; show; dryrun; skip_update; fake;
     jobs; ignore_constraints_on; unlock_base; locked; lock_suffix;
+    skip_depexts;
   }
 
 let apply_build_options b =
@@ -205,6 +208,7 @@ let apply_build_options b =
     ?show:(flag b.show)
     ?fake:(flag b.fake)
     ?skip_dev_update:(flag b.skip_update)
+    ?skip_depexts:(flag b.skip_depexts)
     ()
 
 let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
@@ -299,6 +303,8 @@ let help_sections = [
   `P "$(i,OPAMROOTISOK) don't complain when running as root.";
   `P "$(i,OPAMSAFE) see option `--safe'";
   `P "$(i,OPAMSHOW) see option `--show`";
+  `P "$(i,OPAMSKIPDEPEXTS) see option `--skip-depexts`. It is recommended to \
+      disable depext handling rather than setting this environment variable.";
   `P "$(i,OPAMSKIPUPDATE) see option `--skip-updates`";
   `P "$(i,OPAMSKIPVERSIONCHECKS) bypasses some version checks. Unsafe, for \
       compatibility testing only.";
@@ -1183,11 +1189,18 @@ let build_options =
        $(b,\\$OPAMUNLOCKBASE) environment variable" in
   let locked = locked section in
   let lock_suffix = lock_suffix section in
+  let skip_depexts =
+    mk_flag ~section ["skip-depexts"]
+      "When installing opam packages that declare dependencies towards system \
+       packages, don't attempt to install those and proceed anyway. If the \
+       package build is successful, the exception for these system packages \
+       will be remembered. Only meaningful if external dependency handling is \
+       enabled." in
   Term.(const create_build_options
         $keep_build_dir $reuse_build_dir $inplace_build $make
         $no_checksums $req_checksums $build_test $build_doc $show $dryrun
         $skip_update $fake $jobs_flag $ignore_constraints_on
-        $unlock_base $locked $lock_suffix)
+        $unlock_base $locked $lock_suffix $skip_depexts)
 
 (* Option common to install commands *)
 let assume_built =

@@ -919,7 +919,8 @@ let get_depexts t packages =
 
 let install_depexts t packages sys_packages =
   if OpamSysPkg.Set.is_empty sys_packages ||
-     OpamClientConfig.(!r.show)
+     OpamClientConfig.(!r.show) ||
+     OpamClientConfig.(!r.skip_depexts)
   then t else
   let print () =
     let commands = OpamSysInteract.install_packages_commands sys_packages in
@@ -952,12 +953,10 @@ let install_depexts t packages sys_packages =
   in
   let rec wait msg sys_packages =
     let give_up () =
-      OpamConsole.formatted_msg (* TODO: implement the bypass option ! *)
-        "You can retry with `--depext-bypass %s' to skip this check, or run \
-         `opam set-opt global depext-enable false' to disable handling of \
-         system packages altogether.\n"
-        (OpamStd.List.concat_map "," OpamSysPkg.to_string
-           (OpamSysPkg.Set.elements sys_packages));
+      OpamConsole.formatted_msg
+        "You can retry with `--skip-depexts' to skip this check, or run `opam \
+         set-opt global depext-enable false' to disable handling of system \
+         packages altogether.\n";
       OpamStd.Sys.exit_because `Aborted
     in
     if not OpamStd.Sys.tty_in || OpamCoreConfig.(!r.answer <> None) then
