@@ -72,3 +72,11 @@ val set_var_global:
   rw global_state -> string -> string option -> rw global_state
 val set_var_switch:
   rw switch_state -> string -> string option -> rw switch_state
+
+(** List switch or global fields/sections and their value *)
+val options_list_switch: ro switch_state -> unit
+val options_list_global: ro global_state -> unit
+
+(** Display [field] name and content in the global or switch configuration *)
+val option_show_switch: ro switch_state -> string -> unit
+val option_show_global: ro global_state -> string -> unit

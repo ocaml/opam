@@ -778,3 +778,53 @@ let set_var_switch st var value =
           st.switch_config;
         st);
   }
+
+(** Option display *)
+
+let field_str pp t =
+  match OpamPp.print pp t with
+  | _, None -> "undefined"
+  | _, Some v -> OpamPrinter.value v
+
+let section_str field  pp t =
+  match OpamPp.print pp t with
+  | _, None -> "undefined"
+  | _, Some items ->
+    OpamPrinter.items
+      (List.map (fun (section_name, section_items) ->
+           Section (pos_null,
+                    { section_kind = field;
+                      section_name;
+                      section_items }))
+          items)
+
+let options_list scope conf =
+  let fields_sections =
+    List.map (fun (f,pp) ->
+        [f; field_str pp conf.stg_config]) conf.stg_fields
+    @ List.map (fun (f,pp) ->
+        [f; section_str f pp conf.stg_config]) conf.stg_sections
+  in
+  OpamConsole.msg "%s fields and sections:\n" scope;
+  OpamConsole.print_table stdout ~sep:"   "
+    (OpamStd.Format.align_table (fields_sections))
+
+let options_list_switch st = options_list "Switch" (confset_switch st)
+let options_list_global st = options_list "Global" (confset_global st)
+
+let option_show conf field =
+  match OpamStd.List.find_opt (fun (f,_) -> f = field) conf.stg_fields with
+  | Some (_, pp) ->
+    OpamConsole.msg "Field %s: %s\n" field
+      (field_str pp conf.stg_config)
+  | None ->
+    (match OpamStd.List.find_opt (fun (f,_) -> f = field) conf.stg_sections with
+     | Some (_, pp) ->
+       OpamConsole.msg "Section %s\n"
+         (section_str field pp conf.stg_config)
+     | None ->
+       OpamConsole.error_and_exit `Bad_arguments
+         "Field or section %s not found" field)
+
+let option_show_switch st field = option_show (confset_switch st) field
+let option_show_global gt field = option_show (confset_global gt) field
