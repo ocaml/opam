@@ -161,20 +161,21 @@ type build_options = {
   unlock_base   : bool;
   locked        : bool;
   lock_suffix   : string;
-  skip_depexts: bool;
+  assume_depexts: bool;
+  no_depexts    : bool;
 }
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
     req_checksums build_test build_doc show dryrun skip_update
     fake jobs ignore_constraints_on unlock_base locked lock_suffix
-    skip_depexts
+    assume_depexts no_depexts
     =
   {
     keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
     req_checksums; build_test; build_doc; show; dryrun; skip_update; fake;
     jobs; ignore_constraints_on; unlock_base; locked; lock_suffix;
-    skip_depexts;
+    assume_depexts; no_depexts;
   }
 
 let apply_build_options b =
@@ -200,6 +201,7 @@ let apply_build_options b =
                          OpamPackage.Name.Set.of_list)
     ?unlock_base:(flag b.unlock_base)
     ?locked:(if b.locked then Some (Some b.lock_suffix) else None)
+    ?no_depexts:(flag b.no_depexts)
     ();
   OpamClientConfig.update
     ?keep_build_dir:(flag b.keep_build_dir)
@@ -208,7 +210,7 @@ let apply_build_options b =
     ?show:(flag b.show)
     ?fake:(flag b.fake)
     ?skip_dev_update:(flag b.skip_update)
-    ?skip_depexts:(flag b.skip_depexts)
+    ?assume_depexts:(flag (b.assume_depexts || b.no_depexts))
     ()
 
 let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
@@ -245,12 +247,6 @@ let help_sections = [
       list of sections. Sections can optionally have a specific debug level \
       (for example, $(b,CLIENT:2) or $(b,CLIENT CUDF:2), but otherwise use \
       `--debug-level'.";
-  `P "$(i,OPAMDEPEXTS) enalbe or disable depext mechanism, see option \
-      `--depext-enable`.";
-  `P "$(i,OPAMDEPEXTBYPASS) set system package to not check, same as \
-      `--depext-bypass` with a list of packages to add.";
-  `P "$(i,OPAMDEPEXTPRINTONLY) see option `--depext-print-only`.";
-  `P "$(i,OPAMDEPEXTNOROOT) see option `--depext-no-root";
   `P "$(i,OPAMDOWNLOADJOBS) sets the maximum number of simultaneous downloads.";
   `P "$(i,OPAMDRYRUN) see option `--dry-run`";
   `P "$(i,OPAMEDITOR) sets the editor to use for opam file editing, overrides \
@@ -267,7 +263,6 @@ let help_sections = [
   `P "$(i,OPAMFIXUPCRITERIA) same as $(i,OPAMUPGRADECRITERIA), but specific \
       to fixup";
   `P "$(i,OPAMIGNORECONSTRAINTS) see install option `--ignore-constraints-on`";
-  `P "$(i,OPAMDEPEXTNOCONSISTENCYCHECK) see option `--depext-no-consistency-checks`";
   `P "$(i,OPAMIGNOREPINDEPENDS) see option `--ignore-pin-depends`";
   `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
   `P "$(i,OPAMJSON) log json output to the given file (use character `%' to \
@@ -303,8 +298,6 @@ let help_sections = [
   `P "$(i,OPAMROOTISOK) don't complain when running as root.";
   `P "$(i,OPAMSAFE) see option `--safe'";
   `P "$(i,OPAMSHOW) see option `--show`";
-  `P "$(i,OPAMSKIPDEPEXTS) see option `--skip-depexts`. It is recommended to \
-      disable depext handling rather than setting this environment variable.";
   `P "$(i,OPAMSKIPUPDATE) see option `--skip-updates`";
   `P "$(i,OPAMSKIPVERSIONCHECKS) bypasses some version checks. Unsafe, for \
       compatibility testing only.";
@@ -1173,7 +1166,8 @@ let build_options =
       "This option registers the actions into the opam database, without \
        actually performing them. \
        WARNING: This option is dangerous and likely to break your opam \
-       environment. You probably want `--dry-run'. You've been $(i,warned)." in
+       environment. You probably want $(b,--dry-run). You've been $(i,warned)."
+  in
   let ignore_constraints_on =
     mk_opt ~section ["ignore-constraints-on"] "PACKAGES"
       "Forces opam to ignore version constraints on all dependencies to the \
@@ -1189,18 +1183,25 @@ let build_options =
        $(b,\\$OPAMUNLOCKBASE) environment variable" in
   let locked = locked section in
   let lock_suffix = lock_suffix section in
-  let skip_depexts =
-    mk_flag ~section ["skip-depexts"]
-      "When installing opam packages that declare dependencies towards system \
-       packages, don't attempt to install those and proceed anyway. If the \
-       package build is successful, the exception for these system packages \
-       will be remembered. Only meaningful if external dependency handling is \
-       enabled." in
+  let assume_depexts =
+    mk_flag ~section ["assume-depexts"]
+      "Skip the installation step for any missing system packages, and attempt \
+       to proceed with compilation of the opam packages anyway. If the \
+       installation is successful, opam won't prompt again about these system \
+       packages. Only meaningful if external dependency handling is enabled."
+  in
+  let no_depexts =
+    mk_flag ~section ["no-depexts"]
+      "Temporarily disables handling of external dependencies. This can be \
+       used if a package is not available on your system package manager, but \
+       you installed the required dependency by hand. Implies \
+       $(b,--assume-depexts), and stores the exceptions upon success as well."
+  in
   Term.(const create_build_options
         $keep_build_dir $reuse_build_dir $inplace_build $make
         $no_checksums $req_checksums $build_test $build_doc $show $dryrun
         $skip_update $fake $jobs_flag $ignore_constraints_on
-        $unlock_base $locked $lock_suffix $skip_depexts)
+        $unlock_base $locked $lock_suffix $assume_depexts $no_depexts)
 
 (* Option common to install commands *)
 let assume_built =

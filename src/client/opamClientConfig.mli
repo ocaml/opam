@@ -28,7 +28,7 @@ type t = private {
   json_out: string option;
   root_is_ok: bool;
   no_auto_upgrade: bool;
-  skip_depexts: bool;
+  assume_depexts: bool;
 }
 
 type 'a options_fun =
@@ -49,7 +49,7 @@ type 'a options_fun =
   ?json_out:string option ->
   ?root_is_ok:bool ->
   ?no_auto_upgrade:bool ->
-  ?skip_depexts:bool ->
+  ?assume_depexts:bool ->
   'a
   (* constraint 'a = 'b -> 'c *)
 
@@ -84,7 +84,7 @@ val opam_init:
   ?json_out:string option ->
   ?root_is_ok:bool ->
   ?no_auto_upgrade:bool ->
-  ?skip_depexts:bool ->
+  ?assume_depexts:bool ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:[ `Command_line | `Default | `Env ] ->
   ?jobs:int Lazy.t ->
@@ -97,11 +97,7 @@ val opam_init:
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
   ?locked:string option ->
-  ?depext_bypass: OpamSysPkg.Set.t ->
-  ?depext_enable: bool ->
-  ?depext_no_consistency_checks: bool ->
-  ?depext_no_root: bool ->
-  ?depext_print_only: bool ->
+  ?no_depexts:bool ->
   ?cudf_file:string option ->
   ?solver:(module OpamCudfSolver.S) Lazy.t ->
   ?best_effort:bool ->

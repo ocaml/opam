@@ -169,18 +169,22 @@ let get_sysdeps_map ~depexts global_config switch_config packages =
   in
   let chronos = OpamConsole.timer () in
   let bypass =
-    OpamSysPkg.Set.union
-      (OpamFile.Config.depext_bypass global_config)
-      (switch_config.OpamFile.Switch_config.depext_bypass)
+    OpamFile.Config.depext_bypass global_config ++
+    switch_config.OpamFile.Switch_config.depext_bypass
   in
   let syspkg_set = syspkg_set -- bypass in
   let ret =
     match OpamSysInteract.packages_status syspkg_set with
     | avail, not_found ->
       let avail, not_found =
-        if OpamStateConfig.(!r.depext_no_root)
-        then OpamSysPkg.Set.empty, avail ++ not_found
-        else avail, not_found
+        if OpamStateConfig.(!r.no_depexts) then
+          (* Mark all as available. This is necessary to store the exceptions
+             afterwards *)
+          avail ++ not_found, OpamSysPkg.Set.empty
+        else if OpamFile.Config.depext_cannot_install global_config then
+          OpamSysPkg.Set.empty, avail ++ not_found
+        else
+          avail, not_found
       in
       OpamPackage.Map.map (fun set ->
           { OpamSysPkg.s_available = set %% avail;
@@ -188,7 +192,7 @@ let get_sysdeps_map ~depexts global_config switch_config packages =
         ) syspkg_map
     | exception (Failure msg) ->
       OpamConsole.note "%s\nYou can disable this check using 'opam config \
-                        set-opt depext-enable=false'"
+                        option global depext=false'"
         msg;
       OpamPackage.Map.empty
   in
@@ -431,7 +435,8 @@ let load lock_kind gt rt switch =
   ) in
   (* depext check *)
   let sys_packages =
-    if OpamStateConfig.(not !r.depext_enable) then
+    if not (OpamFile.Config.depext gt.config)
+    || OpamStateConfig.(!r.no_depexts) then
       lazy OpamPackage.Map.empty
     else lazy (
       get_sysdeps_map gt.config switch_config (Lazy.force available_packages)
@@ -443,7 +448,7 @@ let load lock_kind gt rt switch =
     )
   in
   let available_packages =
-    if OpamStateConfig.(not !r.depext_enable) then available_packages
+    if not (OpamFile.Config.depext gt.config) then available_packages
     else lazy (
       let sys_packages = Lazy.force sys_packages in
       OpamPackage.Set.filter (fun nv ->
@@ -455,7 +460,7 @@ let load lock_kind gt rt switch =
     )
   in
   let sys_packages_changed = lazy (
-    if OpamStateConfig.(!r.depext_no_consistency_checks) then
+    if not (OpamFile.Config.depext_verify gt.config) then
       OpamPackage.Set.empty
     else
     let sys_packages =

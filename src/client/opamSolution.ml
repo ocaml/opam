@@ -56,7 +56,7 @@ let post_message ?(failed=false) st action =
     )
 
 let print_depexts_helper st actions =
-  if OpamStateConfig.(!r.depext_enable) then () else
+  if OpamFile.Config.depext st.switch_global.config then () else
   let depexts =
     List.fold_left (fun depexts -> function
         | `Build nv ->
@@ -133,7 +133,8 @@ let check_availability ?permissive t set atoms =
       else
         Some
           (Printf.sprintf
-             "Package %s depends on the unavailable system package '%s'"
+             "Package %s depends on the unavailable system package '%s'. You \
+              can use `--no-depexts' to attempt installation anyway."
              (OpamFormula.short_string_of_atom atom)
              (OpamStd.List.concat_map " " OpamSysPkg.to_string
                 (OpamSysPkg.Set.elements depexts_missing)))
@@ -148,9 +149,7 @@ let check_availability ?permissive t set atoms =
       with Not_found -> false
     in
     if exists then None
-    else match check_depexts atom with
-      | Some _ as some -> some
-      | None ->
+    else match check_depexts atom with Some _ as some -> some | None ->
     if permissive = Some true
     then Some (OpamSwitchState.not_found_message t atom)
     else
@@ -923,7 +922,8 @@ let print_depext_msg (avail, nf) =
 
 (* Gets depexts from the state, without checking again *)
 let get_depexts t packages =
-  if OpamStateConfig.(!r.depext_no_consistency_checks) then OpamSysPkg.Set.empty
+  if not (OpamFile.Config.depext_verify t.switch_global.config) then
+    OpamSysPkg.Set.empty
   else
   let sys_packages = Lazy.force t.sys_packages in
   let avail, nf =
@@ -941,7 +941,7 @@ let get_depexts t packages =
 let install_depexts t packages sys_packages =
   if OpamSysPkg.Set.is_empty sys_packages ||
      OpamClientConfig.(!r.show) ||
-     OpamClientConfig.(!r.skip_depexts)
+     OpamClientConfig.(!r.assume_depexts)
   then t else
   let print () =
     let commands = OpamSysInteract.install_packages_commands sys_packages in
@@ -975,9 +975,9 @@ let install_depexts t packages sys_packages =
   let rec wait msg sys_packages =
     let give_up () =
       OpamConsole.formatted_msg
-        "You can retry with `--skip-depexts' to skip this check, or run `opam \
-         set-opt global depext-enable false' to disable handling of system \
-         packages altogether.\n";
+        "You can retry with '--assume-depexts' to skip this check, or run \
+         'opam config option global depext=false' to permanently disable handling of \
+         system packages altogether.\n";
       OpamStd.Sys.exit_because `Aborted
     in
     if not OpamStd.Sys.tty_in || OpamCoreConfig.(!r.answer <> None) then
@@ -1001,7 +1001,7 @@ let install_depexts t packages sys_packages =
     else give_up ()
   in
   OpamConsole.header_msg "Handling external dependencies";
-  if OpamStateConfig.(!r.depext_print_only) then
+  if not (OpamFile.Config.depext_run_installs t.switch_global.config) then
     (print ();
      wait "You may now install the packages on your system."
        sys_packages)
@@ -1019,8 +1019,9 @@ let install_depexts t packages sys_packages =
       wait "You can now try to get them installed manually."
         sys_packages
   else
-    (OpamConsole.note "Use `opam config set-opt global depext-print-only=true' \
-                       if you don't want to be prompted anymore.";
+    (OpamConsole.note "Use 'opam config option global \
+                       depext-run-installs=false' if you don't want to be \
+                       prompted again.";
      print ();
      wait
        "You may now install the packages manually on your system."
@@ -1075,7 +1076,8 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false) ?force_remove
         OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
     );
     let sys_packages =
-      if OpamStateConfig.(not !r.depext_enable) then OpamSysPkg.Set.empty
+      if not (OpamFile.Config.depext t.switch_global.config) then
+        OpamSysPkg.Set.empty
       else
         get_depexts t @@ OpamPackage.Set.inter
           new_state.installed

@@ -25,7 +25,7 @@ type t = {
   json_out: string option;
   root_is_ok: bool;
   no_auto_upgrade: bool;
-  skip_depexts: bool;
+  assume_depexts: bool;
 }
 
 let default = {
@@ -45,7 +45,7 @@ let default = {
   json_out = None;
   root_is_ok = false;
   no_auto_upgrade = false;
-  skip_depexts = false;
+  assume_depexts = false;
 }
 
 type 'a options_fun =
@@ -65,7 +65,7 @@ type 'a options_fun =
   ?json_out:string option ->
   ?root_is_ok:bool ->
   ?no_auto_upgrade:bool ->
-  ?skip_depexts:bool ->
+  ?assume_depexts:bool ->
   'a
 
 let setk k t
@@ -85,7 +85,7 @@ let setk k t
     ?json_out
     ?root_is_ok
     ?no_auto_upgrade
-    ?skip_depexts
+    ?assume_depexts
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -105,7 +105,7 @@ let setk k t
     json_out = t.json_out + json_out;
     root_is_ok = t.root_is_ok + root_is_ok;
     no_auto_upgrade = t.no_auto_upgrade + no_auto_upgrade;
-    skip_depexts = t.skip_depexts + skip_depexts;
+    assume_depexts = t.assume_depexts + assume_depexts;
   }
 
 let set t = setk (fun x () -> x) t
@@ -137,7 +137,7 @@ let initk k =
     ?json_out:(env_string "JSON" >>| function "" -> None | s -> Some s)
     ?root_is_ok:(env_bool "ROOTISOK")
     ?no_auto_upgrade:(env_bool "NOAUTOUPGRADE")
-    ?skip_depexts:(env_bool "SKIPDEPEXTS")
+    ?assume_depexts:None
 
 let init ?noop:_ = initk (fun () -> ())
 
@@ -177,11 +177,6 @@ let opam_init ?root_dir ?strict =
           (OpamFile.Config.best_effort_prefix conf >>| fun s -> lazy (Some s))
         ();
       OpamStateConfig.update
-        ~depext_bypass:(OpamFile.Config.depext_bypass conf)
-        ~depext_enable:(OpamFile.Config.depext_enable conf)
-        ~depext_no_consistency_checks:(OpamFile.Config.depext_no_consistency_checks conf)
-        ~depext_no_root:(OpamFile.Config.depext_no_root conf)
-        ~depext_print_only:(OpamFile.Config.depext_print_only conf)
         ()
   end;
 

@@ -1074,11 +1074,11 @@ module ConfigSyntax = struct
     eval_variables : (variable * string list * string) list;
     validation_hook : arg list option;
     default_compiler : formula;
+    depext: bool;
+    depext_run_installs : bool;
+    depext_cannot_install : bool;
+    depext_verify : bool;
     depext_bypass: OpamSysPkg.Set.t;
-    depext_enable: bool;
-    depext_no_consistency_checks : bool;
-    depext_no_root : bool;
-    depext_print_only : bool;
   }
 
   let opam_version t = t.opam_version
@@ -1103,11 +1103,11 @@ module ConfigSyntax = struct
   let validation_hook t = t.validation_hook
   let default_compiler t = t.default_compiler
 
+  let depext t = t.depext
+  let depext_run_installs t = t.depext_run_installs
+  let depext_cannot_install t = t.depext_cannot_install
+  let depext_verify t = t.depext_verify
   let depext_bypass t = t.depext_bypass
-  let depext_enable t = t.depext_enable
-  let depext_no_consistency_checks t = t.depext_no_consistency_checks
-  let depext_no_root t = t.depext_no_root
-  let depext_print_only t = t.depext_print_only
 
 
   let with_opam_version opam_version t = { t with opam_version }
@@ -1137,12 +1137,13 @@ module ConfigSyntax = struct
     { t with validation_hook = Some validation_hook}
   let with_validation_hook_opt validation_hook t = { t with validation_hook }
   let with_default_compiler default_compiler t = { t with default_compiler }
+  let with_depext depext t = { t with depext }
+  let with_depext_run_installs depext_run_installs t =
+    { t with depext_run_installs }
+  let with_depext_cannot_install depext_cannot_install t =
+    { t with depext_cannot_install }
+  let with_depext_verify depext_verify t = { t with depext_verify }
   let with_depext_bypass depext_bypass t = { t with depext_bypass }
-  let with_depext_enable depext_enable t = { t with depext_enable }
-  let with_depext_no_consistency_checks depext_no_consistency_checks t =
-    { t with depext_no_consistency_checks }
-  let with_depext_no_root depext_no_root t = { t with depext_no_root }
-  let with_depext_print_only depext_print_only t = { t with depext_print_only }
 
   let empty = {
     opam_version = format_version;
@@ -1161,11 +1162,11 @@ module ConfigSyntax = struct
     eval_variables = [];
     validation_hook = None;
     default_compiler = OpamFormula.Empty;
+    depext = true;
+    depext_run_installs = true;
+    depext_cannot_install = false;
+    depext_verify = true;
     depext_bypass = OpamSysPkg.Set.empty;
-    depext_enable = false;
-    depext_no_consistency_checks = false;
-    depext_no_root = false;
-    depext_print_only = false;
   }
 
   (* When adding a field, make sure to add it in
@@ -1242,24 +1243,23 @@ module ConfigSyntax = struct
       "default-compiler", Pp.ppacc
         with_default_compiler default_compiler
         (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
-      (* depext fields *)
+      "depext", Pp.ppacc
+        with_depext depext
+        Pp.V.bool;
+      "depext-run-installs", Pp.ppacc
+        with_depext_run_installs depext_run_installs
+        Pp.V.bool;
+      "depext-cannot-install", Pp.ppacc
+        with_depext_cannot_install depext_cannot_install
+        Pp.V.bool;
+      "depext-verify", Pp.ppacc
+        with_depext_verify depext_verify
+        Pp.V.bool;
       "depext-bypass", Pp.ppacc
         with_depext_bypass depext_bypass
         (Pp.V.map_list
            (Pp.V.string -| Pp.of_module "sys-package" (module OpamSysPkg)) -|
          Pp.of_pair "System package set" OpamSysPkg.Set.(of_list, elements));
-      "depext-enable", Pp.ppacc
-        with_depext_enable depext_enable
-        Pp.V.bool;
-      "depext-no-consistency_checks", Pp.ppacc
-        with_depext_no_consistency_checks depext_no_consistency_checks
-        Pp.V.bool;
-      "depext-no-root", Pp.ppacc
-        with_depext_no_root depext_no_root
-        Pp.V.bool;
-      "depext-print-only", Pp.ppacc
-        with_depext_print_only depext_print_only
-        Pp.V.bool;
 
       (* deprecated fields *)
       "alias", Pp.ppacc_opt

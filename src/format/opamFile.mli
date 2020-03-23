@@ -147,11 +147,11 @@ module Config: sig
     arg list option -> t -> t
   val with_default_compiler:
     formula -> t -> t
+  val with_depext: bool -> t -> t
+  val with_depext_run_installs: bool -> t -> t
+  val with_depext_cannot_install: bool -> t -> t
+  val with_depext_verify: bool -> t -> t
   val with_depext_bypass: OpamSysPkg.Set.t -> t -> t
-  val with_depext_enable: bool -> t -> t
-  val with_depext_no_consistency_checks: bool -> t -> t
-  val with_depext_no_root: bool -> t -> t
-  val with_depext_print_only: bool -> t -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> opam_version
@@ -192,11 +192,11 @@ module Config: sig
 
   val default_compiler: t -> formula
 
+  val depext: t -> bool
+  val depext_run_installs: t -> bool
+  val depext_cannot_install: t -> bool
+  val depext_verify: t -> bool
   val depext_bypass: t -> OpamSysPkg.Set.t
-  val depext_enable: t -> bool
-  val depext_no_consistency_checks: t -> bool
-  val depext_no_root: t -> bool
-  val depext_print_only: t -> bool
 
   val fields: (string * (t, value) OpamPp.field_parser) list
 
