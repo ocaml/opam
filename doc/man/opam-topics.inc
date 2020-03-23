@@ -113,12 +113,12 @@
                  (diff opam-var.err %{dep:opam-var.0}))))
 
 (rule
-  (with-stdout-to opam-set-opt.0 (echo "")))
+  (with-stdout-to opam-option.0 (echo "")))
 (rule
-  (targets opam-set-opt.1 opam-set-opt.err)
-  (action (progn (with-stderr-to opam-set-opt.err
-                   (with-stdout-to opam-set-opt.1 (run %{bin:opam} set-opt --help=groff)))
-                 (diff opam-set-opt.err %{dep:opam-set-opt.0}))))
+  (targets opam-option.1 opam-option.err)
+  (action (progn (with-stderr-to opam-option.err
+                   (with-stdout-to opam-option.1 (run %{bin:opam} option --help=groff)))
+                 (diff opam-option.err %{dep:opam-option.0}))))
 
 (rule
   (with-stdout-to opam-config.0 (echo "")))
@@ -234,7 +234,7 @@
     opam-env.1 
     opam-exec.1 
     opam-var.1 
-    opam-set-opt.1 
+    opam-option.1 
     opam-config.1 
     opam-upgrade.1 
     opam-update.1 

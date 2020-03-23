@@ -858,7 +858,7 @@ end
 
 (* CONFIG *)
 let config_doc = "Display configuration options for packages."
-let config ?(setopt=false) () =
+let config ?(option=false) () =
   let doc = config_doc in
   let commands = [
     "env", `env, [],
@@ -891,10 +891,12 @@ let config ?(setopt=false) () =
     "Set the given variable globally or in the current switch. Warning: \
      changing a configured path will not move any files! This command does not \
      perform any variable expansion.";
-    "set-opt", `set_opt, ["<switch|global>"; "FIELD[(=|+=|-=)VALUE]"],
-    "Set the given opam configuration field in the global/switch configuration \
-     file.  If $(b,op VALUE) is omitted, $(b,FIELD) is reset to its default \
-     initial configuration, as after a fresh init (use `opam init \
+    "option", `option, ["<switch|global>"; "[FIELD[(=|+=|-=)VALUE]"],
+    "Global and switch configuration options settings. If no field is given, \
+     list all configurable fields. If a only a field name is given, display \
+     its content. Otherwise, set the given field in the global/switch \
+     configuration file. If $(b,VALUE) is ommited, $(b,FIELD) is reset to its \
+     default initial configuration, as after a fresh init (use `opam init \
      show-default-opamrc` to display it)";
     "expand", `expand, ["STRING"],
     "Expand variable interpolations in the given string";
@@ -929,8 +931,8 @@ let config ?(setopt=false) () =
   in
 
   let command, params =
-    if setopt then
-      Term.const (Some `set_opt),
+    if option then
+      Term.const (Some `option),
       Arg.(value & pos_all string [] & Arg.info [])
     else
       mk_subcommands commands
@@ -972,35 +974,68 @@ let config ?(setopt=false) () =
       (try `Ok (OpamConfigCommand.list gt
                   (List.map OpamPackage.Name.of_string params))
        with Failure msg -> `Error (false, msg))
-    | Some (`set_var | `set_opt as cmd), scope::var::args ->
+    | Some (`set_var | `option as cmd), scope::args ->
       let scope =
         if String.length scope < 1 then `None
         else if OpamStd.String.starts_with ~prefix:scope "switch" then `Switch
         else if OpamStd.String.starts_with ~prefix:scope "global" then `Global
         else `None
       in
-      let opt_value = match args with [] -> None | x::_ -> Some x in
-      (match scope, cmd, opt_value with
-       | `None, _, _ ->
+      let apply =
+        match args with
+        | [] -> `empty
+        | [var] when not (OpamStd.String.contains_char var '=') ->
+          `value_wt_eq var
+        | [var] -> `value_eq var
+        | [var; value] -> `two_values (var, value)
+        | _ -> `err
+      in
+      (match scope with
+       | `None ->
          `Error (true, "no scope ('switch' or 'global') specified")
-       | _, `set_opt, Some _ ->
-         `Error (true, "too many arguments")
-       | `Switch, _, _ ->
-         OpamGlobalState.with_ `Lock_none @@ fun gt ->
-         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-         let _st = match cmd with
-           | `set_var -> OpamConfigCommand.set_var_switch st var opt_value
-           | `set_opt -> OpamConfigCommand.set_opt_switch st var
-         in
-         `Ok ()
-       | `Global, _, _ ->
-         OpamGlobalState.with_ `Lock_write @@ fun gt ->
-         let _st =
-           match cmd with
-           | `set_var -> OpamConfigCommand.set_var_global gt var opt_value
-           | `set_opt -> OpamConfigCommand.set_opt_global gt var
-         in
-         `Ok ())
+       | (`Global | `Switch) as scope ->
+         (match cmd, apply with
+          | `option, (`empty | `value_wt_eq _ as apply) ->
+            (match scope with
+             | `Switch ->
+               OpamGlobalState.with_ `Lock_none @@ fun gt ->
+               OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+               (match apply with
+                | `empty -> OpamConfigCommand.options_list_switch st
+                | `value_wt_eq v -> OpamConfigCommand.option_show_switch st v);
+               `Ok ()
+             | `Global ->
+               OpamGlobalState.with_ `Lock_read @@ fun gt ->
+               (match apply with
+                | `empty -> OpamConfigCommand.options_list_global gt
+                | `value_wt_eq v -> OpamConfigCommand.option_show_global gt v);
+               `Ok ())
+          | _, `err | `set_var, `empty ->
+            bad_subcommand commands ("config", command, params)
+          | _,
+            (`value_eq var | `value_wt_eq var | `two_values (var,_) as apply) ->
+            let opt_value =
+              match apply with `two_values (_,x) -> Some x | _ -> None
+            in
+            match scope with
+            | `Switch ->
+              OpamGlobalState.with_ `Lock_none @@ fun gt ->
+              OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+              let _st =
+                match cmd with
+                | `set_var -> OpamConfigCommand.set_var_switch st var opt_value
+                | `option -> OpamConfigCommand.set_opt_switch st var
+              in
+              `Ok ()
+            | `Global ->
+              OpamGlobalState.with_ `Lock_write @@ fun gt ->
+              let _st =
+                match cmd with
+                | `set_var -> OpamConfigCommand.set_var_global gt var opt_value
+                | `option -> OpamConfigCommand.set_opt_global gt var
+              in
+              `Ok ()
+         ))
     | Some `expand, [str] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.expand gt str)
@@ -3563,7 +3598,7 @@ let commands = [
   remove; make_command_alias remove "uninstall";
   reinstall;
   update; upgrade;
-  config (); make_command_alias (config ~setopt:true ()) ~options:" set-opt" "set-opt";
+  config (); make_command_alias (config ~option:true ()) ~options:" option" "option";
   var; exec; env;
   repository; make_command_alias repository "remote";
   switch;

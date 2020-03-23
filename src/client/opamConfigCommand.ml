@@ -409,7 +409,7 @@ let parse_upd fv =
                  str "==";
                  char '=';
                ]));
-            (group @@ rep1 any)
+            opt @@ (group @@ rep1 any)
           ]);
       ])
   in
@@ -417,13 +417,17 @@ let parse_upd fv =
   let var = Re.Group.get grs 1 in
   let value =
     try
-      let value = Re.Group.get grs 3 in
-      match Re.Group.get grs 2 with
-      | "+=" -> Add value
-      | "-=" -> Remove value
-      | "=" | "==" -> Overwrite value
-      | _ -> raise (Invalid_argument "set-opt: illegal operator")
-    with Not_found -> Revert
+      let value =
+        OpamStd.Option.of_Not_found (fun () -> Re.Group.get grs 3) ()
+      in
+      match Re.Group.get grs 2, value with
+      | "+=", Some value -> Add value
+      | "-=", Some value -> Remove value
+      | ("=" | "=="), Some value -> Overwrite value
+      | ("=" | "=="), None -> Revert
+      | ("+=" | "-="), None -> raise (Invalid_argument "set-opt: rhs needed")
+      | _, _ -> raise (Invalid_argument "set-opt: illegal operator")
+    with Not_found ->  raise (Invalid_argument "set-opt: operator needed")
   in
   var, value
 
