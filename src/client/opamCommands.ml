@@ -914,9 +914,9 @@ let config ?(option=false) () =
     "unset", `unset, ["VAR"],
     "Deprecated, see $(b,set-var).";
     "set-global", `set_global, ["VAR";"VALUE"],
-    "Deprecated, see $(b,set-opt).";
+    "Deprecated, see $(b,set-var).";
     "unset-global", `unset_global, ["VAR"],
-    "Deprecated, see $(b,set-opt).";
+    "Deprecated, see $(b,set-var).";
    ] in
   let man = [
     `S "DESCRIPTION";
