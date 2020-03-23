@@ -325,6 +325,30 @@ let variable gt v =
       "Variable %s not found"
       (OpamVariable.Full.to_string v)
 
+let exec gt ?set_opamroot ?set_opamswitch ~inplace_path command =
+  log "config-exec command=%a" (slog (String.concat " ")) command;
+  OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+  let cmd, args =
+    match
+      List.map (OpamFilter.expand_string ~default:(fun _ -> "")
+                  (OpamPackageVar.resolve st)) command
+    with
+    | []        -> OpamSystem.internal_error "Empty command"
+    | h::_ as l -> h, Array.of_list l in
+  let env =
+    OpamTypesBase.env_array
+      (OpamEnv.get_full
+         ?set_opamroot ?set_opamswitch ~force_path:(not inplace_path) st)
+  in
+  match OpamSystem.resolve_command ~env cmd with
+  | Some cmd -> raise (OpamStd.Sys.Exec (cmd, args, env))
+  | None -> raise (OpamStd.Sys.Exit 127)
+
+
+(** Options and Variables settings *)
+
+(** Option settings *)
+
 (* For function that takes two config and update (add or remove) elements in a
    field. Used for appending or deleting element in config file fields *)
 type 'config fld_updater =  ('config -> 'config -> 'config)
@@ -534,8 +558,8 @@ let allwd_wrappers wdef wrappers with_wrappers =
       Wrappers.with_post_session, Wrappers.post_session;
     ]
 
-let set_opt_switch_t ?inner st field_value =
-  let allowed_fields =
+let switch_allowed_fields, switch_allowed_sections  =
+  let allowed_fields () =
     OpamFile.Switch_config.(
       [
         ("synopsis", Atomic,
@@ -543,12 +567,9 @@ let set_opt_switch_t ?inner st field_value =
       ] @ allwd_wrappers empty.wrappers wrappers
         (fun wrappers t -> { t with wrappers }))
   in
-  let allowed_sections =
-    let rem_elem nelems elems =
-      List.filter (fun (n,p) ->
-          None = OpamStd.List.find_opt (fun (n',p') -> n = n' && p = p')
-            nelems)
-        elems
+  let allowed_sections () =
+    let rem_elem new_elems elems =
+      List.filter (fun n -> not (List.mem n new_elems)) elems
     in
     OpamFile.Switch_config.([
         ("paths", Modifiable (
@@ -562,26 +583,31 @@ let set_opt_switch_t ?inner st field_value =
          (fun c -> { c with variables = empty.variables }));
       ])
   in
+  allowed_fields, allowed_sections
+
+let confset_switch st =
   let root = st.switch_global.root in
   let config_f = OpamPath.Switch.switch_config root st.switch in
   let write new_config = OpamFile.Switch_config.write config_f new_config in
+  { stg_fields = OpamFile.Switch_config.fields;
+    stg_allwd_fields = switch_allowed_fields ();
+    stg_sections = OpamFile.Switch_config.sections;
+    stg_allwd_sections = switch_allowed_sections ();
+    stg_config = st.switch_config;
+    stg_write_config = write;
+    stg_file = OpamFile.filename config_f;
+  }
+
+let set_opt_switch_t ?inner st field_value =
   let switch_config =
-    set_opt ?inner field_value
-      { stg_fields = OpamFile.Switch_config.fields;
-        stg_allwd_fields = allowed_fields;
-        stg_sections = OpamFile.Switch_config.sections;
-        stg_allwd_sections = allowed_sections;
-        stg_config = st.switch_config;
-        stg_write_config = write;
-        stg_file = OpamFile.filename config_f;
-      }
+    set_opt ?inner field_value (confset_switch st)
   in
   { st with switch_config }
 
 let set_opt_switch = set_opt_switch_t ~inner:false
 
-let set_opt_global_t ?inner gt field_value =
-  let allowed_fields =
+let global_allowed_fields, global_allowed_sections =
+  let allowed_fields () =
     let open OpamStd.Option.Op in
     let open OpamFile in
     let in_config = OpamInitDefaults.init_config () in
@@ -631,21 +657,28 @@ let set_opt_global_t ?inner gt field_value =
         "solver-fixup-criteria" ]
     @ allwd_wrappers wrapper_init Config.wrappers Config.with_wrappers
   in
+  allowed_fields, fun () -> []
+
+let confset_global gt =
   let write new_config = OpamGlobalState.write {gt with config = new_config} in
+  { stg_fields = OpamFile.Config.fields;
+    stg_allwd_fields = global_allowed_fields ();
+    stg_sections = [];
+    stg_allwd_sections = global_allowed_sections ();
+    stg_config = gt.config;
+    stg_write_config = write;
+    stg_file = OpamFile.filename (OpamPath.config gt.root);
+  }
+
+let set_opt_global_t ?inner gt field_value =
   let config =
-    set_opt ?inner field_value
-      { stg_fields = OpamFile.Config.fields;
-        stg_allwd_fields = allowed_fields;
-        stg_sections = [];
-        stg_allwd_sections = [];
-        stg_config = gt.config;
-        stg_write_config = write;
-        stg_file = OpamFile.filename (OpamPath.config gt.root);
-      }
+    set_opt ?inner field_value (confset_global gt)
   in
   { gt with config }
 
 let set_opt_global = set_opt_global_t ~inner:false
+
+(** Variable settings *)
 
 (* "Configuration" of the [set_var] function. As these modification can be on
    global and switch config, this record aggregates all needed inputs. *)
@@ -745,22 +778,3 @@ let set_var_switch st var value =
           st.switch_config;
         st);
   }
-
-let exec gt ?set_opamroot ?set_opamswitch ~inplace_path command =
-  log "config-exec command=%a" (slog (String.concat " ")) command;
-  OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-  let cmd, args =
-    match
-      List.map (OpamFilter.expand_string ~default:(fun _ -> "")
-                  (OpamPackageVar.resolve st)) command
-    with
-    | []        -> OpamSystem.internal_error "Empty command"
-    | h::_ as l -> h, Array.of_list l in
-  let env =
-    OpamTypesBase.env_array
-      (OpamEnv.get_full
-         ?set_opamroot ?set_opamswitch ~force_path:(not inplace_path) st)
-  in
-  match OpamSystem.resolve_command ~env cmd with
-  | Some cmd -> raise (OpamStd.Sys.Exec (cmd, args, env))
-  | None -> raise (OpamStd.Sys.Exit 127)

@@ -1124,8 +1124,11 @@ module ConfigSyntax = struct
     default_compiler = OpamFormula.Empty;
   }
 
-  (* When adding a field or section, make sure to add it in
-     [OpamConfigCommand.set_opt_global_t] if it is a user modifiable field *)
+  (* When adding a field, make sure to add it in
+     [OpamConfigCommand.global_allowed_fields] if it is a user modifiable field.
+     When creating sections, make sure to update
+     [OpamConfigCommand.global_allowed_sections] and
+     [OpamConfigCommand.get_scope]. *)
   let fields =
     let with_switch sw t =
       if t.switch = None then with_switch sw t
@@ -1515,7 +1518,9 @@ module Switch_configSyntax = struct
   }
 
   (* When adding a field or section, make sure to add it in
-     [OpamConfigCommand.set_opt_switch] if it is a user modifiable field *)
+     [OpamConfigCommand.switch_allowed_fields] and
+     [OpamConfigCommand.switch_allowed_sections] if it is a user modifiable
+     field *)
   let sections = [
     "paths", Pp.ppacc
       (fun paths t -> {t with paths}) (fun t -> t.paths)
