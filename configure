@@ -3978,13 +3978,11 @@ else
 
 fi
 
+CONF_OCAMLFLAGS="-w -67"
+
 if test "x${CI}" != "x"; then :
 
-  CONF_OCAMLFLAGS="-warn-error A-3"
-
-else
-
-  CONF_OCAMLFLAGS=
+  CONF_OCAMLFLAGS="${CONF_OCAMLFLAGS} -w -67"
 
 fi
 if test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"; then :
