@@ -143,6 +143,10 @@ module OpamList = struct
     | l when index <= 0 -> value :: l
     | x::l -> x :: insert_at (index - 1) value l
 
+  let rec assoc_opt x = function
+      [] -> None
+    | (a,b)::l -> if compare a x = 0 then Some b else assoc_opt x l
+
   let pick_assoc x l =
     let rec aux acc = function
       | [] -> None, l
