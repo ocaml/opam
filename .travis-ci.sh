@@ -281,7 +281,7 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
   cd src_ext
   ../shell/re-patch.sh
   if [[ $(find patches -name \*.old | wc -l) -ne 0 ]] ; then
-    echo -e "[\e[31mERROR\e[0m] ../shell/re-patch.sh should be run from src_ext"
+    echo -e "[\e[31mERROR\e[0m] ../shell/re-patch.sh should be run from src_ext before CI check"
     git diff
     ERROR=1
   fi
