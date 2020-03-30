@@ -568,6 +568,16 @@ let switch_allowed_fields, switch_allowed_sections  =
       [
         ("synopsis", Atomic,
          fun t -> { t with synopsis = empty.synopsis });
+        ("setenv", Modifiable (
+            (fun nc c -> { c with env = nc.env @ c.env }),
+            (fun nc c ->
+               let env =
+                 List.filter (fun (vr,op,vl,_) ->
+                     None = OpamStd.List.find_opt (fun (vr',op',vl',_) ->
+                         vr = vr' && op = op' && vl = vl') nc.env) c.env
+               in
+               { c with env })),
+         fun t -> { t with env = empty.env });
       ] @ allwd_wrappers empty.wrappers wrappers
         (fun wrappers t -> { t with wrappers }))
   in
