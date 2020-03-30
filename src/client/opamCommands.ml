@@ -887,17 +887,18 @@ let config ?(option=false) () =
     "Without argument, prints a documented list of all available variables. \
      With $(i,PACKAGE), lists all the variables available for these packages. \
      Use $(i,-) to include global configuration variables for this switch.";
-    "set-var", `set_var, ["<switch|global>"; "NAME"; "[VALUE]"],
-    "Set the given variable globally or in the current switch. Warning: \
-     changing a configured path will not move any files! This command does not \
-     perform any variable expansion.";
-    "option", `option, ["<switch|global>"; "[FIELD[(=|+=|-=)VALUE]"],
+    "set-var", `set_var, ["NAME"; "[VALUE]"],
+    "Set the given variable globally, in the current switch, or the specified \
+     switch. Warning: changing a configured path will not move any files! \
+     This command does not perform any variable expansion.";
+    "option", `option, ["[FIELD[(=|+=|-=)VALUE]"],
     "Global and switch configuration options settings. If no field is given, \
-     list all configurable fields. If a only a field name is given, display \
-     its content. Otherwise, set the given field in the global/switch \
-     configuration file. If $(b,VALUE) is ommited, $(b,FIELD) is reset to its \
-     default initial configuration, as after a fresh init (use `opam init \
-     show-default-opamrc` to display it)";
+     list all configurable fields (if no scope given, by default switch ones). \
+     If a only a field name is given, display its content. Otherwise, set or \
+     update the given field in the global/switch configuration file. \
+     If $(b,VALUE) is empty, $(b,FIELD) is reset to its default initial \
+     configuration, as after a fresh init (use `opam init show-default-opamrc`\
+     to display it)";
     "expand", `expand, ["STRING"],
     "Expand variable interpolations in the given string";
     "subst", `subst, ["FILE..."],
@@ -938,10 +939,14 @@ let config ?(option=false) () =
       mk_subcommands commands
   in
   let open Common_config_flags in
+  let global =
+    mk_flag ["global"]
+      "With `option` or `set-var` subcommands, act on global configuration"
+  in
 
   let config global_options
       command shell sexp inplace_path
-      set_opamroot set_opamswitch params =
+      set_opamroot set_opamswitch global params =
     apply_global_options global_options;
     let shell = match shell with
       | Some s -> s
@@ -974,12 +979,15 @@ let config ?(option=false) () =
       (try `Ok (OpamConfigCommand.list gt
                   (List.map OpamPackage.Name.of_string params))
        with Failure msg -> `Error (false, msg))
-    | Some (`set_var | `option as cmd), scope::args ->
+    | Some (`set_var | `option as cmd), args ->
       let scope =
-        if String.length scope < 1 then `None
-        else if OpamStd.String.starts_with ~prefix:scope "switch" then `Switch
-        else if OpamStd.String.starts_with ~prefix:scope "global" then `Global
-        else `None
+        if global then `Global
+        else if (fst global_options).opt_switch <> None then `Switch
+        else match cmd with
+          | `set_var -> `None_set_var
+          | `option -> match args with
+            | [] -> `Switch
+            | f::_ -> OpamConfigCommand.get_scope f
       in
       let apply =
         match args with
@@ -991,8 +999,14 @@ let config ?(option=false) () =
         | _ -> `err
       in
       (match scope with
-       | `None ->
-         `Error (true, "no scope ('switch' or 'global') specified")
+       | `None field ->
+         (* must be an option command *)
+         OpamConsole.error_and_exit `Bad_arguments
+           "No option named '%s' found. Use 'opam config option \
+            [--global]' to list them" field
+       | `None_set_var ->
+         `Error (true, "set-var: no scope defined, \
+                        use '--global' or '--switch sw'")
        | (`Global | `Switch) as scope ->
          (match cmd, apply with
           | `option, (`empty | `value_wt_eq _ as apply) ->
@@ -1212,6 +1226,7 @@ let config ?(option=false) () =
           $global_options $command $shell_opt $sexp
           $inplace_path
           $set_opamroot $set_opamswitch
+          $global
           $params)
   ),
   term_info "config" ~doc ~man
