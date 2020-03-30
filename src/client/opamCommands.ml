@@ -751,8 +751,10 @@ let show =
          let opam = OpamFile.OPAM.read_from_channel stdin in
          print_just_file None opam;
          `Ok ()
-       with | Parsing.Parse_error | OpamLexer.Error _ | OpamPp.Bad_format _  ->
-         OpamConsole.error_and_exit `File_error "Stdin parsing failed")
+       with
+       | Parsing.Parse_error | OpamLexer.Error _ | OpamPp.Bad_format _ as exn ->
+         OpamConsole.error_and_exit `File_error
+           "Stdin parsing failed:\n%s" (Printexc.to_string exn))
     | atom_locs, false ->
       let fields, show_empty =
         if list_files then
@@ -801,19 +803,22 @@ let show =
             try
               errors, (Some opamf, (OpamFile.OPAM.read opamf))::opams
             with
-            | Parsing.Parse_error | OpamLexer.Error _ | OpamPp.Bad_format _  ->
-              opamf::errors, opams)
+            | Parsing.Parse_error | OpamLexer.Error _ | OpamPp.Bad_format _ as exn ->
+              (opamf, exn)::errors, opams)
           ([],[]) opamfs
       in
       List.iter (fun (f,o) -> print_just_file f o) opams;
       (if errors <> [] then
          let sgl = match errors with [_] -> true | _ -> false in
-         let files = List.map (OpamFile.filename @> OpamFilename.to_string) errors in
+         let tostr (opamf, error) =
+           (OpamFilename.to_string (OpamFile.filename opamf))
+           ^ ":\n" ^ Printexc.to_string error
+         in
          OpamConsole.error "Parsing error on%s:%s"
            (if sgl then "" else "some opam files")
-           (match files with
-            | [f] -> " " ^ f
-            | fs -> "\n"^OpamStd.Format.itemize (fun x -> x) fs));
+           (match errors with
+            | [f] -> tostr f
+            | fs -> OpamStd.Format.itemize tostr fs));
       if opams = [] then
         OpamStd.Sys.exit_because `File_error
       else
