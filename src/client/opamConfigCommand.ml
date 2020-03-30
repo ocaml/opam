@@ -517,7 +517,7 @@ let set_opt ?(inner=false) field_value conf =
     (OpamFilename.to_string conf.stg_file);
   new_config
 
-let allwd_wrappers wdef wrappers with_wrappers =
+let allwd_wrappers wdef wrappers with_wrappers  =
   let open OpamFile in
   List.map (fun (n, set, get) ->
       n,
@@ -562,42 +562,45 @@ let allwd_wrappers wdef wrappers with_wrappers =
       Wrappers.with_post_session, Wrappers.post_session;
     ]
 
-let switch_allowed_fields, switch_allowed_sections  =
-  let allowed_fields () =
-    OpamFile.Switch_config.(
-      [
-        ("synopsis", Atomic,
-         fun t -> { t with synopsis = empty.synopsis });
-        ("setenv", Modifiable (
-            (fun nc c -> { c with env = nc.env @ c.env }),
-            (fun nc c ->
-               let env =
-                 List.filter (fun (vr,op,vl,_) ->
-                     None = OpamStd.List.find_opt (fun (vr',op',vl',_) ->
-                         vr = vr' && op = op' && vl = vl') nc.env) c.env
-               in
-               { c with env })),
-         fun t -> { t with env = empty.env });
-      ] @ allwd_wrappers empty.wrappers wrappers
-        (fun wrappers t -> { t with wrappers }))
+let switch_allowed_fields, switch_allowed_sections =
+  let allowed_fields =
+    lazy (
+      OpamFile.Switch_config.(
+        [
+          ("synopsis", Atomic,
+           fun t -> { t with synopsis = empty.synopsis });
+          ("setenv", Modifiable (
+              (fun nc c -> { c with env = nc.env @ c.env }),
+              (fun nc c ->
+                 let env =
+                   List.filter (fun (vr,op,vl,_) ->
+                       None = OpamStd.List.find_opt (fun (vr',op',vl',_) ->
+                           vr = vr' && op = op' && vl = vl') nc.env) c.env
+                 in
+                 { c with env })),
+           fun t -> { t with env = empty.env });
+        ] @ allwd_wrappers empty.wrappers wrappers
+          (fun wrappers t -> { t with wrappers })))
   in
-  let allowed_sections () =
+  let allowed_sections =
     let rem_elem new_elems elems =
       List.filter (fun n -> not (List.mem n new_elems)) elems
     in
-    OpamFile.Switch_config.([
-        ("paths", Modifiable (
-            (fun nc c -> { c with paths = nc.paths @ c.paths }),
-            (fun nc c -> { c with paths = rem_elem nc.paths c.paths })),
-         (fun c -> { c with paths = empty.paths }));
-        ("variables", Modifiable (
-            (fun nc c -> { c with variables = nc.variables @ c.variables }),
-            (fun nc c ->
-               { c with variables = rem_elem nc.variables c.variables })),
-         (fun c -> { c with variables = empty.variables }));
-      ])
+    lazy (
+      OpamFile.Switch_config.([
+          ("paths", Modifiable (
+              (fun nc c -> { c with paths = nc.paths @ c.paths }),
+              (fun nc c -> { c with paths = rem_elem nc.paths c.paths })),
+           (fun c -> { c with paths = empty.paths }));
+          ("variables", Modifiable (
+              (fun nc c -> { c with variables = nc.variables @ c.variables }),
+              (fun nc c ->
+                 { c with variables = rem_elem nc.variables c.variables })),
+           (fun c -> { c with variables = empty.variables }));
+        ]))
   in
-  allowed_fields, allowed_sections
+  (fun () -> Lazy.force allowed_fields),
+  fun () -> Lazy.force allowed_sections
 
 let confset_switch st =
   let root = st.switch_global.root in
@@ -621,7 +624,7 @@ let set_opt_switch_t ?inner st field_value =
 let set_opt_switch = set_opt_switch_t ~inner:false
 
 let global_allowed_fields, global_allowed_sections =
-  let allowed_fields () =
+  let allowed_fields =
     let open OpamStd.Option.Op in
     let open OpamFile in
     let in_config = OpamInitDefaults.init_config () in
@@ -634,44 +637,47 @@ let global_allowed_fields, global_allowed_sections =
              None = OpamStd.List.find_opt (fun (k',v',_) -> k = k' && v = v') gv)
              (get c)) c)
     in
-    [ "download-command", Atomic,
-      Config.with_dl_tool_opt
-        (InitConfig.dl_tool in_config ++ Config.dl_tool Config.empty);
-      "download-jobs", Atomic,
-      Config.with_dl_jobs
-        (InitConfig.dl_jobs in_config +! Config.dl_jobs Config.empty);
-      "jobs", Atomic,
-      Config.with_jobs_opt
-        (InitConfig.jobs in_config ++ Config.jobs Config.empty);
-      "best-effort-prefix-criteria", Atomic,
-      Config.with_best_effort_prefix_opt
-        (Config.best_effort_prefix Config.empty);
-      "solver", Atomic,
-      Config.with_solver_opt
-        (InitConfig.solver in_config ++ Config.solver Config.empty);
-      "global-variables",
-      (let add, rem =
-         upd_vars Config.global_variables Config.with_global_variables
-       in
-       InModifiable (add, rem)),
-      Config.with_global_variables (InitConfig.global_variables in_config);
-      "eval-variables",
-      (let add, rem =
-         upd_vars Config.eval_variables Config.with_eval_variables
-       in
-       InModifiable (add, rem)),
-      Config.with_eval_variables (InitConfig.eval_variables in_config);
-      "repository-validation-command", Atomic,
-      Config.with_validation_hook_opt (Config.validation_hook Config.empty);
-    ] @ List.map (fun f ->
+    lazy ([
+        "download-command", Atomic,
+        Config.with_dl_tool_opt
+          (InitConfig.dl_tool in_config ++ Config.dl_tool Config.empty);
+        "download-jobs", Atomic,
+        Config.with_dl_jobs
+          (InitConfig.dl_jobs in_config +! Config.dl_jobs Config.empty);
+        "jobs", Atomic,
+        Config.with_jobs_opt
+          (InitConfig.jobs in_config ++ Config.jobs Config.empty);
+        "best-effort-prefix-criteria", Atomic,
+        Config.with_best_effort_prefix_opt
+          (Config.best_effort_prefix Config.empty);
+        "solver", Atomic,
+        Config.with_solver_opt
+          (InitConfig.solver in_config ++ Config.solver Config.empty);
+        "global-variables",
+        (let add, rem =
+           upd_vars Config.global_variables Config.with_global_variables
+         in
+         InModifiable (add, rem)),
+        Config.with_global_variables (InitConfig.global_variables in_config);
+        "eval-variables",
+        (let add, rem =
+           upd_vars Config.eval_variables Config.with_eval_variables
+         in
+         InModifiable (add, rem)),
+        Config.with_eval_variables (InitConfig.eval_variables in_config);
+        "repository-validation-command", Atomic,
+        Config.with_validation_hook_opt (Config.validation_hook Config.empty);
+      ] @ List.map (fun f ->
         f, Atomic, Config.with_criteria
           (Config.criteria Config.empty))
-      [ "solver-criteria";
-        "solver-upgrade-criteria";
-        "solver-fixup-criteria" ]
-    @ allwd_wrappers wrapper_init Config.wrappers Config.with_wrappers
+        [ "solver-criteria";
+          "solver-upgrade-criteria";
+          "solver-fixup-criteria" ]
+        @ allwd_wrappers wrapper_init Config.wrappers Config.with_wrappers
+      )
   in
-  allowed_fields, fun () -> []
+  (fun () -> Lazy.force allowed_fields),
+  fun () -> []
 
 let confset_global gt =
   let write new_config = OpamGlobalState.write {gt with config = new_config} in
