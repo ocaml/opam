@@ -767,8 +767,11 @@ let show =
         OpamAuxCommands.simulate_autopin ~quiet:no_lint ~for_view:true st
           atom_locs
       in
-      OpamListCommand.info st
-        ~fields ~raw ~where ~normalise ~show_empty ~all_versions atoms;
+      if atoms = [] then
+        OpamConsole.error_and_exit `Not_found "No package found"
+      else
+        OpamListCommand.info st
+          ~fields ~raw ~where ~normalise ~show_empty ~all_versions atoms;
       `Ok ()
     | atom_locs, true ->
       if List.exists (function `Atom _ -> true | _ -> false) atom_locs then
