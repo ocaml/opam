@@ -842,3 +842,16 @@ let option_show conf field =
 
 let option_show_switch st field = option_show (confset_switch st) field
 let option_show_global gt field = option_show (confset_global gt) field
+
+let get_scope field =
+  let field =
+    try fst (parse_upd field)
+    with Invalid_argument _ -> field
+  in
+  let find l = OpamStd.List.find_opt (fun (f,_) -> f = field) l in
+  if find OpamFile.Config.fields <> None then
+    `Global
+  else if find OpamFile.Switch_config.fields <> None
+       || find OpamFile.Switch_config.sections <> None then
+    `Switch
+  else `None field

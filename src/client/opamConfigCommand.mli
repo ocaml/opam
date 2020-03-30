@@ -80,3 +80,7 @@ val options_list_global: ro global_state -> unit
 (** Display [field] name and content in the global or switch configuration *)
 val option_show_switch: ro switch_state -> string -> unit
 val option_show_global: ro global_state -> string -> unit
+
+(** Given an `opam config option` field or field-value argument, detect the
+    scope, switch, global or inexistent field *)
+val get_scope: string -> [> `Switch | `Global | `None of string ]
