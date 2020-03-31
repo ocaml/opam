@@ -1077,7 +1077,6 @@ module ConfigSyntax = struct
     depext: bool;
     depext_run_installs : bool;
     depext_cannot_install : bool;
-    depext_verify : bool;
     depext_bypass: OpamSysPkg.Set.t;
   }
 
@@ -1106,7 +1105,6 @@ module ConfigSyntax = struct
   let depext t = t.depext
   let depext_run_installs t = t.depext_run_installs
   let depext_cannot_install t = t.depext_cannot_install
-  let depext_verify t = t.depext_verify
   let depext_bypass t = t.depext_bypass
 
 
@@ -1142,7 +1140,6 @@ module ConfigSyntax = struct
     { t with depext_run_installs }
   let with_depext_cannot_install depext_cannot_install t =
     { t with depext_cannot_install }
-  let with_depext_verify depext_verify t = { t with depext_verify }
   let with_depext_bypass depext_bypass t = { t with depext_bypass }
 
   let empty = {
@@ -1165,7 +1162,6 @@ module ConfigSyntax = struct
     depext = true;
     depext_run_installs = true;
     depext_cannot_install = false;
-    depext_verify = true;
     depext_bypass = OpamSysPkg.Set.empty;
   }
 
@@ -1251,9 +1247,6 @@ module ConfigSyntax = struct
         Pp.V.bool;
       "depext-cannot-install", Pp.ppacc
         with_depext_cannot_install depext_cannot_install
-        Pp.V.bool;
-      "depext-verify", Pp.ppacc
-        with_depext_verify depext_verify
         Pp.V.bool;
       "depext-bypass", Pp.ppacc
         with_depext_bypass depext_bypass

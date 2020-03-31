@@ -591,8 +591,6 @@ let global_allowed_fields, global_allowed_sections =
         "depext-cannot-install", Atomic,
         Config.with_depext_cannot_install
           (Config.depext_cannot_install Config.empty);
-        "depext-verify", Atomic,
-        Config.with_depext_verify (Config.depext_verify Config.empty);
         "depext-bypass", OpamSysPkg.Set.Op.(Modifiable (
             (fun nc c -> Config.with_depext_bypass
                 (Config.depext_bypass nc ++ Config.depext_bypass c) c),

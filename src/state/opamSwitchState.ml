@@ -460,9 +460,6 @@ let load lock_kind gt rt switch =
     )
   in
   let sys_packages_changed = lazy (
-    if not (OpamFile.Config.depext_verify gt.config) then
-      OpamPackage.Set.empty
-    else
     let sys_packages =
       OpamPackage.Map.filter (fun pkg spkg ->
           OpamPackage.Set.mem pkg installed

@@ -922,9 +922,6 @@ let print_depext_msg (avail, nf) =
 
 (* Gets depexts from the state, without checking again *)
 let get_depexts t packages =
-  if not (OpamFile.Config.depext_verify t.switch_global.config) then
-    OpamSysPkg.Set.empty
-  else
   let sys_packages = Lazy.force t.sys_packages in
   let avail, nf =
     OpamPackage.Set.fold (fun pkg (avail,nf) ->
