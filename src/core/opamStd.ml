@@ -838,7 +838,7 @@ module OpamSys = struct
 
   let registered_at_exit = ref []
   let at_exit f =
-    Pervasives.at_exit f;
+    Stdlib.at_exit f;
     registered_at_exit := f :: !registered_at_exit
   let exec_at_exit () =
     List.iter

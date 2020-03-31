@@ -382,7 +382,7 @@ let exit_status p return =
     (verbose_print_cmd p;
      List.iter verbose_print_out stdout;
      List.iter verbose_print_out stderr;
-     flush Pervasives.stdout);
+     flush Stdlib.stdout);
   let info =
     make_info ?code ?signal
       ~cmd:p.p_name ~args:p.p_args ~cwd:p.p_cwd ~metadata:p.p_metadata

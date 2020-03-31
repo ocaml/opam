@@ -36,5 +36,5 @@ val equal : string -> string -> bool
 
 (** [compare x y] returns 0 if x is eqivalent to y, -1 if x is smaller
     than y, and 1 if x is greater than y. This is consistent with
-    [Pervasives.compare]. *)
+    [Stdlib.compare]. *)
 val compare : string -> string -> int

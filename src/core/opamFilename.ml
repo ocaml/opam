@@ -383,14 +383,14 @@ let with_flock flag ?dontblock file f =
           else
             "/dev/null"
         in
-        let ch = Pervasives.open_out null in
+        let ch = Stdlib.open_out null in
         Unix.descr_of_out_channel ch, Some ch
       | fd ->
         fd, None
     in
     let r = f fd in
     OpamSystem.funlock lock;
-    OpamStd.Option.iter Pervasives.close_out ch;
+    OpamStd.Option.iter Stdlib.close_out ch;
     r
   with e ->
     OpamStd.Exn.finalise e @@ fun () ->
