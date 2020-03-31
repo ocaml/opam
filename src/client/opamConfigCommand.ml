@@ -373,7 +373,7 @@ type 'config confset =
     stg_allwd_fields:
       (string * 'config fld_policy * ('config -> 'config)) list;
     (* Config file updatable fields: field name, update policy, and function to
-       update the given field in config file *)
+       revert the given field in config file *)
     stg_sections:
       (string * ('config, (string option * opamfile_item list) list)
          OpamPp.field_parser) list;
@@ -717,8 +717,8 @@ type ('var,'t) var_confset =
     (* The [set_opt] function call [stv_set_opt state var_value] *)
     stv_remove_elem: 'var list -> 't -> 't;
     (* As variable can't be duplicated, a function to remove it from the list *)
-    stv_revert: 't -> 't;
-    (* The revert variable function *)
+    stv_write: 't -> 't;
+    (* Write the config file *)
   }
 
 let set_var var value conf =
@@ -748,7 +748,7 @@ let set_var var value conf =
   let t = conf.stv_remove_elem rest t in
   match value with
   | Overwrite value -> conf.stv_set_opt t ("+=" ^ conf.stv_varstr value)
-  | Revert -> conf.stv_revert t
+  | Revert -> conf.stv_write t (* only write, as the var is already removed *)
   | _ -> assert false
 
 let set_var_global gt var value =
@@ -774,7 +774,7 @@ let set_var_global gt var value =
                (OpamFile.Config.eval_variables gt.config))
         in
         { gt with config });
-    stv_revert = (fun gt -> OpamGlobalState.write gt; gt);
+    stv_write = (fun gt -> OpamGlobalState.write gt; gt);
   }
 
 let set_var_switch st var value =
@@ -792,7 +792,7 @@ let set_var_switch st var value =
         set_opt_switch_t ~inner:true st ("variables"^s));
     stv_remove_elem = (fun rest st ->
         { st with switch_config = { st.switch_config with variables = rest }});
-    stv_revert = (fun st ->
+    stv_write = (fun st ->
         OpamFile.Switch_config.write
           (OpamPath.Switch.switch_config st.switch_global.root st.switch)
           st.switch_config;
