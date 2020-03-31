@@ -153,10 +153,10 @@ let opam_invariant_package version_map invariant =
 
 let lag_function =
   let exp =
-    OpamStd.Option.default 1 (OpamStd.Config.env_int "VERSIONLAGPOWER")
+    lazy (OpamStd.Option.default 1 (OpamStd.Config.env_int "VERSIONLAGPOWER"))
   in
   let rec power n x = if n <= 0 then 1 else x * power (n-1) x in
-  power exp
+  fun x -> power (Lazy.force exp) x
 
 let opam2cudf universe version_map packages =
   let set_to_bool_map set =
