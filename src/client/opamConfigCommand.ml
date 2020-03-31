@@ -592,7 +592,7 @@ let switch_allowed_fields, switch_allowed_sections =
               (fun nc c -> { c with paths = nc.paths @ c.paths }),
               (fun nc c -> { c with paths = rem_elem nc.paths c.paths })),
            (fun c -> { c with paths = empty.paths }));
-          ("variables", Modifiable (
+          ("variables", InModifiable (
               (fun nc c -> { c with variables = nc.variables @ c.variables }),
               (fun nc c ->
                  { c with variables = rem_elem nc.variables c.variables })),
@@ -801,53 +801,80 @@ let set_var_switch st var value =
 
 (** Option display *)
 
-let field_str pp t =
-  match OpamPp.print pp t with
-  | _, None -> "undefined"
-  | _, Some v -> OpamPrinter.value v
-
-let section_str field  pp t =
-  match OpamPp.print pp t with
-  | _, None -> "undefined"
-  | _, Some items ->
-    OpamPrinter.items
-      (List.map (fun (section_name, section_items) ->
-           Section (pos_null,
-                    { section_kind = field;
-                      section_name;
-                      section_items }))
-          items)
-
-let options_list scope conf =
-  let fields_sections =
-    List.map (fun (f,pp) ->
-        [f; field_str pp conf.stg_config]) conf.stg_fields
-    @ List.map (fun (f,pp) ->
-        [f; section_str f pp conf.stg_config]) conf.stg_sections
+let print_fields fields =
+  let fields =
+    List.sort (fun (x,_) (x',_) -> compare x x') fields
+    |> List.map (fun (name, value) ->
+        let value = match value with
+          | None -> "{}"
+          | Some value -> (OpamPrinter.value value)
+        in
+        [
+          OpamConsole.colorise `bold name ;
+          OpamConsole.colorise `blue value
+        ])
   in
-  OpamConsole.msg "%s fields and sections:\n" scope;
-  OpamConsole.print_table stdout ~sep:"   "
-    (OpamStd.Format.align_table (fields_sections))
+  OpamConsole.print_table stdout ~sep:"  "
+    (OpamStd.Format.align_table fields)
 
-let options_list_switch st = options_list "Switch" (confset_switch st)
-let options_list_global st = options_list "Global" (confset_global st)
+let find_field field name_value =
+  match OpamStd.List.find_opt (fun (name, _) -> name = field) name_value with
+  | None -> (field, None)
+  | Some (name, value) -> (name, Some value)
 
-let option_show conf field =
+let find_section section name_value =
+  let sections =
+    List.find_all (fun (name, _) ->
+        match OpamStd.String.cut_at name '.' with
+        | None -> false
+        | Some (name,_) -> name = section)
+      name_value
+  in
+  match sections with
+  | [] -> [section, None]
+  | section -> List.map (fun (n,v) -> n, Some v) section
+
+let options_list to_list conf =
+  let name_value = to_list conf.stg_config in
+  let fields =
+    OpamStd.List.filter_map (fun (field, policy, _) ->
+        match policy with
+        | InModifiable _ -> None
+        | _ -> Some (find_field field name_value))
+      conf.stg_allwd_fields
+  in
+  let sections =
+    OpamStd.List.filter_map (fun (field, policy, _) ->
+        match policy with
+        | InModifiable _ -> None
+        | _ -> Some (find_section field name_value))
+      conf.stg_allwd_sections
+    |> List.flatten
+  in
+  print_fields (fields @ sections)
+
+let options_list_switch st =
+  options_list OpamFile.Switch_config.to_list (confset_switch st)
+let options_list_global gt =
+  options_list OpamFile.Config.to_list (confset_global gt)
+
+let option_show to_list conf field =
+  let name_value = to_list conf.stg_config in
   match OpamStd.List.find_opt (fun (f,_) -> f = field) conf.stg_fields with
-  | Some (_, pp) ->
-    OpamConsole.msg "Field %s: %s\n" field
-      (field_str pp conf.stg_config)
+  | Some (_, _) ->
+    print_fields [find_field field name_value]
   | None ->
     (match OpamStd.List.find_opt (fun (f,_) -> f = field) conf.stg_sections with
-     | Some (_, pp) ->
-       OpamConsole.msg "Section %s\n"
-         (section_str field pp conf.stg_config)
+     | Some (_, _) ->
+       print_fields (find_section field name_value)
      | None ->
        OpamConsole.error_and_exit `Bad_arguments
          "Field or section %s not found" field)
 
-let option_show_switch st field = option_show (confset_switch st) field
-let option_show_global gt field = option_show (confset_global gt) field
+let option_show_switch st field =
+  option_show OpamFile.Switch_config.to_list (confset_switch st) field
+let option_show_global gt field =
+  option_show OpamFile.Config.to_list (confset_global gt) field
 
 let get_scope field =
   let field =
