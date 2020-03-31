@@ -1429,27 +1429,30 @@ for <span class="opam">opam</span>.
   compiler in the list will be chosen for creating the initial switch if
   `--bare` wasn't specified.
 
-- <a id="configfield-depext-enable">`depext-enable: <bool>`</a>:
-	enable the depext mechanism. Opam needs to interact with the system-wide
-	package manager in some cases: packages can declare dependencies on system
-  packages (typically, bindings to C libraries, e.g. SDL, require the library to
-  be installed), in an OS-dependent way. Then, opam will do its best to interact
-  with your system, checking their availability, and triggering their
-  installation if needed.";
+- <a id="configfield-depext">`depext: <bool>`</a>:
+  enable or disable system dependency handling. When packages declare
+  dependencies on system packages using the [depexts](#opamfield-depexts) field
+  (typically, bindings to C libraries like SDL, require the library to be
+  installed, which is outside the scope of opam), if this is set to `true` (the
+  default), opam will check the availability of such dependencies using the host
+  system package manager, and prompt the user to install them when needed.
 
-- <a id="configfield-depext-no-consistency-checks">`depext-no-consistency-checks: <bool>`</a>:
-  check that the system dependencies of already installed packages are still present
+- <a id="configfield-depext-run-installs">`depext-run-installs: <bool>`</a>:
+  if `true` (the default), opam is allowed to run installations through the host
+  system package manager (_e.g._ `apt`, `yum` or `brew`) when required for the
+  installation of opam packages through their [depexts](#opamfield-depexts).
+  This is generally done through `sudo`, and always after prompting the user
+  (unless `--yes` was specified). if disabled, the installation command is
+  printed to stdout, and opam pauses to let the user proceed.
 
-- <a id="configfield-depext-print-only">`depext-print-only: <cool>`</a>:
-  don't run any system-related commands, instead print them and pause. Useful if you don't or can't use `sudo`.
-
-- <a id="configfield-depext-no-root">`depext-no-root: <bool>`</a>:
-	mark all external dependencies that are not already installed as
-  unavailable. This can make a lot of packages uninstallable.
+- <a id="configfield-depext-cannot-install">`depext-cannot-install: <bool>`</a>:
+  instructs opam that no system package can be installed on the system. Any opam
+  package declaring system dependencies towards a system package that is not yet
+  installed will be marked as unavailable.
 
 - <a id="configfield-depext-bypass">`depext-bypass: [ <string> ... ] `</a>:
-	assume the listed system packages to be already installed, so they will not
-  be searched for using the package manager of your system.
+  assume the listed system packages to be already installed, bypassing the
+  checks normally done when `depext` is enabled.
 
 #### switch-config
 
@@ -1488,6 +1491,8 @@ contains configuration options specific to that switch:
   [`post-remove-commands:`](#configfield-post-remove-commands),
   [`post-session-commands:`](#configfield-post-session-commands):
   as the corresponding [global config](#config) fields.
+- [`depext-bypass:`](#configfield-depext-bypass):
+  as the corresponding [global config](#config) field.
 - <a id="switchconfigsection-paths">`paths "{" { <ident>: <string> ... } "}"`</a>:
   defines the standard paths within the switch: recognised fields include
   `prefix:`, `bin:`, `sbin:`, `lib:`, `share:`, `etc:`, `doc:`, `man:`,
