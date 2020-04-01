@@ -588,10 +588,6 @@ let switch_allowed_fields, switch_allowed_sections =
     in
     lazy (
       OpamFile.Switch_config.([
-          ("paths", Modifiable (
-              (fun nc c -> { c with paths = nc.paths @ c.paths }),
-              (fun nc c -> { c with paths = rem_elem nc.paths c.paths })),
-           (fun c -> { c with paths = empty.paths }));
           ("variables", InModifiable (
               (fun nc c -> { c with variables = nc.variables @ c.variables }),
               (fun nc c ->
