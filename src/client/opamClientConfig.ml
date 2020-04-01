@@ -174,9 +174,13 @@ let opam_init ?root_dir ?strict =
 
   (* (iii) load from env and options using OpamXxxConfig.init *)
   let log_dir =
+    OpamStd.Option.map OpamFilename.Dir.to_string @@
     if log_dir = None && initialised
-    then Some OpamFilename.(Dir.to_string (OpamPath.log root))
-    else None
+       && OpamStd.Config.env_string "LOGS" = None then
+      (* fixme: in order to not revert [OPAMLOGS] value,
+         we need to check it here *)
+      Some (OpamPath.log root)
+    else log_dir
   in
   (fun () -> ()) |>
   OpamStd.Config.initk ?log_dir |>
