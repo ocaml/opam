@@ -400,11 +400,11 @@ let init =
       (match invariant with
        | OpamFormula.Empty -> "empty"
        | c -> OpamFileTools.dep_formula_to_string c);
-    let st =
+    let (), st =
       try
         OpamSwitchCommand.create
           gt ~rt ~invariant ~update_config:true (OpamSwitch.of_string name) @@
-        OpamSwitchCommand.install_compiler
+        (fun st -> (), OpamSwitchCommand.install_compiler st)
       with e ->
         OpamStd.Exn.finalise e @@ fun () ->
         OpamConsole.note
@@ -2330,7 +2330,7 @@ let switch =
       (match invariant_arg ?repos rt pkg_params with
        | exception Failure e -> `Error (false, e)
        | invariant ->
-         let st =
+         let (), st =
            OpamSwitchCommand.create gt ~rt
              ?synopsis:descr ?repos
              ~update_config:(not no_switch)
@@ -2364,6 +2364,7 @@ let switch =
                st, atoms
              else st, []
            in
+           (),
            OpamSwitchCommand.install_compiler st ~additional_installs ~deps_only
          in
          OpamSwitchState.drop st;
@@ -2387,17 +2388,23 @@ let switch =
       if is_new_switch then
         with_repos_rt gt repos @@ fun (repos, rt) ->
         let synopsis = "Import from " ^ Filename.basename filename in
-        ignore @@ OpamGlobalState.with_write_lock gt @@ fun gt ->
-        OpamSwitchCommand.create gt ~rt
-          ~synopsis ?repos ~invariant:OpamFormula.Empty
-          ~update_config:(not no_switch)
-          switch
-        @@ fun st ->
-        let st = OpamSwitchCommand.import st import_source in
-        let invariant = OpamSwitchState.infer_switch_invariant st in
-        let st = OpamSwitchCommand.set_invariant_raw st invariant in
-        OpamSwitchState.drop st;
-        (), gt
+        let (), gt =
+          OpamGlobalState.with_write_lock gt @@ fun gt ->
+          let gt, st =
+            OpamSwitchCommand.create gt ~rt
+              ~synopsis ?repos ~invariant:OpamFormula.Empty
+              ~update_config:(not no_switch)
+              switch
+            @@ fun st ->
+            let st = OpamSwitchCommand.import st import_source in
+            let invariant = OpamSwitchState.infer_switch_invariant st in
+            let st = OpamSwitchCommand.set_invariant_raw st invariant in
+            st.switch_global, st
+          in
+          OpamSwitchState.drop st;
+          (), gt
+        in
+        OpamGlobalState.drop gt
       else begin
         if repos <> None then
           OpamConsole.warning

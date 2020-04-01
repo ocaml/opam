@@ -14,15 +14,13 @@
 open OpamTypes
 open OpamStateTypes
 
-(** Creates and configures a new switch. The given [global_state] is unlocked as
-    soon as possible, i.e. after registering the existence of the new switch.
-    [update_config] sets the switch as current globally, unless it is
+(** Creates and configures a new switch. The given [global_state] is unlocked
+    once done. [update_config] sets the switch as current globally, unless it is
     external.
 
     [post] can be used to run guarded operations after the switch creation
     (cleanup will be proposed to the user if they fail). You probably want to
-    call [install_compiler] there.
-*)
+    call [install_compiler] there. *)
 val create:
   rw global_state ->
   rt:'a repos_state ->
@@ -31,7 +29,8 @@ val create:
   update_config:bool ->
   invariant:formula ->
   switch ->
-  (rw switch_state -> 'ret) -> 'ret
+  (rw switch_state -> 'ret * rw switch_state) ->
+  'ret * rw switch_state
 
 (** Used to initially install a compiler's base packages, according to its
     invariant. *)

@@ -25,10 +25,9 @@ val create_empty_switch:
     Unless [OpamStateConfig.(!r.dryrun)] *)
 val write_selections: rw switch_state -> unit
 
-(** Updates the defined default switch and loads its state; fails and exits with
-    a message if the switch is external *)
-val set_current_switch:
-  'a lock -> rw global_state -> rt:'b repos_state -> switch -> 'a switch_state
+(** Updates the global default switch to the one corresponding to the given
+    state; fails and exits with a message if the switch is external *)
+val set_current_switch: rw global_state -> 'a switch_state -> 'a switch_state
 
 (** Create the default global_config structure for a switch, including default
     prefix *)

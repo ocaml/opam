@@ -146,7 +146,7 @@ let list gt ~print_short =
          (OpamEnv.eval_string gt (Some switch)))
   | _ -> ()
 
-let clear_switch ?(keep_debug=false) gt switch =
+let clear_switch ?(keep_debug=false) (gt: rw global_state) switch =
   let module C = OpamFile.Config in
   let config = gt.config in
   let config =
@@ -198,7 +198,9 @@ let install_compiler ?(additional_installs=[]) ?(deps_only=false) t =
   if invariant = OpamFormula.Empty && additional_installs = [] then begin
     (if not OpamClientConfig.(!r.show) &&
         not OpamStateConfig.(!r.dryrun) then
-       OpamFile.Environment.write (OpamPath.Switch.environment t.switch_global.root t.switch) (OpamEnv.compute_updates t);
+       OpamFile.Environment.write
+         (OpamPath.Switch.environment t.switch_global.root t.switch)
+         (OpamEnv.compute_updates t);
      OpamEnv.check_and_print_env_warning t);
     t
   end else
@@ -212,15 +214,6 @@ let install_compiler ?(additional_installs=[]) ?(deps_only=false) t =
   OpamConsole.header_msg "Installing new switch packages";
   OpamConsole.msg "Switch invariant: %s\n"
     (OpamFileTools.dep_formula_to_string invariant);
-  (* let not_found =
-   *   OpamPackage.Name.Set.diff roots @@
-   *   OpamPackage.names_of_packages @@
-   *   OpamPackage.packages_of_names t.packages roots
-   * in
-   * if not (OpamPackage.Name.Set.is_empty not_found) then
-   *   OpamConsole.error_and_exit `Not_found
-   *     "No packages %s found."
-   *     (OpamPackage.Name.Set.to_string not_found); *)
   let solution =
     OpamSolution.resolve t Switch
       ~orphans:OpamPackage.Set.empty
@@ -307,6 +300,7 @@ let create
     gt ~rt ?synopsis ?repos ~update_config ~invariant switch post =
   let update_config = update_config && not (OpamSwitch.is_external switch) in
   let comp_dir = OpamPath.Switch.root gt.root switch in
+  let simulate = OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) in
   if OpamGlobalState.switch_exists gt switch then
     OpamConsole.error_and_exit `Bad_arguments
       "There already is an installed switch named %s"
@@ -315,20 +309,17 @@ let create
     OpamConsole.error_and_exit `Bad_arguments
       "Directory %S already exists, please choose a different name"
       (OpamFilename.Dir.to_string comp_dir);
-  let st =
-    if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
+  let gt, st =
+    if not simulate then
       let gt =
         OpamSwitchAction.create_empty_switch gt ?synopsis ?repos ~invariant
           switch
       in
-      if update_config then
-        OpamSwitchAction.set_current_switch `Lock_write gt ~rt switch
-      else
       let rt =
         ({ rt with repos_global = (gt :> unlocked global_state)  }
          :> unlocked repos_state)
       in
-      OpamSwitchState.load `Lock_write gt rt switch
+      gt, OpamSwitchState.load `Lock_write gt rt switch
     else
       let rt = (rt :> unlocked repos_state) in
       let st = OpamSwitchState.load_virtual ?repos_list:repos gt rt in
@@ -341,11 +332,18 @@ let create
                 ~pinned:OpamPackage.Set.empty
                 ~opams:st.opams)
       in
-      { st with switch; switch_config; available_packages }
+      gt, { st with switch; switch_config; available_packages }
   in
-  OpamGlobalState.drop gt;
-  try post st
-  with e when not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) ->
+  match post st with
+  | ret, st ->
+    let st =
+      if update_config && not simulate
+      then OpamSwitchAction.set_current_switch gt st
+      else st
+    in
+    OpamGlobalState.drop gt;
+    ret, st
+  | exception e when not simulate ->
     let () =
       try OpamStd.Exn.fatal e with e ->
         OpamStd.Exn.finalise e @@ fun () ->
@@ -353,23 +351,25 @@ let create
           (OpamSwitch.to_string st.switch)
     in
     OpamStd.Exn.finalise e @@ fun () ->
-    if OpamConsole.confirm "Switch initialisation failed: clean up? \
-                            ('n' will leave the switch partially installed)"
-    then
-      let gt, switch = st.switch_global, st.switch in
-      OpamSwitchState.drop st;
-      OpamGlobalState.drop (clear_switch gt switch)
-
+    let gt, st =
+      if OpamConsole.confirm "Switch initialisation failed: clean up? \
+                              ('n' will leave the switch partially installed)"
+      then clear_switch gt st.switch, st
+      else if update_config && not simulate
+      then gt, OpamSwitchAction.set_current_switch gt st
+      else gt, st
+    in
+    OpamSwitchState.drop st;
+    OpamGlobalState.drop gt
 
 let switch lock gt switch =
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
   if OpamGlobalState.switch_exists gt switch then
     OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+    let st = OpamSwitchState.load lock gt rt switch in
     let st =
-      if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
-        OpamSwitchAction.set_current_switch lock gt ~rt switch
-      else
-        OpamSwitchState.load lock gt rt switch
+      if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) then st
+      else OpamSwitchAction.set_current_switch gt st
     in
     OpamEnv.check_and_print_env_warning st
   else
