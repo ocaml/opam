@@ -703,19 +703,12 @@ let show =
   let sort = mk_flag ["sort"] "Sort opam fields" in
   let opam_files_in_dir d =
     match OpamPinned.files_in_source d with
-    | [] ->
-      OpamConsole.warning "No opam files found in %s"
-        (OpamFilename.Dir.to_string d);
-      []
-    | l -> List.map (fun (_,f,_) -> Some f) l
+    | [] -> []
+    | l -> List.map (fun (_,f,_) -> f) l
   in
   let pkg_info global_options fields show_empty raw where
       list_files file normalise no_lint just_file all_versions sort atom_locs =
-    let print_just_file f =
-      let opam = match f with
-        | Some f -> OpamFile.OPAM.read f
-        | None -> OpamFile.OPAM.read_from_channel stdin
-      in
+    let print_just_file opamf opam =
       if not no_lint then OpamFile.OPAM.print_errors opam;
       let opam =
         if not sort then opam else
@@ -723,9 +716,9 @@ let show =
       in
       if where then
         OpamConsole.msg "%s\n"
-          (match f with
-           | Some f ->
-             OpamFilename.(Dir.to_string (dirname (OpamFile.filename f)))
+          (match opamf with
+           | Some opamf ->
+             OpamFilename.(Dir.to_string (dirname (OpamFile.filename opamf)))
            | None -> ".")
       else
       let opam_content_list = OpamFile.OPAM.to_list opam in
@@ -754,8 +747,14 @@ let show =
     | [], false ->
       `Error (true, "required argument PACKAGES is missing")
     | [], true ->
-      print_just_file None;
-      `Ok ()
+      (try
+         let opam = OpamFile.OPAM.read_from_channel stdin in
+         print_just_file None opam;
+         `Ok ()
+       with
+       | Parsing.Parse_error | OpamLexer.Error _ | OpamPp.Bad_format _ as exn ->
+         OpamConsole.error_and_exit `File_error
+           "Stdin parsing failed:\n%s" (Printexc.to_string exn))
     | atom_locs, false ->
       let fields, show_empty =
         if list_files then
@@ -770,23 +769,60 @@ let show =
         OpamAuxCommands.simulate_autopin ~quiet:no_lint ~for_view:true st
           atom_locs
       in
-      OpamListCommand.info st
-        ~fields ~raw ~where ~normalise ~show_empty ~all_versions atoms;
+      if atoms = [] then
+        OpamConsole.error_and_exit `Not_found "No package found"
+      else
+        OpamListCommand.info st
+          ~fields ~raw ~where ~normalise ~show_empty ~all_versions atoms;
       `Ok ()
     | atom_locs, true ->
       if List.exists (function `Atom _ -> true | _ -> false) atom_locs then
         `Error (true, "packages can't be specified with --just-file")
       else
-      let opams =
+      let opamfs =
         List.fold_left (fun acc al ->
             match al with
-            | `Filename f -> Some (OpamFile.make f) :: acc
+            | `Filename f -> (OpamFile.make f) :: acc
             | `Dirname d -> opam_files_in_dir d @ acc
             | _ -> acc)
           [] atom_locs
       in
-      List.iter print_just_file opams;
-      `Ok ()
+      if opamfs = [] then
+        let dirnames =
+          OpamStd.List.filter_map (function
+              | `Dirname d -> Some (OpamFilename.Dir.to_string d)
+              | _ -> None)
+            atom_locs
+        in
+        OpamConsole.error_and_exit `Not_found "No opam files found at %s"
+          (OpamStd.List.concat_map ", " ~last_sep:" and "
+             (fun x -> x) dirnames )
+      else
+      let errors, opams =
+        List.fold_left (fun (errors,opams) opamf ->
+            try
+              errors, (Some opamf, (OpamFile.OPAM.read opamf))::opams
+            with
+            | Parsing.Parse_error | OpamLexer.Error _ | OpamPp.Bad_format _ as exn ->
+              (opamf, exn)::errors, opams)
+          ([],[]) opamfs
+      in
+      List.iter (fun (f,o) -> print_just_file f o) opams;
+      (if errors <> [] then
+         let sgl = match errors with [_] -> true | _ -> false in
+         let tostr (opamf, error) =
+           (OpamFilename.to_string (OpamFile.filename opamf))
+           ^ ":\n" ^ Printexc.to_string error
+         in
+         OpamConsole.error "Parsing error on%s:%s"
+           (if sgl then "" else "some opam files")
+           (match errors with
+            | [f] -> tostr f
+            | fs -> OpamStd.Format.itemize tostr fs));
+      if opams = [] then
+        OpamStd.Sys.exit_because `File_error
+      else
+        `Ok ()
   in
   Term.(ret
           (const pkg_info $global_options $fields $show_empty $raw $where
