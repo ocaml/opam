@@ -58,7 +58,8 @@ val exec:
     a string of the form "field[(+=|-=|=)value]". In the case where it contains
     only the field name, field is reverted to its initial value as defined in
     [OpamInitDefaults.init_config], to default value otherwise
-    ([OpamFile.Config.empty]).*)
+    ([OpamFile.Config.empty]).
+    May raise [Invalid_argument] or [OpamStd.Sys.Exit 2]. *)
 val set_opt_global: rw global_state -> string -> rw global_state
 
 (** As [set_opt_global], [set_opt_switch] updates switch config file in

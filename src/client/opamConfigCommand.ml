@@ -385,8 +385,8 @@ type 'config confset =
     (* The config *)
     stg_write_config: 'config -> unit;
     (* Function to write the config file *)
-    stg_file: filename;
-    (* Filename of the config file *)
+    stg_doc: string;
+    (* Global or switch specification, used to print final user message *)
   }
 
 type 'a update_op =
@@ -430,6 +430,11 @@ let parse_upd fv =
     with Not_found ->  raise (Invalid_argument "set-opt: operator needed")
   in
   var, value
+
+let global_doc = "global configuration"
+let switch_doc st =
+  Printf.sprintf "switch %s"
+    (OpamConsole.colorise `bold (OpamSwitch.to_string st.switch))
 
 (* General setting option function. Takes [field_value], a string of the field
    and its value update, [conf] the configuration according the config file
@@ -507,14 +512,14 @@ let set_opt ?(inner=false) field_value conf =
            (OpamPp.string_of_bad_format e))
   in
   conf.stg_write_config new_config;
-  OpamConsole.msg "%s field %s in %s.\n"
+  OpamConsole.msg "%s field %s in %s\n"
     (match value with
-     | Add value ->  Printf.sprintf "Added %s to" value
-     | Remove value ->  Printf.sprintf "Removed %s from" value
-     | Overwrite value -> Printf.sprintf "Set to %s the" value
+     | Add value ->  Printf.sprintf "Added '%s' to" value
+     | Remove value ->  Printf.sprintf "Removed '%s' from" value
+     | Overwrite value -> Printf.sprintf "Set to '%s' the" value
      | Revert -> "Reverted")
     (OpamConsole.colorise `underline field)
-    (OpamFilename.to_string conf.stg_file);
+    conf.stg_doc;
   new_config
 
 let allwd_wrappers wdef wrappers with_wrappers  =
@@ -608,7 +613,7 @@ let confset_switch st =
     stg_allwd_sections = switch_allowed_sections ();
     stg_config = st.switch_config;
     stg_write_config = write;
-    stg_file = OpamFile.filename config_f;
+    stg_doc = switch_doc st
   }
 
 let set_opt_switch_t ?inner st field_value =
@@ -683,7 +688,7 @@ let confset_global gt =
     stg_allwd_sections = global_allowed_sections ();
     stg_config = gt.config;
     stg_write_config = write;
-    stg_file = OpamFile.filename (OpamPath.config gt.root);
+    stg_doc = global_doc;
   }
 
 let set_opt_global_t ?inner gt field_value =
@@ -715,9 +720,11 @@ type ('var,'t) var_confset =
     (* As variable can't be duplicated, a function to remove it from the list *)
     stv_write: 't -> 't;
     (* Write the config file *)
+    stv_doc: string;
+    (* Global or switch specification, used to print final user message *)
   }
 
-let set_var var value conf =
+let set_var svar value conf =
   let value =
     match value with
     | None -> Revert
@@ -733,7 +740,7 @@ let set_var var value conf =
        | exception Invalid_argument _ -> ());
       Overwrite value
   in
-  let var = OpamVariable.Full.of_string var in
+  let var = OpamVariable.Full.of_string svar in
   let conf = conf (OpamVariable.Full.variable var) in
   if not (OpamVariable.Full.is_global var) then
     OpamConsole.error_and_exit `Bad_arguments
@@ -744,7 +751,13 @@ let set_var var value conf =
   let t = conf.stv_remove_elem rest t in
   match value with
   | Overwrite value -> conf.stv_set_opt t ("+=" ^ conf.stv_varstr value)
-  | Revert -> conf.stv_write t (* only write, as the var is already removed *)
+  | Revert ->
+    (* only write, as the var is already removed *)
+    let t = conf.stv_write t in
+    OpamConsole.msg "Reverted variable %s in %s\n"
+      (OpamConsole.colorise `underline svar)
+      conf.stv_doc;
+    t
   | _ -> assert false
 
 let set_var_global gt var value =
@@ -755,7 +768,7 @@ let set_var_global gt var value =
     stv_find = (fun (k,_,_) -> k = var);
     stv_state = gt;
     stv_varstr = (fun v ->
-        OpamPrinter.value (List (pos_null, [
+        OpamPrinter.Normalise.value (List (pos_null, [
             Ident (pos_null, OpamVariable.to_string var);
             String (pos_null, v);
             String (pos_null, "Set through 'opam config set-var global'")
@@ -771,6 +784,7 @@ let set_var_global gt var value =
         in
         { gt with config });
     stv_write = (fun gt -> OpamGlobalState.write gt; gt);
+    stv_doc = global_doc;
   }
 
 let set_var_switch st var value =
@@ -781,7 +795,8 @@ let set_var_switch st var value =
     stv_find = (fun (k,_) -> k = var);
     stv_state = st;
     stv_varstr = (fun v ->
-        OpamPrinter.items
+        OpamStd.String.remove_suffix ~suffix:"\n" @@
+        OpamPrinter.Normalise.items
           [Variable
              (pos_null, OpamVariable.to_string var, String (pos_null, v))]);
     stv_set_opt = (fun st s ->
@@ -793,6 +808,7 @@ let set_var_switch st var value =
           (OpamPath.Switch.switch_config st.switch_global.root st.switch)
           st.switch_config;
         st);
+    stv_doc = switch_doc st;
   }
 
 (** Option display *)
@@ -882,7 +898,7 @@ let option_show to_list conf field =
       OpamConsole.print_table stdout ~sep:"  "
         (OpamStd.Format.align_table sections)
     else
-      OpamConsole.error_and_exit `Bad_arguments
+      OpamConsole.error_and_exit `Not_found
         "Field or section %s not found" field
 
 let option_show_switch st field =
