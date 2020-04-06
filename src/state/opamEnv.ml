@@ -467,7 +467,8 @@ let source root shell f =
     Printf.sprintf "test -r %s && . %s > /dev/null 2> /dev/null || true\n"
       (file f) (file f)
   | SH_zsh ->
-    Printf.sprintf "[[ ! -r %s ]] || source %s  > /dev/null 2> /dev/null" (file f) (file f)
+    Printf.sprintf "[[ ! -r %s ]] || source %s  > /dev/null 2> /dev/null\n"
+      (file f) (file f)
 
 let if_interactive_script shell t e =
   let ielse else_opt = match else_opt with
