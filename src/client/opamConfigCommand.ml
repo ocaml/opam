@@ -803,7 +803,7 @@ let print_fields fields =
     |> List.map (fun (name, value) ->
         let value = match value with
           | None -> "{}"
-          | Some value -> (OpamPrinter.value value)
+          | Some value -> (OpamPrinter.Normalise.value value)
         in
         [
           OpamConsole.colorise `bold name ;
