@@ -9,6 +9,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamParserTypes
 open OpamTypes
 open OpamTypesBase
 
@@ -275,7 +276,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
         Printf.sprintf "File format error in '%s'%s: %s"
           field
           (match pos with
-           | Some (_,li,col) when li >= 0 && col >= 0 ->
+           | Some {start=li,col; _} when li >= 0 && col >= 0 ->
              Printf.sprintf " at line %d, column %d" li col
            | _ -> "")
           msg)
@@ -715,7 +716,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        (bad_licenses <> []));
     (let subpath =
        match OpamStd.String.Map.find_opt "x-subpath" (extensions t) with
-       | Some (String (_,_)) -> true
+       | Some {pelem = String _; _} -> true
        | _ -> false
      in
      let opam_restriction =
@@ -736,7 +737,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        (subpath && not opam_restriction));
     (let subpath_string =
        match OpamStd.String.Map.find_opt "x-subpath" (extensions t) with
-       | Some (String (_,_)) | None -> false
+       | Some {pelem = String _; _} | None -> false
        | _ -> true
      in
      cond 64 `Warning
@@ -783,7 +784,7 @@ let lint_gen ?check_extra_files ?check_upstream ?(handle_dirname=false)
     let warn_of_bad_format (pos, msg) =
       2, `Error, Printf.sprintf "File format error%s: %s"
         (match pos with
-         | Some (_,li,col) when li >= 0 && col >= 0 ->
+         | Some {start=li,col; _} when li >= 0 && col >= 0 ->
            Printf.sprintf " at line %d, column %d" li col
          | _ -> "")
         msg

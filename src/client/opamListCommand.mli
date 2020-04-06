@@ -11,6 +11,7 @@
 
 (** Functions handling the "opam list" subcommand *)
 
+open OpamParserTypes
 open OpamTypes
 open OpamStateTypes
 
