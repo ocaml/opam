@@ -1013,48 +1013,49 @@ let config ?(option=false) () =
          OpamConfigCommand.options_list gt st;
          `Ok ()
        | (`Global | `Switch) as scope ->
-         (match cmd, apply with
-          | `option, (`empty | `value_wt_eq _ as apply) ->
-            (match scope with
-             | `Switch ->
-               OpamGlobalState.with_ `Lock_none @@ fun gt ->
-               OpamSwitchState.with_ `Lock_read gt @@ fun st ->
-               (match apply with
-                | `empty -> OpamConfigCommand.options_list_switch st
-                | `value_wt_eq v -> OpamConfigCommand.option_show_switch st v);
-               `Ok ()
-             | `Global ->
-               OpamGlobalState.with_ `Lock_read @@ fun gt ->
-               (match apply with
-                | `empty -> OpamConfigCommand.options_list_global gt
-                | `value_wt_eq v -> OpamConfigCommand.option_show_global gt v);
-               `Ok ())
-          | _, `err | `set_var, `empty ->
-            bad_subcommand commands ("config", command, params)
-          | _,
-            (`value_eq var | `value_wt_eq var | `two_values (var,_) as apply) ->
-            let opt_value =
-              match apply with `two_values (_,x) -> Some x | _ -> None
-            in
-            match scope with
-            | `Switch ->
-              OpamGlobalState.with_ `Lock_none @@ fun gt ->
-              OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-              let _st =
-                match cmd with
-                | `set_var -> OpamConfigCommand.set_var_switch st var opt_value
-                | `option -> OpamConfigCommand.set_opt_switch st var
+         try
+           (match cmd, apply with
+            | `option, (`empty | `value_wt_eq _ as apply) ->
+              (match scope with
+               | `Switch ->
+                 OpamGlobalState.with_ `Lock_none @@ fun gt ->
+                 OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+                 (match apply with
+                  | `empty -> OpamConfigCommand.options_list_switch st
+                  | `value_wt_eq v -> OpamConfigCommand.option_show_switch st v);
+                 `Ok ()
+               | `Global ->
+                 OpamGlobalState.with_ `Lock_read @@ fun gt ->
+                 (match apply with
+                  | `empty -> OpamConfigCommand.options_list_global gt
+                  | `value_wt_eq v -> OpamConfigCommand.option_show_global gt v);
+                 `Ok ())
+            | _, `err | `set_var, `empty ->
+              bad_subcommand commands ("config", command, params)
+            | _,
+              (`value_eq var | `value_wt_eq var | `two_values (var,_) as apply) ->
+              let opt_value =
+                match apply with `two_values (_,x) -> Some x | _ -> None
               in
-              `Ok ()
-            | `Global ->
-              OpamGlobalState.with_ `Lock_write @@ fun gt ->
-              let _st =
-                match cmd with
-                | `set_var -> OpamConfigCommand.set_var_global gt var opt_value
-                | `option -> OpamConfigCommand.set_opt_global gt var
-              in
-              `Ok ()
-         ))
+              match scope with
+              | `Switch ->
+                OpamGlobalState.with_ `Lock_none @@ fun gt ->
+                OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+                let _st =
+                  match cmd with
+                  | `set_var -> OpamConfigCommand.set_var_switch st var opt_value
+                  | `option -> OpamConfigCommand.set_opt_switch st var
+                in
+                `Ok ()
+              | `Global ->
+                OpamGlobalState.with_ `Lock_write @@ fun gt ->
+                let _st =
+                  match cmd with
+                  | `set_var -> OpamConfigCommand.set_var_global gt var opt_value
+                  | `option -> OpamConfigCommand.set_opt_global gt var
+                in
+                `Ok ())
+         with Invalid_argument err -> `Error (true, err))
     | Some `expand, [str] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.expand gt str)
