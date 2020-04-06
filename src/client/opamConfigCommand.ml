@@ -855,17 +855,28 @@ let options_list_global gt =
   options_list OpamFile.Config.to_list (confset_global gt)
 
 let option_show to_list conf field =
-  let name_value = to_list conf.stg_config in
-  match OpamStd.List.find_opt (fun (f,_) -> f = field) conf.stg_fields with
-  | Some (_, _) ->
-    print_fields [find_field field name_value]
+  match OpamStd.List.assoc_opt field conf.stg_fields with
+  | Some pp ->
+    (match OpamPp.print pp conf.stg_config with
+     | _, Some value ->
+       OpamConsole.msg "%s\n" (OpamPrinter.Normalise.value value)
+     | _, None -> ())
   | None ->
-    (match OpamStd.List.find_opt (fun (f,_) -> f = field) conf.stg_sections with
-     | Some (_, _) ->
-       print_fields (find_section field name_value)
-     | None ->
-       OpamConsole.error_and_exit `Bad_arguments
-         "Field or section %s not found" field)
+    if List.mem_assoc field conf.stg_sections then
+      let name_value = to_list conf.stg_config in
+      let sections =
+        OpamStd.List.filter_map (fun (name, v) ->
+            match OpamStd.String.cut_at name '.' with
+            | Some (name,elem) when name = field ->
+              Some [ elem; OpamPrinter.Normalise.value v ]
+            | _ -> None
+          ) name_value
+      in
+      OpamConsole.print_table stdout ~sep:"  "
+        (OpamStd.Format.align_table sections)
+    else
+      OpamConsole.error_and_exit `Bad_arguments
+        "Field or section %s not found" field
 
 let option_show_switch st field =
   option_show OpamFile.Switch_config.to_list (confset_switch st) field
