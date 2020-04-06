@@ -830,7 +830,7 @@ let find_section section name_value =
   | [] -> [section, None]
   | section -> List.map (fun (n,v) -> n, Some v) section
 
-let options_list to_list conf =
+let options_list_t to_list conf =
   let name_value = to_list conf.stg_config in
   let fields =
     OpamStd.List.filter_map (fun (field, policy, _) ->
@@ -850,9 +850,16 @@ let options_list to_list conf =
   print_fields (fields @ sections)
 
 let options_list_switch st =
-  options_list OpamFile.Switch_config.to_list (confset_switch st)
+  options_list_t OpamFile.Switch_config.to_list (confset_switch st)
 let options_list_global gt =
-  options_list OpamFile.Config.to_list (confset_global gt)
+  options_list_t OpamFile.Config.to_list (confset_global gt)
+
+let options_list gt st =
+  OpamConsole.header_msg "Global configuration";
+  options_list_global gt;
+  OpamConsole.header_msg "Switch configuration (%s)"
+    (OpamSwitch.to_string st.switch);
+  options_list_switch st
 
 let option_show to_list conf field =
   match OpamStd.List.assoc_opt field conf.stg_fields with

@@ -986,7 +986,7 @@ let config ?(option=false) () =
         else match cmd with
           | `set_var -> `None_set_var
           | `option -> match args with
-            | [] -> `Switch
+            | [] -> `All
             | f::_ -> OpamConfigCommand.get_scope f
       in
       let apply =
@@ -1007,6 +1007,11 @@ let config ?(option=false) () =
        | `None_set_var ->
          `Error (true, "set-var: no scope defined, \
                         use '--global' or '--switch sw'")
+       | `All ->
+         OpamGlobalState.with_ `Lock_read @@ fun gt ->
+         OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+         OpamConfigCommand.options_list gt st;
+         `Ok ()
        | (`Global | `Switch) as scope ->
          (match cmd, apply with
           | `option, (`empty | `value_wt_eq _ as apply) ->
