@@ -51,7 +51,8 @@ let help t =
         content % `blue;
         "#"; doc
       ])
-    (OpamVariable.Map.bindings all_global_vars) |>
+    (List.sort (fun (x,_) (x',_) -> compare x x')
+       (OpamVariable.Map.bindings all_global_vars)) |>
   OpamStd.Format.align_table |>
   OpamConsole.print_table stdout ~sep:" ";
 
@@ -69,7 +70,8 @@ let help t =
         OpamVariable.to_string var % `bold;
         OpamVariable.string_of_variable_contents value % `blue;
       ])
-    (global.OpamFile.Switch_config.variables) |>
+    (List.sort (fun (x,_) (x',_) -> compare x' x)
+       global.OpamFile.Switch_config.variables) |>
   OpamStd.Format.align_table |>
   OpamConsole.print_table stdout ~sep:" ";
 
