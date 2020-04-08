@@ -391,13 +391,18 @@ type 'config confset =
     (* Global or switch specification, used to print final user message *)
   }
 
-type 'a update_op =
-  | Add of 'a
-  | Remove of 'a
-  | Overwrite of 'a
-  | Revert
+type whole_op =
+  [ `Overwrite of string
+  | `Revert ]
 
-let parse_upd fv =
+type append_op =
+  [ `Add of string
+  | `Remove of string ]
+
+type update_op =
+  [ append_op  | whole_op ]
+
+let parse_update fv =
   let reg =
     Re.(compile @@ seq [
         group @@ seq [
@@ -423,27 +428,35 @@ let parse_upd fv =
         OpamStd.Option.of_Not_found (fun () -> Re.Group.get grs 3) ()
       in
       match Re.Group.get grs 2, value with
-      | "+=", Some value -> Add value
-      | "-=", Some value -> Remove value
-      | ("=" | "=="), Some value -> Overwrite value
-      | ("=" | "=="), None -> Revert
-      | ("+=" | "-="), None -> raise (Invalid_argument "set-opt: rhs needed")
-      | _, _ -> raise (Invalid_argument "set-opt: illegal operator")
-    with Not_found ->  raise (Invalid_argument "set-opt: operator needed")
+      | "+=", Some value -> `Add value
+      | "-=", Some value -> `Remove value
+      | ("=" | "=="), Some value -> `Overwrite value
+      | ("=" | "=="), None -> `Revert
+      | ("+=" | "-="), None -> raise (Invalid_argument "parse_update: rhs needed")
+      | _, _ -> raise (Invalid_argument "parse_update: illegal operator")
+    with Not_found ->  raise (Invalid_argument "parse_update: operator needed")
   in
   var, value
+
+let whole_of_update_op = function
+  | #whole_op as w -> w
+  | _ -> raise Not_found
+
+let parse_whole fv =
+  let v, upd = parse_update fv in
+  try v, (whole_of_update_op upd)
+  with Not_found -> raise (Invalid_argument "parse_whole: append operator")
 
 let global_doc = "global configuration"
 let switch_doc st =
   Printf.sprintf "switch %s"
     (OpamConsole.colorise `bold (OpamSwitch.to_string st.switch))
 
-(* General setting option function. Takes [field_value], a string of the field
-   and its value update, [conf] the configuration according the config file
-   (['config confest]). If [inner] is set, it allows the modification of
-   [InModifiable] fields *)
-let set_opt ?(inner=false) field_value conf =
-  let field, value = parse_upd field_value in
+(* General setting option function. Takes the [field] to update, the [value]
+   operation, [conf] the configuration according the config file (['config
+   confest]). If [inner] is set, it allows the modification of [InModifiable]
+   fields *)
+let set_opt ?(inner=false) field value conf =
   let wrap allowed all parse =
     List.map (fun (field, pp) ->
         match OpamStd.List.find_opt (fun (x,_,_) -> x = field) allowed with
@@ -481,31 +494,29 @@ let set_opt ?(inner=false) field_value conf =
     | Some None, _ ->
       OpamConsole.error_and_exit `Bad_arguments
         "Field %s is not modifiable" (OpamConsole.colorise `underline field)
-    | Some (Some (_, Atomic, _)), ((Add _ | Remove _) as ar) ->
+    | Some (Some (_, Atomic, _)), (#append_op as ar) ->
       OpamConsole.error_and_exit `Bad_arguments
         "Field %s can't be %s" (OpamConsole.colorise `underline field)
-        (match ar with Add _ -> "appended" | Remove _ -> "substracted"
-                     | _ -> assert false)
-    | Some (Some (_, InModifiable (_,_), _)), (Add _ | Remove _ as ar)
-      when not inner ->
+        (match ar with `Add _ -> "appended" | `Remove _ -> "substracted")
+    | Some (Some (_, InModifiable (_,_), _)), (#append_op as ar) when not inner ->
       OpamConsole.error_and_exit `Bad_arguments
         "Field %s can't be directly %s, use `opam var` instead"
         (OpamConsole.colorise `underline field)
-        (match ar with Add _ -> "appended to" | Remove _ -> "substracted from"
-                     | _ -> assert false)
-    | Some (Some (_, _, set_default)), Revert ->
+        (match ar with `Add _ -> "appended to"
+                     | `Remove _ -> "substracted from")
+    | Some (Some (_, _, set_default)), `Revert ->
       set_default conf.stg_config
     | Some (Some (parse, fix_app, _)),
-      ((Add v | Remove v | Overwrite v) as req_value) ->
+      ((`Add v | `Remove v | `Overwrite v) as req_value) ->
       (try
          let updf v = parse v conf.stg_config in
          match req_value, fix_app with
-         | Add value, (Modifiable (add, _) | InModifiable (add, _))  ->
+         | `Add value, (Modifiable (add, _) | InModifiable (add, _))  ->
            add (updf value) conf.stg_config
-         | Remove value, (Modifiable (_, rem) | InModifiable (_, rem)) ->
+         | `Remove value, (Modifiable (_, rem) | InModifiable (_, rem)) ->
            rem (updf value) conf.stg_config
-         | Overwrite value, _ -> (updf value)
-         | _,_ -> assert false
+         | `Overwrite value, _ -> (updf value)
+         | _, Atomic -> assert false
        with
        | (OpamPp.Bad_format (_,_) | Parsing.Parse_error) as e ->
          OpamConsole.error_and_exit `Bad_arguments
@@ -516,10 +527,10 @@ let set_opt ?(inner=false) field_value conf =
   conf.stg_write_config new_config;
   OpamConsole.msg "%s field %s in %s\n"
     (match value with
-     | Add value ->  Printf.sprintf "Added '%s' to" value
-     | Remove value ->  Printf.sprintf "Removed '%s' from" value
-     | Overwrite value -> Printf.sprintf "Set to '%s' the" value
-     | Revert -> "Reverted")
+     | `Add value ->  Printf.sprintf "Added '%s' to" value
+     | `Remove value ->  Printf.sprintf "Removed '%s' from" value
+     | `Overwrite value -> Printf.sprintf "Set to '%s' the" value
+     | `Revert -> "Reverted")
     (OpamConsole.colorise `underline field)
     conf.stg_doc;
   new_config
@@ -618,9 +629,9 @@ let confset_switch st =
     stg_doc = switch_doc st
   }
 
-let set_opt_switch_t ?inner st field_value =
+let set_opt_switch_t ?inner st field value =
   let switch_config =
-    set_opt ?inner field_value (confset_switch st)
+    set_opt ?inner field value (confset_switch st)
   in
   { st with switch_config }
 
@@ -693,9 +704,9 @@ let confset_global gt =
     stg_doc = global_doc;
   }
 
-let set_opt_global_t ?inner gt field_value =
+let set_opt_global_t ?inner gt field value =
   let config =
-    set_opt ?inner field_value (confset_global gt)
+    set_opt ?inner field value (confset_global gt)
   in
   { gt with config }
 
@@ -716,7 +727,7 @@ type ('var,'t) var_confset =
     stv_varstr: string -> string;
     (* [stv_vars value] returns the string of the variable with the new value.
        It is used to give the overall value to [set_opt] functions. *)
-    stv_set_opt: 't -> string -> 't;
+    stv_set_opt: 't -> update_op -> 't;
     (* The [set_opt] function call [stv_set_opt state var_value] *)
     stv_remove_elem: 'var list -> 't -> 't;
     (* As variable can't be duplicated, a function to remove it from the list *)
@@ -726,13 +737,7 @@ type ('var,'t) var_confset =
     (* Global or switch specification, used to print final user message *)
   }
 
-let set_var varvalue conf =
-  let svar, value = parse_upd varvalue in
-  (match value with
-   | Add _ | Remove _ ->
-     OpamConsole.error_and_exit `Bad_arguments
-       "Variables are not appendable"
-   | Revert | Overwrite _ -> ());
+let set_var svar value conf =
   let var = OpamVariable.Full.of_string svar in
   let conf = conf (OpamVariable.Full.variable var) in
   if not (OpamVariable.Full.is_global var) then
@@ -743,18 +748,17 @@ let set_var varvalue conf =
   let t = conf.stv_state in
   let t = conf.stv_remove_elem rest t in
   match value with
-  | Overwrite value -> conf.stv_set_opt t ("+=" ^ conf.stv_varstr value)
-  | Revert ->
+  | `Overwrite value -> conf.stv_set_opt t (`Add (conf.stv_varstr value))
+  | `Revert ->
     (* only write, as the var is already removed *)
     let t = conf.stv_write t in
     OpamConsole.msg "Removed variable %s in %s\n"
       (OpamConsole.colorise `underline svar)
       conf.stv_doc;
     t
-  | _ -> assert false
 
-let set_var_global gt varvalue =
-  set_var varvalue @@
+let set_var_global gt var value =
+  set_var var value @@
   fun var ->
   let global_vars = OpamFile.Config.global_variables gt.config in
   { stv_vars = global_vars;
@@ -767,7 +771,7 @@ let set_var_global gt varvalue =
             String (pos_null, "Set through 'opam var'")
           ])));
     stv_set_opt = (fun gt s ->
-        set_opt_global_t ~inner:true gt ("global-variables"^s));
+        set_opt_global_t ~inner:true gt "global-variables" s);
     stv_remove_elem = (fun rest gt ->
         let config =
           OpamFile.Config.with_global_variables rest gt.config
@@ -780,8 +784,8 @@ let set_var_global gt varvalue =
     stv_doc = global_doc;
   }
 
-let set_var_switch st varvalue =
-  set_var varvalue @@
+let set_var_switch st var value =
+  set_var var value @@
   fun var ->
   let switch_vars = st.switch_config.OpamFile.Switch_config.variables in
   { stv_vars = switch_vars;
@@ -793,7 +797,7 @@ let set_var_switch st varvalue =
           [Variable
              (pos_null, OpamVariable.to_string var, String (pos_null, v))]);
     stv_set_opt = (fun st s ->
-        set_opt_switch_t ~inner:true st ("variables"^s));
+        set_opt_switch_t ~inner:true st "variables" s);
     stv_remove_elem = (fun rest st ->
         { st with switch_config = { st.switch_config with variables = rest }});
     stv_write = (fun st ->
@@ -901,7 +905,7 @@ let option_show_global gt field =
 
 let get_scope field =
   let field =
-    try fst (parse_upd field)
+    try fst (parse_update field)
     with Invalid_argument _ -> field
   in
   let find l = OpamStd.List.find_opt (fun (f,_) -> f = field) l in

@@ -52,27 +52,42 @@ val exec:
   ?set_opamroot:bool -> ?set_opamswitch:bool -> inplace_path:bool ->
   string list -> unit
 
-(** [set_opt_global gt field_value] updates global config field with value
-    (using prefix '+=', '-=', '=') in <opamroot>/config file. Modifiable fields
-    are a subset of all defined fields in [OpamFile.Config.t]. [field_value] is
-    a string of the form "field[(+=|-=|=)value]". In the case where it contains
-    only the field name, field is reverted to its initial value as defined in
-    [OpamInitDefaults.init_config], to default value otherwise
-    ([OpamFile.Config.empty]).
-    May raise [Invalid_argument] or [OpamStd.Sys.Exit 2]. *)
-val set_opt_global: rw global_state -> string -> rw global_state
+(** Update operations *)
+type whole_op  = [ `Overwrite of string | `Revert ]
+type append_op = [ `Add of string | `Remove of string ]
+type update_op = [ append_op  | whole_op ]
+
+(** Parse an update operation. String is of the form "var[(+=|-=|=)[value]]".
+    If 'value' is absent, it is a revert operation.
+    Raise [Invalid_argument] if the string is malformed *)
+val parse_update: string -> string * update_op
+
+(** As [parse_update] but parse only overwrites and reverts. String is of the
+    form "var=[value]".
+    Raise [Invalid_argument] if the string is malformed *)
+val parse_whole: string -> string * whole_op
+
+val whole_of_update_op: update_op -> whole_op
+
+(** [set_opt_global gt field value] updates global config field with update
+    value in <opamroot>/config file. Modifiable fields are a subset of all
+    defined fields in [OpamFile.Config.t]. On revert, field is reverted to its
+    initial value as defined in [OpamInitDefaults.init_config], to default
+    value otherwise ([OpamFile.Config.empty]).
+    May raise [OpamStd.Sys.Exit 2]. *)
+val set_opt_global: rw global_state -> string -> update_op -> rw global_state
 
 (** As [set_opt_global], [set_opt_switch] updates switch config file in
     <opamroot>/<switch>/.opam-switch/switch-config. *)
-val set_opt_switch: rw switch_state -> string -> rw switch_state
+val set_opt_switch: rw switch_state -> string -> update_op -> rw switch_state
 
 (** [set_var_global] and [set_var_switch] update respectively `global-variables`
     field in global config and `variables` field in switch config, by appending
     the new variables to current set *)
 val set_var_global:
-  rw global_state -> string -> rw global_state
+  rw global_state -> string -> whole_op -> rw global_state
 val set_var_switch:
-  rw switch_state -> string -> rw switch_state
+  rw switch_state -> string -> whole_op -> rw switch_state
 
 (** List switch and/or global fields/sections and their value *)
 val options_list       : ro global_state -> ro switch_state -> unit
