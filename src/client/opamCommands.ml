@@ -1195,35 +1195,41 @@ let config ?(option=false) () =
           `Ok ()
         with e -> print "read-state" "%s" (Printexc.to_string e); `Ok ())
     (* deprecated *)
-    | Some `set, [var; value] ->
-      OpamConsole.warning
-        "Subcommand set is deprecated. Use set-var switch %s %s instead."
-        var value;
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let _st = OpamConfigCommand.set_var_switch st var (Some value) in
-      `Ok ()
-    | Some `unset, [var] ->
-      OpamConsole.warning
-        "Subcommand set is deprecated. Use set-var switch %s instead." var;
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let _st = OpamConfigCommand.set_var_switch st var None in
-      `Ok ()
-    | Some `set_global, [var; value] ->
-      OpamConsole.warning
-        "Subcommand set-global is deprecated. Use set-var global %s %s instead."
-        var value;
-      OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      let _gt = OpamConfigCommand.set_var_global gt var (Some value) in
-      `Ok ()
-    | Some `unset_global, [var] ->
-      OpamConsole.warning
-        "Subcommand set-global is deprecated. Use set-var global %s instead."
-        var;
-      OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      let _gt = OpamConfigCommand.set_var_global gt var None in
-      `Ok ()
+    | Some (`set | `unset as cmd), var::value ->
+      let args =
+        match cmd,value with
+        | `unset, [] -> Some None
+        | `set, v::_ -> Some (Some v)
+        |  _, _ -> None
+      in
+      (match args with
+       | None ->
+         bad_subcommand commands ("config", command, params)
+       | Some opt_value ->
+         OpamConsole.warning
+           "Subcommand set is deprecated. Use set-var %s%s instead."
+           var (OpamStd.Option.to_string (fun v -> " "^v) opt_value);
+         OpamGlobalState.with_ `Lock_none @@ fun gt ->
+         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+         let _st = OpamConfigCommand.set_var_switch st var opt_value in
+         `Ok ())
+    | Some (`set_global | `unset_global as cmd), var::value ->
+      let args =
+        match cmd,value with
+        |`unset_global, [] -> Some None
+        | `set_global, v::_ -> Some (Some v)
+        |  _, _ -> None
+      in
+      (match args with
+       | None ->
+         bad_subcommand commands ("config", command, params)
+       | Some opt_value ->
+         OpamConsole.warning
+           "Subcommand set-global is deprecated. Use set-var %s%s --global instead."
+           var (OpamStd.Option.to_string (fun v -> " "^v) opt_value);
+         OpamGlobalState.with_ `Lock_write @@ fun gt ->
+         let _gt = OpamConfigCommand.set_var_global gt var opt_value in
+         `Ok ())
     | command, params -> bad_subcommand commands ("config", command, params)
   in
 
