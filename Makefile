@@ -100,11 +100,11 @@ ifneq ($(LIBINSTALL_DIR),)
 endif
 
 opam-devel.install: $(DUNE_DEP)
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) -p opam opam.install
+	$(DUNE) build $(DUNE_ARGS) -p opam opam.install
 	sed -e "s/bin:/libexec:/" opam.install > $@
 
 opam-%.install: $(DUNE_DEP)
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) -p opam-$* $@
+	$(DUNE) build $(DUNE_ARGS) -p opam-$* $@
 
 .PHONY: build-opam-installer
 build-opam-installer: $(DUNE_DEP) 
@@ -169,7 +169,7 @@ crowbar: $(DUNE_DEP)
 .PHONY: crowbar-afl
 # runs the real AFL deal, but needs to be done in a +afl switch
 crowbar-afl: $(DUNE_DEP)
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/crowbar/test.exe
+	dune build src/crowbar/test.exe
 	mkdir -p /tmp/opam-crowbar-input -p /tmp/opam-crowbar-output
 	echo foo > /tmp/opam-crowbar-input/foo
 	afl-fuzz -i /tmp/opam-crowbar-input -o /tmp/opam-crowbar-output dune exec src/crowbar/test.exe @@
