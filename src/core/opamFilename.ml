@@ -374,6 +374,7 @@ let flock flag ?dontblock file = OpamSystem.flock flag ?dontblock (to_string fil
 let with_flock flag ?dontblock file f =
   let lock = OpamSystem.flock flag ?dontblock (to_string file) in
   try
+    let open OpamCompat in
     let (fd, ch) =
       match OpamSystem.get_lock_fd lock with
       | exception Not_found ->
