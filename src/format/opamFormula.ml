@@ -538,7 +538,6 @@ let gen_formula l f =
     | _ :: r -> Some (ors (aux2 r))
 
 let formula_of_version_set set subset =
-  let module S = OpamPackage.Version.Set in
   match
     gen_formula
       (OpamPackage.Version.Set.elements set)
