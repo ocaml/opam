@@ -35,10 +35,10 @@ val print_eval_env: csh:bool -> sexp:bool -> fish:bool -> env -> unit
 (** Display the content of all available variables; global summary if the list
     is empty, package name "-" is understood as global configuration *)
 val list:
-  'a global_state -> name list -> unit
+  ro global_state -> name list -> unit
 
 (** Display the content of a given variable *)
-val variable: 'a global_state -> full_variable -> unit
+val variable: ro global_state -> full_variable -> unit
 
 (** Substitute files *)
 val subst: 'a global_state -> basename list -> unit
@@ -70,9 +70,9 @@ val set_opt_switch: rw switch_state -> string -> rw switch_state
     field in global config and `variables` field in switch config, by appending
     the new variables to current set *)
 val set_var_global:
-  rw global_state -> string -> string option -> rw global_state
+  rw global_state -> string -> rw global_state
 val set_var_switch:
-  rw switch_state -> string -> string option -> rw switch_state
+  rw switch_state -> string -> rw switch_state
 
 (** List switch and/or global fields/sections and their value *)
 val options_list       : ro global_state -> ro switch_state -> unit
@@ -83,6 +83,7 @@ val options_list_global: ro global_state -> unit
 val option_show_switch: ro switch_state -> string -> unit
 val option_show_global: ro global_state -> string -> unit
 
-(** Given an `opam config option` field or field-value argument, detect the
-    scope, switch, global or inexistent field *)
+(** Given an `opam option` field or field-value argument, detect the scope,
+    switch, global or inexistent field
+    (cf. [OpamCommands.Var_Option_Common.var_option]) *)
 val get_scope: string -> [> `Switch | `Global | `None of string ]

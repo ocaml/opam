@@ -487,7 +487,7 @@ let set_opt ?(inner=false) field_value conf =
     | Some (Some (_, InModifiable (_,_), _)), (Add _ | Remove _ as ar)
       when not inner ->
       OpamConsole.error_and_exit `Bad_arguments
-        "Field %s can't be directly %s, use `opam config set-var` instead"
+        "Field %s can't be directly %s, use `opam var` instead"
         (OpamConsole.colorise `underline field)
         (match ar with Add _ -> "appended to" | Remove _ -> "substracted from"
                      | _ -> assert false)
@@ -724,22 +724,13 @@ type ('var,'t) var_confset =
     (* Global or switch specification, used to print final user message *)
   }
 
-let set_var svar value conf =
-  let value =
-    match value with
-    | None -> Revert
-    | Some value ->
-      (match String.get value 0, String.get value 1 with
-       | '+', '=' | '-', '=' ->
-         OpamConsole.error_and_exit `Bad_arguments
-           "Variables are not appendable"
-       | '=', '=' | '=', _ ->
-         OpamConsole.error_and_exit `Bad_arguments
-           "set-var doesn't take operators"
-       | _,_ -> ()
-       | exception Invalid_argument _ -> ());
-      Overwrite value
-  in
+let set_var varvalue conf =
+  let svar, value = parse_upd varvalue in
+  (match value with
+   | Add _ | Remove _ ->
+     OpamConsole.error_and_exit `Bad_arguments
+       "Variables are not appendable"
+   | Revert | Overwrite _ -> ());
   let var = OpamVariable.Full.of_string svar in
   let conf = conf (OpamVariable.Full.variable var) in
   if not (OpamVariable.Full.is_global var) then
@@ -754,14 +745,14 @@ let set_var svar value conf =
   | Revert ->
     (* only write, as the var is already removed *)
     let t = conf.stv_write t in
-    OpamConsole.msg "Reverted variable %s in %s\n"
+    OpamConsole.msg "Removed variable %s in %s\n"
       (OpamConsole.colorise `underline svar)
       conf.stv_doc;
     t
   | _ -> assert false
 
-let set_var_global gt var value =
-  set_var var value @@
+let set_var_global gt varvalue =
+  set_var varvalue @@
   fun var ->
   let global_vars = OpamFile.Config.global_variables gt.config in
   { stv_vars = global_vars;
@@ -771,7 +762,7 @@ let set_var_global gt var value =
         OpamPrinter.Normalise.value (List (pos_null, [
             Ident (pos_null, OpamVariable.to_string var);
             String (pos_null, v);
-            String (pos_null, "Set through 'opam config set-var global'")
+            String (pos_null, "Set through 'opam var'")
           ])));
     stv_set_opt = (fun gt s ->
         set_opt_global_t ~inner:true gt ("global-variables"^s));
@@ -787,8 +778,8 @@ let set_var_global gt var value =
     stv_doc = global_doc;
   }
 
-let set_var_switch st var value =
-  set_var var value @@
+let set_var_switch st varvalue =
+  set_var varvalue @@
   fun var ->
   let switch_vars = st.switch_config.OpamFile.Switch_config.variables in
   { stv_vars = switch_vars;
