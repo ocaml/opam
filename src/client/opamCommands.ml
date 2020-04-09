@@ -859,8 +859,8 @@ module Var_Option_Common = struct
         "No option named '%s' found. Use 'opam option [--global]' to list them"
         field
     | `All ->
-      OpamGlobalState.with_ `Lock_read @@ fun gt ->
-      OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
       (match cmd with
        | `var -> OpamConfigCommand.vars_list gt st
        | `option -> OpamConfigCommand.options_list gt st);
@@ -871,13 +871,13 @@ module Var_Option_Common = struct
         (match scope with
          | `Switch ->
            OpamGlobalState.with_ `Lock_none @@ fun gt ->
-           OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+           OpamSwitchState.with_ `Lock_none gt @@ fun st ->
            (match cmd with
             | `var -> OpamConfigCommand.vars_list_switch st
             | `option -> OpamConfigCommand.options_list_switch st);
            `Ok ()
          | `Global ->
-           OpamGlobalState.with_ `Lock_read @@ fun gt ->
+           OpamGlobalState.with_ `Lock_none @@ fun gt ->
            (match cmd with
             | `var -> OpamConfigCommand.vars_list_global gt
             | `option -> OpamConfigCommand.options_list_global gt);
@@ -886,13 +886,13 @@ module Var_Option_Common = struct
         (match scope with
          | `Switch ->
            OpamGlobalState.with_ `Lock_none @@ fun gt ->
-           OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+           OpamSwitchState.with_ `Lock_none gt @@ fun st ->
            (match cmd with
             | `var -> OpamConfigCommand.var_show_switch st v
             | `option -> OpamConfigCommand.option_show_switch st v);
            `Ok ()
          | `Global ->
-           OpamGlobalState.with_ `Lock_read @@ fun gt ->
+           OpamGlobalState.with_ `Lock_none @@ fun gt ->
            (match cmd with
             | `var -> OpamConfigCommand.var_show_global gt v
             | `option -> OpamConfigCommand.option_show_global gt v);
@@ -957,8 +957,8 @@ let var =
     | _, None ->
       var_option global global_options `var varvalue
     | None, Some pkg ->
-      OpamGlobalState.with_ `Lock_read @@ fun gt ->
-      OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
       (try `Ok (OpamConfigCommand.list st [pkg])
        with Failure msg -> `Error (false, msg))
     | _, _ ->
@@ -1126,12 +1126,12 @@ let config =
       `Ok (OpamConfigCommand.exec
              gt ~set_opamroot ~set_opamswitch ~inplace_path c)
     | Some `list, [] ->
-      OpamGlobalState.with_ `Lock_read @@ fun gt ->
-      OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
       `Ok (OpamConfigCommand.vars_list gt st)
     | Some `list, params ->
-      OpamGlobalState.with_ `Lock_read @@ fun gt ->
-      OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
       (try `Ok (OpamConfigCommand.list st
                   (List.map OpamPackage.Name.of_string params))
        with Failure msg -> `Error (false, msg))
@@ -1139,8 +1139,8 @@ let config =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.expand gt str)
     | Some `var, [var] ->
-      OpamGlobalState.with_ `Lock_read @@ fun gt ->
-      OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
       (try `Ok (OpamConfigCommand.variable st var)
        with Failure msg -> `Error (false, msg))
     | Some `subst, (_::_ as files) ->
