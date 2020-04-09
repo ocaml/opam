@@ -125,18 +125,18 @@ let add_to_reinstall st ~unpinned_only packages =
     OpamFile.PkgList.write reinstall_file reinstall;
   { st with reinstall = lazy (Lazy.force st.reinstall ++ add_reinst_packages) }
 
-let set_current_switch lock gt ~rt switch =
-  if OpamSwitch.is_external switch then
+let set_current_switch gt st =
+  if OpamSwitch.is_external st.switch then
     OpamConsole.error_and_exit `Bad_arguments
       "Can not set external switch '%s' globally. To set it in the current \
        shell use:\n %s"
-      (OpamSwitch.to_string switch)
-      (OpamEnv.eval_string gt ~set_opamswitch:true (Some switch));
-  let config = OpamFile.Config.with_switch switch gt.config in
+      (OpamSwitch.to_string st.switch)
+      (OpamEnv.eval_string gt ~set_opamswitch:true (Some st.switch));
+  let config = OpamFile.Config.with_switch st.switch gt.config in
   let gt = { gt with config } in
   OpamGlobalState.write gt;
-  let rt = { rt with repos_global = gt } in
-  let st = OpamSwitchState.load lock gt rt switch in
+  let rt = { st.switch_repos with repos_global = gt } in
+  let st = { st with switch_global = gt; switch_repos = rt } in
   OpamEnv.write_dynamic_init_scripts st;
   st
 
