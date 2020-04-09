@@ -879,25 +879,24 @@ module Var_Option_Common = struct
          | `Global ->
            OpamGlobalState.with_ `Lock_read @@ fun gt ->
            (match cmd with
-            | `var ->
-              OpamSwitchState.with_ `Lock_read gt @@ fun st ->
-              OpamConfigCommand.vars_list_global gt st
+            | `var -> OpamConfigCommand.vars_list_global gt
             | `option -> OpamConfigCommand.options_list_global gt);
            `Ok ())
-      | `var, `value_wo_eq v ->
-        OpamGlobalState.with_ `Lock_read @@ fun gt ->
-        OpamConfigCommand.variable gt (OpamVariable.Full.of_string v);
-        `Ok ()
-      | `option, `value_wo_eq v ->
+      | _, `value_wo_eq v ->
         (match scope with
          | `Switch ->
            OpamGlobalState.with_ `Lock_none @@ fun gt ->
            OpamSwitchState.with_ `Lock_read gt @@ fun st ->
-           OpamConfigCommand.option_show_switch st v
+           (match cmd with
+            | `var -> OpamConfigCommand.var_show_switch st v
+            | `option -> OpamConfigCommand.option_show_switch st v);
+           `Ok ()
          | `Global ->
            OpamGlobalState.with_ `Lock_read @@ fun gt ->
-           OpamConfigCommand.option_show_global gt v);
-        `Ok ()
+           (match cmd with
+            | `var -> OpamConfigCommand.var_show_global gt v
+            | `option -> OpamConfigCommand.option_show_global gt v);
+           `Ok ())
       | `var, `value_eq (_,#OpamConfigCommand.append_op) ->
         `Error (true, "var: append operation are not permitted")
       | _, `value_eq (v,u) ->
@@ -1054,9 +1053,9 @@ let config =
      $(i,OPAMSWITCH) environment variable, $(i,OPAMSWITCH) is not set in \
      $(i,COMMAND)'s environment. Can also be accessed through $(b,opam exec).";
     "var", `var, ["VAR"],
-    "Return the value associated with variable $(i,VAR). Package variables can \
-     be accessed with the syntax $(i,pkg:var). Can also be accessed through \
-     $(b,opam var VAR)";
+    "Return the value associated with variable $(i,VAR), looking in switch \
+     first, global if not found. Package variables can be accessed with the \
+     syntax $(i,pkg:var). Can also be accessed through $(b,opam var VAR)";
     "list", `list, ["[PACKAGE]..."],
     "Without argument, prints a documented list of all available variables. \
      With $(i,PACKAGE), lists all the variables available for these packages. \
@@ -1141,8 +1140,8 @@ let config =
       `Ok (OpamConfigCommand.expand gt str)
     | Some `var, [var] ->
       OpamGlobalState.with_ `Lock_read @@ fun gt ->
-      (try `Ok (OpamConfigCommand.variable gt
-                  (OpamVariable.Full.of_string var))
+      OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+      (try `Ok (OpamConfigCommand.variable st var)
        with Failure msg -> `Error (false, msg))
     | Some `subst, (_::_ as files) ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->

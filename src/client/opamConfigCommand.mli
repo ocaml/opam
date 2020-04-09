@@ -35,8 +35,8 @@ val print_eval_env: csh:bool -> sexp:bool -> fish:bool -> env -> unit
 (** Display the content of all available packages variables *)
 val list: ro switch_state -> name list -> unit
 
-(** Display the content of a given variable *)
-val variable: ro global_state -> full_variable -> unit
+(** Display the content of a given variable, deprecated *)
+val variable: ro switch_state -> string -> unit
 
 (** Substitute files *)
 val subst: 'a global_state -> basename list -> unit
@@ -94,12 +94,16 @@ val options_list_switch: ro switch_state -> unit
 
 (** List switch and/or global variables and their value *)
 val vars_list       : ro global_state -> ro switch_state -> unit
-val vars_list_global: ro global_state -> ro switch_state -> unit
+val vars_list_global: ro global_state -> unit
 val vars_list_switch: ro switch_state -> unit
 
 (** Display [field] name and content in the global or switch configuration *)
 val option_show_global: ro global_state -> string -> unit
 val option_show_switch: ro switch_state -> string -> unit
+
+(** Display [var] name and content in the global or switch configuration *)
+val var_show_global: ro global_state -> string -> unit
+val var_show_switch: ro switch_state -> string -> unit
 
 (** Given an `opam option` field or field-value argument, detect the scope,
     switch, global or inexistent field

@@ -227,36 +227,6 @@ let expand gt str =
     (OpamFilter.expand_string ~default:(fun _ -> "")
        (OpamPackageVar.resolve st) str)
 
-let variable gt v =
-  let raw_switch_content =
-    match OpamStateConfig.get_switch_opt () with
-    | Some switch ->
-      let switch_config =
-        OpamFile.Switch_config.safe_read
-          (OpamPath.Switch.switch_config gt.root switch)
-      in
-      OpamPackageVar.resolve_switch_raw gt switch switch_config v
-    | None -> None
-  in
-  let switch_content =
-    match raw_switch_content with
-    | None when not (OpamVariable.Full.is_global v) ->
-      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-      OpamPackageVar.resolve st v
-    | rsc -> rsc
-  in
-  let content =
-    match switch_content with
-    | Some _ as some -> some
-    | None -> OpamPackageVar.resolve_global gt v
-  in
-  match content with
-  | Some c -> OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
-  | None ->
-    OpamConsole.error_and_exit `Not_found
-      "Variable %s not found"
-      (OpamVariable.Full.to_string v)
-
 let exec gt ?set_opamroot ?set_opamswitch ~inplace_path command =
   log "config-exec command=%a" (slog (String.concat " ")) command;
   OpamSwitchState.with_ `Lock_none gt @@ fun st ->
@@ -804,7 +774,7 @@ let options_list gt st =
     (OpamSwitch.to_string st.switch);
   options_list_switch st
 
-let vars_list_global gt st =
+let vars_list_global gt =
   let (%) s col = OpamConsole.colorise col s in
   let all_global_vars =
     List.fold_left (fun acc (v,doc) ->
@@ -817,7 +787,7 @@ let vars_list_global gt st =
       all_global_vars
       (OpamVariable.Map.map snd gt.global_variables)
   in
-  let env = OpamPackageVar.resolve st in
+  let env = OpamPackageVar.resolve_global gt in
   List.map (fun (var, doc) ->
       let content =
         OpamFilter.ident_string env ~default:"" ([],var,None)
@@ -867,7 +837,7 @@ let vars_list_switch st =
 let vars_list gt st =
   let (%) s col = OpamConsole.colorise col s in
   OpamConsole.header_msg "Global opam variables";
-  vars_list_global gt st;
+  vars_list_global gt;
   OpamConsole.header_msg "Configuration variables from the current switch";
   vars_list_switch st;
   OpamConsole.header_msg "Package variables ('opam config list PKG' to show)";
@@ -880,7 +850,7 @@ let vars_list gt st =
   OpamStd.Format.align_table |>
   OpamConsole.print_table stdout ~sep:" "
 
-(* Specified option display *)
+(* Specified option/var display *)
 
 let option_show to_list conf field =
   match OpamStd.List.assoc_opt field conf.stg_fields with
@@ -911,6 +881,33 @@ let option_show_switch st field =
 let option_show_global gt field =
   option_show OpamFile.Config.to_list (confset_global gt) field
 
+let var_show resolve v =
+  match resolve (OpamVariable.Full.of_string v) with
+  | Some c ->
+    OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
+  | None ->
+    OpamConsole.error_and_exit `Not_found "Variable %s not found" v
+
+let var_show_switch st v =
+  (* check that the variable is switch defined *)
+  if OpamFile.Switch_config.variable st.switch_config
+      (OpamVariable.of_string v) = None
+  && (try let _stdpath = OpamTypesBase.std_path_of_string v in false
+      with Failure _ -> true) then
+    (* maybe package one *)
+    if OpamStd.String.contains_char v ':' then
+      var_show (OpamPackageVar.resolve st) v
+    else
+      OpamConsole.error_and_exit `Not_found "Variable %s not found" v
+  else
+    var_show (OpamPackageVar.resolve_switch st) v
+
+let var_show_global gt = var_show (OpamPackageVar.resolve_global gt)
+
+(* deprecated, kept for `opam config var` retrocompatibility *)
+let variable st = var_show (OpamPackageVar.resolve st)
+
+(* detect scope *)
 let get_scope field =
   let field =
     try fst (parse_update field)
