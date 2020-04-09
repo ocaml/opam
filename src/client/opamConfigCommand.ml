@@ -16,80 +16,10 @@ open OpamTypes
 open OpamTypesBase
 open OpamStateTypes
 
-let help t =
-  let (%) s col = OpamConsole.colorise col s in
-  OpamConsole.header_msg "Global opam variables";
-  let all_global_vars =
-    List.fold_left (fun acc (v,doc) ->
-        OpamVariable.Map.add (OpamVariable.of_string v) doc acc)
-      OpamVariable.Map.empty
-      OpamPackageVar.global_variable_names
-  in
-  let all_global_vars =
-    OpamVariable.Map.union (fun _ x -> x)
-      all_global_vars
-      (OpamVariable.Map.map snd t.switch_global.global_variables)
-  in
-  let env = OpamPackageVar.resolve t in
-  List.map (fun (var, doc) ->
-      let content =
-        OpamFilter.ident_string env ~default:"" ([],var,None)
-      in
-      let doc =
-        if doc = OpamGlobalState.inferred_from_system then
-          match OpamStd.Option.Op.(
-              OpamVariable.Map.find_opt var t.switch_global.global_variables
-              >>| fst
-              >>= Lazy.force) with
-          | Some c when (OpamVariable.string_of_variable_contents c) <> content ->
-            "Set through local opam config or env"
-          | _ -> doc
-        else doc
-      in
-      [
-        OpamVariable.to_string var % `bold;
-        content % `blue;
-        "#"; doc
-      ])
-    (List.sort (fun (x,_) (x',_) -> compare x x')
-       (OpamVariable.Map.bindings all_global_vars)) |>
-  OpamStd.Format.align_table |>
-  OpamConsole.print_table stdout ~sep:" ";
-
-  OpamConsole.header_msg "Configuration variables from the current switch";
-  let global = t.switch_config in
-  List.map (fun stdpath -> [
-        OpamTypesBase.string_of_std_path stdpath % `bold;
-        OpamPath.Switch.get_stdpath
-          t.switch_global.root t.switch global stdpath |>
-        OpamFilename.Dir.to_string |>
-        OpamConsole.colorise `blue
-      ])
-    OpamTypesBase.all_std_paths @
-  List.map (fun (var,value) -> [
-        OpamVariable.to_string var % `bold;
-        OpamVariable.string_of_variable_contents value % `blue;
-      ])
-    (List.sort (fun (x,_) (x',_) -> compare x' x)
-       global.OpamFile.Switch_config.variables) |>
-  OpamStd.Format.align_table |>
-  OpamConsole.print_table stdout ~sep:" ";
-
-  OpamConsole.header_msg "Package variables ('opam config list PKG' to show)";
-  List.map (fun (var, doc) -> [
-        ("PKG:"^var) % `bold;
-        "";
-        "#";doc
-      ])
-    OpamPackageVar.package_variable_names |>
-  OpamStd.Format.align_table |>
-  OpamConsole.print_table stdout ~sep:" "
-
 (* List all the available variables *)
-let list gt ns =
+let list t ns =
   log "config-list";
-  OpamSwitchState.with_ `Lock_none gt @@ fun t ->
-  if ns = [] then help t else
+  if ns = [] then () else
   let list_vars name =
     if OpamPackage.Name.to_string name = "-" then
       let conf = t.switch_config in
@@ -808,7 +738,7 @@ let set_var_switch st var value =
     stv_doc = switch_doc st;
   }
 
-(** Option display *)
+(** Option and var list display *)
 
 let print_fields fields =
   let fields =
@@ -873,6 +803,84 @@ let options_list gt st =
   OpamConsole.header_msg "Switch configuration (%s)"
     (OpamSwitch.to_string st.switch);
   options_list_switch st
+
+let vars_list_global gt st =
+  let (%) s col = OpamConsole.colorise col s in
+  let all_global_vars =
+    List.fold_left (fun acc (v,doc) ->
+        OpamVariable.Map.add (OpamVariable.of_string v) doc acc)
+      OpamVariable.Map.empty
+      OpamPackageVar.global_variable_names
+  in
+  let all_global_vars =
+    OpamVariable.Map.union (fun _ x -> x)
+      all_global_vars
+      (OpamVariable.Map.map snd gt.global_variables)
+  in
+  let env = OpamPackageVar.resolve st in
+  List.map (fun (var, doc) ->
+      let content =
+        OpamFilter.ident_string env ~default:"" ([],var,None)
+      in
+      let doc =
+        if doc = OpamGlobalState.inferred_from_system then
+          match OpamStd.Option.Op.(
+              OpamVariable.Map.find_opt var gt.global_variables
+              >>| fst
+              >>= Lazy.force) with
+          | Some c
+            when (OpamVariable.string_of_variable_contents c) <> content ->
+            "Set through local opam config or env"
+          | _ -> doc
+        else doc
+      in
+      [
+        OpamVariable.to_string var % `bold;
+        content % `blue;
+        "#"; doc
+      ])
+    (List.sort (fun (x,_) (x',_) -> compare x x')
+       (OpamVariable.Map.bindings all_global_vars)) |>
+  OpamStd.Format.align_table |>
+  OpamConsole.print_table stdout ~sep:" "
+
+let vars_list_switch st =
+  let (%) s col = OpamConsole.colorise col s in
+  let config = st.switch_config in
+  List.map (fun stdpath -> [
+        OpamTypesBase.string_of_std_path stdpath % `bold;
+        OpamPath.Switch.get_stdpath
+          st.switch_global.root st.switch config stdpath |>
+        OpamFilename.Dir.to_string |>
+        OpamConsole.colorise `blue
+      ])
+    OpamTypesBase.all_std_paths @
+  List.map (fun (var,value) -> [
+        OpamVariable.to_string var % `bold;
+        OpamVariable.string_of_variable_contents value % `blue;
+      ])
+    (List.sort (fun (x,_) (x',_) -> compare x' x)
+       config.OpamFile.Switch_config.variables) |>
+  OpamStd.Format.align_table |>
+  OpamConsole.print_table stdout ~sep:" "
+
+let vars_list gt st =
+  let (%) s col = OpamConsole.colorise col s in
+  OpamConsole.header_msg "Global opam variables";
+  vars_list_global gt st;
+  OpamConsole.header_msg "Configuration variables from the current switch";
+  vars_list_switch st;
+  OpamConsole.header_msg "Package variables ('opam config list PKG' to show)";
+  List.map (fun (var, doc) -> [
+        ("PKG:"^var) % `bold;
+        "";
+        "#";doc
+      ])
+    OpamPackageVar.package_variable_names |>
+  OpamStd.Format.align_table |>
+  OpamConsole.print_table stdout ~sep:" "
+
+(* Specified option display *)
 
 let option_show to_list conf field =
   match OpamStd.List.assoc_opt field conf.stg_fields with

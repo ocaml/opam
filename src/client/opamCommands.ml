@@ -860,35 +860,43 @@ module Var_Option_Common = struct
         field
     | `All ->
       OpamGlobalState.with_ `Lock_read @@ fun gt ->
+      OpamSwitchState.with_ `Lock_read gt @@ fun st ->
       (match cmd with
-       | `var -> OpamConfigCommand.list gt []
-       | `option ->
-         OpamSwitchState.with_ `Lock_read gt @@ fun st ->
-         OpamConfigCommand.options_list gt st);
+       | `var -> OpamConfigCommand.vars_list gt st
+       | `option -> OpamConfigCommand.options_list gt st);
       `Ok ()
     | (`Global | `Switch) as scope ->
       match cmd, apply with
-      | `option, (`empty | `value_wo_eq _ as apply) ->
+      | _ , `empty ->
         (match scope with
          | `Switch ->
            OpamGlobalState.with_ `Lock_none @@ fun gt ->
            OpamSwitchState.with_ `Lock_read gt @@ fun st ->
-           (match apply with
-            | `empty -> OpamConfigCommand.options_list_switch st
-            | `value_wo_eq v -> OpamConfigCommand.option_show_switch st v);
+           (match cmd with
+            | `var -> OpamConfigCommand.vars_list_switch st
+            | `option -> OpamConfigCommand.options_list_switch st);
            `Ok ()
          | `Global ->
            OpamGlobalState.with_ `Lock_read @@ fun gt ->
-           (match apply with
-            | `empty -> OpamConfigCommand.options_list_global gt
-            | `value_wo_eq v -> OpamConfigCommand.option_show_global gt v);
+           (match cmd with
+            | `var ->
+              OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+              OpamConfigCommand.vars_list_global gt st
+            | `option -> OpamConfigCommand.options_list_global gt);
            `Ok ())
-      | `var, (`empty | `value_wo_eq _ as apply) ->
+      | `var, `value_wo_eq v ->
         OpamGlobalState.with_ `Lock_read @@ fun gt ->
-        (match apply with
-         | `empty -> OpamConfigCommand.list gt []
-         | `value_wo_eq v ->
-           OpamConfigCommand.variable gt (OpamVariable.Full.of_string v));
+        OpamConfigCommand.variable gt (OpamVariable.Full.of_string v);
+        `Ok ()
+      | `option, `value_wo_eq v ->
+        (match scope with
+         | `Switch ->
+           OpamGlobalState.with_ `Lock_none @@ fun gt ->
+           OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+           OpamConfigCommand.option_show_switch st v
+         | `Global ->
+           OpamGlobalState.with_ `Lock_read @@ fun gt ->
+           OpamConfigCommand.option_show_global gt v);
         `Ok ()
       | `var, `value_eq (_,#OpamConfigCommand.append_op) ->
         `Error (true, "var: append operation are not permitted")
@@ -951,7 +959,8 @@ let var =
       var_option global global_options `var varvalue
     | None, Some pkg ->
       OpamGlobalState.with_ `Lock_read @@ fun gt ->
-      (try `Ok (OpamConfigCommand.list gt [pkg])
+      OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+      (try `Ok (OpamConfigCommand.list st [pkg])
        with Failure msg -> `Error (false, msg))
     | _, _ ->
       `Error (true, "--package can't be specified with a var argument, use \
@@ -1117,9 +1126,14 @@ let config =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.exec
              gt ~set_opamroot ~set_opamswitch ~inplace_path c)
+    | Some `list, [] ->
+      OpamGlobalState.with_ `Lock_read @@ fun gt ->
+      OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+      `Ok (OpamConfigCommand.vars_list gt st)
     | Some `list, params ->
       OpamGlobalState.with_ `Lock_read @@ fun gt ->
-      (try `Ok (OpamConfigCommand.list gt
+      OpamSwitchState.with_ `Lock_read gt @@ fun st ->
+      (try `Ok (OpamConfigCommand.list st
                   (List.map OpamPackage.Name.of_string params))
        with Failure msg -> `Error (false, msg))
     | Some `expand, [str] ->
