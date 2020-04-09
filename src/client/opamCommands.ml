@@ -835,21 +835,7 @@ module Var_Option_Common = struct
 
   let global = mk_flag ["global"] "Act on global configuration"
 
-  let var_value var =
-    let svar = match var with `var -> "VAR" | `field -> "FIELD" in
-    let docv = svar ^ "[(=|+=|-=)[VALUE]]" in
-    let doc =
-      Printf.sprintf
-        "If only $(i,%s) is given, displays its associated value. \
-         If $(i,VALUE) is absent, $(i,%s)'s value is %s. Otherwise, its value \
-         is updated: overwrite (=), append (+=), or remove of an element (-=)."
-        svar svar
-        (match var with `var -> "removed" | `field -> "reverted")
-    in
-    Arg.(value & pos 0 (some string) None & info ~docv ~doc [])
-
   let is_set var = OpamStd.String.contains_char var '='
-
   let var_option global global_options cmd var =
     let scope =
       if global then `Global
@@ -942,7 +928,15 @@ let var =
         This command does not perform any variable expansion.";
   ] in
   let open Var_Option_Common in
-  let varvalue = var_value `var in
+  let varvalue =
+    let docv = "VAR[=[VALUE]]" in
+    let doc =
+      "If only $(i,VAR) is given, displays its associated value. \
+       If $(i,VALUE) is absent, $(i,VAR)'s value is removed. Otherwise, its \
+       value is overwritten."
+    in
+    Arg.(value & pos 0 (some string) None & info ~docv ~doc [])
+  in
   let package =
     mk_opt ["package"] "PACKAGE"
       "List all variables defined for the given package"
@@ -980,7 +974,16 @@ let option =
         display it)."
   ] in
   let open Var_Option_Common in
-  let fieldvalue = var_value `field in
+  let fieldvalue =
+    let docv = "FIELD[(=|+=|-=)[VALUE]]" in
+    let doc =
+      "If only $(i,FIELD) is given, displays its associated value. If \
+       $(i,VALUE) is absent, $(i,FIELD)'s value is reverted. Otherwise, its \
+       value is updated: overwrite (=), append (+=), or remove of an element \
+       (-=)."
+    in
+    Arg.(value & pos 0 (some string) None & info ~docv ~doc [])
+  in
   let option global_options fieldvalue global =
     apply_global_options global_options;
     var_option global global_options `option fieldvalue
