@@ -33,11 +33,11 @@ val ensure_env: 'a global_state -> switch -> unit
 val print_eval_env: csh:bool -> sexp:bool -> fish:bool -> env -> unit
 
 (** Display the content of all available packages variables *)
-val list: unlocked switch_state -> name list -> unit
+val list: 'a switch_state -> name list -> unit
 
 (** Display the content of a given variable. Load a switch state only if the
     variable is not found on raw state. *)
-val variable: unlocked global_state -> string -> unit
+val variable: 'a global_state -> string -> unit
 
 (** Substitute files *)
 val subst: 'a global_state -> basename list -> unit
@@ -79,7 +79,7 @@ val set_opt_global: rw global_state -> string -> update_op -> rw global_state
 (** As [set_opt_global], [set_opt_switch] updates switch config file in
     <opamroot>/<switch>/.opam-switch/switch-config. *)
 val set_opt_switch:
-  unlocked global_state -> ?st:rw switch_state -> string -> update_op
+  'a global_state -> ?st:rw switch_state -> string -> update_op
   -> rw switch_state option
 
 (** [set_var_global] and [set_var_switch] update respectively `global-variables`
@@ -88,34 +88,34 @@ val set_opt_switch:
 val set_var_global:
   rw global_state -> string -> whole_op -> rw global_state
 val set_var_switch:
-    unlocked global_state -> ?st:rw switch_state -> string -> whole_op
+    'a global_state -> ?st:rw switch_state -> string -> whole_op
     -> rw switch_state option
 
 (** List switch and/or global fields/sections and their value *)
 val options_list:
-  ?st:unlocked switch_state -> unlocked global_state -> unit
-val options_list_global: unlocked global_state -> unit
+  ?st:unlocked switch_state -> 'a global_state -> unit
+val options_list_global: 'a global_state -> unit
 val options_list_switch:
-  ?st:unlocked switch_state -> unlocked global_state -> unit
+  ?st:unlocked switch_state -> 'a global_state -> unit
 
 (** List switch and/or global variables and their value *)
 val vars_list:
-  ?st:unlocked switch_state -> unlocked global_state -> unit
-val vars_list_global: unlocked global_state -> unit
+  ?st:'a switch_state -> 'b global_state -> unit
+val vars_list_global: 'a global_state -> unit
 val vars_list_switch:
-  ?st:unlocked switch_state -> unlocked global_state -> unit
+  ?st:'a switch_state -> 'b global_state -> unit
 
 (** Display [field] name and content in the global or switch configuration *)
-val option_show_global: unlocked global_state -> string -> unit
+val option_show_global: 'a global_state -> string -> unit
 val option_show_switch:
-  unlocked global_state -> ?st:unlocked switch_state -> string -> unit
+  'a global_state -> ?st:unlocked switch_state -> string -> unit
 
 (** Display [var] name and content in the global or switch configuration.
     Look first in the raw switch_state, if not found, uses the given switch
     state or loads one. *)
-val var_show_global: unlocked global_state -> string -> unit
+val var_show_global: 'a global_state -> string -> unit
 val var_show_switch:
-  unlocked global_state -> ?st:unlocked switch_state -> string -> unit
+  'a global_state -> ?st:'b switch_state -> string -> unit
 
 (** Given an `opam option` field or field-value argument, detect the scope,
     switch, global or inexistent field
