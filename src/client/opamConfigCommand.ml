@@ -905,24 +905,55 @@ let var_show resolve v =
   | None ->
     OpamConsole.error_and_exit `Not_found "Variable %s not found" v
 
-let var_show_switch st v =
-  (* check that the variable is switch defined *)
-  if OpamFile.Switch_config.variable st.switch_config
-      (OpamVariable.of_string v) = None
-  && (try let _stdpath = OpamTypesBase.std_path_of_string v in false
-      with Failure _ -> true) then
-    (* maybe package one *)
-    if OpamStd.String.contains_char v ':' then
-      var_show (OpamPackageVar.resolve st) v
-    else
-      OpamConsole.error_and_exit `Not_found "Variable %s not found" v
-  else
-    var_show (OpamPackageVar.resolve_switch st) v
+let is_switch_defined_var switch_config v =
+  OpamFile.Switch_config.variable switch_config
+    (OpamVariable.of_string v) <> None
+  || (try let _path = OpamTypesBase.std_path_of_string v in true
+      with Failure _ -> false)
+
+let var_switch_raw ?(only_switch=true) gt v =
+  match OpamStateConfig.get_switch_opt () with
+  | Some switch ->
+    let switch_config =
+      OpamFile.Switch_config.safe_read
+        (OpamPath.Switch.switch_config gt.root switch)
+    in
+    let rsc =
+      if only_switch && is_switch_defined_var switch_config v then
+        OpamPackageVar.resolve_switch_raw gt switch switch_config
+          (OpamVariable.Full.of_string v)
+      else None
+    in
+    (match rsc with
+     | Some c ->
+       OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c);
+       rsc
+     | None -> None)
+  | None -> None
+
+let var_show_switch gt ?st v =
+  if var_switch_raw gt v = None then
+    let resolve_switch st =
+      if is_switch_defined_var st.switch_config v then
+        var_show (OpamPackageVar.resolve st) v
+      else
+        (* maybe package one *)
+      if OpamStd.String.contains_char v ':' then
+        var_show (OpamPackageVar.resolve_switch st) v
+      else
+        OpamConsole.error_and_exit `Not_found "Variable %s not found" v
+    in
+    match st with
+    | Some st -> resolve_switch st
+    | None -> OpamSwitchState.with_ `Lock_none gt resolve_switch
 
 let var_show_global gt = var_show (OpamPackageVar.resolve_global gt)
 
-(* deprecated, kept for `opam config var` retrocompatibility *)
-let variable st = var_show (OpamPackageVar.resolve st)
+(* deprecated, kept for `opam config var` retro-compatibility *)
+let variable gt v =
+  if var_switch_raw ~only_switch:false gt v = None then
+    OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+    var_show (OpamPackageVar.resolve st) v
 
 (* detect scope *)
 let get_scope field =

@@ -886,10 +886,11 @@ module Var_Option_Common = struct
         (match scope with
          | `Switch ->
            OpamGlobalState.with_ `Lock_none @@ fun gt ->
-           OpamSwitchState.with_ `Lock_none gt @@ fun st ->
            (match cmd with
-            | `var -> OpamConfigCommand.var_show_switch st v
-            | `option -> OpamConfigCommand.option_show_switch st v);
+            | `var -> OpamConfigCommand.var_show_switch gt v
+            | `option ->
+              OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+              OpamConfigCommand.option_show_switch st v);
            `Ok ()
          | `Global ->
            OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1140,8 +1141,7 @@ let config =
       `Ok (OpamConfigCommand.expand gt str)
     | Some `var, [var] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-      (try `Ok (OpamConfigCommand.variable st var)
+      (try `Ok (OpamConfigCommand.variable gt var)
        with Failure msg -> `Error (false, msg))
     | Some `subst, (_::_ as files) ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
