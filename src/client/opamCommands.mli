@@ -49,7 +49,7 @@ val update: command
 val upgrade: command
 
 (** opam config *)
-val config: ?setopt:bool -> unit -> command
+val config: command
 
 (** opam repository *)
 val repository: command

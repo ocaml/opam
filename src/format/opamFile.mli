@@ -189,6 +189,10 @@ module Config: sig
 
   val fields: (string * (t, value) OpamPp.field_parser) list
 
+  (** All file fields as print-AST, Fields within sections are
+      accessed through dot-separated paths *)
+  val to_list: ?filename:'a typed_file -> t -> (string * value) list
+
 end
 
 (** Init config file [/etc/opamrc] *)
@@ -915,6 +919,7 @@ module Switch_config: sig
   val wrappers: t -> Wrappers.t
   val sections: (string * (t, (string option * opamfile_item list) list) OpamPp.field_parser) list
   val fields: (string * (t, value) OpamPp.field_parser) list
+  val to_list: ?filename:'a typed_file -> t -> (string * value) list
   include IO_FILE with type t := t
   val oldest_compatible_format_version: OpamVersion.t
 end

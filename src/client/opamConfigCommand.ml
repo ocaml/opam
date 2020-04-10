@@ -16,78 +16,10 @@ open OpamTypes
 open OpamTypesBase
 open OpamStateTypes
 
-let help t =
-  let (%) s col = OpamConsole.colorise col s in
-  OpamConsole.header_msg "Global opam variables";
-  let all_global_vars =
-    List.fold_left (fun acc (v,doc) ->
-        OpamVariable.Map.add (OpamVariable.of_string v) doc acc)
-      OpamVariable.Map.empty
-      OpamPackageVar.global_variable_names
-  in
-  let all_global_vars =
-    OpamVariable.Map.union (fun _ x -> x)
-      all_global_vars
-      (OpamVariable.Map.map snd t.switch_global.global_variables)
-  in
-  let env = OpamPackageVar.resolve t in
-  List.map (fun (var, doc) ->
-      let content =
-        OpamFilter.ident_string env ~default:"" ([],var,None)
-      in
-      let doc =
-        if doc = OpamGlobalState.inferred_from_system then
-          match OpamStd.Option.Op.(
-              OpamVariable.Map.find_opt var t.switch_global.global_variables
-              >>| fst
-              >>= Lazy.force) with
-          | Some c when (OpamVariable.string_of_variable_contents c) <> content ->
-            "Set through local opam config or env"
-          | _ -> doc
-        else doc
-      in
-      [
-        OpamVariable.to_string var % `bold;
-        content % `blue;
-        "#"; doc
-      ])
-    (OpamVariable.Map.bindings all_global_vars) |>
-  OpamStd.Format.align_table |>
-  OpamConsole.print_table stdout ~sep:" ";
-
-  OpamConsole.header_msg "Configuration variables from the current switch";
-  let global = t.switch_config in
-  List.map (fun stdpath -> [
-        OpamTypesBase.string_of_std_path stdpath % `bold;
-        OpamPath.Switch.get_stdpath
-          t.switch_global.root t.switch global stdpath |>
-        OpamFilename.Dir.to_string |>
-        OpamConsole.colorise `blue
-      ])
-    OpamTypesBase.all_std_paths @
-  List.map (fun (var,value) -> [
-        OpamVariable.to_string var % `bold;
-        OpamVariable.string_of_variable_contents value % `blue;
-      ])
-    (global.OpamFile.Switch_config.variables) |>
-  OpamStd.Format.align_table |>
-  OpamConsole.print_table stdout ~sep:" ";
-
-  OpamConsole.header_msg "Package variables ('opam config list PKG' to show)";
-  List.map (fun (var, doc) -> [
-        ("PKG:"^var) % `bold;
-        "";
-        "#";doc
-      ])
-    OpamPackageVar.package_variable_names |>
-  OpamStd.Format.align_table |>
-  OpamConsole.print_table stdout ~sep:" "
-
 (* List all the available variables *)
-let list gt ns =
+let list t ns =
   log "config-list";
-  OpamSwitchState.with_ `Lock_none gt @@ fun t ->
-  if ns = [] then help t else
+  if ns = [] then () else
   let list_vars name =
     if OpamPackage.Name.to_string name = "-" then
       let conf = t.switch_config in
@@ -295,35 +227,29 @@ let expand gt str =
     (OpamFilter.expand_string ~default:(fun _ -> "")
        (OpamPackageVar.resolve st) str)
 
-let variable gt v =
-  let raw_switch_content =
-    match OpamStateConfig.get_switch_opt () with
-    | Some switch ->
-      let switch_config =
-        OpamFile.Switch_config.safe_read
-          (OpamPath.Switch.switch_config gt.root switch)
-      in
-      OpamPackageVar.resolve_switch_raw gt switch switch_config v
-    | None -> None
+let exec gt ?set_opamroot ?set_opamswitch ~inplace_path command =
+  log "config-exec command=%a" (slog (String.concat " ")) command;
+  OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+  let cmd, args =
+    match
+      List.map (OpamFilter.expand_string ~default:(fun _ -> "")
+                  (OpamPackageVar.resolve st)) command
+    with
+    | []        -> OpamSystem.internal_error "Empty command"
+    | h::_ as l -> h, Array.of_list l in
+  let env =
+    OpamTypesBase.env_array
+      (OpamEnv.get_full
+         ?set_opamroot ?set_opamswitch ~force_path:(not inplace_path) st)
   in
-  let switch_content =
-    match raw_switch_content with
-    | None when not (OpamVariable.Full.is_global v) ->
-      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-      OpamPackageVar.resolve st v
-    | rsc -> rsc
-  in
-  let content =
-    match switch_content with
-    | Some _ as some -> some
-    | None -> OpamPackageVar.resolve_global gt v
-  in
-  match content with
-  | Some c -> OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
-  | None ->
-    OpamConsole.error_and_exit `Not_found
-      "Variable %s not found"
-      (OpamVariable.Full.to_string v)
+  match OpamSystem.resolve_command ~env cmd with
+  | Some cmd -> raise (OpamStd.Sys.Exec (cmd, args, env))
+  | None -> raise (OpamStd.Sys.Exit 127)
+
+
+(** Options and Variables settings *)
+
+(** Option settings *)
 
 (* For function that takes two config and update (add or remove) elements in a
    field. Used for appending or deleting element in config file fields *)
@@ -334,7 +260,7 @@ type 'config fld_updater =  ('config -> 'config -> 'config)
    code (see [set_var_global]).
    First argument is the addition function, the second the remove one. *)
 type 'config fld_policy =
-  | Fixed
+  | Atomic
   | Modifiable of 'config fld_updater * 'config fld_updater
   | InModifiable of 'config fld_updater * 'config fld_updater
 
@@ -349,7 +275,7 @@ type 'config confset =
     stg_allwd_fields:
       (string * 'config fld_policy * ('config -> 'config)) list;
     (* Config file updatable fields: field name, update policy, and function to
-       update the given field in config file *)
+       revert the given field in config file *)
     stg_sections:
       (string * ('config, (string option * opamfile_item list) list)
          OpamPp.field_parser) list;
@@ -361,17 +287,22 @@ type 'config confset =
     (* The config *)
     stg_write_config: 'config -> unit;
     (* Function to write the config file *)
-    stg_file: filename;
-    (* Filename of the config file *)
+    stg_doc: string;
+    (* Global or switch specification, used to print final user message *)
   }
 
-type 'a update_op =
-  | Add of 'a
-  | Remove of 'a
-  | Overwrite of 'a
-  | Revert
+type whole_op =
+  [ `Overwrite of string
+  | `Revert ]
 
-let parse_upd fv =
+type append_op =
+  [ `Add of string
+  | `Remove of string ]
+
+type update_op =
+  [ append_op  | whole_op ]
+
+let parse_update fv =
   let reg =
     Re.(compile @@ seq [
         group @@ seq [
@@ -385,7 +316,7 @@ let parse_upd fv =
                  str "==";
                  char '=';
                ]));
-            (group @@ rep1 any)
+            opt @@ (group @@ rep1 any)
           ]);
       ])
   in
@@ -393,23 +324,39 @@ let parse_upd fv =
   let var = Re.Group.get grs 1 in
   let value =
     try
-      let value = Re.Group.get grs 3 in
-      match Re.Group.get grs 2 with
-      | "+=" -> Add value
-      | "-=" -> Remove value
-      | "=" | "==" -> Overwrite value
-      | _ -> raise (Invalid_argument "set-opt: illegal operator")
-    with Not_found -> Revert
+      let value =
+        OpamStd.Option.of_Not_found (fun () -> Re.Group.get grs 3) ()
+      in
+      match Re.Group.get grs 2, value with
+      | "+=", Some value -> `Add value
+      | "-=", Some value -> `Remove value
+      | ("=" | "=="), Some value -> `Overwrite value
+      | ("=" | "=="), None -> `Revert
+      | ("+=" | "-="), None -> raise (Invalid_argument "parse_update: rhs needed")
+      | _, _ -> raise (Invalid_argument "parse_update: illegal operator")
+    with Not_found ->  raise (Invalid_argument "parse_update: operator needed")
   in
   var, value
 
-(* General setting option function. Takes [field_value], a string of the field
-   and its value update, [conf] the configuration according the config file
-   (['config confest]). If [inner] is set, it allows the modification of
-   [InModificable] fields *)
-let set_opt ?(inner=false) field_value conf =
-  let field, value = parse_upd field_value in
-  let open OpamStd.Op in
+let whole_of_update_op = function
+  | #whole_op as w -> w
+  | _ -> raise Not_found
+
+let parse_whole fv =
+  let v, upd = parse_update fv in
+  try v, (whole_of_update_op upd)
+  with Not_found -> raise (Invalid_argument "parse_whole: append operator")
+
+let global_doc = "global configuration"
+let switch_doc st =
+  Printf.sprintf "switch %s"
+    (OpamConsole.colorise `bold (OpamSwitch.to_string st.switch))
+
+(* General setting option function. Takes the [field] to update, the [value]
+   operation, [conf] the configuration according the config file (['config
+   confest]). If [inner] is set, it allows the modification of [InModifiable]
+   fields *)
+let set_opt ?(inner=false) field value conf =
   let wrap allowed all parse =
     List.map (fun (field, pp) ->
         match OpamStd.List.find_opt (fun (x,_,_) -> x = field) allowed with
@@ -433,57 +380,62 @@ let set_opt ?(inner=false) field_value conf =
              (OpamParser.string str_value "<command-line>").file_contents]))
   in
   let new_config =
-    match OpamStd.List.find_opt ((=) field @* fst) fields, value with
+    match OpamStd.List.assoc_opt field fields, value with
     | None, _ ->
-      OpamConsole.error_and_exit `Bad_arguments
-        "Field %s doesn't exist" (OpamConsole.colorise `underline field)
-    | Some (_, None), _ ->
+      OpamConsole.error
+        "There is no option named '%s'. The allowed options are:"
+        (OpamConsole.colorise `underline field);
+      OpamConsole.print_table stderr ~sep:" "
+        (OpamStd.Format.as_aligned_table
+           (OpamStd.List.filter_map
+              (function fl, Some _ -> Some fl | _ -> None)
+              fields));
+      OpamStd.Sys.exit_because `Bad_arguments
+    | Some None, _ ->
       OpamConsole.error_and_exit `Bad_arguments
         "Field %s is not modifiable" (OpamConsole.colorise `underline field)
-    | Some (_, Some (_, Fixed, _)), ((Add _ | Remove _) as ar) ->
+    | Some (Some (_, Atomic, _)), (#append_op as ar) ->
       OpamConsole.error_and_exit `Bad_arguments
         "Field %s can't be %s" (OpamConsole.colorise `underline field)
-        (match ar with Add _ -> "appended" | Remove _ -> "substracted"
-                     | _ -> assert false)
-    | Some (_, Some (_, InModifiable (_,_), _)), ((Add _ | Remove _) as ar)
-      when not inner ->
+        (match ar with `Add _ -> "appended" | `Remove _ -> "substracted")
+    | Some (Some (_, InModifiable (_,_), _)), (#append_op as ar) when not inner ->
       OpamConsole.error_and_exit `Bad_arguments
-        "Field %s can't be directly %s, use instead `opam config set-var`"
+        "Field %s can't be directly %s, use `opam var` instead"
         (OpamConsole.colorise `underline field)
-        (match ar with Add _ -> "appended" | Remove _ -> "substracted"
-                     | _ -> assert false)
-    | Some (_, Some (_, _, set_default)), Revert ->
+        (match ar with `Add _ -> "appended to"
+                     | `Remove _ -> "substracted from")
+    | Some (Some (_, _, set_default)), `Revert ->
       set_default conf.stg_config
-    | Some (_, Some (parse, fix_app, _)),
-      ((Add v | Remove v | Overwrite v) as req_value) ->
+    | Some (Some (parse, fix_app, _)),
+      ((`Add v | `Remove v | `Overwrite v) as req_value) ->
       (try
          let updf v = parse v conf.stg_config in
          match req_value, fix_app with
-         | Add value, (Modifiable (add, _) | InModifiable (add, _))  ->
+         | `Add value, (Modifiable (add, _) | InModifiable (add, _))  ->
            add (updf value) conf.stg_config
-         | Remove value, (Modifiable (_, rem) | InModifiable (_, rem)) ->
+         | `Remove value, (Modifiable (_, rem) | InModifiable (_, rem)) ->
            rem (updf value) conf.stg_config
-         | Overwrite value, _ -> (updf value)
-         | _,_ -> assert false
+         | `Overwrite value, _ -> (updf value)
+         | _, Atomic -> assert false
        with
        | (OpamPp.Bad_format (_,_) | Parsing.Parse_error) as e ->
          OpamConsole.error_and_exit `Bad_arguments
-           "Parse error on %s value '%s': %s"
+           "Parse error on the value of %s '%s': %s"
            (OpamConsole.colorise `underline field) v
            (OpamPp.string_of_bad_format e))
   in
   conf.stg_write_config new_config;
-  OpamConsole.msg "%s field %s in %s.\n"
+  OpamConsole.msg "%s field %s in %s\n"
     (match value with
-     | Add value ->  Printf.sprintf "Added %s to" value
-     | Remove value ->  Printf.sprintf "Removed %s from" value
-     | Overwrite value -> Printf.sprintf "Overwritted %s from" value
-     | Revert -> "Reverted")
+     | `Add value ->  Printf.sprintf "Added '%s' to" value
+     | `Remove value ->  Printf.sprintf "Removed '%s' from" value
+     | `Overwrite value -> Printf.sprintf "Set to '%s' the" value
+     | `Revert -> "Reverted")
     (OpamConsole.colorise `underline field)
-    (OpamFilename.to_string conf.stg_file);
+    conf.stg_doc;
   new_config
 
-let allwd_wrappers wdef wrappers with_wrappers =
+let allwd_wrappers wdef wrappers with_wrappers  =
   let open OpamFile in
   List.map (fun (n, set, get) ->
       n,
@@ -528,53 +480,64 @@ let allwd_wrappers wdef wrappers with_wrappers =
       Wrappers.with_post_session, Wrappers.post_session;
     ]
 
-let set_opt_switch_t ?inner st field_value =
+let switch_allowed_fields, switch_allowed_sections =
   let allowed_fields =
-    OpamFile.Switch_config.(
-      [
-        ("synopsis", Fixed,
-         fun t -> { t with synopsis = empty.synopsis });
-      ] @ allwd_wrappers empty.wrappers wrappers
-        (fun wrappers t -> { t with wrappers }))
+    lazy (
+      OpamFile.Switch_config.(
+        [
+          ("synopsis", Atomic,
+           fun t -> { t with synopsis = empty.synopsis });
+          ("setenv", Modifiable (
+              (fun nc c -> { c with env = nc.env @ c.env }),
+              (fun nc c ->
+                 let env =
+                   List.filter (fun (vr,op,vl,_) ->
+                       None = OpamStd.List.find_opt (fun (vr',op',vl',_) ->
+                           vr = vr' && op = op' && vl = vl') nc.env) c.env
+                 in
+                 { c with env })),
+           fun t -> { t with env = empty.env });
+        ] @ allwd_wrappers empty.wrappers wrappers
+          (fun wrappers t -> { t with wrappers })))
   in
   let allowed_sections =
-    let rem_elem nelems elems =
-      List.filter (fun (n,p) ->
-          None = OpamStd.List.find_opt (fun (n',p') -> n = n' && p = p')
-            nelems)
-        elems
+    let rem_elem new_elems elems =
+      List.filter (fun n -> not (List.mem n new_elems)) elems
     in
-    OpamFile.Switch_config.([
-        ("paths", Modifiable (
-            (fun nc c -> { c with paths = nc.paths @ c.paths }),
-            (fun nc c -> { c with paths = rem_elem nc.paths c.paths })),
-         (fun c -> { c with paths = empty.paths }));
-        ("variables", Modifiable (
-            (fun nc c -> { c with variables = nc.variables @ c.variables }),
-            (fun nc c ->
-               { c with variables = rem_elem nc.variables c.variables })),
-         (fun c -> { c with variables = empty.variables }));
-      ])
+    lazy (
+      OpamFile.Switch_config.([
+          ("variables", InModifiable (
+              (fun nc c -> { c with variables = nc.variables @ c.variables }),
+              (fun nc c ->
+                 { c with variables = rem_elem nc.variables c.variables })),
+           (fun c -> { c with variables = empty.variables }));
+        ]))
   in
+  (fun () -> Lazy.force allowed_fields),
+  fun () -> Lazy.force allowed_sections
+
+let confset_switch st =
   let root = st.switch_global.root in
   let config_f = OpamPath.Switch.switch_config root st.switch in
   let write new_config = OpamFile.Switch_config.write config_f new_config in
+  { stg_fields = OpamFile.Switch_config.fields;
+    stg_allwd_fields = switch_allowed_fields ();
+    stg_sections = OpamFile.Switch_config.sections;
+    stg_allwd_sections = switch_allowed_sections ();
+    stg_config = st.switch_config;
+    stg_write_config = write;
+    stg_doc = switch_doc st
+  }
+
+let set_opt_switch_t ?inner st field value =
   let switch_config =
-    set_opt ?inner field_value
-      { stg_fields = OpamFile.Switch_config.fields;
-        stg_allwd_fields = allowed_fields;
-        stg_sections = OpamFile.Switch_config.sections;
-        stg_allwd_sections = allowed_sections;
-        stg_config = st.switch_config;
-        stg_write_config = write;
-        stg_file = OpamFile.filename config_f;
-      }
+    set_opt ?inner field value (confset_switch st)
   in
   { st with switch_config }
 
 let set_opt_switch = set_opt_switch_t ~inner:false
 
-let set_opt_global_t ?inner gt field_value =
+let global_allowed_fields, global_allowed_sections =
   let allowed_fields =
     let open OpamStd.Option.Op in
     let open OpamFile in
@@ -588,58 +551,68 @@ let set_opt_global_t ?inner gt field_value =
              None = OpamStd.List.find_opt (fun (k',v',_) -> k = k' && v = v') gv)
              (get c)) c)
     in
-    [ "download-command", Fixed,
-      Config.with_dl_tool_opt
-        (InitConfig.dl_tool in_config ++ Config.dl_tool Config.empty);
-      "download-jobs", Fixed,
-      Config.with_dl_jobs
-        (InitConfig.dl_jobs in_config +! Config.dl_jobs Config.empty);
-      "jobs", Fixed,
-      Config.with_jobs_opt
-        (InitConfig.jobs in_config ++ Config.jobs Config.empty);
-      "best-effort-prefix-criteria", Fixed,
-      Config.with_best_effort_prefix_opt
-        (Config.best_effort_prefix Config.empty);
-      "solver", Fixed,
-      Config.with_solver_opt
-        (InitConfig.solver in_config ++ Config.solver Config.empty);
-      "global-variables",
-      (let add, rem =
-         upd_vars Config.global_variables Config.with_global_variables
-       in
-       InModifiable (add, rem)),
-      Config.with_global_variables (InitConfig.global_variables in_config);
-      "eval-variables",
-      (let add, rem =
-         upd_vars Config.eval_variables Config.with_eval_variables
-       in
-       InModifiable (add, rem)),
-      Config.with_eval_variables (InitConfig.eval_variables in_config);
-      "repository-validation-command", Fixed,
-      Config.with_validation_hook_opt (Config.validation_hook Config.empty);
-    ] @ List.map (fun f ->
-        f, Fixed, Config.with_criteria
+    lazy ([
+        "download-command", Atomic,
+        Config.with_dl_tool_opt
+          (InitConfig.dl_tool in_config ++ Config.dl_tool Config.empty);
+        "download-jobs", Atomic,
+        Config.with_dl_jobs
+          (InitConfig.dl_jobs in_config +! Config.dl_jobs Config.empty);
+        "jobs", Atomic,
+        Config.with_jobs_opt
+          (InitConfig.jobs in_config ++ Config.jobs Config.empty);
+        "best-effort-prefix-criteria", Atomic,
+        Config.with_best_effort_prefix_opt
+          (Config.best_effort_prefix Config.empty);
+        "solver", Atomic,
+        Config.with_solver_opt
+          (InitConfig.solver in_config ++ Config.solver Config.empty);
+        "global-variables",
+        (let add, rem =
+           upd_vars Config.global_variables Config.with_global_variables
+         in
+         InModifiable (add, rem)),
+        Config.with_global_variables (InitConfig.global_variables in_config);
+        "eval-variables",
+        (let add, rem =
+           upd_vars Config.eval_variables Config.with_eval_variables
+         in
+         InModifiable (add, rem)),
+        Config.with_eval_variables (InitConfig.eval_variables in_config);
+        "repository-validation-command", Atomic,
+        Config.with_validation_hook_opt (Config.validation_hook Config.empty);
+      ] @ List.map (fun f ->
+        f, Atomic, Config.with_criteria
           (Config.criteria Config.empty))
-      [ "solver-criteria";
-        "solver-upgrade-criteria";
-        "solver-fixup-criteria" ]
-    @ allwd_wrappers wrapper_init Config.wrappers Config.with_wrappers
+        [ "solver-criteria";
+          "solver-upgrade-criteria";
+          "solver-fixup-criteria" ]
+        @ allwd_wrappers wrapper_init Config.wrappers Config.with_wrappers
+      )
   in
+  (fun () -> Lazy.force allowed_fields),
+  fun () -> []
+
+let confset_global gt =
   let write new_config = OpamGlobalState.write {gt with config = new_config} in
+  { stg_fields = OpamFile.Config.fields;
+    stg_allwd_fields = global_allowed_fields ();
+    stg_sections = [];
+    stg_allwd_sections = global_allowed_sections ();
+    stg_config = gt.config;
+    stg_write_config = write;
+    stg_doc = global_doc;
+  }
+
+let set_opt_global_t ?inner gt field value =
   let config =
-    set_opt ?inner field_value
-      { stg_fields = OpamFile.Config.fields;
-        stg_allwd_fields = allowed_fields;
-        stg_sections = [];
-        stg_allwd_sections = [];
-        stg_config = gt.config;
-        stg_write_config = write;
-        stg_file = OpamFile.filename (OpamPath.config gt.root);
-      }
+    set_opt ?inner field value (confset_global gt)
   in
   { gt with config }
 
 let set_opt_global = set_opt_global_t ~inner:false
+
+(** Variable settings *)
 
 (* "Configuration" of the [set_var] function. As these modification can be on
    global and switch config, this record aggregates all needed inputs. *)
@@ -654,31 +627,18 @@ type ('var,'t) var_confset =
     stv_varstr: string -> string;
     (* [stv_vars value] returns the string of the variable with the new value.
        It is used to give the overall value to [set_opt] functions. *)
-    stv_set_opt: 't -> string -> 't;
+    stv_set_opt: 't -> update_op -> 't;
     (* The [set_opt] function call [stv_set_opt state var_value] *)
     stv_remove_elem: 'var list -> 't -> 't;
     (* As variable can't be duplicated, a function to remove it from the list *)
-    stv_revert: 't -> 't;
-    (* The revert variable function *)
+    stv_write: 't -> 't;
+    (* Write the config file *)
+    stv_doc: string;
+    (* Global or switch specification, used to print final user message *)
   }
 
-let set_var var value conf =
-  let value =
-    match value with
-    | None -> Revert
-    | Some value ->
-      (match String.get value 0, String.get value 1 with
-       | '+', '=' | '-', '=' ->
-         OpamConsole.error_and_exit `Bad_arguments
-           "Variables are not appendable"
-       | '=', '=' | '=', _ ->
-         OpamConsole.error_and_exit `Bad_arguments
-           "set-var doesn't take operators"
-       | _,_ -> ()
-       | exception Invalid_argument _ -> ());
-      Overwrite value
-  in
-  let var = OpamVariable.Full.of_string var in
+let set_var svar value conf =
+  let var = OpamVariable.Full.of_string svar in
   let conf = conf (OpamVariable.Full.variable var) in
   if not (OpamVariable.Full.is_global var) then
     OpamConsole.error_and_exit `Bad_arguments
@@ -688,9 +648,14 @@ let set_var var value conf =
   let t = conf.stv_state in
   let t = conf.stv_remove_elem rest t in
   match value with
-  | Overwrite value -> conf.stv_set_opt t ("+=" ^ conf.stv_varstr value)
-  | Revert -> conf.stv_revert t
-  | _ -> assert false
+  | `Overwrite value -> conf.stv_set_opt t (`Add (conf.stv_varstr value))
+  | `Revert ->
+    (* only write, as the var is already removed *)
+    let t = conf.stv_write t in
+    OpamConsole.msg "Removed variable %s in %s\n"
+      (OpamConsole.colorise `underline svar)
+      conf.stv_doc;
+    t
 
 let set_var_global gt var value =
   set_var var value @@
@@ -700,13 +665,13 @@ let set_var_global gt var value =
     stv_find = (fun (k,_,_) -> k = var);
     stv_state = gt;
     stv_varstr = (fun v ->
-        OpamPrinter.value (List (pos_null, [
+        OpamPrinter.Normalise.value (List (pos_null, [
             Ident (pos_null, OpamVariable.to_string var);
             String (pos_null, v);
-            String (pos_null, "Set through 'opam config set-var global'")
+            String (pos_null, "Set through 'opam var'")
           ])));
     stv_set_opt = (fun gt s ->
-        set_opt_global_t ~inner:true gt ("global-variables"^s));
+        set_opt_global_t ~inner:true gt "global-variables" s);
     stv_remove_elem = (fun rest gt ->
         let config =
           OpamFile.Config.with_global_variables rest gt.config
@@ -715,7 +680,8 @@ let set_var_global gt var value =
                (OpamFile.Config.eval_variables gt.config))
         in
         { gt with config });
-    stv_revert = (fun gt -> OpamGlobalState.write gt; gt);
+    stv_write = (fun gt -> OpamGlobalState.write gt; gt);
+    stv_doc = global_doc;
   }
 
 let set_var_switch st var value =
@@ -726,35 +692,231 @@ let set_var_switch st var value =
     stv_find = (fun (k,_) -> k = var);
     stv_state = st;
     stv_varstr = (fun v ->
-        OpamPrinter.items
+        OpamStd.String.remove_suffix ~suffix:"\n" @@
+        OpamPrinter.Normalise.items
           [Variable
              (pos_null, OpamVariable.to_string var, String (pos_null, v))]);
     stv_set_opt = (fun st s ->
-        set_opt_switch_t ~inner:true st ("variables"^s));
+        set_opt_switch_t ~inner:true st "variables" s);
     stv_remove_elem = (fun rest st ->
         { st with switch_config = { st.switch_config with variables = rest }});
-    stv_revert = (fun st ->
+    stv_write = (fun st ->
         OpamFile.Switch_config.write
           (OpamPath.Switch.switch_config st.switch_global.root st.switch)
           st.switch_config;
         st);
+    stv_doc = switch_doc st;
   }
 
-let exec gt ?set_opamroot ?set_opamswitch ~inplace_path command =
-  log "config-exec command=%a" (slog (String.concat " ")) command;
-  OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-  let cmd, args =
-    match
-      List.map (OpamFilter.expand_string ~default:(fun _ -> "")
-                  (OpamPackageVar.resolve st)) command
-    with
-    | []        -> OpamSystem.internal_error "Empty command"
-    | h::_ as l -> h, Array.of_list l in
-  let env =
-    OpamTypesBase.env_array
-      (OpamEnv.get_full
-         ?set_opamroot ?set_opamswitch ~force_path:(not inplace_path) st)
+(** Option and var list display *)
+
+let print_fields fields =
+  let fields =
+    List.sort (fun (x,_) (x',_) -> compare x x') fields
+    |> List.map (fun (name, value) ->
+        let value = match value with
+          | None -> "{}"
+          | Some value -> (OpamPrinter.Normalise.value value)
+        in
+        [
+          OpamConsole.colorise `bold name ;
+          OpamConsole.colorise `blue value
+        ])
   in
-  match OpamSystem.resolve_command ~env cmd with
-  | Some cmd -> raise (OpamStd.Sys.Exec (cmd, args, env))
-  | None -> raise (OpamStd.Sys.Exit 127)
+  OpamConsole.print_table stdout ~sep:"  "
+    (OpamStd.Format.align_table fields)
+
+let find_field field name_value =
+  match OpamStd.List.find_opt (fun (name, _) -> name = field) name_value with
+  | None -> (field, None)
+  | Some (name, value) -> (name, Some value)
+
+let find_section section name_value =
+  let sections =
+    List.find_all (fun (name, _) ->
+        match OpamStd.String.cut_at name '.' with
+        | None -> false
+        | Some (name,_) -> name = section)
+      name_value
+  in
+  match sections with
+  | [] -> [section, None]
+  | section -> List.map (fun (n,v) -> n, Some v) section
+
+let options_list_t to_list conf =
+  let name_value = to_list conf.stg_config in
+  let fields =
+    OpamStd.List.filter_map (fun (field, policy, _) ->
+        match policy with
+        | InModifiable _ -> None
+        | _ -> Some (find_field field name_value))
+      conf.stg_allwd_fields
+  in
+  let sections =
+    OpamStd.List.filter_map (fun (field, policy, _) ->
+        match policy with
+        | InModifiable _ -> None
+        | _ -> Some (find_section field name_value))
+      conf.stg_allwd_sections
+    |> List.flatten
+  in
+  print_fields (fields @ sections)
+
+let options_list_switch st =
+  options_list_t OpamFile.Switch_config.to_list (confset_switch st)
+let options_list_global gt =
+  options_list_t OpamFile.Config.to_list (confset_global gt)
+
+let options_list gt st =
+  OpamConsole.header_msg "Global configuration";
+  options_list_global gt;
+  OpamConsole.header_msg "Switch configuration (%s)"
+    (OpamSwitch.to_string st.switch);
+  options_list_switch st
+
+let vars_list_global gt =
+  let (%) s col = OpamConsole.colorise col s in
+  let all_global_vars =
+    List.fold_left (fun acc (v,doc) ->
+        OpamVariable.Map.add (OpamVariable.of_string v) doc acc)
+      OpamVariable.Map.empty
+      OpamPackageVar.global_variable_names
+  in
+  let all_global_vars =
+    OpamVariable.Map.union (fun _ x -> x)
+      all_global_vars
+      (OpamVariable.Map.map snd gt.global_variables)
+  in
+  let env = OpamPackageVar.resolve_global gt in
+  List.map (fun (var, doc) ->
+      let content =
+        OpamFilter.ident_string env ~default:"" ([],var,None)
+      in
+      let doc =
+        if doc = OpamGlobalState.inferred_from_system then
+          match OpamStd.Option.Op.(
+              OpamVariable.Map.find_opt var gt.global_variables
+              >>| fst
+              >>= Lazy.force) with
+          | Some c
+            when (OpamVariable.string_of_variable_contents c) <> content ->
+            "Set through local opam config or env"
+          | _ -> doc
+        else doc
+      in
+      [
+        OpamVariable.to_string var % `bold;
+        content % `blue;
+        "#"; doc
+      ])
+    (List.sort (fun (x,_) (x',_) -> compare x x')
+       (OpamVariable.Map.bindings all_global_vars)) |>
+  OpamStd.Format.align_table |>
+  OpamConsole.print_table stdout ~sep:" "
+
+let vars_list_switch st =
+  let (%) s col = OpamConsole.colorise col s in
+  let config = st.switch_config in
+  List.map (fun stdpath -> [
+        OpamTypesBase.string_of_std_path stdpath % `bold;
+        OpamPath.Switch.get_stdpath
+          st.switch_global.root st.switch config stdpath |>
+        OpamFilename.Dir.to_string |>
+        OpamConsole.colorise `blue
+      ])
+    OpamTypesBase.all_std_paths @
+  List.map (fun (var,value) -> [
+        OpamVariable.to_string var % `bold;
+        OpamVariable.string_of_variable_contents value % `blue;
+      ])
+    (List.sort (fun (x,_) (x',_) -> compare x' x)
+       config.OpamFile.Switch_config.variables) |>
+  OpamStd.Format.align_table |>
+  OpamConsole.print_table stdout ~sep:" "
+
+let vars_list gt st =
+  let (%) s col = OpamConsole.colorise col s in
+  OpamConsole.header_msg "Global opam variables";
+  vars_list_global gt;
+  OpamConsole.header_msg "Configuration variables from the current switch";
+  vars_list_switch st;
+  OpamConsole.header_msg "Package variables ('opam config list PKG' to show)";
+  List.map (fun (var, doc) -> [
+        ("PKG:"^var) % `bold;
+        "";
+        "#";doc
+      ])
+    OpamPackageVar.package_variable_names |>
+  OpamStd.Format.align_table |>
+  OpamConsole.print_table stdout ~sep:" "
+
+(* Specified option/var display *)
+
+let option_show to_list conf field =
+  match OpamStd.List.assoc_opt field conf.stg_fields with
+  | Some pp ->
+    (match OpamPp.print pp conf.stg_config with
+     | _, Some value ->
+       OpamConsole.msg "%s\n" (OpamPrinter.Normalise.value value)
+     | _, None -> ())
+  | None ->
+    if List.mem_assoc field conf.stg_sections then
+      let name_value = to_list conf.stg_config in
+      let sections =
+        OpamStd.List.filter_map (fun (name, v) ->
+            match OpamStd.String.cut_at name '.' with
+            | Some (name,elem) when name = field ->
+              Some [ elem; OpamPrinter.Normalise.value v ]
+            | _ -> None
+          ) name_value
+      in
+      OpamConsole.print_table stdout ~sep:"  "
+        (OpamStd.Format.align_table sections)
+    else
+      OpamConsole.error_and_exit `Not_found
+        "Field or section %s not found" field
+
+let option_show_switch st field =
+  option_show OpamFile.Switch_config.to_list (confset_switch st) field
+let option_show_global gt field =
+  option_show OpamFile.Config.to_list (confset_global gt) field
+
+let var_show resolve v =
+  match resolve (OpamVariable.Full.of_string v) with
+  | Some c ->
+    OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
+  | None ->
+    OpamConsole.error_and_exit `Not_found "Variable %s not found" v
+
+let var_show_switch st v =
+  (* check that the variable is switch defined *)
+  if OpamFile.Switch_config.variable st.switch_config
+      (OpamVariable.of_string v) = None
+  && (try let _stdpath = OpamTypesBase.std_path_of_string v in false
+      with Failure _ -> true) then
+    (* maybe package one *)
+    if OpamStd.String.contains_char v ':' then
+      var_show (OpamPackageVar.resolve st) v
+    else
+      OpamConsole.error_and_exit `Not_found "Variable %s not found" v
+  else
+    var_show (OpamPackageVar.resolve_switch st) v
+
+let var_show_global gt = var_show (OpamPackageVar.resolve_global gt)
+
+(* deprecated, kept for `opam config var` retrocompatibility *)
+let variable st = var_show (OpamPackageVar.resolve st)
+
+(* detect scope *)
+let get_scope field =
+  let field =
+    try fst (parse_update field)
+    with Invalid_argument _ -> field
+  in
+  let find l = OpamStd.List.find_opt (fun (f,_) -> f = field) l in
+  if find OpamFile.Switch_config.fields <> None
+  || find OpamFile.Switch_config.sections <> None then
+    `Switch
+  else if find OpamFile.Config.fields <> None then
+    `Global
+  else `None field

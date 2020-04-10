@@ -183,6 +183,7 @@ module MakeIO (F : IO_Arg) = struct
 
   let write_to_string ?(filename=dummy_file) t =
     F.to_string filename t
+
 end
 
 (** I - Raw text files (no parsing) *)
@@ -864,6 +865,25 @@ module Syntax = struct
       (List.rev_append strs
          (if rem = [] then [""] else [OpamPrinter.items rem;""]))
 
+  let contents pp ?(filename=dummy_file) t =
+    Pp.print pp (filename, t)
+
+  let to_list pp ?(filename=dummy_file) t =
+    let rec aux acc pfx = function
+      | Section (_, {section_kind; section_name=None; section_items}) :: r ->
+        aux (aux acc (section_kind :: pfx) section_items) pfx r
+      | Section (_, {section_kind; section_name=Some n; section_items}) :: r ->
+        aux
+          (aux acc (Printf.sprintf "%s(%s)" section_kind n :: pfx)
+             section_items)
+          pfx r
+      | Variable (_, name, value) :: r ->
+        aux (((name :: pfx), value) :: acc) pfx r
+      | [] -> acc
+    in
+    List.rev_map
+      (fun (pfx, value) -> String.concat "." (List.rev pfx), value)
+      (aux [] [] (contents pp ~filename t).file_contents)
 end
 
 module type SyntaxFileArg = sig
@@ -900,6 +920,7 @@ module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
       include X
       include IO
     end)
+
 end
 
 (** (1) Internal files *)
@@ -1124,8 +1145,11 @@ module ConfigSyntax = struct
     default_compiler = OpamFormula.Empty;
   }
 
-  (* When adding a field or section, make sure to add it in
-     [OpamConfigCommand.set_opt_global_t] if it is a user modifiable field *)
+  (* When adding a field, make sure to add it in
+     [OpamConfigCommand.global_allowed_fields] if it is a user modifiable field.
+     When creating sections, make sure to update
+     [OpamConfigCommand.global_allowed_sections] and
+     [OpamConfigCommand.get_scope]. *)
   let fields =
     let with_switch sw t =
       if t.switch = None then with_switch sw t
@@ -1219,6 +1243,7 @@ module ConfigSyntax = struct
     Pp.I.fields ~name ~empty fields -|
     Pp.I.show_errors ~name ~strict:OpamCoreConfig.(not !r.safe_mode) ()
 
+  let to_list = Syntax.to_list pp
 end
 module Config = struct
   include ConfigSyntax
@@ -1515,7 +1540,9 @@ module Switch_configSyntax = struct
   }
 
   (* When adding a field or section, make sure to add it in
-     [OpamConfigCommand.set_opt_switch] if it is a user modifiable field *)
+     [OpamConfigCommand.switch_allowed_fields] and
+     [OpamConfigCommand.switch_allowed_sections] if it is a user modifiable
+     field *)
   let sections = [
     "paths", Pp.ppacc
       (fun paths t -> {t with paths}) (fun t -> t.paths)
@@ -1577,6 +1604,7 @@ module Switch_configSyntax = struct
 
   let wrappers t = t.wrappers
 
+  let to_list = Syntax.to_list pp
 end
 module Switch_config = struct
   include Switch_configSyntax
@@ -2846,25 +2874,9 @@ module OPAMSyntax = struct
     in
     OpamFilename.write filename s
 
-  let contents ?(filename=dummy_file) t =
-    Pp.print pp (filename, t)
+  let contents = Syntax.contents pp
 
-  let to_list ?filename t =
-    let rec aux acc pfx = function
-      | Section (_, {section_kind; section_name=None; section_items}) :: r ->
-        aux (aux acc (section_kind :: pfx) section_items) pfx r
-      | Section (_, {section_kind; section_name=Some n; section_items}) :: r ->
-        aux
-          (aux acc (Printf.sprintf "%s(%s)" section_kind n :: pfx)
-             section_items)
-          pfx r
-      | Variable (_, name, value) :: r ->
-        aux (((name :: pfx), value) :: acc) pfx r
-      | [] -> acc
-    in
-    List.rev_map
-      (fun (pfx, value) -> String.concat "." (List.rev pfx), value)
-      (aux [] [] (contents ?filename t).file_contents)
+  let to_list = Syntax.to_list pp
 
   let print_field_as_syntax field t =
     let field = try List.assoc field alias_fields with Not_found -> field in
