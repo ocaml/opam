@@ -78,7 +78,9 @@ val set_opt_global: rw global_state -> string -> update_op -> rw global_state
 
 (** As [set_opt_global], [set_opt_switch] updates switch config file in
     <opamroot>/<switch>/.opam-switch/switch-config. *)
-val set_opt_switch: rw switch_state -> string -> update_op -> rw switch_state
+val set_opt_switch:
+  unlocked global_state -> ?st:rw switch_state -> string -> update_op
+  -> rw switch_state option
 
 (** [set_var_global] and [set_var_switch] update respectively `global-variables`
     field in global config and `variables` field in switch config, by appending
@@ -86,21 +88,27 @@ val set_opt_switch: rw switch_state -> string -> update_op -> rw switch_state
 val set_var_global:
   rw global_state -> string -> whole_op -> rw global_state
 val set_var_switch:
-  rw switch_state -> string -> whole_op -> rw switch_state
+    unlocked global_state -> ?st:rw switch_state -> string -> whole_op
+    -> rw switch_state option
 
 (** List switch and/or global fields/sections and their value *)
-val options_list       : unlocked global_state -> unlocked switch_state -> unit
+val options_list:
+  ?st:unlocked switch_state -> unlocked global_state -> unit
 val options_list_global: unlocked global_state -> unit
-val options_list_switch: unlocked switch_state -> unit
+val options_list_switch:
+  ?st:unlocked switch_state -> unlocked global_state -> unit
 
 (** List switch and/or global variables and their value *)
-val vars_list       : unlocked global_state -> unlocked switch_state -> unit
+val vars_list:
+  ?st:unlocked switch_state -> unlocked global_state -> unit
 val vars_list_global: unlocked global_state -> unit
-val vars_list_switch: unlocked switch_state -> unit
+val vars_list_switch:
+  ?st:unlocked switch_state -> unlocked global_state -> unit
 
 (** Display [field] name and content in the global or switch configuration *)
 val option_show_global: unlocked global_state -> string -> unit
-val option_show_switch: unlocked switch_state -> string -> unit
+val option_show_switch:
+  unlocked global_state -> ?st:unlocked switch_state -> string -> unit
 
 (** Display [var] name and content in the global or switch configuration.
     Look first in the raw switch_state, if not found, uses the given switch

@@ -860,10 +860,9 @@ module Var_Option_Common = struct
         field
     | `All ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
       (match cmd with
-       | `var -> OpamConfigCommand.vars_list gt st
-       | `option -> OpamConfigCommand.options_list gt st);
+       | `var -> OpamConfigCommand.vars_list gt
+       | `option -> OpamConfigCommand.options_list gt);
       `Ok ()
     | (`Global | `Switch) as scope ->
       match cmd, apply with
@@ -871,10 +870,9 @@ module Var_Option_Common = struct
         (match scope with
          | `Switch ->
            OpamGlobalState.with_ `Lock_none @@ fun gt ->
-           OpamSwitchState.with_ `Lock_none gt @@ fun st ->
            (match cmd with
-            | `var -> OpamConfigCommand.vars_list_switch st
-            | `option -> OpamConfigCommand.options_list_switch st);
+            | `var -> OpamConfigCommand.vars_list_switch gt
+            | `option -> OpamConfigCommand.options_list_switch gt);
            `Ok ()
          | `Global ->
            OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -888,9 +886,7 @@ module Var_Option_Common = struct
            OpamGlobalState.with_ `Lock_none @@ fun gt ->
            (match cmd with
             | `var -> OpamConfigCommand.var_show_switch gt v
-            | `option ->
-              OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-              OpamConfigCommand.option_show_switch st v);
+            | `option -> OpamConfigCommand.option_show_switch gt v);
            `Ok ()
          | `Global ->
            OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -904,13 +900,12 @@ module Var_Option_Common = struct
         match scope with
         | `Switch ->
           OpamGlobalState.with_ `Lock_none @@ fun gt ->
-          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
           let _st =
             match cmd with
             | `var ->
-              OpamConfigCommand.set_var_switch st v
+              OpamConfigCommand.set_var_switch gt v
                 (OpamConfigCommand.whole_of_update_op u)
-            | `option -> OpamConfigCommand.set_opt_switch st v u
+            | `option -> OpamConfigCommand.set_opt_switch gt v u
           in
           `Ok ()
         | `Global ->
@@ -1128,8 +1123,7 @@ let config =
              gt ~set_opamroot ~set_opamswitch ~inplace_path c)
     | Some `list, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-      `Ok (OpamConfigCommand.vars_list gt st)
+      `Ok (OpamConfigCommand.vars_list gt)
     | Some `list, params ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
@@ -1289,12 +1283,11 @@ let config =
            "Subcommand set is deprecated. Use opam var %s=%s instead."
            var (OpamStd.Option.to_string (fun v -> v) opt_value);
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
-         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let value =
            OpamStd.Option.map_default (fun v -> `Overwrite v)
              `Revert opt_value
          in
-         let _st = OpamConfigCommand.set_var_switch st var value in
+         let _ = OpamConfigCommand.set_var_switch gt var value in
          `Ok ())
     | Some (`set_global | `unset_global as cmd), var::value ->
       let args =
