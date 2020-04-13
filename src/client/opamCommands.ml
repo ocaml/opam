@@ -836,9 +836,13 @@ module Var_Option_Common = struct
   let global = mk_flag ["global"] "Act on global configuration"
 
   let var_option global global_options cmd var =
+    let switch_set = (fst global_options).opt_switch <> None in
+    if global && switch_set then
+      `Error (true, "--global and --switch sw option can't be used together")
+    else
     let scope =
       if global then `Global
-      else if (fst global_options).opt_switch <> None then `Switch
+      else if switch_set then `Switch
       else match var with
         | None -> `All
         | Some f -> match cmd with
