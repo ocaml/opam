@@ -426,15 +426,18 @@ let set_opt ?(inner=false) field value conf =
            (OpamConsole.colorise `underline field) v
            (OpamPp.string_of_bad_format e))
   in
-  conf.stg_write_config new_config;
-  OpamConsole.msg "%s field %s in %s\n"
-    (match value with
-     | `Add value ->  Printf.sprintf "Added '%s' to" value
-     | `Remove value ->  Printf.sprintf "Removed '%s' from" value
-     | `Overwrite value -> Printf.sprintf "Set to '%s' the" value
-     | `Revert -> "Reverted")
-    (OpamConsole.colorise `underline field)
-    conf.stg_doc;
+  if conf.stg_config = new_config then
+    OpamConsole.msg "No modification in %s\n" conf.stg_doc
+  else
+    (conf.stg_write_config new_config;
+     OpamConsole.msg "%s field %s in %s\n"
+       (match value with
+        | `Add value ->  Printf.sprintf "Added '%s' to" value
+        | `Remove value ->  Printf.sprintf "Removed '%s' from" value
+        | `Overwrite value -> Printf.sprintf "Set to '%s' the" value
+        | `Revert -> "Reverted")
+       (OpamConsole.colorise `underline field)
+       conf.stg_doc);
   new_config
 
 let allwd_wrappers wdef wrappers with_wrappers  =
@@ -682,10 +685,13 @@ let set_var svar value conf =
   | `Overwrite value -> conf.stv_set_opt config (`Add (conf.stv_varstr value))
   | `Revert ->
     (* only write, as the var is already removed *)
-    conf.stv_write config;
-    OpamConsole.msg "Removed variable %s in %s\n"
-      (OpamConsole.colorise `underline svar)
-      conf.stv_doc;
+    if config = conf.stv_config then
+      OpamConsole.msg "No modification in %s\n" conf.stv_doc
+    else
+      (conf.stv_write config;
+       OpamConsole.msg "Removed variable %s in %s\n"
+         (OpamConsole.colorise `underline svar)
+         conf.stv_doc);
     config
 
 let set_var_global gt var value =
