@@ -109,3 +109,7 @@ struct
         ""
 end
 #endif
+
+#if OCAML_VERSION < (4, 7, 0)
+module Stdlib = Pervasives
+#endif
