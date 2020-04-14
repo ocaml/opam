@@ -1478,9 +1478,9 @@ let install =
   in
   let check =
     mk_flag ["check"]
-      "Check if dependencies are installed. If some packages are missing, \
-       it will ask if you want them installed and launch install of \
-       $(i,PACKAGES) with option $(b,deps-only) enabled."
+      "Exit with 0 if all the dependencies of $(i,PACKAGES) are already \
+       installed. If not, output the names of the missing dependencies to \
+       stdout, and exits with 1."
   in
   let install
       global_options build_options add_to_roots deps_only ignore_conflicts
@@ -1520,19 +1520,19 @@ let install =
       (OpamConsole.msg "Nothing to do\n";
        OpamStd.Sys.exit_because `Success);
     if check then
-      (let missing = OpamClient.check_installed st atoms in
-       if OpamPackage.Map.is_empty missing then
+      (let missing =
+         OpamPackage.Map.fold (fun _ -> OpamPackage.Name.Set.union)
+           (OpamClient.check_installed st atoms)
+           (OpamPackage.Name.Set.empty)
+       in
+       if OpamPackage.Name.Set.is_empty missing then
          (OpamConsole.errmsg "All dependencies installed\n";
           OpamStd.Sys.exit_because `Success)
        else
-         (OpamConsole.errmsg "Missing dependencies\n";
+         (OpamConsole.errmsg "Missing dependencies:\n";
           OpamConsole.msg "%s\n"
-            (OpamStd.List.concat_map "\n" (fun (pkg, names) ->
-                 Printf.sprintf "%s: %s"
-                   (OpamConsole.colorise `underline (OpamPackage.to_string pkg))
-                   (OpamStd.List.concat_map ", " OpamPackage.Name.to_string
-                      (OpamPackage.Name.Set.elements names)))
-                (OpamPackage.Map.bindings missing));
+            (OpamStd.List.concat_map " " OpamPackage.Name.to_string
+               (OpamPackage.Name.Set.elements missing));
           OpamStd.Sys.exit_because `False));
     let st =
       OpamClient.install st atoms
