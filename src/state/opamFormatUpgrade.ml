@@ -42,7 +42,7 @@ let upgrade_depexts_to_2_0_beta5 filename depexts =
       | "nixpkgs"     -> eq distro "nixos"
       | "arch"        -> eq distro "archlinux"
       | "homebrew" | "macports" | "debian" | "ubuntu" | "centos" | "fedora"
-      | "rhel" | "opensuse" | "oraclelinux" | "mageia" | "alpine"
+      | "rhel" | "opensuse" | "oraclelinux" | "ol" | "mageia" | "alpine"
       | "archlinux" | "gentoo" | "nixos" as d -> eq distro d
 
       | "bsd"         -> eq os_family "bsd"
@@ -938,6 +938,7 @@ let from_2_0_alpha2_to_2_0_alpha3 root conf =
             opam_root; paths; variables; wrappers = OpamFile.Wrappers.empty;
             env = [];
             invariant = OpamFormula.Empty;
+            depext_bypass = OpamSysPkg.Set.empty;
           }
         in
         OpamFile.Switch_config.write (OpamFile.make new_config_file) new_config;

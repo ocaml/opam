@@ -147,6 +147,10 @@ module Config: sig
     arg list option -> t -> t
   val with_default_compiler:
     formula -> t -> t
+  val with_depext: bool -> t -> t
+  val with_depext_run_installs: bool -> t -> t
+  val with_depext_cannot_install: bool -> t -> t
+  val with_depext_bypass: OpamSysPkg.Set.t -> t -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> opam_version
@@ -186,6 +190,11 @@ module Config: sig
   val validation_hook: t -> arg list option
 
   val default_compiler: t -> formula
+
+  val depext: t -> bool
+  val depext_run_installs: t -> bool
+  val depext_cannot_install: t -> bool
+  val depext_bypass: t -> OpamSysPkg.Set.t
 
   val fields: (string * (t, value) OpamPp.field_parser) list
 
@@ -320,7 +329,7 @@ module OPAM: sig
     (* User-facing data used by opam *)
     messages   : (string * filter option) list;
     post_messages: (string * filter option) list;
-    depexts    : (string list * filter) list;
+    depexts    : (OpamSysPkg.Set.t * filter) list;
     libraries  : (string * filter option) list;
     syntax     : (string * filter option) list;
     dev_repo   : url option;
@@ -425,7 +434,7 @@ module OPAM: sig
   val depopts: t -> filtered_formula
 
   (** External dependencies *)
-  val depexts: t -> (string list * filter) list
+  val depexts: t -> (OpamSysPkg.Set.t * filter) list
 
   val extra_sources: t -> (basename * URL.t) list
 
@@ -599,7 +608,7 @@ module OPAM: sig
   val with_bug_reports: string list -> t -> t
 
   (** Construct using [depexts] *)
-  val with_depexts: (string list * filter) list -> t -> t
+  val with_depexts: (OpamSysPkg.Set.t * filter) list -> t -> t
 
   val with_flags: package_flag list -> t -> t
 
@@ -913,6 +922,7 @@ module Switch_config: sig
     wrappers: Wrappers.t;
     env: env_update list;
     invariant: OpamFormula.t;
+    depext_bypass: OpamSysPkg.Set.t;
   }
   val variable: t -> variable -> variable_contents option
   val path: t -> std_path -> string option

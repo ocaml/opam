@@ -69,10 +69,10 @@ val filter:
 val pattern_selector: string list -> selector OpamFormula.formula
 
 (** Get the aggregated active external dependencies of the given packages *)
-val get_depexts: 'a switch_state -> package_set -> OpamStd.String.Set.t
+val get_depexts: 'a switch_state -> package_set -> OpamSysPkg.Set.t
 
 (** Lists the given aggregated active external dependencies of the given packages *)
-val print_depexts: OpamStd.String.Set.t -> unit
+val print_depexts: OpamSysPkg.Set.t -> unit
 
 (** Element of package information to be printed. Fixme: should be part of the
     run-time man! *)

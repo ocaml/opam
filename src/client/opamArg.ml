@@ -161,17 +161,22 @@ type build_options = {
   unlock_base   : bool;
   locked        : bool;
   lock_suffix   : string;
+  assume_depexts: bool;
+  no_depexts    : bool;
 }
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
     req_checksums build_test build_doc show dryrun skip_update
-    fake jobs ignore_constraints_on unlock_base locked lock_suffix = {
-  keep_build_dir; reuse_build_dir; inplace_build; make;
-  no_checksums; req_checksums; build_test; build_doc; show; dryrun;
-  skip_update; fake; jobs; ignore_constraints_on; unlock_base;
-  locked; lock_suffix
-}
+    fake jobs ignore_constraints_on unlock_base locked lock_suffix
+    assume_depexts no_depexts
+    =
+  {
+    keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
+    req_checksums; build_test; build_doc; show; dryrun; skip_update; fake;
+    jobs; ignore_constraints_on; unlock_base; locked; lock_suffix;
+    assume_depexts; no_depexts;
+  }
 
 let apply_build_options b =
   let flag f = if f then Some true else None in
@@ -196,6 +201,7 @@ let apply_build_options b =
                          OpamPackage.Name.Set.of_list)
     ?unlock_base:(flag b.unlock_base)
     ?locked:(if b.locked then Some (Some b.lock_suffix) else None)
+    ?no_depexts:(flag b.no_depexts)
     ();
   OpamClientConfig.update
     ?keep_build_dir:(flag b.keep_build_dir)
@@ -204,6 +210,7 @@ let apply_build_options b =
     ?show:(flag b.show)
     ?fake:(flag b.fake)
     ?skip_dev_update:(flag b.skip_update)
+    ?assume_depexts:(flag (b.assume_depexts || b.no_depexts))
     ()
 
 let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
@@ -238,7 +245,8 @@ let help_sections = [
   `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
   `P "$(i,OPAMDEBUGSECTIONS) if set, limits debug messages to the space-separated \
       list of sections. Sections can optionally have a specific debug level \
-      (for example, $(b,CLIENT:2) or $(b,CLIENT CUDF:2), but otherwise use `--debug-level'.";
+      (for example, $(b,CLIENT:2) or $(b,CLIENT CUDF:2), but otherwise use \
+      `--debug-level'.";
   `P "$(i,OPAMDOWNLOADJOBS) sets the maximum number of simultaneous downloads.";
   `P "$(i,OPAMDRYRUN) see option `--dry-run`";
   `P "$(i,OPAMEDITOR) sets the editor to use for opam file editing, overrides \
@@ -624,6 +632,28 @@ let warn_selector =
     OpamStd.List.concat_map "" (fun (num,enable) ->
         Printf.sprintf "%c%d" (if enable then '+' else '-') num)
       warns
+  in
+  parse, print
+
+let _selector =
+  let parse str =
+    let r =
+      List.fold_left (fun (plus, minus) elem ->
+          match OpamStd.String.sub_at 1 elem with
+          | "+" as prefix ->
+            (OpamStd.String.remove_prefix ~prefix elem)::plus, minus
+          | "-" as prefix ->
+            plus, (OpamStd.String.remove_prefix ~prefix elem)::minus
+          |  _ ->  elem::plus, minus)
+        ([],[]) (OpamStd.String.split str ',')
+    in
+    `Ok r
+  in
+  let print ppf (plus,minus) =
+    let concat c =
+      OpamStd.List.concat_map ~nil:"" "," (fun x -> c^x)
+    in
+    pr_str ppf @@ Printf.sprintf "%s,%s" (concat "+" plus) (concat "-" minus)
   in
   parse, print
 
@@ -1063,6 +1093,10 @@ let lock_suffix section =
 
 (* Options common to all build commands *)
 let build_option_section = "PACKAGE BUILD OPTIONS"
+let man_build_option_section =
+  [
+    `S build_option_section;
+  ]
 let build_options =
   let section = build_option_section in
   let keep_build_dir =
@@ -1132,7 +1166,8 @@ let build_options =
       "This option registers the actions into the opam database, without \
        actually performing them. \
        WARNING: This option is dangerous and likely to break your opam \
-       environment. You probably want `--dry-run'. You've been $(i,warned)." in
+       environment. You probably want $(b,--dry-run). You've been $(i,warned)."
+  in
   let ignore_constraints_on =
     mk_opt ~section ["ignore-constraints-on"] "PACKAGES"
       "Forces opam to ignore version constraints on all dependencies to the \
@@ -1148,11 +1183,25 @@ let build_options =
        $(b,\\$OPAMUNLOCKBASE) environment variable" in
   let locked = locked section in
   let lock_suffix = lock_suffix section in
+  let assume_depexts =
+    mk_flag ~section ["assume-depexts"]
+      "Skip the installation step for any missing system packages, and attempt \
+       to proceed with compilation of the opam packages anyway. If the \
+       installation is successful, opam won't prompt again about these system \
+       packages. Only meaningful if external dependency handling is enabled."
+  in
+  let no_depexts =
+    mk_flag ~section ["no-depexts"]
+      "Temporarily disables handling of external dependencies. This can be \
+       used if a package is not available on your system package manager, but \
+       you installed the required dependency by hand. Implies \
+       $(b,--assume-depexts), and stores the exceptions upon success as well."
+  in
   Term.(const create_build_options
-    $keep_build_dir $reuse_build_dir $inplace_build $make
-    $no_checksums $req_checksums $build_test $build_doc $show $dryrun
-    $skip_update $fake $jobs_flag $ignore_constraints_on
-    $unlock_base $locked $lock_suffix)
+        $keep_build_dir $reuse_build_dir $inplace_build $make
+        $no_checksums $req_checksums $build_test $build_doc $show $dryrun
+        $skip_update $fake $jobs_flag $ignore_constraints_on
+        $unlock_base $locked $lock_suffix $assume_depexts $no_depexts)
 
 (* Option common to install commands *)
 let assume_built =

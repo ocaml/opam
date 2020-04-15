@@ -1074,6 +1074,10 @@ module ConfigSyntax = struct
     eval_variables : (variable * string list * string) list;
     validation_hook : arg list option;
     default_compiler : formula;
+    depext: bool;
+    depext_run_installs : bool;
+    depext_cannot_install : bool;
+    depext_bypass: OpamSysPkg.Set.t;
   }
 
   let opam_version t = t.opam_version
@@ -1097,6 +1101,12 @@ module ConfigSyntax = struct
 
   let validation_hook t = t.validation_hook
   let default_compiler t = t.default_compiler
+
+  let depext t = t.depext
+  let depext_run_installs t = t.depext_run_installs
+  let depext_cannot_install t = t.depext_cannot_install
+  let depext_bypass t = t.depext_bypass
+
 
   let with_opam_version opam_version t = { t with opam_version }
   let with_repositories repositories t = { t with repositories }
@@ -1125,6 +1135,12 @@ module ConfigSyntax = struct
     { t with validation_hook = Some validation_hook}
   let with_validation_hook_opt validation_hook t = { t with validation_hook }
   let with_default_compiler default_compiler t = { t with default_compiler }
+  let with_depext depext t = { t with depext }
+  let with_depext_run_installs depext_run_installs t =
+    { t with depext_run_installs }
+  let with_depext_cannot_install depext_cannot_install t =
+    { t with depext_cannot_install }
+  let with_depext_bypass depext_bypass t = { t with depext_bypass }
 
   let empty = {
     opam_version = format_version;
@@ -1143,6 +1159,10 @@ module ConfigSyntax = struct
     eval_variables = [];
     validation_hook = None;
     default_compiler = OpamFormula.Empty;
+    depext = true;
+    depext_run_installs = true;
+    depext_cannot_install = false;
+    depext_bypass = OpamSysPkg.Set.empty;
   }
 
   (* When adding a field, make sure to add it in
@@ -1219,6 +1239,20 @@ module ConfigSyntax = struct
       "default-compiler", Pp.ppacc
         with_default_compiler default_compiler
         (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
+      "depext", Pp.ppacc
+        with_depext depext
+        Pp.V.bool;
+      "depext-run-installs", Pp.ppacc
+        with_depext_run_installs depext_run_installs
+        Pp.V.bool;
+      "depext-cannot-install", Pp.ppacc
+        with_depext_cannot_install depext_cannot_install
+        Pp.V.bool;
+      "depext-bypass", Pp.ppacc
+        with_depext_bypass depext_bypass
+        (Pp.V.map_list
+           (Pp.V.string -| Pp.of_module "sys-package" (module OpamSysPkg)) -|
+         Pp.of_pair "System package set" OpamSysPkg.Set.(of_list, elements));
 
       (* deprecated fields *)
       "alias", Pp.ppacc_opt
@@ -1525,6 +1559,7 @@ module Switch_configSyntax = struct
     wrappers: Wrappers.t;
     env: env_update list;
     invariant: OpamFormula.t;
+    depext_bypass: OpamSysPkg.Set.t;
   }
 
   let empty = {
@@ -1537,6 +1572,7 @@ module Switch_configSyntax = struct
     wrappers = Wrappers.empty;
     env = [];
     invariant = OpamFormula.Empty;
+    depext_bypass = OpamSysPkg.Set.empty;
   }
 
   (* When adding a field or section, make sure to add it in
@@ -1580,7 +1616,12 @@ module Switch_configSyntax = struct
     "invariant", Pp.ppacc
       (fun invariant t -> {t with invariant}) (fun t -> t.invariant)
       (Pp.V.package_formula `Conj Pp.V.(constraints version));
-
+    "depext-bypass", Pp.ppacc
+      (fun depext_bypass t -> { t with depext_bypass})
+      (fun t -> t.depext_bypass)
+      (Pp.V.map_list
+         (Pp.V.string -| Pp.of_module "sys-package" (module OpamSysPkg)) -|
+       Pp.of_pair "System package set" OpamSysPkg.Set.(of_list, elements));
   ] @
     List.map
       (fun (fld, ppacc) ->
@@ -2044,7 +2085,7 @@ module OPAMSyntax = struct
     (* User-facing data used by opam *)
     messages   : (string * filter option) list;
     post_messages: (string * filter option) list;
-    depexts    : (string list * filter) list;
+    depexts    : (OpamSysPkg.Set.t * filter) list;
     libraries  : (string * filter option) list;
     syntax     : (string * filter option) list;
     dev_repo   : url option;
@@ -2594,20 +2635,25 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:1 @@
          Pp.V.map_option Pp.V.string_tr (Pp.opt Pp.V.filter));
       "depexts", no_cleanup Pp.ppacc with_depexts depexts
-        (Pp.fallback
+        (let map_syspkg =
+           (Pp.V.map_list
+              (Pp.V.string -| Pp.of_module "sys-package" (module OpamSysPkg))
+            -| Pp.pp (fun ~pos:_ -> OpamSysPkg.Set.of_list) OpamSysPkg.Set.elements)
+         in
+         Pp.fallback
            (Pp.V.map_list ~depth:2 @@
-            Pp.V.map_option (Pp.V.map_list Pp.V.string) (Pp.V.filter))
+            Pp.V.map_option map_syspkg (Pp.V.filter))
            (Pp.V.map_list ~depth:3
               (let rec filter_of_taglist = function
-                 | [] -> FBool true
-                 | [v] -> FString v
-                 | v :: r -> FAnd (FString v, filter_of_taglist r)
+                  | [] -> FBool true
+                  | [v] -> FString v
+                  | v :: r -> FAnd (FString v, filter_of_taglist r)
                in
                Pp.V.map_pair
                  (Pp.V.map_list Pp.V.string -|
                   Pp.of_pair "tag-list"
                     (filter_of_taglist, fun _ -> assert false))
-                 (Pp.V.map_list Pp.V.string) -|
+                 map_syspkg -|
                Pp.pp (fun ~pos:_ (a,b) -> b,a) (fun (b,a) -> a,b))));
       "libraries", no_cleanup Pp.ppacc with_libraries libraries
         (Pp.V.map_list ~depth:1 @@

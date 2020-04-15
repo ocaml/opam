@@ -25,6 +25,7 @@ type t = {
   json_out: string option;
   root_is_ok: bool;
   no_auto_upgrade: bool;
+  assume_depexts: bool;
 }
 
 let default = {
@@ -44,6 +45,7 @@ let default = {
   json_out = None;
   root_is_ok = false;
   no_auto_upgrade = false;
+  assume_depexts = false;
 }
 
 type 'a options_fun =
@@ -63,6 +65,7 @@ type 'a options_fun =
   ?json_out:string option ->
   ?root_is_ok:bool ->
   ?no_auto_upgrade:bool ->
+  ?assume_depexts:bool ->
   'a
 
 let setk k t
@@ -82,6 +85,7 @@ let setk k t
     ?json_out
     ?root_is_ok
     ?no_auto_upgrade
+    ?assume_depexts
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -93,6 +97,7 @@ let setk k t
     reuse_build_dir = t.reuse_build_dir + reuse_build_dir;
     inplace_build = t.inplace_build + inplace_build;
     working_dir = t.working_dir + working_dir;
+    drop_working_dir = t.drop_working_dir + drop_working_dir;
     ignore_pin_depends = t.ignore_pin_depends + ignore_pin_depends;
     show = t.show + show;
     fake = t.fake + fake;
@@ -100,7 +105,7 @@ let setk k t
     json_out = t.json_out + json_out;
     root_is_ok = t.root_is_ok + root_is_ok;
     no_auto_upgrade = t.no_auto_upgrade + no_auto_upgrade;
-    drop_working_dir = t.drop_working_dir + drop_working_dir;
+    assume_depexts = t.assume_depexts + assume_depexts;
   }
 
 let set t = setk (fun x () -> x) t
@@ -132,6 +137,7 @@ let initk k =
     ?json_out:(env_string "JSON" >>| function "" -> None | s -> Some s)
     ?root_is_ok:(env_bool "ROOTISOK")
     ?no_auto_upgrade:(env_bool "NOAUTOUPGRADE")
+    ?assume_depexts:None
 
 let init ?noop:_ = initk (fun () -> ())
 
@@ -169,6 +175,8 @@ let opam_init ?root_dir ?strict =
         ?solver_preferences_fixup:(criteria `Fixup >>| fun s -> lazy (Some s))
         ?solver_preferences_best_effort_prefix:
           (OpamFile.Config.best_effort_prefix conf >>| fun s -> lazy (Some s))
+        ();
+      OpamStateConfig.update
         ()
   end;
 

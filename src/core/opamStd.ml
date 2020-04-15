@@ -1267,8 +1267,8 @@ module OpamFormat = struct
     else
     let rec aux rline n = function
       | [] -> [List.rev rline]
-      | x::r ->
-        if n = 0 then List.rev rline :: aux [] by_line r
+      | x::r as line ->
+        if n = 0 then List.rev rline :: aux [] by_line line
         else aux (x :: rline) (n-1) r
     in
     align_table (aux [] by_line l)

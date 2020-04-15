@@ -27,6 +27,7 @@ type t = private {
   unlock_base: bool;
   no_env_notice: bool;
   locked: string option;
+  no_depexts : bool;
 }
 
 type 'a options_fun =
@@ -43,6 +44,7 @@ type 'a options_fun =
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
   ?locked:string option ->
+  ?no_depexts: bool ->
   'a
 
 include OpamStd.Config.Sig

@@ -221,6 +221,9 @@ need more.
 
 #### 🐫  Some packages fail during compilation, complaining about missing dependencies ("m4", "libgtk", etc.)
 
+> NOTE: since opam 2.1.0, the following is directly handled by opam, without
+> relying on a plugin.
+
 They probably depend on system, non-OCaml libraries: they need to be installed
 using your system package manager (apt-get, yum, pacman, homebrew, etc.) since
 they are outside the scope of opam.

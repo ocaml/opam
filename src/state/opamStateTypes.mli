@@ -85,6 +85,7 @@ type +'lock repos_state = {
       repositories *)
 } constraint 'lock = 'lock lock
 
+
 (** State of a given switch: options, available and installed packages, etc.*)
 type +'lock switch_state = {
   switch_lock: OpamSystem.lock;
@@ -124,6 +125,10 @@ type +'lock switch_state = {
   packages: package_set;
   (** The set of all known packages *)
 
+  sys_packages: sys_pkg_status package_map Lazy.t;
+  (** Map of package and their system dependencies packages status. Only
+      initialised for otherwise available packages *)
+
   available_packages: package_set Lazy.t;
   (** The set of available packages, filtered by their [available:] field *)
 
@@ -144,7 +149,7 @@ type +'lock switch_state = {
       user would like them installed. *)
 
   reinstall: package_set Lazy.t;
-  (** The set of packages which needs to be reinstalled *)
+  (** The set of packages which need to be reinstalled *)
 
   invalidated: package_set Lazy.t;
   (** The set of packages which are installed but no longer valid, e.g. because

@@ -195,8 +195,8 @@ let init =
           $(i,--config). The default configuration for this version of opam \
           can be obtained using $(b,--show-default-opamrc)."
          Filename.dir_sep |> Cmdliner.Manpage.escape);
-    `S OpamArg.build_option_section;
-  ] in
+  ] @ OpamArg.man_build_option_section
+  in
   let compiler =
     mk_opt ["c";"compiler"] "PACKAGE"
       "Set the compiler to install (when creating an initial switch)"
@@ -620,7 +620,7 @@ let list ?(force_search=false) () =
     let results_depexts = OpamListCommand.get_depexts st results in
     if not silent then
       OpamListCommand.print_depexts results_depexts
-    else if OpamStd.String.Set.is_empty results_depexts then
+    else if OpamSysPkg.Set.is_empty results_depexts then
       OpamStd.Sys.exit_because `False
   in
   Term.(const list $global_options $package_selection $state_selector
@@ -1079,7 +1079,7 @@ let config =
     "Deprecated, see $(b,set-var).";
     "unset-global", `unset_global, ["VAR"],
     "Deprecated, see $(b,set-var).";
-   ] in
+  ] in
   let man = [
     `S "DESCRIPTION";
     `P "This command uses opam state to output information on how to use \
@@ -1441,8 +1441,8 @@ let install =
         specified).";
     `S "ARGUMENTS";
     `S "OPTIONS";
-    `S OpamArg.build_option_section;
-  ] in
+  ] @ OpamArg.man_build_option_section
+   in
   let add_to_roots =
     let root =
       Some true, Arg.info ["set-root"]
@@ -1567,8 +1567,8 @@ let remove =
         directory are both unpinned and removed.";
     `S "ARGUMENTS";
     `S "OPTIONS";
-    `S OpamArg.build_option_section;
-  ] in
+  ] @ OpamArg.man_build_option_section
+  in
   let autoremove =
     mk_flag ["a";"auto-remove"]
       "Remove all the packages which have not been explicitly installed and \
@@ -1645,8 +1645,8 @@ let reinstall =
         that directory is selected for reinstall.";
     `S "ARGUMENTS";
     `S "OPTIONS";
-    `S OpamArg.build_option_section;
-  ] in
+  ] @ OpamArg.man_build_option_section
+  in
   let cmd =
     Arg.(value & vflag `Default [
         `Pending, info ["pending"]
@@ -1804,8 +1804,8 @@ let upgrade =
         that directory is selected for upgrade.";
     `S "ARGUMENTS";
     `S "OPTIONS";
-    `S OpamArg.build_option_section;
-  ] in
+  ] @ OpamArg.man_build_option_section
+  in
   let fixup =
     mk_flag ["fixup"]
       "Recover from a broken state (eg. missing dependencies, two conflicting \
@@ -2302,7 +2302,7 @@ let switch =
           repository bound to the given URL selected besides the default one."
     ]
     @ [`S "OPTIONS"]
-    @ [`S OpamArg.build_option_section]
+    @ OpamArg.man_build_option_section
   in
 
   let command, params = mk_subcommands_with_default commands in
@@ -2736,8 +2736,7 @@ let pin ?(unpin_only=false) () =
         and $(i,add) otherwise if unambiguous.";
   ] @ mk_subdoc ~defaults:["","list"] commands @ [
       `S "OPTIONS";
-      `S OpamArg.build_option_section;
-    ]
+    ] @ OpamArg.man_build_option_section
   in
   let command, params =
     if unpin_only then

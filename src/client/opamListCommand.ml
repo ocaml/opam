@@ -608,8 +608,8 @@ let detail_printer ?prettify ?normalise st nv =
       +! ""
     )
   | Depexts ->
-    String.concat " "
-      (OpamStd.String.Set.elements (OpamSwitchState.depexts st nv))
+    OpamStd.List.concat_map " " OpamSysPkg.to_string
+      (OpamSysPkg.Set.elements (OpamSwitchState.depexts st nv))
 
 type package_listing_format = {
   short: bool;
@@ -702,13 +702,13 @@ let get_depexts st packages =
          if OpamPackage.Set.mem nv packages then nv else
            OpamPackage.Set.max_elt (OpamPackage.packages_of_name packages name)
        in
-       OpamStd.String.Set.union acc
+       OpamSysPkg.Set.union acc
          (OpamSwitchState.depexts st nv))
     (OpamPackage.names_of_packages packages)
-    OpamStd.String.Set.empty
+    OpamSysPkg.Set.empty
 
 let print_depexts =
-  OpamStd.String.Set.iter (OpamConsole.msg "%s\n")
+  OpamSysPkg.Set.iter (fun d -> OpamConsole.msg "%s\n" (OpamSysPkg.to_string d))
 
 let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
     ?(all_versions=false) atoms =
