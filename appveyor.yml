@@ -1,7 +1,7 @@
 platform:
     - x64
 
-image: Visual Studio 2017
+image: Visual Studio 2019
 
 environment:
   global:
@@ -14,13 +14,13 @@ environment:
     # This should be identical to the value in .travis.yml
     OPAM_REPO_SHA: 8c45759d4
   matrix:
-    - appveyor_build_worker_image: Visual Studio 2019
-      CYG_ROOT: cygwin
+    - CYG_ROOT: cygwin
       CYG_ARCH: x86
 #    - CYG_ROOT: cygwin64
 #      CYG_ARCH: x86_64
 #      DEP_MODE: lib-pkg
-    - OCAML_PORT: msvc
+    - appveyor_build_worker_image: Visual Studio 2017
+      OCAML_PORT: msvc
       DEP_MODE: lib-pkg
       GIT_FOR_WINDOWS: 1
     - OCAML_PORT: msvc64
