@@ -264,7 +264,7 @@ let add_hashes_command =
           "This command scans through package definitions, and add hashes as \
            requested (fetching the archives if required). A cache is generated \
            in %s for subsequent runs."
-          (OpamFilename.Dir.to_string cache_dir |> Cmdliner.Manpage.escape));
+          (OpamFilename.Dir.to_string cache_dir));
   ]
   in
   let hash_kinds = [`MD5; `SHA256; `SHA512] in
