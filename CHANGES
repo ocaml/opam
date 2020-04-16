@@ -3,6 +3,13 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
 
+2.0.7:
+* Properly escape Windows paths on manpages [#4129 @AltGr @rjbou]
+* Fix opam installer opam file [#4058 @rjbou]
+* Fix various warnings [#4132 @rjbou @AltGr - fix 4100]
+* Fix dune 2.5.0 promote-install-files duplication [#4132 @rjbou ]
+* opam exec: display command not found message [#4133 @rjbou - fix #4131]
+
 2.0.6:
 * Don't remove git cache objects that may be used [#3831 @AltGr]
 * Don't include .gitattributes in index.tar.gz [#3873 @dra27]
