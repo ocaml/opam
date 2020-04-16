@@ -27,6 +27,13 @@ val mk_opt_all:
   string list -> string -> string ->
   'a Arg.converter -> 'a list Term.t
 
+(* Escaped Windows directory separator. To use instead of [Filename.dir_sep] for
+   manpage strings *)
+val dir_sep: string
+
+(* Escape Windows path *)
+val escape_path: string -> string
+
 (** {2 Flags} *)
 
 (** --short *)
