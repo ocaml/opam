@@ -23,10 +23,13 @@ let run_command
       OpamFilename.touch f;
       k (Some (OpamFilename.to_string f))
   in
+  let verbose =
+    OpamStd.Option.default OpamCoreConfig.(!r.verbose_level >= 3) verbose
+  in
   let open OpamProcess.Job.Op in
   OpamProcess.Job.run @@ clean_output @@ fun stdout ->
   OpamSystem.make_command
-    ?stdout ?allow_stdin ?verbose cmd args
+    ?stdout ?allow_stdin ~verbose cmd args
   @@> fun r ->
   let code = r.r_code in
   let out = r.r_stdout in
