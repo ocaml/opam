@@ -217,7 +217,7 @@ the Dose library and Copyright 2011 Ralf Treinen.
 
 All other code is:
 
-Copyright 2012-2016 OCamlPro
+Copyright 2012-2020 OCamlPro
 Copyright 2012 INRIA
 
 All rights reserved. Opam is distributed under the terms of the GNU Lesser
