@@ -129,7 +129,10 @@ let packages_status packages =
             |> OpamSysPkg.Set.of_list
           in
           packages %% installed
-        | _ -> OpamSysPkg.Set.empty
+        | distribution ->
+          Printf.ksprintf failwith
+            "External dependency handling not supported for BSD distribution '%s'."
+            distribution
       in
       installed, packages -- installed, OpamSysPkg.Set.empty
     | "debian" ->
