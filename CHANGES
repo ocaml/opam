@@ -10,7 +10,7 @@ are not marked).
 * Integrate lock plugin [#3746 @rjbou - fix #3734 #3769 #3694]
 * Add configuration modifications as opam config subcommands [#3992 @rjbou]
 * opam var and opam option outside of opam config [#4116 @rjbou - fix #4119]
-* Enable option var optim switch load [#4138 @rjbou]
+* Enable option var optimisation switch load [#4138 @rjbou]
 * Integrate depext plugin [#3975 @rjbou @AltGr - fix #3790 #1519 #2426 #3692]
 * Enable command/output display only from verbose level 3 [#4141 @rjbou]
 * Add `opam install --check <pkg>` checks that `<pkg>` dependencies are already
@@ -20,7 +20,7 @@ are not marked).
 * Add `opam install <pkg> --ignore-conflicts` to use with `--deps-only` in case
   it is needed to install dependencies without taking conflicts into account.
   [#3853 @rjbou - fix #3846]
-* Add `opam show --just-file <file>`  shows information of a given file,
+* Add `opam show --just-file <file>` shows information of a given file,
   without loading the switch state. It can be combined with other options, as
   field filter `--field`. It deprecates `--file` option. [#3729 @rjbou - fix
   #3721]
@@ -99,8 +99,7 @@ are not marked).
 * Correct display of dir separator on Windows. [#3893 @dra27]
 * Tested wrong variable in OPAMW_HasGlyp. [#3898 @dra27]
 * Default use `fetch` on FreeBSD, `ftp` on OpenBSD. [#3904 @hannesm]
-* Don't overwrite user's sandbow script modification. [#4020 @rjbou] 
-  [#4092 @rjbou]
+* Don't overwrite user's sandbow script modification. [#4020 #4092 @rjbou]
 * Handle `CCACHE_DIR` environment variable in sandbox script. [#4087 @rjbou -
   fix #4079]
 * Follow links of `~/.cache` & `~/.cache/dune` for bwrap call. [#4087 @rjbou -
@@ -115,7 +114,7 @@ are not marked).
 * Download files (patches, etc.) using a safe filename. [#3900 @dra27]
 * `opam admin --add-constraints`, add constraint on depopts. [#4002 @rjbou -
   fix #3994]
-* Add `format-version` field to all opam files. [#3478 @AltGr]  [#3906 @AltGr]
+* Add `format-version` field to all opam files. [#3478 @AltGr] [#3906 @AltGr]
 * Clarify pin depend parse error. [#3762 @rjbou]
 * Opam file extensions (`x-` fields) enhancement. [#4049 @hannesm]
 * Add support for Z3 as a solver backend. [#3845 @AltGr]
@@ -123,7 +122,7 @@ are not marked).
   [#4083 @rjbou - fix #4080]
 * Generalization of the job scheduler: provide separate job pools for different
   subsets of the tasks. [#3778 @AltGr]
-* Refactor the return types of  `OpamSolution.{apply,resolve_and_apply}`
+* Refactor the return types of `OpamSolution.{apply,resolve_and_apply}`
   [#3781 @Armael]
 * Use the scheduler pools to respect the download-jobs parameter.
   [#3791 @AltGr]
@@ -137,7 +136,7 @@ are not marked).
   [#4094 @rjbou - fix #4091]
 * Add `OpamDirTack.string_of_changes` [#4107 @rjbou @hannesm]
 * Introduce state `drop` function to replace `ignore (unlock ..)` for more
-  lock-type-safety.  [#3783 @gasche - #3812 @rjbou]
+  lock-type-safety. [#3783 @gasche - #3812 @rjbou]
 * Change `OpamStateTypes.switch_state.conf_files `from package_map` to
   `name_map` [#3799 @dra27]
 * Fix handling of availability outside of switches. [#3864 @AltGr]
@@ -147,7 +146,7 @@ are not marked).
 * Command errors display: differentiate command not found & permission denied.
   [#3865 @rjbou]
 * Factorize option functions in `OpamProcess` [#4016 @nobrakal]
-* Use ocaml code for looking up commands in `PATH` [#4072 @armael]
+* Use ocaml code for looking up commands in `PATH` [#4072 @Armael]
 * Copy files using OCaml code instead of calling to cp or install
   [#4064 @Armael]
 * Sort & clean pkg:depend. [#4060 @rjbou - fix #4057]
@@ -166,13 +165,13 @@ are not marked).
 * Ensure configure generates consistently. [#3935 @dra27]
 * Documentation [#3542 @0xflotus] [#3571 @hannesm] [#3780 @gasche]
   [#3944 @tchajed] [#3955 @nbraud] [#4106 @vp2177] [#3863 @dra27] [#3554 @rjbou - fix
-  #3540 #2255c #3612 #3606c] [#4058 @rjbou] [#4114 @rjbou AltGr]
+  #3540 #2255c #3612 #3606c] [#4058 @rjbou] [#4114 @rjbou @AltGr]
 
 2.0.7:
 * opam exec: display command not found message. [#4133 @rjbou - fix #4131]
 * Escape Windows paths on manpages. [#4129 @AltGr @rjbou - fix #4100]
 * Fix opam installer opam file. [#4058 @rjbou]
-* Fix various warnings. [#4132 @rjbou AltGr - fix 4100]
+* Fix various warnings. [#4132 @rjbou @AltGr - fix #4100]
 
 2.0.6:
 * Do not fail if `$HOME/.ccache` is missing. [#3957 @mseri - fix
@@ -264,7 +263,7 @@ are not marked).
   #3390]
 
 2.0.1:
-* Add `opam list --silent` to write anything in the output, exit with return
+* Add `opam list --silent` to not write in the output, exit with return
   code 0 if the list is not empty, 1 otherwise. [#3533 @rjbou - fix #3525]
 * Fix `opam list --external` [#3558 @rjbou - fix #3557
   ocaml/opam-repository#12677]
@@ -278,7 +277,7 @@ are not marked).
 * Git: fallback, fetch all repository remotes to get SHA1 with git < 2.1.
   [#3561 @rjbou - fix #3523 #3548]
 * Lint E57: A description or a synopsis must be present and non empty.
-  [#3581 @rjbou - fix  ocaml/opam-repository#12729]
+  [#3581 @rjbou - fix ocaml/opam-repository#12729]
 * Lint W58: Advise to use `with-test` and `with-doc` variables if `test`
   and `doc` are present. [#3591 @rjbou - fix #3580 ocaml/opam-repository#12729]
 * Add `gtar` as OpenBSD required tool, as tar does not support the `J` flag.
@@ -299,10 +298,10 @@ are not marked).
   message in verbose mode. [#3502 @rjbou - fix #3497]
 * Remove link files only if it exists. [#3519 @rjbou - fix
   ocaml/opam-depext#104]
-* Remove GNUism from bootstrap-ocaml.sh [#3481 @dra27 - fix #3480] * Avoid sed
-  -i, a GNU sed extension, use mv instead [#3603 @hannesm]
-* Add patch & bunzip2 checki in configure. [#3531 @rjbou - fix #3520] * Not
-  having wget or curl is now only a hard-error if src_ext/archives doesn't
+* Remove GNUism from bootstrap-ocaml.sh [#3481 @dra27 - fix #3480]
+* Avoid sed -i, a GNU sed extension, use mv instead [#3603 @hannesm]
+* Add patch & bunzip2 check in configure. [#3531 @rjbou - fix #3520]
+* Not having wget or curl is now only a hard-error if src_ext/archives doesn't
   contain the archives (i.e. if make -C src_ext cache-archives has not been run)
   which means that this should no longer be a requirement for building with the
   "full" tarball. [#3572 @dra27 - fix #3551]
