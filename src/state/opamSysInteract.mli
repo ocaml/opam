@@ -18,7 +18,7 @@ val packages_status:
   OpamSysPkg.Set.t -> OpamSysPkg.Set.t * OpamSysPkg.Set.t
 
 (* Return the commands to run to install given system packages *)
-val install_packages_commands: OpamSysPkg.Set.t -> string list list
+val install_packages_commands: OpamSysPkg.Set.t -> (string * string list) list
 
 (* Install given system packages, by calling local system package manager *)
 val install: OpamSysPkg.Set.t -> unit

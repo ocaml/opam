@@ -941,7 +941,10 @@ let install_depexts t packages sys_packages =
      OpamClientConfig.(!r.assume_depexts)
   then t else
   let print () =
-    let commands = OpamSysInteract.install_packages_commands sys_packages in
+    let commands =
+      OpamSysInteract.install_packages_commands sys_packages
+      |> List.map (fun (c,a) -> c::a)
+    in
     OpamConsole.formatted_msg
       (match commands with
        | [_] -> "This command should get the requirements installed:\n"
