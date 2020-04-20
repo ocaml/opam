@@ -191,7 +191,7 @@ let get_sysdeps_map ~depexts global_config switch_config packages =
             OpamSysPkg.s_not_found = set %% not_found}
         ) syspkg_map
     | exception (Failure msg) ->
-      OpamConsole.note "%s\nYou can disable this check using 'opam config \
+      OpamConsole.note "%s\nYou can disable this check using 'opam \
                         option global depext=false'"
         msg;
       OpamPackage.Map.empty
