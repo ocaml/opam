@@ -1,5 +1,5 @@
 dnl The line below must be formatted AC_INIT(opam,VERSION) with no extra spaces
-AC_INIT(opam,2.0.6)
+AC_INIT(opam,2.0.7)
 AC_COPYRIGHT(Copyright 2012-2017 OcamlPro SAS)
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -131,11 +131,11 @@ AS_IF([test "x${enable_developer_mode}" = "xyes"], [AC_SUBST(DEVELOPER,true)], [
 
 AS_IF([test "x${with_mccs}" = "xno"], [AC_SUBST(MCCS_ENABLED,false)], [AC_SUBST(MCCS_ENABLED,true)])
 
+CONF_OCAMLFLAGS="-w -67"
+
 AS_IF([test "x${CI}" != "x"], [
-  CONF_OCAMLFLAGS="-warn-error A-3"
-],[
-  CONF_OCAMLFLAGS=
-])
+  CONF_OCAMLFLAGS="${CONF_OCAMLFLAGS} -w -67"
+],[])
 AS_IF([test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"],[
   AS_IF([test "x${CCOMP_TYPE}" = "xmsvc"],[
     CONF_CFLAGS="\"/WX\""

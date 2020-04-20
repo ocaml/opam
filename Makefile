@@ -21,7 +21,7 @@ OPAMINSTALLER = ./opam-installer$(EXE)
 ALWAYS:
 	@
 
-DUNE_PROMOTE_ARG := $(shell dune build --help=plain 2>/dev/null | sed -ne 's/.*\(--promote-install-files\).*/ \1/p')
+DUNE_PROMOTE_ARG := $(shell dune build --help=plain 2>/dev/null | sed -ne 's/^[[:space:]]*\(--promote-install-files\)[[:space:]]*$$/ \1/p')
 DUNE_DEP = $(DUNE_EXE)
 JBUILDER_ARGS ?= 
 DUNE_ARGS ?= $(JBUILDER_ARGS)

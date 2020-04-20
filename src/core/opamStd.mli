@@ -409,7 +409,7 @@ module Sys : sig
 
   (** {3 Exit handling} *)
 
-  (** Like Pervasives.at_exit but with the possibility to call manually
+  (** Like Stdlib.at_exit but with the possibility to call manually
       (eg. before exec()) *)
   val at_exit: (unit -> unit) -> unit
 

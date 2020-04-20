@@ -391,6 +391,18 @@ let help_sections = [
 ]
 
 (* Converters *)
+
+(* Windows directory separator need to be escaped for manpage *)
+let dir_sep, escape_path =
+  match Filename.dir_sep with
+  | "\\" ->
+    let esc = "\\\\" in
+    esc,
+    fun p ->
+      OpamStd.List.concat_map esc (fun x -> x)
+        (OpamStd.String.split_delim p '\\')
+  | ds -> ds, fun x -> x
+
 let pr_str = Format.pp_print_string
 
 let repository_name =
@@ -423,7 +435,7 @@ let existing_filename_or_dash =
 
 let dirname =
   let parse str = `Ok (OpamFilename.Dir.of_string str) in
-  let print ppf dir = pr_str ppf (OpamFilename.prettify_dir dir) in
+  let print ppf dir = pr_str ppf (escape_path (OpamFilename.prettify_dir dir)) in
   parse, print
 
 let existing_filename_dirname_or_dash =
@@ -829,8 +841,11 @@ let shell_opt =
 
 let dot_profile_flag =
   mk_opt ["dot-profile"]
-    "FILENAME" "Name of the configuration file to update instead of \
-                $(i,~/.profile) or $(i,~/.zshrc) based on shell detection."
+    "FILENAME"
+    (Printf.sprintf
+      "Name of the configuration file to update instead of \
+       $(i,~%s.profile) or $(i,~%s.zshrc) based on shell detection."
+      dir_sep dir_sep)
     (Arg.some filename) None
 
 let repo_kind_flag =
@@ -869,16 +884,18 @@ let atom_list =
 
 let atom_or_local_list =
   arg_list "PACKAGES"
-    "List of package names, with an optional version or constraint, e.g `pkg', \
-     `pkg.1.0' or `pkg>=0.5' ; or files or directory names containing package \
-     description, with explicit directory (e.g. `./foo.opam' or `.')"
+    (Printf.sprintf
+      "List of package names, with an optional version or constraint, e.g `pkg', \
+       `pkg.1.0' or `pkg>=0.5' ; or files or directory names containing package \
+       description, with explicit directory (e.g. `.%sfoo.opam' or `.')" dir_sep)
     atom_or_local
 
 let atom_or_dir_list =
   arg_list "PACKAGES"
-    "List of package names, with an optional version or constraint, e.g `pkg', \
-     `pkg.1.0' or `pkg>=0.5' ; or directory names containing package \
-     description, with explicit directory (e.g. `./srcdir' or `.')"
+    (Printf.sprintf
+      "List of package names, with an optional version or constraint, e.g `pkg', \
+       `pkg.1.0' or `pkg>=0.5' ; or directory names containing package \
+       description, with explicit directory (e.g. `.%ssrcdir' or `.')" dir_sep)
     atom_or_dir
 
 let nonempty_atom_list =

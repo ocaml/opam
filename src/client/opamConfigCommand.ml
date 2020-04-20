@@ -392,4 +392,6 @@ let exec gt ?set_opamroot ?set_opamswitch ~inplace_path command =
   in
   match OpamSystem.resolve_command ~env cmd with
   | Some cmd -> raise (OpamStd.Sys.Exec (cmd, args, env))
-  | None -> raise (OpamStd.Sys.Exit 127)
+  | None ->
+    OpamConsole.error "Command not found '%s'" cmd;
+    raise (OpamStd.Sys.Exit 127)
