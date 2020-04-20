@@ -324,9 +324,9 @@ let packages_status packages =
 
 (* Install *)
 
-let install_packages_commands s_packages =
+let install_packages_commands sys_packages =
   let packages =
-    List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements s_packages)
+    List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements sys_packages)
   in
   match family () with
   | Alpine -> ["apk", "add"::packages]
@@ -337,22 +337,22 @@ let install_packages_commands s_packages =
        means that other dependencies require the EPEL repository to be
        already setup when yum-install is called. Cf. opam-depext/#70,#76. *)
     let epel_release = "epel-release" in
-    let install_epel =
+    let install_epel rest =
       if List.mem epel_release packages then
-        ["yum", "install"::[epel_release]]
-      else []
+        ["yum", ["install"; epel_release]] @ rest
+      else rest
     in
-    install_epel @
-    ["yum", "install"::
-     (OpamSysPkg.Set.remove (OpamSysPkg.of_string epel_release) s_packages
-      |> OpamSysPkg.Set.elements
-      |> List.map OpamSysPkg.to_string);
-     "rpm", "-q"::"--whatprovides"::packages]
+    install_epel
+      ["yum", "install"::
+              (OpamStd.String.Set.of_list packages
+               |> OpamStd.String.Set.remove epel_release
+               |> OpamStd.String.Set.elements);
+       "rpm", "-q"::"--whatprovides"::packages]
   | Debian -> ["apt-get", "install"::packages]
   | Freebsd -> ["pkg", "install"::packages]
   | Gentoo -> ["emerge", packages]
   | Homebrew -> ["brew", "install"::packages]
-(*   | Macports -> ["port", "install"::packages] *)
+  (*   | Macports -> ["port", "install"::packages] *)
   | Openbsd -> ["pkg_add", packages]
   | Suse -> ["zypper", ("install"::packages)]
 
