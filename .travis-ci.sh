@@ -238,24 +238,30 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
     TRAVIS_MERGE_BASE=$(git merge-base "$TRAVIS_CUR_HEAD" "$TRAVIS_PR_HEAD")
     if ! git diff "$TRAVIS_MERGE_BASE..$TRAVIS_PR_HEAD" --name-only --exit-code -- shell/install.sh > /dev/null ; then
       echo "shell/install.sh updated - checking it"
-      eval $(grep '^\(VERSION\|TAG\|OPAM_BIN_URL_BASE\)=' shell/install.sh)
-      echo "TAG = $TAG"
+      eval $(grep '^\(OPAM_BIN_URL_BASE\|DEV_VERSION\|VERSION\)=' shell/install.sh)
       echo "OPAM_BIN_URL_BASE=$OPAM_BIN_URL_BASE"
-      ARCHES=0
-      while read -r key sha
-      do
-        ARCHES=1
-        URL="$OPAM_BIN_URL_BASE$TAG/opam-$TAG-$key"
-        echo "Checking $URL"
-        check=$(curl -Ls "$URL" | sha512sum | cut -d' ' -f1)
-        if [ "$check" = "$sha" ] ; then
-          echo "Checksum as expected ($sha)"
-        else
-          echo -e "[\e[31mERROR\e[0m] Checksum downloaded: $check"
-          echo -e "[\e[31mERROR\e[0m] Checksum install.sh: $sha"
-          ERROR=1
-        fi
-      done < <(sed -ne "s/.*opam-$TAG-\([^)]*\).*\"\([^\"]*\)\".*/\1 \2/p" shell/install.sh)
+      echo "VERSION = $VERSION"
+      echo "DEV_VERSION = $DEV_VERSION"
+      for VERSION in $DEV_VERSION $VERSION; do
+        eval $(grep '^TAG=' shell/install.sh)
+        echo "TAG = $TAG"
+        ARCHES=0
+
+        while read -r key sha
+        do
+          ARCHES=1
+          URL="$OPAM_BIN_URL_BASE$TAG/opam-$TAG-$key"
+          echo "Checking $URL"
+          check=$(curl -Ls "$URL" | sha512sum | cut -d' ' -f1)
+          if [ "$check" = "$sha" ] ; then
+            echo "Checksum as expected ($sha)"
+          else
+            echo -e "[\e[31mERROR\e[0m] Checksum downloaded: $check"
+            echo -e "[\e[31mERROR\e[0m] Checksum install.sh: $sha"
+            ERROR=1
+          fi
+        done < <(sed -ne "s/.*opam-$TAG-\([^)]*\).*\"\([^\"]*\)\".*/\1 \2/p" shell/install.sh)
+      done
       if [ $ARCHES -eq 0 ] ; then
         echo "[\e[31mERROR\e[0m] No sha512 checksums were detected in shell/install.sh"
         echo "That can't be right..."
