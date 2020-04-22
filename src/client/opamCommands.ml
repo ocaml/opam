@@ -2491,11 +2491,21 @@ let switch =
                    let local_compilers =
                      OpamStd.List.filter_map
                        (fun (name, _) ->
-                          if OpamFile.OPAM.has_flag Pkgflag_Compiler
-                              (OpamSwitchState.opam st
-                                 (OpamPinned.package st name))
-                          then Some (Atom (name, None))
-                          else None)
+                          (* The opam file for the local package might not be
+                             the current pinning (e.g. with deps-only), but it's
+                             guaranteed to be the only available version by
+                             autopin. *)
+                          match
+                            OpamSwitchState.opam st
+                              (OpamPackage.package_of_name
+                                 (Lazy.force st.available_packages)
+                                 name)
+                          with
+                          | opam ->
+                            if OpamFile.OPAM.has_flag Pkgflag_Compiler opam then
+                              Some (Atom (name, None))
+                            else None
+                          | exception Not_found -> None)
                        atoms
                    in
                    if local_compilers <> [] then
