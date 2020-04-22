@@ -43,6 +43,8 @@ usage() {
     echo "Options:"
     echo "    --dev                  Install the latest alpha or beta instead: $DEV_VERSION"
     echo "    --no-backup            Don't attempt to backup the current opam root"
+    echo "    --no-interaction       Don't ask for user interaction, use default installation path"
+    echo "    --disable-sandboxing   Disables sandboxing, needed for using inside docker"
     echo "    --backup               Force the backup the current opam root (even if it"
     echo "                           is from the 2.0 branch already)"
     echo "    --fresh                Create the opam $VERSION root from scratch"
@@ -55,6 +57,8 @@ usage() {
 RESTORE=
 NOBACKUP=
 FRESH=
+NO_INTERACTION=
+DISABLE_SANDBOXING=
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -67,6 +71,10 @@ while [ $# -gt 0 ]; do
             RESTORE=$1;;
         --no-backup)
             NOBACKUP=1;;
+        --disable-sandboxing)
+            DISABLE_SANDBOXING=1;;
+        --no-interaction)
+            NO_INTERACTION=1;;
         --backup)
             NOBACKUP=0;;
         --fresh)
@@ -221,22 +229,26 @@ if [ -n "$EXISTING_OPAM" ]; then
     DEFAULT_BINDIR=$(dirname "$EXISTING_OPAM")
 fi
 
-while true; do
-    printf "## Where should it be installed ? [$DEFAULT_BINDIR] "
-    read BINDIR
-    if [ -z "$BINDIR" ]; then BINDIR="$DEFAULT_BINDIR"; fi
+if [ "$NO_INTERACTION" -ne 1 ] ; then
+    while true; do
+        printf "## Where should it be installed ? [$DEFAULT_BINDIR] "
+        read BINDIR
+        if [ -z "$BINDIR" ]; then BINDIR="$DEFAULT_BINDIR"; fi
 
-    if [ -d "$BINDIR" ]; then break
-    else
-        printf "## $BINDIR does not exist. Create ? [Y/n] "
-        read R
-        case "$R" in
-            ""|"y"|"Y"|"yes")
-            xsudo mkdir -p $BINDIR
-            break;;
-        esac
-    fi
-done
+        if [ -d "$BINDIR" ]; then break
+        else
+            printf "## $BINDIR does not exist. Create ? [Y/n] "
+            read R
+            case "$R" in
+                ""|"y"|"Y"|"yes")
+                xsudo mkdir -p $BINDIR
+                break;;
+            esac
+        fi
+    done
+else 
+    BINDIR="$DEFAULT_BINDIR"
+fi 
 
 if [ -e "$EXISTING_OPAM" ]; then
     if [ "$NOBACKUP" = 1 ]; then
@@ -283,6 +295,10 @@ fi
 
 xsudo install -m 755 "$TMP/$OPAM_BIN" "$BINDIR/opam"
 echo "## opam $VERSION installed to $BINDIR"
+
+if [ "$DISABLE_SANDBOXING" = 1 ] ; then
+    opam init --disable-sandboxing
+fi
 
 if [ ! "$FRESH" = 1 ]; then
     echo "## Converting the opam root format & updating"
