@@ -53,6 +53,7 @@ type families =
   | Freebsd
   | Gentoo
   | Homebrew
+  | Macports
   | Openbsd
   | Suse
 
@@ -76,6 +77,7 @@ let family =
       | "debian" -> Debian
       | "gentoo" -> Gentoo
       | "homebrew" -> Homebrew
+      | "macports" -> Macports
       | "suse" | "opensuse" -> Suse
       | family ->
         Printf.ksprintf failwith
@@ -295,6 +297,37 @@ let packages_status packages =
       |> OpamSysPkg.Set.of_list
     in
     compute_sets sys_installed
+  | Macports ->
+    let str_pkgs =
+      List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements packages)
+    in
+    let sys_installed =
+      run_query_command "port" ("installed" :: str_pkgs)
+      |> (function _::lines -> lines | _ -> [])
+      |> OpamStd.List.filter_map (fun l ->
+          match OpamStd.String.split l ' ' with
+          | pkg::_version::"(active)"::[] -> Some (OpamSysPkg.of_string pkg)
+          | _ -> None)
+      |> OpamSysPkg.Set.of_list
+    in
+    let sys_available =
+      (* example output
+          diffutils	3.7	sysutils textproc devel	GNU diff utilities
+          --
+          No match for gcc found
+      *)
+      run_query_command "port" (["search"; "--line"; "--exact" ] @ str_pkgs)
+      |> OpamStd.List.filter_map (fun l ->
+          if l = "--" then None else
+          match OpamStd.String.split l ' ' with
+          | "No"::"match"::_ | [] -> None
+          | pkg_info::_ ->
+            match OpamStd.String.split pkg_info '\t' with
+            | pkg::_ -> Some (OpamSysPkg.of_string pkg)
+            | _ -> None)
+      |> OpamSysPkg.Set.of_list
+    in
+    compute_sets sys_installed ~sys_available
   | Openbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-mqP"]
@@ -352,7 +385,7 @@ let install_packages_commands sys_packages =
   | Freebsd -> ["pkg", "install"::packages]
   | Gentoo -> ["emerge", packages]
   | Homebrew -> ["brew", "install"::packages]
-  (*   | Macports -> ["port", "install"::packages] *)
+  | Macports -> ["port", "install"::packages]
   | Openbsd -> ["pkg_add", packages]
   | Suse -> ["zypper", ("install"::packages)]
 
@@ -397,6 +430,7 @@ let update () =
     | Debian -> Some ("apt-get", ["update"])
     | Gentoo -> Some ("emerge", ["--sync"])
     | Homebrew -> Some ("brew", ["update"])
+    | Macports -> Some ("port", ["sync"])
     | Suse -> Some ("zypper", ["--non-interactive"; "update"])
     | Freebsd | Openbsd ->
       None
