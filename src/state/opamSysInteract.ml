@@ -165,7 +165,7 @@ let packages_status packages =
               OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) avail
             | _ ->  avail)
           OpamSysPkg.Set.empty
-          (run_query_command "apt-cache" ["search"; ".*"])
+          (run_query_command "apt-cache" ["search"; ".*"; "--names-only"])
       in
       let available = available -- installed in
       let not_found = packages -- available -- installed in
