@@ -133,13 +133,14 @@ let packages_status packages =
       in
       installed, packages -- installed, OpamSysPkg.Set.empty
     | "debian" ->
+      let str_pkgs =
+        OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) packages [])
+      in
       (* First query regular package *)
       let lines =
         (* discard stderr as just nagging *)
         let _, lines =
-          run_command ~discard_err:true "dpkg-query"
-            ("-l" :: (List.map OpamSysPkg.to_string
-                        (OpamSysPkg.Set.elements packages)))
+          run_command ~discard_err:true "dpkg-query" ("-l" :: str_pkgs)
         in
         lines
       in
@@ -158,14 +159,19 @@ let packages_status packages =
           OpamSysPkg.Set.empty lines
       in
       let available =
+        let names_re =
+          let need_escape = Re.(compile (group (set "+."))) in
+          Printf.sprintf "^(%s)$"
+            (OpamStd.List.concat_map "|"
+               (Re.replace ~all:true need_escape ~f:(fun g -> "\\"^Re.Group.get g 1))
+               str_pkgs)
+        in
+        run_query_command "apt-cache" ["search"; names_re; "--names-only"] |>
         List.fold_left (fun avail l ->
-            match OpamStd.String.split l ' ' with
-            | pkg::_
-              when OpamSysPkg.Set.mem (OpamSysPkg.of_string pkg) packages ->
-              OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) avail
-            | _ ->  avail)
+            match OpamStd.String.cut_at l ' ' with
+            | Some (pkg, _) -> OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) avail
+            | None ->  avail)
           OpamSysPkg.Set.empty
-          (run_query_command "apt-cache" ["search"; ".*"])
       in
       let available = available -- installed in
       let not_found = packages -- available -- installed in
