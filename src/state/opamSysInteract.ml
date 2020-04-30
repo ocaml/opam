@@ -439,14 +439,14 @@ let packages_status packages =
 (* Install *)
 
 let install_packages_commands_t sys_packages =
-  let yes opt r =
-    if OpamCoreConfig.(!r.answer) = Some true then opt @ r else r
+  let yes ?(no=[]) yes r =
+    if OpamCoreConfig.(!r.answer) = Some true then yes @ r else no @ r
   in
   let packages =
     List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements sys_packages)
   in
   match family () with
-  | Alpine -> ["apk", "add"::packages], None
+  | Alpine -> ["apk", "add"::yes ~no:["-i"] [] packages], None
   | Arch -> ["pacman", "-S"::yes ["--noconfirm"] packages], None
   | Centos ->
     (* TODO: check if they all declare "rhel" as primary family *)
@@ -466,13 +466,16 @@ let install_packages_commands_t sys_packages =
                  |> OpamStd.String.Set.elements);
        "rpm", "-q"::"--whatprovides"::packages], None
   | Debian -> ["apt-get", "install"::yes ["-qq"; "-yy"] packages], None
-  | Freebsd -> ["pkg", "install"::packages], None
-  | Gentoo -> ["emerge", packages], None
+  | Freebsd -> ["pkg", "install"::yes ["-y"] packages], None
+  | Gentoo -> ["emerge", yes ~no:["-a"] [] packages], None
   | Homebrew ->
-    ["brew", "install"::packages],
+    ["brew", "install"::packages], (* NOTE: Does not have any interactive mode *)
     Some (["HOMEBREW_NO_AUTO_UPDATE","yes"])
+  | Macports ->
+    ["port", "install"::packages], (* NOTE: Does not have any interactive mode *)
+    None
+  | Openbsd -> ["pkg_add", yes ~no:["-I"] ["-i"] packages], None
   | Suse -> ["zypper", ("install"::yes ["--non-interactive"] packages)], None
-  | Openbsd -> ["pkg_add", packages], None
 
 let install_packages_commands sys_packages =
   fst (install_packages_commands_t sys_packages)
