@@ -61,7 +61,9 @@ let rec rmdir_cleanup dirname =
   if OpamSystem.dir_is_empty sd then (
     rmdir dirname;
     let parent = Filename.dirname sd in
-    if parent <> sd then rmdir_cleanup parent
+    if parent <> sd then
+      try rmdir_cleanup parent
+      with e -> OpamStd.Exn.fatal e
   )
 
 let cwd () =
