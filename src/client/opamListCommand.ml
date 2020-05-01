@@ -716,10 +716,16 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
     OpamFormula.packages_of_atoms ~disj:all_versions
       (st.packages ++ st.installed) atoms
   in
-  if OpamPackage.Set.is_empty packages then
+  let missing_atoms =
+    OpamStd.List.filter_map (fun ((n,_) as atom) ->
+        if OpamPackage.has_name packages n then None else Some atom) atoms
+  in
+  if missing_atoms <> [] then
     (OpamConsole.error "No package matching %s found"
-       (OpamStd.List.concat_map " or " OpamFormula.short_string_of_atom atoms);
-     OpamStd.Sys.exit_because `Not_found);
+       (OpamStd.List.concat_map " or " OpamFormula.short_string_of_atom
+          missing_atoms);
+     if OpamPackage.Set.is_empty packages then
+       OpamStd.Sys.exit_because `Not_found);
   let fields = List.map (field_of_string ~raw) fields in
   let all_versions_fields = [
     Name;
