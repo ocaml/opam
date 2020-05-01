@@ -716,9 +716,8 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
     OpamFormula.packages_of_atoms ~disj:all_versions
       (st.packages ++ st.installed) atoms
   in
-  let missing_atoms =
-    OpamStd.List.filter_map (fun ((n,_) as atom) ->
-        if OpamPackage.has_name packages n then None else Some atom) atoms
+  let atoms, missing_atoms =
+    List.partition (fun (n,_) -> OpamPackage.has_name packages n) atoms
   in
   if missing_atoms <> [] then
     (OpamConsole.error "No package matching %s found"
@@ -807,8 +806,7 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
     | [f] -> OpamConsole.msg "%s\n" (detail_printer ?normalise st pkg f)
     | fields -> output_table fields pkg
   in
-  OpamPackage.names_of_packages packages |>
-  OpamPackage.Name.Set.iter (fun name ->
+  List.iter (fun (name,_) ->
       (* Like OpamSwitchState.get_package, but restricted to [packages] *)
       let nvs = OpamPackage.packages_of_name packages name in
       if all_versions then
@@ -824,4 +822,4 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
          in
          header choose;
          output_package choose)
-    )
+    ) atoms
