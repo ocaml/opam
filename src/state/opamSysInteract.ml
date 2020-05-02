@@ -474,7 +474,7 @@ let install_packages_commands_t sys_packages =
   | Macports ->
     ["port", "install"::packages], (* NOTE: Does not have any interactive mode *)
     None
-  | Openbsd -> ["pkg_add", yes ~no:["-I"] ["-i"] packages], None
+  | Openbsd -> ["pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> ["zypper", ("install"::yes ["--non-interactive"] packages)], None
 
 let install_packages_commands sys_packages =
