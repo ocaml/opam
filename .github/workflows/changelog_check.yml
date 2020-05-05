@@ -9,11 +9,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Check current changelog updated
-      run: |
-        git fetch origin $GITHUB_BASE_REF --depth=1 --quiet
-        echo "> base commit"
-        git show origin/$GITHUB_BASE_REF --format=oneline -s
-        echo "> diff"
-        git diff origin/$GITHUB_BASE_REF --name-status --diff-filter=AM | tee /tmp/diff
-        grep -q master_changes.md /tmp/diff
+    - run: bash .github/scripts/changelog_checker
