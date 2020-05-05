@@ -1,6 +1,6 @@
 #!/bin/bash -xue
 
-OPAMBSVERSION=2.0.0
+OPAMBSVERSION=2.1.0-alpha
 OPAMBSROOT=$HOME/.opam.cached
 OPAMBSSWITCH=opam-build
 PATH=~/local/bin:$PATH; export PATH
@@ -199,8 +199,12 @@ EOF
       if [[ $OPAM_TEST -eq 1 ]] ; then
         echo -en "travis_fold:start:opam\r"
         if [[ ! -e ~/local/bin/opam-bootstrap ]] ; then
+          os=$( (uname -s || echo unknown) | awk '{print tolower($0)}')
+          if [ "$os" = "darwin" ] ; then
+            os=macos
+          fi
           wget -q -O ~/local/bin/opam-bootstrap \
-               "https://github.com/ocaml/opam/releases/download/$OPAMBSVERSION/opam-$OPAMBSVERSION-$(uname -m)-$(uname -s)"
+            "https://github.com/ocaml/opam/releases/download/$OPAMBSVERSION/opam-$OPAMBSVERSION-$(uname -m)-$os"
         fi
 
         cp -f ~/local/bin/opam-bootstrap ~/local/bin/opam
