@@ -112,7 +112,6 @@ let recommended_tools () =
   let make = OpamStateConfig.(Lazy.force !r.makecmd) in
   [
     [make], None, None;
-    ["m4"], None, None;
     ["cc"], None, None;
   ]
 
