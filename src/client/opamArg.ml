@@ -240,6 +240,7 @@ let help_sections = [
        report` to know the current setting. See also option --criteria";
   `P "$(i,OPAMCUDFFILE file) save the cudf graph to \
       $(i,file)-actions-explicit.dot";
+  `P "$(i,OPAMDEPEXTYES) launch system package managers in non-interactive mode";
   `P "$(i,OPAMCURL) can be used to select a given 'curl' program. See \
       $(i,OPAMFETCH) for more options.";
   `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
