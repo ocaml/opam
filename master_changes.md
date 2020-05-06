@@ -1,6 +1,9 @@
 Working version changelog, used as a base for the changelog and the release
 note.
 
+## Init
+  * Remove m4 from the list of recommended tools [#4184 @kit-ty-kate]
+
 ## Switch
   * Fix Not_found with `opam switch create . --deps` [#4151 @AltGr]
 
