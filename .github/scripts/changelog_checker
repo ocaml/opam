@@ -1,24 +1,28 @@
-#!/bin/sh
+# This script check that the current master changelog has been updated by PR,
+# ignoring some internal files.
+# It is used byt the changelog_check github action.
+
+# (c) Copyright Raja Boujbel OCamlPro 2020
 
 set -ue
 
-UNTRACKED="
-appveyor_build.cmd
-appveyor.patch
-appveyor_test.sh
-appveyor.yml
-AUTHORS
-CONTRIBUTING.md
+IGNORE="
 .gitattributes
 .github
 .gitignore
-ISSUE_TEMPLATE.md
 .ocamlinit
 .ocp-indent
 .ocplint
-README.md
 .travis-ci.sh
 .travis.yml
+AUTHORS
+CONTRIBUTING.md
+ISSUE_TEMPLATE.md
+README.md
+appveyor.patch
+appveyor.yml
+appveyor_build.cmd
+appveyor_test.sh
 master_changes.md
 "
 changelog=master_changes.md
@@ -28,17 +32,15 @@ git fetch origin $GITHUB_BASE_REF --depth=1 --quiet
 echo "> base commit"
 git show origin/$GITHUB_BASE_REF --format=oneline -s
 
-git diff origin/$GITHUB_BASE_REF --name-status --diff-filter=AM > $diffile
+git diff origin/$GITHUB_BASE_REF --name-only --diff-filter=AMRCX > $diffile
 updated=0
-if [ -z "`grep -s $changelog $diffile`" ] ; then
-  updated=1
-fi
+grep -sq $changelog $diffile || updated=1
 
 echo "> all changes"
 cat $diffile
 
-for untrack in $UNTRACKED ; do
-  sed -i "/$untrack/d" $diffile
+for ign in $IGNORE ; do
+  sed -i "/^$ign/d" $diffile
 done
 
 echo "> kept changes"
@@ -48,11 +50,11 @@ num_changes=`wc -l $diffile | cut -f 1 -d ' '`
 
 if [ $num_changes -ne 0 ] ; then
   if [ $updated -eq 0 ] ; then
-    echo "[32mChangelog updated[0m"
+    echo -e "\033[32mChangelog updated\033[m"
   else
-    echo "[31mPlease update changelog in master_changes.md[0m"
+    echo -e "\033[31mPlease update changelog in master_changes.md\033[m"
     exit 1
   fi
 else
-  echo "[33mCommited files not concerned by changelog[0m"
+  echo -e "\033[33mCommitted files not concerned by changelog\033[m"
 fi
