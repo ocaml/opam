@@ -170,6 +170,9 @@ val get_sysdeps_map:
   package_set ->
   OpamSysPkg.status package_map
 
+(** Returns not found depexts for the package *)
+val depexts_unavailable: 'a switch_state -> package -> OpamSysPkg.Set.t option
+
 (** [conflicts_with st subset pkgs] returns all packages declared in conflict
     with at least one element of [subset] within [pkgs], through forward or
     backward conflict definition or common conflict-class. Packages in [subset]

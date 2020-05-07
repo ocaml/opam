@@ -199,6 +199,12 @@ let get_sysdeps_map ~depexts global_config switch_config packages =
   log "depexts loaded in %.3fs" (chronos());
   ret
 
+let depexts_unavailable_raw sys_packages nv =
+  match OpamPackage.Map.find_opt nv sys_packages with
+  | Some { OpamSysPkg.s_not_found; _}
+    when not (OpamSysPkg.Set.is_empty s_not_found) ->
+    Some s_not_found
+  | _ -> None
 
 let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
@@ -452,10 +458,7 @@ let load lock_kind gt rt switch =
     else lazy (
       let sys_packages = Lazy.force sys_packages in
       OpamPackage.Set.filter (fun nv ->
-          match OpamPackage.Map.find_opt nv sys_packages with
-          | Some { OpamSysPkg.s_not_found; _ }
-            when not (OpamSysPkg.Set.is_empty s_not_found) -> false
-          | _ -> true)
+          depexts_unavailable_raw sys_packages nv = None)
         (Lazy.force available_packages)
     )
   in
@@ -681,6 +684,9 @@ let source_dir st nv =
 let depexts st nv =
   let env v = OpamPackageVar.resolve_switch ~package:nv st v in
  depexts_raw ~env nv st.opams
+
+let depexts_unavailable st nv =
+  depexts_unavailable_raw (Lazy.force st.sys_packages) nv
 
 let dev_packages st =
   OpamPackage.Set.filter (is_dev_package st)
@@ -1002,7 +1008,14 @@ let unavailable_reason st ?(default="") (name, vformula) =
         (OpamConsole.colorise `bold
            (OpamFileTools.dep_formula_to_string st.switch_invariant))
     else
-      default
+    match depexts_unavailable st (OpamPackage.Set.max_elt candidates) with
+    | Some missing ->
+      Printf.sprintf
+        "depends on the unavailable system package '%s'. Use \
+         `--assume-depexts' to attempt installation anyway."
+        (OpamStd.List.concat_map " " OpamSysPkg.to_string
+           (OpamSysPkg.Set.elements missing))
+    | None -> default
 
 let update_package_metadata nv opam st =
   { st with
