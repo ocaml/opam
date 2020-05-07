@@ -333,7 +333,8 @@ let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums remote_urls =
   let text = OpamProcess.make_command_text label "dl" in
   OpamProcess.Job.with_text text @@
   fetch_from_cache cache_dir cache_urls checksums @@+ function
-  | Up_to_date (_, url) -> Done (Up_to_date (OpamUrl.to_string url))
+  | Up_to_date (_, _) ->
+    Done (Up_to_date "cached")
   | Result (_, url) ->
     Done (Result (OpamUrl.to_string url))
   | Not_available _ ->
