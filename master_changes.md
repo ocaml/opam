@@ -1,5 +1,6 @@
 Working version changelog, used as a base for the changelog and the release
 note.
+Possibly scripts breaking changes are prefixed with ✘
 
 ## Admin
   * Fix admin cache synchronisation message [#4193 @rjbou - fix #4167]
@@ -23,6 +24,12 @@ note.
 
 ## Pin
   * Don't keep unpinned package version if it exists in repo [#4073 @rjbou - fix #3630]
+
+## Show
+  * ✘ Display error message for all not found packages [#4179 @rjbou - fix #4164]
+  * ✘ Keep package order given via cli [#4179 @rjbou - fix #4163]
+  * `--sort`` apply to with all options, not only `--just-file` [#4179 @rjbou]
+
 
 ## Depext
   * Fix performance issue of depext under Docker/debian [#4165 @AltGr]
