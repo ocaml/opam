@@ -6,3 +6,5 @@ note.
 
 ## Depext
   * Fix performance issue of depext under Docker/debian [#4165 @AltGr]
+  * Refactor package status [#4152 @rjbou]
+  * Add Macport support [#4152 @rjbou]

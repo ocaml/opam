@@ -45,345 +45,364 @@ let run_command_exit_code ?allow_stdin ?verbose cmd args =
   let code,_ = run_command ?allow_stdin ?verbose cmd args in
   code
 
+type families =
+  | Alpine
+  | Arch
+  | Centos
+  | Debian
+  | Freebsd
+  | Gentoo
+  | Homebrew
+  | Macports
+  | Openbsd
+  | Suse
+
 (* System status *)
-let spv f = OpamStd.Option.Op.(f () +! "unknown")
+let family =
+  let family = lazy (
+    match OpamSysPoll.os_family () with
+    | None ->
+      Printf.ksprintf failwith
+        "External dependency unusable, OS family not detected."
+    | Some family ->
+      match family with
+      | "alpine" -> Alpine
+      | "amzn" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol"
+      | "rhel" -> Centos
+      | "archlinux" | "arch" -> Arch
+      | "bsd" when OpamSysPoll.os_distribution () = Some "freebsd" ->
+        Freebsd
+      | "bsd" when OpamSysPoll.os_distribution () = Some "openbsd" ->
+        Openbsd
+      | "debian" -> Debian
+      | "gentoo" -> Gentoo
+      | "homebrew" -> Homebrew
+      | "macports" -> Macports
+      | "suse" | "opensuse" -> Suse
+      | family ->
+        Printf.ksprintf failwith
+          "External dependency handling not supported for OS family '%s'."
+          family
+  ) in
+  fun () -> Lazy.force family
+
 
 let packages_status packages =
+  let (+++) pkg set = OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set in
+  (* Some package managers don't permit to request on available packages. In
+     this case, we consider all non installed packages as [available]. *)
   let open OpamSysPkg.Set.Op in
-  let from_system lines get =
-    let installed, available =
-      List.fold_left get OpamSysPkg.Set.(empty, empty) lines
+  let compute_sets ?sys_available sys_installed =
+    let installed = packages %% sys_installed in
+    let available, not_found =
+      match sys_available with
+      | Some sys_available ->
+        let available = (packages -- installed) %% sys_available in
+        let not_found = packages -- installed -- available in
+        available, not_found
+      | None ->
+        let available = packages -- installed in
+        available, OpamSysPkg.Set.empty
     in
-    let not_found = packages -- installed -- available in
-    installed, available, not_found
+    available, not_found
   in
-  (* keep tracking installed ones ?? *)
-  let _installed, available, not_found =
-    match spv OpamSysPoll.os_family with
-    | "alpine" ->
-      let lines =
-        run_query_command "apk" ["list";"--available"]
-      in
-      let re_installed = Re.(compile (seq [str "[installed]"; eol])) in
-      let re_pkg =
-        (* packages form : libpeas-python3-1.22.0-r1 *)
-        Re.(compile @@ seq
-              [ bol;
-                group @@ rep1 @@ alt [alnum; punct];
-                char '-';
-                rep1 digit;
-                rep any ])
-      in
-      from_system lines
-        (fun (inst,avail) l ->
-           try
-             let pkg = OpamSysPkg.of_string (Re.(Group.get (exec re_pkg l) 1)) in
-             if OpamSysPkg.Set.mem pkg packages then
-               if Re.execp re_installed l then
-                 OpamSysPkg.Set.add pkg inst, avail
-               else
-                 inst, OpamSysPkg.Set.add pkg avail
-             else inst, avail
-           with Not_found -> inst, avail)
-    | "amzn" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol" | "rhel" ->
-      (* XXX /!\ only checked on centos XXX *)
-      let lines = run_query_command "yum" ["-q"; "-C"; "list"] in
-      (* -C to retrieve from cache, no udpatei, bt still quite long, 1,5 sec *)
-      (* Return a list of installed packages then available ones:
-           Installed Packages
-           foo.arch    version   repo
-           Available Packages
-           bar.arch    version   repo
-      *)
-      let installed, available, _ =
-        List.fold_left (fun (inst,avail,part) l ->
-            match l with
-            (* beware of locales!! *)
-            | "Installed Packages" -> inst, avail, `installed
-            | "Available Packages" -> inst, avail, `available
-            | _ ->
-              (match part, OpamStd.String.split l '.' with
-               | `installed, pkg::_ ->
-                 OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) inst, avail, part
-               | `available, pkg::_ ->
-                 inst, OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) avail, part
-               | _ -> (* shouldn't happen *) inst, avail, part))
-          OpamSysPkg.Set.(empty, empty, `preamble) lines
-      in
-      let not_found = packages -- installed -- available in
-      installed, available, not_found
-    | "bsd" ->
-      let installed =
-        match spv OpamSysPoll.os_distribution with
-        | "freebsd" ->
-          let installed =
-            run_query_command "pkg" ["query"; "%n"]
-            |> List.map OpamSysPkg.of_string
-            |> OpamSysPkg.Set.of_list
-          in
-          packages %% installed
-        | "openbsd" ->
-          let installed =
-            run_query_command "pkg_info" ["-mqP"]
-            |> List.map OpamSysPkg.of_string
-            |> OpamSysPkg.Set.of_list
-          in
-          packages %% installed
-        | _ -> OpamSysPkg.Set.empty
-      in
-      installed, packages -- installed, OpamSysPkg.Set.empty
-    | "debian" ->
-      let str_pkgs =
-        OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) packages [])
-      in
-      (* First query regular package *)
-      let lines =
-        (* discard stderr as just nagging *)
-        let _, lines =
-          run_command ~discard_err:true "dpkg-query" ("-l" :: str_pkgs)
-        in
-        lines
-      in
-      let installed =
-        List.fold_left
-          (fun inst l ->
-             match OpamStd.String.split l ' ' with
-             | "ii"::pkg::_ ->
-               let pkg =
-                 match OpamStd.String.cut_at pkg ':' with
-                 | Some (pkg,_) -> pkg (* pkg:arch convention *)
-                 | _ -> pkg
-               in
-               OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) inst
-             | _ -> inst)
-          OpamSysPkg.Set.empty lines
-      in
-      let available =
-        let names_re =
-          let need_escape = Re.(compile (group (set "+."))) in
-          Printf.sprintf "^(%s)$"
-            (OpamStd.List.concat_map "|"
-               (Re.replace ~all:true need_escape ~f:(fun g -> "\\"^Re.Group.get g 1))
-               str_pkgs)
-        in
-        run_query_command "apt-cache" ["search"; names_re; "--names-only"] |>
-        List.fold_left (fun avail l ->
-            match OpamStd.String.cut_at l ' ' with
-            | Some (pkg, _) -> OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) avail
-            | None ->  avail)
-          OpamSysPkg.Set.empty
-      in
-      let available = available -- installed in
-      let not_found = packages -- available -- installed in
-      installed, available, not_found
-    (* Disable for time saving
-          let installed =
-            if OpamSysPkg.Set.is_empty not_found then
-              installed
+  match family () with
+  | Alpine ->
+    let lines =
+      run_query_command "apk" ["list";"--available"]
+    in
+    let re_installed = Re.(compile (seq [str "[installed]"; eol])) in
+    let re_pkg =
+      (* packages form : libpeas-python3-1.22.0-r1 *)
+      Re.(compile @@ seq
+            [ bol;
+              group @@ rep1 @@ alt [alnum; punct];
+              char '-';
+              rep1 digit;
+              rep any ])
+    in
+    let sys_installed, sys_available =
+      List.fold_left (fun (inst,avail) l ->
+          try
+            let pkg = Re.(Group.get (exec re_pkg l) 1) in
+            if Re.execp re_installed l then
+              pkg +++ inst, avail
             else
-            (* If package are not_found look for virtual package. *)
-            let resolve_virtual name =
-              let lines =
-                run_query_command "apt-cache"
-                  ["--names-only"; "search"; "^"^name^"$"]
-                  (* name need to be escaped, its a regexp *)
-              in
-              List.fold_left
-                (fun acc l -> match OpamStd.String.split l ' ' with
-                   | pkg :: _ ->
-                   OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) acc
-                   | [] -> acc)
-                OpamSysPkg.Set.empty lines
+              inst, pkg +++ avail
+          with Not_found -> inst, avail)
+        OpamSysPkg.Set.(empty, empty) lines
+    in
+    compute_sets sys_installed ~sys_available
+  | Arch ->
+    let sys_query arg =
+      run_query_command "pacman" [arg]
+      |> OpamStd.List.filter_map (fun s ->
+          match OpamStd.String.split s ' ' with
+          | x::_::_ -> Some x
+          | _ -> None)
+      |> List.map OpamSysPkg.of_string
+      |> OpamSysPkg.Set.of_list
+    in
+    let sys_installed = sys_query "-Qe" in
+    let sys_available = sys_query "-Q" in
+    compute_sets sys_installed ~sys_available
+  | Centos ->
+    (* XXX /!\ only checked on centos XXX *)
+    let lines = run_query_command "yum" ["-q"; "-C"; "list"] in
+    (* -C to retrieve from cache, no update but still quite long, 1,5 sec *)
+    (* Return a list of installed packages then available ones:
+         Installed Packages
+         foo.arch    version   repo
+         Available Packages
+         bar.arch    version   repo
+    *)
+    let sys_installed, sys_available, _ =
+      List.fold_left (fun (inst,avail,part) -> function
+          (* beware of locales!! *)
+          | "Installed Packages" -> inst, avail, `installed
+          | "Available Packages" -> inst, avail, `available
+          | l ->
+            (match part, OpamStd.String.split l '.' with
+             | `installed, pkg::_ ->
+               pkg +++ inst, avail, part
+             | `available, pkg::_ ->
+               inst, pkg +++ avail, part
+             | _ -> (* shouldn't happen *) inst, avail, part))
+        OpamSysPkg.Set.(empty, empty, `preamble) lines
+    in
+    compute_sets sys_installed ~sys_available
+  | Debian ->
+    let str_pkgs =
+      OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) packages [])
+    in
+    (* First query regular package *)
+    let lines =
+      (* discard stderr as just nagging *)
+      let _, lines =
+        run_command ~discard_err:true "dpkg-query" ("-l" :: str_pkgs)
+      in
+      lines
+    in
+    let sys_installed =
+      List.fold_left
+        (fun inst l ->
+           match OpamStd.String.split l ' ' with
+           | "ii"::pkg::_ ->
+             let pkg =
+               match OpamStd.String.cut_at pkg ':' with
+               | Some (pkg,_) -> pkg (* pkg:arch convention *)
+               | _ -> pkg
+             in
+             OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) inst
+           | _ -> inst)
+        OpamSysPkg.Set.empty lines
+    in
+    let sys_available =
+      let names_re =
+        let need_escape = Re.(compile (group (set "+."))) in
+        Printf.sprintf "^(%s)$"
+          (OpamStd.List.concat_map "|"
+             (Re.replace ~all:true need_escape ~f:(fun g -> "\\"^Re.Group.get g 1))
+             str_pkgs)
+      in
+      run_query_command "apt-cache" ["search"; names_re; "--names-only"] |>
+      List.fold_left (fun avail l ->
+          match OpamStd.String.cut_at l ' ' with
+          | Some (pkg, _) -> OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) avail
+          | None ->  avail)
+        OpamSysPkg.Set.empty
+    in
+    compute_sets sys_installed ~sys_available
+  (* Disable for time saving
+        let installed =
+          if OpamSysPkg.Set.is_empty not_found then
+            installed
+          else
+          (* If package are not_found look for virtual package. *)
+          let resolve_virtual name =
+            let lines =
+              run_query_command "apt-cache"
+                ["--names-only"; "search"; "^"^name^"$"]
+                (* name need to be escaped, its a regexp *)
             in
-            let virtual_map =
-              OpamSysPkg.Set.fold (fun vpkg acc ->
-                  OpamSysPkg.Set.fold (fun pkg acc ->
-                      let old =
-                        try OpamSysPkg.Map.find pkg acc
-                        with Not_found -> OpamSysPkg.Set.empty
-                      in
-                      OpamSysPkg.Map.add pkg
-                      (OpamSysPkg.Set.add (OpamSysPkg.of_string vpkg) old) acc)
-                    (resolve_virtual vpkg)acc)
-                not_found OpamSysPkg.Map.empty
-            in
-            let real_packages =
-              List.map fst (OpamSysPkg.Map.bindings virtual_map)
-            in
-            let dpkg_args pkgs = if pkgs = [] then [] else "-l" :: pkgs in
-            let lines = run_query_command "dpkg-query" (dpkg_args real_packages) in
             List.fold_left
               (fun acc l -> match OpamStd.String.split l ' ' with
-                 | [pkg;_;_;"installed"] ->
-                   (match OpamSysPkg.Map.find_opt pkg virtual_map with
-                    | Some p -> p ++ acc
-                    | None -> acc)
-                 | _ -> acc)
-              installed lines
+                 | pkg :: _ ->
+                 pkg +++ acc
+                 | [] -> acc)
+              OpamSysPkg.Set.empty lines
           in
-    *)
-    | "gentoo" ->
-      let sys_installed =
-        let re_pkg =
-          Re.(compile @@ seq
-                [ group @@ rep1 @@ alt [alnum; punct];
-                  char '-';
-                  rep @@ seq [rep1 digit; char '.'];
-                  rep1 digit;
-                  rep any;
-                  eol ])
+          let virtual_map =
+            OpamSysPkg.Set.fold (fun vpkg acc ->
+                OpamSysPkg.Set.fold (fun pkg acc ->
+                    let old =
+                      try OpamSysPkg.Map.find pkg acc
+                      with Not_found -> OpamSysPkg.Set.empty
+                    in
+                    OpamSysPkg.Map.add pkg
+                    (OpamSysPkg.Set.add (OpamSysPkg.of_string vpkg) old) acc)
+                  (resolve_virtual vpkg)acc)
+              not_found OpamSysPkg.Map.empty
+          in
+          let real_packages =
+            List.map fst (OpamSysPkg.Map.bindings virtual_map)
+          in
+          let dpkg_args pkgs = if pkgs = [] then [] else "-l" :: pkgs in
+          let lines = run_query_command "dpkg-query" (dpkg_args real_packages) in
+          List.fold_left
+            (fun acc l -> match OpamStd.String.split l ' ' with
+               | [pkg;_;_;"installed"] ->
+                 (match OpamSysPkg.Map.find_opt pkg virtual_map with
+                  | Some p -> p ++ acc
+                  | None -> acc)
+               | _ -> acc)
+            installed lines
         in
-        List.fold_left (fun inst dir ->
-            let pkg =
-              OpamFilename.basename_dir dir
-              |> OpamFilename.Base.to_string
-            in
-            try
-              OpamSysPkg.Set.add
-                (OpamSysPkg.of_string Re.(Group.get (exec re_pkg pkg) 1))
-                inst
-            with Not_found -> inst)
-          OpamSysPkg.Set.empty
-          (OpamFilename.rec_dirs (OpamFilename.Dir.of_string "/var/db/pkg"))
+  *)
+  | Freebsd ->
+    let sys_installed =
+      run_query_command "pkg" ["query"; "%n"]
+      |> List.map OpamSysPkg.of_string
+      |> OpamSysPkg.Set.of_list
+    in
+    compute_sets sys_installed
+  | Gentoo ->
+    let sys_installed =
+      let re_pkg =
+        Re.(compile @@ seq
+              [ group @@ rep1 @@ alt [alnum; punct];
+                char '-';
+                rep @@ seq [rep1 digit; char '.'];
+                rep1 digit;
+                rep any;
+                eol ])
       in
-      let installed = packages %% sys_installed in
-      let available = packages -- installed in
-      installed, available, OpamSysPkg.Set.empty
-    | "homebrew" ->
-      let lines = run_query_command "brew" ["list"] in
-      let installed =
-        packages %%
-        (List.map (fun s -> OpamStd.String.split s ' ') lines
-         |> List.flatten
-         |> List.map OpamSysPkg.of_string
-         |> OpamSysPkg.Set.of_list)
-      in
-      installed, packages -- installed, OpamSysPkg.Set.empty
-    (* | "macports" -> OpamSysPkg.Set.(empty,empty,empty) (\* Why ? *\) *)
-    | "archlinux" | "arch" ->
-      let sys_query arg =
-        run_query_command "pacman" [arg]
-        |> OpamStd.List.filter_map (fun s ->
-            match OpamStd.String.split s ' ' with
-            | x::_::_ -> Some x
+      List.fold_left (fun inst dir ->
+          let pkg =
+            OpamFilename.basename_dir dir
+            |> OpamFilename.Base.to_string
+          in
+          try Re.(Group.get (exec re_pkg pkg) 1) +++ inst
+          with Not_found -> inst)
+        OpamSysPkg.Set.empty
+        (OpamFilename.rec_dirs (OpamFilename.Dir.of_string "/var/db/pkg"))
+    in
+    compute_sets sys_installed
+  | Homebrew ->
+    let sys_installed =
+      run_query_command "brew" ["list"]
+      |> List.map (fun s -> OpamStd.String.split s ' ')
+      |> List.flatten
+      |> List.map OpamSysPkg.of_string
+      |> OpamSysPkg.Set.of_list
+    in
+    compute_sets sys_installed
+  | Macports ->
+    let str_pkgs =
+      List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements packages)
+    in
+    let sys_installed =
+      run_query_command "port" ("installed" :: str_pkgs)
+      |> (function _::lines -> lines | _ -> [])
+      |> OpamStd.List.filter_map (fun l ->
+          match OpamStd.String.split l ' ' with
+          | pkg::_version::"(active)"::[] -> Some (OpamSysPkg.of_string pkg)
+          | _ -> None)
+      |> OpamSysPkg.Set.of_list
+    in
+    let sys_available =
+      (* example output
+          diffutils	3.7	sysutils textproc devel	GNU diff utilities
+          --
+          No match for gcc found
+      *)
+      run_query_command "port" (["search"; "--line"; "--exact" ] @ str_pkgs)
+      |> OpamStd.List.filter_map (fun l ->
+          if l = "--" then None else
+          match OpamStd.String.split l ' ' with
+          | "No"::"match"::_ | [] -> None
+          | pkg_info::_ ->
+            match OpamStd.String.split pkg_info '\t' with
+            | pkg::_ -> Some (OpamSysPkg.of_string pkg)
             | _ -> None)
-        |> List.map OpamSysPkg.of_string
-        |> OpamSysPkg.Set.of_list
-      in
-      let sys_installed = sys_query "-Qe" in
-      let sys_available = sys_query "-Q" in
-      let installed = packages %% sys_installed in
-      let available = (packages -- installed) %% sys_available in
-      let not_found = packages -- installed -- available in
-      installed, available, not_found
-    | "suse" | "opensuse" ->
-      let lines =
-        (* get the second column of the table:
-           zypper --quiet se -i -t package|grep '^i '|awk -F'|' '{print $2}'|xargs echo*)
-        run_query_command "zypper" ["--quiet"; "se"; "-t"; "package"]
-      in
-      from_system lines
-        (fun (inst,avail) l ->
-           match OpamStd.String.split l '|' with
-           | st::pkg::_ ->
-             let pkg = OpamStd.String.strip pkg in
-             if OpamStd.String.starts_with ~prefix:"i" st then
-               OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) inst, avail
-             else
-               inst, OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) avail
-           | _ -> inst, avail)
-    | family ->
-      Printf.ksprintf failwith
-        "External dependency handling not supported for OS family '%s'."
-        family
-  in
-  available, not_found
+      |> OpamSysPkg.Set.of_list
+    in
+    compute_sets sys_installed ~sys_available
+  | Openbsd ->
+    let sys_installed =
+      run_query_command "pkg_info" ["-mqP"]
+      |> List.map OpamSysPkg.of_string
+      |> OpamSysPkg.Set.of_list
+    in
+    compute_sets sys_installed
+  | Suse ->
+    let lines =
+      (* get the second column of the table:
+         zypper --quiet se -i -t package|grep '^i '|awk -F'|' '{print $2}'|xargs echo*)
+      run_query_command "zypper" ["--quiet"; "se"; "-t"; "package"]
+    in
+    let sys_installed, sys_available =
+      List.fold_left (fun (inst,avail) l ->
+          match OpamStd.String.split l '|' with
+          | st::pkg::_ ->
+            let pkg = OpamStd.String.strip pkg in
+            if OpamStd.String.starts_with ~prefix:"i" st then
+              pkg +++ inst, avail
+            else
+              inst, pkg +++ avail
+          | _ -> inst, avail)
+        OpamSysPkg.Set.(empty, empty) lines
+    in
+    compute_sets sys_installed ~sys_available
 
 (* Install *)
 
-let install_packages_commands s_packages =
+let install_packages_commands sys_packages =
   let packages =
-    List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements s_packages)
+    List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements sys_packages)
   in
-  match spv OpamSysPoll.os_family with
-  | "homebrew" ->
-    ["brew"::"install"::packages]
-  | "macports" ->
-    ["port"::"install"::packages]
-  | "debian" ->
-    ["apt-get"::"install"::packages]
-  | "rhel" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol" ->
-    (* todo: check if they all declare "rhel" as primary family *)
+  match family () with
+  | Alpine -> ["apk", "add"::packages]
+  | Arch -> ["pacman", "-S"::"--noconfirm"::packages]
+  | Centos ->
+    (* TODO: check if they all declare "rhel" as primary family *)
     (* When opam-packages specify the epel-release package, usually it
        means that other dependencies require the EPEL repository to be
        already setup when yum-install is called. Cf. opam-depext/#70,#76. *)
     let epel_release = "epel-release" in
-    let install_epel =
+    let install_epel rest =
       if List.mem epel_release packages then
-        ["yum"::"install"::[epel_release]]
-      else []
+        ["yum", ["install"; epel_release]] @ rest
+      else rest
     in
-    install_epel @
-    ["yum"::"install"::
-     (OpamSysPkg.Set.remove (OpamSysPkg.of_string epel_release) s_packages
-      |> OpamSysPkg.Set.elements
-      |> List.map OpamSysPkg.to_string);
-     "rpm"::"-q"::"--whatprovides"::packages]
-  | "bsd" ->
-    if spv OpamSysPoll.os_distribution = "freebsd" then
-      ["pkg"::"install"::packages]
-    else
-      ["pkg_add"::packages]
-  | "archlinux" | "arch" ->
-    ["pacman"::"-S"::"--noconfirm"::packages]
-  | "gentoo" ->
-    ["emerge"::packages]
-  | "alpine" ->
-    ["apk"::"add"::packages]
-  | "suse" | "opensuse" ->
-    ["zypper"::("install"::packages)]
-  | _ -> []
+    install_epel
+      ["yum", "install"::
+              (OpamStd.String.Set.of_list packages
+               |> OpamStd.String.Set.remove epel_release
+               |> OpamStd.String.Set.elements);
+       "rpm", "-q"::"--whatprovides"::packages]
+  | Debian -> ["apt-get", "install"::packages]
+  | Freebsd -> ["pkg", "install"::packages]
+  | Gentoo -> ["emerge", packages]
+  | Homebrew -> ["brew", "install"::packages]
+  | Macports -> ["port", "install"::packages]
+  | Openbsd -> ["pkg_add", packages]
+  | Suse -> ["zypper", ("install"::packages)]
 
-let update_command () =
-  match spv OpamSysPoll.os_family with
-  | "debian" ->
-    Some ["apt-get";"update"]
-  | "homebrew" ->
-    Some ["brew"; "update"]
-  | "rhel" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol" ->
-    Some ["yum"; "makecache"]
-  | "archlinux" | "arch" ->
-    Some ["pacman"; "-Sy"]
-  | "gentoo" ->
-    Some ["emerge"; "--sync"]
-  | "alpine" ->
-    Some ["apk"; "update"]
-  | "suse" | "opensuse" ->
-    Some ["zypper"; "--non-interactive"; "update"]
-  | _ -> None
-
-let sudo_run_command cmd =
-  (* Allow it as option ? *)
-  let su = OpamSystem.resolve_command "sudo" = None in
-  let get_cmd = function
-    | c::a -> c, a
-    | _  -> invalid_arg "sudo_run_command"
-  in
+let sudo_run_command cmd args =
   let cmd, args =
-    match spv OpamSysPoll.os, spv OpamSysPoll.os_distribution with
-    | "openbsd", _ ->
-      if Unix.getuid () <> 0 then (
-        "doas", cmd
-      ) else get_cmd cmd
-    | ("linux" | "unix" | "freebsd" | "netbsd" | "dragonfly"), _
-    | "macos", "macports" ->
-      if Unix.getuid () <> 0 then (
-        if su then
-          "su", ["root"; "-c"; Printf.sprintf "%S" (String.concat " " cmd)]
-        else
-          "sudo", cmd
-      ) else get_cmd cmd
-    | _ -> get_cmd cmd
+    let not_root = Unix.getuid () <> 0  in
+    match OpamSysPoll.os (), OpamSysPoll.os_distribution () with
+    | Some "openbsd", _ when not_root ->
+      "doas", cmd::args
+    | Some ("linux" | "unix" | "freebsd" | "netbsd" | "dragonfly"), _
+    | Some "macos", Some "macports" when not_root ->
+      if OpamSystem.resolve_command "sudo" = None then
+        "su",
+        ["root"; "-c"; Printf.sprintf "%S" (String.concat " " (cmd::args))]
+      else
+        "sudo", cmd::args
+    | _ -> cmd, args
   in
   match run_command_exit_code ~allow_stdin:true ~verbose:true cmd args with
   | 0 -> ()
@@ -392,20 +411,35 @@ let sudo_run_command cmd =
       "failed with exit code %d at command:\n    %s"
       code (String.concat " " (cmd::args))
 
-let update () =
-  match update_command () with
-  | Some cmd ->
-    (try sudo_run_command cmd
-     with Failure msg -> failwith ("System package update " ^ msg))
-  | None ->
-    log "Unknown system %s, skipping system update"
-      (spv OpamSysPoll.os_family)
-
 let install packages =
-  if OpamSysPkg.Set.is_empty packages then ()
+  if OpamSysPkg.Set.is_empty packages then
+    log "nothing to install"
   else
     List.iter
-      (fun c ->
-         try sudo_run_command c
+      (fun (cmd, args) ->
+         try sudo_run_command cmd args
          with Failure msg -> failwith ("System package install " ^ msg))
       (install_packages_commands packages)
+
+let update () =
+  let cmd =
+    match family () with
+    | Alpine -> Some ("apk", ["update"])
+    | Arch -> Some ("pacman", ["-Sy"])
+    | Centos -> Some ("yum", ["makecache"])
+    | Debian -> Some ("apt-get", ["update"])
+    | Gentoo -> Some ("emerge", ["--sync"])
+    | Homebrew -> Some ("brew", ["update"])
+    | Macports -> Some ("port", ["sync"])
+    | Suse -> Some ("zypper", ["--non-interactive"; "update"])
+    | Freebsd | Openbsd ->
+      None
+  in
+  match cmd with
+  | None ->
+    OpamConsole.warning
+      "Unknown update command for %s, skipping system update"
+      OpamStd.Option.Op.(OpamSysPoll.os_family () +! "unknown")
+  | Some (cmd, args) ->
+    try sudo_run_command cmd args
+    with Failure msg -> failwith ("System package update " ^ msg)
