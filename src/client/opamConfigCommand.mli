@@ -53,7 +53,7 @@ val exec:
 (** Functions handling `opam var` and `opam option` command *)
 
 (** Given an `opam option` field or field-value argument, detect the scope,
-    switch, global or inexistent field
+    switch, global or nonexistent field
     (cf. [OpamCommands.Var_Option_Common.var_option]) *)
 val get_scope: string -> [> `Switch | `Global | `None of string ]
 
