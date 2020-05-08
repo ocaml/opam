@@ -36,7 +36,6 @@ Possibly scripts breaking changes are prefixed with ✘
   * Refactor package status [#4152 @rjbou]
   * Add Macport support [#4152 @rjbou]
 
-
 ## Remove
   * Fix autoremove env var handling [#4219 @rjbou - fix #4217]
 
@@ -52,3 +51,8 @@ Possibly scripts breaking changes are prefixed with ✘
 
 ## Doc
   * add doc/warning for  Filename.rmdir_cleanup [#4197 @rjbou]
+
+## Var
+  * Not found message show scope [#4192 @rjbou]
+  * No scope needed for variable display [#4192 @rjbou - fix #4183]
+  * Fix package variable resolution [#4192 @rjbou - fix #4182]
