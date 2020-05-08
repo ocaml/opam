@@ -333,7 +333,7 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
     let root = OpamPackage.Name.Set.mem nv.name root_installs in
     t_ref := OpamSwitchAction.add_to_installed !t_ref ~root nv;
     let missing_depexts =
-      (* Turns out these depexts wheren't needed after all. Remember that and
+      (* Turns out these depexts weren't needed after all. Remember that and
          make the bypass permanent. *)
       try
         (OpamPackage.Map.find nv (Lazy.force !t_ref.sys_packages)).s_available
@@ -359,7 +359,16 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
       else !invariant_ref
     in
     if bypass <> !bypass_ref || invariant <> !invariant_ref then
-      (bypass_ref := bypass;
+      (if bypass <> !bypass_ref then
+         (let spkgs = OpamSysPkg.Set.Op.(bypass -- !bypass_ref) in
+          OpamConsole.note
+            "The bypass of system package %s has been registered in this switch. You \
+             can use `opam option depext-bypass-=%s' to revert."
+            (if OpamSysPkg.Set.cardinal spkgs > 1 then "s" else "")
+            (OpamStd.Format.pretty_list
+               (List.map OpamSysPkg.to_string
+                  (OpamSysPkg.Set.elements spkgs))));
+       bypass_ref := bypass;
        invariant_ref := invariant;
        let switch_config =
          {!t_ref.switch_config with invariant; depext_bypass = bypass }
