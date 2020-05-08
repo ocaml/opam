@@ -945,6 +945,7 @@ let is_switch_defined_var switch_config v =
     (OpamVariable.of_string v) <> None
   || (try let _path = OpamTypesBase.std_path_of_string v in true
       with Failure _ -> false)
+  || OpamStd.String.contains_char v ':'
 
 let var_switch_raw ?(only_switch=true) gt v =
   match OpamStateConfig.get_switch_opt () with
@@ -971,10 +972,6 @@ let var_show_switch gt ?st v =
     let resolve_switch st =
       if is_switch_defined_var st.switch_config v then
         var_show (OpamPackageVar.resolve st) v
-      else
-        (* maybe package one *)
-      if OpamStd.String.contains_char v ':' then
-        var_show (OpamPackageVar.resolve_switch st) v
       else
         OpamConsole.error_and_exit `Not_found "Variable %s not found" v
     in
