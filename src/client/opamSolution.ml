@@ -1133,6 +1133,15 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false) ?force_remove
           action_graph
       in
       let success = match r with | OK _ -> true | _ -> false in
+      let t =
+        if success && (OpamClientConfig.(!r.assume_depexts) ||
+                       OpamStateConfig.(!r.no_depexts)) then
+          let depext_bypass =
+            OpamSysPkg.Set.Op.(t.switch_config.depext_bypass ++ sys_packages)
+          in
+          { t with switch_config = { t.switch_config with depext_bypass }}
+        else t
+      in
       let post_session =
         let open OpamPackage.Set.Op in
         let local = [
