@@ -933,7 +933,7 @@ let option_show_switch gt ?st field =
 let option_show_global gt field =
   option_show OpamFile.Config.to_list (confset_global gt) field
 
-let var_show resolve v =
+let var_show_t resolve v =
   match resolve (OpamVariable.Full.of_string v) with
   | Some c ->
     OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
@@ -971,7 +971,7 @@ let var_show_switch gt ?st v =
   if var_switch_raw gt v = None then
     let resolve_switch st =
       if is_switch_defined_var st.switch_config v then
-        var_show (OpamPackageVar.resolve st) v
+        var_show_t (OpamPackageVar.resolve st) v
       else
         OpamConsole.error_and_exit `Not_found "Variable %s not found" v
     in
@@ -979,13 +979,12 @@ let var_show_switch gt ?st v =
     | Some st -> resolve_switch st
     | None -> OpamSwitchState.with_ `Lock_none gt resolve_switch
 
-let var_show_global gt = var_show (OpamPackageVar.resolve_global gt)
+let var_show_global gt = var_show_t (OpamPackageVar.resolve_global gt)
 
-(* deprecated, kept for `opam config var` retro-compatibility *)
-let variable gt v =
+let var_show gt v =
   if var_switch_raw ~only_switch:false gt v = None then
     OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-    var_show (OpamPackageVar.resolve st) v
+    var_show_t (OpamPackageVar.resolve st) v
 
 (* detect scope *)
 let get_scope field =

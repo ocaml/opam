@@ -37,10 +37,6 @@ val print_eval_env: csh:bool -> sexp:bool -> fish:bool -> env -> unit
 (** Display the content of all available packages variables *)
 val list: 'a switch_state -> name list -> unit
 
-(** Display the content of a given variable. Load a switch state only if the
-    variable is not found on raw state. *)
-val variable: 'a global_state -> string -> unit
-
 (** Substitute files *)
 val subst: 'a global_state -> basename list -> unit
 
@@ -147,3 +143,4 @@ val option_show_switch:
 val var_show_global: 'a global_state -> string -> unit
 val var_show_switch:
   'a global_state -> ?st:'b switch_state -> string -> unit
+val var_show: 'a global_state -> string -> unit
