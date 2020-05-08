@@ -1139,6 +1139,11 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false) ?force_remove
           let depext_bypass =
             OpamSysPkg.Set.Op.(t.switch_config.depext_bypass ++ sys_packages)
           in
+          OpamConsole.note "Add system packages %s to switch 'depext-bypass' field"
+            (OpamStd.Format.pretty_list
+               (List.map (fun s ->
+                    OpamConsole.colorise `underline (OpamSysPkg.to_string s))
+                   (OpamSysPkg.Set.elements sys_packages)));
           { t with switch_config = { t.switch_config with depext_bypass }}
         else t
       in
