@@ -157,7 +157,7 @@ let depexts_raw ~env nv opams =
       (OpamFile.OPAM.depexts opam)
   with Not_found -> OpamSysPkg.Set.empty
 
-let get_sysdeps_map ~depexts global_config switch_config packages =
+let depexts_status_of_packages_raw ~depexts global_config switch_config packages =
   let open OpamSysPkg.Set.Op in
   let syspkg_set, syspkg_map =
     OpamPackage.Set.fold (fun nv (set, map) ->
@@ -445,7 +445,8 @@ let load lock_kind gt rt switch =
     || OpamStateConfig.(!r.no_depexts) then
       lazy OpamPackage.Map.empty
     else lazy (
-      get_sysdeps_map gt.config switch_config (Lazy.force available_packages)
+      depexts_status_of_packages_raw gt.config switch_config
+        (Lazy.force available_packages)
         ~depexts:(fun package ->
             let env =
               OpamPackageVar.resolve_switch_raw ~package gt switch switch_config
@@ -684,6 +685,10 @@ let source_dir st nv =
 let depexts st nv =
   let env v = OpamPackageVar.resolve_switch ~package:nv st v in
  depexts_raw ~env nv st.opams
+
+let depexts_status_of_packages st set =
+  depexts_status_of_packages_raw st.switch_global.config st.switch_config set
+    ~depexts:(depexts st)
 
 let depexts_unavailable st nv =
   depexts_unavailable_raw (Lazy.force st.sys_packages) nv
