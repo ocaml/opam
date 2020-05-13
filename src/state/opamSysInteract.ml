@@ -118,7 +118,13 @@ let packages_status packages =
          (Re.replace ~all:true need_escape ~f:(fun g -> "\\"^Re.Group.get g 1))
          str_pkgs)
   in
-  let with_regexp ~re_installed ~re_pkg =
+  let with_regexp_sgl re_pkg =
+    List.fold_left (fun pkgs l ->
+        try
+          Re.(Group.get (exec re_pkg l) 1) +++ pkgs
+        with Not_found -> pkgs) OpamSysPkg.Set.empty
+  in
+  let with_regexp_dbl ~re_installed ~re_pkg =
     List.fold_left (fun (inst,avail) l ->
         try
           let pkg = Re.(Group.get (exec re_pkg l) 1) in
@@ -131,9 +137,6 @@ let packages_status packages =
   in
   match family () with
   | Alpine ->
-    let lines =
-      run_query_command "apk" ["list";"--available"]
-    in
     let re_installed = Re.(compile (seq [str "[installed]"; eol])) in
     let re_pkg =
       (* packages form : libpeas-python3-1.22.0-r1 *)
@@ -145,17 +148,17 @@ let packages_status packages =
               rep any ])
     in
     let sys_installed, sys_available =
-      with_regexp ~re_installed ~re_pkg lines
+      run_query_command "apk" ["list";"--available"]
+      |> with_regexp_dbl ~re_installed ~re_pkg
     in
     compute_sets sys_installed ~sys_available
   | Arch ->
     (* output:
-       extra/cmake 3.17.1-1 [installed]
-           A cross-platform open-source make system
-       extra/cmark 0.29.0-1
-           CommonMark parsing and rendering library and program in C
+       >extra/cmake 3.17.1-1 [installed]
+       >    A cross-platform open-source make system
+       >extra/cmark 0.29.0-1
+       >    CommonMark parsing and rendering library and program in C
     *)
-    let lines = run_query_command "pacman" ["-Ss" ; names_re ()] in
     let re_installed = Re.(compile (seq [str "[installed]"; eol])) in
     let re_pkg =
       Re.(compile @@ seq
@@ -167,7 +170,8 @@ let packages_status packages =
             ])
     in
     let sys_installed, sys_available =
-      with_regexp ~re_installed ~re_pkg lines
+      run_query_command "pacman" ["-Ss" ; names_re ()]
+      |> with_regexp_dbl ~re_installed ~re_pkg
     in
     compute_sets sys_installed ~sys_available
   | Centos ->
@@ -175,10 +179,10 @@ let packages_status packages =
     let lines = run_query_command "yum" ["-q"; "-C"; "list"] in
     (* -C to retrieve from cache, no update but still quite long, 1,5 sec *)
     (* Return a list of installed packages then available ones:
-         Installed Packages
-         foo.arch    version   repo
-         Available Packages
-         bar.arch    version   repo
+       >Installed Packages
+       >foo.arch    version   repo
+       >Available Packages
+       >bar.arch    version   repo
     *)
     let sys_installed, sys_available, _ =
       List.fold_left (fun (inst,avail,part) -> function
@@ -200,26 +204,24 @@ let packages_status packages =
       OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) packages [])
     in
     (* First query regular package *)
-    let lines =
-      (* discard stderr as just nagging *)
-      let _, lines =
-        run_command ~discard_err:true "dpkg-query" ("-l" :: str_pkgs)
-      in
-      lines
-    in
     let sys_installed =
-      List.fold_left
-        (fun inst l ->
-           match OpamStd.String.split l ' ' with
-           | "ii"::pkg::_ ->
-             let pkg =
-               match OpamStd.String.cut_at pkg ':' with
-               | Some (pkg,_) -> pkg (* pkg:arch convention *)
-               | _ -> pkg
-             in
-             pkg +++ inst
-           | _ -> inst)
-        OpamSysPkg.Set.empty lines
+      (* ouput:
+         >ii  uim-gtk3                 1:1.8.8-6.1  amd64    Universal ...
+         >ii  uim-gtk3-immodule:amd64  1:1.8.8-6.1  amd64    Universal ...
+      *)
+      let re_pkg =
+        Re.(compile @@ seq
+              [ bol;
+                str "ii";
+                rep1 @@ space;
+                group @@ rep1 @@ diff (alt [alnum; punct]) (char ':');
+                (* pkg:arch convention *)
+              ])
+      in
+      (* discard stderr as just nagging *)
+      run_command ~discard_err:true "dpkg-query" ("-l" :: str_pkgs)
+      |> snd
+      |> with_regexp_sgl re_pkg
     in
     let sys_available =
       run_query_command "apt-cache"
@@ -317,33 +319,42 @@ let packages_status packages =
     compute_sets sys_installed
   | Macports ->
     let str_pkgs =
-      List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements packages)
+      OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) packages [])
     in
     let sys_installed =
+      (* output:
+         >zlib @1.2.11_0 (active)
+      *)
+      let re_pkg =
+        Re.(compile @@ seq
+              [ bol;
+                group @@ rep1 @@ alt [alnum; punct];
+                rep1 space;
+                rep any;
+                str "(active)";
+                eol
+              ])
+      in
       run_query_command "port" ("installed" :: str_pkgs)
       |> (function _::lines -> lines | _ -> [])
-      |> OpamStd.List.filter_map (fun l ->
-          match OpamStd.String.split l ' ' with
-          | pkg::_version::"(active)"::[] -> Some (OpamSysPkg.of_string pkg)
-          | _ -> None)
-      |> OpamSysPkg.Set.of_list
+      |> with_regexp_sgl re_pkg
     in
     let sys_available =
       (* example output
-          diffutils	3.7	sysutils textproc devel	GNU diff utilities
-          --
-          No match for gcc found
+         >diffutils  3.7  sysutils textproc devel  GNU diff utilities
+         >--
+         >No match for gcc found
       *)
+      let re_pkg =
+        Re.(compile @@ seq
+              [ bol;
+                group @@ rep1 @@ alt [alnum; punct];
+                rep1 space;
+                rep1 @@ alt [digit; punct];
+              ])
+      in
       run_query_command "port" (["search"; "--line"; "--exact" ] @ str_pkgs)
-      |> OpamStd.List.filter_map (fun l ->
-          if l = "--" then None else
-          match OpamStd.String.split l ' ' with
-          | "No"::"match"::_ | [] -> None
-          | pkg_info::_ ->
-            match OpamStd.String.split pkg_info '\t' with
-            | pkg::_ -> Some (OpamSysPkg.of_string pkg)
-            | _ -> None)
-      |> OpamSysPkg.Set.of_list
+      |> with_regexp_sgl re_pkg
     in
     compute_sets sys_installed ~sys_available
   | Openbsd ->
@@ -354,22 +365,29 @@ let packages_status packages =
     in
     compute_sets sys_installed
   | Suse ->
-    let lines =
-      (* get the second column of the table:
-         zypper --quiet se -i -t package|grep '^i '|awk -F'|' '{print $2}'|xargs echo*)
-      run_query_command "zypper" ["--quiet"; "se"; "-t"; "package"]
+    (* get the second column of the table:
+       zypper --quiet se -i -t package|grep '^i '|awk -F'|' '{print $2}'|xargs echo
+       output:
+       >S | Name                        | Summary
+       >--+-----------------------------+-------------
+       >  | go-gosqlite                 | Trivial SQLi
+       >i | libqt4-sql-sqlite-32bit     | Qt 4 sqlite
+    *)
+    let re_pkg =
+      Re.(compile @@ seq
+            [ bol;
+              rep1 any;
+              char '|';
+              rep1 space;
+              group @@ rep1 @@ alt [alnum; punct];
+              rep1 space;
+              char '|';
+            ])
     in
+    let re_installed = Re.(compile @@ seq [bol ; char 'i']) in
     let sys_installed, sys_available =
-      List.fold_left (fun (inst,avail) l ->
-          match OpamStd.String.split l '|' with
-          | st::pkg::_ ->
-            let pkg = OpamStd.String.strip pkg in
-            if OpamStd.String.starts_with ~prefix:"i" st then
-              pkg +++ inst, avail
-            else
-              inst, pkg +++ avail
-          | _ -> inst, avail)
-        OpamSysPkg.Set.(empty, empty) lines
+      run_query_command "zypper" ["--quiet"; "se"; "-t"; "package"]
+      |> with_regexp_dbl ~re_installed ~re_pkg
     in
     compute_sets sys_installed ~sys_available
 
