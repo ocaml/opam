@@ -106,6 +106,29 @@ let packages_status packages =
     in
     available, not_found
   in
+  let names_re ?str_pkgs () =
+    let str_pkgs =
+      OpamStd.Option.default
+        OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) packages [])
+        str_pkgs
+    in
+    let need_escape = Re.(compile (group (set "+."))) in
+    Printf.sprintf "^(%s)$"
+      (OpamStd.List.concat_map "|"
+         (Re.replace ~all:true need_escape ~f:(fun g -> "\\"^Re.Group.get g 1))
+         str_pkgs)
+  in
+  let with_regexp ~re_installed ~re_pkg =
+    List.fold_left (fun (inst,avail) l ->
+        try
+          let pkg = Re.(Group.get (exec re_pkg l) 1) in
+          if Re.execp re_installed l then
+            pkg +++ inst, avail
+          else
+            inst, pkg +++ avail
+        with Not_found -> inst, avail)
+      OpamSysPkg.Set.(empty, empty)
+  in
   match family () with
   | Alpine ->
     let lines =
@@ -122,29 +145,30 @@ let packages_status packages =
               rep any ])
     in
     let sys_installed, sys_available =
-      List.fold_left (fun (inst,avail) l ->
-          try
-            let pkg = Re.(Group.get (exec re_pkg l) 1) in
-            if Re.execp re_installed l then
-              pkg +++ inst, avail
-            else
-              inst, pkg +++ avail
-          with Not_found -> inst, avail)
-        OpamSysPkg.Set.(empty, empty) lines
+      with_regexp ~re_installed ~re_pkg lines
     in
     compute_sets sys_installed ~sys_available
   | Arch ->
-    let sys_query arg =
-      run_query_command "pacman" [arg]
-      |> OpamStd.List.filter_map (fun s ->
-          match OpamStd.String.split s ' ' with
-          | x::_::_ -> Some x
-          | _ -> None)
-      |> List.map OpamSysPkg.of_string
-      |> OpamSysPkg.Set.of_list
+    (* output:
+       extra/cmake 3.17.1-1 [installed]
+           A cross-platform open-source make system
+       extra/cmark 0.29.0-1
+           CommonMark parsing and rendering library and program in C
+    *)
+    let lines = run_query_command "pacman" ["-Ss" ; names_re ()] in
+    let re_installed = Re.(compile (seq [str "[installed]"; eol])) in
+    let re_pkg =
+      Re.(compile @@ seq
+            [ bol;
+              rep1 @@ alt [alnum; punct];
+              char '/';
+              group @@ rep1 @@ alt [alnum; punct];
+              space;
+            ])
     in
-    let sys_installed = sys_query "-Qe" in
-    let sys_available = sys_query "-Q" in
+    let sys_installed, sys_available =
+      with_regexp ~re_installed ~re_pkg lines
+    in
     compute_sets sys_installed ~sys_available
   | Centos ->
     (* XXX /!\ only checked on centos XXX *)
@@ -193,22 +217,16 @@ let packages_status packages =
                | Some (pkg,_) -> pkg (* pkg:arch convention *)
                | _ -> pkg
              in
-             OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) inst
+             pkg +++ inst
            | _ -> inst)
         OpamSysPkg.Set.empty lines
     in
     let sys_available =
-      let names_re =
-        let need_escape = Re.(compile (group (set "+."))) in
-        Printf.sprintf "^(%s)$"
-          (OpamStd.List.concat_map "|"
-             (Re.replace ~all:true need_escape ~f:(fun g -> "\\"^Re.Group.get g 1))
-             str_pkgs)
-      in
-      run_query_command "apt-cache" ["search"; names_re; "--names-only"] |>
-      List.fold_left (fun avail l ->
+      run_query_command "apt-cache"
+        ["search"; names_re ~str_pkgs (); "--names-only"]
+      |> List.fold_left (fun avail l ->
           match OpamStd.String.cut_at l ' ' with
-          | Some (pkg, _) -> OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) avail
+          | Some (pkg, _) -> pkg +++ avail
           | None ->  avail)
         OpamSysPkg.Set.empty
     in
