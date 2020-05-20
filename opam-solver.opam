@@ -21,7 +21,7 @@ build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "opam-format" {= "2.1.0~alpha"}
+  "opam-format" {= version}
   "mccs" {>= "1.1+9"}
   "dose3" {>= "5"}
   "cudf" {>= "0.7"}

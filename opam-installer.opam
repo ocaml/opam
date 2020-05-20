@@ -21,7 +21,7 @@ build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "opam-format" {= "2.1.0~alpha"}
+  "opam-format" {= version}
   "cmdliner" {>= "0.9.8"}
   "dune" {build & >= "1.2.1"}
 ]

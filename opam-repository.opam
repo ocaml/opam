@@ -21,7 +21,7 @@ build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "opam-format" {= "2.1.0~alpha"}
+  "opam-format" {= version}
   "dune" {build & >= "1.2.1"}
 ]
 available: ocaml-version >= "4.02.3"

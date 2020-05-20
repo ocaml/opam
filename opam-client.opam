@@ -21,10 +21,10 @@ build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "opam-state" {= "2.1.0~alpha"}
-  "opam-solver" {= "2.1.0~alpha"}
+  "opam-state" {= version}
+  "opam-solver" {= version}
   "extlib"
-  "opam-repository" {= "2.1.0~alpha"}
+  "opam-repository" {= version}
   "re" {>= "1.9.0"}
   "cmdliner" {>= "0.9.8"}
   "dune" {build & >= "1.2.1"}
