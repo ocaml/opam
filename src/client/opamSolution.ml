@@ -980,7 +980,7 @@ let install_depexts t packages sys_packages =
     let give_up () =
       OpamConsole.formatted_msg
         "You can retry with '--assume-depexts' to skip this check, or run \
-         'opam config option global depext=false' to permanently disable handling of \
+         'opam option depext=false' to permanently disable handling of \
          system packages altogether.\n";
       OpamStd.Sys.exit_because `Aborted
     in
@@ -1023,9 +1023,8 @@ let install_depexts t packages sys_packages =
       wait "You can now try to get them installed manually."
         sys_packages
   else
-    (OpamConsole.note "Use 'opam config option global \
-                       depext-run-installs=false' if you don't want to be \
-                       prompted again.";
+    (OpamConsole.note "Use 'opam option depext-run-installs=false' \
+                       if you don't want to be prompted again.";
      print ();
      wait
        "You may now install the packages manually on your system."

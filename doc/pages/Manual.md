@@ -1265,8 +1265,8 @@ shouldn't be edited except by <span class="opam">opam</span>.
 #### config
 
 This file is stored as `~/.opam/config` and defines global configuration options
-for <span class="opam">opam</span>. Fields value can be displayed and some of
-them modified with [`opam config option --global`](man/opam-config.html).
+for <span class="opam">opam</span>. Field values can be displayed and some of
+them modified with [`opam option --global`](man/opam-option.html).
 
 - <a id="configfield-opam-version">`opam-version: <string>`</a>:
   the version of the format of this opam root, used in particular to trigger
@@ -1501,8 +1501,8 @@ contains configuration options specific to that switch:
 - <a id="switchconfigsection-variables">`variables "{" { <ident>: ( <string> | [ <string> ... ] | <bool> ) ... } "}"`</a>:
   allows the definition of variables local to the switch.
 
-As [config](#config), fields value can be displayed and some of them modified
-with [`opam config option`](man/opam-config.html).
+As [config](#config), field values can be displayed and some of them modified
+with [`opam option`](man/opam-option.html).
 
 #### switch-state
 
