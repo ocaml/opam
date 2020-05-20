@@ -22,7 +22,7 @@ build: [
 ]
 build-test: [make "tests"]
 depends: [
-  "opam-client" {= "2.0.7"}
+  "opam-client" {= version}
   "cmdliner" {>= "0.9.8"}
   "dune" {build & >= "1.2.1"}
 ]
