@@ -55,6 +55,8 @@ let rem_prefix pfx s =
    contents...
    ### opam command
    output...
+   ### ENV_VAR=x opam command
+   output...
 v}*)
 
 let load_test f =
@@ -124,15 +126,29 @@ let opam_cmd =
   testdir / ".." / ".." / "opam"
 
 let run_cmd ?(verbose=true) opamroot logfile fmt =
+  let complete_opam_cmd cmd args =
+    Printf.sprintf  "%s %s --root=%s %s >>%s 2>&1"
+      opam_cmd cmd opamroot (String.concat " " args)
+      logfile
+  in
   Printf.ksprintf (fun cmd ->
       try
         match String.split_on_char ' ' cmd with
         | "opam" :: cmd :: args ->
-          command ~verbose "%s %s --root=%s %s >>%s 2>&1"
-            opam_cmd cmd opamroot (String.concat " " args)
-            logfile
-        | _ ->
-          command ~verbose "%s >>%s 2>&1" cmd logfile
+          command ~verbose "%s" (complete_opam_cmd cmd args)
+        | lst ->
+          let rec split var = function
+            | v::r when Char.uppercase_ascii v.[0] = v.[0] ->
+              split (v::var) r
+            | "opam" :: cmd :: args ->
+              Some (List.rev var, cmd, args)
+            | _ -> None
+          in
+          match split [] lst with
+          | Some (vars, cmd, args) ->
+            command ~verbose "%s %s" (String.concat " " vars) (complete_opam_cmd cmd args)
+          | None ->
+            command ~verbose "%s >>%s 2>&1" cmd logfile
       with Failure _ -> ())
     fmt
 
