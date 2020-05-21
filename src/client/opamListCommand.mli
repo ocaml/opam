@@ -141,7 +141,7 @@ val display: 'a switch_state -> package_listing_format -> package_set -> unit
 val info:
   'a switch_state ->
   fields:string list -> raw:bool -> where:bool ->
-  ?normalise:bool -> ?show_empty:bool -> ?all_versions:bool ->
+  ?normalise:bool -> ?show_empty:bool -> ?all_versions:bool -> ?sort:bool ->
   atom list -> unit
 
 (** Prints the value of an opam field in a shortened way (with [prettify] -- the

@@ -490,12 +490,17 @@ let mini_field_printer ?(prettify=false) ?(normalise=false) =
   | List (_, l) -> OpamPrinter.value_list l
   | f -> OpamPrinter.Normalise.value f
 
-let detail_printer ?prettify ?normalise st nv =
+let detail_printer ?prettify ?normalise ?(sort=false) st nv =
   let open OpamStd.Option.Op in
   let (%) s cols = OpamConsole.colorise' cols s in
   let root_sty =
     if OpamPackage.Set.mem nv st.installed_roots then [`underline]
     else []
+  in
+  let get_opam =
+    if not sort then get_opam else
+    fun st nv ->
+      OpamFileTools.sort_opam (get_opam st nv)
   in
   function
   | Name -> OpamPackage.Name.to_string nv.name % (`bold :: root_sty)
@@ -711,7 +716,7 @@ let print_depexts =
   OpamSysPkg.Set.iter (fun d -> OpamConsole.msg "%s\n" (OpamSysPkg.to_string d))
 
 let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
-    ?(all_versions=false) atoms =
+    ?(all_versions=false) ?(sort=false) atoms =
   let packages =
     OpamFormula.packages_of_atoms ~disj:all_versions
       (st.packages ++ st.installed) atoms
@@ -756,7 +761,7 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
   let output_table fields nv =
     let tbl =
       List.fold_left (fun acc item ->
-          let contents = detail_printer ?normalise st nv item in
+          let contents = detail_printer ?normalise ~sort st nv item in
           if show_empty || contents <> "" then
             [ OpamConsole.colorise `blue (string_of_field ~raw item); contents ]
             :: acc
@@ -779,6 +784,10 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
   in
   let output_package pkg =
     let opam = get_opam st pkg in
+    let opam =
+      if not sort then opam else
+        OpamFileTools.sort_opam opam
+    in
     OpamFile.OPAM.print_errors opam;
     if where then
       OpamConsole.msg "%s\n"
@@ -803,7 +812,7 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
     | [] ->
       OpamConsole.header_msg "Version-specific details";
       output_table one_version_fields pkg
-    | [f] -> OpamConsole.msg "%s\n" (detail_printer ?normalise st pkg f)
+    | [f] -> OpamConsole.msg "%s\n" (detail_printer ?normalise ~sort st pkg f)
     | fields -> output_table fields pkg
   in
   List.iter (fun (name,_) ->
