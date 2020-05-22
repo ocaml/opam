@@ -160,7 +160,7 @@ let run_test t =
            --no-setup --bypass-checks --no-opamrc --bare \
            file://%s >/dev/null 2>&1"
     opamroot;
-  command "opam config set-global --root=%s sys-ocaml-version 4.08.0"
+  command "opam var --global --root=%s sys-ocaml-version=4.08.0"
     opamroot;
   let out_dir = testdir ^ ".out" in
   command "mkdir -p %s" (Filename.quote out_dir);
