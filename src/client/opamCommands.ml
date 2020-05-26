@@ -619,6 +619,39 @@ let list ?(force_search=false) () =
     let results =
       OpamListCommand.filter ~base:all st filter
     in
+    if not no_depexts && not silent then
+      (let drop_by_depexts =
+         List.fold_left (fun missing str ->
+             let is_missing pkgs =
+                 if OpamStd.String.contains_char str '.' then
+                   let nv = OpamPackage.of_string str in
+                   if OpamPackage.Set.mem nv results then None else
+                     OpamPackage.Set.find_opt (OpamPackage.equal nv) pkgs
+                 else
+                 let n = OpamPackage.Name.of_string str in
+                 if OpamPackage.has_name results n then None else
+                 let exist = OpamPackage.packages_of_name pkgs n in
+                 if OpamPackage.Set.is_empty exist then None else
+                   Some (OpamPackage.Set.max_elt exist)
+             in
+             match OpamStd.Option.Op.(
+                 is_missing OpamPackage.Set.Op.(st.packages ++ st.pinned)
+                 >>= OpamSwitchState.depexts_unavailable st) with
+             | Some nf ->  OpamStd.String.Map.add str nf missing
+             | None -> missing
+             | exception Failure _ -> missing (* invalid package *)
+           ) OpamStd.String.Map.empty packages
+       in
+       if not (OpamStd.String.Map.is_empty drop_by_depexts) then
+         OpamConsole.note
+           "Some packages are unavailable because of their external dependencies. \
+            Use `--no-depexts' to show them anyway.\n%s"
+           (OpamStd.Format.itemize (fun (n, spkgs) ->
+                Printf.sprintf "%s: %s" n
+                  (OpamStd.Format.pretty_list
+                     (List.map OpamSysPkg.to_string
+                        (OpamSysPkg.Set.elements spkgs))))
+               (OpamStd.String.Map.bindings drop_by_depexts)));
     if not depexts then
       (if not silent then
          OpamListCommand.display st format results
