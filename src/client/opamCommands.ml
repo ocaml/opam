@@ -532,9 +532,15 @@ let list ?(force_search=false) () =
       "Don't write anything in the output, exit with return code 0 if the list \
        is not empty, 1 otherwise."
   in
+  let no_depexts =
+    mk_flag ["no-depexts"]
+      "Disable external dependencies handling for the query. This can be used \
+       to include packages that are marked as unavailable because of an unavailable \
+       system dependency."
+  in
   let list
       global_options selection state_selector no_switch depexts vars repos
-      owns_file disjunction search silent format packages =
+      owns_file disjunction search silent no_depexts format packages =
     apply_global_options global_options;
     let no_switch =
       no_switch || OpamStateConfig.get_switch_opt () = None
@@ -590,6 +596,7 @@ let list ?(force_search=false) () =
     in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+    if no_depexts then OpamStateConfig.update ~no_depexts:true ();
     let st =
       if no_switch then OpamSwitchState.load_virtual ?repos_list:repos gt rt
       else OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ())
@@ -626,7 +633,7 @@ let list ?(force_search=false) () =
   in
   Term.(const list $global_options $package_selection $state_selector
         $no_switch $depexts $vars $repos $owns_file $disjunction $search
-        $silent $package_listing $pattern_list),
+        $silent $no_depexts $package_listing $pattern_list),
   term_info "list" ~doc ~man
 
 
