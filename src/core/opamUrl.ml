@@ -117,7 +117,7 @@ let looks_like_ssh_path =
             try "/" ^ Re.Group.get sub 2 with Not_found -> "")
     with Not_found -> None
 
-let parse ?backend ?(handle_suffix=true) s =
+let parse ?backend ?(handle_suffix=true) ?(from_file=true) s =
   let vc, transport, path, suffix, hash = split_url s in
   let backend =
     match backend with
@@ -150,6 +150,8 @@ let parse ?backend ?(handle_suffix=true) s =
       "ssh", path
     | _, (None | Some ("hg"|"darcs")), None ->
       "file", OpamSystem.real_path path |> OpamSystem.back_to_forward
+    | `rsync, Some "file", _ when not from_file ->
+      "file", OpamSystem.real_path path |> OpamSystem.back_to_forward
     | _, Some tr, _ ->
       tr, path
   in
@@ -160,9 +162,9 @@ let parse ?backend ?(handle_suffix=true) s =
     backend;
   }
 
-let parse_opt ?(quiet=false)?backend ?handle_suffix s =
+let parse_opt ?(quiet=false) ?backend ?handle_suffix ?from_file s =
   try
-    Some (parse ?backend ?handle_suffix s)
+    Some (parse ?backend ?handle_suffix ?from_file s)
   with Parse_error pe ->
     if not quiet then
       OpamConsole.warning "URL parsing error on %s: %s"

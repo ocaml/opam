@@ -36,14 +36,17 @@ type t = {
     otherwise guess version control from the suffix by default (for e.g.
     https://foo/bar.git). (this should be disabled when parsing from files).
     Note that [handle_suffix] also handles user-name in ssh addresses (e.g.
-    "ssh://git@github.com/...").
+    "ssh://git@github.com/..."). If [from_file] is set to false, it resolves
+    rsync/file relative path.
     @raise Parse_error *)
-val parse: ?backend:backend -> ?handle_suffix:bool -> string -> t
+val parse:
+  ?backend:backend -> ?handle_suffix:bool -> ?from_file:bool -> string -> t
 
 (** Same as [parse], but catch [Parse_error]. In this case, display a warning
     if [quiet] is not set to true. *)
 val parse_opt:
-  ?quiet:bool -> ?backend:backend -> ?handle_suffix:bool -> string -> t option
+  ?quiet:bool -> ?backend:backend -> ?handle_suffix:bool -> ?from_file:bool
+  -> string -> t option
 
 include OpamStd.ABSTRACT with type t := t
 

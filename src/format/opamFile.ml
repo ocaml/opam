@@ -2664,7 +2664,8 @@ module OPAMSyntax = struct
       "dev-repo", with_cleanup cleanup_dev_repo Pp.ppacc_opt with_dev_repo dev_repo
         (Pp.V.string -|
          Pp.of_pair "vc-url"
-           OpamUrl.(parse ?backend:None ~handle_suffix:false, to_string));
+           OpamUrl.(parse ?backend:None ~handle_suffix:false ~from_file:true,
+                    to_string));
       "pin-depends", no_cleanup Pp.ppacc with_pin_depends pin_depends
         (OpamFormat.V.map_list ~depth:2
            (OpamFormat.V.map_pair

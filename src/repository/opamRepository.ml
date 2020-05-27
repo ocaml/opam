@@ -175,7 +175,7 @@ let pull_from_upstream
        (log "Pin cache existing for %s : %s\n"
           (OpamUrl.to_string url) @@ OpamFilename.Dir.to_string pin_cache_dir;
         let rsync =
-          OpamUrl.parse ~backend:`rsync
+          OpamUrl.parse ~backend:`rsync ~from_file:false
           @@ OpamFilename.Dir.to_string pin_cache_dir
         in
         let pull =

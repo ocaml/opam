@@ -205,7 +205,7 @@ let resolve_locals ?(quiet=false) ?recurse ?subpath atom_or_local_list =
   let target_dir dir =
     let d = OpamFilename.Dir.to_string dir in
     let backend = OpamUrl.guess_version_control d in
-    OpamUrl.parse ?backend d |>
+    OpamUrl.parse ?backend ~from_file:false d |>
     url_with_local_branch
   in
   let to_pin, atoms =

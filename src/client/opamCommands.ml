@@ -377,7 +377,7 @@ let init =
     in
     let repo =
       OpamStd.Option.map (fun url ->
-          let repo_url = OpamUrl.parse ?backend:repo_kind url in
+          let repo_url = OpamUrl.parse ?backend:repo_kind ~from_file:false url in
           { repo_name; repo_url; repo_trust = None })
         repo_url
     in
@@ -2077,7 +2077,7 @@ let repository =
         | Some _ -> kind
         | None -> OpamUrl.guess_version_control url
       in
-      let url = OpamUrl.parse ?backend url in
+      let url = OpamUrl.parse ?backend ~from_file:false url in
       let trust_anchors = match security with
         | [] -> None
         | quorum::fingerprints ->
@@ -2147,7 +2147,7 @@ let repository =
         | Some _ -> kind
         | None -> OpamUrl.guess_version_control url
       in
-      let url = OpamUrl.parse ?backend url in
+      let url = OpamUrl.parse ?backend ~from_file:false url in
       let trust_anchors = match security with
         | [] -> None
         | quorum::fingerprints ->
@@ -2232,7 +2232,8 @@ let with_repos_rt gt repos f =
           | (n, Some url) ->
             let repo =
               OpamStd.Option.Op.(
-                OpamUrl.parse_opt ~handle_suffix:false url >>| fun u -> n, u)
+                OpamUrl.parse_opt ~handle_suffix:false ~from_file:false url
+                >>| fun u -> n, u)
             in
             if repo = None then
               OpamConsole.warning "Skipping %s, malformed url" url;
@@ -2923,7 +2924,8 @@ let pin ?(unpin_only=false) () =
             eos])
     in
     let parse ?backend ?handle_suffix target =
-      match OpamUrl.parse_opt ?backend ?handle_suffix target with
+      match OpamUrl.parse_opt ?backend ?handle_suffix ~from_file:false
+              target with
       | Some url -> `Source url
       | None ->
         OpamConsole.error_and_exit `Bad_arguments
@@ -2970,7 +2972,7 @@ let pin ?(unpin_only=false) () =
         let open OpamStd.Option.Op in
         List.fold_left (fun (err, acc) arg ->
             let as_url =
-              OpamUrl.parse_opt ~handle_suffix:false arg
+              OpamUrl.parse_opt ~handle_suffix:false ~from_file:false arg
               >>| fun url ->
               OpamPackage.Set.filter
                 (fun nv ->
@@ -3220,7 +3222,7 @@ let source =
         else `rsync
       in
       let target =
-        `Source (OpamUrl.parse ~backend
+        `Source (OpamUrl.parse ~backend ~from_file:false
                    ("file://"^OpamFilename.Dir.to_string dir))
       in
       OpamSwitchState.drop
