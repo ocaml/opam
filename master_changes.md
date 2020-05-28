@@ -22,6 +22,7 @@ New option are prefixed with ◈
 ## Install
   * Add `_build` to rsync exclusion list [#4230 @rjbou - fix #4195]
   * Recursive opam file lookup: ignore `_build` [#4230 @rjbou]
+  * Assume-built fix & rewriting [#4211 @rjbou]
 
 ## Archives fetch
   * Copy instead of calling rsync when archives are in a local cache [#4270 @kit-ty-kate]
