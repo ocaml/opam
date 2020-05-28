@@ -1003,45 +1003,60 @@ let check_installed ~build ~post t atoms =
           map
     ) pkgs OpamPackage.Map.empty
 
-let assume_built_restrictions t atoms =
-  let installed_fixed, not_installed_fixed =
-    let rec all_deps set pkgs =
-      let universe =
-        OpamSwitchState.universe t
-          ~requested:(OpamPackage.names_of_packages pkgs)
-          Install
-      in
-      let deps =
-        OpamPackage.Set.of_list
-          (OpamSolver.dependencies ~build:false ~post:true
-             ~depopts:false ~installed:false ~unavailable:true universe pkgs)
-      in
-      let deps = deps -- pkgs in
-      if OpamPackage.Set.is_empty deps then set
-      else all_deps (set ++ deps) deps
-    in
-    let pkg_of_atoms =
-      OpamPackage.Set.filter
-        (fun p -> List.exists (fun a -> OpamFormula.check a p) atoms)
-        t.packages
-    in
-    let all_fixed = all_deps OpamPackage.Set.empty pkg_of_atoms in
-    OpamSolution.eq_atoms_of_packages all_fixed |> get_installed_atoms t
-  in
+let assume_built_restrictions ?available_packages t atoms =
+  let missing = check_installed ~build:false ~post:false t atoms in
   let atoms =
-      atoms @ OpamSolution.eq_atoms_of_packages
-        (OpamPackage.Set.of_list installed_fixed)
+    if OpamPackage.Map.is_empty missing then atoms else
+      (OpamConsole.warning
+         "You specified '--assume-built' but the following dependencies \
+          aren't installed, skipping\n%s\
+          Launch 'opam install %s --deps-only' (and recompile) to \
+          install them.\n"
+         (OpamStd.Format.itemize (fun (nv, names) ->
+              Printf.sprintf "%s: %s" (OpamPackage.name_to_string nv)
+                (OpamStd.List.concat_map " " OpamPackage.Name.to_string
+                   (OpamPackage.Name.Set.elements names)))
+             (OpamPackage.Map.bindings missing))
+         (OpamStd.List.concat_map " " OpamPackage.name_to_string
+            (OpamPackage.Map.keys missing));
+       List.filter (fun (n,_) ->
+           not (OpamPackage.Map.exists (fun nv _ ->
+               OpamPackage.name nv = n) missing))
+         atoms)
   in
-  let t =
-      let avp =
-        OpamPackage.Set.filter
-          (fun p -> not (List.exists (fun a -> OpamFormula.check a p)
-                           not_installed_fixed))
-          (Lazy.force t.available_packages)
-      in
-      { t with available_packages = lazy avp}
+  let pinned =
+    (* Not pinned atoms already removed. *)
+    OpamPackage.Set.filter
+      (fun p -> List.exists (fun a -> OpamFormula.check a p) atoms)
+      t.pinned
   in
-  t, atoms
+  let installed_dependencies =
+    OpamSolver.dependencies ~build:false ~post:false
+      ~depopts:false ~installed:true ~unavailable:false
+      (OpamSwitchState.universe t
+         ~requested:(OpamPackage.names_of_packages pinned) Query)
+      pinned
+  in
+  let available_packages =
+    match available_packages with
+    | Some a -> a
+    | None -> Lazy.force t.available_packages
+  in
+  let uninstalled_dependencies =
+    (OpamPackage.Map.values missing
+     |> List.fold_left OpamPackage.Name.Set.union OpamPackage.Name.Set.empty
+     |> OpamPackage.packages_of_names available_packages)
+    -- OpamPackage.Set.of_list installed_dependencies
+  in
+  let available_packages = lazy (
+    (available_packages -- uninstalled_dependencies) ++ t.installed ++ pinned
+  ) in
+  let fixed_atoms =
+    List.map (fun nv ->
+        (OpamPackage.name nv , Some (`Eq, OpamPackage.version nv)))
+      ((OpamPackage.Set.elements pinned) @ installed_dependencies)
+  in
+  { t with available_packages }, fixed_atoms
 
 let filter_unpinned_locally t atoms f =
   OpamStd.List.filter_map (fun at ->
@@ -1175,7 +1190,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
   if pkg_new = [] && OpamPackage.Set.is_empty pkg_reinstall then t else
   let t, atoms =
     if assume_built then
-      assume_built_restrictions t atoms
+      assume_built_restrictions ~available_packages t atoms
     else t, atoms
   in
   let request = OpamSolver.request ~install:atoms () in
