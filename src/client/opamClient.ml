@@ -953,6 +953,56 @@ let check_conflicts t atoms =
     full_orphans,
     orphan_versions
 
+let check_installed ~build ~post t atoms =
+  let available = (Lazy.force t.available_packages) in
+  let uninstalled = OpamPackage.Set.Op.(available -- t.installed) in
+  let pkgs =
+    OpamPackage.to_map
+      (OpamFormula.packages_of_atoms available atoms)
+  in
+  let test = OpamStateConfig.(!r.build_test) in
+  let doc = OpamStateConfig.(!r.build_doc) in
+  let env p =
+    OpamFilter.deps_var_env ~build ~post ~test ~doc
+      ~dev:(OpamSwitchState.is_dev_package t p)
+  in
+  OpamPackage.Name.Map.fold (fun name versions map ->
+      let compliant, missing_opt =
+        OpamPackage.Version.Set.fold (fun version (found, missing) ->
+            if found then (found, missing)
+            else
+            let pkg = OpamPackage.create name version in
+            let cnf_formula =
+              OpamSwitchState.opam t pkg
+              |> OpamFile.OPAM.depends
+              |> OpamFilter.filter_formula (env pkg)
+              |> OpamFormula.to_cnf
+            in
+            let missing_conj =
+              List.filter
+                (List.for_all (fun ((n,_vc) as atom) ->
+                     OpamPackage.Set.for_all
+                       (fun p -> not (OpamFormula.check atom p))
+                       (OpamPackage.packages_of_name t.installed n)))
+                cnf_formula
+            in
+            if missing_conj = [] then true, None
+            else false, Some (pkg,missing_conj))
+          versions (false,None)
+      in
+      if compliant then map else
+      match missing_opt with
+      | None -> assert false (* version set can't be empty *)
+      | Some (pkg, missing_conj) ->
+        OpamPackage.Map.add pkg
+          (OpamPackage.names_of_packages
+             (List.fold_left (fun names disj ->
+                  OpamPackage.Set.union names
+                    (OpamFormula.packages_of_atoms uninstalled disj))
+                 OpamPackage.Set.empty missing_conj))
+          map
+    ) pkgs OpamPackage.Map.empty
+
 let assume_built_restrictions t atoms =
   let installed_fixed, not_installed_fixed =
     let rec all_deps set pkgs =
@@ -1178,57 +1228,6 @@ let install t ?autoupdate ?add_to_roots
   in
   let t = update_dev_packages_t autoupdate_atoms t in
   install_t t ~ignore_conflicts ~depext_only atoms add_to_roots ~deps_only ~assume_built
-
-let check_installed t atoms =
-  let available = (Lazy.force t.available_packages) in
-  let uninstalled = OpamPackage.Set.Op.(available -- t.installed) in
-  let pkgs =
-    OpamPackage.to_map
-      (OpamFormula.packages_of_atoms available atoms)
-  in
-  let test = OpamStateConfig.(!r.build_test) in
-  let doc = OpamStateConfig.(!r.build_doc) in
-  let env p =
-    OpamFilter.deps_var_env ~build:true ~post:true ~test ~doc
-      ~dev:(OpamSwitchState.is_dev_package t p)
-  in
-  OpamPackage.Name.Map.fold (fun name versions map ->
-      let compliant, missing_opt =
-        OpamPackage.Version.Set.fold (fun version (found, missing) ->
-            if found then (found, missing)
-            else
-            let pkg = OpamPackage.create name version in
-            let cnf_formula =
-              OpamSwitchState.opam t pkg
-              |> OpamFile.OPAM.depends
-              |> OpamFilter.filter_formula (env pkg)
-              |> OpamFormula.to_cnf
-            in
-            let missing_conj =
-              List.filter
-                (List.for_all (fun ((n,_vc) as atom) ->
-                     OpamPackage.Set.for_all
-                       (fun p -> not (OpamFormula.check atom p))
-                       (OpamPackage.packages_of_name t.installed n)))
-                cnf_formula
-            in
-            if missing_conj = [] then true, None
-            else false, Some (pkg,missing_conj))
-          versions (false,None)
-      in
-      if compliant then map
-      else
-      match missing_opt with
-      | None -> assert false (* version set can't be empty *)
-      | Some (pkg, missing_conj) ->
-        OpamPackage.Map.add pkg
-          (OpamPackage.names_of_packages
-             (List.fold_left (fun names disj ->
-                  OpamPackage.Set.union names
-                    (OpamFormula.packages_of_atoms uninstalled disj))
-                 OpamPackage.Set.empty missing_conj))
-          map
-    ) pkgs OpamPackage.Map.empty
 
 let remove_t ?ask ~autoremove ~force atoms t =
   log "REMOVE autoremove:%b %a" autoremove
