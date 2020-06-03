@@ -8,12 +8,12 @@
 (*                                                                        *)
 (**************************************************************************)
 
-let log = OpamConsole.log "XSYS"
+let log fmt = OpamConsole.log "XSYS" fmt
 
 (* Run commands *)
 (* Always call this function to run a command, as it handles `dryrun` option *)
 let run_command
-    ?(discard_err=false) ?allow_stdin ?verbose cmd args =
+    ?vars ?(discard_err=false) ?allow_stdin ?verbose cmd args =
   let clean_output =
     if not discard_err then
       fun k -> k None
@@ -26,23 +26,49 @@ let run_command
   let verbose =
     OpamStd.Option.default OpamCoreConfig.(!r.verbose_level >= 3) verbose
   in
+  let env =
+    match vars with
+    | None -> None
+    | Some vars ->
+      let env = OpamStd.Env.list () in
+      let new_vars, existing_vars =
+        List.fold_left (fun (n,p) (name,content as var) ->
+            match  OpamStd.List.assoc_opt name env with
+            | Some c when c = content -> n, p
+            | Some _ -> n, var::p
+            | None -> var::n, p)
+          ([],[]) vars
+      in
+      let str_var (v,c) = Printf.sprintf "%s=%s" v c in
+      if new_vars = [] then
+        ((if existing_vars <> [] then
+            log "Won't override %s"
+              (OpamStd.List.to_string str_var existing_vars));
+         None)
+      else
+        (log "Adding to env %s"
+           (OpamStd.List.to_string str_var new_vars);
+         Some (new_vars @ env
+               |> List.rev_map str_var
+               |> Array.of_list))
+  in
   let open OpamProcess.Job.Op in
   OpamProcess.Job.run @@ clean_output @@ fun stdout ->
   OpamSystem.make_command
-    ?stdout ?allow_stdin ~verbose cmd args
+    ?env ?stdout ?allow_stdin ~verbose cmd args
   @@> fun r ->
   let code = r.r_code in
   let out = r.r_stdout in
   OpamProcess.cleanup r;
   Done (code, out)
 
-let run_query_command cmd args =
-  let code,out = run_command cmd args in
+let run_query_command ?vars cmd args =
+  let code,out = run_command ?vars cmd args in
   if code = 0 then out
   else []
 
-let run_command_exit_code ?allow_stdin ?verbose cmd args =
-  let code,_ = run_command ?allow_stdin ?verbose cmd args in
+let run_command_exit_code ?vars ?allow_stdin ?verbose cmd args =
+  let code,_ = run_command ?vars ?allow_stdin ?verbose cmd args in
   code
 
 type families =
@@ -402,13 +428,13 @@ let packages_status packages =
 
 (* Install *)
 
-let install_packages_commands sys_packages =
+let install_packages_commands_t sys_packages =
   let packages =
     List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements sys_packages)
   in
   match family () with
-  | Alpine -> ["apk", "add"::packages]
-  | Arch -> ["pacman", "-S"::"--noconfirm"::packages]
+  | Alpine -> ["apk", "add"::packages], None
+  | Arch -> ["pacman", "-S"::"--noconfirm"::packages], None
   | Centos ->
     (* TODO: check if they all declare "rhel" as primary family *)
     (* When opam-packages specify the epel-release package, usually it
@@ -425,16 +451,19 @@ let install_packages_commands sys_packages =
               (OpamStd.String.Set.of_list packages
                |> OpamStd.String.Set.remove epel_release
                |> OpamStd.String.Set.elements);
-       "rpm", "-q"::"--whatprovides"::packages]
-  | Debian -> ["apt-get", "install"::packages]
-  | Freebsd -> ["pkg", "install"::packages]
-  | Gentoo -> ["emerge", packages]
-  | Homebrew -> ["brew", "install"::packages]
-  | Macports -> ["port", "install"::packages]
-  | Openbsd -> ["pkg_add", packages]
-  | Suse -> ["zypper", ("install"::packages)]
+       "rpm", "-q"::"--whatprovides"::packages], None
+  | Debian -> ["apt-get", "install"::packages], None
+  | Freebsd -> ["pkg", "install"::packages], None
+  | Gentoo -> ["emerge", packages], None
+  | Homebrew -> ["brew", "install"::packages], None
+  | Macports -> ["port", "install"::packages], None
+  | Openbsd -> ["pkg_add", packages], None
+  | Suse -> ["zypper", ("install"::packages)], None
 
-let sudo_run_command cmd args =
+let install_packages_commands sys_packages =
+  fst (install_packages_commands_t sys_packages)
+
+let sudo_run_command ?vars cmd args =
   let cmd, args =
     let not_root = Unix.getuid () <> 0  in
     match OpamSysPoll.os (), OpamSysPoll.os_distribution () with
@@ -449,7 +478,7 @@ let sudo_run_command cmd args =
         "sudo", cmd::args
     | _ -> cmd, args
   in
-  match run_command_exit_code ~allow_stdin:true ~verbose:true cmd args with
+  match run_command_exit_code ?vars ~allow_stdin:true ~verbose:true cmd args with
   | 0 -> ()
   | code ->
     Printf.ksprintf failwith
@@ -458,13 +487,14 @@ let sudo_run_command cmd args =
 
 let install packages =
   if OpamSysPkg.Set.is_empty packages then
-    log "nothing to install"
+    log "Nothing to install"
   else
+    let commands, vars = install_packages_commands_t packages in
     List.iter
       (fun (cmd, args) ->
-         try sudo_run_command cmd args
+         try sudo_run_command ?vars cmd args
          with Failure msg -> failwith ("System package install " ^ msg))
-      (install_packages_commands packages)
+      commands
 
 let update () =
   let cmd =
