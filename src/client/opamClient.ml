@@ -224,6 +224,15 @@ let compute_upgrade_t
     then not_installed
     else []
   in
+  let upgrade_atoms to_upgrade =
+    (* packages corresponds to the currently installed versions.
+       Not what we are interested in, recover the original atom constraints *)
+    List.map (fun nv ->
+        let name = nv.name in
+        try name, List.assoc name atoms
+        with Not_found -> name, None)
+      (OpamPackage.Set.elements to_upgrade)
+  in
   if all then
     let t, full_orphans, orphan_versions = orphans ~transitive:true t in
     let to_upgrade = t.installed -- full_orphans in
@@ -234,7 +243,7 @@ let compute_upgrade_t
       ~reinstall:(Lazy.force t.reinstall)
       (OpamSolver.request
          ~install:to_install
-         ~upgrade:(OpamSolution.atoms_of_packages to_upgrade)
+         ~upgrade:(upgrade_atoms to_upgrade)
          ~criteria:`Upgrade ())
   else
   let changes =
@@ -243,14 +252,6 @@ let compute_upgrade_t
   let t, full_orphans, orphan_versions = orphans ~changes t in
   let to_remove = requested_installed %% full_orphans in
   let to_upgrade = requested_installed -- full_orphans in
-  let upgrade_atoms =
-    (* packages corresponds to the currently installed versions.
-       Not what we are interested in, recover the original atom constraints *)
-    List.map (fun nv ->
-        let name = nv.name in
-        try name, List.assoc name atoms
-        with Not_found -> name, None)
-      (OpamPackage.Set.elements to_upgrade) in
   names,
   OpamSolution.resolve t Upgrade
     ~orphans:(full_orphans ++ orphan_versions)
@@ -258,7 +259,7 @@ let compute_upgrade_t
     (OpamSolver.request
        ~install:to_install
        ~remove:(OpamSolution.atoms_of_packages to_remove)
-       ~upgrade:upgrade_atoms
+       ~upgrade:(upgrade_atoms to_upgrade)
        ())
 
 let upgrade_t
