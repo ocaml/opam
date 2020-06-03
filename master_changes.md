@@ -4,6 +4,9 @@ note.
 ## Init
   * Remove m4 from the list of recommended tools [#4184 @kit-ty-kate]
 
+## Upgrade
+  * Fix atoms formula restriction with `--all` [#4221 @rjbou - fix #4218]
+
 ## Switch
   * Fix Not_found with `opam switch create . --deps` [#4151 @AltGr]
 
