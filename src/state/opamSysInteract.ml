@@ -455,7 +455,9 @@ let install_packages_commands_t sys_packages =
   | Debian -> ["apt-get", "install"::packages], None
   | Freebsd -> ["pkg", "install"::packages], None
   | Gentoo -> ["emerge", packages], None
-  | Homebrew -> ["brew", "install"::packages], None
+  | Homebrew ->
+    ["brew", "install"::packages],
+    Some (["HOMEBREW_NO_AUTO_UPDATE","yes"])
   | Macports -> ["port", "install"::packages], None
   | Openbsd -> ["pkg_add", packages], None
   | Suse -> ["zypper", ("install"::packages)], None
