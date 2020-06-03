@@ -1475,14 +1475,10 @@ module PIN = struct
   let unpin st ?(action=true) names =
     let pinned_before = st.pinned in
     let st = unpin st names in
-    let available = Lazy.force st.available_packages in
     let installed_unpinned = (pinned_before -- st.pinned) %% st.installed in
     if action && not (OpamPackage.Set.is_empty installed_unpinned) then
       let atoms =
-        OpamPackage.Set.fold (fun nv acc ->
-            if OpamPackage.Set.mem nv available then
-              (nv.name, Some (`Eq, nv.version)) :: acc
-            else (nv.name, None) :: acc)
+        OpamPackage.Set.fold (fun nv acc -> (nv.name, None) :: acc)
           installed_unpinned []
       in
       upgrade_t

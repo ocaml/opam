@@ -7,6 +7,9 @@ note.
 ## Switch
   * Fix Not_found with `opam switch create . --deps` [#4151 @AltGr]
 
+## Pin
+  * Don't keep unpinned package version if it exists in repo [#4073 @rjbou - fix #3630]
+
 ## Depext
   * Fix performance issue of depext under Docker/debian [#4165 @AltGr]
   * Refactor package status [#4152 @rjbou]
