@@ -120,7 +120,7 @@ static char* getProcessInfo(HANDLE hProcessSnapshot,
   return NULL;
 }
 
-char* InjectSetEnvironmentVariable(DWORD pid, char* key, char* val);
+char* InjectSetEnvironmentVariable(DWORD pid, const char* key, const char* val);
 
 #define OPAMreturn CAMLreturn
 
@@ -239,7 +239,7 @@ CAMLprim value OPAMW_FillConsoleOutputCharacter(value vhConsoleOutput,
     }
   }
 #endif
- 
+
   OPAMreturn(Val_bool(result));
 }
 
@@ -259,7 +259,7 @@ CAMLprim value OPAMW_GetConsoleMode(value hConsoleHandle)
 CAMLprim value OPAMW_SetConsoleMode(value hConsoleMode, value dwMode)
 {
   CAMLparam2(hConsoleMode, dwMode);
- 
+
 #ifdef _WIN32
   BOOL result = SetConsoleMode(HANDLE_val(hConsoleMode), Int_val(dwMode));
 #endif
@@ -366,7 +366,7 @@ CAMLprim value OPAMW_WriteRegistry(value hKey,
 
 #ifdef _WIN32
   HKEY key;
-  void* buf = NULL;
+  const void* buf = NULL;
   DWORD cbData = 0;
   DWORD type = 0;
 
@@ -738,7 +738,8 @@ CAMLprim value OPAMW_GetConsoleAlias(value alias, value exeName)
   if (!buffer)
     caml_raise_out_of_memory();
 
-  if (GetConsoleAlias(String_val(alias), buffer, nLength, String_val(exeName)))
+  if (GetConsoleAlias((LPTSTR)String_val(alias), buffer, nLength,
+                      (LPTSTR)String_val(exeName)))
   {
     result = caml_copy_string(buffer);
   }
