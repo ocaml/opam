@@ -103,9 +103,6 @@ opam-devel.install: $(DUNE_DEP)
 	$(DUNE) build $(DUNE_ARGS) -p opam opam.install
 	sed -e "s/bin:/libexec:/" opam.install > $@
 
-opam-%.install: $(DUNE_DEP)
-	$(DUNE) build $(DUNE_ARGS) -p opam-$* $@
-
 .PHONY: build-opam-installer
 build-opam-installer: $(DUNE_DEP) 
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS)$(DUNE_PROMOTE_ARG) opam-installer.install

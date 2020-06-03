@@ -18,10 +18,10 @@ bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "https://github.com/ocaml/opam.git"
 build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
-  [make "%{name}%.install"]
+  ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "opam-core" {= "2.1.0~alpha"}
+  "opam-core" {= version}
   "opam-file-format" {>= "2.0.0~rc2"}
   "dune" {build & >= "1.2.1"}
 ]
