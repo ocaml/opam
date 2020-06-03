@@ -309,10 +309,19 @@ let packages_status packages =
     in
     compute_sets sys_installed
   | Homebrew ->
+    (* accept 'pkgname' and 'pkgname@version'
+       exampe output
+       >openssl@1.1
+       >bmake
+    *)
     let sys_installed =
       run_query_command "brew" ["list"]
-      |> List.map (fun s -> OpamStd.String.split s ' ')
-      |> List.flatten
+      |> List.fold_left (fun res s ->
+          List.fold_left (fun res spkg ->
+              match OpamStd.String.cut_at spkg '@' with
+              | Some (n,_v) -> n::spkg::res
+              | None -> spkg::res)
+            res (OpamStd.String.split s ' ')) []
       |> List.map OpamSysPkg.of_string
       |> OpamSysPkg.Set.of_list
     in
