@@ -133,13 +133,16 @@ module Make (VCS: VCS) = struct
           (OpamFilename.rec_files repo_root)
       in
       List.iter OpamFilename.remove rm_list;
-      (* We do the list cleaning here becuse of rsync options: `--exclude` need
-         to be explicitely given directory descendants, e.g `--exclude
-         _build/**`
+      (* We do the list cleaning here because of rsync options: with
+         `--files-from`, `--exclude` need to be explicitly given directory
+         descendants, e.g `--exclude _build/**`
       *)
       let excluded =
-        (* from [OpamGit.rsync] exclude list *)
-        let exc = [ "_opam"; "_build"; ".git"; "_darcs"; ".hg" ] in
+        (* from [OpamLocal.rsync] exclude list *)
+        let exc =
+          [ OpamSwitch.external_dirname ^ "*"; "_build";
+            ".git"; "_darcs"; ".hg" ]
+        in
         OpamStd.String.Set.filter (fun f ->
             List.exists (fun prefix ->
                 OpamStd.String.starts_with ~prefix f)
@@ -147,7 +150,9 @@ module Make (VCS: VCS) = struct
           fset
       in
       let vcset = OpamStd.String.Set.of_list (filter_subpath vc_files) in
-      let vc_dirty_set = OpamStd.String.Set.of_list (filter_subpath vc_dirty_files) in
+      let vc_dirty_set =
+        OpamStd.String.Set.of_list (filter_subpath vc_dirty_files)
+      in
       let final_set =
         OpamStd.String.Set.Op.(fset -- vcset ++ vc_dirty_set -- excluded)
       in
