@@ -260,8 +260,11 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
       Some (bool false)
     | "pinned", _ ->
       Some (bool (OpamPackage.has_name st.pinned name))
-    | "name", _ ->
-      if OpamPackage.has_name st.packages name
+    | "name", opam ->
+      (* On reinstall, orphan packages are not present in the state, and we
+         need to resolve their internal name variable *)
+      if OpamStd.Option.map OpamFile.OPAM.name opam = Some name
+      || OpamPackage.has_name st.packages name
       then Some (string (OpamPackage.Name.to_string name))
       else None
     | _, None -> None
