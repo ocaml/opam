@@ -18,11 +18,11 @@ bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "https://github.com/ocaml/opam.git"
 build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
-  [make "%{name}%.install"]
+  ["dune" "build" "-p" name "-j" jobs]
 ]
 build-test: [make "tests"]
 depends: [
-  "opam-client" {= "2.1.0~alpha"}
+  "opam-client" {= version}
   "cmdliner" {>= "0.9.8"}
   "dune" {build & >= "1.2.1"}
 ]
