@@ -18,3 +18,6 @@ note.
   * Fix performance issue of depext under Docker/debian [#4165 @AltGr]
   * Refactor package status [#4152 @rjbou]
   * Add Macport support [#4152 @rjbou]
+
+## Remove
+  * Fix autoremove env var handling [#4219 @rjbou - fix #4217]

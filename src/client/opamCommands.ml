@@ -1625,6 +1625,7 @@ let remove =
         List.map (function `Atom a -> a | _ -> assert false) pure_atoms
         @ pin_atoms
       in
+      let autoremove = autoremove || OpamClientConfig.(!r.autoremove) in
       OpamSwitchState.drop (OpamClient.remove st ~autoremove ~force atoms)
   in
   Term.(const remove $global_options $build_options $autoremove $force $destdir
