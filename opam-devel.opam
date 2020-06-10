@@ -24,7 +24,7 @@ build-test: [make "tests"]
 depends: [
   "opam-client" {= version}
   "cmdliner" {>= "0.9.8"}
-  "dune" {build & >= "1.2.1"}
+  "dune" {>= "1.2.1"}
 ]
 post-messages: [
 "The development version of opam has been successfully compiled into %{lib}%/%{name}%. You should not run it from there, please install the binaries to your PATH, e.g. with

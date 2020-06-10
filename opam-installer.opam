@@ -23,6 +23,6 @@ build: [
 depends: [
   "opam-format" {= version}
   "cmdliner" {>= "0.9.8"}
-  "dune" {build & >= "1.2.1"}
+  "dune" {>= "1.2.1"}
 ]
 available: ocaml-version >= "4.02.3"
