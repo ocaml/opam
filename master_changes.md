@@ -1,6 +1,9 @@
 Working version changelog, used as a base for the changelog and the release
 note.
 
+## Admin
+  * Fix admin cache synchronisation message [#4193 @rjbou - fix #4167]
+
 ## Init
   * Remove m4 from the list of recommended tools [#4184 @kit-ty-kate]
 
