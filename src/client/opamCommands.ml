@@ -774,7 +774,7 @@ let show =
         OpamConsole.error_and_exit `Not_found "No package found"
       else
         OpamListCommand.info st
-          ~fields ~raw ~where ~normalise ~show_empty ~all_versions atoms;
+          ~fields ~raw ~where ~normalise ~show_empty ~all_versions ~sort atoms;
       `Ok ()
     | atom_locs, true ->
       if List.exists (function `Atom _ -> true | _ -> false) atom_locs then
