@@ -65,7 +65,7 @@ let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
     not (OpamStd.String.contains ~sub:OpamSwitch.external_dirname (norm dst)) ||
     OpamStd.String.starts_with ~prefix:(norm dst) (norm src)
   in
-  (* See also OpamVCS.sync_dirty *)
+  (* See also [OpamVCS.sync_dirty] *)
   let exclude_args =
     (if not exclude_vcdirs then [] else
        [ "--exclude"; ".git";
@@ -75,6 +75,7 @@ let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
     @ [
       "--exclude"; ".#*";
       "--exclude"; OpamSwitch.external_dirname ^ "*";
+      "--exclude"; "_build";
     ]
   in
   if not(remote || Sys.file_exists src) then
