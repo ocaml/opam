@@ -32,9 +32,15 @@ Possibly scripts breaking changes are prefixed with ✘
 
 
 ## Depext
+  * Fix arch query [#4200 @rjbou]
   * Fix performance issue of depext under Docker/debian [#4165 @AltGr]
-  * Refactor package status [#4152 @rjbou]
+  * Refactor package status [#4152 #4200 @rjbou]
+  * Add environment variables handling [#4200 @rjbou]
   * Add Macport support [#4152 @rjbou]
+  * Homebrew: add no auto update env var for install, accept `pkgname` and `pkgnam@version` on query [#4200 @rjbou]
+  * Force LC_ALL=C for query commands [#4200 @rjbou]
+  * Fix install command dryrun [#4200 @rjbou]
+
 
 
 ## Remove
