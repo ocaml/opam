@@ -168,11 +168,15 @@ let load_repo repo repo_root =
     (t ());
   repo_def, opams
 
+(* Cleaning directories follows the repo path pattern:
+   TMPDIR/opam-tmp-dir/repo-dir, defined in [load]. *)
 let clean_repo_tmp tmp_dir =
   if Lazy.is_val tmp_dir then
-    let d = Lazy.force tmp_dir in
-    OpamFilename.cleandir d;
-    OpamFilename.rmdir_cleanup d
+    (let dir = Lazy.force tmp_dir in
+     OpamFilename.rmdir dir;
+     let parent = OpamFilename.dirname_dir dir in
+     if OpamFilename.dir_is_empty parent then
+       OpamFilename.rmdir parent)
 
 let remove_from_repos_tmp rt name =
   try
@@ -223,6 +227,8 @@ let load lock_kind gt =
         let tmp = lazy (
           let tmp_root = Lazy.force repos_tmp_root in
           try
+            (* We rely on this path pattern to clean the repo.
+               cf. [clean_repo_tmp] *)
             OpamFilename.extract_in tar tmp_root;
             OpamFilename.Op.(tmp_root / OpamRepositoryName.to_string name)
           with Failure s ->
