@@ -27,3 +27,10 @@ note.
 
 ## Remove
   * Fix autoremove env var handling [#4219 @rjbou - fix #4217]
+
+## Repository management
+  * Fix temp files repository cleaning [#4197 @rjbou]
+
+
+## Doc
+  * add doc/warning for  Filename.rmdir_cleanup [#4197 @rjbou]
