@@ -58,7 +58,7 @@ This is generally the recommended way, **when available and up-to-date** (you
 can check [here](https://github.com/ocaml/opam/wiki/Distributions) the latest
 available release per distribution). Here is a list of supported distributions:
 
-#### Archlinux
+#### Arch Linux
 
 The [opam](https://www.archlinux.org/packages/community/x86_64/opam/)
 package is available in the official distribution. To install it simply run:
@@ -68,11 +68,11 @@ pacman -S opam
 ```
 
 If you'd like to use the development version there is an [opam-git](https://aur.archlinux.org/packages/opam-git/)
-package available in the [AUR](https://wiki.archlinux.org/index.php/AUR).
-Assuming you have [yaourt](https://aur.archlinux.org/packages/yaourt) installed just run the following command:
+package available in the [AUR](https://wiki.archlinux.org/index.php/Arch_User_Repository).
+Assuming you have [yay](https://github.com/Jguer/yay) installed just run the following command:
 
 ```
-yaourt -S opam-git
+yay -S opam-git
 ```
 
 #### Debian
