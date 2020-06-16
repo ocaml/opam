@@ -12,6 +12,7 @@ let log fmt = OpamConsole.log "XSYS" fmt
 
 (* Run commands *)
 (* Always call this function to run a command, as it handles `dryrun` option *)
+
 let run_command
     ?vars ?(discard_err=false) ?allow_stdin ?verbose cmd args =
   let clean_output =
@@ -65,7 +66,8 @@ let run_command
   Done (code, out)
 
 let run_query_command ?vars cmd args =
-  let code,out = run_command ?vars cmd args in
+  let vars = (`set, ("LC_ALL","C"))::OpamStd.Option.to_list vars in
+  let code,out = run_command ~vars cmd args in
   if code = 0 then out
   else []
 
