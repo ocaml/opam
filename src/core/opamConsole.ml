@@ -174,7 +174,7 @@ let utf8_symbol main ?(alternates=[]) s =
     s
 
 let timer () =
-  if debug () then
+  if OpamCoreConfig.(!r.debug_level) > 0 then
     let t = Unix.gettimeofday () in
     fun () -> Unix.gettimeofday () -. t
   else

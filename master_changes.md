@@ -36,12 +36,19 @@ Possibly scripts breaking changes are prefixed with ✘
   * Refactor package status [#4152 @rjbou]
   * Add Macport support [#4152 @rjbou]
 
+
 ## Remove
   * Fix autoremove env var handling [#4219 @rjbou - fix #4217]
 
 ## Repository management
   * Fix temp files repository cleaning [#4197 @rjbou]
 
+## Internal
+  * Disable chrono when timestamps are disables [#4206 @rjbou]
+
+## Test
+  * Add show cram test [#4206 @rjbou]
+  * Add envrionnement variable handling on cram test [#4206 @rjbou]
 
 ## Doc
   * add doc/warning for  Filename.rmdir_cleanup [#4197 @rjbou]
