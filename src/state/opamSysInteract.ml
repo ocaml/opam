@@ -31,24 +31,26 @@ let run_command
     | None -> None
     | Some vars ->
       let env = OpamStd.Env.list () in
-      let new_vars, existing_vars =
-        List.fold_left (fun (n,p) (name,content as var) ->
-            match  OpamStd.List.assoc_opt name env with
-            | Some c when c = content -> n, p
-            | Some _ -> n, var::p
-            | None -> var::n, p)
-          ([],[]) vars
+      let set_vars, kept_vars, env =
+        List.fold_left (fun (n,p,e) (op, (name, content as var)) ->
+            match  OpamStd.List.assoc_opt name env, op with
+            | Some c, `add when String.compare c content = 0 -> n, p, e
+            | Some _, `set -> var::n, p, (List.remove_assoc name env)
+            | Some _, _ -> n, var::p, e
+            | None, _ -> var::n, p, e
+          )
+          ([],[], env) vars
       in
       let str_var (v,c) = Printf.sprintf "%s=%s" v c in
-      if new_vars = [] then
-        ((if existing_vars <> [] then
+      if set_vars = [] then
+        ((if kept_vars <> [] then
             log "Won't override %s"
-              (OpamStd.List.to_string str_var existing_vars));
+              (OpamStd.List.to_string str_var kept_vars));
          None)
       else
         (log "Adding to env %s"
-           (OpamStd.List.to_string str_var new_vars);
-         Some (new_vars @ env
+           (OpamStd.List.to_string str_var set_vars);
+         Some (set_vars @ env
                |> List.rev_map str_var
                |> Array.of_list))
   in
@@ -492,6 +494,7 @@ let install packages =
     log "Nothing to install"
   else
     let commands, vars = install_packages_commands_t packages in
+    let vars = OpamStd.Option.map (List.map (fun x -> `add, x)) vars in
     List.iter
       (fun (cmd, args) ->
          try sudo_run_command ?vars cmd args
