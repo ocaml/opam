@@ -46,7 +46,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## External dependencies
-  *
+  * Upgrade bootstrap OCaml compiler from 4.09.1 to 4.11.1 [#4234 @avsm]
 
 ## Sandbox
   *
