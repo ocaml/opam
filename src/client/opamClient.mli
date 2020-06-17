@@ -49,13 +49,14 @@ val reinit:
 val install:
   rw switch_state ->
   ?autoupdate:atom list -> ?add_to_roots:bool -> ?deps_only:bool ->
-  ?ignore_conflicts:bool -> ?assume_built:bool -> atom list ->
+  ?ignore_conflicts:bool -> ?assume_built:bool -> ?depext_only:bool ->
+  atom list ->
   rw switch_state
 
 (** Low-level version of [reinstall], bypassing the package name sanitization
     and dev package update, and offering more control *)
 val install_t:
-  rw switch_state -> ?ask:bool -> ?ignore_conflicts:bool ->
+  rw switch_state -> ?ask:bool -> ?ignore_conflicts:bool -> ?depext_only:bool ->
   atom list -> bool option -> deps_only:bool -> assume_built:bool ->
   rw switch_state
 

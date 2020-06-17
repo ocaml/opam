@@ -939,7 +939,7 @@ let get_depexts t packages =
   print_depext_msg (avail, nf);
   avail
 
-let install_depexts ?(noconfirm=false) t packages =
+let install_depexts ?(confirm=true) t packages =
   let sys_packages =
     if not (OpamFile.Config.depext t.switch_global.config) then
       OpamSysPkg.Set.empty
@@ -1017,7 +1017,7 @@ let install_depexts ?(noconfirm=false) t packages =
        sys_packages)
   else if OpamClientConfig.(!r.fake) then (print (); t)
   else if
-    noconfirm || OpamConsole.confirm
+    not confirm || OpamConsole.confirm
       "Let opam run your package manager to install the required system \
        packages?"
   then
@@ -1026,7 +1026,7 @@ let install_depexts ?(noconfirm=false) t packages =
       map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
     with Failure msg ->
       OpamConsole.error "%s" msg;
-      if noconfirm then (print (); t) else
+      if not confirm then (print (); t) else
         wait "You can now try to get them installed manually."
           sys_packages
   else
