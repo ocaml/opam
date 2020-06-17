@@ -14,7 +14,7 @@ let log fmt = OpamConsole.log "XSYS" fmt
 (* Always call this function to run a command, as it handles `dryrun` option *)
 
 let run_command
-    ?vars ?(discard_err=false) ?allow_stdin ?verbose cmd args =
+    ?vars ?(discard_err=false) ?allow_stdin ?verbose ?(dryrun=false) cmd args =
   let clean_output =
     if not discard_err then
       fun k -> k None
@@ -55,8 +55,11 @@ let run_command
                |> List.rev_map str_var
                |> Array.of_list))
   in
+  let run =
+    if dryrun then OpamProcess.Job.dry_run else OpamProcess.Job.run
+  in
   let open OpamProcess.Job.Op in
-  OpamProcess.Job.run @@ clean_output @@ fun stdout ->
+  run @@ clean_output @@ fun stdout ->
   OpamSystem.make_command
     ?env ?stdout ?allow_stdin ~verbose cmd args
   @@> fun r ->
@@ -72,7 +75,10 @@ let run_query_command ?vars cmd args =
   else []
 
 let run_command_exit_code ?vars ?allow_stdin ?verbose cmd args =
-  let code,_ = run_command ?vars ?allow_stdin ?verbose cmd args in
+  let code,_ =
+    run_command ?vars ?allow_stdin ?verbose ~dryrun:OpamStateConfig.(!r.dryrun)
+      cmd args
+  in
   code
 
 type families =
