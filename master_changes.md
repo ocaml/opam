@@ -1,6 +1,7 @@
 Working version changelog, used as a base for the changelog and the release
 note.
 Possibly scripts breaking changes are prefixed with ✘
+New option are prefixed with ◈
 
 ## Admin
   * Fix admin cache synchronisation message [#4193 @rjbou - fix #4167]
@@ -60,7 +61,9 @@ Possibly scripts breaking changes are prefixed with ✘
   * Homebrew: add no auto update env var for install, accept `pkgname` and `pkgnam@version` on query [#4200 @rjbou]
   * Force LC_ALL=C for query commands [#4200 @rjbou]
   * Fix install command dryrun [#4200 @rjbou]
-
+  * ◈ Add --depext-only to install only external dependencies, regardless of config depext status [#4238 @rjbou]
+  * Move confirmation message after opam packages install [#4238 @rjbou]
+  * Error if '--depext-only' is given with '--assume-depexts' or '--no-depexts'
 
 ## Env
   * Fix `OPAMSWITCH` empty string setting, consider as unset [#4237 @rjbou]
