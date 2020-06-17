@@ -64,6 +64,12 @@ val check_solution:
   (solution_result, 'conflict) result ->
   unit
 
+(* Install external dependencies of the given package set, according the depext
+   configuration. If [noconfirm] is given, install commands are directly
+   launched, without asking user (used by the `--depext-only` option). *)
+val install_depexts:
+  ?noconfirm:bool -> rw switch_state -> package_set -> rw switch_state
+
 (** {2 Atoms} *)
 
 (** Return an atom with a strict version constraint *)

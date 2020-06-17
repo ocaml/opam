@@ -939,7 +939,13 @@ let get_depexts t packages =
   print_depext_msg (avail, nf);
   avail
 
-let install_depexts t packages sys_packages =
+let install_depexts ?(noconfirm=false) t packages =
+  let sys_packages =
+    if not (OpamFile.Config.depext t.switch_global.config) then
+      OpamSysPkg.Set.empty
+    else
+      get_depexts t packages
+  in
   if OpamSysPkg.Set.is_empty sys_packages ||
      OpamClientConfig.(!r.show) ||
      OpamClientConfig.(!r.assume_depexts)
@@ -1011,7 +1017,7 @@ let install_depexts t packages sys_packages =
        sys_packages)
   else if OpamClientConfig.(!r.fake) then (print (); t)
   else if
-    OpamConsole.confirm
+    noconfirm || OpamConsole.confirm
       "Let opam run your package manager to install the required system \
        packages?"
   then
@@ -1020,8 +1026,9 @@ let install_depexts t packages sys_packages =
       map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
     with Failure msg ->
       OpamConsole.error "%s" msg;
-      wait "You can now try to get them installed manually."
-        sys_packages
+      if noconfirm then (print (); t) else
+        wait "You can now try to get them installed manually."
+          sys_packages
   else
     (OpamConsole.note "Use 'opam option depext-run-installs=false' \
                        if you don't want to be prompted again.";
@@ -1078,18 +1085,13 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false) ?force_remove
       if total_actions >= 2 then
         OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
     );
-    let sys_packages =
-      if not (OpamFile.Config.depext t.switch_global.config) then
-        OpamSysPkg.Set.empty
-      else
-        get_depexts t @@ OpamPackage.Set.inter
-          new_state.installed
-          (OpamSolver.all_packages solution)
-    in
     if not OpamClientConfig.(!r.show) &&
        confirmation ?ask requested action_graph
     then (
-      let t = install_depexts t new_state.installed sys_packages in
+      let t =
+        install_depexts t @@ OpamPackage.Set.inter
+          new_state.installed (OpamSolver.all_packages solution)
+      in
       let requested =
         OpamPackage.packages_of_names new_state.installed requested
       in
