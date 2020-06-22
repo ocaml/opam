@@ -65,6 +65,7 @@ val search_files: string list
 val opam_init:
   ?root_dir:OpamTypes.dirname ->
   ?strict:bool ->
+  ?solver:(module OpamCudfSolver.S) Lazy.t ->
   ?skip_version_checks:bool ->
   ?all_parens:bool ->
   ?log_dir:OpamTypes.dirname ->
@@ -99,7 +100,6 @@ val opam_init:
   ?locked:string option ->
   ?no_depexts:bool ->
   ?cudf_file:string option ->
-  ?solver:(module OpamCudfSolver.S) Lazy.t ->
   ?best_effort:bool ->
   ?solver_preferences_default:string option Lazy.t ->
   ?solver_preferences_upgrade:string option Lazy.t ->
