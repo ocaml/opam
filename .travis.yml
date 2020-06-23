@@ -1,6 +1,6 @@
+os: linux
 dist: focal
 language: c
-sudo: false
 
 addons:
   apt:
