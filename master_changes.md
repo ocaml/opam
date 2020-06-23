@@ -14,6 +14,7 @@ Possibly scripts breaking changes are prefixed with ✘
 ## Build
   * Opam file build using dune, removal of opam-%.install makefile target [#4178 @rjbou - fix #4173]
   * Use version var in opam file instead of equal current version number in opamlib dependencies [#4178 @rjbou]
+  * Upgrade bootstrap OCaml compiler from 4.07.1 to 4.10.0 [#4234 @avsm]
 
 ## Install
   * Add `_build` to rsync exclusion list [#4230 @rjobou - fix #4195]
@@ -30,7 +31,6 @@ Possibly scripts breaking changes are prefixed with ✘
   * ✘ Display error message for all not found packages [#4179 @rjbou - fix #4164]
   * ✘ Keep package order given via cli [#4179 @rjbou - fix #4163]
   * `--sort`` apply to with all options, not only `--just-file` [#4179 @rjbou]
-
 
 ## Depext
   * Fix performance issue of depext under Docker/debian [#4165 @AltGr]
