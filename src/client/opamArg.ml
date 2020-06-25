@@ -518,6 +518,14 @@ let package_name =
   let print ppf pkg = pr_str ppf (OpamPackage.Name.to_string pkg) in
   parse, print
 
+let package_version =
+  let parse str =
+    try `Ok (OpamPackage.Version.of_string str)
+    with Failure msg -> `Error msg
+  in
+  let print ppf ver = pr_str ppf (OpamPackage.Version.to_string ver) in
+  parse, print
+
 let positive_integer : int Arg.converter =
   let (parser, printer) = Arg.int in
   let parser s =
