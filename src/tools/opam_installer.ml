@@ -156,7 +156,16 @@ let script_commands project_root ochan =
    where [dest src dst] returns the destination of a file with a
   ["src" {"dst"}] line in the .install *)
 let iter_install f instfile o =
-  let module D = OpamPath.Switch.Default in
+  let open OpamFilename.Op in
+  let module D =
+  struct
+    include OpamPath.Switch.DefaultF (struct
+        type ctx = unit
+        let root d _ = d
+        let lib_dir t a = root t a / "lib"
+      end)
+  end
+  in
   let module S = OpamFile.Dot_install in
   let dest ?fix dir =
     let dir = OpamStd.Option.default dir fix in
@@ -164,18 +173,14 @@ let iter_install f instfile o =
       OpamFilename.create dir
         (OpamStd.Option.default (OpamFilename.basename src) dst)
   in
-  let dest_global ?fix instdir_f =
-    dest ?fix (instdir_f o.prefix (OpamSwitch.of_string ""))
-  in
+  let dest_global ?fix instdir_f = dest ?fix (instdir_f o.prefix ()) in
   let dest_pkg ?fix instdir_f =
     let fix =
-      OpamStd.Option.map
-        OpamFilename.Op.(fun d ->
-            d / OpamPackage.Name.to_string o.pkgname)
+      OpamStd.Option.map (fun d ->
+          d / OpamPackage.Name.to_string o.pkgname)
         fix
     in
-    dest ?fix
-      (instdir_f o.prefix (OpamSwitch.of_string "") o.pkgname)
+    dest ?fix (instdir_f o.prefix () o.pkgname)
   in
   List.iter f
     [ dest_global                 D.bin,      S.bin instfile,        true;
