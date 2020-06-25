@@ -2875,8 +2875,9 @@ let pin ?(unpin_only=false) cli =
       "Set the pinning version to $(b,VERSION) for named $(b,PACKAGES) or \
        retrieved packagesi fro $(b,TARGET). It has priority to any other \
        version specification (opam file version field, $(i,name.vers) \
-       argument). It is equivalent to editing pinned package opam file to set \
-       its version."
+       argument)). With version pin, package source is version pin one and \
+       package version is the one specified with this option. It is equivalent \
+       to editing pinned package opam file to set its version."
       Arg.(some package_version) None
   in
   let guess_names kind ~recurse ?subpath url k =
@@ -3123,7 +3124,11 @@ let pin ?(unpin_only=false) cli =
     | `add_wtarget (n, target) ->
       (match (fst package) n with
        | `Ok (name,version) ->
-         let pin = pin_target kind target in
+         let pin =
+           match pin_target kind target, with_version with
+           | `Version v, Some v' -> `Source_version (v, v')
+           | p, _ -> p
+         in
          let version = OpamStd.Option.Op.(with_version ++ version) in
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->

@@ -1468,6 +1468,26 @@ module PIN = struct
         | `Version v ->
           let st = version_pin st name v in
           if edit then OpamPinCommand.edit st name else st
+        | `Source_version (srcv, version) ->
+          let url =
+            let nv = (OpamPackage.create name srcv) in
+            match OpamPackage.Map.find_opt nv st.repos_package_index with
+            | Some opam ->
+              (match
+                 OpamStd.Option.Op.(OpamFile.OPAM.url opam >>| OpamFile.URL.url)
+               with
+               | Some u -> u
+               | None ->
+                 OpamConsole.error_and_exit `Not_found
+                   "Package %s has no url defined in its opam file description"
+                   (OpamPackage.to_string nv))
+            | None ->
+              OpamConsole.error_and_exit `Not_found
+                "Package %s has no known version %s in the repositories"
+                (OpamPackage.Name.to_string name)
+                (OpamPackage.Version.to_string version)
+          in
+          source_pin st name ~version ~edit (Some url)
         | `Dev_upstream ->
           source_pin st name ?version ~edit (Some (get_upstream st name))
         | `None -> source_pin st name ?version ~edit None
