@@ -40,17 +40,20 @@ let if_not_already_in_spec f ((pkgs, _) as spec) ((pkgname, _) as vpkg) =
   then f spec vpkg
   else spec
 
-let add_spec pkg req f_relop c (pkgs, constraints) =
+let add_spec pkg req c (pkgs, constraints) =
   let pkgs = (pkg, req) :: pkgs in
   let constraints = match c with
     | None -> constraints
-    | Some (relop, v) -> (pkg, (f_relop relop, v)) :: constraints
+    | Some c -> (pkg, c) :: constraints
   in
   (pkgs, constraints)
 
-let essential spec (pkg, c) = add_spec pkg `Essential (fun x -> x) c spec
-let recommended spec (pkg, c) = add_spec pkg `Recommended (fun x -> x) c spec
-let restricts spec (pkg, c) = add_spec pkg `Restricts not_relop c spec
+let essential spec (pkg, c) = add_spec pkg `Essential c spec
+let recommended spec (pkg, c) = add_spec pkg `Recommended c spec
+
+let restricts (pkgs, constraints) = function
+  | (pkg, None) -> ((pkg, `Restricts) :: pkgs, constraints)
+  | (pkg, Some (relop, v)) -> (pkgs, (pkg, (not_relop relop, v)) :: constraints)
 
 let create_spec universe request =
   let spec = ([], []) in
