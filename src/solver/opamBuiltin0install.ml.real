@@ -35,10 +35,10 @@ let not_relop = function
   | `Leq -> `Gt
   | `Lt -> `Geq
 
-let if_not_already_in_spec f ((pkgs, _) as spec) ((pkgname, _) as vpkg) =
-  if not (List.exists (fun (pkg, _) -> String.equal pkg pkgname) pkgs)
-  then f spec vpkg
-  else spec
+let keep_installed request pkgname =
+  not (List.exists (fun (pkg, _) -> String.equal pkg pkgname) request.Cudf.install) &&
+  not (List.exists (fun (pkg, _) -> String.equal pkg pkgname) request.Cudf.upgrade) &&
+  not (List.exists (fun (pkg, _) -> String.equal pkg pkgname) request.Cudf.remove)
 
 let add_spec pkg req c (pkgs, constraints) =
   let pkgs = (pkg, req) :: pkgs in
@@ -51,9 +51,12 @@ let add_spec pkg req c (pkgs, constraints) =
 let essential spec (pkg, c) = add_spec pkg `Essential c spec
 let recommended spec (pkg, c) = add_spec pkg `Recommended c spec
 
-let restricts (pkgs, constraints) = function
-  | (pkg, None) -> ((pkg, `Restricts) :: pkgs, constraints)
-  | (pkg, Some (relop, v)) -> (pkgs, (pkg, (not_relop relop, v)) :: constraints)
+let restricts (pkgs, constraints) (pkg, c) =
+  let constraints = match c with
+    | None -> (pkg, (`Lt, 1)) :: (pkg, (`Gt, 1)) :: constraints (* pkg < 1 & pkg > 1 is always false *)
+    | Some (relop, v) -> (pkg, (not_relop relop, v)) :: constraints
+  in
+  (pkgs, constraints)
 
 let create_spec universe request =
   let spec = ([], []) in
@@ -65,7 +68,8 @@ let create_spec universe request =
       | Some {Cudf.keep = `Keep_version; version; _} -> essential spec (pkgname, Some (`Eq, version))
       | Some {Cudf.keep = `Keep_package; _} -> essential spec (pkgname, None)
       | Some {Cudf.keep = `Keep_feature; _} -> assert false (* TODO: Is this used? *)
-      | Some {Cudf.keep = `Keep_none; _} -> if_not_already_in_spec recommended spec (pkgname, None)
+      | Some {Cudf.keep = `Keep_none; _} when keep_installed request pkgname -> recommended spec (pkgname, None)
+      | Some {Cudf.keep = `Keep_none; _}
       | None -> spec
     ) spec universe
 
