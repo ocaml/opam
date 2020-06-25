@@ -2757,6 +2757,7 @@ let pin ?(unpin_only=false) () =
   let doc = pin_doc in
   let commands = [
     "list", `list, [], "Lists pinned packages.";
+    "scan", `scan, ["DIR"], "Lists available packages to pin in directory.";
     "add", `add, ["PACKAGE"; "TARGET"],
     "Pins package $(i,PACKAGE) to $(i,TARGET), which may be a version, a path, \
      or a URL.\n\
@@ -2860,6 +2861,15 @@ let pin ?(unpin_only=false) () =
     mk_flag ["dev-repo"] "Pin to the upstream package source for the latest \
                           development version"
   in
+  let normalise =
+    mk_flag ["normalise"]
+      (Printf.sprintf
+         "Print list of available package to pin in format \
+          `name.version%curl%csubpath`, that is comprehensible by `opam pin \
+          add`. Available only with the scan subcommand. An example of use is \
+          `opam pin scan . --normalise | grep foo | xargs opam pin add`"
+         OpamPinCommand.scan_sep OpamPinCommand.scan_sep)
+  in
   let guess_names kind ~recurse ?subpath url k =
     let found, cleanup =
       match OpamUrl.local_dir url with
@@ -2955,7 +2965,8 @@ let pin ?(unpin_only=false) () =
   in
   let pin
       global_options build_options
-      kind edit no_act dev_repo print_short recurse subpath command params =
+      kind edit no_act dev_repo print_short recurse subpath normalise
+      command params =
     apply_global_options global_options;
     apply_build_options build_options;
     let action = not no_act in
@@ -2964,6 +2975,19 @@ let pin ?(unpin_only=false) () =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
       OpamClient.PIN.list st ~short:print_short;
+      `Ok ()
+    | Some `scan, [url] ->
+      let backend, handle_suffix =
+        match kind with
+        | Some (#OpamUrl.backend as k) -> Some k, None
+        | Some `auto -> OpamUrl.guess_version_control url, Some true
+        | None when OpamClientConfig.(!r.pin_kind_auto) ->
+          OpamUrl.guess_version_control url, Some true
+        | _ -> None, None
+      in
+      OpamUrl.parse ?backend ?handle_suffix url
+      |> OpamAuxCommands.url_with_local_branch
+      |> OpamPinCommand.scan ~normalise ~recurse ?subpath;
       `Ok ()
     | Some `remove, (_::_ as arg) ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -3099,6 +3123,7 @@ let pin ?(unpin_only=false) () =
     Term.(const pin
           $global_options $build_options
           $kind $edit $no_act $dev_repo $print_short_flag $recurse $subpath
+          $normalise
           $command $params),
   term_info "pin" ~doc ~man
 
