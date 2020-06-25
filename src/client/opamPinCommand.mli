@@ -65,6 +65,13 @@ val scan_sep: char
     [normalise] is true, displays it's normalised format
     `name.version[scan_sep]curl[scan_sep]subpath`. *)
 val scan: normalise:bool -> recurse:bool -> ?subpath: string -> url -> unit
+
+(** Detect if a string is a normalised format of [scan]. *)
+val looks_like_normalised: string list -> bool
+
+(** Parse the normalised form of [scan], and returns pinning informations. *)
+val parse_pins: string list -> (name * version option * url * string option) list
+
 (** Lints the given opam file, prints warnings or errors accordingly (unless
     [quiet]), upgrades it to current format, adds references to files below the
     'files/' subdir (unless the file is directly below the specified, local

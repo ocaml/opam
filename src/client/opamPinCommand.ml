@@ -774,3 +774,43 @@ let scan ~normalise ~recurse ?subpath url =
           sb +! "-" ]) pins
     |> OpamStd.Format.align_table
     |> OpamConsole.print_table stdout ~sep:"  "
+
+let looks_like_normalised args =
+    List.for_all (fun s -> OpamStd.String.contains_char s scan_sep) args
+
+let parse_pins pins =
+  let separator = Re.char scan_sep in
+  let re =
+    Re.(compile @@ whole_string @@ seq [
+        (* package name *)
+        group @@
+        rep1 @@ alt [ alnum; diff punct (alt [char '.'; char scan_sep]) ];
+        (* optional version *)
+        opt @@ seq [ char '.';
+                     group @@
+                     rep1 @@ alt [ alnum; diff punct separator ]];
+        separator;
+        (* url *)
+        group @@ rep1 @@ diff any separator;
+        (* optional subpath *)
+        opt @@ seq [ separator; group @@ rep1 any ];
+      ])
+  in
+  let get s =
+    try
+      let groups = Re.exec re s in
+      Some ( Re.Group.(
+          OpamPackage.Name.of_string @@ get groups 1,
+          OpamStd.Option.map OpamPackage.Version.of_string
+          @@ OpamStd.Option.of_Not_found (get groups) 2,
+          OpamUrl.parse @@ get groups 3,
+          OpamStd.Option.of_Not_found (get groups) 4)
+        )
+    with Not_found | Failure _ -> None
+  in
+  OpamStd.List.filter_map (fun str ->
+      let pin = get str in
+      if pin = None then
+        (OpamConsole.warning "Argument %S is not correct" str;
+         None)
+      else pin) pins

@@ -3050,6 +3050,25 @@ let pin ?(unpin_only=false) () =
          OpamSwitchState.drop @@ OpamClient.PIN.edit st ~action ?version name;
          `Ok ()
        | `Error e -> `Error (false, e))
+    | Some `add, pins when OpamPinCommand.looks_like_normalised pins ->
+      let pins = OpamPinCommand.parse_pins pins in
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let pinned = st.pinned in
+      let st =
+        List.fold_left (fun st (name, version, url, subpath) ->
+            try
+              OpamPinCommand.source_pin st name ?version ~edit ?subpath (Some url)
+            with | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
+                 | OpamPinCommand.Nothing_to_do -> st)
+          st pins
+      in
+      if action then
+        (OpamSwitchState.drop @@
+         OpamClient.PIN.post_pin_action st pinned
+           (List.map (fun (n,_,_,_) -> n) pins);
+         `Ok ())
+      else `Ok ()
     | Some `add, [nv] | Some `default nv, [] when dev_repo ->
       (match (fst package) nv with
        | `Ok (name,version) ->
