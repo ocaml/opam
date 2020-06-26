@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2015 OCamlPro                                             *)
+(*    Copyright 2015-2019 OCamlPro                                        *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -22,14 +22,15 @@ type update =
 module type S = sig
   val name: OpamUrl.backend
   val pull_url:
-    ?cache_dir:dirname -> dirname -> OpamHash.t option -> url ->
+    ?cache_dir:dirname -> ?subpath:string -> dirname -> OpamHash.t option -> url ->
     filename option download OpamProcess.job
   val fetch_repo_update:
     repository_name -> ?cache_dir:dirname -> dirname -> url ->
     update OpamProcess.job
   val repo_update_complete: dirname -> url -> unit OpamProcess.job
   val revision: dirname -> version option OpamProcess.job
-  val sync_dirty: dirname -> url -> filename option download OpamProcess.job
+  val sync_dirty:
+    ?subpath:string -> dirname -> url -> filename option download OpamProcess.job
   val get_remote_url:
     ?hash:string -> dirname ->
     url option OpamProcess.job

@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2016 OCamlPro                                             *)
+(*    Copyright 2016-2019 OCamlPro                                        *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -19,13 +19,10 @@ let repository_url = {
 }
 
 let default_compiler =
-  OpamFormula.ors [
-    OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-system",
-                      OpamFormula.Atom
-                        (`Geq, OpamPackage.Version.of_string "4.02.3"));
-    OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-base-compiler",
-                      OpamFormula.Empty);
-  ]
+  OpamFormula.Atom
+    (OpamPackage.Name.of_string "ocaml",
+     OpamFormula.Atom
+       (`Geq, OpamPackage.Version.of_string "4.05.0"))
 
 let eval_variables = [
   OpamVariable.of_string "sys-ocaml-version", ["ocamlc"; "-vnum"],
@@ -115,7 +112,6 @@ let recommended_tools () =
   let make = OpamStateConfig.(Lazy.force !r.makecmd) in
   [
     [make], None, None;
-    ["m4"], None, None;
     ["cc"], None, None;
   ]
 

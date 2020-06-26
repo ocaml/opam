@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2015 OCamlPro                                             *)
+(*    Copyright 2015-2020 OCamlPro                                        *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -27,6 +27,7 @@ type t = private {
   unlock_base: bool;
   no_env_notice: bool;
   locked: string option;
+  no_depexts : bool;
 }
 
 type 'a options_fun =
@@ -43,6 +44,7 @@ type 'a options_fun =
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
   ?locked:string option ->
+  ?no_depexts: bool ->
   'a
 
 include OpamStd.Config.Sig

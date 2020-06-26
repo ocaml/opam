@@ -58,8 +58,10 @@ td.sublib {
   <td>Generic stdlib functions (String, List, Option, Sys submodules...)</td></tr>
 <tr><th><a href="opam-core/OpamConsole">opamConsole.ml</a></th>
   <td>Console output, ANSI color, logging and user querying</td></tr>
-<tr><th><a href="opam-core/OpamCompat">opamCompat.ml.4.01/4.02</a></th>
+<tr><th><a href="opam-core/OpamCompat">opamCompat.ml</a></th>
   <td>Compatibility layer (Bytes, etc.) for different OCaml versions</td></tr>
+<tr><th><a href="opam-core/OpamSHA">opamSHA.ml</a></th>
+  <td>Pure OCaml implementation of SHA256/512 hashing functions</td></tr>
 
 <tr><td colspan="2" class="sublib">System handling</td></tr>
 
@@ -80,10 +82,24 @@ td.sublib {
   <td>URL parsing and printing, with support for our different backends</td></tr>
 
 <tr><td colspan="2" class="sublib">Windows support</td></tr>
-<tr><th><a href="opam-core/OpamStubsTypes">opamStubsTypes.ml</a></th>
-  <td>Types in the stubs definitions (shared between both implementations)</td></tr>
 <tr><th><a href="opam-core/OpamStubs">opamStubs.ml</a></th>
   <td>C stubs for Windows. A &ldquo;dummy&rdquo; alternate is provided for Unix, which doesn&rsquo;t require any C code</td></tr>
+<tr><th><a href="opam-core/OpamStubsTypes">opamStubsTypes.ml</a></th>
+  <td>Types in the stubs definitions (shared between both implementations)</td></tr>
+
+<tr class="lib">
+  <th><code>src/stubs</code></th>
+  <td><em>opam-stubs</em> library</td>
+</tr>
+
+<tr><td colspan="2" class="libnote">
+    C stubs. This library is built on Windows-only and automatically pulled into opam-core if needed
+</td></tr>
+
+<tr><th><a>opamInject.c</a></th>
+  <td>Code for process injection shared between <a>opamWindows.c</a> and <a>opam-putenv.c</a></td></tr>
+<tr><th><a>opamWindows.c</a></th>
+  <td>C stubs themselves</td></tr>
 
 <tr class="lib">
   <th><a href="opam-format"><code>src/format</code></a></th>
@@ -103,7 +119,7 @@ td.sublib {
 <tr><th><a href="opam-format/OpamPath">opamPath.ml</a></th>
   <td>Defines the file hierarchy in ~/.opam</td></tr>
 
-<tr><td colspan="2" class="sublib">basic types, used as keys</td></tr>
+<tr><td colspan="2" class="sublib">Basic types, used as keys</td></tr>
 
 <tr><th><a href="opam-format/OpamPackage">opamPackage.ml</a></th>
   <td>The package type, and package name type (name+version, values often called "nv" in the code)</td></tr>
@@ -112,9 +128,11 @@ td.sublib {
 <tr><th><a href="opam-format/OpamSwitch">opamSwitch.ml</a></th>
   <td>The switch type</td></tr>
 <tr><th><a href="opam-format/OpamVariable">opamVariable.ml</a></th>
-  <td>opam variables with scope (global or module)</td></tr>
+  <td>Opam variables with scope (global or module)</td></tr>
+<tr><th><a href="opam-format/OpamSysPkg">opamSysPkg.ml</a></th>
+  <td>The system package type</td></tr>
 
-<tr><td colspan="2" class="sublib">more advanced types</td></tr>
+<tr><td colspan="2" class="sublib">More advanced types</td></tr>
 
 <tr><th><a href="opam-format/OpamFilter">opamFilter.ml</a></th>
   <td>Formulas on variables, as used in opam files build scripts</td></tr>
@@ -122,10 +140,12 @@ td.sublib {
   <td>Formulas on packages, opt. with sub-formulas on versions, and conversion
     functions</td></tr>
 
-<tr><td colspan="2" class="sublib">file format</td></tr>
+<tr><td colspan="2" class="sublib">File format</td></tr>
 
 <tr><th><a href="opam-format/OpamLineLexer">opamLineLexer.mll</a></th>
   <td>A simple lexer to list of lines, which are lists of words</td></tr>
+<tr><th><a href="opam-format/OpamInterpLexer">opamInterpLexer.mll</a></th>
+  <td>Opam format variable interpolation processor</td></tr>
 <tr><th><a href="opam-format/OpamPp">opamPp.ml</a></th>
   <td>Bidirectional transformations on top of the parser and printer</td></tr>
 <tr><th><a href="opam-format/OpamFormat">opamFormat.ml</a></th>
@@ -185,6 +205,12 @@ td.sublib {
 <tr><th><a href="opam-solver/OpamSolver">opamSolver.ml</a></th>
   <td>Entry point, conversion of universe to cudf, dependencies computation</td></tr>
 
+<tr><td colspan="2" class="sublib">Built-in solver backends</td></tr>
+<tr><th><a href="opam-solver/OpamBuiltinMccs">opamBuiltinMccs.ml.real</a></th>
+  <td>Direct interface to the <a href="https://github.com/AltGr/ocaml-mccs">mccs</a> solver, if present</td></tr>
+<tr><th><a href="opam-solver/OpamBuiltinZ3">opamBuiltinZ3.ml.real</a></th>
+  <td>Direct interface to the <a href="https://github.com/Z3Prover/z3">Z3</a> solver, if present</td></tr>
+
 <tr class="lib">
   <th><a href="opam-state"><code>src/state</code></a></th>
   <td><em>opam-state</em> library</td>
@@ -222,22 +248,10 @@ td.sublib {
   <td>Specific query and handling of pinned packages</td></tr>
 <tr><th><a href="opam-state/OpamUpdate">opamUpdate.ml</a></th>
   <td>Synchronisation and downloading of repositories and package sources</td></tr>
-
-<tr class="lib">
-  <th><code>src/stubs</code></th>
-  <td><em>opam-stubs</em> library</td>
-</tr>
-
-<tr><td colspan="2" class="libnote">
-    C stubs. This library is built on Windows-only and automatically pulled into opam-core if needed
-</td></tr>
-
-<tr><th><a>opamInject.c</a></th>
-  <td>Code for process injection shared between <a>opamWindows.c</a> and <a>opam-putenv.c</a></td></tr>
-<tr><th><a>opamWindows.c</a></th>
-  <td>C stubs themselves</td></tr>
-<tr><th><a>opamWin32Stubs.ml</a></th>
-  <td>OCaml <code>external</code> declarations for the stubs</td></tr>
+<tr><th><a href="opam-state/OpamSysInteract">opamSysInteract.ml</a></th>
+  <td>Interaction with system package manager, for external dependencies management</td></tr>
+<tr><th><a href="opam-state/OpamSpdxList">opamSpdxList.ml</a></th>
+  <td>(generated) SPDX short IDs licenses list, used for linting packages</td></tr>
 
 <tr class="lib">
   <th><a href="opam-client"><code>src/client</code></a></th>
@@ -266,6 +280,8 @@ td.sublib {
   <td>Functions for the "opam switch" subcommand</td></tr>
 <tr><th><a href="opam-client/OpamListCommand">opamListCommand.ml</a></th>
   <td>Functions for the "opam list" subcommand</td></tr>
+<tr><th><a href="opam-client/OpamLockCommand">opamLockCommand.ml</a></th>
+  <td>Functions for the "opam lock" subcommand</td></tr>
 <tr><th><a href="opam-client/OpamInitDefaults">opamInitDefaults.ml</a></th>
   <td>Defines the built-in "opamrc" to use by default on "opam init"</td></tr>
 <tr><th><a href="opam-client/OpamClient">opamClient.ml</a></th>
@@ -292,7 +308,23 @@ td.sublib {
   <td>Main opam entry point</td></tr>
 
 <tr class="lib">
-  <th><code>src/tools</code></th>
+  <th><a><code>src/crowbar</code></a></th>
+  <td>crowbar tests</td>
+</tr>
+
+<tr><td colspan="2" class="libnote">
+    Crowbar generators and tests for internal data structures
+</td></tr>
+
+<tr><th><a>test.ml</a></th>
+  <td>Main crowbar tests entry point</td></tr>
+<tr><th><a>opamCrowbar.ml</a></th>
+  <td>Definition of utils structures and functions</td></tr>
+<tr><th><a>opamXxx_crowbar.ml</a></th>
+  <td>Definition of tests for module <a>Xxx</a></td></tr>
+
+<tr class="lib">
+  <th><a><code>src/tools</code></a></th>
   <td>Extra tools and utilities</td>
 </tr>
 

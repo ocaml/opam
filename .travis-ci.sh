@@ -1,6 +1,6 @@
 #!/bin/bash -xue
 
-OPAMBSVERSION=2.0.0
+OPAMBSVERSION=2.1.0-alpha
 OPAMBSROOT=$HOME/.opam.cached
 OPAMBSSWITCH=opam-build
 PATH=~/local/bin:$PATH; export PATH
@@ -146,6 +146,15 @@ EOF
           rm -f ~/local/bin/opam-bootstrap
         fi
       fi
+
+      if ! diff -q src_ext/Makefile src_ext/archives/Makefile 2>/dev/null || \
+         ! diff -q src_ext/Makefile.sources src_ext/archives/Makefile.sources 2>/dev/null ; then
+        echo "lib-ext/lib-pkg package may have been altered - resetting cache"
+        rm -rf src_ext/archives
+        make -C src_ext cache-archives
+        cp src_ext/Makefile src_ext/archives/Makefile
+        cp src_ext/Makefile.sources src_ext/archives/Makefile.sources
+      fi
     fi
     exit 0
     ;;
@@ -159,16 +168,24 @@ EOF
     else
       if [[ ! -x ~/local/bin/ocaml ]] ; then
         echo -en "travis_fold:start:ocaml\r"
-        wget http://caml.inria.fr/pub/distrib/ocaml-${OCAML_VERSION%.*}/ocaml-$OCAML_VERSION.tar.gz
-        tar -xzf ocaml-$OCAML_VERSION.tar.gz
-        cd ocaml-$OCAML_VERSION
+        wget "http://caml.inria.fr/pub/distrib/ocaml-${OCAML_VERSION%.*}/ocaml-$OCAML_VERSION.tar.gz"
+        tar -xzf "ocaml-$OCAML_VERSION.tar.gz"
+        cd "ocaml-$OCAML_VERSION"
         if [[ $OPAM_TEST -ne 1 ]] ; then
-          CONFIGURE_SWITCHES="-no-ocamldoc"
-          if [[ "$OCAML_VERSION" != "4.02.3" ]] ; then
-            CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-ocamlbuild"
+          if [[ -e configure.ac ]]; then
+            CONFIGURE_SWITCHES="--disable-debugger --disable-debug-runtime --disable-ocamldoc"
+            if [[ ${OCAML_VERSION%.*} = '4.08' ]]; then
+              CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES --disable-graph-lib"
+            fi
+          else
+            CONFIGURE_SWITCHES="-no-graph -no-debugger -no-ocamldoc"
+            if [[ "$OCAML_VERSION" != "4.02.3" ]] ; then
+              CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-ocamlbuild"
+            fi
+
           fi
         fi
-        ./configure --prefix ~/local -no-graph -no-debugger ${CONFIGURE_SWITCHES:-}
+        ./configure --prefix ~/local ${CONFIGURE_SWITCHES:-}
         if [[ $OPAM_TEST -eq 1 ]] ; then
           make -j 4 world.opt
         else
@@ -182,8 +199,12 @@ EOF
       if [[ $OPAM_TEST -eq 1 ]] ; then
         echo -en "travis_fold:start:opam\r"
         if [[ ! -e ~/local/bin/opam-bootstrap ]] ; then
+          os=$( (uname -s || echo unknown) | awk '{print tolower($0)}')
+          if [ "$os" = "darwin" ] ; then
+            os=macos
+          fi
           wget -q -O ~/local/bin/opam-bootstrap \
-               "https://github.com/ocaml/opam/releases/download/$OPAMBSVERSION/opam-$OPAMBSVERSION-$(uname -m)-$(uname -s)"
+            "https://github.com/ocaml/opam/releases/download/$OPAMBSVERSION/opam-$OPAMBSVERSION-$(uname -m)-$os"
         fi
 
         cp -f ~/local/bin/opam-bootstrap ~/local/bin/opam
@@ -221,24 +242,30 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
     TRAVIS_MERGE_BASE=$(git merge-base "$TRAVIS_CUR_HEAD" "$TRAVIS_PR_HEAD")
     if ! git diff "$TRAVIS_MERGE_BASE..$TRAVIS_PR_HEAD" --name-only --exit-code -- shell/install.sh > /dev/null ; then
       echo "shell/install.sh updated - checking it"
-      eval $(grep '^\(VERSION\|TAG\|OPAM_BIN_URL_BASE\)=' shell/install.sh)
-      echo "TAG = $TAG"
+      eval $(grep '^\(OPAM_BIN_URL_BASE\|DEV_VERSION\|VERSION\)=' shell/install.sh)
       echo "OPAM_BIN_URL_BASE=$OPAM_BIN_URL_BASE"
-      ARCHES=0
-      while read -r key sha
-      do
-        ARCHES=1
-        URL="$OPAM_BIN_URL_BASE$TAG/opam-$TAG-$key"
-        echo "Checking $URL"
-        check=$(curl -Ls "$URL" | sha512sum | cut -d' ' -f1)
-        if [ "$check" = "$sha" ] ; then
-          echo "Checksum as expected ($sha)"
-        else
-          echo -e "[\e[31mERROR\e[0m] Checksum downloaded: $check"
-          echo -e "[\e[31mERROR\e[0m] Checksum install.sh: $sha"
-          ERROR=1
-        fi
-      done < <(sed -ne 's/.*opam-\$TAG-\([^)]*\).*"\([^"]*\)".*/\1 \2/p' shell/install.sh)
+      echo "VERSION = $VERSION"
+      echo "DEV_VERSION = $DEV_VERSION"
+      for VERSION in $DEV_VERSION $VERSION; do
+        eval $(grep '^TAG=' shell/install.sh)
+        echo "TAG = $TAG"
+        ARCHES=0
+
+        while read -r key sha
+        do
+          ARCHES=1
+          URL="$OPAM_BIN_URL_BASE$TAG/opam-$TAG-$key"
+          echo "Checking $URL"
+          check=$(curl -Ls "$URL" | sha512sum | cut -d' ' -f1)
+          if [ "$check" = "$sha" ] ; then
+            echo "Checksum as expected ($sha)"
+          else
+            echo -e "[\e[31mERROR\e[0m] Checksum downloaded: $check"
+            echo -e "[\e[31mERROR\e[0m] Checksum install.sh: $sha"
+            ERROR=1
+          fi
+        done < <(sed -ne "s/.*opam-$TAG-\([^)]*\).*\"\([^\"]*\)\".*/\1 \2/p" shell/install.sh)
+      done
       if [ $ARCHES -eq 0 ] ; then
         echo "[\e[31mERROR\e[0m] No sha512 checksums were detected in shell/install.sh"
         echo "That can't be right..."
@@ -257,6 +284,18 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Hygiene" ] ; then
       CheckConfigure "$commit"
     done
   fi
+  # Check that the lib-ext/lib-pkg patches are "simple"
+  make -C src_ext PATCH="busybox patch" clone
+  make -C src_ext PATCH="busybox patch" clone-pkg
+  # Check that the lib-ext/lib-pkg patches have been re-packaged
+  cd src_ext
+  ../shell/re-patch.sh
+  if [[ $(find patches -name \*.old | wc -l) -ne 0 ]] ; then
+    echo -e "[\e[31mERROR\e[0m] ../shell/re-patch.sh should be run from src_ext before CI check"
+    git diff
+    ERROR=1
+  fi
+  cd ..
   exit $ERROR
 fi
 set -x

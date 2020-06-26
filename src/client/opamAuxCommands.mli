@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2017 OCamlPro                                             *)
+(*    Copyright 2017-2019 OCamlPro                                        *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -33,15 +33,31 @@ val url_with_local_branch: url -> url
     be found, and the corresponding source directory *)
 val name_and_dir_of_opam_file: filename -> name option * dirname
 
+(** From a directory, retrieve its opam files and returns packages name, opam
+    file and subpath option *)
+val opams_of_dir:
+  ?recurse:bool -> ?subpath:string ->
+  OpamFilename.Dir.t -> (name * OpamFile.OPAM.t OpamFile.t * string option) list
+
+(** Like [opam_of_dirs], but changes the pinning_url if needed. If given [url]
+    is local dir with vcs backend, and opam files not versioned, its pinning url
+    is changed to rsync path-pin. If [ame_kind the_new_url] returns true,
+    package information (name, opam file, new_url, subpath) are added to the
+    returned list, otherwise it is discarded. *)
+val opams_of_dir_w_target:
+  ?recurse:bool -> ?subpath:string ->
+  ?same_kind:(OpamUrl.t -> bool) -> OpamUrl.t -> OpamFilename.Dir.t ->
+  (name * OpamFile.OPAM.t OpamFile.t * OpamUrl.t * string option) list
+
 (** Resolves the opam files and directories in the list to package name and
     location, and returns the corresponding pinnings and atoms. May fail and
     exit if package names for provided [`Filename] could not be inferred, or if
     the same package name appears multiple times.
 *)
 val resolve_locals:
-  ?quiet:bool ->
+  ?quiet:bool -> ?recurse:bool -> ?subpath:string ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
-  (name * OpamUrl.t * OpamFile.OPAM.t OpamFile.t) list * atom list
+  (name * OpamUrl.t * string option * OpamFile.OPAM.t OpamFile.t) list * atom list
 
 (** Resolves the opam files and directories in the list to package name and
     location, according to what is currently pinned, and returns the
@@ -49,7 +65,7 @@ val resolve_locals:
     is pinned, or opam files corresponding to no pinned package.
 *)
 val resolve_locals_pinned:
-  'a switch_state ->
+  'a switch_state -> ?recurse:bool -> ?subpath:string ->
   [ `Atom of atom | `Dirname of dirname ] list ->
   atom list
 
@@ -68,6 +84,8 @@ val autopin:
   rw switch_state ->
   ?simulate:bool ->
   ?quiet:bool ->
+  ?recurse:bool ->
+  ?subpath:string ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   rw switch_state * atom list
 
@@ -81,14 +99,7 @@ val simulate_autopin:
   'a switch_state ->
   ?quiet:bool ->
   ?for_view:bool ->
+  ?recurse:bool ->
+  ?subpath:string ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   'a switch_state * atom list
-
-(** Scans for package definition files in a directory, and selects a compiler
-    that is compatible with them from the configured default compiler list, or
-    that is unambiguously selected by the package definitions.
-    Returns the corresponding atoms. If no compiler matches, prints a
-    warning, and returns the empty list after user confirmation. *)
-val get_compatible_compiler:
-  ?repos:repository_name list ->
-  'a repos_state -> dirname -> atom option * bool

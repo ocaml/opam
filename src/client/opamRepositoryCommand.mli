@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -52,7 +52,8 @@ val set_url:
 
 (** Update the given repositories, as per [OpamUpdate.repositories], checks for
     their version and runs the upgrade script locally if they are for an earlier
-    opam. Returns [true] if no update or upgrade errors were encountered. *)
+    opam. Returns list of repositories that failed and the new repository state.
+    *)
 val update_with_auto_upgrade:
   rw repos_state -> repository_name list ->
   repository_name list * rw repos_state

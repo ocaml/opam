@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -152,7 +152,7 @@ let validate_and_add_to_cache label url cache_dir file checksums =
 
 (* [cache_dir] used to add to cache only *)
 let pull_from_upstream
-    label ?(working_dir=false) cache_dir destdir checksums url =
+    label ?(working_dir=false) ?subpath cache_dir destdir checksums url =
   let module B = (val url_backend url: OpamRepositoryBackend.S) in
   let cksum = match checksums with [] -> None | c::_ -> Some c in
   let text =
@@ -160,7 +160,7 @@ let pull_from_upstream
       (OpamUrl.string_of_backend url.OpamUrl.backend)
   in
   OpamProcess.Job.with_text text @@
-  (if working_dir then B.sync_dirty destdir url
+  (if working_dir then B.sync_dirty ?subpath destdir url
    else
    let pin_cache_dir = OpamRepositoryPath.pin_cache url in
    let url, pull =
@@ -178,9 +178,23 @@ let pull_from_upstream
         in
         rsync, pull
        )
+     else if OpamUrl.(match url.backend with | `git -> true | _ -> false)
+          && OpamFilename.exists_dir pin_cache_dir then
+       (log "Pin cache (git) existing for %s : %s\n"
+          (OpamUrl.to_string url) @@ OpamFilename.Dir.to_string pin_cache_dir;
+        let git_cached =
+          OpamUrl.parse ~backend:`git
+          @@ OpamFilename.Dir.to_string pin_cache_dir
+        in
+        let pull =
+          let module BR = (val url_backend git_cached: OpamRepositoryBackend.S) in
+          BR.pull_url
+        in
+        git_cached, pull
+       )
      else url, B.pull_url
    in
-   pull ?cache_dir destdir cksum url
+   pull ?cache_dir ?subpath destdir cksum url
   )
   @@| function
   | (Result (Some file) | Up_to_date (Some file)) as ret ->
@@ -193,14 +207,14 @@ let pull_from_upstream
   | (Result None | Up_to_date None) as ret -> ret
   | Not_available _ as na -> na
 
-let pull_from_mirrors label ?working_dir cache_dir destdir checksums urls =
+let pull_from_mirrors label ?working_dir ?subpath cache_dir destdir checksums urls =
   let rec aux = function
     | [] -> invalid_arg "pull_from_mirrors: empty mirror list"
     | [url] ->
-      pull_from_upstream label ?working_dir cache_dir destdir checksums url
+      pull_from_upstream label ?working_dir ?subpath cache_dir destdir checksums url
       @@| fun r -> url, r
     | url::mirrors ->
-      pull_from_upstream label ?working_dir cache_dir destdir checksums url
+      pull_from_upstream label ?working_dir ?subpath cache_dir destdir checksums url
       @@+ function
       | Not_available (_,s) ->
         OpamConsole.warning "%s: download of %s failed (%s), trying mirror"
@@ -219,7 +233,7 @@ let pull_from_mirrors label ?working_dir cache_dir destdir checksums urls =
   | ret -> ret
 
 let pull_tree
-    label ?cache_dir ?(cache_urls=[]) ?working_dir
+    label ?cache_dir ?(cache_urls=[]) ?working_dir ?subpath
     local_dirname checksums remote_urls =
   let extract_archive f s =
     OpamFilename.cleandir local_dirname;
@@ -258,7 +272,7 @@ let pull_tree
           Some ("missing checksum"),
           label ^ ": Missing checksum, and `--require-checksums` was set."))
     else
-      pull_from_mirrors label ?working_dir cache_dir local_dirname checksums
+      pull_from_mirrors label ?working_dir ?subpath cache_dir local_dirname checksums
         remote_urls
       @@+ function
       | _, Up_to_date None -> Done (Up_to_date "no changes")
@@ -319,7 +333,8 @@ let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums remote_urls =
   let text = OpamProcess.make_command_text label "dl" in
   OpamProcess.Job.with_text text @@
   fetch_from_cache cache_dir cache_urls checksums @@+ function
-  | Up_to_date (_, url) -> Done (Up_to_date (OpamUrl.to_string url))
+  | Up_to_date (_, _) ->
+    Done (Up_to_date "cached")
   | Result (_, url) ->
     Done (Result (OpamUrl.to_string url))
   | Not_available _ ->
@@ -463,9 +478,9 @@ let current_branch url =
   on_local_version_control url ~default:(Done None) @@
   fun dir (module VCS) -> VCS.current_branch dir
 
-let is_dirty url =
+let is_dirty ?subpath url =
   on_local_version_control url ~default:(Done false) @@
-  fun dir (module VCS) -> VCS.is_dirty dir
+  fun dir (module VCS) -> VCS.is_dirty ?subpath dir
 
 let report_fetch_result pkg = function
   | Result msg ->

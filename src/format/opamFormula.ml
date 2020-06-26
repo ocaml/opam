@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -45,6 +45,27 @@ let short_string_of_atom = function
 
 let string_of_atoms atoms =
   OpamStd.List.concat_map " & " short_string_of_atom atoms
+
+let atom_of_string str =
+  let re = lazy Re.(compile @@ whole_string @@ seq [
+      group @@ rep1 @@ diff any (set ">=<.!");
+      group @@ alt [ seq [ set "<>"; opt @@ char '=' ];
+                     set "=."; str "!="; ];
+      group @@ rep1 any;
+    ])
+  in
+  try
+    let sub = Re.exec (Lazy.force re) str in
+    let sname = Re.Group.get sub 1 in
+    let sop = Re.Group.get sub 2 in
+    let sversion = Re.Group.get sub 3 in
+    let name = OpamPackage.Name.of_string sname in
+    let sop = if sop = "." then "=" else sop in
+    let op = OpamLexer.relop sop in
+    let version = OpamPackage.Version.of_string sversion in
+    name, Some (op, version)
+  with Not_found | Failure _ | OpamLexer.Error _ ->
+    OpamPackage.Name.of_string str, None
 
 type 'a conjunction = 'a list
 
@@ -269,7 +290,7 @@ let check (name,cstr) package =
   | Some (relop, v) -> eval_relop relop (OpamPackage.version package) v
 
 let packages_of_atoms ?(disj=false) pkgset atoms =
-  (* Conjunction for constraints over the same name (unless [disj@ is
+  (* Conjunction for constraints over the same name (unless [disj] is
      specified), but disjunction on the package names *)
   let ffilter = if disj then List.exists else List.for_all in
   let by_name =
@@ -283,6 +304,12 @@ let packages_of_atoms ?(disj=false) pkgset atoms =
         (fun nv -> ffilter (fun a -> check a nv) atoms)
         (OpamPackage.packages_of_name pkgset name))
     by_name OpamPackage.Set.empty
+
+let satisfies_depends pkgset f =
+  eval (fun (name, cstr) ->
+      OpamPackage.Set.exists (fun nv -> check_version_formula cstr nv.version)
+        (OpamPackage.packages_of_name pkgset name))
+    f
 
 let to_string t =
   let string_of_constraint (relop, version) =
@@ -610,9 +637,7 @@ let gen_formula l f =
 let formula_of_version_set set subset =
   let module S = OpamPackage.Version.Set in
   match
-    gen_formula
-      (OpamPackage.Version.Set.elements set)
-      (fun x -> OpamPackage.Version.Set.mem x subset)
+    gen_formula (S.elements set) (fun x -> S.mem x subset)
   with
   | Some f -> f
   | None -> invalid_arg "Empty subset"

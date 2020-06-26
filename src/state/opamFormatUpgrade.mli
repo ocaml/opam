@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -21,7 +21,6 @@ exception Upgrade_done of OpamFile.Config.t
 (** The latest version of the opam root format, that normal operation of this
     instance of opam requires *)
 val latest_version: OpamVersion.t
-val lastest_compatible_switch_version: OpamVersion.t
 
 (** Runs the upgrade from its current format to the latest compatible version
     for the opam root at the given directory. A global write lock must be supplied.

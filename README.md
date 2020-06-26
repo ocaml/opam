@@ -1,7 +1,8 @@
 # opam - A package manager for OCaml
 
-[![TravisCI Build Status](https://travis-ci.org/ocaml/opam.svg?branch=master)](https://travis-ci.org/ocaml/opam)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/ocaml/opam?branch=master&svg=true)](https://ci.appveyor.com/project/AltGr/opam)
+|master|2.0|
+|--|--|
+|[![TravisCI Build Status](https://travis-ci.org/ocaml/opam.svg?branch=master)](https://travis-ci.org/ocaml/opam) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/ocaml/opam?branch=master&svg=true)](https://ci.appveyor.com/project/AltGr/opam) | [![TravisCI 2.0 Build Status](https://travis-ci.org/ocaml/opam.svg?branch=2.0)](https://travis-ci.org/ocaml/opam)  [![AppVeyor 2.0 Build Status](https://ci.appveyor.com/api/projects/status/github/ocaml/opam?branch=2.0&svg=true)](https://ci.appveyor.com/project/AltGr/opam) |
 
 Opam is a source-based package manager for OCaml. It supports multiple simultaneous
 compiler installations, flexible package constraints, and a Git-friendly development
@@ -216,7 +217,7 @@ the Dose library and Copyright 2011 Ralf Treinen.
 
 All other code is:
 
-Copyright 2012-2016 OCamlPro
+Copyright 2012-2020 OCamlPro
 Copyright 2012 INRIA
 
 All rights reserved. Opam is distributed under the terms of the GNU Lesser

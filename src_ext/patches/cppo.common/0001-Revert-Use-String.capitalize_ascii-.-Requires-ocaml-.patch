@@ -1,19 +1,7 @@
-From b20bb269b7bc753c6a9dc17251fc6d54ee650c70 Mon Sep 17 00:00:00 2001
-From: David Allsopp <david.allsopp@metastack.com>
-Date: Wed, 26 Jun 2019 16:09:49 +0100
-Subject: [PATCH] Revert "Use `String.capitalize_ascii`. Requires ocaml >=
- 4.03."
-
-This reverts commit 97617417d5093d73e0680c4c52f38d07b04c4300.
----
- src/cppo_eval.ml | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/src/cppo_eval.ml b/src/cppo_eval.ml
-index fb3f9de..7542b42 100644
---- a/src/cppo_eval.ml
-+++ b/src/cppo_eval.ml
-@@ -82,11 +82,10 @@ let trim_and_compact_string s =
+diff -Naur a/src/cppo_eval.ml b/src/cppo_eval.ml
+--- a/src/cppo_eval.ml	2019-05-26 23:49:42.000000000 +0000
++++ b/src/cppo_eval.ml	2019-11-21 14:29:33.416891946 +0000
+@@ -82,11 +82,10 @@
    let buf = Buffer.create (String.length s) in
    trim_and_compact buf s;
    Buffer.contents buf
@@ -26,6 +14,3 @@ index fb3f9de..7542b42 100644
  
  let is_ident s =
    let len = String.length s in
--- 
-2.19.1.windows.1
-

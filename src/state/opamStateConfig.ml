@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2015 OCamlPro                                             *)
+(*    Copyright 2015-2020 OCamlPro                                        *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -24,6 +24,7 @@ type t = {
   unlock_base: bool;
   no_env_notice: bool;
   locked: string option;
+  no_depexts: bool;
 }
 
 let default = {
@@ -46,6 +47,7 @@ let default = {
   unlock_base = false;
   no_env_notice = false;
   locked = None;
+  no_depexts = false;
 }
 
 type 'a options_fun =
@@ -62,6 +64,7 @@ type 'a options_fun =
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
   ?locked:string option ->
+  ?no_depexts: bool ->
   'a
 
 let setk k t
@@ -78,6 +81,7 @@ let setk k t
     ?unlock_base
     ?no_env_notice
     ?locked
+    ?no_depexts
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -95,6 +99,7 @@ let setk k t
     unlock_base = t.unlock_base + unlock_base;
     no_env_notice = t.no_env_notice + no_env_notice;
     locked = t.locked + locked;
+    no_depexts = t.no_depexts + no_depexts;
   }
 
 let set t = setk (fun x () -> x) t
@@ -129,6 +134,7 @@ let initk k =
     ?unlock_base:(env_bool "UNLOCKBASE")
     ?no_env_notice:(env_bool "NOENVNOTICE")
     ?locked:(env_string "LOCKED" >>| function "" -> None | s -> Some s)
+    ?no_depexts:None
 
 let init ?noop:_ = initk (fun () -> ())
 

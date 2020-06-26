@@ -105,20 +105,28 @@
                  (diff opam-exec.err %{dep:opam-exec.0}))))
 
 (rule
-  (with-stdout-to opam-var.0 (echo "")))
-(rule
-  (targets opam-var.1 opam-var.err)
-  (action (progn (with-stderr-to opam-var.err
-                   (with-stdout-to opam-var.1 (run %{bin:opam} var --help=groff)))
-                 (diff opam-var.err %{dep:opam-var.0}))))
-
-(rule
   (with-stdout-to opam-config.0 (echo "")))
 (rule
   (targets opam-config.1 opam-config.err)
   (action (progn (with-stderr-to opam-config.err
                    (with-stdout-to opam-config.1 (run %{bin:opam} config --help=groff)))
                  (diff opam-config.err %{dep:opam-config.0}))))
+
+(rule
+  (with-stdout-to opam-option.0 (echo "")))
+(rule
+  (targets opam-option.1 opam-option.err)
+  (action (progn (with-stderr-to opam-option.err
+                   (with-stdout-to opam-option.1 (run %{bin:opam} option --help=groff)))
+                 (diff opam-option.err %{dep:opam-option.0}))))
+
+(rule
+  (with-stdout-to opam-var.0 (echo "")))
+(rule
+  (targets opam-var.1 opam-var.err)
+  (action (progn (with-stderr-to opam-var.err
+                   (with-stdout-to opam-var.1 (run %{bin:opam} var --help=groff)))
+                 (diff opam-var.err %{dep:opam-var.0}))))
 
 (rule
   (with-stdout-to opam-upgrade.0 (echo "")))
@@ -225,8 +233,9 @@
     opam-repository.1 
     opam-env.1 
     opam-exec.1 
-    opam-var.1 
     opam-config.1 
+    opam-option.1 
+    opam-var.1 
     opam-upgrade.1 
     opam-update.1 
     opam-reinstall.1 

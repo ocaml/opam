@@ -1,0 +1,314 @@
+009e00fa
+### opam show "conf-llvm>7.0.0"
+
+<><> conf-llvm: information on all versions <><><><><><><><><><><><><><><><><><>
+name         conf-llvm
+all-versions 3.4  3.8  3.9  4.0.0  5.0.0  6.0.0  7.0.0  8.0.0  9.0.0  10.0.0
+
+<><> Version-specific details <><><><><><><><><><><><><><><><><><><><><><><><><>
+version     10.0.0
+repository  default
+homepage    "http://llvm.org"
+bug-reports "https://llvm.org/bugs/"
+authors     "The LLVM team"
+maintainer  "Kate <kit.ty.kate@disroot.org>"
+license     "MIT"
+flags       conf
+synopsis    Virtual package relying on llvm library installation
+### opam show --all-versions "conf-llvm>7.0.0"
+
+<><> conf-llvm: information on all versions <><><><><><><><><><><><><><><><><><>
+name         conf-llvm
+all-versions 3.4  3.8  3.9  4.0.0  5.0.0  6.0.0  7.0.0  8.0.0  9.0.0  10.0.0
+
+<><> Version-specific details <><><><><><><><><><><><><><><><><><><><><><><><><>
+version     8.0.0
+repository  default
+homepage    "http://llvm.org"
+bug-reports "https://llvm.org/bugs/"
+authors     "The LLVM team"
+maintainer  "Kate <kit.ty.kate@disroot.org>"
+license     "MIT"
+flags       conf
+synopsis    Virtual package relying on llvm library installation
+
+<><> Version-specific details <><><><><><><><><><><><><><><><><><><><><><><><><>
+version     9.0.0
+repository  default
+homepage    "http://llvm.org"
+bug-reports "https://llvm.org/bugs/"
+authors     "The LLVM team"
+maintainer  "Kate <kit.ty.kate@disroot.org>"
+license     "MIT"
+flags       conf
+synopsis    Virtual package relying on llvm library installation
+
+<><> Version-specific details <><><><><><><><><><><><><><><><><><><><><><><><><>
+version     10.0.0
+repository  default
+homepage    "http://llvm.org"
+bug-reports "https://llvm.org/bugs/"
+authors     "The LLVM team"
+maintainer  "Kate <kit.ty.kate@disroot.org>"
+license     "MIT"
+flags       conf
+synopsis    Virtual package relying on llvm library installation
+### opam show  "conf-llvm>7.0.0" --raw
+opam-version: "2.0"
+name: "conf-llvm"
+version: "10.0.0"
+synopsis: "Virtual package relying on llvm library installation"
+maintainer: "Kate <kit.ty.kate@disroot.org>"
+authors: "The LLVM team"
+license: "MIT"
+homepage: "http://llvm.org"
+bug-reports: "https://llvm.org/bugs/"
+flags: conf
+build: ["bash" "-ex" "configure.sh" version]
+depexts: [
+  ["llvm@10"] {os-distribution = "homebrew" & os = "macos"}
+  ["llvm-10.0"] {os-distribution = "macports" & os = "macos"}
+  ["llvm-10-dev"] {os-family = "debian"}
+  ["llvm10-dev"] {os-distribution = "alpine"}
+  ["llvm10-devel"] {os-family = "suse"}
+  ["devel/llvm10"] {os = "freebsd"}
+]
+extra-files: ["configure.sh" "md5=b22c1cc2fb7743accdf5d72b9f480307"]
+### opam show  "conf-llvm>7.0.0" --raw --sort
+opam-version: "2.0"
+name: "conf-llvm"
+version: "10.0.0"
+synopsis: "Virtual package relying on llvm library installation"
+maintainer: "Kate <kit.ty.kate@disroot.org>"
+authors: "The LLVM team"
+license: "MIT"
+homepage: "http://llvm.org"
+bug-reports: "https://llvm.org/bugs/"
+flags: conf
+build: ["bash" "-ex" "configure.sh" version]
+depexts: [
+  ["devel/llvm10"] {os = "freebsd"}
+  ["llvm-10-dev"] {os-family = "debian"}
+  ["llvm-10.0"] {os-distribution = "macports" & os = "macos"}
+  ["llvm10-dev"] {os-distribution = "alpine"}
+  ["llvm10-devel"] {os-family = "suse"}
+  ["llvm@10"] {os-distribution = "homebrew" & os = "macos"}
+]
+extra-files: ["configure.sh" "md5=b22c1cc2fb7743accdf5d72b9f480307"]
+### opam show "conf-llvm>7.0.0" --sort
+
+<><> conf-llvm: information on all versions <><><><><><><><><><><><><><><><><><>
+name         conf-llvm
+all-versions 3.4  3.8  3.9  4.0.0  5.0.0  6.0.0  7.0.0  8.0.0  9.0.0  10.0.0
+
+<><> Version-specific details <><><><><><><><><><><><><><><><><><><><><><><><><>
+version     10.0.0
+repository  default
+homepage    "http://llvm.org"
+bug-reports "https://llvm.org/bugs/"
+authors     "The LLVM team"
+maintainer  "Kate <kit.ty.kate@disroot.org>"
+license     "MIT"
+flags       conf
+synopsis    Virtual package relying on llvm library installation
+### opam show "conf-llvm>7.0.0" -f depexts: --sort
+["devel/llvm10"] {os = "freebsd"}
+["llvm-10-dev"] {os-family = "debian"}
+["llvm-10.0"] {os-distribution = "macports" & os = "macos"}
+["llvm10-dev"] {os-distribution = "alpine"}
+["llvm10-devel"] {os-family = "suse"}
+["llvm@10"] {os-distribution = "homebrew" & os = "macos"}
+### <showtest.opam>
+opam-version: "2.0"
+name: "showtest"
+version: "1.0"
+synopsis: "A word"
+description: "Two words."
+maintainer: "opam-devel@lists.ocaml.org"
+authors: [ "Z" "A" "R" ]
+homepage: "x"
+bug-reports: "x"
+depends: [
+  "ocaml" {>= "4.02.3"}
+  "base-unix"
+  "base-bigarray"
+  "ocamlgraph"
+  "re" {>= "1.5.0"}
+  "dune" {>= "1.2.1"}
+  "cppo" {build}
+]
+conflicts: ["extlib-compat"]
+build: [
+  [ "./configure" ]
+  [ make ]
+]
+dev-repo: "git+https://github.com/ocaml/opam.git"
+### opam show ./showtest.opam --sort --raw
+opam-version: "2.0"
+name: "showtest"
+version: "1.0"
+synopsis: "A word"
+description: "Two words."
+maintainer: "opam-devel@lists.ocaml.org"
+authors: ["A" "R" "Z"]
+homepage: "x"
+bug-reports: "x"
+depends: [
+  "base-bigarray"
+  "base-unix"
+  "ocamlgraph"
+  "cppo" {build}
+  "dune" {>= "1.2.1"}
+  "ocaml" {>= "4.02.3"}
+  "re" {>= "1.5.0"}
+]
+conflicts: ["extlib-compat"]
+build: [
+  ["./configure"]
+  [make]
+]
+dev-repo: "git+https://github.com/ocaml/opam.git"
+### opam show ./showtest.opam --sort
+
+<><> showtest: information on all versions ><><><><><><><><><><><><><><><><><><>
+name         showtest
+all-versions 1.0
+
+<><> Version-specific details <><><><><><><><><><><><><><><><><><><><><><><><><>
+version     1.0
+pin         --
+homepage    "x"
+bug-reports "x"
+dev-repo    "git+https://github.com/ocaml/opam.git"
+authors     "A" "R" "Z"
+maintainer  "opam-devel@lists.ocaml.org"
+depends     "base-bigarray"
+            "base-unix"
+            "ocamlgraph"
+            "cppo" {build}
+            "dune" {>= "1.2.1"}
+            "ocaml" {>= "4.02.3"}
+            "re" {>= "1.5.0"}
+conflicts   "extlib-compat"
+synopsis    A word
+description Two words.
+### opam show ./showtest.opam --sort --just-file
+opam-version: "2.0"
+name: "showtest"
+version: "1.0"
+synopsis: "A word"
+description: "Two words."
+maintainer: "opam-devel@lists.ocaml.org"
+authors: ["A" "R" "Z"]
+homepage: "x"
+bug-reports: "x"
+depends: [
+  "base-bigarray"
+  "base-unix"
+  "ocamlgraph"
+  "cppo" {build}
+  "dune" {>= "1.2.1"}
+  "ocaml" {>= "4.02.3"}
+  "re" {>= "1.5.0"}
+]
+conflicts: ["extlib-compat"]
+build: [
+  ["./configure"]
+  [make]
+]
+dev-repo: "git+https://github.com/ocaml/opam.git"
+### opam show ./showtest.opam -f depends: --sort
+"base-bigarray"
+"base-unix"
+"ocamlgraph"
+"cppo" {build}
+"dune" {>= "1.2.1"}
+"ocaml" {>= "4.02.3"}
+"re" {>= "1.5.0"}
+### OPAMDEBUGSECTIONS=AUXCMD opam show ./showtest.opam --debug-level=-1 --debug --just-file
+opam-version: "2.0"
+name: "showtest"
+version: "1.0"
+synopsis: "A word"
+description: "Two words."
+maintainer: "opam-devel@lists.ocaml.org"
+authors: ["Z" "A" "R"]
+homepage: "x"
+bug-reports: "x"
+depends: [
+  "ocaml" {>= "4.02.3"}
+  "base-unix"
+  "base-bigarray"
+  "ocamlgraph"
+  "re" {>= "1.5.0"}
+  "dune" {>= "1.2.1"}
+  "cppo" {build}
+]
+conflicts: ["extlib-compat"]
+build: [
+  ["./configure"]
+  [make]
+]
+dev-repo: "git+https://github.com/ocaml/opam.git"
+### OPAMDEBUGSECTIONS=AUXCMD opam show ./showtest.opam --debug-level=-1 --debug
+AUXCMD                          autopin: { showtest => file:///tmp/opam-reftest-5a61c5 }
+
+<><> showtest: information on all versions ><><><><><><><><><><><><><><><><><><>
+name         showtest
+all-versions 1.0
+
+<><> Version-specific details <><><><><><><><><><><><><><><><><><><><><><><><><>
+version     1.0
+pin         --
+homepage    "x"
+bug-reports "x"
+dev-repo    "git+https://github.com/ocaml/opam.git"
+authors     "Z" "A" "R"
+maintainer  "opam-devel@lists.ocaml.org"
+depends     "ocaml" {>= "4.02.3"}
+            "base-unix"
+            "base-bigarray"
+            "ocamlgraph"
+            "re" {>= "1.5.0"}
+            "dune" {>= "1.2.1"}
+            "cppo" {build}
+conflicts   "extlib-compat"
+synopsis    A word
+description Two words.
+### opam show ./showtest.opam --normalise -f depends:
+["ocaml" {>= "4.02.3"} "base-unix" "base-bigarray" "ocamlgraph" "re" {>= "1.5.0"} "dune" {>= "1.2.1"} "cppo" {build}]
+### OPAMVAR_os=freebsd opam show "conf-llvm>7.0.0" -f name,version,depexts: --all-versions
+name     conf-llvm
+version  8.0.0
+depexts: ["llvm@8"] {os-distribution = "homebrew" & os = "macos"}
+         ["llvm-8.0"] {os-distribution = "macports" & os = "macos"}
+         ["llvm-8-dev"] {os-family = "debian"}
+         ["llvm8-dev"] {os-distribution = "alpine"}
+         ["llvm8-devel"] {os-family = "suse"}
+         ["devel/llvm80"] {os = "freebsd"}
+name     conf-llvm
+version  9.0.0
+depexts: ["llvm@9"] {os-distribution = "homebrew" & os = "macos"}
+         ["llvm-9.0"] {os-distribution = "macports" & os = "macos"}
+         ["llvm-9-dev"] {os-family = "debian"}
+         ["llvm9-dev"] {os-distribution = "alpine"}
+         ["llvm9-devel"] {os-family = "suse"}
+         ["devel/llvm90"] {os = "freebsd"}
+name     conf-llvm
+version  10.0.0
+depexts: ["llvm@10"] {os-distribution = "homebrew" & os = "macos"}
+         ["llvm-10.0"] {os-distribution = "macports" & os = "macos"}
+         ["llvm-10-dev"] {os-family = "debian"}
+         ["llvm10-dev"] {os-distribution = "alpine"}
+         ["llvm10-devel"] {os-family = "suse"}
+         ["devel/llvm10"] {os = "freebsd"}
+### OPAMVAR_os=freebsd opam show "conf-llvm>7.0.0" -f name,version,depexts --all-versions
+name    conf-llvm
+version 8.0.0
+depexts devel/llvm80 llvm-8-dev
+name    conf-llvm
+version 9.0.0
+depexts devel/llvm90 llvm-9-dev
+name    conf-llvm
+version 10.0.0
+depexts devel/llvm10 llvm-10-dev

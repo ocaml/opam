@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -174,6 +174,45 @@ let write file contents =
   Unix.lockf (Unix.descr_of_out_channel oc) Unix.F_LOCK 0;
   output_string oc contents;
   close_out oc
+
+let setup_copy ?(chmod = fun x -> x) ~src ~dst () =
+  let ic = open_in_bin src in
+  let oc =
+    try
+      let perm =
+        (Unix.fstat (Unix.descr_of_in_channel ic)).st_perm |> chmod
+      in
+      open_out_gen
+        [ Open_wronly; Open_creat; Open_trunc; Open_binary ]
+        perm dst
+    with exn ->
+      OpamStd.Exn.finalise exn (fun () -> close_in ic)
+  in
+  (ic, oc)
+
+let copy_channels =
+  let buf_len = 4096 in
+  let buf = Bytes.create buf_len in
+  let rec loop ic oc =
+    match input ic buf 0 buf_len with
+    | 0 -> ()
+    | n ->
+      output oc buf 0 n;
+      loop ic oc
+  in
+  loop
+
+let copy_file_aux ?chmod ~src ~dst () =
+  let close_channels ic oc =
+    OpamStd.Exn.finally (fun () -> close_in ic) (fun () -> close_out oc) in
+  try
+    let ic, oc = setup_copy ?chmod ~src ~dst () in
+    OpamStd.Exn.finally (fun () -> close_channels ic oc)
+      (fun () -> copy_channels ic oc);
+  with Unix.Unix_error _ as e ->
+    (* Remove the partial destination file, if any. *)
+    (try Unix.unlink dst with Unix.Unix_error _ -> ());
+    internal_error "Cannot copy %s to %s (%s)." src dst (Printexc.to_string e)
 
 let chdir dir =
   try Unix.chdir dir
@@ -356,45 +395,41 @@ let t_resolve_command =
       with e -> OpamStd.Exn.fatal e; false
   in
   let resolve ?dir env name =
-    if not (Filename.is_relative name) then (* absolute path *)
-      if check_perms name then `Cmd name else `Denied
-    else if is_external_cmd name then (* relative *)
+    if not (Filename.is_relative name) then begin
+      (* absolute path *)
+      if not (Sys.file_exists name) then `Not_found
+      else if not (check_perms name) then `Denied
+      else `Cmd name
+    end else if is_external_cmd name then begin
+      (* relative path *)
       let cmd = match dir with
         | None -> name
         | Some d -> Filename.concat d name
       in
-      if check_perms cmd then `Cmd cmd else `Denied
-    else (* bare command, lookup in PATH *)
-    if Sys.win32 then
-      let path = OpamStd.Sys.split_path_variable (env_var env "PATH") in
-      let name =
-        if Filename.check_suffix name ".exe" then name else name ^ ".exe"
-      in
-      let cmdname =
-        OpamStd.(List.find_opt (fun path ->
-            check_perms (Filename.concat path name))
-            path |> Option.map (fun path -> Filename.concat path name))
-      in
-      match cmdname with
-      | Some cmd -> `Cmd cmd
-      | None -> `Denied
-    else
-    let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "command -v %s" name] in
-    let r =
-      OpamProcess.run
-        (OpamProcess.command ~env ?dir
-           ~name:(temp_file ("command-"^(Filename.basename name)))
-           ~verbose:false cmd args)
+      if not (Sys.file_exists cmd) then `Not_found
+      else if not (check_perms cmd) then `Denied
+      else `Cmd cmd
+    end else
+    (* bare command, lookup in PATH *)
+    (* Following the shell sematics for looking up PATH, programs with the
+       expected name but not the right permissions are skipped silently.
+       Therefore, only two outcomes are possible in that case, [`Cmd ..] or
+       [`Not_found]. *)
+    let path = OpamStd.Sys.split_path_variable (env_var env "PATH") in
+    let name =
+      if Sys.win32 && not (Filename.check_suffix name ".exe") then
+        name ^ ".exe"
+      else name
     in
-    if OpamProcess.check_success_and_cleanup r then
-      match r.OpamProcess.r_stdout with
-      | cmdname::_ ->
-        (* "command -v echo" returns just echo, hence the first when check *)
-        if cmdname = name || check_perms cmdname then `Cmd cmdname
-        else if check_perms cmdname then `Not_found
-        else `Denied
-      | _ -> `Not_found
-    else `Not_found
+    let cmdname =
+      let open OpamStd in
+      List.find_opt (fun path ->
+          check_perms (Filename.concat path name)
+        ) path |> Option.map (fun path -> Filename.concat path name)
+    in
+    match cmdname with
+    | Some cmd -> `Cmd cmd
+    | None -> `Not_found
   in
   fun ?(env=default_env) ?dir name ->
     resolve env ?dir name
@@ -536,7 +571,7 @@ let cygify f =
   else
     fun x -> x
 
-let copy_file_aux f src dst =
+let copy_file src dst =
   if (try Sys.is_directory src
       with Sys_error _ -> raise (File_not_found src))
   then internal_error "Cannot copy %s: it is a directory." src;
@@ -545,9 +580,8 @@ let copy_file_aux f src dst =
   if file_or_symlink_exists dst
   then remove_file dst;
   mkdir (Filename.dirname dst);
-  command ~verbose:(verbose_for_base_commands ()) ("cp"::(cygify f [src; dst]))
-
-let copy_file = copy_file_aux (get_cygpath_function ~command:"cp")
+  log "copy %s -> %s" src dst;
+  copy_file_aux ~src ~dst ()
 
 let copy_dir src dst =
   if Sys.file_exists dst then
@@ -691,7 +725,7 @@ let install ?(warning=default_install_warning) ?exec src dst =
               warning dst `Install_unknown;
               (dst, false)
         in
-        copy_file src dst;
+        copy_file_aux ~src ~dst ();
         if cygcheck then
           match OpamStd.Sys.is_cygwin_variant dst with
             `Native ->
@@ -701,10 +735,12 @@ let install ?(warning=default_install_warning) ?exec src dst =
           | `CygLinked ->
               warning dst `Cygwin_libraries
       end else
-        copy_file src dst
-    else
-      command ("install" :: "-m" :: (if exec then "0755" else "0644") ::
-         [ src; dst ])
+        copy_file_aux ~src ~dst ()
+    else (
+      let perm = if exec then 0o755 else 0o644 in
+      log "install %s -> %s (%o)" src dst perm;
+      copy_file_aux ~chmod:(fun _ -> perm) ~src ~dst ()
+    )
   end
 
 let cpu_count () =
@@ -797,26 +833,31 @@ module Tar = struct
         Some (Printf.sprintf "Tar needs %s to extract the archive" cmd)
       else None)
 
-  let tar_cmd =
+  let tar_cmd = lazy (
     match OpamStd.Sys.os () with
     | OpamStd.Sys.OpenBSD -> "gtar"
     | _ -> "tar"
+  )
+
+  let cygpath_tar = lazy (
+    Lazy.force (get_cygpath_function ~command:(Lazy.force tar_cmd))
+  )
 
   let extract_command =
-    let f = get_cygpath_function ~command:tar_cmd in
     fun file ->
       OpamStd.Option.Op.(
         get_type file >>| fun typ ->
-        let f = Lazy.force f in
+        let f = Lazy.force cygpath_tar in
+        let tar_cmd = Lazy.force tar_cmd in
         let command c dir =
           make_command tar_cmd [ Printf.sprintf "xf%c" c ; f file; "-C" ; f dir ]
         in
         command (extract_option typ))
 
   let compress_command =
-    let f = get_cygpath_function ~command:tar_cmd in
     fun file dir ->
-      let f = Lazy.force f in
+      let f = Lazy.force cygpath_tar in
+      let tar_cmd = Lazy.force tar_cmd in
       make_command tar_cmd [
         "cfz"; f file;
         "-C" ; f (Filename.dirname dir);

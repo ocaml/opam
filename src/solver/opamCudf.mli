@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -182,6 +182,16 @@ val s_pinned: string
 
 (** the number of versions of the package since this one, cubed *)
 val s_version_lag: string
+
+(** valid cudf name for the dummy package used for enforcing opam's switch
+    invariants *)
+val opam_invariant_package_name: string
+
+(** valid cudf name and version for the dummy package used for enforcing opam's
+    switch invariants *)
+val opam_invariant_package: string * int
+
+val is_opam_invariant: Cudf.package -> bool
 
 (** {2 Pretty-printing} *)
 

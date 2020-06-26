@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -69,10 +69,10 @@ val filter:
 val pattern_selector: string list -> selector OpamFormula.formula
 
 (** Get the aggregated active external dependencies of the given packages *)
-val get_depexts: 'a switch_state -> package_set -> OpamStd.String.Set.t
+val get_depexts: 'a switch_state -> package_set -> OpamSysPkg.Set.t
 
 (** Lists the given aggregated active external dependencies of the given packages *)
-val print_depexts: OpamStd.String.Set.t -> unit
+val print_depexts: OpamSysPkg.Set.t -> unit
 
 (** Element of package information to be printed. Fixme: should be part of the
     run-time man! *)
@@ -141,7 +141,7 @@ val display: 'a switch_state -> package_listing_format -> package_set -> unit
 val info:
   'a switch_state ->
   fields:string list -> raw:bool -> where:bool ->
-  ?normalise:bool -> ?show_empty:bool -> ?all_versions:bool ->
+  ?normalise:bool -> ?show_empty:bool -> ?all_versions:bool -> ?sort:bool ->
   atom list -> unit
 
 (** Prints the value of an opam field in a shortened way (with [prettify] -- the

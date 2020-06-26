@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -177,7 +177,7 @@ let string_of_cause to_string =
     | a::b::c::_::_::_ -> Printf.sprintf "%s, %s, %s, etc." a b c
     | l -> String.concat ", " l in
   function
-  | Upstream_changes -> "upstream changes"
+  | Upstream_changes -> "upstream or system changes"
   | Use pkgs         -> Printf.sprintf "uses %s" (list_to_string pkgs)
   | Required_by pkgs ->
     Printf.sprintf "required by %s" (list_to_string pkgs)

@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -28,7 +28,7 @@ module type VCS = sig
       in a staging area.
       Be aware that the remote URL might have been changed, so make sure
       to update accordingly. *)
-  val fetch: ?cache_dir:dirname -> dirname -> url -> unit OpamProcess.job
+  val fetch: ?cache_dir:dirname -> ?subpath:string -> dirname -> url -> unit OpamProcess.job
 
   (** Reset the master branch of the repository to match the remote repository
       state. This might still fetch more data (git submodules...), so is
@@ -65,7 +65,7 @@ module type VCS = sig
       recorded in the VCS as current. This differs from [is_up_to_date], which
       compares specifically to the last fetched state. This should always be
       [false] after [reset] has been called. *)
-  val is_dirty: dirname -> bool OpamProcess.job
+  val is_dirty: ?subpath:string -> dirname -> bool OpamProcess.job
 
   (** Returns the list of files under version control, modified in the working
       tree but not comitted *)

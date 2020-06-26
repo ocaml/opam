@@ -1,18 +1,7 @@
-From b7f7507882975e58851e3d25ea8511c2af3d6c73 Mon Sep 17 00:00:00 2001
-From: David Allsopp <david.allsopp@metastack.com>
-Date: Wed, 22 Jul 2015 16:59:37 +0100
-Subject: [PATCH 1/2] Fix build process under Windows
-
-Convert LIBDIR using cygpath
----
- Makefile.config.in | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/Makefile.config.in b/Makefile.config.in
-index 155a77a..f9f1e6f 100644
---- a/Makefile.config.in
-+++ b/Makefile.config.in
-@@ -12,14 +12,14 @@ DOSELIBS = _build/doselibs
+diff -Naur a/Makefile.config.in b/Makefile.config.in
+--- a/Makefile.config.in	2016-07-20 11:45:05.000000000 +0000
++++ b/Makefile.config.in	2019-11-21 14:29:34.508346003 +0000
+@@ -12,14 +12,14 @@
  BINDIR = @prefix@@bindir@
  # if prefix is /usr/local (default), then we use ocamlfind, 
  # otherwise use build the destdir using the given prefix
@@ -33,6 +22,3 @@ index 155a77a..f9f1e6f 100644
  endif
  
  # if DESTDIR is specified, we ignore the prefix and we use the 
--- 
-2.12.0.windows.1
-

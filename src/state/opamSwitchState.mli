@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -62,6 +62,10 @@ val get_conflicts_t:
   (package -> OpamFilter.env) -> package_set ->
   OpamFile.OPAM.t package_map -> formula package_map
 
+(** Infer a switch invariant from a switch state with compiler_packages and
+    roots set, using some heuristics. Useful for migration from pre-2.1 opam *)
+val infer_switch_invariant: 'a switch_state -> OpamFormula.t
+
 (** Releases any locks on the given switch_state *)
 val unlock: 'a switch_state -> unlocked switch_state
 
@@ -102,6 +106,8 @@ val url: 'a switch_state -> package -> OpamFile.URL.t option
 
 (** Returns the primary URL from the URL field of the given package *)
 val primary_url: 'a switch_state -> package -> url option
+
+val primary_url_with_subpath: 'a switch_state -> package -> url option
 
 (** Return the descr field for the given package (or an empty descr if none) *)
 val descr: 'a switch_state -> package -> OpamFile.Descr.t
@@ -153,7 +159,16 @@ val source_dir: 'a switch_state -> package -> dirname
 
 (** Returns the set of active external dependencies for the package, computed
     from the values of the system-specific variables *)
-val depexts: 'a switch_state -> package -> OpamStd.String.Set.t
+val depexts: 'a switch_state -> package -> OpamSysPkg.Set.t
+
+(** Returns required system packages of each of the given packages (elements are
+    not added to the map  if they don't have system dependencies) *)
+val get_sysdeps_map:
+  depexts:(package -> OpamSysPkg.Set.t) ->
+  OpamFile.Config.t ->
+  OpamFile.Switch_config.t ->
+  package_set ->
+  OpamSysPkg.status package_map
 
 (** [conflicts_with st subset pkgs] returns all packages declared in conflict
     with at least one element of [subset] within [pkgs], through forward or

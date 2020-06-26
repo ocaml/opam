@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -17,22 +17,23 @@ open OpamStateTypes
 (** Initialises a new switch with the given name in the given opam root,
     registers it in the global config and returns the updated global state *)
 val create_empty_switch:
-  rw global_state -> ?synopsis:string -> ?repos:repository_name list ->
+  rw global_state ->
+  ?synopsis:string -> ?repos:repository_name list -> ?invariant:formula ->
   switch -> rw global_state
 
 (** Writes the current state file to disk (installed, pinned, root packages etc.).
     Unless [OpamStateConfig.(!r.dryrun)] *)
 val write_selections: rw switch_state -> unit
 
-(** Updates the defined default switch and loads its state; fails and exits with
-    a message if the switch is external *)
-val set_current_switch:
-  'a lock -> rw global_state -> rt:'b repos_state -> switch -> 'a switch_state
+(** Updates the global default switch to the one corresponding to the given
+    state; fails and exits with a message if the switch is external *)
+val set_current_switch: rw global_state -> 'a switch_state -> 'a switch_state
 
 (** Create the default global_config structure for a switch, including default
     prefix *)
 val gen_switch_config:
-  dirname -> ?synopsis:string -> ?repos:repository_name list ->
+  dirname ->
+  ?synopsis:string -> ?repos:repository_name list -> ?invariant:formula ->
   switch -> OpamFile.Switch_config.t
 
 (** (Re-)install the configuration for a given root and switch *)

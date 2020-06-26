@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2017 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -20,7 +20,7 @@ let checked_repo_root () =
   then
     OpamConsole.error_and_exit `Bad_arguments
       "No repository found in current directory.\n\
-       Please make sure there is a \"packages%s\" directory" Filename.dir_sep;
+       Please make sure there is a \"packages%s\" directory" OpamArg.dir_sep;
   repo_root
 
 
@@ -36,7 +36,7 @@ let admin_command_man = [
         holding package definition within subdirectories. A 'compilers%s' \
         subdirectory (opam repository format version < 2) will also be used by \
         the $(b,upgrade-format) subcommand."
-       Filename.dir_sep Filename.dir_sep |> Cmdliner.Manpage.escape)
+       OpamArg.dir_sep OpamArg.dir_sep)
 ]
 
 let index_command_doc =
@@ -198,7 +198,8 @@ let cache_command =
          info ["link"] ~docv:"DIR" ~doc:
            (Printf.sprintf
              "Create reverse symbolic links to the archives within $(i,DIR), in \
-              the form $(b,DIR%sPKG.VERSION%sFILENAME)." Filename.dir_sep Filename.dir_sep |> Cmdliner.Manpage.escape))
+              the form $(b,DIR%sPKG.VERSION%sFILENAME)."
+             OpamArg.dir_sep OpamArg.dir_sep))
   in
   let jobs_arg =
     Arg.(value & opt OpamArg.positive_integer 8 &
@@ -266,7 +267,7 @@ let add_hashes_command =
           "This command scans through package definitions, and add hashes as \
            requested (fetching the archives if required). A cache is generated \
            in %s for subsequent runs."
-          (OpamFilename.Dir.to_string cache_dir |> Cmdliner.Manpage.escape));
+          (OpamArg.escape_path (OpamFilename.Dir.to_string cache_dir)));
   ]
   in
   let hash_kinds = [`MD5; `SHA256; `SHA512] in
@@ -376,11 +377,11 @@ let add_hashes_command =
     let repo_root = checked_repo_root () in
     let cache_urls =
       let repo_file = OpamRepositoryPath.repo repo_root in
-      List.map (fun rel ->
+      OpamStd.List.filter_map (fun rel ->
           if OpamStd.String.contains ~sub:"://" rel
-          then OpamUrl.of_string rel
-          else OpamUrl.Op.(OpamUrl.of_string
-                             (OpamFilename.Dir.to_string repo_root) / rel))
+          then OpamUrl.parse_opt ~handle_suffix:false rel
+          else Some OpamUrl.Op.(OpamUrl.of_string
+                                  (OpamFilename.Dir.to_string repo_root) / rel))
         (OpamFile.Repo.dl_cache (OpamFile.Repo.safe_read repo_file))
     in
     let pkg_prefixes =
@@ -494,7 +495,8 @@ let upgrade_command =
           converts them to repositories suitable for the current opam version. \
           Packages might be created or renamed, and any compilers defined in the \
           old format ('compilers%s' directory) will be turned into packages, \
-          using a pre-defined hierarchy that assumes OCaml compilers." Filename.dir_sep |> Cmdliner.Manpage.escape)
+          using a pre-defined hierarchy that assumes OCaml compilers."
+         OpamArg.dir_sep)
   ]
   in
   let clear_cache_arg =
@@ -502,7 +504,7 @@ let upgrade_command =
       Printf.sprintf
        "Instead of running the upgrade, clear the cache of archive hashes (held \
         in ~%s.cache), that is used to avoid re-downloading files to obtain \
-        their hashes at every run." Filename.dir_sep |> Cmdliner.Manpage.escape
+        their hashes at every run." OpamArg.dir_sep
     in
     Arg.(value & flag & info ["clear-cache"] ~doc)
   in
@@ -718,7 +720,8 @@ let env_arg =
            resolved purely from globally defined variables. Note that, unless \
            overridden, variables like 'root' or 'opam-version' may be taken \
            from the current opam installation. What is defined in \
-           $(i,~%s.opam%sconfig) is always ignored." Filename.dir_sep Filename.dir_sep |> Cmdliner.Manpage.escape))
+           $(i,~%s.opam%sconfig) is always ignored."
+          OpamArg.dir_sep OpamArg.dir_sep))
 
 let state_selection_arg =
   let docs = OpamArg.package_selection_section in
@@ -974,16 +977,16 @@ let add_constraint_command =
     OpamArg.apply_global_options global_options;
     let repo_root = checked_repo_root () in
     let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
-    let name, cstr = atom in
-    let cstr = match cstr with
+    let name, cstr_opt = atom in
+    let cstr = match cstr_opt with
       | Some (relop, v) ->
         OpamFormula.Atom
           (Constraint (relop, FString (OpamPackage.Version.to_string v)))
       | None ->
         OpamFormula.Empty
     in
-    let add_cstr nv n c =
-      let f = OpamFormula.ands [c; cstr] in
+    let add_cstr op cstr nv n c =
+      let f = op [ cstr; c] in
       match OpamFilter.simplify_extended_version_formula f with
       | Some f -> f
       | None -> (* conflicting constraint *)
@@ -1005,13 +1008,40 @@ let add_constraint_command =
         let deps =
           OpamFormula.map (function
               | (n,c as atom) ->
-                if n = name then Atom (n, (add_cstr nv n c))
+                if n = name then Atom (n, (add_cstr OpamFormula.ands cstr nv n c))
                 else Atom atom)
             deps0
         in
-        if deps <> deps0 then
+        let depopts0 = OpamFile.OPAM.depopts opam in
+        let conflicts0 = OpamFile.OPAM.conflicts opam in
+        let contains name =
+          OpamFormula.fold_left (fun contains (n,_) ->
+              contains || n = name) false
+        in
+        let conflicts =
+          if contains name depopts0 then
+            match cstr_opt with
+            | Some (relop, v) ->
+              let icstr =
+                OpamFormula.Atom
+                  (Constraint (OpamFormula.neg_relop relop,
+                               FString (OpamPackage.Version.to_string v)))
+              in
+              if contains name conflicts0 then
+                OpamFormula.map (function
+                    | (n,c as atom) ->
+                      if n = name then Atom (n, (add_cstr OpamFormula.ors icstr nv n c))
+                      else Atom atom)
+                  conflicts0
+              else
+                OpamFormula.ors [ conflicts0; Atom (name, icstr) ]
+            | None -> conflicts0
+          else conflicts0
+        in
+        if deps <> deps0 || conflicts <> conflicts0 then
           OpamFile.OPAM.write_with_preserved_format opam_file
-            (OpamFile.OPAM.with_depends deps opam))
+            (OpamFile.OPAM.with_depends deps opam
+             |> OpamFile.OPAM.with_conflicts conflicts))
       pkg_prefixes
   in
   Term.(pure cmd $ OpamArg.global_options $ force_arg $ atom_arg),

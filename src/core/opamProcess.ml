@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -572,9 +572,9 @@ let verbose_print_cmd p =
      else Printf.sprintf " (CWD=%s)" p.p_cwd)
 
 let verbose_print_out =
-  let pfx = OpamConsole.colorise `yellow "- " in
+  let pfx = lazy (OpamConsole.colorise `yellow "- ") in
   fun s ->
-    OpamConsole.msg "%s%s\n" pfx s
+    OpamConsole.msg "%s%s\n" (Lazy.force pfx) s
 
 (** Semi-synchronous printing of the output of a command *)
 let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =
@@ -635,7 +635,7 @@ let exit_status p return =
     (verbose_print_cmd p;
      List.iter verbose_print_out stdout;
      List.iter verbose_print_out stderr;
-     flush Pervasives.stdout);
+     flush Stdlib.stdout);
   let info =
     make_info ?code ?signal
       ~cmd:p.p_name ~args:p.p_args ~cwd:p.p_cwd ~metadata:p.p_metadata

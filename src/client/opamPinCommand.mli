@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2018 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -35,7 +35,7 @@ exception Nothing_to_do
 val source_pin:
   rw switch_state -> name ->
   ?version:version -> ?edit:bool -> ?opam:OpamFile.OPAM.t -> ?quiet:bool ->
-  ?force:bool -> ?ignore_extra_pins:bool ->
+  ?force:bool -> ?ignore_extra_pins:bool -> ?subpath: string ->
   url option ->
   rw switch_state
 

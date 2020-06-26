@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -38,9 +38,8 @@ val init:
    (defaults to [OpamInitDefaults.init_config]) for the settings that are unset,
    and updates all repositories *)
 val reinit:
-  ?init_config:OpamFile.InitConfig.t ->
-  interactive:bool ->
-  ?dot_profile:filename -> ?update_config:bool -> ?env_hook:bool -> ?completion:bool ->
+  ?init_config:OpamFile.InitConfig.t -> interactive:bool -> ?dot_profile:filename ->
+  ?update_config:bool -> ?env_hook:bool -> ?completion:bool -> ?inplace:bool ->
   OpamFile.Config.t -> shell -> unit
 
 (** Install the given list of packages. [add_to_roots], if given, specifies that
@@ -50,12 +49,13 @@ val reinit:
 val install:
   rw switch_state ->
   ?autoupdate:atom list -> ?add_to_roots:bool -> ?deps_only:bool ->
-  ?assume_built:bool -> atom list -> rw switch_state
+  ?ignore_conflicts:bool -> ?assume_built:bool -> atom list ->
+  rw switch_state
 
 (** Low-level version of [reinstall], bypassing the package name sanitization
     and dev package update, and offering more control *)
 val install_t:
-  rw switch_state -> ?ask:bool ->
+  rw switch_state -> ?ask:bool -> ?ignore_conflicts:bool ->
   atom list -> bool option -> deps_only:bool -> assume_built:bool ->
   rw switch_state
 
@@ -88,7 +88,9 @@ val update:
     versions. The specified atoms are kept installed (or newly installed after a
     confirmation). The upgrade concerns them only unless [all] is specified. *)
 val upgrade:
-  rw switch_state -> ?check:bool -> all:bool -> atom list -> rw switch_state
+  rw switch_state ->
+  ?check:bool -> ?only_installed:bool ->
+  all:bool -> atom list -> rw switch_state
 
 (** Low-level version of [upgrade], bypassing the package name sanitization and
    dev package update, and offering more control. [terse] avoids the verbose
@@ -96,6 +98,7 @@ val upgrade:
 val upgrade_t:
   ?strict_upgrade:bool -> ?auto_install:bool -> ?ask:bool -> ?check:bool ->
   ?terse:bool ->
+  ?only_installed:bool ->
   all:bool -> atom list -> rw switch_state -> rw switch_state
 
 (** Recovers from an inconsistent universe *)
@@ -113,7 +116,7 @@ module PIN: sig
   val pin:
     rw switch_state ->
     OpamPackage.Name.t ->
-    ?edit:bool -> ?version:version -> ?action:bool ->
+    ?edit:bool -> ?version:version -> ?action:bool -> ?subpath:string ->
     [< `Source of url | `Version of version | `Dev_upstream | `None ] ->
     rw switch_state
 

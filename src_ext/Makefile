@@ -9,8 +9,10 @@ else
 CAN_PKG=0
 endif
 
-URL_ocaml = http://caml.inria.fr/pub/distrib/ocaml-4.07/ocaml-4.07.1.tar.gz
-MD5_ocaml = 0b180b273ce5cc2ac68f347c9b06d06f
+PATCH ?= patch
+
+URL_ocaml = http://caml.inria.fr/pub/distrib/ocaml-4.10/ocaml-4.10.0.tar.gz
+MD5_ocaml = 34de3225e40d92a6a8b03f1626a01dd3
 
 URL_flexdll = https://github.com/alainfrisch/flexdll/archive/0.37.tar.gz
 MD5_flexdll = cc456a89382e60d84130cddd53977486
@@ -174,13 +176,13 @@ endef
 	@if [ -d patches/$*.common ]; then \
           cd $* && \
 	  for p in ../patches/$*.common/*.patch; do \
-	    patch -p1 < $$p; \
+	    $(PATCH) -p1 < $$p; \
 	  done; \
         fi
 	@if [ -d patches/$* ]; then \
           cd $* && \
 	  for p in ../patches/$*/*.patch; do \
-	    patch -p1 < $$p; \
+	    $(PATCH) -p1 < $$p; \
 	  done; \
         fi
 	@if [ "$*" != "dune-local" ] ; then \
@@ -207,13 +209,13 @@ endef
 	@if [ -d patches/$*.common ]; then \
           cd $* && \
 	  for p in ../patches/$*.common/*.patch; do \
-	    patch -p1 < $$p; \
+	    $(PATCH) -p1 < $$p; \
 	  done; \
         fi
 	@if [ -d patches/$*.pkg ]; then \
           cd $* && \
 	  for p in ../patches/$*.pkg/*.patch; do \
-	    patch -p1 < $$p; \
+	    $(PATCH) -p1 < $$p; \
 	  done; \
         fi
 	@touch $@ && rm -f $*.stamp

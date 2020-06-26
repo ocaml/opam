@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -122,6 +122,10 @@ module Switch = struct
     config_dir t a /- (OpamPackage.Name.to_string n ^ ".config")
 
   let sources_dir t a = meta t a / "sources"
+
+  let extra_files_dir t a = meta t a / "extra-files-cache"
+
+  let extra_file t a h = extra_files_dir t a // OpamHash.contents h
 
   let sources t a nv = sources_dir t a / OpamPackage.to_string nv
 

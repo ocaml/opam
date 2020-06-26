@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -52,10 +52,9 @@ val updates:
   ?set_opamroot:bool -> ?set_opamswitch:bool -> ?force_path:bool ->
   'a switch_state -> env_update list
 
-(** Check if the shell environment is in sync with the current OPAM switch (or
-    if OPAMNOENVNOTICE has been set, in which case we just assume it's up to
-    date) *)
-val is_up_to_date: 'a switch_state -> bool
+(** Check if the shell environment is in sync with the current OPAM switch,
+    unless [skip] is true (it's default value is OPAMNOENVNOTICE *)
+val is_up_to_date: ?skip:bool -> 'a switch_state -> bool
 
 (** Check if the shell environment is in sync with the given opam root and
     switch (or if OPAMNOENVNOTICE has been set, in which case we just assume
@@ -86,7 +85,7 @@ val full_with_path:
     and asking the user if either [update_config] or [shell_hook] are unset *)
 val setup:
   dirname -> interactive:bool -> ?dot_profile:filename ->
-  ?update_config:bool -> ?env_hook:bool -> ?completion:bool ->
+  ?update_config:bool -> ?env_hook:bool -> ?completion:bool -> ?inplace:bool ->
   shell -> unit
 
 (* (\** Display the global and user configuration for OPAM. *\)
@@ -98,9 +97,10 @@ val update_user_setup:
 
 (** Write the generic scripts in ~/.opam/opam-init needed to import state for
     various shells. If specified, completion and env_hook files can also be
-    written or removed (the default is to keep them as they are) *)
+    written or removed (the default is to keep them as they are). If [inplace]
+    is true, they are updated if they exist. *)
 val write_static_init_scripts:
-  dirname -> ?completion:bool -> ?env_hook:bool -> unit -> unit
+  dirname -> ?completion:bool -> ?env_hook:bool -> ?inplace:bool -> unit -> unit
 
 (** Write into [OpamPath.hooks_dir] the given custom scripts (listed as
     (filename, content)), normally provided by opamrc ([OpamFile.InitConfig]) *)

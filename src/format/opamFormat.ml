@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -775,10 +775,10 @@ module I = struct
       (fun ~pos:_ -> List.partition filter)
       (fun (a,b) -> a @ b)
 
-  let partition_fields filter =
+  let partition_fields ?(section=false) filter =
     partition @@ function
     | Variable (_,k,_) -> filter k
-    | _ -> false
+    | Section _ -> section
 
   let field name parse =
     pp

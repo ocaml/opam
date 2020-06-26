@@ -330,3 +330,21 @@ clean:
 	rm -f test.log fulltest.log
 	rm -f $(ARCHIVES)
 	rm -rf $(TMP_DIR_ACT)
+	rm -rf reftests.out
+
+reftests = $(wildcard reftests/*.test)
+reftests-out = $(reftests:reftests/%=reftests.out/%)
+
+$(reftests-out): reftests.ml $(reftests)
+	./$<
+
+.PHONY: reftests reftests-%
+reftests: $(reftests-out)
+	diff reftests reftests.out
+
+reftests-meld: $(reftests-out)
+	meld reftests reftests.out
+
+reftests-promote: $(reftests-out)
+	mv reftests.out/*.tests reftests/
+	rmdir reftests.out

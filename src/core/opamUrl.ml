@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -28,6 +28,9 @@ let empty = {
   path = "";
   hash = None;
 }
+
+exception Parse_error of string
+let parse_error s = raise (Parse_error s)
 
 let split_url =
   let re =
@@ -63,7 +66,9 @@ let vc_of_string = function
   | "git" -> `git
   | "hg" -> `hg
   | "darcs" -> `darcs
-  | x -> failwith (Printf.sprintf "Unsupported version control system %S" x)
+  | vc ->
+    parse_error (Printf.sprintf "unsupported version control system %s"
+                (OpamConsole.colorise `underline vc))
 
 let string_of_vc = function
   | `git   -> "git"
@@ -82,7 +87,9 @@ let backend_of_string = function
   | "darcs" -> `darcs
   | "hg" -> `hg
   | "path" | "local" | "rsync" | "ssh" | "scp" | "sftp" -> `rsync
-  | p -> failwith (Printf.sprintf "Unsupported protocol %S" p)
+  | p ->
+    parse_error (Printf.sprintf "unsupported protocol %s"
+                (OpamConsole.colorise `underline p))
 
 
 let looks_like_ssh_path =
@@ -122,17 +129,17 @@ let parse ?backend ?(handle_suffix=true) s =
         let of_suffix ~default =
           if not handle_suffix then default else
           match suffix with
-          | Some sf -> (try vc_of_string sf with Failure _ -> default)
+          | Some sf -> (try vc_of_string sf with Parse_error _ -> default)
           | None ->
             match OpamStd.String.cut_at path '@' with
             | Some (user, _) ->
-              (try vc_of_string user with Failure _ -> default)
+              (try vc_of_string user with Parse_error _ -> default)
             | None -> default
         in
         match transport with
         | None -> of_suffix ~default:`rsync
         | Some tr ->
-          try vc_of_string tr with Failure _ ->
+          try vc_of_string tr with Parse_error _ ->
             of_suffix ~default:(backend_of_string tr)
   in
   let transport, path =
@@ -152,6 +159,15 @@ let parse ?backend ?(handle_suffix=true) s =
     hash;
     backend;
   }
+
+let parse_opt ?(quiet=false)?backend ?handle_suffix s =
+  try
+    Some (parse ?backend ?handle_suffix s)
+  with Parse_error pe ->
+    if not quiet then
+      OpamConsole.warning "URL parsing error on %s: %s"
+        (OpamConsole.colorise `underline s) pe;
+    None
 
 let of_string url = parse ~handle_suffix:false url
 

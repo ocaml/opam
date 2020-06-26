@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -61,7 +61,15 @@ module VCS : OpamVCS.VCS = struct
     | Some h -> "refs/remotes/opam-ref-"^h
     | None -> "refs/remotes/opam-ref"
 
-  let fetch ?cache_dir repo_root repo_url =
+  let fetch ?cache_dir ?subpath repo_root repo_url =
+    (match subpath with
+     | Some sp ->
+       git repo_root [ "config"; "--local"; "core.sparseCheckout"; "true" ]
+       @@> fun r -> OpamSystem.raise_on_process_error r;
+       OpamFilename.write (repo_root / ".git" / "info" // "sparse-checkout") sp;
+       Done()
+     | None -> Done())
+    @@+ fun _ ->
     (match cache_dir with
      | Some c when OpamUrl.local_dir repo_url = None ->
        let dir = c / "git" in
@@ -214,8 +222,12 @@ module VCS : OpamVCS.VCS = struct
     | _ ->
       Done (Some "HEAD")
 
-  let is_dirty dir =
-    git dir [ "diff" ; "--no-ext-diff" ; "--quiet" ]
+  let is_dirty ?subpath dir =
+    let subpath =
+      match subpath with
+      | None -> []
+      | Some dir -> ["--" ; dir] in
+    git dir ([ "diff"; "--no-ext-diff"; "--quiet" ; "HEAD" ] @ subpath)
     @@> function
     | { OpamProcess.r_code = 0; _ } ->
       (git dir ["ls-files"; "--others"; "--exclude-standard"]

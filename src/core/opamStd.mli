@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -200,6 +200,9 @@ module List : sig
       end if index < 0 or > length respectively). Not tail-recursive *)
   val insert_at: int -> 'a -> 'a list -> 'a list
 
+  (** Like [List.find], but returning option instead of raising *)
+  val assoc_opt: 'a -> ('a * 'b) list -> 'b option
+
   (** Like [List.assoc], but as an option, and also returns the list with the
       binding removed, e.g. equivalent to
       [(List.assoc_opt x l, List.remove_assoc x l)]
@@ -299,6 +302,10 @@ module Format : sig
   (** Display a pretty list: ["x";"y";"z"] -> "x, y and z".
       "and" can be changed by specifying [last] *)
   val pretty_list: ?last:string -> string list -> string
+
+  (** Splits a list of strings so that it can be printed as a table that should
+      fit on screen *)
+  val as_aligned_table: ?width:int -> string list -> string list list
 end
 
 module Exn : sig
@@ -429,7 +436,7 @@ module Sys : sig
 
   (** {3 Exit handling} *)
 
-  (** Like Pervasives.at_exit but with the possibility to call manually
+  (** Like Stdlib.at_exit but with the possibility to call manually
       (eg. before exec()) *)
   val at_exit: (unit -> unit) -> unit
 

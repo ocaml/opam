@@ -61,23 +61,29 @@ add_sys_mounts /usr /bin /lib /lib32 /lib64 /etc /opt /home /var
 # that remain writeable. ccache seems widespread in some Fedora systems.
 add_ccache_mount() {
   if command -v ccache > /dev/null; then
-      CCACHE_DIR=$HOME/.ccache
       ccache_dir_regex='cache_dir = (.*)$'
       local IFS=$'\n'
-      for f in $(ccache --print-config 2>/dev/null); do
+      for f in $(ccache -p 2>/dev/null); do
         if [[ $f =~ $ccache_dir_regex ]]; then
-          CCACHE_DIR=${BASH_REMATCH[1]}
+          ccache_dir=${BASH_REMATCH[1]}
+          break
         fi
       done
-      add_mounts rw $CCACHE_DIR
+      CCACHE_DIR=${CCACHE_DIR-$HOME/.ccache}
+      ccache_dir=${ccache_dir-$CCACHE_DIR}
+      add_mounts rw $ccache_dir
   fi
 }
 
 add_dune_cache_mount() {
-  DUNE_CACHE=${XDG_CACHE_HOME:-$HOME/.cache}/dune
-  mkdir -p ${DUNE_CACHE}
-  add_mounts rw $DUNE_CACHE
- }
+  u_cache=${XDG_CACHE_HOME:-$HOME/.cache}
+  u_dune_cache=$u_cache/dune
+  cache=$(readlink -f "$u_cache")
+  dune_cache=$cache/dune
+  dune_cache=$(readlink -f $u_dune_cache)
+  mkdir -p ${dune_cache}
+  add_mount rw $u_dune_cache $dune_cache
+}
 
 # This case-switch should remain identical between the different sandbox implems
 COMMAND="$1"; shift

@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -530,7 +530,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
       (t.deprecated_build_test <> [] || t.deprecated_build_doc <> []);
     (let suspicious_urls =
        List.filter (fun u ->
-           OpamUrl.parse ~handle_suffix:true (OpamUrl.to_string u) <> u)
+           OpamUrl.parse_opt ~handle_suffix:true (OpamUrl.to_string u) <> Some u)
          (all_urls t)
      in
      cond 49 `Warning
@@ -598,9 +598,16 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        "Mismatching 'extra-files:' field"
        ~detail:(List.map OpamFilename.Base.to_string mismatching_extra_files)
        (mismatching_extra_files <> []));
-    (let spaced_depexts = List.concat (List.map (fun (dl,_) ->
-         List.filter (fun d -> String.contains d ' ' || String.length d = 0) dl)
-         t.depexts) in
+    (let spaced_depexts =
+       List.concat (List.map (fun (dl,_) ->
+           OpamStd.List.filter_map
+             (fun s ->
+                let d = OpamSysPkg.to_string s in
+                if String.contains d ' ' || String.length d = 0 then
+                  Some d
+                else None)
+             (OpamSysPkg.Set.elements dl))
+           t.depexts) in
      cond 54 `Warning
        "External dependencies should not contain spaces nor empty string"
        ~detail:spaced_depexts
@@ -681,8 +688,9 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
             if not_corresponding = [] then None
             else
             let msg =
-              Printf.sprintf "Cheksum%s %s don't verify archive"
-                (if List.length chks = 1 then "" else "s")
+              let is_singular = function [_] -> true | _ -> false in
+              Printf.sprintf "The archive doesn't match checksum%s: %s."
+                (if is_singular not_corresponding then "" else "s")
                 (OpamStd.List.to_string OpamHash.to_string not_corresponding)
             in
             Some msg)
@@ -704,6 +712,35 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        "License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/"
        ~detail:bad_licenses
        (bad_licenses <> []));
+    (let subpath =
+       match OpamStd.String.Map.find_opt "x-subpath" (extensions t) with
+       | Some (String (_,_)) -> true
+       | _ -> false
+     in
+     let opam_restriction =
+       OpamFilter.fold_down_left (fun acc filter ->
+           acc ||
+           match filter with
+           | FOp (FIdent (_, var, _), op, FString version)
+             when OpamVariable.to_string var = "opam-version" ->
+             OpamFormula.simplify_version_formula
+               (OpamFormula.ands
+                  [ Atom (`Lt, OpamPackage.Version.of_string "2.1");
+                    Atom (op, OpamPackage.Version.of_string version) ])
+             = None
+           | _ -> false) false t.available
+     in
+     cond 63 `Error
+       "`subpath` field need `opam-version = 2.1` restriction"
+       (subpath && not opam_restriction));
+    (let subpath_string =
+       match OpamStd.String.Map.find_opt "x-subpath" (extensions t) with
+       | Some (String (_,_)) | None -> false
+       | _ -> true
+     in
+     cond 64 `Warning
+       "`x-subpath` must be a simple string to be considered as a subpath`"
+       subpath_string);
   ]
   in
   format_errors @
@@ -984,3 +1021,45 @@ let read_repo_opam ~repo_name ~repo_root dir =
   read_opam dir >>|
   OpamFile.OPAM.with_metadata_dir
     (Some (Some repo_name, OpamFilename.remove_prefix_dir repo_root dir))
+
+let dep_formula_to_string f =
+  let pp =
+    OpamFormat.V.(package_formula `Conj (constraints version))
+  in
+  OpamPrinter.value (OpamPp.print pp f)
+
+let sort_opam opam =
+  log "sorting %s" (OpamPackage.to_string (package opam));
+  let sort_ff =
+    let compare_filters filter filter' =
+      let get_vars = function
+        | Constraint _ -> []
+        | Filter filter ->
+          List.sort compare (OpamFilter.variables filter)
+      in
+      match get_vars filter, get_vars filter' with
+      | v::_, v'::_ -> compare v v'
+      | [], _::_ -> 1
+      | _::_, [] -> -1
+      | [],[] -> 0
+    in
+    OpamFilter.sort_filtered_formula
+      (fun (n,filter) (n',filter') ->
+         let cmp = OpamFormula.compare_formula compare_filters filter filter' in
+         if cmp <> 0 then cmp else
+           OpamPackage.Name.compare n n')
+  in
+  let fst_sort ?comp =
+    let comp = OpamStd.Option.default compare comp in
+    fun l -> List.sort (fun (e,_) (e',_) -> comp e e') l
+  in
+  opam
+  |> with_author @@ List.sort compare opam.author
+  |> with_tags @@ List.sort compare opam.tags
+  |> with_depends @@ sort_ff opam.depends
+  |> with_depopts @@ sort_ff opam.depopts
+  |> with_depexts @@ fst_sort opam.depexts
+  |> with_conflicts @@ sort_ff opam.conflicts
+  |> with_pin_depends @@ fst_sort ~comp:OpamPackage.compare opam.pin_depends
+  |> with_extra_files_opt @@ OpamStd.Option.map fst_sort opam.extra_files
+  |> with_extra_sources @@ fst_sort opam.extra_sources

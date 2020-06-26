@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -249,8 +249,7 @@ let apply_selector ~base st = function
   | Coinstallable_with (tog, packages) ->
     let universe = get_universe st tog in
     let set = OpamPackage.Set.of_list packages in
-    let universe = { universe with u_base = set; u_installed = set } in
-    OpamSolver.installable_subset universe base
+    OpamSolver.coinstallable_subset universe set base
   | Solution (tog, atoms) ->
     let universe =
       let requested =
@@ -491,12 +490,17 @@ let mini_field_printer ?(prettify=false) ?(normalise=false) =
   | List (_, l) -> OpamPrinter.value_list l
   | f -> OpamPrinter.Normalise.value f
 
-let detail_printer ?prettify ?normalise st nv =
+let detail_printer ?prettify ?normalise ?(sort=false) st nv =
   let open OpamStd.Option.Op in
   let (%) s cols = OpamConsole.colorise' cols s in
   let root_sty =
     if OpamPackage.Set.mem nv st.installed_roots then [`underline]
     else []
+  in
+  let get_opam =
+    if not sort then get_opam else
+    fun st nv ->
+      OpamFileTools.sort_opam (get_opam st nv)
   in
   function
   | Name -> OpamPackage.Name.to_string nv.name % (`bold :: root_sty)
@@ -609,8 +613,8 @@ let detail_printer ?prettify ?normalise st nv =
       +! ""
     )
   | Depexts ->
-    String.concat " "
-      (OpamStd.String.Set.elements (OpamSwitchState.depexts st nv))
+    OpamStd.List.concat_map " " OpamSysPkg.to_string
+      (OpamSysPkg.Set.elements (OpamSwitchState.depexts st nv))
 
 type package_listing_format = {
   short: bool;
@@ -703,24 +707,29 @@ let get_depexts st packages =
          if OpamPackage.Set.mem nv packages then nv else
            OpamPackage.Set.max_elt (OpamPackage.packages_of_name packages name)
        in
-       OpamStd.String.Set.union acc
+       OpamSysPkg.Set.union acc
          (OpamSwitchState.depexts st nv))
     (OpamPackage.names_of_packages packages)
-    OpamStd.String.Set.empty
+    OpamSysPkg.Set.empty
 
 let print_depexts =
-  OpamStd.String.Set.iter (OpamConsole.msg "%s\n")
+  OpamSysPkg.Set.iter (fun d -> OpamConsole.msg "%s\n" (OpamSysPkg.to_string d))
 
 let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
-    ?(all_versions=false) atoms =
+    ?(all_versions=false) ?(sort=false) atoms =
   let packages =
     OpamFormula.packages_of_atoms ~disj:all_versions
       (st.packages ++ st.installed) atoms
   in
-  if OpamPackage.Set.is_empty packages then
+  let atoms, missing_atoms =
+    List.partition (fun (n,_) -> OpamPackage.has_name packages n) atoms
+  in
+  if missing_atoms <> [] then
     (OpamConsole.error "No package matching %s found"
-       (OpamStd.List.concat_map " or " OpamFormula.short_string_of_atom atoms);
-     OpamStd.Sys.exit_because `Not_found);
+       (OpamStd.List.concat_map " or " OpamFormula.short_string_of_atom
+          missing_atoms);
+     if OpamPackage.Set.is_empty packages then
+       OpamStd.Sys.exit_because `Not_found);
   let fields = List.map (field_of_string ~raw) fields in
   let all_versions_fields = [
     Name;
@@ -752,7 +761,7 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
   let output_table fields nv =
     let tbl =
       List.fold_left (fun acc item ->
-          let contents = detail_printer ?normalise st nv item in
+          let contents = detail_printer ?normalise ~sort st nv item in
           if show_empty || contents <> "" then
             [ OpamConsole.colorise `blue (string_of_field ~raw item); contents ]
             :: acc
@@ -775,6 +784,10 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
   in
   let output_package pkg =
     let opam = get_opam st pkg in
+    let opam =
+      if not sort then opam else
+        OpamFileTools.sort_opam opam
+    in
     OpamFile.OPAM.print_errors opam;
     if where then
       OpamConsole.msg "%s\n"
@@ -799,11 +812,10 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
     | [] ->
       OpamConsole.header_msg "Version-specific details";
       output_table one_version_fields pkg
-    | [f] -> OpamConsole.msg "%s\n" (detail_printer ?normalise st pkg f)
+    | [f] -> OpamConsole.msg "%s\n" (detail_printer ?normalise ~sort st pkg f)
     | fields -> output_table fields pkg
   in
-  OpamPackage.names_of_packages packages |>
-  OpamPackage.Name.Set.iter (fun name ->
+  List.iter (fun (name,_) ->
       (* Like OpamSwitchState.get_package, but restricted to [packages] *)
       let nvs = OpamPackage.packages_of_name packages name in
       if all_versions then
@@ -819,4 +831,4 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
          in
          header choose;
          output_package choose)
-    )
+    ) atoms

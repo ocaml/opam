@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -26,6 +26,13 @@ val mk_opt_all:
   ?section:string -> ?vopt:'a -> ?default:'a list ->
   string list -> string -> string ->
   'a Arg.converter -> 'a list Term.t
+
+(* Escaped Windows directory separator. To use instead of [Filename.dir_sep] for
+   manpage strings *)
+val dir_sep: string
+
+(* Escape Windows path *)
+val escape_path: string -> string
 
 (** {2 Flags} *)
 
@@ -109,13 +116,18 @@ val apply_global_options: global_options -> unit
 (** Abstract type for build options *)
 type build_options
 
-val build_option_section: string
+val man_build_option_section: Manpage.block list
 
 (** Build options *)
 val build_options: build_options Term.t
 
 (** Install and reinstall options *)
 val assume_built: bool Term.t
+
+(* Options common to all path based/related commands, e.g. (un)pin, upgrade,
+   remove, (re)install *)
+val recurse: bool Term.t
+val subpath: string option Term.t
 
 (** Applly build options *)
 val apply_build_options: build_options -> unit
@@ -180,6 +192,9 @@ val atom_or_local:
 
 val atom_or_dir:
   [ `Atom of atom | `Dirname of dirname ] Arg.converter
+
+(** Formula, in the same format as [depends:] in opam files *)
+val dep_formula: formula Arg.converter
 
 (** [var=value,...] argument *)
 val variable_bindings: (OpamVariable.t * string) list Arg.converter

@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2017 OCamlPro                                             *)
+(*    Copyright 2017-2019 OCamlPro                                        *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -31,3 +31,7 @@ val normalise_os: string -> string
 
 (* Number of cores *)
 val cores: unit -> int
+
+(** Returns a string containing arch, os, os-distribution & os-version values,
+    unknown if they are not available *)
+val to_string: unit -> string

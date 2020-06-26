@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2017-2018 OCamlPro                                        *)
+(*    Copyright 2017-2019 OCamlPro                                        *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -58,6 +58,7 @@ let get_universe ~with_test ~with_doc ~dev opams =
     u_installed_roots = OpamPackage.Set.empty;
     u_pinned = OpamPackage.Set.empty;
     u_base = OpamPackage.Set.empty;
+    u_invariant = OpamFormula.Empty;
     u_attrs = [];
     u_reinstall = OpamPackage.Set.empty;
   }

@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -37,7 +37,7 @@ module VCS = struct
     | None -> mark_prefix
     | Some fragment -> mark_prefix ^ "-" ^ fragment
 
-  let fetch ?cache_dir:_ repo_root repo_url =
+  let fetch ?cache_dir:_ ?subpath:_ repo_root repo_url =
     let src = OpamUrl.base_url repo_url in
     let rev = OpamStd.Option.default "default" repo_url.OpamUrl.hash in
     let mark = mark_from_url repo_url in
@@ -111,7 +111,7 @@ module VCS = struct
             | branch::_ when branch <> "default" -> Done (Some branch)
             | _ -> Done None
 
-  let is_dirty repo_root =
+  let is_dirty ?subpath:_ repo_root =
     hg repo_root [ "status"; "--subrepos" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     Done (r.OpamProcess.r_stdout = [])

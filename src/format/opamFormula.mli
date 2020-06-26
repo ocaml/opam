@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -24,9 +24,13 @@ type atom = OpamPackage.Name.t * version_constraint option
 (** Pretty-printing of atoms *)
 val string_of_atom: atom -> string
 
-(** The compact atom format used in requests, "pkgOPvers", with '.' allowed instead
-    of '=' *)
+(** The compact atom format used in requests, "pkgOPvers", with '.' allowed
+    instead of '=' *)
 val short_string_of_atom: atom -> string
+
+(** Parses a package or atom, in a format similar to [short_string_of_atom].
+    @raise [Failure] if the format is incorrect *)
+val atom_of_string: string -> atom
 
 (** Prints atoms as a conjunction ("&") using the short format *)
 val string_of_atoms: atom list -> string
@@ -153,6 +157,9 @@ val compare: t -> t -> int
     one package set that is a solution of the formula, and is named in the
     formula) *)
 val verifies: t -> OpamPackage.t -> bool
+
+(** Checks if a given set of (installed) packages satisfies a formula *)
+val satisfies_depends: OpamPackage.Set.t -> t -> bool
 
 (** Returns the subset of packages possibly matching the formula (i.e. including
     all disjunction cases) *)

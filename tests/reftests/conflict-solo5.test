@@ -1,0 +1,17 @@
+f372039d
+### opam switch create --fake ocaml-base-compiler.4.02.3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.02.3
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.02.3
+Faking installation of base-ocamlbuild.base
+Done.
+### opam install --show solo5-kernel-virtio solo5-kernel-ukvm
+Your request can't be satisfied:
+  - solo5-kernel-virtio is in conflict with solo5-kernel-ukvm
+
+No solution found, exiting

@@ -24,7 +24,7 @@ OPAMINSTALLER = ./opam-installer$(EXE)
 ALWAYS:
 	@
 
-DUNE_PROMOTE_ARG := $(shell dune build --help=plain 2>/dev/null | sed -ne 's/.*\(--promote-install-files\).*/ \1/p')
+DUNE_PROMOTE_ARG := $(shell dune build --help=plain 2>/dev/null | sed -ne 's/^[[:space:]]*\(--promote-install-files\)[[:space:]]*$$/ \1/p')
 DUNE_DEP = $(DUNE_EXE)
 JBUILDER_ARGS ?= 
 DUNE_ARGS ?= $(JBUILDER_ARGS)
@@ -40,7 +40,7 @@ dune: $(DUNE_DEP)
 	@$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) @install
 
 opam: $(DUNE_DEP) build-opam processed-opam.install
-	$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
+	@$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
 ifneq ($(MANIFEST_ARCH),)
 	@mkdir -p Opam.Runtime.$(MANIFEST_ARCH)
 	@cp -f src/manifest/Opam.Runtime.$(MANIFEST_ARCH).manifest Opam.Runtime.$(MANIFEST_ARCH)/
@@ -50,7 +50,7 @@ ifneq ($(MANIFEST_ARCH),)
 endif
 
 opam-installer: $(DUNE_DEP) build-opam-installer processed-opam-installer.install
-	$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
+	@$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
 
 opam-admin.top: $(DUNE_DEP)
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/tools/opam_admin_topstart.bc
@@ -102,9 +102,6 @@ endif
 opam-devel.install: $(DUNE_DEP)
 	$(DUNE) build $(DUNE_ARGS) -p opam opam.install
 	sed -e "s/bin:/libexec:/" opam.install > $@
-
-opam-%.install: $(DUNE_DEP)
-	$(DUNE) build $(DUNE_ARGS) -p opam-$* $@
 
 .PHONY: build-opam-installer
 build-opam-installer: $(DUNE_DEP) 
@@ -216,3 +213,9 @@ cold-%:
 .PHONY: run-appveyor-test
 run-appveyor-test:
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" ./appveyor_test.sh
+
+.PHONY: reftests%
+reftests: opam
+	make -C tests $@
+reftests-%: opam
+	make -C tests $@

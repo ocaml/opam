@@ -17,7 +17,7 @@ get an up-to-date overview of official packages on most Linux distributions.
 OS/distrubtion, their latest opam version and their maintainers:
 
  * Arch Linux
-  * 2.0.4 [Package search](https://www.archlinux.org/packages/community/x86_64/opam/)
+  * 2.0.7 [Package search](https://www.archlinux.org/packages/community/x86_64/opam/)
   * Alexander F. Rødseth [@xyproto](https://github.com/xyproto)
  * Debian Linux (8,jessie)
   * 1.2.0 [Package search](https://packages.debian.org/search?keywords=opam&searchon=names&suite=all&section=all)

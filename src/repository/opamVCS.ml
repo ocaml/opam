@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -17,7 +17,7 @@ module type VCS = sig
   val name: OpamUrl.backend
   val exists: dirname -> bool
   val init: dirname -> url -> unit OpamProcess.job
-  val fetch: ?cache_dir:dirname -> dirname -> url -> unit OpamProcess.job
+  val fetch: ?cache_dir:dirname -> ?subpath:string -> dirname -> url -> unit OpamProcess.job
   val reset_tree: dirname -> url -> unit OpamProcess.job
   val patch_applied: dirname -> url -> unit OpamProcess.job
   val diff: dirname -> url -> filename option OpamProcess.job
@@ -26,7 +26,7 @@ module type VCS = sig
   val versioned_files: dirname -> string list OpamProcess.job
   val vc_dir: dirname -> dirname
   val current_branch: dirname -> string option OpamProcess.job
-  val is_dirty: dirname -> bool OpamProcess.job
+  val is_dirty: ?subpath:string -> dirname -> bool OpamProcess.job
   val modified_files: dirname -> string list OpamProcess.job
   val get_remote_url: ?hash:string -> dirname -> url option OpamProcess.job
 end
@@ -72,7 +72,7 @@ module Make (VCS: VCS) = struct
     VCS.patch_applied dirname url @@+ fun () ->
     Done ()
 
-  let pull_url ?cache_dir dirname checksum url =
+  let pull_url ?cache_dir ?subpath dirname checksum url =
     if checksum <> None then invalid_arg "VC pull_url doesn't allow checksums";
     OpamProcess.Job.catch
       (fun e ->
@@ -83,7 +83,7 @@ module Make (VCS: VCS) = struct
          Done (Not_available (None, OpamUrl.to_string url)))
     @@ fun () ->
     if VCS.exists dirname then
-      VCS.fetch ?cache_dir dirname url @@+ fun () ->
+      VCS.fetch ?cache_dir ?subpath dirname url @@+ fun () ->
       VCS.is_up_to_date dirname url @@+ function
       | true -> Done (Up_to_date None)
       | false ->
@@ -92,7 +92,7 @@ module Make (VCS: VCS) = struct
     else
       (OpamFilename.mkdir dirname;
        VCS.init dirname url @@+ fun () ->
-       VCS.fetch ?cache_dir dirname url @@+ fun () ->
+       VCS.fetch ?cache_dir ?subpath dirname url @@+ fun () ->
        VCS.reset_tree dirname url @@+ fun () ->
        Done (Result None))
 
@@ -100,16 +100,27 @@ module Make (VCS: VCS) = struct
     VCS.revision repo_root @@+ fun r ->
     Done (OpamStd.Option.map OpamPackage.Version.of_string r)
 
-  let sync_dirty repo_root repo_url =
-    pull_url repo_root None repo_url @@+ fun result ->
+  let sync_dirty ?subpath repo_root repo_url =
+    let filter_subpath files =
+      match subpath with
+      | None -> files
+      | Some sp ->
+        OpamStd.List.filter_map
+          (fun f ->
+             if OpamStd.String.remove_prefix ~prefix:(sp ^ Filename.dir_sep) f
+                <> f then Some f else None)
+          files
+    in
+    pull_url ?subpath repo_root None repo_url @@+ fun result ->
     match OpamUrl.local_dir repo_url with
     | None -> Done (result)
     | Some dir ->
       VCS.versioned_files dir @@+ fun vc_files ->
       VCS.modified_files dir @@+ fun vc_dirty_files ->
       let files =
-        List.map OpamFilename.(remove_prefix dir)
-          (OpamFilename.rec_files dir)
+        filter_subpath
+          (List.map OpamFilename.(remove_prefix dir)
+             (OpamFilename.rec_files dir))
       in
       (* Remove non-listed files from destination *)
       (* fixme: doesn't clean directories *)
@@ -122,21 +133,26 @@ module Make (VCS: VCS) = struct
           (OpamFilename.rec_files repo_root)
       in
       List.iter OpamFilename.remove rm_list;
-      (* We do the list cleaning here becuse of rsync options: `--exclude` need
-         to be explicitely given directory descendants, e.g `--exclude
-         _build/**`
+      (* We do the list cleaning here because of rsync options: with
+         `--files-from`, `--exclude` need to be explicitly given directory
+         descendants, e.g `--exclude _build/**`
       *)
       let excluded =
-        (* from [OpamGit.rsync] exclude list *)
-        let exc = [ "_opam"; "_build"; ".git"; "_darcs"; ".hg" ] in
+        (* from [OpamLocal.rsync] exclude list *)
+        let exc =
+          [ OpamSwitch.external_dirname ^ "*"; "_build";
+            ".git"; "_darcs"; ".hg" ]
+        in
         OpamStd.String.Set.filter (fun f ->
             List.exists (fun prefix ->
                 OpamStd.String.starts_with ~prefix f)
               exc)
           fset
       in
-      let vcset = OpamStd.String.Set.of_list vc_files in
-      let vc_dirty_set = OpamStd.String.Set.of_list vc_dirty_files in
+      let vcset = OpamStd.String.Set.of_list (filter_subpath vc_files) in
+      let vc_dirty_set =
+        OpamStd.String.Set.of_list (filter_subpath vc_dirty_files)
+      in
       let final_set =
         OpamStd.String.Set.Op.(fset -- vcset ++ vc_dirty_set -- excluded)
       in

@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -143,6 +143,10 @@ module OpamList = struct
     | l when index <= 0 -> value :: l
     | x::l -> x :: insert_at (index - 1) value l
 
+  let rec assoc_opt x = function
+      [] -> None
+    | (a,b)::l -> if compare a x = 0 then Some b else assoc_opt x l
+
   let pick_assoc x l =
     let rec aux acc = function
       | [] -> None, l
@@ -245,7 +249,8 @@ module Set = struct
       let rec aux fullset curset =
         if is_empty curset then fullset else
         let newset = fold (fun nv set -> set ++ f nv) curset empty in
-        aux (fullset ++ curset) (newset -- fullset)
+        let fullset = fullset ++ curset in
+        aux fullset (newset -- fullset)
       in
       aux empty
 
@@ -607,7 +612,6 @@ type warning_printer =
   {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
 let console = ref {warning = fun fmt -> Printf.ksprintf prerr_string fmt}
 
-
 module Env = struct
 
   (* Remove from a c-separated list of string the one with the given prefix *)
@@ -709,7 +713,7 @@ module OpamSys = struct
 
   let tty_in = Unix.isatty Unix.stdin
 
-  let default_columns =
+  let default_columns = lazy (
     let default = 16_000_000 in
     let cols =
       try int_of_string (Env.get "COLUMNS") with
@@ -717,6 +721,7 @@ module OpamSys = struct
       | Failure _ -> default
     in
     if cols > 0 then cols else default
+  )
 
   let get_terminal_columns () =
     let fallback = 80 in
@@ -757,15 +762,19 @@ module OpamSys = struct
       fun () ->
         if tty_out
         then win32_get_console_width ()
-        else default_columns
+        else Lazy.force default_columns
     else
       fun () ->
         if tty_out
         then Lazy.force !v
-        else default_columns
+        else Lazy.force default_columns
 
   let home =
-    let home = lazy (try Env.get "HOME" with Not_found -> Sys.getcwd ()) in
+    (* Note: we ask Unix.getenv instead of Env.get to avoid
+       forcing the environment in this function that is used
+       before the .init() functions are called -- see
+       OpamStateConfig.default. *)
+    let home = lazy (try Unix.getenv "HOME" with Not_found -> Sys.getcwd ()) in
     fun () -> Lazy.force home
 
   let etc () = "/etc"
@@ -917,7 +926,7 @@ module OpamSys = struct
 
   let registered_at_exit = ref []
   let at_exit f =
-    Pervasives.at_exit f;
+    Stdlib.at_exit f;
     registered_at_exit := f :: !registered_at_exit
   let exec_at_exit () =
     List.iter
@@ -1246,6 +1255,23 @@ module OpamFormat = struct
     | [a]   -> a
     | [a;b] -> Printf.sprintf "%s %s %s" a last b
     | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
+
+  let as_aligned_table ?(width=OpamSys.terminal_columns ()) l =
+    let itlen =
+      List.fold_left (fun acc s -> max acc (visual_length s))
+        0 l
+    in
+    let by_line = (width + 1) / (itlen + 1) in
+    if by_line <= 1 then
+      List.map (fun x -> [x]) l
+    else
+    let rec aux rline n = function
+      | [] -> [List.rev rline]
+      | x::r as line ->
+        if n = 0 then List.rev rline :: aux [] by_line line
+        else aux (x :: rline) (n-1) r
+    in
+    align_table (aux [] by_line l)
 
 end
 

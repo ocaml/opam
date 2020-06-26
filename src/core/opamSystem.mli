@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -38,6 +38,8 @@ val with_tmp_dir_job: (string -> 'a OpamProcess.job) -> 'a OpamProcess.job
 (** Returns true if the default verbose level for base commands (cp, mv, etc.)
     is reached *)
 val verbose_for_base_commands: unit -> bool
+
+(** {2 Filesystem management} *)
 
 (** Returns a directory name, in the temporary directory, composed by {i opam}
     (if [prefix] is not set), pid, and random number. *)

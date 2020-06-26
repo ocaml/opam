@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -155,20 +155,20 @@ let all_depends ?build ?post ?test ?doc ?dev ?(filter_default=false)
 
 let all_installed_deps st opam =
   let deps = OpamFormula.atoms (all_depends ~post:false st opam) in
-  OpamStd.List.filter_map
-    (fun (n,cstr) ->
+  List.fold_left
+    (fun deps (n,cstr) ->
        try
          let nv =
-           OpamPackage.Set.find (fun nv -> nv.name = n)
-             st.installed
+           OpamPackage.Set.find (fun nv -> nv.name = n) st.installed
          in
          let version = nv.version in
          match cstr with
-         | None -> Some nv
-         | Some (op,v) when OpamFormula.eval_relop op version v -> Some nv
-         | Some _ -> None
-       with Not_found -> None)
-    deps
+         | None -> OpamPackage.Set.add nv deps
+         | Some (op,v) when OpamFormula.eval_relop op version v ->
+           OpamPackage.Set.add nv deps
+         | Some _ -> deps
+       with Not_found -> deps)
+    OpamPackage.Set.empty deps
 
 let build_id st opam =
   let kind = `SHA256 in
@@ -180,14 +180,12 @@ let build_id st opam =
       raise Exit
     | _ ->
       let hash_map, deps_hashes =
-        List.fold_left (fun (hash_map, hashes) nv ->
+        OpamPackage.Set.fold (fun nv (hash_map, hashes) ->
             let hash_map, hash =
               aux hash_map nv (OpamPackage.Map.find nv st.opams)
             in
             hash_map, hash::hashes)
-          (hash_map, [])
-          (List.sort (fun a b -> - OpamPackage.compare a b)
-             (all_installed_deps st opam))
+           (all_installed_deps st opam) (hash_map, [])
       in
       let opam_hash =
         OpamHash.compute_from_string ~kind
@@ -262,8 +260,11 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
       Some (bool false)
     | "pinned", _ ->
       Some (bool (OpamPackage.has_name st.pinned name))
-    | "name", _ ->
-      if OpamPackage.has_name st.packages name
+    | "name", opam ->
+      (* On reinstall, orphan packages are not present in the state, and we
+         need to resolve their internal name variable *)
+      if OpamStd.Option.map OpamFile.OPAM.name opam = Some name
+      || OpamPackage.has_name st.packages name
       then Some (string (OpamPackage.Name.to_string name))
       else None
     | _, None -> None
@@ -286,9 +287,10 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     | "version", Some opam ->
       Some (string (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
     | "depends", Some opam ->
-      let installed_deps = all_installed_deps st opam in
       let str_deps =
-        OpamStd.List.concat_map " " OpamPackage.to_string installed_deps
+        all_installed_deps st opam
+        |> OpamPackage.Set.elements
+        |> OpamStd.List.concat_map " " OpamPackage.to_string
       in
       Some (string str_deps)
     | "hash", Some opam ->

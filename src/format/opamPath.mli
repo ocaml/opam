@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -158,6 +158,14 @@ module Switch: sig
   (** Clean, uncompressed source directory for this package: {i
       $meta/sources/$name.$version/} *)
   val sources: t -> switch -> package -> dirname
+
+  (** Temporary switch-local directory where a by-hash map of extra files may be stored.
+      This is used for switch-imports: {i $meta/extra-files-cache} *)
+  val extra_files_dir: t -> switch -> dirname
+
+  (** Extra file with the given hash from the temporary switch-import cache:
+      {i $meta/extra-files-cache/HASH} *)
+  val extra_file: t -> switch -> OpamHash.t -> filename
 
   (** Mirror of the sources for a given pinned package: {i
       $meta/sources/$name/} (without version) *)

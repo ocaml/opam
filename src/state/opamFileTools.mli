@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2016 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -104,3 +104,11 @@ val map_all_variables:
 
 val map_all_filters:
   (filter -> filter) -> OpamFile.OPAM.t -> OpamFile.OPAM.t
+
+(** Converts a dependency formula to the same format as used in opam package
+    definition files. *)
+val dep_formula_to_string: formula -> string
+
+(** Sort opam fields: author, tags, depexts, depends, depopts, conflicts,
+    pin_depends, extra_files, extra_sources *)
+val sort_opam: OpamFile.OPAM.t -> OpamFile.OPAM.t

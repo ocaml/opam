@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -35,7 +35,8 @@ exception Aborted
 (** Simply parallel execution of tasks *)
 
 (** In the simple iter, map and reduce cases, ints are the indexes of the jobs
-    in the list *)
+    in the list. First list is return code of sucessfull commands, second those
+    which raised expcetions, and third one those which were canceled. *)
 exception Errors of int list * (int * exn) list * int list
 
 val iter: jobs:int -> command:('a -> unit OpamProcess.job) -> ?dry_run:bool ->

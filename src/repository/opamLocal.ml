@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -62,12 +62,10 @@ let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
   let overlap src dst =
     let norm d = Filename.concat d "" in
     OpamStd.String.starts_with ~prefix:(norm src) (norm dst) &&
-    not (OpamStd.String.starts_with
-           ~prefix:(norm (Filename.concat src OpamSwitch.external_dirname))
-           (norm dst)) ||
+    not (OpamStd.String.contains ~sub:OpamSwitch.external_dirname (norm dst)) ||
     OpamStd.String.starts_with ~prefix:(norm dst) (norm src)
   in
-  (* See also OpamVCS.sync_dirty *)
+  (* See also [OpamVCS.sync_dirty] *)
   let exclude_args =
     (if not exclude_vcdirs then [] else
        [ "--exclude"; ".git";
@@ -77,6 +75,7 @@ let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
     @ [
       "--exclude"; ".#*";
       "--exclude"; OpamSwitch.external_dirname ^ "*";
+      "--exclude"; "_build";
     ]
   in
   if not(remote || Sys.file_exists src) then
@@ -192,9 +191,17 @@ module B = struct
 
   let repo_update_complete _ _ = Done ()
 
-  let pull_url ?cache_dir:_ local_dirname _checksum remote_url =
+  let pull_url ?cache_dir:_ ?subpath local_dirname _checksum remote_url =
+    let local_dirname =
+      OpamStd.Option.map_default (fun x -> OpamFilename.Op.(local_dirname / x))
+        local_dirname subpath
+    in
     OpamFilename.mkdir local_dirname;
     let dir = OpamFilename.Dir.to_string local_dirname in
+    let remote_url =
+      OpamStd.Option.map_default (fun x -> OpamUrl.Op.(remote_url / x))
+        remote_url subpath
+    in
     let remote_url =
       match OpamUrl.local_dir remote_url with
       | Some _ ->
@@ -230,7 +237,7 @@ module B = struct
   let revision _ =
     Done None
 
-  let sync_dirty dir url = pull_url dir None url
+  let sync_dirty ?subpath dir url = pull_url ?subpath dir None url
 
   let get_remote_url ?hash:_ _ =
     Done None

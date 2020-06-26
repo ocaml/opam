@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2015 OCamlPro                                             *)
+(*    Copyright 2015-2019 OCamlPro                                        *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -45,7 +45,7 @@ module type S = sig
       [checksum] can be used for retrieval but is NOT checked by this
       function. *)
   val pull_url:
-    ?cache_dir:dirname -> dirname -> OpamHash.t option -> url ->
+    ?cache_dir:dirname -> ?subpath:string -> dirname -> OpamHash.t option -> url ->
     filename option download OpamProcess.job
 
   (** [pull_repo_update] fetches the remote update from [url] to the local
@@ -73,7 +73,7 @@ module type S = sig
       [pull_url], then remove deleted files, and finally copy via rsync
       unversioned & modified-uncommitted files. *)
   val sync_dirty:
-    dirname -> url -> filename option download OpamProcess.job
+    ?subpath:string -> dirname -> url -> filename option download OpamProcess.job
 
   (** [get_remote_url ?hash dirname] return the distant url of repo [dirname], \
       if found. When [hash] is specified, it checks that this hash (branch or \

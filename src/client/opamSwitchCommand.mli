@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -14,24 +14,29 @@
 open OpamTypes
 open OpamStateTypes
 
-(** Install a new switch, with the given packages set as compiler. The given
-    [global_state] is unlocked as soon as possible, i.e. after registering the
-    existence of the new switch. [update_config] sets the switch as current
-    globally, unless it is external *)
-val install:
+(** Creates and configures a new switch. The given [global_state] is unlocked
+    once done. [update_config] sets the switch as current globally, unless it is
+    external.
+
+    [post] can be used to run guarded operations after the switch creation
+    (cleanup will be proposed to the user if they fail). You probably want to
+    call [install_compiler] there. *)
+val create:
   rw global_state ->
   rt:'a repos_state ->
   ?synopsis:string ->
   ?repos:repository_name list ->
   update_config:bool ->
-  packages:atom conjunction -> 
-  ?local_compiler:bool ->
+  invariant:formula ->
   switch ->
-  unlocked global_state * rw switch_state
+  (rw switch_state -> 'ret * rw switch_state) ->
+  'ret * rw switch_state
 
-(** Install a compiler's base packages *)
-val install_compiler_packages:
-  rw switch_state -> atom conjunction -> rw switch_state
+(** Used to initially install a compiler's base packages, according to its
+    invariant. *)
+val install_compiler:
+  ?additional_installs:atom list -> ?deps_only:bool ->
+  rw switch_state -> rw switch_state
 
 (** Import a file which contains the packages to install.  *)
 val import:
@@ -39,10 +44,19 @@ val import:
   OpamFile.SwitchExport.t OpamFile.t option ->
   rw switch_state
 
-(** Export a file which contains the installed packages. If full is specified
+(** Export a file which contains the installed packages. If [full] is specified
     and true, export metadata of all installed packages (excluding overlay
-    files) as part of the export. [None] means export to stdout. *)
-val export: ?full:bool -> OpamFile.SwitchExport.t OpamFile.t option -> unit
+    files) as part of the export. The export will be extended with a map of all
+    extra-files. If [freeze] is specified and true, VCS urls will be frozen to
+    the specific commit ID. If [None] is provided as file argument, the export
+    is done to stdout. *)
+val export:
+  'a repos_state ->
+  ?freeze:bool ->
+  ?full:bool ->
+  ?switch:switch ->
+  OpamFile.SwitchExport.t OpamFile.t option ->
+  unit
 
 (** Remove the given compiler switch, and returns the updated state (unchanged
     in case [confirm] is [true] and the user didn't confirm) *)
@@ -54,9 +68,16 @@ val switch: 'a lock -> rw global_state -> switch -> unit
 (** Reinstall the given compiler switch. *)
 val reinstall: rw switch_state -> rw switch_state
 
-(** Sets the packages configured as the current switch compiler base *)
-val set_compiler:
-  rw switch_state -> (name * version option) list -> rw switch_state
+(** Updates the switch invariant and the associated config files, and writes the
+    config file unless [show] or [dry_run] are activated globally. Low-level
+    function, see [set_invariant] for the user-facing function. *)
+val set_invariant_raw:
+  rw switch_state -> formula -> rw switch_state
+
+(** Sets the packages configured as the current switch compiler base, after some
+    checks and messages. *)
+val set_invariant:
+  ?force:bool -> rw switch_state -> formula -> rw switch_state
 
 (** Display the current compiler switch. *)
 val show: unit -> unit
@@ -68,8 +89,9 @@ val list: 'a global_state -> print_short:bool -> unit
 val get_compiler_packages:
   ?repos:repository_name list -> 'a repos_state -> package_set
 
-(** Guess the compiler from the switch name: within compiler packages,
-    match [name] against "pkg.version", "pkg", and, as a last resort,
-    "version" (for compat with older opams, eg. 'opam switch 4.02.3') *)
-val guess_compiler_package:
-  ?repos:repository_name list -> 'a repos_state -> string -> atom option
+(** Guess a real compiler spec from a list of strings, which may refer to
+    packages with optional version constraints, or just versions.
+    This uses some heuristics. *)
+val guess_compiler_invariant:
+  ?repos:repository_name list -> 'a repos_state -> string list -> OpamFormula.t
+

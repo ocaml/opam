@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -85,6 +85,7 @@ type +'lock repos_state = {
       repositories *)
 } constraint 'lock = 'lock lock
 
+
 (** State of a given switch: options, available and installed packages, etc.*)
 type +'lock switch_state = {
   switch_lock: OpamSystem.lock;
@@ -96,8 +97,13 @@ type +'lock switch_state = {
   switch: switch;
   (** The current active switch *)
 
+  switch_invariant: formula;
+  (** Defines the "base" of the switch, e.g. what compiler is desired *)
+
   compiler_packages: package_set;
-  (** The packages that form the base of the current compiler *)
+  (** The packages that form the base of the current compiler. Normally equal to
+      the subset of installed packages matching the invariant defined in
+      switch_config *)
 
   switch_config: OpamFile.Switch_config.t;
   (** The configuration file for this switch *)
@@ -119,6 +125,10 @@ type +'lock switch_state = {
   packages: package_set;
   (** The set of all known packages *)
 
+  sys_packages: sys_pkg_status package_map Lazy.t;
+  (** Map of package and their system dependencies packages status. Only
+      initialised for otherwise available packages *)
+
   available_packages: package_set Lazy.t;
   (** The set of available packages, filtered by their [available:] field *)
 
@@ -138,8 +148,13 @@ type +'lock switch_state = {
       happen not to be installed at some point, but this indicates that the
       user would like them installed. *)
 
-  reinstall: package_set;
-  (** The set of packages which needs to be reinstalled *)
+  reinstall: package_set Lazy.t;
+  (** The set of packages which need to be reinstalled *)
+
+  invalidated: package_set Lazy.t;
+  (** The set of packages which are installed but no longer valid, e.g. because
+      of removed system dependencies. Only packages which are unavailable end up
+      in this set, they are otherwise put in [reinstall]. *)
 
   (* Missing: a cache for
      - switch-global and package variables

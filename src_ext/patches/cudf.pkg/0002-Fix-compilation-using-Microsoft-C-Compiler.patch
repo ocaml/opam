@@ -1,17 +1,7 @@
-From 441cd1403081099ded532119cd195b3c27e36392 Mon Sep 17 00:00:00 2001
-From: David Allsopp <david.allsopp@metastack.com>
-Date: Thu, 23 Jul 2015 17:53:05 +0100
-Subject: [PATCH] Fix compilation using Microsoft C Compiler
-
----
- Makefile | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/Makefile b/Makefile
-index edf24c4..9e1f7b0 100644
---- a/Makefile
-+++ b/Makefile
-@@ -2,6 +2,8 @@ include Makefile.config
+diff -Naur a/Makefile b/Makefile
+--- a/Makefile	2017-03-21 14:39:23.000000000 +0000
++++ b/Makefile	2019-11-21 14:29:33.684757960 +0000
+@@ -2,6 +2,8 @@
  
  NAME = cudf
  
@@ -20,7 +10,7 @@ index edf24c4..9e1f7b0 100644
  ifeq ("$(shell (ocamlc -config 2>/dev/null || ocamlopt -config) | fgrep os_type)","os_type: Win32")
  EXE=.exe
  OCAMLLIBDIR := $(shell cygpath $(OCAMLLIBDIR))
-@@ -81,9 +83,9 @@ TAGS: $(SOURCES)
+@@ -81,9 +83,9 @@
  	otags $^
  
  INSTALL_STUFF = META
@@ -32,6 +22,3 @@ index edf24c4..9e1f7b0 100644
  INSTALL_STUFF += $(wildcard _build/cudf.o _build/cudf.cmx _build/cudf.cmi)
  
  install:
--- 
-2.4.4.windows.2
-

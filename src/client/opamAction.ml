@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -361,18 +361,41 @@ let prepare_package_source st nv dir =
       (Done None) (OpamFile.OPAM.extra_sources opam)
   in
   let check_extra_files =
-    try
-      List.iter (fun (src,base,hash) ->
-          if not (OpamHash.check_file (OpamFilename.to_string src) hash) then
-            failwith
-              (Printf.sprintf "Bad hash for %s" (OpamFilename.to_string src))
+    let extra_files =
+      let extra_files =
+        OpamFile.OPAM.get_extra_files
+          ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+          opam
+      in
+      if extra_files <> [] then extra_files else
+      match OpamFile.OPAM.extra_files opam with
+      | None -> []
+      | Some xs ->
+        (* lookup in switch-local hashmap overlay *)
+        let extra_files_dir =
+          OpamPath.Switch.extra_files_dir st.switch_global.root st.switch
+        in
+        OpamStd.List.filter_map (fun (base, hash) ->
+            let src =
+              OpamFilename.create extra_files_dir
+                (OpamFilename.Base.of_string (OpamHash.contents hash))
+            in
+            if OpamFilename.exists src then
+              Some (src, base, hash)
+            else None)
+          xs
+    in
+    let bad_hash =
+      OpamStd.List.filter_map (fun (src, base, hash) ->
+          if OpamHash.check_file (OpamFilename.to_string src) hash then
+            (OpamFilename.copy ~src ~dst:(OpamFilename.create dir base); None)
           else
-            OpamFilename.copy ~src ~dst:(OpamFilename.create dir base))
-        (OpamFile.OPAM.get_extra_files
-           ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
-           opam);
-      None
-    with e -> Some e
+            Some src) extra_files
+    in
+    if bad_hash = [] then None else
+      Some (Failure
+              (Printf.sprintf "Bad hash for %s"
+                 (OpamStd.Format.itemize OpamFilename.to_string bad_hash)));
   in
   OpamFilename.mkdir dir;
   get_extra_sources_job @@+ function Some _ as err -> Done err | None ->
@@ -466,16 +489,19 @@ let make_command st opam ?dir ?text_command (cmd, args) =
          OpamPackage.Set.(elements @@
                           inter st.compiler_packages st.installed_roots));
       if OpamPackage.Set.mem nv st.pinned then
-        match OpamFile.OPAM.get_url opam with
+        match OpamFile.OPAM.url opam with
         | None -> "pinned"
-        | Some u ->
+        | Some url ->
+          let u = OpamFile.URL.url url in
           let src =
             OpamPath.Switch.pinned_package st.switch_global.root st.switch
               nv.name
           in
           let rev = OpamProcess.Job.run (OpamRepository.revision src u) in
-          Printf.sprintf "pinned(%s%s)"
+          Printf.sprintf "pinned(%s%s%s)"
             (OpamUrl.to_string u)
+            (OpamStd.Option.to_string (fun s -> "("^s^")")
+               (OpamFile.URL.subpath url))
             (OpamStd.Option.to_string
                (fun r -> "#"^OpamPackage.Version.to_string r) rev)
       else
@@ -783,7 +809,7 @@ let build_package t ?(test=false) ?(doc=false) build_dir nv =
   | Some (cmd, result), _ | _, Some (cmd, result) ->
     OpamConsole.error
       "The compilation of %s failed at %S."
-      name (OpamProcess.string_of_command cmd);
+      (OpamPackage.to_string nv) (OpamProcess.string_of_command cmd);
     Done (Some (OpamSystem.Process_error result))
   | None, None ->
     if commands <> [] && OpamConsole.verbose () then

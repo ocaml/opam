@@ -172,9 +172,20 @@ opam switch import <file.export> --switch <new switch>
 The file format is human-readable, so you are free to edit the file before doing
 the `import` if you need to customise the installation.
 
-You may also want to have a look at the `opam lock` plugin, that can memorise
-the precise set of installed dependencies for a local package, and the
-associated `opam install DIR --locked` command that can restore them.
+### 🐫 How to share my working switch setup for a specific package ?
+
+When working on a project, it is sometimes needed to share a set of
+dependencies that you know (locally) the project is working with. You can share
+this set by generating a _locked_ opam file. Ths is easily done using the [`lock`
+command](man/opam-lock.html): it creates an opam file with a `depends:` field
+populated with all dependencies, at their exact version in the current
+(working) switch. You can then share this `opam.locked` file, or check it
+in your version-control system.
+
+```shell
+$ opam lock <pkg> # generated ans <pkg>.opam.lock file
+$ opam install --locked <pkg> # use <pkg> locked file, if present
+```
 
 ---
 
@@ -209,6 +220,9 @@ need more.
 ---
 
 #### 🐫  Some packages fail during compilation, complaining about missing dependencies ("m4", "libgtk", etc.)
+
+> NOTE: since opam 2.1.0, the following is directly handled by opam, without
+> relying on a plugin.
 
 They probably depend on system, non-OCaml libraries: they need to be installed
 using your system package manager (apt-get, yum, pacman, homebrew, etc.) since

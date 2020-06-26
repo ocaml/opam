@@ -1,0 +1,24 @@
+f372039d
+### opam switch create --fake ocaml-base-compiler.4.02.3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.02.3
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.02.3
+Faking installation of base-ocamlbuild.base
+Done.
+### opam install core'>'112.17.00 core'<'112.17.00 --show
+The following dependencies couldn't be met:
+  - core → core_kernel (>= 109.36.00 & < 109.42.00 | >= 109.53.00 & != 109.55.02 & < 109.60.00 | >= 111.03.00 & < 111.08.00 | >= 111.17.00 & < 111.25.00) → ocaml < 4.02.1
+      base of this switch (use `--unlock-base' to force)
+  - core → custom_printf < 111.21.00 → ocaml < 4.02.0
+      base of this switch (use `--unlock-base' to force)
+  - core → ocaml (< 4.01.0 | >= 4.03.0)
+      base of this switch (use `--unlock-base' to force)
+Your request can't be satisfied:
+  - No available version of core satisfies the constraints
+
+No solution found, exiting

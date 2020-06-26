@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -48,7 +48,7 @@ module VCS = struct
   (* Marks the current state, in the form of a reversing patch on top of the
      fetched state *)
 
-  let fetch ?cache_dir:_ repo_root repo_url =
+  let fetch ?cache_dir:_ ?subpath:_ repo_root repo_url =
     (* Just do a fresh pull into a temp directory, and replace _darcs/
        There is no easy way to diff or make sure darcs forgets about local
        patches otherwise. *)
@@ -157,7 +157,7 @@ module VCS = struct
 
   let current_branch _dir = Done None (* No branches in Darcs *)
 
-  let is_dirty dir =
+  let is_dirty ?subpath:_ dir =
     darcs dir [ "whatsnew"; "--quiet"; "--summary" ]
     @@> fun r -> Done (OpamProcess.check_success_and_cleanup r)
 

@@ -1,0 +1,12 @@
+diff -Naur a/src/cudf.h b/src/cudf.h
+--- a/src/cudf.h	2019-12-11 16:55:17.000000000 +0000
++++ b/src/cudf.h	2020-03-27 13:29:20.497173037 +0000
+@@ -118,7 +118,7 @@
+ // Compares two versioned package (used by ordered set packages likes CUDFVersionedPackageSet)
+ class CUDFPackage_comparator {
+ public:
+-  bool operator()(CUDFVersionedPackage *p1, CUDFVersionedPackage *p2) {
++  bool operator()(CUDFVersionedPackage *p1, CUDFVersionedPackage *p2) const {
+     if (p1->version < p2->version)
+       return true;
+     else

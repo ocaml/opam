@@ -49,7 +49,7 @@ static void AfterThreadFunc (void)
   return;
 }
 
-char* InjectSetEnvironmentVariable(DWORD pid, char* key, char* val)
+char* InjectSetEnvironmentVariable(DWORD pid, const char* key, const char* val)
 {
   /*
    * Open the parent process for code injection

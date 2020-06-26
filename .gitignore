@@ -4,6 +4,8 @@ _opam/
 _olint/
 bootstrap/
 tests/tmp/
+tests/reftests.out/
+tests/.merlin
 .*.swp
 src_ext/lib
 src_ext/cudf/

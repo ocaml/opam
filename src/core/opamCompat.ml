@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2018 OCamlPro                                             *)
+(*    Copyright 2018-2020 OCamlPro                                        *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -108,4 +108,8 @@ struct
     | exception Invalid_argument _ ->
         ""
 end
+#endif
+
+#if OCAML_VERSION < (4, 7, 0)
+module Stdlib = Pervasives
 #endif

@@ -1,0 +1,12 @@
+name: Changelog check
+
+on:
+  pull_request:
+    branches: master
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: bash .github/scripts/changelog_checker

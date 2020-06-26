@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -64,18 +64,20 @@ let add rt name url trust_anchors =
     -> rt
   | Some r ->
     OpamConsole.error_and_exit `Bad_arguments
-      "Repository %s is already set up %s. To change that, use 'opam \
-       repository set-url'."
+      "Repository %s is already set up%s. To change that, use 'opam \
+       repository set-url %s %s'."
       (OpamRepositoryName.to_string name)
       (if r.repo_url <> url then
-         "and points to "^OpamUrl.to_string r.repo_url
+         " and points to "^OpamUrl.to_string r.repo_url
        else match r.repo_trust with
-         | None -> "without trust anchors"
+         | None -> " without trust anchors"
          | Some ta ->
-           Printf.sprintf "with trust anchors %s and quorum %d"
+           Printf.sprintf " with trust anchors %s and quorum %d"
              (OpamStd.List.concat_map ~nil:"()" "," String.escaped
                 ta.fingerprints)
              ta.quorum)
+      (OpamRepositoryName.to_string name)
+      (OpamUrl.to_string url)
   | None ->
     let repo = { repo_name = name; repo_url = url;
                  repo_trust = trust_anchors; }

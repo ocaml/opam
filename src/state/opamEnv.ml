@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -280,8 +280,8 @@ let get_full
   let updates = u @ updates ~set_opamroot ~set_opamswitch ~force_path st in
   add env0 updates
 
-let is_up_to_date_raw updates =
-  OpamStateConfig.(!r.no_env_notice) ||
+let is_up_to_date_raw ?(skip=OpamStateConfig.(!r.no_env_notice)) updates =
+  skip ||
   let not_utd =
     List.fold_left (fun notutd (var, op, arg, _doc as upd) ->
         match OpamStd.Env.getopt var with
@@ -329,8 +329,8 @@ let full_with_path ~force_path ?(updates=[]) root switch =
   let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
   add env0 (switch_path_update ~force_path root switch @ updates)
 
-let is_up_to_date st =
-  is_up_to_date_raw
+let is_up_to_date ?skip st =
+  is_up_to_date_raw ?skip
     (updates ~set_opamroot:false ~set_opamswitch:false ~force_path:false st)
 
 let eval_string gt ?(set_opamswitch=false) switch =
@@ -463,8 +463,11 @@ let source root shell f =
     Printf.sprintf "source %s >& /dev/null || true\n" (file f)
   | SH_fish ->
     Printf.sprintf "source %s > /dev/null 2> /dev/null; or true\n" (file f)
-  | SH_sh | SH_bash | SH_zsh ->
+  | SH_sh | SH_bash ->
     Printf.sprintf "test -r %s && . %s > /dev/null 2> /dev/null || true\n"
+      (file f) (file f)
+  | SH_zsh ->
+    Printf.sprintf "[[ ! -r %s ]] || source %s  > /dev/null 2> /dev/null\n"
       (file f) (file f)
 
 let if_interactive_script shell t e =
@@ -473,8 +476,10 @@ let if_interactive_script shell t e =
     | Some e -> Printf.sprintf "else\n  %s" e
   in
   match shell with
-  | SH_sh | SH_zsh | SH_bash ->
+  | SH_sh| SH_bash ->
     Printf.sprintf "if [ -t 0 ]; then\n  %s%sfi\n" t @@ ielse e
+  | SH_zsh ->
+    Printf.sprintf "if [[ -o interactive ]]; then\n  %s%sfi\n" t @@ ielse e
   | SH_csh ->
     Printf.sprintf "if ( $?prompt ) then\n  %s%sendif\n" t @@ ielse e
   | SH_fish ->
@@ -522,7 +527,7 @@ let write_init_shell_scripts root =
   in
   List.iter (write_script (OpamPath.init root)) scripts
 
-let write_static_init_scripts root ?completion ?env_hook () =
+let write_static_init_scripts root ?completion ?env_hook ?(inplace=false) () =
   write_init_shell_scripts root;
   let update_scripts filef scriptf enable =
     let scripts =
@@ -532,13 +537,18 @@ let write_static_init_scripts root ?completion ?env_hook () =
           | _ -> None)
         shells_list
     in
-    match enable with
-    | Some true ->
+    match enable, inplace with
+    | Some true, _ ->
       List.iter (write_script (OpamPath.init root)) scripts
-    | Some false ->
-      List.iter (fun (f,_) -> OpamFilename.remove (OpamPath.init root // f))
+    | _, true ->
+      List.iter (fun ((f,_) as fs) ->
+          if OpamFilename.exists (OpamPath.init root // f) then
+            write_script (OpamPath.init root) fs)
         scripts
-    | None -> ()
+    | Some false, _ ->
+      List.iter (fun (f,_) ->
+          OpamFilename.remove (OpamPath.init root // f)) scripts
+    | None, _ -> ()
   in
   update_scripts complete_file complete_script completion;
   update_scripts env_hook_file env_hook_script env_hook
@@ -552,14 +562,18 @@ let write_custom_init_scripts root custom =
       let hash_name = name ^ ".hash" in
       let hash_file = hookdir // hash_name in
       if not (OpamFilename.exists hash_file)
-      || OpamHash.of_string_opt (OpamFilename.read hash_file) <>
-         Some (OpamHash.compute ~kind (OpamFilename.to_string script_file))
-         && OpamConsole.confirm ~default:false
-           "%s contains local modification, overwrite ?"
-           (OpamFilename.to_string script_file) then
-        (write_script hookdir (name, script);
-         OpamFilename.chmod script_file 0o777;
-         write_script hookdir (hash_name, OpamHash.to_string hash))
+      || (let same_hash =
+          OpamHash.of_string_opt (OpamFilename.read hash_file) =
+          Some (OpamHash.compute ~kind (OpamFilename.to_string script_file))
+        in
+        same_hash
+        || not same_hash
+           && OpamConsole.confirm ~default:false
+             "%s contains local modification, overwrite ?"
+             (OpamFilename.to_string script_file)) then
+            (write_script hookdir (name, script);
+            OpamFilename.chmod script_file 0o777;
+            write_script hookdir (hash_name, OpamHash.to_string hash))
     ) custom
 
 let write_dynamic_init_scripts st =
@@ -654,7 +668,7 @@ let check_and_print_env_warning st =
 
 let setup
     root ~interactive ?dot_profile ?update_config ?env_hook ?completion
-    shell =
+    ?inplace shell =
   let update_dot_profile =
     match update_config, dot_profile, interactive with
     | Some false, _, _ -> None
@@ -712,11 +726,13 @@ let setup
     | Some b, _ -> Some b
     | None, false -> None
     | None, true ->
-      Some
-        (OpamConsole.confirm ~default:false
-           "A hook can be added to opam's init scripts to ensure that the \
-            shell remains in sync with the opam environment when they are \
-            loaded. Set that up?")
+      (* not just interactive mode *)
+      if update_config <> None || completion <> None then None else
+          Some
+          (OpamConsole.confirm ~default:false
+             "A hook can be added to opam's init scripts to ensure that the \
+              shell remains in sync with the opam environment when they are \
+              loaded. Set that up?")
   in
   update_user_setup root ?dot_profile:update_dot_profile shell;
-  write_static_init_scripts root ?completion ?env_hook ()
+  write_static_init_scripts root ?completion ?env_hook ?inplace ()

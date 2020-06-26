@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2016 OCamlPro                                             *)
+(*    Copyright 2016-2019 OCamlPro                                        *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -177,7 +177,10 @@ let do_upgrade repo_root =
     let url_md5 = Hashtbl.create 187 in
     let () =
       OpamFile.Lines.read_opt cache_file +! [] |> List.iter @@ function
-      | [url; md5] -> Hashtbl.add url_md5 (OpamUrl.of_string url) (OpamHash.of_string md5)
+      | [url; md5] ->
+        OpamStd.Option.iter
+          (fun url -> Hashtbl.add url_md5 url (OpamHash.of_string md5))
+          (OpamUrl.parse_opt ~handle_suffix:false url)
       | _ -> failwith "Bad cache, run 'opam admin upgrade --clear-cache'"
     in
     (fun url ->

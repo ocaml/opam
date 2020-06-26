@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -296,6 +296,7 @@ type universe = {
   u_installed_roots: package_set;
   u_pinned   : package_set;
   u_base     : package_set;
+  u_invariant: formula;
   u_reinstall: package_set;
   u_attrs    : (string * package_set) list;
 }
@@ -401,3 +402,7 @@ type checksums = string list
 
 (** {2 JSON} *)
 type json = OpamJson.t
+
+type sys_package = OpamSysPkg.t
+
+type sys_pkg_status = OpamSysPkg.status

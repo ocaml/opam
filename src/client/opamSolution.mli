@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -27,20 +27,22 @@ val resolve:
 (** Apply a solution returned by the solver. If [ask] is not specified, prompts
     the user whenever the solution isn't obvious from the request. [add_roots]
     defaults to the set of newly installed packages that are part of
-    [requested]. *)
+    [requested].  If [force_remove] is true, modified files are not kept.*)
 val apply:
   ?ask:bool ->
   rw switch_state ->
   requested:OpamPackage.Name.Set.t ->
   ?add_roots:OpamPackage.Name.Set.t ->
   ?assume_built:bool ->
+  ?force_remove:bool ->
   OpamSolver.solution ->
   rw switch_state * solution_result
 
 (** Call the solver to get a solution and then call [apply]. If [ask] is not
     specified, prompts the user whenever the solution isn't obvious from the
     request. [add_roots] defaults to the set of newly installed packages that
-    are part of [requested]. *)
+    are part of [requested]. If [force_remove] is true, modified files are
+    not kept. *)
 val resolve_and_apply:
   ?ask:bool ->
   rw switch_state ->
@@ -50,6 +52,7 @@ val resolve_and_apply:
   requested:OpamPackage.Name.Set.t ->
   ?add_roots:OpamPackage.Name.Set.t ->
   ?assume_built:bool ->
+  ?force_remove:bool ->
   atom request ->
   rw switch_state * (solution_result, OpamCudf.conflict) result
 

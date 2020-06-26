@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2020 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -161,17 +161,22 @@ type build_options = {
   unlock_base   : bool;
   locked        : bool;
   lock_suffix   : string;
+  assume_depexts: bool;
+  no_depexts    : bool;
 }
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
     req_checksums build_test build_doc show dryrun skip_update
-    fake jobs ignore_constraints_on unlock_base locked lock_suffix = {
-  keep_build_dir; reuse_build_dir; inplace_build; make;
-  no_checksums; req_checksums; build_test; build_doc; show; dryrun;
-  skip_update; fake; jobs; ignore_constraints_on; unlock_base;
-  locked; lock_suffix
-}
+    fake jobs ignore_constraints_on unlock_base locked lock_suffix
+    assume_depexts no_depexts
+    =
+  {
+    keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
+    req_checksums; build_test; build_doc; show; dryrun; skip_update; fake;
+    jobs; ignore_constraints_on; unlock_base; locked; lock_suffix;
+    assume_depexts; no_depexts;
+  }
 
 let apply_build_options b =
   let flag f = if f then Some true else None in
@@ -196,6 +201,7 @@ let apply_build_options b =
                          OpamPackage.Name.Set.of_list)
     ?unlock_base:(flag b.unlock_base)
     ?locked:(if b.locked then Some (Some b.lock_suffix) else None)
+    ?no_depexts:(flag b.no_depexts)
     ();
   OpamClientConfig.update
     ?keep_build_dir:(flag b.keep_build_dir)
@@ -204,6 +210,7 @@ let apply_build_options b =
     ?show:(flag b.show)
     ?fake:(flag b.fake)
     ?skip_dev_update:(flag b.skip_update)
+    ?assume_depexts:(flag (b.assume_depexts || b.no_depexts))
     ()
 
 let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
@@ -238,7 +245,8 @@ let help_sections = [
   `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
   `P "$(i,OPAMDEBUGSECTIONS) if set, limits debug messages to the space-separated \
       list of sections. Sections can optionally have a specific debug level \
-      (for example, $(b,CLIENT:2) or $(b,CLIENT CUDF:2), but otherwise use `--debug-level'.";
+      (for example, $(b,CLIENT:2) or $(b,CLIENT CUDF:2), but otherwise use \
+      `--debug-level'.";
   `P "$(i,OPAMDOWNLOADJOBS) sets the maximum number of simultaneous downloads.";
   `P "$(i,OPAMDRYRUN) see option `--dry-run`";
   `P "$(i,OPAMEDITOR) sets the editor to use for opam file editing, overrides \
@@ -398,6 +406,18 @@ let help_sections = [
 ]
 
 (* Converters *)
+
+(* Windows directory separator need to be escaped for manpage *)
+let dir_sep, escape_path =
+  match Filename.dir_sep with
+  | "\\" ->
+    let esc = "\\\\" in
+    esc,
+    fun p ->
+      OpamStd.List.concat_map esc (fun x -> x)
+        (OpamStd.String.split_delim p '\\')
+  | ds -> ds, fun x -> x
+
 let pr_str = Format.pp_print_string
 
 let repository_name =
@@ -406,7 +426,11 @@ let repository_name =
   parse, print
 
 let url =
-  let parse str = `Ok (OpamUrl.parse str) in
+  let parse str =
+    match OpamUrl.parse_opt str with
+    | Some url -> `Ok url
+    | None -> `Error ("malformed url "^str)
+  in
   let print ppf url = pr_str ppf (OpamUrl.to_string url) in
   parse, print
 
@@ -430,7 +454,7 @@ let existing_filename_or_dash =
 
 let dirname =
   let parse str = `Ok (OpamFilename.Dir.of_string str) in
-  let print ppf dir = pr_str ppf (OpamFilename.prettify_dir dir) in
+  let print ppf dir = pr_str ppf (escape_path (OpamFilename.prettify_dir dir)) in
   parse, print
 
 let existing_filename_dirname_or_dash =
@@ -450,6 +474,9 @@ let existing_filename_dirname_or_dash =
     | Some (OpamFilename.F f) -> OpamFilename.to_string f
   in
   parse, print
+
+let subpath_conv =
+  (fun str -> `Ok (OpamStd.String.remove_prefix ~prefix:"./" str)), pr_str
 
 let package_name =
   let parse str =
@@ -508,27 +535,8 @@ let package_with_version =
 (* name * version constraint *)
 let atom =
   let parse str =
-    let re = Re.(compile @@ seq [
-        bos;
-        group @@ rep1 @@ diff any (set ">=<.!");
-        group @@ alt [ seq [ set "<>"; opt @@ char '=' ];
-                       set "=."; str "!="; ];
-        group @@ rep1 any;
-        eos;
-      ]) in
-    try
-      let sub = Re.exec re str in
-      let sname = Re.Group.get sub 1 in
-      let sop = Re.Group.get sub 2 in
-      let sversion = Re.Group.get sub 3 in
-      let name = OpamPackage.Name.of_string sname in
-      let sop = if sop = "." then "=" else sop in
-      let op = OpamLexer.relop sop in
-      let version = OpamPackage.Version.of_string sversion in
-      `Ok (name, Some (op, version))
-    with Not_found | Failure _ | OpamLexer.Error _ ->
-      try `Ok (OpamPackage.Name.of_string str, None)
-      with Failure msg -> `Error msg
+    try `Ok (OpamFormula.atom_of_string str)
+    with Failure msg -> `Error msg
   in
   let print ppf atom =
     pr_str ppf (OpamFormula.short_string_of_atom atom) in
@@ -568,6 +576,19 @@ let atom_or_dir =
     | `Error e -> `Error e
   in
   let print ppf = snd atom_or_local ppf in
+  parse, print
+
+let dep_formula =
+  let pp = OpamFormat.V.(package_formula `Conj (constraints version)) in
+  let parse str =
+    try
+      let v = OpamParser.value_from_string str "<command-line>" in
+      `Ok (OpamPp.parse pp ~pos:pos_null v)
+    with e -> OpamStd.Exn.fatal e; `Error (Printexc.to_string e)
+  in
+  let print ppf f =
+    pr_str ppf (OpamPrinter.value (OpamPp.print pp f))
+  in
   parse, print
 
 let variable_bindings =
@@ -623,6 +644,28 @@ let warn_selector =
     OpamStd.List.concat_map "" (fun (num,enable) ->
         Printf.sprintf "%c%d" (if enable then '+' else '-') num)
       warns
+  in
+  parse, print
+
+let _selector =
+  let parse str =
+    let r =
+      List.fold_left (fun (plus, minus) elem ->
+          match OpamStd.String.sub_at 1 elem with
+          | "+" as prefix ->
+            (OpamStd.String.remove_prefix ~prefix elem)::plus, minus
+          | "-" as prefix ->
+            plus, (OpamStd.String.remove_prefix ~prefix elem)::minus
+          |  _ ->  elem::plus, minus)
+        ([],[]) (OpamStd.String.split str ',')
+    in
+    `Ok r
+  in
+  let print ppf (plus,minus) =
+    let concat c =
+      OpamStd.List.concat_map ~nil:"" "," (fun x -> c^x)
+    in
+    pr_str ppf @@ Printf.sprintf "%s,%s" (concat "+" plus) (concat "-" minus)
   in
   parse, print
 
@@ -840,7 +883,7 @@ let dot_profile_flag =
     (Printf.sprintf
       "Name of the configuration file to update instead of \
        $(i,~%s.profile) or $(i,~%s.zshrc) based on shell detection."
-      Filename.dir_sep Filename.dir_sep |> Cmdliner.Manpage.escape)
+      dir_sep dir_sep)
     (Arg.some filename) None
 
 let repo_kind_flag =
@@ -882,7 +925,7 @@ let atom_or_local_list =
     (Printf.sprintf
       "List of package names, with an optional version or constraint, e.g `pkg', \
        `pkg.1.0' or `pkg>=0.5' ; or files or directory names containing package \
-       description, with explicit directory (e.g. `.%sfoo.opam' or `.')" Filename.dir_sep |> Cmdliner.Manpage.escape)
+       description, with explicit directory (e.g. `.%sfoo.opam' or `.')" dir_sep)
     atom_or_local
 
 let atom_or_dir_list =
@@ -890,7 +933,7 @@ let atom_or_dir_list =
     (Printf.sprintf
       "List of package names, with an optional version or constraint, e.g `pkg', \
        `pkg.1.0' or `pkg>=0.5' ; or directory names containing package \
-       description, with explicit directory (e.g. `.%ssrcdir' or `.')" Filename.dir_sep |> Cmdliner.Manpage.escape)
+       description, with explicit directory (e.g. `.%ssrcdir' or `.')" dir_sep)
     atom_or_dir
 
 let nonempty_atom_list =
@@ -1062,6 +1105,10 @@ let lock_suffix section =
 
 (* Options common to all build commands *)
 let build_option_section = "PACKAGE BUILD OPTIONS"
+let man_build_option_section =
+  [
+    `S build_option_section;
+  ]
 let build_options =
   let section = build_option_section in
   let keep_build_dir =
@@ -1131,7 +1178,8 @@ let build_options =
       "This option registers the actions into the opam database, without \
        actually performing them. \
        WARNING: This option is dangerous and likely to break your opam \
-       environment. You probably want `--dry-run'. You've been $(i,warned)." in
+       environment. You probably want $(b,--dry-run). You've been $(i,warned)."
+  in
   let ignore_constraints_on =
     mk_opt ~section ["ignore-constraints-on"] "PACKAGES"
       "Forces opam to ignore version constraints on all dependencies to the \
@@ -1141,62 +1189,85 @@ let build_options =
        to setting $(b,\\$OPAMIGNORECONSTRAINTS)."
       Arg.(some (list package_name)) None ~vopt:(Some []) in
   let unlock_base =
-    mk_flag ~section ["unlock-base"]
+    mk_flag ~section ["update-invariant"; "unlock-base"]
       "Allow changes to the packages set as switch base (typically, the main \
        compiler). Use with caution. This is equivalent to setting the \
        $(b,\\$OPAMUNLOCKBASE) environment variable" in
   let locked = locked section in
   let lock_suffix = lock_suffix section in
+  let assume_depexts =
+    mk_flag ~section ["assume-depexts"]
+      "Skip the installation step for any missing system packages, and attempt \
+       to proceed with compilation of the opam packages anyway. If the \
+       installation is successful, opam won't prompt again about these system \
+       packages. Only meaningful if external dependency handling is enabled."
+  in
+  let no_depexts =
+    mk_flag ~section ["no-depexts"]
+      "Temporarily disables handling of external dependencies. This can be \
+       used if a package is not available on your system package manager, but \
+       you installed the required dependency by hand. Implies \
+       $(b,--assume-depexts), and stores the exceptions upon success as well."
+  in
   Term.(const create_build_options
-    $keep_build_dir $reuse_build_dir $inplace_build $make
-    $no_checksums $req_checksums $build_test $build_doc $show $dryrun
-    $skip_update $fake $jobs_flag $ignore_constraints_on
-    $unlock_base $locked $lock_suffix)
+        $keep_build_dir $reuse_build_dir $inplace_build $make
+        $no_checksums $req_checksums $build_test $build_doc $show $dryrun
+        $skip_update $fake $jobs_flag $ignore_constraints_on
+        $unlock_base $locked $lock_suffix $assume_depexts $no_depexts)
 
 (* Option common to install commands *)
 let assume_built =
-  Arg.(value & flag & info ["assume-built"]
-         ~doc:"For use on locally-pinned packages: assume they have already \
-               been correctly built, and only run their installation \
-               instructions, directly from their source directory. This \
-               skips the build instructions and can be useful to install \
-               packages that are being worked on. Implies $(i,--inplace-build). \
-               No locally-pinned packages will be skipped.")
+  mk_flag  ["assume-built"]
+    "For use on locally-pinned packages: assume they have already \
+     been correctly built, and only run their installation \
+     instructions, directly from their source directory. This \
+     skips the build instructions and can be useful to install \
+     packages that are being worked on. Implies $(i,--inplace-build). \
+     No locally-pinned packages will be skipped."
+
+(* Options common to all path based/related commands, e.g. (un)pin, upgrade,
+   remove, (re)install *)
+let recurse =
+  mk_flag ["recursive"]
+    "Allow recursive lookups of (b,*.opam) files. Cf. $(i,--subpath) also."
+
+let subpath =
+  mk_opt ["subpath"] "PATH"
+    "$(b,*.opam) files are retrieved from the given sub directory instead of \
+      top directory. Sources are then taken from the targeted sub directory, \
+      internally only this subdirectory is copied/fetched.  It can be combined \
+      with $(i,--recursive) to have a recursive lookup on the subpath."
+    Arg.(some subpath_conv) None
 
 let package_selection_section = "PACKAGE SELECTION OPTIONS"
 
 let package_selection =
   let section = package_selection_section in
-  let docs = section in
   let depends_on =
-    let doc =
-      "List only packages that depend on one of (comma-separated) $(docv)."
-    in
-    Arg.(value & opt_all (list atom) [] &
-         info ~doc ~docs ~docv:"PACKAGES" ["depends-on"])
+    mk_opt_all ["depends-on"] "PACKAGES" ~section
+      "List only packages that depend on one of (comma-separated) $(b,PACKAGES)."
+      Arg.(list atom)
   in
   let required_by =
-    let doc = "List only the dependencies of (comma-separated) $(docv)." in
-    Arg.(value & opt_all (list atom) [] &
-         info ~doc ~docs ~docv:"PACKAGES" ["required-by"])
+    mk_opt_all ["required-by"] "PACKAGES" ~section
+      "List only the dependencies of (comma-separated) $(b,PACKAGES)."
+      Arg.(list atom)
   in
   let conflicts_with =
-    let doc =
+    mk_opt_all ["conflicts-with"] "PACKAGES" ~section
       "List packages that have declared conflicts with at least one of the \
        given list. This includes conflicts defined from the packages in the \
        list, from the other package, or by a common $(b,conflict-class:) \
        field."
-    in
-    Arg.(value & opt_all (list package_with_version) [] &
-         info ~doc ~docs ~docv:"PACKAGES" ["conflicts-with"])
+      Arg.(list package_with_version)
   in
   let coinstallable_with =
-    let doc = "Only list packages that are compatible with all of $(docv)." in
-    Arg.(value & opt_all (list package_with_version) [] &
-         info ~doc ~docs ~docv:"PACKAGES" ["coinstallable-with"])
+    mk_opt_all ["coinstallable-with"] "PACKAGES" ~section
+      "Only list packages that are compatible with all of $(b,PACKAGES)."
+      Arg.(list package_with_version)
   in
   let resolve =
-    let doc =
+    mk_opt_all ["resolve"] "PACKAGES" ~section
       "Restrict to a solution to install (comma-separated) $(docv), $(i,i.e.) \
        a consistent set of packages including those. This is subtly different \
        from `--required-by --recursive`, which is more predictable and can't \
@@ -1208,9 +1279,7 @@ let package_selection =
        `--no-switch` further makes the solution independent from the \
        currently pinned packages, architecture, and compiler version. \
        The combination with `--depopts' is not supported."
-    in
-    Arg.(value & opt_all (list atom) [] &
-         info ~doc ~docs ~docv:"PACKAGES" ["resolve"])
+      Arg.(list atom)
   in
   let recursive =
     mk_flag ["recursive"] ~section
@@ -1349,9 +1418,8 @@ let package_listing =
        terminal, or to keep as is otherwise"
   in
   let separator =
-    Arg.(value & opt string " " & info ["separator"]
-           ~docv:"STRING" ~docs:package_listing_section
-           ~doc:"Set the column-separator string")
+    mk_opt ["separator"] "STRING" ~section "Set the column-separator string"
+      Arg.string " "
   in
   let format all_versions short sort columns normalise wrap separator =
   fun ~force_all_versions ->

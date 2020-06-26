@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -35,7 +35,9 @@ val rmdir: Dir.t -> unit
 (** Cleans the contents of a directory, but keeps the directory in place. *)
 val cleandir: Dir.t -> unit
 
-(** Removes an empty directory, as well as any empty leading path components *)
+(** Removes an empty directory, as well as any empty leading path components.
+    Must be called only on a directory that is known to not have empty parents,
+    only internal opam directory (and not tmp dir). *)
 val rmdir_cleanup: Dir.t -> unit
 
 (** Create a directory *)

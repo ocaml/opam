@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
+(*    Copyright 2012-2019 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -91,5 +91,5 @@ val cleanup_source:
 
 (** Low-level function to retrieve the package source into its local cache *)
 val fetch_dev_package:
-  OpamFile.URL.t -> dirname -> ?working_dir:bool -> package ->
+  OpamFile.URL.t -> dirname -> ?working_dir:bool -> ?subpath:string -> package ->
   unit download OpamProcess.job

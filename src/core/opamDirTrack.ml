@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2016 OCamlPro                                             *)
+(*    Copyright 2016-2020 OCamlPro                                        *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -31,12 +31,17 @@ type change =
 
 type t = change SM.t
 
-let string_of_change = function
-  | Added _ -> "addition"
+let string_of_change ?(full=false) =
+  let str s d =
+    if not full then s else
+      Printf.sprintf "%s %s" s (string_of_digest d)
+  in
+  function
+  | Added d -> str "addition" d
   | Removed -> "removal"
-  | Contents_changed _ -> "modifications"
-  | Perm_changed _ -> "permission change"
-  | Kind_changed _ -> "kind change"
+  | Contents_changed d -> str "modifications" d
+  | Perm_changed d -> str "permission change" d
+  | Kind_changed d -> str "kind change" d
 
 let to_string t =
   OpamStd.Format.itemize (fun (f, change) ->
@@ -60,7 +65,7 @@ let cached_digest =
   fun f size mtime ->
     try
       let csize, cmtime, digest = Hashtbl.find item_cache f in
-      if csize = size || mtime = cmtime then Digest.to_hex digest
+      if csize = size && mtime = cmtime then Digest.to_hex digest
       else raise Not_found
     with Not_found ->
       let digest = Digest.file f in
@@ -224,14 +229,42 @@ let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
   if already <> [] then
     log ~level:2 "%sfiles %s were already removed" title
       (String.concat ", " (List.rev already));
-  if modified <> [] && verbose then
-    OpamConsole.warning "%snot removing files that changed since:\n%s" title
-      (OpamStd.Format.itemize (fun s -> s) (List.rev modified));
+  if modified <> [] then
+    if OpamConsole.confirm ~default:false
+        "%sthese files have been modified since installation:\n%s\
+         Remove them anyway?" title
+        (OpamStd.Format.itemize (fun s -> s) (List.rev modified)) then
+      List.iter (fun f -> OpamFilename.remove (OpamFilename.Op.(prefix // f)))
+        modified;
   if nonempty <> [] && verbose then
     OpamConsole.note "%snot removing non-empty directories:\n%s" title
       (OpamStd.Format.itemize (fun s -> s) (List.rev nonempty));
   if cannot <> [] && verbose then
-    OpamConsole.warning "%scannot revert:\n%s" title
-      (OpamStd.Format.itemize
-         (fun (op,f) -> string_of_change op ^" of "^ f)
-         (List.rev cannot))
+    let cannot =
+      let rem, modf, perm =
+        List.fold_left (fun (rem, modf, perm as acc) (op,f) ->
+            match op with
+            | Removed -> (None, f)::rem, modf, perm
+            | Contents_changed dg ->
+              let precise = Some (is_precise_digest dg) in
+              rem, (precise, f)::modf, perm
+            | Perm_changed dg ->
+              let precise = Some (is_precise_digest dg) in
+              rem, modf, (precise, f)::perm
+            |  _ -> acc)
+          ([],[],[]) cannot
+      in
+      (if rem = [] then [] else [Removed, rem])
+      @ (if modf = [] then [] else [Contents_changed "_", modf])
+      @ (if perm = [] then [] else [Perm_changed "_", perm])
+    in
+    (OpamConsole.warning "%scannot revert:" title;
+     OpamConsole.errmsg "%s"
+       (OpamStd.Format.itemize
+          (fun (op,lf) ->
+             Printf.sprintf "%s of:\n%s"
+               (string_of_change op)
+               (OpamStd.Format.itemize (fun (pre,x) ->
+                    (OpamStd.Option.to_string (fun pr ->
+                         if pr then "[hash] " else "[tms] ") pre) ^ x) lf))
+          cannot))
