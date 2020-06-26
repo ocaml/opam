@@ -56,8 +56,9 @@ val compute_available_packages:
 
 (** Raw function to compute the conflicts for all packages, given
     the set of available packages and the corresponding opam files.
-    the `u_conflicts` field when building a universe manually. *)
-val get_conflicts:
+    This is useful to populate the `u_conflicts` field when building
+    a universe manually. *)
+val get_conflicts_t:
   (package -> OpamFilter.env) -> package_set ->
   OpamFile.OPAM.t package_map -> formula package_map
 

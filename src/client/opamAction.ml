@@ -240,13 +240,13 @@ let download_package st nv =
 (* Prepare the package build:
    * apply the patches
    * substitute the files *)
-let prepare_package_build package_var opam nv dir =
+let prepare_package_build env opam nv dir =
   let patches = OpamFile.OPAM.patches opam in
 
   let rec iter_patches f = function
     | [] -> Done []
     | (patchname,filter)::rest ->
-      if OpamFilter.opt_eval_to_bool package_var filter
+      if OpamFilter.opt_eval_to_bool env filter
       then
         OpamFilename.patch (dir // OpamFilename.Base.to_string patchname) dir
         @@+ function
@@ -276,7 +276,7 @@ let prepare_package_build package_var opam nv dir =
     OpamFilename.in_dir dir  @@ fun () ->
     List.fold_left (fun errs f ->
         try
-          OpamFilter.expand_interpolations_in_file package_var f;
+          OpamFilter.expand_interpolations_in_file env f;
           errs
         with e -> (f, e)::errs)
       [] subst_patches
@@ -303,7 +303,7 @@ let prepare_package_build package_var opam nv dir =
     OpamFilename.in_dir dir @@ fun () ->
     List.fold_left (fun errs f ->
         try
-          OpamFilter.expand_interpolations_in_file package_var f;
+          OpamFilter.expand_interpolations_in_file env f;
           errs
         with e -> (f, e)::errs)
       subst_errs subst_others

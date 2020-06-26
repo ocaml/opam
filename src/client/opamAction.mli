@@ -29,7 +29,7 @@ val download_package:
 val prepare_package_source:
   rw switch_state -> package -> dirname -> exn option OpamProcess.job
 
-(** [prepare_package_build env opam t dir] is a lower level version
+(** [prepare_package_build env opam pkg dir] is a lower level version
     of `prepare_package_source`, without requiring a switch and
     without handling extra downloads. *)
 val prepare_package_build:
