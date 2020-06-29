@@ -476,7 +476,7 @@ let existing_filename_dirname_or_dash =
   in
   parse, print
 
-let subpath_conv =
+let _subpath_conv =
   (fun str -> `Ok (OpamStd.String.remove_prefix ~prefix:"./" str)), pr_str
 
 let package_name =
@@ -1227,18 +1227,24 @@ let assume_built =
      No locally-pinned packages will be skipped."
 
 (* Options common to all path based/related commands, e.g. (un)pin, upgrade,
-   remove, (re)install *)
-let recurse =
+   remove, (re)install.
+   Disabled *)
+let recurse = Term.const false
+
+(*
   mk_flag ["recursive"]
     "Allow recursive lookups of (b,*.opam) files. Cf. $(i,--subpath) also."
+*)
 
-let subpath =
+let subpath = Term.const None
+(*
   mk_opt ["subpath"] "PATH"
     "$(b,*.opam) files are retrieved from the given sub directory instead of \
       top directory. Sources are then taken from the targeted sub directory, \
       internally only this subdirectory is copied/fetched.  It can be combined \
       with $(i,--recursive) to have a recursive lookup on the subpath."
     Arg.(some subpath_conv) None
+*)
 
 let package_selection_section = "PACKAGE SELECTION OPTIONS"
 
