@@ -15,7 +15,7 @@ install:
 
 cache:
     directories:
-    - $HOME/.opam.cached
+    - $HOME/.opam.2.0.cached
     - $HOME/local
     - $HOME/opam1.2/cache
 
