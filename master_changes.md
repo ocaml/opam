@@ -50,6 +50,7 @@ New option are prefixed with ◈
 ## Pin
   * Don't keep unpinned package version if it exists in repo [#4073 @rjbou - fix #3630]
   * Fix path resolving when pinning with `file://` [#4209 @rjbou - fix #4208]
+  * ✘ Disable recursive & subpath pinning (only present experimentally in opam 2.1.0~alpha) [#4252 @rjbou]
 
 ## Show
   * ✘ Display error message for all not found packages [#4179 @rjbou - fix #4164]
@@ -108,6 +109,7 @@ New option are prefixed with ◈
   * add badges to install page [#4236 @rjbou]
   * Harden build system against changing the name of the opam binary [#4264 @dra27]
   * Fix typo [#4273 @robz]
+  * Remove recursive & subpath pinning doc [#4252 @rjbou]
 
 ## Var
   * Not found message show scope [#4192 @rjbou]
