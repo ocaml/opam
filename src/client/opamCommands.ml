@@ -847,7 +847,7 @@ module Var_Option_Common = struct
       else match var with
         | None -> `All
         | Some f -> match cmd with
-          | `var -> `Switch
+          | `var -> `All_var
           | `option -> OpamConfigCommand.get_scope f
     in
     let apply =
@@ -869,6 +869,16 @@ module Var_Option_Common = struct
        | `var -> OpamConfigCommand.vars_list gt
        | `option -> OpamConfigCommand.options_list gt);
       `Ok ()
+    | `All_var ->
+      (match apply with
+       | `value_wo_eq v ->
+         OpamGlobalState.with_ `Lock_none @@ fun gt ->
+         OpamConfigCommand.var_show gt v;
+         `Ok ()
+       | `empty -> assert false (* can't happen *)
+       | `value_eq _ ->
+         `Error (true, "variable setting needs a scope, \
+                        use '--global' or '--switch <switch>'"))
     | (`Global | `Switch) as scope ->
       match cmd, apply with
       | _ , `empty ->
@@ -1140,7 +1150,7 @@ let config =
       `Ok (OpamConfigCommand.expand gt str)
     | Some `var, [var] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      (try `Ok (OpamConfigCommand.variable gt var)
+      (try `Ok (OpamConfigCommand.var_show gt var)
        with Failure msg -> `Error (false, msg))
     | Some `subst, (_::_ as files) ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
