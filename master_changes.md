@@ -64,3 +64,6 @@ Possibly scripts breaking changes are prefixed with ✘
   * Not found message show scope [#4192 @rjbou]
   * No scope needed for variable display [#4192 @rjbou - fix #4183]
   * Fix package variable resolution [#4192 @rjbou - fix #4182]
+
+## Infrastructure
+  * Use OCaml 4.09.1 for the make cold target [#4257 @dra27]

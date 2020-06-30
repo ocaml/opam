@@ -39,12 +39,23 @@ PATH_PREPEND=
 LIB_PREPEND=
 INC_PREPEND=
 if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
+  case "$(uname -m)" in
+    'i686')
+      BUILD=i686-pc-cygwin
+    ;;
+    'x86_64')
+      BUILD=x86_64-pc-cygwin
+    ;;
+  esac
   case "$1" in
-    "mingw"|"mingw64")
-      BUILD=$1
+    "mingw")
+      HOST=i686-w64-mingw32
+    ;;
+    "mingw64")
+      HOST=x86_64-w64-mingw32
     ;;
     "msvc")
-      BUILD=$1
+      HOST=i686-pc-windows
       if ! command -v ml > /dev/null ; then
         eval `../../shell/msvs-detect --arch=x86`
         if [ -n "${MSVS_NAME}" ] ; then
@@ -55,7 +66,7 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
       fi
     ;;
     "msvc64")
-      BUILD=$1
+      HOST=x86_64-pc-windows
       if ! command -v ml64 > /dev/null ; then
         eval `../../shell/msvs-detect --arch=x64`
         if [ -n "${MSVS_NAME}" ] ; then
@@ -76,24 +87,24 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
       fi
 
       if [ ${TRY64} -eq 1 ] && command -v x86_64-w64-mingw32-gcc > /dev/null ; then
-        BUILD=mingw64
+        HOST=x86_64-w64-mingw32
       elif command -v i686-w64-mingw32-gcc > /dev/null ; then
-        BUILD=mingw
+        HOST=i686-w64-mingw32
       elif [ ${TRY64} -eq 1 ] && command -v ml64 > /dev/null ; then
-        BUILD=msvc64
+        HOST=x86_64-pc-windows
         PATH_PREPEND=`bash ../../shell/check_linker`
       elif command -v ml > /dev/null ; then
-        BUILD=msvc
+        HOST=i686-pc-windows
         PATH_PREPEND=`bash ../../shell/check_linker`
       else
         if [ ${TRY64} -eq 1 ] ; then
-          BUILD=msvc64
-          BUILD_ARCH=x64
+          HOST=x86_64-pc-windows
+          HOST_ARCH=x64
         else
-          BUILD=msvc
-          BUILD_ARCH=x86
+          HOST=i686-pc-windows
+          HOST_ARCH=x86
         fi
-        eval `../../shell/msvs-detect --arch=${BUILD_ARCH}`
+        eval `../../shell/msvs-detect --arch=${HOST_ARCH}`
         if [ -z "${MSVS_NAME}" ] ; then
           echo "No appropriate C compiler was found -- unable to build OCaml"
           exit 1
@@ -111,9 +122,8 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
   PREFIX=`cd .. ; pwd`/ocaml
   WINPREFIX=`echo ${PREFIX} | cygpath -f - -m`
   if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
-    sed -e "s|^PREFIX=.*|PREFIX=${WINPREFIX}|" -e "s|/lib|/lib/ocaml|" config/Makefile.${BUILD} > config/Makefile
-    cp config/s-nt.h byterun/caml/s.h
-    cp config/m-nt.h byterun/caml/m.h
+    # --disable-ocamldoc can change to --disable-stdlib-manpages when bumped to 4.11
+    PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" ./configure --prefix "$WINPREFIX" --build=$BUILD --host=$HOST --disable-ocamldoc
   fi
   cd ..
   if [ ! -e ${FLEXDLL} ]; then
@@ -124,7 +134,9 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
     tar -xzf ../${FLEXDLL}
     rm -rf flexdll
     mv flexdll-* flexdll
-    PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make flexdll world.opt install
+    PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make -j flexdll
+    PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make -j world.opt
+    PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make install
   fi
   OCAMLLIB=${WINPREFIX}/lib/ocaml
 else
