@@ -51,7 +51,7 @@ matrix:
       env: OCAML_VERSION=4.08.1
       stage: Build
     - os: linux
-      env: OCAML_VERSION=4.09.0
+      env: OCAML_VERSION=4.09.1
       stage: Build
     - os: linux
       stage: Hygiene
