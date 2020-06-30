@@ -167,7 +167,7 @@ EOF
       make lib-pkg
     else
       if [[ ! -x ~/local/bin/ocaml ]] ; then
-        echo -en "travis_fold:start:ocaml\r"
+        (set +x ; echo -en "travis_fold:start:ocaml\r") 2>/dev/null
         wget "http://caml.inria.fr/pub/distrib/ocaml-${OCAML_VERSION%.*}/ocaml-$OCAML_VERSION.tar.gz"
         tar -xzf "ocaml-$OCAML_VERSION.tar.gz"
         cd "ocaml-$OCAML_VERSION"
@@ -193,11 +193,11 @@ EOF
         fi
         make install
         echo "LOCAL_OCAML_VERSION=$OCAML_VERSION" > ~/local/versions
-        echo -en "travis_fold:end:ocaml\r"
+        (set +x ; echo -en "travis_fold:end:ocaml\r") 2>/dev/null
       fi
 
       if [[ $OPAM_TEST -eq 1 ]] ; then
-        echo -en "travis_fold:start:opam\r"
+        (set +x ; echo -en "travis_fold:start:opam\r") 2>/dev/null
         if [[ ! -e ~/local/bin/opam-bootstrap ]] ; then
           os=$( (uname -s || echo unknown) | awk '{print tolower($0)}')
           if [ "$os" = "darwin" ] ; then
@@ -215,7 +215,7 @@ EOF
         else
           init-bootstrap
         fi
-        echo -en "travis_fold:end:opam\r"
+        (set +x ; echo -en "travis_fold:end:opam\r") 2>/dev/null
       fi
     fi
     exit 0
@@ -304,7 +304,7 @@ export OPAMYES=1
 export OCAMLRUNPARAM=b
 
 ( # Run subshell in bootstrap root env to build
-  echo -en "travis_fold:start:build\r"
+  (set +x ; echo -en "travis_fold:start:build\r") 2>/dev/null
   if [[ $OPAM_TEST -eq 1 ]] ; then
     export OPAMROOT=$OPAMBSROOT
     eval $(opam env)
@@ -345,14 +345,14 @@ export OCAMLRUNPARAM=b
     OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make tests ||
       (tail -n 2000 _build/default/tests/fulltest-*.log; echo "-- TESTS FAILED --"; exit 1)
   fi
-  echo -en "travis_fold:end:build\r"
+  (set +x ; echo -en "travis_fold:end:build\r") 2>/dev/null
 )
 
 if [ "$TRAVIS_BUILD_STAGE_NAME" = "Upgrade" ]; then
   OPAM12DIR=~/opam1.2
   CACHE=$OPAM12DIR/cache
   export OPAMROOT=$CACHE/root20
-  echo -en "travis_fold:start:opam12\r"
+  (set +x ; echo -en "travis_fold:start:opam12\r") 2>/dev/null
   if [[ ! -f $CACHE/bin/opam ]]; then
     mkdir -p $CACHE/bin
     wget https://github.com/ocaml/opam/releases/download/1.2.2/opam-1.2.2-x86_64-Linux -O $CACHE/bin/opam
@@ -366,7 +366,7 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Upgrade" ]; then
   else
     cp -r $CACHE/root /tmp/opamroot
   fi
-  echo -en "travis_fold:end:opam12\r"
+  (set +x ; echo -en "travis_fold:end:opam12\r") 2>/dev/null
   set +e
   opam update
   rcode=$?
