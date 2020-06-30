@@ -23,7 +23,7 @@ ocamlbuild.pkgbuild: findlib.pkgbuild
 
 re.pkgbuild: dune-local.pkgbuild seq.pkgbuild findlib.pkgbuild
 
-seq.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild
+seq.pkgbuild: dune-local.pkgbuild
 
 ocamlgraph.pkgbuild: findlib.pkgbuild
 
@@ -70,7 +70,7 @@ ocamlgraph-pkg-build:
 	make all install-findlib
 
 result-pkg-build:
-	dune build @install --root=.
+	dune build @install -p result
 	ocamlfind install result $(addprefix _build/install/default/lib/result/,META result.*)
 
 EXTS1=$(EXT_LIB) mli
@@ -98,10 +98,10 @@ dune-local-pkg-build:
 	cp _boot/install/default/bin/dune$(EXT_EXE) $(OCAMLBIN)/dune$(EXT_EXE)
 
 mccs-pkg-build:
-	dune build @install --root=.
+	dune build @install -p mccs
 	ocamlfind install mccs $(addprefix _build/install/default/lib/,$(addprefix mccs/,META libmccs_stubs.$(EXT_LIB) mccs.*) stublibs/*.$(EXT_DLL))
 	cp -RL _build/install/default/lib/mccs/glpk $(SITELIB)/mccs/
 
 seq-pkg-build:
-	make all
-	make install
+	dune build @install -p seq
+	dune install -p seq
