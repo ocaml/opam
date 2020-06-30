@@ -54,6 +54,9 @@ matrix:
       env: OCAML_VERSION=4.09.1
       stage: Build
     - os: linux
+      env: OCAML_VERSION=4.10.0
+      stage: Build
+    - os: linux
       stage: Hygiene
     - os: osx
       env: OCAML_VERSION=4.07.1 OPAM_TEST=1
