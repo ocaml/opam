@@ -1,6 +1,6 @@
 diff -Naur a/src/configure.ml b/src/configure.ml
---- a/src/configure.ml	2019-03-03 16:33:48.000000000 +0000
-+++ b/src/configure.ml	2019-11-21 14:29:34.732234015 +0000
+--- a/src/configure.ml	2020-04-24 21:55:13.000000000 +0000
++++ b/src/configure.ml	2020-07-01 10:05:50.237441972 +0000
 @@ -1,15 +1,21 @@
  open Printf
  

@@ -21,10 +21,11 @@ diff -Naur a/pkg/META b/pkg/META
 diff -Naur a/src/cmdliner.ml b/src/cmdliner.ml
 --- a/src/cmdliner.ml	2019-06-14 09:55:03.000000000 +0000
 +++ b/src/cmdliner.ml	2019-11-21 14:29:33.236981936 +0000
-@@ -4,11 +4,11 @@
+@@ -4,11 +4,12 @@
     cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
  
++let stdlib_compare = compare
 +open Result
 +
  module Manpage = Cmdliner_manpage
@@ -35,7 +36,7 @@ diff -Naur a/src/cmdliner.ml b/src/cmdliner.ml
    include Cmdliner_term
  
    (* Deprecated *)
-@@ -112,7 +112,7 @@
+@@ -112,7 +113,7 @@
      ('a, [ term_escape
           | `Exn of exn * Printexc.raw_backtrace
           | `Parse of string
@@ -44,6 +45,15 @@ diff -Naur a/src/cmdliner.ml b/src/cmdliner.ml
  
    let run ~catch ei cl f = try (f ei cl :> 'a eval_result) with
    | exn when catch ->
+@@ -242,7 +243,7 @@
+           Error (Cmdliner_base.err_unknown ~kind:"command" maybe ~hints)
+       | `Ambiguous ->
+           let ambs = Cmdliner_trie.ambiguities index maybe in
+-          let ambs = List.sort compare ambs in
++          let ambs = List.sort stdlib_compare ambs in
+           Error (Cmdliner_base.err_ambiguous ~kind:"command" maybe ~ambs)
+ 
+   let eval_choice
 diff -Naur a/src/cmdliner.mli b/src/cmdliner.mli
 --- a/src/cmdliner.mli	2019-06-14 09:55:03.000000000 +0000
 +++ b/src/cmdliner.mli	2019-11-21 14:29:33.240979936 +0000
@@ -67,15 +77,15 @@ diff -Naur a/src/cmdliner.mli b/src/cmdliner.mli
 diff -Naur a/src/cmdliner_arg.ml b/src/cmdliner_arg.ml
 --- a/src/cmdliner_arg.ml	2019-06-14 09:55:03.000000000 +0000
 +++ b/src/cmdliner_arg.ml	2019-11-21 14:29:33.240979936 +0000
-@@ -4,6 +4,8 @@
-    cmdliner v1.0.4
-   ---------------------------------------------------------------------------*)
+@@ -6,6 +6,8 @@
+ 
+ let rev_compare n0 n1 = compare n1 n0
  
 +open Result
 +
- let rev_compare n0 n1 = compare n1 n0
- 
  (* Invalid_argument strings **)
+ 
+ let err_not_opt = "Option argument without name"
 diff -Naur a/src/cmdliner_arg.mli b/src/cmdliner_arg.mli
 --- a/src/cmdliner_arg.mli	2019-06-14 09:55:03.000000000 +0000
 +++ b/src/cmdliner_arg.mli	2019-11-21 14:29:33.240979936 +0000
@@ -103,15 +113,25 @@ diff -Naur a/src/cmdliner_base.ml b/src/cmdliner_base.ml
 diff -Naur a/src/cmdliner_cline.ml b/src/cmdliner_cline.ml
 --- a/src/cmdliner_cline.ml	2019-06-14 09:55:03.000000000 +0000
 +++ b/src/cmdliner_cline.ml	2019-11-21 14:29:33.240979936 +0000
-@@ -4,6 +4,8 @@
+@@ -4,6 +4,9 @@
     cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
  
++let stdlib_compare = compare
 +open Result
 +
  (* A command line stores pre-parsed information about the command
     line's arguments in a more structured way. Given the
     Cmdliner_info.arg values mentioned in a term and Sys.argv
+@@ -119,7 +122,7 @@
+           loop (err :: errs) (k + 1) cl pargs args
+       | `Ambiguous ->
+           let ambs = Cmdliner_trie.ambiguities optidx name in
+-          let ambs = List.sort compare ambs in
++          let ambs = List.sort stdlib_compare ambs in
+           let err = Cmdliner_base.err_ambiguous "option" name ambs in
+           loop (err :: errs) (k + 1) cl pargs args
+   in
 diff -Naur a/src/cmdliner_cline.mli b/src/cmdliner_cline.mli
 --- a/src/cmdliner_cline.mli	2019-06-14 09:55:03.000000000 +0000
 +++ b/src/cmdliner_cline.mli	2019-11-21 14:29:33.240979936 +0000
