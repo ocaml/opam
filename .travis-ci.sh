@@ -183,6 +183,8 @@ EOF
           make world.opt
         fi
         make install
+        cd ..
+        rm -rf "ocaml-$OCAML_VERSION"
         echo "LOCAL_OCAML_VERSION=$OCAML_VERSION" > ~/local/versions
         (set +x ; echo -en "travis_fold:end:ocaml\r") 2>/dev/null
       fi
