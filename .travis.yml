@@ -59,10 +59,10 @@ matrix:
     - os: linux
       stage: Hygiene
     - os: osx
-      env: OCAML_VERSION=4.07.1 OPAM_TEST=1
+      env: OCAML_VERSION=4.09.1 OPAM_TEST=1
       stage: Test
     - os: linux
-      env: OCAML_VERSION=4.07.1 OPAM_TEST=1
+      env: OCAML_VERSION=4.09.1 OPAM_TEST=1
       stage: Test
 #    - os: linux
 #      env: OCAML_VERSION=4.07.1 OPAM_TEST=1 EXTERNAL_SOLVER=aspcud
@@ -71,7 +71,7 @@ matrix:
       env: COLD=1
       stage: Test
     - os: linux
-      env: OCAML_VERSION=4.07.1
+      env: OCAML_VERSION=4.09.1
       stage: Upgrade
 
 notifications:
