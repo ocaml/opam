@@ -40,6 +40,7 @@ Possibly scripts breaking changes are prefixed with ✘
   * Add environment variables handling [#4200 @rjbou]
   * Add Macport support [#4152 @rjbou]
   * Homebrew: add no auto update env var for install, accept `pkgname` and `pkgnam@version` on query [#4200 @rjbou]
+  * Tag packages with missing depexts in Cudf [#4235 @AltGr]
   * Force LC_ALL=C for query commands [#4200 @rjbou]
   * Fix install command dryrun [#4200 @rjbou]
 
