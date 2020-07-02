@@ -1545,6 +1545,14 @@ let install =
     if atoms_or_locals = [] && not restore then
       `Error (true, "required argument PACKAGES is missing")
     else
+    if depext_only
+    && (OpamClientConfig.(!r.assume_depexts)
+        || OpamStateConfig.(!r.no_depexts)) then
+      `Error (true,
+              Printf.sprintf "--depext-only and --%s can't be used together"
+                (if OpamClientConfig.(!r.assume_depexts) then "assume-depexts"
+                 else "no-depexts"))
+    else
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_write gt @@ fun st ->
     let pure_atoms =
