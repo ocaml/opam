@@ -924,9 +924,15 @@ let print_depext_msg (avail, nf) =
      OpamConsole.formatted_msg ~indent:4 "    %s\n"
        (syspkgs_to_string avail))
 
-(* Gets depexts from the state, without checking again *)
-let get_depexts t packages =
-  let sys_packages = Lazy.force t.sys_packages in
+(* Gets depexts from the state, without checking again, unless [recover] is
+   true. *)
+let get_depexts ?(recover=false) t packages =
+  let sys_packages =
+    if recover then
+      OpamSwitchState.depexts_status_of_packages t packages
+    else
+      Lazy.force t.sys_packages
+  in
   let avail, nf =
     OpamPackage.Set.fold (fun pkg (avail,nf) ->
         match OpamPackage.Map.find_opt pkg sys_packages with
@@ -939,12 +945,12 @@ let get_depexts t packages =
   print_depext_msg (avail, nf);
   avail
 
-let install_depexts ?(confirm=true) t packages =
+let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   let sys_packages =
-    if not (OpamFile.Config.depext t.switch_global.config) then
-      OpamSysPkg.Set.empty
+    if force_depext || OpamFile.Config.depext t.switch_global.config then
+      get_depexts ~recover:force_depext t packages
     else
-      get_depexts t packages
+      OpamSysPkg.Set.empty
   in
   if OpamSysPkg.Set.is_empty sys_packages ||
      OpamClientConfig.(!r.show) ||
