@@ -52,6 +52,8 @@ Possibly scripts breaking changes are prefixed with ✘
 
 ## Internal
   * Disable chrono when timestamps are disables [#4206 @rjbou]
+  * Expose some functionality in the `OpamAction`, `OpamPath` and `OpamSwitchState`
+    modules for use without a `switch` value [#4147]
 
 ## Test
   * Add show cram test [#4206 @rjbou]

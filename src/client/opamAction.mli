@@ -29,6 +29,12 @@ val download_package:
 val prepare_package_source:
   rw switch_state -> package -> dirname -> exn option OpamProcess.job
 
+(** [prepare_package_build env opam pkg dir] is a lower level version
+    of `prepare_package_source`, without requiring a switch and
+    without handling extra downloads. *)
+val prepare_package_build:
+  OpamFilter.env -> OpamFile.OPAM.t -> package -> dirname -> exn option OpamProcess.job
+
 (** [build_package t build_dir pkg] builds the package [pkg] within [build_dir].
     Returns [None] on success, [Some exn] on error.
     See {!download_package} and {!prepare_package_source} for the previous

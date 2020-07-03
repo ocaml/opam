@@ -240,15 +240,13 @@ let download_package st nv =
 (* Prepare the package build:
    * apply the patches
    * substitute the files *)
-let prepare_package_build st nv dir =
-  let opam = OpamSwitchState.opam st nv in
-
+let prepare_package_build env opam nv dir =
   let patches = OpamFile.OPAM.patches opam in
 
   let rec iter_patches f = function
     | [] -> Done []
     | (patchname,filter)::rest ->
-      if OpamFilter.opt_eval_to_bool (OpamPackageVar.resolve ~opam st) filter
+      if OpamFilter.opt_eval_to_bool env filter
       then
         OpamFilename.patch (dir // OpamFilename.Base.to_string patchname) dir
         @@+ function
@@ -278,8 +276,7 @@ let prepare_package_build st nv dir =
     OpamFilename.in_dir dir  @@ fun () ->
     List.fold_left (fun errs f ->
         try
-          OpamFilter.expand_interpolations_in_file
-            (OpamPackageVar.resolve ~opam st) f;
+          OpamFilter.expand_interpolations_in_file env f;
           errs
         with e -> (f, e)::errs)
       [] subst_patches
@@ -306,8 +303,7 @@ let prepare_package_build st nv dir =
     OpamFilename.in_dir dir @@ fun () ->
     List.fold_left (fun errs f ->
         try
-          OpamFilter.expand_interpolations_in_file
-            (OpamPackageVar.resolve ~opam st) f;
+          OpamFilter.expand_interpolations_in_file env f;
           errs
         with e -> (f, e)::errs)
       subst_errs subst_others
@@ -404,7 +400,8 @@ let prepare_package_source st nv dir =
   OpamFilename.mkdir dir;
   get_extra_sources_job @@+ function Some _ as err -> Done err | None ->
     check_extra_files |> function Some _ as err -> Done err | None ->
-      prepare_package_build st nv dir
+      let opam = OpamSwitchState.opam st nv in
+      prepare_package_build (OpamPackageVar.resolve ~opam st) opam nv dir
 
 let compilation_env t opam =
   OpamEnv.get_full ~force_path:true t ~updates:([

@@ -723,7 +723,7 @@ let conflicts_with st subset =
 let remove_conflicts st subset pkgs =
   pkgs -- conflicts_with st subset pkgs
 
-let get_conflicts st packages opams_map =
+let get_conflicts_t env packages opams_map =
   let conflict_classes =
     OpamPackage.Map.fold (fun nv opam acc ->
         List.fold_left (fun acc cc ->
@@ -750,7 +750,7 @@ let get_conflicts st packages opams_map =
   OpamPackage.Map.fold (fun nv opam acc ->
       let conflicts =
         OpamFilter.filter_formula ~default:false
-          (OpamPackageVar.resolve_switch ~package:nv st)
+          (env nv)
           (OpamFile.OPAM.conflicts opam)
       in
       let conflicts =
@@ -769,6 +769,11 @@ let get_conflicts st packages opams_map =
       OpamPackage.Map.add nv conflicts acc)
     opams_map
     OpamPackage.Map.empty
+
+let get_conflicts st packages opams_map =
+  get_conflicts_t
+    (fun package -> OpamPackageVar.resolve_switch ~package st)
+    packages opams_map
 
 let universe st
     ?(test=OpamStateConfig.(!r.build_test))

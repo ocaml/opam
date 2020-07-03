@@ -74,6 +74,12 @@ let plugin t name =
   assert (sname <> "bin");
   plugins t / sname
 
+module type LAYOUT = sig
+  type ctx
+  val root : dirname -> ctx -> dirname
+  val lib_dir : dirname -> ctx -> dirname
+end
+
 module Switch = struct
 
   let root t a = OpamSwitch.get_root t a
@@ -142,39 +148,45 @@ module Switch = struct
   let installed_opam_files_dir t a nv =
     installed_package_dir t a nv / "files"
 
-  module Default = struct
+  module DefaultF(L:LAYOUT) = struct
+    let lib_dir = L.lib_dir
 
-    (** Visible files that can be redirected using
-        [config/global-config.config] *)
+    let lib t a n = L.lib_dir t a / OpamPackage.Name.to_string n
 
-    let lib_dir t a = root t a / "lib"
+    let stublibs t a = L.lib_dir t a / "stublibs"
 
-    let lib t a n = lib_dir t a / OpamPackage.Name.to_string n
+    let toplevel t a = L.lib_dir t a / "toplevel"
 
-    let stublibs t a = lib_dir t a / "stublibs"
-
-    let toplevel t a = lib_dir t a / "toplevel"
-
-    let doc_dir t a = root t a / "doc"
+    let doc_dir t a = L.root t a / "doc"
 
     let man_dir ?num t a =
       match num with
-      | None -> root t a / "man"
-      | Some n -> root t a / "man" / ("man" ^ n)
+      | None -> L.root t a / "man"
+      | Some n -> L.root t a / "man" / ("man" ^ n)
 
-    let share_dir t a = root t a / "share"
+    let share_dir t a = L.root t a / "share"
 
     let share t a n = share_dir t a / OpamPackage.Name.to_string n
 
-    let etc_dir t a = root t a / "etc"
+    let etc_dir t a = L.root t a / "etc"
 
     let etc t a n = etc_dir t a / OpamPackage.Name.to_string n
 
     let doc t a n = doc_dir t a / OpamPackage.Name.to_string n
 
-    let bin t a = root t a / "bin"
+    let bin t a = L.root t a / "bin"
 
-    let sbin t a = root t a / "sbin"
+    let sbin t a = L.root t a / "sbin"
+  end
+
+  (** Visible files that can be redirected using
+      [config/global-config.config] *)
+  module Default = struct
+    include DefaultF(struct
+      type ctx = switch
+      let root = root
+      let lib_dir t a = root t a / "lib"
+    end)
 
   end
 
