@@ -69,3 +69,6 @@ Possibly scripts breaking changes are prefixed with ✘
 
 ## Infrastructure
   * Use OCaml 4.09.1 for the make cold target [#4257 @dra27]
+
+## Opam file
+  * Fix mismatching extra files detection [#4198 @rjbou]

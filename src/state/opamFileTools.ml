@@ -978,15 +978,25 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
       if not files_subdir_hashes then opam else
       let extra_files =
         OpamFilename.opt_dir files_dir >>| fun dir ->
-        List.map
-          (fun f ->
-             OpamFilename.Base.of_string (OpamFilename.remove_prefix dir f),
-             OpamHash.compute (OpamFilename.to_string f))
-          (OpamFilename.rec_files dir)
+        OpamFilename.rec_files dir
+        |> List.map (fun file ->
+            file,
+            OpamFilename.Base.of_string (OpamFilename.remove_prefix dir file))
       in
       match OpamFile.OPAM.extra_files opam, extra_files with
       | None, None -> opam
-      | None, Some ef -> OpamFile.OPAM.with_extra_files ef opam
+      | None, Some ef ->
+        log "Missing extra-files field for %s, adding them."
+          (OpamStd.List.concat_map ", "
+             (fun (_,f) -> OpamFilename.Base.to_string f) ef);
+        let ef =
+          List.map
+            (fun (file, basename) ->
+               basename,
+               OpamHash.compute (OpamFilename.to_string file))
+            ef
+        in
+        OpamFile.OPAM.with_extra_files ef opam
       | Some ef, None ->
         log "Missing expected extra files %s at %s/files"
           (OpamStd.List.concat_map ", "
@@ -994,10 +1004,35 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
           (OpamFilename.Dir.to_string dir);
         opam
       | Some oef, Some ef ->
-        let sort = List.sort (fun (b, _) (b', _) -> compare b b') in
-        if sort oef <> sort ef then
-          log "Mismatching extra-files at %s"
-            (OpamFilename.Dir.to_string dir);
+        let wr_check, nf_opam, rest =
+          List.fold_left (fun (wr_check, nf_opam, rest) (file, basename) ->
+              match OpamStd.List.pick_assoc basename rest with
+              | None, rest ->
+                wr_check, (basename::nf_opam), rest
+              | Some ohash, rest ->
+                (if OpamHash.check_file (OpamFilename.to_string file) ohash then
+                   wr_check
+                 else
+                   basename::wr_check),
+                nf_opam, rest
+            ) ([], [], oef) ef
+        in
+        let nf_file = List.map fst rest in
+        if nf_file <> [] || wr_check <> [] || nf_opam <> [] then
+          log "Mismatching extra-files at %s: %s"
+            (OpamFilename.Dir.to_string dir)
+            ((if nf_file = [] then None else
+                Some (Printf.sprintf "missing from 'files' directory (%d)"
+                        (List.length nf_file)))
+             :: (if nf_opam = [] then None else
+                   Some (Printf.sprintf "missing from opam file (%d)"
+                           (List.length nf_opam)))
+             :: (if wr_check = [] then None else
+                   Some (Printf.sprintf "wrong checksum (%d)"
+                           (List.length wr_check)))
+             :: []
+             |> OpamStd.List.filter_some
+             |> OpamStd.Format.pretty_list);
         opam
     in
     opam
