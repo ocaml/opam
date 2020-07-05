@@ -10,7 +10,7 @@
 
 open OpamCudfSolverSig
 
-let log f = OpamConsole.log "0install" f
+let log ?level f = OpamConsole.log "0install" ?level f
 
 let name = "builtin-0install"
 
@@ -82,18 +82,15 @@ let reconstruct_universe universe selections =
   Cudf.load_universe
 
 let call ~criteria:_ ?timeout:_ (preamble, universe, request) =
-  let t0 = Unix.gettimeofday () in
+  let timer = OpamConsole.timer () in
   let pkgs, constraints = create_spec universe request in
   let context = Opam_0install_cudf.create ~constraints universe in
   match Opam_0install_cudf.solve context pkgs with
   | Ok selections ->
     let universe = reconstruct_universe universe selections in
-    let t1 = Unix.gettimeofday () in
-    log "Solution found. Solve took %.2f s" (t1 -. t0);
+    log "Solution found. Solve took %.2f s" (timer ());
     (Some preamble, universe)
-  | Error _problem ->
-    let t1 = Unix.gettimeofday () in
-    log "No solution. Solve took %.2f s" (t1 -. t0);
-    (* Diagnostics disabled. Feel free to enable again for debug *)
-    (* print_endline (Opam_0install_cudf.diagnostics problem); *)
+  | Error problem ->
+    log "No solution. Solve took %.2f s" (timer ());
+    log ~level:3 "%a" (OpamConsole.slog Opam_0install_cudf.diagnostics) problem;
     raise Common.CudfSolver.Unsat
