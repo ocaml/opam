@@ -67,7 +67,7 @@ let create_spec universe request =
       match List.find_opt (fun pkg -> pkg.Cudf.installed) pkgs with
       | Some {Cudf.keep = `Keep_version; version; _} -> essential spec (pkgname, Some (`Eq, version))
       | Some {Cudf.keep = `Keep_package; _} -> essential spec (pkgname, None)
-      | Some {Cudf.keep = `Keep_feature; _} -> assert false (* TODO: Is this used? *)
+      | Some {Cudf.keep = `Keep_feature; _} -> assert false (* NOTE: Opam has no support for features *)
       | Some {Cudf.keep = `Keep_none; _} when keep_installed request pkgname -> recommended spec (pkgname, None)
       | Some {Cudf.keep = `Keep_none; _}
       | None -> spec
