@@ -882,6 +882,13 @@ let universe st
       (Lazy.force st.sys_packages)
       OpamPackage.Set.empty
   in
+  let hidden_versions =
+    OpamPackage.Map.fold (fun nv opam acc ->
+        if OpamFile.OPAM.has_flag Pkgflag_HiddenVersion opam
+        then OpamPackage.Set.add nv acc else acc)
+      st.opams
+      OpamPackage.Set.empty
+  in
   let u =
 {
   u_packages  = st.packages;
@@ -897,7 +904,8 @@ let universe st
   u_invariant;
   u_reinstall;
   u_attrs     = ["opam-query", requested_allpkgs;
-                 "missing-depexts", missing_depexts];
+                 "missing-depexts", missing_depexts;
+                 "hidden-version", hidden_versions];
 }
   in
   u

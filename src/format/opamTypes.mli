@@ -115,6 +115,8 @@ type package_flag =
   | Pkgflag_Compiler (** Package may be used for 'opam switch' *)
   | Pkgflag_Conf (** Virtual package: no source, no install or remove instructions,
                      .install, but likely has depexts *)
+  | Pkgflag_HiddenVersion (** This version of the package will only be installed if
+                              strictly required *)
   | Pkgflag_Unknown of string (** Used for error reporting, otherwise ignored *)
 
 (** At some point we want to abstract so that the same functions can be used
