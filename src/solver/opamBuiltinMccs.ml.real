@@ -14,13 +14,20 @@ let name solver_backend = "builtin-"^Mccs.get_solver_id ~solver:solver_backend (
 
 let default_criteria = {
   crit_default = "-removed,\
+                  -count[hidden-version,changed],\
                   -count[version-lag,request],\
                   -count[version-lag,changed],\
+                  -count[missing-depexts,changed],\
                   -changed";
   crit_upgrade = "-removed,\
+                  -count[hidden-version,changed],\
                   -count[version-lag,solution],\
+                  -count[missing-depexts,changed],\
                   -new";
-  crit_fixup = "-changed,-count[version-lag:,false]";
+  crit_fixup = "-changed,\
+                -count[hidden-version:,true],\
+                -count[version-lag:,false],\
+                -count[missing-depexts:,true]";
   crit_best_effort_prefix = Some "+count[opam-query:,false],";
 }
 

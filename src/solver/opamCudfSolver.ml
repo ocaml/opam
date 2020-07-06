@@ -125,16 +125,23 @@ module Aspcud_def = struct
   let default_criteria =
     {
       crit_default = "-count(removed),\
+                      -sum(solution,hidden-version),\
                       -sum(request,version-lag),\
                       -count(down),\
                       -sum(solution,version-lag),\
-                      -count(changed)";
+                      -count(changed),\
+                      -sum(solution,missing-depexts)";
       crit_upgrade = "-count(down),\
                       -count(removed),\
+                      -sum(solution,hidden-version),\
                       -sum(solution,version-lag),\
+                      -sum(solution,missing-depexts),\
                       -count(new)";
       crit_fixup = "-count(changed),\
-                    -notuptodate(solution),-sum(solution,version-lag)";
+                    -count[hidden-version:,true],\
+                    -notuptodate(solution),\
+                    -sum(solution,version-lag),\
+                    -count[missing-depexts:,true]";
       crit_best_effort_prefix = Some "+sum(solution,opam-query),";
     }
 end
@@ -170,14 +177,21 @@ module Mccs_def = struct
 
   let default_criteria =  {
     crit_default = "-removed,\
+                    -count[hidden-version:,true],\
                     -count[version-lag:,true],\
                     -changed,\
                     -count[version-lag:,false],\
+                    -count[missing-depexts:,true],\
                     -new";
     crit_upgrade = "-removed,\
+                    -count[hidden-version:,true],\
                     -count[version-lag:,false],\
+                    -count[missing-depexts:,true],\
                     -new";
-    crit_fixup = "-changed,-count[version-lag:,false]";
+    crit_fixup = "-changed,\
+                  -count[hidden-version:,true],\
+                  -count[version-lag:,false],\
+                  -count[missing-depexts:,true]";
     crit_best_effort_prefix = Some "+count[opam-query:,false],";
   }
 end
