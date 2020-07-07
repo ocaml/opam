@@ -56,7 +56,16 @@ ifdef OCAML
 # Portable md5check
 MD5CHECK = $(OCAML) ../shell/md5check.ml $(1) $(2)
 else
-MD5CHECK = test "`md5sum $(1) | sed -e 's/^[^a-f0-9]*\([a-f0-9]*\).*/\1/'`" = "$(2)" || (rm $(1) && false)
+MD5CHECK = { \
+  sum=`md5sum $(1) | sed -e 's/^[^a-f0-9]*\([a-f0-9]*\).*/\1/'`; \
+  { test "$$sum" = "$(2)" && echo '$(1) has the expected MD5.'; } || \
+  { rm -f $(1); \
+    echo 'MD5 for $(1) differs:'; \
+    echo '  expected: $(2)'; \
+    echo "    actual: $$sum"; \
+    false; \
+  }; \
+}
 endif
 
 lib-ext: clone ensure-seq-patched.stamp
