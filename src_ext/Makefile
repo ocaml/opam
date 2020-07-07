@@ -27,7 +27,7 @@ endif
 
 # Shorthand for designating that lib-ext and lib-pkg use the same version of a library
 PKG_SAME = $(eval $(call PKG_SAME_DEFS,$(1)))
-define PKG_SAME_DEFS =
+define PKG_SAME_DEFS
 URL_PKG_$(1) = $(URL_$(1))
 MD5_PKG_$(1) = $(MD5_$(1))
 endef
