@@ -136,12 +136,12 @@ has-archives: $(addprefix archives/, $(notdir $(URL_ocaml)) $(notdir $(URL_flexd
 %.cache:
 	@mkdir -p archives
 	@[ -e archives/$(notdir $(URL_$*)) ] || \
-		($(call FETCH,$(URL_$*),$(notdir $(URL_$*))) && mv $(notdir $(URL_$*)) archives/)
+		( ( $(call FETCH,$(URL_$*),$(call ARCHIVE_FILE,$*)) || $(call get_from_cache,$*) ) && mv $(call ARCHIVE_FILE,$*) archives/$(notdir $(URL_$*)) )
 
 %.pkgcache:
 	@mkdir -p archives
 	@[ -e archives/$(notdir $(URL_PKG_$*)) ] || \
-		($(call FETCH,$(URL_PKG_$*),$(notdir $(URL_PKG_$*))) && mv $(notdir $(URL_PKG_$*)) archives/)
+		( ( $(call FETCH,$(URL_PKG_$*),$(call ARCHIVE_FILE,$*,PKG_)) || $(call get_from_cache,$*,PKG_) ) && mv $(call ARCHIVE_FILE,$*,PKG_) archives/$(notdir $(URL_PKG_$*)) )
 
 define cache_url
 https://opam.ocaml.org/cache/md5/$(shell echo $(MD5_$(2)$(1)) | cut -c -2)/$(MD5_$(2)$(1))
