@@ -15,7 +15,7 @@ URL_ocaml = https://caml.inria.fr/pub/distrib/ocaml-4.09/ocaml-4.09.1.tar.gz
 MD5_ocaml = 1a7fc32aebbad6cb821ef26a396f78e7
 
 URL_flexdll = https://github.com/alainfrisch/flexdll/archive/0.38.tar.gz
-MD5_flexdll = c0fcfd7554b68547435fb69db8cde260
+MD5_flexdll = dca52bce081c8f19e9cd78219458a816
 
 ifndef FETCH
   ifneq ($(shell command -v curl 2>/dev/null),)
