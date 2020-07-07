@@ -142,39 +142,35 @@ cache-archives: $(SRC_EXTS:=.cache) $(PKG_EXTS:=.pkgcache) ocaml.cache flexdll.c
 has-archives: $(addprefix archives/, $(notdir $(URL_ocaml)) $(notdir $(URL_flexdll)) $(ARCHIVES) $(filter-out $(ARCHIVES), $(foreach pkg,$(PKG_EXTS), $(notdir $(URL_PKG_$(pkg))))))
 	@
 
-%.cache:
-	@mkdir -p archives
-	@[ -e archives/$(notdir $(URL_$*)) ] || \
-		( ( $(call FETCH,$(URL_$*),$(call ARCHIVE_FILE,$*)) || $(call get_from_cache,$*) ) && mv $(call ARCHIVE_FILE,$*) archives/$(notdir $(URL_$*)) )
-
-%.pkgcache:
-	@mkdir -p archives
-	@[ -e archives/$(notdir $(URL_PKG_$*)) ] || \
-		( ( $(call FETCH,$(URL_PKG_$*),$(call ARCHIVE_FILE,$*,PKG_)) || $(call get_from_cache,$*,PKG_) ) && mv $(call ARCHIVE_FILE,$*,PKG_) archives/$(notdir $(URL_PKG_$*)) )
-
 define cache_url
 https://opam.ocaml.org/cache/md5/$(shell echo $(MD5_$(2)$(1)) | cut -c -2)/$(MD5_$(2)$(1))
 endef
 
-define get_from_cache
-{ $(call FETCH,$(call cache_url,$(1),$(2)),$(MD5_$(2)$(1))) && \
-  mv $(MD5_$(2)$(1)) $(call ARCHIVE_FILE,$(1),$(2)) && \
-  $(call MD5CHECK,$(call ARCHIVE_FILE,$(1),$(2)),$(MD5_$(2)$(1))); }
-endef
+GET_ARCHIVE=\
+  { { { $(call FETCH,$(URL_$(2)$(1)),$(call ARCHIVE_FILE,$(1),$(2))) && $(call MD5CHECK,$(call ARCHIVE_FILE,$(1),$(2)),$(MD5_$(2)$(1))); } \
+      || { echo 'Failed to download $(URL_$(2)$(1))'; false; }; } || \
+    { { $(call FETCH,$(call cache_url,$(1),$(2)),$(call ARCHIVE_FILE,$(1),$(2))) && $(call MD5CHECK,$(call ARCHIVE_FILE,$(1),$(2)),$(MD5_$(2)$(1))); } \
+      || { echo 'Failed to download $(1) from opam cache'; false; }; }; }
+
+%.cache:
+	@mkdir -p archives
+	@test -e archives/$(notdir $(URL_$*)) || \
+          { $(call GET_ARCHIVE,$*) && mv $(call ARCHIVE_FILE,$*) archives/$(notdir $(URL_$*)); }
+
+%.pkgcache:
+	@mkdir -p archives
+	@test -e archives/$(notdir $(URL_$*)) || \
+          { $(call GET_ARCHIVE,$*,PKG_) && mv $(call ARCHIVE_FILE,$*,PKG_) archives/$(notdir $(URL_PKG_$*)); }
 
 %.download: Makefile.sources
 	@$(call DOWNLOAD_COOKIE,$*,,PKG_,,pkg)
 	[ -e $(call ARCHIVE_FILE,$*) ] || \
-	cp archives/$(notdir $(URL_$*)) $(call ARCHIVE_FILE,$*) 2>/dev/null || \
-	{ $(call FETCH,$(URL_$*),$(call ARCHIVE_FILE,$*)) && $(call MD5CHECK,$(call ARCHIVE_FILE,$*),$(MD5_$*)); } || \
-	$(call get_from_cache,$*)
+	cp archives/$(notdir $(URL_$*)) $(call ARCHIVE_FILE,$*) 2>/dev/null || $(call GET_ARCHIVE,$*)
 
 %.pkgdownload: Makefile.sources
 	@$(call DOWNLOAD_COOKIE,$*,PKG_,,pkg)
 	[ -e $(call ARCHIVE_FILE,$*,PKG_) ] || \
-	cp archives/$(notdir $(URL_PKG_$*)) $(call ARCHIVE_FILE,$*,PKG_) 2>/dev/null || \
-	{ $(call FETCH,$(URL_PKG_$*),$(call ARCHIVE_FILE,$*,PKG_)) && $(call MD5CHECK,$(call ARCHIVE_FILE,$*,PKG_),$(MD5_PKG_$*)); } || \
-	$(call get_from_cache,$*,PKG_)
+	cp archives/$(notdir $(URL_PKG_$*)) $(call ARCHIVE_FILE,$*,PKG_) 2>/dev/null || $(call GET_ARCHIVE,$*,PKG_)
 
 %.stamp: %.download
 	mkdir -p tmp-$*
