@@ -148,7 +148,10 @@ let opam_invariant_package version_map invariant =
     installed = true;
     was_installed = true;
     keep = `Keep_version;
-    pkg_extra = [];
+    pkg_extra = [
+      OpamCudf.s_source, `String "SWITCH_INVARIANT";
+      OpamCudf.s_source_number, `String "NULL";
+    ];
   }
 
 let lag_function =
