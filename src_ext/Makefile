@@ -144,7 +144,7 @@ has-archives: $(addprefix archives/, $(notdir $(URL_ocaml)) $(notdir $(URL_flexd
 		($(call FETCH,$(URL_PKG_$*),$(notdir $(URL_PKG_$*))) && mv $(notdir $(URL_PKG_$*)) archives/)
 
 define cache_url
-https://opam.ocaml.org/2.0/cache/md5/$(shell echo $(MD5_$(2)$(1)) | cut -c -2)/$(MD5_$(2)$(1))
+https://opam.ocaml.org/cache/md5/$(shell echo $(MD5_$(2)$(1)) | cut -c -2)/$(MD5_$(2)$(1))
 endef
 
 define get_from_cache
