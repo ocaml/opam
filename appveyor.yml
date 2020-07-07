@@ -31,6 +31,7 @@ cache:
   - C:\projects\opam\src_ext\archives
 
 init:
+  - systeminfo 2>nul | findstr /B /C:"OS Name" /C:"OS Version"
   - "echo System architecture: %PLATFORM%"
 
 install:

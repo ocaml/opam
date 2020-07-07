@@ -116,18 +116,7 @@ wrap-install-commands: []
 wrap-remove-commands: []
 EOF
 
-    if [[ $COLD -eq 1 ]] ; then
-      if [ ! -x ~/local/bin/make ] ; then
-        wget http://ftpmirror.gnu.org/gnu/make/make-4.2.tar.gz
-        tar -xzf make-4.2.tar.gz
-        mkdir make-4.2-build
-        cd make-4.2-build
-        ../make-4.2/configure --prefix ~/local
-        make
-        make install
-        cd ..
-      fi
-    else
+    if [[ $COLD -ne 1 ]] ; then
       if [[ $TRAVIS_OS_NAME = "osx" && -n $EXTERNAL_SOLVER ]] ; then
         rvm install ruby-2.3.3
         rvm --default use 2.3.3

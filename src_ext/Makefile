@@ -15,7 +15,7 @@ URL_ocaml = https://caml.inria.fr/pub/distrib/ocaml-4.09/ocaml-4.09.1.tar.gz
 MD5_ocaml = 1a7fc32aebbad6cb821ef26a396f78e7
 
 URL_flexdll = https://github.com/alainfrisch/flexdll/archive/0.38.tar.gz
-MD5_flexdll = c0fcfd7554b68547435fb69db8cde260
+MD5_flexdll = dca52bce081c8f19e9cd78219458a816
 
 ifndef FETCH
   ifneq ($(shell command -v curl 2>/dev/null),)
@@ -27,7 +27,7 @@ endif
 
 # Shorthand for designating that lib-ext and lib-pkg use the same version of a library
 PKG_SAME = $(eval $(call PKG_SAME_DEFS,$(1)))
-define PKG_SAME_DEFS =
+define PKG_SAME_DEFS
 URL_PKG_$(1) = $(URL_$(1))
 MD5_PKG_$(1) = $(MD5_$(1))
 endef
@@ -56,7 +56,16 @@ ifdef OCAML
 # Portable md5check
 MD5CHECK = $(OCAML) ../shell/md5check.ml $(1) $(2)
 else
-MD5CHECK = test "`md5sum $(1) | sed -e 's/^[^a-f0-9]*\([a-f0-9]*\).*/\1/'`" = "$(2)" || (rm $(1) && false)
+MD5CHECK = { \
+  sum=`md5sum $(1) | sed -e 's/^[^a-f0-9]*\([a-f0-9]*\).*/\1/'`; \
+  { test "$$sum" = "$(2)" && echo '$(1) has the expected MD5.'; } || \
+  { rm -f $(1); \
+    echo 'MD5 for $(1) differs:'; \
+    echo '  expected: $(2)'; \
+    echo "    actual: $$sum"; \
+    false; \
+  }; \
+}
 endif
 
 lib-ext: clone ensure-seq-patched.stamp
@@ -133,39 +142,35 @@ cache-archives: $(SRC_EXTS:=.cache) $(PKG_EXTS:=.pkgcache) ocaml.cache flexdll.c
 has-archives: $(addprefix archives/, $(notdir $(URL_ocaml)) $(notdir $(URL_flexdll)) $(ARCHIVES) $(filter-out $(ARCHIVES), $(foreach pkg,$(PKG_EXTS), $(notdir $(URL_PKG_$(pkg))))))
 	@
 
+define cache_url
+https://opam.ocaml.org/cache/md5/$(shell echo $(MD5_$(2)$(1)) | cut -c -2)/$(MD5_$(2)$(1))
+endef
+
+GET_ARCHIVE=\
+  { { { $(call FETCH,$(URL_$(2)$(1)),$(call ARCHIVE_FILE,$(1),$(2))) && $(call MD5CHECK,$(call ARCHIVE_FILE,$(1),$(2)),$(MD5_$(2)$(1))); } \
+      || { echo 'Failed to download $(URL_$(2)$(1))'; false; }; } || \
+    { { $(call FETCH,$(call cache_url,$(1),$(2)),$(call ARCHIVE_FILE,$(1),$(2))) && $(call MD5CHECK,$(call ARCHIVE_FILE,$(1),$(2)),$(MD5_$(2)$(1))) && echo 'Warning: downloaded $(URL_$(2)$(1)) from opam cache'; } \
+      || { echo 'Failed to download $(1) from opam cache'; false; }; }; }
+
 %.cache:
 	@mkdir -p archives
-	@[ -e archives/$(notdir $(URL_$*)) ] || \
-		($(call FETCH,$(URL_$*),$(notdir $(URL_$*))) && mv $(notdir $(URL_$*)) archives/)
+	@test -e archives/$(notdir $(URL_$*)) || \
+          { $(call GET_ARCHIVE,$*) && mv $(call ARCHIVE_FILE,$*) archives/$(notdir $(URL_$*)); }
 
 %.pkgcache:
 	@mkdir -p archives
-	@[ -e archives/$(notdir $(URL_PKG_$*)) ] || \
-		($(call FETCH,$(URL_PKG_$*),$(notdir $(URL_PKG_$*))) && mv $(notdir $(URL_PKG_$*)) archives/)
-
-define cache_url
-https://opam.ocaml.org/2.0/cache/md5/$(shell echo $(MD5_$(2)$(1)) | cut -c -2)/$(MD5_$(2)$(1))
-endef
-
-define get_from_cache
-{ $(call FETCH,$(call cache_url,$(1),$(2)),$(MD5_$(2)$(1))) && \
-  mv $(MD5_$(2)$(1)) $(call ARCHIVE_FILE,$(1),$(2)) && \
-  $(call MD5CHECK,$(call ARCHIVE_FILE,$(1),$(2)),$(MD5_$(2)$(1))); }
-endef
+	@test -e archives/$(notdir $(URL_$*)) || \
+          { $(call GET_ARCHIVE,$*,PKG_) && mv $(call ARCHIVE_FILE,$*,PKG_) archives/$(notdir $(URL_PKG_$*)); }
 
 %.download: Makefile.sources
 	@$(call DOWNLOAD_COOKIE,$*,,PKG_,,pkg)
 	[ -e $(call ARCHIVE_FILE,$*) ] || \
-	cp archives/$(notdir $(URL_$*)) $(call ARCHIVE_FILE,$*) 2>/dev/null || \
-	{ $(call FETCH,$(URL_$*),$(call ARCHIVE_FILE,$*)) && $(call MD5CHECK,$(call ARCHIVE_FILE,$*),$(MD5_$*)); } || \
-	$(call get_from_cache,$*)
+	cp archives/$(notdir $(URL_$*)) $(call ARCHIVE_FILE,$*) 2>/dev/null || $(call GET_ARCHIVE,$*)
 
 %.pkgdownload: Makefile.sources
 	@$(call DOWNLOAD_COOKIE,$*,PKG_,,pkg)
 	[ -e $(call ARCHIVE_FILE,$*,PKG_) ] || \
-	cp archives/$(notdir $(URL_PKG_$*)) $(call ARCHIVE_FILE,$*,PKG_) 2>/dev/null || \
-	{ $(call FETCH,$(URL_PKG_$*),$(call ARCHIVE_FILE,$*,PKG_)) && $(call MD5CHECK,$(call ARCHIVE_FILE,$*,PKG_),$(MD5_PKG_$*)); } || \
-	$(call get_from_cache,$*,PKG_)
+	cp archives/$(notdir $(URL_PKG_$*)) $(call ARCHIVE_FILE,$*,PKG_) 2>/dev/null || $(call GET_ARCHIVE,$*,PKG_)
 
 %.stamp: %.download
 	mkdir -p tmp-$*
