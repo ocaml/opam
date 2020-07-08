@@ -4,6 +4,7 @@ let gen_topic target_basename dline t =
                 \  (with-stdout-to %s-%s.0 (echo \"\")))\n\
                  (rule\n\
                 \  (targets %s-%s.1 %s-%s.err)\n\
+                \  (deps using-built-opam)\n\
                 \  (action (progn (with-stderr-to %s-%s.err\n\
                 \                   (with-stdout-to %s-%s.1 (run %s %s --help=groff)))\n\
                 \                 (diff %s-%s.err %%{dep:%s-%s.0}))))\n\

@@ -71,6 +71,7 @@ Possibly scripts breaking changes are prefixed with ✘
 ## Doc
   * add doc/warning for  Filename.rmdir_cleanup [#4197 @rjbou]
   * add badges to install page [#4236 @rjbou]
+  * Harden build system against changing the name of the opam binary [#4264 @dra27]
 
 ## Var
   * Not found message show scope [#4192 @rjbou]
