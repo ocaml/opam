@@ -421,15 +421,17 @@ let t_resolve_command =
         name ^ ".exe"
       else name
     in
-    let cmdname =
-      let open OpamStd in
-      List.find_opt (fun path ->
-          check_perms (Filename.concat path name)
-        ) path |> Option.map (fun path -> Filename.concat path name)
+    let possibles = OpamStd.List.filter_map (fun path ->
+        let candidate = Filename.concat path name in
+        if Sys.file_exists candidate then Some candidate else None) path
     in
-    match cmdname with
-    | Some cmd -> `Cmd cmd
-    | None -> `Not_found
+    match List.find check_perms possibles with
+    | cmdname -> `Cmd cmdname
+    | exception Not_found ->
+      if possibles = [] then
+        `Not_found
+      else
+        `Denied
   in
   fun ?(env=default_env) ?dir name ->
     resolve env ?dir name
