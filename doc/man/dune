@@ -35,3 +35,7 @@
 (include opam-topics.inc)
 
 (include opam-admin-topics.inc)
+
+; This ensures that no opam command run will block asking for input
+(env
+  (_ (env-vars ("OPAMYES" "no"))))
