@@ -16,6 +16,7 @@ module type SET = sig
   val map: (elt -> elt) -> t -> t
   val is_singleton: t -> bool
   val choose_one : t -> elt
+  val choose_opt : t -> elt option
   val of_list: elt list -> t
   val to_string: t -> string
   val to_json: t -> OpamJson.t
@@ -24,6 +25,7 @@ module type SET = sig
   val find_opt: (elt -> bool) -> t -> elt option
   val safe_add: elt -> t -> t
   val fixpoint: (elt -> t) -> t -> t
+  val map_reduce: ?default:'a -> (elt -> 'a) -> ('a -> 'a -> 'a) -> t -> 'a
 
   module Op : sig
     val (++): t -> t -> t
@@ -39,11 +41,14 @@ module type MAP = sig
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
   val find_opt: key -> 'a t -> 'a option
+  val choose_opt: 'a t -> (key * 'a) option
   val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
   val is_singleton: 'a t -> bool
   val of_list: (key * 'a) list -> 'a t
   val safe_add: key -> 'a -> 'a t -> 'a t
   val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
+  val map_reduce:
+    ?default:'b -> (key -> 'a -> 'b) -> ('b -> 'b -> 'b) -> 'a t -> 'b
 end
 module type ABSTRACT = sig
   type t
@@ -107,12 +112,15 @@ module OpamList = struct
   let to_string f =
     concat_map ~left:"{ " ~right:" }" ~nil:"{}" ", " f
 
-  let rec remove_duplicates = function
-    | a::(b::_ as r) when a = b -> remove_duplicates r
-    | a::r -> a::remove_duplicates r
+  let rec remove_duplicates_eq eq = function
+    | a::(b::_ as r) when eq a b -> remove_duplicates_eq eq r
+    | a::r -> a::remove_duplicates_eq eq r
     | [] -> []
 
-  let sort_nodup cmp l = remove_duplicates (List.sort cmp l)
+  let remove_duplicates l = remove_duplicates_eq ( = ) l
+
+  let sort_nodup cmp l =
+    remove_duplicates_eq (fun a b -> cmp a b = 0) (List.sort cmp l)
 
   let filter_map f l =
     let rec loop accu = function
@@ -192,6 +200,9 @@ module Set = struct
       else if is_singleton s then choose s
       else failwith "choose_one"
 
+    let choose_opt s =
+      try Some (choose s) with Not_found -> None
+
     let of_list l =
       List.fold_left (fun set e -> add e set) empty l
 
@@ -253,6 +264,15 @@ module Set = struct
         aux fullset (newset -- fullset)
       in
       aux empty
+
+    let map_reduce ?default f op t =
+      match choose_opt t with
+      | Some x ->
+        fold (fun x acc -> op acc (f x)) (remove x t) (f x)
+      | None ->
+        match default with
+        | Some d -> d
+        | None -> invalid_arg "Set.map_reduce"
 
   end
 
@@ -340,6 +360,9 @@ module Map = struct
 
     let find_opt k map = try Some (find k map) with Not_found -> None
 
+    let choose_opt m =
+      try Some (choose m) with Not_found -> None
+
     let safe_add k v map =
       if mem k map
       then failwith (Printf.sprintf "duplicate entry %s" (O.to_string k))
@@ -349,6 +372,14 @@ module Map = struct
       let v = try find k map with Not_found -> zero in
       add k (f v) map
 
+    let map_reduce ?default f op t =
+      match choose_opt t with
+      | Some (k, v) ->
+        fold (fun k v acc -> op acc (f k v)) (remove k t) (f k v)
+      | None ->
+        match default with
+        | Some d -> d
+        | None -> invalid_arg "Map.map_reduce"
   end
 
 end
