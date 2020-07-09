@@ -505,14 +505,16 @@ module OpamString = struct
   let starts_with ~prefix s =
     let x = String.length prefix in
     let n = String.length s in
-    n >= x
-    && String.sub s 0 x = prefix
+    n >= x &&
+    let rec chk i = i >= x || prefix.[i] = s.[i] && chk (i+1) in
+    chk 0
 
   let ends_with ~suffix s =
     let x = String.length suffix in
     let n = String.length s in
-    n >= x
-    && String.sub s (n - x) x = suffix
+    n >= x &&
+    let rec chk i = i >= x || suffix.[i] = s.[i+n-x] && chk (i+1) in
+    chk 0
 
   let contains_char s c =
     try let _ = String.index s c in true
