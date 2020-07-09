@@ -388,9 +388,14 @@ let t_resolve_command =
         let open Unix in
         let uid = getuid() and groups = Array.to_list(getgroups()) in
         let {st_uid; st_gid; st_perm; _} = stat f in
-        let mask = 0o001
-                   lor (if uid = st_uid then 0o100 else 0)
-                   lor (if List.mem st_gid groups then 0o010 else 0) in
+        let mask =
+          if uid = st_uid then
+            0o100
+          else if List.mem st_gid groups then
+            0o010
+          else
+            0o001
+        in
         (st_perm land mask) <> 0
       with e -> OpamStd.Exn.fatal e; false
   in
