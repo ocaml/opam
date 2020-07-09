@@ -44,6 +44,7 @@ Possibly scripts breaking changes are prefixed with ✘
   * Homebrew: add no auto update env var for install, accept `pkgname` and `pkgnam@version` on query [#4200 @rjbou]
   * Force LC_ALL=C for query commands [#4200 @rjbou]
   * Fix install command dryrun [#4200 @rjbou]
+  * Handle debian virtual packages [#4267 @rjbou - fix #4251]
 
 
 ## Env
