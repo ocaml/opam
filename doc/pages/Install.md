@@ -60,6 +60,8 @@ available release per distribution). Here is a list of supported distributions:
 
 #### Arch Linux
 
+[![badge](https://repology.org/badge/version-for-repo/arch/opam.svg)](https://repology.org/project/opam/versions)
+
 The [opam](https://www.archlinux.org/packages/community/x86_64/opam/)
 package is available in the official distribution. To install it simply run:
 
@@ -76,6 +78,8 @@ yay -S opam-git
 ```
 
 #### Debian
+
+[![badge](https://repology.org/badge/version-for-repo/debian_stable/opam.svg)](https://repology.org/project/opam/versions) [![badge](https://repology.org/badge/version-for-repo/debian_testing/opam.svg)](https://repology.org/project/opam/versions) [![badge](https://repology.org/badge/version-for-repo/debian_unstable/opam.svg)](https://repology.org/project/opam/versions)
 
 Binary packages of opam are available for the
 [stable](http://packages.debian.org/jessie/opam),
@@ -105,6 +109,8 @@ cave resolve -x repository/ocaml-unofficial
 
 #### [Fedora](http://fedoraproject.org), [CentOS](http://centos.org) and RHEL
 
+[![Fedora 32](https://repology.org/badge/version-for-repo/fedora_32/opam.svg)](https://repology.org/project/opam/versions)
+
 The opam package for Fedora can be installed with the command:
 
 ```
@@ -116,6 +122,8 @@ pre-built binaries, or build from sources.
 
 #### Mageia
 
+[![badge](https://repology.org/badge/version-for-repo/mageia_cauldron/opam.svg)](https://repology.org/project/opam/versions)
+
 The opam package for Mageia can be installed with the command:
 
 ```
@@ -123,6 +131,8 @@ urpmi opam
 ```
 
 #### OpenBSD
+
+[![badge](https://repology.org/badge/version-for-repo/openbsd/opam.svg)](https://repology.org/project/opam/versions)
 
 The opam package for OpenBSD can be installed with the command (since OpenBSD 5.7):
 
@@ -132,6 +142,8 @@ pkg_add opam
 
 #### FreeBSD
 
+[![badge](https://repology.org/badge/version-for-repo/freebsd/opam.svg)](https://repology.org/project/opam/versions)
+
 Opam is available in the ports and packages tree on FreeBSD 11 or higher.
 
 ```
@@ -140,6 +152,8 @@ make install
 ```
 
 #### OSX
+
+[![badge](https://repology.org/badge/version-for-repo/homebrew/opam.svg)](https://repology.org/project/opam/versions) [![badge](https://repology.org/badge/version-for-repo/macports/opam.svg)](https://repology.org/project/opam/versions)
 
 Opam packages for [homebrew](http://mxcl.github.com/homebrew/) and [MacPorts](http://www.macports.org/) are available.
 homebrew need a prior installation of `gpatch`, as opam uses gnu-specific options.
@@ -159,6 +173,8 @@ for Opam usage.
 
 #### Ubuntu
 
+[![badge](https://repology.org/badge/version-for-repo/ubuntu_20_04/opam.svg)](https://repology.org/project/opam/versions)
+
 ##### Versions 18.04 and newer
 There is a [ppa](https://launchpad.net/~avsm/+archive/ubuntu/ppa) available that contains the current stable version of `opam`.
 ```
@@ -171,6 +187,8 @@ apt install opam
 Use the binary distribution. Instructions provided at https://opam.ocaml.org/doc/Install.html#Binary-distribution
 
 #### Guix & Guix System
+
+[![badge](https://repology.org/badge/version-for-repo/gnuguix/opam.svg)](https://repology.org/project/opam/versions)
 
 The opam package for [guix](https://www.gnu.org/software/guix/) can be installed with the command:
 
