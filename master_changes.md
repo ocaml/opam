@@ -7,6 +7,7 @@ Possibly scripts breaking changes are prefixed with ✘
 
 ## Init
   * Remove m4 from the list of recommended tools [#4184 @kit-ty-kate]
+  * Fix config solver field ignored [#4243 @rjbou - fix #4241]
 
 ## Upgrade
   * Fix atoms formula restriction with `--all` [#4221 @rjbou - fix #4218]

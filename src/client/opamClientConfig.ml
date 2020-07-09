@@ -145,7 +145,7 @@ let search_files = ["findlib"]
 
 open OpamStd.Op
 
-let opam_init ?root_dir ?strict =
+let opam_init ?root_dir ?strict ?solver =
   let open OpamStd.Option.Op in
 
   (* (i) get root dir *)
@@ -160,6 +160,14 @@ let opam_init ?root_dir ?strict =
   (* !X fixme: don't drop the loaded config file to reload it afterwards (when
      loading the global_state) like that... *)
 
+  let solver =
+    if solver = None && OpamStd.Config.env_string "EXTERNALSOLVER" = None then
+      (* fixme: in order to not revert config file solver value, we need to
+         check it here *)
+      (config >>= OpamFile.Config.solver >>|
+       fun s -> lazy (OpamCudfSolver.custom_solver s))
+    else solver
+  in
   begin match config with
     | None -> ()
     | Some conf ->
@@ -168,8 +176,7 @@ let opam_init ?root_dir ?strict =
         try Some (List.assoc kind c) with Not_found -> None
       in
       OpamSolverConfig.update
-        ?solver:(OpamFile.Config.solver conf >>|
-                 fun s -> lazy(OpamCudfSolver.custom_solver s))
+        ?solver
         ?solver_preferences_default:(criteria `Default >>| fun s-> lazy(Some s))
         ?solver_preferences_upgrade:(criteria `Upgrade >>| fun s-> lazy(Some s))
         ?solver_preferences_fixup:(criteria `Fixup >>| fun s -> lazy (Some s))
@@ -193,6 +200,6 @@ let opam_init ?root_dir ?strict =
   (fun () -> ()) |>
   OpamStd.Config.initk ?log_dir |>
   OpamRepositoryConfig.initk |>
-  OpamSolverConfig.initk |>
+  OpamSolverConfig.initk ?solver |>
   OpamStateConfig.initk ~root_dir:root |>
   initk
