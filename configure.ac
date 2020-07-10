@@ -171,8 +171,8 @@ AS_IF([ test ${WIN32} -eq 1 ],[
       AS_IF([ test "$ARCH" = "i386" ],[T_CC64=x86_64-w64-mingw32-gcc],[T_CC64=i686-w64-mingw32-gcc])])
     AC_CHECK_TOOL(CC64,[${T_CC64}],[no])
     AS_IF([ test "x${CC64}" != "xno" ],[
-      echo "${CC64} -o " > src/stubs/cc64
-      echo " -Wdeclaration-after-statement " >> src/stubs/cc64
+      echo "${CC64} -o " > src/stubs/win32/cc64
+      echo " -Wdeclaration-after-statement " >> src/stubs/win32/cc64
     ])
   ],[
     AC_MSG_CHECKING([whether Microsoft Linker needs a PATH shim])
@@ -196,14 +196,14 @@ AS_IF([ test ${WIN32} -eq 1 ],[
       AC_MSG_RESULT([from $MSVS_NAME])
       CL_FULL="`PATH="${MSVS_PATH}:${PATH}" which cl | cygpath -f - -w`"
       MSVS_PATH="`echo "${MSVS_PATH}" | cygpath -f - -wp`"
-      echo "cl /nologo /Fe" > src/stubs/cc64
-      echo " " >> src/stubs/cc64
-      echo "PATH" >> src/stubs/cc64
-      echo "${MSVS_PATH}" >> src/stubs/cc64
-      echo "LIB" >> src/stubs/cc64
-      echo "${MSVS_LIB}" >> src/stubs/cc64
-      echo "INCLUDE" >> src/stubs/cc64
-      echo "${MSVS_INC}" >> src/stubs/cc64
+      echo "cl /nologo /Fe" > src/stubs/win32/cc64
+      echo " " >> src/stubs/win32/cc64
+      echo "PATH" >> src/stubs/win32/cc64
+      echo "${MSVS_PATH}" >> src/stubs/win32/cc64
+      echo "LIB" >> src/stubs/win32/cc64
+      echo "${MSVS_LIB}" >> src/stubs/win32/cc64
+      echo "INCLUDE" >> src/stubs/win32/cc64
+      echo "${MSVS_INC}" >> src/stubs/win32/cc64
     ])
   ])
   AS_IF([ test "x${CC64}" = "xno" ],[
@@ -373,11 +373,11 @@ AS_IF([test "x${with_private_runtime}" != "xno"],[
   ])
 ])
 
-rm -f src/stubs/dune
+rm -f src/stubs/win32/dune
 AS_IF([ test ${WIN32} -eq 1],[
-  cd src/stubs
+  cd src/stubs/win32
   ${LN_S} -f dune-win32 dune
-  cd ../..
+  cd ../../..
 ])
 
 echo

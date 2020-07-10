@@ -4123,8 +4123,8 @@ fi
 
     if  test "x${CC64}" != "xno" ; then :
 
-      echo "${CC64} -o " > src/stubs/cc64
-      echo " -Wdeclaration-after-statement " >> src/stubs/cc64
+      echo "${CC64} -o " > src/stubs/win32/cc64
+      echo " -Wdeclaration-after-statement " >> src/stubs/win32/cc64
 
 fi
 
@@ -4167,14 +4167,14 @@ else
 $as_echo "from $MSVS_NAME" >&6; }
       CL_FULL="`PATH="${MSVS_PATH}:${PATH}" which cl | cygpath -f - -w`"
       MSVS_PATH="`echo "${MSVS_PATH}" | cygpath -f - -wp`"
-      echo "cl /nologo /Fe" > src/stubs/cc64
-      echo " " >> src/stubs/cc64
-      echo "PATH" >> src/stubs/cc64
-      echo "${MSVS_PATH}" >> src/stubs/cc64
-      echo "LIB" >> src/stubs/cc64
-      echo "${MSVS_LIB}" >> src/stubs/cc64
-      echo "INCLUDE" >> src/stubs/cc64
-      echo "${MSVS_INC}" >> src/stubs/cc64
+      echo "cl /nologo /Fe" > src/stubs/win32/cc64
+      echo " " >> src/stubs/win32/cc64
+      echo "PATH" >> src/stubs/win32/cc64
+      echo "${MSVS_PATH}" >> src/stubs/win32/cc64
+      echo "LIB" >> src/stubs/win32/cc64
+      echo "${MSVS_LIB}" >> src/stubs/win32/cc64
+      echo "INCLUDE" >> src/stubs/win32/cc64
+      echo "${MSVS_INC}" >> src/stubs/win32/cc64
 
 fi
 
@@ -6691,12 +6691,12 @@ fi
 
 fi
 
-rm -f src/stubs/dune
+rm -f src/stubs/win32/dune
 if  test ${WIN32} -eq 1; then :
 
-  cd src/stubs
+  cd src/stubs/win32
   ${LN_S} -f dune-win32 dune
-  cd ../..
+  cd ../../..
 
 fi
 
