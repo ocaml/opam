@@ -386,7 +386,7 @@ let t_resolve_command =
     else fun f ->
       try
         let open Unix in
-        let uid = getuid() and groups = Array.to_list(getgroups()) in
+        let uid = geteuid() and groups = getegid() :: Array.to_list(getgroups()) in
         let {st_uid; st_gid; st_perm; _} = stat f in
         let mask =
           if uid = st_uid then
