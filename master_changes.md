@@ -25,6 +25,21 @@ Possibly scripts breaking changes are prefixed with ✘
   * Fix Not_found with `opam switch create . --deps` [#4151 @AltGr]
   * Package Var: resolve self `name` variable for orphan packages [#4228 @rjbou - fix #4224]
   * ✘ Reject (shell) character on switch names [#4237 @rjbou - fix #4231]
+  * Add missing depext to unavailable reasons [#4194 @rjbou - fix #4176]
+
+
+## Pin
+  * Add depext handling on new pinned packages [#4194 @rjbou - fix #4189]
+
+## Option
+  * Fix messages advertising a command in an obsolete format [#4194 @rjbou]
+
+## Config
+  * Add switch depext-bypass as modifiable field [#4194 @rjbou - fix #4177]
+
+## List
+  * Add --no-depexts option to disable depexts packages unavailability [#4194 @rjbou - fix #4205]
+  * Warn if packages are not listed because of depexts unavailaibilty [#4194 @rjbou - fix #4205]
 
 ## Pin
   * Don't keep unpinned package version if it exists in repo [#4073 @rjbou - fix #3630]
@@ -37,6 +52,7 @@ Possibly scripts breaking changes are prefixed with ✘
 
 ## Depext
   * Fix arch query [#4200 @rjbou]
+  * Add message when adding a package to `depext-bypass` [#4194 @rjbou]
   * Fix performance issue of depext under Docker/debian [#4165 @AltGr]
   * Refactor package status [#4152 #4200 @rjbou]
   * Add environment variables handling [#4200 @rjbou]

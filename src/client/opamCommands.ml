@@ -532,9 +532,15 @@ let list ?(force_search=false) () =
       "Don't write anything in the output, exit with return code 0 if the list \
        is not empty, 1 otherwise."
   in
+  let no_depexts =
+    mk_flag ["no-depexts"]
+      "Disable external dependencies handling for the query. This can be used \
+       to include packages that are marked as unavailable because of an unavailable \
+       system dependency."
+  in
   let list
       global_options selection state_selector no_switch depexts vars repos
-      owns_file disjunction search silent format packages =
+      owns_file disjunction search silent no_depexts format packages =
     apply_global_options global_options;
     let no_switch =
       no_switch || OpamStateConfig.get_switch_opt () = None
@@ -590,6 +596,7 @@ let list ?(force_search=false) () =
     in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+    if no_depexts then OpamStateConfig.update ~no_depexts:true ();
     let st =
       if no_switch then OpamSwitchState.load_virtual ?repos_list:repos gt rt
       else OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ())
@@ -612,6 +619,39 @@ let list ?(force_search=false) () =
     let results =
       OpamListCommand.filter ~base:all st filter
     in
+    if not no_depexts && not silent then
+      (let drop_by_depexts =
+         List.fold_left (fun missing str ->
+             let is_missing pkgs =
+                 if OpamStd.String.contains_char str '.' then
+                   let nv = OpamPackage.of_string str in
+                   if OpamPackage.Set.mem nv results then None else
+                     OpamPackage.Set.find_opt (OpamPackage.equal nv) pkgs
+                 else
+                 let n = OpamPackage.Name.of_string str in
+                 if OpamPackage.has_name results n then None else
+                 let exist = OpamPackage.packages_of_name pkgs n in
+                 if OpamPackage.Set.is_empty exist then None else
+                   Some (OpamPackage.Set.max_elt exist)
+             in
+             match OpamStd.Option.Op.(
+                 is_missing OpamPackage.Set.Op.(st.packages ++ st.pinned)
+                 >>= OpamSwitchState.depexts_unavailable st) with
+             | Some nf ->  OpamStd.String.Map.add str nf missing
+             | None -> missing
+             | exception Failure _ -> missing (* invalid package *)
+           ) OpamStd.String.Map.empty packages
+       in
+       if not (OpamStd.String.Map.is_empty drop_by_depexts) then
+         OpamConsole.note
+           "Some packages are unavailable because of their external dependencies. \
+            Use `--no-depexts' to show them anyway.\n%s"
+           (OpamStd.Format.itemize (fun (n, spkgs) ->
+                Printf.sprintf "%s: %s" n
+                  (OpamStd.Format.pretty_list
+                     (List.map OpamSysPkg.to_string
+                        (OpamSysPkg.Set.elements spkgs))))
+               (OpamStd.String.Map.bindings drop_by_depexts)));
     if not depexts then
       (if not silent then
          OpamListCommand.display st format results
@@ -626,7 +666,7 @@ let list ?(force_search=false) () =
   in
   Term.(const list $global_options $package_selection $state_selector
         $no_switch $depexts $vars $repos $owns_file $disjunction $search
-        $silent $package_listing $pattern_list),
+        $silent $no_depexts $package_listing $pattern_list),
   term_info "list" ~doc ~man
 
 

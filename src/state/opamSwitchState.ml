@@ -157,7 +157,7 @@ let depexts_raw ~env nv opams =
       (OpamFile.OPAM.depexts opam)
   with Not_found -> OpamSysPkg.Set.empty
 
-let get_sysdeps_map ~depexts global_config switch_config packages =
+let depexts_status_of_packages_raw ~depexts global_config switch_config packages =
   let open OpamSysPkg.Set.Op in
   let syspkg_set, syspkg_map =
     OpamPackage.Set.fold (fun nv (set, map) ->
@@ -199,6 +199,12 @@ let get_sysdeps_map ~depexts global_config switch_config packages =
   log "depexts loaded in %.3fs" (chronos());
   ret
 
+let depexts_unavailable_raw sys_packages nv =
+  match OpamPackage.Map.find_opt nv sys_packages with
+  | Some { OpamSysPkg.s_not_found; _}
+    when not (OpamSysPkg.Set.is_empty s_not_found) ->
+    Some s_not_found
+  | _ -> None
 
 let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
@@ -439,7 +445,8 @@ let load lock_kind gt rt switch =
     || OpamStateConfig.(!r.no_depexts) then
       lazy OpamPackage.Map.empty
     else lazy (
-      get_sysdeps_map gt.config switch_config (Lazy.force available_packages)
+      depexts_status_of_packages_raw gt.config switch_config
+        (Lazy.force available_packages)
         ~depexts:(fun package ->
             let env =
               OpamPackageVar.resolve_switch_raw ~package gt switch switch_config
@@ -452,10 +459,7 @@ let load lock_kind gt rt switch =
     else lazy (
       let sys_packages = Lazy.force sys_packages in
       OpamPackage.Set.filter (fun nv ->
-          match OpamPackage.Map.find_opt nv sys_packages with
-          | Some { OpamSysPkg.s_not_found; _ }
-            when not (OpamSysPkg.Set.is_empty s_not_found) -> false
-          | _ -> true)
+          depexts_unavailable_raw sys_packages nv = None)
         (Lazy.force available_packages)
     )
   in
@@ -681,6 +685,13 @@ let source_dir st nv =
 let depexts st nv =
   let env v = OpamPackageVar.resolve_switch ~package:nv st v in
  depexts_raw ~env nv st.opams
+
+let depexts_status_of_packages st set =
+  depexts_status_of_packages_raw st.switch_global.config st.switch_config set
+    ~depexts:(depexts st)
+
+let depexts_unavailable st nv =
+  depexts_unavailable_raw (Lazy.force st.sys_packages) nv
 
 let dev_packages st =
   OpamPackage.Set.filter (is_dev_package st)
@@ -1002,7 +1013,14 @@ let unavailable_reason st ?(default="") (name, vformula) =
         (OpamConsole.colorise `bold
            (OpamFileTools.dep_formula_to_string st.switch_invariant))
     else
-      default
+    match depexts_unavailable st (OpamPackage.Set.max_elt candidates) with
+    | Some missing ->
+      Printf.sprintf
+        "depends on the unavailable system package '%s'. Use \
+         `--assume-depexts' to attempt installation anyway."
+        (OpamStd.List.concat_map " " OpamSysPkg.to_string
+           (OpamSysPkg.Set.elements missing))
+    | None -> default
 
 let update_package_metadata nv opam st =
   { st with
