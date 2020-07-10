@@ -13,7 +13,7 @@ Possibly scripts breaking changes are prefixed with ✘
   * Fix atoms formula restriction with `--all` [#4221 @rjbou - fix #4218]
 
 ## Build
-  * Opam file build using dune, removal of opam-%.install makefile target [#4178 @rjbou - fix #4173]
+  * Opam file build using dune, removal of opam-%.install makefile target [#4178 @rjbou #4229 @kit-ty-kate - fix #4173]
   * Use version var in opam file instead of equal current version number in opamlib dependencies [#4178 @rjbou]
   * ext: fix extlib url [#4248 @rjbou]
 

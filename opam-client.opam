@@ -27,6 +27,6 @@ depends: [
   "opam-repository" {= version}
   "re" {>= "1.9.0"}
   "cmdliner" {>= "0.9.8"}
-  "dune" {build & >= "1.2.1"}
+  "dune" {>= "1.2.1"}
 ]
 available: ocaml-version >= "4.02.3"
