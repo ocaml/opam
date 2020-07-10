@@ -65,8 +65,9 @@ if "%OCAML_PORT%" equ "mingw64" (
   set CYGWIN_COMMANDS=%CYGWIN_COMMANDS% x86_64-w64-mingw32-g++
 )
 if "%OCAML_PORT%" equ "" (
-  set CYGWIN_PACKAGES=%CYGWIN_PACKAGES% gcc-g++ flexdll
-  set CYGWIN_COMMANDS=%CYGWIN_COMMANDS% g++ flexlink
+  rem NB Hard-coded Cygwin32 for the manual build
+  set CYGWIN_PACKAGES=%CYGWIN_PACKAGES% gcc-g++ flexdll perl gettext-devel libiconv-devel zlib-devel cocom mingw64-i686-gcc-g++ mingw64-i686-zlib
+  set CYGWIN_COMMANDS=%CYGWIN_COMMANDS% g++ flexlink perl msgen gcc gcc gcc i686-w64-mingw32-g++ i686-w64-mingw32-gcc
 )
 
 set CYGWIN_INSTALL_PACKAGES=
@@ -74,6 +75,13 @@ set CYGWIN_UPGRADE_REQUIRED=0
 
 for %%P in (%CYGWIN_PACKAGES%) do call :CheckPackage %%P
 call :UpgradeCygwin
+
+if "%OCAML_PORT%" equ "" (
+  if not exist C:\projects\opam\bootstrap\cygwin1.dll (
+    "%CYG_ROOT%\bin\bash.exe" -lc "cd ~ ; git clone git://cygwin.com/git/newlib-cygwin.git ; cd newlib-cygwin ; git checkout acfc63b ; cd .. ; mkdir build ; cd build ; ../newlib-cygwin/configure -v ; make ; cp i686-pc-cygwin/winsup/cygwin/new-cygwin1.dll /cygdrive/c/projects/opam/bootstrap/cygwin1.dll"
+  )
+  copy C:\projects\opam\bootstrap\cygwin1.dll %CYG_ROOT%\bin\cygwin1.dll
+)
 
 set INSTALLED_URL=
 for /f "tokens=3" %%U in ('findstr /C:"URL_ocaml = " src_ext\Makefile') do set OCAML_URL=%%U
