@@ -48,6 +48,13 @@ set CYG_ROOT=C:\%CYG_ROOT%
 
 cd "%APPVEYOR_BUILD_FOLDER%"
 
+if "%OCAML_PORT%" equ "" (
+  rem Need unreleased Cygwin 3.1.7 for bugfix in acl_get_tag_type and acl_get_permset
+  appveyor DownloadFile "https://cygwin.com/snapshots/x86/cygwin1-20200710.dll.xz" -FileName "cygwin1.dll.xz" || exit /b 1
+  "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER ; unxz cygwin1.dll.xz ; chmod +x cygwin1.dll"
+  move cygwin1.dll %CYG_ROOT%\bin\cygwin1.dll
+)
+
 rem CYGWIN_PACKAGES is the list of required Cygwin packages (cygwin is included
 rem in the list just so that the Cygwin version is always displayed on the log).
 rem CYGWIN_COMMANDS is a corresponding command to run with --version to test
@@ -65,9 +72,8 @@ if "%OCAML_PORT%" equ "mingw64" (
   set CYGWIN_COMMANDS=%CYGWIN_COMMANDS% x86_64-w64-mingw32-g++
 )
 if "%OCAML_PORT%" equ "" (
-  rem NB Hard-coded Cygwin32 for the manual build
-  set CYGWIN_PACKAGES=%CYGWIN_PACKAGES% gcc-g++ flexdll perl gettext-devel libiconv-devel zlib-devel cocom mingw64-i686-gcc-g++ mingw64-i686-zlib
-  set CYGWIN_COMMANDS=%CYGWIN_COMMANDS% g++ flexlink perl msgen gcc gcc gcc i686-w64-mingw32-g++ i686-w64-mingw32-gcc
+  set CYGWIN_PACKAGES=%CYGWIN_PACKAGES% gcc-g++ flexdll
+  set CYGWIN_COMMANDS=%CYGWIN_COMMANDS% g++ flexlink
 )
 
 set CYGWIN_INSTALL_PACKAGES=
@@ -75,13 +81,6 @@ set CYGWIN_UPGRADE_REQUIRED=0
 
 for %%P in (%CYGWIN_PACKAGES%) do call :CheckPackage %%P
 call :UpgradeCygwin
-
-if "%OCAML_PORT%" equ "" (
-  if not exist C:\projects\opam\bootstrap\cygwin1.dll (
-    "%CYG_ROOT%\bin\bash.exe" -lc "cd ~ ; git clone git://cygwin.com/git/newlib-cygwin.git ; cd newlib-cygwin ; git checkout acfc63b ; cd .. ; mkdir build ; cd build ; ../newlib-cygwin/configure -v ; make ; cp i686-pc-cygwin/winsup/cygwin/new-cygwin1.dll /cygdrive/c/projects/opam/bootstrap/cygwin1.dll"
-  )
-  copy C:\projects\opam\bootstrap\cygwin1.dll %CYG_ROOT%\bin\cygwin1.dll
-)
 
 set INSTALLED_URL=
 for /f "tokens=3" %%U in ('findstr /C:"URL_ocaml = " src_ext\Makefile') do set OCAML_URL=%%U
