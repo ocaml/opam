@@ -1530,13 +1530,28 @@ let install =
        installed. If not, output the names of the missing dependencies to \
        stdout, and exits with 1."
   in
+  let depext_only =
+    mk_flag ["depext-only"]
+      "Resolves the package installation normally, but only installs the required \
+       system dependencies, without affecting the opam switch state or installing \
+       opam packages."
+  in
   let install
       global_options build_options add_to_roots deps_only ignore_conflicts
-      restore destdir assume_built check recurse subpath atoms_or_locals =
+      restore destdir assume_built check recurse subpath depext_only
+      atoms_or_locals =
     apply_global_options global_options;
     apply_build_options build_options;
     if atoms_or_locals = [] && not restore then
       `Error (true, "required argument PACKAGES is missing")
+    else
+    if depext_only
+    && (OpamClientConfig.(!r.assume_depexts)
+        || OpamStateConfig.(!r.no_depexts)) then
+      `Error (true,
+              Printf.sprintf "--depext-only and --%s can't be used together"
+                (if OpamClientConfig.(!r.assume_depexts) then "assume-depexts"
+                 else "no-depexts"))
     else
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_write gt @@ fun st ->
@@ -1561,7 +1576,7 @@ let install =
     if atoms_or_locals = [] then `Ok () else
     let st, atoms =
       OpamAuxCommands.autopin
-        st ~recurse ?subpath ~quiet:check ~simulate:(deps_only||check)
+        st ~recurse ?subpath ~quiet:check ~simulate:(deps_only||check||depext_only)
         atoms_or_locals
     in
     if atoms = [] then
@@ -1585,7 +1600,7 @@ let install =
     let st =
       OpamClient.install st atoms
         ~autoupdate:pure_atoms ?add_to_roots ~deps_only ~ignore_conflicts
-        ~assume_built
+        ~assume_built ~depext_only
     in
     match destdir with
     | None -> `Ok ()
@@ -1597,7 +1612,8 @@ let install =
   Term.ret
     Term.(const install $global_options $build_options
           $add_to_roots $deps_only $ignore_conflicts $restore $destdir
-          $assume_built $check $recurse $subpath $atom_or_local_list),
+          $assume_built $check $recurse $subpath $depext_only
+          $atom_or_local_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
