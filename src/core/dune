@@ -3,6 +3,9 @@
   (public_name opam-core)
   (synopsis    "OCaml Package Manager core internal stdlib")
   (libraries   re ocamlgraph unix bigarray
+               (select opamACL.ml from
+                       (opam-core.libacl -> opamACL.ml.libacl)
+                       (                 -> opamACL.ml.dummy))
                (select opamStubs.ml from
                        (opam-core.stubs -> opamStubs.ml.win32)
                        (                -> opamStubs.ml.dummy)))

@@ -386,17 +386,24 @@ let t_resolve_command =
     else fun f ->
       try
         let open Unix in
-        let uid = geteuid() and groups = getegid() :: Array.to_list(getgroups()) in
+        let uid = geteuid () in
+        let groups = OpamStd.IntSet.of_list (getegid () :: Array.to_list (getgroups ())) in
         let {st_uid; st_gid; st_perm; _} = stat f in
         let mask =
           if uid = st_uid then
             0o100
-          else if List.mem st_gid groups then
+          else if OpamStd.IntSet.mem st_gid groups then
             0o010
           else
             0o001
         in
-        (st_perm land mask) <> 0
+        if (st_perm land mask) <> 0 then
+          true
+        else
+          match OpamACL.get_acl_executable_info f st_uid with
+          | None -> false
+          | Some [] -> true
+          | Some gids -> OpamStd.IntSet.(not (is_empty (inter (of_list gids) groups)))
       with e -> OpamStd.Exn.fatal e; false
   in
   let resolve ?dir env name =
