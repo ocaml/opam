@@ -25,7 +25,7 @@ depends: [
   "base-bigarray"
   "ocamlgraph"
   "re" {>= "1.9.0"}
-  "dune" {>= "1.2.1"}
+  "dune" {>= "1.5.0"}
   "cppo" {build}
 ]
 conflicts: "extlib-compat"

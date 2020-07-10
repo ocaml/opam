@@ -12,6 +12,7 @@
 
 (executable
   (name        opamMain)
+  ; This name needs to be updated in doc/man/dune if changed
   (public_name opam)
   (package     opam)
   (modules     opamMain)

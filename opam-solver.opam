@@ -25,7 +25,7 @@ depends: [
   "mccs" {>= "1.1+9"}
   "dose3" {>= "5"}
   "cudf" {>= "0.7"}
-  "dune" {>= "1.2.1"}
+  "dune" {>= "1.5.0"}
 ]
 depopts: "z3"
 conflicts: [ "z3" {< "4.8.4"} ]
