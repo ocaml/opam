@@ -874,6 +874,14 @@ let universe st
     | Some set -> set
     | None -> OpamPackage.Set.empty
   in
+  let missing_depexts =
+    OpamPackage.Map.fold (fun nv status acc ->
+        if OpamSysPkg.Set.is_empty status.OpamSysPkg.s_available
+        then acc
+        else OpamPackage.Set.add nv acc)
+      (Lazy.force st.sys_packages)
+      OpamPackage.Set.empty
+  in
   let u =
 {
   u_packages  = st.packages;
@@ -888,7 +896,8 @@ let universe st
   u_base      = base;
   u_invariant;
   u_reinstall;
-  u_attrs     = ["opam-query", requested_allpkgs];
+  u_attrs     = ["opam-query", requested_allpkgs;
+                 "missing-depexts", missing_depexts];
 }
   in
   u
