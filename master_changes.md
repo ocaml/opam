@@ -22,6 +22,9 @@ New option are prefixed with ◈
   * Add `_build` to rsync exclusion list [#4230 @rjobou - fix #4195]
   * Recursive opam file lookup: ignore `_build` [#4230 @rjbou]
 
+## Archives fetch
+  * Copy instead of calling rsync when archives are in a local cache [#4270 @kit-ty-kate]
+
 ## Switch
   * Fix Not_found with `opam switch create . --deps` [#4151 @AltGr]
   * Package Var: resolve self `name` variable for orphan packages [#4228 @rjbou - fix #4224]
