@@ -403,8 +403,14 @@ module Sys : sig
   (** Queried lazily *)
   val os: unit -> os
 
-  (** The output of the command "uname", with the given argument. Memoised. *)
-  val uname: string -> string option
+  type uname = {
+    sysname : string;
+    release : string;
+    machine : string;
+  }
+
+  (** The output of uname (2) if it exists. Returns None if not. *)
+  val uname : unit -> uname option
 
   (** Append .exe (only if missing) to executable filenames on Windows *)
   val executable_name : string -> string

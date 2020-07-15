@@ -36,7 +36,7 @@ let normalise_arch raw =
 
 let arch_lazy = lazy (
   let raw = match Sys.os_type with
-    | "Unix" | "Cygwin" -> OpamStd.Sys.uname "-m"
+    | "Unix" | "Cygwin" -> (OpamStd.Sys.uname ()) >>| (fun x -> x.machine)
     | "Win32" ->
       if Sys.word_size = 32 && not (OpamStubs.isWoW64 ()) then
         Some "i686"
@@ -58,7 +58,7 @@ let normalise_os raw =
 let os_lazy = lazy (
   let raw =
     match Sys.os_type with
-    | "Unix" -> OpamStd.Sys.uname "-s"
+    | "Unix" -> (OpamStd.Sys.uname ()) >>| (fun x -> x.sysname)
     | s -> norm s
   in
   match raw with
@@ -127,10 +127,8 @@ let os_version_lazy = lazy (
        command_output ["cmd"; "/C"; "ver"] >>= fun s ->
        Scanf.sscanf s "%_s@[ Version %s@]" norm
      with Scanf.Scan_failure _ | End_of_file -> None)
-  | Some "freebsd" ->
-    OpamStd.Sys.uname "-U" >>= norm
   | _ ->
-    OpamStd.Sys.uname "-r" >>= norm
+    (OpamStd.Sys.uname ()) >>= (fun x -> norm x.release)
 )
 let os_version () = Lazy.force os_version_lazy
 

@@ -779,18 +779,13 @@ module OpamSys = struct
 
   let etc () = "/etc"
 
-  let uname =
-    let memo = Hashtbl.create 7 in
-    fun arg ->
-      try Hashtbl.find memo arg with Not_found ->
-        let r =
-          try
-            with_process_in "uname" arg
-              (fun ic -> Some (OpamString.strip (input_line ic)))
-          with Unix.Unix_error _ | Sys_error _ | Not_found -> None
-        in
-        Hashtbl.add memo arg r;
-        r
+  type uname = {
+    sysname : string;
+    release : string;
+    machine : string;
+  }
+
+  external uname : unit -> uname option = "builtin_uname"
 
   let system () =
     (* CSIDL_SYSTEM = 0x25 *)
@@ -812,14 +807,14 @@ module OpamSys = struct
     let os = lazy (
       match Sys.os_type with
       | "Unix" -> begin
-          match uname "-s" with
-          | Some "Darwin"    -> Darwin
-          | Some "Linux"     -> Linux
-          | Some "FreeBSD"   -> FreeBSD
-          | Some "OpenBSD"   -> OpenBSD
-          | Some "NetBSD"    -> NetBSD
-          | Some "DragonFly" -> DragonFly
-          | _                -> Unix
+          match uname () with
+          | Some {sysname = "Darwin"; _}    -> Darwin
+          | Some {sysname = "Linux"; _}     -> Linux
+          | Some {sysname = "FreeBSD"; _}   -> FreeBSD
+          | Some {sysname = "OpenBSD"; _}   -> OpenBSD
+          | Some {sysname = "NetBSD"; _}    -> NetBSD
+          | Some {sysname = "DragonFly"; _} -> DragonFly
+          | _                               -> Unix
         end
       | "Win32"  -> Win32
       | "Cygwin" -> Cygwin

@@ -6,6 +6,7 @@
                (select opamStubs.ml from
                        (opam-core.stubs -> opamStubs.ml.win32)
                        (                -> opamStubs.ml.dummy)))
+  (c_names     builtin_uname)
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
                (:include ../ocaml-flags-configure.sexp)
