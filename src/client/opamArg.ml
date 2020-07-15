@@ -427,7 +427,7 @@ let repository_name =
 
 let url =
   let parse str =
-    match OpamUrl.parse_opt str with
+    match OpamUrl.parse_opt ~from_file:false str with
     | Some url -> `Ok url
     | None -> `Error ("malformed url "^str)
   in

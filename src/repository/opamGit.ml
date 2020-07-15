@@ -308,7 +308,7 @@ module VCS : OpamVCS.VCS = struct
     git repo_root ["remote"; "get-url"; origin]
     @@> function
     | { OpamProcess.r_code = 0; OpamProcess.r_stdout = [url]; _ } ->
-      (let u = OpamUrl.parse url in
+      (let u = OpamUrl.parse ~backend:`git url in
        if OpamUrl.local_dir u <> None then Done None else
        let hash_in_remote =
          match hash with

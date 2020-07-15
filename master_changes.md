@@ -19,7 +19,7 @@ New option are prefixed with ◈
   * ext: fix extlib url [#4248 @rjbou]
 
 ## Install
-  * Add `_build` to rsync exclusion list [#4230 @rjobou - fix #4195]
+  * Add `_build` to rsync exclusion list [#4230 @rjbou - fix #4195]
   * Recursive opam file lookup: ignore `_build` [#4230 @rjbou]
 
 ## Archives fetch
@@ -47,12 +47,15 @@ New option are prefixed with ◈
 
 ## Pin
   * Don't keep unpinned package version if it exists in repo [#4073 @rjbou - fix #3630]
+  * Fix path resolving when pinning with `file://` [#4209 @rjbou - fix #4208]
 
 ## Show
   * ✘ Display error message for all not found packages [#4179 @rjbou - fix #4164]
   * ✘ Keep package order given via cli [#4179 @rjbou - fix #4163]
   * `--sort`` apply to with all options, not only `--just-file` [#4179 @rjbou]
 
+## Lint
+  * E65: check that url local path ar absolute [#4209 @rjbou]
 
 ## Depext
   * Fix arch query [#4200 @rjbou]

@@ -44,7 +44,8 @@ let all_urls t =
   let urlf_urls uf = OpamFile.URL.url uf :: OpamFile.URL.mirrors uf in
   (match t.url with Some uf -> urlf_urls uf | None -> []) @
   (match t.dev_repo with Some u -> [u] | None -> []) @
-  List.fold_left (fun acc (_, uf) -> urlf_urls uf @ acc) [] t.extra_sources
+  List.fold_left (fun acc (_, uf) -> urlf_urls uf @ acc) [] t.extra_sources @
+  List.map snd t.pin_depends
 
 let filters_of_formula f =
   OpamFormula.fold_left (fun acc (_, f) ->
@@ -741,6 +742,23 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
      cond 64 `Warning
        "`x-subpath` must be a simple string to be considered as a subpath`"
        subpath_string);
+    (let relative =
+       let open OpamUrl in
+       List.filter (fun u ->
+           (* OpamUrl.local_dir is not used because it checks the existence of
+              the directory *)
+           (match u.backend, u.transport with
+            | (#version_control | `rsync),
+              ("file" | "path" | "local" | "rsync") -> true
+            | _, _ -> false)
+           && (Filename.is_relative u.path
+               || OpamStd.String.contains ~sub:".." u.path))
+         (all_urls t)
+     in
+     cond 65 `Error
+       "URLs must be absolute"
+       ~detail:(List.map (fun u -> u.OpamUrl.path) relative)
+       (relative <> []));
   ]
   in
   format_errors @
