@@ -133,7 +133,7 @@ opam pin add opam-lib https://github.com/ocaml/opam.git#1.2   # specific branch 
 opam pin add opam-lib --dev-repo                              # upstream repository
 ```
 
-This actually a powerful mechanism to divert any package definition, and can
+This is actually a powerful mechanism to divert any package definition, and can
 even be used to locally create packages that don't have entries in the
 repositories.
 
