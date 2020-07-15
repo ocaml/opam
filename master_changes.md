@@ -55,6 +55,9 @@ Possibly scripts breaking changes are prefixed with ✘
   * Expose some functionality in the `OpamAction`, `OpamPath` and `OpamSwitchState`
     modules for use without a `switch` value [#4147]
 
+## Solver
+  * Fix Cudf generation for compat with external solvers [#4261 @AltGr]
+
 ## Test
   * Add show cram test [#4206 @rjbou]
   * Add envrionnement variable handling on cram test [#4206 @rjbou]
