@@ -7,6 +7,8 @@
                        (opam-core.stubs -> opamStubs.ml.win32)
                        (                -> opamStubs.ml.dummy)))
   (c_names     builtin_uname)
+  (c_flags     (:standard
+               (:include c-flags.sexp)))
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
                (:include ../ocaml-flags-configure.sexp)

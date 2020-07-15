@@ -3,7 +3,7 @@
 #include <caml/alloc.h>
 #include <caml/memory.h>
 
-#if defined(unix) || defined(__unix__) || defined(__unix)
+#ifdef HAS_UNAME
 #include <sys/utsname.h>
 
 value builtin_uname(value unit)
