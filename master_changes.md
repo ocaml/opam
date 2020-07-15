@@ -90,6 +90,9 @@ New option are prefixed with ◈
     modules for use without a `switch` value [#4147 @timberston]
     *Path: introduce a functor to permit replicating switch layout in different contexts
 
+## Solver
+  * Fix Cudf generation for compat with external solvers [#4261 @AltGr]
+
 ## Test
   * Add show cram test [#4206 @rjbou]
   * Add envrionnement variable handling on cram test [#4206 @rjbou]
