@@ -26,6 +26,8 @@ module type SET = sig
       on an empty set, [Failure] on a non-singleton. *)
   val choose_one : t -> elt
 
+  val choose_opt: t -> elt option
+
   val of_list: elt list -> t
   val to_string: t -> string
   val to_json: t -> OpamJson.t
@@ -39,6 +41,11 @@ module type SET = sig
   (** Accumulates the resulting sets of a function of elements until a fixpoint
       is reached *)
   val fixpoint: (elt -> t) -> t -> t
+
+  (** [map_reduce f op t] applies [f] to every element of [t] and combines the
+      results using associative operator [op]. Raises [Invalid_argument] on an
+      empty set, or returns [default] if it is defined. *)
+  val map_reduce: ?default:'a -> (elt -> 'a) -> ('a -> 'a -> 'a) -> t -> 'a
 
   module Op : sig
     val (++): t -> t -> t (** Infix set union *)
@@ -61,6 +68,7 @@ module type MAP = sig
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
   val find_opt: key -> 'a t -> 'a option
+  val choose_opt: 'a t -> (key * 'a) option
 
   (** A key will be in the union of [m1] and [m2] if it is appears
       either [m1] or [m2], with the corresponding value. If a key
@@ -78,6 +86,13 @@ module type MAP = sig
   (** [update k f zero map] updates the binding of [k] in [map] using function
       [f], applied to the current value bound to [k] or [zero] if none *)
   val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
+
+  (** [map_reduce f op t] applies [f] to every binding of [t] and combines the
+      results using associative operator [op]. Raises [Invalid_argument] on an
+      empty map, or returns [default] if it is defined. *)
+  val map_reduce:
+    ?default:'b -> (key -> 'a -> 'b) -> ('b -> 'b -> 'b) -> 'a t -> 'b
+
 end
 
 (** A signature for handling abstract keys and collections thereof *)
