@@ -17,6 +17,7 @@ New option are prefixed with ◈
   * Opam file build using dune, removal of opam-%.install makefile target [#4178 @rjbou #4229 @kit-ty-kate - fix #4173]
   * Use version var in opam file instead of equal current version number in opamlib dependencies [#4178 @rjbou]
   * ext: fix extlib url [#4248 @rjbou]
+  * Bump to alpha2 version [#4253 @rjbou]
 
 ## Install
   * Add `_build` to rsync exclusion list [#4230 @rjbou - fix #4195]
