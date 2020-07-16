@@ -1,6 +1,5 @@
 #!/bin/bash -xue
 
-OPAMBSVERSION=2.0.7
 OPAMBSROOT=$HOME/.opam.2.0.cached
 OPAMBSSWITCH=opam-build
 PATH=~/local/bin:$PATH; export PATH
