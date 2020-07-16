@@ -15,14 +15,18 @@ install:
 
 cache:
     directories:
-    - $HOME/.opam.2.0.cached
+    - $HOME/.opam.cached
     - $HOME/local
     - $HOME/opam1.2/cache
 
 script:
     - bash -exu .travis-ci.sh build
 
-matrix:
+env:
+  global:
+  - OPAMBSVERSION=2.0.7
+
+jobs:
   include:
     - os: linux
       env: OCAML_VERSION=4.02.3
@@ -49,24 +53,27 @@ matrix:
       env: OCAML_VERSION=4.08.1
       stage: Build
     - os: linux
-      env: OCAML_VERSION=4.09.0
+      env: OCAML_VERSION=4.09.1
+      stage: Build
+    - os: linux
+      env: OCAML_VERSION=4.10.0
       stage: Build
     - os: linux
       stage: Hygiene
     - os: osx
-      env: OCAML_VERSION=4.07.1 OPAM_TEST=1
+      env: OCAML_VERSION=4.09.1 OPAM_TEST=1
       stage: Test
     - os: linux
-      env: OCAML_VERSION=4.07.1 OPAM_TEST=1
+      env: OCAML_VERSION=4.09.1 OPAM_TEST=1
       stage: Test
     - os: linux
-      env: OCAML_VERSION=4.07.1 OPAM_TEST=1 EXTERNAL_SOLVER=aspcud
+      env: OCAML_VERSION=4.09.1 OPAM_TEST=1 EXTERNAL_SOLVER=aspcud
       stage: Test
     - os: linux
       env: COLD=1
       stage: Test
     - os: linux
-      env: OCAML_VERSION=4.07.1
+      env: OCAML_VERSION=4.09.1
       stage: Upgrade
 
 notifications:

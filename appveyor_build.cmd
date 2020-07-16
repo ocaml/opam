@@ -75,7 +75,7 @@ set CYGWIN_UPGRADE_REQUIRED=0
 for %%P in (%CYGWIN_PACKAGES%) do call :CheckPackage %%P
 call :UpgradeCygwin
 
-rem Use dra27 flexdll for native ports
+rem Use cmdliner 1.0.4 + #111 in order to build manpages
 if "%OCAML_PORT%" neq "" git apply appveyor.patch
 
 set INSTALLED_URL=

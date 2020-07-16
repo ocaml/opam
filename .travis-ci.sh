@@ -1,7 +1,6 @@
 #!/bin/bash -xue
 
-OPAMBSVERSION=2.0.0-rc2
-OPAMBSROOT=$HOME/.opam.2.0.cached
+OPAMBSROOT=$HOME/.opam.cached
 OPAMBSSWITCH=opam-build
 PATH=~/local/bin:$PATH; export PATH
 
@@ -38,6 +37,11 @@ else
   fi
 fi
 set -x
+
+write_versions () {
+  echo "LOCAL_OCAML_VERSION=$OCAML_VERSION" > ~/local/versions
+  echo "LOCAL_OPAMBSVERSION=$OPAMBSVERSION" >> ~/local/versions
+}
 
 init-bootstrap () {
   export OPAMROOT=$OPAMBSROOT
@@ -116,18 +120,7 @@ wrap-install-commands: []
 wrap-remove-commands: []
 EOF
 
-    if [[ $COLD -eq 1 ]] ; then
-      if [ ! -x ~/local/bin/make ] ; then
-        wget http://ftpmirror.gnu.org/gnu/make/make-4.2.tar.gz
-        tar -xzf make-4.2.tar.gz
-        mkdir make-4.2-build
-        cd make-4.2-build
-        ../make-4.2/configure --prefix ~/local
-        make
-        make install
-        cd ..
-      fi
-    else
+    if [[ $COLD -ne 1 ]] ; then
       if [[ $TRAVIS_OS_NAME = "osx" && -n $EXTERNAL_SOLVER ]] ; then
         rvm install ruby-2.3.3
         rvm --default use 2.3.3
@@ -140,10 +133,20 @@ EOF
           echo "Cached compiler is $LOCAL_OCAML_VERSION; requested $OCAML_VERSION"
           echo "Resetting local cache"
           rm -rf ~/local
-        elif [[ ${LOCAL_OPAMBSVERSION:-$OPAMBSVERSION} != $OPAMBSVERSION ]] ; then
-          echo "Cached opam is $LOCAL_OPAMBSVERSION; requested $OPAMBSVERSION"
-          echo "Replacement opam will be downloaded"
-          rm -f ~/local/bin/opam-bootstrap
+        elif [[ -e ~/local/bin/opam-bootstrap ]] ; then
+          if [[ -z ${LOCAL_OPAMBSVERSION:-} ]] ; then
+            ls -l ~/local/bin
+            chmod +x ~/local/bin/opam-bootstrap
+            LOCAL_OPAMBSVERSION="$(~/local/bin/opam-bootstrap --version)"
+            chmod -x ~/local/bin/opam-bootstrap
+          fi
+          if [[ $LOCAL_OPAMBSVERSION != $OPAMBSVERSION ]] ; then
+            echo "Cached opam is $LOCAL_OPAMBSVERSION; requested $OPAMBSVERSION"
+            echo "Replacement opam will be downloaded"
+            rm -f ~/local/bin/opam-bootstrap
+            # The root may well have been written by a newer version of opam
+            rm -rf "$OPAMBSROOT"
+          fi
         fi
       fi
     fi
@@ -158,7 +161,7 @@ EOF
       make lib-pkg
     else
       if [[ ! -x ~/local/bin/ocaml ]] ; then
-        echo -en "travis_fold:start:ocaml\r"
+        (set +x ; echo -en "travis_fold:start:ocaml\r") 2>/dev/null
         wget "http://caml.inria.fr/pub/distrib/ocaml-${OCAML_VERSION%.*}/ocaml-$OCAML_VERSION.tar.gz"
         tar -xzf "ocaml-$OCAML_VERSION.tar.gz"
         cd "ocaml-$OCAML_VERSION"
@@ -183,15 +186,22 @@ EOF
           make world.opt
         fi
         make install
-        echo "LOCAL_OCAML_VERSION=$OCAML_VERSION" > ~/local/versions
-        echo -en "travis_fold:end:ocaml\r"
+        cd ..
+        rm -rf "ocaml-$OCAML_VERSION"
+        write_versions
+        (set +x ; echo -en "travis_fold:end:ocaml\r") 2>/dev/null
       fi
 
       if [[ $OPAM_TEST -eq 1 ]] ; then
-        echo -en "travis_fold:start:opam\r"
+        (set +x ; echo -en "travis_fold:start:opam\r") 2>/dev/null
         if [[ ! -e ~/local/bin/opam-bootstrap ]] ; then
+          os=$( (uname -s || echo unknown) | awk '{print tolower($0)}')
+          if [ "$os" = "darwin" ] ; then
+            os=macos
+          fi
           wget -q -O ~/local/bin/opam-bootstrap \
-               "https://github.com/ocaml/opam/releases/download/$OPAMBSVERSION/opam-$OPAMBSVERSION-$(uname -m)-$(uname -s)"
+            "https://github.com/ocaml/opam/releases/download/$OPAMBSVERSION/opam-$OPAMBSVERSION-$(uname -m)-$os"
+          write_versions
         fi
 
         cp -f ~/local/bin/opam-bootstrap ~/local/bin/opam
@@ -202,7 +212,7 @@ EOF
         else
           init-bootstrap
         fi
-        echo -en "travis_fold:end:opam\r"
+        (set +x ; echo -en "travis_fold:end:opam\r") 2>/dev/null
       fi
     fi
     exit 0
@@ -273,7 +283,7 @@ export OPAMYES=1
 export OCAMLRUNPARAM=b
 
 ( # Run subshell in bootstrap root env to build
-  echo -en "travis_fold:start:build\r"
+  (set +x ; echo -en "travis_fold:start:build\r") 2>/dev/null
   if [[ $OPAM_TEST -eq 1 ]] ; then
     export OPAMROOT=$OPAMBSROOT
     eval $(opam env)
@@ -313,14 +323,14 @@ export OCAMLRUNPARAM=b
     OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make tests ||
       (tail -n 2000 _build/default/tests/fulltest-*.log; echo "-- TESTS FAILED --"; exit 1)
   fi
-  echo -en "travis_fold:end:build\r"
+  (set +x ; echo -en "travis_fold:end:build\r") 2>/dev/null
 )
 
 if [ "$TRAVIS_BUILD_STAGE_NAME" = "Upgrade" ]; then
   OPAM12DIR=~/opam1.2
   CACHE=$OPAM12DIR/cache
   export OPAMROOT=$CACHE/root20
-  echo -en "travis_fold:start:opam12\r"
+  (set +x ; echo -en "travis_fold:start:opam12\r") 2>/dev/null
   if [[ ! -f $CACHE/bin/opam ]]; then
     mkdir -p $CACHE/bin
     wget https://github.com/ocaml/opam/releases/download/1.2.2/opam-1.2.2-x86_64-Linux -O $CACHE/bin/opam
@@ -334,7 +344,7 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Upgrade" ]; then
   else
     cp -r $CACHE/root /tmp/opamroot
   fi
-  echo -en "travis_fold:end:opam12\r"
+  (set +x ; echo -en "travis_fold:end:opam12\r") 2>/dev/null
   set +e
   opam update
   rcode=$?
@@ -357,7 +367,10 @@ fi
     fi
 
     # Test basic actions
-    opam init --bare default git+https://github.com/ocaml/opam-repository#8be4290a
+    # The SHA is fixed so that upstream changes shouldn't affect CI. The SHA needs
+    # to be moved forwards when a new version of OCaml is added to ensure that the
+    # ocaml-system package is available at the correct version.
+    opam init --bare default git+https://github.com/ocaml/opam-repository#8c45759d4
     opam switch create default ocaml-system
     eval $(opam env)
     opam install lwt

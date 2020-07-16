@@ -3,32 +3,15 @@ From: David Allsopp <david.allsopp@metastack.com>
 Date: Fri, 19 Jul 2019 13:14:44 +0100
 Subject: [PATCH] AppVeyor src_ext patches
 
-- Need unreleased flexdll 0.38 to build mccs on mingw.
 - Need unreleased cmdliner 1.0.5 to build man pages on Windows.
 ---
- src_ext/Makefile                                  |   4 ++--
  src_ext/Makefile.sources                          |   4 ++--
  src_ext/dune-cmdliner-src                         |   5 -----
  .../0001-Escape-default-values.patch              | Bin 0 -> 920 bytes
- 4 files changed, 4 insertions(+), 9 deletions(-)
+ 3 files changed, 2 insertions(+), 7 deletions(-)
  delete mode 100644 src_ext/dune-cmdliner-src
  create mode 100644 src_ext/patches/cmdliner.common/0001-Escape-default-values.patch
 
-diff --git a/src_ext/Makefile b/src_ext/Makefile
-index b83b9029..7154900b 100644
---- a/src_ext/Makefile
-+++ b/src_ext/Makefile
-@@ -12,8 +12,8 @@ endif
- URL_ocaml = http://caml.inria.fr/pub/distrib/ocaml-4.07/ocaml-4.07.1.tar.gz
- MD5_ocaml = 0b180b273ce5cc2ac68f347c9b06d06f
- 
--URL_flexdll = https://github.com/alainfrisch/flexdll/archive/0.37.tar.gz
--MD5_flexdll = cc456a89382e60d84130cddd53977486
-+URL_flexdll = https://github.com/dra27/flexdll/archive/linking-c++.tar.gz
-+MD5_flexdll = 75bd0efc328ad9f8f2e01414464d217b
- 
- ifndef FETCH
-   ifneq ($(shell command -v curl 2>/dev/null),)
 diff --git a/src_ext/Makefile.sources b/src_ext/Makefile.sources
 index f21ca4b3..e9830a7b 100644
 --- a/src_ext/Makefile.sources
