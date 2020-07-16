@@ -439,12 +439,16 @@ let packages_status packages =
 (* Install *)
 
 let install_packages_commands_t sys_packages =
+  let yes ?(no=[]) yes r =
+    if OpamStd.Config.env_bool "DEPEXTYES" = Some true then
+      yes @ r else no @ r
+  in
   let packages =
     List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements sys_packages)
   in
   match family () with
-  | Alpine -> ["apk", "add"::packages], None
-  | Arch -> ["pacman", "-S"::"--noconfirm"::packages], None
+  | Alpine -> ["apk", "add"::yes ~no:["-i"] [] packages], None
+  | Arch -> ["pacman", "-S"::yes ["--noconfirm"] packages], None
   | Centos ->
     (* TODO: check if they all declare "rhel" as primary family *)
     (* When opam-packages specify the epel-release package, usually it
@@ -453,24 +457,26 @@ let install_packages_commands_t sys_packages =
     let epel_release = "epel-release" in
     let install_epel rest =
       if List.mem epel_release packages then
-        ["yum", ["install"; epel_release]] @ rest
+        ["yum", "install"::yes ["-y"] [epel_release]] @ rest
       else rest
     in
     install_epel
-      ["yum", "install"::
-              (OpamStd.String.Set.of_list packages
-               |> OpamStd.String.Set.remove epel_release
-               |> OpamStd.String.Set.elements);
+      ["yum", "install"::yes ["-y"]
+                (OpamStd.String.Set.of_list packages
+                 |> OpamStd.String.Set.remove epel_release
+                 |> OpamStd.String.Set.elements);
        "rpm", "-q"::"--whatprovides"::packages], None
-  | Debian -> ["apt-get", "install"::packages], None
-  | Freebsd -> ["pkg", "install"::packages], None
-  | Gentoo -> ["emerge", packages], None
+  | Debian -> ["apt-get", "install"::yes ["-qq"; "-yy"] packages], None
+  | Freebsd -> ["pkg", "install"::yes ["-y"] packages], None
+  | Gentoo -> ["emerge", yes ~no:["-a"] [] packages], None
   | Homebrew ->
-    ["brew", "install"::packages],
+    ["brew", "install"::packages], (* NOTE: Does not have any interactive mode *)
     Some (["HOMEBREW_NO_AUTO_UPDATE","yes"])
-  | Macports -> ["port", "install"::packages], None
-  | Openbsd -> ["pkg_add", packages], None
-  | Suse -> ["zypper", ("install"::packages)], None
+  | Macports ->
+    ["port", "install"::packages], (* NOTE: Does not have any interactive mode *)
+    None
+  | Openbsd -> ["pkg_add", yes ~no:["-i"] ["-I"] packages], None
+  | Suse -> ["zypper", ("install"::yes ["--non-interactive"] packages)], None
 
 let install_packages_commands sys_packages =
   fst (install_packages_commands_t sys_packages)

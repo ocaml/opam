@@ -68,6 +68,8 @@ New option are prefixed with ◈
   * Homebrew: add no auto update env var for install, accept `pkgname` and `pkgnam@version` on query [#4200 @rjbou]
   * Tag packages with missing depexts in Cudf [#4235 @AltGr]
   * Force LC_ALL=C for query commands [#4200 @rjbou]
+  * Put back opam-depext-2.0's behaviour with regards to asking users' consent before installing system packages [#4168 @kit-ty-kate @rjbou]
+  * Add OPAMDEPEXTYES env variable to pass --yes options to system package manaer [#4168 @kit-ty-kate @rjbou]
   * Fix install command dryrun [#4200 @rjbou]
   * ◈ Add --depext-only to install only external dependencies, regardless of config depext status [#4238 @rjbou]
   * Move confirmation message after opam packages install [#4238 @rjbou]
