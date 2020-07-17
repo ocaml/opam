@@ -1585,7 +1585,7 @@ let install =
     if check then
       (let missing =
          OpamPackage.Map.fold (fun _ -> OpamPackage.Name.Set.union)
-           (OpamClient.check_installed st atoms)
+           (OpamClient.check_installed ~build:true ~post:true st atoms)
            (OpamPackage.Name.Set.empty)
        in
        if OpamPackage.Name.Set.is_empty missing then
