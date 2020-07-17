@@ -236,20 +236,38 @@ let packages_status packages =
     in
     compute_sets sys_installed ~sys_available
   | Debian ->
-    let str_pkgs =
-      OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) packages [])
-    in
     let sys_available, sys_provides, _ =
+      let provides_sep = Re.(compile @@ str ", ") in
+      let package_provided str =
+        OpamSysPkg.of_string
+          (match OpamStd.String.cut_at str ' ' with
+           | None -> str
+           | Some (p, _vc) -> p)
+      in
+      (* Output format:
+         >Package: apt
+         >Version: 2.1.7
+         >Installed-Size: 4136
+         >Maintainer: APT Development Team <deity@lists.debian.org>
+         >Architecture: amd64
+         >Replaces: apt-transport-https (<< 1.5~alpha4~), apt-utils (<< 1.3~exp2~)
+         >Provides: apt-transport-https (= 2.1.7)
+         > [...]
+         >
+         The `Provides' field contains provided virtual package(s) by current
+         `Package:'.
+         * manpages.debian.org/buster/apt/apt-cache.8.en.html
+         * www.debian.org/doc/debian-policy/ch-relationships.html#s-virtual
+      *)
       run_query_command "apt-cache"
-        ["search"; names_re ~str_pkgs (); "--names-only"; "--full"]
+        ["search"; names_re (); "--names-only"; "--full"]
       |> List.fold_left (fun (avail, provides, latest) l ->
           if OpamStd.String.starts_with ~prefix:"Package: " l then
             let p = String.sub l 9 (String.length l - 9) in
             p +++ avail, provides, Some (OpamSysPkg.of_string p)
           else if OpamStd.String.starts_with ~prefix:"Provides: " l then
-            let sep = Re.(compile @@ str ", ") in
             let ps =
-              List.map OpamSysPkg.of_string (Re.split ~pos:10 sep l)
+              List.map package_provided (Re.split ~pos:10 provides_sep l)
               |> OpamSysPkg.Set.of_list
             in
             avail ++ ps,
@@ -260,20 +278,11 @@ let packages_status packages =
           else avail, provides, latest)
         (OpamSysPkg.Set.empty, OpamSysPkg.Map.empty, None)
     in
-    let rev_provides =
-      OpamSysPkg.Map.fold (fun p ps ->
-          OpamSysPkg.Set.fold (fun p1 ->
-              OpamSysPkg.Map.update
-                p1 (OpamSysPkg.Set.add p) OpamSysPkg.Set.empty)
-            ps)
-        sys_provides OpamSysPkg.Map.empty
-    in
     let need_inst_check =
-      OpamSysPkg.Set.fold (fun p acc ->
-          match OpamSysPkg.Map.find_opt p rev_provides with
-          | None -> acc
-          | Some ps -> OpamSysPkg.Set.union acc ps)
-        packages packages
+      OpamSysPkg.Map.fold (fun cp vps set ->
+          if OpamSysPkg.Set.(is_empty (inter vps packages)) then set else
+            OpamSysPkg.Set.add cp set
+        ) sys_provides packages
     in
     let str_need_inst_check =
       OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) need_inst_check [])
