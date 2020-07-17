@@ -125,7 +125,8 @@ val build_options: build_options Term.t
 val assume_built: bool Term.t
 
 (* Options common to all path based/related commands, e.g. (un)pin, upgrade,
-   remove, (re)install *)
+   remove, (re)install
+   Disabled *)
 val recurse: bool Term.t
 val subpath: string option Term.t
 

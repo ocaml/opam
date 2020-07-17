@@ -211,9 +211,8 @@ all the packages pinned in the current switch.
 
 `opam install <DIR>` is an automatic way to handle pinning packages whose
 definitions are found in `<DIR>`, synchronise and install them. The `upgrade`,
-`reinstall` and `remove` commands can likewise be used with a directory
-argument to refer to pinned packages. Since `2.1.0~beta`, opam handles lookup
-in subdirectories with `--recurse` and `--subpath` options.
+`reinstall` and `remove` commands can likewise be used with a directory argument
+to refer to pinned packages.
 
 ## Common file format
 
@@ -1105,9 +1104,7 @@ files.
 
 - <a id="opamfield-extra-fields">`x-*: <value>`</a>:
   extra fields prefixed with `x-` can be defined for use by external tools. <span class="opam">opam</span>
-  will ignore them except for some search operations. _Note that_ on 2.1.0, the
-  field `x-subpath` is reserved to specify the subpath of the package (cf.
-  [install manpage](man/opam-install.html#lbAF)).
+  will ignore them except for some search operations.
 
 #### descr
 
