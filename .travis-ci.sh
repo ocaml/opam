@@ -1,6 +1,5 @@
 #!/bin/bash -xue
 
-OPAMBSVERSION=2.1.0-alpha
 OPAMBSROOT=$HOME/.opam.cached
 OPAMBSSWITCH=opam-build
 PATH=~/local/bin:$PATH; export PATH
@@ -38,6 +37,11 @@ else
   fi
 fi
 set -x
+
+write_versions () {
+  echo "LOCAL_OCAML_VERSION=$OCAML_VERSION" > ~/local/versions
+  echo "LOCAL_OPAMBSVERSION=$OPAMBSVERSION" >> ~/local/versions
+}
 
 init-bootstrap () {
   export OPAMROOT=$OPAMBSROOT
@@ -129,10 +133,20 @@ EOF
           echo "Cached compiler is $LOCAL_OCAML_VERSION; requested $OCAML_VERSION"
           echo "Resetting local cache"
           rm -rf ~/local
-        elif [[ ${LOCAL_OPAMBSVERSION:-$OPAMBSVERSION} != $OPAMBSVERSION ]] ; then
-          echo "Cached opam is $LOCAL_OPAMBSVERSION; requested $OPAMBSVERSION"
-          echo "Replacement opam will be downloaded"
-          rm -f ~/local/bin/opam-bootstrap
+        elif [[ -e ~/local/bin/opam-bootstrap ]] ; then
+          if [[ -z ${LOCAL_OPAMBSVERSION:-} ]] ; then
+            ls -l ~/local/bin
+            chmod +x ~/local/bin/opam-bootstrap
+            LOCAL_OPAMBSVERSION="$(~/local/bin/opam-bootstrap --version)"
+            chmod -x ~/local/bin/opam-bootstrap
+          fi
+          if [[ $LOCAL_OPAMBSVERSION != $OPAMBSVERSION ]] ; then
+            echo "Cached opam is $LOCAL_OPAMBSVERSION; requested $OPAMBSVERSION"
+            echo "Replacement opam will be downloaded"
+            rm -f ~/local/bin/opam-bootstrap
+            # The root may well have been written by a newer version of opam
+            rm -rf "$OPAMBSROOT"
+          fi
         fi
       fi
 
@@ -183,7 +197,7 @@ EOF
         make install
         cd ..
         rm -rf "ocaml-$OCAML_VERSION"
-        echo "LOCAL_OCAML_VERSION=$OCAML_VERSION" > ~/local/versions
+        write_versions
         (set +x ; echo -en "travis_fold:end:ocaml\r") 2>/dev/null
       fi
 
@@ -196,6 +210,7 @@ EOF
           fi
           wget -q -O ~/local/bin/opam-bootstrap \
             "https://github.com/ocaml/opam/releases/download/$OPAMBSVERSION/opam-$OPAMBSVERSION-$(uname -m)-$os"
+          write_versions
         fi
 
         cp -f ~/local/bin/opam-bootstrap ~/local/bin/opam
