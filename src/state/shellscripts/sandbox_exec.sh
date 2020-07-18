@@ -23,11 +23,11 @@ if [ -z ${TMPDIR+x} ]; then
   # directory differently; the latter should be made readable/writable
   # too and getconf seems to be a robust way to get it
   if [ -z /usr/bin/getconf ]; then
-    TMP=`getconf DARWIN_USER_TEMP_DIR`
-    add_mounts rw $TMP
+    TMP=$(getconf DARWIN_USER_TEMP_DIR)
+    add_mounts rw "$TMP"
   fi
 else
-  add_mounts rw $TMPDIR
+  add_mounts rw "$TMPDIR"
 fi
 
 # C compilers using `ccache` will write to a shared cache directory
@@ -44,14 +44,14 @@ add_ccache_mount() {
       done
       CCACHE_DIR=${CCACHE_DIR-$HOME/.ccache}
       ccache_dir=${ccache_dir-$CCACHE_DIR}
-      add_mounts rw $ccache_dir
+      add_mounts rw "$ccache_dir"
   fi
 }
 
 add_dune_cache_mount() {
   DUNE_CACHE=${XDG_CACHE_HOME:-$HOME/.cache}/dune
-  mkdir -p ${DUNE_CACHE}
-  add_mounts rw $DUNE_CACHE
+  mkdir -p "${DUNE_CACHE}"
+  add_mounts rw "$DUNE_CACHE"
  }
 
 # This case-switch should remain identical between the different sandbox implems
