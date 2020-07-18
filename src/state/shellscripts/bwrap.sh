@@ -71,7 +71,7 @@ add_ccache_mount() {
       done
       CCACHE_DIR=${CCACHE_DIR-$HOME/.ccache}
       ccache_dir=${ccache_dir-$CCACHE_DIR}
-      add_mounts rw $ccache_dir
+      add_mounts rw "$ccache_dir"
   fi
 }
 
@@ -80,9 +80,9 @@ add_dune_cache_mount() {
   u_dune_cache=$u_cache/dune
   cache=$(readlink -m "$u_cache")
   dune_cache=$cache/dune
-  dune_cache=$(readlink -m $u_dune_cache)
-  mkdir -p ${dune_cache}
-  add_mount rw $u_dune_cache $dune_cache
+  dune_cache=$(readlink -m "$u_dune_cache")
+  mkdir -p "${dune_cache}"
+  add_mount rw "$u_dune_cache" "$dune_cache"
 }
 
 # This case-switch should remain identical between the different sandbox implems
@@ -91,7 +91,7 @@ case "$COMMAND" in
     build)
         # mount unusual path in ro
         if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
-           add_mounts ro $(echo ${OPAM_USER_PATH_RO} | sed 's|:| |g')
+           add_mounts ro $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
         fi
         add_mounts ro "$OPAM_SWITCH_PREFIX"
         add_mounts rw "$PWD"
@@ -101,7 +101,7 @@ case "$COMMAND" in
     install)
         # mount unusual path in ro
         if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
-           add_mounts ro  $(echo ${OPAM_USER_PATH_RO} | sed 's|:| |g')
+           add_mounts ro  $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
         fi
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
@@ -110,7 +110,7 @@ case "$COMMAND" in
     remove)
         # mount unusual path in ro
         if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
-           add_mounts ro $(echo ${OPAM_USER_PATH_RO} | sed 's|:| |g')
+           add_mounts ro $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
         fi
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
