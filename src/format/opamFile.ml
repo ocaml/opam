@@ -1055,7 +1055,7 @@ module ConfigSyntax = struct
   let internal = "config"
   (* This version is used as a marker for the whole opam root, so it's not
      strictly speaking the actual format of the config file *)
-  let format_version = OpamVersion.of_string "2.0"
+  let format_version = OpamVersion.of_string "2.1"
 
   type t = {
     opam_version : opam_version;
