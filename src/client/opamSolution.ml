@@ -123,6 +123,7 @@ let check_availability ?permissive t set atoms =
   let available = OpamPackage.to_map set in
   let check_depexts atom =
     let pkgs = OpamFormula.packages_of_atoms t.packages [atom] in
+    if OpamPackage.Set.is_empty pkgs then None else
     match OpamSwitchState.depexts_unavailable
             t (OpamPackage.Set.max_elt pkgs) with
     | Some missing ->
