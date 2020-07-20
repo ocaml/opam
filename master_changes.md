@@ -81,6 +81,10 @@ New option are prefixed with ◈
 ## Env
   * Fix `OPAMSWITCH` empty string setting, consider as unset [#4237 @rjbou]
 
+## Sandbox
+  * No error when linked directory doesn't exist (e.g. XDG defined) [#4278 @kit-ty-kate]
+  * Add quotew to avoid space unwanted behaviors [#4278 @kit-ty-kate]
+
 ## Remove
   * Fix autoremove env var handling [#4219 @rjbou - fix #4217]
 
