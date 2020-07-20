@@ -33,6 +33,7 @@ New option are prefixed with ◈
   * ✘ Reject (shell) character on switch names [#4237 @rjbou - fix #4231]
   * Add missing depext to unavailable reasons [#4194 @rjbou - fix #4176]
     * Fix not found error [#4279 @rjbou]
+  * ✘ Bump config file version to 2.1 (new depext fields) [#4280 @rjbou - fix #4266]
 
 
 ## Pin
