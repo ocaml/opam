@@ -44,6 +44,7 @@ write_versions () {
 }
 
 init-bootstrap () {
+  set -e
   export OPAMROOT=$OPAMBSROOT
   # The system compiler will be picked up
   opam init --yes --no-setup git+https://github.com/ocaml/opam-repository#$OPAM_REPO_SHA
@@ -90,6 +91,11 @@ please run make configure and fixup the commit"
       ERROR=1
     fi
   fi
+}
+
+unset-dev-version () {
+  # unset git versioning to allow OPAMYES use for upgrade
+  sed -i  -e 's/\(.*with-stdout-to get_git_version.ml.*@@\).*/\1 \\"let version = None\\"")))/' src/client/dune
 }
 
 case "$TARGET" in
@@ -322,8 +328,7 @@ export OCAMLRUNPARAM=b
     make lib-ext
   fi
   if [ "$TRAVIS_BUILD_STAGE_NAME" = "Upgrade" ]; then
-    # unset git versioning to allow OPAMYES use for upgrade
-    sed -i  -e 's/\(.*with-stdout-to get_git_version.ml.*@@\).*/\1 \\"let version = None\\"")))/' src/client/dune
+    unset-dev-version
   fi
   make all admin
 
@@ -331,7 +336,31 @@ export OCAMLRUNPARAM=b
   make install
 
   if [ "$OPAM_TEST" = "1" ]; then
+    # test if an upgrade is needed
+    set +e
+    opam list 2> /dev/null
+    rcode=$?
+    if [ $rcode -eq 10 ]; then
+      echo "Recompiling for an opam root upgrade"
+      unset-dev-version
+      make all admin
+      rm -f ~/local/bin/opam
+      make install
+      opam list 2> /dev/null
+      rcode=$?
+      set -e
+      if [ $rcode -ne 10 ]; then
+        echo -e "\e[31mBad return code $rcode, should be 10\e[0m";
+        exit $rcode
+      fi
+      # Disable sandbox because of the init done in the forced upgrade
+      opam option --global 'wrap-build-commands=[]'
+      opam option --global 'wrap-install-commands=[]'
+      opam option --global 'wrap-remove-commands=[]'
+    fi
+    set -e
     make distclean
+
     for pin in core format solver repository state client ; do
       opam pin add --kind=path opam-$pin . --yes
     done
