@@ -77,6 +77,7 @@ src/manifest/install.inc
 src/stubs/cc64
 src/stubs/dune
 src/stubs/c-flags.sexp
+src/core/c-flags.sexp
 # doc
 doc/dev-manual/*aux
 doc/dev-manual/*.html

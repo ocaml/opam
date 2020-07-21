@@ -278,6 +278,9 @@ AS_IF([test "x${with_private_runtime}" != "xno"],[
 ],[CONF_MANIFEST_O=])
 AC_SUBST(CONF_MANIFEST_O)
 
+AC_CHECK_HEADER([sys/utsname.h],
+  [AC_CHECK_FUNC([uname], [AC_SUBST(HAS_UNAME,-DHAS_UNAME)])])
+
 echo
 
 AC_CHECK_OCAML_PKG([unix])
@@ -358,6 +361,7 @@ AC_CONFIG_FILES(
   Makefile.config
   src/ocaml-flags-configure.sexp
   src/stubs/c-flags.sexp
+  src/core/c-flags.sexp
 )
 AC_OUTPUT
 
