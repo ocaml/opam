@@ -319,6 +319,8 @@ export OCAMLRUNPARAM=b
   (set +x ; echo -en "travis_fold:start:build\r") 2>/dev/null
   if [[ $OPAM_TEST -eq 1 ]] ; then
     export OPAMROOT=$OPAMBSROOT
+    # If the cached root is newer, regenerate a binary compatible root
+    opam env || { rm -rf $OPAMBSROOT; init-bootstrap; }
     eval $(opam env)
   fi
 
