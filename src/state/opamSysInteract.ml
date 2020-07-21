@@ -236,10 +236,57 @@ let packages_status packages =
     in
     compute_sets sys_installed ~sys_available
   | Debian ->
-    let str_pkgs =
-      OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) packages [])
+    let sys_available, sys_provides, _ =
+      let provides_sep = Re.(compile @@ str ", ") in
+      let package_provided str =
+        OpamSysPkg.of_string
+          (match OpamStd.String.cut_at str ' ' with
+           | None -> str
+           | Some (p, _vc) -> p)
+      in
+      (* Output format:
+         >Package: apt
+         >Version: 2.1.7
+         >Installed-Size: 4136
+         >Maintainer: APT Development Team <deity@lists.debian.org>
+         >Architecture: amd64
+         >Replaces: apt-transport-https (<< 1.5~alpha4~), apt-utils (<< 1.3~exp2~)
+         >Provides: apt-transport-https (= 2.1.7)
+         > [...]
+         >
+         The `Provides' field contains provided virtual package(s) by current
+         `Package:'.
+         * manpages.debian.org/buster/apt/apt-cache.8.en.html
+         * www.debian.org/doc/debian-policy/ch-relationships.html#s-virtual
+      *)
+      run_query_command "apt-cache"
+        ["search"; names_re (); "--names-only"; "--full"]
+      |> List.fold_left (fun (avail, provides, latest) l ->
+          if OpamStd.String.starts_with ~prefix:"Package: " l then
+            let p = String.sub l 9 (String.length l - 9) in
+            p +++ avail, provides, Some (OpamSysPkg.of_string p)
+          else if OpamStd.String.starts_with ~prefix:"Provides: " l then
+            let ps =
+              List.map package_provided (Re.split ~pos:10 provides_sep l)
+              |> OpamSysPkg.Set.of_list
+            in
+            avail ++ ps,
+            (match latest with
+             | Some p -> OpamSysPkg.Map.add p ps provides
+             | None -> provides (* Bad apt-cache output ?? *)),
+            None
+          else avail, provides, latest)
+        (OpamSysPkg.Set.empty, OpamSysPkg.Map.empty, None)
     in
-    (* First query regular package *)
+    let need_inst_check =
+      OpamSysPkg.Map.fold (fun cp vps set ->
+          if OpamSysPkg.Set.(is_empty (inter vps packages)) then set else
+            OpamSysPkg.Set.add cp set
+        ) sys_provides packages
+    in
+    let str_need_inst_check =
+      OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) need_inst_check [])
+    in
     let sys_installed =
       (* ouput:
          >ii  uim-gtk3                 1:1.8.8-6.1  amd64    Universal ...
@@ -255,66 +302,20 @@ let packages_status packages =
               ])
       in
       (* discard stderr as just nagging *)
-      run_command ~discard_err:true "dpkg-query" ("-l" :: str_pkgs)
+      run_command ~discard_err:true "dpkg-query" ("-l" :: str_need_inst_check)
       |> snd
       |> with_regexp_sgl re_pkg
     in
-    let sys_available =
-      run_query_command "apt-cache"
-        ["search"; names_re ~str_pkgs (); "--names-only"]
-      |> List.fold_left (fun avail l ->
-          match OpamStd.String.cut_at l ' ' with
-          | Some (pkg, _) -> pkg +++ avail
-          | None ->  avail)
-        OpamSysPkg.Set.empty
+    let sys_installed =
+      (* Resolve installed "provides" packages;
+         assumes provides are not recursive *)
+      OpamSysPkg.Set.fold (fun p acc ->
+          match OpamSysPkg.Map.find_opt p sys_provides with
+          | None -> acc
+          | Some ps -> OpamSysPkg.Set.union acc ps)
+        sys_installed sys_installed
     in
     compute_sets sys_installed ~sys_available
-  (* Disable for time saving
-        let installed =
-          if OpamSysPkg.Set.is_empty not_found then
-            installed
-          else
-          (* If package are not_found look for virtual package. *)
-          let resolve_virtual name =
-            let lines =
-              run_query_command "apt-cache"
-                ["--names-only"; "search"; "^"^name^"$"]
-                (* name need to be escaped, its a regexp *)
-            in
-            List.fold_left
-              (fun acc l -> match OpamStd.String.split l ' ' with
-                 | pkg :: _ ->
-                 pkg +++ acc
-                 | [] -> acc)
-              OpamSysPkg.Set.empty lines
-          in
-          let virtual_map =
-            OpamSysPkg.Set.fold (fun vpkg acc ->
-                OpamSysPkg.Set.fold (fun pkg acc ->
-                    let old =
-                      try OpamSysPkg.Map.find pkg acc
-                      with Not_found -> OpamSysPkg.Set.empty
-                    in
-                    OpamSysPkg.Map.add pkg
-                    (OpamSysPkg.Set.add (OpamSysPkg.of_string vpkg) old) acc)
-                  (resolve_virtual vpkg)acc)
-              not_found OpamSysPkg.Map.empty
-          in
-          let real_packages =
-            List.map fst (OpamSysPkg.Map.bindings virtual_map)
-          in
-          let dpkg_args pkgs = if pkgs = [] then [] else "-l" :: pkgs in
-          let lines = run_query_command "dpkg-query" (dpkg_args real_packages) in
-          List.fold_left
-            (fun acc l -> match OpamStd.String.split l ' ' with
-               | [pkg;_;_;"installed"] ->
-                 (match OpamSysPkg.Map.find_opt pkg virtual_map with
-                  | Some p -> p ++ acc
-                  | None -> acc)
-               | _ -> acc)
-            installed lines
-        in
-  *)
   | Freebsd ->
     let sys_installed =
       run_query_command "pkg" ["query"; "%n"]

@@ -77,6 +77,7 @@ New option are prefixed with ◈
   * ◈ Add --depext-only to install only external dependencies, regardless of config depext status [#4238 @rjbou]
   * Move confirmation message after opam packages install [#4238 @rjbou]
   * Error if '--depext-only' is given with '--assume-depexts' or '--no-depexts'
+  * Handle debian virtual packages [#4269 @AltGr @rjbou - fix #4251]
 
 ## Env
   * Fix `OPAMSWITCH` empty string setting, consider as unset [#4237 @rjbou]
