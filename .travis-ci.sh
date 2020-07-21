@@ -322,8 +322,8 @@ export OCAMLRUNPARAM=b
     make lib-ext
   fi
   if [ "$TRAVIS_BUILD_STAGE_NAME" = "Upgrade" ]; then
-    # unset git versionning to allow OPAMYES use for upgrade
-    sed -i  -e 's/\(.*with-stdout-to get-git-version.ml.*@@\).*/\1 \\"let version = None\\"")))/' src/client/dune
+    # unset git versioning to allow OPAMYES use for upgrade
+    sed -i  -e 's/\(.*with-stdout-to get_git_version.ml.*@@\).*/\1 \\"let version = None\\"")))/' src/client/dune
   fi
   make all admin
 
