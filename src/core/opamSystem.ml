@@ -386,12 +386,24 @@ let t_resolve_command =
     else fun f ->
       try
         let open Unix in
-        let uid = getuid() and groups = Array.to_list(getgroups()) in
+        let uid = geteuid () in
+        let groups = OpamStd.IntSet.of_list (getegid () :: Array.to_list (getgroups ())) in
         let {st_uid; st_gid; st_perm; _} = stat f in
-        let mask = 0o001
-                   lor (if uid = st_uid then 0o100 else 0)
-                   lor (if List.mem st_gid groups then 0o010 else 0) in
-        (st_perm land mask) <> 0
+        let mask =
+          if uid = st_uid then
+            0o100
+          else if OpamStd.IntSet.mem st_gid groups then
+            0o010
+          else
+            0o001
+        in
+        if (st_perm land mask) <> 0 then
+          true
+        else
+          match OpamACL.get_acl_executable_info f st_uid with
+          | None -> false
+          | Some [] -> true
+          | Some gids -> OpamStd.IntSet.(not (is_empty (inter (of_list gids) groups)))
       with e -> OpamStd.Exn.fatal e; false
   in
   let resolve ?dir env name =
@@ -421,15 +433,17 @@ let t_resolve_command =
         name ^ ".exe"
       else name
     in
-    let cmdname =
-      let open OpamStd in
-      List.find_opt (fun path ->
-          check_perms (Filename.concat path name)
-        ) path |> Option.map (fun path -> Filename.concat path name)
+    let possibles = OpamStd.List.filter_map (fun path ->
+        let candidate = Filename.concat path name in
+        if Sys.file_exists candidate then Some candidate else None) path
     in
-    match cmdname with
-    | Some cmd -> `Cmd cmd
-    | None -> `Not_found
+    match List.find check_perms possibles with
+    | cmdname -> `Cmd cmdname
+    | exception Not_found ->
+      if possibles = [] then
+        `Not_found
+      else
+        `Denied
   in
   fun ?(env=default_env) ?dir name ->
     resolve env ?dir name

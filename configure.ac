@@ -55,6 +55,10 @@ AC_ARG_WITH([mccs],
                  [Compile without a built-in Cudf solver (only works if 'mccs' is not otherwise installed)]),[],[MCCS_DEFAULT=yes]
 )
 
+AC_ARG_WITH([libacl],
+  AC_HELP_STRING([--with-libacl],
+                 [Compile opam with libacl support]),,[with_libacl=auto])
+
 AC_ARG_WITH([private_runtime],
   AC_HELP_STRING([--with-private-runtime],
                  [For a mingw-w64 build, manifest the runtime DLLs locally in Opam.Runtime.arch]),,[with_private_runtime=no]
@@ -138,6 +142,23 @@ AS_IF([test "x${enable_developer_mode}" = "xyes"],[
 
 AS_IF([test "x${with_mccs}" = "xno"], [AC_SUBST(MCCS_ENABLED,false)], [AC_SUBST(MCCS_ENABLED,true)])
 
+AS_IF([test "x${with_libacl}" != "xno"],[
+  have_libacl=yes
+  AC_CHECK_HEADER([acl/libacl.h],,[have_libacl=no])
+  AC_SEARCH_LIBS([acl_get_perm],[acl],,[have_libacl=no])
+  AS_IF([test "x${SYSTEM}" = "xcygwin"],[
+    AS_IF([test "x${have_libacl}" = "xno"],[AC_MSG_ERROR([opam on Cygwin requires libacl])],[with_libacl=yes])
+  ])
+  AS_IF([test "x${with_libacl}${have_libacl}" = "xyesno"],[AC_MSG_ERROR([libacl not found])])
+])
+AS_IF([test "x${with_libacl}" = "xyes"],[
+  AS_IF([test "x${ac_cv_search_acl_get_perm}" = "xnone required"],[
+    AC_SUBST(CONF_LIBACL_LINK,[])
+  ],[
+    AC_SUBST(CONF_LIBACL_LINK,[${ac_cv_search_acl_get_perm}])
+  ])
+])
+
 CONF_OCAMLFLAGS="-w -67"
 
 AS_IF([test "x${CI}" != "x"], [
@@ -171,8 +192,8 @@ AS_IF([ test ${WIN32} -eq 1 ],[
       AS_IF([ test "$ARCH" = "i386" ],[T_CC64=x86_64-w64-mingw32-gcc],[T_CC64=i686-w64-mingw32-gcc])])
     AC_CHECK_TOOL(CC64,[${T_CC64}],[no])
     AS_IF([ test "x${CC64}" != "xno" ],[
-      echo "${CC64} -o " > src/stubs/cc64
-      echo " -Wdeclaration-after-statement " >> src/stubs/cc64
+      echo "${CC64} -o " > src/stubs/win32/cc64
+      echo " -Wdeclaration-after-statement " >> src/stubs/win32/cc64
     ])
   ],[
     AC_MSG_CHECKING([whether Microsoft Linker needs a PATH shim])
@@ -196,14 +217,14 @@ AS_IF([ test ${WIN32} -eq 1 ],[
       AC_MSG_RESULT([from $MSVS_NAME])
       CL_FULL="`PATH="${MSVS_PATH}:${PATH}" which cl | cygpath -f - -w`"
       MSVS_PATH="`echo "${MSVS_PATH}" | cygpath -f - -wp`"
-      echo "cl /nologo /Fe" > src/stubs/cc64
-      echo " " >> src/stubs/cc64
-      echo "PATH" >> src/stubs/cc64
-      echo "${MSVS_PATH}" >> src/stubs/cc64
-      echo "LIB" >> src/stubs/cc64
-      echo "${MSVS_LIB}" >> src/stubs/cc64
-      echo "INCLUDE" >> src/stubs/cc64
-      echo "${MSVS_INC}" >> src/stubs/cc64
+      echo "cl /nologo /Fe" > src/stubs/win32/cc64
+      echo " " >> src/stubs/win32/cc64
+      echo "PATH" >> src/stubs/win32/cc64
+      echo "${MSVS_PATH}" >> src/stubs/win32/cc64
+      echo "LIB" >> src/stubs/win32/cc64
+      echo "${MSVS_LIB}" >> src/stubs/win32/cc64
+      echo "INCLUDE" >> src/stubs/win32/cc64
+      echo "${MSVS_INC}" >> src/stubs/win32/cc64
     ])
   ])
   AS_IF([ test "x${CC64}" = "xno" ],[
@@ -358,6 +379,7 @@ AC_CONFIG_FILES(
   Makefile.config
   src/ocaml-flags-configure.sexp
   src/stubs/c-flags.sexp
+  src/stubs/libacl/c-libraries.sexp
 )
 AC_OUTPUT
 
@@ -373,11 +395,17 @@ AS_IF([test "x${with_private_runtime}" != "xno"],[
   ])
 ])
 
-rm -f src/stubs/dune
+rm -f src/stubs/win32/dune
 AS_IF([ test ${WIN32} -eq 1],[
-  cd src/stubs
+  cd src/stubs/win32
   ${LN_S} -f dune-win32 dune
-  cd ../..
+  cd ../../..
+])
+rm -f src/stubs/libacl/dune
+AS_IF([ test "x${with_libacl}" = "xyes" ],[
+  cd src/stubs/libacl
+  ${LN_S} -f dune-libacl dune
+  cd ../../..
 ])
 
 echo

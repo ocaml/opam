@@ -46,7 +46,7 @@ write_versions () {
 init-bootstrap () {
   export OPAMROOT=$OPAMBSROOT
   # The system compiler will be picked up
-  opam init --yes --no-setup
+  opam init --yes --no-setup git+https://github.com/ocaml/opam-repository#$OPAM_REPO_SHA
   eval $(opam env)
   opam update
   CURRENT_SWITCH=$(opam config var switch)
@@ -398,7 +398,7 @@ fi
     # The SHA is fixed so that upstream changes shouldn't affect CI. The SHA needs
     # to be moved forwards when a new version of OCaml is added to ensure that the
     # ocaml-system package is available at the correct version.
-    opam init --bare default git+https://github.com/ocaml/opam-repository#8c45759d4
+    opam init --bare default git+https://github.com/ocaml/opam-repository#$OPAM_REPO_SHA
     opam switch create default ocaml-system
     eval $(opam env)
     opam install lwt

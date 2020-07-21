@@ -27,6 +27,8 @@ script:
 env:
   global:
   - OPAMBSVERSION=2.1.0-alpha
+    # This should be identical to the value in appveyor.yml
+  - OPAM_REPO_SHA=8c45759d4
 
 jobs:
   include:

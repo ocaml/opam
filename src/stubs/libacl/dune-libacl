@@ -1,0 +1,19 @@
+(library
+  (name            opam_stubs_libacl)
+  (public_name     opam-core.libacl)
+  (synopsis        "OCaml Package Manager libacl C stubs")
+  (flags           (:standard
+                   (:include ../../ocaml-flags-standard.sexp)
+                   (:include ../../ocaml-flags-configure.sexp)
+                   (:include ../../ocaml-context-flags.sexp)))
+  (modules         opamlibACL)
+  (c_names         opamACL)
+  (c_flags         (:standard
+                   (:include ../c-flags.sexp)))
+  (c_library_flags (:include c-libraries.sexp))
+  (wrapped         false))
+
+(rule
+  (targets c-libraries.sexp)
+  (mode    fallback)
+  (action  (with-stdout-to %{targets} (echo "()"))))

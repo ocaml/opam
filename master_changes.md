@@ -99,8 +99,9 @@ New option are prefixed with ◈
   * Disable chrono when timestamps are disables [#4206 @rjbou]
   * Expose some functionality in the `OpamAction`, `OpamPath` and `OpamSwitchState`
     modules for use without a `switch` value [#4147 @timberston]
-    * Path: introduce a functor to permit replicating switch layout in different contexts
+  * Path: introduce a functor to permit replicating switch layout in different contexts
   * Std: Add map_reduce to Set and Map [#4263 @AltGr]
+  * Fix regression in command resolution from #4072 [#4265 @dra27]
 
 ## Solver
   * Fix Cudf generation for compat with external solvers [#4261 @AltGr]

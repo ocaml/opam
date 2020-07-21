@@ -1,0 +1,4 @@
+(rule
+  (targets c-flags.sexp)
+  (mode    fallback)
+  (action  (with-stdout-to %{targets} (echo "()"))))

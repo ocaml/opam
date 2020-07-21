@@ -79,7 +79,7 @@ clean:
 distclean: clean clean-ext
 	rm -rf autom4te.cache bootstrap
 	rm -f Makefile.config config.log config.status aclocal.m4
-	rm -f src/*.META src/*/.merlin src/manifest/dune src/manifest/install.inc src/stubs/dune src/stubs/cc64 src/ocaml-flags-configure.sexp
+	rm -f src/*.META src/*/.merlin src/manifest/dune src/manifest/install.inc src/stubs/libacl/dune src/stubs/win32/dune src/stubs/win32/cc64 src/ocaml-flags-configure.sexp src/stubs/libacl/c-libraries.sexp
 	rm -f src/client/linking.sexp src/stubs/c-flags.sexp src/core/developer src/core/version
 
 OPAMINSTALLER_FLAGS = --prefix "$(DESTDIR)$(prefix)"
