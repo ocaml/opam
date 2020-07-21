@@ -22,13 +22,20 @@ let command_name = None
 
 let default_criteria = {
   crit_default = "-removed,\
+                  -count[hidden-version,changed],\
                   -count[version-lag,request],\
                   -count[version-lag,changed],\
+                  -count[missing-depexts,changed],\
                   -changed";
   crit_upgrade = "-removed,\
+                  -count[hidden-version,changed],\
                   -count[version-lag,solution],\
+                  -count[missing-depexts,changed],\
                   -new";
-  crit_fixup = "-changed,-count[version-lag,solution]";
+  crit_fixup = "-changed,\
+                -count[hidden-version,changed],\
+                -count[version-lag,solution],\
+                -count[missing-depexts,changed]";
   crit_best_effort_prefix = Some "+count[opam-query,solution],";
 }
 
