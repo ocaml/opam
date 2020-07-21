@@ -105,8 +105,8 @@ New option are prefixed with ◈
 ## Solver
   * Fix Cudf generation for compat with external solvers [#4261 @AltGr]
   * Check for a solution before calling the solver [#4263 @AltGr]
-  * Add the package flag 'hidden-version' to discourage selection by the solver [@AltGr]
-  * Tweak the default criteria to handle 'missing-depexts' and 'hidden-version' flags [@AltGr]
+  * Add the package flag 'hidden-version' to discourage selection by the solver [#4281 @AltGr]
+  * Tweak the default criteria to handle 'missing-depexts' and 'hidden-version' flags [#4281 @AltGr]
 
 ## Test
   * Add show cram test [#4206 @rjbou]
