@@ -380,6 +380,12 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Upgrade" ]; then
     echo "[31mBad return code $rcode, should be 10[0m";
     exit $rcode
   fi
+  opam_version=$(sed -ne 's/opam-version: *//p' $OPAMROOT/config)
+  if [ "$opam_version" = '"1.2"' ]; then
+    echo -e "\e[31mUpgrade failed, opam-root is still 1.2\e[0m";
+    cat $OPAMROOT/config
+    exit 2
+  fi
   exit 0
 fi
 
