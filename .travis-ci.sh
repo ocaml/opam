@@ -94,8 +94,8 @@ please run make configure and fixup the commit"
 }
 
 unset-dev-version () {
-  # unset git versioning to allow OPAMYES use for upgrade
-  sed -i  -e 's/\(.*with-stdout-to get_git_version.ml.*@@\).*/\1 \\"let version = None\\"")))/' src/client/dune
+  # disable git versioning to allow OPAMYES use for upgrade
+  touch src/client/no-git-version
 }
 
 case "$TARGET" in
