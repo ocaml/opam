@@ -62,6 +62,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Solver
   * Allow Z3 backend to return sub-optimal solutions on timeout, add `OPAMSOLVERALLOWSUBOPTIMAL` environment variable [#4289 @AltGr]
+  * Add an optional solver relying on opam-0install-cudf [#4240 @kit-ty-kate]
 
 ## Internal
   *
