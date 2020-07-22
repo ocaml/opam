@@ -62,7 +62,7 @@ init-bootstrap () {
     eval $(opam env)
     # extlib is installed, since UChar.cmi causes problems with the search
     # order. See also the removal of uChar and uTF8 in src_ext/jbuild-extlib-src
-    opam install ssl cmdliner dose3 cudf.0.9 opam-file-format re extlib dune 'mccs>=1.1+5' --yes
+    opam install . --deps-only --yes
   fi
   rm -f "$OPAMBSROOT"/log/*
 }
