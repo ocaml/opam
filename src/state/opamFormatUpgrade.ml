@@ -1046,9 +1046,9 @@ let from_2_0_beta_to_2_0_beta5 root conf =
 
 let from_2_0_beta5_to_2_0 _ conf = conf
 
-let _v2_1 = OpamVersion.of_string "2.1"
+let v2_1 = OpamVersion.of_string "2.1"
 
-let _from_2_0_to_2_1 _ conf = conf
+let from_2_0_to_2_1 _ conf = conf
 
 let latest_version = OpamFile.Config.format_version
 
@@ -1111,7 +1111,8 @@ let as_necessary global_lock root config =
         update_to v2_0_alpha3 from_2_0_alpha2_to_2_0_alpha3 |>
         update_to v2_0_beta  from_2_0_alpha3_to_2_0_beta |>
         update_to v2_0_beta5 from_2_0_beta_to_2_0_beta5 |>
-        update_to v2_0       from_2_0_beta5_to_2_0
+        update_to v2_0       from_2_0_beta5_to_2_0 |>
+        update_to v2_1       from_2_0_to_2_1
       in
       OpamConsole.msg "Format upgrade done.\n";
       raise (Upgrade_done config)

@@ -44,6 +44,7 @@ write_versions () {
 }
 
 init-bootstrap () {
+  set -e
   export OPAMROOT=$OPAMBSROOT
   # The system compiler will be picked up
   opam init --yes --no-setup git+https://github.com/ocaml/opam-repository#$OPAM_REPO_SHA
@@ -61,7 +62,7 @@ init-bootstrap () {
     eval $(opam env)
     # extlib is installed, since UChar.cmi causes problems with the search
     # order. See also the removal of uChar and uTF8 in src_ext/jbuild-extlib-src
-    opam install ssl cmdliner dose3 cudf.0.9 opam-file-format re extlib dune 'mccs>=1.1+5' --yes
+    opam install . --deps-only --yes
   fi
   rm -f "$OPAMBSROOT"/log/*
 }
@@ -90,6 +91,11 @@ please run make configure and fixup the commit"
       ERROR=1
     fi
   fi
+}
+
+unset-dev-version () {
+  # disable git versioning to allow OPAMYES use for upgrade
+  touch src/client/no-git-version
 }
 
 case "$TARGET" in
@@ -313,6 +319,8 @@ export OCAMLRUNPARAM=b
   (set +x ; echo -en "travis_fold:start:build\r") 2>/dev/null
   if [[ $OPAM_TEST -eq 1 ]] ; then
     export OPAMROOT=$OPAMBSROOT
+    # If the cached root is newer, regenerate a binary compatible root
+    opam env || { rm -rf $OPAMBSROOT; init-bootstrap; }
     eval $(opam env)
   fi
 
@@ -322,8 +330,7 @@ export OCAMLRUNPARAM=b
     make lib-ext
   fi
   if [ "$TRAVIS_BUILD_STAGE_NAME" = "Upgrade" ]; then
-    # unset git versionning to allow OPAMYES use for upgrade
-    sed -i  -e 's/\(.*with-stdout-to get-git-version.ml.*@@\).*/\1 \\"let version = None\\"")))/' src/client/dune
+    unset-dev-version
   fi
   make all admin
 
@@ -331,7 +338,31 @@ export OCAMLRUNPARAM=b
   make install
 
   if [ "$OPAM_TEST" = "1" ]; then
+    # test if an upgrade is needed
+    set +e
+    opam list 2> /dev/null
+    rcode=$?
+    if [ $rcode -eq 10 ]; then
+      echo "Recompiling for an opam root upgrade"
+      unset-dev-version
+      make all admin
+      rm -f ~/local/bin/opam
+      make install
+      opam list 2> /dev/null
+      rcode=$?
+      set -e
+      if [ $rcode -ne 10 ]; then
+        echo -e "\e[31mBad return code $rcode, should be 10\e[0m";
+        exit $rcode
+      fi
+      # Disable sandbox because of the init done in the forced upgrade
+      opam option --global 'wrap-build-commands=[]'
+      opam option --global 'wrap-install-commands=[]'
+      opam option --global 'wrap-remove-commands=[]'
+    fi
+    set -e
     make distclean
+
     for pin in core format solver repository state client ; do
       opam pin add --kind=path opam-$pin . --yes
     done
@@ -379,6 +410,12 @@ if [ "$TRAVIS_BUILD_STAGE_NAME" = "Upgrade" ]; then
   if [ $rcode -ne 10 ]; then
     echo "[31mBad return code $rcode, should be 10[0m";
     exit $rcode
+  fi
+  opam_version=$(sed -ne 's/opam-version: *//p' $OPAMROOT/config)
+  if [ "$opam_version" = '"1.2"' ]; then
+    echo -e "\e[31mUpgrade failed, opam-root is still 1.2\e[0m";
+    cat $OPAMROOT/config
+    exit 2
   fi
   exit 0
 fi
