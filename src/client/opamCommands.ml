@@ -2865,10 +2865,10 @@ let pin ?(unpin_only=false) () =
     mk_flag ["normalise"]
       (Printf.sprintf
          "Print list of available package to pin in format \
-          `name.version%curl%csubpath`, that is comprehensible by `opam pin \
+          `name.version%curl`, that is comprehensible by `opam pin \
           add`. Available only with the scan subcommand. An example of use is \
           `opam pin scan . --normalise | grep foo | xargs opam pin add`"
-         OpamPinCommand.scan_sep OpamPinCommand.scan_sep)
+         OpamPinCommand.scan_sep)
   in
   let guess_names kind ~recurse ?subpath url k =
     let found, cleanup =
