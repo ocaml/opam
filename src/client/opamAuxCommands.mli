@@ -103,3 +103,11 @@ val simulate_autopin:
   ?subpath:string ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   'a switch_state * atom list
+
+(* Check sandboxing script call. If it errors or unattended output, disable
+   sandboxing by removing [OpamInitDefaults.sandbox_wrappers] commands in
+   config file.
+   Only one script is checked (init script default one), and tested on an
+   `echo SUCCESS' call. *)
+val check_and_revert_sandboxing:
+  OpamPath.t -> OpamFile.Config.t -> OpamFile.Config.t

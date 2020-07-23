@@ -779,10 +779,17 @@ let update_with_init_config ?(overwrite=false) config init_config =
     (I.default_compiler init_config)
 
 let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
-    ?dot_profile ?update_config ?env_hook ?completion ?inplace config shell =
+    ?dot_profile ?update_config ?env_hook ?completion ?inplace
+    ?(check_sandbox=true)
+    config shell =
   let root = OpamStateConfig.(!r.root_dir) in
   let config = update_with_init_config config init_config in
   let _all_ok = init_checks ~hard_fail_exn:false init_config in
+  let config =
+    if check_sandbox then
+      OpamAuxCommands.check_and_revert_sandboxing root config
+    else config
+  in
   OpamFile.Config.write (OpamPath.config root) config;
   let custom_init_scripts =
     let env v =
@@ -812,6 +819,7 @@ let init
     ~init_config ~interactive
     ?repo ?(bypass_checks=false)
     ?dot_profile ?update_config ?env_hook ?(completion=true)
+    ?(check_sandbox=true)
     shell =
   log "INIT %a"
     (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
@@ -840,6 +848,11 @@ let init
         let config =
           update_with_init_config OpamFile.Config.empty init_config |>
           OpamFile.Config.with_repositories (List.map fst repos)
+        in
+        let config =
+          if check_sandbox then
+            OpamAuxCommands.check_and_revert_sandboxing root config
+          else config
         in
         OpamFile.Config.write config_f config;
 
