@@ -2970,13 +2970,35 @@ let pin ?(unpin_only=false) () =
     apply_global_options global_options;
     apply_build_options build_options;
     let action = not no_act in
-    match command, params with
-    | Some `list, [] | None, [] ->
+    let get_command = function
+      | Some `list, [] | None, [] ->
+        `list
+      | Some `scan, [url] ->
+        `scan url
+      | Some `remove, (_::_ as arg) ->
+        `remove arg
+      | Some `edit, [nv]  ->
+        `edit nv
+      | Some `add, pins when OpamPinCommand.looks_like_normalised pins ->
+        `add_normalised pins
+      | Some `default p, pins when
+          OpamPinCommand.looks_like_normalised (p::pins) ->
+        `add_normalised (p::pins)
+      | Some `add, [nv] | Some `default nv, [] when dev_repo ->
+        `add_dev nv
+      | Some `add, [arg] | Some `default arg, [] ->
+        `add_url arg
+      | Some `add, [n; target] | Some `default n, [target] ->
+        `add_wtarget (n,target)
+      | _ -> `incorrect
+    in
+    match get_command (command, params) with
+    | `list ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
       OpamClient.PIN.list st ~short:print_short;
       `Ok ()
-    | Some `scan, [url] ->
+    | `scan url ->
       let backend, handle_suffix =
         match kind with
         | Some (#OpamUrl.backend as k) -> Some k, None
@@ -2989,7 +3011,7 @@ let pin ?(unpin_only=false) () =
       |> OpamAuxCommands.url_with_local_branch
       |> OpamPinCommand.scan ~normalise ~recurse ?subpath;
       `Ok ()
-    | Some `remove, (_::_ as arg) ->
+    | `remove arg ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       let err, to_unpin =
@@ -3042,7 +3064,7 @@ let pin ?(unpin_only=false) () =
       else
         (OpamSwitchState.drop @@ OpamClient.PIN.unpin st ~action to_unpin;
          `Ok ())
-    | Some `edit, [nv]  ->
+    | `edit nv  ->
       (match (fst package) nv with
        | `Ok (name, version) ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -3050,21 +3072,14 @@ let pin ?(unpin_only=false) () =
          OpamSwitchState.drop @@ OpamClient.PIN.edit st ~action ?version name;
          `Ok ()
        | `Error e -> `Error (false, e))
-    | Some `add, pins when OpamPinCommand.looks_like_normalised pins ->
+    | `add_normalised pins ->
       let pins = OpamPinCommand.parse_pins pins in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       OpamSwitchState.drop @@
       OpamClient.PIN.url_pins st ~edit ~action pins;
       `Ok ()
-    | Some `default p, pins when OpamPinCommand.looks_like_normalised (p::pins) ->
-      let pins = OpamPinCommand.parse_pins (p::pins) in
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      OpamSwitchState.drop @@
-      OpamClient.PIN.pin_url_list st ~edit ~action pins;
-      `Ok ()
-    | Some `add, [nv] | Some `default nv, [] when dev_repo ->
+    | `add_dev nv ->
       (match (fst package) nv with
        | `Ok (name,version) ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -3076,7 +3091,7 @@ let pin ?(unpin_only=false) () =
        | `Error e ->
          if command = Some `add then `Error (false, e)
          else bad_subcommand commands ("pin", command, params))
-    | Some `add, [arg] | Some `default arg, [] ->
+    | `add_url arg ->
       (match pin_target kind arg with
        | `None | `Version _ ->
          let msg =
@@ -3109,7 +3124,7 @@ let pin ?(unpin_only=false) () =
          OpamSwitchState.drop @@
          OpamClient.PIN.url_pins st ~edit ~action ~pre (List.rev pins);
          `Ok ())
-    | Some `add, [n; target] | Some `default n, [target] ->
+    | `add_wtarget (n, target) ->
       (match (fst package) n with
        | `Ok (name,version) ->
          let pin = pin_target kind target in
@@ -3119,7 +3134,7 @@ let pin ?(unpin_only=false) () =
          OpamClient.PIN.pin st name ?version ~edit ~action ?subpath pin;
          `Ok ()
        | `Error e -> `Error (false, e))
-    | command, params -> bad_subcommand commands ("pin", command, params)
+    | `incorrect -> bad_subcommand commands ("pin", command, params)
   in
   Term.ret
     Term.(const pin
