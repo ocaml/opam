@@ -1478,6 +1478,33 @@ module PIN = struct
     | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
     | OpamPinCommand.Nothing_to_do -> st
 
+  let url_pins st ?edit ?(action=true) ?(pre=fun _ -> ()) pins =
+    let names = List.map (fun (n,_,_,_) -> n) pins in
+    (match names with
+    | _::_::_ ->
+      if not (OpamConsole.confirm
+                "This will pin the following packages: %s. Continue?"
+                (OpamStd.List.concat_map ", " OpamPackage.Name.to_string names))
+      then
+        OpamStd.Sys.exit_because `Aborted
+    | _ -> ());
+    let pinned = st.pinned in
+    let st =
+      List.fold_left (fun st (name, version, url, subpath as pin) ->
+          pre pin;
+          try
+            OpamPinCommand.source_pin st name ?version
+              ?edit ?subpath (Some url)
+          with
+          | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
+          | OpamPinCommand.Nothing_to_do -> st)
+        st pins
+    in
+    if action then
+      (OpamConsole.msg "\n";
+       post_pin_action st pinned names)
+    else st
+
   let edit st ?(action=true) ?version name =
     let pinned = st.pinned in
     let st =

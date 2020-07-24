@@ -3054,21 +3054,16 @@ let pin ?(unpin_only=false) () =
       let pins = OpamPinCommand.parse_pins pins in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let pinned = st.pinned in
-      let st =
-        List.fold_left (fun st (name, version, url, subpath) ->
-            try
-              OpamPinCommand.source_pin st name ?version ~edit ?subpath (Some url)
-            with | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
-                 | OpamPinCommand.Nothing_to_do -> st)
-          st pins
-      in
-      if action then
-        (OpamSwitchState.drop @@
-         OpamClient.PIN.post_pin_action st pinned
-           (List.map (fun (n,_,_,_) -> n) pins);
-         `Ok ())
-      else `Ok ()
+      OpamSwitchState.drop @@
+      OpamClient.PIN.url_pins st ~edit ~action pins;
+      `Ok ()
+    | Some `default p, pins when OpamPinCommand.looks_like_normalised (p::pins) ->
+      let pins = OpamPinCommand.parse_pins (p::pins) in
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      OpamSwitchState.drop @@
+      OpamClient.PIN.pin_url_list st ~edit ~action pins;
+      `Ok ()
     | Some `add, [nv] | Some `default nv, [] when dev_repo ->
       (match (fst package) nv with
        | `Ok (name,version) ->
@@ -3091,41 +3086,29 @@ let pin ?(unpin_only=false) () =
          `Error (true, msg)
        | `Source url ->
          guess_names kind ~recurse ?subpath url @@ fun names ->
-         let names = match names with
-           | _::_::_ ->
-             if OpamConsole.confirm
-                 "This will pin the following packages: %s. Continue?"
-                 (OpamStd.List.concat_map ", "
-                    (fun (n, _, _, _) -> OpamPackage.Name.to_string n)
-                    names)
-             then names
-             else OpamStd.Sys.exit_because `Aborted
-           | _ -> names
-         in
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-         let pinned = st.pinned in
-         let st =
-           List.fold_left (fun st (name, opam_opt, subpath,  url) ->
-               OpamStd.Option.iter (fun opam ->
-                   let opam_localf =
-                     OpamPath.Switch.Overlay.tmp_opam
-                       st.switch_global.root st.switch name
-                   in
-                   if not (OpamFilename.exists (OpamFile.filename opam_localf))
-                   then OpamFile.OPAM.write opam_localf opam)
-                 opam_opt;
-               try OpamPinCommand.source_pin st name ~edit ?subpath (Some url) with
-               | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
-               | OpamPinCommand.Nothing_to_do -> st)
-             st names
+         let pins, opams =
+           List.fold_left (fun (pins, opams) (name, opam_opt, subpath, url) ->
+               (name, None, url, subpath)::pins,
+               match opam_opt with
+               | None -> opams
+               | Some opam -> OpamPackage.Name.Map.add name opam opams)
+             ([], OpamPackage.Name.Map.empty) names
          in
-         if action then
-           (OpamSwitchState.drop @@
-            OpamClient.PIN.post_pin_action st pinned
-              (List.map (fun (n,_,_,_) -> n) names);
-            `Ok ())
-         else `Ok ())
+         let pre (name, _, _, _) =
+           OpamPackage.Name.Map.find_opt name opams
+           |> OpamStd.Option.iter (fun opam ->
+               let opam_localf =
+                 OpamPath.Switch.Overlay.tmp_opam
+                   st.switch_global.root st.switch name
+               in
+               if not (OpamFilename.exists (OpamFile.filename opam_localf))
+               then OpamFile.OPAM.write opam_localf opam)
+         in
+         OpamSwitchState.drop @@
+         OpamClient.PIN.url_pins st ~edit ~action ~pre (List.rev pins);
+         `Ok ())
     | Some `add, [n; target] | Some `default n, [target] ->
       (match (fst package) n with
        | `Ok (name,version) ->
