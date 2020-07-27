@@ -866,7 +866,9 @@ module Job = struct
         OpamStd.Option.iter
           (if OpamConsole.disp_status_line () then
              OpamConsole.status_line "Processing: %s"
-           else OpamConsole.msg "%s\n")
+           else if OpamConsole.verbose () then
+             OpamConsole.msg "%s\n"
+           else fun _ -> ())
           (text_of_command cmd);
         let r = run cmd in
         let k =
