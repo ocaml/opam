@@ -1,6 +1,102 @@
 Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
-are not marked).
+are not marked). Those prefixed with "(+)" are new command/option (since
+2.1.0~alpha2).
+
+2.1.0~alpha2:
+* Remove m4 from the list of recommended tools [#4184 @kit-ty-kate]
+* Fix config solver field ignored at init [#4243 @rjbou - fix #4241]
+* Fix atoms formula restriction with `--all` at upgrade [#4221 @rjbou - fix
+  #4218]
+* Copy instead of calling rsync when archives are in a local cache [#4270
+  @kit-ty-kate]
+* Opam file build using dune, removal of opam-%.install makefile target
+  [#4178 @rjbou #4229 @kit-ty-kate - fix #4173]
+* Use version var in opam file instead of equal current version number in
+  opamlib dependencies [#4178 @rjbou]
+* src ext: fix extlib url [#4248 @rjbou]
+* Add `_build` to rsync exclusion list [#4230 @rjbou - fix #4195]
+* Recursive opam file lookup: ignore `_build` [#4230 @rjbou]
+* Assume-built fix & rewriting [#4211 @rjbou]
+* Fix autoremove env var handling [#4219 @rjbou - fix #4217]
+* Fix Not_found with `opam switch create . --deps` [#4151 @AltGr]
+* Package Var: resolve self `name` variable for orphan packages [#4228 @rjbou
+  - fix #4224]
+* (*) Reject (shell) character on switch names [#4237 @rjbou - fix #4231]
+* Fix `OPAMSWITCH` empty string setting, consider as unset [#4237 @rjbou]
+* opam-installer: For paths, remove use of empty switch in favor of a
+  context-less module [#4237 @rjbou]
+* Add missing depext to unavailable reasons [#4194 @rjbou #4279 @rjbou - fix
+  #4176]
+* (*) Bump config file version to 2.1 (new depext fields) [#4280 @rjbou - fix
+  #4266]
+* Add depext handling on new pinned packages [#4194 @rjbou - fix #4189]
+* Don't keep unpinned package version if it exists in repo [#4073 @rjbou -
+  fix #3630]
+* Fix path resolving when pinning with `file://` [#4209 @rjbou - fix #4208]
+* (*) Disable recursive & subpath pinning (only present experimentally in opam
+  2.1.0~alpha) [#4252 @rjbou]
+* Add switch depext-bypass as modifiable field [#4194 @rjbou - fix #4177]
+* Add `--no-depexts` option to disable depexts packages unavailability [#4194
+  @rjbou - fix #4205]
+* Warn if packages are not listed because of depexts unavailability [#4194
+  @rjbou - fix #4205]
+* (*) Display error message for all not found packages [#4179 @rjbou - fix
+  #4164]
+* (*) Keep package order given via cli [#4179 @rjbou - fix #4163]
+* `--sort`` apply to with all options, not only `--just-file` [#4179 @rjbou]
+* Add scope display to Not found message [#4192 @rjbou]
+* No scope needed for variable display [#4192 @rjbou - fix #4183]
+* Fix package variable resolution [#4192 @rjbou - fix #4182]
+* opam option: Fix messages advertising a command in an obsolete format
+  [#4194 @rjbou]
+* E65: check that url local paths are absolute [#4209 @rjbou]
+* Fix arch query depext [#4200 @rjbou]
+* Add message when adding a package to `depext-bypass` [#4194 @rjbou]
+* Fix performance issue of depext under Docker/debian [#4165 @AltGr]
+* Handle debian virtual packages [#4269 @AltGr @rjbou - fix #4251]
+* Refactor `OpamSysInteract` package status [#4152 #4200 @rjbou]
+* Add environment variables handling on depext query [#4200 @rjbou]
+* Add depext Macport support [#4152 @rjbou]
+* Homebrew/depext: add no auto update env var for install, accept `pkgname`
+  and `pkgname@version` on query [#4200 @rjbou]
+* Tag packages with missing depexts in Cudf [#4235 @AltGr]
+* Force LC_ALL=C for depext query commands [#4200 @rjbou]
+* Put back opam-depext-2.0's behaviour with regards to asking users' consent
+  before installing system packages [#4168 @kit-ty-kate @rjbou]
+* Add OPAMDEPEXTYES env variable to pass --yes options to system package
+  manager [#4168 @kit-ty-kate @rjbou]
+* Fix system install command dryrun [#4200 @rjbou]
+* (+) Add --depext-only to install only external dependencies, regardless of
+  config depext status [#4238 @rjbou]
+* Move system install confirmation message after opam packages install [#4238
+  @rjbou]
+* Error if '--depext-only' is given with '--assume-depexts' or '--no-depexts'
+  [#4238 @rjbou]
+* Sanddbox: no error when linked directory doesn't exist (e.g. XDG defined)
+  [#4278 @kit-ty-kate]
+* Sandbox: add quotes to avoid space unwanted behaviors [#4278 @kit-ty-kate]
+* Fix temp files repository cleaning [#4197 @rjbou]
+* Fix admin cache synchronisation message [#4193 @rjbou - fix #4167]
+* Fix mismatching extra files detection [#4198 @rjbou]
+* Fix Cudf generation for compat with external solvers [#4261 @AltGr]
+* Check for a solution before calling the solver [#4263 @AltGr]
+* Add the package flag 'hidden-version' to discourage selection by the solver
+  [#4281 @AltGr]
+* Tweak the default criteria to handle 'missing-depexts' and 'hidden-version'
+  flags [#4281 @AltGr]
+* Disable chrono when timestamps are disables [#4206 @rjbou]
+* Expose some functionality in the `OpamAction`, `OpamPath` and
+  `OpamSwitchState` modules for use without a `switch` value (introduce a
+  functor to permit replicating switch layout in different contexts) [#4147
+  @timberston]
+* Std: Add map_reduce to Set and Map [#4263 @AltGr]
+* Fix regression in command resolution from #4072 (ocaml code for looking up
+  commands in PATH) [#4265 @dra27]
+* Use OCaml 4.09.1 for the make cold target [#4257 @dra27]
+* Add show cram test [#4206 @rjbou]
+* Add envrionnement variable handling on cram test [#4206 @rjbou]
+
 
 2.1.0~alpha:
 * Recursive & subpath based pin [#3499 @rjbou @hngrgr - fix #3174 #3477]
