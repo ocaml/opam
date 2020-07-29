@@ -372,6 +372,27 @@ module Syntax = struct
 
 end
 
+let extract_solution_packages universe opt =
+  match Z3.Optimize.get_model opt with
+  | Some model ->
+    Z3.Model.get_const_decls model |>
+    List.fold_left (fun pkgs decl ->
+        match Z3.Model.get_const_interp model decl with
+        | Some p when Z3.Boolean.is_true p ->
+          (match OpamStd.String.cut_at
+                   (Z3.Symbol.get_string (Z3.FuncDecl.get_name decl))
+                   '.'
+           with
+           | None -> pkgs
+           | Some (p, v) ->
+             let p = Cudf.lookup_package universe (p, int_of_string v) in
+             {p with
+              Cudf.was_installed = p.installed;
+              Cudf.installed = true}
+             :: pkgs)
+        | _ -> pkgs)
+      []
+  | None -> failwith "no model ??"
 
 let call ~criteria ?timeout (preamble, universe, _ as cudf) =
   (* try *)
@@ -404,31 +425,19 @@ let call ~criteria ?timeout (preamble, universe, _ as cudf) =
     raise Common.CudfSolver.Unsat
   | UNKNOWN ->
     log "UNKNOWN";
-    raise Timeout
+    (try
+       let universe =
+         Cudf.load_universe (extract_solution_packages universe opt)
+       in
+       raise (Timeout (Some (Some preamble, universe)))
+     with Failure _ ->
+       raise (Timeout None))
   | SATISFIABLE ->
     log "SAT: extracting model";
-    match Z3.Optimize.get_model opt with
-    | Some model ->
-      Z3.Model.get_const_decls model |>
-      List.fold_left (fun pkgs decl ->
-          match Z3.Model.get_const_interp model decl with
-          | Some p when Z3.Boolean.is_true p ->
-            (match OpamStd.String.cut_at
-                     (Z3.Symbol.get_string (Z3.FuncDecl.get_name decl))
-                     '.'
-             with
-             | None -> pkgs
-             | Some (p, v) ->
-               let p = Cudf.lookup_package universe (p, int_of_string v) in
-               {p with
-                Cudf.was_installed = p.installed;
-                Cudf.installed = true}
-               :: pkgs)
-          | _ -> pkgs)
-        [] |>
-      Cudf.load_universe |>
-      fun u -> Some preamble, u
-    | None -> failwith "no model ??"
+    let universe =
+      Cudf.load_universe (extract_solution_packages universe opt)
+    in
+    Some preamble, universe
   (* with
    * | (Timeout | Common.CudfSolver.Unsat | Failure _) as e -> raise e
    * | e ->

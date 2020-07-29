@@ -19,6 +19,7 @@ type t = {
   solver_preferences_fixup: string option Lazy.t;
   solver_preferences_best_effort_prefix: string option Lazy.t;
   solver_timeout: float option;
+  solver_allow_suboptimal: bool;
 }
 
 type 'a options_fun =
@@ -30,6 +31,7 @@ type 'a options_fun =
   ?solver_preferences_fixup:string option Lazy.t ->
   ?solver_preferences_best_effort_prefix:string option Lazy.t ->
   ?solver_timeout:float option ->
+  ?solver_allow_suboptimal:bool ->
   'a
 
 let default =
@@ -45,6 +47,7 @@ let default =
     solver_preferences_fixup = lazy None;
     solver_preferences_best_effort_prefix = lazy None;
     solver_timeout = Some 60.;
+    solver_allow_suboptimal = true;
   }
 
 let setk k t
@@ -56,6 +59,7 @@ let setk k t
     ?solver_preferences_fixup
     ?solver_preferences_best_effort_prefix
     ?solver_timeout
+    ?solver_allow_suboptimal
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -73,6 +77,8 @@ let setk k t
       solver_preferences_best_effort_prefix;
     solver_timeout =
       t.solver_timeout + solver_timeout;
+    solver_allow_suboptimal =
+      t.solver_allow_suboptimal + solver_allow_suboptimal;
   }
 
 let set t = setk (fun x () -> x) t
@@ -130,6 +136,8 @@ let initk k =
     env_string "BESTEFFORTPREFIXCRITERIA" >>| fun c -> (lazy (Some c)) in
   let solver_timeout =
     env_float "SOLVERTIMEOUT" >>| fun f -> if f <= 0. then None else Some f in
+  let solver_allow_suboptimal =
+    env_bool "SOLVERALLOWSUBOPTIMAL" in
   setk (setk (fun c -> r := with_auto_criteria c; k)) !r
     ~cudf_file:(env_string "CUDFFILE")
     ~solver
@@ -139,6 +147,7 @@ let initk k =
     ?solver_preferences_fixup:fixup_criteria
     ?solver_preferences_best_effort_prefix:best_effort_prefix_criteria
     ?solver_timeout
+    ?solver_allow_suboptimal
 
 let init ?noop:_ = initk (fun () -> ())
 

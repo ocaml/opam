@@ -307,6 +307,12 @@ let help_sections = [
          Default is %.1f, set to 0 for unlimited. Note that all solvers may \
          not support this option."
         (OpamStd.Option.default 0. OpamSolverConfig.(default.solver_timeout)));
+  `P "$(i,OPAMSOLVERALLOWSUBOPTIMAL) (default `true') allows some solvers to \
+      still return a solution when they reach timeout; while the solution \
+      remains assured to be consistent, there is no guarantee in this case \
+      that it fits the expected optimisation criteria. If `true', opam will \
+      continue with a warning, if `false' a timeout is an error. Currently \
+      only the builtin-z3 backend handles this degraded case.";
   `P ("$(i,OPAMSTATUSLINE) display a dynamic status line showing what's \
        currently going on on the terminal. \
        (one of "^Arg.doc_alts_enum when_enum^")");
