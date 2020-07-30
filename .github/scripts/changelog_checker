@@ -17,13 +17,13 @@ IGNORE="
 .travis.yml
 AUTHORS
 CONTRIBUTING.md
-ISSUE_TEMPLATE.md
 README.md
 appveyor.patch
 appveyor.yml
 appveyor_build.cmd
 appveyor_test.sh
 master_changes.md
+shell/install.sh
 "
 changelog=master_changes.md
 diffile=/tmp/diff
