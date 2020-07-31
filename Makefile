@@ -203,7 +203,7 @@ endif
 
 .PHONY: compiler cold
 compiler:
-	env MAKE=$(MAKE) ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
+	env MAKE=$(MAKE) BOOTSTRAP_EXTRA_OPTS= BOOTSTRAP_OPT_TARGET=opt.opt BOOTSTRAP_ROOT=.. BOOTSTRAP_DIR=bootstrap ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
 
 cold: compiler
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" ./configure --enable-cold-check $(CONFIGURE_ARGS)
