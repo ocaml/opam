@@ -13,7 +13,7 @@ SITELIB=$(shell PATH="$(PATH)" ocamlfind printconf path | cygpath -f - -m)
 endif
 
 # Package dependencies
-opam-file-format.pkgbuild: findlib.pkgbuild
+opam-file-format.pkgbuild: findlib.pkgbuild dune-local.pkgbuild
 
 cppo.pkgbuild: dune-local.pkgbuild
 
@@ -42,7 +42,8 @@ dose3.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild cppo.pkgbuild extlib.pkgbui
 mccs.pkgbuild: dune-local.pkgbuild cudf.pkgbuild findlib.pkgbuild
 
 opam-file-format-pkg-build:
-	make LIBDIR=$(SITELIB) all install
+	dune build @install -p opam-file-format
+	dune install -p opam-file-format
 
 findlib-pkg-build:
 	./configure
