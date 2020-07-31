@@ -142,8 +142,9 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
 else
   PREFIX=`cd .. ; pwd`/ocaml
   if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
-    ./configure -prefix "${PREFIX}"
-    ${MAKE:-make} world opt.opt
+    ./configure --prefix "${PREFIX}"
+    ${MAKE:-make} world
+    ${MAKE:-make} opt.opt
     ${MAKE:-make} install
   fi
   OCAMLLIB=${PREFIX}/lib/ocaml
