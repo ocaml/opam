@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.1.0~alpha2"
+version: "2.1.0~alpha3"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Vincent Bernardoff <vb@luminar.eu.org>"
