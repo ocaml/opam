@@ -19,7 +19,9 @@ New option/command/subcommand are prefixed with ◈.
   * Confirmation on non-compiler switch invariant: not on dryrun, Y by default [#4289 @AltGr]
 
 ## Pin
-  *
+  * Fix pin kind automatic detection consistency [#4300 @rjbou]
+    * With `opam pin target`, when opam file is not versioned and at root, vcs-pin the package instead of path-pin
+    * With `opam pin add nv target`, take opam file even if not versioned
 
 ## List
   *
