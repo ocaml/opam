@@ -957,6 +957,8 @@ let dump_cudf_error ~version_map univ req =
   | Some f -> f
   | None -> assert false
 
+exception Timeout of Algo.Depsolver.solver_result option
+
 let call_external_solver ~version_map univ req =
   let cudf_request = to_cudf univ req in
   if Cudf.universe_size univ > 0 then
@@ -964,20 +966,42 @@ let call_external_solver ~version_map univ req =
     let chrono = OpamConsole.timer () in
     ignore (dump_cudf_request ~version_map cudf_request
               criteria OpamSolverConfig.(!r.cudf_file));
+    (* Wrap a return of exn Timeout through Depsolver *)
+    let check_request_using ~call_solver ~criteria ~explain req =
+      let timed_out = ref false in
+      let call_solver args =
+        try call_solver args with
+        | OpamCudfSolver.Timeout (Some s) -> timed_out := true; s
+        | OpamCudfSolver.Timeout None -> raise (Timeout None)
+      in
+      let r =
+        Algo.Depsolver.check_request_using ~call_solver ~criteria ~explain req
+      in
+      if !timed_out then raise (Timeout (Some r)) else r
+    in
     try
       let r =
-        Algo.Depsolver.check_request_using
+        check_request_using
           ~call_solver:(OpamSolverConfig.call_solver ~criteria)
           ~criteria ~explain:true cudf_request
       in
-      log "Solver call done in %.3f" (chrono ());
+      log "Solver call done in %.3fs" (chrono ());
       r
     with
-    | OpamCudfSolver.Timeout ->
+    | Timeout (Some sol) ->
+      log "Solver call TIMED OUT with solution after %.3fs" (chrono ());
+      OpamConsole.warning
+        "Resolution of the installation set timed out, so the following \
+         solution might not be optimal.\n\
+         You may want to make your request more precise, increase the value \
+         of OPAMSOLVERTIMEOUT (currently %.1fs), or try a different solver."
+        OpamSolverConfig.(OpamStd.Option.default 0. !r.solver_timeout);
+      sol
+    | Timeout None ->
       let msg =
         Printf.sprintf
           "Sorry, resolution of the request timed out.\n\
-           Try to specify a simpler request, use a different solver, or \
+           Try to specify a more precise request, use a different solver, or \
            increase the allowed time by setting OPAMSOLVERTIMEOUT to a bigger \
            value (currently, it is set to %.1f seconds)."
           OpamSolverConfig.(OpamStd.Option.default 0. !r.solver_timeout)

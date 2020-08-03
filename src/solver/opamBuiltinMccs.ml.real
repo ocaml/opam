@@ -44,7 +44,7 @@ let call solver_backend ext ~criteria ?timeout cudf =
   with
   | None -> raise Common.CudfSolver.Unsat
   | Some (preamble, univ) -> Some preamble, univ
-  | exception Mccs.Timeout -> raise Timeout
+  | exception Mccs.Timeout -> raise (Timeout None)
 
 let of_backend backend : (module OpamCudfSolverSig.S) =
   (module struct

@@ -15,7 +15,8 @@ type criteria_def = {
   crit_best_effort_prefix: string option;
 }
 
-exception Timeout
+(** Timeout might still return a non-optimal solution *)
+exception Timeout of (Cudf.preamble option * Cudf.universe) option
 
 module type S = sig
 
