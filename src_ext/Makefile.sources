@@ -48,8 +48,9 @@ MD5_result = 1b82dec78849680b49ae9a8a365b831b
 
 $(call PKG_SAME,result)
 
-URL_dune-local = https://github.com/ocaml/dune/releases/download/1.11.4/dune-build-info-1.11.4.tbz
-MD5_dune-local = 8d63f9e1cd71d6fc7ee83d37b88c1da2
+# NB If minimum OCaml version for Dune changes, update DUNE_SECONDARY in configure.ac
+URL_dune-local = https://github.com/ocaml/dune/releases/download/2.6.2/dune-2.6.2.tbz
+MD5_dune-local = 8fe40bef051975e798537d3450b61129
 
 $(call PKG_SAME,dune-local)
 

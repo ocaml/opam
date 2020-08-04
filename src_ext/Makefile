@@ -229,7 +229,7 @@ clean:
 	@
 
 distclean: clean
-	rm -rf dune-local $(SRC_EXTS) $(PKG_EXTS)
+	rm -rf dune-local secondary $(SRC_EXTS) $(PKG_EXTS)
 	rm -f *.tar.gz *.tbz *.*stamp *.*download *.pkgbuild dune \
         Makefile.config
 	[ -d archives ] && ([ "$$(find archives -maxdepth 0 -type d -empty)" != "" ] && rmdir archives || echo "WARNING! $$(pwd)/archives/ not empty so left") || true

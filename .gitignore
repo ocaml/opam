@@ -24,6 +24,7 @@ src_ext/findlib
 src_ext/ocamlbuild
 src_ext/topkg
 src_ext/seq
+src_ext/secondary/
 src_ext/*.*stamp
 src_ext/*.tbz
 src_ext/*.tar.gz
