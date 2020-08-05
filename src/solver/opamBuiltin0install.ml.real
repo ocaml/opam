@@ -1,0 +1,99 @@
+(**************************************************************************)
+(*                                                                        *)
+(*    Copyright 2020 Kate Deplaix                                         *)
+(*                                                                        *)
+(*  All rights reserved. This file is distributed under the terms of the  *)
+(*  GNU Lesser General Public License version 2.1, with the special       *)
+(*  exception on linking described in the file LICENSE.                   *)
+(*                                                                        *)
+(**************************************************************************)
+
+open OpamCudfSolverSig
+
+let log ?level f = OpamConsole.log "0install" ?level f
+
+let name = "builtin-0install"
+
+let ext = ref None
+
+let is_present () = true
+
+let command_name = None
+
+let default_criteria = {
+  crit_default = "";
+  crit_upgrade = "";
+  crit_fixup = "";
+  crit_best_effort_prefix = None;
+}
+
+let not_relop = function
+  | `Eq -> `Neq
+  | `Neq -> `Eq
+  | `Geq -> `Lt
+  | `Gt -> `Leq
+  | `Leq -> `Gt
+  | `Lt -> `Geq
+
+let keep_installed request pkgname =
+  not (List.exists (fun (pkg, _) -> String.equal pkg pkgname) request.Cudf.install) &&
+  not (List.exists (fun (pkg, _) -> String.equal pkg pkgname) request.Cudf.upgrade) &&
+  not (List.exists (fun (pkg, _) -> String.equal pkg pkgname) request.Cudf.remove)
+
+let add_spec pkg req c (pkgs, constraints) =
+  let pkgs = (pkg, req) :: pkgs in
+  let constraints = match c with
+    | None -> constraints
+    | Some c -> (pkg, c) :: constraints
+  in
+  (pkgs, constraints)
+
+let essential spec (pkg, c) = add_spec pkg `Essential c spec
+let recommended spec (pkg, c) = add_spec pkg `Recommended c spec
+
+let restricts (pkgs, constraints) (pkg, c) =
+  let constraints = match c with
+    | None -> (pkg, (`Lt, 1)) :: (pkg, (`Gt, 1)) :: constraints (* pkg < 1 & pkg > 1 is always false *)
+    | Some (relop, v) -> (pkg, (not_relop relop, v)) :: constraints
+  in
+  (pkgs, constraints)
+
+let create_spec universe request =
+  let spec = ([], []) in
+  let spec = List.fold_left essential spec request.Cudf.install in
+  let spec = List.fold_left essential spec request.Cudf.upgrade in
+  let spec = List.fold_left restricts spec request.Cudf.remove in
+  Cudf.fold_packages_by_name (fun spec pkgname pkgs ->
+      match List.find_opt (fun pkg -> pkg.Cudf.installed) pkgs with
+      | Some {Cudf.keep = `Keep_version; version; _} -> essential spec (pkgname, Some (`Eq, version))
+      | Some {Cudf.keep = `Keep_package; _} -> essential spec (pkgname, None)
+      | Some {Cudf.keep = `Keep_feature; _} -> assert false (* NOTE: Opam has no support for features *)
+      | Some {Cudf.keep = `Keep_none; _} when keep_installed request pkgname -> recommended spec (pkgname, None)
+      | Some {Cudf.keep = `Keep_none; _}
+      | None -> spec
+    ) spec universe
+
+let reconstruct_universe universe selections =
+  Opam_0install_cudf.packages_of_result selections |>
+  List.fold_left (fun pkgs (pkg, v) ->
+      let pkg = Cudf.lookup_package universe (pkg, v) in
+      {pkg with was_installed = pkg.installed; installed = true} :: pkgs
+    ) [] |>
+  Cudf.load_universe
+
+let call ~criteria ?timeout:_ (preamble, universe, request) =
+  if not (String.equal criteria default_criteria.crit_default) then begin
+    OpamConsole.warning "Custom CUDF criteria is not supported by the 0install solver";
+  end;
+  let timer = OpamConsole.timer () in
+  let pkgs, constraints = create_spec universe request in
+  let context = Opam_0install_cudf.create ~constraints universe in
+  match Opam_0install_cudf.solve context pkgs with
+  | Ok selections ->
+    let universe = reconstruct_universe universe selections in
+    log "Solution found. Solve took %.2f s" (timer ());
+    (Some preamble, universe)
+  | Error problem ->
+    log "No solution. Solve took %.2f s" (timer ());
+    log ~level:3 "%a" (OpamConsole.slog Opam_0install_cudf.diagnostics) problem;
+    raise Common.CudfSolver.Unsat

@@ -8,7 +8,10 @@
                  (     -> opamBuiltinMccs.ml.dummy))
                (select opamBuiltinZ3.ml from
                  (z3 -> opamBuiltinZ3.ml.real)
-                 (   -> opamBuiltinZ3.ml.dummy)))
+                 (   -> opamBuiltinZ3.ml.dummy))
+               (select opamBuiltin0install.ml from
+                 (opam-0install-cudf -> opamBuiltin0install.ml.real)
+                 (                   -> opamBuiltin0install.ml.dummy)))
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
                (:include ../ocaml-flags-configure.sexp)
