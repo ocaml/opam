@@ -47,6 +47,9 @@ New option/command/subcommand are prefixed with ◈.
 ## Repository management
   *
 
+## VCS
+  * Add error message in case git repo is empty [#4303 @rjbou - fix #3905]
+
 ## Build
   * src-ext: bump topkg to 1.0.2 and dune to 2.6.2, with a second compiler built in case main one is < 4.07.0 (dune restriction) [#4294 @dra27]
   * Bump to 2.1.0~alpha3 version [#4299 @rjbou]
