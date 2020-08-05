@@ -90,7 +90,7 @@ let url_with_local_branch = function
 
 let opams_of_dir ?recurse ?subpath d =
   let files = OpamPinned.files_in_source ?recurse ?subpath d in
-  List.fold_left (fun acc (n, f, base) ->
+  List.fold_left (fun acc (n, f, subp) ->
       let name =
         let open OpamStd.Option.Op in
         n >>+ fun () ->
@@ -101,7 +101,7 @@ let opams_of_dir ?recurse ?subpath d =
         | [_] -> name_from_project_dirname d
       in
       match name with
-      | Some n -> (n, f, base) :: acc
+      | Some n -> (n, f, subp) :: acc
       | None ->
         OpamConsole.warning
           "Ignoring file at %s: could not infer package name"
@@ -111,7 +111,7 @@ let opams_of_dir ?recurse ?subpath d =
 
 let opams_of_dir_w_target ?(recurse=false) ?subpath
     ?(same_kind=fun _ -> OpamClientConfig.(!r.pin_kind_auto)) url dir =
-  OpamStd.List.filter_map (fun (name, file, base) ->
+  OpamStd.List.filter_map (fun (name, file, subp) ->
       let url =
         match url.OpamUrl.backend with
         | #OpamUrl.version_control as vc ->
@@ -123,14 +123,17 @@ let opams_of_dir_w_target ?(recurse=false) ?subpath
                : OpamVCS.VCS)
           in
           let open OpamProcess.Job.Op in
-          let files =
+          let versioned_files =
             OpamProcess.Job.run @@
             VCS.versioned_files dir @@| fun files -> files
           in
-          let versioned =
+          let opamfile =
             OpamFilename.remove_prefix dir (OpamFile.filename file)
           in
-          if List.mem versioned files then url else
+          if List.mem opamfile versioned_files
+          || not (OpamStd.String.contains opamfile ~sub:Filename.dir_sep) then
+            url
+          else
             { url with
               transport = "file";
               hash = None;
@@ -138,7 +141,7 @@ let opams_of_dir_w_target ?(recurse=false) ?subpath
         | _ -> url
       in
       if same_kind url then
-        Some (name, file, url, base)
+        Some (name, file, url, subp)
       else None)
     (opams_of_dir ~recurse ?subpath dir)
 
