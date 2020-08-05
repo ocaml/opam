@@ -8,8 +8,11 @@ all: opam opam-installer
 admin:
 	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-admin.install
 
+DUNE_PROMOTE_ARG =
+DUNE_PROMOTE_ARG += --promote-install-files
+
 ifeq ($(DUNE),)
-  DUNE_EXE = src_ext/dune-local/_boot/install/default/bin/dune$(EXE)
+  DUNE_EXE = src_ext/dune-local/dune.exe
   ifeq ($(shell command -v cygpath 2>/dev/null),)
     DUNE := $(DUNE_EXE)
   else
@@ -17,6 +20,11 @@ ifeq ($(DUNE),)
   endif
 else
   DUNE_EXE=
+  # NB make does not export the PATH update in Makefile.config to $(shell ...)
+  ifeq ($(shell PATH='$(PATH)' $(DUNE) build --help=plain 2>/dev/null \
+                  | grep -F -- '$(DUNE_PROMOTE_ARG) '),)
+    DUNE_PROMOTE_ARG =
+  endif
 endif
 
 OPAMINSTALLER = ./opam-installer$(EXE)
@@ -24,14 +32,17 @@ OPAMINSTALLER = ./opam-installer$(EXE)
 ALWAYS:
 	@
 
-DUNE_PROMOTE_ARG := $(shell dune build --help=plain 2>/dev/null | sed -ne 's/^[[:space:]]*\(--promote-install-files\)[[:space:]]*$$/ \1/p')
 DUNE_DEP = $(DUNE_EXE)
-JBUILDER_ARGS ?= 
+JBUILDER_ARGS ?=
 DUNE_ARGS ?= $(JBUILDER_ARGS)
 DUNE_PROFILE ?= release
 
-src_ext/dune-local/_boot/install/default/bin/dune$(EXE): src_ext/dune-local.stamp
-	cd src_ext/dune-local && ocaml bootstrap.ml && ./boot.exe --release
+src_ext/dune-local/dune.exe: src_ext/dune-local.stamp $(DUNE_SECONDARY)
+ifeq ($(DUNE_SECONDARY),)
+	cd src_ext/dune-local && ocaml bootstrap.ml
+else
+	cd src_ext/dune-local && ( unset OCAMLLIB ; PATH="$(dir $(realpath $(DUNE_SECONDARY))):$$PATH" ../../$(DUNE_SECONDARY) bootstrap.ml )
+endif
 
 src_ext/dune-local.stamp:
 	$(MAKE) -C src_ext dune-local.stamp
@@ -203,7 +214,10 @@ endif
 
 .PHONY: compiler cold
 compiler:
-	env MAKE=$(MAKE) ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
+	env MAKE=$(MAKE) BOOTSTRAP_EXTRA_OPTS= BOOTSTRAP_OPT_TARGET=opt.opt BOOTSTRAP_ROOT=.. BOOTSTRAP_DIR=bootstrap ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
+
+src_ext/secondary/ocaml/bin/ocaml:
+	env MAKE=$(MAKE) BOOTSTRAP_EXTRA_OPTS="--disable-ocamldoc --disable-debug-runtime --disable-debugger" BOOTSTRAP_OPT_TARGET=opt BOOTSTRAP_ROOT=../.. BOOTSTRAP_DIR=src_ext/secondary ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
 
 cold: compiler
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" ./configure --enable-cold-check $(CONFIGURE_ARGS)

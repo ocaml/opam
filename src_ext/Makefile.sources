@@ -48,8 +48,9 @@ MD5_result = 1b82dec78849680b49ae9a8a365b831b
 
 $(call PKG_SAME,result)
 
-URL_dune-local = https://github.com/ocaml/dune/releases/download/1.11.4/dune-build-info-1.11.4.tbz
-MD5_dune-local = 8d63f9e1cd71d6fc7ee83d37b88c1da2
+# NB If minimum OCaml version for Dune changes, update DUNE_SECONDARY in configure.ac
+URL_dune-local = https://github.com/ocaml/dune/releases/download/2.6.2/dune-2.6.2.tbz
+MD5_dune-local = 8fe40bef051975e798537d3450b61129
 
 $(call PKG_SAME,dune-local)
 
@@ -59,8 +60,8 @@ MD5_PKG_findlib = 18ca650982c15536616dea0e422cbd8c
 URL_PKG_ocamlbuild = https://github.com/ocaml/ocamlbuild/archive/0.14.0.tar.gz
 MD5_PKG_ocamlbuild = a7bf2fe594cd16907807c756b14d501f
 
-URL_PKG_topkg = http://erratique.ch/software/topkg/releases/topkg-1.0.1.tbz
-MD5_PKG_topkg = 16b90e066d8972a5ef59655e7c28b3e9
+URL_PKG_topkg = http://erratique.ch/software/topkg/releases/topkg-1.0.2.tbz
+MD5_PKG_topkg = b4925b2c37f73f8f0b79ea07ab15ff67
 
 URL_seq = https://github.com/c-cube/seq/archive/0.2.2.tar.gz
 MD5_seq = 9033e02283aa3bde9f97f24e632902e3

@@ -251,6 +251,11 @@ AC_CHECK_TOOL(CPPO,cppo)
 AC_CHECK_TOOL(PATCH,patch)
 AC_CHECK_TOOL(BUNZIP2,bunzip2)
 
+AX_COMPARE_VERSION([$OCAMLVERSION], [lt], [4.07.0],
+  [DUNE_SECONDARY=src_ext/secondary/ocaml/bin/ocaml],
+  [DUNE_SECONDARY=])
+AC_SUBST([DUNE_SECONDARY])
+
 if test "x${COLD_CHECK}" = "xyes" ; then
   if test "x$PATCH"  = "x" ; then
     AC_MSG_ERROR([You must have patch installed.])
