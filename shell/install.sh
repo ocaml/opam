@@ -63,6 +63,7 @@ usage() {
 RESTORE=
 NOBACKUP=
 FRESH=
+DOWNLOAD_ONLY=
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -79,6 +80,8 @@ while [ $# -gt 0 ]; do
             NOBACKUP=0;;
         --fresh)
             FRESH=1;;
+        --download-only)
+            DOWNLOAD_ONLY=1;;
         --help|-h)
             usage; exit 0;;
         *)
@@ -86,6 +89,93 @@ while [ $# -gt 0 ]; do
     esac
     shift
 done
+
+
+TMP=${TMPDIR:-/tmp}
+
+ARCH=$(uname -m || echo unknown)
+case "$ARCH" in
+    x86|i?86) ARCH="i686";;
+    x86_64|amd64) ARCH="x86_64";;
+    ppc|powerpc|ppcle) ARCH="ppc";;
+    aarch64_be|aarch64|armv8b|armv8l) ARCH="arm64";;
+    armv5*|armv6*|earmv6*|armv7*|earmv7*) ARCH="armhf";;
+    *) ARCH=$(echo "$ARCH" | awk '{print tolower($0)}')
+esac
+
+OS=$( (uname -s || echo unknown) | awk '{print tolower($0)}')
+
+if [ "$OS" = "darwin" ] ; then
+  OS=macos
+fi
+
+TAG=$(echo "$VERSION" | tr '~' '-')
+
+OPAM_BIN_URL_BASE='https://github.com/ocaml/opam/releases/download/'
+OPAM_BIN="opam-${TAG}-${ARCH}-${OS}"
+OPAM_BIN_URL="${OPAM_BIN_URL_BASE}${TAG}/${OPAM_BIN}"
+
+download() {
+    if command -v wget >/dev/null; then wget -q -O "$@"
+    else curl -s -L -o "$@"
+    fi
+}
+
+check_sha512() {
+    OPAM_BIN_LOC="$1"
+    if command -v openssl > /dev/null; then
+        sha512_devnull="cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
+        sha512_check=`openssl sha512 2>&1 < /dev/null | cut -f 2 -d ' '`
+        if [ "x$sha512_devnull" = "x$sha512_check" ]; then
+            sha512=`openssl sha512 "$OPAM_BIN_LOC" 2> /dev/null | cut -f 2 -d ' '`
+            check=`bin_sha512`
+            test "x$sha512" = "x$check"
+        else
+            echo "openssl 512 option not handled, binary integrity check can't be performed."
+            return 0
+        fi
+    else
+        echo "openssl not found, binary integrity check can't be performed."
+        return 0
+    fi
+}
+
+download_and_check() {
+    OPAM_BIN_LOC="$1"
+    echo "## Downloading opam $VERSION for $OS on $ARCH..."
+
+    if ! download "$OPAM_BIN_LOC" "$OPAM_BIN_URL"; then
+        echo "There may not yet be a binary release for your architecture or OS, sorry."
+        echo "See https://github.com/ocaml/opam/releases/tag/$TAG for pre-compiled binaries,"
+        echo "or run 'make cold' from https://github.com/ocaml/opam/archive/$TAG.tar.gz"
+        echo "to build from scratch"
+        exit 10
+    else
+        if check_sha512 "$OPAM_BIN_LOC"; then
+            echo "## Downloaded."
+        else
+            echo "Checksum mismatch, a problem occurred during download."
+            exit 10
+        fi
+    fi
+}
+
+DOWNLOAD_ONLY=${DOWNLOAD_ONLY:-0}
+
+if [ $DOWNLOAD_ONLY -eq 1 ]; then
+    OPAM_BIN_LOC="$PWD/$OPAM_BIN"
+    if [ -e "$OPAM_BIN_LOC" ]; then
+        echo "Found opam binary in $OPAM_BIN_LOC ..."
+        if check_sha512 "$OPAM_BIN_LOC" ; then
+            echo "... with matching sha512"
+            exit 0;
+        else
+            echo "... with mismatching sha512, download the good one."
+        fi
+    fi
+    download_and_check "$OPAM_BIN_LOC"
+    exit 0;
+fi
 
 EXISTING_OPAM=$(command -v opam || echo)
 EXISTING_OPAMV=
@@ -156,71 +246,8 @@ if [ -n "$RESTORE" ]; then
     exit 0
 fi
 
-TMP=${TMPDIR:-/tmp}
-
-ARCH=$(uname -m || echo unknown)
-case "$ARCH" in
-    x86|i?86) ARCH="i686";;
-    x86_64|amd64) ARCH="x86_64";;
-    ppc|powerpc|ppcle) ARCH="ppc";;
-    aarch64_be|aarch64|armv8b|armv8l) ARCH="arm64";;
-    armv5*|armv6*|earmv6*|armv7*|earmv7*) ARCH="armhf";;
-    *) ARCH=$(echo "$ARCH" | awk '{print tolower($0)}')
-esac
-
-OS=$( (uname -s || echo unknown) | awk '{print tolower($0)}')
-
-if [ "$OS" = "darwin" ] ; then
-  OS=macos
-fi
-
-TAG=$(echo "$VERSION" | tr '~' '-')
-
-OPAM_BIN_URL_BASE='https://github.com/ocaml/opam/releases/download/'
-OPAM_BIN="opam-${TAG}-${ARCH}-${OS}"
-OPAM_BIN_URL="${OPAM_BIN_URL_BASE}${TAG}/${OPAM_BIN}"
-
-download() {
-    if command -v wget >/dev/null; then wget -q -O "$@"
-    else curl -s -L -o "$@"
-    fi
-}
-
-check_sha512() {
-  if command -v openssl > /dev/null; then
-    sha512_devnull="cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
-    sha512_check=`openssl sha512 2>&1 < /dev/null | cut -f 2 -d ' '`
-    if [ "x$sha512_devnull" = "x$sha512_check" ]; then
-      sha512=`openssl sha512 "$TMP/$OPAM_BIN" 2> /dev/null | cut -f 2 -d ' '`
-      check=`bin_sha512`
-      test "x$sha512" = "x$check"
-    else
-      echo "openssl 512 option not handled, binary integrity check can't be performed."
-      return 0
-    fi
-  else
-    echo "openssl not found, binary integrity check can't be performed."
-    return 0
-  fi
-}
-
-if [ -e "$TMP/$OPAM_BIN" ] && ! check_sha512 || [ ! -e "$TMP/$OPAM_BIN" ]; then
-    echo "## Downloading opam $VERSION for $OS on $ARCH..."
-
-    if ! download "$TMP/$OPAM_BIN" "$OPAM_BIN_URL"; then
-        echo "There may not yet be a binary release for your architecture or OS, sorry."
-        echo "See https://github.com/ocaml/opam/releases/tag/$TAG for pre-compiled binaries,"
-        echo "or run 'make cold' from https://github.com/ocaml/opam/archive/$TAG.tar.gz"
-        echo "to build from scratch"
-        exit 10
-    else
-        if check_sha512; then
-            echo "## Downloaded."
-        else
-            echo "Checksum mismatch, a problem occurred during download."
-            exit 10
-        fi
-    fi
+if [ -e "$TMP/$OPAM_BIN" ] && ! check_sha512 "$TMP/$OPAM_BIN" || [ ! -e "$TMP/$OPAM_BIN" ]; then
+    download_and_check "$TMP/$OPAM_BIN"
 else
     echo "## Using already downloaded \"$TMP/$OPAM_BIN\""
 fi
