@@ -74,4 +74,4 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Doc
-  *
+  * Add repology badges on distribution page [#4304 @rjbou]
