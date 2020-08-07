@@ -3,6 +3,21 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.1.0~alpha3:
+* Confirmation on non-compiler switch invariant: not on dryrun, Y by default
+  [#4289 @AltGr]
+* (*) Fix pin kind automatic detection consistency [#4300 @rjbou]: With `opam
+  pin target', when opam file is not versioned and at root, vcs-pin the package
+  instead of path-pin, and with `opam pin add nv target', take opam file even
+  if not versioned.
+* External dependencies: Fix non-interactive mode on OpenSuse [#4293
+  @kit-ty-kate]
+* src-ext: bump topkg to 1.0.2 and dune to 2.6.2, with a second compiler
+  built in case main one is < 4.07.0 (dune restriction) [#4294 @dra27]
+* Allow Z3 backend to return sub-optimal solutions on timeout, add
+  `OPAMSOLVERALLOWSUBOPTIMAL` environment variable [#4289 @AltGr]
+* Add an optional solver relying on opam-0install-cudf [#4240 @kit-ty-kate]
+
 2.1.0~alpha2:
 * Remove m4 from the list of recommended tools [#4184 @kit-ty-kate]
 * Fix config solver field ignored at init [#4243 @rjbou - fix #4241]
