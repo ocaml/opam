@@ -40,7 +40,7 @@ echo "> all changes"
 cat $diffile
 
 for ign in $IGNORE ; do
-  sed -i "/^$ign/d" $diffile
+  sed -i "/^${ign//\//\\\/}/d" $diffile
 done
 
 echo "> kept changes"
