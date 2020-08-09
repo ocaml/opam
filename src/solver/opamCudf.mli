@@ -203,7 +203,7 @@ val make_conflicts:
   Algo.Diagnostic.diagnosis -> ('a, conflict) result
 val cycle_conflict:
   version_map:int package_map -> Cudf.universe ->
-  string list list -> ('a, conflict) result
+  Cudf.package action list list -> ('a, conflict) result
 
 (** Convert a conflict to something readable by the user. The second argument
     should return a string explaining the unavailability, or the empty string,
@@ -223,6 +223,8 @@ val strings_of_conflict:
 
 val conflict_chains:
   package_set -> conflict -> (name * OpamFormula.version_formula) list list
+
+val conflict_cycles : conflict -> package action list list option
 
 (** Dumps the given cudf universe to the given channel *)
 val dump_universe: out_channel -> Cudf.universe -> unit

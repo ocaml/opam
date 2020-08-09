@@ -415,7 +415,7 @@ exception Cyclic_actions of Action.t list list
 
 type conflict_case =
   | Conflict_dep of (unit -> Algo.Diagnostic.reason list)
-  | Conflict_cycle of string list list
+  | Conflict_cycle of Cudf.package action list list
 type conflict =
   Cudf.universe * int package_map * conflict_case
 
@@ -798,7 +798,10 @@ let strings_of_chains packages cudfnv2opam unav_reasons reasons =
   List.map string_of_chain chains
 
 let strings_of_cycles cycles =
-  List.map arrow_concat cycles
+  let string_of_cycle cycle =
+    List.map string_of_action cycle
+    |> arrow_concat in
+  List.map string_of_cycle cycles
 
 let strings_of_conflict packages unav_reasons = function
   | univ, version_map, Conflict_dep reasons ->
@@ -814,6 +817,11 @@ let conflict_chains packages = function
   | cudf_universe, version_map, Conflict_dep r ->
     make_chains packages (cudfnv2opam ~cudf_universe ~version_map) (r ())
   | _ -> []
+
+let conflict_cycles = function
+  | _cudf_universe, _version_map, Conflict_cycle cycles ->
+     Some (List.map (List.map (map_action cudf2opam)) cycles)
+  | _ -> None
 
 let string_of_conflict packages unav_reasons conflict =
   let final, chains, cycles =

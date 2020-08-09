@@ -25,7 +25,6 @@ module type ACTION = sig
 end
 
 module MakeAction (P: GenericPackage) : ACTION with type package = P.t and type t = P.t OpamTypes.action
-
 module type SIG = sig
   type package
   include OpamParallel.GRAPH with type V.t = package OpamTypes.action
