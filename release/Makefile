@@ -8,7 +8,7 @@ FULL_ARCHIVE_URL = https://github.com/ocaml/opam/releases/download/$(VERSION)/op
 TARGETS = x86_64-linux i686-linux armhf-linux arm64-linux
 # todo: x86_64-darwin
 
-OCAMLV = 4.04.2
+OCAMLV = 4.07.1
 # currently hardcoded in Dockerfile.in
 OCAML_URL = https://caml.inria.fr/pub/distrib/ocaml-$(basename $(OCAMLV))/ocaml-$(OCAMLV).tar.gz
 
