@@ -6,7 +6,7 @@ set -ue
 # (c) Copyright Louis Gesbert OCamlPro 2014-2017
 
 VERSION='2.0.7'
-DEV_VERSION='2.1.0~alpha2'
+DEV_VERSION='2.1.0~alpha3'
 DEFAULT_BINDIR=/usr/local/bin
 
 bin_sha512() {
@@ -38,6 +38,13 @@ bin_sha512() {
     opam-2.1.0-alpha2-x86_64-linux)   echo "21509e8abd8463f4e18a55398f690700772e25f0ddb9f3fd7644e2f9a9a89ebbf5c09efbeceafe4a0ab5015d0d03b2f29506be514aae813a2f3dac7dd01261f3";;
     opam-2.1.0-alpha2-x86_64-macos)   echo "1c1bd26621eebb5bf3783dec80d5555aa5ff02dcbf43eb44398798e6162c1964bc1964e3980391ea115e5c068c1bb66960f8ebdd91bc4f0bac844f3a61433f1e";;
     opam-2.1.0-alpha2-x86_64-openbsd) echo "941f3e306bc36e8e44e4245ca5e635b04e0a54f33439d55d41875ced47384cad8c222b649027d3c4eacc3c2c569cf5006c872763b19c490d9b289c9cfe4f491a";;
+
+    opam-2.1.0-alpha3-arm64-linux)     echo "ad906bb2ab764a92fabdf0b906310c5034bf5daf0ebfb2529e9b87661ddbf8fd14f51dee5ce75b4fd4bb5789e29c7be71063f1ebcc92e92333be12aa62efdff9";;
+    opam-2.1.0-alpha3-armhf-linux)     echo "2a7022c1f5dbc855a0d067f29677b13253dccbc9792b8170fa72a743802bbcd6e41ce7512c4845091af0f73b8ba7573038ec53ea9aaf74be04367ac1767e7220";;
+    opam-2.1.0-alpha3-i686-linux)      echo "6f2fce0c45ae700e7a1b32d0a24988645c9aed3afc45998c8fbe70e97a65e3ba5d824069914a892bb3f9b1336383cfd492c28678ff16db5cada863da924b07d8";;
+    opam-2.1.0-alpha3-x86_64-linux)    echo "1d219dbf670e1550bf71c28e586d14f1d8af2605f0e13bea2f11ad52a7f176bd9a89637e44a91a024f0088db1b2aba8dc3207bc81fa930580e54f4031255c178";;
+    opam-2.1.0-alpha3-x86_64-macos)    echo "93edb6c1151f8f5bd017f230ffd9277f6ad943e3f5032ea000c37f012738fb3ab4b4add172e1f624c37e6564963fef0716b876b0113c8e43f5943d77bbbc173c";;
+    opam-2.1.0-alpha3-x86_64-openbsd)  echo "0e3b3761e877c57f5b333aacb70c86bf60f50eecdca6e9e1a552e3d666cea034d8873f3a87e585a5970b1aef7e540adb18c71e0e8fd8794843dd5d1d421a87ec";;
 
     *) echo "no sha";;
   esac
