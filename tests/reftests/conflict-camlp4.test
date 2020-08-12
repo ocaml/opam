@@ -5,10 +5,10 @@ f372039d
 Switch invariant: ["camlp4" "ocaml-system"]
 [ERROR] Could not resolve base install for this switch:
         The following dependencies couldn't be met:
-          - camlp4 → ocaml < 4.08 → ocaml-variants < 4.07.2~
-          - camlp4 → ocaml < 4.08 → ocaml-base-compiler < 4.08.0
-          - camlp4 → ocaml-variants (= 4.02.0+modular-implicits & = 4.02.1+modular-implicits-ber)
+          - ocaml-base-compiler < 4.08.0 (from camlp4 → ocaml < 4.08)
+          - ocaml-variants (= 4.02.0+modular-implicits & = 4.02.1+modular-implicits-ber) (from camlp4)
               no matching version
+          - ocaml-variants < 4.07.2~ (from camlp4 → ocaml < 4.08)
         Your request can't be satisfied:
           - camlp4 (!= 4.01+system & < 4.02+system | = 4.03+1 | = 4.04+1 | = 4.05+1 | = 4.06+1 | = 4.07+1) is in conflict with ocaml-system
           - ocaml-base-compiler < 4.08.0 is in conflict with ocaml-system
