@@ -250,8 +250,8 @@ build: [
   [make]
 ]
 dev-repo: "git+https://github.com/ocaml/opam.git"
-### OPAMDEBUGSECTIONS=AUXCMD opam show ./showtest.opam --debug-level=-1 | sed 's/opam-reftest-[0-9]{6}/opam-reftest-XXXXXX/'
-AUXCMD                          autopin: { showtest => file:///tmp/opam-reftest-XXXXXX }
+### OPAMDEBUGSECTIONS=AUXCMD opam show ./showtest.opam --debug-level=-1
+AUXCMD                          autopin: { showtest => file://${BASEDIR} }
 
 <><> showtest: information on all versions ><><><><><><><><><><><><><><><><><><>
 name         showtest
