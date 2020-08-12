@@ -1,6 +1,9 @@
 f372039d
 ### opam switch create --fake 4.06.1
 
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "4.06.1"} | "ocaml-system" {= "4.06.1"}]
+
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of base-bigarray.base
 Faking installation of base-threads.base
@@ -11,9 +14,23 @@ Faking installation of ocaml.4.06.1
 Done.
 ### opam install 'pgocaml<2.0' 'pgocaml>=1.7.1' --show
 The following dependencies couldn't be met:
-  - pgocaml → extlib = 1.5.3 → ocaml < 4.05.0
-      base of this switch (use `--unlock-base' to force)
-  - pgocaml → ocaml < 4.06.0
-      base of this switch (use `--unlock-base' to force)
+  - pgocaml → extlib = 1.5.3 → ocaml < 4.05.0 → ocaml-base-compiler (< 3.07+2 | >= 3.08.2 & != 3.09.0 & != 3.12.1 & != 4.01.0 & != 4.03.0 & < 4.04.2)
+      incompatible with the switch invariant ["ocaml-base-compiler" {= "4.06.1"} | "ocaml-system" {= "4.06.1"}] (use `--update-invariant' to force)
+  - pgocaml → extlib = 1.5.3 → ocaml < 4.05.0 → ocaml-system (< 3.08.5~ | >= 3.09.1)
+      unmet availability conditions, e.g. sys-ocaml-version = "4.10.0"
+  - pgocaml → extlib = 1.5.3 → ocaml < 4.05.0 → ocaml-variants != 3.08.5~ → ocaml-beta
+      unmet availability conditions: enable-ocaml-beta-repository
+  - pgocaml → ocaml < 4.06.0 → ocaml-variants != 3.08.5~ → ocaml-beta
+      unmet availability conditions: enable-ocaml-beta-repository
+  - pgocaml → ocaml < 4.06.0 → ocaml-system (< 3.08.5~ | >= 3.09.1)
+      unmet availability conditions, e.g. sys-ocaml-version = "4.10.0"
+  - pgocaml → ocaml < 4.06.0 → ocaml-base-compiler (< 3.07+2 | >= 3.08.2 & != 3.09.0 & != 3.12.1 & != 4.01.0 & != 4.03.0 & != 4.04.2 & < 4.06.0)
+      incompatible with the switch invariant ["ocaml-base-compiler" {= "4.06.1"} | "ocaml-system" {= "4.06.1"}] (use `--update-invariant' to force)
+  - ocaml-base-compiler → ocaml = 4.06.1
+Your request can't be satisfied:
+  - No available version of ocaml satisfies the constraints
+  - No available version of ocaml-base-compiler satisfies the constraints
+  - ocaml-base-compiler = 4.06.1 is in conflict with ocaml-system
+  - ocaml-variants (< 4.08.0+beta1 | >= 4.08.0+bytecode-only & < 4.08.0+rc1 | = 4.08.0+spacetime) is in conflict with ocaml-base-compiler
 
 No solution found, exiting

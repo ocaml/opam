@@ -1,6 +1,9 @@
 f372039d
 ### opam switch create test --packages=camlp4,ocaml-system --show --yes
-[ERROR] Could not resolve set of base packages:
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["camlp4" "ocaml-system"]
+[ERROR] Could not resolve base install for this switch:
         The following dependencies couldn't be met:
           - camlp4 → ocaml < 4.08 → ocaml-variants < 4.07.2~
           - camlp4 → ocaml < 4.08 → ocaml-base-compiler < 4.08.0
