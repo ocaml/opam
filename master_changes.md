@@ -61,7 +61,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Solver
-  *
+  * Don't penalise packages with more recent 'hidden-versions' [#4312 @AltGr]
 
 ## Internal
   *
