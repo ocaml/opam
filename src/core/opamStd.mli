@@ -536,6 +536,8 @@ module Config : sig
 
   type env_var = string
 
+  val env: (string -> 'a) -> string -> 'a option
+
   val env_bool: env_var -> bool option
 
   val env_int: env_var -> int option
