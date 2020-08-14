@@ -1101,14 +1101,14 @@ let do_backup lock st = match lock with
                (Printf.sprintf
                   "\nThe former state can be restored with:\n\
                   \    %s switch import %S\n"
-                  Sys.argv.(0) (OpamFile.to_string file) ^
+                  Sys.executable_name (OpamFile.to_string file) ^
                 if OpamPackage.Set.is_empty
                     (new_selections.sel_roots -- new_selections.sel_installed)
                 then "" else
                   Printf.sprintf
                     "Or you can retry to install your package selection with:\n\
                     \    %s install --restore\n"
-                  Sys.argv.(0))))
+                  Sys.executable_name)))
   | _ -> fun _ -> ()
 
 let with_ lock ?rt ?(switch=OpamStateConfig.get_switch ()) gt f =
