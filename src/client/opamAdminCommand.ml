@@ -1100,7 +1100,7 @@ let default_subcommand =
       \                  [--help]\n\
       \                  <command> [<args>]\n\
        \n\
-       The most commonly used opam commands are:\n\
+       The most commonly used opam admin commands are:\n\
       \    index          %s\n\
       \    cache          %s\n\
       \    upgrade-format %s\n\
