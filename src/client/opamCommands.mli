@@ -21,6 +21,10 @@ type command = unit Term.t * Term.info
 (** The default list of commands *)
 val commands: command list
 
+(** [is_builtin_command arg] is [true] if [arg] is a prefix of any built-in
+    command *)
+val is_builtin_command: string -> bool
+
 (** opam *)
 val default: command
 

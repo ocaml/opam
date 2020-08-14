@@ -3760,3 +3760,8 @@ let commands = [
   admin;
   help;
 ]
+
+let is_builtin_command prefix =
+  List.exists (fun (_,info) ->
+                 OpamStd.String.starts_with ~prefix (Term.name info))
+              commands

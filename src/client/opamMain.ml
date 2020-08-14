@@ -24,9 +24,7 @@ let check_and_run_external_commands () =
   | _ :: name :: args ->
     if
       not (OpamStd.String.starts_with ~prefix:"-" name)
-      && List.for_all (fun (_,info) ->
-          not (OpamStd.String.starts_with ~prefix:name (Term.name info)))
-        OpamCommands.commands
+      && not (OpamCommands.is_builtin_command name)
     then
       (* No such command, check if there is a matching plugin *)
       let command = plugin_prefix ^ name in
