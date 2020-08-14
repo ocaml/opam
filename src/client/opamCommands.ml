@@ -3732,11 +3732,10 @@ let default =
     ~man
 
 let admin =
-  let doc = "Use 'opam admin' instead (abbreviation not supported)" in
+  (* cmdliner never sees the admin subcommand, so this "can't happen" *)
+  let doc = "Internal opam error - main admin command invoked" in
   Term.(ret (const (`Error (true, doc)))),
-  Term.info "admin" ~doc:OpamAdminCommand.admin_command_doc
-    ~man:[`S Manpage.s_synopsis;
-          `P doc]
+  Term.info "admin"
 
 let commands = [
   init;
@@ -3765,3 +3764,13 @@ let is_builtin_command prefix =
   List.exists (fun (_,info) ->
                  OpamStd.String.starts_with ~prefix (Term.name info))
               commands
+
+let is_admin_subcommand prefix =
+  prefix = "admin" ||
+  let matches =
+    List.filter (fun (_,info) ->
+                   OpamStd.String.starts_with ~prefix (Term.name info))
+                commands in
+  match matches with
+  | [(_,info)] when Term.name info = "admin" -> true
+  | _ -> false

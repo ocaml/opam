@@ -25,6 +25,10 @@ val commands: command list
     command *)
 val is_builtin_command: string -> bool
 
+(** [is_admin_subcommand arg] is [true] if [arg] is a unique prefix of the admin
+    sub-command. *)
+val is_admin_subcommand: string -> bool
+
 (** opam *)
 val default: command
 

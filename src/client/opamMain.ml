@@ -190,7 +190,7 @@ let run default commands =
   main_catch_all @@ fun () ->
   check_and_run_external_commands ();
   let admin, argv1 =
-    if Array.length Sys.argv > 1 && Sys.argv.(1) = "admin" then
+    if Array.length Sys.argv > 1 && OpamCommands.is_admin_subcommand Sys.argv.(1) then
       true,
       Array.init (Array.length Sys.argv - 1) (function
           | 0 -> Sys.argv.(0)
