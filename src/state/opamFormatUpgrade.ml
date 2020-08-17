@@ -1052,40 +1052,55 @@ let from_2_0_to_2_1 _ conf = conf
 
 let latest_version = OpamFile.Config.format_version
 
+let latest_hard_upgrade = v2_0
+
 let as_necessary global_lock root config =
   let config_version = OpamFile.Config.opam_version config in
   let cmp =
     OpamVersion.(compare OpamFile.Config.format_version config_version)
   in
-  if cmp = 0 then ()
-  else if cmp < 0 then
-    if OpamFormatConfig.(!r.skip_version_checks) then () else
+  if cmp = 0 then config else
+  if cmp < 0 then
+    if OpamFormatConfig.(!r.skip_version_checks) then config else
       OpamConsole.error_and_exit `Configuration_error
         "%s reports a newer opam version, aborting."
         (OpamFilename.Dir.to_string root)
   else
-  if OpamVersion.compare config_version OpamFile.Config.format_version >= 0 then ()
+  if OpamVersion.compare config_version OpamFile.Config.format_version >= 0 then
+    config
   else
+  let on_the_fly, file_lock =
+    if OpamVersion.compare config_version latest_hard_upgrade >= 0
+    && OpamSystem.get_lock_flag global_lock <> `Lock_write then
+      (log "On the fly config upgrade, from %s to %s"
+         (OpamVersion.to_string config_version)
+         (OpamVersion.to_string latest_version);
+       true, `Lock_read)
+    else
+      false, `Lock_write
+  in
   let is_dev = OpamVersion.git () <> None in
-  OpamConsole.formatted_msg
-    "This %sversion of opam requires an update to the layout of %s \
-     from version %s to version %s, which can't be reverted.\n\
-     You may want to back it up before going further.\n"
-    (if is_dev then "development " else "")
-    (OpamFilename.Dir.to_string root)
-    (OpamVersion.to_string config_version)
-    (OpamVersion.to_string latest_version);
+  if not on_the_fly then
+    OpamConsole.formatted_msg
+      "This %sversion of opam requires an update to the layout of %s \
+       from version %s to version %s, which can't be reverted.\n\
+       You may want to back it up before going further.\n"
+      (if is_dev then "development " else "")
+      (OpamFilename.Dir.to_string root)
+      (OpamVersion.to_string config_version)
+      (OpamVersion.to_string latest_version);
   let dontblock =
     (* Deadlock until one is killed in interactive mode, but abort in batch *)
     if OpamStd.Sys.tty_out then None else Some true
   in
   try
-    OpamFilename.with_flock_upgrade `Lock_write ?dontblock global_lock
+    OpamFilename.with_flock_upgrade file_lock ?dontblock global_lock
     @@ fun _ ->
-    if is_dev &&
+    if on_the_fly
+    || is_dev &&
        Some "yes" =
-       OpamConsole.read "Type \"yes\" to perform the update and continue:" ||
-       not is_dev &&
+       OpamConsole.read "Type \"yes\" to perform the update and continue:"
+    || not is_dev &&
        OpamConsole.confirm "Perform the update and continue?"
     then
       let update_to v f config =
@@ -1093,8 +1108,9 @@ let as_necessary global_lock root config =
           let config = f root config |> OpamFile.Config.with_opam_version v in
           (* save the current version to mitigate damage is the upgrade goes
              wrong afterwards *)
-          OpamFile.Config.write (OpamPath.config root)
-            (OpamFile.Config.with_opam_version v config);
+          (if not on_the_fly then
+             OpamFile.Config.write (OpamPath.config root)
+               (OpamFile.Config.with_opam_version v config));
           config
         else config
       in
@@ -1114,8 +1130,12 @@ let as_necessary global_lock root config =
         update_to v2_0       from_2_0_beta5_to_2_0 |>
         update_to v2_1       from_2_0_to_2_1
       in
-      OpamConsole.msg "Format upgrade done.\n";
-      raise (Upgrade_done config)
+      if on_the_fly then
+        (log "Format upgrade done";
+         config)
+      else
+        (OpamConsole.msg "Format upgrade done.\n";
+         raise (Upgrade_done config));
     else
       OpamStd.Sys.exit_because `Aborted
   with OpamSystem.Locked ->

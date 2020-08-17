@@ -31,7 +31,7 @@ let load_config global_lock root =
            argument"
           (OpamFilename.Dir.to_string root)
   in
-  OpamFormatUpgrade.as_necessary global_lock root config;
+  let config = OpamFormatUpgrade.as_necessary global_lock root config in
   config
 
 let inferred_from_system = "Inferred from system"
@@ -44,7 +44,12 @@ let load lock_kind =
   let has_root = OpamFilename.exists_dir root in
   let global_lock =
     if has_root then
-      OpamFilename.flock `Lock_read (OpamPath.lock root)
+      let lock = (* needed for on-the-fly upgrade config file *)
+        match lock_kind with
+        | `Lock_none | `Lock_read -> `Lock_read
+        | `Lock_write -> `Lock_write
+      in
+      OpamFilename.flock lock (OpamPath.lock root)
     else OpamSystem.lock_none
   in
   (* The global_state lock actually concerns the global config file only (and

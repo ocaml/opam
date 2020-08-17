@@ -25,7 +25,7 @@ val latest_version: OpamVersion.t
 (** Runs the upgrade from its current format to the latest compatible version
     for the opam root at the given directory. A global write lock must be supplied.
     If an upgrade has been done, raises [Upgrade_done updated_config]. *)
-val as_necessary: OpamSystem.lock -> dirname -> OpamFile.Config.t -> unit
+val as_necessary: OpamSystem.lock -> dirname -> OpamFile.Config.t -> OpamFile.Config.t
 
 (** Converts the opam file format, including rewriting availability conditions
     based on OCaml-related variables into dependencies. The filename is used to
