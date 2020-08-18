@@ -87,7 +87,7 @@ val opam_init:
   ?no_auto_upgrade:bool ->
   ?assume_depexts:bool ->
   ?current_switch:OpamSwitch.t ->
-  ?switch_from:[ `Command_line | `Default | `Env ] ->
+  ?switch_from:OpamStateTypes.provenance ->
   ?jobs:int Lazy.t ->
   ?dl_jobs:int ->
   ?build_test:bool ->

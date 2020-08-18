@@ -9,11 +9,12 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamStateTypes
 
 type t = {
   root_dir: OpamFilename.Dir.t;
   current_switch: OpamSwitch.t option;
-  switch_from: [ `Env | `Command_line | `Default ];
+  switch_from: provenance;
   jobs: int Lazy.t;
   dl_jobs: int;
   build_test: bool;
@@ -53,7 +54,7 @@ let default = {
 type 'a options_fun =
   ?root_dir:OpamFilename.Dir.t ->
   ?current_switch:OpamSwitch.t ->
-  ?switch_from:[ `Env | `Command_line | `Default ] ->
+  ?switch_from:provenance ->
   ?jobs:(int Lazy.t) ->
   ?dl_jobs:int ->
   ?build_test:bool ->

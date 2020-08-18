@@ -160,3 +160,9 @@ type +'lock switch_state = {
      - switch-global and package variables
      - the solver universe? *)
 } constraint 'lock = 'lock lock
+
+(** Command-line setting provenance *)
+type provenance = [ `Env          (** Environment variable *)
+                  | `Command_line (** Command line *)
+                  | `Default      (** Default value *)
+                  ]
