@@ -230,8 +230,8 @@ let acolor_with_width width c () s =
     else String.make (w-String.length str) ' '
 
 let acolor c () = colorise c
-let acolor_w width c oc s =
-  output_string oc (acolor_with_width (Some width) c () s)
+let acolor_w width c f s =
+  Format.pp_print_string f (acolor_with_width (Some width) c () s)
 
 type win32_color_mode = Shim | VT100
 
@@ -495,6 +495,20 @@ let timestamp () =
     tm.Unix.tm_sec
     (int_of_float (1000.0 *. msec))
 
+let log_formatter, finalise_output =
+  if Sys.win32 then
+    let b = Buffer.create 128 in
+    let f _ =
+      win32_print_message `stderr (Buffer.contents b);
+      Buffer.clear b
+    in
+      Format.formatter_of_buffer b, f
+  else
+    Format.formatter_of_out_channel stderr, ignore
+
+let () =
+  Format.pp_set_margin log_formatter 0
+
 let log section ?(level=1) fmt =
   let debug_level =
     let debug_level = OpamCoreConfig.(!r.debug_level) in
@@ -510,24 +524,15 @@ let log section ?(level=1) fmt =
   if level <= abs debug_level then
     let () = clear_status () in
     let timestamp = if debug_level < 0 then "" else timestamp () ^ "  " in
-    if Sys.win32 then begin
-      (*
-       * In order not to break [slog], split the output into two. A side-effect
-       * of this is that logging lines may not use colour.
-       *)
-      win32_print_message `stderr (Printf.sprintf "%s%a  "
-        timestamp (acolor_with_width (Some 30) `yellow) section);
-      Printf.fprintf stderr (fmt ^^ "\n%!") end
-    else
-      Printf.fprintf stderr ("%s%a  " ^^ fmt ^^ "\n%!")
-        timestamp (acolor_w 30 `yellow) section
+    Format.kfprintf finalise_output log_formatter ("%s%a  " ^^ fmt ^^ "\n%!")
+      timestamp (acolor_w 30 `yellow) section
   else
-    Printf.ifprintf stderr fmt
+    Format.ifprintf Format.err_formatter fmt
 
 (* Helper to pass stringifiers to log (use [log "%a" (slog to_string) x]
    rather than [log "%s" (to_string x)] to avoid costly unneeded
    stringifications *)
-let slog to_string channel x = output_string channel (to_string x)
+let slog to_string f x = Format.pp_print_string f (to_string x)
 
 let error fmt =
   Printf.ksprintf (fun str ->
