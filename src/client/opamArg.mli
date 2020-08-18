@@ -102,6 +102,7 @@ type global_options = {
   no_auto_upgrade : bool;
   working_dir : bool;
   ignore_pin_depends : bool;
+  cli : OpamCLIVersion.t;
 }
 
 (** Global options *)

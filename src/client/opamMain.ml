@@ -15,23 +15,122 @@ open OpamStateTypes
 open OpamTypesBase
 open OpamStd.Op
 
+exception InvalidCLI of (OpamCLIVersion.t * provenance, string option) OpamCompat.Result.t
+
+(* Filter and parse "--cli=v" or "--cli v" options *)
+let rec filter_cli_arg cli acc args =
+  match args with
+  | []
+  | "--" :: _ -> (cli, List.rev_append acc args)
+  | "--cl" :: args -> filter_cli_arg cli acc ("--cli"::args)
+  | ["--cli"] | "--cli" :: "--" :: _ ->
+    raise (InvalidCLI(Error None))
+  | "--cli" :: arg :: args ->
+    let version =
+      match OpamCLIVersion.of_string_opt arg with
+      | Some cli ->
+        if OpamCLIVersion.is_supported cli then
+          cli
+        else
+          raise (InvalidCLI(Ok(cli, `Command_line)))
+      | None -> raise (InvalidCLI(Error(Some arg)))
+    in
+      filter_cli_arg (Some version) acc args
+  | arg :: args ->
+    match OpamStd.String.cut_at arg '=' with
+    | Some ("--cl", value)
+    | Some ("--cli", value) ->
+      filter_cli_arg cli acc ("--cli"::value::args)
+    | _ ->
+      filter_cli_arg cli (arg::acc) args
+
+(* Pre-process argv processing the --yes and --cli. Returns Some cli, if --cli
+   was encountered, a boolean indicating if a valid --yes/-y was encountered
+   (it returns false if multiple flags were encountered) and the list of
+   arguments to continue with processing. *)
+let rec preprocess_argv cli yes args =
+  let is_valid_yes = function [_] -> true | _ -> false in
+  match args with
+  | [] ->
+    (cli, is_valid_yes yes, yes)
+  | "--" :: _ ->
+    (cli, is_valid_yes yes, yes @ args)
+    (* Note that because this is evaluated before a sub-command, all the
+       prefixes of --yes are assumed to valid at all times. *)
+  | ("-y" | "--y" | "--ye" | "--yes") as yes_opt :: args ->
+    if yes = [] then
+      preprocess_argv cli [yes_opt] args
+    else
+      (cli, false, yes @ [yes_opt])
+  | "--cl" :: args -> preprocess_argv cli yes ("--cli"::args)
+  | ["--cli"] | "--cli" :: "--" :: _ ->
+    raise (InvalidCLI(Error None))
+  | "--cli" :: arg :: args ->
+    let version =
+      match OpamCLIVersion.of_string_opt arg with
+      | Some cli ->
+        if OpamCLIVersion.is_supported cli then
+          cli
+        else
+          raise (InvalidCLI(Ok(cli, `Command_line)))
+      | _ -> raise (InvalidCLI(Error(Some arg)))
+    in
+      preprocess_argv (Some version) yes args
+  | arg :: rest ->
+    match OpamStd.String.cut_at arg '=' with
+    | Some ("--cl", value)
+    | Some ("--cli", value) ->
+      preprocess_argv cli yes ("--cli"::value::rest)
+    | _ ->
+      if OpamCommands.is_builtin_command arg then
+        let (cli, rest) = filter_cli_arg cli [] rest in
+        (cli, is_valid_yes yes, arg :: (yes @ rest))
+      else
+        (cli, is_valid_yes yes, args)
+
 (* Handle git-like plugins *)
 let check_and_run_external_commands () =
   let plugin_prefix = "opam-" in
-  match Array.to_list Sys.argv with
-  | [] | [_] -> ()
-  | _ :: ("-y" | "--yes") :: name :: args
+  (* Pre-process the --yes and --cli options *)
+  let (cli, yes, argv) =
+    match Array.to_list Sys.argv with
+    | prog::args ->
+      let (cli, yes, args) = preprocess_argv None [] args in
+      let cli =
+        match cli with
+        | Some cli ->
+          if OpamCLIVersion.(cli < (2, 1)) then begin
+            let cli = OpamCLIVersion.to_string cli in
+            OpamConsole.warning "--cli is not supported by opam %s; setting OPAMCLI=%s is more portable" cli cli
+          end;
+          (cli, `Command_line)
+        | None ->
+          match OpamCLIVersion.env "CLI" with
+          | Some cli ->
+            if OpamCLIVersion.is_supported cli then
+              let () =
+                if OpamCLIVersion.(cli >= (2, 1)) then
+                  OpamConsole.warning "Setting OPAMCLI is brittle - consider using the '--cli <major>.<minor>' flag."
+              in
+                cli, `Env
+            else
+              raise (InvalidCLI(Ok(cli, `Env)))
+          | None ->
+            OpamCLIVersion.current, `Default
+      in
+      (cli, yes, prog::args)
+    | args -> ((OpamCLIVersion.current, `Default), false, args)
+  in
+  match argv with
+  | [] | [_] -> (cli, argv)
   | _ :: name :: args ->
     if
-      not (OpamStd.String.starts_with ~prefix:"-" name)
-      && not (OpamCommands.is_builtin_command name)
-    then
+      String.length name > 0 && name.[0] = '-' || OpamCommands.is_builtin_command name
+    then (cli, argv)
+    else
       (* No such command, check if there is a matching plugin *)
       let command = plugin_prefix ^ name in
-      let answer = match Sys.argv.(1) with
-        | "-y" | "--yes" -> Some true
-        | _ -> OpamStd.Config.env_bool "YES"
-      in
+      let answer = if yes then Some true else OpamStd.Config.env_bool "YES" in
       OpamStd.Config.init ~answer ();
       OpamFormatConfig.init ();
       let root_dir = OpamStateConfig.opamroot () in
@@ -55,11 +154,11 @@ let check_and_run_external_commands () =
       | Some command ->
         let argv = Array.of_list (command :: args) in
         raise (OpamStd.Sys.Exec (command, argv, env))
-      | None when not has_init -> ()
+      | None when not has_init -> (cli, argv)
       | None ->
         (* Look for a corresponding package *)
         match OpamStateConfig.get_switch_opt () with
-        | None -> ()
+        | None -> (cli, argv)
         | Some sw ->
           OpamGlobalState.with_ `Lock_none @@ fun gt ->
           OpamSwitchState.with_ `Lock_none gt ~switch:sw @@ fun st ->
@@ -80,7 +179,7 @@ let check_and_run_external_commands () =
               candidates
           in
           let installed = OpamPackage.Set.inter plugins st.installed in
-          if OpamPackage.Set.is_empty candidates then ()
+          if OpamPackage.Set.is_empty candidates then (cli, argv)
           else if not OpamPackage.Set.(is_empty installed) then
             (OpamConsole.error
                "Plugin %s is already installed, but no %s command was found.\n\
@@ -129,6 +228,14 @@ let check_and_run_external_commands () =
               OpamConsole.msg "\n";
               let argv = Array.of_list (command :: args) in
               raise (OpamStd.Sys.Exec (command, argv, env))
+          else (cli, argv)
+
+let display_cli_error msg =
+  Format.eprintf "@[<v>opam: @[%a@]@,@[Usage: @[opam COMMAND ...@]@]@,Try `opam --help' for more information.@]@."
+                 Format.pp_print_text msg
+
+let display_cli_error fmt =
+  Format.ksprintf display_cli_error fmt
 
 let rec main_catch_all f =
   try f () with
@@ -173,6 +280,24 @@ let rec main_catch_all f =
         (* workaround warning 52, this is a fallback (we already handle the
            signal) and there is no way around at the moment *)
         141
+      | InvalidCLI (Ok(cli, source)) ->
+        (* Unsupported CLI version *)
+        let suffix =
+          if source = `Env then
+            " Please fix the value of the OPAMCLI environment variable, or use the '--cli <major>.<minor>' flag"
+          else
+            ""
+        in
+        OpamConsole.error "opam command-line version %s is not supported.%s" (OpamCLIVersion.to_string cli) suffix;
+        OpamStd.Sys.get_exit_code `Bad_arguments
+      | InvalidCLI (Error None) ->
+        (* No CLI version given *)
+        display_cli_error "option `--cli' needs an argument";
+        OpamStd.Sys.get_exit_code `Bad_arguments
+      | InvalidCLI (Error (Some invalid)) ->
+        (* Corrupt CLI version *)
+        display_cli_error "option `--cli': invalid value `%s', expected major.minor" invalid;
+        OpamStd.Sys.get_exit_code `Bad_arguments
       | Failure msg ->
         OpamConsole.errmsg "Fatal error: %s\n" msg;
         OpamConsole.errmsg "%s" (OpamStd.Exn.pretty_backtrace e);
@@ -184,27 +309,21 @@ let rec main_catch_all f =
     in
     exit exit_code
 
-let run default commands =
+let run () =
   OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
   OpamSystem.init ();
   main_catch_all @@ fun () ->
-  check_and_run_external_commands ();
-  let admin, argv1 =
-    if Array.length Sys.argv > 1 && OpamCommands.is_admin_subcommand Sys.argv.(1) then
-      true,
-      Array.init (Array.length Sys.argv - 1) (function
-          | 0 -> Sys.argv.(0)
-          | i -> Sys.argv.(i+1))
-    else false, Sys.argv
+  let (cli, _), argv = check_and_run_external_commands () in
+  let (default, commands), argv1 =
+    match argv with
+    | prog :: command :: argv when OpamCommands.is_admin_subcommand command ->
+      OpamAdminCommand.get_cmdliner_parser cli, prog::argv
+    | _ ->
+      OpamCommands.get_cmdliner_parser cli, argv
   in
-  let eval () =
-    if admin then
-      Term.eval_choice ~catch:false ~argv:argv1
-        OpamAdminCommand.default_subcommand OpamAdminCommand.admin_subcommands
-    else
-      Term.eval_choice ~catch:false ~argv:argv1 default commands
-  in
-  match eval () with
+  let argv = Array.of_list argv1 in
+  OpamConsole.log "CLI" "Parsing CLI version %s" @@ OpamCLIVersion.to_string cli;
+  match Term.eval_choice ~catch:false ~argv default commands with
   | `Error _ -> exit (OpamStd.Sys.get_exit_code `Bad_arguments)
   | _        -> exit (OpamStd.Sys.get_exit_code `Success)
 
@@ -240,4 +359,4 @@ let () =
       );
       json_out ()
     );
-  run OpamCommands.default OpamCommands.commands
+  run ()
