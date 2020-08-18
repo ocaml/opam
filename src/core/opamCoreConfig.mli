@@ -50,6 +50,8 @@ type t = private {
   precise_tracking : bool;
   (** If set, will take full md5 of all files when checking diffs (to track
       installations), rather than rely on just file size and mtime *)
+  set : bool;
+  (** Options have not yet been initialised (i.e. defaults are active) *)
 }
 
 type 'a options_fun =

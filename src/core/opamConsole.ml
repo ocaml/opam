@@ -509,6 +509,17 @@ let log_formatter, finalise_output =
 let () =
   Format.pp_set_margin log_formatter 0
 
+let pending = Queue.create ()
+
+let clear_pending debug_level =
+  let f (level, timestamp, msg) =
+    if level <= abs debug_level then
+      let timestamp = if debug_level < 0 then "" else timestamp in
+      Format.kfprintf finalise_output log_formatter "%s%s%!" timestamp msg
+  in
+  Queue.iter f pending;
+  Queue.clear pending
+
 let log section ?(level=1) fmt =
   let debug_level =
     let debug_level = OpamCoreConfig.(!r.debug_level) in
@@ -521,8 +532,15 @@ let log section ?(level=1) fmt =
       | None -> debug_level
       | exception Not_found -> 0
   in
-  if level <= abs debug_level then
+  if not OpamCoreConfig.(!r.set) then
+    let b = Buffer.create 128 in
+    let timestamp = timestamp () ^ "  " in
+    let k _ = Queue.push (level, timestamp, Buffer.contents b) pending in
+    Format.kfprintf k (Format.formatter_of_buffer b) ("%a  " ^^ fmt ^^ "\n%!")
+      (acolor_w 30 `yellow) section
+  else if level <= abs debug_level then
     let () = clear_status () in
+    let () = clear_pending debug_level in
     let timestamp = if debug_level < 0 then "" else timestamp () ^ "  " in
     Format.kfprintf finalise_output log_formatter ("%s%a  " ^^ fmt ^^ "\n%!")
       timestamp (acolor_w 30 `yellow) section

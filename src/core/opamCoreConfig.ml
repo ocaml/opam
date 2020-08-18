@@ -27,6 +27,7 @@ type t = {
   merged_output: bool;
   use_openssl: bool;
   precise_tracking: bool;
+  set: bool;
 }
 
 type 'a options_fun =
@@ -64,6 +65,7 @@ let default = {
   merged_output = true;
   use_openssl = true;
   precise_tracking = false;
+  set = false;
 }
 
 let setk k t
@@ -98,6 +100,7 @@ let setk k t
     merged_output = t.merged_output + merged_output;
     use_openssl = t.use_openssl + use_openssl;
     precise_tracking = t.precise_tracking + precise_tracking;
+    set = true;
   }
 
 let set t = setk (fun x () -> x) t
