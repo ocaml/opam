@@ -3652,7 +3652,7 @@ let lock =
   in
   Term.(pure lock $global_options $only_direct_flag $lock_suffix
         $atom_or_local_list),
-  Term.info "lock" ~doc ~man
+  term_info "lock" ~doc ~man
 
 (* HELP *)
 let help =
