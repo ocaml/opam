@@ -221,7 +221,7 @@ let help_sections = [
   `S global_option_section;
   `P "These options are common to all commands.";
 
-  `S "ENVIRONMENT VARIABLES";
+  `S Manpage.s_environment;
   `P "Opam makes use of the environment variables listed here. Boolean \
       variables should be set to \"0\", \"no\", \"false\" or the empty  string \
       to disable, \"1\", \"yes\" or \"true\" to enable.";
