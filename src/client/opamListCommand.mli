@@ -111,7 +111,12 @@ val default_list_format: output_format list
     state corresponding to the configured repos *)
 val get_switch_state: 'a global_state -> 'a repos_state -> unlocked switch_state
 
-(** For documentation, includes a dummy '<field>:' for the [Field] format *)
+(** For documentation, includes a dummy '<field>:' for the [Field] format.
+    Used for the --columns argument. *)
+val raw_field_names: (output_format * string) list
+
+(** For documentation, includes a dummy '<field>:' and '<field>' for the
+    [Field] format. Used for the --field argument. *)
 val field_names: (output_format * string) list
 
 val string_of_field: ?raw:bool -> output_format -> string

@@ -1417,7 +1417,7 @@ let package_listing =
                        The default is $(b,name) when $(i,--short) is present \
                        and %s otherwise."
          (OpamStd.List.concat_map ", " (fun (_,f) -> Printf.sprintf "$(b,%s)" f)
-            OpamListCommand.field_names)
+            OpamListCommand.raw_field_names)
          (OpamStd.List.concat_map ", "
             (fun f -> Printf.sprintf "$(b,%s)" (OpamListCommand.string_of_field f))
             OpamListCommand.default_list_format))

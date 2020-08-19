@@ -442,6 +442,9 @@ let field_names = [
   Depexts, "depexts";
 ]
 
+let raw_field_names =
+  List.filter (function Field _, _ -> false | _ -> true) field_names
+
 let string_of_field ?(raw=false) = function
   | Field s -> if raw then s ^":" else s
   | Raw_field s -> s ^":"
