@@ -169,7 +169,7 @@ let init_doc = "Initialize opam state, or set init options."
 let init =
   let doc = init_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "Initialise the opam state, or update opam init options";
     `P (Printf.sprintf
          "The $(b,init) command initialises a local \"opam root\" (by default, \
@@ -187,8 +187,8 @@ let init =
     `P "Additionally, this command allows one to customise some aspects of opam's \
         shell integration, when run initially (avoiding the interactive \
         dialog), but also at any later time.";
-    `S "ARGUMENTS";
-    `S "OPTIONS";
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
     `S "CONFIGURATION FILE";
     `P (Printf.sprintf
          "Any field from the built-in initial configuration can be overridden \
@@ -430,7 +430,7 @@ let list ?(force_search=false) () =
   let selection_docs = OpamArg.package_selection_section in
   let display_docs = OpamArg.package_listing_section in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "List selections of opam packages.";
     `P "Without argument, the command displays the list of currently installed \
         packages. With pattern arguments, lists all available packages \
@@ -446,7 +446,7 @@ let list ?(force_search=false) () =
     `P "For a more detailed description of packages, see $(b,opam show). For \
         extended search capabilities within the packages' metadata, see \
         $(b,opam search).";
-    `S "ARGUMENTS";
+    `S Manpage.s_arguments;
     `S selection_docs;
     `S display_docs;
   ] in
@@ -675,7 +675,7 @@ let show_doc = "Display information about specific packages."
 let show =
   let doc = show_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "This command displays the information block for the selected \
         package(s).";
     `P "The information block consists of the name of the package, \
@@ -980,7 +980,7 @@ let var_doc = "Display and update the value associated with a given variable"
 let var =
   let doc = var_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "Without argument, lists the opam variables currently defined. With a \
         $(i,VAR) argument, prints the value associated with $(i,VAR). \
         Otherwise, sets or updates $(i,VAR)'s value. \
@@ -1026,7 +1026,7 @@ let option_doc = "Global and switch configuration options settings"
 let option =
   let doc = option_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "Without argument, list all configurable fields. If a field name \
         $(i,FIELD) is given, display its content. Otherwise, sets or updates \
         the given field in the global/switch configuration file. \
@@ -1132,7 +1132,7 @@ let config =
     "Deprecated, see $(b,set-var).";
   ] in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "This command uses opam state to output information on how to use \
         installed libraries, update the $(b,PATH), and substitute \
         variables used in opam packages.";
@@ -1140,7 +1140,7 @@ let config =
         by opam internally, and are of limited interest for the casual \
         user.";
   ] @ mk_subdoc commands
-    @ [`S "OPTIONS"]
+    @ [`S Manpage.s_options]
   in
 
   let command, params = mk_subcommands commands in
@@ -1383,7 +1383,7 @@ let exec_doc = "Executes a command in the proper opam environment"
 let exec =
   let doc = exec_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "Execute $(i,COMMAND) with the correct environment variables. This \
         command can be used to cross-compile between switches using $(b,opam \
         config exec --switch=SWITCH -- COMMAND ARG1 ... ARGn). Opam expansion \
@@ -1412,7 +1412,7 @@ let env_doc = "Prints appropriate shell variable assignments to stdout"
 let env =
   let doc = env_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "Returns the bindings for the environment variables set in the current \
         switch, e.g. PATH, in a format intended to be evaluated by a shell. \
         With $(i,-v), add comments documenting the reason or package of origin \
@@ -1469,7 +1469,7 @@ let install_doc = "Install a list of packages."
 let install =
   let doc = install_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "This command installs one or more packages inside the currently \
         selected switch (see $(b,opam switch)). Once installed, you can remove \
         packages with $(b,opam remove), upgrade them with $(b,opam upgrade), \
@@ -1487,8 +1487,8 @@ let install =
         $(i,opam) files. Then the corresponding packages will be pinned to \
         their local directory and installed (unless $(b,--deps-only) was \
         specified).";
-    `S "ARGUMENTS";
-    `S "OPTIONS";
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
   ] @ OpamArg.man_build_option_section
    in
   let add_to_roots =
@@ -1621,7 +1621,7 @@ let remove_doc = "Remove a list of packages."
 let remove =
   let doc = remove_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "This command uninstalls one or more packages currently \
         installed in the currently selected compiler switch. To remove packages \
         installed in another compiler, you need to switch compilers using \
@@ -1629,8 +1629,8 @@ let remove =
         inverse of $(b,opam-install).";
     `P "If a directory name is specified as package, packages pinned to that \
         directory are both unpinned and removed.";
-    `S "ARGUMENTS";
-    `S "OPTIONS";
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
   ] @ OpamArg.man_build_option_section
   in
   let autoremove =
@@ -1702,14 +1702,14 @@ let remove =
 let reinstall =
   let doc = "Reinstall a list of packages." in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "This command removes the given packages and the ones that depend on \
         them, and reinstalls the same versions. Without arguments, assume \
         $(b,--pending) and reinstall any package with upstream changes.";
     `P "If a directory is specified as argument, anything that is pinned to \
         that directory is selected for reinstall.";
-    `S "ARGUMENTS";
-    `S "OPTIONS";
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
   ] @ OpamArg.man_build_option_section
   in
   let cmd =
@@ -1791,7 +1791,7 @@ let update_doc = "Update the list of available packages."
 let update =
   let doc = update_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "Update the package definitions. This fetches the newest version of the \
         repositories configured through $(b, opam repository), and the sources \
         of installed development packages and packages pinned in the current \
@@ -1860,15 +1860,15 @@ let upgrade_doc = "Upgrade the installed package to latest version."
 let upgrade =
   let doc = upgrade_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "This command upgrades the installed packages to their latest available \
         versions. More precisely, this command calls the dependency solver to \
         find a consistent state where $(i,most) of the installed packages are \
         upgraded to their latest versions.";
     `P "If a directory is specified as argument, anything that is pinned to \
         that directory is selected for upgrade.";
-    `S "ARGUMENTS";
-    `S "OPTIONS";
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
   ] @ OpamArg.man_build_option_section
   in
   let fixup =
@@ -1956,7 +1956,7 @@ let repository =
     "Synonym to $(b,add NAME --rank RANK)";
   ] in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "This command is used to manage package repositories. Repositories can \
         be registered through subcommands $(b,add), $(b,remove) and \
         $(b,set-url), and are updated from their URLs using $(b,opam update). \
@@ -1973,7 +1973,7 @@ let repository =
           $(b,remove), $(b,set-repos). If no flag in this section is specified \
           the updated selections default to the current switch. Multiple scopes \
           can be selected, e.g. $(b,--this-switch --set-default).";
-      `S "OPTIONS";
+      `S Manpage.s_options;
     ]
   in
   let command, params = mk_subcommands commands in
@@ -2324,7 +2324,7 @@ let switch =
     "Deprecated alias for 'set-invariant'.";
   ] in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "This command is used to manage \"switches\", which are independent \
         installation prefixes with their own compiler and sets of installed \
         and pinned packages. This is typically useful to have different \
@@ -2350,7 +2350,7 @@ let switch =
         --switch=SWITCH --set-switch\\)).";
   ] @ mk_subdoc ~defaults:["","list";"SWITCH","set"] commands
     @ [
-      `S "EXAMPLES";
+      `S Manpage.s_examples;
       `Pre "    opam switch create 4.08.0";
       `P "Create a new switch called \"4.08.0\" and select it, with a compiler \
           automatically selected at version 4.08.0 (note that this can fail in \
@@ -2367,7 +2367,7 @@ let switch =
           $(b,ocaml-variants.4.10.0+trunk) as compiler, with a new $(i,beta) \
           repository bound to the given URL selected besides the default one."
     ]
-    @ [`S "OPTIONS"]
+    @ [`S Manpage.s_options]
     @ OpamArg.man_build_option_section
   in
 
@@ -2788,7 +2788,7 @@ let pin ?(unpin_only=false) () =
      order.";
   ] in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "This command allows local customisation of the packages in a given \
         switch. A pinning can either just enforce a given version, or provide \
         a local, editable version of the definition of the package. It is also \
@@ -2811,7 +2811,7 @@ let pin ?(unpin_only=false) () =
     `P "The default subcommand is $(i,list) if there are no further arguments, \
         and $(i,add) otherwise if unambiguous.";
   ] @ mk_subdoc ~defaults:["","list"] commands @ [
-      `S "OPTIONS";
+      `S Manpage.s_options;
     ] @ OpamArg.man_build_option_section
   in
   let command, params =
@@ -3107,7 +3107,7 @@ let source_doc = "Get the source of an opam package."
 let source =
   let doc = source_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "Downloads the source for a given package to a local directory \
         for development, bug fixing or documentation purposes."
   ] in
@@ -3237,11 +3237,11 @@ let lint_doc = "Checks and validate package description ('opam') files."
 let lint =
   let doc = lint_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "Given an $(i,opam) file, performs several quality checks on it and \
         outputs recommendations, warnings or errors on stderr.";
-    `S "ARGUMENTS";
-    `S "OPTIONS";
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
     `S "LINT CODES"
   ] @
     List.map (fun (c,t,s) ->
@@ -3252,7 +3252,7 @@ let lint =
   in
   let files =
     Arg.(value & pos_all (existing_filename_dirname_or_dash) [] &
-         info ~docv:"FILES" []
+         info ~docv:Manpage.s_files []
            ~doc:"Name of the opam files to check, or directory containing \
                  them. Current directory if unspecified")
   in
@@ -3411,7 +3411,7 @@ let clean_doc = "Cleans up opam caches"
 let clean =
   let doc = clean_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "Cleans up opam caches, reclaiming some disk space. If no options are \
         specified, the default is $(b,--logs --download-cache \
         --switch-cleanup)."
@@ -3589,7 +3589,7 @@ let lock_doc = "Create locked opam files to share build environments across host
 let lock =
   let doc = lock_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "Generates a lock file of a package: checks the current \
         state of their installed dependencies, and outputs modified versions of \
         the opam file with a $(i,.locked) suffix, where all the (transitive) \
@@ -3613,15 +3613,15 @@ let lock =
         dependencies some packages are pinned ";
     `P "- pins are resolved: if a package is locally pinned, opam tries to get \
         its remote url and branch, and sets this as the target URL";
-    `S "ARGUMENTS";
-    `S "OPTIONS";
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
   ]
   in
   let only_direct_flag =
     mk_flag ["direct-only"]
       "Only lock direct dependencies, rather than the whole dependency tree."
   in
-  let lock_suffix = OpamArg.lock_suffix "OPTIONS" in
+  let lock_suffix = OpamArg.lock_suffix Manpage.s_options in
   let lock global_options only_direct lock_suffix atom_locs =
     apply_global_options global_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -3658,7 +3658,7 @@ let lock =
 let help =
   let doc = "Display help about opam and opam commands." in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "Prints help about opam commands.";
     `P "Use `$(mname) help topics' to get the full list of help topics.";
   ] in
@@ -3683,7 +3683,7 @@ let help =
 let default =
   let doc = "source-based package management" in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "Opam is a package manager. It uses the powerful mancoosi tools to \
         handle dependencies, including support for version constraints, \
         optional dependencies, and conflict management. The default \
@@ -3694,7 +3694,7 @@ let default =
         different sets of intalled packages.";
     `P "Use either $(b,opam <command> --help) or $(b,opam help <command>) \
         for more information on a specific command.";
-    `S "COMMANDS";
+    `S Manpage.s_commands;
     `S "COMMAND ALIASES";
   ] @  help_sections
   in
@@ -3735,7 +3735,7 @@ let admin =
   let doc = "Use 'opam admin' instead (abbreviation not supported)" in
   Term.(ret (const (`Error (true, doc)))),
   Term.info "admin" ~doc:OpamAdminCommand.admin_command_doc
-    ~man:[`S "SYNOPSIS";
+    ~man:[`S Manpage.s_synopsis;
           `P doc]
 
 let commands = [

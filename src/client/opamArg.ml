@@ -216,7 +216,7 @@ let apply_build_options b =
 let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
 
 (* Help sections common to all commands *)
-let global_option_section = "COMMON OPTIONS"
+let global_option_section = Manpage.s_common_options
 let help_sections = [
   `S global_option_section;
   `P "These options are common to all commands.";
@@ -342,7 +342,7 @@ let help_sections = [
   `P "$(i,OPAMWORKINGDIR) see option `--working-dir`";
   `P "$(i,OPAMYES) see option `--yes'.";
 
-  `S "EXIT STATUS";
+  `S Manpage.s_exit_status;
   `P "As an exception to the following, the `exec' command returns 127 if the \
       command was not found or couldn't be executed, and the command's exit \
       value otherwise."
@@ -396,7 +396,7 @@ let help_sections = [
   `S "FURTHER DOCUMENTATION";
   `P (Printf.sprintf "See https://opam.ocaml.org/doc.");
 
-  `S "AUTHORS";
+  `S Manpage.s_authors;
   `P "Vincent Bernardoff <vb@luminar.eu.org>"; `Noblank;
   `P "Raja Boujbel       <raja.boujbel@ocamlpro.com>"; `Noblank;
   `P "Roberto Di Cosmo   <roberto@dicosmo.org>"; `Noblank;
@@ -408,7 +408,7 @@ let help_sections = [
   `P "Ralf Treinen       <ralf.treinen@pps.jussieu.fr>"; `Noblank;
   `P "Frederic Tuong     <tuong@users.gforge.inria.fr>";
 
-  `S "BUGS";
+  `S Manpage.s_bugs;
   `P "Check bug reports at https://github.com/ocaml/opam/issues.";
 ]
 
@@ -773,7 +773,7 @@ type 'a subcommands = 'a subcommand list
 let mk_subdoc ?(defaults=[]) commands =
   let bold s = Printf.sprintf "$(b,%s)" s in
   let it s = Printf.sprintf "$(i,%s)" s in
-  `S "COMMANDS" ::
+  `S Manpage.s_commands ::
   (List.map (function
        | "", name ->
          `P (Printf.sprintf "Without argument, defaults to %s."
@@ -811,12 +811,12 @@ let make_command_alias cmd ?(options="") name =
   let orig = Term.name info in
   let doc = Printf.sprintf "An alias for $(b,%s%s)." orig options in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P (Printf.sprintf "$(mname)$(b, %s) is an alias for $(mname)$(b, %s%s)."
           name orig options);
     `P (Printf.sprintf "See $(mname)$(b, %s --help) for details."
           orig);
-    `S "OPTIONS";
+    `S Manpage.s_options;
   ] @ help_sections
   in
   term,
@@ -850,7 +850,7 @@ let bad_subcommand subcommands (command, usersubcommand, userparams) =
 
 let term_info title ~doc ~man =
   let man = man @ help_sections in
-  Term.info ~sdocs:global_option_section ~docs:"COMMANDS" ~doc ~man title
+  Term.info ~sdocs:global_option_section ~docs:Manpage.s_commands ~doc ~man title
 
 let arg_list name doc kind =
   let doc = Arg.info ~docv:name ~doc [] in
