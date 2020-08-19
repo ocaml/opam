@@ -2436,7 +2436,7 @@ let switch =
        consistency checks."
   in
   let no_action =
-    mk_flag ["no-action"]
+    mk_flag ["n"; "no-action"]
       "Only for $(i,set-invariant): set the invariant, but don't enforce it \
        right away: wait for the next $(i,install), $(i,upgrade) or similar \
        command."
