@@ -36,6 +36,9 @@ New option/command/subcommand are prefixed with ◈.
 ## Lint
   *
 
+## Lock
+  * Support -d as alias of --direct-only (to match plugin) [#4319 @dra27]
+
 ## External dependencies
   *
 

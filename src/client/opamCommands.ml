@@ -3618,7 +3618,7 @@ let lock =
   ]
   in
   let only_direct_flag =
-    mk_flag ["direct-only"]
+    mk_flag ["d"; "direct-only"]
       "Only lock direct dependencies, rather than the whole dependency tree."
   in
   let lock_suffix = OpamArg.lock_suffix "OPTIONS" in
