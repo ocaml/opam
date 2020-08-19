@@ -821,7 +821,7 @@ let make_command_alias cmd ?(options="") name =
   in
   term,
   Term.info name
-    ~docs:"COMMAND ALIASES"
+    ~docs:"COMMAND ALIASES" ~sdocs:global_option_section
     ~doc ~man
 
 let bad_subcommand subcommands (command, usersubcommand, userparams) =

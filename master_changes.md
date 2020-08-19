@@ -3,6 +3,9 @@ note.
 Possibly scripts breaking changes are prefixed with ✘.
 New option/command/subcommand are prefixed with ◈.
 
+## Global CLI
+  * --help/--version documented in wrong section for aliases [#4317 @dra27]
+
 ## Init
   *
 
