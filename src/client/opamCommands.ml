@@ -3600,7 +3600,7 @@ let lock =
     `P "If paths (filename or directory) are given, those opam files are locked. \
         If package is given, installed one is locked, otherwise its latest version.";
     `P "Fails if all mandatory dependencies are not installed in the switch.";
-    `S "What is changed in the locked file?";
+    `S "LOCK FILE CHANGED FIELDS";
     `P "- $(i,depends) are fixed to their specific versions, with all filters \
         removed (except for the exceptions below";
     `P "- $(i,depopts) that are installed in the current switch are turned into \
