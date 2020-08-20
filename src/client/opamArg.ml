@@ -619,6 +619,8 @@ let atom_or_dir =
   parse, print
 
 let dep_formula =
+  let module OpamParser = OpamParser.FullPos in
+  let module OpamPrinter = OpamPrinter.FullPos in
   let pp = OpamFormat.V.(package_formula `Conj (constraints version)) in
   let parse str =
     try

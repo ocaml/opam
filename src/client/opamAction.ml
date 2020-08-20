@@ -404,6 +404,7 @@ let prepare_package_source st nv dir =
       prepare_package_build (OpamPackageVar.resolve ~opam st) opam nv dir
 
 let compilation_env t opam =
+  let open OpamParserTypes in
   OpamEnv.get_full ~force_path:true t ~updates:([
       "CDPATH", Eq, "", Some "shell env sanitization";
       "MAKEFLAGS", Eq, "", Some "make env sanitization";

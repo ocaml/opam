@@ -13,6 +13,9 @@ open OpamTypes
 open OpamTypesBase
 open OpamStd.Op
 
+module OpamParser = OpamParser.FullPos
+module OpamPrinter = OpamPrinter.FullPos
+
 let log ?level fmt =
   OpamConsole.log "FILTER" ?level fmt
 let slog = OpamConsole.slog

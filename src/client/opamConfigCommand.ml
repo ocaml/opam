@@ -12,7 +12,7 @@
 let log fmt = OpamConsole.log "CONFIG" fmt
 let slog = OpamConsole.slog
 
-open OpamParserTypes
+open OpamParserTypes.FullPos
 open OpamTypes
 open OpamTypesBase
 open OpamStateTypes
@@ -371,6 +371,9 @@ let global_doc = "global configuration"
 let switch_doc switch =
   Printf.sprintf "switch %s"
     (OpamConsole.colorise `bold (OpamSwitch.to_string switch))
+
+module OpamParser = OpamParser.FullPos
+module OpamPrinter = OpamPrinter.FullPos
 
 (* General setting option function. Takes the [field] to update, the [value]
    operation, [conf] the configuration according the config file (['config

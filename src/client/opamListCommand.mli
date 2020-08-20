@@ -11,7 +11,7 @@
 
 (** Functions handling the "opam list" subcommand *)
 
-open OpamParserTypes
+open OpamParserTypes.FullPos
 open OpamTypes
 open OpamStateTypes
 

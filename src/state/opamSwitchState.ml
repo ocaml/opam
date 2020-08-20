@@ -1007,7 +1007,7 @@ let not_found_message st (name, cstr) =
   | Some (relop,v) when OpamPackage.has_name st.packages name ->
     Printf.sprintf "Package %s has no version %s%s."
       (OpamPackage.Name.to_string name)
-      (match relop with `Eq -> "" | r -> OpamPrinter.relop_kind r)
+      (match relop with `Eq -> "" | r -> OpamPrinter.FullPos.relop_kind r)
       (OpamPackage.Version.to_string v)
   | _ ->
     Printf.sprintf "No package named %s found."

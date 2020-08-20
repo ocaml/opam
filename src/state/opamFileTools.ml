@@ -9,7 +9,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamParserTypes
+open OpamParserTypes.FullPos
 open OpamTypes
 open OpamTypesBase
 
@@ -1084,7 +1084,7 @@ let dep_formula_to_string f =
   let pp =
     OpamFormat.V.(package_formula `Conj (constraints version))
   in
-  OpamPrinter.value (OpamPp.print pp f)
+  OpamPrinter.FullPos.value (OpamPp.print pp f)
 
 let sort_opam opam =
   log "sorting %s" (OpamPackage.to_string (package opam));

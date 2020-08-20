@@ -10,7 +10,7 @@
 (**************************************************************************)
 
 open OpamCompat
-open OpamParserTypes
+open OpamParserTypes.FullPos
 open OpamTypes
 open OpamStateTypes
 open OpamStd.Op
@@ -483,6 +483,7 @@ let version_color st nv =
     (if is_available nv then [] else [`crossed;`red])
 
 let mini_field_printer ?(prettify=false) ?(normalise=false) =
+  let module OpamPrinter = OpamPrinter.FullPos in
   if normalise then OpamPrinter.Normalise.value else
   fun v -> match v.pelem with
   | String s when prettify -> s

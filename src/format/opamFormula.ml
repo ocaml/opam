@@ -19,7 +19,7 @@ let neg_relop = function
   | `Leq -> `Gt
   | `Lt -> `Geq
 
-let string_of_relop = OpamPrinter.relop_kind
+let string_of_relop = OpamPrinter.FullPos.relop_kind
 
 type version_constraint = relop * OpamPackage.Version.t
 
@@ -63,7 +63,7 @@ let atom_of_string str =
     let sversion = Re.Group.get sub 3 in
     let name = OpamPackage.Name.of_string sname in
     let sop = if sop = "." then "=" else sop in
-    let op = OpamLexer.relop sop in
+    let op = OpamLexer.FullPos.relop sop in
     let version = OpamPackage.Version.of_string sversion in
     name, Some (op, version)
   with Not_found | Failure _ | OpamLexer.Error _ ->

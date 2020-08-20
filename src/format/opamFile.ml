@@ -19,10 +19,13 @@
     - files using the "opam syntax" and lexer, parsed using OpamFormat.Pp.V
 *)
 
-open OpamParserTypes
+open OpamParserTypes.FullPos
 open OpamTypes
 open OpamTypesBase
 open OpamStd.Op
+
+module OpamParser = OpamParser.FullPos
+module OpamPrinter = OpamPrinter.FullPos
 
 module Pp = struct
   include OpamPp
@@ -545,7 +548,7 @@ module Environment = LineFile(struct
       (OpamFormat.lines_set ~empty:[] ~add:OpamStd.List.cons ~fold:List.fold_right @@
        Pp.identity ^+
        Pp.of_pair "env_update_op"
-         (OpamLexer.env_update_op, OpamPrinter.env_update_op_kind) ^+
+         (OpamLexer.FullPos.env_update_op, OpamPrinter.env_update_op_kind) ^+
        Pp.identity ^+
        Pp.opt Pp.singleton)
       -| Pp.pp (fun ~pos:_ -> List.rev) List.rev

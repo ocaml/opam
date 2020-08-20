@@ -174,7 +174,7 @@ type repository = {
 
 (** {2 Variable-based filters} *)
 
-type relop = OpamParserTypes.relop_kind
+type relop = OpamParserTypes.FullPos.relop_kind
 
 type filter =
   | FBool of bool
@@ -389,7 +389,7 @@ type stats = {
 type env = (string * string * string option) list
 
 (** Environment updates *)
-type env_update = string * OpamParserTypes.env_update_op_kind * string * string option
+type env_update = string * OpamParserTypes.FullPos.env_update_op_kind * string * string option
 (** var, update_op, value, comment *)
 
 (** Tags *)

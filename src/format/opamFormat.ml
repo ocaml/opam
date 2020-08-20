@@ -9,7 +9,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamParserTypes
+open OpamParserTypes.FullPos
 open OpamTypes
 open OpamTypesBase
 open OpamStd.Op
@@ -556,7 +556,7 @@ module V = struct
   let env_binding =
     let parse ~pos:_ v = match v.pelem with
       | Relop ({ pelem = `Eq;_}, { pelem = Ident i;_}, { pelem = String s;_}) ->
-        i, Eq, s, None
+        i, OpamParserTypes.Eq, s, None
       | Env_binding ({ pelem = Ident i; _}, op, { pelem = String s; _}) ->
         i, op.pelem, s, None
       | _ -> unexpected ()
@@ -878,6 +878,7 @@ module I = struct
   exception Invalid_signature of pos * (string*string*string) list option
 
   let signed ~check =
+    let module OpamPrinter = OpamPrinter.FullPos in
     let pp_sig = V.map_list ~depth:2 signature in
     extract_field "signature" -|
     pp ~name:"signed-file"

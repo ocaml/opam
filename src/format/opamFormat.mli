@@ -11,7 +11,7 @@
 
 (** OPAM files syntax and conversion tools *)
 
-open OpamParserTypes
+open OpamParserTypes.FullPos
 open OpamTypes
 open OpamPp
 
