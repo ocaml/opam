@@ -16,7 +16,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Switch
-  *
+  * Support -n as an alias of --no-action (to match opam-pin) [#4324 @dra27]
 
 ## Pin
   *
