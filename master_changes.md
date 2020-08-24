@@ -52,6 +52,9 @@ New option/command/subcommand are prefixed with ◈.
 ## Repository management
   *
 
+## VCS
+  * Add error message in case git repo is empty [#4303 @rjbou - fix #3905]
+
 ## Build
   *
 
