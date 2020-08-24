@@ -22,7 +22,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## List
-  *
+  * <field> form no longer advertised as valid for --columns [#4322 @dra27]
 
 ## Show
   *
@@ -55,7 +55,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Admin
-  *
+  * <field> form no longer advertised as valid for --columns in list [#4322 @dra27]
 
 ## Opam installer
   *
