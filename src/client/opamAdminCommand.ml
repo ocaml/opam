@@ -28,7 +28,7 @@ let admin_command_doc =
   "Tools for repository administrators"
 
 let admin_command_man = [
-  `S "DESCRIPTION";
+  `S Manpage.s_description;
   `P (Printf.sprintf
        "This command can perform various actions on repositories in the opam \
         format. It is expected to be run from the root of a repository, i.e. a \
@@ -45,7 +45,7 @@ let index_command =
   let command = "index" in
   let doc = index_command_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "An opam repository can be served over HTTP or HTTPS using any web \
         server. To that purpose, an inclusive index needs to be generated \
         first: this command generates the files the opam client will expect \
@@ -178,7 +178,7 @@ let cache_command =
   let command = "cache" in
   let doc = cache_command_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "Downloads the archives for all packages to fill a local cache, that \
         can be used when serving the repository."
   ]
@@ -262,7 +262,7 @@ let add_hashes_command =
   let doc = add_hashes_command_doc in
   let cache_dir = OpamFilename.Dir.of_string "~/.cache/opam-hash-cache" in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P (Printf.sprintf
           "This command scans through package definitions, and add hashes as \
            requested (fetching the archives if required). A cache is generated \
@@ -489,7 +489,7 @@ let upgrade_command =
   let command = "upgrade" in
   let doc = upgrade_command_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P (Printf.sprintf
          "This command reads repositories from earlier opam versions, and \
           converts them to repositories suitable for the current opam version. \
@@ -543,7 +543,7 @@ let lint_command =
   let command = "lint" in
   let doc = lint_command_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "This command gathers linting results on all files in a repository. The \
         warnings and errors to show or hide can be selected"
   ]
@@ -627,7 +627,7 @@ let check_command =
   let command = "check" in
   let doc = check_command_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "This command runs consistency checks on a repository, and prints a \
         report to stdout. Checks include packages that are not installable \
         (due e.g. to a missing dependency) and dependency cycles. The \
@@ -800,12 +800,12 @@ let list_command =
   let command = "list" in
   let doc = list_command_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "This command is similar to 'opam list', but allows listing packages \
         directly from a repository instead of what is available in a given \
         opam installation.";
-    `S "ARGUMENTS";
-    `S "OPTIONS";
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
     `S OpamArg.package_selection_section;
     `S OpamArg.package_listing_section;
   ]
@@ -859,12 +859,12 @@ let filter_command =
   let command = "filter" in
   let doc = filter_command_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "This command removes all package definitions that don't match the \
         search criteria (specified similarly to 'opam admin list') from a \
         repository.";
-    `S "ARGUMENTS";
-    `S "OPTIONS";
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
     `S OpamArg.package_selection_section;
   ]
   in
@@ -947,15 +947,15 @@ let add_constraint_command =
   let command = "add-constraint" in
   let doc = add_constraint_command_doc in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "This command searches to all dependencies towards a given package, and \
         adds a version constraint to them. It is particularly useful to add \
         upper bounds to existing dependencies when a new, incompatible major \
         version of a library is added to a repository. The new version \
         constraint is merged with the existing one, and simplified if \
         possible (e.g. $(b,>=3 & >5) becomes $(b,>5)).";
-    `S "ARGUMENTS";
-    `S "OPTIONS";
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
   ]
   in
   let atom_arg =
@@ -1051,7 +1051,7 @@ let add_constraint_command =
 let help =
   let doc = "Display help about opam admin and opam admin subcommands." in
   let man = [
-    `S "DESCRIPTION";
+    `S Manpage.s_description;
     `P "Prints help about opam admin commands.";
     `P "Use `$(mname) help topics' to get the full list of help topics.";
   ] in
@@ -1089,7 +1089,7 @@ let admin_subcommands = [
 let default_subcommand =
   let man =
     admin_command_man @ [
-      `S "COMMANDS";
+      `S Manpage.s_commands;
       `S "COMMAND ALIASES";
     ] @ OpamArg.help_sections
   in
