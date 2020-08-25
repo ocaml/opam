@@ -1052,7 +1052,7 @@ let from_2_0_to_2_1 _ conf = conf
 
 let latest_version = OpamFile.Config.format_version
 
-let latest_hard_upgrade = v2_0
+let latest_hard_upgrade = (* to *) v2_0_beta5
 
 let as_necessary global_lock root config =
   let config_version = OpamFile.Config.opam_version config in
@@ -1069,17 +1069,61 @@ let as_necessary global_lock root config =
   if OpamVersion.compare config_version OpamFile.Config.format_version >= 0 then
     config
   else
+  let need_hard_upg =
+    OpamVersion.compare config_version latest_hard_upgrade < 0
+  in
   let on_the_fly, file_lock =
-    if OpamVersion.compare config_version latest_hard_upgrade >= 0
+    if not need_hard_upg
     && OpamSystem.get_lock_flag global_lock <> `Lock_write then
-      (log "On the fly config upgrade, from %s to %s"
-         (OpamVersion.to_string config_version)
-         (OpamVersion.to_string latest_version);
-       true, `Lock_read)
+      true, `Lock_read
     else
       false, `Lock_write
   in
+  let hard_upg, light_upg =
+    [
+      v1_1,        from_1_0_to_1_1;
+      v1_2,        from_1_1_to_1_2;
+      v1_3_dev2,   from_1_2_to_1_3_dev2;
+      v1_3_dev5,   from_1_3_dev2_to_1_3_dev5;
+      v1_3_dev6,   from_1_3_dev5_to_1_3_dev6;
+      v1_3_dev7,   from_1_3_dev6_to_1_3_dev7;
+      v2_0_alpha,  from_1_3_dev7_to_2_0_alpha;
+      v2_0_alpha2, from_2_0_alpha_to_2_0_alpha2;
+      v2_0_alpha3, from_2_0_alpha2_to_2_0_alpha3;
+      v2_0_beta,   from_2_0_alpha3_to_2_0_beta;
+      v2_0_beta5,  from_2_0_beta_to_2_0_beta5;
+      v2_0,        from_2_0_beta5_to_2_0;
+      v2_1,        from_2_0_to_2_1;
+    ]
+    |> List.filter (fun (v,_) -> OpamVersion.compare config_version v < 0)
+    |> List.partition (fun (v,_) ->
+        OpamVersion.compare v latest_hard_upgrade <= 0)
+  in
+  let light config =
+    let config =
+      List.fold_left (fun config (v, from) ->
+          from root config |> OpamFile.Config.with_opam_version v)
+        config light_upg
+    in
+    (if not on_the_fly then
+       OpamFile.Config.write (OpamPath.config root) config);
+    config
+  in
+  let hard config =
+    List.fold_left (fun config (v, from) ->
+        let config = from root config |> OpamFile.Config.with_opam_version v in
+        (* save the current version to mitigate damage is the upgrade goes
+           wrong afterwards *)
+        OpamFile.Config.write (OpamPath.config root) config;
+        config)
+      config hard_upg
+  in
   let is_dev = OpamVersion.git () <> None in
+  log "%s config upgrade, from %s to %s"
+    (if on_the_fly then "On-the-fly" else
+     if need_hard_upg then "Hard" else "Light")
+    (OpamVersion.to_string config_version)
+    (OpamVersion.to_string latest_version);
   if not on_the_fly then
     OpamConsole.formatted_msg
       "This %sversion of opam requires an update to the layout of %s \
@@ -1096,48 +1140,31 @@ let as_necessary global_lock root config =
   try
     OpamFilename.with_flock_upgrade file_lock ?dontblock global_lock
     @@ fun _ ->
-    if on_the_fly
-    || is_dev &&
-       Some "yes" =
-       OpamConsole.read "Type \"yes\" to perform the update and continue:"
-    || not is_dev &&
-       OpamConsole.confirm "Perform the update and continue?"
-    then
-      let update_to v f config =
-        if OpamVersion.compare config_version v < 0 then
-          let config = f root config |> OpamFile.Config.with_opam_version v in
-          (* save the current version to mitigate damage is the upgrade goes
-             wrong afterwards *)
-          (if not on_the_fly then
-             OpamFile.Config.write (OpamPath.config root)
-               (OpamFile.Config.with_opam_version v config));
-          config
-        else config
-      in
-      let config =
-        config |>
-        update_to v1_1       from_1_0_to_1_1 |>
-        update_to v1_2       from_1_1_to_1_2 |>
-        update_to v1_3_dev2  from_1_2_to_1_3_dev2 |>
-        update_to v1_3_dev5  from_1_3_dev2_to_1_3_dev5 |>
-        update_to v1_3_dev6  from_1_3_dev5_to_1_3_dev6 |>
-        update_to v1_3_dev7  from_1_3_dev6_to_1_3_dev7 |>
-        update_to v2_0_alpha from_1_3_dev7_to_2_0_alpha |>
-        update_to v2_0_alpha2 from_2_0_alpha_to_2_0_alpha2 |>
-        update_to v2_0_alpha3 from_2_0_alpha2_to_2_0_alpha3 |>
-        update_to v2_0_beta  from_2_0_alpha3_to_2_0_beta |>
-        update_to v2_0_beta5 from_2_0_beta_to_2_0_beta5 |>
-        update_to v2_0       from_2_0_beta5_to_2_0 |>
-        update_to v2_1       from_2_0_to_2_1
-      in
-      if on_the_fly then
-        (log "Format upgrade done";
+    if not on_the_fly then
+      if need_hard_upg then
+        if is_dev &&
+           Some "yes" =
+           OpamConsole.read "Type \"yes\" to perform the update and continue:"
+        || not is_dev &&
+           OpamConsole.confirm "Perform the update and continue?"
+        then
+          let config = hard config |> light in
+          OpamConsole.msg "Format upgrade done.\n";
+          (* We need to re run init in case of hard upgrade *)
+          raise (Upgrade_done config)
+        else
+          OpamStd.Sys.exit_because `Aborted
+      else
+      if OpamConsole.confirm "Continue?" then
+        (let config = light config in
+         OpamConsole.msg "Format upgrade done.\n";
          config)
       else
-        (OpamConsole.msg "Format upgrade done.\n";
-         raise (Upgrade_done config));
+        OpamStd.Sys.exit_because `Aborted
     else
-      OpamStd.Sys.exit_because `Aborted
+      (let config = light config in
+       log "Format upgrade done";
+       config)
   with OpamSystem.Locked ->
     OpamConsole.error_and_exit `Locked
       "Could not acquire lock for performing format upgrade."
