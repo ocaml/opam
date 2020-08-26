@@ -110,7 +110,7 @@ users)
   *
 
 ## State
-  *
+  * Handle empty environment variable updates - missed cherry-pick from 2.0 [#4840 @dra27]
 
 ## Opam file format
   *
