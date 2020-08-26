@@ -14,6 +14,8 @@ open OpamProcess.Job.Op
 open OpamStateTypes
 open Cmdliner
 
+type command = unit Cmdliner.Term.t * Cmdliner.Term.info
+
 let checked_repo_root () =
   let repo_root = OpamFilename.cwd () in
   if not (OpamFilename.exists_dir (OpamRepositoryPath.packages_dir repo_root))
@@ -23,6 +25,9 @@ let checked_repo_root () =
        Please make sure there is a \"packages%s\" directory" OpamArg.dir_sep;
   repo_root
 
+let global_options cli =
+  let apply_cli options = {options with OpamArg.cli} in
+  Term.(const apply_cli $ OpamArg.global_options)
 
 let admin_command_doc =
   "Tools for repository administrators"
@@ -41,7 +46,7 @@ let admin_command_man = [
 
 let index_command_doc =
   "Generate an inclusive index file for serving over HTTP."
-let index_command =
+let index_command cli =
   let command = "index" in
   let doc = index_command_doc in
   let man = [
@@ -116,7 +121,7 @@ let index_command =
     OpamHTTP.make_index_tar_gz repo_root;
     OpamConsole.msg "Done.\n";
   in
-  Term.(const cmd $ OpamArg.global_options $ urls_txt_arg),
+  Term.(const cmd $ global_options cli $ urls_txt_arg),
   OpamArg.term_info command ~doc ~man
 
 
@@ -174,7 +179,7 @@ let package_files_to_cache repo_root cache_dir ?link (nv, prefix) =
     OpamProcess.Job.seq urls OpamPackage.Map.empty
 
 let cache_command_doc = "Fills a local cache of package archives"
-let cache_command =
+let cache_command cli =
   let command = "cache" in
   let doc = cache_command_doc in
   let man = [
@@ -251,13 +256,13 @@ let cache_command =
 
       OpamConsole.msg "Done.\n";
   in
-  Term.(const cmd $ OpamArg.global_options $
+  Term.(const cmd $ global_options cli $
         cache_dir_arg $ no_repo_update_arg $ link_arg $ jobs_arg),
   OpamArg.term_info command ~doc ~man
 
 let add_hashes_command_doc =
   "Add archive hashes to an opam repository."
-let add_hashes_command =
+let add_hashes_command cli =
   let command = "add-hashes" in
   let doc = add_hashes_command_doc in
   let cache_dir = OpamFilename.Dir.of_string "~/.cache/opam-hash-cache" in
@@ -479,13 +484,13 @@ let add_hashes_command =
     if has_error then OpamStd.Sys.exit_because `Sync_error
     else OpamStd.Sys.exit_because `Success
   in
-  Term.(const cmd $ OpamArg.global_options $
+  Term.(const cmd $ global_options cli $
         hash_types_arg $ replace_arg $ packages),
   OpamArg.term_info command ~doc ~man
 
 let upgrade_command_doc =
   "Upgrades repository from earlier opam versions."
-let upgrade_command =
+let upgrade_command cli =
   let command = "upgrade" in
   let doc = upgrade_command_doc in
   let man = [
@@ -533,13 +538,13 @@ let upgrade_command =
             \  opam admin index"
       | Some m -> OpamAdminRepoUpgrade.do_upgrade_mirror (OpamFilename.cwd ()) m
   in
-  Term.(const cmd $ OpamArg.global_options $
+  Term.(const cmd $ global_options cli $
         clear_cache_arg $ create_mirror_arg),
   OpamArg.term_info command ~doc ~man
 
 let lint_command_doc =
   "Runs 'opam lint' and reports on a whole repository"
-let lint_command =
+let lint_command cli =
   let command = "lint" in
   let doc = lint_command_doc in
   let man = [
@@ -616,14 +621,14 @@ let lint_command =
     in
     OpamStd.Sys.exit_because (if ret then `Success else `False)
   in
-  Term.(const cmd $ OpamArg.global_options $
+  Term.(const cmd $ global_options cli $
         short_arg $ list_arg $ include_arg $ exclude_arg $ ignore_arg $
         warn_error_arg),
   OpamArg.term_info command ~doc ~man
 
 let check_command_doc =
   "Runs some consistency checks on a repository"
-let check_command =
+let check_command cli =
   let command = "check" in
   let doc = check_command_doc in
   let man = [
@@ -700,7 +705,7 @@ let check_command =
        (pr obsolete "obsolete packages"));
     OpamStd.Sys.exit_because (if all_ok then `Success else `False)
   in
-  Term.(const cmd $ OpamArg.global_options $ ignore_test_arg $ print_short_arg
+  Term.(const cmd $ global_options cli $ ignore_test_arg $ print_short_arg
         $ installability_arg $ cycles_arg $ obsolete_arg),
   OpamArg.term_info command ~doc ~man
 
@@ -796,7 +801,7 @@ let or_arg =
                criteria, select packages that match $(i,any) of them")
 
 let list_command_doc = "Lists packages from a repository"
-let list_command =
+let list_command cli =
   let command = "list" in
   let doc = list_command_doc in
   let man = [
@@ -849,13 +854,13 @@ let list_command =
     in
     OpamListCommand.display st format results
   in
-  Term.(const cmd $ OpamArg.global_options $ OpamArg.package_selection $
+  Term.(const cmd $ global_options cli $ OpamArg.package_selection $
         or_arg $ state_selection_arg $ OpamArg.package_listing $ env_arg $
         pattern_list_arg),
   OpamArg.term_info command ~doc ~man
 
 let filter_command_doc = "Filters a repository to only keep selected packages"
-let filter_command =
+let filter_command cli =
   let command = "filter" in
   let doc = filter_command_doc in
   let man = [
@@ -936,14 +941,14 @@ let filter_command =
              OpamFilename.rmdir_cleanup d))
       pkg_prefixes
   in
-  Term.(const cmd $ OpamArg.global_options $ OpamArg.package_selection $ or_arg $
+  Term.(const cmd $ global_options cli $ OpamArg.package_selection $ or_arg $
         state_selection_arg $ env_arg $ remove_arg $ dryrun_arg $
         pattern_list_arg),
   OpamArg.term_info command ~doc ~man
 
 let add_constraint_command_doc =
   "Adds version constraints on all dependencies towards a given package"
-let add_constraint_command =
+let add_constraint_command cli =
   let command = "add-constraint" in
   let doc = add_constraint_command_doc in
   let man = [
@@ -1044,7 +1049,7 @@ let add_constraint_command =
              |> OpamFile.OPAM.with_conflicts conflicts))
       pkg_prefixes
   in
-  Term.(pure cmd $ OpamArg.global_options $ force_arg $ atom_arg),
+  Term.(pure cmd $ global_options cli $ force_arg $ atom_arg),
   OpamArg.term_info command ~doc ~man
 
 (* HELP *)
@@ -1073,20 +1078,22 @@ let help =
   Term.(ret (const help $Term.man_format $Term.choice_names $topic)),
   Term.info "help" ~doc ~man
 
-let admin_subcommands = [
-  index_command; OpamArg.make_command_alias index_command "make";
-  cache_command;
-  upgrade_command;
-  lint_command;
-  check_command;
-  list_command;
-  filter_command;
-  add_constraint_command;
-  add_hashes_command;
-  help;
-]
+let admin_subcommands cli =
+  let index_command = index_command cli in
+  [
+    index_command; OpamArg.make_command_alias index_command "make";
+    cache_command cli;
+    upgrade_command cli;
+    lint_command cli;
+    check_command cli;
+    list_command cli;
+    filter_command cli;
+    add_constraint_command cli;
+    add_hashes_command cli;
+    help;
+  ]
 
-let default_subcommand =
+let default_subcommand cli =
   let man =
     admin_command_man @ [
       `S Manpage.s_commands;
@@ -1100,7 +1107,7 @@ let default_subcommand =
       \                  [--help]\n\
       \                  <command> [<args>]\n\
        \n\
-       The most commonly used opam commands are:\n\
+       The most commonly used opam admin commands are:\n\
       \    index          %s\n\
       \    cache          %s\n\
       \    upgrade-format %s\n\
@@ -1111,9 +1118,12 @@ let default_subcommand =
       cache_command_doc
       upgrade_command_doc
   in
-  Term.(const usage $ OpamArg.global_options),
+  Term.(const usage $ global_options cli),
   Term.info "opam admin"
     ~version:(OpamVersion.to_string OpamVersion.current)
     ~sdocs:OpamArg.global_option_section
     ~doc:admin_command_doc
     ~man
+
+let get_cmdliner_parser cli =
+  default_subcommand cli, admin_subcommands cli

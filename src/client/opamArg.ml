@@ -35,6 +35,7 @@ type global_options = {
   no_auto_upgrade : bool;
   working_dir : bool;
   ignore_pin_depends : bool;
+  cli : OpamCLIVersion.t;
 }
 
 let deprecated_option option absent name instead =
@@ -45,21 +46,23 @@ let deprecated_option option absent name instead =
       | None -> ""
       | Some instead -> Printf.sprintf " You can use %s instead." instead)
 
+(* The --cli passed by cmdliner is ignored (it's only there for --help) *)
 let create_global_options
     git_version debug debug_level verbose quiet color opt_switch yes strict
     opt_root external_solver use_internal_solver
     cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade
     working_dir ignore_pin_depends
-    d_no_aspcud =
+    d_no_aspcud _ =
   deprecated_option d_no_aspcud false "no-aspcud" None;
   let debug_level = OpamStd.Option.Op.(
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
   let verbose = List.length verbose in
+  let cli = OpamCLIVersion.current in
   { git_version; debug_level; verbose; quiet; color; opt_switch; yes;
     strict; opt_root; external_solver; use_internal_solver;
     cudf_file; solver_preferences; best_effort; safe_mode; json;
-    no_auto_upgrade; working_dir; ignore_pin_depends; }
+    no_auto_upgrade; working_dir; ignore_pin_depends; cli }
 
 let apply_global_options o =
   if o.git_version then (
@@ -135,6 +138,7 @@ let apply_global_options o =
     (* ?pin_kind_auto:bool *)
     (* ?autoremove:bool *)
     (* ?editor:string *)
+    ~cli:o.cli
     ();
   if OpamClientConfig.(!r.json_out <> None) then (
     OpamJson.append "opam-version" (`String OpamVersion.(to_string (full ())));
@@ -215,6 +219,17 @@ let apply_build_options b =
 
 let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
 
+(* Windows directory separators need to be escaped for manpages *)
+let dir_sep, escape_path =
+  match Filename.dir_sep with
+  | "\\" ->
+    let esc = "\\\\" in
+    esc,
+    fun p ->
+      OpamStd.List.concat_map esc (fun x -> x)
+        (OpamStd.String.split_delim p '\\')
+  | ds -> ds, fun x -> x
+
 (* Help sections common to all commands *)
 let global_option_section = Manpage.s_common_options
 let help_sections = [
@@ -233,6 +248,7 @@ let help_sections = [
   `P "$(i,OPAMBESTEFFORTPREFIXCRITERIA) sets the string that must be prepended \
       to the criteria when the `--best-effort` option is set, and is expected \
       to maximise the `opam-query` property in the solution ";
+  `P "$(i,OPAMCLI) see option `--cli'";
   `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
       value for the --color option.";
   `P "$(i,OPAMCRITERIA) specifies user $(i,preferences) for dependency \
@@ -342,6 +358,26 @@ let help_sections = [
   `P "$(i,OPAMWORKINGDIR) see option `--working-dir`";
   `P "$(i,OPAMYES) see option `--yes'.";
 
+  `S "CLI VERSION";
+  `P "All scripts and programmatic invocations of opam should use `--cli' in \
+      order to ensure that they work seamlessly with future versions of the \
+      opam client. Additionally, blog posts or other documentation can \
+      benefit, as it prevents information from becoming stale.";
+  `P (Printf.sprintf
+       "Although opam only supports roots ($(i,~%s.opam%s)) for the current \
+        version, it does provide backwards compatibility for its command-line \
+        interface." dir_sep dir_sep);
+  `P "The command-line version is selected by using the `--cli' option or the \
+      $(i,OPAMCLI) environment variable. `--cli' may be specified more than \
+      once, where the last instance takes precedence. $(i,OPAMCLI) is only \
+      inspected if `--cli' is not given.";
+  `P "Since CLI version support was only added in opam 2.1, use $(i,OPAMCLI) \
+      to select 2.0 support (as opam 2.0 will just ignore it), and `--cli=2.1' \
+      for 2.1 later versions, since an environment variable controlling the \
+      parsing of syntax is brittle. To this end, opam displays a warning if \
+      $(i,OPAMCLI) specifies a valid version other than 2.0, and also if \
+      `--cli=2.0' is specified.";
+
   `S Manpage.s_exit_status;
   `P "As an exception to the following, the `exec' command returns 127 if the \
       command was not found or couldn't be executed, and the command's exit \
@@ -413,17 +449,6 @@ let help_sections = [
 ]
 
 (* Converters *)
-
-(* Windows directory separator need to be escaped for manpage *)
-let dir_sep, escape_path =
-  match Filename.dir_sep with
-  | "\\" ->
-    let esc = "\\\\" in
-    esc,
-    fun p ->
-      OpamStd.List.concat_map esc (fun x -> x)
-        (OpamStd.String.split_delim p '\\')
-  | ds -> ds, fun x -> x
 
 let pr_str = Format.pp_print_string
 
@@ -982,6 +1007,17 @@ let global_options =
     mk_tristate_opt ~section ["color"] "WHEN"
       (Printf.sprintf "Colorize the output. $(docv) must be %s."
          (Arg.doc_alts_enum when_enum)) in
+  (* The --cli option is pre-processed, because it has to be able to appear
+     before sub-commands. The one here is present only for --help. *)
+  let cli_arg =
+    mk_opt ~section ["cli"] "MAJOR.MINOR"
+      "Use the command-line interface syntax and semantics of $(docv). \
+       Intended for any persistent use of opam (scripts, blog posts, etc.), \
+       any version of opam in the same MAJOR series will behave as for the \
+       specified MINOR release. The flag was not available in opam 2.0, so for \
+       2.0, use $(b,\\$OPAMCLI). This is equivalent to setting $(b,\\$OPAMCLI) \
+       to $(i,MAJOR.MINOR)."
+      Arg.string (OpamCLIVersion.to_string OpamCLIVersion.current) in
   let switch =
     mk_opt ~section ["switch"]
       "SWITCH" "Use $(docv) as the current compiler switch. \
@@ -1091,7 +1127,7 @@ let global_options =
         $use_internal_solver $cudf_file $solver_preferences $best_effort
         $safe_mode $json_flag $no_auto_upgrade $working_dir
         $ignore_pin_depends
-        $d_no_aspcud)
+        $d_no_aspcud $cli_arg)
 
 (* lock options *)
 let locked section =

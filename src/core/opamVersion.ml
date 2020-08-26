@@ -69,7 +69,7 @@ let message () =
     \n\
     This is free software; see the source for copying conditions.  There is NO\n\
     warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
-    Sys.argv.(0) current_raw;
+    Sys.executable_name current_raw;
   exit 0
 
 let gitversion = ref None

@@ -110,6 +110,19 @@ struct
 end
 #endif
 
+module Result =
+#if OCAML_VERSION >= (4, 8, 0)
+  Result
+#else
+struct
+  type ('a, 'e) t
+#if OCAML_VERSION >= (4, 3, 0)
+    = ('a, 'e) result
+#endif
+    = Ok of 'a | Error of 'e
+end
+#endif
+
 #if OCAML_VERSION < (4, 7, 0)
 module Stdlib = Pervasives
 #endif

@@ -411,3 +411,27 @@ you could lose your opam configuration at each reboot.
 You can use the [`nfsopam`](https://github.com/UnixJunkie/nfsopam) script to
 have the best of both worlds: persistence of NFS directories and fast operations
 of local directories.
+
+---
+
+#### 🐫  What does the `--cli` option do? Should I be using it everywhere?
+
+`--cli` was introduced in opam 2.1 to deal with changes in the command line
+interface between releases. It tells opam to interpret the command line as a
+specific version, in particular it means that new options or options which
+have had their meaning altered will not be available, or will be behave as they
+did in that version. It only affects the command-line - it does not, for
+example, stop a root from being upgraded from an older version to the current
+version.
+
+We recommend using it in scripts (and programs which call opam) since they can
+then expect to work seamlessly with future versions of the opam client. It's
+also a good idea to use it in blog posts, or other documentation you may share,
+since it allows copy-and-paste to work reliably (a user with a newer version of
+opam should have no issues and a user with an older opam gets a clearer error
+message).
+
+We don't recommend using it in day-to-day use of opam in the shell, because
+you'll be typing more and you won't get to notice exciting new features! If the
+behaviour of a command or option is altered, and you write something which in no
+longer valid, opam will try to tell you what the new command should look like.

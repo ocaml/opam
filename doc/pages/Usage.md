@@ -45,6 +45,14 @@ you find a package there but not on your computer, either it has been recently
 added and you should simply run `opam update`, or it's not available on your
 system or OCaml version — `opam install PACKAGE` will give you the reason.
 
+## `--cli` option
+
+Since opam 2.1, opam is able to be invoked using a previous version of its
+command line. It's recommended that all opam commands in scripts use it, and
+also blog posts and other sources of information, so you may come across
+examples which include it. We don't recommend using it in the shell because it's
+more to type!
+
 ## Details on commands
 
 ### opam init
