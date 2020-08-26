@@ -736,3 +736,8 @@ let setup
   in
   update_user_setup root ?dot_profile:update_dot_profile shell;
   write_static_init_scripts root ?completion ?env_hook ?inplace ()
+
+let hook_env root =
+  let hook_vnam = OpamVariable.of_string "hooks" in
+  let hook_vval = Some (OpamVariable.dirname (OpamPath.hooks_dir root)) in
+  OpamVariable.Map.singleton hook_vnam hook_vval

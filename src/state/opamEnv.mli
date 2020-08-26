@@ -121,3 +121,7 @@ val clear_dynamic_init_scripts: rw global_state -> unit
 (** Print a warning if the environment is not set-up properly.
     (General message) *)
 val check_and_print_env_warning: 'a switch_state -> unit
+
+(** Hook directory environment *)
+val hook_env:
+  OpamPath.t -> OpamVariable.variable_contents option OpamVariable.Map.t

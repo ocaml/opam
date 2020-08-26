@@ -446,12 +446,11 @@ let get_wrappers t =
     ~inner:(OpamFile.Switch_config.wrappers t.switch_config)
 
 let get_wrapper t opam wrappers ?local getter =
-  let root = t.switch_global.root in
-  let hook_vnam = OpamVariable.of_string "hooks" in
-  let hook_vval = Some (OpamVariable.dirname (OpamPath.hooks_dir root)) in
-  let local_env = match local with
-    | Some e -> OpamVariable.Map.add hook_vnam hook_vval e
-    | None ->OpamVariable.Map.singleton hook_vnam hook_vval
+  let local_env =
+    let hook_env = OpamEnv.hook_env t.switch_global.root in
+    match local with
+    | Some e -> OpamVariable.Map.merge (fun _ _ v -> v) e hook_env
+    | None -> hook_env
   in
   OpamFilter.commands (OpamPackageVar.resolve ~local:local_env ~opam t)
     (getter wrappers) |>
