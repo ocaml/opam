@@ -639,6 +639,26 @@ module OpamString = struct
     for i = 0 to String.length s - 1 do acc := f !acc s.[i] done;
     !acc
 
+  let compare_case s1 s2 =
+    let l1 = String.length s1 and l2 = String.length s2 in
+    let len = min l1 l2 in
+    let rec aux i =
+      if i < len then
+        let c1 = s1.[i] and c2 = s2.[i] in
+        match Char.compare (Char.lowercase_ascii c1) (Char.lowercase_ascii c2)
+        with
+        | 0 ->
+          (match Char.compare c1 c2 with
+           | 0 -> aux (i+1)
+           | c -> c)
+        | c -> c
+      else
+        if l1 < l2 then -1
+        else if l1 > l2 then 1
+        else 0
+    in
+    aux 0
+
 end
 
 type warning_printer =

@@ -14,11 +14,8 @@ type t = string
 
 let of_string s = s
 let to_string s = s
-let compare s s' =
-  let open OpamCompat in
-  match compare (String.lowercase_ascii s) (String.lowercase_ascii s') with
-  | 0 -> compare s s'
-  | i -> i
+let compare = OpamStd.String.compare_case
+
 let to_json s =
   `O [ ("sys_package", `String s) ]
 let of_json = function

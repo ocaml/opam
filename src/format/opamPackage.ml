@@ -83,10 +83,7 @@ module Name = struct
     | Some true ->
       x
 
-  let compare n1 n2 =
-    match compare (String.lowercase_ascii n1) (String.lowercase_ascii n2) with
-    | 0 -> compare n1 n2
-    | i -> i
+  let compare = OpamStd.String.compare_case
 
   let equal n1 n2 =
     compare n1 n2 = 0
