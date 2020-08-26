@@ -75,6 +75,9 @@ New option/command/subcommand are prefixed with ◈.
 ## Solver
   * Don't penalise packages with more recent 'hidden-versions' [#4312 @AltGr]
 
+## Client
+  * Provide all functions in the client library [#4329 @AltGr]
+
 ## Internal
   * Process: don't display status line if not verbose, and status line disabled [#4285 @rjbou]
   * Optimise package name comparison [#4328 @AltGr - fix #4245]
