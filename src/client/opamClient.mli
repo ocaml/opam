@@ -126,6 +126,12 @@ module PIN: sig
     rw switch_state -> ?action:bool -> ?version:version -> OpamPackage.Name.t ->
     rw switch_state
 
+  val url_pins:
+    rw switch_state ->  ?edit:bool -> ?action:bool ->
+    ?pre:((name * version option * url * string option) -> unit) ->
+    (name * version option * url * string option) list ->
+    rw switch_state
+
   val unpin:
     rw switch_state ->
     ?action:bool -> OpamPackage.Name.t list -> rw switch_state

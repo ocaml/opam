@@ -25,7 +25,9 @@ New option/command/subcommand are prefixed with ◈.
   * Support -n as an alias of --no-action (to match opam-pin) [#4324 @dra27]
 
 ## Pin
-  *
+  * ◈ Add `pin scan` subcommand to list available pins [#4285 @rjbou]
+  * ◈ Add `--normalise` option to print a normalised list when scanning, that can be taken by `opam pin add` [#4285 @rjbou]
+  * `OpamCommand.pin` refactor, including adding `OpamClient.PIN.pin_url_list` to pin a list of package with url  [#4285 @rjbou]
 
 ## List
   * <field> form no longer advertised as valid for --columns [#4322 @dra27]
@@ -69,13 +71,12 @@ New option/command/subcommand are prefixed with ◈.
 ## Opam installer
   *
 
-## Opam file
-  *
 
 ## Solver
   * Don't penalise packages with more recent 'hidden-versions' [#4312 @AltGr]
 
 ## Internal
+  * Process: don't display status line if not verbose, and status line disabled [#4285 @rjbou]
   * Optimise package name comparison [#4328 @AltGr - fix #4245]
 
 ## Test
