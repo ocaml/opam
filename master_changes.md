@@ -12,8 +12,8 @@ New option/command/subcommand are prefixed with ◈.
 ## Init
   *
 
-## Upgrade
-  *
+## Config Upgrade
+  * config upgrade: on the fly upgrade if no write lock required [#4313 @rjbou]
 
 ## Install
   *
