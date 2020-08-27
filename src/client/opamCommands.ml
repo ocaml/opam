@@ -2808,7 +2808,7 @@ let pin ?(unpin_only=false) cli =
     `P "If $(i,PACKAGE) has the form $(i,name.version), the pinned package \
         will be considered as version $(i,version) by opam. Beware that this \
         doesn't relate with the version of the source actually used for the \
-        package.";
+        package. See also $(i,--with-version) option.";
     `P "The default subcommand is $(i,list) if there are no further arguments, \
         and $(i,add) otherwise if unambiguous.";
   ] @ mk_subdoc ~defaults:["","list"] commands @ [
@@ -2869,6 +2869,16 @@ let pin ?(unpin_only=false) cli =
           add`. Available only with the scan subcommand. An example of use is \
           `opam pin scan . --normalise | grep foo | xargs opam pin add`"
          OpamPinCommand.scan_sep)
+  in
+  let with_version =
+    mk_opt ["with-version"] "VERSION"
+      "Set the pinning version to $(b,VERSION) for named $(b,PACKAGES) or \
+       retrieved packagesi fro $(b,TARGET). It has priority to any other \
+       version specification (opam file version field, $(i,name.vers) \
+       argument)). With version pin, package source is version pin one and \
+       package version is the one specified with this option. It is equivalent \
+       to editing pinned package opam file to set its version."
+      Arg.(some package_version) None
   in
   let guess_names kind ~recurse ?subpath url k =
     let found, cleanup =
@@ -2966,6 +2976,7 @@ let pin ?(unpin_only=false) cli =
   let pin
       global_options build_options
       kind edit no_act dev_repo print_short recurse subpath normalise
+      with_version
       command params =
     apply_global_options global_options;
     apply_build_options build_options;
@@ -3069,6 +3080,7 @@ let pin ?(unpin_only=false) cli =
        | `Ok (name, version) ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+         let version = OpamStd.Option.Op.(with_version ++ version) in
          OpamSwitchState.drop @@ OpamClient.PIN.edit st ~action ?version name;
          `Ok ()
        | `Error e -> `Error (false, e))
@@ -3077,7 +3089,8 @@ let pin ?(unpin_only=false) cli =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       OpamSwitchState.drop @@
-      OpamClient.PIN.url_pins st ~edit ~action pins;
+      OpamClient.PIN.url_pins st ~edit ~action
+        (List.map (fun (n,v,u,sb) -> n,v,None,u,sb) pins);
       `Ok ()
     | `add_dev nv ->
       (match (fst package) nv with
@@ -3085,6 +3098,7 @@ let pin ?(unpin_only=false) cli =
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let name = OpamSolution.fuzzy_name st name in
+         let version = OpamStd.Option.Op.(with_version ++ version) in
          OpamSwitchState.drop @@ OpamClient.PIN.pin st name ~edit ?version ~action
            `Dev_upstream;
          `Ok ()
@@ -3103,31 +3117,19 @@ let pin ?(unpin_only=false) cli =
          guess_names kind ~recurse ?subpath url @@ fun names ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-         let pins, opams =
-           List.fold_left (fun (pins, opams) (name, opam_opt, subpath, url) ->
-               (name, None, url, subpath)::pins,
-               match opam_opt with
-               | None -> opams
-               | Some opam -> OpamPackage.Name.Map.add name opam opams)
-             ([], OpamPackage.Name.Map.empty) names
-         in
-         let pre (name, _, _, _) =
-           OpamPackage.Name.Map.find_opt name opams
-           |> OpamStd.Option.iter (fun opam ->
-               let opam_localf =
-                 OpamPath.Switch.Overlay.tmp_opam
-                   st.switch_global.root st.switch name
-               in
-               if not (OpamFilename.exists (OpamFile.filename opam_localf))
-               then OpamFile.OPAM.write opam_localf opam)
-         in
          OpamSwitchState.drop @@
-         OpamClient.PIN.url_pins st ~edit ~action ~pre (List.rev pins);
+         OpamClient.PIN.url_pins st ~edit ~action
+           (List.map (fun (n,o,u,sb) -> n,None,o,sb,u) names);
          `Ok ())
     | `add_wtarget (n, target) ->
       (match (fst package) n with
        | `Ok (name,version) ->
-         let pin = pin_target kind target in
+         let pin =
+           match pin_target kind target, with_version with
+           | `Version v, Some v' -> `Source_version (v, v')
+           | p, _ -> p
+         in
+         let version = OpamStd.Option.Op.(with_version ++ version) in
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          OpamSwitchState.drop @@
@@ -3140,7 +3142,7 @@ let pin ?(unpin_only=false) cli =
     Term.(const pin
           $global_options cli $build_options
           $kind $edit $no_act $dev_repo $print_short_flag $recurse $subpath
-          $normalise
+          $normalise $with_version
           $command $params),
   term_info "pin" ~doc ~man
 

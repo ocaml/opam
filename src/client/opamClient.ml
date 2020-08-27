@@ -1468,6 +1468,26 @@ module PIN = struct
         | `Version v ->
           let st = version_pin st name v in
           if edit then OpamPinCommand.edit st name else st
+        | `Source_version (srcv, version) ->
+          let url =
+            let nv = (OpamPackage.create name srcv) in
+            match OpamPackage.Map.find_opt nv st.repos_package_index with
+            | Some opam ->
+              (match
+                 OpamStd.Option.Op.(OpamFile.OPAM.url opam >>| OpamFile.URL.url)
+               with
+               | Some u -> u
+               | None ->
+                 OpamConsole.error_and_exit `Not_found
+                   "Package %s has no url defined in its opam file description"
+                   (OpamPackage.to_string nv))
+            | None ->
+              OpamConsole.error_and_exit `Not_found
+                "Package %s has no known version %s in the repositories"
+                (OpamPackage.Name.to_string name)
+                (OpamPackage.Version.to_string version)
+          in
+          source_pin st name ~version ~edit (Some url)
         | `Dev_upstream ->
           source_pin st name ?version ~edit (Some (get_upstream st name))
         | `None -> source_pin st name ?version ~edit None
@@ -1479,7 +1499,7 @@ module PIN = struct
     | OpamPinCommand.Nothing_to_do -> st
 
   let url_pins st ?edit ?(action=true) ?(pre=fun _ -> ()) pins =
-    let names = List.map (fun (n,_,_,_) -> n) pins in
+    let names = List.map (fun (n,_,_,_,_) -> n) pins in
     (match names with
     | _::_::_ ->
       if not (OpamConsole.confirm
@@ -1490,10 +1510,10 @@ module PIN = struct
     | _ -> ());
     let pinned = st.pinned in
     let st =
-      List.fold_left (fun st (name, version, url, subpath as pin) ->
+      List.fold_left (fun st (name, version, opam, url, subpath as pin) ->
           pre pin;
           try
-            OpamPinCommand.source_pin st name ?version
+            OpamPinCommand.source_pin st name ?version ?opam
               ?edit ?subpath (Some url)
           with
           | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted

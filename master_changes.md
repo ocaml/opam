@@ -27,7 +27,9 @@ New option/command/subcommand are prefixed with ◈.
 ## Pin
   * ◈ Add `pin scan` subcommand to list available pins [#4285 @rjbou]
   * ◈ Add `--normalise` option to print a normalised list when scanning, that can be taken by `opam pin add` [#4285 @rjbou]
-  * `OpamCommand.pin` refactor, including adding `OpamClient.PIN.pin_url_list` to pin a list of package with url  [#4285 @rjbou]
+  * `OpamCommand.pin` refactor, including adding `OpamClient.PIN.url_pins` to pin a list of package with url  [#4285 #4301 @rjbou]
+  * ◈ Add `with-version` option to set the pinned package version [#4301 @rjbou]
+  * `OpamPinCommand.source_pin', for new package confirmation, don't check that no opam file is given as argument [#4301 @rjbou]
 
 ## List
   * <field> form no longer advertised as valid for --columns [#4322 @dra27]

@@ -411,6 +411,8 @@ and source_pin
     with Not_found -> None
   in *)
 
+  let open OpamStd.Option.Op in
+
   let cur_version, cur_urlf =
     try
       let cur_version = OpamPinned.version st name in
@@ -449,7 +451,6 @@ and source_pin
   in
 
   if not (OpamPackage.has_name st.packages name) &&
-     opam_opt = None &&
      not (OpamConsole.confirm
             "Package %s does not exist, create as a %s package?"
             (OpamPackage.Name.to_string name)
@@ -466,11 +467,11 @@ and source_pin
        (OpamPath.Switch.pinned_package st.switch_global.root st.switch name)
    | _ -> ());
 
-  let pin_version = OpamStd.Option.Op.(version +! cur_version) in
+  let pin_version = version +! cur_version in
 
   let nv = OpamPackage.create name pin_version in
 
-  let urlf = OpamStd.Option.Op.(target_url >>| OpamFile.URL.create ?subpath) in
+  let urlf = target_url >>| OpamFile.URL.create ?subpath in
 
   let temp_file =
     OpamPath.Switch.Overlay.tmp_opam st.switch_global.root st.switch name
@@ -478,17 +479,15 @@ and source_pin
 
   let opam_local =
     OpamFile.OPAM.read_opt temp_file
-    |> OpamStd.Option.map (OpamFormatUpgrade.opam_file)
+    >>| OpamFormatUpgrade.opam_file
   in
   OpamFilename.remove (OpamFile.filename temp_file);
 
   let opam_opt =
     try
-      OpamStd.Option.Op.(
-        opam_opt >>+ fun () ->
-        urlf >>= fun url ->
-        OpamProcess.Job.run @@ get_source_definition ?version ?subpath st nv url
-      )
+      opam_opt >>+ fun () ->
+      urlf >>= fun url ->
+      OpamProcess.Job.run @@ get_source_definition ?version ?subpath st nv url
     with Fetch_Fail err ->
       if force then None else
         (OpamConsole.error_and_exit `Sync_error
@@ -501,16 +500,15 @@ and source_pin
     match version with
     | Some _ -> nv
     | None ->
-      OpamPackage.create name OpamStd.Option.Op.(
-          (opam_opt >>= OpamFile.OPAM.version_opt)
-          +! cur_version)
+      OpamPackage.create name
+        ((opam_opt >>= OpamFile.OPAM.version_opt)
+         +! cur_version)
   in
 
   let opam_opt =
-    OpamStd.Option.Op.(
-      opam_opt >>+ fun () ->
-      OpamPackage.Map.find_opt nv st.installed_opams >>+ fun () ->
-      OpamSwitchState.opam_opt st nv)
+    opam_opt >>+ fun () ->
+    OpamPackage.Map.find_opt nv st.installed_opams >>+ fun () ->
+    OpamSwitchState.opam_opt st nv
   in
 
   let opam_opt =
@@ -551,11 +549,10 @@ and source_pin
          OpamFile.OPAM.write_with_preserved_format
            ?format_from:(OpamPinned.orig_opam_file st name opam_base)
            temp_file opam_base;
-       OpamStd.Option.Op.(
-         edit_raw name temp_file >>|
-         (* Preserve metadata_dir so that copy_files below works *)
-         OpamFile.OPAM.(with_metadata_dir (metadata_dir opam_base))
-       ))
+       edit_raw name temp_file >>|
+       (* Preserve metadata_dir so that copy_files below works *)
+       OpamFile.OPAM.(with_metadata_dir (metadata_dir opam_base))
+      )
     else
       Some opam_base
   in
@@ -569,9 +566,7 @@ and source_pin
       | Some _ -> opam
       | None -> OpamFile.OPAM.with_url_opt urlf opam
     in
-    let version =
-      OpamStd.Option.Op.(OpamFile.OPAM.version_opt opam +! nv.version)
-    in
+    let version = version +! (OpamFile.OPAM.version_opt opam +! nv.version) in
     let nv = OpamPackage.create nv.name version in
     let st =
       if ignore_extra_pins then st
