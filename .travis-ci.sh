@@ -112,19 +112,6 @@ case "$TARGET" in
     git config --global gc.autoDetach false
 
   # Disable bubblewrap wrapping, it's not available within Docker
-  cat <<EOF >>~/.opamrc
-required-tools: [
-  ["curl" "wget"]
-    {"A download tool is required, check env variables OPAMCURL or OPAMFETCH"}
-  "diff"
-  "patch"
-  "tar"
-  "unzip"
-]
-wrap-build-commands: []
-wrap-install-commands: []
-wrap-remove-commands: []
-EOF
 
     if [[ $COLD -ne 1 ]] ; then
       if [[ $TRAVIS_OS_NAME = "osx" && -n $EXTERNAL_SOLVER ]] ; then
@@ -355,10 +342,6 @@ export OCAMLRUNPARAM=b
         echo -e "\e[31mBad return code $rcode, should be 10\e[0m";
         exit $rcode
       fi
-      # Disable sandbox because of the init done in the forced upgrade
-      opam option --global 'wrap-build-commands=[]'
-      opam option --global 'wrap-install-commands=[]'
-      opam option --global 'wrap-remove-commands=[]'
     fi
     set -e
     make distclean

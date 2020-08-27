@@ -365,8 +365,9 @@ let init cli =
             ~no_default_config_file:no_config_file ~add_config_file:config_file
         in
         OpamClient.reinit ~init_config ~interactive ~dot_profile
-          ?update_config ?env_hook ?completion ~inplace
-          (OpamFile.Config.safe_read config_f) shell
+           ?update_config ?env_hook ?completion ~inplace
+           ~check_sandbox:(not no_sandboxing)
+           (OpamFile.Config.safe_read config_f) shell;
       else
         OpamEnv.setup root ~interactive ~dot_profile ?update_config ?env_hook
           ?completion ~inplace shell
@@ -385,7 +386,9 @@ let init cli =
       OpamClient.init
         ~init_config ~interactive
         ?repo ~bypass_checks ~dot_profile
-        ?update_config ?env_hook ?completion shell
+        ?update_config ?env_hook ?completion
+        ~check_sandbox:(not no_sandboxing)
+        shell
     in
     OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
     @@ fun () ->

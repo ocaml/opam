@@ -55,19 +55,24 @@ let tar_filter = FNot gtar_filter
 
 let getconf_filter = FNot (FOr (win32_filter, freebsd_filter))
 
-let wrappers ~sandboxing () =
+let sandbox_wrappers =
   let cmd t = [
     CString "%{hooks}%/sandbox.sh", None;
     CString t, None;
   ] in
+  [ `build  [cmd "build", Some sandbox_filter];
+    `install  [cmd "install", Some sandbox_filter];
+    `remove  [cmd "remove", Some sandbox_filter];
+  ]
+
+let wrappers ~sandboxing () =
   let w = OpamFile.Wrappers.empty in
   if sandboxing then
-    { w with
-      OpamFile.Wrappers.
-      wrap_build = [cmd "build", Some sandbox_filter];
-      wrap_install = [cmd "install", Some sandbox_filter];
-      wrap_remove = [cmd "remove", Some sandbox_filter];
-    }
+    List.fold_left OpamFile.Wrappers.(fun w -> function
+        | `build wrap_build -> { w with wrap_build }
+        | `install wrap_install -> { w with wrap_install }
+        | `remove wrap_remove -> { w with wrap_remove }
+      ) OpamFile.Wrappers.empty sandbox_wrappers
   else w
 
 let bwrap_cmd = "bwrap"

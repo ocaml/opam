@@ -467,3 +467,57 @@ let autopin st ?(simulate=false) ?quiet ?recurse ?subpath atom_or_local_list =
       (OpamPackage.Set.union pins already_pinned_set) st
   in
   st, atoms
+
+let check_and_revert_sandboxing root config =
+  let sdbx_wrappers =
+    let w = OpamFile.Config.wrappers config in
+    let init_sdbx_cmds =
+      List.map (function `build cmd | `install cmd | `remove cmd -> cmd)
+        OpamInitDefaults.sandbox_wrappers
+      |> List.flatten
+    in
+    List.filter (fun cmd -> List.mem cmd init_sdbx_cmds)
+      OpamFile.Wrappers.(wrap_build w @ wrap_install w @ wrap_remove w)
+  in
+  let env = fun v ->
+    let fv = OpamVariable.Full.variable v in
+    match OpamVariable.Map.find_opt fv (OpamEnv.hook_env root) with
+    | Some c -> c
+    | None ->
+      OpamStd.Option.Op.(OpamStd.Option.of_Not_found (List.assoc fv)
+                           OpamSysPoll.variables >>= Lazy.force)
+  in
+  match OpamFilter.commands env sdbx_wrappers with
+  | [] -> config
+  | cmd::_ ->
+    let test_cmd = [ "sh"; "-c"; "echo SUCCESS >/tmp/t && cat /tmp/t" ] in
+    let working_or_noop =
+      try
+        OpamSystem.read_command_output ~allow_stdin:false (cmd @ test_cmd)
+        = ["SUCCESS"]
+      with e ->
+        (OpamConsole.error "Sandboxing is not working on your platform%s:\n%s"
+           (OpamStd.Option.to_string (fun os -> " "^os)
+              (OpamSysPoll.os_distribution ()))
+           (Printexc.to_string e);
+         not (OpamConsole.confirm ~default:false
+                "Do you want to disable it?  Note that this will result in \
+                less secure package builds, so please ensure that you have \
+                some other isolation mechanisms in place (such as running \
+                within a container or virtual machine)."))
+    in
+    if working_or_noop then config else
+    let wrappers =
+      let filter sdbx_cmd =
+        List.filter (fun cmd_l -> not (List.mem cmd_l sdbx_cmd))
+      in
+      List.fold_left OpamFile.Wrappers.(fun w -> function
+          | `build sdbx_build ->
+            { w with wrap_build = filter sdbx_build w.wrap_build }
+          | `install sdbx_install ->
+            { w with wrap_install = filter sdbx_install w.wrap_install }
+          | `remove sdbx_remove ->
+            { w with wrap_remove = filter sdbx_remove w.wrap_remove })
+        (OpamFile.Config.wrappers config) OpamInitDefaults.sandbox_wrappers
+    in
+    OpamFile.Config.with_wrappers wrappers config

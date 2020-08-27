@@ -21,6 +21,11 @@ val default_compiler: formula
 
 val eval_variables: (OpamVariable.t * string list * string) list
 
+val sandbox_wrappers:
+  [> `build of command list
+  | `install of command list
+  | `remove of command list ] list
+
 (** Default initial configuration file for use by [opam init] if nothing is
     supplied. *)
 val init_config: ?sandboxing:bool -> unit -> OpamFile.InitConfig.t

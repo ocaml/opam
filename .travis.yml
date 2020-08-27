@@ -8,6 +8,7 @@ addons:
     - aspcud
     - libglpk-dev
     - busybox
+    - bubblewrap
 
 before_install:
     - bash -exu .travis-ci.sh prepare

@@ -10,7 +10,7 @@ New option/command/subcommand are prefixed with ◈.
   * ✘ `--yes` passed to all commands, and plugins [#4316 @dra27]
 
 ## Init
-  *
+  * On init, check availability of sandbox and propose to disable [#4284 @rjbou - fix #4089]
 
 ## Config Upgrade
   * config upgrade: on the fly upgrade if no write lock required [#4313 @rjbou]
