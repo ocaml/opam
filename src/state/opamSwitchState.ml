@@ -192,7 +192,7 @@ let depexts_status_of_packages_raw ~depexts global_config switch_config packages
         ) syspkg_map
     | exception (Failure msg) ->
       OpamConsole.note "%s\nYou can disable this check using 'opam \
-                        option global depext=false'"
+                        option --global depext=false'"
         msg;
       OpamPackage.Map.empty
   in
