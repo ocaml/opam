@@ -39,7 +39,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Option
-  *
+  * Fix to output a correct note by changing to the `--global` flag instead of `global` [#4334 @smorimoto]
 
 ## Lint
   *
