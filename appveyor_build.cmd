@@ -48,12 +48,12 @@ set CYG_ROOT=C:\%CYG_ROOT%
 
 cd "%APPVEYOR_BUILD_FOLDER%"
 
-if "%OCAML_PORT%" equ "" (
-  rem Need unreleased Cygwin 3.1.7 for bugfix in acl_get_tag_type and acl_get_permset
-  appveyor DownloadFile "https://cygwin.com/snapshots/x86/cygwin1-20200710.dll.xz" -FileName "cygwin1.dll.xz" || exit /b 1
-  "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER ; unxz cygwin1.dll.xz ; chmod +x cygwin1.dll"
-  move cygwin1.dll %CYG_ROOT%\bin\cygwin1.dll
-)
+:: if "%OCAML_PORT%" equ "" (
+::   rem Need unreleased Cygwin 3.1.7 for bugfix in acl_get_tag_type and acl_get_permset
+::   appveyor DownloadFile "https://cygwin.com/snapshots/x86/cygwin1-20200710.dll.xz" -FileName "cygwin1.dll.xz" || exit /b 1
+::   "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER ; unxz cygwin1.dll.xz ; chmod +x cygwin1.dll"
+::   move cygwin1.dll %CYG_ROOT%\bin\cygwin1.dll
+:: )
 
 rem CYGWIN_PACKAGES is the list of required Cygwin packages (cygwin is included
 rem in the list just so that the Cygwin version is always displayed on the log).
