@@ -51,6 +51,9 @@ if "%CYGWIN_UPGRADE_REQUIRED%%CYGWIN_UPGRADE_FLAG%" equ "1" call :UpgradeCygwin
 goto :EOF
 
 :install
+echo Build Worker Image: %APPVEYOR_BUILD_WORKER_IMAGE%
+systeminfo 2>nul | findstr /B /C:"OS Name" /C:"OS Version"
+echo System architecture: %PLATFORM%
 set CYG_ROOT=C:\%CYG_ROOT%
 
 cd "%APPVEYOR_BUILD_FOLDER%"
