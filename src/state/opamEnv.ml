@@ -245,7 +245,8 @@ let get_pure ?(updates=[]) () =
 let get_opam ?(set_opamroot=false) ?(set_opamswitch=false) ~force_path st =
   add [] (updates ~set_opamroot ~set_opamswitch ~force_path st)
 
-let get_opam_raw ?(set_opamroot=false) ?(set_opamswitch=false) ~force_path
+let get_opam_raw ?(set_opamroot=false) ?(set_opamswitch=false) ?(base=[])
+    ~force_path
     root switch =
   let env_file = OpamPath.Switch.environment root switch in
   let upd = OpamFile.Environment.safe_read env_file in
@@ -269,7 +270,7 @@ let get_opam_raw ?(set_opamroot=false) ?(set_opamswitch=false) ~force_path
         upd
 
   in
-  add []
+  add base
     (updates_common ~set_opamroot ~set_opamswitch root switch @
      upd)
 
