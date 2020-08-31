@@ -20,7 +20,7 @@ let slog = OpamConsole.slog
 module Cache = struct
   type t = {
     cached_repofiles: (repository_name * OpamFile.Repo.t) list;
-    cached_opams: (repository_name * (package * OpamFile.OPAM.t) list) list;
+    cached_opams: (repository_name * OpamFile.OPAM.t OpamPackage.Map.t) list;
   }
 
   let check_marshaled_file fd =
@@ -64,8 +64,7 @@ module Cache = struct
         OpamRepositoryName.Map.of_list cache.cached_repofiles
       in
       let repo_opams_map =
-        OpamRepositoryName.Map.map OpamPackage.Map.of_list
-          (OpamRepositoryName.Map.of_list cache.cached_opams)
+        OpamRepositoryName.Map.of_list cache.cached_opams
       in
       (repofiles_map, repo_opams_map)
     in
@@ -113,8 +112,7 @@ module Cache = struct
             (filter_out_nourl rt.repos_definitions);
         cached_opams =
           OpamRepositoryName.Map.bindings
-            (OpamRepositoryName.Map.map OpamPackage.Map.bindings
-               (filter_out_nourl rt.repo_opams));
+            (filter_out_nourl rt.repo_opams);
       }
       [Marshal.No_sharing];
     flush oc;
