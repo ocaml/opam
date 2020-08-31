@@ -114,7 +114,7 @@ module Cache = struct
           OpamRepositoryName.Map.bindings
             (filter_out_nourl rt.repo_opams);
       }
-      [Marshal.No_sharing];
+      [];
     flush oc;
     log "%a written in %.3fs" (slog OpamFilename.prettify) file (chrono ())
 
