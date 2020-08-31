@@ -395,12 +395,25 @@ let load lock_kind gt rt switch =
       invariant
   in
   let conf_files =
-    OpamPackage.Set.fold (fun nv acc ->
-        OpamPackage.Name.Map.add nv.name
-          (OpamFile.Dot_config.safe_read
-             (OpamPath.Switch.config gt.root switch nv.name))
-          acc)
-      installed OpamPackage.Name.Map.empty
+    let conf_files =
+      OpamFilename.files (OpamPath.Switch.config_dir gt.root switch)
+    in
+    List.fold_left (fun acc f ->
+        if OpamFilename.check_suffix f ".config" then
+          match
+            OpamPackage.Name.of_string
+              OpamFilename.(Base.to_string (basename (chop_extension f)))
+          with
+          | name when OpamPackage.has_name installed name ->
+              OpamPackage.Name.Map.add name
+                (OpamFile.Dot_config.safe_read
+                   (OpamPath.Switch.config gt.root switch name))
+                acc
+          | exception (Failure _) -> acc
+          | _ -> acc
+        else acc)
+      OpamPackage.Name.Map.empty
+      conf_files
   in
   let ext_files_changed = lazy (
     OpamPackage.Name.Map.fold (fun name conf acc ->
