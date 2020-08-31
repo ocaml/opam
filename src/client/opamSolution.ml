@@ -685,6 +685,12 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
 
   (* 2/ Display errors and finalize *)
 
+  OpamSwitchState.Installed_cache.save
+    (OpamPath.Switch.installed_opams_cache t.switch_global.root t.switch)
+    (OpamPackage.Set.fold (fun nv opams ->
+         OpamPackage.Map.add nv (OpamSwitchState.opam t nv) opams)
+        t.installed OpamPackage.Map.empty);
+
   let cleanup_artefacts graph =
     PackageActionGraph.iter_vertex (function
         | `Remove nv

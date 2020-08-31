@@ -181,6 +181,10 @@ module Switch: sig
       {i $meta/packages/} *)
   val installed_opams: t -> switch -> dirname
 
+  (** Cache file for the mirrored installed package metadata
+      {i $meta/packages/cache} *)
+  val installed_opams_cache: t -> switch -> filename
+
   (** The mirror of the package definition for the given installed package {i
       $meta/packages/$name.$version/} *)
   val installed_package_dir: t -> switch -> package -> dirname

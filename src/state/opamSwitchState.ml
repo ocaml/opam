@@ -157,6 +157,11 @@ let depexts_raw ~env nv opams =
       (OpamFile.OPAM.depexts opam)
   with Not_found -> OpamSysPkg.Set.empty
 
+module Installed_cache = OpamCached.Make(struct
+    type t = OpamFile.OPAM.t OpamPackage.Map.t
+    let name = "installed"
+  end)
+
 let depexts_status_of_packages_raw ~depexts global_config switch_config packages =
   let open OpamSysPkg.Set.Op in
   let syspkg_set, syspkg_map =
@@ -278,13 +283,21 @@ let load lock_kind gt rt switch =
       pinned (OpamPackage.Set.empty, OpamPackage.Map.empty)
   in
   let installed_opams =
-    OpamPackage.Set.fold (fun nv opams ->
-        OpamStd.Option.Op.(
-          (OpamFile.OPAM.read_opt
-             (OpamPath.Switch.installed_opam gt.root switch nv)
-           >>| fun opam -> OpamPackage.Map.add nv opam opams)
-          +! opams))
-      installed OpamPackage.Map.empty
+    let cache_file = OpamPath.Switch.installed_opams_cache gt.root switch in
+    match Installed_cache.load cache_file with
+    | Some opams -> opams
+    | None ->
+      let opams =
+        OpamPackage.Set.fold (fun nv opams ->
+            OpamStd.Option.Op.(
+              (OpamFile.OPAM.read_opt
+                 (OpamPath.Switch.installed_opam gt.root switch nv)
+               >>| fun opam -> OpamPackage.Map.add nv opam opams)
+              +! opams))
+          installed OpamPackage.Map.empty
+      in
+      Installed_cache.save cache_file opams;
+      opams
   in
   let repos_package_index =
     OpamRepositoryState.build_index rt (repos_list_raw rt switch_config)
