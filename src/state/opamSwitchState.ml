@@ -285,7 +285,16 @@ let load lock_kind gt rt switch =
   let installed_opams =
     let cache_file = OpamPath.Switch.installed_opams_cache gt.root switch in
     match Installed_cache.load cache_file with
-    | Some opams -> opams
+    | Some opams ->
+      OpamPackage.Map.mapi (fun nv opam ->
+          let metadata_dir =
+            OpamPath.Switch.installed_opam gt.root switch nv
+            |> OpamFile.filename
+            |> OpamFilename.dirname
+            |> OpamFilename.Dir.to_string
+          in
+          OpamFile.OPAM.with_metadata_dir (Some (None, metadata_dir)) opam)
+        opams
     | None ->
       let opams =
         OpamPackage.Set.fold (fun nv opams ->
