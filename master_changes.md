@@ -3,6 +3,9 @@ note.
 Possibly scripts breaking changes are prefixed with ✘.
 New option/command/subcommand are prefixed with ◈.
 
+## Version
+  * Bump version to '2.1.0~beta2' [#4336 @rjbou]
+
 ## Global CLI
   *
 
@@ -34,7 +37,6 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Option
-  * Fix to output a correct note by changing to the `--global` flag instead of `global` [#4334 @smorimoto]
 
 ## Lint
   *
