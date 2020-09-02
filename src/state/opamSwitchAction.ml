@@ -142,6 +142,8 @@ let set_current_switch gt st =
   st
 
 let install_metadata st nv =
+  OpamSwitchState.Installed_cache.remove
+    (OpamPath.Switch.installed_opams_cache st.switch_global.root st.switch);
   let opam = OpamSwitchState.opam st nv in
   OpamFile.OPAM.write
     (OpamPath.Switch.installed_opam st.switch_global.root st.switch nv)
@@ -160,6 +162,8 @@ let install_metadata st nv =
        opam)
 
 let remove_metadata st packages =
+  OpamSwitchState.Installed_cache.remove
+    (OpamPath.Switch.installed_opams_cache st.switch_global.root st.switch);
   OpamPackage.Set.iter (fun nv ->
       OpamFilename.rmdir
         (OpamPath.Switch.installed_package_dir

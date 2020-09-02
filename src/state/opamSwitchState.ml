@@ -157,6 +157,11 @@ let depexts_raw ~env nv opams =
       (OpamFile.OPAM.depexts opam)
   with Not_found -> OpamSysPkg.Set.empty
 
+module Installed_cache = OpamCached.Make(struct
+    type t = OpamFile.OPAM.t OpamPackage.Map.t
+    let name = "installed"
+  end)
+
 let depexts_status_of_packages_raw ~depexts global_config switch_config packages =
   let open OpamSysPkg.Set.Op in
   let syspkg_set, syspkg_map =
@@ -278,13 +283,30 @@ let load lock_kind gt rt switch =
       pinned (OpamPackage.Set.empty, OpamPackage.Map.empty)
   in
   let installed_opams =
-    OpamPackage.Set.fold (fun nv opams ->
-        OpamStd.Option.Op.(
-          (OpamFile.OPAM.read_opt
-             (OpamPath.Switch.installed_opam gt.root switch nv)
-           >>| fun opam -> OpamPackage.Map.add nv opam opams)
-          +! opams))
-      installed OpamPackage.Map.empty
+    let cache_file = OpamPath.Switch.installed_opams_cache gt.root switch in
+    match Installed_cache.load cache_file with
+    | Some opams ->
+      OpamPackage.Map.mapi (fun nv opam ->
+          let metadata_dir =
+            OpamPath.Switch.installed_opam gt.root switch nv
+            |> OpamFile.filename
+            |> OpamFilename.dirname
+            |> OpamFilename.Dir.to_string
+          in
+          OpamFile.OPAM.with_metadata_dir (Some (None, metadata_dir)) opam)
+        opams
+    | None ->
+      let opams =
+        OpamPackage.Set.fold (fun nv opams ->
+            OpamStd.Option.Op.(
+              (OpamFile.OPAM.read_opt
+                 (OpamPath.Switch.installed_opam gt.root switch nv)
+               >>| fun opam -> OpamPackage.Map.add nv opam opams)
+              +! opams))
+          installed OpamPackage.Map.empty
+      in
+      Installed_cache.save cache_file opams;
+      opams
   in
   let repos_package_index =
     OpamRepositoryState.build_index rt (repos_list_raw rt switch_config)
@@ -395,12 +417,25 @@ let load lock_kind gt rt switch =
       invariant
   in
   let conf_files =
-    OpamPackage.Set.fold (fun nv acc ->
-        OpamPackage.Name.Map.add nv.name
-          (OpamFile.Dot_config.safe_read
-             (OpamPath.Switch.config gt.root switch nv.name))
-          acc)
-      installed OpamPackage.Name.Map.empty
+    let conf_files =
+      OpamFilename.files (OpamPath.Switch.config_dir gt.root switch)
+    in
+    List.fold_left (fun acc f ->
+        if OpamFilename.check_suffix f ".config" then
+          match
+            OpamPackage.Name.of_string
+              OpamFilename.(Base.to_string (basename (chop_extension f)))
+          with
+          | name when OpamPackage.has_name installed name ->
+              OpamPackage.Name.Map.add name
+                (OpamFile.Dot_config.safe_read
+                   (OpamPath.Switch.config gt.root switch name))
+                acc
+          | exception (Failure _) -> acc
+          | _ -> acc
+        else acc)
+      OpamPackage.Name.Map.empty
+      conf_files
   in
   let ext_files_changed = lazy (
     OpamPackage.Name.Map.fold (fun name conf acc ->

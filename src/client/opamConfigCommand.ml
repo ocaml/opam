@@ -229,19 +229,36 @@ let expand gt str =
 
 let exec gt ?set_opamroot ?set_opamswitch ~inplace_path command =
   log "config-exec command=%a" (slog (String.concat " ")) command;
-  OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+  let switch = OpamStateConfig.get_switch () in
+  let st_lazy = lazy (
+    let rt = OpamRepositoryState.load `Lock_none gt in
+    OpamSwitchState.load `Lock_none gt rt switch
+  ) in
+  let env_file = OpamPath.Switch.environment gt.root switch in
+  let env =
+    if OpamFile.exists env_file then
+      let base = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
+      OpamEnv.get_opam_raw ~base
+        ?set_opamroot ?set_opamswitch ~force_path:(not inplace_path)
+        gt.root switch
+    else
+      OpamEnv.get_full
+        ?set_opamroot ?set_opamswitch ~force_path:(not inplace_path)
+        (Lazy.force st_lazy)
+  in
+  let env = OpamTypesBase.env_array env in
+  let resolve var =
+    OpamPackageVar.resolve (Lazy.force st_lazy) var
+  in
   let cmd, args =
     match
-      List.map (OpamFilter.expand_string ~default:(fun _ -> "")
-                  (OpamPackageVar.resolve st)) command
+      List.map (OpamFilter.expand_string ~default:(fun _ -> "") resolve) command
     with
     | []        -> OpamSystem.internal_error "Empty command"
-    | h::_ as l -> h, Array.of_list l in
-  let env =
-    OpamTypesBase.env_array
-      (OpamEnv.get_full
-         ?set_opamroot ?set_opamswitch ~force_path:(not inplace_path) st)
+    | h::_ as l -> h, Array.of_list l
   in
+  (* it's OK not to release [st_lazy] since we are certain everything will be
+     cleaned up anyway *)
   match OpamSystem.resolve_command ~env cmd with
   | Some cmd -> raise (OpamStd.Sys.Exec (cmd, args, env))
   | None ->

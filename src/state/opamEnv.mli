@@ -26,15 +26,20 @@ val get_full:
 
 (** Get only environment modified by OPAM. If [force_path], the PATH is modified
     to ensure opam dirs are leading. [set_opamroot] and [set_opamswitch] can be
-    additionally used to set the [OPAMROOT] and [OPAMSWITCH] variables. *)
+    additionally used to set the [OPAMROOT] and [OPAMSWITCH] variables.
+
+    With [base], apply the modifications to the specified base environment *)
 val get_opam:
   ?set_opamroot:bool -> ?set_opamswitch:bool -> force_path:bool ->
   'a switch_state -> env
 
 (** Like [get_opam], but reads the cache file from the given opam root and
-    switch instead of computing the environment from a switch state *)
+    switch instead of computing the environment from a switch state.
+
+    With [base], apply the modifications to the specified base environment *)
 val get_opam_raw:
-  ?set_opamroot:bool -> ?set_opamswitch:bool -> force_path:bool ->
+  ?set_opamroot:bool -> ?set_opamswitch:bool -> ?base:env ->
+  force_path:bool ->
   dirname -> switch -> env
 
 (** Returns the running environment, with any opam modifications cleaned out,

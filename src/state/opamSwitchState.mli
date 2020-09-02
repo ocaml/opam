@@ -238,3 +238,10 @@ val not_found_message: 'a switch_state -> atom -> string
 val unavailable_reason:
   'a switch_state -> ?default:string -> name * OpamFormula.version_formula ->
   string
+
+(** Handle a cache of the opam files of installed packages *)
+module Installed_cache: sig
+  type t = OpamFile.OPAM.t OpamPackage.Map.t
+  val save: OpamFilename.t -> t -> unit
+  val remove: OpamFilename.t -> unit
+end

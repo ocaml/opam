@@ -139,6 +139,8 @@ module Switch = struct
 
   let installed_opams t a = meta t a / "packages"
 
+  let installed_opams_cache t a = meta t a / "packages" // "cache"
+
   let installed_package_dir t a nv =
     installed_opams t a / OpamPackage.to_string nv
 

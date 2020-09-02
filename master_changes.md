@@ -7,7 +7,8 @@ New option/command/subcommand are prefixed with ◈.
   * Bump version to '2.1.0~beta2' [#4336 @rjbou]
 
 ## Global CLI
-  *
+  * Reduce startup time with better use of more caches, etc. [#4341 @altgr]
+  * Do not load the full state on `opam exec` when not necessary [#4341 @altgr]
 
 ## Init
   *

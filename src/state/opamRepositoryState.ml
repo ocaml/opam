@@ -10,7 +10,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamTypesBase
 open OpamStd.Op
 open OpamStateTypes
 
@@ -20,82 +19,16 @@ let slog = OpamConsole.slog
 module Cache = struct
   type t = {
     cached_repofiles: (repository_name * OpamFile.Repo.t) list;
-    cached_opams: (repository_name * (package * OpamFile.OPAM.t) list) list;
+    cached_opams: (repository_name * OpamFile.OPAM.t OpamPackage.Map.t) list;
   }
 
-  let check_marshaled_file fd =
-    try
-    let ic = Unix.in_channel_of_descr fd in
-    let this_magic = OpamVersion.magic () in
-    let magic_len = String.length this_magic in
-    let file_magic =
-      let b = Bytes.create magic_len in
-      really_input ic b 0 magic_len;
-      Bytes.to_string b in
-    if not OpamCoreConfig.developer &&
-      file_magic <> this_magic then (
-      log "Bad cache: incompatible magic string %S (expected %S)."
-        file_magic this_magic;
-      None
-    ) else
-    let header = Bytes.create Marshal.header_size in
-    really_input ic header 0 Marshal.header_size;
-    let expected_size = magic_len + Marshal.total_size header 0 in
-    let current_size = in_channel_length ic in
-    if expected_size <> current_size then (
-      log "Bad cache: wrong length %d (advertised %d)."
-        current_size expected_size;
-      None
-    ) else (
-      seek_in ic magic_len;
-      Some ic
-    )
-    with e ->
-      OpamStd.Exn.fatal e;
-      log "Bad cache: %s" (Printexc.to_string e);
-      None
-
-  let marshal_from_file file fd =
-    let chrono = OpamConsole.timer () in
-    let f ic =
-      let (cache: t) = Marshal.from_channel ic in
-      log "Loaded %a in %.3fs" (slog OpamFilename.to_string) file (chrono ());
-      let repofiles_map =
-        OpamRepositoryName.Map.of_list cache.cached_repofiles
-      in
-      let repo_opams_map =
-        OpamRepositoryName.Map.map OpamPackage.Map.of_list
-          (OpamRepositoryName.Map.of_list cache.cached_opams)
-      in
-      (repofiles_map, repo_opams_map)
-    in
-    OpamStd.Option.map f (check_marshaled_file fd)
-
-  let load root =
-    match OpamFilename.opt_file (OpamPath.state_cache root) with
-    | Some file ->
-        let r =
-          OpamFilename.with_flock `Lock_read file @@ fun fd ->
-          marshal_from_file file fd
-        in
-        if r = None then begin
-          log "Invalid cache, removing";
-          OpamFilename.remove file
-        end;
-        r
-    | None -> None
+  module C = OpamCached.Make (struct
+      type nonrec t = t
+      let name = "repository"
+    end)
 
   let save rt =
-    if OpamCoreConfig.(!r.safe_mode) then
-      log "Running in safe mode, not upgrading the repository cache"
-    else
-    let chrono = OpamConsole.timer () in
     let file = OpamPath.state_cache rt.repos_global.root in
-    OpamFilename.with_flock `Lock_write file @@ fun fd ->
-    log "Writing the cache of repository metadata to %s ...\n"
-      (OpamFilename.prettify file);
-    let oc = Unix.out_channel_of_descr fd in
-    output_string oc (OpamVersion.magic ());
     (* Repository without remote are not cached, they are intended to be
        manually edited *)
     let filter_out_nourl repos_map =
@@ -107,23 +40,30 @@ module Cache = struct
            with Not_found -> false)
         repos_map
     in
-    Marshal.to_channel oc
+    let t =
       { cached_repofiles =
           OpamRepositoryName.Map.bindings
             (filter_out_nourl rt.repos_definitions);
         cached_opams =
           OpamRepositoryName.Map.bindings
-            (OpamRepositoryName.Map.map OpamPackage.Map.bindings
-               (filter_out_nourl rt.repo_opams));
+            (filter_out_nourl rt.repo_opams);
       }
-      [Marshal.No_sharing];
-    flush oc;
-    log "%a written in %.3fs" (slog OpamFilename.prettify) file (chrono ())
+    in
+    C.save file t
+
+  let load root =
+    let file = OpamPath.state_cache root in
+    match C.load file with
+    | Some cache ->
+      Some
+        (OpamRepositoryName.Map.of_list cache.cached_repofiles,
+         OpamRepositoryName.Map.of_list cache.cached_opams)
+    | None -> None
 
   let remove () =
     let root = OpamStateConfig.(!r.root_dir) in
     let file = OpamPath.state_cache root in
-    OpamFilename.remove file
+    C.remove file
 
 end
 
