@@ -10,7 +10,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Init
-  *
+  * Fix the sandboxing check introduced in beta1
 
 ## Config Upgrade
   *
