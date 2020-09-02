@@ -785,12 +785,6 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
   let root = OpamStateConfig.(!r.root_dir) in
   let config = update_with_init_config config init_config in
   let _all_ok = init_checks ~hard_fail_exn:false init_config in
-  let config =
-    if check_sandbox then
-      OpamAuxCommands.check_and_revert_sandboxing root config
-    else config
-  in
-  OpamFile.Config.write (OpamPath.config root) config;
   let custom_init_scripts =
     let env v =
       let vs = OpamVariable.Full.variable v in
@@ -804,6 +798,12 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
       (OpamFile.InitConfig.init_scripts init_config)
   in
   OpamEnv.write_custom_init_scripts root custom_init_scripts;
+  let config =
+    if check_sandbox then
+      OpamAuxCommands.check_and_revert_sandboxing root config
+    else config
+  in
+  OpamFile.Config.write (OpamPath.config root) config;
   OpamEnv.setup root ~interactive
     ?dot_profile ?update_config ?env_hook ?completion ?inplace shell;
   let gt = OpamGlobalState.load `Lock_write in
@@ -849,12 +849,6 @@ let init
           update_with_init_config OpamFile.Config.empty init_config |>
           OpamFile.Config.with_repositories (List.map fst repos)
         in
-        let config =
-          if check_sandbox then
-            OpamAuxCommands.check_and_revert_sandboxing root config
-          else config
-        in
-        OpamFile.Config.write config_f config;
 
         let dontswitch =
           if bypass_checks then false else
@@ -877,6 +871,12 @@ let init
                   Some (nam,scr) else None) scripts
         in
         OpamEnv.write_custom_init_scripts root custom_scripts;
+        let config =
+          if check_sandbox then
+            OpamAuxCommands.check_and_revert_sandboxing root config
+          else config
+        in
+        OpamFile.Config.write config_f config;
         let repos_config =
           OpamRepositoryName.Map.of_list repos |>
           OpamRepositoryName.Map.map OpamStd.Option.some

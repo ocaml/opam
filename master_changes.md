@@ -11,7 +11,7 @@ New option/command/subcommand are prefixed with ◈.
   * Do not load the full state on `opam exec` when not necessary [#4341 @altgr]
 
 ## Init
-  *
+  * Fix the sandboxing check introduced in beta1
 
 ## Config Upgrade
   *
