@@ -33,27 +33,37 @@ if %ERRORLEVEL% equ 1 (
 goto :EOF
 
 :UpgradeCygwin
-if "%CYGWIN_INSTALL_PACKAGES%" neq "" "%CYG_ROOT%\setup-%CYG_ARCH%.exe" --quiet-mode --no-shortcuts --no-startmenu --no-desktop --only-site --root "%CYG_ROOT%" --site "%CYG_MIRROR%" --local-package-dir "%CYG_CACHE%" --packages %CYGWIN_INSTALL_PACKAGES:~1% > nul
-for %%P in (%CYGWIN_COMMANDS%) do "%CYG_ROOT%\bin\bash.exe" -lc "%%P --help" > nul || set CYGWIN_UPGRADE_REQUIRED=1
-"%CYG_ROOT%\bin\bash.exe" -lc "cygcheck -dc %CYGWIN_PACKAGES%"
 if %CYGWIN_UPGRADE_REQUIRED% equ 1 (
   echo Cygwin package upgrade required - please go and drink coffee
-  "%CYG_ROOT%\setup-%CYG_ARCH%.exe" --quiet-mode --no-shortcuts --no-startmenu --no-desktop --only-site --root "%CYG_ROOT%" --site "%CYG_MIRROR%" --local-package-dir "%CYG_CACHE%" --upgrade-also > nul
-  "%CYG_ROOT%\bin\bash.exe" -lc "cygcheck -dc %CYGWIN_PACKAGES%"
+  set CYGWIN_UPGRADE_FLAG=--upgrade-also
+  SET CYGWIN_UPGRADE_REQUIRED=0
+) else (
+  set CYGWIN_UPGRADE_FLAG=
 )
+if "%CYGWIN_INSTALL_PACKAGES%" neq "" set CYGWIN_INSTALL_PACKAGES=--packages %CYGWIN_INSTALL_PACKAGES:~1%
+if "%CYGWIN_INSTALL_PACKAGES%%FLAG%" equ "" goto UpgradeCygwin_next
+"%CYG_ROOT%\setup-%CYG_ARCH%.exe" --quiet-mode --no-shortcuts --no-startmenu --no-desktop --only-site --root "%CYG_ROOT%" --site "%CYG_MIRROR%" --local-package-dir "%CYG_CACHE%" %CYGWIN_INSTALL_PACKAGES% %CYGWIN_UPGRADE_FLAG% > nul
+set CYGWIN_INSTALL_PACKAGES=
+:UpgradeCygwin_next
+if "%CYGWIN_UPGRADE_FLAG%" equ "" for %%P in (%CYGWIN_COMMANDS%) do "%CYG_ROOT%\bin\bash.exe" -lc "%%P --help" > nul || set CYGWIN_UPGRADE_REQUIRED=1
+"%CYG_ROOT%\bin\bash.exe" -lc "cygcheck -dc %CYGWIN_PACKAGES%"
+if "%CYGWIN_UPGRADE_REQUIRED%%CYGWIN_UPGRADE_FLAG%" equ "1" call :UpgradeCygwin
 goto :EOF
 
 :install
+echo Build Worker Image: %APPVEYOR_BUILD_WORKER_IMAGE%
+systeminfo 2>nul | findstr /B /C:"OS Name" /C:"OS Version"
+echo System architecture: %PLATFORM%
 set CYG_ROOT=C:\%CYG_ROOT%
 
 cd "%APPVEYOR_BUILD_FOLDER%"
 
-if "%OCAML_PORT%" equ "" (
-  rem Need unreleased Cygwin 3.1.7 for bugfix in acl_get_tag_type and acl_get_permset
-  appveyor DownloadFile "https://cygwin.com/snapshots/x86/cygwin1-20200710.dll.xz" -FileName "cygwin1.dll.xz" || exit /b 1
-  "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER ; unxz cygwin1.dll.xz ; chmod +x cygwin1.dll"
-  move cygwin1.dll %CYG_ROOT%\bin\cygwin1.dll
-)
+:: if "%OCAML_PORT%" equ "" (
+::   rem Need unreleased Cygwin 3.1.7 for bugfix in acl_get_tag_type and acl_get_permset
+::   appveyor DownloadFile "https://cygwin.com/snapshots/x86/cygwin1-20200710.dll.xz" -FileName "cygwin1.dll.xz" || exit /b 1
+::   "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER ; unxz cygwin1.dll.xz ; chmod +x cygwin1.dll"
+::   move cygwin1.dll %CYG_ROOT%\bin\cygwin1.dll
+:: )
 
 rem CYGWIN_PACKAGES is the list of required Cygwin packages (cygwin is included
 rem in the list just so that the Cygwin version is always displayed on the log).
@@ -79,7 +89,24 @@ if "%OCAML_PORT%" equ "" (
 set CYGWIN_INSTALL_PACKAGES=
 set CYGWIN_UPGRADE_REQUIRED=0
 
+rem Check that all packages are installed
 for %%P in (%CYGWIN_PACKAGES%) do call :CheckPackage %%P
+
+rem Check that Cygwin is at least 3.1.7
+for /f "tokens=2,3,4 delims=-. " %%a in ('%CYG_ROOT%\bin\bash.exe -lc "cygcheck -dc cygwin" ^| findstr cygwin') do (
+  set CYG_MAJOR=%%a
+  set CYG_MINOR=%%b
+  set CYG_REV=%%c
+)
+set /a CYG_VER=%CYG_MAJOR%*10000+%CYG_MINOR%*100+%CYG_REV%
+if %CYG_VER% lss 30107 (
+  if "%OCAML_PORT%" equ "" (
+    echo Cygwin version %CYG_MAJOR%.%CYG_MINOR%.%CYG_REV% installed; opam requires 3.1.7 or later
+    set CYGWIN_UPGRADE_REQUIRED=1
+  )
+)
+
+rem Upgrade/install packages as necessary
 call :UpgradeCygwin
 
 set INSTALLED_URL=

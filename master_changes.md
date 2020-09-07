@@ -76,7 +76,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Internal
-  *
+  * Switch AppVeyor Cygwin from snapshot back to main repository [#4338 @dra27]
 
 ## Test
   *

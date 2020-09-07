@@ -14,7 +14,8 @@ environment:
     # This should be identical to the value in .travis.yml
     OPAM_REPO_SHA: 8c45759d4
   matrix:
-    - CYG_ROOT: cygwin
+    - appveyor_build_worker_image: Visual Studio 2019
+      CYG_ROOT: cygwin
       CYG_ARCH: x86
 #    - CYG_ROOT: cygwin64
 #      CYG_ARCH: x86_64
@@ -31,10 +32,6 @@ environment:
 cache:
   - C:\projects\opam\bootstrap
   - C:\projects\opam\src_ext\archives
-
-init:
-  - systeminfo 2>nul | findstr /B /C:"OS Name" /C:"OS Version"
-  - "echo System architecture: %PLATFORM%"
 
 install:
   - call "%APPVEYOR_BUILD_FOLDER%\appveyor_build.cmd" install
