@@ -26,7 +26,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Pin
-  *
+  * Fix the `--with-version` flag, which wasn't always honored
 
 ## List
   *
