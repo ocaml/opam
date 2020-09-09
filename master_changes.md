@@ -46,10 +46,13 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## External dependencies
-  *
+  * Upgrade bootstrap OCaml compiler from 4.09.1 to 4.11.1 [#4242 @avsm @dra27 @MisterDA @rjbou]
 
 ## Sandbox
   *
+
+## Test
+  * Update and expand Travis and AppVeyor test matrices [#4242 @MisterDA]
 
 ## Repository management
   *

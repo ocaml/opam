@@ -125,8 +125,13 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
   PREFIX=`cd .. ; pwd`/ocaml
   WINPREFIX=`echo ${PREFIX} | cygpath -f - -m`
   if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
-    # --disable-ocamldoc can change to --disable-stdlib-manpages when bumped to 4.11
-    PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" ./configure --prefix "$WINPREFIX" --build=$BUILD --host=$HOST --disable-ocamldoc $BOOTSTRAP_EXTRA_OPTS
+    PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" \
+    Lib="${LIB_PREPEND}${Lib}" \
+    Include="${INC_PREPEND}${Include}" \
+      ./configure --prefix "$WINPREFIX" \
+                  --build=$BUILD --host=$HOST \
+                  --disable-stdlib-manpages \
+                  $BOOTSTRAP_EXTRA_OPTS
   fi
   cd ..
   if [ ! -e ${FLEXDLL} ]; then
