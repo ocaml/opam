@@ -828,7 +828,7 @@ files.
 
 - <a id="opamfield-substs">`substs: [ <string> ... ]`</a>:
   a list of files relative to the project source root. These files will be
-  generated from their `.in` counterparts, with variable interpolations
+  generated from their `.in` counterparts, with [variable interpolations](#Interpolation)
   expanded.
 
 - <a id="opamfield-build">
