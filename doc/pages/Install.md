@@ -175,6 +175,10 @@ for Opam usage.
 
 [![badge](https://repology.org/badge/version-for-repo/ubuntu_20_04/opam.svg)](https://repology.org/project/opam/versions)
 
+#### Windows
+
+We are looking for help packaging Opam on Windows. If you are interested, please get in touch!
+
 ##### Versions 18.04 and newer
 There is a [ppa](https://launchpad.net/~avsm/+archive/ubuntu/ppa) available that contains the current stable version of `opam`.
 ```
