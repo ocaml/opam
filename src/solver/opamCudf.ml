@@ -868,7 +868,7 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
 
   let has_invariant p =
     let chain_has_invariant cs =
-      CS.exists (function p::_ -> is_opam_invariant p | _ -> false) cs
+      CS.exists (List.exists is_opam_invariant) cs
     in
     try chain_has_invariant (Map.find p ct_chains)
     with Not_found -> false
