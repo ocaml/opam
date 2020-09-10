@@ -14,7 +14,9 @@ Faking installation of ocaml.4.02.3
 Faking installation of base-ocamlbuild.base
 Done.
 ### opam install --show solo5-kernel-virtio solo5-kernel-ukvm
-Your request can't be satisfied:
-  - solo5-kernel-virtio is in conflict with solo5-kernel-ukvm
+[ERROR] Package conflict!
+  * Incompatible packages:
+    - solo5-kernel-ukvm
+    - solo5-kernel-virtio
 
 No solution found, exiting

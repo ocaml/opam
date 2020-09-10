@@ -13,18 +13,10 @@ Faking installation of ocaml-config.1
 Faking installation of ocaml.4.08.0
 Done.
 ### opam install core_bench.112.17.00 core'<112.17.00' --show
-The following dependencies couldn't be met:
-  - ocaml = 4.08.0 (from ocaml-base-compiler >= 4.08.0)
-  - ocaml-base-compiler (< 3.07+2 | >= 3.08.2 & != 3.09.0 & != 3.09.2 & != 3.12.1 & < 4.01.0 | >= 4.02.1 & < 4.03.0) (from core < 112.17.00 → ocaml < 4.03)
-      incompatible with the switch invariant ["ocaml-base-compiler" {= "4.08.0"}] (use `--update-invariant' to force)
-  - ocaml-beta (from core < 112.17.00 → ocaml < 4.03 → ocaml-variants != 3.08.5~)
-      unmet availability conditions: enable-ocaml-beta-repository
-  - ocaml-system (< 3.08.5~ | >= 3.09.1) (from core < 112.17.00 → ocaml < 4.03)
-      unmet availability conditions, e.g. sys-ocaml-version = "4.10.0"
-Your request can't be satisfied:
-  - No available version of ocaml satisfies the constraints
-  - No available version of ocaml-base-compiler satisfies the constraints
-  - ocaml-base-compiler (= 3.11.0 | = 4.02.2 | >= 4.08.0) is in conflict with ocaml-variants
-  - ocaml-base-compiler >= 4.08.0 is in conflict with ocaml-system
+[ERROR] Package conflict!
+  * No agreement on the version of ocaml:
+    - (invariant) → ocaml-base-compiler >= 4.08.0 → ocaml = 4.08.0
+    - core < 112.17.00 → ocaml < 4.00.1
+    You can temporarily relax the switch invariant with `--update-invariant'
 
 No solution found, exiting

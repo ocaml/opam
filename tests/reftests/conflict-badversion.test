@@ -14,31 +14,9 @@ Faking installation of ocaml.4.02.3
 Faking installation of base-ocamlbuild.base
 Done.
 ### opam install core'>'112.17.00 core'<'112.17.00 --show
-The following dependencies couldn't be met:
-  - ocaml = 4.02.3 (from ocaml-base-compiler = 4.02.3)
-  - ocaml-base-compiler (< 3.07+1 | >= 3.08.2 & != 3.09.0 & != 3.09.2 & != 3.11.0 & < 3.12.1) (from core (> 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00) → custom_printf < 111.21.00 → ocaml < 4.02.0)
-      incompatible with the switch invariant ["ocaml-base-compiler" {= "4.02.3"}] (use `--update-invariant' to force)
-  - ocaml-base-compiler (< 3.07+1 | >= 3.08.2 & != 3.09.0 & != 3.09.2 & != 3.11.0 & < 3.12.1) (from core (> 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00) → core_kernel = 111.21.00 → ocaml < 4.02.1)
-      incompatible with the switch invariant ["ocaml-base-compiler" {= "4.02.3"}] (use `--update-invariant' to force)
-  - ocaml-base-compiler (< 3.07+1 | >= 3.08.2 & != 3.09.0 & != 3.09.2 & != 3.11.0 & < 3.12.1 | = 4.05.0 | >= 4.09.0) (from core (> 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00) → ocaml (< 4.01.0 | >= 4.03.0))
-      incompatible with the switch invariant ["ocaml-base-compiler" {= "4.02.3"}] (use `--update-invariant' to force)
-  - ocaml-beta (from core (> 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00) → ocaml (< 4.01.0 | >= 4.03.0) → ocaml-variants != 3.08.5~)
-      unmet availability conditions: enable-ocaml-beta-repository
-  - ocaml-beta (from core (> 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00) → custom_printf < 111.21.00 → ocaml < 4.02.0 → ocaml-variants != 3.08.5~)
-      unmet availability conditions: enable-ocaml-beta-repository
-  - ocaml-beta (from core (> 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00) → core_kernel = 111.21.00 → ocaml < 4.02.1 → ocaml-variants != 3.08.5~)
-      unmet availability conditions: enable-ocaml-beta-repository
-  - ocaml-system (< 3.08.5~ | >= 3.09.1) (from core (> 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00) → ocaml (< 4.01.0 | >= 4.03.0))
-      unmet availability conditions, e.g. sys-ocaml-version = "4.10.0"
-  - ocaml-system (< 3.08.5~ | >= 3.09.1) (from core (> 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00) → custom_printf < 111.21.00 → ocaml < 4.02.0)
-      unmet availability conditions, e.g. sys-ocaml-version = "4.10.0"
-  - ocaml-system (< 3.08.5~ | >= 3.09.1) (from core (> 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00 & > 112.17.00 & < 112.17.00) → core_kernel = 111.21.00 → ocaml < 4.02.1)
-      unmet availability conditions, e.g. sys-ocaml-version = "4.10.0"
-Your request can't be satisfied:
-  - No available version of core satisfies the constraints
-  - No available version of ocaml satisfies the constraints
-  - No available version of ocaml-base-compiler satisfies the constraints
-  - ocaml-base-compiler (< 3.07+1 | = 3.08.2 | = 3.08.4 | = 3.09.1 | >= 3.10.0 & < 3.10.2 | = 3.11.1 | = 3.12.0 | = 4.02.3) is in conflict with ocaml-variants
-  - ocaml-base-compiler = 4.02.3 is in conflict with ocaml-system
+[ERROR] Package conflict!
+  * No agreement on the version of core:
+    - core != 112.17.00
+    - core != 112.17.00
 
 No solution found, exiting

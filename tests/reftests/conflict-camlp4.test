@@ -4,14 +4,9 @@ f372039d
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["camlp4" "ocaml-system"]
 [ERROR] Could not resolve base install for this switch:
-        The following dependencies couldn't be met:
-          - ocaml-base-compiler < 4.08.0 (from camlp4 → ocaml < 4.08)
-          - ocaml-variants (= 4.02.0+modular-implicits & = 4.02.1+modular-implicits-ber) (from camlp4)
-              no matching version
-          - ocaml-variants < 4.07.2~ (from camlp4 → ocaml < 4.08)
-        Your request can't be satisfied:
-          - camlp4 (!= 4.01+system & < 4.02+system | = 4.03+1 | = 4.04+1 | = 4.05+1 | = 4.06+1 | = 4.07+1) is in conflict with ocaml-system
-          - ocaml-base-compiler < 4.08.0 is in conflict with ocaml-system
-          - ocaml-variants < 4.08.0+32bit is in conflict with ocaml-system
+  * Incompatible packages:
+    - (invariant) → camlp4
+    - (invariant) → ocaml-system
+    You can temporarily relax the switch invariant with `--update-invariant'
 
 
