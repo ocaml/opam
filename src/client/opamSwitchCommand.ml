@@ -223,10 +223,12 @@ let install_compiler ?(additional_installs=[]) ?(deps_only=false) t =
   let solution = match solution with
     | Success s -> s
     | Conflicts cs ->
-      OpamConsole.error_and_exit `No_solution
-        "Could not resolve base install for this switch:\n%s"
+      OpamConsole.error
+        "Could not resolve base install for this switch:";
+      OpamConsole.errmsg "%s\n"
         (OpamCudf.string_of_conflicts t.packages
            (OpamSwitchState.unavailable_reason t) cs);
+      OpamStd.Sys.exit_because `No_solution
   in
   let () = match OpamSolver.stats solution with
     | { s_install = _; s_reinstall = 0; s_upgrade = 0;
