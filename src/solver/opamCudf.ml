@@ -893,7 +893,7 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
               else
                 "Incompatible packages:"
             in
-            let msg2 = [csl; csr] in
+            let msg2 = List.sort compare [csl; csr] in
             let msg3 =
               if has_invariant l || has_invariant r then
                 ["You can temporarily relax the switch invariant with \
