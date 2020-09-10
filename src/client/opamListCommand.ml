@@ -271,7 +271,7 @@ let apply_selector ~base st = function
         "No solution%s for %s: %s"
         (if tog.depopts then " including optional dependencies" else "")
         (OpamFormula.string_of_atoms atoms)
-        (OpamCudf.string_of_conflict st.packages
+        (OpamCudf.string_of_conflicts st.packages
            (OpamSwitchState.unavailable_reason st) cs))
   | Pattern (psel, pat) ->
     let re =

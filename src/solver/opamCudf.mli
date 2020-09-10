@@ -209,17 +209,21 @@ val cycle_conflict:
     should return a string explaining the unavailability, or the empty string,
     when called on an unavailable package (the reason can't be known this deep
     in the solver) *)
-val string_of_conflict:
+val string_of_conflicts:
   package_set -> (name * OpamFormula.version_formula -> string) -> conflict ->
   string
 
-(** Returns three lists of strings:
-    - the final reasons why the request can't be satisfied
-    - the dependency chains explaining it
-    - the cycles in the actions to process (exclusive with the other two) *)
-val strings_of_conflict:
+(** Returns two lists:
+    - the reasons why the request can't be satisfied with conflict explanations
+    - the cycles in the actions to process (exclusive with the first) *)
+val conflict_explanations:
   package_set -> (name * OpamFormula.version_formula -> string) -> conflict ->
-  string list * string list * string list
+  (string * string list * string list) list * string list
+
+(** Properly concat a single conflict as returned by [conflict_explanations] for
+   display *)
+val string_of_conflict:
+  ?indent:int -> string * string list * string list -> string
 
 val conflict_chains:
   package_set -> conflict -> (name * OpamFormula.version_formula) option list list
