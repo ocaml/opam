@@ -40,6 +40,8 @@ We provide pre-compiled binaries for:
 - OSX (intel 64 bits)
 (other platforms are available using the other methods below)
 
+Note: We are looking for help packaging Opam for Windows.
+
 If you don't like scripts, you can just pick your download
 [here](https://github.com/ocaml/opam/releases), put it in your PATH as
 `opam`, and set it as executable, e.g.
@@ -175,10 +177,6 @@ for Opam usage.
 
 [![badge](https://repology.org/badge/version-for-repo/ubuntu_20_04/opam.svg)](https://repology.org/project/opam/versions)
 
-#### Windows
-
-We are looking for help packaging Opam on Windows. If you are interested, please get in touch!
-
 ##### Versions 18.04 and newer
 There is a [ppa](https://launchpad.net/~avsm/+archive/ubuntu/ppa) available that contains the current stable version of `opam`.
 ```
@@ -189,6 +187,10 @@ apt install opam
 
 ##### Versions older than 18.04
 Use the binary distribution. Instructions provided at https://opam.ocaml.org/doc/Install.html#Binary-distribution
+
+#### Windows
+
+We are looking for help packaging Opam on Windows. If you are interested, please get in touch!
 
 #### Guix & Guix System
 
