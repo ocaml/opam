@@ -590,11 +590,6 @@ let vpkg2atom cudfnv2opam (name,cstr) =
    }]
 *)
 
-let vpkg2opam cudfnv2opam vpkg =
-  match vpkg2atom cudfnv2opam vpkg with
-  | p, None -> p, Empty
-  | p, Some (relop,v) -> p, Atom (relop, v)
-
 let conflict_empty ~version_map univ =
   Conflicts (univ, version_map, Conflict_dep (fun () -> []))
 let make_conflicts ~version_map univ = function
@@ -639,17 +634,6 @@ let formula_of_vpkgl cudfnv2opam all_packages vpkgl =
 (* - Conflict message handling machinery - *)
 
 
-let rec list_trunc n = function
-  | x::r when n > 0 -> x :: list_trunc (n - 1) r
-  | _ -> []
-
-let list_cut n l =
-  let rec aux acc n = function
-    | x::r when n > 0 -> aux (x :: acc) (n-1) r
-    | l -> acc, l
-  in
-  aux [] n l
-
 (* chain sets: sets of package lists *)
 module ChainSet = struct
 
@@ -678,38 +662,6 @@ module ChainSet = struct
     if Set.is_empty hds then []
     else hds :: transpose tls
 
-  let to_string_xx1 packages cs =
-    let rec aux cs =
-      let hds, tls =
-        fold (fun c (hds, tls) -> match c with
-            | hd::tl -> hd::hds, add tl tls
-            | [] -> hds, tls)
-          cs ([], empty)
-      in
-      if hds = [] then []
-      else if List.exists is_artefact hds then
-        if List.exists is_opam_invariant hds then "(invariant)" :: aux tls
-        else aux tls
-      else
-      let nvs = OpamPackage.to_map (OpamPackage.Set.of_list (List.map cudf2opam hds)) in
-      let strs =
-        OpamPackage.Name.Map.mapi (fun name versions ->
-            let all_versions = OpamPackage.versions_of_name packages name in
-            let formula = OpamFormula.formula_of_version_set all_versions versions in
-            OpamConsole.colorise' [`red;`bold]
-              (OpamFormula.to_string (Atom (name, formula))))
-          nvs
-      in
-      String.concat ", " (OpamPackage.Name.Map.values strs)
-      :: aux tls
-    in
-    arrow_concat (aux (map List.rev cs))
-
-  let to_string_raw cs =
-    OpamStd.Format.itemize (fun chain ->
-        arrow_concat (List.map Package.to_string chain))
-      (elements cs)
-
   (** cs1 precludes cs2 if it contains a list that is prefix to all elements of
       cs2 *)
   let precludes cs1 cs2 =
@@ -724,7 +676,7 @@ module ChainSet = struct
 end
 
 
-let refact_cflt packages cudfnv2opam (unav_reasons:  OpamPackage.Name.t * OpamFormula.version_formula -> string)  reasons =
+let extract_explanations packages cudfnv2opam unav_reasons reasons =
   log "Conflict reporting";
   let open Algo.Diagnostic in
   let open Set.Op in
@@ -931,7 +883,7 @@ let refact_cflt packages cudfnv2opam (unav_reasons:  OpamPackage.Name.t * OpamFo
         in
         try
           match re with
-          | Conflict (l, r, vp) ->
+          | Conflict (l, r, _) ->
             let ct_chains, csl = cst ct_chains l in
             let ct_chains, csr = cst ct_chains r in
             let msg1 =
@@ -973,212 +925,6 @@ let refact_cflt packages cudfnv2opam (unav_reasons:  OpamPackage.Name.t * OpamFo
   in
   List.rev explanations
 
-let strings_of_reasons packages cudfnv2opam unav_reasons rs =
-  let open Algo.Diagnostic in
-  let rec aux = function
-    | [] -> []
-    | Conflict (i,j,jc)::rs ->
-      if is_artefact i || is_artefact j then
-        let a = if is_artefact i then j else i in
-        if is_artefact a then aux rs else
-        let str =
-          Printf.sprintf "Conflicting query for package %s"
-            (OpamPackage.to_string (cudf2opam a)) in
-        str :: aux rs
-      else if i.Cudf.package = j.Cudf.package then
-        let str = Printf.sprintf "No available version of %s satisfies the \
-                                  constraints"
-            (OpamPackage.name_to_string (cudf2opam i)) in
-        str :: aux rs
-      else
-      let nva = cudf2opam i in
-      let versions, rs =
-        List.fold_left (fun (versions, rs) -> function
-            | Conflict (i1, _, jc1) when
-                (cudf2opam i1).name = nva.name && jc1 = jc ->
-              OpamPackage.Version.Set.add (cudf2opam i1).version versions, rs
-            | Conflict (_, i2, (_, cstr)) when
-                (cudf2opam i2).name = nva.name && Cudf.(|=) i.version cstr ->
-              OpamPackage.Version.Set.add (cudf2opam i2).version versions, rs
-            | r -> versions, r::rs)
-          (OpamPackage.Version.Set.singleton nva.version, []) rs
-      in
-      let rs = List.rev rs in
-      let formula =
-        OpamFormula.formula_of_version_set
-          (OpamPackage.versions_of_name packages nva.name) versions
-      in
-      let str = Printf.sprintf "%s is in conflict with %s"
-          (OpamFormula.to_string (Atom (nva.name, formula)))
-          (OpamFormula.to_string
-             (OpamFormula.of_atom_formula (Atom (vpkg2atom cudfnv2opam jc))))
-      in
-      str :: aux rs
-    | Missing (p,missing) :: rs when is_artefact p ->
-      (* Requested pkg missing *)
-      let atoms =
-        List.map (fun vp ->
-            try vpkg2atom cudfnv2opam vp
-            with Not_found ->
-              OpamPackage.Name.of_string (Common.CudfAdd.decode (fst vp)), None)
-          missing
-      in
-      let names = OpamStd.List.sort_nodup compare (List.map fst atoms) in
-      List.map (fun name ->
-          let formula =
-            OpamFormula.ors (List.map (function
-                | n, Some atom when n = name -> Atom atom
-                | _ -> Empty)
-                atoms)
-          in
-          let all_versions = OpamPackage.versions_of_name packages name in
-          let formula = OpamFormula.simplify_version_set all_versions formula in
-          OpamConsole.colorise' [`red;`bold]
-            (OpamFormula.to_string (Atom (name, formula)))
-          ^": "^
-          unav_reasons (name, formula))
-        names @
-      aux rs
-    | Missing _ :: rs (* dependency missing, treated in strings_of_chains *)
-    | Dependency _ :: rs -> aux rs
-  in
-  aux rs
-
-
-let make_chains packages cudfnv2opam depends =
-  let open Algo.Diagnostic in
-  let map_addlist k v map =
-    try Map.add k (v @ Map.find k map) map
-    with Not_found -> Map.add k v map in
-  let roots,_cflct,deps,vpkgs =
-    List.fold_left (fun (roots,cflct,deps,vpkgs) -> function
-        | Dependency (i, vpkgl, jl) ->
-          Set.add i roots,
-          cflct,
-          map_addlist i jl deps,
-          map_addlist i vpkgl vpkgs
-        | Missing (i, vpkgl) when not (is_artefact i) ->
-          let jl =
-            List.map (fun (package,_) ->
-                {Cudf.default_package with Cudf.package})
-              vpkgl in
-          Set.add i roots,
-          cflct,
-          map_addlist i jl deps,
-          map_addlist i vpkgl vpkgs
-        | Conflict (i1, i2, _) when i1.Cudf.package = i2.Cudf.package ->
-          roots,
-          OpamStd.String.Set.add i1.Cudf.package cflct,
-          deps,
-          vpkgs
-        | _ -> roots, cflct, deps, vpkgs)
-      (Set.empty,OpamStd.String.Set.empty,Map.empty,Map.empty)
-      depends
-  in
-  if Set.is_empty roots then [] else
-  let children cpkgs =
-    Set.fold (fun c acc ->
-        (* if OpamStd.String.Set.mem c.Cudf.package cflct then acc else *)
-        List.fold_left (fun m a -> Set.add a m) acc
-          (try Map.find c deps with Not_found -> []))
-      cpkgs Set.empty
-  in
-  let rec aux constrs direct_deps =
-    if Set.is_empty direct_deps then [[]] else
-    let depnames =
-      Set.fold (fun p set -> OpamStd.String.Set.add p.Cudf.package set)
-        direct_deps OpamStd.String.Set.empty in
-    OpamStd.String.Set.fold (fun name acc ->
-        let name_deps = (* Gather all deps with the given name *)
-          Set.filter (fun p -> p.Cudf.package = name) direct_deps in
-        let name_constrs =
-          List.map (List.filter (fun (n,_) -> n = name)) constrs in
-        let formula =
-          if name = opam_invariant_package_name then None else
-          let to_opam_constr p =
-            snd (vpkg2opam cudfnv2opam p)
-          in
-          let formula =
-            OpamFormula.ors
-              (List.map (fun conj ->
-                   OpamFormula.ands (List.map to_opam_constr conj))
-                  name_constrs)
-          in
-          let opam_name =
-            OpamPackage.Name.of_string (Common.CudfAdd.decode name)
-          in
-          let all_versions = OpamPackage.versions_of_name packages opam_name in
-          let formula = OpamFormula.simplify_version_set all_versions formula in
-          Some (opam_name, formula)
-        in
-        let children_constrs =
-          List.map (fun p ->
-              (* if OpamStd.String.Set.mem p.Cudf.package cflct then []
-               * (\* don't dig into deeper conflicts *\)
-               * else *) try Map.find p vpkgs with Not_found -> [])
-            (Set.elements name_deps) in
-        let chains = aux children_constrs (children name_deps) in
-        List.fold_left
-          (fun acc chain -> (formula :: chain) :: acc)
-          acc chains
-      )
-      depnames []
-  in
-  let roots = Set.filter is_artefact roots in
-  let start_constrs =
-      List.map (fun v -> try Map.find v vpkgs with Not_found -> [])
-        (Set.elements roots)
-  in
-  List.fold_left (fun acc chain -> match chain with
-      | [] | [_] | [_;_] -> acc
-      | _ :: chain -> chain :: acc)
-    []
-    (aux start_constrs roots)
-
-let strings_of_final_reasons packages cudfnv2opam unav_reasons reasons =
-  let reasons =
-    strings_of_reasons packages cudfnv2opam unav_reasons reasons
-  in
-  OpamStd.List.sort_nodup compare reasons
-
-let strings_of_chains packages cudfnv2opam unav_reasons reasons =
-  let chains = make_chains packages cudfnv2opam reasons in
-  let chains = List.map List.rev chains in
-  let string_of_chain = function
-    | None :: _ -> assert false (* no package can depend on the invariant *)
-    | Some (name, vform) :: r ->
-      let all_versions = OpamPackage.versions_of_name packages name in
-      let formula = OpamFormula.simplify_version_set all_versions vform in
-      String.concat "" [
-        OpamConsole.colorise' [`red;`bold]
-          (OpamFormula.to_string (Atom (name, vform)));
-        (match r with | [] -> "" | r ->
-            Printf.sprintf " (from %s)" @@
-            arrow_concat
-              (List.rev_map (function
-                   | Some c -> OpamFormula.to_string (Atom c)
-                   | None -> "The switch invariant") r));
-        (match unav_reasons (name, formula) with "" -> "" | s -> "\n  " ^ s);
-      ]
-    | [] -> ""
-  in
-  let chains =
-    let rec cmp l1 l2 =
-      match l1, l2 with
-      | None::r1, None::r2 -> cmp r1 r2
-      | None::_, _ -> -1
-      | _, None::_ -> 1
-      | Some a1::r1, Some a2::r2 ->
-        let c = OpamFormula.compare_nc a1 a2 in
-        if c <> 0 then c else cmp r1 r2
-      | [], _::_ -> -1
-      | _::_, [] -> 1
-      | [], [] -> 0
-    in
-    List.sort cmp chains
-  in
-  List.map string_of_chain chains
-
 let strings_of_cycles cycles =
   List.map arrow_concat cycles
 
@@ -1193,15 +939,10 @@ let conflict_explanations packages unav_reasons = function
   | univ, version_map, Conflict_dep reasons ->
     let r = reasons () in
     let cudfnv2opam = cudfnv2opam ~cudf_universe:univ ~version_map in
-    refact_cflt packages cudfnv2opam unav_reasons r,
+    extract_explanations packages cudfnv2opam unav_reasons r,
     []
   | _univ, _version_map, Conflict_cycle cycles ->
     [], strings_of_cycles cycles
-
-let conflict_chains packages = function
-  | cudf_universe, version_map, Conflict_dep r ->
-    make_chains packages (cudfnv2opam ~cudf_universe ~version_map) (r ())
-  | _ -> []
 
 let string_of_conflicts packages unav_reasons conflict =
   let cflts,  cycles =

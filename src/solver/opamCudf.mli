@@ -225,9 +225,6 @@ val conflict_explanations:
 val string_of_conflict:
   ?indent:int -> string * string list * string list -> string
 
-val conflict_chains:
-  package_set -> conflict -> (name * OpamFormula.version_formula) option list list
-
 (** Dumps the given cudf universe to the given channel *)
 val dump_universe: out_channel -> Cudf.universe -> unit
 

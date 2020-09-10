@@ -243,21 +243,10 @@ module Json = struct
           t.packages (OpamSwitchState.unavailable_reason t) cs
       in
       let causes = List.map OpamCudf.string_of_conflict causes in
-      let chains = OpamCudf.conflict_chains t.packages cs in
-      let jchains =
-        `A (List.map (fun c ->
-            `A ((List.map (function
-                | Some f ->
-                  `String (OpamFormula.to_string (Atom f))
-                | None -> `String "The switch invariant")
-                c)))
-            chains)
-      in
       let toj l = `A (List.map (fun s -> `String s) l) in
       OpamJson.append "conflicts"
         (`O ((if cycles <> [] then ["cycles", toj cycles] else []) @
-             (if causes <> [] then ["causes", toj causes] else []) @
-             (if chains <> [] then ["broken-deps", jchains] else [])))
+             (if causes <> [] then ["causes", toj causes] else [])))
 
   let exc e =
     let lmap f l = List.rev (List.rev_map f l) in
