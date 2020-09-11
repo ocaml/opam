@@ -43,7 +43,6 @@ depends: [
   * No agreement on the version of ocaml-base-compiler:
     - (invariant) → ocaml-base-compiler = 4.08.0
     - camelus → tls → ppx_sexp_conv < v0.11.0 → ocaml = 4.02.3 → ocaml-base-compiler = 4.02.3
-    You can temporarily relax the switch invariant with `--update-invariant'
   * Missing dependency:
     - camelus → tls → ppx_sexp_conv < v0.11.0 → ocaml = 4.02.3 → ocaml-variants >= 4.02.3 → ocaml-beta
     unmet availability conditions: 'enable-ocaml-beta-repository'

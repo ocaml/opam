@@ -17,6 +17,5 @@ Done.
 [ERROR] Package conflict!
   * No agreement on the version of core:
     - core != 112.17.00
-    - core != 112.17.00
 
 No solution found, exiting
