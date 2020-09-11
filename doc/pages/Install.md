@@ -38,9 +38,8 @@ and run `sh install.sh`)
 We provide pre-compiled binaries for:
 - Linux i686, amd64, arm7, arm64
 - OSX (intel 64 bits)
+- We do not at present provide an official Windows distribution of opam, but please see [this separately maintained distribution](https://fdopen.github.io/opam-repository-mingw/)
 (other platforms are available using the other methods below)
-
-Note: We are looking for help packaging Opam for Windows.
 
 If you don't like scripts, you can just pick your download
 [here](https://github.com/ocaml/opam/releases), put it in your PATH as
