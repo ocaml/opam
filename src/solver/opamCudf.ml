@@ -772,10 +772,9 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
     reasons;
   (* Get paths from the conflicts to requested or invariant packages *)
   let roots =
-     Hashtbl.fold (fun p _ acc ->
-        (* OpamConsole.errmsg "%s is_artefact %b\n" (Package.to_string p) (is_artefact p); *)
-         if is_artefact p then Set.add p acc else acc)
-       deps Set.empty
+    Hashtbl.fold (fun p _ acc ->
+        if is_artefact p then Set.add p acc else acc)
+      deps Set.empty
   in
   let conflicting =
     Hashtbl.fold (fun p _ -> Set.add p) ct Set.empty
@@ -800,10 +799,10 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
             if not (Set.is_empty dsc) then
               dsc ++ seen1, Set.fold append_to_chains (dsc -- seen1) new_chains
             else
-            Set.fold (fun d (seen1, new_chains) ->
-                if Set.mem d seen then seen1, new_chains
-                else Set.add d seen1, append_to_chains d new_chains)
-              ds (seen1, new_chains))
+              Set.fold (fun d (seen1, new_chains) ->
+                  if Set.mem d seen then seen1, new_chains
+                  else Set.add d seen1, append_to_chains d new_chains)
+                ds (seen1, new_chains))
           pchains (seen, Map.empty)
       in
       aux new_chains seen @@
@@ -814,25 +813,13 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
     in
     aux init_chains roots Map.empty
   in
-  (* let root_chains =
-   *   (\* Take only the chains that end on conflicts, and reverse them to get the
-   *      root -> conflict path *\)
-   *   Map.fold (fun p chains acc ->
-   *       if Set.mem p roots then
-   *         let rev_chains = CS.map List.rev chains in
-   *         CS.fold (fun chain acc ->
-   *             Map.update (List.hd chain) (CS.add chain) CS.empty acc)
-   *           rev_chains acc
-   *       else acc)
-   *     ct_chains Map.empty
-   * in *)
-
   let reasons =
     (* order "reasons" by most interesting first: version conflicts then package
        then missing + shortest chains first *)
     let clen p = try CS.length (Map.find p ct_chains) with Not_found -> 0 in
-    let version_conflict =
-      function Conflict (l, r, _) -> l.Cudf.package = r.Cudf.package | _ -> false
+    let version_conflict = function
+        | Conflict (l, r, _) -> l.Cudf.package = r.Cudf.package
+        | _ -> false
     in
     let cmp a b = match a, b with
       | Conflict (l1, r1, _), Conflict (l2, r2, _) ->
@@ -856,15 +843,6 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
     in
     List.sort_uniq cmp reasons
   in
-
-  (* let ct_chains =
-   *   List.fold_left (fun acc c ->
-   *       match c with
-   *       | Conflict (l, r, _) ->
-   *         (try
-   *            let cl = Map.find l ct_chains in
-   *            let cr = Map.find r ct_chains in
-   *            CS.Map. cl c (CS.Map.add cr c *)
 
   let has_invariant p =
     let chain_has_invariant cs =
@@ -893,12 +871,15 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
               else
                 "Incompatible packages:"
             in
-            let msg2 = List.sort compare [csl; csr] in
+            let msg2 = List.sort_uniq compare [csl; csr] in
             let msg3 =
-              if has_invariant l || has_invariant r then
-                ["You can temporarily relax the switch invariant with \
-                  `--update-invariant'"]
-              else []
+              let msg =
+                "You can temporarily relax the switch invariant with \
+                 `--update-invariant'"
+              in
+              if (has_invariant l || has_invariant r) &&
+                 not (List.exists (fun (_,_,m) -> List.mem msg m) explanations)
+              then [msg] else []
             in
             let msg = msg1, msg2, msg3 in
             if List.mem msg explanations then raise Not_found else
