@@ -189,8 +189,7 @@ Use the binary distribution. Instructions provided at https://opam.ocaml.org/doc
 
 #### Windows
 
-We are looking for help packaging Opam on Windows. If you are interested, please get in touch!
-
+Full support for Windows is planned for opam 2.2, and we expect to provide an opam package in [Chocolatey](https://chocolatey.org/) and [winget](https://docs.microsoft.com/en-us/windows/package-manager/). If you'd like to help out, please get in touch!
 #### Guix & Guix System
 
 [![badge](https://repology.org/badge/version-for-repo/gnuguix/opam.svg)](https://repology.org/project/opam/versions)
