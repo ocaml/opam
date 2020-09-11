@@ -749,7 +749,7 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
     in
     arrow_concat (aux [] (CS.transpose (CS.map List.rev cs)))
   in
-  let get t x = OpamStd.Option.default Set.empty (Hashtbl.find_opt t x) in
+  let get t x = try Hashtbl.find t x with Not_found -> Set.empty in
   let add_set t l set =
     match Hashtbl.find t l with
     | exception Not_found -> Hashtbl.add t l set
