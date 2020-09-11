@@ -38,6 +38,7 @@ and run `sh install.sh`)
 We provide pre-compiled binaries for:
 - Linux i686, amd64, arm7, arm64
 - OSX (intel 64 bits)
+- We do not at present provide an official Windows distribution of opam, but please see [this separately maintained distribution](https://fdopen.github.io/opam-repository-mingw/)
 (other platforms are available using the other methods below)
 
 If you don't like scripts, you can just pick your download
@@ -186,6 +187,9 @@ apt install opam
 ##### Versions older than 18.04
 Use the binary distribution. Instructions provided at https://opam.ocaml.org/doc/Install.html#Binary-distribution
 
+#### Windows
+
+Full support for Windows is planned for opam 2.2, and we expect to provide an opam package in [Chocolatey](https://chocolatey.org/) and [winget](https://docs.microsoft.com/en-us/windows/package-manager/). If you'd like to help out, please get in touch!
 #### Guix & Guix System
 
 [![badge](https://repology.org/badge/version-for-repo/gnuguix/opam.svg)](https://repology.org/project/opam/versions)
