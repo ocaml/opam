@@ -127,9 +127,9 @@ let opam_cmd =
 
 let run_cmd ?(verbose=true) opamroot logfile fmt =
   let complete_opam_cmd cmd args =
-    Printf.sprintf  "%s %s --root=%s %s >>%s 2>&1"
+    Printf.sprintf  "%s %s --root=%s %s 2>&1 |sed 's#%s#${BASEDIR}#g' >>%s"
       opam_cmd cmd opamroot (String.concat " " args)
-      logfile
+      (Filename.dirname opamroot) logfile
   in
   Printf.ksprintf (fun cmd ->
       try

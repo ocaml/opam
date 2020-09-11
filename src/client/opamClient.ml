@@ -273,12 +273,13 @@ let upgrade_t
   | requested, Conflicts cs ->
     log "conflict!";
     if not (OpamPackage.Name.Set.is_empty requested) then
-      (OpamConsole.msg "%s"
-         (OpamCudf.string_of_conflict t.packages
+      (OpamConsole.error "Package conflict!";
+       OpamConsole.errmsg "%s"
+         (OpamCudf.string_of_conflicts t.packages
             (OpamSwitchState.unavailable_reason t) cs);
        OpamStd.Sys.exit_because `No_solution);
-    let reasons, chains, cycles =
-      OpamCudf.strings_of_conflict t.packages
+    let reasons, cycles =
+      OpamCudf.conflict_explanations t.packages
         (OpamSwitchState.unavailable_reason t) cs in
     if cycles <> [] then begin
       OpamConsole.error
@@ -292,11 +293,8 @@ let upgrade_t
       OpamConsole.warning
         "Upgrade is not possible because of conflicts or packages that \
          are no longer available:";
-      OpamConsole.errmsg "%s" (OpamStd.Format.itemize (fun x -> x) reasons);
-      if chains <> [] then
-        OpamConsole.errmsg
-          "The following dependencies are the cause:\n%s"
-          (OpamStd.Format.itemize (fun x -> x) chains);
+      OpamConsole.errmsg "%s"
+        (OpamStd.Format.itemize (OpamCudf.string_of_conflict ~indent:4) reasons);
       OpamConsole.errmsg
         "\nYou may run \"opam upgrade --fixup\" to let opam fix the \
          current state.\n"
@@ -476,7 +474,7 @@ let fixup t =
     | _, Success _ -> true
     | _, Conflicts cs ->
       log "conflict: %a"
-        (slog (OpamCudf.string_of_conflict t.packages @@
+        (slog (OpamCudf.string_of_conflicts t.packages @@
                OpamSwitchState.unavailable_reason t))
         cs;
       false
@@ -513,7 +511,7 @@ let fixup t =
          available. Either fix their prerequisites or change them through \
          'opam list --base' and 'opam switch set-base'.";
       OpamConsole.errmsg "%s"
-        (OpamCudf.string_of_conflict t.packages
+        (OpamCudf.string_of_conflicts t.packages
            (OpamSwitchState.unavailable_reason t) cs);
       t, Conflicts cs
     | Success solution ->
@@ -1217,8 +1215,9 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
   let t, solution = match solution with
     | Conflicts cs ->
       log "conflict!";
-      OpamConsole.msg "%s"
-        (OpamCudf.string_of_conflict t.packages
+      OpamConsole.error "Package conflict!";
+      OpamConsole.errmsg "%s"
+        (OpamCudf.string_of_conflicts t.packages
            (OpamSwitchState.unavailable_reason t) cs);
       t, if depext_only then None else Some (Conflicts cs)
     | Success solution ->

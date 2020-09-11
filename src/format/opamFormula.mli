@@ -165,6 +165,11 @@ val satisfies_depends: OpamPackage.Set.t -> t -> bool
     all disjunction cases) *)
 val packages: OpamPackage.Set.t -> t -> OpamPackage.Set.t
 
+val compare_nc:
+  (OpamPackage.Name.t * version_formula) ->
+  (OpamPackage.Name.t * version_formula) ->
+  int
+
 (** Convert a formula to CNF *)
 val cnf_of_formula: 'a formula -> 'a formula
 

@@ -346,5 +346,5 @@ reftests-meld: $(reftests-out)
 	meld reftests reftests.out
 
 reftests-promote: $(reftests-out)
-	mv reftests.out/*.tests reftests/
+	mv reftests.out/*.test reftests/
 	rmdir reftests.out

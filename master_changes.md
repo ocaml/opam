@@ -73,7 +73,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Solver
-  *
+  * More concise explanation of package conflicts [#4349 @altgr]
 
 ## Client
   *

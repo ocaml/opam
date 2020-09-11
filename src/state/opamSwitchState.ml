@@ -1046,7 +1046,7 @@ let unavailable_reason st ?(default="") (name, vformula) =
                    (OpamPackageVar.resolve_switch ~package:nv st)
                    avail)
     then
-      Printf.sprintf "unmet availability conditions%s%s"
+      Printf.sprintf "unmet availability conditions%s'%s'"
         (if OpamPackage.Set.cardinal candidates = 1 then ": "
          else ", e.g. ")
         (OpamFilter.to_string avail)
