@@ -4,7 +4,7 @@ Possibly scripts breaking changes are prefixed with ✘.
 New option/command/subcommand are prefixed with ◈.
 
 ## Version
-  *
+  * Bump version to '2.1.0~beta3' [@altgr]
 
 ## Global CLI
   *
