@@ -731,6 +731,7 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
           if Set.exists is_opam_invariant pkgs then
             Printf.sprintf "(invariant)"
             :: aux vpkgl1 r
+          else if r = [] then ["(request)"]
           else aux vpkgl1 r (* request *)
         else if vpkgl = [] then
           print_set pkgs :: aux vpkgl1 r
@@ -772,9 +773,12 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
     reasons;
   (* Get paths from the conflicts to requested or invariant packages *)
   let roots =
-    Hashtbl.fold (fun p _ acc ->
-        if is_artefact p then Set.add p acc else acc)
-      deps Set.empty
+    let add_artefacts set =
+      Hashtbl.fold (fun p _ acc ->
+          if is_artefact p then Set.add p acc else acc)
+        set
+    in
+    Set.empty |> add_artefacts deps |> add_artefacts missing |> add_artefacts ct
   in
   let conflicting =
     Hashtbl.fold (fun p _ -> Set.add p) ct Set.empty
