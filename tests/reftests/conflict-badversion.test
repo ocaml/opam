@@ -20,6 +20,9 @@ Done.
 
 No solution found, exiting
 ### opam remove ocaml --show
-Sorry, no solution found: there seems to be a problem with your request.
+  * Incompatible packages:
+    - (invariant) → ocaml-base-compiler = 4.02.3
+    - (request)
+    You can temporarily relax the switch invariant with `--update-invariant'
 
 No solution found, exiting
