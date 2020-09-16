@@ -319,6 +319,9 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
   (* only needed when --update-invariant is set. Use the configured invariant,
      not the current one which will be empty. *)
   let original_invariant = t.switch_config.OpamFile.Switch_config.invariant in
+  let original_invariant_packages =
+    OpamFormula.packages t.installed original_invariant
+  in
   let invariant_ref = ref original_invariant in
 
   let bypass_ref = ref (t.switch_config.OpamFile.Switch_config.depext_bypass) in
@@ -336,19 +339,35 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
     let bypass = OpamSysPkg.Set.union missing_depexts !bypass_ref in
     let invariant =
       if OpamStateConfig.(!r.unlock_base) then
+        let update_cstr cstr =
+          if OpamFormula.check_version_formula cstr nv.version then cstr
+          else
+            OpamFormula.map (fun (relop, _ as vat) ->
+                if OpamFormula.check_version_formula (Atom vat) nv.version
+                then Atom vat
+                else match relop with
+                  | `Neq | `Gt | `Lt -> OpamFormula.Empty
+                  | `Eq | `Geq | `Leq -> Atom (relop, nv.version))
+              cstr
+        in
+        let nvset = OpamPackage.Set.singleton nv in
+        let upd_packages =
+          OpamSwitchState.conflicts_with t nvset original_invariant_packages
+        in
         OpamFormula.map (fun (n, cstr as at) ->
-            if n <> nv.name || OpamFormula.check_version_formula cstr nv.version
-            then Atom at else
-            let cstr =
-              OpamFormula.map (fun (relop, _ as vat) ->
-                  if OpamFormula.check_version_formula (Atom vat) nv.version
-                  then Atom vat
-                  else match relop with
-                    | `Neq | `Gt | `Lt -> OpamFormula.Empty
-                    | `Eq | `Geq | `Leq -> Atom (relop, nv.version))
-                cstr
-            in
-            Atom (n, cstr))
+            if
+              OpamPackage.Set.exists (OpamFormula.verifies (Atom at))
+                upd_packages
+            then
+              (* a package in the previous base validated this atom but is in
+                 conflict with what we just installed *)
+              Atom (nv.name, update_cstr cstr)
+            else if
+              n = nv.name && OpamFormula.check_version_formula cstr nv.version
+            then
+              Atom (n, update_cstr cstr)
+            else
+              Atom at)
           !invariant_ref
       else !invariant_ref
     in
@@ -367,9 +386,10 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
        let switch_config =
          {!t_ref.switch_config with invariant; depext_bypass = bypass }
        in
-       t_ref := {!t_ref with switch_config};
-       OpamSwitchAction.install_switch_config t.switch_global.root t.switch
-         switch_config)
+       t_ref := {!t_ref with switch_invariant = invariant; switch_config};
+       if not OpamStateConfig.(!r.dryrun) then
+         OpamSwitchAction.install_switch_config t.switch_global.root t.switch
+           switch_config)
   in
 
   let remove_from_install ?keep_as_root nv =
@@ -704,10 +724,31 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
         | _ -> assert false)
       graph
   in
-  if !invariant_ref <> original_invariant then
-    OpamConsole.note "Switch invariant was updated to %s\n\
+  let t =
+    if OpamStateConfig.(!r.unlock_base) &&
+       (match action_results with `Successful _ -> true | _ -> false) &&
+       not (OpamFormula.satisfies_depends t.installed t.switch_invariant)
+    then
+      (* Fix the invariant to account for removed base packages *)
+      let invariant =
+        OpamFormula.map_formula (function
+            | OpamFormula.And _ as f -> f
+            | f when OpamFormula.satisfies_depends t.installed f -> f
+            | _ -> OpamFormula.Empty)
+          t.switch_invariant
+      in
+      let switch_config = {t.switch_config with invariant} in
+      if not OpamStateConfig.(!r.dryrun) then
+        OpamSwitchAction.install_switch_config t.switch_global.root t.switch
+          switch_config;
+      {t with switch_invariant = invariant; switch_config}
+    else t
+  in
+  if t.switch_invariant <> original_invariant then
+    OpamConsole.note "Switch invariant %s updated to %s\n\
                       Use `opam switch set-invariant' to change it."
-      (match !invariant_ref with
+      (if OpamStateConfig.(!r.dryrun) then "would have been" else "was")
+      (match t.switch_invariant with
        | OpamFormula.Empty -> "<empty>"
        | f -> OpamFileTools.dep_formula_to_string f);
   match action_results with
