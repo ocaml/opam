@@ -78,7 +78,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Internal
-  *
+  * ActionGraph: removal postponing, protect against addition of cycles [#4358 @AltGr - fix #4357]
 
 ## Test
   *

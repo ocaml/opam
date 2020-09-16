@@ -238,6 +238,8 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
       ) !reduced;
     g
 
+  let same_name p1 p2 = A.Pkg.(name_to_string p1 = name_to_string p2)
+
   let compute_closed_predecessors noop_remove g =
     let closed_g = copy g in
     transitive_closure closed_g;
@@ -264,7 +266,12 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
             let preds =
               List.filter
                 (function
-                  | `Build p -> Set.mem p closed_packages
+                  | `Build q as b ->
+                    Set.mem q closed_packages &&
+                    not (List.exists (function
+                        | `Remove r -> same_name p r
+                        | _ -> false)
+                        (pred closed_g b))
                   | _ -> false)
                 (pred closed_g a) in
             OpamStd.String.Map.add (A.Pkg.name_to_string p) preds acc
@@ -280,7 +287,6 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
 
   let explicit ?(noop_remove = (fun _ -> false)) ~sources_needed g0 =
     let g = copy g0 in
-    let same_name p1 p2 = A.Pkg.(name_to_string p1 = name_to_string p2) in
     (* We insert a "build" action before any "install" action.
        Except, between the removal and installation of the same package
        (the removal might be postponed after a succesfull build. *)
