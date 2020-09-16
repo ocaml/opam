@@ -72,7 +72,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Solver
-  *
+  * Fix missing conflict message when trying to remove required packages [#4362 @AltGr]
 
 ## Client
   *

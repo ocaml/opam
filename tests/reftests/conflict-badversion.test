@@ -19,3 +19,10 @@ Done.
     - core != 112.17.00
 
 No solution found, exiting
+### opam remove ocaml --show
+  * Incompatible packages:
+    - (invariant) → ocaml-base-compiler = 4.02.3
+    - (request)
+    You can temporarily relax the switch invariant with `--update-invariant'
+
+No solution found, exiting
