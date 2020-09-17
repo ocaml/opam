@@ -1068,6 +1068,49 @@ let dump_cudf_error ~version_map univ req =
   | Some f -> f
   | None -> assert false
 
+let preprocess_cudf_request (props, univ, creq) =
+  let chrono = OpamConsole.timer () in
+  let univ0 = univ in
+  let univ =
+    let open Set.Op in
+    let vpkg2set vp = Set.of_list (Common.CudfAdd.resolve_deps univ vp) in
+    let deps p =
+      List.fold_left (fun acc dep -> Set.union acc (vpkg2set dep)) Set.empty p.Cudf.depends
+    in
+    let installed =
+      Set.of_list (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) univ)
+    in
+    let to_install = vpkg2set creq.Cudf.install in
+    let packages =
+      to_install ++
+      vpkg2set creq.Cudf.remove ++
+      vpkg2set creq.Cudf.upgrade
+    in
+    let packages =
+      Set.fixpoint deps packages
+    in
+    let conflicts =
+      (* Lookup deps of level 1 of [to_install], and gather all mandatory
+         conflicts *)
+      Set.fold (fun p acc ->
+          List.fold_left (fun acc disj ->
+              Set.map_reduce ~default:Set.empty (fun d ->
+                  Set.filter (fun e -> e.Cudf.package <> d.Cudf.package)
+                    (vpkg2set d.Cudf.conflicts))
+                Set.inter (vpkg2set disj)
+              ++ acc)
+            acc p.depends)
+        to_install Set.empty
+    in
+    log "Conflicts: %d pkgs to remove" (Set.cardinal conflicts);
+    Cudf.load_universe (Set.elements (packages -- conflicts ++ installed))
+  in
+  log "Preprocess cudf request: from %d to %d packages in %.2fs"
+    (Cudf.universe_size univ0)
+    (Cudf.universe_size univ)
+    (chrono ());
+  props, univ, creq
+
 exception Timeout of Algo.Depsolver.solver_result option
 
 let call_external_solver ~version_map univ req =
@@ -1091,6 +1134,7 @@ let call_external_solver ~version_map univ req =
       if !timed_out then raise (Timeout (Some r)) else r
     in
     try
+      let cudf_request = preprocess_cudf_request cudf_request in
       let r =
         check_request_using
           ~call_solver:(OpamSolverConfig.call_solver ~criteria)
@@ -1412,7 +1456,7 @@ let compute_root_causes g requested reinstall =
    required reinstallations and computing the graph of dependency of required
    actions *)
 let atomic_actions ~simple_universe ~complete_universe root_actions =
-  log "graph_of_actions root_actions=%a"
+  log ~level:2 "graph_of_actions root_actions=%a"
     (slog string_of_actions) root_actions;
 
   let to_remove, to_install =
