@@ -623,6 +623,66 @@ let dump_cudf_error ~version_map univ req =
   | Some f -> f
   | None -> assert false
 
+let preprocess_cudf_request (props, univ, creq) =
+  let chrono = OpamConsole.timer () in
+  let univ0 = univ in
+  let univ =
+    let open Set.Op in
+    let vpkg2set vp = Set.of_list (Common.CudfAdd.resolve_deps univ vp) in
+    let deps p =
+      List.fold_left (fun acc dep -> Set.union acc (vpkg2set dep)) Set.empty p.Cudf.depends
+    in
+    let installed =
+      Set.of_list (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) univ)
+    in
+    let to_install = vpkg2set creq.Cudf.install in
+    let packages =
+      to_install ++
+      vpkg2set creq.Cudf.remove ++
+      vpkg2set creq.Cudf.upgrade
+    in
+    let packages =
+      Set.fixpoint deps packages
+    in
+    let direct_conflicts p =
+      Set.filter (fun q -> q.Cudf.package <> p.Cudf.package)
+        (vpkg2set p.Cudf.conflicts)
+    in
+    let cache = Hashtbl.create 513 in
+    let rec transitive_conflicts seen acc p =
+      (* OpamConsole.msg "%s\n" (Package.to_string p); *)
+      try Hashtbl.find cache p ++ acc with Not_found ->
+      if Set.mem p seen then acc else
+      let seen = Set.add p seen in
+      let conflicts =
+        direct_conflicts p ++
+        List.fold_left (fun acc disj ->
+            acc ++
+            Set.map_reduce ~default:Set.empty
+              (transitive_conflicts seen Set.empty)
+              Set.inter
+              (vpkg2set disj))
+          acc
+          p.Cudf.depends
+      in
+      Hashtbl.add cache p conflicts;
+      conflicts
+    in
+    let conflicts =
+      Set.fold (fun p acc -> transitive_conflicts Set.empty acc p)
+        to_install Set.empty
+    in
+    log "Conflicts: %d pkgs to remove" (Set.cardinal conflicts);
+    Cudf.load_universe (Set.elements (packages -- conflicts ++ installed))
+  in
+  log "Preprocess cudf request: from %d to %d packages in %.2fs"
+    (Cudf.universe_size univ0)
+    (Cudf.universe_size univ)
+    (chrono ());
+  props, univ, creq
+
+exception Timeout of Algo.Depsolver.solver_result option
+
 let call_external_solver ~version_map univ req =
   let cudf_request = to_cudf univ req in
   if Cudf.universe_size univ > 0 then
