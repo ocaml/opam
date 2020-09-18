@@ -1089,17 +1089,32 @@ let preprocess_cudf_request (props, univ, creq) =
     let packages =
       Set.fixpoint deps packages
     in
+    let direct_conflicts p =
+      Set.filter (fun q -> q.Cudf.package <> p.Cudf.package)
+        (vpkg2set p.Cudf.conflicts)
+    in
+    let cache = Hashtbl.create 513 in
+    let rec transitive_conflicts seen acc p =
+      (* OpamConsole.msg "%s\n" (Package.to_string p); *)
+      try Hashtbl.find cache p ++ acc with Not_found ->
+      if Set.mem p seen then acc else
+      let seen = Set.add p seen in
+      let conflicts =
+        direct_conflicts p ++
+        List.fold_left (fun acc disj ->
+            acc ++
+            Set.map_reduce ~default:Set.empty
+              (transitive_conflicts seen Set.empty)
+              Set.inter
+              (vpkg2set disj))
+          acc
+          p.Cudf.depends
+      in
+      Hashtbl.add cache p conflicts;
+      conflicts
+    in
     let conflicts =
-      (* Lookup deps of level 1 of [to_install], and gather all mandatory
-         conflicts *)
-      Set.fold (fun p acc ->
-          List.fold_left (fun acc disj ->
-              Set.map_reduce ~default:Set.empty (fun d ->
-                  Set.filter (fun e -> e.Cudf.package <> d.Cudf.package)
-                    (vpkg2set d.Cudf.conflicts))
-                Set.inter (vpkg2set disj)
-              ++ acc)
-            acc p.depends)
+      Set.fold (fun p acc -> transitive_conflicts Set.empty acc p)
         to_install Set.empty
     in
     log "Conflicts: %d pkgs to remove" (Set.cardinal conflicts);
