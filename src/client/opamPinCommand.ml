@@ -495,6 +495,7 @@ and source_pin
            (OpamStd.Option.to_string OpamUrl.to_string target_url)
            (OpamStd.Format.itemize (fun x -> x) [err]));
   in
+  let opam_opt = opam_opt >>| OpamFormatUpgrade.opam_file in
 
   let nv =
     match version with
