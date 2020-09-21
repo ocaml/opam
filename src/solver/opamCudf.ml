@@ -1090,12 +1090,13 @@ let preprocess_cudf_request (props, univ, creq) =
     in
     let to_install = vpkg2set creq.Cudf.install in
     let packages =
-      to_install ++
-      vpkg2set creq.Cudf.remove ++
-      vpkg2set creq.Cudf.upgrade
-    in
-    let packages =
-      Set.fixpoint deps packages
+      if OpamStd.Config.env_bool "CUDFTRIM" = Some true then
+        Set.fixpoint deps
+          (to_install ++
+           vpkg2set creq.Cudf.remove ++
+           vpkg2set creq.Cudf.upgrade)
+      else
+        Set.of_list (Cudf.get_packages univ)
     in
     let to_map set =
       Set.fold (fun p ->
@@ -1144,10 +1145,9 @@ let preprocess_cudf_request (props, univ, creq) =
       Set.fold (fun p acc -> transitive_conflicts Set.empty acc p)
         to_install Set.empty
     in
-    log "Conflicts: %d pkgs to remove" (Set.cardinal conflicts);
+    log "Conflicts: %a pkgs to remove"
+      (slog OpamStd.Op.(string_of_int @* Set.cardinal)) conflicts;
     let final_packages = packages -- conflicts ++ installed in
-    let ocamls = Set.filter (fun p -> p.Cudf.package = "ocaml") final_packages in
-    log "OCamls (%d): %s" (Set.cardinal ocamls) (Set.to_string ocamls);
     Cudf.load_universe (Set.elements (final_packages -- conflicts))
   in
   log "Preprocess cudf request: from %d to %d packages in %.2fs"
