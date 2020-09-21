@@ -4,13 +4,13 @@ Possibly scripts breaking changes are prefixed with ✘.
 New option/command/subcommand are prefixed with ◈.
 
 ## Version
-  * Bump version to '2.1.0~beta3' [@altgr]
+  * Bump version to '2.1.0~beta3' [#4351 @AltGr]
 
 ## Global CLI
   *
 
 ## Init
-  *
+  * Fix sandbox check with not yet set opam environment variables [#4370 @rjbou - fix #4368]
 
 ## Config Upgrade
   *
