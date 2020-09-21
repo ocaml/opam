@@ -1180,9 +1180,8 @@ let call_external_solver ~version_map univ req =
     in
     try
       let cudf_request =
-        if OpamStd.Config.env_bool "PREPRO" = Some true then
-          preprocess_cudf_request cudf_request
-        else  cudf_request
+        if OpamStd.Config.env_bool "PREPRO" = Some false then cudf_request
+        else preprocess_cudf_request cudf_request
       in
       let r =
         check_request_using
