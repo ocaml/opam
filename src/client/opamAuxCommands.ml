@@ -492,8 +492,11 @@ let check_and_revert_sandboxing root config =
   | cmd::_ ->
     let test_cmd = [ "sh"; "-c"; "echo SUCCESS >/tmp/t && cat /tmp/t" ] in
     let working_or_noop =
+      let env =
+        Array.append [| "OPAM_SWITCH_PREFIX=/dev/null" |] (Unix.environment ())
+      in
       try
-        OpamSystem.read_command_output ~allow_stdin:false (cmd @ test_cmd)
+        OpamSystem.read_command_output ~env ~allow_stdin:false (cmd @ test_cmd)
         = ["SUCCESS"]
       with e ->
         (OpamConsole.error "Sandboxing is not working on your platform%s:\n%s"
