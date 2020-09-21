@@ -1142,8 +1142,14 @@ let preprocess_cudf_request (props, univ, creq) =
       conflicts
     in
     let conflicts =
-      Set.fold (fun p acc -> transitive_conflicts Set.empty acc p)
-        to_install Set.empty
+      OpamStd.String.Map.fold (fun _ ps acc ->
+          acc ++
+          Set.map_reduce ~default:Set.empty
+            (transitive_conflicts Set.empty Set.empty)
+            Set.inter
+            ps)
+        (to_map to_install)
+        Set.empty
     in
     log "Conflicts: %a pkgs to remove"
       (slog OpamStd.Op.(string_of_int @* Set.cardinal)) conflicts;
