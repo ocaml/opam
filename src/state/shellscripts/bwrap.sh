@@ -85,6 +85,9 @@ add_dune_cache_mount() {
   add_mount rw "$u_dune_cache" "$dune_cache"
 }
 
+# When using opam variable that must be defined at action time, add them also
+# at init check in OpamAuxCommands.check_and_revert_sandboxing (like
+# OPAM_SWITCH_PREFIX).
 # This case-switch should remain identical between the different sandbox implems
 COMMAND="$1"; shift
 case "$COMMAND" in
