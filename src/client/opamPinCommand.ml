@@ -311,7 +311,8 @@ let edit st ?version name =
       let nv = OpamPackage.create name (OpamFile.OPAM.version opam) in
       let st = OpamSwitchState.update_pin nv opam st in
       OpamUpdate.cleanup_source st current_opam opam;
-      OpamSwitchAction.write_selections st;
+      if not OpamClientConfig.(!r.show) then
+        OpamSwitchAction.write_selections st;
       st
 
 let version_pin st name version =
@@ -351,7 +352,8 @@ let version_pin st name version =
     | None -> ()
   end;
   let st = OpamSwitchState.update_pin nv repo_opam st in
-  OpamSwitchAction.write_selections st;
+  if not OpamClientConfig.(!r.show) then
+    OpamSwitchAction.write_selections st;
   OpamConsole.msg "%s is now pinned to version %s\n"
     (OpamPackage.Name.to_string name)
     (OpamPackage.Version.to_string version);
@@ -592,7 +594,8 @@ and source_pin
 
     let st = OpamSwitchState.update_pin nv opam st in
 
-    OpamSwitchAction.write_selections st;
+    if not OpamClientConfig.(!r.show) then
+      OpamSwitchAction.write_selections st;
     OpamConsole.msg "%s is now %s\n"
       (OpamPackage.Name.to_string name)
       (string_of_pinned opam);
@@ -640,7 +643,8 @@ let unpin st names =
             string_of_pinned (OpamSwitchState.opam_opt st nv)
         in
         let st = unpin_one st nv in
-        OpamSwitchAction.write_selections st;
+        if not OpamClientConfig.(!r.show) then
+          OpamSwitchAction.write_selections st;
         OpamConsole.msg "Ok, %s is no longer %s\n"
           (OpamPackage.Name.to_string name) pin_str;
         st
