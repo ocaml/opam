@@ -226,44 +226,44 @@ let init cli =
     Arg.(value & pos ~rev:true 0 (some string) None & doc)
   in
   let interactive =
-    Arg.(value & vflag None [
-        Some false, info ["a";"auto-setup"] ~doc:
+    mk_vflag None [
+        Some false, ["a";"auto-setup"],
           "Automatically do a full setup, including adding a line to your \
            shell init files.";
-        Some true, info ["i";"interactive"] ~doc:
+        Some true, ["i";"interactive"],
           "Run the setup interactively (this is the default for an initial \
            run, or when no more specific options are specified)";
-      ])
+      ]
   in
   let update_config =
-    Arg.(value & vflag None [
-        Some true, info ["shell-setup"] ~doc:
+    mk_vflag None [
+        Some true, ["shell-setup"],
           "Automatically setup the user shell configuration for opam, e.g. \
            adding a line to the `~/.profile' file.";
-        Some false, info ["n";"no-setup"] ~doc:
+        Some false, ["n";"no-setup"],
           "Do not update the user shell configuration to setup opam. Also \
            implies $(b,--disable-shell-hook), unless $(b,--interactive) or \
            specified otherwise";
-      ])
+      ]
   in
   let setup_completion =
-    Arg.(value & vflag None [
-        Some true, info ["enable-completion"] ~doc:
+    mk_vflag None [
+        Some true, ["enable-completion"],
           "Setup shell completion in opam init scripts, for supported \
            shells.";
-        Some false, info ["disable-completion"] ~doc:
+        Some false, ["disable-completion"],
           "Disable shell completion in opam init scripts.";
-      ])
+      ]
   in
   let env_hook =
-    Arg.(value & vflag None [
-        Some true, info ["enable-shell-hook"] ~doc:
+    mk_vflag None [
+        Some true, ["enable-shell-hook"],
           "Setup opam init scripts to register a shell hook that will \
            automatically keep the shell environment up-to-date at every \
            prompt.";
-        Some false, info ["disable-shell-hook"] ~doc:
+        Some false, ["disable-shell-hook"],
           "Disable registration of a shell hook in opam init scripts.";
-      ])
+      ]
   in
   let config_file =
     mk_opt_all ["config"] "FILE"
@@ -462,29 +462,28 @@ let list ?(force_search=false) cli =
       Arg.string
   in
   let state_selector =
-    let docs = selection_docs in
-    Arg.(value & vflag_all [] [
-        OpamListCommand.Any, info ~docs ["A";"all"]
-          ~doc:"Include all, even uninstalled or unavailable packages";
-        OpamListCommand.Installed, info ~docs ["i";"installed"]
-          ~doc:"List installed packages only. This is the default when no \
+    mk_vflag_all ~section:selection_docs [
+        OpamListCommand.Any, ["A";"all"],
+          "Include all, even uninstalled or unavailable packages";
+        OpamListCommand.Installed, ["i";"installed"],
+          "List installed packages only. This is the default when no \
                 further arguments are supplied";
-        OpamListCommand.Root, info ~docs ["roots";"installed-roots"]
-          ~doc:"List only packages that were explicitly installed, excluding \
+        OpamListCommand.Root, ["roots";"installed-roots"],
+          "List only packages that were explicitly installed, excluding \
                 the ones installed as dependencies";
-        OpamListCommand.Available, info ~docs ["a";"available"]
-          ~doc:"List only packages that are available on the current system";
-        OpamListCommand.Installable, info ~docs ["installable"]
-          ~doc:"List only packages that can be installed on the current switch \
+        OpamListCommand.Available, ["a";"available"],
+          "List only packages that are available on the current system";
+        OpamListCommand.Installable, ["installable"],
+          "List only packages that can be installed on the current switch \
                 (this calls the solver and may be more costly; a package \
                 depending on an unavailable package may be available, but is \
                 never installable)";
-        OpamListCommand.Compiler, info ~docs ["base"]
-          ~doc:"List only the immutable base of the current switch (i.e. \
+        OpamListCommand.Compiler, ["base"],
+          "List only the immutable base of the current switch (i.e. \
                 compiler packages)";
-        OpamListCommand.Pinned, info ~docs ["pinned"]
-          ~doc:"List only the pinned packages";
-      ])
+        OpamListCommand.Pinned, ["pinned"],
+          "List only the pinned packages";
+      ]
   in
   let section = selection_docs in
   let search =
@@ -1497,14 +1496,13 @@ let install cli =
   ] @ OpamArg.man_build_option_section
    in
   let add_to_roots =
-    let root =
-      Some true, Arg.info ["set-root"]
-        ~doc:"Mark given packages as installed roots. This is the default \
-              for newly manually-installed packages." in
-    let unroot =
-      Some false, Arg.info ["unset-root"]
-        ~doc:"Mark given packages as \"installed automatically\"." in
-    Arg.(value & vflag None[root; unroot])
+    mk_vflag None [
+      Some true, ["set-root"],
+      "Mark given packages as installed roots. This is the default \
+       for newly manually-installed packages.";
+      Some false, ["unset-root"],
+      "Mark given packages as \"installed automatically\".";
+    ]
   in
   let deps_only =
     mk_flag  ["deps-only"]
@@ -1718,20 +1716,20 @@ let reinstall cli =
   ] @ OpamArg.man_build_option_section
   in
   let cmd =
-    Arg.(value & vflag `Default [
-        `Pending, info ["pending"]
-          ~doc:"Perform pending reinstallations, i.e. reinstallations of \
+    mk_vflag `Default [
+        `Pending, ["pending"],
+          "Perform pending reinstallations, i.e. reinstallations of \
                 packages that have changed since installed";
-        `List_pending, info ["list-pending"]
-          ~doc:"List packages that have been changed since installed and are \
+        `List_pending, ["list-pending"],
+          "List packages that have been changed since installed and are \
                 marked for reinstallation";
-        `Forget_pending, info ["forget-pending"]
-          ~doc:"Forget about pending reinstallations of listed packages. This \
+        `Forget_pending, ["forget-pending"],
+          "Forget about pending reinstallations of listed packages. This \
                 implies making opam assume that your packages were installed \
                 with a newer version of their metadata, so only use this if \
                 you know what you are doing, and the actual changes you are \
                 overriding."
-      ])
+      ]
   in
   let reinstall global_options build_options assume_built recurse subpath
       atoms_locs cmd =
@@ -1987,15 +1985,15 @@ let repository cli =
       Arg.info ~docs:scope_section ~doc ?docv flags
     in
     let flags =
-      Arg.vflag_all [] [
-        `No_selection, scope_info ["dont-select"]
+      mk_vflag_all ~section:scope_section [
+        `No_selection, ["dont-select"],
           "Don't update any selections";
-        `Current_switch, scope_info ["this-switch"]
+        `Current_switch, ["this-switch"],
           "Act on the selections for the current switch (this is the default)";
-        `Default, scope_info ["set-default"]
+        `Default, ["set-default"],
           "Act on the default repository selection that is used for newly \
            created switches";
-        `All, scope_info ["all-switches";"a"]
+        `All, ["all-switches";"a"],
           "Act on the selections of all configured switches";
       ]
     in
@@ -2009,7 +2007,7 @@ let repository cli =
             $ Arg.value switches)
     in
     Term.(const (fun l1 l2 -> match l1@l2 with [] -> [`Current_switch] | l -> l)
-          $ Arg.value flags $ switches)
+          $ flags $ switches)
   in
   let rank =
     mk_opt ["rank"] "RANK"

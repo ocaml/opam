@@ -27,6 +27,13 @@ val mk_opt_all:
   string list -> string -> string ->
   'a Arg.converter -> 'a list Term.t
 
+val mk_vflag:
+  ?section:string -> 'a -> ('a * string list * string) list -> 'a Term.t
+
+val mk_vflag_all:
+  ?section:string -> ?default:'a list -> ('a * string list * string) list
+  -> 'a list Term.t
+
 (* Escaped Windows directory separator. To use instead of [Filename.dir_sep] for
    manpage strings *)
 val dir_sep: string

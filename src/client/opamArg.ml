@@ -183,6 +183,7 @@ let create_build_options
   }
 
 let apply_build_options b =
+  let open OpamStd.Option.Op in
   let flag f = if f then Some true else None in
   OpamRepositoryConfig.update
     (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
@@ -193,16 +194,16 @@ let apply_build_options b =
     ();
   OpamStateConfig.update
     (* ?root: -- handled globally *)
-    ?jobs:OpamStd.Option.Op.(b.jobs >>| fun j -> lazy j)
+    ?jobs:(b.jobs >>| fun j -> lazy j)
     (* ?dl_jobs:int *)
     (* ?no_base_packages:(flag o.no_base_packages) -- handled globally *)
     ?build_test:(flag b.build_test)
     ?build_doc:(flag b.build_doc)
     ?dryrun:(flag b.dryrun)
-    ?makecmd:OpamStd.Option.Op.(b.make >>| fun m -> lazy m)
+    ?makecmd:(b.make >>| fun m -> lazy m)
     ?ignore_constraints_on:
-      OpamStd.Option.Op.(b.ignore_constraints_on >>|
-                         OpamPackage.Name.Set.of_list)
+      (b.ignore_constraints_on >>|
+       OpamPackage.Name.Set.of_list)
     ?unlock_base:(flag b.unlock_base)
     ?locked:(if b.locked then Some (Some b.lock_suffix) else None)
     ?no_depexts:(flag b.no_depexts)
@@ -800,6 +801,20 @@ let mk_opt_all ?section ?vopt ?(default=[]) flags value doc kind =
 let mk_tristate_opt ?section flags value doc =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
   Arg.(value & opt (some (enum when_enum)) None & doc)
+
+let mk_vflag ?section default flags =
+  let flags =
+    List.map (fun (content, flag, doc) ->
+        content, Arg.info ?docs:section flag ~doc) flags
+  in
+  Arg.(value & vflag default flags)
+
+let mk_vflag_all ?section ?(default=[]) flags =
+  let flags =
+    List.map (fun (content, flag, doc) ->
+        content, Arg.info ?docs:section flag ~doc) flags
+  in
+  Arg.(value & vflag_all default flags)
 
 type 'a subcommand = string * 'a * string list * string
 
