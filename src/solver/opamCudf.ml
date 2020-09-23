@@ -1103,21 +1103,24 @@ let preprocess_cudf_request (props, univ, creq) =
           OpamStd.String.Map.update p.Cudf.package (Set.add p) Set.empty)
         set OpamStd.String.Map.empty
     in
-    let to_set map =
-      OpamStd.String.Map.fold (fun _ -> Set.union) map Set.empty
-    in
-    let packages_map = to_map packages in
     let direct_conflicts p =
-      Set.filter (fun q -> q.Cudf.package <> p.Cudf.package)
-        (vpkg2set p.Cudf.conflicts)
-      ++
+      let base_conflicts =
+        Set.filter (fun q -> q.Cudf.package <> p.Cudf.package)
+          (vpkg2set p.Cudf.conflicts)
+      in
       (* Dependencies not matching constraints are also conflicts *)
-      (to_set @@
-       OpamStd.String.Map.mapi (fun name set ->
-           try OpamStd.String.Map.find name packages_map -- set
-           with Not_found -> Set.empty)
-         @@
-         to_map (deps p))
+      List.fold_left (fun acc -> function
+          | (n, c) :: disj when List.for_all (fun (m, _) -> m = n) disj ->
+            let coset = function
+              | Some (op, v) ->
+                let filter = Some (OpamFormula.neg_relop op, v) in
+                Set.of_list (Cudf.lookup_packages ~filter univ n)
+              | None -> Set.empty
+            in
+            acc ++
+            List.fold_left (fun acc (_, c) -> acc %% coset c) (coset c) disj
+          | _ -> acc)
+        base_conflicts p.Cudf.depends
     in
     let cache = Hashtbl.create 513 in
     (* Don't explore deeper than that for transitive conflicts *)
