@@ -61,7 +61,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Build
-  *
+  * Update opam file to 2.0 [#4371 @AltGr]
 
 ## Infrastructure
   *
