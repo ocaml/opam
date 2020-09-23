@@ -1122,20 +1122,20 @@ let preprocess_cudf_request (props, univ, creq) =
     let cache = Hashtbl.create 513 in
     (* Don't explore deeper than that for transitive conflicts *)
     let max_dig_depth = 2 in
-    let rec transitive_conflicts seen acc p =
+    let rec transitive_conflicts seen p =
       (* OpamConsole.msg "%s\n" (Package.to_string p); *)
-      try Hashtbl.find cache p ++ acc with Not_found ->
-      if Set.mem p seen || Set.cardinal seen >= max_dig_depth then acc else
+      try Hashtbl.find cache p with Not_found ->
+      if Set.mem p seen || Set.cardinal seen >= max_dig_depth then Set.empty else
       let seen = Set.add p seen in
       let conflicts =
         direct_conflicts p ++
         List.fold_left (fun acc disj ->
             acc ++
             Set.map_reduce ~default:Set.empty
-              (transitive_conflicts seen Set.empty)
+              (transitive_conflicts seen)
               Set.inter
               (vpkg2set disj))
-          acc
+          Set.empty
           p.Cudf.depends
       in
       Hashtbl.add cache p conflicts;
@@ -1145,7 +1145,7 @@ let preprocess_cudf_request (props, univ, creq) =
       OpamStd.String.Map.fold (fun _ ps acc ->
           acc ++
           Set.map_reduce ~default:Set.empty
-            (transitive_conflicts Set.empty Set.empty)
+            (transitive_conflicts Set.empty)
             Set.inter
             ps)
         (to_map to_install)
