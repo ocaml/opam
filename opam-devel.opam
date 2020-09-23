@@ -1,5 +1,9 @@
-opam-version: "1.2"
+opam-version: "2.0"
 version: "2.1.0~beta3"
+synopsis: "opam 2.1 bootstrapped binary"
+description: """
+This package compiles (bootstraps) opam. For consistency and safety of the installation, the binaries are not installed into the PATH, but into lib/opam-devel, from where the user can manually install them system-wide.
+"""
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Vincent Bernardoff <vb@luminar.eu.org>"
@@ -15,13 +19,14 @@ authors: [
 ]
 homepage: "https://opam.ocaml.org"
 bug-reports: "https://github.com/ocaml/opam/issues"
-dev-repo: "https://github.com/ocaml/opam.git"
+dev-repo: "git+https://github.com/ocaml/opam.git"
 build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
   [make "%{name}%.install"]
+  [make "tests"] {with-test}
 ]
-build-test: [make "tests"]
 depends: [
+  "ocaml" {>= "4.02.3"}
   "opam-client" {= version}
   "cmdliner" {>= "0.9.8"}
   "dune" {>= "1.5.0"}
@@ -34,4 +39,3 @@ If you just want to give it a try without altering your current installation, yo
     alias opam2=\"OPAMROOT=~/.opam2 %{lib}%/%{name}%/opam\""
   {success}
 ]
-available: ocaml-version >= "4.02.3"
