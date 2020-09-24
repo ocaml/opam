@@ -1124,7 +1124,11 @@ let preprocess_cudf_request (props, univ, creq) =
     in
     let cache = Hashtbl.create 513 in
     (* Don't explore deeper than that for transitive conflicts *)
-    let max_dig_depth = 2 in
+    let max_dig_depth =
+      match OpamStd.Config.env_int "DIGDEPTH" with
+      | None -> 2
+      | Some i -> i
+    in
     let rec transitive_conflicts seen p =
       (* OpamConsole.msg "%s\n" (Package.to_string p); *)
       try Hashtbl.find cache p with Not_found ->
