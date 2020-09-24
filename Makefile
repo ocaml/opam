@@ -93,7 +93,7 @@ endif
 endif
 
 ifneq ($(LIBINSTALL_DIR),)
-    OPAMINSTALLER_FLAGS += --libdir "$(LIBINSTALL_DIR)"
+    OPAMINSTALLER_FLAGS += --libdir "$(LIBINSTALL_DIR)" --docdir "$(LIBINSTALL_DIR)/../doc"
 endif
 
 opam-devel.install: $(DUNE_DEP)
