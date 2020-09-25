@@ -102,6 +102,8 @@ let constraint_to_cudf version_map name (op,v) =
        (this shouldn't happen for any constraint in the universe, now that we
        compute a full version map, but may still happen for user-provided
        constraints) *)
+    log "Warn: fallback constraint for %s"
+      (OpamFormula.string_of_atom (name, Some (op,v)));
     let all_versions =
       OpamPackage.Map.filter (fun nv _ -> nv.name = name)
         version_map in
