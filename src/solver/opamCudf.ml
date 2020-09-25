@@ -1090,26 +1090,31 @@ let preprocess_cudf_request (props, univ, creq) criteria =
     let open Set.Op in
     let vpkg2set vp = Set.of_list (Common.CudfAdd.resolve_deps univ vp) in
     let deps p = dependency_set univ p.Cudf.depends in
-    let installed =
-      Set.of_list (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) univ)
-    in
     let to_install =
       vpkg2set creq.Cudf.install
       ++ Set.of_list (Cudf.lookup_packages univ opam_invariant_package_name)
+    in
+    let to_map set =
+      Set.fold (fun p ->
+          OpamStd.String.Map.update p.Cudf.package (Set.add p) Set.empty)
+        set OpamStd.String.Map.empty
     in
     let packages =
       if do_trimming then
         Set.fixpoint deps
           (to_install ++
            vpkg2set creq.Cudf.remove ++
-           vpkg2set creq.Cudf.upgrade)
+           vpkg2set creq.Cudf.upgrade) ++
+        Set.of_list (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) univ)
+      else if OpamStd.Config.env_string "CUDFTRIM" = Some "simple" then
+        let cone = to_map (Set.fixpoint deps to_install) in
+        let filter p = match OpamStd.String.Map.find_opt p.Cudf.package cone with
+          | Some ps -> Set.mem p ps
+          | None -> true
+        in
+        Set.of_list (Cudf.get_packages ~filter univ)
       else
         Set.of_list (Cudf.get_packages univ)
-    in
-    let to_map set =
-      Set.fold (fun p ->
-          OpamStd.String.Map.update p.Cudf.package (Set.add p) Set.empty)
-        set OpamStd.String.Map.empty
     in
     let direct_conflicts p =
       let base_conflicts =
@@ -1168,8 +1173,7 @@ let preprocess_cudf_request (props, univ, creq) criteria =
     in
     log "Conflicts: %a pkgs to remove"
       (slog OpamStd.Op.(string_of_int @* Set.cardinal)) conflicts;
-    let final_packages = packages -- conflicts ++ installed in
-    Cudf.load_universe (Set.elements (final_packages -- conflicts))
+    Cudf.load_universe (Set.elements (packages -- conflicts))
   in
   log "Preprocess cudf request (trimming: %b): from %d to %d packages in %.2fs"
     do_trimming
