@@ -1,5 +1,9 @@
-opam-version: "1.2"
+opam-version: "2.0"
 version: "2.1.0~beta3"
+synopsis: "opam 2.1 development libraries (core)"
+description: """
+Small standard library extensions, and generic system interaction modules used by opam.
+"""
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Vincent Bernardoff <vb@luminar.eu.org>"
@@ -15,12 +19,13 @@ authors: [
 ]
 homepage: "https://opam.ocaml.org/"
 bug-reports: "https://github.com/ocaml/opam/issues"
-dev-repo: "https://github.com/ocaml/opam.git"
+dev-repo: "git+https://github.com/ocaml/opam.git"
 build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
   ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
+  "ocaml" {>= "4.02.3"}
   "base-unix"
   "base-bigarray"
   "ocamlgraph"
@@ -29,4 +34,3 @@ depends: [
   "cppo" {build}
 ]
 conflicts: "extlib-compat"
-available: ocaml-version >= "4.02.3"
