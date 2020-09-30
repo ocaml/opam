@@ -23,7 +23,7 @@ PACKAGES  = P1-0 P1-1 P1-2 P2 P3 P4 P5
 unexport OCAMLLIB
 
 ifndef OPAM
-  OPAM = $(firstword $(realpath ../../install/default/bin/opam$(EXE) ../_build/install/default/bin/opamMain.exe))
+  OPAM = $(firstword $(realpath ../../install/default/bin/opam$(EXE) ../_build/install/default/bin/opamMain.exe ../../default/src/client/opamMain.exe))
 endif
 ENV   = PATH="$(PATH)" $(DEBUG) OPAMKEEPBUILDDIR=1 OPAMROOT=$(OPAM_ROOT) OPAMSWITCH= OPAMNOBASEPACKAGES=1 OPAMYES=1 OPAM=$(OPAM)
 OPAMBIN  = $(ENV) $(OPAM)
