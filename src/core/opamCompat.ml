@@ -29,6 +29,7 @@ struct
   include Char
 
   let lowercase_ascii = lowercase
+  let uppercase_ascii = uppercase
 end
 #endif
 
