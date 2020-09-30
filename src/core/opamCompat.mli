@@ -29,6 +29,7 @@ module Char
   include module type of struct include Char end
 
   val lowercase_ascii: char -> char
+  val uppercase_ascii: char -> char
 end
 #endif
 
