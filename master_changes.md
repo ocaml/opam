@@ -82,7 +82,7 @@ New option/command/subcommand are prefixed with ◈.
   * ActionGraph: removal postponing, protect against addition of cycles [#4358 @AltGr - fix #4357]
 
 ## Test
-  *
+  * Ensure that a cold `dune runtest` works [#4375 @emillon]
 
 ## Doc
   *
