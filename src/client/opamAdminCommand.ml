@@ -249,8 +249,8 @@ let cache_command cli =
             (OpamPackage.Map.bindings pkg_prefixes))
     in
 
+    let cache_dir_url = OpamFilename.remove_prefix_dir repo_root cache_dir in
     if not no_repo_update then
-      let cache_dir_url = OpamFilename.remove_prefix_dir repo_root cache_dir in
       if not (List.mem cache_dir_url (OpamFile.Repo.dl_cache repo_def)) then
         (OpamConsole.msg "Adding %s to %s...\n"
            cache_dir_url (OpamFile.to_string repo_file);
@@ -259,18 +259,18 @@ let cache_command cli =
               (cache_dir_url :: OpamFile.Repo.dl_cache repo_def)
               repo_def));
 
-      if not (OpamPackage.Map.is_empty errors) then (
-        OpamConsole.error "Got some errors while processing: %s"
-          (OpamStd.List.concat_map ", " OpamPackage.to_string
-             (OpamPackage.Map.keys errors));
-        OpamConsole.errmsg "%s"
-          (OpamStd.Format.itemize (fun (nv,el) ->
-               Printf.sprintf "[%s] %s" (OpamPackage.to_string nv)
-                 (String.concat "\n" el))
-              (OpamPackage.Map.bindings errors))
-      );
+    if not (OpamPackage.Map.is_empty errors) then (
+      OpamConsole.error "Got some errors while processing: %s"
+        (OpamStd.List.concat_map ", " OpamPackage.to_string
+           (OpamPackage.Map.keys errors));
+      OpamConsole.errmsg "%s"
+        (OpamStd.Format.itemize (fun (nv,el) ->
+             Printf.sprintf "[%s] %s" (OpamPackage.to_string nv)
+               (String.concat "\n" el))
+            (OpamPackage.Map.bindings errors))
+    );
 
-      OpamConsole.msg "Done.\n";
+    OpamConsole.msg "Done.\n";
   in
   Term.(const cmd $ global_options cli $
         cache_dir_arg $ no_repo_update_arg $ link_arg $ jobs_arg),
