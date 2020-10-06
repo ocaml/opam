@@ -755,7 +755,7 @@ let confirmation ?ask requested solution =
     OpamPackage.Name.Set.equal requested solution_packages
     || OpamConsole.confirm "Do you want to continue?"
 
-let run_hook_job t name ?(local=[]) w =
+let run_hook_job t name ?(local=[]) ?(allow_stdout=false) w =
   let shell_env = OpamEnv.get_full ~force_path:true t in
   let mk_cmd = function
     | cmd :: args ->
@@ -772,9 +772,18 @@ let run_hook_job t name ?(local=[]) w =
     try Some (List.assoc v local)
     with Not_found -> OpamPackageVar.resolve_switch t v
   in
-  OpamProcess.Job.of_fun_list
-    (OpamStd.List.filter_map (fun cmd -> mk_cmd cmd)
-       (OpamFilter.commands env w))
+  let rec iter_commands = function
+    | [] -> Done None
+    | None :: commands -> iter_commands commands
+    | Some cmdf :: commands ->
+      let cmd = cmdf () in
+      cmd @@> fun result ->
+      if allow_stdout then
+        List.iter (OpamConsole.msg "%s\n") result.r_stdout;
+      if OpamProcess.is_success result then iter_commands commands
+      else Done (Some (cmd, result))
+  in
+  iter_commands (List.map mk_cmd (OpamFilter.commands env w))
   @@+ function
   | Some (cmd, _err) ->
     OpamConsole.error "The %s hook failed at %S"
@@ -864,7 +873,7 @@ let apply ?ask t action ~requested ?add_roots ?(assume_built=false) solution =
           var_def "depexts" (OpamStd.String.Set.elements depexts);
         ] in
         run_job @@
-        run_hook_job t "pre-session" ~local
+        run_hook_job t "pre-session" ~local ~allow_stdout:true
           (OpamFile.Wrappers.pre_session
              (OpamFile.Config.wrappers t.switch_global.config))
       in
@@ -885,7 +894,7 @@ let apply ?ask t action ~requested ?add_roots ?(assume_built=false) solution =
           OpamVariable.Full.of_string "failure", B (not success);
         ] in
         run_job @@
-        run_hook_job t "post-session" ~local
+        run_hook_job t "post-session" ~local ~allow_stdout:true
           (OpamFile.Wrappers.post_session
              (OpamFile.Config.wrappers t.switch_global.config))
       in

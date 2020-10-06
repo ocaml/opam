@@ -1388,6 +1388,10 @@ for <span class="opam">opam</span>.
     - `hooks`: the directory where scripts created using `opamrc`'s
       [`init-scripts:`](#opamrcfield-init-scripts) field are created.
 
+    In addition, the output of these hooks is printed to the user, so
+    `post-session-commands` may be used to output extra information upon session
+    completion.
+
 - <a id="configfield-repository-validation-command">`repository-validation-command: [ <term> { <filter> } ... ]`</a>:
   defines a command to run on the upstream repositories to validate their
   authenticity. When this is specified, and for repositories that define
