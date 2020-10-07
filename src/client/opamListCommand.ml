@@ -232,7 +232,6 @@ let apply_selector ~base st = function
       ~installed:false ~unavailable:true
       (get_universe st tog)
       (packages_of_atoms st atoms)
-    |> OpamPackage.Set.of_list
   | Required_by (tog, atoms) ->
     atom_dependencies st tog atoms |>
     OpamFormula.packages base
@@ -664,14 +663,8 @@ let display st format packages =
           ~requested:(OpamPackage.names_of_packages packages)
           Query
       in
-      let deps_packages =
-        OpamSolver.dependencies
-          ~depopts:true ~installed:false ~unavailable:true
-          ~build:true ~post:false
-          universe packages
-      in
-      List.filter (fun nv -> OpamPackage.Set.mem nv packages) deps_packages |>
-      List.rev
+      OpamSolver.dependency_sort ~depopts:true ~build:true ~post:false
+        universe packages
     else match format.order with
       | `Custom o -> List.sort o (OpamPackage.Set.elements packages)
       | _ -> OpamPackage.Set.elements packages

@@ -113,7 +113,7 @@ let lock_opam ?(only_direct=false) st opam =
     OpamSolver.dependencies
       ~depopts:true ~build:true ~post:true ~installed:true
       univ (OpamPackage.Set.singleton nv) |>
-    List.filter (fun nv1 -> nv1 <> nv)
+    OpamPackage.Set.remove nv
   in
   let depends =
     if only_direct then
@@ -123,14 +123,14 @@ let lock_opam ?(only_direct=false) st opam =
         OpamFormula.fold_left (fun acc (n,_) -> OpamPackage.Name.Set.add n acc)
           OpamPackage.Name.Set.empty
       in
-      List.filter (fun nv -> OpamPackage.Name.Set.mem nv.name names) all_depends
+      OpamPackage.packages_of_names all_depends names
     else all_depends
   in
   let map_of_set x set =
     OpamPackage.Map.of_list (List.map (fun nv -> nv, x)
                                (OpamPackage.Set.elements set))
   in
-  let depends_map = map_of_set `version (OpamPackage.Set.of_list depends) in
+  let depends_map = map_of_set `version depends in
   (* others: dev, test, doc *)
   let open OpamPackage.Set.Op in
   let select ?(build=false) ?(test=false) ?(doc=false) ?(dev=false)
@@ -153,11 +153,10 @@ let lock_opam ?(only_direct=false) st opam =
       let depends_map = map_of_set `other installed in
       if only_direct then depends_map
       else
-        ((OpamPackage.Set.of_list
-            (OpamSolver.dependencies
-               ~depopts:false ~build:true ~post:true ~installed:true
-               univ installed))
-         -- (OpamPackage.Set.of_list all_depends))
+        (OpamSolver.dependencies
+           ~depopts:false ~build:true ~post:true ~installed:true
+           univ installed
+         -- all_depends)
         |> map_of_set (`other_dep typ)
         |> OpamPackage.Map.union (fun _v _o -> `other_dep typ) depends_map
     else
@@ -245,17 +244,17 @@ let lock_opam ?(only_direct=false) st opam =
          (OpamPackage.Name.Set.elements uninstalled_depopts))
   in
   let pin_depends =
-    OpamStd.List.filter_map (fun nv ->
-        if not (OpamSwitchState.is_pinned st nv.name) then None else
+    OpamPackage.Set.fold (fun nv acc ->
+        if not (OpamSwitchState.is_pinned st nv.name) then acc else
         match OpamSwitchState.primary_url st nv with
-        | None -> None
+        | None -> acc
         | Some u ->
           match OpamUrl.local_dir u with
           | Some d ->
             let local_warn () =
               OpamConsole.warning "Dependency %s is pinned to local target %s"
                 (OpamPackage.to_string nv) (OpamUrl.to_string u);
-              None
+              acc
             in
             (match u.OpamUrl.backend with
              | #OpamUrl.version_control ->
@@ -263,11 +262,12 @@ let lock_opam ?(only_direct=false) st opam =
                 | Some resolved_u ->
                   OpamConsole.note "Local pin %s resolved to %s"
                     (OpamUrl.to_string u) (OpamUrl.to_string resolved_u);
-                  Some (nv, resolved_u)
+                  (nv, resolved_u) :: acc
                 | None -> local_warn ())
              | _ -> local_warn ())
-          | None -> Some (nv, u))
-      all_depends
+          | None -> (nv, u) :: acc)
+      all_depends []
+    |> List.rev
   in
   opam |>
   OpamFile.OPAM.with_depopts OpamFormula.Empty |>

@@ -422,7 +422,7 @@ type conflict =
 module Map = OpamStd.Map.Make(Package)
 module Set = OpamStd.Set.Make(Package)
 
-(* From a CUDF dependency CNF, extract the set of packages that can possibly
+(* From a CUDF dependency CNF, extract the set of packages that can possibly be
    part of a solution.
 
    This is much finer than [Common.CudfAdd.resolve_deps] which doesn't handle
@@ -510,19 +510,8 @@ module Graph = struct
   let transitive_closure g =
     PO.O.add_transitive_closure g
 
-  let close_and_linearize g pkgs =
-    let _, l =
-      Topo.fold
-        (fun pkg (closure, topo) ->
-           if Set.mem pkg closure then
-             closure, pkg :: topo
-           else if List.exists (fun p -> Set.mem p closure) (PG.pred g pkg) then
-             Set.add pkg closure, pkg :: topo
-           else
-             closure, topo)
-        g
-        (pkgs, []) in
-    l
+  let linearize g pkgs =
+    Topo.fold (fun p acc -> if Set.mem p pkgs then p::acc else acc) g []
 
   let mirror = PO.O.mirror
 
@@ -535,21 +524,19 @@ let is_artefact cpkg =
   is_opam_invariant cpkg ||
   cpkg.Cudf.package = dose_dummy_request
 
-let filter_dependencies f_direction universe packages =
-  log ~level:3 "filter deps: build graph";
-  let graph = f_direction (Graph.of_universe universe) in
-  let packages = Set.of_list packages in
-  log ~level:3 "filter deps: close_and_linearize";
-  let r = Graph.close_and_linearize graph packages in
-  log ~level:3 "filter deps: done";
-  r
-
-let dependencies = filter_dependencies (fun x -> x)
+let dependencies universe packages =
+  Set.fixpoint (fun p -> dependency_set universe p.Cudf.depends) packages
 (* similar to Algo.Depsolver.dependency_closure but with finer results on
    version sets *)
 
-let reverse_dependencies = filter_dependencies Graph.mirror
+let reverse_dependencies universe packages =
+  let graph = Graph.of_universe universe in
+  Set.fixpoint (fun p -> Set.of_list (Graph.pred graph p)) packages
 (* similar to Algo.Depsolver.reverse_dependency_closure but more reliable *)
+
+let dependency_sort universe packages =
+  let graph = Graph.of_universe universe in
+  Graph.linearize graph packages |> List.rev
 
 let string_of_atom (p, c) =
   let const = function

@@ -63,7 +63,6 @@ let orphans ?changes ?(transitive=false) t =
     | Some ch ->
       if OpamPackage.Set.is_empty orphans then orphans else
       let recompile_cone =
-        OpamPackage.Set.of_list @@
         OpamSolver.reverse_dependencies
           ~depopts:true ~installed:true ~unavailable:true
           ~build:true ~post:false
@@ -93,7 +92,6 @@ let orphans ?changes ?(transitive=false) t =
     let rec add_trans full_orphans orphan_versions =
       (* fixpoint to check all packages with no available version *)
       let new_orphans =
-        OpamPackage.Set.of_list @@
         OpamSolver.reverse_dependencies
           ~depopts:false ~installed:false ~unavailable:true
           ~build:true ~post:false
@@ -1057,7 +1055,7 @@ let assume_built_restrictions ?available_packages t atoms =
     (OpamPackage.Map.values missing
      |> List.fold_left OpamPackage.Name.Set.union OpamPackage.Name.Set.empty
      |> OpamPackage.packages_of_names available_packages)
-    -- OpamPackage.Set.of_list installed_dependencies
+    -- installed_dependencies
   in
   let available_packages = lazy (
     (available_packages -- uninstalled_dependencies) ++ t.installed ++ pinned
@@ -1065,7 +1063,8 @@ let assume_built_restrictions ?available_packages t atoms =
   let fixed_atoms =
     List.map (fun nv ->
         (OpamPackage.name nv , Some (`Eq, OpamPackage.version nv)))
-      ((OpamPackage.Set.elements pinned) @ installed_dependencies)
+      (OpamPackage.Set.elements pinned @
+       OpamPackage.Set.elements installed_dependencies)
   in
   { t with available_packages }, fixed_atoms
 
@@ -1300,18 +1299,17 @@ let remove_t ?ask ~autoremove ~force atoms t =
         Remove
     in
     let to_remove =
-      OpamPackage.Set.of_list
-        (OpamSolver.reverse_dependencies ~build:true ~post:true
-           ~depopts:false ~installed:true universe packages) in
+      OpamSolver.reverse_dependencies ~build:true ~post:true
+        ~depopts:false ~installed:true universe packages
+    in
     let to_keep =
       (if autoremove then t.installed_roots %% t.installed else t.installed)
       ++ universe.u_base
       -- to_remove -- full_orphans -- orphan_versions
     in
     let to_keep =
-      OpamPackage.Set.of_list
-        (OpamSolver.dependencies ~build:true ~post:true
-           ~depopts:true ~installed:true universe to_keep) in
+      OpamSolver.dependencies ~build:true ~post:true
+        ~depopts:true ~installed:true universe to_keep in
     (* to_keep includes the depopts, because we don't want to autoremove
        them. But that may re-include packages that we wanted removed, so we
        need to remove them again *)
@@ -1323,9 +1321,8 @@ let remove_t ?ask ~autoremove ~force atoms t =
         if atoms = [] then to_remove
         else (* restrict to the dependency cone of removed pkgs *)
           to_remove %%
-          (OpamPackage.Set.of_list
-             (OpamSolver.dependencies ~build:true ~post:true
-                ~depopts:true ~installed:true universe to_remove))
+          (OpamSolver.dependencies ~build:true ~post:true
+             ~depopts:true ~installed:true universe to_remove)
       else to_remove in
     let t, solution =
       OpamSolution.resolve_and_apply ?ask t Remove
