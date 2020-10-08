@@ -38,22 +38,13 @@ type global_options = {
   cli : OpamCLIVersion.t;
 }
 
-let deprecated_option option absent name instead =
-  if option <> absent then
-    OpamConsole.warning
-      "Option %s is deprecated, ignoring it.%s" name
-      (match instead with
-      | None -> ""
-      | Some instead -> Printf.sprintf " You can use %s instead." instead)
-
 (* The --cli passed by cmdliner is ignored (it's only there for --help) *)
 let create_global_options
     git_version debug debug_level verbose quiet color opt_switch yes strict
     opt_root external_solver use_internal_solver
     cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade
     working_dir ignore_pin_depends
-    d_no_aspcud _ =
-  deprecated_option d_no_aspcud false "no-aspcud" None;
+    _d_no_aspcud _ =
   let debug_level = OpamStd.Option.Op.(
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
@@ -785,42 +776,261 @@ let opamlist_columns =
   in
   parse, print
 
-(* Helpers *)
-let mk_flag ?section flags doc =
+(* CLI version helpers *)
+
+type flag_validity =
+  | Valid_since of OpamCLIVersion.t
+  | Deprecated of OpamCLIVersion.t * OpamCLIVersion.t * string option
+  (* since * removal * use instead *)
+
+let cli2_0 = OpamCLIVersion.of_string "2.0"
+let cli2_1 = OpamCLIVersion.of_string "2.1"
+let valid_cli_legacy = Valid_since cli2_0
+
+let update_doc_w_cli doc ~cli = function
+  | Valid_since c ->
+    if cli < c then
+      Printf.sprintf "(Since $(b,%s)) %s"
+        (OpamCLIVersion.to_string c) doc
+    else doc
+  | Deprecated (since, removal, instead) ->
+    if cli < since then
+      Printf.sprintf "(Deprecated from $(b,%s), removed at $(b,%s)%s) %s"
+        (OpamCLIVersion.to_string since)
+        (OpamCLIVersion.to_string removal)
+        (match instead with
+         | Some instead ->
+           Printf.sprintf ", see $(i,%s)" instead
+         | None -> "")
+        doc
+    else if cli < removal then
+      Printf.sprintf
+        "Deprecated since $(b,%s), will be removed at $(b,%s)%s"
+        (OpamCLIVersion.to_string since)
+        (OpamCLIVersion.to_string removal)
+        (match instead with
+         | Some instead ->
+           Printf.sprintf ", use $(i,%s) instead." instead
+         | None -> ".")
+    else
+      Printf.sprintf "Removed since $(b,%s)%s"
+        (OpamCLIVersion.to_string removal)
+        (match instead with
+         | Some instead ->
+           Printf.sprintf ", use $(i,%s) instead." instead
+         | None -> ".")
+
+let get_long_form flags =
+  List.fold_left (fun (lgth,long) f ->
+      let flgth =  String.length f in
+      if flgth > lgth then (flgth, f) else (lgth, long))
+    (0,"") flags |> snd
+
+let error_new_flag cli valid_since flags =
+  let flag = get_long_form flags in
+  let msg =
+    Printf.sprintf
+      "%s is only available since version %s of the opam CLI, \
+       but version %s has been requested."
+      flag (OpamCLIVersion.to_string valid_since)
+      (OpamCLIVersion.to_string cli)
+  in
+  `Error (false, msg)
+
+let error_rm_flag cli removal instead flags =
+  let flag = get_long_form flags in
+  let msg =
+    Printf.sprintf
+      "%s was removed in version %s of the opam CLI, \
+       but version %s has been requested.%s"
+      flag (OpamCLIVersion.to_string removal)
+      (OpamCLIVersion.to_string cli)
+      (OpamStd.Option.to_string (fun ist ->
+           Printf.sprintf  " Use %s instead."
+             (OpamConsole.colorise `bold ist))
+          instead)
+  in
+  `Error (false, msg)
+
+let ok_deprecated_flag cli since removal instead flags =
+  let flag = get_long_form flags in
+  OpamConsole.warning
+    "%s is deprecated in %s (since %s), it will be removed in %s.%s"
+    flag
+    (OpamCLIVersion.to_string cli)
+    (OpamCLIVersion.to_string since)
+    (OpamCLIVersion.to_string removal)
+    (OpamStd.Option.to_string (fun ist ->
+         Printf.sprintf  " Use %s instead."
+           (OpamConsole.colorise `bold ist))
+        instead)
+
+(* Cli version check *)
+let cond_new cli c = cli < c
+let cond_removed cli removal =
+  cli >= removal || removal <= OpamCLIVersion.current
+let cond_deprecated cli removal = cli < removal
+
+let check_cli_validity cli validity ?cond elem flags =
+  let cond = OpamStd.Option.default (fun x -> x) cond in
+  match validity with
+  | Valid_since c when cond (cond_new cli c) ->
+    error_new_flag cli c flags
+  | Deprecated (_, removal, instead) when cond (cond_removed cli removal) ->
+    error_rm_flag cli removal instead flags
+  | Deprecated (since, removal, instead)
+    when cond (cond_deprecated cli removal) ->
+    (ok_deprecated_flag cli since removal instead flags;
+     `Ok elem)
+  | _ -> `Ok elem
+
+let term_cli_check ~check arg =
+  Term.(ret ((const check) $ (Arg.value arg)))
+
+(* Arguments constructors *)
+
+let mk_flag ~cli validity ?section flags doc =
+  let doc = update_doc_w_cli doc ~cli validity in
   let doc = Arg.info ?docs:section ~doc flags in
-  Arg.(value & flag & doc)
-
-let mk_opt ?section ?vopt flags value doc kind default =
-  let doc = Arg.info ?docs:section ~docv:value ~doc flags in
-  Arg.(value & opt ?vopt kind default & doc)
-
-let mk_opt_all ?section ?vopt ?(default=[]) flags value doc kind =
-  let doc = Arg.info ?docs:section ~docv:value ~doc flags in
-  Arg.(value & opt_all ?vopt kind default & doc)
-
-let mk_tristate_opt ?section flags value doc =
-  let doc = Arg.info ?docs:section ~docv:value ~doc flags in
-  Arg.(value & opt (some (enum when_enum)) None & doc)
-
-let mk_vflag ?section default flags =
-  let flags =
-    List.map (fun (content, flag, doc) ->
-        content, Arg.info ?docs:section flag ~doc) flags
+  let check elem =
+    check_cli_validity cli validity ~cond:(fun c -> c && elem) elem flags
   in
-  Arg.(value & vflag default flags)
+  term_cli_check ~check Arg.(flag & doc)
 
-let mk_vflag_all ?section ?(default=[]) flags =
-  let flags =
-    List.map (fun (content, flag, doc) ->
-        content, Arg.info ?docs:section flag ~doc) flags
+let mk_opt ~cli validity ?section ?vopt flags value doc kind default =
+  let doc = update_doc_w_cli doc ~cli validity in
+  let doc = Arg.info ?docs:section ~docv:value ~doc flags in
+  let check elem =
+    check_cli_validity cli validity
+      ~cond:(fun c -> c && default != elem) elem flags
   in
-  Arg.(value & vflag_all default flags)
+  term_cli_check ~check Arg.(opt ?vopt kind default & doc)
 
-type 'a subcommand = string * 'a * string list * string
+let mk_opt_all ~cli validity ?section ?vopt ?(default=[])
+    flags value doc kind =
+  let doc = update_doc_w_cli doc ~cli validity in
+  let doc = Arg.info ?docs:section ~docv:value ~doc flags in
+  let check elem =
+    check_cli_validity cli validity
+      ~cond:(fun c -> c && default != elem) elem flags
+  in
+  term_cli_check ~check Arg.(opt_all ?vopt kind default & doc)
+
+let mk_vflag ~cli ?section default flags =
+  let info_flags =
+    List.map (fun (validity, content, flag, doc) ->
+        let doc = update_doc_w_cli doc ~cli validity in
+        content, Arg.info ?docs:section flag ~doc)
+      flags
+  in
+  let check elem =
+    match
+      OpamStd.List.find_opt (fun (_, content, _, _) -> content = elem) flags
+    with
+    | Some (validity, _, flags, _) ->
+      check_cli_validity cli validity elem flags
+    | None -> `Ok elem
+  in
+  term_cli_check ~check Arg.(vflag default info_flags)
+
+let mk_vflag_all ~cli ?section ?(default=[]) flags =
+  let info_flags =
+    List.map (fun (validity, content, flag, doc) ->
+        let doc = update_doc_w_cli doc ~cli validity in
+        content, Arg.info ?docs:section flag ~doc)
+      flags
+  in
+  let check selected =
+    let neww, rm =
+      List.fold_left (fun (neww,rm) elem ->
+          match OpamStd.List.find_opt (fun (_, content, _, _) ->
+              content = elem) flags with
+          | Some (Valid_since c, _, flags, _) when cond_new cli c ->
+            (flags, c)::neww, rm
+          | Some (Deprecated (_, removal, instead), _, flags, _)
+            when cond_removed cli removal ->
+            neww, (flags, (removal, instead))::rm
+          | Some (Deprecated (since, removal, instead), _, flags, _)
+            when cond_deprecated cli removal ->
+            ok_deprecated_flag cli since removal instead flags;
+            neww,rm
+          | _ -> neww,rm) ([],[]) selected
+    in
+    match neww, rm with
+    | [flags, c], [] ->
+      error_new_flag cli c flags
+    | [], [flags, (c, instead)] ->
+      error_rm_flag cli c instead flags
+    | [], [] -> `Ok selected
+    | _::_, []->
+      let options, clis = List.split neww in
+      let msg =
+        Printf.sprintf
+          "%s are only available since respectively versions %s of the opam \
+           CLI, but version %s has been requested."
+          (OpamStd.Format.pretty_list (List.map get_long_form options) )
+          (OpamStd.Format.pretty_list
+             (List.map OpamCLIVersion.to_string clis))
+          (OpamCLIVersion.to_string cli)
+      in
+      `Error (false,msg)
+    | [], _::_->
+      let options, clis = List.split rm in
+      let clis = List.split clis |> fst in
+      let msg =
+        Printf.sprintf
+          "%s were removed in, respectively, %s versions of the opam CLI, \
+           but version %s has been requested."
+          (OpamStd.Format.pretty_list (List.map get_long_form options) )
+          (OpamStd.Format.pretty_list
+             (List.map OpamCLIVersion.to_string clis))
+          (OpamCLIVersion.to_string cli)
+      in
+      `Error (false,msg)
+    | _,_ ->
+      let news, nclis = List.split neww in
+      let rms, rclis = List.split rm in
+      let rclis = List.split rclis |> fst in
+      let msg =
+        Printf.sprintf
+          "%s are only available since respectively versions %s of the opam \
+           CLI,and %s were removed in respectively versions %s, \
+           but version %s has been requested."
+          (OpamStd.Format.pretty_list (List.map get_long_form news))
+          (OpamStd.Format.pretty_list
+             (List.map OpamCLIVersion.to_string nclis))
+          (OpamStd.Format.pretty_list (List.map get_long_form rms))
+          (OpamStd.Format.pretty_list
+             (List.map OpamCLIVersion.to_string rclis))
+          (OpamCLIVersion.to_string cli)
+      in
+      `Error (false,msg)
+  in
+  term_cli_check ~check Arg.(vflag_all default info_flags)
+
+let mk_tristate_opt ~cli validity ?section flags value doc =
+  let doc = update_doc_w_cli doc ~cli validity in
+  let doc = Arg.info ?docs:section ~docv:value ~doc flags in
+  let check elem = check_cli_validity cli validity elem flags in
+  term_cli_check ~check Arg.(opt (some (enum when_enum)) None & doc)
+
+(*
+let mk_pos ?rev p content default ~docv ~doc =
+Arg.(value & pos ?rev p content default & info ~docv ~doc [])
+
+let mk_pos ~cli ~validity ?rev p content default ~docv ~doc =
+  let doc = update_doc_w_cli doc ~cli validity in
+  Arg.(value & pos ?rev p content default & info ~docv ~doc [])
+*)
+
+type 'a subcommand = flag_validity * string * 'a * string list * string
+(** A subcommand [cmds, v, args, doc] is the subcommand [cmd], using
+    the documentation [doc] and the list of documentation parameters
+    [args]. If the subcommand is selected, return [v]. *)
 
 type 'a subcommands = 'a subcommand list
 
-let mk_subdoc ?(defaults=[]) commands =
+let mk_subdoc ~cli ?(defaults=[]) commands =
   let bold s = Printf.sprintf "$(b,%s)" s in
   let it s = Printf.sprintf "$(i,%s)" s in
   `S Manpage.s_commands ::
@@ -832,29 +1042,38 @@ let mk_subdoc ?(defaults=[]) commands =
          `I (it arg, Printf.sprintf "With a %s argument, defaults to %s %s."
                (it arg) (bold default) (it arg))
      ) defaults) @
-  List.map (fun (c,_,args,d) ->
+  List.map (fun (validity, c,_,args,d) ->
       let cmds = bold c ^ " " ^ OpamStd.List.concat_map " " it args in
+      let d = update_doc_w_cli d ~cli validity in
       `I (cmds, d)
     ) commands
 
-let mk_subcommands_aux my_enum commands =
+let mk_subcommands_aux ~cli my_enum commands =
   let command =
     let doc = Arg.info ~docv:"COMMAND" [] in
-    let commands =
-      List.fold_left
-        (fun acc (c,f,_,_) -> (c,f) :: acc)
-        [] commands in
-    Arg.(value & pos 0 (some & my_enum commands) None & doc) in
+    let scommands = List.rev_map (fun (_,c,f,_,_) -> c,f) commands in
+    let check = function
+      | None -> `Ok None
+      | Some elem as some ->
+        match OpamStd.List.find_opt (fun (_, _, content, _, _) ->
+              content = elem) commands with
+        | Some (validity, sbcmd, _,_,_) ->
+          check_cli_validity cli validity some [sbcmd]
+        | None -> `Ok some
+    in
+    term_cli_check ~check Arg.(pos 0 (some & my_enum scommands) None & doc)
+  in
   let params =
     let doc = Arg.info ~doc:"Optional parameters." [] in
-    Arg.(value & pos_right 0 string [] & doc) in
+    Arg.(value & pos_right 0 string [] & doc)
+  in
   command, params
 
-let mk_subcommands commands =
-  mk_subcommands_aux Arg.enum commands
+let mk_subcommands ~cli commands =
+  mk_subcommands_aux ~cli Arg.enum commands
 
-let mk_subcommands_with_default commands =
-  mk_subcommands_aux enum_with_default commands
+let mk_subcommands_with_default ~cli commands =
+  mk_subcommands_aux ~cli enum_with_default commands
 
 let make_command_alias cmd ?(options="") name =
   let term, info = cmd in
@@ -874,18 +1093,26 @@ let make_command_alias cmd ?(options="") name =
     ~docs:"COMMAND ALIASES" ~sdocs:global_option_section
     ~doc ~man
 
-let bad_subcommand subcommands (command, usersubcommand, userparams) =
+let bad_subcommand ~cli subcommands (command, usersubcommand, userparams) =
   match usersubcommand with
   | None ->
-    `Error (false, Printf.sprintf "Missing subcommand. Valid subcommands are %s."
+    `Error (false,
+            Printf.sprintf "Missing subcommand. Valid subcommands are %s."
               (OpamStd.Format.pretty_list
-                 (List.map (fun (a,_,_,_) -> a) subcommands)))
+                 (OpamStd.List.filter_map (fun (validity,a,_,_,_) ->
+                      match validity with
+                      | Valid_since c when c < cli -> None
+                      | Deprecated (_,c,_) when c >= cli -> None
+                      | _ -> Some a)
+                     subcommands)))
   | Some (`default cmd) ->
     `Error (true, Printf.sprintf "Invalid %s subcommand %S" command cmd)
   | Some usersubcommand ->
     let exe = Filename.basename Sys.executable_name in
-    match List.find_all (fun (_,cmd,_,_) -> cmd = usersubcommand) subcommands with
-    | [name, _, args, _doc] ->
+    match
+      List.find_all (fun (_,_,cmd,_,_) -> cmd = usersubcommand) subcommands
+    with
+    | [_, name, _, args, _doc] ->
       let usage =
         Printf.sprintf "%s %s [OPTION]... %s %s"
           exe command name (String.concat " " args) in
@@ -911,14 +1138,11 @@ let nonempty_arg_list name doc kind =
   Arg.(non_empty & pos_all kind [] & doc)
 
 (* Common flags *)
-let print_short_flag =
-  mk_flag ["s";"short"]
+let print_short_flag ?(validity=valid_cli_legacy) cli =
+  mk_flag ~cli validity ["s";"short"]
     "Output raw lists of names, one per line, skipping any details."
 
-let installed_roots_flag =
-  mk_flag ["installed-roots"] "Display only the installed roots."
-
-let shell_opt =
+let shell_opt ?(validity=valid_cli_legacy) cli =
   let enum = [
       "bash",SH_bash;
       "sh",SH_sh;
@@ -926,7 +1150,7 @@ let shell_opt =
       "zsh",SH_zsh;
       "fish",SH_fish;
     ] in
-  mk_opt ["shell"] "SHELL"
+  mk_opt ~cli validity ["shell"] "SHELL"
     (Printf.sprintf
        "Sets the configuration mode for opam environment appropriate for \
         $(docv). One of %s. Guessed from the parent processes and the \\$SHELL \
@@ -934,8 +1158,8 @@ let shell_opt =
        (Arg.doc_alts_enum enum))
     (Arg.some (Arg.enum enum)) None
 
-let dot_profile_flag =
-  mk_opt ["dot-profile"]
+let dot_profile_flag ?(validity=valid_cli_legacy) cli =
+  mk_opt ~cli validity ["dot-profile"]
     "FILENAME"
     (Printf.sprintf
       "Name of the configuration file to update instead of \
@@ -943,7 +1167,7 @@ let dot_profile_flag =
       dir_sep dir_sep)
     (Arg.some filename) None
 
-let repo_kind_flag =
+let repo_kind_flag ?(validity=valid_cli_legacy) cli =
   let main_kinds = [
     "http" , `http;
     "local", `rsync;
@@ -956,13 +1180,13 @@ let repo_kind_flag =
     "curl" , `http;
     "rsync", `rsync;
   ] in
-  mk_opt ["k";"kind"] "KIND"
+  mk_opt ~cli validity ["k";"kind"] "KIND"
     (Printf.sprintf "Specify the kind of the repository to be used (%s)."
        (Arg.doc_alts_enum main_kinds))
     Arg.(some (enum (main_kinds @ aliases_kinds))) None
 
-let jobs_flag =
-  mk_opt ["j";"jobs"] "JOBS"
+let jobs_flag ?(validity=valid_cli_legacy) cli =
+  mk_opt ~cli validity ["j";"jobs"] "JOBS"
     "Set the maximal number of concurrent jobs to use. The default value is \
     calculated from the number of cores. You can also set it using the \
     $(b,\\$OPAMJOBS) environment variable."
@@ -1003,19 +1227,19 @@ let param_list =
   arg_list "PARAMS" "List of parameters." Arg.string
 
 (* Options common to all commands *)
-let global_options =
+let global_options cli =
   let section = global_option_section in
   let git_version =
-    mk_flag ~section ["git-version"]
+    mk_flag ~cli valid_cli_legacy ~section ["git-version"]
       "Print the git version of opam, if set (i.e. you are using a development \
        version), and exit."
   in
   let debug =
-    mk_flag ~section ["debug"]
+    mk_flag ~cli valid_cli_legacy ~section ["debug"]
       "Print debug message to stderr. \
        This is equivalent to setting $(b,\\$OPAMDEBUG) to \"true\"." in
   let debug_level =
-    mk_opt ~section ["debug-level"] "LEVEL"
+    mk_opt ~cli valid_cli_legacy ~section ["debug-level"] "LEVEL"
       "Like $(b,--debug), but allows specifying the debug level ($(b,--debug) \
        sets it to 1). Equivalent to setting $(b,\\$OPAMDEBUG) to a positive \
        integer."
@@ -1027,15 +1251,15 @@ let global_options =
             $(i,patch) etc.) Repeating $(i,n) times is equivalent to setting \
             $(b,\\$OPAMVERBOSE) to \"$(i,n)\".") in
   let quiet =
-    mk_flag ~section ["q";"quiet"] "Disables $(b,--verbose)." in
+    mk_flag ~cli valid_cli_legacy ~section ["q";"quiet"] "Disables $(b,--verbose)." in
   let color =
-    mk_tristate_opt ~section ["color"] "WHEN"
+    mk_tristate_opt ~cli valid_cli_legacy ~section ["color"] "WHEN"
       (Printf.sprintf "Colorize the output. $(docv) must be %s."
          (Arg.doc_alts_enum when_enum)) in
   (* The --cli option is pre-processed, because it has to be able to appear
      before sub-commands. The one here is present only for --help. *)
   let cli_arg =
-    mk_opt ~section ["cli"] "MAJOR.MINOR"
+    mk_opt ~cli valid_cli_legacy ~section ["cli"] "MAJOR.MINOR"
       "Use the command-line interface syntax and semantics of $(docv). \
        Intended for any persistent use of opam (scripts, blog posts, etc.), \
        any version of opam in the same MAJOR series will behave as for the \
@@ -1044,35 +1268,35 @@ let global_options =
        to $(i,MAJOR.MINOR)."
       Arg.string (OpamCLIVersion.to_string OpamCLIVersion.current) in
   let switch =
-    mk_opt ~section ["switch"]
+    mk_opt ~cli valid_cli_legacy ~section ["switch"]
       "SWITCH" "Use $(docv) as the current compiler switch. \
                 This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
       Arg.(some string) None in
   let yes =
-    mk_flag ~section ["y";"yes"]
+    mk_flag ~cli valid_cli_legacy ~section ["y";"yes"]
       "Answer yes to all yes/no questions without prompting. \
        This is equivalent to setting $(b,\\$OPAMYES) to \"true\"." in
   let strict =
-    mk_flag ~section ["strict"]
+    mk_flag ~cli valid_cli_legacy ~section ["strict"]
       "Fail whenever an error is found in a package definition \
        or a configuration file. The default is to continue silently \
        if possible." in
   let root =
-    mk_opt ~section ["root"]
+    mk_opt ~cli valid_cli_legacy ~section ["root"]
       "ROOT" "Use $(docv) as the current root path. \
               This is equivalent to setting $(b,\\$OPAMROOT) to $(i,ROOT)."
       Arg.(some dirname) None in
   let d_no_aspcud =
-    mk_flag ~section ["no-aspcud"]
+    mk_flag ~cli valid_cli_legacy ~section ["no-aspcud"]
     "Deprecated."
   in
   let use_internal_solver =
-    mk_flag ~section ["use-internal-solver"]
+    mk_flag ~cli valid_cli_legacy ~section ["use-internal-solver"]
       "Disable any external solver, and use the built-in one (this requires \
        that opam has been compiled with a built-in solver). This is equivalent \
        to setting $(b,\\$OPAMNOASPCUD) or $(b,\\$OPAMUSEINTERNALSOLVER)." in
   let external_solver =
-    mk_opt ~section ["solver"] "CMD"
+    mk_opt ~cli valid_cli_legacy ~section ["solver"] "CMD"
       (Printf.sprintf
          "Specify the CUDF solver to use for resolving package installation \
           problems. This is either a predefined solver (this version of opam \
@@ -1084,7 +1308,7 @@ let global_options =
             (OpamCudfSolver.default_solver_selection)))
       Arg.(some string) None in
   let solver_preferences =
-    mk_opt ~section ["criteria"] "CRITERIA"
+    mk_opt ~cli valid_cli_legacy ~section ["criteria"] "CRITERIA"
       ("Specify user $(i,preferences) for dependency solving for this run. \
         Overrides both $(b,\\$OPAMCRITERIA) and $(b,\\$OPAMUPGRADECRITERIA). \
         For details on the supported language, and the external solvers available, see \
@@ -1093,19 +1317,19 @@ let global_options =
         $(i,  http://www.dicosmo.org/Articles/usercriteria.pdf).")
       Arg.(some string) None in
   let cudf_file =
-    mk_opt ~section ["cudf"] "FILENAME"
+    mk_opt ~cli valid_cli_legacy ~section ["cudf"] "FILENAME"
       "Debug option: Save the CUDF requests sent to the solver to \
        $(docv)-<n>.cudf."
       Arg.(some string) None in
   let best_effort =
-    mk_flag ~section ["best-effort"]
+    mk_flag ~cli valid_cli_legacy ~section ["best-effort"]
       "Don't fail if all requested packages can't be installed: try to install \
        as many as possible. Note that not all external solvers may support \
        this option (recent versions of $(i,aspcud) or $(i,mccs) should). This \
        is equivalent to setting $(b,\\$OPAMBESTEFFORT) environment variable."
   in
   let safe_mode =
-    mk_flag ~section ["readonly"; "safe"]
+    mk_flag ~cli valid_cli_legacy ~section ["readonly"; "safe"]
       "Make sure nothing will be automatically updated or rewritten. Useful \
        for calling from completion scripts, for example. Will fail whenever \
        such an operation is needed ; also avoids waiting for locks, skips \
@@ -1113,7 +1337,7 @@ let global_options =
        This is equivalent to set environment variable $(b,\\$OPAMSAFE)."
   in
   let json_flag =
-    mk_opt ~section ["json"] "FILENAME"
+    mk_opt ~cli valid_cli_legacy ~section ["json"] "FILENAME"
       "Save the results of the opam run in a computer-readable file. If the \
        filename contains the character `%', it will be replaced by an index \
        that doesn't overwrite an existing file. Similar to setting the \
@@ -1121,7 +1345,7 @@ let global_options =
       Arg.(some string) None
   in
   let no_auto_upgrade =
-    mk_flag ~section ["no-auto-upgrade"]
+    mk_flag ~cli valid_cli_legacy ~section ["no-auto-upgrade"]
       "When configuring or updating a repository that is written for an \
        earlier opam version (1.2), opam internally converts it to the current \
        format. This disables this behaviour. Note that repositories should \
@@ -1131,7 +1355,7 @@ let global_options =
        upgrade [--mirror URL]) when possible."
   in
   let working_dir =
-    mk_flag ~section ["working-dir"; "w"]
+    mk_flag ~cli valid_cli_legacy ~section ["working-dir"; "w"]
       "Whenever updating packages that are bound to a local, \
        version-controlled directory, update to the current working state of \
        their source instead of the last committed state, or the ref they are \
@@ -1141,7 +1365,7 @@ let global_options =
        It can also be set with $(b,\\$OPAMWORKINGDIR). "
   in
   let ignore_pin_depends =
-    mk_flag ~section ["ignore-pin-depends"]
+    mk_flag ~cli valid_cli_legacy ~section ["ignore-pin-depends"]
       "Ignore extra pins required by packages that get pinned, either manually \
        through $(i,opam pin) or through $(i,opam install DIR). This is \
        equivalent to setting $(b,IGNOREPINDEPENDS=true)."
@@ -1155,8 +1379,8 @@ let global_options =
         $d_no_aspcud $cli_arg)
 
 (* lock options *)
-let locked section =
-  mk_flag ~section ["locked"]
+let locked cli section =
+  mk_flag ~cli valid_cli_legacy ~section ["locked"]
     "In commands that use opam files found from pinned sources, if a variant \
      of the file with an added .$(i,locked) extension is found (e.g. \
      $(b,foo.opam.locked) besides $(b,foo.opam)), that will be used instead. \
@@ -1166,8 +1390,8 @@ let locked section =
      of the dependencies currently installed on the host. This is equivalent \
      to setting the $(b,\\$OPAMLOCKED) environment variable. Note that this \
      option doesn't generally affect already pinned packages."
-let lock_suffix section =
-  mk_opt ~section ["lock-suffix"] "SUFFIX"
+let lock_suffix cli section =
+  mk_opt ~cli valid_cli_legacy ~section ["lock-suffix"] "SUFFIX"
     "Set locked files suffix to $(i,SUFFIX)."
     Arg.(string) ("locked")
 
@@ -1177,14 +1401,14 @@ let man_build_option_section =
   [
     `S build_option_section;
   ]
-let build_options =
+let build_options cli =
   let section = build_option_section in
   let keep_build_dir =
-    mk_flag ~section ["b";"keep-build-dir"]
+    mk_flag ~cli valid_cli_legacy ~section ["b";"keep-build-dir"]
       "Keep the build directories after compiling packages. \
        This is equivalent to setting $(b,\\$OPAMKEEPBUILDDIR) to \"true\"." in
   let reuse_build_dir =
-    mk_flag ~section ["reuse-build-dir"]
+    mk_flag ~cli valid_cli_legacy ~section ["reuse-build-dir"]
       "Reuse existing build directories (kept by using $(b,--keep-build-dir)), \
        instead of compiling from a fresh clone of the source. This can be \
        faster, but also lead to failures if the build systems of the packages \
@@ -1192,7 +1416,7 @@ let build_options =
        setting $(b,\\$OPAMREUSEBUILDDIR) to \"true\"."
   in
   let inplace_build =
-    mk_flag ~section ["inplace-build"]
+    mk_flag ~cli valid_cli_legacy ~section ["inplace-build"]
       "When compiling a package which has its source bound to a local \
        directory, process the build and install actions directly in that \
        directory, rather than in a clean copy handled by opam. This only \
@@ -1200,56 +1424,56 @@ let build_options =
        This is equivalent to setting $(b,\\$OPAMINPLACEBUILD) to \"true\"."
   in
   let no_checksums =
-    mk_flag ~section ["no-checksums"]
+    mk_flag ~cli valid_cli_legacy ~section ["no-checksums"]
       "Do not verify the checksum of downloaded archives.\
        This is equivalent to setting $(b,\\$OPAMNOCHECKSUMS) to \"true\"." in
   let req_checksums =
-    mk_flag ~section ["require-checksums"]
+    mk_flag ~cli valid_cli_legacy ~section ["require-checksums"]
       "Reject the installation of packages that don't provide a checksum for the upstream archives. \
        This is equivalent to setting $(b,\\$OPAMREQUIRECHECKSUMS) to \"true\"." in
   let build_test =
-    mk_flag ~section ["t";"with-test";"build-test"]
+    mk_flag ~cli valid_cli_legacy ~section ["t";"with-test";"build-test"]
       "Build and $(b,run) the package unit-tests. This only affects packages \
        listed on the command-line. The $(b,--build-test) form is deprecated as \
        this also affects installation. This is equivalent to setting \
        $(b,\\$OPAMWITHTEST) (or the deprecated $(b,\\$OPAMBUILDTEST)) to \
        \"true\"." in
   let build_doc =
-    mk_flag ~section ["d";"with-doc";"build-doc"]
+    mk_flag ~cli valid_cli_legacy ~section ["d";"with-doc";"build-doc"]
       "Build the package documentation. This only affects packages listed on \
        the command-line. The $(b,--build-doc) form is deprecated as this does \
        also installation. This is equivalent to setting $(b,\\$OPAMWITHDOC) \
        (or the deprecated $(b,\\$OPAMBUILDDOC)) to \"true\"." in
   let make =
-    mk_opt ~section ["m";"make"] "MAKE"
+    mk_opt ~cli valid_cli_legacy ~section ["m";"make"] "MAKE"
       "Use $(docv) as the default 'make' command. Deprecated: use $(b,opam \
        config set[-global] make MAKE) instead. Has no effect if the $(i,make) \
        variable is defined."
       Arg.(some string) None in
   let show =
-    mk_flag ~section ["show-actions"]
+    mk_flag ~cli valid_cli_legacy ~section ["show-actions"]
       "Call the solver and display the actions. Don't perform any changes. \
       This is equivalent to setting $(b,\\$OPAMSHOW)." in
   let dryrun =
-    mk_flag ~section ["dry-run"]
+    mk_flag ~cli valid_cli_legacy ~section ["dry-run"]
       "Simulate the command, but don't actually perform any changes. This also \
        can be set with environment variable $(b,\\$OPAMDEBUG)." in
   let skip_update =
-    mk_flag ~section ["skip-updates"]
+    mk_flag ~cli valid_cli_legacy ~section ["skip-updates"]
       "When running an install, upgrade or reinstall on source-pinned \
        packages, they are normally updated from their origin first. This flag \
        disables that behaviour and will keep them to their version in cache. \
        This is equivalent to setting $(b,\\$OPAMSKIPUPDATE)."
   in
   let fake =
-    mk_flag ~section ["fake"]
+    mk_flag ~cli valid_cli_legacy ~section ["fake"]
       "This option registers the actions into the opam database, without \
        actually performing them. \
        WARNING: This option is dangerous and likely to break your opam \
        environment. You probably want $(b,--dry-run). You've been $(i,warned)."
   in
   let ignore_constraints_on =
-    mk_opt ~section ["ignore-constraints-on"] "PACKAGES"
+    mk_opt ~cli valid_cli_legacy ~section ["ignore-constraints-on"] "PACKAGES"
       "Forces opam to ignore version constraints on all dependencies to the \
        listed packages. This can be used to test compatibility, but expect \
        builds to break when using this. Note that version constraints on \
@@ -1257,21 +1481,21 @@ let build_options =
        to setting $(b,\\$OPAMIGNORECONSTRAINTS)."
       Arg.(some (list package_name)) None ~vopt:(Some []) in
   let unlock_base =
-    mk_flag ~section ["update-invariant"; "unlock-base"]
+    mk_flag ~cli valid_cli_legacy ~section ["update-invariant"; "unlock-base"]
       "Allow changes to the packages set as switch base (typically, the main \
        compiler). Use with caution. This is equivalent to setting the \
        $(b,\\$OPAMUNLOCKBASE) environment variable" in
-  let locked = locked section in
-  let lock_suffix = lock_suffix section in
+  let locked = locked cli section in
+  let lock_suffix = lock_suffix cli section in
   let assume_depexts =
-    mk_flag ~section ["assume-depexts"]
+    mk_flag ~cli valid_cli_legacy ~section ["assume-depexts"]
       "Skip the installation step for any missing system packages, and attempt \
        to proceed with compilation of the opam packages anyway. If the \
        installation is successful, opam won't prompt again about these system \
        packages. Only meaningful if external dependency handling is enabled."
   in
   let no_depexts =
-    mk_flag ~section ["no-depexts"]
+    mk_flag ~cli valid_cli_legacy ~section ["no-depexts"]
       "Temporarily disables handling of external dependencies. This can be \
        used if a package is not available on your system package manager, but \
        you installed the required dependency by hand. Implies \
@@ -1280,12 +1504,12 @@ let build_options =
   Term.(const create_build_options
         $keep_build_dir $reuse_build_dir $inplace_build $make
         $no_checksums $req_checksums $build_test $build_doc $show $dryrun
-        $skip_update $fake $jobs_flag $ignore_constraints_on
+        $skip_update $fake $jobs_flag cli $ignore_constraints_on
         $unlock_base $locked $lock_suffix $assume_depexts $no_depexts)
 
 (* Option common to install commands *)
-let assume_built =
-  mk_flag  ["assume-built"]
+let assume_built cli =
+  mk_flag ~cli valid_cli_legacy  ["assume-built"]
     "For use on locally-pinned packages: assume they have already \
      been correctly built, and only run their installation \
      instructions, directly from their source directory. This \
@@ -1296,16 +1520,16 @@ let assume_built =
 (* Options common to all path based/related commands, e.g. (un)pin, upgrade,
    remove, (re)install.
    Disabled *)
-let recurse = Term.const false
+let recurse _cli = Term.const false
 
 (*
-  mk_flag ["recursive"]
+  mk_flag ~cli valid_cli_legacy ["recursive"]
     "Allow recursive lookups of (b,*.opam) files. Cf. $(i,--subpath) also."
 *)
 
-let subpath = Term.const None
+let subpath _cli = Term.const None
 (*
-  mk_opt ["subpath"] "PATH"
+  mk_opt ~cli valid_cli_legacy ["subpath"] "PATH"
     "$(b,*.opam) files are retrieved from the given sub directory instead of \
       top directory. Sources are then taken from the targeted sub directory, \
       internally only this subdirectory is copied/fetched.  It can be combined \
@@ -1315,20 +1539,20 @@ let subpath = Term.const None
 
 let package_selection_section = "PACKAGE SELECTION OPTIONS"
 
-let package_selection =
+let package_selection cli =
   let section = package_selection_section in
   let depends_on =
-    mk_opt_all ["depends-on"] "PACKAGES" ~section
+    mk_opt_all ~cli valid_cli_legacy ["depends-on"] "PACKAGES" ~section
       "List only packages that depend on one of (comma-separated) $(b,PACKAGES)."
       Arg.(list atom)
   in
   let required_by =
-    mk_opt_all ["required-by"] "PACKAGES" ~section
+    mk_opt_all ~cli valid_cli_legacy ["required-by"] "PACKAGES" ~section
       "List only the dependencies of (comma-separated) $(b,PACKAGES)."
       Arg.(list atom)
   in
   let conflicts_with =
-    mk_opt_all ["conflicts-with"] "PACKAGES" ~section
+    mk_opt_all ~cli valid_cli_legacy ["conflicts-with"] "PACKAGES" ~section
       "List packages that have declared conflicts with at least one of the \
        given list. This includes conflicts defined from the packages in the \
        list, from the other package, or by a common $(b,conflict-class:) \
@@ -1336,12 +1560,12 @@ let package_selection =
       Arg.(list package_with_version)
   in
   let coinstallable_with =
-    mk_opt_all ["coinstallable-with"] "PACKAGES" ~section
+    mk_opt_all ~cli valid_cli_legacy ["coinstallable-with"] "PACKAGES" ~section
       "Only list packages that are compatible with all of $(b,PACKAGES)."
       Arg.(list package_with_version)
   in
   let resolve =
-    mk_opt_all ["resolve"] "PACKAGES" ~section
+    mk_opt_all ~cli valid_cli_legacy ["resolve"] "PACKAGES" ~section
       "Restrict to a solution to install (comma-separated) $(docv), $(i,i.e.) \
        a consistent set of packages including those. This is subtly different \
        from `--required-by --recursive`, which is more predictable and can't \
@@ -1356,42 +1580,42 @@ let package_selection =
       Arg.(list atom)
   in
   let recursive =
-    mk_flag ["recursive"] ~section
+    mk_flag ~cli valid_cli_legacy ["recursive"] ~section
       "With `--depends-on' and `--required-by', display all transitive \
        dependencies rather than just direct dependencies." in
   let depopts =
-    mk_flag ["depopts"]  ~section
+    mk_flag ~cli valid_cli_legacy ["depopts"]  ~section
       "Include optional dependencies in dependency requests."
   in
   let nobuild =
-    mk_flag ["nobuild"]  ~section
+    mk_flag ~cli valid_cli_legacy ["nobuild"]  ~section
       "Exclude build dependencies (they are included by default)."
   in
   let post =
-    mk_flag ["post"]  ~section
+    mk_flag ~cli valid_cli_legacy ["post"]  ~section
       "Include dependencies tagged as $(i,post)."
   in
   let dev =
-    mk_flag ["dev"]  ~section
+    mk_flag ~cli valid_cli_legacy ["dev"]  ~section
       "Include development packages in dependencies."
   in
   let doc_flag =
-    mk_flag ["doc";"with-doc"] ~section
+    mk_flag ~cli valid_cli_legacy ["doc";"with-doc"] ~section
       "Include doc-only dependencies."
   in
   let test =
-    mk_flag ["t";"test";"with-test"] ~section
+    mk_flag ~cli valid_cli_legacy ["t";"test";"with-test"] ~section
       "Include test-only dependencies."
   in
   let field_match =
-    mk_opt_all ["field-match"] "FIELD:PATTERN" ~section
+    mk_opt_all ~cli valid_cli_legacy ["field-match"] "FIELD:PATTERN" ~section
       "Filter packages with a match for $(i,PATTERN) on the given $(i,FIELD)"
       Arg.(pair ~sep:':' string string)
   in
   let has_flag =
-    mk_opt_all ["has-flag"] "FLAG" ~section
-      ("Only include packages which have the given flag set. Package flags are \
-        one of: "^
+    mk_opt_all ~cli valid_cli_legacy ["has-flag"] "FLAG" ~section
+      ("Only include packages which have the given flag set. \
+        Package flags are one of: "^
        (OpamStd.List.concat_map " "
           (Printf.sprintf "$(b,%s)" @* string_of_pkg_flag)
           all_package_flags))
@@ -1405,7 +1629,7 @@ let package_selection =
          Format.pp_print_string fmt (string_of_pkg_flag flag))
   in
   let has_tag =
-    mk_opt_all ["has-tag"] "TAG" ~section
+    mk_opt_all ~cli valid_cli_legacy ["has-tag"] "TAG" ~section
       "Only includes packages which have the given tag set"
       Arg.string
   in
@@ -1449,9 +1673,10 @@ let package_selection =
 
 let package_listing_section = "OUTPUT FORMAT OPTIONS"
 
-let package_listing =
+let package_listing cli =
   let section = package_listing_section in
-  let all_versions = mk_flag ["all-versions";"V"] ~section
+  let all_versions = mk_flag ~cli valid_cli_legacy ["all-versions";"V"]
+      ~section
       "Normally, when multiple versions of a package match, only one is shown \
        in the output (the installed one, the pinned-to one, or, failing that, \
        the highest one available or the highest one). This flag disables this \
@@ -1462,18 +1687,18 @@ let package_listing =
        command-line."
   in
   let print_short =
-    mk_flag ["short";"s"] ~section
+    mk_flag ~cli valid_cli_legacy ["short";"s"] ~section
       "Don't print a header, and sets the default columns to $(b,name) only. \
        If you need package versions included, use $(b,--columns=package) \
        instead"
   in
   let sort =
-    mk_flag ["sort";"S"] ~section
+    mk_flag ~cli valid_cli_legacy ["sort";"S"] ~section
       "Sort the packages in dependency order (i.e. an order in which they \
        could be individually installed.)"
   in
   let columns =
-    mk_opt ["columns"] "COLUMNS" ~section
+    mk_opt ~cli valid_cli_legacy ["columns"] "COLUMNS" ~section
       (Printf.sprintf "Select the columns to display among: %s.\n\
                        The default is $(b,name) when $(i,--short) is present \
                        and %s otherwise."
@@ -1484,15 +1709,16 @@ let package_listing =
             OpamListCommand.default_list_format))
       Arg.(some & opamlist_columns) None
   in
-  let normalise = mk_flag ["normalise"] ~section
+  let normalise = mk_flag ~cli valid_cli_legacy ["normalise"] ~section
       "Print the values of opam fields normalised"
   in
-  let wrap = mk_flag ["wrap"] ~section
+  let wrap = mk_flag ~cli valid_cli_legacy ["wrap"] ~section
       "Wrap long lines, the default being to truncate when displaying on a \
        terminal, or to keep as is otherwise"
   in
   let separator =
-    mk_opt ["separator"] "STRING" ~section "Set the column-separator string"
+    mk_opt ~cli valid_cli_legacy ["separator"] "STRING" ~section
+      "Set the column-separator string"
       Arg.string " "
   in
   let format all_versions short sort columns normalise wrap separator =
