@@ -67,7 +67,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Admin
-  *
+  * Use the archive caches when running `opam admin cache` [#4384 @AltGr - fix #4352]
 
 ## Opam installer
   *

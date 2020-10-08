@@ -124,9 +124,24 @@ let index_command cli =
   Term.(const cmd $ global_options cli $ urls_txt_arg),
   OpamArg.term_info command ~doc ~man
 
+let cache_urls repo_root repo_def =
+  let global_dl_cache =
+    OpamStd.Option.Op.(OpamStateConfig.(load !r.root_dir) +!
+                       OpamFile.Config.empty)
+    |> OpamFile.Config.dl_cache
+  in
+  let repo_dl_cache =
+    OpamStd.List.filter_map (fun rel ->
+        if OpamStd.String.contains ~sub:"://" rel
+        then OpamUrl.parse_opt ~handle_suffix:false rel
+        else Some OpamUrl.Op.(OpamUrl.of_string
+                                (OpamFilename.Dir.to_string repo_root) / rel))
+      (OpamFile.Repo.dl_cache repo_def)
+  in
+  repo_dl_cache @ global_dl_cache
 
 (* Downloads all urls of the given package to the given cache_dir *)
-let package_files_to_cache repo_root cache_dir ?link (nv, prefix) =
+let package_files_to_cache repo_root cache_dir cache_urls ?link (nv, prefix) =
   match
     OpamFileTools.read_opam
       (OpamRepositoryPath.packages repo_root prefix nv)
@@ -145,7 +160,7 @@ let package_files_to_cache repo_root cache_dir ?link (nv, prefix) =
         Done errors
       | (first_checksum :: _) as checksums ->
         OpamRepository.pull_file_to_cache label
-          ~cache_dir
+          ~cache_urls ~cache_dir
           checksums
           (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
         @@| fun r -> match OpamRepository.report_fetch_result nv r with
@@ -218,12 +233,13 @@ let cache_command cli =
     let repo_def = OpamFile.Repo.safe_read repo_file in
 
     let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
+    let cache_urls = cache_urls repo_root repo_def in
 
     let errors =
       OpamParallel.reduce ~jobs
         ~nil:OpamPackage.Map.empty
         ~merge:(OpamPackage.Map.union (fun a _ -> a))
-        ~command:(package_files_to_cache repo_root cache_dir ?link)
+        ~command:(package_files_to_cache repo_root cache_dir cache_urls ?link)
         (List.sort (fun (nv1,_) (nv2,_) ->
              (* Some pseudo-randomisation to avoid downloading all files from
                 the same host simultaneously *)
@@ -381,13 +397,8 @@ let add_hashes_command cli =
     OpamArg.apply_global_options global_options;
     let repo_root = checked_repo_root () in
     let cache_urls =
-      let repo_file = OpamRepositoryPath.repo repo_root in
-      OpamStd.List.filter_map (fun rel ->
-          if OpamStd.String.contains ~sub:"://" rel
-          then OpamUrl.parse_opt ~handle_suffix:false rel
-          else Some OpamUrl.Op.(OpamUrl.of_string
-                                  (OpamFilename.Dir.to_string repo_root) / rel))
-        (OpamFile.Repo.dl_cache (OpamFile.Repo.safe_read repo_file))
+      cache_urls repo_root
+        (OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo_root))
     in
     let pkg_prefixes =
       let pkgs_map = OpamRepository.packages_with_prefixes repo_root in
