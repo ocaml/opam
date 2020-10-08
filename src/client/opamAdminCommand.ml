@@ -299,8 +299,8 @@ let add_hashes_command cli =
             hash_kinds))
   in
   let packages =
-    OpamArg.mk_opt ~cli OpamArg.valid_cli_legacy ["p";"packages"] "PACKAGES"
-      "Only add hashes for the given packages"
+    OpamArg.mk_opt ~cli OpamArg.(Valid_since cli2_1) ["p";"packages"]
+      "PACKAGES" "Only add hashes for the given packages"
       Arg.(list OpamArg.package) []
   in
   let replace_arg =

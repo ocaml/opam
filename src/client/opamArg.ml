@@ -785,6 +785,8 @@ type flag_validity =
 
 let cli2_0 = OpamCLIVersion.of_string "2.0"
 let cli2_1 = OpamCLIVersion.of_string "2.1"
+let cli2_3 = OpamCLIVersion.of_string "2.3"
+let cli3_0 = OpamCLIVersion.of_string "3.0"
 let valid_cli_legacy = Valid_since cli2_0
 
 let update_doc_w_cli doc ~cli = function
@@ -1287,8 +1289,7 @@ let global_options cli =
               This is equivalent to setting $(b,\\$OPAMROOT) to $(i,ROOT)."
       Arg.(some dirname) None in
   let d_no_aspcud =
-    mk_flag ~cli valid_cli_legacy ~section ["no-aspcud"]
-    "Deprecated."
+    mk_flag ~cli (Deprecated (cli2_0, cli2_1, None)) ~section ["no-aspcud"] ""
   in
   let use_internal_solver =
     mk_flag ~cli valid_cli_legacy ~section ["use-internal-solver"]
@@ -1391,7 +1392,7 @@ let locked cli section =
      to setting the $(b,\\$OPAMLOCKED) environment variable. Note that this \
      option doesn't generally affect already pinned packages."
 let lock_suffix cli section =
-  mk_opt ~cli valid_cli_legacy ~section ["lock-suffix"] "SUFFIX"
+  mk_opt ~cli (Valid_since cli2_1) ~section ["lock-suffix"] "SUFFIX"
     "Set locked files suffix to $(i,SUFFIX)."
     Arg.(string) ("locked")
 
@@ -1481,21 +1482,26 @@ let build_options cli =
        to setting $(b,\\$OPAMIGNORECONSTRAINTS)."
       Arg.(some (list package_name)) None ~vopt:(Some []) in
   let unlock_base =
-    mk_flag ~cli valid_cli_legacy ~section ["update-invariant"; "unlock-base"]
-      "Allow changes to the packages set as switch base (typically, the main \
-       compiler). Use with caution. This is equivalent to setting the \
-       $(b,\\$OPAMUNLOCKBASE) environment variable" in
+    mk_vflag ~cli ~section false ([
+        Deprecated (cli2_1, cli2_3, Some "--update-invariant"), true, ["unlock-base"] ;
+        Valid_since cli2_1, true, ["update-invariant"]
+      ] |> List.map (fun (c,v,f) ->
+        c,v,f,
+        "Allow changes to the packages set as switch base (typically, the main \
+         compiler). Use with caution. This is equivalent to setting the \
+         $(b,\\$OPAMUNLOCKBASE) environment variable"))
+  in
   let locked = locked cli section in
   let lock_suffix = lock_suffix cli section in
   let assume_depexts =
-    mk_flag ~cli valid_cli_legacy ~section ["assume-depexts"]
+    mk_flag ~cli (Valid_since cli2_1) ~section ["assume-depexts"]
       "Skip the installation step for any missing system packages, and attempt \
        to proceed with compilation of the opam packages anyway. If the \
        installation is successful, opam won't prompt again about these system \
        packages. Only meaningful if external dependency handling is enabled."
   in
   let no_depexts =
-    mk_flag ~cli valid_cli_legacy ~section ["no-depexts"]
+    mk_flag ~cli (Valid_since cli2_1) ~section ["no-depexts"]
       "Temporarily disables handling of external dependencies. This can be \
        used if a package is not available on your system package manager, but \
        you installed the required dependency by hand. Implies \

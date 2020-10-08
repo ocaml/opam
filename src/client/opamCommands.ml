@@ -720,7 +720,8 @@ let show cli =
        packages"
   in
   let file =
-    mk_opt ~cli valid_cli_legacy ["file"] "FILE" "DEPRECATED: see $(i,--just-file)"
+    mk_opt ~cli (Deprecated (cli2_0, cli2_1, Some "--just-file"))
+      ["file"] "FILE" ""
       Arg.(some existing_filename_or_dash) None
   in
   let normalise =
@@ -733,7 +734,7 @@ let show cli =
       "Don't output linting warnings or errors when reading from files"
   in
   let just_file =
-    mk_flag ~cli valid_cli_legacy ["just-file"]
+    mk_flag ~cli (Valid_since cli2_1) ["just-file"]
       "Load and display information from the given files (allowed \
        $(i,PACKAGES) are file or directory paths), without consideration for \
        the repositories or state of the package. This implies $(b,--raw) unless \
@@ -741,11 +742,11 @@ let show cli =
        PACKAGES argument is given, read opam file from stdin."
   in
   let all_versions =
-    mk_flag ~cli valid_cli_legacy ["all-versions"]
+    mk_flag ~cli (Valid_since cli2_1) ["all-versions"]
       "Display information of all packages matching $(i,PACKAGES), not \
        restrained to a single package matching $(i,PACKAGES) constraints."
   in
-  let sort = mk_flag ~cli valid_cli_legacy ["sort"] "Sort opam fields" in
+  let sort = mk_flag ~cli (Valid_since cli2_1) ["sort"] "Sort opam fields" in
   let opam_files_in_dir d =
     match OpamPinned.files_in_source d with
     | [] -> []
@@ -878,7 +879,7 @@ let show cli =
 module Var_Option_Common = struct
 
   let global cli =
-    mk_flag ~cli valid_cli_legacy ["global"] "Act on global configuration"
+    mk_flag ~cli (Valid_since cli2_1) ["global"] "Act on global configuration"
 
   let var_option global global_options cmd var =
     let switch_set = (fst global_options).opt_switch <> None in
@@ -1100,17 +1101,6 @@ let config cli =
     "Reverts environment changes made by opam, e.g. $(b,eval \\$(opam config \
      revert-env)) undoes what $(b,eval \\$(opam config env\\)) did, as much as \
      possible.";
-    valid_cli_legacy, "exec", `exec, ["[--] COMMAND"; "[ARG]..."],
-    "Execute $(i,COMMAND) with the correct environment variables. This command \
-     can be used to cross-compile between switches using $(b,opam config exec \
-     --switch=SWITCH -- COMMAND ARG1 ... ARGn). Opam expansion takes place in \
-     command and args. If no switch is present on the command line or in the \
-     $(i,OPAMSWITCH) environment variable, $(i,OPAMSWITCH) is not set in \
-     $(i,COMMAND)'s environment. Can also be accessed through $(b,opam exec).";
-    valid_cli_legacy, "var", `var, ["VAR"],
-    "Return the value associated with variable $(i,VAR), looking in switch \
-     first, global if not found. Package variables can be accessed with the \
-     syntax $(i,pkg:var). Can also be accessed through $(b,opam var VAR)";
     valid_cli_legacy, "list", `list, ["[PACKAGE]..."],
     "Without argument, prints a documented list of all available variables. \
      With $(i,PACKAGE), lists all the variables available for these packages. \
@@ -1126,14 +1116,32 @@ let config cli =
     "Outputs the current available package universe in CUDF format.";
     valid_cli_legacy, "pef-universe", `pef, ["[FILE]"],
     "Outputs the current package universe in PEF format.";
-    valid_cli_legacy, "set", `set, ["VAR";"VALUE"],
-    "Deprecated, see $(b,set-var).";
-    valid_cli_legacy, "unset", `unset, ["VAR"],
-    "Deprecated, see $(b,set-var).";
-    valid_cli_legacy, "set-global", `set_global, ["VAR";"VALUE"],
-    "Deprecated, see $(b,set-var).";
-    valid_cli_legacy, "unset-global", `unset_global, ["VAR"],
-    "Deprecated, see $(b,set-var).";
+    (* Deprecated options *)
+    Deprecated (cli2_1, cli3_0, Some "opam exec"),
+    "exec", `exec, ["[--] COMMAND"; "[ARG]..."],
+    "Execute $(i,COMMAND) with the correct environment variables. This command \
+     can be used to cross-compile between switches using $(b,opam config exec \
+     --switch=SWITCH -- COMMAND ARG1 ... ARGn). Opam expansion takes place in \
+     command and args. If no switch is present on the command line or in the \
+     $(i,OPAMSWITCH) environment variable, $(i,OPAMSWITCH) is not set in \
+     $(i,COMMAND)'s environment. Can also be accessed through $(b,opam exec).";
+    Deprecated (cli2_1, cli3_0, Some "opam var"),
+    "set", `set, ["VAR";"VALUE"],
+    "Set switch variable";
+    Deprecated (cli2_1, cli3_0, Some "opam var"),
+    "unset", `unset, ["VAR"],
+    "Unset switch variable";
+    Deprecated (cli2_1, cli3_0, Some "opam var"),
+    "set-global", `set_global, ["VAR";"VALUE"],
+    "Set global variable";
+    Deprecated (cli2_1, cli3_0, Some "opam var"),
+    "unset-global", `unset_global, ["VAR"],
+    "Unset global variable";
+    Deprecated (cli2_1, cli3_0, Some "opam var"),
+    "var", `var, ["VAR"],
+    "Return the value associated with variable $(i,VAR), looking in switch \
+     first, global if not found. Package variables can be accessed with the \
+     syntax $(i,pkg:var). Can also be accessed through $(b,opam var VAR)";
   ] in
   let man = [
     `S Manpage.s_description;
@@ -1176,10 +1184,6 @@ let config cli =
               OpamConfigCommand.print_eval_env
                 ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
                 (OpamEnv.add [] [])))
-    | Some `exec, (_::_ as c) ->
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      `Ok (OpamConfigCommand.exec
-             gt ~set_opamroot ~set_opamswitch ~inplace_path c)
     | Some `list, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.vars_list gt)
@@ -1327,6 +1331,10 @@ let config cli =
           `Ok ()
         with e -> print "read-state" "%s" (Printexc.to_string e); `Ok ())
     (* deprecated *)
+    | Some `exec, (_::_ as c) ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      `Ok (OpamConfigCommand.exec
+             gt ~set_opamroot ~set_opamswitch ~inplace_path c)
     | Some (`set | `unset as cmd), var::value ->
       let args =
         match cmd,value with
@@ -1338,8 +1346,8 @@ let config cli =
        | None ->
          bad_subcommand ~cli commands ("config", command, params)
        | Some opt_value ->
-         OpamConsole.warning
-           "Subcommand set is deprecated. Use opam var %s=%s instead."
+         OpamConsole.errmsg
+           "Use opam var %s=%s instead.\n"
            var (OpamStd.Option.to_string (fun v -> v) opt_value);
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          let value =
@@ -1359,9 +1367,8 @@ let config cli =
        | None ->
          bad_subcommand ~cli commands ("config", command, params)
        | Some opt_value ->
-         OpamConsole.warning
-           "Subcommand set-global is deprecated. \
-            Use opam var %s=%s --global instead."
+         OpamConsole.errmsg
+           "Use opam var %s=%s --global instead.\n"
            var (OpamStd.Option.to_string (fun v -> v) opt_value);
          OpamGlobalState.with_ `Lock_write @@ fun gt ->
          let value =
@@ -1430,9 +1437,9 @@ let env cli =
       "Output the environment with updates done by opam reverted instead."
   in
   let check =
-    mk_flag ~cli valid_cli_legacy ["check"]
-      "Exits with 0 if the environment is already up-to-date, 1 otherwise, after \
-       printing the list of not up-to-date variables."
+    mk_flag ~cli (Valid_since cli2_1) ["check"]
+      "Exits with 0 if the environment is already up-to-date, 1 otherwise, \
+       after printing the list of not up-to-date variables."
   in
   let env
       global_options shell sexp inplace_path set_opamroot set_opamswitch
@@ -1509,7 +1516,7 @@ let install cli =
       "Install all its dependencies, but don't actually install the package."
   in
   let ignore_conflicts =
-    mk_flag ~cli valid_cli_legacy ["ignore-conflicts"]
+    mk_flag ~cli (Valid_since cli2_1) ["ignore-conflicts"]
       "Used with $(b,--deps-only), ignores conflicts of given package"
   in
   let restore =
@@ -1528,16 +1535,16 @@ let install cli =
       Arg.(some dirname) None
   in
   let check =
-    mk_flag ~cli valid_cli_legacy ["check"]
+    mk_flag ~cli (Valid_since cli2_1) ["check"]
       "Exit with 0 if all the dependencies of $(i,PACKAGES) are already \
        installed. If not, output the names of the missing dependencies to \
        stdout, and exits with 1."
   in
   let depext_only =
-    mk_flag ~cli valid_cli_legacy ["depext-only"]
-      "Resolves the package installation normally, but only installs the required \
-       system dependencies, without affecting the opam switch state or installing \
-       opam packages."
+    mk_flag ~cli (Valid_since cli2_1) ["depext-only"]
+      "Resolves the package installation normally, but only installs \
+       the required system dependencies, without affecting the opam switch \
+       state or installing opam packages."
   in
   let install
       global_options build_options add_to_roots deps_only ignore_conflicts
@@ -1891,11 +1898,11 @@ let upgrade cli =
        to upgrade while ensuring that some packages get or remain installed."
   in
   let installed =
-    mk_flag ~cli valid_cli_legacy ["installed"]
+    mk_flag ~cli (Valid_since cli2_1) ["installed"]
       "When a directory is provided as argument, do not install pinned package \
        that are not yet installed." in
-  let upgrade global_options build_options fixup check only_installed all recurse
-      subpath atom_locs =
+  let upgrade global_options build_options fixup check only_installed all
+      recurse subpath atom_locs =
     apply_global_options global_options;
     apply_build_options build_options;
     let all = all || atom_locs = [] in
@@ -2313,9 +2320,9 @@ let switch cli =
      no pattern is supplied, all versions are shown.";
     valid_cli_legacy, "show", `current, [],
     "Prints the name of the current switch.";
-    valid_cli_legacy, "invariant", `show_invariant, [],
+    (Valid_since cli2_1), "invariant", `show_invariant, [],
     "Prints the active switch invariant.";
-    valid_cli_legacy, "set-invariant", `set_invariant, ["PACKAGES"],
+    (Valid_since cli2_1), "set-invariant", `set_invariant, ["PACKAGES"],
     "Updates the switch invariant, that is, the formula that the switch must \
      keep verifying throughout all operations. The previous setting is \
      overriden. See also options $(b,--force) and $(b,--no-action). Without \
@@ -2325,10 +2332,12 @@ let switch cli =
     valid_cli_legacy, "link", `link, ["SWITCH";"[DIR]"],
     "Sets a local alias for a given switch, so that the switch gets \
      automatically selected whenever in that directory or a descendant.";
-    valid_cli_legacy, "install", `install, ["SWITCH"],
-    "Deprecated alias for 'create'.";
-    valid_cli_legacy, "set-base", `set_invariant, ["PACKAGES"],
-    "Deprecated alias for 'set-invariant'.";
+    Deprecated (cli2_1, cli3_0, Some "create"),
+    "install", `install, ["SWITCH"],
+    "Install a new switch";
+    Deprecated (cli2_1, cli3_0, Some "set-invariant"),
+    "set-base", `set_invariant, ["PACKAGES"],
+    "Define a set of switch base packages.";
   ] in
   let man = [
     `S Manpage.s_description;
@@ -2388,7 +2397,7 @@ let switch cli =
        enforce as the switch invariant."
       Arg.(some (list atom)) None in
   let formula =
-    mk_opt ~cli valid_cli_legacy ["formula"] "FORMULA"
+    mk_opt ~cli (Valid_since cli2_1) ["formula"] "FORMULA"
       "Allows specifying a complete \"dependency formula\", possibly including \
        disjunction cases, as the switch invariant."
       Arg.(some OpamArg.dep_formula) None in
@@ -2421,7 +2430,7 @@ let switch cli =
        default is to include only the metadata of pinned packages)."
   in
   let freeze =
-    mk_flag ~cli valid_cli_legacy ["freeze"]
+    mk_flag ~cli (Valid_since cli2_1) ["freeze"]
       "When exporting, locks all VCS urls to their current commit, failing if \
        it can not be retrieved. This ensures that an import will restore the \
        exact state. Implies $(b,--full)."
@@ -2438,12 +2447,12 @@ let switch cli =
        project but not the project itself."
   in
   let force =
-    mk_flag ~cli valid_cli_legacy ["force"]
+    mk_flag ~cli (Valid_since cli2_1) ["force"]
       "Only for $(i,set-invariant): force setting the invariant, bypassing \
        consistency checks."
   in
   let no_action =
-    mk_flag ~cli valid_cli_legacy ["n"; "no-action"]
+    mk_flag ~cli (Valid_since cli2_1) ["n"; "no-action"]
       "Only for $(i,set-invariant): set the invariant, but don't enforce it \
        right away: wait for the next $(i,install), $(i,upgrade) or similar \
        command."
@@ -2759,7 +2768,8 @@ let pin ?(unpin_only=false) cli =
   let doc = pin_doc in
   let commands = [
     valid_cli_legacy, "list", `list, [], "Lists pinned packages.";
-    valid_cli_legacy, "scan", `scan, ["DIR"], "Lists available packages to pin in directory.";
+    (Valid_since cli2_1), "scan", `scan, ["DIR"],
+    "Lists available packages to pin in directory.";
     valid_cli_legacy, "add", `add, ["PACKAGE"; "TARGET"],
     "Pins package $(i,PACKAGE) to $(i,TARGET), which may be a version, a path, \
      or a URL.\n\
@@ -2864,7 +2874,7 @@ let pin ?(unpin_only=false) cli =
       "Pin to the upstream package source for the latest development version"
   in
   let normalise =
-    mk_flag ~cli valid_cli_legacy ["normalise"]
+    mk_flag ~cli (Valid_since cli2_1) ["normalise"]
       (Printf.sprintf
          "Print list of available package to pin in format \
           `name.version%curl`, that is comprehensible by `opam pin \
@@ -2873,7 +2883,7 @@ let pin ?(unpin_only=false) cli =
          OpamPinCommand.scan_sep)
   in
   let with_version =
-    mk_opt ~cli valid_cli_legacy ["with-version"] "VERSION"
+    mk_opt ~cli (Valid_since cli2_1) ["with-version"] "VERSION"
       "Set the pinning version to $(i,VERSION) for named $(i,PACKAGES) or \
        packages retrieved from $(i,TARGET). It has priority over any other \
        version specification (opam file version field, $(b,name.vers) \

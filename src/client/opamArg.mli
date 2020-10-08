@@ -33,6 +33,8 @@ type flag_validity =
 val valid_cli_legacy: flag_validity
 val cli2_0: OpamCLIVersion.t
 val cli2_1: OpamCLIVersion.t
+val cli2_3: OpamCLIVersion.t
+val cli3_0: OpamCLIVersion.t
 
 val mk_flag:
   cli:OpamCLIVersion.t -> flag_validity ->
@@ -52,8 +54,8 @@ val mk_opt_all:
   'a Arg.converter -> 'a list Term.t
 
 val mk_vflag:
-  cli:OpamCLIVersion.t -> ?section:string -> 'a ->
-  (flag_validity * 'a * string list * string) list ->
+  cli:OpamCLIVersion.t ->
+  ?section:string -> 'a -> (flag_validity * 'a * string list * string) list ->
   'a Term.t
 
 val mk_vflag_all:
