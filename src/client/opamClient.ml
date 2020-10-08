@@ -1261,10 +1261,10 @@ let remove_t ?ask ~autoremove ~force atoms t =
     (slog OpamFormula.string_of_atoms) atoms;
 
   let t, full_orphans, orphan_versions =
-    let changes =
-      if autoremove then None
-      else Some (OpamSwitchState.packages_of_atoms t atoms) in
-    orphans ?changes t
+    if atoms = [] then t, OpamPackage.Set.empty, OpamPackage.Set.empty
+    else
+    let changes = OpamSwitchState.packages_of_atoms t atoms in
+    orphans ~changes t
   in
 
   let nothing_to_do = ref true in
@@ -1306,7 +1306,7 @@ let remove_t ?ask ~autoremove ~force atoms t =
     let to_keep =
       (if autoremove then t.installed_roots %% t.installed else t.installed)
       ++ universe.u_base
-      -- to_remove -- full_orphans -- orphan_versions
+      -- to_remove
     in
     let to_keep =
       OpamSolver.dependencies ~build:true ~post:true
@@ -1318,10 +1318,10 @@ let remove_t ?ask ~autoremove ~force atoms t =
     let requested = OpamPackage.names_of_packages packages in
     let to_remove =
       if autoremove then
-        let to_remove = t.installed -- to_keep in
-        if atoms = [] then to_remove
+        let to_remove1 = t.installed -- to_keep in
+        if atoms = [] then to_remove1
         else (* restrict to the dependency cone of removed pkgs *)
-          to_remove %%
+          to_remove1 %%
           (OpamSolver.dependencies ~build:true ~post:true
              ~depopts:true ~installed:true universe to_remove)
       else to_remove in
