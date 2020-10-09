@@ -1163,7 +1163,7 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
         OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
     );
     if not OpamClientConfig.(!r.show) &&
-       confirmation ?ask requested action_graph
+       (download_only || confirmation ?ask requested action_graph)
     then (
       let t =
         install_depexts t @@ OpamPackage.Set.inter
