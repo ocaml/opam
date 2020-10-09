@@ -21,6 +21,7 @@ New option/command/subcommand are prefixed with ◈.
 ## Install
   * The stdout of `pre-` and `post-session` hooks is now propagated to the user [#4382 @AltGr - fix #4359]
   * `post-install` hooks are allowed to modify or remove installed files, the but not add new ones. Those changes are integrated in changes file [#4388 @lefessan]
+  * ◈ Add `--download-only` flag [#4071 @Armael @rjbou - fix #4036]
 
 ## Remove
   * Fix `opam remove --autoremove <PKG>` to not autoremove unrelated packages [#4369 @AltGr - fix #4250 #4332]
