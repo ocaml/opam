@@ -910,12 +910,13 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
 let strings_of_cycles cycles =
   List.map arrow_concat cycles
 
-let string_of_conflict ?(indent=0) (msg1, msg2, msg3) =
-  OpamStd.Format.reformat ~start_column:indent ~indent msg1 ^
+let string_of_conflict ?(start_column=0) (msg1, msg2, msg3) =
+  let width = OpamStd.Sys.terminal_columns () - start_column - 2 in
+  OpamStd.Format.reformat ~start_column ~indent:2 msg1 ^
   OpamStd.List.concat_map ~left:"\n- " ~nil:"" "\n- "
-    (fun s -> OpamStd.Format.reformat ~indent s) msg2 ^
+    (fun s -> OpamStd.Format.reformat ~indent:2 ~width s) msg2 ^
   OpamStd.List.concat_map ~left:"\n" ~nil:"" "\n"
-    (fun s -> OpamStd.Format.reformat ~indent s) msg3
+    (fun s -> OpamStd.Format.reformat ~indent:2 ~width s) msg3
 
 let conflict_explanations packages unav_reasons = function
   | univ, version_map, Conflict_dep reasons ->
@@ -942,7 +943,7 @@ let string_of_conflicts packages unav_reasons conflict =
   if cflts <> [] then
     Buffer.add_string b
       (OpamStd.Format.itemize ~bullet:(OpamConsole.colorise `red "  * ")
-         (string_of_conflict ~indent:4) cflts);
+         (string_of_conflict ~start_column:4) cflts);
   if cflts = [] && cycles = [] then (* No explanation found *)
     Printf.bprintf b
       "Sorry, no solution found: \

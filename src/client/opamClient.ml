@@ -291,8 +291,9 @@ let upgrade_t
       OpamConsole.warning
         "Upgrade is not possible because of conflicts or packages that \
          are no longer available:";
-      OpamConsole.errmsg "%s"
-        (OpamStd.Format.itemize (OpamCudf.string_of_conflict ~indent:4) reasons);
+      OpamConsole.errmsg "  %s"
+        (OpamStd.Format.itemize (OpamCudf.string_of_conflict ~start_column:2)
+           reasons);
       OpamConsole.errmsg
         "\nYou may run \"opam upgrade --fixup\" to let opam fix the \
          current state.\n"

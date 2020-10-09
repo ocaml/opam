@@ -221,7 +221,7 @@ val conflict_explanations:
 (** Properly concat a single conflict as returned by [conflict_explanations] for
    display *)
 val string_of_conflict:
-  ?indent:int -> string * string list * string list -> string
+  ?start_column:int -> string * string list * string list -> string
 
 (** Dumps the given cudf universe to the given channel *)
 val dump_universe: out_channel -> Cudf.universe -> unit
