@@ -16,7 +16,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Install
-  *
+  * The stdout of `pre-` and `post-session` hooks is now propagated to the user [#4382 @AltGr - fix #4359]
 
 ## Remove
   *
