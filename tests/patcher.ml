@@ -90,7 +90,7 @@ let generate_patch () =
 let tests () =
   set_debug_level 0 [];
   let cwd = Sys.getcwd () in
-  setup_directory test_dir;
+  setup_directory ~dir:test_dir;
   pattern1 "a";
   pattern2 "b";
   pattern1 "c";
