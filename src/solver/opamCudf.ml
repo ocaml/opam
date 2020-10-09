@@ -463,7 +463,15 @@ let strings_of_chains packages cudfnv2opam unav_reasons reasons =
 let strings_of_cycles cycles =
   List.map arrow_concat cycles
 
-let strings_of_conflict packages unav_reasons = function
+let string_of_conflict ?(start_column=0) (msg1, msg2, msg3) =
+  let width = OpamStd.Sys.terminal_columns () - start_column - 2 in
+  OpamStd.Format.reformat ~start_column ~indent:2 msg1 ^
+  OpamStd.List.concat_map ~left:"\n- " ~nil:"" "\n- "
+    (fun s -> OpamStd.Format.reformat ~indent:2 ~width s) msg2 ^
+  OpamStd.List.concat_map ~left:"\n" ~nil:"" "\n"
+    (fun s -> OpamStd.Format.reformat ~indent:2 ~width s) msg3
+
+let conflict_explanations packages unav_reasons = function
   | univ, version_map, Conflict_dep reasons ->
     let r = reasons () in
     let cudfnv2opam = cudfnv2opam ~cudf_universe:univ ~version_map in
@@ -490,15 +498,11 @@ let string_of_conflict packages unav_reasons conflict =
     Printf.bprintf b
       "The actions to process have cyclic dependencies:\n%a"
       pr_items cycles;
-  if chains <> [] then
-    Printf.bprintf b
-      "The following dependencies couldn't be met:\n%a"
-      pr_items chains;
-  if final <> [] then
-    Printf.bprintf b
-      "Your request can't be satisfied:\n%a"
-      pr_items final;
-  if final = [] && chains = [] && cycles = [] then (* No explanation found *)
+  if cflts <> [] then
+    Buffer.add_string b
+      (OpamStd.Format.itemize ~bullet:(OpamConsole.colorise `red "  * ")
+         (string_of_conflict ~start_column:4) cflts);
+  if cflts = [] && cycles = [] then (* No explanation found *)
     Printf.bprintf b
       "Sorry, no solution found: \
        there seems to be a problem with your request.\n";

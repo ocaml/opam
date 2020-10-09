@@ -199,8 +199,10 @@ val strings_of_conflict:
   package_set -> (name * OpamFormula.version_formula -> string) -> conflict ->
   string list * string list * string list
 
-val conflict_chains:
-  package_set -> conflict -> (name * OpamFormula.version_formula) list list
+(** Properly concat a single conflict as returned by [conflict_explanations] for
+   display *)
+val string_of_conflict:
+  ?start_column:int -> string * string list * string list -> string
 
 (** Dumps the given cudf universe to the given channel *)
 val dump_universe: out_channel -> Cudf.universe -> unit
