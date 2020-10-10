@@ -449,7 +449,7 @@ let get_wrapper t opam wrappers ?local getter =
   let local_env =
     let hook_env = OpamEnv.hook_env t.switch_global.root in
     match local with
-    | Some e -> OpamVariable.Map.merge (fun _ _ v -> v) e hook_env
+    | Some e -> OpamVariable.Map.union (fun _ v -> v) e hook_env
     | None -> hook_env
   in
   OpamFilter.commands (OpamPackageVar.resolve ~local:local_env ~opam t)

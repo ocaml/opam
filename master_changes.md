@@ -7,7 +7,7 @@ New option/command/subcommand are prefixed with ◈.
   * Bump version to '2.1.0~beta3' [#4351 @AltGr]
 
 ## Global CLI
-  *
+  * Fix hooks broken by 371963a6b [#4386 @lefessan]
 
 ## Init
   * Fix sandbox check with not yet set opam environment variables [#4370 @rjbou - fix #4368]
