@@ -718,8 +718,10 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
           when not (OpamPackage.has_name t.pinned nv.name) ->
           let build_dir =
             OpamPath.Switch.build t.switch_global.root t.switch nv in
-          if not OpamClientConfig.(!r.keep_build_dir) then
-            OpamFilename.rmdir build_dir
+          if not OpamClientConfig.(!r.keep_build_dir) then begin
+            OpamFilename.rmdir build_dir;
+            OpamFilename.remove ( OpamPath.Switch.build_opam ~build_dir )
+          end
         | `Remove _ | `Install _ | `Build _ | `Fetch _ -> ()
         | _ -> assert false)
       graph

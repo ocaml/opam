@@ -398,6 +398,9 @@ let prepare_package_source st nv dir =
                  (OpamStd.Format.itemize OpamFilename.to_string bad_hash)));
   in
   OpamFilename.mkdir dir;
+  OpamFile.OPAM.write
+    (OpamFile.make (OpamPath.Switch.build_opam ~build_dir:dir))
+    opam;
   get_extra_sources_job @@+ function Some _ as err -> Done err | None ->
     check_extra_files |> function Some _ as err -> Done err | None ->
       let opam = OpamSwitchState.opam st nv in
