@@ -869,6 +869,8 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
     | Some e -> Some e
     | None -> try process_dot_install t nv dir; None with e -> Some e
   in
+  let root = t.switch_global.root in
+  let switch_prefix = OpamPath.Switch.root root t.switch in
   let post_install error changes =
     let local =
       let added =
@@ -885,17 +887,25 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
         (OpamVariable.of_string "installed-files")
         (Some (L added))
     in
+    let hooks =
+      get_wrapper t opam wrappers ~local OpamFile.Wrappers.post_install
+    in
+    let has_hooks = match hooks with [] -> false | _ -> true in
     OpamProcess.Job.of_fun_list ~keep_going:true
-      (List.map (fun cmd () -> mk_cmd cmd)
-         (get_wrapper t opam wrappers ~local OpamFile.Wrappers.post_install))
+      (List.map (fun cmd () -> mk_cmd cmd) hooks)
     @@+ fun error_post ->
     match error, error_post with
     | Some err, _ -> Done (Some err, changes)
     | None, Some (_cmd, r) -> Done (Some (OpamSystem.Process_error r), changes)
-    | None, None -> Done (None, changes)
+    | None, None ->
+      let changes =
+        if has_hooks then
+          OpamDirTrack.update (OpamFilename.Dir.to_string switch_prefix) changes
+        else
+          changes
+      in
+      Done (None, changes)
   in
-  let root = t.switch_global.root in
-  let switch_prefix = OpamPath.Switch.root root t.switch in
   let rel_meta_dir =
     OpamFilename.(Base.of_string (remove_prefix_dir switch_prefix
                                     (OpamPath.Switch.meta root t.switch)))
