@@ -119,7 +119,7 @@ module Switch: sig
 
   (** Temporary copy of the opam description of the package during
       the build/install process *)
-  val build_opam: build_dir:dirname -> filename
+  val build_opam: t -> switch -> package -> OpamFile.OPAM.t OpamFile.t
 
   (** Temporary folders used to decompress the corresponding archives, used only
       for package removal {i $meta/remove/$packages} *)

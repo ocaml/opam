@@ -102,8 +102,7 @@ module Switch = struct
 
   let build t a nv = build_dir t a / OpamPackage.to_string nv
 
-  let build_opam ~build_dir =
-    OpamFilename.of_string ( OpamFilename.Dir.to_string build_dir ^ ".opam" )
+  let build_opam t a nv = build_dir t a /- (OpamPackage.to_string nv ^ ".opam")
 
   let remove_dir t a = meta t a / "remove"
 

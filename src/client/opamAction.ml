@@ -399,7 +399,7 @@ let prepare_package_source st nv dir =
   in
   OpamFilename.mkdir dir;
   OpamFile.OPAM.write
-    (OpamFile.make (OpamPath.Switch.build_opam ~build_dir:dir))
+    (OpamPath.Switch.build_opam st.switch_global.root st.switch nv)
     opam;
   get_extra_sources_job @@+ function Some _ as err -> Done err | None ->
     check_extra_files |> function Some _ as err -> Done err | None ->

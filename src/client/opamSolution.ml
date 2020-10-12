@@ -720,7 +720,7 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
             OpamPath.Switch.build t.switch_global.root t.switch nv in
           if not OpamClientConfig.(!r.keep_build_dir) then begin
             OpamFilename.rmdir build_dir;
-            OpamFilename.remove ( OpamPath.Switch.build_opam ~build_dir )
+            OpamFilename.remove (OpamFile.filename (OpamPath.Switch.build_opam t.switch_global.root t.switch nv))
           end
         | `Remove _ | `Install _ | `Build _ | `Fetch _ -> ()
         | _ -> assert false)
