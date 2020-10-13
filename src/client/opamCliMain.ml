@@ -333,7 +333,6 @@ let run () =
       OpamCommands.get_cmdliner_parser cli, argv
   in
   let argv = Array.of_list argv1 in
-  OpamConsole.log "CLI" "Parsing CLI version %s" @@ OpamCLIVersion.to_string cli;
   match Term.eval_choice ~catch:false ~argv default commands with
   | `Error _ -> exit (OpamStd.Sys.get_exit_code `Bad_arguments)
   | _        -> exit (OpamStd.Sys.get_exit_code `Success)
