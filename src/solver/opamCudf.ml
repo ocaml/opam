@@ -1093,7 +1093,10 @@ let preprocess_cudf_request (props, univ, creq) criteria =
     let installed =
       Set.of_list (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) univ)
     in
-    let to_install = vpkg2set creq.Cudf.install in
+    let to_install =
+      vpkg2set creq.Cudf.install
+      ++ Set.of_list (Cudf.lookup_packages univ opam_invariant_package_name)
+    in
     let packages =
       if do_trimming then
         Set.fixpoint deps
