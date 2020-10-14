@@ -80,6 +80,8 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Internal
   * ActionGraph: removal postponing, protect against addition of cycles [#4358 @AltGr - fix #4357]
+  * Initialise random [#4391 @rjbou]
+  * Fix CLI debug log printed without taking into account debug sections [#4391 @rjbou]
 
 ## Test
   * Ensure that a cold `dune runtest` works [#4375 @emillon]
