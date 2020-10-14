@@ -1280,22 +1280,22 @@ let get_final_universe ~version_map univ req =
     Success (Cudf.load_universe [])
   | Algo.Depsolver.Error str -> fail str
   | Algo.Depsolver.Unsat r   ->
-    OpamConsole.error
-      "The solver (%s) pretends there is no solution while that's apparently \
-       false.\n\
-       This is likely an issue with the solver interface, please try a \
-       different solver and report if you were using a supported one."
-      (let module Solver = (val OpamSolverConfig.(Lazy.force !r.solver)) in
-       Solver.name);
+    let msg =
+      Printf.sprintf
+        "The solver (%s) pretends there is no solution while that's apparently \
+         false.\n\
+         This is likely an issue with the solver interface, please try a \
+         different solver and report if you were using a supported one."
+        (let module Solver = (val OpamSolverConfig.(Lazy.force !r.solver)) in
+         Solver.name)
+    in
     match r with
     | Some ({Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _} as r) ->
+      OpamConsole.error "%s" msg;
       make_conflicts ~version_map univ r
     | Some {Algo.Diagnostic.result = Algo.Diagnostic.Success _; _}
     | None ->
-      raise (Solver_failure
-        "The current solver could not find a solution but dose3 could. \
-         This is probably a bug in the current solver. Please file a bug-report \
-         on the opam bug tracker: https://github.com/ocaml/opam/issues/")
+      raise (Solver_failure msg)
 
 let diff univ sol =
   let before =
