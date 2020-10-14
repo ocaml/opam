@@ -181,7 +181,7 @@ let def_request ctx (_preamble, universe, request) psym =
             List.fold_left (fun vmin p -> max vmin p.Cudf.version) p.Cudf.version l
           in
           Cudf.lookup_packages universe ~filter:constr name |>
-          List.filter (fun p -> p.Cudf.version > vmin) |>
+          List.filter (fun p -> p.Cudf.version >= vmin) |>
           xrmap psym |>
           (* fixme: the spec states that an 'upgrade' request should guarantee
              that only one version of the package will be installed. Since it's
