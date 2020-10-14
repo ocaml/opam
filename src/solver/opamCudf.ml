@@ -816,14 +816,23 @@ let get_final_universe ~version_map univ req =
     Success (Cudf.load_universe [])
   | Algo.Depsolver.Error str -> fail str
   | Algo.Depsolver.Unsat r   ->
+    let msg =
+      Printf.sprintf
+        "The solver (%s) pretends there is no solution while that's apparently \
+         false.\n\
+         This is likely an issue with the solver interface, please try a \
+         different solver and report if you were using a supported one."
+        (let module Solver = (val OpamSolverConfig.(Lazy.force !r.solver)) in
+         Solver.name)
+    in
     match r with
     | Some ({Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _} as r) ->
+      OpamConsole.error "%s" msg;
       make_conflicts ~version_map univ r
     | Some {Algo.Diagnostic.result = Algo.Diagnostic.Success _; _}(*  -> *)
       (* fail "inconsistent return value." *)
     | None ->
-      (* External solver did not provide explanations, hopefully this will *)
-      check_request ~version_map univ req
+      raise (Solver_failure msg)
 
 let diff univ sol =
   let before =
