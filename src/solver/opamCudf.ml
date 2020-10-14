@@ -1066,9 +1066,26 @@ let dump_cudf_error ~version_map univ req =
   | Some f -> f
   | None -> assert false
 
-let preprocess_cudf_request (props, univ, creq) =
+let preprocess_cudf_request (props, univ, creq) criteria =
   let chrono = OpamConsole.timer () in
   let univ0 = univ in
+  let do_trimming =
+    match OpamStd.Config.env_bool "CUDFTRIM" with
+    | Some o -> o
+    | None ->
+      (* Trimming is only correct when there is no maximisation criteria, so
+         automatically set it to true in this case *)
+      let neg_crit_re =
+        Re.(seq [char '-';
+                 rep1 (diff any (set ",["));
+                 opt (seq [char '['; rep1 (diff any (char ']')); char ']'])])
+      in
+      let all_neg_re =
+        Re.(whole_string (seq [rep (seq [neg_crit_re; char ',']);
+                               neg_crit_re]))
+      in
+      Re.execp (Re.compile all_neg_re) criteria
+  in
   let univ =
     let open Set.Op in
     let vpkg2set vp = Set.of_list (Common.CudfAdd.resolve_deps univ vp) in
@@ -1078,7 +1095,7 @@ let preprocess_cudf_request (props, univ, creq) =
     in
     let to_install = vpkg2set creq.Cudf.install in
     let packages =
-      if OpamStd.Config.env_bool "CUDFTRIM" = Some true then
+      if do_trimming then
         Set.fixpoint deps
           (to_install ++
            vpkg2set creq.Cudf.remove ++
@@ -1151,7 +1168,8 @@ let preprocess_cudf_request (props, univ, creq) =
     let final_packages = packages -- conflicts ++ installed in
     Cudf.load_universe (Set.elements (final_packages -- conflicts))
   in
-  log "Preprocess cudf request: from %d to %d packages in %.2fs"
+  log "Preprocess cudf request (trimming: %b): from %d to %d packages in %.2fs"
+    do_trimming
     (Cudf.universe_size univ0)
     (Cudf.universe_size univ)
     (chrono ());
@@ -1182,7 +1200,7 @@ let call_external_solver ~version_map univ req =
     try
       let cudf_request =
         if OpamStd.Config.env_bool "PREPRO" = Some false then cudf_request
-        else preprocess_cudf_request cudf_request
+        else preprocess_cudf_request cudf_request criteria
       in
       let r =
         check_request_using
