@@ -549,6 +549,8 @@ module Config : sig
   (* Like [env_int], but accept boolean values for 0 and 1 *)
   val env_level: env_var -> int option
 
+  val env_sections: env_var -> int option OpamCoreConfig.StringMap.t option
+
   val env_string: env_var -> string option
 
   val env_float: env_var -> float option

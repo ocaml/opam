@@ -122,6 +122,7 @@ let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 let initk k =
   let open OpamStd.Config in
   let open OpamStd.Option.Op in
+  Random.self_init ();
   let editor =
     env_string "EDITOR" ++ OpamStd.Env.(getopt "VISUAL" ++ getopt "EDITOR")
   in
