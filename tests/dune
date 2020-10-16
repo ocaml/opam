@@ -5,14 +5,7 @@
 
 (ignored_subdirs (packages))
 
-(executable
+(test
   (name      patcher)
   (modules   patcher)
   (libraries opam-core))
-
-(rule
-  (with-stdout-to patcher-test.result (run %{exe:patcher.exe})))
-
-(alias
-  (name runtest)
-  (action (system "diff %{dep:patcher-test.result} %{dep:patcher-test.reference}")))
