@@ -318,7 +318,7 @@ let packages_status packages =
     compute_sets sys_installed ~sys_available
   | Freebsd ->
     let sys_installed =
-      run_query_command "pkg" ["query"; "%n"]
+      run_query_command "pkg" ["query"; "%n\n%o"]
       |> List.map OpamSysPkg.of_string
       |> OpamSysPkg.Set.of_list
     in
