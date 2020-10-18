@@ -106,10 +106,14 @@ let family =
       | "amzn" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol"
       | "rhel" -> Centos
       | "archlinux" | "arch" -> Arch
-      | "bsd" when OpamSysPoll.os_distribution () = Some "freebsd" ->
-        Freebsd
-      | "bsd" when OpamSysPoll.os_distribution () = Some "openbsd" ->
-        Openbsd
+      | "bsd" ->
+        begin match OpamSysPoll.os_distribution () with
+        | Some ("freebsd" | "dragonfly") -> Freebsd
+        | Some "openbsd" -> Openbsd
+        | _ ->
+          Printf.ksprintf failwith
+            "External dependency handling not supported for OS family 'bsd'."
+        end
       | "debian" -> Debian
       | "gentoo" -> Gentoo
       | "homebrew" -> Homebrew
