@@ -353,14 +353,18 @@ let packages_status packages =
                 eol ])
       in
       List.fold_left (fun inst dir ->
-          let pkg =
-            OpamFilename.basename_dir dir
-            |> OpamFilename.Base.to_string
-          in
-          try Re.(Group.get (exec re_pkg pkg) 1) +++ inst
-          with Not_found -> inst)
-        OpamSysPkg.Set.empty
-        (OpamFilename.rec_dirs (OpamFilename.Dir.of_string "/var/db/pkg"))
+          List.fold_left (fun inst pkg ->
+              let to_string d =
+                OpamFilename.basename_dir d
+                |> OpamFilename.Base.to_string
+              in
+              let pkg = Filename.concat (to_string dir) (to_string pkg) in
+              try Re.(Group.get (exec re_pkg pkg) 1) :: inst
+              with Not_found -> inst
+            ) inst (OpamFilename.dirs dir))
+        []
+        (OpamFilename.dirs (OpamFilename.Dir.of_string "/var/db/pkg"))
+      |> package_set_of_pkgpath
     in
     compute_sets sys_installed
   | Homebrew ->
