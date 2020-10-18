@@ -91,6 +91,7 @@ type families =
   | Homebrew
   | Macports
   | Openbsd
+  | Netbsd
   | Suse
 
 (* System status *)
@@ -110,6 +111,7 @@ let family =
         begin match OpamSysPoll.os_distribution () with
         | Some ("freebsd" | "dragonfly") -> Freebsd
         | Some "openbsd" -> Openbsd
+        | Some "netbsd" -> Netbsd
         | _ ->
           Printf.ksprintf failwith
             "External dependency handling not supported for OS family 'bsd'."
@@ -174,6 +176,18 @@ let packages_status packages =
             inst, pkg +++ avail
         with Not_found -> inst, avail)
       OpamSysPkg.Set.(empty, empty)
+  in
+  let package_set_of_pkgpath l =
+    List.fold_left (fun set pkg ->
+        let short_name =
+          match String.rindex_opt pkg '/' with
+          | None -> pkg
+          | Some idx -> String.sub pkg idx (String.length pkg - idx)
+        in
+        set
+        |> OpamSysPkg.Set.add (OpamSysPkg.of_string pkg)
+        |> OpamSysPkg.Set.add (OpamSysPkg.of_string short_name)
+      ) OpamSysPkg.Set.empty l
   in
   match family () with
   | Alpine ->
@@ -410,8 +424,13 @@ let packages_status packages =
   | Openbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-mqP"]
-      |> List.map OpamSysPkg.of_string
-      |> OpamSysPkg.Set.of_list
+      |> package_set_of_pkgpath
+    in
+    compute_sets sys_installed
+  | Netbsd ->
+    let sys_installed =
+      run_query_command "pkg_info" ["-Q"; "PKGPATH"; "-a"]
+      |> package_set_of_pkgpath
     in
     compute_sets sys_installed
   | Suse ->
@@ -481,6 +500,7 @@ let install_packages_commands_t sys_packages =
     ["port", "install"::packages], (* NOTE: Does not have any interactive mode *)
     None
   | Openbsd -> ["pkg_add", yes ~no:["-i"] ["-I"] packages], None
+  | Netbsd -> ["pkgin", yes ["-y"] ("install" :: packages)], None
   | Suse -> ["zypper", yes ["--non-interactive"] ("install"::packages)], None
 
 let install_packages_commands sys_packages =
@@ -531,7 +551,7 @@ let update () =
     | Homebrew -> Some ("brew", ["update"])
     | Macports -> Some ("port", ["sync"])
     | Suse -> Some ("zypper", ["--non-interactive"; "update"])
-    | Freebsd | Openbsd ->
+    | Freebsd | Openbsd | Netbsd ->
       None
   in
   match cmd with
