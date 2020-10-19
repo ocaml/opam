@@ -1520,6 +1520,15 @@ module PIN = struct
       then
         OpamStd.Sys.exit_because `Aborted
     | _ -> ());
+    let pins =
+      let urls_ok =
+        OpamPinCommand.fetch_all_pins st (List.map (fun (name, _, _, url, subpath) ->
+            OpamPackage.Name.to_string name, url, subpath) pins)
+      in
+      List.filter (fun (_,_,_, url, subpath) ->
+          List.mem (url, subpath) urls_ok)
+        pins
+    in
     let pinned = st.pinned in
     let st =
       List.fold_left (fun st (name, version, opam, url, subpath as pin) ->

@@ -43,6 +43,14 @@ val source_pin:
 val handle_pin_depends:
   rw switch_state -> package -> OpamFile.OPAM.t -> rw switch_state
 
+(** Fetch in parallel jobs a list of pins [name, url, subpath], and return the
+    successful ones.
+    Ask for confirmation to continue if a fetching fails.
+*)
+val fetch_all_pins:
+  'a switch_state -> (string * url * string option) list ->
+  (url * string option) list
+
 (** Let the user edit a pinned package's opam file. If given, the version is put
     into the template in advance. Writes and returns the updated switch
     state. *)
