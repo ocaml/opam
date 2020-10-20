@@ -19,8 +19,8 @@ New option/command/subcommand are prefixed with ◈.
   * The stdout of `pre-` and `post-session` hooks is now propagated to the user [#4382 @AltGr - fix #4359]
 
 ## Remove
-  * Fix `opam remove --autoremove <PKG>` to not autoremove unrelated packages
-  * Fix cases where `opam remove -a` could trigger conflicts in the presence of orphan packages
+  * Fix `opam remove --autoremove <PKG>` to not autoremove unrelated packages [#4369 @AltGr - fix #4250 #4332]
+  * Fix cases where `opam remove -a` could trigger conflicts in the presence of orphan packages [#4369 @AltGr - fix #4250 #4332]
 
 ## Switch
   * Fix `--update-invariant` when removing or changing package name [#4360 @AltGr - fix #4353]
