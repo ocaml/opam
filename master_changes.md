@@ -46,7 +46,8 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## External dependencies
-  *
+  * Add support for NetBSD and DragonFlyBSD [#4396 @kit-ty-kate]
+  * Fix OpenBSD, FreeBSD and Gentoo: Allow short names and full name paths for ports-based systems [#4396 @kit-ty-kate]
 
 ## Sandbox
   *
