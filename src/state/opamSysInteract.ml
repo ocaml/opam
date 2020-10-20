@@ -81,6 +81,8 @@ let run_command_exit_code ?vars ?allow_stdin ?verbose cmd args =
   in
   code
 
+(* Please keep this alphabetically ordered, in the type definition, and in
+   below pattern matching *)
 type families =
   | Alpine
   | Arch
@@ -109,12 +111,12 @@ let family =
       | "archlinux" | "arch" -> Arch
       | "bsd" ->
         begin match OpamSysPoll.os_distribution () with
-        | Some ("freebsd" | "dragonfly") -> Freebsd
-        | Some "openbsd" -> Openbsd
-        | Some "netbsd" -> Netbsd
-        | _ ->
-          Printf.ksprintf failwith
-            "External dependency handling not supported for OS family 'bsd'."
+          | Some ("freebsd" | "dragonfly") -> Freebsd
+          | Some "netbsd" -> Netbsd
+          | Some "openbsd" -> Openbsd
+          | _ ->
+            Printf.ksprintf failwith
+              "External dependency handling not supported for OS family 'bsd'."
         end
       | "debian" -> Debian
       | "gentoo" -> Gentoo
@@ -425,15 +427,15 @@ let packages_status packages =
       |> with_regexp_sgl re_pkg
     in
     compute_sets sys_installed ~sys_available
-  | Openbsd ->
-    let sys_installed =
-      run_query_command "pkg_info" ["-mqP"]
-      |> package_set_of_pkgpath
-    in
-    compute_sets sys_installed
   | Netbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-Q"; "PKGPATH"; "-a"]
+      |> package_set_of_pkgpath
+    in
+    compute_sets sys_installed
+  | Openbsd ->
+    let sys_installed =
+      run_query_command "pkg_info" ["-mqP"]
       |> package_set_of_pkgpath
     in
     compute_sets sys_installed
@@ -503,8 +505,8 @@ let install_packages_commands_t sys_packages =
   | Macports ->
     ["port", "install"::packages], (* NOTE: Does not have any interactive mode *)
     None
-  | Openbsd -> ["pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Netbsd -> ["pkgin", yes ["-y"] ("install" :: packages)], None
+  | Openbsd -> ["pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> ["zypper", yes ["--non-interactive"] ("install"::packages)], None
 
 let install_packages_commands sys_packages =
@@ -555,7 +557,7 @@ let update () =
     | Homebrew -> Some ("brew", ["update"])
     | Macports -> Some ("port", ["sync"])
     | Suse -> Some ("zypper", ["--non-interactive"; "update"])
-    | Freebsd | Openbsd | Netbsd ->
+    | Freebsd | Netbsd | Openbsd ->
       None
   in
   match cmd with
