@@ -57,4 +57,4 @@ val check:
 
 (** Reload all the digests from the directory [prefix]. Remove a file
     from the map if it has been removed from the file-system. *)
-val update : string -> t -> t
+val update : OpamFilename.Dir.t -> t -> t
