@@ -3391,9 +3391,10 @@ let lint cli =
           try
             let warnings,opam =
               match opam_f with
-              | Some f -> OpamFileTools.lint_file ~check_upstream f
+              | Some f ->
+                OpamFileTools.lint_file ~check_upstream ~handle_dirname:true f
               | None ->
-                OpamFileTools.lint_channel ~check_upstream
+                OpamFileTools.lint_channel ~check_upstream ~handle_dirname:false
                   (OpamFile.make (OpamFilename.of_string "-")) stdin
             in
             let enabled =
