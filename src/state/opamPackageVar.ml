@@ -46,6 +46,7 @@ let package_variable_names = [
   "dev",       "True if this is a development package";
   "build-id",  "A hash identifying the precise package version with all its \
                 dependencies";
+  "opamfile", "Path of the curent opam file";
 ]
 
 let predefined_depends_variables =
@@ -305,6 +306,21 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
        with Not_found -> Some (string ""))
     | "dev", Some opam -> Some (bool (is_dev_package st opam))
     | "build-id", Some opam -> OpamStd.Option.map string (build_id st opam)
+    | "opamfile", Some opam ->
+      (* Opamfile path is retrieved from overlay directory for pinned packages,
+         or from temporary repository in /tmp *)
+      let repos_roots reponame =
+        match Hashtbl.find st.switch_repos.repos_tmp reponame with
+        | lazy repo_root -> repo_root
+        | exception Not_found ->
+          OpamRepositoryPath.root st.switch_global.root reponame
+      in
+      OpamFile.OPAM.get_metadata_dir ~repos_roots opam
+      |> OpamStd.Option.map (fun d ->
+          OpamFilename.Op.(d//"opam")
+          |> OpamFilename.to_string
+          |> string
+        )
     | _, _ -> None
   in
   let make_package_local v =
