@@ -180,9 +180,9 @@ let packages_status packages =
   let package_set_of_pkgpath l =
     List.fold_left (fun set pkg ->
         let short_name =
-          match String.rindex_opt pkg '/' with
-          | None -> pkg
-          | Some idx -> String.sub pkg idx (String.length pkg - idx)
+          match String.rindex pkg '/' with
+          | exception Not_found -> pkg
+          | idx -> String.sub pkg idx (String.length pkg - idx)
         in
         set
         |> OpamSysPkg.Set.add (OpamSysPkg.of_string pkg)
