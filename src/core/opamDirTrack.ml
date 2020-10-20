@@ -271,6 +271,7 @@ let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
 
 let update prefix t =
   let removed = ref [] in
+  let prefix = OpamFilename.Dir.to_string prefix in
   let update_digest file digest =
     match
       let filename = Filename.concat prefix file in
