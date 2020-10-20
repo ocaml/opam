@@ -900,7 +900,7 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
     | None, None ->
       let changes =
         if has_hooks then
-          OpamDirTrack.update (OpamFilename.Dir.to_string switch_prefix) changes
+          OpamDirTrack.update switch_prefix changes
         else
           changes
       in
