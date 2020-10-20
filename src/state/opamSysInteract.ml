@@ -90,8 +90,8 @@ type families =
   | Gentoo
   | Homebrew
   | Macports
-  | Openbsd
   | Netbsd
+  | Openbsd
   | Suse
 
 (* System status *)
