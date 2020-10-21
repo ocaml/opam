@@ -70,6 +70,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Admin
   * Use the archive caches when running `opam admin cache` [#4384 @AltGr - fix #4352]
+  * Fix explosion of `opam admin check --cycles` on repositories with huge cliques [#4392 @AltGr]
 
 ## Opam installer
   *

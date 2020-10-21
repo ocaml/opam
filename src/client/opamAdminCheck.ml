@@ -171,7 +171,7 @@ let cycle_check univ =
          *   "Number of vertices: before merge %d, after merge %d\n"
          *   count (OpamCudf.Graph.nb_vertex g); *)
         let it = ref 0 in
-        let rec extract_cycles acc rpath v g =
+        let rec extract_cycles acc seen rpath v g =
           incr it;
           let rec find_pref acc v = function
             | [] -> None
@@ -181,17 +181,19 @@ let cycle_check univ =
               else find_pref (v1::acc) v r
           in
           match find_pref [] v rpath with
-          | Some cy -> cy :: acc
+          | Some cy -> cy :: acc, seen
           | None ->
+            if OpamCudf.Set.mem v seen then acc, seen else
+            let seen = OpamCudf.Set.add v seen in
             let rpath = v::rpath in
             (* split into sub-graphs for each successor *)
             List.fold_left
-              (fun acc s -> extract_cycles acc rpath s g)
-              acc (OpamCudf.Graph.succ g v)
+              (fun (acc, seen) s -> extract_cycles acc seen rpath s g)
+              (acc, seen) (OpamCudf.Graph.succ g v)
         in
         let p0 = List.find (OpamCudf.Graph.mem_vertex g) pkgs in
-        let r = extract_cycles acc [] p0 g in
         (* OpamConsole.msg "Iterations: %d\n" !it; *)
+        let r, _seen = extract_cycles acc OpamCudf.Set.empty [] p0 g in
         node_map, r
       )
       (OpamCudf.Map.empty, []) scc
