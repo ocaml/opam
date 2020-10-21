@@ -1378,7 +1378,8 @@ them modified with [`opam option --global`](man/opam-option.html).
     modified during the installation of the package.
     Note that this hook is run after the scan for installed files is
     done, so any additional installed files won't be recorded and must be taken
-    care of by a `pre-remove-commands` hook.
+    care of by a `pre-remove-commands` hook. However, modified or deleted installed
+    files during the `post-install-commands` will be handled correctly by `opam`.
 - <a id="configfield-pre-session-commands">`pre-session-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
   <a id="configfield-post-session-commands">`post-session-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>:
   These commands will be run once respectively before and after the sequence of

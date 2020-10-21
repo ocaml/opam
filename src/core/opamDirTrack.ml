@@ -268,3 +268,33 @@ let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
                     (OpamStd.Option.to_string (fun pr ->
                          if pr then "[hash] " else "[tms] ") pre) ^ x) lf))
           cannot))
+
+let update prefix t =
+  let removed = ref [] in
+  let prefix = OpamFilename.Dir.to_string prefix in
+  let update_digest file digest =
+    match
+      let filename = Filename.concat prefix file in
+      let precise = is_precise_digest digest in
+      item_digest ( item_of_filename ~precise filename )
+    with
+    | exception Unix.Unix_error ( ENOENT, _, _) ->
+      removed := file :: !removed;
+      digest
+    | exception _exn -> digest
+    | digest -> digest
+  in
+  let t =
+    SM.mapi (fun file change ->
+        match change with
+        | Added digest -> Added (update_digest file digest)
+        | Removed -> Removed
+        | Contents_changed digest ->
+          Contents_changed (update_digest file digest)
+        | Perm_changed digest -> Perm_changed (update_digest file digest)
+        | Kind_changed digest -> Kind_changed (update_digest file digest)
+      ) t
+  in
+  List.fold_left (fun t file ->
+      SM.remove file t
+    ) t !removed
