@@ -81,6 +81,8 @@ let run_command_exit_code ?vars ?allow_stdin ?verbose cmd args =
   in
   code
 
+(* Please keep this alphabetically ordered, in the type definition, and in
+   below pattern matching *)
 type families =
   | Alpine
   | Arch
@@ -90,6 +92,7 @@ type families =
   | Gentoo
   | Homebrew
   | Macports
+  | Netbsd
   | Openbsd
   | Suse
 
@@ -106,10 +109,15 @@ let family =
       | "amzn" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol"
       | "rhel" -> Centos
       | "archlinux" | "arch" -> Arch
-      | "bsd" when OpamSysPoll.os_distribution () = Some "freebsd" ->
-        Freebsd
-      | "bsd" when OpamSysPoll.os_distribution () = Some "openbsd" ->
-        Openbsd
+      | "bsd" ->
+        begin match OpamSysPoll.os_distribution () with
+          | Some ("freebsd" | "dragonfly") -> Freebsd
+          | Some "netbsd" -> Netbsd
+          | Some "openbsd" -> Openbsd
+          | _ ->
+            Printf.ksprintf failwith
+              "External dependency handling not supported for OS family 'bsd'."
+        end
       | "debian" -> Debian
       | "gentoo" -> Gentoo
       | "homebrew" -> Homebrew
@@ -170,6 +178,18 @@ let packages_status packages =
             inst, pkg +++ avail
         with Not_found -> inst, avail)
       OpamSysPkg.Set.(empty, empty)
+  in
+  let package_set_of_pkgpath l =
+    List.fold_left (fun set pkg ->
+        let short_name =
+          match String.rindex pkg '/' with
+          | exception Not_found -> pkg
+          | idx -> String.sub pkg idx (String.length pkg - idx)
+        in
+        set
+        |> OpamSysPkg.Set.add (OpamSysPkg.of_string pkg)
+        |> OpamSysPkg.Set.add (OpamSysPkg.of_string short_name)
+      ) OpamSysPkg.Set.empty l
   in
   match family () with
   | Alpine ->
@@ -318,7 +338,7 @@ let packages_status packages =
     compute_sets sys_installed ~sys_available
   | Freebsd ->
     let sys_installed =
-      run_query_command "pkg" ["query"; "%n"]
+      run_query_command "pkg" ["query"; "%n\n%o"]
       |> List.map OpamSysPkg.of_string
       |> OpamSysPkg.Set.of_list
     in
@@ -335,14 +355,18 @@ let packages_status packages =
                 eol ])
       in
       List.fold_left (fun inst dir ->
-          let pkg =
-            OpamFilename.basename_dir dir
-            |> OpamFilename.Base.to_string
-          in
-          try Re.(Group.get (exec re_pkg pkg) 1) +++ inst
-          with Not_found -> inst)
-        OpamSysPkg.Set.empty
-        (OpamFilename.rec_dirs (OpamFilename.Dir.of_string "/var/db/pkg"))
+          List.fold_left (fun inst pkg ->
+              let to_string d =
+                OpamFilename.basename_dir d
+                |> OpamFilename.Base.to_string
+              in
+              let pkg = Filename.concat (to_string dir) (to_string pkg) in
+              try Re.(Group.get (exec re_pkg pkg) 1) :: inst
+              with Not_found -> inst
+            ) inst (OpamFilename.dirs dir))
+        []
+        (OpamFilename.dirs (OpamFilename.Dir.of_string "/var/db/pkg"))
+      |> package_set_of_pkgpath
     in
     compute_sets sys_installed
   | Homebrew ->
@@ -403,11 +427,16 @@ let packages_status packages =
       |> with_regexp_sgl re_pkg
     in
     compute_sets sys_installed ~sys_available
+  | Netbsd ->
+    let sys_installed =
+      run_query_command "pkg_info" ["-Q"; "PKGPATH"; "-a"]
+      |> package_set_of_pkgpath
+    in
+    compute_sets sys_installed
   | Openbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-mqP"]
-      |> List.map OpamSysPkg.of_string
-      |> OpamSysPkg.Set.of_list
+      |> package_set_of_pkgpath
     in
     compute_sets sys_installed
   | Suse ->
@@ -476,6 +505,7 @@ let install_packages_commands_t sys_packages =
   | Macports ->
     ["port", "install"::packages], (* NOTE: Does not have any interactive mode *)
     None
+  | Netbsd -> ["pkgin", yes ["-y"] ("install" :: packages)], None
   | Openbsd -> ["pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> ["zypper", yes ["--non-interactive"] ("install"::packages)], None
 
@@ -527,7 +557,7 @@ let update () =
     | Homebrew -> Some ("brew", ["update"])
     | Macports -> Some ("port", ["sync"])
     | Suse -> Some ("zypper", ["--non-interactive"; "update"])
-    | Freebsd | Openbsd ->
+    | Freebsd | Netbsd | Openbsd ->
       None
   in
   match cmd with
