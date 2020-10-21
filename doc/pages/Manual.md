@@ -506,6 +506,9 @@ the package being defined.
 - <a id="pkgvar-build-id">`build-id`</a>:
   a hash identifying the precise package version and metadata, and that of all
   its dependencies
+- <a id="pkgvar-opamfile">`opamfile`</a>:
+  if the package is installed, path of its opam file, from opam internals,
+  otherwise not defined
 
 Extra variables can be defined by any package at installation time, using a
 [`<pkgname>.config`](#lt-pkgname-gt-config) file with a
