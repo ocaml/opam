@@ -92,7 +92,7 @@ val installable: universe -> package_set
 (** Like [installable], but within a subset and potentially much faster *)
 val installable_subset: universe -> package_set -> package_set
 
-(** Return the topological sort of the transitive dependency closures
+(** Return the transitive dependency closures
     of a collection of packages.*)
 val dependencies :
   depopts:bool -> build:bool -> post:bool ->
@@ -100,13 +100,21 @@ val dependencies :
   ?unavailable:bool ->
   universe ->
   package_set ->
-  package list
+  package_set
 
 (** Same as [dependencies] but for reverse dependencies *)
 val reverse_dependencies :
   depopts:bool -> build:bool -> post:bool ->
   installed:bool ->
   ?unavailable:bool ->
+  universe ->
+  package_set ->
+  package_set
+
+(** Sorts the given package set in topological order (as much as possible,
+    beware of cycles in particular if [post] is [true]) *)
+val dependency_sort :
+  depopts:bool -> build:bool -> post:bool ->
   universe ->
   package_set ->
   package list

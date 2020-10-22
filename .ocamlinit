@@ -1,4 +1,5 @@
 #use "topfind";;
+#use "down.top";;
 #require "opam-client";;
 
 OpamClientConfig.opam_init ();;

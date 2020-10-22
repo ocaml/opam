@@ -42,10 +42,6 @@ module Graph: sig
   (** Return the transitive closure of [g] *)
   val transitive_closure: t -> t
 
-  (** Return the transitive closure of dependencies of [set],
-      sorted in topological order. *)
-  val close_and_linearize: t -> Set.t -> Cudf.package list
-
   (** Reverse the direction of all edges *)
   val mirror: t -> t
 end
@@ -62,13 +58,15 @@ module ActionGraph: OpamActionGraph.SIG with type package = Package.t
 (** Abstract type that may be returned in case of conflicts *)
 type conflict
 
-(** Return the transitive closure of dependencies of [set],
-    sorted in topological order *)
-val dependencies: Cudf.universe -> Cudf.package list -> Cudf.package list
+(** Return the transitive closure of dependencies of [set] *)
+val dependencies: Cudf.universe -> Set.t -> Set.t
 
-(** Return the transitive closure of dependencies of [set],
-    sorted in topological order *)
-val reverse_dependencies: Cudf.universe -> Cudf.package list -> Cudf.package list
+(** Return the transitive closure of reverse dependencies of [set] *)
+val reverse_dependencies: Cudf.universe -> Set.t -> Set.t
+
+(** Sorts the given packages topolgically (be careful if there are cycles, e.g.
+   if the universe was loaded with [post] dependencies enabled) *)
+val dependency_sort: Cudf.universe -> Set.t -> Cudf.package list
 
 (** Check if a request is satisfiable and return the reasons why not unless
     [explain] is set to [false] *)
@@ -223,7 +221,7 @@ val conflict_explanations:
 (** Properly concat a single conflict as returned by [conflict_explanations] for
    display *)
 val string_of_conflict:
-  ?indent:int -> string * string list * string list -> string
+  ?start_column:int -> string * string list * string list -> string
 
 (** Dumps the given cudf universe to the given channel *)
 val dump_universe: out_channel -> Cudf.universe -> unit

@@ -20,7 +20,8 @@ New option/command/subcommand are prefixed with ◈.
   * `post-install` hooks are allowed to modify or remove installed files, the but not add new ones. Those changes are integrated in changes file [#4388 @lefessan]
 
 ## Remove
-  *
+  * Fix `opam remove --autoremove <PKG>` to not autoremove unrelated packages [#4369 @AltGr - fix #4250 #4332]
+  * Fix cases where `opam remove -a` could trigger conflicts in the presence of orphan packages [#4369 @AltGr - fix #4250 #4332]
 
 ## Switch
   * Fix `--update-invariant` when removing or changing package name [#4360 @AltGr - fix #4353]

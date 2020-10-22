@@ -102,6 +102,8 @@ let constraint_to_cudf version_map name (op,v) =
        (this shouldn't happen for any constraint in the universe, now that we
        compute a full version map, but may still happen for user-provided
        constraints) *)
+    log "Warn: fallback constraint for %s"
+      (OpamFormula.string_of_atom (name, Some (op,v)));
     let all_versions =
       OpamPackage.Map.filter (fun nv _ -> nv.name = name)
         version_map in
@@ -568,7 +570,7 @@ let dependency_graph
 let filter_dependencies
     f_direction ~depopts ~build ~post ~installed
     ?(unavailable=false) universe packages =
-  if OpamPackage.Set.is_empty packages then [] else
+  if OpamPackage.Set.is_empty packages then OpamPackage.Set.empty else
   let u_packages =
     packages ++
     if installed then universe.u_installed else
@@ -581,18 +583,34 @@ let filter_dependencies
     load_cudf_universe ~depopts ~build ~post universe ~version_map
       u_packages () in
   let cudf_packages =
-    opam2cudf universe ~depopts ~build ~post version_map packages
+    OpamCudf.Set.of_list
+      (opam2cudf universe ~depopts ~build ~post version_map packages)
   in
   log ~level:3 "filter_dependencies: dependency";
-  let topo_packages = f_direction cudf_universe cudf_packages in
-  let result = List.rev_map OpamCudf.cudf2opam topo_packages in
+  let clos_packages = f_direction cudf_universe cudf_packages in
+  let result =
+    OpamCudf.Set.fold (fun cp -> OpamPackage.Set.add (OpamCudf.cudf2opam cp))
+      clos_packages OpamPackage.Set.empty
+  in
   log "filter_dependencies result=%a"
-    (slog (OpamStd.List.to_string OpamPackage.to_string)) result;
+    (slog OpamPackage.Set.to_string) result;
   result
 
 let dependencies = filter_dependencies OpamCudf.dependencies
 
 let reverse_dependencies = filter_dependencies OpamCudf.reverse_dependencies
+
+let dependency_sort ~depopts ~build ~post universe packages =
+  let version_map = cudf_versions_map universe universe.u_packages in
+  let cudf_universe =
+    load_cudf_universe ~depopts ~build ~post universe ~version_map
+      universe.u_packages () in
+  let cudf_packages =
+    OpamCudf.Set.of_list
+      (opam2cudf universe ~depopts ~build ~post version_map packages)
+  in
+  List.map OpamCudf.cudf2opam
+    (OpamCudf.dependency_sort cudf_universe cudf_packages)
 
 let coinstallability_check universe packages =
   let version_map = cudf_versions_map universe universe.u_packages in
