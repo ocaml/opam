@@ -45,6 +45,9 @@ New option/command/subcommand are prefixed with ◈.
 ## Lock
   *
 
+## Opamfile
+  * Fix handling of filename-encoded pkgname in opam files [#4401 @AltGr - fix ocaml-opam/opam-publish#107]
+
 ## External dependencies
   *
 
@@ -62,6 +65,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Build
   * Update opam file to 2.0 [#4371 @AltGr]
+  * Makefile: Add rule `custom-libinstall` for `opam-custom-install` use [#4401 @AltGr]
 
 ## Infrastructure
   *
