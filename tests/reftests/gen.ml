@@ -24,6 +24,9 @@ let tgz_name ~archive_hash =
 let repo_directory ~archive_hash =
   Printf.sprintf "opam-repo-%s" archive_hash
 
+let opamroot_directory ~archive_hash =
+  Printf.sprintf "root-%s" archive_hash
+
 let run_rule ~base_name ~archive_hash =
   Format.sprintf {|
 (rule
@@ -32,7 +35,7 @@ let run_rule ~base_name ~archive_hash =
   (with-stdout-to
    %s.out
    (run ./run.exe %%{bin:opam} %%{dep:%s.test} %%{dep:%s}))))
-|} base_name base_name (repo_directory ~archive_hash)
+|} base_name base_name (opamroot_directory ~archive_hash)
 
 let archive_download_rule archive_hash =
    Format.sprintf {|
@@ -50,6 +53,17 @@ let archive_unpack_rule archive_hash =
     (run mkdir %%{targets})
     (run tar -C %%{targets} -xzf %%{dep:%s} --strip-components=1))))
 |} (repo_directory ~archive_hash) (tgz_name ~archive_hash)
+
+let opam_init_rule archive_hash =
+  Format.sprintf {|
+(rule
+  (targets %s)
+  (action
+   (progn
+    (run %%{bin:opam} init --root=%%{targets}
+           --no-setup --bypass-checks --no-opamrc --bare
+           file://%s))))
+|} (opamroot_directory ~archive_hash) (repo_directory ~archive_hash)
 
 module StringSet = Set.Make(String)
 
@@ -72,6 +86,7 @@ let () =
   StringSet.iter
     (fun archive_hash ->
        print_string (archive_download_rule archive_hash);
-       print_string (archive_unpack_rule archive_hash)
+       print_string (archive_unpack_rule archive_hash);
+       print_string (opam_init_rule archive_hash)
     )
     !archive_hashes
