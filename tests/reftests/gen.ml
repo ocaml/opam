@@ -62,7 +62,7 @@ let opam_init_rule archive_hash =
    (progn
     (run %%{bin:opam} init --root=%%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
-           file://%s))))
+           file://%%{dep:%s}))))
 |} (opamroot_directory ~archive_hash) (repo_directory ~archive_hash)
 
 module StringSet = Set.Make(String)

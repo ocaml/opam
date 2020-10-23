@@ -109,6 +109,7 @@ let parse_command cmd =
     Run
 
 let write_file ~path ~contents =
+  command "mkdir -p %s" (Filename.dirname path);
   let oc = open_out path in
   output_string oc contents;
   close_out oc
