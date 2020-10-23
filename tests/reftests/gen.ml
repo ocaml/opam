@@ -30,7 +30,6 @@ let opamroot_directory ~archive_hash =
 let run_rule ~base_name ~archive_hash =
   Format.sprintf {|
 (rule
- (locks ./opam)
  (action
   (with-stdout-to
    %s.out
