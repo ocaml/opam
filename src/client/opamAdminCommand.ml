@@ -602,7 +602,7 @@ let lint_command cli =
     let ret =
       OpamPackage.Map.fold (fun nv prefix ret ->
           let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
-          let w, _ = OpamFileTools.lint_file opam_file in
+          let w, _ = OpamFileTools.lint_file ~handle_dirname:true opam_file in
           if List.exists (fun (n,_,_) -> List.mem n ign) w then ret else
           let w =
             List.filter (fun (n,_,_) ->

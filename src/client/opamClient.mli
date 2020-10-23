@@ -151,3 +151,25 @@ module PIN: sig
   val post_pin_action: rw switch_state -> package_set -> name list -> rw switch_state
 
 end
+
+
+(** {2 Auxiliary functions}
+    These functions are exposed for advanced uses by external libraries
+*)
+
+(** Orphan packages are installed but no longer available packages; we add
+    special treatment so that opam doesn't force their removal for consistency
+    reasons on any action. Returns the "fixed" state, fully orphan packages (no
+    available version of the package remaining), and orphan package versions.
+
+    Find more technical explanations in the source. *)
+val orphans:
+  ?changes:package_set -> ?transitive:bool ->
+  'a switch_state ->
+  'a switch_state * package_set * package_set
+
+(** An extended version of [orphans] that checks for conflicts between a given
+    request and the orphan packages *)
+val check_conflicts:
+  'a switch_state -> atom list ->
+  'a switch_state * package_set * package_set

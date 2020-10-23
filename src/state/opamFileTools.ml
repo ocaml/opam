@@ -777,7 +777,8 @@ let extra_files_default filename =
        OpamHash.check_file (OpamFilename.to_string f))
     (OpamFilename.rec_files dir)
 
-let lint_gen ?check_extra_files ?check_upstream reader filename =
+let lint_gen ?check_extra_files ?check_upstream ?(handle_dirname=false)
+    reader filename =
   let warnings, t =
     let warn_of_bad_format (pos, msg) =
       2, `Error, Printf.sprintf "File format error%s: %s"
@@ -795,6 +796,7 @@ let lint_gen ?check_extra_files ?check_upstream reader filename =
           (OpamFormat.I.map_file OpamFile.OPAM.pp_raw_fields) f
       in
       let t, warnings =
+        if handle_dirname = false then t, [] else
         match OpamPackage.of_filename (OpamFile.filename filename) with
         | None -> t, []
         | Some nv ->
@@ -851,7 +853,7 @@ let lint_gen ?check_extra_files ?check_upstream reader filename =
   warnings @ (match t with Some t -> lint ~check_extra_files ?check_upstream t | None -> []),
   t
 
-let lint_file ?check_extra_files ?check_upstream filename =
+let lint_file ?check_extra_files ?check_upstream ?handle_dirname filename =
   let reader filename =
     try
       let ic = OpamFilename.open_in (OpamFile.filename filename) in
@@ -863,15 +865,17 @@ let lint_file ?check_extra_files ?check_upstream filename =
       OpamConsole.error_and_exit `Bad_arguments "File %s not found"
         (OpamFile.to_string filename)
   in
-  lint_gen ?check_extra_files ?check_upstream reader filename
+  lint_gen ?check_extra_files ?check_upstream ?handle_dirname reader filename
 
-let lint_channel ?check_extra_files ?check_upstream filename ic =
+let lint_channel ?check_extra_files ?check_upstream ?handle_dirname
+    filename ic =
   let reader filename = OpamFile.Syntax.of_channel filename ic in
-  lint_gen ?check_extra_files ?check_upstream reader filename
+  lint_gen ?check_extra_files ?check_upstream ?handle_dirname reader filename
 
-let lint_string ?check_extra_files ?check_upstream filename string =
+let lint_string ?check_extra_files ?check_upstream ?handle_dirname
+    filename string =
   let reader filename = OpamFile.Syntax.of_string filename string in
-  lint_gen ?check_extra_files ?check_upstream reader filename
+  lint_gen ?check_extra_files ?check_upstream ?handle_dirname reader filename
 
 let all_lint_warnings () =
   t_lint ~all:true OpamFile.OPAM.empty

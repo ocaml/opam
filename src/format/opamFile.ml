@@ -2450,24 +2450,6 @@ module OPAMSyntax = struct
       Some (pkg_flag_of_string (OpamStd.String.remove_prefix ~prefix tag))
     else None
 
-  let cleanup_name _opam_version ~pos:(file,_,_ as pos) name =
-    match OpamPackage.of_filename (OpamFilename.of_string file) with
-    | Some nv when nv.OpamPackage.name <> name ->
-      Pp.warn ~pos "This file is for package '%s' but its 'name:' field \
-                    advertises '%s'."
-        (OpamPackage.name_to_string nv) (OpamPackage.Name.to_string name);
-      nv.OpamPackage.name
-    | _ -> name
-
-  let cleanup_version _opam_version ~pos:(file,_,_ as pos) version =
-    match OpamPackage.of_filename (OpamFilename.of_string file) with
-    | Some nv when nv.OpamPackage.version <> version ->
-      Pp.warn ~pos "This file is for version '%s' but its 'version:' field \
-                    advertises '%s'."
-        (OpamPackage.version_to_string nv) (OpamPackage.Version.to_string version);
-      nv.OpamPackage.version
-    | _ -> version
-
   let cleanup_depopts opam_version ~pos depopts =
     if OpamFormatConfig.(!r.skip_version_checks) ||
        OpamVersion.compare opam_version (OpamVersion.of_string "1.2") < 0
@@ -2555,10 +2537,9 @@ module OPAMSyntax = struct
     [
       "opam-version", no_cleanup Pp.ppacc with_opam_version opam_version
         (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
-      "name", with_cleanup cleanup_name Pp.ppacc_opt with_name name_opt
+      "name", no_cleanup Pp.ppacc_opt with_name name_opt
         Pp.V.pkgname;
-      "version", with_cleanup cleanup_version
-        Pp.ppacc_opt with_version version_opt
+      "version", no_cleanup Pp.ppacc_opt with_version version_opt
         (Pp.V.string_tr -| Pp.of_module "version" (module OpamPackage.Version));
 
       "synopsis", no_cleanup Pp.ppacc_opt with_synopsis synopsis
@@ -2880,7 +2861,20 @@ module OPAMSyntax = struct
          in
          let t = { t with metadata_dir } in
          match OpamPackage.of_filename filename with
-         | Some nv -> with_nv nv t
+         | Some nv ->
+           if t.name <> None && t.name <> Some nv.name ||
+              t.version <> None && t.version <> Some nv.version
+           then
+             Pp.warn
+               "This file is for package '%s' but has mismatching fields%s%s."
+               (OpamPackage.to_string nv)
+               (OpamStd.Option.to_string
+                  (fun n -> " 'name:"^OpamPackage.Name.to_string n)
+                  t.name)
+               (OpamStd.Option.to_string
+                  (fun v -> " 'version:"^OpamPackage.Version.to_string v)
+                  t.version);
+           with_nv nv t
          | None -> t)
       (fun (filename, t) ->
          filename,
