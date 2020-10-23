@@ -113,14 +113,9 @@ let write_file ~path ~contents =
   output_string oc contents;
   close_out oc
 
-let run_test t ~opam ~repo_dir =
+let run_test t ~opam ~opamroot:opamroot0 =
   with_temp_dir @@ fun opamroot ->
-  command "%s init --root=%s \
-           --no-setup --bypass-checks --no-opamrc --bare \
-           file://%s >/dev/null 2>&1"
-    opam
-    opamroot
-    repo_dir;
+  command "rsync -a %s/ %s/" opamroot0 opamroot;
   command "%s var --quiet --global --root=%s sys-ocaml-version=4.08.0 >/dev/null"
     opam opamroot;
   print_endline t.repo_hash;
@@ -139,5 +134,5 @@ let run_test t ~opam ~repo_dir =
 let () =
   let opam = Sys.argv.(1) in
   let input = Sys.argv.(2) in
-  let repo_dir = Sys.argv.(3) in
-  load_test input |> run_test ~opam ~repo_dir
+  let opamroot = Sys.argv.(3) in
+  load_test input |> run_test ~opam ~opamroot
