@@ -2,6 +2,14 @@
 ### : INIT :
 ### mkdir REPO
 ### opam repo add test REPO --set-default --yes
+"file://${BASEDIR}/REPO" doesn't contain a "packages" directory.
+Is it really the directory of your repo? [Y/n] y
+[test] Initialised
+[WARNING] The repository 'test' at file://${BASEDIR}/REPO doesn't have a 'repo' file, and might not be compatible with this version of opam.
+[NOTE] Repository at file://${BASEDIR}/REPO doesn't define its version, assuming it's 1.2.
+
+<><> Upgrading repositories from older opam format ><><><><><><><><><><><><><><>
+Upgrading repository "test"...
 ### opam repo remove default -a
 ### : GEN FILES :
 ### <packages/P1-0.opam>
@@ -197,6 +205,7 @@ variables {
     stublibs: "$STUBLIBS"
 }
 EOF
+### chmod a+x packages/ocaml/ocaml.system/files/gen.sh
 ### <packages/ocaml/ocaml.system/opam>
 opam-version: "1.3.0~dev4"
 maintainer: "louis.gesbert@ocamlpro.com"
@@ -252,6 +261,7 @@ fi
 
 ocamlc -a p1.ml -o p1.cma
 ocamlopt -a p1.ml -o p1.cmxa
+### chmod a+x packages/P1-1/build.sh
 ### <packages/P1-1.opam>
 (* API version *)
 opam-version: "1"
@@ -341,6 +351,7 @@ fi
 
 ocamlc -a p1.ml -o p1.cma
 ocamlopt -a p1.ml -o p1.cmxa
+### chmod a+x packages/P1-2/build.sh
 ### <packages/P1-2.opam>
 opam-version: "1"
 name: "P1"
@@ -389,10 +400,11 @@ if which ocamlopt >/dev/null 2>&1; then
     ocamlopt ${OFLAGS} -a p2.ml -o p2.cmxa
 fi
 
+### chmod a+x packages/P2/build.sh
 ### <packages/P2/config.in>
 Foo is %{P1:FOO}%
 
-Foo also contains a variable with %{P1:l}%. Funny, isn't it?
+Foo also contains a variable with %{P1:l}%. Funny, isn\'t it?
 ### <packages/P2.opam>
 opam-version: "1"
 name: "P2"
@@ -440,6 +452,7 @@ if [ "x${OPAM_PACKAGE_NAME}" = "xP3" ]; then
 else
    exit 1
 fi
+### chmod a+x packages/P3/build.sh
 ### <packages/P3.opam>
 opam-version: "1"
 name: "P3"
@@ -534,6 +547,7 @@ if which ocamlopt >/dev/null 2>&1; then OCAMLC=ocamlopt; fi
 $OCAMLC ${COMP} ${LINK} p4.ml -o p4.foo
 
 echo "TEST=${TEST}"
+### chmod a+x packages/P4/build.sh
 ### <packages/P4/P4.install>
 bin: [
  "p4.foo" { "p4" }
@@ -562,6 +576,7 @@ if which ocamlopt >/dev/null 2>&1; then
     echo "Native Compilation"
     ocamlopt ${FLAGS} -a p5.ml -o p5.cmxa
 fi
+### chmod a+x packages/P5/build.sh
 ### <packages/P5.opam>
 (* API version *)
 opam-version: "1"
@@ -611,26 +626,71 @@ echo 'src: "http://dev.null" checksum: "'$(openssl md5 packages/${ARCHIVE} |cut 
 ### cp packages/P5.opam       REPO/packages/P5.1/opam
 ### cp packages/P5/README     REPO/packages/P5.1/descr
 ### sh ./mkurl.sh P5.1 P5.tar.gz
-### for f in packages/*.tar.gz; do md5=$(openssl md5 $f |cut -d' ' -f2); dir=REPO/cache/md5/$(echo $$md5 |head -c2); mkdir -p $dir; cp $f $dir/$md5; done
+### for f in packages/*.tar.gz; do md5=$(openssl md5 $f |cut -d' ' -f2); dir=REPO/cache/md5/$(echo $md5 |head -c2); mkdir -p $dir; cp $f $dir/$md5; done
 ### echo 'archive-mirrors: "'"$PWD"'/REPO/cache"' >> REPO/repo
-### opam update
+### opam update | sed 's%/opam-[0-9a-f]*-[0-9a-f]*/%/XXX/%'
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[test] synchronised from file://${BASEDIR}/REPO
+[NOTE] Repository at file://${BASEDIR}/REPO doesn't define its version, assuming it's 1.2.
+
+<><> Upgrading repositories from older opam format ><><><><><><><><><><><><><><>
+Upgrading repository "test"...
+Updated /tmp/XXX/test/packages/P1.0/opam
+Updated /tmp/XXX/test/packages/P1.1/opam
+Updated /tmp/XXX/test/packages/P2.1/opam
+Updated /tmp/XXX/test/packages/P3.1~weird-version.test/opam
+Updated /tmp/XXX/test/packages/P4.1/opam
+Updated /tmp/XXX/test/packages/P5.1/opam
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create system --packages ocaml.system
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml" {= "system"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+∗ installed ocaml.system
+Done.
 ### opam config set ext_lib $(ocamlc -config | sed -ne "s/ext_lib: .//p" | tr -d '\r')
+[WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
+Added 'ext_lib: "a"' to field variables in switch system
 ### : INSTALL-REMOVE :
-### opam list -is
-install-remove-1
+### opam list -is --columns=package
 ocaml.system
 ### opam install P1
-### opam list -is
-install-remove-2
+The following actions will be performed:
+  ∗ install P1 1  I'll always bother you displaying this message
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P1.1  (${BASEDIR}/REPO/cache)
+∗ installed P1.1
+Done.
+
+<><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
+=> Thanks SO MUCH for installing this humble package
+=> Everything went well
+### opam list -is --columns=package
 ocaml.system
 P1.1
 ### opam remove P1
-### opam list -is
-install-remove-3
+The following actions will be performed:
+  ⊘ remove P1 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⊘ removed   P1.1
+Done.
+### opam list -is --columns=package
 ocaml.system
 ### : LIST :
 ### opam list -A
+# Packages matching: any
+# Name # Installed # Synopsis
+ocaml  system
+P1     --          A very useful package
+P2     --          An other very useful package
+P3     --          Testing version names
+P4     --          Testing transitive closure
+P5     --          Testing optional dependencies
 ### $(call RUN,list)
 ### $(call RUN,install-opt)
 ### $(call RUN,list)
