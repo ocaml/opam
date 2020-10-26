@@ -70,12 +70,16 @@ let rec with_temp_dir f =
     with_temp_dir f
   else
   (command "mkdir -p %s" s;
-   finally f s @@ fun () -> command "rm -rf %s" s)
+   finally f s @@ fun () -> ()(* command "rm -rf %s" s *))
 
-let run_cmd ~opam ~opamroot cmd =
+let run_cmd ~opam cmd =
   let complete_opam_cmd cmd args =
-    Printf.sprintf "%s %s --color=never --root=%s %s 2>&1 |sed 's#%s#${BASEDIR}#g'"
-      opam cmd opamroot (String.concat " " args)
+    Printf.sprintf
+      "%s %s %s 2>&1 \
+       | sed 's#%s#${BASEDIR}#g' \
+       | sed 's#'\"$OPAMROOT\"'#${OPAMROOT}#g' \
+       | sed 's#/tmp/opam-[0-9a-f]*-[0-9a-f]*/#${OPAMTMP}/#g'"
+      opam cmd (String.concat " " args)
       (Sys.getcwd ())
   in
   try
@@ -116,9 +120,17 @@ let write_file ~path ~contents =
 
 let run_test t ~opam ~opamroot:opamroot0 =
   with_temp_dir @@ fun opamroot ->
+  List.iter (fun (var, value) -> Unix.putenv var value) [
+    "OPAM", opam;
+    "OPAMKEEPBUILDDIR", "1";
+    "OPAMSWITCH", "";
+    "OPAMCOLOR", "never";
+    "OPAMROOT", opamroot;
+    "OPAMJOBS", "1";
+    "OPAMDOWNLOADJOBS", "1";
+  ];
   command "rsync -a %s/ %s/" opamroot0 opamroot;
-  command "%s var --quiet --global --root=%s sys-ocaml-version=4.08.0 >/dev/null"
-    opam opamroot;
+  command "%s var --quiet --global sys-ocaml-version=4.08.0 >/dev/null" opam;
   print_endline t.repo_hash;
   List.iter (fun (cmd, out) ->
       print_string cmd_prompt;
@@ -129,11 +141,11 @@ let run_test t ~opam ~opamroot:opamroot0 =
         write_file ~path ~contents;
         print_endline contents
       | Run ->
-        run_cmd ~opam ~opamroot cmd)
+        run_cmd ~opam cmd)
     t.commands
 
 let () =
-  let opam = Sys.argv.(1) in
+  let opam = OpamFilename.(to_string (of_string Sys.argv.(1))) in
   let input = Sys.argv.(2) in
   let opamroot = Sys.argv.(3) in
   load_test input |> run_test ~opam ~opamroot
