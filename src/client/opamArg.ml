@@ -239,11 +239,12 @@ let help_sections = [
 
   (* Alphabetical order *)
   `P "$(i,OPAMALLPARENS) surround all filters with parenthesis";
+  `P "$(i,OPAMASSUMEDEPEXTS) see option `--assume-depexts'";
   `P "$(i,OPAMAUTOREMOVE) see remove option `--auto-remove`";
   `P "$(i,OPAMBESTEFFORT) see option `--best-effort`";
   `P "$(i,OPAMBESTEFFORTPREFIXCRITERIA) sets the string that must be prepended \
       to the criteria when the `--best-effort` option is set, and is expected \
-      to maximise the `opam-query` property in the solution ";
+      to maximise the `opam-query` property in the solution";
   `P "$(i,OPAMCLI) see option `--cli'";
   `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
       value for the --color option.";
@@ -296,6 +297,8 @@ let help_sections = [
   `P "$(i,OPAMNO) answer no to any question asked.";
   `P "$(i,OPAMNOASPCUD) Deprecated.";
   `P "$(i,OPAMNOCHECKSUMS) enables option --no-checksums when available.";
+  `P "$(i,OPAMNODEPEXTS) disables system dependencies handling, see option \
+      `--no-depexts'.";
   `P "$(i,OPAMDROPWORKINGDIR) overrides packages previously updated with \
       $(b,--working-dir) on update. Without this variable set, opam would keep them \
       unchanged unless explicitely named on the command-line.";
