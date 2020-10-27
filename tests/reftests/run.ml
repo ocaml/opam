@@ -121,6 +121,7 @@ let write_file ~path ~contents =
 let run_test t ~opam ~opamroot:opamroot0 =
   with_temp_dir @@ fun opamroot ->
   List.iter (fun (var, value) -> Unix.putenv var value) [
+    "LC_ALL", "C";
     "OPAM", opam;
     "OPAMKEEPBUILDDIR", "1";
     "OPAMSWITCH", "";
@@ -128,6 +129,7 @@ let run_test t ~opam ~opamroot:opamroot0 =
     "OPAMROOT", opamroot;
     "OPAMJOBS", "1";
     "OPAMDOWNLOADJOBS", "1";
+    "OPAMUTF8", "always";
   ];
   command "rsync -a %s/ %s/" opamroot0 opamroot;
   command "%s var --quiet --global sys-ocaml-version=4.08.0 >/dev/null" opam;

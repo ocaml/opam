@@ -9,7 +9,6 @@
  (deps (alias reftest-camelus)))
 
 (rule
- (locks ./opam)
  (action
   (with-stdout-to
    camelus.out
@@ -25,7 +24,6 @@
  (deps (alias reftest-conflict-badversion)))
 
 (rule
- (locks ./opam)
  (action
   (with-stdout-to
    conflict-badversion.out
@@ -41,7 +39,6 @@
  (deps (alias reftest-conflict-camlp4)))
 
 (rule
- (locks ./opam)
  (action
   (with-stdout-to
    conflict-camlp4.out
@@ -57,7 +54,6 @@
  (deps (alias reftest-conflict-core)))
 
 (rule
- (locks ./opam)
  (action
   (with-stdout-to
    conflict-core.out
@@ -73,7 +69,6 @@
  (deps (alias reftest-conflict-solo5)))
 
 (rule
- (locks ./opam)
  (action
   (with-stdout-to
    conflict-solo5.out
@@ -89,11 +84,25 @@
  (deps (alias reftest-install-pgocaml)))
 
 (rule
- (locks ./opam)
  (action
   (with-stdout-to
    install-pgocaml.out
    (run ./run.exe %{bin:opam} %{dep:install-pgocaml.test} %{dep:root-f372039d}))))
+
+(alias
+ (name reftest-legacy-git)
+ (action
+  (diff legacy-git.test legacy-git.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-legacy-git)))
+
+(rule
+ (action
+  (with-stdout-to
+   legacy-git.out
+   (run ./run.exe %{bin:opam} %{dep:legacy-git.test} %{dep:root-632bc2e}))))
 
 (alias
  (name reftest-legacy-local)
@@ -105,7 +114,6 @@
  (deps (alias reftest-legacy-local)))
 
 (rule
- (locks ./opam)
  (action
   (with-stdout-to
    legacy-local.out
@@ -121,7 +129,6 @@
  (deps (alias reftest-show)))
 
 (rule
- (locks ./opam)
  (action
   (with-stdout-to
    show.out
