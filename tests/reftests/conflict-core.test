@@ -15,8 +15,8 @@ Done.
 ### opam install core_bench.112.17.00 core'<112.17.00' --show
 [ERROR] Package conflict!
   * No agreement on the version of ocaml:
-    - (invariant) → ocaml-base-compiler >= 4.08.0 → ocaml = 4.08.0
-    - core < 112.17.00 → ocaml < 4.00.1
+    - (invariant) -> ocaml-base-compiler >= 4.08.0 -> ocaml = 4.08.0
+    - core < 112.17.00 -> ocaml < 4.00.1
     You can temporarily relax the switch invariant with `--update-invariant'
 
 No solution found, exiting

@@ -1,18 +1,35 @@
 632bc2e
-### : INIT :
-### mkdir REPO
-### <git-init.sh>
+### : UTILITARY SCRIPTS :
+### <git-init>
 #!/bin/sh -ue
 cd $1
 git init >/dev/null
 echo '*.sh text eol=lf' >.gitattributes
-[ -z "$2" ] || touch "$2"
+[ $# -lt 2 ] || touch "$2"
 git add -A
 git config --local user.name 'OPAM test environment'
 git config --local user.email noreply@ocaml.org
 git commit -qm "Initial commit"
 echo "OK"
-### sh ./git-init.sh REPO README
+### chmod a+x git-init
+### <mkurl>
+#!/bin/sh -ue
+PKG=$1; shift
+ARCHIVE=$1; shift
+( cd packages && tar czf ${ARCHIVE} ${ARCHIVE%.tar.gz}; )
+MD5=$(openssl md5 packages/${ARCHIVE} | cut -d' ' -f2)
+echo 'src: "http://dev.null" checksum: "'$MD5'"' > REPO/packages/${PKG}/url
+CACHEDIR=REPO/cache/md5/$(echo $MD5 |head -c2)
+mkdir -p $CACHEDIR
+cp "packages/$ARCHIVE" "$CACHEDIR/$MD5"
+### chmod a+x mkurl
+### <opam-sort>
+#!/bin/sh
+exec awk '/^-> / {print | "sort"; next} /^Done.$/ { close("sort") } {print}'
+### chmod a+x opam-sort
+### : INIT :
+### mkdir REPO
+### ./git-init REPO README
 OK
 ### opam repo add test REPO --set-default --yes
 [test] Initialised
@@ -611,37 +628,27 @@ Testing optional dependencies
 ### cp -r packages/ocaml REPO/packages
 ### mkdir -p REPO/packages/P1.0
 ### cp packages/P1-0.opam     REPO/packages/P1.0/opam
-### <mkurl.sh>
-#!/bin/sh -ue
-PKG=$1; shift
-ARCHIVE=$1; shift
-( cd packages && tar czf ${ARCHIVE} ${ARCHIVE%.tar.gz}; )
-MD5=$(openssl md5 packages/${ARCHIVE} | cut -d' ' -f2)
-echo 'src: "http://dev.null" checksum: "'$MD5'"' > REPO/packages/${PKG}/url
-CACHEDIR=REPO/cache/md5/$(echo $MD5 |head -c2)
-mkdir -p $CACHEDIR
-cp "packages/$ARCHIVE" "$CACHEDIR/$MD5"
-### sh ./mkurl.sh P1.0 P1-0.tar.gz
+### ./mkurl P1.0 P1-0.tar.gz
 ### mkdir -p REPO/packages/P1.1
 ### cp packages/P1-1.opam     REPO/packages/P1.1/opam
 ### cp packages/P1-1/README   REPO/packages/P1.1/descr
-### sh ./mkurl.sh P1.1 P1-1.tar.gz
+### ./mkurl P1.1 P1-1.tar.gz
 ### mkdir -p REPO/packages/P2.1
 ### cp packages/P2/README     REPO/packages/P2.1/descr
 ### cp packages/P2.opam       REPO/packages/P2.1/opam
-### sh ./mkurl.sh P2.1 P2.tar.gz
+### ./mkurl P2.1 P2.tar.gz
 ### mkdir -p REPO/packages/P3.1~weird-version.test
 ### cp packages/P3.opam       REPO/packages/P3.1~weird-version.test/opam
 ### cp packages/P3/README     REPO/packages/P3.1~weird-version.test/descr
-### sh ./mkurl.sh P3.1~weird-version.test P3.tar.gz
+### ./mkurl P3.1~weird-version.test P3.tar.gz
 ### mkdir -p REPO/packages/P4.1
 ### cp packages/P4-1.opam     REPO/packages/P4.1/opam
 ### cp packages/P4/README     REPO/packages/P4.1/descr
-### sh ./mkurl.sh P4.1 P4.tar.gz
+### ./mkurl P4.1 P4.tar.gz
 ### mkdir -p REPO/packages/P5.1
 ### cp packages/P5.opam       REPO/packages/P5.1/opam
 ### cp packages/P5/README     REPO/packages/P5.1/descr
-### sh ./mkurl.sh P5.1 P5.tar.gz
+### ./mkurl P5.1 P5.tar.gz
 ### cd REPO/packages/ocaml.system && git add * && git commit -qm "Adding ocaml.system"
 ### cd REPO/packages/ocaml.20 && git add * && git commit -qm "Adding ocaml.20"
 ### cd REPO/packages/ocaml.10+a+b && git add * && git commit -qm "Adding ocaml.10+a+b"
@@ -664,17 +671,17 @@ cp "packages/$ARCHIVE" "$CACHEDIR/$MD5"
 ### mkdir GIT/P3   && cp packages/P3/*   GIT/P3/
 ### mkdir GIT/P4   && cp packages/P4/*   GIT/P4/
 ### mkdir GIT/P5   && cp packages/P5/*   GIT/P5/
-### sh ./git-init.sh GIT/P1-0
+### ./git-init GIT/P1-0
 OK
-### sh ./git-init.sh GIT/P1-1
+### ./git-init GIT/P1-1
 OK
-### sh ./git-init.sh GIT/P2
+### ./git-init GIT/P2
 OK
-### sh ./git-init.sh GIT/P3
+### ./git-init GIT/P3
 OK
-### sh ./git-init.sh GIT/P4
+### ./git-init GIT/P4
 OK
-### sh ./git-init.sh GIT/P5
+### ./git-init GIT/P5
 OK
 ### opam update
 
@@ -698,7 +705,7 @@ Now run 'opam upgrade' to apply any package updates.
 Switch invariant: ["ocaml" {= "system"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-∗ installed ocaml.system
+-> installed ocaml.system
 Done.
 ### opam exec -- ocamlc -config | sed -ne "s/ext_lib: .//p" | tr -d '\r' >lib-ext
 ### opam config set ext_lib $(cat lib-ext)
@@ -709,11 +716,11 @@ Added 'ext_lib: "a"' to field variables in switch system
 ocaml.system
 ### opam install P1
 The following actions will be performed:
-  ∗ install P1 1  I ll always bother you displaying this message
+  - install P1 1  I ll always bother you displaying this message
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
-∗ installed P1.1
+-> retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+-> installed P1.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -724,10 +731,10 @@ ocaml.system
 P1.1
 ### opam remove P1
 The following actions will be performed:
-  ⊘ remove P1 1
+  - remove P1 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⊘ removed   P1.1
+-> removed   P1.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -744,17 +751,17 @@ P5     --          Testing optional dependencies
 ### : INSTALL-OPT :
 ### opam list -is --columns=package
 ocaml.system
-### opam install --yes P5
+### opam install --yes P5 | ./opam-sort
 The following actions will be performed:
-  ∗ install P1 1 [required by P5] I ll always bother you displaying this message
-  ∗ install P5 1
-===== ∗ 2 =====
+  - install P1 1 [required by P5] I ll always bother you displaying this message
+  - install P5 1
+===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
-⬇ retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
-∗ installed P1.1
-∗ installed P5.1
+-> installed P1.1
+-> installed P5.1
+-> retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+-> retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -768,21 +775,21 @@ P1.1
 P5.1
 ### opam remove P5
 The following actions will be performed:
-  ⊘ remove P5 1
+  - remove P5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⊘ removed   P5.1
+-> removed   P5.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
 P1.1
 ### opam install P5
 The following actions will be performed:
-  ∗ install P5 1
+  - install P5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
-∗ installed P5.1
+-> retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
+-> installed P5.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -790,27 +797,27 @@ P1.1
 P5.1
 ### opam remove P5 -a --yes
 The following actions will be performed:
-  ⊘ remove P5 1
-  ⊘ remove P1 1
-===== ⊘ 2 =====
+  - remove P5 1
+  - remove P1 1
+===== 2 to remove =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⊘ removed   P5.1
-⊘ removed   P1.1
+-> removed   P5.1
+-> removed   P1.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
-### opam install P5 --yes
+### opam install P5 --yes | ./opam-sort
 The following actions will be performed:
-  ∗ install P1 1 [required by P5] I ll always bother you displaying this message
-  ∗ install P5 1
-===== ∗ 2 =====
+  - install P1 1 [required by P5] I ll always bother you displaying this message
+  - install P5 1
+===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
-⬇ retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
-∗ installed P1.1
-∗ installed P5.1
+-> installed P1.1
+-> installed P5.1
+-> retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+-> retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -820,18 +827,18 @@ Done.
 ocaml.system
 P1.1
 P5.1
-### opam install P2 --yes
+### opam install P2 --yes | ./opam-sort
 The following actions will be performed:
-  ∗ install   P2 1
-  ↻ recompile P5 1 [uses P2]
-===== ∗ 1   ↻ 1 =====
+  - install   P2 1
+  - recompile P5 1 [uses P2]
+===== 1 to install | 1 to recompile =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
-⬇ retrieved P5.1  (no changes)
-⊘ removed   P5.1
-∗ installed P2.1
-∗ installed P5.1
+-> installed P2.1
+-> installed P5.1
+-> removed   P5.1
+-> retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
+-> retrieved P5.1  (no changes)
 Done.
 ### test -f ${OPAMROOT}/system/lib/p5/p2_present && echo PASS
 PASS
@@ -842,10 +849,10 @@ P2.1
 P5.1
 ### opam remove P5 -a
 The following actions will be performed:
-  ⊘ remove P5 1
+  - remove P5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⊘ removed   P5.1
+-> removed   P5.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -853,30 +860,30 @@ P1.1
 P2.1
 ### opam remove P2 -a --yes
 The following actions will be performed:
-  ⊘ remove P2 1
-  ⊘ remove P1 1
-===== ⊘ 2 =====
+  - remove P2 1
+  - remove P1 1
+===== 2 to remove =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⊘ removed   P2.1
-⊘ removed   P1.1
+-> removed   P2.1
+-> removed   P1.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
-### opam install P1 P2 P5
+### opam install P1 P2 P5 | ./opam-sort
 The following actions will be performed:
-  ∗ install P1 1  I ll always bother you displaying this message
-  ∗ install P2 1
-  ∗ install P5 1
-===== ∗ 3 =====
+  - install P1 1  I ll always bother you displaying this message
+  - install P2 1
+  - install P5 1
+===== 3 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
-⬇ retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
-⬇ retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
-∗ installed P1.1
-∗ installed P2.1
-∗ installed P5.1
+-> installed P1.1
+-> installed P2.1
+-> installed P5.1
+-> retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+-> retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
+-> retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -891,15 +898,15 @@ P2.1
 P5.1
 ### opam remove P2 -a --yes
 The following actions will be performed:
-  ⊘ remove    P2 1
-  ↻ recompile P5 1 [uses P2]
-===== ↻ 1   ⊘ 1 =====
+  - remove    P2 1
+  - recompile P5 1 [uses P2]
+===== 1 to recompile | 1 to remove =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P5.1  (no changes)
-⊘ removed   P5.1
-⊘ removed   P2.1
-∗ installed P5.1
+-> retrieved P5.1  (no changes)
+-> removed   P5.1
+-> removed   P2.1
+-> installed P5.1
 Done.
 ### test -f ${OPAMROOT}/system/lib/p5/p2_absent && echo PASS
 PASS
@@ -909,13 +916,13 @@ P1.1
 P5.1
 ### opam remove P1 --yes
 The following actions will be performed:
-  ⊘ remove P5 1 [uses P1]
-  ⊘ remove P1 1
-===== ⊘ 2 =====
+  - remove P5 1 [uses P1]
+  - remove P1 1
+===== 2 to remove =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⊘ removed   P5.1
-⊘ removed   P1.1
+-> removed   P5.1
+-> removed   P1.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -934,11 +941,11 @@ P5     --          Testing optional dependencies
 ocaml.system
 ### opam install P1
 The following actions will be performed:
-  ∗ install P1 1  I ll always bother you displaying this message
+  - install P1 1  I ll always bother you displaying this message
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
-∗ installed P1.1
+-> retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+-> installed P1.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -949,11 +956,11 @@ ocaml.system
 P1.1
 ### opam install P2
 The following actions will be performed:
-  ∗ install P2 1
+  - install P2 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
-∗ installed P2.1
+-> retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
+-> installed P2.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -961,11 +968,11 @@ P1.1
 P2.1
 ### opam install P3
 The following actions will be performed:
-  ∗ install P3 1~weird-version.test
+  - install P3 1~weird-version.test
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P3.1~weird-version.test  (git+file://${BASEDIR}/GIT/P3)
-∗ installed P3.1~weird-version.test
+-> retrieved P3.1~weird-version.test  (git+file://${BASEDIR}/GIT/P3)
+-> installed P3.1~weird-version.test
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -974,11 +981,11 @@ P2.1
 P3.1~weird-version.test
 ### opam install P4
 The following actions will be performed:
-  ∗ install P4 1
+  - install P4 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P4.1  (git+file://${BASEDIR}/GIT/P4)
-∗ installed P4.1
+-> retrieved P4.1  (git+file://${BASEDIR}/GIT/P4)
+-> installed P4.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -1003,27 +1010,27 @@ P1.1
 P2.1
 P3.1~weird-version.test
 P4.1
-### opam reinstall P1 --yes
+### opam reinstall P1 --yes | ./opam-sort
 The following actions will be performed:
-  ↻ recompile P1 1                                  I ll always bother you displaying this message
-  ↻ recompile P3 1~weird-version.test [uses P1]
-  ↻ recompile P2 1                    [uses P1]
-  ↻ recompile P4 1                    [uses P2, P3]
-===== ↻ 4 =====
+  - recompile P1 1                                  I ll always bother you displaying this message
+  - recompile P3 1~weird-version.test [uses P1]
+  - recompile P2 1                    [uses P1]
+  - recompile P4 1                    [uses P2, P3]
+===== 4 to recompile =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (no changes)
-⬇ retrieved P2.1  (no changes)
-⬇ retrieved P3.1~weird-version.test  (no changes)
-⬇ retrieved P4.1  (no changes)
-⊘ removed   P4.1
-⊘ removed   P2.1
-⊘ removed   P3.1~weird-version.test
-⊘ removed   P1.1
-∗ installed P1.1
-∗ installed P2.1
-∗ installed P3.1~weird-version.test
-∗ installed P4.1
+-> installed P1.1
+-> installed P2.1
+-> installed P3.1~weird-version.test
+-> installed P4.1
+-> removed   P1.1
+-> removed   P2.1
+-> removed   P3.1~weird-version.test
+-> removed   P4.1
+-> retrieved P1.1  (no changes)
+-> retrieved P2.1  (no changes)
+-> retrieved P3.1~weird-version.test  (no changes)
+-> retrieved P4.1  (no changes)
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1049,11 +1056,11 @@ P5     --                   Testing optional dependencies
 ### mkdir REPO/packages/P4.2
 ### cp packages/P4-2.opam   REPO/packages/P4.2/opam
 ### cp packages/P4/README   REPO/packages/P4.2/descr
-### sh ./mkurl.sh P4.2 P4.tar.gz
+### ./mkurl P4.2 P4.tar.gz
 ### mkdir REPO/packages/P4.3
 ### cp packages/P4-3.opam   REPO/packages/P4.3/opam
 ### cp packages/P4/README   REPO/packages/P4.3/descr
-### sh ./mkurl.sh P4.3 P4.tar.gz
+### ./mkurl P4.3 P4.tar.gz
 ### echo "(* new line *)" >> GIT/P1-1/p1.ml
 ### cd GIT/P1-1 && git commit -a -qm "a small change"
 ### echo 'git: "GIT/P4"' > REPO/packages/P4.2/url
@@ -1102,27 +1109,27 @@ P3.1~weird-version.test
 P4.1
 ### eval `opam config env | tr -d '\r'`; echo $P1
 version1
-### opam upgrade --yes
+### opam upgrade --yes | ./opam-sort
 The following actions will be performed:
-  ↻ recompile P1 1                    [upstream or system changes] I ll always bother you displaying this message
-  ↻ recompile P3 1~weird-version.test [uses P1]
-  ↻ recompile P2 1                    [uses P1]
-  ↗ upgrade   P4 1 to 3
-===== ↻ 3   ↗ 1 =====
+  - recompile P1 1                    [upstream or system changes] I ll always bother you displaying this message
+  - recompile P3 1~weird-version.test [uses P1]
+  - recompile P2 1                    [uses P1]
+  - upgrade   P4 1 to 3
+===== 3 to recompile | 1 to upgrade =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (no changes)
-⬇ retrieved P2.1  (no changes)
-⬇ retrieved P3.1~weird-version.test  (no changes)
-⬇ retrieved P4.3  (git+file://${BASEDIR}/GIT/P4)
-⊘ removed   P4.1
-⊘ removed   P2.1
-⊘ removed   P3.1~weird-version.test
-⊘ removed   P1.1
-∗ installed P1.1
-∗ installed P2.1
-∗ installed P3.1~weird-version.test
-∗ installed P4.3
+-> installed P1.1
+-> installed P2.1
+-> installed P3.1~weird-version.test
+-> installed P4.3
+-> removed   P1.1
+-> removed   P2.1
+-> removed   P3.1~weird-version.test
+-> removed   P4.1
+-> retrieved P1.1  (no changes)
+-> retrieved P2.1  (no changes)
+-> retrieved P3.1~weird-version.test  (no changes)
+-> retrieved P4.3  (git+file://${BASEDIR}/GIT/P4)
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1151,14 +1158,14 @@ P1.1
 P2.1
 P3.1~weird-version.test
 P4.3
-### opam install P4.2 --yes
+### opam install P4.2 --yes | ./opam-sort
 The following actions will be performed:
-  ↘ downgrade P4 3 to 2
+  - downgrade P4 3 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P4.2  (git+file://${BASEDIR}/GIT/P4)
-⊘ removed   P4.3
-∗ installed P4.2
+-> installed P4.2
+-> removed   P4.3
+-> retrieved P4.2  (git+file://${BASEDIR}/GIT/P4)
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -1185,13 +1192,13 @@ P3.1~weird-version.test
 P4.2
 ### opam remove P3.1~weird-version.test P4.2
 The following actions will be performed:
-  ⊘ remove P4 2
-  ⊘ remove P3 1~weird-version.test
-===== ⊘ 2 =====
+  - remove P4 2
+  - remove P3 1~weird-version.test
+===== 2 to remove =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⊘ removed   P4.2
-⊘ removed   P3.1~weird-version.test
+-> removed   P4.2
+-> removed   P3.1~weird-version.test
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -1204,24 +1211,24 @@ P2.1
 Switch invariant: ["ocaml" {= "system"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-∗ installed ocaml.system
+-> installed ocaml.system
 Done.
 ### opam config set ext_lib $(cat lib-ext)
 [WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
 Added 'ext_lib: "a"' to field variables in switch test
 ### opam list -is --columns=package
 ocaml.system
-### opam switch import test.export
+### opam switch import test.export | ./opam-sort
 The following actions will be performed:
-  ∗ install P1 1  I ll always bother you displaying this message
-  ∗ install P2 1
-===== ∗ 2 =====
+  - install P1 1  I ll always bother you displaying this message
+  - install P2 1
+===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
-⬇ retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
-∗ installed P1.1
-∗ installed P2.1
+-> installed P1.1
+-> installed P2.1
+-> retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+-> retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1237,7 +1244,7 @@ P2.1
 Switch invariant: ["ocaml" {= "20"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-∗ installed ocaml.20
+-> installed ocaml.20
 Done.
 ### opam config set ext_lib $(cat lib-ext)
 [WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
@@ -1246,11 +1253,11 @@ Added 'ext_lib: "a"' to field variables in switch test2
 ocaml.20
 ### opam install P1
 The following actions will be performed:
-  ∗ install P1 1  I ll always bother you displaying this message
+  - install P1 1  I ll always bother you displaying this message
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
-∗ installed P1.1
+-> retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+-> installed P1.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1283,28 +1290,28 @@ ocaml.system
 P1.1
 P2.1
 ### opam switch create 10+a+b --empty
-### opam config set ext_lib $(cat lib-ext)
+### opam config set ext_lib $(cat lib-ext) | ./opam-sort
 [WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
 Added 'ext_lib: "a"' to field variables in switch 10+a+b
-### opam install ocaml.10+a+b P1 P2 P3 P4
+### opam install ocaml.10+a+b P1 P2 P3 P4 | ./opam-sort
 The following actions will be performed:
-  ∗ install ocaml 10+a+b
-  ∗ install P1    1                     I ll always bother you displaying this message
-  ∗ install P3    1~weird-version.test
-  ∗ install P2    1
-  ∗ install P4    3
-===== ∗ 5 =====
+  - install ocaml 10+a+b
+  - install P1    1                     I ll always bother you displaying this message
+  - install P3    1~weird-version.test
+  - install P2    1
+  - install P4    3
+===== 5 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-∗ installed ocaml.10+a+b
-⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
-⬇ retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
-⬇ retrieved P3.1~weird-version.test  (git+file://${BASEDIR}/GIT/P3)
-⬇ retrieved P4.3  (git+file://${BASEDIR}/GIT/P4)
-∗ installed P1.1
-∗ installed P2.1
-∗ installed P3.1~weird-version.test
-∗ installed P4.3
+-> installed P1.1
+-> installed P2.1
+-> installed P3.1~weird-version.test
+-> installed P4.3
+-> installed ocaml.10+a+b
+-> retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+-> retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
+-> retrieved P3.1~weird-version.test  (git+file://${BASEDIR}/GIT/P3)
+-> retrieved P4.3  (git+file://${BASEDIR}/GIT/P4)
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
