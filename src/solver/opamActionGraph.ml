@@ -157,6 +157,7 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
       Some (`Change(d, o, p))
     | `O ["recompile", p] -> P.of_json p >>= (fun p -> Some (`Reinstall p))
     | `O ["build", p] -> P.of_json p >>= (fun p -> Some (`Build p))
+    | `O ["fetch", p] -> P.of_json p >>= (fun p -> Some (`Fetch p))
     | _ -> None
 
   module O = struct

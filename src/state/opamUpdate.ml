@@ -507,7 +507,16 @@ let cleanup_source st old_opam_opt new_opam =
     { u with OpamUrl.hash = None }
   in
   let url_remote opam = OpamFile.OPAM.url opam >>| base_url in
-  if url_remote new_opam <> (old_opam_opt >>= url_remote) then
+  let new_opam_o = url_remote new_opam in
+  let old_opam_o = old_opam_opt >>= url_remote in
+  let backend u = u.OpamUrl.backend in
+  let clean =
+    match new_opam_o >>| backend, old_opam_o >>| backend with
+    | Some #OpamUrl.version_control, (Some #OpamUrl.version_control | None) ->
+      false
+    | _ -> new_opam_o <> old_opam_o
+  in
+  if clean then
     OpamFilename.rmdir
       (OpamSwitchState.source_dir st (OpamFile.OPAM.package new_opam))
 
