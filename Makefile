@@ -193,7 +193,13 @@ crowbar-afl: $(DUNE_DEP)
 
 # tests-local, tests-git
 tests-%:
-	$(MAKE) -C tests $*
+	$(DUNE) build $(DUNE_ARGS) @reftests-legacy-%
+
+reftests:
+	$(DUNE) build --profile=$(DUNE_PROFILE) @reftest
+
+reftests-meld:
+	meld `for t in tests/reftests/*.test; do echo --diff $$t _build/default/$${t%.test}.out; done`
 
 .PHONY: doc
 doc: all
