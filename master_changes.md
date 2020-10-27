@@ -68,6 +68,8 @@ New option/command/subcommand are prefixed with ◈.
   * Fix sandbox script shell mistake that made `PWD` read-write on remove actions [@4589 @AltGr]
   * Port bwrap improvements to sandbox_exec [@4589 @AltGr]
 
+  * Make the reference tests dune-friendly [#4376 @emillon]
+  * Rewrite the very old tests and unify them with the newer ones [@AltGr]
 ## Repository management
   *
 
