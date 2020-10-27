@@ -1,0 +1,1350 @@
+632bc2e
+### : INIT :
+### mkdir REPO
+### <git-init.sh>
+#!/bin/sh -ue
+cd $1
+git init >/dev/null
+echo '*.sh text eol=lf' >.gitattributes
+[ -z "$2" ] || touch "$2"
+git add -A
+git config --local user.name 'OPAM test environment'
+git config --local user.email noreply@ocaml.org
+git commit -qm "Initial commit"
+echo "OK"
+### sh ./git-init.sh REPO README
+OK
+### opam repo add test REPO --set-default --yes
+[test] Initialised
+[WARNING] The repository 'test' at git+file://${BASEDIR}/REPO doesn't have a 'repo' file, and might not be compatible with this version of opam.
+[NOTE] Repository at git+file://${BASEDIR}/REPO doesn't define its version, assuming it's 1.2.
+
+<><> Upgrading repositories from older opam format ><><><><><><><><><><><><><><>
+Upgrading repository "test"...
+### opam repo remove default -a
+### : GEN FILES :
+### <packages/P1-0.opam>
+(* API version *)
+opam-version: "1"
+
+name: "P1"
+version: "0"
+
+setenv: [P1 = "version0"]
+substs: [ "P1.config" "P1.install" ]
+
+build: [
+  [ "ocamlc" "-a" "p1.ml" "-o" "p1.cma" ]
+  [ "ocamlopt" "-a" "p1.ml" "-o" "p1.cmxa" ]
+]
+depends: ["ocaml"]
+### <packages/P1-1.opam>
+(* API version *)
+opam-version: "1"
+
+name: "P1"
+
+# Test
+# Toto
+
+(* Version are arbitrary strings *)
+version: "1"
+
+maintainer: "contact@ocamlpro.com"
+
+(* The command to run *)
+build: [
+  ["./build.sh"] # HAHAH
+  ["this" "should" "never" "run"] {ocaml:version > "z100"}
+  [make "this" ocaml:version "also"] {os = "NO"}
+  ["echo" "HAHA!"] {ocaml:version = "10"}
+  ["echo" make share ocaml:version]
+  ["this as well" {os = "myOS"}]
+]
+available: os != "NO" | os != "NO" & os != "YES"
+
+(* List of files to substitute env variables *)
+substs: [ "P1.config" "P1.install" ]
+
+(* Libraries *)
+libraries: [ "p1" ]
+
+(* External dependencies *)
+depexts: [
+  [ ["debian" "amd64"] ["apt" "dpkg"] ]
+  [ ["osx" ]           ["curl"]    ]
+]
+
+messages: [ "I ll always bother you displaying this message" ]
+
+post-messages: [ "Thanks SO MUCH for installing this humble package"
+                 "Everything went well" {success}
+                 "Nooo, something went wrong, this makes me feel sooo sad..." {failure} ]
+
+bug-reports: "TEST.com"
+
+setenv: [P1 = "version1"]
+depends: [
+  "ocaml" {(!= "20" | != "10") & (= "20" | = "10" | = "10+a+b" | = "system")}
+]
+### <packages/P1-2.opam>
+opam-version: "1"
+name: "P1"
+version: "2"
+depends: [ "ocaml" {<= "10" | = "system"} ]
+maintainer: "contact@ocamlpro.com"
+substs:     [ "P1.config" "P1.install" ]
+libraries:  [ "p1" ]
+build: [ "./build.sh" ]
+setenv: [P1 = "version2"]
+### <packages/P2.opam>
+opam-version: "1"
+name: "P2"
+version:    "1"
+maintainer: "contact@ocamlpro.com"
+substs:     [ "config" "P2.config" "P2.install" ]
+depends: ["ocaml" "P1"]
+libraries:  [ "p2" ]
+build: [ "./build.sh" ]
+### <packages/P3.opam>
+opam-version: "1"
+name: "P3"
+version: "1~weird-version.test"
+maintainer: "contact@ocamlpro.com"
+depends: ["ocaml" "P1"]
+substs: [ "P3.config" "P3.install" ]
+build: [ "./build.sh" ]
+### <packages/P4-1.opam>
+opam-version: "1"
+name: "P4"
+version:    "1"
+maintainer: "contact@ocamlpro.com"
+depends: ["ocaml" "P2" "P3"]
+build: [ "./build.sh" ]
+### <packages/P4-2.opam>
+opam-version: "1"
+name: "P4"
+version:    "2"
+maintainer: "contact@ocamlpro.com"
+depends: [
+    "P1" { <= "1" }
+    "P2"
+    "P3"
+]
+build: [ "./build.sh" ]
+### <packages/P4-3.opam>
+opam-version: "1"
+name: "P4"
+version:    "3"
+maintainer: "contact@ocamlpro.com"
+depends:    [ "P2" "P3" ]
+build: [ "./build.sh" ]
+### <packages/P5.opam>
+(* API version *)
+opam-version: "1"
+name: "P5"
+version: "1"
+maintainer: "contact@ocamlpro.com"
+depends: ["ocaml" "P1"]
+depopts: [ "P2" ]
+build: [ [ "./build.sh" ] ]
+install: [ [ "mkdir" "-p" "%{lib}%/p5" ]
+           [ "touch" "%{lib}%/p5/p2_present" ] {P2:installed}
+           [ "touch" "%{lib}%/p5/p2_absent" ] {!P2:installed} ]
+remove: [ "rm" "-rf" "%{lib}%/p5" ]
+### <packages/ocaml/ocaml.10+a+b/files/ocaml.config>
+opam-version: "1.3~dev4"
+variables {
+  compiler: "10+a+b"
+  native: true
+  native-tools: true
+  native-dynlink: true
+  stubsdir: "%{lib}%/stublibs"
+}
+### <packages/ocaml/ocaml.10+a+b/opam>
+opam-version: "1.3"
+maintainer: "contact@ocamlpro.com"
+# depends: ["P1" "P2" "P3" "P4"]
+flags: compiler
+setenv: TEST = "1"
+### <packages/ocaml/ocaml.20/files/ocaml.config>
+opam-version: "1.3~dev4"
+variables {
+  compiler: "20"
+  native: true
+  native-tools: true
+  native-dynlink: true
+  stubsdir: "%{lib}%/stublibs"
+}
+### <packages/ocaml/ocaml.20/opam>
+opam-version: "1.3"
+maintainer: "contact@ocamlpro.com"
+flags: compiler
+setenv: TEST = "1"
+### <packages/ocaml/ocaml.system/files/gen.sh>
+#!/bin/sh -ue
+
+if ! OCAMLC=$(command -v ocamlc); then
+    echo "No OCaml compiler was found on the system" >&2
+    exit 2
+fi
+
+if [ $($OCAMLC -config | sed -ne "s/os_type: //p" | tr -d '\r') = Win32 ] ; then
+  OCAMLC_FILE=$(echo $OCAMLC| cygpath -w -f - | sed -e 's/\\/\\\\/g')
+  LIBDIR=$("$OCAMLC" -where | tr -d '\r' | cygpath -f -)
+else
+  OCAMLC_FILE=$OCAMLC
+  LIBDIR=$("$OCAMLC" -where)
+fi
+
+STUBLIBS=$(cat "$LIBDIR/ld.conf" | tr -d '\r' | tr '\n' ':' | sed -e 's/\\/\\\\/g')
+
+echo "Using ocaml compiler found at $OCAMLC with base lib at $LIBDIR"
+
+bool() {
+    if "$@"; then echo "true"; else echo "false"; fi
+}
+
+cat >ocaml.config <<EOF
+opam-version: "1.3.0~dev4"
+file-depends: ["$OCAMLC_FILE" "$(md5sum "$OCAMLC" | cut -d' ' -f1)"]
+variables {
+    compiler: "system"
+    native: $(bool [ -x "$(dirname "$OCAMLC")"/ocamlopt ])
+    native-tools: $(bool [ -x "$OCAMLC".opt ])
+    native-dynlink: $(bool [ -e "$LIBDIR"/dynlink.cmxa ])
+    stublibs: "$STUBLIBS"
+}
+EOF
+### chmod a+x packages/ocaml/ocaml.system/files/gen.sh
+### <packages/ocaml/ocaml.system/opam>
+opam-version: "1.3.0~dev4"
+maintainer: "louis.gesbert@ocamlpro.com"
+build: ["sh" "-uex" "./gen.sh"]
+setenv: [CAML_LD_LIBRARY_PATH = "%{lib}%:%{_:ocaml-stublibs}%"]
+depends: [ ]
+flags: compiler
+### <packages/P1-0.opam>
+(* API version *)
+opam-version: "1"
+
+name: "P1"
+version: "0"
+
+setenv: [P1 = "version0"]
+substs: [ "P1.config" "P1.install" ]
+
+build: [
+  [ "ocamlc" "-a" "p1.ml" "-o" "p1.cma" ]
+  [ "ocamlopt" "-a" "p1.ml" "-o" "p1.cmxa" ]
+]
+depends: ["ocaml"]
+### <packages/P1-0/P1.config.in>
+opam-version: "1.3"
+variables {
+  asmcomp:  "-I %{lib}%/P1"
+  bytecomp: "-I %{lib}%/P1"
+  asmlink:  "-I %{lib}%/P1 p1.cmxa"
+  bytelink: "-I %{lib}%/P1 p1.cma"
+  LOCAL: "local"
+  l: "L"
+  FOO: "foo"
+  bar: true
+}
+### <packages/P1-0/P1.install.in>
+lib: [
+  "p1.cmi"
+  "p1.cma"
+  "p1.cmxa"
+  "p1.%{ext_lib}%"
+]
+### <packages/P1-0/p1.ml>
+let x () =
+  try Random.int 10
+  with _ -> 0
+### <packages/P1-1/build.sh>
+#! /bin/sh -eu
+
+if [ -n "${P1:-}" ]; then
+    echo "P1 ('$P1') should not be set yet" >&2
+    exit 12
+fi
+
+ocamlc -a p1.ml -o p1.cma
+ocamlopt -a p1.ml -o p1.cmxa
+### chmod a+x packages/P1-1/build.sh
+### <packages/P1-1.opam>
+(* API version *)
+opam-version: "1"
+
+name: "P1"
+
+# Test
+# Toto
+
+(* Version are arbitrary strings *)
+version: "1"
+
+maintainer: "contact@ocamlpro.com"
+
+(* The command to run *)
+build: [
+  ["./build.sh"] # HAHAH
+  ["this" "should" "never" "run"] {ocaml:version > "z100"}
+  [make "this" ocaml:version "also"] {os = "NO"}
+  ["echo" "HAHA!"] {ocaml:version = "10"}
+  ["echo" make share ocaml:version]
+  ["this as well" {os = "myOS"}]
+]
+available: os != "NO" | os != "NO" & os != "YES"
+
+(* List of files to substitute env variables *)
+substs: [ "P1.config" "P1.install" ]
+
+(* Libraries *)
+libraries: [ "p1" ]
+
+(* External dependencies *)
+depexts: [
+  [ ["debian" "amd64"] ["apt" "dpkg"] ]
+  [ ["osx" ]           ["curl"]    ]
+]
+
+messages: [ "I ll always bother you displaying this message" ]
+
+post-messages: [ "Thanks SO MUCH for installing this humble package"
+                 "Everything went well" {success}
+                 "Nooo, something went wrong, this makes me feel sooo sad..." {failure} ]
+
+bug-reports: "TEST.com"
+
+setenv: [P1 = "version1"]
+depends: [
+  "ocaml" {(!= "20" | != "10") & (= "20" | = "10" | = "10+a+b" | = "system")}
+]
+### <packages/P1-1/P1.config.in>
+opam-version: "1.3"
+variables {
+  asmcomp:  "-I %{lib}%/P1"
+  bytecomp: "-I %{lib}%/P1"
+  asmlink:  "-I %{lib}%/P1 p1.cmxa"
+  bytelink: "-I %{lib}%/P1 p1.cma"
+  LOCAL: "local"
+  l: "L"
+  FOO: "foo"
+  bar: true
+}
+### <packages/P1-1/P1.install.in>
+lib: [
+  "p1.cmi"
+  "p1.cma"
+  "p1.cmxa"
+  "p1.%{ext_lib}%"
+  "?this_file_will_not_exist_but_that's_ok"
+]
+share: [ "build.sh" ]
+doc: [
+  "p1.cmi" { "foo/bar/index.html" }
+]
+### <packages/P1-1/p1.ml>
+let x () =
+  try Random.int 10
+  with _ -> 0
+### <packages/P1-1/README>
+A very useful package
+### <packages/P1-2/build.sh>
+#! /bin/sh -eu
+
+if [ -n "${P1:-}" ]; then
+    echo "P1 ('$P1') should not be set yet" >&2
+    exit 12
+fi
+
+ocamlc -a p1.ml -o p1.cma
+ocamlopt -a p1.ml -o p1.cmxa
+### chmod a+x packages/P1-2/build.sh
+### <packages/P1-2.opam>
+opam-version: "1"
+name: "P1"
+version: "2"
+depends: [ "ocaml" {<= "10" | = "system"} ]
+maintainer: "contact@ocamlpro.com"
+substs:     [ "P1.config" "P1.install" ]
+libraries:  [ "p1" ]
+build: [ "./build.sh" ]
+setenv: [P1 = "version2"]
+### <packages/P1-2/P1.config.in>
+opam-version: "1.3"
+variables {
+  asmcomp:  "-I %{lib}%/P1"
+  bytecomp: "-I %{lib}%/P1"
+  asmlink:  "-I %{lib}%/P1 p1.cmxa"
+  bytelink: "-I %{lib}%/P1 p1.cma"
+  LOCAL: "local"
+  l: "L"
+  FOO: "foo"
+  bar: true
+}
+### <packages/P1-2/P1.install.in>
+lib: [
+  "p1.cma"
+  "p1.cmxa"
+  "p1.%{ext_lib}%"
+  "p1.cmi"
+]
+### <packages/P1-2/p1.ml>
+let x () =
+  failwith "the new version is not very good"
+### <packages/P1-2/README>
+A very useful package
+### <packages/P2/build.sh>
+#! /bin/sh -eu
+
+OFLAGS="`opam config var P1:asmcomp | tr -d '\r'`"
+CFLAGS="`opam config var P1:bytecomp | tr -d '\r'`"
+
+echo "Bytecode Compilation"
+ocamlc ${CFLAGS} -a p2.ml -o p2.cma
+
+if which ocamlopt >/dev/null 2>&1; then
+    echo "Native Compilation"
+    ocamlopt ${OFLAGS} -a p2.ml -o p2.cmxa
+fi
+
+### chmod a+x packages/P2/build.sh
+### <packages/P2/config.in>
+Foo is %{P1:FOO}%
+
+Foo also contains a variable with %{P1:l}%. Funny, isn\'t it?
+### <packages/P2.opam>
+opam-version: "1"
+name: "P2"
+version:    "1"
+maintainer: "contact@ocamlpro.com"
+substs:     [ "config" "P2.config" "P2.install" ]
+depends: ["ocaml" "P1"]
+libraries:  [ "p2" ]
+build: [ "./build.sh" ]
+### <packages/P2/P2.config.in>
+opam-version: "1.3"
+variables {
+  asmcomp:  "-I %{lib}%/P2"
+  bytecomp: "-I %{lib}%/P2"
+  asmlink:  "-I %{lib}%/P2 p2.cmxa"
+  bytelink: "-I %{lib}%/P2 p2.cma"
+  requires: "p1"
+}
+### <packages/P2/P2.install.in>
+lib: [
+  "p2.cma"
+  "p2.cmxa"
+  "p2.%{ext_lib}%"
+  "p2.cmi"
+]
+### <packages/P2/p2.ml>
+let g () =
+  P1.x ()
+### <packages/P2/README>
+An other very useful package
+
+The description can go on multiple lines. The first line is the package synopsis,
+and the rest is the package description.
+### <packages/P3/build.sh>
+#! /bin/sh -eu
+
+echo "Building P3 version ${OPAM_PACKAGE_VERSION}"
+
+if [ "x${OPAM_PACKAGE_NAME}" = "xP3" ]; then
+    LIB=$(${OPAM} config var lib | tr -d '\r')
+    ocamlc -a -I $LIB/P1 -I $LIB/P2 p3.ml -o p3.cma
+    ocamlopt -a -I $LIB/P1 -I $LIB/P2 p3.ml -o p3.cmxa
+    ocamlc -a -I $LIB/P1 -I $LIB/P2 p3_bar.ml -o p3_bar.cma
+    ocamlopt -a -I $LIB/P1 -I $LIB/P2 p3_bar.ml -o p3_bar.cmxa
+else
+   exit 1
+fi
+### chmod a+x packages/P3/build.sh
+### <packages/P3.opam>
+opam-version: "1"
+name: "P3"
+version: "1~weird-version.test"
+maintainer: "contact@ocamlpro.com"
+depends: ["ocaml" "P1"]
+substs: [ "P3.config" "P3.install" ]
+build: [ "./build.sh" ]
+### <packages/P3/p3_bar.ml>
+let f () =
+  Printf.printf "foo\n%!"
+
+let _ =
+  P3.z ()
+### <packages/P3/P3.config.in>
+opam-version: "1.3"
+variables {
+  asmcomp : "-I %{lib}%/P3"
+  bytecomp: "-I %{lib}%/P3"
+  asmlink : "-I %{lib}%/P3 p3.cmxa p3_bar.cmxa"
+  bytelink: "-I %{lib}%/P3 p3.cma p3_bar.cma"
+  requires: "p1"
+}
+### <packages/P3/P3.install.in>
+lib: [
+  (* p3 *)
+  "p3.cma"
+  "p3.cmxa"
+  "p3.%{ext_lib}%"
+  "p3.cmi"
+
+  (* p3_bar *)
+  "p3_bar.cma"
+  "p3_bar.cmxa"
+  "p3_bar.%{ext_lib}%"
+  "p3_bar.cmi"
+]
+### <packages/P3/p3.ml>
+let z () =
+  try P1.x ()
+  with _ -> 0
+### <packages/P3/README>
+Testing version names
+### <packages/P4-1.opam>
+opam-version: "1"
+name: "P4"
+version:    "1"
+maintainer: "contact@ocamlpro.com"
+depends: ["ocaml" "P2" "P3"]
+build: [ "./build.sh" ]
+### <packages/P4-2.opam>
+opam-version: "1"
+name: "P4"
+version:    "2"
+maintainer: "contact@ocamlpro.com"
+depends: [
+    "P1" { <= "1" }
+    "P2"
+    "P3"
+]
+build: [ "./build.sh" ]
+### <packages/P4-3.opam>
+opam-version: "1"
+name: "P4"
+version:    "3"
+maintainer: "contact@ocamlpro.com"
+depends:    [ "P2" "P3" ]
+build: [ "./build.sh" ]
+### <packages/P4/build.sh>
+#! /bin/sh -ex
+
+if [ $OPAM_PACKAGE_VERSION -eq 2 ]; then
+    if [ "X${P1:-}" != "Xversion1" ]; then
+        echo "P1 not set to version1 while P1.1 should be installed" >&2
+        exit 12
+    fi
+else
+    if [ -z "X${P1:-}" ]; then
+        echo "P1 not set while P1 should be installed" >&2
+        exit 12
+    fi
+fi
+
+echo "Building P4 with ${OPAM}"
+LIBDIR="`${OPAM} config var lib | tr -d '\r'`"
+COMP="-I ${LIBDIR}/P1 -I ${LIBDIR}/P2 -I ${LIBDIR}/P3"
+LINK="p1.cmxa p2.cmxa p3.cmxa p3_bar.cmxa"
+
+OCAMLC=ocamlc
+if which ocamlopt >/dev/null 2>&1; then OCAMLC=ocamlopt; fi
+
+$OCAMLC ${COMP} ${LINK} p4.ml -o p4.foo
+
+echo "TEST=${TEST}"
+### chmod a+x packages/P4/build.sh
+### <packages/P4/P4.install>
+bin: [
+ "p4.foo" { "p4" }
+ "p4.foo"
+]
+### <packages/P4/p4.ml>
+let f =
+  try P3_bar.f (); P1.x ()
+  with _ -> P3.z ()
+
+let () =
+  let t =
+    try Sys.getenv "TEST"
+    with _ -> "<not found>" in
+  Printf.printf "TEST=%s\n%!" t
+### <packages/P4/README>
+Testing transitive closure
+### <packages/P5/build.sh>
+#! /bin/sh -eu
+
+FLAGS="-I `${OPAM} config var P1:lib | tr -d '\r'`"
+
+echo "Bytecode Compilation"
+ocamlc ${FLAGS} -a p5.ml -o p5.cma
+
+if which ocamlopt >/dev/null 2>&1; then
+    echo "Native Compilation"
+    ocamlopt ${FLAGS} -a p5.ml -o p5.cmxa
+fi
+### chmod a+x packages/P5/build.sh
+### <packages/P5.opam>
+(* API version *)
+opam-version: "1"
+name: "P5"
+version: "1"
+maintainer: "contact@ocamlpro.com"
+depends: ["ocaml" "P1"]
+depopts: [ "P2" ]
+build: [ [ "./build.sh" ] ]
+install: [ [ "mkdir" "-p" "%{lib}%/p5" ]
+           [ "touch" "%{lib}%/p5/p2_present" ] {P2:installed}
+           [ "touch" "%{lib}%/p5/p2_absent" ] {!P2:installed} ]
+remove: [ "rm" "-rf" "%{lib}%/p5" ]
+### <packages/P5/p5.ml>
+let g () =
+  P1.x ()
+### <packages/P5/README>
+Testing optional dependencies
+### : UPLOAD :
+### cp -r packages/ocaml REPO/packages
+### mkdir -p REPO/packages/P1.0
+### cp packages/P1-0.opam     REPO/packages/P1.0/opam
+### <mkurl.sh>
+#!/bin/sh -ue
+PKG=$1; shift
+ARCHIVE=$1; shift
+( cd packages && tar czf ${ARCHIVE} ${ARCHIVE%.tar.gz}; )
+MD5=$(openssl md5 packages/${ARCHIVE} | cut -d' ' -f2)
+echo 'src: "http://dev.null" checksum: "'$MD5'"' > REPO/packages/${PKG}/url
+CACHEDIR=REPO/cache/md5/$(echo $MD5 |head -c2)
+mkdir -p $CACHEDIR
+cp "packages/$ARCHIVE" "$CACHEDIR/$MD5"
+### sh ./mkurl.sh P1.0 P1-0.tar.gz
+### mkdir -p REPO/packages/P1.1
+### cp packages/P1-1.opam     REPO/packages/P1.1/opam
+### cp packages/P1-1/README   REPO/packages/P1.1/descr
+### sh ./mkurl.sh P1.1 P1-1.tar.gz
+### mkdir -p REPO/packages/P2.1
+### cp packages/P2/README     REPO/packages/P2.1/descr
+### cp packages/P2.opam       REPO/packages/P2.1/opam
+### sh ./mkurl.sh P2.1 P2.tar.gz
+### mkdir -p REPO/packages/P3.1~weird-version.test
+### cp packages/P3.opam       REPO/packages/P3.1~weird-version.test/opam
+### cp packages/P3/README     REPO/packages/P3.1~weird-version.test/descr
+### sh ./mkurl.sh P3.1~weird-version.test P3.tar.gz
+### mkdir -p REPO/packages/P4.1
+### cp packages/P4-1.opam     REPO/packages/P4.1/opam
+### cp packages/P4/README     REPO/packages/P4.1/descr
+### sh ./mkurl.sh P4.1 P4.tar.gz
+### mkdir -p REPO/packages/P5.1
+### cp packages/P5.opam       REPO/packages/P5.1/opam
+### cp packages/P5/README     REPO/packages/P5.1/descr
+### sh ./mkurl.sh P5.1 P5.tar.gz
+### cd REPO/packages/ocaml.system && git add * && git commit -qm "Adding ocaml.system"
+### cd REPO/packages/ocaml.20 && git add * && git commit -qm "Adding ocaml.20"
+### cd REPO/packages/ocaml.10+a+b && git add * && git commit -qm "Adding ocaml.10+a+b"
+### echo 'git: "GIT/P1-0"' > REPO/packages/P1.0/url
+### cd REPO/packages/P1.0/ && git add * && git commit -qm "Adding P0"
+### echo 'git: "GIT/P1-1"' > REPO/packages/P1.1/url
+### cd REPO/packages/P1.1/ && git add * && git commit -qm "Adding P1"
+### echo 'git: "GIT/P2"'   > REPO/packages/P2.1/url
+### cd REPO/packages/P2.1/ && git add * && git commit -qm "Adding P2"
+### echo 'git: "GIT/P3"'   > REPO/packages/P3.1~weird-version.test/url
+### cd REPO/packages/P3.1~weird-version.test/ && git add * && git commit -qm "Adding P3"
+### echo 'git: "GIT/P4"'   > REPO/packages/P4.1/url
+### cd REPO/packages/P4.1/ && git add * && git commit -qm "Adding P4"
+### echo 'git: "GIT/P5"'   > REPO/packages/P5.1/url
+### cd REPO/packages/P5.1/ && git add * && git commit -qm "Adding P5"
+### rm -rf GIT && mkdir -p GIT
+### mkdir GIT/P1-0 && cp packages/P1-0/* GIT/P1-0/
+### mkdir GIT/P1-1 && cp packages/P1-1/* GIT/P1-1/
+### mkdir GIT/P2   && cp packages/P2/*   GIT/P2/
+### mkdir GIT/P3   && cp packages/P3/*   GIT/P3/
+### mkdir GIT/P4   && cp packages/P4/*   GIT/P4/
+### mkdir GIT/P5   && cp packages/P5/*   GIT/P5/
+### sh ./git-init.sh GIT/P1-0
+OK
+### sh ./git-init.sh GIT/P1-1
+OK
+### sh ./git-init.sh GIT/P2
+OK
+### sh ./git-init.sh GIT/P3
+OK
+### sh ./git-init.sh GIT/P4
+OK
+### sh ./git-init.sh GIT/P5
+OK
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[test] synchronised from git+file://${BASEDIR}/REPO
+[WARNING] The repository 'test' at git+file://${BASEDIR}/REPO doesn't have a 'repo' file, and might not be compatible with this version of opam.
+[NOTE] Repository at git+file://${BASEDIR}/REPO doesn't define its version, assuming it's 1.2.
+
+<><> Upgrading repositories from older opam format ><><><><><><><><><><><><><><>
+Upgrading repository "test"...
+Updated ${OPAMTMP}/test/packages/P1.0/opam
+Updated ${OPAMTMP}/test/packages/P1.1/opam
+Updated ${OPAMTMP}/test/packages/P2.1/opam
+Updated ${OPAMTMP}/test/packages/P3.1~weird-version.test/opam
+Updated ${OPAMTMP}/test/packages/P4.1/opam
+Updated ${OPAMTMP}/test/packages/P5.1/opam
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create system --packages ocaml.system
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml" {= "system"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+∗ installed ocaml.system
+Done.
+### opam config set ext_lib $(ocamlc -config | sed -ne "s/ext_lib: .//p" | tr -d '\r')
+[WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
+Added 'ext_lib: "a"' to field variables in switch system
+### : INSTALL-REMOVE :
+### opam list -is --columns=package
+ocaml.system
+### opam install P1
+The following actions will be performed:
+  ∗ install P1 1  I ll always bother you displaying this message
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+∗ installed P1.1
+Done.
+
+<><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
+=> Thanks SO MUCH for installing this humble package
+=> Everything went well
+### opam list -is --columns=package
+ocaml.system
+P1.1
+### opam remove P1
+The following actions will be performed:
+  ⊘ remove P1 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⊘ removed   P1.1
+Done.
+### opam list -is --columns=package
+ocaml.system
+### : LIST :
+### opam list -A
+# Packages matching: any
+# Name # Installed # Synopsis
+ocaml  system
+P1     --          A very useful package
+P2     --          An other very useful package
+P3     --          Testing version names
+P4     --          Testing transitive closure
+P5     --          Testing optional dependencies
+### : INSTALL-OPT :
+### opam list -is --columns=package
+ocaml.system
+### opam install --yes P5
+The following actions will be performed:
+  ∗ install P1 1 [required by P5] I ll always bother you displaying this message
+  ∗ install P5 1
+===== ∗ 2 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+⬇ retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
+∗ installed P1.1
+∗ installed P5.1
+Done.
+
+<><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
+=> Thanks SO MUCH for installing this humble package
+=> Everything went well
+### test -f ${OPAMROOT}/system/lib/p5/p2_absent && echo PASS
+PASS
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P5.1
+### opam remove P5
+The following actions will be performed:
+  ⊘ remove P5 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⊘ removed   P5.1
+Done.
+### opam list -is --columns=package
+ocaml.system
+P1.1
+### opam install P5
+The following actions will be performed:
+  ∗ install P5 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
+∗ installed P5.1
+Done.
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P5.1
+### opam remove P5 -a --yes
+The following actions will be performed:
+  ⊘ remove P5 1
+  ⊘ remove P1 1
+===== ⊘ 2 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⊘ removed   P5.1
+⊘ removed   P1.1
+Done.
+### opam list -is --columns=package
+ocaml.system
+### opam install P5 --yes
+The following actions will be performed:
+  ∗ install P1 1 [required by P5] I ll always bother you displaying this message
+  ∗ install P5 1
+===== ∗ 2 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+⬇ retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
+∗ installed P1.1
+∗ installed P5.1
+Done.
+
+<><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
+=> Thanks SO MUCH for installing this humble package
+=> Everything went well
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P5.1
+### opam install P2 --yes
+The following actions will be performed:
+  ∗ install   P2 1
+  ↻ recompile P5 1 [uses P2]
+===== ∗ 1   ↻ 1 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
+⬇ retrieved P5.1  (no changes)
+⊘ removed   P5.1
+∗ installed P2.1
+∗ installed P5.1
+Done.
+### test -f ${OPAMROOT}/system/lib/p5/p2_present && echo PASS
+PASS
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+P5.1
+### opam remove P5 -a
+The following actions will be performed:
+  ⊘ remove P5 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⊘ removed   P5.1
+Done.
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+### opam remove P2 -a --yes
+The following actions will be performed:
+  ⊘ remove P2 1
+  ⊘ remove P1 1
+===== ⊘ 2 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⊘ removed   P2.1
+⊘ removed   P1.1
+Done.
+### opam list -is --columns=package
+ocaml.system
+### opam install P1 P2 P5
+The following actions will be performed:
+  ∗ install P1 1  I ll always bother you displaying this message
+  ∗ install P2 1
+  ∗ install P5 1
+===== ∗ 3 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+⬇ retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
+⬇ retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
+∗ installed P1.1
+∗ installed P2.1
+∗ installed P5.1
+Done.
+
+<><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
+=> Thanks SO MUCH for installing this humble package
+=> Everything went well
+### test -f ${OPAMROOT}/system/lib/p5/p2_present && echo PASS
+PASS
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+P5.1
+### opam remove P2 -a --yes
+The following actions will be performed:
+  ⊘ remove    P2 1
+  ↻ recompile P5 1 [uses P2]
+===== ↻ 1   ⊘ 1 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P5.1  (no changes)
+⊘ removed   P5.1
+⊘ removed   P2.1
+∗ installed P5.1
+Done.
+### test -f ${OPAMROOT}/system/lib/p5/p2_absent && echo PASS
+PASS
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P5.1
+### opam remove P1 --yes
+The following actions will be performed:
+  ⊘ remove P5 1 [uses P1]
+  ⊘ remove P1 1
+===== ⊘ 2 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⊘ removed   P5.1
+⊘ removed   P1.1
+Done.
+### opam list -is --columns=package
+ocaml.system
+### : LIST :
+### opam list -A
+# Packages matching: any
+# Name # Installed # Synopsis
+ocaml  system
+P1     --          A very useful package
+P2     --          An other very useful package
+P3     --          Testing version names
+P4     --          Testing transitive closure
+P5     --          Testing optional dependencies
+### : INSTALL :
+### opam list -is --columns=package
+ocaml.system
+### opam install P1
+The following actions will be performed:
+  ∗ install P1 1  I ll always bother you displaying this message
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+∗ installed P1.1
+Done.
+
+<><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
+=> Thanks SO MUCH for installing this humble package
+=> Everything went well
+### opam list -is --columns=package
+ocaml.system
+P1.1
+### opam install P2
+The following actions will be performed:
+  ∗ install P2 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
+∗ installed P2.1
+Done.
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+### opam install P3
+The following actions will be performed:
+  ∗ install P3 1~weird-version.test
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P3.1~weird-version.test  (git+file://${BASEDIR}/GIT/P3)
+∗ installed P3.1~weird-version.test
+Done.
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+P3.1~weird-version.test
+### opam install P4
+The following actions will be performed:
+  ∗ install P4 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P4.1  (git+file://${BASEDIR}/GIT/P4)
+∗ installed P4.1
+Done.
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+P3.1~weird-version.test
+P4.1
+### : LIST :
+### opam list -A
+# Packages matching: any
+# Name # Installed          # Synopsis
+ocaml  system
+P1     1                    A very useful package
+P2     1                    An other very useful package
+P3     1~weird-version.test Testing version names
+P4     1                    Testing transitive closure
+P5     --                   Testing optional dependencies
+### : REINSTALL :
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+P3.1~weird-version.test
+P4.1
+### opam reinstall P1 --yes
+The following actions will be performed:
+  ↻ recompile P1 1                                  I ll always bother you displaying this message
+  ↻ recompile P3 1~weird-version.test [uses P1]
+  ↻ recompile P2 1                    [uses P1]
+  ↻ recompile P4 1                    [uses P2, P3]
+===== ↻ 4 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P1.1  (no changes)
+⬇ retrieved P2.1  (no changes)
+⬇ retrieved P3.1~weird-version.test  (no changes)
+⬇ retrieved P4.1  (no changes)
+⊘ removed   P4.1
+⊘ removed   P2.1
+⊘ removed   P3.1~weird-version.test
+⊘ removed   P1.1
+∗ installed P1.1
+∗ installed P2.1
+∗ installed P3.1~weird-version.test
+∗ installed P4.1
+Done.
+
+<><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
+=> Thanks SO MUCH for installing this humble package
+=> Everything went well
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+P3.1~weird-version.test
+P4.1
+### : LIST :
+### opam list -A
+# Packages matching: any
+# Name # Installed          # Synopsis
+ocaml  system
+P1     1                    A very useful package
+P2     1                    An other very useful package
+P3     1~weird-version.test Testing version names
+P4     1                    Testing transitive closure
+P5     --                   Testing optional dependencies
+### : UPLOAD-NEW :
+### mkdir REPO/packages/P4.2
+### cp packages/P4-2.opam   REPO/packages/P4.2/opam
+### cp packages/P4/README   REPO/packages/P4.2/descr
+### sh ./mkurl.sh P4.2 P4.tar.gz
+### mkdir REPO/packages/P4.3
+### cp packages/P4-3.opam   REPO/packages/P4.3/opam
+### cp packages/P4/README   REPO/packages/P4.3/descr
+### sh ./mkurl.sh P4.3 P4.tar.gz
+### echo "(* new line *)" >> GIT/P1-1/p1.ml
+### cd GIT/P1-1 && git commit -a -qm "a small change"
+### echo 'git: "GIT/P4"' > REPO/packages/P4.2/url
+### echo 'git: "GIT/P4"' > REPO/packages/P4.3/url
+### cd REPO && git add * && git commit -qm "Adding P4.2 and P4.3"
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[test] synchronised from git+file://${BASEDIR}/REPO
+[WARNING] The repository 'test' at git+file://${BASEDIR}/REPO doesn't have a 'repo' file, and might not be compatible with this version of opam.
+[NOTE] Repository at git+file://${BASEDIR}/REPO doesn't define its version, assuming it's 1.2.
+
+<><> Upgrading repositories from older opam format ><><><><><><><><><><><><><><>
+Upgrading repository "test"...
+Updated ${OPAMTMP}/test/packages/P1.0/opam
+Updated ${OPAMTMP}/test/packages/P1.1/opam
+Updated ${OPAMTMP}/test/packages/P2.1/opam
+Updated ${OPAMTMP}/test/packages/P3.1~weird-version.test/opam
+Updated ${OPAMTMP}/test/packages/P4.1/opam
+Updated ${OPAMTMP}/test/packages/P4.2/opam
+Updated ${OPAMTMP}/test/packages/P4.3/opam
+Updated ${OPAMTMP}/test/packages/P5.1/opam
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[P1.1] synchronised (git+file://${BASEDIR}/GIT/P1-1)
+[P2.1] synchronised (no changes)
+[P3.1~weird-version.test] synchronised (no changes)
+[P4.1] synchronised (no changes)
+Now run 'opam upgrade' to apply any package updates.
+### : LIST :
+### opam list -A
+# Packages matching: any
+# Name # Installed          # Synopsis
+ocaml  system
+P1     1                    A very useful package
+P2     1                    An other very useful package
+P3     1~weird-version.test Testing version names
+P4     1                    Testing transitive closure
+P5     --                   Testing optional dependencies
+### : UPGRADE :
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+P3.1~weird-version.test
+P4.1
+### eval `opam config env | tr -d '\r'`; echo $P1
+version1
+### opam upgrade --yes
+The following actions will be performed:
+  ↻ recompile P1 1                    [upstream or system changes] I ll always bother you displaying this message
+  ↻ recompile P3 1~weird-version.test [uses P1]
+  ↻ recompile P2 1                    [uses P1]
+  ↗ upgrade   P4 1 to 3
+===== ↻ 3   ↗ 1 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P1.1  (no changes)
+⬇ retrieved P2.1  (no changes)
+⬇ retrieved P3.1~weird-version.test  (no changes)
+⬇ retrieved P4.3  (git+file://${BASEDIR}/GIT/P4)
+⊘ removed   P4.1
+⊘ removed   P2.1
+⊘ removed   P3.1~weird-version.test
+⊘ removed   P1.1
+∗ installed P1.1
+∗ installed P2.1
+∗ installed P3.1~weird-version.test
+∗ installed P4.3
+Done.
+
+<><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
+=> Thanks SO MUCH for installing this humble package
+=> Everything went well
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+P3.1~weird-version.test
+P4.3
+### : LIST :
+### opam list -A
+# Packages matching: any
+# Name # Installed          # Synopsis
+ocaml  system
+P1     1                    A very useful package
+P2     1                    An other very useful package
+P3     1~weird-version.test Testing version names
+P4     3                    Testing transitive closure
+P5     --                   Testing optional dependencies
+### : DOWNGRADE :
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+P3.1~weird-version.test
+P4.3
+### opam install P4.2 --yes
+The following actions will be performed:
+  ↘ downgrade P4 3 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P4.2  (git+file://${BASEDIR}/GIT/P4)
+⊘ removed   P4.3
+∗ installed P4.2
+Done.
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+P3.1~weird-version.test
+P4.2
+### : LIST :
+### opam list -A
+# Packages matching: any
+# Name # Installed          # Synopsis
+ocaml  system
+P1     1                    A very useful package
+P2     1                    An other very useful package
+P3     1~weird-version.test Testing version names
+P4     2                    Testing transitive closure
+P5     --                   Testing optional dependencies
+### : SWITCH-ALIAS :
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+P3.1~weird-version.test
+P4.2
+### opam remove P3.1~weird-version.test P4.2
+The following actions will be performed:
+  ⊘ remove P4 2
+  ⊘ remove P3 1~weird-version.test
+===== ⊘ 2 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⊘ removed   P4.2
+⊘ removed   P3.1~weird-version.test
+Done.
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+### opam switch export test.export
+### opam switch create test system
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml" {= "system"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+∗ installed ocaml.system
+Done.
+### opam config set ext_lib $(ocamlc -config | sed -ne "s/ext_lib: .//p" | tr -d '\r')
+[WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
+Added 'ext_lib: "a"' to field variables in switch test
+### opam list -is --columns=package
+ocaml.system
+### opam switch import test.export
+The following actions will be performed:
+  ∗ install P1 1  I ll always bother you displaying this message
+  ∗ install P2 1
+===== ∗ 2 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+⬇ retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
+∗ installed P1.1
+∗ installed P2.1
+Done.
+
+<><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
+=> Thanks SO MUCH for installing this humble package
+=> Everything went well
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+### opam switch create test2 20
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml" {= "20"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+∗ installed ocaml.20
+Done.
+### opam config set ext_lib $(ocamlc -config | sed -ne "s/ext_lib: .//p" | tr -d '\r')
+[WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
+Added 'ext_lib: "a"' to field variables in switch test2
+### opam list -is --columns=package
+ocaml.20
+### opam install P1
+The following actions will be performed:
+  ∗ install P1 1  I ll always bother you displaying this message
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+∗ installed P1.1
+Done.
+
+<><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
+=> Thanks SO MUCH for installing this humble package
+=> Everything went well
+### opam list -is --columns=package
+ocaml.20
+P1.1
+### opam switch system
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+### opam switch remove test test2 --yes
+Switch test and all its packages will be wiped. Are you sure? [Y/n] y
+Switch test2 and all its packages will be wiped. Are you sure? [Y/n] y
+### : LIST :
+### opam list -A
+# Packages matching: any
+# Name # Installed # Synopsis
+ocaml  system
+P1     1           A very useful package
+P2     1           An other very useful package
+P3     --          Testing version names
+P4     --          Testing transitive closure
+P5     --          Testing optional dependencies
+### : SWITCH-ENV-PACKAGES :
+### opam list -is --columns=package
+ocaml.system
+P1.1
+P2.1
+### opam switch create 10+a+b --empty
+### opam config set ext_lib $(ocamlc -config | sed -ne "s/ext_lib: .//p" | tr -d '\r')
+[WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
+Added 'ext_lib: "a"' to field variables in switch 10+a+b
+### opam install ocaml.10+a+b P1 P2 P3 P4
+The following actions will be performed:
+  ∗ install ocaml 10+a+b
+  ∗ install P1    1                     I ll always bother you displaying this message
+  ∗ install P3    1~weird-version.test
+  ∗ install P2    1
+  ∗ install P4    3
+===== ∗ 5 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+∗ installed ocaml.10+a+b
+⬇ retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
+⬇ retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
+⬇ retrieved P3.1~weird-version.test  (git+file://${BASEDIR}/GIT/P3)
+⬇ retrieved P4.3  (git+file://${BASEDIR}/GIT/P4)
+∗ installed P1.1
+∗ installed P2.1
+∗ installed P3.1~weird-version.test
+∗ installed P4.3
+Done.
+
+<><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
+=> Thanks SO MUCH for installing this humble package
+=> Everything went well
+### opam list -is --columns=package
+ocaml.10+a+b
+P1.1
+P2.1
+P3.1~weird-version.test
+P4.3
+### . ${OPAMROOT}/opam-init/variables.sh && echo "PASS $TEST"
+PASS 1
+### : REPO :
+### opam repo add REPO2 REPO -k git
+[REPO2] Initialised
+[WARNING] The repository 'REPO2' at git+file://${BASEDIR}/REPO doesn't have a 'repo' file, and might not be compatible with this version of opam.
+[NOTE] Repository at git+file://${BASEDIR}/REPO doesn't define its version, assuming it's 1.2.
+
+<><> Upgrading repositories from older opam format ><><><><><><><><><><><><><><>
+Upgrading repository "REPO2"...
+Updated ${OPAMROOT}/repo/REPO2/packages/P1.0/opam
+Updated ${OPAMROOT}/repo/REPO2/packages/P1.1/opam
+Updated ${OPAMROOT}/repo/REPO2/packages/P2.1/opam
+Updated ${OPAMROOT}/repo/REPO2/packages/P3.1~weird-version.test/opam
+Updated ${OPAMROOT}/repo/REPO2/packages/P4.1/opam
+Updated ${OPAMROOT}/repo/REPO2/packages/P4.2/opam
+Updated ${OPAMROOT}/repo/REPO2/packages/P4.3/opam
+Updated ${OPAMROOT}/repo/REPO2/packages/P5.1/opam
+[NOTE] Repository REPO2 has been added to the selections of switch 10+a+b only.
+       Run `opam repository add REPO2 --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+
+### opam repo remove REPO2 --all && echo PASS
+PASS
+### opam repo remove test --all
+### : LIST :
+### opam list -A
+# Packages matching: any
+# Name # Installed          # Synopsis
+ocaml  10+a+b
+P1     1                    A very useful package
+P2     1                    An other very useful package
+P3     1~weird-version.test Testing version names
+P4     3                    Testing transitive closure
