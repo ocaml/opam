@@ -1,4 +1,20 @@
 632bc2e
+### : UTILITARY SCRIPTS :
+### <mkurl>
+#!/bin/sh -ue
+PKG=$1; shift
+ARCHIVE=$1; shift
+( cd packages && tar czf ${ARCHIVE} ${ARCHIVE%.tar.gz}; )
+MD5=$(openssl md5 packages/${ARCHIVE} | cut -d' ' -f2)
+echo 'src: "http://dev.null" checksum: "'$MD5'"' > REPO/packages/${PKG}/url
+CACHEDIR=REPO/cache/md5/$(echo $MD5 |head -c2)
+mkdir -p $CACHEDIR
+cp "packages/$ARCHIVE" "$CACHEDIR/$MD5"
+### chmod a+x mkurl
+### <opam-sort>
+#!/bin/sh
+exec awk '/^-> / {print | "sort"; next} /^Done.$/ { close("sort") } {print}'
+### chmod a+x opam-sort
 ### : INIT :
 ### mkdir REPO
 ### opam repo add test REPO --set-default --yes
@@ -600,37 +616,27 @@ Testing optional dependencies
 ### cp -r packages/ocaml REPO/packages
 ### mkdir -p REPO/packages/P1.0
 ### cp packages/P1-0.opam     REPO/packages/P1.0/opam
-### <mkurl.sh>
-#!/bin/sh -ue
-PKG=$1; shift
-ARCHIVE=$1; shift
-( cd packages && tar czf ${ARCHIVE} ${ARCHIVE%.tar.gz}; )
-MD5=$(openssl md5 packages/${ARCHIVE} | cut -d' ' -f2)
-echo 'src: "http://dev.null" checksum: "'$MD5'"' > REPO/packages/${PKG}/url
-CACHEDIR=REPO/cache/md5/$(echo $MD5 |head -c2)
-mkdir -p $CACHEDIR
-cp "packages/$ARCHIVE" "$CACHEDIR/$MD5"
-### sh ./mkurl.sh P1.0 P1-0.tar.gz
+### ./mkurl P1.0 P1-0.tar.gz
 ### mkdir -p REPO/packages/P1.1
 ### cp packages/P1-1.opam     REPO/packages/P1.1/opam
 ### cp packages/P1-1/README   REPO/packages/P1.1/descr
-### sh ./mkurl.sh P1.1 P1-1.tar.gz
+### ./mkurl P1.1 P1-1.tar.gz
 ### mkdir -p REPO/packages/P2.1
 ### cp packages/P2/README     REPO/packages/P2.1/descr
 ### cp packages/P2.opam       REPO/packages/P2.1/opam
-### sh ./mkurl.sh P2.1 P2.tar.gz
+### ./mkurl P2.1 P2.tar.gz
 ### mkdir -p REPO/packages/P3.1~weird-version.test
 ### cp packages/P3.opam       REPO/packages/P3.1~weird-version.test/opam
 ### cp packages/P3/README     REPO/packages/P3.1~weird-version.test/descr
-### sh ./mkurl.sh P3.1~weird-version.test P3.tar.gz
+### ./mkurl P3.1~weird-version.test P3.tar.gz
 ### mkdir -p REPO/packages/P4.1
 ### cp packages/P4-1.opam     REPO/packages/P4.1/opam
 ### cp packages/P4/README     REPO/packages/P4.1/descr
-### sh ./mkurl.sh P4.1 P4.tar.gz
+### ./mkurl P4.1 P4.tar.gz
 ### mkdir -p REPO/packages/P5.1
 ### cp packages/P5.opam       REPO/packages/P5.1/opam
 ### cp packages/P5/README     REPO/packages/P5.1/descr
-### sh ./mkurl.sh P5.1 P5.tar.gz
+### ./mkurl P5.1 P5.tar.gz
 ### echo 'archive-mirrors: "'"$PWD"'/REPO/cache"' >> REPO/repo
 ### opam update
 
@@ -653,7 +659,7 @@ Now run 'opam upgrade' to apply any package updates.
 Switch invariant: ["ocaml" {= "system"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-∗ installed ocaml.system
+-> installed ocaml.system
 Done.
 ### opam exec -- ocamlc -config | sed -ne "s/ext_lib: .//p" | tr -d '\r' >lib-ext
 ### opam config set ext_lib $(cat lib-ext)
@@ -664,11 +670,11 @@ Added 'ext_lib: "a"' to field variables in switch system
 ocaml.system
 ### opam install P1
 The following actions will be performed:
-  ∗ install P1 1  I ll always bother you displaying this message
+  - install P1 1  I ll always bother you displaying this message
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (${BASEDIR}/REPO/cache)
-∗ installed P1.1
+-> retrieved P1.1  (${BASEDIR}/REPO/cache)
+-> installed P1.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -679,10 +685,10 @@ ocaml.system
 P1.1
 ### opam remove P1
 The following actions will be performed:
-  ⊘ remove P1 1
+  - remove P1 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⊘ removed   P1.1
+-> removed   P1.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -699,17 +705,17 @@ P5     --          Testing optional dependencies
 ### : INSTALL-OPT :
 ### opam list -is --columns=package
 ocaml.system
-### opam install --yes P5
+### opam install --yes P5 | ./opam-sort
 The following actions will be performed:
-  ∗ install P1 1 [required by P5] I ll always bother you displaying this message
-  ∗ install P5 1
-===== ∗ 2 =====
+  - install P1 1 [required by P5] I ll always bother you displaying this message
+  - install P5 1
+===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (cached)
-⬇ retrieved P5.1  (${BASEDIR}/REPO/cache)
-∗ installed P1.1
-∗ installed P5.1
+-> installed P1.1
+-> installed P5.1
+-> retrieved P1.1  (cached)
+-> retrieved P5.1  (${BASEDIR}/REPO/cache)
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -723,21 +729,21 @@ P1.1
 P5.1
 ### opam remove P5
 The following actions will be performed:
-  ⊘ remove P5 1
+  - remove P5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⊘ removed   P5.1
+-> removed   P5.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
 P1.1
 ### opam install P5
 The following actions will be performed:
-  ∗ install P5 1
+  - install P5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P5.1  (cached)
-∗ installed P5.1
+-> retrieved P5.1  (cached)
+-> installed P5.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -745,27 +751,27 @@ P1.1
 P5.1
 ### opam remove P5 -a --yes
 The following actions will be performed:
-  ⊘ remove P5 1
-  ⊘ remove P1 1
-===== ⊘ 2 =====
+  - remove P5 1
+  - remove P1 1
+===== 2 to remove =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⊘ removed   P5.1
-⊘ removed   P1.1
+-> removed   P5.1
+-> removed   P1.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
-### opam install P5 --yes
+### opam install P5 --yes | ./opam-sort
 The following actions will be performed:
-  ∗ install P1 1 [required by P5] I ll always bother you displaying this message
-  ∗ install P5 1
-===== ∗ 2 =====
+  - install P1 1 [required by P5] I ll always bother you displaying this message
+  - install P5 1
+===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (cached)
-⬇ retrieved P5.1  (cached)
-∗ installed P1.1
-∗ installed P5.1
+-> installed P1.1
+-> installed P5.1
+-> retrieved P1.1  (cached)
+-> retrieved P5.1  (cached)
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -775,18 +781,18 @@ Done.
 ocaml.system
 P1.1
 P5.1
-### opam install P2 --yes
+### opam install P2 --yes | ./opam-sort
 The following actions will be performed:
-  ∗ install   P2 1
-  ↻ recompile P5 1 [uses P2]
-===== ∗ 1   ↻ 1 =====
+  - install   P2 1
+  - recompile P5 1 [uses P2]
+===== 1 to install | 1 to recompile =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P2.1  (${BASEDIR}/REPO/cache)
-⬇ retrieved P5.1  (cached)
-⊘ removed   P5.1
-∗ installed P2.1
-∗ installed P5.1
+-> installed P2.1
+-> installed P5.1
+-> removed   P5.1
+-> retrieved P2.1  (${BASEDIR}/REPO/cache)
+-> retrieved P5.1  (cached)
 Done.
 ### test -f ${OPAMROOT}/system/lib/p5/p2_present && echo PASS
 PASS
@@ -797,10 +803,10 @@ P2.1
 P5.1
 ### opam remove P5 -a
 The following actions will be performed:
-  ⊘ remove P5 1
+  - remove P5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⊘ removed   P5.1
+-> removed   P5.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -808,30 +814,30 @@ P1.1
 P2.1
 ### opam remove P2 -a --yes
 The following actions will be performed:
-  ⊘ remove P2 1
-  ⊘ remove P1 1
-===== ⊘ 2 =====
+  - remove P2 1
+  - remove P1 1
+===== 2 to remove =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⊘ removed   P2.1
-⊘ removed   P1.1
+-> removed   P2.1
+-> removed   P1.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
-### opam install P1 P2 P5
+### opam install P1 P2 P5 | ./opam-sort
 The following actions will be performed:
-  ∗ install P1 1  I ll always bother you displaying this message
-  ∗ install P2 1
-  ∗ install P5 1
-===== ∗ 3 =====
+  - install P1 1  I ll always bother you displaying this message
+  - install P2 1
+  - install P5 1
+===== 3 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (cached)
-⬇ retrieved P2.1  (cached)
-⬇ retrieved P5.1  (cached)
-∗ installed P1.1
-∗ installed P2.1
-∗ installed P5.1
+-> installed P1.1
+-> installed P2.1
+-> installed P5.1
+-> retrieved P1.1  (cached)
+-> retrieved P2.1  (cached)
+-> retrieved P5.1  (cached)
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -846,15 +852,15 @@ P2.1
 P5.1
 ### opam remove P2 -a --yes
 The following actions will be performed:
-  ⊘ remove    P2 1
-  ↻ recompile P5 1 [uses P2]
-===== ↻ 1   ⊘ 1 =====
+  - remove    P2 1
+  - recompile P5 1 [uses P2]
+===== 1 to recompile | 1 to remove =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P5.1  (cached)
-⊘ removed   P5.1
-⊘ removed   P2.1
-∗ installed P5.1
+-> retrieved P5.1  (cached)
+-> removed   P5.1
+-> removed   P2.1
+-> installed P5.1
 Done.
 ### test -f ${OPAMROOT}/system/lib/p5/p2_absent && echo PASS
 PASS
@@ -864,13 +870,13 @@ P1.1
 P5.1
 ### opam remove P1 --yes
 The following actions will be performed:
-  ⊘ remove P5 1 [uses P1]
-  ⊘ remove P1 1
-===== ⊘ 2 =====
+  - remove P5 1 [uses P1]
+  - remove P1 1
+===== 2 to remove =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⊘ removed   P5.1
-⊘ removed   P1.1
+-> removed   P5.1
+-> removed   P1.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -889,11 +895,11 @@ P5     --          Testing optional dependencies
 ocaml.system
 ### opam install P1
 The following actions will be performed:
-  ∗ install P1 1  I ll always bother you displaying this message
+  - install P1 1  I ll always bother you displaying this message
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (cached)
-∗ installed P1.1
+-> retrieved P1.1  (cached)
+-> installed P1.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -904,11 +910,11 @@ ocaml.system
 P1.1
 ### opam install P2
 The following actions will be performed:
-  ∗ install P2 1
+  - install P2 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P2.1  (cached)
-∗ installed P2.1
+-> retrieved P2.1  (cached)
+-> installed P2.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -916,11 +922,11 @@ P1.1
 P2.1
 ### opam install P3
 The following actions will be performed:
-  ∗ install P3 1~weird-version.test
+  - install P3 1~weird-version.test
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P3.1~weird-version.test  (${BASEDIR}/REPO/cache)
-∗ installed P3.1~weird-version.test
+-> retrieved P3.1~weird-version.test  (${BASEDIR}/REPO/cache)
+-> installed P3.1~weird-version.test
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -929,11 +935,11 @@ P2.1
 P3.1~weird-version.test
 ### opam install P4
 The following actions will be performed:
-  ∗ install P4 1
+  - install P4 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P4.1  (${BASEDIR}/REPO/cache)
-∗ installed P4.1
+-> retrieved P4.1  (${BASEDIR}/REPO/cache)
+-> installed P4.1
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -958,27 +964,27 @@ P1.1
 P2.1
 P3.1~weird-version.test
 P4.1
-### opam reinstall P1 --yes
+### opam reinstall P1 --yes | ./opam-sort
 The following actions will be performed:
-  ↻ recompile P1 1                                  I ll always bother you displaying this message
-  ↻ recompile P3 1~weird-version.test [uses P1]
-  ↻ recompile P2 1                    [uses P1]
-  ↻ recompile P4 1                    [uses P2, P3]
-===== ↻ 4 =====
+  - recompile P1 1                                  I ll always bother you displaying this message
+  - recompile P3 1~weird-version.test [uses P1]
+  - recompile P2 1                    [uses P1]
+  - recompile P4 1                    [uses P2, P3]
+===== 4 to recompile =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (cached)
-⬇ retrieved P2.1  (cached)
-⬇ retrieved P3.1~weird-version.test  (cached)
-⬇ retrieved P4.1  (cached)
-⊘ removed   P4.1
-⊘ removed   P2.1
-⊘ removed   P3.1~weird-version.test
-⊘ removed   P1.1
-∗ installed P1.1
-∗ installed P2.1
-∗ installed P3.1~weird-version.test
-∗ installed P4.1
+-> installed P1.1
+-> installed P2.1
+-> installed P3.1~weird-version.test
+-> installed P4.1
+-> removed   P1.1
+-> removed   P2.1
+-> removed   P3.1~weird-version.test
+-> removed   P4.1
+-> retrieved P1.1  (cached)
+-> retrieved P2.1  (cached)
+-> retrieved P3.1~weird-version.test  (cached)
+-> retrieved P4.1  (cached)
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1004,15 +1010,15 @@ P5     --                   Testing optional dependencies
 ### mkdir REPO/packages/P4.2
 ### cp packages/P4-2.opam   REPO/packages/P4.2/opam
 ### cp packages/P4/README   REPO/packages/P4.2/descr
-### sh ./mkurl.sh P4.2 P4.tar.gz
+### ./mkurl P4.2 P4.tar.gz
 ### mkdir REPO/packages/P4.3
 ### cp packages/P4-3.opam   REPO/packages/P4.3/opam
 ### cp packages/P4/README   REPO/packages/P4.3/descr
-### sh ./mkurl.sh P4.3 P4.tar.gz
+### ./mkurl P4.3 P4.tar.gz
 ### mkdir REPO/packages/P1.2
 ### cp packages/P1-2.opam   REPO/packages/P1.2/opam
 ### cp packages/P1-2/README REPO/packages/P1.2/descr
-### sh ./mkurl.sh P1.2 P1-2.tar.gz
+### ./mkurl P1.2 P1-2.tar.gz
 ### opam update
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1050,27 +1056,27 @@ P3.1~weird-version.test
 P4.1
 ### eval `opam config env | tr -d '\r'`; echo $P1
 version1
-### opam upgrade --yes
+### opam upgrade --yes | ./opam-sort
 The following actions will be performed:
-  ↗ upgrade   P1 1 to 2
-  ↻ recompile P3 1~weird-version.test [uses P1]
-  ↻ recompile P2 1                    [uses P1]
-  ↗ upgrade   P4 1 to 3
-===== ↻ 2   ↗ 2 =====
+  - upgrade   P1 1 to 2
+  - recompile P3 1~weird-version.test [uses P1]
+  - recompile P2 1                    [uses P1]
+  - upgrade   P4 1 to 3
+===== 2 to recompile | 2 to upgrade =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.2  (${BASEDIR}/REPO/cache)
-⬇ retrieved P2.1  (cached)
-⬇ retrieved P3.1~weird-version.test  (cached)
-⬇ retrieved P4.3  (${BASEDIR}/REPO/cache)
-⊘ removed   P4.1
-⊘ removed   P2.1
-⊘ removed   P3.1~weird-version.test
-⊘ removed   P1.1
-∗ installed P1.2
-∗ installed P2.1
-∗ installed P3.1~weird-version.test
-∗ installed P4.3
+-> installed P1.2
+-> installed P2.1
+-> installed P3.1~weird-version.test
+-> installed P4.3
+-> removed   P1.1
+-> removed   P2.1
+-> removed   P3.1~weird-version.test
+-> removed   P4.1
+-> retrieved P1.2  (${BASEDIR}/REPO/cache)
+-> retrieved P2.1  (cached)
+-> retrieved P3.1~weird-version.test  (cached)
+-> retrieved P4.3  (${BASEDIR}/REPO/cache)
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -1097,27 +1103,27 @@ P1.2
 P2.1
 P3.1~weird-version.test
 P4.3
-### opam install P4.2 --yes
+### opam install P4.2 --yes | ./opam-sort
 The following actions will be performed:
-  ↘ downgrade P1 2 to 1               [required by P4] I ll always bother you displaying this message
-  ↻ recompile P3 1~weird-version.test [uses P1]
-  ↻ recompile P2 1                    [uses P1]
-  ↘ downgrade P4 3 to 2
-===== ↻ 2   ↘ 2 =====
+  - downgrade P1 2 to 1               [required by P4] I ll always bother you displaying this message
+  - recompile P3 1~weird-version.test [uses P1]
+  - recompile P2 1                    [uses P1]
+  - downgrade P4 3 to 2
+===== 2 to recompile | 2 to downgrade =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (cached)
-⬇ retrieved P2.1  (cached)
-⬇ retrieved P3.1~weird-version.test  (cached)
-⬇ retrieved P4.2  (cached)
-⊘ removed   P4.3
-⊘ removed   P2.1
-⊘ removed   P3.1~weird-version.test
-⊘ removed   P1.2
-∗ installed P1.1
-∗ installed P2.1
-∗ installed P3.1~weird-version.test
-∗ installed P4.2
+-> installed P1.1
+-> installed P2.1
+-> installed P3.1~weird-version.test
+-> installed P4.2
+-> removed   P1.2
+-> removed   P2.1
+-> removed   P3.1~weird-version.test
+-> removed   P4.3
+-> retrieved P1.1  (cached)
+-> retrieved P2.1  (cached)
+-> retrieved P3.1~weird-version.test  (cached)
+-> retrieved P4.2  (cached)
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1148,13 +1154,13 @@ P3.1~weird-version.test
 P4.2
 ### opam remove P3.1~weird-version.test P4.2
 The following actions will be performed:
-  ⊘ remove P4 2
-  ⊘ remove P3 1~weird-version.test
-===== ⊘ 2 =====
+  - remove P4 2
+  - remove P3 1~weird-version.test
+===== 2 to remove =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⊘ removed   P4.2
-⊘ removed   P3.1~weird-version.test
+-> removed   P4.2
+-> removed   P3.1~weird-version.test
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -1167,7 +1173,7 @@ P2.1
 Switch invariant: ["ocaml" {= "system"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-∗ installed ocaml.system
+-> installed ocaml.system
 Done.
 ### opam config set ext_lib $(cat lib-ext)
 [WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
@@ -1176,15 +1182,15 @@ Added 'ext_lib: "a"' to field variables in switch test
 ocaml.system
 ### opam switch import test.export
 The following actions will be performed:
-  ∗ install P1 1  I ll always bother you displaying this message
-  ∗ install P2 1
-===== ∗ 2 =====
+  - install P1 1  I ll always bother you displaying this message
+  - install P2 1
+===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (cached)
-⬇ retrieved P2.1  (cached)
-∗ installed P1.1
-∗ installed P2.1
+-> retrieved P1.1  (cached)
+-> retrieved P2.1  (cached)
+-> installed P1.1
+-> installed P2.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1200,7 +1206,7 @@ P2.1
 Switch invariant: ["ocaml" {= "20"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-∗ installed ocaml.20
+-> installed ocaml.20
 Done.
 ### opam config set ext_lib $(cat lib-ext)
 [WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
@@ -1209,11 +1215,11 @@ Added 'ext_lib: "a"' to field variables in switch test2
 ocaml.20
 ### opam install P1
 The following actions will be performed:
-  ∗ install P1 1  I ll always bother you displaying this message
+  - install P1 1  I ll always bother you displaying this message
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved P1.1  (cached)
-∗ installed P1.1
+-> retrieved P1.1  (cached)
+-> installed P1.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1249,25 +1255,25 @@ P2.1
 ### opam config set ext_lib $(cat lib-ext)
 [WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
 Added 'ext_lib: "a"' to field variables in switch 10+a+b
-### opam install ocaml.10+a+b P1 P2 P3 P4
+### opam install ocaml.10+a+b P1 P2 P3 P4 | ./opam-sort
 The following actions will be performed:
-  ∗ install ocaml 10+a+b
-  ∗ install P1    1                     I ll always bother you displaying this message
-  ∗ install P3    1~weird-version.test
-  ∗ install P2    1
-  ∗ install P4    3
-===== ∗ 5 =====
+  - install ocaml 10+a+b
+  - install P1    1                     I ll always bother you displaying this message
+  - install P3    1~weird-version.test
+  - install P2    1
+  - install P4    3
+===== 5 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-∗ installed ocaml.10+a+b
-⬇ retrieved P1.1  (cached)
-⬇ retrieved P2.1  (cached)
-⬇ retrieved P3.1~weird-version.test  (cached)
-⬇ retrieved P4.3  (cached)
-∗ installed P1.1
-∗ installed P2.1
-∗ installed P3.1~weird-version.test
-∗ installed P4.3
+-> installed P1.1
+-> installed P2.1
+-> installed P3.1~weird-version.test
+-> installed P4.3
+-> installed ocaml.10+a+b
+-> retrieved P1.1  (cached)
+-> retrieved P2.1  (cached)
+-> retrieved P3.1~weird-version.test  (cached)
+-> retrieved P4.3  (cached)
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>

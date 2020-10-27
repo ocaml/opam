@@ -47,14 +47,45 @@ let load_test f =
   close_in ic;
   { repo_hash; commands }
 
-let command fmt =
-  Printf.ksprintf (fun str ->
-    let ret = Sys.command str in
-    if ret <> 0 then
-      Printf.ksprintf failwith
-        "Error code %d: %s"
-        ret str)
-  fmt
+let cleanup_path path =
+  try
+    let prefix = Sys.getenv "OPAM_SWITCH_PREFIX" in
+    OpamStd.Sys.split_path_variable path |>
+    List.filter (fun p -> not (OpamStd.String.starts_with ~prefix p)) |>
+    String.concat (String.make 1 OpamStd.Sys.path_sep)
+  with Not_found -> path
+
+let base_env =
+  (try ["PATH", (Sys.getenv "PATH" |> cleanup_path)] with Not_found -> []) @
+  (try ["HOME", Sys.getenv "HOME"] with Not_found -> []) @
+  [
+    "OPAMKEEPBUILDDIR", "1";
+    "OPAMCOLOR", "never";
+    "OPAMUTF8", "never";
+    "OPAMNOENVNOTICE", "1";
+    "OPAMSTRICT", "1";
+    "OPAMNODEPEXTS", "1";
+  ]
+
+let command ?(vars=[]) fmt =
+  Printf.ksprintf (fun cmd ->
+      let env =
+        Array.of_list @@
+        List.map (fun (var, value) -> Printf.sprintf "%s=%s" var value) @@
+        (base_env @ vars)
+      in
+      let pid =
+        Unix.create_process_env "sh" [| "sh"; "-c"; cmd |] env
+          Unix.stdin Unix.stdout Unix.stdout
+      in
+      match Unix.waitpid [] pid with
+      | _, Unix.WEXITED 0 -> ()
+      | _, Unix.WEXITED ret ->
+        Printf.ksprintf failwith
+          "Error code %d: %s"
+          ret cmd
+      | _ -> failwith "signal")
+    fmt
 
 let finally f x k = match f x with
   | r -> k (); r
@@ -72,20 +103,24 @@ let rec with_temp_dir f =
   (command "mkdir -p %s" s;
    finally f s @@ fun () -> command "rm -rf %s" s)
 
-let run_cmd ~opam cmd =
+let run_cmd ~opam ~dir cmd =
   let complete_opam_cmd cmd args =
     Printf.sprintf
       "%s %s %s 2>&1 \
        | sed 's#%s#${BASEDIR}#g' \
        | sed 's#%s/opam-[0-9a-f]*-[0-9a-f]*/#${OPAMTMP}/#g'"
       opam cmd (String.concat " " args)
-      (Sys.getcwd ())
+      dir
       (Filename.get_temp_dir_name ())
   in
+  let env_vars = [
+    "OPAM", opam;
+    "OPAMROOT", Filename.concat dir "OPAM";
+  ] in
   try
     match OpamStd.String.split cmd ' ' with
     | "opam" :: cmd :: args ->
-      command "%s" (complete_opam_cmd cmd args)
+      command ~vars:env_vars "%s" (complete_opam_cmd cmd args)
     | lst ->
       let rec split var = function
         | v::r when OpamCompat.Char.uppercase_ascii v.[0] = v.[0] ->
@@ -96,9 +131,10 @@ let run_cmd ~opam cmd =
       in
       match split [] lst with
       | Some (vars, cmd, args) ->
-        command "%s %s" (String.concat " " vars) (complete_opam_cmd cmd args)
+        command ~vars:env_vars "%s %s" (String.concat " " vars)
+          (complete_opam_cmd cmd args)
       | None ->
-        command "%s 2>&1" cmd
+        command ~vars:env_vars "%s 2>&1" cmd
   with Failure _ -> ()
 
 type command =
@@ -123,21 +159,9 @@ let run_test t ~opam ~opamroot:opamroot0 =
   let opamroot = Filename.concat dir "OPAM" in
   command "rsync -a %s/ %s/" opamroot0 opamroot;
   Sys.chdir dir;
-  List.iter (fun (var, value) -> Unix.putenv var value) [
-    "LC_ALL", "C";
-    "OPAM", opam;
-    "OPAMKEEPBUILDDIR", "1";
-    "OPAMSWITCH", "";
-    "OPAMCOLOR", "never";
-    "OPAMROOT", opamroot;
-    "OPAMJOBS", "1";
-    "OPAMDOWNLOADJOBS", "1";
-    "OPAMUTF8", "always";
-    "OPAMNOENVNOTICE", "1";
-    "OPAMSTRICT", "1";
-    "OPAMNODEPEXTS", "1";
-  ];
-  command "%s var --quiet --global sys-ocaml-version=4.08.0 >/dev/null" opam;
+  command
+    "%s var --quiet --root %s --global sys-ocaml-version=4.08.0 >/dev/null"
+    opam opamroot;
   print_endline t.repo_hash;
   List.iter (fun (cmd, out) ->
       print_string cmd_prompt;
@@ -148,7 +172,7 @@ let run_test t ~opam ~opamroot:opamroot0 =
         write_file ~path ~contents;
         print_endline contents
       | Run ->
-        run_cmd ~opam cmd)
+        run_cmd ~opam ~dir cmd)
     t.commands
 
 let () =
