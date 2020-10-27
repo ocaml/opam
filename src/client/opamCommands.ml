@@ -74,7 +74,7 @@ let switch_to_updated_self debug opamroot =
 
 let global_options cli =
   let no_self_upgrade =
-    mk_flag ~cli valid_cli_legacy ~section:global_option_section ["no-self-upgrade"]
+    mk_flag ~cli cli_original ~section:global_option_section ["no-self-upgrade"]
       (Printf.sprintf
         "Opam will replace itself with a newer binary found \
          at $(b,OPAMROOT%sopam) if present. This disables this behaviour."
@@ -201,12 +201,12 @@ let init cli =
   ] @ OpamArg.man_build_option_section
   in
   let compiler =
-    mk_opt ~cli valid_cli_legacy ["c";"compiler"] "PACKAGE"
+    mk_opt ~cli cli_original ["c";"compiler"] "PACKAGE"
       "Set the compiler to install (when creating an initial switch)"
       Arg.(some string) None
   in
   let no_compiler =
-    mk_flag ~cli valid_cli_legacy ["bare"]
+    mk_flag ~cli cli_original ["bare"]
       "Initialise the opam state, but don't setup any compiler switch yet."
   in
   let repo_name =
@@ -227,20 +227,20 @@ let init cli =
   in
   let interactive =
     mk_vflag ~cli None [
-        valid_cli_legacy, Some false, ["a";"auto-setup"],
+        cli_original, (Some false), ["a";"auto-setup"],
           "Automatically do a full setup, including adding a line to your \
            shell init files.";
-        valid_cli_legacy, Some true, ["i";"interactive"],
+        cli_original, (Some true), ["i";"interactive"],
           "Run the setup interactively (this is the default for an initial \
            run, or when no more specific options are specified)";
       ]
   in
   let update_config =
     mk_vflag ~cli None [
-        valid_cli_legacy, Some true, ["shell-setup"],
+        cli_original, (Some true), ["shell-setup"],
           "Automatically setup the user shell configuration for opam, e.g. \
            adding a line to the `~/.profile' file.";
-        valid_cli_legacy, Some false, ["n";"no-setup"],
+        cli_original, (Some false), ["n";"no-setup"],
           "Do not update the user shell configuration to setup opam. Also \
            implies $(b,--disable-shell-hook), unless $(b,--interactive) or \
            specified otherwise";
@@ -248,25 +248,25 @@ let init cli =
   in
   let setup_completion =
     mk_vflag ~cli None [
-        valid_cli_legacy, Some true, ["enable-completion"],
+        cli_original, (Some true), ["enable-completion"],
           "Setup shell completion in opam init scripts, for supported \
            shells.";
-        valid_cli_legacy, Some false, ["disable-completion"],
+        cli_original, (Some false), ["disable-completion"],
           "Disable shell completion in opam init scripts.";
       ]
   in
   let env_hook =
     mk_vflag ~cli None [
-        valid_cli_legacy, Some true, ["enable-shell-hook"],
+        cli_original, (Some true), ["enable-shell-hook"],
           "Setup opam init scripts to register a shell hook that will \
            automatically keep the shell environment up-to-date at every \
            prompt.";
-        valid_cli_legacy, Some false, ["disable-shell-hook"],
+        cli_original, (Some false), ["disable-shell-hook"],
           "Disable registration of a shell hook in opam init scripts.";
       ]
   in
   let config_file =
-    mk_opt_all ~cli valid_cli_legacy ["config"] "FILE"
+    mk_opt_all ~cli cli_original ["config"] "FILE"
       "Use the given init config file. If repeated, latest has the highest \
        priority ($(b,i.e.) each field gets its value from where it was defined \
        last). Specifying a URL pointing to a config file instead is \
@@ -274,27 +274,27 @@ let init cli =
       OpamArg.url
   in
   let no_config_file =
-    mk_flag ~cli valid_cli_legacy ["no-opamrc"]
+    mk_flag ~cli cli_original ["no-opamrc"]
       (Printf.sprintf
       "Don't read `/etc/opamrc' or `~%s.opamrc': use the default settings and \
        the files specified through $(b,--config) only" OpamArg.dir_sep)
   in
   let reinit =
-    mk_flag ~cli valid_cli_legacy ["reinit"]
+    mk_flag ~cli cli_original ["reinit"]
       "Re-run the initial checks and setup, according to opamrc, even if this \
        is not a new opam root"
   in
   let show_default_opamrc =
-    mk_flag ~cli valid_cli_legacy ["show-default-opamrc"]
+    mk_flag ~cli cli_original ["show-default-opamrc"]
       "Print the built-in default configuration to stdout and exit"
   in
   let bypass_checks =
-    mk_flag ~cli valid_cli_legacy ["bypass-checks"]
+    mk_flag ~cli cli_original ["bypass-checks"]
       "Skip checks on required or recommended tools, and assume everything is \
        fine"
   in
   let no_sandboxing =
-    mk_flag ~cli valid_cli_legacy ["disable-sandboxing"]
+    mk_flag ~cli cli_original ["disable-sandboxing"]
       "Use a default configuration with sandboxing disabled (note that this \
        may be overridden by `opamrc' if $(b,--no-opamrc) is not specified or \
        $(b,--config) is used). Use this at your own risk, without sandboxing \
@@ -421,11 +421,11 @@ let init cli =
     OpamSwitchState.drop st
   in
   Term.(const init
-        $global_options cli $build_options cli $repo_kind_flag cli $repo_name $repo_url
-        $interactive $update_config $setup_completion $env_hook $no_sandboxing
-        $shell_opt cli $dot_profile_flag cli
-        $compiler $ no_compiler
-        $config_file $no_config_file $reinit $show_default_opamrc $bypass_checks),
+        $global_options cli $build_options cli $repo_kind_flag cli cli_original
+        $repo_name $repo_url $interactive $update_config $setup_completion
+        $env_hook $no_sandboxing $shell_opt cli cli_original
+        $dot_profile_flag cli cli_original $compiler $ no_compiler $config_file
+        $no_config_file $reinit $show_default_opamrc $bypass_checks),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -463,60 +463,60 @@ let list ?(force_search=false) cli =
   in
   let state_selector =
     mk_vflag_all ~cli ~section:selection_docs [
-        valid_cli_legacy, OpamListCommand.Any, ["A";"all"],
+        cli_original, OpamListCommand.Any, ["A";"all"],
           "Include all, even uninstalled or unavailable packages";
-        valid_cli_legacy, OpamListCommand.Installed, ["i";"installed"],
+        cli_original, OpamListCommand.Installed, ["i";"installed"],
           "List installed packages only. This is the default when no \
                 further arguments are supplied";
-        valid_cli_legacy, OpamListCommand.Root, ["roots";"installed-roots"],
+        cli_original, OpamListCommand.Root, ["roots";"installed-roots"],
           "List only packages that were explicitly installed, excluding \
                 the ones installed as dependencies";
-        valid_cli_legacy, OpamListCommand.Available, ["a";"available"],
+        cli_original, OpamListCommand.Available, ["a";"available"],
           "List only packages that are available on the current system";
-        valid_cli_legacy, OpamListCommand.Installable, ["installable"],
+        cli_original, OpamListCommand.Installable, ["installable"],
           "List only packages that can be installed on the current switch \
                 (this calls the solver and may be more costly; a package \
                 depending on an unavailable package may be available, but is \
                 never installable)";
-        valid_cli_legacy, OpamListCommand.Compiler, ["base"],
+        cli_original, OpamListCommand.Compiler, ["base"],
           "List only the immutable base of the current switch (i.e. \
                 compiler packages)";
-        valid_cli_legacy, OpamListCommand.Pinned, ["pinned"],
+        cli_original, OpamListCommand.Pinned, ["pinned"],
           "List only the pinned packages";
       ]
   in
   let section = selection_docs in
   let search =
     if force_search then Term.const true else
-      mk_flag ~cli valid_cli_legacy ["search"] ~section
+      mk_flag ~cli cli_original ["search"] ~section
         "Match $(i,PATTERNS) against the full descriptions of packages, and \
          require all of them to match, instead of requiring at least one to \
          match against package names (unless $(b,--or) is also specified)."
   in
   let repos =
-    mk_opt ~cli valid_cli_legacy ["repos"] "REPOS" ~section
+    mk_opt ~cli cli_original ["repos"] "REPOS" ~section
       "Include only packages that took their origin from one of the given \
        repositories (unless $(i,no-switch) is also specified, this excludes \
        pinned packages)."
       Arg.(some & list & repository_name) None
   in
   let owns_file =
-    mk_opt ~cli valid_cli_legacy ["owns-file"] "FILE" ~section
+    mk_opt ~cli cli_original ["owns-file"] "FILE" ~section
       "Finds installed packages responsible for installing the given file"
       Arg.(some OpamArg.filename) None
   in
   let no_switch =
-    mk_flag ~cli valid_cli_legacy ["no-switch"] ~section:selection_docs
+    mk_flag ~cli cli_original ["no-switch"] ~section:selection_docs
       "List what is available from the repositories, without consideration for \
        the current (or any other) switch (installed or pinned packages, etc.)"
   in
   let disjunction =
-    mk_flag ~cli valid_cli_legacy ["or"] ~section:selection_docs
+    mk_flag ~cli cli_original ["or"] ~section:selection_docs
       "Instead of selecting packages that match $(i,all) the criteria, select \
        packages that match $(i,any) of them"
   in
   let depexts =
-    mk_flag ~cli valid_cli_legacy ["e";"external";"depexts"] ~section:display_docs
+    mk_flag ~cli cli_original ["e";"external";"depexts"] ~section:display_docs
       "Instead of displaying the packages, display their external dependencies \
        that are associated with the current system. This excludes other \
        display options. Rather than using this directly, you should probably \
@@ -525,19 +525,19 @@ let list ?(force_search=false) cli =
        `opam depext'."
   in
   let vars =
-    mk_opt ~cli valid_cli_legacy ["vars"] "[VAR=STR,...]" ~section:display_docs
+    mk_opt ~cli cli_original ["vars"] "[VAR=STR,...]" ~section:display_docs
       "Define the given variable bindings. Typically useful with \
        $(b,--external) to override the values for $(i,arch), $(i,os), \
        $(i,os-distribution), $(i,os-version), $(i,os-family)."
       OpamArg.variable_bindings []
   in
   let silent =
-    mk_flag ~cli valid_cli_legacy ["silent"]
+    mk_flag ~cli cli_original ["silent"]
       "Don't write anything in the output, exit with return code 0 if the list \
        is not empty, 1 otherwise."
   in
   let no_depexts =
-    mk_flag ~cli valid_cli_legacy ["no-depexts"]
+    mk_flag ~cli cli_original ["no-depexts"]
       "Disable external dependencies handling for the query. This can be used \
        to include packages that are marked as unavailable because of an unavailable \
        system dependency."
@@ -693,7 +693,7 @@ let show cli =
         metadata will be shown."
   ] in
   let fields =
-    mk_opt ~cli valid_cli_legacy ["f";"field"] "FIELDS"
+    mk_opt ~cli cli_original ["f";"field"] "FIELDS"
       (Printf.sprintf
          "Only display the values of these fields. Fields can be selected \
           among %s. Multiple fields can be separated with commas, in which case \
@@ -704,37 +704,37 @@ let show cli =
       Arg.(list string) []
   in
   let show_empty =
-    mk_flag ~cli valid_cli_legacy ["empty-fields"]
+    mk_flag ~cli cli_original ["empty-fields"]
       "Show fields that are empty. This is implied when $(b,--field) is \
        given."
   in
   let raw =
-    mk_flag ~cli valid_cli_legacy ["raw"] "Print the raw opam file for this package" in
+    mk_flag ~cli cli_original ["raw"] "Print the raw opam file for this package" in
   let where =
-    mk_flag ~cli valid_cli_legacy ["where"]
+    mk_flag ~cli cli_original ["where"]
       "Print the location of the opam file used for this package" in
   let list_files =
-    mk_flag ~cli valid_cli_legacy ["list-files"]
+    mk_flag ~cli cli_original ["list-files"]
       "List the files installed by the package. Equivalent to \
        $(b,--field=installed-files), and only available for installed \
        packages"
   in
   let file =
-    mk_opt ~cli (Deprecated (cli2_0, cli2_1, Some "--just-file"))
+    mk_opt ~cli (cli_between cli2_0 cli2_1 ~replaced:"--just-file")
       ["file"] "FILE" ""
       Arg.(some existing_filename_or_dash) None
   in
   let normalise =
-    mk_flag ~cli valid_cli_legacy ["normalise"]
+    mk_flag ~cli cli_original ["normalise"]
       "Print the values of opam fields normalised (no newlines, no implicit \
        brackets)"
   in
   let no_lint =
-    mk_flag ~cli valid_cli_legacy ["no-lint"]
+    mk_flag ~cli cli_original ["no-lint"]
       "Don't output linting warnings or errors when reading from files"
   in
   let just_file =
-    mk_flag ~cli (Valid_since cli2_1) ["just-file"]
+    mk_flag ~cli (cli_from cli2_1) ["just-file"]
       "Load and display information from the given files (allowed \
        $(i,PACKAGES) are file or directory paths), without consideration for \
        the repositories or state of the package. This implies $(b,--raw) unless \
@@ -742,11 +742,11 @@ let show cli =
        PACKAGES argument is given, read opam file from stdin."
   in
   let all_versions =
-    mk_flag ~cli (Valid_since cli2_1) ["all-versions"]
+    mk_flag ~cli (cli_from cli2_1) ["all-versions"]
       "Display information of all packages matching $(i,PACKAGES), not \
        restrained to a single package matching $(i,PACKAGES) constraints."
   in
-  let sort = mk_flag ~cli (Valid_since cli2_1) ["sort"] "Sort opam fields" in
+  let sort = mk_flag ~cli (cli_from cli2_1) ["sort"] "Sort opam fields" in
   let opam_files_in_dir d =
     match OpamPinned.files_in_source d with
     | [] -> []
@@ -879,7 +879,7 @@ let show cli =
 module Var_Option_Common = struct
 
   let global cli =
-    mk_flag ~cli (Valid_since cli2_1) ["global"] "Act on global configuration"
+    mk_flag ~cli (cli_from cli2_1) ["global"] "Act on global configuration"
 
   let var_option global global_options cmd var =
     let switch_set = (fst global_options).opt_switch <> None in
@@ -1003,7 +1003,7 @@ let var cli =
     Arg.(value & pos 0 (some string) None & info ~docv ~doc [])
   in
   let package =
-    mk_opt ~cli valid_cli_legacy ["package"] "PACKAGE"
+    mk_opt ~cli cli_original ["package"] "PACKAGE"
       "List all variables defined for the given package"
       Arg.(some package_name) None
   in
@@ -1061,24 +1061,24 @@ let option cli =
 
 module Common_config_flags = struct
   let sexp cli =
-    mk_flag ~cli valid_cli_legacy ["sexp"]
+    mk_flag ~cli cli_original ["sexp"]
       "Print environment as an s-expression rather than in shell format"
 
   let inplace_path cli =
-    mk_flag ~cli valid_cli_legacy ["inplace-path"]
+    mk_flag ~cli cli_original ["inplace-path"]
       "When updating the $(i,PATH) variable, replace any pre-existing opam \
        path in-place rather than putting the new path in front. This means \
        programs installed in opam that were shadowed will remain so after \
        $(b,opam env)"
 
   let set_opamroot cli =
-    mk_flag ~cli valid_cli_legacy ["set-root"]
+    mk_flag ~cli cli_original ["set-root"]
       "With the $(b,env) and $(b,exec) subcommands, also sets the \
        $(i,OPAMROOT) variable, making sure further calls to opam will use the \
        same root."
 
   let set_opamswitch cli =
-    mk_flag ~cli valid_cli_legacy ["set-switch"]
+    mk_flag ~cli cli_original ["set-switch"]
       "With the $(b,env) and $(b,exec) subcommands, also sets the \
        $(i,OPAMSWITCH) variable, making sure further calls to opam will use \
        the same switch as this one."
@@ -1090,55 +1090,49 @@ let config_doc = "Display configuration options for packages."
 let config cli =
   let doc = config_doc in
   let commands = [
-    valid_cli_legacy, "env", `env, [],
+    cli_original, "env", `env, [],
     "Returns the bindings for the environment variables set in the current \
      switch, e.g. PATH, in a format intended to be evaluated by a shell. With \
      $(i,-v), add comments documenting the reason or package of origin for \
      each binding. This is most usefully used as $(b,eval \\$(opam config \
      env\\)) to have further shell commands be evaluated in the proper opam \
      context. Can also be accessed through $(b,opam env).";
-    valid_cli_legacy, "revert-env", `revert_env, [],
+    cli_original, "revert-env", `revert_env, [],
     "Reverts environment changes made by opam, e.g. $(b,eval \\$(opam config \
      revert-env)) undoes what $(b,eval \\$(opam config env\\)) did, as much as \
      possible.";
-    valid_cli_legacy, "list", `list, ["[PACKAGE]..."],
+    cli_original, "list", `list, ["[PACKAGE]..."],
     "Without argument, prints a documented list of all available variables. \
      With $(i,PACKAGE), lists all the variables available for these packages. \
      Use $(i,-) to include global configuration variables for this switch.";
-    valid_cli_legacy, "expand", `expand, ["STRING"],
+    cli_original, "expand", `expand, ["STRING"],
     "Expand variable interpolations in the given string";
-    valid_cli_legacy, "subst", `subst, ["FILE..."],
+    cli_original, "subst", `subst, ["FILE..."],
     "Substitute variables in the given files. The strings $(i,%{var}%) are \
      replaced by the value of variable $(i,var) (see $(b,var)).";
-    valid_cli_legacy, "report", `report, [],
+    cli_original, "report", `report, [],
     "Prints a summary of your setup, useful for bug-reports.";
-    valid_cli_legacy, "cudf-universe",`cudf, ["[FILE]"],
+    cli_original, "cudf-universe", `cudf, ["[FILE]"],
     "Outputs the current available package universe in CUDF format.";
-    valid_cli_legacy, "pef-universe", `pef, ["[FILE]"],
+    cli_original, "pef-universe", `pef, ["[FILE]"],
     "Outputs the current package universe in PEF format.";
     (* Deprecated options *)
-    Deprecated (cli2_1, cli3_0, Some "opam exec"),
-    "exec", `exec, ["[--] COMMAND"; "[ARG]..."],
+    cli_between cli2_0 cli2_1 ~replaced:"opam exec", "exec", `exec, ["[--] COMMAND"; "[ARG]..."],
     "Execute $(i,COMMAND) with the correct environment variables. This command \
      can be used to cross-compile between switches using $(b,opam config exec \
      --switch=SWITCH -- COMMAND ARG1 ... ARGn). Opam expansion takes place in \
      command and args. If no switch is present on the command line or in the \
      $(i,OPAMSWITCH) environment variable, $(i,OPAMSWITCH) is not set in \
      $(i,COMMAND)'s environment. Can also be accessed through $(b,opam exec).";
-    Deprecated (cli2_1, cli3_0, Some "opam var"),
-    "set", `set, ["VAR";"VALUE"],
+    cli_between cli2_0 cli2_1 ~replaced:"opam var", "set", `set, ["VAR";"VALUE"],
     "Set switch variable";
-    Deprecated (cli2_1, cli3_0, Some "opam var"),
-    "unset", `unset, ["VAR"],
+    cli_between cli2_0 cli2_1 ~replaced:"opam var", "unset", `unset, ["VAR"],
     "Unset switch variable";
-    Deprecated (cli2_1, cli3_0, Some "opam var"),
-    "set-global", `set_global, ["VAR";"VALUE"],
+    cli_between cli2_0 cli2_1 ~replaced:"opam var", "set-global", `set_global, ["VAR";"VALUE"],
     "Set global variable";
-    Deprecated (cli2_1, cli3_0, Some "opam var"),
-    "unset-global", `unset_global, ["VAR"],
+    cli_between cli2_0 cli2_1 ~replaced:"opam var", "unset-global", `unset_global, ["VAR"],
     "Unset global variable";
-    Deprecated (cli2_1, cli3_0, Some "opam var"),
-    "var", `var, ["VAR"],
+    cli_between cli2_0 cli2_1 ~replaced:"opam var", "var", `var, ["VAR"],
     "Return the value associated with variable $(i,VAR), looking in switch \
      first, global if not found. Package variables can be accessed with the \
      syntax $(i,pkg:var). Can also be accessed through $(b,opam var VAR)";
@@ -1382,7 +1376,7 @@ let config cli =
 
   Term.ret (
     Term.(const config
-          $global_options cli $command $shell_opt cli $sexp cli
+          $global_options cli $command $shell_opt cli cli_original $sexp cli
           $inplace_path cli
           $set_opamroot cli $set_opamswitch cli
           $params)
@@ -1433,11 +1427,11 @@ let env cli =
     `P "This is a shortcut, and equivalent to $(b,opam config env).";
   ] in
   let revert =
-    mk_flag ~cli valid_cli_legacy ["revert"]
+    mk_flag ~cli cli_original ["revert"]
       "Output the environment with updates done by opam reverted instead."
   in
   let check =
-    mk_flag ~cli (Valid_since cli2_1) ["check"]
+    mk_flag ~cli (cli_from cli2_1) ["check"]
       "Exits with 0 if the environment is already up-to-date, 1 otherwise, \
        after printing the list of not up-to-date variables."
   in
@@ -1471,8 +1465,9 @@ let env cli =
   in
   let open Common_config_flags in
   Term.(const env
-        $global_options cli $shell_opt cli $sexp cli $inplace_path cli
-        $set_opamroot cli $set_opamswitch cli $revert $check),
+        $global_options cli $shell_opt cli cli_original $sexp cli
+        $inplace_path cli $set_opamroot cli $set_opamswitch cli
+        $revert $check),
   term_info "env" ~doc ~man
 
 (* INSTALL *)
@@ -1504,28 +1499,28 @@ let install cli =
    in
   let add_to_roots =
     mk_vflag ~cli None [
-      valid_cli_legacy, Some true, ["set-root"],
+      cli_original, (Some true), ["set-root"],
       "Mark given packages as installed roots. This is the default \
        for newly manually-installed packages.";
-      valid_cli_legacy, Some false, ["unset-root"],
+      cli_original, (Some false), ["unset-root"],
       "Mark given packages as \"installed automatically\".";
     ]
   in
   let deps_only =
-    mk_flag ~cli valid_cli_legacy  ["deps-only"]
+    mk_flag ~cli cli_original  ["deps-only"]
       "Install all its dependencies, but don't actually install the package."
   in
   let ignore_conflicts =
-    mk_flag ~cli (Valid_since cli2_1) ["ignore-conflicts"]
+    mk_flag ~cli (cli_from cli2_1) ["ignore-conflicts"]
       "Used with $(b,--deps-only), ignores conflicts of given package"
   in
   let restore =
-    mk_flag ~cli valid_cli_legacy ["restore"]
+    mk_flag ~cli cli_original ["restore"]
       "Attempt to restore packages that were marked for installation but have \
        been removed due to errors"
   in
   let destdir =
-    mk_opt ~cli valid_cli_legacy ["destdir"] "DIR"
+    mk_opt ~cli cli_original ["destdir"] "DIR"
       "Copy the files installed by the given package within the current opam \
        switch below the prefix $(i,DIR), respecting their hierarchy, after \
        installation. Caution, calling this can overwrite, but never remove \
@@ -1535,13 +1530,13 @@ let install cli =
       Arg.(some dirname) None
   in
   let check =
-    mk_flag ~cli (Valid_since cli2_1) ["check"]
+    mk_flag ~cli (cli_from cli2_1) ["check"]
       "Exit with 0 if all the dependencies of $(i,PACKAGES) are already \
        installed. If not, output the names of the missing dependencies to \
        stdout, and exits with 1."
   in
   let depext_only =
-    mk_flag ~cli (Valid_since cli2_1) ["depext-only"]
+    mk_flag ~cli (cli_from cli2_1) ["depext-only"]
       "Resolves the package installation normally, but only installs \
        the required system dependencies, without affecting the opam switch \
        state or installing opam packages."
@@ -1644,18 +1639,18 @@ let remove cli =
   ] @ OpamArg.man_build_option_section
   in
   let autoremove =
-    mk_flag ~cli valid_cli_legacy ["a";"auto-remove"]
+    mk_flag ~cli cli_original ["a";"auto-remove"]
       "Remove all the packages which have not been explicitly installed and \
        which are not necessary anymore. It is possible to prevent the removal \
        of an already-installed package by running $(b,opam install <pkg> \
        --set-root). This flag can also be set using the $(b,\\$OPAMAUTOREMOVE) \
        configuration variable." in
   let force =
-    mk_flag ~cli valid_cli_legacy ["force"]
+    mk_flag ~cli cli_original ["force"]
       "Execute the remove commands of given packages directly, even if they are \
        not considered installed by opam." in
   let destdir =
-    mk_opt ~cli valid_cli_legacy ["destdir"] "DIR"
+    mk_opt ~cli cli_original ["destdir"] "DIR"
       "Instead of uninstalling the packages, reverts the action of $(b,opam \
        install --destdir): remove files corresponding to what the listed \
        packages installed to the current switch from the given $(i,DIR). Note \
@@ -1724,13 +1719,13 @@ let reinstall cli =
   in
   let cmd =
     mk_vflag ~cli `Default [
-        valid_cli_legacy, `Pending, ["pending"],
+        cli_original, `Pending, ["pending"],
           "Perform pending reinstallations, i.e. reinstallations of \
                 packages that have changed since installed";
-        valid_cli_legacy, `List_pending, ["list-pending"],
+        cli_original, `List_pending, ["list-pending"],
           "List packages that have been changed since installed and are \
                 marked for reinstallation";
-        valid_cli_legacy, `Forget_pending, ["forget-pending"],
+        cli_original, `Forget_pending, ["forget-pending"],
           "Forget about pending reinstallations of listed packages. This \
                 implies making opam assume that your packages were installed \
                 with a newer version of their metadata, so only use this if \
@@ -1810,26 +1805,26 @@ let update cli =
         $(b,opam upgrade).";
   ] in
   let repos_only =
-    mk_flag ~cli valid_cli_legacy ["R"; "repositories"]
+    mk_flag ~cli cli_original ["R"; "repositories"]
       "Update repositories (skipping development packages unless \
        $(b,--development) is also specified)." in
   let dev_only =
-    mk_flag ~cli valid_cli_legacy ["development"]
+    mk_flag ~cli cli_original ["development"]
       "Update development packages (skipping repositories unless \
        $(b,--repositories) is also specified)." in
   let upgrade =
-    mk_flag ~cli valid_cli_legacy ["u";"upgrade"]
+    mk_flag ~cli cli_original ["u";"upgrade"]
       "Automatically run $(b,opam upgrade) after the update." in
   let name_list =
     arg_list "NAMES"
       "List of repository or development package names to update."
       Arg.string in
   let all =
-    mk_flag ~cli valid_cli_legacy ["a"; "all"]
+    mk_flag ~cli cli_original ["a"; "all"]
       "Update all configured repositories, not only what is set in the current \
        switch" in
   let check =
-    mk_flag ~cli valid_cli_legacy ["check"]
+    mk_flag ~cli cli_original ["check"]
       "Do the update, then return with code 0 if there were any upstream \
        changes, 1 if there were none. Repositories or development packages \
        that failed to update are considered without changes. With \
@@ -1862,7 +1857,7 @@ let update cli =
       OpamConsole.msg "Now run 'opam upgrade' to apply any package updates.\n";
     if not success then OpamStd.Sys.exit_because `Sync_error
   in
-  Term.(const update $global_options cli $jobs_flag cli $name_list
+  Term.(const update $global_options cli $jobs_flag cli cli_original $name_list
         $repos_only $dev_only $all $check $upgrade),
   term_info "update" ~doc ~man
 
@@ -1883,22 +1878,22 @@ let upgrade cli =
   ] @ OpamArg.man_build_option_section
   in
   let fixup =
-    mk_flag ~cli valid_cli_legacy ["fixup"]
+    mk_flag ~cli cli_original ["fixup"]
       "Recover from a broken state (eg. missing dependencies, two conflicting \
        packages installed together...)." in
   let check =
-    mk_flag ~cli valid_cli_legacy ["check"]
+    mk_flag ~cli cli_original ["check"]
       "Don't run the upgrade: just check if anything could be upgraded. \
        Returns 0 if that is the case, 1 if there is nothing that can be \
        upgraded." in
   let all =
-    mk_flag ~cli valid_cli_legacy ["a";"all"]
+    mk_flag ~cli cli_original ["a";"all"]
       "Run an upgrade of all installed packages. This is the default if \
        $(i,PACKAGES) was not specified, and can be useful with $(i,PACKAGES) \
        to upgrade while ensuring that some packages get or remain installed."
   in
   let installed =
-    mk_flag ~cli (Valid_since cli2_1) ["installed"]
+    mk_flag ~cli (cli_from cli2_1) ["installed"]
       "When a directory is provided as argument, do not install pinned package \
        that are not yet installed." in
   let upgrade global_options build_options fixup check only_installed all
@@ -1930,7 +1925,7 @@ let repository cli =
   let doc = repository_doc in
   let scope_section = "SCOPE SPECIFICATION OPTIONS" in
   let commands = [
-    valid_cli_legacy, "add", `add, ["NAME"; "[ADDRESS]"; "[QUORUM]"; "[FINGERPRINTS]"],
+    cli_original, "add", `add, ["NAME"; "[ADDRESS]"; "[QUORUM]"; "[FINGERPRINTS]"],
     "Adds under $(i,NAME) the repository at address $(i,ADDRESS) to the list \
      of configured repositories, if not already registered, and sets this \
      repository for use in the current switch (or the specified scope). \
@@ -1939,7 +1934,7 @@ let repository cli =
      address. The quorum is a positive integer that determines the validation \
      threshold for signed repositories, with fingerprints the trust anchors \
      for said validation.";
-    valid_cli_legacy, " ", `add, [],
+    cli_original, " ", `add, [],
     (* using an unbreakable space here will indent the text paragraph at the level
        of the previous labelled paragraph, which is what we want for our note. *)
     "$(b,Note:) By default, the repository is only added to the current \
@@ -1947,24 +1942,24 @@ let repository cli =
      $(b,--all) or $(b,--set-default) options (see below). If you want to \
      enable a repository only to install its switches, you may be \
      looking for $(b,opam switch create --repositories=REPOS).";
-    valid_cli_legacy, "remove", `remove, ["NAME..."],
+    cli_original, "remove", `remove, ["NAME..."],
     "Unselects the given repositories so that they will not be used to get \
      package definitions anymore. With $(b,--all), makes opam forget about \
      these repositories completely.";
-    valid_cli_legacy, "set-repos", `set_repos, ["NAME..."],
+    cli_original, "set-repos", `set_repos, ["NAME..."],
     "Explicitly selects the list of repositories to look up package \
      definitions from, in the specified priority order (overriding previous \
      selection and ranks), according to the specified scope.";
-    valid_cli_legacy, "set-url", `set_url,
+    cli_original, "set-url",  `set_url,
     ["NAME"; "ADDRESS"; "[QUORUM]"; "[FINGERPRINTS]"],
     "Updates the URL and trust anchors associated with a given repository \
      name. Note that if you don't specify $(i,[QUORUM]) and \
      $(i,[FINGERPRINTS]), any previous settings will be erased.";
-    valid_cli_legacy, "list", `list, [],
+    cli_original, "list", `list, [],
     "Lists the currently selected repositories in priority order from rank 1. \
      With $(b,--all), lists all configured repositories and the switches \
      where they are active.";
-    valid_cli_legacy, "priority", `priority, ["NAME"; "RANK"],
+    cli_original, "priority", `priority, ["NAME"; "RANK"],
     "Synonym to $(b,add NAME --rank RANK)";
   ] in
   let man = [
@@ -1995,14 +1990,14 @@ let repository cli =
     in
     let flags =
       mk_vflag_all ~cli ~section:scope_section [
-        valid_cli_legacy, `No_selection, ["dont-select"],
+        cli_original, `No_selection, ["dont-select"],
           "Don't update any selections";
-        valid_cli_legacy, `Current_switch, ["this-switch"],
+        cli_original, `Current_switch, ["this-switch"],
           "Act on the selections for the current switch (this is the default)";
-        valid_cli_legacy, `Default, ["set-default"],
+        cli_original, `Default, ["set-default"],
           "Act on the default repository selection that is used for newly \
            created switches";
-        valid_cli_legacy, `All, ["all-switches";"a"],
+        cli_original, `All, ["all-switches";"a"],
           "Act on the selections of all configured switches";
       ]
     in
@@ -2019,7 +2014,7 @@ let repository cli =
           $ flags $ switches)
   in
   let rank =
-    mk_opt ~cli valid_cli_legacy ["rank"] "RANK"
+    mk_opt ~cli cli_original ["rank"] "RANK"
       "Set the rank of the repository in the list of configured repositories. \
       Package definitions are looked in the repositories in increasing rank \
       order, therefore 1 is the highest priority.  Negative ints can be used to \
@@ -2215,8 +2210,9 @@ let repository cli =
     | command, params -> bad_subcommand ~cli commands ("repository", command, params)
   in
   Term.ret
-    Term.(const repository $global_options cli $command $repo_kind_flag cli
-          $print_short_flag cli $scope $rank $params),
+    Term.(const repository $global_options cli $command
+          $repo_kind_flag cli cli_original $print_short_flag cli cli_original
+          $scope $rank $params),
   term_info "repository" ~doc ~man
 
 
@@ -2288,7 +2284,7 @@ let switch_doc = "Manage multiple installation prefixes."
 let switch cli =
   let doc = switch_doc in
   let commands = [
-    valid_cli_legacy, "create", `install, ["SWITCH"; "[COMPILER]"],
+    cli_original, "create", `install, ["SWITCH"; "[COMPILER]"],
     "Create a new switch, and install the given compiler there. $(i,SWITCH) \
      can be a plain name, or a directory, absolute or relative, in which case \
      a local switch is created below the given directory. $(i,COMPILER), if \
@@ -2299,44 +2295,42 @@ let switch cli =
      opam-init(1)). If the chosen directory contains package definitions, a \
      compatible compiler is searched within the default selection, and the \
      packages will automatically get installed.";
-    valid_cli_legacy, "set", `set, ["SWITCH"],
+    cli_original, "set", `set, ["SWITCH"],
     "Set the currently active switch, among the installed switches.";
-    valid_cli_legacy, "remove", `remove, ["SWITCH"],
+    cli_original, "remove", `remove, ["SWITCH"],
     "Remove the given switch from disk.";
-    valid_cli_legacy, "export", `export, ["FILE"],
+    cli_original, "export", `export, ["FILE"],
     "Save the current switch state to a file. If $(b,--full) is specified, it \
      includes the metadata of all installed packages, and if $(b,--freeze) is \
      specified, it freezes all vcs to their current commit.";
-    valid_cli_legacy, "import", `import, ["FILE"],
+    cli_original, "import", `import, ["FILE"],
     "Import a saved switch state. If $(b,--switch) is specified and doesn't \
      point to an existing switch, the switch will be created for the import.";
-    valid_cli_legacy, "reinstall", `reinstall, ["[SWITCH]"],
+    cli_original, "reinstall", `reinstall, ["[SWITCH]"],
     "Reinstall the given compiler switch and all its packages.";
-    valid_cli_legacy, "list", `list, [],
+    cli_original, "list", `list, [],
     "Lists installed switches.";
-    valid_cli_legacy, "list-available", `list_available, ["[PATTERN]"],
+    cli_original, "list-available", `list_available, ["[PATTERN]"],
     "Lists all the possible packages that are advised for installation when \
      creating a new switch, i.e. packages with the $(i,compiler) flag set. If \
      no pattern is supplied, all versions are shown.";
-    valid_cli_legacy, "show", `current, [],
+    cli_original, "show", `current, [],
     "Prints the name of the current switch.";
-    (Valid_since cli2_1), "invariant", `show_invariant, [],
+    cli_from cli2_1, "invariant", `show_invariant, [],
     "Prints the active switch invariant.";
-    (Valid_since cli2_1), "set-invariant", `set_invariant, ["PACKAGES"],
+    cli_from cli2_1, "set-invariant", `set_invariant, ["PACKAGES"],
     "Updates the switch invariant, that is, the formula that the switch must \
      keep verifying throughout all operations. The previous setting is \
      overriden. See also options $(b,--force) and $(b,--no-action). Without \
      arguments, an invariant is chosen automatically.";
-    valid_cli_legacy, "set-description", `set_description, ["STRING"],
+    cli_original, "set-description", `set_description, ["STRING"],
     "Sets the description for the selected switch.";
-    valid_cli_legacy, "link", `link, ["SWITCH";"[DIR]"],
+    cli_original, "link", `link, ["SWITCH";"[DIR]"],
     "Sets a local alias for a given switch, so that the switch gets \
      automatically selected whenever in that directory or a descendant.";
-    Deprecated (cli2_1, cli3_0, Some "create"),
-    "install", `install, ["SWITCH"],
+    cli_between cli2_0 cli2_1 ~replaced:"create", "install", `install, ["SWITCH"],
     "Install a new switch";
-    Deprecated (cli2_1, cli3_0, Some "set-invariant"),
-    "set-base", `set_invariant, ["PACKAGES"],
+    cli_between cli2_0 cli2_1 ~replaced:"set-invariant", "set-base", `set_invariant, ["PACKAGES"],
     "Define a set of switch base packages.";
   ] in
   let man = [
@@ -2389,23 +2383,23 @@ let switch cli =
 
   let command, params = mk_subcommands_with_default ~cli commands in
   let no_switch =
-    mk_flag ~cli valid_cli_legacy ["no-switch"]
+    mk_flag ~cli cli_original ["no-switch"]
       "Don't automatically select newly installed switches." in
   let packages =
-    mk_opt ~cli valid_cli_legacy ["packages"] "PACKAGES"
+    mk_opt ~cli cli_original ["packages"] "PACKAGES"
       "When installing a switch, explicitly define the set of packages to \
        enforce as the switch invariant."
       Arg.(some (list atom)) None in
   let formula =
-    mk_opt ~cli (Valid_since cli2_1) ["formula"] "FORMULA"
+    mk_opt ~cli (cli_from cli2_1) ["formula"] "FORMULA"
       "Allows specifying a complete \"dependency formula\", possibly including \
        disjunction cases, as the switch invariant."
       Arg.(some OpamArg.dep_formula) None in
   let empty =
-    mk_flag ~cli valid_cli_legacy ["empty"]
+    mk_flag ~cli cli_original ["empty"]
       "Allow creating an empty switch, with no invariant." in
   let repos =
-    mk_opt ~cli valid_cli_legacy ["repositories"] "REPOS"
+    mk_opt ~cli cli_original ["repositories"] "REPOS"
       "When creating a new switch, use the given selection of repositories \
        instead of the default. $(i,REPOS) should be a comma-separated list of \
        either already registered repository names (configured through e.g. \
@@ -2417,54 +2411,53 @@ let switch cli =
       Arg.(some (list string)) None
   in
   let descr =
-    mk_opt ~cli valid_cli_legacy ["description"] "STRING"
+    mk_opt ~cli cli_original ["description"] "STRING"
       "Attach the given description to a switch when creating it. Use the \
        $(i,set-description) subcommand to modify the description of an \
        existing switch."
       Arg.(some string) None
   in
   let full =
-    mk_flag ~cli valid_cli_legacy ["full"]
+    mk_flag ~cli cli_original ["full"]
       "When exporting, include the metadata of all installed packages, \
        allowing to re-import even if they don't exist in the repositories (the \
        default is to include only the metadata of pinned packages)."
   in
   let freeze =
-    mk_flag ~cli (Valid_since cli2_1) ["freeze"]
+    mk_flag ~cli (cli_from cli2_1) ["freeze"]
       "When exporting, locks all VCS urls to their current commit, failing if \
        it can not be retrieved. This ensures that an import will restore the \
        exact state. Implies $(b,--full)."
   in
   let no_install =
-    mk_flag ~cli valid_cli_legacy ["no-install"]
+    mk_flag ~cli cli_original ["no-install"]
       "When creating a local switch, don't look for any local package \
        definitions to install."
   in
   let deps_only =
-    mk_flag ~cli valid_cli_legacy ["deps-only"]
+    mk_flag ~cli cli_original ["deps-only"]
       "When creating a local switch in a project directory (i.e. a directory \
        containing opam package definitions), install the dependencies of the \
        project but not the project itself."
   in
   let force =
-    mk_flag ~cli (Valid_since cli2_1) ["force"]
+    mk_flag ~cli (cli_from cli2_1) ["force"]
       "Only for $(i,set-invariant): force setting the invariant, bypassing \
        consistency checks."
   in
   let no_action =
-    mk_flag ~cli (Valid_since cli2_1) ["n"; "no-action"]
+    mk_flag ~cli (cli_from cli2_1) ["n"; "no-action"]
       "Only for $(i,set-invariant): set the invariant, but don't enforce it \
        right away: wait for the next $(i,install), $(i,upgrade) or similar \
        command."
   in
   (* Deprecated options *)
   let d_alias_of =
-    mk_opt ~cli (Deprecated (cli2_0, cli2_1,
-                             Some "opam switch <switch-name> <compiler>"))
+    mk_opt ~cli (cli_between cli2_0 cli2_0 ~replaced:"opam switch <switch-name> <compiler>")
       ["A";"alias-of"] "COMP" "" Arg.(some string) None
   in
   let d_no_autoinstall =
-    mk_flag ~cli (Deprecated (cli2_0, cli2_1, None)) ["no-autoinstall"] ""
+    mk_flag ~cli (cli_between cli2_0 cli2_0) ["no-autoinstall"] ""
   in
   let switch
       global_options build_options command print_short
@@ -2755,7 +2748,7 @@ let switch cli =
   in
   Term.(ret (const switch
              $global_options cli $build_options cli $command
-             $print_short_flag cli
+             $print_short_flag cli cli_original
              $no_switch
              $packages $formula $empty $descr $full $freeze $no_install
              $deps_only $repos $force $no_action $d_alias_of $d_no_autoinstall
@@ -2767,10 +2760,10 @@ let pin_doc = "Pin a given package to a specific version or source."
 let pin ?(unpin_only=false) cli =
   let doc = pin_doc in
   let commands = [
-    valid_cli_legacy, "list", `list, [], "Lists pinned packages.";
-    (Valid_since cli2_1), "scan", `scan, ["DIR"],
+    cli_original, "list", `list, [], "Lists pinned packages.";
+    cli_from cli2_1, "scan", `scan, ["DIR"],
     "Lists available packages to pin in directory.";
-    valid_cli_legacy, "add", `add, ["PACKAGE"; "TARGET"],
+    cli_original, "add", `add, ["PACKAGE"; "TARGET"],
     "Pins package $(i,PACKAGE) to $(i,TARGET), which may be a version, a path, \
      or a URL.\n\
      $(i,PACKAGE) can be omitted if $(i,TARGET) contains one or more \
@@ -2787,11 +2780,11 @@ let pin ?(unpin_only=false) cli =
      For source pinnings, the package version may be specified by using the \
      format $(i,NAME).$(i,VERSION) for $(i,PACKAGE), in the source opam file, \
      or with $(b,edit).";
-    valid_cli_legacy, "remove", `remove, ["NAMES...|TARGET"],
+    cli_original, "remove", `remove, ["NAMES...|TARGET"],
     "Unpins packages $(i,NAMES), restoring their definition from the \
      repository, if any. With a $(i,TARGET), unpins everything that is \
      currently pinned to that target.";
-    valid_cli_legacy, "edit", `edit, ["NAME"],
+    cli_original, "edit", `edit, ["NAME"],
     "Opens an editor giving you the opportunity to change the package \
      definition that opam will locally use for package $(i,NAME), including \
      its version and source URL. Using the format $(i,NAME.VERSION) will \
@@ -2834,7 +2827,7 @@ let pin ?(unpin_only=false) cli =
     else
       mk_subcommands_with_default ~cli commands in
   let edit =
-    mk_flag ~cli valid_cli_legacy ["e";"edit"]
+    mk_flag ~cli cli_original ["e";"edit"]
       "With $(i,opam pin add), edit the opam file as with `opam pin edit' \
        after pinning." in
   let kind =
@@ -2865,16 +2858,16 @@ let pin ?(unpin_only=false) cli =
       ] in
     Arg.(value & opt (some & enum kinds) None & doc) in
   let no_act =
-    mk_flag ~cli valid_cli_legacy ["n";"no-action"]
+    mk_flag ~cli cli_original ["n";"no-action"]
       "Just record the new pinning status, and don't prompt for \
        (re)installation or removal of affected packages."
   in
   let dev_repo =
-    mk_flag ~cli valid_cli_legacy ["dev-repo"]
+    mk_flag ~cli cli_original ["dev-repo"]
       "Pin to the upstream package source for the latest development version"
   in
   let normalise =
-    mk_flag ~cli (Valid_since cli2_1) ["normalise"]
+    mk_flag ~cli (cli_from cli2_1) ["normalise"]
       (Printf.sprintf
          "Print list of available package to pin in format \
           `name.version%curl`, that is comprehensible by `opam pin \
@@ -2883,7 +2876,7 @@ let pin ?(unpin_only=false) cli =
          OpamPinCommand.scan_sep)
   in
   let with_version =
-    mk_opt ~cli (Valid_since cli2_1) ["with-version"] "VERSION"
+    mk_opt ~cli (cli_from cli2_1) ["with-version"] "VERSION"
       "Set the pinning version to $(i,VERSION) for named $(i,PACKAGES) or \
        packages retrieved from $(i,TARGET). It has priority over any other \
        version specification (opam file version field, $(b,name.vers) \
@@ -3155,7 +3148,7 @@ let pin ?(unpin_only=false) cli =
   Term.ret
     Term.(const pin
           $global_options cli $build_options cli
-          $kind $edit $no_act $dev_repo $print_short_flag cli
+          $kind $edit $no_act $dev_repo $print_short_flag cli cli_original
           $recurse cli $subpath cli
           $normalise $with_version
           $command $params),
@@ -3175,14 +3168,14 @@ let source cli =
            ~doc:"A package name with an optional version constraint")
   in
   let dev_repo =
-    mk_flag ~cli valid_cli_legacy ["dev-repo"]
+    mk_flag ~cli cli_original ["dev-repo"]
       "Get the latest version-controlled source rather than the \
        release archive" in
   let pin =
-    mk_flag ~cli valid_cli_legacy ["pin"]
+    mk_flag ~cli cli_original ["pin"]
       "Pin the package to the downloaded source (see `opam pin')." in
   let dir =
-    mk_opt ~cli valid_cli_legacy ["dir"] "DIR" "The directory where to put the source."
+    mk_opt ~cli cli_original ["dir"] "DIR" "The directory where to put the source."
       Arg.(some dirname) None in
   let source global_options atom dev_repo pin dir =
     apply_global_options global_options;
@@ -3316,15 +3309,15 @@ let lint cli =
                  them. Current directory if unspecified")
   in
   let normalise =
-    mk_flag ~cli valid_cli_legacy ["normalise"]
+    mk_flag ~cli cli_original ["normalise"]
       "Output a normalised version of the opam file to stdout"
   in
   let short =
-    mk_flag ~cli valid_cli_legacy ["short";"s"]
+    mk_flag ~cli cli_original ["short";"s"]
       "Only print the warning/error numbers, space-separated, if any"
   in
   let warnings =
-    mk_opt ~cli valid_cli_legacy ["warnings";"W"] "WARNS"
+    mk_opt ~cli cli_original ["warnings";"W"] "WARNS"
       "Select the warnings to show or hide. $(i,WARNS) should be a \
        concatenation of $(b,+N), $(b,-N), $(b,+N..M), $(b,-N..M) to \
        respectively enable or disable warning or error number $(b,N) or \
@@ -3334,13 +3327,13 @@ let lint cli =
       warn_selector []
   in
   let package =
-    mk_opt ~cli valid_cli_legacy ["package"] "PKG"
+    mk_opt ~cli cli_original ["package"] "PKG"
       "Lint the current definition of the given package instead of specifying \
        an opam file directly."
       Arg.(some package) None
   in
   let check_upstream =
-    mk_flag ~cli valid_cli_legacy ["check-upstream"]
+    mk_flag ~cli cli_original ["check-upstream"]
       "Check upstream, archive availability and checksum(s)"
   in
   let lint global_options files package normalise short warnings_sel
@@ -3477,37 +3470,37 @@ let clean cli =
         --switch-cleanup)."
   ] in
   let dry_run =
-    mk_flag ~cli valid_cli_legacy ["dry-run"]
+    mk_flag ~cli cli_original ["dry-run"]
       "Print the removal commands, but don't execute them"
   in
   let download_cache =
-    mk_flag ~cli valid_cli_legacy ["c"; "download-cache"]
+    mk_flag ~cli cli_original ["c"; "download-cache"]
       (Printf.sprintf
         "Clear the cache of downloaded files (\\$OPAMROOT%sdownload-cache), as \
          well as the obsolete \\$OPAMROOT%sarchives, if that exists."
         OpamArg.dir_sep OpamArg.dir_sep)
   in
   let repos =
-    mk_flag ~cli valid_cli_legacy ["unused-repositories"]
+    mk_flag ~cli cli_original ["unused-repositories"]
       "Clear any configured repository that is not used by any switch nor the \
        default."
   in
   let repo_cache =
-    mk_flag ~cli valid_cli_legacy ["r"; "repo-cache"]
+    mk_flag ~cli cli_original ["r"; "repo-cache"]
       "Clear the repository cache. It will be rebuilt by the next opam command \
        that needs it."
   in
   let logs =
-    mk_flag ~cli valid_cli_legacy ["logs"] "Clear the logs directory."
+    mk_flag ~cli cli_original ["logs"] "Clear the logs directory."
   in
   let switch =
-    mk_flag ~cli valid_cli_legacy ["s";"switch-cleanup"]
+    mk_flag ~cli cli_original ["s";"switch-cleanup"]
       "Run the switch-specific cleanup: clears backups, build dirs, \
        uncompressed package sources of non-dev packages, local metadata of \
        previously pinned packages, etc."
   in
   let all_switches =
-    mk_flag ~cli valid_cli_legacy ["a"; "all-switches"]
+    mk_flag ~cli cli_original ["a"; "all-switches"]
       "Run the switch cleanup commands in all switches. Implies $(b,--switch-cleanup)"
   in
   let clean global_options dry_run
@@ -3678,7 +3671,7 @@ let lock cli =
   ]
   in
   let only_direct_flag =
-    mk_flag ~cli valid_cli_legacy ["d"; "direct-only"]
+    mk_flag ~cli cli_original ["d"; "direct-only"]
       "Only lock direct dependencies, rather than the whole dependency tree."
   in
   let lock_suffix = OpamArg.lock_suffix cli Manpage.s_options in

@@ -60,13 +60,13 @@ let index_command cli =
   in
   let urls_txt_arg cli =
     OpamArg.mk_vflag ~cli `minimal_urls_txt [
-      OpamArg.valid_cli_legacy, `no_urls_txt, ["no-urls-txt"],
+      OpamArg.cli_original, `no_urls_txt, ["no-urls-txt"],
       "Don't generate a 'urls.txt' file. That index file is no longer \
        needed from opam 2.0 on, but is still used by older versions.";
-      OpamArg.valid_cli_legacy, `full_urls_txt, ["full-urls-txt"],
+      OpamArg.cli_original, `full_urls_txt, ["full-urls-txt"],
       "Generate an inclusive 'urls.txt', for a repository that will be \
        used by opam versions earlier than 2.0.";
-      OpamArg.valid_cli_legacy, `minimal_urls_txt, ["minimal-urls-txt"],
+      OpamArg.cli_original, `minimal_urls_txt, ["minimal-urls-txt"],
       "Generate a minimal 'urls.txt' file, that only includes the 'repo' \
        file. This allows opam versions earlier than 2.0 to read that file, \
        and be properly redirected to a repository dedicated to their \
@@ -209,12 +209,12 @@ let cache_command cli =
            "Name of the cache directory to use.")
   in
   let no_repo_update_arg =
-    OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ["no-repo-update";"n"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["no-repo-update";"n"]
       "Don't check, create or update the 'repo' file to point to the \
        generated cache ('archive-mirrors:' field)."
   in
   let link_arg =
-    OpamArg.mk_opt ~cli OpamArg.valid_cli_legacy ["link"] "DIR"
+    OpamArg.mk_opt ~cli OpamArg.cli_original ["link"] "DIR"
       (Printf.sprintf
          "Create reverse symbolic links to the archives within $(i,DIR), in \
           the form $(b,DIR%sPKG.VERSION%sFILENAME)."
@@ -222,7 +222,7 @@ let cache_command cli =
       Arg.(some OpamArg.dirname) None
   in
   let jobs_arg =
-    OpamArg.mk_opt ~cli OpamArg.valid_cli_legacy ["jobs"; "j"]
+    OpamArg.mk_opt ~cli OpamArg.cli_original ["jobs"; "j"]
       "JOBS" "Number of parallel downloads"
       OpamArg.positive_integer 8
   in
@@ -299,12 +299,12 @@ let add_hashes_command cli =
             hash_kinds))
   in
   let packages =
-    OpamArg.mk_opt ~cli OpamArg.(Valid_since cli2_1) ["p";"packages"]
+    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_1) ["p";"packages"]
       "PACKAGES" "Only add hashes for the given packages"
       Arg.(list OpamArg.package) []
   in
   let replace_arg =
-    OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ["replace"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["replace"]
       "Replace the existing hashes rather than adding to them"
   in
   let hash_tables =
@@ -512,14 +512,14 @@ let upgrade_command cli =
   ]
   in
   let clear_cache_arg =
-    OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ["clear-cache"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["clear-cache"]
       (Printf.sprintf
          "Instead of running the upgrade, clear the cache of archive hashes (held \
           in ~%s.cache), that is used to avoid re-downloading files to obtain \
           their hashes at every run." OpamArg.dir_sep)
   in
   let create_mirror_arg =
-    OpamArg.mk_opt ~cli OpamArg.valid_cli_legacy ["m"; "mirror"] "URL"
+    OpamArg.mk_opt ~cli OpamArg.cli_original ["m"; "mirror"] "URL"
       "Don't overwrite the current repository, but put an upgraded mirror in \
        place in a subdirectory, with proper redirections. Needs the URL the \
        repository will be served from to put in the redirects (older versions \
@@ -557,11 +557,11 @@ let lint_command cli =
   ]
   in
   let short_arg =
-    OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ["s";"short"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["s";"short"]
       "Print only packages and warning/error numbers, without explanations"
   in
   let list_arg =
-    OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ["list";"l"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["list";"l"]
       "Only list package names, without warning details"
   in
   let include_arg =
@@ -569,17 +569,17 @@ let lint_command cli =
       OpamArg.positive_integer
   in
   let exclude_arg =
-    OpamArg.mk_opt_all ~cli OpamArg.valid_cli_legacy ["exclude";"x"] "INT"
+    OpamArg.mk_opt_all ~cli OpamArg.cli_original ["exclude";"x"] "INT"
       "Exclude the given warnings or errors"
       OpamArg.positive_integer
   in
   let ignore_arg =
-    OpamArg.mk_opt_all ~cli OpamArg.valid_cli_legacy ["ignore-packages";"i"] "INT"
+    OpamArg.mk_opt_all ~cli OpamArg.cli_original ["ignore-packages";"i"] "INT"
       "Ignore any packages having one of these warnings or errors"
       OpamArg.positive_integer
   in
   let warn_error_arg =
-    OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ["warn-error";"W"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["warn-error";"W"]
       "Return failure on any warnings, not only on errors"
   in
   let cmd global_options short list incl excl ign warn_error =
@@ -644,24 +644,24 @@ let check_command cli =
   ]
   in
   let ignore_test_arg =
-    OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ["ignore-test-doc";"i"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["ignore-test-doc";"i"]
       "By default, $(b,{with-test}) and $(b,{with-doc}) dependencies are \
        included. This ignores them, and makes the test more tolerant."
   in
   let print_short_arg =
-    OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ["s";"short"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["s";"short"]
       "Only output a list of uninstallable packages"
   in
   let installability_arg =
-    OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ["installability"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["installability"]
       "Do the installability check (and disable the others by default)"
   in
   let cycles_arg =
-    OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ["cycles"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["cycles"]
       "Do the cycles check (and disable the others by default)"
   in
   let obsolete_arg =
-    OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ["obsolete"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["obsolete"]
       "Analyse for obsolete packages"
   in
   let cmd global_options ignore_test print_short
@@ -719,7 +719,7 @@ let pattern_list_arg =
     Arg.string
 
 let env_arg cli =
-  OpamArg.mk_opt ~cli OpamArg.valid_cli_legacy ["environment"]
+  OpamArg.mk_opt ~cli OpamArg.cli_original ["environment"]
     "VAR=VALUE[;VAR=VALUE]"
     (Printf.sprintf
        "Use the given opam environment, in the form of a list of \
@@ -736,14 +736,14 @@ let env_arg cli =
 let state_selection_arg cli =
   OpamArg.mk_vflag ~cli ~section:OpamArg.package_selection_section
     OpamListCommand.Available [
-    OpamArg.valid_cli_legacy, OpamListCommand.Any, ["A";"all"],
+    OpamArg.cli_original, OpamListCommand.Any, ["A";"all"],
     "Include all, even uninstalled or unavailable packages";
-    OpamArg.valid_cli_legacy, OpamListCommand.Available, ["a";"available"],
+    OpamArg.cli_original, OpamListCommand.Available, ["a";"available"],
     "List only packages that are available according to the defined \
      $(b,environment). Without $(b,--environment), this will include \
      any packages for which availability is not resolvable at this \
      point.";
-    OpamArg.valid_cli_legacy, OpamListCommand.Installable, ["installable"],
+    OpamArg.cli_original, OpamListCommand.Installable, ["installable"],
     "List only packages that are installable according to the defined \
      $(b,environment) (this calls the solver and may be more costly; \
      a package depending on an unavailable one may be available, but \
@@ -801,7 +801,7 @@ let get_virtual_switch_state repo_root env =
     gt rt
 
 let or_arg cli =
-  OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ~section:OpamArg.package_selection_section ["or"]
+  OpamArg.mk_flag ~cli OpamArg.cli_original ~section:OpamArg.package_selection_section ["or"]
     "Instead of selecting packages that match $(i,all) the \
      criteria, select packages that match $(i,any) of them"
 
@@ -879,12 +879,12 @@ let filter_command cli =
   ]
   in
   let remove_arg =
-    OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ["remove"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["remove"]
       "Invert the behaviour and remove the matching packages, keeping the ones \
        that don't match."
   in
   let dryrun_arg =
-    OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ["dry-run"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["dry-run"]
       "List the removal commands, without actually performing them"
   in
   let cmd
@@ -978,7 +978,7 @@ let add_constraint_command cli =
             package.")
   in
   let force_arg =
-    OpamArg.mk_flag ~cli OpamArg.valid_cli_legacy ["force"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["force"]
       "Force updating of constraints even if the resulting constraint is \
        unsatisfiable (e.g. when adding $(b,>3) to the constraint \
        $(b,<2)). The default in this case is to print a warning and keep \

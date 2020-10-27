@@ -18,50 +18,59 @@ open Cmdliner
 
 (** {3 CLI versioning} *)
 
-type flag_validity =
-  (* New flag since version [OpamCLIVersion.t] *)
-  | Valid_since of OpamCLIVersion.t
-  (* since * removal * instead
-     Option to remove, deprecated [since], to be removed at [removal],
-     and a hint to use another option or command [instead] *)
-  | Deprecated of
-      OpamCLIVersion.t (* since *)
-      * OpamCLIVersion.t (* removal *)
-      * string option (* use instead *)
+(* Type of the validity of a flag *)
+type validity
 
-
-val valid_cli_legacy: flag_validity
 val cli2_0: OpamCLIVersion.t
 val cli2_1: OpamCLIVersion.t
-val cli2_3: OpamCLIVersion.t
-val cli3_0: OpamCLIVersion.t
+
+(* [cli_from since] validity flag since [since], and no removal version *)
+val cli_from: OpamCLIVersion.t -> validity
+
+(* [cli_between since until ?replaced] a validity flags introduced in
+   [since], removed in [until], [replaced] is the replacement helper
+   message *)
+val cli_between:
+  OpamCLIVersion.t -> ?replaced:string -> OpamCLIVersion.t -> validity
+
+(* Original cli options : [validity] from 2.0 and no removal.
+   No new options should use this. *)
+val cli_original: validity
+
+(** {3 Common helphers} *)
+
+(* Helpers function takes [cli] as first argument, which is the requested cli
+   (via [--cli] or [OPAMCLI]), and a [validity] argument, the validity of the
+   flag.
+   All arguments must be defined using [mk_*] function, they embed cli
+   validation. *)
 
 val mk_flag:
-  cli:OpamCLIVersion.t -> flag_validity ->
+  cli:OpamCLIVersion.t -> validity ->
   ?section:string -> string list -> string ->
   bool Term.t
 
 val mk_opt:
-  cli:OpamCLIVersion.t -> flag_validity ->
+  cli:OpamCLIVersion.t -> validity ->
   ?section:string -> ?vopt:'a -> string list -> string -> string ->
   'a Arg.converter -> 'a ->
   'a Term.t
 
 val mk_opt_all:
-  cli:OpamCLIVersion.t -> flag_validity ->
+  cli:OpamCLIVersion.t -> validity ->
   ?section:string -> ?vopt:'a -> ?default:'a list ->
   string list -> string -> string ->
   'a Arg.converter -> 'a list Term.t
 
 val mk_vflag:
   cli:OpamCLIVersion.t ->
-  ?section:string -> 'a -> (flag_validity * 'a * string list * string) list ->
+  ?section:string -> 'a -> (validity * 'a * string list * string) list ->
   'a Term.t
 
 val mk_vflag_all:
   cli:OpamCLIVersion.t ->
   ?section:string -> ?default:'a list ->
-  (flag_validity * 'a * string list * string) list ->
+  (validity * 'a * string list * string) list ->
   'a list Term.t
 
 (* Escaped Windows directory separator. To use instead of [Filename.dir_sep] for
@@ -75,23 +84,23 @@ val escape_path: string -> string
 
 (** --short *)
 val print_short_flag:
-  ?validity:flag_validity -> OpamCLIVersion.t -> bool Term.t
+  OpamCLIVersion.t -> validity -> bool Term.t
 
 (** --shell *)
 val shell_opt:
-  ?validity:flag_validity -> OpamCLIVersion.t -> shell option Term.t
+  OpamCLIVersion.t -> validity -> shell option Term.t
 
 (** --dot-profile *)
 val dot_profile_flag:
-  ?validity:flag_validity -> OpamCLIVersion.t -> filename option Term.t
+  OpamCLIVersion.t -> validity -> filename option Term.t
 
 (** --http/ --git/ --local *)
 val repo_kind_flag:
-  ?validity:flag_validity -> OpamCLIVersion.t -> OpamUrl.backend option Term.t
+  OpamCLIVersion.t -> validity -> OpamUrl.backend option Term.t
 
 (** --jobs *)
 val jobs_flag:
-  ?validity:flag_validity -> OpamCLIVersion.t -> int option Term.t
+  OpamCLIVersion.t -> validity -> int option Term.t
 
 (** package names *)
 val name_list: name list Term.t
@@ -256,10 +265,10 @@ val opamlist_columns: OpamListCommand.output_format list Arg.converter
 
 (** {2 Subcommands} *)
 
-type 'a subcommand = flag_validity * string * 'a * string list * string
+type 'a subcommand = validity * string * 'a * string list * string
 (** A subcommand [cmds, v, args, doc] is the subcommand [cmd], using
     the documentation [doc] and the list of documentation parameters
-    [args]. If the subcommand is selected, return [v]. *)
+    [args]. If the subcommand is selected, return [v] value. *)
 
 type 'a subcommands = 'a subcommand list
 
