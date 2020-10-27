@@ -1,8 +1,0 @@
-opam-version: "1.3"
-variables {
-  asmcomp : "-I %{lib}%/P3"
-  bytecomp: "-I %{lib}%/P3"
-  asmlink : "-I %{lib}%/P3 p3.cmxa p3_bar.cmxa"
-  bytelink: "-I %{lib}%/P3 p3.cma p3_bar.cma"
-  requires: "p1"
-}

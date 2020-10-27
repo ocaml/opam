@@ -64,20 +64,19 @@ let rec with_temp_dir f =
   let s =
     Filename.concat
       (Filename.get_temp_dir_name ())
-      (Printf.sprintf "opam-reftest-%06x.opam" (Random.int 0xffffff))
+      (Printf.sprintf "opam-reftest-%06x" (Random.int 0xffffff))
   in
   if Sys.file_exists s then
     with_temp_dir f
   else
   (command "mkdir -p %s" s;
-   finally f s @@ fun () -> ()(* command "rm -rf %s" s *))
+   finally f s @@ fun () -> command "rm -rf %s" s)
 
 let run_cmd ~opam cmd =
   let complete_opam_cmd cmd args =
     Printf.sprintf
       "%s %s %s 2>&1 \
        | sed 's#%s#${BASEDIR}#g' \
-       | sed 's#'\"$OPAMROOT\"'#${OPAMROOT}#g' \
        | sed 's#/tmp/opam-[0-9a-f]*-[0-9a-f]*/#${OPAMTMP}/#g'"
       opam cmd (String.concat " " args)
       (Sys.getcwd ())
@@ -119,7 +118,10 @@ let write_file ~path ~contents =
   close_out oc
 
 let run_test t ~opam ~opamroot:opamroot0 =
-  with_temp_dir @@ fun opamroot ->
+  with_temp_dir @@ fun dir ->
+  let opamroot = Filename.concat dir "OPAM" in
+  command "rsync -a %s/ %s/" opamroot0 opamroot;
+  Sys.chdir dir;
   List.iter (fun (var, value) -> Unix.putenv var value) [
     "LC_ALL", "C";
     "OPAM", opam;
@@ -131,7 +133,6 @@ let run_test t ~opam ~opamroot:opamroot0 =
     "OPAMDOWNLOADJOBS", "1";
     "OPAMUTF8", "always";
   ];
-  command "rsync -a %s/ %s/" opamroot0 opamroot;
   command "%s var --quiet --global sys-ocaml-version=4.08.0 >/dev/null" opam;
   print_endline t.repo_hash;
   List.iter (fun (cmd, out) ->
@@ -147,6 +148,7 @@ let run_test t ~opam ~opamroot:opamroot0 =
     t.commands
 
 let () =
+  Random.self_init ();
   let opam = OpamFilename.(to_string (of_string Sys.argv.(1))) in
   let input = Sys.argv.(2) in
   let opamroot = Sys.argv.(3) in
