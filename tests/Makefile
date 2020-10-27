@@ -330,3 +330,6 @@ clean:
 	rm -f test.log fulltest.log
 	rm -f $(ARCHIVES)
 	rm -rf $(TMP_DIR_ACT)
+
+meld:
+	meld `for t in reftests/*.test; do echo --diff $$t ../_build/default/tests/$${t%.test}.out; done`
