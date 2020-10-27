@@ -655,7 +655,8 @@ Switch invariant: ["ocaml" {= "system"}]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ∗ installed ocaml.system
 Done.
-### opam config set ext_lib $(ocamlc -config | sed -ne "s/ext_lib: .//p" | tr -d '\r')
+### opam exec -- ocamlc -config | sed -ne "s/ext_lib: .//p" | tr -d '\r' >lib-ext
+### opam config set ext_lib $(cat lib-ext)
 [WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
 Added 'ext_lib: "a"' to field variables in switch system
 ### : INSTALL-REMOVE :
@@ -1168,7 +1169,7 @@ Switch invariant: ["ocaml" {= "system"}]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ∗ installed ocaml.system
 Done.
-### opam config set ext_lib $(ocamlc -config | sed -ne "s/ext_lib: .//p" | tr -d '\r')
+### opam config set ext_lib $(cat lib-ext)
 [WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
 Added 'ext_lib: "a"' to field variables in switch test
 ### opam list -is --columns=package
@@ -1201,7 +1202,7 @@ Switch invariant: ["ocaml" {= "20"}]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ∗ installed ocaml.20
 Done.
-### opam config set ext_lib $(ocamlc -config | sed -ne "s/ext_lib: .//p" | tr -d '\r')
+### opam config set ext_lib $(cat lib-ext)
 [WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
 Added 'ext_lib: "a"' to field variables in switch test2
 ### opam list -is --columns=package
@@ -1245,7 +1246,7 @@ ocaml.system
 P1.1
 P2.1
 ### opam switch create 10+a+b --empty
-### opam config set ext_lib $(ocamlc -config | sed -ne "s/ext_lib: .//p" | tr -d '\r')
+### opam config set ext_lib $(cat lib-ext)
 [WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
 Added 'ext_lib: "a"' to field variables in switch 10+a+b
 ### opam install ocaml.10+a+b P1 P2 P3 P4

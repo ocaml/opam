@@ -77,9 +77,10 @@ let run_cmd ~opam cmd =
     Printf.sprintf
       "%s %s %s 2>&1 \
        | sed 's#%s#${BASEDIR}#g' \
-       | sed 's#/tmp/opam-[0-9a-f]*-[0-9a-f]*/#${OPAMTMP}/#g'"
+       | sed 's#%s/opam-[0-9a-f]*-[0-9a-f]*/#${OPAMTMP}/#g'"
       opam cmd (String.concat " " args)
       (Sys.getcwd ())
+      (Filename.get_temp_dir_name ())
   in
   try
     match OpamStd.String.split cmd ' ' with
@@ -132,6 +133,9 @@ let run_test t ~opam ~opamroot:opamroot0 =
     "OPAMJOBS", "1";
     "OPAMDOWNLOADJOBS", "1";
     "OPAMUTF8", "always";
+    "OPAMNOENVNOTICE", "1";
+    "OPAMSTRICT", "1";
+    "OPAMNODEPEXTS", "1";
   ];
   command "%s var --quiet --global sys-ocaml-version=4.08.0 >/dev/null" opam;
   print_endline t.repo_hash;
