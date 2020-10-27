@@ -37,7 +37,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Var
-  *
+  * Add `opamfile-loc` as a package variable, containing the location of installed package opam file [#4402 @rjbou]
 
 ## Option
 
