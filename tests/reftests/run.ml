@@ -67,6 +67,15 @@ let base_env =
     "OPAMDOWNLOADJOBS", "1";
   ]
 
+(* See [opamprocess.safe_wait] *)
+let rec waitpid pid =
+  match Unix.waitpid [] pid with
+  | exception Unix.Unix_error (Unix.EINTR,_,_) -> waitpid pid
+  | exception Unix.Unix_error (Unix.ECHILD,_,_) -> 256
+  | _, Unix.WSTOPPED _ -> waitpid pid
+  | _, Unix.WEXITED n -> n
+  | _, Unix.WSIGNALED _ -> failwith "signal"
+
 let command ?(vars=[]) fmt =
   Printf.ksprintf (fun cmd ->
       let env =
@@ -78,13 +87,9 @@ let command ?(vars=[]) fmt =
         Unix.create_process_env "sh" [| "sh"; "-c"; cmd |] env
           Unix.stdin Unix.stdout Unix.stdout
       in
-      match Unix.waitpid [] pid with
-      | _, Unix.WEXITED 0 -> ()
-      | _, Unix.WEXITED ret ->
-        Printf.ksprintf failwith
-          "Error code %d: %s"
-          ret cmd
-      | _ -> failwith "signal")
+      match waitpid pid with
+      | 0 -> ()
+      | ret -> Printf.ksprintf failwith "Error code %d: %s" ret cmd)
     fmt
 
 let finally f x k = match f x with
