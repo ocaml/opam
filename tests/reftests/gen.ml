@@ -33,7 +33,7 @@ let run_rule ~base_name ~archive_hash =
  (action
   (with-stdout-to
    %s.out
-   (run ./run.exe %%{bin:opam} %%{dep:%s.test} %%{dep:%s}))))
+   (run ./run.exe %%{bin:opam} %%{dep:%s.test} %%{dep:%s} %%{read-lines:testing-env}))))
 |} base_name base_name (opamroot_directory ~archive_hash)
 
 let archive_download_rule archive_hash =
