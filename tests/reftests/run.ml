@@ -63,7 +63,6 @@ let base_env =
     "OPAMCOLOR", "never";
     "OPAMUTF8", "never";
     "OPAMNOENVNOTICE", "1";
-    "OPAMSTRICT", "1";
     "OPAMNODEPEXTS", "1";
     "OPAMDOWNLOADJOBS", "1";
   ]
