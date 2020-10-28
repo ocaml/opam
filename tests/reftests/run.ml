@@ -104,7 +104,7 @@ let rec with_temp_dir f =
   (command "mkdir -p %s" s;
    finally f s @@ fun () -> command "rm -rf %s" s)
 
-let run_cmd ~opam ~dir cmd =
+let run_cmd ~opam ~dir ?(vars=[]) cmd =
   let complete_opam_cmd cmd args =
     Printf.sprintf
       "%s %s %s 2>&1 \
@@ -117,7 +117,8 @@ let run_cmd ~opam ~dir cmd =
   let env_vars = [
     "OPAM", opam;
     "OPAMROOT", Filename.concat dir "OPAM";
-  ] in
+  ] @ vars
+  in
   try
     match OpamStd.String.split cmd ' ' with
     | "opam" :: cmd :: args ->
@@ -155,7 +156,7 @@ let write_file ~path ~contents =
   output_string oc contents;
   close_out oc
 
-let run_test t ~opam ~opamroot:opamroot0 =
+let run_test t ?vars ~opam ~opamroot:opamroot0 =
   with_temp_dir @@ fun dir ->
   let opamroot = Filename.concat dir "OPAM" in
   command "rsync -a %s/ %s/" opamroot0 opamroot;
@@ -173,12 +174,20 @@ let run_test t ~opam ~opamroot:opamroot0 =
         write_file ~path ~contents;
         print_endline contents
       | Run ->
-        run_cmd ~opam ~dir cmd)
+        run_cmd ~opam ~dir ?vars cmd)
     t.commands
 
 let () =
   Random.self_init ();
-  let opam = OpamFilename.(to_string (of_string Sys.argv.(1))) in
-  let input = Sys.argv.(2) in
-  let opamroot = Sys.argv.(3) in
-  load_test input |> run_test ~opam ~opamroot
+  match Array.to_list Sys.argv with
+  | _ :: opam :: input :: opamroot :: env ->
+    let opam = OpamFilename.(to_string (of_string opam)) in
+    let vars =
+      List.map (fun s -> match OpamStd.String.cut_at s '=' with
+          | Some (var, value) -> var, value
+          | None -> failwith "Bad 'var=value' argument")
+        env
+    in
+    load_test input |> run_test ~opam ~opamroot ~vars
+  | _ ->
+    failwith "Expected arguments: opam.exe file.test opamroot [env-bindings]"
