@@ -363,7 +363,7 @@ export OCAMLRUNPARAM=b
   elif [ "$TRAVIS_BUILD_STAGE_NAME" != "Upgrade" ]; then
     # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
     OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make tests ||
-      (tail -n 2000 _build/default/tests/fulltest-*.log; echo "-- TESTS FAILED --"; exit 1)
+      (echo "-- TESTS FAILED --"; exit 1)
   fi
   (set +x ; echo -en "travis_fold:end:build\r") 2>/dev/null
 )

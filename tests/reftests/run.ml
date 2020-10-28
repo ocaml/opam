@@ -65,6 +65,7 @@ let base_env =
     "OPAMNOENVNOTICE", "1";
     "OPAMSTRICT", "1";
     "OPAMNODEPEXTS", "1";
+    "OPAMDOWNLOADJOBS", "1";
   ]
 
 let command ?(vars=[]) fmt =

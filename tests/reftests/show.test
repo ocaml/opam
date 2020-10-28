@@ -302,7 +302,7 @@ depexts: ["llvm@10"] {os-distribution = "homebrew" & os = "macos"}
          ["llvm10-dev"] {os-distribution = "alpine"}
          ["llvm10-devel"] {os-family = "suse"}
          ["devel/llvm10"] {os = "freebsd"}
-### OPAMVAR_os=freebsd opam show "conf-llvm>7.0.0" -f name,version,depexts --all-versions
+### OPAMVAR_os=freebsd OPAMVAR_os_family=debian opam show "conf-llvm>7.0.0" -f name,version,depexts --all-versions
 name    conf-llvm
 version 8.0.0
 depexts devel/llvm80 llvm-8-dev
