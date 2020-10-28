@@ -12,7 +12,7 @@
  (action
   (with-stdout-to
    conflict-badversion.out
-   (run ./run.exe %{bin:opam} %{dep:conflict-badversion.test} %{dep:root-f372039d}))))
+   (run ./run.exe %{bin:opam} %{dep:conflict-badversion.test} %{dep:root-f372039d} %{read-lines:testing-env}))))
 
 (alias
  (name reftest-conflict-camlp4)
@@ -27,7 +27,7 @@
  (action
   (with-stdout-to
    conflict-camlp4.out
-   (run ./run.exe %{bin:opam} %{dep:conflict-camlp4.test} %{dep:root-f372039d}))))
+   (run ./run.exe %{bin:opam} %{dep:conflict-camlp4.test} %{dep:root-f372039d} %{read-lines:testing-env}))))
 
 (alias
  (name reftest-conflict-core)
@@ -42,7 +42,7 @@
  (action
   (with-stdout-to
    conflict-core.out
-   (run ./run.exe %{bin:opam} %{dep:conflict-core.test} %{dep:root-f372039d}))))
+   (run ./run.exe %{bin:opam} %{dep:conflict-core.test} %{dep:root-f372039d} %{read-lines:testing-env}))))
 
 (alias
  (name reftest-conflict-solo5)
@@ -57,7 +57,7 @@
  (action
   (with-stdout-to
    conflict-solo5.out
-   (run ./run.exe %{bin:opam} %{dep:conflict-solo5.test} %{dep:root-f372039d}))))
+   (run ./run.exe %{bin:opam} %{dep:conflict-solo5.test} %{dep:root-f372039d} %{read-lines:testing-env}))))
 
 (alias
  (name reftest-install-pgocaml)
@@ -72,7 +72,7 @@
  (action
   (with-stdout-to
    install-pgocaml.out
-   (run ./run.exe %{bin:opam} %{dep:install-pgocaml.test} %{dep:root-f372039d}))))
+   (run ./run.exe %{bin:opam} %{dep:install-pgocaml.test} %{dep:root-f372039d} %{read-lines:testing-env}))))
 
 (alias
  (name reftest-legacy-git)
@@ -87,7 +87,7 @@
  (action
   (with-stdout-to
    legacy-git.out
-   (run ./run.exe %{bin:opam} %{dep:legacy-git.test} %{dep:root-632bc2e}))))
+   (run ./run.exe %{bin:opam} %{dep:legacy-git.test} %{dep:root-632bc2e} %{read-lines:testing-env}))))
 
 (alias
  (name reftest-legacy-local)
@@ -102,7 +102,7 @@
  (action
   (with-stdout-to
    legacy-local.out
-   (run ./run.exe %{bin:opam} %{dep:legacy-local.test} %{dep:root-632bc2e}))))
+   (run ./run.exe %{bin:opam} %{dep:legacy-local.test} %{dep:root-632bc2e} %{read-lines:testing-env}))))
 
 (alias
  (name reftest-show)
@@ -117,7 +117,7 @@
  (action
   (with-stdout-to
    show.out
-   (run ./run.exe %{bin:opam} %{dep:show.test} %{dep:root-009e00fa}))))
+   (run ./run.exe %{bin:opam} %{dep:show.test} %{dep:root-009e00fa} %{read-lines:testing-env}))))
 
 (rule
  (targets opam-archive-009e00fa.tar.gz)

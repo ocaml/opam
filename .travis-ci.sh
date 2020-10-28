@@ -363,11 +363,9 @@ export OCAMLRUNPARAM=b
   elif [ "$TRAVIS_BUILD_STAGE_NAME" != "Upgrade" ]; then
     # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
     if [ -n "$EXTERNAL_SOLVER" ]; then
-        echo "ERROR: external solver is not passed to the opam tests anymore, this needs fixing"
-        exit 1
+      echo "OPAMEXTERNALSOLVER=$EXTERNAL_SOLVER" >>tests/reftests/testing-env
     fi
-    OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make tests ||
-      (echo "-- TESTS FAILED --"; exit 1)
+    make tests || (echo "-- TESTS FAILED --"; exit 1)
   fi
   (set +x ; echo -en "travis_fold:end:build\r") 2>/dev/null
 )
