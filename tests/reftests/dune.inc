@@ -1,20 +1,5 @@
 
 (alias
- (name reftest-camelus)
- (action
-  (diff camelus.test camelus.out)))
-
-(alias
- (name reftest)
- (deps (alias reftest-camelus)))
-
-(rule
- (action
-  (with-stdout-to
-   camelus.out
-   (run ./run.exe %{bin:opam} %{dep:camelus.test} %{dep:root-c7f8804c}))))
-
-(alias
  (name reftest-conflict-badversion)
  (action
   (diff conflict-badversion.test conflict-badversion.out)))
@@ -171,25 +156,6 @@
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
            file://%{dep:opam-repo-632bc2e}))))
-
-(rule
- (targets opam-archive-c7f8804c.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/c7f8804c.tar.gz)))
-
-(rule
-  (targets opam-repo-c7f8804c)
-  (action
-   (progn
-    (run mkdir %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-c7f8804c.tar.gz} --strip-components=1))))
-
-(rule
-  (targets root-c7f8804c)
-  (action
-   (progn
-    (run %{bin:opam} init --root=%{targets}
-           --no-setup --bypass-checks --no-opamrc --bare
-           file://%{dep:opam-repo-c7f8804c}))))
 
 (rule
  (targets opam-archive-f372039d.tar.gz)
