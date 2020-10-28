@@ -13,6 +13,10 @@ Faking installation of ocaml-config.1
 Faking installation of ocaml.4.02.3
 Faking installation of base-ocamlbuild.base
 Done.
+### opam var arch=x86_64 --global
+Added '[arch "x86_64" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var os=linux --global
+Added '[os "linux" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam install --show solo5-kernel-virtio solo5-kernel-ukvm
 [ERROR] Package conflict!
   * Incompatible packages:
