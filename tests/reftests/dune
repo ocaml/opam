@@ -28,7 +28,7 @@
   (alias reftest)))
 
 (alias
- (name runtest)
+ (name reftest)
  (action
   (diff dune.inc dune.inc.gen)))
 
