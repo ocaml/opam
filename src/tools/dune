@@ -22,15 +22,6 @@
 (rule (with-stdout-to opam_admin_topstart.ml (echo "include Opam_admin_top\n\nlet _ = Topmain.main ()")))
 
 (executable
-  (name    opam_check)
-  (modules opam_check)
-  (flags   (:standard
-           (:include ../ocaml-flags-standard.sexp)
-           (:include ../ocaml-flags-configure.sexp)
-           (:include ../ocaml-context-flags.sexp)))
-  (libraries opam-state))
-
-(executable
   (name        opam_installer)
   (package     opam-installer)
   (public_name opam-installer)
