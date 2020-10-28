@@ -362,6 +362,10 @@ export OCAMLRUNPARAM=b
     opam switch remove $OPAMBSSWITCH --yes
   elif [ "$TRAVIS_BUILD_STAGE_NAME" != "Upgrade" ]; then
     # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
+    if [ -n "$EXTERNAL_SOLVER" ]; then
+        echo "ERROR: external solver is not passed to the opam tests anymore, this needs fixing"
+        exit 1
+    fi
     OPAMEXTERNALSOLVER="$EXTERNAL_SOLVER" make tests ||
       (echo "-- TESTS FAILED --"; exit 1)
   fi
