@@ -158,8 +158,9 @@ let write_file ~path ~contents =
 let run_test t ?vars ~opam ~opamroot:opamroot0 =
   with_temp_dir @@ fun dir ->
   let opamroot = Filename.concat dir "OPAM" in
-  command "rsync -a %s/ %s/" opamroot0 opamroot;
+  command "cp -a %s %s" opamroot0 opamroot;
   Sys.chdir dir;
+  let dir = Sys.getcwd () in (* because it may need to be normalised on OSX *)
   command
     "%s var --quiet --root %s --global sys-ocaml-version=4.08.0 >/dev/null"
     opam opamroot;
