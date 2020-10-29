@@ -160,7 +160,8 @@ let write_file ~path ~contents =
   output_string oc contents;
   close_out oc
 
-let run_test t ?vars ~opam ~opamroot:opamroot0 =
+let run_test t ?vars ~opam =
+  let opamroot0 = Filename.concat (Sys.getcwd ()) ("root-"^t.repo_hash) in
   with_temp_dir @@ fun dir ->
   let opamroot = Filename.concat dir "OPAM" in
   command "cp -a %s %s" opamroot0 opamroot;
@@ -185,7 +186,7 @@ let run_test t ?vars ~opam ~opamroot:opamroot0 =
 let () =
   Random.self_init ();
   match Array.to_list Sys.argv with
-  | _ :: opam :: input :: opamroot :: env ->
+  | _ :: opam :: input :: env ->
     let opam = OpamFilename.(to_string (of_string opam)) in
     let vars =
       List.map (fun s -> match OpamStd.String.cut_at s '=' with
@@ -193,6 +194,6 @@ let () =
           | None -> failwith "Bad 'var=value' argument")
         env
     in
-    load_test input |> run_test ~opam ~opamroot ~vars
+    load_test input |> run_test ~opam ~vars
   | _ ->
     failwith "Expected arguments: opam.exe file.test opamroot [env-bindings]"
