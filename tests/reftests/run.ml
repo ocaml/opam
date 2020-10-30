@@ -176,9 +176,9 @@ let run_test t ?vars ~opam =
       print_endline cmd;
       match parse_command cmd with
       | File_contents path ->
-        let contents = String.concat "\n" out in
+        let contents = String.concat "\n" out ^ "\n" in
         write_file ~path ~contents;
-        print_endline contents
+        print_string contents
       | Run ->
         run_cmd ~opam ~dir ?vars cmd)
     t.commands
