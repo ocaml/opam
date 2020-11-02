@@ -28,9 +28,9 @@ depends: [
   "ocaml" {>= "4.02.3"}
   "opam-state" {= version}
   "opam-solver" {= version}
-  "extlib"
+  "extlib" {>= "1.7.3"}
   "opam-repository" {= version}
   "re" {>= "1.9.0"}
-  "cmdliner" {>= "0.9.8"}
+  "cmdliner" {>= "1.0.0"}
   "dune" {>= "1.5.0"}
 ]

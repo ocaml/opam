@@ -394,8 +394,8 @@ let fetch_all_pins st pins =
   in
   if errored = []
   || OpamConsole.confirm
-       "Could not retrieve some package source, they will not be pinned nor
-        installed:%s\nContinue anyway?"
+       "Could not retrieve some package source, they will not be pinned nor \
+        installed:\n%s\nContinue anyway?"
        (OpamStd.Format.itemize (fun (name, url, subpath) ->
             name ^ ": " ^ OpamUrl.to_string url ^
             (OpamStd.Option.to_string (fun s -> "("^s^")") subpath))
