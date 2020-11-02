@@ -29,6 +29,11 @@
 
 (alias
  (name reftest)
+ (deps
+  (alias reftest-gen)))
+
+(alias
+ (name reftest-gen)
  (action
   (diff dune.inc dune.inc.gen)))
 
