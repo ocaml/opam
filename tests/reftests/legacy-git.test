@@ -16,7 +16,7 @@ echo "OK"
 #!/bin/sh -ue
 PKG=$1; shift
 ARCHIVE=$1; shift
-( cd packages && tar czf ${ARCHIVE} ${ARCHIVE%.tar.gz}; )
+if [ ! -e "packages/${ARCHIVE}" ]; then ( cd packages && tar czf ${ARCHIVE} ${ARCHIVE%.tar.gz}; ) fi
 MD5=$(openssl md5 packages/${ARCHIVE} | cut -d' ' -f2)
 echo 'src: "http://dev.null" checksum: "'$MD5'"' > REPO/packages/${PKG}/url
 CACHEDIR=REPO/cache/md5/$(echo $MD5 |head -c2)
