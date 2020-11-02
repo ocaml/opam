@@ -176,21 +176,24 @@ tests: $(DUNE_DEP)
 .PHONY: crowbar
 # only run the quickcheck-style tests, not very covering
 crowbar: $(DUNE_DEP)
-	dune exec src/crowbar/test.exe
+	$(DUNE) exec src/crowbar/test.exe
 
 .PHONY: crowbar-afl
 # runs the real AFL deal, but needs to be done in a +afl switch
 crowbar-afl: $(DUNE_DEP)
-	dune build src/crowbar/test.exe
+	$(DUNE) build src/crowbar/test.exe
 	mkdir -p /tmp/opam-crowbar-input -p /tmp/opam-crowbar-output
 	echo foo > /tmp/opam-crowbar-input/foo
 	afl-fuzz -i /tmp/opam-crowbar-input -o /tmp/opam-crowbar-output dune exec src/crowbar/test.exe @@
 
 # tests-local, tests-git
-tests-%:
+tests-%: $(DUNE_DEP)
 	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) @reftests-legacy-%
 
-reftests:
+reftest-gen: $(DUNE_DEP)
+	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) @reftest-gen --auto-promote --force
+
+reftests: $(DUNE_DEP)
 	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) @reftest
 
 reftests-meld:
