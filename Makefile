@@ -171,7 +171,7 @@ uninstall: opam.install
 
 .PHONY: tests
 tests: $(DUNE_DEP)
-	$(DUNE) runtest --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/ tests/
+	$(DUNE) runtest --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/ tests/ --no-buffer
 
 .PHONY: crowbar
 # only run the quickcheck-style tests, not very covering
