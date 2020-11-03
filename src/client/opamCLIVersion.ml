@@ -42,6 +42,15 @@ let env = OpamStd.Config.env of_string
 let ( >= ) = Stdlib.( >= )
 let ( < ) = Stdlib.( < )
 
+let previous cli =
+  let f previous version =
+    if version > previous && cli > version then version else previous
+  in
+  let zero = (0, 0) in
+  let previous = List.fold_left f zero supported_versions in
+  if previous = zero then raise Not_found
+  else previous
+
 module O = struct
   type nonrec t = t
   let to_string = to_string
