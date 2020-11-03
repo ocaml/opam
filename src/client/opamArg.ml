@@ -44,7 +44,11 @@ let create_global_options
     opt_root external_solver use_internal_solver
     cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade
     working_dir ignore_pin_depends
-    _d_no_aspcud _ =
+    d_no_aspcud _ =
+  if d_no_aspcud then
+    OpamConsole.warning
+      "Option %s is deprecated, ignoring it."
+      (OpamConsole.colorise `bold "--no-aspcud");
   let debug_level = OpamStd.Option.Op.(
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
@@ -1353,7 +1357,7 @@ let global_options cli =
               This is equivalent to setting $(b,\\$OPAMROOT) to $(i,ROOT)."
       Arg.(some dirname) None in
   let d_no_aspcud =
-    mk_flag ~cli (cli_between cli2_0 cli2_0) ~section ["no-aspcud"] ""
+    mk_flag ~cli (cli_between cli2_0 cli2_1) ~section ["no-aspcud"] "Deprecated"
   in
   let use_internal_solver =
     mk_flag ~cli cli_original ~section ["use-internal-solver"]

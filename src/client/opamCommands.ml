@@ -2453,17 +2453,25 @@ let switch cli =
   in
   (* Deprecated options *)
   let d_alias_of =
-    mk_opt ~cli (cli_between cli2_0 cli2_0 ~replaced:"opam switch <switch-name> <compiler>")
-      ["A";"alias-of"] "COMP" "" Arg.(some string) None
+    mk_opt ~cli (cli_between cli2_0 cli2_1)
+      ["A";"alias-of"] "COMP" "Deprecated" Arg.(some string) None
   in
   let d_no_autoinstall =
-    mk_flag ~cli (cli_between cli2_0 cli2_0) ["no-autoinstall"] ""
+      mk_flag ~cli (cli_between cli2_0 cli2_1) ["no-autoinstall"] "Deprecated"
   in
   let switch
       global_options build_options command print_short
       no_switch packages formula empty descr full freeze no_install deps_only repos
       force no_action
-      _d_alias_of _d_no_autoinstall params =
+      d_alias_of d_no_autoinstall params =
+    if d_alias_of <> None then
+      OpamConsole.warning
+        "Option %s is deprecated, ignoring it. \
+         Use instead 'opam switch <switch-name> <compiler>'"
+        (OpamConsole.colorise `bold "--alias-of");
+    if d_no_autoinstall then
+      OpamConsole.warning "Option %s is deprecated, ignoring it."
+        (OpamConsole.colorise `bold "--no-autoinstall");
     apply_global_options global_options;
     apply_build_options build_options;
     let invariant_arg ?repos rt args =
