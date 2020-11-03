@@ -61,7 +61,7 @@ let opam_init_rule archive_hash =
   (action
    (progn
     (run %%{bin:opam} init --root=%%{targets}
-           --no-setup --bypass-checks --no-opamrc --bare -vv
+           --no-setup --bypass-checks --no-opamrc --bare -vv --debug
            file://%%{dep:%s}))))
 |} (opamroot_directory ~archive_hash) (repo_directory ~archive_hash)
 
