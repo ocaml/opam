@@ -721,8 +721,12 @@ let show cli =
   in
   let file =
     mk_opt ~cli (cli_between cli2_0 cli2_1 ~replaced:"--just-file")
-      ["file"] "FILE" ""
-      Arg.(some existing_filename_or_dash) None
+      ["file"] "FILE"
+      "DEPRECATED: use an explicit path argument as package instead. \
+       Get package information from the given FILE instead of from \
+       known packages. This implies $(b,--raw) unless $(b,--fields) is \
+       used. Only raw opam-file fields can be queried."
+      existing_filename_or_dash None
   in
   let normalise =
     mk_flag ~cli cli_original ["normalise"]
@@ -753,7 +757,7 @@ let show cli =
     | l -> List.map (fun (_,f,_) -> f) l
   in
   let pkg_info global_options fields show_empty raw where
-      list_files _file normalise no_lint just_file all_versions sort atom_locs =
+      list_files file normalise no_lint just_file all_versions sort atom_locs =
     let print_just_file opamf opam =
       if not no_lint then OpamFile.OPAM.print_errors opam;
       let opam =
@@ -788,86 +792,93 @@ let show cli =
         OpamConsole.print_table stdout ~sep:" "
     in
     apply_global_options global_options;
-    match atom_locs, just_file with
-    | [], false ->
-      `Error (true, "required argument PACKAGES is missing")
-    | [], true ->
-      (try
-         let opam = OpamFile.OPAM.read_from_channel stdin in
-         print_just_file None opam;
-         `Ok ()
-       with
-       | Parsing.Parse_error | OpamLexer.Error _ | OpamPp.Bad_format _ as exn ->
-         OpamConsole.error_and_exit `File_error
-           "Stdin parsing failed:\n%s" (Printexc.to_string exn))
-    | atom_locs, false ->
-      let fields, show_empty =
-        if list_files then
-          fields @ [OpamListCommand.(string_of_field Installed_files)],
-          show_empty
-        else fields, show_empty || fields <> []
-      in
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-      let st = OpamListCommand.get_switch_state gt rt in
-      let st, atoms =
-        OpamAuxCommands.simulate_autopin ~quiet:no_lint ~for_view:true st
-          atom_locs
-      in
-      if atoms = [] then
-        OpamConsole.error_and_exit `Not_found "No package found"
-      else
-        OpamListCommand.info st
-          ~fields ~raw ~where ~normalise ~show_empty ~all_versions ~sort atoms;
+    match file with
+    | Some file ->
+      let opamf = OpamFile.make file in
+      print_just_file (Some opamf) (OpamFile.OPAM.safe_read opamf);
       `Ok ()
-    | atom_locs, true ->
-      if List.exists (function `Atom _ -> true | _ -> false) atom_locs then
-        `Error (true, "packages can't be specified with --just-file")
-      else
-      let opamfs =
-        List.fold_left (fun acc al ->
-            match al with
-            | `Filename f -> (OpamFile.make f) :: acc
-            | `Dirname d -> opam_files_in_dir d @ acc
-            | _ -> acc)
-          [] atom_locs
-      in
-      if opamfs = [] then
-        let dirnames =
-          OpamStd.List.filter_map (function
-              | `Dirname d -> Some (OpamFilename.Dir.to_string d)
-              | _ -> None)
-            atom_locs
-        in
-        OpamConsole.error_and_exit `Not_found "No opam files found at %s"
-          (OpamStd.List.concat_map ", " ~last_sep:" and "
-             (fun x -> x) dirnames )
-      else
-      let errors, opams =
-        List.fold_left (fun (errors,opams) opamf ->
-            try
-              errors, (Some opamf, (OpamFile.OPAM.read opamf))::opams
-            with
-            | Parsing.Parse_error | OpamLexer.Error _ | OpamPp.Bad_format _ as exn ->
-              (opamf, exn)::errors, opams)
-          ([],[]) opamfs
-      in
-      List.iter (fun (f,o) -> print_just_file f o) opams;
-      (if errors <> [] then
-         let sgl = match errors with [_] -> true | _ -> false in
-         let tostr (opamf, error) =
-           (OpamFilename.to_string (OpamFile.filename opamf))
-           ^ ":\n" ^ Printexc.to_string error
+    | None ->
+      (match atom_locs, just_file with
+       | [], false ->
+         `Error (true, "required argument PACKAGES is missing")
+       | [], true ->
+         (try
+            let opam = OpamFile.OPAM.read_from_channel stdin in
+            print_just_file None opam;
+            `Ok ()
+          with
+          | Parsing.Parse_error | OpamLexer.Error _ | OpamPp.Bad_format _ as exn ->
+            OpamConsole.error_and_exit `File_error
+              "Stdin parsing failed:\n%s" (Printexc.to_string exn))
+       | atom_locs, false ->
+         let fields, show_empty =
+           if list_files then
+             fields @ [OpamListCommand.(string_of_field Installed_files)],
+             show_empty
+           else fields, show_empty || fields <> []
          in
-         OpamConsole.error "Parsing error on%s:%s"
-           (if sgl then "" else "some opam files")
-           (match errors with
-            | [f] -> tostr f
-            | fs -> OpamStd.Format.itemize tostr fs));
-      if opams = [] then
-        OpamStd.Sys.exit_because `File_error
-      else
-        `Ok ()
+         OpamGlobalState.with_ `Lock_none @@ fun gt ->
+         OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+         let st = OpamListCommand.get_switch_state gt rt in
+         let st, atoms =
+           OpamAuxCommands.simulate_autopin ~quiet:no_lint ~for_view:true st
+             atom_locs
+         in
+         if atoms = [] then
+           OpamConsole.error_and_exit `Not_found "No package found"
+         else
+           OpamListCommand.info st
+             ~fields ~raw ~where ~normalise ~show_empty ~all_versions ~sort atoms;
+         `Ok ()
+       | atom_locs, true ->
+         if List.exists (function `Atom _ -> true | _ -> false) atom_locs then
+           `Error (true, "packages can't be specified with --just-file")
+         else
+         let opamfs =
+           List.fold_left (fun acc al ->
+               match al with
+               | `Filename f -> (OpamFile.make f) :: acc
+               | `Dirname d -> opam_files_in_dir d @ acc
+               | _ -> acc)
+             [] atom_locs
+         in
+         if opamfs = [] then
+           let dirnames =
+             OpamStd.List.filter_map (function
+                 | `Dirname d -> Some (OpamFilename.Dir.to_string d)
+                 | _ -> None)
+               atom_locs
+           in
+           OpamConsole.error_and_exit `Not_found "No opam files found at %s"
+             (OpamStd.List.concat_map ", " ~last_sep:" and "
+                (fun x -> x) dirnames )
+         else
+         let errors, opams =
+           List.fold_left (fun (errors,opams) opamf ->
+               try
+                 errors, (Some opamf, (OpamFile.OPAM.read opamf))::opams
+               with
+               | Parsing.Parse_error | OpamLexer.Error _ | OpamPp.Bad_format _ as exn ->
+                 (opamf, exn)::errors, opams)
+             ([],[]) opamfs
+         in
+         List.iter (fun (f,o) -> print_just_file f o) opams;
+         (if errors <> [] then
+            let sgl = match errors with [_] -> true | _ -> false in
+            let tostr (opamf, error) =
+              (OpamFilename.to_string (OpamFile.filename opamf))
+              ^ ":\n" ^ Printexc.to_string error
+            in
+            OpamConsole.error "Parsing error on%s:%s"
+              (if sgl then "" else "some opam files")
+              (match errors with
+               | [f] -> tostr f
+               | fs -> OpamStd.Format.itemize tostr fs));
+         if opams = [] then
+           OpamStd.Sys.exit_because `File_error
+         else
+           `Ok ()
+      )
   in
   Term.(ret
           (const pkg_info $global_options cli $fields $show_empty $raw $where
