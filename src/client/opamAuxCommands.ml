@@ -490,7 +490,13 @@ let check_and_revert_sandboxing root config =
   match OpamFilter.commands env sdbx_wrappers with
   | [] -> config
   | cmd::_ ->
-    let test_cmd = [ "sh"; "-c"; "echo SUCCESS >/tmp/t && cat /tmp/t" ] in
+    OpamFilename.with_tmp_dir @@ fun tmp ->
+    let test_file = OpamFilename.(to_string Op.(tmp // "check")) in
+    let test_cmd =
+      [ "sh"; "-c";
+        Printf.sprintf "echo SUCCESS >%s && cat %s"
+          test_file test_file ]
+    in
     let working_or_noop =
       let env =
         Array.append [| "OPAM_SWITCH_PREFIX=/dev/null" |] (Unix.environment ())
