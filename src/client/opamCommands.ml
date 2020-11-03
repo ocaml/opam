@@ -1351,9 +1351,6 @@ let config cli =
        | None ->
          bad_subcommand ~cli commands ("config", command, params)
        | Some opt_value ->
-         OpamConsole.errmsg
-           "Use opam var %s=%s instead.\n"
-           var (OpamStd.Option.to_string (fun v -> v) opt_value);
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          let value =
            OpamStd.Option.map_default (fun v -> `Overwrite v)
@@ -1372,9 +1369,6 @@ let config cli =
        | None ->
          bad_subcommand ~cli commands ("config", command, params)
        | Some opt_value ->
-         OpamConsole.errmsg
-           "Use opam var %s=%s --global instead.\n"
-           var (OpamStd.Option.to_string (fun v -> v) opt_value);
          OpamGlobalState.with_ `Lock_write @@ fun gt ->
          let value =
            OpamStd.Option.map_default (fun v -> `Overwrite v)
