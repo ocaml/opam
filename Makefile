@@ -188,7 +188,7 @@ crowbar-afl: $(DUNE_DEP)
 
 # tests-local, tests-git
 tests-%: $(DUNE_DEP)
-	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) @reftests-legacy-%
+	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) @reftest-legacy-$* --force
 
 reftest-gen: $(DUNE_DEP)
 	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) @reftest-gen --auto-promote --force
