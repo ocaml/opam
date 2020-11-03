@@ -65,6 +65,7 @@ let base_env =
     "OPAMNOENVNOTICE", "1";
     "OPAMNODEPEXTS", "1";
     "OPAMDOWNLOADJOBS", "1";
+    "TMPDIR", Filename.get_temp_dir_name ();
   ]
 
 (* See [opamprocess.safe_wait] *)
@@ -113,7 +114,7 @@ let run_cmd ~opam ~dir ?(vars=[]) cmd =
     Printf.sprintf
       "%s %s %s 2>&1 \
        | sed 's#%s#${BASEDIR}#g' \
-       | sed 's#%s/opam-[0-9a-f]*-[0-9a-f]*/#${OPAMTMP}/#g'"
+       | sed 's#\\(/private\\)*%s/*opam-[0-9a-f]*-[0-9a-f]*/#${OPAMTMP}/#g'"
       opam cmd (String.concat " " args)
       dir
       (Filename.get_temp_dir_name ())
