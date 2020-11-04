@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2.1.0~beta3"
+version: "2.1.0~beta4"
 synopsis: "opam 2.1 development libraries (core)"
 description: """
 Small standard library extensions, and generic system interaction modules used by opam.
