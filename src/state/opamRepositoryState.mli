@@ -103,3 +103,6 @@ val with_write_lock:
 
 (** Writes the repositories config file back to disk *)
 val write_config: rw repos_state -> unit
+
+(** Display a warning if repository has not been updated since 3 weeks *)
+val check_last_update: unit -> unit
