@@ -11,6 +11,13 @@ if ! command -v bwrap >/dev/null; then
     exit 10
 fi
 
+OPAMVERSION=`opam --version`
+if [ "$OPAMVERSION" != "$SCRIPTOPAMVERSION" ]; then
+  echo "Sandbox script is out of date, update it with"
+  echo "    opam init --reinit -ni"
+  exit 2
+fi
+
 ARGS=(--unshare-net --new-session)
 ARGS=("${ARGS[@]}" --proc /proc --dev /dev)
 ARGS=("${ARGS[@]}" --bind "${TMPDIR:-/tmp}" /tmp)

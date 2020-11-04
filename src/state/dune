@@ -13,8 +13,10 @@
 (rule
   (targets opamScript.ml)
   (deps    ../../shell/crunch.ml (glob_files shellscripts/*.*sh))
-  (action  (with-stdout-to %{targets} (run ocaml %{deps}))))
-
+  (action  (with-stdout-to %{targets}
+  (progn
+    (run ocaml %{deps})
+    (run sed -i -e "s/$SCRIPTOPAMVERSION\\b/%{read-lines:../version}/g" %{targets})))))
 
 ;; These rules are here to document and for easy (re-)generation of the module,
 ;; but relying on the checked-in file should be OK (we don't want to rely on
