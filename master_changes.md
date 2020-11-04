@@ -4,7 +4,8 @@ Possibly scripts breaking changes are prefixed with ✘.
 New option/command/subcommand are prefixed with ◈.
 
 ## Version
-  * Bump version to '2.1.0~beta3' [#4351 @AltGr]
+  * Bump version to `2.1.0~beta3` [#4351 @AltGr]
+  * Bump to version `2.1.0~beta4` [#4413 @rjbou - fix #4408]
 
 ## Global CLI
   * Fix hooks broken by 371963a6b [#4386 @lefessan]
