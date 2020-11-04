@@ -57,7 +57,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix OpenBSD, FreeBSD and Gentoo: Allow short names and full name paths for ports-based systems [#4396 @kit-ty-kate]
 
 ## Sandbox
-  *
+  * Add a test to check script generation opam version, to ask an update [#4414 @rjbou - fix #4361 #4306]
 
 ## Test
   *
