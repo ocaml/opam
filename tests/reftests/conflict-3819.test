@@ -1,0 +1,73 @@
+40265f4
+### opam sw cr 4.03.0 --fake
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "4.03.0"} | "ocaml-system" {= "4.03.0"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.03.0
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.03.0
+Done.
+### opam install mirage-dns.2.0.0 --show
+[ERROR] Package conflict!
+  * No agreement on the version of cstruct:
+    - mirage-dns < 2.5.0 -> cstruct >= 1.0.0
+  * No agreement on the version of dns:
+    - mirage-dns < 2.5.0 -> dns
+  * No agreement on the version of cstruct:
+    - mirage-dns < 2.5.0 -> cstruct >= 1.0.0
+    - mirage-dns < 2.5.0 -> dns -> cstruct < 0.6.0
+  * No agreement on the version of cstruct:
+    - mirage-dns < 2.5.0 -> cstruct >= 1.0.0
+    - mirage-dns < 2.5.0 -> dns -> cstruct < 1.0.0
+  * No agreement on the version of cstruct:
+    - mirage-dns < 2.5.0 -> dns -> cstruct < 1.0.0
+  * No agreement on the version of io-page:
+    - mirage-dns < 2.5.0 -> dns -> io-page < 1.3.0
+    - mirage-dns < 2.5.0 -> mirage-types-lwt < 3.0.0 -> io-page >= 1.4.0
+  * No agreement on the version of ipaddr:
+    - mirage-dns < 2.5.0 -> dns -> ipaddr
+    - mirage-dns < 2.5.0 -> dns -> ipaddr < 2.0.0
+  * No agreement on the version of ipaddr:
+    - mirage-dns < 2.5.0 -> dns -> ipaddr < 2.0.0
+    - mirage-dns < 2.5.0 -> dns -> ipaddr < 2.8.0
+  * No agreement on the version of ipaddr:
+    - mirage-dns < 2.5.0 -> dns -> ipaddr < 2.8.0
+  * No agreement on the version of ipaddr:
+    - mirage-dns < 2.5.0 -> dns -> ipaddr
+    - mirage-dns < 2.5.0 -> dns -> ipaddr < 2.8.0
+  * No agreement on the version of mirage-types:
+    - mirage-dns < 2.5.0 -> mirage-types-lwt < 3.0.0 -> mirage-types
+  * Incompatible packages:
+    - mirage-dns < 2.5.0 -> dns
+    - mirage-dns < 2.5.0 -> mirage-types-lwt < 3.0.0
+  * Incompatible packages:
+    - mirage-dns < 2.5.0 -> dns
+    - mirage-dns < 2.5.0 -> mirage-types-lwt < 3.0.0 -> io-page >= 1.4.0
+  * Incompatible packages:
+    - mirage-dns < 2.5.0 -> dns
+    - mirage-dns < 2.5.0 -> mirage-types-lwt < 3.0.0 -> mirage-types
+  * Incompatible packages:
+    - mirage-dns < 2.5.0 -> dns -> ipaddr < 2.0.0
+    - mirage-dns < 2.5.0 -> mirage-types-lwt < 3.0.0 -> mirage-types
+
+No solution found, exiting
+### opam install tftp.0.1.4 --show
+[ERROR] Package conflict!
+  * No agreement on the version of cstruct:
+    - tftp -> cstruct
+  * No agreement on the version of mirage:
+    - tftp -> mirage
+  * No agreement on the version of ocaml:
+    - (invariant) -> ocaml-base-compiler = 4.03.0 -> ocaml = 4.03.0
+    - tftp -> mirage -> mirage-types-lwt < 3.0.0 -> sexplib < 113.01.00 -> ocaml < 4.03.0
+    You can temporarily relax the switch invariant with `--update-invariant'
+  * Incompatible packages:
+    - tftp -> cstruct
+    - tftp -> mirage
+
+No solution found, exiting
