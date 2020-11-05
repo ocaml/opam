@@ -16,6 +16,38 @@
    (run ./run.exe %{bin:opam} %{dep:cli-versioning.test} %{read-lines:testing-env}))))
 
 (alias
+ (name reftest-conflict-3819)
+ (action
+  (diff conflict-3819.test conflict-3819.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-conflict-3819)))
+
+(rule
+ (deps root-40265f4)
+ (action
+  (with-stdout-to
+   conflict-3819.out
+   (run ./run.exe %{bin:opam} %{dep:conflict-3819.test} %{read-lines:testing-env}))))
+
+(alias
+ (name reftest-conflict-4373)
+ (action
+  (diff conflict-4373.test conflict-4373.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-conflict-4373)))
+
+(rule
+ (deps root-c1d23f0e)
+ (action
+  (with-stdout-to
+   conflict-4373.out
+   (run ./run.exe %{bin:opam} %{dep:conflict-4373.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-conflict-badversion)
  (action
   (diff conflict-badversion.test conflict-badversion.out)))
@@ -195,6 +227,25 @@
            file://%{dep:opam-repo-009e00fa}))))
 
 (rule
+ (targets opam-archive-40265f4.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/40265f4.tar.gz)))
+
+(rule
+  (targets opam-repo-40265f4)
+  (action
+   (progn
+    (run mkdir %{targets})
+    (run tar -C %{targets} -xzf %{dep:opam-archive-40265f4.tar.gz} --strip-components=1))))
+
+(rule
+  (targets root-40265f4)
+  (action
+   (progn
+    (run %{bin:opam} init --root=%{targets}
+           --no-setup --bypass-checks --no-opamrc --bare -vv --debug
+           file://%{dep:opam-repo-40265f4}))))
+
+(rule
  (targets opam-archive-632bc2e.tar.gz)
  (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/632bc2e.tar.gz)))
 
@@ -212,6 +263,25 @@
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare -vv --debug
            file://%{dep:opam-repo-632bc2e}))))
+
+(rule
+ (targets opam-archive-c1d23f0e.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/c1d23f0e.tar.gz)))
+
+(rule
+  (targets opam-repo-c1d23f0e)
+  (action
+   (progn
+    (run mkdir %{targets})
+    (run tar -C %{targets} -xzf %{dep:opam-archive-c1d23f0e.tar.gz} --strip-components=1))))
+
+(rule
+  (targets root-c1d23f0e)
+  (action
+   (progn
+    (run %{bin:opam} init --root=%{targets}
+           --no-setup --bypass-checks --no-opamrc --bare -vv --debug
+           file://%{dep:opam-repo-c1d23f0e}))))
 
 (rule
  (targets opam-archive-f372039d.tar.gz)
