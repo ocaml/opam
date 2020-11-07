@@ -4,7 +4,6 @@ This page describes how to install and configure opam. For further help on how
 to use opam, either read [`opam --help`](man/opam.html) or move on to the
 [Usage](Usage.html) guide.
 
-
 ## Upgrading from a previous version
 
 Generally, you should just reproduce the same installation steps as for the
@@ -53,7 +52,7 @@ sudo install <downloaded file> /usr/local/bin/opam
 
 > Note that this script is intended for end-users, not CI. For that purpose,
 > you can use pre-built [Docker images for various
-> configurations](https://hub.docker.com/r/ocaml/opam2/).
+> configurations](https://hub.docker.com/r/ocaml/opam).
 
 ## Using your distribution's package system
 
@@ -159,11 +158,9 @@ make install
 [![badge](https://repology.org/badge/version-for-repo/homebrew/opam.svg)](https://repology.org/project/opam/versions) [![badge](https://repology.org/badge/version-for-repo/macports/opam.svg)](https://repology.org/project/opam/versions)
 
 Opam packages for [homebrew](http://mxcl.github.com/homebrew/) and [MacPorts](http://www.macports.org/) are available.
-homebrew need a prior installation of `gpatch`, as opam uses gnu-specific options.
 
 ```
 # Homebrew
-brew install gpatch
 brew install opam
 
 # MacPort
