@@ -228,6 +228,7 @@ users)
   * Add `avoid-version` doc [#4896 @AltGR - fix #4864]
   * Document custom licenses [#4863 @kit-ty-kate - fix #4862]
   * Add OpenBSD & FreeBSD in the precompiled binaries list [#5001 @mndrix]
+  * install.md: fix brew instructions, spelling [#4421 @johnwhitington]
 
 ## Security fixes
   *
