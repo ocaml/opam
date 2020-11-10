@@ -2,6 +2,28 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+2.0.8:
+* Add colon for fish MANPATH fix. [#4084 @rjbou - fix #4078]
+* No error when linked directory doesn't exist (e.g. XDG defined)
+  [#4278 @kit-ty-kate]
+* Add quotes to avoid space unwanted behaviors [#4278 @kit-ty-kate]
+* Handle `CCACHE_DIR` environment variable in sandbox script.
+  [#4087 @rjbou - fix #4079]
+* Follow links of `~/.cache` & `~/.cache/dune` for bwrap call.
+  [#4087 @rjbou - fix #4086]
+* Don't overwrite user's sandbow script modification. [#4020 #4092 @rjbou]
+* On MacOS sandbox script, always read write mount `/tmp`
+  [#3742 @rjbou - fix ocaml/opam-repository#13339]
+* Use version var in opam file instead of equal current version number in
+  opamlib dependencies [#4178 @rjbou]
+* Opam file build using dune [#4178 @rjbou #4229 @kit-ty-kate - fix #4173]
+* Update opam file to 2.0 [#4371 @AltGr]
+* Fix `arch` detection when using 32bit mode on ARM64 [#4462 @kit-ty-kate]
+* Fix `arch` detection of i486 [#4462 @kit-ty-kate]
+* The stdout of pre- and post-session hooks is now propagated to the user
+  [#4382 @AltGr - fix #4359]
+* Run switch pre/post sessions hooks [#4476 @rjbou - fix #4472]
+
 
 2.0.7:
 * Properly escape Windows paths on manpages [#4129 @AltGr @rjbou]
