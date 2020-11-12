@@ -425,7 +425,8 @@ overridden from configuration. You can get the list of currently defined
 variables by running:
 
 ```
-opam config list
+opam config list # opam 2.0
+opam var         # opam 2.1.0
 ```
 
 #### Global variables

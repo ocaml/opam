@@ -148,9 +148,9 @@ remove the others rather than leave them empty.
   containing arguments either as a string (`"./configure"`) or a variable name
   (`make`, defined by default to point at the chosen "make" command -- think
   `$(MAKE)` in Makefiles). `%{prefix}%` is another syntax to replace variables
-  within strings. `opam config list` will give you a list of available
-  variables. `build` instructions shouldn't need to write outside of the
-  package's source directory.
+  within strings. `opam config list` (or `opam var` with opam 2.1.0) will give
+  you a list of available variables. `build` instructions shouldn't need to
+  write outside of the package's source directory.
 * `install` is similar to `build`, but tells opam how to install. The example
   above should indeed be `install: [ [make "install"] ]`, but the extra square
   brackets are optional when there is a single element. This field can be
@@ -210,7 +210,8 @@ This is just a very short introduction, don't be afraid to consult
   package formula like `depends`. simple list of package names. If you require
   specific versions, add a `conflicts` field with the ones that won't work.
 * [**Variables**](Manual.html#Variables): you can get a list of predefined
-  variables that you can use in your opam rules with `opam config list`.
+  variables that you can use in your opam rules with `opam config list` (or
+  `opam var` with opam 2.1.0).
 * [**Filters**](Manual.html#Filters): dependencies, commands and single command
   arguments may need to be omitted depending on the environment. This uses the
   same optional argument syntax as above, postfix curly braces, with boolean

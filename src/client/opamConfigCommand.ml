@@ -921,7 +921,7 @@ let vars_list ?st gt =
   vars_list_global gt;
   OpamConsole.header_msg "Configuration variables from the current switch";
   vars_list_switch ?st gt;
-  OpamConsole.header_msg "Package variables ('opam config list PKG' to show)";
+  OpamConsole.header_msg "Package variables ('opam var --package PKG' to show)";
   List.map (fun (var, doc) -> [
         ("PKG:"^var) % `bold;
         "";
