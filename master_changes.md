@@ -46,8 +46,11 @@ New option/command/subcommand are prefixed with ◈.
   * Add `opamfile-loc` as a package variable, containing the location of installed package opam file [#4402 @rjbou]
   * Fix `arch` detection when using 32bit mode on ARM64 [#4462 @kit-ty-kate]
   * Fix `arch` detection of i486 [#4462 @kit-ty-kate]
+  * Don't load switch for some variable looking [#4428 @rjbou]
+  * Fix package variables display when no config file is found [#4428 @rjbou]
 
 ## Option
+  * Fix `depext-bypass` removal (`-=`) [#4428 @rjbou]
 
 ## Lint
   * W66: check strings in filtered package formula are booleans or variables [#443 @rjbou - fix #4439]
@@ -64,9 +67,6 @@ New option/command/subcommand are prefixed with ◈.
   * Handle the case where `os-family=ubuntu` as `os-family=debian` [#4441 @alan-j-hu]
   
 ## Sandbox
-  *
-
-## Test
   *
 
 ## Repository management
@@ -114,7 +114,12 @@ New option/command/subcommand are prefixed with ◈.
 ## Test
   * Ensure that a cold `dune runtest` works [#4375 @emillon]
   * Use dune "expected" convention for patcher test [#4395 @emillon]
+  * Add var/option test [#4428 @rjbou]
+
+## Shell
+  * Update completion scripts with `opam var` instead of `opam config list` [#4428 @rjbou]
 
 ## Doc
+  * Change `opam config list` into `opam var [--package]` [#4428 @rjbou]
   * Update ùaintainer name [#4456 @nbraud]
   * Specify url syntaxe in usage/opam pin [#4460 @rjbou - fix #4459]
