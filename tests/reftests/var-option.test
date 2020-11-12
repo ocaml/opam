@@ -1,0 +1,473 @@
+009e00fa
+### opam switch create var-option --empty
+### opam var user=reftest --switch var-option
+Added 'user: "reftest"' to field variables in switch var-option
+### opam var group=reftest --switch var-option
+Added 'group: "reftest"' to field variables in switch var-option
+### opam var arch=x86_64 --global
+Added '[arch "x86_64" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var jobs=7 --global
+Added '[jobs "7" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var make=make --global
+Added '[make "make" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var opam-version=68.79 --global
+Added '[opam-version "68.79" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var os=linux --global
+Added '[os "linux" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var os-distribution=lorem --global
+Added '[os-distribution "lorem" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var os-family=ipsum --global
+Added '[os-family "ipsum" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var os-version=dolor --global
+Added '[os-version "dolor" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var sys-ocaml-arch=x86_64 --global
+Added '[sys-ocaml-arch "x86_64" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var sys-ocaml-cc=cc --global
+Added '[sys-ocaml-cc "cc" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var sys-ocaml-libc=libc --global
+Added '[sys-ocaml-libc "libc" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam option wrap-build-commands=[] --global
+Set to '[]' the field wrap-build-commands in global configuration
+### opam option wrap-install-commands=[] --global
+Set to '[]' the field wrap-install-commands in global configuration
+### opam option wrap-remove-commands=[] --global
+Set to '[]' the field wrap-remove-commands in global configuration
+### opam install ocaml-base-compiler.4.09.0 --fake --yes
+The following actions will be faked:
+  ∗ install base-bigarray       base
+  ∗ install ocaml-base-compiler 4.09.0
+  ∗ install base-threads        base
+  ∗ install base-unix           base
+  ∗ install ocaml-config        1
+  ∗ install ocaml               4.09.0
+===== ∗ 6 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.09.0
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.09.0
+Done.
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+
+<><> Global opam variables ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+arch              x86_64                         # Set through 'opam var'
+exe                                              # Suffix needed for executable filenames (Windows)
+jobs              7                              # Set through 'opam var'
+make              make                           # Set through 'opam var'
+opam-version      68.79                          # Set through 'opam var'
+os                linux                          # Set through 'opam var'
+os-distribution   lorem                          # Set through 'opam var'
+os-family         ipsum                          # Set through 'opam var'
+os-version        dolor                          # Set through 'opam var'
+root              ${BASEDIR}/.opam # The current opam root directory
+switch                                           # The identifier of the current switch
+sys-ocaml-arch    x86_64                         # Set through 'opam var'
+sys-ocaml-cc      cc                             # Set through 'opam var'
+sys-ocaml-libc    libc                           # Set through 'opam var'
+sys-ocaml-version 4.08.0                         # Set through 'opam var'
+
+<><> Configuration variables from the current switch ><><><><><><><><><><><><><>
+prefix   ${BASEDIR}/.opam/var-option
+lib      ${BASEDIR}/.opam/var-option/lib
+bin      ${BASEDIR}/.opam/var-option/bin
+sbin     ${BASEDIR}/.opam/var-option/sbin
+share    ${BASEDIR}/.opam/var-option/share
+doc      ${BASEDIR}/.opam/var-option/doc
+etc      ${BASEDIR}/.opam/var-option/etc
+man      ${BASEDIR}/.opam/var-option/man
+toplevel ${BASEDIR}/.opam/var-option/lib/toplevel
+stublibs ${BASEDIR}/.opam/var-option/lib/stublibs
+user     reftest
+group    reftest
+
+<><> Package variables ('opam config list PKG' to show) <><><><><><><><><><><><>
+PKG:name       # Name of the package
+PKG:version    # Version of the package
+PKG:depends    # Resolved direct dependencies of the package
+PKG:installed  # Whether the package is installed
+PKG:enable     # Takes the value "enable" or "disable" depending on whether the package is installed
+PKG:pinned     # Whether the package is pinned
+PKG:bin        # Binary directory for this package
+PKG:sbin       # System binary directory for this package
+PKG:lib        # Library directory for this package
+PKG:man        # Man directory for this package
+PKG:doc        # Doc directory for this package
+PKG:share      # Share directory for this package
+PKG:etc        # Etc directory for this package
+PKG:build      # Directory where the package was built
+PKG:hash       # Hash of the package archive
+PKG:dev        # True if this is a development package
+PKG:build-id   # A hash identifying the precise package version with all its dependencies
+PKG:opamfile   # Path of the curent opam file
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+prefix   ${BASEDIR}/.opam/var-option
+lib      ${BASEDIR}/.opam/var-option/lib
+bin      ${BASEDIR}/.opam/var-option/bin
+sbin     ${BASEDIR}/.opam/var-option/sbin
+share    ${BASEDIR}/.opam/var-option/share
+doc      ${BASEDIR}/.opam/var-option/doc
+etc      ${BASEDIR}/.opam/var-option/etc
+man      ${BASEDIR}/.opam/var-option/man
+toplevel ${BASEDIR}/.opam/var-option/lib/toplevel
+stublibs ${BASEDIR}/.opam/var-option/lib/stublibs
+user     reftest
+group    reftest
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+arch              x86_64                         # Set through 'opam var'
+exe                                              # Suffix needed for executable filenames (Windows)
+jobs              7                              # Set through 'opam var'
+make              make                           # Set through 'opam var'
+opam-version      68.79                          # Set through 'opam var'
+os                linux                          # Set through 'opam var'
+os-distribution   lorem                          # Set through 'opam var'
+os-family         ipsum                          # Set through 'opam var'
+os-version        dolor                          # Set through 'opam var'
+root              ${BASEDIR}/.opam # The current opam root directory
+switch                                           # The identifier of the current switch
+sys-ocaml-arch    x86_64                         # Set through 'opam var'
+sys-ocaml-cc      cc                             # Set through 'opam var'
+sys-ocaml-libc    libc                           # Set through 'opam var'
+sys-ocaml-version 4.08.0                         # Set through 'opam var'
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var bin
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+STATE                           LOAD-SWITCH-STATE @ var-option
+STATE                           Switch state loaded in 0.000s
+${BASEDIR}/.opam/var-option/bin
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var bin --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+${BASEDIR}/.opam/var-option/bin
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var bin --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[ERROR] Variable bin not found in global config
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var bin=global-bin --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Added '[bin "global-bin" "Set through 'opam var'"]' to field global-variables in global configuration
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var bin=switch-bin --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Added 'bin: "switch-bin"' to field variables in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var bin
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+STATE                           LOAD-SWITCH-STATE @ var-option
+STATE                           Switch state loaded in 0.000s
+${BASEDIR}/.opam/var-option/bin
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var bin --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+${BASEDIR}/.opam/var-option/bin
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var bin --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+global-bin
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var foo=global-foo --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Added '[foo "global-foo" "Set through 'opam var'"]' to field global-variables in global configuration
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var foo=switch-foo --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Added 'foo: "switch-foo"' to field variables in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var foo
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+STATE                           LOAD-SWITCH-STATE @ var-option
+STATE                           Switch state loaded in 0.000s
+switch-foo
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var foo --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+switch-foo
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var foo --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+global-foo
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var ocaml-base-compiler:version
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+STATE                           LOAD-SWITCH-STATE @ var-option
+STATE                           Switch state loaded in 0.000s
+4.09.0
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var ocaml-base-compiler:version --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+STATE                           LOAD-SWITCH-STATE @ var-option
+STATE                           Switch state loaded in 0.000s
+4.09.0
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+
+<><> Global configuration <><><><><><><><><><><><><><><><><><><><><><><><><><><>
+best-effort-prefix-criteria    {}
+depext                         true
+depext-bypass                  {}
+depext-cannot-install          false
+depext-run-installs            true
+download-command               {}
+download-jobs                  3
+jobs                           {}
+post-build-commands            {}
+post-install-commands          {}
+post-remove-commands           {}
+post-session-commands          {}
+pre-build-commands             {}
+pre-install-commands           {}
+pre-remove-commands            {}
+pre-session-commands           {}
+repository-validation-command  {}
+solver                         {}
+solver-criteria                {}
+solver-fixup-criteria          {}
+solver-upgrade-criteria        {}
+wrap-build-commands            {}
+wrap-install-commands          {}
+wrap-remove-commands           {}
+
+<><> Switch configuration (var-option) ><><><><><><><><><><><><><><><><><><><><>
+depext-bypass          {}
+post-build-commands    {}
+post-install-commands  {}
+post-remove-commands   {}
+post-session-commands  {}
+pre-build-commands     {}
+pre-install-commands   {}
+pre-remove-commands    {}
+pre-session-commands   {}
+setenv                 {}
+synopsis               "var-option"
+wrap-build-commands    {}
+wrap-install-commands  {}
+wrap-remove-commands   {}
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option download-jobs
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+3
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option download-jobs --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+3
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option download-jobs --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[ERROR] Field or section download-jobs not found
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option jobs
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option jobs --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option jobs --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[ERROR] Field or section jobs not found
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option depext-bypass
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option depext-bypass --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option depext-bypass --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option synopsis
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+"var-option"
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'synopsis="sit amet"'
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Set to '"sit amet"' the field synopsis in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option synopsis
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+"sit amet"
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option synopsis --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+"sit amet"
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option synopsis --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[ERROR] Field or section synopsis not found
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option synopsis=
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Reverted field synopsis in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option synopsis
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+""
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'synopsis="consectetur adipiscing"' --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Set to '"consectetur adipiscing"' the field synopsis in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option synopsis
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+"consectetur adipiscing"
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option synopsis= --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Reverted field synopsis in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option synopsis
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+""
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option download-jobs
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+3
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option download-jobs=10
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Set to '10' the field download-jobs in global configuration
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option download-jobs
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+10
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option download-jobs --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[ERROR] Field or section download-jobs not found
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option download-jobs --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+10
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option download-jobs=
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Reverted field download-jobs in global configuration
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option download-jobs
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+1
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option download-jobs=12 --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Set to '12' the field download-jobs in global configuration
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option download-jobs
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+12
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option download-jobs= --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Reverted field download-jobs in global configuration
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option download-jobs
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+1
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'pre-session-commands=["elit"]'
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Set to '["elit"]' the field pre-session-commands in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+"elit"
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+"elit"
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands=
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Reverted field pre-session-commands in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'pre-session-commands=["sed"]' --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Set to '["sed"]' the field pre-session-commands in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+"sed"
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+"sed"
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands= --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Reverted field pre-session-commands in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'pre-session-commands=["do"]' --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Set to '["do"]' the field pre-session-commands in global configuration
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+"do"
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands= --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Reverted field pre-session-commands in global configuration
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option pre-session-commands --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option depext-bypass
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'depext-bypass+=["tempor"]'
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Added '["tempor"]' to field depext-bypass in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'depext-bypass+=["incididunt"]'
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Added '["incididunt"]' to field depext-bypass in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option depext-bypass
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+["incididunt" "tempor"]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'depext-bypass-=["incididunt"]'
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Removed '["incididunt"]' from field depext-bypass in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option depext-bypass
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'depext-bypass=["incididunt tempor"]'
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Set to '["incididunt tempor"]' the field depext-bypass in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'depext-bypass-=["tempor"]'
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Removed '["tempor"]' from field depext-bypass in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option depext-bypass
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+["tempor"]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'depext-bypass-=["ut"]'
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Removed '["ut"]' from field depext-bypass in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option depext-bypass
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+["ut"]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'depext-bypass-=[]'
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Removed '[]' from field depext-bypass in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option depext-bypass
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option depext-bypass=
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+No modification in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'depext-bypass-=["tempor"]'
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+Removed '["tempor"]' from field depext-bypass in switch var-option
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option depext-bypass
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+["tempor"]
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'jobs+=3'
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[ERROR] Field jobs can't be appended
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option 'jobs-=3'
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[ERROR] Field jobs can't be substracted
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option bar
+[ERROR] No option named 'bar' found. Use 'opam option [--global]' to list them
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option bar --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[ERROR] Field or section bar not found
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option bar --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[ERROR] Field or section bar not found
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option bar=sit
+[ERROR] No option named 'bar' found. Use 'opam option [--global]' to list them
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option bar=sit --global
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[ERROR] There is no option named 'bar'. The allowed options are:
+jobs download-command download-jobs solver-criteria solver-upgrade-criteria solver-fixup-criteria best-effort-prefix-criteria solver global-variables eval-variables repository-validation-command depext depext-run-installs depext-cannot-install depext-bypass pre-build-commands pre-install-commands pre-remove-commands pre-session-commands wrap-build-commands wrap-install-commands wrap-remove-commands post-build-commands post-install-commands post-remove-commands post-session-commands
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam option bar=sit --switch var-option
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/.opam
+[ERROR] There is no option named 'bar'. The allowed options are:
+synopsis setenv depext-bypass pre-build-commands pre-install-commands pre-remove-commands pre-session-commands wrap-build-commands wrap-install-commands wrap-remove-commands post-build-commands post-install-commands post-remove-commands post-session-commands variables
