@@ -527,7 +527,7 @@ let switch_allowed_fields, switch_allowed_sections =
               (fun nc c ->
                  { c with depext_bypass = nc.depext_bypass ++ c.depext_bypass }),
               (fun nc c ->
-                 { c with depext_bypass = nc.depext_bypass -- c.depext_bypass })
+                 { c with depext_bypass = c.depext_bypass -- nc.depext_bypass })
             )),
           (fun t -> { t with depext_bypass = empty.depext_bypass });
         ] @ allwd_wrappers empty.wrappers wrappers
