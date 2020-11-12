@@ -979,7 +979,7 @@ let is_switch_defined_var switch_config v =
       with Failure _ -> false)
   || OpamStd.String.contains_char v ':'
 
-let var_switch_raw ?(only_switch=true) gt v =
+let var_switch_raw gt v =
   match OpamStateConfig.get_switch_opt () with
   | Some switch ->
     let switch_config =
@@ -987,7 +987,7 @@ let var_switch_raw ?(only_switch=true) gt v =
         (OpamPath.Switch.switch_config gt.root switch)
     in
     let rsc =
-      if only_switch && is_switch_defined_var switch_config v then
+      if is_switch_defined_var switch_config v then
         OpamPackageVar.resolve_switch_raw gt switch switch_config
           (OpamVariable.Full.of_string v)
       else None
@@ -1016,7 +1016,7 @@ let var_show_switch gt ?st v =
 let var_show_global gt f = var_show_t (OpamPackageVar.resolve_global gt) f
 
 let var_show gt v =
-  if var_switch_raw ~only_switch:false gt v = None then
+  if var_switch_raw gt v = None then
     OpamSwitchState.with_ `Lock_none gt @@ fun st ->
     let switch =
       if is_switch_defined_var st.switch_config v then Some st.switch else None
