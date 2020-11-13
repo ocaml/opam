@@ -91,6 +91,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Internal
+  * Be more robust w.r.t. new caches updates [#4429 @AltGr - fix #4354]
   * ActionGraph: removal postponing, protect against addition of cycles [#4358 @AltGr - fix #4357]
   * Initialise random [#4391 @rjbou]
   * Fix CLI debug log printed without taking into account debug sections [#4391 @rjbou]
