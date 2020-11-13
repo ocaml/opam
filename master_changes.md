@@ -25,6 +25,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Switch
   * Fix `--update-invariant` when removing or changing package name [#4360 @AltGr - fix #4353]
+  * Fix updates of the invariant with `--update-invariant` [#4431 @AltGr]
 
 ## Pin
   * Url pin: fix opamfile format upgrade [#4366 @rjbou - fix #4365]
