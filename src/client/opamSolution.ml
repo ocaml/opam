@@ -346,7 +346,9 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
                 if OpamFormula.check_version_formula (Atom vat) nv.version
                 then Atom vat
                 else match relop with
-                  | `Neq | `Gt | `Lt -> OpamFormula.Empty
+                  | `Neq -> OpamFormula.Empty
+                  | `Gt -> Atom (`Geq, nv.version)
+                  | `Lt -> Atom (`Leq, nv.version)
                   | `Eq | `Geq | `Leq -> Atom (relop, nv.version))
               cstr
         in
@@ -362,9 +364,7 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
               (* a package in the previous base validated this atom but is in
                  conflict with what we just installed *)
               Atom (nv.name, update_cstr cstr)
-            else if
-              n = nv.name && OpamFormula.check_version_formula cstr nv.version
-            then
+            else if n = nv.name then
               Atom (n, update_cstr cstr)
             else
               Atom at)
