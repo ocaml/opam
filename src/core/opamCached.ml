@@ -48,18 +48,7 @@ end = struct
         X.name file_magic this_magic;
       None
     ) else
-    let header = Bytes.create Marshal.header_size in
-    really_input ic header 0 Marshal.header_size;
-    let expected_size = magic_len + Marshal.total_size header 0 in
-    let current_size = in_channel_length ic in
-    if expected_size <> current_size then (
-      log "Bad %s cache: wrong length %d (advertised %d)."
-        X.name current_size expected_size;
-      None
-    ) else (
-      seek_in ic magic_len;
       Some ic
-    )
     with e ->
       OpamStd.Exn.fatal e;
       log "Bad %s cache: %s" X.name (Printexc.to_string e);
@@ -68,11 +57,15 @@ end = struct
   let marshal_from_file file fd =
     let chrono = OpamConsole.timer () in
     let f ic =
-      let (cache: t) = Marshal.from_channel ic in
-      log "Loaded %a in %.3fs" (slog OpamFilename.to_string) file (chrono ());
-      cache
+      try
+        let (cache: t) = Marshal.from_channel ic in
+        log "Loaded %a in %.3fs" (slog OpamFilename.to_string) file (chrono ());
+        Some cache
+      with End_of_file | Failure _ ->
+        log "Bad %s cache: likely a truncated file, ignoring." X.name;
+        None
     in
-    OpamStd.Option.map f (check_marshaled_file fd)
+    OpamStd.Option.Op.(check_marshaled_file fd >>= f)
 
   let load cache_file =
     match OpamFilename.opt_file cache_file with
