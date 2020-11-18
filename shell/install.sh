@@ -162,6 +162,7 @@ usage() {
     echo "    --fresh                Create the opam $VERSION root from scratch"
     echo "    --restore   VERSION    Restore a backed up opam binary and root"
     echo "    --version   VERSION    Install this specific version instead of $VERSION"
+    echo "    --download-only        Download binary in current directory and check its sha512"
     echo
     echo "The default is to backup if the current version of opam is 1.*, or when"
     echo "using '--fresh' or '--dev'"
