@@ -81,6 +81,8 @@ New option/command/subcommand are prefixed with ◈.
   * Restrict to opam-file-format 2.1.2 [#4495 @rjbou]
   * Switch to newer version of MCCS (based on newer GLPK) for src_ext [#4559 @AltGr]
   * Bump dune version to 2.8.2 [#4592 @AltGr]
+  * Bump the minimal dune requirement to dune 1.11 [#4437 @dra27 @kit-ty-kate]
+  * 4.12 compatibility [#4437 @dra27 @kit-ty-kate]
 
 ## Infrastructure
   * Release scripts: switch to OCaml 4.10.2 by default, add macos/arm64 builds by default [#4559 @AltGr]
