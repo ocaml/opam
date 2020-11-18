@@ -33,6 +33,7 @@ New option/command/subcommand are prefixed with ◈.
   * Don't save the pin with `--show` [#4367 @rjbou - fix #4348]
   * When several pins are needed, do their fetching in parallel [#4399 @rjbou - fix #4315]
   * Don't cleanup vcs pin source directory [#4399 @rjbou]
+  * Working dir: fix exclude local switch path [#4433 @rjbou]
 
 ## List
   *
