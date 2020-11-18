@@ -292,6 +292,19 @@ while true; do
 
     if [ -d "$BINDIR" ]; then break
     else
+        RES_BINDIR=$(eval echo "$BINDIR")
+        if [ "$RES_BINDIR" != "$BINDIR" ] ; then
+            printf "## '$BINDIR' resolves to '$RES_BINDIR', do you confirm [Y/n] "
+            read R
+            case "$R" in
+                ""|"y"|"Y"|"yes")
+                   BINDIR="$RES_BINDIR"
+                   if [ -d "$BINDIR" ]; then break; fi
+                   ;;
+                *)
+                   ;;
+            esac
+        fi
         printf "## $BINDIR does not exist. Create ? [Y/n] "
         read R
         case "$R" in
