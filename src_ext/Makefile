@@ -119,7 +119,7 @@ ext-ignore:
 	@echo "(ignored_subdirs (dune-local $(filter-out dune-local $(SRC_EXTS),$(PKG_EXTS))))" >> dune
 
 clone: $(DUNE_CLONE) $(SRC_EXTS:=.stamp) | ext-ignore
-	@rm -f cppo/ocamlbuild_plugin/jbuild
+	@rm -f cppo/ocamlbuild_plugin/dune
 
 .PHONY: pkg-ignore
 pkg-ignore:
