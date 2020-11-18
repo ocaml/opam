@@ -1,0 +1,129 @@
+009e00fa
+### <opam-core.opam>
+opam-version: "1.2"
+version: "2.0.7"
+maintainer: "opam-devel@lists.ocaml.org"
+authors: [
+  "Vincent Bernardoff <vb@luminar.eu.org>"
+  "Raja Boujbel <raja.boujbel@ocamlpro.com>"
+  "Roberto Di Cosmo <roberto@dicosmo.org>"
+  "Thomas Gazagnaire <thomas@gazagnaire.org>"
+  "Louis Gesbert <louis.gesbert@ocamlpro.com>"
+  "Fabrice Le Fessant <Fabrice.Le_fessant@inria.fr>"
+  "Anil Madhavapeddy <anil@recoil.org>"
+  "Guillem Rieu <guillem.rieu@ocamlpro.com>"
+  "Ralf Treinen <ralf.treinen@pps.jussieu.fr>"
+  "Frederic Tuong <tuong@users.gforge.inria.fr>"
+]
+homepage: "https://opam.ocaml.org/"
+bug-reports: "https://github.com/ocaml/opam/issues"
+dev-repo: "https://github.com/ocaml/opam.git"
+build: [
+  ["./configure" "--disable-checks" "--prefix" prefix]
+  [make "%{name}%.install"]
+]
+depends: [
+  "base-unix"
+  "base-bigarray"
+  "ocamlgraph"
+  "re" {>= "1.5.0"}
+  "dune" {build & >= "1.2.1"}
+  "cppo" {build}
+]
+conflicts: "extlib-compat"
+available: ocaml-version >= "4.02.3"
+### opam show --raw ./opam-core.opam
+[WARNING] Failed checks on opam-core package definition from source at file://${BASEDIR}:
+             error 57: Synopsis and description must not be both empty
+opam-version: "2.0"
+name: "opam-core"
+version: "2.0.7"
+maintainer: "opam-devel@lists.ocaml.org"
+authors: [
+  "Vincent Bernardoff <vb@luminar.eu.org>"
+  "Raja Boujbel <raja.boujbel@ocamlpro.com>"
+  "Roberto Di Cosmo <roberto@dicosmo.org>"
+  "Thomas Gazagnaire <thomas@gazagnaire.org>"
+  "Louis Gesbert <louis.gesbert@ocamlpro.com>"
+  "Fabrice Le Fessant <Fabrice.Le_fessant@inria.fr>"
+  "Anil Madhavapeddy <anil@recoil.org>"
+  "Guillem Rieu <guillem.rieu@ocamlpro.com>"
+  "Ralf Treinen <ralf.treinen@pps.jussieu.fr>"
+  "Frederic Tuong <tuong@users.gforge.inria.fr>"
+]
+homepage: "https://opam.ocaml.org/"
+bug-reports: "https://github.com/ocaml/opam/issues"
+depends: [
+  "ocaml" {>= "4.02.3"}
+  "base-unix"
+  "base-bigarray"
+  "ocamlgraph"
+  "re" {>= "1.5.0"}
+  "dune" {build & >= "1.2.1"}
+  "cppo" {build}
+]
+conflicts: ["extlib-compat"]
+build: [
+  ["./configure" "--disable-checks" "--prefix" prefix]
+  [make "%{name}%.install"]
+]
+dev-repo: "git+https://github.com/ocaml/opam.git"
+### opam switch create . ocaml-system --fake -y
+opam-core is now pinned to file://${BASEDIR} (version 2.0.7)
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-system"]
+The following actions will be faked:
+  ∗ install base-bigarray base   [required by opam-core]
+  ∗ install base-threads  base   [required by dune]
+  ∗ install base-unix     base   [required by opam-core]
+  ∗ install ocaml-system  4.08.0
+  ∗ install conf-m4       1      [required by ocamlfind]
+  ∗ install ocaml-config  1      [required by ocaml]
+  ∗ install ocaml         4.08.0 [required by opam-core]
+  ∗ install seq           base   [required by re]
+  ∗ install ocamlfind     1.8.1  [required by ocamlgraph]
+  ∗ install dune          2.5.1  [required by opam-core]
+  ∗ install ocamlgraph    1.8.8  [required by opam-core]
+  ∗ install re            1.9.0  [required by opam-core]
+  ∗ install cppo          1.6.6  [required by opam-core]
+  ∗ install opam-core     2.0.7*
+===== ∗ 14 =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of conf-m4.1
+Faking installation of ocaml-system.4.08.0
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.08.0
+Faking installation of dune.2.5.1
+Faking installation of cppo.1.6.6
+Faking installation of ocamlfind.1.8.1
+Faking installation of ocamlgraph.1.8.8
+Faking installation of seq.base
+Faking installation of re.1.9.0
+Faking installation of opam-core.2.0.7
+Done.
+### opam pin add git://github.com/ocaml/opam.git#59a71e3cf1 -yn
+This will pin the following packages: opam-client, opam-core, opam-devel, opam-format, opam-installer, opam-repository, opam-solver, opam-state. Continue? [Y/n] y
+opam-client is now pinned to git://github.com/ocaml/opam.git#59a71e3cf1 (version 2.1.0~beta3)
+[NOTE] Package opam-core is currently pinned to file://${BASEDIR} (version 2.0.7).
+opam-core is now pinned to git://github.com/ocaml/opam.git#59a71e3cf1 (version 2.1.0~beta3)
+opam-devel is now pinned to git://github.com/ocaml/opam.git#59a71e3cf1 (version 2.1.0~beta3)
+opam-format is now pinned to git://github.com/ocaml/opam.git#59a71e3cf1 (version 2.1.0~beta3)
+opam-installer is now pinned to git://github.com/ocaml/opam.git#59a71e3cf1 (version 2.1.0~beta3)
+opam-repository is now pinned to git://github.com/ocaml/opam.git#59a71e3cf1 (version 2.1.0~beta3)
+opam-solver is now pinned to git://github.com/ocaml/opam.git#59a71e3cf1 (version 2.1.0~beta3)
+opam-state is now pinned to git://github.com/ocaml/opam.git#59a71e3cf1 (version 2.1.0~beta3)
+### opam install opam-format --show
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[opam-format.2.1.0~beta3] synchronised (no changes)
+
+The following actions would be performed:
+  ↗ upgrade opam-core        2.0.7 to 2.1.0~beta3* [required by opam-format]
+  ∗ install opam-file-format 2.0.0                 [required by opam-format]
+  ∗ install opam-format      2.1.0~beta3*
+===== ∗ 2   ↗ 1 =====
