@@ -378,6 +378,19 @@ while true; do
 
     if [ -d "$BINDIR" ]; then break
     else
+        if [ "${BINDIR#\~/}" != "$BINDIR" ] ; then
+            RES_BINDIR="$HOME/${BINDIR#\~/}"
+            printf "## '$BINDIR' resolves to '$RES_BINDIR', do you confirm [Y/n] "
+            read R
+            case "$R" in
+                ""|"y"|"Y"|"yes")
+                   BINDIR="$RES_BINDIR"
+                   if [ -d "$BINDIR" ]; then break; fi
+                   ;;
+                *)
+                   ;;
+            esac
+        fi
         printf "## $BINDIR does not exist. Create ? [Y/n] "
         read R
         case "$R" in
