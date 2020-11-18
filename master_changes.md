@@ -249,3 +249,6 @@ users)
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamFilename`, `OpamHash`, `OpamStd`, `OpamStd`, `OpamUrl`, and `OpamVersion` [#4918 @rjbou]
   * `OpamHash`: add `sort` from strongest to weakest kind
   * `OpamSystem.real_path`: Remove the double chdir trick on OCaml >= 4.13.0 [#4961 @kit-ty-kate]
+  * Last repo removal note [#4433 @rjbou - fix #4381]
+  * Update maintainer name [#4456 @nbraud]
+  * Specify url syntaxe in usage/opam pin [#4460 @rjbou - fix #4459]
