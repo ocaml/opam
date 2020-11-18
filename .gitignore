@@ -5,6 +5,7 @@ _olint/
 bootstrap/
 tests/tmp/
 tests/.merlin
+tests/reftests/.merlin
 .*.swp
 src_ext/lib
 src_ext/cudf/
