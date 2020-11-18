@@ -1,5 +1,5 @@
-URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.5.tar.gz
-MD5_cppo = 1cd25741d31417995b0973fe0b6f6c82
+URL_cppo = https://github.com/ocaml-community/cppo/releases/download/v1.6.6/cppo-v1.6.6.tbz
+MD5_cppo = b13afeea6631d7c9b61f95bfd984a542
 
 $(call PKG_SAME,cppo)
 
