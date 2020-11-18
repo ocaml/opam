@@ -2029,7 +2029,8 @@ let repository cli =
     cli_original, "remove", `remove, ["NAME..."],
     "Unselects the given repositories so that they will not be used to get \
      package definitions anymore. With $(b,--all), makes opam forget about \
-     these repositories completely.";
+     these repositories completely. When last repository is removed, it is \
+     removed and  replaced by global default repository ";
     cli_original, "set-repos", `set_repos, ["NAME..."],
     "Explicitly selects the list of repositories to look up package \
      definitions from, in the specified priority order (overriding previous \
