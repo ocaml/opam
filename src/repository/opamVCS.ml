@@ -140,7 +140,7 @@ module Make (VCS: VCS) = struct
       let excluded =
         (* from [OpamLocal.rsync] exclude list *)
         let exc =
-          [ OpamSwitch.external_dirname ^ "*"; "_build";
+          [ OpamSwitch.external_dirname; "_build";
             ".git"; "_darcs"; ".hg" ]
         in
         OpamStd.String.Set.filter (fun f ->
