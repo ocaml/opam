@@ -85,6 +85,9 @@ New option/command/subcommand are prefixed with ◈.
 ## Opam installer
   *
 
+## State
+  * Handle the case where `os-family=ubuntu` as `os-family=debian`
+
 ## Solver
   * Fix missing conflict message when trying to remove required packages [#4362 @AltGr]
   * Fix the Z3 backend for upgrades [#4393 @AltGr]
