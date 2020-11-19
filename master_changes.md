@@ -66,7 +66,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Repository management
-  *
+  * Pass --depth=1 to git-fetch in the Git repo backend [#4442 @dra27]
 
 ## VCS
   *

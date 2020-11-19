@@ -93,7 +93,7 @@ module VCS : OpamVCS.VCS = struct
           OpamFilename.write alternates
             (OpamFilename.Dir.to_string (cache / "objects")))
       global_cache;
-    git repo_root [ "fetch" ; "-q"; origin; "--update-shallow"; refspec ]
+    git repo_root [ "fetch" ; "-q"; origin; "--update-shallow"; "--depth=1"; refspec ]
     @@> fun r ->
     if OpamProcess.check_success_and_cleanup r then
       let refspec =
