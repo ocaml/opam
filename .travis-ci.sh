@@ -418,7 +418,7 @@ fi
     # The SHA is fixed so that upstream changes shouldn't affect CI. The SHA needs
     # to be moved forwards when a new version of OCaml is added to ensure that the
     # ocaml-system package is available at the correct version.
-    opam init --bare default git+https://github.com/ocaml/opam-repository#$OPAM_REPO_SHA
+    opam init --bare default git+https://github.com/ocaml/opam-repository#$OPAM_TEST_REPO_SHA
     opam switch create default ocaml-system
     eval $(opam env)
     opam install lwt
