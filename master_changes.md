@@ -57,7 +57,8 @@ New option/command/subcommand are prefixed with ◈.
 ## External dependencies
   * Add support for NetBSD and DragonFlyBSD [#4396 @kit-ty-kate]
   * Fix OpenBSD, FreeBSD and Gentoo: Allow short names and full name paths for ports-based systems [#4396 @kit-ty-kate]
-
+  * Handle the case where `os-family=ubuntu` as `os-family=debian` [#4441 @alan-j-hu]
+  
 ## Sandbox
   *
 
@@ -86,7 +87,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## State
-  * Handle the case where `os-family=ubuntu` as `os-family=debian`
+  * 
 
 ## Solver
   * Fix missing conflict message when trying to remove required packages [#4362 @AltGr]
