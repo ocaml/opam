@@ -29,8 +29,8 @@ module VCS : OpamVCS.VCS = struct
     (* If the ?env arg is restored here, then the caching for the Cygwin-ness
        of git will need to change, as altering PATH could select a different
        Git *)
-    fun ?verbose ?stdout args ->
-      OpamSystem.make_command ~dir ?verbose ?stdout "git" args
+    fun ?allow_stdin ?verbose ?stdout args ->
+      OpamSystem.make_command ~dir ?verbose ?stdout ?allow_stdin "git" args
 
   let init repo_root repo_url =
     OpamFilename.mkdir repo_root;
@@ -93,7 +93,7 @@ module VCS : OpamVCS.VCS = struct
           OpamFilename.write alternates
             (OpamFilename.Dir.to_string (cache / "objects")))
       global_cache;
-    git repo_root [ "fetch" ; "-q"; origin; "--update-shallow"; refspec ]
+    git repo_root ~allow_stdin:true [ "fetch" ; "-q"; origin; "--update-shallow"; refspec ]
     @@> fun r ->
     if OpamProcess.check_success_and_cleanup r then
       let refspec =
