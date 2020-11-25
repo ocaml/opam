@@ -98,6 +98,7 @@ New option/command/subcommand are prefixed with ◈.
   * Initialise random [#4391 @rjbou]
   * Fix CLI debug log printed without taking into account debug sections [#4391 @rjbou]
   * Internal caches: use size checks from Marshal [#4430 @AltGr]
+  * openssl invocation: Fix fallback [#4449 @Blaisorblade]
 
 ## Test
   * Ensure that a cold `dune runtest` works [#4375 @emillon]
