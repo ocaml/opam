@@ -841,6 +841,16 @@ module Mk : sig
     cli:OpamCLIVersion.t -> ?defaults:(string * string) list ->
     'a subcommands -> Manpage.block list
 
+  type command = unit Term.t * Term.info
+
+  val mk_command:
+    OpamCLIVersion.t -> validity -> string -> doc:string ->
+    man:Manpage.block list -> (unit -> unit) Term.t -> command
+
+  val mk_command_ret:
+    OpamCLIVersion.t -> validity -> string -> doc:string ->
+    man:Manpage.block list -> (unit -> unit Term.ret) Term.t -> command
+
 end = struct
 
   let cli2_0 = OpamCLIVersion.of_string "2.0"
@@ -1195,6 +1205,34 @@ end = struct
                     exe usage)
       | _ ->
         `Error (true, Printf.sprintf "Invalid %s subcommand" command)
+
+  (* Commands *)
+
+  let term_info title ~doc ~man =
+    let man = man @ help_sections in
+    Term.info ~sdocs:global_option_section ~docs:Manpage.s_commands ~doc ~man title
+
+  type command = unit Term.t * Term.info
+
+  let mk_command cli validity name ~doc ~man cmd =
+    let doc = update_doc_w_cli doc ~cli validity in
+    let info = term_info name ~doc ~man in
+    let check =
+      check_cli_validity cli validity () [name]
+      |> Term.const
+      |> Term.ret
+    in
+    Term.(cmd $ check), info
+
+  let mk_command_ret cli validity name ~doc ~man cmd =
+    let doc = update_doc_w_cli doc ~cli validity in
+    let info = term_info name ~doc ~man in
+    let check =
+      check_cli_validity cli validity () [name]
+      |> Term.const
+      |> Term.ret
+    in
+    Term.(ret (cmd $ check)), info
 
 end
 

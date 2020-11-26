@@ -121,8 +121,6 @@ let apply_global_options (options,self_upgrade) =
 
 let self_upgrade_status global_options = snd global_options
 
-type command = unit Term.t * Term.info
-
 let get_init_config ~no_sandboxing ~no_default_config_file ~add_config_file =
   let builtin_config =
     OpamInitDefaults.init_config ~sandboxing:(not no_sandboxing) ()

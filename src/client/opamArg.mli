@@ -285,13 +285,6 @@ val mk_subcommands_with_default:
 (** Same as {!mk_subcommand} but use the default value if no
     sub-command is selected. *)
 
-val make_command_alias:
-  'a Term.t * Term.info -> ?options:string -> string ->
-  'a Term.t * Term.info
-(** Create an alias for an existing command. [options] can be used to add extra
-    options after the original command in the doc (eg like `unpin` is an alias
-    for `pin remove`). *)
-
 val bad_subcommand:
   cli:OpamCLIVersion.t ->
   'a default subcommands -> (string * 'a option * string list) -> 'b Term.ret
@@ -302,6 +295,33 @@ val mk_subdoc :
   cli:OpamCLIVersion.t ->
   ?defaults:(string * string) list -> 'a subcommands -> Manpage.block list
 (** [mk_subdoc cmds] is the documentation block for [cmds]. *)
+
+val make_command_alias:
+  'a Term.t * Term.info -> ?options:string -> string ->
+  'a Term.t * Term.info
+(** Create an alias for an existing command. [options] can be used to add extra
+    options after the original command in the doc (eg like `unpin` is an alias
+    for `pin remove`). *)
+
+(** {2 Commands} *)
+
+(* All commands must be defined using [mk_command] and [mk_command_ret] for
+   prior cli validation. *)
+
+type command = unit Term.t * Term.info
+
+val mk_command:
+  OpamCLIVersion.t -> validity -> string -> doc:string ->
+  man:Manpage.block list -> (unit -> unit) Term.t -> command
+  (* [mk_command cli validity name doc man term] is the command [name] with its
+     [doc] and [man], and using [term]. Its [validity] is checked at runtime
+     against requested [cli], updates its documentation and errors if not
+     valid. *)
+
+val mk_command_ret:
+  OpamCLIVersion.t -> validity -> string -> doc:string ->
+  man:Manpage.block list -> (unit -> unit Term.ret) Term.t -> command
+  (* Same as {!mk_command} but [term] returns a [Cmdliner.Term.ret] *)
 
 (** {2 Documentation} *)
 
