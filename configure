@@ -2177,6 +2177,9 @@ if  test -x bootstrap/ocaml/bin/ocamlc -o -x bootstrap/ocaml/bin/ocamlopt ; then
 
 fi
 
+# XXX This isn't strictly correct for Windows
+MIN_OCAML_VERSION=4.02.3
+
   # checking for ocamlc
   if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ocamlc", so it can be a program name with args.
@@ -3386,7 +3389,7 @@ fi
 
 
 if test "x$OCAMLC" = "xno"; then
-   as_fn_error $? "You must install the OCaml compiler (or run: make compiler)" "$LINENO" 5
+   as_fn_error $? "You must install the OCaml compiler, at least version $MIN_OCAML_VERSION (or run: make compiler)" "$LINENO" 5
 fi
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking OCaml Sys.os_type" >&5
 $as_echo_n "checking OCaml Sys.os_type... " >&6; }
@@ -3535,8 +3538,6 @@ if test "x${enable_version_check}" != "xno"; then :
 
   if  test ${WIN32} -eq 1 ; then :
   MIN_OCAML_VERSION=4.06.0
-else
-  MIN_OCAML_VERSION=4.02.3
 fi
 
 
