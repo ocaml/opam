@@ -52,3 +52,17 @@ The following actions would be performed:
 ===== ∗ 6 =====
 ### opam install ocaml.4.10.0 --unlock-base --show
 opam: unlock-base was removed in version 2.1 of the opam CLI, but version 2.1 has been requested. Use --update-invariant instead or set OPAMCLI environment variable to 2.0.
+### #opam option use mk_command_ret
+### opam option foo
+[ERROR] No option named 'foo' found. Use 'opam option [--global]' to list them
+### OPAMCLI=2.0 opam option foo
+opam: option was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+### opam option foo --global
+[ERROR] Field or section foo not found
+### OPAMCLI=2.0 opam option foo --global
+opam: global was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+### # opam lock use mk_command
+### opam lock foo
+[ERROR] No package matching foo
+### OPAMCLI=2.0 opam lock foo
+opam: lock was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
