@@ -118,7 +118,7 @@ let family =
             Printf.ksprintf failwith
               "External dependency handling not supported for OS family 'bsd'."
         end
-      | "debian" -> Debian
+      | "debian" | "ubuntu" -> Debian
       | "gentoo" -> Gentoo
       | "homebrew" -> Homebrew
       | "macports" -> Macports
