@@ -3386,7 +3386,7 @@ fi
 
 
 if test "x$OCAMLC" = "xno"; then
-   as_fn_error $? "You must install the OCaml compiler" "$LINENO" 5
+   as_fn_error $? "You must install the OCaml compiler (or run: make compiler)" "$LINENO" 5
 fi
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking OCaml Sys.os_type" >&5
 $as_echo_n "checking OCaml Sys.os_type... " >&6; }

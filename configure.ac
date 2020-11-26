@@ -16,7 +16,7 @@ AS_IF([ test -x bootstrap/ocaml/bin/ocamlc -o -x bootstrap/ocaml/bin/ocamlopt ],
 
 AC_PROG_OCAML
 if test "x$OCAMLC" = "xno"; then
-   AC_MSG_ERROR([You must install the OCaml compiler])
+   AC_MSG_ERROR([You must install the OCaml compiler (or run: make compiler)])
 fi
 AC_CHECK_OCAML_OS_TYPE
 AS_IF([ test "${OCAML_OS_TYPE}" = "Win32"],[
