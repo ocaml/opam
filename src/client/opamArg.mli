@@ -327,4 +327,3 @@ val mk_command_ret:
 
 val global_option_section: string
 val help_sections: Manpage.block list
-val term_info: string -> doc:string -> man:Manpage.block list -> Term.info

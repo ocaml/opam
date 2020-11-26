@@ -1256,10 +1256,6 @@ let make_command_alias cmd ?(options="") name =
     ~docs:"COMMAND ALIASES" ~sdocs:global_option_section
     ~doc ~man
 
-let term_info title ~doc ~man =
-  let man = man @ help_sections in
-  Term.info ~sdocs:global_option_section ~docs:Manpage.s_commands ~doc ~man title
-
 let arg_list name doc kind =
   let doc = Arg.info ~docv:name ~doc [] in
   Arg.(value & pos_all kind [] & doc)
