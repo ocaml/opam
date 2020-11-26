@@ -104,7 +104,7 @@ let compute ?(kind=default_kind) file = match kind with
         | _ ->
           log "openssl error, use internal sha library";
           OpamSHA.hash kind file
-      with OpamSystem.Command_not_found _ | OpamSystem.Process_error _ ->
+      with OpamSystem.Command_not_found _ | OpamSystem.Process_error _ | OpamSystem.Permission_denied _ ->
         log "openssl not found, use internal sha library";
         OpamSHA.hash kind file
     in
