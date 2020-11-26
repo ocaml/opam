@@ -302,7 +302,8 @@ let init cli =
       build_options repo_kind repo_name repo_url
       interactive update_config completion env_hook no_sandboxing shell
       dot_profile_o compiler no_compiler config_file no_config_file reinit
-      show_opamrc bypass_checks =
+      show_opamrc bypass_checks
+      () =
     apply_global_options global_options;
     apply_build_options build_options;
     (* If show option is set, dump opamrc and exit *)
@@ -418,13 +419,14 @@ let init cli =
     in
     OpamSwitchState.drop st
   in
-  Term.(const init
-        $global_options cli $build_options cli $repo_kind_flag cli cli_original
-        $repo_name $repo_url $interactive $update_config $setup_completion
-        $env_hook $no_sandboxing $shell_opt cli cli_original
-        $dot_profile_flag cli cli_original $compiler $ no_compiler $config_file
-        $no_config_file $reinit $show_default_opamrc $bypass_checks),
-  term_info "init" ~doc ~man
+  mk_command cli cli_original "init" ~doc ~man
+    Term.(const init
+          $global_options cli $build_options cli $repo_kind_flag cli
+          cli_original $repo_name $repo_url $interactive $update_config
+          $setup_completion $env_hook $no_sandboxing $shell_opt cli
+          cli_original $dot_profile_flag cli cli_original $compiler
+          $no_compiler $config_file $no_config_file $reinit $show_default_opamrc
+          $bypass_checks)
 
 (* LIST *)
 let list_doc = "Display the list of available packages."
@@ -542,7 +544,7 @@ let list ?(force_search=false) cli =
   in
   let list
       global_options selection state_selector no_switch depexts vars repos
-      owns_file disjunction search silent no_depexts format packages =
+      owns_file disjunction search silent no_depexts format packages () =
     apply_global_options global_options;
     let no_switch =
       no_switch || OpamStateConfig.get_switch_opt () = None
@@ -666,10 +668,10 @@ let list ?(force_search=false) cli =
     else if OpamSysPkg.Set.is_empty results_depexts then
       OpamStd.Sys.exit_because `False
   in
-  Term.(const list $global_options cli $package_selection cli $state_selector
-        $no_switch $depexts $vars $repos $owns_file $disjunction $search
-        $silent $no_depexts $package_listing cli $pattern_list),
-  term_info "list" ~doc ~man
+  mk_command cli cli_original "list" ~doc ~man
+    Term.(const list $global_options cli $package_selection cli $state_selector
+          $no_switch $depexts $vars $repos $owns_file $disjunction $search
+          $silent $no_depexts $package_listing cli $pattern_list)
 
 
 (* SHOW *)
@@ -754,8 +756,9 @@ let show cli =
     | [] -> []
     | l -> List.map (fun (_,f,_) -> f) l
   in
-  let pkg_info global_options fields show_empty raw where
-      list_files file normalise no_lint just_file all_versions sort atom_locs =
+  let show global_options fields show_empty raw where
+      list_files file normalise no_lint just_file all_versions sort atom_locs
+      () =
     let print_just_file opamf opam =
       if not no_lint then OpamFile.OPAM.print_errors opam;
       let opam =
@@ -878,11 +881,10 @@ let show cli =
            `Ok ()
       )
   in
-  Term.(ret
-          (const pkg_info $global_options cli $fields $show_empty $raw $where
-           $list_files $file $normalise $no_lint $just_file $all_versions
-           $sort $atom_or_local_list)),
-  term_info "show" ~doc ~man
+  mk_command_ret cli cli_original "show" ~doc ~man
+    Term.(const show $global_options cli $fields $show_empty $raw $where
+          $list_files $file $normalise $no_lint $just_file $all_versions
+          $sort $atom_or_local_list)
 
 (* Shared between [option] and [var] *)
 module Var_Option_Common = struct
@@ -1016,7 +1018,7 @@ let var cli =
       "List all variables defined for the given package"
       Arg.(some package_name) None
   in
-  let print_var global_options package varvalue global=
+  let print_var global_options package varvalue global () =
     apply_global_options global_options;
     match varvalue, package with
     | _, None ->
@@ -1030,10 +1032,9 @@ let var cli =
       `Error (true, "--package can't be specified with a var argument, use \
                      'pkg:var' instead.")
   in
-  Term.ret (
-    Term.(const print_var $global_options cli $package $varvalue $global cli)
-  ),
-  term_info "var" ~doc ~man
+  mk_command_ret cli cli_original "var" ~doc ~man
+    Term.(const print_var
+          $global_options cli $package $varvalue $global cli)
 
 (* OPTION *)
 let option_doc = "Global and switch configuration options settings"
@@ -1059,14 +1060,13 @@ let option cli =
     in
     Arg.(value & pos 0 (some string) None & info ~docv ~doc [])
   in
-  let option global_options fieldvalue global =
+  let option global_options fieldvalue global () =
     apply_global_options global_options;
     var_option global global_options `option fieldvalue
   in
-  Term.ret (
-    Term.(const option $global_options cli $fieldvalue $global cli)
-  ),
-  term_info "option" ~doc ~man
+  mk_command_ret cli (cli_from cli2_1) "option" ~doc ~man
+    Term.(const option
+          $global_options cli $fieldvalue $global cli)
 
 module Common_config_flags = struct
   let sexp cli =
@@ -1163,7 +1163,7 @@ let config cli =
 
   let config global_options
       command shell sexp inplace_path
-      set_opamroot set_opamswitch params =
+      set_opamroot set_opamswitch params () =
     apply_global_options global_options;
     let shell = match shell with
       | Some s -> s
@@ -1377,14 +1377,12 @@ let config cli =
     | command, params -> bad_subcommand ~cli commands ("config", command, params)
   in
 
-  Term.ret (
+  mk_command_ret cli cli_original "config" ~doc ~man
     Term.(const config
           $global_options cli $command $shell_opt cli cli_original $sexp cli
           $inplace_path cli
           $set_opamroot cli $set_opamswitch cli
           $params)
-  ),
-  term_info "config" ~doc ~man
 
 (* EXEC *)
 let exec_doc = "Executes a command in the proper opam environment"
@@ -1403,17 +1401,17 @@ let exec cli =
   let cmd =
     Arg.(non_empty & pos_all string [] & info ~docv:"COMMAND [ARG]..." [])
   in
-  let exec global_options inplace_path set_opamroot set_opamswitch cmd =
+  let exec global_options inplace_path set_opamroot set_opamswitch cmd () =
     apply_global_options global_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamConfigCommand.exec gt
       ~set_opamroot ~set_opamswitch ~inplace_path cmd
   in
   let open Common_config_flags in
-  Term.(const exec $global_options cli $inplace_path cli
-        $set_opamroot cli $set_opamswitch cli
-        $cmd),
-  term_info "exec" ~doc ~man
+  mk_command cli cli_original "exec" ~doc ~man
+    Term.(const exec $global_options cli $inplace_path cli
+          $set_opamroot cli $set_opamswitch cli
+          $cmd)
 
 (* ENV *)
 let env_doc = "Prints appropriate shell variable assignments to stdout"
@@ -1440,7 +1438,7 @@ let env cli =
   in
   let env
       global_options shell sexp inplace_path set_opamroot set_opamswitch
-      revert check =
+      revert check () =
     apply_global_options global_options;
     if check then
       (OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1467,11 +1465,11 @@ let env cli =
         (OpamEnv.add [] [])
   in
   let open Common_config_flags in
+  mk_command cli cli_original "env" ~doc ~man
   Term.(const env
         $global_options cli $shell_opt cli cli_original $sexp cli
         $inplace_path cli $set_opamroot cli $set_opamswitch cli
-        $revert $check),
-  term_info "env" ~doc ~man
+        $revert $check)
 
 (* INSTALL *)
 let install_doc = "Install a list of packages."
@@ -1547,7 +1545,7 @@ let install cli =
   let install
       global_options build_options add_to_roots deps_only ignore_conflicts
       restore destdir assume_built check recurse subpath depext_only
-      atoms_or_locals =
+      atoms_or_locals () =
     apply_global_options global_options;
     apply_build_options build_options;
     if atoms_or_locals = [] && not restore then
@@ -1617,12 +1615,11 @@ let install cli =
       OpamAuxCommands.copy_files_to_destdir st dest packages;
       `Ok ()
   in
-  Term.ret
+  mk_command_ret cli cli_original "install" ~doc ~man
     Term.(const install $global_options cli $build_options cli
           $add_to_roots $deps_only $ignore_conflicts $restore $destdir
           $assume_built cli $check $recurse cli $subpath cli $depext_only
-          $atom_or_local_list),
-  term_info "install" ~doc ~man
+          $atom_or_local_list)
 
 (* REMOVE *)
 let remove_doc = "Remove a list of packages."
@@ -1664,7 +1661,7 @@ let remove cli =
       Arg.(some dirname) None
   in
   let remove global_options build_options autoremove force destdir recurse
-      subpath atom_locs =
+      subpath atom_locs () =
     apply_global_options global_options;
     apply_build_options build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1702,9 +1699,9 @@ let remove cli =
       let autoremove = autoremove || OpamClientConfig.(!r.autoremove) in
       OpamSwitchState.drop (OpamClient.remove st ~autoremove ~force atoms)
   in
-  Term.(const remove $global_options cli $build_options cli $autoremove
-        $force $destdir $recurse cli $subpath cli $atom_or_dir_list),
-  term_info "remove" ~doc ~man
+  mk_command cli cli_original "remove" ~doc ~man
+    Term.(const remove $global_options cli $build_options cli $autoremove
+          $force $destdir $recurse cli $subpath cli $atom_or_dir_list)
 
 (* REINSTALL *)
 let reinstall cli =
@@ -1737,7 +1734,7 @@ let reinstall cli =
       ]
   in
   let reinstall global_options build_options assume_built recurse subpath
-      atoms_locs cmd =
+      atoms_locs cmd () =
     apply_global_options global_options;
     apply_build_options build_options;
     let open OpamPackage.Set.Op in
@@ -1790,10 +1787,10 @@ let reinstall cli =
     | _, _::_ ->
       `Error (true, "Package arguments not allowed with this option")
   in
-  Term.(ret (const reinstall $global_options cli $build_options cli
-             $assume_built cli $recurse cli $subpath cli $atom_or_dir_list
-             $cmd)),
-  term_info "reinstall" ~doc ~man
+  mk_command_ret cli cli_original "reinstall" ~doc ~man
+    Term.(const reinstall $global_options cli $build_options cli
+          $assume_built cli $recurse cli $subpath cli $atom_or_dir_list
+          $cmd)
 
 (* UPDATE *)
 let update_doc = "Update the list of available packages."
@@ -1834,7 +1831,8 @@ let update cli =
        $(b,--upgrade), applies to the upgrade step: that is $(b,opam update \
        --upgrade --check) behaves like $(b,opam update && opam upgrade --check), \
        returning 0 if there are available upgrades, rather than upstream updates." in
-  let update global_options jobs names repos_only dev_only all check upgrade =
+  let update global_options jobs names repos_only dev_only all
+      check upgrade () =
     apply_global_options global_options;
     OpamStateConfig.update
       ?jobs:OpamStd.Option.Op.(jobs >>| fun j -> lazy j)
@@ -1860,9 +1858,9 @@ let update cli =
       OpamConsole.msg "Now run 'opam upgrade' to apply any package updates.\n";
     if not success then OpamStd.Sys.exit_because `Sync_error
   in
+  mk_command cli cli_original "update" ~doc ~man
   Term.(const update $global_options cli $jobs_flag cli cli_original $name_list
-        $repos_only $dev_only $all $check $upgrade),
-  term_info "update" ~doc ~man
+        $repos_only $dev_only $all $check $upgrade)
 
 (* UPGRADE *)
 let upgrade_doc = "Upgrade the installed package to latest version."
@@ -1900,7 +1898,7 @@ let upgrade cli =
       "When a directory is provided as argument, do not install pinned package \
        that are not yet installed." in
   let upgrade global_options build_options fixup check only_installed all
-      recurse subpath atom_locs =
+      recurse subpath atom_locs () =
     apply_global_options global_options;
     apply_build_options build_options;
     let all = all || atom_locs = [] in
@@ -1918,9 +1916,9 @@ let upgrade cli =
       OpamSwitchState.drop @@ OpamClient.upgrade st ~check ~only_installed ~all atoms;
       `Ok ()
   in
-  Term.(ret (const upgrade $global_options cli $build_options cli $fixup $check
-             $installed $all $recurse cli $subpath cli $atom_or_dir_list)),
-  term_info "upgrade" ~doc ~man
+  mk_command_ret cli cli_original "upgrade" ~doc ~man
+    Term.(const upgrade $global_options cli $build_options cli $fixup $check
+          $installed $all $recurse cli $subpath cli $atom_or_dir_list)
 
 (* REPOSITORY *)
 let repository_doc = "Manage opam repositories."
@@ -2025,7 +2023,7 @@ let repository cli =
       otherwise be used to explicitly set the repository list at once."
       Arg.(int) 1
   in
-  let repository global_options command kind short scope rank params =
+  let repository global_options command kind short scope rank params () =
     apply_global_options global_options;
     let global = List.mem `Default scope in
     let command, params, rank = match command, params, rank with
@@ -2212,11 +2210,10 @@ let repository cli =
       `Ok ()
     | command, params -> bad_subcommand ~cli commands ("repository", command, params)
   in
-  Term.ret
+  mk_command_ret cli cli_original "repository" ~doc ~man
     Term.(const repository $global_options cli $command
           $repo_kind_flag cli cli_original $print_short_flag cli cli_original
-          $scope $rank $params),
-  term_info "repository" ~doc ~man
+          $scope $rank $params)
 
 
 (* SWITCH *)
@@ -2466,7 +2463,7 @@ let switch cli =
       global_options build_options command print_short
       no_switch packages formula empty descr full freeze no_install deps_only repos
       force no_action
-      d_alias_of d_no_autoinstall params =
+      d_alias_of d_no_autoinstall params () =
     if d_alias_of <> None then
       OpamConsole.warning
         "Option %s is deprecated, ignoring it. \
@@ -2757,14 +2754,14 @@ let switch cli =
       `Ok ()
     | command, params -> bad_subcommand ~cli commands ("switch", command, params)
   in
-  Term.(ret (const switch
-             $global_options cli $build_options cli $command
-             $print_short_flag cli cli_original
-             $no_switch
-             $packages $formula $empty $descr $full $freeze $no_install
-             $deps_only $repos $force $no_action $d_alias_of $d_no_autoinstall
-             $params)),
-  term_info "switch" ~doc ~man
+  mk_command_ret cli cli_original "switch" ~doc ~man
+    Term.(const switch
+          $global_options cli $build_options cli $command
+          $print_short_flag cli cli_original
+          $no_switch
+          $packages $formula $empty $descr $full $freeze $no_install
+          $deps_only $repos $force $no_action $d_alias_of $d_no_autoinstall
+          $params)
 
 (* PIN *)
 let pin_doc = "Pin a given package to a specific version or source."
@@ -2994,7 +2991,7 @@ let pin ?(unpin_only=false) cli =
       global_options build_options
       kind edit no_act dev_repo print_short recurse subpath normalise
       with_version
-      command params =
+      command params () =
     apply_global_options global_options;
     apply_build_options build_options;
     let action = not no_act in
@@ -3156,14 +3153,13 @@ let pin ?(unpin_only=false) cli =
        | `Error e -> `Error (false, e))
     | `incorrect -> bad_subcommand ~cli commands ("pin", command, params)
   in
-  Term.ret
+  mk_command_ret cli cli_original "pin" ~doc ~man
     Term.(const pin
           $global_options cli $build_options cli
           $kind $edit $no_act $dev_repo $print_short_flag cli cli_original
           $recurse cli $subpath cli
           $normalise $with_version
-          $command $params),
-  term_info "pin" ~doc ~man
+          $command $params)
 
 (* SOURCE *)
 let source_doc = "Get the source of an opam package."
@@ -3188,7 +3184,7 @@ let source cli =
   let dir =
     mk_opt ~cli cli_original ["dir"] "DIR" "The directory where to put the source."
       Arg.(some dirname) None in
-  let source global_options atom dev_repo pin dir =
+  let source global_options atom dev_repo pin dir () =
     apply_global_options global_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     (* Fixme: this needs a write lock, because it uses the routines that
@@ -3291,9 +3287,9 @@ let source cli =
       OpamSwitchState.drop
         (OpamClient.PIN.pin t nv.name ~version:nv.version target)
   in
-  Term.(const source
-        $global_options cli $atom $dev_repo $pin $dir),
-  term_info "source" ~doc ~man
+  mk_command cli cli_original "source" ~doc ~man
+    Term.(const source
+          $global_options cli $atom $dev_repo $pin $dir)
 
 (* LINT *)
 let lint_doc = "Checks and validate package description ('opam') files."
@@ -3348,7 +3344,7 @@ let lint cli =
       "Check upstream, archive availability and checksum(s)"
   in
   let lint global_options files package normalise short warnings_sel
-      check_upstream recurse subpath =
+      check_upstream recurse subpath () =
     apply_global_options global_options;
     let opam_files_in_dir d =
       match OpamPinned.files_in_source ~recurse ?subpath d with
@@ -3466,9 +3462,9 @@ let lint cli =
     OpamStd.Option.iter (fun json -> OpamJson.append "lint" (`A json)) json;
     if err then OpamStd.Sys.exit_because `False
   in
-  Term.(const lint $global_options cli $files $package $normalise $short
-        $warnings $check_upstream $recurse cli $subpath cli),
-  term_info "lint" ~doc ~man
+  mk_command cli cli_original "lint" ~doc ~man
+    Term.(const lint $global_options cli $files $package $normalise $short
+          $warnings $check_upstream $recurse cli $subpath cli)
 
 (* CLEAN *)
 let clean_doc = "Cleans up opam caches"
@@ -3515,7 +3511,7 @@ let clean cli =
       "Run the switch cleanup commands in all switches. Implies $(b,--switch-cleanup)"
   in
   let clean global_options dry_run
-      download_cache repos repo_cache logs switch all_switches =
+      download_cache repos repo_cache logs switch all_switches () =
     apply_global_options global_options;
     let logs, download_cache, switch =
       if logs || download_cache || repos || repo_cache || switch || all_switches
@@ -3644,9 +3640,9 @@ let clean cli =
       (OpamConsole.msg "Clearing logs\n";
        cleandir (OpamPath.log root))
   in
-  Term.(const clean $global_options cli $dry_run $download_cache $repos $repo_cache
-        $logs $switch $all_switches),
-  term_info "clean" ~doc ~man
+  mk_command cli cli_original "clean" ~doc ~man
+    Term.(const clean $global_options cli $dry_run $download_cache $repos
+          $repo_cache $logs $switch $all_switches)
 
 (* LOCK *)
 let lock_doc = "Create locked opam files to share build environments across hosts."
@@ -3686,7 +3682,7 @@ let lock cli =
       "Only lock direct dependencies, rather than the whole dependency tree."
   in
   let lock_suffix = OpamArg.lock_suffix cli Manpage.s_options in
-  let lock global_options only_direct lock_suffix atom_locs =
+  let lock global_options only_direct lock_suffix atom_locs () =
     apply_global_options global_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_none gt @@ fun st ->
@@ -3714,9 +3710,9 @@ let lock cli =
              (OpamPackage.to_string nv)
              (OpamFilename.to_string file)) pkg_done)
   in
-  Term.(pure lock $global_options cli $only_direct_flag $lock_suffix
-        $atom_or_local_list),
-  term_info "lock" ~doc ~man
+  mk_command cli (cli_from cli2_1) "lock" ~doc ~man
+    Term.(const lock $global_options cli $only_direct_flag $lock_suffix
+          $atom_or_local_list)
 
 (* HELP *)
 let help =
@@ -3801,6 +3797,8 @@ let admin =
   Term.(ret (const (`Error (true, doc)))),
   Term.info "admin"
 
+(* Note: for cli versionning check, all commands must be constructed with
+   [OpamArg.mk_command] or [OpamArg.mk_command_ret]. *)
 let commands cli =
   let show = show cli in
   let remove = remove cli in
