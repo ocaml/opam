@@ -4,7 +4,6 @@ This page describes how to install and configure opam. For further help on how
 to use opam, either read [`opam --help`](man/opam.html) or move on to the
 [Usage](Usage.html) guide.
 
-
 ## Upgrading from a previous version
 
 Generally, you should just reproduce the same installation steps as for the
@@ -17,41 +16,6 @@ To upgrade shell scripts, and enable sandboxing, don't forget to run `opam init
 --reinit -ni`.
 
 Then see the [Upgrade guide](Upgrade_guide.html) to check the changes.
-
-
-## Binary distribution
-
-The quickest way to get the latest opam up and working is to run
-[this script](https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh):
-```
-sh <(curl -sL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)
-```
-
-This will simply check your architecture, download and install the proper
-pre-compiled binary, backup your opam data if from an older version, and run
-`opam init`.
-
-(If you have trouble with `curl`, just
-[download the script](https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)
-and run `sh install.sh`)
-
-We provide pre-compiled binaries for:
-- Linux i686, amd64, arm7, arm64
-- OSX (intel 64 bits)
-- We do not at present provide an official Windows distribution of opam, but please see [this separately maintained distribution](https://fdopen.github.io/opam-repository-mingw/)
-(other platforms are available using the other methods below)
-
-If you don't like scripts, you can just pick your download
-[here](https://github.com/ocaml/opam/releases), put it in your PATH as
-`opam`, and set it as executable, e.g.
-
-```
-sudo install <downloaded file> /usr/local/bin/opam
-```
-
-> Note that this script is intended for end-users, not CI. For that purpose,
-> you can use pre-built [Docker images for various
-> configurations](https://hub.docker.com/r/ocaml/opam2/).
 
 ## Using your distribution's package system
 
@@ -152,16 +116,14 @@ cd /usr/ports/devel/ocaml-opam
 make install
 ```
 
-#### OSX
+#### macOS
 
 [![badge](https://repology.org/badge/version-for-repo/homebrew/opam.svg)](https://repology.org/project/opam/versions) [![badge](https://repology.org/badge/version-for-repo/macports/opam.svg)](https://repology.org/project/opam/versions)
 
 Opam packages for [homebrew](http://mxcl.github.com/homebrew/) and [MacPorts](http://www.macports.org/) are available.
-homebrew need a prior installation of `gpatch`, as opam uses gnu-specific options.
 
 ```
 # Homebrew
-brew install gpatch
 brew install opam
 
 # MacPort
@@ -200,6 +162,41 @@ The opam package for [guix](https://www.gnu.org/software/guix/) can be installed
 # Guix
 guix install opam
 ```
+
+## Binary distribution
+
+The quickest way to get the latest opam up and working is to run
+[this script](https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh):
+```
+sh <(curl -sL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)
+```
+
+This will simply check your architecture, download and install the proper
+pre-compiled binary, backup your opam data if from an older version, and run
+`opam init`.
+
+(If you have trouble with `curl`, just
+[download the script](https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)
+and run `sh install.sh`)
+
+We provide pre-compiled binaries for:
+- Linux i686, amd64, arm7, arm64
+- macOS (intel 64 bits)
+- We do not at present provide an official Windows distribution of opam, but please see [this separately maintained distribution](https://fdopen.github.io/opam-repository-mingw/)
+(other platforms are available using the other methods below)
+
+If you don't like scripts, you can just pick your download
+[here](https://github.com/ocaml/opam/releases), put it in your PATH as
+`opam`, and set it as executable, e.g.
+
+```
+sudo install <downloaded file> /usr/local/bin/opam
+```
+
+> Note that this script is intended for end-users, not CI. For that purpose,
+> you can use pre-built [Docker images for various
+> configurations](https://hub.docker.com/r/ocaml/opam2/).
+
 
 ## From Sources
 
