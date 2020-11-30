@@ -109,7 +109,7 @@ OS/distrubtion, their latest opam version and their maintainers:
 
 * Exherbo Linux
   * 1.1.1 [Package page](http://git.exherbo.org/summer/packages/dev-ocaml/opam/index.html) (_ocaml-unofficial_)
-  * nicoo [@nbraud](https://www.github.com/nbraud) (?)
+  * nicoo [@nbraud](https://www.github.com/nbraud)
 
 * Ubuntu Linux PPA
   * 2.0.4 [Anil's official opam PPA](https://launchpad.net/~avsm) and [ppa post](https://discuss.ocaml.org/t/opam-2-0-experimental-ppas/2446)
