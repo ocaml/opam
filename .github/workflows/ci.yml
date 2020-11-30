@@ -1,0 +1,196 @@
+name: Builds, tests & co 
+
+on: [ push, pull_request ]
+
+env:
+  OPAMBSVERSION: 2.1.0-alpha2
+  OPAMBSROOT: ~/.cache/.opam.cached
+  OPAM12CACHE: ~/.cache/opam1.2/cache
+  # This should be identical to the value in appveyor.yml
+  OPAM_TEST_REPO_SHA: 6877131f0
+  OPAM_REPO_SHA: 88c17a663
+  # Default ocaml version for some jobs
+  OCAML_VERSION: 4.11.1
+  ## variables for cache paths
+  GH_OCAML_CACHE: ~/.cache/ocaml-local/**
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+
+####
+# Caches
+####
+  ocaml-cache:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        ocamlv: [ 4.02.3, 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1, 4.08.1, 4.09.1, 4.10.1, 4.11.1 ]
+        include:
+          - os: macos-latest
+            ocamlv: 4.11.1
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v2
+    - name: ocaml ${{ matrix.ocamlv }} cache
+      id: ocaml-cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ env.GH_OCAML_CACHE }}
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/ocaml-cache.sh', '.github/scripts/preamble.sh') }}
+    - name: Building ocaml ${{ matrix.ocamlv }} cache
+      if: steps.ocaml-cache.outputs.cache-hit != 'true'
+      env:
+        OCAML_VERSION: ${{ matrix.ocamlv }}
+      run: bash -exu .github/scripts/ocaml-cache.sh ocaml
+
+  archives-cache:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: src ext archives cache
+      id: archives
+      uses: actions/cache@v2
+      with:
+        path: src_ext/archives
+        key: archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
+    - name: Retrieve archives
+      if: steps.archives.outputs.cache-hit != 'true'
+      run: |#bash -exu .github/scripts/caches.sh archives
+        rm -rf src_ext/archives
+        export PATH=~/.cache/ocaml-local/bin:$PATH
+        which ocaml && export OCAML=`which ocaml` || true
+        make -C src_ext cache-archives
+        ls src_ext/archives -al
+
+####
+# Build
+####
+  build:
+    needs: [ ocaml-cache ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # If a target is added in the matrix, ensure that it's corresponding ocaml-cache is generated
+      matrix:
+        os: [ ubuntu-latest ]
+        ocamlv: [ 4.02.3, 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1, 4.08.1, 4.09.1, 4.10.1, 4.11.1 ]
+        include:
+          - os: macos-latest
+            ocamlv: 4.11.1
+      # Intentionnaly fail fast, no need to run all build if there is a
+      # problem in a given version; usually it is functions not defined in lower
+      # versions of caml
+      # fail-fast: false
+    steps:
+    - name: install deps
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: sudo apt install bubblewrap
+    - uses: actions/checkout@v2
+    - name: ocaml ${{ matrix.ocamlv }} cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ env.GH_OCAML_CACHE }}
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/ocaml-cache.sh', '.github/scripts/preamble.sh') }}
+    - name: Build
+      env:
+        OCAML_VERSION: ${{ matrix.ocamlv }}
+      run: bash -exu .github/scripts/main.sh
+
+####
+# Opam tests
+####
+  test:
+    needs: [ build, archives-cache ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        #os: [ ubuntu-latest, macos-latest ]
+        os: [ ubuntu-latest ]
+        ocamlv: [ 4.11.1 ]
+      fail-fast: false
+    env:
+      OPAM_TEST: 1
+    steps:
+    - uses: actions/checkout@v2
+    - name: install deps
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: sudo apt install bubblewrap
+    - name: ocaml ${{ matrix.ocamlv }} cache
+      id: ocaml-cache-test
+      uses: actions/cache@v2
+      with:
+        path: ${{ env.GH_OCAML_CACHE }}
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/ocaml-cache.sh', '.github/scripts/preamble.sh') }}-test
+    - name: Building ocaml ${{ env.OCAML_VERSION }} cache
+      if: steps.ocaml-cache-test.outputs.cache-hit != 'true'
+      env:
+        OCAML_VERSION: ${{ matrix.ocamlv }}
+      run: bash -exu .github/scripts/ocaml-cache.sh ocaml
+    - name: opam bootstrap cache
+      id: opam-bootstrap
+      uses: actions/cache@v2
+      with:
+        path: |
+          ${{ env.OPAMBSROOT }}/**
+          ~/.cache/opam-local/bin/**
+        key: opam-${{ env.OPAMBSVERSION }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/opam-bs-cache.sh', '.github/scripts/preamble.sh') }}
+    - name: opam root cache
+      if: steps.opam-bootstrap.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/opam-bs-cache.sh
+    - name: opam-rt cache
+      id: opam-rt
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/opam-rt/**
+        key: ${{ runner.os }}-opam-rt
+    - name: Test
+      env:
+        OCAML_VERSION: ${{ matrix.ocamlv }}
+      run: bash -exu .github/scripts/main.sh
+
+  cold:
+    needs: [ build, archives-cache ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: install deps
+      run: sudo apt install bubblewrap
+    - uses: actions/checkout@v2
+    - name: src ext archives cache
+      uses: actions/cache@v2
+      with:
+        path: src_ext/archives
+        key: archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
+    - name: Cold
+      env:
+        OCAML_VERSION: ${{ env.OCAML_VERSION }}
+        OPAM_COLD: 1
+      run: |
+        make compiler
+        make lib-pkg
+        bash -exu .github/scripts/main.sh
+
+  upgrade:
+    needs: [ build, ocaml-cache ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: install deps
+      run: sudo apt install bubblewrap
+    - uses: actions/checkout@v2
+    - name: opam 1.2 root cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ env.OPAM12CACHE }}
+        key: opam1.2-root
+    - name: ocaml ${{ env.OCAML_VERSION }} cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ env.GH_OCAML_CACHE }}
+        key: ${{ runner.os }}-ocaml-${{ env.OCAML_VERSION }}-${{ hashFiles ('.github/scripts/ocaml-cache.sh', '.github/scripts/preamble.sh') }}
+    - name: Upgrade
+      env:
+        OCAML_VERSION: ${{ env.OCAML_VERSION }}
+        OPAM_UPGRADE: 1
+      run: bash -exu .github/scripts/main.sh
