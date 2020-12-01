@@ -12,6 +12,7 @@
 (** Handles all OPAM file formats as record types and submodules, conversion to
     and from syntax *)
 
+open OpamParserTypes.FullPos
 open OpamTypes
 
 (** Functions to read and write OPAM configuration files in a typed way *)
@@ -345,7 +346,7 @@ module OPAM: sig
     bug_reports: string list;
 
     (* Extension fields (x-foo: "bar") *)
-    extensions : (pos * value) OpamStd.String.Map.t;
+    extensions : value OpamStd.String.Map.t;
 
     (* Extra sections *)
     url        : URL.t option;

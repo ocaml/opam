@@ -13,6 +13,8 @@
 
 (** This module contains basic utility functions and stringifiers for the
     basic OPAM types present in OpamTypes.ml *)
+
+open OpamParserTypes.FullPos
 open OpamTypes
 
 include module type of struct include OpamCompat end
@@ -41,6 +43,7 @@ val string_of_shell: shell -> string
 
 (** The empty file position *)
 val pos_null: pos
+val nullify_pos : 'a -> 'a with_pos
 
 (** [pos_best pos1 pos2] returns the most detailed position between [pos1] and
     [pos2] (defaulting to [pos1]) *)

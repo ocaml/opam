@@ -9,6 +9,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamParserTypes
 open OpamTypes
 open OpamStateTypes
 open OpamTypesBase

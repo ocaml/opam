@@ -9,26 +9,23 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamParserTypes.FullPos
 open OpamTypes
 open OpamTypesBase
 open OpamStd.Op
 open OpamPp
 open OpamPp.Op
 
-let item_pos = function
-  | Section (pos,_) | Variable (pos,_,_) -> pos
+let item_pos (i: opamfile_item) = i.pos
 
-let value_pos = function
-  | Bool (pos, _) | Int (pos, _) | String (pos, _)
-  | Logop (pos, _, _, _) | Pfxop (pos, _, _)
-  | Relop (pos, _, _, _) | Prefix_relop (pos, _, _)
-  | Ident (pos, _) | List (pos, _) | Group (pos, _) | Option (pos, _, _)
-  | Env_binding (pos, _, _, _)
-    -> pos
+let value_pos (v: value) = v.pos
 
 let values_pos = function
   | [] -> None
   | x::_ -> Some (value_pos x)
+
+let optelem = OpamStd.Option.map (fun x -> x.pelem)
+let nullposelem = OpamStd.Option.map nullify_pos
 
 (** low-level Pps for the Lines parser ([string list list]) *)
 
@@ -37,10 +34,14 @@ type lines = string list list
 let lines_set ~empty ~add ~fold pp1 =
   pp
     ~name:(Printf.sprintf "(%s) lines" pp1.ppname)
-    (fun ~pos:(file,_,_) lines ->
+    (fun ~pos lines ->
        List.fold_left (fun (i,acc) -> function
            | [] -> i + 1, acc
-           | line -> i + 1, add (parse pp1 ~pos:(file,i,0) line) acc)
+           | line ->
+             (* XXX POSCHECK *)
+             let pos = { pos with start = i,0 ; stop = i,0 } in
+             i + 1,
+             add (parse pp1 ~pos line) acc)
          (1, empty) lines
        |> snd)
     (fun x ->
@@ -49,17 +50,18 @@ let lines_set ~empty ~add ~fold pp1 =
 let lines_map ~empty ~add ~fold pp1 =
   pp
     ~name:(Printf.sprintf "(%s) lines" pp1.ppname)
-    (fun ~pos:(file,_,_) lines ->
+    (fun ~pos lines ->
        List.fold_left (fun (i,acc) -> function
            | [] -> i + 1, acc
            | line ->
-             let k,v = parse pp1 ~pos:(file,i,0) line in
+             let pos = { pos with start = i,0 ; stop = i,0 } in
+             (* XXX POSCHECK *)
+             let k,v = parse pp1 ~pos line in
              i + 1, add k v acc)
          (1, empty) lines
        |> snd)
     (fun x ->
        List.rev (fold (fun k v acc -> print pp1 (k,v)::acc) x []))
-
 
 (*
   let list2 pp1 pp2 =
@@ -76,98 +78,109 @@ module V = struct
 
   let bool =
     pp ~name:"bool"
-      (fun ~pos:_ -> function Bool (_,b) -> b | _ -> unexpected ())
-      (fun b -> Bool (pos_null,b))
+      (fun ~pos:_ v -> match v.pelem with Bool b -> b | _ -> unexpected ())
+      (fun b -> nullify_pos (Bool b))
 
   let int =
     pp ~name:"int"
-      (fun ~pos:_ -> function Int (_,i) -> i | _ -> unexpected ())
-      (fun i -> Int (pos_null,i))
+      (fun ~pos:_ v -> match v.pelem with Int i -> i | _ -> unexpected ())
+      (fun i -> nullify_pos (Int i))
 
   let pos_int = int -| check ~name:"positive-int" (fun i -> i >= 0)
 
   let ident =
     pp ~name:"ident"
-      (fun ~pos:_ -> function Ident (_,i) -> i | _ -> unexpected ())
-      (fun str -> Ident (pos_null,str))
+      (fun ~pos:_ v -> match v.pelem with Ident i -> i | _ -> unexpected ())
+      (fun str -> nullify_pos (Ident str))
 
   let string =
     pp ~name:"string"
-      (fun ~pos:_ -> function String (_,s) -> s | _ -> unexpected ())
-      (fun str -> String (pos_null,str))
+      (fun ~pos:_ v -> match v.pelem with String s -> s | _ -> unexpected ())
+      (fun str -> nullify_pos (String str))
 
   let string_tr = string -| pp (fun ~pos:_ -> OpamStd.String.strip) (fun x -> x)
 
   let simple_arg =
     pp ~name:"ident-or-string"
-      (fun ~pos:_ -> function
-         | Ident (_,i) -> CIdent i
-         | String (_,s) -> CString s
+      (fun ~pos:_ v ->
+         match v.pelem with
+         | Ident i -> CIdent i
+         | String s -> CString s
          | _ -> unexpected ())
       (function
-        | CIdent i -> Ident (pos_null, i)
-        | CString s -> String (pos_null, s))
+        | CIdent i -> nullify_pos (Ident i)
+        | CString s -> nullify_pos (String s))
 
   let variable_contents =
     pp ~name:"string-or-stringlist-or-bool"
-      (fun ~pos:_ -> function
-         | String (_,s) -> S s
-         | Bool (_,b) -> B b
-         | List (_,l) ->
-           L (List.map (function String (_, s) -> s | _ -> unexpected ()) l)
+      (fun ~pos:_ v ->
+         match v.pelem with
+         | String s -> S s
+         | Bool b -> B b
+         | List l ->
+           L (List.map (fun v ->
+               match v.pelem with String s -> s | _ -> unexpected ())
+               l.pelem)
          | _ -> unexpected ())
       (function
-        | S s -> String (pos_null, s)
-        | B b -> Bool (pos_null, b)
-        | L l -> List (pos_null, List.map (fun s -> String (pos_null, s)) l))
+        | S s -> nullify_pos (String s)
+        | B b -> nullify_pos (Bool b)
+        | L l ->
+          nullify_pos (List (nullify_pos (List.map (fun s ->
+              nullify_pos (String s)) l))))
 
   let list =
     pp ~name:"list" ~name_constr:(Printf.sprintf "[%s]")
-      (fun ~pos:_ -> function
-         | List (_,l) -> l
-         | x -> [x])
-      (fun l -> List (pos_null, l))
+      (fun ~pos:_ v ->
+         match v.pelem with
+         | List l -> l.pelem
+         | _ -> [v])
+      (fun l -> nullify_pos (List (nullify_pos l)))
 
   let group =
     pp ~name:"group" ~name_constr:(Printf.sprintf "(%s)")
-      (fun ~pos:_ -> function
-         | Group (_,l) -> l
-         | x -> [x])
-      (fun l -> Group (pos_null, l))
+      (fun ~pos:_ v ->
+         match v.pelem with
+         | Group l -> l.pelem
+         | _ -> [v])
+      (fun l -> nullify_pos (Group (nullify_pos l)))
 
   let option =
     pp ~name:"option"
-      (fun ~pos:_ -> function
-         | Option (_,k,l) -> k, l
-         | k -> k, [])
+      (fun ~pos:_ v ->
+         match v.pelem with
+         | Option (k,l) -> k, l.pelem
+         | _ -> v, [])
       (function
         | (v, []) -> v
-        | (v, l) -> Option (pos_null, v, l))
+        | (v, l) -> nullify_pos (Option (v, nullify_pos l)))
 
   let option_strict =
     pp ~name:"option"
-      (fun ~pos -> function
-         | Option (_,k,l) -> k, l
+      (fun ~pos v ->
+         match v.pelem with
+         | Option (k,l) -> k, l.pelem
          | _ -> bad_format ~pos "Expected an option")
-      (function (v, l) -> Option (pos_null, v, l))
+      (function (v, l) -> nullify_pos (Option (v, nullify_pos l)))
 
   let map_group pp1 = group -| map_list ~posf:value_pos pp1
 
   let list_depth expected_depth =
-    let rec depth = function
-      | List (_,[]) -> 1
-      | List (_,(v::_)) -> 1 + depth v
-      | Option (_,v,_) -> depth v
+    let rec depth v =
+      match v.pelem with
+      | List { pelem = []; _} -> 1
+      | List { pelem = v::_; _} -> 1 + depth v
+      | Option (v,_) -> depth v
       | _ -> 0
     in
     let rec wrap n v =
-      if n <= 0 then v else wrap (n-1) (List (pos_null, [v]))
+      if n <= 0 then v else wrap (n-1) (nullify_pos (List (nullify_pos [v])))
     in
     let rec lift n v =
       if n <= 0 then v else
-      match v with
-      | List (_, [v]) -> lift (n-1) v
-      | v -> v
+      match v.pelem with
+      | List { pelem = [v]; _} -> lift (n-1) v
+      | _ -> v
     in
     pp
       (fun ~pos:_ v -> wrap (expected_depth - depth v) v)
@@ -175,17 +188,18 @@ module V = struct
 
   let option_depth expected_depth =
     let rec depth = function
-      | Option (_,v,_) -> 1 + depth v
+      | { pelem = Option (v,_); _} -> 1 + depth v
       | _ -> 0
     in
     let rec wrap n v =
-      if n <= 0 then v else wrap (n-1) (Option (pos_null, v, []))
+      if n <= 0 then v else
+        wrap (n-1) (nullify_pos (Option (v, nullify_pos [])))
     in
     let rec lift n v =
       if n <= 0 then v else
-      match v with
-      | Option (_, v, []) -> lift (n-1) v
-      | v -> v
+      match v.pelem with
+      | Option (v, {pelem = []; _}) -> lift (n-1) v
+      | _ -> v
     in
     pp
       (fun ~pos:_ v -> wrap (expected_depth - depth v) v)
@@ -195,13 +209,14 @@ module V = struct
     list_depth depth -|
     pp ~name:(Printf.sprintf "[%s]" pp1.ppname)
       (fun ~pos:_ v ->
-         match v with
-         | List (_, l) ->
+         match v.pelem with
+         | List l ->
            List.rev @@
-           List.rev_map (fun v -> parse pp1 ~pos:(value_pos v) v) l
+           List.rev_map (fun v -> parse pp1 ~pos:(value_pos v) v) l.pelem
          | _ -> unexpected ())
-      (function
-        | l -> List (pos_null, List.rev @@ List.rev_map (print pp1) l))
+      (fun l ->
+         nullify_pos (List (nullify_pos @@
+                            List.rev @@ List.rev_map (print pp1) l)))
 
   let map_option_contents pp1 pp2 =
     map_pair ~name:(Printf.sprintf "%s ?{%s}" pp1.ppname pp2.ppname)
@@ -231,22 +246,24 @@ module V = struct
 
   let map_pair pp1 pp2 =
     pp ~name:(Printf.sprintf "[%s %s]" pp1.ppname pp2.ppname)
-      (fun ~pos:_ -> function
-         | List (_,[a; b]) ->
+      (fun ~pos:_ v -> match v.pelem with
+         | List { pelem = [a; b]; _} ->
            parse pp1 ~pos:(value_pos a) a, parse pp2 ~pos:(value_pos b) b
          | _ -> unexpected ())
-      (fun (a, b) -> List (pos_null, [pp1.print a; pp2.print b]))
+      (fun (a, b) ->
+         nullify_pos @@ List (nullify_pos @@ [pp1.print a; pp2.print b]))
 
   let map_triple pp1 pp2 pp3 =
     pp ~name:(Printf.sprintf "[%s %s %s]" pp1.ppname pp2.ppname pp3.ppname)
-      (fun ~pos:_ -> function
-         | List (_,[a; b; c]) ->
+      (fun ~pos:_ v -> match v.pelem with
+         | List { pelem = [a; b; c]; _} ->
            parse pp1 ~pos:(value_pos a) a,
            parse pp2 ~pos:(value_pos b) b,
            parse pp3 ~pos:(value_pos c) c
          | _ -> unexpected ())
       (fun (a, b, c) ->
-         List (pos_null, [pp1.print a; pp2.print b; pp3.print c]))
+         nullify_pos @@ List (nullify_pos @@
+                              [pp1.print a; pp2.print b; pp3.print c]))
 
   (** Pps for the [value] type to higher level types *)
 
@@ -262,9 +279,10 @@ module V = struct
      backwards-compat. Deprecated, for migration only *)
   let compiler_version =
     let system_compiler = "system" in
-    let parse ~pos:_ = function
-      | Ident (_, v) when v = system_compiler -> v
-      | String (_, v) -> v
+    let parse ~pos:_ = fun v ->
+      match v.pelem with
+      | Ident v when v = system_compiler -> v
+      | String v -> v
       | _ -> unexpected ()
     in
     let print v =
@@ -281,51 +299,53 @@ module V = struct
 
   let filter =
     let rec parse_filter ~pos l =
-      let rec aux = function
-        | Bool (_,b) -> FBool b
-        | String (_,s) -> FString s
-        | Int (_,i) -> FString (string_of_int i)
-        | Ident (pos,_) as id -> FIdent (parse ~pos filter_ident id)
-        | Group (pos,g) -> parse_filter ~pos g
-        | Relop (_,op,e,f) -> FOp (aux e, op, aux f)
-        | Pfxop (_,`Not,e) -> FNot (aux e)
-        | Pfxop (_,`Defined,e) -> FDefined (aux e)
-        | Logop(_,`And,e,f)-> FAnd (aux e, aux f)
-        | Logop(_,`Or, e,f)-> FOr (aux e, aux f)
+      let rec aux = fun v ->
+        match v.pelem with
+        | Bool b -> FBool b
+        | String s -> FString s
+        | Int i -> FString (string_of_int i)
+        | Ident _ -> FIdent (parse ~pos:v.pos filter_ident v)
+        | Group g -> parse_filter ~pos:v.pos g.pelem
+        | Relop (op,e,f) -> FOp (aux e, op.pelem, aux f)
+        | Pfxop ({ pelem = `Not; _}, e) -> FNot (aux e)
+        | Pfxop ({ pelem = `Defined; _}, e) -> FDefined (aux e)
+        | Logop ({ pelem = `And; _}, e, f)-> FAnd (aux e, aux f)
+        | Logop ({ pelem = `Or; _}, e, f)-> FOr (aux e, aux f)
         | _ -> unexpected ()
       in
       match l with
       | [] -> FBool true
-      | [Group (_, ([] | _::_::_))] | _::_::_ ->
+      | [{ pelem = Group { pelem = [] | _::_::_ ; _}; _}]
+      | _::_::_ ->
         bad_format ~pos "expected a single filter expression"
-      | [Group(_,[f])] | [f] -> aux f
+      | [{ pelem = Group { pelem = [f]; _}; _}] | [f] -> aux f
     in
     let print_filter f =
       let rec aux ?(context=`Or) f =
         let group_if ?(cond=false) f =
           if cond || OpamFormatConfig.(!r.all_parens)
-          then Group (pos_null, [f])
+          then nullify_pos @@ Group (nullify_pos [f])
           else f
         in
         match f with
         | FString s  -> print string s
         | FIdent fid -> print filter_ident fid
         | FBool b    -> print bool b
-        | FOp(e,s,f) ->
-          group_if ~cond:(context <> `Or && context <> `And)
-            (Relop (pos_null, s, aux ~context:`Relop e, aux ~context:`Relop f))
-        | FOr(e,f) ->
-          group_if ~cond:(context <> `Or)
-            (Logop (pos_null, `Or, aux ~context:`Or e, aux ~context:`Or f))
-        | FAnd(e,f) ->
-          group_if ~cond:(context <> `Or && context <> `And)
-            (Logop (pos_null, `And, aux ~context:`And e, aux ~context:`And f))
+        | FOp (e,s,f) ->
+          group_if ~cond:(context <> `Or && context <> `And) @@ nullify_pos @@
+          Relop (nullify_pos s, aux ~context:`Relop e, aux ~context:`Relop f)
+        | FOr (e,f) ->
+          group_if ~cond:(context <> `Or) @@ nullify_pos @@
+          Logop (nullify_pos `Or, aux ~context:`Or e, aux ~context:`Or f)
+        | FAnd (e,f) ->
+          group_if ~cond:(context <> `Or && context <> `And) @@ nullify_pos @@
+          Logop (nullify_pos `And, aux ~context:`And e, aux ~context:`And f)
         | FNot f ->
-          group_if ~cond:(context = `Relop)
-            (Pfxop (pos_null, `Not, aux ~context:`Not f))
+          group_if ~cond:(context = `Relop) @@ nullify_pos @@
+          Pfxop (nullify_pos `Not, aux ~context:`Not f)
         | FDefined f ->
-          group_if ~cond:(context = `Relop)
-            (Pfxop (pos_null, `Defined, aux ~context:`Defined f))
+          group_if ~cond:(context = `Relop) @@ nullify_pos @@
+          Pfxop (nullify_pos `Defined, aux ~context:`Defined f)
         | FUndef _ -> assert false
       in
       match f with
@@ -340,18 +360,15 @@ module V = struct
 
   let constraints version =
     let rec parse_constraints ~pos:_ l =
-      let rec aux = function
-        | Prefix_relop (pos, op, v) ->
-          Atom (op, parse version ~pos v)
-        | Logop (_, `And, l, r) ->
-          And (aux l, aux r)
-        | Logop (_, `Or, l, r) ->
-          Or (aux l, aux r)
-        | Pfxop (_,`Not,v) ->
-          OpamFormula.neg (fun (op, s) -> (OpamFormula.neg_relop op, s)) (aux v)
-        | Group (pos, g) ->
-          Block (parse_constraints ~pos g)
-        | v -> unexpected ~pos:(value_pos v) ()
+      let rec aux v = match v.pelem with
+        | Prefix_relop (op, v) -> Atom (op.pelem, parse version ~pos:v.pos v)
+        | Logop ({ pelem = `And; _}, l, r) -> And (aux l, aux r)
+        | Logop ({ pelem = `Or; _}, l, r) -> Or (aux l, aux r)
+        | Pfxop ({ pelem = `Not; _}, v) ->
+          OpamFormula.neg (fun (op, s) ->
+              (OpamFormula.neg_relop op, s)) (aux v)
+        | Group g -> Block (parse_constraints ~pos:v.pos g.pelem)
+        | _ -> unexpected ~pos:(value_pos v) ()
       in
       OpamFormula.ands (List.map aux l)
     in
@@ -359,20 +376,22 @@ module V = struct
       let rec aux ?(in_and=false) cs =
         let group_if ?(cond=false) f =
           if cond || OpamFormatConfig.(!r.all_parens)
-          then Group (pos_null, [f])
+          then nullify_pos @@ Group (nullify_pos [f])
           else f
         in
         match cs with
         | Empty       -> assert false
         | Atom (r, v) ->
-          group_if (Prefix_relop (pos_null, r, print version v))
+          group_if @@ nullify_pos @@
+          Prefix_relop (nullify_pos r, print version v)
         | And (x, y)  ->
-          group_if
-            (Logop (pos_null, `And, aux ~in_and:true x, aux ~in_and:true y))
+          group_if @@ nullify_pos @@
+          Logop (nullify_pos `And, aux ~in_and:true x, aux ~in_and:true y)
         | Or (x, y)   ->
-          group_if ~cond:in_and
-            (Logop (pos_null, `Or, aux x, aux y))
-        | Block g     -> Group (pos_null, print_constraints g)
+          group_if ~cond:in_and @@ nullify_pos @@
+          Logop (nullify_pos `Or, aux x, aux y)
+        | Block g     ->
+          nullify_pos @@ Group (nullify_pos @@ print_constraints g)
       in
       match cs with
       | Empty -> []
@@ -383,50 +402,50 @@ module V = struct
 
   let filtered_constraints version =
     let rec parse_cs ~pos:_ items =
-      let rec aux_parse = function
-        | Prefix_relop (pos, op, v) ->
-          Atom (Constraint (op, parse version ~pos v))
-        | Logop (_, `And, a, b) -> OpamFormula.ands [aux_parse a; aux_parse b]
-        | Logop (_, `Or, a, b) -> OpamFormula.ors [aux_parse a; aux_parse b]
-        | Group (pos, g) -> OpamFormula.Block (parse_cs ~pos g)
-        | Pfxop (pos, `Not, v) ->
-          parse_cs ~pos [v] |>
+      let rec aux_parse v = match v.pelem with
+        | Prefix_relop (op, v) ->
+          Atom (Constraint (op.pelem, parse version ~pos:v.pos v))
+        | Logop ({ pelem = `And; _}, a, b) ->
+          OpamFormula.ands [aux_parse a; aux_parse b]
+        | Logop ({ pelem = `Or; _}, a, b) ->
+          OpamFormula.ors [aux_parse a; aux_parse b]
+        | Group g -> OpamFormula.Block (parse_cs ~pos:v.pos g.pelem)
+        | Pfxop ({ pelem = `Not; _}, v') ->
+          parse_cs ~pos:v.pos [v'] |>
           OpamFormula.neg (function
-              | Constraint (op, v) ->
-                Constraint (OpamFormula.neg_relop op, v)
-              | Filter f ->
-                Filter (FNot f))
-        | filt ->
-          let f = filter.parse ~pos:(value_pos filt) [filt] in
-          Atom (Filter f)
+              | Constraint (op, v) -> Constraint (OpamFormula.neg_relop op, v)
+              | Filter f -> Filter (FNot f))
+        | _ ->
+          Atom (Filter (filter.parse ~pos:(value_pos v) [v]))
       in
       OpamFormula.ands (List.map aux_parse items)
     in
-    let rec print_cs cs =
+    let rec print_cs cs = (* form -> val list *)
       let rec aux ?(in_and=false) cs =
         let group_if ?(cond=false) f =
           if cond || OpamFormatConfig.(!r.all_parens)
-          then Group (pos_null, [f])
+          then nullify_pos @@ Group (nullify_pos [f])
           else f
         in
         match cs with
         | Empty -> assert false
         | And (x, y) ->
-          group_if
-            (Logop (pos_null, `And, aux ~in_and:true x, aux ~in_and:true y))
+          group_if @@ nullify_pos @@
+          Logop (nullify_pos `And, aux ~in_and:true x, aux ~in_and:true y)
         | Or (x, y) ->
-          group_if ~cond:in_and
-            (Logop (pos_null, `Or, aux x, aux y))
-        | Block g -> Group (pos_null, print_cs g)
+          group_if ~cond:in_and @@ nullify_pos @@
+          Logop (nullify_pos `Or, aux x, aux y)
+        | Block g -> nullify_pos @@ Group (nullify_pos @@ print_cs g)
         | Atom (Constraint (op,v)) ->
-          group_if (Prefix_relop (pos_null, op, print version v))
+          group_if @@ nullify_pos @@
+          Prefix_relop (nullify_pos op, print version v)
         | Atom (Filter flt) ->
           (match filter.print flt with
            | f1::fr ->
-             group_if
-               (List.fold_left (fun a b -> Logop (pos_null, `And, a, b))
-                  f1 fr)
-           | [] -> Group (pos_null, []))
+             group_if (List.fold_left (fun a b ->
+                 nullify_pos @@ Logop (nullify_pos `And, a, b))
+                 f1 fr)
+           | [] -> nullify_pos @@ Group (nullify_pos []))
       in
       match cs with
       | Empty -> []
@@ -439,21 +458,21 @@ module V = struct
 
   let ext_version =
     pp ~name:"version-expr"
-      (fun ~pos:_ -> function
-         | String (pos,s) ->
+      (fun ~pos:_ v -> match v.pelem with
+         | String s ->
            let _ =
              try
                OpamPackage.Version.of_string
                  (OpamFilter.expand_string (fun _ -> Some (S "-")) s)
              with Failure msg ->
-               bad_format ~pos "Invalid version string %S: %s" s msg
+               bad_format ~pos:v.pos "Invalid version string %S: %s" s msg
            in
            FString s
-         | Ident (_,s) -> FIdent (filter_ident_of_string s)
+         | Ident s -> FIdent (filter_ident_of_string s)
          | _ -> unexpected ())
       (function
-        | FString s -> String (pos_null, s)
-        | FIdent id -> Ident (pos_null, string_of_filter_ident id)
+        | FString s -> nullify_pos (String s)
+        | FIdent id -> nullify_pos @@ Ident (string_of_filter_ident id)
         | _ -> assert false)
 
   let pkgname =
@@ -495,13 +514,15 @@ module V = struct
       | `Disj -> ors_to_list, OpamFormula.ors
     in
     let rec parse_formula ~pos:_ l =
-      let rec aux = function
-        | String (pos,_) | Option (pos,_,_) as at ->
-          Atom (parse (package_atom constraints) ~pos at)
-        | Group (pos,g) -> Block (parse_formula ~pos g)
-        | Logop (_, `Or, e1, e2) -> let left = aux e1 in Or (left, aux e2)
-        | Logop (_, `And, e1, e2) -> let left = aux e1 in And (left, aux e2)
-        | v -> unexpected ~pos:(value_pos v) ()
+      let rec aux v = match v.pelem with
+        | String _ | Option (_,_) ->
+          Atom (parse (package_atom constraints) ~pos:v.pos v)
+        | Group g -> Block (parse_formula ~pos:v.pos g.pelem)
+        | Logop ({ pelem = `Or; _}, e1, e2) ->
+          let left = aux e1 in Or (left, aux e2)
+        | Logop ({ pelem = `And; _}, e1, e2) ->
+          let left = aux e1 in And (left, aux e2)
+        | _ -> unexpected ~pos:(value_pos v) ()
       in
       join (List.map aux l)
     in
@@ -509,18 +530,19 @@ module V = struct
       let rec aux ?(in_and=false) f =
         let group_if ?(cond=false) f =
           if cond || OpamFormatConfig.(!r.all_parens)
-          then Group (pos_null, [f])
+          then nullify_pos @@ Group (nullify_pos [f])
           else f
         in
         match f with
         | Empty -> assert false
-        | Block f -> Group (pos_null, print_formula ~inner:true f)
+        | Block f ->
+          nullify_pos @@ Group (nullify_pos @@ print_formula ~inner:true f)
         | And (e,f) ->
-          group_if
-            (Logop (pos_null, `And, aux ~in_and:true e, aux ~in_and:true f))
+          group_if @@ nullify_pos @@
+          Logop (nullify_pos `And, aux ~in_and:true e, aux ~in_and:true f)
         | Or (e,f) ->
-          group_if ~cond:in_and
-            (Logop (pos_null, `Or, aux e, aux f))
+          group_if ~cond:in_and @@ nullify_pos @@
+          Logop (nullify_pos `Or, aux e, aux f)
         | Atom at -> group_if (print (package_atom constraints) at)
       in
       let fl = if inner then [f] else split f in
@@ -532,27 +554,30 @@ module V = struct
     list -| package_formula_items kind constraints
 
   let env_binding =
-    let parse ~pos:_ = function
-      | Relop (_, `Eq, Ident (_,i), String (_,s)) -> i, Eq, s, None
-      | Env_binding (_, Ident (_,i), op, String (_,s)) -> i, op, s, None
+    let parse ~pos:_ v = match v.pelem with
+      | Relop ({ pelem = `Eq;_}, { pelem = Ident i;_}, { pelem = String s;_}) ->
+        i, OpamParserTypes.Eq, s, None
+      | Env_binding ({ pelem = Ident i; _}, op, { pelem = String s; _}) ->
+        i, op.pelem, s, None
       | _ -> unexpected ()
     in
     let print (id, op, str, _) =
-      Env_binding (pos_null, print ident id, op, print string str)
+      nullify_pos @@
+      Env_binding (print ident id, nullify_pos op, print string str)
     in
     list -| singleton -| pp ~name:"env-binding" parse print
 
   (* Only used by the deprecated "os" field *)
   let os_constraint =
     let rec parse_osc ~pos:_ l =
-      let rec aux = function
-        | Group (pos,g) -> Block (parse_osc ~pos g)
-        | String (_,os) -> Atom (true, os)
-        | Logop (_,`And,l,r) -> And (aux l, aux r)
-        | Logop (_,`Or,l,r) -> Or (aux l, aux r)
-        | Pfxop (_,`Not,v) ->
+      let rec aux v = match v.pelem with
+        | Group g -> Block (parse_osc ~pos:g.pos g.pelem)
+        | String os -> Atom (true, os)
+        | Logop ({ pelem = `And; _}, l, r) -> And (aux l, aux r)
+        | Logop ({ pelem = `Or; _}, l, r) -> Or (aux l, aux r)
+        | Pfxop ({ pelem = `Not; _}, v) ->
           OpamFormula.neg (fun (b, s) -> (not b, s)) (aux v)
-        | v -> unexpected ~pos:(value_pos v) ()
+        | _ -> unexpected ~pos:(value_pos v) ()
       in
       OpamFormula.ors (List.map aux l)
     in
@@ -560,10 +585,11 @@ module V = struct
       let rec aux = function
         | Empty -> assert false
         | Atom (true , os) -> print string os
-        | Atom (false, os) -> Pfxop (pos_null, `Not, print string os)
-        | Block g -> Group (pos_null, [aux g])
-        | And(e,f) -> Logop (pos_null, `And, aux e, aux f)
-        | Or(e,f) -> Logop (pos_null, `Or, aux e, aux f)
+        | Atom (false, os) ->
+          nullify_pos @@ Pfxop (nullify_pos `Not, print string os)
+        | Block g -> nullify_pos @@ Group (nullify_pos [aux g])
+        | And (e,f) -> nullify_pos @@ Logop (nullify_pos `And, aux e, aux f)
+        | Or (e,f) -> nullify_pos @@ Logop (nullify_pos `Or, aux e, aux f)
       in
       match f with
       | Empty -> []
@@ -590,19 +616,19 @@ module I = struct
 
   let item =
     pp ~name:"field-binding"
-      (fun ~pos:_ -> function
-         | Section (pos,sec) ->
-           bad_format ~pos "Unexpected section %s" sec.section_kind
-         | Variable (_,k,v) -> k,v)
-      (fun (k,v) -> Variable (pos_null, k, v))
+      (fun ~pos:_ v -> match v.pelem with
+         | Section (sec) ->
+           bad_format ~pos:v.pos "Unexpected section %s" sec.section_kind.pelem
+         | Variable (k,v) -> k.pelem, v)
+      (fun (k,v) -> nullify_pos @@ Variable (nullify_pos k, v))
 
   let items = map_list ~posf:item_pos item
 
   let anonymous_section pp1 =
     pp ~name:pp1.ppname
       (fun ~pos -> function
-         | [None, contents] -> pp1.parse ~pos contents
-         | [Some _, _] ->
+         | [ None, contents ] -> pp1.parse ~pos contents
+         | [ Some _, _ ] ->
            bad_format ~pos "Unexpected section title"
          | [] ->
            bad_format ~pos "Missing section"
@@ -612,15 +638,18 @@ module I = struct
 
   let section kind =
     pp ~name:"file-section"
-      (fun ~pos:_ -> function
-         | Section (_, ({section_kind; _} as s)) when section_kind = kind ->
-           s.section_name, s.section_items
-         | Section (pos,sec) ->
-           bad_format ~pos "Unexpected section %s" sec.section_kind
-         | Variable (pos,k,_) ->
-           bad_format ~pos "Unexpected field %s" k)
-      (fun (section_name, section_items) ->
-         Section (pos_null, { section_kind=kind; section_name; section_items }))
+      (fun ~pos:_ v -> match v.pelem with
+         | Section ({section_kind; _} as s) when section_kind.pelem = kind ->
+           optelem s.section_name, s.section_items.pelem
+         | Section sec ->
+           bad_format ~pos:v.pos "Unexpected section %s" sec.section_kind.pelem
+         | Variable (k,_) ->
+           bad_format ~pos:v.pos "Unexpected field %s" k.pelem)
+      (fun (name, items) ->
+         nullify_pos @@ Section {
+             section_kind = nullify_pos kind;
+             section_name = nullposelem name;
+             section_items = nullify_pos items })
 
   type ('a, 'value) fields_def = (string * ('a, 'value) field_parser) list
 
@@ -635,10 +664,10 @@ module I = struct
           let to_json (s,o) =
             `O (("kind", `String s) ::
                 match o with None -> [] | Some s -> ["name", `String s])
-         (* these serializers/deserializers are not accessible
-            from the OpamFormat.mli interface, so there are not currently
-            tested -- it's not clear if usage of the SEM functor touches
-            them in any way... *)
+          (* these serializers/deserializers are not accessible
+             from the OpamFormat.mli interface, so there are not currently
+             tested -- it's not clear if usage of the SEM functor touches
+             them in any way... *)
           let of_json = function
             | `O dict ->
               begin try
@@ -658,22 +687,28 @@ module I = struct
             | _ -> None
         end)
       in
+      (* XXX trasnform field map into set *)
       let errs, section_map, field_map =
         List.fold_left
-          (fun (errs, section_map, field_map) -> function
-             | Section
-                 (pos, {section_kind=k; section_name=n; section_items=v}) ->
+          (fun (errs, section_map, field_map) it -> match it.pelem with
+             | Section sec ->
+               let k = sec.section_kind.pelem in
+               let v = sec.section_items.pelem in
+               let n = optelem sec.section_name in
                if List.mem_assoc k sections then
                  try
                    errs,
-                   SEM.safe_add (k,n) (pos,v) section_map, field_map
+                   SEM.safe_add (k, n) (pos,v) section_map, field_map
                  with Failure _ ->
                    (k,(Some pos,"Duplicate section "^k)) :: errs,
                    section_map, field_map
                else
                  (k,(Some pos,"Invalid section "^k)) :: errs,
                  section_map, field_map
-             | Variable (pos, k, v) ->
+             | Variable (k, v) ->
+               let k = k.pelem in
+               let v = v.pelem in
+               let pos = it.pos in
                if List.mem_assoc k ppas then
                  try
                    errs,
@@ -691,7 +726,7 @@ module I = struct
           (fun (errs,acc) (field,ppa) ->
              try
                let pos, v = OpamStd.String.Map.find field field_map in
-               try errs, parse ppa ~pos (acc, Some v) with
+               try errs, parse ppa ~pos (acc, Some { pelem = v; pos }) with
                | Bad_format (pos, msg) ->
                  (field, (pos, msg)) :: errs, acc
              with Not_found ->
@@ -708,8 +743,8 @@ module I = struct
                SEM.fold
                  (fun (kind, name) (_, items) acc ->
                     if kind = section_kind then (name, items) :: acc else acc)
-                 section_map [] |>
-               List.rev
+                 section_map []
+               |> List.rev
              in
              if secs = [] then errs, acc else
              try errs, parse ppa ~pos (acc, Some secs) with
@@ -723,16 +758,20 @@ module I = struct
       OpamStd.List.filter_map
         (fun (field,ppa) ->
            match snd (ppa.print acc) with
-           | None | Some (List (_,[]) | Group (_,[])) -> None
-           | Some value -> Some (Variable (pos_null, field, value)))
+           | None | Some ({ pelem = List { pelem = []; _}; _}
+                         | { pelem = Group { pelem = []; _}; _}) -> None
+           | Some value ->
+             Some (nullify_pos @@ Variable (nullify_pos field, value)))
         ppas
       @
       (List.flatten @@ List.map
-         (fun (section_kind, ppa) ->
+         (fun (kind, ppa) ->
             OpamStd.Option.default [] (snd (ppa.print acc)) |>
-            List.map (fun (section_name, section_items) ->
-                Section
-                  (pos_null, { section_kind; section_name; section_items })))
+            List.map (fun (name, items) ->
+                nullify_pos @@ Section {
+                  section_kind = nullify_pos kind;
+                  section_name = nullposelem name;
+                  section_items = nullify_pos items }))
          sections)
     in
     pp ?name parse print
@@ -741,7 +780,8 @@ module I = struct
       ?(strict=OpamFormatConfig.(!r.strict))
       ?(condition=fun _ -> true)
       () =
-    let parse ~pos:(file,_,_) (t, errs) =
+    let parse ~pos (t, errs) =
+      let file = pos.filename in
       if errs = [] then t
       else if strict then raise (Bad_format_list (List.rev_map snd errs))
       else
@@ -776,23 +816,23 @@ module I = struct
       (fun (a,b) -> a @ b)
 
   let partition_fields ?(section=false) filter =
-    partition @@ function
-    | Variable (_,k,_) -> filter k
+    partition @@ fun v -> match v.pelem with
+    | Variable (k,_) -> filter k.pelem
     | Section _ -> section
 
   let field name parse =
     pp
       (fun ~pos items ->
          match
-           OpamStd.List.filter_map (function
-               | Variable (_,k,v) when k = name -> Some v
+           OpamStd.List.filter_map (fun v -> match v.pelem with
+               | Variable (k,v) when k.pelem = name -> Some v
                | _ -> None)
              items
          with
          | [] -> None, items
          | _::_::_ -> bad_format ~pos "Duplicate '%s:' field" name
          | [v] -> Some (parse ~pos v), items)
-      (fun (_,x) -> x)
+      snd
 
 
   let extract_field name =
@@ -817,7 +857,8 @@ module I = struct
       | None -> optional
     in
     let errmsg =
-      Printf.sprintf "unsupported or missing file format version; should be %s or older"
+      Printf.sprintf
+        "unsupported or missing file format version; should be %s or older"
         (OpamVersion.to_string format_version)
     in
     field name (parse opam_v) -|
@@ -837,6 +878,7 @@ module I = struct
   exception Invalid_signature of pos * (string*string*string) list option
 
   let signed ~check =
+    let module OpamPrinter = OpamPrinter.FullPos in
     let pp_sig = V.map_list ~depth:2 signature in
     extract_field "signature" -|
     pp ~name:"signed-file"

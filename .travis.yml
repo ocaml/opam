@@ -29,7 +29,8 @@ env:
   global:
   - OPAMBSVERSION=2.1.0-alpha2
     # This should be identical to the value in appveyor.yml
-  - OPAM_REPO_SHA=6877131f0
+  - OPAM_REPO_SHA=88c17a663
+  - OPAM_TEST_REPO_SHA=6877131f0
 
 jobs:
   include:

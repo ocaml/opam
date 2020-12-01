@@ -12,6 +12,7 @@
 let log fmt = OpamConsole.log "CONFIG" fmt
 let slog = OpamConsole.slog
 
+open OpamParserTypes.FullPos
 open OpamTypes
 open OpamTypesBase
 open OpamStateTypes
@@ -371,6 +372,9 @@ let switch_doc switch =
   Printf.sprintf "switch %s"
     (OpamConsole.colorise `bold (OpamSwitch.to_string switch))
 
+module OpamParser = OpamParser.FullPos
+module OpamPrinter = OpamPrinter.FullPos
+
 (* General setting option function. Takes the [field] to update, the [value]
    operation, [conf] the configuration according the config file (['config
    confest]). If [inner] is set, it allows the modification of [InModifiable]
@@ -727,10 +731,10 @@ let set_var_global gt var value =
       stv_find = (fun (k,_,_) -> k = var);
       stv_config = gt.config;
       stv_varstr = (fun v ->
-          OpamPrinter.Normalise.value (List (pos_null, [
-              Ident (pos_null, OpamVariable.to_string var);
-              String (pos_null, v);
-              String (pos_null, "Set through 'opam var'")
+          OpamPrinter.Normalise.value (nullify_pos @@ List (nullify_pos @@ [
+              nullify_pos @@ Ident (OpamVariable.to_string var);
+              nullify_pos @@ String v;
+              nullify_pos @@ String "Set through 'opam config set-var global'"
             ])));
       stv_set_opt = (fun config value ->
           let gt =
@@ -756,8 +760,9 @@ let set_var_switch gt ?st var value =
       stv_varstr = (fun v ->
           OpamStd.String.remove_suffix ~suffix:"\n" @@
           OpamPrinter.Normalise.items
-            [Variable
-               (pos_null, OpamVariable.to_string var, String (pos_null, v))]);
+            [ nullify_pos @@ Variable
+                (nullify_pos @@ OpamVariable.to_string var,
+                 nullify_pos @@ String v)]);
       stv_set_opt = (fun swc value ->
           set_opt_switch_t ~inner:true gt switch swc "variables" value);
       stv_remove_elem = (fun rest switch_config ->

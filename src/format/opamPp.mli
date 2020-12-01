@@ -11,7 +11,7 @@
 
 (** Generic bidirectional transformation toolbox for parsing/printing *)
 
-open OpamTypes
+open OpamParserTypes.FullPos
 
 (** {2 Parsing positions and error reporting helpers} *)
 

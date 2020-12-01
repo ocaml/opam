@@ -19,9 +19,13 @@
     - files using the "opam syntax" and lexer, parsed using OpamFormat.Pp.V
 *)
 
+open OpamParserTypes.FullPos
 open OpamTypes
 open OpamTypesBase
 open OpamStd.Op
+
+module OpamParser = OpamParser.FullPos
+module OpamPrinter = OpamPrinter.FullPos
 
 module Pp = struct
   include OpamPp
@@ -391,7 +395,7 @@ module LineFile (X: LineFileArg) = struct
 
     let of_string filename str =
       Pp.parse (Lines.pp_string -| pp)
-        ~pos:(OpamFilename.to_string filename,0,0)
+        ~pos:{ pos_null with filename = OpamFilename.to_string filename }
         str
   end
 
@@ -544,7 +548,7 @@ module Environment = LineFile(struct
       (OpamFormat.lines_set ~empty:[] ~add:OpamStd.List.cons ~fold:List.fold_right @@
        Pp.identity ^+
        Pp.of_pair "env_update_op"
-         (OpamLexer.env_update_op, OpamPrinter.env_update_op) ^+
+         (OpamLexer.FullPos.env_update_op, OpamPrinter.env_update_op_kind) ^+
        Pp.identity ^+
        Pp.opt Pp.singleton)
       -| Pp.pp (fun ~pos:_ -> List.rev) List.rev
@@ -713,9 +717,14 @@ module Syntax = struct
       let curr = lexbuf.Lexing.lex_curr_p in
       let start = lexbuf.Lexing.lex_start_p in
       let pos =
-        curr.Lexing.pos_fname,
-        start.Lexing.pos_lnum,
-        start.Lexing.pos_cnum - start.Lexing.pos_bol
+        { filename = curr.Lexing.pos_fname;
+          start =
+            start.Lexing.pos_lnum,
+            start.Lexing.pos_cnum - start.Lexing.pos_bol;
+          stop = (* XXX here we take current position, where error occurs as end position *) 
+            curr.Lexing.pos_lnum,
+            curr.Lexing.pos_cnum - curr.Lexing.pos_bol;
+        }
       in
       raise (OpamPp.Bad_format (Some pos, msg))
     in
@@ -762,128 +771,139 @@ module Syntax = struct
     match current_str_opt with
     | None -> to_string filename (Pp.print pp (filename, t))
     | Some str ->
-    let syn_file = of_string filename str in
-    let syn_t = Pp.print pp (filename, t) in
-    let it_ident = function
-      | Variable (_, f, _) -> `Var f
-      | Section (_, {section_kind = k; section_name = n; _}) -> `Sec (k,n)
-    in
-    let it_pos = function
-      | Section (pos,_) | Variable (pos,_,_) -> pos
-    in
-    let lines_index =
-      let rec aux acc s =
-        let until =
-          try Some (String.index_from s (List.hd acc) '\n')
-          with Not_found -> None
-        in
-        match until with
-        | Some until -> aux (until+1 :: acc) s
-        | None -> Array.of_list (List.rev acc)
+      let syn_file = of_string filename str in
+      let syn_t = Pp.print pp (filename, t) in
+      let it_ident it = match it.pelem with
+        | Variable (f, _) -> `Var f.pelem
+        | Section ({section_kind = k; section_name = n; _}) ->
+          `Sec (k.pelem, OpamStd.Option.map (fun x -> x.pelem) n)
       in
-      aux [0] str
-    in
-    let pos_index (_file, li, col) = lines_index.(li - 1) + col in
-    let field_str ident =
-      let rec aux = function
-        | it1 :: r when it_ident it1 = ident ->
-          let start = pos_index (it_pos it1) in
-          let stop = match r with
-            | it2 :: _ -> pos_index (it_pos it2) - 1
-            | [] ->
-              let len = ref (String.length str) in
-              while str.[!len - 1] = '\n' do decr len done;
-              !len
+      let lines_index =
+        let rec aux acc s =
+          let until =
+            try Some (String.index_from s (List.hd acc) '\n')
+            with Not_found -> None
           in
-          String.sub str start (stop - start)
-        | _ :: r -> aux r
-        | [] -> raise Not_found
+          match until with
+          | Some until -> aux (until+1 :: acc) s
+          | None -> Array.of_list (List.rev acc)
+        in
+        aux [0] str
       in
-      aux syn_file.file_contents
-    in
-    let rem, strs =
-      List.fold_left (fun (rem, strs) item ->
-          List.filter (fun i -> it_ident i <> it_ident item) rem,
-          match item with
-          | Variable (pos, name, v) ->
-            (try
-               let ppa = List.assoc name fields in
-               match snd (Pp.print ppa t) with
-               | None | Some (List (_, [])) | Some (List (_,[List(_,[])])) ->
-                 strs
-               | field_syn_t when
-                   field_syn_t =
-                   snd (Pp.print ppa (Pp.parse ppa ~pos (empty, Some v)))
-                 ->
-                 (* unchanged *)
-                 field_str (`Var name) :: strs
-               | _ ->
+      let pos_index pos =
+        let (li, col) = pos.start in
+        lines_index.(li - 1) + col
+      in
+      let field_str ident =
+        let rec aux = function
+          | it1 :: r when it_ident it1 = ident ->
+            let start = pos_index it1.pos in
+            let stop = match r with
+              | it2 :: _ -> pos_index it2.pos - 1
+              | [] ->
+                let len = ref (String.length str) in
+                while str.[!len - 1] = '\n' do decr len done;
+                !len
+            in
+            String.sub str start (stop - start)
+          | _ :: r -> aux r
+          | [] -> raise Not_found
+        in
+        aux syn_file.file_contents
+      in
+      let rem, strs =
+        List.fold_left (fun (rem, strs) item ->
+            List.filter (fun i -> it_ident i <> it_ident item) rem,
+            let pos = item.pos in
+            match item.pelem with
+            | Variable (name, v) ->
+              let name = name.pelem in
+              (try
+                 let ppa = List.assoc name fields in
+                 match snd (Pp.print ppa t) with
+                 | None
+                 | Some { pelem = List { pelem = []; _}; _}
+                 | Some { pelem = List
+                              { pelem = [ { pelem = List
+                                                { pelem = []; _}; _}]; _}; _} ->
+                   strs
+                 | field_syn_t when
+                     field_syn_t =
+                     snd (Pp.print ppa (Pp.parse ppa ~pos (empty, Some v)))
+                   ->
+                   (* unchanged *)
+                   field_str (`Var name) :: strs
+                 | _ ->
+                   try
+                     let f =
+                       List.find (fun i -> it_ident i = `Var name) syn_t.file_contents
+                     in
+                     OpamPrinter.items [f] :: strs
+                   with Not_found -> strs
+               with Not_found | OpamPp.Bad_format _ ->
+                 if OpamStd.String.starts_with ~prefix:"x-" name &&
+                    OpamStd.List.find_opt (fun i -> it_ident i = `Var name)
+                      syn_t.file_contents <> None then
+                   field_str (`Var name) :: strs
+                 else strs)
+            | Section {section_kind; section_name; section_items} ->
+              let section_kind = section_kind.pelem in
+              let section_items = section_items.pelem in
+              let section_name = OpamStd.Option.map (fun x -> x.pelem) section_name in
+              (try
+                 let ppa = List.assoc section_kind sections in
+                 let print_sec ppa t =
+                   match snd (Pp.print ppa t) with
+                   | None -> None
+                   | Some v ->
+                     try Some (List.assoc section_name v) with Not_found -> None
+                 in
+                 let sec_field_t = print_sec ppa t in
+                 if sec_field_t <> None &&
+                    sec_field_t =
+                    print_sec ppa
+                      (Pp.parse ppa ~pos
+                         (empty, Some [section_name, section_items]))
+                 then
+                   (* unchanged *)
+                   field_str (`Sec (section_kind, section_name)) :: strs
+                 else
                  try
                    let f =
-                     List.find (fun i -> it_ident i = `Var name) syn_t.file_contents
+                     List.filter
+                       (fun i -> it_ident i = `Sec (section_kind, section_name))
+                       syn_t.file_contents
                    in
-                   OpamPrinter.items [f] :: strs
+                   OpamPrinter.items f :: strs
                  with Not_found -> strs
-             with Not_found | OpamPp.Bad_format _ ->
-               if OpamStd.String.starts_with ~prefix:"x-" name &&
-                  OpamStd.List.find_opt (fun i -> it_ident i = `Var name)
-                    syn_t.file_contents <> None then
-                 field_str (`Var name) :: strs
-               else strs)
-          | Section (pos, {section_kind; section_name; section_items}) ->
-            (try
-               let ppa = List.assoc section_kind sections in
-               let print_sec ppa t =
-                 match snd (Pp.print ppa t) with
-                 | None -> None
-                 | Some v ->
-                   try Some (List.assoc section_name v) with Not_found -> None
-               in
-               let sec_field_t = print_sec ppa t in
-               if sec_field_t <> None &&
-                  sec_field_t =
-                  print_sec ppa
-                    (Pp.parse ppa ~pos
-                       (empty, Some [section_name, section_items]))
-               then
-                 (* unchanged *)
-                 field_str (`Sec (section_kind, section_name)) :: strs
-               else
-               try
-                 let f =
-                   List.filter
-                     (fun i -> it_ident i = `Sec (section_kind, section_name))
-                     syn_t.file_contents
-                 in
-                 OpamPrinter.items f :: strs
-               with Not_found -> strs
-             with Not_found | OpamPp.Bad_format _ -> strs)
-        )
-        (syn_t.file_contents, []) syn_file.file_contents
-    in
-    String.concat "\n"
-      (List.rev_append strs
-         (if rem = [] then [""] else [OpamPrinter.items rem;""]))
+               with Not_found | OpamPp.Bad_format _ -> strs)
+          )
+          (syn_t.file_contents, []) syn_file.file_contents
+      in
+      String.concat "\n"
+        (List.rev_append strs
+           (if rem = [] then [""] else [OpamPrinter.items rem;""]))
 
   let contents pp ?(filename=dummy_file) t =
     Pp.print pp (filename, t)
 
   let to_list pp ?(filename=dummy_file) t =
     let rec aux acc pfx = function
-      | Section (_, {section_kind; section_name=None; section_items}) :: r ->
-        aux (aux acc (section_kind :: pfx) section_items) pfx r
-      | Section (_, {section_kind; section_name=Some n; section_items}) :: r ->
+      | {pelem=Section ({section_kind; section_name=None; section_items});_} :: r ->
+        aux (aux acc (section_kind.pelem :: pfx) section_items.pelem) pfx r
+      | {pelem=Section ({section_kind; section_name=Some n; section_items});_} :: r ->
         aux
-          (aux acc (Printf.sprintf "%s(%s)" section_kind n :: pfx)
-             section_items)
+          (aux acc (Printf.sprintf "%s(%s)" section_kind.pelem n.pelem :: pfx)
+             section_items.pelem)
           pfx r
-      | Variable (_, name, value) :: r ->
-        aux (((name :: pfx), value) :: acc) pfx r
+      | {pelem=Variable (name, value);_} :: r ->
+        aux (((name.pelem :: pfx), value) :: acc) pfx r
       | [] -> acc
     in
     List.rev_map
       (fun (pfx, value) -> String.concat "." (List.rev pfx), value)
       (aux [] [] (contents pp ~filename t).file_contents)
+
 end
 
 module type SyntaxFileArg = sig
@@ -2101,7 +2121,7 @@ module OPAMSyntax = struct
     bug_reports: string list;
 
     (* Extension fields (x-foo: "bar") *)
-    extensions : (pos * value) OpamStd.String.Map.t;
+    extensions : value OpamStd.String.Map.t;
 
     (* Extra sections *)
     url        : URL.t option;
@@ -2193,8 +2213,9 @@ module OPAMSyntax = struct
       let pos =
         OpamStd.Option.Op.(>>|) t.metadata_dir @@ function
         | Some r, rel ->
-          (Printf.sprintf "<%s>/%s/opam" (OpamRepositoryName.to_string r) rel,
-           -1, -1)
+          { pos_null with
+            filename =
+              Printf.sprintf "<%s>/%s/opam" (OpamRepositoryName.to_string r) rel }
         | None, d ->
           pos_file OpamFilename.Op.(OpamFilename.Dir.of_string d // "opam")
       in
@@ -2258,13 +2279,13 @@ module OPAMSyntax = struct
   let doc t = t.doc
   let bug_reports t = t.bug_reports
 
-  let extensions t = OpamStd.String.Map.map snd t.extensions
+  let extensions t = t.extensions
   let extended t fld parse =
     if not (is_ext_field fld) then invalid_arg "OpamFile.OPAM.extended";
     try
-      let pos, s = OpamStd.String.Map.find fld t.extensions in
+      let s = OpamStd.String.Map.find fld t.extensions in
       (try Some (parse s) with
-       | Pp.Bad_format _ as e -> raise (Pp.add_pos pos e))
+       | Pp.Bad_format _ as e -> raise (Pp.add_pos s.pos e))
     with Not_found -> None
 
   let url t = t.url
@@ -2338,11 +2359,11 @@ module OPAMSyntax = struct
     if not (OpamStd.String.Map.for_all (fun k _ -> is_ext_field k) extensions)
     then invalid_arg "OpamFile.OPAM.with_extensions";
     {t with
-     extensions = OpamStd.String.Map.map (fun s -> pos_null, s) extensions }
+     extensions = extensions }
   let add_extension t fld syn =
     if not (is_ext_field fld) then invalid_arg "OpamFile.OPAM.add_extension";
     {t with
-     extensions = OpamStd.String.Map.add fld (pos_null,syn) t.extensions }
+     extensions = OpamStd.String.Map.add fld syn t.extensions }
   let remove_extension t fld =
     if not (is_ext_field fld) then invalid_arg "OpamFile.OPAM.remove_extension";
     {t with extensions = OpamStd.String.Map.remove fld t.extensions }
@@ -2803,14 +2824,14 @@ module OPAMSyntax = struct
       if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
       else
       match OpamStd.String.Map.find_opt subpath_xfield t.extensions with
-      | Some (_, String (_,subpath)) ->
+      | Some {pelem = String subpath;_} ->
         let url = match t.url with
           | Some u -> Some (URL.with_subpath subpath u)
           | None -> None
         in
         { t with url }
         |> Pp.parse ~pos pp_constraint
-      | Some (pos, _) ->
+      | Some {pos;_} ->
         Pp.bad_format ~pos "Field %s must be a string"
           (OpamConsole.colorise `underline subpath_xfield)
       | None -> t
@@ -2820,7 +2841,7 @@ module OPAMSyntax = struct
       | Some ({ URL.subpath = Some sb ; _ } as url) ->
         if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
         else
-          add_extension t subpath_xfield (String (pos_null, sb))
+          add_extension t subpath_xfield (nullify_pos @@ String sb)
           |> with_url (URL.with_subpath_opt None url)
           |> Pp.print pp_constraint
       | _ -> t
@@ -2925,17 +2946,15 @@ module OPAMSyntax = struct
     match OpamStd.String.cut_at field '.' with
     | None ->
       if is_ext_field field
-      then
-        OpamStd.Option.map snd
-          (OpamStd.String.Map.find_opt field t.extensions)
+      then OpamStd.String.Map.find_opt field t.extensions
       else snd (Pp.print (List.assoc field fields) t)
     | Some (sec, field) ->
       match snd (Pp.print (List.assoc sec sections) t) with
       | None -> None
       | Some items ->
         (* /!\ returns only the first result for multiple named sections *)
-        Some (OpamStd.List.find_map (function
-            | Variable (_, f, contents) when f = field -> Some contents
+        Some (OpamStd.List.find_map (fun i -> match i.pelem with
+            | Variable (f, contents) when f.pelem = field -> Some contents
             | _ -> None)
             (List.flatten (List.map snd items)))
 
@@ -3332,8 +3351,8 @@ module SwitchExportSyntax = struct
     let name = "export-file" in
     Pp.I.map_file @@
     Pp.I.check_opam_version ~format_version () -|
-    Pp.I.partition (function
-        | Section (_, { section_kind="package"; section_name=Some _; _ }) ->
+    Pp.I.partition (fun i -> match i.pelem with
+        | Section ({ section_kind={pelem="package";_}; section_name=Some _; _ }) ->
           false
         | _ -> true) -|
     Pp.map_pair

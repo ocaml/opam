@@ -10,6 +10,7 @@
 (**************************************************************************)
 
 open OpamCompat
+open OpamParserTypes.FullPos
 open OpamTypes
 open OpamStateTypes
 open OpamStd.Op
@@ -176,22 +177,20 @@ let rec value_strings value =
   let module SS = OpamStd.String.Set in
   match value with
   | Bool _ | Int _ -> SS.empty
-  | Ident (_, s) -> SS.singleton s
-  | String (_, s) -> SS.singleton s
-  | Relop (_, _, v1, v2)
-  | Logop (_, _, v1, v2)
-  | Env_binding (_, v1, _, v2) ->
-    SS.union (value_strings v1) (value_strings v2)
-  | Prefix_relop (_, _, v)
-  | Pfxop (_, _, v) ->
-    value_strings v
-  | List (_, l)
-  | Group (_, l) ->
-    List.fold_left (fun acc v -> SS.union acc (value_strings v))
-      SS.empty l
-  | Option (_, v, vl) ->
-    List.fold_left (fun acc v -> SS.union acc (value_strings v))
-      (value_strings v) vl
+  | Ident s -> SS.singleton s
+  | String s -> SS.singleton s
+  | Relop (_, v1, v2)
+  | Logop (_, v1, v2)
+  | Env_binding (v1, _, v2) ->
+    SS.union (value_strings v1.pelem) (value_strings v2.pelem)
+  | Prefix_relop (_, v) | Pfxop (_, v) ->
+    value_strings v.pelem
+  | List l | Group l ->
+    List.fold_left (fun acc v -> SS.union acc (value_strings v.pelem))
+      SS.empty l.pelem
+  | Option (v, vl) ->
+    List.fold_left (fun acc v -> SS.union acc (value_strings v.pelem))
+      (value_strings v.pelem) vl.pelem
 
 let pattern_selector patterns =
   let name_patt =
@@ -283,13 +282,14 @@ let apply_selector ~base st = function
     let content_strings nv =
       let opam = get_opam st nv in
       if psel.fields = [] then
-        List.map (fun (_,v) -> value_strings v) (OpamFile.OPAM.to_list opam)
+        List.map (fun (_,v) -> value_strings v.pelem)
+          (OpamFile.OPAM.to_list opam)
       else
       try
         List.map
           (fun f -> match OpamFile.OPAM.print_field_as_syntax f opam with
              | None -> OpamStd.String.Set.empty
-             | Some v -> value_strings v)
+             | Some v -> value_strings v.pelem)
           psel.fields
       with Not_found ->
         OpamConsole.error_and_exit `Bad_arguments
@@ -326,10 +326,10 @@ let apply_selector ~base st = function
     (try
        let root = st.switch_global.root in
        let switch =
-        List.find (fun sw ->
-            OpamFilename.remove_prefix (OpamPath.Switch.root root sw) file
-            <> OpamFilename.to_string file)
-          (OpamFile.Config.installed_switches st.switch_global.config)
+         List.find (fun sw ->
+             OpamFilename.remove_prefix (OpamPath.Switch.root root sw) file
+             <> OpamFilename.to_string file)
+           (OpamFile.Config.installed_switches st.switch_global.config)
        in
        let rel_name =
          OpamFilename.remove_prefix (OpamPath.Switch.root root switch) file
@@ -483,14 +483,15 @@ let version_color st nv =
     (if is_available nv then [] else [`crossed;`red])
 
 let mini_field_printer ?(prettify=false) ?(normalise=false) =
+  let module OpamPrinter = OpamPrinter.FullPos in
   if normalise then OpamPrinter.Normalise.value else
-  function
-  | String (_, s) when prettify -> s
-  | List (_, l) when prettify &&
-                     List.for_all (function String _ -> true | _ -> false) l ->
-    OpamStd.List.concat_map ", " (function String (_, s) -> s | _ -> assert false) l
-  | List (_, l) -> OpamPrinter.value_list l
-  | f -> OpamPrinter.Normalise.value f
+  fun v -> match v.pelem with
+  | String s when prettify -> s
+  | List l when prettify &&
+                     List.for_all (function {pelem=String _;_} -> true | _ -> false) l.pelem ->
+    OpamStd.List.concat_map ", "  (function {pelem=String s;_} -> s | _ -> assert false) l.pelem
+  | List l -> OpamPrinter.value_list l
+  | _ -> OpamPrinter.Normalise.value v
 
 let detail_printer ?prettify ?normalise ?(sort=false) st nv =
   let open OpamStd.Option.Op in

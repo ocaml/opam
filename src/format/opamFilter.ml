@@ -13,6 +13,9 @@ open OpamTypes
 open OpamTypesBase
 open OpamStd.Op
 
+module OpamParser = OpamParser.FullPos
+module OpamPrinter = OpamPrinter.FullPos
+
 let log ?level fmt =
   OpamConsole.log "FILTER" ?level fmt
 let slog = OpamConsole.slog
@@ -41,7 +44,7 @@ let to_string t =
     | FOp(e,s,f) ->
       paren ~cond:(context <> `Or && context <> `And)
         (Printf.sprintf "%s %s %s"
-           (aux ~context:`Relop e) (OpamPrinter.relop s) (aux ~context:`Relop f))
+           (aux ~context:`Relop e) (OpamPrinter.relop_kind s) (aux ~context:`Relop f))
     | FAnd (e,f) ->
       paren ~cond:(context <> `Or && context <> `And)
         (Printf.sprintf "%s & %s" (aux ~context:`And e) (aux ~context:`And f))
@@ -547,11 +550,11 @@ let string_of_filtered_formula =
   let string_of_constraint =
     OpamFormula.string_of_formula (function
         | Constraint (op, FString s) ->
-          Printf.sprintf "%s \"%s\"" (OpamPrinter.relop op) s
+          Printf.sprintf "%s \"%s\"" (OpamPrinter.relop_kind op) s
         | Constraint (op, (FIdent _ as v)) ->
-          Printf.sprintf "%s %s" (OpamPrinter.relop op) (to_string v)
+          Printf.sprintf "%s %s" (OpamPrinter.relop_kind op) (to_string v)
         | Constraint (op, v) ->
-          Printf.sprintf "%s (%s)" (OpamPrinter.relop op) (to_string v)
+          Printf.sprintf "%s (%s)" (OpamPrinter.relop_kind op) (to_string v)
         | Filter f -> to_string f)
   in
   OpamFormula.string_of_formula (function

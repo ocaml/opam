@@ -128,7 +128,7 @@ let check_locked ?subpath default =
                          (OpamFormula.string_of_formula
                             (fun (op, vc) ->
                                Printf.sprintf "%s %s"
-                                 (OpamPrinter.relop op) (OpamPackage.Version.to_string vc))
+                                 (OpamPrinter.FullPos.relop_kind op) (OpamPackage.Version.to_string vc))
                             bv))
                       consistent)
               else "")));

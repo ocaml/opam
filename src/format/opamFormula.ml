@@ -19,6 +19,8 @@ let neg_relop = function
   | `Leq -> `Gt
   | `Lt -> `Geq
 
+let string_of_relop = OpamPrinter.FullPos.relop_kind
+
 type version_constraint = relop * OpamPackage.Version.t
 
 type atom = OpamPackage.Name.t * version_constraint option
@@ -28,7 +30,7 @@ let string_of_atom = function
   | n, Some (r,c) ->
     Printf.sprintf "%s (%s %s)"
       (OpamPackage.Name.to_string n)
-      (OpamPrinter.relop r)
+      (string_of_relop r)
       (OpamPackage.Version.to_string c)
 
 let short_string_of_atom = function
@@ -40,7 +42,7 @@ let short_string_of_atom = function
   | n, Some (r,c) ->
     Printf.sprintf "%s%s%s"
       (OpamPackage.Name.to_string n)
-      (OpamPrinter.relop r)
+      (string_of_relop r)
       (OpamPackage.Version.to_string c)
 
 let string_of_atoms atoms =
@@ -61,7 +63,7 @@ let atom_of_string str =
     let sversion = Re.Group.get sub 3 in
     let name = OpamPackage.Name.of_string sname in
     let sop = if sop = "." then "=" else sop in
-    let op = OpamLexer.relop sop in
+    let op = OpamLexer.FullPos.relop sop in
     let version = OpamPackage.Version.of_string sversion in
     name, Some (op, version)
   with Not_found | Failure _ | OpamLexer.Error _ ->
@@ -313,7 +315,7 @@ let satisfies_depends pkgset f =
 
 let to_string t =
   let string_of_constraint (relop, version) =
-    Printf.sprintf "%s %s" (OpamPrinter.relop relop)
+    Printf.sprintf "%s %s" (string_of_relop relop)
       (OpamPackage.Version.to_string version) in
   let string_of_pkg = function
     | n, Empty -> OpamPackage.Name.to_string n
