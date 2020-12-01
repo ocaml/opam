@@ -272,6 +272,19 @@ let prepare_package_build env opam nv dir =
     List.partition (fun f -> List.mem_assoc f patches)
       (OpamFile.OPAM.substs opam)
   in
+  let print_subst basename =
+    log "%s: substitution in %s.\n" (OpamPackage.name_to_string nv)
+      (OpamFilename.Base.to_string basename);
+    if OpamConsole.verbose () then
+      OpamConsole.msg "[%s: subst] %s\n"
+        (OpamConsole.colorise `green (OpamPackage.name_to_string nv))
+        (OpamFilename.Base.to_string basename)
+  in
+  if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake) then
+    List.iter print_subst subst_others
+  else
+
+
   let subst_errs =
     OpamFilename.in_dir dir  @@ fun () ->
     List.fold_left (fun errs f ->
@@ -297,7 +310,7 @@ let prepare_package_build env opam nv dir =
 
   (* Substitute the configuration files. We should be in the right
      directory to get the correct absolute path for the
-     substitution files (see [substitute_file] and
+     substitution files (see [OpamFilter.expand_interpolations_in_file] and
      [OpamFilename.of_basename]. *)
   let subst_errs =
     OpamFilename.in_dir dir @@ fun () ->
