@@ -114,4 +114,4 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Doc
   * Update ùaintainer name [#4456 @nbraud]
-  *
+  * Specify url syntaxe in usage/opam pin [#4460 @rjbou - fix #4459]
