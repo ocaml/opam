@@ -29,8 +29,8 @@ let normalise_arch raw =
   | "x86_64" | "amd64" -> "x86_64"
   | "powerpc" | "ppc" | "ppcle" -> "ppc32"
   | "ppc64" | "ppc64le" -> "ppc64"
-  | "aarch64_be" | "aarch64" | "armv8b" | "armv8l" -> "arm64"
-  | a when List.exists (fun prefix -> OpamStd.String.starts_with ~prefix a)
+  | "aarch64_be" | "aarch64" -> "arm64"
+  | a when a = "armv8b" || a = "armv8l" || List.exists (fun prefix -> OpamStd.String.starts_with ~prefix a)
         ["armv5"; "armv6"; "earmv6"; "armv7"; "earmv7"] -> "arm32"
   | s -> s
 
