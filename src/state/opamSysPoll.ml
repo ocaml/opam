@@ -25,7 +25,7 @@ let norm s = if s = "" then None else Some (String.lowercase_ascii s)
 
 let normalise_arch raw =
   match String.lowercase_ascii raw with
-  | "x86" | "i386" | "i586" | "i686" -> "x86_32"
+  | "x86" | "i386" | "i486" | "i586" | "i686" -> "x86_32"
   | "x86_64" | "amd64" -> "x86_64"
   | "powerpc" | "ppc" | "ppcle" -> "ppc32"
   | "ppc64" | "ppc64le" -> "ppc64"
