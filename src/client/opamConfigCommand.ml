@@ -736,7 +736,7 @@ let set_var_global gt var value =
           OpamPrinter.Normalise.value (nullify_pos @@ List (nullify_pos @@ [
               nullify_pos @@ Ident (OpamVariable.to_string var);
               nullify_pos @@ String v;
-              nullify_pos @@ String "Set through 'opam config set-var global'"
+              nullify_pos @@ String "Set through 'opam var'"
             ])));
       stv_set_opt = (fun config value ->
           let gt =
