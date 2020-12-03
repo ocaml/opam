@@ -26,22 +26,22 @@ OS/distrubtion, their latest opam version and their maintainers:
 * Debian Linux (9, oldstable, Stretch)
  [![Debian Oldstable package](https://repology.org/badge/version-for-repo/debian_oldstable/opam.svg?header=)](https://packages.debian.org/oldstable/source/opam)
   * [Package search](https://packages.debian.org/search?keywords=opam&searchon=names&suite=all&section=all)
-  * Mehdi Dogguy [@mehdid](https://github.com/mehdid), Nicolas Braud-Santoni [@nbraud](https://www.github.com/nbraud)
+  * Mehdi Dogguy [@mehdid](https://github.com/mehdid), nicoo [@nbraud](https://www.github.com/nbraud)
 
 * Debian Linux (10, stable, Buster)
  [![Debian Stable package](https://repology.org/badge/version-for-repo/debian_stable/opam.svg?header=)](https://packages.debian.org/stable/source/opam)
   * [Package search](https://packages.debian.org/search?keywords=opam&searchon=names&suite=all&section=all)
-  * Mehdi Dogguy [@mehdid](https://github.com/mehdid), Nicolas Braud-Santoni [@nbraud](https://www.github.com/nbraud)
+  * Mehdi Dogguy [@mehdid](https://github.com/mehdid), nicoo [@nbraud](https://www.github.com/nbraud)
 
 * Debian Linux (11, testing, Bullseye)
  [![Debian Testing package](https://repology.org/badge/version-for-repo/debian_testing/opam.svg?header=)](https://packages.debian.org/testing/source/opam)
   * [Package search](https://packages.debian.org/search?keywords=opam&searchon=names&suite=all&section=all)
-  * Mehdi Dogguy [@mehdid](https://github.com/mehdid), Nicolas Braud-Santoni [@nbraud](https://www.github.com/nbraud)
+  * Mehdi Dogguy [@mehdid](https://github.com/mehdid), nicoo [@nbraud](https://www.github.com/nbraud)
 
 * Debian Linux (unstable, sid)
  [![Debian Unstable package](https://repology.org/badge/version-for-repo/debian_unstable/opam.svg?header=)](https://packages.debian.org/unstable/source/opam)
   * [Package search](https://packages.debian.org/search?keywords=opam&searchon=names&suite=all&section=all)
-  * Mehdi Dogguy [@mehdid](https://github.com/mehdid), Nicolas Braud-Santoni [@nbraud](https://www.github.com/nbraud)
+  * Mehdi Dogguy [@mehdid](https://github.com/mehdid), nicoo [@nbraud](https://www.github.com/nbraud)
 
 * Fedora 32
  [![Fedora 32 package](https://repology.org/badge/version-for-repo/fedora_32/opam.svg?header=)](https://src.fedoraproject.org/rpms/opam)
@@ -109,7 +109,7 @@ OS/distrubtion, their latest opam version and their maintainers:
 
 * Exherbo Linux
   * 1.1.1 [Package page](http://git.exherbo.org/summer/packages/dev-ocaml/opam/index.html) (_ocaml-unofficial_)
-  * Nicolas Braud-Santoni [@nbraud](https://www.github.com/nbraud) (?)
+  * nicoo [@nbraud](https://www.github.com/nbraud)
 
 * Ubuntu Linux PPA
   * 2.0.4 [Anil's official opam PPA](https://launchpad.net/~avsm) and [ppa post](https://discuss.ocaml.org/t/opam-2-0-experimental-ppas/2446)

@@ -113,4 +113,5 @@ New option/command/subcommand are prefixed with ◈.
   * Use dune "expected" convention for patcher test [#4395 @emillon]
 
 ## Doc
+  * Update ùaintainer name [#4456 @nbraud]
   *
