@@ -760,6 +760,61 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        "URLs must be absolute"
        ~detail:(List.map (fun u -> u.OpamUrl.path) relative)
        (relative <> []));
+    (let maybe_bool =
+      (* Regexp from [OpamFilter.string_interp_regexp] *)
+       let re =
+         let open Re in
+         let notclose =
+           rep @@ alt [
+             diff notnl @@ set "}";
+             seq [char '}'; alt [diff notnl @@ set "%"; stop] ]
+           ]
+         in
+         compile @@ seq [
+           bos; alt [
+             str "true"; str "false"; str "%%";
+             seq [str "%{"; greedy notclose; opt @@ str "}%"];
+           ]; eos]
+       in
+       fun s ->
+         try let _ = Re.exec re s in true with Not_found -> false
+     in
+     let check_strings =
+       let rec aux acc oped = function
+         | FString s -> if oped || maybe_bool s then acc else s::acc
+         | FIdent _ | FBool _ -> acc
+         | FOp (fl,_,fr) -> (aux acc true fl) @ aux acc true fr
+         | FAnd (fl, fr) | FOr (fl, fr)  ->
+           (aux acc false fl) @ aux acc false fr
+         | FNot f | FDefined f | FUndef f -> aux acc false f
+       in
+       aux [] false
+     in
+     let check_formula =
+       OpamFormula.fold_left (fun acc (_, form as ff) ->
+           match
+             OpamFormula.fold_left (fun acc fc ->
+                 match fc with
+                 | Filter f -> check_strings f @ acc
+                 | Constraint _ -> acc) [] form
+           with
+           | [] -> acc
+           | strs -> (ff, List.rev strs)::acc
+         )
+     in
+     let not_bool_strings =
+       List.fold_left check_formula []
+         (t.depends :: t.depopts :: t.conflicts
+          :: List.map (fun (_,f,_) -> f) t.features)
+     in
+     cond 66 `Warning
+       "String that can't be resolved to bool in filtered package formula"
+       ~detail:(List.map (fun (f, strs) ->
+           Printf.sprintf "%s in '%s'"
+             (OpamStd.Format.pretty_list (List.map (Printf.sprintf "%S") strs))
+             (OpamFilter.string_of_filtered_formula (Atom f)))
+           not_bool_strings)
+       (not_bool_strings <> []));
   ]
   in
   format_errors @

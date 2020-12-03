@@ -48,7 +48,7 @@ New option/command/subcommand are prefixed with ◈.
 ## Option
 
 ## Lint
-  *
+  * W66: check strings in filtered package formula are booleans or variables [#443 @rjbou - fix #4439]
 
 ## Lock
   *
