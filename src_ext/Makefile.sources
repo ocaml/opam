@@ -1,15 +1,15 @@
-URL_cppo = https://github.com/mjambon/cppo/archive/v1.6.5.tar.gz
-MD5_cppo = 1cd25741d31417995b0973fe0b6f6c82
+URL_cppo = https://github.com/ocaml-community/cppo/releases/download/v1.6.6/cppo-v1.6.6.tbz
+MD5_cppo = b13afeea6631d7c9b61f95bfd984a542
 
 $(call PKG_SAME,cppo)
 
-URL_extlib = http://ygrek.org/p/release/ocaml-extlib/extlib-1.7.5.tar.gz
-MD5_extlib = d989951536077563bf4c5e3479c3866f
+URL_extlib = https://ygrek.org/p/release/ocaml-extlib/extlib-1.7.7.tar.gz
+MD5_extlib = 2c620993aecd4b31b3a362b21b55dd94
 
 $(call PKG_SAME,extlib)
 
-URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.8.0/re-1.8.0.tbz
-MD5_re = 765f6f8d3e6ab200866e719ed7e5178d
+URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.9.0/re-1.9.0.tbz
+MD5_re = bddaed4f386a22cace7850c9c7dac296
 
 $(call PKG_SAME,re)
 
@@ -43,8 +43,8 @@ MD5_opam-file-format = d7852cb63df0f442bed14ba2c5740135
 
 $(call PKG_SAME,opam-file-format)
 
-URL_result = https://github.com/janestreet/result/releases/download/1.3/result-1.3.tbz
-MD5_result = 4beebefd41f7f899b6eeba7414e7ae01
+URL_result = https://github.com/janestreet/result/archive/1.4.tar.gz
+MD5_result = d3162dbc501a2af65c8c71e0866541da
 
 $(call PKG_SAME,result)
 
