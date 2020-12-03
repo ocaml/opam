@@ -29,6 +29,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix updates of the invariant with `--update-invariant` [#4431 @AltGr]
 
 ## Pin
+  * Clean version pinned build dir [#4436 @rjbou - fix #4255]
   * Url pin: fix opamfile format upgrade [#4366 @rjbou - fix #4365]
   * Don't save the pin with `--show` [#4367 @rjbou - fix #4348]
   * When several pins are needed, do their fetching in parallel [#4399 @rjbou - fix #4315]

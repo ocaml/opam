@@ -715,7 +715,8 @@ let parallel_apply t ~requested ?add_roots ~assume_built ?(force_remove=false)
           OpamAction.cleanup_package_artefacts t nv
           (* if reinstalled, only removes build dir *)
         | `Install nv
-          when not (OpamPackage.has_name t.pinned nv.name) ->
+          when not (OpamPackage.has_name t.pinned nv.name)
+            || OpamSwitchState.is_version_pinned t nv.name ->
           let build_dir =
             OpamPath.Switch.build t.switch_global.root t.switch nv in
           if not OpamClientConfig.(!r.keep_build_dir) then
