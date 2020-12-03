@@ -3795,7 +3795,7 @@ let admin =
   (* cmdliner never sees the admin subcommand, so this "can't happen" *)
   let doc = "Internal opam error - main admin command invoked" in
   Term.(ret (const (`Error (true, doc)))),
-  Term.info "admin"
+  Term.info "admin" ~doc:OpamAdminCommand.admin_command_doc
 
 (* Note: for cli versionning check, all commands must be constructed with
    [OpamArg.mk_command] or [OpamArg.mk_command_ret]. *)
