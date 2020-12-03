@@ -128,11 +128,12 @@ The syntax is
 opam pin add <package name> <target>
 ```
 
-Where `<target>` may be a version, but also a local path, the URL of an archive,
-or even a git, mercurial or darcs URL. The package will be kept up-to-date with
-its origin on `opam update` and when explicitly mentioned in a command, so that
-you can simply run `opam upgrade <package name>` to re-compile it from its
-upstream. If the upstream includes opam metadata, that will be used as well.
+Where `<target>` may be a version, but also an [URL](Manual.html#URLs) of a
+local path, an archive, or even a git, mercurial or darcs repository. The
+package will be kept up-to-date with its origin on `opam update` and when
+explicitly mentioned in a command, so that you can simply run `opam upgrade
+<package name>` to re-compile it from its upstream. If the upstream includes
+opam metadata, that will be used as well.
 
 ```
 opam pin add camlpdf 1.7                                      # version pin
