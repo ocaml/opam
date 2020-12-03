@@ -58,6 +58,10 @@ export OCAMLRUNPARAM=b
       (set +x ; echo -en "::endgroup::rebuild opam\r") 2>/dev/null
     fi
     set -e
+
+    # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
+    make tests
+
     make distclean
 
     # Compile and run opam-rt
@@ -87,11 +91,6 @@ export OCAMLRUNPARAM=b
     opam install opam-rt --deps-only
     make
     (set +x ; echo -en "::endgroup::opam-rt\r") 2>/dev/null
-
-  elif [ $OPAM_UPGRADE -ne 1 ]; then
-    # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
-     make tests ||
-      (tail -n 2000 _build/default/tests/fulltest-*.log; echo "-- TESTS FAILED --"; exit 1)
   fi
 )
 
