@@ -43,8 +43,8 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Var
   * Add `opamfile-loc` as a package variable, containing the location of installed package opam file [#4402 @rjbou]
-  * Fix `arch` detection when using 32bit mode on ARM64
-  * Fix `arch` detection of i486
+  * Fix `arch` detection when using 32bit mode on ARM64 [#4462 @kit-ty-kate]
+  * Fix `arch` detection of i486 [#4462 @kit-ty-kate]
 
 ## Option
 
