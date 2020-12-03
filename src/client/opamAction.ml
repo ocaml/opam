@@ -248,11 +248,12 @@ let prepare_package_build env opam nv dir =
     | (patchname,filter)::rest ->
       if OpamFilter.opt_eval_to_bool env filter
       then
-        OpamFilename.patch (dir // OpamFilename.Base.to_string patchname) dir
-        @@+ function
-        | None -> iter_patches f rest
-        | Some err ->
-          iter_patches f rest @@| fun e -> (patchname, err) :: e
+        (f patchname;
+         OpamFilename.patch (dir // OpamFilename.Base.to_string patchname) dir
+         @@+ function
+         | None -> iter_patches f rest
+         | Some err ->
+           iter_patches f rest @@| fun e -> (patchname, err) :: e)
       else iter_patches f rest
   in
   let print_apply basename =
@@ -263,32 +264,29 @@ let prepare_package_build env opam nv dir =
         (OpamConsole.colorise `green (OpamPackage.name_to_string nv))
         (OpamFilename.Base.to_string basename)
   in
-
-  if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake) then
-    iter_patches print_apply patches @@| fun _ -> None
-  else
-
+  let print_subst basename =
+    let file = OpamFilename.Base.to_string basename in
+    let file_in = file ^ ".in" in
+    log "%s: expanding opam variables in %s, generating %s.\n" (OpamPackage.name_to_string nv)
+      file_in file;
+    if OpamConsole.verbose () then
+      OpamConsole.msg "[%s: subst] expanding opam variables in %s, generating %s\n"
+        (OpamConsole.colorise `green (OpamPackage.name_to_string nv))
+        file_in file
+  in
   let subst_patches, subst_others =
     List.partition (fun f -> List.mem_assoc f patches)
       (OpamFile.OPAM.substs opam)
   in
-  let print_subst basename =
-    log "%s: substitution in %s.\n" (OpamPackage.name_to_string nv)
-      (OpamFilename.Base.to_string basename);
-    if OpamConsole.verbose () then
-      OpamConsole.msg "[%s: subst] %s\n"
-        (OpamConsole.colorise `green (OpamPackage.name_to_string nv))
-        (OpamFilename.Base.to_string basename)
-  in
   if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake) then
-    List.iter print_subst subst_others
+    (List.iter print_subst (OpamFile.OPAM.substs opam);
+     iter_patches print_apply patches) @@| fun _ -> None
   else
-
-
   let subst_errs =
     OpamFilename.in_dir dir  @@ fun () ->
     List.fold_left (fun errs f ->
         try
+          print_subst f;
           OpamFilter.expand_interpolations_in_file env f;
           errs
         with e -> (f, e)::errs)
@@ -316,6 +314,7 @@ let prepare_package_build env opam nv dir =
     OpamFilename.in_dir dir @@ fun () ->
     List.fold_left (fun errs f ->
         try
+          print_subst f;
           OpamFilter.expand_interpolations_in_file env f;
           errs
         with e -> (f, e)::errs)
