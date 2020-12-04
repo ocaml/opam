@@ -278,3 +278,14 @@ let write_config rt =
          if r.repo_url = OpamUrl.empty then None
          else Some (r.repo_url, r.repo_trust))
         rt.repositories)
+
+let check_last_update () =
+  let last_update =
+    OpamFilename.written_since
+      (OpamPath.state_cache (OpamStateConfig.(!r.root_dir)))
+  in
+  if last_update > float_of_int (3600*24*21) then
+    OpamConsole.note "It seems you have not updated your repositories \
+                      for a while. Consider updating them with:\n%s\n"
+      (OpamConsole.colorise `bold "opam update");
+

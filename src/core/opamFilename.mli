@@ -254,6 +254,9 @@ val touch: t -> unit
 (** Change file permissions *)
 val chmod: t -> int -> unit
 
+(** Returns delay since last file update, based on mtime *)
+val written_since: t -> float
+
 (** Returns the closest parent of a directory (including itself) for which the
     predicate holds, if any *)
 val find_in_parents: (Dir.t -> bool) ->  Dir.t -> Dir.t option

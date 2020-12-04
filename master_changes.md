@@ -27,6 +27,7 @@ New option/command/subcommand are prefixed with ◈.
 ## Switch
   * Fix `--update-invariant` when removing or changing package name [#4360 @AltGr - fix #4353]
   * Fix updates of the invariant with `--update-invariant` [#4431 @AltGr]
+  * Add a message to advise update if not done since 3 weeks [#4415 @rjbou - fix #4377]
 
 ## Pin
   * Clean version pinned build dir [#4436 @rjbou - fix #4255]

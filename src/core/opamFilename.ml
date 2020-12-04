@@ -168,6 +168,12 @@ let touch t =
 let chmod t p =
   Unix.chmod (to_string t) p
 
+let written_since file =
+  let last_update =
+    (Unix.stat (to_string file)).Unix.st_mtime
+  in
+  (Unix.time () -. last_update)
+
 let of_string s =
   let dirname = Filename.dirname s in
   let basename = Filename.basename s in
