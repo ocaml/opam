@@ -126,8 +126,8 @@ case "$ARCH" in
     x86|i?86) ARCH="i686";;
     x86_64|amd64) ARCH="x86_64";;
     ppc|powerpc|ppcle) ARCH="ppc";;
-    aarch64_be|aarch64|armv8b|armv8l) ARCH="arm64";;
-    armv5*|armv6*|earmv6*|armv7*|earmv7*) ARCH="armhf";;
+    aarch64_be|aarch64) ARCH="arm64";;
+    armv5*|armv6*|earmv6*|armv7*|earmv7*|armv8b|armv8l) ARCH="armhf";;
     *) ARCH=$(echo "$ARCH" | awk '{print tolower($0)}')
 esac
 
