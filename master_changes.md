@@ -118,5 +118,6 @@ New option/command/subcommand are prefixed with ◈.
   * Use dune "expected" convention for patcher test [#4395 @emillon]
 
 ## Doc
-  * Update ùaintainer name [#4456 @nbraud]
+  * Last repo removal note [#4433 @rjbou - fix #4381]
+  * Update maintainer name [#4456 @nbraud]
   * Specify url syntaxe in usage/opam pin [#4460 @rjbou - fix #4459]
