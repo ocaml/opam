@@ -61,6 +61,7 @@ export OCAMLRUNPARAM=b
 
     # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
     make tests
+    make reftests
 
     make distclean
 
