@@ -2,7 +2,7 @@
 
 |master|2.0|
 |--|--|
-|[![TravisCI Build Status](https://travis-ci.org/ocaml/opam.svg?branch=master)](https://travis-ci.org/ocaml/opam) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/ocaml/opam?branch=master&svg=true)](https://ci.appveyor.com/project/AltGr/opam) | [![TravisCI 2.0 Build Status](https://travis-ci.org/ocaml/opam.svg?branch=2.0)](https://travis-ci.org/ocaml/opam)  [![AppVeyor 2.0 Build Status](https://ci.appveyor.com/api/projects/status/github/ocaml/opam?branch=2.0&svg=true)](https://ci.appveyor.com/project/AltGr/opam) |
+|[![GH  actions](https://github.com/ocaml/opam/workflows/Builds,%20tests%20&%20co/badge.svg)](https://github.com/ocaml/opam/actions?query=workflow%3A%22Builds%2C+tests+%26+co%22+branch%3Amaster) [![TravisCI Build Status](https://travis-ci.org/ocaml/opam.svg?branch=master)](https://travis-ci.org/ocaml/opam) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/ocaml/opam?branch=master&svg=true)](https://ci.appveyor.com/project/AltGr/opam) | [![TravisCI 2.0 Build Status](https://travis-ci.org/ocaml/opam.svg?branch=2.0)](https://travis-ci.org/ocaml/opam)  [![AppVeyor 2.0 Build Status](https://ci.appveyor.com/api/projects/status/github/ocaml/opam?branch=2.0&svg=true)](https://ci.appveyor.com/project/AltGr/opam) |
 
 Opam is a source-based package manager for OCaml. It supports multiple simultaneous
 compiler installations, flexible package constraints, and a Git-friendly development
