@@ -13,7 +13,17 @@ OPAM_UPGRADE=${OPAM_UPGRADE:-0}
 
 OPAMBSSWITCH=opam-build
 
-BRANCH=${GITHUB_REF##*/}
+case $GITHUB_EVENT_NAME in
+  pull_request)
+    BRANCH=$GITHUB_HEAD_REF
+    ;;
+  push)
+    BRANCH=${GITHUB_REF##*/}
+    ;;
+  *)
+  echo -e "Not handled event"
+  BRANCH=master
+esac
 
 git config --global user.email "travis@example.com"
 git config --global user.name "Travis CI"
