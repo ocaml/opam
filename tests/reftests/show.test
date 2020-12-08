@@ -251,7 +251,6 @@ build: [
 ]
 dev-repo: "git+https://github.com/ocaml/opam.git"
 ### OPAMDEBUGSECTIONS=AUXCMD opam show ./showtest.opam --debug-level=-1
-CLI                             Parsing CLI version 2.1
 AUXCMD                          autopin: { showtest => file://${BASEDIR} }
 
 <><> showtest: information on all versions ><><><><><><><><><><><><><><><><><><>
