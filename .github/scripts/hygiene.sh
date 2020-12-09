@@ -2,6 +2,8 @@
 
 . .github/scripts/preamble.sh
 
+env
+
 PR_COMMIT_RANGE=
 if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
   PR_COMMIT_RANGE="$GITHUB_REF_SHA...$GITHUB_SHA"
