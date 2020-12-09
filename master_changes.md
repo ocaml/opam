@@ -85,7 +85,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Internal
-  *
+  * External sources: Upgrade to ocamlgraph 2.0 [#4470 @kit-ty-kate]
 
 ## Test
   *
