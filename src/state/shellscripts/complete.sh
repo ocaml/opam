@@ -33,7 +33,7 @@ _opam_commands()
 
 _opam_vars()
 {
-  opam config list --safe 2>/dev/null | \
+  opam var --safe 2>/dev/null | \
       sed -n \
       -e '/^PKG:/d' \
       -e 's%^\([^#= ][^ ]*\).*%\1%p'

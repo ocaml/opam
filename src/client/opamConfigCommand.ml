@@ -30,12 +30,11 @@ let list t ns =
           "")
         (conf.OpamFile.Switch_config.variables)
     else
-    try
-      let nv = OpamSwitchState.get_package t name in
-      let opam = OpamSwitchState.opam t nv in
-      let env = OpamPackageVar.resolve ~opam t in
-      let conf = OpamSwitchState.package_config t name in
-      let pkg_vars =
+    let nv = OpamSwitchState.get_package t name in
+    let pkg_vars =
+      try
+        let opam = OpamSwitchState.opam t nv in
+        let env = OpamPackageVar.resolve ~opam t in
         OpamStd.List.filter_map (fun (vname, desc) ->
             let v = OpamVariable.(Full.create name (of_string vname)) in
             try
@@ -43,16 +42,19 @@ let list t ns =
               Some (v, c, desc)
             with Failure _ -> None)
           OpamPackageVar.package_variable_names
-      in
-      let conf_vars =
+      with Not_found -> []
+    in
+    let conf_vars =
+      try
+        let conf = OpamSwitchState.package_config t name in
         List.map (fun (v,c) ->
             OpamVariable.Full.create name v,
             OpamVariable.string_of_variable_contents c,
             "")
           (OpamFile.Dot_config.bindings conf)
-      in
-      pkg_vars @ conf_vars
-    with Not_found -> []
+      with Not_found -> []
+    in
+    pkg_vars @ conf_vars
   in
   let vars = List.flatten (List.map list_vars ns) in
   let (%) s col = OpamConsole.colorise col s in
@@ -527,7 +529,7 @@ let switch_allowed_fields, switch_allowed_sections =
               (fun nc c ->
                  { c with depext_bypass = nc.depext_bypass ++ c.depext_bypass }),
               (fun nc c ->
-                 { c with depext_bypass = nc.depext_bypass -- c.depext_bypass })
+                 { c with depext_bypass = c.depext_bypass -- nc.depext_bypass })
             )),
           (fun t -> { t with depext_bypass = empty.depext_bypass });
         ] @ allwd_wrappers empty.wrappers wrappers
@@ -734,7 +736,7 @@ let set_var_global gt var value =
           OpamPrinter.Normalise.value (nullify_pos @@ List (nullify_pos @@ [
               nullify_pos @@ Ident (OpamVariable.to_string var);
               nullify_pos @@ String v;
-              nullify_pos @@ String "Set through 'opam config set-var global'"
+              nullify_pos @@ String "Set through 'opam var'"
             ])));
       stv_set_opt = (fun config value ->
           let gt =
@@ -919,7 +921,7 @@ let vars_list ?st gt =
   vars_list_global gt;
   OpamConsole.header_msg "Configuration variables from the current switch";
   vars_list_switch ?st gt;
-  OpamConsole.header_msg "Package variables ('opam config list PKG' to show)";
+  OpamConsole.header_msg "Package variables ('opam var --package PKG' to show)";
   List.map (fun (var, doc) -> [
         ("PKG:"^var) % `bold;
         "";
@@ -979,7 +981,7 @@ let is_switch_defined_var switch_config v =
       with Failure _ -> false)
   || OpamStd.String.contains_char v ':'
 
-let var_switch_raw ?(only_switch=true) gt v =
+let var_switch_raw gt v =
   match OpamStateConfig.get_switch_opt () with
   | Some switch ->
     let switch_config =
@@ -987,7 +989,7 @@ let var_switch_raw ?(only_switch=true) gt v =
         (OpamPath.Switch.switch_config gt.root switch)
     in
     let rsc =
-      if only_switch && is_switch_defined_var switch_config v then
+      if is_switch_defined_var switch_config v then
         OpamPackageVar.resolve_switch_raw gt switch switch_config
           (OpamVariable.Full.of_string v)
       else None
@@ -1016,7 +1018,7 @@ let var_show_switch gt ?st v =
 let var_show_global gt f = var_show_t (OpamPackageVar.resolve_global gt) f
 
 let var_show gt v =
-  if var_switch_raw ~only_switch:false gt v = None then
+  if var_switch_raw gt v = None then
     OpamSwitchState.with_ `Lock_none gt @@ fun st ->
     let switch =
       if is_switch_defined_var st.switch_config v then Some st.switch else None
