@@ -1,11 +1,11 @@
 #!/bin/bash -xue
 
+. .github/scripts/preamble.sh
+
 PR_COMMIT_RANGE=
 if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
   PR_COMMIT_RANGE="$GITHUB_REF_SHA...$GITHUB_SHA"
 fi
-CI_BRANCH=${GITHUB_REF##*/}
-
 
 echo "PR_COMMIT_RANGE=$PR_COMMIT_RANGE"
 echo "GITHUB_SHA=$GITHUB_SHA"
@@ -23,7 +23,7 @@ if [[ $GITHUB_EVENT_NAME = 'push' ]] ; then
   fi
 else
   if [[ $GITHUB_SHA != $(git rev-parse FETCH_HEAD) ]] ; then
-    echo 'WARNING! Travis GITHUB_SHA and FETCH_HEAD do not agree!'
+    echo 'WARNING! GHA GITHUB_SHA and FETCH_HEAD do not agree!'
     if git cat-file -e "$GITHUB_SHA" 2> /dev/null ; then
       echo 'GITHUB_SHA exists, so going with it'
     else
@@ -34,6 +34,7 @@ else
 fi
 
 CheckConfigure () {
+  (set +x ; echo -en "::group::check configure\r") 2>/dev/null
   GIT_INDEX_FILE=tmp-index git read-tree --reset -i "$1"
   git diff-tree --diff-filter=d --no-commit-id --name-only -r "$1" \
     | (while IFS= read -r path
@@ -57,24 +58,27 @@ please run make configure and fixup the commit"
       ERROR=1
     fi
   fi
+  (set +x ; echo -en "::endgroup::check configure\r") 2>/dev/null
 }
 
 set +x
 
 ERROR=0
 
+
 ###
 # Check install.sh
 ###
 
 if [ "$GITHUB_EVENT_NAME" = "pull_request" ] ; then
+  (set +x ; echo -en "::group::check install.sh\r") 2>/dev/null
   CUR_HEAD=$GITHUB_REF_SHA
   PR_HEAD=$GITHUB_SHA
   DEEPEN=50
   while ! git merge-base "$CUR_HEAD" "$PR_HEAD" >& /dev/null
   do
-    echo "Deepening $CI_BRANCH by $DEEPEN commits"
-    git fetch origin --deepen=$DEEPEN "$CI_BRANCH"
+    echo "Deepening $BRANCH by $DEEPEN commits"
+    git fetch origin --deepen=$DEEPEN "$BRANCH"
     ((DEEPEN*=2))
   done
   MERGE_BASE=$(git merge-base "$CUR_HEAD" "$PR_HEAD")
@@ -110,7 +114,9 @@ if [ "$GITHUB_EVENT_NAME" = "pull_request" ] ; then
       ERROR=1
     fi
   fi
+  (set +x ; echo -en "::endgroup::check install.sh\r") 2>/dev/null
 fi
+
 
 ###
 # Check configure
@@ -128,9 +134,12 @@ else
   done
 fi
 
+
 ###
 # Check src_ext patches
 ###
+
+(set +x ; echo -en "::group::check src_ext patches\r") 2>/dev/null
 # Check that the lib-ext/lib-pkg patches are "simple"
 make -C src_ext PATCH="busybox patch" clone
 make -C src_ext PATCH="busybox patch" clone-pkg
@@ -143,4 +152,6 @@ if [[ $(find patches -name \*.old | wc -l) -ne 0 ]] ; then
   ERROR=1
 fi
 cd ..
+(set +x ; echo -en "::endgroup::check src_ext patches\r") 2>/dev/null
+
 exit $ERROR
