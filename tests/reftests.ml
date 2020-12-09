@@ -164,6 +164,7 @@ let run_test t =
     "OPAMDOWNLOADJOBS", "1";
     "OPAMNOENVNOTICE", "1";
     "OPAMYES", "0";
+    "OCAMLRUNPARAM", "";
   ];
   let opamroot = Filename.concat tdir ".opam" in
   with_repo t.repo_hash @@
