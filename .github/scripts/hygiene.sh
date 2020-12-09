@@ -1,36 +1,18 @@
 #!/bin/bash -xue
 
-PR_COMMIT_RANGE=
+. .github/scripts/preamble.sh
+
+if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "x" = "x$BASE_REF_SHA$PR_REF_SHA" ] ; then
+  echo "Variables BASE_REF_SHA and PR_REF_SHA must be defined in a pull request job"
+  exit 2
+fi
+# Don't use BASE_REF_SHA and PR_REF_SHA on non pull request jobs, they are not
+# defined. See .github/workflows/ci.yml hygiene job.
+
 if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-  PR_COMMIT_RANGE="$GITHUB_REF_SHA...$GITHUB_SHA"
-fi
-CI_BRANCH=${GITHUB_REF##*/}
-
-
-echo "PR_COMMIT_RANGE=$PR_COMMIT_RANGE"
-echo "GITHUB_SHA=$GITHUB_SHA"
-if [[ $GITHUB_EVENT_NAME = 'pull_request' ]] ; then
-  FETCH_HEAD=$(git rev-parse FETCH_HEAD)
-  echo "FETCH_HEAD=$FETCH_HEAD"
-else
-  FETCH_HEAD=$GITHUB_SHA
-fi
-
-if [[ $GITHUB_EVENT_NAME = 'push' ]] ; then
-  if ! git cat-file -e "$GITHUB_SHA" 2> /dev/null ; then
-    echo 'GITHUB_SHA does not exist - CI failure'
-    exit 1
-  fi
-else
-  if [[ $GITHUB_SHA != $(git rev-parse FETCH_HEAD) ]] ; then
-    echo 'WARNING! Travis GITHUB_SHA and FETCH_HEAD do not agree!'
-    if git cat-file -e "$GITHUB_SHA" 2> /dev/null ; then
-      echo 'GITHUB_SHA exists, so going with it'
-    else
-      echo 'GITHUB_SHA does not exist; setting to FETCH_HEAD'
-      GITHUB_SHA=$FETCH_HEAD
-    fi
-  fi
+  # needed or git diffs and rev-list
+  git fetch origin master
+  git fetch origin $GITHUB_REF
 fi
 
 CheckConfigure () {
@@ -55,6 +37,8 @@ CheckConfigure () {
       echo -e "[\e[31mERROR\e[0m] configure.ac in $1 doesn't generate configure, \
 please run make configure and fixup the commit"
       ERROR=1
+    else
+      echo "configure ok for $1"
     fi
   fi
 }
@@ -64,21 +48,35 @@ set +x
 ERROR=0
 
 ###
+# Check configure
+###
+
+(set +x ; echo -en "::group::check configure\r") 2>/dev/null
+case $GITHUB_EVENT_NAME in
+  push)
+    CheckConfigure "$GITHUB_SHA"
+    ;;
+  pull_request)
+    for commit in $(git rev-list $BASE_REF_SHA...$PR_REF_SHA --reverse)
+    do
+      echo "check configure for $commit"
+      CheckConfigure "$commit"
+    done
+    ;;
+  *)
+    echo "no configure to check for unknown event"
+    ;;
+esac
+(set +x ; echo -en "::endgroup::check configure\r") 2>/dev/null
+
+
+###
 # Check install.sh
 ###
 
 if [ "$GITHUB_EVENT_NAME" = "pull_request" ] ; then
-  CUR_HEAD=$GITHUB_REF_SHA
-  PR_HEAD=$GITHUB_SHA
-  DEEPEN=50
-  while ! git merge-base "$CUR_HEAD" "$PR_HEAD" >& /dev/null
-  do
-    echo "Deepening $CI_BRANCH by $DEEPEN commits"
-    git fetch origin --deepen=$DEEPEN "$CI_BRANCH"
-    ((DEEPEN*=2))
-  done
-  MERGE_BASE=$(git merge-base "$CUR_HEAD" "$PR_HEAD")
-  if ! git diff "$MERGE_BASE..$PR_HEAD" --name-only --exit-code -- shell/install.sh > /dev/null ; then
+  (set +x ; echo -en "::group::check install.sh\r") 2>/dev/null
+  if ! git diff "$BASE_REF_SHA..$PR_REF_SHA" --name-only --exit-code -- shell/install.sh > /dev/null ; then
     echo "shell/install.sh updated - checking it"
     eval $(grep '^\(OPAM_BIN_URL_BASE\|DEV_VERSION\|VERSION\)=' shell/install.sh)
     echo "OPAM_BIN_URL_BASE=$OPAM_BIN_URL_BASE"
@@ -109,28 +107,18 @@ if [ "$GITHUB_EVENT_NAME" = "pull_request" ] ; then
       echo "That can't be right..."
       ERROR=1
     fi
+  else
+    echo "No changes in install.sh"
   fi
+  (set +x ; echo -en "::endgroup::check install.sh\r") 2>/dev/null
 fi
 
-###
-# Check configure
-###
-
-if [[ -z $PR_COMMIT_RANGE ]]
-then CheckConfigure "$GITHUB_SHA"
-else
-  if [[ $GITHUB_EVENT_NAME = 'pull_request' ]]
-  then PR_COMMIT_RANGE=$MERGE_BASE..$GITHUB_SHA
-  fi
-  for commit in $(git rev-list "$PR_COMMIT_RANGE" --reverse)
-  do
-    CheckConfigure "$commit"
-  done
-fi
 
 ###
 # Check src_ext patches
 ###
+
+(set +x ; echo -en "::group::check src_ext patches\r") 2>/dev/null
 # Check that the lib-ext/lib-pkg patches are "simple"
 make -C src_ext PATCH="busybox patch" clone
 make -C src_ext PATCH="busybox patch" clone-pkg
@@ -143,4 +131,6 @@ if [[ $(find patches -name \*.old | wc -l) -ne 0 ]] ; then
   ERROR=1
 fi
 cd ..
+(set +x ; echo -en "::endgroup::check src_ext patches\r") 2>/dev/null
+
 exit $ERROR
