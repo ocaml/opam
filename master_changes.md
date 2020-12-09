@@ -12,6 +12,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Init
   * Fix sandbox check with not yet set opam environment variables [#4370 @rjbou - fix #4368]
+  * Sandboxing check: use configured temp dir and cleanup afterwards [#4466 @AltGr]
 
 ## Config Upgrade
   *
@@ -66,7 +67,7 @@ New option/command/subcommand are prefixed with ◈.
   * Add support for NetBSD and DragonFlyBSD [#4396 @kit-ty-kate]
   * Fix OpenBSD, FreeBSD and Gentoo: Allow short names and full name paths for ports-based systems [#4396 @kit-ty-kate]
   * Handle the case where `os-family=ubuntu` as `os-family=debian` [#4441 @alan-j-hu]
-  
+
 ## Sandbox
   *
 
@@ -93,7 +94,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## State
-  * 
+  *
 
 # Opam file format
   * Update opam-format lib to opam-file-format end position and new type definition [#4298 @rjbou]
@@ -112,16 +113,21 @@ New option/command/subcommand are prefixed with ◈.
   * Internal caches: use size checks from Marshal [#4430 @AltGr]
   * openssl invocation: Fix permission denied fallback [#4449 @Blaisorblade - fix #4448]
   * Add debug & verbose log for patch & subst application [#4464 @rjbou - fix #4453]
+  * Be more robust w.r.t. new caches updates when `--read-only` is not used [#4466 @AltGr - fix #4354]
 
 ## Test
   * Ensure that a cold `dune runtest` works [#4375 @emillon]
   * Use dune "expected" convention for patcher test [#4395 @emillon]
   * Add var/option test [#4428 @rjbou]
+  * patcher: fix local [#4466 @AltGr]
+  * Add github actions [#4463 @rjbou]
+  * Add reftests to github actions [#4466 @rjbou]
+  * Add opam file 1.2 -> 2.0 upgrade test [#4466 @rjbou]
 
 ## Shell
   * Update completion scripts with `opam var` instead of `opam config list` [#4428 @rjbou]
 
 ## Doc
   * Change `opam config list` into `opam var [--package]` [#4428 @rjbou]
-  * Update ùaintainer name [#4456 @nbraud]
+  * Update maintainer name [#4456 @nbraud]
   * Specify url syntaxe in usage/opam pin [#4460 @rjbou - fix #4459]
