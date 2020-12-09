@@ -61,7 +61,9 @@ export OCAMLRUNPARAM=b
 
     # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
     make tests
-    make reftests
+    if [ "$RUNNER_OS" = "Linux" ]; then
+      make reftests
+    fi
 
     make distclean
 
