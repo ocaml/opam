@@ -1,0 +1,31 @@
+From e26e675690b3aff46c97f8e05a198f337b870823 Mon Sep 17 00:00:00 2001
+From: Kate <kit.ty.kate@disroot.org>
+Date: Thu, 15 Oct 2020 15:42:32 +0100
+Subject: [PATCH] Fix compatibility with ocamlgraph >= 2.0
+
+---
+ algo/dominators.ml | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/algo/dominators.ml b/algo/dominators.ml
+index 230acd4..27fa96c 100644
+--- a/algo/dominators.ml
++++ b/algo/dominators.ml
+@@ -101,7 +101,13 @@ let dominators_tarjan graph =
+   ) graph;
+ 
+   Util.Timer.start tjntimer;
+-#if OCAMLGRAPHVERSION >= 186
++#if OCAMLGRAPHVERSION >= 200
++  let module Dom = Dominator.Make_graph(struct
++      include G
++      let empty () = create ()
++      let add_edge g v1 v2 = add_edge g v1 v2; g
++    end) in
++#elif OCAMLGRAPHVERSION >= 186
+   let module Dom = Dominator.Make_graph(G) in
+ #else
+   let module Dom = Dominator.Make(G) in
+-- 
+2.29.2
+
