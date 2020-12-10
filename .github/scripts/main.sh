@@ -58,17 +58,24 @@ export OCAMLRUNPARAM=b
       (set +x ; echo -en "::endgroup::rebuild opam\r") 2>/dev/null
     fi
     set -e
+
+    # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
+    make tests
+    if [ "$RUNNER_OS" = "Linux" ]; then
+      make reftests
+    fi
+
     make distclean
 
     # Compile and run opam-rt
     (set +x ; echo -en "::group::opam-rt\r") 2>/dev/null
-    opamrt_url="https://github.com/ocaml/opam-rt"
+    opamrt_url="https://github.com/ocaml-opam/opam-rt"
     if [ ! -d $CACHE/opam-rt ]; then
       git clone $opamrt_url  $CACHE/opam-rt
     fi
     cd $CACHE/opam-rt
     git fetch origin
-    if git ls-remote --exit-code --heads $opamrt_url $BRANCH ; then 
+    if git ls-remote --exit-code origin $BRANCH ; then
       if git branch | grep -q $BRANCH; then
         git checkout $BRANCH
         git reset --hard origin/$BRANCH
@@ -79,18 +86,14 @@ export OCAMLRUNPARAM=b
       git checkout master
       git reset --hard origin/master
     fi
-    test -d _opam || opam switch create . --empty 
+
+    test -d _opam || opam switch create . --empty
     eval $(opam env)
     opam pin --kind=path $GITHUB_WORKSPACE --yes --no-action
     opam pin . -yn
     opam install opam-rt --deps-only
     make
     (set +x ; echo -en "::endgroup::opam-rt\r") 2>/dev/null
-
-  elif [ $OPAM_UPGRADE -ne 1 ]; then
-    # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
-     make tests ||
-      (tail -n 2000 _build/default/tests/fulltest-*.log; echo "-- TESTS FAILED --"; exit 1)
   fi
 )
 

@@ -85,15 +85,19 @@ end = struct
     if OpamCoreConfig.(!r.safe_mode) then
       log "Running in safe mode, not upgrading the %s cache" X.name
     else
-    let chrono = OpamConsole.timer () in
-    OpamFilename.with_flock `Lock_write cache_file @@ fun fd ->
-    log "Writing the %s cache to %s ...\n"
-      X.name (OpamFilename.prettify cache_file);
-    let oc = Unix.out_channel_of_descr fd in
-    output_string oc (OpamVersion.magic ());
-    Marshal.to_channel oc t [];
-    flush oc;
-    log "%a written in %.3fs" (slog OpamFilename.prettify) cache_file (chrono ())
+    try
+      let chrono = OpamConsole.timer () in
+      OpamFilename.with_flock `Lock_write cache_file @@ fun fd ->
+      log "Writing the %s cache to %s ..."
+        X.name (OpamFilename.prettify cache_file);
+      let oc = Unix.out_channel_of_descr fd in
+      output_string oc (OpamVersion.magic ());
+      Marshal.to_channel oc t [];
+      flush oc;
+      log "%a written in %.3fs" (slog OpamFilename.prettify) cache_file (chrono ())
+    with Unix.Unix_error _ ->
+      log "Could not acquire lock for writing %s, skipping %s cache update"
+        (OpamFilename.prettify cache_file) X.name
 
   let remove cache_file =
     OpamFilename.remove cache_file

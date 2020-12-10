@@ -1,5 +1,7 @@
 #!/usr/bin/env ocaml
 
+#load "unix.cma"
+
 let testdir =
   let d =
     Filename.concat
@@ -154,6 +156,16 @@ let run_cmd ?(verbose=true) opamroot logfile fmt =
 
 let run_test t =
   with_temp_dir @@ fun tdir ->
+    List.iter (fun (var, value) -> Unix.putenv var value) [
+    "OPAMKEEPBUILDDIR", "1";
+    "OPAMSWITCH", "";
+    "OPAMCOLOR", "never";
+    "OPAMJOBS", "1";
+    "OPAMDOWNLOADJOBS", "1";
+    "OPAMNOENVNOTICE", "1";
+    "OPAMYES", "0";
+    "OCAMLRUNPARAM", "";
+  ];
   let opamroot = Filename.concat tdir ".opam" in
   with_repo t.repo_hash @@
   command "opam init --root=%s \

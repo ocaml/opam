@@ -102,6 +102,7 @@ let tests () =
 
 let () =
   (* This causes Windows to use LF endings instead of CRLF, which simplifies the comparison with the reference file *)
+  Unix.putenv "LC_ALL" "C";
   set_binary_mode_out stdout true;
   Unix.dup2 Unix.stdout Unix.stderr;
   tests ()
