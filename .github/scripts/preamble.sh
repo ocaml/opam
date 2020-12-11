@@ -29,13 +29,28 @@ git config --global user.email "travis@example.com"
 git config --global user.name "Travis CI"
 git config --global gc.autoDetach false
 
+# Disable bubblewrap wrapping, it's not available within Docker
+cat <<EOF >~/.opamrc
+required-tools: [
+  ["curl" "wget"]
+    {"A download tool is required, check env variables OPAMCURL or OPAMFETCH"}
+  "diff"
+  "patch"
+  "tar"
+  "unzip"
+]
+wrap-build-commands: []
+wrap-install-commands: []
+wrap-remove-commands: []
+EOF
+
 # used only for TEST jobs
 init-bootstrap () {
   if [ "$OPAM_TEST" = "1" ]; then
     set -e
     export OPAMROOT=$OPAMBSROOT
     # The system compiler will be picked up
-    opam init --yes --no-setup git+https://github.com/ocaml/opam-repository#$OPAM_REPO_SHA --disable-sandboxing
+    opam init --yes --no-setup git+https://github.com/ocaml/opam-repository#$OPAM_REPO_SHA
     eval $(opam env)
 #    opam update
     CURRENT_SWITCH=$(opam config var switch)

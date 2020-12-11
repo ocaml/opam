@@ -3,7 +3,7 @@ name: Builds, tests & co
 on: [ push, pull_request ]
 
 env:
-  OPAMBSVERSION: 2.1.0-alpha2
+  OPAMBSVERSION: 2.0.7
   OPAMBSROOT: ~/.cache/.opam.cached
   OPAM12CACHE: ~/.cache/opam1.2/cache
   # This should be identical to the value in appveyor.yml
@@ -23,30 +23,6 @@ jobs:
 ####
 # Caches
 ####
-#  ocaml-cache:
-#    runs-on: ${{ matrix.os }}
-#    strategy:
-#      matrix:
-#        os: [ ubuntu-latest ]
-#        ocamlv: [ 4.02.3, 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1, 4.08.1, 4.09.1, 4.10.1, 4.11.1 ]
-#        include:
-#          - os: macos-latest
-#            ocamlv: 4.11.1
-#      fail-fast: false
-#    steps:
-#    - uses: actions/checkout@v2
-#    - name: ocaml ${{ matrix.ocamlv }} cache
-#      id: ocaml-cache
-#      uses: actions/cache@v2
-#      with:
-#        path: ${{ env.GH_OCAML_CACHE }}
-#        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/ocaml-cache.sh', '.github/scripts/preamble.sh') }}
-#    - name: Building ocaml ${{ matrix.ocamlv }} cache
-#      if: steps.ocaml-cache.outputs.cache-hit != 'true'
-#      env:
-#        OCAML_VERSION: ${{ matrix.ocamlv }}
-#      run: bash -exu .github/scripts/ocaml-cache.sh ocaml
-
   archives-cache:
     runs-on: ubuntu-latest
     steps:
@@ -56,7 +32,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: src_ext/archives
-        key: archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
+        key: archives-2.0-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
     - name: Retrieve archives
       if: steps.archives.outputs.cache-hit != 'true'
       run: |#bash -exu .github/scripts/caches.sh archives
@@ -107,7 +83,7 @@ jobs:
 # Opam tests
 ####
   test:
-    needs: [ build, archives-cache ]
+    needs: [ build ]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -139,7 +115,7 @@ jobs:
         path: |
           ${{ env.OPAMBSROOT }}/**
           ~/.cache/opam-local/bin/**
-        key: opam-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/opam-bs-cache.sh', '.github/scripts/preamble.sh') }}
+        key: opam-2.0-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/opam-bs-cache.sh', '.github/scripts/preamble.sh') }}
     - name: opam root cache
       if: steps.opam-bootstrap.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/opam-bs-cache.sh
@@ -148,7 +124,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.cache/opam-rt/**
-        key: ${{ runner.os }}-opam-rt
+        key: ${{ runner.os }}-opam-rt-2.0
     - name: Test
       env:
         OCAML_VERSION: ${{ matrix.ocamlv }}
@@ -172,7 +148,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: src_ext/archives
-        key: archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
+        key: archives-2.0-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
     - name: Cold
       env:
         OCAML_VERSION: ${{ matrix.ocamlv }}
@@ -229,7 +205,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: src_ext/archives
-        key: archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
+        key: archives-2.0-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
     - name: Hygiene
       env:
         # Defined only on pull request jobs

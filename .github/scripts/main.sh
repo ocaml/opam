@@ -14,8 +14,6 @@ export OCAMLRUNPARAM=b
   (set +x ; echo -en "::group::build opam\r") 2>/dev/null
   if [[ $OPAM_TEST -eq 1 ]] ; then
     export OPAMROOT=$OPAMBSROOT
-    # If the cached root is newer, regenerate a binary compatible root
-    opam env || { rm -rf $OPAMBSROOT; init-bootstrap; }
     eval $(opam env)
   fi
 
@@ -25,9 +23,10 @@ export OCAMLRUNPARAM=b
     make lib-ext
   fi
   if [ $OPAM_UPGRADE -eq 1 ]; then
-    unset-dev-version
+    # unset git versionning to allow OPAMYES use for upgrade
+    sed -i  -e 's/\(.*with-stdout-to get-git-version.ml.*@@\).*/\1 \\"let version = None\\"")))/' src/client/dune
   fi
-  make all admin
+  make all
 
   rm -f ~/local/bin/opam
   make install
@@ -37,27 +36,6 @@ export OCAMLRUNPARAM=b
   opam config report
 
   if [ "$OPAM_TEST" = "1" ]; then
-    # test if an upgrade is needed
-    set +e
-    opam list 2> /dev/null
-    rcode=$?
-    if [ $rcode -eq 10 ]; then
-      echo "Recompiling for an opam root upgrade"
-      (set +x ; echo -en "::group::rebuild opam\r") 2>/dev/null
-      unset-dev-version
-      make all admin
-      rm -f ~/local/bin/opam
-      make install
-      opam list 2> /dev/null
-      rcode=$?
-      set -e
-      if [ $rcode -ne 10 ]; then
-        echo -e "\e[31mBad return code $rcode, should be 10\e[0m";
-        exit $rcode
-      fi
-      (set +x ; echo -en "::endgroup::rebuild opam\r") 2>/dev/null
-    fi
-    set -e
 
     # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
     make tests
@@ -80,15 +58,16 @@ export OCAMLRUNPARAM=b
         git checkout -b $BRANCH origin/$BRANCH
       fi
     else
-      git checkout master
-      git reset --hard origin/master
+      git checkout opam2.0
+      git reset --hard origin/opam2.0
     fi
 
     test -d _opam || opam switch create . --empty
+    opam install ocaml-system
     eval $(opam env)
     opam pin --kind=path $GITHUB_WORKSPACE --yes --no-action
     opam pin . -yn
-    opam install opam-rt --deps-only
+    OPAMSOLVERTIMEOUT=3600 opam install opam-rt --deps-only
     make
     (set +x ; echo -en "::endgroup::opam-rt\r") 2>/dev/null
   fi
@@ -150,7 +129,7 @@ fi
     # The SHA is fixed so that upstream changes shouldn't affect CI. The SHA needs
     # to be moved forwards when a new version of OCaml is added to ensure that the
     # ocaml-system package is available at the correct version.
-    opam init --bare default git+https://github.com/ocaml/opam-repository#$OPAM_TEST_REPO_SHA --disable-sandboxing
+    opam init --bare default "git+https://github.com/ocaml/opam-repository#$OPAM_TEST_REPO_SHA"
     opam switch create default ocaml-system
     eval $(opam env)
     opam install lwt
