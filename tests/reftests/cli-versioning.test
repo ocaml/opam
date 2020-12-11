@@ -1,0 +1,68 @@
+009e00fa
+### opam switch install cli-versioning --empty
+opam: install was removed in version 2.1 of the opam CLI, but version 2.1 has been requested. Use create instead or set OPAMCLI environment variable to 2.0.
+### OPAMCLI=2.0 opam switch install cli-versioning --empty
+### opam list --cli 31.4
+[ERROR] opam command-line version 31.4 is not supported.
+### opam install --show --assume-depexts base-unix --cli 2.1
+The following actions would be performed:
+  ∗ install base-unix base
+### OPAMCLI=2.0 opam install --show --assume-depexts base-unix
+opam: assume-depexts was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+### opam config set cli version
+opam: set was removed in version 2.1 of the opam CLI, but version 2.1 has been requested. Use opam var instead or set OPAMCLI environment variable to 2.0.
+### OPAMCLI=2.0 opam config set cli version
+Added 'cli: "version"' to field variables in switch cli-versioning
+### opam switch set-invariant ocaml.4.05.0
+### OPAMCLI=2.0 opam install ocaml.4.10.0
+[ERROR] Package conflict!
+  * No agreement on the version of ocaml:
+    - (invariant) → ocaml = 4.05.0
+    - ocaml = 4.10.0
+    You can temporarily relax the switch invariant with `--update-invariant'
+
+No solution found, exiting
+### opam install ocaml.4.10.0
+[ERROR] Package conflict!
+  * No agreement on the version of ocaml:
+    - (invariant) → ocaml = 4.05.0
+    - ocaml = 4.10.0
+    You can temporarily relax the switch invariant with `--update-invariant'
+
+No solution found, exiting
+### OPAMCLI=2.0 opam install ocaml.4.10.0 --update-invariant --show
+opam: update-invariant was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+### opam install ocaml.4.10.0 --update-invariant --show
+The following actions would be performed:
+  ∗ install base-bigarray       base
+  ∗ install ocaml-base-compiler 4.10.0 [required by ocaml]
+  ∗ install base-threads        base
+  ∗ install base-unix           base
+  ∗ install ocaml-config        1      [required by ocaml]
+  ∗ install ocaml               4.10.0
+===== ∗ 6 =====
+### OPAMCLI=2.0 opam install ocaml.4.10.0 --unlock-base --show
+The following actions would be performed:
+  ∗ install base-bigarray       base
+  ∗ install ocaml-base-compiler 4.10.0 [required by ocaml]
+  ∗ install base-threads        base
+  ∗ install base-unix           base
+  ∗ install ocaml-config        1      [required by ocaml]
+  ∗ install ocaml               4.10.0
+===== ∗ 6 =====
+### opam install ocaml.4.10.0 --unlock-base --show
+opam: unlock-base was removed in version 2.1 of the opam CLI, but version 2.1 has been requested. Use --update-invariant instead or set OPAMCLI environment variable to 2.0.
+### #opam option use mk_command_ret
+### opam option foo
+[ERROR] No option named 'foo' found. Use 'opam option [--global]' to list them
+### OPAMCLI=2.0 opam option foo
+opam: option was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+### opam option foo --global
+[ERROR] Field or section foo not found
+### OPAMCLI=2.0 opam option foo --global
+opam: global was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+### # opam lock use mk_command
+### opam lock foo
+[ERROR] No package matching foo
+### OPAMCLI=2.0 opam lock foo
+opam: lock was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.

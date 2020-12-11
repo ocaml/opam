@@ -9,6 +9,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Global CLI
   * Fix hooks broken by 371963a6b [#4386 @lefessan]
+  * CLI versioning usage [#4385 @rjbou]
 
 ## Init
   * Fix sandbox check with not yet set opam environment variables [#4370 @rjbou - fix #4368]
@@ -123,6 +124,7 @@ New option/command/subcommand are prefixed with ◈.
   * Add github actions [#4463 @rjbou]
   * Add reftests to github actions [#4466 @rjbou]
   * Add opam file 1.2 -> 2.0 upgrade test [#4466 @rjbou]
+  * Add cli versioning test [#4385 @rjbou]
 
 ## Shell
   * Update completion scripts with `opam var` instead of `opam config list` [#4428 @rjbou]

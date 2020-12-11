@@ -13,9 +13,6 @@
 
 (** {2 Commands} *)
 
-(** Type of commands *)
-type command = unit Cmdliner.Term.t * Cmdliner.Term.info
-
 (** [is_builtin_command arg] is [true] if [arg] is a prefix of any built-in
     command *)
 val is_builtin_command: string -> bool
@@ -24,4 +21,4 @@ val is_builtin_command: string -> bool
     sub-command. *)
 val is_admin_subcommand: string -> bool
 
-val get_cmdliner_parser: OpamCLIVersion.t -> command * command list
+val get_cmdliner_parser: OpamCLIVersion.t -> OpamArg.command * OpamArg.command list

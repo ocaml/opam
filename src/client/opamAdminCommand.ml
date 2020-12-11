@@ -27,7 +27,7 @@ let checked_repo_root () =
 
 let global_options cli =
   let apply_cli options = {options with OpamArg.cli} in
-  Term.(const apply_cli $ OpamArg.global_options)
+  Term.(const apply_cli $ OpamArg.global_options cli)
 
 let admin_command_doc =
   "Tools for repository administrators"
@@ -58,23 +58,23 @@ let index_command cli =
         are done to the contents of the repository."
   ]
   in
-  let urls_txt_arg =
-    Arg.(value & vflag `minimal_urls_txt [
-        `no_urls_txt, info ["no-urls-txt"] ~doc:
-          "Don't generate a 'urls.txt' file. That index file is no longer \
-           needed from opam 2.0 on, but is still used by older versions.";
-        `full_urls_txt, info ["full-urls-txt"] ~doc:
-          "Generate an inclusive 'urls.txt', for a repository that will be \
-           used by opam versions earlier than 2.0.";
-        `minimal_urls_txt, info ["minimal-urls-txt"] ~doc:
-          "Generate a minimal 'urls.txt' file, that only includes the 'repo' \
-           file. This allows opam versions earlier than 2.0 to read that file, \
-           and be properly redirected to a repository dedicated to their \
-           version, assuming a suitable 'redirect:' field is defined, instead \
-           of failing. This is the default.";
-      ])
+  let urls_txt_arg cli =
+    OpamArg.mk_vflag ~cli `minimal_urls_txt [
+      OpamArg.cli_original, `no_urls_txt, ["no-urls-txt"],
+      "Don't generate a 'urls.txt' file. That index file is no longer \
+       needed from opam 2.0 on, but is still used by older versions.";
+      OpamArg.cli_original, `full_urls_txt, ["full-urls-txt"],
+      "Generate an inclusive 'urls.txt', for a repository that will be \
+       used by opam versions earlier than 2.0.";
+      OpamArg.cli_original, `minimal_urls_txt, ["minimal-urls-txt"],
+      "Generate a minimal 'urls.txt' file, that only includes the 'repo' \
+       file. This allows opam versions earlier than 2.0 to read that file, \
+       and be properly redirected to a repository dedicated to their \
+       version, assuming a suitable 'redirect:' field is defined, instead \
+       of failing. This is the default.";
+    ]
   in
-  let cmd global_options urls_txt =
+  let cmd global_options urls_txt () =
     OpamArg.apply_global_options global_options;
     let repo_root = checked_repo_root ()  in
     let repo_file = OpamRepositoryPath.repo repo_root in
@@ -121,8 +121,8 @@ let index_command cli =
     OpamHTTP.make_index_tar_gz repo_root;
     OpamConsole.msg "Done.\n";
   in
-  Term.(const cmd $ global_options cli $ urls_txt_arg),
-  OpamArg.term_info command ~doc ~man
+  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+    Term.(const cmd $ global_options cli $ urls_txt_arg cli)
 
 let cache_urls repo_root repo_def =
   let global_dl_cache =
@@ -209,24 +209,24 @@ let cache_command cli =
            "Name of the cache directory to use.")
   in
   let no_repo_update_arg =
-    Arg.(value & flag & info ["no-repo-update";"n"] ~doc:
-           "Don't check, create or update the 'repo' file to point to the \
-            generated cache ('archive-mirrors:' field).")
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["no-repo-update";"n"]
+      "Don't check, create or update the 'repo' file to point to the \
+       generated cache ('archive-mirrors:' field)."
   in
   let link_arg =
-    Arg.(value & opt (some OpamArg.dirname) None &
-         info ["link"] ~docv:"DIR" ~doc:
-           (Printf.sprintf
-             "Create reverse symbolic links to the archives within $(i,DIR), in \
-              the form $(b,DIR%sPKG.VERSION%sFILENAME)."
-             OpamArg.dir_sep OpamArg.dir_sep))
+    OpamArg.mk_opt ~cli OpamArg.cli_original ["link"] "DIR"
+      (Printf.sprintf
+         "Create reverse symbolic links to the archives within $(i,DIR), in \
+          the form $(b,DIR%sPKG.VERSION%sFILENAME)."
+         OpamArg.dir_sep OpamArg.dir_sep)
+      Arg.(some OpamArg.dirname) None
   in
   let jobs_arg =
-    Arg.(value & opt OpamArg.positive_integer 8 &
-         info ["jobs"; "j"] ~docv:"JOBS" ~doc:
-           "Number of parallel downloads")
+    OpamArg.mk_opt ~cli OpamArg.cli_original ["jobs"; "j"]
+      "JOBS" "Number of parallel downloads"
+      OpamArg.positive_integer 8
   in
-  let cmd global_options cache_dir no_repo_update link jobs =
+  let cmd global_options cache_dir no_repo_update link jobs () =
     OpamArg.apply_global_options global_options;
     let repo_root = checked_repo_root () in
     let repo_file = OpamRepositoryPath.repo repo_root in
@@ -272,9 +272,9 @@ let cache_command cli =
 
     OpamConsole.msg "Done.\n";
   in
-  Term.(const cmd $ global_options cli $
-        cache_dir_arg $ no_repo_update_arg $ link_arg $ jobs_arg),
-  OpamArg.term_info command ~doc ~man
+  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+    Term.(const cmd $ global_options cli $
+          cache_dir_arg $ no_repo_update_arg $ link_arg $ jobs_arg)
 
 let add_hashes_command_doc =
   "Add archive hashes to an opam repository."
@@ -293,23 +293,19 @@ let add_hashes_command cli =
   in
   let hash_kinds = [`MD5; `SHA256; `SHA512] in
   let hash_types_arg =
-    let hash_kind_conv =
-      Arg.enum
-        (List.map (fun k -> OpamHash.string_of_kind k, k)
-           hash_kinds)
-    in
-    Arg.(non_empty & pos_all hash_kind_conv [] & info [] ~docv:"HASH_ALGO" ~doc:
-           "The hash, or hashes to be added")
+    OpamArg.nonempty_arg_list "HASH_ALGO" "The hash, or hashes to be added"
+      (Arg.enum
+         (List.map (fun k -> OpamHash.string_of_kind k, k)
+            hash_kinds))
   in
   let packages =
-    Arg.(value & opt (list OpamArg.package) [] & info
-           ~docv:"PACKAGES"
-           ~doc:"Only add hashes for the given packages"
-           ["p";"packages"])
+    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_1) ["p";"packages"]
+      "PACKAGES" "Only add hashes for the given packages"
+      Arg.(list OpamArg.package) []
   in
   let replace_arg =
-    Arg.(value & flag & info ["replace"] ~doc:
-           "Replace the existing hashes rather than adding to them")
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["replace"]
+      "Replace the existing hashes rather than adding to them"
   in
   let hash_tables =
     let t = Hashtbl.create (List.length hash_kinds) in
@@ -393,7 +389,7 @@ let add_hashes_command cli =
        | None -> ());
       h
   in
-  let cmd global_options hash_types replace packages =
+  let cmd global_options hash_types replace packages () =
     OpamArg.apply_global_options global_options;
     let repo_root = checked_repo_root () in
     let cache_urls =
@@ -495,9 +491,9 @@ let add_hashes_command cli =
     if has_error then OpamStd.Sys.exit_because `Sync_error
     else OpamStd.Sys.exit_because `Success
   in
-  Term.(const cmd $ global_options cli $
-        hash_types_arg $ replace_arg $ packages),
-  OpamArg.term_info command ~doc ~man
+  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+    Term.(const cmd $ global_options cli $
+          hash_types_arg $ replace_arg $ packages)
 
 let upgrade_command_doc =
   "Upgrades repository from earlier opam versions."
@@ -507,34 +503,30 @@ let upgrade_command cli =
   let man = [
     `S Manpage.s_description;
     `P (Printf.sprintf
-         "This command reads repositories from earlier opam versions, and \
-          converts them to repositories suitable for the current opam version. \
-          Packages might be created or renamed, and any compilers defined in the \
-          old format ('compilers%s' directory) will be turned into packages, \
-          using a pre-defined hierarchy that assumes OCaml compilers."
-         OpamArg.dir_sep)
+          "This command reads repositories from earlier opam versions, and \
+           converts them to repositories suitable for the current opam version. \
+           Packages might be created or renamed, and any compilers defined in the \
+           old format ('compilers%s' directory) will be turned into packages, \
+           using a pre-defined hierarchy that assumes OCaml compilers."
+          OpamArg.dir_sep)
   ]
   in
   let clear_cache_arg =
-    let doc =
-      Printf.sprintf
-       "Instead of running the upgrade, clear the cache of archive hashes (held \
-        in ~%s.cache), that is used to avoid re-downloading files to obtain \
-        their hashes at every run." OpamArg.dir_sep
-    in
-    Arg.(value & flag & info ["clear-cache"] ~doc)
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["clear-cache"]
+      (Printf.sprintf
+         "Instead of running the upgrade, clear the cache of archive hashes (held \
+          in ~%s.cache), that is used to avoid re-downloading files to obtain \
+          their hashes at every run." OpamArg.dir_sep)
   in
   let create_mirror_arg =
-    let doc =
+    OpamArg.mk_opt ~cli OpamArg.cli_original ["m"; "mirror"] "URL"
       "Don't overwrite the current repository, but put an upgraded mirror in \
        place in a subdirectory, with proper redirections. Needs the URL the \
        repository will be served from to put in the redirects (older versions \
        of opam don't understand relative redirects)."
-    in
-    Arg.(value & opt (some OpamArg.url) None &
-         info ~docv:"URL" ["m"; "mirror"] ~doc)
+      Arg.(some OpamArg.url) None
   in
-  let cmd global_options clear_cache create_mirror =
+  let cmd global_options clear_cache create_mirror () =
     OpamArg.apply_global_options global_options;
     if clear_cache then OpamAdminRepoUpgrade.clear_cache ()
     else match create_mirror with
@@ -549,9 +541,9 @@ let upgrade_command cli =
             \  opam admin index"
       | Some m -> OpamAdminRepoUpgrade.do_upgrade_mirror (OpamFilename.cwd ()) m
   in
-  Term.(const cmd $ global_options cli $
-        clear_cache_arg $ create_mirror_arg),
-  OpamArg.term_info command ~doc ~man
+  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+    Term.(const cmd $ global_options cli $
+          clear_cache_arg $ create_mirror_arg)
 
 let lint_command_doc =
   "Runs 'opam lint' and reports on a whole repository"
@@ -565,11 +557,11 @@ let lint_command cli =
   ]
   in
   let short_arg =
-    OpamArg.mk_flag ["s";"short"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["s";"short"]
       "Print only packages and warning/error numbers, without explanations"
   in
   let list_arg =
-    OpamArg.mk_flag ["list";"l"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["list";"l"]
       "Only list package names, without warning details"
   in
   let include_arg =
@@ -577,20 +569,20 @@ let lint_command cli =
       OpamArg.positive_integer
   in
   let exclude_arg =
-    OpamArg.mk_opt_all ["exclude";"x"] "INT"
+    OpamArg.mk_opt_all ~cli OpamArg.cli_original ["exclude";"x"] "INT"
       "Exclude the given warnings or errors"
       OpamArg.positive_integer
   in
   let ignore_arg =
-    OpamArg.mk_opt_all ["ignore-packages";"i"] "INT"
+    OpamArg.mk_opt_all ~cli OpamArg.cli_original ["ignore-packages";"i"] "INT"
       "Ignore any packages having one of these warnings or errors"
       OpamArg.positive_integer
   in
   let warn_error_arg =
-    OpamArg.mk_flag ["warn-error";"W"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["warn-error";"W"]
       "Return failure on any warnings, not only on errors"
   in
-  let cmd global_options short list incl excl ign warn_error =
+  let cmd global_options short list incl excl ign warn_error () =
     OpamArg.apply_global_options global_options;
     let repo_root = OpamFilename.cwd () in
     if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
@@ -632,10 +624,10 @@ let lint_command cli =
     in
     OpamStd.Sys.exit_because (if ret then `Success else `False)
   in
-  Term.(const cmd $ global_options cli $
-        short_arg $ list_arg $ include_arg $ exclude_arg $ ignore_arg $
-        warn_error_arg),
-  OpamArg.term_info command ~doc ~man
+  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+    Term.(const cmd $ global_options cli $
+          short_arg $ list_arg $ include_arg $ exclude_arg $ ignore_arg $
+          warn_error_arg)
 
 let check_command_doc =
   "Runs some consistency checks on a repository"
@@ -652,28 +644,28 @@ let check_command cli =
   ]
   in
   let ignore_test_arg =
-    OpamArg.mk_flag ["ignore-test-doc";"i"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["ignore-test-doc";"i"]
       "By default, $(b,{with-test}) and $(b,{with-doc}) dependencies are \
        included. This ignores them, and makes the test more tolerant."
   in
   let print_short_arg =
-    OpamArg.mk_flag ["s";"short"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["s";"short"]
       "Only output a list of uninstallable packages"
   in
   let installability_arg =
-    OpamArg.mk_flag ["installability"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["installability"]
       "Do the installability check (and disable the others by default)"
   in
   let cycles_arg =
-    OpamArg.mk_flag ["cycles"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["cycles"]
       "Do the cycles check (and disable the others by default)"
   in
   let obsolete_arg =
-    OpamArg.mk_flag ["obsolete"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["obsolete"]
       "Analyse for obsolete packages"
   in
   let cmd global_options ignore_test print_short
-      installability cycles obsolete =
+      installability cycles obsolete () =
     OpamArg.apply_global_options global_options;
     let repo_root = checked_repo_root () in
     let installability, cycles, obsolete =
@@ -716,9 +708,9 @@ let check_command cli =
        (pr obsolete "obsolete packages"));
     OpamStd.Sys.exit_because (if all_ok then `Success else `False)
   in
+  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
   Term.(const cmd $ global_options cli $ ignore_test_arg $ print_short_arg
-        $ installability_arg $ cycles_arg $ obsolete_arg),
-  OpamArg.term_info command ~doc ~man
+        $ installability_arg $ cycles_arg $ obsolete_arg)
 
 let pattern_list_arg =
   OpamArg.arg_list "PATTERNS"
@@ -726,35 +718,37 @@ let pattern_list_arg =
      $(b,NAME.VERSION)"
     Arg.string
 
-let env_arg =
-  Arg.(value & opt (list string) [] & info ["environment"] ~doc:(
-         Printf.sprintf
-          "Use the given opam environment, in the form of a list of \
-           comma-separated 'var=value' bindings, when resolving variables. This \
-           is used e.g. when computing available packages: if undefined, \
-           availability of packages will be assumed as soon as it can not be \
-           resolved purely from globally defined variables. Note that, unless \
-           overridden, variables like 'root' or 'opam-version' may be taken \
-           from the current opam installation. What is defined in \
-           $(i,~%s.opam%sconfig) is always ignored."
-          OpamArg.dir_sep OpamArg.dir_sep))
+let env_arg cli =
+  OpamArg.mk_opt ~cli OpamArg.cli_original ["environment"]
+    "VAR=VALUE[;VAR=VALUE]"
+    (Printf.sprintf
+       "Use the given opam environment, in the form of a list of \
+        comma-separated 'var=value' bindings, when resolving variables. This \
+        is used e.g. when computing available packages: if undefined, \
+        availability of packages will be assumed as soon as it can not be \
+        resolved purely from globally defined variables. Note that, unless \
+        overridden, variables like 'root' or 'opam-version' may be taken \
+        from the current opam installation. What is defined in \
+        $(i,~%s.opam%sconfig) is always ignored."
+       OpamArg.dir_sep OpamArg.dir_sep)
+    Arg.(list string) []
 
-let state_selection_arg =
-  let docs = OpamArg.package_selection_section in
-  Arg.(value & vflag OpamListCommand.Available [
-      OpamListCommand.Any, info ~docs ["A";"all"]
-        ~doc:"Include all, even uninstalled or unavailable packages";
-      OpamListCommand.Available, info ~docs ["a";"available"]
-        ~doc:"List only packages that are available according to the defined \
-              $(b,environment). Without $(b,--environment), this will include \
-              any packages for which availability is not resolvable at this \
-              point.";
-      OpamListCommand.Installable, info ~docs ["installable"]
-        ~doc:"List only packages that are installable according to the defined \
-              $(b,environment) (this calls the solver and may be more costly; \
-              a package depending on an unavailable one may be available, but \
-              is never installable)";
-    ])
+let state_selection_arg cli =
+  OpamArg.mk_vflag ~cli ~section:OpamArg.package_selection_section
+    OpamListCommand.Available [
+    OpamArg.cli_original, OpamListCommand.Any, ["A";"all"],
+    "Include all, even uninstalled or unavailable packages";
+    OpamArg.cli_original, OpamListCommand.Available, ["a";"available"],
+    "List only packages that are available according to the defined \
+     $(b,environment). Without $(b,--environment), this will include \
+     any packages for which availability is not resolvable at this \
+     point.";
+    OpamArg.cli_original, OpamListCommand.Installable, ["installable"],
+    "List only packages that are installable according to the defined \
+     $(b,environment) (this calls the solver and may be more costly; \
+     a package depending on an unavailable one may be available, but \
+     is never installable)";
+  ]
 
 let get_virtual_switch_state repo_root env =
   let env =
@@ -806,10 +800,10 @@ let get_virtual_switch_state repo_root env =
     ~avail_default:(env = [])
     gt rt
 
-let or_arg =
-  Arg.(value & flag & info ~docs:OpamArg.package_selection_section ["or"]
-         ~doc:"Instead of selecting packages that match $(i,all) the \
-               criteria, select packages that match $(i,any) of them")
+let or_arg cli =
+  OpamArg.mk_flag ~cli OpamArg.cli_original ~section:OpamArg.package_selection_section ["or"]
+    "Instead of selecting packages that match $(i,all) the \
+     criteria, select packages that match $(i,any) of them"
 
 let list_command_doc = "Lists packages from a repository"
 let list_command cli =
@@ -828,7 +822,7 @@ let list_command cli =
   in
   let cmd
       global_options package_selection disjunction state_selection
-      package_listing env packages =
+      package_listing env packages () =
     OpamArg.apply_global_options global_options;
     let format =
       let force_all_versions =
@@ -865,10 +859,10 @@ let list_command cli =
     in
     OpamListCommand.display st format results
   in
-  Term.(const cmd $ global_options cli $ OpamArg.package_selection $
-        or_arg $ state_selection_arg $ OpamArg.package_listing $ env_arg $
-        pattern_list_arg),
-  OpamArg.term_info command ~doc ~man
+  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+  Term.(const cmd $ global_options cli $ OpamArg.package_selection cli $
+        or_arg cli $ state_selection_arg cli $ OpamArg.package_listing cli $
+        env_arg cli $ pattern_list_arg)
 
 let filter_command_doc = "Filters a repository to only keep selected packages"
 let filter_command cli =
@@ -885,17 +879,17 @@ let filter_command cli =
   ]
   in
   let remove_arg =
-    OpamArg.mk_flag ["remove"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["remove"]
       "Invert the behaviour and remove the matching packages, keeping the ones \
        that don't match."
   in
   let dryrun_arg =
-    OpamArg.mk_flag ["dry-run"]
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["dry-run"]
       "List the removal commands, without actually performing them"
   in
   let cmd
       global_options package_selection disjunction state_selection env
-      remove dryrun packages =
+      remove dryrun packages () =
     OpamArg.apply_global_options global_options;
     let repo_root = OpamFilename.cwd () in
     let pattern_selector = OpamListCommand.pattern_selector packages in
@@ -952,10 +946,11 @@ let filter_command cli =
              OpamFilename.rmdir_cleanup d))
       pkg_prefixes
   in
-  Term.(const cmd $ global_options cli $ OpamArg.package_selection $ or_arg $
-        state_selection_arg $ env_arg $ remove_arg $ dryrun_arg $
-        pattern_list_arg),
-  OpamArg.term_info command ~doc ~man
+  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+  Term.(const cmd $ global_options cli $ OpamArg.package_selection cli $
+        or_arg cli $ state_selection_arg cli $ env_arg cli $ remove_arg $
+        dryrun_arg $
+        pattern_list_arg)
 
 let add_constraint_command_doc =
   "Adds version constraints on all dependencies towards a given package"
@@ -983,13 +978,13 @@ let add_constraint_command cli =
             package.")
   in
   let force_arg =
-    Arg.(value & flag & info ["force"] ~doc:
-           "Force updating of constraints even if the resulting constraint is \
-            unsatisfiable (e.g. when adding $(b,>3) to the constraint \
-            $(b,<2)). The default in this case is to print a warning and keep \
-            the existing constraint unchanged.")
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["force"]
+      "Force updating of constraints even if the resulting constraint is \
+       unsatisfiable (e.g. when adding $(b,>3) to the constraint \
+       $(b,<2)). The default in this case is to print a warning and keep \
+       the existing constraint unchanged."
   in
-  let cmd global_options force atom =
+  let cmd global_options force atom () =
     OpamArg.apply_global_options global_options;
     let repo_root = checked_repo_root () in
     let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
@@ -1060,8 +1055,8 @@ let add_constraint_command cli =
              |> OpamFile.OPAM.with_conflicts conflicts))
       pkg_prefixes
   in
-  Term.(pure cmd $ global_options cli $ force_arg $ atom_arg),
-  OpamArg.term_info command ~doc ~man
+  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+  Term.(pure cmd $ global_options cli $ force_arg $ atom_arg)
 
 (* HELP *)
 let help =
