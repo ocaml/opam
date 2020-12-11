@@ -99,6 +99,7 @@ New option/command/subcommand are prefixed with ◈.
 
 # Opam file format
   * Update opam-format lib to opam-file-format end position and new type definition [#4298 @rjbou]
+  * `with_preserved_format` preserves in fields also, don't drop comments, etc. [#4302 @rjbou - fix #3993]
 
 ## Solver
   * Fix missing conflict message when trying to remove required packages [#4362 @AltGr]

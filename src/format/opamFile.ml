@@ -790,29 +790,115 @@ module Syntax = struct
         in
         aux [0] str
       in
-      let pos_index pos =
-        let (li, col) = pos.start in
-        lines_index.(li - 1) + col
-      in
-      let field_str ident =
-        let rec aux = function
-          | it1 :: r when it_ident it1 = ident ->
-            let start = pos_index it1.pos in
-            let stop = match r with
-              | it2 :: _ -> pos_index it2.pos - 1
-              | [] ->
-                let len = ref (String.length str) in
-                while str.[!len - 1] = '\n' do decr len done;
-                !len
-            in
-            String.sub str start (stop - start)
-          | _ :: r -> aux r
-          | [] -> raise Not_found
+      let pos_index (li,col) = lines_index.(li - 1) + col in
+      let extract start stop = String.sub str start (stop - start) in
+      let value_list_str lastpos vlst vlst_raw =
+        let extract_pos start stop = extract (pos_index start) (pos_index stop) in
+        let def_blank blank = OpamStd.Option.default "\n  " blank in
+        let find_split f =
+          let rec aux p = function
+            | x::r when f x -> Some (p, x, r)
+            | p::r -> aux (Some p) r
+            | [] -> None
+          in
+          aux None
         in
-        aux syn_file.file_contents
+        let full_vlst_raw = vlst_raw in
+        let rec aux lastpos blank acc vlst vlst_raw =
+          match vlst, vlst_raw with
+          | v::r, vraw :: rraw when OpamPrinter.value_equals v vraw ->
+            let blank = extract lastpos (pos_index vraw.pos.start) in
+            let str = extract_pos vraw.pos.start vraw.pos.stop in
+            let new_v = blank ^ str in
+            let blank = Some blank in
+            let lastpos = pos_index vraw.pos.stop in
+            aux lastpos blank (new_v :: acc) r rraw
+          | v::r , _ ->
+            (match find_split (OpamPrinter.value_equals v) full_vlst_raw with
+             | Some (pvraw, vraw, rraw) ->
+               let str = extract_pos vraw.pos.start vraw.pos.stop in
+               let blank, lastpos =
+                 if pos_index vraw.pos.start - lastpos <= 0 then
+                   def_blank blank, lastpos
+                 else
+                   (let start = match pvraw with
+                       | Some pvraw -> pos_index pvraw.pos.stop
+                       | None -> lastpos
+                    in
+                    let stop = pos_index vraw.pos.start in
+                    extract start stop),
+                   pos_index vraw.pos.stop
+               in
+               let new_v = blank ^ str in
+               let blank = Some blank in
+               aux lastpos blank (new_v :: acc) r rraw
+             | None ->
+               let blank, rraw, lastpos =
+                 match vlst_raw with
+                 | vraw :: rraw ->
+                   let blank = extract lastpos (pos_index vraw.pos.start) in
+                   let rraw, lastpos =
+                     if OpamStd.List.find_opt
+                         (OpamPrinter.value_equals vraw) vlst <> None then
+                       vlst_raw, lastpos
+                     else
+                       rraw, pos_index vraw.pos.stop
+                   in
+                   blank, rraw, lastpos
+                 | [] -> def_blank blank, vlst_raw, lastpos
+               in
+               let new_v = blank ^ (OpamPrinter.value v) in
+               let blank = Some blank in
+               aux lastpos blank (new_v :: acc) r rraw)
+          | [], _ ->  acc
+        in
+        aux lastpos None [] vlst vlst_raw
       in
-      let rem, strs =
-        List.fold_left (fun (rem, strs) item ->
+      let item_var_str name field =
+        let field_raw =
+          List.find (fun i -> it_ident i = `Var name) syn_file.file_contents
+        in
+        match field.pelem with
+        | Variable (n, { pelem = List { pelem = full_vlst;_}; _}) when n.pelem = name ->
+          let full_vlst_raw, full_vlst_raw_pos =
+            match field_raw.pelem with
+            | Variable (_, {pelem = List vlst_raw;  pos}) -> vlst_raw.pelem, pos
+            | _ -> raise Not_found
+          in
+          (* aux *)
+          let item_var_str =
+            let lastpos = pos_index full_vlst_raw_pos.start +1 in
+            let final_list = value_list_str lastpos full_vlst full_vlst_raw in
+            String.concat "" (List.rev final_list)
+          in
+          let beginning =
+            let start = pos_index field_raw.pos.start in
+            let stop = pos_index full_vlst_raw_pos.start +1 in
+            extract start stop
+          in
+          let ending =
+            let start = pos_index (List.hd (List.rev full_vlst_raw)).pos.stop in
+            let stop = pos_index full_vlst_raw_pos.stop in
+            extract start stop
+          in
+          beginning ^ item_var_str ^ ending
+        | _ -> OpamPrinter.items [field]
+      in
+      (* Fields *)
+      let get_padding item lastpos =
+        let start = pos_index item.pos.start in
+        let stop = pos_index item.pos.stop in
+        let padding = extract lastpos start in
+        padding, stop
+      in
+      let field_str item lastpos strs =
+        let start = pos_index item.pos.start in
+        let padding, stop = get_padding item lastpos in
+        let field = extract start stop in
+        field :: padding :: strs, stop
+      in
+      let rem, (strs, lastpos) =
+        List.fold_left (fun (rem, (strs, lastpos)) item ->
             List.filter (fun i -> it_ident i <> it_ident item) rem,
             let pos = item.pos in
             match item.pelem with
@@ -826,26 +912,28 @@ module Syntax = struct
                  | Some { pelem = List
                               { pelem = [ { pelem = List
                                                 { pelem = []; _}; _}]; _}; _} ->
-                   strs
+                   strs, pos_index item.pos.stop
                  | field_syn_t when
                      field_syn_t =
                      snd (Pp.print ppa (Pp.parse ppa ~pos (empty, Some v)))
                    ->
                    (* unchanged *)
-                   field_str (`Var name) :: strs
+                   field_str item lastpos strs
                  | _ ->
                    try
-                     let f =
+                     let field =
                        List.find (fun i -> it_ident i = `Var name) syn_t.file_contents
                      in
-                     OpamPrinter.items [f] :: strs
-                   with Not_found -> strs
+                     let f = item_var_str name field in
+                     let padding, stop = get_padding item lastpos in
+                     f :: padding :: strs, stop
+                   with Not_found -> strs, pos_index item.pos.stop
                with Not_found | OpamPp.Bad_format _ ->
                  if OpamStd.String.starts_with ~prefix:"x-" name &&
                     OpamStd.List.find_opt (fun i -> it_ident i = `Var name)
                       syn_t.file_contents <> None then
-                   field_str (`Var name) :: strs
-                 else strs)
+                   field_str item lastpos strs
+                 else strs, pos_index item.pos.stop)
             | Section {section_kind; section_name; section_items} ->
               let section_kind = section_kind.pelem in
               let section_items = section_items.pelem in
@@ -866,23 +954,29 @@ module Syntax = struct
                          (empty, Some [section_name, section_items]))
                  then
                    (* unchanged *)
-                   field_str (`Sec (section_kind, section_name)) :: strs
+                   field_str item lastpos strs
                  else
-                 try
-                   let f =
-                     List.filter
-                       (fun i -> it_ident i = `Sec (section_kind, section_name))
-                       syn_t.file_contents
-                   in
-                   OpamPrinter.items f :: strs
-                 with Not_found -> strs
-               with Not_found | OpamPp.Bad_format _ -> strs)
-          )
-          (syn_t.file_contents, []) syn_file.file_contents
+                 let f =
+                   List.filter
+                     (fun i -> it_ident i = `Sec (section_kind, section_name))
+                     syn_t.file_contents
+                 in
+                 let padding, stop = get_padding item lastpos in
+                 (OpamPrinter.items f :: padding :: strs), stop
+               with Not_found | OpamPp.Bad_format _ ->
+                 strs, pos_index item.pos.stop))
+          (syn_t.file_contents, ([], 0)) syn_file.file_contents
       in
-      String.concat "\n"
-        (List.rev_append strs
-           (if rem = [] then [""] else [OpamPrinter.items rem;""]))
+      let str = String.concat "" (List.rev strs) in
+      let str =
+        if rem = [] then str else
+          str ^ "\n" ^ (OpamPrinter.items rem)
+      in
+      let str =
+        let last = lines_index.(Array.length lines_index -1) in
+        if last <= lastpos then str else str ^ extract lastpos last
+      in
+      str
 
   let contents pp ?(filename=dummy_file) t =
     Pp.print pp (filename, t)
