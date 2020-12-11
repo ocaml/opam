@@ -35,7 +35,7 @@ init-bootstrap () {
     set -e
     export OPAMROOT=$OPAMBSROOT
     # The system compiler will be picked up
-    opam init --yes --no-setup git+https://github.com/ocaml/opam-repository#$OPAM_REPO_SHA
+    opam init --yes --no-setup git+https://github.com/ocaml/opam-repository#$OPAM_REPO_SHA --disable-sandboxing
     eval $(opam env)
 #    opam update
     CURRENT_SWITCH=$(opam config var switch)
