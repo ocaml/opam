@@ -1515,6 +1515,10 @@ let install cli =
     mk_flag ~cli (cli_from cli2_1) ["ignore-conflicts"]
       "Used with $(b,--deps-only), ignores conflicts of given package"
   in
+  let download_only =
+    mk_flag ~cli (cli_from cli2_1) ["download-only"]
+      "Fetch the sources of the packages, but don't build or install anything."
+  in
   let restore =
     mk_flag ~cli cli_original ["restore"]
       "Attempt to restore packages that were marked for installation but have \
@@ -1545,7 +1549,7 @@ let install cli =
   let install
       global_options build_options add_to_roots deps_only ignore_conflicts
       restore destdir assume_built check recurse subpath depext_only
-      atoms_or_locals () =
+      download_only atoms_or_locals () =
     apply_global_options global_options;
     apply_build_options build_options;
     if atoms_or_locals = [] && not restore then
@@ -1606,7 +1610,7 @@ let install cli =
     let st =
       OpamClient.install st atoms
         ~autoupdate:pure_atoms ?add_to_roots ~deps_only ~ignore_conflicts
-        ~assume_built ~depext_only
+        ~assume_built ~depext_only ~download_only
     in
     match destdir with
     | None -> `Ok ()
@@ -1619,7 +1623,7 @@ let install cli =
     Term.(const install $global_options cli $build_options cli
           $add_to_roots $deps_only $ignore_conflicts $restore $destdir
           $assume_built cli $check $recurse cli $subpath cli $depext_only
-          $atom_or_local_list)
+          $download_only $atom_or_local_list)
 
 (* REMOVE *)
 let remove_doc = "Remove a list of packages."
@@ -2708,7 +2712,8 @@ let switch cli =
            if no_action || OpamFormula.satisfies_depends st.installed invariant
            then st
            else OpamClient.install_t
-               st ~ask:true [] None ~deps_only:false ~assume_built:false
+               st ~ask:true [] None
+               ~deps_only:false ~assume_built:false
          in
          OpamSwitchState.drop st;
          `Ok ())
