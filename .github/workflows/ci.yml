@@ -199,7 +199,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{ env.OPAM12CACHE }}
-        key: opam1.2-root
+        key: ${{ runner.os }}-opam1.2-root
     - name: ocaml ${{ matrix.ocamlv }} cache
       id: ocaml-cache
       uses: actions/cache@v2
