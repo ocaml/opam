@@ -1812,6 +1812,11 @@ let update cli =
     mk_flag ~cli cli_original ["development"]
       "Update development packages (skipping repositories unless \
        $(b,--repositories) is also specified)." in
+  let depexts_only =
+    mk_flag ~cli (cli_from cli2_1) ["depexts"]
+      "Request the system package manager to update its databases (skipping \
+       all opam packages, unless $(b,--development) or $(b,--repositories) is \
+       also specified). This generally requires $(b,sudo) rights." in
   let upgrade =
     mk_flag ~cli cli_original ["u";"upgrade"]
       "Automatically run $(b,opam upgrade) after the update." in
@@ -1831,13 +1836,15 @@ let update cli =
        $(b,--upgrade), applies to the upgrade step: that is $(b,opam update \
        --upgrade --check) behaves like $(b,opam update && opam upgrade --check), \
        returning 0 if there are available upgrades, rather than upstream updates." in
-  let update global_options jobs names repos_only dev_only all
+  let update global_options jobs names repos_only dev_only depexts_only all
       check upgrade () =
     apply_global_options global_options;
     OpamStateConfig.update
       ?jobs:OpamStd.Option.Op.(jobs >>| fun j -> lazy j)
       ();
     OpamClientConfig.update ();
+    if depexts_only then OpamSysInteract.update ();
+    if depexts_only && not (repos_only || dev_only) then () else
     OpamGlobalState.with_ `Lock_write @@ fun gt ->
     let success, changed, rt =
       OpamClient.update gt
@@ -1860,7 +1867,7 @@ let update cli =
   in
   mk_command cli cli_original "update" ~doc ~man
   Term.(const update $global_options cli $jobs_flag cli cli_original $name_list
-        $repos_only $dev_only $all $check $upgrade)
+        $repos_only $dev_only $depexts_only $all $check $upgrade)
 
 (* UPGRADE *)
 let upgrade_doc = "Upgrade the installed package to latest version."

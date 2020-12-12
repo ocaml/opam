@@ -68,6 +68,7 @@ New option/command/subcommand are prefixed with ◈.
   * Add support for NetBSD and DragonFlyBSD [#4396 @kit-ty-kate]
   * Fix OpenBSD, FreeBSD and Gentoo: Allow short names and full name paths for ports-based systems [#4396 @kit-ty-kate]
   * Handle the case where `os-family=ubuntu` as `os-family=debian` [#4441 @alan-j-hu]
+  * ◈ Provide `opam update --depexts` to request an update of the system package manager databases [#4379 @AltGr - fix #4355]
 
 ## Sandbox
   *
