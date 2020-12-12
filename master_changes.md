@@ -13,7 +13,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Init
   * Fix sandbox check with not yet set opam environment variables [#4370 @rjbou - fix #4368]
-  * Sandboxing check: use configured temp dir and cleanup afterwards [#4466 @AltGr]
+  * Sandboxing check: use configured temp dir and cleanup afterwards [#4467 @AltGr]
 
 ## Config Upgrade
   *
@@ -117,17 +117,17 @@ New option/command/subcommand are prefixed with ◈.
   * Internal caches: use size checks from Marshal [#4430 @AltGr]
   * openssl invocation: Fix permission denied fallback [#4449 @Blaisorblade - fix #4448]
   * Add debug & verbose log for patch & subst application [#4464 @rjbou - fix #4453]
-  * Be more robust w.r.t. new caches updates when `--read-only` is not used [#4466 @AltGr - fix #4354]
+  * Be more robust w.r.t. new caches updates when `--read-only` is not used [#4467 @AltGr - fix #4354]
 
 ## Test
   * Ensure that a cold `dune runtest` works [#4375 @emillon]
   * Use dune "expected" convention for patcher test [#4395 @emillon]
   * Add var/option test [#4428 @rjbou]
-  * patcher: fix local [#4466 @AltGr]
-  * Add github actions [#4463 @rjbou]
-  * Add reftests to github actions [#4466 @rjbou]
-  * Add opam file 1.2 -> 2.0 upgrade test [#4466 @rjbou]
   * Add cli versioning test [#4385 @rjbou]
+  * Add opam file 1.2 -> 2.0 upgrade test [#4467 @rjbou]
+  * patcher: fix local [#4467 @AltGr]
+  * Add github actions [#4463 @rjbou]
+  * Add reftests to github actions [#4467 @rjbou]
 
 ## Shell
   * Update completion scripts with `opam var` instead of `opam config list` [#4428 @rjbou]
