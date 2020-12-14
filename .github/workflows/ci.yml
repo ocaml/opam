@@ -216,3 +216,23 @@ jobs:
         OCAML_VERSION: ${{ matrix.ocamlv }}
         OPAM_UPGRADE: 1
       run: bash -exu .github/scripts/main.sh
+
+####
+# Around opam tests
+###
+  hygiene:
+    needs: [ archives-cache ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: src ext archives cache
+      uses: actions/cache@v2
+      with:
+        path: src_ext/archives
+        key: archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
+    - name: Hygiene
+      env:
+        # Defined only on pull request jobs
+        BASE_REF_SHA: ${{ github.event.pull_request.base.sha }}
+        PR_REF_SHA: ${{ github.event.pull_request.head.sha }}
+      run: bash -exu .github/scripts/hygiene.sh
