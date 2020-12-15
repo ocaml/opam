@@ -184,7 +184,11 @@ let compute_upgrade_t
              then (n, None)
              else
              let atom = (n, Some (`Gt, nv.version)) in
-             if OpamPackage.Set.exists (OpamFormula.check atom)
+             if OpamPackage.Set.exists
+                 (fun nv ->
+                    OpamFormula.check atom nv &&
+                    not (OpamFile.OPAM.has_flag Pkgflag_HiddenVersion
+                           (OpamSwitchState.opam t nv)))
                  (Lazy.force t.available_packages)
              then atom
              else (n, None)
