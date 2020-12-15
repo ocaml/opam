@@ -19,6 +19,9 @@ open OpamProcess.Job.Op
 module PackageAction = OpamSolver.Action
 module PackageActionGraph = OpamSolver.ActionGraph
 
+
+exception Fetch_fail of string
+
 let post_message ?(failed=false) st action =
   match action, failed with
   | `Remove _, _ | `Reinstall _, _ | `Build _, false | `Fetch _, _ -> ()
@@ -84,7 +87,14 @@ let check_solution ?(quiet=false) st = function
     List.iter (fun (a, _) -> post_message ~failed:true st a) actions_errors;
     print_depexts_helper st (List.map fst actions_errors);
     OpamEnv.check_and_print_env_warning st;
-    OpamStd.Sys.exit_because `Package_operation_error
+    let reason =
+      if List.for_all (function
+            _, Fetch_fail _ -> true | _ -> false)
+          actions_errors then
+        `Sync_error
+      else `Package_operation_error
+    in
+    OpamStd.Sys.exit_because reason
   | Success (OK actions) ->
     List.iter (post_message st) actions;
     OpamEnv.check_and_print_env_warning st
@@ -531,7 +541,7 @@ let parallel_apply t
         | None ->
           store_time (); Done (`Successful (installed, removed))
         | Some (_short_error, long_error) ->
-          Done (`Exception (Failure long_error)))
+          Done (`Exception (Fetch_fail long_error)))
 
     | `Build nv ->
       if assume_built && OpamPackage.Set.mem nv requested then
@@ -647,7 +657,7 @@ let parallel_apply t
         (* Report download failures *)
         let failed_downloads = List.fold_left (fun failed (a, err) ->
             match (a, err) with
-            | `Fetch pkg, `Exception (Failure long_error) ->
+            | `Fetch pkg, `Exception (Fetch_fail long_error) ->
               OpamPackage.Map.add pkg long_error failed
             | _ ->
               failed
