@@ -23,6 +23,7 @@ New option/command/subcommand are prefixed with ◈.
   * `post-install` hooks are allowed to modify or remove installed files, the but not add new ones. Those changes are integrated in changes file [#4388 @lefessan]
   * ◈ Add `--download-only` flag [#4071 @Armael @rjbou - fix #4036]
   * Run switch pre/post sessions hooks [#4476 @rjbou - fix #4472]
+  * Ensure we don't advertise upgrades to hidden versions [#4477 @AltGr - fix #4432]
 
 ## Remove
   * Fix `opam remove --autoremove <PKG>` to not autoremove unrelated packages [#4369 @AltGr - fix #4250 #4332]
@@ -65,6 +66,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Opamfile
   * Fix handling of filename-encoded pkgname in opam files [#4401 @AltGr - fix ocaml-opam/opam-publish#107]
+  * Make sure modifying the (currently existing) flags don't cause recompilation [#4477 @AltGr]
 
 ## External dependencies
   * Add support for NetBSD and DragonFlyBSD [#4396 @kit-ty-kate]
