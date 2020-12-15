@@ -330,7 +330,7 @@
   (targets opam-repo-009e00fa)
   (action
    (progn
-    (run mkdir %{targets})
+    (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-009e00fa.tar.gz} --strip-components=1))))
 
 (rule
@@ -350,7 +350,7 @@
   (targets opam-repo-ad4dd344)
   (action
    (progn
-    (run mkdir %{targets})
+    (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-ad4dd344.tar.gz} --strip-components=1))))
 
 (rule
@@ -370,7 +370,7 @@
   (targets opam-repo-c1d23f0e)
   (action
    (progn
-    (run mkdir %{targets})
+    (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-c1d23f0e.tar.gz} --strip-components=1))))
 
 (rule
@@ -390,7 +390,7 @@
   (targets opam-repo-f372039d)
   (action
    (progn
-    (run mkdir %{targets})
+    (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-f372039d.tar.gz} --strip-components=1))))
 
 (rule

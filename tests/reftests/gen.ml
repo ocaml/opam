@@ -66,7 +66,7 @@ let archive_unpack_rule archive_hash =
   (targets %s)
   (action
    (progn
-    (run mkdir %%{targets})
+    (run mkdir -p %%{targets})
     (run tar -C %%{targets} -xzf %%{dep:%s} --strip-components=1))))
 |} (repo_directory ~archive_hash) (tgz_name ~archive_hash)
 
