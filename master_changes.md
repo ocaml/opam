@@ -128,6 +128,7 @@ New option/command/subcommand are prefixed with ◈.
   * patcher: fix local [#4467 @AltGr]
   * Add github actions [#4463 @rjbou]
   * Add reftests to github actions [#4467 @rjbou]
+  * Fix MacOS upgrade CI test using OS-specific opam 1.2 cache [#4475 @freevoid - fix #4474]
 
 ## Shell
   * Update completion scripts with `opam var` instead of `opam config list` [#4428 @rjbou]

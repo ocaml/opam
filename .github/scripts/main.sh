@@ -104,7 +104,12 @@ if [ $OPAM_UPGRADE -eq 1 ]; then
   OPAM12=$OPAM12CACHE/bin/opam
   if [[ ! -f $OPAM12 ]]; then
     mkdir -p $OPAM12CACHE/bin
-    wget https://github.com/ocaml/opam/releases/download/1.2.2/opam-1.2.2-x86_64-Linux -O $OPAM12
+
+    os="Linux"
+    if [ "$RUNNER_OS" = "macOS" ]; then
+      os="Darwin"
+    fi
+    wget "https://github.com/ocaml/opam/releases/download/1.2.2/opam-1.2.2-x86_64-$os" -O $OPAM12
     chmod +x $OPAM12
   fi
   export OPAMROOT=/tmp/opamroot
