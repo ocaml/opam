@@ -3071,7 +3071,17 @@ module OPAM = struct
       conflicts  = t.conflicts;
       conflict_class = t.conflict_class;
       available  = t.available;
-      flags      = t.flags;
+      flags      =
+        (List.filter (function
+             | Pkgflag_LightUninstall
+             | Pkgflag_Verbose
+             | Pkgflag_Plugin
+             | Pkgflag_Compiler
+             | Pkgflag_Conf
+             | Pkgflag_HiddenVersion
+             | Pkgflag_Unknown _
+               -> false)
+            t.flags);
       env        = t.env;
 
       build      = t.build;
