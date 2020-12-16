@@ -1204,6 +1204,11 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
               (OpamSwitchState.depexts t nv))
           new_state.installed OpamSysPkg.Set.empty
       in
+      let wrappers =
+        OpamFile.Wrappers.add
+          ~outer:(OpamFile.Config.wrappers t.switch_global.config)
+          ~inner:(OpamFile.Switch_config.wrappers t.switch_config)
+      in
       let pre_session =
         let open OpamPackage.Set.Op in
         let local = [
@@ -1214,8 +1219,7 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
         ] in
         run_job @@
         run_hook_job t "pre-session" ~local ~allow_stdout:true
-          (OpamFile.Wrappers.pre_session
-             (OpamFile.Config.wrappers t.switch_global.config))
+          (OpamFile.Wrappers.pre_session wrappers)
       in
       if not pre_session then
         OpamStd.Sys.exit_because `Configuration_error;
@@ -1237,8 +1241,7 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
         ] in
         run_job @@
         run_hook_job t "post-session" ~local ~allow_stdout:true
-          (OpamFile.Wrappers.post_session
-             (OpamFile.Config.wrappers t.switch_global.config))
+          (OpamFile.Wrappers.post_session wrappers)
       in
       if not post_session then
         OpamStd.Sys.exit_because `Configuration_error;
