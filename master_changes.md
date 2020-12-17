@@ -86,6 +86,7 @@ New option/command/subcommand are prefixed with ◈.
   * Makefile: Add rule `custom-libinstall` for `opam-custom-install` use [#4401 @AltGr]
   * opam-client lib: fix dependency constraints for cmdliner, extlib [#4410 @AltGr]
   * Makefile: Fix missing spaces between `DUNE_ARGS` and `DUNE_PROMOTE_ARG`. [#4458 @nbraud - fix #4457]
+  * advertise make compiler in configure if no compiler is found [#4451 @dra27]
 
 ## Infrastructure
   *
