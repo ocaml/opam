@@ -405,8 +405,8 @@ A very useful package
 ### <packages/P2/build.sh>
 #! /bin/sh -eu
 
-OFLAGS="`opam config var P1:asmcomp | tr -d '\r'`"
-CFLAGS="`opam config var P1:bytecomp | tr -d '\r'`"
+OFLAGS="`opam var P1:asmcomp | tr -d '\r'`"
+CFLAGS="`opam var P1:bytecomp | tr -d '\r'`"
 
 echo "Bytecode Compilation"
 ocamlc ${CFLAGS} -a p2.ml -o p2.cma
@@ -460,7 +460,7 @@ and the rest is the package description.
 echo "Building P3 version ${OPAM_PACKAGE_VERSION}"
 
 if [ "x${OPAM_PACKAGE_NAME}" = "xP3" ]; then
-    LIB=$(${OPAM} config var lib | tr -d '\r')
+    LIB=$(${OPAM} var lib | tr -d '\r')
     ocamlc -a -I $LIB/P1 -I $LIB/P2 p3.ml -o p3.cma
     ocamlopt -a -I $LIB/P1 -I $LIB/P2 p3.ml -o p3.cmxa
     ocamlc -a -I $LIB/P1 -I $LIB/P2 p3_bar.ml -o p3_bar.cma
@@ -553,7 +553,7 @@ else
 fi
 
 echo "Building P4 with ${OPAM}"
-LIBDIR="`${OPAM} config var lib | tr -d '\r'`"
+LIBDIR="`${OPAM} var lib | tr -d '\r'`"
 COMP="-I ${LIBDIR}/P1 -I ${LIBDIR}/P2 -I ${LIBDIR}/P3"
 LINK="p1.cmxa p2.cmxa p3.cmxa p3_bar.cmxa"
 
@@ -584,7 +584,7 @@ Testing transitive closure
 ### <packages/P5/build.sh>
 #! /bin/sh -eu
 
-FLAGS="-I `${OPAM} config var P1:lib | tr -d '\r'`"
+FLAGS="-I `${OPAM} var P1:lib | tr -d '\r'`"
 
 echo "Bytecode Compilation"
 ocamlc ${FLAGS} -a p5.ml -o p5.cma
@@ -662,8 +662,7 @@ Switch invariant: ["ocaml" {= "system"}]
 -> installed ocaml.system
 Done.
 ### opam exec -- ocamlc -config | sed -ne "s/ext_lib: .//p" | tr -d '\r' >lib-ext
-### opam config set ext_lib $(cat lib-ext)
-[WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
+### opam var ext_lib=$(cat lib-ext) --switch system
 Added 'ext_lib: "a"' to field variables in switch system
 ### : INSTALL-REMOVE :
 ### opam list -is --columns=package
@@ -1175,8 +1174,7 @@ Switch invariant: ["ocaml" {= "system"}]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml.system
 Done.
-### opam config set ext_lib $(cat lib-ext)
-[WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
+### opam var ext_lib=$(cat lib-ext) --switch test
 Added 'ext_lib: "a"' to field variables in switch test
 ### opam list -is --columns=package
 ocaml.system
@@ -1208,8 +1206,7 @@ Switch invariant: ["ocaml" {= "20"}]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml.20
 Done.
-### opam config set ext_lib $(cat lib-ext)
-[WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
+### opam var ext_lib=$(cat lib-ext) --switch test2
 Added 'ext_lib: "a"' to field variables in switch test2
 ### opam list -is --columns=package
 ocaml.20
@@ -1252,8 +1249,7 @@ ocaml.system
 P1.1
 P2.1
 ### opam switch create 10+a+b --empty
-### opam config set ext_lib $(cat lib-ext)
-[WARNING] Subcommand set is deprecated. Use opam var ext_lib=a instead.
+### opam var ext_lib=$(cat lib-ext) --switch 10+a+b
 Added 'ext_lib: "a"' to field variables in switch 10+a+b
 ### opam install ocaml.10+a+b P1 P2 P3 P4 | ./opam-sort
 The following actions will be performed:
