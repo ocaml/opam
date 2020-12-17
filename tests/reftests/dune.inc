@@ -1,5 +1,21 @@
 
 (alias
+ (name reftest-cli-versioning)
+ (action
+  (diff cli-versioning.test cli-versioning.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-cli-versioning)))
+
+(rule
+ (deps root-009e00fa)
+ (action
+  (with-stdout-to
+   cli-versioning.out
+   (run ./run.exe %{bin:opam} %{dep:cli-versioning.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-conflict-badversion)
  (action
   (diff conflict-badversion.test conflict-badversion.out)))
@@ -126,6 +142,38 @@
   (with-stdout-to
    show.out
    (run ./run.exe %{bin:opam} %{dep:show.test} %{read-lines:testing-env}))))
+
+(alias
+ (name reftest-upgrade-format)
+ (action
+  (diff upgrade-format.test upgrade-format.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-upgrade-format)))
+
+(rule
+ (deps root-009e00fa)
+ (action
+  (with-stdout-to
+   upgrade-format.out
+   (run ./run.exe %{bin:opam} %{dep:upgrade-format.test} %{read-lines:testing-env}))))
+
+(alias
+ (name reftest-var-option)
+ (action
+  (diff var-option.test var-option.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-var-option)))
+
+(rule
+ (deps root-009e00fa)
+ (action
+  (with-stdout-to
+   var-option.out
+   (run ./run.exe %{bin:opam} %{dep:var-option.test} %{read-lines:testing-env}))))
 
 (rule
  (targets opam-archive-009e00fa.tar.gz)
