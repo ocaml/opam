@@ -14,8 +14,8 @@ PATCH ?= patch
 URL_ocaml = https://caml.inria.fr/pub/distrib/ocaml-4.11/ocaml-4.11.1.tar.gz
 MD5_ocaml = 3bee0ea50ed28b9cf0e8a35233f61480
 
-URL_flexdll = https://github.com/alainfrisch/flexdll/archive/0.38.tar.gz
-MD5_flexdll = dca52bce081c8f19e9cd78219458a816
+URL_flexdll = https://github.com/alainfrisch/flexdll/archive/0.39.tar.gz
+MD5_flexdll = c8493c7b6e95c4763b89213a9a710af5
 
 ifndef FETCH
   ifneq ($(shell command -v curl 2>/dev/null),)

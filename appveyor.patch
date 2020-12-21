@@ -1,0 +1,16 @@
+diff --git a/shell/bootstrap-ocaml.sh b/shell/bootstrap-ocaml.sh
+index e36e07b5..65d05ac1 100755
+--- a/shell/bootstrap-ocaml.sh
++++ b/shell/bootstrap-ocaml.sh
+@@ -34,6 +34,11 @@ fi
+ 
+ if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
+   tar -zxf ${V}.tar.gz
++  cd ${V}
++  ${CURL} https://github.com/ocaml/ocaml/commit/26ebd64227e99a125bb0530bdfdfdb2782792d56.patch
++  # OCaml PR#9939 for mingw-w64 8.0.0 support
++  patch -p1 -i 26ebd64227e99a125bb0530bdfdfdb2782792d56.patch
++  cd ..
+ else
+   mkdir -p ${V}
+ fi
