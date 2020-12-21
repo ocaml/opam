@@ -70,6 +70,15 @@ val is_up_to_date_switch: dirname -> switch -> bool
     its set of installed packages *)
 val compute_updates: ?force_path:bool -> 'a switch_state -> env_update list
 
+(** Returns shell-appropriate statement to evaluate [cmd]. *)
+val shell_eval_invocation:
+  OpamTypes.shell -> string -> string
+
+(** Returns "opam env" invocation string together with optional root and switch
+    overrides *)
+val opam_env_invocation:
+  ?root:string -> ?switch:string -> ?set_opamswitch:bool -> unit -> string
+
 (** The shell command to run by the user to set his OPAM environment, adapted to
     the current shell (as returned by [eval `opam config env`]) *)
 val eval_string:

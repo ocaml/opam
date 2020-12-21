@@ -1097,19 +1097,25 @@ end
 (* CONFIG *)
 let config_doc = "Display configuration options for packages."
 let config cli =
+  let shell = OpamStd.Sys.guess_shell_compat () in
   let doc = config_doc in
   let commands = [
     cli_original, "env", `env, [],
-    "Returns the bindings for the environment variables set in the current \
-     switch, e.g. PATH, in a format intended to be evaluated by a shell. With \
-     $(i,-v), add comments documenting the reason or package of origin for \
-     each binding. This is most usefully used as $(b,eval \\$(opam config \
-     env\\)) to have further shell commands be evaluated in the proper opam \
-     context. Can also be accessed through $(b,opam env).";
+    Printf.sprintf
+      "Returns the bindings for the environment variables set in the \
+       current switch, e.g. PATH, in a format intended to be evaluated by \
+       a shell. With $(i,-v), add comments documenting the reason or \
+       package of origin for each binding. This is most usefully used as \
+       $(b,%s) to have further shell commands be evaluated in the proper \
+       opam context. Can also be accessed through $(b,opam env)."
+      OpamEnv.(shell_eval_invocation shell "opam config env" |> Manpage.escape);
     cli_original, "revert-env", `revert_env, [],
-    "Reverts environment changes made by opam, e.g. $(b,eval \\$(opam config \
-     revert-env)) undoes what $(b,eval \\$(opam config env\\)) did, as much as \
-     possible.";
+    Printf.sprintf
+      "Reverts environment changes made by opam, e.g. $(b,%s) undoes what \
+       $(b,%s) did, as much as possible."
+      OpamEnv.(shell_eval_invocation shell "opam config revert-env"
+               |> Manpage.escape)
+      OpamEnv.(shell_eval_invocation shell "opam config env" |> Manpage.escape);
     cli_original, "list", `list, ["[PACKAGE]..."],
     "Without argument, prints a documented list of all available variables. \
      With $(i,PACKAGE), lists all the variables available for these packages. \
@@ -1416,15 +1422,20 @@ let exec cli =
 (* ENV *)
 let env_doc = "Prints appropriate shell variable assignments to stdout"
 let env cli =
+  let shell = OpamStd.Sys.guess_shell_compat () in
   let doc = env_doc in
   let man = [
     `S Manpage.s_description;
-    `P "Returns the bindings for the environment variables set in the current \
-        switch, e.g. PATH, in a format intended to be evaluated by a shell. \
-        With $(i,-v), add comments documenting the reason or package of origin \
-        for each binding. This is most usefully used as $(b,eval \\$(opam \
-        env\\)) to have further shell commands be evaluated in the proper opam \
-        context.";
+    `P (Printf.sprintf
+        "Returns the bindings for the environment variables set in the current \
+         switch, e.g. PATH, in a format intended to be evaluated by a shell. \
+         With $(i,-v), add comments documenting the reason or package of origin \
+         for each binding. This is most usefully used as $(b,%s) \
+         to have further shell commands be evaluated in the proper opam \
+         context."
+        OpamEnv.(
+          shell_eval_invocation shell (opam_env_invocation ())
+            |> Manpage.escape));
     `P "This is a shortcut, and equivalent to $(b,opam config env).";
   ] in
   let revert =
@@ -2293,6 +2304,7 @@ let with_repos_rt gt repos f =
 
 let switch_doc = "Manage multiple installation prefixes."
 let switch cli =
+  let shell = OpamStd.Sys.guess_shell_compat () in
   let doc = switch_doc in
   let commands = [
     cli_original, "create", `install, ["SWITCH"; "[COMPILER]"],
@@ -2365,10 +2377,14 @@ let switch cli =
          prompted to install them after the switch is created unless \
          $(b,--no-install) is specified."
         OpamArg.dir_sep OpamSwitch.external_dirname);
-    `P "$(b,opam switch set) sets the default switch globally, but it is also \
-        possible to select a switch in a given shell session, using the \
-        environment. For that, use $(i,eval \\$(opam env \
-        --switch=SWITCH --set-switch\\)).";
+    `P (Printf.sprintf
+         "$(b,opam switch set) sets the default switch globally, but it is also \
+         possible to select a switch in a given shell session, using the \
+         environment. For that, use $(i,%s)."
+        OpamEnv.(
+          shell_eval_invocation shell
+            (opam_env_invocation ~switch:"SWITCH" ~set_opamswitch:true ())
+            |> Manpage.escape));
   ] @ mk_subdoc ~cli ~defaults:["","list";"SWITCH","set"] commands
     @ [
       `S Manpage.s_examples;
