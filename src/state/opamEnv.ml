@@ -475,7 +475,7 @@ let source root shell f =
   let file f = OpamFilename.to_string (OpamPath.init root // f) in
   match shell with
   | SH_csh ->
-    Printf.sprintf "source %s >& /dev/null || true\n" (file f)
+    Printf.sprintf "if ( -f %s ) source %s >& /dev/null\n" (file f) (file f)
   | SH_fish ->
     Printf.sprintf "source %s > /dev/null 2> /dev/null; or true\n" (file f)
   | SH_sh | SH_bash ->
