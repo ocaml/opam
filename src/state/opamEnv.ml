@@ -472,18 +472,18 @@ let env_hook_script shell =
     (env_hook_script_base shell)
 
 let source root shell f =
-  let file f = OpamFilename.to_string (OpamPath.init root // f) in
+  let fname = OpamFilename.to_string (OpamPath.init root // f) in
   match shell with
   | SH_csh ->
-    Printf.sprintf "if ( -f %s ) source %s >& /dev/null\n" (file f) (file f)
+    Printf.sprintf "if ( -f %s ) source %s >& /dev/null\n" fname fname
   | SH_fish ->
-    Printf.sprintf "source %s > /dev/null 2> /dev/null; or true\n" (file f)
+    Printf.sprintf "source %s > /dev/null 2> /dev/null; or true\n" fname
   | SH_sh | SH_bash ->
     Printf.sprintf "test -r %s && . %s > /dev/null 2> /dev/null || true\n"
-      (file f) (file f)
+      fname fname
   | SH_zsh ->
     Printf.sprintf "[[ ! -r %s ]] || source %s  > /dev/null 2> /dev/null\n"
-      (file f) (file f)
+      fname fname
 
 let if_interactive_script shell t e =
   let ielse else_opt = match else_opt with
