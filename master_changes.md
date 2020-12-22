@@ -15,6 +15,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix sandbox check with not yet set opam environment variables [#4370 @rjbou - fix #4368]
   * Sandboxing check: use configured temp dir and cleanup afterwards [#4467 @AltGr]
   * Print shell-appropriate eval command on `opam init` [#4427 @freevoid]
+  * Fix non-existing file check in csh [#4482 @gahr]
 
 ## Config Upgrade
   *
