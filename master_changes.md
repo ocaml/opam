@@ -114,6 +114,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Opam installer
   *
+  * Support `etc_root` and `etcexec_root` in `opam-installer` [#3958 @hongchangwu]
 
 ## State
   *
