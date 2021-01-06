@@ -3211,7 +3211,7 @@ end
 module Dot_installSyntax = struct
 
   let internal = ".install"
-  let format_version = OpamVersion.of_string "2.0"
+  let format_version = OpamVersion.of_string "2.1"
 
   type t =  {
     bin     : (basename optional * basename option) list;
