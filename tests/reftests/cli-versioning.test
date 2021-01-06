@@ -52,7 +52,7 @@ The following actions would be performed:
 ===== ∗ 6 =====
 ### opam install ocaml.4.10.0 --unlock-base --show
 opam: unlock-base was removed in version 2.1 of the opam CLI, but version 2.1 has been requested. Use --update-invariant instead or set OPAMCLI environment variable to 2.0.
-### #opam option use mk_command_ret
+### # opam option uses mk_command_ret
 ### opam option foo
 [ERROR] No option named 'foo' found. Use 'opam option [--global]' to list them
 ### OPAMCLI=2.0 opam option foo
@@ -61,8 +61,153 @@ opam: option was added in version 2.1 of the opam CLI, but version 2.0 has been 
 [ERROR] Field or section foo not found
 ### OPAMCLI=2.0 opam option foo --global
 opam: global was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
-### # opam lock use mk_command
+### # opam lock uses mk_command
 ### opam lock foo
 [ERROR] No package matching foo
 ### OPAMCLI=2.0 opam lock foo
 opam: lock was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+### # Check for build test env
+### # Note: you must have an installed opam with cli version enabled to pass these tests
+### mkdir opams
+### <opams/ok-var-2-0.opam>
+opam-version: "2.0"
+build: [ "opam" "config" "var" "prefix" "--readonly" ]
+### <opams/ok-var-2-0-cli.opam>
+opam-version: "2.0"
+build: [ "opam" "config" "var" "prefix" "--cli=2.0" "--readonly" ]
+### <opams/ko-var-2-1.opam>
+opam-version: "2.0"
+build: [ "opam" "option" "depext" "--readonly" ]
+### <opams/ok-var-2-1-cli.opam>
+opam-version: "2.0"
+build: [ "opam" "option" "depext" "--cli=2.1" "--readonly" ]
+### <opams/ok-var-2-1-env.opam>
+opam-version: "2.0"
+build-env: [ OPAMCLI = "2.1" ]
+build: [ "opam" "option" "depext" "--readonly" ]
+### <opams/ko-var-2-1-env.opam>
+opam-version: "2.0"
+build-env: [ OPAMCLI = "2.1" ]
+build: [ "opam" "config" "var" "prefix" "--readonly" ]
+### opam pin opams -yn
+This will pin the following packages: ko-var-2-1-env, ko-var-2-1, ok-var-2-0-cli, ok-var-2-0, ok-var-2-1-cli, ok-var-2-1-env. Continue? [Y/n] y
+Package ko-var-2-1-env does not exist, create as a NEW package? [Y/n] y
+ko-var-2-1-env is now pinned to file://${BASEDIR}/opams (version ~dev)
+Package ko-var-2-1 does not exist, create as a NEW package? [Y/n] y
+ko-var-2-1 is now pinned to file://${BASEDIR}/opams (version ~dev)
+Package ok-var-2-0-cli does not exist, create as a NEW package? [Y/n] y
+ok-var-2-0-cli is now pinned to file://${BASEDIR}/opams (version ~dev)
+Package ok-var-2-0 does not exist, create as a NEW package? [Y/n] y
+ok-var-2-0 is now pinned to file://${BASEDIR}/opams (version ~dev)
+Package ok-var-2-1-cli does not exist, create as a NEW package? [Y/n] y
+ok-var-2-1-cli is now pinned to file://${BASEDIR}/opams (version ~dev)
+Package ok-var-2-1-env does not exist, create as a NEW package? [Y/n] y
+ok-var-2-1-env is now pinned to file://${BASEDIR}/opams (version ~dev)
+### opam switch set-invariant --formula "[]"
+### opam install ok-var-2-0
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[ok-var-2-0.~dev] synchronised (no changes)
+
+The following actions will be performed:
+  ∗ install ok-var-2-0 ~dev*
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved ok-var-2-0.~dev  (file://${BASEDIR}/opams)
+∗ installed ok-var-2-0.~dev
+Done.
+### opam install ok-var-2-0-cli
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[ok-var-2-0-cli.~dev] synchronised (no changes)
+
+The following actions will be performed:
+  ∗ install ok-var-2-0-cli ~dev*
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved ok-var-2-0-cli.~dev  (file://${BASEDIR}/opams)
+∗ installed ok-var-2-0-cli.~dev
+Done.
+### opam install ko-var-2-1 2>&1 | sed -e 's/#/ø/g' | sed -e 's/log.*/log/g'
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[ko-var-2-1.~dev] synchronised (no changes)
+
+The following actions will be performed:
+  ∗ install ko-var-2-1 ~dev*
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved ko-var-2-1.~dev  (file://${BASEDIR}/opams)
+[ERROR] The compilation of ko-var-2-1.~dev failed at "opam option depext --readonly".
+
+ø=== ERROR while compiling ko-var-2-1.~dev ====================================ø
+ø context              2.1.0~beta4 | linux/x86_64 |  | pinned(file://${BASEDIR}/opams)
+ø path                 ${BASEDIR}/.opam/cli-versioning/.opam-switch/build/ko-var-2-1.~dev
+ø command              ${BASEDIR}/.opam/opam-init/hooks/sandbox.sh build opam option depext --readonly
+ø exit-code            2
+ø env-file             ${BASEDIR}/.opam/log
+ø output-file          ${BASEDIR}/.opam/log
+øøø output øøø
+ø opam: option was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+┌─ The following actions failed
+│ λ build ko-var-2-1 ~dev
+└─ 
+╶─ No changes have been performed
+### opam install ok-var-2-1-cli
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[ok-var-2-1-cli.~dev] synchronised (no changes)
+
+The following actions will be performed:
+  ∗ install ok-var-2-1-cli ~dev*
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved ok-var-2-1-cli.~dev  (file://${BASEDIR}/opams)
+∗ installed ok-var-2-1-cli.~dev
+Done.
+### opam install ok-var-2-1-env
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[ok-var-2-1-env.~dev] synchronised (no changes)
+
+The following actions will be performed:
+  ∗ install ok-var-2-1-env ~dev*
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved ok-var-2-1-env.~dev  (file://${BASEDIR}/opams)
+∗ installed ok-var-2-1-env.~dev
+Done.
+### opam install ko-var-2-1-env 2>&1 | sed -e 's/#/ø/g' | sed -e 's/log.*/log/g'
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[ko-var-2-1-env.~dev] synchronised (no changes)
+
+The following actions will be performed:
+  ∗ install ko-var-2-1-env ~dev*
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved ko-var-2-1-env.~dev  (file://${BASEDIR}/opams)
+[ERROR] The compilation of ko-var-2-1-env.~dev failed at "opam config var prefix --readonly".
+
+ø=== ERROR while compiling ko-var-2-1-env.~dev ================================ø
+ø context              2.1.0~beta4 | linux/x86_64 |  | pinned(file://${BASEDIR}/opams)
+ø path                 ${BASEDIR}/.opam/cli-versioning/.opam-switch/build/ko-var-2-1-env.~dev
+ø command              ${BASEDIR}/.opam/opam-init/hooks/sandbox.sh build opam config var prefix --readonly
+ø exit-code            2
+ø env-file             ${BASEDIR}/.opam/log
+ø output-file          ${BASEDIR}/.opam/log
+øøø output øøø
+ø [WARNING] Setting OPAMCLI is brittle - consider using the '--cli <major>.<minor>' flag.
+ø opam: var was removed in version 2.1 of the opam CLI, but version 2.1 has been requested. Use opam var instead or set OPAMCLI environment variable to 2.0.
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+┌─ The following actions failed
+│ λ build ko-var-2-1-env ~dev
+└─ 
+╶─ No changes have been performed
