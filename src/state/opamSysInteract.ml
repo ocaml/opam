@@ -376,7 +376,7 @@ let packages_status packages =
        >bmake
     *)
     let sys_installed =
-      run_query_command "brew" ["list"]
+      run_query_command "brew" ["list"; "--formula"]
       |> List.fold_left (fun res s ->
           List.fold_left (fun res spkg ->
               match OpamStd.String.cut_at spkg '@' with
