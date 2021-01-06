@@ -1228,9 +1228,9 @@ allowed.
 - <a id="installfield-etc">`etc:`</a>
   installs to `<prefix>/etc/<pkgname>/`
 - <a id="installfield-etc_root">`etc_root:`</a>
-  installs to `<prefix>/etc/` (since <span class="opam">opam</span> 2.0.6)
+  installs to `<prefix>/etc/` (since <span class="opam">opam</span> 2.1.0~beta4)
 - <a id="installfield-etcexec_root">`etc_root:`</a>
-  installs to `<prefix>/etc/`, with the `exec` bit set (since <span class="opam">opam</span> 2.0.6)
+  installs to `<prefix>/etc/`, with the `exec` bit set (since <span class="opam">opam</span> 2.1.0~beta4)
 - <a id="installfield-doc">`doc:`</a>
   installs to `<prefix>/doc/<pkgname>/`
 - <a id="installfield-stublibs">`stublibs:`</a>
