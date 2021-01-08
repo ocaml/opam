@@ -112,6 +112,7 @@ New option/command/subcommand are prefixed with ◈.
 ## Solver
   * Fix missing conflict message when trying to remove required packages [#4362 @AltGr]
   * Fix the Z3 backend for upgrades [#4393 @AltGr]
+  * Increase the minimal requirement for the 0install backend to opam-0install-cudf >= 0.4 [#4398 @kit-ty-kate]
 
 ## Client
   *
