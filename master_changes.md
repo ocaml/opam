@@ -10,6 +10,7 @@ New option/command/subcommand are prefixed with ◈.
 ## Global CLI
   * Fix hooks broken by 371963a6b [#4386 @lefessan]
   * CLI versioning usage [#4385 @rjbou]
+  * Set OPAMCLI=2.0 by default during the build/install/remove phases [#4492 @kit-ty-kate]
 
 ## Init
   * Fix sandbox check with not yet set opam environment variables [#4370 @rjbou - fix #4368]

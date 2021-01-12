@@ -427,6 +427,7 @@ let compilation_env t opam =
       "OPAM_PACKAGE_VERSION", Eq,
       OpamPackage.Version.to_string (OpamFile.OPAM.version opam),
       Some "build environment definition";
+      "OPAMCLI", Eq, "2.0", Some "opam CLI version";
     ] @
       OpamFile.OPAM.build_env opam)
 

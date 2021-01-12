@@ -52,7 +52,7 @@ The following actions would be performed:
 ===== ∗ 6 =====
 ### opam install ocaml.4.10.0 --unlock-base --show
 opam: unlock-base was removed in version 2.1 of the opam CLI, but version 2.1 has been requested. Use --update-invariant instead or set OPAMCLI environment variable to 2.0.
-### #opam option use mk_command_ret
+### # opam option uses mk_command_ret
 ### opam option foo
 [ERROR] No option named 'foo' found. Use 'opam option [--global]' to list them
 ### OPAMCLI=2.0 opam option foo
@@ -61,8 +61,69 @@ opam: option was added in version 2.1 of the opam CLI, but version 2.0 has been 
 [ERROR] Field or section foo not found
 ### OPAMCLI=2.0 opam option foo --global
 opam: global was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
-### # opam lock use mk_command
+### # opam lock uses mk_command
 ### opam lock foo
 [ERROR] No package matching foo
 ### OPAMCLI=2.0 opam lock foo
 opam: lock was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+### # Check for build test env
+### # Note: you must have an installed opam with cli version enabled to pass these tests
+### mkdir opams
+### <opams/env-2-0.opam>
+opam-version: "2.0"
+build: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.0$'"]
+install: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.0$'"]
+remove: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.0$'"]
+### <opams/env-2-1.opam>
+opam-version: "2.0"
+build-env: [OPAMCLI = "2.1"]
+build: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.1$'"]
+install: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.1$'"]
+remove: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.1$'"]
+### opam pin opams -yn
+This will pin the following packages: env-2-0, env-2-1. Continue? [Y/n] y
+Package env-2-0 does not exist, create as a NEW package? [Y/n] y
+env-2-0 is now pinned to file://${BASEDIR}/opams (version ~dev)
+Package env-2-1 does not exist, create as a NEW package? [Y/n] y
+env-2-1 is now pinned to file://${BASEDIR}/opams (version ~dev)
+### opam switch set-invariant --formula "[]"
+### opam install env-2-0
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[env-2-0.~dev] synchronised (no changes)
+
+The following actions will be performed:
+  ∗ install env-2-0 ~dev*
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved env-2-0.~dev  (file://${BASEDIR}/opams)
+∗ installed env-2-0.~dev
+Done.
+### opam install env-2-1
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[env-2-1.~dev] synchronised (no changes)
+
+The following actions will be performed:
+  ∗ install env-2-1 ~dev*
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved env-2-1.~dev  (file://${BASEDIR}/opams)
+∗ installed env-2-1.~dev
+Done.
+### opam remove env-2-0
+The following actions will be performed:
+  ⊘ remove env-2-0 ~dev*
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved env-2-0.~dev  (no changes)
+⊘ removed   env-2-0.~dev
+Done.
+### opam remove env-2-1
+The following actions will be performed:
+  ⊘ remove env-2-1 ~dev*
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+⬇ retrieved env-2-1.~dev  (no changes)
+⊘ removed   env-2-1.~dev
+Done.
