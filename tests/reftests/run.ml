@@ -125,7 +125,7 @@ let run_cmd ~opam ~dir ?(vars=[]) cmd =
   ] @ vars
   in
   try
-    match OpamStd.String.split cmd ' ' with
+    match OpamStd.String.split_delim cmd ' ' with
     | "opam" :: cmd :: args ->
       command ~vars:env_vars "%s" (complete_opam_cmd cmd args)
     | lst ->
