@@ -50,53 +50,53 @@ Faking installation of ocaml-base-compiler.4.08.0
 Faking installation of ocaml-config.1
 Faking installation of ocaml.4.08.0
 Done.
-### opam var
+### opam var | sed 's/  \+/ /g'
 
 <><> Global opam variables ><><><><><><><><><><><><><><><><><><><><><><><><><><>
-arch              x86_64                        # Set through 'opam var'
-exe                                             # Suffix needed for executable filenames (Windows)
-jobs              7                             # Set through 'opam var'
-make              make                          # Set through 'opam var'
-opam-version      68.79                         # Set through 'opam var'
-os                linux                         # Set through 'opam var'
-os-distribution   lorem                         # Set through 'opam var'
-os-family         ipsum                         # Set through 'opam var'
-os-version        dolor                         # Set through 'opam var'
-root              ${BASEDIR}/OPAM # The current opam root directory
-switch                                          # The identifier of the current switch
-sys-ocaml-version 4.08.0                        # Set through 'opam var'
+arch x86_64 # Set through 'opam var'
+exe # Suffix needed for executable filenames (Windows)
+jobs 7 # Set through 'opam var'
+make make # Set through 'opam var'
+opam-version 68.79 # Set through 'opam var'
+os linux # Set through 'opam var'
+os-distribution lorem # Set through 'opam var'
+os-family ipsum # Set through 'opam var'
+os-version dolor # Set through 'opam var'
+root ${BASEDIR}/OPAM # The current opam root directory
+switch # The identifier of the current switch
+sys-ocaml-version 4.08.0 # Set through 'opam var'
 
 <><> Configuration variables from the current switch ><><><><><><><><><><><><><>
-prefix   ${BASEDIR}/OPAM/var-option
-lib      ${BASEDIR}/OPAM/var-option/lib
-bin      ${BASEDIR}/OPAM/var-option/bin
-sbin     ${BASEDIR}/OPAM/var-option/sbin
-share    ${BASEDIR}/OPAM/var-option/share
-doc      ${BASEDIR}/OPAM/var-option/doc
-etc      ${BASEDIR}/OPAM/var-option/etc
-man      ${BASEDIR}/OPAM/var-option/man
+prefix ${BASEDIR}/OPAM/var-option
+lib ${BASEDIR}/OPAM/var-option/lib
+bin ${BASEDIR}/OPAM/var-option/bin
+sbin ${BASEDIR}/OPAM/var-option/sbin
+share ${BASEDIR}/OPAM/var-option/share
+doc ${BASEDIR}/OPAM/var-option/doc
+etc ${BASEDIR}/OPAM/var-option/etc
+man ${BASEDIR}/OPAM/var-option/man
 toplevel ${BASEDIR}/OPAM/var-option/lib/toplevel
 stublibs ${BASEDIR}/OPAM/var-option/lib/stublibs
 
 <><> Package variables ('opam var --package PKG' to show) <><><><><><><><><><><>
-PKG:name       # Name of the package
-PKG:version    # Version of the package
-PKG:depends    # Resolved direct dependencies of the package
-PKG:installed  # Whether the package is installed
-PKG:enable     # Takes the value "enable" or "disable" depending on whether the package is installed
-PKG:pinned     # Whether the package is pinned
-PKG:bin        # Binary directory for this package
-PKG:sbin       # System binary directory for this package
-PKG:lib        # Library directory for this package
-PKG:man        # Man directory for this package
-PKG:doc        # Doc directory for this package
-PKG:share      # Share directory for this package
-PKG:etc        # Etc directory for this package
-PKG:build      # Directory where the package was built
-PKG:hash       # Hash of the package archive
-PKG:dev        # True if this is a development package
-PKG:build-id   # A hash identifying the precise package version with all its dependencies
-PKG:opamfile   # Path of the curent opam file
+PKG:name # Name of the package
+PKG:version # Version of the package
+PKG:depends # Resolved direct dependencies of the package
+PKG:installed # Whether the package is installed
+PKG:enable # Takes the value "enable" or "disable" depending on whether the package is installed
+PKG:pinned # Whether the package is pinned
+PKG:bin # Binary directory for this package
+PKG:sbin # System binary directory for this package
+PKG:lib # Library directory for this package
+PKG:man # Man directory for this package
+PKG:doc # Doc directory for this package
+PKG:share # Share directory for this package
+PKG:etc # Etc directory for this package
+PKG:build # Directory where the package was built
+PKG:hash # Hash of the package archive
+PKG:dev # True if this is a development package
+PKG:build-id # A hash identifying the precise package version with all its dependencies
+PKG:opamfile # Path of the curent opam file
 ### opam var --switch var-option
 prefix   ${BASEDIR}/OPAM/var-option
 lib      ${BASEDIR}/OPAM/var-option/lib
@@ -108,19 +108,19 @@ etc      ${BASEDIR}/OPAM/var-option/etc
 man      ${BASEDIR}/OPAM/var-option/man
 toplevel ${BASEDIR}/OPAM/var-option/lib/toplevel
 stublibs ${BASEDIR}/OPAM/var-option/lib/stublibs
-### opam var --global
-arch              x86_64                        # Set through 'opam var'
-exe                                             # Suffix needed for executable filenames (Windows)
-jobs              7                             # Set through 'opam var'
-make              make                          # Set through 'opam var'
-opam-version      68.79                         # Set through 'opam var'
-os                linux                         # Set through 'opam var'
-os-distribution   lorem                         # Set through 'opam var'
-os-family         ipsum                         # Set through 'opam var'
-os-version        dolor                         # Set through 'opam var'
-root              ${BASEDIR}/OPAM # The current opam root directory
-switch                                          # The identifier of the current switch
-sys-ocaml-version 4.08.0                        # Set through 'opam var'
+### opam var --global | sed 's/  \+/ /g'
+arch x86_64 # Set through 'opam var'
+exe # Suffix needed for executable filenames (Windows)
+jobs 7 # Set through 'opam var'
+make make # Set through 'opam var'
+opam-version 68.79 # Set through 'opam var'
+os linux # Set through 'opam var'
+os-distribution lorem # Set through 'opam var'
+os-family ipsum # Set through 'opam var'
+os-version dolor # Set through 'opam var'
+root ${BASEDIR}/OPAM # The current opam root directory
+switch # The identifier of the current switch
+sys-ocaml-version 4.08.0 # Set through 'opam var'
 ### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var bin
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 ${BASEDIR}/OPAM/var-option/bin
@@ -152,23 +152,23 @@ global-foo
 4.08.0
 ### opam var ocaml-base-compiler:version --switch var-option
 4.08.0
-### opam var --package ocaml | grep -v build-id | grep -v opamfile
-ocaml:name      ocaml                                                                    # Name of the package
-ocaml:version   4.08.0                                                                   # Version of the package
-ocaml:depends   ocaml-base-compiler.4.08.0 ocaml-config.1                                # Resolved direct dependencies of the package
-ocaml:installed true                                                                     # Whether the package is installed
-ocaml:enable    enable                                                                   # Takes the value "enable" or "disable" depending on whether the package is installed
-ocaml:pinned    false                                                                    # Whether the package is pinned
-ocaml:bin       ${BASEDIR}/OPAM/var-option/bin                             # Binary directory for this package
-ocaml:sbin      ${BASEDIR}/OPAM/var-option/sbin                            # System binary directory for this package
-ocaml:lib       ${BASEDIR}/OPAM/var-option/lib/ocaml                       # Library directory for this package
-ocaml:man       ${BASEDIR}/OPAM/var-option/man                             # Man directory for this package
-ocaml:doc       ${BASEDIR}/OPAM/var-option/doc/ocaml                       # Doc directory for this package
-ocaml:share     ${BASEDIR}/OPAM/var-option/share/ocaml                     # Share directory for this package
-ocaml:etc       ${BASEDIR}/OPAM/var-option/etc/ocaml                       # Etc directory for this package
-ocaml:build     ${BASEDIR}/OPAM/var-option/.opam-switch/build/ocaml.4.08.0 # Directory where the package was built
-ocaml:hash                                                                               # Hash of the package archive
-ocaml:dev       false                                                                    # True if this is a development package
+### opam var --package ocaml | grep -v build-id | grep -v opamfile | sed 's/  \+/ /g'
+ocaml:name ocaml # Name of the package
+ocaml:version 4.08.0 # Version of the package
+ocaml:depends ocaml-base-compiler.4.08.0 ocaml-config.1 # Resolved direct dependencies of the package
+ocaml:installed true # Whether the package is installed
+ocaml:enable enable # Takes the value "enable" or "disable" depending on whether the package is installed
+ocaml:pinned false # Whether the package is pinned
+ocaml:bin ${BASEDIR}/OPAM/var-option/bin # Binary directory for this package
+ocaml:sbin ${BASEDIR}/OPAM/var-option/sbin # System binary directory for this package
+ocaml:lib ${BASEDIR}/OPAM/var-option/lib/ocaml # Library directory for this package
+ocaml:man ${BASEDIR}/OPAM/var-option/man # Man directory for this package
+ocaml:doc ${BASEDIR}/OPAM/var-option/doc/ocaml # Doc directory for this package
+ocaml:share ${BASEDIR}/OPAM/var-option/share/ocaml # Share directory for this package
+ocaml:etc ${BASEDIR}/OPAM/var-option/etc/ocaml # Etc directory for this package
+ocaml:build ${BASEDIR}/OPAM/var-option/.opam-switch/build/ocaml.4.08.0 # Directory where the package was built
+ocaml:hash # Hash of the package archive
+ocaml:dev false # True if this is a development package
 ### opam option
 
 <><> Global configuration <><><><><><><><><><><><><><><><><><><><><><><><><><><>
