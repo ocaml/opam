@@ -71,15 +71,15 @@ opam: lock was added in version 2.1 of the opam CLI, but version 2.0 has been re
 ### mkdir opams
 ### <opams/env-2-0.opam>
 opam-version: "2.0"
-build: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.0$'"]
-install: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.0$'"]
-remove: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.0$'"]
+build: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.0'"]
+install: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.0'"]
+remove: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.0'"]
 ### <opams/env-2-1.opam>
 opam-version: "2.0"
 build-env: [OPAMCLI = "2.1"]
-build: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.1$'"]
-install: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.1$'"]
-remove: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.1$'"]
+build: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.1'"]
+install: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.1'"]
+remove: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.1'"]
 ### opam pin opams -yn
 This will pin the following packages: env-2-0, env-2-1. Continue? [Y/n] y
 Package env-2-0 does not exist, create as a NEW package? [Y/n] y
@@ -93,11 +93,11 @@ env-2-1 is now pinned to file://${BASEDIR}/opams (version ~dev)
 [env-2-0.~dev] synchronised (no changes)
 
 The following actions will be performed:
-  ∗ install env-2-0 ~dev*
+  - install env-2-0 ~dev*
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved env-2-0.~dev  (file://${BASEDIR}/opams)
-∗ installed env-2-0.~dev
+-> retrieved env-2-0.~dev  (file://${BASEDIR}/opams)
+-> installed env-2-0.~dev
 Done.
 ### opam install env-2-1
 
@@ -105,25 +105,25 @@ Done.
 [env-2-1.~dev] synchronised (no changes)
 
 The following actions will be performed:
-  ∗ install env-2-1 ~dev*
+  - install env-2-1 ~dev*
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved env-2-1.~dev  (file://${BASEDIR}/opams)
-∗ installed env-2-1.~dev
+-> retrieved env-2-1.~dev  (file://${BASEDIR}/opams)
+-> installed env-2-1.~dev
 Done.
 ### opam remove env-2-0
 The following actions will be performed:
-  ⊘ remove env-2-0 ~dev*
+  - remove env-2-0 ~dev*
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved env-2-0.~dev  (no changes)
-⊘ removed   env-2-0.~dev
+-> retrieved env-2-0.~dev  (no changes)
+-> removed   env-2-0.~dev
 Done.
 ### opam remove env-2-1
 The following actions will be performed:
-  ⊘ remove env-2-1 ~dev*
+  - remove env-2-1 ~dev*
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved env-2-1.~dev  (no changes)
-⊘ removed   env-2-1.~dev
+-> retrieved env-2-1.~dev  (no changes)
+-> removed   env-2-1.~dev
 Done.
