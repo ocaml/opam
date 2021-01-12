@@ -50,7 +50,7 @@ Faking installation of ocaml-base-compiler.4.08.0
 Faking installation of ocaml-config.1
 Faking installation of ocaml.4.08.0
 Done.
-### opam var | sed 's/  \+/ /g'
+### opam var | sed 's/   */ /g'
 
 <><> Global opam variables ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 arch x86_64 # Set through 'opam var'
@@ -108,7 +108,7 @@ etc      ${BASEDIR}/OPAM/var-option/etc
 man      ${BASEDIR}/OPAM/var-option/man
 toplevel ${BASEDIR}/OPAM/var-option/lib/toplevel
 stublibs ${BASEDIR}/OPAM/var-option/lib/stublibs
-### opam var --global | sed 's/  \+/ /g'
+### opam var --global | sed 's/   */ /g'
 arch x86_64 # Set through 'opam var'
 exe # Suffix needed for executable filenames (Windows)
 jobs 7 # Set through 'opam var'
@@ -152,7 +152,7 @@ global-foo
 4.08.0
 ### opam var ocaml-base-compiler:version --switch var-option
 4.08.0
-### opam var --package ocaml | grep -v build-id | grep -v opamfile | sed 's/  \+/ /g'
+### opam var --package ocaml | grep -v build-id | grep -v opamfile | sed 's/   */ /g'
 ocaml:name ocaml # Name of the package
 ocaml:version 4.08.0 # Version of the package
 ocaml:depends ocaml-base-compiler.4.08.0 ocaml-config.1 # Resolved direct dependencies of the package
