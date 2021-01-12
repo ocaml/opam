@@ -3,7 +3,7 @@
 ### <git-init>
 #!/bin/sh -ue
 cd $1
-git init -b master >/dev/null
+git init >/dev/null 2>&1
 echo '*.sh text eol=lf' >.gitattributes
 [ $# -lt 2 ] || touch "$2"
 git add -A
