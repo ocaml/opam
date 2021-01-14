@@ -37,7 +37,7 @@ build/Dockerfile.i686-linux: Dockerfile.in
 build/Dockerfile.armhf-linux: Dockerfile.in
 	mkdir -p build && sed 's/%TARGET_TAG%/armhf-jessie/g' $^ | sed 's/%CONF%//g' >$@
 build/Dockerfile.arm64-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/arm64-jessie/g' $^ | sed 's/%CONF%//g' >$@
+	mkdir -p build && sed 's/%TARGET_TAG%/arm64-stretch/g' $^ | sed 's/%CONF%//g' >$@
 
 
 build/%.image: build/Dockerfile.%
