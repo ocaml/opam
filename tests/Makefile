@@ -1,3 +1,5 @@
+PATH = $(PWD)/bin:$(shell echo $$PATH)
+
 TMP_DIR   = $(realpath .)/tmp
 OPAM_ROOT = $(TMP_DIR)/OPAM.ROOT
 OPAM_REPO = $(TMP_DIR)/OPAM.REPO
