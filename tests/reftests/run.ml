@@ -97,6 +97,34 @@ let finally f x k = match f x with
   | r -> k (); r
   | exception e -> (try k () with _ -> ()); raise e
 
+(* Borrowed from ocamltest_stdlib.ml *)
+let rec mkdir_p dir =
+  if Sys.file_exists dir then ()
+  else let () = mkdir_p (Filename.dirname dir) in
+       if not (Sys.file_exists dir) then
+         Unix.mkdir dir 0o777
+       else ()
+
+let erase_file path =
+  try Sys.remove path
+  with Sys_error _ when Sys.win32 ->
+    (* Deal with read-only attribute on Windows. Ignore any error from chmod
+       so that the message always come from Sys.remove *)
+    let () = try Unix.chmod path 0o666 with Sys_error _ -> () in
+    Sys.remove path
+
+let rm_rf path =
+  let rec erase path =
+    if Sys.is_directory path then begin
+      Array.iter (fun entry -> erase (Filename.concat path entry))
+                 (Sys.readdir path);
+      Unix.rmdir path
+    end else erase_file path
+  in
+    try if Sys.file_exists path then erase path
+    with Sys_error err ->
+      raise (Sys_error (Printf.sprintf "Failed to remove %S (%s)" path err))
+
 let rec with_temp_dir f =
   let s =
     Filename.concat
@@ -106,8 +134,8 @@ let rec with_temp_dir f =
   if Sys.file_exists s then
     with_temp_dir f
   else
-  (command "mkdir -p %s" s;
-   finally f s @@ fun () -> command "rm -rf %s" s)
+  (mkdir_p s;
+   finally f s @@ fun () -> rm_rf s)
 
 let run_cmd ~opam ~dir ?(vars=[]) cmd =
   let complete_opam_cmd cmd args =
@@ -156,7 +184,7 @@ let parse_command cmd =
     Run
 
 let write_file ~path ~contents =
-  command "mkdir -p %s" (Filename.dirname path);
+  mkdir_p (Filename.dirname path);
   let oc = open_out path in
   output_string oc contents;
   close_out oc
