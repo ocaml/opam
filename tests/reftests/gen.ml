@@ -44,6 +44,7 @@ let archive_download_rule archive_hash =
  (action (run wget --quiet -O %%{targets} https://github.com/ocaml/opam-repository/archive/%s.tar.gz)))
 |} (tgz_name ~archive_hash) archive_hash
 
+(* XXX this fails if the directory already exists ?! *)
 let archive_unpack_rule archive_hash =
   Format.sprintf {|
 (rule
