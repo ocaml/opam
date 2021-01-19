@@ -205,8 +205,8 @@ let run_test t ?vars ~opam =
   Sys.chdir dir;
   let dir = Sys.getcwd () in (* because it may need to be normalised on OSX *)
   command
-    "%s var --quiet --root %s --global sys-ocaml-version=4.08.0 >/dev/null"
-    opam opamroot;
+    "%s var --quiet --root %s --global sys-ocaml-version=4.08.0 >%s"
+    opam opamroot Filename.null;
   print_endline t.repo_hash;
   List.iter (fun (cmd, out) ->
       print_string cmd_prompt;
