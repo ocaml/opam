@@ -69,6 +69,7 @@ let opam_init_rule archive_hash =
 module StringSet = Set.Make(String)
 
 let () =
+  let () = set_binary_mode_out stdout true in
   let contents =
     Sys.readdir "."
     |> Array.to_list
