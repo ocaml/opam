@@ -196,6 +196,7 @@ let write_file ~path ~contents =
 let run_test t ?vars ~opam =
   let opamroot0 = Filename.concat (Sys.getcwd ()) ("root-"^t.repo_hash) in
   with_temp_dir @@ fun dir ->
+  let old_cwd = Sys.getcwd () in
   let opamroot = Filename.concat dir "OPAM" in
   if Sys.win32 then
     command ~allowed_codes:[0; 1] "robocopy /e /copy:dat /dcopy:dat /sl %s %s >nul 2>nul" opamroot0 opamroot
@@ -217,7 +218,8 @@ let run_test t ?vars ~opam =
         print_string contents
       | Run ->
         run_cmd ~opam ~dir ?vars cmd)
-    t.commands
+    t.commands;
+  Sys.chdir old_cwd
 
 let () =
   Random.self_init ();
