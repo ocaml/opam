@@ -85,8 +85,12 @@ let command ?(vars=[]) fmt =
         (base_env @ vars)
       in
       let pid =
-        Unix.create_process_env "sh" [| "sh"; "-c"; cmd |] env
-          Unix.stdin Unix.stdout Unix.stdout
+        if Sys.win32 then
+          Unix.create_process_env "cmd" [| "cmd"; "/c"; cmd |] env
+            Unix.stdin Unix.stdout Unix.stdout
+        else
+          Unix.create_process_env "sh" [| "sh"; "-c"; cmd |] env
+            Unix.stdin Unix.stdout Unix.stdout
       in
       match waitpid pid with
       | 0 -> ()
