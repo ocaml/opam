@@ -77,7 +77,7 @@ let rec waitpid pid =
   | _, Unix.WEXITED n -> n
   | _, Unix.WSIGNALED _ -> failwith "signal"
 
-let command ?(vars=[]) fmt =
+let command ?(allowed_codes = [0]) ?(vars=[]) fmt =
   Printf.ksprintf (fun cmd ->
       let env =
         Array.of_list @@
@@ -92,9 +92,9 @@ let command ?(vars=[]) fmt =
           Unix.create_process_env "sh" [| "sh"; "-c"; cmd |] env
             Unix.stdin Unix.stdout Unix.stdout
       in
-      match waitpid pid with
-      | 0 -> ()
-      | ret -> Printf.ksprintf failwith "Error code %d: %s" ret cmd)
+      let ret = waitpid pid in
+      if not (List.mem ret allowed_codes) then
+        Printf.ksprintf failwith "Error code %d: %s" ret cmd)
     fmt
 
 let finally f x k = match f x with
@@ -198,7 +198,7 @@ let run_test t ?vars ~opam =
   with_temp_dir @@ fun dir ->
   let opamroot = Filename.concat dir "OPAM" in
   if Sys.win32 then
-    command "robocopy /e /copy:dat /dcopy:dat /sl %s %s >nul 2>nul" opamroot0 opamroot
+    command ~allowed_codes:[0; 1] "robocopy /e /copy:dat /dcopy:dat /sl %s %s >nul 2>nul" opamroot0 opamroot
   else
     command "cp -a %s %s" opamroot0 opamroot;
   Sys.chdir dir;
