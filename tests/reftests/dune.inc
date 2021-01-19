@@ -112,38 +112,6 @@
    (run ./run.exe %{bin:opam} %{dep:install-pgocaml.test} %{read-lines:testing-env}))))
 
 (alias
- (name reftest-legacy-git)
- (action
-  (diff legacy-git.test legacy-git.out)))
-
-(alias
- (name reftest)
- (deps (alias reftest-legacy-git)))
-
-(rule
- (deps root-632bc2e)
- (action
-  (with-stdout-to
-   legacy-git.out
-   (run ./run.exe %{bin:opam} %{dep:legacy-git.test} %{read-lines:testing-env}))))
-
-(alias
- (name reftest-legacy-local)
- (action
-  (diff legacy-local.test legacy-local.out)))
-
-(alias
- (name reftest)
- (deps (alias reftest-legacy-local)))
-
-(rule
- (deps root-632bc2e)
- (action
-  (with-stdout-to
-   legacy-local.out
-   (run ./run.exe %{bin:opam} %{dep:legacy-local.test} %{read-lines:testing-env}))))
-
-(alias
  (name reftest-show)
  (action
   (diff show.test show.out)))
@@ -209,25 +177,6 @@
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare -vv --debug
            file://%{dep:opam-repo-009e00fa}))))
-
-(rule
- (targets opam-archive-632bc2e.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/632bc2e.tar.gz)))
-
-(rule
-  (targets opam-repo-632bc2e)
-  (action
-   (progn
-    (run mkdir %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-632bc2e.tar.gz} --strip-components=1))))
-
-(rule
-  (targets root-632bc2e)
-  (action
-   (progn
-    (run %{bin:opam} init --root=%{targets}
-           --no-setup --bypass-checks --no-opamrc --bare -vv --debug
-           file://%{dep:opam-repo-632bc2e}))))
 
 (rule
  (targets opam-archive-c1d23f0e.tar.gz)

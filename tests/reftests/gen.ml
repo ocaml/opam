@@ -76,7 +76,7 @@ let () =
   let archive_hashes = ref StringSet.empty in
   let process filename =
     let base_name = OpamStd.String.remove_suffix ~suffix:".test" filename in
-    if base_name = filename then () else
+    if base_name = filename || List.mem base_name ["legacy-git"; "legacy-local"] then () else
       (print_string (diff_rule base_name);
        let archive_hash = first_line ~path:filename in
        print_string (run_rule ~base_name ~archive_hash);
