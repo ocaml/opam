@@ -77,22 +77,41 @@ let rec waitpid pid =
   | _, Unix.WEXITED n -> n
   | _, Unix.WSIGNALED _ -> failwith "signal"
 
-let command ?(allowed_codes = [0]) ?(vars=[]) fmt =
+let command
+    ?(allowed_codes = [0]) ?(vars=[]) ?(silent=false) ?(filter=[])
+    fmt =
   Printf.ksprintf (fun cmd ->
       let env =
         Array.of_list @@
         List.map (fun (var, value) -> Printf.sprintf "%s=%s" var value) @@
         (base_env @ vars)
       in
+      let input, stdout = Unix.pipe () in
+      Unix.set_close_on_exec input;
+      let ic = Unix.in_channel_of_descr input in
+      let stderr = (* if drop_stderr then nul else *) stdout in
       let pid =
         if Sys.win32 then
           Unix.create_process_env "cmd" [| "cmd"; "/c"; cmd |] env
-            Unix.stdin Unix.stdout Unix.stdout
+            Unix.stdin stdout stderr
         else
           Unix.create_process_env "sh" [| "sh"; "-c"; cmd |] env
-            Unix.stdin Unix.stdout Unix.stdout
+            Unix.stdin stdout stderr
       in
+      Unix.close stdout;
+      let rec filter_output ic =
+        match input_line ic with
+        | s ->
+          List.fold_left (fun s (re, by) ->
+              Re.replace_string (Re.compile re) ~by s)
+            s filter
+          |> if silent then ignore else print_endline;
+          filter_output ic
+        | exception End_of_file -> ()
+      in
+      filter_output ic;
       let ret = waitpid pid in
+      close_in ic;
       if not (List.mem ret allowed_codes) then
         Printf.ksprintf failwith "Error code %d: %s" ret cmd)
     fmt
@@ -142,14 +161,20 @@ let rec with_temp_dir f =
    finally f s @@ fun () -> rm_rf s)
 
 let run_cmd ~opam ~dir ?(vars=[]) cmd =
+  let filter = Re.[
+      str dir, "${BASEDIR}";
+      seq [opt (str "/private");
+           str (Filename.get_temp_dir_name ());
+           rep (char '/');
+           str "opam-";
+           rep1 (alt [alnum; char '-']);
+           char '/'],
+      "${OPAMTMP}";
+    ]
+  in
   let complete_opam_cmd cmd args =
-    Printf.sprintf
-      "%s %s %s 2>&1 \
-       | sed 's#%s#${BASEDIR}#g' \
-       | sed 's#\\(/private\\)*%s/*opam-[0-9a-f]*-[0-9a-f]*/#${OPAMTMP}/#g'"
+    Printf.sprintf "%s %s %s"
       opam cmd (String.concat " " args)
-      dir
-      (Filename.get_temp_dir_name ())
   in
   let env_vars = [
     "OPAM", opam;
@@ -159,7 +184,7 @@ let run_cmd ~opam ~dir ?(vars=[]) cmd =
   try
     match OpamStd.String.split_delim cmd ' ' with
     | "opam" :: cmd :: args ->
-      command ~vars:env_vars "%s" (complete_opam_cmd cmd args)
+      command ~vars:env_vars ~filter "%s" (complete_opam_cmd cmd args)
     | lst ->
       let rec split var = function
         | v::r when OpamCompat.Char.uppercase_ascii v.[0] = v.[0] ->
@@ -170,10 +195,10 @@ let run_cmd ~opam ~dir ?(vars=[]) cmd =
       in
       match split [] lst with
       | Some (vars, cmd, args) ->
-        command ~vars:env_vars "%s %s" (String.concat " " vars)
+        command ~vars:env_vars ~filter "%s %s" (String.concat " " vars)
           (complete_opam_cmd cmd args)
       | None ->
-        command ~vars:env_vars "%s 2>&1" cmd
+        command ~vars:env_vars "%s" cmd
   with Failure _ -> ()
 
 type command =
@@ -199,14 +224,16 @@ let run_test t ?vars ~opam =
   let old_cwd = Sys.getcwd () in
   let opamroot = Filename.concat dir "OPAM" in
   if Sys.win32 then
-    command ~allowed_codes:[0; 1] "robocopy /e /copy:dat /dcopy:dat /sl %s %s >nul 2>nul" opamroot0 opamroot
+    command ~allowed_codes:[0; 1] ~silent:true
+      "robocopy /e /copy:dat /dcopy:dat /sl %s %s"
+      opamroot0 opamroot
   else
     command "cp -a %s %s" opamroot0 opamroot;
   Sys.chdir dir;
   let dir = Sys.getcwd () in (* because it may need to be normalised on OSX *)
-  command
-    "%s var --quiet --root %s --global sys-ocaml-version=4.08.0 >%s"
-    opam opamroot Filename.null;
+  command ~silent:true
+    "%s var --quiet --root %s --global sys-ocaml-version=4.08.0"
+    opam opamroot;
   print_endline t.repo_hash;
   List.iter (fun (cmd, out) ->
       print_string cmd_prompt;
