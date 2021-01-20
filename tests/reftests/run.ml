@@ -79,42 +79,38 @@ let rec waitpid pid =
 
 let command
     ?(allowed_codes = [0]) ?(vars=[]) ?(silent=false) ?(filter=[])
-    fmt =
-  Printf.ksprintf (fun cmd ->
-      let env =
-        Array.of_list @@
-        List.map (fun (var, value) -> Printf.sprintf "%s=%s" var value) @@
-        (base_env @ vars)
-      in
-      let input, stdout = Unix.pipe () in
-      Unix.set_close_on_exec input;
-      let ic = Unix.in_channel_of_descr input in
-      let stderr = (* if drop_stderr then nul else *) stdout in
-      let pid =
-        if Sys.win32 then
-          Unix.create_process_env "cmd" [| "cmd"; "/c"; cmd |] env
-            Unix.stdin stdout stderr
-        else
-          Unix.create_process_env "sh" [| "sh"; "-c"; cmd |] env
-            Unix.stdin stdout stderr
-      in
-      Unix.close stdout;
-      let rec filter_output ic =
-        match input_line ic with
-        | s ->
-          List.fold_left (fun s (re, by) ->
-              Re.replace_string (Re.compile re) ~by s)
-            s filter
-          |> if silent then ignore else print_endline;
-          filter_output ic
-        | exception End_of_file -> ()
-      in
-      filter_output ic;
-      let ret = waitpid pid in
-      close_in ic;
-      if not (List.mem ret allowed_codes) then
-        Printf.ksprintf failwith "Error code %d: %s" ret cmd)
-    fmt
+    cmd args =
+  let env =
+    Array.of_list @@
+    List.map (fun (var, value) -> Printf.sprintf "%s=%s" var value) @@
+    (base_env @ vars)
+  in
+  let input, stdout = Unix.pipe () in
+  Unix.set_close_on_exec input;
+  let ic = Unix.in_channel_of_descr input in
+  set_binary_mode_in ic false;
+  let pid =
+    Unix.create_process_env cmd (Array.of_list (cmd::args)) env
+      Unix.stdin stdout stdout
+  in
+  Unix.close stdout;
+  let rec filter_output ic =
+    match input_line ic with
+    | s ->
+      List.fold_left (fun s (re, by) ->
+          Re.replace_string (Re.compile re) ~by s)
+        s filter
+      |>
+      if silent then ignore else print_endline;
+      filter_output ic
+    | exception End_of_file -> ()
+  in
+  filter_output ic;
+  let ret = waitpid pid in
+  close_in ic;
+  if not (List.mem ret allowed_codes) then
+    Printf.ksprintf failwith "Error code %d: %s" ret
+      (String.concat " " (cmd :: args))
 
 let finally f x k = match f x with
   | r -> k (); r
@@ -160,7 +156,7 @@ let rec with_temp_dir f =
   (mkdir_p s;
    finally f s @@ fun () -> rm_rf s)
 
-let run_cmd ~opam ~dir ?(vars=[]) cmd =
+let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) cmd args =
   let filter = Re.[
       str dir, "${BASEDIR}";
       seq [opt (str "/private");
@@ -170,47 +166,111 @@ let run_cmd ~opam ~dir ?(vars=[]) cmd =
            rep1 (alt [alnum; char '-']);
            char '/'],
       "${OPAMTMP}";
-    ]
-  in
-  let complete_opam_cmd cmd args =
-    Printf.sprintf "%s %s %s"
-      opam cmd (String.concat " " args)
+    ] @ filter
   in
   let env_vars = [
     "OPAM", opam;
     "OPAMROOT", Filename.concat dir "OPAM";
   ] @ vars
   in
-  try
-    match OpamStd.String.split_delim cmd ' ' with
-    | "opam" :: cmd :: args ->
-      command ~vars:env_vars ~filter "%s" (complete_opam_cmd cmd args)
-    | lst ->
-      let rec split var = function
-        | v::r when OpamCompat.Char.uppercase_ascii v.[0] = v.[0] ->
-          split (v::var) r
-        | "opam" :: cmd :: args ->
-          Some (List.rev var, cmd, args)
-        | _ -> None
-      in
-      match split [] lst with
-      | Some (vars, cmd, args) ->
-        command ~vars:env_vars ~filter "%s %s" (String.concat " " vars)
-          (complete_opam_cmd cmd args)
-      | None ->
-        command ~vars:env_vars "%s" cmd
+  let cmd = if cmd = "opam" then opam else cmd in
+  try command ~vars:env_vars ~filter cmd args
   with Failure _ -> ()
 
 type command =
-  | Run
   | File_contents of string
+  | Run of { env: (string * string) list;
+             cmd: string;
+             args: string list;
+             filter: (Re.t * string) list; }
 
-let parse_command cmd =
-  if cmd.[0] = '<' && cmd.[String.length cmd - 1] = '>' then
-    let f = String.sub cmd 1 (String.length cmd - 2) in
-    File_contents f
-  else
-    Run
+module Parse = struct
+
+  open Re
+
+  let re_str_atom =
+    alt [
+      seq [char '"';
+           rep @@ alt
+             [diff any (set "\"\\");
+              seq [char '\\'; any]];
+           char '"'];
+      seq [char '\'';
+           rep @@ diff any (char '\'');
+           char '\''];
+      seq [diff any (set "\"' ");
+           rep @@ alt
+             [diff any (set "\\ ");
+              seq [char '\\'; any]]];
+    ]
+
+  let get_str s =
+    let unescape =
+      replace (compile @@ seq [char '\\'; group any])
+        ~f:(fun g -> Group.get g 1)
+    in
+    let trim s = String.sub s 1 (String.length s - 2) in
+    if s = "" then ""
+    else match s.[0] with
+      | '"' -> unescape (trim s)
+      | '\'' -> trim s
+      | _ -> unescape s
+
+  let re_varbind =
+    seq [
+      group @@ seq [alpha; rep (alt [alnum; set "_-"])];
+      char '=';
+      group @@ re_str_atom;
+      rep space;
+    ]
+
+  let re_cmd =
+    seq [group re_str_atom;
+         rep space;
+         rep @@ seq [group re_str_atom; rep space]]
+
+  let command str =
+    if str.[0] = '<' && str.[String.length str - 1] = '>' then
+      let f = String.sub str 1 (String.length str - 2) in
+      File_contents f
+    else
+    let varbinds, pos =
+      let gr = exec (compile @@ rep re_varbind) str in
+      List.map (fun gr -> Group.get gr 1, get_str (Group.get gr 2))
+        (all (compile @@ re_varbind) (Group.get gr 0)),
+      Group.stop gr 0
+    in
+    let cmd, pos =
+      let gr = exec ~pos (compile re_str_atom) str in
+      get_str (Group.get gr 0),
+      Group.stop gr 0
+    in
+    let args =
+      let grs = all ~pos (compile re_str_atom) str in
+      List.map (fun gr -> Group.get gr 0) grs
+    in
+    let rec get_args_rewr acc = function
+      | [] -> List.rev acc, []
+      | "|" :: _ as rewr ->
+        let rec get_rewr = function
+          | "|" :: re :: "->" :: str :: r ->
+            (Re.Posix.re (get_str re), get_str str) :: get_rewr r
+          | [] -> []
+          | _ -> failwith "Bad rewrite, expecting '| RE -> STR'"
+        in
+        List.rev acc, get_rewr rewr
+      | arg :: r -> get_args_rewr (get_str arg :: acc) r
+    in
+    let args, rewr = get_args_rewr [] args in
+    Run {
+      env = varbinds;
+      cmd;
+      args;
+      filter = rewr;
+    }
+end
+
+let parse_command = Parse.command
 
 let write_file ~path ~contents =
   mkdir_p (Filename.dirname path);
@@ -218,22 +278,22 @@ let write_file ~path ~contents =
   output_string oc contents;
   close_out oc
 
-let run_test t ?vars ~opam =
+let run_test t ?(vars=[]) ~opam =
   let opamroot0 = Filename.concat (Sys.getcwd ()) ("root-"^t.repo_hash) in
   with_temp_dir @@ fun dir ->
   let old_cwd = Sys.getcwd () in
   let opamroot = Filename.concat dir "OPAM" in
   if Sys.win32 then
     command ~allowed_codes:[0; 1] ~silent:true
-      "robocopy /e /copy:dat /dcopy:dat /sl %s %s"
-      opamroot0 opamroot
+      "robocopy"
+      ["/e"; "/copy:dat"; "/dcopy:dat"; "/sl"; opamroot0; opamroot]
   else
-    command "cp -a %s %s" opamroot0 opamroot;
+    command "cp" ["-a"; opamroot0; opamroot];
   Sys.chdir dir;
   let dir = Sys.getcwd () in (* because it may need to be normalised on OSX *)
-  command ~silent:true
-    "%s var --quiet --root %s --global sys-ocaml-version=4.08.0"
-    opam opamroot;
+  command ~silent:true opam
+    ["var"; "--quiet"; "--root"; opamroot; "--global";
+     "sys-ocaml-version=4.08.0"];
   print_endline t.repo_hash;
   List.iter (fun (cmd, out) ->
       print_string cmd_prompt;
@@ -243,8 +303,8 @@ let run_test t ?vars ~opam =
         let contents = String.concat "\n" out ^ "\n" in
         write_file ~path ~contents;
         print_string contents
-      | Run ->
-        run_cmd ~opam ~dir ?vars cmd)
+      | Run {env; cmd; args; filter} ->
+        run_cmd ~opam ~dir ~vars:(vars @ env) ~filter cmd args)
     t.commands;
   Sys.chdir old_cwd
 
