@@ -46,7 +46,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Opamfile
-  *
+  * Fix `features` parser [#4507 @rjbou]
 
 ## External dependencies
 
