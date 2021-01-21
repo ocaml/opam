@@ -10,3 +10,4 @@ Switch invariant: ["camlp4" "ocaml-system"]
     You can temporarily relax the switch invariant with `--update-invariant'
 
 
+# Return code 20 #

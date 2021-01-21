@@ -12,7 +12,7 @@ Faking installation of ocaml-base-compiler.4.08.0
 Faking installation of ocaml-config.1
 Faking installation of ocaml.4.08.0
 Done.
-### opam install core_bench.112.17.00 core'<112.17.00' --show
+### opam install 'core_bench.112.17.00' 'core<112.17.00' --show
 [ERROR] Package conflict!
   * No agreement on the version of ocaml:
     - (invariant) -> ocaml-base-compiler >= 4.08.0 -> ocaml = 4.08.0
@@ -20,3 +20,4 @@ Done.
     You can temporarily relax the switch invariant with `--update-invariant'
 
 No solution found, exiting
+# Return code 20 #

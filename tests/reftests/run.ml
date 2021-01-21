@@ -1,3 +1,38 @@
+(**************************************************************************)
+(*                                                                        *)
+(*    Copyright 2012-2021 OCamlPro                                        *)
+(*    Copyright 2012 INRIA                                                *)
+(*                                                                        *)
+(*  All rights reserved. This file is distributed under the terms of the  *)
+(*  GNU Lesser General Public License version 2.1, with the special       *)
+(*  exception on linking described in the file LICENSE.                   *)
+(*                                                                        *)
+(**************************************************************************)
+
+(* Simple CRAM-like test framework for opam tests.
+   Features and format:
+   - first line is the git hash of the repository to use
+   - an opamroot is already initialised with that repo as "default"
+   - 'opam' is automatically redirected to the correct binary
+   - the command prefix is `### `
+   - use `### <FILENAME>`, then the contents below to create a file verbatim
+   - shell-like command handling:
+     * **NO pattern expansion, shell pipes, sequences or redirections**
+     * `FOO=x BAR=y command`
+     * Arguments can be quoted: eg `"foo\"bar"`, `'foo\bar'`, but not combined
+       (`foo'bar'` is not translated to `foobar`)
+     * Variable expansion in arguments (`$FOO` or `${FOO}`). Undefined variables
+       are left as-is
+     * rewrites: `| 'REGEXP' -> 'STR'` (can be repeated)
+     * `| unordered` compares lines without considering their ordering
+     * variables from command outputs: `cmd args >$ VAR`
+   - if you need more shell power, create a script using <FILENAME> then run it.
+     Or just use `sh -c`... but beware for compatibility.
+
+   The opam roots are generated using dynamically generated dune rules (see
+   gen.ml and dune.inc), then the tests are run using this script.
+*)
+
 type test = {
   repo_hash: string;
   commands: (string * string list) list;
@@ -77,6 +112,13 @@ let rec waitpid pid =
   | _, Unix.WEXITED n -> n
   | _, Unix.WSIGNALED _ -> failwith "signal"
 
+exception Command_failure of int * string
+
+let str_replace filters s =
+  List.fold_left (fun s (re, by) ->
+      Re.replace_string (Re.compile re) ~by s)
+    s filters
+
 let command
     ?(allowed_codes = [0]) ?(vars=[]) ?(silent=false) ?(filter=[])
     cmd args =
@@ -94,23 +136,26 @@ let command
       Unix.stdin stdout stdout
   in
   Unix.close stdout;
-  let rec filter_output ic =
+  let out_buf = Buffer.create 273 in
+  let rec filter_output ?(first=true) ic =
     match input_line ic with
     | s ->
-      List.fold_left (fun s (re, by) ->
-          Re.replace_string (Re.compile re) ~by s)
-        s filter
-      |>
-      if silent then ignore else print_endline;
-      filter_output ic
+      let s = str_replace filter s in
+      if s = "\\c" then filter_output ~first ic
+      else
+        (if not first then Buffer.add_char out_buf '\n';
+         Buffer.add_string out_buf s;
+         if not silent then print_endline s;
+         filter_output ~first:false ic)
     | exception End_of_file -> ()
   in
   filter_output ic;
   let ret = waitpid pid in
   close_in ic;
   if not (List.mem ret allowed_codes) then
-    Printf.ksprintf failwith "Error code %d: %s" ret
-      (String.concat " " (cmd :: args))
+    raise (Command_failure (ret, String.concat " " (cmd :: args)))
+  else
+    Buffer.contents out_buf
 
 let finally f x k = match f x with
   | r -> k (); r
@@ -156,33 +201,15 @@ let rec with_temp_dir f =
   (mkdir_p s;
    finally f s @@ fun () -> rm_rf s)
 
-let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) cmd args =
-  let filter = Re.[
-      str dir, "${BASEDIR}";
-      seq [opt (str "/private");
-           str (Filename.get_temp_dir_name ());
-           rep (char '/');
-           str "opam-";
-           rep1 (alt [alnum; char '-']);
-           char '/'],
-      "${OPAMTMP}";
-    ] @ filter
-  in
-  let env_vars = [
-    "OPAM", opam;
-    "OPAMROOT", Filename.concat dir "OPAM";
-  ] @ vars
-  in
-  let cmd = if cmd = "opam" then opam else cmd in
-  try command ~vars:env_vars ~filter cmd args
-  with Failure _ -> ()
-
 type command =
   | File_contents of string
   | Run of { env: (string * string) list;
              cmd: string;
-             args: string list;
-             filter: (Re.t * string) list; }
+             args: string list; (* still escaped *)
+             filter: (Re.t * string) list;
+             output: string option;
+             unordered: bool; }
+  | Comment of string
 
 module Parse = struct
 
@@ -233,6 +260,8 @@ module Parse = struct
     if str.[0] = '<' && str.[String.length str - 1] = '>' then
       let f = String.sub str 1 (String.length str - 2) in
       File_contents f
+    else if str.[0] = ':' || str.[0] = '#' then
+      Comment str
     else
     let varbinds, pos =
       let gr = exec (compile @@ rep re_varbind) str in
@@ -250,27 +279,75 @@ module Parse = struct
       List.map (fun gr -> Group.get gr 0) grs
     in
     let rec get_args_rewr acc = function
-      | [] -> List.rev acc, []
+      | [] -> List.rev acc, false, [], None
       | "|" :: _ as rewr ->
-        let rec get_rewr = function
+        let rec get_rewr (unordered, acc) = function
           | "|" :: re :: "->" :: str :: r ->
-            (Re.Posix.re (get_str re), get_str str) :: get_rewr r
-          | [] -> []
-          | _ -> failwith "Bad rewrite, expecting '| RE -> STR'"
+            get_rewr (unordered, (Posix.re (get_str re), get_str str) :: acc) r
+          | "|" :: unordered :: r ->
+            get_rewr (true, acc) r
+          | ">$" :: output :: [] ->
+            unordered, List.rev acc, Some (get_str output)
+          | [] ->
+            unordered, List.rev acc, None
+          | r ->
+            Printf.printf
+              "Bad rewrite %S, expecting '| RE -> STR' or '>$ VAR'\n%!"
+              (String.concat " " r);
+            unordered, List.rev acc, None
         in
-        List.rev acc, get_rewr rewr
-      | arg :: r -> get_args_rewr (get_str arg :: acc) r
+        let unordered, rewr, out = get_rewr (false, []) rewr in
+        List.rev acc, unordered, rewr, out
+      | arg :: r -> get_args_rewr (arg :: acc) r
     in
-    let args, rewr = get_args_rewr [] args in
+    let args, unordered, rewr, output = get_args_rewr [] args in
     Run {
       env = varbinds;
       cmd;
       args;
       filter = rewr;
+      output;
+      unordered;
     }
 end
 
 let parse_command = Parse.command
+
+let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
+  let filter = Re.[
+      str dir, "${BASEDIR}";
+      seq [opt (str "/private");
+           str (Filename.get_temp_dir_name ());
+           rep (char '/');
+           str "opam-";
+           rep1 (alt [alnum; char '-'])],
+      "${OPAMTMP}";
+    ] @ filter
+  in
+  let env_vars = [
+    "OPAM", opam;
+    "OPAMROOT", Filename.concat dir "OPAM";
+  ] @ vars
+  in
+  let var_filters =
+    List.rev_map (fun (v, x) ->
+        Re.(alt [seq [str "${"; str v; str "}"];
+                 seq [char '$'; str v; eow]];),
+        x)
+      env_vars
+  in
+  let cmd = if cmd = "opam" then opam else cmd in
+  let args =
+    List.map (fun a ->
+        let expanded =
+          if a <> "" && a.[0] = '\'' then a
+          else str_replace var_filters a
+        in
+        Parse.get_str expanded)
+      args
+  in
+  try command ~vars:env_vars ~filter ~silent cmd args
+  with Command_failure (n,_) -> Printf.printf "# Return code %d #\n" n; ""
 
 let write_file ~path ~contents =
   mkdir_p (Filename.dirname path);
@@ -278,34 +355,64 @@ let write_file ~path ~contents =
   output_string oc contents;
   close_out oc
 
+let rec list_remove x = function
+  | [] -> []
+  | y :: r -> if x = y then r else y :: list_remove x r
+
 let run_test t ?(vars=[]) ~opam =
   let opamroot0 = Filename.concat (Sys.getcwd ()) ("root-"^t.repo_hash) in
   with_temp_dir @@ fun dir ->
   let old_cwd = Sys.getcwd () in
   let opamroot = Filename.concat dir "OPAM" in
   if Sys.win32 then
-    command ~allowed_codes:[0; 1] ~silent:true
+    ignore @@ command ~allowed_codes:[0; 1] ~silent:true
       "robocopy"
       ["/e"; "/copy:dat"; "/dcopy:dat"; "/sl"; opamroot0; opamroot]
   else
-    command "cp" ["-a"; opamroot0; opamroot];
+    ignore @@ command "cp" ["-a"; opamroot0; opamroot];
   Sys.chdir dir;
   let dir = Sys.getcwd () in (* because it may need to be normalised on OSX *)
-  command ~silent:true opam
+  ignore @@ command ~silent:true opam
     ["var"; "--quiet"; "--root"; opamroot; "--global";
      "sys-ocaml-version=4.08.0"];
   print_endline t.repo_hash;
-  List.iter (fun (cmd, out) ->
-      print_string cmd_prompt;
-      print_endline cmd;
-      match parse_command cmd with
-      | File_contents path ->
-        let contents = String.concat "\n" out ^ "\n" in
-        write_file ~path ~contents;
-        print_string contents
-      | Run {env; cmd; args; filter} ->
-        run_cmd ~opam ~dir ~vars:(vars @ env) ~filter cmd args)
-    t.commands;
+  let _vars =
+    List.fold_left (fun vars (cmd, out) ->
+        print_string cmd_prompt;
+        print_endline cmd;
+        match parse_command cmd with
+        | Comment _ -> vars
+        | File_contents path ->
+          let contents = String.concat "\n" out ^ "\n" in
+          write_file ~path ~contents;
+          print_string contents;
+          vars
+        | Run {env; cmd; args; filter; output; unordered} ->
+          let silent = output <> None || unordered in
+          let r =
+            run_cmd ~opam ~dir ~vars:(vars @ env) ~filter ~silent cmd args
+          in
+          (if unordered then
+             (* print lines from Result, but respecting order from Expect *)
+             let rec diffl acc r e = match r, e with
+               | r, el::e when List.mem el acc ->
+                 print_endline el; diffl (list_remove el acc) r e
+               | rl::r, el::e ->
+                 if rl = el then (print_endline el; diffl acc r e)
+                 else if List.mem rl e then diffl (rl::acc) r (el :: e)
+                 else (print_endline rl; diffl acc r (el :: e))
+               | [], e::el ->
+                 diffl acc [] el
+               | r, [] ->
+                 assert (acc = []); List.iter print_endline r
+             in
+             diffl [] (String.split_on_char '\n' r) out);
+          match output with
+          | None -> vars
+          | Some v -> (v, r) :: List.filter (fun (w,_) -> v <> w) vars)
+      vars
+      t.commands
+  in
   Sys.chdir old_cwd
 
 let () =

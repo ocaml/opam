@@ -11,10 +11,6 @@ CACHEDIR=REPO/cache/md5/$(echo $MD5 |head -c2)
 mkdir -p $CACHEDIR
 cp "packages/$ARCHIVE" "$CACHEDIR/$MD5"
 ### chmod a+x mkurl
-### <opam-sort>
-#!/bin/sh
-exec awk '/^-> / {print | "sort"; next} /^Done.$/ { close("sort") } {print}'
-### chmod a+x opam-sort
 ### : INIT :
 ### mkdir REPO
 ### opam repo add test REPO --set-default --yes
@@ -637,7 +633,8 @@ Testing optional dependencies
 ### cp packages/P5.opam       REPO/packages/P5.1/opam
 ### cp packages/P5/README     REPO/packages/P5.1/descr
 ### ./mkurl P5.1 P5.tar.gz
-### echo 'archive-mirrors: "'"$PWD"'/REPO/cache"' >> REPO/repo
+### <REPO/repo>
+archive-mirrors: "cache"
 ### opam update
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -661,9 +658,8 @@ Switch invariant: ["ocaml" {= "system"}]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml.system
 Done.
-### opam exec -- ocamlc -config | sed -ne "s/ext_lib: .//p" | tr -d '\r' >lib-ext
-### opam var ext_lib=$(cat lib-ext) --switch system
-Added 'ext_lib: "a"' to field variables in switch system
+### opam exec -- ocamlc -config | 'ext_lib: .' -> '#' | '^[^#].*' -> '\c' | '^#' -> '' >$ LIB_EXT
+### opam var ext_lib=$LIB_EXT --switch system | .* -> '\c'
 ### : INSTALL-REMOVE :
 ### opam list -is --columns=package
 ocaml.system
@@ -704,7 +700,7 @@ P5     --          Testing optional dependencies
 ### : INSTALL-OPT :
 ### opam list -is --columns=package
 ocaml.system
-### opam install --yes P5 | ./opam-sort
+### opam install --yes P5 | unordered
 The following actions will be performed:
   - install P1 1 [required by P5] I ll always bother you displaying this message
   - install P5 1
@@ -720,8 +716,7 @@ Done.
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
 => Thanks SO MUCH for installing this humble package
 => Everything went well
-### test -f ${OPAMROOT}/system/lib/p5/p2_absent && echo PASS
-PASS
+### test -f ${OPAMROOT}/system/lib/p5/p2_absent
 ### opam list -is --columns=package
 ocaml.system
 P1.1
@@ -760,7 +755,7 @@ The following actions will be performed:
 Done.
 ### opam list -is --columns=package
 ocaml.system
-### opam install P5 --yes | ./opam-sort
+### opam install P5 --yes | unordered
 The following actions will be performed:
   - install P1 1 [required by P5] I ll always bother you displaying this message
   - install P5 1
@@ -780,7 +775,7 @@ Done.
 ocaml.system
 P1.1
 P5.1
-### opam install P2 --yes | ./opam-sort
+### opam install P2 --yes | unordered
 The following actions will be performed:
   - install   P2 1
   - recompile P5 1 [uses P2]
@@ -793,8 +788,7 @@ The following actions will be performed:
 -> retrieved P2.1  (${BASEDIR}/REPO/cache)
 -> retrieved P5.1  (cached)
 Done.
-### test -f ${OPAMROOT}/system/lib/p5/p2_present && echo PASS
-PASS
+### test -f ${OPAMROOT}/system/lib/p5/p2_present
 ### opam list -is --columns=package
 ocaml.system
 P1.1
@@ -823,7 +817,7 @@ The following actions will be performed:
 Done.
 ### opam list -is --columns=package
 ocaml.system
-### opam install P1 P2 P5 | ./opam-sort
+### opam install P1 P2 P5 | unordered
 The following actions will be performed:
   - install P1 1  I ll always bother you displaying this message
   - install P2 1
@@ -842,8 +836,7 @@ Done.
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
 => Thanks SO MUCH for installing this humble package
 => Everything went well
-### test -f ${OPAMROOT}/system/lib/p5/p2_present && echo PASS
-PASS
+### test -f ${OPAMROOT}/system/lib/p5/p2_present
 ### opam list -is --columns=package
 ocaml.system
 P1.1
@@ -861,8 +854,7 @@ The following actions will be performed:
 -> removed   P2.1
 -> installed P5.1
 Done.
-### test -f ${OPAMROOT}/system/lib/p5/p2_absent && echo PASS
-PASS
+### test -f ${OPAMROOT}/system/lib/p5/p2_absent
 ### opam list -is --columns=package
 ocaml.system
 P1.1
@@ -963,7 +955,7 @@ P1.1
 P2.1
 P3.1~weird-version.test
 P4.1
-### opam reinstall P1 --yes | ./opam-sort
+### opam reinstall P1 --yes | unordered
 The following actions will be performed:
   - recompile P1 1                                  I ll always bother you displaying this message
   - recompile P3 1~weird-version.test [uses P1]
@@ -1053,9 +1045,9 @@ P1.1
 P2.1
 P3.1~weird-version.test
 P4.1
-### eval `opam config env | tr -d '\r'`; echo $P1
+### sh -c 'eval `opam config env`; echo $P1'
 version1
-### opam upgrade --yes | ./opam-sort
+### opam upgrade --yes | unordered
 The following actions will be performed:
   - upgrade   P1 1 to 2
   - recompile P3 1~weird-version.test [uses P1]
@@ -1083,7 +1075,7 @@ P1.2
 P2.1
 P3.1~weird-version.test
 P4.3
-### eval `opam config env | tr -d '\r'`; echo $P1
+### sh -c 'eval `opam config env`; echo $P1'
 version2
 ### : LIST :
 ### opam list -A
@@ -1102,7 +1094,7 @@ P1.2
 P2.1
 P3.1~weird-version.test
 P4.3
-### opam install P4.2 --yes | ./opam-sort
+### opam install P4.2 --yes | unordered
 The following actions will be performed:
   - downgrade P1 2 to 1               [required by P4] I ll always bother you displaying this message
   - recompile P3 1~weird-version.test [uses P1]
@@ -1174,7 +1166,7 @@ Switch invariant: ["ocaml" {= "system"}]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml.system
 Done.
-### opam var ext_lib=$(cat lib-ext) --switch test
+### opam var ext_lib=$LIB_EXT --switch test
 Added 'ext_lib: "a"' to field variables in switch test
 ### opam list -is --columns=package
 ocaml.system
@@ -1206,7 +1198,7 @@ Switch invariant: ["ocaml" {= "20"}]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml.20
 Done.
-### opam var ext_lib=$(cat lib-ext) --switch test2
+### opam var ext_lib=$LIB_EXT --switch test2
 Added 'ext_lib: "a"' to field variables in switch test2
 ### opam list -is --columns=package
 ocaml.20
@@ -1249,9 +1241,9 @@ ocaml.system
 P1.1
 P2.1
 ### opam switch create 10+a+b --empty
-### opam var ext_lib=$(cat lib-ext) --switch 10+a+b
+### opam var ext_lib=$LIB_EXT --switch 10+a+b
 Added 'ext_lib: "a"' to field variables in switch 10+a+b
-### opam install ocaml.10+a+b P1 P2 P3 P4 | ./opam-sort
+### opam install ocaml.10+a+b P1 P2 P3 P4 | unordered
 The following actions will be performed:
   - install ocaml 10+a+b
   - install P1    1                     I ll always bother you displaying this message
@@ -1281,7 +1273,7 @@ P1.1
 P2.1
 P3.1~weird-version.test
 P4.3
-### . ${OPAMROOT}/opam-init/variables.sh && echo "PASS $TEST"
+### sh -c '. ${OPAMROOT}/opam-init/variables.sh && echo "PASS $TEST"'
 PASS 1
 ### : REPO :
 ### opam repo add REPO2 REPO -k local
@@ -1302,8 +1294,7 @@ Updated ${BASEDIR}/OPAM/repo/REPO2/packages/P5.1/opam
 [NOTE] Repository REPO2 has been added to the selections of switch 10+a+b only.
        Run `opam repository add REPO2 --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
 
-### opam repo remove REPO2 --all && echo PASS
-PASS
+### opam repo remove REPO2 --all
 ### opam repo remove test --all
 ### : LIST :
 ### opam list -A
