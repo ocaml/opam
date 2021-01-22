@@ -2718,7 +2718,7 @@ module OPAMSyntax = struct
       "build-env", no_cleanup Pp.ppacc with_build_env build_env
         (Pp.V.map_list ~depth:2 Pp.V.env_binding);
       "features", no_cleanup Pp.ppacc with_features features
-        (Pp.V.map_list ~depth:2 @@
+        (Pp.V.map_list ~depth:1 @@
          Pp.V.map_options_2
            (Pp.V.ident -| Pp.of_module "variable" (module OpamVariable))
            (Pp.V.package_formula_items `Conj Pp.V.(filtered_constraints ext_version))
