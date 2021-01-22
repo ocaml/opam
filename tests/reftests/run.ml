@@ -364,7 +364,10 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
 
 let write_file ~path ~contents =
   mkdir_p (Filename.dirname path);
-  let oc = open_out path in
+  let oc =
+    if Sys.cygwin then open_out_bin path
+    else open_out path
+  in
   output_string oc contents;
   close_out oc
 
