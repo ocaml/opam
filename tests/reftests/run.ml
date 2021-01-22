@@ -324,10 +324,13 @@ end
 let parse_command = Parse.command
 
 let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
-  let filter = Re.[
+  let filter =
+    let tmpdir = Filename.get_temp_dir_name () in
+    Re.[
       str dir, "${BASEDIR}";
       seq [opt (str "/private");
-           str (Filename.get_temp_dir_name ());
+           alt [str tmpdir;
+                str (OpamSystem.back_to_forward tmpdir)];
            rep (char '/');
            str "opam-";
            rep1 (alt [alnum; char '-'])],
