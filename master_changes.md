@@ -60,7 +60,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Build
-  *
+  * Fix opam-devel's tests on platforms without openssl, GNU-diff and a system-wide ocaml [#4500 @kit-ty-kate]
 
 ## Infrastructure
   *
