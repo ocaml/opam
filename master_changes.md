@@ -49,6 +49,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix `features` parser [#4507 @rjbou]
 
 ## External dependencies
+  * Handle macport variants [#4509 @rjbou - fix #4297]
 
 ## Sandbox
   * Fix the conflict with the environment variable name used by dune [#4535 @smorimoto - fix ocaml/dune#4166]
