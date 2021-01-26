@@ -1505,7 +1505,7 @@ let global_options cli =
         $d_no_aspcud $cli_arg)
 
 (* lock options *)
-let locked cli section =
+let locked ?(section=Manpage.s_options) cli =
   mk_flag ~cli cli_original ~section ["locked"]
     "In commands that use opam files found from pinned sources, if a variant \
      of the file with an added .$(i,locked) extension is found (e.g. \
@@ -1516,7 +1516,7 @@ let locked cli section =
      of the dependencies currently installed on the host. This is equivalent \
      to setting the $(b,\\$OPAMLOCKED) environment variable. Note that this \
      option doesn't generally affect already pinned packages."
-let lock_suffix cli section =
+let lock_suffix ?(section=Manpage.s_options) cli =
   mk_opt ~cli (cli_from cli2_1) ~section ["lock-suffix"] "SUFFIX"
     "Set locked files suffix to $(i,SUFFIX)."
     Arg.(string) ("locked")
@@ -1617,8 +1617,8 @@ let build_options cli =
          compiler). Use with caution. This is equivalent to setting the \
          $(b,\\$OPAMUNLOCKBASE) environment variable"))
   in
-  let locked = locked cli section in
-  let lock_suffix = lock_suffix cli section in
+  let locked = locked cli ~section in
+  let lock_suffix = lock_suffix cli ~section in
   let assume_depexts =
     mk_flag ~cli (cli_from cli2_1) ~section ["assume-depexts"]
       "Skip the installation step for any missing system packages, and attempt \

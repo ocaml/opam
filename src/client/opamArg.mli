@@ -183,8 +183,8 @@ val subpath: OpamCLIVersion.t -> string option Term.t
 val apply_build_options: build_options -> unit
 
 (** Lock options *)
-val locked: OpamCLIVersion.t -> string -> bool Term.t
-val lock_suffix: OpamCLIVersion.t -> string -> string Term.t
+val locked: ?section:string -> OpamCLIVersion.t -> bool Term.t
+val lock_suffix: ?section:string -> OpamCLIVersion.t -> string Term.t
 
 (** {3 Package listing and filtering options} *)
 
