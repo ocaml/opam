@@ -1,4 +1,5 @@
 OCAMLC = ocamlc
+PATH = $(PWD)/bin:$(shell echo $$PATH)
 OS_TYPE := $(shell $(OCAMLC) -config | sed -ne "s/os_type: //p" | tr -d '\r')
 EXT_LIB := $(shell $(OCAMLC) -config | sed -ne "s/ext_lib: .//p" | tr -d '\r')
 

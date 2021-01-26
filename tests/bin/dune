@@ -1,0 +1,7 @@
+(rule
+  (targets ocamlc)
+  (action (copy %{ocamlc} %{targets})))
+
+(rule
+  (targets ocamlopt)
+  (action (copy %{ocamlopt} %{targets})))

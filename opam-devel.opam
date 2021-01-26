@@ -30,6 +30,8 @@ depends: [
   "opam-client" {= version}
   "cmdliner" {>= "0.9.8"}
   "dune" {>= "1.5.0"}
+  "conf-openssl" {with-test}
+  "conf-diffutils" {with-test}
 ]
 post-messages: [
 "The development version of opam has been successfully compiled into %{lib}%/%{name}%. You should not run it from there, please install the binaries to your PATH, e.g. with
