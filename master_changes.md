@@ -25,7 +25,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Pin
-  *
+  * Don't look for lock files for pin depends [#4511 @rjbou - fix #4505]
 
 ## List
   *
