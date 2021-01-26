@@ -1464,12 +1464,12 @@ module PIN = struct
         "No package named %S found"
         (OpamPackage.Name.to_string name)
 
-  let pin st name ?(edit=false) ?version ?(action=true) ?subpath target =
+  let pin st name ?(edit=false) ?version ?(action=true) ?subpath ?locked target =
     try
       let pinned = st.pinned in
       let st =
         match target with
-        | `Source url -> source_pin st name ?version ~edit ?subpath (Some url)
+        | `Source url -> source_pin st name ?version ~edit ?subpath ?locked (Some url)
         | `Version v ->
           let st = version_pin st name v in
           if edit then OpamPinCommand.edit st name else st
@@ -1492,10 +1492,10 @@ module PIN = struct
                 (OpamPackage.Name.to_string name)
                 (OpamPackage.Version.to_string version)
           in
-          source_pin st name ~version ~edit (Some url)
+          source_pin st name ~version ~edit ?locked (Some url)
         | `Dev_upstream ->
-          source_pin st name ?version ~edit (Some (get_upstream st name))
-        | `None -> source_pin st name ?version ~edit None
+          source_pin st name ?version ~edit ?locked (Some (get_upstream st name))
+        | `None -> source_pin st name ?version ~edit ?locked None
       in
       if action then (OpamConsole.msg "\n"; post_pin_action st pinned [name])
       else st
@@ -1503,7 +1503,7 @@ module PIN = struct
     | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
     | OpamPinCommand.Nothing_to_do -> st
 
-  let url_pins st ?edit ?(action=true) ?(pre=fun _ -> ()) pins =
+  let url_pins st ?edit ?(action=true) ?locked ?(pre=fun _ -> ()) pins =
     let names = List.map (fun (n,_,_,_,_) -> n) pins in
     (match names with
     | _::_::_ ->
@@ -1528,7 +1528,7 @@ module PIN = struct
           pre pin;
           try
             OpamPinCommand.source_pin st name ?version ?opam
-              ?edit ?subpath (Some url)
+              ?edit ?subpath ?locked (Some url)
           with
           | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
           | OpamPinCommand.Nothing_to_do -> st)
@@ -1539,7 +1539,7 @@ module PIN = struct
        post_pin_action st pinned names)
     else st
 
-  let edit st ?(action=true) ?version name =
+  let edit st ?(action=true) ?version ?locked name =
     let pinned = st.pinned in
     let st =
       if OpamPackage.has_name st.pinned name then
@@ -1564,7 +1564,7 @@ module PIN = struct
             OpamStd.Option.Op.(OpamSwitchState.url st nv >>| OpamFile.URL.url)
           in
           let opam = OpamPackage.Map.find_opt nv st.repos_package_index in
-          try source_pin st name ~edit:true ?version ?opam target
+          try source_pin st name ~edit:true ?version ?opam ?locked target
           with OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
              | OpamPinCommand.Nothing_to_do -> st
         else

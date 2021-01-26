@@ -59,7 +59,7 @@ let read_opam_file_for_pinning ?(quiet=false) name f url =
 
 exception Fetch_Fail of string
 
-let get_source_definition ?version ?subpath st nv url =
+let get_source_definition ?version ?subpath ?locked st nv url =
   let root = st.switch_global.root in
   let srcdir = OpamPath.Switch.pinned_package root st.switch nv.name in
   let fix opam =
@@ -86,7 +86,7 @@ let get_source_definition ?version ?subpath st nv url =
       match OpamFile.URL.subpath url with
       | None -> srcdir
       | Some subpath -> OpamFilename.Op.(srcdir / subpath) in
-    match OpamPinned.find_opam_file_in_source nv.name subsrcdir with
+    match OpamPinned.find_opam_file_in_source ?locked nv.name subsrcdir with
     | None -> None
     | Some f ->
       match read_opam_file_for_pinning nv.name f (OpamFile.URL.url url) with
@@ -444,7 +444,7 @@ and source_pin
     st name
     ?version ?edit:(need_edit=false) ?opam:opam_opt ?(quiet=false)
     ?(force=false) ?(ignore_extra_pins=OpamClientConfig.(!r.ignore_pin_depends))
-    ?subpath
+    ?subpath ?locked
     target_url
   =
   log "pin %a to %a %a%a"
@@ -535,7 +535,7 @@ and source_pin
     try
       opam_opt >>+ fun () ->
       urlf >>= fun url ->
-      OpamProcess.Job.run @@ get_source_definition ?version ?subpath st nv url
+      OpamProcess.Job.run @@ get_source_definition ?version ?subpath ?locked st nv url
     with Fetch_Fail err ->
       if force then None else
         (OpamConsole.error_and_exit `Sync_error

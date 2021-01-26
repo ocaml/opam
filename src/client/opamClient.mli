@@ -122,6 +122,7 @@ module PIN: sig
     rw switch_state ->
     OpamPackage.Name.t ->
     ?edit:bool -> ?version:version -> ?action:bool -> ?subpath:string ->
+    ?locked:bool ->
     [< `Source of url | `Version of version | `Dev_upstream
     | `Source_version of version * version
     (* the first version is the source one, the second the package one *)
@@ -129,11 +130,13 @@ module PIN: sig
     rw switch_state
 
   val edit:
-    rw switch_state -> ?action:bool -> ?version:version -> OpamPackage.Name.t ->
+    rw switch_state ->
+    ?action:bool -> ?version:version -> ?locked:bool ->
+    OpamPackage.Name.t ->
     rw switch_state
 
   val url_pins:
-    rw switch_state ->  ?edit:bool -> ?action:bool ->
+    rw switch_state -> ?edit:bool -> ?action:bool -> ?locked:bool ->
     ?pre:((name * version option * OpamFile.OPAM.t option * url * string option)
           -> unit) ->
     (name * version option * OpamFile.OPAM.t option * url * string option) list ->

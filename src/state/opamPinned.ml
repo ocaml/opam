@@ -13,6 +13,8 @@ open OpamTypes
 open OpamStateTypes
 open OpamFilename.Op
 
+let log fmt = OpamConsole.log "PIN" fmt
+
 let package st name = OpamPackage.package_of_name st.pinned name
 
 let package_opt st name = try Some (package st name) with Not_found -> None
@@ -31,6 +33,8 @@ let possible_definition_filenames dir name = [
 ]
 
 let check_locked ?subpath default =
+  (* we keep the check, but this function shouldn't be called if the package is
+     not asked as locked *)
   match OpamStateConfig.(!r.locked) with
   | None -> default
   | Some ext ->
@@ -40,8 +44,9 @@ let check_locked ?subpath default =
       | None -> default
     in
     let fl = OpamFilename.add_extension flo ext in
-    if OpamFilename.exists fl then
-      (let base_depends =
+    if not (OpamFilename.exists fl) then default else
+      (log "Lock file found %s" (OpamFilename.to_string flo);
+       let base_depends =
          OpamFile.make flo
          |> OpamFile.OPAM.read
          |> OpamFile.OPAM.depends
@@ -133,15 +138,14 @@ let check_locked ?subpath default =
                       consistent)
               else "")));
        OpamFilename.add_extension default ext)
-    else default
 
-let find_opam_file_in_source name dir =
+let find_opam_file_in_source ?(locked=false) name dir =
   let opt =
     OpamStd.List.find_opt OpamFilename.exists
       (possible_definition_filenames dir name)
   in
   (match opt with
-   | Some base -> Some (check_locked base)
+   | Some base when locked -> Some (check_locked base)
    | _ -> opt)
   |> OpamStd.Option.map OpamFile.make
 
