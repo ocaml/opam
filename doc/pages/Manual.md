@@ -1078,6 +1078,15 @@ files.
   defines environment updates that will be applied when running the package's
   build, install and remove scripts.
 
+    The following environment variables are set by opam (but can be overridden by `build-env`):
+    - `CDPATH=`
+    - `MAKEFLAGS=`
+    - `MAKELEVEL=`
+    - `OPAM_PACKAGE_NAME=<pkg>` (`<pkg>` is the name of the package being built/installed/removed)
+    - `OPAM_PACKAGE_VERSION=<ver>` (`<ver>` is the version of the package being built/installed/removed)
+    - `OPAMCLI=2.0` (since opam 2.1)
+    - `TMP` and `TMPDIR` are set by the sandbox script (bubblewrap), but should not be relied on since the sandbox is not used on all platforms and can be disabled by the user.
+
 - <a id="opamsection-extra-sources">`extra-source <string> "{" <url-file> "}"`</a>:
   allows the definition of extra files that need downloading into the source
   tree before the package can be patched (if necessary) and built. The format is

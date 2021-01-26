@@ -93,4 +93,4 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Doc
-  *
+  * Document the default build environment variables [#4496 @kit-ty-kate]
