@@ -57,7 +57,7 @@ let call_external_solver command ~criteria ?timeout (_, universe,_ as cudf) =
     in
     OpamFilename.remove solver_in;
     if not (OpamFilename.exists solver_out) then
-      raise (Common.CudfSolver.Error "no output")
+      raise (Dose_common.CudfSolver.Error "no output")
     else if
       (let ic = OpamFilename.open_in solver_out in
        try
@@ -65,7 +65,7 @@ let call_external_solver command ~criteria ?timeout (_, universe,_ as cudf) =
          i = "FAIL"
        with End_of_file -> close_in ic; false)
     then
-      raise Common.CudfSolver.Unsat
+      raise Dose_common.CudfSolver.Unsat
     else
     let r =
       Cudf_parser.load_solution_from_file
