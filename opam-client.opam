@@ -29,7 +29,7 @@ depends: [
   "ocaml" {>= "4.02.3"}
   "opam-state" {= version}
   "opam-solver" {= version}
-  "extlib" {>= "1.7.3" & < "1.7.8"}
+  "base64" {>= "3.1.0"}
   "opam-repository" {= version}
   "re" {>= "1.9.0"}
   "cmdliner" {>= "1.0.0"}
