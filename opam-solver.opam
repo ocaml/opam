@@ -29,7 +29,7 @@ depends: [
   "ocaml" {>= "4.02.3"}
   "opam-format" {= version}
   "mccs" {>= "1.1+9"}
-  "dose3" {>= "5" & < "6.0"}
+  "dose3" {>= "6.1"}
   "cudf" {>= "0.7"}
   "dune" {>= "1.11.0"}
 ]
