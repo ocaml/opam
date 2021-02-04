@@ -26,6 +26,7 @@ New option/command/subcommand are prefixed with ◈.
   * Don't patch twice [#4529 @rjbou]
   * With `--deps-only`, set dependencies as root packages [#4964 @rjbou - fix #4502]
   * Keep global lock only if root format upgrade is performed [#4612 @rjbou - fix #4597]
+  * Improve installation times by only tracking files listed in `.install` instead of the whole switch prefix when there are no `install:` instructions (and no preinstall commands) [#4494 @kit-ty-kate @rjbou - fix #4422]
 
 ## Remove
   *
