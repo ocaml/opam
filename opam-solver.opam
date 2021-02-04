@@ -1,5 +1,9 @@
-opam-version: "1.2"
-version: "2.0.7"
+opam-version: "2.0"
+version: "2.0.8"
+synopsis: "opam 2.0 development libraries (solver)"
+description: """
+Solver and Cudf interaction. This library is based on the Cudf and Dose libraries, and handles calls to the external solver from opam.
+"""
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Vincent Bernardoff <vb@luminar.eu.org>"
@@ -15,16 +19,16 @@ authors: [
 ]
 homepage: "https://opam.ocaml.org/"
 bug-reports: "https://github.com/ocaml/opam/issues"
-dev-repo: "https://github.com/ocaml/opam.git"
+dev-repo: "git+https://github.com/ocaml/opam.git"
 build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
-  [make "%{name}%.install"]
+  ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "opam-format" {= "2.0.7"}
+  "ocaml" {>= "4.02.3"}
+  "opam-format" {= version}
   "mccs" {>= "1.1+9"}
   "dose3" {>= "5"}
   "cudf" {>= "0.7"}
   "dune" {build & >= "1.2.1"}
 ]
-available: ocaml-version >= "4.02.3"
