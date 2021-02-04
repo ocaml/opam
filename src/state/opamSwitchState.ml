@@ -859,11 +859,16 @@ let get_conflicts st packages opams_map =
 
 let avoid_version st nv =
   let open OpamStd.Option.Op in
-  OpamFile.OPAM.has_flag Pkgflag_AvoidVersion (opam st nv) &&
-  not ((OpamPackage.package_of_name_opt st.installed nv.name >>=
-        (fun nv -> OpamPackage.Map.find_opt nv st.installed_opams) >>|
-        OpamFile.OPAM.has_flag Pkgflag_AvoidVersion)
-       +! false)
+  let opam = opam st nv in
+  let has_avoid_flag opam =
+    OpamFile.OPAM.has_flag Pkgflag_AvoidVersion opam
+    || OpamFile.OPAM.has_flag Pkgflag_Deprecated opam
+  in
+  has_avoid_flag opam
+  && not ((OpamPackage.package_of_name_opt st.installed nv.name >>=
+           (fun nv -> OpamPackage.Map.find_opt nv st.installed_opams) >>|
+           has_avoid_flag)
+          +! false)
 
 let universe st
     ?(test=OpamStateConfig.(!r.build_test))

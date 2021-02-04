@@ -40,6 +40,10 @@ let post_message ?(failed=false) st action =
     in
     let messages =
       let filter_env = OpamPackageVar.resolve ~opam ~local:local_variables st in
+      (if OpamFile.OPAM.has_flag Pkgflag_Deprecated opam then
+        ["Note: This package is deprecated."]
+      else
+        []) @
       OpamStd.List.filter_map (fun (message,filter) ->
           if OpamFilter.opt_eval_to_bool filter_env filter then
             Some (OpamFilter.expand_string ~default:(fun _ -> "")
