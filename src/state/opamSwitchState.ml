@@ -919,7 +919,8 @@ let universe st
   in
   let hidden_versions =
     OpamPackage.Map.fold (fun nv opam acc ->
-        if OpamFile.OPAM.has_flag Pkgflag_HiddenVersion opam
+        if OpamFile.OPAM.has_flag Pkgflag_HiddenVersion opam ||
+           OpamFile.OPAM.has_flag Pkgflag_Deprecated opam
         then OpamPackage.Set.add nv acc else acc)
       st.opams
       OpamPackage.Set.empty

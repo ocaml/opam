@@ -78,7 +78,10 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Solver
-  *
+  * Add bultin support for the 'deprecated' flag.
+    Any packages flagged with deprecated would be avoided by the solver unless there is no other choice (e.g. some user wants to install package a which depends on b which is deprecated)
+    If it is installed, show up a note after installation notifying the user that the package is deprecated.
+    [#4523 @kit-ty-kate]
 
 ## Client
   *
