@@ -16,7 +16,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Install
-  *
+  * Don't patch twice [#4529 @rjbou]
 
 ## Remove
   *
