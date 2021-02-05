@@ -1427,10 +1427,12 @@ module ConfigSyntax = struct
         (Pp.V.map_list ~depth:1 Pp.V.arg);
       "default-compiler", Pp.ppacc
         with_default_compiler default_compiler
-        (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
+        (Pp.V.package_formula `Disj
+           Pp.V.(constraints Pp.V.version OpamPackage.Version.next));
       "default-invariant", Pp.ppacc
         with_default_invariant default_invariant
-        (Pp.V.package_formula `Conj Pp.V.(constraints Pp.V.version));
+        (Pp.V.package_formula `Conj Pp.V.(constraints Pp.V.version
+                                            OpamPackage.Version.next));
       "depext", Pp.ppacc
         with_depext depext
         Pp.V.bool;
@@ -1612,10 +1614,12 @@ module InitConfigSyntax = struct
            (fun (name, (url, ta)) -> (name, Some url, ta)));
       "default-compiler", Pp.ppacc
         with_default_compiler default_compiler
-        (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
+        (Pp.V.package_formula `Disj
+           Pp.V.(constraints Pp.V.version OpamPackage.Version.next));
       "default-invariant", Pp.ppacc
         with_default_invariant default_invariant
-        (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
+        (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version
+                                            OpamPackage.Version.next));
       "jobs", Pp.ppacc_opt
         (with_jobs @* OpamStd.Option.some) jobs
         Pp.V.pos_int;
@@ -1843,7 +1847,8 @@ module Switch_configSyntax = struct
       (Pp.V.map_list ~depth:2 Pp.V.env_binding);
     "invariant", Pp.ppacc_opt
       (fun inv t -> {t with invariant = Some inv }) (fun t -> t.invariant)
-      (Pp.V.package_formula `Conj Pp.V.(constraints version));
+      (Pp.V.package_formula `Conj
+         Pp.V.(constraints version OpamPackage.Version.next));
     "depext-bypass", Pp.ppacc
       (fun depext_bypass t -> { t with depext_bypass})
       (fun t -> t.depext_bypass)
@@ -2812,12 +2817,15 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:1 Pp.V.string);
 
       "depends", no_cleanup Pp.ppacc with_depends depends
-        (Pp.V.package_formula `Conj Pp.V.(filtered_constraints ext_version));
+        (Pp.V.package_formula `Conj
+           Pp.V.(filtered_constraints ext_version (fun f -> FNext f)));
       "depopts", with_cleanup cleanup_depopts Pp.ppacc with_depopts depopts
-        (Pp.V.package_formula `Disj Pp.V.(filtered_constraints ext_version));
+        (Pp.V.package_formula `Disj
+           Pp.V.(filtered_constraints ext_version (fun f -> FNext f)));
       "conflicts", with_cleanup cleanup_conflicts
         Pp.ppacc with_conflicts conflicts
-        (Pp.V.package_formula `Disj Pp.V.(filtered_constraints ext_version));
+        (Pp.V.package_formula `Disj
+           Pp.V.(filtered_constraints ext_version (fun f -> FNext f)));
       "conflict-class", no_cleanup Pp.ppacc with_conflict_class conflict_class
         (Pp.V.map_list ~depth:1 Pp.V.pkgname);
       "available", no_cleanup Pp.ppacc with_available available
@@ -2849,7 +2857,8 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:1 @@
          Pp.V.map_options_2
            (Pp.V.ident -| Pp.of_module "variable" (module OpamVariable))
-           (Pp.V.package_formula_items `Conj Pp.V.(filtered_constraints ext_version))
+           (Pp.V.package_formula_items `Conj
+              Pp.V.(filtered_constraints ext_version (fun f -> FNext f)))
            (Pp.singleton -| Pp.V.string));
 
       "messages", no_cleanup Pp.ppacc with_messages messages
@@ -2910,7 +2919,8 @@ module OPAMSyntax = struct
       "ocaml-version", no_cleanup
         Pp.ppacc_opt with_ocaml_version OpamStd.Option.none
         (Pp.V.list_depth 1 -| Pp.V.list -|
-         Pp.V.constraints Pp.V.compiler_version);
+           Pp.V.constraints Pp.V.compiler_version
+             (fun _ -> raise (Failure "unexpected '~' in compiler constraints")));
       "os", no_cleanup Pp.ppacc_opt with_os OpamStd.Option.none
         Pp.V.os_constraint;
       "descr", no_cleanup Pp.ppacc_opt with_descr OpamStd.Option.none
@@ -3745,7 +3755,8 @@ module CompSyntax = struct
         (Pp.V.map_list ~depth:1 Pp.V.command);
 
       "packages", Pp.ppacc with_packages packages
-        (Pp.V.package_formula `Conj (Pp.V.constraints Pp.V.version));
+        (Pp.V.package_formula `Conj
+           (Pp.V.constraints Pp.V.version OpamPackage.Version.next));
       "env", Pp.ppacc with_env env
         (Pp.V.map_list ~depth:2 Pp.V.env_binding);
       "preinstalled", Pp.ppacc_opt with_preinstalled
