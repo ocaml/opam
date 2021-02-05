@@ -306,7 +306,13 @@ module V = struct
         | Int i -> FString (string_of_int i)
         | Ident _ -> FIdent (parse ~pos:v.pos filter_ident v)
         | Group g -> parse_filter ~pos:v.pos g.pelem
-        | Relop (op,e,f) -> FOp (aux e, op.pelem, aux f)
+        | Relop (op,e,f) ->
+           (match op.pelem with
+            | `Sem -> (* rewrite `Sem case *)
+               FAnd (FOp (aux e, `Geq, aux f),
+                     FOp (aux e, `Lt, FNext (aux f)))
+            | `Eq | `Neq | `Gt | `Geq | `Lt | `Leq as op ->
+               FOp (aux e, op, aux f))
         | Pfxop ({ pelem = `Not; _}, e) -> FNot (aux e)
         | Pfxop ({ pelem = `Defined; _}, e) -> FDefined (aux e)
         | Logop ({ pelem = `And; _}, e, f)-> FAnd (aux e, aux f)
@@ -331,9 +337,15 @@ module V = struct
         | FString s  -> print string s
         | FIdent fid -> print filter_ident fid
         | FBool b    -> print bool b
+        | FAnd (FOp (f1, `Geq, v1), FOp(f2, `Lt, FNext v2))
+             when f1 = f2 && v1 = v2 ->
+           (* match rewrote `Sem *)
+           group_if ~cond:(context <> `Or && context <> `And) @@ nullify_pos @@
+           Relop (nullify_pos `Sem, aux ~context:`Relop f1, aux ~context:`Relop v1)
         | FOp (e,s,f) ->
+           let s :> relop_kind with_pos = nullify_pos s in
           group_if ~cond:(context <> `Or && context <> `And) @@ nullify_pos @@
-          Relop (nullify_pos s, aux ~context:`Relop e, aux ~context:`Relop f)
+          Relop (s, aux ~context:`Relop e, aux ~context:`Relop f)
         | FOr (e,f) ->
           group_if ~cond:(context <> `Or) @@ nullify_pos @@
           Logop (nullify_pos `Or, aux ~context:`Or e, aux ~context:`Or f)
@@ -346,7 +358,7 @@ module V = struct
         | FDefined f ->
           group_if ~cond:(context = `Relop) @@ nullify_pos @@
           Pfxop (nullify_pos `Defined, aux ~context:`Defined f)
-        | FUndef _ -> assert false
+        | FUndef _  | FNext _ -> assert false
       in
       match f with
       | FBool true -> []
@@ -358,10 +370,16 @@ module V = struct
 
   let command = map_option (map_list arg) (opt filter)
 
-  let constraints version =
+  let constraints version next =
     let rec parse_constraints ~pos:_ l =
       let rec aux v = match v.pelem with
-        | Prefix_relop (op, v) -> Atom (op.pelem, parse version ~pos:v.pos v)
+        | Prefix_relop (op, v) ->
+           let ver = parse version ~pos:v.pos v in
+           (match op.pelem with
+            | `Sem -> (* rewrite `Sem case *)
+               And (Atom (`Geq, ver), Atom (`Lt, next ver))
+            | `Eq | `Neq | `Gt | `Geq | `Lt | `Leq as op ->
+               Atom (op, ver))
         | Logop ({ pelem = `And; _}, l, r) -> And (aux l, aux r)
         | Logop ({ pelem = `Or; _}, l, r) -> Or (aux l, aux r)
         | Pfxop ({ pelem = `Not; _}, v) ->
@@ -381,9 +399,14 @@ module V = struct
         in
         match cs with
         | Empty       -> assert false
+        | And (Atom (`Geq, v1), Atom (`Lt, v2))
+             when next v1 = v2 ->
+          (* match rewrote `Sem *)
+          group_if @@ nullify_pos @@
+          Prefix_relop (nullify_pos `Sem, print version v1)
         | Atom (r, v) ->
           group_if @@ nullify_pos @@
-          Prefix_relop (nullify_pos r, print version v)
+          Prefix_relop ((nullify_pos r :> relop_kind with_pos), print version v)
         | And (x, y)  ->
           group_if @@ nullify_pos @@
           Logop (nullify_pos `And, aux ~in_and:true x, aux ~in_and:true y)
@@ -400,11 +423,17 @@ module V = struct
     pp ~name:(version.ppname ^ "-constraints")
       parse_constraints print_constraints
 
-  let filtered_constraints version =
+  let filtered_constraints version next =
     let rec parse_cs ~pos:_ items =
       let rec aux_parse v = match v.pelem with
         | Prefix_relop (op, v) ->
-          Atom (Constraint (op.pelem, parse version ~pos:v.pos v))
+           let ver = parse version ~pos:v.pos v in
+           (match op.pelem with
+            | `Sem -> (* rewrite `Sem case *)
+               And (Atom (Constraint (`Geq, ver)),
+                    Atom (Constraint (`Lt, next ver)))
+            | `Eq | `Neq | `Gt | `Geq | `Lt | `Leq as op ->
+               Atom (Constraint (op, ver)))
         | Logop ({ pelem = `And; _}, a, b) ->
           OpamFormula.ands [aux_parse a; aux_parse b]
         | Logop ({ pelem = `Or; _}, a, b) ->
@@ -429,6 +458,12 @@ module V = struct
         in
         match cs with
         | Empty -> assert false
+        | And (Atom (Constraint (`Geq, v1)),
+               Atom (Constraint (`Lt, v2)))
+             when (next v1) = v2 ->
+           (* match rewrote `Sem *)
+           group_if @@ nullify_pos @@
+             Prefix_relop (nullify_pos `Sem, print version v1)
         | And (x, y) ->
           group_if @@ nullify_pos @@
           Logop (nullify_pos `And, aux ~in_and:true x, aux ~in_and:true y)
@@ -438,7 +473,7 @@ module V = struct
         | Block g -> nullify_pos @@ Group (nullify_pos @@ print_cs g)
         | Atom (Constraint (op,v)) ->
           group_if @@ nullify_pos @@
-          Prefix_relop (nullify_pos op, print version v)
+          Prefix_relop ((nullify_pos op :> relop_kind with_pos), print version v)
         | Atom (Filter flt) ->
           (match filter.print flt with
            | f1::fr ->

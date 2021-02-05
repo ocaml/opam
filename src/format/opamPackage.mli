@@ -27,6 +27,10 @@ module Version: sig
 
   (** Default version used when no version is given *)
   val default : t
+
+  (** Next version from semantic versioning perspective *)
+  val next: t -> t
+
 end
 
 (** Names *)
