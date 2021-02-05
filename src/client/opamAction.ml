@@ -243,19 +243,6 @@ let download_package st nv =
 let prepare_package_build env opam nv dir =
   let patches = OpamFile.OPAM.patches opam in
 
-  let rec iter_patches f = function
-    | [] -> Done []
-    | (patchname,filter)::rest ->
-      if OpamFilter.opt_eval_to_bool env filter
-      then
-        (f patchname;
-         OpamFilename.patch (dir // OpamFilename.Base.to_string patchname) dir
-         @@+ function
-         | None -> iter_patches f rest
-         | Some err ->
-           iter_patches f rest @@| fun e -> (patchname, err) :: e)
-      else iter_patches f rest
-  in
   let print_apply basename =
     log "%s: applying %s.\n" (OpamPackage.name_to_string nv)
       (OpamFilename.Base.to_string basename);
@@ -267,12 +254,33 @@ let prepare_package_build env opam nv dir =
   let print_subst basename =
     let file = OpamFilename.Base.to_string basename in
     let file_in = file ^ ".in" in
-    log "%s: expanding opam variables in %s, generating %s.\n" (OpamPackage.name_to_string nv)
+    log "%s: expanding opam variables in %s, generating %s.\n"
+      (OpamPackage.name_to_string nv)
       file_in file;
     if OpamConsole.verbose () then
-      OpamConsole.msg "[%s: subst] expanding opam variables in %s, generating %s\n"
+      OpamConsole.msg
+        "[%s: subst] expanding opam variables in %s, generating %s\n"
         (OpamConsole.colorise `green (OpamPackage.name_to_string nv))
         file_in file
+  in
+
+  let apply_patches ?(dryrun=false) () =
+    let patch base =
+      if dryrun then Done None else
+        OpamFilename.patch
+          (dir // OpamFilename.Base.to_string base) dir
+    in
+    let rec aux = function
+      | [] -> Done []
+      | (patchname,filter)::rest ->
+        if OpamFilter.opt_eval_to_bool env filter then
+          (print_apply patchname;
+           patch patchname @@+ function
+           | None -> aux rest
+           | Some err -> aux rest @@| fun e -> (patchname, err) :: e)
+        else aux rest
+    in
+    aux patches
   in
   let subst_patches, subst_others =
     List.partition (fun f -> List.mem_assoc f patches)
@@ -280,7 +288,7 @@ let prepare_package_build env opam nv dir =
   in
   if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake) then
     (List.iter print_subst (OpamFile.OPAM.substs opam);
-     iter_patches print_apply patches) @@| fun _ -> None
+     apply_patches ~dryrun:true ()) @@| fun _ -> None
   else
   let subst_errs =
     OpamFilename.in_dir dir  @@ fun () ->
@@ -297,13 +305,7 @@ let prepare_package_build env opam nv dir =
   let text =
     OpamProcess.make_command_text (OpamPackage.Name.to_string nv.name) "patch"
   in
-
-  OpamProcess.Job.with_text text @@
-  iter_patches (fun base ->
-      let patch = dir // OpamFilename.Base.to_string base in
-      print_apply base;
-      OpamFilename.patch patch dir)
-    patches
+  OpamProcess.Job.with_text text (apply_patches ())
   @@+ fun patching_errors ->
 
   (* Substitute the configuration files. We should be in the right
