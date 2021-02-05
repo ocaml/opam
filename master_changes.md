@@ -65,11 +65,9 @@ New option/command/subcommand are prefixed with ◈.
   * Kill builds on Ctrl-C with bubblewrap [#4530 @kit-ty-kate - fix #4400]
   * Linux: mount existing TMPDIR read-only, re-bind `$TMPDIR` to a separate tmpfs [#4589 @AltGr]
   * Fix the sandbox check [#4589 @AltGr]
-  * Fix sandbox script shell mistake that made `PWD` read-write on remove actions [@4589 @AltGr]
-  * Port bwrap improvements to sandbox_exec [@4589 @AltGr]
+  * Fix sandbox script shell mistake that made `PWD` read-write on remove actions [#4589 @AltGr]
+  * Port bwrap improvements to sandbox_exec [#4589 @AltGr]
 
-  * Make the reference tests dune-friendly [#4376 @emillon]
-  * Rewrite the very old tests and unify them with the newer ones [@AltGr]
 ## Repository management
   *
 
@@ -109,6 +107,9 @@ New option/command/subcommand are prefixed with ◈.
   * Fix temporary file with a too long name causing errors on Windows [#4590 @AltGr]
 
 ## Test
+  * Make the reference tests dune-friendly [#4376 @emillon]
+  * Rewrite the very old tests and unify them with the newer ones [#4504 @AltGr]
+  * Add patch an substitution tests [#4545 @rjbou]
   * Fix configure check in github actions [#4593 @rjbou]
 
 ## Shell
