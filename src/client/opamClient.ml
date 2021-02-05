@@ -187,7 +187,7 @@ let compute_upgrade_t
              if OpamPackage.Set.exists
                  (fun nv ->
                     OpamFormula.check atom nv &&
-                    not (OpamFile.OPAM.has_flag Pkgflag_HiddenVersion
+                    not (OpamFile.OPAM.has_flag Pkgflag_AvoidVersion
                            (OpamSwitchState.opam t nv)))
                  (Lazy.force t.available_packages)
              then atom
