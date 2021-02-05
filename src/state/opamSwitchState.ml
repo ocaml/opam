@@ -815,6 +815,12 @@ let get_conflicts st packages opams_map =
     (fun package -> OpamPackageVar.resolve_switch ~package st)
     packages opams_map
 
+let can_upgrade_to_avoid_version name st =
+  OpamPackage.Set.exists (fun pkg ->
+      OpamPackage.Name.equal (OpamPackage.name pkg) name &&
+      OpamFile.OPAM.has_flag Pkgflag_AvoidVersion (OpamPackage.Map.find pkg st.opams)
+    ) st.installed
+
 let universe st
     ?(test=OpamStateConfig.(!r.build_test))
     ?(doc=OpamStateConfig.(!r.build_doc))
@@ -913,7 +919,8 @@ let universe st
   in
   let avoid_versions =
     OpamPackage.Map.fold (fun nv opam acc ->
-        if OpamFile.OPAM.has_flag Pkgflag_AvoidVersion opam
+        if OpamFile.OPAM.has_flag Pkgflag_AvoidVersion opam &&
+           not (can_upgrade_to_avoid_version (OpamFile.OPAM.name opam) st)
         then OpamPackage.Set.add nv acc else acc)
       st.opams
       OpamPackage.Set.empty

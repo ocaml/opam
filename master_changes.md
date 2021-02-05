@@ -104,6 +104,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Solver
   * Fix Cudf preprocessing [#4534 @AltGr]
+  * Allow to upgrade to a hidden-version package if a hidden-version package is already installed [#4525 @kit-ty-kate]
 
 ## Client
   *
