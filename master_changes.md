@@ -89,6 +89,7 @@ New option/command/subcommand are prefixed with ◈.
   * Upgrade to dune 2.7 [#4470 @kit-ty-kate]
   * Upgrade to dose3 6.0.2 [#4470 @kit-ty-kate]
   * Vendor stdlib-shims 0.3.0 [#4470 @kit-ty-kate]
+  * Upgrade ocaml secondary to 4.08.1 [#4470 @kit-ty-kate]
 
 ## Test
   *
