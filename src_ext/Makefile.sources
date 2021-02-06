@@ -8,6 +8,11 @@ MD5_extlib = 7e0df072af4e2daa094e5936a661cb11
 
 $(call PKG_SAME,extlib)
 
+URL_base64 = https://github.com/mirage/ocaml-base64/releases/download/v3.4.0/base64-v3.4.0.tbz
+MD5_base64 = d0fa1ef0bfee191066ab82dcc117bf27
+
+$(call PKG_SAME,base64)
+
 URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.9.0/re-1.9.0.tbz
 MD5_re = bddaed4f386a22cace7850c9c7dac296
 
