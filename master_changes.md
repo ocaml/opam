@@ -88,8 +88,11 @@ New option/command/subcommand are prefixed with ◈.
   * Upgrade to ocamlgraph 2.0 [#4470 @kit-ty-kate]
   * Upgrade to dune 2.7 [#4470 @kit-ty-kate]
   * Upgrade to dose3 6.0.2 [#4470 @kit-ty-kate]
+  * Upgrade to extlib 1.7.8 [#4470 @kit-ty-kate]
   * Vendor stdlib-shims 0.3.0 [#4470 @kit-ty-kate]
   * Upgrade ocaml secondary to 4.08.1 [#4470 @kit-ty-kate]
+  * Vendor base64 3.4.0 [#4470 @kit-ty-kate]
+  * Increase the minimal requirement for opam from OCaml 4.02 to OCaml 4.03 [#4470 @kit-ty-kate]
 
 ## Test
   *
