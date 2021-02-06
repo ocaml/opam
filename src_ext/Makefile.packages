@@ -25,7 +25,9 @@ re.pkgbuild: dune-local.pkgbuild seq.pkgbuild findlib.pkgbuild
 
 seq.pkgbuild: dune-local.pkgbuild
 
-ocamlgraph.pkgbuild: findlib.pkgbuild
+stdlib-shims.pkgbuild: dune-local.pkgbuild
+
+ocamlgraph.pkgbuild: dune-local.pkgbuild stdlib-shims.pkgbuild
 
 # result.pkgbuild depends on findlib because the files are explicitly installed using it
 result.pkgbuild: dune-local.pkgbuild findlib.pkgbuild
@@ -105,3 +107,7 @@ mccs-pkg-build:
 seq-pkg-build:
 	dune build @install -p seq
 	dune install -p seq
+
+stdlib-shims-pkg-build:
+	dune build @install -p stdlib-shims
+	dune install -p stdlib-shims
