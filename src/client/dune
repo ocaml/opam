@@ -23,8 +23,8 @@
                (:include linking.sexp)))
   (libraries   opam-client
                (select link-opam-manifest from
-                       (opam-client.manifest -> pull-manifest)
-                       (                     -> dummy)
+                       (opam-client.manifest -> link-opam-manifest.pull-manifest)
+                       (                     -> link-opam-manifest.dummy)
                )))
 
 (rule

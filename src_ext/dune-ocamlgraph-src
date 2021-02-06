@@ -1,5 +1,0 @@
-(library
-  (name graph)
-  (libraries graphlib)
-  (modules_without_implementation sig_pack sig dot_ast)
-  (public_name ocamlgraph))
