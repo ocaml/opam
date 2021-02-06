@@ -85,8 +85,10 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Internal
-  * External sources: Upgrade to ocamlgraph 2.0 [#4470 @kit-ty-kate]
-  * Upgrade to dune 2.0 [#4470 @kit-ty-kate]
+  * Upgrade to ocamlgraph 2.0 [#4470 @kit-ty-kate]
+  * Upgrade to dune 2.7 [#4470 @kit-ty-kate]
+  * Upgrade to dose3 6.0.2 [#4470 @kit-ty-kate]
+  * Vendor stdlib-shims 0.3.0 [#4470 @kit-ty-kate]
 
 ## Test
   *
