@@ -11,7 +11,9 @@ if ! command -v bwrap >/dev/null; then
     exit 10
 fi
 
-ARGS=(--unshare-net --new-session)
+# --new-session requires bubblewrap 0.1.7
+# --die-with-parent requires bubblewrap 0.1.8
+ARGS=(--unshare-net --new-session --die-with-parent)
 ARGS=("${ARGS[@]}" --proc /proc --dev /dev)
 ARGS=("${ARGS[@]}" --bind "${TMPDIR:-/tmp}" /tmp)
 ARGS=("${ARGS[@]}" --setenv TMPDIR /tmp --setenv TMP /tmp --setenv TEMPDIR /tmp --setenv TEMP /tmp)
