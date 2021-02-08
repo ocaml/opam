@@ -33,8 +33,8 @@ MD5_cudf = a4c0e652e56e74c7b388a43f9258d119
 
 $(call PKG_SAME,cudf)
 
-URL_dose3 = https://gitlab.com/irill/dose3/-/archive/abate@6.0.2/dose3-abate@6.0.2.tar.gz
-MD5_dose3 = 8da5a70f36cab29e0477e151f5593dc3
+URL_dose3 = https://gitlab.com/kit-ty-kate/dose3/-/archive/split-extra/dose3-split-extra.tar.gz
+MD5_dose3 = bb7f2969bf4ae9360d4e29ffb233db59
 
 $(call PKG_SAME,dose3)
 
