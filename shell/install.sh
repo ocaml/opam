@@ -5,7 +5,7 @@ set -ue
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
 # (c) Copyright Louis Gesbert OCamlPro 2014-2017
 
-VERSION='2.0.7'
+VERSION='2.0.8'
 DEV_VERSION='2.1.0~beta4'
 DEFAULT_BINDIR=/usr/local/bin
 
@@ -25,6 +25,13 @@ bin_sha512() {
     opam-2.0.7-x86_64-linux)    echo "da75b0cb5ad50f95d31857a7d72f1836132a1fa1cdbfdedf684342b798e7107b4add4c74c05d5ce44881309fa1e57707538dbcda874e7f74b269b1bb204f3ae3";;
     opam-2.0.7-x86_64-macos)    echo "de1194c8e97e53956e5e47502c28881bbf26d1beaac4f33a43a922b8ca7ce97725533cfaf65a33fc0e183eab5a95e9ecd2e20f72faeaec333dc3850b79b5fe8a";;
     opam-2.0.7-x86_64-openbsd)  echo "b253809c4388847e1a33b5c4f1f5d72bef79a2f0c43b19ef65b40d0c10341aa0bee4a4b1f3a9ab70eb026e4cc220a63cfc56a18c035b6b0297c92f2bdb7f9a78";;
+
+    opam-2.0.8-arm64-linux)     echo "74f23cd478371e9f1de88bb89ab6d07985c2077b3392288399e37499514c03b7c826f29147282d147efeba0700aee73e8b8230ee77ba0a433dddfe42d15b1df7";;
+    opam-2.0.8-armhf-linux)     echo "56cd91ee076e3eb54b18028e6551776fb0568b459292cdc78ebbffc9ca684454f525b9dcb37e46c7a191492221387ab9abdbedc7754d0fe6ab278e3ad548c614";;
+    opam-2.0.8-i686-linux)      echo "ee7b6bac2c94c096580cbcc73ad9105ec62f1a899339d13f18bd8a0abc0d3a4daaa5dca580712744d4cc52d7b319a2274c427f18af709619e98f1cd3fe78fe0e";;
+    opam-2.0.8-x86_64-linux)    echo "66eee43400fa014e2128a2ffb82b36f7a9bcec4c1d243c7a38bb608ab86c8e814a7b1219e6f21beedac28b2b8c51b233377a8f7bd22fee2ff3c9c56f9264f3f0";;
+    opam-2.0.8-x86_64-macos)    echo "17b7f6716dd0540f2405474451de80c3badfe4de06b8b747e9b9302d8897433f4235aa1166e8bf7c873254f92f5a7087525435b65b62e1fe00fa57d01936b430";;
+    opam-2.0.8-x86_64-openbsd)  echo "05203d65d391b92350390dff7a1ffaca2b67bba9ca948cea26607f0cf7f19f30070d63f4f3bd78aff1b1c062d764e4a938106d072d8aa66740fb28480feabac5";;
 
     opam-2.1.0-alpha-arm64-linux)     echo "1bf0acfa64aa01c3244e65eed60eef1caaa6de53aa8b32dd0d2446f91905a1e41591f53cd350e85b2b9f5edba9b137d723c32949115623e9753e77b707bb25b0";;
     opam-2.1.0-alpha-armhf-linux)     echo "87c12a422bd14a0d10a94ddaaa46de23700e3b89810a0c06232eff8d96b37c2fd43dcb5a8da5a2004aa8040d1b93293209f1ff1aab865ffd150364e24c87c716";;
