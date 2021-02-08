@@ -12,7 +12,7 @@ environment:
     CYG_MIRROR: http://mirrors.kernel.org/sourceware/cygwin/
     DEP_MODE: lib-ext
     # This should be identical to the value in .travis.yml
-    OPAM_REPO_SHA: 88c17a663
+    OPAM_REPO_SHA: ec3d487fc0
     OPAM_TEST_REPO_SHA: 6877131f0
   matrix:
     - CYG_ROOT: cygwin
