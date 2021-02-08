@@ -49,9 +49,9 @@ add_ccache_mount() {
 }
 
 add_dune_cache_mount() {
-  DUNE_CACHE=${XDG_CACHE_HOME:-$HOME/.cache}/dune
-  mkdir -p "${DUNE_CACHE}"
-  add_mounts rw "$DUNE_CACHE"
+  dune_cache=${XDG_CACHE_HOME:-$HOME/.cache}/dune
+  mkdir -p "${dune_cache}"
+  add_mounts rw "$dune_cache"
  }
 
 # When using opam variable that must be defined at action time, add them also
