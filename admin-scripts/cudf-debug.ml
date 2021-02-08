@@ -32,11 +32,11 @@ let rebuild_version_map univ =
 let _ =
   match Cudf_parser.load_from_file Sys.argv.(1) with
   | Some preamble, univ, Some req ->
-    begin match Algo.Depsolver.check_request ~explain:true (preamble, univ, req) with
-      | Algo.Depsolver.Unsat (Some f) -> 
+    begin match Dose_algo.Depsolver.check_request ~explain:true (preamble, univ, req) with
+      | Dose_algo.Depsolver.Unsat (Some f) ->
         OpamConsole.msg "== DOSE MESSAGE ==\n";
         flush stdout;
-        Algo.Diagnostic.fprintf_human
+        Dose_algo.Diagnostic.fprintf_human
           ~pp:cudf_pp
           Format.err_formatter
           f;

@@ -1,4 +1,0 @@
-(library
-  (name graphlib)
-  (public_name ocamlgraph.lib)
-  (wrapped false))

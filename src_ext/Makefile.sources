@@ -3,10 +3,15 @@ MD5_cppo = b13afeea6631d7c9b61f95bfd984a542
 
 $(call PKG_SAME,cppo)
 
-URL_extlib = https://ygrek.org/p/release/ocaml-extlib/extlib-1.7.7.tar.gz
-MD5_extlib = 2c620993aecd4b31b3a362b21b55dd94
+URL_extlib = https://ygrek.org/p/release/ocaml-extlib/extlib-1.7.8.tar.gz
+MD5_extlib = 7e0df072af4e2daa094e5936a661cb11
 
 $(call PKG_SAME,extlib)
+
+URL_base64 = https://github.com/mirage/ocaml-base64/releases/download/v3.4.0/base64-v3.4.0.tbz
+MD5_base64 = d0fa1ef0bfee191066ab82dcc117bf27
+
+$(call PKG_SAME,base64)
 
 URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.9.0/re-1.9.0.tbz
 MD5_re = bddaed4f386a22cace7850c9c7dac296
@@ -18,8 +23,8 @@ MD5_cmdliner = fe2213d0bc63b1e10a2d0aa66d2fc8d9
 
 $(call PKG_SAME,cmdliner)
 
-URL_ocamlgraph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.8.tar.gz
-MD5_ocamlgraph = 9d71ca69271055bd22d0dfe4e939831a
+URL_ocamlgraph = https://github.com/backtracking/ocamlgraph/releases/download/2.0.0/ocamlgraph-2.0.0.tbz
+MD5_ocamlgraph = 2d07fcf3501e1d4997c03fa94cea22f0
 
 $(call PKG_SAME,ocamlgraph)
 
@@ -28,8 +33,8 @@ MD5_cudf = a4c0e652e56e74c7b388a43f9258d119
 
 $(call PKG_SAME,cudf)
 
-URL_dose3 = https://gforge.inria.fr/frs/download.php/file/36063/dose3-5.0.1.tar.gz
-MD5_dose3 = e7d4b1840383c6732f29a47c08ba5650
+URL_dose3 = https://gitlab.com/kit-ty-kate/dose3/-/archive/split-extra/dose3-split-extra.tar.gz
+MD5_dose3 = bb7f2969bf4ae9360d4e29ffb233db59
 
 $(call PKG_SAME,dose3)
 
@@ -49,8 +54,8 @@ MD5_result = 1b82dec78849680b49ae9a8a365b831b
 $(call PKG_SAME,result)
 
 # NB If minimum OCaml version for Dune changes, update DUNE_SECONDARY in configure.ac
-URL_dune-local = https://github.com/ocaml/dune/releases/download/2.6.2/dune-2.6.2.tbz
-MD5_dune-local = 8fe40bef051975e798537d3450b61129
+URL_dune-local = https://github.com/ocaml/dune/releases/download/2.7.1/dune-2.7.1.tbz
+MD5_dune-local = df5aa68a01be4247301e79e7123728a3
 
 $(call PKG_SAME,dune-local)
 
@@ -65,6 +70,9 @@ MD5_PKG_topkg = b4925b2c37f73f8f0b79ea07ab15ff67
 
 URL_seq = https://github.com/c-cube/seq/archive/0.2.2.tar.gz
 MD5_seq = 9033e02283aa3bde9f97f24e632902e3
+
+URL_stdlib-shims = https://github.com/ocaml/stdlib-shims/releases/download/0.3.0/stdlib-shims-0.3.0.tbz
+MD5_stdlib-shims = 09db7af8b4a3a96048a61cb6ae2496ef
 
 # This is necessary as long as a patch is used to rename seq.ml and seq.mli
 ensure-seq-patched.stamp: seq.stamp

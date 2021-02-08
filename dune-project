@@ -1,2 +1,2 @@
-(lang dune 1.5)
+(lang dune 2.7)
 (name opam)

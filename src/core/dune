@@ -4,11 +4,11 @@
   (synopsis    "OCaml Package Manager core internal stdlib")
   (libraries   re ocamlgraph unix bigarray
                (select opamACL.ml from
-                       (opam-core.libacl -> opamACL.ml.libacl)
-                       (                 -> opamACL.ml.dummy))
+                       (opam-core.libacl -> opamACL.libacl.ml)
+                       (                 -> opamACL.dummy.ml))
                (select opamStubs.ml from
-                       (opam-core.stubs -> opamStubs.ml.win32)
-                       (                -> opamStubs.ml.dummy)))
+                       (opam-core.stubs -> opamStubs.win32.ml)
+                       (                -> opamStubs.dummy.ml)))
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
                (:include ../ocaml-flags-configure.sexp)

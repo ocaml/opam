@@ -35,9 +35,6 @@ env:
 jobs:
   include:
     - os: linux
-      env: OCAML_VERSION=4.02.3
-      stage: Build
-    - os: linux
       env: OCAML_VERSION=4.03.0
       stage: Build
     - os: osx

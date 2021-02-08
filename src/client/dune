@@ -3,7 +3,7 @@
   (public_name opam-client)
   (synopsis    "OCaml Package Manager client and CLI library")
   (modules     (:standard \ opamMain get_git_version))
-  (libraries   opam-state opam-solver opam-repository re extlib cmdliner)
+  (libraries   opam-state opam-solver opam-repository re base64 cmdliner)
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
                (:include ../ocaml-flags-configure.sexp)
@@ -23,8 +23,8 @@
                (:include linking.sexp)))
   (libraries   opam-client
                (select link-opam-manifest from
-                       (opam-client.manifest -> pull-manifest)
-                       (                     -> dummy)
+                       (opam-client.manifest -> link-opam-manifest.pull-manifest)
+                       (                     -> link-opam-manifest.dummy)
                )))
 
 (rule

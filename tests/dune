@@ -1,9 +1,9 @@
-(alias
-  (name runtest)
+(rule
+  (alias runtest)
   (deps (source_tree .) ../src/client/opamMain.exe ../src/tools/opam_check.exe ./bin/ocamlc ./bin/ocamlopt)
   (action (run make all)))
 
-(ignored_subdirs (packages))
+(dirs :standard \ packages)
 
 (test
   (name      patcher)

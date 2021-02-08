@@ -25,7 +25,11 @@ re.pkgbuild: dune-local.pkgbuild seq.pkgbuild findlib.pkgbuild
 
 seq.pkgbuild: dune-local.pkgbuild
 
-ocamlgraph.pkgbuild: findlib.pkgbuild
+stdlib-shims.pkgbuild: dune-local.pkgbuild
+
+base64.pkgbuild: dune-local.pkgbuild
+
+ocamlgraph.pkgbuild: dune-local.pkgbuild stdlib-shims.pkgbuild
 
 # result.pkgbuild depends on findlib because the files are explicitly installed using it
 result.pkgbuild: dune-local.pkgbuild findlib.pkgbuild
@@ -36,9 +40,8 @@ cmdliner.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild result.pkgbuild topkg.pk
 
 cudf.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild extlib.pkgbuild
 
-dose3.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild cppo.pkgbuild extlib.pkgbuild re.pkgbuild ocamlgraph.pkgbuild cudf.pkgbuild
+dose3.pkgbuild: extlib.pkgbuild re.pkgbuild ocamlgraph.pkgbuild cudf.pkgbuild base64.pkgbuild
 
-# mccs.pkgbuild depends on findlib because the files are explicitly installed using it
 mccs.pkgbuild: dune-local.pkgbuild cudf.pkgbuild findlib.pkgbuild
 
 opam-file-format-pkg-build:
@@ -67,8 +70,8 @@ re-pkg-build:
 	cp -LR _build/install/default/lib/re $(SITELIB)/re/
 
 ocamlgraph-pkg-build:
-	./configure
-	make all install-findlib
+	dune build @install -p ocamlgraph
+	dune install -p ocamlgraph
 
 result-pkg-build:
 	dune build @install -p result
@@ -89,13 +92,14 @@ cudf-pkg-build:
 	make DOC= BINDIR=$(OCAMLBIN) all opt install
 
 dose3-pkg-build:
-	./configure $(if $(EXT_EXE),--prefix=$(OCAMLROOT),--bindir=/../../$(OCAMLBIN))
-	make libs apps
-	make install
+	dune build @install -p dose3
+	dune install -p dose3
 
 dune-local-pkg-build:
 	ocaml bootstrap.ml
 	cp dune.exe $(OCAMLBIN)/dune$(EXT_EXE)
+	dune build @install -p dune-configurator
+	dune install -p dune-configurator
 
 mccs-pkg-build:
 	dune build @install -p mccs
@@ -105,3 +109,7 @@ mccs-pkg-build:
 seq-pkg-build:
 	dune build @install -p seq
 	dune install -p seq
+
+stdlib-shims-pkg-build:
+	dune build @install -p stdlib-shims
+	dune install -p stdlib-shims
