@@ -76,11 +76,11 @@ add_ccache_mount() {
 }
 
 add_dune_cache_mount() {
-  u_cache=${XDG_CACHE_HOME:-$HOME/.cache}
-  u_dune_cache=$u_cache/dune
-  cache=$(readlink -m "$u_cache")
-  dune_cache=$cache/dune
-  dune_cache=$(readlink -m "$u_dune_cache")
+  local u_cache=${XDG_CACHE_HOME:-$HOME/.cache}
+  local u_dune_cache=$u_cache/dune
+  local cache=$(readlink -m "$u_cache")
+  local dune_cache=$cache/dune
+  local dune_cache=$(readlink -m "$u_dune_cache")
   mkdir -p "${dune_cache}"
   add_mount rw "$u_dune_cache" "$dune_cache"
 }
