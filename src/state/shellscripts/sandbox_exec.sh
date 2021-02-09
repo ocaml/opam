@@ -49,10 +49,10 @@ add_ccache_mount() {
 }
 
 add_dune_cache_mount() {
-  dune_cache=${XDG_CACHE_HOME:-$HOME/.cache}/dune
+  local dune_cache=${XDG_CACHE_HOME:-$HOME/.cache}/dune
   mkdir -p "${dune_cache}"
   add_mounts rw "$dune_cache"
- }
+}
 
 # This case-switch should remain identical between the different sandbox implems
 COMMAND="$1"; shift
