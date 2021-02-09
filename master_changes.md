@@ -51,7 +51,7 @@ New option/command/subcommand are prefixed with ◈.
 ## External dependencies
 
 ## Sandbox
-  *
+  * Add a test to check script generation opam version, to ask an update [#4414 @rjbou - fix #4361 #4306]
 
 ## Repository management
   *

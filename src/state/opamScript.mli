@@ -10,6 +10,9 @@
 (**************************************************************************)
 
 (** (generated) Shell config scripts as OCaml strings *)
+(* The string SCRIPTOPAMVERSION is replaced in generated "script" by the
+   current opam version, i.e. [OpamVersion.current].
+   See src/client/dune *)
 
 val complete : string
 val complete_zsh : string
