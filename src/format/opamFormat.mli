@@ -134,12 +134,14 @@ module V : sig
 
   (** Simple dependency constraints *)
   val constraints :
-    (value, 'a) t ->
-    (value list, (OpamFormula.relop * 'a) OpamFormula.formula) t
+    (value, 'version) t ->
+    ('version -> 'version) ->
+    (value list, (OpamFormula.relop * 'version) OpamFormula.formula) t
 
   (** Dependency constraints mixed with filters *)
   val filtered_constraints :
     (value, 'version) t ->
+    ('version -> 'version) ->
     (value list, 'version filter_or_constraint OpamFormula.formula) t
 
   (** Package versions *)

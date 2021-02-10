@@ -617,7 +617,8 @@ let atom_or_dir =
 let dep_formula =
   let module OpamParser = OpamParser.FullPos in
   let module OpamPrinter = OpamPrinter.FullPos in
-  let pp = OpamFormat.V.(package_formula `Conj (constraints version)) in
+  let pp = OpamFormat.V.(package_formula `Conj
+                           (constraints version OpamPackage.Version.next)) in
   let parse str =
     try
       let v = OpamParser.value_from_string str "<command-line>" in

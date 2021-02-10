@@ -24,6 +24,10 @@ module Version: sig
 
   (** Are two package versions equal? *)
   val equal: t -> t -> bool
+
+  (** Next version from semantic versioning perspective (#2976) *)
+  val next: t -> t
+
 end
 
 (** Names *)

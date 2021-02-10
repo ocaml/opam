@@ -174,7 +174,7 @@ type repository = {
 
 (** {2 Variable-based filters} *)
 
-type relop = OpamParserTypes.FullPos.relop_kind
+type relop = OpamFormula.relop
 
 type filter =
   | FBool of bool
@@ -182,6 +182,7 @@ type filter =
   | FIdent of (name option list * variable * (string * string) option)
   (** packages (or None for self-ref through "_"), variable name,
       string converter (val_if_true, val_if_false_or_undef) *)
+  | FNext of filter
   | FOp of filter * relop * filter
   | FAnd of filter * filter
   | FOr of filter * filter

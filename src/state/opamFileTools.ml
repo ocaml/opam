@@ -786,7 +786,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
          | FOp (fl,_,fr) -> (aux acc true fl) @ aux acc true fr
          | FAnd (fl, fr) | FOr (fl, fr)  ->
            (aux acc false fl) @ aux acc false fr
-         | FNot f | FDefined f | FUndef f -> aux acc false f
+         | FNot f | FNext f | FDefined f | FUndef f -> aux acc false f
        in
        aux [] false
      in
@@ -1137,7 +1137,7 @@ let read_repo_opam ~repo_name ~repo_root dir =
 
 let dep_formula_to_string f =
   let pp =
-    OpamFormat.V.(package_formula `Conj (constraints version))
+    OpamFormat.V.(package_formula `Conj (constraints version OpamPackage.Version.next))
   in
   OpamPrinter.FullPos.value (OpamPp.print pp f)
 

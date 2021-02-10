@@ -39,6 +39,34 @@ module Version = struct
   let equal v1 v2 =
     compare v1 v2 = 0
 
+  let next v =
+    let re = Re.(compile @@ seq [ start;
+      group @@ rep @@ diff any (alt [ digit; char '~' ]);
+      group @@ opt @@ seq [
+        rep1 @@ digit;
+        rep @@ seq [
+          char '.';
+          rep1 @@ digit ]]
+      ])
+    in
+    let res = Re.exec re v in
+    let pfx = Re.Group.get res 1 in
+    let num = Re.Group.get res 2 in
+    let nums = String.split_on_char '.' num in
+    let incr_compat_num nums =
+      let aux = function
+        | [] -> ["1"]
+        | [n] -> [int_of_string n |> (+)1 |> string_of_int ]
+        | n0::n1::ns ->
+           let nn0,nn1 = int_of_string n0, int_of_string n1 in
+           if not (nn1=0 && ns=[])
+           then (string_of_int (nn1+1))::ns
+           else (string_of_int (nn0+1))::n1::ns
+      in List.rev nums |> aux |> List.rev
+    in
+    let next = incr_compat_num nums |> String.concat "." in
+    pfx^next
+
   let to_json x =
     `String (to_string x)
   let of_json = function
