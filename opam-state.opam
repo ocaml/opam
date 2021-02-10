@@ -27,5 +27,5 @@ build: [
 depends: [
   "ocaml" {>= "4.02.3"}
   "opam-repository" {= version}
-  "dune" {build & >= "1.2.1"}
+  "dune" {>= "1.2.1"}
 ]
