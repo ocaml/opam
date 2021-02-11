@@ -51,7 +51,8 @@ New option/command/subcommand are prefixed with ◈.
 ## External dependencies
 
 ## Sandbox
-  * Fix the conflict with the environment variable name used by dune [#4535 @smorimoto]
+  * Fix the conflict with the environment variable name used by dune [#4535 @smorimoto - fix ocaml/dune#4166]
+  * Kill builds on Ctrl-C with bubblewrap [#4530 @kit-ty-kate - fix #4400]
 
 ## Repository management
   *
