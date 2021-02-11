@@ -48,7 +48,7 @@ val handle_pin_depends:
     Ask for confirmation to continue if a fetching fails.
 *)
 val fetch_all_pins:
-  'a switch_state -> (string * url * string option) list ->
+  'a switch_state -> ?working_dir:bool -> (name * url * string option) list ->
   (url * string option) list
 
 (** Let the user edit a pinned package's opam file. If given, the version is put

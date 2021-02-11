@@ -1515,8 +1515,9 @@ module PIN = struct
     | _ -> ());
     let pins =
       let urls_ok =
-        OpamPinCommand.fetch_all_pins st (List.map (fun (name, _, _, url, subpath) ->
-            OpamPackage.Name.to_string name, url, subpath) pins)
+        OpamPinCommand.fetch_all_pins st
+          (List.map (fun (name, _, _, url, subpath) ->
+               name, url, subpath) pins)
       in
       List.filter (fun (_,_,_, url, subpath) ->
           List.mem (url, subpath) urls_ok)
