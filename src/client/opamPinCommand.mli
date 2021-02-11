@@ -65,13 +65,13 @@ val unpin_one: 'a switch_state -> package -> 'a switch_state
 (** List the pinned packages to the user. *)
 val list: 'a switch_state -> short:bool -> unit
 
-(** Scan pinning separator, used for printing and parsing by [scna] and
+(** Scan pinning separator, used for printing and parsing by [scan] and
     [parse_pins]. *)
 val scan_sep: char
 
 (** Scan for available packages to pin, and display it on stdout. If
     [normalise] is true, displays it's normalised format
-    `name.version[scan_sep]curl[scan_sep]subpath`. *)
+    `name.version[scan_sep]url[scan_sep]subpath`. *)
 val scan: normalise:bool -> recurse:bool -> ?subpath: string -> url -> unit
 
 (** Detect if a string is a normalised format of [scan]. *)
