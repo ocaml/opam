@@ -3022,6 +3022,7 @@ let pin ?(unpin_only=false) cli =
       command params () =
     apply_global_options global_options;
     apply_build_options build_options;
+    let locked = OpamStateConfig.(!r.locked) <> None in
     let action = not no_act in
     let get_command = function
       | Some `list, [] | None, [] ->
@@ -3123,7 +3124,8 @@ let pin ?(unpin_only=false) cli =
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let version = OpamStd.Option.Op.(with_version ++ version) in
-         OpamSwitchState.drop @@ OpamClient.PIN.edit st ~action ?version name;
+         OpamSwitchState.drop @@
+         OpamClient.PIN.edit st ~locked ~action ?version name;
          `Ok ()
        | `Error e -> `Error (false, e))
     | `add_normalised pins ->
@@ -3131,7 +3133,7 @@ let pin ?(unpin_only=false) cli =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       OpamSwitchState.drop @@
-      OpamClient.PIN.url_pins st ~edit ~action
+      OpamClient.PIN.url_pins st ~locked ~edit ~action
         (List.map (fun (n,v,u,sb) ->
              n, OpamStd.Option.Op.(with_version ++ v), None, u, sb) pins);
       `Ok ()
@@ -3142,7 +3144,8 @@ let pin ?(unpin_only=false) cli =
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let name = OpamSolution.fuzzy_name st name in
          let version = OpamStd.Option.Op.(with_version ++ version) in
-         OpamSwitchState.drop @@ OpamClient.PIN.pin st name ~edit ?version ~action
+         OpamSwitchState.drop @@
+         OpamClient.PIN.pin st name ~locked ~edit ?version ~action
            `Dev_upstream;
          `Ok ()
        | `Error e ->
@@ -3161,7 +3164,7 @@ let pin ?(unpin_only=false) cli =
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          OpamSwitchState.drop @@
-         OpamClient.PIN.url_pins st ~edit ~action
+         OpamClient.PIN.url_pins st ~locked ~edit ~action
            (List.map (fun (n,o,u,sb) -> n,with_version,o,sb,u) names);
          `Ok ())
     | `add_wtarget (n, target) ->
@@ -3176,7 +3179,7 @@ let pin ?(unpin_only=false) cli =
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          OpamSwitchState.drop @@
-         OpamClient.PIN.pin st name ?version ~edit ~action ?subpath pin;
+         OpamClient.PIN.pin st name ~locked ?version ~edit ~action ?subpath pin;
          `Ok ()
        | `Error e -> `Error (false, e))
     | `incorrect -> bad_subcommand ~cli commands ("pin", command, params)
@@ -3709,7 +3712,7 @@ let lock cli =
     mk_flag ~cli cli_original ["d"; "direct-only"]
       "Only lock direct dependencies, rather than the whole dependency tree."
   in
-  let lock_suffix = OpamArg.lock_suffix cli Manpage.s_options in
+  let lock_suffix = OpamArg.lock_suffix cli in
   let lock global_options only_direct lock_suffix atom_locs () =
     apply_global_options global_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
