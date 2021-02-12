@@ -659,11 +659,12 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
         in
         Printf.sprintf "Found %s variable%s, predefined one%s" var s_ nvar)
        (rem_test || rem_doc));
-    cond 59 `Warning "url don't contain a checksum"
+    cond 59 `Warning "url doesn't contain a checksum"
       (check_upstream &&
+       not (OpamFile.OPAM.has_flag Pkgflag_Conf t) &&
        OpamStd.Option.map OpamFile.URL.checksum t.url = Some []);
     (let upstream_error =
-       if not check_upstream then None
+       if not check_upstream || OpamFile.OPAM.has_flag Pkgflag_Conf t then None
        else
        match t.url with
        | None -> Some "No url defined"
