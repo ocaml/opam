@@ -2,11 +2,13 @@ ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 -include Makefile.config
 endif
 
+# TODO: Replace --profile=$(DUNE_PROFILE) by --release when we require on dune >= 2.5
+
 all: opam opam-installer
 	@
 
 admin:
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) opam-admin.install
+	$(DUNE) build --profile=$(DUNE_PROFILE) --root . $(DUNE_ARGS) opam-admin.install
 
 DUNE_PROMOTE_ARG =
 DUNE_PROMOTE_ARG += --promote-install-files
@@ -21,7 +23,7 @@ ifeq ($(DUNE),)
 else
   DUNE_EXE=
   # NB make does not export the PATH update in Makefile.config to $(shell ...)
-  ifeq ($(shell PATH='$(PATH)' $(DUNE) build --help=plain 2>/dev/null \
+  ifeq ($(shell PATH='$(PATH)' $(DUNE) build --root . --help=plain 2>/dev/null \
                   | grep -F -- '$(DUNE_PROMOTE_ARG) '),)
     DUNE_PROMOTE_ARG =
   endif
@@ -48,7 +50,7 @@ src_ext/dune-local.stamp:
 	$(MAKE) -C src_ext dune-local.stamp
 
 dune: $(DUNE_DEP)
-	@$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) @install
+	@$(DUNE) build --profile=$(DUNE_PROFILE) --root . $(DUNE_ARGS) @install
 
 opam: $(DUNE_DEP) build-opam processed-opam.install
 	@$(LN_S) -f _build/default/src/client/opamMain.exe $@$(EXE)
@@ -64,7 +66,7 @@ opam-installer: $(DUNE_DEP) build-opam-installer processed-opam-installer.instal
 	@$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
 
 opam-admin.top: $(DUNE_DEP)
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/tools/opam_admin_topstart.bc
+	$(DUNE) build --profile=$(DUNE_PROFILE) --root . $(DUNE_ARGS) src/tools/opam_admin_topstart.bc
 	$(LN_S) -f _build/default/src/tools/opam_admin_topstart.bc $@$(EXE)
 
 lib-ext:
@@ -119,23 +121,23 @@ opam-%.install: $(DUNE_DEP)
 
 .PHONY: build-opam-installer
 build-opam-installer: $(DUNE_DEP) 
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-installer.install
+	$(DUNE) build --profile=$(DUNE_PROFILE) --root . $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-installer.install
 opam-installer.install: $(DUNE_DEP)
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-installer.install
+	$(DUNE) build --profile=$(DUNE_PROFILE) --root . $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-installer.install
 
 .PHONY: build-opam
 build-opam: $(DUNE_DEP)
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-installer.install opam.install
+	$(DUNE) build --profile=$(DUNE_PROFILE) --root . $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-installer.install opam.install
 opam.install: $(DUNE_DEP)
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-installer.install opam.install
+	$(DUNE) build --profile=$(DUNE_PROFILE) --root . $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-installer.install opam.install
 
 OPAMLIBS = core format solver repository state client
 
 opam-%: $(DUNE_DEP)
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-$*.install
+	$(DUNE) build --profile=$(DUNE_PROFILE) --root . $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-$*.install
 
 opam-lib: $(DUNE_DEP)
-	$(DUNE) build --profile=$(DUNE_PROFILE) $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) $(patsubst %,opam-%.install,$(OPAMLIBS))
+	$(DUNE) build --profile=$(DUNE_PROFILE) --root . $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) $(patsubst %,opam-%.install,$(OPAMLIBS))
 
 installlib-%: opam-installer opam-%.install
 	$(if $(wildcard src_ext/lib/*),\
@@ -152,7 +154,7 @@ libinstall: $(DUNE_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
 custom-libinstall: $(DUNE_DEP) opam-lib opam
 	for p in $(OPAMLIBS); do \
 	  ./opam$(EXE) custom-install --no-recompilations opam-$$p.$(version) -- \
-	    $(DUNE) install opam-$$p; \
+	    $(DUNE) install --root . opam-$$p; \
 	done
 
 processed-%.install: %.install
@@ -171,7 +173,7 @@ uninstall: opam.install
 
 .PHONY: tests
 tests: $(DUNE_DEP)
-	@$(DUNE) runtest --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/ tests/ --no-buffer; \
+	@$(DUNE) runtest --profile=$(DUNE_PROFILE) --root . $(DUNE_ARGS) src/ tests/ --no-buffer; \
 	ret=$$?; \
 	echo "###     TESTS RESULT SUMMARY     ###"; \
 	for t in _build/default/tests/reftests/*.test; do \
@@ -186,31 +188,31 @@ tests: $(DUNE_DEP)
 .PHONY: crowbar
 # only run the quickcheck-style tests, not very covering
 crowbar: $(DUNE_DEP)
-	$(DUNE) exec src/crowbar/test.exe
+	$(DUNE) exec --root . -- src/crowbar/test.exe
 
 .PHONY: crowbar-afl
 # runs the real AFL deal, but needs to be done in a +afl switch
 crowbar-afl: $(DUNE_DEP)
-	$(DUNE) build src/crowbar/test.exe
+	$(DUNE) build --root . -- src/crowbar/test.exe
 	mkdir -p /tmp/opam-crowbar-input -p /tmp/opam-crowbar-output
 	echo foo > /tmp/opam-crowbar-input/foo
 	afl-fuzz -i /tmp/opam-crowbar-input -o /tmp/opam-crowbar-output dune exec src/crowbar/test.exe @@
 
 # tests-local, tests-git
 tests-%: $(DUNE_DEP)
-	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) @reftest-legacy-$* --force
+	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) --root . @reftest-legacy-$* --force
 
 reftest-gen: $(DUNE_DEP)
-	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) @reftest-gen --auto-promote --force
+	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) --root . @reftest-gen --auto-promote --force
 
 reftest-runner: $(DUNE_DEP)
-	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) tests/reftests/run.exe
+	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) --root . tests/reftests/run.exe
 
 reftests: $(DUNE_DEP)
-	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) @reftest
+	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) --root . @reftest
 
 reftests-%: $(DUNE_DEP)
-	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) @reftest-$* --force
+	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) --root . @reftest-$* --force
 
 reftests-meld:
 	meld `for t in tests/reftests/*.test; do echo --diff $$t _build/default/$${t%.test}.out; done`
