@@ -51,7 +51,7 @@ New option/command/subcommand are prefixed with ◈.
 ## External dependencies
 
 ## Sandbox
-  *
+  * Fix the conflict with the environment variable name used by dune [#4535 @smorimoto]
 
 ## Repository management
   *
