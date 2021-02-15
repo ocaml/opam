@@ -3730,12 +3730,16 @@ let lock cli =
               (OpamFilename.of_string (OpamPackage.name_to_string nv))
               ("opam." ^ lock_suffix)
           in
-          OpamFile.OPAM.write_with_preserved_format
-            (OpamFile.make locked_fname) locked;
-          (nv, locked_fname)::msgs
-        ) packages []
+          if not (OpamCoreConfig.(!r).OpamCoreConfig.safe_mode
+                  || OpamStateConfig.(!r.dryrun)) then
+            OpamFile.OPAM.write_with_preserved_format
+              (OpamFile.make locked_fname) locked;
+          (nv, locked_fname)::msgs)
+        packages []
     in
-    OpamConsole.msg "Generated lock files for:\n%s"
+    OpamConsole.msg "Generated %slock files for:\n%s"
+      (if OpamCoreConfig.(!r).safe_mode || OpamStateConfig.(!r.dryrun) then
+         "(not saved) " else "")
       (OpamStd.Format.itemize (fun (nv, file) ->
            Printf.sprintf "%s: %s"
              (OpamPackage.to_string nv)
