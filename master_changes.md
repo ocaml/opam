@@ -81,7 +81,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Solver
-  *
+  * Fix Cudf preprocessing [#4534 @AltGr]
 
 ## Client
   *
