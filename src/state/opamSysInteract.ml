@@ -388,26 +388,53 @@ let packages_status packages =
     in
     compute_sets sys_installed
   | Macports ->
+    let variants_map, packages =
+      OpamSysPkg.(Set.fold (fun spkg (map, set) ->
+          match OpamStd.String.cut_at (to_string spkg) ' ' with
+          | Some (pkg, variant) ->
+            OpamStd.String.Map.add pkg variant map,
+            pkg +++ set
+          | None -> map, Set.add spkg set)
+          packages (OpamStd.String.Map.empty, Set.empty))
+    in
     let str_pkgs =
       OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) packages [])
     in
     let sys_installed =
       (* output:
-         >zlib @1.2.11_0 (active)
+         >  zlib @1.2.11_0 (active)
+         >  gtk3 @3.24.21_0+quartz (active)
       *)
       let re_pkg =
         Re.(compile @@ seq
               [ bol;
+                rep space;
                 group @@ rep1 @@ alt [alnum; punct];
                 rep1 space;
-                rep any;
+                char '@';
+                rep1 @@ diff any (char '+');
+                opt @@ group @@ rep1 @@ alt [alnum; punct];
+                rep1 space;
                 str "(active)";
                 eol
               ])
       in
       run_query_command "port" ("installed" :: str_pkgs)
       |> (function _::lines -> lines | _ -> [])
-      |> with_regexp_sgl re_pkg
+      |> List.fold_left (fun pkgs l ->
+          try
+            let pkg = Re.(Group.get (exec re_pkg l) 1) in
+            (* variant handling *)
+            match OpamStd.String.Map.find_opt pkg variants_map with
+            | Some variant ->
+              (try
+                 if Re.(Group.get (exec re_pkg l) 2) = variant then
+                   (pkg ^ " " ^ variant) +++ pkgs
+                 else pkgs
+               with Not_found -> pkgs)
+            | None -> pkg +++ pkgs
+          with Not_found -> pkgs)
+        OpamSysPkg.Set.empty
     in
     let sys_available =
       (* example output
@@ -423,8 +450,30 @@ let packages_status packages =
                 rep1 @@ alt [digit; punct];
               ])
       in
-      run_query_command "port" (["search"; "--line"; "--exact" ] @ str_pkgs)
-      |> with_regexp_sgl re_pkg
+      let avail =
+        run_query_command "port"
+          [ "search"; "--line"; "--regex"; names_re ~str_pkgs () ]
+        |> with_regexp_sgl re_pkg
+      in
+      (* variants handling *)
+      let variants =
+        OpamStd.String.Map.filter
+          (fun p _ -> OpamSysPkg.Set.mem (OpamSysPkg.of_string p) avail)
+          variants_map
+        |> OpamStd.String.Map.keys
+      in
+      run_query_command "port" ([ "info"; "--name"; "--variants" ] @ variants)
+      |> List.fold_left (fun (prec, avail) l ->
+          match prec, OpamStd.String.split l ' ' with
+          | _, "name:"::pkg::[] -> Some pkg, avail
+          | Some pkg, "variants:"::variants ->
+            None,
+            List.fold_left (fun avail v ->
+                (pkg ^ " +" ^ (OpamStd.String.remove_suffix ~suffix:"," v))
+                +++ avail) avail variants
+          | _ -> None, avail
+        ) (None, avail)
+      |> snd
     in
     compute_sets sys_installed ~sys_available
   | Netbsd ->
@@ -503,6 +552,10 @@ let install_packages_commands_t sys_packages =
     ["brew", "install"::packages], (* NOTE: Does not have any interactive mode *)
     Some (["HOMEBREW_NO_AUTO_UPDATE","yes"])
   | Macports ->
+    let packages = (* Separate variants from their packages *)
+      List.map (fun p -> OpamStd.String.split p ' ')  packages
+      |> List.flatten
+    in
     ["port", "install"::packages], (* NOTE: Does not have any interactive mode *)
     None
   | Netbsd -> ["pkgin", yes ["-y"] ("install" :: packages)], None
