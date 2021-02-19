@@ -40,7 +40,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Lint
-  *
+  * fix W59 & E60 with conf flag handling (no url required) [#4550 @rjbou - fix #4549]
 
 ## Lock
   *
