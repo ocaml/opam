@@ -137,6 +137,7 @@ type global_options = {
   color : [ `Always | `Never | `Auto ] option;
   opt_switch : string option;
   yes : bool;
+  unsafe_depext_yes : bool;
   strict : bool;
   opt_root : dirname option;
   git_version : bool;

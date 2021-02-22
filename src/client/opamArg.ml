@@ -22,6 +22,7 @@ type global_options = {
   color : [ `Always | `Never | `Auto ] option;
   opt_switch : string option;
   yes : bool;
+  unsafe_depext_yes : bool;
   strict : bool;
   opt_root : dirname option;
   git_version : bool;
@@ -40,7 +41,8 @@ type global_options = {
 
 (* The --cli passed by cmdliner is ignored (it's only there for --help) *)
 let create_global_options
-    git_version debug debug_level verbose quiet color opt_switch yes strict
+    git_version debug debug_level verbose quiet color opt_switch yes unsafe_depext_yes
+    strict
     opt_root external_solver use_internal_solver
     cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade
     working_dir ignore_pin_depends
@@ -55,9 +57,10 @@ let create_global_options
   let verbose = List.length verbose in
   let cli = OpamCLIVersion.current in
   { git_version; debug_level; verbose; quiet; color; opt_switch; yes;
-    strict; opt_root; external_solver; use_internal_solver;
+    unsafe_depext_yes; strict; opt_root; external_solver; use_internal_solver;
     cudf_file; solver_preferences; best_effort; safe_mode; json;
-    no_auto_upgrade; working_dir; ignore_pin_depends; cli }
+    no_auto_upgrade; working_dir; ignore_pin_depends; cli
+  }
 
 let apply_global_options o =
   if o.git_version then (
@@ -91,6 +94,7 @@ let apply_global_options o =
     (* ?utf8:[ `Extended | `Always | `Never | `Auto ] *)
     (* ?disp_status_line:[ `Always | `Never | `Auto ] *)
     ?answer:(some (flag o.yes))
+    ?unsafe_depext_yes:(flag o.unsafe_depext_yes)
     ?safe_mode:(flag o.safe_mode)
     (* ?lock_retries:int *)
     (* ?log_dir:OpamTypes.dirname *)
@@ -252,7 +256,8 @@ let help_sections = [
        report` to know the current setting. See also option --criteria";
   `P "$(i,OPAMCUDFFILE file) save the cudf graph to \
       $(i,file)-actions-explicit.dot";
-  `P "$(i,OPAMDEPEXTYES) launch system package managers in non-interactive mode";
+  `P "$(i,OPAMUNSAFEDEPEXTYES), when set to $(i,true) launch system package \
+       managers in non-interactive mode";
   `P "$(i,OPAMCURL) can be used to select a given 'curl' program. See \
       $(i,OPAMFETCH) for more options.";
   `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
@@ -1402,7 +1407,13 @@ let global_options cli =
   let yes =
     mk_flag ~cli cli_original ~section ["y";"yes"]
       "Answer yes to all yes/no questions without prompting. \
-       This is equivalent to setting $(b,\\$OPAMYES) to \"true\"." in
+       This is equivalent to setting $(b,\\$OPAMYES) to \"true\"."
+  in
+  let unsafe_depext_yes =
+    mk_flag ~cli (cli_from cli2_1) ~section ["unsafe-yes"]
+      "Answer yes to all system package manager questions, if available. \
+       This is equivalent to setting $(b,\\$OPAMDEPEXTUNSAFEYES) to \"true\"."
+  in
   let strict =
     mk_flag ~cli cli_original ~section ["strict"]
       "Fail whenever an error is found in a package definition \
@@ -1498,7 +1509,7 @@ let global_options cli =
   in
   Term.(const create_global_options
         $git_version $debug $debug_level $verbose $quiet $color $switch $yes
-        $strict $root $external_solver
+        $unsafe_depext_yes $strict $root $external_solver
         $use_internal_solver $cudf_file $solver_preferences $best_effort
         $safe_mode $json_flag $no_auto_upgrade $working_dir
         $ignore_pin_depends

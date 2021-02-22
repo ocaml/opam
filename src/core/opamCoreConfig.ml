@@ -20,6 +20,7 @@ type t = {
   utf8: [ `Extended | `Always | `Never | `Auto ];
   disp_status_line: [ `Always | `Never | `Auto ];
   answer: bool option;
+  unsafe_depext_yes: bool;
   safe_mode: bool;
   log_dir: string;
   keep_log_dir: bool;
@@ -38,6 +39,7 @@ type 'a options_fun =
   ?utf8:[ `Extended | `Always | `Never | `Auto ] ->
   ?disp_status_line:[ `Always | `Never | `Auto ] ->
   ?answer:bool option ->
+  ?unsafe_depext_yes:bool ->
   ?safe_mode:bool ->
   ?log_dir:string ->
   ?keep_log_dir:bool ->
@@ -55,6 +57,7 @@ let default = {
   utf8 = `Auto;
   disp_status_line = `Auto;
   answer = None;
+  unsafe_depext_yes = false;
   safe_mode = false;
   log_dir =
     (let user = try Unix.getlogin() with Unix.Unix_error _ -> "xxx" in
@@ -76,6 +79,7 @@ let setk k t
     ?utf8
     ?disp_status_line
     ?answer
+    ?unsafe_depext_yes
     ?safe_mode
     ?log_dir
     ?keep_log_dir
@@ -93,6 +97,7 @@ let setk k t
     utf8 = t.utf8 + utf8;
     disp_status_line = t.disp_status_line + disp_status_line;
     answer = t.answer + answer;
+    unsafe_depext_yes = t.unsafe_depext_yes + unsafe_depext_yes;
     safe_mode = t.safe_mode + safe_mode;
     log_dir = t.log_dir + log_dir;
     keep_log_dir = t.keep_log_dir + keep_log_dir;

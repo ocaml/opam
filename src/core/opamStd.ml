@@ -1486,6 +1486,7 @@ module Config = struct
       ?utf8
       ?disp_status_line:(env_when "STATUSLINE")
       ?answer
+      ?unsafe_depext_yes:(env_bool "UNSAFEDEPEXTYES")
       ?safe_mode:(env_bool "SAFE")
       ?log_dir:(env_string "LOGS")
       ?keep_log_dir:(env_bool "KEEPLOGS")

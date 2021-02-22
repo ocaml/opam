@@ -7,7 +7,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Global CLI
-  *
+  * ◈ Add `--unsafe-depext-yes' for system package managers and change `OPAMDEPEXTYES' to `OPAMUNSAFEDEPEXTYES' [#4563 @rjbou - fix #4321]
 
 ## Init
   *

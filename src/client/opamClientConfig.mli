@@ -121,6 +121,7 @@ val opam_init:
   ?utf8:[ `Always | `Auto | `Extended | `Never ] ->
   ?disp_status_line:[ `Always | `Auto | `Never ] ->
   ?answer:bool option ->
+  ?unsafe_depext_yes: bool ->
   ?safe_mode:bool ->
   ?keep_log_dir:bool ->
   ?errlog_length:int ->

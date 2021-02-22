@@ -33,6 +33,8 @@ type t = private {
   answer : bool option;
   (** Affects interactive questions in OpamConsole: auto-answer with the given
       bool if Some *)
+  unsafe_depext_yes : bool;
+  (** Affects system package manager interactive questions, if available *)
   safe_mode : bool;
   (** Fail on writes or delays, don't ask questions (for quick queries, e.g.
       for shell completion) *)
@@ -62,6 +64,7 @@ type 'a options_fun =
   ?utf8:[ `Extended | `Always | `Never | `Auto ] ->
   ?disp_status_line:[ `Always | `Never | `Auto ] ->
   ?answer:bool option ->
+  ?unsafe_depext_yes:bool ->
   ?safe_mode:bool ->
   ?log_dir:string ->
   ?keep_log_dir:bool ->
