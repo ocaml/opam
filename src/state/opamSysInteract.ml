@@ -527,7 +527,7 @@ let install_packages_commands_t sys_packages =
   in
   match family () with
   | Alpine -> ["apk", "add"::yes ~no:["-i"] [] packages], None
-  | Arch -> ["pacman", "-S"::yes ["--noconfirm"] packages], None
+  | Arch -> ["pacman", "-Su"::yes ["--noconfirm"] packages], None
   | Centos ->
     (* TODO: check if they all declare "rhel" as primary family *)
     (* When opam-packages specify the epel-release package, usually it
