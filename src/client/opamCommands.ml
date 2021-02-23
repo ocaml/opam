@@ -1319,19 +1319,21 @@ let config cli =
           print "current-switch" "%s"
             (OpamSwitch.to_string state.switch);
           let process nv =
-            let conf = OpamSwitchState.package_config state nv.name in
-            let bindings =
-              let f (name, value) =
-                (OpamVariable.Full.create nv.name name,
-                 OpamVariable.string_of_variable_contents value)
+            try
+              let conf = OpamSwitchState.package_config state nv.name in
+              let bindings =
+                let f (name, value) =
+                  (OpamVariable.Full.create nv.name name,
+                   OpamVariable.string_of_variable_contents value)
+                in
+                List.map f (OpamFile.Dot_config.bindings conf)
               in
-              List.map f (OpamFile.Dot_config.bindings conf)
-            in
-            let print (name, value) =
-              let name = OpamVariable.Full.to_string name in
-              print name "%s" value
-            in
-            List.iter print bindings
+              let print (name, value) =
+                let name = OpamVariable.Full.to_string name in
+                print name "%s" value
+              in
+              List.iter print bindings
+            with Not_found -> ()
           in
           List.iter process (OpamPackage.Set.elements state.compiler_packages);
           if List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
