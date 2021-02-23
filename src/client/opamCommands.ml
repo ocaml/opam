@@ -1335,7 +1335,16 @@ let config cli =
               List.iter print bindings
             with Not_found -> ()
           in
-          List.iter process (OpamPackage.Set.elements state.compiler_packages);
+          state.installed
+          |> OpamPackage.Set.filter (fun p ->
+              match OpamSwitchState.opam_opt state p with
+              | Some o -> OpamFile.OPAM.has_flag Pkgflag_Compiler o
+              | None -> false)
+          |> OpamSolver.dependencies ~depopts:true ~post:true ~build:true
+            ~installed:true
+            (OpamSwitchState.universe ~test:true ~doc:true
+               ~requested:OpamPackage.Name.Set.empty state Query)
+          |> OpamPackage.Set.iter process;
           if List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
           then OpamConsole.warning
               "PATH contains '.' : this is a likely cause of trouble.";
