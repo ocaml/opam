@@ -43,7 +43,8 @@ New option/command/subcommand are prefixed with ◈.
   * fix W59 & E60 with conf flag handling (no url required) [#4550 @rjbou - fix #4549]
 
 ## Lock
-  *
+  * Don't write lock file with `--read-only', `--safe`, and `--dryrun` [#4562 @rjbou - fix #4320]
+  * Make consistent with `opam install`, on local pin always take last opam file even if uncomitted [#4562 @rjbou - fix #4320]
 
 ## Opamfile
   * Fix `features` parser [#4507 @rjbou]
