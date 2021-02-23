@@ -65,9 +65,10 @@ New option/command/subcommand are prefixed with ◈.
   * Fix opam-devel's tests on platforms without openssl, GNU-diff and a system-wide ocaml [#4500 @kit-ty-kate]
   * Restrict `extlib` and `dose` version [#4517 @kit-ty-kate]
   * Restrict to opam-file-format 2.1.2 [#4495 @rjbou]
+  * Switch to newer version of MCCS (based on newer GLPK) for src_ext [#4559 @AltGr]
 
 ## Infrastructure
-  *
+  * Release scripts: switch to OCaml 4.10.2 by default, add macos/arm64 builds by default [#4559 @AltGr]
 
 ## Admin
   *
