@@ -117,9 +117,9 @@ val opam_init:
   ?debug_level:int ->
   ?debug_sections:int option OpamStd.String.Map.t ->
   ?verbose_level:int ->
-  ?color:[ `Always | `Auto | `Never ] ->
-  ?utf8:[ `Always | `Auto | `Extended | `Never ] ->
-  ?disp_status_line:[ `Always | `Auto | `Never ] ->
+  ?color:OpamStd.Config.when_ ->
+  ?utf8:OpamStd.Config.when_ext ->
+  ?disp_status_line:OpamStd.Config.when_ ->
   ?answer:bool option ->
   ?safe_mode:bool ->
   ?keep_log_dir:bool ->

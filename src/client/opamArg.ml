@@ -19,7 +19,7 @@ type global_options = {
   debug_level: int option;
   verbose: int;
   quiet : bool;
-  color : [ `Always | `Never | `Auto ] option;
+  color : OpamStd.Config.when_ option;
   opt_switch : string option;
   yes : bool;
   strict : bool;

@@ -540,6 +540,9 @@ module Config : sig
 
   type env_var = string
 
+  type when_ = [ `Always | `Never | `Auto ]
+  type when_ext = [ `Extended | when_ ]
+
   val env: (string -> 'a) -> string -> 'a option
 
   val env_bool: env_var -> bool option
@@ -555,11 +558,11 @@ module Config : sig
 
   val env_float: env_var -> float option
 
-  val env_when: env_var -> [ `Always | `Never | `Auto ] option
+  val env_when: env_var -> when_ option
 
-  val env_when_ext: env_var -> [ `Extended | `Always | `Never | `Auto ] option
+  val env_when_ext: env_var -> when_ext option
 
-  val resolve_when: auto:(bool Lazy.t) -> [ `Always | `Never | `Auto ] -> bool
+  val resolve_when: auto:(bool Lazy.t) -> when_ -> bool
 
   module type Sig = sig
 

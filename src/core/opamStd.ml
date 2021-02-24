@@ -1400,6 +1400,9 @@ module Config = struct
 
   type env_var = string
 
+  type when_ = [ `Always | `Never | `Auto ]
+  type when_ext = [ `Extended | when_ ]
+
   let env conv var =
     try Option.map conv (Env.getopt ("OPAM"^var))
     with Failure _ ->

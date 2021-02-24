@@ -20,12 +20,12 @@ type t = private {
   verbose_level : int;
   (** Controls printing of external commands and output, 0 to disable, more
       means print more low-level commands *)
-  color : [ `Always | `Never | `Auto ];
+  color : OpamStd.Config.when_;
   (** Console ANSI color control *)
-  utf8 : [ `Extended | `Always | `Never | `Auto ];
+  utf8 : OpamStd.Config.when_ext;
   (** Controls usage of UTF8 in OPAM-generated messages. Extended adds camel
       emojis *)
-  disp_status_line: [ `Always | `Never | `Auto ];
+  disp_status_line: OpamStd.Config.when_;
   (** Controls on-line display of parallel commands being run, using ANSI
       escapes *)
   answer : bool option;
@@ -56,9 +56,9 @@ type 'a options_fun =
   ?debug_level:int ->
   ?debug_sections:int option OpamStd.String.Map.t ->
   ?verbose_level:int ->
-  ?color:[ `Always | `Never | `Auto ] ->
-  ?utf8:[ `Extended | `Always | `Never | `Auto ] ->
-  ?disp_status_line:[ `Always | `Never | `Auto ] ->
+  ?color:OpamStd.Config.when_ ->
+  ?utf8:OpamStd.Config.when_ext ->
+  ?disp_status_line:OpamStd.Config.when_ ->
   ?answer:bool option ->
   ?safe_mode:bool ->
   ?log_dir:string ->

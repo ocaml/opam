@@ -16,9 +16,9 @@ type t = {
   debug_level: int;
   debug_sections: int option StringMap.t;
   verbose_level: int;
-  color: [ `Always | `Never | `Auto ];
-  utf8: [ `Extended | `Always | `Never | `Auto ];
-  disp_status_line: [ `Always | `Never | `Auto ];
+  color: OpamStd.Config.when_;
+  utf8: OpamStd.Config.when_ext;
+  disp_status_line: OpamStd.Config.when_;
   answer: bool option;
   safe_mode: bool;
   log_dir: string;
@@ -34,9 +34,9 @@ type 'a options_fun =
   ?debug_level:int ->
   ?debug_sections:int option StringMap.t ->
   ?verbose_level:int ->
-  ?color:[ `Always | `Never | `Auto ] ->
-  ?utf8:[ `Extended | `Always | `Never | `Auto ] ->
-  ?disp_status_line:[ `Always | `Never | `Auto ] ->
+  ?color:OpamStd.Config.when_ ->
+  ?utf8:OpamStd.Config.when_ext ->
+  ?disp_status_line:OpamStd.Config.when_ ->
   ?answer:bool option ->
   ?safe_mode:bool ->
   ?log_dir:string ->
