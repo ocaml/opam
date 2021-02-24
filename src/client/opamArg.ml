@@ -822,9 +822,9 @@ module Mk : sig
     cli:OpamCLIVersion.Sourced.t -> ?section:string -> ?default:'a list ->
     (validity * 'a * string list * string) list -> 'a list Term.t
 
-  val mk_tristate_opt:
+  val mk_state_opt:
     cli:OpamCLIVersion.Sourced.t -> validity -> ?section:string -> string list ->
-    string -> string -> [> `Always | `Auto | `Never ] option Term.t
+    string -> (string * 'a) list -> string -> 'a option Term.t
 
   type 'a subcommand = validity * string * 'a * string list * string
   type 'a subcommands = 'a subcommand list
@@ -1130,11 +1130,11 @@ end = struct
     let default = List.map (fun x -> `Valid x) default in
     term_cli_check ~check Arg.(vflag_all default info_flags)
 
-  let mk_tristate_opt ~cli validity ?section flags value doc =
+  let mk_state_opt ~cli validity ?section flags value state doc =
     let doc = update_doc_w_cli doc ~cli validity in
     let doc = Arg.info ?docs:section ~docv:value ~doc flags in
     let check elem = check_cli_validity cli validity elem flags in
-    term_cli_check ~check Arg.(opt (some (enum when_enum)) None & doc)
+    term_cli_check ~check Arg.(opt (some (enum state)) None & doc)
 
   (* Subcommands *)
   type 'a subcommand = validity * string * 'a * string list * string
@@ -1404,7 +1404,7 @@ let global_options cli =
   let quiet =
     mk_flag ~cli cli_original ~section ["q";"quiet"] "Disables $(b,--verbose)." in
   let color =
-    mk_tristate_opt ~cli cli_original ~section ["color"] "WHEN"
+    mk_state_opt ~cli cli_original ~section ["color"] "WHEN" when_enum
       (Printf.sprintf "Colorize the output. $(docv) must be %s."
          (Arg.doc_alts_enum when_enum)) in
   (* The --cli option is pre-processed, because it has to be able to appear
