@@ -1214,22 +1214,39 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
         (OpamCudf.string_of_conflicts t.packages
            (OpamSwitchState.unavailable_reason t) cs);
       t, if depext_only then None else Some (Conflicts cs)
-    | Success solution ->
+    | Success full_solution ->
       let solution =
         if deps_only then
           OpamSolver.filter_solution (fun nv ->
               not (OpamPackage.Name.Set.mem nv.name names))
-            solution
-        else solution in
+            full_solution
+        else full_solution in
       if depext_only then
         (OpamSolution.install_depexts ~force_depext:true ~confirm:false t
            (OpamSolver.all_packages solution)), None
       else
       let add_roots =
-        OpamStd.Option.map (function
-            | true -> names
-            | false -> OpamPackage.Name.Set.empty)
-          add_to_roots
+        if deps_only && add_to_roots <> Some false then
+          let requested_deps =
+            OpamPackage.Set.fold (fun nv acc ->
+                OpamFormula.ors [
+                  OpamPackageVar.all_depends t (OpamSwitchState.opam t nv)
+                    ~depopts:false ~build:true ~post:false;
+                  acc
+                ])
+              (OpamPackage.packages_of_names
+                 (OpamSolver.all_packages full_solution)
+                 names)
+              OpamFormula.Empty
+          in
+          Some (OpamPackage.names_of_packages
+                  (OpamFormula.packages
+                     (OpamSolver.all_packages solution) requested_deps))
+        else
+          OpamStd.Option.map (function
+              | true -> names
+              | false -> OpamPackage.Name.Set.empty)
+            add_to_roots
       in
       let t, res =
         OpamSolution.apply ?ask t ~requested:names ?add_roots
