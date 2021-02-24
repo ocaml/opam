@@ -23,8 +23,9 @@ if [ -z ${TMPDIR+x} ]; then
   # directory differently; the latter should be made readable/writable
   # too and getconf seems to be a robust way to get it
   if [ -z /usr/bin/getconf ]; then
-    TMP=$(getconf DARWIN_USER_TEMP_DIR)
-    add_mounts rw "$TMP"
+    TMPDIR=$(getconf DARWIN_USER_TEMP_DIR)
+    add_mounts rw "$TMPDIR"
+    export TMPDIR
   fi
 else
   add_mounts rw "$TMPDIR"
