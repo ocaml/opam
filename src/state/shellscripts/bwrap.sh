@@ -15,8 +15,8 @@ fi
 # --die-with-parent requires bubblewrap 0.1.8
 ARGS=(--unshare-net --new-session --die-with-parent)
 ARGS=("${ARGS[@]}" --proc /proc --dev /dev)
-ARGS=("${ARGS[@]}" --bind "${TMPDIR:-/tmp}" /tmp)
-ARGS=("${ARGS[@]}" --setenv TMPDIR /tmp --setenv TMP /tmp --setenv TEMPDIR /tmp --setenv TEMP /tmp)
+ARGS=("${ARGS[@]}" --setenv TMPDIR /opam-tmp --setenv TMP /opam-tmp --setenv TEMPDIR /opam-tmp --setenv TEMP /opam-tmp)
+ARGS=("${ARGS[@]}" --tmpfs /opam-tmp)
 ARGS=("${ARGS[@]}" --tmpfs /run)
 
 add_mount() {
@@ -57,7 +57,7 @@ add_sys_mounts() {
 # use OPAM_USER_PATH_RO variable to add them
 # the OPAM_USER_PATH_RO format is the same as PATH
 # ie: export OPAM_USER_PATH_RO=/nix/store:/rw/usrlocal
-add_sys_mounts /usr /bin /lib /lib32 /lib64 /etc /opt /home /var
+add_sys_mounts /usr /bin /lib /lib32 /lib64 /etc /opt /home /var /tmp
 
 # C compilers using `ccache` will write to a shared cache directory
 # that remain writeable. ccache seems widespread in some Fedora systems.
