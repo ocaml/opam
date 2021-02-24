@@ -707,10 +707,10 @@ The following actions will be performed:
 ===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P1.1
--> installed P5.1
 -> retrieved P1.1  (cached)
 -> retrieved P5.1  (${BASEDIR}/REPO/cache)
+-> installed P1.1
+-> installed P5.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -762,10 +762,10 @@ The following actions will be performed:
 ===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P1.1
--> installed P5.1
 -> retrieved P1.1  (cached)
 -> retrieved P5.1  (cached)
+-> installed P1.1
+-> installed P5.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -782,11 +782,11 @@ The following actions will be performed:
 ===== 1 to install | 1 to recompile =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P2.1
--> installed P5.1
--> removed   P5.1
 -> retrieved P2.1  (${BASEDIR}/REPO/cache)
 -> retrieved P5.1  (cached)
+-> removed   P5.1
+-> installed P2.1
+-> installed P5.1
 Done.
 ### test -f ${OPAMROOT}/system/lib/p5/p2_present
 ### opam list -is --columns=package
@@ -825,12 +825,12 @@ The following actions will be performed:
 ===== 3 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P1.1
--> installed P2.1
--> installed P5.1
 -> retrieved P1.1  (cached)
 -> retrieved P2.1  (cached)
 -> retrieved P5.1  (cached)
+-> installed P1.1
+-> installed P2.1
+-> installed P5.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -964,18 +964,18 @@ The following actions will be performed:
 ===== 4 to recompile =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P1.1
--> installed P2.1
--> installed P3.1~weird-version.test
--> installed P4.1
--> removed   P1.1
--> removed   P2.1
--> removed   P3.1~weird-version.test
--> removed   P4.1
 -> retrieved P1.1  (cached)
 -> retrieved P2.1  (cached)
 -> retrieved P3.1~weird-version.test  (cached)
 -> retrieved P4.1  (cached)
+-> removed   P4.1
+-> removed   P2.1
+-> removed   P3.1~weird-version.test
+-> removed   P1.1
+-> installed P1.1
+-> installed P2.1
+-> installed P3.1~weird-version.test
+-> installed P4.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1056,18 +1056,18 @@ The following actions will be performed:
 ===== 2 to recompile | 2 to upgrade =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P1.2
--> installed P2.1
--> installed P3.1~weird-version.test
--> installed P4.3
--> removed   P1.1
--> removed   P2.1
--> removed   P3.1~weird-version.test
--> removed   P4.1
 -> retrieved P1.2  (${BASEDIR}/REPO/cache)
 -> retrieved P2.1  (cached)
 -> retrieved P3.1~weird-version.test  (cached)
 -> retrieved P4.3  (cached)
+-> removed   P4.1
+-> removed   P2.1
+-> removed   P3.1~weird-version.test
+-> removed   P1.1
+-> installed P1.2
+-> installed P2.1
+-> installed P3.1~weird-version.test
+-> installed P4.3
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -1103,18 +1103,18 @@ The following actions will be performed:
 ===== 2 to recompile | 2 to downgrade =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P1.1
--> installed P2.1
--> installed P3.1~weird-version.test
--> installed P4.2
--> removed   P1.2
--> removed   P2.1
--> removed   P3.1~weird-version.test
--> removed   P4.3
 -> retrieved P1.1  (cached)
 -> retrieved P2.1  (cached)
 -> retrieved P3.1~weird-version.test  (cached)
 -> retrieved P4.2  (cached)
+-> removed   P4.3
+-> removed   P2.1
+-> removed   P3.1~weird-version.test
+-> removed   P1.2
+-> installed P1.1
+-> installed P2.1
+-> installed P3.1~weird-version.test
+-> installed P4.2
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1253,15 +1253,15 @@ The following actions will be performed:
 ===== 5 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P1.1
--> installed P2.1
--> installed P3.1~weird-version.test
--> installed P4.3
 -> installed ocaml.10+a+b
 -> retrieved P1.1  (cached)
 -> retrieved P2.1  (cached)
 -> retrieved P3.1~weird-version.test  (cached)
 -> retrieved P4.3  (cached)
+-> installed P1.1
+-> installed P2.1
+-> installed P3.1~weird-version.test
+-> installed P4.3
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>

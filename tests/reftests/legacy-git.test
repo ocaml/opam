@@ -768,10 +768,10 @@ The following actions will be performed:
 ===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P1.1
--> installed P5.1
 -> retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
 -> retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
+-> installed P1.1
+-> installed P5.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -823,10 +823,10 @@ The following actions will be performed:
 ===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P1.1
--> installed P5.1
 -> retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
 -> retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
+-> installed P1.1
+-> installed P5.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -843,11 +843,11 @@ The following actions will be performed:
 ===== 1 to install | 1 to recompile =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P2.1
--> installed P5.1
--> removed   P5.1
 -> retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
 -> retrieved P5.1  (no changes)
+-> removed   P5.1
+-> installed P2.1
+-> installed P5.1
 Done.
 ### test -f ${OPAMROOT}/system/lib/p5/p2_present
 ### opam list -is --columns=package
@@ -886,12 +886,12 @@ The following actions will be performed:
 ===== 3 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P1.1
--> installed P2.1
--> installed P5.1
 -> retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
 -> retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
+-> installed P1.1
 -> retrieved P5.1  (git+file://${BASEDIR}/GIT/P5)
+-> installed P2.1
+-> installed P5.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1025,18 +1025,18 @@ The following actions will be performed:
 ===== 4 to recompile =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P1.1
--> installed P2.1
--> installed P3.1~weird-version.test
--> installed P4.1
--> removed   P1.1
--> removed   P2.1
--> removed   P3.1~weird-version.test
--> removed   P4.1
 -> retrieved P1.1  (no changes)
 -> retrieved P2.1  (no changes)
 -> retrieved P3.1~weird-version.test  (no changes)
 -> retrieved P4.1  (no changes)
+-> removed   P4.1
+-> removed   P2.1
+-> removed   P3.1~weird-version.test
+-> removed   P1.1
+-> installed P1.1
+-> installed P2.1
+-> installed P3.1~weird-version.test
+-> installed P4.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1176,9 +1176,9 @@ The following actions will be performed:
   - downgrade P4 3 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P4.2
--> removed   P4.3
 -> retrieved P4.2  (git+file://${BASEDIR}/GIT/P4)
+-> removed   P4.3
+-> installed P4.2
 Done.
 ### opam list -is --columns=package
 ocaml.system
@@ -1237,10 +1237,10 @@ The following actions will be performed:
 ===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P1.1
--> installed P2.1
 -> retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
 -> retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
+-> installed P1.1
+-> installed P2.1
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1313,15 +1313,15 @@ The following actions will be performed:
 ===== 5 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed P1.1
--> installed P2.1
--> installed P3.1~weird-version.test
--> installed P4.3
 -> installed ocaml.10+a+b
 -> retrieved P1.1  (git+file://${BASEDIR}/GIT/P1-1)
 -> retrieved P2.1  (git+file://${BASEDIR}/GIT/P2)
 -> retrieved P3.1~weird-version.test  (git+file://${BASEDIR}/GIT/P3)
+-> installed P1.1
 -> retrieved P4.3  (git+file://${BASEDIR}/GIT/P4)
+-> installed P2.1
+-> installed P3.1~weird-version.test
+-> installed P4.3
 Done.
 
 <><> P1.1 installed successfully ><><><><><><><><><><><><><><><><><><><><><><><>
