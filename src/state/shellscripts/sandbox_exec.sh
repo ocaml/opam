@@ -49,7 +49,11 @@ add_ccache_mount() {
 }
 
 add_dune_cache_mount() {
-  local dune_cache=${XDG_CACHE_HOME:-$HOME/.cache}/dune
+  local u_cache=${XDG_CACHE_HOME:-$HOME/.cache}
+  local u_dune_cache=$u_cache/dune
+  local cache=$(readlink -m "$u_cache")
+  local dune_cache=$cache/dune
+  local dune_cache=$(readlink -m "$u_dune_cache")
   mkdir -p "${dune_cache}"
   add_mounts rw "$dune_cache"
 }
@@ -58,20 +62,32 @@ add_dune_cache_mount() {
 COMMAND="$1"; shift
 case "$COMMAND" in
     build)
+        # mount unusual path in ro
+        if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
+           add_mounts ro $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
+        fi
         add_mounts ro "$OPAM_SWITCH_PREFIX"
         add_mounts rw "$PWD"
         add_ccache_mount
         add_dune_cache_mount
         ;;
     install)
+        # mount unusual path in ro
+        if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
+           add_mounts ro  $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
+        fi
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
         add_mounts rw "$PWD"
         ;;
     remove)
+        # mount unusual path in ro
+        if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
+           add_mounts ro $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
+        fi
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
-        if [ "X${PWD#$OPAM_SWITCH_PREFIX/.opam-switch}" != "X${PWD}" ]; then
+        if [ "X${PWD#$OPAM_SWITCH_PREFIX/.opam-switch/}" != "X${PWD}" ]; then
           add_mounts rw "$PWD"
         fi
         ;;

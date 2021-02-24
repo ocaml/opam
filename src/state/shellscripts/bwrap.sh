@@ -126,4 +126,5 @@ case "$COMMAND" in
 esac
 
 # Note: we assume $1 can be trusted, see https://github.com/projectatomic/bubblewrap/issues/259
+# As of now we are compatible up to 0.1.8, '--' can be added here when we require >= 0.3.0
 exec bwrap "${ARGS[@]}" "$@"
