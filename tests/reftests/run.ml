@@ -112,7 +112,7 @@ let rec waitpid pid =
   | _, Unix.WEXITED n -> n
   | _, Unix.WSIGNALED _ -> failwith "signal"
 
-exception Command_failure of int * string
+exception Command_failure of int * string * string
 
 let str_replace filters s =
   List.fold_left (fun s (re, by) ->
@@ -162,10 +162,11 @@ let command
   filter_output ic;
   let ret = waitpid pid in
   close_in ic;
+  let out = Buffer.contents out_buf in
   if not (List.mem ret allowed_codes) then
-    raise (Command_failure (ret, String.concat " " (cmd :: args)))
+    raise (Command_failure (ret, String.concat " " (cmd :: args), out))
   else
-    Buffer.contents out_buf
+    out
 
 let finally f x k = match f x with
   | r -> k (); r
@@ -359,8 +360,8 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
         Parse.get_str expanded)
       args
   in
-  try command ~vars:env_vars ~filter ~silent cmd args
-  with Command_failure (n,_) -> Printf.printf "# Return code %d #\n" n; ""
+  try command ~vars:env_vars ~filter ~silent cmd args, None
+  with Command_failure (n,_, out) -> out, Some n
 
 let write_file ~path ~contents =
   mkdir_p (Filename.dirname path);
@@ -405,17 +406,22 @@ let run_test t ?(vars=[]) ~opam =
           vars
         | Run {env; cmd; args; filter; output; unordered} ->
           let silent = output <> None || unordered in
-          let r =
+          let r, errcode =
             run_cmd ~opam ~dir ~vars:(vars @ env) ~filter ~silent cmd args
           in
           (if unordered then
              (* print lines from Result, but respecting order from Expect *)
-             let rec diffl acc r e = match r, e with
+             let rec diffl acc r e =
+               let expect_has rl =
+                 let matching = List.filter (( = ) rl) in
+                 List.length (matching e) > List.length (matching acc)
+               in
+               match r, e with
                | r, el::e when List.mem el acc ->
                  print_endline el; diffl (list_remove el acc) r e
                | rl::r, el::e ->
                  if rl = el then (print_endline el; diffl acc r e)
-                 else if List.mem rl e then diffl (rl::acc) r (el :: e)
+                 else if expect_has rl then diffl (rl::acc) r (el :: e)
                  else (print_endline rl; diffl acc r (el :: e))
                | [], e::el ->
                  diffl acc [] el
@@ -423,6 +429,7 @@ let run_test t ?(vars=[]) ~opam =
                  assert (acc = []); List.iter print_endline r
              in
              diffl [] (String.split_on_char '\n' r) out);
+          OpamStd.Option.iter (Printf.printf "# Return code %d #\n") errcode;
           match output with
           | None -> vars
           | Some v -> (v, r) :: List.filter (fun (w,_) -> v <> w) vars)
