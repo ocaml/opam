@@ -116,7 +116,7 @@ case "$COMMAND" in
         fi
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
-        if [ "X${PWD#$OPAM_SWITCH_PREFIX}/.opam-switch/" != "X${PWD}" ]; then
+        if [ "X${PWD#$OPAM_SWITCH_PREFIX/.opam-switch/}" != "X${PWD}" ]; then
           add_mounts rw "$PWD"
         fi
         ;;
