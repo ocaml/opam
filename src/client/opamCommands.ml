@@ -3689,7 +3689,9 @@ let lock cli =
     `P "By using these locked opam files, it is then possible to recover the \
         precise build environment that was setup when they were generated.";
     `P "If paths (filename or directory) are given, those opam files are locked. \
-        If package is given, installed one is locked, otherwise its latest version.";
+        If package is given, installed one is locked, otherwise its latest \
+        version. If a locally pinned package is given, its current local opam \
+        file is locked, even if not versioned or uncommitted changes";
     `P "Fails if all mandatory dependencies are not installed in the switch.";
     `S "LOCK FILE CHANGED FIELDS";
     `P "- $(i,depends) are fixed to their specific versions, with all filters \
