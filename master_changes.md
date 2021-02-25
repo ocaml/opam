@@ -19,6 +19,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Install
   * Don't patch twice [#4529 @rjbou]
+  * With `--deps-only`, set dependencies as root packages [#4964 @rjbou - fix #4502]
 
 ## Remove
   *
