@@ -51,6 +51,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## External dependencies
   * Handle macport variants [#4509 @rjbou - fix #4297]
+  * Always upgrade all the installed packages when installing a new package on Archlinux [#4556 @kit-ty-kate]
 
 ## Sandbox
   * Fix the conflict with the environment variable name used by dune [#4535 @smorimoto - fix ocaml/dune#4166]
