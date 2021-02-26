@@ -442,6 +442,12 @@ let carriage_delete =
   else
     carriage_delete_unix
 
+let url ~ref ~label =
+  if not (color ()) || Sys.win32 && get_win32_console_shim `stdout Mode = Shim then
+    label
+  else
+    Printf.sprintf "\027]8;;%s\027\\%s\027]8;;\027\\" ref label
+
 let displaying_status = ref false
 
 let clear_status_unix () =
