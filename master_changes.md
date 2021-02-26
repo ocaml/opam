@@ -47,6 +47,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Opamfile
   * Fix `features` parser [#4507 @rjbou]
+  * Rename `hidden-version` to `avoid-version` [#4527 @dra27]
 
 ## External dependencies
   * Handle macport variants [#4509 @rjbou - fix #4297]

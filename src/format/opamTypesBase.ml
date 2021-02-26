@@ -157,7 +157,7 @@ let string_of_pkg_flag = function
   | Pkgflag_Plugin -> "plugin"
   | Pkgflag_Compiler -> "compiler"
   | Pkgflag_Conf -> "conf"
-  | Pkgflag_HiddenVersion -> "hidden-version"
+  | Pkgflag_AvoidVersion -> "avoid-version"
   | Pkgflag_Unknown s -> s
 
 let pkg_flag_of_string = function
@@ -166,7 +166,7 @@ let pkg_flag_of_string = function
   | "plugin" -> Pkgflag_Plugin
   | "compiler" -> Pkgflag_Compiler
   | "conf" -> Pkgflag_Conf
-  | "hidden-version" -> Pkgflag_HiddenVersion
+  | "avoid-version" -> Pkgflag_AvoidVersion
   | s -> Pkgflag_Unknown s
 
 let action_contents = function

@@ -125,7 +125,7 @@ module Aspcud_def = struct
   let default_criteria =
     {
       crit_default = "-count(removed),\
-                      -sum(solution,hidden-version),\
+                      -sum(solution,avoid-version),\
                       -sum(request,version-lag),\
                       -count(down),\
                       -sum(solution,version-lag),\
@@ -133,12 +133,12 @@ module Aspcud_def = struct
                       -sum(solution,missing-depexts)";
       crit_upgrade = "-count(down),\
                       -count(removed),\
-                      -sum(solution,hidden-version),\
+                      -sum(solution,avoid-version),\
                       -sum(solution,version-lag),\
                       -sum(solution,missing-depexts),\
                       -count(new)";
       crit_fixup = "-count(changed),\
-                    -count[hidden-version:,true],\
+                    -count[avoid-version:,true],\
                     -notuptodate(solution),\
                     -sum(solution,version-lag),\
                     -count[missing-depexts:,true]";
@@ -177,19 +177,19 @@ module Mccs_def = struct
 
   let default_criteria =  {
     crit_default = "-removed,\
-                    -count[hidden-version:,true],\
+                    -count[avoid-version:,true],\
                     -count[version-lag:,true],\
                     -changed,\
                     -count[version-lag:,false],\
                     -count[missing-depexts:,true],\
                     -new";
     crit_upgrade = "-removed,\
-                    -count[hidden-version:,true],\
+                    -count[avoid-version:,true],\
                     -count[version-lag:,false],\
                     -count[missing-depexts:,true],\
                     -new";
     crit_fixup = "-changed,\
-                  -count[hidden-version:,true],\
+                  -count[avoid-version:,true],\
                   -count[version-lag:,false],\
                   -count[missing-depexts:,true]";
     crit_best_effort_prefix = Some "+count[opam-query:,false],";

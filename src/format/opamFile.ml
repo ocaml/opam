@@ -3078,7 +3078,7 @@ module OPAM = struct
              | Pkgflag_Plugin
              | Pkgflag_Compiler
              | Pkgflag_Conf
-             | Pkgflag_HiddenVersion
+             | Pkgflag_AvoidVersion
              | Pkgflag_Unknown _
                -> false)
             t.flags);
