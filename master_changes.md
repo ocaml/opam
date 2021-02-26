@@ -22,7 +22,8 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Switch
-  *
+  * Don't exclude base packages from rebuilds (made some sense in opam 2.0
+    with base packages but doesn't make sense with 2.1 switch invariants) [#4569 @dra27]
 
 ## Pin
   * Don't look for lock files for pin depends [#4511 @rjbou - fix #4505]
