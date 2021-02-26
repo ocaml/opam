@@ -25,7 +25,7 @@ build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "ocaml" {>= "4.02.3"}
+  "ocaml" {>= "4.08"}
   "opam-state" {= version}
   "opam-solver" {= version}
   "extlib" {>= "1.7.3" & < "1.7.8"}

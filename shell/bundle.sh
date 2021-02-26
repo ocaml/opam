@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ue
 
-OCAMLV=4.04.1
+OCAMLV=4.08.1
 OPAMV=2.0.0
 OPAM_REPO=https://opam.ocaml.org/2.0
 DEBUG=
