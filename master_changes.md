@@ -26,6 +26,8 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Pin
   * Don't look for lock files for pin depends [#4511 @rjbou - fix #4505]
+  * Don't ask for confirmation for pinning base packages (similarly makes no
+    sense with 2.1 switch invariants) [#4571 @dra27]
 
 ## List
   *
