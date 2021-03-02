@@ -121,7 +121,7 @@ let index_command cli =
     OpamHTTP.make_index_tar_gz repo_root;
     OpamConsole.msg "Done.\n";
   in
-  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+  OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
     Term.(const cmd $ global_options cli $ urls_txt_arg cli)
 
 let cache_urls repo_root repo_def =
@@ -272,7 +272,7 @@ let cache_command cli =
 
     OpamConsole.msg "Done.\n";
   in
-  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+  OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
     Term.(const cmd $ global_options cli $
           cache_dir_arg $ no_repo_update_arg $ link_arg $ jobs_arg)
 
@@ -491,7 +491,7 @@ let add_hashes_command cli =
     if has_error then OpamStd.Sys.exit_because `Sync_error
     else OpamStd.Sys.exit_because `Success
   in
-  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+  OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
     Term.(const cmd $ global_options cli $
           hash_types_arg $ replace_arg $ packages)
 
@@ -541,7 +541,7 @@ let upgrade_command cli =
             \  opam admin index"
       | Some m -> OpamAdminRepoUpgrade.do_upgrade_mirror (OpamFilename.cwd ()) m
   in
-  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+  OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
     Term.(const cmd $ global_options cli $
           clear_cache_arg $ create_mirror_arg)
 
@@ -624,7 +624,7 @@ let lint_command cli =
     in
     OpamStd.Sys.exit_because (if ret then `Success else `False)
   in
-  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+  OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
     Term.(const cmd $ global_options cli $
           short_arg $ list_arg $ include_arg $ exclude_arg $ ignore_arg $
           warn_error_arg)
@@ -708,7 +708,7 @@ let check_command cli =
        (pr obsolete "obsolete packages"));
     OpamStd.Sys.exit_because (if all_ok then `Success else `False)
   in
-  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+  OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
   Term.(const cmd $ global_options cli $ ignore_test_arg $ print_short_arg
         $ installability_arg $ cycles_arg $ obsolete_arg)
 
@@ -859,7 +859,7 @@ let list_command cli =
     in
     OpamListCommand.display st format results
   in
-  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+  OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
   Term.(const cmd $ global_options cli $ OpamArg.package_selection cli $
         or_arg cli $ state_selection_arg cli $ OpamArg.package_listing cli $
         env_arg cli $ pattern_list_arg)
@@ -946,7 +946,7 @@ let filter_command cli =
              OpamFilename.rmdir_cleanup d))
       pkg_prefixes
   in
-  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+  OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
   Term.(const cmd $ global_options cli $ OpamArg.package_selection cli $
         or_arg cli $ state_selection_arg cli $ env_arg cli $ remove_arg $
         dryrun_arg $
@@ -1055,7 +1055,7 @@ let add_constraint_command cli =
              |> OpamFile.OPAM.with_conflicts conflicts))
       pkg_prefixes
   in
-  OpamArg.mk_command cli OpamArg.cli_original command ~doc ~man
+  OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
   Term.(pure cmd $ global_options cli $ force_arg $ atom_arg)
 
 (* HELP *)

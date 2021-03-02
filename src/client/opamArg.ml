@@ -847,11 +847,11 @@ module Mk : sig
   type command = unit Term.t * Term.info
 
   val mk_command:
-    OpamCLIVersion.t -> validity -> string -> doc:string ->
+    cli:OpamCLIVersion.t -> validity -> string -> doc:string ->
     man:Manpage.block list -> (unit -> unit) Term.t -> command
 
   val mk_command_ret:
-    OpamCLIVersion.t -> validity -> string -> doc:string ->
+    cli:OpamCLIVersion.t -> validity -> string -> doc:string ->
     man:Manpage.block list -> (unit -> unit Term.ret) Term.t -> command
 
 end = struct
@@ -1217,7 +1217,7 @@ end = struct
 
   type command = unit Term.t * Term.info
 
-  let mk_command cli validity name ~doc ~man cmd =
+  let mk_command ~cli validity name ~doc ~man cmd =
     let doc = update_doc_w_cli doc ~cli validity in
     let info = term_info name ~doc ~man in
     let check =
@@ -1227,7 +1227,7 @@ end = struct
     in
     Term.(cmd $ check), info
 
-  let mk_command_ret cli validity name ~doc ~man cmd =
+  let mk_command_ret ~cli validity name ~doc ~man cmd =
     let doc = update_doc_w_cli doc ~cli validity in
     let info = term_info name ~doc ~man in
     let check =

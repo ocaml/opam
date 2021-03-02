@@ -311,7 +311,7 @@ val make_command_alias:
 type command = unit Term.t * Term.info
 
 val mk_command:
-  OpamCLIVersion.t -> validity -> string -> doc:string ->
+  cli:OpamCLIVersion.t -> validity -> string -> doc:string ->
   man:Manpage.block list -> (unit -> unit) Term.t -> command
   (* [mk_command cli validity name doc man term] is the command [name] with its
      [doc] and [man], and using [term]. Its [validity] is checked at runtime
@@ -319,7 +319,7 @@ val mk_command:
      valid. *)
 
 val mk_command_ret:
-  OpamCLIVersion.t -> validity -> string -> doc:string ->
+  cli:OpamCLIVersion.t -> validity -> string -> doc:string ->
   man:Manpage.block list -> (unit -> unit Term.ret) Term.t -> command
   (* Same as {!mk_command} but [term] returns a [Cmdliner.Term.ret] *)
 
