@@ -13,8 +13,8 @@ The following actions would be performed:
 opam: assume-depexts was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
 # Return code 2 #
 ### opam config set cli version
-opam: set was removed in version 2.1 of the opam CLI, but version 2.1 has been requested. Use opam var instead or set OPAMCLI environment variable to 2.0.
-# Return code 2 #
+[WARNING] set was deprecated in version 2.1 of the opam CLI. Use opam var instead or set OPAMCLI environment variable to 2.0.
+Added 'cli: "version"' to field variables in switch cli-versioning
 ### OPAMCLI=2.0 opam config set cli version
 Added 'cli: "version"' to field variables in switch cli-versioning
 ### opam switch set-invariant ocaml.4.05.0
