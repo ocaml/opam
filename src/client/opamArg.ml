@@ -935,6 +935,16 @@ end = struct
     in
     `Error (false, msg)
 
+  let previously_str removal instead =
+    let previous =
+      string_of_cli_option (OpamCLIVersion.previous removal)
+    in
+    match instead with
+    | Some ist ->
+      Printf.sprintf  ". Use %s instead or %s"
+        (OpamConsole.colorise `bold ist) previous
+    | None -> Printf.sprintf ", %s"  previous
+
   let older_flag_error cli removal instead flags =
     let flag = get_long_form flags in
     let msg =
@@ -943,16 +953,16 @@ end = struct
          but version %s has been requested%s."
         flag (OpamCLIVersion.to_string removal)
         (string_of_sourced_cli cli)
-        (let previous =
-           string_of_cli_option (OpamCLIVersion.previous removal)
-         in
-         match instead with
-         | Some ist ->
-           Printf.sprintf  ". Use %s instead or %s"
-             (OpamConsole.colorise `bold ist) previous
-         | None -> Printf.sprintf ", %s"  previous)
+        (previously_str removal instead)
     in
     `Error (false, msg)
+
+  let deprecated_warning removal instead flags =
+    let flag = get_long_form flags in
+    OpamConsole.warning
+      "%s was deprecated in version %s of the opam CLI%s."
+      flag (OpamCLIVersion.to_string removal)
+      (previously_str removal instead)
 
   (* Cli version check *)
   let cond_new cli c = cli @< c
@@ -963,9 +973,10 @@ end = struct
     match validity with
     | { removed = None ; valid = c; _ } when cond (cond_new cli c) ->
       newer_flag_error cli c flags
-    | { removed = Some (removal, _instead); default = true; _ }
+    | { removed = Some (removal, instead); default = true; _ }
       when (snd cli = `Default) && OpamCLIVersion.default < removal ->
       (* default cli case : we dont even check if the condition is required *)
+      deprecated_warning removal instead flags;
       `Ok elem
     | { removed = Some (removal, instead); _ }
       when cond (cond_removed cli removal) ->
