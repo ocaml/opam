@@ -16,7 +16,7 @@
     leading [--yes] argument.
     @raise InvalidCLI *)
 val check_and_run_external_commands:
-  unit -> (OpamCLIVersion.t * OpamStateTypes.provenance) * string list
+  unit -> OpamCLIVersion.Sourced.t * string list
 
 (** Handles flushing buffers and catching exceptions from the main call,
     including special cases like [OpamStd.Sys.Exec] that is expected to do a

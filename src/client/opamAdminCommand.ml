@@ -26,7 +26,7 @@ let checked_repo_root () =
   repo_root
 
 let global_options cli =
-  let apply_cli options = {options with OpamArg.cli} in
+  let apply_cli options = { options with OpamArg.cli = options.OpamArg.cli} in
   Term.(const apply_cli $ OpamArg.global_options cli)
 
 let admin_command_doc =

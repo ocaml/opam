@@ -99,7 +99,7 @@ let global_options cli =
     if not (options.safe_mode || root_is_ok) &&
        Unix.getuid () = 0 then
       OpamConsole.warning "Running as root is not recommended";
-    {options with cli}, self_upgrade_status
+    {options with cli = fst cli}, self_upgrade_status
   in
   Term.(const self_upgrade $ no_self_upgrade $ global_options cli)
 
@@ -3875,7 +3875,7 @@ let commands cli =
     help;
   ]
 
-let current_commands = commands OpamCLIVersion.current
+let current_commands = commands OpamCLIVersion.Sourced.current
 
 let is_builtin_command prefix =
   List.exists (fun (_,info) ->

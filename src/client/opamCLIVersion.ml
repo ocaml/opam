@@ -34,10 +34,8 @@ let to_string (major, minor) = Printf.sprintf "%d.%d" major minor
 
 let to_json v = `String (to_string v)
 let of_json = function
-| `String x -> of_string_opt x
-| _ -> None
-
-let env = OpamStd.Config.env of_string
+  | `String x -> of_string_opt x
+  | _ -> None
 
 let ( >= ) = Stdlib.( >= )
 let ( < ) = Stdlib.( < )
@@ -50,6 +48,24 @@ let previous cli =
   let previous = List.fold_left f zero supported_versions in
   if previous = zero then raise Not_found
   else previous
+
+(* CLI version extended with provenance *)
+module Sourced = struct
+  type nonrec t = t * OpamStateTypes.provenance
+
+  let current = current, `Default
+
+  let env () =
+    OpamStd.Option.map (fun c -> c, `Env)
+      (OpamStd.Config.env of_string "CLI")
+
+end
+
+module Op = struct
+  let ( @>= ) (c,_) = Stdlib.( >= ) c
+  let ( @< ) (c,_) = Stdlib.( < ) c
+  let ( @= ) (c,_) = Stdlib.( = ) c
+end
 
 module O = struct
   type nonrec t = t
