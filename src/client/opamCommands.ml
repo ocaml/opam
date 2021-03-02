@@ -1132,22 +1132,24 @@ let config cli =
     cli_original, "pef-universe", `pef, ["[FILE]"],
     "Outputs the current package universe in PEF format.";
     (* Deprecated options *)
-    cli_between cli2_0 cli2_1 ~replaced:"opam exec", "exec", `exec, ["[--] COMMAND"; "[ARG]..."],
+    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam exec", "exec",
+    `exec, ["[--] COMMAND"; "[ARG]..."],
     "Execute $(i,COMMAND) with the correct environment variables. This command \
      can be used to cross-compile between switches using $(b,opam config exec \
      --switch=SWITCH -- COMMAND ARG1 ... ARGn). Opam expansion takes place in \
      command and args. If no switch is present on the command line or in the \
      $(i,OPAMSWITCH) environment variable, $(i,OPAMSWITCH) is not set in \
      $(i,COMMAND)'s environment. Can also be accessed through $(b,opam exec).";
-    cli_between cli2_0 cli2_1 ~replaced:"opam var", "set", `set, ["VAR";"VALUE"],
-    "Set switch variable";
-    cli_between cli2_0 cli2_1 ~replaced:"opam var", "unset", `unset, ["VAR"],
-    "Unset switch variable";
-    cli_between cli2_0 cli2_1 ~replaced:"opam var", "set-global", `set_global, ["VAR";"VALUE"],
-    "Set global variable";
-    cli_between cli2_0 cli2_1 ~replaced:"opam var", "unset-global", `unset_global, ["VAR"],
-    "Unset global variable";
-    cli_between cli2_0 cli2_1 ~replaced:"opam var", "var", `var, ["VAR"],
+    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var", "set", `set,
+    ["VAR";"VALUE"], "Set switch variable";
+    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var", "unset",
+    `unset, ["VAR"], "Unset switch variable";
+    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var", "set-global",
+    `set_global, ["VAR";"VALUE"], "Set global variable";
+    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var",
+    "unset-global", `unset_global, ["VAR"], "Unset global variable";
+    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var", "var", `var,
+    ["VAR"],
     "Return the value associated with variable $(i,VAR), looking in switch \
      first, global if not found. Package variables can be accessed with the \
      syntax $(i,pkg:var). Can also be accessed through $(b,opam var VAR)";
