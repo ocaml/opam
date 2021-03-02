@@ -866,6 +866,7 @@ end = struct
     valid: OpamCLIVersion.t;
     removed: (OpamCLIVersion.t * string option) option;
     content: 'b;
+    default: bool;
   }
 
   type 'a contented_validity =
@@ -880,17 +881,18 @@ end = struct
     | None -> { validity with content = `Valid content}
     | Some _ -> { validity with content = `Removed content}
 
-  let cli_from valid = { valid ; removed = None; content = () }
-  let cli_between since ?replaced removal =
+  let cli_from valid = { valid ; removed = None; content = (); default = false }
+  let cli_between since ?(default=false) ?replaced removal =
     if since >= removal then
       OpamConsole.error_and_exit `Internal_error
         "An option can't be added in %s and removed in %s"
         (OpamCLIVersion.to_string since)
         (OpamCLIVersion.to_string removal);
-    { valid = since ; removed = Some (removal, replaced); content = () }
+    { valid = since ; removed = Some (removal, replaced);
+      content = (); default }
   let cli_original = cli_from cli2_0
 
-  let string_of_cli_ext (c,_) = OpamCLIVersion.to_string c
+  let string_of_sourced_cli (c,_) = OpamCLIVersion.to_string c
   let string_of_cli_option cli =
     if cli = cli2_0 then
       Printf.sprintf "set %s environment variable to %s"
@@ -929,7 +931,7 @@ end = struct
         "%s was added in version %s of the opam CLI, \
          but version %s has been requested, which is older."
         flag (OpamCLIVersion.to_string valid_since)
-        (string_of_cli_ext cli)
+        (string_of_sourced_cli cli)
     in
     `Error (false, msg)
 
@@ -940,7 +942,7 @@ end = struct
         "%s was removed in version %s of the opam CLI, \
          but version %s has been requested%s."
         flag (OpamCLIVersion.to_string removal)
-        (string_of_cli_ext cli)
+        (string_of_sourced_cli cli)
         (let previous =
            string_of_cli_option (OpamCLIVersion.previous removal)
          in
@@ -961,6 +963,10 @@ end = struct
     match validity with
     | { removed = None ; valid = c; _ } when cond (cond_new cli c) ->
       newer_flag_error cli c flags
+    | { removed = Some (removal, _instead); default = true; _ }
+      when (snd cli = `Default) && OpamCLIVersion.default < removal ->
+      (* default cli case : we dont even check if the condition is required *)
+      `Ok elem
     | { removed = Some (removal, instead); _ }
       when cond (cond_removed cli removal) ->
       older_flag_error cli removal instead flags
@@ -1059,7 +1065,7 @@ end = struct
              CLI, but version %s has been requested."
             (OpamStd.Format.pretty_list (List.map get_long_form options) )
             (max_cli clis)
-            (string_of_cli_ext cli)
+            (string_of_sourced_cli cli)
         in
         `Error (false, msg)
       | [], _::_->
@@ -1079,7 +1085,7 @@ end = struct
                (OpamCLIVersion.to_string
                 @> Printf.sprintf "were all in %s, and ") in_all)
             (max_cli clis)
-            (string_of_cli_ext cli)
+            (string_of_sourced_cli cli)
         in
         `Error (false, msg)
       | _,_ ->

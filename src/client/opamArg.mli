@@ -31,7 +31,8 @@ val cli_from: OpamCLIVersion.t -> validity
    [since], removed in [until], [replaced] is the replacement helper
    message *)
 val cli_between:
-  OpamCLIVersion.t -> ?replaced:string -> OpamCLIVersion.t -> validity
+  OpamCLIVersion.t -> ?default:bool -> ?replaced:string -> OpamCLIVersion.t ->
+  validity
 
 (* Original cli options : [validity] from 2.0 and no removal.
    No new options should use this. *)
