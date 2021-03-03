@@ -7,7 +7,8 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Global CLI
-  * Fix `opam exec` on native Windows when calling cygwin executables [#4588 @AltGr]
+  * Add default cli mechanism: deprecated options are acceptedi (in the major version) if no cli is specified [#4575 @rjbou]
+  * Add `opam config` deprecated subcommands in the default cli  [#4575 @rjbou - fix #4503]
 
 ## Init
   *
@@ -86,6 +87,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Infrastructure
   * Release scripts: switch to OCaml 4.10.2 by default, add macos/arm64 builds by default [#4559 @AltGr]
+  * Release script: add default cli version check on full archive build [#4575 @rjbou]
 
 ## Admin
   *
@@ -106,10 +108,13 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Internal
+  * Generalise `mk_tristate_opt' to mk_state_opt [#4575 @rjbou]
+  * Fix `opam exec` on native Windows when calling cygwin executables [#4588 @AltGr]
   * Fix temporary file with a too long name causing errors on Windows [#4590 @AltGr]
 
 ## Test
   * Fix configure check in github actions [#4593 @rjbou]
+  * GHA: Add default cli check in hygien job [#4575 @rjbou]
 
 ## Shell
   *
