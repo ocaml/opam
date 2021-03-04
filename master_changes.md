@@ -54,6 +54,9 @@ New option/command/subcommand are prefixed with ◈.
 ## Sandbox
   * Fix the conflict with the environment variable name used by dune [#4535 @smorimoto - fix ocaml/dune#4166]
   * Kill builds on Ctrl-C with bubblewrap [#4530 @kit-ty-kate - fix #4400]
+  * Fix sandbox script shell mistake that made `PWD` read-write on remove actions [@4561 @AltGr]
+  * Change handling of TMPDIR: redefining `TMPDIR` broke sandbox scripts [@4561 @AltGr]
+  * Port `OPAM_USER_PATH_RO` improvements from bwrap to sandbox_exec [@4561 @AltGr]
 
 ## Repository management
   *
