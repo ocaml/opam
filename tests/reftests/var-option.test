@@ -50,7 +50,7 @@ Faking installation of ocaml-base-compiler.4.08.0
 Faking installation of ocaml-config.1
 Faking installation of ocaml.4.08.0
 Done.
-### opam var | "   *" -> " "
+### opam var | "   *" -> " " | "[.]exe " -> ""
 
 <><> Global opam variables ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 arch x86_64 # Set through 'opam var'
@@ -108,7 +108,7 @@ etc      ${BASEDIR}/OPAM/var-option/etc
 man      ${BASEDIR}/OPAM/var-option/man
 toplevel ${BASEDIR}/OPAM/var-option/lib/toplevel
 stublibs ${BASEDIR}/OPAM/var-option/lib/stublibs
-### opam var --global | "   *" -> " "
+### opam var --global | "   *" -> " " | "[.]exe " -> ""
 arch x86_64 # Set through 'opam var'
 exe # Suffix needed for executable filenames (Windows)
 jobs 7 # Set through 'opam var'

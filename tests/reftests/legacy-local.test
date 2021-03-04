@@ -1,7 +1,7 @@
 632bc2e
 ### : UTILITARY SCRIPTS :
-### <mkurl>
-#!/bin/sh -ue
+### <mkurl.sh>
+set -ue
 PKG=$1; shift
 ARCHIVE=$1; shift
 if [ ! -e "packages/${ARCHIVE}" ]; then ( cd packages && tar czf ${ARCHIVE} ${ARCHIVE%.tar.gz}; ) fi
@@ -10,7 +10,6 @@ echo 'src: "http://dev.null" checksum: "'$MD5'"' > REPO/packages/${PKG}/url
 CACHEDIR=REPO/cache/md5/$(echo $MD5 |head -c2)
 mkdir -p $CACHEDIR
 cp "packages/$ARCHIVE" "$CACHEDIR/$MD5"
-### chmod a+x mkurl
 ### : INIT :
 ### mkdir REPO
 ### opam repo add test REPO --set-default --yes
@@ -612,27 +611,27 @@ Testing optional dependencies
 ### cp -r packages/ocaml REPO/packages
 ### mkdir -p REPO/packages/P1.0
 ### cp packages/P1-0.opam     REPO/packages/P1.0/opam
-### ./mkurl P1.0 P1-0.tar.gz
+### sh mkurl.sh P1.0 P1-0.tar.gz
 ### mkdir -p REPO/packages/P1.1
 ### cp packages/P1-1.opam     REPO/packages/P1.1/opam
 ### cp packages/P1-1/README   REPO/packages/P1.1/descr
-### ./mkurl P1.1 P1-1.tar.gz
+### sh mkurl.sh P1.1 P1-1.tar.gz
 ### mkdir -p REPO/packages/P2.1
 ### cp packages/P2/README     REPO/packages/P2.1/descr
 ### cp packages/P2.opam       REPO/packages/P2.1/opam
-### ./mkurl P2.1 P2.tar.gz
+### sh mkurl.sh P2.1 P2.tar.gz
 ### mkdir -p REPO/packages/P3.1~weird-version.test
 ### cp packages/P3.opam       REPO/packages/P3.1~weird-version.test/opam
 ### cp packages/P3/README     REPO/packages/P3.1~weird-version.test/descr
-### ./mkurl P3.1~weird-version.test P3.tar.gz
+### sh mkurl.sh P3.1~weird-version.test P3.tar.gz
 ### mkdir -p REPO/packages/P4.1
 ### cp packages/P4-1.opam     REPO/packages/P4.1/opam
 ### cp packages/P4/README     REPO/packages/P4.1/descr
-### ./mkurl P4.1 P4.tar.gz
+### sh mkurl.sh P4.1 P4.tar.gz
 ### mkdir -p REPO/packages/P5.1
 ### cp packages/P5.opam       REPO/packages/P5.1/opam
 ### cp packages/P5/README     REPO/packages/P5.1/descr
-### ./mkurl P5.1 P5.tar.gz
+### sh mkurl.sh P5.1 P5.tar.gz
 ### <REPO/repo>
 archive-mirrors: "cache"
 ### opam update
@@ -1001,15 +1000,15 @@ P5     --                   Testing optional dependencies
 ### mkdir REPO/packages/P4.2
 ### cp packages/P4-2.opam   REPO/packages/P4.2/opam
 ### cp packages/P4/README   REPO/packages/P4.2/descr
-### ./mkurl P4.2 P4.tar.gz
+### sh mkurl.sh P4.2 P4.tar.gz
 ### mkdir REPO/packages/P4.3
 ### cp packages/P4-3.opam   REPO/packages/P4.3/opam
 ### cp packages/P4/README   REPO/packages/P4.3/descr
-### ./mkurl P4.3 P4.tar.gz
+### sh mkurl.sh P4.3 P4.tar.gz
 ### mkdir REPO/packages/P1.2
 ### cp packages/P1-2.opam   REPO/packages/P1.2/opam
 ### cp packages/P1-2/README REPO/packages/P1.2/descr
-### ./mkurl P1.2 P1-2.tar.gz
+### sh mkurl.sh P1.2 P1-2.tar.gz
 ### opam update
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>

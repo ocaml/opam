@@ -1,9 +1,10 @@
 632bc2e
 ### : UTILITARY SCRIPTS :
-### <git-init>
-#!/bin/sh -ue
+### <git-init.sh>
+set -ue
 cd $1
 git init >/dev/null 2>&1
+git config --local core.autocrlf false
 echo '*.sh text eol=lf' >.gitattributes
 [ $# -lt 2 ] || touch "$2"
 git add -A
@@ -11,9 +12,8 @@ git config --local user.name 'OPAM test environment'
 git config --local user.email noreply@ocaml.org
 git commit -qm "Initial commit"
 echo "OK"
-### chmod a+x git-init
-### <mkurl>
-#!/bin/sh -ue
+### <mkurl.sh>
+set -ue
 PKG=$1; shift
 ARCHIVE=$1; shift
 if [ ! -e "packages/${ARCHIVE}" ]; then ( cd packages && tar czf ${ARCHIVE} ${ARCHIVE%.tar.gz}; ) fi
@@ -22,10 +22,9 @@ echo 'src: "http://dev.null" checksum: "'$MD5'"' > REPO/packages/${PKG}/url
 CACHEDIR=REPO/cache/md5/$(echo $MD5 |head -c2)
 mkdir -p $CACHEDIR
 cp "packages/$ARCHIVE" "$CACHEDIR/$MD5"
-### chmod a+x mkurl
 ### : INIT :
 ### mkdir REPO
-### ./git-init REPO README
+### sh git-init.sh REPO README
 OK
 ### opam repo add test REPO --set-default --yes
 [test] Initialised
@@ -624,27 +623,27 @@ Testing optional dependencies
 ### cp -r packages/ocaml REPO/packages
 ### mkdir -p REPO/packages/P1.0
 ### cp packages/P1-0.opam     REPO/packages/P1.0/opam
-### ./mkurl P1.0 P1-0.tar.gz
+### sh mkurl.sh P1.0 P1-0.tar.gz
 ### mkdir -p REPO/packages/P1.1
 ### cp packages/P1-1.opam     REPO/packages/P1.1/opam
 ### cp packages/P1-1/README   REPO/packages/P1.1/descr
-### ./mkurl P1.1 P1-1.tar.gz
+### sh mkurl.sh P1.1 P1-1.tar.gz
 ### mkdir -p REPO/packages/P2.1
 ### cp packages/P2/README     REPO/packages/P2.1/descr
 ### cp packages/P2.opam       REPO/packages/P2.1/opam
-### ./mkurl P2.1 P2.tar.gz
+### sh mkurl.sh P2.1 P2.tar.gz
 ### mkdir -p REPO/packages/P3.1~weird-version.test
 ### cp packages/P3.opam       REPO/packages/P3.1~weird-version.test/opam
 ### cp packages/P3/README     REPO/packages/P3.1~weird-version.test/descr
-### ./mkurl P3.1~weird-version.test P3.tar.gz
+### sh mkurl.sh P3.1~weird-version.test P3.tar.gz
 ### mkdir -p REPO/packages/P4.1
 ### cp packages/P4-1.opam     REPO/packages/P4.1/opam
 ### cp packages/P4/README     REPO/packages/P4.1/descr
-### ./mkurl P4.1 P4.tar.gz
+### sh mkurl.sh P4.1 P4.tar.gz
 ### mkdir -p REPO/packages/P5.1
 ### cp packages/P5.opam       REPO/packages/P5.1/opam
 ### cp packages/P5/README     REPO/packages/P5.1/descr
-### ./mkurl P5.1 P5.tar.gz
+### sh mkurl.sh P5.1 P5.tar.gz
 ### git -C REPO/packages/ocaml.system add *
 ### git -C REPO/packages/ocaml.system commit -qm "Adding ocaml.system"
 ### git -C REPO/packages/ocaml.20 add *
@@ -683,17 +682,17 @@ git: "GIT/P5"
 ### cp -r packages/P3   GIT/
 ### cp -r packages/P4   GIT/
 ### cp -r packages/P5   GIT/
-### ./git-init GIT/P1-0
+### sh git-init.sh GIT/P1-0
 OK
-### ./git-init GIT/P1-1
+### sh git-init.sh GIT/P1-1
 OK
-### ./git-init GIT/P2
+### sh git-init.sh GIT/P2
 OK
-### ./git-init GIT/P3
+### sh git-init.sh GIT/P3
 OK
-### ./git-init GIT/P4
+### sh git-init.sh GIT/P4
 OK
-### ./git-init GIT/P5
+### sh git-init.sh GIT/P5
 OK
 ### opam update
 
@@ -1062,11 +1061,11 @@ P5     --                   Testing optional dependencies
 ### mkdir REPO/packages/P4.2
 ### cp packages/P4-2.opam   REPO/packages/P4.2/opam
 ### cp packages/P4/README   REPO/packages/P4.2/descr
-### ./mkurl P4.2 P4.tar.gz
+### sh mkurl.sh P4.2 P4.tar.gz
 ### mkdir REPO/packages/P4.3
 ### cp packages/P4-3.opam   REPO/packages/P4.3/opam
 ### cp packages/P4/README   REPO/packages/P4.3/descr
-### ./mkurl P4.3 P4.tar.gz
+### sh mkurl.sh P4.3 P4.tar.gz
 ### <GIT/P1-1/p1.ml>
 let x () =
   try Random.int 10
