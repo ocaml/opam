@@ -150,8 +150,8 @@ let download_package st nv =
   if OpamPackage.Set.mem nv st.pinned &&
      OpamFilename.exists_dir dir &&
      OpamStd.Option.Op.(
-       OpamPinned.find_opam_file_in_source nv.name dir >>=
-       OpamFile.OPAM.read_opt >>=
+       OpamPinned.find_opam_file_in_source nv.name dir >>|
+       OpamFile.OPAM.safe_read >>=
        OpamFile.OPAM.version_opt)
      = Some nv.version
   then
