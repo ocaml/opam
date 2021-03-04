@@ -1001,7 +1001,7 @@ end = struct
     let doc = Arg.info ?docs:section ~docv:value ~doc flags in
     let check elem =
       check_cli_validity cli validity
-        ~cond:(fun c -> c && default != elem) elem flags
+        ~cond:(fun c -> c && default <> elem) elem flags
     in
     term_cli_check ~check Arg.(opt ?vopt kind default & doc)
 
@@ -1011,7 +1011,7 @@ end = struct
     let doc = Arg.info ?docs:section ~docv:value ~doc flags in
     let check elem =
       check_cli_validity cli validity
-        ~cond:(fun c -> c && default != elem) elem flags
+        ~cond:(fun c -> c && default <> elem) elem flags
     in
     term_cli_check ~check Arg.(opt_all ?vopt kind default & doc)
 
