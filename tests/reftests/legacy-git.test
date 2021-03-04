@@ -1126,10 +1126,8 @@ P1.1
 P2.1
 P3.1~weird-version.test
 P4.1
-### opam env --sexp | '^ *\("...[^"]*".*' -> '\c'
-(
+### opam env --sexp | grep '"P1"'
   ("P1" "version1")
-)
 ### opam upgrade --yes | unordered
 The following actions will be performed:
   - recompile P1 1                    [upstream or system changes] I ll always bother you displaying this message

@@ -25,6 +25,7 @@
        are left as-is
      * rewrites: `| 'REGEXP' -> 'STR'` (can be repeated; set `STR` to `\c` to
        clear the line)
+     * `| grep REGEXP`
      * `| unordered` compares lines without considering their ordering
      * variables from command outputs: `cmd args >$ VAR`
    - if you need more shell power, create a script using <FILENAME> then run it.
@@ -132,9 +133,13 @@ let str_replace_path ?(escape=false) whichway filters s =
       let re_path = Re.(
           seq [re; group (rep (diff any space))]
         ) in
-      Re.replace (Re.compile re_path) s
-        ~f:(fun g ->
-            escape (by ^ whichway (Re.Group.get g 1))))
+      match by with
+      | Some by ->
+        Re.replace (Re.compile re_path) s
+          ~f:(fun g ->
+              escape (by ^ whichway (Re.Group.get g 1)))
+      | None ->
+        if Re.execp (Re.compile re) s then s else "\\c")
     s filters
 
 let command
@@ -225,7 +230,7 @@ type command =
   | Run of { env: (string * string) list;
              cmd: string;
              args: string list; (* still escaped *)
-             filter: (Re.t * string) list;
+             filter: (Re.t * string option) list;
              output: string option;
              unordered: bool; }
   | Comment of string
@@ -302,8 +307,10 @@ module Parse = struct
       | "|" :: _ as rewr ->
         let rec get_rewr (unordered, acc) = function
           | "|" :: re :: "->" :: str :: r ->
-            get_rewr (unordered, (Posix.re (get_str re), get_str str) :: acc) r
-          | "|" :: unordered :: r ->
+            get_rewr (unordered, (Posix.re (get_str re), Some (get_str str)) :: acc) r
+          | "|" :: "grep" :: re :: r ->
+            get_rewr (unordered, (Posix.re (get_str re), None) :: acc) r
+          | "|" :: "unordered" :: r ->
             get_rewr (true, acc) r
           | ">$" :: output :: [] ->
             unordered, List.rev acc, Some (get_str output)
@@ -337,14 +344,14 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
     let tmpdir = Filename.get_temp_dir_name () in
     Re.[
       alt [str dir; str (OpamSystem.back_to_forward dir)],
-      "${BASEDIR}";
+      Some "${BASEDIR}";
       seq [opt (str "/private");
            alt [str tmpdir;
                 str (OpamSystem.back_to_forward tmpdir)];
            rep (set "/\\");
            str "opam-";
            rep1 (alt [alnum; char '-'])],
-      "${OPAMTMP}";
+      Some "${OPAMTMP}";
     ] @ filter
   in
   let env_vars = [
@@ -356,7 +363,7 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
     List.rev_map (fun (v, x) ->
         Re.(alt [seq [str "${"; str v; str "}"];
                  seq [char '$'; str v; eow]];),
-        x)
+        Some x)
       env_vars
   in
   let cmd = if cmd = "opam" then opam else cmd in
