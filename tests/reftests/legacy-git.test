@@ -464,6 +464,8 @@ and the rest is the package description.
 ### <packages/P3/build.sh>
 #! /bin/sh -eu
 
+OPAM=$(cygpath ${OPAM} 2>/dev/null || echo ${OPAM})
+
 echo "Building P3 version ${OPAM_PACKAGE_VERSION}"
 
 if [ "x${OPAM_PACKAGE_NAME}" = "xP3" ]; then
@@ -547,6 +549,8 @@ build: [ "./build.sh" ]
 ### <packages/P4/build.sh>
 #! /bin/sh -ex
 
+OPAM=$(cygpath ${OPAM} 2>/dev/null || echo ${OPAM})
+
 if [ $OPAM_PACKAGE_VERSION -eq 2 ]; then
     if [ "X${P1:-}" != "Xversion1" ]; then
         echo "P1 not set to version1 while P1.1 should be installed" >&2
@@ -590,6 +594,8 @@ let () =
 Testing transitive closure
 ### <packages/P5/build.sh>
 #! /bin/sh -eu
+
+OPAM=$(cygpath ${OPAM} 2>/dev/null || echo ${OPAM})
 
 FLAGS="-I `${OPAM} var P1:lib | tr -d '\r'`"
 
