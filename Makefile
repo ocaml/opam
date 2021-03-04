@@ -171,7 +171,17 @@ uninstall: opam.install
 
 .PHONY: tests
 tests: $(DUNE_DEP)
-	$(DUNE) runtest --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/ tests/ --no-buffer
+	@$(DUNE) runtest --profile=$(DUNE_PROFILE) $(DUNE_ARGS) src/ tests/ --no-buffer; \
+	ret=$$?; \
+	echo "###     TESTS RESULT SUMMARY     ###"; \
+	for t in _build/default/tests/reftests/*.test; do \
+	  printf "%-30s" $$(basename $$t .test); \
+	  if diff -q $$t $${t%.test}.out >/dev/null; \
+	  then printf '\033[32m[ OK ]\033[m\n'; \
+	  else printf '\033[31m[FAIL]\033[m\n'; \
+	  fi; \
+	done; \
+	test $$ret -eq 0
 
 .PHONY: crowbar
 # only run the quickcheck-style tests, not very covering
@@ -193,8 +203,14 @@ tests-%: $(DUNE_DEP)
 reftest-gen: $(DUNE_DEP)
 	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) @reftest-gen --auto-promote --force
 
+reftest-runner: $(DUNE_DEP)
+	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) tests/reftests/run.exe
+
 reftests: $(DUNE_DEP)
 	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) @reftest
+
+reftests-%: $(DUNE_DEP)
+	$(DUNE) build $(DUNE_ARGS) --profile=$(DUNE_PROFILE) @reftest-$* --force
 
 reftests-meld:
 	meld `for t in tests/reftests/*.test; do echo --diff $$t _build/default/$${t%.test}.out; done`
