@@ -572,14 +572,14 @@ LINK="p1.cmxa p2.cmxa p3.cmxa p3_bar.cmxa"
 OCAMLC=ocamlc
 if which ocamlopt >/dev/null 2>&1; then OCAMLC=ocamlopt; fi
 
-$OCAMLC ${COMP} ${LINK} p4.ml -o p4.foo
+$OCAMLC ${COMP} ${LINK} p4.ml -o p4.foo.exe
 
 echo "TEST=${TEST}"
 ### chmod a+x packages/P4/build.sh
 ### <packages/P4/P4.install>
 bin: [
- "p4.foo" { "p4" }
- "p4.foo"
+ "p4.foo.exe" { "p4.exe" }
+ "p4.foo.exe"
 ]
 ### <packages/P4/p4.ml>
 let f =
@@ -1126,8 +1126,10 @@ P1.1
 P2.1
 P3.1~weird-version.test
 P4.1
-### sh -c 'eval `opam env`; echo $P1'
-version1
+### opam env --sexp | '^ *\("...[^"]*".*' -> '\c'
+(
+  ("P1" "version1")
+)
 ### opam upgrade --yes | unordered
 The following actions will be performed:
   - recompile P1 1                    [upstream or system changes] I ll always bother you displaying this message

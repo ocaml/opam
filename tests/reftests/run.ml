@@ -95,6 +95,7 @@ let base_env =
   (try ["PATH", (Sys.getenv "PATH" |> cleanup_path)] with Not_found -> []) @
   (try ["HOME", Sys.getenv "HOME"] with Not_found -> []) @
   (try ["COMSPEC", Sys.getenv "COMSPEC"] with Not_found -> []) @
+  (try ["LIB", Sys.getenv "LIB"] with Not_found -> []) @
   [
     "OPAMKEEPBUILDDIR", "1";
     "OPAMCOLOR", "never";
