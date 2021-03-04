@@ -7,9 +7,10 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Global CLI
-  * Add default cli mechanism: deprecated options are acceptedi (in the major version) if no cli is specified [#4575 @rjbou]
+  * Add default cli mechanism: deprecated options are accepted (in the major version) if no cli is specified [#4575 @rjbou]
   * Add `opam config` deprecated subcommands in the default cli  [#4575 @rjbou - fix #4503]
   * Add cli versioning for opam environment variables [#4606 @rjbou]
+  * Deprecated `build-doc`, `build-test`, `make` [#4581 @rjbou]
 
 ## Init
   * Introduce a `default-invariant` config field, restore the 2.0 semantics for
