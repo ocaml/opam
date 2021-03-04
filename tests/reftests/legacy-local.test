@@ -452,6 +452,8 @@ and the rest is the package description.
 ### <packages/P3/build.sh>
 #! /bin/sh -eu
 
+OPAM=$(cygpath ${OPAM} 2>/dev/null || echo ${OPAM})
+
 echo "Building P3 version ${OPAM_PACKAGE_VERSION}"
 
 if [ "x${OPAM_PACKAGE_NAME}" = "xP3" ]; then
@@ -535,6 +537,10 @@ build: [ "./build.sh" ]
 ### <packages/P4/build.sh>
 #! /bin/sh -ex
 
+OPAM=$(cygpath ${OPAM} 2>/dev/null || echo ${OPAM})
+
+opam() { $OPAM "$@" | tr -d '\r'; }
+
 if [ $OPAM_PACKAGE_VERSION -eq 2 ]; then
     if [ "X${P1:-}" != "Xversion1" ]; then
         echo "P1 not set to version1 while P1.1 should be installed" >&2
@@ -548,21 +554,20 @@ else
 fi
 
 echo "Building P4 with ${OPAM}"
-LIBDIR="`${OPAM} var lib | tr -d '\r'`"
-COMP="-I ${LIBDIR}/P1 -I ${LIBDIR}/P2 -I ${LIBDIR}/P3"
+COMP="-I $(opam var P1:lib) -I $(opam var P2:lib) -I $(opam var P3:lib)"
 LINK="p1.cmxa p2.cmxa p3.cmxa p3_bar.cmxa"
 
 OCAMLC=ocamlc
 if which ocamlopt >/dev/null 2>&1; then OCAMLC=ocamlopt; fi
 
-$OCAMLC ${COMP} ${LINK} p4.ml -o p4.foo
+$OCAMLC ${COMP} ${LINK} p4.ml -o p4.foo.exe
 
 echo "TEST=${TEST}"
 ### chmod a+x packages/P4/build.sh
 ### <packages/P4/P4.install>
 bin: [
- "p4.foo" { "p4" }
- "p4.foo"
+ "p4.foo.exe" { "p4.exe" }
+ "p4.foo.exe"
 ]
 ### <packages/P4/p4.ml>
 let f =
@@ -578,6 +583,8 @@ let () =
 Testing transitive closure
 ### <packages/P5/build.sh>
 #! /bin/sh -eu
+
+OPAM=$(cygpath ${OPAM} 2>/dev/null || echo ${OPAM})
 
 FLAGS="-I `${OPAM} var P1:lib | tr -d '\r'`"
 
@@ -1044,8 +1051,8 @@ P1.1
 P2.1
 P3.1~weird-version.test
 P4.1
-### sh -c 'eval `opam config env`; echo $P1'
-version1
+### opam env --sexp | grep '"P1"'
+  ("P1" "version1")
 ### opam upgrade --yes | unordered
 The following actions will be performed:
   - upgrade   P1 1 to 2
@@ -1074,8 +1081,8 @@ P1.2
 P2.1
 P3.1~weird-version.test
 P4.3
-### sh -c 'eval `opam config env`; echo $P1'
-version2
+### opam env --sexp | grep '"P1"'
+  ("P1" "version2")
 ### : LIST :
 ### opam list -A
 # Packages matching: any
@@ -1165,11 +1172,10 @@ Switch invariant: ["ocaml" {= "system"}]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml.system
 Done.
-### opam var ext_lib=$LIB_EXT --switch test
-Added 'ext_lib: "a"' to field variables in switch test
+### opam var ext_lib=$LIB_EXT --switch test | '.*' -> '\c'
 ### opam list -is --columns=package
 ocaml.system
-### opam switch import test.export
+### opam switch import test.export | unordered
 The following actions will be performed:
   - install P1 1  I ll always bother you displaying this message
   - install P2 1
@@ -1197,8 +1203,7 @@ Switch invariant: ["ocaml" {= "20"}]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml.20
 Done.
-### opam var ext_lib=$LIB_EXT --switch test2
-Added 'ext_lib: "a"' to field variables in switch test2
+### opam var ext_lib=$LIB_EXT --switch test2 | '.*' -> '\c'
 ### opam list -is --columns=package
 ocaml.20
 ### opam install P1
@@ -1240,8 +1245,7 @@ ocaml.system
 P1.1
 P2.1
 ### opam switch create 10+a+b --empty
-### opam var ext_lib=$LIB_EXT --switch 10+a+b
-Added 'ext_lib: "a"' to field variables in switch 10+a+b
+### opam var ext_lib=$LIB_EXT --switch 10+a+b | '.*' -> '\c'
 ### opam install ocaml.10+a+b P1 P2 P3 P4 | unordered
 The following actions will be performed:
   - install ocaml 10+a+b
