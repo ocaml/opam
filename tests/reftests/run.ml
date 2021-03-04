@@ -23,7 +23,8 @@
        (`foo'bar'` is not translated to `foobar`)
      * Variable expansion in arguments (`$FOO` or `${FOO}`). Undefined variables
        are left as-is
-     * rewrites: `| 'REGEXP' -> 'STR'` (can be repeated)
+     * rewrites: `| 'REGEXP' -> 'STR'` (can be repeated; set `STR` to `\c` to
+       clear the line)
      * `| unordered` compares lines without considering their ordering
      * variables from command outputs: `cmd args >$ VAR`
    - if you need more shell power, create a script using <FILENAME> then run it.
@@ -93,6 +94,7 @@ let cleanup_path path =
 let base_env =
   (try ["PATH", (Sys.getenv "PATH" |> cleanup_path)] with Not_found -> []) @
   (try ["HOME", Sys.getenv "HOME"] with Not_found -> []) @
+  (try ["COMSPEC", Sys.getenv "COMSPEC"] with Not_found -> []) @
   [
     "OPAMKEEPBUILDDIR", "1";
     "OPAMCOLOR", "never";
@@ -101,6 +103,7 @@ let base_env =
     "OPAMNODEPEXTS", "1";
     "OPAMDOWNLOADJOBS", "1";
     "TMPDIR", Filename.get_temp_dir_name ();
+    "TEMP", Filename.get_temp_dir_name ();
   ]
 
 (* See [opamprocess.safe_wait] *)
@@ -328,7 +331,8 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
   let filter =
     let tmpdir = Filename.get_temp_dir_name () in
     Re.[
-      str dir, "${BASEDIR}";
+      alt [str dir; str (OpamSystem.back_to_forward dir)],
+      "${BASEDIR}";
       seq [opt (str "/private");
            alt [str tmpdir;
                 str (OpamSystem.back_to_forward tmpdir)];
@@ -365,10 +369,7 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
 
 let write_file ~path ~contents =
   mkdir_p (Filename.dirname path);
-  let oc =
-    if Sys.cygwin then open_out_bin path
-    else open_out path
-  in
+  let oc = open_out_bin path in
   output_string oc contents;
   close_out oc
 
@@ -390,7 +391,7 @@ let run_test t ?(vars=[]) ~opam =
   Sys.chdir dir;
   let dir = Sys.getcwd () in (* because it may need to be normalised on OSX *)
   ignore @@ command ~silent:true opam
-    ["var"; "--quiet"; "--root"; opamroot; "--global";
+    ["var"; "--quiet"; "--root"; opamroot; "--global"; "--cli=2.1";
      "sys-ocaml-version=4.08.0"];
   print_endline t.repo_hash;
   let _vars =
@@ -451,4 +452,4 @@ let () =
     in
     load_test input |> run_test ~opam ~vars
   | _ ->
-    failwith "Expected arguments: opam.exe file.test opamroot [env-bindings]"
+    failwith "Expected arguments: opam.exe opam file.test [env-bindings]"
