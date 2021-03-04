@@ -122,14 +122,18 @@ let str_replace filters s =
       Re.replace_string (Re.compile re) ~by s)
     s filters
 
-let str_replace_path filters s =
+let str_replace_path ?(escape=false) whichway filters s =
+  let escape =
+    if escape then Re.(replace_string (compile @@ char '\\') ~by:"\\\\")
+    else fun s -> s
+  in
   List.fold_left (fun s (re, by) ->
       let re_path = Re.(
           seq [re; group (rep (diff any space))]
         ) in
       Re.replace (Re.compile re_path) s
         ~f:(fun g ->
-            by ^ OpamSystem.back_to_forward (Re.Group.get g 1)))
+            escape (by ^ whichway (Re.Group.get g 1))))
     s filters
 
 let command
@@ -153,7 +157,7 @@ let command
   let rec filter_output ?(first=true) ic =
     match input_line ic with
     | s ->
-      let s = str_replace_path filter s in
+      let s = str_replace_path OpamSystem.back_to_forward filter s in
       if s = "\\c" then filter_output ~first ic
       else
         (if not first then Buffer.add_char out_buf '\n';
@@ -359,7 +363,9 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
     List.map (fun a ->
         let expanded =
           if a <> "" && a.[0] = '\'' then a
-          else str_replace var_filters a
+          else
+            str_replace_path ~escape:true OpamSystem.forward_to_back
+              var_filters a
         in
         Parse.get_str expanded)
       args

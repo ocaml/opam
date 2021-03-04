@@ -551,6 +551,8 @@ build: [ "./build.sh" ]
 
 OPAM=$(cygpath ${OPAM} 2>/dev/null || echo ${OPAM})
 
+opam() { $OPAM "$@" | tr -d '\r'; }
+
 if [ $OPAM_PACKAGE_VERSION -eq 2 ]; then
     if [ "X${P1:-}" != "Xversion1" ]; then
         echo "P1 not set to version1 while P1.1 should be installed" >&2
@@ -564,8 +566,7 @@ else
 fi
 
 echo "Building P4 with ${OPAM}"
-LIBDIR="`${OPAM} var lib | tr -d '\r'`"
-COMP="-I ${LIBDIR}/P1 -I ${LIBDIR}/P2 -I ${LIBDIR}/P3"
+COMP="-I $(opam var P1:lib) -I $(opam var P2:lib) -I $(opam var P3:lib)"
 LINK="p1.cmxa p2.cmxa p3.cmxa p3_bar.cmxa"
 
 OCAMLC=ocamlc
@@ -1231,8 +1232,7 @@ Switch invariant: ["ocaml" {= "system"}]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml.system
 Done.
-### opam var ext_lib=$LIB_EXT --switch test
-Added 'ext_lib: "a"' to field variables in switch test
+### opam var ext_lib=$LIB_EXT --switch test | '.*' -> '\c'
 ### opam list -is --columns=package
 ocaml.system
 ### opam switch import test.export | unordered
@@ -1263,8 +1263,7 @@ Switch invariant: ["ocaml" {= "20"}]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml.20
 Done.
-### opam var ext_lib=$LIB_EXT --switch test2
-Added 'ext_lib: "a"' to field variables in switch test2
+### opam var ext_lib=$LIB_EXT --switch test2 | '.*' -> '\c'
 ### opam list -is --columns=package
 ocaml.20
 ### opam install P1
@@ -1306,8 +1305,7 @@ ocaml.system
 P1.1
 P2.1
 ### opam switch create 10+a+b --empty
-### opam var ext_lib=$LIB_EXT --switch 10+a+b | unordered
-Added 'ext_lib: "a"' to field variables in switch 10+a+b
+### opam var ext_lib=$LIB_EXT --switch 10+a+b | '.*' -> '\c'
 ### opam install ocaml.10+a+b P1 P2 P3 P4 | unordered
 The following actions will be performed:
   - install ocaml 10+a+b
