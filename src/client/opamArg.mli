@@ -51,6 +51,12 @@ val mk_flag:
   ?section:string -> string list -> string ->
   bool Term.t
 
+(* Deprecate and replace a [flags]. Constructs a [vflag] with the deprecated
+   option and the new one *)
+val mk_flag_replaced:
+  cli:OpamCLIVersion.Sourced.t -> ?section:string -> (validity * string list) list ->
+  string -> bool Term.t
+
 val mk_opt:
   cli:OpamCLIVersion.Sourced.t -> validity ->
   ?section:string -> ?vopt:'a -> string list -> string -> string ->

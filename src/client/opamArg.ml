@@ -805,6 +805,10 @@ module Mk : sig
     cli:OpamCLIVersion.Sourced.t -> validity -> ?section:string -> string list ->
     string -> bool Term.t
 
+  val mk_flag_replaced:
+    cli:OpamCLIVersion.Sourced.t -> ?section:string -> (validity * string list) list ->
+    string -> bool Term.t
+
   val mk_opt:
     cli:OpamCLIVersion.Sourced.t -> validity -> ?section:string -> ?vopt:'a ->
     string list -> string -> string -> 'a Arg.converter -> 'a -> 'a Term.t
@@ -1034,6 +1038,10 @@ end = struct
       | None -> `Ok (elem_of_vr elem)
     in
     term_cli_check ~check Arg.(vflag (`Valid default) info_flags)
+
+  let mk_flag_replaced ~cli ?section flags doc =
+    let flags = List.map (fun (c,f) -> c, true, f, doc) flags in
+    mk_vflag ~cli ?section false flags
 
   let mk_vflag_all ~cli ?section ?(default=[]) flags =
     let flags = List.map (fun (v,c,f,d) -> contented_validity v c, f, d) flags in
@@ -1632,14 +1640,12 @@ let build_options cli =
       Arg.(some (list package_name)) None ~vopt:(Some [])
   in
   let unlock_base =
-    mk_vflag ~cli ~section false ([
-        cli_between cli2_0 cli2_1 ~replaced:"--update-invariant", true, ["unlock-base"] ;
-        cli_from cli2_1, true, ["update-invariant"]
-      ] |> List.map (fun (c,v,f) ->
-        c,v,f,
-        "Allow changes to the packages set as switch base (typically, the main \
-         compiler). Use with caution. This is equivalent to setting the \
-         $(b,\\$OPAMUNLOCKBASE) environment variable"))
+    mk_flag_replaced ~cli ~section [
+      cli_between cli2_0 cli2_1 ~replaced:"--update-invariant", ["unlock-base"];
+      cli_from cli2_1, ["update-invariant"]
+    ] "Allow changes to the packages set as switch base (typically, the main \
+       compiler). Use with caution. This is equivalent to setting the \
+       $(b,\\$OPAMUNLOCKBASE) environment variable"
   in
   let locked = locked cli ~section in
   let lock_suffix = lock_suffix cli ~section in
