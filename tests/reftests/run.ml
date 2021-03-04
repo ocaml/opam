@@ -336,7 +336,7 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
       seq [opt (str "/private");
            alt [str tmpdir;
                 str (OpamSystem.back_to_forward tmpdir)];
-           rep (char '/');
+           rep (set "/\\");
            str "opam-";
            rep1 (alt [alnum; char '-'])],
       "${OPAMTMP}";
