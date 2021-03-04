@@ -1287,11 +1287,13 @@ let build_options cli =
        also installation. This is equivalent to setting $(b,\\$OPAMWITHDOC) \
        (or the deprecated $(b,\\$OPAMBUILDDOC)) to \"true\"." in
   let make =
-    mk_opt ~cli cli_original ~section ["m";"make"] "MAKE"
-      "Use $(docv) as the default 'make' command. Deprecated: use $(b,opam \
-       config set[-global] make MAKE) instead. Has no effect if the $(i,make) \
-       variable is defined."
-      Arg.(some string) None in
+    mk_opt ~cli (cli_between cli2_0 cli2_1
+                   ~replaced:"opam config set[-global] make MAKE")
+      ~section ["m";"make"] "MAKE"
+      "Use $(docv) as the default 'make' command. Has no effect if the \
+       $(i,make) variable is defined."
+      Arg.(some string) None
+  in
   let show =
     mk_flag ~cli cli_original ~section ["show-actions"]
       "Call the solver and display the actions. Don't perform any changes. \
