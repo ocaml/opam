@@ -59,33 +59,29 @@ add_dune_cache_mount() {
   add_mounts rw "$dune_cache"
 }
 
+# mount unusual path in ro
+if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
+   add_mounts ro $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
+fi
+
+# When using opam variable that must be defined at action time, add them also
+# at init check in OpamAuxCommands.check_and_revert_sandboxing (like
+# OPAM_SWITCH_PREFIX).
 # This case-switch should remain identical between the different sandbox implems
 COMMAND="$1"; shift
 case "$COMMAND" in
     build)
-        # mount unusual path in ro
-        if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
-           add_mounts ro $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
-        fi
         add_mounts ro "$OPAM_SWITCH_PREFIX"
         add_mounts rw "$PWD"
         add_ccache_mount
         add_dune_cache_mount
         ;;
     install)
-        # mount unusual path in ro
-        if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
-           add_mounts ro  $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
-        fi
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
         add_mounts rw "$PWD"
         ;;
     remove)
-        # mount unusual path in ro
-        if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
-           add_mounts ro $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
-        fi
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
         if [ "X${PWD#$OPAM_SWITCH_PREFIX/.opam-switch/}" != "X${PWD}" ]; then
