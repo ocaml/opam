@@ -12,8 +12,9 @@ New option/command/subcommand are prefixed with ◈.
 ## Init
   *
 
-## Config Upgrade
-  *
+## Config report
+  * Fix `Not_found` (config file) error [#4570 @rjbou]
+  * Print variables of installed compilers and their (installed) dependencies [#4570 @rjbou]
 
 ## Install
   * Don't patch twice [#4529 @rjbou]
