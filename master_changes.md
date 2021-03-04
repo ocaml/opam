@@ -33,6 +33,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fetch sources when pinning an already pinned package with a different url when using working directory [#4542 @rjbou - fix #4484]
   * Don't ask for confirmation for pinning base packages (similarly makes no
     sense with 2.1 switch invariants) [#4571 @dra27]
+  * Fix version pin source retrieving: mustn't error if archive opam file is malformed [#4580 @rjbou]
 
 ## List
   * --silent renamed to --check [#4595 @dra27 - fix #4323]
