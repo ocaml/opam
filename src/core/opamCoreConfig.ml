@@ -10,7 +10,7 @@
 
 open OpamCompat
 
-module StringMap = Map.Make(String)
+module StringMap = OpamStd.String.Map
 
 type t = {
   debug_level: int;
@@ -110,6 +110,39 @@ let set t = setk (fun x () -> x) t
 let r = ref default
 
 let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
+
+let initk k =
+  let open OpamStd in
+  let open OpamStd.Config in
+  let utf8 = Option.Op.(
+      env_when_ext "UTF8" ++
+      (env_bool "UTF8MSGS" >>= function
+        | true -> Some `Extended
+        | false -> None)
+    ) in
+  let answer = match env_bool "YES", env_bool "NO" with
+    | Some true, _ -> Some (Some true)
+    | _, Some true -> Some (Some false)
+    | None, None -> None
+    | _ -> Some None
+  in
+  (setk (setk (fun c -> r := c; k)) !r)
+    ?debug_level:(env_level "DEBUG")
+    ?debug_sections:(env_sections "DEBUGSECTIONS")
+    ?verbose_level:(env_level "VERBOSE")
+    ?color:(env_when "COLOR")
+    ?utf8
+    ?disp_status_line:(env_when "STATUSLINE")
+    ?answer
+    ?safe_mode:(env_bool "SAFE")
+    ?log_dir:(env_string "LOGS")
+    ?keep_log_dir:(env_bool "KEEPLOGS")
+    ?errlog_length:(env_int "ERRLOGLEN")
+    ?merged_output:(env_bool "MERGEOUT")
+    ?use_openssl:(env_bool "USEOPENSSL")
+    ?precise_tracking:(env_bool "PRECISETRACKING")
+
+let init ?noop:_ = initk (fun () -> ())
 
 #ifdef DEVELOPER
 let developer = true

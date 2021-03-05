@@ -11,12 +11,10 @@
 (** Configuration options for the core lib (record, global reference and
     setter) *)
 
-module StringMap : Map.S with type key = string
-
 type t = private {
   debug_level : int;
   (** Controls debug messages, 0 to disable *)
-  debug_sections : int option StringMap.t;
+  debug_sections : int option OpamStd.String.Map.t;
   (** Controls which sections display debugging messages. If empty, all messages
       are displayed. *)
   verbose_level : int;
@@ -56,7 +54,7 @@ type t = private {
 
 type 'a options_fun =
   ?debug_level:int ->
-  ?debug_sections:int option StringMap.t ->
+  ?debug_sections:int option OpamStd.String.Map.t ->
   ?verbose_level:int ->
   ?color:[ `Always | `Never | `Auto ] ->
   ?utf8:[ `Extended | `Always | `Never | `Auto ] ->
@@ -80,6 +78,14 @@ val setk : (t -> 'a) -> t -> 'a options_fun
 val r : t ref
 
 val update : ?noop:_ -> (unit -> unit) options_fun
+
+(** Sets the OpamCoreConfig options, reading the environment to get default
+    values when unspecified *)
+val init: ?noop:_ -> (unit -> unit) options_fun
+
+(** Like [init], but returns the given value. For optional argument
+    stacking *)
+val initk: 'a -> 'a options_fun
 
 (** [true] if OPAM was compiled in developer mode *)
 val developer : bool

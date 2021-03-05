@@ -205,7 +205,7 @@ let opam_init ?root_dir ?strict ?solver =
     else log_dir
   in
   (fun () -> ()) |>
-  OpamStd.Config.initk ?log_dir |>
+  OpamCoreConfig.initk ?log_dir |>
   OpamRepositoryConfig.initk |>
   OpamSolverConfig.initk ?solver |>
   OpamStateConfig.initk ~root_dir:root |>

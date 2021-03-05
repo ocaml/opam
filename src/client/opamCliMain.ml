@@ -134,7 +134,7 @@ let check_and_run_external_commands () =
     (* No such command, check if there is a matching plugin *)
     let command = plugin_prefix ^ name in
     let answer = if yes then Some true else OpamStd.Config.env_bool "YES" in
-    OpamStd.Config.init ~answer ();
+    OpamCoreConfig.init ~answer ();
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
     let has_init = OpamStateConfig.load_defaults root_dir <> None in

@@ -1436,9 +1436,9 @@ module Config = struct
         let (section, level) =
           Option.map_default parse_value (elt, None) (OpamString.cut_at elt ':')
         in
-        OpamCoreConfig.StringMap.add section level map
+        OpamString.Map.add section level map
       in
-      List.fold_left f OpamCoreConfig.StringMap.empty (OpamString.split s ' ')) var
+      List.fold_left f OpamString.Map.empty (OpamString.split s ' ')) var
 
   let env_string var =
     env (fun s -> s) var
@@ -1466,37 +1466,6 @@ module Config = struct
     | `Always -> true
     | `Never -> false
     | `Auto -> Lazy.force auto
-
-  let initk k =
-    let utf8 = Option.Op.(
-        env_when_ext "UTF8" ++
-        (env_bool "UTF8MSGS" >>= function
-          | true -> Some `Extended
-          | false -> None)
-      ) in
-    let answer = match env_bool "YES", env_bool "NO" with
-      | Some true, _ -> Some (Some true)
-      | _, Some true -> Some (Some false)
-      | None, None -> None
-      | _ -> Some None
-    in
-    OpamCoreConfig.(setk (setk (fun c -> r := c; k)) !r)
-      ?debug_level:(env_level "DEBUG")
-      ?debug_sections:(env_sections "DEBUGSECTIONS")
-      ?verbose_level:(env_level "VERBOSE")
-      ?color:(env_when "COLOR")
-      ?utf8
-      ?disp_status_line:(env_when "STATUSLINE")
-      ?answer
-      ?safe_mode:(env_bool "SAFE")
-      ?log_dir:(env_string "LOGS")
-      ?keep_log_dir:(env_bool "KEEPLOGS")
-      ?errlog_length:(env_int "ERRLOGLEN")
-      ?merged_output:(env_bool "MERGEOUT")
-      ?use_openssl:(env_bool "USEOPENSSL")
-      ?precise_tracking:(env_bool "PRECISETRACKING")
-
-  let init ?noop:_ = initk (fun () -> ())
 end
 
 module List = OpamList

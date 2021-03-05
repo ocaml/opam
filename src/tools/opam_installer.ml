@@ -386,7 +386,7 @@ let info =
 
 let () =
   OpamSystem.init ();
-  OpamStd.Config.init ();
+  OpamCoreConfig.init ();
   try
     match
       Term.eval ~catch:false (command,info)

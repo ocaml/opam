@@ -115,7 +115,7 @@ val opam_init:
   ?retries:int ->
   ?force_checksums:bool option ->
   ?debug_level:int ->
-  ?debug_sections:int option OpamCoreConfig.StringMap.t ->
+  ?debug_sections:int option OpamStd.String.Map.t ->
   ?verbose_level:int ->
   ?color:[ `Always | `Auto | `Never ] ->
   ?utf8:[ `Always | `Auto | `Extended | `Never ] ->

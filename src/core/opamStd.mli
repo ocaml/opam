@@ -549,7 +549,7 @@ module Config : sig
   (* Like [env_int], but accept boolean values for 0 and 1 *)
   val env_level: env_var -> int option
 
-  val env_sections: env_var -> int option OpamCoreConfig.StringMap.t option
+  val env_sections: env_var -> int option String.Map.t option
 
   val env_string: env_var -> string option
 
@@ -560,14 +560,6 @@ module Config : sig
   val env_when_ext: env_var -> [ `Extended | `Always | `Never | `Auto ] option
 
   val resolve_when: auto:(bool Lazy.t) -> [ `Always | `Never | `Auto ] -> bool
-
-  (** Sets the OpamCoreConfig options, reading the environment to get default
-      values when unspecified *)
-  val init: ?noop:_ -> (unit -> unit) OpamCoreConfig.options_fun
-
-  (** Like [init], but returns the given value. For optional argument
-      stacking *)
-  val initk: 'a -> 'a OpamCoreConfig.options_fun
 
   module type Sig = sig
 
