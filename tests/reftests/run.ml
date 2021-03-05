@@ -93,10 +93,14 @@ let cleanup_path path =
   with Not_found -> path
 
 let base_env =
+  let propagate v = try [v, Sys.getenv v] with Not_found -> [] in
   (try ["PATH", (Sys.getenv "PATH" |> cleanup_path)] with Not_found -> []) @
-  (try ["HOME", Sys.getenv "HOME"] with Not_found -> []) @
-  (try ["COMSPEC", Sys.getenv "COMSPEC"] with Not_found -> []) @
-  (try ["LIB", Sys.getenv "LIB"] with Not_found -> []) @
+  propagate "HOME" @
+  propagate "COMSPEC" @
+  propagate "LIB" @
+  propagate "SYSTEMROOT" @
+  propagate "TMPDIR" @
+  propagate "TEMP" @
   [
     "OPAMKEEPBUILDDIR", "1";
     "OPAMCOLOR", "never";
@@ -104,8 +108,6 @@ let base_env =
     "OPAMNOENVNOTICE", "1";
     "OPAMNODEPEXTS", "1";
     "OPAMDOWNLOADJOBS", "1";
-    "TMPDIR", Filename.get_temp_dir_name ();
-    "TEMP", Filename.get_temp_dir_name ();
   ]
 
 (* See [opamprocess.safe_wait] *)
