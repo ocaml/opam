@@ -486,14 +486,6 @@ and source_pin
       (* else raise Exns.Aborted *);
       cur_version, cur_urlf
     with Not_found ->
-      if OpamPackage.has_name st.compiler_packages name then (
-        OpamConsole.warning
-          "Package %s is part of the base packages of this compiler."
-          (OpamPackage.Name.to_string name);
-        if not @@ OpamConsole.confirm
-            "Are you sure you want to override this and pin it anyway?"
-        then raise Aborted
-      );
       let version = default_version st name in
       version, None
   in
