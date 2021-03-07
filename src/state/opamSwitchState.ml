@@ -357,12 +357,6 @@ let load lock_kind gt rt switch =
         opams installed_opams
       |> OpamPackage.keys
     in
-    let changed =
-      changed --
-      OpamPackage.Set.filter
-        (fun nv -> not (OpamPackage.has_name pinned nv.name))
-        compiler_packages
-    in
     log "Detected changed packages (marked for reinstall): %a"
       (slog OpamPackage.Set.to_string) changed;
     changed
