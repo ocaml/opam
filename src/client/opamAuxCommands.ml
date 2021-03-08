@@ -302,7 +302,7 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath atom_or_local_list
           let pinned_pkg = OpamPinned.package st name in
           OpamSwitchState.primary_url st pinned_pkg = Some target
           &&
-          (* For `opam show`, we need to check is the opam file changed to
+          (* For `opam show`, we need to check does the opam file changed to
              perform a simulated pin if so *)
           (not for_view ||
            match
@@ -432,16 +432,19 @@ let autopin st ?(simulate=false) ?quiet ?recurse ?subpath atom_or_local_list =
         (OpamPackage.Name.Set.elements
            (OpamPackage.names_of_packages obsolete_pins))
   in
-  let st =
-    let working_dir =
-      if OpamClientConfig.(!r.working_dir || !r.inplace_build) then already_pinned_set
-      else OpamPackage.Set.empty
-    in
-    let _result, st, _updated =
-      OpamUpdate.dev_packages st ~working_dir already_pinned_set
-    in
-    st
+  let already_pinned_diff_url =
+    (* is pinned but no in already pinned because not same url *)
+    List.fold_left (fun set (n,_,_,_) ->
+        match
+          OpamStd.Option.map
+            (fun nv -> OpamPackage.Set.mem nv already_pinned_set)
+            (OpamPinned.package_opt st n)
+        with
+        | Some false -> OpamPackage.Name.Set.add n set
+        | _ -> set
+      ) OpamPackage.Name.Set.empty to_pin
   in
+
   let st, pins =
     if simulate then simulate_local_pinnings ?quiet st to_pin else
     try
@@ -460,11 +463,21 @@ let autopin st ?(simulate=false) ?quiet ?recurse ?subpath atom_or_local_list =
     with OpamPinCommand.Aborted ->
       OpamStd.Sys.exit_because `Aborted
   in
+  let _result, st, _updated =
+    let already_pinned =
+      OpamPackage.Set.union already_pinned_set
+        (OpamPackage.packages_of_names pins already_pinned_diff_url)
+    in
+    if OpamClientConfig.(!r.working_dir || !r.inplace_build) then
+      OpamUpdate.dev_packages st ~working_dir:pins pins
+    else
+      OpamUpdate.dev_packages st ~working_dir:OpamPackage.Set.empty already_pinned
+  in
   let st =
     if OpamClientConfig.(!r.ignore_pin_depends) then st else
-    OpamPackage.Set.fold (fun nv st ->
-        OpamPinCommand.handle_pin_depends st nv (OpamSwitchState.opam st nv))
-      (OpamPackage.Set.union pins already_pinned_set) st
+      OpamPackage.Set.fold (fun nv st ->
+          OpamPinCommand.handle_pin_depends st nv (OpamSwitchState.opam st nv))
+        (OpamPackage.Set.union pins already_pinned_set) st
   in
   st, atoms
 

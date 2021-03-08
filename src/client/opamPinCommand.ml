@@ -366,19 +366,18 @@ let default_version st name =
   try OpamPackage.version (OpamSwitchState.get_package st name)
   with Not_found -> OpamPackage.Version.of_string "~dev"
 
-let fetch_all_pins st pins =
+let fetch_all_pins st ?working_dir pins =
   let root = st.switch_global.root in
   let fetched =
     let cache_dir =
       OpamRepositoryPath.download_cache OpamStateConfig.(!r.root_dir)
     in
     let command (name, url, subpath) =
-      let srcdir =
-        OpamPath.Switch.pinned_package root st.switch
-          (OpamPackage.Name.of_string name)
-      in
+      let srcdir = OpamPath.Switch.pinned_package root st.switch name in
+      let name = OpamPackage.Name.to_string name in
       OpamProcess.Job.Op.(
-        OpamRepository.pull_tree ~cache_dir ?subpath name srcdir [] [url]
+        OpamRepository.pull_tree ~cache_dir ?subpath ?working_dir
+          name srcdir [] [url]
         @@| fun r -> (name, url, subpath, r))
     in
     OpamParallel.map ~jobs:OpamStateConfig.(!r.dl_jobs) ~command pins
@@ -427,7 +426,7 @@ let rec handle_pin_depends st nv opam =
        (let extra_pins =
           let urls_ok =
             fetch_all_pins st (List.map (fun (nv, u) ->
-                OpamPackage.name_to_string nv, u, None) extra_pins)
+                OpamPackage.name nv, u, None) extra_pins)
           in
           List.filter (fun (_, url) -> List.mem (url, None) urls_ok) extra_pins
         in
