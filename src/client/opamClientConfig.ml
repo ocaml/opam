@@ -143,7 +143,7 @@ let initk k =
     ?json_out:(env_string "JSON" >>| function "" -> None | s -> Some s)
     ?root_is_ok:(env_bool "ROOTISOK")
     ?no_auto_upgrade:(env_bool "NOAUTOUPGRADE")
-    ?assume_depexts:None
+    ?assume_depexts:(env_bool "ASSUMEDEPEXTS")
     ?cli:None
 
 let init ?noop:_ = initk (fun () -> ())
