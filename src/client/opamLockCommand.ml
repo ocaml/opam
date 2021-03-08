@@ -37,12 +37,12 @@ let select_packages atom_locs st =
      let packages =
        OpamPackage.Name.Set.fold (fun name acc ->
            let pkgs = OpamPackage.packages_of_name packages name in
-           let pkg =
+           let pkg, is_pinned =
              let open OpamPackage.Set.Op in
              let pinned = pkgs %% st.pinned in
              if OpamPackage.Set.is_empty pinned then
-               pkgs %% st.installed
-             else pinned
+               pkgs %% st.installed, false
+             else pinned, true
            in
            let nv =
              match OpamPackage.Set.elements pkg with
@@ -55,9 +55,33 @@ let select_packages atom_locs st =
                   (OpamConsole.colorise `underline (OpamPackage.version_to_string nv));
                 nv)
            in
+           let opam =
+             if is_pinned then
+               let open OpamStd.Option.Op in
+               match
+                 OpamSwitchState.opam st nv
+                 |> OpamFile.OPAM.url
+                 >>| OpamFile.URL.url
+                 >>= OpamUrl.local_dir
+                 >>= OpamPinned.find_opam_file_in_source name
+                 >>| OpamFile.OPAM.read
+               with
+               | Some opam ->
+                 (* we add the name/version because of an [OpamFile.OPAM.package] in all depends *)
+                 let opam =
+                   if OpamFile.OPAM.name_opt opam = None then
+                     OpamFile.OPAM.with_name name opam
+                   else opam
+                 in
+                 if OpamFile.OPAM.version_opt opam  = None then
+                   OpamFile.OPAM.with_version (OpamPackage.version nv) opam
+                 else opam
+               | None -> OpamSwitchState.opam st nv
+             else OpamSwitchState.opam st nv
+           in
            let atoms =
-             OpamFormula.atoms (OpamPackageVar.all_depends ~depopts:false st
-                                  (OpamSwitchState.opam st nv))
+             OpamFormula.atoms
+               (OpamPackageVar.all_depends ~depopts:false st opam)
            in
            let missing =
              List.filter (fun (n,vc) ->
