@@ -250,7 +250,17 @@ let rec main_catch_all f =
   | OpamStd.Sys.Exit 0 -> ()
   | OpamStd.Sys.Exec (cmd,args,env) ->
     OpamStd.Sys.exec_at_exit ();
-    Unix.execvpe cmd args env
+    if Sys.win32 then
+      OpamProcess.create_process_env cmd args env
+        Unix.stdin Unix.stdout Unix.stderr
+      |> Unix.waitpid []
+      |> function
+      | _, Unix.WEXITED n -> exit n
+      | _, (Unix.WSIGNALED n | Unix.WSTOPPED n) -> exit (128 - n)
+      (* This is not how you should handle `WSTOPPED` ; but it doesn't happen on
+         Windows anyway. *)
+    else
+      Unix.execvpe cmd args env
   | OpamFormatUpgrade.Upgrade_done conf ->
     main_catch_all @@ fun () ->
     OpamConsole.header_msg "Rerunning init and update";

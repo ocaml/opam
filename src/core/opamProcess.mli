@@ -214,3 +214,10 @@ type 'a job = 'a Job.Op.job
 (**/**)
 val set_resolve_command :
   (?env:string array -> ?dir:string -> string -> string option) -> unit
+
+(** Like Unix.create_process_env, but with correct escaping of arguments when
+    invoking cygwin executables *)
+val create_process_env :
+  string -> string array -> string array ->
+  Unix.file_descr -> Unix.file_descr -> Unix.file_descr ->
+  int

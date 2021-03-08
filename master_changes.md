@@ -7,7 +7,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Global CLI
-  *
+  * Fix `opam exec` on native Windows when calling cygwin executables (@AltGr)
 
 ## Init
   *

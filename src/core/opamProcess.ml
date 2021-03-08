@@ -310,6 +310,13 @@ let set_resolve_command =
     resolve_command_fn := resolve_command
 let resolve_command cmd = !resolve_command_fn cmd
 
+let create_process_env cmd args env cin cout cerr =
+  let resolve cmd = OpamStd.Option.default cmd @@ resolve_command cmd in
+  if Sys.win32 && OpamStd.Sys.is_cygwin_variant (resolve cmd) = `Cygwin then
+    cygwin_create_process_env cmd args env cin cout cerr
+  else
+    Unix.create_process_env cmd args env cin cout cerr
+
 (** [create cmd args] create a new process to execute the command
     [cmd] with arguments [args]. If [stdout_file] or [stderr_file] are
     set, the channels are redirected to the corresponding files.  The
