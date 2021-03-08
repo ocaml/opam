@@ -24,9 +24,11 @@ let pin_cache_dir =
 
 let pin_cache u =
   pin_cache_dir () /
-  (OpamHash.contents @@
-   OpamHash.compute_from_string ~kind:`SHA512 @@
-   OpamUrl.to_string u)
+  String.sub
+    (OpamHash.contents @@
+     OpamHash.compute_from_string ~kind:`SHA512 @@
+     OpamUrl.to_string u)
+    0 16
 
 let repo repo_root = repo_root // "repo" |> OpamFile.make
 
