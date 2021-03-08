@@ -135,7 +135,7 @@ let initk k =
     ?unlock_base:(env_bool "UNLOCKBASE")
     ?no_env_notice:(env_bool "NOENVNOTICE")
     ?locked:(env_string "LOCKED" >>| function "" -> None | s -> Some s)
-    ?no_depexts:None
+    ?no_depexts:(env_bool "NODEPEXTS")
 
 let init ?noop:_ = initk (fun () -> ())
 
