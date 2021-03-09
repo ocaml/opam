@@ -10,9 +10,19 @@ fi
 # defined. See .github/workflows/ci.yml hygiene job.
 
 if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-  # needed or git diffs and rev-list
-  git fetch origin 2.0
-  git fetch origin $GITHUB_REF
+  # needed for git diffs and rev-list
+  # we need to get history from base ref to head ref for check configure
+  depth=10
+  set +e
+  git cat-file -e $BASE_REF_SHA
+  r=$?
+  while [ $r -ne 0 ] ; do
+    git fetch origin $GITHUB_REF --depth=$depth
+    depth=$(( $depth + 10 ))
+    git cat-file -e $BASE_REF_SHA
+    r=$?
+  done
+  set -e
 fi
 
 CheckConfigure () {
