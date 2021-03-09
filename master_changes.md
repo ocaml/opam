@@ -101,7 +101,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix temporary file with a too long name causing errors on Windows [#4590 @AltGr]
 
 ## Test
-  *
+  * Fix configure check in github actions [#4593 @rjbou]
 
 ## Shell
   *
