@@ -14,8 +14,7 @@ AS_IF([ test -x bootstrap/ocaml/bin/ocamlc -o -x bootstrap/ocaml/bin/ocamlopt ],
   export PATH="$PATH_PREPEND$PATH"
 ])
 
-# XXX This isn't strictly correct for Windows
-MIN_OCAML_VERSION=4.02.3
+MIN_OCAML_VERSION=4.08.0
 
 AC_PROG_OCAML
 if test "x$OCAMLC" = "xno"; then
@@ -80,15 +79,6 @@ AS_IF([test "x" != "x$LIB_PREFIX"], [
 AC_SUBST(LIB_PREFIX,$LIB_PREFIX)
 AC_SUBST(CPATH,$CPATH)
 AC_SUBST(LIBRARY_PATH,$LIBRARY_PATH)
-
-# Check that OCaml version is greater or equal to 4.02.3
-# Native Windows builds require at least 4.06.0 for the Unicode runtime.
-AS_IF([test "x${enable_version_check}" != "xno"], [
-  AS_IF([ test ${WIN32} -eq 1 ],[MIN_OCAML_VERSION=4.06.0])
-  AX_COMPARE_VERSION(
-    [$OCAMLVERSION], [lt], [$MIN_OCAML_VERSION],
-    AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported]))
-])
 
 AC_MSG_CHECKING([for compiler type])
 CCOMP_TYPE=`$OCAML shell/print_config.ml ccomp_type 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/ccomp_type: //p"`
@@ -254,6 +244,8 @@ AC_CHECK_TOOL(CPPO,cppo)
 AC_CHECK_TOOL(PATCH,patch)
 AC_CHECK_TOOL(BUNZIP2,bunzip2)
 
+# NOTE: Currently we require OCaml >= 4.08 so this is not used
+# however it might be useful in the future so it is kept here.
 AX_COMPARE_VERSION([$OCAMLVERSION], [lt], [4.07.0],
   [DUNE_SECONDARY=src_ext/secondary/ocaml/bin/ocaml],
   [DUNE_SECONDARY=])
