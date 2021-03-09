@@ -317,7 +317,7 @@ let create_process_env =
       if OpamStd.(Option.map_default Sys.is_cygwin_variant `Native resolved_cmd) = `Cygwin then
         cygwin_create_process_env cmd
       else
-        Unix.create_process_env
+        Unix.create_process_env cmd
   else
     Unix.create_process_env
 
