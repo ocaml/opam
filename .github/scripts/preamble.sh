@@ -25,8 +25,8 @@ case $GITHUB_EVENT_NAME in
   BRANCH=master
 esac
 
-git config --global user.email "travis@example.com"
-git config --global user.name "Travis CI"
+git config --global user.email "gha@example.com"
+git config --global user.name "Github Actions CI"
 git config --global gc.autoDetach false
 
 # Disable bubblewrap wrapping, it's not available within Docker
