@@ -23,8 +23,9 @@ if [ -z ${TMPDIR+x} ]; then
   # directory differently; the latter should be made readable/writable
   # too and getconf seems to be a robust way to get it
   if [ -z /usr/bin/getconf ]; then
-    TMP=$(getconf DARWIN_USER_TEMP_DIR)
-    add_mounts rw "$TMP"
+    TMPDIR=$(getconf DARWIN_USER_TEMP_DIR)
+    add_mounts rw "$TMPDIR"
+    export TMPDIR
   fi
 else
   add_mounts rw "$TMPDIR"
@@ -49,10 +50,19 @@ add_ccache_mount() {
 }
 
 add_dune_cache_mount() {
-  local dune_cache=${XDG_CACHE_HOME:-$HOME/.cache}/dune
+  local u_cache=${XDG_CACHE_HOME:-$HOME/.cache}
+  local u_dune_cache=$u_cache/dune
+  local cache=$(readlink -m "$u_cache")
+  local dune_cache=$cache/dune
+  local dune_cache=$(readlink -m "$u_dune_cache")
   mkdir -p "${dune_cache}"
   add_mounts rw "$dune_cache"
 }
+
+# mount unusual path in ro
+if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
+   add_mounts ro $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
+fi
 
 # When using opam variable that must be defined at action time, add them also
 # at init check in OpamAuxCommands.check_and_revert_sandboxing (like
@@ -74,7 +84,7 @@ case "$COMMAND" in
     remove)
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
-        if [ "X${PWD#$OPAM_SWITCH_PREFIX/.opam-switch}" != "X${PWD}" ]; then
+        if [ "X${PWD#$OPAM_SWITCH_PREFIX/.opam-switch/}" != "X${PWD}" ]; then
           add_mounts rw "$PWD"
         fi
         ;;
