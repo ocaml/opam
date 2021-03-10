@@ -1411,20 +1411,27 @@ module Config = struct
         "Invalid value for environment variable OPAM%s, ignored." var;
       None
 
+  let bool_of_string s =
+    match String.lowercase_ascii s with
+    | "" | "0" | "no" | "false" -> Some false
+    | "1" | "yes" | "true" -> Some true
+    | _ -> None
+
   let env_bool var =
-    env (fun s -> match String.lowercase_ascii s with
-        | "" | "0" | "no" | "false" -> false
-        | "1" | "yes" | "true" -> true
-        | _ -> failwith "env_bool")
+    env (fun s -> match bool_of_string s with
+        | Some s -> s
+        | None -> failwith "env_bool")
       var
 
   let env_int var = env int_of_string var
 
   let env_level var =
-    env (fun s -> match String.lowercase_ascii s with
-        | "" | "no" | "false" -> 0
-        | "yes" | "true" -> 1
-        | s -> int_of_string s)
+    env (function s ->
+        if s = "" then 0 else
+        match bool_of_string s with
+        | Some true -> 0
+        | Some false -> 1
+        | None -> int_of_string s)
       var
 
   let env_sections var =

@@ -543,6 +543,9 @@ module Config : sig
   type when_ = [ `Always | `Never | `Auto ]
   type when_ext = [ `Extended | when_ ]
 
+  (* Parse a envrionement variable boolean value *)
+  val bool_of_string: string -> bool option
+
   val env: (string -> 'a) -> string -> 'a option
 
   val env_bool: env_var -> bool option
