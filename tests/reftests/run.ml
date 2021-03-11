@@ -157,7 +157,7 @@ let command
   let ic = Unix.in_channel_of_descr input in
   set_binary_mode_in ic false;
   let pid =
-    Unix.create_process_env cmd (Array.of_list (cmd::args)) env
+    OpamProcess.create_process_env cmd (Array.of_list (cmd::args)) env
       Unix.stdin stdout stdout
   in
   Unix.close stdout;

@@ -176,7 +176,7 @@ tests: $(DUNE_DEP)
 	echo "###     TESTS RESULT SUMMARY     ###"; \
 	for t in _build/default/tests/reftests/*.test; do \
 	  printf "%-30s" $$(basename $$t .test); \
-	  if diff -q $$t $${t%.test}.out >/dev/null; \
+	  if diff -q --strip-trailing-cr $$t $${t%.test}.out >/dev/null; \
 	  then printf '\033[32m[ OK ]\033[m\n'; \
 	  else printf '\033[31m[FAIL]\033[m\n'; \
 	  fi; \
