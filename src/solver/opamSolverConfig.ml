@@ -8,6 +8,46 @@
 (*                                                                        *)
 (**************************************************************************)
 
+module E = struct
+
+  type OpamStd.Config.E.t +=
+    | BESTEFFORT of bool option
+    | BESTEFFORTPREFIXCRITERIA of string option
+    | CRITERIA of string option
+    | CUDFFILE of string option
+    | CUDFTRIM of string option
+    | DIGDEPTH of int option
+    | EXTERNALSOLVER of string option
+    | FIXUPCRITERIA of string option
+    | NOASPCUD of bool option
+    | PREPRO of bool option
+    | SOLVERALLOWSUBOPTIMAL of bool option
+    | SOLVERTIMEOUT of float option
+    | UPGRADECRITERIA of string option
+    | USEINTERNALSOLVER of bool option
+    | VERSIONLAGPOWER of int option
+
+  open OpamStd.Config.E
+  let besteffort = value (function BESTEFFORT b -> b | _ -> None)
+  let besteffortprefixcriteria =
+    value (function BESTEFFORTPREFIXCRITERIA s -> s | _ -> None)
+  let criteria = value (function CRITERIA s -> s | _ -> None)
+  let cudffile = value (function CUDFFILE s -> s | _ -> None)
+  let cudftrim = value (function CUDFTRIM s -> s | _ -> None)
+  let digdepth = value (function DIGDEPTH i -> i | _ -> None)
+  let externalsolver = value (function EXTERNALSOLVER s -> s | _ -> None)
+  let fixupcriteria = value (function FIXUPCRITERIA s -> s | _ -> None)
+  let noaspcud = value (function NOASPCUD b -> b | _ -> None)
+  let prepro = value (function PREPRO b -> b | _ -> None)
+  let solverallowsuboptimal =
+    value (function SOLVERALLOWSUBOPTIMAL b -> b | _ -> None)
+  let solvertimeout = value (function SOLVERTIMEOUT f -> f | _ -> None)
+  let useinternalsolver = value (function USEINTERNALSOLVER b -> b | _ -> None)
+  let upgradecriteria = value (function UPGRADECRITERIA s -> s | _ -> None)
+  let versionlagpower = value (function VERSIONLAGPOWER i -> i | _ -> None)
+
+end
+
 type t = {
   cudf_file: string option;
   solver: (module OpamCudfSolver.S) Lazy.t;
@@ -133,41 +173,40 @@ let with_auto_criteria config =
     ()
 
 let initk k =
-  let open OpamStd.Config in
   let open OpamStd.Option.Op in
   let solver =
     let open OpamCudfSolver in
-    match env_string "EXTERNALSOLVER" with
+    match E.externalsolver () with
     | Some "" -> lazy (get_solver ~internal:true default_solver_selection)
     | Some s -> lazy (solver_of_string s)
     | None ->
-      let internal = env_bool "USEINTERNALSOLVER" ++ env_bool "NOASPCUD" in
+      let internal = E.useinternalsolver () ++ E.noaspcud () in
       lazy (get_solver ?internal default_solver_selection)
   in
   let criteria =
-    env_string "CRITERIA" >>| fun c -> lazy (Some c) in
+    E.criteria () >>| fun c -> lazy (Some c) in
   let upgrade_criteria =
-    (env_string "UPGRADECRITERIA" >>| fun c -> lazy (Some c)) ++ criteria in
+    (E.upgradecriteria () >>| fun c -> lazy (Some c)) ++ criteria in
   let fixup_criteria =
-    env_string "FIXUPCRITERIA" >>| fun c -> (lazy (Some c)) in
+    E.fixupcriteria () >>| fun c -> (lazy (Some c)) in
   let best_effort_prefix_criteria =
-    env_string "BESTEFFORTPREFIXCRITERIA" >>| fun c -> (lazy (Some c)) in
+    E.besteffortprefixcriteria () >>| fun c -> (lazy (Some c)) in
   let solver_timeout =
-    env_float "SOLVERTIMEOUT" >>| fun f -> if f <= 0. then None else Some f in
+    E.solvertimeout () >>| fun f -> if f <= 0. then None else Some f in
   setk (setk (fun c -> r := with_auto_criteria c; k)) !r
-    ~cudf_file:(env_string "CUDFFILE")
+    ~cudf_file:(E.cudffile ())
     ~solver
-    ?best_effort:(env_bool "BESTEFFORT")
+    ?best_effort:(E.besteffort ())
     ?solver_preferences_default:criteria
     ?solver_preferences_upgrade:upgrade_criteria
     ?solver_preferences_fixup:fixup_criteria
     ?solver_preferences_best_effort_prefix:best_effort_prefix_criteria
     ?solver_timeout
-    ?solver_allow_suboptimal:(env_bool "SOLVERALLOWSUBOPTIMAL")
-    ~cudf_trim:(env_string "CUDFTRIM")
-    ?dig_depth:(env_int "DIGDEPTH")
-    ?preprocess:(env_bool "PREPRO")
-    ?version_lag_power:(env_int "VERSIONLAGPOWER")
+    ?solver_allow_suboptimal:(E.solverallowsuboptimal ())
+    ~cudf_trim:(E.cudftrim ())
+    ?dig_depth:(E.digdepth ())
+    ?preprocess:(E.prepro ())
+    ?version_lag_power:(E.versionlagpower ())
 
 let init ?noop:_ = initk (fun () -> ())
 

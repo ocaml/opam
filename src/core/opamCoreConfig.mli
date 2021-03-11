@@ -11,13 +11,34 @@
 (** Configuration options for the core lib (record, global reference and
     setter) *)
 
+module E : sig
+  type OpamStd.Config.E.t +=
+    | COLOR of OpamStd.Config.when_ option
+    | DEBUG of int option
+    | DEBUGSECTIONS of OpamStd.Config.sections option
+    | ERRLOGLEN of int option
+    | KEEPLOGS of bool option
+    | LOGS of string option
+    | MERGEOUT of bool option
+    | NO of bool option
+    | PRECISETRACKING of bool option
+    | SAFE of bool option
+    | STATUSLINE of OpamStd.Config.when_ option
+    | USEOPENSSL of bool option
+    | UTF8 of OpamStd.Config.when_ext option
+    | UTF8MSGS of bool option
+    | VERBOSE of OpamStd.Config.level option
+    | YES of bool option
+    val logs: unit -> string option
+end
+
 type t = private {
   debug_level : int;
   (** Controls debug messages, 0 to disable *)
-  debug_sections : int option OpamStd.String.Map.t;
+  debug_sections : OpamStd.Config.sections;
   (** Controls which sections display debugging messages. If empty, all messages
       are displayed. *)
-  verbose_level : int;
+  verbose_level : OpamStd.Config.level;
   (** Controls printing of external commands and output, 0 to disable, more
       means print more low-level commands *)
   color : OpamStd.Config.when_;
@@ -54,8 +75,8 @@ type t = private {
 
 type 'a options_fun =
   ?debug_level:int ->
-  ?debug_sections:int option OpamStd.String.Map.t ->
-  ?verbose_level:int ->
+  ?debug_sections:OpamStd.Config.sections ->
+  ?verbose_level:OpamStd.Config.level ->
   ?color:OpamStd.Config.when_ ->
   ?utf8:OpamStd.Config.when_ext ->
   ?disp_status_line:OpamStd.Config.when_ ->

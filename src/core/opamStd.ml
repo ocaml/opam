@@ -1425,6 +1425,7 @@ module Config = struct
 
   let env_int var = env int_of_string var
 
+  type level = int
   let env_level var =
     env (function s ->
         if s = "" then 0 else
@@ -1434,6 +1435,7 @@ module Config = struct
         | None -> int_of_string s)
       var
 
+  type sections = int option OpamString.Map.t
   let env_sections var =
     env (fun s ->
       let f map elt =
@@ -1476,6 +1478,20 @@ module Config = struct
     | `Always -> true
     | `Never -> false
     | `Auto -> Lazy.force auto
+
+  module E = struct
+    type t = ..
+    let (r : t list ref) = ref []
+
+    let update v = r := v :: !r
+    let updates l = r := l @ !r
+
+    let find var = OpamList.find_map var !r
+    let value var =
+      let l = lazy (try Some (find var); with Not_found -> None) in
+      fun () -> Lazy.force l
+  end
+
 end
 
 module List = OpamList

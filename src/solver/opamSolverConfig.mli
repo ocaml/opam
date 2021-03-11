@@ -11,6 +11,26 @@
 (** Configuration options for the solver lib (record, global reference, setter,
     initialisation) *)
 
+module E : sig
+  type OpamStd.Config.E.t +=
+    | BESTEFFORT of bool option
+    | BESTEFFORTPREFIXCRITERIA of string option
+    | CRITERIA of string option
+    | CUDFFILE of string option
+    | CUDFTRIM of string option
+    | DIGDEPTH of int option
+    | EXTERNALSOLVER of string option
+    | FIXUPCRITERIA of string option
+    | NOASPCUD of bool option
+    | PREPRO of bool option
+    | SOLVERALLOWSUBOPTIMAL of bool option
+    | SOLVERTIMEOUT of float option
+    | UPGRADECRITERIA of string option
+    | USEINTERNALSOLVER of bool option
+    | VERSIONLAGPOWER of int option
+    val externalsolver: unit -> string option
+end
+
 type t = private {
   cudf_file: string option;
   solver: (module OpamCudfSolver.S) Lazy.t;

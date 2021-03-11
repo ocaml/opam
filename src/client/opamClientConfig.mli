@@ -11,6 +11,27 @@
 (** Configuration options for the client lib (record, global reference, setter,
     initialisation), plus helper for global setup *)
 
+module E: sig
+  type OpamStd.Config.E.t +=
+    | ASSUMEDEPEXTS of bool option
+    | AUTOREMOVE of bool option
+    | DROPWORKINGDIR of bool option
+    | EDITOR of string option
+    | FAKE of bool option
+    | IGNOREPINDEPENDS of bool option
+    | INPLACEBUILD of bool option
+    | JSON of string option
+    | KEEPBUILDDIR of bool option
+    | NOAUTOUPGRADE of bool option
+    | PINKINDAUTO of bool option
+    | REUSEBUILDDIR of bool option
+    | ROOTISOK of bool option
+    | SHOW of bool option
+    | SKIPUPDATE of bool option
+    | STATS of bool option
+    | WORKINGDIR of bool option
+end
+
 type t = private {
   print_stats: bool;
   pin_kind_auto: bool;
@@ -120,8 +141,8 @@ val opam_init:
   ?retries:int ->
   ?force_checksums:bool option ->
   ?debug_level:int ->
-  ?debug_sections:int option OpamStd.String.Map.t ->
-  ?verbose_level:int ->
+  ?debug_sections:OpamStd.Config.sections ->
+  ?verbose_level:OpamStd.Config.level ->
   ?color:OpamStd.Config.when_ ->
   ?utf8:OpamStd.Config.when_ext ->
   ?disp_status_line:OpamStd.Config.when_ ->

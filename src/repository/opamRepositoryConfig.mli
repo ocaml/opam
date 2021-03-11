@@ -11,6 +11,16 @@
 (** Configuration options for the repository lib (record, global reference,
     setter, initialisation) *)
 
+module E : sig
+  type OpamStd.Config.E.t +=
+    | CURL of string option
+    | FETCH of string option
+    | NOCHECKSUMS of bool option
+    | REQUIRECHECKSUMS of bool option
+    | RETRIES of int option
+    | VALIDATIONHOOK of string option
+end
+
 (** Toggles parsing of the tool's output to detect errors
     (curl returns 0 on a 404) *)
 type dl_tool_kind = [ `Curl | `Default ]

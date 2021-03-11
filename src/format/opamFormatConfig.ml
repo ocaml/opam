@@ -8,6 +8,20 @@
 (*                                                                        *)
 (**************************************************************************)
 
+module E = struct
+
+  type OpamStd.Config.E.t +=
+    | ALLPARENS of bool option
+    | SKIPVERSIONCHECKS of bool option
+    | STRICT of bool option
+
+  open OpamStd.Config.E
+  let allparens = value (function ALLPARENS b -> b | _ -> None)
+  let skipversionchecks = value (function SKIPVERSIONCHECKS b -> b | _ -> None)
+  let strict = value (function STRICT b -> b | _ -> None)
+
+end
+
 type t = {
   strict: bool;
   skip_version_checks: bool;
@@ -47,10 +61,9 @@ let r = ref default
 let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 
 let initk k =
-  let open OpamStd.Config in
   setk (setk (fun c -> r := c; k)) !r
-    ?strict:(env_bool "STRICT")
-    ?skip_version_checks:(env_bool "SKIPVERSIONCHECKS")
-    ?all_parens:(env_bool "ALLPARENS")
+    ?strict:(E.strict ())
+    ?skip_version_checks:(E.skipversionchecks ())
+    ?all_parens:(E.allparens ())
 
 let init ?noop:_ = initk (fun () -> ())
