@@ -102,6 +102,7 @@ val opam_init:
   ?no_env_notice:bool ->
   ?locked:string option ->
   ?no_depexts:bool ->
+  ?depext_yes:bool ->
   ?cudf_file:string option ->
   ?best_effort:bool ->
   ?solver_preferences_default:string option Lazy.t ->

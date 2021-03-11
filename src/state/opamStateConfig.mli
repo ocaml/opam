@@ -29,6 +29,7 @@ type t = private {
   no_env_notice: bool;
   locked: string option;
   no_depexts : bool;
+  depext_yes: bool;
 }
 
 type 'a options_fun =
@@ -46,6 +47,7 @@ type 'a options_fun =
   ?no_env_notice:bool ->
   ?locked:string option ->
   ?no_depexts: bool ->
+  ?depext_yes: bool ->
   'a
 
 include OpamStd.Config.Sig
