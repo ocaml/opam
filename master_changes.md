@@ -34,7 +34,7 @@ New option/command/subcommand are prefixed with ◈.
     sense with 2.1 switch invariants) [#4571 @dra27]
 
 ## List
-  *
+  * --silent renamed to --check [#4595 @dra27 - fix #4323]
 
 ## Show
   *

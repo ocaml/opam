@@ -532,8 +532,10 @@ let list ?(force_search=false) cli =
       OpamArg.variable_bindings []
   in
   let silent =
-    mk_flag ~cli cli_original ["silent"]
-      "Don't write anything in the output, exit with return code 0 if the list \
+    mk_flag_replaced ~cli [
+      cli_between ~default:true cli2_0 cli2_1 ~replaced:"--check", ["silent"];
+      cli_from cli2_1, ["check"]
+    ] "Don't write anything in the output, exit with return code 0 if the list \
        is not empty, 1 otherwise."
   in
   let no_depexts =
