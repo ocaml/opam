@@ -14,8 +14,6 @@ endif
 DUNE_PROFILE ?= release
 DUNE_ARGS ?= 
 
-HELPFMT = --help=groff
-
 .PHONY: man html pages
 all: html pages
 
