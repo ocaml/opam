@@ -20,6 +20,10 @@ type t = {
   solver_preferences_best_effort_prefix: string option Lazy.t;
   solver_timeout: float option;
   solver_allow_suboptimal: bool;
+  cudf_trim: string option;
+  dig_depth: int;
+  preprocess: bool;
+  version_lag_power: int;
 }
 
 type 'a options_fun =
@@ -32,6 +36,10 @@ type 'a options_fun =
   ?solver_preferences_best_effort_prefix:string option Lazy.t ->
   ?solver_timeout:float option ->
   ?solver_allow_suboptimal:bool ->
+  ?cudf_trim:string option ->
+  ?dig_depth:int ->
+  ?preprocess:bool ->
+  ?version_lag_power:int ->
   'a
 
 let default =
@@ -48,6 +56,10 @@ let default =
     solver_preferences_best_effort_prefix = lazy None;
     solver_timeout = Some 60.;
     solver_allow_suboptimal = true;
+    cudf_trim = None;
+    dig_depth = 2;
+    preprocess = true;
+    version_lag_power = 1;
   }
 
 let setk k t
@@ -60,6 +72,10 @@ let setk k t
     ?solver_preferences_best_effort_prefix
     ?solver_timeout
     ?solver_allow_suboptimal
+    ?cudf_trim
+    ?dig_depth
+    ?preprocess
+    ?version_lag_power
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -79,6 +95,10 @@ let setk k t
       t.solver_timeout + solver_timeout;
     solver_allow_suboptimal =
       t.solver_allow_suboptimal + solver_allow_suboptimal;
+    cudf_trim = t.cudf_trim + cudf_trim;
+    dig_depth = t.dig_depth + dig_depth;
+    preprocess = t.preprocess + preprocess;
+    version_lag_power = t.version_lag_power + version_lag_power;
   }
 
 let set t = setk (fun x () -> x) t
@@ -124,8 +144,6 @@ let initk k =
       let internal = env_bool "USEINTERNALSOLVER" ++ env_bool "NOASPCUD" in
       lazy (get_solver ?internal default_solver_selection)
   in
-  let best_effort =
-    env_bool "BESTEFFORT" in
   let criteria =
     env_string "CRITERIA" >>| fun c -> lazy (Some c) in
   let upgrade_criteria =
@@ -136,18 +154,20 @@ let initk k =
     env_string "BESTEFFORTPREFIXCRITERIA" >>| fun c -> (lazy (Some c)) in
   let solver_timeout =
     env_float "SOLVERTIMEOUT" >>| fun f -> if f <= 0. then None else Some f in
-  let solver_allow_suboptimal =
-    env_bool "SOLVERALLOWSUBOPTIMAL" in
   setk (setk (fun c -> r := with_auto_criteria c; k)) !r
     ~cudf_file:(env_string "CUDFFILE")
     ~solver
-    ?best_effort
+    ?best_effort:(env_bool "BESTEFFORT")
     ?solver_preferences_default:criteria
     ?solver_preferences_upgrade:upgrade_criteria
     ?solver_preferences_fixup:fixup_criteria
     ?solver_preferences_best_effort_prefix:best_effort_prefix_criteria
     ?solver_timeout
-    ?solver_allow_suboptimal
+    ?solver_allow_suboptimal:(env_bool "SOLVERALLOWSUBOPTIMAL")
+    ~cudf_trim:(env_string "CUDFTRIM")
+    ?dig_depth:(env_int "DIGDEPTH")
+    ?preprocess:(env_bool "PREPRO")
+    ?version_lag_power:(env_int "VERSIONLAGPOWER")
 
 let init ?noop:_ = initk (fun () -> ())
 
