@@ -68,6 +68,8 @@ New option/command/subcommand are prefixed with ◈.
   * Fix sandbox script shell mistake that made `PWD` read-write on remove actions [@4589 @AltGr]
   * Port bwrap improvements to sandbox_exec [@4589 @AltGr]
 
+  * Make the reference tests dune-friendly [#4376 @emillon]
+  * Rewrite the very old tests and unify them with the newer ones [@AltGr]
 ## Repository management
   *
 
@@ -76,6 +78,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Build
   * Fix opam-devel's tests on platforms without openssl, GNU-diff and a system-wide ocaml [#4500 @kit-ty-kate]
+  * Use dune to run reftests [#4376 @emillon]
   * Restrict `extlib` and `dose` version [#4517 @kit-ty-kate]
   * Restrict to opam-file-format 2.1.2 [#4495 @rjbou]
   * Switch to newer version of MCCS (based on newer GLPK) for src_ext [#4559 @AltGr]

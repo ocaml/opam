@@ -1004,8 +1004,9 @@ module OpamSys = struct
                   f a
               else
                 f a
-          | exception _ ->
+          | exception e ->
               Unix.close_process_full process |> ignore;
+              fatal e;
               a
         in
         f `Native

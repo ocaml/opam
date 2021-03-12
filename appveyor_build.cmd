@@ -201,7 +201,7 @@ if "%OCAML_PORT%" neq "" if "%GIT_FOR_WINDOWS%" equ "1" (
   "C:\Program Files\Git\cmd\git.exe" config --global core.autocrlf true
   "C:\Program Files\Git\cmd\git.exe" config --global core.autocrlf
 )
-"%CYG_ROOT%\bin\bash.exe" -lc "%PATH_SHIM% make -C $APPVEYOR_BUILD_FOLDER tests" || (for %%I in (%APPVEYOR_BUILD_FOLDER%\_build\default\tests\failed-*.log) do appveyor PushArtifact %%I) && exit /b 1
+"%CYG_ROOT%\bin\bash.exe" -lc "%PATH_SHIM% make -C $APPVEYOR_BUILD_FOLDER tests" || exit /b 1
 rem Can't yet do an opam init with the native Windows builds
 if "%OCAML_PORT%" equ "" "%CYG_ROOT%\bin\bash.exe" -lc "make -C $APPVEYOR_BUILD_FOLDER run-appveyor-test" || exit /b 1
 goto :EOF

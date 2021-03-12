@@ -1,85 +1,99 @@
 009e00fa
 ### opam switch install cli-versioning --empty
 opam: install was removed in version 2.1 of the opam CLI, but version 2.1 has been requested. Use create instead or set OPAMCLI environment variable to 2.0.
+# Return code 2 #
 ### OPAMCLI=2.0 opam switch install cli-versioning --empty
 ### opam list --cli 31.4
 [ERROR] opam command-line version 31.4 is not supported.
+# Return code 2 #
 ### opam install --show --assume-depexts base-unix --cli 2.1
 The following actions would be performed:
-  ∗ install base-unix base
+  - install base-unix base
 ### OPAMCLI=2.0 opam install --show --assume-depexts base-unix
 opam: assume-depexts was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+# Return code 2 #
 ### opam config set cli version
 opam: set was removed in version 2.1 of the opam CLI, but version 2.1 has been requested. Use opam var instead or set OPAMCLI environment variable to 2.0.
+# Return code 2 #
 ### OPAMCLI=2.0 opam config set cli version
 Added 'cli: "version"' to field variables in switch cli-versioning
 ### opam switch set-invariant ocaml.4.05.0
 ### OPAMCLI=2.0 opam install ocaml.4.10.0
 [ERROR] Package conflict!
   * No agreement on the version of ocaml:
-    - (invariant) → ocaml = 4.05.0
+    - (invariant) -> ocaml = 4.05.0
     - ocaml = 4.10.0
     You can temporarily relax the switch invariant with `--update-invariant'
 
 No solution found, exiting
+# Return code 20 #
 ### opam install ocaml.4.10.0
 [ERROR] Package conflict!
   * No agreement on the version of ocaml:
-    - (invariant) → ocaml = 4.05.0
+    - (invariant) -> ocaml = 4.05.0
     - ocaml = 4.10.0
     You can temporarily relax the switch invariant with `--update-invariant'
 
 No solution found, exiting
+# Return code 20 #
 ### OPAMCLI=2.0 opam install ocaml.4.10.0 --update-invariant --show
 opam: update-invariant was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+# Return code 2 #
 ### opam install ocaml.4.10.0 --update-invariant --show
 The following actions would be performed:
-  ∗ install base-bigarray       base
-  ∗ install ocaml-base-compiler 4.10.0 [required by ocaml]
-  ∗ install base-threads        base
-  ∗ install base-unix           base
-  ∗ install ocaml-config        1      [required by ocaml]
-  ∗ install ocaml               4.10.0
-===== ∗ 6 =====
+  - install base-bigarray       base
+  - install ocaml-base-compiler 4.10.0 [required by ocaml]
+  - install base-threads        base
+  - install base-unix           base
+  - install ocaml-config        1      [required by ocaml]
+  - install ocaml               4.10.0
+===== 6 to install =====
 ### OPAMCLI=2.0 opam install ocaml.4.10.0 --unlock-base --show
 The following actions would be performed:
-  ∗ install base-bigarray       base
-  ∗ install ocaml-base-compiler 4.10.0 [required by ocaml]
-  ∗ install base-threads        base
-  ∗ install base-unix           base
-  ∗ install ocaml-config        1      [required by ocaml]
-  ∗ install ocaml               4.10.0
-===== ∗ 6 =====
+  - install base-bigarray       base
+  - install ocaml-base-compiler 4.10.0 [required by ocaml]
+  - install base-threads        base
+  - install base-unix           base
+  - install ocaml-config        1      [required by ocaml]
+  - install ocaml               4.10.0
+===== 6 to install =====
 ### opam install ocaml.4.10.0 --unlock-base --show
 opam: unlock-base was removed in version 2.1 of the opam CLI, but version 2.1 has been requested. Use --update-invariant instead or set OPAMCLI environment variable to 2.0.
+# Return code 2 #
 ### # opam option uses mk_command_ret
 ### opam option foo
 [ERROR] No option named 'foo' found. Use 'opam option [--global]' to list them
+# Return code 2 #
 ### OPAMCLI=2.0 opam option foo
 opam: option was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+# Return code 2 #
 ### opam option foo --global
 [ERROR] Field or section foo not found
+# Return code 5 #
 ### OPAMCLI=2.0 opam option foo --global
 opam: global was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+# Return code 2 #
 ### # opam lock uses mk_command
 ### opam lock foo
 [ERROR] No package matching foo
+# Return code 5 #
 ### OPAMCLI=2.0 opam lock foo
 opam: lock was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+# Return code 2 #
 ### # Check for build test env
 ### # Note: you must have an installed opam with cli version enabled to pass these tests
 ### mkdir opams
 ### <opams/env-2-0.opam>
 opam-version: "2.0"
-build: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.0$'"]
-install: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.0$'"]
-remove: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.0$'"]
+build: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.0'"]
+install: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.0'"]
+remove: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.0'"]
 ### <opams/env-2-1.opam>
 opam-version: "2.0"
 build-env: [OPAMCLI = "2.1"]
-build: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.1$'"]
-install: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.1$'"]
-remove: ["sh" "-c" "env | grep -q '^OPAMCLI=2\.1$'"]
+build: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.1'"]
+install: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.1'"]
+remove: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.1'"]
 ### opam pin opams -yn
 This will pin the following packages: env-2-0, env-2-1. Continue? [Y/n] y
 Package env-2-0 does not exist, create as a NEW package? [Y/n] y
@@ -93,11 +107,11 @@ env-2-1 is now pinned to file://${BASEDIR}/opams (version ~dev)
 [env-2-0.~dev] synchronised (no changes)
 
 The following actions will be performed:
-  ∗ install env-2-0 ~dev*
+  - install env-2-0 ~dev*
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved env-2-0.~dev  (file://${BASEDIR}/opams)
-∗ installed env-2-0.~dev
+-> retrieved env-2-0.~dev  (file://${BASEDIR}/opams)
+-> installed env-2-0.~dev
 Done.
 ### opam install env-2-1
 
@@ -105,25 +119,25 @@ Done.
 [env-2-1.~dev] synchronised (no changes)
 
 The following actions will be performed:
-  ∗ install env-2-1 ~dev*
+  - install env-2-1 ~dev*
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved env-2-1.~dev  (file://${BASEDIR}/opams)
-∗ installed env-2-1.~dev
+-> retrieved env-2-1.~dev  (file://${BASEDIR}/opams)
+-> installed env-2-1.~dev
 Done.
 ### opam remove env-2-0
 The following actions will be performed:
-  ⊘ remove env-2-0 ~dev*
+  - remove env-2-0 ~dev*
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved env-2-0.~dev  (no changes)
-⊘ removed   env-2-0.~dev
+-> retrieved env-2-0.~dev  (no changes)
+-> removed   env-2-0.~dev
 Done.
 ### opam remove env-2-1
 The following actions will be performed:
-  ⊘ remove env-2-1 ~dev*
+  - remove env-2-1 ~dev*
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-⬇ retrieved env-2-1.~dev  (no changes)
-⊘ removed   env-2-1.~dev
+-> retrieved env-2-1.~dev  (no changes)
+-> removed   env-2-1.~dev
 Done.

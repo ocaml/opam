@@ -1,0 +1,40 @@
+; Reftests are set up using aliases so that they can be run individually:
+;
+; - each test has its own alias (e.g. dune build @reftest-conflict-camlp4)
+; - all tests are attached to @reftest (dune build @reftest runs all)
+; - this alias is attached to @runtest too (so dune runtest will run these)
+
+(executable
+ (name run)
+ (libraries opam-core)
+ (modules run))
+
+(executable
+ (name gen)
+ (libraries opam-core)
+ (modules gen))
+
+(rule
+ (deps
+  (glob_files *.test))
+ (action
+  (with-stdout-to
+   dune.inc.gen
+   (run ./gen.exe))))
+
+(alias
+ (name runtest)
+ (deps
+  (alias reftest)))
+
+(alias
+ (name reftest)
+ (deps
+  (alias reftest-gen)))
+
+(alias
+ (name reftest-gen)
+ (action
+  (diff dune.inc dune.inc.gen)))
+
+(include dune.inc)

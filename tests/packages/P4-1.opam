@@ -1,6 +1,0 @@
-opam-version: "1"
-name: "P4"
-version:    "1"
-maintainer: "contact@ocamlpro.com"
-depends: ["ocaml" "P2" "P3"]
-build: [ "./build.sh" ]
