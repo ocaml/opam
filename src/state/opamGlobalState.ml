@@ -42,15 +42,18 @@ let load lock_kind =
   (* Always take a global read lock, this is only used to prevent concurrent
      ~/.opam format changes *)
   let has_root = OpamFilename.exists_dir root in
-  let global_lock =
+  let global_lock, update_global_lock =
     if has_root then
       let lock = (* needed for on-the-fly upgrade config file *)
         match lock_kind with
         | `Lock_none | `Lock_read -> `Lock_read
         | `Lock_write -> `Lock_write
       in
-      OpamFilename.flock lock (OpamPath.lock root)
-    else OpamSystem.lock_none
+      let lock = OpamFilename.flock lock (OpamPath.lock root) in
+      match lock_kind with
+      | `Lock_none | `Lock_read -> lock, ignore
+      | `Lock_write -> lock, OpamSystem.flock_update `Lock_read ?dontblock:None
+    else OpamSystem.lock_none, ignore
   in
   (* The global_state lock actually concerns the global config file only (and
      the consistence thereof with the repository and switch sets, and the
@@ -60,6 +63,7 @@ let load lock_kind =
       "Opam has not been initialised, please run `opam init'";
   let config_lock = OpamFilename.flock lock_kind (OpamPath.config_lock root) in
   let config = load_config global_lock root in
+  update_global_lock global_lock;
   let switches =
     List.filter
       (fun sw -> not (OpamSwitch.is_external sw) ||
