@@ -144,6 +144,22 @@
    (run ./run.exe %{bin:opam} %{dep:legacy-local.test} %{read-lines:testing-env}))))
 
 (alias
+ (name reftest-pat-sub)
+ (action
+  (diff pat-sub.test pat-sub.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-pat-sub)))
+
+(rule
+ (deps root-009e00fa)
+ (action
+  (with-stdout-to
+   pat-sub.out
+   (run ./run.exe %{bin:opam} %{dep:pat-sub.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-show)
  (action
   (diff show.test show.out)))

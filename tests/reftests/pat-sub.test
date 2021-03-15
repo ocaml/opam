@@ -1,0 +1,84 @@
+009e00fa
+### mkdir ps
+### <ps/bar>
+blabla
+pioupiou
+bloblob
+### <ps/bar-update.patch>
+--- a/bar	2020-12-02 14:22:55.364620832 +0100
++++ b/bar	2020-12-02 14:23:05.668686881 +0100
+@@ -1,3 +1,3 @@
+ blabla
+-pioupiou
++ploplop
+ bloblob
+### <ps/baz>
+blabla
+pat-sub
+bloblob
+### <ps/baz-update.patch.in>
+--- a/baz	2020-12-02 14:22:55.364620832 +0100
++++ b/baz	2020-12-02 14:23:05.668686881 +0100
+@@ -1,3 +1,3 @@
+ blabla
+-%{name}%
++ploplop
+ bloblob
+### <ps/foo.in>
+bla
+%{name}%
+blo
+%{version}%
+### <ps/pat-sub.opam>
+opam-version: "2.0"
+name: "pat-sub"
+version: "0.1"
+synopsis: "One-line description"
+description: """
+Longer description
+"""
+maintainer: "Name <email>"
+authors: "Name <email>"
+license: "MIT"
+homepage: " "
+bug-reports: " "
+dev-repo: "git://github.com/foo"
+patches:
+[
+ "bar-update.patch"
+ "baz-update.patch"
+]
+substs:
+[
+ "foo"
+ "baz-update.patch"
+]
+build: [
+  ["grep" "pat-sub" "foo"]
+  ["grep" "0.1" "foo"]
+  ["grep" "ploplop" "bar"]
+  ["grep" "ploplop" "baz"]
+]
+### opam switch create sw --empty
+### OPAMDEBUGSECTIONS="ACTION" opam install ./ps -y --debug --debug-level=-1
+Package pat-sub does not exist, create as a NEW package? [Y/n] y
+pat-sub is now pinned to file://${BASEDIR}/ps (version 0.1)
+The following actions will be performed:
+  - install pat-sub 0.1*
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          download_package: pat-sub.0.1
+-> retrieved pat-sub.0.1  (file://${BASEDIR}/ps)
+ACTION                          prepare_package_source: pat-sub.0.1 at ${BASEDIR}/OPAM/sw/.opam-switch/build/pat-sub.0.1
+ACTION                          pat-sub: expanding opam variables in baz-update.patch.in, generating baz-update.patch.
+
+ACTION                          pat-sub: applying bar-update.patch.
+
+ACTION                          pat-sub: applying baz-update.patch.
+
+ACTION                          pat-sub: expanding opam variables in foo.in, generating foo.
+
+ACTION                          Installing pat-sub.0.1.
+
+-> installed pat-sub.0.1
+Done.
