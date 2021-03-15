@@ -15,7 +15,8 @@ include OpamStd.ABSTRACT
 (** The current version of the CLI (major and minor of OpamVersion.current *)
 val current : t
 
-(* Default CLI version, currently 2.0 *)
+(* Default CLI version, currently 2.0.
+   This value is checked in CI. *)
 val default : t
 
 (** Tests whether a valid CLI version is supported by the client library *)

@@ -27,6 +27,9 @@ let of_string s =
   | _ -> failwith "OpamVersion.CLI.of_string"
 
 let current = of_string @@ OpamVersion.(to_string current_nopatch)
+
+(* This line is checked on CI to ensure that default cli version
+   matches release opam version *)
 let default = (2,0)
 
 let of_string_opt s = try Some (of_string s) with Failure _ -> None
