@@ -205,7 +205,7 @@ let erase_file path =
 
 let rm_rf path =
   let rec erase path =
-    if Sys.is_directory path then begin
+    if Sys.file_exists path && Sys.is_directory path then begin
       Array.iter (fun entry -> erase (Filename.concat path entry))
                  (Sys.readdir path);
       Unix.rmdir path
