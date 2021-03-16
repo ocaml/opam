@@ -3,8 +3,8 @@ MD5_cppo = b13afeea6631d7c9b61f95bfd984a542
 
 $(call PKG_SAME,cppo)
 
-URL_extlib = https://ygrek.org/p/release/ocaml-extlib/extlib-1.7.7.tar.gz
-MD5_extlib = 2c620993aecd4b31b3a362b21b55dd94
+URL_extlib = https://ygrek.org/p/release/ocaml-extlib/extlib-1.7.8.tar.gz
+MD5_extlib = 7e0df072af4e2daa094e5936a661cb11
 
 $(call PKG_SAME,extlib)
 
