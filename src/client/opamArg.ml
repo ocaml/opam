@@ -33,163 +33,281 @@ let dir_sep, escape_path =
   | ds -> ds, fun x -> x
 
 
+(** Opam environment variables, with their doc and their validity
+    OPAMVAR_var and OPAMPACKAGE_var are defined and documented static in
+    [help_sections].
+*)
+let environment_variables =
+  (* Missing
+     `P "$(i,OPAMCLI) see option `--cli'";
+     `P "$(i,OPAMLOCKRETRIES) sets the number of tries after which opam gives up acquiring its lock and fails. <= 0 means infinite wait.";
+     `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
+  *)
+  let open OpamStd.Config in
+  let core =
+    let open OpamCoreConfig.E in [
+      "COLOR", cli_original, (fun v -> COLOR (env_when v)),
+      "when set to $(i,always) or $(i,never), sets a default value for the \
+       `--color' option.";
+      "DEBUG", cli_original, (fun v -> DEBUG (env_int v)),
+      "see options `--debug' and `--debug-level'.";
+      "DEBUGSECTIONS", cli_original, (fun v -> DEBUGSECTIONS (env_sections v)),
+      "if set, limits debug messages to the space-separated list of \
+       sections. Sections can optionally have a specific debug level (for \
+       example, $(b,CLIENT:2) or $(b,CLIENT CUDF:2)), but otherwise use \
+       `--debug-level'.";
+      "ERRLOGLEN", cli_original, (fun v -> ERRLOGLEN (env_int v)),
+      "sets the number of log lines printed when a sub-process fails. 0 to \
+       print all.";
+      "KEEPLOGS", cli_original, (fun v -> KEEPLOGS (env_bool v)),
+      "tells opam to not remove some temporary command logs and some \
+       backups. This skips some finalisers and may also help to get more \
+       reliable backtraces.";
+      "LOGS", cli_original, (fun v -> LOGS (env_string v)),
+      ("$(i,logdir) sets log directory, default is a temporary directory in \
+       " ^ (if Sys.win32 then "%TEMP%" else "/tmp"));
+      "MERGEOUT", cli_original, (fun v -> MERGEOUT (env_bool v)),
+      "merge process outputs, stderr on stdout.";
+      "NO", cli_original, (fun v -> NO (env_bool v)),
+      "answer no to any question asked.";
+      "PRECISETRACKING", cli_original, (fun v -> PRECISETRACKING (env_bool v)),
+      "fine grain tracking of directories.";
+      "SAFE", cli_original, (fun v -> SAFE (env_bool v)),
+      "see option `--safe'.";
+      "STATUSLINE", cli_original, (fun v -> STATUSLINE (env_when v)),
+      ("display a dynamic status line showing what's currently going on on \
+        the terminal. (one of "^Arg.doc_alts_enum when_enum^")");
+      "USEOPENSSL", cli_original, (fun v -> USEOPENSSL (env_bool v)),
+      "force openssl use for hash computing.";
+      "UTF8", cli_original, (fun v -> UTF8 (env_when_ext v)),
+      (Printf.sprintf "use UTF8 characters in output (one of %s). By default \
+                       `auto', which is determined from the locale)."
+         (Arg.doc_alts_enum when_enum));
+      "UTF8MSGS", cli_original, (fun v -> UTF8MSGS (env_bool v)),
+      "use extended UTF8 characters (camels) in opam messages. Implies \
+       $(i,OPAMUTF8). This is set by default on OSX only.";
+      "VERBOSE", cli_original, (fun v -> VERBOSE (env_level v)),
+      "see option `--verbose'.";
+      "YES", cli_original, (fun v -> YES (env_bool v)),
+      "see option `--yes'.";
+    ] in
+  let format =
+    let open OpamFormatConfig.E in [
+      "ALLPARENS", cli_original, (fun v -> ALLPARENS (env_bool v)),
+      "surround all filters with parenthesis.";
+      "SKIPVERSIONCHECKS", cli_original,
+      (fun v -> SKIPVERSIONCHECKS (env_bool v)),
+      "bypasses some version checks. Unsafe, for compatibility testing only.";
+      "STRICT", cli_original, (fun v -> STRICT (env_bool v)),
+      "fail on inconsistencies (file reading, switch import, etc.).";
+    ] in
+  let solver =
+    let open OpamSolverConfig.E in [
+      "BESTEFFORT", cli_original, (fun v -> BESTEFFORT (env_bool v)),
+      "see option `--best-effort`.";
+      "BESTEFFORTPREFIXCRITERIA", cli_original,
+      (fun v -> BESTEFFORTPREFIXCRITERIA (env_string v)),
+      "sets the string that must be prepended to the criteria when the \
+       `--best-effort` option is set, and is expected to maximise the \
+       `opam-query` property in the solution.";
+      "CRITERIA", cli_original, (fun v -> CRITERIA (env_string v)),
+      "specifies user $(i,preferences) for dependency solving. The default \
+       value depends on the solver version, use `config report` to know the \
+       current setting. See also option --criteria.";
+      "CUDFFILE", cli_original, (fun v -> CUDFFILE (env_string v)),
+      "save the cudf graph to $(i,file)-actions-explicit.dot.";
+      "CUDFTRIM", cli_original, (fun v -> CUDFTRIM (env_string v)),
+      "TO DOCUMENT ... OR NOT";
+      "DIGDEPTH", cli_original, (fun v -> DIGDEPTH (env_int v)),
+      "TO DOCUMENT ... OR NOT";
+      "EXTERNALSOLVER", cli_original, (fun v -> EXTERNALSOLVER (env_string v)),
+      "see option `--solver'.";
+      "FIXUPCRITERIA", cli_original, (fun v -> FIXUPCRITERIA (env_string v)),
+      "same as $(i,OPAMUPGRADECRITERIA), but specific to fixup.";
+      "NOASPCUD", cli_original, (fun v -> NOASPCUD (env_bool v)),
+      "Deprecated.";
+      "PREPRO", cli_original, (fun v -> PREPRO (env_bool v)),
+      "TO DOCUMENT ... OR NOT";
+      "SOLVERALLOWSUBOPTIMAL", cli_original,
+      (fun v -> SOLVERALLOWSUBOPTIMAL (env_bool v)),
+      "(default `true') allows some solvers to still return a solution when \
+       they reach timeout; while the solution remains assured to be \
+       consistent, there is no guarantee in this case that it fits the \
+       expected optimisation criteria. If `true', opam willcontinue with a \
+       warning, if `false' a timeout is an error. Currently only \
+       the builtin-z3 backend handles this degraded case.";
+      "SOLVERTIMEOUT", cli_original, (fun v -> SOLVERTIMEOUT (env_float v)),
+      (Printf.sprintf
+         "change the time allowance of the solver. Default is %.1f, set to 0 \
+          for unlimited. Note that all solvers may not support this option."
+         (OpamStd.Option.default 0. OpamSolverConfig.(default.solver_timeout)));
+      "UPGRADECRITERIA", cli_original,
+      (fun v -> UPGRADECRITERIA (env_string v)),
+      "specifies user $(i,preferences) for dependency solving when performing \
+       an upgrade. Overrides $(i,OPAMCRITERIA) in upgrades if both are set. \
+       See also option --criteria.";
+      "USEINTERNALSOLVER", cli_original,
+      (fun v -> USEINTERNALSOLVER (env_bool v)),
+      "see option `--use-internal-solver'.";
+      "VERSIONLAGPOWER", cli_original, (fun v -> VERSIONLAGPOWER (env_int v)),
+      "TO DOCUMENT ... OR NOT";
+    ] in
+  let repository =
+    let open OpamRepositoryConfig.E in [
+      "CURL", cli_original, (fun v -> CURL (env_string v)),
+      "can be used to select a given 'curl' program. See $(i,OPAMFETCH) for \
+       more options.";
+      "FETCH", cli_original, (fun v -> FETCH (env_string v)),
+      "specifies how to download files: either `wget', `curl' or a custom \
+       command where variables $(b,%{url}%), $(b,%{out}%), $(b,%{retry}%), \
+       $(b,%{compress}%) and $(b,%{checksum}%) will be replaced. Overrides the \
+       'download-command' value from the main config file.";
+      "NOCHECKSUMS", cli_original, (fun v -> NOCHECKSUMS (env_bool v)),
+      "enables option --no-checksums when available.";
+      "REQUIRECHECKSUMS", cli_original,
+      (fun v -> REQUIRECHECKSUMS (env_bool v)),
+      "Enables option `--require-checksums' when available \
+       (e.g. for `opam install`).";
+      "RETRIES", cli_original, (fun v -> RETRIES (env_int v)),
+      "sets the number of tries before failing downloads.";
+      "VALIDATIONHOOK", cli_original, (fun v -> VALIDATIONHOOK (env_string v)),
+      "if set, uses the `%{hook%}` command to validate \
+       an opam repository update.";
+    ] in
+  let state =
+    let open OpamStateConfig.E in [
+      "BUILDDOC", cli_original,
+      (fun v -> BUILDDOC (env_bool v)),
+      "TO DOCUMENT ... OR NOT";
+      "BUILDTEST", cli_original,
+      (fun v -> BUILDTEST (env_bool v)),
+      "TO DOCUMENT ... OR NOT";
+      "DEPEXTYES", cli_original, (fun v -> DEPEXTYES (env_bool v)),
+      "launch system package managers in non-interactive mode.";
+      "DOWNLOADJOBS", cli_original, (fun v -> DOWNLOADJOBS (env_int v)),
+      "sets the maximum number of simultaneous downloads.";
+      "DRYRUN", cli_original, (fun v -> DRYRUN (env_bool v)),
+      "see option `--dry-run`.";
+      "IGNORECONSTRAINTS", cli_original,
+      (fun v -> IGNORECONSTRAINTS (env_string v)),
+      "see install option `--ignore-constraints-on`.";
+      "JOBS", cli_original, (fun v -> JOBS (env_int v)),
+      "sets the maximum number of parallel workers to run.";
+      "LOCKED", cli_original, (fun v -> LOCKED (env_string v)),
+      "combination of `--locked` and `--lock-suffix` options.";
+      "MAKECMD", cli_original, (fun v -> MAKECMD (env_string v)),
+      "set the system make command to use.";
+      "NODEPEXTS", cli_original, (fun v -> NODEPEXTS (env_bool v)),
+      "disables system dependencies handling, see option `--no-depexts'.";
+      "NOENVNOTICE", cli_original, (fun v -> NOENVNOTICE (env_bool v)),
+      "Internal.";
+      "ROOT", cli_original, (fun v -> ROOT (env_string v)),
+      "see option `--root'. This is automatically set \
+       by `opam env --root=DIR --set-root'.";
+      "SWITCH", cli_original, (fun v -> SWITCH (env_string v)),
+      "see option `--switch'. Automatically set \
+       by `opam env --switch=SWITCH --set-switch'.";
+      "UNLOCKBASE", cli_original, (fun v -> UNLOCKBASE (env_bool v)),
+      "see install option `--unlock-base`.";
+      "WITHDOC", cli_original, (fun v -> WITHDOC (env_bool v)),
+      "see install option `--with-doc'.";
+      "WITHTEST", cli_original, (fun v -> WITHTEST (env_bool v)),
+      "see install option `--with-test.";
+    ] in
+  let client =
+    let open OpamClientConfig.E in [
+      "ASSUMEDEPEXTS", cli_original, (fun v -> ASSUMEDEPEXTS (env_bool v)),
+      "see option `--assume-depexts'.";
+      "AUTOREMOVE", cli_original, (fun v -> AUTOREMOVE (env_bool v)),
+      "see remove option `--auto-remove`.";
+      "DROPWORKINGDIR", cli_original, (fun v -> DROPWORKINGDIR (env_bool v)),
+      "overrides packages previously updated with $(b,--working-dir) on \
+       update. Without this variable set, opam would keep them unchanged \
+       unless explicitly named on the command-line.";
+      "EDITOR", cli_original, (fun v -> EDITOR (env_string v)),
+      "sets the editor to use for opam file editing, overrides $(i,\\$EDITOR) \
+       and $(i,\\$VISUAL).";
+      "FAKE", cli_original, (fun v -> FAKE (env_bool v)),
+      "see option `--fake`.";
+      "IGNOREPINDEPENDS", cli_original,
+      (fun v -> IGNOREPINDEPENDS (env_bool v)),
+      "see option `--ignore-pin-depends`.";
+      "INPLACEBUILD", cli_original, (fun v -> INPLACEBUILD (env_bool v)),
+      "TO DOCUMENT ... OR NOT.";
+      "JSON", cli_original, (fun v -> JSON (env_string v)),
+      "log json output to the given file \
+       (use character `%' to index the files).";
+      "KEEPBUILDDIR", cli_original, (fun v -> KEEPBUILDDIR (env_bool v)),
+      "see install option `--keep-build-dir'.";
+      "NOAUTOUPGRADE", cli_original, (fun v -> NOAUTOUPGRADE (env_bool v)),
+      "disables automatic internal upgrade of repositories in an earlier \
+       format to the current one, on 'update' or 'init'.";
+      "PINKINDAUTO", cli_original, (fun v -> PINKINDAUTO (env_bool v)),
+      "sets whether version control systems should be detected when pinning \
+       to a local path. Enabled by default since 1.3.0.";
+      "REUSEBUILDDIR", cli_original, (fun v -> REUSEBUILDDIR (env_bool v)),
+      "TO DOCUMENT ... OR NOT.";
+      "ROOTISOK", cli_original, (fun v -> ROOTISOK (env_bool v)),
+      "don't complain when running as root.";
+      "SHOW", cli_original, (fun v -> SHOW (env_bool v)),
+      "see option `--show`.";
+      "SKIPUPDATE", cli_original, (fun v -> SKIPUPDATE (env_bool v)),
+      "see option `--skip-updates`.";
+      "STATS", cli_original, (fun v -> STATS (env_bool v)),
+      "display stats at the end of command.";
+      "WORKINGDIR", cli_original, (fun v -> WORKINGDIR (env_bool v)),
+      "see option `--working-dir`.";
+    ] in
+  core @ format @ solver @ repository @ state @ client
+
+let doc_opam_envvariables, init_opam_envvariabes =
+  env_with_cli environment_variables
+
+
 (** Help sections common to all commands *)
 
 let global_option_section = Manpage.s_common_options
-let help_sections _cli = [
-  `S global_option_section;
-  `P "These options are common to all commands.";
+let help_sections cli =
+  [
+    `S global_option_section;
+    `P "These options are common to all commands.";
 
-  `S Manpage.s_environment;
-  `P "Opam makes use of the environment variables listed here. Boolean \
-      variables should be set to \"0\", \"no\", \"false\" or the empty  string \
-      to disable, \"1\", \"yes\" or \"true\" to enable.";
+    `S Manpage.s_environment;
+    `P "Opam makes use of the environment variables listed here. Boolean \
+        variables should be set to \"0\", \"no\", \"false\" or the empty \
+        string to disable, \"1\", \"yes\" or \"true\" to enable.";
+  ] @ doc_opam_envvariables cli @ [
+    `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
+        substituting `%{var}%` strings in `opam` files.";
+    `P "$(i,OPAMVAR_package_var) overrides the contents of the variable \
+        $(i,package:var) when substituting `%{package:var}%` strings in \
+        `opam` files.";
 
-  (* Alphabetical order *)
-  `P "$(i,OPAMALLPARENS) surround all filters with parenthesis";
-  `P "$(i,OPAMASSUMEDEPEXTS) see option `--assume-depexts'";
-  `P "$(i,OPAMAUTOREMOVE) see remove option `--auto-remove`";
-  `P "$(i,OPAMBESTEFFORT) see option `--best-effort`";
-  `P "$(i,OPAMBESTEFFORTPREFIXCRITERIA) sets the string that must be prepended \
-      to the criteria when the `--best-effort` option is set, and is expected \
-      to maximise the `opam-query` property in the solution";
-  `P "$(i,OPAMCLI) see option `--cli'";
-  `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
-      value for the --color option.";
-  `P "$(i,OPAMCRITERIA) specifies user $(i,preferences) for dependency \
-       solving. The default value depends on the solver version, use `config \
-       report` to know the current setting. See also option --criteria";
-  `P "$(i,OPAMCUDFFILE file) save the cudf graph to \
-      $(i,file)-actions-explicit.dot";
-  `P "$(i,OPAMDEPEXTYES) launch system package managers in non-interactive mode";
-  `P "$(i,OPAMCURL) can be used to select a given 'curl' program. See \
-      $(i,OPAMFETCH) for more options.";
-  `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
-  `P "$(i,OPAMDEBUGSECTIONS) if set, limits debug messages to the space-separated \
-      list of sections. Sections can optionally have a specific debug level \
-      (for example, $(b,CLIENT:2) or $(b,CLIENT CUDF:2), but otherwise use \
-      `--debug-level'.";
-  `P "$(i,OPAMDOWNLOADJOBS) sets the maximum number of simultaneous downloads.";
-  `P "$(i,OPAMDRYRUN) see option `--dry-run`";
-  `P "$(i,OPAMEDITOR) sets the editor to use for opam file editing, overrides \
-      $(i,\\$EDITOR) and $(i,\\$VISUAL)";
-  `P "$(i,OPAMERRLOGLEN) sets the number of log lines printed when a \
-      sub-process fails. 0 to print all.";
-  `P "$(i,OPAMEXTERNALSOLVER) see option `--solver'.";
-  `P "$(i,OPAMFAKE) see option `--fake`";
-  `P "$(i,OPAMFETCH) specifies how to download files: either `wget', `curl' or \
-      a custom command where variables $(b,%{url}%), $(b,%{out}%), \
-      $(b,%{retry}%), $(b,%{compress}%) and $(b,%{checksum}%) will \
-      be replaced. Overrides the \
-      'download-command' value from the main config file.";
-  `P "$(i,OPAMFIXUPCRITERIA) same as $(i,OPAMUPGRADECRITERIA), but specific \
-      to fixup";
-  `P "$(i,OPAMIGNORECONSTRAINTS) see install option `--ignore-constraints-on`";
-  `P "$(i,OPAMIGNOREPINDEPENDS) see option `--ignore-pin-depends`";
-  `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
-  `P "$(i,OPAMJSON) log json output to the given file (use character `%' to \
-      index the files)";
-  `P "$(i,OPAMLOCKED) combination of `--locked` and `--lock-suffix` options";
-  `P ("$(i,OPAMLOGS logdir) sets log directory, default is a temporary directory \
-       in " ^ (if Sys.win32 then "%TEMP%" else "/tmp"));
-  `P "$(i,OPAMMAKECMD) set the system make command to use";
-  `P "$(i,OPAMNOAUTOUPGRADE) disables automatic internal upgrade of \
-      repositories in an earlier format to the current one, on 'update' or \
-      'init'.";
-  `P "$(i,OPAMKEEPLOGS) tells opam to not remove some temporary command logs \
-      and some backups. This skips some finalisers and may also help to get \
-      more reliable backtraces";
-  `P "$(i,OPAMLOCKRETRIES) sets the number of tries after which opam gives up \
-      acquiring its lock and fails. <= 0 means infinite wait.";
-  `P "$(i,OPAMMERGEOUT) merge process outputs, stderr on stdout";
-  `P "$(i,OPAMNO) answer no to any question asked.";
-  `P "$(i,OPAMNOASPCUD) Deprecated.";
-  `P "$(i,OPAMNOCHECKSUMS) enables option --no-checksums when available.";
-  `P "$(i,OPAMNODEPEXTS) disables system dependencies handling, see option \
-      `--no-depexts'.";
-  `P "$(i,OPAMDROPWORKINGDIR) overrides packages previously updated with \
-      $(b,--working-dir) on update. Without this variable set, opam would keep them \
-      unchanged unless explicitely named on the command-line.";
-  `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
-  `P "$(i,OPAMPINKINDAUTO) sets whether version control systems should be \
-      detected when pinning to a local path. Enabled by default since 1.3.0.";
-  `P "$(i,OPAMPRECISETRACKING) fine grain tracking of directories";
-  `P "$(i,OPAMREQUIRECHECKSUMS) Enables option `--require-checksums' when \
-      available (e.g. for `opam install`).";
-  `P "$(i,OPAMRETRIES) sets the number of tries before failing downloads.";
-  `P "$(i,OPAMROOT) see option `--root'. This is automatically set by \
-      `opam env --root=DIR --set-root'.";
-  `P "$(i,OPAMROOTISOK) don't complain when running as root.";
-  `P "$(i,OPAMSAFE) see option `--safe'";
-  `P "$(i,OPAMSHOW) see option `--show`";
-  `P "$(i,OPAMSKIPUPDATE) see option `--skip-updates`";
-  `P "$(i,OPAMSKIPVERSIONCHECKS) bypasses some version checks. Unsafe, for \
-      compatibility testing only.";
-  `P (Printf.sprintf
-        "$(i,OPAMSOLVERTIMEOUT) change the time allowance of the solver. \
-         Default is %.1f, set to 0 for unlimited. Note that all solvers may \
-         not support this option."
-        (OpamStd.Option.default 0. OpamSolverConfig.(default.solver_timeout)));
-  `P "$(i,OPAMSOLVERALLOWSUBOPTIMAL) (default `true') allows some solvers to \
-      still return a solution when they reach timeout; while the solution \
-      remains assured to be consistent, there is no guarantee in this case \
-      that it fits the expected optimisation criteria. If `true', opam will \
-      continue with a warning, if `false' a timeout is an error. Currently \
-      only the builtin-z3 backend handles this degraded case.";
-  `P ("$(i,OPAMSTATUSLINE) display a dynamic status line showing what's \
-       currently going on on the terminal. \
-       (one of "^Arg.doc_alts_enum when_enum^")");
-  `P "$(i,OPAMSTATS) display stats at the end of command";
-  `P "$(i,OPAMSTRICT) fail on inconsistencies (file reading, switch import, etc.)";
-  `P "$(i,OPAMSWITCH) see option `--switch'. Automatically set by \
-      `opam env --switch=SWITCH --set-switch'.";
-  `P "$(i,OPAMUNLOCKBASE) see install option `--unlock-base`";
-  `P ("$(i,OPAMUPGRADECRITERIA) specifies user $(i,preferences) for dependency \
-       solving when performing an upgrade. Overrides $(i,OPAMCRITERIA) in \
-       upgrades if both are set. See also option --criteria");
-  `P "$(i,OPAMUSEINTERNALSOLVER) see option `--use-internal-solver'.";
-  `P "$(i,OPAMUSEOPENSSL) force openssl use for hash computing";
-  `P ("$(i,OPAMUTF8) use UTF8 characters in output \
-       (one of "^Arg.doc_alts_enum when_enum^
-      "). By default `auto', which is determined from the locale).");
-  `P "$(i,OPAMUTF8MSGS) use extended UTF8 characters (camels) in opam \
-      messages. Implies $(i,OPAMUTF8). This is set by default on OSX only.";
-  `P "$(i,OPAMVALIDATIONHOOK hook) if set, uses the `%{hook%}` command to \
-      validate an opam repository update";
-  `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
-      substituting `%{var}%` strings in `opam` files.";
-  `P "$(i,OPAMVAR_package_var) overrides the contents of the variable \
-      $(i,package:var) when substituting `%{package:var}%` strings in \
-      `opam` files.";
-  `P "$(i,OPAMVERBOSE) see option `--verbose'.";
-  `P "$(i,OPAMWORKINGDIR) see option `--working-dir`";
-  `P "$(i,OPAMYES) see option `--yes'.";
+    `S "CLI VERSION";
+    `P "All scripts and programmatic invocations of opam should use `--cli' in \
+        order to ensure that they work seamlessly with future versions of the \
+        opam client. Additionally, blog posts or other documentation can \
+        benefit, as it prevents information from becoming stale.";
+    `P (Printf.sprintf
+          "Although opam only supports roots ($(i,~%s.opam%s)) for the current \
+           version, it does provide backwards compatibility for its \
+           command-line interface." dir_sep dir_sep);
+    `P "The command-line version is selected by using the `--cli' option or \
+        the $(i,OPAMCLI) environment variable. `--cli' may be specified more\
+        than once, where the last instance takes precedence. $(i,OPAMCLI) is \
+        only inspected if `--cli' is not given.";
+    `P "Since CLI version support was only added in opam 2.1, use $(i,OPAMCLI) \
+        to select 2.0 support (as opam 2.0 will just ignore it), \
+        and `--cli=2.1' for 2.1 later versions, since an environment variable \
+        controlling the parsing of syntax is brittle. To this end, opam \
+        displays a warning if $(i,OPAMCLI) specifies a valid version other \
+        than 2.0, and also if `--cli=2.0' is specified.";
 
-  `S "CLI VERSION";
-  `P "All scripts and programmatic invocations of opam should use `--cli' in \
-      order to ensure that they work seamlessly with future versions of the \
-      opam client. Additionally, blog posts or other documentation can \
-      benefit, as it prevents information from becoming stale.";
-  `P (Printf.sprintf
-       "Although opam only supports roots ($(i,~%s.opam%s)) for the current \
-        version, it does provide backwards compatibility for its command-line \
-        interface." dir_sep dir_sep);
-  `P "The command-line version is selected by using the `--cli' option or the \
-      $(i,OPAMCLI) environment variable. `--cli' may be specified more than \
-      once, where the last instance takes precedence. $(i,OPAMCLI) is only \
-      inspected if `--cli' is not given.";
-  `P "Since CLI version support was only added in opam 2.1, use $(i,OPAMCLI) \
-      to select 2.0 support (as opam 2.0 will just ignore it), and `--cli=2.1' \
-      for 2.1 later versions, since an environment variable controlling the \
-      parsing of syntax is brittle. To this end, opam displays a warning if \
-      $(i,OPAMCLI) specifies a valid version other than 2.0, and also if \
-      `--cli=2.0' is specified.";
-
-  `S Manpage.s_exit_status;
-  `P "As an exception to the following, the `exec' command returns 127 if the \
-      command was not found or couldn't be executed, and the command's exit \
-      value otherwise."
-] @
+    `S Manpage.s_exit_status;
+    `P "As an exception to the following, the `exec' command returns 127 if the \
+        command was not found or couldn't be executed, and the command's exit \
+        value otherwise."
+  ] @
   List.map (fun (reason, code) ->
       `I (string_of_int code, match reason with
         | `Success ->
@@ -235,25 +353,25 @@ let help_sections _cli = [
            pressing Ctrl-C."
         ))
     OpamStd.Sys.exit_codes
-@ [
-  `S "FURTHER DOCUMENTATION";
-  `P (Printf.sprintf "See https://opam.ocaml.org/doc.");
+  @ [
+    `S "FURTHER DOCUMENTATION";
+    `P (Printf.sprintf "See https://opam.ocaml.org/doc.");
 
-  `S Manpage.s_authors;
-  `P "Vincent Bernardoff <vb@luminar.eu.org>"; `Noblank;
-  `P "Raja Boujbel       <raja.boujbel@ocamlpro.com>"; `Noblank;
-  `P "Roberto Di Cosmo   <roberto@dicosmo.org>"; `Noblank;
-  `P "Thomas Gazagnaire  <thomas@gazagnaire.org>"; `Noblank;
-  `P "Louis Gesbert      <louis.gesbert@ocamlpro.com>"; `Noblank;
-  `P "Fabrice Le Fessant <Fabrice.Le_fessant@inria.fr>"; `Noblank;
-  `P "Anil Madhavapeddy  <anil@recoil.org>"; `Noblank;
-  `P "Guillem Rieu       <guillem.rieu@ocamlpro.com>"; `Noblank;
-  `P "Ralf Treinen       <ralf.treinen@pps.jussieu.fr>"; `Noblank;
-  `P "Frederic Tuong     <tuong@users.gforge.inria.fr>";
+    `S Manpage.s_authors;
+    `P "Vincent Bernardoff <vb@luminar.eu.org>"; `Noblank;
+    `P "Raja Boujbel       <raja.boujbel@ocamlpro.com>"; `Noblank;
+    `P "Roberto Di Cosmo   <roberto@dicosmo.org>"; `Noblank;
+    `P "Thomas Gazagnaire  <thomas@gazagnaire.org>"; `Noblank;
+    `P "Louis Gesbert      <louis.gesbert@ocamlpro.com>"; `Noblank;
+    `P "Fabrice Le Fessant <Fabrice.Le_fessant@inria.fr>"; `Noblank;
+    `P "Anil Madhavapeddy  <anil@recoil.org>"; `Noblank;
+    `P "Guillem Rieu       <guillem.rieu@ocamlpro.com>"; `Noblank;
+    `P "Ralf Treinen       <ralf.treinen@pps.jussieu.fr>"; `Noblank;
+    `P "Frederic Tuong     <tuong@users.gforge.inria.fr>";
 
-  `S Manpage.s_bugs;
-  `P "Check bug reports at https://github.com/ocaml/opam/issues.";
-]
+    `S Manpage.s_bugs;
+    `P "Check bug reports at https://github.com/ocaml/opam/issues.";
+  ]
 
 
 (** Global options *)
@@ -302,7 +420,7 @@ let create_global_options
     cudf_file; solver_preferences; best_effort; safe_mode; json;
     no_auto_upgrade; working_dir; ignore_pin_depends; cli }
 
-let apply_global_options _cli o =
+let apply_global_options cli o =
   if o.git_version then (
     begin match OpamGitVersion.version with
       | None   -> ()
@@ -321,6 +439,7 @@ let apply_global_options _cli o =
       o.external_solver >>| fun s -> lazy (OpamCudfSolver.solver_of_string s)
   in
   let solver_prefs = o.solver_preferences >>| fun p -> lazy (Some p) in
+  init_opam_envvariabes cli;
   OpamClientConfig.opam_init
     (* - format options - *)
     ?strict:(flag o.strict)
