@@ -215,6 +215,7 @@ let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
         gt.root switch
   in
   print_eval_env ~csh ~sexp ~fish env
+[@@ocaml.warning "-16"]
 
 let subst gt fs =
   log "config-substitute";
