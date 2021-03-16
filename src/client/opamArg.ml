@@ -16,6 +16,7 @@ open OpamStd.Op
 
 include OpamArgTools
 
+
 (** Utils *)
 
 let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]

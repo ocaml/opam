@@ -90,3 +90,8 @@ val mk_command_ret:
   (string -> doc:string -> man:Manpage.block list -> Term.info) ->
   string -> doc:string -> man:Manpage.block list ->
   (unit -> unit Term.ret) Term.t -> command
+
+val env_with_cli:
+  (string * validity * (string -> OpamStd.Config.E.t) * string) list ->
+  (OpamCLIVersion.Sourced.t -> Manpage.block list) *
+  (OpamCLIVersion.Sourced.t -> unit)

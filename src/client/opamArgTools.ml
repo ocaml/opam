@@ -77,15 +77,16 @@ let get_long_form flags =
       if flgth > lgth then (flgth, f) else (lgth, long))
     (0,"") flags |> snd
 
+let newer_flag_msg cli valid_since elem =
+  Printf.sprintf
+    "%s was added in version %s of the opam CLI, \
+     but version %s has been requested, which is older."
+    elem (OpamCLIVersion.to_string valid_since)
+    (string_of_sourced_cli cli)
+
 let newer_flag_error cli valid_since flags =
   let flag = get_long_form flags in
-  let msg =
-    Printf.sprintf
-      "%s was added in version %s of the opam CLI, \
-       but version %s has been requested, which is older."
-      flag (OpamCLIVersion.to_string valid_since)
-      (string_of_sourced_cli cli)
-  in
+  let msg = newer_flag_msg cli valid_since flag in
   `Error (false, msg)
 
 let previously_str removal instead =
@@ -98,16 +99,17 @@ let previously_str removal instead =
       (OpamConsole.colorise `bold ist) previous
   | None -> Printf.sprintf ", %s"  previous
 
+let older_flag_msg cli removal instead elem =
+  Printf.sprintf
+    "%s was removed in version %s of the opam CLI, \
+     but version %s has been requested%s."
+    elem (OpamCLIVersion.to_string removal)
+    (string_of_sourced_cli cli)
+    (previously_str removal instead)
+
 let older_flag_error cli removal instead flags =
   let flag = get_long_form flags in
-  let msg =
-    Printf.sprintf
-      "%s was removed in version %s of the opam CLI, \
-       but version %s has been requested%s."
-      flag (OpamCLIVersion.to_string removal)
-      (string_of_sourced_cli cli)
-      (previously_str removal instead)
-  in
+  let msg = older_flag_msg cli removal instead flag in
   `Error (false, msg)
 
 let deprecated_warning removal instead flags =
@@ -413,3 +415,42 @@ let mk_command_ret ~cli validity term_info name ~doc ~man cmd =
     |> Term.ret
   in
   Term.(ret (cmd $ check)), info
+
+(* Environment variables *)
+
+let check_cli_env_validity cli validity var cons =
+  let is_defined () = OpamStd.Config.env (fun x -> x) var <> None in
+  let ovar = "OPAM"^var in
+  match validity with
+  | { removed = None ; valid = c; _ } when cond_new cli c ->
+    if is_defined () then
+      OpamConsole.warning
+        "%s was ignored because CLI %s \
+         was requested and it was introduced in %s."
+        ovar (string_of_sourced_cli cli) (OpamCLIVersion.to_string c);
+    None
+  | { removed = Some (removal, instead); _ } when cond_removed cli removal ->
+    if is_defined () then
+      OpamConsole.warning
+        "%s was ignored because CLI %s \
+         was requested and it was removed in %s%s."
+        ovar (string_of_sourced_cli cli) (OpamCLIVersion.to_string removal)
+        (previously_str removal instead);
+    None
+  | _ -> Some (cons var)
+
+let env_with_cli environment =
+  let doc_env cli =
+    List.map (fun (var, validity, _cons, doc) ->
+        let doc = update_doc_w_cli doc ~cli validity in
+        `P (Printf.sprintf "$(i,OPAM%s) %s" var doc))
+      environment
+    |> List.sort compare
+  in
+  let init_env cli =
+    OpamStd.List.filter_map (fun (var, validity, cons, _doc) ->
+        check_cli_env_validity cli validity var cons)
+      environment
+    |> OpamStd.Config.E.updates
+  in
+  doc_env, init_env
