@@ -176,6 +176,22 @@
    (run ./run.exe %{bin:opam} %{dep:show.test} %{read-lines:testing-env}))))
 
 (alias
+ (name reftest-switch-locking)
+ (action
+  (diff switch-locking.test switch-locking.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-switch-locking)))
+
+(rule
+ (deps root-0370d92b)
+ (action
+  (with-stdout-to
+   switch-locking.out
+   (run ./run.exe %{bin:opam} %{dep:switch-locking.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-upgrade-format)
  (action
   (diff upgrade-format.test upgrade-format.out)))
@@ -225,6 +241,25 @@
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare -vv --debug
            file://%{dep:opam-repo-009e00fa}))))
+
+(rule
+ (targets opam-archive-0370d92b.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/0370d92b.tar.gz)))
+
+(rule
+  (targets opam-repo-0370d92b)
+  (action
+   (progn
+    (run mkdir %{targets})
+    (run tar -C %{targets} -xzf %{dep:opam-archive-0370d92b.tar.gz} --strip-components=1))))
+
+(rule
+  (targets root-0370d92b)
+  (action
+   (progn
+    (run %{bin:opam} init --root=%{targets}
+           --no-setup --bypass-checks --no-opamrc --bare -vv --debug
+           file://%{dep:opam-repo-0370d92b}))))
 
 (rule
  (targets opam-archive-632bc2e.tar.gz)

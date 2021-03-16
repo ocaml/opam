@@ -1,0 +1,40 @@
+0370d92b
+### opam switch create nohang ocaml-variants.4.12.0+options ocaml-option-bytecode-only mirage-crypto bigstringaf | unordered
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: [
+  "ocaml-variants" {= "4.12.0+options"}
+  "ocaml-option-bytecode-only"
+  "mirage-crypto"
+  "bigstringaf"
+]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed base-bigarray.base
+-> installed base-threads.base
+-> installed base-unix.base
+-> retrieved bigarray-compat.1.0.0  (https://github.com/mirage/bigarray-compat/archive/v1.0.0.tar.gz)
+-> retrieved bigstringaf.0.7.0  (https://github.com/inhabitedtype/bigstringaf/archive/0.7.0.tar.gz)
+-> installed conf-pkg-config.2
+-> retrieved csexp.1.4.0  (https://github.com/ocaml-dune/csexp/releases/download/1.4.0/csexp-1.4.0.tbz)
+-> retrieved cstruct.6.0.0  (https://github.com/mirage/ocaml-cstruct/releases/download/v6.0.0/cstruct-v6.0.0.tbz)
+-> retrieved dune.2.8.4  (https://github.com/ocaml/dune/releases/download/2.8.4/dune-2.8.4.tbz)
+-> retrieved dune-configurator.2.8.4  (cached)
+-> retrieved eqaf.0.7  (https://github.com/mirage/eqaf/releases/download/v0.7/eqaf-v0.7.tbz)
+-> retrieved mirage-crypto.0.8.10  (https://github.com/mirage/mirage-crypto/releases/download/v0.8.10/mirage-crypto-v0.8.10.tbz)
+-> installed ocaml-option-bytecode-only.1
+-> retrieved ocaml-variants.4.12.0+options  (https://github.com/ocaml/ocaml/archive/4.12.0.tar.gz)
+-> retrieved result.1.5  (https://github.com/janestreet/result/releases/download/1.5/result-1.5.tbz)
+-> installed ocaml-variants.4.12.0+options
+-> installed ocaml-config.2
+-> installed ocaml.4.12.0
+-> installed dune.2.8.4
+-> installed bigarray-compat.1.0.0
+-> installed result.1.5
+-> installed bigstringaf.0.7.0
+-> installed csexp.1.4.0
+-> installed cstruct.6.0.0
+-> installed eqaf.0.7
+-> installed dune-configurator.2.8.4
+-> installed mirage-crypto.0.8.10
+Done.
