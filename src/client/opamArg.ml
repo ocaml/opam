@@ -36,7 +36,7 @@ let dir_sep, escape_path =
 (** Help sections common to all commands *)
 
 let global_option_section = Manpage.s_common_options
-let help_sections = [
+let help_sections _cli = [
   `S global_option_section;
   `P "These options are common to all commands.";
 
@@ -302,7 +302,7 @@ let create_global_options
     cudf_file; solver_preferences; best_effort; safe_mode; json;
     no_auto_upgrade; working_dir; ignore_pin_depends; cli }
 
-let apply_global_options o =
+let apply_global_options _cli o =
   if o.git_version then (
     begin match OpamGitVersion.version with
       | None   -> ()
@@ -795,8 +795,8 @@ let opamlist_columns =
   in
   parse, print
 
-let term_info title ~doc ~man =
-  let man = man @ help_sections in
+let term_info ~cli title ~doc ~man =
+  let man = man @ help_sections cli in
   Term.info ~sdocs:global_option_section ~docs:Manpage.s_commands
     ~doc ~man title
 
@@ -806,7 +806,7 @@ let mk_command ~cli validity name ~doc ~man =
 let mk_command_ret ~cli validity name ~doc ~man =
   mk_command_ret ~cli validity term_info name ~doc ~man
 
-let make_command_alias cmd ?(options="") name =
+let make_command_alias ~cli cmd ?(options="") name =
   let term, info = cmd in
   let orig = Term.name info in
   let doc = Printf.sprintf "An alias for $(b,%s%s)." orig options in
@@ -817,7 +817,7 @@ let make_command_alias cmd ?(options="") name =
     `P (Printf.sprintf "See $(mname)$(b, %s --help) for details."
           orig);
     `S Manpage.s_options;
-  ] @ help_sections
+  ] @ help_sections cli
   in
   term,
   Term.info name

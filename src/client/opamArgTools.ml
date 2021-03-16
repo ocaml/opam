@@ -398,7 +398,7 @@ type command = unit Term.t * Term.info
 (* As [term_info] is defined later, we need to have it as argument *)
 let mk_command ~cli validity term_info name ~doc ~man cmd =
   let doc = update_doc_w_cli doc ~cli validity in
-  let info = term_info name ~doc ~man in
+  let info = term_info ~cli name ~doc ~man in
   let check =
     check_cli_validity cli validity () [name]
     |> Term.const
@@ -408,7 +408,7 @@ let mk_command ~cli validity term_info name ~doc ~man cmd =
 
 let mk_command_ret ~cli validity term_info name ~doc ~man cmd =
   let doc = update_doc_w_cli doc ~cli validity in
-  let info = term_info name ~doc ~man in
+  let info = term_info ~cli name ~doc ~man in
   let check =
     check_cli_validity cli validity () [name]
     |> Term.const

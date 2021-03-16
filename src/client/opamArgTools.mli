@@ -81,13 +81,16 @@ type command = unit Term.t * Term.info
 
 val mk_command:
   cli:OpamCLIVersion.Sourced.t -> validity ->
-  (string -> doc:string -> man:Manpage.block list -> Term.info) ->
+  (cli:OpamCLIVersion.Sourced.t -> string -> doc:string ->
+   man:Manpage.block list -> Term.info) ->
   string -> doc:string ->
   man:Manpage.block list -> (unit -> unit) Term.t -> command
 
 val mk_command_ret:
   cli:OpamCLIVersion.Sourced.t -> validity ->
-  (string -> doc:string -> man:Manpage.block list -> Term.info) ->
+  (cli:OpamCLIVersion.Sourced.t -> string -> doc:string ->
+   man:Manpage.block
+       list -> Term.info) ->
   string -> doc:string -> man:Manpage.block list ->
   (unit -> unit Term.ret) Term.t -> command
 

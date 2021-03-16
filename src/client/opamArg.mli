@@ -164,7 +164,7 @@ type global_options = {
 val global_options: OpamCLIVersion.Sourced.t -> global_options Term.t
 
 (** Apply global options *)
-val apply_global_options: global_options -> unit
+val apply_global_options: OpamCLIVersion.Sourced.t -> global_options -> unit
 
 
 (** {3 Build options} *)
@@ -306,6 +306,7 @@ val mk_subdoc :
 (** [mk_subdoc cmds] is the documentation block for [cmds]. *)
 
 val make_command_alias:
+  cli:OpamCLIVersion.Sourced.t ->
   'a Term.t * Term.info -> ?options:string -> string ->
   'a Term.t * Term.info
 (** Create an alias for an existing command. [options] can be used to add extra
@@ -335,4 +336,4 @@ val mk_command_ret:
 (** {2 Documentation} *)
 
 val global_option_section: string
-val help_sections: Manpage.block list
+val help_sections: OpamCLIVersion.Sourced.t -> Manpage.block list

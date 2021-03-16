@@ -75,7 +75,7 @@ let index_command cli =
     ]
   in
   let cmd global_options urls_txt () =
-    OpamArg.apply_global_options global_options;
+    OpamArg.apply_global_options cli global_options;
     let repo_root = checked_repo_root ()  in
     let repo_file = OpamRepositoryPath.repo repo_root in
     let repo_def =
@@ -227,7 +227,7 @@ let cache_command cli =
       OpamArg.positive_integer 8
   in
   let cmd global_options cache_dir no_repo_update link jobs () =
-    OpamArg.apply_global_options global_options;
+    OpamArg.apply_global_options cli global_options;
     let repo_root = checked_repo_root () in
     let repo_file = OpamRepositoryPath.repo repo_root in
     let repo_def = OpamFile.Repo.safe_read repo_file in
@@ -390,7 +390,7 @@ let add_hashes_command cli =
       h
   in
   let cmd global_options hash_types replace packages () =
-    OpamArg.apply_global_options global_options;
+    OpamArg.apply_global_options cli global_options;
     let repo_root = checked_repo_root () in
     let cache_urls =
       cache_urls repo_root
@@ -527,7 +527,7 @@ let upgrade_command cli =
       Arg.(some OpamArg.url) None
   in
   let cmd global_options clear_cache create_mirror () =
-    OpamArg.apply_global_options global_options;
+    OpamArg.apply_global_options cli global_options;
     if clear_cache then OpamAdminRepoUpgrade.clear_cache ()
     else match create_mirror with
       | None ->
@@ -583,7 +583,7 @@ let lint_command cli =
       "Return failure on any warnings, not only on errors"
   in
   let cmd global_options short list incl excl ign warn_error () =
-    OpamArg.apply_global_options global_options;
+    OpamArg.apply_global_options cli global_options;
     let repo_root = OpamFilename.cwd () in
     if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
     then
@@ -666,7 +666,7 @@ let check_command cli =
   in
   let cmd global_options ignore_test print_short
       installability cycles obsolete () =
-    OpamArg.apply_global_options global_options;
+    OpamArg.apply_global_options cli global_options;
     let repo_root = checked_repo_root () in
     let installability, cycles, obsolete =
       if installability || cycles || obsolete
@@ -823,7 +823,7 @@ let list_command cli =
   let cmd
       global_options package_selection disjunction state_selection
       package_listing env packages () =
-    OpamArg.apply_global_options global_options;
+    OpamArg.apply_global_options cli global_options;
     let format =
       let force_all_versions =
         match packages with
@@ -890,7 +890,7 @@ let filter_command cli =
   let cmd
       global_options package_selection disjunction state_selection env
       remove dryrun packages () =
-    OpamArg.apply_global_options global_options;
+    OpamArg.apply_global_options cli global_options;
     let repo_root = OpamFilename.cwd () in
     let pattern_selector = OpamListCommand.pattern_selector packages in
     let join =
@@ -985,7 +985,7 @@ let add_constraint_command cli =
        the existing constraint unchanged."
   in
   let cmd global_options force atom () =
-    OpamArg.apply_global_options global_options;
+    OpamArg.apply_global_options cli global_options;
     let repo_root = checked_repo_root () in
     let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
     let name, cstr_opt = atom in
@@ -1087,7 +1087,7 @@ let help =
 let admin_subcommands cli =
   let index_command = index_command cli in
   [
-    index_command; OpamArg.make_command_alias index_command "make";
+    index_command; OpamArg.make_command_alias ~cli index_command "make";
     cache_command cli;
     upgrade_command cli;
     lint_command cli;
@@ -1104,10 +1104,10 @@ let default_subcommand cli =
     admin_command_man @ [
       `S Manpage.s_commands;
       `S "COMMAND ALIASES";
-    ] @ OpamArg.help_sections
+    ] @ OpamArg.help_sections cli
   in
   let usage global_options =
-    OpamArg.apply_global_options global_options;
+    OpamArg.apply_global_options cli global_options;
     OpamConsole.formatted_msg
       "usage: opam admin [--version]\n\
       \                  [--help]\n\
