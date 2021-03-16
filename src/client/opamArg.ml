@@ -14,776 +14,7 @@ open OpamTypesBase
 open Cmdliner
 open OpamStd.Op
 
-(* Global options *)
-type global_options = {
-  debug_level: int option;
-  verbose: int;
-  quiet : bool;
-  color : OpamStd.Config.when_ option;
-  opt_switch : string option;
-  yes : bool;
-  strict : bool;
-  opt_root : dirname option;
-  git_version : bool;
-  external_solver : string option;
-  use_internal_solver : bool;
-  cudf_file : string option;
-  solver_preferences : string option;
-  best_effort : bool;
-  safe_mode : bool;
-  json : string option;
-  no_auto_upgrade : bool;
-  working_dir : bool;
-  ignore_pin_depends : bool;
-  cli : OpamCLIVersion.t;
-}
-
-(* The --cli passed by cmdliner is ignored (it's only there for --help) *)
-let create_global_options
-    git_version debug debug_level verbose quiet color opt_switch yes strict
-    opt_root external_solver use_internal_solver
-    cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade
-    working_dir ignore_pin_depends
-    d_no_aspcud _ =
-  if d_no_aspcud then
-    OpamConsole.warning
-      "Option %s is deprecated, ignoring it."
-      (OpamConsole.colorise `bold "--no-aspcud");
-  let debug_level = OpamStd.Option.Op.(
-      debug_level >>+ fun () -> if debug then Some 1 else None
-    ) in
-  let verbose = List.length verbose in
-  let cli = OpamCLIVersion.current in
-  { git_version; debug_level; verbose; quiet; color; opt_switch; yes;
-    strict; opt_root; external_solver; use_internal_solver;
-    cudf_file; solver_preferences; best_effort; safe_mode; json;
-    no_auto_upgrade; working_dir; ignore_pin_depends; cli }
-
-let apply_global_options o =
-  if o.git_version then (
-    begin match OpamGitVersion.version with
-      | None   -> ()
-      | Some v -> OpamConsole.msg "%s\n" v
-    end;
-    OpamStd.Sys.exit_because `Success
-  );
-  let open OpamStd.Option.Op in
-  let flag f = if f then Some true else None in
-  let some x = match x with None -> None | some -> Some some in
-  let solver =
-    if o.use_internal_solver then
-      Some (lazy (OpamCudfSolver.get_solver ~internal:true
-                    OpamCudfSolver.default_solver_selection))
-    else
-      o.external_solver >>| fun s -> lazy (OpamCudfSolver.solver_of_string s)
-  in
-  let solver_prefs = o.solver_preferences >>| fun p -> lazy (Some p) in
-  OpamClientConfig.opam_init
-    (* - format options - *)
-    ?strict:(flag o.strict)
-    (* ?skip_version_checks:bool *)
-    (* ?all_parens:bool *)
-    (* - core options - *)
-    ?debug_level:(if o.safe_mode then Some 0 else o.debug_level)
-    ?verbose_level:(if o.quiet then Some 0 else
-                    if o.verbose = 0 then None else Some o.verbose)
-    ?color:o.color
-    (* ?utf8:[ `Extended | `Always | `Never | `Auto ] *)
-    (* ?disp_status_line:[ `Always | `Never | `Auto ] *)
-    ?answer:(some (flag o.yes))
-    ?safe_mode:(flag o.safe_mode)
-    (* ?lock_retries:int *)
-    (* ?log_dir:OpamTypes.dirname *)
-    (* ?keep_log_dir:bool *)
-    (* - repository options - *)
-    (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
-    (* ?retries:int *)
-    (* ?force_checksums:bool option *)
-    (* - solver options *)
-    ?cudf_file:(some o.cudf_file)
-    ?solver
-    ?best_effort:(flag o.best_effort)
-    ?solver_preferences_default:solver_prefs
-    ?solver_preferences_upgrade:solver_prefs
-    ?solver_preferences_fixup:solver_prefs
-    (* ?solver_preferences_best_effort_prefix: *)
-    (* - state options - *)
-    ?root_dir:o.opt_root
-    ?current_switch:(o.opt_switch >>| OpamSwitch.of_string)
-    ?switch_from:(o.opt_switch >>| fun _ -> `Command_line)
-    (* ?jobs: int *)
-    (* ?dl_jobs: int *)
-    (* ?keep_build_dir:bool *)
-    (* ?build_test:bool *)
-    (* ?build_doc:bool *)
-    (* ?show:bool *)
-    (* ?dryrun:bool *)
-    (* ?fake:bool *)
-    (* ?makecmd:string Lazy.t *)
-    (* ?ignore_constraints_on:name_set *)
-    (* ?skip_dev_update:bool *)
-    ?json_out:OpamStd.Option.Op.(o.json >>| function "" -> None | s -> Some s)
-    (* ?root_is_ok:bool *)
-    ?no_auto_upgrade:(flag o.no_auto_upgrade)
-    (* - client options - *)
-    ?working_dir:(flag o.working_dir)
-    ?ignore_pin_depends:(flag o.ignore_pin_depends)
-    (* ?print_stats:bool *)
-    (* ?sync_archives:bool *)
-    (* ?pin_kind_auto:bool *)
-    (* ?autoremove:bool *)
-    (* ?editor:string *)
-    ~cli:o.cli
-    ();
-  if OpamClientConfig.(!r.json_out <> None) then (
-    OpamJson.append "opam-version" (`String OpamVersion.(to_string (full ())));
-    OpamJson.append "command-line"
-      (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)))
-  )
-
-(* Build options *)
-type build_options = {
-  keep_build_dir: bool;
-  reuse_build_dir: bool;
-  inplace_build : bool;
-  make          : string option;
-  no_checksums  : bool;
-  req_checksums : bool;
-  build_test    : bool;
-  build_doc     : bool;
-  show          : bool;
-  dryrun        : bool;
-  fake          : bool;
-  skip_update   : bool;
-  jobs          : int option;
-  ignore_constraints_on: name list option;
-  unlock_base   : bool;
-  locked        : bool;
-  lock_suffix   : string;
-  assume_depexts: bool;
-  no_depexts    : bool;
-}
-
-let create_build_options
-    keep_build_dir reuse_build_dir inplace_build make no_checksums
-    req_checksums build_test build_doc show dryrun skip_update
-    fake jobs ignore_constraints_on unlock_base locked lock_suffix
-    assume_depexts no_depexts
-    =
-  {
-    keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
-    req_checksums; build_test; build_doc; show; dryrun; skip_update; fake;
-    jobs; ignore_constraints_on; unlock_base; locked; lock_suffix;
-    assume_depexts; no_depexts;
-  }
-
-let apply_build_options b =
-  let open OpamStd.Option.Op in
-  let flag f = if f then Some true else None in
-  OpamRepositoryConfig.update
-    (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
-    (* ?retries:int *)
-    ?force_checksums:(if b.req_checksums then Some (Some true)
-                      else if b.no_checksums then Some (Some false)
-                      else None)
-    ();
-  OpamStateConfig.update
-    (* ?root: -- handled globally *)
-    ?jobs:(b.jobs >>| fun j -> lazy j)
-    (* ?dl_jobs:int *)
-    (* ?no_base_packages:(flag o.no_base_packages) -- handled globally *)
-    ?build_test:(flag b.build_test)
-    ?build_doc:(flag b.build_doc)
-    ?dryrun:(flag b.dryrun)
-    ?makecmd:(b.make >>| fun m -> lazy m)
-    ?ignore_constraints_on:
-      (b.ignore_constraints_on >>|
-       OpamPackage.Name.Set.of_list)
-    ?unlock_base:(flag b.unlock_base)
-    ?locked:(if b.locked then Some (Some b.lock_suffix) else None)
-    ?no_depexts:(flag b.no_depexts)
-    ();
-  OpamClientConfig.update
-    ?keep_build_dir:(flag b.keep_build_dir)
-    ?reuse_build_dir:(flag b.reuse_build_dir)
-    ?inplace_build:(flag b.inplace_build)
-    ?show:(flag b.show)
-    ?fake:(flag b.fake)
-    ?skip_dev_update:(flag b.skip_update)
-    ?assume_depexts:(flag (b.assume_depexts || b.no_depexts))
-    ()
-
-let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
-
-(* Windows directory separators need to be escaped for manpages *)
-let dir_sep, escape_path =
-  match Filename.dir_sep with
-  | "\\" ->
-    let esc = "\\\\" in
-    esc,
-    fun p ->
-      OpamStd.List.concat_map esc (fun x -> x)
-        (OpamStd.String.split_delim p '\\')
-  | ds -> ds, fun x -> x
-
-(* Help sections common to all commands *)
-let global_option_section = Manpage.s_common_options
-let help_sections = [
-  `S global_option_section;
-  `P "These options are common to all commands.";
-
-  `S Manpage.s_environment;
-  `P "Opam makes use of the environment variables listed here. Boolean \
-      variables should be set to \"0\", \"no\", \"false\" or the empty  string \
-      to disable, \"1\", \"yes\" or \"true\" to enable.";
-
-  (* Alphabetical order *)
-  `P "$(i,OPAMALLPARENS) surround all filters with parenthesis";
-  `P "$(i,OPAMASSUMEDEPEXTS) see option `--assume-depexts'";
-  `P "$(i,OPAMAUTOREMOVE) see remove option `--auto-remove`";
-  `P "$(i,OPAMBESTEFFORT) see option `--best-effort`";
-  `P "$(i,OPAMBESTEFFORTPREFIXCRITERIA) sets the string that must be prepended \
-      to the criteria when the `--best-effort` option is set, and is expected \
-      to maximise the `opam-query` property in the solution";
-  `P "$(i,OPAMCLI) see option `--cli'";
-  `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
-      value for the --color option.";
-  `P "$(i,OPAMCRITERIA) specifies user $(i,preferences) for dependency \
-       solving. The default value depends on the solver version, use `config \
-       report` to know the current setting. See also option --criteria";
-  `P "$(i,OPAMCUDFFILE file) save the cudf graph to \
-      $(i,file)-actions-explicit.dot";
-  `P "$(i,OPAMDEPEXTYES) launch system package managers in non-interactive mode";
-  `P "$(i,OPAMCURL) can be used to select a given 'curl' program. See \
-      $(i,OPAMFETCH) for more options.";
-  `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
-  `P "$(i,OPAMDEBUGSECTIONS) if set, limits debug messages to the space-separated \
-      list of sections. Sections can optionally have a specific debug level \
-      (for example, $(b,CLIENT:2) or $(b,CLIENT CUDF:2), but otherwise use \
-      `--debug-level'.";
-  `P "$(i,OPAMDOWNLOADJOBS) sets the maximum number of simultaneous downloads.";
-  `P "$(i,OPAMDRYRUN) see option `--dry-run`";
-  `P "$(i,OPAMEDITOR) sets the editor to use for opam file editing, overrides \
-      $(i,\\$EDITOR) and $(i,\\$VISUAL)";
-  `P "$(i,OPAMERRLOGLEN) sets the number of log lines printed when a \
-      sub-process fails. 0 to print all.";
-  `P "$(i,OPAMEXTERNALSOLVER) see option `--solver'.";
-  `P "$(i,OPAMFAKE) see option `--fake`";
-  `P "$(i,OPAMFETCH) specifies how to download files: either `wget', `curl' or \
-      a custom command where variables $(b,%{url}%), $(b,%{out}%), \
-      $(b,%{retry}%), $(b,%{compress}%) and $(b,%{checksum}%) will \
-      be replaced. Overrides the \
-      'download-command' value from the main config file.";
-  `P "$(i,OPAMFIXUPCRITERIA) same as $(i,OPAMUPGRADECRITERIA), but specific \
-      to fixup";
-  `P "$(i,OPAMIGNORECONSTRAINTS) see install option `--ignore-constraints-on`";
-  `P "$(i,OPAMIGNOREPINDEPENDS) see option `--ignore-pin-depends`";
-  `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
-  `P "$(i,OPAMJSON) log json output to the given file (use character `%' to \
-      index the files)";
-  `P "$(i,OPAMLOCKED) combination of `--locked` and `--lock-suffix` options";
-  `P ("$(i,OPAMLOGS logdir) sets log directory, default is a temporary directory \
-       in " ^ (if Sys.win32 then "%TEMP%" else "/tmp"));
-  `P "$(i,OPAMMAKECMD) set the system make command to use";
-  `P "$(i,OPAMNOAUTOUPGRADE) disables automatic internal upgrade of \
-      repositories in an earlier format to the current one, on 'update' or \
-      'init'.";
-  `P "$(i,OPAMKEEPLOGS) tells opam to not remove some temporary command logs \
-      and some backups. This skips some finalisers and may also help to get \
-      more reliable backtraces";
-  `P "$(i,OPAMLOCKRETRIES) sets the number of tries after which opam gives up \
-      acquiring its lock and fails. <= 0 means infinite wait.";
-  `P "$(i,OPAMMERGEOUT) merge process outputs, stderr on stdout";
-  `P "$(i,OPAMNO) answer no to any question asked.";
-  `P "$(i,OPAMNOASPCUD) Deprecated.";
-  `P "$(i,OPAMNOCHECKSUMS) enables option --no-checksums when available.";
-  `P "$(i,OPAMNODEPEXTS) disables system dependencies handling, see option \
-      `--no-depexts'.";
-  `P "$(i,OPAMDROPWORKINGDIR) overrides packages previously updated with \
-      $(b,--working-dir) on update. Without this variable set, opam would keep them \
-      unchanged unless explicitely named on the command-line.";
-  `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
-  `P "$(i,OPAMPINKINDAUTO) sets whether version control systems should be \
-      detected when pinning to a local path. Enabled by default since 1.3.0.";
-  `P "$(i,OPAMPRECISETRACKING) fine grain tracking of directories";
-  `P "$(i,OPAMREQUIRECHECKSUMS) Enables option `--require-checksums' when \
-      available (e.g. for `opam install`).";
-  `P "$(i,OPAMRETRIES) sets the number of tries before failing downloads.";
-  `P "$(i,OPAMROOT) see option `--root'. This is automatically set by \
-      `opam env --root=DIR --set-root'.";
-  `P "$(i,OPAMROOTISOK) don't complain when running as root.";
-  `P "$(i,OPAMSAFE) see option `--safe'";
-  `P "$(i,OPAMSHOW) see option `--show`";
-  `P "$(i,OPAMSKIPUPDATE) see option `--skip-updates`";
-  `P "$(i,OPAMSKIPVERSIONCHECKS) bypasses some version checks. Unsafe, for \
-      compatibility testing only.";
-  `P (Printf.sprintf
-        "$(i,OPAMSOLVERTIMEOUT) change the time allowance of the solver. \
-         Default is %.1f, set to 0 for unlimited. Note that all solvers may \
-         not support this option."
-        (OpamStd.Option.default 0. OpamSolverConfig.(default.solver_timeout)));
-  `P "$(i,OPAMSOLVERALLOWSUBOPTIMAL) (default `true') allows some solvers to \
-      still return a solution when they reach timeout; while the solution \
-      remains assured to be consistent, there is no guarantee in this case \
-      that it fits the expected optimisation criteria. If `true', opam will \
-      continue with a warning, if `false' a timeout is an error. Currently \
-      only the builtin-z3 backend handles this degraded case.";
-  `P ("$(i,OPAMSTATUSLINE) display a dynamic status line showing what's \
-       currently going on on the terminal. \
-       (one of "^Arg.doc_alts_enum when_enum^")");
-  `P "$(i,OPAMSTATS) display stats at the end of command";
-  `P "$(i,OPAMSTRICT) fail on inconsistencies (file reading, switch import, etc.)";
-  `P "$(i,OPAMSWITCH) see option `--switch'. Automatically set by \
-      `opam env --switch=SWITCH --set-switch'.";
-  `P "$(i,OPAMUNLOCKBASE) see install option `--unlock-base`";
-  `P ("$(i,OPAMUPGRADECRITERIA) specifies user $(i,preferences) for dependency \
-       solving when performing an upgrade. Overrides $(i,OPAMCRITERIA) in \
-       upgrades if both are set. See also option --criteria");
-  `P "$(i,OPAMUSEINTERNALSOLVER) see option `--use-internal-solver'.";
-  `P "$(i,OPAMUSEOPENSSL) force openssl use for hash computing";
-  `P ("$(i,OPAMUTF8) use UTF8 characters in output \
-       (one of "^Arg.doc_alts_enum when_enum^
-      "). By default `auto', which is determined from the locale).");
-  `P "$(i,OPAMUTF8MSGS) use extended UTF8 characters (camels) in opam \
-      messages. Implies $(i,OPAMUTF8). This is set by default on OSX only.";
-  `P "$(i,OPAMVALIDATIONHOOK hook) if set, uses the `%{hook%}` command to \
-      validate an opam repository update";
-  `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
-      substituting `%{var}%` strings in `opam` files.";
-  `P "$(i,OPAMVAR_package_var) overrides the contents of the variable \
-      $(i,package:var) when substituting `%{package:var}%` strings in \
-      `opam` files.";
-  `P "$(i,OPAMVERBOSE) see option `--verbose'.";
-  `P "$(i,OPAMWORKINGDIR) see option `--working-dir`";
-  `P "$(i,OPAMYES) see option `--yes'.";
-
-  `S "CLI VERSION";
-  `P "All scripts and programmatic invocations of opam should use `--cli' in \
-      order to ensure that they work seamlessly with future versions of the \
-      opam client. Additionally, blog posts or other documentation can \
-      benefit, as it prevents information from becoming stale.";
-  `P (Printf.sprintf
-       "Although opam only supports roots ($(i,~%s.opam%s)) for the current \
-        version, it does provide backwards compatibility for its command-line \
-        interface." dir_sep dir_sep);
-  `P "The command-line version is selected by using the `--cli' option or the \
-      $(i,OPAMCLI) environment variable. `--cli' may be specified more than \
-      once, where the last instance takes precedence. $(i,OPAMCLI) is only \
-      inspected if `--cli' is not given.";
-  `P "Since CLI version support was only added in opam 2.1, use $(i,OPAMCLI) \
-      to select 2.0 support (as opam 2.0 will just ignore it), and `--cli=2.1' \
-      for 2.1 later versions, since an environment variable controlling the \
-      parsing of syntax is brittle. To this end, opam displays a warning if \
-      $(i,OPAMCLI) specifies a valid version other than 2.0, and also if \
-      `--cli=2.0' is specified.";
-
-  `S Manpage.s_exit_status;
-  `P "As an exception to the following, the `exec' command returns 127 if the \
-      command was not found or couldn't be executed, and the command's exit \
-      value otherwise."
-] @
-  List.map (fun (reason, code) ->
-      `I (string_of_int code, match reason with
-        | `Success ->
-          "Success, or true for boolean queries."
-        | `False ->
-          "False. Returned when a boolean return value is expected, e.g. when \
-           running with $(b,--check), or for queries like $(b,opam lint)."
-        | `Bad_arguments ->
-          "Bad command-line arguments, or command-line arguments pointing to \
-           an invalid context (e.g. file not following the expected format)."
-        | `Not_found ->
-          "Not found. You requested something (package, version, repository, \
-           etc.) that couldn't be found."
-        | `Aborted ->
-          "Aborted. The operation required confirmation, which wasn't given."
-        | `Locked ->
-          "Could not acquire the locks required for the operation."
-        | `No_solution ->
-          "There is no solution to the user request. This can be caused by \
-           asking to install two incompatible packages, for example."
-        | `File_error ->
-          "Error in package definition, or other metadata files. Using \
-           $(b,--strict) raises this error more often."
-        | `Package_operation_error ->
-          "Package script error. Some package operations were unsuccessful. \
-           This may be an error in the packages or an incompatibility with \
-           your system. This can be a partial error."
-        | `Sync_error ->
-          "Sync error. Could not fetch some remotes from the network. This can \
-           be a partial error."
-        | `Configuration_error ->
-          "Configuration error. Opam or system configuration doesn't allow \
-           operation, and needs fixing."
-        | `Solver_failure ->
-          "Solver failure. The solver failed to return a sound answer. It can \
-           be due to a broken external solver, or an error in solver \
-           configuration."
-        | `Internal_error ->
-          "Internal error. Something went wrong, likely due to a bug in opam \
-           itself."
-        | `User_interrupt ->
-          "User interrupt. SIGINT was received, generally due to the user \
-           pressing Ctrl-C."
-        ))
-    OpamStd.Sys.exit_codes
-@ [
-  `S "FURTHER DOCUMENTATION";
-  `P (Printf.sprintf "See https://opam.ocaml.org/doc.");
-
-  `S Manpage.s_authors;
-  `P "Vincent Bernardoff <vb@luminar.eu.org>"; `Noblank;
-  `P "Raja Boujbel       <raja.boujbel@ocamlpro.com>"; `Noblank;
-  `P "Roberto Di Cosmo   <roberto@dicosmo.org>"; `Noblank;
-  `P "Thomas Gazagnaire  <thomas@gazagnaire.org>"; `Noblank;
-  `P "Louis Gesbert      <louis.gesbert@ocamlpro.com>"; `Noblank;
-  `P "Fabrice Le Fessant <Fabrice.Le_fessant@inria.fr>"; `Noblank;
-  `P "Anil Madhavapeddy  <anil@recoil.org>"; `Noblank;
-  `P "Guillem Rieu       <guillem.rieu@ocamlpro.com>"; `Noblank;
-  `P "Ralf Treinen       <ralf.treinen@pps.jussieu.fr>"; `Noblank;
-  `P "Frederic Tuong     <tuong@users.gforge.inria.fr>";
-
-  `S Manpage.s_bugs;
-  `P "Check bug reports at https://github.com/ocaml/opam/issues.";
-]
-
-(* Converters *)
-
-let pr_str = Format.pp_print_string
-
-let repository_name =
-  let parse str = `Ok (OpamRepositoryName.of_string str) in
-  let print ppf name = pr_str ppf (OpamRepositoryName.to_string name) in
-  parse, print
-
-let url =
-  let parse str =
-    match OpamUrl.parse_opt ~from_file:false str with
-    | Some url -> `Ok url
-    | None -> `Error ("malformed url "^str)
-  in
-  let print ppf url = pr_str ppf (OpamUrl.to_string url) in
-  parse, print
-
-let filename =
-  let parse str = `Ok (OpamFilename.of_string str) in
-  let print ppf filename = pr_str ppf (OpamFilename.to_string filename) in
-  parse, print
-
-let existing_filename_or_dash =
-  let parse str =
-    if str = "-" then `Ok None
-    else
-      let f = OpamFilename.of_string str in
-      if OpamFilename.exists f then `Ok (Some f)
-      else
-        `Error (Printf.sprintf "File %s not found" (OpamFilename.to_string f))
-  in
-  let print ppf filename =
-    pr_str ppf OpamStd.Option.Op.((filename >>| OpamFilename.to_string) +! "-") in
-  parse, print
-
-let dirname =
-  let parse str = `Ok (OpamFilename.Dir.of_string str) in
-  let print ppf dir = pr_str ppf (escape_path (OpamFilename.prettify_dir dir)) in
-  parse, print
-
-let existing_filename_dirname_or_dash =
-  let parse str =
-    if str = "-" then `Ok None else
-    match OpamFilename.opt_file (OpamFilename.of_string str) with
-    | Some f -> `Ok (Some (OpamFilename.F f))
-    | None -> match OpamFilename.opt_dir (OpamFilename.Dir.of_string str) with
-      | Some d -> `Ok (Some (OpamFilename.D d))
-      | None ->
-        `Error (Printf.sprintf "File or directory %s not found" str)
-  in
-  let print ppf gf =
-    pr_str ppf @@ match gf with
-    | None -> "-"
-    | Some (OpamFilename.D d) -> OpamFilename.Dir.to_string d
-    | Some (OpamFilename.F f) -> OpamFilename.to_string f
-  in
-  parse, print
-
-let _subpath_conv =
-  (fun str -> `Ok (OpamStd.String.remove_prefix ~prefix:"./" str)), pr_str
-
-let package_name =
-  let parse str =
-    try `Ok (OpamPackage.Name.of_string str)
-    with Failure msg -> `Error msg
-  in
-  let print ppf pkg = pr_str ppf (OpamPackage.Name.to_string pkg) in
-  parse, print
-
-let package_version =
-  let parse str =
-    try `Ok (OpamPackage.Version.of_string str)
-    with Failure msg -> `Error msg
-  in
-  let print ppf ver = pr_str ppf (OpamPackage.Version.to_string ver) in
-  parse, print
-
-let positive_integer : int Arg.converter =
-  let (parser, printer) = Arg.int in
-  let parser s =
-    match parser s with
-    | `Error _ -> `Error "expected a strictly positive integer"
-    | `Ok n as r -> if n <= 0
-      then `Error "expected a positive integer"
-      else r in
-  (parser, printer)
-
-(* name * version option *)
-let package =
-  let parse str =
-    let re = Re.(compile @@ seq [
-        bos;
-        group @@ rep1 @@ diff any (set ">=<.!");
-        opt @@ seq [ set ".="; group @@ rep1 any ];
-        eos;
-      ]) in
-    try
-      let sub = Re.exec re str in
-      let name = OpamPackage.Name.of_string (Re.Group.get sub 1) in
-      let version_opt =
-        try Some (OpamPackage.Version.of_string (Re.Group.get sub 2))
-        with Not_found -> None in
-      `Ok (name, version_opt)
-    with Not_found | Failure _ -> `Error "bad package format"
-  in
-  let print ppf (name, version_opt) =
-    match version_opt with
-    | None -> pr_str ppf (OpamPackage.Name.to_string name)
-    | Some v -> pr_str ppf (OpamPackage.Name.to_string name ^"."^
-                            OpamPackage.Version.to_string v)
-  in
-  parse, print
-
-let package_with_version =
-  let parse str =
-    match fst package str with
-    | `Ok (n, Some v) -> `Ok (OpamPackage.create n v)
-    | `Ok (_, None) -> `Error "missing package version"
-    | `Error e -> `Error e
-  in
-  let print ppf nv = pr_str ppf (OpamPackage.to_string nv) in
-  parse, print
-
-(* name * version constraint *)
-let atom =
-  let parse str =
-    try `Ok (OpamFormula.atom_of_string str)
-    with Failure msg -> `Error msg
-  in
-  let print ppf atom =
-    pr_str ppf (OpamFormula.short_string_of_atom atom) in
-  parse, print
-
-let atom_or_local =
-  let parse str =
-    if OpamStd.String.contains ~sub:Filename.dir_sep str ||
-       OpamStd.String.starts_with ~prefix:"." str
-    then
-      if OpamFilename.(exists (of_string str)) then
-        `Ok (`Filename (OpamFilename.of_string str))
-      else if  OpamFilename.(exists_dir (Dir.of_string str)) then
-        `Ok (`Dirname (OpamFilename.Dir.of_string str))
-      else
-        `Error (Printf.sprintf
-                  "Not a valid package specification or existing file or \
-                   directory: %s" str)
-    else match fst atom str with
-      | `Ok at -> `Ok (`Atom at)
-      | `Error e -> `Error e
-  in
-  let print ppf = function
-    | `Filename f -> pr_str ppf (OpamFilename.to_string f)
-    | `Dirname d -> pr_str ppf (OpamFilename.Dir.to_string d)
-    | `Atom a -> snd atom ppf a
-  in
-  parse, print
-
-let atom_or_dir =
-  let parse str = match fst atom_or_local str with
-    | `Ok (`Filename _) ->
-      `Error (Printf.sprintf
-                "Not a valid package specification or existing directory: %s"
-                str)
-    | `Ok (`Atom _ | `Dirname _ as atom_or_dir) -> `Ok (atom_or_dir)
-    | `Error e -> `Error e
-  in
-  let print ppf = snd atom_or_local ppf in
-  parse, print
-
-let dep_formula =
-  let module OpamParser = OpamParser.FullPos in
-  let module OpamPrinter = OpamPrinter.FullPos in
-  let pp = OpamFormat.V.(package_formula `Conj (constraints version)) in
-  let parse str =
-    try
-      let v = OpamParser.value_from_string str "<command-line>" in
-      `Ok (OpamPp.parse pp ~pos:pos_null v)
-    with e -> OpamStd.Exn.fatal e; `Error (Printexc.to_string e)
-  in
-  let print ppf f =
-    pr_str ppf (OpamPrinter.value (OpamPp.print pp f))
-  in
-  parse, print
-
-let variable_bindings =
-  let parse str =
-    try
-      OpamStd.String.split str ',' |>
-      List.map (fun s -> match OpamStd.String.cut_at s '=' with
-          | Some (a, b) -> OpamVariable.of_string a, b
-          | None -> Printf.ksprintf failwith "%S is not a binding" s) |>
-      fun bnds -> `Ok bnds
-    with Failure e -> `Error e
-  in
-  let print ppf x =
-    List.map
-      (fun (a,b) -> Printf.sprintf "%s=%s" (OpamVariable.to_string a) b) x |>
-    String.concat "," |>
-    pr_str ppf
-  in
-  parse, print
-
-let warn_selector =
-  let parse str =
-    let sep = Re.(compile (set "+-")) in
-    let sel = Re.(compile @@
-                  seq [bos; group (rep1 digit);
-                       opt @@ seq [str ".."; group (rep1 digit)];
-                       eos]) in
-    let rec seq i j =
-      if i = j then [i]
-      else if i < j then i :: seq (i+1) j
-      else j :: seq (j+1) i
-    in
-    let rec aux acc = function
-      | `Delim d :: `Text n :: r ->
-        let nums =
-          let g = Re.exec sel n in
-          let i = int_of_string (Re.Group.get g 1) in
-          try seq i (int_of_string (Re.Group.get g 2))
-          with Not_found -> [i]
-        in
-        let enabled = Re.Group.get d 0 = "+" in
-        let acc = List.fold_left (fun acc n -> (n, enabled) :: acc) acc nums in
-        aux acc r
-      | [] -> acc
-      | _ -> raise Not_found
-    in
-    try `Ok (List.rev (aux [] (Re.split_full sep str)))
-    with Not_found ->
-      `Error "Expected a warning string, e.g. '--warn=-10..21+12-36'"
-  in
-  let print ppf warns =
-    pr_str ppf @@
-    OpamStd.List.concat_map "" (fun (num,enable) ->
-        Printf.sprintf "%c%d" (if enable then '+' else '-') num)
-      warns
-  in
-  parse, print
-
-let _selector =
-  let parse str =
-    let r =
-      List.fold_left (fun (plus, minus) elem ->
-          match OpamStd.String.sub_at 1 elem with
-          | "+" as prefix ->
-            (OpamStd.String.remove_prefix ~prefix elem)::plus, minus
-          | "-" as prefix ->
-            plus, (OpamStd.String.remove_prefix ~prefix elem)::minus
-          |  _ ->  elem::plus, minus)
-        ([],[]) (OpamStd.String.split str ',')
-    in
-    `Ok r
-  in
-  let print ppf (plus,minus) =
-    let concat c =
-      OpamStd.List.concat_map ~nil:"" "," (fun x -> c^x)
-    in
-    pr_str ppf @@ Printf.sprintf "%s,%s" (concat "+" plus) (concat "-" minus)
-  in
-  parse, print
-
-type 'a default = [> `default of string] as 'a
-
-let enum_with_default sl: 'a Arg.converter =
-  let parse, print = Arg.enum sl in
-  let parse s =
-    match parse s with
-    | `Ok _ as x -> x
-    | _ -> `Ok (`default s) in
-  parse, print
-
-let opamlist_column =
-  let parse str =
-    if OpamStd.String.ends_with ~suffix:":" str then
-      let fld = OpamStd.String.remove_suffix ~suffix:":" str in
-      `Ok (OpamListCommand.Field fld)
-    else
-    try
-      List.find (function (OpamListCommand.Field _), _ -> false
-                        | _, name -> name = str)
-        OpamListCommand.field_names
-      |> fun (f, _) -> `Ok f
-    with Not_found ->
-      `Error (Printf.sprintf
-                "No known printer for column %s. If you meant an opam file \
-                 field, use '%s:' instead (with a trailing colon)."
-                str str)
-  in
-  let print ppf field =
-    Format.pp_print_string ppf (OpamListCommand.string_of_field field)
-  in
-  parse, print
-
-let opamlist_columns =
-  let field_re =
-    (* max paren nesting 1, obviously *)
-    Re.(compile @@ seq [
-        start;
-        group @@ seq [
-          rep @@ diff any (set ",(");
-          opt @@ seq [char '('; rep (diff any (char ')')); char ')'];
-        ];
-        alt [char ','; stop];
-      ])
-  in
-  let parse str =
-    try
-      let rec aux pos =
-        if pos = String.length str then [] else
-        let g = Re.exec ~pos field_re str in
-        Re.Group.get g 1 :: aux (Re.Group.stop g 0)
-      in
-      let fields = aux 0 in
-      List.fold_left (function
-          | `Error _ as e -> fun _ -> e
-          | `Ok acc -> fun str ->
-            match fst opamlist_column str with
-            | `Ok f -> `Ok (acc @ [f])
-            | `Error _ as e -> e)
-        (`Ok []) fields
-    with Not_found ->
-      `Error (Printf.sprintf "Invalid columns specification: '%s'." str)
-  in
-  let print ppf cols =
-    let rec aux = function
-      | x::(_::_) as r ->
-        snd opamlist_column ppf x; Format.pp_print_char ppf ','; aux r
-      | [x] -> snd opamlist_column ppf x
-      | [] -> ()
-    in
-    aux cols
-  in
-  parse, print
-
-(* CLI version helpers *)
+(** CLI version helpers *)
 
 (* Module Mk defines Cmdliner optional argument function-helpers, with the cli
    version. *)
@@ -806,8 +37,8 @@ module Mk : sig
     string -> bool Term.t
 
   val mk_flag_replaced:
-    cli:OpamCLIVersion.Sourced.t -> ?section:string -> (validity * string list) list ->
-    string -> bool Term.t
+    cli:OpamCLIVersion.Sourced.t -> ?section:string ->
+    (validity * string list) list -> string -> bool Term.t
 
   val mk_opt:
     cli:OpamCLIVersion.Sourced.t -> validity -> ?section:string -> ?vopt:'a ->
@@ -837,6 +68,8 @@ module Mk : sig
     cli:OpamCLIVersion.Sourced.t -> 'a subcommands ->
     'a option Term.t * string list Term.t
 
+  type 'a default = [> `default of string] as 'a
+
   val mk_subcommands_with_default:
     cli:OpamCLIVersion.Sourced.t -> 'a default subcommands ->
     'a option Term.t * string list Term.t
@@ -852,12 +85,16 @@ module Mk : sig
   type command = unit Term.t * Term.info
 
   val mk_command:
-    cli:OpamCLIVersion.Sourced.t -> validity -> string -> doc:string ->
+    cli:OpamCLIVersion.Sourced.t -> validity ->
+    (string -> doc:string -> man:Manpage.block list -> Term.info) ->
+    string -> doc:string ->
     man:Manpage.block list -> (unit -> unit) Term.t -> command
 
   val mk_command_ret:
-    cli:OpamCLIVersion.Sourced.t -> validity -> string -> doc:string ->
-    man:Manpage.block list -> (unit -> unit Term.ret) Term.t -> command
+    cli:OpamCLIVersion.Sourced.t -> validity ->
+    (string -> doc:string -> man:Manpage.block list -> Term.info) ->
+    string -> doc:string -> man:Manpage.block list ->
+    (unit -> unit Term.ret) Term.t -> command
 
 end = struct
 
@@ -1194,6 +431,8 @@ end = struct
   let mk_subcommands ~cli commands =
     mk_subcommands_aux ~cli Arg.enum commands
 
+  type 'a default = [> `default of string] as 'a
+
   let mk_subcommands_with_default ~cli commands =
     let enum_with_default_valrem sl =
       let parse, print = Arg.enum sl in
@@ -1240,13 +479,10 @@ end = struct
 
   (* Commands *)
 
-  let term_info title ~doc ~man =
-    let man = man @ help_sections in
-    Term.info ~sdocs:global_option_section ~docs:Manpage.s_commands ~doc ~man title
-
   type command = unit Term.t * Term.info
 
-  let mk_command ~cli validity name ~doc ~man cmd =
+  (* As [term_info] is defined later, we need to have it as argument *)
+  let mk_command ~cli validity term_info name ~doc ~man cmd =
     let doc = update_doc_w_cli doc ~cli validity in
     let info = term_info name ~doc ~man in
     let check =
@@ -1256,7 +492,7 @@ end = struct
     in
     Term.(cmd $ check), info
 
-  let mk_command_ret ~cli validity name ~doc ~man cmd =
+  let mk_command_ret ~cli validity term_info name ~doc ~man cmd =
     let doc = update_doc_w_cli doc ~cli validity in
     let info = term_info name ~doc ~man in
     let check =
@@ -1269,6 +505,796 @@ end = struct
 end
 
 include Mk
+
+
+(** Utils *)
+
+let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
+
+(* Windows directory separators need to be escaped for manpages *)
+let dir_sep, escape_path =
+  match Filename.dir_sep with
+  | "\\" ->
+    let esc = "\\\\" in
+    esc,
+    fun p ->
+      OpamStd.List.concat_map esc (fun x -> x)
+        (OpamStd.String.split_delim p '\\')
+  | ds -> ds, fun x -> x
+
+
+(** Help sections common to all commands *)
+
+let global_option_section = Manpage.s_common_options
+let help_sections = [
+  `S global_option_section;
+  `P "These options are common to all commands.";
+
+  `S Manpage.s_environment;
+  `P "Opam makes use of the environment variables listed here. Boolean \
+      variables should be set to \"0\", \"no\", \"false\" or the empty  string \
+      to disable, \"1\", \"yes\" or \"true\" to enable.";
+
+  (* Alphabetical order *)
+  `P "$(i,OPAMALLPARENS) surround all filters with parenthesis";
+  `P "$(i,OPAMASSUMEDEPEXTS) see option `--assume-depexts'";
+  `P "$(i,OPAMAUTOREMOVE) see remove option `--auto-remove`";
+  `P "$(i,OPAMBESTEFFORT) see option `--best-effort`";
+  `P "$(i,OPAMBESTEFFORTPREFIXCRITERIA) sets the string that must be prepended \
+      to the criteria when the `--best-effort` option is set, and is expected \
+      to maximise the `opam-query` property in the solution";
+  `P "$(i,OPAMCLI) see option `--cli'";
+  `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
+      value for the --color option.";
+  `P "$(i,OPAMCRITERIA) specifies user $(i,preferences) for dependency \
+       solving. The default value depends on the solver version, use `config \
+       report` to know the current setting. See also option --criteria";
+  `P "$(i,OPAMCUDFFILE file) save the cudf graph to \
+      $(i,file)-actions-explicit.dot";
+  `P "$(i,OPAMDEPEXTYES) launch system package managers in non-interactive mode";
+  `P "$(i,OPAMCURL) can be used to select a given 'curl' program. See \
+      $(i,OPAMFETCH) for more options.";
+  `P "$(i,OPAMDEBUG) see options `--debug' and `--debug-level'.";
+  `P "$(i,OPAMDEBUGSECTIONS) if set, limits debug messages to the space-separated \
+      list of sections. Sections can optionally have a specific debug level \
+      (for example, $(b,CLIENT:2) or $(b,CLIENT CUDF:2), but otherwise use \
+      `--debug-level'.";
+  `P "$(i,OPAMDOWNLOADJOBS) sets the maximum number of simultaneous downloads.";
+  `P "$(i,OPAMDRYRUN) see option `--dry-run`";
+  `P "$(i,OPAMEDITOR) sets the editor to use for opam file editing, overrides \
+      $(i,\\$EDITOR) and $(i,\\$VISUAL)";
+  `P "$(i,OPAMERRLOGLEN) sets the number of log lines printed when a \
+      sub-process fails. 0 to print all.";
+  `P "$(i,OPAMEXTERNALSOLVER) see option `--solver'.";
+  `P "$(i,OPAMFAKE) see option `--fake`";
+  `P "$(i,OPAMFETCH) specifies how to download files: either `wget', `curl' or \
+      a custom command where variables $(b,%{url}%), $(b,%{out}%), \
+      $(b,%{retry}%), $(b,%{compress}%) and $(b,%{checksum}%) will \
+      be replaced. Overrides the \
+      'download-command' value from the main config file.";
+  `P "$(i,OPAMFIXUPCRITERIA) same as $(i,OPAMUPGRADECRITERIA), but specific \
+      to fixup";
+  `P "$(i,OPAMIGNORECONSTRAINTS) see install option `--ignore-constraints-on`";
+  `P "$(i,OPAMIGNOREPINDEPENDS) see option `--ignore-pin-depends`";
+  `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
+  `P "$(i,OPAMJSON) log json output to the given file (use character `%' to \
+      index the files)";
+  `P "$(i,OPAMLOCKED) combination of `--locked` and `--lock-suffix` options";
+  `P ("$(i,OPAMLOGS logdir) sets log directory, default is a temporary directory \
+       in " ^ (if Sys.win32 then "%TEMP%" else "/tmp"));
+  `P "$(i,OPAMMAKECMD) set the system make command to use";
+  `P "$(i,OPAMNOAUTOUPGRADE) disables automatic internal upgrade of \
+      repositories in an earlier format to the current one, on 'update' or \
+      'init'.";
+  `P "$(i,OPAMKEEPLOGS) tells opam to not remove some temporary command logs \
+      and some backups. This skips some finalisers and may also help to get \
+      more reliable backtraces";
+  `P "$(i,OPAMLOCKRETRIES) sets the number of tries after which opam gives up \
+      acquiring its lock and fails. <= 0 means infinite wait.";
+  `P "$(i,OPAMMERGEOUT) merge process outputs, stderr on stdout";
+  `P "$(i,OPAMNO) answer no to any question asked.";
+  `P "$(i,OPAMNOASPCUD) Deprecated.";
+  `P "$(i,OPAMNOCHECKSUMS) enables option --no-checksums when available.";
+  `P "$(i,OPAMNODEPEXTS) disables system dependencies handling, see option \
+      `--no-depexts'.";
+  `P "$(i,OPAMDROPWORKINGDIR) overrides packages previously updated with \
+      $(b,--working-dir) on update. Without this variable set, opam would keep them \
+      unchanged unless explicitely named on the command-line.";
+  `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
+  `P "$(i,OPAMPINKINDAUTO) sets whether version control systems should be \
+      detected when pinning to a local path. Enabled by default since 1.3.0.";
+  `P "$(i,OPAMPRECISETRACKING) fine grain tracking of directories";
+  `P "$(i,OPAMREQUIRECHECKSUMS) Enables option `--require-checksums' when \
+      available (e.g. for `opam install`).";
+  `P "$(i,OPAMRETRIES) sets the number of tries before failing downloads.";
+  `P "$(i,OPAMROOT) see option `--root'. This is automatically set by \
+      `opam env --root=DIR --set-root'.";
+  `P "$(i,OPAMROOTISOK) don't complain when running as root.";
+  `P "$(i,OPAMSAFE) see option `--safe'";
+  `P "$(i,OPAMSHOW) see option `--show`";
+  `P "$(i,OPAMSKIPUPDATE) see option `--skip-updates`";
+  `P "$(i,OPAMSKIPVERSIONCHECKS) bypasses some version checks. Unsafe, for \
+      compatibility testing only.";
+  `P (Printf.sprintf
+        "$(i,OPAMSOLVERTIMEOUT) change the time allowance of the solver. \
+         Default is %.1f, set to 0 for unlimited. Note that all solvers may \
+         not support this option."
+        (OpamStd.Option.default 0. OpamSolverConfig.(default.solver_timeout)));
+  `P "$(i,OPAMSOLVERALLOWSUBOPTIMAL) (default `true') allows some solvers to \
+      still return a solution when they reach timeout; while the solution \
+      remains assured to be consistent, there is no guarantee in this case \
+      that it fits the expected optimisation criteria. If `true', opam will \
+      continue with a warning, if `false' a timeout is an error. Currently \
+      only the builtin-z3 backend handles this degraded case.";
+  `P ("$(i,OPAMSTATUSLINE) display a dynamic status line showing what's \
+       currently going on on the terminal. \
+       (one of "^Arg.doc_alts_enum when_enum^")");
+  `P "$(i,OPAMSTATS) display stats at the end of command";
+  `P "$(i,OPAMSTRICT) fail on inconsistencies (file reading, switch import, etc.)";
+  `P "$(i,OPAMSWITCH) see option `--switch'. Automatically set by \
+      `opam env --switch=SWITCH --set-switch'.";
+  `P "$(i,OPAMUNLOCKBASE) see install option `--unlock-base`";
+  `P ("$(i,OPAMUPGRADECRITERIA) specifies user $(i,preferences) for dependency \
+       solving when performing an upgrade. Overrides $(i,OPAMCRITERIA) in \
+       upgrades if both are set. See also option --criteria");
+  `P "$(i,OPAMUSEINTERNALSOLVER) see option `--use-internal-solver'.";
+  `P "$(i,OPAMUSEOPENSSL) force openssl use for hash computing";
+  `P ("$(i,OPAMUTF8) use UTF8 characters in output \
+       (one of "^Arg.doc_alts_enum when_enum^
+      "). By default `auto', which is determined from the locale).");
+  `P "$(i,OPAMUTF8MSGS) use extended UTF8 characters (camels) in opam \
+      messages. Implies $(i,OPAMUTF8). This is set by default on OSX only.";
+  `P "$(i,OPAMVALIDATIONHOOK hook) if set, uses the `%{hook%}` command to \
+      validate an opam repository update";
+  `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
+      substituting `%{var}%` strings in `opam` files.";
+  `P "$(i,OPAMVAR_package_var) overrides the contents of the variable \
+      $(i,package:var) when substituting `%{package:var}%` strings in \
+      `opam` files.";
+  `P "$(i,OPAMVERBOSE) see option `--verbose'.";
+  `P "$(i,OPAMWORKINGDIR) see option `--working-dir`";
+  `P "$(i,OPAMYES) see option `--yes'.";
+
+  `S "CLI VERSION";
+  `P "All scripts and programmatic invocations of opam should use `--cli' in \
+      order to ensure that they work seamlessly with future versions of the \
+      opam client. Additionally, blog posts or other documentation can \
+      benefit, as it prevents information from becoming stale.";
+  `P (Printf.sprintf
+       "Although opam only supports roots ($(i,~%s.opam%s)) for the current \
+        version, it does provide backwards compatibility for its command-line \
+        interface." dir_sep dir_sep);
+  `P "The command-line version is selected by using the `--cli' option or the \
+      $(i,OPAMCLI) environment variable. `--cli' may be specified more than \
+      once, where the last instance takes precedence. $(i,OPAMCLI) is only \
+      inspected if `--cli' is not given.";
+  `P "Since CLI version support was only added in opam 2.1, use $(i,OPAMCLI) \
+      to select 2.0 support (as opam 2.0 will just ignore it), and `--cli=2.1' \
+      for 2.1 later versions, since an environment variable controlling the \
+      parsing of syntax is brittle. To this end, opam displays a warning if \
+      $(i,OPAMCLI) specifies a valid version other than 2.0, and also if \
+      `--cli=2.0' is specified.";
+
+  `S Manpage.s_exit_status;
+  `P "As an exception to the following, the `exec' command returns 127 if the \
+      command was not found or couldn't be executed, and the command's exit \
+      value otherwise."
+] @
+  List.map (fun (reason, code) ->
+      `I (string_of_int code, match reason with
+        | `Success ->
+          "Success, or true for boolean queries."
+        | `False ->
+          "False. Returned when a boolean return value is expected, e.g. when \
+           running with $(b,--check), or for queries like $(b,opam lint)."
+        | `Bad_arguments ->
+          "Bad command-line arguments, or command-line arguments pointing to \
+           an invalid context (e.g. file not following the expected format)."
+        | `Not_found ->
+          "Not found. You requested something (package, version, repository, \
+           etc.) that couldn't be found."
+        | `Aborted ->
+          "Aborted. The operation required confirmation, which wasn't given."
+        | `Locked ->
+          "Could not acquire the locks required for the operation."
+        | `No_solution ->
+          "There is no solution to the user request. This can be caused by \
+           asking to install two incompatible packages, for example."
+        | `File_error ->
+          "Error in package definition, or other metadata files. Using \
+           $(b,--strict) raises this error more often."
+        | `Package_operation_error ->
+          "Package script error. Some package operations were unsuccessful. \
+           This may be an error in the packages or an incompatibility with \
+           your system. This can be a partial error."
+        | `Sync_error ->
+          "Sync error. Could not fetch some remotes from the network. This can \
+           be a partial error."
+        | `Configuration_error ->
+          "Configuration error. Opam or system configuration doesn't allow \
+           operation, and needs fixing."
+        | `Solver_failure ->
+          "Solver failure. The solver failed to return a sound answer. It can \
+           be due to a broken external solver, or an error in solver \
+           configuration."
+        | `Internal_error ->
+          "Internal error. Something went wrong, likely due to a bug in opam \
+           itself."
+        | `User_interrupt ->
+          "User interrupt. SIGINT was received, generally due to the user \
+           pressing Ctrl-C."
+        ))
+    OpamStd.Sys.exit_codes
+@ [
+  `S "FURTHER DOCUMENTATION";
+  `P (Printf.sprintf "See https://opam.ocaml.org/doc.");
+
+  `S Manpage.s_authors;
+  `P "Vincent Bernardoff <vb@luminar.eu.org>"; `Noblank;
+  `P "Raja Boujbel       <raja.boujbel@ocamlpro.com>"; `Noblank;
+  `P "Roberto Di Cosmo   <roberto@dicosmo.org>"; `Noblank;
+  `P "Thomas Gazagnaire  <thomas@gazagnaire.org>"; `Noblank;
+  `P "Louis Gesbert      <louis.gesbert@ocamlpro.com>"; `Noblank;
+  `P "Fabrice Le Fessant <Fabrice.Le_fessant@inria.fr>"; `Noblank;
+  `P "Anil Madhavapeddy  <anil@recoil.org>"; `Noblank;
+  `P "Guillem Rieu       <guillem.rieu@ocamlpro.com>"; `Noblank;
+  `P "Ralf Treinen       <ralf.treinen@pps.jussieu.fr>"; `Noblank;
+  `P "Frederic Tuong     <tuong@users.gforge.inria.fr>";
+
+  `S Manpage.s_bugs;
+  `P "Check bug reports at https://github.com/ocaml/opam/issues.";
+]
+
+
+(** Global options *)
+
+type global_options = {
+  debug_level: int option;
+  verbose: int;
+  quiet : bool;
+  color : OpamStd.Config.when_ option;
+  opt_switch : string option;
+  yes : bool;
+  strict : bool;
+  opt_root : dirname option;
+  git_version : bool;
+  external_solver : string option;
+  use_internal_solver : bool;
+  cudf_file : string option;
+  solver_preferences : string option;
+  best_effort : bool;
+  safe_mode : bool;
+  json : string option;
+  no_auto_upgrade : bool;
+  working_dir : bool;
+  ignore_pin_depends : bool;
+  cli : OpamCLIVersion.t;
+}
+
+(* The --cli passed by cmdliner is ignored (it's only there for --help) *)
+let create_global_options
+    git_version debug debug_level verbose quiet color opt_switch yes strict
+    opt_root external_solver use_internal_solver
+    cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade
+    working_dir ignore_pin_depends
+    d_no_aspcud _ =
+  if d_no_aspcud then
+    OpamConsole.warning
+      "Option %s is deprecated, ignoring it."
+      (OpamConsole.colorise `bold "--no-aspcud");
+  let debug_level = OpamStd.Option.Op.(
+      debug_level >>+ fun () -> if debug then Some 1 else None
+    ) in
+  let verbose = List.length verbose in
+  let cli = OpamCLIVersion.current in
+  { git_version; debug_level; verbose; quiet; color; opt_switch; yes;
+    strict; opt_root; external_solver; use_internal_solver;
+    cudf_file; solver_preferences; best_effort; safe_mode; json;
+    no_auto_upgrade; working_dir; ignore_pin_depends; cli }
+
+let apply_global_options o =
+  if o.git_version then (
+    begin match OpamGitVersion.version with
+      | None   -> ()
+      | Some v -> OpamConsole.msg "%s\n" v
+    end;
+    OpamStd.Sys.exit_because `Success
+  );
+  let open OpamStd.Option.Op in
+  let flag f = if f then Some true else None in
+  let some x = match x with None -> None | some -> Some some in
+  let solver =
+    if o.use_internal_solver then
+      Some (lazy (OpamCudfSolver.get_solver ~internal:true
+                    OpamCudfSolver.default_solver_selection))
+    else
+      o.external_solver >>| fun s -> lazy (OpamCudfSolver.solver_of_string s)
+  in
+  let solver_prefs = o.solver_preferences >>| fun p -> lazy (Some p) in
+  OpamClientConfig.opam_init
+    (* - format options - *)
+    ?strict:(flag o.strict)
+    (* ?skip_version_checks:bool *)
+    (* ?all_parens:bool *)
+    (* - core options - *)
+    ?debug_level:(if o.safe_mode then Some 0 else o.debug_level)
+    ?verbose_level:(if o.quiet then Some 0 else
+                    if o.verbose = 0 then None else Some o.verbose)
+    ?color:o.color
+    (* ?utf8:[ `Extended | `Always | `Never | `Auto ] *)
+    (* ?disp_status_line:[ `Always | `Never | `Auto ] *)
+    ?answer:(some (flag o.yes))
+    ?safe_mode:(flag o.safe_mode)
+    (* ?lock_retries:int *)
+    (* ?log_dir:OpamTypes.dirname *)
+    (* ?keep_log_dir:bool *)
+    (* - repository options - *)
+    (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
+    (* ?retries:int *)
+    (* ?force_checksums:bool option *)
+    (* - solver options *)
+    ?cudf_file:(some o.cudf_file)
+    ?solver
+    ?best_effort:(flag o.best_effort)
+    ?solver_preferences_default:solver_prefs
+    ?solver_preferences_upgrade:solver_prefs
+    ?solver_preferences_fixup:solver_prefs
+    (* ?solver_preferences_best_effort_prefix: *)
+    (* - state options - *)
+    ?root_dir:o.opt_root
+    ?current_switch:(o.opt_switch >>| OpamSwitch.of_string)
+    ?switch_from:(o.opt_switch >>| fun _ -> `Command_line)
+    (* ?jobs: int *)
+    (* ?dl_jobs: int *)
+    (* ?keep_build_dir:bool *)
+    (* ?build_test:bool *)
+    (* ?build_doc:bool *)
+    (* ?show:bool *)
+    (* ?dryrun:bool *)
+    (* ?fake:bool *)
+    (* ?makecmd:string Lazy.t *)
+    (* ?ignore_constraints_on:name_set *)
+    (* ?skip_dev_update:bool *)
+    ?json_out:OpamStd.Option.Op.(o.json >>| function "" -> None | s -> Some s)
+    (* ?root_is_ok:bool *)
+    ?no_auto_upgrade:(flag o.no_auto_upgrade)
+    (* - client options - *)
+    ?working_dir:(flag o.working_dir)
+    ?ignore_pin_depends:(flag o.ignore_pin_depends)
+    (* ?print_stats:bool *)
+    (* ?sync_archives:bool *)
+    (* ?pin_kind_auto:bool *)
+    (* ?autoremove:bool *)
+    (* ?editor:string *)
+    ~cli:o.cli
+    ();
+  if OpamClientConfig.(!r.json_out <> None) then (
+    OpamJson.append "opam-version" (`String OpamVersion.(to_string (full ())));
+    OpamJson.append "command-line"
+      (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)))
+  )
+
+
+(** Build options *)
+
+type build_options = {
+  keep_build_dir: bool;
+  reuse_build_dir: bool;
+  inplace_build : bool;
+  make          : string option;
+  no_checksums  : bool;
+  req_checksums : bool;
+  build_test    : bool;
+  build_doc     : bool;
+  show          : bool;
+  dryrun        : bool;
+  fake          : bool;
+  skip_update   : bool;
+  jobs          : int option;
+  ignore_constraints_on: name list option;
+  unlock_base   : bool;
+  locked        : bool;
+  lock_suffix   : string;
+  assume_depexts: bool;
+  no_depexts    : bool;
+}
+
+let create_build_options
+    keep_build_dir reuse_build_dir inplace_build make no_checksums
+    req_checksums build_test build_doc show dryrun skip_update
+    fake jobs ignore_constraints_on unlock_base locked lock_suffix
+    assume_depexts no_depexts
+    =
+  {
+    keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
+    req_checksums; build_test; build_doc; show; dryrun; skip_update; fake;
+    jobs; ignore_constraints_on; unlock_base; locked; lock_suffix;
+    assume_depexts; no_depexts;
+  }
+
+let apply_build_options b =
+  let open OpamStd.Option.Op in
+  let flag f = if f then Some true else None in
+  OpamRepositoryConfig.update
+    (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
+    (* ?retries:int *)
+    ?force_checksums:(if b.req_checksums then Some (Some true)
+                      else if b.no_checksums then Some (Some false)
+                      else None)
+    ();
+  OpamStateConfig.update
+    (* ?root: -- handled globally *)
+    ?jobs:(b.jobs >>| fun j -> lazy j)
+    (* ?dl_jobs:int *)
+    (* ?no_base_packages:(flag o.no_base_packages) -- handled globally *)
+    ?build_test:(flag b.build_test)
+    ?build_doc:(flag b.build_doc)
+    ?dryrun:(flag b.dryrun)
+    ?makecmd:(b.make >>| fun m -> lazy m)
+    ?ignore_constraints_on:
+      (b.ignore_constraints_on >>|
+       OpamPackage.Name.Set.of_list)
+    ?unlock_base:(flag b.unlock_base)
+    ?locked:(if b.locked then Some (Some b.lock_suffix) else None)
+    ?no_depexts:(flag b.no_depexts)
+    ();
+  OpamClientConfig.update
+    ?keep_build_dir:(flag b.keep_build_dir)
+    ?reuse_build_dir:(flag b.reuse_build_dir)
+    ?inplace_build:(flag b.inplace_build)
+    ?show:(flag b.show)
+    ?fake:(flag b.fake)
+    ?skip_dev_update:(flag b.skip_update)
+    ?assume_depexts:(flag (b.assume_depexts || b.no_depexts))
+    ()
+
+
+(** Converters *)
+
+let pr_str = Format.pp_print_string
+
+let repository_name =
+  let parse str = `Ok (OpamRepositoryName.of_string str) in
+  let print ppf name = pr_str ppf (OpamRepositoryName.to_string name) in
+  parse, print
+
+let url =
+  let parse str =
+    match OpamUrl.parse_opt ~from_file:false str with
+    | Some url -> `Ok url
+    | None -> `Error ("malformed url "^str)
+  in
+  let print ppf url = pr_str ppf (OpamUrl.to_string url) in
+  parse, print
+
+let filename =
+  let parse str = `Ok (OpamFilename.of_string str) in
+  let print ppf filename = pr_str ppf (OpamFilename.to_string filename) in
+  parse, print
+
+let existing_filename_or_dash =
+  let parse str =
+    if str = "-" then `Ok None
+    else
+      let f = OpamFilename.of_string str in
+      if OpamFilename.exists f then `Ok (Some f)
+      else
+        `Error (Printf.sprintf "File %s not found" (OpamFilename.to_string f))
+  in
+  let print ppf filename =
+    pr_str ppf OpamStd.Option.Op.((filename >>| OpamFilename.to_string) +! "-") in
+  parse, print
+
+let dirname =
+  let parse str = `Ok (OpamFilename.Dir.of_string str) in
+  let print ppf dir = pr_str ppf (escape_path (OpamFilename.prettify_dir dir)) in
+  parse, print
+
+let existing_filename_dirname_or_dash =
+  let parse str =
+    if str = "-" then `Ok None else
+    match OpamFilename.opt_file (OpamFilename.of_string str) with
+    | Some f -> `Ok (Some (OpamFilename.F f))
+    | None -> match OpamFilename.opt_dir (OpamFilename.Dir.of_string str) with
+      | Some d -> `Ok (Some (OpamFilename.D d))
+      | None ->
+        `Error (Printf.sprintf "File or directory %s not found" str)
+  in
+  let print ppf gf =
+    pr_str ppf @@ match gf with
+    | None -> "-"
+    | Some (OpamFilename.D d) -> OpamFilename.Dir.to_string d
+    | Some (OpamFilename.F f) -> OpamFilename.to_string f
+  in
+  parse, print
+
+let _subpath_conv =
+  (fun str -> `Ok (OpamStd.String.remove_prefix ~prefix:"./" str)), pr_str
+
+let package_name =
+  let parse str =
+    try `Ok (OpamPackage.Name.of_string str)
+    with Failure msg -> `Error msg
+  in
+  let print ppf pkg = pr_str ppf (OpamPackage.Name.to_string pkg) in
+  parse, print
+
+let package_version =
+  let parse str =
+    try `Ok (OpamPackage.Version.of_string str)
+    with Failure msg -> `Error msg
+  in
+  let print ppf ver = pr_str ppf (OpamPackage.Version.to_string ver) in
+  parse, print
+
+let positive_integer : int Arg.converter =
+  let (parser, printer) = Arg.int in
+  let parser s =
+    match parser s with
+    | `Error _ -> `Error "expected a strictly positive integer"
+    | `Ok n as r -> if n <= 0
+      then `Error "expected a positive integer"
+      else r in
+  (parser, printer)
+
+(* name * version option *)
+let package =
+  let parse str =
+    let re = Re.(compile @@ seq [
+        bos;
+        group @@ rep1 @@ diff any (set ">=<.!");
+        opt @@ seq [ set ".="; group @@ rep1 any ];
+        eos;
+      ]) in
+    try
+      let sub = Re.exec re str in
+      let name = OpamPackage.Name.of_string (Re.Group.get sub 1) in
+      let version_opt =
+        try Some (OpamPackage.Version.of_string (Re.Group.get sub 2))
+        with Not_found -> None in
+      `Ok (name, version_opt)
+    with Not_found | Failure _ -> `Error "bad package format"
+  in
+  let print ppf (name, version_opt) =
+    match version_opt with
+    | None -> pr_str ppf (OpamPackage.Name.to_string name)
+    | Some v -> pr_str ppf (OpamPackage.Name.to_string name ^"."^
+                            OpamPackage.Version.to_string v)
+  in
+  parse, print
+
+let package_with_version =
+  let parse str =
+    match fst package str with
+    | `Ok (n, Some v) -> `Ok (OpamPackage.create n v)
+    | `Ok (_, None) -> `Error "missing package version"
+    | `Error e -> `Error e
+  in
+  let print ppf nv = pr_str ppf (OpamPackage.to_string nv) in
+  parse, print
+
+(* name * version constraint *)
+let atom =
+  let parse str =
+    try `Ok (OpamFormula.atom_of_string str)
+    with Failure msg -> `Error msg
+  in
+  let print ppf atom =
+    pr_str ppf (OpamFormula.short_string_of_atom atom) in
+  parse, print
+
+let atom_or_local =
+  let parse str =
+    if OpamStd.String.contains ~sub:Filename.dir_sep str ||
+       OpamStd.String.starts_with ~prefix:"." str
+    then
+      if OpamFilename.(exists (of_string str)) then
+        `Ok (`Filename (OpamFilename.of_string str))
+      else if  OpamFilename.(exists_dir (Dir.of_string str)) then
+        `Ok (`Dirname (OpamFilename.Dir.of_string str))
+      else
+        `Error (Printf.sprintf
+                  "Not a valid package specification or existing file or \
+                   directory: %s" str)
+    else match fst atom str with
+      | `Ok at -> `Ok (`Atom at)
+      | `Error e -> `Error e
+  in
+  let print ppf = function
+    | `Filename f -> pr_str ppf (OpamFilename.to_string f)
+    | `Dirname d -> pr_str ppf (OpamFilename.Dir.to_string d)
+    | `Atom a -> snd atom ppf a
+  in
+  parse, print
+
+let atom_or_dir =
+  let parse str = match fst atom_or_local str with
+    | `Ok (`Filename _) ->
+      `Error (Printf.sprintf
+                "Not a valid package specification or existing directory: %s"
+                str)
+    | `Ok (`Atom _ | `Dirname _ as atom_or_dir) -> `Ok (atom_or_dir)
+    | `Error e -> `Error e
+  in
+  let print ppf = snd atom_or_local ppf in
+  parse, print
+
+let dep_formula =
+  let module OpamParser = OpamParser.FullPos in
+  let module OpamPrinter = OpamPrinter.FullPos in
+  let pp = OpamFormat.V.(package_formula `Conj (constraints version)) in
+  let parse str =
+    try
+      let v = OpamParser.value_from_string str "<command-line>" in
+      `Ok (OpamPp.parse pp ~pos:pos_null v)
+    with e -> OpamStd.Exn.fatal e; `Error (Printexc.to_string e)
+  in
+  let print ppf f =
+    pr_str ppf (OpamPrinter.value (OpamPp.print pp f))
+  in
+  parse, print
+
+let variable_bindings =
+  let parse str =
+    try
+      OpamStd.String.split str ',' |>
+      List.map (fun s -> match OpamStd.String.cut_at s '=' with
+          | Some (a, b) -> OpamVariable.of_string a, b
+          | None -> Printf.ksprintf failwith "%S is not a binding" s) |>
+      fun bnds -> `Ok bnds
+    with Failure e -> `Error e
+  in
+  let print ppf x =
+    List.map
+      (fun (a,b) -> Printf.sprintf "%s=%s" (OpamVariable.to_string a) b) x |>
+    String.concat "," |>
+    pr_str ppf
+  in
+  parse, print
+
+let warn_selector =
+  let parse str =
+    let sep = Re.(compile (set "+-")) in
+    let sel = Re.(compile @@
+                  seq [bos; group (rep1 digit);
+                       opt @@ seq [str ".."; group (rep1 digit)];
+                       eos]) in
+    let rec seq i j =
+      if i = j then [i]
+      else if i < j then i :: seq (i+1) j
+      else j :: seq (j+1) i
+    in
+    let rec aux acc = function
+      | `Delim d :: `Text n :: r ->
+        let nums =
+          let g = Re.exec sel n in
+          let i = int_of_string (Re.Group.get g 1) in
+          try seq i (int_of_string (Re.Group.get g 2))
+          with Not_found -> [i]
+        in
+        let enabled = Re.Group.get d 0 = "+" in
+        let acc = List.fold_left (fun acc n -> (n, enabled) :: acc) acc nums in
+        aux acc r
+      | [] -> acc
+      | _ -> raise Not_found
+    in
+    try `Ok (List.rev (aux [] (Re.split_full sep str)))
+    with Not_found ->
+      `Error "Expected a warning string, e.g. '--warn=-10..21+12-36'"
+  in
+  let print ppf warns =
+    pr_str ppf @@
+    OpamStd.List.concat_map "" (fun (num,enable) ->
+        Printf.sprintf "%c%d" (if enable then '+' else '-') num)
+      warns
+  in
+  parse, print
+
+let _selector =
+  let parse str =
+    let r =
+      List.fold_left (fun (plus, minus) elem ->
+          match OpamStd.String.sub_at 1 elem with
+          | "+" as prefix ->
+            (OpamStd.String.remove_prefix ~prefix elem)::plus, minus
+          | "-" as prefix ->
+            plus, (OpamStd.String.remove_prefix ~prefix elem)::minus
+          |  _ ->  elem::plus, minus)
+        ([],[]) (OpamStd.String.split str ',')
+    in
+    `Ok r
+  in
+  let print ppf (plus,minus) =
+    let concat c =
+      OpamStd.List.concat_map ~nil:"" "," (fun x -> c^x)
+    in
+    pr_str ppf @@ Printf.sprintf "%s,%s" (concat "+" plus) (concat "-" minus)
+  in
+  parse, print
+
+(* unused
+let enum_with_default sl: 'a Arg.converter =
+  let parse, print = Arg.enum sl in
+  let parse s =
+    match parse s with
+    | `Ok _ as x -> x
+    | _ -> `Ok (`default s) in
+  parse, print
+*)
+
+let opamlist_column =
+  let parse str =
+    if OpamStd.String.ends_with ~suffix:":" str then
+      let fld = OpamStd.String.remove_suffix ~suffix:":" str in
+      `Ok (OpamListCommand.Field fld)
+    else
+    try
+      List.find (function (OpamListCommand.Field _), _ -> false
+                        | _, name -> name = str)
+        OpamListCommand.field_names
+      |> fun (f, _) -> `Ok f
+    with Not_found ->
+      `Error (Printf.sprintf
+                "No known printer for column %s. If you meant an opam file \
+                 field, use '%s:' instead (with a trailing colon)."
+                str str)
+  in
+  let print ppf field =
+    Format.pp_print_string ppf (OpamListCommand.string_of_field field)
+  in
+  parse, print
+
+let opamlist_columns =
+  let field_re =
+    (* max paren nesting 1, obviously *)
+    Re.(compile @@ seq [
+        start;
+        group @@ seq [
+          rep @@ diff any (set ",(");
+          opt @@ seq [char '('; rep (diff any (char ')')); char ')'];
+        ];
+        alt [char ','; stop];
+      ])
+  in
+  let parse str =
+    try
+      let rec aux pos =
+        if pos = String.length str then [] else
+        let g = Re.exec ~pos field_re str in
+        Re.Group.get g 1 :: aux (Re.Group.stop g 0)
+      in
+      let fields = aux 0 in
+      List.fold_left (function
+          | `Error _ as e -> fun _ -> e
+          | `Ok acc -> fun str ->
+            match fst opamlist_column str with
+            | `Ok f -> `Ok (acc @ [f])
+            | `Error _ as e -> e)
+        (`Ok []) fields
+    with Not_found ->
+      `Error (Printf.sprintf "Invalid columns specification: '%s'." str)
+  in
+  let print ppf cols =
+    let rec aux = function
+      | x::(_::_) as r ->
+        snd opamlist_column ppf x; Format.pp_print_char ppf ','; aux r
+      | [x] -> snd opamlist_column ppf x
+      | [] -> ()
+    in
+    aux cols
+  in
+  parse, print
+
+let term_info title ~doc ~man =
+  let man = man @ help_sections in
+  Term.info ~sdocs:global_option_section ~docs:Manpage.s_commands
+    ~doc ~man title
+
+let mk_command ~cli validity name ~doc ~man =
+  Mk.mk_command ~cli validity term_info name ~doc ~man
+
+let mk_command_ret ~cli validity name ~doc ~man =
+  Mk.mk_command_ret ~cli validity term_info name ~doc ~man
 
 let make_command_alias cmd ?(options="") name =
   let term, info = cmd in
@@ -1296,7 +1322,9 @@ let nonempty_arg_list name doc kind =
   let doc = Arg.info ~docv:name ~doc [] in
   Arg.(non_empty & pos_all kind [] & doc)
 
-(* Common flags *)
+
+(** Common flags *)
+
 let print_short_flag cli validity =
   mk_flag ~cli validity ["s";"short"]
     "Output raw lists of names, one per line, skipping any details."

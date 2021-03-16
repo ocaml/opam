@@ -263,11 +263,6 @@ val variable_bindings: (OpamVariable.t * string) list Arg.converter
 (** Warnings string ["+3..10-4"] *)
 val warn_selector: (int * bool) list Arg.converter
 
-type 'a default = [> `default of string] as 'a
-
-(** Enumeration with a default command *)
-val enum_with_default: (string * 'a default) list -> 'a Arg.converter
-
 val opamlist_columns: OpamListCommand.output_format list Arg.converter
 
 (** {2 Subcommands} *)
@@ -285,6 +280,13 @@ val mk_subcommands:
 (** [subcommands cmds] are the terms [cmd] and [params]. [cmd] parses
     which sub-commands in [cmds] is selected and [params] parses the
     remaining of the command-line parameters as a list of strings. *)
+
+type 'a default = [> `default of string] as 'a
+
+(* unused
+(** Enumeration with a default command *)
+val enum_with_default: (string * 'a default) list -> 'a Arg.converter
+*)
 
 val mk_subcommands_with_default:
   cli:OpamCLIVersion.Sourced.t ->
