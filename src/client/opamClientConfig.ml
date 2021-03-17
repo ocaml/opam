@@ -21,6 +21,7 @@ module E = struct
     | JSON of string option
     | KEEPBUILDDIR of bool option
     | NOAUTOUPGRADE of bool option
+    | NOSELFUPGRADE of string option
     | PINKINDAUTO of bool option
     | REUSEBUILDDIR of bool option
     | ROOTISOK of bool option
@@ -40,6 +41,7 @@ module E = struct
   let json = value (function JSON s -> s | _ -> None)
   let keepbuilddir = value (function KEEPBUILDDIR b -> b | _ -> None)
   let noautoupgrade = value (function NOAUTOUPGRADE b -> b | _ -> None)
+  let noselfupgrade = value (function NOSELFUPGRADE s -> s | _ -> None)
   let pinkindauto = value (function PINKINDAUTO b -> b | _ -> None)
   let reusebuilddir = value (function REUSEBUILDDIR b -> b | _ -> None)
   let rootisok = value (function ROOTISOK b -> b | _ -> None)

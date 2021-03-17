@@ -40,8 +40,6 @@ let dir_sep, escape_path =
 let environment_variables =
   (* Missing
      `P "$(i,OPAMCLI) see option `--cli'";
-     `P "$(i,OPAMLOCKRETRIES) sets the number of tries after which opam gives up acquiring its lock and fails. <= 0 means infinite wait.";
-     `P "$(i,OPAMNOSELFUPGRADE) see option `--no-self-upgrade'.";
   *)
   let open OpamStd.Config in
   let core =
@@ -242,6 +240,8 @@ let environment_variables =
       "NOAUTOUPGRADE", cli_original, (fun v -> NOAUTOUPGRADE (env_bool v)),
       "disables automatic internal upgrade of repositories in an earlier \
        format to the current one, on 'update' or 'init'.";
+      "NOSELFUPGRADE", cli_original,(fun v -> NOSELFUPGRADE (env_string v)),
+      "see option `--no-self-upgrade'";
       "PINKINDAUTO", cli_original, (fun v -> PINKINDAUTO (env_bool v)),
       "sets whether version control systems should be detected when pinning \
        to a local path. Enabled by default since 1.3.0.";

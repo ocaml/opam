@@ -23,6 +23,7 @@ module E: sig
     | JSON of string option
     | KEEPBUILDDIR of bool option
     | NOAUTOUPGRADE of bool option
+    | NOSELFUPGRADE of string option
     | PINKINDAUTO of bool option
     | REUSEBUILDDIR of bool option
     | ROOTISOK of bool option
@@ -30,6 +31,7 @@ module E: sig
     | SKIPUPDATE of bool option
     | STATS of bool option
     | WORKINGDIR of bool option
+    val noselfupgrade: unit -> string option
 end
 
 type t = private {
