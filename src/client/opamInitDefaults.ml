@@ -19,6 +19,14 @@ let repository_url = {
 }
 
 let default_compiler =
+  OpamFormula.ors [
+    OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-system",
+                      OpamFormula.Empty);
+    OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-base-compiler",
+                      OpamFormula.Empty);
+  ]
+
+let default_invariant =
   OpamFormula.Atom
     (OpamPackage.Name.of_string "ocaml",
      OpamFormula.Atom
@@ -150,6 +158,7 @@ let init_config ?(sandboxing=true) () =
   I.with_repositories
     [OpamRepositoryName.of_string "default", (repository_url, None)] |>
   I.with_default_compiler default_compiler |>
+  I.with_default_invariant default_invariant |>
   I.with_eval_variables eval_variables |>
   I.with_wrappers @| wrappers ~sandboxing |>
   I.with_recommended_tools @| recommended_tools |>

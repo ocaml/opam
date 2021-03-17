@@ -11,7 +11,8 @@ New option/command/subcommand are prefixed with ◈.
   * Add `opam config` deprecated subcommands in the default cli  [#4575 @rjbou - fix #4503]
 
 ## Init
-  *
+  * Introduce a `default-invariant` config field, restore the 2.0 semantics for
+    `default-compiler` [#4607 @AltGr]
 
 ## Config report
   * Fix `Not_found` (config file) error [#4570 @rjbou]

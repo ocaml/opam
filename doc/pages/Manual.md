@@ -757,7 +757,8 @@ seen with `opam init --show-default-opamrc`.
   [`best-effort-prefix-criteria:`](#configfield-best-effort-prefix-criteria),
   [`solver:`](#configfield-solver),
   [`global-variables:`](#configfield-global-variables),
-  [`default-compiler:`](#configfield-default-compiler):
+  [`default-compiler:`](#configfield-default-compiler),
+  [`default-invariant:`](#configfield-default-invariant):
   these have the same format as the same-named fields in the [config](#config)
   file, and will be imported to that file on `opam init`.
   [`default-compiler:`](#configfield-default-compiler) is additionally used to
@@ -1443,7 +1444,12 @@ them modified with [`opam option --global`](man/opam-option.html).
 - <a id="configfield-default-compiler">`default-compiler: [ <package-formula> ... ]`</a>:
   a list of compiler package choices. On `opam init`, the first available
   compiler in the list will be chosen for creating the initial switch if
-  `--bare` wasn't specified.
+  `--bare` wasn't specified. Note that `default-invariant:` will still be used,
+  so the alternatives listed here should be compatible with it.
+
+- <a id="configfield-default-invariant">`default-invariant: [ <package-formula> ... ]`</a>:
+  the default switch invariant that will be set on newly created switches, in
+  cases where nothing else was specified.
 
 - <a id="configfield-depext">`depext: <bool>`</a>:
   enable or disable system dependency handling. When packages declare

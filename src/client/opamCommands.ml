@@ -150,10 +150,13 @@ let get_init_config ~no_sandboxing ~no_default_config_file ~add_config_file =
       | [] -> ""
       | [file] -> OpamFile.to_string file ^ " and then from "
       | _ ->
-        (OpamStd.List.concat_map ~nil:"" ~right:", and finally from " ", then "
+        (OpamStd.List.concat_map ~right:", and finally from " ", then "
            OpamFile.to_string (List.rev config_files))
     in
-    OpamConsole.note "Will configure from %sbuilt-in defaults." others;
+    if config_files = [] then
+      OpamConsole.msg "No configuration file found, using built-in defaults.\n"
+    else
+      OpamConsole.msg "Configuring from %sbuilt-in defaults.\n" others;
     List.fold_left (fun acc f ->
         OpamFile.InitConfig.add acc (OpamFile.InitConfig.read f))
       builtin_config config_files
@@ -394,22 +397,32 @@ let init cli =
     OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
     @@ fun () ->
     if no_compiler then () else
-    let invariant, name =
+    let invariant, default_compiler, name =
       match compiler with
       | Some comp when String.length comp > 0 ->
-        OpamSwitchCommand.guess_compiler_invariant rt [comp], comp
-      | _ -> default_compiler, "default"
+        OpamSwitchCommand.guess_compiler_invariant rt [comp],
+        [],
+        comp
+      | _ ->
+        OpamFile.Config.default_invariant gt.config,
+        default_compiler, "default"
     in
-    OpamConsole.header_msg "Creating initial switch %s (%s)"
+    OpamConsole.header_msg "Creating initial switch '%s' (invariant %s%s)"
       name
       (match invariant with
        | OpamFormula.Empty -> "empty"
-       | c -> OpamFileTools.dep_formula_to_string c);
+       | c -> OpamFileTools.dep_formula_to_string c)
+      (match default_compiler with
+       | [] -> ""
+       | comp -> " - initially with "^ (OpamFormula.string_of_atoms comp));
     let (), st =
       try
         OpamSwitchCommand.create
           gt ~rt ~invariant ~update_config:true (OpamSwitch.of_string name) @@
-        (fun st -> (), OpamSwitchCommand.install_compiler st)
+        (fun st ->
+           (),
+           OpamSwitchCommand.install_compiler st
+             ~additional_installs:default_compiler)
       with e ->
         OpamStd.Exn.finalise e @@ fun () ->
         OpamConsole.note
@@ -2519,7 +2532,7 @@ let switch cli =
     let invariant_arg ?repos rt args =
       match args, packages, formula, empty with
       | [], None, None, false ->
-        OpamFile.Config.default_compiler rt.repos_global.config
+        OpamFile.Config.default_invariant rt.repos_global.config
       | _::_ as packages, None, None, false ->
         OpamSwitchCommand.guess_compiler_invariant ?repos rt packages
       | [], Some atoms, None, false ->

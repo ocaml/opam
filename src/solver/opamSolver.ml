@@ -615,7 +615,7 @@ let dependency_sort ~depopts ~build ~post universe packages =
 let coinstallability_check universe packages =
   let version_map = cudf_versions_map universe universe.u_packages in
   let cudf_universe =
-    load_cudf_universe ~build:true ~post:true ~version_map
+    load_cudf_universe ~build:true ~post:true ~version_map ~add_invariant:true
       universe universe.u_packages ()
   in
   let cudf_packages =
@@ -639,7 +639,7 @@ let atom_coinstallability_check universe atoms =
   List.for_all (fun (n, _) -> OpamPackage.Name.Map.mem n map) atoms &&
   let version_map = cudf_versions_map universe universe.u_packages in
   let cudf_universe =
-    load_cudf_universe ~build:true ~post:true ~version_map
+    load_cudf_universe ~build:true ~post:true ~version_map ~add_invariant:true
       universe universe.u_packages ()
   in
   let cudf_ll =

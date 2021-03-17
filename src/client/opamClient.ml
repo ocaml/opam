@@ -767,7 +767,9 @@ let update_with_init_config ?(overwrite=false) config init_config =
   setifnew C.eval_variables C.with_eval_variables
     (I.eval_variables init_config) |>
   setifnew C.default_compiler C.with_default_compiler
-    (I.default_compiler init_config)
+    (I.default_compiler init_config) |>
+  setifnew C.default_invariant C.with_default_invariant
+    (I.default_invariant init_config)
 
 let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
     ?dot_profile ?update_config ?env_hook ?completion ?inplace
@@ -823,7 +825,11 @@ let init
     if OpamFile.exists config_f then (
       OpamConsole.msg "Opam has already been initialized.\n";
       let gt = OpamGlobalState.load `Lock_write in
-      gt, OpamRepositoryState.load `Lock_none gt, OpamFormula.Empty
+      if OpamFile.Config.installed_switches gt.config = [] then
+        OpamConsole.msg
+          "... but you have no switches installed, use `opam switch \
+           create <compiler-or-version>' to get started.";
+      gt, OpamRepositoryState.load `Lock_none gt, []
     ) else (
       if not root_empty then (
         OpamConsole.warning "%s exists and is not empty"
@@ -886,9 +892,25 @@ let init
         if failed <> [] then
           OpamConsole.error_and_exit `Sync_error
             "Initial download of repository failed";
-        gt, OpamRepositoryState.unlock ~cleanup:false rt,
-        (if dontswitch then OpamFormula.Empty
-         else OpamFile.InitConfig.default_compiler init_config)
+        let default_compiler =
+          if dontswitch then [] else
+          let alternatives =
+            OpamFormula.to_dnf
+              (OpamFile.InitConfig.default_compiler init_config)
+          in
+          let invariant = OpamFile.InitConfig.default_invariant init_config in
+          let virt_st = OpamSwitchState.load_virtual gt rt in
+          let univ =
+            OpamSwitchState.universe virt_st
+              ~requested:OpamPackage.Name.Set.empty Query
+          in
+          let univ = { univ with u_invariant = invariant } in
+          OpamStd.List.find_opt
+            (OpamSolver.atom_coinstallability_check univ)
+            alternatives
+          |> OpamStd.Option.default []
+        in
+        gt, OpamRepositoryState.unlock ~cleanup:false rt, default_compiler
       with e ->
         OpamStd.Exn.finalise e @@ fun () ->
         if not (OpamConsole.debug ()) && root_empty then begin
