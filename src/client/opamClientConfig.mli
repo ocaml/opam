@@ -32,6 +32,8 @@ module E: sig
     | SKIPUPDATE of bool option
     | STATS of bool option
     | WORKINGDIR of bool option
+    val cli: unit -> string option
+    val rootisok: unit -> bool option
     val noselfupgrade: unit -> string option
 end
 

@@ -44,8 +44,8 @@ module Sourced : sig
   (** The current version of the CLI (major and minor of OpamVersion.current *)
   val current : t
 
-  (** Parse the given environment variable as MAJOR.MINOR *)
-  val env: unit -> t option
+  (** Parse the given environment variable result as MAJOR.MINOR *)
+  val env: string option -> t option
 
 end
 

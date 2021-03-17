@@ -29,7 +29,9 @@ module E : sig
     | UTF8MSGS of bool option
     | VERBOSE of OpamStd.Config.level option
     | YES of bool option
+    val debug: unit -> int option
     val logs: unit -> string option
+    val yes: unit -> bool option
 end
 
 type t = private {

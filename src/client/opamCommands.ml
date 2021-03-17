@@ -81,20 +81,23 @@ let global_options cli =
         OpamArg.dir_sep) in
   let self_upgrade no_self_upgrade options =
     let self_upgrade_status =
-      if OpamStd.Config.env_string "NOSELFUPGRADE" =
+      if OpamClientConfig.E.noselfupgrade () =
          Some self_upgrade_bootstrapping_value
       then `Running
       else if no_self_upgrade then `Disable
-      else if OpamStd.Config.env_bool "NOSELFUPGRADE" = Some true then `Disable
+      else if OpamStd.Option.Op.((OpamClientConfig.E.noselfupgrade ())
+                                 >>= OpamStd.Config.bool_of_string)
+              = Some true
+      then `Disable
       else `None
     in
     if self_upgrade_status = `None then
       switch_to_updated_self
         OpamStd.Option.Op.(options.debug_level ++
-                           OpamStd.Config.env_level "DEBUG" +! 0 |> abs > 0)
+                           OpamCoreConfig.E.debug () +! 0 |> abs > 0)
         (OpamStateConfig.opamroot ?root_dir:options.opt_root ());
     let root_is_ok =
-      OpamStd.Option.default false (OpamStd.Config.env_bool "ROOTISOK")
+      OpamStd.Option.default false (OpamClientConfig.E.rootisok ())
     in
     if not (options.safe_mode || root_is_ok) &&
        Unix.getuid () = 0 then
