@@ -280,6 +280,7 @@ let write_config rt =
         rt.repositories)
 
 let check_last_update () =
+  if OpamCoreConfig.(!r.debug_level) < 0 then () else
   let last_update =
     OpamFilename.written_since
       (OpamPath.state_cache (OpamStateConfig.(!r.root_dir)))
