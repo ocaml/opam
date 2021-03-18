@@ -1,0 +1,12 @@
+diff -Naur a/src/extList.ml b/src/extList.ml
+--- a/src/extList.ml	2020-04-24 21:55:13.000000000 +0000
++++ b/src/extList.ml	2020-11-18 15:01:29.659443867 +0000
+@@ -380,7 +380,7 @@
+   loop dummy l1 l2;
+   dummy.tl
+ 
+-let sort ?(cmp=compare) = List.sort cmp
++let sort ?(cmp=Pervasives.compare) = List.sort cmp
+ 
+ #if OCAML < 406
+ let rec init size f =

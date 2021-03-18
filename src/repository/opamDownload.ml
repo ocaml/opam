@@ -57,7 +57,7 @@ let ftp_args = [
   CIdent "url", None;
 ]
 
-let download_args ~url ~out ~retry ?checksum ~compress =
+let download_args ~url ~out ~retry ?checksum ~compress () =
   let cmd, _ = Lazy.force OpamRepositoryConfig.(!r.download_tool) in
   let cmd =
     match cmd with
@@ -116,7 +116,7 @@ let tool_return url ret =
                     code (OpamUrl.to_string url))
       else Done ()
 
-let download_command ~compress ?checksum ~url ~dst =
+let download_command ~compress ?checksum ~url ~dst () =
   let cmd, args =
     match
       download_args
@@ -125,6 +125,7 @@ let download_command ~compress ?checksum ~url ~dst =
         ~retry:OpamRepositoryConfig.(!r.retries)
         ?checksum
         ~compress
+        ()
     with
     | cmd::args -> cmd, args
     | [] ->
@@ -135,7 +136,7 @@ let download_command ~compress ?checksum ~url ~dst =
 
 let really_download
     ?(quiet=false) ~overwrite ?(compress=false) ?checksum ?(validate=true)
-    ~url ~dst =
+    ~url ~dst () =
   assert (url.OpamUrl.backend = `http);
   let tmp_dst = dst ^ ".part" in
   if Sys.file_exists tmp_dst then OpamSystem.remove tmp_dst;
@@ -151,7 +152,7 @@ let really_download
         log "Could not download file at %s." (OpamUrl.to_string url);
         raise e)
   @@ fun () ->
-  download_command ~compress ?checksum ~url ~dst:tmp_dst
+  download_command ~compress ?checksum ~url ~dst:tmp_dst ()
   @@+ fun () ->
   if not (Sys.file_exists tmp_dst) then
     fail (Some "Downloaded file not found",
@@ -184,6 +185,7 @@ let download_as ?quiet ?validate ~overwrite ?compress ?checksum url dst =
     really_download ?quiet ~overwrite ?compress ?checksum ?validate
       ~url
       ~dst:(OpamFilename.to_string dst)
+      ()
 
 let download ?quiet ?validate ~overwrite ?compress ?checksum url dstdir =
   let dst =

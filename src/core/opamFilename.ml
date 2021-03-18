@@ -386,6 +386,7 @@ let link ?(relative=false) ~target ~link =
       Filename.concat back forward
   in
   OpamSystem.link target (to_string link)
+[@@ocaml.warning "-16"]
 
 let patch ?preprocess filename dirname =
   OpamSystem.patch ?preprocess ~dir:(Dir.to_string dirname) (to_string filename)
