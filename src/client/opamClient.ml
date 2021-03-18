@@ -890,8 +890,10 @@ let init
             (List.map fst repos)
         in
         if failed <> [] then
-          OpamConsole.error_and_exit `Sync_error
-            "Initial download of repository failed";
+          (if root_empty then
+             (try OpamFilename.rmdir root with _ -> ());
+           OpamConsole.error_and_exit `Sync_error
+             "Initial download of repository failed.");
         let default_compiler =
           if dontswitch then [] else
           let alternatives =
