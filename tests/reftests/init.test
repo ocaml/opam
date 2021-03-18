@@ -3,9 +3,8 @@
 ### tar xzf ${OPAMROOT}/repo/default.tar.gz
 ### rm -rf ${OPAMROOT}
 ### OPAMVAR_sys_ocaml_version=''
-### opam init --no-setup default default/ --fake
+### opam init --no-setup --bypass-checks default default/ --fake
 No configuration file found, using built-in defaults.
-Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
@@ -35,9 +34,8 @@ Done.
 ["ocaml" {>= "4.05.0"}]
 ### rm -rf ${OPAMROOT}
 ### OPAMVAR_sys_ocaml_version=4.02.3
-### opam init --no-setup default default/ --fake
+### opam init --no-setup --bypass-checks default default/ --fake
 No configuration file found, using built-in defaults.
-Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
@@ -67,9 +65,8 @@ Done.
 ["ocaml" {>= "4.05.0"}]
 ### rm -rf ${OPAMROOT}
 ### OPAMVAR_sys_ocaml_version=4.07.0
-### opam init --no-setup default default/ --fake
+### opam init --no-setup --bypass-checks default default/ --fake
 No configuration file found, using built-in defaults.
-Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised

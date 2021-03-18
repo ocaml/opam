@@ -896,6 +896,7 @@ let init
              "Initial download of repository failed.");
         let default_compiler =
           if dontswitch then [] else
+          let chrono = OpamConsole.timer () in
           let alternatives =
             OpamFormula.to_dnf
               (OpamFile.InitConfig.default_compiler init_config)
@@ -907,10 +908,16 @@ let init
               ~requested:OpamPackage.Name.Set.empty Query
           in
           let univ = { univ with u_invariant = invariant } in
-          OpamStd.List.find_opt
-            (OpamSolver.atom_coinstallability_check univ)
+          let default_compiler =
+            OpamStd.List.find_opt
+              (OpamSolver.atom_coinstallability_check univ)
             alternatives
-          |> OpamStd.Option.default []
+            |> OpamStd.Option.default []
+          in
+          log "Selected default compiler %s in %0.3fs"
+            (OpamFormula.string_of_atoms default_compiler)
+            (chrono ());
+          default_compiler
         in
         gt, OpamRepositoryState.unlock ~cleanup:false rt, default_compiler
       with e ->

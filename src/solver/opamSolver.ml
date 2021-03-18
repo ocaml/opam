@@ -634,29 +634,21 @@ let check_for_conflicts universe =
   coinstallability_check universe universe.u_installed
 
 let atom_coinstallability_check universe atoms =
-  let packages = OpamFormula.packages_of_atoms universe.u_available atoms in
-  let map = OpamPackage.to_map packages in
-  List.for_all (fun (n, _) -> OpamPackage.Name.Map.mem n map) atoms &&
   let version_map = cudf_versions_map universe universe.u_packages in
+  let check_pkg = {
+    Cudf.default_package with
+    package = "=check_coinstallability";
+    depends = List.map (fun at -> [atom2cudf () version_map at]) atoms;
+  } in
   let cudf_universe =
-    load_cudf_universe ~build:true ~post:true ~version_map ~add_invariant:true
-      universe universe.u_packages ()
+    Cudf.load_universe
+      (check_pkg ::
+       opam_invariant_package version_map universe.u_invariant ::
+       opam2cudf universe version_map universe.u_available
+         ~depopts:false ~build:true ~post:true)
   in
-  let cudf_ll =
-    OpamPackage.Name.Map.fold (fun n versions acc ->
-        let packages =
-          OpamPackage.Version.Set.fold
-            (fun v -> OpamPackage.(Set.add (create n v)))
-            versions OpamPackage.Set.empty
-        in
-        opam2cudf
-          universe ~depopts:false ~build:true ~post:true version_map
-          packages
-        :: acc)
-      map []
-  in
-  let result = Algo.Depsolver.edos_coinstall_prod cudf_universe cudf_ll in
-  List.exists Algo.Diagnostic.is_solution result
+  Algo.Depsolver.edos_install cudf_universe check_pkg
+  |> Algo.Diagnostic.is_solution
 
 let new_packages sol =
   OpamCudf.ActionGraph.fold_vertex (fun action packages ->
