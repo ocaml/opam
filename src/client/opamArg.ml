@@ -33,22 +33,51 @@ let dir_sep, escape_path =
   | ds -> ds, fun x -> x
 
 
-(** Opam environment variables, with their doc and their validity
-    OPAMVAR_var and OPAMPACKAGE_var are defined and documented static in
-    [help_sections].
+(** Opam environment variables *)
+
+(* Environment variables that need to be initialised before config init, see
+   [OpamCliMain.run]. *)
+let preinit_environment_variables =
+  let open OpamStd.Config in
+  let core =
+    let open OpamCoreConfig.E in [
+      "DEBUG", (fun v -> DEBUG (env_int v)),
+      "see options `--debug' and `--debug-level'.";
+      "YES", (fun v -> YES (env_bool v)), "see option `--yes'.";
+    ] in
+  let client =
+    let open OpamClientConfig.E in [
+      "CLI", (fun v -> CLI (env_string v)), "see option `--cli'.";
+      "NOSELFUPGRADE",(fun v -> NOSELFUPGRADE (env_string v)),
+      "see option `--no-self-upgrade'";
+      "ROOTISOK", (fun v -> ROOTISOK (env_bool v)),
+      "don't complain when running as root.";
+    ] in
+  core @ client
+
+let preinit_opam_envvariables, doc_opam_envvariables_pre =
+  let preinit () =
+    OpamStd.Config.E.updates @@
+    List.map (fun (var, cons, _doc) -> cons var)
+      preinit_environment_variables
+  in
+  let doc =
+    List.map (fun (var, _cons, doc) ->
+        `P (Printf.sprintf "$(i,OPAM%s) %s" var doc))
+      preinit_environment_variables
+  in
+  preinit, doc
+
+(* Environment variables with their doc and their validity OPAMVAR_var and
+   OPAMPACKAGE_var are defined and documented static in [help_sections].
 *)
 let environment_variables =
-  (* Missing
-     `P "$(i,OPAMCLI) see option `--cli'";
-  *)
   let open OpamStd.Config in
   let core =
     let open OpamCoreConfig.E in [
       "COLOR", cli_original, (fun v -> COLOR (env_when v)),
       "when set to $(i,always) or $(i,never), sets a default value for the \
        `--color' option.";
-      "DEBUG", cli_original, (fun v -> DEBUG (env_int v)),
-      "see options `--debug' and `--debug-level'.";
       "DEBUGSECTIONS", cli_original, (fun v -> DEBUGSECTIONS (env_sections v)),
       "if set, limits debug messages to the space-separated list of \
        sections. Sections can optionally have a specific debug level (for \
@@ -86,8 +115,6 @@ let environment_variables =
        $(i,OPAMUTF8). This is set by default on OSX only.";
       "VERBOSE", cli_original, (fun v -> VERBOSE (env_level v)),
       "see option `--verbose'.";
-      "YES", cli_original, (fun v -> YES (env_bool v)),
-      "see option `--yes'.";
     ] in
   let format =
     let open OpamFormatConfig.E in [
@@ -240,15 +267,11 @@ let environment_variables =
       "NOAUTOUPGRADE", cli_original, (fun v -> NOAUTOUPGRADE (env_bool v)),
       "disables automatic internal upgrade of repositories in an earlier \
        format to the current one, on 'update' or 'init'.";
-      "NOSELFUPGRADE", cli_original,(fun v -> NOSELFUPGRADE (env_string v)),
-      "see option `--no-self-upgrade'";
       "PINKINDAUTO", cli_original, (fun v -> PINKINDAUTO (env_bool v)),
       "sets whether version control systems should be detected when pinning \
        to a local path. Enabled by default since 1.3.0.";
       "REUSEBUILDDIR", cli_original, (fun v -> REUSEBUILDDIR (env_bool v)),
       "TO DOCUMENT ... OR NOT.";
-      "ROOTISOK", cli_original, (fun v -> ROOTISOK (env_bool v)),
-      "don't complain when running as root.";
       "SHOW", cli_original, (fun v -> SHOW (env_bool v)),
       "see option `--show`.";
       "SKIPUPDATE", cli_original, (fun v -> SKIPUPDATE (env_bool v)),
@@ -276,7 +299,9 @@ let help_sections cli =
     `P "Opam makes use of the environment variables listed here. Boolean \
         variables should be set to \"0\", \"no\", \"false\" or the empty \
         string to disable, \"1\", \"yes\" or \"true\" to enable.";
-  ] @ doc_opam_envvariables cli @ [
+  ] @
+  List.sort compare (doc_opam_envvariables_pre @ doc_opam_envvariables cli)
+  @ [
     `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
         substituting `%{var}%` strings in `opam` files.";
     `P "$(i,OPAMVAR_package_var) overrides the contents of the variable \

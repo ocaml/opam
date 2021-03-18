@@ -332,6 +332,7 @@ let rec main_catch_all f =
 let run () =
   OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
   OpamSystem.init ();
+  OpamArg.preinit_opam_envvariables ();
   main_catch_all @@ fun () ->
   let cli, argv = check_and_run_external_commands () in
   let (default, commands), argv1 =

@@ -445,7 +445,6 @@ let env_with_cli environment =
         let doc = update_doc_w_cli doc ~cli validity in
         `P (Printf.sprintf "$(i,OPAM%s) %s" var doc))
       environment
-    |> List.sort compare
   in
   let init_env cli =
     OpamStd.List.filter_map (fun (var, validity, cons, _doc) ->
