@@ -1,0 +1,116 @@
+009e00fa
+### OPAMYES=1
+### tar xzf ${OPAMROOT}/repo/default.tar.gz
+### rm -rf ${OPAMROOT}
+### OPAMVAR_sys_ocaml_version=''
+### opam init --no-setup default default/ --fake
+No configuration file found, using built-in defaults.
+Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+
+<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-base-compiler) 
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml" {>= "4.05.0"}]
+The following actions will be faked:
+  - install base-bigarray       base
+  - install ocaml-base-compiler 4.10.0
+  - install base-threads        base
+  - install base-unix           base
+  - install ocaml-config        1      [required by ocaml]
+  - install ocaml               4.10.0
+===== 6 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.10.0
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.10.0
+Done.
+### opam switch invariant
+["ocaml" {>= "4.05.0"}]
+### rm -rf ${OPAMROOT}
+### OPAMVAR_sys_ocaml_version=4.02.3
+### opam init --no-setup default default/ --fake
+No configuration file found, using built-in defaults.
+Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+
+<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-base-compiler) 
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml" {>= "4.05.0"}]
+The following actions will be faked:
+  - install base-bigarray       base
+  - install ocaml-base-compiler 4.10.0
+  - install base-threads        base
+  - install base-unix           base
+  - install ocaml-config        1      [required by ocaml]
+  - install ocaml               4.10.0
+===== 6 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.10.0
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.10.0
+Done.
+### opam switch invariant
+["ocaml" {>= "4.05.0"}]
+### rm -rf ${OPAMROOT}
+### OPAMVAR_sys_ocaml_version=4.07.0
+### opam init --no-setup default default/ --fake
+No configuration file found, using built-in defaults.
+Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+
+<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-system) 
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml" {>= "4.05.0"}]
+The following actions will be faked:
+  - install base-bigarray base
+  - install base-threads  base
+  - install ocaml-system  4.07.0
+  - install base-unix     base
+  - install ocaml-config  1      [required by ocaml]
+  - install ocaml         4.07.0
+===== 6 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-system.4.07.0
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.07.0
+Done.
+### opam switch invariant
+["ocaml" {>= "4.05.0"}]
+### opam upgrade --fake
+Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
+However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+Nothing to do.
+### opam upgrade ocaml --fake
+The following actions will be faked:
+  - remove    ocaml-system        4.07.0           [conflicts with ocaml]
+  - install   ocaml-base-compiler 4.10.0           [required by ocaml]
+  - recompile ocaml-config        1                [uses ocaml-system]
+  - upgrade   ocaml               4.07.0 to 4.10.0
+===== 1 to install | 1 to recompile | 1 to upgrade | 1 to remove =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of ocaml-base-compiler.4.10.0
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.10.0
+Done.

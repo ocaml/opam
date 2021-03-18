@@ -96,6 +96,22 @@
    (run ./run.exe %{bin:opam} %{dep:conflict-solo5.test} %{read-lines:testing-env}))))
 
 (alias
+ (name reftest-init)
+ (action
+  (diff init.test init.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-init)))
+
+(rule
+ (deps root-009e00fa)
+ (action
+  (with-stdout-to
+   init.out
+   (run ./run.exe %{bin:opam} %{dep:init.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-install-pgocaml)
  (action
   (diff install-pgocaml.test install-pgocaml.out)))
