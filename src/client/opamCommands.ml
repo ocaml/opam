@@ -373,8 +373,14 @@ let init cli =
            ~check_sandbox:(not no_sandboxing)
            (OpamFile.Config.safe_read config_f) shell;
       else
-        OpamEnv.setup root ~interactive ~dot_profile ?update_config ?env_hook
-          ?completion ~inplace shell
+        (if not interactive &&
+            update_config <> Some true && completion <> Some true && env_hook <> Some true then
+           OpamConsole.msg
+             "Opam was already initialised. If you want to set it up again, \
+              use `--interactive', `--reinit', or choose a different \
+              `--root'.\n";
+         OpamEnv.setup root ~interactive ~dot_profile ?update_config ?env_hook
+           ?completion ~inplace shell)
     else
     let init_config =
       get_init_config ~no_sandboxing
