@@ -15,6 +15,7 @@ module E: sig
   type OpamStd.Config.E.t +=
     | ASSUMEDEPEXTS of bool option
     | AUTOREMOVE of bool option
+    | CLI of string option
     | DROPWORKINGDIR of bool option
     | EDITOR of string option
     | FAKE of bool option

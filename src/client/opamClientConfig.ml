@@ -13,6 +13,7 @@ module E = struct
   type OpamStd.Config.E.t +=
     | ASSUMEDEPEXTS of bool option
     | AUTOREMOVE of bool option
+    | CLI of string option
     | DROPWORKINGDIR of bool option
     | EDITOR of string option
     | FAKE of bool option
@@ -33,6 +34,7 @@ module E = struct
   open OpamStd.Config.E
   let assumedepexts = value (function ASSUMEDEPEXTS b -> b | _ -> None)
   let autoremove = value (function AUTOREMOVE b -> b | _ -> None)
+  let cli = value (function CLI s -> s | _ -> None)
   let dropworkingdir = value (function DROPWORKINGDIR b -> b | _ -> None)
   let editor = value (function EDITOR s -> s | _ -> None)
   let fake = value (function FAKE b -> b | _ -> None)
