@@ -112,6 +112,7 @@ New option/command/subcommand are prefixed with ◈.
   * Generalise `mk_tristate_opt' to mk_state_opt [#4575 @rjbou]
   * Fix `opam exec` on native Windows when calling cygwin executables [#4588 @AltGr]
   * Fix temporary file with a too long name causing errors on Windows [#4590 @AltGr]
+  * CLI: Add flag deprecation and replacement helper [#4595 @rjbou]
 
 ## Test
   * Make the reference tests dune-friendly [#4376 @emillon]
