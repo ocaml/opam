@@ -99,7 +99,7 @@ let global_options cli =
     if not (options.safe_mode || root_is_ok) &&
        Unix.getuid () = 0 then
       OpamConsole.warning "Running as root is not recommended";
-    {options with cli}, self_upgrade_status
+    {options with cli = fst cli}, self_upgrade_status
   in
   Term.(const self_upgrade $ no_self_upgrade $ global_options cli)
 
@@ -419,7 +419,7 @@ let init cli =
     in
     OpamSwitchState.drop st
   in
-  mk_command cli cli_original "init" ~doc ~man
+  mk_command  ~cli cli_original "init" ~doc ~man
     Term.(const init
           $global_options cli $build_options cli $repo_kind_flag cli
           cli_original $repo_name $repo_url $interactive $update_config
@@ -668,7 +668,7 @@ let list ?(force_search=false) cli =
     else if OpamSysPkg.Set.is_empty results_depexts then
       OpamStd.Sys.exit_because `False
   in
-  mk_command cli cli_original "list" ~doc ~man
+  mk_command  ~cli cli_original "list" ~doc ~man
     Term.(const list $global_options cli $package_selection cli $state_selector
           $no_switch $depexts $vars $repos $owns_file $disjunction $search
           $silent $no_depexts $package_listing cli $pattern_list)
@@ -881,7 +881,7 @@ let show cli =
            `Ok ()
       )
   in
-  mk_command_ret cli cli_original "show" ~doc ~man
+  mk_command_ret  ~cli cli_original "show" ~doc ~man
     Term.(const show $global_options cli $fields $show_empty $raw $where
           $list_files $file $normalise $no_lint $just_file $all_versions
           $sort $atom_or_local_list)
@@ -1032,7 +1032,7 @@ let var cli =
       `Error (true, "--package can't be specified with a var argument, use \
                      'pkg:var' instead.")
   in
-  mk_command_ret cli cli_original "var" ~doc ~man
+  mk_command_ret  ~cli cli_original "var" ~doc ~man
     Term.(const print_var
           $global_options cli $package $varvalue $global cli)
 
@@ -1064,7 +1064,7 @@ let option cli =
     apply_global_options global_options;
     var_option global global_options `option fieldvalue
   in
-  mk_command_ret cli (cli_from cli2_1) "option" ~doc ~man
+  mk_command_ret  ~cli (cli_from cli2_1) "option" ~doc ~man
     Term.(const option
           $global_options cli $fieldvalue $global cli)
 
@@ -1132,22 +1132,24 @@ let config cli =
     cli_original, "pef-universe", `pef, ["[FILE]"],
     "Outputs the current package universe in PEF format.";
     (* Deprecated options *)
-    cli_between cli2_0 cli2_1 ~replaced:"opam exec", "exec", `exec, ["[--] COMMAND"; "[ARG]..."],
+    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam exec", "exec",
+    `exec, ["[--] COMMAND"; "[ARG]..."],
     "Execute $(i,COMMAND) with the correct environment variables. This command \
      can be used to cross-compile between switches using $(b,opam config exec \
      --switch=SWITCH -- COMMAND ARG1 ... ARGn). Opam expansion takes place in \
      command and args. If no switch is present on the command line or in the \
      $(i,OPAMSWITCH) environment variable, $(i,OPAMSWITCH) is not set in \
      $(i,COMMAND)'s environment. Can also be accessed through $(b,opam exec).";
-    cli_between cli2_0 cli2_1 ~replaced:"opam var", "set", `set, ["VAR";"VALUE"],
-    "Set switch variable";
-    cli_between cli2_0 cli2_1 ~replaced:"opam var", "unset", `unset, ["VAR"],
-    "Unset switch variable";
-    cli_between cli2_0 cli2_1 ~replaced:"opam var", "set-global", `set_global, ["VAR";"VALUE"],
-    "Set global variable";
-    cli_between cli2_0 cli2_1 ~replaced:"opam var", "unset-global", `unset_global, ["VAR"],
-    "Unset global variable";
-    cli_between cli2_0 cli2_1 ~replaced:"opam var", "var", `var, ["VAR"],
+    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var", "set", `set,
+    ["VAR";"VALUE"], "Set switch variable";
+    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var", "unset",
+    `unset, ["VAR"], "Unset switch variable";
+    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var", "set-global",
+    `set_global, ["VAR";"VALUE"], "Set global variable";
+    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var",
+    "unset-global", `unset_global, ["VAR"], "Unset global variable";
+    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var", "var", `var,
+    ["VAR"],
     "Return the value associated with variable $(i,VAR), looking in switch \
      first, global if not found. Package variables can be accessed with the \
      syntax $(i,pkg:var). Can also be accessed through $(b,opam var VAR)";
@@ -1394,7 +1396,7 @@ let config cli =
     | command, params -> bad_subcommand ~cli commands ("config", command, params)
   in
 
-  mk_command_ret cli cli_original "config" ~doc ~man
+  mk_command_ret  ~cli cli_original "config" ~doc ~man
     Term.(const config
           $global_options cli $command $shell_opt cli cli_original $sexp cli
           $inplace_path cli
@@ -1425,7 +1427,7 @@ let exec cli =
       ~set_opamroot ~set_opamswitch ~inplace_path cmd
   in
   let open Common_config_flags in
-  mk_command cli cli_original "exec" ~doc ~man
+  mk_command  ~cli cli_original "exec" ~doc ~man
     Term.(const exec $global_options cli $inplace_path cli
           $set_opamroot cli $set_opamswitch cli
           $cmd)
@@ -1487,7 +1489,7 @@ let env cli =
         (OpamEnv.add [] [])
   in
   let open Common_config_flags in
-  mk_command cli cli_original "env" ~doc ~man
+  mk_command  ~cli cli_original "env" ~doc ~man
   Term.(const env
         $global_options cli $shell_opt cli cli_original $sexp cli
         $inplace_path cli $set_opamroot cli $set_opamswitch cli
@@ -1641,7 +1643,7 @@ let install cli =
       OpamAuxCommands.copy_files_to_destdir st dest packages;
       `Ok ()
   in
-  mk_command_ret cli cli_original "install" ~doc ~man
+  mk_command_ret  ~cli cli_original "install" ~doc ~man
     Term.(const install $global_options cli $build_options cli
           $add_to_roots $deps_only $ignore_conflicts $restore $destdir
           $assume_built cli $check $recurse cli $subpath cli $depext_only
@@ -1725,7 +1727,7 @@ let remove cli =
       let autoremove = autoremove || OpamClientConfig.(!r.autoremove) in
       OpamSwitchState.drop (OpamClient.remove st ~autoremove ~force atoms)
   in
-  mk_command cli cli_original "remove" ~doc ~man
+  mk_command  ~cli cli_original "remove" ~doc ~man
     Term.(const remove $global_options cli $build_options cli $autoremove
           $force $destdir $recurse cli $subpath cli $atom_or_dir_list)
 
@@ -1813,7 +1815,7 @@ let reinstall cli =
     | _, _::_ ->
       `Error (true, "Package arguments not allowed with this option")
   in
-  mk_command_ret cli cli_original "reinstall" ~doc ~man
+  mk_command_ret  ~cli cli_original "reinstall" ~doc ~man
     Term.(const reinstall $global_options cli $build_options cli
           $assume_built cli $recurse cli $subpath cli $atom_or_dir_list
           $cmd)
@@ -1891,7 +1893,7 @@ let update cli =
       OpamConsole.msg "Now run 'opam upgrade' to apply any package updates.\n";
     if not success then OpamStd.Sys.exit_because `Sync_error
   in
-  mk_command cli cli_original "update" ~doc ~man
+  mk_command  ~cli cli_original "update" ~doc ~man
   Term.(const update $global_options cli $jobs_flag cli cli_original $name_list
         $repos_only $dev_only $depexts_only $all $check $upgrade)
 
@@ -1949,7 +1951,7 @@ let upgrade cli =
       OpamSwitchState.drop @@ OpamClient.upgrade st ~check ~only_installed ~all atoms;
       `Ok ()
   in
-  mk_command_ret cli cli_original "upgrade" ~doc ~man
+  mk_command_ret  ~cli cli_original "upgrade" ~doc ~man
     Term.(const upgrade $global_options cli $build_options cli $fixup $check
           $installed $all $recurse cli $subpath cli $atom_or_dir_list)
 
@@ -2243,7 +2245,7 @@ let repository cli =
       `Ok ()
     | command, params -> bad_subcommand ~cli commands ("repository", command, params)
   in
-  mk_command_ret cli cli_original "repository" ~doc ~man
+  mk_command_ret  ~cli cli_original "repository" ~doc ~man
     Term.(const repository $global_options cli $command
           $repo_kind_flag cli cli_original $print_short_flag cli cli_original
           $scope $rank $params)
@@ -2793,7 +2795,7 @@ let switch cli =
       `Ok ()
     | command, params -> bad_subcommand ~cli commands ("switch", command, params)
   in
-  mk_command_ret cli cli_original "switch" ~doc ~man
+  mk_command_ret  ~cli cli_original "switch" ~doc ~man
     Term.(const switch
           $global_options cli $build_options cli $command
           $print_short_flag cli cli_original
@@ -3195,7 +3197,7 @@ let pin ?(unpin_only=false) cli =
        | `Error e -> `Error (false, e))
     | `incorrect -> bad_subcommand ~cli commands ("pin", command, params)
   in
-  mk_command_ret cli cli_original "pin" ~doc ~man
+  mk_command_ret  ~cli cli_original "pin" ~doc ~man
     Term.(const pin
           $global_options cli $build_options cli
           $kind $edit $no_act $dev_repo $print_short_flag cli cli_original
@@ -3329,7 +3331,7 @@ let source cli =
       OpamSwitchState.drop
         (OpamClient.PIN.pin t nv.name ~version:nv.version target)
   in
-  mk_command cli cli_original "source" ~doc ~man
+  mk_command  ~cli cli_original "source" ~doc ~man
     Term.(const source
           $global_options cli $atom $dev_repo $pin $dir)
 
@@ -3504,7 +3506,7 @@ let lint cli =
     OpamStd.Option.iter (fun json -> OpamJson.append "lint" (`A json)) json;
     if err then OpamStd.Sys.exit_because `False
   in
-  mk_command cli cli_original "lint" ~doc ~man
+  mk_command  ~cli cli_original "lint" ~doc ~man
     Term.(const lint $global_options cli $files $package $normalise $short
           $warnings $check_upstream $recurse cli $subpath cli)
 
@@ -3682,7 +3684,7 @@ let clean cli =
       (OpamConsole.msg "Clearing logs\n";
        cleandir (OpamPath.log root))
   in
-  mk_command cli cli_original "clean" ~doc ~man
+  mk_command  ~cli cli_original "clean" ~doc ~man
     Term.(const clean $global_options cli $dry_run $download_cache $repos
           $repo_cache $logs $switch $all_switches)
 
@@ -3758,7 +3760,7 @@ let lock cli =
              (OpamPackage.to_string nv)
              (OpamFilename.to_string file)) pkg_done)
   in
-  mk_command cli (cli_from cli2_1) "lock" ~doc ~man
+  mk_command  ~cli (cli_from cli2_1) "lock" ~doc ~man
     Term.(const lock $global_options cli $only_direct_flag $lock_suffix
           $atom_or_local_list)
 
@@ -3875,7 +3877,7 @@ let commands cli =
     help;
   ]
 
-let current_commands = commands OpamCLIVersion.current
+let current_commands = commands OpamCLIVersion.Sourced.current
 
 let is_builtin_command prefix =
   List.exists (fun (_,info) ->

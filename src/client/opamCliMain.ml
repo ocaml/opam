@@ -15,7 +15,7 @@ open OpamStateTypes
 open OpamTypesBase
 open OpamStd.Op
 
-exception InvalidCLI of (OpamCLIVersion.t * provenance, string option) OpamCompat.Result.t
+exception InvalidCLI of (OpamCLIVersion.Sourced.t, string option) OpamCompat.Result.t
 
 (* Filter and parse "--cli=v" or "--cli v" options *)
 let rec filter_cli_arg cli acc args =
@@ -24,16 +24,15 @@ let rec filter_cli_arg cli acc args =
   | "--" :: _ -> (cli, List.rev_append acc args)
   | "--cl" :: args -> filter_cli_arg cli acc ("--cli"::args)
   | ["--cli"] | "--cli" :: "--" :: _ ->
-    raise (InvalidCLI(Error None))
+    raise (InvalidCLI (Error None))
   | "--cli" :: arg :: args ->
     let version =
       match OpamCLIVersion.of_string_opt arg with
       | Some cli ->
-        if OpamCLIVersion.is_supported cli then
-          cli
-        else
-          raise (InvalidCLI(Ok(cli, `Command_line)))
-      | None -> raise (InvalidCLI(Error(Some arg)))
+        let ocli = cli, `Command_line in
+        if OpamCLIVersion.is_supported cli then ocli else
+          raise (InvalidCLI (Ok ocli))
+      | None -> raise (InvalidCLI (Error (Some arg)))
     in
     filter_cli_arg (Some version) acc args
   | arg :: args ->
@@ -64,16 +63,15 @@ let rec preprocess_argv cli yes args =
       (cli, false, yes @ [yes_opt])
   | "--cl" :: args -> preprocess_argv cli yes ("--cli"::args)
   | ["--cli"] | "--cli" :: "--" :: _ ->
-    raise (InvalidCLI(Error None))
+    raise (InvalidCLI (Error None))
   | "--cli" :: arg :: args ->
     let version =
       match OpamCLIVersion.of_string_opt arg with
       | Some cli ->
-        if OpamCLIVersion.is_supported cli then
-          cli
-        else
-          raise (InvalidCLI(Ok(cli, `Command_line)))
-      | _ -> raise (InvalidCLI(Error(Some arg)))
+        let ocli = cli, `Command_line in
+        if OpamCLIVersion.is_supported cli then ocli else
+          raise (InvalidCLI (Ok ocli))
+      | _ -> raise (InvalidCLI (Error (Some arg)))
     in
     preprocess_argv (Some version) yes args
   | arg :: rest ->
@@ -95,10 +93,10 @@ let check_and_run_external_commands () =
   let (cli, yes, argv) =
     match Array.to_list Sys.argv with
     | prog::args ->
-      let (cli, yes, args) = preprocess_argv None [] args in
-      let cli =
-        match cli with
-        | Some cli ->
+      let (ocli, yes, args) = preprocess_argv None [] args in
+      let ocli =
+        match ocli with
+        | Some ((cli, _) as ocli) ->
           if OpamCLIVersion.(cli < (2, 1)) then begin
             let cli = OpamCLIVersion.to_string cli in
             OpamConsole.warning
@@ -106,10 +104,10 @@ let check_and_run_external_commands () =
                is more portable"
               cli cli
           end;
-          (cli, `Command_line)
+          ocli
         | None ->
-          match OpamCLIVersion.env "CLI" with
-          | Some cli ->
+          match OpamCLIVersion.Sourced.env () with
+          | Some ((cli, _) as ocli) ->
             if OpamCLIVersion.is_supported cli then
               let () =
                 if OpamCLIVersion.(cli >= (2, 1)) then
@@ -117,14 +115,14 @@ let check_and_run_external_commands () =
                     "Setting OPAMCLI is brittle - consider using the \
                      '--cli <major>.<minor>' flag."
               in
-              cli, `Env
+              ocli
             else
-              raise (InvalidCLI(Ok(cli, `Env)))
+              raise (InvalidCLI (Ok ocli))
           | None ->
-            OpamCLIVersion.current, `Default
+            OpamCLIVersion.Sourced.current
       in
-      (cli, yes, prog::args)
-    | args -> ((OpamCLIVersion.current, `Default), false, args)
+      (ocli, yes, prog::args)
+    | args -> (OpamCLIVersion.Sourced.current, false, args)
   in
   match argv with
   | [] | [_] -> (cli, argv)
@@ -335,7 +333,7 @@ let run () =
   OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
   OpamSystem.init ();
   main_catch_all @@ fun () ->
-  let (cli, _), argv = check_and_run_external_commands () in
+  let cli, argv = check_and_run_external_commands () in
   let (default, commands), argv1 =
     match argv with
     | prog :: command :: argv when OpamCommands.is_admin_subcommand command ->

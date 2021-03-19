@@ -15,14 +15,16 @@ include OpamStd.ABSTRACT
 (** The current version of the CLI (major and minor of OpamVersion.current *)
 val current : t
 
+(* Default CLI version, currently 2.0.
+   This value is checked in CI. *)
+val default : t
+
 (** Tests whether a valid CLI version is supported by the client library *)
 val is_supported : t -> bool
 
-(** Parse the given environment variable as MAJOR.MINOR *)
-val env: OpamStd.Config.env_var -> t option
-
 (** ['a option] version of {!to_string} *)
 val of_string_opt : string -> t option
+val of_string : string -> t
 
 (** Comparison [>]] with [(major, minor)] *)
 val ( >= ) : t -> int * int -> bool
@@ -33,3 +35,22 @@ val ( < ) : t -> int * int -> bool
 (** Returns previous supported version.
     @raise Not_found if there isn't one. *)
 val previous: t -> t
+
+(* CLI version extended with provenance *)
+module Sourced : sig
+
+  type nonrec t = t * OpamStateTypes.provenance
+
+  (** The current version of the CLI (major and minor of OpamVersion.current *)
+  val current : t
+
+  (** Parse the given environment variable as MAJOR.MINOR *)
+  val env: unit -> t option
+
+end
+
+module Op : sig
+  val (@<)  : Sourced.t -> t -> bool
+  val (@=)  : Sourced.t -> t -> bool
+  val (@>=) : Sourced.t -> t -> bool
+end
