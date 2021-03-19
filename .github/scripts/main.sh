@@ -86,8 +86,9 @@ export OCAMLRUNPARAM=b
 
     test -d _opam || opam switch create . --empty
     eval $(opam env)
-    opam pin --kind=path $GITHUB_WORKSPACE --yes --no-action
-    opam pin . -yn
+    opam pin --kind=path $GITHUB_WORKSPACE -yn
+    # opam lib pins defined in opam-rt are ignored as there is a local pin
+    opam pin . -yn --ignore-pin-depends
     opam install opam-rt --deps-only
     make
     (set +x ; echo -en "::endgroup::opam-rt\r") 2>/dev/null
