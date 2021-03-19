@@ -23,6 +23,7 @@ module E: sig
     | INPLACEBUILD of bool option
     | JSON of string option
     | KEEPBUILDDIR of bool option
+    | NOAGGREGATE of bool option
     | NOAUTOUPGRADE of bool option
     | NOSELFUPGRADE of string option
     | PINKINDAUTO of bool option
@@ -34,6 +35,7 @@ module E: sig
     | WORKINGDIR of bool option
     val cli: unit -> string option
     val rootisok: unit -> bool option
+    val noaggregate: unit -> bool option
     val noselfupgrade: unit -> string option
 end
 

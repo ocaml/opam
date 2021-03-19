@@ -267,6 +267,8 @@ let environment_variables =
       "NOAUTOUPGRADE", cli_original, (fun v -> NOAUTOUPGRADE (env_bool v)),
       "disables automatic internal upgrade of repositories in an earlier \
        format to the current one, on 'update' or 'init'.";
+      "NOAGGREGATE", cli_original, (fun v -> NOAGGREGATE (env_bool v)),
+      "TO DOCUMENT ... OR NOT.";
       "PINKINDAUTO", cli_original, (fun v -> PINKINDAUTO (env_bool v)),
       "sets whether version control systems should be detected when pinning \
        to a local path. Enabled by default since 1.3.0.";

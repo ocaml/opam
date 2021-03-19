@@ -304,7 +304,7 @@ let more_restrictive_deps_than deps1 deps2 =
    can be installed with a.va1 is vb1). An aggregate should not contain more
    than one version per package name. *)
 let aggregate packages deps revdeps =
-  if OpamStd.Config.env_bool "NOAGGREGATE" = Some true then
+  if OpamClientConfig.E.noaggregate () = Some true then
     PkgSet.fold (fun nv -> PkgSetSet.add (PkgSet.singleton nv))
       packages PkgSetSet.empty
   else

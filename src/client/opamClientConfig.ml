@@ -21,6 +21,7 @@ module E = struct
     | INPLACEBUILD of bool option
     | JSON of string option
     | KEEPBUILDDIR of bool option
+    | NOAGGREGATE of bool option
     | NOAUTOUPGRADE of bool option
     | NOSELFUPGRADE of string option
     | PINKINDAUTO of bool option
@@ -42,6 +43,7 @@ module E = struct
   let inplacebuild = value (function INPLACEBUILD b -> b | _ -> None)
   let json = value (function JSON s -> s | _ -> None)
   let keepbuilddir = value (function KEEPBUILDDIR b -> b | _ -> None)
+  let noaggregate = value (function NOAGGREGATE b -> b | _ -> None)
   let noautoupgrade = value (function NOAUTOUPGRADE b -> b | _ -> None)
   let noselfupgrade = value (function NOSELFUPGRADE s -> s | _ -> None)
   let pinkindauto = value (function PINKINDAUTO b -> b | _ -> None)
