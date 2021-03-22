@@ -117,7 +117,9 @@ New option/command/subcommand are prefixed with ◈.
   * Rewrite the very old tests and unify them with the newer ones [#4504 @AltGr]
   * Add patch an substitution tests [#4545 @rjbou]
   * Fix configure check in github actions [#4593 @rjbou]
-  * GHA: Add default cli check in hygien job [#4575 @rjbou]
+  * GHA: Add default cli check in hygiene job [#4575 @rjbou]
+  * GHA: Fix opam-rt on macos, set ocaml-system as switch compiler [#4610 @dra27 @rjbou]
+  * GHA: Ignore opam-rt pin depends, opam libs are already pinned locally [#4610 @AltGr @rjbou]
 
 ## Shell
   *
