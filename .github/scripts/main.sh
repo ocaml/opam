@@ -84,7 +84,7 @@ export OCAMLRUNPARAM=b
       git reset --hard origin/master
     fi
 
-    test -d _opam || opam switch create . --empty
+    test -d _opam || opam switch create . --no-install --formula '"ocaml-system"'
     eval $(opam env)
     opam pin --kind=path $GITHUB_WORKSPACE -yn
     # opam lib pins defined in opam-rt are ignored as there is a local pin
