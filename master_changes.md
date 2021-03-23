@@ -68,6 +68,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix the sandbox check [#4589 @AltGr]
   * Fix sandbox script shell mistake that made `PWD` read-write on remove actions [#4589 @AltGr]
   * Port bwrap improvements to sandbox_exec [#4589 @AltGr]
+  * Fix realpath use for macos, partial revert of #4589 [#4609 @AltGr]
 
 ## Repository management
   *
