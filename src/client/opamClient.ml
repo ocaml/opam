@@ -187,8 +187,8 @@ let compute_upgrade_t
              if OpamPackage.Set.exists
                  (fun nv ->
                     OpamFormula.check atom nv &&
-                    not (OpamFile.OPAM.has_flag Pkgflag_AvoidVersion
-                           (OpamSwitchState.opam t nv)))
+                    (not (OpamFile.OPAM.has_flag Pkgflag_AvoidVersion (OpamSwitchState.opam t nv)) ||
+                     OpamSwitchState.can_upgrade_to_avoid_version (OpamPackage.name nv) t))
                  (Lazy.force t.available_packages)
              then atom
              else (n, None)
