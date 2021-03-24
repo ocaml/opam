@@ -223,7 +223,7 @@
   (action
    (progn
     (run %{bin:opam} init --root=%{targets}
-           --no-setup --bypass-checks --no-opamrc --bare -vv --debug
+           --no-setup --bypass-checks --no-opamrc --bare
            file://%{dep:opam-repo-009e00fa}))))
 
 (rule
@@ -242,7 +242,7 @@
   (action
    (progn
     (run %{bin:opam} init --root=%{targets}
-           --no-setup --bypass-checks --no-opamrc --bare -vv --debug
+           --no-setup --bypass-checks --no-opamrc --bare
            file://%{dep:opam-repo-632bc2e}))))
 
 (rule
@@ -261,7 +261,7 @@
   (action
    (progn
     (run %{bin:opam} init --root=%{targets}
-           --no-setup --bypass-checks --no-opamrc --bare -vv --debug
+           --no-setup --bypass-checks --no-opamrc --bare
            file://%{dep:opam-repo-c1d23f0e}))))
 
 (rule
@@ -280,5 +280,5 @@
   (action
    (progn
     (run %{bin:opam} init --root=%{targets}
-           --no-setup --bypass-checks --no-opamrc --bare -vv --debug
+           --no-setup --bypass-checks --no-opamrc --bare
            file://%{dep:opam-repo-f372039d}))))
