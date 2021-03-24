@@ -20,6 +20,7 @@ New option/command/subcommand are prefixed with ◈.
 ## Install
   * Don't patch twice [#4529 @rjbou]
   * With `--deps-only`, set dependencies as root packages [#4964 @rjbou - fix #4502]
+  * Keep global lock only if root format upgrade is performed [#4612 @rjbou - fix #4597]
 
 ## Remove
   *
@@ -127,6 +128,8 @@ New option/command/subcommand are prefixed with ◈.
   * GHA: Fix opam-rt on macos, set ocaml-system as switch compiler [#4610 @dra27 @rjbou]
   * GHA: Ignore opam-rt pin depends, opam libs are already pinned locally [#4610 @AltGr @rjbou]
   * GHA: The bootstrap cache also depends on the precise version! [#4618 @dra27]
+  * Add switch creation tests: (dead)locking and switch defitinion at action time [#4612 @rjbou]
+  * Remove debug information from reftest [#4612 @rjbou]
 
 ## Shell
   *
