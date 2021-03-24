@@ -153,7 +153,7 @@
  (deps (alias reftest-pat-sub)))
 
 (rule
- (deps root-009e00fa)
+ (deps root-632bc2e)
  (action
   (with-stdout-to
    pat-sub.out
@@ -174,6 +174,22 @@
   (with-stdout-to
    show.out
    (run ./run.exe %{bin:opam} %{dep:show.test} %{read-lines:testing-env}))))
+
+(alias
+ (name reftest-switch-creation)
+ (action
+  (diff switch-creation.test switch-creation.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-switch-creation)))
+
+(rule
+ (deps root-632bc2e)
+ (action
+  (with-stdout-to
+   switch-creation.out
+   (run ./run.exe %{bin:opam} %{dep:switch-creation.test} %{read-lines:testing-env}))))
 
 (alias
  (name reftest-upgrade-format)
