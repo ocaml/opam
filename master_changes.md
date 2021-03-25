@@ -115,6 +115,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix `opam exec` on native Windows when calling cygwin executables [#4588 @AltGr]
   * Fix temporary file with a too long name causing errors on Windows [#4590 @AltGr]
   * CLI: Add flag deprecation and replacement helper [#4595 @rjbou]
+  * Win32 Console: fix VT100 support [#3897 @dra27]
 
 ## Test
   * Make the reference tests dune-friendly [#4376 @emillon]

@@ -240,15 +240,12 @@ type _ shim_return =
  | Mode   : win32_color_mode shim_return
  | Peek   : bool shim_return
 
-let force_win32_vt100 h () =
-  let hConsoleOutput =
-    OpamStubs.getStdHandle h
-  in
-    let mode = OpamStubs.getConsoleMode hConsoleOutput in
-    (* ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x4 *)
-    let vt100_on = 0x4 in
-    if mode land vt100_on = 0 then
-      OpamStubs.setConsoleMode hConsoleOutput (mode lor vt100_on) |> ignore
+let force_win32_vt100 hConsoleOutput () =
+  let mode = OpamStubs.getConsoleMode hConsoleOutput in
+  (* ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x4 *)
+  let vt100_on = 0x4 in
+  if mode land vt100_on = 0 then
+    OpamStubs.setConsoleMode hConsoleOutput (mode lor vt100_on) |> ignore
 
 let enable_win32_vt100 ch =
   let hConsoleOutput =
@@ -259,7 +256,7 @@ let enable_win32_vt100 ch =
     (* ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x4 *)
     let vt100_on = 0x4 in
     if mode land vt100_on <> 0 then
-      (hConsoleOutput, VT100(force_win32_vt100 ch))
+      (hConsoleOutput, VT100(force_win32_vt100 hConsoleOutput))
     else
       if OpamStubs.setConsoleMode hConsoleOutput (mode lor vt100_on) then begin
         let restore_console () =
@@ -269,18 +266,18 @@ let enable_win32_vt100 ch =
           OpamStubs.setConsoleMode hConsoleOutput mode |> ignore
         in
         at_exit restore_console;
-        (hConsoleOutput, VT100(force_win32_vt100 ch))
+        (hConsoleOutput, VT100(force_win32_vt100 hConsoleOutput))
       end else
         (hConsoleOutput, Shim)
   with Not_found ->
-    (hConsoleOutput, VT100(force_win32_vt100 ch))
+    (hConsoleOutput, VT100 ignore)
 
 let stdout_state = lazy (enable_win32_vt100 OpamStubs.STD_OUTPUT_HANDLE)
 let stderr_state = lazy (enable_win32_vt100 OpamStubs.STD_ERROR_HANDLE)
 
 let get_win32_console_shim :
   type s . [ `stdout | `stderr ] -> s shim_return -> s = fun ch ->
-    let (h, ch) = if ch = `stdout then (OpamStubs.STD_OUTPUT_HANDLE, stdout_state) else (OpamStubs.STD_ERROR_HANDLE, stderr_state) in
+    let ch = if ch = `stdout then stdout_state else stderr_state in
     function
     | Handle ->
         Lazy.force ch
@@ -288,10 +285,9 @@ let get_win32_console_shim :
         Lazy.force ch |> snd
     | Peek ->
         if Lazy.is_val ch then
-          let r = (snd (Lazy.force ch) <> Shim) in
-          if r then
-            force_win32_vt100 h ();
-          r
+          match Lazy.force ch with
+          | (_, Shim) -> false
+          | (_, VT100 force) -> force (); true
         else
           false
 
