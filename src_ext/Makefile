@@ -191,10 +191,6 @@ GET_ARCHIVE=\
 	  done; \
         fi
 	@if [ "$*" != "dune-local" ] ; then \
-	   for i in `find $* -name jbuild`; do \
-       sed -e "s/name \+runtest/name disabled-runtest/g" $$i > $$i.tmp ; \
-       mv $$i.tmp $$i ; \
-     done; \
      for j in $(wildcard dune-$* dune-$*-*); do \
        cp $$j $*$$(echo "$$j" | sed -e "s/dune-$*//" -e "s|-|/|g")/dune; \
        echo "(lang dune 1.2)" > $*/dune-project; \
