@@ -1,6 +1,7 @@
 (library
   (name extlib)
   (public_name extlib)
+  (flags :standard -w -3)
   (modules (:standard \ configure install uChar uTF8))
   (preprocess (action (run %{bin:cppo} %{read-lines:compat-level} %{input-file})))
   (wrapped false))
