@@ -175,3 +175,5 @@ if [ -n "${INC_PREPEND}" ] ; then
   echo "export Include:=${INC_PREPEND}\$(Include)" >> $BOOTSTRAP_ROOT/../src_ext/Makefile.config
 fi
 echo "export OCAMLLIB=${OCAMLLIB}" >> $BOOTSTRAP_ROOT/../src_ext/Makefile.config
+echo 'unexport CAML_LD_LIBRARY_PATH' >> $BOOTSTRAP_ROOT/../src_ext/Makefile.config
+echo 'unexport OPAM_SWITCH_PREFIX' >> $BOOTSTRAP_ROOT/../src_ext/Makefile.config
