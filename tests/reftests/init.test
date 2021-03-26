@@ -13,14 +13,6 @@ No configuration file found, using built-in defaults.
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ocaml" {>= "4.05.0"}]
-The following actions will be faked:
-  - install base-bigarray       base
-  - install ocaml-base-compiler 4.10.0
-  - install base-threads        base
-  - install base-unix           base
-  - install ocaml-config        1      [required by ocaml]
-  - install ocaml               4.10.0
-===== 6 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of base-bigarray.base
@@ -44,14 +36,6 @@ No configuration file found, using built-in defaults.
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ocaml" {>= "4.05.0"}]
-The following actions will be faked:
-  - install base-bigarray       base
-  - install ocaml-base-compiler 4.10.0
-  - install base-threads        base
-  - install base-unix           base
-  - install ocaml-config        1      [required by ocaml]
-  - install ocaml               4.10.0
-===== 6 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of base-bigarray.base
@@ -75,14 +59,6 @@ No configuration file found, using built-in defaults.
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ocaml" {>= "4.05.0"}]
-The following actions will be faked:
-  - install base-bigarray base
-  - install base-threads  base
-  - install ocaml-system  4.07.0
-  - install base-unix     base
-  - install ocaml-config  1      [required by ocaml]
-  - install ocaml         4.07.0
-===== 6 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of base-bigarray.base
