@@ -47,7 +47,7 @@ dune-local.pkgbuild: findlib.pkgbuild
 
 opam-file-format-pkg-build:
 	dune build @install -p opam-file-format
-	dune install -p opam-file-format
+	dune install -p opam-file-format opam-file-format
 
 findlib-pkg-build:
 	./configure
@@ -109,8 +109,8 @@ mccs-pkg-build:
 
 seq-pkg-build:
 	dune build @install -p seq
-	dune install -p seq
+	dune install -p seq seq
 
 stdlib-shims-pkg-build:
 	dune build @install -p stdlib-shims
-	dune install -p stdlib-shims
+	dune install -p stdlib-shims stdlib-shims
