@@ -1,8 +1,11 @@
 009e00fa
+### opam option depext=false
+Set to 'false' the field depext in global configuration
 ### opam switch install cli-versioning --empty
 opam: install was removed in version 2.1 of the opam CLI, but version 2.1 has been requested. Use create instead or set OPAMCLI environment variable to 2.0.
 # Return code 2 #
-### OPAMCLI=2.0 opam switch install cli-versioning --empty
+### OPAMVAR_os=cygwin OPAMCLI=2.0 opam switch install cli-versioning --empty
+[WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 ### opam list --cli 31.4
 [ERROR] opam command-line version 31.4 is not supported.
 # Return code 2 #
@@ -16,9 +19,11 @@ opam: assume-depexts was added in version 2.1 of the opam CLI, but version 2.0 h
 [WARNING] set was deprecated in version 2.1 of the opam CLI. Use opam var instead or set OPAMCLI environment variable to 2.0.
 Added 'cli: "version"' to field variables in switch cli-versioning
 ### OPAMCLI=2.0 opam config set cli version
+[WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 Added 'cli: "version"' to field variables in switch cli-versioning
 ### opam switch set-invariant ocaml.4.05.0
 ### OPAMCLI=2.0 opam install ocaml.4.10.0
+[WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 [ERROR] Package conflict!
   * No agreement on the version of ocaml:
     - (invariant) -> ocaml = 4.05.0
@@ -49,6 +54,7 @@ The following actions would be performed:
   - install ocaml               4.10.0
 ===== 6 to install =====
 ### OPAMCLI=2.0 opam install ocaml.4.10.0 --unlock-base --show
+[WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 The following actions would be performed:
   - install base-bigarray       base
   - install ocaml-base-compiler 4.10.0 [required by ocaml]
