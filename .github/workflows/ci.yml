@@ -148,7 +148,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.cache/opam-rt/**
-        key: ${{ runner.os }}-opam-rt
+        key: ${{ runner.os }}-opam-rt-${{ matrix.ocamlv }}
     - name: Test
       env:
         OCAML_VERSION: ${{ matrix.ocamlv }}
