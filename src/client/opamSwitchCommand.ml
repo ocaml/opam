@@ -193,7 +193,8 @@ let set_invariant_raw st invariant =
       switch_config;
   st
 
-let install_compiler ?(additional_installs=[]) ?(deps_only=false) t =
+let install_compiler
+    ?(additional_installs=[]) ?(deps_only=false) ?(ask=false) t =
   let invariant = t.switch_invariant in
   if invariant = OpamFormula.Empty && additional_installs = [] then begin
     (if not OpamClientConfig.(!r.show) &&
@@ -299,12 +300,9 @@ let install_compiler ?(additional_installs=[]) ?(deps_only=false) t =
         solution
     else solution
   in
-  let ask =
-    OpamClientConfig.(!r.show) || additional_installs <> []
-  in
   let t, result =
     OpamSolution.apply t
-      ~ask
+      ~ask:(OpamClientConfig.(!r.show) || ask)
       ~requested:roots
       ~add_roots:roots
       solution in

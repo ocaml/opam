@@ -428,6 +428,7 @@ let init cli =
         (fun st ->
            (),
            OpamSwitchCommand.install_compiler st
+             ~ask:false
              ~additional_installs:default_compiler)
       with e ->
         OpamStd.Exn.finalise e @@ fun () ->
@@ -2659,7 +2660,10 @@ let switch cli =
              else st, []
            in
            (),
-           OpamSwitchCommand.install_compiler st ~additional_installs ~deps_only
+           OpamSwitchCommand.install_compiler st
+             ~additional_installs
+             ~deps_only
+             ~ask:(additional_installs <> [])
          in
          OpamSwitchState.drop st;
          `Ok ())
