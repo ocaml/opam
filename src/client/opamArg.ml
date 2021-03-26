@@ -129,22 +129,23 @@ let environment_variables =
   let solver =
     let open OpamSolverConfig.E in [
       "BESTEFFORT", cli_original, (fun v -> BESTEFFORT (env_bool v)),
-      "see option `--best-effort`.";
+      "see option `--best-effort'.";
       "BESTEFFORTPREFIXCRITERIA", cli_original,
       (fun v -> BESTEFFORTPREFIXCRITERIA (env_string v)),
       "sets the string that must be prepended to the criteria when the \
-       `--best-effort` option is set, and is expected to maximise the \
-       `opam-query` property in the solution.";
+       `--best-effort' option is set, and is expected to maximise the \
+       `opam-query' property in the solution.";
       "CRITERIA", cli_original, (fun v -> CRITERIA (env_string v)),
       "specifies user $(i,preferences) for dependency solving. The default \
-       value depends on the solver version, use `config report` to know the \
+       value depends on the solver version, use `config report' to know the \
        current setting. See also option --criteria.";
       "CUDFFILE", cli_original, (fun v -> CUDFFILE (env_string v)),
       "save the cudf graph to $(i,file)-actions-explicit.dot.";
       "CUDFTRIM", cli_original, (fun v -> CUDFTRIM (env_string v)),
-      "TO DOCUMENT ... OR NOT";
+      "controls the filtering of unrelated packages during CUDF preprocessing.";
       "DIGDEPTH", cli_original, (fun v -> DIGDEPTH (env_int v)),
-      "TO DOCUMENT ... OR NOT";
+      "defines how aggressive the lookup for conflicts during CUDF \
+       preprocessing is.";
       "EXTERNALSOLVER", cli_original, (fun v -> EXTERNALSOLVER (env_string v)),
       "see option `--solver'.";
       "FIXUPCRITERIA", cli_original, (fun v -> FIXUPCRITERIA (env_string v)),
@@ -152,7 +153,8 @@ let environment_variables =
       "NOASPCUD", cli_original, (fun v -> NOASPCUD (env_bool v)),
       "Deprecated.";
       "PREPRO", cli_original, (fun v -> PREPRO (env_bool v)),
-      "TO DOCUMENT ... OR NOT";
+      "set this to false to disable CUDF preprocessing. Less efficient, but \
+       might help debugging solver issue.";
       "SOLVERALLOWSUBOPTIMAL", cli_from cli2_1,
       (fun v -> SOLVERALLOWSUBOPTIMAL (env_bool v)),
       "(default `true') allows some solvers to still return a solution when \
@@ -175,7 +177,7 @@ let environment_variables =
       (fun v -> USEINTERNALSOLVER (env_bool v)),
       "see option `--use-internal-solver'.";
       "VERSIONLAGPOWER", cli_original, (fun v -> VERSIONLAGPOWER (env_int v)),
-      "TO DOCUMENT ... OR NOT";
+      "do not use.";
     ] in
   let repository =
     let open OpamRepositoryConfig.E in [
@@ -192,34 +194,32 @@ let environment_variables =
       "REQUIRECHECKSUMS", cli_original,
       (fun v -> REQUIRECHECKSUMS (env_bool v)),
       "Enables option `--require-checksums' when available \
-       (e.g. for `opam install`).";
+       (e.g. for `opam install').";
       "RETRIES", cli_original, (fun v -> RETRIES (env_int v)),
       "sets the number of tries before failing downloads.";
       "VALIDATIONHOOK", cli_original, (fun v -> VALIDATIONHOOK (env_string v)),
-      "if set, uses the `%{hook%}` command to validate \
+      "if set, uses the `%{hook%}' command to validate \
        an opam repository update.";
     ] in
   let state =
     let open OpamStateConfig.E in [
       "BUILDDOC", cli_original,
-      (fun v -> BUILDDOC (env_bool v)),
-      "TO DOCUMENT ... OR NOT";
+      (fun v -> BUILDDOC (env_bool v)), "see option `--build-doc'.";
       "BUILDTEST", cli_original,
-      (fun v -> BUILDTEST (env_bool v)),
-      "TO DOCUMENT ... OR NOT";
+      (fun v -> BUILDTEST (env_bool v)), "see option `--build-test'.";
       "DEPEXTYES", cli_from cli2_1, (fun v -> DEPEXTYES (env_bool v)),
       "launch system package managers in non-interactive mode.";
       "DOWNLOADJOBS", cli_original, (fun v -> DOWNLOADJOBS (env_int v)),
       "sets the maximum number of simultaneous downloads.";
       "DRYRUN", cli_original, (fun v -> DRYRUN (env_bool v)),
-      "see option `--dry-run`.";
+      "see option `--dry-run'.";
       "IGNORECONSTRAINTS", cli_original,
       (fun v -> IGNORECONSTRAINTS (env_string v)),
-      "see install option `--ignore-constraints-on`.";
+      "see install option `--ignore-constraints-on'.";
       "JOBS", cli_original, (fun v -> JOBS (env_int v)),
       "sets the maximum number of parallel workers to run.";
       "LOCKED", cli_original, (fun v -> LOCKED (env_string v)),
-      "combination of `--locked` and `--lock-suffix` options.";
+      "combination of `--locked' and `--lock-suffix' options.";
       "MAKECMD", cli_original, (fun v -> MAKECMD (env_string v)),
       "set the system make command to use.";
       "NODEPEXTS", cli_from cli2_1, (fun v -> NODEPEXTS (env_bool v)),
@@ -233,7 +233,7 @@ let environment_variables =
       "see option `--switch'. Automatically set \
        by `opam env --switch=SWITCH --set-switch'.";
       "UNLOCKBASE", cli_original, (fun v -> UNLOCKBASE (env_bool v)),
-      "see install option `--unlock-base`.";
+      "see install option `--unlock-base'.";
       "WITHDOC", cli_original, (fun v -> WITHDOC (env_bool v)),
       "see install option `--with-doc'.";
       "WITHTEST", cli_original, (fun v -> WITHTEST (env_bool v)),
@@ -244,7 +244,7 @@ let environment_variables =
       "ASSUMEDEPEXTS", cli_from cli2_1, (fun v -> ASSUMEDEPEXTS (env_bool v)),
       "see option `--assume-depexts'.";
       "AUTOREMOVE", cli_original, (fun v -> AUTOREMOVE (env_bool v)),
-      "see remove option `--auto-remove`.";
+      "see remove option `--auto-remove'.";
       "DROPWORKINGDIR", cli_from cli2_1, (fun v -> DROPWORKINGDIR (env_bool v)),
       "overrides packages previously updated with $(b,--working-dir) on \
        update. Without this variable set, opam would keep them unchanged \
@@ -253,12 +253,12 @@ let environment_variables =
       "sets the editor to use for opam file editing, overrides $(i,\\$EDITOR) \
        and $(i,\\$VISUAL).";
       "FAKE", cli_original, (fun v -> FAKE (env_bool v)),
-      "see option `--fake`.";
+      "see option `--fake'.";
       "IGNOREPINDEPENDS", cli_original,
       (fun v -> IGNOREPINDEPENDS (env_bool v)),
-      "see option `--ignore-pin-depends`.";
+      "see option `--ignore-pin-depends'.";
       "INPLACEBUILD", cli_original, (fun v -> INPLACEBUILD (env_bool v)),
-      "TO DOCUMENT ... OR NOT.";
+      "see option `--inplace-build'.";
       "JSON", cli_original, (fun v -> JSON (env_string v)),
       "log json output to the given file \
        (use character `%' to index the files).";
@@ -268,20 +268,20 @@ let environment_variables =
       "disables automatic internal upgrade of repositories in an earlier \
        format to the current one, on 'update' or 'init'.";
       "NOAGGREGATE", cli_original, (fun v -> NOAGGREGATE (env_bool v)),
-      "TO DOCUMENT ... OR NOT.";
+      "with `opam admin check', don't aggregate packages.";
       "PINKINDAUTO", cli_original, (fun v -> PINKINDAUTO (env_bool v)),
       "sets whether version control systems should be detected when pinning \
        to a local path. Enabled by default since 1.3.0.";
       "REUSEBUILDDIR", cli_original, (fun v -> REUSEBUILDDIR (env_bool v)),
-      "TO DOCUMENT ... OR NOT.";
+      "see option `--reuse-build-dir'.";
       "SHOW", cli_original, (fun v -> SHOW (env_bool v)),
-      "see option `--show`.";
+      "see option `--show'.";
       "SKIPUPDATE", cli_original, (fun v -> SKIPUPDATE (env_bool v)),
-      "see option `--skip-updates`.";
+      "see option `--skip-updates'.";
       "STATS", cli_original, (fun v -> STATS (env_bool v)),
       "display stats at the end of command.";
       "WORKINGDIR", cli_original, (fun v -> WORKINGDIR (env_bool v)),
-      "see option `--working-dir`.";
+      "see option `--working-dir'.";
     ] in
   core @ format @ solver @ repository @ state @ client
 
