@@ -78,7 +78,7 @@ let environment_variables =
       "COLOR", cli_original, (fun v -> COLOR (env_when v)),
       "when set to $(i,always) or $(i,never), sets a default value for the \
        `--color' option.";
-      "DEBUGSECTIONS", cli_original, (fun v -> DEBUGSECTIONS (env_sections v)),
+      "DEBUGSECTIONS", cli_from cli2_1, (fun v -> DEBUGSECTIONS (env_sections v)),
       "if set, limits debug messages to the space-separated list of \
        sections. Sections can optionally have a specific debug level (for \
        example, $(b,CLIENT:2) or $(b,CLIENT CUDF:2)), but otherwise use \
@@ -153,7 +153,7 @@ let environment_variables =
       "Deprecated.";
       "PREPRO", cli_original, (fun v -> PREPRO (env_bool v)),
       "TO DOCUMENT ... OR NOT";
-      "SOLVERALLOWSUBOPTIMAL", cli_original,
+      "SOLVERALLOWSUBOPTIMAL", cli_from cli2_1,
       (fun v -> SOLVERALLOWSUBOPTIMAL (env_bool v)),
       "(default `true') allows some solvers to still return a solution when \
        they reach timeout; while the solution remains assured to be \
@@ -207,7 +207,7 @@ let environment_variables =
       "BUILDTEST", cli_original,
       (fun v -> BUILDTEST (env_bool v)),
       "TO DOCUMENT ... OR NOT";
-      "DEPEXTYES", cli_original, (fun v -> DEPEXTYES (env_bool v)),
+      "DEPEXTYES", cli_from cli2_1, (fun v -> DEPEXTYES (env_bool v)),
       "launch system package managers in non-interactive mode.";
       "DOWNLOADJOBS", cli_original, (fun v -> DOWNLOADJOBS (env_int v)),
       "sets the maximum number of simultaneous downloads.";
@@ -222,7 +222,7 @@ let environment_variables =
       "combination of `--locked` and `--lock-suffix` options.";
       "MAKECMD", cli_original, (fun v -> MAKECMD (env_string v)),
       "set the system make command to use.";
-      "NODEPEXTS", cli_original, (fun v -> NODEPEXTS (env_bool v)),
+      "NODEPEXTS", cli_from cli2_1, (fun v -> NODEPEXTS (env_bool v)),
       "disables system dependencies handling, see option `--no-depexts'.";
       "NOENVNOTICE", cli_original, (fun v -> NOENVNOTICE (env_bool v)),
       "Internal.";
@@ -241,11 +241,11 @@ let environment_variables =
     ] in
   let client =
     let open OpamClientConfig.E in [
-      "ASSUMEDEPEXTS", cli_original, (fun v -> ASSUMEDEPEXTS (env_bool v)),
+      "ASSUMEDEPEXTS", cli_from cli2_1, (fun v -> ASSUMEDEPEXTS (env_bool v)),
       "see option `--assume-depexts'.";
       "AUTOREMOVE", cli_original, (fun v -> AUTOREMOVE (env_bool v)),
       "see remove option `--auto-remove`.";
-      "DROPWORKINGDIR", cli_original, (fun v -> DROPWORKINGDIR (env_bool v)),
+      "DROPWORKINGDIR", cli_from cli2_1, (fun v -> DROPWORKINGDIR (env_bool v)),
       "overrides packages previously updated with $(b,--working-dir) on \
        update. Without this variable set, opam would keep them unchanged \
        unless explicitly named on the command-line.";
