@@ -125,6 +125,7 @@ New option/command/subcommand are prefixed with ◈.
   * GHA: Add default cli check in hygiene job [#4575 @rjbou]
   * GHA: Fix opam-rt on macos, set ocaml-system as switch compiler [#4610 @dra27 @rjbou]
   * GHA: Ignore opam-rt pin depends, opam libs are already pinned locally [#4610 @AltGr @rjbou]
+  * AppVeyor: test installing ocamlfind on native Windows too
 
 ## Shell
   *
