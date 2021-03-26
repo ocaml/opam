@@ -1,0 +1,18 @@
+diff -Naur a/algo/dominators.ml b/algo/dominators.ml
+--- a/algo/dominators.ml	2016-07-20 11:45:05.000000000 +0000
++++ b/algo/dominators.ml	2021-03-26 12:23:35.843306398 +0000
+@@ -101,7 +101,13 @@
+   ) graph;
+ 
+   Util.Timer.start tjntimer;
+-#if OCAMLGRAPHVERSION >= 186
++#if OCAMLGRAPHVERSION >= 200
++  let module Dom = Dominator.Make_graph(struct
++      include G
++      let empty () = create ()
++      let add_edge g v1 v2 = add_edge g v1 v2; g
++    end) in
++#elif OCAMLGRAPHVERSION >= 186
+   let module Dom = Dominator.Make_graph(G) in
+ #else
+   let module Dom = Dominator.Make(G) in

@@ -1,0 +1,23 @@
+diff -Naur a/src/dot_lexer.mll b/src/dot_lexer.mll
+--- a/src/dot_lexer.mll	2020-10-02 13:47:57.000000000 +0000
++++ b/src/dot_lexer.mll	2021-03-26 12:32:55.716136300 +0000
+@@ -35,7 +35,7 @@
+ 	"node", NODE;
+ 	"edge", EDGE;
+       ];
+-    fun s -> let s = String.lowercase_ascii s in Hashtbl.find h s
++    fun s -> let s = String.lowercase s in Hashtbl.find h s
+ 
+ }
+ 
+diff -Naur a/src/dune b/src/dune
+--- a/src/dune	2020-10-02 13:47:57.000000000 +0000
++++ b/src/dune	2021-03-26 12:33:07.160324274 +0000
+@@ -3,6 +3,7 @@
+ (library
+  (name graph)
+  (public_name ocamlgraph)
++ (flags :standard -w -3)
+  (libraries stdlib-shims)
+  (modules_without_implementation dot_ast sig sig_pack))
+ 

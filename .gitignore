@@ -18,6 +18,7 @@ src_ext/re/
 src_ext/ocamlgraph/
 src_ext/dune-local/
 src_ext/result/
+src_ext/stdlib-shims/
 src_ext/opam-file-format/
 src_ext/camlp4
 src_ext/findlib

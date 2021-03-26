@@ -1,5 +1,5 @@
-URL_cppo = https://github.com/ocaml-community/cppo/releases/download/v1.6.6/cppo-v1.6.6.tbz
-MD5_cppo = b13afeea6631d7c9b61f95bfd984a542
+URL_cppo = https://github.com/ocaml-community/cppo/releases/download/v1.6.7/cppo-v1.6.7.tbz
+MD5_cppo = 65c668196c3dabf34d9e887952e5bbb4
 
 $(call PKG_SAME,cppo)
 
@@ -18,8 +18,8 @@ MD5_cmdliner = fe2213d0bc63b1e10a2d0aa66d2fc8d9
 
 $(call PKG_SAME,cmdliner)
 
-URL_ocamlgraph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.8.tar.gz
-MD5_ocamlgraph = 9d71ca69271055bd22d0dfe4e939831a
+URL_ocamlgraph = https://github.com/backtracking/ocamlgraph/releases/download/2.0.0/ocamlgraph-2.0.0.tbz
+MD5_ocamlgraph = 2d07fcf3501e1d4997c03fa94cea22f0
 
 $(call PKG_SAME,ocamlgraph)
 
@@ -49,19 +49,19 @@ MD5_result = 1b82dec78849680b49ae9a8a365b831b
 $(call PKG_SAME,result)
 
 # NB If minimum OCaml version for Dune changes, update DUNE_SECONDARY in configure.ac
-URL_dune-local = https://github.com/ocaml/dune/releases/download/2.8.2/dune-2.8.2.tbz
-MD5_dune-local = d74e57bb53ae0deba61ea3dc5087b934
+URL_dune-local = https://github.com/ocaml/dune/releases/download/2.8.4/dune-2.8.4.tbz
+MD5_dune-local = 3b6044c7173fe5079c09341fc5373077
 
 $(call PKG_SAME,dune-local)
 
-URL_PKG_findlib = http://download.camlcity.org/download/findlib-1.8.1.tar.gz
-MD5_PKG_findlib = 18ca650982c15536616dea0e422cbd8c
+URL_PKG_findlib = http://download.camlcity.org/download/findlib-1.9.1.tar.gz
+MD5_PKG_findlib = 65e6dc9b305ccbed1267275fe180f538
 
 URL_PKG_ocamlbuild = https://github.com/ocaml/ocamlbuild/archive/0.14.0.tar.gz
 MD5_PKG_ocamlbuild = a7bf2fe594cd16907807c756b14d501f
 
-URL_PKG_topkg = http://erratique.ch/software/topkg/releases/topkg-1.0.2.tbz
-MD5_PKG_topkg = b4925b2c37f73f8f0b79ea07ab15ff67
+URL_PKG_topkg = http://erratique.ch/software/topkg/releases/topkg-1.0.3.tbz
+MD5_PKG_topkg = e285f7a296d77ee7d831ba9a6bfb396f
 
 URL_seq = https://github.com/c-cube/seq/archive/0.2.2.tar.gz
 MD5_seq = 9033e02283aa3bde9f97f24e632902e3
@@ -71,3 +71,8 @@ ensure-seq-patched.stamp: seq.stamp
 	rm -f seq/src/seq.ml seq/src/seq.mli
 
 $(call PKG_SAME,seq)
+
+URL_stdlib-shims = https://github.com/ocaml/stdlib-shims/releases/download/0.3.0/stdlib-shims-0.3.0.tbz
+MD5_stdlib-shims = 09db7af8b4a3a96048a61cb6ae2496ef
+
+$(call PKG_SAME,stdlib-shims)
