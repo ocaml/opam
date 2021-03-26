@@ -10,7 +10,7 @@ env:
   OPAM_TEST_REPO_SHA: 75ff83837547183f000e1c18d42260d7d6cc5fbc
   OPAM_REPO_SHA: 75ff83837547183f000e1c18d42260d7d6cc5fbc
   # Default ocaml version for some jobs
-  OCAML_VERSION: 4.11.1
+  OCAML_VERSION: 4.11.2
   ## variables for cache paths
   GH_OCAML_CACHE: ~/.cache/ocaml-local/**
 
@@ -28,10 +28,10 @@ jobs:
 #    strategy:
 #      matrix:
 #        os: [ ubuntu-latest ]
-#        ocamlv: [ 4.02.3, 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1, 4.08.1, 4.09.1, 4.10.1, 4.11.1 ]
+#        ocamlv: [ 4.02.3, 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1, 4.08.1, 4.09.1, 4.10.2, 4.11.2 ]
 #        include:
 #          - os: macos-latest
-#            ocamlv: 4.11.1
+#            ocamlv: 4.11.2
 #      fail-fast: false
 #    steps:
 #    - uses: actions/checkout@v2
@@ -74,7 +74,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
-        ocamlv: [ 4.02.3, 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1, 4.08.1, 4.09.1, 4.10.1, 4.11.1, 4.12.0 ]
+        ocamlv: [ 4.02.3, 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1, 4.08.1, 4.09.1, 4.10.2, 4.11.2, 4.12.0 ]
         include:
           - os: macos-latest
             ocamlv: 4.12.0
@@ -112,7 +112,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest ]
-        ocamlv: [ 4.11.1 ]
+        ocamlv: [ 4.11.2 ]
       fail-fast: false
     env:
       OPAM_TEST: 1
@@ -161,7 +161,7 @@ jobs:
       matrix:
 #        os: [ ubuntu-latest, macos-latest ]
         os: [ ubuntu-latest ]
-        ocamlv: [ 4.11.1 ]
+        ocamlv: [ 4.11.2 ]
       fail-fast: false
     steps:
     - name: install deps
@@ -188,7 +188,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest ]
-        ocamlv: [ 4.11.1 ]
+        ocamlv: [ 4.11.2 ]
       fail-fast: false
     steps:
     - name: install deps
