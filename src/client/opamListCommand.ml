@@ -741,6 +741,7 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
     Field "url.src";
     Field "url.checksum";
     Field "homepage";
+    Field "doc";
     Field "bug-reports";
     Field "dev-repo";
     Field "authors";

@@ -38,7 +38,7 @@ New option/command/subcommand are prefixed with ◈.
   * --silent renamed to --check [#4595 @dra27 - fix #4323]
 
 ## Show
-  *
+  * Include doc field in opam-show [#4567 @dra27 - partially fix #4565]
 
 ## Var
   *
