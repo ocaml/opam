@@ -17,7 +17,7 @@ authors: [
   "Ralf Treinen <ralf.treinen@pps.jussieu.fr>"
   "Frederic Tuong <tuong@users.gforge.inria.fr>"
 ]
-homepage: "https://opam.ocaml.org/"
+homepage: "https://opam.ocaml.org"
 bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "git+https://github.com/ocaml/opam.git"
 build: [
