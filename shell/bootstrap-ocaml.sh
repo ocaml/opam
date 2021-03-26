@@ -151,7 +151,7 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
 else
   PREFIX=`cd .. ; pwd`/ocaml
   if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
-    ./configure --prefix "${PREFIX}" $BOOTSTRAP_EXTRA_OPTS
+    ./configure --prefix "${PREFIX}" $BOOTSTRAP_EXTRA_OPTS --disable-stdlib-manpages
     ${MAKE:-make} world
     ${MAKE:-make} $BOOTSTRAP_OPT_TARGET
     ${MAKE:-make} install
