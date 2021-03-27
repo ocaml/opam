@@ -25,7 +25,7 @@ re.pkgbuild: dune-local.pkgbuild seq.pkgbuild findlib.pkgbuild
 
 seq.pkgbuild: dune-local.pkgbuild
 
-ocamlgraph.pkgbuild: findlib.pkgbuild
+ocamlgraph.pkgbuild: dune-local.pkgbuild stdlib-shims.pkgbuild
 
 # result.pkgbuild depends on findlib because the files are explicitly installed using it
 result.pkgbuild: dune-local.pkgbuild findlib.pkgbuild
@@ -41,9 +41,13 @@ dose3.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild cppo.pkgbuild extlib.pkgbui
 # mccs.pkgbuild depends on findlib because the files are explicitly installed using it
 mccs.pkgbuild: dune-local.pkgbuild cudf.pkgbuild findlib.pkgbuild
 
+stdlib-shims.pkgbuild: dune-local.pkgbuild
+
+dune-local.pkgbuild: findlib.pkgbuild
+
 opam-file-format-pkg-build:
 	dune build @install -p opam-file-format
-	dune install -p opam-file-format
+	dune install -p opam-file-format opam-file-format
 
 findlib-pkg-build:
 	./configure
@@ -67,8 +71,9 @@ re-pkg-build:
 	cp -LR _build/install/default/lib/re $(SITELIB)/re/
 
 ocamlgraph-pkg-build:
-	./configure
-	make all install-findlib
+	dune installed-libraries
+	dune build @install -p ocamlgraph
+	dune install -p ocamlgraph ocamlgraph
 
 result-pkg-build:
 	dune build @install -p result
@@ -104,4 +109,8 @@ mccs-pkg-build:
 
 seq-pkg-build:
 	dune build @install -p seq
-	dune install -p seq
+	dune install -p seq seq
+
+stdlib-shims-pkg-build:
+	dune build @install -p stdlib-shims
+	dune install -p stdlib-shims stdlib-shims

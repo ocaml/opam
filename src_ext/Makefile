@@ -11,8 +11,8 @@ endif
 
 PATCH ?= patch
 
-URL_ocaml = https://caml.inria.fr/pub/distrib/ocaml-4.11/ocaml-4.11.1.tar.gz
-MD5_ocaml = 3bee0ea50ed28b9cf0e8a35233f61480
+URL_ocaml = https://caml.inria.fr/pub/distrib/ocaml-4.12/ocaml-4.12.0.tar.gz
+MD5_ocaml = 0863b31da0ab8ef67c5b723206f494da
 
 URL_flexdll = https://github.com/alainfrisch/flexdll/archive/0.39.tar.gz
 MD5_flexdll = c8493c7b6e95c4763b89213a9a710af5
@@ -32,7 +32,7 @@ URL_PKG_$(1) = $(URL_$(1))
 MD5_PKG_$(1) = $(MD5_$(1))
 endef
 
-SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result seq
+SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result seq stdlib-shims
 PKG_EXTS = $(SRC_EXTS) dune-local findlib ocamlbuild topkg mccs
 
 ifeq ($(MCCS_ENABLED),true)
@@ -191,10 +191,6 @@ GET_ARCHIVE=\
 	  done; \
         fi
 	@if [ "$*" != "dune-local" ] ; then \
-	   for i in `find $* -name jbuild`; do \
-       sed -e "s/name \+runtest/name disabled-runtest/g" $$i > $$i.tmp ; \
-       mv $$i.tmp $$i ; \
-     done; \
      for j in $(wildcard dune-$* dune-$*-*); do \
        cp $$j $*$$(echo "$$j" | sed -e "s/dune-$*//" -e "s|-|/|g")/dune; \
        echo "(lang dune 1.2)" > $*/dune-project; \
