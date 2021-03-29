@@ -112,6 +112,22 @@
    (run ./run.exe %{bin:opam} %{dep:cudf-preprocess.test} %{read-lines:testing-env}))))
 
 (alias
+ (name reftest-dot-install)
+ (action
+  (diff dot-install.test dot-install.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-dot-install)))
+
+(rule
+ (deps root-632bc2e)
+ (action
+  (with-stdout-to
+   dot-install.out
+   (run ./run.exe %{bin:opam} %{dep:dot-install.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-init)
  (action
   (diff init.test init.out)))
