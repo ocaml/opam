@@ -1,0 +1,26 @@
+632bc2e
+### <test-repo/packages/foo/foo.1/opam>
+opam-version: "2.0"
+build: ["opam" "option" "jobs" "--safe" "--cli=2.1"]
+flags: compiler
+### <test-repo/packages/bar/bar.1/opam>
+opam-version: "2.0"
+build: ["opam" "option" "jobs" "--safe" "--cli=2.1"]
+### <test-repo/packages/baz/baz.1/opam>
+opam-version: "2.0"
+flags: compiler
+build: ["opam" "var" "prefix" "--safe"]
+### opam switch create undef-prefix --repo=sw-lock=test-repo baz | grep ERROR | unordered
+[ERROR] The compilation of baz.1 failed at "opam var prefix --safe".
+#=== ERROR while compiling baz.1 ==============================================#
+# [ERROR] No switch is currently set. Please use 'opam switch' to set or install a switch
+# Return code 31 #
+### opam switch create nohang --repo=sw-lock=test-repo foo bar | unordered
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo" "bar"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+-> installed foo.1
+Done.

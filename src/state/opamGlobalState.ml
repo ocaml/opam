@@ -18,7 +18,7 @@ open OpamStateTypes
 let log fmt = OpamConsole.log "GSTATE" fmt
 let slog = OpamConsole.slog
 
-let load_config global_lock root =
+let load_config lock_kind global_lock root =
   let config = match OpamStateConfig.load root with
     | Some c -> c
     | None ->
@@ -31,7 +31,9 @@ let load_config global_lock root =
            argument"
           (OpamFilename.Dir.to_string root)
   in
-  let config = OpamFormatUpgrade.as_necessary global_lock root config in
+  let config =
+    OpamFormatUpgrade.as_necessary lock_kind global_lock root config
+  in
   config
 
 let inferred_from_system = "Inferred from system"
@@ -44,12 +46,7 @@ let load lock_kind =
   let has_root = OpamFilename.exists_dir root in
   let global_lock =
     if has_root then
-      let lock = (* needed for on-the-fly upgrade config file *)
-        match lock_kind with
-        | `Lock_none | `Lock_read -> `Lock_read
-        | `Lock_write -> `Lock_write
-      in
-      OpamFilename.flock lock (OpamPath.lock root)
+      OpamFilename.flock `Lock_read (OpamPath.lock root)
     else OpamSystem.lock_none
   in
   (* The global_state lock actually concerns the global config file only (and
@@ -59,7 +56,7 @@ let load lock_kind =
     OpamConsole.error_and_exit `Configuration_error
       "Opam has not been initialised, please run `opam init'";
   let config_lock = OpamFilename.flock lock_kind (OpamPath.config_lock root) in
-  let config = load_config global_lock root in
+  let config = load_config lock_kind global_lock root in
   let switches =
     List.filter
       (fun sw -> not (OpamSwitch.is_external sw) ||

@@ -1054,7 +1054,7 @@ let latest_version = OpamFile.Config.format_version
 
 let latest_hard_upgrade = (* to *) v2_0_beta5
 
-let as_necessary global_lock root config =
+let as_necessary requested_lock global_lock root config =
   let config_version = OpamFile.Config.opam_version config in
   let cmp =
     OpamVersion.(compare OpamFile.Config.format_version config_version)
@@ -1072,9 +1072,8 @@ let as_necessary global_lock root config =
   let need_hard_upg =
     OpamVersion.compare config_version latest_hard_upgrade < 0
   in
-  let on_the_fly, file_lock =
-    if not need_hard_upg
-    && OpamSystem.get_lock_flag global_lock <> `Lock_write then
+  let on_the_fly, global_lock_kind =
+    if not need_hard_upg && requested_lock <> `Lock_write then
       true, `Lock_read
     else
       false, `Lock_write
@@ -1138,7 +1137,7 @@ let as_necessary global_lock root config =
     if OpamStd.Sys.tty_out then None else Some true
   in
   try
-    OpamFilename.with_flock_upgrade file_lock ?dontblock global_lock
+    OpamFilename.with_flock_upgrade global_lock_kind ?dontblock global_lock
     @@ fun _ ->
     if not on_the_fly then
       if need_hard_upg then
