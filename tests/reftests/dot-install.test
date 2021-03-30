@@ -111,6 +111,7 @@ ACTION                          prepare_package_source: dot.~dev at ${BASEDIR}/O
 ACTION                          Installing dot.~dev.
 
 ACTION                          creating ${BASEDIR}/OPAM/inst/share/dot
+TRACK                           after install: 2 elements, 2 added, scanned in 0.000s
 -> installed dot.~dev
 Done.
 ### ocaml cat.ml dot
