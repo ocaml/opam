@@ -88,7 +88,6 @@ let rec preprocess_argv cli yes args =
 
 (* Handle git-like plugins *)
 let check_and_run_external_commands () =
-  let plugin_prefix = "opam-" in
   (* Pre-process the --yes and --cli options *)
   let (cli, yes, argv) =
     match Array.to_list Sys.argv with
@@ -132,7 +131,7 @@ let check_and_run_external_commands () =
     then (cli, argv)
     else
     (* No such command, check if there is a matching plugin *)
-    let command = plugin_prefix ^ name in
+    let command = OpamPath.plugin_prefix ^ name in
     let answer = if yes then Some true else OpamCoreConfig.E.yes () in
     OpamCoreConfig.init ~answer ();
     OpamFormatConfig.init ();
@@ -166,7 +165,7 @@ let check_and_run_external_commands () =
       | Some sw ->
         OpamGlobalState.with_ `Lock_none @@ fun gt ->
         OpamSwitchState.with_ `Lock_none gt ~switch:sw @@ fun st ->
-        let prefixed_name = plugin_prefix ^ name in
+        let prefixed_name = OpamPath.plugin_prefix ^ name in
         let candidates =
           OpamPackage.packages_of_names
             (Lazy.force st.available_packages)
