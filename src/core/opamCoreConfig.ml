@@ -14,6 +14,7 @@ module E = struct
 
   type OpamStd.Config.E.t +=
     | COLOR of OpamStd.Config.when_ option
+    | CONFIRMLEVEL of OpamStd.Config.answer option
     | DEBUG of int option
     | DEBUGSECTIONS of OpamStd.Config.sections option
     | ERRLOGLEN of int option
@@ -32,6 +33,7 @@ module E = struct
 
   open OpamStd.Config.E
   let color = value (function COLOR c -> c | _ -> None)
+  let confirmlevel = value (function CONFIRMLEVEL c -> c | _ -> None)
   let debug = value (function DEBUG i -> i | _ -> None)
   let debugsections = value (function DEBUGSECTIONS s -> s | _ -> None)
   let errloglen = value (function ERRLOGLEN i -> i | _ -> None)
@@ -57,7 +59,7 @@ type t = {
   color: OpamStd.Config.when_;
   utf8: OpamStd.Config.when_ext;
   disp_status_line: OpamStd.Config.when_;
-  answer: bool option;
+  answer: OpamStd.Config.answer;
   safe_mode: bool;
   log_dir: string;
   keep_log_dir: bool;
@@ -75,7 +77,7 @@ type 'a options_fun =
   ?color:OpamStd.Config.when_ ->
   ?utf8:OpamStd.Config.when_ext ->
   ?disp_status_line:OpamStd.Config.when_ ->
-  ?answer:bool option ->
+  ?answer:OpamStd.Config.answer ->
   ?safe_mode:bool ->
   ?log_dir:string ->
   ?keep_log_dir:bool ->
@@ -92,7 +94,7 @@ let default = {
   color = `Auto;
   utf8 = `Auto;
   disp_status_line = `Auto;
-  answer = None;
+  answer = `ask;
   safe_mode = false;
   log_dir =
     (let user = try Unix.getlogin() with Unix.Unix_error _ -> "xxx" in
@@ -157,11 +159,19 @@ let initk k =
         | true -> Some `Extended
         | false -> None)
     ) in
+  let answer =
+    match E.confirmlevel (), E.yes (), E.no () with
+    | Some c, _,  _ -> Some c
+    | _, Some true, _ -> Some `all_yes
+    | _, _, Some true -> Some `all_no
+    | _ -> None
+(*
   let answer = match E.yes (), E.no () with
     | Some true, _ -> Some (Some true)
     | _, Some true -> Some (Some false)
     | None, None -> None
     | _ -> Some None
+*)
   in
   (setk (setk (fun c -> r := c; k)) !r)
     ?debug_level:(E.debug ())
@@ -180,6 +190,11 @@ let initk k =
     ?precise_tracking:(E.precisetracking ())
 
 let init ?noop:_ = initk (fun () -> ())
+
+let is_answer_yes () =
+  match !r.answer with
+  | `all_yes | `unsafe_yes -> true
+  | _ -> false
 
 #ifdef DEVELOPER
 let developer = true

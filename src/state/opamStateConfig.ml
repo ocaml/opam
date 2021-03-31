@@ -180,7 +180,9 @@ let initk k =
     ?no_env_notice:(E.noenvnotice ())
     ?locked:(E.locked () >>| function "" -> None | s -> Some s)
     ?no_depexts:(E.nodepexts ())
-    ?depext_yes:(E.depextyes ())
+    ?depext_yes:(E.depextyes () ++
+                 if OpamCoreConfig.(!r.answer) = `Unsafe_yes then
+                   Some true else None)
 
 let init ?noop:_ = initk (fun () -> ())
 
