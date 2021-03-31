@@ -2538,15 +2538,14 @@ let switch cli =
     apply_build_options build_options;
     let invariant_arg ?repos rt args =
       match args, packages, formula, empty with
-      | [], None, None, false ->
-        OpamFile.Config.default_invariant rt.repos_global.config
+      | [], None, None, false -> None
       | _::_ as packages, None, None, false ->
-        OpamSwitchCommand.guess_compiler_invariant ?repos rt packages
+        Some (OpamSwitchCommand.guess_compiler_invariant ?repos rt packages)
       | [], Some atoms, None, false ->
         let atoms = List.map (fun p -> Atom p) atoms in
-        OpamFormula.of_atom_formula (OpamFormula.ands atoms)
-      | [], None, (Some f), false -> f
-      | [], None, None, true -> OpamFormula.Empty
+        Some (OpamFormula.of_atom_formula (OpamFormula.ands atoms))
+      | [], None, (Some f), false -> Some f
+      | [], None, None, true -> Some OpamFormula.Empty
       | _ ->
         OpamConsole.error_and_exit `Bad_arguments
           "Individual packages, options --packages, --formula and --empty may \
@@ -2614,7 +2613,12 @@ let switch cli =
       in
       (match invariant_arg ?repos rt pkg_params with
        | exception Failure e -> `Error (false, e)
-       | invariant ->
+       | invariant_opt ->
+         let invariant =
+           OpamStd.Option.default
+             (OpamFile.Config.default_invariant rt.repos_global.config)
+             invariant_opt
+         in
          let (), st =
            OpamSwitchCommand.create gt ~rt
              ?synopsis:descr ?repos
@@ -2759,9 +2763,15 @@ let switch cli =
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
       (match invariant_arg rt params with
        | exception Failure e -> `Error (false, e)
-       | invariant ->
+       | invariant_opt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+         let invariant = match invariant_opt with
+           | Some i -> i
+           | None -> OpamSwitchState.infer_switch_invariant st
+         in
          let st = OpamSwitchCommand.set_invariant ~force st invariant in
+         OpamConsole.msg "The switch invariant was set to %s\n"
+           (OpamFormula.to_string invariant);
          let st =
            if no_action || OpamFormula.satisfies_depends st.installed invariant
            then st

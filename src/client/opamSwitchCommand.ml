@@ -693,7 +693,7 @@ let set_invariant ?(force=false) st invariant =
   let not_comp =
     OpamPackage.Set.filter (fun nv ->
         match OpamSwitchState.opam_opt st nv with
-        | Some opam -> OpamFile.OPAM.has_flag Pkgflag_Compiler opam
+        | Some opam -> not (OpamFile.OPAM.has_flag Pkgflag_Compiler opam)
         | None -> false)
       packages
   in
