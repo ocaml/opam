@@ -225,7 +225,7 @@ let install_compiler ?(additional_installs=[]) ?(deps_only=false) t =
     | Success s -> s
     | Conflicts cs ->
       OpamConsole.error
-        "Could not resolve base install for this switch:";
+        "Could not determine which packages to install for this switch:";
       OpamConsole.errmsg "%s\n"
         (OpamCudf.string_of_conflicts t.packages
            (OpamSwitchState.unavailable_reason t) cs);
@@ -236,7 +236,7 @@ let install_compiler ?(additional_installs=[]) ?(deps_only=false) t =
         s_downgrade=0; s_remove = 0 } -> ()
     | stats ->
       OpamConsole.error_and_exit `No_solution
-        "Inconsistent resolution of base package installs:\n%s"
+        "Inconsistent resolution of packages:\n%s"
         (OpamSolver.string_of_stats stats)
   in
   let to_install_pkgs = OpamSolver.new_packages solution in
