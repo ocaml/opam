@@ -19,7 +19,9 @@ include OpamArgTools
 
 (** Utils *)
 
-let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ]
+let when_enum =
+  [ "always", `Always; "never", `Never; "auto", `Auto ]
+  |> List.map (fun (s,v) -> cli_original, s, v)
 
 (* Windows directory separators need to be escaped for manpages *)
 let dir_sep, escape_path =
@@ -103,13 +105,13 @@ let environment_variables =
       "see option `--safe'.";
       "STATUSLINE", cli_original, (fun v -> STATUSLINE (env_when v)),
       ("display a dynamic status line showing what's currently going on on \
-        the terminal. (one of "^Arg.doc_alts_enum when_enum^")");
+        the terminal. (one of "^string_of_enum when_enum^")");
       "USEOPENSSL", cli_original, (fun v -> USEOPENSSL (env_bool v)),
       "force openssl use for hash computing.";
       "UTF8", cli_original, (fun v -> UTF8 (env_when_ext v)),
       (Printf.sprintf "use UTF8 characters in output (one of %s). By default \
                        `auto', which is determined from the locale)."
-         (Arg.doc_alts_enum when_enum));
+         (string_of_enum when_enum));
       "UTF8MSGS", cli_original, (fun v -> UTF8MSGS (env_bool v)),
       "use extended UTF8 characters (camels) in opam messages. Implies \
        $(i,OPAMUTF8). This is set by default on OSX only.";
@@ -987,19 +989,19 @@ let print_short_flag cli validity =
 
 let shell_opt cli validity =
   let enum = [
-      "bash",SH_bash;
-      "sh",SH_sh;
-      "csh",SH_csh;
-      "zsh",SH_zsh;
-      "fish",SH_fish;
-    ] in
-  mk_opt ~cli validity ["shell"] "SHELL"
+    "bash",SH_bash;
+    "sh",SH_sh;
+    "csh",SH_csh;
+    "zsh",SH_zsh;
+    "fish",SH_fish;
+  ] |> List.map (fun (s,v) -> cli_original, s, v)
+  in
+  mk_enum_opt ~cli validity ["shell"] "SHELL" enum
     (Printf.sprintf
        "Sets the configuration mode for opam environment appropriate for \
         $(docv). One of %s. Guessed from the parent processes and the \\$SHELL \
         variable by default."
-       (Arg.doc_alts_enum enum))
-    (Arg.some (Arg.enum enum)) None
+       (string_of_enum enum))
 
 let dot_profile_flag cli validity =
   mk_opt ~cli validity ["dot-profile"]
@@ -1017,16 +1019,17 @@ let repo_kind_flag cli validity =
     "git"  , `git;
     "darcs", `darcs;
     "hg"   , `hg;
-  ] in
+  ] |> List.map (fun (s,v) -> cli_original, s, v)
+  in
   let aliases_kinds = [
     "wget" , `http;
     "curl" , `http;
     "rsync", `rsync;
-  ] in
-  mk_opt ~cli validity ["k";"kind"] "KIND"
+  ] |> List.map (fun (s,v) -> cli_original, s, v)
+  in
+  mk_enum_opt ~cli validity ["k";"kind"] "KIND" (main_kinds @ aliases_kinds)
     (Printf.sprintf "Specify the kind of the repository to be used (%s)."
-       (Arg.doc_alts_enum main_kinds))
-    Arg.(some (enum (main_kinds @ aliases_kinds))) None
+       (string_of_enum main_kinds))
 
 let jobs_flag cli validity =
   mk_opt ~cli validity ["j";"jobs"] "JOBS"
@@ -1096,9 +1099,9 @@ let global_options cli =
   let quiet =
     mk_flag ~cli cli_original ~section ["q";"quiet"] "Disables $(b,--verbose)." in
   let color =
-    mk_state_opt ~cli cli_original ~section ["color"] "WHEN" when_enum
+    mk_enum_opt ~cli cli_original ~section ["color"] "WHEN" when_enum
       (Printf.sprintf "Colorize the output. $(docv) must be %s."
-         (Arg.doc_alts_enum when_enum)) in
+         (string_of_enum when_enum)) in
   (* The --cli option is pre-processed, because it has to be able to appear
      before sub-commands. The one here is present only for --help. *)
   let cli_arg =

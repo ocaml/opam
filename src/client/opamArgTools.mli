@@ -52,9 +52,11 @@ val mk_vflag_all:
   cli:OpamCLIVersion.Sourced.t -> ?section:string -> ?default:'a list ->
   (validity * 'a * string list * string) list -> 'a list Term.t
 
-val mk_state_opt:
+val mk_enum_opt:
   cli:OpamCLIVersion.Sourced.t -> validity -> ?section:string -> string list ->
-  string -> (string * 'a) list -> string -> 'a option Term.t
+  string -> (validity * string * 'a) list -> string -> 'a option Term.t
+
+val string_of_enum: (validity * string * 'a) list -> string
 
 type 'a subcommand = validity * string * 'a * string list * string
 type 'a subcommands = 'a subcommand list

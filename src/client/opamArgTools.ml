@@ -298,14 +298,31 @@ let mk_vflag_all ~cli ?section ?(default=[]) flags =
   let default = List.map (fun x -> `Valid x) default in
   term_cli_check ~check Arg.(vflag_all default info_flags)
 
-let mk_state_opt ~cli validity ?section flags value state doc =
+let string_of_enum enum =
+  Arg.doc_alts_enum (List.map (fun (_, s, v) -> s,v) enum)
+
+let mk_enum_opt ~cli validity ?section flags value states doc =
   let doc = update_doc_w_cli doc ~cli validity in
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
   let check elem =
-    check_cli_validity cli validity ~cond:(fun c -> c && elem <> None)
-      elem flags
+    (* first check validity of flag *)
+    let flag_validity =
+      check_cli_validity cli validity ~cond:(fun c -> c && elem <> None)
+        elem (`Flags flags)
+    in
+    (* then check validity of the argument *)
+    match flag_validity with
+    | `Ok (Some elem) ->
+      let validity, str, _ = List.find (fun (_,_,v) -> v = elem) states in
+      check_cli_validity cli validity (Some elem)
+        (`Verbatim
+           (Printf.sprintf "the %s option for %s"
+              (OpamConsole.colorise `bold str)
+              (OpamConsole.colorise `bold ("--"^get_long_form flags))))
+    | _ -> flag_validity
   in
-  term_cli_check ~check Arg.(opt (some (enum state)) None & doc)
+  let states = List.map (fun (_, s, v) -> s,v) states in
+  term_cli_check ~check Arg.(opt (some (enum states)) None & doc)
 
 (* Subcommands *)
 type 'a subcommand = validity * string * 'a * string list * string
