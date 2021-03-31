@@ -292,7 +292,10 @@ let mk_vflag_all ~cli ?section ?(default=[]) flags =
 let mk_state_opt ~cli validity ?section flags value state doc =
   let doc = update_doc_w_cli doc ~cli validity in
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
-  let check elem = check_cli_validity cli validity elem flags in
+  let check elem =
+    check_cli_validity cli validity ~cond:(fun c -> c && elem <> None)
+      elem flags
+  in
   term_cli_check ~check Arg.(opt (some (enum state)) None & doc)
 
 (* Subcommands *)
