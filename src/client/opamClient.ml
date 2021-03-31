@@ -1126,16 +1126,15 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
               { t with installed_roots =
                          OpamPackage.Set.add nv t.installed_roots }
             | Some false ->
-              if OpamPackage.Set.mem nv t.compiler_packages then
-                (OpamConsole.note
-                   "Package %s is part of the compiler base and can't be set \
-                    as 'installed automatically'"
-                   (OpamPackage.name_to_string nv);
-                 t)
-              else if OpamPackage.Set.mem nv t.installed_roots then
+              if OpamPackage.Set.mem nv t.installed_roots then begin
+                if OpamPackage.Set.mem nv t.compiler_packages then
+                  OpamConsole.note
+                    "Package %s is part of the switch invariant and won't be uninstalled \
+                     unless the invariant is updated."
+                    (OpamPackage.name_to_string nv);
                 { t with installed_roots =
                            OpamPackage.Set.remove nv t.installed_roots }
-              else
+              end else
                 (OpamConsole.note
                    "Package %s is already marked as 'installed automatically'."
                    (OpamPackage.Name.to_string nv.name);
