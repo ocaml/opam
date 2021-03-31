@@ -500,9 +500,9 @@ let fixup t =
   let t, result = match solution with
     | Conflicts cs -> (* ouch... *)
       OpamConsole.error
-        "It appears that the base packages for this switch are no longer \
-         available. Either fix their prerequisites or change them through \
-         'opam list --base' and 'opam switch set-base'.";
+        "It appears that the switch invariant is no longer satisfiable. \
+         Either fix the package prerequisites or change the invariant \
+         with 'opam switch set-invariant'.";
       OpamConsole.errmsg "%s"
         (OpamCudf.string_of_conflicts t.packages
            (OpamSwitchState.unavailable_reason t) cs);
