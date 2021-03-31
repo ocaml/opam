@@ -138,6 +138,9 @@ let check_and_run_external_commands () =
     let root_dir = OpamStateConfig.opamroot () in
     let has_init = OpamStateConfig.load_defaults root_dir <> None in
     let plugins_bin = OpamPath.plugins_bin root_dir in
+    let plugin_symlink_present =
+      OpamFilename.is_symlink (OpamPath.plugin_bin root_dir (OpamPackage.Name.of_string name))
+    in
     let env =
       if has_init then
         let updates =
@@ -154,11 +157,11 @@ let check_and_run_external_commands () =
         Unix.environment ()
     in
     match OpamSystem.resolve_command ~env command with
-    | Some command ->
+    | Some command when plugin_symlink_present ->
       let argv = Array.of_list (command :: args) in
       raise (OpamStd.Sys.Exec (command, argv, env))
     | None when not has_init -> (cli, argv)
-    | None ->
+    | cmd ->
       (* Look for a corresponding package *)
       match OpamStateConfig.get_switch_opt () with
       | None -> (cli, argv)
@@ -183,7 +186,7 @@ let check_and_run_external_commands () =
         in
         let installed = OpamPackage.Set.inter plugins st.installed in
         if OpamPackage.Set.is_empty candidates then (cli, argv)
-        else if not OpamPackage.Set.(is_empty installed) then
+        else if not OpamPackage.Set.(is_empty installed) && cmd = None then
           (OpamConsole.error
              "Plugin %s is already installed, but no %s command was found.\n\
               Try upgrading, and report to the package maintainer if \
@@ -205,18 +208,28 @@ let check_and_run_external_commands () =
         then
           let nv =
             try
-              OpamPackage.max_version plugins
-                (OpamPackage.Name.of_string prefixed_name)
+              (* If the command was resolved, attempt to find the package to reinstall. *)
+              if cmd = None then
+                raise Not_found
+              else
+                OpamPackage.package_of_name installed (OpamPackage.Name.of_string prefixed_name)
             with Not_found ->
-              OpamPackage.max_version plugins
-                (OpamPackage.Name.of_string name)
+              try
+                OpamPackage.max_version plugins
+                  (OpamPackage.Name.of_string prefixed_name)
+              with Not_found ->
+                OpamPackage.max_version plugins
+                  (OpamPackage.Name.of_string name)
           in
           OpamRepositoryConfig.init ();
           OpamSolverConfig.init ();
           OpamClientConfig.init ();
           OpamSwitchState.with_ `Lock_write gt (fun st ->
-              OpamSwitchState.drop @@
-              OpamClient.install st [OpamSolution.eq_atom_of_package nv]
+              OpamSwitchState.drop @@ (
+              if cmd = None then
+                OpamClient.install st [OpamSolution.eq_atom_of_package nv]
+              else
+                OpamClient.reinstall st [OpamSolution.eq_atom_of_package nv])
             );
           match OpamSystem.resolve_command ~env command with
           | None ->
