@@ -167,6 +167,11 @@ let command
     in
       maybe_resolved_cmd, cmd
   in
+  let args =
+    if orig_cmd = "tar" || orig_cmd = "tar.exe" then
+      List.map (Lazy.force (OpamSystem.get_cygpath_function ~command:cmd)) args
+    else args
+  in
   let pid =
     OpamProcess.create_process_env cmd (Array.of_list (cmd::args)) env
       Unix.stdin stdout stdout
