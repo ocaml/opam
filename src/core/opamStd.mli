@@ -450,7 +450,10 @@ module Sys : sig
   (** For native Windows builds, returns [`Cygwin] if the command is a Cygwin-
       compiled executable, [`CygLinked] if the command links to a library which is
       itself Cygwin-compiled or [`Native] otherwise.
-      Note that this returns [`Native] on a Cygwin-build of opam! *)
+
+      Note that this returns [`Native] on a Cygwin-build of opam!
+
+      Both cygcheck and an unqualified command will be resolved using the current PATH. *)
   val is_cygwin_variant: string -> [ `Native | `Cygwin | `CygLinked ]
 
   (** {3 Exit handling} *)
