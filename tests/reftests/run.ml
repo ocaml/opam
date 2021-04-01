@@ -158,6 +158,15 @@ let command
   Unix.set_close_on_exec input;
   let ic = Unix.in_channel_of_descr input in
   set_binary_mode_in ic false;
+  let cmd, orig_cmd =
+    let maybe_resolved_cmd =
+      if Sys.win32 then
+        OpamStd.Option.default cmd @@ OpamSystem.resolve_command cmd
+      else
+        cmd
+    in
+      maybe_resolved_cmd, cmd
+  in
   let pid =
     OpamProcess.create_process_env cmd (Array.of_list (cmd::args)) env
       Unix.stdin stdout stdout
