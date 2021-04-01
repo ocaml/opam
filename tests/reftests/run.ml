@@ -102,6 +102,7 @@ let base_env =
   propagate "LIB" @
   propagate "SYSTEMROOT" @
   propagate "TMPDIR" @
+  propagate "TMP" @
   propagate "TEMP" @
   [
     "OPAMKEEPBUILDDIR", "1";
