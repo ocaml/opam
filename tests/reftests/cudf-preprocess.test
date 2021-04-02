@@ -1,0 +1,350 @@
+ad4dd344
+### : Github issue #4624
+### OPAMFAKE=1
+### opam switch create 4.11.0
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "4.11.0"} | "ocaml-system" {= "4.11.0"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.11.0
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.11.0
+Done.
+### opam install git-unix git-cohttp-mirage git-cohttp-unix git-cohttp git carton-git carton-lwt carton decompress checkseum optint.0.0.4 --yes | unordered
+The following actions will be faked:
+  - install seq                     base    [required by psq]
+  - install conf-gmp                3       [required by conf-gmp-powm-sec, zarith]
+  - install mirage-no-xen           1       [required by mirage-crypto-pk]
+  - install ocamlbuild              0.14.0  [required by bos]
+  - install conf-pkg-config         2       [required by checkseum]
+  - install ocamlfind               1.9.1   [required by git-unix]
+  - install mirage-no-solo5         1       [required by mirage-crypto-pk]
+  - install cmdliner                1.0.4   [required by decompress, carton, git-unix]
+  - install dune                    2.8.5   [required by git-unix, git-cohttp-mirage, git, etc.]
+  - install conf-gmp-powm-sec       3       [required by mirage-crypto-pk]
+  - install uchar                   0.0.2   [required by uutf, jsonm]
+  - install zarith                  1.12    [required by awa]
+  - install topkg                   1.0.3   [required by bos]
+  - install num                     1.4     [required by sexplib]
+  - install base-bytes              base    [required by checkseum, decompress]
+  - install stdlib-shims            0.3.0   [required by ocamlgraph, digestif, duff, cohttp]
+  - install sexplib0                v0.14.0 [required by cohttp, cohttp-lwt]
+  - install result                  1.5     [required by git-cohttp-unix, git-cohttp, carton-git, etc.]
+  - install re                      1.9.0   [required by cohttp]
+  - install psq                     0.2.0   [required by carton, git]
+  - install ppx_derivers            1.2.1   [required by ppxlib]
+  - install pecu                    0.5     [required by emile]
+  - install optint                  0.0.4
+  - install ocaml-syntax-shims      1.0.0   [required by angstrom]
+  - install ocaml-migrate-parsetree 2.1.0   [required by ppxlib]
+  - install ocaml-compiler-libs     v0.12.3 [required by ppxlib]
+  - install mmap                    1.1.0   [required by carton-git, carton, git-unix]
+  - install mirage-clock            3.1.0   [required by git-unix]
+  - install magic-mime              1.1.3   [required by cohttp-mirage, cohttp-lwt-unix]
+  - install macaddr                 5.0.1   [required by tcpip]
+  - install gmap                    0.3.0   [required by dns, x509]
+  - install duration                0.1.3   [required by tcpip]
+  - install csexp                   1.5.1   [required by dune-configurator]
+  - install cppo                    1.6.7   [required by lwt]
+  - install bigarray-compat         1.0.0   [required by git, checkseum, carton, etc.]
+  - install base64                  3.5.0   [required by git]
+  - install uutf                    1.0.2   [required by emile]
+  - install mtime                   1.2.0   [required by git-unix]
+  - install astring                 0.8.5   [required by git, carton-git, git-unix]
+  - install stringext               1.6.0   [required by uri, cohttp]
+  - install ocamlgraph              2.0.0   [required by git]
+  - install fmt                     0.8.9   [required by git-cohttp-unix, git-cohttp, carton-git, etc.]
+  - install rresult                 0.6.0   [required by git-cohttp-unix, git-cohttp, carton, etc.]
+  - install ptime                   0.8.5   [required by tls-mirage, tls, ca-certs]
+  - install lru                     0.3.0   [required by tcpip]
+  - install ppxlib                  0.22.0  [required by ppx_fields_conv, ppx_sexp_conv]
+  - install dune-configurator       2.8.5   [required by checkseum]
+  - install ocplib-endian           1.1     [required by lwt, mirage-profile]
+  - install cstruct                 6.0.0   [required by carton, git]
+  - install bigstringaf             0.7.0   [required by git, carton-git, carton, etc.]
+  - install jsonm                   1.0.1   [required by cohttp]
+  - install fpath                   0.7.3   [required by git, carton, carton-git, git-unix]
+  - install metrics                 0.2.0   [required by dns]
+  - install ke                      0.4     [required by carton, git]
+  - install duff                    0.4     [required by carton]
+  - install domain-name             0.3.0   [required by git, git-unix]
+  - install mirage-clock-unix       3.1.0   [required by git-unix]
+  - install checkseum               0.3.0
+  - install base                    v0.14.1 [required by ppx_fields_conv, fieldslib, ppx_sexp_conv]
+  - install lwt                     5.4.0   [required by git-cohttp-unix, git-cohttp, carton-lwt, etc.]
+  - install randomconv              0.1.3   [required by tcpip]
+  - install mirage-random           2.0.0   [required by tcpip]
+  - install macaddr-cstruct         5.0.1   [required by tcpip]
+  - install io-page                 2.4.0   [required by vchan]
+  - install hex                     1.4.0   [required by fiat-p256]
+  - install eqaf                    0.7     [required by digestif]
+  - install cstruct-unix            6.0.0   [required by awa]
+  - install asn1-combinators        0.2.5   [required by x509]
+  - install angstrom                0.15.0  [required by git]
+  - install ipaddr                  5.0.1   [required by git, git-unix]
+  - install decompress              1.3.0
+  - install ppx_sexp_conv           v0.14.3 [required by cohttp-lwt, cohttp, awa]
+  - install parsexp                 v0.14.0 [required by sexplib]
+  - install fieldslib               v0.14.0 [required by cohttp]
+  - install mirage-time             2.0.1   [required by tcpip]
+  - install mirage-flow             2.0.1   [required by git, git-unix]
+  - install mirage-device           2.0.0   [required by mirage-net]
+  - install lwt-dllist              1.0.0   [required by tcpip]
+  - install logs                    0.7.0   [required by git, carton, git-unix]
+  - install hxd                     0.3.1   [required by carton]
+  - install cstruct-lwt             6.0.0   [required by tcpip]
+  - install mirage-crypto           0.9.0   [required by awa]
+  - install hacl_x25519             0.2.2   [required by awa]
+  - install fiat-p256               0.2.3   [required by tls, tls-mirage]
+  - install digestif                1.0.0   [required by git, carton, git-unix]
+  - install uri                     4.1.0   [required by git-cohttp-mirage, git, git-cohttp, git-cohttp-unix]
+  - install encore                  0.8     [required by git]
+  - install emile                   1.1     [required by git]
+  - install ipaddr-sexp             5.0.1   [required by conduit-mirage, conduit, conduit-lwt-unix]
+  - install sexplib                 v0.14.0 [required by awa]
+  - install ppx_fields_conv         v0.14.2 [required by cohttp]
+  - install mirage-protocols        5.0.0   [required by tcpip]
+  - install mirage-net              3.0.1   [required by tcpip]
+  - install mirage-kv               3.0.1   [required by cohttp-mirage]
+  - install mirage-flow-combinators 2.0.1   [required by conduit-mirage]
+  - install mirage-channel          4.0.1   [required by cohttp-mirage]
+  - install mimic                   0.0.2   [required by git, git-cohttp-mirage]
+  - install dns                     4.6.3   [required by dns-client]
+  - install bos                     0.2.0   [required by carton, git-unix]
+  - install mirage-crypto-rng       0.9.0   [required by awa]
+  - install hkdf                    1.0.4   [required by tls]
+  - install uri-sexp                4.1.0   [required by cohttp]
+  - install ppx_cstruct             6.0.0   [required by awa, tcpip]
+  - install cstruct-sexp            6.0.0   [required by awa]
+  - install conduit                 2.3.0   [required by cohttp-mirage]
+  - install mirage-stack            2.2.0   [required by tcpip]
+  - install carton                  0.4.0
+  - install mirage-crypto-pk        0.9.0   [required by awa]
+  - install cohttp                  2.5.5   [required by git-cohttp-mirage, git-cohttp, git-cohttp-unix]
+  - install xenstore                2.1.1   [required by conduit-mirage]
+  - install mirage-profile          0.9.1   [required by tcpip]
+  - install conduit-lwt             2.3.0   [required by conduit-mirage, conduit-lwt-unix]
+  - install dns-client              4.6.3   [required by conduit-mirage]
+  - install carton-lwt              0.4.0
+  - install x509                    0.11.2  [required by awa]
+  - install cohttp-lwt              2.5.5   [required by git-cohttp-mirage, git-cohttp, git-cohttp-unix]
+  - install xenstore_transport      1.3.0   [required by vchan]
+  - install ethernet                2.2.0   [required by tcpip]
+  - install carton-git              0.4.0
+  - install tls                     0.12.8  [required by conduit-mirage, conduit-lwt-unix]
+  - install ca-certs                0.2.0   [required by conduit-lwt-unix]
+  - install awa                     0.0.1   [required by git-unix]
+  - install vchan                   6.0.0   [required by conduit-mirage]
+  - install tcpip                   6.1.0   [required by git-unix]
+  - install git                     3.3.3
+  - install tls-mirage              0.12.8  [required by conduit-mirage]
+  - install conduit-lwt-unix        2.3.0   [required by cohttp-lwt-unix]
+  - install awa-mirage              0.0.1   [required by git-unix]
+  - install git-cohttp              3.3.3
+  - install conduit-mirage          2.2.1   [required by cohttp-mirage]
+  - install cohttp-lwt-unix         2.5.5   [required by git-cohttp-unix, git-unix]
+  - install cohttp-mirage           2.5.5   [required by git-cohttp-mirage]
+  - install git-cohttp-unix         3.3.3
+  - install git-cohttp-mirage       3.3.3
+  - install git-unix                3.3.3
+===== 135 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of cmdliner.1.0.4
+Faking installation of conf-gmp.3
+Faking installation of conf-gmp-powm-sec.3
+Faking installation of conf-pkg-config.2
+Faking installation of dune.2.8.5
+Faking installation of base64.3.5.0
+Faking installation of bigarray-compat.1.0.0
+Faking installation of bigstringaf.0.7.0
+Faking installation of cppo.1.6.7
+Faking installation of csexp.1.5.1
+Faking installation of cstruct.6.0.0
+Faking installation of cstruct-unix.6.0.0
+Faking installation of duration.0.1.3
+Faking installation of eqaf.0.7
+Faking installation of gmap.0.3.0
+Faking installation of hacl_x25519.0.2.2
+Faking installation of hex.1.4.0
+Faking installation of io-page.2.4.0
+Faking installation of macaddr.5.0.1
+Faking installation of macaddr-cstruct.5.0.1
+Faking installation of magic-mime.1.1.3
+Faking installation of mirage-clock.3.1.0
+Faking installation of mirage-no-solo5.1
+Faking installation of mirage-no-xen.1
+Faking installation of mirage-random.2.0.0
+Faking installation of mmap.1.1.0
+Faking installation of ocaml-compiler-libs.v0.12.3
+Faking installation of ocaml-migrate-parsetree.2.1.0
+Faking installation of ocaml-syntax-shims.1.0.0
+Faking installation of ocamlbuild.0.14.0
+Faking installation of ocamlfind.1.9.1
+Faking installation of base-bytes.base
+Faking installation of num.1.4
+Faking installation of ocplib-endian.1.1
+Faking installation of optint.0.0.4
+Faking installation of pecu.0.5
+Faking installation of ppx_derivers.1.2.1
+Faking installation of randomconv.0.1.3
+Faking installation of result.1.5
+Faking installation of angstrom.0.15.0
+Faking installation of dune-configurator.2.8.5
+Faking installation of checkseum.0.3.0
+Faking installation of decompress.1.3.0
+Faking installation of fiat-p256.0.2.3
+Faking installation of mirage-clock-unix.3.1.0
+Faking installation of mirage-crypto.0.9.0
+Faking installation of hkdf.1.0.4
+Faking installation of seq.base
+Faking installation of lwt.5.4.0
+Faking installation of cstruct-lwt.6.0.0
+Faking installation of hxd.0.3.1
+Faking installation of lwt-dllist.1.0.0
+Faking installation of mirage-time.2.0.1
+Faking installation of psq.0.2.0
+Faking installation of lru.0.3.0
+Faking installation of re.1.9.0
+Faking installation of sexplib0.v0.14.0
+Faking installation of base.v0.14.1
+Faking installation of fieldslib.v0.14.0
+Faking installation of parsexp.v0.14.0
+Faking installation of sexplib.v0.14.0
+Faking installation of cstruct-sexp.6.0.0
+Faking installation of stdlib-shims.0.3.0
+Faking installation of digestif.1.0.0
+Faking installation of ocamlgraph.2.0.0
+Faking installation of ppxlib.0.22.0
+Faking installation of ppx_cstruct.6.0.0
+Faking installation of mirage-profile.0.9.1
+Faking installation of ppx_fields_conv.v0.14.2
+Faking installation of ppx_sexp_conv.v0.14.3
+Faking installation of stringext.1.6.0
+Faking installation of topkg.1.0.3
+Faking installation of astring.0.8.5
+Faking installation of fmt.0.8.9
+Faking installation of domain-name.0.3.0
+Faking installation of duff.0.4
+Faking installation of encore.0.8
+Faking installation of fpath.0.7.3
+Faking installation of ipaddr.5.0.1
+Faking installation of ipaddr-sexp.5.0.1
+Faking installation of ke.0.4
+Faking installation of logs.0.7.0
+Faking installation of metrics.0.2.0
+Faking installation of mirage-device.2.0.0
+Faking installation of mirage-flow.2.0.1
+Faking installation of mirage-channel.4.0.1
+Faking installation of mirage-flow-combinators.2.0.1
+Faking installation of mirage-kv.3.0.1
+Faking installation of mirage-net.3.0.1
+Faking installation of mirage-protocols.5.0.0
+Faking installation of mirage-stack.2.2.0
+Faking installation of mtime.1.2.0
+Faking installation of mirage-crypto-rng.0.9.0
+Faking installation of ptime.0.8.5
+Faking installation of rresult.0.6.0
+Faking installation of bos.0.2.0
+Faking installation of carton.0.4.0
+Faking installation of carton-lwt.0.4.0
+Faking installation of carton-git.0.4.0
+Faking installation of dns.4.6.3
+Faking installation of dns-client.4.6.3
+Faking installation of ethernet.2.2.0
+Faking installation of mimic.0.0.2
+Faking installation of tcpip.6.1.0
+Faking installation of uchar.0.0.2
+Faking installation of uri.4.1.0
+Faking installation of conduit.2.3.0
+Faking installation of conduit-lwt.2.3.0
+Faking installation of uri-sexp.4.1.0
+Faking installation of uutf.1.0.2
+Faking installation of emile.1.1
+Faking installation of git.3.3.3
+Faking installation of jsonm.1.0.1
+Faking installation of cohttp.2.5.5
+Faking installation of cohttp-lwt.2.5.5
+Faking installation of git-cohttp.3.3.3
+Faking installation of xenstore.2.1.1
+Faking installation of xenstore_transport.1.3.0
+Faking installation of vchan.6.0.0
+Faking installation of zarith.1.12
+Faking installation of asn1-combinators.0.2.5
+Faking installation of mirage-crypto-pk.0.9.0
+Faking installation of x509.0.11.2
+Faking installation of awa.0.0.1
+Faking installation of awa-mirage.0.0.1
+Faking installation of ca-certs.0.2.0
+Faking installation of tls.0.12.8
+Faking installation of conduit-lwt-unix.2.3.0
+Faking installation of cohttp-lwt-unix.2.5.5
+Faking installation of git-cohttp-unix.3.3.3
+Faking installation of git-unix.3.3.3
+Faking installation of tls-mirage.0.12.8
+Faking installation of conduit-mirage.2.2.1
+Faking installation of cohttp-mirage.2.5.5
+Faking installation of git-cohttp-mirage.3.3.3
+Done.
+### OPAMSHOW=1
+### opam install git.3.3.3 optint.0.1.0
+[NOTE] Package git is already installed (current version is 3.3.3).
+The following actions would be faked:
+  - upgrade   optint            0.0.4 to 0.1.0
+  - upgrade   checkseum         0.3.0 to 0.3.1 [required by git]
+  - recompile decompress        1.3.0          [uses optint]
+  - recompile carton            0.4.0          [uses optint]
+  - recompile carton-lwt        0.4.0          [uses optint]
+  - recompile carton-git        0.4.0          [uses carton, decompress]
+  - recompile git               3.3.3
+  - recompile git-cohttp-mirage 3.3.3          [uses git]
+  - recompile git-cohttp        3.3.3          [uses git]
+  - recompile git-cohttp-unix   3.3.3          [uses git]
+  - recompile git-unix          3.3.3          [uses git]
+===== 9 to recompile | 2 to upgrade =====
+### opam install optint.0.1.0
+The following actions would be faked:
+  - upgrade   optint            0.0.4 to 0.1.0
+  - upgrade   checkseum         0.3.0 to 0.3.1 [uses optint]
+  - recompile decompress        1.3.0          [uses optint]
+  - recompile carton            0.4.0          [uses optint]
+  - recompile carton-lwt        0.4.0          [uses optint]
+  - recompile carton-git        0.4.0          [uses carton]
+  - recompile git               3.3.3          [uses optint]
+  - recompile git-cohttp-mirage 3.3.3          [uses git]
+  - recompile git-cohttp        3.3.3          [uses git]
+  - recompile git-cohttp-unix   3.3.3          [uses git]
+  - recompile git-unix          3.3.3          [uses decompress]
+===== 9 to recompile | 2 to upgrade =====
+### OPAMCUDFTRIM=0 opam install optint.0.1.0
+The following actions would be faked:
+  - upgrade   optint            0.0.4 to 0.1.0
+  - upgrade   checkseum         0.3.0 to 0.3.1 [uses optint]
+  - recompile decompress        1.3.0          [uses optint]
+  - recompile carton            0.4.0          [uses optint]
+  - recompile carton-lwt        0.4.0          [uses optint]
+  - recompile carton-git        0.4.0          [uses carton]
+  - recompile git               3.3.3          [uses optint]
+  - recompile git-cohttp-mirage 3.3.3          [uses git]
+  - recompile git-cohttp        3.3.3          [uses git]
+  - recompile git-cohttp-unix   3.3.3          [uses git]
+  - recompile git-unix          3.3.3          [uses decompress]
+===== 9 to recompile | 2 to upgrade =====
+### OPAMCUDFTRIM=simple opam install optint.0.1.0
+The following actions would be faked:
+  - upgrade   optint            0.0.4 to 0.1.0
+  - upgrade   checkseum         0.3.0 to 0.3.1 [uses optint]
+  - recompile decompress        1.3.0          [uses optint]
+  - recompile carton            0.4.0          [uses optint]
+  - recompile carton-lwt        0.4.0          [uses optint]
+  - recompile carton-git        0.4.0          [uses carton]
+  - recompile git               3.3.3          [uses optint]
+  - recompile git-cohttp-mirage 3.3.3          [uses git]
+  - recompile git-cohttp        3.3.3          [uses git]
+  - recompile git-cohttp-unix   3.3.3          [uses git]
+  - recompile git-unix          3.3.3          [uses decompress]
+===== 9 to recompile | 2 to upgrade =====

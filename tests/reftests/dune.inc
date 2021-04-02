@@ -96,6 +96,22 @@
    (run ./run.exe %{bin:opam} %{dep:conflict-solo5.test} %{read-lines:testing-env}))))
 
 (alias
+ (name reftest-cudf-preprocess)
+ (action
+  (diff cudf-preprocess.test cudf-preprocess.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-cudf-preprocess)))
+
+(rule
+ (deps root-ad4dd344)
+ (action
+  (with-stdout-to
+   cudf-preprocess.out
+   (run ./run.exe %{bin:opam} %{dep:cudf-preprocess.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-init)
  (action
   (diff init.test init.out)))
@@ -278,6 +294,26 @@
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
            file://%{dep:opam-repo-632bc2e})))))
+
+(rule
+ (targets opam-archive-ad4dd344.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/ad4dd344.tar.gz)))
+
+(rule
+  (targets opam-repo-ad4dd344)
+  (action
+   (progn
+    (run mkdir %{targets})
+    (run tar -C %{targets} -xzf %{dep:opam-archive-ad4dd344.tar.gz} --strip-components=1))))
+
+(rule
+  (targets root-ad4dd344)
+  (action
+   (progn
+    (ignore-stdout
+    (run %{bin:opam} init --root=%{targets}
+           --no-setup --bypass-checks --no-opamrc --bare
+           file://%{dep:opam-repo-ad4dd344})))))
 
 (rule
  (targets opam-archive-c1d23f0e.tar.gz)
