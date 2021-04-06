@@ -120,7 +120,7 @@ let string_of_formula string_of_a f =
       else s
     in
     match f with
-    | Empty    -> "0"
+    | Empty    -> "[]"
     | Atom a   -> paren_if (string_of_a a)
     | Block x  -> Printf.sprintf "(%s)" (aux x)
     | And(x,y) ->

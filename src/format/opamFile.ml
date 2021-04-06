@@ -1188,6 +1188,7 @@ module ConfigSyntax = struct
     eval_variables : (variable * string list * string) list;
     validation_hook : arg list option;
     default_compiler : formula;
+    default_invariant : formula;
     depext: bool;
     depext_run_installs : bool;
     depext_cannot_install : bool;
@@ -1215,6 +1216,7 @@ module ConfigSyntax = struct
 
   let validation_hook t = t.validation_hook
   let default_compiler t = t.default_compiler
+  let default_invariant t = t.default_invariant
 
   let depext t = t.depext
   let depext_run_installs t = t.depext_run_installs
@@ -1249,6 +1251,7 @@ module ConfigSyntax = struct
     { t with validation_hook = Some validation_hook}
   let with_validation_hook_opt validation_hook t = { t with validation_hook }
   let with_default_compiler default_compiler t = { t with default_compiler }
+  let with_default_invariant default_invariant t = { t with default_invariant }
   let with_depext depext t = { t with depext }
   let with_depext_run_installs depext_run_installs t =
     { t with depext_run_installs }
@@ -1273,6 +1276,7 @@ module ConfigSyntax = struct
     eval_variables = [];
     validation_hook = None;
     default_compiler = OpamFormula.Empty;
+    default_invariant = OpamFormula.Empty;
     depext = true;
     depext_run_installs = true;
     depext_cannot_install = false;
@@ -1353,6 +1357,9 @@ module ConfigSyntax = struct
       "default-compiler", Pp.ppacc
         with_default_compiler default_compiler
         (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
+      "default-invariant", Pp.ppacc
+        with_default_invariant default_invariant
+        (Pp.V.package_formula `Conj Pp.V.(constraints Pp.V.version));
       "depext", Pp.ppacc
         with_depext depext
         Pp.V.bool;
@@ -1406,6 +1413,7 @@ module InitConfigSyntax = struct
     opam_version : opam_version;
     repositories : (repository_name * (url * trust_anchors option)) list;
     default_compiler : formula;
+    default_invariant : formula;
     jobs : int option;
     dl_tool : arg list option;
     dl_jobs : int option;
@@ -1423,6 +1431,7 @@ module InitConfigSyntax = struct
   let opam_version t = t.opam_version
   let repositories t = t.repositories
   let default_compiler t = t.default_compiler
+  let default_invariant t = t.default_invariant
   let jobs t = t.jobs
   let dl_tool t = t.dl_tool
   let dl_jobs t = t.dl_jobs
@@ -1439,6 +1448,7 @@ module InitConfigSyntax = struct
   let with_opam_version opam_version t = {t with opam_version}
   let with_repositories repositories t = {t with repositories}
   let with_default_compiler default_compiler t = {t with default_compiler}
+  let with_default_invariant default_invariant t = {t with default_invariant}
   let with_jobs jobs t = {t with jobs}
   let with_dl_tool dl_tool t = {t with dl_tool}
   let with_dl_jobs dl_jobs t = {t with dl_jobs}
@@ -1464,6 +1474,7 @@ module InitConfigSyntax = struct
     opam_version = format_version;
     repositories = [];
     default_compiler = OpamFormula.Empty;
+    default_invariant = OpamFormula.Empty;
     jobs = None;
     dl_tool = None;
     dl_jobs = None;
@@ -1511,6 +1522,9 @@ module InitConfigSyntax = struct
            (fun (name, (url, ta)) -> (name, Some url, ta)));
       "default-compiler", Pp.ppacc
         with_default_compiler default_compiler
+        (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
+      "default-invariant", Pp.ppacc
+        with_default_invariant default_invariant
         (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
       "jobs", Pp.ppacc_opt
         (with_jobs @* OpamStd.Option.some) jobs
@@ -1594,6 +1608,9 @@ module InitConfigSyntax = struct
       default_compiler =
         if t2.default_compiler <> Empty
         then t2.default_compiler else t1.default_compiler;
+      default_invariant =
+        if t2.default_invariant <> Empty
+        then t2.default_invariant else t1.default_invariant;
       jobs = opt t2.jobs t1.jobs;
       dl_tool = opt t2.dl_tool t1.dl_tool;
       dl_jobs = opt t2.dl_jobs t1.dl_jobs;

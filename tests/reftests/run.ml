@@ -16,6 +16,7 @@
    - 'opam' is automatically redirected to the correct binary
    - the command prefix is `### `
    - use `### <FILENAME>`, then the contents below to create a file verbatim
+   - `### FOO=x BAR=y` to export variables for subsequent commands
    - shell-like command handling:
      * **NO pattern expansion, shell pipes, sequences or redirections**
      * `FOO=x BAR=y command`
@@ -28,6 +29,7 @@
      * `| grep REGEXP`
      * `| unordered` compares lines without considering their ordering
      * variables from command outputs: `cmd args >$ VAR`
+     * `### : comment`
    - if you need more shell power, create a script using <FILENAME> then run it.
      Or just use `sh -c`... but beware for compatibility.
 
@@ -156,6 +158,20 @@ let command
   Unix.set_close_on_exec input;
   let ic = Unix.in_channel_of_descr input in
   set_binary_mode_in ic false;
+  let cmd, orig_cmd =
+    let maybe_resolved_cmd =
+      if Sys.win32 then
+        OpamStd.Option.default cmd @@ OpamSystem.resolve_command cmd
+      else
+        cmd
+    in
+      maybe_resolved_cmd, cmd
+  in
+  let args =
+    if orig_cmd = "tar" || orig_cmd = "tar.exe" then
+      List.map (Lazy.force (OpamSystem.get_cygpath_function ~command:cmd)) args
+    else args
+  in
   let pid =
     OpamProcess.create_process_env cmd (Array.of_list (cmd::args)) env
       Unix.stdin stdout stdout
@@ -235,6 +251,7 @@ type command =
              filter: (Re.t * string option) list;
              output: string option;
              unordered: bool; }
+  | Export of (string * string) list
   | Comment of string
 
 module Parse = struct
@@ -296,9 +313,11 @@ module Parse = struct
       Group.stop gr 0
     in
     let cmd, pos =
-      let gr = exec ~pos (compile re_str_atom) str in
-      get_str (Group.get gr 0),
-      Group.stop gr 0
+      try
+        let gr = exec ~pos (compile re_str_atom) str in
+        Some (get_str (Group.get gr 0)),
+        Group.stop gr 0
+      with Not_found -> None, pos
     in
     let args =
       let grs = all ~pos (compile re_str_atom) str in
@@ -329,14 +348,18 @@ module Parse = struct
       | arg :: r -> get_args_rewr (arg :: acc) r
     in
     let args, unordered, rewr, output = get_args_rewr [] args in
-    Run {
-      env = varbinds;
-      cmd;
-      args;
-      filter = rewr;
-      output;
-      unordered;
-    }
+    match cmd with
+    | Some cmd ->
+      Run {
+        env = varbinds;
+        cmd;
+        args;
+        filter = rewr;
+        output;
+        unordered;
+      }
+    | None ->
+      Export varbinds
 end
 
 let parse_command = Parse.command
@@ -421,6 +444,10 @@ let run_test t ?(vars=[]) ~opam =
           write_file ~path ~contents;
           print_string contents;
           vars
+        | Export bindings ->
+          List.fold_left
+            (fun vars (v, r) -> (v, r) :: List.filter (fun (w, _) -> v <> w) vars)
+            vars bindings
         | Run {env; cmd; args; filter; output; unordered} ->
           let silent = output <> None || unordered in
           let r, errcode =

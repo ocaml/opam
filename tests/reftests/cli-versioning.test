@@ -18,6 +18,7 @@ Added 'cli: "version"' to field variables in switch cli-versioning
 ### OPAMCLI=2.0 opam config set cli version
 Added 'cli: "version"' to field variables in switch cli-versioning
 ### opam switch set-invariant ocaml.4.05.0
+The switch invariant was set to ocaml = 4.05.0
 ### OPAMCLI=2.0 opam install ocaml.4.10.0
 [ERROR] Package conflict!
   * No agreement on the version of ocaml:
@@ -101,6 +102,7 @@ env-2-0 is now pinned to file://${BASEDIR}/opams (version ~dev)
 Package env-2-1 does not exist, create as a NEW package? [Y/n] y
 env-2-1 is now pinned to file://${BASEDIR}/opams (version ~dev)
 ### opam switch set-invariant --formula "[]"
+The switch invariant was set to []
 ### opam install env-2-0
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>

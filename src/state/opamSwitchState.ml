@@ -142,9 +142,17 @@ let infer_switch_invariant_raw
   | [] -> OpamFormula.Empty
 
 let infer_switch_invariant st =
+  let compiler_packages =
+    if OpamPackage.Set.is_empty st.compiler_packages then
+      OpamPackage.Set.filter (fun nv ->
+          OpamFile.OPAM.has_flag Pkgflag_Compiler
+            (OpamPackage.Map.find nv st.opams))
+        st.installed
+    else st.compiler_packages
+  in
   infer_switch_invariant_raw
     st.switch_global st.switch st.switch_config st.opams
-    st.packages st.compiler_packages st.installed_roots st.available_packages
+    st.packages compiler_packages st.installed_roots st.available_packages
 
 let depexts_raw ~env nv opams =
   try

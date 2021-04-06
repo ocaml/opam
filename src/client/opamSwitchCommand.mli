@@ -33,9 +33,10 @@ val create:
   'ret * rw switch_state
 
 (** Used to initially install a compiler's base packages, according to its
-    invariant. *)
+    invariant. [ask] triggers prompting the user as for normal installs;
+    defaults to [false]. *)
 val install_compiler:
-  ?additional_installs:atom list -> ?deps_only:bool ->
+  ?additional_installs:atom list -> ?deps_only:bool -> ?ask:bool ->
   rw switch_state -> rw switch_state
 
 (** Import a file which contains the packages to install.  *)

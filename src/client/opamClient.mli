@@ -15,7 +15,9 @@
 open OpamTypes
 open OpamStateTypes
 
-(** Initialize the client to a consistent state. *)
+(** Initialize the client to a consistent state.
+    Returns the initial state and, in case a switch is to be created, its
+    initial set of packages *)
 val init:
   init_config:OpamFile.InitConfig.t ->
   interactive:bool ->
@@ -27,7 +29,7 @@ val init:
   ?completion:bool ->
   ?check_sandbox:bool ->
   shell ->
-  rw global_state * unlocked repos_state * formula
+  rw global_state * unlocked repos_state * atom list
 
 (* (\** Gets the initial config (opamrc) to be used *\)
  * val get_init_config:

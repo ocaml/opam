@@ -148,6 +148,8 @@ module Config: sig
     arg list option -> t -> t
   val with_default_compiler:
     formula -> t -> t
+  val with_default_invariant:
+    formula -> t -> t
   val with_depext: bool -> t -> t
   val with_depext_run_installs: bool -> t -> t
   val with_depext_cannot_install: bool -> t -> t
@@ -191,6 +193,7 @@ module Config: sig
   val validation_hook: t -> arg list option
 
   val default_compiler: t -> formula
+  val default_invariant: t -> formula
 
   val depext: t -> bool
   val depext_run_installs: t -> bool
@@ -212,6 +215,7 @@ module InitConfig: sig
   val opam_version: t -> opam_version
   val repositories: t -> (repository_name * (url * trust_anchors option)) list
   val default_compiler: t -> formula
+  val default_invariant: t -> formula
   val jobs: t -> int option
   val dl_tool: t -> arg list option
   val dl_jobs: t -> int option
@@ -229,6 +233,7 @@ module InitConfig: sig
   val with_repositories:
     (repository_name * (url * trust_anchors option)) list -> t -> t
   val with_default_compiler: formula -> t -> t
+  val with_default_invariant: formula -> t -> t
   val with_jobs: int option -> t -> t
   val with_dl_tool: arg list option -> t -> t
   val with_dl_jobs: int option -> t -> t

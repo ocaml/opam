@@ -150,10 +150,13 @@ let get_init_config ~no_sandboxing ~no_default_config_file ~add_config_file =
       | [] -> ""
       | [file] -> OpamFile.to_string file ^ " and then from "
       | _ ->
-        (OpamStd.List.concat_map ~nil:"" ~right:", and finally from " ", then "
+        (OpamStd.List.concat_map ~right:", and finally from " ", then "
            OpamFile.to_string (List.rev config_files))
     in
-    OpamConsole.note "Will configure from %sbuilt-in defaults." others;
+    if config_files = [] then
+      OpamConsole.msg "No configuration file found, using built-in defaults.\n"
+    else
+      OpamConsole.msg "Configuring from %sbuilt-in defaults.\n" others;
     List.fold_left (fun acc f ->
         OpamFile.InitConfig.add acc (OpamFile.InitConfig.read f))
       builtin_config config_files
@@ -370,8 +373,14 @@ let init cli =
            ~check_sandbox:(not no_sandboxing)
            (OpamFile.Config.safe_read config_f) shell;
       else
-        OpamEnv.setup root ~interactive ~dot_profile ?update_config ?env_hook
-          ?completion ~inplace shell
+        (if not interactive &&
+            update_config <> Some true && completion <> Some true && env_hook <> Some true then
+           OpamConsole.msg
+             "Opam was already initialised. If you want to set it up again, \
+              use `--interactive', `--reinit', or choose a different \
+              `--root'.\n";
+         OpamEnv.setup root ~interactive ~dot_profile ?update_config ?env_hook
+           ?completion ~inplace shell)
     else
     let init_config =
       get_init_config ~no_sandboxing
@@ -394,22 +403,33 @@ let init cli =
     OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
     @@ fun () ->
     if no_compiler then () else
-    let invariant, name =
+    let invariant, default_compiler, name =
       match compiler with
       | Some comp when String.length comp > 0 ->
-        OpamSwitchCommand.guess_compiler_invariant rt [comp], comp
-      | _ -> default_compiler, "default"
+        OpamSwitchCommand.guess_compiler_invariant rt [comp],
+        [],
+        comp
+      | _ ->
+        OpamFile.Config.default_invariant gt.config,
+        default_compiler, "default"
     in
-    OpamConsole.header_msg "Creating initial switch %s (%s)"
+    OpamConsole.header_msg "Creating initial switch '%s' (invariant %s%s)"
       name
       (match invariant with
        | OpamFormula.Empty -> "empty"
-       | c -> OpamFileTools.dep_formula_to_string c);
+       | c -> OpamFileTools.dep_formula_to_string c)
+      (match default_compiler with
+       | [] -> ""
+       | comp -> " - initially with "^ (OpamFormula.string_of_atoms comp));
     let (), st =
       try
         OpamSwitchCommand.create
           gt ~rt ~invariant ~update_config:true (OpamSwitch.of_string name) @@
-        (fun st -> (), OpamSwitchCommand.install_compiler st)
+        (fun st ->
+           (),
+           OpamSwitchCommand.install_compiler st
+             ~ask:false
+             ~additional_installs:default_compiler)
       with e ->
         OpamStd.Exn.finalise e @@ fun () ->
         OpamConsole.note
@@ -2518,15 +2538,14 @@ let switch cli =
     apply_build_options build_options;
     let invariant_arg ?repos rt args =
       match args, packages, formula, empty with
-      | [], None, None, false ->
-        OpamFile.Config.default_compiler rt.repos_global.config
+      | [], None, None, false -> None
       | _::_ as packages, None, None, false ->
-        OpamSwitchCommand.guess_compiler_invariant ?repos rt packages
+        Some (OpamSwitchCommand.guess_compiler_invariant ?repos rt packages)
       | [], Some atoms, None, false ->
         let atoms = List.map (fun p -> Atom p) atoms in
-        OpamFormula.of_atom_formula (OpamFormula.ands atoms)
-      | [], None, (Some f), false -> f
-      | [], None, None, true -> OpamFormula.Empty
+        Some (OpamFormula.of_atom_formula (OpamFormula.ands atoms))
+      | [], None, (Some f), false -> Some f
+      | [], None, None, true -> Some OpamFormula.Empty
       | _ ->
         OpamConsole.error_and_exit `Bad_arguments
           "Individual packages, options --packages, --formula and --empty may \
@@ -2594,7 +2613,12 @@ let switch cli =
       in
       (match invariant_arg ?repos rt pkg_params with
        | exception Failure e -> `Error (false, e)
-       | invariant ->
+       | invariant_opt ->
+         let invariant =
+           OpamStd.Option.default
+             (OpamFile.Config.default_invariant rt.repos_global.config)
+             invariant_opt
+         in
          let (), st =
            OpamSwitchCommand.create gt ~rt
              ?synopsis:descr ?repos
@@ -2640,7 +2664,10 @@ let switch cli =
              else st, []
            in
            (),
-           OpamSwitchCommand.install_compiler st ~additional_installs ~deps_only
+           OpamSwitchCommand.install_compiler st
+             ~additional_installs
+             ~deps_only
+             ~ask:(additional_installs <> [])
          in
          OpamSwitchState.drop st;
          `Ok ())
@@ -2736,9 +2763,15 @@ let switch cli =
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
       (match invariant_arg rt params with
        | exception Failure e -> `Error (false, e)
-       | invariant ->
+       | invariant_opt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+         let invariant = match invariant_opt with
+           | Some i -> i
+           | None -> OpamSwitchState.infer_switch_invariant st
+         in
          let st = OpamSwitchCommand.set_invariant ~force st invariant in
+         OpamConsole.msg "The switch invariant was set to %s\n"
+           (OpamFormula.to_string invariant);
          let st =
            if no_action || OpamFormula.satisfies_depends st.installed invariant
            then st
