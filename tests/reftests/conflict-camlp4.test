@@ -3,7 +3,7 @@ f372039d
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["camlp4" "ocaml-system"]
-[ERROR] Could not resolve base install for this switch:
+[ERROR] Could not determine which packages to install for this switch:
   * Incompatible packages:
     - (invariant) -> camlp4
     - (invariant) -> ocaml-system
