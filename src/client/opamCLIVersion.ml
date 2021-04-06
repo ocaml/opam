@@ -59,9 +59,8 @@ module Sourced = struct
 
   let current = current, `Default
 
-  let env () =
-    OpamStd.Option.map (fun c -> c, `Env)
-      (OpamStd.Config.env of_string "CLI")
+  let env s =
+    OpamStd.Option.Op.(s >>= of_string_opt >>| (fun c -> c, `Env))
 
 end
 

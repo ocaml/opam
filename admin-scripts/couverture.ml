@@ -97,7 +97,7 @@ let () =
   OpamFormatConfig.init ();
   if not (OpamStateConfig.load_defaults root) then
     failwith "Opam root not found";
-  OpamStd.Config.init ();
+  OpamCoreConfig.init ();
   OpamSolverConfig.init ();
   OpamStateConfig.init ();
   let t =

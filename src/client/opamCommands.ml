@@ -81,20 +81,23 @@ let global_options cli =
         OpamArg.dir_sep) in
   let self_upgrade no_self_upgrade options =
     let self_upgrade_status =
-      if OpamStd.Config.env_string "NOSELFUPGRADE" =
+      if OpamClientConfig.E.noselfupgrade () =
          Some self_upgrade_bootstrapping_value
       then `Running
       else if no_self_upgrade then `Disable
-      else if OpamStd.Config.env_bool "NOSELFUPGRADE" = Some true then `Disable
+      else if OpamStd.Option.Op.((OpamClientConfig.E.noselfupgrade ())
+                                 >>= OpamStd.Config.bool_of_string)
+              = Some true
+      then `Disable
       else `None
     in
     if self_upgrade_status = `None then
       switch_to_updated_self
         OpamStd.Option.Op.(options.debug_level ++
-                           OpamStd.Config.env_level "DEBUG" +! 0 |> abs > 0)
+                           OpamCoreConfig.E.debug () +! 0 |> abs > 0)
         (OpamStateConfig.opamroot ?root_dir:options.opt_root ());
     let root_is_ok =
-      OpamStd.Option.default false (OpamStd.Config.env_bool "ROOTISOK")
+      OpamStd.Option.default false (OpamClientConfig.E.rootisok ())
     in
     if not (options.safe_mode || root_is_ok) &&
        Unix.getuid () = 0 then
@@ -103,8 +106,8 @@ let global_options cli =
   in
   Term.(const self_upgrade $ no_self_upgrade $ global_options cli)
 
-let apply_global_options (options,self_upgrade) =
-  apply_global_options options;
+let apply_global_options cli (options,self_upgrade) =
+  apply_global_options cli options;
   OpamConsole.log "CLI" "Parsing CLI version %s"
     (OpamCLIVersion.to_string options.cli);
   try
@@ -307,7 +310,7 @@ let init cli =
       dot_profile_o compiler no_compiler config_file no_config_file reinit
       show_opamrc bypass_checks
       () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     apply_build_options build_options;
     (* If show option is set, dump opamrc and exit *)
     if show_opamrc then
@@ -567,7 +570,7 @@ let list ?(force_search=false) cli =
   let list
       global_options selection state_selector no_switch depexts vars repos
       owns_file disjunction search silent no_depexts format packages () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     let no_switch =
       no_switch || OpamStateConfig.get_switch_opt () = None
     in
@@ -814,7 +817,7 @@ let show cli =
         OpamStd.Format.align_table tbl |>
         OpamConsole.print_table stdout ~sep:" "
     in
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     match file with
     | Some file ->
       let opamf = OpamFile.make file in
@@ -1041,7 +1044,7 @@ let var cli =
       Arg.(some package_name) None
   in
   let print_var global_options package varvalue global () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     match varvalue, package with
     | _, None ->
       var_option global global_options `var varvalue
@@ -1083,7 +1086,7 @@ let option cli =
     Arg.(value & pos 0 (some string) None & info ~docv ~doc [])
   in
   let option global_options fieldvalue global () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     var_option global global_options `option fieldvalue
   in
   mk_command_ret  ~cli (cli_from cli2_1) "option" ~doc ~man
@@ -1194,7 +1197,7 @@ let config cli =
   let config global_options
       command shell sexp inplace_path
       set_opamroot set_opamswitch params () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     let shell = match shell with
       | Some s -> s
       | None -> OpamStd.Sys.guess_shell_compat ()
@@ -1443,7 +1446,7 @@ let exec cli =
     Arg.(non_empty & pos_all string [] & info ~docv:"COMMAND [ARG]..." [])
   in
   let exec global_options inplace_path set_opamroot set_opamswitch cmd () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamConfigCommand.exec gt
       ~set_opamroot ~set_opamswitch ~inplace_path cmd
@@ -1485,7 +1488,7 @@ let env cli =
   let env
       global_options shell sexp inplace_path set_opamroot set_opamswitch
       revert check () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     if check then
       (OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
@@ -1596,7 +1599,7 @@ let install cli =
       global_options build_options add_to_roots deps_only ignore_conflicts
       restore destdir assume_built check recurse subpath depext_only
       download_only atoms_or_locals () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     apply_build_options build_options;
     if atoms_or_locals = [] && not restore then
       `Error (true, "required argument PACKAGES is missing")
@@ -1712,7 +1715,7 @@ let remove cli =
   in
   let remove global_options build_options autoremove force destdir recurse
       subpath atom_locs () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     apply_build_options build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     match destdir with
@@ -1785,7 +1788,7 @@ let reinstall cli =
   in
   let reinstall global_options build_options assume_built recurse subpath
       atoms_locs cmd () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     apply_build_options build_options;
     let open OpamPackage.Set.Op in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1888,7 +1891,7 @@ let update cli =
        returning 0 if there are available upgrades, rather than upstream updates." in
   let update global_options jobs names repos_only dev_only depexts_only all
       check upgrade () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     OpamStateConfig.update
       ?jobs:OpamStd.Option.Op.(jobs >>| fun j -> lazy j)
       ();
@@ -1956,7 +1959,7 @@ let upgrade cli =
        that are not yet installed." in
   let upgrade global_options build_options fixup check only_installed all
       recurse subpath atom_locs () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     apply_build_options build_options;
     let all = all || atom_locs = [] in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -2081,7 +2084,7 @@ let repository cli =
       Arg.(int) 1
   in
   let repository global_options command kind short scope rank params () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     let global = List.mem `Default scope in
     let command, params, rank = match command, params, rank with
       | Some `priority, [name; rank], 1 ->
@@ -2534,7 +2537,7 @@ let switch cli =
     if d_no_autoinstall then
       OpamConsole.warning "Option %s is deprecated, ignoring it."
         (OpamConsole.colorise `bold "--no-autoinstall");
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     apply_build_options build_options;
     let invariant_arg ?repos rt args =
       match args, packages, formula, empty with
@@ -3068,7 +3071,7 @@ let pin ?(unpin_only=false) cli =
       kind edit no_act dev_repo print_short recurse subpath normalise
       with_version
       command params () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     apply_build_options build_options;
     let locked = OpamStateConfig.(!r.locked) <> None in
     let action = not no_act in
@@ -3264,7 +3267,7 @@ let source cli =
     mk_opt ~cli cli_original ["dir"] "DIR" "The directory where to put the source."
       Arg.(some dirname) None in
   let source global_options atom dev_repo pin dir () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     (* Fixme: this needs a write lock, because it uses the routines that
        download to opam's shared switch cache.
@@ -3424,7 +3427,7 @@ let lint cli =
   in
   let lint global_options files package normalise short warnings_sel
       check_upstream recurse subpath () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     let opam_files_in_dir d =
       match OpamPinned.files_in_source ~recurse ?subpath d with
       | [] ->
@@ -3591,7 +3594,7 @@ let clean cli =
   in
   let clean global_options dry_run
       download_cache repos repo_cache logs switch all_switches () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     let logs, download_cache, switch =
       if logs || download_cache || repos || repo_cache || switch || all_switches
       then logs, download_cache, switch
@@ -3764,7 +3767,7 @@ let lock cli =
   in
   let lock_suffix = OpamArg.lock_suffix cli in
   let lock global_options only_direct lock_suffix atom_locs () =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_none gt @@ fun st ->
     let st, packages = OpamLockCommand.select_packages atom_locs st in
@@ -3841,10 +3844,10 @@ let default cli =
         for more information on a specific command.";
     `S Manpage.s_commands;
     `S "COMMAND ALIASES";
-  ] @  help_sections
+  ] @ help_sections cli
   in
   let usage global_options =
-    apply_global_options global_options;
+    apply_global_options cli global_options;
     OpamConsole.formatted_msg
       "usage: opam [--version]\n\
       \            [--help]\n\
@@ -3892,18 +3895,18 @@ let commands cli =
   [
     init cli;
     list cli;
-    make_command_alias (list ~force_search:true cli) ~options:" --search" "search";
-    show; make_command_alias show "info";
+    make_command_alias ~cli (list ~force_search:true cli) ~options:" --search" "search";
+    show; make_command_alias ~cli show "info";
     install cli;
-    remove; make_command_alias remove "uninstall";
+    remove; make_command_alias ~cli remove "uninstall";
     reinstall cli;
     update cli; upgrade cli;
     var cli; option cli;
     config cli;
     exec cli; env cli;
-    repository; make_command_alias repository "remote";
+    repository; make_command_alias ~cli repository "remote";
     switch cli;
-    pin cli; make_command_alias (pin ~unpin_only:true cli) ~options:" remove" "unpin";
+    pin cli; make_command_alias ~cli (pin ~unpin_only:true cli) ~options:" remove" "unpin";
     source cli;
     lint cli;
     clean cli;

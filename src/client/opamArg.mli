@@ -141,7 +141,7 @@ type global_options = {
   debug_level: int option;
   verbose: int;
   quiet : bool;
-  color : [ `Always | `Never | `Auto ] option;
+  color : OpamStd.Config.when_ option;
   opt_switch : string option;
   yes : bool;
   strict : bool;
@@ -164,7 +164,7 @@ type global_options = {
 val global_options: OpamCLIVersion.Sourced.t -> global_options Term.t
 
 (** Apply global options *)
-val apply_global_options: global_options -> unit
+val apply_global_options: OpamCLIVersion.Sourced.t -> global_options -> unit
 
 
 (** {3 Build options} *)
@@ -263,11 +263,6 @@ val variable_bindings: (OpamVariable.t * string) list Arg.converter
 (** Warnings string ["+3..10-4"] *)
 val warn_selector: (int * bool) list Arg.converter
 
-type 'a default = [> `default of string] as 'a
-
-(** Enumeration with a default command *)
-val enum_with_default: (string * 'a default) list -> 'a Arg.converter
-
 val opamlist_columns: OpamListCommand.output_format list Arg.converter
 
 (** {2 Subcommands} *)
@@ -285,6 +280,13 @@ val mk_subcommands:
 (** [subcommands cmds] are the terms [cmd] and [params]. [cmd] parses
     which sub-commands in [cmds] is selected and [params] parses the
     remaining of the command-line parameters as a list of strings. *)
+
+type 'a default = [> `default of string] as 'a
+
+(* unused
+(** Enumeration with a default command *)
+val enum_with_default: (string * 'a default) list -> 'a Arg.converter
+*)
 
 val mk_subcommands_with_default:
   cli:OpamCLIVersion.Sourced.t ->
@@ -304,6 +306,7 @@ val mk_subdoc :
 (** [mk_subdoc cmds] is the documentation block for [cmds]. *)
 
 val make_command_alias:
+  cli:OpamCLIVersion.Sourced.t ->
   'a Term.t * Term.info -> ?options:string -> string ->
   'a Term.t * Term.info
 (** Create an alias for an existing command. [options] can be used to add extra
@@ -333,4 +336,10 @@ val mk_command_ret:
 (** {2 Documentation} *)
 
 val global_option_section: string
-val help_sections: Manpage.block list
+val help_sections: OpamCLIVersion.Sourced.t -> Manpage.block list
+
+
+(** {2 Environment variables} *)
+
+val preinit_opam_envvariables: unit -> unit
+val init_opam_envvariabes: OpamCLIVersion.Sourced.t -> unit

@@ -14,6 +14,28 @@
 open OpamTypes
 open OpamStateTypes
 
+module E : sig
+  type OpamStd.Config.E.t +=
+    | BUILDDOC of bool option
+    | BUILDTEST of bool option
+    | DEPEXTYES of bool option
+    | DOWNLOADJOBS of int option
+    | DRYRUN of bool option
+    | IGNORECONSTRAINTS of string option
+    | JOBS of int option
+    | LOCKED of string option
+    | MAKECMD of string option
+    | NODEPEXTS of bool option
+    | NOENVNOTICE of bool option
+    | ROOT of string option
+    | SWITCH of string option
+    | UNLOCKBASE of bool option
+    | WITHDOC of bool option
+    | WITHTEST of bool option
+  val root: unit -> string option
+  val switch: unit -> string option
+end
+
 type t = private {
   root_dir: OpamFilename.Dir.t;
   current_switch: OpamSwitch.t option;
@@ -29,6 +51,7 @@ type t = private {
   no_env_notice: bool;
   locked: string option;
   no_depexts : bool;
+  depext_yes: bool;
 }
 
 type 'a options_fun =
@@ -46,6 +69,7 @@ type 'a options_fun =
   ?no_env_notice:bool ->
   ?locked:string option ->
   ?no_depexts: bool ->
+  ?depext_yes: bool ->
   'a
 
 include OpamStd.Config.Sig

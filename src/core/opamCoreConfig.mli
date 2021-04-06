@@ -11,23 +11,44 @@
 (** Configuration options for the core lib (record, global reference and
     setter) *)
 
-module StringMap : Map.S with type key = string
+module E : sig
+  type OpamStd.Config.E.t +=
+    | COLOR of OpamStd.Config.when_ option
+    | DEBUG of int option
+    | DEBUGSECTIONS of OpamStd.Config.sections option
+    | ERRLOGLEN of int option
+    | KEEPLOGS of bool option
+    | LOGS of string option
+    | MERGEOUT of bool option
+    | NO of bool option
+    | PRECISETRACKING of bool option
+    | SAFE of bool option
+    | STATUSLINE of OpamStd.Config.when_ option
+    | USEOPENSSL of bool option
+    | UTF8 of OpamStd.Config.when_ext option
+    | UTF8MSGS of bool option
+    | VERBOSE of OpamStd.Config.level option
+    | YES of bool option
+    val debug: unit -> int option
+    val logs: unit -> string option
+    val yes: unit -> bool option
+end
 
 type t = private {
   debug_level : int;
   (** Controls debug messages, 0 to disable *)
-  debug_sections : int option StringMap.t;
+  debug_sections : OpamStd.Config.sections;
   (** Controls which sections display debugging messages. If empty, all messages
       are displayed. *)
-  verbose_level : int;
+  verbose_level : OpamStd.Config.level;
   (** Controls printing of external commands and output, 0 to disable, more
       means print more low-level commands *)
-  color : [ `Always | `Never | `Auto ];
+  color : OpamStd.Config.when_;
   (** Console ANSI color control *)
-  utf8 : [ `Extended | `Always | `Never | `Auto ];
+  utf8 : OpamStd.Config.when_ext;
   (** Controls usage of UTF8 in OPAM-generated messages. Extended adds camel
       emojis *)
-  disp_status_line: [ `Always | `Never | `Auto ];
+  disp_status_line: OpamStd.Config.when_;
   (** Controls on-line display of parallel commands being run, using ANSI
       escapes *)
   answer : bool option;
@@ -56,11 +77,11 @@ type t = private {
 
 type 'a options_fun =
   ?debug_level:int ->
-  ?debug_sections:int option StringMap.t ->
-  ?verbose_level:int ->
-  ?color:[ `Always | `Never | `Auto ] ->
-  ?utf8:[ `Extended | `Always | `Never | `Auto ] ->
-  ?disp_status_line:[ `Always | `Never | `Auto ] ->
+  ?debug_sections:OpamStd.Config.sections ->
+  ?verbose_level:OpamStd.Config.level ->
+  ?color:OpamStd.Config.when_ ->
+  ?utf8:OpamStd.Config.when_ext ->
+  ?disp_status_line:OpamStd.Config.when_ ->
   ?answer:bool option ->
   ?safe_mode:bool ->
   ?log_dir:string ->
@@ -80,6 +101,14 @@ val setk : (t -> 'a) -> t -> 'a options_fun
 val r : t ref
 
 val update : ?noop:_ -> (unit -> unit) options_fun
+
+(** Sets the OpamCoreConfig options, reading the environment to get default
+    values when unspecified *)
+val init: ?noop:_ -> (unit -> unit) options_fun
+
+(** Like [init], but returns the given value. For optional argument
+    stacking *)
+val initk: 'a -> 'a options_fun
 
 (** [true] if OPAM was compiled in developer mode *)
 val developer : bool

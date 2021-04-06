@@ -10,15 +10,53 @@
 
 open OpamCompat
 
-module StringMap = Map.Make(String)
+module E = struct
+
+  type OpamStd.Config.E.t +=
+    | COLOR of OpamStd.Config.when_ option
+    | DEBUG of int option
+    | DEBUGSECTIONS of OpamStd.Config.sections option
+    | ERRLOGLEN of int option
+    | KEEPLOGS of bool option
+    | LOGS of string option
+    | MERGEOUT of bool option
+    | NO of bool option
+    | PRECISETRACKING of bool option
+    | SAFE of bool option
+    | STATUSLINE of OpamStd.Config.when_ option
+    | USEOPENSSL of bool option
+    | UTF8 of OpamStd.Config.when_ext option
+    | UTF8MSGS of bool option
+    | VERBOSE of OpamStd.Config.level option
+    | YES of bool option
+
+  open OpamStd.Config.E
+  let color = value (function COLOR c -> c | _ -> None)
+  let debug = value (function DEBUG i -> i | _ -> None)
+  let debugsections = value (function DEBUGSECTIONS s -> s | _ -> None)
+  let errloglen = value (function ERRLOGLEN i -> i | _ -> None)
+  let keeplogs = value (function KEEPLOGS b -> b | _ -> None)
+  let logs = value (function LOGS s -> s | _ -> None)
+  let mergeout = value (function MERGEOUT b -> b | _ -> None)
+  let no = value (function NO b -> b | _ -> None)
+  let precisetracking = value (function PRECISETRACKING b -> b | _ -> None)
+  let safe = value (function SAFE b -> b | _ -> None)
+  let statusline = value (function STATUSLINE c -> c | _ -> None)
+  let useopenssl = value (function USEOPENSSL b -> b | _ -> None)
+  let utf8 = value (function UTF8 c -> c | _ -> None)
+  let utf8msgs = value (function UTF8MSGS b -> b | _ -> None)
+  let verbose = value (function VERBOSE l -> l | _ -> None)
+  let yes = value (function YES b -> b | _ -> None)
+
+end
 
 type t = {
   debug_level: int;
-  debug_sections: int option StringMap.t;
-  verbose_level: int;
-  color: [ `Always | `Never | `Auto ];
-  utf8: [ `Extended | `Always | `Never | `Auto ];
-  disp_status_line: [ `Always | `Never | `Auto ];
+  debug_sections: OpamStd.Config.sections;
+  verbose_level: OpamStd.Config.level;
+  color: OpamStd.Config.when_;
+  utf8: OpamStd.Config.when_ext;
+  disp_status_line: OpamStd.Config.when_;
   answer: bool option;
   safe_mode: bool;
   log_dir: string;
@@ -32,11 +70,11 @@ type t = {
 
 type 'a options_fun =
   ?debug_level:int ->
-  ?debug_sections:int option StringMap.t ->
-  ?verbose_level:int ->
-  ?color:[ `Always | `Never | `Auto ] ->
-  ?utf8:[ `Extended | `Always | `Never | `Auto ] ->
-  ?disp_status_line:[ `Always | `Never | `Auto ] ->
+  ?debug_sections:OpamStd.Config.sections ->
+  ?verbose_level:OpamStd.Config.level ->
+  ?color:OpamStd.Config.when_ ->
+  ?utf8:OpamStd.Config.when_ext ->
+  ?disp_status_line:OpamStd.Config.when_ ->
   ?answer:bool option ->
   ?safe_mode:bool ->
   ?log_dir:string ->
@@ -49,7 +87,7 @@ type 'a options_fun =
 
 let default = {
   debug_level = 0;
-  debug_sections = StringMap.empty;
+  debug_sections = OpamStd.String.Map.empty;
   verbose_level = 0;
   color = `Auto;
   utf8 = `Auto;
@@ -110,6 +148,38 @@ let set t = setk (fun x () -> x) t
 let r = ref default
 
 let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
+
+let initk k =
+  let open OpamStd in
+  let utf8 = Option.Op.(
+      E.utf8 () ++
+      (E.utf8msgs () >>= function
+        | true -> Some `Extended
+        | false -> None)
+    ) in
+  let answer = match E.yes (), E.no () with
+    | Some true, _ -> Some (Some true)
+    | _, Some true -> Some (Some false)
+    | None, None -> None
+    | _ -> Some None
+  in
+  (setk (setk (fun c -> r := c; k)) !r)
+    ?debug_level:(E.debug ())
+    ?debug_sections:(E.debugsections ())
+    ?verbose_level:(E.verbose ())
+    ?color:(E.color ())
+    ?utf8
+    ?disp_status_line:(E.statusline ())
+    ?answer
+    ?safe_mode:(E.safe ())
+    ?log_dir:(E.logs ())
+    ?keep_log_dir:(E.keeplogs ())
+    ?errlog_length:(E.errloglen ())
+    ?merged_output:(E.mergeout ())
+    ?use_openssl:(E.useopenssl ())
+    ?precise_tracking:(E.precisetracking ())
+
+let init ?noop:_ = initk (fun () -> ())
 
 #ifdef DEVELOPER
 let developer = true

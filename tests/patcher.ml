@@ -1,6 +1,6 @@
 let set_debug_level n sections =
   let debug_sections =
-    List.fold_left (fun map elt -> OpamCoreConfig.StringMap.add elt None map) OpamCoreConfig.StringMap.empty sections
+    List.fold_left (fun map elt -> OpamStd.String.Map.add elt None map) OpamStd.String.Map.empty sections
   in
   OpamCoreConfig.(update ~noop:()) ~debug_level:n ~debug_sections ()
 

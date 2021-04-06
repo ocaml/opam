@@ -519,7 +519,7 @@ let packages_status packages =
 
 let install_packages_commands_t sys_packages =
   let yes ?(no=[]) yes r =
-    if OpamStd.Config.env_bool "DEPEXTYES" = Some true then
+    if OpamStateConfig.(!r.depext_yes) then
       yes @ r else no @ r
   in
   let packages =

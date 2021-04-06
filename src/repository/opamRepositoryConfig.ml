@@ -10,6 +10,26 @@
 
 open OpamTypes
 
+module E = struct
+
+  type OpamStd.Config.E.t +=
+    | CURL of string option
+    | FETCH of string option
+    | NOCHECKSUMS of bool option
+    | REQUIRECHECKSUMS of bool option
+    | RETRIES of int option
+    | VALIDATIONHOOK of string option
+
+  open OpamStd.Config.E
+  let curl = value (function CURL s -> s | _ -> None)
+  let fetch = value (function FETCH s -> s | _ -> None)
+  let nochecksums = value (function NOCHECKSUMS b -> b | _ -> None)
+  let requirechecksums = value (function REQUIRECHECKSUMS b -> b | _ -> None)
+  let retries = value (function RETRIES i -> i | _ -> None)
+  let validationhook = value (function VALIDATIONHOOK s -> s | _ -> None)
+
+end
+
 type dl_tool_kind = [ `Curl | `Default ]
 
 type t = {
@@ -78,10 +98,9 @@ let r = ref default
 let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 
 let initk k =
-  let open OpamStd.Config in
   let open OpamStd.Option.Op in
   let download_tool =
-    env_string "FETCH" >>= (fun s ->
+    E.fetch () >>= (fun s ->
         let args = OpamStd.String.split s ' ' in
         match args with
         | cmd::a ->
@@ -99,17 +118,17 @@ let initk k =
           None
       )
     >>+ fun () ->
-    env_string "CURL" >>| (fun s ->
+    E.curl () >>| (fun s ->
         lazy ([CString s, None], `Curl))
   in
   let validation_hook =
-    env_string "VALIDATIONHOOK" >>| fun s ->
+    E.validationhook () >>| fun s ->
     match List.map (fun s -> CString s, None) (OpamStd.String.split s ' ') with
     | [] -> None
     | l -> Some l
   in
   let force_checksums =
-    match env_bool "REQUIRECHECKSUMS", env_bool "NOCHECKSUMS" with
+    match E.requirechecksums (), E.nochecksums () with
     | Some true, _ -> Some (Some true)
     | _, Some true -> Some (Some false)
     | None, None -> None
@@ -118,7 +137,7 @@ let initk k =
   setk (setk (fun c -> r := c; k)) !r
     ?download_tool
     ?validation_hook
-    ?retries:(env_int "RETRIES")
+    ?retries:(E.retries ())
     ?force_checksums
 
 let init ?noop:_ = initk (fun () -> ())

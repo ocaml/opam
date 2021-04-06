@@ -9,6 +9,7 @@ New option/command/subcommand are prefixed with ◈.
 ## Global CLI
   * Add default cli mechanism: deprecated options are acceptedi (in the major version) if no cli is specified [#4575 @rjbou]
   * Add `opam config` deprecated subcommands in the default cli  [#4575 @rjbou - fix #4503]
+  * Add cli versioning for opam environment variables [#4606 @rjbou]
 
 ## Init
   * Introduce a `default-invariant` config field, restore the 2.0 semantics for
@@ -113,7 +114,7 @@ New option/command/subcommand are prefixed with ◈.
   * Allow to upgrade to a hidden-version package if a hidden-version package is already installed [#4525 @kit-ty-kate]
 
 ## Client
-  *
+  * ✘ Environment variables initialised only at opam client launch, no more via libraries [#4606 @rjbou]
 
 ## Internal
   * Generalise `mk_tristate_opt' to mk_state_opt [#4575 @rjbou]
@@ -122,6 +123,8 @@ New option/command/subcommand are prefixed with ◈.
   * CLI: Add flag deprecation and replacement helper [#4595 @rjbou]
   * Win32 Console: fix VT100 support [#3897 @dra27]
   * Tidied the opam files [#4620 @dra27]
+  * Externalise cli versioning tools from `OpamArg` into `OpamArgTools` [#4606 @rjbou]
+  * Each library defines its own environment variables, that fills the config record [#4606 @rjbou]
 
 ## Test
   * Make the reference tests dune-friendly [#4376 @emillon]
@@ -132,6 +135,7 @@ New option/command/subcommand are prefixed with ◈.
   * GHA: Fix opam-rt on macos, set ocaml-system as switch compiler [#4610 @dra27 @rjbou]
   * GHA: Ignore opam-rt pin depends, opam libs are already pinned locally [#4610 @AltGr @rjbou]
   * GHA: The bootstrap cache also depends on the precise version! [#4618 @dra27]
+  * GHA: fix opam-rt specific PR branch use [#4606 @rjbou]
   * Add switch creation tests: (dead)locking and switch defitinion at action time [#4612 @rjbou]
   * Remove debug information from reftest [#4612 @rjbou]
 

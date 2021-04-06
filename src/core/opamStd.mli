@@ -540,34 +540,34 @@ module Config : sig
 
   type env_var = string
 
+  type when_ = [ `Always | `Never | `Auto ]
+  type when_ext = [ `Extended | when_ ]
+
+  (* Parse a envrionement variable boolean value *)
+  val bool_of_string: string -> bool option
+
   val env: (string -> 'a) -> string -> 'a option
 
   val env_bool: env_var -> bool option
 
   val env_int: env_var -> int option
 
+  type level = int
   (* Like [env_int], but accept boolean values for 0 and 1 *)
-  val env_level: env_var -> int option
+  val env_level: env_var -> level option
 
-  val env_sections: env_var -> int option OpamCoreConfig.StringMap.t option
+  type sections = int option String.Map.t
+  val env_sections: env_var -> sections option
 
   val env_string: env_var -> string option
 
   val env_float: env_var -> float option
 
-  val env_when: env_var -> [ `Always | `Never | `Auto ] option
+  val env_when: env_var -> when_ option
 
-  val env_when_ext: env_var -> [ `Extended | `Always | `Never | `Auto ] option
+  val env_when_ext: env_var -> when_ext option
 
-  val resolve_when: auto:(bool Lazy.t) -> [ `Always | `Never | `Auto ] -> bool
-
-  (** Sets the OpamCoreConfig options, reading the environment to get default
-      values when unspecified *)
-  val init: ?noop:_ -> (unit -> unit) OpamCoreConfig.options_fun
-
-  (** Like [init], but returns the given value. For optional argument
-      stacking *)
-  val initk: 'a -> 'a OpamCoreConfig.options_fun
+  val resolve_when: auto:(bool Lazy.t) -> when_ -> bool
 
   module type Sig = sig
 
@@ -605,6 +605,15 @@ module Config : sig
         stacking) *)
     val initk: 'a -> 'a options_fun
 
+  end
+
+  (* Opam environment variables handling *)
+  module E : sig
+    type t = ..
+    val find: (t -> 'a option) -> 'a
+    val value: (t -> 'a option) -> (unit ->'a option)
+    val update: t -> unit
+    val updates: t list -> unit
   end
 
 end

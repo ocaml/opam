@@ -8,6 +8,54 @@
 (*                                                                        *)
 (**************************************************************************)
 
+module E = struct
+
+  type OpamStd.Config.E.t +=
+    | ASSUMEDEPEXTS of bool option
+    | AUTOREMOVE of bool option
+    | CLI of string option
+    | DROPWORKINGDIR of bool option
+    | EDITOR of string option
+    | FAKE of bool option
+    | IGNOREPINDEPENDS of bool option
+    | INPLACEBUILD of bool option
+    | JSON of string option
+    | KEEPBUILDDIR of bool option
+    | NOAGGREGATE of bool option
+    | NOAUTOUPGRADE of bool option
+    | NOSELFUPGRADE of string option
+    | PINKINDAUTO of bool option
+    | REUSEBUILDDIR of bool option
+    | ROOTISOK of bool option
+    | SHOW of bool option
+    | SKIPUPDATE of bool option
+    | STATS of bool option
+    | WORKINGDIR of bool option
+
+  open OpamStd.Config.E
+  let assumedepexts = value (function ASSUMEDEPEXTS b -> b | _ -> None)
+  let autoremove = value (function AUTOREMOVE b -> b | _ -> None)
+  let cli = value (function CLI s -> s | _ -> None)
+  let dropworkingdir = value (function DROPWORKINGDIR b -> b | _ -> None)
+  let editor = value (function EDITOR s -> s | _ -> None)
+  let fake = value (function FAKE b -> b | _ -> None)
+  let ignorepindepends = value (function IGNOREPINDEPENDS b -> b | _ -> None)
+  let inplacebuild = value (function INPLACEBUILD b -> b | _ -> None)
+  let json = value (function JSON s -> s | _ -> None)
+  let keepbuilddir = value (function KEEPBUILDDIR b -> b | _ -> None)
+  let noaggregate = value (function NOAGGREGATE b -> b | _ -> None)
+  let noautoupgrade = value (function NOAUTOUPGRADE b -> b | _ -> None)
+  let noselfupgrade = value (function NOSELFUPGRADE s -> s | _ -> None)
+  let pinkindauto = value (function PINKINDAUTO b -> b | _ -> None)
+  let reusebuilddir = value (function REUSEBUILDDIR b -> b | _ -> None)
+  let rootisok = value (function ROOTISOK b -> b | _ -> None)
+  let show = value (function SHOW b -> b | _ -> None)
+  let skipupdate = value (function SKIPUPDATE b -> b | _ -> None)
+  let stats = value (function STATS b -> b | _ -> None)
+  let workingdir = value (function WORKINGDIR b -> b | _ -> None)
+
+end
+
 type t = {
   print_stats: bool;
   pin_kind_auto: bool;
@@ -120,30 +168,29 @@ let r = ref default
 let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 
 let initk k =
-  let open OpamStd.Config in
   let open OpamStd.Option.Op in
   Random.self_init ();
   let editor =
-    env_string "EDITOR" ++ OpamStd.Env.(getopt "VISUAL" ++ getopt "EDITOR")
+    E.editor () ++ OpamStd.Env.(getopt "VISUAL" ++ getopt "EDITOR")
   in
   setk (setk (fun c -> r := c; k)) !r
-    ?print_stats:(env_bool "STATS")
-    ?pin_kind_auto:(env_bool "PINKINDAUTO")
-    ?autoremove:(env_bool "AUTOREMOVE")
+    ?print_stats:(E.stats ())
+    ?pin_kind_auto:(E.pinkindauto ())
+    ?autoremove:(E.autoremove ())
     ?editor
-    ?keep_build_dir:(env_bool "KEEPBUILDDIR")
-    ?reuse_build_dir:(env_bool "REUSEBUILDDIR")
-    ?inplace_build:(env_bool "INPLACEBUILD")
-    ?working_dir:(env_bool "WORKINGDIR")
-    ?drop_working_dir:(env_bool "DROPWORKINGDIR")
-    ?ignore_pin_depends:(env_bool "IGNOREPINDEPENDS")
-    ?show:(env_bool "SHOW")
-    ?fake:(env_bool "FAKE")
-    ?skip_dev_update:(env_bool "SKIPUPDATE")
-    ?json_out:(env_string "JSON" >>| function "" -> None | s -> Some s)
-    ?root_is_ok:(env_bool "ROOTISOK")
-    ?no_auto_upgrade:(env_bool "NOAUTOUPGRADE")
-    ?assume_depexts:(env_bool "ASSUMEDEPEXTS")
+    ?keep_build_dir:(E.keepbuilddir ())
+    ?reuse_build_dir:(E.reusebuilddir ())
+    ?inplace_build:(E.inplacebuild ())
+    ?working_dir:(E.workingdir ())
+    ?drop_working_dir:(E.dropworkingdir ())
+    ?ignore_pin_depends:(E.ignorepindepends ())
+    ?show:(E.show ())
+    ?fake:(E.fake ())
+    ?skip_dev_update:(E.skipupdate ())
+    ?json_out:(E.json () >>| function "" -> None | s -> Some s)
+    ?root_is_ok:(E.rootisok ())
+    ?no_auto_upgrade:(E.noautoupgrade ())
+    ?assume_depexts:(E.assumedepexts ())
     ?cli:None
 
 let init ?noop:_ = initk (fun () -> ())
@@ -168,7 +215,7 @@ let opam_init ?root_dir ?strict ?solver =
      loading the global_state) like that... *)
 
   let solver =
-    if solver = None && OpamStd.Config.env_string "EXTERNALSOLVER" = None then
+    if solver = None && OpamSolverConfig.E.externalsolver () = None then
       (* fixme: in order to not revert config file solver value, we need to
          check it here *)
       (config >>= OpamFile.Config.solver >>|
@@ -198,14 +245,14 @@ let opam_init ?root_dir ?strict ?solver =
   let log_dir =
     OpamStd.Option.map OpamFilename.Dir.to_string @@
     if log_dir = None && initialised
-       && OpamStd.Config.env_string "LOGS" = None then
+       && OpamCoreConfig.E.logs () = None then
       (* fixme: in order to not revert [OPAMLOGS] value,
          we need to check it here *)
       Some (OpamPath.log root)
     else log_dir
   in
   (fun () -> ()) |>
-  OpamStd.Config.initk ?log_dir |>
+  OpamCoreConfig.initk ?log_dir |>
   OpamRepositoryConfig.initk |>
   OpamSolverConfig.initk ?solver |>
   OpamStateConfig.initk ~root_dir:root |>

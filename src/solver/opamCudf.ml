@@ -1070,7 +1070,8 @@ let preprocess_cudf_request (props, univ, creq) criteria =
   let chrono = OpamConsole.timer () in
   let univ0 = univ in
   let do_trimming =
-    match OpamStd.Config.env_bool "CUDFTRIM" with
+    match OpamStd.Option.Op.(OpamSolverConfig.(!r.cudf_trim)
+                             >>= OpamStd.Config.bool_of_string) with
     | Some o -> o
     | None ->
       (* Trimming is only correct when there is no maximisation criteria, so
@@ -1106,7 +1107,7 @@ let preprocess_cudf_request (props, univ, creq) criteria =
            vpkg2set creq.Cudf.remove ++
            vpkg2set creq.Cudf.upgrade) ++
         Set.of_list (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) univ)
-      else if OpamStd.Config.env_string "CUDFTRIM" = Some "simple" then
+      else if OpamSolverConfig.(!r.cudf_trim) = Some "simple" then
         let cone = to_map (Set.fixpoint deps to_install) in
         let filter p = match OpamStd.String.Map.find_opt p.Cudf.package cone with
           | Some ps -> Set.mem p ps
@@ -1138,11 +1139,7 @@ let preprocess_cudf_request (props, univ, creq) criteria =
     let cache = Hashtbl.create 513 in
     let cache_direct = Hashtbl.create 513 in
     (* Don't explore deeper than that for transitive conflicts *)
-    let max_dig_depth =
-      match OpamStd.Config.env_int "DIGDEPTH" with
-      | None -> 2
-      | Some i -> i
-    in
+    let max_dig_depth = OpamSolverConfig.(!r.dig_depth) in
     let rec transitive_conflicts seen p =
       (* OpamConsole.msg "%s\n" (Package.to_string p); *)
       try Hashtbl.find cache p with Not_found ->
@@ -1214,7 +1211,7 @@ let call_external_solver ~version_map univ req =
     in
     try
       let cudf_request =
-        if OpamStd.Config.env_bool "PREPRO" = Some false then cudf_request
+        if not OpamSolverConfig.(!r.preprocess) then cudf_request
         else preprocess_cudf_request cudf_request criteria
       in
       let r =

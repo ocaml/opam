@@ -106,7 +106,7 @@ let check_and_run_external_commands () =
           end;
           ocli
         | None ->
-          match OpamCLIVersion.Sourced.env () with
+          match OpamCLIVersion.Sourced.env (OpamClientConfig.E.cli ()) with
           | Some ((cli, _) as ocli) ->
             if OpamCLIVersion.is_supported cli then
               let () =
@@ -133,8 +133,8 @@ let check_and_run_external_commands () =
     else
     (* No such command, check if there is a matching plugin *)
     let command = plugin_prefix ^ name in
-    let answer = if yes then Some true else OpamStd.Config.env_bool "YES" in
-    OpamStd.Config.init ~answer ();
+    let answer = if yes then Some true else OpamCoreConfig.E.yes () in
+    OpamCoreConfig.init ~answer ();
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
     let has_init = OpamStateConfig.load_defaults root_dir <> None in
@@ -332,6 +332,7 @@ let rec main_catch_all f =
 let run () =
   OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
   OpamSystem.init ();
+  OpamArg.preinit_opam_envvariables ();
   main_catch_all @@ fun () ->
   let cli, argv = check_and_run_external_commands () in
   let (default, commands), argv1 =

@@ -11,6 +11,46 @@
 open OpamTypes
 open OpamStateTypes
 
+module E = struct
+
+  type OpamStd.Config.E.t +=
+    | BUILDDOC of bool option
+    | BUILDTEST of bool option
+    | DEPEXTYES of bool option
+    | DOWNLOADJOBS of int option
+    | DRYRUN of bool option
+    | IGNORECONSTRAINTS of string option
+    | JOBS of int option
+    | LOCKED of string option
+    | MAKECMD of string option
+    | NODEPEXTS of bool option
+    | NOENVNOTICE of bool option
+    | ROOT of string option
+    | SWITCH of string option
+    | UNLOCKBASE of bool option
+    | WITHDOC of bool option
+    | WITHTEST of bool option
+
+  open OpamStd.Config.E
+  let builddoc = value (function BUILDDOC b -> b | _ -> None)
+  let buildtest = value (function BUILDTEST b -> b | _ -> None)
+  let depextyes = value (function DEPEXTYES b -> b | _ -> None)
+  let downloadjobs = value (function DOWNLOADJOBS i -> i | _ -> None)
+  let dryrun = value (function DRYRUN b -> b | _ -> None)
+  let ignoreconstraints = value (function IGNORECONSTRAINTS s -> s | _ -> None)
+  let jobs = value (function JOBS i -> i | _ -> None)
+  let locked = value (function LOCKED s -> s | _ -> None)
+  let makecmd = value (function MAKECMD s -> s | _ -> None)
+  let nodepexts = value (function NODEPEXTS b -> b | _ -> None)
+  let noenvnotice = value (function NOENVNOTICE b -> b | _ -> None)
+  let root = value (function ROOT s -> s | _ -> None)
+  let switch = value (function SWITCH s -> s | _ -> None)
+  let unlockbase = value (function UNLOCKBASE b -> b | _ -> None)
+  let withdoc = value (function WITHDOC b -> b | _ -> None)
+  let withtest = value (function WITHTEST b -> b | _ -> None)
+
+end
+
 type t = {
   root_dir: OpamFilename.Dir.t;
   current_switch: OpamSwitch.t option;
@@ -26,6 +66,7 @@ type t = {
   no_env_notice: bool;
   locked: string option;
   no_depexts: bool;
+  depext_yes: bool;
 }
 
 let default = {
@@ -49,6 +90,7 @@ let default = {
   no_env_notice = false;
   locked = None;
   no_depexts = false;
+  depext_yes = false;
 }
 
 type 'a options_fun =
@@ -66,6 +108,7 @@ type 'a options_fun =
   ?no_env_notice:bool ->
   ?locked:string option ->
   ?no_depexts: bool ->
+  ?depext_yes: bool ->
   'a
 
 let setk k t
@@ -83,6 +126,7 @@ let setk k t
     ?no_env_notice
     ?locked
     ?no_depexts
+    ?depext_yes
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -101,6 +145,7 @@ let setk k t
     no_env_notice = t.no_env_notice + no_env_notice;
     locked = t.locked + locked;
     no_depexts = t.no_depexts + no_depexts;
+    depext_yes = t.depext_yes + depext_yes;
   }
 
 let set t = setk (fun x () -> x) t
@@ -110,32 +155,32 @@ let r = ref default
 let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 
 let initk k =
-  let open OpamStd.Config in
   let open OpamStd.Option.Op in
   let current_switch, switch_from =
-    match env_string "SWITCH" with
+    match E.switch () with
     | Some "" | None -> None, None
     | Some s -> Some (OpamSwitch.of_string s), Some `Env
   in
   setk (setk (fun c -> r := c; k)) !r
-    ?root_dir:(env_string "ROOT" >>| OpamFilename.Dir.of_string)
+    ?root_dir:(E.root () >>| OpamFilename.Dir.of_string)
     ?current_switch
     ?switch_from
-    ?jobs:(env_int "JOBS" >>| fun s -> lazy s)
-    ?dl_jobs:(env_int "DOWNLOADJOBS")
-    ?build_test:(env_bool "WITHTEST" ++ env_bool "BUILDTEST")
-    ?build_doc:(env_bool "WITHDOC" ++ env_bool "BUILDDOC")
-    ?dryrun:(env_bool "DRYRUN")
-    ?makecmd:(env_string "MAKECMD" >>| fun s -> lazy s)
+    ?jobs:(E.jobs () >>| fun s -> lazy s)
+    ?dl_jobs:(E.downloadjobs ())
+    ?build_test:(E.withtest () ++ E.buildtest ())
+    ?build_doc:(E.withdoc () ++ E.builddoc ())
+    ?dryrun:(E.dryrun ())
+    ?makecmd:(E.makecmd () >>| fun s -> lazy s)
     ?ignore_constraints_on:
-      (env_string "IGNORECONSTRAINTS" >>| fun s ->
+      (E.ignoreconstraints () >>| fun s ->
        OpamStd.String.split s ',' |>
        List.map OpamPackage.Name.of_string |>
        OpamPackage.Name.Set.of_list)
-    ?unlock_base:(env_bool "UNLOCKBASE")
-    ?no_env_notice:(env_bool "NOENVNOTICE")
-    ?locked:(env_string "LOCKED" >>| function "" -> None | s -> Some s)
-    ?no_depexts:(env_bool "NODEPEXTS")
+    ?unlock_base:(E.unlockbase ())
+    ?no_env_notice:(E.noenvnotice ())
+    ?locked:(E.locked () >>| function "" -> None | s -> Some s)
+    ?no_depexts:(E.nodepexts ())
+    ?depext_yes:(E.depextyes ())
 
 let init ?noop:_ = initk (fun () -> ())
 
@@ -171,7 +216,7 @@ let get_current_switch_from_cwd root =
 
 let load_defaults root_dir =
   let current_switch =
-    match OpamStd.Config.env_string "SWITCH" with
+    match E.switch () with
     | Some "" | None -> get_current_switch_from_cwd root_dir
     | _ -> (* OPAMSWITCH is set, no need to lookup *) None
   in

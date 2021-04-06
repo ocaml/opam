@@ -11,6 +11,34 @@
 (** Configuration options for the client lib (record, global reference, setter,
     initialisation), plus helper for global setup *)
 
+module E: sig
+  type OpamStd.Config.E.t +=
+    | ASSUMEDEPEXTS of bool option
+    | AUTOREMOVE of bool option
+    | CLI of string option
+    | DROPWORKINGDIR of bool option
+    | EDITOR of string option
+    | FAKE of bool option
+    | IGNOREPINDEPENDS of bool option
+    | INPLACEBUILD of bool option
+    | JSON of string option
+    | KEEPBUILDDIR of bool option
+    | NOAGGREGATE of bool option
+    | NOAUTOUPGRADE of bool option
+    | NOSELFUPGRADE of string option
+    | PINKINDAUTO of bool option
+    | REUSEBUILDDIR of bool option
+    | ROOTISOK of bool option
+    | SHOW of bool option
+    | SKIPUPDATE of bool option
+    | STATS of bool option
+    | WORKINGDIR of bool option
+    val cli: unit -> string option
+    val rootisok: unit -> bool option
+    val noaggregate: unit -> bool option
+    val noselfupgrade: unit -> string option
+end
+
 type t = private {
   print_stats: bool;
   pin_kind_auto: bool;
@@ -102,6 +130,7 @@ val opam_init:
   ?no_env_notice:bool ->
   ?locked:string option ->
   ?no_depexts:bool ->
+  ?depext_yes:bool ->
   ?cudf_file:string option ->
   ?best_effort:bool ->
   ?solver_preferences_default:string option Lazy.t ->
@@ -110,16 +139,20 @@ val opam_init:
   ?solver_preferences_best_effort_prefix: string option Lazy.t ->
   ?solver_timeout:float option ->
   ?solver_allow_suboptimal:bool ->
+  ?cudf_trim:string option ->
+  ?dig_depth:int ->
+  ?preprocess:bool ->
+  ?version_lag_power:int ->
   ?download_tool:(OpamTypes.arg list * OpamRepositoryConfig.dl_tool_kind) Lazy.t ->
   ?validation_hook:OpamTypes.arg list option ->
   ?retries:int ->
   ?force_checksums:bool option ->
   ?debug_level:int ->
-  ?debug_sections:int option OpamCoreConfig.StringMap.t ->
-  ?verbose_level:int ->
-  ?color:[ `Always | `Auto | `Never ] ->
-  ?utf8:[ `Always | `Auto | `Extended | `Never ] ->
-  ?disp_status_line:[ `Always | `Auto | `Never ] ->
+  ?debug_sections:OpamStd.Config.sections ->
+  ?verbose_level:OpamStd.Config.level ->
+  ?color:OpamStd.Config.when_ ->
+  ?utf8:OpamStd.Config.when_ext ->
+  ?disp_status_line:OpamStd.Config.when_ ->
   ?answer:bool option ->
   ?safe_mode:bool ->
   ?keep_log_dir:bool ->

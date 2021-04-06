@@ -8,6 +8,13 @@
 (*                                                                        *)
 (**************************************************************************)
 
+module E : sig
+  type OpamStd.Config.E.t +=
+    | ALLPARENS of bool option
+    | SKIPVERSIONCHECKS of bool option
+    | STRICT of bool option
+end
+
 (** Configuration options for the format lib (record, global reference and
     setter) *)
 
