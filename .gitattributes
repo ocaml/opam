@@ -19,3 +19,6 @@ tests/patcher-test.reference text eol=lf
 
 # Actual binary files
 *.pdf binary
+
+# Avoid conflicts in master_changes.md
+master_changes.md merge=union
