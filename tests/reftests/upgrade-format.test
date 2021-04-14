@@ -127,3 +127,279 @@ The following actions would be performed:
   - install opam-file-format 2.0.0                 [required by opam-format]
   - install opam-format      2.1.0~beta3*
 ===== 2 to install | 1 to upgrade =====
+### : Testing preserved format with upgrade :
+### <packages/foo/foo.1/opam>
+opam-version: "2.0"
+build: ["opam"]
+#comment
+depends: ["config" "ocaml" "base"] #comment
+#comment
+flags: compiler
+### <packages/bar/bar.1/opam>
+#comment
+opam-version: "2.0"
+#comment
+build: ["opam"]
+#comment
+depends: [
+# comment
+  "config" #comment
+  "ocaml"  #comment
+  "base"   #comment
+#comment
+]
+#comment
+flags: compiler
+### <packages/baz/baz.1/opam>
+#comment
+opam-version: "2.0"
+#comment
+flags: compiler
+#comment
+depends: [
+#comment
+           "config" #comment
+           "ocaml"  #comment
+           "base"   #comment
+#comment
+]
+#comment
+build: ["opam" "var" "prefix" "--safe"]
+license: "MIT"
+#comment
+### <packages/ocamlbuild/ocamlbuild.1/opam>
+# taken from repository/packages/ocamlbuild/ocamlbuild.0.9.0/opam at 437319f58e
+opam-version: "1.2"
+name: "ocamlbuild"
+maintainer: "Gabriel Scherer <gabriel.scherer@gmail.com>"
+version: "1"
+
+authors: [
+  "Nicolas Pouillard"
+  "Berke Durak"
+]
+
+license: "LGPL-2 with OCaml linking exception"
+dev-repo: "https://github.com/ocaml/ocamlbuild.git"
+homepage: "https://github.com/ocaml/ocamlbuild/"
+bug-reports: "https://github.com/ocaml/ocamlbuild/issues"
+doc: "https://github.com/ocaml/ocamlbuild/blob/master/manual/manual.adoc"
+
+build: [
+  [make "-f" "configure.make" "Makefile.config" "src/ocamlbuild_config.ml"
+    "OCAMLBUILD_PREFIX=%{prefix}%"
+    "OCAMLBUILD_BINDIR=%{bin}%"
+    "OCAMLBUILD_LIBDIR=%{lib}%"
+    "OCAML_NATIVE=%{ocaml-native}%"
+    "OCAML_NATIVE_TOOLS=%{ocaml-native}%"]
+  [make "check-if-preinstalled" "all" "opam-install"]
+]
+
+available: [ocaml-version >= "4.03" & ocaml-version < "4.04"]
+depends: [ ]
+conflicts: [
+  "base-ocamlbuild"
+  "ocamlfind" {< "1.6.2"}
+]
+### opam admin upgrade
+Updated ${BASEDIR}/packages/ocamlbuild/ocamlbuild.1/opam
+### cat packages/ocamlbuild/ocamlbuild.1/opam
+# taken from repository/packages/ocamlbuild/ocamlbuild.0.9.0/opam at 437319f58e
+opam-version: "2.0"
+name: "ocamlbuild"
+maintainer: "Gabriel Scherer <gabriel.scherer@gmail.com>"
+version: "1"
+
+authors: [
+  "Nicolas Pouillard"
+  "Berke Durak"
+]
+
+license: "LGPL-2 with OCaml linking exception"
+dev-repo: "git+https://github.com/ocaml/ocamlbuild.git"
+homepage: "https://github.com/ocaml/ocamlbuild/"
+bug-reports: "https://github.com/ocaml/ocamlbuild/issues"
+doc: "https://github.com/ocaml/ocamlbuild/blob/master/manual/manual.adoc"
+
+build: [
+  [
+  make
+  "-f"
+  "configure.make"
+  "Makefile.config"
+  "src/ocamlbuild_config.ml"
+  "OCAMLBUILD_PREFIX=%{prefix}%"
+  "OCAMLBUILD_BINDIR=%{bin}%"
+  "OCAMLBUILD_LIBDIR=%{lib}%"
+  "OCAML_NATIVE=%{ocaml:native}%"
+  "OCAML_NATIVE_TOOLS=%{ocaml:native}%"
+]
+  [make "check-if-preinstalled" "all" "opam-install"]
+]
+depends: [
+  "ocaml" {>= "4.03" & < "4.04"}
+]
+conflicts: [
+  "base-ocamlbuild"
+  "ocamlfind" {< "1.6.2"}
+]
+### opam admin add-constraint "ocaml<4.03.5"
+### cat packages/ocamlbuild/ocamlbuild.1/opam
+# taken from repository/packages/ocamlbuild/ocamlbuild.0.9.0/opam at 437319f58e
+opam-version: "2.0"
+name: "ocamlbuild"
+maintainer: "Gabriel Scherer <gabriel.scherer@gmail.com>"
+version: "1"
+
+authors: [
+  "Nicolas Pouillard"
+  "Berke Durak"
+]
+
+license: "LGPL-2 with OCaml linking exception"
+dev-repo: "git+https://github.com/ocaml/ocamlbuild.git"
+homepage: "https://github.com/ocaml/ocamlbuild/"
+bug-reports: "https://github.com/ocaml/ocamlbuild/issues"
+doc: "https://github.com/ocaml/ocamlbuild/blob/master/manual/manual.adoc"
+
+build: [
+  [
+  make
+  "-f"
+  "configure.make"
+  "Makefile.config"
+  "src/ocamlbuild_config.ml"
+  "OCAMLBUILD_PREFIX=%{prefix}%"
+  "OCAMLBUILD_BINDIR=%{bin}%"
+  "OCAMLBUILD_LIBDIR=%{lib}%"
+  "OCAML_NATIVE=%{ocaml:native}%"
+  "OCAML_NATIVE_TOOLS=%{ocaml:native}%"
+]
+  [make "check-if-preinstalled" "all" "opam-install"]
+]
+depends: [
+  "ocaml" {>= "4.03" & < "4.03.5"}
+]
+conflicts: [
+  "base-ocamlbuild"
+  "ocamlfind" {< "1.6.2"}
+]
+### cat packages/foo/foo.1/opam
+opam-version: "2.0"
+build: ["opam"]
+#comment
+depends: ["config" "ocaml" {< "4.03.5"} "base"] #comment
+#comment
+flags: compiler
+### cat packages/bar/bar.1/opam
+#comment
+opam-version: "2.0"
+#comment
+build: ["opam"]
+#comment
+depends: [
+# comment
+  "config" #comment
+  "ocaml" {< "4.03.5"}  #comment
+  "base"   #comment
+#comment
+]
+#comment
+flags: compiler
+### cat packages/baz/baz.1/opam
+#comment
+opam-version: "2.0"
+#comment
+flags: compiler
+#comment
+depends: [
+#comment
+           "config" #comment
+           "ocaml" {< "4.03.5"}  #comment
+           "base"   #comment
+#comment
+]
+#comment
+build: ["opam" "var" "prefix" "--safe"]
+license: "MIT"
+#comment
+### opam admin add-constraint "config<1"
+### cat packages/foo/foo.1/opam
+opam-version: "2.0"
+build: ["opam"]
+#comment
+depends: ["config" {< "1"} "ocaml" {< "4.03.5"} "base"] #comment
+#comment
+flags: compiler
+### cat packages/bar/bar.1/opam
+#comment
+opam-version: "2.0"
+#comment
+build: ["opam"]
+#comment
+depends: [
+# comment
+  "config" {< "1"} #comment
+  "ocaml" {< "4.03.5"}  #comment
+  "base"   #comment
+#comment
+]
+#comment
+flags: compiler
+### cat packages/baz/baz.1/opam
+#comment
+opam-version: "2.0"
+#comment
+flags: compiler
+#comment
+depends: [
+#comment
+           "config" {< "1"} #comment
+           "ocaml" {< "4.03.5"}  #comment
+           "base"   #comment
+#comment
+]
+#comment
+build: ["opam" "var" "prefix" "--safe"]
+license: "MIT"
+#comment
+### opam admin add-constraint "base>1"
+### cat packages/foo/foo.1/opam
+opam-version: "2.0"
+build: ["opam"]
+#comment
+depends: ["config" {< "1"} "ocaml" {< "4.03.5"} "base" {> "1"}] #comment
+#comment
+flags: compiler
+### cat packages/bar/bar.1/opam
+#comment
+opam-version: "2.0"
+#comment
+build: ["opam"]
+#comment
+depends: [
+# comment
+  "config" {< "1"} #comment
+  "ocaml" {< "4.03.5"}  #comment
+  "base" {> "1"}   #comment
+#comment
+]
+#comment
+flags: compiler
+### cat packages/baz/baz.1/opam
+#comment
+opam-version: "2.0"
+#comment
+flags: compiler
+#comment
+depends: [
+#comment
+           "config" {< "1"} #comment
+           "ocaml" {< "4.03.5"}  #comment
+           "base" {> "1"}   #comment
+#comment
+]
+#comment
+build: ["opam" "var" "prefix" "--safe"]
+license: "MIT"
+#comment
