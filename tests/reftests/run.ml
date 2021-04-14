@@ -102,6 +102,7 @@ let base_env =
   propagate "LIB" @
   propagate "SYSTEMROOT" @
   propagate "TMPDIR" @
+  propagate "TMP" @
   propagate "TEMP" @
   [
     "OPAMKEEPBUILDDIR", "1";
@@ -201,7 +202,12 @@ let command
 
 let finally f x k = match f x with
   | r -> k (); r
-  | exception e -> (try k () with _ -> ()); raise e
+  | exception e ->
+      (* When we're at least 4.05+
+      let bt = Printexc.get_raw_backtrace () in*)
+      (try k () with _ -> ());
+      (*Printexc.raise_with_backtrace e bt*)
+      raise e
 
 (* Borrowed from ocamltest_stdlib.ml *)
 let rec mkdir_p dir =
