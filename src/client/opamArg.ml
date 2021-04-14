@@ -203,9 +203,9 @@ let environment_variables =
     ] in
   let state =
     let open OpamStateConfig.E in [
-      "BUILDDOC", cli_original,
+      "BUILDDOC", cli_between cli2_0 cli2_1,
       (fun v -> BUILDDOC (env_bool v)), "see option `--build-doc'.";
-      "BUILDTEST", cli_original,
+      "BUILDTEST", cli_between cli2_0 cli2_1,
       (fun v -> BUILDTEST (env_bool v)), "see option `--build-test'.";
       "DEPEXTYES", cli_from cli2_1, (fun v -> DEPEXTYES (env_bool v)),
       "launch system package managers in non-interactive mode.";
@@ -1274,24 +1274,30 @@ let build_options cli =
       "Reject the installation of packages that don't provide a checksum for the upstream archives. \
        This is equivalent to setting $(b,\\$OPAMREQUIRECHECKSUMS) to \"true\"." in
   let build_test =
-    mk_flag ~cli cli_original ~section ["t";"with-test";"build-test"]
-      "Build and $(b,run) the package unit-tests. This only affects packages \
-       listed on the command-line. The $(b,--build-test) form is deprecated as \
-       this also affects installation. This is equivalent to setting \
+    mk_flag_replaced ~cli ~section [
+      cli_between cli2_0 cli2_1 ~replaced:"--with-test", ["build-test"];
+      cli_original, ["t";"with-test"];
+    ] "Build and $(b,run) the package unit-tests. This only affects packages \
+       listed on the command-line. This is equivalent to setting \
        $(b,\\$OPAMWITHTEST) (or the deprecated $(b,\\$OPAMBUILDTEST)) to \
-       \"true\"." in
+       \"true\"."
+  in
   let build_doc =
-    mk_flag ~cli cli_original ~section ["d";"with-doc";"build-doc"]
-      "Build the package documentation. This only affects packages listed on \
-       the command-line. The $(b,--build-doc) form is deprecated as this does \
-       also installation. This is equivalent to setting $(b,\\$OPAMWITHDOC) \
-       (or the deprecated $(b,\\$OPAMBUILDDOC)) to \"true\"." in
+    mk_flag_replaced ~cli ~section [
+      cli_between cli2_0 cli2_1 ~replaced:"--with-doc", ["build-doc"];
+      cli_original, ["d";"with-doc"];
+    ] "Build the package documentation. This only affects packages listed on \
+       the command-line. This is equivalent to setting $(b,\\$OPAMWITHDOC) \
+       (or the deprecated $(b,\\$OPAMBUILDDOC)) to \"true\"."
+  in
   let make =
-    mk_opt ~cli cli_original ~section ["m";"make"] "MAKE"
-      "Use $(docv) as the default 'make' command. Deprecated: use $(b,opam \
-       config set[-global] make MAKE) instead. Has no effect if the $(i,make) \
-       variable is defined."
-      Arg.(some string) None in
+    mk_opt ~cli (cli_between cli2_0 cli2_1
+                   ~replaced:"opam config set[-global] make MAKE")
+      ~section ["m";"make"] "MAKE"
+      "Use $(docv) as the default 'make' command. Has no effect if the \
+       $(i,make) variable is defined."
+      Arg.(some string) None
+  in
   let show =
     mk_flag ~cli cli_original ~section ["show-actions"]
       "Call the solver and display the actions. Don't perform any changes. \
