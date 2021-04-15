@@ -55,7 +55,9 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Lint
-  * fix W59 & E60 with conf flag handling (no url required) [#4550 @rjbou - fix #4549]
+  * Fix W59 & E60 with conf flag handling (no url required) [#4550 @rjbou - fix #4549]
+  * Fix W59 & E60 with VCS urls, don't check upstream if url has VCS backend [#4635 @rjbou]
+  * Add E67 checksum specified with non archive url [#4635 @rjbou]
 
 ## Lock
   * Don't write lock file with `--read-only', `--safe`, and `--dryrun` [#4562 @rjbou - fix #4320]
@@ -64,7 +66,7 @@ New option/command/subcommand are prefixed with ◈.
 ## Opamfile
   * Fix `features` parser [#4507 @rjbou]
   * Rename `hidden-version` to `avoid-version` [#4527 @dra27]
-  * Fix rewrtiting with preserved format empty field error [#4633 @rjbou - fix #4628]
+  * Fix rewriting with preserved format empty field error [#4634 @rjbou - fix #4628]
 
 ## External dependencies
   * Handle macport variants [#4509 @rjbou - fix #4297]
@@ -144,7 +146,7 @@ New option/command/subcommand are prefixed with ◈.
   * GHA: fix opam-rt specific PR branch use [#4606 @rjbou]
   * Add switch creation tests: (dead)locking and switch defitinion at action time [#4612 @rjbou]
   * Remove debug information from reftest [#4612 @rjbou]
-  * Add preserved format test [#4633 @rjbou]
+  * Add preserved format test [#4634 @rjbou]
 
 ## Shell
   *
