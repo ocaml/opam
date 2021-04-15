@@ -9,7 +9,7 @@
  (deps (alias reftest-cli-versioning)))
 
 (rule
- (deps root-009e00fa)
+ (deps root-632bc2e)
  (action
   (with-stdout-to
    cli-versioning.out

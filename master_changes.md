@@ -11,6 +11,7 @@ New option/command/subcommand are prefixed with ◈.
   * Add `opam config` deprecated subcommands in the default cli  [#4575 @rjbou - fix #4503]
   * Add cli versioning for opam environment variables [#4606 @rjbou]
   * Deprecated `build-doc`, `build-test`, `make` [#4581 @rjbou]
+  * Add cli versioning for enums of flags with predefined enums [#4606 @rjbou]
 
 ## Init
   * Introduce a `default-invariant` config field, restore the 2.0 semantics for
@@ -119,7 +120,8 @@ New option/command/subcommand are prefixed with ◈.
   * ✘ Environment variables initialised only at opam client launch, no more via libraries [#4606 @rjbou]
 
 ## Internal
-  * Generalise `mk_tristate_opt' to mk_state_opt [#4575 @rjbou]
+  * Generalise `mk_tristate_opt` to `mk_state_opt` [#4575 @rjbou]
+  * Fix `mk_state_opt` and rename to `mk_enum_opt` [#4626 @rjbou]
   * Fix `opam exec` on native Windows when calling cygwin executables [#4588 @AltGr]
   * Fix temporary file with a too long name causing errors on Windows [#4590 @AltGr]
   * CLI: Add flag deprecation and replacement helper [#4595 @rjbou]
