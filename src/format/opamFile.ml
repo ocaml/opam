@@ -859,12 +859,15 @@ module Syntax = struct
           List.find (fun i -> it_ident i = `Var name) syn_file.file_contents
         in
         match field.pelem with
-        | Variable (n, { pelem = List { pelem = full_vlst;_}; _}) when n.pelem = name ->
+        | Variable (n, { pelem = List { pelem = full_vlst;_}; _})
+          when n.pelem = name ->
           let full_vlst_raw, full_vlst_raw_pos =
             match field_raw.pelem with
             | Variable (_, {pelem = List vlst_raw;  pos}) -> vlst_raw.pelem, pos
             | _ -> raise Not_found
           in
+          (* if empty, rewrite full field *)
+          if full_vlst_raw = [] then OpamPrinter.items [field] else
           (* aux *)
           let item_var_str =
             let lastpos = pos_index full_vlst_raw_pos.start +1 in
