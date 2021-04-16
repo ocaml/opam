@@ -57,6 +57,8 @@ let backup_dir t = t / "backup"
 
 let backup t = backup_dir t /- backup_file ()
 
+let plugin_prefix = "opam-"
+
 let plugins t = t / "plugins"
 
 let plugins_bin t = plugins t / "bin"
@@ -64,8 +66,8 @@ let plugins_bin t = plugins t / "bin"
 let plugin_bin t name =
   let sname = OpamPackage.Name.to_string name in
   let basename =
-    if OpamStd.String.starts_with ~prefix:"opam-" sname then sname
-    else "opam-" ^ sname
+    if OpamStd.String.starts_with ~prefix:plugin_prefix sname then sname
+    else plugin_prefix ^ sname
   in
   plugins_bin t // basename
 

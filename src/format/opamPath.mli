@@ -64,6 +64,9 @@ val backup_dir: t -> dirname
 (** Backup file for state export *)
 val backup: t -> switch_selections OpamFile.t
 
+(** The prefix for plugin commands (["opam-"]) *)
+val plugin_prefix : string
+
 (** The directory for plugins data {i $opam/plugins} *)
 val plugins: t -> dirname
 
