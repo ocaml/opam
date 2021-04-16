@@ -386,8 +386,8 @@ let parallel_apply t
       (if bypass <> !bypass_ref then
          (let spkgs = OpamSysPkg.Set.Op.(bypass -- !bypass_ref) in
           OpamConsole.note
-            "The bypass of system package%s %s has been registered in this \
-             switch. You can use `opam option depext-bypass-=%s' to revert."
+            "Requirement for system package%s %s overridden in this switch. Use \
+             `opam option depext-bypass-=%s' to revert."
             (if OpamSysPkg.Set.cardinal spkgs > 1 then "s" else "")
             (OpamStd.Format.pretty_list
                (List.map OpamSysPkg.to_string
