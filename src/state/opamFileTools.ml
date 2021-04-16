@@ -852,6 +852,20 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
              (OpamFilter.string_of_filtered_formula (Atom f)))
            not_bool_strings)
        (not_bool_strings <> []));
+    cond 67 `Error
+      "Checksum specified with a non archive url"
+      ~detail:OpamStd.Option.Op.([
+          Printf.sprintf "%s - %s"
+            ((t.url >>| OpamFile.URL.url >>| OpamUrl.to_string) +! "")
+            ((t.url >>| OpamFile.URL.checksum
+              >>| List.map OpamHash.to_string
+              >>| OpamStd.Format.pretty_list)
+             +! "")])
+      (match t.url with
+       | None -> false
+       | Some urlf ->
+         (OpamFile.URL.checksum urlf <> [])
+         && url_is_archive <> Some true);
   ]
   in
   format_errors @
