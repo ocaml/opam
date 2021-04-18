@@ -386,12 +386,14 @@ let parallel_apply t
       (if bypass <> !bypass_ref then
          (let spkgs = OpamSysPkg.Set.Op.(bypass -- !bypass_ref) in
           OpamConsole.note
-            "The bypass of system package %s has been registered in this switch. You \
-             can use `opam option depext-bypass-=%s' to revert."
+            "Requirement for system package%s %s overridden in this switch. Use \
+             `opam option depext-bypass-=%s' to revert."
             (if OpamSysPkg.Set.cardinal spkgs > 1 then "s" else "")
             (OpamStd.Format.pretty_list
                (List.map OpamSysPkg.to_string
-                  (OpamSysPkg.Set.elements spkgs))));
+                  (OpamSysPkg.Set.elements spkgs)))
+            (OpamStd.List.concat_map "," OpamSysPkg.to_string
+               (OpamSysPkg.Set.elements spkgs)));
        bypass_ref := bypass;
        invariant_ref := invariant;
        let switch_config =
@@ -1106,7 +1108,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   else if
     not confirm || OpamConsole.confirm
       "Let opam run your package manager to install the required system \
-       packages?"
+       packages?\n(answer 'n' for other options)"
   then
     try
       OpamSysInteract.install sys_packages; (* handles dry_run *)
