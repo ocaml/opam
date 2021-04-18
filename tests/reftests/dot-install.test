@@ -1,0 +1,124 @@
+632bc2e
+### <cat.ml>
+#load "str.cma"
+
+let read file =
+  let ic = open_in file in
+  let rec aux lines =
+    try aux (input_line ic :: lines)
+    with End_of_file -> lines
+  in
+  let r = Str.regexp "/\\|\\\\\\\\" in
+  try
+    List.rev_map
+      (Str.global_replace r "-")
+      (aux [])
+  with Sys_error _ -> ["Not found: "^file]
+
+let cat header path =
+  Printf.printf "==> %s\n" header;
+  let contents = read path in
+  Printf.printf "%s\n" (String.concat "\n" contents)
+
+let pkg = (Sys.argv).(1)
+let root = Sys.getenv "OPAMROOT"
+let (/) = Filename.concat
+let share = root / "inst" / "share"
+let inst_file = share / pkg / "file"
+let changes = root / "inst" / ".opam-switch" / "install" / pkg ^ ".changes"
+let _ =
+  cat (pkg ^" installed file") inst_file;
+  cat (pkg^" changes") changes
+### <dotty/dot.opam>
+opam-version: "2.0"
+synopsis: "One-line description"
+description: """
+Longer description
+"""
+maintainer: "Name <email>"
+authors: "Name <email>"
+license: "MIT"
+homepage: " "
+bug-reports: " "
+dev-repo: "git://do.t"
+depends: "nodot"
+### <dotty/dot.install>
+share: [ "file" ]
+### <dotty/file>
+hellow
+### <dotty/nodot.opam>
+opam-version: "2.0"
+synopsis: "One-line description"
+description: """
+Longer description
+"""
+maintainer: "Name <email>"
+authors: "Name <email>"
+license: "MIT"
+homepage: " "
+bug-reports: " "
+dev-repo: "git://nodo.t"
+install: [ "echo" "hellow" ]
+### <dotty/nodot.install>
+share: [ "file" ]
+### opam switch create inst --empty
+### opam pin ./dotty -yn
+This will pin the following packages: dot, nodot. Continue? [Y/n] y
+Package dot does not exist, create as a NEW package? [Y/n] y
+dot is now pinned to file://${BASEDIR}/dotty (version ~dev)
+Package nodot does not exist, create as a NEW package? [Y/n] y
+nodot is now pinned to file://${BASEDIR}/dotty (version ~dev)
+### OPAMPRECISETRACKING=1 OPAMDEBUGSECTIONS="TRACK ACTION" OPAMDEBUG=-1
+### opam install nodot -y
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[nodot.~dev] synchronised (no changes)
+
+The following actions will be performed:
+  - install nodot ~dev*
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          download_package: nodot.~dev
+-> retrieved nodot.~dev  (file://${BASEDIR}/dotty)
+ACTION                          prepare_package_source: nodot.~dev at ${BASEDIR}/OPAM/inst/.opam-switch/build/nodot.~dev
+ACTION                          Installing nodot.~dev.
+
+ACTION                          creating ${BASEDIR}/OPAM/inst/share/nodot
+TRACK                           after install: 19 elements, 3 added, scanned in 0.000s
+-> installed nodot.~dev
+Done.
+### ocaml cat.ml nodot
+==> nodot installed file
+hellow
+==> nodot changes
+added: [
+  "share" {"D"}
+  "share-nodot" {"D"}
+  "share-nodot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+]
+### opam install dot -y
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[dot.~dev] synchronised (no changes)
+
+The following actions will be performed:
+  - install dot ~dev*
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          download_package: dot.~dev
+-> retrieved dot.~dev  (file://${BASEDIR}/dotty)
+ACTION                          prepare_package_source: dot.~dev at ${BASEDIR}/OPAM/inst/.opam-switch/build/dot.~dev
+ACTION                          Installing dot.~dev.
+
+ACTION                          creating ${BASEDIR}/OPAM/inst/share/dot
+TRACK                           after install: 2 elements, 2 added, scanned in 0.000s
+-> installed dot.~dev
+Done.
+### ocaml cat.ml dot
+==> dot installed file
+hellow
+==> dot changes
+added: [
+  "share-dot" {"D"}
+  "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+]

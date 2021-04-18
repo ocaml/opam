@@ -19,132 +19,158 @@ open OpamProcess.Job.Op
 
 module PackageActionGraph = OpamSolver.ActionGraph
 
-(* Install the package files *)
-let process_dot_install st nv build_dir =
+(* Preprocess install: returns a list of files to install, and their respective
+   install functions *)
+let preprocess_dot_install_t st nv build_dir =
+  if not (OpamFilename.exists_dir build_dir) then [] else
   let root = st.switch_global.root in
-  let (warning, had_windows_warnings) =
-    if OpamFormatConfig.(!r.strict) then
-      let had_warnings = ref false in
-      let install_warning dst warning =
-        let () =
-          match warning with
-          | `Add_exe | `Install_script | `Cygwin | `Cygwin_libraries ->
-            had_warnings := true
-          | _ ->
-            ()
-        in
-        OpamSystem.default_install_warning dst warning
-      in
-      (install_warning, (fun () -> !had_warnings))
-    else
-      (OpamSystem.default_install_warning, (fun () -> false))
-  in
-  if OpamStateConfig.(!r.dryrun) then
-    OpamConsole.msg "Installing %s.\n" (OpamPackage.to_string nv)
-  else
-  if OpamFilename.exists_dir build_dir then OpamFilename.in_dir build_dir (fun () ->
+  let switch_prefix = OpamPath.Switch.root root st.switch in
+  let file_wo_prefix f = OpamFilename.remove_prefix switch_prefix f in
 
-      log "Installing %s.\n" (OpamPackage.to_string nv);
-      let name = nv.name in
-      let config_f = OpamPath.Builddir.config build_dir nv in
-      let config = OpamFile.Dot_config.read_opt config_f in
-      let install_f = OpamPath.Builddir.install build_dir nv in
-      let install = OpamFile.Dot_install.safe_read install_f in
+  let files_and_installs = [] in
 
-      (* .install *)
-      let install_f = OpamPath.Switch.install root st.switch name in
-      if install <> OpamFile.Dot_install.empty then
-        OpamFile.Dot_install.write install_f install;
+  let name = nv.name in
+  let install_f = OpamPath.Builddir.install build_dir nv in
+  let install = OpamFile.Dot_install.safe_read install_f in
 
-      (* .config *)
-      (match config with
-       | Some config ->
+  (* .install *)
+  let install_loc = OpamPath.Switch.install root st.switch name in
+  if install <> OpamFile.Dot_install.empty then
+    OpamFile.Dot_install.write install_loc install;
+
+  (* .config *)
+  let files_and_installs =
+    let config_f = OpamPath.Builddir.config build_dir nv in
+    let config = OpamFile.Dot_config.read_opt config_f in
+    (match config with
+     | Some config ->
+       let file =
+         OpamPath.Switch.config root st.switch name
+         |> OpamFile.filename
+         |> file_wo_prefix
+       in
+       let inst _ =
          let dot_config = OpamPath.Switch.config root st.switch name in
-         OpamFile.Dot_config.write dot_config config
-       | None -> ());
+         OpamFile.Dot_config.write dot_config config; None
+       in
+       (file, inst) :: files_and_installs
+     | None -> files_and_installs)
+  in
 
-      let warnings = ref [] in
-      let check ~src ~dst base =
-        let src_file = OpamFilename.create src base.c in
-        if base.optional && not (OpamFilename.exists src_file) then
-          log "Not installing %a is not present and optional."
-            (slog OpamFilename.to_string) src_file;
-        if not base.optional && not (OpamFilename.exists src_file) then (
-          warnings := (dst, base.c) :: !warnings
-        );
-        OpamFilename.exists src_file in
+  let check ~src ~dst base =
+    let src_file = OpamFilename.create src base.c in
+    if base.optional && not (OpamFilename.exists src_file) then
+      log "Not installing %a is not present and optional."
+        (slog OpamFilename.to_string) src_file;
+    let exists = OpamFilename.exists src_file in
+    let warn =
+      if not base.optional && not exists then
+        Some (dst, base.c) else None
+    in
+    exists, warn
+  in
 
-      (* Install a list of files *)
-      let install_files exec dst_fn files_fn =
-        let dst_dir = dst_fn root st.switch name in
-        let files = files_fn install in
-        if not (OpamFilename.exists_dir dst_dir) && files <> [] then (
-          log "creating %a" (slog OpamFilename.Dir.to_string) dst_dir;
-          OpamFilename.mkdir dst_dir;
-        );
-        List.iter (fun (base, dst) ->
-            let (base, append) =
-              if exec && not (OpamFilename.exists (OpamFilename.create build_dir base.c)) then
-                let base' =
-                  {base with c = OpamFilename.Base.add_extension base.c "exe"} in
-                if OpamFilename.exists (OpamFilename.create build_dir base'.c) then begin
-                  OpamConsole.warning ".install file is missing .exe extension for %s" (OpamFilename.Base.to_string base.c);
-                  (base', true)
-                end else
-                  (base, false)
-              else
-                (base, false) in
-            let src_file = OpamFilename.create build_dir base.c in
-            if append then warning (OpamFilename.to_string src_file) `Add_exe;
-            let dst_file = match dst with
-              | None   -> OpamFilename.create dst_dir (OpamFilename.basename src_file)
-              | Some d ->
-                  if append && not (OpamFilename.Base.check_suffix d ".exe") then
-                    OpamFilename.create dst_dir (OpamFilename.Base.add_extension d "exe")
-                  else
-                    OpamFilename.create dst_dir d in
-            if check ~src:build_dir ~dst:dst_dir base then
-              OpamFilename.install ~warning ~exec ~src:src_file ~dst:dst_file ();
-          ) files in
+  (* Install a list of files *)
+  let install_files exec dst_fn files_fn =
+    let dst_dir = dst_fn root st.switch name in
+    let files = files_fn install in
+    let dir_and_install =
+      if OpamFilename.exists_dir dst_dir || files = [] then [] else
+      let dir = OpamFilename.remove_prefix_dir switch_prefix dst_dir in
+      let inst _ =
+        log "creating %a" (slog OpamFilename.Dir.to_string) dst_dir;
+        OpamFilename.mkdir dst_dir;
+        None
+      in
+      [dir, inst]
+    in
+    dir_and_install @
+    List.map (fun (base, dst) ->
+        let (base, append) =
+          if exec &&
+             not (OpamFilename.exists (OpamFilename.create build_dir base.c))
+          then
+            let base' =
+              {base with c = OpamFilename.Base.add_extension base.c "exe"} in
+            if OpamFilename.exists (OpamFilename.create build_dir base'.c) then
+              (OpamConsole.warning
+                 ".install file is missing .exe extension for %s"
+                 (OpamFilename.Base.to_string base.c);
+               (base', true))
+            else
+              (base, false)
+          else
+            (base, false) in
+        let src_file = OpamFilename.create build_dir base.c in
+        let dst_file = match dst with
+          | None   -> OpamFilename.create dst_dir (OpamFilename.basename src_file)
+          | Some d ->
+            if append && not (OpamFilename.Base.check_suffix d ".exe") then
+              OpamFilename.create dst_dir
+                (OpamFilename.Base.add_extension d "exe")
+            else
+              OpamFilename.create dst_dir d in
+        let file = file_wo_prefix dst_file in
+        let inst warning =
+          if append then warning (OpamFilename.to_string src_file) `Add_exe;
+          let check, warn = check ~src:build_dir ~dst:dst_dir base in
+          if check then
+            OpamFilename.install ~warning ~exec ~src:src_file ~dst:dst_file ();
+          warn
+        in
+        file, inst)
+      files
+  in
 
-      let module P = OpamPath.Switch in
-      let module I = OpamFile.Dot_install in
-      let instdir_gen fpath r s _ = fpath r s st.switch_config in
-      let instdir_pkg fpath r s n = fpath r s st.switch_config n in
+  let module P = OpamPath.Switch in
+  let module I = OpamFile.Dot_install in
+  let instdir_gen fpath r s _ = fpath r s st.switch_config in
+  let instdir_pkg fpath r s n = fpath r s st.switch_config n in
 
-      (* bin *)
-      install_files true (instdir_gen P.bin) I.bin;
+  let to_install = [
+    (* bin *)
+    true, (instdir_gen P.bin), I.bin;
 
-      (* sbin *)
-      install_files true (instdir_gen P.sbin) I.sbin;
+    (* sbin *)
+    true, (instdir_gen P.sbin), I.sbin;
 
-      (* lib *)
-      install_files false (instdir_pkg P.lib) I.lib;
-      install_files true (instdir_pkg P.lib) I.libexec;
-      install_files false (instdir_gen P.lib_dir) I.lib_root;
-      install_files true (instdir_gen P.lib_dir) I.libexec_root;
+    (* lib *)
+    false, (instdir_pkg P.lib), I.lib;
+    true, (instdir_pkg P.lib), I.libexec;
+    false, (instdir_gen P.lib_dir), I.lib_root;
+    true, (instdir_gen P.lib_dir), I.libexec_root;
 
-      (* toplevel *)
-      install_files false (instdir_gen P.toplevel) I.toplevel;
+    (* toplevel *)
+    false, (instdir_gen P.toplevel), I.toplevel;
 
-      install_files true (instdir_gen P.stublibs) I.stublibs;
+    true, (instdir_gen P.stublibs), I.stublibs;
 
-      (* Man pages *)
-      install_files false (instdir_gen P.man_dir) I.man;
+    (* Man pages *)
+    false, (instdir_gen P.man_dir), I.man;
 
-      (* Shared files *)
-      install_files false (instdir_pkg P.share) I.share;
-      install_files false (instdir_gen P.share_dir) I.share_root;
+    (* Shared files *)
+    false, (instdir_pkg P.share), I.share;
+    false, (instdir_gen P.share_dir), I.share_root;
 
-      (* Etc files *)
-      install_files false (instdir_pkg P.etc) I.etc;
+    (* Etc files *)
+    false, (instdir_pkg P.etc), I.etc;
 
-      (* Documentation files *)
-      install_files false (instdir_pkg P.doc) I.doc;
+    (* Documentation files *)
+    false, (instdir_pkg P.doc), I.doc;
+  ]
+  in
 
-      (* misc *)
-      List.iter
-        (fun (src, dst) ->
+  let files_and_installs =
+    List.fold_left (fun files_and_installs (exec, dst_fn, files_fn) ->
+        install_files exec dst_fn files_fn @ files_and_installs)
+      files_and_installs to_install
+  in
+
+  (* misc *)
+  let files_and_installs =
+    List.fold_left (fun files_and_installs (src, dst) ->
+        let file = file_wo_prefix dst in
+        let inst warning =
           let src_file = OpamFilename.create (OpamFilename.cwd ()) src.c in
           if OpamFilename.exists dst
           && OpamConsole.confirm "Overwriting %s?" (OpamFilename.to_string dst) then
@@ -154,28 +180,65 @@ let process_dot_install st nv build_dir =
               (OpamFilename.Base.to_string src.c) (OpamFilename.to_string dst);
             if OpamConsole.confirm "Continue?" then
               OpamFilename.install ~warning ~src:src_file ~dst ()
-          end
-        ) (I.misc install);
-
-      if !warnings <> [] then (
-        let print (dir, base) =
-          Printf.sprintf "  - %s to %s\n"
-            (OpamFilename.to_string (OpamFilename.create build_dir base))
-            (OpamFilename.Dir.to_string dir) in
-        OpamConsole.error "Installation of %s failed"
-          (OpamPackage.to_string nv);
-        let msg =
-          Printf.sprintf
-            "Some files in %s couldn't be installed:\n%s"
-            (OpamFile.to_string install_f)
-            (String.concat "" (List.map print !warnings))
+          end;
+          None
         in
-        failwith msg
-      );
+        (file, inst) :: files_and_installs)
+      files_and_installs (I.misc install)
+  in
+  files_and_installs
 
+(* Returns function to install package files from [.install] *)
+let preprocess_dot_install st nv build_dir =
+  let files_and_installs = preprocess_dot_install_t st nv build_dir in
+  let root = st.switch_global.root in
+  let files, installs = List.split files_and_installs in
+  let really_process_dot_install () =
+    if OpamStateConfig.(!r.dryrun) then
+      OpamConsole.msg "Installing %s.\n" (OpamPackage.to_string nv)
+    else if OpamFilename.exists_dir build_dir then
+      let (warning, had_windows_warnings) =
+        if OpamFormatConfig.(!r.strict) then
+          let had_warnings = ref false in
+          let install_warning dst warning =
+            let () =
+              match warning with
+              | `Add_exe | `Install_script | `Cygwin | `Cygwin_libraries ->
+                had_warnings := true
+              | _ ->
+                ()
+            in
+            OpamSystem.default_install_warning dst warning
+          in
+          (install_warning, (fun () -> !had_warnings))
+        else
+          (OpamSystem.default_install_warning, (fun () -> false))
+      in
+      OpamFilename.in_dir build_dir @@ fun () ->
+      log "Installing %s.\n" (OpamPackage.to_string nv);
+      let warnings =
+        OpamStd.List.filter_map (fun install -> install warning) installs
+      in
+      if warnings <> [] then
+        (let install_f = OpamPath.Switch.install root st.switch nv.name in
+         let print (dir, base) =
+           Printf.sprintf "  - %s to %s\n"
+             (OpamFilename.to_string (OpamFilename.create build_dir base))
+             (OpamFilename.Dir.to_string dir)
+         in
+         OpamConsole.error "Installation of %s failed"
+           (OpamPackage.to_string nv);
+         let msg =
+           Printf.sprintf
+             "Some files in %s couldn't be installed:\n%s"
+             (OpamFile.to_string install_f)
+             (String.concat "" (List.map print warnings))
+         in
+         failwith msg);
       if had_windows_warnings () then
         failwith "Strict mode is enabled - previous warnings considered fatal"
-    )
+  in
+  files, really_process_dot_install
 
 let download_package st nv =
   log "download_package: %a" (slog OpamPackage.to_string) nv;
@@ -871,22 +934,43 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
       )
     | [] -> Done None
   in
-  let install_job () =
-    (* let text = OpamProcess.make_command_text name "install" in
-     * OpamProcess.Job.with_text text *)
-    OpamProcess.Job.of_fun_list
-      (List.map (fun cmd () -> mk_cmd cmd)
-         (get_wrapper t opam wrappers OpamFile.Wrappers.pre_install))
-    @@+ fun error ->
-    (match error with
-     | None -> run_commands commands
-     | Some (_, result) -> Done (Some (OpamSystem.Process_error result)))
-    @@| function
-    | Some e -> Some e
-    | None -> try process_dot_install t nv dir; None with e -> Some e
-  in
   let root = t.switch_global.root in
   let switch_prefix = OpamPath.Switch.root root t.switch in
+  let pre_install_wrappers =
+    get_wrapper t opam wrappers OpamFile.Wrappers.pre_install
+  in
+  let pre_install () =
+    (* let text = OpamProcess.make_command_text name "install" in
+      * OpamProcess.Job.with_text text *)
+    OpamProcess.Job.of_fun_list
+      (List.map (fun cmd () -> mk_cmd cmd) pre_install_wrappers)
+  in
+  let install_job () =
+    pre_install ()
+    @@+ function
+    | Some (_, result) -> Done (Some (OpamSystem.Process_error result))
+    | None ->
+      run_commands commands @@| function
+      | Some e -> Some e
+      | None ->
+        try
+          let _, process_dot_install = preprocess_dot_install t nv dir in
+          process_dot_install ();
+          None
+        with e -> Some e
+  in
+  let install_and_track_job () =
+    pre_install ()
+    @@+ function
+    | Some (_, result) ->
+      Done (Some (OpamSystem.Process_error result), OpamStd.String.Map.empty)
+    | None ->
+      let installed_files, process_dot_install =
+        preprocess_dot_install t nv dir
+      in
+      OpamDirTrack.track_files ~prefix:switch_prefix installed_files
+        (fun () -> process_dot_install () ; Done None)
+  in
   let post_install error changes =
     let local =
       let added =
@@ -926,9 +1010,12 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
     OpamFilename.(Base.of_string (remove_prefix_dir switch_prefix
                                     (OpamPath.Switch.meta root t.switch)))
   in
-  OpamDirTrack.track switch_prefix
-    ~except:(OpamFilename.Base.Set.singleton rel_meta_dir)
-    install_job
+  (if commands = [] && pre_install_wrappers = [] then
+     install_and_track_job ()
+   else
+     OpamDirTrack.track switch_prefix
+       ~except:(OpamFilename.Base.Set.singleton rel_meta_dir)
+       install_job)
   @@+ fun (error, changes) -> post_install error changes
   @@+ function
   | Some e, changes ->
