@@ -96,8 +96,7 @@ let parse_criteria criteria =
   | "" -> default
   | "+removed" -> {drop_installed_packages = true; prefer_oldest = false}
   | "+count[version-lag,solution]" -> {drop_installed_packages = false; prefer_oldest = true}
-  | "+removed,+count[version-lag,solution]"
-  | "+count[version-lag,solution],+removed" ->
+  | "+removed,+count[version-lag,solution]" ->
     {drop_installed_packages = true; prefer_oldest = true}
   | _ ->
     OpamConsole.warning "Criteria '%s' is not supported by the 0install solver" criteria;
