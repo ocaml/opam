@@ -183,7 +183,7 @@ populated with all dependencies, at their exact version in the current
 in your version-control system.
 
 ```shell
-$ opam lock <pkg> # generated ans <pkg>.opam.lock file
+$ opam lock <pkg> # generate a <pkg>.opam.lock file
 $ opam install --locked <pkg> # use <pkg> locked file, if present
 ```
 
