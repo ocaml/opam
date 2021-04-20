@@ -1029,8 +1029,14 @@ module ConfigSyntax = struct
 
   let internal = "config"
 
+  (* Unused, present as a hint *)
+  let _format_version = OpamVersion.of_string "2.0"
+  let _file_format_version = OpamVersion.of_string "2.0"
+  let root_version = OpamVersion.of_string "2.0"
+
   type t = {
     opam_version : opam_version;
+    opam_root_version: opam_version option;
     repositories : repository_name list;
     installed_switches : switch list;
     switch : switch option;
@@ -1049,6 +1055,7 @@ module ConfigSyntax = struct
   }
 
   let opam_version t = t.opam_version
+  let opam_root_version t = t.opam_root_version
   let repositories t = t.repositories
   let installed_switches t = t.installed_switches
   let switch t = t.switch
@@ -1071,6 +1078,8 @@ module ConfigSyntax = struct
   let default_compiler t = t.default_compiler
 
   let with_opam_version opam_version t = { t with opam_version }
+  let with_opam_root_version opam_root_version t =
+    { t with opam_root_version = Some opam_root_version }
   let with_repositories repositories t = { t with repositories }
   let with_installed_switches installed_switches t =
     { t with installed_switches }
@@ -1098,6 +1107,7 @@ module ConfigSyntax = struct
 
   let empty = {
     opam_version = OpamVersion.current_nopatch;
+    opam_root_version = None;
     repositories = [];
     installed_switches = [];
     switch = None;
@@ -1123,6 +1133,9 @@ module ConfigSyntax = struct
     [
       "opam-version", Pp.ppacc
         with_opam_version opam_version
+        (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
+      "opam-root-version", Pp.ppacc_opt
+        with_opam_root_version opam_root_version
         (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
       "repositories", Pp.ppacc
         with_repositories repositories
@@ -1212,6 +1225,23 @@ end
 module Config = struct
   include ConfigSyntax
   include SyntaxFile(ConfigSyntax)
+
+  let raw_root_version f =
+    try
+      let opamfile = OpamParser.file (OpamFilename.to_string (filename f)) in
+      let get_version field =
+        try
+          Some (OpamStd.List.find_map (function
+              | Variable (_, field', String (_, version))
+                when field' = field ->
+                Some (OpamVersion.of_string version)
+              | _ -> None)
+              opamfile.file_contents)
+        with Not_found -> None
+      in
+      get_version "opam-root-version", get_version "opam-version"
+    with
+    | Sys_error _ -> None, None
 end
 
 module InitConfigSyntax = struct

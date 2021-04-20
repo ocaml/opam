@@ -98,6 +98,9 @@ module Config: sig
 
   include IO_FILE
 
+  (** Current root version *)
+  val root_version: opam_version
+
   (** OCaml switch updates *)
   val with_switch: switch -> t -> t
   val with_switch_opt: switch option -> t -> t
@@ -109,6 +112,7 @@ module Config: sig
 
   (** Update opam-version *)
   val with_opam_version: OpamVersion.t -> t -> t
+  val with_opam_root_version: OpamVersion.t -> t -> t
 
   val with_criteria: (solver_criteria * string) list -> t -> t
   val with_best_effort_prefix: string -> t -> t
@@ -132,8 +136,11 @@ module Config: sig
   val with_default_compiler:
     formula -> t -> t
 
-  (** Return the OPAM version *)
+  (** Return the opam version *)
   val opam_version: t  -> opam_version
+
+  (** Return the opam root version *)
+  val opam_root_version: t -> opam_version option
 
   (** Return the list of repository *)
   val repositories: t  -> repository_name list
@@ -171,6 +178,10 @@ module Config: sig
 
   val default_compiler: t -> formula
 
+  (** Raw read the config file to extract [opam-root-version] and
+      [opam-version] fields value. *)
+  val raw_root_version:
+    'a typed_file -> OpamVersion.t option * OpamVersion.t option
 end
 
 (** Init config file [/etc/opamrc] *)
