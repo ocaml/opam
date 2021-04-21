@@ -18,5 +18,5 @@ bug-reports: "https://github.com/ocaml/opam/issues"
 depends: [
   "dune" {>= "1.11.0"}
   "re" {>= "1.9.0"}
-  "opam-file-format" {>= "2.1.2"}
+  "opam-file-format" {>= "2.1.3"}
 ]
