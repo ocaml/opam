@@ -35,7 +35,8 @@ let not_relop = function
   | `Leq -> `Gt
   | `Lt -> `Geq
 
-let keep_installed request pkgname =
+let keep_installed ~drop_installed_packages request pkgname =
+  not drop_installed_packages &&
   not (List.exists (fun (pkg, _) -> String.equal pkg pkgname) request.Cudf.install) &&
   not (List.exists (fun (pkg, _) -> String.equal pkg pkgname) request.Cudf.upgrade) &&
   not (List.exists (fun (pkg, _) -> String.equal pkg pkgname) request.Cudf.remove)
@@ -58,7 +59,7 @@ let restricts (pkgs, constraints) (pkg, c) =
   in
   (pkgs, constraints)
 
-let create_spec universe request =
+let create_spec ~drop_installed_packages universe request =
   let spec = ([], []) in
   let spec = List.fold_left essential spec request.Cudf.install in
   let spec = List.fold_left essential spec request.Cudf.upgrade in
@@ -68,8 +69,11 @@ let create_spec universe request =
       | Some {Cudf.keep = `Keep_version; version; _} -> essential spec (pkgname, Some (`Eq, version))
       | Some {Cudf.keep = `Keep_package; _} -> essential spec (pkgname, None)
       | Some {Cudf.keep = `Keep_feature; _} -> assert false (* NOTE: Opam has no support for features *)
-      | Some {Cudf.keep = `Keep_none; _} when keep_installed request pkgname -> recommended spec (pkgname, None)
-      | Some {Cudf.keep = `Keep_none; _}
+      | Some {Cudf.keep = `Keep_none; _} ->
+          if keep_installed ~drop_installed_packages request pkgname then
+            recommended spec (pkgname, None)
+          else
+            spec
       | None -> spec
     ) spec universe
 
@@ -81,13 +85,28 @@ let reconstruct_universe universe selections =
     ) [] |>
   Cudf.load_universe
 
+type options = {
+  drop_installed_packages : bool;
+  prefer_oldest : bool;
+}
+
+let parse_criteria criteria =
+  let default = {drop_installed_packages = false; prefer_oldest = false} in
+  match criteria with
+  | "" -> default
+  | "+removed" -> {drop_installed_packages = true; prefer_oldest = false}
+  | "+count[version-lag,solution]" -> {drop_installed_packages = false; prefer_oldest = true}
+  | "+removed,+count[version-lag,solution]" ->
+    {drop_installed_packages = true; prefer_oldest = true}
+  | _ ->
+    OpamConsole.warning "Criteria '%s' is not supported by the 0install solver" criteria;
+    default
+
 let call ~criteria ?timeout:_ (preamble, universe, request) =
-  if not (String.equal criteria default_criteria.crit_default) then begin
-    OpamConsole.warning "Custom CUDF criteria is not supported by the 0install solver";
-  end;
+  let {drop_installed_packages; prefer_oldest} = parse_criteria criteria in
   let timer = OpamConsole.timer () in
-  let pkgs, constraints = create_spec universe request in
-  let context = Opam_0install_cudf.create ~constraints universe in
+  let pkgs, constraints = create_spec ~drop_installed_packages universe request in
+  let context = Opam_0install_cudf.create ~prefer_oldest ~constraints universe in
   match Opam_0install_cudf.solve context pkgs with
   | Ok selections ->
     let universe = reconstruct_universe universe selections in
