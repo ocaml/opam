@@ -136,7 +136,24 @@ let check_and_run_external_commands () =
     OpamCoreConfig.init ~answer ();
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
-    let has_init = OpamStateConfig.load_defaults root_dir <> None in
+    let has_init, root_upgraded =
+      match OpamStateConfig.load_defaults root_dir with
+      | None -> (false, false)
+      | Some config ->
+          let root_upgraded =
+            let config_version = OpamFile.Config.opam_version config in
+            let cmp =
+              OpamVersion.(compare OpamFile.Config.format_version config_version)
+            in
+            if cmp < 0 then
+              OpamConsole.error_and_exit `Configuration_error
+                "%s reports a newer opam version, aborting."
+                 (OpamFilename.Dir.to_string root_dir)
+            else
+              cmp = 0
+          in
+            (true, root_upgraded)
+    in
     let plugins_bin = OpamPath.plugins_bin root_dir in
     let plugin_symlink_present =
       OpamFilename.is_symlink (OpamPath.plugin_bin root_dir (OpamPackage.Name.of_string name))
@@ -157,7 +174,7 @@ let check_and_run_external_commands () =
         Unix.environment ()
     in
     match OpamSystem.resolve_command ~env command with
-    | Some command when plugin_symlink_present ->
+    | Some command when plugin_symlink_present && root_upgraded ->
       let argv = Array.of_list (command :: args) in
       raise (OpamStd.Sys.Exec (command, argv, env))
     | None when not has_init -> (cli, argv)
@@ -202,9 +219,12 @@ let check_and_run_external_commands () =
              (OpamPackage.to_string (OpamPackage.Set.max_elt candidates));
            exit (OpamStd.Sys.get_exit_code `Bad_arguments))
         else if
-          OpamConsole.confirm "Opam plugin \"%s\" is not installed. \
-                               Install it on the current switch?"
-            name
+          (if cmd = None then
+             OpamConsole.confirm "Opam plugin \"%s\" is not installed. \
+                                  Install it on the current switch?"
+           else
+             OpamConsole.confirm "Opam plugin \"%s\" may require upgrading/reinstalling. \
+                                  Reinstall the plugin on the current switch?") name
         then
           let nv =
             try
@@ -228,8 +248,10 @@ let check_and_run_external_commands () =
               OpamSwitchState.drop @@ (
               if cmd = None then
                 OpamClient.install st [OpamSolution.eq_atom_of_package nv]
+              else if root_upgraded then
+                OpamClient.reinstall st [OpamSolution.eq_atom_of_package nv]
               else
-                OpamClient.reinstall st [OpamSolution.eq_atom_of_package nv])
+                OpamClient.upgrade st ~all:false [OpamSolution.eq_atom_of_package nv])
             );
           match OpamSystem.resolve_command ~env command with
           | None ->
