@@ -27,7 +27,7 @@ let init_config_files () =
 
 let state_cache_dir t = t / "repo"
 
-let state_cache t = state_cache_dir t // "state.cache"
+let state_cache t = state_cache_dir t // Printf.sprintf "state-%s.cache" (OpamVersion.magic ())
 
 let lock t = t // "lock"
 
