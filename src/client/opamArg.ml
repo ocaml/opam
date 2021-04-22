@@ -220,8 +220,6 @@ let environment_variables =
       (fun v -> BUILDDOC (env_bool v)), "see option `--build-doc'.";
       "BUILDTEST", cli_between cli2_0 cli2_1,
       (fun v -> BUILDTEST (env_bool v)), "see option `--build-test'.";
-      "DEPEXTYES", cli_from cli2_1, (fun v -> DEPEXTYES (env_bool v)),
-      "launch system package managers in non-interactive mode.";
       "DOWNLOADJOBS", cli_original, (fun v -> DOWNLOADJOBS (env_int v)),
       "sets the maximum number of simultaneous downloads.";
       "DRYRUN", cli_original, (fun v -> DRYRUN (env_bool v)),
