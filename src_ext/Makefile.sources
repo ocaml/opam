@@ -38,6 +38,16 @@ MD5_mccs = 7086eefb41e631a63e26b23577cef582
 
 $(call PKG_SAME,mccs)
 
+URL_opam-0install-cudf = https://github.com/ocaml-opam/opam-0install-solver/releases/download/v0.4.1/opam-0install-cudf-v0.4.1.tbz
+MD5_opam-0install-cudf = 44e6d5a7fcdbc130db5dc86a6b9aeca6
+
+$(call PKG_SAME,opam-0install-cudf)
+
+URL_0install-solver = https://github.com/0install/0install/releases/download/v2.17/0install-v2.17.tbz
+MD5_0install-solver = 50daf035b04b29399a3c6e6f965ac447
+
+$(call PKG_SAME,0install-solver)
+
 URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.1.2.tar.gz
 MD5_opam-file-format = f16ed774167fc1881876b8185087e0ab
 

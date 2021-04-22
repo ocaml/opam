@@ -120,6 +120,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix Cudf preprocessing [#4534 #4627 @AltGr - fix #4624]
   * Allow to upgrade to a hidden-version package if a hidden-version package is already installed [#4525 @kit-ty-kate]
   * Add support for a few select criteria useful to CI to the 0install solver: `+count[version-lag,solution]` to always choose the oldest version available, `+removed` to not try to keep installed packages [#4631 @kit-ty-kate]
+  * Build opam with the builtin 0install solver whenever possible [#4643 @kit-ty-kate]
 
 ## Client
   * ✘ Environment variables initialised only at opam client launch, no more via libraries [#4606 @rjbou]
