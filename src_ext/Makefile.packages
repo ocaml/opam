@@ -41,6 +41,10 @@ dose3.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild cppo.pkgbuild extlib.pkgbui
 # mccs.pkgbuild depends on findlib because the files are explicitly installed using it
 mccs.pkgbuild: dune-local.pkgbuild cudf.pkgbuild findlib.pkgbuild
 
+opam-0install-cudf.pkgbuild: dune-local.pkgbuild cudf.pkgbuild 0install-solver.pkgbuild
+
+0install-solver.pkgbuild: dune-local.pkgbuild
+
 stdlib-shims.pkgbuild: dune-local.pkgbuild
 
 dune-local.pkgbuild: findlib.pkgbuild
@@ -106,6 +110,14 @@ mccs-pkg-build:
 	dune build @install -p mccs
 	ocamlfind install mccs $(addprefix _build/install/default/lib/,$(addprefix mccs/,META libmccs_stubs.$(EXT_LIB) mccs.*) stublibs/*.$(EXT_DLL))
 	cp -RL _build/install/default/lib/mccs/glpk $(SITELIB)/mccs/
+
+opam-0install-cudf-pkg-build:
+	dune build @install -p opam-0install-cudf
+	dune install -p opam-0install-cudf opam-0install-cudf
+
+0install-solver-pkg-build:
+	dune build @install -p 0install-solver
+	dune install -p 0install-solver 0install-solver
 
 seq-pkg-build:
 	dune build @install -p seq

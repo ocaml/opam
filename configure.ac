@@ -57,6 +57,13 @@ AC_ARG_WITH([mccs],
   AC_HELP_STRING([--without-mccs],
                  [Compile without a built-in Cudf solver (only works if 'mccs' is not otherwise installed)]),[],[MCCS_DEFAULT=yes]
 )
+AC_ARG_WITH([0install-solver],
+  AC_HELP_STRING([--without-0install-solver],
+                 [Compile without the built-in 0install solver (only works if 'opam-0install-cudf' is not otherwise installed)]),
+                 [],
+                 [OPAM_0INSTALL_SOLVER_DEFAULT=yes]
+)
+
 
 AC_ARG_WITH([libacl],
   AC_HELP_STRING([--with-libacl],
@@ -144,6 +151,7 @@ AS_IF([test "x${enable_developer_mode}" = "xyes"],[
 ])
 
 AS_IF([test "x${with_mccs}" = "xno"], [AC_SUBST(MCCS_ENABLED,false)], [AC_SUBST(MCCS_ENABLED,true)])
+AS_IF([test "x${with_0install_solver}" = "xno"], [AC_SUBST(OPAM_0INSTALL_SOLVER_ENABLED,false)], [AC_SUBST(OPAM_0INSTALL_SOLVER_ENABLED,true)])
 
 AS_IF([test "x${with_libacl}" != "xno"],[
   have_libacl=yes
@@ -321,9 +329,12 @@ AC_CHECK_OCAML_PKG(dose3.common,dose.common)
 AC_CHECK_OCAML_PKG(dose3.algo,dose.algo)
 AC_CHECK_OCAML_PKG([opam-file-format])
 AC_CHECK_OCAML_PKG([mccs])
+AC_CHECK_OCAML_PKG([opam-0install-cudf])
 
 AS_IF([test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"],
       [AC_MSG_ERROR([Option --without-mccs is not available without uninstalling the 'mccs' package])])
+AS_IF([test "x${with_0install_solver}" = "xno" && test "x$OCAML_PKG_opam_0install_cudf" != "xno"],
+      [AC_MSG_ERROR([Option --without-0install-solver is not available without uninstalling the 'opam-0install-cudf' package])])
 
 dnl -- that's what we would like to do, but no way to disable mccs in jbuilder
 dnl -- if it's installed, at the moment
@@ -349,6 +360,18 @@ AS_IF([test "x$MCCS_ENABLED" = "xtrue"],[
   ])
 ])
 
+dnl -- if we're using the vendored opam-0install-cudf packages, then check that the compiler supports it
+dnl -- and disable it if it does not and fail if it was explicitly requested.
+AS_IF([test "x$OPAM_0INSTALL_SOLVER_ENABLED" = "xtrue" -a "x$OCAML_PKG_opam_0install_cudf" = "xno"],[
+  AX_COMPARE_VERSION([$OCAMLVERSION], [lt], [4.08],[
+    AS_IF([test "x$OPAM_0INSTALL_SOLVER_DEFAULT" = "xyes"],[
+      AC_SUBST(OPAM_0INSTALL_SOLVER_ENABLED,false)
+    ],[
+      AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION does not support the requested 0install-solver. \
+                    You can either re-run the configure script with --without-0install-solver or use make cold])
+    ])
+  ])
+])
 
 dnl echo
 dnl echo "extlib........................ ${OCAML_PKG_extlib}"
@@ -368,7 +391,8 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_dose3_common" = "xno" ||
        test "x$OCAML_PKG_opam_file_format" = "xno" ||
        test "x$CPPO" = "x" ||
-       test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue";}],[
+       test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue" ||
+       test "x$OCAML_PKG_opam_0install_cudf$OPAM_0INSTALL_SOLVER_ENABLED" = "xnotrue";}],[
   echo "============================================================================"
   echo "Some dependencies are missing. If you are just interested in the stand-alone"
   echo "'opam' binary, run 'make lib-ext' to download and include them."
@@ -423,7 +447,7 @@ bindir="`eval echo ${bindir}`"
 mandir="`eval echo ${mandir}`"
 mandir="`eval echo ${mandir}`"
 
-AS_IF([test "x$MCCS_ENABLED" = "xfalse"],[
+AS_IF([test "x$MCCS_ENABLED" = "xfalse" -a "x$OPAM_0INSTALL_SOLVER_ENABLED" = "xfalse"],[
   echo "Opam will be built WITHOUT a built-in solver"
 ],[
   echo "Opam will be built WITH a built-in solver"
