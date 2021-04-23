@@ -17,6 +17,7 @@ New option/command/subcommand are prefixed with ◈.
 ## Init
   * Introduce a `default-invariant` config field, restore the 2.0 semantics for
     `default-compiler` [#4607 @AltGr]
+  * Fix default invariant with no system compiler [#4644 @AltGr - fix #4640]
 
 ## Config report
   * Fix `Not_found` (config file) error [#4570 @rjbou]
