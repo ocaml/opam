@@ -875,15 +875,26 @@ module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
   module IO = struct
     let to_opamfile filename t = Pp.print X.pp (filename, t)
 
+    let catch_future_syntax_error = function
+      | {file_contents = [ Variable (_, "opam-version",
+                                     String (_, ver));
+                           Section (pos, {section_kind = "#"; _})]; _}
+        when OpamVersion.(compare (nopatch (of_string ver))
+                            (OpamVersion.of_string "2.0")) <= 0 ->
+        raise (OpamPp.Bad_format (Some pos, "Parse error"))
+      | opamfile -> opamfile
+
     let of_channel filename (ic:in_channel) =
-      Pp.parse X.pp ~pos:(pos_file filename) (Syntax.of_channel filename ic)
+      let opamfile = Syntax.of_channel filename ic |> catch_future_syntax_error in
+      Pp.parse X.pp ~pos:(pos_file filename) opamfile
       |> snd
 
     let to_channel filename oc t =
       Syntax.to_channel filename oc (to_opamfile filename t)
 
     let of_string (filename:filename) str =
-      Pp.parse X.pp ~pos:(pos_file filename) (Syntax.of_string filename str)
+      let opamfile = Syntax.of_string filename str |> catch_future_syntax_error in
+      Pp.parse X.pp ~pos:(pos_file filename) opamfile
       |> snd
 
     let to_string filename t =
