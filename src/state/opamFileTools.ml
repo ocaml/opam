@@ -295,6 +295,19 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
   let all_commands = all_commands t in
   let all_expanded_strings = all_expanded_strings t in
   let all_depends = all_depends t in
+  (* Upstream is checked only if it is an archive and non vcs backend *)
+  let url_is_archive =
+    let open OpamStd.Option.Op in
+    t.url >>| OpamFile.URL.url >>| (fun u ->
+        match u.OpamUrl.backend with
+        | #OpamUrl.version_control -> false
+        | _ -> OpamSystem.is_archive (OpamUrl.base_url u))
+  in
+  let check_upstream =
+    check_upstream &&
+    not (OpamFile.OPAM.has_flag Pkgflag_Conf t) &&
+    url_is_archive = Some true
+  in
   let warnings = [
     cond 20 `Warning
       "Field 'opam-version' refers to the patch version of opam, it \
@@ -661,42 +674,65 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        (rem_test || rem_doc));
     cond 59 `Warning "url doesn't contain a checksum"
       (check_upstream &&
-       not (OpamFile.OPAM.has_flag Pkgflag_Conf t) &&
        OpamStd.Option.map OpamFile.URL.checksum t.url = Some []);
     (let upstream_error =
-       if not check_upstream || OpamFile.OPAM.has_flag Pkgflag_Conf t then None
-       else
+       if not check_upstream then None else
        match t.url with
        | None -> Some "No url defined"
-       | Some url ->
+       | Some urlf ->
          let open OpamProcess.Job.Op in
+         let check_checksum f =
+           match OpamFile.URL.checksum urlf with
+           | [] -> None
+           | chks ->
+             let not_corresponding =
+               OpamStd.List.filter_map (fun chk ->
+                   match OpamHash.mismatch (OpamFilename.to_string f) chk with
+                   | Some m -> Some (m, chk)
+                   | None -> None)
+                 chks
+             in
+             if not_corresponding = [] then None
+             else
+             let msg =
+               let is_singular = function [_] -> true | _ -> false in
+               Printf.sprintf "The archive doesn't match checksum%s:\n%s."
+                 (if is_singular not_corresponding then "" else "s")
+                 (OpamStd.Format.itemize (fun (good, bad) ->
+                      Printf.sprintf "archive: %s, in opam file: %s"
+                        (OpamHash.to_string good) (OpamHash.to_string bad))
+                     not_corresponding)
+             in
+             Some msg
+         in
+         let url = OpamFile.URL.url urlf in
          OpamProcess.Job.run @@
          OpamFilename.with_tmp_dir_job @@ fun dir ->
-         OpamProcess.Job.catch (function
-               Failure msg -> Done (Some msg)
-             | OpamDownload.Download_fail (s,l) ->
-               Done (Some (OpamStd.Option.default l s))
-             | e -> Done (Some (Printexc.to_string e)))
-         @@ fun () ->
-         OpamDownload.download ~overwrite:false (OpamFile.URL.url url) dir
-         @@| fun f ->
-         (match OpamFile.URL.checksum url with
-          | [] -> None
-          | chks ->
-            let not_corresponding =
-              List.filter (fun chk ->
-                  not (OpamHash.check_file (OpamFilename.to_string f) chk))
-                chks
-            in
-            if not_corresponding = [] then None
-            else
-            let msg =
-              let is_singular = function [_] -> true | _ -> false in
-              Printf.sprintf "The archive doesn't match checksum%s: %s."
-                (if is_singular not_corresponding then "" else "s")
-                (OpamStd.List.to_string OpamHash.to_string not_corresponding)
-            in
-            Some msg)
+         match url.backend with
+         | #OpamUrl.version_control -> Done None (* shouldn't happen *)
+         | `http ->
+           OpamProcess.Job.catch (function
+               | Failure msg -> Done (Some msg)
+               | OpamDownload.Download_fail (s,l) ->
+                 Done (Some (OpamStd.Option.default l s))
+               | e -> Done (Some (Printexc.to_string e)))
+           @@ fun () ->
+           OpamDownload.download ~overwrite:false url dir
+           @@| check_checksum
+         | `rsync ->
+           let filename =
+             let open OpamStd.Option.Op in
+             (OpamFile.OPAM.name_opt t
+              >>| OpamPackage.Name.to_string)
+             +! "lint-check-upstream"
+             |> OpamFilename.Base.of_string
+             |> OpamFilename.create dir
+           in
+           OpamLocal.rsync_file url filename
+           @@| function
+           | Up_to_date f | Result f -> check_checksum f
+           | Not_available (_,src) ->
+             Some ("Source not found: "^src)
      in
      cond 60 `Error "Upstream check failed"
        ~detail:[OpamStd.Option.default "" upstream_error]
@@ -816,6 +852,20 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
              (OpamFilter.string_of_filtered_formula (Atom f)))
            not_bool_strings)
        (not_bool_strings <> []));
+    cond 67 `Error
+      "Checksum specified with a non archive url"
+      ~detail:OpamStd.Option.Op.([
+          Printf.sprintf "%s - %s"
+            ((t.url >>| OpamFile.URL.url >>| OpamUrl.to_string) +! "")
+            ((t.url >>| OpamFile.URL.checksum
+              >>| List.map OpamHash.to_string
+              >>| OpamStd.Format.pretty_list)
+             +! "")])
+      (match t.url with
+       | None -> false
+       | Some urlf ->
+         (OpamFile.URL.checksum urlf <> [])
+         && url_is_archive <> Some true);
   ]
   in
   format_errors @
