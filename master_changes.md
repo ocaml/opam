@@ -99,6 +99,8 @@ New option/command/subcommand are prefixed with ◈.
   * Bump the minimal dune requirement to dune 1.11 [#4437 @dra27 @kit-ty-kate]
   * 4.12 compatibility [#4437 @dra27 @kit-ty-kate]
   * Cold compiler updated to 4.12 [#4616 @dra27]
+  * Fix build from source when a dune-project file is presented in the parent directory [#4545 @kit-ty-kate]
+  * Fix build from source when a dune-project file is presented in the parent directory [#4545 @kit-ty-kate - fix #4537]
 
 ## Infrastructure
   * Release scripts: switch to OCaml 4.10.2 by default, add macos/arm64 builds by default [#4559 @AltGr]
