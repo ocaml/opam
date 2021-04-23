@@ -360,7 +360,9 @@ AS_IF([test "x$MCCS_ENABLED" = "xtrue"],[
   ])
 ])
 
-AS_IF([test "x$MCCS_ENABLED" = "xtrue"],[
+dnl -- if we're using the vendored opam-0install-cudf packages, then check that the compiler supports it
+dnl -- and disable it if it does not and fail if it was explicitly requested.
+AS_IF([test "x$OPAM_0INSTALL_SOLVER_ENABLED" = "xtrue" -a "x$OCAML_PKG_opam_0install_cudf" = "xno"],[
   AX_COMPARE_VERSION([$OCAMLVERSION], [lt], [4.08],[
     AS_IF([test "x$OPAM_0INSTALL_SOLVER_DEFAULT" = "xyes"],[
       AC_SUBST(OPAM_0INSTALL_SOLVER_ENABLED,false)

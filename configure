@@ -6362,7 +6362,7 @@ fi
 
 fi
 
-if test "x$MCCS_ENABLED" = "xtrue"; then :
+if test "x$OPAM_0INSTALL_SOLVER_ENABLED" = "xtrue" -a "x$OCAML_PKG_opam_0install_cudf" = "xno"; then :
 
 
 
