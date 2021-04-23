@@ -10,20 +10,21 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
 
-<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-system) 
+<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-base-compiler) 
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ocaml" {>= "4.05.0"}]
-[ERROR] Could not determine which packages to install for this switch:
-  * Missing dependency:
-    - (request) -> ocaml-system
-    unmet availability conditions, e.g. 'sys-ocaml-version = "4.10.0"'
 
-
-Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] y
-[NOTE] Opam has been initialised, but the initial switch creation failed.
-       Use 'opam switch create <compiler>' to get started.
-# Return code 20 #
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.10.0
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.10.0
+Done.
+### opam switch invariant
+["ocaml" {>= "4.05.0"}]
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["echo" "4.02.3"] "old system compiler" ]
