@@ -4,7 +4,7 @@ Possibly scripts breaking changes are prefixed with ✘.
 New option/command/subcommand are prefixed with ◈.
 
 ## Version
-  *
+  * Bump to `release candidate` [#4645 @rjbou]
 
 ## Global CLI
   * Add default cli mechanism: deprecated options are accepted (in the major version) if no cli is specified [#4575 @rjbou]
@@ -18,10 +18,12 @@ New option/command/subcommand are prefixed with ◈.
     so that calls to `opam` during build access the correct root and switch [#4668 @LasseBlaauwbroek]
   * Add cli versioning for enums of flags with predefined enums [#4626 @rjbou]
   * ◈ Add `--confirm-level` and `OPAMCONFIRMLEVEL` [#4582 @rjbou - fix #4168]
+    * `OPAMCONFIRMLEVEL` and `OPAMYES` now override "lower" CLI flags [#4683 @dra27 - fix #4682]
     * Take content of cli flags over environment variables, instead of already computed answer [#4691 @rjbou - fix #4682]
   * ◈ Add `--no` [#4582 @rjbou]
+
+## Plugins
   * Initialise environment variables for plugins call/install [#4582 @rjbou]
-  * `OPAMCONFIRMLEVEL` and `OPAMYES` now override "lower" CLI flags [#4683 @dra27 - fix #4682]
   * Preprocess `--confirm-level` for plugins calls/install [#4694 @rjbou]
   * Expect plugins to end in .exe on Windows [#4709 @dra27]
 
@@ -67,7 +69,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix version pin source retrieving: mustn't error if archive opam file is malformed [#4580 @rjbou]
 
 ## List
-  * --silent renamed to --check [#4595 @dra27 - fix #4323]
+  * `--silent` renamed to `--check` [#4595 @dra27 - fix #4323]
 
 ## Show
   * Include doc field in opam-show [#4567 @dra27 - partially fix #4565]
@@ -80,7 +82,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Lint
-  * Fix W59 & E60 with conf flag handling (no url required) [#4550 @rjbou - fix #4549]
+  * Fix W59 & E60 for conf packages (no url required) [#4550 @rjbou - fix #4549]
   * Fix W59 & E60 with VCS urls, don't check upstream if url has VCS backend [#4635 @rjbou]
   * Add E67 checksum specified with non archive url [#4635 @rjbou]
   * Disable subpath warning E63,W64 [#4638 @rjbou]
@@ -88,14 +90,12 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Lock
   * Don't write lock file with `--read-only', `--safe`, and `--dryrun` [#4562 @rjbou - fix #4320]
-  * Make consistent with `opam install`, on local pin always take last opam file even if uncomitted [#4562 @rjbou - fix #4320]
+  * Make consistent with `opam install`, on local pin always take last opam file even if uncommitted [#4562 @rjbou - fix #4320]
 
 ## Opamfile
   * Fix `features` parser [#4507 @rjbou]
   * Rename `hidden-version` to `avoid-version` [#4527 @dra27]
   * Fix rewriting with preserved format empty field error [#4634 @rjbou - fix #4628]
-  * Fix rewrtiting with preserved format empty field error [#4633 @rjbou - fix #4628]
-  * Require opam-file-format 2.1.3+ in order to enforce opam-version: "2.1" as first non-comment line [#4639 @dra27 - fix #4394]
   * Switch config: Defined `invariant` field as an option to differentiate when it is not defined [#4638 @rjbou]
   * Differentiate bad format from bad (opam) version with `Bad_version` exception, raised from `OpamFormat.check_opam_version` [#4638 @rjbou]
   * Always print the `opam-version` field on files [#4638 @rjbou]
@@ -132,7 +132,8 @@ New option/command/subcommand are prefixed with ◈.
   * Fix opam-devel's tests on platforms without openssl, GNU-diff and a system-wide ocaml [#4500 @kit-ty-kate]
   * Use dune to run reftests [#4376 @emillon]
   * Restrict `extlib` and `dose` version [#4517 @kit-ty-kate]
-  * Restrict to opam-file-format 2.1.2 [#4495 @rjbou]
+  * Restrict to `opam-file-format 2.1.2` [#4495 @rjbou]
+  * Require `opam-file-format 2.1.3+` in order to enforce `opam-version: "2.1"' as first non-comment line [#4639 @dra27 - fix #4394]
   * Switch to newer version of MCCS (based on newer GLPK) for src_ext [#4559 @AltGr]
   * Bump dune version to 2.8.2 [#4592 @AltGr]
   * Bump the minimal dune requirement to dune 1.11 [#4437 @dra27 @kit-ty-kate]
@@ -149,7 +150,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Infrastructure
   * Release scripts: switch to OCaml 4.10.2 by default, add macos/arm64 builds by default [#4559 @AltGr]
-  * Release script: add default cli version check on full archive build [#4575 @rjbou]
+  * Release scripts: add default cli version check on full archive build [#4575 @rjbou]
 
 ## Admin
   *
@@ -158,7 +159,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## State
-  * Rename state.cache to include the OpamVersion.magic() string. All .cache files are deleted if any
+  * Rename `state.cache` to include the `OpamVersion.magic()` string. All .cache files are deleted if any
     cache file is written to, allowing multiple versions of the library to co-exist without constantly
     regenerating it [#4642 @dra27 - fix #4554]
 
@@ -169,7 +170,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix Cudf preprocessing [#4534 #4627 @AltGr - fix #4624]
   * Allow to upgrade to a hidden-version package if a hidden-version package is already installed [#4525 @kit-ty-kate]
   * Add support for a few select criteria useful to CI to the 0install solver: `+count[version-lag,solution]` to always choose the oldest version available, `+removed` to not try to keep installed packages [#4631 @kit-ty-kate]
-  * Add a --with-0install-solver option to the configure script to enable the 'builtin-0install' solver [#4646 @kit-ty-kate]
+  * ◈ Add a `--with-0install-solver` option to the configure script to enable the 'builtin-0install' solver [#4646 @kit-ty-kate]
 
 ## Client
   * ✘ Environment variables initialised only at opam client launch, no more via libraries [#4606 #4703 @rjbou]
