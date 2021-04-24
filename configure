@@ -1396,10 +1396,10 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --without-mccs          Compile without a built-in Cudf solver (only works
                           if 'mccs' is not otherwise installed)
-  --without-0install-solver
-                          Compile without the built-in 0install solver (only
-                          works if 'opam-0install-cudf' is not otherwise
-                          installed)
+  --with-0install-solver  Compile with the built-in 0install solver
+                          (--without-0install-solver only works if
+                          'opam-0install-cudf' is not otherwise installed)
+
   --with-libacl           Compile opam with libacl support
   --with-private-runtime  For a mingw-w64 build, manifest the runtime DLLs
                           locally in Opam.Runtime.arch
@@ -3461,9 +3461,6 @@ fi
 # Check whether --with-0install-solver was given.
 if test "${with_0install_solver+set}" = set; then :
   withval=$with_0install_solver;
-else
-  OPAM_0INSTALL_SOLVER_DEFAULT=yes
-
 fi
 
 
@@ -4293,11 +4290,11 @@ else
   MCCS_ENABLED=true
 
 fi
-if test "x${with_0install_solver}" = "xno"; then :
-  OPAM_0INSTALL_SOLVER_ENABLED=false
+if test "x${with_0install_solver}" = "xyes"; then :
+  OPAM_0INSTALL_SOLVER_ENABLED=true
 
 else
-  OPAM_0INSTALL_SOLVER_ENABLED=true
+  OPAM_0INSTALL_SOLVER_ENABLED=false
 
 fi
 
@@ -6075,6 +6072,11 @@ if test "x${with_0install_solver}" = "xno" && test "x$OCAML_PKG_opam_0install_cu
   as_fn_error $? "Option --without-0install-solver is not available without uninstalling the 'opam-0install-cudf' package" "$LINENO" 5
 fi
 
+if test "x$OCAML_PKG_opam_0install_cudf" != "xno"; then :
+  OPAM_0INSTALL_SOLVER_ENABLED=true
+
+fi
+
 
 if test "x$MCCS_ENABLED" = "xtrue"; then :
 
@@ -6397,17 +6399,8 @@ x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version
 
     if test "$ax_compare_version" = "true" ; then
 
-    if test "x$OPAM_0INSTALL_SOLVER_DEFAULT" = "xyes"; then :
-
-      OPAM_0INSTALL_SOLVER_ENABLED=false
-
-
-else
-
-      as_fn_error $? "Your version of OCaml: $OCAMLVERSION does not support the requested 0install-solver. \
-                    You can either re-run the configure script with --without-0install-solver or use make cold" "$LINENO" 5
-
-fi
+    as_fn_error $? "Your version of OCaml: $OCAMLVERSION does not support the requested 0install-solver. \
+                  You can either re-run the configure script with --without-0install-solver or use make cold" "$LINENO" 5
 
       fi
 

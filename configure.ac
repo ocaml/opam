@@ -58,10 +58,8 @@ AC_ARG_WITH([mccs],
                  [Compile without a built-in Cudf solver (only works if 'mccs' is not otherwise installed)]),[],[MCCS_DEFAULT=yes]
 )
 AC_ARG_WITH([0install-solver],
-  AC_HELP_STRING([--without-0install-solver],
-                 [Compile without the built-in 0install solver (only works if 'opam-0install-cudf' is not otherwise installed)]),
-                 [],
-                 [OPAM_0INSTALL_SOLVER_DEFAULT=yes]
+  AC_HELP_STRING([--with-0install-solver],
+                 [Compile with the built-in 0install solver (--without-0install-solver only works if 'opam-0install-cudf' is not otherwise installed)])
 )
 
 
@@ -151,7 +149,7 @@ AS_IF([test "x${enable_developer_mode}" = "xyes"],[
 ])
 
 AS_IF([test "x${with_mccs}" = "xno"], [AC_SUBST(MCCS_ENABLED,false)], [AC_SUBST(MCCS_ENABLED,true)])
-AS_IF([test "x${with_0install_solver}" = "xno"], [AC_SUBST(OPAM_0INSTALL_SOLVER_ENABLED,false)], [AC_SUBST(OPAM_0INSTALL_SOLVER_ENABLED,true)])
+AS_IF([test "x${with_0install_solver}" = "xyes"], [AC_SUBST(OPAM_0INSTALL_SOLVER_ENABLED,true)], [AC_SUBST(OPAM_0INSTALL_SOLVER_ENABLED,false)])
 
 AS_IF([test "x${with_libacl}" != "xno"],[
   have_libacl=yes
@@ -336,6 +334,10 @@ AS_IF([test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"],
 AS_IF([test "x${with_0install_solver}" = "xno" && test "x$OCAML_PKG_opam_0install_cudf" != "xno"],
       [AC_MSG_ERROR([Option --without-0install-solver is not available without uninstalling the 'opam-0install-cudf' package])])
 
+dnl -- Enable 0install-solver if the package is available
+AS_IF([test "x$OCAML_PKG_opam_0install_cudf" != "xno"],
+      [AC_SUBST(OPAM_0INSTALL_SOLVER_ENABLED,true)])
+
 dnl -- that's what we would like to do, but no way to disable mccs in jbuilder
 dnl -- if it's installed, at the moment
 dnl AS_IF([test "x${with_mccs}" != "xno"],
@@ -360,16 +362,10 @@ AS_IF([test "x$MCCS_ENABLED" = "xtrue"],[
   ])
 ])
 
-dnl -- if we're using the vendored opam-0install-cudf packages, then check that the compiler supports it
-dnl -- and disable it if it does not and fail if it was explicitly requested.
 AS_IF([test "x$OPAM_0INSTALL_SOLVER_ENABLED" = "xtrue" -a "x$OCAML_PKG_opam_0install_cudf" = "xno"],[
   AX_COMPARE_VERSION([$OCAMLVERSION], [lt], [4.08],[
-    AS_IF([test "x$OPAM_0INSTALL_SOLVER_DEFAULT" = "xyes"],[
-      AC_SUBST(OPAM_0INSTALL_SOLVER_ENABLED,false)
-    ],[
-      AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION does not support the requested 0install-solver. \
-                    You can either re-run the configure script with --without-0install-solver or use make cold])
-    ])
+    AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION does not support the requested 0install-solver. \
+                  You can either re-run the configure script with --without-0install-solver or use make cold])
   ])
 ])
 
