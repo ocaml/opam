@@ -902,7 +902,9 @@ let init
               (OpamFile.InitConfig.default_compiler init_config)
           in
           let invariant = OpamFile.InitConfig.default_invariant init_config in
-          let virt_st = OpamSwitchState.load_virtual gt rt in
+          let virt_st =
+            OpamSwitchState.load_virtual ~avail_default:false gt rt
+          in
           let univ =
             OpamSwitchState.universe virt_st
               ~requested:OpamPackage.Name.Set.empty Query
