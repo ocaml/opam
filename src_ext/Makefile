@@ -39,6 +39,10 @@ ifeq ($(MCCS_ENABLED),true)
 SRC_EXTS := $(SRC_EXTS) mccs
 endif
 
+ifeq ($(OPAM_0INSTALL_SOLVER_ENABLED),true)
+SRC_EXTS := $(SRC_EXTS) opam-0install-cudf 0install-solver
+endif
+
 include Makefile.sources
 ifneq ($(shell PATH="$(PATH)" command -v ocamlc 2>/dev/null),)
 include Makefile.packages
