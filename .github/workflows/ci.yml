@@ -7,10 +7,10 @@ env:
   OPAMBSROOT: ~/.cache/.opam.cached
   OPAM12CACHE: ~/.cache/opam1.2/cache
   # This should be identical to the value in appveyor.yml
-  OPAM_TEST_REPO_SHA: 6877131f0
-  OPAM_REPO_SHA: 88c17a663
+  OPAM_TEST_REPO_SHA: 75ff83837547183f000e1c18d42260d7d6cc5fbc
+  OPAM_REPO_SHA: 75ff83837547183f000e1c18d42260d7d6cc5fbc
   # Default ocaml version for some jobs
-  OCAML_VERSION: 4.11.1
+  OCAML_VERSION: 4.11.2
   ## variables for cache paths
   GH_OCAML_CACHE: ~/.cache/ocaml-local/**
 
@@ -50,10 +50,10 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
-        ocamlv: [ 4.02.3, 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1, 4.08.1, 4.09.1, 4.10.1, 4.11.1 ]
+        ocamlv: [ 4.02.3, 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1, 4.08.1, 4.09.1, 4.10.2, 4.11.2 ]
         include:
           - os: macos-latest
-            ocamlv: 4.11.1
+            ocamlv: 4.11.2
       # Intentionnaly fail fast, no need to run all build if there is a
       # problem in a given version; usually it is functions not defined in lower
       # versions of caml
@@ -88,7 +88,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest ]
-        ocamlv: [ 4.11.1 ]
+        ocamlv: [ 4.11.2 ]
       fail-fast: false
     env:
       OPAM_TEST: 1
@@ -115,7 +115,7 @@ jobs:
         path: |
           ${{ env.OPAMBSROOT }}/**
           ~/.cache/opam-local/bin/**
-        key: opam-2.0-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/opam-bs-cache.sh', '.github/scripts/preamble.sh') }}
+        key: opam-2.0-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/opam-bs-cache.sh', '.github/scripts/preamble.sh') }}
     - name: opam root cache
       if: steps.opam-bootstrap.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/opam-bs-cache.sh
@@ -124,7 +124,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.cache/opam-rt/**
-        key: ${{ runner.os }}-opam-rt-2.0
+        key: ${{ runner.os }}-opam-rt-2.0-${{ matrix.ocamlv }}
     - name: Test
       env:
         OCAML_VERSION: ${{ matrix.ocamlv }}
@@ -137,7 +137,7 @@ jobs:
       matrix:
 #        os: [ ubuntu-latest, macos-latest ]
         os: [ ubuntu-latest ]
-        ocamlv: [ 4.11.1 ]
+        ocamlv: [ 4.11.2 ]
       fail-fast: false
     steps:
     - name: install deps
@@ -164,7 +164,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest ]
-        ocamlv: [ 4.11.1 ]
+        ocamlv: [ 4.11.2 ]
       fail-fast: false
     steps:
     - name: install deps
