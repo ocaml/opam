@@ -1099,18 +1099,9 @@ let as_necessary requested_lock global_lock root config =
         OpamVersion.compare v latest_hard_upgrade <= 0)
   in
   let erase_plugin_links root =
-    let root = OpamPath.plugins_bin root in
-    if OpamFilename.exists_dir root then begin
-      let root = OpamFilename.Dir.to_string root in
-      let files = Sys.readdir root in
-      let erase_link file =
-        (* Sys.file_exists will be false for a dangling symlink *)
-        let file = Filename.concat root file in
-        if not (Sys.file_exists file && Sys.is_directory file) then
-          try Unix.unlink file
-          with Unix.Unix_error _ -> ()
-      in
-      Array.iter erase_link files
+    let plugins_bin = OpamPath.plugins_bin root in
+    if OpamFilename.exists_dir plugins_bin then begin
+      List.iter OpamFilename.remove @@ OpamFilename.files_and_links plugins_bin
     end
   in
   let light config =
