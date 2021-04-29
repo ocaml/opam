@@ -192,6 +192,22 @@
    (run ./run.exe %{bin:opam} %{dep:legacy-local.test} %{read-lines:testing-env}))))
 
 (alias
+ (name reftest-opamroot-versions)
+ (action
+  (diff opamroot-versions.test opamroot-versions.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-opamroot-versions)))
+
+(rule
+ (deps root-632bc2e)
+ (action
+  (with-stdout-to
+   opamroot-versions.out
+   (run ./run.exe %{bin:opam} %{dep:opamroot-versions.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-pat-sub)
  (action
   (diff pat-sub.test pat-sub.out)))

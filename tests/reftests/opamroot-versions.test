@@ -1,0 +1,912 @@
+632bc2e
+### OPAMYES=1 OPAMDEBUG=-1 OPAMSTRICT=0 OPAMDEBUGSECTIONS="FMT_UPG FORMAT GSTATE RSTATE STATE"
+### : setup
+### <generate.ml>
+let opam_version = Printf.sprintf "opam-version: %S"
+let root_version = Printf.sprintf "opam-root-version: %S"
+let switches = {|
+installed-switches: "foo"
+switch: "foo"
+|}
+let neant = "neant: 0"
+let repo = {|repositories: [ "default" {"file:///${BASEDIR/dontexist"} ]|}
+let switch_config = {|synopsis: "foo"|}
+let _ =
+  let configs =
+    ( let opam_v = opam_version "2.0" in
+      List.map (fun v -> [
+            "config."^v, [ opam_v ; root_version v ];
+            "config-w-swfoo."^v, [ opam_v; root_version v; switches ];
+          ]) ["2.0"; "2.1~rc"; "2.2"]
+      |> List.flatten)
+    @ (let opam_v = opam_version "2.1" in
+       let v = "2.3" in [
+         "config."^v, [ opam_v; root_version v ];
+         "config-w-swfoo."^v, [ opam_v; root_version v; switches ];
+       ])
+  in
+  let files = [
+    "repos-config", [ repo ];
+    "switch-config", [ opam_version "2.0"; switch_config ];
+  ] @ configs
+  in
+  let errs =
+    List.map (fun (n,c) -> n^".err" , c@[neant]) files
+    @ (let v = "2.1~rc" in
+       let opam_v = opam_version "2.1" in [
+         "config."^v^".wrong", [ opam_v; root_version v ];
+         "switch-config.wrong", [ opam_v; switch_config ];
+       ])
+  in
+  List.iter (fun (name, content) ->
+      let fd = open_out name in
+      List.iter (fun l -> output_string fd (l^"\n")) content;
+      close_out fd)
+    (files @ errs)
+### ocaml generate.ml
+### <root-config/repo>
+opam-version: "2.0"
+### mkdir root-config/packages
+### :                     :
+### :I: Current opam root :
+### :                     :
+### :I:1:a: Bad config file
+### cp config.2.1~rc.err $OPAMROOT/config
+### # ro global state
+### opam switch
+[WARNING] Errors in ${BASEDIR}/OPAM/config, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/config:3:0-3:8::
+              Invalid field neant
+
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Errors in ${BASEDIR}/OPAM/config, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/config:3:0-3:8::
+              Invalid field neant
+
+#  switch  compiler  description
+### :I:1:b: Good config file
+### cp config.2.1~rc $OPAMROOT/config
+### # ro global state
+### opam switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+#  switch  compiler  description
+### :I:2:a: Bad repo config file :
+### cp repos-config.err $OPAMROOT/repo/repos-config
+### # ro global state, ro repo state
+### opam list --no-switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+[WARNING] Errors in ${BASEDIR}/OPAM/repo/repos-config, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/repo/repos-config:2:0-2:8::
+              Invalid field neant
+
+RSTATE                          Cache found
+# No matches found
+### # ro global state, rw repo state
+### opam repo add root-config ./root-config --set-default
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+[WARNING] Errors in ${BASEDIR}/OPAM/repo/repos-config, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/repo/repos-config:2:0-2:8::
+              Invalid field neant
+
+RSTATE                          Cache found
+[root-config] Initialised
+### opam repo remove root-config --all --debug-level=0
+### :I:2:b: Good repo config file :
+### cp repos-config $OPAMROOT/repo/repos-config
+### # ro global state, ro repo state
+### opam list --no-switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+# No matches found
+### # ro global state, rw repo state
+### opam repo add root-config ./root-config --set-default
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+[root-config] Initialised
+### opam switch create foo --empty --debug-level=0
+### :I:3:a: Bad switch config file :
+### cp switch-config.err $OPAMROOT/foo/.opam-switch/switch-config
+### # ro global state, ro repo state, ro switch state
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ foo
+[WARNING] Errors in ${BASEDIR}/OPAM/foo/.opam-switch/switch-config, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/foo/.opam-switch/switch-config:3:0-3:8::
+              Invalid field neant
+
+STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# No matches found
+### # ro global state, ro repo state, rw switch state
+### opam install bar
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ foo
+[WARNING] Errors in ${BASEDIR}/OPAM/foo/.opam-switch/switch-config, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/foo/.opam-switch/switch-config:3:0-3:8::
+              Invalid field neant
+
+STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+STATE                           Switch state loaded in 0.000s
+[ERROR] No package named bar found.
+# Return code 5 #
+### :I:3:b: Good switch config file :
+### cp switch-config $OPAMROOT/foo/.opam-switch/switch-config
+### # ro global state, ro repo state, ro switch state
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ foo
+STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# No matches found
+### # ro global state, ro repo state, rw switch state
+### opam install bar
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ foo
+STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+STATE                           Switch state loaded in 0.000s
+[ERROR] No package named bar found.
+# Return code 5 #
+### :I:1:a: Bad config file
+### cp config-w-swfoo.2.1~rc.err $OPAMROOT/config
+### # rw global state
+### opam switch remove foo
+[WARNING] Errors in ${BASEDIR}/OPAM/config, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/config:7:0-7:8::
+              Invalid field neant
+
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Errors in ${BASEDIR}/OPAM/config, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/config:7:0-7:8::
+              Invalid field neant
+
+Switch foo and all its packages will be wiped. Are you sure? [Y/n] y
+### :I:1:b: Good config file
+### opam switch create foo --empty --debug-level=0
+### cp config-w-swfoo.2.1~rc $OPAMROOT/config
+### # rw global state
+### opam switch remove foo
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+Switch foo and all its packages will be wiped. Are you sure? [Y/n] y
+### :                                                :
+### :II: Current opam root & newer opam file version :
+### :                                                :
+### :II:1: config with newer opam version file & no update of root version
+### cp config.2.1~rc.wrong $OPAMROOT/config
+### # cat $OPAMROOT/config
+### # ro global state
+### opam switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+Fatal error:
+In ${BASEDIR}/OPAM/config:
+unsupported or missing file format version; should be 2.0 or older
+# Return code 99 #
+### opam option jobs
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+Fatal error:
+In ${BASEDIR}/OPAM/config:
+unsupported or missing file format version; should be 2.0 or older
+# Return code 99 #
+### # rw global state
+### opam switch bar
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+Fatal error:
+In ${BASEDIR}/OPAM/config:
+unsupported or missing file format version; should be 2.0 or older
+# Return code 99 #
+### :II:2: switch-config with newer opam version file & no update of root version
+### cp config.2.1~rc $OPAMROOT/config
+### opam switch create foo --empty --debug-level=0
+### cp switch-config.wrong $OPAMROOT/foo/.opam-switch/switch-config
+### # ro global state
+### opam option jobs
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+### # rw global state
+### # opam option synopsis="bar" --switch foo
+### opam switch foo
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ foo
+Fatal error:
+In ${BASEDIR}/OPAM/foo/.opam-switch/switch-config:
+unsupported or missing file format version; should be 2.0 or older
+# Return code 99 #
+### :                 :
+### : Newer opam root :
+### :                 :
+### :III:1:a: Bad config file
+### cp config.2.2.err $OPAMROOT/config
+### # ro global state
+### opam switch
+FORMAT                          File errors in ${BASEDIR}/OPAM/config, ignored fields: At ${BASEDIR}/OPAM/config:3:0-3:8::
+Invalid field neant
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FORMAT                          File errors in ${BASEDIR}/OPAM/config, ignored fields: At ${BASEDIR}/OPAM/config:3:0-3:8::
+Invalid field neant
+GSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+#  switch  compiler  description
+### :III:1:b: Good config file
+### cp config.2.2 $OPAMROOT/config
+### # ro global state
+### opam switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+GSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+#  switch  compiler  description
+### :III:2:a: Bad repo config file :
+### cp repos-config.err $OPAMROOT/repo/repos-config
+### # ro global state, ro repo state
+### opam list --no-switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+GSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+FORMAT                          File errors in ${BASEDIR}/OPAM/repo/repos-config, ignored fields: At ${BASEDIR}/OPAM/repo/repos-config:2:0-2:8::
+Invalid field neant
+RSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+RSTATE                          Cache found
+# No matches found
+### # ro global state, rw repo state
+### opam repo add root-config ./root-config --set-default
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+GSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.1), aborting.
+# Return code 15 #
+### :III:2:b: Good repo config file :
+### cp repos-config $OPAMROOT/repo/repos-config
+### # ro global state, ro repo state
+### opam list --no-switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+GSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+RSTATE                          Cache found
+# No matches found
+### # ro global state, rw repo state
+### opam repo add root-config ./root-config --set-default
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+GSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.1), aborting.
+# Return code 15 #
+### cp config.2.1~rc $OPAMROOT/config
+### cp config-w-swfoo.2.2 $OPAMROOT/config
+### :III:3:a: Bad switch config file :
+### cp switch-config.err $OPAMROOT/foo/.opam-switch/switch-config
+### # ro global state, ro repo state, ro switch state
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+GSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ foo
+FORMAT                          File errors in ${BASEDIR}/OPAM/foo/.opam-switch/switch-config, ignored fields: At ${BASEDIR}/OPAM/foo/.opam-switch/switch-config:3:0-3:8::
+Invalid field neant
+STATE                           root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# No matches found
+### # ro global state, ro repo state, rw switch state
+### opam install bar
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+GSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ foo
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.1), aborting.
+# Return code 15 #
+### :III:3:b: Good switch config file :
+### cp switch-config $OPAMROOT/foo/.opam-switch/switch-config
+### # ro global state, ro repo state, ro switch state
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+GSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ foo
+STATE                           root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# No matches found
+### # ro global state, ro repo state, rw switch state
+### opam install bar
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+GSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ foo
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.1), aborting.
+# Return code 15 #
+### :III:1:a: Bad config file
+### cp config-w-swfoo.2.2.err $OPAMROOT/config
+### # rw global state
+### opam switch remove foo
+FORMAT                          File errors in ${BASEDIR}/OPAM/config, ignored fields: At ${BASEDIR}/OPAM/config:7:0-7:8::
+Invalid field neant
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.1), aborting.
+# Return code 15 #
+### :III:1:b: Good config file
+### cp config-w-swfoo.2.2 $OPAMROOT/config
+### # rw global state
+### opam switch remove foo
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.1), aborting.
+# Return code 15 #
+### :                                    :
+### : Newer opam root & new file version :
+### :                                    :
+### :IV:1:a: Bad config file
+### cp config.2.3.err $OPAMROOT/config
+### # ro global state
+### opam switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+Fatal error:
+In ${BASEDIR}/OPAM/config:
+unsupported or missing file format version; should be 2.0 or older
+# Return code 99 #
+### :IV:1:b: Good config file
+### cp config.2.3 $OPAMROOT/config
+### # ro global state
+### opam switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+Fatal error:
+In ${BASEDIR}/OPAM/config:
+unsupported or missing file format version; should be 2.0 or older
+# Return code 99 #
+### :IV:2:a: Bad repo config file :
+### cp repos-config.err $OPAMROOT/repo/repos-config
+### # ro global state, ro repo state
+### opam list --no-switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+Fatal error:
+In ${BASEDIR}/OPAM/config:
+unsupported or missing file format version; should be 2.0 or older
+# Return code 99 #
+### # ro global state, rw repo state
+### opam repo add root-config ./root-config --set-default
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+Fatal error:
+In ${BASEDIR}/OPAM/config:
+unsupported or missing file format version; should be 2.0 or older
+# Return code 99 #
+### :IV:2:b: Good repo config file :
+### cp repos-config $OPAMROOT/repo/repos-config
+### # ro global state, ro repo state
+### opam list --no-switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+Fatal error:
+In ${BASEDIR}/OPAM/config:
+unsupported or missing file format version; should be 2.0 or older
+# Return code 99 #
+### # ro global state, rw repo state
+### opam repo add root-config ./root-config --set-default
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+Fatal error:
+In ${BASEDIR}/OPAM/config:
+unsupported or missing file format version; should be 2.0 or older
+# Return code 99 #
+### cp config.2.1~rc $OPAMROOT/config
+### #opam switch create foo --empty --debug-level=0
+### cp config-w-swfoo.2.3 $OPAMROOT/config
+### :IV:3:a: Bad switch config file :
+### cp switch-config.err $OPAMROOT/foo/.opam-switch/switch-config
+### # ro global state, ro repo state, ro switch state
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+Fatal error:
+In ${BASEDIR}/OPAM/config:
+unsupported or missing file format version; should be 2.0 or older
+# Return code 99 #
+### # ro global state, ro repo state, rw switch state
+### opam install bar
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+Fatal error:
+In ${BASEDIR}/OPAM/config:
+unsupported or missing file format version; should be 2.0 or older
+# Return code 99 #
+### :IV:3:b: Good switch config file :
+### cp switch-config $OPAMROOT/foo/.opam-switch/switch-config
+### # ro global state, ro repo state, ro switch state
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+Fatal error:
+In ${BASEDIR}/OPAM/config:
+unsupported or missing file format version; should be 2.0 or older
+# Return code 99 #
+### # ro global state, ro repo state, rw switch state
+### opam install bar
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+Fatal error:
+In ${BASEDIR}/OPAM/config:
+unsupported or missing file format version; should be 2.0 or older
+# Return code 99 #
+### :IV:1:a: Bad config file
+### cp config-w-swfoo.2.3.err $OPAMROOT/config
+### # rw global state
+### opam switch remove foo
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.3 > 2.1), aborting.
+# Return code 15 #
+### :IV:1:b: Good config file
+### cp config-w-swfoo.2.3 $OPAMROOT/config
+### # rw global state
+### opam switch remove foo
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.3 > 2.1), aborting.
+# Return code 15 #
+### :                 :
+### : Older opam root :
+### :                 :
+### <generate_repo.ml>
+let content = {|opam-version: "2.0"
+synopsis: "One-line description"
+maintainer: "Name <email>"
+authors: "Name <email>"
+license: "MIT"
+homepage: " "
+bug-reports: " "
+dev-repo: "git://url.net/name"|}
+let compiler="flags: compiler"
+let files = [
+  "repo", [{|opam-version: "2.0"|}];
+  "packages/i-am-compiler/i-am-compiler.1/opam", [ content; compiler ];
+  "packages/i-am-compiler/i-am-compiler.2/opam", [ content; compiler ];
+  "packages/i-am-sys-compiler/i-am-sys-compiler.1/opam", [ content; compiler; {|available: sys-comp-version = "1"|}];
+  "packages/i-am-sys-compiler/i-am-sys-compiler.2/opam", [ content; compiler; {|available: sys-comp-version = "2"|}];
+  "packages/i-am-package/i-am-package.1/opam", [ content; {|depends: ["i-am-compiler"|"i-am-sys-compiler"]|} ];
+  "packages/i-am-package/i-am-package.2/opam", [ content; {|depends: ["i-am-compiler"|"i-am-sys-compiler"]|} ];
+  "packages/i-am-another-package/i-am-another-package.1/opam", [ content; {|depends: "i-am-package"|} ];
+  "packages/i-am-another-package/i-am-another-package.2/opam", [ content; {|depends: "i-am-package"|} ];
+]
+let _ =
+  List.iter (fun (name, content) ->
+      let fd = open_out name in
+      List.iter (fun l -> output_string fd (l^"\n")) content;
+      close_out fd)
+    (List.map (fun (n,c) -> "default/"^n, c) files)
+### <generate_dirs.sh>
+for d in i-am-compiler i-am-sys-compiler i-am-package i-am-another-package; do
+  for v in 1 2 ; do
+    mkdir -p default/packages/$d/$d.$v
+  done
+done
+### sh generate_dirs.sh
+### ocaml generate_repo.ml
+### <generate.ml>
+let opam_version = Printf.sprintf "opam-version: %S"
+let opam_version_2_0 = opam_version "2.0"
+let opam_version_2_1 = opam_version "2.1"
+let repo = {|repositories: "default"|}
+let installed_switches = {|
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+switch: "sw-sys-comp"
+|}
+let default_compiler = {|default-compiler: ["i-am-sys-compiler" "i-am-compiler"]|}
+let default_invariant = {|default-invariant: ["i-am-sys-compiler"]|}
+let depext = {|
+depext: true
+depext-run-installs: true
+depext-cannot-install: false
+|}
+let eval = {|eval-variables: [ sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version" ]|}
+let sw_state_default = {|
+compiler: ["i-am-sys-compiler.2"]
+roots: ["i-am-sys-compiler.2"]
+installed: ["i-am-sys-compiler.2"]
+|}
+let sw_state_sw_comp = {|
+compiler: ["i-am-compiler.2"]
+roots: ["i-am-package.2" "i-am-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2"]
+|}
+let sw_state_sw_sys_comp = {|
+compiler: ["i-am-sys-compiler.1"]
+roots: ["i-am-another-package.2" "i-am-sys-compiler.1"]
+installed: ["i-am-another-package.2" "i-am-package.2" "i-am-sys-compiler.1"]
+|}
+let invariant_default = {|invariant: ["i-am-sys-compiler" | "i-am-compiler"]|}
+let invariant_sw_comp = {|invariant: ["i-am-compiler"]|}
+let invariant_sw_sys_comp = {|invariant: ["i-am-sys-compiler"]|}
+let root_version =  {|opam-root-version: "2.1~rc"|}
+let synopsis = Printf.sprintf "synopsis: %S"
+let opam_20 =
+[ "config", [ opam_version_2_0; repo; installed_switches; eval; default_compiler ];
+  "switch-config.default", [ opam_version_2_0; synopsis "default switch" ];
+  "switch-state.default", [ opam_version_2_0; sw_state_default ];
+  "switch-config.sw-comp", [ opam_version_2_0; synopsis "switch with compiler" ];
+  "switch-state.sw-comp", [ opam_version_2_0; sw_state_sw_comp ];
+  "switch-config.sw-sys-comp", [ opam_version_2_0; synopsis "switch with system compiler" ];
+  "switch-state.sw-sys-comp", [ opam_version_2_0; sw_state_sw_sys_comp ]
+]
+let opam_21alpha =
+[ "config", [ opam_version_2_0; repo; installed_switches; eval; default_compiler ];
+  "switch-config.default", [ opam_version_2_1; synopsis "default switch"; invariant_default ];
+  "switch-state.default", [ opam_version_2_0; sw_state_default ];
+  "switch-config.sw-comp", [ opam_version_2_1; synopsis "switch with compiler"; invariant_sw_comp ];
+  "switch-state.sw-comp", [ opam_version_2_0; sw_state_sw_comp ];
+  "switch-config.sw-sys-comp", [ opam_version_2_1; synopsis "switch with system compiler"; invariant_sw_sys_comp ];
+  "switch-state.sw-sys-comp", [ opam_version_2_0; sw_state_sw_sys_comp ]
+]
+let opam_21alpha2 =
+[ "config", [ opam_version_2_1; repo; installed_switches; eval; default_compiler; depext; ];
+  "switch-config.default", [ opam_version_2_1; synopsis "default switch"; invariant_default ];
+  "switch-state.default", [ opam_version_2_0; sw_state_default ];
+  "switch-config.sw-comp", [ opam_version_2_1; synopsis "switch with compiler"; invariant_sw_comp ];
+  "switch-state.sw-comp", [ opam_version_2_0; sw_state_sw_comp ];
+  "switch-config.sw-sys-comp", [ opam_version_2_1; synopsis "switch with system compiler"; invariant_sw_sys_comp ];
+  "switch-state.sw-sys-comp", [ opam_version_2_0; sw_state_sw_sys_comp ]
+]
+let opam_21rc =
+[ "config", [ opam_version_2_0; root_version; repo; installed_switches; eval; default_compiler; default_invariant; depext ];
+  "switch-config.default", [ opam_version_2_0; synopsis "default switch"; invariant_default ];
+  "switch-state.default", [ opam_version_2_0; sw_state_default ];
+  "switch-config.sw-comp", [ opam_version_2_0; synopsis "switch with compiler"; invariant_sw_comp ];
+  "switch-state.sw-comp", [ opam_version_2_0; sw_state_sw_comp ];
+  "switch-config.sw-sys-comp", [ opam_version_2_0; synopsis "switch with system compiler"; invariant_sw_sys_comp ];
+  "switch-state.sw-sys-comp", [ opam_version_2_0; sw_state_sw_sys_comp ]
+]
+let _ =
+  let append v (f,c) = f^"."^v, c in
+  List.iter (fun (name, content) ->
+      let fd = open_out name in
+      List.iter (fun l -> output_string fd (l^"\n")) content;
+      close_out fd)
+    (List.map (append "2.0") opam_20
+     @ List.map (append "2.1~alpha") opam_21alpha
+     @ List.map (append "2.1~alpha2") opam_21alpha2
+     @ List.map (append "2.1~rc") opam_21rc)
+### ocaml generate.ml
+### <switch-root.sh>
+version=$1
+cp config.$version $OPAMROOT/config
+cp switch-config.default.$version $OPAMROOT/default/.opam-switch/switch-config
+cp switch-state.default.$version $OPAMROOT/default/.opam-switch/switch-state
+cp switch-config.sw-comp.$version $OPAMROOT/sw-comp/.opam-switch/switch-config
+cp switch-state.sw-comp.$version $OPAMROOT/sw-comp/.opam-switch/switch-state
+cp switch-config.sw-sys-comp.$version $OPAMROOT/sw-sys-comp/.opam-switch/switch-config
+cp switch-state.sw-sys-comp.$version $OPAMROOT/sw-sys-comp/.opam-switch/switch-state
+### # OPAMDEBUG=0 OPAMDEBUGLEVEL=0
+### rm -rf $OPAMROOT
+### opam init -na default ./default --bare --bypass-checks --no-opamrc --debug-level=0
+No configuration file found, using built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+### mkdir -p $OPAMROOT $OPAMROOT/repo $OPAMROOT/default/.opam-switch  $OPAMROOT/sw-comp/.opam-switch $OPAMROOT/sw-sys-comp/.opam-switch
+### :V:1: From 2.0 root
+### sh switch-root.sh 2.0
+### # ro global state
+### opam option jobs
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.0 to 2.1~rc
+FMT_UPG                         Format upgrade done
+### # ro global state, ro repo state, ro switch state
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.0 to 2.1~rc
+FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Inferred invariant: from base packages { i-am-sys-compiler.1 }, (roots { i-am-sys-compiler.1 }) => ["i-am-sys-compiler"]
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# Name               # Installed # Synopsis
+i-am-another-package 2           One-line description
+i-am-package         2           One-line description
+i-am-sys-compiler    1           One-line description
+### # ro global state, ro repo state, rw switch state
+### opam install i-am-another-package --switch sw-comp
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.0 to 2.1~rc
+FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Definition missing for installed package i-am-compiler.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Inferred invariant: from base packages { i-am-compiler.2 }, (roots { i-am-compiler.2 }) => ["i-am-compiler" {>= "2"}]
+STATE                           Switch state loaded in 0.000s
+STATE                           Detected changed packages (marked for reinstall): {}
+The following actions will be performed:
+  - install i-am-another-package 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-another-package.2
+Done.
+### # rw global state
+### opam switch sw-comp
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         Light config upgrade, from 2.0 to 2.1~rc
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version 2.1~rc, which can't be reverted.
+You may want to back it up before going further.
+Continue? [Y/n] y
+Format upgrade done.
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+### cat $OPAMROOT/config
+opam-version: "2.0"
+opam-root-version: "2.1~rc"
+repositories: "default"
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+switch: "sw-comp"
+download-jobs: 1
+eval-variables: [
+  sys-comp-version
+  ["sh" "-c" "echo $OPAMSYSCOMP"]
+  "comp version"
+]
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+depext: true
+depext-run-installs: true
+depext-cannot-install: false
+### cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+opam-version: "2.0"
+synopsis: "switch with compiler"
+invariant: [
+  "i-am-compiler" {>= "2"}
+]
+paths {
+  
+}
+variables {
+  
+}
+### cat $OPAMROOT/sw-comp/.opam-switch/switch-state
+opam-version: "2.0"
+compiler: ["i-am-compiler.2"]
+roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+### :V:2: From 2.1~alpha root
+### sh switch-root.sh 2.1~alpha
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         Hard config upgrade, from 2.1~alpha to 2.1~rc
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha to version 2.1~rc, which can't be reverted.
+You may want to back it up before going further.
+Perform the update and continue? [Y/n] y
+Format upgrade done.
+
+<><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/default
+Update done, please now retry your command.
+# Return code 10 #
+### # ro global state, ro repo state, ro switch state
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# Name               # Installed # Synopsis
+i-am-another-package 2           One-line description
+i-am-package         2           One-line description
+i-am-sys-compiler    1           One-line description
+### # ro global state, ro repo state, rw switch state
+### opam install i-am-another-package --switch sw-comp
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           Detected changed packages (marked for reinstall): {}
+The following actions will be performed:
+  - install i-am-another-package 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-another-package.2
+Done.
+### # rw global state
+### opam switch sw-comp
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+### cat $OPAMROOT/config
+opam-version: "2.0"
+opam-root-version: "2.1~rc"
+repositories: "default"
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+switch: "sw-comp"
+download-jobs: 3
+eval-variables: [
+  sys-comp-version
+  ["sh" "-c" "echo $OPAMSYSCOMP"]
+  "comp version"
+]
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+default-invariant: [
+  "ocaml" {>= "4.05.0"}
+]
+depext: true
+depext-run-installs: true
+depext-cannot-install: false
+wrap-build-commands:
+  ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands:
+  ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands:
+  ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
+### cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+opam-version: "2.0"
+synopsis: "switch with compiler"
+invariant: ["i-am-compiler"]
+### cat $OPAMROOT/sw-comp/.opam-switch/switch-state
+opam-version: "2.0"
+compiler: ["i-am-compiler.2"]
+roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+### :V:3: From 2.1~alpha2 root
+### sh switch-root.sh 2.1~alpha2
+### # ro global state
+### opam option jobs
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         Intermediate opam root detected, launch hard upgrade
+FMT_UPG                         Downgrade config opam-version to fix up
+FMT_UPG                         Hard config upgrade, from 2.1~alpha2 to 2.1~rc
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha2 to version 2.1~rc, which can't be reverted.
+You may want to back it up before going further.
+Perform the update and continue? [Y/n] y
+Format upgrade done.
+
+<><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/default
+Update done, please now retry your command.
+# Return code 10 #
+### # ro global state, ro repo state, ro switch state
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# Name               # Installed # Synopsis
+i-am-another-package 2           One-line description
+i-am-package         2           One-line description
+i-am-sys-compiler    1           One-line description
+### # ro global state, ro repo state, rw switch state
+### opam install i-am-another-package --switch sw-comp
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           Detected changed packages (marked for reinstall): {}
+The following actions will be performed:
+  - install i-am-another-package 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-another-package.2
+Done.
+### # rw global state
+### opam switch sw-comp
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+### cat $OPAMROOT/config
+opam-version: "2.0"
+opam-root-version: "2.1~rc"
+repositories: "default"
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+switch: "sw-comp"
+download-jobs: 3
+eval-variables: [
+  sys-comp-version
+  ["sh" "-c" "echo $OPAMSYSCOMP"]
+  "comp version"
+]
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+default-invariant: [
+  "ocaml" {>= "4.05.0"}
+]
+depext: true
+depext-run-installs: true
+depext-cannot-install: false
+wrap-build-commands:
+  ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands:
+  ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands:
+  ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
+### cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+opam-version: "2.0"
+synopsis: "switch with compiler"
+invariant: ["i-am-compiler"]
+### cat $OPAMROOT/sw-comp/.opam-switch/switch-state
+opam-version: "2.0"
+compiler: ["i-am-compiler.2"]
+roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+### :V:4: From 2.1~rc root
+### sh switch-root.sh 2.1~rc
+### # ro global state
+### opam option jobs
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+### # ro global state, ro repo state, ro switch state
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# Name               # Installed # Synopsis
+i-am-another-package 2           One-line description
+i-am-package         2           One-line description
+i-am-sys-compiler    1           One-line description
+### # ro global state, ro repo state, rw switch state
+### opam install i-am-another-package --switch sw-comp
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           Detected changed packages (marked for reinstall): {}
+The following actions will be performed:
+  - install i-am-another-package 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-another-package.2
+Done.
+### cat $OPAMROOT/config
+opam-version: "2.0"
+opam-root-version: "2.1~rc"
+repositories: "default"
+
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+switch: "sw-sys-comp"
+
+eval-variables: [ sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version" ]
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+default-invariant: ["i-am-sys-compiler"]
+
+depext: true
+depext-run-installs: true
+depext-cannot-install: false
+
+### cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+opam-version: "2.0"
+synopsis: "switch with compiler"
+invariant: ["i-am-compiler"]
+### cat $OPAMROOT/sw-comp/.opam-switch/switch-state
+opam-version: "2.0"
+compiler: ["i-am-compiler.2"]
+roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
