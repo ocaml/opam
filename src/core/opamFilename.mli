@@ -170,6 +170,10 @@ val rec_files: Dir.t -> t list
 (** List all the filename. Do not recurse. *)
 val files: Dir.t -> t list
 
+(** Returns alll the files, including dangling symlinks (which means that
+    not all entries will satisfy {!exists}). *)
+val files_and_links: Dir.t -> t list
+
 (** Apply a function on the contents of a file *)
 val with_contents: (string -> 'a) -> t -> 'a
 

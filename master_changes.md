@@ -141,6 +141,7 @@ New option/command/subcommand are prefixed with ◈.
   * Externalise cli versioning tools from `OpamArg` into `OpamArgTools` [#4606 @rjbou]
   * Each library defines its own environment variables, that fills the config record [#4606 @rjbou]
   * Harden cygpath wrapper [#4625 @dra27]
+  * Reset the plugin symlinks when the root is upgraded [#4641 @dra27 - partial fix for #4619]
 
 ## Test
   * Make the reference tests dune-friendly [#4376 @emillon]

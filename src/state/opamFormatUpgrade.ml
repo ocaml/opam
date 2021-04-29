@@ -1098,14 +1098,22 @@ let as_necessary requested_lock global_lock root config =
     |> List.partition (fun (v,_) ->
         OpamVersion.compare v latest_hard_upgrade <= 0)
   in
+  let erase_plugin_links root =
+    let plugins_bin = OpamPath.plugins_bin root in
+    if OpamFilename.exists_dir plugins_bin then begin
+      List.iter OpamFilename.remove @@ OpamFilename.files_and_links plugins_bin
+    end
+  in
   let light config =
     let config =
       List.fold_left (fun config (v, from) ->
           from root config |> OpamFile.Config.with_opam_version v)
         config light_upg
     in
-    (if not on_the_fly then
-       OpamFile.Config.write (OpamPath.config root) config);
+    if not on_the_fly then begin
+      OpamFile.Config.write (OpamPath.config root) config;
+      erase_plugin_links root;
+    end;
     config
   in
   let hard config =
@@ -1114,6 +1122,7 @@ let as_necessary requested_lock global_lock root config =
         (* save the current version to mitigate damage is the upgrade goes
            wrong afterwards *)
         OpamFile.Config.write (OpamPath.config root) config;
+        erase_plugin_links root;
         config)
       config hard_upg
   in

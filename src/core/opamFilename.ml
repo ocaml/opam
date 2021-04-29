@@ -238,6 +238,10 @@ let files d =
   let fs = OpamSystem.files (Dir.to_string d) in
   List.rev_map of_string fs
 
+let files_and_links d =
+  let fs = OpamSystem.files_all_not_dir (Dir.to_string d) in
+  List.rev_map of_string fs
+
 let copy ~src ~dst =
   if src <> dst then OpamSystem.copy_file (to_string src) (to_string dst)
 
