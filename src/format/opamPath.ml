@@ -25,7 +25,9 @@ let init_config_files () =
     OpamFilename.Dir.of_string (OpamStd.Sys.home ()) // ".opamrc";
   ]
 
-let state_cache t = t / "repo" // "state.cache"
+let state_cache_dir t = t / "repo"
+
+let state_cache t = state_cache_dir t // Printf.sprintf "state-%s.cache" (OpamVersion.magic ())
 
 let lock t = t // "lock"
 

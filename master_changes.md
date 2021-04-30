@@ -116,7 +116,9 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## State
-  *
+  * Rename state.cache to include the OpamVersion.magic() string. All .cache files are deleted if any
+    cache file is written to, allowing multiple versions of the library to co-exist without constantly
+    regenerating it [#4642 @dra27 - fix #4554]
 
 # Opam file format
   *

@@ -21,6 +21,9 @@ type t = dirname
 (** State cache *)
 val state_cache: t -> filename
 
+(** Directory containing state cache *)
+val state_cache_dir: t -> dirname
+
 (** Global lock file for the whole opamroot. Opam should generally read-lock
     this (e.g. initialisation and format upgrades require a write lock) *)
 val lock: t -> filename

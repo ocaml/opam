@@ -27,6 +27,15 @@ module Cache = struct
       let name = "repository"
     end)
 
+  let remove () =
+    let root = OpamStateConfig.(!r.root_dir) in
+    let cache_dir = OpamPath.state_cache_dir root in
+    let remove_cache_file file =
+      if OpamFilename.check_suffix file ".cache" then
+        OpamFilename.remove file
+    in
+    List.iter remove_cache_file (OpamFilename.files cache_dir)
+
   let save rt =
     let file = OpamPath.state_cache rt.repos_global.root in
     (* Repository without remote are not cached, they are intended to be
@@ -49,6 +58,7 @@ module Cache = struct
             (filter_out_nourl rt.repo_opams);
       }
     in
+    remove ();
     C.save file t
 
   let load root =
@@ -59,11 +69,6 @@ module Cache = struct
         (OpamRepositoryName.Map.of_list cache.cached_repofiles,
          OpamRepositoryName.Map.of_list cache.cached_opams)
     | None -> None
-
-  let remove () =
-    let root = OpamStateConfig.(!r.root_dir) in
-    let file = OpamPath.state_cache root in
-    C.remove file
 
 end
 
