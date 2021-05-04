@@ -1067,9 +1067,6 @@ let as_necessary requested_lock global_lock root config =
         "%s reports a newer opam version, aborting."
         (OpamFilename.Dir.to_string root)
   else
-  if OpamVersion.compare config_version OpamFile.Config.format_version >= 0 then
-    config
-  else
   let need_hard_upg =
     OpamVersion.compare config_version latest_hard_upgrade < 0
   in
