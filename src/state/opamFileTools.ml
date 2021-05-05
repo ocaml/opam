@@ -751,6 +751,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        "License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/"
        ~detail:bad_licenses
        (bad_licenses <> []));
+(*
     (let subpath =
        match OpamStd.String.Map.find_opt "x-subpath" (extensions t) with
        | Some {pelem = String _; _} -> true
@@ -780,6 +781,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
      cond 64 `Warning
        "`x-subpath` must be a simple string to be considered as a subpath`"
        subpath_string);
+*)
     (let relative =
        let open OpamUrl in
        List.filter (fun u ->
