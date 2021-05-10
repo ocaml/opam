@@ -99,9 +99,9 @@ let check_and_run_external_commands () =
           if OpamCLIVersion.(cli < (2, 1)) then begin
             let cli = OpamCLIVersion.to_string cli in
             OpamConsole.warning
-              "--cli is not supported by opam %s; setting OPAMCLI=%s \
-               is more portable"
-              cli cli
+              "%s cannot be understood by opam %s; set %s to %s instead."
+              (OpamConsole.colorise `bold ("--cli=" ^ cli)) cli
+              (OpamConsole.colorise `bold "OPAMCLI") (OpamConsole.colorise `bold cli)
           end;
           ocli
         | None ->
