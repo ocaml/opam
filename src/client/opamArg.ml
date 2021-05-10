@@ -323,7 +323,7 @@ let help_sections cli =
            command-line interface." dir_sep dir_sep);
     `P "Since CLI version support was only added in opam 2.1, use $(i,OPAMCLI) \
         to select 2.0 support (as opam 2.0 will just ignore it), \
-        and `--cli=2.1' for 2.1 later versions, since an environment variable \
+        and `--cli=2.1' for 2.1 (or later) versions, since an environment variable \
         controlling the parsing of syntax is brittle. To this end, opam \
         displays a warning if $(i,OPAMCLI) specifies a valid version other \
         than 2.0, and also if `--cli=2.0' is specified.";
