@@ -13,6 +13,7 @@ New option/command/subcommand are prefixed with ◈.
   * Deprecated `build-doc`, `build-test`, `make` [#4581 @rjbou]
   * Add cli versioning for enums of flags with predefined enums [#4606 @rjbou]
   * Ensure the symlink for a plugin is maintained on each invocation [#4621 @dra27 - partially fixes #4619]
+  * Clearer messages about using --cli and OPAMCLI [#4655 @dra27]
 
 ## Init
   * Introduce a `default-invariant` config field, restore the 2.0 semantics for
