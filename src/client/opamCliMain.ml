@@ -110,9 +110,11 @@ let check_and_run_external_commands () =
             if OpamCLIVersion.is_supported cli then
               let () =
                 if OpamCLIVersion.(cli >= (2, 1)) then
+                  let flag = "--cli=" ^ OpamCLIVersion.(to_string cli) in
                   OpamConsole.warning
-                    "Setting OPAMCLI is brittle - consider using the \
-                     '--cli <major>.<minor>' flag."
+                    "OPAMCLI should only ever be set to %s - use '%s' instead."
+                      (OpamConsole.colorise `bold "2.0")
+                      (OpamConsole.colorise `bold flag)
               in
               ocli
             else
