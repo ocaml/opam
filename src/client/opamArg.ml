@@ -1109,9 +1109,9 @@ let global_options cli =
       "Use the command-line interface syntax and semantics of $(docv). \
        Intended for any persistent use of opam (scripts, blog posts, etc.), \
        any version of opam in the same MAJOR series will behave as for the \
-       specified MINOR release. The flag was not available in opam 2.0, so for \
-       2.0, use $(b,\\$OPAMCLI). This is equivalent to setting $(b,\\$OPAMCLI) \
-       to $(i,MAJOR.MINOR)."
+       specified MINOR release. The flag was not available in opam 2.0, so to \
+       select the 2.0 CLI, set the $(b,OPAMCLI) environment variable to \
+       $(i,2.0) instead of using this parameter."
       Arg.string (OpamCLIVersion.to_string OpamCLIVersion.current) in
   let switch =
     mk_opt ~cli cli_original ~section ["switch"]
