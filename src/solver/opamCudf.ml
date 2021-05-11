@@ -1413,11 +1413,7 @@ let actions_of_diff (install, remove) =
 
 let resolve ~extern ~version_map universe request =
   log "resolve request=%a" (slog string_of_request) request;
-  let resp =
-    match check_request ~version_map universe request with
-    | Success _ when extern -> get_final_universe ~version_map universe request
-    | resp -> resp
-  in
+  let resp = get_final_universe ~version_map universe request in
   let cleanup univ =
     Cudf.remove_package univ opam_invariant_package
   in
