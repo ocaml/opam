@@ -247,15 +247,14 @@ let load lock_kind gt rt switch =
   in
   let switch_config = load_switch_config gt switch in
   if OpamVersion.compare
-      switch_config.OpamFile.Switch_config.opam_version
+      switch_config.opam_version
       OpamFile.Switch_config.oldest_compatible_format_version
      < 0 then
     OpamConsole.error_and_exit `Configuration_error
       "Could not load opam switch %s: it reports version %s while >= %s was \
        expected"
       (OpamSwitch.to_string switch)
-      (OpamVersion.to_string
-         (switch_config.OpamFile.Switch_config.opam_version))
+      (OpamVersion.to_string (switch_config.opam_version))
       (OpamVersion.to_string
          OpamFile.Switch_config.oldest_compatible_format_version);
   let { sel_installed = installed; sel_roots = installed_roots;
@@ -372,7 +371,7 @@ let load lock_kind gt rt switch =
   (* Detect and initialise missing switch description *)
   let switch_config =
     if switch_config <> OpamFile.Switch_config.empty &&
-       switch_config.OpamFile.Switch_config.synopsis = "" then
+       switch_config.synopsis = "" then
       let synopsis =
         match OpamPackage.Set.elements (compiler_packages %% installed_roots)
         with
@@ -383,7 +382,7 @@ let load lock_kind gt rt switch =
           OpamPackage.to_string nv
         | pkgs -> OpamStd.List.concat_map " " OpamPackage.to_string pkgs
       in
-      let conf = { switch_config with OpamFile.Switch_config.synopsis } in
+      let conf = { switch_config with synopsis } in
       if lock_kind = `Lock_write then (* auto-repair *)
         OpamFile.Switch_config.write
           (OpamPath.Switch.switch_config gt.root switch)
@@ -392,7 +391,7 @@ let load lock_kind gt rt switch =
     else switch_config
   in
   let switch_config, switch_invariant =
-    match switch_config.OpamFile.Switch_config.invariant with
+    match switch_config.invariant with
     | Some invariant -> switch_config, invariant
     | None ->
       let invariant =
