@@ -104,6 +104,7 @@ New option/command/subcommand are prefixed with ◈.
   * Cold compiler updated to 4.12 [#4616 @dra27]
   * Fix build from source when a dune-project file is presented in the parent directory [#4545 @kit-ty-kate]
   * Fix build from source when a dune-project file is presented in the parent directory [#4545 @kit-ty-kate - fix #4537]
+  * Fix opam-devel.install not to install two files called opam [#4664 @dra27]
 
 ## Infrastructure
   * Release scripts: switch to OCaml 4.10.2 by default, add macos/arm64 builds by default [#4559 @AltGr]
