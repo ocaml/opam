@@ -296,7 +296,9 @@ let set var value =
   @@ fun _ ->
   let var = OpamVariable.Full.variable var in
   let config_f = OpamPath.Switch.switch_config root switch in
-  let config = OpamFile.Switch_config.read config_f in
+  let config =
+    OpamStateConfig.Switch.safe_load_t ~lock_kind:`Lock_write root switch
+  in
   let oldval = OpamFile.Switch_config.variable config var in
   let newval = OpamStd.Option.map (fun s -> S s) value in
   if oldval = newval then
@@ -345,8 +347,7 @@ let variable gt v =
     match OpamStateConfig.get_switch_opt () with
     | Some switch ->
       let switch_config =
-        OpamFile.Switch_config.safe_read
-          (OpamPath.Switch.switch_config gt.root switch)
+        OpamStateConfig.Switch.safe_load ~lock_kind:`Lock_read gt switch
       in
       OpamPackageVar.resolve_switch_raw gt switch switch_config v
     | None -> None
@@ -391,3 +392,4 @@ let exec gt ~set_opamroot ~set_opamswitch ~inplace_path command =
   | None ->
     OpamConsole.error "Command not found '%s'" cmd;
     raise (OpamStd.Sys.Exit 127)
+

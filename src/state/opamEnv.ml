@@ -310,8 +310,8 @@ let is_up_to_date_switch root switch =
 let switch_path_update ~force_path root switch =
   let bindir =
     OpamPath.Switch.bin root switch
-      (OpamFile.Switch_config.safe_read
-         (OpamPath.Switch.switch_config root switch))
+      (OpamStateConfig.Switch.safe_load_t
+         ~lock_kind:`Lock_read root switch)
   in
   [
     "PATH",
@@ -569,6 +569,9 @@ let write_custom_init_scripts root custom =
 let write_dynamic_init_scripts st =
   let updates = updates ~set_opamroot:false ~set_opamswitch:false st in
   try
+    if OpamStateConfig.is_newer_than_self
+        ~lock_kind:`Lock_write st.switch_global then
+      raise OpamSystem.Locked;
     OpamFilename.with_flock_upgrade `Lock_write ~dontblock:true
       st.switch_global.global_lock
     @@ fun _ ->

@@ -41,7 +41,8 @@ val load_virtual:
 
 (** Load the switch's state file, without constructing the package maps: much
     faster than loading the full switch state *)
-val load_selections: 'a global_state -> switch -> switch_selections
+val load_selections:
+  ?lock_kind: 'a lock -> 'b global_state -> switch -> switch_selections
 
 (** Raw function to compute the availability of all packages, in [opams], given
     the switch configuration and the set of pinned packages. (The result is

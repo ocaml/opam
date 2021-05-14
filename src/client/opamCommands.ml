@@ -361,7 +361,7 @@ let init =
         in
         OpamClient.reinit ~init_config ~interactive ~dot_profile
           ?update_config ?env_hook ?completion
-          (OpamFile.Config.safe_read config_f) shell
+          (OpamStateConfig.safe_load ~lock_kind:`Lock_write root) shell;
       else
         OpamEnv.setup root
           ~interactive ~dot_profile ?update_config ?env_hook ?completion shell
@@ -1802,7 +1802,7 @@ let repository =
       let names = List.map OpamRepositoryName.of_string names in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       let repos =
-        OpamFile.Repos_config.safe_read (OpamPath.repos_config gt.root)
+        OpamStateConfig.Repos.safe_read ~lock_kind:`Lock_read gt
       in
       let not_found =
         List.filter (fun r -> not (OpamRepositoryName.Map.mem r repos)) names
@@ -2990,7 +2990,7 @@ let clean =
       (OpamFilename.with_flock `Lock_write (OpamPath.repos_lock gt.root)
        @@ fun _lock ->
        let repos_config =
-         OpamFile.Repos_config.safe_read (OpamPath.repos_config gt.root)
+         OpamStateConfig.Repos.safe_read ~lock_kind:`Lock_write gt
        in
        let all_repos =
          OpamRepositoryName.Map.keys repos_config |>
@@ -3003,8 +3003,8 @@ let clean =
        let unused_repos =
          List.fold_left (fun repos sw ->
              let switch_config =
-               OpamFile.Switch_config.safe_read
-                 (OpamPath.Switch.switch_config root sw)
+               OpamStateConfig.Switch.safe_load
+                 ~lock_kind:`Lock_read gt sw
              in
              let used_repos =
                OpamStd.Option.default []

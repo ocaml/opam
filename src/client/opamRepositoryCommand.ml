@@ -141,8 +141,8 @@ let print_selection rt ~short repos_list =
 
 let switch_repos rt sw =
   let switch_config =
-    OpamFile.Switch_config.safe_read
-      (OpamPath.Switch.switch_config rt.repos_global.root sw)
+    OpamStateConfig.Switch.safe_load
+      ~lock_kind:`Lock_read rt.repos_global sw
   in
   match switch_config.OpamFile.Switch_config.repos with
   | None -> OpamGlobalState.repos_list rt.repos_global

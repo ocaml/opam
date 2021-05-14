@@ -698,7 +698,7 @@ let from_1_3_dev6_to_1_3_dev7 root conf =
       let switch_dir = root / OpamSwitch.to_string switch in
       let meta_dir =  switch_dir / ".opam-switch" in
       let installed =
-        (OpamFile.SwitchSelections.safe_read
+        (OpamFile.SwitchSelections.BestEffort.safe_read
            (OpamFile.make (meta_dir // "switch-state")))
         .sel_installed
       in
@@ -801,7 +801,7 @@ let from_2_0_alpha_to_2_0_alpha2 root conf =
          let the wrapper 'ocaml' package be pulled from the repository later
          on to detect and set the 'ocaml:*' variables *)
       let selections_file = OpamFile.make (meta_dir // "switch-state") in
-      let selections = OpamFile.SwitchSelections.safe_read selections_file in
+      let selections = OpamFile.SwitchSelections.BestEffort.safe_read selections_file in
       let new_compilers =
         OpamPackage.Set.map (fun nv ->
             if nv.name <> OpamPackage.Name.of_string "ocaml" then nv else
@@ -948,7 +948,7 @@ let from_2_0_alpha3_to_2_0_beta root conf =
       let packages_dev_dir = switch_meta_dir / "packages.dev" in (* old *)
       let sources_dir = switch_meta_dir / "sources" in (* new *)
       let state =
-        OpamFile.SwitchSelections.safe_read
+        OpamFile.SwitchSelections.BestEffort.safe_read
           (OpamFile.make (switch_meta_dir // "switch-state"))
       in
       OpamFilename.mkdir sources_dir;
@@ -1002,7 +1002,7 @@ let from_2_0_beta_to_2_0_beta5 root conf =
       in
       let switch_config = OpamFile.make (switch_meta_dir // "switch-config") in
       let module C = OpamFile.Switch_config in
-      let config = C.safe_read switch_config in
+      let config = C.BestEffort.safe_read switch_config in
       let rem_variables = List.map OpamVariable.of_string ["os"; "make"] in
       let config =
         { config with
@@ -1044,13 +1044,7 @@ let latest_version = v2_0
 let as_necessary global_lock root config =
   let config_version = OpamFile.Config.opam_version config in
   let cmp = OpamVersion.(compare current_nopatch config_version) in
-  if cmp = 0 then ()
-  else if cmp < 0 then
-    if OpamFormatConfig.(!r.skip_version_checks) then () else
-      OpamConsole.error_and_exit `Configuration_error
-        "%s reports a newer opam version, aborting."
-        (OpamFilename.Dir.to_string root)
-  else
+  if cmp = 0 then () else
   if OpamVersion.compare config_version latest_version >= 0 then () else
   let is_dev = OpamVersion.git () <> None in
   OpamConsole.formatted_msg
