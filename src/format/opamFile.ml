@@ -158,14 +158,14 @@ module MakeIO (F : IO_Arg) = struct
         log ~level:2 "Cannot find %a" (slog OpamFilename.to_string) f;
         F.empty
     with
-    | Pp.Bad_format _ as e->
+    | (Pp.Bad_version _ | Pp.Bad_format _) as e->
       OpamConsole.error "%s [skipped]\n"
         (Pp.string_of_bad_format ~file:(OpamFilename.to_string f) e);
       F.empty
 
   let read_from_f f input =
     try f input with
-    | Pp.Bad_format _ as e ->
+    | (Pp.Bad_version _ | Pp.Bad_format _) as e->
       if OpamFormatConfig.(!r.strict) then
         (OpamConsole.error "%s" (Pp.string_of_bad_format e);
          OpamConsole.error_and_exit `File_error "Strict mode: aborting")

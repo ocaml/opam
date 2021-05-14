@@ -2870,6 +2870,7 @@ let lint =
           with
           | Parsing.Parse_error
           | OpamLexer.Error _
+          | OpamPp.Bad_version _
           | OpamPp.Bad_format _ ->
             msg "File format error\n";
             true)

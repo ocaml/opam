@@ -795,7 +795,9 @@ module I = struct
       | None -> optional
     in
     field name (parse opam_v) -|
-    map_fst (check ~name ~errmsg:"unsupported or missing file format version" f)  -|
+    map_fst (check ~name ~raise:OpamPp.bad_version
+               ~errmsg:"unsupported or missing file format version; \
+                        should be 2.0 or older" f)  -|
     pp
       (fun ~pos:_ (_,x) -> x)
       (fun x ->
