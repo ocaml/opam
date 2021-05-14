@@ -1049,6 +1049,48 @@ module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
 
 end
 
+(* Error less reading for forward compatibility of opam roots *)
+module type BestEffortArg = sig
+  include SyntaxFileArg
+
+  (* Version of file format, as understood by [opam-file-format] *)
+  val file_format_version: OpamVersion.t
+
+  (* Construct the syntax pp, under some conditions. If [condition] is given,
+     it is passed to [OpamFormat.show_erros] call, for error display
+     conditions, default is to display it as a warning. If [f] is given, it is
+     passed to [OpamFormat.check_opam_version] call, it is the check function,
+     default is to check regarding [file_format_version]. *)
+  val pp_cond:
+    ?f:(OpamVersion.t -> bool) -> ?condition:(t -> bool) -> unit ->
+    (opamfile, filename * t) Pp.t
+end
+
+module type BestEffortRead = sig
+  type t
+  val read: t typed_file -> t
+  val read_opt: t typed_file -> t option
+  val safe_read: t typed_file -> t
+  val read_from_channel: ?filename:t typed_file -> in_channel -> t
+  val read_from_string: ?filename:t typed_file -> string -> t
+end
+
+module MakeBestEffort (S: BestEffortArg) : BestEffortRead
+  with type t := S.t = struct
+  module ES = struct
+    include S
+    let pp =
+      pp_cond
+        (* to read newer oapm root with newer `opam-version` field, we need to
+           be less strict on the check_opam_version
+           ~f:(fun _ -> true)
+        *)
+        ~condition:(fun _ -> false) ()
+  end
+  include ES
+  include SyntaxFile(ES)
+end
+
 (** (1) Internal files *)
 
 (** Structure shared by a few file formats *)
@@ -1180,6 +1222,7 @@ module ConfigSyntax = struct
 
   let internal = "config"
   let format_version = OpamVersion.of_string "2.1"
+  let file_format_version = OpamVersion.of_string "2.0"
   let root_version = OpamVersion.of_string "2.1~rc"
 
   type t = {
@@ -1275,7 +1318,7 @@ module ConfigSyntax = struct
   let with_depext_bypass depext_bypass t = { t with depext_bypass }
 
   let empty = {
-    opam_version = format_version;
+    opam_version = file_format_version;
     opam_root_version = None;
     repositories = [];
     installed_switches = [];
@@ -1410,19 +1453,25 @@ module ConfigSyntax = struct
       (fun (fld, ppacc) -> fld, Pp.embed with_wrappers wrappers ppacc)
       Wrappers.fields
 
-  let pp =
+  let pp_cond ?f ?condition () =
     let name = internal in
+    let format_version = file_format_version in
     Pp.I.map_file @@
-    Pp.I.check_opam_version ~format_version () -|
+    Pp.I.check_opam_version ?f ~format_version () -|
     Pp.I.opam_version ~format_version () -|
     Pp.I.fields ~name ~empty fields -|
-    Pp.I.show_errors ~name ~strict:OpamCoreConfig.(not !r.safe_mode) ()
+    Pp.I.show_errors ~name ?condition ()
+
+  let pp = pp_cond ()
 
   let to_list = Syntax.to_list pp
 end
+
 module Config = struct
   include ConfigSyntax
   include SyntaxFile(ConfigSyntax)
+
+  module BestEffort = MakeBestEffort(ConfigSyntax)
 
   let raw_root_version f =
     let open OpamParserTypes.FullPos in
@@ -1673,6 +1722,7 @@ module Repos_configSyntax = struct
 
   let internal = "repos-config"
   let format_version = OpamVersion.of_string "2.0"
+  let file_format_version = OpamVersion.of_string "2.0"
 
   type t = ((url * trust_anchors option) option) OpamRepositoryName.Map.t
 
@@ -1694,24 +1744,29 @@ module Repos_configSyntax = struct
          OpamRepositoryName.Map.(of_list, bindings));
   ]
 
-  let pp =
+  let pp_cond ?f ?condition () =
     let name = internal in
+    let format_version = file_format_version in
     Pp.I.map_file @@
-    Pp.I.check_opam_version ~optional:true ~format_version () -|
+    Pp.I.check_opam_version ~optional:true ?f ~format_version () -|
     Pp.I.opam_version ~format_version ~undefined:true () -|
     Pp.I.fields ~name ~empty fields -|
-    Pp.I.show_errors ~name ()
+    Pp.I.show_errors ~name ?condition ()
+
+  let pp = pp_cond ()
 
 end
 module Repos_config = struct
   include Repos_configSyntax
   include SyntaxFile(Repos_configSyntax)
+  module BestEffort = MakeBestEffort(Repos_configSyntax)
 end
 
 module Switch_configSyntax = struct
 
   let internal = "switch-config"
   let format_version = OpamVersion.of_string "2.1"
+  let file_format_version = OpamVersion.of_string "2.0"
   let oldest_compatible_format_version = OpamVersion.of_string "2.0"
 
   type t = {
@@ -1728,7 +1783,7 @@ module Switch_configSyntax = struct
   }
 
   let empty = {
-    opam_version = format_version;
+    opam_version = file_format_version;
     synopsis = "";
     repos = None;
     paths = [];
@@ -1793,13 +1848,16 @@ module Switch_configSyntax = struct
          fld, Pp.embed (fun wrappers t -> {t with wrappers}) (fun t -> t.wrappers) ppacc)
       Wrappers.fields
 
-  let pp =
+  let pp_cond ?f ?condition () =
     let name = internal in
+    let format_version = file_format_version in
     Pp.I.map_file @@
-    Pp.I.check_opam_version ~format_version () -|
+    Pp.I.check_opam_version ?f ~format_version () -|
     Pp.I.opam_version ~format_version () -|
     Pp.I.fields ~name ~empty ~sections fields -|
-    Pp.I.show_errors ~name ()
+    Pp.I.show_errors ~name ?condition ()
+
+  let pp = pp_cond ()
 
   let variable t s =
     try Some (List.assoc s t.variables)
@@ -1813,15 +1871,18 @@ module Switch_configSyntax = struct
 
   let to_list = Syntax.to_list pp
 end
+
 module Switch_config = struct
   include Switch_configSyntax
   include SyntaxFile(Switch_configSyntax)
+  module BestEffort = MakeBestEffort(Switch_configSyntax)
 end
 
 module SwitchSelectionsSyntax = struct
 
   let internal = "switch-state"
   let format_version = OpamVersion.of_string "2.0"
+  let file_format_version = OpamVersion.of_string "2.0"
 
   type t = switch_selections
 
@@ -1841,7 +1902,7 @@ module SwitchSelectionsSyntax = struct
 
   let fields = [
     "opam-version", Pp.ppacc
-      (fun _ t -> t) (fun _ -> format_version)
+      (fun _ t -> t) (fun _ -> file_format_version)
       (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
     "compiler", Pp.ppacc
       (fun sel_compiler t -> {t with sel_compiler}) (fun t -> t.sel_compiler)
@@ -1866,19 +1927,23 @@ module SwitchSelectionsSyntax = struct
        Pp.of_pair "Package set" OpamPackage.Set.(of_list, elements))
   ]
 
-  let pp =
+  let pp_cond ?f ?condition () =
     let name = "switch-state" in
+    let format_version = file_format_version in
     Pp.I.map_file @@
-    Pp.I.check_opam_version ~optional:true ~format_version () -|
+    Pp.I.check_opam_version ~optional:true ?f ~format_version () -|
     Pp.I.opam_version ~format_version () -|
     Pp.I.fields ~name ~empty fields -|
-    Pp.I.show_errors ~name ()
+    Pp.I.show_errors ~name ?condition ()
+
+  let pp = pp_cond ()
 
 end
 
 module SwitchSelections = struct
   type t = switch_selections
   include SyntaxFile(SwitchSelectionsSyntax)
+  module BestEffort = MakeBestEffort(SwitchSelectionsSyntax)
 end
 
 (** Local repository config file (repo/<repo>/config) *)

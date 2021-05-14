@@ -29,7 +29,7 @@ let gen_switch_config
     ]
   in
   { OpamFile.Switch_config.
-    opam_version = OpamFile.Switch_config.format_version;
+    opam_version = OpamFile.Switch_config.file_format_version;
     synopsis;
     variables = vars;
     paths = [];
