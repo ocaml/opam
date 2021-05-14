@@ -100,3 +100,5 @@ val env_with_cli:
   (string * validity * (string -> OpamStd.Config.E.t) * string) list ->
   (OpamCLIVersion.Sourced.t -> Manpage.block list) *
   (OpamCLIVersion.Sourced.t -> unit)
+
+val is_original_cli: validity -> bool

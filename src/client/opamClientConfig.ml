@@ -75,6 +75,7 @@ type t = {
   no_auto_upgrade: bool;
   assume_depexts: bool;
   cli: OpamCLIVersion.t;
+  scrubbed_environment_variables: string list;
 }
 
 let default = {
@@ -96,6 +97,7 @@ let default = {
   no_auto_upgrade = false;
   assume_depexts = false;
   cli = OpamCLIVersion.current;
+  scrubbed_environment_variables = [];
 }
 
 type 'a options_fun =
@@ -117,6 +119,7 @@ type 'a options_fun =
   ?no_auto_upgrade:bool ->
   ?assume_depexts:bool ->
   ?cli:OpamCLIVersion.t ->
+  ?scrubbed_environment_variables:string list ->
   'a
 
 let setk k t
@@ -138,6 +141,7 @@ let setk k t
     ?no_auto_upgrade
     ?assume_depexts
     ?cli
+    ?scrubbed_environment_variables
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -159,6 +163,7 @@ let setk k t
     no_auto_upgrade = t.no_auto_upgrade + no_auto_upgrade;
     assume_depexts = t.assume_depexts + assume_depexts;
     cli = t.cli + cli;
+    scrubbed_environment_variables = t.scrubbed_environment_variables + scrubbed_environment_variables
   }
 
 let set t = setk (fun x () -> x) t
@@ -192,6 +197,7 @@ let initk k =
     ?no_auto_upgrade:(E.noautoupgrade ())
     ?assume_depexts:(E.assumedepexts ())
     ?cli:None
+    ?scrubbed_environment_variables:None
 
 let init ?noop:_ = initk (fun () -> ())
 

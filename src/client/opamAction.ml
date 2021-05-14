@@ -482,6 +482,7 @@ let prepare_package_source st nv dir =
 
 let compilation_env t opam =
   let open OpamParserTypes in
+  let scrub = OpamClientConfig.(!r.scrubbed_environment_variables) in
   OpamEnv.get_full ~set_opamroot:true ~set_opamswitch:true ~force_path:true t ~updates:([
       "CDPATH", Eq, "", Some "shell env sanitization";
       "MAKEFLAGS", Eq, "", Some "make env sanitization";

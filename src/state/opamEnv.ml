@@ -276,9 +276,20 @@ let get_opam_raw ~set_opamroot ~set_opamswitch ?(base=[])
      upd)
 
 let get_full
-    ~set_opamroot ~set_opamswitch ~force_path ?updates:(u=[])
+    ~set_opamroot ~set_opamswitch ~force_path ?updates:(u=[]) ?(scrub=[])
     st =
-  let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
+  let env =
+    let env = OpamStd.Env.list () in
+    let map =
+      if Sys.win32 then
+        String.uppercase_ascii
+      else
+        (fun x -> x)
+    in
+    let scrub = List.rev_map map scrub |> OpamStd.String.Set.of_list in
+    List.filter (fun (name, _) -> not (OpamStd.String.Set.mem (map name) scrub)) env
+  in
+  let env0 = List.map (fun (v,va) -> v,va,None) env in
   let updates = u @ updates ~set_opamroot ~set_opamswitch ~force_path st in
   add env0 updates
 
