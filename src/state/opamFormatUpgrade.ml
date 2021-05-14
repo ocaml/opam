@@ -937,7 +937,7 @@ let from_2_0_alpha2_to_2_0_alpha3 root conf =
             repos = None;
             opam_root; paths; variables; wrappers = OpamFile.Wrappers.empty;
             env = [];
-            invariant = OpamFormula.Empty;
+            invariant = None;
             depext_bypass = OpamSysPkg.Set.empty;
           }
         in

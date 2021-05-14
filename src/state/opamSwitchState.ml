@@ -392,13 +392,9 @@ let load lock_kind gt rt switch =
     else switch_config
   in
   let switch_config, switch_invariant =
-    if OpamVersion.compare
-        switch_config.OpamFile.Switch_config.opam_version
-        (OpamVersion.of_string "2.1")
-       >= 0
-    || switch_config.OpamFile.Switch_config.invariant <> OpamFormula.Empty
-    then switch_config, switch_config.OpamFile.Switch_config.invariant
-    else
+    match switch_config.OpamFile.Switch_config.invariant with
+    | Some invariant -> switch_config, invariant
+    | None ->
       let invariant =
         infer_switch_invariant_raw
           gt switch switch_config opams
@@ -409,13 +405,13 @@ let load lock_kind gt rt switch =
         (slog @@ fun () ->
          OpamPackage.Set.to_string (compiler_packages %% installed_roots)) ()
         (slog OpamFileTools.dep_formula_to_string) invariant;
-      let min_opam_version = OpamVersion.of_string "2.1" in
+      let min_opam_version = OpamVersion.of_string "2.0" in
       let opam_version =
         if OpamVersion.compare switch_config.opam_version min_opam_version < 0
         then min_opam_version
         else switch_config.opam_version
       in
-      {switch_config with invariant; opam_version},
+      {switch_config with invariant = Some invariant; opam_version},
       invariant
   in
   let conf_files =
@@ -429,10 +425,10 @@ let load lock_kind gt rt switch =
               OpamFilename.(Base.to_string (basename (chop_extension f)))
           with
           | name when OpamPackage.has_name installed name ->
-              OpamPackage.Name.Map.add name
-                (OpamFile.Dot_config.safe_read
-                   (OpamPath.Switch.config gt.root switch name))
-                acc
+            OpamPackage.Name.Map.add name
+              (OpamFile.Dot_config.safe_read
+                 (OpamPath.Switch.config gt.root switch name))
+              acc
           | exception (Failure _) -> acc
           | _ -> acc
         else acc)

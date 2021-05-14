@@ -927,7 +927,7 @@ module Switch_config: sig
     opam_root: dirname option;
     wrappers: Wrappers.t;
     env: env_update list;
-    invariant: OpamFormula.t;
+    invariant: OpamFormula.t option;
     depext_bypass: OpamSysPkg.Set.t;
   }
   val variable: t -> variable -> variable_contents option

@@ -1701,7 +1701,7 @@ module Switch_configSyntax = struct
     opam_root: dirname option;
     wrappers: Wrappers.t;
     env: env_update list;
-    invariant: OpamFormula.t;
+    invariant: OpamFormula.t option;
     depext_bypass: OpamSysPkg.Set.t;
   }
 
@@ -1714,7 +1714,7 @@ module Switch_configSyntax = struct
     opam_root = None;
     wrappers = Wrappers.empty;
     env = [];
-    invariant = OpamFormula.Empty;
+    invariant = None;
     depext_bypass = OpamSysPkg.Set.empty;
   }
 
@@ -1756,8 +1756,8 @@ module Switch_configSyntax = struct
     "setenv", Pp.ppacc
       (fun env t -> {t with env}) (fun t -> t.env)
       (Pp.V.map_list ~depth:2 Pp.V.env_binding);
-    "invariant", Pp.ppacc
-      (fun invariant t -> {t with invariant}) (fun t -> t.invariant)
+    "invariant", Pp.ppacc_opt
+      (fun inv t -> {t with invariant = Some inv }) (fun t -> t.invariant)
       (Pp.V.package_formula `Conj Pp.V.(constraints version));
     "depext-bypass", Pp.ppacc
       (fun depext_bypass t -> { t with depext_bypass})
