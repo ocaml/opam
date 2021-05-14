@@ -141,7 +141,7 @@ let check_and_run_external_commands () =
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
     let has_init, root_upgraded =
-      match OpamStateConfig.load_defaults root_dir with
+      match OpamStateConfig.load_defaults ~lock_kind:`Lock_read root_dir with
       | None -> (false, false)
       | Some config ->
           let root_upgraded =

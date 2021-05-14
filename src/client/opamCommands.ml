@@ -372,9 +372,9 @@ let init cli =
             ~no_default_config_file:no_config_file ~add_config_file:config_file
         in
         OpamClient.reinit ~init_config ~interactive ~dot_profile
-           ?update_config ?env_hook ?completion ~inplace
-           ~check_sandbox:(not no_sandboxing)
-           (OpamFile.Config.safe_read config_f) shell;
+          ?update_config ?env_hook ?completion ~inplace
+          ~check_sandbox:(not no_sandboxing)
+          (OpamStateConfig.safe_load ~lock_kind:`Lock_write root) shell;
       else
         (if not interactive &&
             update_config <> Some true && completion <> Some true && env_hook <> Some true then
@@ -2237,7 +2237,7 @@ let repository cli =
       let names = List.map OpamRepositoryName.of_string names in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       let repos =
-        OpamFile.Repos_config.safe_read (OpamPath.repos_config gt.root)
+        OpamStateConfig.Repos.safe_read ~lock_kind:`Lock_read gt
       in
       let not_found =
         List.filter (fun r -> not (OpamRepositoryName.Map.mem r repos)) names
@@ -2677,7 +2677,7 @@ let switch cli =
          OpamSwitchState.drop st;
          `Ok ())
     | Some `export, [filename] ->
-      OpamGlobalState.with_ `Lock_write @@ fun gt ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
       OpamSwitchCommand.export rt
         ~full:(full || freeze) ~freeze
@@ -3667,7 +3667,7 @@ let clean cli =
       (OpamFilename.with_flock `Lock_write (OpamPath.repos_lock gt.root)
        @@ fun _lock ->
        let repos_config =
-         OpamFile.Repos_config.safe_read (OpamPath.repos_config gt.root)
+         OpamStateConfig.Repos.safe_read ~lock_kind:`Lock_write gt
        in
        let all_repos =
          OpamRepositoryName.Map.keys repos_config |>
@@ -3680,8 +3680,8 @@ let clean cli =
        let unused_repos =
          List.fold_left (fun repos sw ->
              let switch_config =
-               OpamFile.Switch_config.safe_read
-                 (OpamPath.Switch.switch_config root sw)
+               OpamStateConfig.Switch.safe_load
+                 ~lock_kind:`Lock_read gt sw
              in
              let used_repos =
                OpamStd.Option.default []

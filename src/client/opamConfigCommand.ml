@@ -567,18 +567,24 @@ let confset_switch gt switch switch_config =
 let with_switch:
   'a global_state -> 'b lock -> 'b switch_state option
   -> (switch -> OpamFile.Switch_config.t -> 'c) -> 'c =
-  fun gt lock st_opt k ->
+  fun gt lock_kind st_opt k ->
   match st_opt with
   | Some st -> k st.switch st.switch_config
   | None ->
     let switch = OpamStateConfig.get_switch () in
+    let switch_config =
+      try OpamStateConfig.Switch.safe_load ~lock_kind gt switch
+      with OpamPp.Bad_version _ as e ->
+        OpamFormatUpgrade.hard_upgrade_from_2_1_intermediates
+          ~global_lock:gt.global_lock gt.root;
+        raise e
+    in
     let lock_file = OpamPath.Switch.lock gt.root switch in
-    let config_f = OpamPath.Switch.switch_config gt.root switch in
-    if not (OpamFile.exists config_f) then
+    if switch_config = OpamFile.Switch_config.empty then
       OpamConsole.error "switch %s not found, display default values"
         (OpamSwitch.to_string switch);
-    OpamFilename.with_flock lock lock_file @@ fun _ ->
-    k switch (OpamFile.Switch_config.safe_read config_f)
+    OpamFilename.with_flock lock_kind lock_file @@ fun _ ->
+    k switch switch_config
 
 let set_opt_switch_t ?inner gt switch switch_config field value =
   set_opt ?inner field value (confset_switch gt switch switch_config)
@@ -897,8 +903,7 @@ let vars_list_switch ?st gt =
     | None ->
       let switch = OpamStateConfig.get_switch () in
       switch,
-      OpamFile.Switch_config.safe_read
-        (OpamPath.Switch.switch_config gt.root switch)
+      OpamStateConfig.Switch.safe_load ~lock_kind:`Lock_read gt switch
   in
   List.map (fun stdpath -> [
         OpamTypesBase.string_of_std_path stdpath % `bold;
@@ -986,8 +991,7 @@ let var_switch_raw gt v =
   match OpamStateConfig.get_switch_opt () with
   | Some switch ->
     let switch_config =
-      OpamFile.Switch_config.safe_read
-        (OpamPath.Switch.switch_config gt.root switch)
+      OpamStateConfig.Switch.safe_load ~lock_kind:`Lock_read gt switch
     in
     let rsc =
       if is_switch_defined_var switch_config v then

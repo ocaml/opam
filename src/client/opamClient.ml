@@ -843,7 +843,9 @@ let init
           | None -> OpamFile.InitConfig.repositories init_config
         in
         let config =
-          update_with_init_config OpamFile.Config.empty init_config |>
+          update_with_init_config
+            OpamFile.Config.(with_opam_root_version root_version empty)
+            init_config |>
           OpamFile.Config.with_repositories (List.map fst repos)
         in
 

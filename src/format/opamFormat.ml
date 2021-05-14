@@ -866,7 +866,8 @@ module I = struct
     pp ~name
       (fun ~pos:_ (_,x) -> x)
       (fun x ->
-         (* re-extract the field using parse when printing, to check *)
+         (* re-extract the field using parse when printing, to check that it is
+            not undefined *)
          match parse ~pos:pos_null (field name (parse opam_v)) x with
          | None, _ -> failwith "opam version must be printed"
          | v, l -> v, l)
