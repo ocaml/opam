@@ -833,7 +833,8 @@ let show cli =
             print_just_file None opam;
             `Ok ()
           with
-          | Parsing.Parse_error | OpamLexer.Error _ | OpamPp.Bad_format _ as exn ->
+          | Parsing.Parse_error | OpamLexer.Error _
+          | OpamPp.Bad_version _ | OpamPp.Bad_format _ as exn ->
             OpamConsole.error_and_exit `File_error
               "Stdin parsing failed:\n%s" (Printexc.to_string exn))
        | atom_locs, false ->
@@ -884,7 +885,8 @@ let show cli =
                try
                  errors, (Some opamf, (OpamFile.OPAM.read opamf))::opams
                with
-               | Parsing.Parse_error | OpamLexer.Error _ | OpamPp.Bad_format _ as exn ->
+               | Parsing.Parse_error | OpamLexer.Error _
+               | OpamPp.Bad_version _ | OpamPp.Bad_format _ as exn ->
                  (opamf, exn)::errors, opams)
              ([],[]) opamfs
          in
@@ -3536,6 +3538,7 @@ let lint cli =
           with
           | Parsing.Parse_error
           | OpamLexer.Error _
+          | OpamPp.Bad_version _
           | OpamPp.Bad_format _ ->
             msg "File format error\n";
             (true, json))

@@ -862,7 +862,7 @@ module I = struct
         (OpamVersion.to_string format_version)
     in
     field name (parse opam_v) -|
-    map_fst (check ~name ~errmsg f) -|
+    map_fst (check ~name ~raise:OpamPp.bad_version ~errmsg f) -|
     pp
       (fun ~pos:_ (_,x) -> x)
       (fun x ->
