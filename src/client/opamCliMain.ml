@@ -144,19 +144,21 @@ let check_and_run_external_commands () =
       match OpamStateConfig.load_defaults ~lock_kind:`Lock_read root_dir with
       | None -> (false, false)
       | Some config ->
-          let root_upgraded =
-            let config_version = OpamFile.Config.opam_version config in
-            let cmp =
-              OpamVersion.(compare OpamFile.Config.format_version config_version)
-            in
-            if cmp < 0 then
-              OpamConsole.error_and_exit `Configuration_error
-                "%s reports a newer opam version, aborting."
-                 (OpamFilename.Dir.to_string root_dir)
-            else
-              cmp = 0
+        let root_upgraded =
+          let cmp =
+            match  OpamFile.Config.opam_root_version config with
+            | Some root_version ->
+              OpamVersion.compare OpamFile.Config.root_version root_version
+            | None -> 1 (* older opam root *)
           in
-            (true, root_upgraded)
+          if cmp < 0 then
+            OpamConsole.error_and_exit `Configuration_error
+              "%s reports a newer opam version, aborting."
+              (OpamFilename.Dir.to_string root_dir)
+          else
+            cmp = 0
+        in
+        (true, root_upgraded)
     in
     let plugins_bin = OpamPath.plugins_bin root_dir in
     let plugin_symlink_present =
