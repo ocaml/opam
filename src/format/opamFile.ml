@@ -1407,6 +1407,7 @@ module ConfigSyntax = struct
     let name = internal in
     Pp.I.map_file @@
     Pp.I.check_opam_version ~format_version () -|
+    Pp.I.opam_version ~format_version () -|
     Pp.I.fields ~name ~empty fields -|
     Pp.I.show_errors ~name ~strict:OpamCoreConfig.(not !r.safe_mode) ()
 
@@ -1677,6 +1678,7 @@ module Repos_configSyntax = struct
     let name = internal in
     Pp.I.map_file @@
     Pp.I.check_opam_version ~optional:true ~format_version () -|
+    Pp.I.opam_version ~format_version ~undefined:true () -|
     Pp.I.fields ~name ~empty fields -|
     Pp.I.show_errors ~name ()
 
@@ -1775,6 +1777,7 @@ module Switch_configSyntax = struct
     let name = internal in
     Pp.I.map_file @@
     Pp.I.check_opam_version ~format_version () -|
+    Pp.I.opam_version ~format_version () -|
     Pp.I.fields ~name ~empty ~sections fields -|
     Pp.I.show_errors ~name ()
 
@@ -1847,6 +1850,7 @@ module SwitchSelectionsSyntax = struct
     let name = "switch-state" in
     Pp.I.map_file @@
     Pp.I.check_opam_version ~optional:true ~format_version () -|
+    Pp.I.opam_version ~format_version () -|
     Pp.I.fields ~name ~empty fields -|
     Pp.I.show_errors ~name ()
 
@@ -1974,6 +1978,7 @@ module Dot_configSyntax = struct
   let pp =
     Pp.I.map_file @@
     Pp.I.check_opam_version ~format_version ~optional:true () -|
+    Pp.I.opam_version ~format_version () -|
     Pp.I.field "opam-version"
       (Pp.parse
          (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion)))
@@ -2084,6 +2089,7 @@ module RepoSyntax = struct
     let name = internal in
     Pp.I.map_file @@
     Pp.I.check_opam_version ~format_version ~optional:true () -|
+    Pp.I.opam_version ~format_version () -|
     Pp.I.fields ~name ~empty fields -|
     Pp.I.show_errors ~name
       ~condition:(function
@@ -2974,6 +2980,7 @@ module OPAMSyntax = struct
   (* Doesn't handle package name encoded in directory name *)
   let pp_raw_fields =
     Pp.I.check_opam_version ~format_version () -|
+    Pp.I.opam_version ~format_version () -|
     Pp.I.partition_fields ~section:true (is_ext_field @> not) -| Pp.map_pair
       (Pp.I.fields ~name:"opam-file" ~empty ~sections fields -|
        Pp.I.on_errors (fun t e -> {t with format_errors=e::t.format_errors}) -|
@@ -3368,6 +3375,7 @@ module Dot_installSyntax = struct
     let name = internal in
     Pp.I.map_file @@
     Pp.I.check_opam_version ~optional:true ~format_version () -|
+    Pp.I.opam_version ~format_version ~undefined:true () -|
     Pp.I.fields ~name ~empty fields -|
     Pp.I.show_errors ~name () -|
     Pp.check ~errmsg:"man file without destination or recognised suffix"
@@ -3436,6 +3444,7 @@ module ChangesSyntax = struct
 
   let pp_contents =
     Pp.I.check_opam_version ~format_version ~optional:true () -|
+    Pp.I.opam_version ~format_version ~undefined:true () -|
     Pp.I.fields ~name:internal ~empty fields -|
     Pp.I.show_errors ~name:internal ()
 
@@ -3484,6 +3493,7 @@ module SwitchExportSyntax = struct
     let name = "export-file" in
     Pp.I.map_file @@
     Pp.I.check_opam_version ~format_version () -|
+    Pp.I.opam_version ~format_version ~undefined:true () -|
     Pp.I.partition (fun i -> match i.pelem with
         | Section ({ section_kind={pelem="package";_}; section_name=Some _; _ }) ->
           false
@@ -3663,6 +3673,7 @@ module CompSyntax = struct
     let name = internal in
     Pp.I.map_file @@
     Pp.I.check_opam_version ~format_version () -|
+    Pp.I.opam_version ~format_version () -|
     Pp.I.fields ~name ~empty fields -|
     Pp.I.show_errors ~name () -|
     Pp.check ~errmsg:"fields 'build:' and 'configure:'+'make:' are mutually \
