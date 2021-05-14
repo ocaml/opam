@@ -57,6 +57,16 @@ module type IO_FILE = sig
 
 end
 
+(* Error less [IO_FILE] read functions. *)
+module type BestEffortRead = sig
+  type t
+  val read: t typed_file -> t
+  val read_opt: t typed_file -> t option
+  val safe_read: t typed_file -> t
+  val read_from_channel: ?filename:t typed_file -> in_channel -> t
+  val read_from_string: ?filename:t typed_file -> string -> t
+end
+
 (** Lines of space-separated words. *)
 module Lines: IO_FILE with type t = string list list
 
@@ -182,6 +192,8 @@ module Config: sig
       [opam-version] fields value. *)
   val raw_root_version:
     'a typed_file -> OpamVersion.t option * OpamVersion.t option
+
+  module BestEffort: BestEffortRead with type t := t
 end
 
 (** Init config file [/etc/opamrc] *)
@@ -673,6 +685,7 @@ end
 module SwitchSelections: sig
   type t = switch_selections
   include IO_FILE with type t := t
+  module BestEffort: BestEffortRead with type t := t
 end
 
 (** An extended version of SwitchSelections that can include full opam files as
@@ -867,9 +880,11 @@ module Repo_config_legacy : sig
   include IO_FILE with type t := t
 end
 
-
-module Repos_config: IO_FILE
-  with type t = (url * trust_anchors option) option OpamRepositoryName.Map.t
+module Repos_config: sig
+  type t = (url * trust_anchors option) option OpamRepositoryName.Map.t
+  include IO_FILE with type t := t
+  module BestEffort: BestEffortRead with type t := t
+end
 
 module Switch_config: sig
   type t = {
@@ -886,6 +901,8 @@ module Switch_config: sig
   val path: t -> std_path -> string option
   val wrappers: t -> Wrappers.t
   include IO_FILE with type t := t
+
+  module BestEffort: BestEffortRead with type t := t
 end
 
 (** Pinned package files (only used for migration from 1.2, the inclusive State
