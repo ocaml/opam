@@ -91,6 +91,7 @@ Done.
 ==> nodot installed file
 hellow
 ==> nodot changes
+opam-version: "2.0"
 added: [
   "share" {"D"}
   "share-nodot" {"D"}
@@ -118,6 +119,7 @@ Done.
 ==> dot installed file
 hellow
 ==> dot changes
+opam-version: "2.0"
 added: [
   "share-dot" {"D"}
   "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
