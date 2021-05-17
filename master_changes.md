@@ -106,6 +106,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix build from source when a dune-project file is presented in the parent directory [#4545 @kit-ty-kate]
   * Fix build from source when a dune-project file is presented in the parent directory [#4545 @kit-ty-kate - fix #4537]
   * Fix opam-devel.install not to install two files called opam [#4664 @dra27]
+  * Build release tags as non-dev versions, as for release tarballs [#4665 @dra27 - fix #4656]
 
 ## Infrastructure
   * Release scripts: switch to OCaml 4.10.2 by default, add macos/arm64 builds by default [#4559 @AltGr]

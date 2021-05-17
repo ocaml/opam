@@ -42,13 +42,24 @@
   (action  (ignore-stderr (with-stdout-to %{targets} (system "git rev-parse --quiet --verify HEAD || echo .")))))
 
 (rule
+  (targets git-describe)
+  (deps    (universe))
+  (action  (ignore-stderr (with-stdout-to %{targets} (system "git describe --exact HEAD || echo [dev]")))))
+
+(rule
   (targets no-git-version)
   (mode fallback)
   (action (copy git-sha %{targets})))
 
 (rule
-  ; Travis Upgrade job rely on this line. If changed, update travis-ci.sh too.
-  (with-stdout-to get_git_version.ml (echo "print_string @@ let v = \"%{read-lines:no-git-version}\" in if v = \"\" || v = \".\" then \"let version = None\" else \"let version = Some \\\"\" ^ v ^ \"\\\"\"")))
+  (with-stdout-to get_git_version.ml
+    (echo "print_string @@ \
+             let v = \"%{read-lines:no-git-version}\" in \
+             let w = \"%{read-lines:git-describe}\" in \
+             if v = \"\" || v = \".\" || w <> \"[dev]\" then \
+               \"let version = None\" \
+             else \
+               \"let version = Some \\\"\" ^ v ^ \"\\\"\"")))
 
 (rule
   (with-stdout-to opamGitVersion.ml (run ocaml %{dep:get_git_version.ml})))
