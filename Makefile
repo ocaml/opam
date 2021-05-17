@@ -114,7 +114,7 @@ endif
 
 opam-devel.install: $(DUNE_DEP)
 	$(DUNE) build $(DUNE_ARGS) -p opam opam.install
-	sed -e "s/bin:/libexec:/" opam.install > $@
+	sed -e "/lib\/opam\/opam/d" -e "s/bin:/libexec:/" opam.install > $@
 
 opam-%.install: $(DUNE_DEP)
 	$(DUNE) build $(DUNE_ARGS) -p opam-$* $@
