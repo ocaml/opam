@@ -134,11 +134,9 @@ let check_and_run_external_commands () =
     else
     (* No such command, check if there is a matching plugin *)
     let command = OpamPath.plugin_prefix ^ name in
-    let answer =
-      if yes then Some `all_yes else
-        OpamStd.Option.Op.(OpamCoreConfig.E.yes ()
-                           >>| (fun b -> if b then `all_yes else `all_no))
-    in
+    OpamArg.init_opam_envvariabes cli;
+    (* if --yes is given, OPAMCONFIRMLEVEL/NO is not taken into account *)
+    let answer = if yes then Some `all_yes else None in
     OpamCoreConfig.init ?answer ();
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
