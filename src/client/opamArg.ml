@@ -321,16 +321,16 @@ let help_sections cli =
           "Although opam only supports roots ($(i,~%s.opam%s)) for the current \
            version, it does provide backwards compatibility for its \
            command-line interface." dir_sep dir_sep);
+    `P "Since CLI version support was only added in opam 2.1, use $(i,OPAMCLI) \
+        to select 2.0 support (as opam 2.0 will just ignore it), \
+        and `--cli=2.1' for 2.1 (or later) versions, since an environment variable \
+        controlling the parsing of syntax is brittle. To this end, opam \
+        displays a warning if $(i,OPAMCLI) specifies a valid version other \
+        than 2.0, and also if `--cli=2.0' is specified.";
     `P "The command-line version is selected by using the `--cli' option or \
         the $(i,OPAMCLI) environment variable. `--cli' may be specified more\
         than once, where the last instance takes precedence. $(i,OPAMCLI) is \
         only inspected if `--cli' is not given.";
-    `P "Since CLI version support was only added in opam 2.1, use $(i,OPAMCLI) \
-        to select 2.0 support (as opam 2.0 will just ignore it), \
-        and `--cli=2.1' for 2.1 later versions, since an environment variable \
-        controlling the parsing of syntax is brittle. To this end, opam \
-        displays a warning if $(i,OPAMCLI) specifies a valid version other \
-        than 2.0, and also if `--cli=2.0' is specified.";
 
     `S Manpage.s_exit_status;
     `P "As an exception to the following, the `exec' command returns 127 if the \
@@ -1109,9 +1109,9 @@ let global_options cli =
       "Use the command-line interface syntax and semantics of $(docv). \
        Intended for any persistent use of opam (scripts, blog posts, etc.), \
        any version of opam in the same MAJOR series will behave as for the \
-       specified MINOR release. The flag was not available in opam 2.0, so for \
-       2.0, use $(b,\\$OPAMCLI). This is equivalent to setting $(b,\\$OPAMCLI) \
-       to $(i,MAJOR.MINOR)."
+       specified MINOR release. The flag was not available in opam 2.0, so to \
+       select the 2.0 CLI, set the $(b,OPAMCLI) environment variable to \
+       $(i,2.0) instead of using this parameter."
       Arg.string (OpamCLIVersion.to_string OpamCLIVersion.current) in
   let switch =
     mk_opt ~cli cli_original ~section ["switch"]
