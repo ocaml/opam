@@ -133,20 +133,29 @@ let deprecated_warning removal instead targets =
 let cond_new cli c = cli @< c
 let cond_removed cli removal = cli @>= removal
 
-let check_cli_validity cli validity ?cond elem targets =
-  let cond = OpamStd.Option.default (fun x -> x) cond in
-  match validity with
+let check_cli_validity_t ~newer ~default_cli ~older ~valid ?(cond=fun x -> x)
+    cli = function
   | { removed = None ; valid = c; _ } when cond (cond_new cli c) ->
-    newer_flag_error cli c targets
+    newer c
   | { removed = Some (removal, instead); default = true; _ }
     when (snd cli = `Default) && OpamCLIVersion.default < removal ->
     (* default cli case : we dont even check if the condition is required *)
-    deprecated_warning removal instead targets;
-    `Ok elem
+    default_cli removal instead
   | { removed = Some (removal, instead); _ }
     when cond (cond_removed cli removal) ->
-    older_flag_error cli removal instead targets
-  | _ -> `Ok elem
+    older removal instead
+  | _ -> valid ()
+
+let check_cli_validity cli validity ?cond elem targets =
+  check_cli_validity_t cli validity ?cond
+    ~newer:(fun c ->
+        newer_flag_error cli c targets)
+    ~default_cli:(fun removal instead ->
+        deprecated_warning removal instead targets;
+        `Ok elem)
+    ~older:(fun removal instead ->
+        older_flag_error cli removal instead targets)
+    ~valid:(fun () -> `Ok elem)
 
 let term_cli_check ~check arg =
   Term.(ret ((const check) $ (Arg.value arg)))
@@ -215,16 +224,18 @@ let mk_vflag_all ~cli ?section ?(default=[]) flags =
   in
   let check selected =
     let newer_cli, older_cli =
-      List.fold_left (fun (newer_cli,older_cli) elem ->
+      List.fold_left (fun (newer_cli,older_cli as acc) elem ->
           match OpamStd.List.find_opt (fun (validity, _, _) ->
               validity.content = elem) flags with
-          | Some ({ removed = None ; valid = c; _ }, flags, _)
-            when cond_new cli c ->
-            (flags, c)::newer_cli, older_cli
-          | Some ({ removed = Some (removal, instead); _ }, flags, _)
-            when cond_removed cli removal ->
-            newer_cli, (flags, (removal, instead))::older_cli
-          | _ -> newer_cli,older_cli) ([],[]) selected
+          | Some (validity, flags, _) ->
+            check_cli_validity_t cli validity
+              ~newer:(fun c -> (flags, c)::newer_cli, older_cli)
+              ~default_cli:(fun _ _ -> acc)
+              ~older:(fun removal instead ->
+                  newer_cli, (flags, (removal, instead))::older_cli)
+              ~valid:(fun () -> acc)
+          | None -> acc)
+        ([],[]) selected
     in
     let max_cli clis =
       OpamCLIVersion.to_string @@
