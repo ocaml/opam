@@ -81,6 +81,9 @@ let git () =
   | None   -> None
   | Some v -> Some (of_string v)
 
+let is_dev_version () =
+  (!gitversion <> None)
+
 let full () =
   let git_version = match git () with
     | None   -> ""

@@ -48,7 +48,7 @@ let switch_to_updated_self debug opamroot =
         (OpamVersion.to_string update_version)
         (OpamVersion.to_string OpamVersion.current)
     else (
-      if OpamVersion.git () <> None then
+      if OpamVersion.is_dev_version () then
         OpamConsole.warning "Using opam self-upgrade to %s while the system \
                              opam is a development version (%s)"
           (OpamVersion.to_string update_version)

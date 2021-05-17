@@ -146,6 +146,7 @@ New option/command/subcommand are prefixed with ◈.
   * Each library defines its own environment variables, that fills the config record [#4606 @rjbou]
   * Harden cygpath wrapper [#4625 @dra27]
   * Reset the plugin symlinks when the root is upgraded [#4641 @dra27 - partial fix for #4619]
+  * Formalise opam dev version detection with `OpamVersion.is_dev_version` [#4665 @dra27]
 
 ## Test
   * Make the reference tests dune-friendly [#4376 @emillon]
