@@ -177,18 +177,29 @@ let write file contents =
 
 let setup_copy ?(chmod = fun x -> x) ~src ~dst () =
   let ic = open_in_bin src in
-  let oc =
-    try
-      let perm =
-        (Unix.fstat (Unix.descr_of_in_channel ic)).st_perm |> chmod
-      in
+  try
+    let perm =
+      (Unix.fstat (Unix.descr_of_in_channel ic)).st_perm |> chmod
+    in
+    let () =
+      try if Unix.((lstat dst).st_kind <> S_REG) then
+            remove_file dst
+      with Unix.Unix_error(ENOENT, _, _) -> ()
+    in
+    let oc =
       open_out_gen
         [ Open_wronly; Open_creat; Open_trunc; Open_binary ]
         perm dst
+    in
+    let fd = Unix.descr_of_out_channel oc in
+    try
+      if Unix.((fstat fd).st_perm) <> perm then
+        Unix.fchmod fd perm;
+      (ic, oc)
     with exn ->
-      OpamStd.Exn.finalise exn (fun () -> close_in ic)
-  in
-  (ic, oc)
+      OpamStd.Exn.finalise exn (fun () -> close_out oc)
+  with exn ->
+    OpamStd.Exn.finalise exn (fun () -> close_in ic)
 
 let copy_channels =
   let buf_len = 4096 in
