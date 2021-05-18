@@ -181,7 +181,9 @@ set PRIVATE_RUNTIME=
 if "%OCAML_PORT:~0,5%" equ "mingw" set PRIVATE_RUNTIME=--with-private-runtime
 set WITH_MCCS=--with-mccs
 if "%DEP_MODE%" equ "lib-pkg" set WITH_MCCS=
-"%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER %LIB_PKG% && ./configure %PRIVATE_RUNTIME% %WITH_MCCS% %LIB_EXT% && make opam %POST_COMMAND%" || exit /b 1
+"%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER %LIB_PKG% && ./configure %PRIVATE_RUNTIME% %WITH_MCCS% %LIB_EXT%" || exit /b 1
+"%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && echo DUNE_PROFILE=dev >> Makefile.config" || exit /b 1
+"%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make opam %POST_COMMAND%" || exit /b 1
 goto :EOF
 
 :test
