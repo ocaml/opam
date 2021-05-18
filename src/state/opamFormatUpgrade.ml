@@ -771,6 +771,7 @@ let from_1_3_dev7_to_2_0_alpha root conf =
   in
   let repositories_list = List.map (fun (_, r, _) -> r) prio_repositories in
   OpamFile.Config.with_repositories repositories_list conf
+  |> OpamFile.Config.with_opam_version v2_0
 
 let v2_0_alpha2 = OpamVersion.of_string "2.0~alpha2"
 
