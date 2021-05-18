@@ -48,15 +48,15 @@ let cli_between since ?(default=false) ?replaced removal =
     content = (); default }
 let cli_original = cli_from cli2_0
 
+let bold = OpamConsole.colorise `bold
 let string_of_sourced_cli (c,_) = OpamCLIVersion.to_string c
 let string_of_cli_option cli =
   if cli = cli2_0 then
     Printf.sprintf "set %s environment variable to %s"
-      (OpamConsole.colorise `bold "OPAMCLI")
-      (OpamConsole.colorise `bold "2.0")
+      (bold "OPAMCLI") (bold "2.0")
   else
     Printf.sprintf "use --cli=%s"
-      (OpamConsole.colorise `bold (OpamCLIVersion.to_string cli))
+      (bold @@ OpamCLIVersion.to_string cli)
 
 let update_doc_w_cli doc ~cli = function
   | { valid = c ; removed = None; _} ->
@@ -81,10 +81,8 @@ let get_long_form flags =
     (0,"") flags |> snd
 
 let string_of_target = function
-  | `Flags flags ->
-    OpamConsole.colorise `bold
-      ("--"^get_long_form flags)
-  | `Option o -> OpamConsole.colorise `bold o
+  | `Flags flags -> bold "--"^get_long_form flags
+  | `Option o -> bold o
   | `Verbatim s -> s
 
 let newer_flag_msg cli valid_since target =
@@ -106,7 +104,7 @@ let previously_str removal instead =
   match instead with
   | Some ist ->
     Printf.sprintf  ". Use %s instead or %s"
-      (OpamConsole.colorise `bold ist) previous
+      (bold ist) previous
   | None -> Printf.sprintf ", %s"  previous
 
 let older_flag_msg cli removal instead target =
