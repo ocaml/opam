@@ -160,6 +160,7 @@ let initk k =
         | false -> None)
     ) in
   let answer =
+    (* priorities: confirm level > yes > no *)
     match E.confirmlevel (), E.yes (), E.no () with
     | Some c, _,  _ -> Some c
     | _, Some true, _ -> Some `all_yes

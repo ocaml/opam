@@ -53,7 +53,9 @@ let preinit_environment_variables =
       "DEBUG", (fun v -> DEBUG (env_int v)),
       "see options `--debug' and `--debug-level'.";
       "YES", (fun v -> YES (env_bool v)),
-      "see option `--yes' and `--confirm-level`.";
+      "see options `--yes' and `--confirm-level`. \
+       $(b,OPAMYES) has has priority over $(b,OPAMNO) and is \
+       ignored if $(b,OPAMCONFIRMLEVEL) is set.";
     ] in
   let client =
     let open OpamClientConfig.E in [
@@ -89,7 +91,9 @@ let environment_variables =
       "when set to $(i,always) or $(i,never), sets a default value for the \
        `--color' option.";
       "CONFIRMLEVEL", cli_from cli2_1, (fun v -> CONFIRMLEVEL (env_answer v)),
-      "see option `--confirm-level`.";
+      "see option `--confirm-level`. \
+       $(b,OPAMCONFIRMLEVEL) has priority over $(b,OPAMYES) \
+       and $(b,OPAMNO).";
       "DEBUGSECTIONS", cli_from cli2_1, (fun v -> DEBUGSECTIONS (env_sections v)),
       "if set, limits debug messages to the space-separated list of \
        sections. Sections can optionally have a specific debug level (for \
@@ -108,8 +112,9 @@ let environment_variables =
       "MERGEOUT", cli_original, (fun v -> MERGEOUT (env_bool v)),
       "merge process outputs, stderr on stdout.";
       "NO", cli_original, (fun v -> NO (env_bool v)),
-      "answer no to any question asked, \
-       see option `--no` and `--confirm-level`.";
+      "answer no to any question asked, see options `--no` and `--confirm-level`. \
+       $(b,OPAMNO) is ignored if either $(b,OPAMCONFIRMLEVEL) or $(b,OPAMYES) \
+       is set.";
       "PRECISETRACKING", cli_original, (fun v -> PRECISETRACKING (env_bool v)),
       "fine grain tracking of directories.";
       "SAFE", cli_original, (fun v -> SAFE (env_bool v)),
@@ -1149,17 +1154,22 @@ let global_options cli =
     mk_vflag_all ~cli [
       cli_original, true, ["y";"yes"],
       "Answer yes to all opam yes/no questions without prompting. \
+       See also $(b,--confirm-level). \
        This is equivalent to setting $(b,\\$OPAMYES) to \"true\".";
       cli_from cli2_1, false, ["no"],
       "Answer no to all opam yes/no questions without prompting. \
+       See also $(b,--confirm-level). \
        This is equivalent to setting $(b,\\$OPAMNO) to \"true\".";
     ]
   in
   let confirm_level =
     mk_enum_opt_all ~cli (cli_from cli2_1) ~section ["confirm-level"] "LEVEL"
       confirm_enum
-      (Printf.sprintf "Confirmation level, $(docv) must be %s. This is \
-                       equivalent to setting $(b, \\$OPAMCONFIRMLEVEL)`."
+      (Printf.sprintf
+         "Confirmation level, $(docv) must be %s. Can be specified more than \
+          once. If $(b,--yes) or $(b,--no) are also given, the value of the \
+          last $(b,--confirm-level) is taken into account. This is equivalent \
+          to setting $(b, \\$OPAMCONFIRMLEVEL)`."
          (string_of_enum confirm_enum))
   in
   let strict =
