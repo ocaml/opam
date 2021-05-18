@@ -14,6 +14,13 @@ endif
 DUNE_PROFILE ?= release
 DUNE_ARGS ?= 
 
+ifeq ($(DUNE_PROFILE_ARG),release)
+  # TODO Replace with --release when we require dune >= 2.5
+  DUNE_PROFILE_ARG = --profile=release
+else
+  DUNE_PROFILE_ARG = --profile=$(DUNE_PROFILE)
+endif
+
 .PHONY: man html pages
 all: html pages
 
@@ -38,7 +45,7 @@ man-html:
 
 html:
 	rm -rf html
-	cd .. && $(DUNE) build --profile=$(DUNE_PROFILE) --root . $(DUNE_ARGS) @doc
+	cd .. && $(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) @doc
 	cp -r ../_build/default/_doc/_html html
 	sed 's/%{OPAMVERSION}%/'$(version)'/g' index.html > html/index.html
 # Not to break older links, add manpages to the `ocamldoc` dir

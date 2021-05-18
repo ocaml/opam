@@ -160,6 +160,7 @@ New option/command/subcommand are prefixed with ◈.
   * Add switch creation tests: (dead)locking and switch defitinion at action time [#4612 @rjbou]
   * Remove debug information from reftest [#4612 @rjbou]
   * Add preserved format test [#4634 @rjbou]
+  * Use the dev profile when testing [#4672 @dra27]
 
 ## Shell
   *
