@@ -462,11 +462,11 @@ let create_global_options
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
   let answer =
-    match yes, confirm_level with
-    | None, None -> None
-    | _ , Some c -> Some c
-    | Some true, None -> Some `all_yes
-    | Some false, None -> Some `all_no
+    match List.rev confirm_level, List.rev yes with
+    | [], [] -> None
+    | [], true::_ -> Some `all_yes
+    | [], false::_ -> Some `all_no
+    | c::_ , _ -> Some c
   in
   let verbose = List.length verbose in
   let cli = OpamCLIVersion.current in
@@ -1146,17 +1146,17 @@ let global_options cli =
                 This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
       Arg.(some string) None in
   let yes =
-    mk_vflag ~cli None [
-      cli_original, Some true, ["y";"yes"],
+    mk_vflag_all ~cli [
+      cli_original, true, ["y";"yes"],
       "Answer yes to all opam yes/no questions without prompting. \
        This is equivalent to setting $(b,\\$OPAMYES) to \"true\".";
-      cli_from cli2_1, Some false, ["no"],
+      cli_from cli2_1, false, ["no"],
       "Answer no to all opam yes/no questions without prompting. \
        This is equivalent to setting $(b,\\$OPAMNO) to \"true\".";
     ]
   in
   let confirm_level =
-    mk_enum_opt ~cli (cli_from cli2_1) ~section ["confirm-level"] "LEVEL"
+    mk_enum_opt_all ~cli (cli_from cli2_1) ~section ["confirm-level"] "LEVEL"
       confirm_enum
       (Printf.sprintf "Confirmation level, $(docv) must be %s. This is \
                        equivalent to setting $(b, \\$OPAMCONFIRMLEVEL)`."
