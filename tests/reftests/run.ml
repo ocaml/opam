@@ -124,11 +124,6 @@ let rec waitpid pid =
 
 exception Command_failure of int * string * string
 
-let str_replace filters s =
-  List.fold_left (fun s (re, by) ->
-      Re.replace_string (Re.compile re) ~by s)
-    s filters
-
 let str_replace_path ?(escape=false) whichway filters s =
   let escape =
     if escape then Re.(replace_string (compile @@ char '\\') ~by:"\\\\")
@@ -300,11 +295,6 @@ module Parse = struct
       rep space;
     ]
 
-  let re_cmd =
-    seq [group re_str_atom;
-         rep space;
-         rep @@ seq [group re_str_atom; rep space]]
-
   let command str =
     if str.[0] = '<' && str.[String.length str - 1] = '>' then
       let f = String.sub str 1 (String.length str - 2) in
@@ -473,7 +463,7 @@ let run_test t ?(vars=[]) ~opam =
                  if rl = el then (print_endline el; diffl acc r e)
                  else if expect_has rl then diffl (rl::acc) r (el :: e)
                  else (print_endline rl; diffl acc r (el :: e))
-               | [], e::el ->
+               | [], _::el ->
                  diffl acc [] el
                | r, [] ->
                  assert (acc = []); List.iter print_endline r
