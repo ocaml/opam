@@ -159,7 +159,8 @@ New option/command/subcommand are prefixed with ◈.
   * GHA: Ignore opam-rt pin depends, opam libs are already pinned locally [#4610 @AltGr @rjbou]
   * GHA: The bootstrap cache also depends on the precise version! [#4618 @dra27]
   * GHA: fix opam-rt specific PR branch use [#4606 @rjbou]
-  * Add switch creation tests: (dead)locking and switch defitinion at action time [#4612 @rjbou]
+  * Add switch creation tests: (dead)locking and switch definition at action time [#4612 @rjbou]
+    * updated with undefined switch values in opam inner calls (undefined for switch creation or not propagated) [#4668 @rjbou]
   * Remove debug information from reftest [#4612 @rjbou]
   * Add preserved format test [#4634 @rjbou]
 
