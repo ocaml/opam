@@ -56,6 +56,14 @@ val mk_enum_opt:
   cli:OpamCLIVersion.Sourced.t -> validity -> ?section:string -> string list ->
   string -> (validity * string * 'a) list -> string -> 'a option Term.t
 
+(** [opt_all] with enums. Check each flag content cli, purge non corresponding
+    ones from the final result. If after purge the resulting list is empty (all
+    removed or newer flag contents), it raises an error ; otherwise only
+    display warnings on wrong cli contents. *)
+val mk_enum_opt_all:
+  cli:OpamCLIVersion.Sourced.t -> validity -> ?section:string -> string list ->
+  string -> (validity * string * 'a) list -> string -> 'a list Term.t
+
 val string_of_enum: (validity * string * 'a) list -> string
 
 type 'a subcommand = validity * string * 'a * string list * string
