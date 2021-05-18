@@ -1054,7 +1054,9 @@ module type BestEffortArg = sig
   include SyntaxFileArg
 
   (* Version of file format, as understood by [opam-file-format] *)
-  val file_format_version: OpamVersion.t
+  (* This attribute can be deleted when 4.02 is ditched *)
+  [@@@ocaml.warning "-32"]
+  val file_format_version: OpamVersion.t [@@ocaml.warning "-32"]
 
   (* Construct the syntax pp, under some conditions. If [condition] is given,
      it is passed to [OpamFormat.show_erros] call, for error display
@@ -1474,7 +1476,6 @@ module Config = struct
   module BestEffort = MakeBestEffort(ConfigSyntax)
 
   let raw_root_version f =
-    let open OpamParserTypes.FullPos in
     try
       let opamfile = OpamParser.file (OpamFilename.to_string (filename f)) in
       Some (OpamStd.List.find_map (function
