@@ -231,7 +231,7 @@ let expand gt str =
     (OpamFilter.expand_string ~default:(fun _ -> "")
        (OpamPackageVar.resolve st) str)
 
-let exec gt ?set_opamroot ?set_opamswitch ~inplace_path command =
+let exec gt ~set_opamroot ~set_opamswitch ~inplace_path command =
   log "config-exec command=%a" (slog (String.concat " ")) command;
   let switch = OpamStateConfig.get_switch () in
   let st_lazy = lazy (
@@ -243,11 +243,11 @@ let exec gt ?set_opamroot ?set_opamswitch ~inplace_path command =
     if OpamFile.exists env_file then
       let base = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
       OpamEnv.get_opam_raw ~base
-        ?set_opamroot ?set_opamswitch ~force_path:(not inplace_path)
+        ~set_opamroot ~set_opamswitch ~force_path:(not inplace_path)
         gt.root switch
     else
-      OpamEnv.get_full
-        ?set_opamroot ?set_opamswitch ~force_path:(not inplace_path)
+      OpamEnv.get_full ~set_opamroot ~set_opamswitch
+        ~force_path:(not inplace_path)
         (Lazy.force st_lazy)
   in
   let env = OpamTypesBase.env_array env in

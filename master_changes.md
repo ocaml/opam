@@ -14,6 +14,8 @@ New option/command/subcommand are prefixed with ◈.
   * Add cli versioning for enums of flags with predefined enums [#4606 @rjbou]
   * Ensure the symlink for a plugin is maintained on each invocation [#4621 @dra27 - partially fixes #4619]
   * Clearer messages about using --cli and OPAMCLI [#4655 @dra27]
+  * The options `--root` and `--switch` are now reflected in environment variables when building packages
+    so that calls to `opam` during build access the correct root and switch [#4668 @LasseBlaauwbroek]
 
 ## Init
   * Introduce a `default-invariant` config field, restore the 2.0 semantics for
