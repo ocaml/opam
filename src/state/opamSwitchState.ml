@@ -1094,14 +1094,16 @@ let unavailable_reason st ?(default="") (name, vformula) =
       in
       let msg =
         match missing with
-        | [pkg] ->
-          " '" ^ pkg ^ "'"
+        | [pkg] -> " '" ^ pkg ^ "'"
         | pkgs ->
-          "s " ^ (OpamStd.Format.pretty_list (List.rev_map (Printf.sprintf "'%s'") pkgs))
+          "s " ^ (OpamStd.Format.pretty_list
+                    (List.rev_map (Printf.sprintf "'%s'") pkgs))
       in
       Printf.sprintf
         "depends on the unavailable system package%s. Use \
-         `--assume-depexts' to attempt installation anyway." msg
+         `--no-depexts' to attempt installation anyway, or it is \
+         possible that a depext package name in the opam file \
+         is incorrect." msg
     | None -> default
 
 let update_package_metadata nv opam st =
