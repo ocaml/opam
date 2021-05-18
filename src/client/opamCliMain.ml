@@ -302,8 +302,8 @@ let rec main_catch_all f =
   | OpamFormatUpgrade.Upgrade_done conf ->
     main_catch_all @@ fun () ->
     OpamConsole.header_msg "Rerunning init and update";
-    OpamClient.reinit ~interactive:true ~update_config:false conf
-      (OpamStd.Sys.guess_shell_compat ());
+    OpamClient.reinit ~interactive:true ~update_config:false ~bypass_checks:true
+      conf (OpamStd.Sys.guess_shell_compat ());
     OpamConsole.msg
       "Update done, please now retry your command.\n";
     exit (OpamStd.Sys.get_exit_code `Aborted)

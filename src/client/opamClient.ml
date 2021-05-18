@@ -773,11 +773,14 @@ let update_with_init_config ?(overwrite=false) config init_config =
 
 let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
     ?dot_profile ?update_config ?env_hook ?completion ?inplace
-    ?(check_sandbox=true)
+    ?(check_sandbox=true) ?(bypass_checks=false)
     config shell =
   let root = OpamStateConfig.(!r.root_dir) in
   let config = update_with_init_config config init_config in
-  let _all_ok = init_checks ~hard_fail_exn:false init_config in
+  let _all_ok =
+    if bypass_checks then false else
+      init_checks ~hard_fail_exn:false init_config
+  in
   let custom_init_scripts =
     let env v =
       let vs = OpamVariable.Full.variable v in
