@@ -371,7 +371,7 @@ let variable gt v =
       (OpamVariable.Full.to_string v)
 
 
-let exec gt ?set_opamroot ?set_opamswitch ~inplace_path command =
+let exec gt ~set_opamroot ~set_opamswitch ~inplace_path command =
   log "config-exec command=%a" (slog (String.concat " ")) command;
   OpamSwitchState.with_ `Lock_none gt @@ fun st ->
   let cmd, args =
@@ -384,7 +384,7 @@ let exec gt ?set_opamroot ?set_opamswitch ~inplace_path command =
   let env =
     OpamTypesBase.env_array
       (OpamEnv.get_full
-         ?set_opamroot ?set_opamswitch ~force_path:(not inplace_path) st)
+         ~set_opamroot ~set_opamswitch ~force_path:(not inplace_path) st)
   in
   match OpamSystem.resolve_command ~env cmd with
   | Some cmd -> raise (OpamStd.Sys.Exec (cmd, args, env))

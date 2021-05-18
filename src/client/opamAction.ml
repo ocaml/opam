@@ -317,7 +317,7 @@ let prepare_package_source st nv dir =
       prepare_package_build st nv dir
 
 let compilation_env t opam =
-  OpamEnv.get_full ~force_path:true t ~updates:([
+  OpamEnv.get_full ~set_opamroot:true ~set_opamswitch:true ~force_path:true t ~updates:([
       "CDPATH", Eq, "", Some "shell env sanitization";
       "MAKEFLAGS", Eq, "", Some "make env sanitization";
       "MAKELEVEL", Eq, "", Some "make env sanitization";
