@@ -412,7 +412,7 @@ let rec list_remove x = function
   | [] -> []
   | y :: r -> if x = y then r else y :: list_remove x r
 
-let run_test t ?(vars=[]) ~opam =
+let run_test ?(vars=[]) ~opam t =
   let opamroot0 = Filename.concat (Sys.getcwd ()) ("root-"^t.repo_hash) in
   with_temp_dir @@ fun dir ->
   let old_cwd = Sys.getcwd () in
