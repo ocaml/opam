@@ -556,7 +556,7 @@ let install_packages_commands_t sys_packages =
       List.map (fun p -> OpamStd.String.split p ' ')  packages
       |> List.flatten
     in
-    ["port", "install"::packages], (* NOTE: Does not have any interactive mode *)
+    ["port", yes ["-N"] ("install"::packages)],
     None
   | Netbsd -> ["pkgin", yes ["-y"] ("install" :: packages)], None
   | Openbsd -> ["pkg_add", yes ~no:["-i"] ["-I"] packages], None
