@@ -2436,7 +2436,7 @@ let switch cli =
           compatible compiler, creates a local switch and installs the local \
           package dependencies.";
       `Pre "    opam switch create trunk --repos \
-            default,beta=https://github.com/ocaml/ocaml-beta-repository.git \
+            default,beta=git+https://github.com/ocaml/ocaml-beta-repository.git \
             ocaml-variants.4.10.0+trunk";
       `P "Create a new switch called \"trunk\", with \
           $(b,ocaml-variants.4.10.0+trunk) as compiler, with a new $(i,beta) \
