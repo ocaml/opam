@@ -23,8 +23,7 @@ export OCAMLRUNPARAM=b
     make lib-ext
   fi
   if [ $OPAM_UPGRADE -eq 1 ]; then
-    # unset git versionning to allow OPAMYES use for upgrade
-    sed -i  -e 's/\(.*with-stdout-to get-git-version.ml.*@@\).*/\1 \\"let version = None\\"")))/' src/client/dune
+    unset-dev-version
   fi
   make all
 
