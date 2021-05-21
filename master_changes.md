@@ -14,6 +14,8 @@ New option/command/subcommand are prefixed with ◈.
   * Add cli versioning for enums of flags with predefined enums [#4606 @rjbou]
   * Ensure the symlink for a plugin is maintained on each invocation [#4621 @dra27 - partially fixes #4619]
   * Clearer messages about using --cli and OPAMCLI [#4655 @dra27]
+  * The options `--root` and `--switch` are now reflected in environment variables when building packages
+    so that calls to `opam` during build access the correct root and switch [#4668 @LasseBlaauwbroek]
 
 ## Init
   * Introduce a `default-invariant` config field, restore the 2.0 semantics for
@@ -160,7 +162,8 @@ New option/command/subcommand are prefixed with ◈.
   * GHA: Ignore opam-rt pin depends, opam libs are already pinned locally [#4610 @AltGr @rjbou]
   * GHA: The bootstrap cache also depends on the precise version! [#4618 @dra27]
   * GHA: fix opam-rt specific PR branch use [#4606 @rjbou]
-  * Add switch creation tests: (dead)locking and switch defitinion at action time [#4612 @rjbou]
+  * Add switch creation tests: (dead)locking and switch definition at action time [#4612 @rjbou]
+    * updated with undefined switch values in opam inner calls (undefined for switch creation or not propagated) [#4668 @rjbou]
   * Remove debug information from reftest [#4612 @rjbou]
   * Add preserved format test [#4634 @rjbou]
 

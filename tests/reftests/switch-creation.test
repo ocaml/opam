@@ -11,14 +11,24 @@ build: ["opam" "option" "jobs" "--safe" "--cli=2.1"]
 ### <sw-lock/packages/baz/baz.1/opam>
 opam-version: "2.0"
 flags: compiler
-build: ["opam" "var" "prefix" "--safe"]
+build: ["sh" "./prefix"]
+install: ["cp" "pref" "%{lib}%/prefix"]
+### <sw-lock/packages/baz/baz.1/files/prefix>
+opam var prefix --safe > pref
 ### opam repository add sw-lock ./sw-lock --set-default
 [sw-lock] Initialised
-### opam switch create undef-prefix baz | grep ERROR | unordered
-[ERROR] The compilation of baz.1 failed at "opam var prefix --safe".
-#=== ERROR while compiling baz.1 ==============================================#
-# [ERROR] No switch is currently set. Please use 'opam switch' to set or install a switch
-# Return code 31 #
+### # switch not undefined for opam calls in build, on build creation
+### opam switch create undef-prefix baz
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["baz"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed baz.1
+Done.
+### cat $OPAMROOT/undef-prefix/lib/prefix
+${BASEDIR}/OPAM/undef-prefix
+### # No deadlock on concurent opam calls in build
 ### opam switch create nohang foo bar | unordered
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
@@ -28,3 +38,15 @@ Switch invariant: ["foo" "bar"]
 -> installed bar.1
 -> installed foo.1
 Done.
+### # switch propagation to opam calls in build
+### opam switch create undef-switch --empty
+### opam switch nohang
+### opam install baz --sw undef-switch
+The following actions will be performed:
+  - install baz 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed baz.1
+Done.
+### cat $OPAMROOT/undef-switch/lib/prefix
+${BASEDIR}/OPAM/undef-switch
