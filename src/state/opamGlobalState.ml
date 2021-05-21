@@ -64,8 +64,7 @@ let load lock_kind =
   if OpamStateConfig.is_newer config && lock_kind <> `Lock_write then
     log "root version (%s) is greater than running binary's (%s); \
          load with best-effort (read-only)"
-      (OpamStd.Option.to_string OpamVersion.to_string
-         (OpamFile.Config.opam_root_version config))
+      (OpamVersion.to_string (OpamFile.Config.opam_root_version config))
       (OpamVersion.to_string (OpamFile.Config.root_version));
   let switches =
     List.filter

@@ -188,7 +188,7 @@ let is_newer_raw = function
   | None -> false
 
 let is_newer config =
-    is_newer_raw (OpamFile.Config.opam_root_version config)
+    is_newer_raw (Some (OpamFile.Config.opam_root_version config))
 
 (** none -> shouldn't load (write attempt in readonly)
     Some true -> everything is fine normal read
@@ -201,7 +201,7 @@ let is_readonly_opamroot_raw ?(lock_kind=`Lock_write) version =
 
 let is_readonly_opamroot_t ?lock_kind gt =
   is_readonly_opamroot_raw ?lock_kind
-    (OpamFile.Config.opam_root_version gt.config)
+    (Some (OpamFile.Config.opam_root_version gt.config))
 
 let is_newer_than_self ?lock_kind gt =
   is_readonly_opamroot_t ?lock_kind gt <> Some false
@@ -220,7 +220,7 @@ let load_if_possible_raw ?lock_kind root version (read,read_wo_err) f =
 
 let load_if_possible_t ?lock_kind opamroot config readf f =
   load_if_possible_raw ?lock_kind
-    opamroot (OpamFile.Config.opam_root_version config) readf f
+    opamroot (Some (OpamFile.Config.opam_root_version config)) readf f
 
 let load_if_possible ?lock_kind gt =
   load_if_possible_t ?lock_kind gt.root gt.config

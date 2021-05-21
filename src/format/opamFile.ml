@@ -1227,9 +1227,11 @@ module ConfigSyntax = struct
   let file_format_version = OpamVersion.of_string "2.0"
   let root_version = OpamVersion.of_string "2.1~rc"
 
+  let default_old_root_version = OpamVersion.of_string "2.1~~previous"
+
   type t = {
     opam_version : opam_version;
-    opam_root_version: opam_version option;
+    opam_root_version: opam_version;
     repositories : repository_name list;
     installed_switches : switch list;
     switch : switch option;
@@ -1254,6 +1256,9 @@ module ConfigSyntax = struct
 
   let opam_version t = t.opam_version
   let opam_root_version t = t.opam_root_version
+  let opam_root_version_opt t =
+    if OpamVersion.compare t.opam_root_version default_old_root_version = 0 then
+      None else Some t.opam_root_version
   let repositories t = t.repositories
   let installed_switches t = t.installed_switches
   let switch t = t.switch
@@ -1283,8 +1288,7 @@ module ConfigSyntax = struct
 
 
   let with_opam_version opam_version t = { t with opam_version }
-  let with_opam_root_version opam_root_version t =
-    { t with opam_root_version = Some opam_root_version }
+  let with_opam_root_version opam_root_version t = { t with opam_root_version }
   let with_repositories repositories t = { t with repositories }
   let with_installed_switches installed_switches t =
     { t with installed_switches }
@@ -1321,7 +1325,7 @@ module ConfigSyntax = struct
 
   let empty = {
     opam_version = file_format_version;
-    opam_root_version = None;
+    opam_root_version = default_old_root_version;
     repositories = [];
     installed_switches = [];
     switch = None;
@@ -1358,7 +1362,7 @@ module ConfigSyntax = struct
       "opam-version", Pp.ppacc
         with_opam_version opam_version
         (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
-      "opam-root-version", Pp.ppacc_opt
+      "opam-root-version", Pp.ppacc
         with_opam_root_version opam_root_version
         (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
       "repositories", Pp.ppacc
@@ -1483,7 +1487,7 @@ module Config = struct
                                 {pelem = String version; _}); _} ->
             Some (OpamVersion.of_string version)
           | _ -> None)
-          opamfile.file_contents)
+        opamfile.file_contents)
     with
     | Sys_error _ | Not_found -> None
 end

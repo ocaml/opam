@@ -252,8 +252,7 @@ let load lock_kind gt rt switch =
   if OpamStateConfig.is_newer_than_self gt then
     log "root version (%s) is greater than running binary's (%s); \
          load with best-effort (read-only)"
-      (OpamStd.Option.to_string OpamVersion.to_string
-         (OpamFile.Config.opam_root_version gt.config))
+      (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config))
       (OpamVersion.to_string (OpamFile.Config.root_version));
   if OpamVersion.compare
       switch_config.opam_version

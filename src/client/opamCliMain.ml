@@ -146,10 +146,8 @@ let check_and_run_external_commands () =
       | Some config ->
         let root_upgraded =
           let cmp =
-            match  OpamFile.Config.opam_root_version config with
-            | Some root_version ->
-              OpamVersion.compare OpamFile.Config.root_version root_version
-            | None -> 1 (* older opam root *)
+            OpamVersion.compare OpamFile.Config.root_version
+              (OpamFile.Config.opam_root_version config)
           in
           if cmp < 0 then
             OpamConsole.error_and_exit `Configuration_error

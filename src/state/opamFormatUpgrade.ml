@@ -1107,7 +1107,7 @@ let intermediate_roots = [
 
 let as_necessary requested_lock global_lock root config =
   let root_version =
-    match OpamFile.Config.opam_root_version config with
+    match OpamFile.Config.opam_root_version_opt config with
     | Some v -> v
     | None ->
       let v = OpamFile.Config.opam_version config in

@@ -172,8 +172,12 @@ module Config: sig
   (** Return the opam version *)
   val opam_version: t  -> opam_version
 
-  (** Return the opam root version *)
-  val opam_root_version: t -> opam_version option
+  (** Return the opam root version, if not defined returns the default version
+      value [2.1~~previous] *)
+  val opam_root_version: t -> opam_version
+
+  (** Return the opam root version if defined *)
+  val opam_root_version_opt: t -> opam_version option
 
   (** Return the list of repository *)
   val repositories: t  -> repository_name list
