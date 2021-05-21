@@ -1126,7 +1126,7 @@ let as_necessary requested_lock global_lock root config =
         config)
       config hard_upg
   in
-  let is_dev = OpamVersion.git () <> None in
+  let is_dev = OpamVersion.is_dev_version () in
   log "%s config upgrade, from %s to %s"
     (if on_the_fly then "On-the-fly" else
      if need_hard_upg then "Hard" else "Light")

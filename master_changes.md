@@ -107,6 +107,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix build from source when a dune-project file is presented in the parent directory [#4545 @kit-ty-kate]
   * Fix build from source when a dune-project file is presented in the parent directory [#4545 @kit-ty-kate - fix #4537]
   * Fix opam-devel.install not to install two files called opam [#4664 @dra27]
+  * Build release tags as non-dev versions, as for release tarballs [#4665 @dra27 - fix #4656]
 
 ## Infrastructure
   * Release scripts: switch to OCaml 4.10.2 by default, add macos/arm64 builds by default [#4559 @AltGr]
@@ -147,6 +148,7 @@ New option/command/subcommand are prefixed with ◈.
   * Each library defines its own environment variables, that fills the config record [#4606 @rjbou]
   * Harden cygpath wrapper [#4625 @dra27]
   * Reset the plugin symlinks when the root is upgraded [#4641 @dra27 - partial fix for #4619]
+  * Formalise opam dev version detection with `OpamVersion.is_dev_version` [#4665 @dra27]
 
 ## Test
   * Make the reference tests dune-friendly [#4376 @emillon]

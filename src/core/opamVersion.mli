@@ -31,6 +31,9 @@ val git: unit -> t option
 (** Side-effect to set the git version later in the build *)
 val set_git: string -> unit
 
+(** [true] if this is a development version of opam *)
+val is_dev_version : unit -> bool
+
 (** The full version (current + git) *)
 val full: unit -> t
 
