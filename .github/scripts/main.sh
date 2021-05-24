@@ -20,6 +20,9 @@ export OCAMLRUNPARAM=b
   fi
 
   ./configure --prefix ~/local --with-mccs
+  if [ "$OPAM_TEST" != "1" ]; then
+    echo 'DUNE_PROFILE=dev' >> Makefile.config
+  fi
 
   if [[ $OPAM_TEST$OPAM_COLD -eq 0 ]] ; then
     make lib-ext
