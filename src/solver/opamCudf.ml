@@ -929,7 +929,7 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
             let ct_chains, csp = cst ~hl_last:false ct_chains p in
             let fdeps = formula_of_vpkgl cudfnv2opam packages deps in
             let sdeps = OpamFormula.to_string fdeps in
-            let msg = `Missing (csp, sdeps, fdeps) in
+            let msg = `Missing (Some csp, sdeps, fdeps) in
             if List.mem msg explanations then raise Not_found else
               msg :: explanations, ct_chains
           | Dependency _ ->
@@ -937,6 +937,15 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
         with Not_found ->
           explanations, ct_chains)
       ([], ct_chains) reasons
+  in
+
+  let explanations =
+    match explanations with
+    | `Missing (_, sdeps, fdeps) :: rest
+      when  List.for_all (function `Missing (_, sdeps', fdeps') -> sdeps = sdeps' && fdeps = fdeps' | _ -> false) rest ->
+        [`Missing (None, sdeps, fdeps)]
+    | _ -> explanations
+
   in
 
   let format_explanation = function
@@ -955,11 +964,13 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
       in
         (msg1, packages, msg3)
   | `Missing (csp, sdeps, fdeps) ->
+      let sdeps = OpamConsole.colorise' [`red;`bold] sdeps in
       let msg1 = "Missing dependency:"
-      and msg2 = [arrow_concat [csp; OpamConsole.colorise' [`red;`bold] sdeps]]
+      and msg2 =
+        OpamStd.Option.map_default (fun csp -> arrow_concat [csp; sdeps]) sdeps csp
       and msg3 = OpamFormula.fold_right (fun a x -> unav_reasons x::a) [] fdeps
       in
-        (msg1, msg2, msg3)
+        (msg1, [msg2], msg3)
   in
 
   List.rev_map format_explanation explanations
