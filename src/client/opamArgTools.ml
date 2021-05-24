@@ -34,6 +34,9 @@ let contented_validity (validity:validity) content : 'a contented_validity =
   | None -> { validity with content = `Valid content}
   | Some _ -> { validity with content = `Removed content}
 
+let is_original_cli validity =
+  OpamCLIVersion.compare validity.valid cli2_0 = 0
+
 let cli_from valid = { valid ; removed = None; content = (); default = false }
 let cli_between since ?(default=false) ?replaced removal =
   if since >= removal then

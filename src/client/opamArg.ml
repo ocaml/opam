@@ -287,9 +287,17 @@ let environment_variables =
     ] in
   core @ format @ solver @ repository @ state @ client
 
+let scrubbed_environment_variables =
+  let f (name, validity, _, _) =
+    if is_original_cli validity then
+      None
+    else
+      Some ("OPAM" ^ name)
+  in
+    OpamStd.List.filter_map f environment_variables
+
 let doc_opam_envvariables, init_opam_envvariabes =
   env_with_cli environment_variables
-
 
 (** Help sections common to all commands *)
 
@@ -604,6 +612,7 @@ let apply_build_options b =
     ?fake:(flag b.fake)
     ?skip_dev_update:(flag b.skip_update)
     ?assume_depexts:(flag (b.assume_depexts || b.no_depexts))
+    ~scrubbed_environment_variables
     ()
 
 

@@ -343,3 +343,4 @@ val help_sections: OpamCLIVersion.Sourced.t -> Manpage.block list
 
 val preinit_opam_envvariables: unit -> unit
 val init_opam_envvariabes: OpamCLIVersion.Sourced.t -> unit
+val scrubbed_environment_variables: string list

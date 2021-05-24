@@ -43,6 +43,7 @@ let of_json = function
 
 let ( >= ) = Stdlib.( >= )
 let ( < ) = Stdlib.( < )
+let compare = Stdlib.compare
 
 let previous cli =
   let f previous version =

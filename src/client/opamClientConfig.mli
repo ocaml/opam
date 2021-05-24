@@ -58,6 +58,7 @@ type t = private {
   no_auto_upgrade: bool;
   assume_depexts: bool;
   cli: OpamCLIVersion.t;
+  scrubbed_environment_variables: string list;
 }
 
 type 'a options_fun =
@@ -80,6 +81,7 @@ type 'a options_fun =
   ?no_auto_upgrade:bool ->
   ?assume_depexts:bool ->
   ?cli:OpamCLIVersion.t ->
+  ?scrubbed_environment_variables:string list ->
   'a
   (* constraint 'a = 'b -> 'c *)
 
@@ -117,6 +119,7 @@ val opam_init:
   ?no_auto_upgrade:bool ->
   ?assume_depexts:bool ->
   ?cli:OpamCLIVersion.t ->
+  ?scrubbed_environment_variables:string list ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:OpamStateTypes.provenance ->
   ?jobs:int Lazy.t ->

@@ -19,10 +19,11 @@ open OpamStateTypes
 (** Get the current environment with OPAM specific additions. If [force_path],
     the PATH is modified to ensure opam dirs are leading. [set_opamroot] and
     [set_opamswitch] can be additionally used to set the [OPAMROOT] and
-    [OPAMSWITCH] variables. *)
+    [OPAMSWITCH] variables. [scrub] is a list of environment variables to
+    remove from the environment. *)
 val get_full:
   set_opamroot:bool -> set_opamswitch:bool -> force_path:bool ->
-  ?updates:env_update list -> 'a switch_state -> env
+  ?updates:env_update list -> ?scrub:string list -> 'a switch_state -> env
 
 (** Get only environment modified by OPAM. If [force_path], the PATH is modified
     to ensure opam dirs are leading. [set_opamroot] and [set_opamswitch] can be

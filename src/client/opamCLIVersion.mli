@@ -32,6 +32,8 @@ val ( >= ) : t -> int * int -> bool
 (** Comparison [<] with [(major, minor)] *)
 val ( < ) : t -> int * int -> bool
 
+val compare : t -> t -> int
+
 (** Returns previous supported version.
     @raise Not_found if there isn't one. *)
 val previous: t -> t
