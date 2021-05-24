@@ -102,11 +102,11 @@ New option/command/subcommand are prefixed with ◈.
   * Handle macport variants [#4509 @rjbou - fix #4297]
   * Always upgrade all the installed packages when installing a new package on Archlinux [#4556 @kit-ty-kate]
   * Handle some additional environment variables (`OPAMASSUMEDEPEXTS`, `OPAMNODEPEXTS`) [#4587 @AltGr]
-  * Improve messages to hint that answering `no` doesn't abort installation [@AltGr]
   * Improve messages to hint that answering `no` doesn't abort installation [#4591 @AltGr]
   * Add support for non-interactive mode in macports [#4676 @kit-ty-kate]
   * Handling of packages of tagged repositories for alpine [#4700 @rjbou - fix #4670]
   * Clarify some `assume-depexts` related messages [#4671 @AltGr - partial fix #4662]
+  * Warn the user if epel-release is missing and unavailable depexts are detected [#4679 @dra27 fix #4669]
 
 ## Sandbox
   * Fix the conflict with the environment variable name used by dune [#4535 @smorimoto - fix ocaml/dune#4166]

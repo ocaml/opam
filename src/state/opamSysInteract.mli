@@ -24,3 +24,8 @@ val install_packages_commands: OpamSysPkg.Set.t -> (string * string list) list
 val install: OpamSysPkg.Set.t -> unit
 
 val update: unit -> unit
+
+(* Determine if special packages may need installing to enable other
+   repositories.
+   Presently used to check for epel-release on CentOS and RHEL. *)
+val repo_enablers : unit -> string option

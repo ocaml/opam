@@ -689,3 +689,17 @@ let update () =
   | Some (cmd, args) ->
     try sudo_run_command cmd args
     with Failure msg -> failwith ("System package update " ^ msg)
+
+let repo_enablers () =
+  if family () <> Centos then None else
+  let (needed, _) =
+    packages_status (OpamSysPkg.raw_set
+                       (OpamStd.String.Set.singleton "epel-release"))
+  in
+  if OpamSysPkg.Set.is_empty needed then None
+  else
+    Some
+      "On CentOS/RHEL, many packages may assume that the Extra Packages for \
+       Enterprise Linux (EPEL) repository has been enabled. \
+       This is typically done by installing the 'epel-release' package. \
+       Please see https://fedoraproject.org/wiki/EPEL for more information"

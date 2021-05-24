@@ -1036,7 +1036,7 @@ let not_found_message st (name, cstr) =
       (OpamPackage.Name.to_string name)
 
 (* Display a meaningful error for an unavailable package *)
-let unavailable_reason st ?(default="") (name, vformula) =
+let unavailable_reason_raw st (name, vformula) =
   let candidates = OpamPackage.packages_of_name st.packages name in
   let candidates =
     OpamPackage.Set.filter
@@ -1044,67 +1044,88 @@ let unavailable_reason st ?(default="") (name, vformula) =
       candidates
   in
   if OpamPackage.Set.is_empty candidates then
-    (if OpamPackage.has_name st.packages name then "no matching version"
-     else "unknown package")
+    (if OpamPackage.has_name st.packages name then `UnknownVersion
+     else `UnknownPackage)
   else
   let nv =
     try OpamPinned.package st name
     with Not_found ->
-      match vformula with
-      | Atom (_, v) when
-          OpamPackage.Set.mem (OpamPackage.create name v) candidates ->
-        OpamPackage.create name v
-      | _ -> OpamPackage.max_version candidates name
+    match vformula with
+    | Atom (_, v) when
+        OpamPackage.Set.mem (OpamPackage.create name v) candidates ->
+      OpamPackage.create name v
+    | _ -> OpamPackage.max_version candidates name
   in
   match opam_opt st nv with
-  | None -> "no package definition found"
+  | None -> `NoDefinition
   | Some opam ->
     let avail = OpamFile.OPAM.available opam in
     if not (OpamPackage.Set.mem nv candidates) then
-      Printf.sprintf
-        "not available because the package is pinned to version %s"
-        (OpamPackage.version_to_string nv)
+      `Pinned nv
     else if not (OpamFilter.eval_to_bool ~default:false
                    (OpamPackageVar.resolve_switch ~package:nv st)
-                   avail)
-    then
-      Printf.sprintf "unmet availability conditions%s'%s'"
-        (if OpamPackage.Set.cardinal candidates = 1 then ": "
-         else ", e.g. ")
-        (OpamFilter.to_string avail)
+                   avail) then
+      `Unavailable
+        (Printf.sprintf "%s'%s'"
+           (if OpamPackage.Set.cardinal candidates = 1 then ": "
+            else ", e.g. ")
+           (OpamFilter.to_string avail))
     else if OpamPackage.has_name
         (Lazy.force st.available_packages --
          remove_conflicts st st.compiler_packages
            (Lazy.force st.available_packages))
-        name
-    then
-      "conflict with the base packages of this switch"
+        name then
+      `ConflictsBase
     else if OpamPackage.has_name st.compiler_packages name &&
             not OpamStateConfig.(!r.unlock_base) then
-      Printf.sprintf
-        "incompatible with the switch invariant %s (use `--update-invariant' \
-         to force)"
-        (OpamConsole.colorise `bold
-           (OpamFileTools.dep_formula_to_string st.switch_invariant))
+      `ConflictsInvariant
+        (OpamFileTools.dep_formula_to_string st.switch_invariant)
     else
     match depexts_unavailable st (OpamPackage.Set.max_elt candidates) with
     | Some missing ->
       let missing =
         List.rev_map OpamSysPkg.to_string (OpamSysPkg.Set.elements missing)
       in
-      let msg =
-        match missing with
-        | [pkg] -> " '" ^ pkg ^ "'"
-        | pkgs ->
-          "s " ^ (OpamStd.Format.pretty_list
-                    (List.rev_map (Printf.sprintf "'%s'") pkgs))
-      in
-      Printf.sprintf
-        "depends on the unavailable system package%s. Use \
-         `--no-depexts' to attempt installation anyway, or it is \
-         possible that a depext package name in the opam file \
-         is incorrect." msg
-    | None -> default
+      `MissingDepexts missing
+    | None -> `Default
+
+(* Display a meaningful error for an unavailable package *)
+let unavailable_reason st ?(default="") atom =
+  match unavailable_reason_raw st atom with
+  | `UnknownVersion ->
+    "no matching version"
+  | `UnknownPackage ->
+    "unknown package"
+  | `NoDefinition ->
+    "no package definition found"
+  | `Pinned nv ->
+    Printf.sprintf
+      "not available because the package is pinned to version %s"
+      (OpamPackage.version_to_string nv)
+  | `Unavailable msg ->
+    Printf.sprintf "unmet availability conditions%s" msg
+  | `ConflictsBase ->
+    "conflict with the base packages of this switch"
+  | `ConflictsInvariant invariant ->
+    Printf.sprintf
+      "incompatible with the switch invariant %s (use `--update-invariant' \
+       to force)"
+      (OpamConsole.colorise `bold invariant)
+  | `MissingDepexts missing ->
+    let msg =
+      match missing with
+      | [pkg] -> " '" ^ pkg ^ "'"
+      | pkgs ->
+        "s " ^ (OpamStd.Format.pretty_list
+                  (List.rev_map (Printf.sprintf "'%s'") pkgs))
+    in
+    Printf.sprintf
+      "depends on the unavailable system package%s. Use \
+       `--no-depexts' to attempt installation anyway, or it is \
+       possible that a depext package name in the opam file \
+       is incorrect." msg
+  | `Default ->
+    default
 
 let update_package_metadata nv opam st =
   { st with

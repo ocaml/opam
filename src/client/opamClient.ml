@@ -1247,9 +1247,32 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
     | Conflicts cs ->
       log "conflict!";
       OpamConsole.error "Package conflict!";
-      OpamConsole.errmsg "%s"
-        (OpamCudf.string_of_conflicts t.packages
-           (OpamSwitchState.unavailable_reason t) cs);
+      let (conflicts, _cycles) as explanations =
+        OpamCudf.conflict_explanations_raw t.packages cs
+      in
+      let has_missing_depexts =
+        let check = function
+          | `Missing (_, _, fdeps) ->
+            OpamFormula.fold_right (fun a x ->
+                match OpamSwitchState.unavailable_reason_raw t x with
+                | `MissingDepexts _ -> true
+                | _ -> a)
+              false fdeps
+          | _ -> false
+        in
+        List.exists check conflicts
+      in
+      let extra_message =
+        if has_missing_depexts then
+          OpamStd.Option.map_default (fun s -> s ^ ".\n\n") ""
+            (OpamSysInteract.repo_enablers ())
+        else
+          ""
+      in
+      OpamConsole.errmsg "%s%s"
+        (OpamCudf.string_of_explanations
+           (OpamSwitchState.unavailable_reason t) explanations)
+        extra_message;
       t, if depext_only then None else Some (Conflicts cs)
     | Success full_solution ->
       let solution =

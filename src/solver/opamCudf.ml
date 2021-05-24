@@ -718,8 +718,14 @@ module ChainSet = struct
   let length cs = fold (fun l acc -> min (List.length l) acc) cs max_int
 end
 
+type explanation =
+  [ `Conflict of string option * string list * bool
+  | `Missing of string option * string *
+                (OpamPackage.Name.t * OpamFormula.version_formula)
+                  OpamFormula.formula
+  ]
 
-let extract_explanations packages cudfnv2opam unav_reasons reasons =
+let extract_explanations packages cudfnv2opam reasons : explanation list =
   log "Conflict reporting";
   let open Algo.Diagnostic in
   let open Set.Op in
@@ -939,44 +945,15 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
       ([], ct_chains) reasons
   in
 
-  let explanations =
-    let same_depexts sdeps fdeps =
-      List.for_all (function
-          | `Missing (_, sdeps', fdeps') -> sdeps = sdeps' && fdeps = fdeps'
-          | _ -> false)
-    in
-    match explanations with
-    | `Missing (_, sdeps, fdeps) :: rest when same_depexts sdeps fdeps rest ->
-      [`Missing (None, sdeps, fdeps)]
-    | _ -> explanations
+  let same_depexts sdeps fdeps =
+    List.for_all (function
+        | `Missing (_, sdeps', fdeps') -> sdeps = sdeps' && fdeps = fdeps'
+        | _ -> false)
   in
-
-  let format_explanation = function
-  | `Conflict (kind, packages, has_invariant) ->
-      let msg1 =
-        let format_package_name p =
-          Printf.sprintf "No agreement on the version of %s:" (OpamConsole.colorise `bold p)
-        in
-        OpamStd.Option.map_default format_package_name "Incompatible packages:" kind
-      and msg3 =
-        if has_invariant then
-          ["You can temporarily relax the switch invariant with \
-            `--update-invariant'"]
-        else
-          []
-      in
-        (msg1, packages, msg3)
-  | `Missing (csp, sdeps, fdeps) ->
-      let sdeps = OpamConsole.colorise' [`red;`bold] sdeps in
-      let msg1 = "Missing dependency:"
-      and msg2 =
-        OpamStd.Option.map_default (fun csp -> arrow_concat [csp; sdeps]) sdeps csp
-      and msg3 = OpamFormula.fold_right (fun a x -> unav_reasons x::a) [] fdeps
-      in
-        (msg1, [msg2], msg3)
-  in
-
-  List.rev_map format_explanation explanations
+  match explanations with
+  | `Missing (_, sdeps, fdeps) :: rest when same_depexts sdeps fdeps rest ->
+    [`Missing (None, sdeps, fdeps)]
+  | _ -> explanations
 
 let strings_of_cycles cycles =
   List.map arrow_concat cycles
@@ -989,19 +966,53 @@ let string_of_conflict ?(start_column=0) (msg1, msg2, msg3) =
   OpamStd.List.concat_map ~left:"\n" ~nil:"" "\n"
     (fun s -> OpamStd.Format.reformat ~indent:2 ~width s) msg3
 
+let conflict_explanations_raw packages = function
+  | univ, version_map, Conflict_dep reasons ->
+    let r = reasons () in
+    let cudfnv2opam = cudfnv2opam ~cudf_universe:univ ~version_map in
+    List.rev (extract_explanations packages cudfnv2opam r),
+    []
+  | _univ, _version_map, Conflict_cycle cycles ->
+    [], cycles
+
+let string_of_explanation unav_reasons = function
+  | `Conflict (kind, packages, has_invariant) ->
+    let msg1 =
+      let format_package_name p =
+        Printf.sprintf "No agreement on the version of %s:"
+          (OpamConsole.colorise `bold p)
+      in
+      OpamStd.Option.map_default format_package_name
+        "Incompatible packages:" kind
+    and msg3 =
+      if has_invariant then
+        ["You can temporarily relax the switch invariant with \
+          `--update-invariant'"]
+      else
+        []
+    in
+    (msg1, packages, msg3)
+  | `Missing (csp, sdeps, fdeps) ->
+    let sdeps = OpamConsole.colorise' [`red;`bold] sdeps in
+    let msg1 = "Missing dependency:"
+    and msg2 =
+      OpamStd.Option.map_default (fun csp -> arrow_concat [csp; sdeps]) sdeps csp
+    and msg3 = OpamFormula.fold_right (fun a x -> unav_reasons x::a) [] fdeps
+    in
+    (msg1, [msg2], msg3)
+
 let conflict_explanations packages unav_reasons = function
   | univ, version_map, Conflict_dep reasons ->
     let r = reasons () in
     let cudfnv2opam = cudfnv2opam ~cudf_universe:univ ~version_map in
-    extract_explanations packages cudfnv2opam unav_reasons r,
-    []
+    let explanations = extract_explanations packages cudfnv2opam r in
+    List.rev_map (string_of_explanation unav_reasons) explanations, []
   | _univ, _version_map, Conflict_cycle cycles ->
     [], strings_of_cycles cycles
 
-let string_of_conflicts packages unav_reasons conflict =
-  let cflts,  cycles =
-    conflict_explanations packages unav_reasons conflict
-  in
+let string_of_explanations unav_reasons (cflts, cycles) =
+  let cflts = List.map (string_of_explanation unav_reasons) cflts in
+  let cycles = strings_of_cycles cycles in
   let b = Buffer.create 1024 in
   let pr_items b l =
     Buffer.add_string b
@@ -1021,6 +1032,10 @@ let string_of_conflicts packages unav_reasons conflict =
        there seems to be a problem with your request.\n";
   Buffer.add_string b "\n";
   Buffer.contents b
+
+let string_of_conflicts packages unav_reasons conflict =
+  string_of_explanations unav_reasons
+    (conflict_explanations_raw packages conflict)
 
 let check flag p =
   try Cudf.lookup_typed_package_property p flag = `Bool true
