@@ -913,36 +913,23 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
             let ct_chains, csr = cst ct_chains r in
             let msg1 =
               if l.Cudf.package = r.Cudf.package then
-                Printf.sprintf "No agreement on the version of %s:"
-                  (OpamConsole.colorise `bold (Package.name_to_string l))
+                Some (Package.name_to_string l)
               else
-                "Incompatible packages:"
+                None
             in
             let msg2 = List.sort_uniq compare [csl; csr] in
             let msg3 =
-              let msg =
-                "You can temporarily relax the switch invariant with \
-                 `--update-invariant'"
-              in
-              if (has_invariant l || has_invariant r) &&
-                 not (List.exists (fun (_,_,m) -> List.mem msg m) explanations)
-              then [msg] else []
+              (has_invariant l || has_invariant r) &&
+                 not (List.exists (function `Conflict (_,_,has_invariant) -> has_invariant | _ -> false) explanations)
             in
-            let msg = msg1, msg2, msg3 in
+            let msg = `Conflict (msg1, msg2, msg3) in
             if List.mem msg explanations then raise Not_found else
               msg :: explanations, ct_chains
           | Missing (p, deps) ->
             let ct_chains, csp = cst ~hl_last:false ct_chains p in
             let fdeps = formula_of_vpkgl cudfnv2opam packages deps in
             let sdeps = OpamFormula.to_string fdeps in
-            let msg1 = "Missing dependency:" in
-            let msg2 =
-              [arrow_concat [csp; OpamConsole.colorise' [`red;`bold] sdeps]]
-            in
-            let msg3 =
-              OpamFormula.fold_right (fun a x -> unav_reasons x::a) [] fdeps
-            in
-            let msg = msg1, msg2, msg3 in
+            let msg = `Missing (csp, sdeps, fdeps) in
             if List.mem msg explanations then raise Not_found else
               msg :: explanations, ct_chains
           | Dependency _ ->
@@ -951,7 +938,31 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
           explanations, ct_chains)
       ([], ct_chains) reasons
   in
-  List.rev explanations
+
+  let format_explanation = function
+  | `Conflict (kind, packages, has_invariant) ->
+      let msg1 =
+        let format_package_name p =
+          Printf.sprintf "No agreement on the version of %s:" (OpamConsole.colorise `bold p)
+        in
+        OpamStd.Option.map_default format_package_name "Incompatible packages:" kind
+      and msg3 =
+        if has_invariant then
+          ["You can temporarily relax the switch invariant with \
+            `--update-invariant'"]
+        else
+          []
+      in
+        (msg1, packages, msg3)
+  | `Missing (csp, sdeps, fdeps) ->
+      let msg1 = "Missing dependency:"
+      and msg2 = [arrow_concat [csp; OpamConsole.colorise' [`red;`bold] sdeps]]
+      and msg3 = OpamFormula.fold_right (fun a x -> unav_reasons x::a) [] fdeps
+      in
+        (msg1, msg2, msg3)
+  in
+
+  List.rev_map format_explanation explanations
 
 let strings_of_cycles cycles =
   List.map arrow_concat cycles
