@@ -137,13 +137,22 @@ let check_availability ?permissive t set atoms =
     match OpamSwitchState.depexts_unavailable
             t (OpamPackage.Set.max_elt pkgs) with
     | Some missing ->
+      let missing =
+        List.rev_map OpamSysPkg.to_string (OpamSysPkg.Set.elements missing)
+      in
+      let msg =
+        match missing with
+        | [pkg] ->
+          " '" ^ pkg ^ "'"
+        | pkgs ->
+          "s " ^ (OpamStd.Format.pretty_list (List.rev_map (Printf.sprintf "'%s'") pkgs))
+      in
       Some
         (Printf.sprintf
-           "Package %s depends on the unavailable system package '%s'. You \
+           "Package %s depends on the unavailable system package%s. You \
             can use `--no-depexts' to attempt installation anyway."
            (OpamFormula.short_string_of_atom atom)
-           (OpamStd.List.concat_map " " OpamSysPkg.to_string
-              (OpamSysPkg.Set.elements missing)))
+           msg)
     | None -> None
   in
   let check_atom (name, cstr as atom) =
