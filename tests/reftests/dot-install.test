@@ -61,15 +61,45 @@ dev-repo: "git://nodo.t"
 install: [ "echo" "hellow" ]
 ### <dotty/nodot.install>
 share: [ "file" ]
+### <dotty/lot-of-files.opam>
+opam-version: "2.0"
+synopsis: "One-line description"
+description: """
+Longer description
+"""
+maintainer: "Name <email>"
+authors: "Name <email>"
+license: "MIT"
+homepage: " "
+bug-reports: " "
+dev-repo: "git://nodo.t"
+install: [ "echo" "hellow" ]
+substs: "lot-of-files.install"
+### <dotty/lot-of-files.install.in>
+lib: [ "file" "fichier" "dosiero" ]
+bin: [ "fichier" ]
+etc: [ "dosiero" "file" ]
+share: [ "fichier" "dosiero" ]
+misc: [ "file" {"%{root}%/dosiero"} ]
+### <dotty/lot-of-files.config>
+opam-version: "2.0"
+variables { lot: true }
+### <dotty/fichier>
+bonjour
+### <dotty/dosiero>
+saluton
+### OPAMYES=1
 ### opam switch create inst --empty
-### opam pin ./dotty -yn
-This will pin the following packages: dot, nodot. Continue? [Y/n] y
+### opam pin ./dotty -n
+This will pin the following packages: dot, lot-of-files, nodot. Continue? [Y/n] y
 Package dot does not exist, create as a NEW package? [Y/n] y
 dot is now pinned to file://${BASEDIR}/dotty (version ~dev)
+Package lot-of-files does not exist, create as a NEW package? [Y/n] y
+lot-of-files is now pinned to file://${BASEDIR}/dotty (version ~dev)
 Package nodot does not exist, create as a NEW package? [Y/n] y
 nodot is now pinned to file://${BASEDIR}/dotty (version ~dev)
 ### OPAMPRECISETRACKING=1 OPAMDEBUGSECTIONS="TRACK ACTION" OPAMDEBUG=-1
-### opam install nodot -y
+### opam install nodot
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [nodot.~dev] synchronised (no changes)
@@ -96,7 +126,7 @@ added: [
   "share-nodot" {"D"}
   "share-nodot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
 ]
-### opam install dot -y
+### opam install dot
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [dot.~dev] synchronised (no changes)
@@ -122,3 +152,24 @@ added: [
   "share-dot" {"D"}
   "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
 ]
+### OPAMDEBUGSECTIONS="SYSTEM FILE(.config)" OPAMDEBUG=-1
+### : check install files ordering :
+### opam install lot-of-files | grep "mkdir\|install\|FILE"
+  - install lot-of-files ~dev*
+SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/sources/lot-of-files
+FILE(.config)                   Wrote ${BASEDIR}/OPAM/inst/.opam-switch/config/lot-of-files.config in 0.000s
+SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/fichier -> ${BASEDIR}/OPAM/inst/bin/fichier (755)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/lib/lot-of-files
+SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/file -> ${BASEDIR}/OPAM/inst/lib/lot-of-files/file (644)
+SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/fichier -> ${BASEDIR}/OPAM/inst/lib/lot-of-files/fichier (644)
+SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/dosiero -> ${BASEDIR}/OPAM/inst/lib/lot-of-files/dosiero (644)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/share/lot-of-files
+SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/fichier -> ${BASEDIR}/OPAM/inst/share/lot-of-files/fichier (644)
+SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/dosiero -> ${BASEDIR}/OPAM/inst/share/lot-of-files/dosiero (644)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/etc
+SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/etc/lot-of-files
+SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/dosiero -> ${BASEDIR}/OPAM/inst/etc/lot-of-files/dosiero (644)
+SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/file -> ${BASEDIR}/OPAM/inst/etc/lot-of-files/file (644)
+SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/file -> ${BASEDIR}/OPAM/dosiero (644)
+-> installed lot-of-files.~dev
+SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev
