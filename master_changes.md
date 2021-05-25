@@ -25,6 +25,9 @@ New option/command/subcommand are prefixed with ◈.
   * Introduce a `default-invariant` config field, restore the 2.0 semantics for
     `default-compiler` [#4607 @AltGr]
   * Fix default invariant with no system compiler [#4644 @AltGr - fix #4640]
+  * Perform an hard upgrade on intermediate roots, ie root from `2.1~alpha/beta`, and keep a light upgrade from `2.0` [#4638 @rjbou]
+  * If opam root is different from the binary, allow reading it and try to read in best effort mode  [#4638 @rjbou - fix #4636]
+  * Don't check opam system dependencies on reinit after a format upgrade [#4638 @rjbou]
 
 ## Config report
   * Fix `Not_found` (config file) error [#4570 @rjbou]
@@ -47,6 +50,7 @@ New option/command/subcommand are prefixed with ◈.
     with base packages but doesn't make sense with 2.1 switch invariants) [#4569 @dra27]
   * Don't refer to base packages in messages any more [#4623 @dra27 - fixes #4572]
   * Give the correct command when demonstrating switch creation [#4675 @dra27 - fixes #4673]
+  * On switch loading, if invariant is inferred and a write lock required, write the file [#4638 @rjbou]
 
 ## Pin
   * Don't look for lock files for pin depends [#4511 @rjbou - fix #4505]
@@ -71,6 +75,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix W59 & E60 with conf flag handling (no url required) [#4550 @rjbou - fix #4549]
   * Fix W59 & E60 with VCS urls, don't check upstream if url has VCS backend [#4635 @rjbou]
   * Add E67 checksum specified with non archive url [#4635 @rjbou]
+  * Disable subpath warning E63,W64 [#4638 @rjbou]
 
 ## Lock
   * Don't write lock file with `--read-only', `--safe`, and `--dryrun` [#4562 @rjbou - fix #4320]
@@ -82,6 +87,11 @@ New option/command/subcommand are prefixed with ◈.
   * Fix rewriting with preserved format empty field error [#4634 @rjbou - fix #4628]
   * Fix rewrtiting with preserved format empty field error [#4633 @rjbou - fix #4628]
   * Require opam-file-format 2.1.3+ in order to enforce opam-version: "2.1" as first non-comment line [#4639 @dra27 - fix #4394]
+  * Switch config: Defined `invariant` field as an option to differentiate when it is not defined [#4638 @rjbou]
+  * Differentiate bad format from bad (opam) version with `Bad_version` exception, raised from `OpamFormat.check_opam_version` [#4638 @rjbou]
+  * Always print the `opam-version` field on files [#4638 @rjbou]
+  * Config: add `opam-root-version` field as a marker for the whole opam root [#4638 @rjbou - fix #4636]
+  * Add `BestEffort` modules with reading functions that don't show errors, given the `opam_file_format` internal field [#4638 @rjbou - fix #4636]
 
 ## External dependencies
   * Handle macport variants [#4509 @rjbou - fix #4297]
@@ -119,6 +129,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix build from source when a dune-project file is presented in the parent directory [#4545 @kit-ty-kate - fix #4537]
   * Fix opam-devel.install not to install two files called opam [#4664 @dra27]
   * Build release tags as non-dev versions, as for release tarballs [#4665 @dra27 - fix #4656]
+  * Disable dev version for tests (needed for format upgrade test) [#4638 @rjbou]
 
 ## Infrastructure
   * Release scripts: switch to OCaml 4.10.2 by default, add macos/arm64 builds by default [#4559 @AltGr]
@@ -177,6 +188,7 @@ New option/command/subcommand are prefixed with ◈.
   * Remove debug information from reftest [#4612 @rjbou]
   * Add preserved format test [#4634 @rjbou]
   * Use the dev profile when testing [#4672 @dra27]
+  * Add a test to test various case of opam root loading (several version, and several lock kinds) [#4638 @rjbou]
 
 ## Shell
   *
