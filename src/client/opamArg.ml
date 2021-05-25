@@ -67,7 +67,7 @@ let preinit_environment_variables =
     ] in
   core @ client
 
-let preinit_opam_envvariables, doc_opam_envvariables_pre =
+let preinit_opam_env_variables, doc_opam_env_variables_pre =
   let preinit () =
     OpamStd.Config.E.updates @@
     List.map (fun (var, cons, _doc) -> cons var)
@@ -310,7 +310,7 @@ let scrubbed_environment_variables =
   in
     OpamStd.List.filter_map f environment_variables
 
-let doc_opam_envvariables, init_opam_envvariabes =
+let doc_opam_env_variables, init_opam_env_variabes =
   env_with_cli environment_variables
 
 (** Help sections common to all commands *)
@@ -326,7 +326,7 @@ let help_sections cli =
         variables should be set to \"0\", \"no\", \"false\" or the empty \
         string to disable, \"1\", \"yes\" or \"true\" to enable.";
   ] @
-  List.sort compare (doc_opam_envvariables_pre @ doc_opam_envvariables cli)
+  List.sort compare (doc_opam_env_variables_pre @ doc_opam_env_variables cli)
   @ [
     `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
         substituting `%{var}%` strings in `opam` files.";
@@ -499,7 +499,7 @@ let apply_global_options cli o =
       o.external_solver >>| fun s -> lazy (OpamCudfSolver.solver_of_string s)
   in
   let solver_prefs = o.solver_preferences >>| fun p -> lazy (Some p) in
-  init_opam_envvariabes cli;
+  init_opam_env_variabes cli;
   OpamClientConfig.opam_init
     (* - format options - *)
     ?strict:(flag o.strict)
