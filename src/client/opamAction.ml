@@ -82,8 +82,8 @@ let preprocess_dot_install_t st nv build_dir =
       in
       [dir, inst]
     in
-    dir_and_install @
-    List.map (fun (base, dst) ->
+    dir_and_install @ List.rev @@
+    List.rev_map (fun (base, dst) ->
         let (base, append) =
           if exec &&
              not (OpamFilename.exists (OpamFilename.create build_dir base.c))
@@ -158,7 +158,10 @@ let preprocess_dot_install_t st nv build_dir =
   ]
   in
 
-  let to_install = List.map install_files to_install in
+  let files_and_installs =
+    List.fold_left (fun acc toi -> List.rev_append (install_files toi) acc)
+      files_and_installs to_install
+  in
 
   (* misc *)
   let misc_files =
@@ -179,7 +182,8 @@ let preprocess_dot_install_t st nv build_dir =
         in
         (file, inst)) (I.misc install)
   in
-  List.flatten ((files_and_installs :: to_install) @ [misc_files])
+
+  List.rev_append files_and_installs misc_files
 
 (* Returns function to install package files from [.install] *)
 let preprocess_dot_install st nv build_dir =
