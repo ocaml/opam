@@ -940,12 +940,15 @@ let extract_explanations packages cudfnv2opam unav_reasons reasons =
   in
 
   let explanations =
+    let same_depexts sdeps fdeps =
+      List.for_all (function
+          | `Missing (_, sdeps', fdeps') -> sdeps = sdeps' && fdeps = fdeps'
+          | _ -> false)
+    in
     match explanations with
-    | `Missing (_, sdeps, fdeps) :: rest
-      when  List.for_all (function `Missing (_, sdeps', fdeps') -> sdeps = sdeps' && fdeps = fdeps' | _ -> false) rest ->
-        [`Missing (None, sdeps, fdeps)]
+    | `Missing (_, sdeps, fdeps) :: rest when same_depexts sdeps fdeps rest ->
+      [`Missing (None, sdeps, fdeps)]
     | _ -> explanations
-
   in
 
   let format_explanation = function
