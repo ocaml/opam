@@ -545,6 +545,7 @@ module Config : sig
 
   type when_ = [ `Always | `Never | `Auto ]
   type when_ext = [ `Extended | when_ ]
+  type answer = [ `unsafe_yes | `all_yes | `all_no | `ask ]
 
   (* Parse a envrionement variable boolean value *)
   val bool_of_string: string -> bool option
@@ -571,6 +572,8 @@ module Config : sig
   val env_when_ext: env_var -> when_ext option
 
   val resolve_when: auto:(bool Lazy.t) -> when_ -> bool
+
+  val env_answer: env_var -> answer option
 
   module type Sig = sig
 

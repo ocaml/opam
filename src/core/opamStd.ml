@@ -1402,6 +1402,7 @@ module Config = struct
 
   type when_ = [ `Always | `Never | `Auto ]
   type when_ext = [ `Extended | when_ ]
+  type answer = [ `unsafe_yes | `all_yes | `all_no | `ask ]
 
   let env conv var =
     try Option.map conv (Env.getopt ("OPAM"^var))
@@ -1417,11 +1418,12 @@ module Config = struct
     | "1" | "yes" | "true" -> Some true
     | _ -> None
 
-  let env_bool var =
-    env (fun s -> match bool_of_string s with
-        | Some s -> s
-        | None -> failwith "env_bool")
-      var
+  let bool s =
+    match bool_of_string s with
+    | Some s -> s
+    | None -> failwith "env_bool"
+
+  let env_bool var = env bool var
 
   let env_int var = env int_of_string var
 
@@ -1478,6 +1480,20 @@ module Config = struct
     | `Always -> true
     | `Never -> false
     | `Auto -> Lazy.force auto
+
+  let answer s =
+    match String.lowercase_ascii s with
+    | "ask" -> `ask
+    | "yes" -> `all_yes
+    | "no" -> `all_no
+    | "unsafe-yes" -> `unsafe_yes
+    | _ -> failwith "env_answer"
+
+  let env_answer =
+    env (fun s ->
+        try if bool s then `all_yes else `all_no
+        with Failure _ -> answer s)
+
 
   module E = struct
     type t = ..

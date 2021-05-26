@@ -22,17 +22,17 @@ type 'b validity_and_content = {
   default: bool;
 }
 
-type 'a contented_validity =
-  [ `Valid of 'a | `Removed of 'a ] validity_and_content
+type 'a content = Valid of 'a | Removed of 'a
+type 'a contented_validity = 'a content validity_and_content
 
 type validity = unit validity_and_content
 
-let elem_of_vr = function `Valid e | `Removed e -> e
+let elem_of_vr = function Valid e | Removed e -> e
 
 let contented_validity (validity:validity) content : 'a contented_validity =
   match validity.removed with
-  | None -> { validity with content = `Valid content}
-  | Some _ -> { validity with content = `Removed content}
+  | None -> { validity with content = Valid content}
+  | Some _ -> { validity with content = Removed content}
 
 let is_original_cli validity =
   OpamCLIVersion.compare validity.valid cli2_0 = 0
@@ -48,15 +48,15 @@ let cli_between since ?(default=false) ?replaced removal =
     content = (); default }
 let cli_original = cli_from cli2_0
 
+let bold = OpamConsole.colorise `bold
 let string_of_sourced_cli (c,_) = OpamCLIVersion.to_string c
 let string_of_cli_option cli =
   if cli = cli2_0 then
     Printf.sprintf "set %s environment variable to %s"
-      (OpamConsole.colorise `bold "OPAMCLI")
-      (OpamConsole.colorise `bold "2.0")
+      (bold "OPAMCLI") (bold "2.0")
   else
     Printf.sprintf "use --cli=%s"
-      (OpamConsole.colorise `bold (OpamCLIVersion.to_string cli))
+      (bold @@ OpamCLIVersion.to_string cli)
 
 let update_doc_w_cli doc ~cli = function
   | { valid = c ; removed = None; _} ->
@@ -74,6 +74,11 @@ let update_doc_w_cli doc ~cli = function
          | None -> ".")
 
 (* Error messages *)
+type target =
+  | Flags of string list
+  | Option of string
+  | Verbatim of string
+
 let get_long_form flags =
   List.fold_left (fun (lgth,long) f ->
       let flgth =  String.length f in
@@ -81,11 +86,9 @@ let get_long_form flags =
     (0,"") flags |> snd
 
 let string_of_target = function
-  | `Flags flags ->
-    OpamConsole.colorise `bold
-      ("--"^get_long_form flags)
-  | `Option o -> OpamConsole.colorise `bold o
-  | `Verbatim s -> s
+  | Flags flags -> bold "--"^get_long_form flags
+  | Option o -> bold o
+  | Verbatim s -> s
 
 let newer_flag_msg cli valid_since target =
   Printf.sprintf
@@ -106,7 +109,7 @@ let previously_str removal instead =
   match instead with
   | Some ist ->
     Printf.sprintf  ". Use %s instead or %s"
-      (OpamConsole.colorise `bold ist) previous
+      (bold ist) previous
   | None -> Printf.sprintf ", %s"  previous
 
 let older_flag_msg cli removal instead target =
@@ -133,20 +136,29 @@ let deprecated_warning removal instead targets =
 let cond_new cli c = cli @< c
 let cond_removed cli removal = cli @>= removal
 
-let check_cli_validity cli validity ?cond elem targets =
-  let cond = OpamStd.Option.default (fun x -> x) cond in
-  match validity with
+let check_cli_validity_t ~newer ~default_cli ~older ~valid ?(cond=fun x -> x)
+    cli = function
   | { removed = None ; valid = c; _ } when cond (cond_new cli c) ->
-    newer_flag_error cli c targets
+    newer c
   | { removed = Some (removal, instead); default = true; _ }
     when (snd cli = `Default) && OpamCLIVersion.default < removal ->
     (* default cli case : we dont even check if the condition is required *)
-    deprecated_warning removal instead targets;
-    `Ok elem
+    default_cli removal instead
   | { removed = Some (removal, instead); _ }
     when cond (cond_removed cli removal) ->
-    older_flag_error cli removal instead targets
-  | _ -> `Ok elem
+    older removal instead
+  | _ -> valid ()
+
+let check_cli_validity cli validity ?cond elem targets =
+  check_cli_validity_t cli validity ?cond
+    ~newer:(fun c ->
+        newer_flag_error cli c targets)
+    ~default_cli:(fun removal instead ->
+        deprecated_warning removal instead targets;
+        `Ok elem)
+    ~older:(fun removal instead ->
+        older_flag_error cli removal instead targets)
+    ~valid:(fun () -> `Ok elem)
 
 let term_cli_check ~check arg =
   Term.(ret ((const check) $ (Arg.value arg)))
@@ -158,7 +170,7 @@ let mk_flag ~cli validity ?section flags doc =
   let doc = Arg.info ?docs:section ~doc flags in
   let check elem =
     check_cli_validity cli validity ~cond:(fun c -> c && elem) elem
-    (`Flags flags)
+      (Flags flags)
   in
   term_cli_check ~check Arg.(flag & doc)
 
@@ -167,7 +179,7 @@ let mk_opt ~cli validity ?section ?vopt flags value doc kind default =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
   let check elem =
     check_cli_validity cli validity
-      ~cond:(fun c -> c && default <> elem) elem (`Flags flags)
+      ~cond:(fun c -> c && default <> elem) elem (Flags flags)
   in
   term_cli_check ~check Arg.(opt ?vopt kind default & doc)
 
@@ -177,7 +189,7 @@ let mk_opt_all ~cli validity ?section ?vopt ?(default=[])
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
   let check elem =
     check_cli_validity cli validity
-      ~cond:(fun c -> c && default <> elem) elem (`Flags flags)
+      ~cond:(fun c -> c && default <> elem) elem (Flags flags)
   in
   term_cli_check ~check Arg.(opt_all ?vopt kind default & doc)
 
@@ -196,10 +208,10 @@ let mk_vflag ~cli ?section default flags =
         flags
     with
     | Some (validity, flags, _) ->
-      check_cli_validity cli validity (elem_of_vr elem) (`Flags flags)
+      check_cli_validity cli validity (elem_of_vr elem) (Flags flags)
     | None -> `Ok (elem_of_vr elem)
   in
-  term_cli_check ~check Arg.(vflag (`Valid default) info_flags)
+  term_cli_check ~check Arg.(vflag (Valid default) info_flags)
 
 let mk_flag_replaced ~cli ?section flags doc =
   let flags = List.map (fun (c,f) -> c, true, f, doc) flags in
@@ -215,16 +227,18 @@ let mk_vflag_all ~cli ?section ?(default=[]) flags =
   in
   let check selected =
     let newer_cli, older_cli =
-      List.fold_left (fun (newer_cli,older_cli) elem ->
+      List.fold_left (fun (newer_cli,older_cli as acc) elem ->
           match OpamStd.List.find_opt (fun (validity, _, _) ->
               validity.content = elem) flags with
-          | Some ({ removed = None ; valid = c; _ }, flags, _)
-            when cond_new cli c ->
-            (flags, c)::newer_cli, older_cli
-          | Some ({ removed = Some (removal, instead); _ }, flags, _)
-            when cond_removed cli removal ->
-            newer_cli, (flags, (removal, instead))::older_cli
-          | _ -> newer_cli,older_cli) ([],[]) selected
+          | Some (validity, flags, _) ->
+            check_cli_validity_t cli validity
+              ~newer:(fun c -> (flags, c)::newer_cli, older_cli)
+              ~default_cli:(fun _ _ -> acc)
+              ~older:(fun removal instead ->
+                  newer_cli, (flags, (removal, instead))::older_cli)
+              ~valid:(fun () -> acc)
+          | None -> acc)
+        ([],[]) selected
     in
     let max_cli clis =
       OpamCLIVersion.to_string @@
@@ -234,14 +248,14 @@ let mk_vflag_all ~cli ?section ?(default=[]) flags =
     in
     let string_of_options options =
       OpamStd.Format.pretty_list
-        (List.map (fun o -> string_of_target (`Flags o)) options)
+        (List.map (fun o -> string_of_target (Flags o)) options)
     in
     match newer_cli, older_cli with
     | [], [] -> `Ok (List.map elem_of_vr selected)
     | [flags, c], [] ->
-      newer_flag_error cli c (`Flags flags)
+      newer_flag_error cli c (Flags flags)
     | [], [flags, (c, instead)] ->
-      older_flag_error cli c instead (`Flags flags)
+      older_flag_error cli c instead (Flags flags)
     | _::_, []->
       let options, clis = List.split newer_cli in
       let msg =
@@ -298,7 +312,7 @@ let mk_vflag_all ~cli ?section ?(default=[]) flags =
       in
       `Error (false, msg)
   in
-  let default = List.map (fun x -> `Valid x) default in
+  let default = List.map (fun x -> Valid x) default in
   term_cli_check ~check Arg.(vflag_all default info_flags)
 
 let string_of_enum enum =
@@ -311,21 +325,137 @@ let mk_enum_opt ~cli validity ?section flags value states doc =
     (* first check validity of flag *)
     let flag_validity =
       check_cli_validity cli validity ~cond:(fun c -> c && elem <> None)
-        elem (`Flags flags)
+        elem (Flags flags)
     in
     (* then check validity of the argument *)
     match flag_validity with
     | `Ok (Some elem) ->
       let validity, str, _ = List.find (fun (_,_,v) -> v = elem) states in
       check_cli_validity cli validity (Some elem)
-        (`Verbatim
+        (Verbatim
            (Printf.sprintf "the %s option for %s"
-              (OpamConsole.colorise `bold str)
-              (OpamConsole.colorise `bold ("--"^get_long_form flags))))
+              (bold str) (bold "--"^get_long_form flags)))
     | _ -> flag_validity
   in
   let states = List.map (fun (_, s, v) -> s,v) states in
   term_cli_check ~check Arg.(opt (some (enum states)) None & doc)
+
+let mk_enum_opt_all ~cli validity ?section flags value states doc =
+  let doc = update_doc_w_cli doc ~cli validity in
+  let doc = Arg.info ?docs:section ~docv:value ~doc flags in
+  let check elems =
+    (* first check validity of flag *)
+    let flag_validity =
+      check_cli_validity cli validity ~cond:(fun c -> c && elems <> [])
+        elems (Flags flags)
+    in
+    (* then check validity of the argument *)
+    match flag_validity with
+    | `Error _ -> flag_validity
+    | `Ok elems ->
+      let newer_cli, older_cli, valid =
+        List.fold_left (fun (newer_cli,older_cli,valid) elem ->
+            let (validity, str, _) =
+              List.find (fun (_,_,v) -> v = elem) states
+            in
+            check_cli_validity_t cli validity
+              ~newer:(fun c -> (str, c)::newer_cli, older_cli, valid)
+              ~default_cli:(fun _ _ -> newer_cli, older_cli, elem::valid)
+              ~older:(fun removal instead ->
+                  newer_cli, (str, (removal, instead))::older_cli, valid)
+              ~valid:(fun () -> newer_cli, older_cli, elem::valid))
+          ([],[],[]) elems
+      in
+      let max_cli clis =
+        OpamCLIVersion.to_string @@
+        match clis with
+        | [] -> assert false
+        | c::cl -> List.fold_left max c cl
+      in
+      let long_form_flags = "--"^get_long_form flags in
+      let to_str states =
+        Printf.sprintf "the option%s %s for %s"
+          (match states with [_] -> "s" | _ -> "")
+          (bold @@ OpamStd.Format.pretty_list states)
+          (bold long_form_flags)
+      in
+      match newer_cli, older_cli, List.rev valid with
+      | [], [], elems -> `Ok elems
+      | [str, c], [], [] ->
+        newer_flag_error cli c (Verbatim (to_str [str]))
+      | [str, c], [], elems ->
+        (OpamConsole.warning "%s"
+           (newer_flag_msg cli c (to_str [str]));
+         `Ok elems)
+      | [], [str, (c, instead)], [] ->
+        older_flag_error cli c instead (Verbatim (to_str [str]))
+      | [], [str, (c, instead)], elems ->
+        (OpamConsole.warning "%s"
+           (older_flag_msg cli c instead (to_str [str]));
+         `Ok elems)
+      | _::_, [], elems ->
+        let states, clis = List.split newer_cli in
+        let msg =
+          Printf.sprintf
+            "%s can only be used with at least version %s of the opam \
+             CLI, but version %s has been requested."
+            (to_str states) (max_cli clis)
+            (string_of_sourced_cli cli)
+        in
+        if elems = [] then `Error (false, msg) else
+          (OpamConsole.warning "%s" msg; `Ok elems)
+      | [], _::_, elems->
+        let states, clis = List.split older_cli in
+        let clis = List.split clis |> fst in
+        let in_all =
+          match clis with
+          | c::cs when List.for_all ((=) c) cs -> Some c
+          | _ -> None
+        in
+        let msg =
+          Printf.sprintf
+            "%s %swere all removed by version %s of the opam CLI, \
+             but version %s has been requested."
+            (to_str states)
+            (OpamStd.Option.to_string
+               (OpamCLIVersion.to_string
+                @> Printf.sprintf "were all in %s, and ") in_all)
+            (max_cli clis)
+            (string_of_sourced_cli cli)
+        in
+        if elems = [] then `Error (false, msg) else
+          (OpamConsole.warning "%s" msg; `Ok elems)
+      | _, _, elems ->
+        let newer, nclis = List.split newer_cli in
+        let older, rclis_ist = List.split older_cli in
+        let rclis, insteads = List.split rclis_ist in
+        let msg =
+          if List.for_all ((<>) None) insteads then
+            Printf.sprintf
+              "This combination of %s options is not possible: %s require \
+               at least version %s of the opam CLI and the newer %s \
+               flags must be used for %s respectively!"
+              (bold long_form_flags)
+              (bold @@ OpamStd.Format.pretty_list newer)
+              (max_cli nclis)
+              (bold @@ OpamStd.Format.pretty_list older)
+              (OpamStd.Format.pretty_list
+                 (List.map (function Some f -> f | None -> assert false)
+                      insteads))
+          else
+            Printf.sprintf
+              "This combination of %s options is not possible: %s require \
+               at least version %s of the opam CLI but %s were all \
+               removed by version %s of the opam CLI!"
+              (bold long_form_flags)
+              (bold @@ OpamStd.Format.pretty_list newer) (max_cli nclis)
+              (bold @@ OpamStd.Format.pretty_list older) (max_cli rclis)
+        in
+        if elems = [] then `Error (false, msg) else
+          (OpamConsole.warning "%s" msg; `Ok elems)
+  in
+  let states = List.map (fun (_, s, v) -> s,v) states in
+  term_cli_check ~check Arg.(opt_all (enum states) [] & doc)
 
 (* Subcommands *)
 type 'a subcommand = validity * string * 'a * string list * string
@@ -363,7 +493,7 @@ let mk_subcommands_aux ~cli my_enum commands =
             validity.content = elem) commands with
         | Some (validity, sbcmd, _,_) ->
           check_cli_validity cli validity (Some (elem_of_vr elem))
-          (`Option sbcmd)
+            (Option sbcmd)
         | None -> `Ok (Some (elem_of_vr elem))
     in
 
@@ -386,7 +516,7 @@ let mk_subcommands_with_default ~cli commands =
     let parse s =
       match parse s with
       | `Ok x -> `Ok (x)
-      | _ -> `Ok (`Valid (`default s)) in
+      | _ -> `Ok (Valid (`default s)) in
     parse, print
   in
   mk_subcommands_aux ~cli enum_with_default_valrem commands
@@ -433,7 +563,7 @@ let mk_command ~cli validity term_info name ~doc ~man cmd =
   let doc = update_doc_w_cli doc ~cli validity in
   let info = term_info ~cli name ~doc ~man in
   let check =
-    check_cli_validity cli validity () (`Option name)
+    check_cli_validity cli validity () (Option name)
     |> Term.const
     |> Term.ret
   in
@@ -443,7 +573,7 @@ let mk_command_ret ~cli validity term_info name ~doc ~man cmd =
   let doc = update_doc_w_cli doc ~cli validity in
   let info = term_info ~cli name ~doc ~man in
   let check =
-    check_cli_validity cli validity () (`Option name)
+    check_cli_validity cli validity () (Option name)
     |> Term.const
     |> Term.ret
   in

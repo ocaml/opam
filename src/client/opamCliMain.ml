@@ -134,8 +134,10 @@ let check_and_run_external_commands () =
     else
     (* No such command, check if there is a matching plugin *)
     let command = OpamPath.plugin_prefix ^ name in
-    let answer = if yes then Some true else OpamCoreConfig.E.yes () in
-    OpamCoreConfig.init ~answer ();
+    OpamArg.init_opam_env_variabes cli;
+    (* if --yes is given, OPAMCONFIRMLEVEL/NO is not taken into account *)
+    let answer = if yes then Some `all_yes else None in
+    OpamCoreConfig.init ?answer ();
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
     let has_init, root_upgraded =
@@ -368,7 +370,7 @@ let rec main_catch_all f =
 let run () =
   OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
   OpamSystem.init ();
-  OpamArg.preinit_opam_envvariables ();
+  OpamArg.preinit_opam_env_variables ();
   main_catch_all @@ fun () ->
   let cli, argv = check_and_run_external_commands () in
   let (default, commands), argv1 =

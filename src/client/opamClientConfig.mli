@@ -133,7 +133,6 @@ val opam_init:
   ?no_env_notice:bool ->
   ?locked:string option ->
   ?no_depexts:bool ->
-  ?depext_yes:bool ->
   ?cudf_file:string option ->
   ?best_effort:bool ->
   ?solver_preferences_default:string option Lazy.t ->
@@ -156,7 +155,7 @@ val opam_init:
   ?color:OpamStd.Config.when_ ->
   ?utf8:OpamStd.Config.when_ext ->
   ?disp_status_line:OpamStd.Config.when_ ->
-  ?answer:bool option ->
+  ?answer:OpamStd.Config.answer ->
   ?safe_mode:bool ->
   ?keep_log_dir:bool ->
   ?errlog_length:int ->

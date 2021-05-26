@@ -16,7 +16,6 @@ module E = struct
   type OpamStd.Config.E.t +=
     | BUILDDOC of bool option
     | BUILDTEST of bool option
-    | DEPEXTYES of bool option
     | DOWNLOADJOBS of int option
     | DRYRUN of bool option
     | IGNORECONSTRAINTS of string option
@@ -34,7 +33,6 @@ module E = struct
   open OpamStd.Config.E
   let builddoc = value (function BUILDDOC b -> b | _ -> None)
   let buildtest = value (function BUILDTEST b -> b | _ -> None)
-  let depextyes = value (function DEPEXTYES b -> b | _ -> None)
   let downloadjobs = value (function DOWNLOADJOBS i -> i | _ -> None)
   let dryrun = value (function DRYRUN b -> b | _ -> None)
   let ignoreconstraints = value (function IGNORECONSTRAINTS s -> s | _ -> None)
@@ -66,7 +64,6 @@ type t = {
   no_env_notice: bool;
   locked: string option;
   no_depexts: bool;
-  depext_yes: bool;
 }
 
 let default = {
@@ -90,7 +87,6 @@ let default = {
   no_env_notice = false;
   locked = None;
   no_depexts = false;
-  depext_yes = false;
 }
 
 type 'a options_fun =
@@ -108,7 +104,6 @@ type 'a options_fun =
   ?no_env_notice:bool ->
   ?locked:string option ->
   ?no_depexts: bool ->
-  ?depext_yes: bool ->
   'a
 
 let setk k t
@@ -126,7 +121,6 @@ let setk k t
     ?no_env_notice
     ?locked
     ?no_depexts
-    ?depext_yes
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -145,7 +139,6 @@ let setk k t
     no_env_notice = t.no_env_notice + no_env_notice;
     locked = t.locked + locked;
     no_depexts = t.no_depexts + no_depexts;
-    depext_yes = t.depext_yes + depext_yes;
   }
 
 let set t = setk (fun x () -> x) t
@@ -180,7 +173,6 @@ let initk k =
     ?no_env_notice:(E.noenvnotice ())
     ?locked:(E.locked () >>| function "" -> None | s -> Some s)
     ?no_depexts:(E.nodepexts ())
-    ?depext_yes:(E.depextyes ())
 
 let init ?noop:_ = initk (fun () -> ())
 

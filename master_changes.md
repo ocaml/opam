@@ -16,6 +16,10 @@ New option/command/subcommand are prefixed with ◈.
   * Clearer messages about using --cli and OPAMCLI [#4655 @dra27]
   * The options `--root` and `--switch` are now reflected in environment variables when building packages
     so that calls to `opam` during build access the correct root and switch [#4668 @LasseBlaauwbroek]
+  * Add cli versioning for enums of flags with predefined enums [#4626 @rjbou]
+  * ◈ Add `--confirm-level` and `OPAMCONFIRMLEVEL` [#4582 @rjbou - fix #4168]
+  * ◈ Add `--no` [#4582 @rjbou]
+  * Initialise environment variables for plugins call/install [#4582 @rjbou]
 
 ## Init
   * Introduce a `default-invariant` config field, restore the 2.0 semantics for
@@ -142,6 +146,7 @@ New option/command/subcommand are prefixed with ◈.
 ## Internal
   * Generalise `mk_tristate_opt` to `mk_state_opt` [#4575 @rjbou]
   * Fix `mk_state_opt` and rename to `mk_enum_opt` [#4626 @rjbou]
+  * Add `mk_enum_opt_all` for state flags that appears more than once [#4582 @rjbou]
   * Fix `opam exec` on native Windows when calling cygwin executables [#4588 @AltGr]
   * Fix temporary file with a too long name causing errors on Windows [#4590 @AltGr]
   * CLI: Add flag deprecation and replacement helper [#4595 @rjbou]

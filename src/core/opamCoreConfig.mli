@@ -14,6 +14,7 @@
 module E : sig
   type OpamStd.Config.E.t +=
     | COLOR of OpamStd.Config.when_ option
+    | CONFIRMLEVEL of OpamStd.Config.answer option
     | DEBUG of int option
     | DEBUGSECTIONS of OpamStd.Config.sections option
     | ERRLOGLEN of int option
@@ -29,6 +30,8 @@ module E : sig
     | UTF8MSGS of bool option
     | VERBOSE of OpamStd.Config.level option
     | YES of bool option
+
+    val confirmlevel: unit -> OpamStd.Config.answer option
     val debug: unit -> int option
     val logs: unit -> string option
     val yes: unit -> bool option
@@ -51,7 +54,7 @@ type t = private {
   disp_status_line: OpamStd.Config.when_;
   (** Controls on-line display of parallel commands being run, using ANSI
       escapes *)
-  answer : bool option;
+  answer : OpamStd.Config.answer;
   (** Affects interactive questions in OpamConsole: auto-answer with the given
       bool if Some *)
   safe_mode : bool;
@@ -82,7 +85,7 @@ type 'a options_fun =
   ?color:OpamStd.Config.when_ ->
   ?utf8:OpamStd.Config.when_ext ->
   ?disp_status_line:OpamStd.Config.when_ ->
-  ?answer:bool option ->
+  ?answer:OpamStd.Config.answer ->
   ?safe_mode:bool ->
   ?log_dir:string ->
   ?keep_log_dir:bool ->
@@ -109,6 +112,8 @@ val init: ?noop:_ -> (unit -> unit) options_fun
 (** Like [init], but returns the given value. For optional argument
     stacking *)
 val initk: 'a -> 'a options_fun
+
+val is_answer_yes : unit -> bool
 
 (** [true] if OPAM was compiled in developer mode *)
 val developer : bool

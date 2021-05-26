@@ -23,6 +23,13 @@ let when_enum =
   [ "always", `Always; "never", `Never; "auto", `Auto ]
   |> List.map (fun (s,v) -> cli_original, s, v)
 
+let confirm_enum = [
+  cli_from cli2_1, "ask", `ask;
+  cli_from cli2_1, "no", `all_no;
+  cli_from cli2_1, "yes", `all_yes;
+  cli_from cli2_1, "unsafe-yes", `unsafe_yes;
+]
+
 (* Windows directory separators need to be escaped for manpages *)
 let dir_sep, escape_path =
   match Filename.dir_sep with
@@ -45,7 +52,10 @@ let preinit_environment_variables =
     let open OpamCoreConfig.E in [
       "DEBUG", (fun v -> DEBUG (env_int v)),
       "see options `--debug' and `--debug-level'.";
-      "YES", (fun v -> YES (env_bool v)), "see option `--yes'.";
+      "YES", (fun v -> YES (env_bool v)),
+      "see options `--yes' and `--confirm-level`. \
+       $(b,OPAMYES) has has priority over $(b,OPAMNO) and is \
+       ignored if $(b,OPAMCONFIRMLEVEL) is set.";
     ] in
   let client =
     let open OpamClientConfig.E in [
@@ -57,7 +67,7 @@ let preinit_environment_variables =
     ] in
   core @ client
 
-let preinit_opam_envvariables, doc_opam_envvariables_pre =
+let preinit_opam_env_variables, doc_opam_env_variables_pre =
   let preinit () =
     OpamStd.Config.E.updates @@
     List.map (fun (var, cons, _doc) -> cons var)
@@ -80,6 +90,10 @@ let environment_variables =
       "COLOR", cli_original, (fun v -> COLOR (env_when v)),
       "when set to $(i,always) or $(i,never), sets a default value for the \
        `--color' option.";
+      "CONFIRMLEVEL", cli_from cli2_1, (fun v -> CONFIRMLEVEL (env_answer v)),
+      "see option `--confirm-level`. \
+       $(b,OPAMCONFIRMLEVEL) has priority over $(b,OPAMYES) \
+       and $(b,OPAMNO).";
       "DEBUGSECTIONS", cli_from cli2_1, (fun v -> DEBUGSECTIONS (env_sections v)),
       "if set, limits debug messages to the space-separated list of \
        sections. Sections can optionally have a specific debug level (for \
@@ -98,7 +112,9 @@ let environment_variables =
       "MERGEOUT", cli_original, (fun v -> MERGEOUT (env_bool v)),
       "merge process outputs, stderr on stdout.";
       "NO", cli_original, (fun v -> NO (env_bool v)),
-      "answer no to any question asked.";
+      "answer no to any question asked, see options `--no` and `--confirm-level`. \
+       $(b,OPAMNO) is ignored if either $(b,OPAMCONFIRMLEVEL) or $(b,OPAMYES) \
+       is set.";
       "PRECISETRACKING", cli_original, (fun v -> PRECISETRACKING (env_bool v)),
       "fine grain tracking of directories.";
       "SAFE", cli_original, (fun v -> SAFE (env_bool v)),
@@ -209,8 +225,6 @@ let environment_variables =
       (fun v -> BUILDDOC (env_bool v)), "see option `--build-doc'.";
       "BUILDTEST", cli_between cli2_0 cli2_1,
       (fun v -> BUILDTEST (env_bool v)), "see option `--build-test'.";
-      "DEPEXTYES", cli_from cli2_1, (fun v -> DEPEXTYES (env_bool v)),
-      "launch system package managers in non-interactive mode.";
       "DOWNLOADJOBS", cli_original, (fun v -> DOWNLOADJOBS (env_int v)),
       "sets the maximum number of simultaneous downloads.";
       "DRYRUN", cli_original, (fun v -> DRYRUN (env_bool v)),
@@ -296,7 +310,7 @@ let scrubbed_environment_variables =
   in
     OpamStd.List.filter_map f environment_variables
 
-let doc_opam_envvariables, init_opam_envvariabes =
+let doc_opam_env_variables, init_opam_env_variabes =
   env_with_cli environment_variables
 
 (** Help sections common to all commands *)
@@ -312,7 +326,7 @@ let help_sections cli =
         variables should be set to \"0\", \"no\", \"false\" or the empty \
         string to disable, \"1\", \"yes\" or \"true\" to enable.";
   ] @
-  List.sort compare (doc_opam_envvariables_pre @ doc_opam_envvariables cli)
+  List.sort compare (doc_opam_env_variables_pre @ doc_opam_env_variables cli)
   @ [
     `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
         substituting `%{var}%` strings in `opam` files.";
@@ -419,7 +433,7 @@ type global_options = {
   quiet : bool;
   color : OpamStd.Config.when_ option;
   opt_switch : string option;
-  yes : bool;
+  answer : OpamStd.Config.answer option;
   strict : bool;
   opt_root : dirname option;
   git_version : bool;
@@ -438,7 +452,9 @@ type global_options = {
 
 (* The --cli passed by cmdliner is ignored (it's only there for --help) *)
 let create_global_options
-    git_version debug debug_level verbose quiet color opt_switch yes strict
+    git_version debug debug_level verbose quiet color opt_switch
+    yes confirm_level
+    strict
     opt_root external_solver use_internal_solver
     cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade
     working_dir ignore_pin_depends
@@ -450,9 +466,16 @@ let create_global_options
   let debug_level = OpamStd.Option.Op.(
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
+  let answer =
+    match List.rev confirm_level, List.rev yes with
+    | [], [] -> None
+    | [], true::_ -> Some `all_yes
+    | [], false::_ -> Some `all_no
+    | c::_ , _ -> Some c
+  in
   let verbose = List.length verbose in
   let cli = OpamCLIVersion.current in
-  { git_version; debug_level; verbose; quiet; color; opt_switch; yes;
+  { git_version; debug_level; verbose; quiet; color; opt_switch; answer;
     strict; opt_root; external_solver; use_internal_solver;
     cudf_file; solver_preferences; best_effort; safe_mode; json;
     no_auto_upgrade; working_dir; ignore_pin_depends; cli }
@@ -476,7 +499,7 @@ let apply_global_options cli o =
       o.external_solver >>| fun s -> lazy (OpamCudfSolver.solver_of_string s)
   in
   let solver_prefs = o.solver_preferences >>| fun p -> lazy (Some p) in
-  init_opam_envvariabes cli;
+  init_opam_env_variabes cli;
   OpamClientConfig.opam_init
     (* - format options - *)
     ?strict:(flag o.strict)
@@ -489,7 +512,7 @@ let apply_global_options cli o =
     ?color:o.color
     (* ?utf8:[ `Extended | `Always | `Never | `Auto ] *)
     (* ?disp_status_line:[ `Always | `Never | `Auto ] *)
-    ?answer:(some (flag o.yes))
+    ?answer:o.answer
     ?safe_mode:(flag o.safe_mode)
     (* ?lock_retries:int *)
     (* ?log_dir:OpamTypes.dirname *)
@@ -1128,9 +1151,27 @@ let global_options cli =
                 This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
       Arg.(some string) None in
   let yes =
-    mk_flag ~cli cli_original ~section ["y";"yes"]
-      "Answer yes to all yes/no questions without prompting. \
-       This is equivalent to setting $(b,\\$OPAMYES) to \"true\"." in
+    mk_vflag_all ~cli [
+      cli_original, true, ["y";"yes"],
+      "Answer yes to all opam yes/no questions without prompting. \
+       See also $(b,--confirm-level). \
+       This is equivalent to setting $(b,\\$OPAMYES) to \"true\".";
+      cli_from cli2_1, false, ["no"],
+      "Answer no to all opam yes/no questions without prompting. \
+       See also $(b,--confirm-level). \
+       This is equivalent to setting $(b,\\$OPAMNO) to \"true\".";
+    ]
+  in
+  let confirm_level =
+    mk_enum_opt_all ~cli (cli_from cli2_1) ~section ["confirm-level"] "LEVEL"
+      confirm_enum
+      (Printf.sprintf
+         "Confirmation level, $(docv) must be %s. Can be specified more than \
+          once. If $(b,--yes) or $(b,--no) are also given, the value of the \
+          last $(b,--confirm-level) is taken into account. This is equivalent \
+          to setting $(b, \\$OPAMCONFIRMLEVEL)`."
+         (string_of_enum confirm_enum))
+  in
   let strict =
     mk_flag ~cli cli_original ~section ["strict"]
       "Fail whenever an error is found in a package definition \
@@ -1225,7 +1266,8 @@ let global_options cli =
        equivalent to setting $(b,IGNOREPINDEPENDS=true)."
   in
   Term.(const create_global_options
-        $git_version $debug $debug_level $verbose $quiet $color $switch $yes
+        $git_version $debug $debug_level $verbose $quiet $color $switch
+        $yes $confirm_level
         $strict $root $external_solver
         $use_internal_solver $cudf_file $solver_preferences $best_effort
         $safe_mode $json_flag $no_auto_upgrade $working_dir

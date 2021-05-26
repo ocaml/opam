@@ -143,7 +143,7 @@ type global_options = {
   quiet : bool;
   color : OpamStd.Config.when_ option;
   opt_switch : string option;
-  yes : bool;
+  answer : OpamStd.Config.answer option;
   strict : bool;
   opt_root : dirname option;
   git_version : bool;
@@ -341,6 +341,6 @@ val help_sections: OpamCLIVersion.Sourced.t -> Manpage.block list
 
 (** {2 Environment variables} *)
 
-val preinit_opam_envvariables: unit -> unit
-val init_opam_envvariabes: OpamCLIVersion.Sourced.t -> unit
+val preinit_opam_env_variables: unit -> unit
+val init_opam_env_variabes: OpamCLIVersion.Sourced.t -> unit
 val scrubbed_environment_variables: string list
