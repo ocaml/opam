@@ -729,44 +729,41 @@ let install ?(warning=default_install_warning) ?exec src dst =
   let exec = match exec with
     | Some e -> e
     | None -> is_exec src in
-  begin
-    if Sys.win32 then
-      if exec then begin
-        let (dst, cygcheck) =
-          match classify_executable src with
-            `Exe _ ->
-              if not (Filename.check_suffix dst ".exe") && not (Filename.check_suffix dst ".dll") then begin
-                warning dst `Add_exe;
-                (dst ^ ".exe", true)
-              end else
-                (dst, true)
-          | `Dll _ ->
-              warning dst `Install_dll;
+  let perm = if exec then 0o755 else 0o644 in
+  log "install %s -> %s (%o)" src dst perm;
+  if Sys.win32 then
+    if exec then begin
+      let (dst, cygcheck) =
+        match classify_executable src with
+          `Exe _ ->
+            if not (Filename.check_suffix dst ".exe") && not (Filename.check_suffix dst ".dll") then begin
+              warning dst `Add_exe;
+              (dst ^ ".exe", true)
+            end else
               (dst, true)
-          | `Script ->
-              warning dst `Install_script;
-              (dst, false)
-          | `Unknown ->
-              warning dst `Install_unknown;
-              (dst, false)
-        in
-        copy_file_aux ~src ~dst ();
-        if cygcheck then
-          match OpamStd.Sys.is_cygwin_variant dst with
-            `Native ->
-              ()
-          | `Cygwin ->
-              warning dst `Cygwin
-          | `CygLinked ->
-              warning dst `Cygwin_libraries
-      end else
-        copy_file_aux ~src ~dst ()
-    else (
-      let perm = if exec then 0o755 else 0o644 in
-      log "install %s -> %s (%o)" src dst perm;
-      copy_file_aux ~chmod:(fun _ -> perm) ~src ~dst ()
-    )
-  end
+        | `Dll _ ->
+            warning dst `Install_dll;
+            (dst, true)
+        | `Script ->
+            warning dst `Install_script;
+            (dst, false)
+        | `Unknown ->
+            warning dst `Install_unknown;
+            (dst, false)
+      in
+      copy_file_aux ~src ~dst ();
+      if cygcheck then
+        match OpamStd.Sys.is_cygwin_variant dst with
+          `Native ->
+            ()
+        | `Cygwin ->
+            warning dst `Cygwin
+        | `CygLinked ->
+            warning dst `Cygwin_libraries
+    end else
+      copy_file_aux ~src ~dst ()
+  else
+    copy_file_aux ~chmod:(fun _ -> perm) ~src ~dst ()
 
 let cpu_count () =
   try
