@@ -1,32 +1,29 @@
-## Steps to follow for each release
+# Steps to follow for each release
 
-* Update version (and copyright year) in `configure.ac`, `shell/opam_installer.sh`
-* Run `make configure` to regenerate `./configure`
-* Run `make tests`, `opam-rt` (with and without aspcud) -- now checked by travis
-* Run `make doc` to re-generate the API documetation
+## Finalise opam code for release
+* update version in opam files, configure.ac
+* run `make configure` to regenerate `./configure` [checked by github actions]
+* update copyright headers
+* run `make tests`, `opam-rt` [checked by github actions & appveyor]
+* update the CHANGE file: take `master_changes.md` content to fil it
 
---
+## Github release
 
-* update the CHANGELOG
-* tag the release (git tag -a 1.2.1; git push origin 1.2.1)
-* create a release on github based on your tag (https://github.com/ocaml/opam/releases/new)
+[ once bump version & changes PRs merged ]
+* tag the release (git tag -a 2.2.0; git push origin 2.2.0)
+* /!\ Once the tag pushed, it can be updated only in case of severe issue
+* create a release (or prerelease if intermediate release) draft on github based on your tag (https://github.com/ocaml/opam/releases/new)
+* generate opam artifacts, using `shell/release.sh`, it requires to have Docker install with several remotes, the different arches
+* add releases notes (content of `master_changes.md`) in the release
+* upload signature of artefacts
+* finalise the release (publish)
 
---
+## Publish the release
 
-* Generate an inclusive source tarball (and the binary for your current arch while you're at it):
-```
-./shell/release.sh full-archive binary publish -n git-name:git-token
-```
-* Check that it's been properly uploaded on https://github.com/ocaml/opam/releases
-* Ask people on other archs (and with write access to opam) to run
-```
-wget https://raw.github.com/ocaml/opam/master/shell/release.sh && \
-bash -ue ./release.sh -t $VERSION
-```
+* add hashes in `install.sh` (and check signatures)
+* publish opam packages in opam-repository
 
---
+## Announce!
 
-* Add some news about the release on the platform blog
-* Update the installation instructions in doc/pages
-* Update the opam-lib, opamfu, opam2web opam packages
-* Announce ! (platform-list, caml-list)
+* a blog entry in opam.ocaml.org
+* a announcement in discuss.ocaml.org
