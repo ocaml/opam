@@ -62,7 +62,7 @@ New option/command/subcommand are prefixed with ◈.
   * Include doc field in opam-show [#4567 @dra27 - partially fix #4565]
 
 ## Var
-  *
+  * Fix `switch` global variable resolving [#4685 @rjbou - fix #4684]
 
 ## Option
   *
