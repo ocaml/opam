@@ -70,6 +70,8 @@ let resolve_global gt full_var =
       | "root"          -> Some (V.string (OpamFilename.Dir.to_string gt.root))
       | "make"          -> Some (V.string OpamStateConfig.(Lazy.force !r.makecmd))
       | "exe"           -> Some (V.string (OpamStd.Sys.executable_name ""))
+      | "switch"        -> OpamStd.Option.map (OpamSwitch.to_string @> V.string)
+                             (OpamStateConfig.get_switch_opt ())
       | _               -> None
 
 (** Resolve switch-global variables only, as allowed by the 'available:'
@@ -106,6 +108,7 @@ let resolve_switch_raw ?package gt switch switch_config full_var =
       | Some _ as c -> c
       | None ->
         match V.to_string var with
+        (* we keep it in case no global switch is defined *)
         | "switch" -> Some (V.string (OpamSwitch.to_string switch))
         | _ -> None
 
