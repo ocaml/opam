@@ -36,6 +36,8 @@ New option/command/subcommand are prefixed with ◈.
   * Keep global lock only if root format upgrade is performed [#4612 @rjbou - fix #4597]
   * Improve installation times by only tracking files listed in `.install` instead of the whole switch prefix when there are no `install:` instructions (and no preinstall commands) [#4494 @kit-ty-kate @rjbou - fix #4422]
   * Scrub OPAM* environment variables added since 2.0 from package builds to prevent warnings when a package calls opam [#4663 @dra27 - fix #4660]
+  * Correct the message when more than one depext is missing [#4678 @dra27]
+  * Only display one conflict message when they are all owing to identical missing depexts [#4678 @dra27]
 
 ## Remove
   *

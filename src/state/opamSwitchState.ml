@@ -1076,11 +1076,19 @@ let unavailable_reason st ?(default="") (name, vformula) =
     else
     match depexts_unavailable st (OpamPackage.Set.max_elt candidates) with
     | Some missing ->
+      let missing =
+        List.rev_map OpamSysPkg.to_string (OpamSysPkg.Set.elements missing)
+      in
+      let msg =
+        match missing with
+        | [pkg] ->
+          " '" ^ pkg ^ "'"
+        | pkgs ->
+          "s " ^ (OpamStd.Format.pretty_list (List.rev_map (Printf.sprintf "'%s'") pkgs))
+      in
       Printf.sprintf
-        "depends on the unavailable system package '%s'. Use \
-         `--assume-depexts' to attempt installation anyway."
-        (OpamStd.List.concat_map " " OpamSysPkg.to_string
-           (OpamSysPkg.Set.elements missing))
+        "depends on the unavailable system package%s. Use \
+         `--assume-depexts' to attempt installation anyway." msg
     | None -> default
 
 let update_package_metadata nv opam st =
