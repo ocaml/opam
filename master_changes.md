@@ -80,6 +80,8 @@ New option/command/subcommand are prefixed with ◈.
   * Fix `features` parser [#4507 @rjbou]
   * Rename `hidden-version` to `avoid-version` [#4527 @dra27]
   * Fix rewriting with preserved format empty field error [#4634 @rjbou - fix #4628]
+  * Fix rewrtiting with preserved format empty field error [#4633 @rjbou - fix #4628]
+  * Require opam-file-format 2.1.3+ in order to enforce opam-version: "2.1" as first non-comment line [#4639 @dra27 - fix #4394]
 
 ## External dependencies
   * Handle macport variants [#4509 @rjbou - fix #4297]
