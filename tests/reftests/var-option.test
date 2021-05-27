@@ -63,7 +63,7 @@ os-distribution lorem # Set through 'opam var'
 os-family ipsum # Set through 'opam var'
 os-version dolor # Set through 'opam var'
 root ${BASEDIR}/OPAM # The current opam root directory
-switch # The identifier of the current switch
+switch var-option # The identifier of the current switch
 sys-ocaml-version 4.08.0 # Set through 'opam var'
 
 <><> Configuration variables from the current switch ><><><><><><><><><><><><><>
@@ -119,7 +119,7 @@ os-distribution lorem # Set through 'opam var'
 os-family ipsum # Set through 'opam var'
 os-version dolor # Set through 'opam var'
 root ${BASEDIR}/OPAM # The current opam root directory
-switch # The identifier of the current switch
+switch var-option # The identifier of the current switch
 sys-ocaml-version 4.08.0 # Set through 'opam var'
 ### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="GSTATE STATE" opam var bin
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
