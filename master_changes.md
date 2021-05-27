@@ -20,6 +20,7 @@ New option/command/subcommand are prefixed with ◈.
   * ◈ Add `--confirm-level` and `OPAMCONFIRMLEVEL` [#4582 @rjbou - fix #4168]
   * ◈ Add `--no` [#4582 @rjbou]
   * Initialise environment variables for plugins call/install [#4582 @rjbou]
+  * `OPAMCONFIRMLEVEL` and `OPAMYES` now override "lower" CLI flags [#4683 @dra27 - fix #4682]
 
 ## Init
   * Introduce a `default-invariant` config field, restore the 2.0 semantics for

@@ -433,7 +433,7 @@ type global_options = {
   quiet : bool;
   color : OpamStd.Config.when_ option;
   opt_switch : string option;
-  answer : OpamStd.Config.answer option;
+  answer : (OpamStd.Config.answer * [`Level | `Yes | `No]) option;
   strict : bool;
   opt_root : dirname option;
   git_version : bool;
@@ -469,9 +469,9 @@ let create_global_options
   let answer =
     match List.rev confirm_level, List.rev yes with
     | [], [] -> None
-    | [], true::_ -> Some `all_yes
-    | [], false::_ -> Some `all_no
-    | c::_ , _ -> Some c
+    | [], true::_ -> Some (`all_yes, `Yes)
+    | [], false::_ -> Some (`all_no, `No)
+    | c::_ , _ -> Some (c, `Level)
   in
   let verbose = List.length verbose in
   let cli = OpamCLIVersion.current in
@@ -500,6 +500,14 @@ let apply_global_options cli o =
   in
   let solver_prefs = o.solver_preferences >>| fun p -> lazy (Some p) in
   init_opam_env_variabes cli;
+  let answer =
+    match o.answer with
+    | Some (a, `Level) -> Some a
+    | Some _ when OpamCoreConfig.E.confirmlevel () <> None -> None
+    | Some (_, `No) when OpamCoreConfig.E.yes () <> None -> None
+    | Some (a, _) -> Some a
+    | None -> None
+  in
   OpamClientConfig.opam_init
     (* - format options - *)
     ?strict:(flag o.strict)
@@ -512,7 +520,7 @@ let apply_global_options cli o =
     ?color:o.color
     (* ?utf8:[ `Extended | `Always | `Never | `Auto ] *)
     (* ?disp_status_line:[ `Always | `Never | `Auto ] *)
-    ?answer:o.answer
+    ?answer
     ?safe_mode:(flag o.safe_mode)
     (* ?lock_retries:int *)
     (* ?log_dir:OpamTypes.dirname *)
