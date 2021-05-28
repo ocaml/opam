@@ -168,7 +168,6 @@ ocaml:doc ${BASEDIR}/OPAM/var-option/doc/ocaml # Doc directory for this package
 ocaml:share ${BASEDIR}/OPAM/var-option/share/ocaml # Share directory for this package
 ocaml:etc ${BASEDIR}/OPAM/var-option/etc/ocaml # Etc directory for this package
 ocaml:build ${BASEDIR}/OPAM/var-option/.opam-switch/build/ocaml.4.08.0 # Directory where the package was built
-ocaml:hash # Hash of the package archive
 ocaml:dev false # True if this is a development package
 ### opam option
 
