@@ -69,6 +69,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Var
   * Fix `switch` global variable resolving [#4685 @rjbou - fix #4684]
+  * Fix `hash` package variable resolving [#4687 @rjbou]
 
 ## Option
   *
