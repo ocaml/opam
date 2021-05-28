@@ -187,3 +187,4 @@ New option/command/subcommand are prefixed with ◈.
   * Document the default build environment variables [#4496 @kit-ty-kate]
   * Remove useless span tag in manual [#4513 @dannywillems]
   * Fix typo [#4637 @UnixJunkie]
+  * Add some release docs [#4681 @rjbou]
