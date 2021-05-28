@@ -298,15 +298,12 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
       in
       Some (string str_deps)
     | "hash", Some opam ->
-      (try
-         let nv = get_nv opam in
-         let f = OpamPath.archive root nv in
-         if OpamFilename.exists f then
-           Some (string (OpamHash.to_string
-                           (OpamHash.compute ~kind:`MD5
-                              (OpamFilename.to_string f))))
-         else Some (string "")
-       with Not_found -> Some (string ""))
+      OpamStd.Option.Op.(
+        OpamFile.OPAM.url opam
+        >>| OpamFile.URL.checksum
+        (* on download, the cache is populated with the first checksum found *)
+        >>= (function [] -> None
+                    | h::_ -> Some (string (OpamHash.to_string h))))
     | "dev", Some opam -> Some (bool (is_dev_package st opam))
     | "build-id", Some opam -> OpamStd.Option.map string (build_id st opam)
     | "opamfile", Some opam ->
