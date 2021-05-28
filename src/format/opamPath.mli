@@ -39,12 +39,6 @@ val init_config_files: unit -> OpamFile.InitConfig.t OpamFile.t list
     switches, repositories lists are expected. No lock needed otherwise) *)
 val config_lock: t -> filename
 
-(** Archives dir *)
-val archives_dir: t -> dirname
-
-(** Archive file: {i $opam/archives/$NAME.$VERSION+opam.tar.gz} *)
-val archive: t -> package -> filename
-
 (** Global lock file for the repositories mirrors: {i $opam/repo/lock} *)
 val repos_lock: t -> filename
 

@@ -3712,7 +3712,6 @@ let clean cli =
        if not dry_run then OpamRepositoryState.Cache.remove ());
     if download_cache then
       (OpamConsole.msg "Clearing cache of downloaded files\n";
-       rmdir (OpamPath.archives_dir root);
        List.iter (fun dir ->
            match OpamFilename.(Base.to_string (basename_dir dir)) with
            | "git" ->
