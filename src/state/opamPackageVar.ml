@@ -301,7 +301,7 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
       OpamStd.Option.Op.(
         OpamFile.OPAM.url opam
         >>| OpamFile.URL.checksum
-        (* on download, the cache is populated with the first checksum found *)
+        >>| OpamHash.sort
         >>= (function [] -> None
                     | h::_ -> Some (string (OpamHash.to_string h))))
     | "dev", Some opam -> Some (bool (is_dev_package st opam))
