@@ -54,8 +54,7 @@ let list gt ~print_short =
           |> ifempty comp
         in
         let conf =
-          OpamFile.Switch_config.read_opt
-            (OpamPath.Switch.switch_config gt.root sw)
+          OpamStateConfig.Switch.read_opt ~lock_kind:`Lock_read gt sw
         in
         let descr = match conf with
           | Some c -> c.OpamFile.Switch_config.synopsis
@@ -186,7 +185,7 @@ let remove gt ?(confirm = true) switch =
   else gt
 
 let set_invariant_raw st invariant =
-  let switch_config = {st.switch_config with invariant} in
+  let switch_config = {st.switch_config with invariant = Some invariant} in
   let st = {st with switch_invariant = invariant; switch_config } in
   if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
     OpamSwitchAction.install_switch_config st.switch_global.root st.switch
@@ -558,7 +557,10 @@ let export rt ?(freeze=false) ?(full=false)
   let export =
     OpamFilename.with_flock `Lock_none (OpamPath.Switch.lock root switch)
     @@ fun _ ->
-    let selections = S.safe_read (OpamPath.Switch.selections root switch) in
+    let selections =
+      OpamStateConfig.Switch.safe_read_selections
+        ~lock_kind:`Lock_none rt.repos_global switch
+    in
     let opams =
       let read_opams read pkgs =
         let src_dir nv =

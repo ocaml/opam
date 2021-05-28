@@ -177,7 +177,7 @@ uninstall: opam.install
 	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) opam-installer.install
 
 .PHONY: tests
-tests: $(DUNE_DEP)
+tests: $(DUNE_DEP) src/client/no-git-version
 	@$(DUNE) runtest $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) src/ tests/ --no-buffer; \
 	ret=$$?; \
 	echo "###     TESTS RESULT SUMMARY     ###"; \
@@ -203,20 +203,24 @@ crowbar-afl: $(DUNE_DEP)
 	echo foo > /tmp/opam-crowbar-input/foo
 	afl-fuzz -i /tmp/opam-crowbar-input -o /tmp/opam-crowbar-output dune exec src/crowbar/test.exe @@
 
+INTERMEDIATE: src/client/no-git-version
+src/client/no-git-version:
+	touch src/client/no-git-version
+
 # tests-local, tests-git
-tests-%: $(DUNE_DEP)
+tests-%: $(DUNE_DEP) src/client/no-git-version
 	$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . @reftest-legacy-$* --force
 
-reftest-gen: $(DUNE_DEP)
+reftest-gen: $(DUNE_DEP) src/client/no-git-version
 	$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . @reftest-gen --auto-promote --force
 
-reftest-runner: $(DUNE_DEP)
+reftest-runner: $(DUNE_DEP) src/client/no-git-version
 	$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . tests/reftests/run.exe
 
-reftests: $(DUNE_DEP)
+reftests: $(DUNE_DEP) src/client/no-git-version
 	$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . @reftest
 
-reftests-%: $(DUNE_DEP)
+reftests-%: $(DUNE_DEP) src/client/no-git-version
 	$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . @reftest-$* --force
 
 reftests-meld:

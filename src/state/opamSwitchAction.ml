@@ -17,7 +17,7 @@ let log fmt = OpamConsole.log "SWACT" fmt
 let slog = OpamConsole.slog
 
 let gen_switch_config
-    root ?(synopsis="") ?repos ?(invariant=OpamFormula.Empty) _switch =
+    root ?(synopsis="") ?repos ?invariant _switch =
   let vars =
     List.map (fun (s,p) -> OpamVariable.of_string s, S p) [
       ("user" ,
@@ -29,7 +29,7 @@ let gen_switch_config
     ]
   in
   { OpamFile.Switch_config.
-    opam_version = OpamFile.Switch_config.format_version;
+    opam_version = OpamFile.Switch_config.file_format_version;
     synopsis;
     variables = vars;
     paths = [];

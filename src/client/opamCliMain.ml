@@ -141,22 +141,22 @@ let check_and_run_external_commands () =
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
     let has_init, root_upgraded =
-      match OpamStateConfig.load_defaults root_dir with
+      match OpamStateConfig.load_defaults ~lock_kind:`Lock_read root_dir with
       | None -> (false, false)
       | Some config ->
-          let root_upgraded =
-            let config_version = OpamFile.Config.opam_version config in
-            let cmp =
-              OpamVersion.(compare OpamFile.Config.format_version config_version)
-            in
-            if cmp < 0 then
-              OpamConsole.error_and_exit `Configuration_error
-                "%s reports a newer opam version, aborting."
-                 (OpamFilename.Dir.to_string root_dir)
-            else
-              cmp = 0
+        let root_upgraded =
+          let cmp =
+            OpamVersion.compare OpamFile.Config.root_version
+              (OpamFile.Config.opam_root_version config)
           in
-            (true, root_upgraded)
+          if cmp < 0 then
+            OpamConsole.error_and_exit `Configuration_error
+              "%s reports a newer opam version, aborting."
+              (OpamFilename.Dir.to_string root_dir)
+          else
+            cmp = 0
+        in
+        (true, root_upgraded)
     in
     let plugins_bin = OpamPath.plugins_bin root_dir in
     let plugin_symlink_present =
@@ -300,8 +300,8 @@ let rec main_catch_all f =
   | OpamFormatUpgrade.Upgrade_done conf ->
     main_catch_all @@ fun () ->
     OpamConsole.header_msg "Rerunning init and update";
-    OpamClient.reinit ~interactive:true ~update_config:false conf
-      (OpamStd.Sys.guess_shell_compat ());
+    OpamClient.reinit ~interactive:true ~update_config:false ~bypass_checks:true
+      conf (OpamStd.Sys.guess_shell_compat ());
     OpamConsole.msg
       "Update done, please now retry your command.\n";
     exit (OpamStd.Sys.get_exit_code `Aborted)

@@ -850,7 +850,7 @@ module I = struct
       ()
     =
     let name = "opam-version" in
-    let opam_v = V.string -| of_module "opam-version" (module OpamVersion) in
+    let opam_v = V.string -| of_module name (module OpamVersion) in
     let f v =
       OpamFormatConfig.(!r.skip_version_checks) || match v with
       | Some v -> f v
@@ -862,12 +862,41 @@ module I = struct
         (OpamVersion.to_string format_version)
     in
     field name (parse opam_v) -|
-    map_fst (check ~name ~errmsg f) -|
-    pp
+    map_fst (check ~name ~raise:OpamPp.bad_version ~errmsg f) -|
+    pp ~name
       (fun ~pos:_ (_,x) -> x)
       (fun x ->
-         (* re-extract the field using parse when printing, to check *)
-         parse ~pos:pos_null (field name (parse opam_v)) x)
+         (* re-extract the field using parse when printing, to check that it is
+            not undefined *)
+         match parse ~pos:pos_null (field name (parse opam_v)) x with
+         | None, _ -> failwith "opam version must be printed"
+         | v, l -> v, l)
+
+  let opam_version ?(undefined=false) ~format_version () =
+    let name = "opam-version" in
+    pp
+      (fun ~pos:_ items ->
+         if not undefined then items else
+           List.filter (function
+               | { pelem = Variable ({ pelem = fname; _},
+                                     { pelem = String _version; _}); _}
+                 when fname = name ->
+                 (* check opam version already called, we don't need to check
+                    that it is the same version *)
+                 false
+               | _ -> true) items)
+      (fun items ->
+         let opam_v = V.string -| of_module name (module OpamVersion) in
+         match parse ~pos:pos_null (field name (parse opam_v)) items with
+         | None, items ->
+           let opam_v =
+             nullify_pos @@
+             Variable (nullify_pos name,
+                       nullify_pos @@
+                       String (OpamVersion.to_string format_version))
+           in
+           opam_v :: items
+         | Some _, items -> items)
 
   type signature = string * string * string
 

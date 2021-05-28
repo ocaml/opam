@@ -43,7 +43,7 @@ val init:
 val reinit:
   ?init_config:OpamFile.InitConfig.t -> interactive:bool -> ?dot_profile:filename ->
   ?update_config:bool -> ?env_hook:bool -> ?completion:bool -> ?inplace:bool ->
-  ?check_sandbox:bool ->
+  ?check_sandbox:bool -> ?bypass_checks:bool ->
   OpamFile.Config.t -> shell -> unit
 
 (** Install the given list of packages. [add_to_roots], if given, specifies that

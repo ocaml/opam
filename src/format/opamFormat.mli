@@ -266,6 +266,12 @@ sig
     -> unit ->
     (opamfile_item list, opamfile_item list) t
 
+  (** Add [opam-version] field printing at printing, and removes it from parsed
+      fields if [undefined] (default is false) *)
+  val opam_version :
+    ?undefined:bool -> format_version:opam_version -> unit ->
+    (opamfile_item list, opamfile_item list) t
+
   (** Signature handling (wip) *)
 
   (** A signature is a keyid, an algorithm and the signature proper *)
