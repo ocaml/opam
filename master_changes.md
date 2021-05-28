@@ -38,6 +38,7 @@ New option/command/subcommand are prefixed with ◈.
   * Scrub OPAM* environment variables added since 2.0 from package builds to prevent warnings when a package calls opam [#4663 @dra27 - fix #4660]
   * Correct the message when more than one depext is missing [#4678 @dra27]
   * Only display one conflict message when they are all owing to identical missing depexts [#4678 @dra27]
+  * Improve installation times by only tracking files listed in `.install` instead of the whole switch prefix when there are no `install:` instructions (and no preinstall commands) [#4494 @kit-ty-kate @rjbou; #4667 @dra27 - fix #4422]
 
 ## Remove
   *

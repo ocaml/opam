@@ -27,8 +27,6 @@ let preprocess_dot_install_t st nv build_dir =
   let switch_prefix = OpamPath.Switch.root root st.switch in
   let file_wo_prefix f = OpamFilename.remove_prefix switch_prefix f in
 
-  let files_and_installs = [] in
-
   let name = nv.name in
   let install_f = OpamPath.Builddir.install build_dir nv in
   let install = OpamFile.Dot_install.safe_read install_f in
@@ -53,8 +51,8 @@ let preprocess_dot_install_t st nv build_dir =
          let dot_config = OpamPath.Switch.config root st.switch name in
          OpamFile.Dot_config.write dot_config config; None
        in
-       (file, inst) :: files_and_installs
-     | None -> files_and_installs)
+       [(file, inst)]
+     | None -> [])
   in
 
   let check ~src ~dst base =
@@ -71,7 +69,7 @@ let preprocess_dot_install_t st nv build_dir =
   in
 
   (* Install a list of files *)
-  let install_files exec dst_fn files_fn =
+  let install_files (exec, dst_fn, files_fn) =
     let dst_dir = dst_fn root st.switch name in
     let files = files_fn install in
     let dir_and_install =
@@ -84,8 +82,8 @@ let preprocess_dot_install_t st nv build_dir =
       in
       [dir, inst]
     in
-    dir_and_install @
-    List.map (fun (base, dst) ->
+    dir_and_install @ List.rev @@
+    List.rev_map (fun (base, dst) ->
         let (base, append) =
           if exec &&
              not (OpamFilename.exists (OpamFilename.create build_dir base.c))
@@ -161,14 +159,13 @@ let preprocess_dot_install_t st nv build_dir =
   in
 
   let files_and_installs =
-    List.fold_left (fun files_and_installs (exec, dst_fn, files_fn) ->
-        install_files exec dst_fn files_fn @ files_and_installs)
+    List.fold_left (fun acc toi -> List.rev_append (install_files toi) acc)
       files_and_installs to_install
   in
 
   (* misc *)
-  let files_and_installs =
-    List.fold_left (fun files_and_installs (src, dst) ->
+  let misc_files =
+    List.map (fun (src, dst) ->
         let file = file_wo_prefix dst in
         let inst warning =
           let src_file = OpamFilename.create (OpamFilename.cwd ()) src.c in
@@ -183,10 +180,10 @@ let preprocess_dot_install_t st nv build_dir =
           end;
           None
         in
-        (file, inst) :: files_and_installs)
-      files_and_installs (I.misc install)
+        (file, inst)) (I.misc install)
   in
-  files_and_installs
+
+  List.rev_append files_and_installs misc_files
 
 (* Returns function to install package files from [.install] *)
 let preprocess_dot_install st nv build_dir =

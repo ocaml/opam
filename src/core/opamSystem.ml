@@ -177,18 +177,29 @@ let write file contents =
 
 let setup_copy ?(chmod = fun x -> x) ~src ~dst () =
   let ic = open_in_bin src in
-  let oc =
-    try
-      let perm =
-        (Unix.fstat (Unix.descr_of_in_channel ic)).st_perm |> chmod
-      in
+  try
+    let perm =
+      (Unix.fstat (Unix.descr_of_in_channel ic)).st_perm |> chmod
+    in
+    let () =
+      try if Unix.((lstat dst).st_kind <> S_REG) then
+            remove_file dst
+      with Unix.Unix_error(ENOENT, _, _) -> ()
+    in
+    let oc =
       open_out_gen
         [ Open_wronly; Open_creat; Open_trunc; Open_binary ]
         perm dst
+    in
+    let fd = Unix.descr_of_out_channel oc in
+    try
+      if Unix.((fstat fd).st_perm) <> perm then
+        Unix.fchmod fd perm;
+      (ic, oc)
     with exn ->
-      OpamStd.Exn.finalise exn (fun () -> close_in ic)
-  in
-  (ic, oc)
+      OpamStd.Exn.finalise exn (fun () -> close_out oc)
+  with exn ->
+    OpamStd.Exn.finalise exn (fun () -> close_in ic)
 
 let copy_channels =
   let buf_len = 4096 in
@@ -718,44 +729,41 @@ let install ?(warning=default_install_warning) ?exec src dst =
   let exec = match exec with
     | Some e -> e
     | None -> is_exec src in
-  begin
-    if Sys.win32 then
-      if exec then begin
-        let (dst, cygcheck) =
-          match classify_executable src with
-            `Exe _ ->
-              if not (Filename.check_suffix dst ".exe") && not (Filename.check_suffix dst ".dll") then begin
-                warning dst `Add_exe;
-                (dst ^ ".exe", true)
-              end else
-                (dst, true)
-          | `Dll _ ->
-              warning dst `Install_dll;
+  let perm = if exec then 0o755 else 0o644 in
+  log "install %s -> %s (%o)" src dst perm;
+  if Sys.win32 then
+    if exec then begin
+      let (dst, cygcheck) =
+        match classify_executable src with
+          `Exe _ ->
+            if not (Filename.check_suffix dst ".exe") && not (Filename.check_suffix dst ".dll") then begin
+              warning dst `Add_exe;
+              (dst ^ ".exe", true)
+            end else
               (dst, true)
-          | `Script ->
-              warning dst `Install_script;
-              (dst, false)
-          | `Unknown ->
-              warning dst `Install_unknown;
-              (dst, false)
-        in
-        copy_file_aux ~src ~dst ();
-        if cygcheck then
-          match OpamStd.Sys.is_cygwin_variant dst with
-            `Native ->
-              ()
-          | `Cygwin ->
-              warning dst `Cygwin
-          | `CygLinked ->
-              warning dst `Cygwin_libraries
-      end else
-        copy_file_aux ~src ~dst ()
-    else (
-      let perm = if exec then 0o755 else 0o644 in
-      log "install %s -> %s (%o)" src dst perm;
-      copy_file_aux ~chmod:(fun _ -> perm) ~src ~dst ()
-    )
-  end
+        | `Dll _ ->
+            warning dst `Install_dll;
+            (dst, true)
+        | `Script ->
+            warning dst `Install_script;
+            (dst, false)
+        | `Unknown ->
+            warning dst `Install_unknown;
+            (dst, false)
+      in
+      copy_file_aux ~src ~dst ();
+      if cygcheck then
+        match OpamStd.Sys.is_cygwin_variant dst with
+          `Native ->
+            ()
+        | `Cygwin ->
+            warning dst `Cygwin
+        | `CygLinked ->
+            warning dst `Cygwin_libraries
+    end else
+      copy_file_aux ~src ~dst ()
+  else
+    copy_file_aux ~chmod:(fun _ -> perm) ~src ~dst ()
 
 let cpu_count () =
   try
