@@ -38,7 +38,7 @@ init-bootstrap () {
     opam init --yes --no-setup git+https://github.com/ocaml/opam-repository#$OPAM_REPO_SHA
     eval $(opam env)
 #    opam update
-    CURRENT_SWITCH=$(opam config var switch)
+    CURRENT_SWITCH=$(opam var switch)
     if [[ $CURRENT_SWITCH != "default" ]] ; then
       opam switch default
       eval $(opam env)
