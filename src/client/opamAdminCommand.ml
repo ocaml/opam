@@ -153,12 +153,16 @@ let package_files_to_cache repo_root cache_dir cache_urls ?link (nv, prefix) =
         OpamPackage.to_string nv ^
         OpamStd.Option.to_string ((^) "/") name
       in
-      match OpamFile.URL.checksum urlf with
+      let checksums =
+        List.sort (fun h h' -> OpamHash.compare_hash_kind h' h)
+          (OpamFile.URL.checksum urlf)
+      in
+      match checksums with
       | [] ->
         OpamConsole.warning "[%s] no checksum, not caching"
           (OpamConsole.colorise `green label);
         Done errors
-      | (first_checksum :: _) as checksums ->
+      | best_chks :: _ ->
         OpamRepository.pull_file_to_cache label
           ~cache_urls ~cache_dir
           checksums
@@ -169,7 +173,7 @@ let package_files_to_cache repo_root cache_dir cache_urls ?link (nv, prefix) =
         | Up_to_date () | Result () ->
           OpamStd.Option.iter (fun link_dir ->
               let target =
-                OpamRepository.cache_file cache_dir first_checksum
+                OpamRepository.cache_file cache_dir best_chks
               in
               let name =
                 OpamStd.Option.default
