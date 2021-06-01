@@ -1092,7 +1092,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
          system packages altogether.\n";
       OpamStd.Sys.exit_because `Aborted
     in
-    if not OpamStd.Sys.tty_in || OpamCoreConfig.(!r.answer <> `ask) then
+    if not OpamStd.Sys.tty_in || OpamCoreConfig.answer () <> `ask then
       give_up ()
     else if OpamConsole.confirm
         "%s\nWhen you are done: check again and continue?"

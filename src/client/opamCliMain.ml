@@ -136,8 +136,8 @@ let check_and_run_external_commands () =
     let command = OpamPath.plugin_prefix ^ name in
     OpamArg.init_opam_env_variabes cli;
     (* if --yes is given, OPAMCONFIRMLEVEL/NO is not taken into account *)
-    let answer = if yes then Some `all_yes else None in
-    OpamCoreConfig.init ?answer ();
+    let yes = if yes then Some (Some true) else None in
+    OpamCoreConfig.init ?yes ();
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
     let has_init, root_upgraded =

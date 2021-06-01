@@ -704,7 +704,7 @@ let confirm ?(default=true) fmt =
         in
         if OpamCoreConfig.is_answer_yes () then
           (prompt (); msg "y\n"; true)
-        else if OpamCoreConfig.(!r.answer) = `all_no ||
+        else if OpamCoreConfig.answer () = `all_no ||
                 OpamStd.Sys.(not tty_in)
         then
           (prompt (); msg "n\n"; false)
@@ -758,7 +758,7 @@ let confirm ?(default=true) fmt =
 let read fmt =
   Printf.ksprintf (fun s ->
       formatted_msg "%s " s;
-      if OpamCoreConfig.(!r.answer = `ask && not !r.safe_mode) then (
+      if OpamCoreConfig.(answer () = `ask && not !r.safe_mode) then (
         try match read_line () with
           | "" -> None
           | s  -> Some s
