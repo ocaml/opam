@@ -15,7 +15,32 @@ open OpamStateTypes
 open OpamTypesBase
 open OpamStd.Op
 
-exception InvalidCLI of (OpamCLIVersion.Sourced.t, string option) OpamCompat.Result.t
+exception InvalidCLI of OpamCLIVersion.Sourced.t
+
+(* [InvalidFlagContent (flag_name, Some (invalid_value, expected_value))] *)
+exception InvalidFlagContent of string * (string * string) option
+
+(* [InvalidNewFlag (requested_cli, flag_name, flag_valid_since)] *)
+exception InvalidNewFlag of OpamCLIVersion.Sourced.t * string * OpamCLIVersion.t
+
+let raise_invalid_cli :
+  (OpamCLIVersion.Sourced.t, string option) OpamCompat.Result.t -> 'a
+  = function
+    | Ok ocli -> raise (InvalidCLI ocli)
+    | Error None -> raise (InvalidFlagContent ("cli", None))
+    | Error (Some invalid) ->
+      raise (InvalidFlagContent ("cli", Some (invalid, "major.minor")))
+
+let raise_invalid_confirm_level invalid =
+  let invalid =
+    OpamStd.Option.map (fun i ->
+        i, "one of " ^
+           (OpamArg.confirm_enum
+            |> List.map (fun (_,s,_) -> Printf.sprintf "`%s'" s)
+            |> OpamStd.Format.pretty_list ~last:"or"))
+      invalid
+  in
+  raise (InvalidFlagContent ("confirm-level", invalid))
 
 (* Filter and parse "--cli=v" or "--cli v" options *)
 let rec filter_cli_arg cli acc args =
@@ -23,16 +48,15 @@ let rec filter_cli_arg cli acc args =
   | []
   | "--" :: _ -> (cli, List.rev_append acc args)
   | "--cl" :: args -> filter_cli_arg cli acc ("--cli"::args)
-  | ["--cli"] | "--cli" :: "--" :: _ ->
-    raise (InvalidCLI (Error None))
+  | ["--cli"] | "--cli" :: "--" :: _ -> raise_invalid_cli (Error None)
   | "--cli" :: arg :: args ->
     let version =
       match OpamCLIVersion.of_string_opt arg with
       | Some cli ->
         let ocli = cli, `Command_line in
         if OpamCLIVersion.is_supported cli then ocli else
-          raise (InvalidCLI (Ok ocli))
-      | None -> raise (InvalidCLI (Error (Some arg)))
+          raise_invalid_cli (Ok ocli)
+      | None -> raise_invalid_cli (Error (Some arg))
     in
     filter_cli_arg (Some version) acc args
   | arg :: args ->
@@ -43,56 +67,70 @@ let rec filter_cli_arg cli acc args =
     | _ ->
       filter_cli_arg cli (arg::acc) args
 
-(* Pre-process argv processing the --yes and --cli. Returns Some cli, if --cli
-   was encountered, a boolean indicating if a valid --yes/-y was encountered
-   (it returns false if multiple flags were encountered) and the list of
-   arguments to continue with processing. *)
-let rec preprocess_argv cli yes args =
+let is_confirm_level =
+  OpamStd.String.is_prefix_of ~from:4 ~full:"--confirm-level"
+
+(* Pre-process argv processing the --yes, --confirm-level, and --cli. Returns
+   Some cli, if --cli was encountered, a boolean indicating if a valid --yes/-y
+   was encountered (it returns false if multiple flags were encountered) and
+   the list of arguments to continue with processing. *)
+let rec preprocess_argv cli yes confirm args =
   let is_valid_yes = function [_] -> true | _ -> false in
   match args with
   | [] ->
-    (cli, is_valid_yes yes, yes)
+    (cli, is_valid_yes yes, confirm, yes)
   | "--" :: _ ->
-    (cli, is_valid_yes yes, yes @ args)
+    (cli, is_valid_yes yes, confirm, yes @ args)
   (* Note that because this is evaluated before a sub-command, all the
      prefixes of --yes are assumed to valid at all times. *)
   | ("-y" | "--y" | "--ye" | "--yes") as yes_opt :: args ->
     if yes = [] then
-      preprocess_argv cli [yes_opt] args
+      preprocess_argv cli [yes_opt] confirm args
     else
-      (cli, false, yes @ [yes_opt])
-  | "--cl" :: args -> preprocess_argv cli yes ("--cli"::args)
-  | ["--cli"] | "--cli" :: "--" :: _ ->
-    raise (InvalidCLI (Error None))
+      (cli, false, confirm, yes @ [yes_opt])
+  | ([c] | c :: "--" :: _) when is_confirm_level c ->
+    raise_invalid_confirm_level None
+  | confirm_level :: cl_arg :: args when is_confirm_level confirm_level ->
+    let answer =
+      match OpamStd.List.find_opt (fun (_,n,_) -> n = cl_arg)
+              OpamArg.confirm_enum with
+      | Some (_, _, a) -> a
+      | None -> raise_invalid_confirm_level (Some cl_arg)
+    in
+    preprocess_argv cli yes (Some answer) args
+  | "--cl" :: args -> preprocess_argv cli yes confirm ("--cli"::args)
+  | ["--cli"] | "--cli" :: "--" :: _ -> raise_invalid_cli (Error None)
   | "--cli" :: arg :: args ->
     let version =
       match OpamCLIVersion.of_string_opt arg with
       | Some cli ->
         let ocli = cli, `Command_line in
         if OpamCLIVersion.is_supported cli then ocli else
-          raise (InvalidCLI (Ok ocli))
-      | _ -> raise (InvalidCLI (Error (Some arg)))
+          raise_invalid_cli (Ok ocli)
+      | _ -> raise_invalid_cli (Error (Some arg))
     in
-    preprocess_argv (Some version) yes args
+    preprocess_argv (Some version) yes confirm args
   | arg :: rest ->
     match OpamStd.String.cut_at arg '=' with
     | Some ("--cl", value)
     | Some ("--cli", value) ->
-      preprocess_argv cli yes ("--cli"::value::rest)
+      preprocess_argv cli yes confirm ("--cli"::value::rest)
+    | Some (pre, value) when is_confirm_level pre ->
+      preprocess_argv cli yes confirm ("--confirm-level"::value::rest)
     | _ ->
       if OpamCommands.is_builtin_command arg then
         let (cli, rest) = filter_cli_arg cli [] rest in
-        (cli, is_valid_yes yes, arg :: (yes @ rest))
+        (cli, is_valid_yes yes, confirm, arg :: (yes @ rest))
       else
-        (cli, is_valid_yes yes, args)
+        (cli, is_valid_yes yes, confirm, args)
 
 (* Handle git-like plugins *)
 let check_and_run_external_commands () =
   (* Pre-process the --yes and --cli options *)
-  let (cli, yes, argv) =
+  let (cli, yes, confirm_level, argv) =
     match Array.to_list Sys.argv with
     | prog::args ->
-      let (ocli, yes, args) = preprocess_argv None [] args in
+      let (ocli, yes, confirm, args) = preprocess_argv None [] None args in
       let ocli =
         match ocli with
         | Some ((cli, _) as ocli) ->
@@ -118,12 +156,20 @@ let check_and_run_external_commands () =
               in
               ocli
             else
-              raise (InvalidCLI (Ok ocli))
+              raise_invalid_cli (Ok ocli)
           | None ->
             OpamCLIVersion.Sourced.current
       in
-      (ocli, yes, prog::args)
-    | args -> (OpamCLIVersion.Sourced.current, false, args)
+      let confirm =
+        (* hardcoded cli validation *)
+        match confirm with
+        | Some _ when OpamCLIVersion.(fst ocli < (2,1)) ->
+          raise (InvalidNewFlag (ocli, "confirm-level",
+                                 OpamCLIVersion.of_string "2.1"))
+        | _ -> confirm
+      in
+      (ocli, yes, confirm, prog::args)
+    | args -> (OpamCLIVersion.Sourced.current, false, None, args)
   in
   match argv with
   | [] | [_] -> (cli, argv)
@@ -135,9 +181,10 @@ let check_and_run_external_commands () =
     (* No such command, check if there is a matching plugin *)
     let command = OpamPath.plugin_prefix ^ name in
     OpamArg.init_opam_env_variabes cli;
-    (* if --yes is given, OPAMCONFIRMLEVEL/NO is not taken into account *)
+    (* `--no` is not taken into account, only `--yes/--confirm-lzvel` are
+       preprocessed *)
     let yes = if yes then Some (Some true) else None in
-    OpamCoreConfig.init ?yes ();
+    OpamCoreConfig.init ?yes ?confirm_level ();
     OpamFormatConfig.init ();
     let root_dir = OpamStateConfig.opamroot () in
     let has_init, root_upgraded =
@@ -334,7 +381,7 @@ let rec main_catch_all f =
         (* workaround warning 52, this is a fallback (we already handle the
            signal) and there is no way around at the moment *)
         141
-      | InvalidCLI (Ok(cli, source)) ->
+      | InvalidCLI (cli, source) ->
         (* Unsupported CLI version *)
         let suffix =
           if source = `Env then
@@ -346,15 +393,23 @@ let rec main_catch_all f =
         OpamConsole.error "opam command-line version %s is not supported.%s"
           (OpamCLIVersion.to_string cli) suffix;
         OpamStd.Sys.get_exit_code `Bad_arguments
-      | InvalidCLI (Error None) ->
-        (* No CLI version given *)
-        display_cli_error "option `--cli' needs an argument";
+      | InvalidFlagContent (flag, None) ->
+        (* No argument given to flag *)
+        display_cli_error "option `--%s' needs an argument" flag;
         OpamStd.Sys.get_exit_code `Bad_arguments
-      | InvalidCLI (Error (Some invalid)) ->
-        (* Corrupt CLI version *)
+      | InvalidFlagContent (flag, Some (invalid, expected)) ->
+        (* Wrong argument kind given to flag *)
         display_cli_error
-          "option `--cli': invalid value `%s', expected major.minor"
-          invalid;
+          "option `--%s': invalid value `%s', expected %s"
+          flag invalid expected;
+        OpamStd.Sys.get_exit_code `Bad_arguments
+      | InvalidNewFlag ((req_cli, _), flag, flag_cli) ->
+        (* Requested cli is older than flag introduction *)
+        display_cli_error
+          "--%s was added in version %s of the opam CLI, \
+           but version %s has been requested, which is older."
+          flag (OpamCLIVersion.to_string flag_cli)
+          (OpamCLIVersion.to_string req_cli);
         OpamStd.Sys.get_exit_code `Bad_arguments
       | Failure msg ->
         OpamConsole.errmsg "Fatal error: %s\n" msg;
