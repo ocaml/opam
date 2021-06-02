@@ -82,6 +82,9 @@ New option/command/subcommand are prefixed with ◈.
   * Add E67 checksum specified with non archive url [#4635 @rjbou]
   * Disable subpath warning E63,W64 [#4638 @rjbou]
 
+## Repository
+  * When several checksume are specified, instead of creating add in the cache only the first checksum, add best one and link others [#XXX rjbou]
+
 ## Lock
   * Don't write lock file with `--read-only', `--safe`, and `--dryrun` [#4562 @rjbou - fix #4320]
   * Make consistent with `opam install`, on local pin always take last opam file even if uncomitted [#4562 @rjbou - fix #4320]
