@@ -1,4 +1,4 @@
-632bc2e
+N0REP0
 ### : UTILITARY SCRIPTS :
 ### <mkurl.sh>
 set -ue
@@ -11,7 +11,8 @@ CACHEDIR=REPO/cache/md5/$(echo $MD5 |head -c2)
 mkdir -p $CACHEDIR
 cp "packages/$ARCHIVE" "$CACHEDIR/$MD5"
 ### : INIT :
-### mkdir REPO
+### rm REPO/repo
+### rmdir REPO/packages
 ### opam repo add test REPO --set-default --yes
 "file://${BASEDIR}/REPO" doesn't contain a "packages" directory.
 Is it really the directory of your repo? [Y/n] y

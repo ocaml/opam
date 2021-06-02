@@ -4,6 +4,9 @@ let first_line ~path =
   close_in ic;
   s
 
+let null_hash= "N0REP0"
+let default_repo = "opam-repo-"^null_hash
+
 let diff_rule base_name =
   Format.sprintf
     {|
@@ -45,6 +48,17 @@ let archive_download_rule archive_hash =
  (action (run wget --quiet -O %%{targets} https://github.com/ocaml/opam-repository/archive/%s.tar.gz)))
 |} (tgz_name ~archive_hash) archive_hash
 
+let default_repo_rule =
+  Format.sprintf {|
+(rule
+ (targets %s)
+ (action
+  (progn
+   (run mkdir -p %%{targets}/packages)
+   (write-file repo "opam-version:\"2.0\"")
+   (run cp repo %%{targets}/repo))))
+|} default_repo
+
 (* XXX this fails if the directory already exists ?! *)
 let archive_unpack_rule archive_hash =
   Format.sprintf {|
@@ -77,20 +91,27 @@ let () =
     |> Array.to_list
     |> List.sort String.compare
   in
-  let archive_hashes = ref StringSet.empty in
-  let process filename =
+  let process archive_hashes filename =
     let base_name = OpamStd.String.remove_suffix ~suffix:".test" filename in
-    if base_name = filename then () else
+    if base_name = filename then archive_hashes else
       (print_string (diff_rule base_name);
        let archive_hash = first_line ~path:filename in
-       print_string (run_rule ~base_name ~archive_hash);
-       archive_hashes := StringSet.add archive_hash !archive_hashes)
+       if archive_hash = null_hash then
+         (print_string (run_rule ~base_name ~archive_hash:null_hash);
+          archive_hashes)
+       else
+         (print_string (run_rule ~base_name ~archive_hash);
+          StringSet.add archive_hash archive_hashes))
   in
-  List.iter process contents;
+  let archive_hashes =
+    List.fold_left process StringSet.empty contents
+  in
+  print_string default_repo_rule;
+  print_string (opam_init_rule null_hash);
   StringSet.iter
     (fun archive_hash ->
        print_string (archive_download_rule archive_hash);
        print_string (archive_unpack_rule archive_hash);
        print_string (opam_init_rule archive_hash)
     )
-    !archive_hashes
+    archive_hashes

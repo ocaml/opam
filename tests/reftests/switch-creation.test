@@ -1,22 +1,25 @@
-632bc2e
-### <sw-lock/repo>
+N0REP0
+### <REPO/repo>
 opam-version: "2.0"
-### <sw-lock/packages/foo/foo.1/opam>
+### <REPO/packages/foo/foo.1/opam>
 opam-version: "2.0"
 build: ["opam" "option" "jobs" "--safe" "--cli=2.1"]
 flags: compiler
-### <sw-lock/packages/bar/bar.1/opam>
+### <REPO/packages/bar/bar.1/opam>
 opam-version: "2.0"
 build: ["opam" "option" "jobs" "--safe" "--cli=2.1"]
-### <sw-lock/packages/baz/baz.1/opam>
+### <REPO/packages/baz/baz.1/opam>
 opam-version: "2.0"
 flags: compiler
 build: ["sh" "./prefix"]
 install: ["cp" "pref" "%{lib}%/prefix"]
-### <sw-lock/packages/baz/baz.1/files/prefix>
+### <REPO/packages/baz/baz.1/files/prefix>
 opam var prefix --safe > pref
-### opam repository add sw-lock ./sw-lock --set-default
-[sw-lock] Initialised
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### # switch not undefined for opam calls in build, on build creation
 ### opam switch create undef-prefix baz
 

@@ -1,16 +1,17 @@
-632bc2e
-### <cliv/repo>
-opam-version: "2.0"
-### <cliv/packages/baz/baz.1/opam>
+N0REP0
+### <REPO/packages/baz/baz.1/opam>
 opam-version: "2.0"
 flags: compiler
-### <cliv/packages/baz/baz.2/opam>
+### <REPO/packages/baz/baz.2/opam>
 opam-version: "2.0"
 flags: compiler
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam option depext=false
 Set to 'false' the field depext in global configuration
-### opam repository add cliv ./cliv --set-default
-[cliv] Initialised
 ### opam switch install cli-versioning --empty
 opam: install was removed in version 2.1 of the opam CLI, but version 2.1 has been requested. Use create instead or set OPAMCLI environment variable to 2.0.
 # Return code 2 #

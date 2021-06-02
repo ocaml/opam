@@ -11,8 +11,12 @@
 
 (* Simple CRAM-like test framework for opam tests.
    Features and format:
-   - first line is the git hash of the repository to use
-   - an opamroot is already initialised with that repo as "default"
+   - first line is
+     * the git hash of the opam repository to use, an opamroot is already
+       initialised with that repo as "default"
+     * or N0REP0 for no dependency on opam repository, and an opamroot is
+       already initialised with an empty `default` repository in `./REPO`
+       directory, that you need to populate and not forget to run `opam update`
    - 'opam' is automatically redirected to the correct binary
    - the command prefix is `### `
    - use `### <FILENAME>`, then the contents below to create a file verbatim
@@ -425,6 +429,11 @@ let run_test ?(vars=[]) ~opam t =
     ignore @@ command "cp" ["-a"; opamroot0; opamroot];
   Sys.chdir dir;
   let dir = Sys.getcwd () in (* because it may need to be normalised on OSX *)
+  if t.repo_hash = "N0REP0" then
+    (mkdir_p "REPO/packages";
+     write_file ~path:"REPO/repo" ~contents:{|opam-version: "2.0"|};
+     ignore @@ command opam ~silent:true
+       [ "repository"; "set-url"; "default"; "./REPO"; "--root"; opamroot]);
   ignore @@ command ~silent:true opam
     ["var"; "--quiet"; "--root"; opamroot; "--global"; "--cli=2.1";
      "sys-ocaml-version=4.08.0"];

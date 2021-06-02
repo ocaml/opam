@@ -1,4 +1,4 @@
-632bc2e
+N0REP0
 ### <cat.ml>
 #load "str.cma"
 
@@ -29,7 +29,7 @@ let changes = root / "inst" / ".opam-switch" / "install" / pkg ^ ".changes"
 let _ =
   cat (pkg ^" installed file") inst_file;
   cat (pkg^" changes") changes
-### <dotty/dot.opam>
+### <REPO/packages/dot/dot.~dev/opam>
 opam-version: "2.0"
 synopsis: "One-line description"
 description: """
@@ -42,11 +42,11 @@ homepage: " "
 bug-reports: " "
 dev-repo: "git://do.t"
 depends: "nodot"
-### <dotty/dot.install>
+### <REPO/packages/dot/dot.~dev/files/dot.install>
 share: [ "file" ]
-### <dotty/file>
+### <REPO/packages/dot/dot.~dev/files/file>
 hellow
-### <dotty/nodot.opam>
+### <REPO/packages/nodot/nodot.~dev/opam>
 opam-version: "2.0"
 synopsis: "One-line description"
 description: """
@@ -59,9 +59,11 @@ homepage: " "
 bug-reports: " "
 dev-repo: "git://nodo.t"
 install: [ "echo" "hellow" ]
-### <dotty/nodot.install>
+### <REPO/packages/nodot/nodot.~dev/files/nodot.install>
 share: [ "file" ]
-### <dotty/lot-of-files.opam>
+### <REPO/packages/nodot/nodot.~dev/files/file>
+hellow
+### <REPO/packages/lot-of-files/lot-of-files.~dev/opam>
 opam-version: "2.0"
 synopsis: "One-line description"
 description: """
@@ -75,41 +77,35 @@ bug-reports: " "
 dev-repo: "git://nodo.t"
 install: [ "echo" "hellow" ]
 substs: "lot-of-files.install"
-### <dotty/lot-of-files.install.in>
+### <REPO/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in>
 lib: [ "file" "fichier" "dosiero" ]
 bin: [ "fichier" ]
 etc: [ "dosiero" "file" ]
 share: [ "fichier" "dosiero" ]
 misc: [ "file" {"%{root}%/dosiero"} ]
-### <dotty/lot-of-files.config>
+### <REPO/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.config>
 opam-version: "2.0"
 variables { lot: true }
-### <dotty/fichier>
+### <REPO/packages/lot-of-files/lot-of-files.~dev/files/file>
+hellow
+### <REPO/packages/lot-of-files/lot-of-files.~dev/files/fichier>
 bonjour
-### <dotty/dosiero>
+### <REPO/packages/lot-of-files/lot-of-files.~dev/files/dosiero>
 saluton
 ### OPAMYES=1
 ### opam switch create inst --empty
-### opam pin ./dotty -n
-This will pin the following packages: dot, lot-of-files, nodot. Continue? [Y/n] y
-Package dot does not exist, create as a NEW package? [Y/n] y
-dot is now pinned to file://${BASEDIR}/dotty (version ~dev)
-Package lot-of-files does not exist, create as a NEW package? [Y/n] y
-lot-of-files is now pinned to file://${BASEDIR}/dotty (version ~dev)
-Package nodot does not exist, create as a NEW package? [Y/n] y
-nodot is now pinned to file://${BASEDIR}/dotty (version ~dev)
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMPRECISETRACKING=1 OPAMDEBUGSECTIONS="TRACK ACTION" OPAMDEBUG=-1
 ### opam install nodot
-
-<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
-[nodot.~dev] synchronised (no changes)
-
 The following actions will be performed:
-  - install nodot ~dev*
+  - install nodot ~dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ACTION                          download_package: nodot.~dev
--> retrieved nodot.~dev  (file://${BASEDIR}/dotty)
 ACTION                          prepare_package_source: nodot.~dev at ${BASEDIR}/OPAM/inst/.opam-switch/build/nodot.~dev
 ACTION                          Installing nodot.~dev.
 
@@ -128,16 +124,11 @@ added: [
   "share-nodot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
 ]
 ### opam install dot
-
-<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
-[dot.~dev] synchronised (no changes)
-
 The following actions will be performed:
-  - install dot ~dev*
+  - install dot ~dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ACTION                          download_package: dot.~dev
--> retrieved dot.~dev  (file://${BASEDIR}/dotty)
 ACTION                          prepare_package_source: dot.~dev at ${BASEDIR}/OPAM/inst/.opam-switch/build/dot.~dev
 ACTION                          Installing dot.~dev.
 
@@ -157,8 +148,10 @@ added: [
 ### OPAMDEBUGSECTIONS="SYSTEM FILE(.config)" OPAMDEBUG=-1
 ### : check install files ordering :
 ### opam install lot-of-files | grep "mkdir\|install\|FILE"
-  - install lot-of-files ~dev*
-SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/sources/lot-of-files
+  - install lot-of-files ~dev
+SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev
+SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          copy ${OPAMTMP}/default/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in -> ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/lot-of-files.install.in
 FILE(.config)                   Wrote ${BASEDIR}/OPAM/inst/.opam-switch/config/lot-of-files.config in 0.000s
 SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/fichier -> ${BASEDIR}/OPAM/inst/bin/fichier (755)
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/lib/lot-of-files
@@ -175,3 +168,5 @@ SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/
 SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/file -> ${BASEDIR}/OPAM/dosiero (644)
 -> installed lot-of-files.~dev
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev
+SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev/files
+SYSTEM                          copy ${OPAMTMP}/default/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in -> ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev/files/lot-of-files.install.in
