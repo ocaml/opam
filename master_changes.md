@@ -202,6 +202,8 @@ New option/command/subcommand are prefixed with ◈.
   * GHA: Bump bootstrap opam version to beta4 [#4695 @rjbou]
   * GHA: fix tilde expansion that was blockign opam bootstrap cache regeneration [#4695 @rjbou]
   * Dune files compatible with dune < 2.0 [#4702 @rjbou]
+  * Don't depend on opam repository for headles tests [#4697 @rjbou]
+  * Some reftests fixes: keep PATH variable, run `mkdir -p`, don't hang on incorrect `dune.inc` [#4697 @AltGr]
 
 ## Shell
   * Run the shell hooks with closed stdin (bash, zsh) [#4692 @AltGr]
