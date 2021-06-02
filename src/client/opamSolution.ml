@@ -952,7 +952,7 @@ let simulate_new_state state t =
 (* Ask confirmation whenever the packages to modify are not exactly
    the packages in the user request *)
 let confirmation ?ask requested solution =
-  OpamCoreConfig.is_answer_yes () ||
+  OpamCoreConfig.answer_is_yes () ||
   match ask with
   | Some false -> true
   | Some true -> OpamConsole.confirm "Do you want to continue?"
@@ -1092,7 +1092,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
          system packages altogether.\n";
       OpamStd.Sys.exit_because `Aborted
     in
-    if not OpamStd.Sys.tty_in || OpamCoreConfig.answer () <> `ask then
+    if not (OpamStd.Sys.tty_in && OpamCoreConfig.answer_is `ask) then
       give_up ()
     else if OpamConsole.confirm
         "%s\nWhen you are done: check again and continue?"

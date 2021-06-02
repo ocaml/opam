@@ -192,20 +192,19 @@ let initk k =
 
 let init ?noop:_ = initk (fun () -> ())
 
-let answer =
-  let answer = lazy (
-      match !r.confirm_level, !r.yes with
-      | #OpamStd.Config.answer as c, _ -> c
-      | _, Some true -> `all_yes
-      | _, Some false -> `all_no
-      | _ -> `ask
-  ) in
-  fun () -> Lazy.force answer
+let answer () =
+  match !r.confirm_level, !r.yes with
+  | #OpamStd.Config.answer as c, _ -> c
+  | _, Some true -> `all_yes
+  | _, Some false -> `all_no
+  | _ -> `ask
 
-let is_answer_yes () =
-  match answer () with
-  | `all_yes | `unsafe_yes -> true
-  | _ -> false
+let answer_is =
+  let answer = lazy (answer ()) in
+  fun a -> Lazy.force answer = a
+
+let answer_is_yes () =
+  answer_is `all_yes || answer_is `unsafe_yes
 
 #ifdef DEVELOPER
 let developer = true

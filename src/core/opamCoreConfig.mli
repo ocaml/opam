@@ -115,20 +115,22 @@ val init: ?noop:_ -> (unit -> unit) options_fun
     stacking *)
 val initk: 'a -> 'a options_fun
 
-(** Affects interactive questions in OpamConsole:
-    * ask: prompt and ask user
-    * no: answer no to all opam questions
-    * yes: answer yes to all opam questions
-    * unsafe-yes: answer yes to all opam question and launch system package
-                  command wit non interactive options
+(** Automatic answering levels
+    * [`ask]: prompt and ask user
+    * [`no]: answer no to all opam questions
+    * [`yes]: answer yes to all opam questions
+    * [`unsafe_yes]: answer yes to all opam question and launch system package
+                     command wit non interactive options
     If confirm-level is set (from cli or environment variable), its value is
     returned. Otherwise, is takes last yes/no cli flag. For environment
     variables, if [OPAMYES] is set to true, it has priority over [OPAMNO]. As
     other environment variables, cli flags content is taken if given.
-    *)
+    [answer_is] and [answer_is_yes] computes the answer lazily, use [answer] in
+    case of config update.
+*)
+val answer_is: OpamStd.Config.answer -> bool
+val answer_is_yes : unit -> bool
 val answer: unit -> OpamStd.Config.answer
-
-val is_answer_yes : unit -> bool
 
 (** [true] if OPAM was compiled in developer mode *)
 val developer : bool
