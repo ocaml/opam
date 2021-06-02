@@ -101,7 +101,6 @@ export OCAMLRUNPARAM=b
 export PATH=~/local/bin:$PATH
 
 if [ $OPAM_UPGRADE -eq 1 ]; then
-  OPAM12CACHE=`eval echo $OPAM12CACHE`
   OPAM12=$OPAM12CACHE/bin/opam
   if [[ ! -f $OPAM12 ]]; then
     mkdir -p $OPAM12CACHE/bin
