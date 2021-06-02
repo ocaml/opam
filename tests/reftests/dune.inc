@@ -299,7 +299,7 @@
 
 (rule
  (targets var-option.out)
- (deps root-009e00fa)
+ (deps root-N0REP0)
  (action
   (with-stdout-to
    %{targets}

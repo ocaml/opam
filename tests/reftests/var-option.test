@@ -1,4 +1,21 @@
-009e00fa
+N0REP0
+### <REPO/packages/i-got-the-variables/i-got-the-variables.2.4.6/opam>
+opam-version: "2.0"
+synopsis: "Official release"
+maintainer: "platform@lists.ocaml.org"
+depends: [ "base" ]
+available: !(os = "macos" & arch = "arm64")
+flags: compiler
+setenv: IGTV_PATH = "%{lib}%/stublibs"
+### <REPO/packages/base/base.1/opam>
+opam-version: "2.0"
+### <REPO/packages/base/base.2/opam>
+opam-version: "2.0"
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create var-option --empty
 ### opam var user= --switch var-option
 Removed variable user in switch var-option
@@ -32,23 +49,15 @@ Set to '[]' the field wrap-build-commands in global configuration
 Set to '[]' the field wrap-install-commands in global configuration
 ### opam option wrap-remove-commands=[] --global
 Set to '[]' the field wrap-remove-commands in global configuration
-### opam install ocaml-base-compiler.4.08.0 --fake --yes
-The following actions will be faked:
-  - install base-bigarray       base
-  - install ocaml-base-compiler 4.08.0
-  - install base-threads        base
-  - install base-unix           base
-  - install ocaml-config        1
-  - install ocaml               4.08.0
-===== 6 to install =====
+### opam install i-got-the-variables --yes
+The following actions will be performed:
+  - install base                2     [required by i-got-the-variables]
+  - install i-got-the-variables 2.4.6
+===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Faking installation of base-bigarray.base
-Faking installation of base-threads.base
-Faking installation of base-unix.base
-Faking installation of ocaml-base-compiler.4.08.0
-Faking installation of ocaml-config.1
-Faking installation of ocaml.4.08.0
+-> installed base.2
+-> installed i-got-the-variables.2.4.6
 Done.
 ### opam var | "   *" -> " " | "[.]exe " -> ""
 
@@ -150,25 +159,35 @@ switch-foo
 ### opam var foo --global
 global-foo
 ### opam var ocaml-base-compiler:version
-4.08.0
+[ERROR] Variable ocaml-base-compiler:version not found in in switch var-option
+# Return code 5 #
 ### opam var ocaml-base-compiler:version --switch var-option
-4.08.0
+[ERROR] Variable ocaml-base-compiler:version not found in in switch var-option
+# Return code 5 #
 ### opam var --package ocaml | ".*build-id.*" -> '\c' | ".*opamfile.*" -> '\c' | "   *" -> " "
-ocaml:name ocaml # Name of the package
-ocaml:version 4.08.0 # Version of the package
-ocaml:depends ocaml-base-compiler.4.08.0 ocaml-config.1 # Resolved direct dependencies of the package
-ocaml:installed true # Whether the package is installed
-ocaml:enable enable # Takes the value "enable" or "disable" depending on whether the package is installed
-ocaml:pinned false # Whether the package is pinned
-ocaml:bin ${BASEDIR}/OPAM/var-option/bin # Binary directory for this package
-ocaml:sbin ${BASEDIR}/OPAM/var-option/sbin # System binary directory for this package
-ocaml:lib ${BASEDIR}/OPAM/var-option/lib/ocaml # Library directory for this package
-ocaml:man ${BASEDIR}/OPAM/var-option/man # Man directory for this package
-ocaml:doc ${BASEDIR}/OPAM/var-option/doc/ocaml # Doc directory for this package
-ocaml:share ${BASEDIR}/OPAM/var-option/share/ocaml # Share directory for this package
-ocaml:etc ${BASEDIR}/OPAM/var-option/etc/ocaml # Etc directory for this package
-ocaml:build ${BASEDIR}/OPAM/var-option/.opam-switch/build/ocaml.4.08.0 # Directory where the package was built
-ocaml:dev false # True if this is a development package
+Fatal error:
+Not_found
+# Return code 99 #
+### opam var i-got-the-variables:version
+2.4.6
+### opam var i-got-the-variables:version --switch var-option
+2.4.6
+### opam var --package i-got-the-variables | ".*build-id.*" -> '\c' | ".*opamfile.*" -> '\c' | "   *" -> " "
+i-got-the-variables:name i-got-the-variables # Name of the package
+i-got-the-variables:version 2.4.6 # Version of the package
+i-got-the-variables:depends base.2 # Resolved direct dependencies of the package
+i-got-the-variables:installed true # Whether the package is installed
+i-got-the-variables:enable enable # Takes the value "enable" or "disable" depending on whether the package is installed
+i-got-the-variables:pinned false # Whether the package is pinned
+i-got-the-variables:bin ${BASEDIR}/OPAM/var-option/bin # Binary directory for this package
+i-got-the-variables:sbin ${BASEDIR}/OPAM/var-option/sbin # System binary directory for this package
+i-got-the-variables:lib ${BASEDIR}/OPAM/var-option/lib/i-got-the-variables # Library directory for this package
+i-got-the-variables:man ${BASEDIR}/OPAM/var-option/man # Man directory for this package
+i-got-the-variables:doc ${BASEDIR}/OPAM/var-option/doc/i-got-the-variables # Doc directory for this package
+i-got-the-variables:share ${BASEDIR}/OPAM/var-option/share/i-got-the-variables # Share directory for this package
+i-got-the-variables:etc ${BASEDIR}/OPAM/var-option/etc/i-got-the-variables # Etc directory for this package
+i-got-the-variables:build ${BASEDIR}/OPAM/var-option/.opam-switch/build/i-got-the-variables.2.4.6 # Directory where the package was built
+i-got-the-variables:dev false # True if this is a development package
 ### opam option
 
 <><> Global configuration <><><><><><><><><><><><><><><><><><><><><><><><><><><>
