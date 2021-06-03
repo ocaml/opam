@@ -247,7 +247,12 @@ let packages_status packages =
         if dont then (inst,avail) else
         if installed then pkg +++ inst, avail else inst, pkg +++ avail
       in
-      run_query_command "apk" ("policy"::(to_string_list packages))
+      to_string_list packages
+      |> List.map (fun s ->
+          match OpamStd.String.cut_at s '@' with
+          | Some (pkg, _repo) -> pkg
+          | None -> s)
+      |> (fun l -> run_query_command "apk" ("policy"::l))
       (* fst_version is here to do not add package while their informations
          parsing it not yet finished, or at least a minimum complete *)
       |> List.fold_left (fun (current, fst_version, installed, repo, instavail) l ->
