@@ -695,14 +695,15 @@ let header_error fmt =
     ) fmt
 
 
-let confirm ?(default=true) fmt =
+let confirm ?(require_unsafe_yes=false) ?(default=true) fmt =
   Printf.ksprintf (fun s ->
       try
         if OpamCoreConfig.(!r.safe_mode) then false else
         let prompt () =
           formatted_msg "%s [%s] " s (if default then "Y/n" else "y/N")
         in
-        if OpamCoreConfig.answer_is_yes () then
+        if (require_unsafe_yes && OpamCoreConfig.answer_is `unsafe_yes)
+        || (not require_unsafe_yes && OpamCoreConfig.answer_is_yes ()) then
           (prompt (); msg "y\n"; true)
         else if OpamCoreConfig.answer_is `all_no ||
                 OpamStd.Sys.(not tty_in)
