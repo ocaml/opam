@@ -1,8 +1,8 @@
 N0REP0
-### <REPO/packages/baz/baz.1/opam>
+### <pkg:baz.1>
 opam-version: "2.0"
 flags: compiler
-### <REPO/packages/baz/baz.2/opam>
+### <pkg:baz.2>
 opam-version: "2.0"
 flags: compiler
 ### opam update default

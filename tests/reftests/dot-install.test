@@ -29,38 +29,38 @@ let changes = root / "inst" / ".opam-switch" / "install" / pkg ^ ".changes"
 let _ =
   cat (pkg ^" installed file") inst_file;
   cat (pkg^" changes") changes
-### <REPO/packages/dot/dot.~dev/opam>
+### <pkg:dot.~dev>
 opam-version: "2.0"
 depends: "nodot"
-### <REPO/packages/dot/dot.~dev/files/dot.install>
+### <pkg:dot.~dev:dot.install>
 share: [ "file" ]
-### <REPO/packages/dot/dot.~dev/files/file>
+### <pkg:dot.~dev:file>
 hellow
-### <REPO/packages/nodot/nodot.~dev/opam>
+### <pkg:nodot.~dev>
 opam-version: "2.0"
 install: [ "echo" "hellow" ]
-### <REPO/packages/nodot/nodot.~dev/files/nodot.install>
+### <pkg:nodot.~dev:nodot.install>
 share: [ "file" ]
-### <REPO/packages/nodot/nodot.~dev/files/file>
+### <pkg:nodot.~dev:file>
 hellow
-### <REPO/packages/lot-of-files/lot-of-files.~dev/opam>
+### <pkg:lot-of-files.~dev>
 opam-version: "2.0"
 install: [ "echo" "hellow" ]
 substs: "lot-of-files.install"
-### <REPO/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in>
+### <pkg:lot-of-files.~dev:lot-of-files.install.in>
 lib: [ "file" "fichier" "dosiero" ]
 bin: [ "fichier" ]
 etc: [ "dosiero" "file" ]
 share: [ "fichier" "dosiero" ]
 misc: [ "file" {"%{root}%/dosiero"} ]
-### <REPO/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.config>
+### <pkg:lot-of-files.~dev:lot-of-files.config>
 opam-version: "2.0"
 variables { lot: true }
-### <REPO/packages/lot-of-files/lot-of-files.~dev/files/file>
+### <pkg:lot-of-files.~dev:file>
 hellow
-### <REPO/packages/lot-of-files/lot-of-files.~dev/files/fichier>
+### <pkg:lot-of-files.~dev:fichier>
 bonjour
-### <REPO/packages/lot-of-files/lot-of-files.~dev/files/dosiero>
+### <pkg:lot-of-files.~dev:dosiero>
 saluton
 ### OPAMYES=1
 ### opam switch create inst --empty

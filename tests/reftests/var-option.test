@@ -1,13 +1,13 @@
 N0REP0
-### <REPO/packages/i-got-the-variables/i-got-the-variables.2.4.6/opam>
+### <pkg:i-got-the-variables.2.4.6>
 opam-version: "2.0"
 depends: [ "base" ]
 available: !(os = "macos" & arch = "arm64")
 flags: compiler
 setenv: IGTV_PATH = "%{lib}%/stublibs"
-### <REPO/packages/base/base.1/opam>
+### <pkg:base.1>
 opam-version: "2.0"
-### <REPO/packages/base/base.2/opam>
+### <pkg:base.2>
 opam-version: "2.0"
 ### opam update
 

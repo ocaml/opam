@@ -1,17 +1,17 @@
 N0REP0
-### <REPO/packages/foo/foo.1/opam>
+### <pkg:foo.1>
 opam-version: "2.0"
 build: ["opam" "option" "jobs" "--safe" "--cli=2.1"]
 flags: compiler
-### <REPO/packages/bar/bar.1/opam>
+### <pkg:bar.1>
 opam-version: "2.0"
 build: ["opam" "option" "jobs" "--safe" "--cli=2.1"]
-### <REPO/packages/baz/baz.1/opam>
+### <pkg:baz.1>
 opam-version: "2.0"
 flags: compiler
 build: ["sh" "./prefix"]
 install: ["cp" "pref" "%{lib}%/prefix"]
-### <REPO/packages/baz/baz.1/files/prefix>
+### <pkg:baz.1:prefix>
 opam var prefix --safe > pref
 ### opam update
 
