@@ -1121,7 +1121,8 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
        sys_packages)
   else if OpamClientConfig.(!r.fake) then (print (); t)
   else if
-    not confirm || OpamConsole.confirm
+    not confirm
+    || OpamConsole.confirm ~require_unsafe_yes:true
       "Let opam run your package manager to install the required system \
        packages?\n(answer 'n' for other options)"
   then
