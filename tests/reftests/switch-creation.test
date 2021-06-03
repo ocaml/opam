@@ -1,6 +1,4 @@
 N0REP0
-### <REPO/repo>
-opam-version: "2.0"
 ### <REPO/packages/foo/foo.1/opam>
 opam-version: "2.0"
 build: ["opam" "option" "jobs" "--safe" "--cli=2.1"]

@@ -31,16 +31,6 @@ let _ =
   cat (pkg^" changes") changes
 ### <REPO/packages/dot/dot.~dev/opam>
 opam-version: "2.0"
-synopsis: "One-line description"
-description: """
-Longer description
-"""
-maintainer: "Name <email>"
-authors: "Name <email>"
-license: "MIT"
-homepage: " "
-bug-reports: " "
-dev-repo: "git://do.t"
 depends: "nodot"
 ### <REPO/packages/dot/dot.~dev/files/dot.install>
 share: [ "file" ]
@@ -48,16 +38,6 @@ share: [ "file" ]
 hellow
 ### <REPO/packages/nodot/nodot.~dev/opam>
 opam-version: "2.0"
-synopsis: "One-line description"
-description: """
-Longer description
-"""
-maintainer: "Name <email>"
-authors: "Name <email>"
-license: "MIT"
-homepage: " "
-bug-reports: " "
-dev-repo: "git://nodo.t"
 install: [ "echo" "hellow" ]
 ### <REPO/packages/nodot/nodot.~dev/files/nodot.install>
 share: [ "file" ]
@@ -65,16 +45,6 @@ share: [ "file" ]
 hellow
 ### <REPO/packages/lot-of-files/lot-of-files.~dev/opam>
 opam-version: "2.0"
-synopsis: "One-line description"
-description: """
-Longer description
-"""
-maintainer: "Name <email>"
-authors: "Name <email>"
-license: "MIT"
-homepage: " "
-bug-reports: " "
-dev-repo: "git://nodo.t"
 install: [ "echo" "hellow" ]
 substs: "lot-of-files.install"
 ### <REPO/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in>

@@ -1,8 +1,6 @@
 N0REP0
 ### <REPO/packages/i-got-the-variables/i-got-the-variables.2.4.6/opam>
 opam-version: "2.0"
-synopsis: "Official release"
-maintainer: "platform@lists.ocaml.org"
 depends: [ "base" ]
 available: !(os = "macos" & arch = "arm64")
 flags: compiler
