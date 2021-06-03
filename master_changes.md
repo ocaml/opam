@@ -107,6 +107,7 @@ New option/command/subcommand are prefixed with ◈.
   * Handling of packages of tagged repositories for alpine [#4700 @rjbou - fix #4670]
   * Clarify some `assume-depexts` related messages [#4671 @AltGr - partial fix #4662]
   * Warn the user if epel-release is missing and unavailable depexts are detected [#4679 @dra27 fix #4669]
+  * Ignore config yes automatic answering when asking confirmation to run install commands [#4698 @rjbou - fix #4680]
 
 ## Sandbox
   * Fix the conflict with the environment variable name used by dune [#4535 @smorimoto - fix ocaml/dune#4166]
