@@ -102,6 +102,7 @@ New option/command/subcommand are prefixed with ◈.
   * Improve messages to hint that answering `no` doesn't abort installation [@AltGr]
   * Improve messages to hint that answering `no` doesn't abort installation [#4591 @AltGr]
   * Add support for non-interactive mode in macports [#4676 @kit-ty-kate]
+  * Handling of packages of tagged repositories for alpine [#4700 @rjbou - fix #4670]
 
 ## Sandbox
   * Fix the conflict with the environment variable name used by dune [#4535 @smorimoto - fix ocaml/dune#4166]
