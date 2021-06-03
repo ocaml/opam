@@ -27,6 +27,7 @@ New option/command/subcommand are prefixed with ◈.
     `default-compiler` [#4607 @AltGr]
   * Fix default invariant with no system compiler [#4644 @AltGr - fix #4640]
   * Perform an hard upgrade on intermediate roots, ie root from `2.1~alpha/beta`, and keep a light upgrade from `2.0` [#4638 @rjbou]
+  * Send the 'opam root layout update' message to stderr [#4692 @AltGr]
   * If opam root is different from the binary, allow reading it and try to read in best effort mode  [#4638 @rjbou - fix #4636]
   * Don't check opam system dependencies on reinit after a format upgrade [#4638 @rjbou]
 
@@ -194,7 +195,7 @@ New option/command/subcommand are prefixed with ◈.
   * Add a test to test various case of opam root loading (several version, and several lock kinds) [#4638 @rjbou]
 
 ## Shell
-  *
+  * Run the shell hooks with closed stdin (bash, zsh) [#4692 @AltGr]
 
 ## Doc
   * Install page: add OSX arm64 [#4506 @eth-arm]

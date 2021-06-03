@@ -640,6 +640,7 @@ GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         Light config upgrade, from 2.0 to 2.1~rc
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version 2.1~rc, which can't be reverted.
 You may want to back it up before going further.
+
 Continue? [Y/n] y
 Format upgrade done.
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -686,6 +687,7 @@ GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         Hard config upgrade, from 2.1~alpha to 2.1~rc
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha to version 2.1~rc, which can't be reverted.
 You may want to back it up before going further.
+
 Perform the update and continue? [Y/n] y
 Format upgrade done.
 
@@ -775,6 +777,7 @@ FMT_UPG                         Downgrade config opam-version to fix up
 FMT_UPG                         Hard config upgrade, from 2.1~alpha2 to 2.1~rc
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha2 to version 2.1~rc, which can't be reverted.
 You may want to back it up before going further.
+
 Perform the update and continue? [Y/n] y
 Format upgrade done.
 

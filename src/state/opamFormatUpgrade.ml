@@ -1196,7 +1196,9 @@ let as_necessary requested_lock global_lock root config =
     (OpamVersion.to_string root_version)
     (OpamVersion.to_string latest_version);
   if not on_the_fly then
-    OpamConsole.formatted_msg
+    OpamConsole.errmsg "%s\n" @@
+    OpamStd.Format.reformat @@
+    Printf.sprintf
       "This %sversion of opam requires an update to the layout of %s \
        from version %s to version %s, which can't be reverted.\n\
        You may want to back it up before going further.\n"
