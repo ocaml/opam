@@ -96,17 +96,9 @@ let load_test f =
   close_in ic;
   { repo_hash; commands }
 
-let cleanup_path path =
-  try
-    let prefix = Sys.getenv "OPAM_SWITCH_PREFIX" in
-    OpamStd.Sys.split_path_variable path |>
-    List.filter (fun p -> not (OpamStd.String.starts_with ~prefix p)) |>
-    String.concat (String.make 1 OpamStd.Sys.path_sep)
-  with Not_found -> path
-
 let base_env =
   let propagate v = try [v, Sys.getenv v] with Not_found -> [] in
-  (try ["PATH", (Sys.getenv "PATH" |> cleanup_path)] with Not_found -> []) @
+  propagate "PATH" @
   propagate "HOME" @
   propagate "COMSPEC" @
   propagate "LIB" @
