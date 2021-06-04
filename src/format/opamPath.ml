@@ -33,9 +33,10 @@ let lock t = t // "lock"
 
 let config_lock t = t // "config.lock"
 
+(*
 let archives_dir t = t / "archives"
-
 let archive t nv = archives_dir t // (OpamPackage.to_string nv ^ "+opam.tar.gz")
+*)
 
 let repos_lock t = t / "repo" // "lock"
 
