@@ -150,11 +150,12 @@ let packages_status packages =
     in
     available, not_found
   in
+  let to_string_list pkgs =
+    OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) pkgs [])
+  in
   let names_re ?str_pkgs () =
     let str_pkgs =
-      OpamStd.Option.default
-        OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) packages [])
-        str_pkgs
+      OpamStd.Option.default (to_string_list packages) str_pkgs
     in
     let need_escape = Re.(compile (group (set "+."))) in
     Printf.sprintf "^(%s)$"
@@ -193,19 +194,90 @@ let packages_status packages =
   in
   match family () with
   | Alpine ->
-    let re_installed = Re.(compile (seq [str "[installed]"; eol])) in
-    let re_pkg =
-      (* packages form : libpeas-python3-1.22.0-r1 *)
-      Re.(compile @@ seq
-            [ bol;
-              group @@ rep1 @@ alt [alnum; punct];
-              char '-';
-              rep1 digit;
-              rep any ])
-    in
+    (* Output format
+       >capnproto policy:
+       >  0.8.0-r1:
+       >    lib/apk/db/installed
+       >    @edgecommunity https://dl-cdn.alpinelinux.org/alpine/edge/community
+       >at policy:
+       >  3.2.1-r1:
+       >    https://dl-cdn.alpinelinux.org/alpine/v3.13/community
+       >vim policy:
+       >  8.2.2320-r0:
+       >    lib/apk/db/installed
+       >    https://dl-cdn.alpinelinux.org/alpine/v3.13/main
+       >  8.2.2852-r0:
+       >    @edge https://dl-cdn.alpinelinux.org/alpine/edge/main
+       >hwids-udev policy:
+       >  20201207-r0:
+       >    https://dl-cdn.alpinelinux.org/alpine/v3.13/main
+       >    @edge https://dl-cdn.alpinelinux.org/alpine/v3.13/main
+       >    https://dl-cdn.alpinelinux.org/alpine/edge/main
+       >    @edge https://dl-cdn.alpinelinux.org/alpine/edge/main
+    *)
     let sys_installed, sys_available =
-      run_query_command "apk" ["list";"--available"]
-      |> with_regexp_dbl ~re_installed ~re_pkg
+      let pkg_name =
+        Re.(compile @@ seq
+              [ bol;
+                group @@ rep1 @@ alt [ alnum; punct ];
+                space;
+                str "policy:";
+                eol
+              ])
+      in
+      let is_installed =
+        Re.(compile @@ seq
+              [ bol;
+                repn space 4 (Some 4);
+                rep any;
+                str "installed";
+                eol
+              ])
+      in
+      let repo_name =
+        Re.(compile @@ seq
+              [ bol;
+                repn space 4 (Some 4);
+                char '@';
+                group @@ rep1 @@ alt [ alnum; punct ];
+                space
+              ])
+      in
+      let add_pkg dont pkg installed (inst,avail) =
+        if dont then (inst,avail) else
+        if installed then pkg +++ inst, avail else inst, pkg +++ avail
+      in
+      to_string_list packages
+      |> List.map (fun s ->
+          match OpamStd.String.cut_at s '@' with
+          | Some (pkg, _repo) -> pkg
+          | None -> s)
+      |> (fun l -> run_query_command "apk" ("policy"::l))
+      (* fst_version is here to do not add package while their informations
+         parsing it not yet finished, or at least a minimum complete *)
+      |> List.fold_left (fun (current, fst_version, installed, repo, instavail) l ->
+          try
+            let new_pkg = Re.(Group.get (exec pkg_name l) 1) in
+            let pkg = match repo with Some r -> current^"@"^r | None -> current in
+            let instavail = add_pkg fst_version pkg installed instavail in
+            new_pkg, true, false, None, instavail
+          with Not_found ->
+            if l.[2] != ' ' then (* only version in after two spaces *)
+              let pkg = match repo with Some r -> current^"@"^r | None -> current in
+              let instavail = add_pkg fst_version pkg installed instavail in
+              current, false, false, None, instavail
+            else
+            if Re.execp is_installed l then
+              current, fst_version, true, repo, instavail
+            else
+            try
+              let grs = Re.exec repo_name l in
+              let repo = Some (Re.Group.get grs 1) in
+              current, fst_version, installed, repo, instavail
+            with Not_found ->
+              current, fst_version, installed, repo, instavail)
+        ("", true, false, None, OpamSysPkg.Set.(empty, empty))
+      |> (fun (_,_,_,_, instavail) -> instavail)
     in
     compute_sets sys_installed ~sys_available
   | Arch ->
@@ -304,9 +376,7 @@ let packages_status packages =
             OpamSysPkg.Set.add cp set
         ) sys_provides packages
     in
-    let str_need_inst_check =
-      OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) need_inst_check [])
-    in
+    let str_need_inst_check = to_string_list need_inst_check in
     let sys_installed =
       (* ouput:
          >ii  uim-gtk3                 1:1.8.8-6.1  amd64    Universal ...
@@ -397,9 +467,7 @@ let packages_status packages =
           | None -> map, Set.add spkg set)
           packages (OpamStd.String.Map.empty, Set.empty))
     in
-    let str_pkgs =
-      OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) packages [])
-    in
+    let str_pkgs = to_string_list packages in
     let sys_installed =
       (* output:
          >  zlib @1.2.11_0 (active)
