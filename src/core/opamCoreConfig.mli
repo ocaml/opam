@@ -54,9 +54,10 @@ type t = private {
   disp_status_line: OpamStd.Config.when_;
   (** Controls on-line display of parallel commands being run, using ANSI
       escapes *)
-  answer : OpamStd.Config.answer;
-  (** Affects interactive questions in OpamConsole: auto-answer with the given
-      bool if Some *)
+  confirm_level : [ OpamStd.Config.answer | `undefined ];
+  yes: bool option;
+  (** Affects interactive questions in OpamConsole: used to compute the
+      automatic ansering level *)
   safe_mode : bool;
   (** Fail on writes or delays, don't ask questions (for quick queries, e.g.
       for shell completion) *)
@@ -85,7 +86,8 @@ type 'a options_fun =
   ?color:OpamStd.Config.when_ ->
   ?utf8:OpamStd.Config.when_ext ->
   ?disp_status_line:OpamStd.Config.when_ ->
-  ?answer:OpamStd.Config.answer ->
+  ?confirm_level:OpamStd.Config.answer ->
+  ?yes:bool option ->
   ?safe_mode:bool ->
   ?log_dir:string ->
   ?keep_log_dir:bool ->
@@ -113,7 +115,22 @@ val init: ?noop:_ -> (unit -> unit) options_fun
     stacking *)
 val initk: 'a -> 'a options_fun
 
-val is_answer_yes : unit -> bool
+(** Automatic answering levels
+    * [`ask]: prompt and ask user
+    * [`no]: answer no to all opam questions
+    * [`yes]: answer yes to all opam questions
+    * [`unsafe_yes]: answer yes to all opam question and launch system package
+                     command wit non interactive options
+    If confirm-level is set (from cli or environment variable), its value is
+    returned. Otherwise, is takes last yes/no cli flag. For environment
+    variables, if [OPAMYES] is set to true, it has priority over [OPAMNO]. As
+    other environment variables, cli flags content is taken if given.
+    [answer_is] and [answer_is_yes] computes the answer lazily, use [answer] in
+    case of config update.
+*)
+val answer_is: OpamStd.Config.answer -> bool
+val answer_is_yes : unit -> bool
+val answer: unit -> OpamStd.Config.answer
 
 (** [true] if OPAM was compiled in developer mode *)
 val developer : bool

@@ -18,6 +18,7 @@ New option/command/subcommand are prefixed with ◈.
     so that calls to `opam` during build access the correct root and switch [#4668 @LasseBlaauwbroek]
   * Add cli versioning for enums of flags with predefined enums [#4626 @rjbou]
   * ◈ Add `--confirm-level` and `OPAMCONFIRMLEVEL` [#4582 @rjbou - fix #4168]
+    * Take content of cli flags over environment variables, instead of already computed answer [#4691 @rjbou - fix #4682]
   * ◈ Add `--no` [#4582 @rjbou]
   * Initialise environment variables for plugins call/install [#4582 @rjbou]
   * `OPAMCONFIRMLEVEL` and `OPAMYES` now override "lower" CLI flags [#4683 @dra27 - fix #4682]
@@ -193,6 +194,8 @@ New option/command/subcommand are prefixed with ◈.
   * Add preserved format test [#4634 @rjbou]
   * Use the dev profile when testing [#4672 @dra27]
   * Add a test to test various case of opam root loading (several version, and several lock kinds) [#4638 @rjbou]
+  * GHA: Bump bootstrap opam version to beta4 [#4695 @rjbou]
+  * GHA: fix tilde expansion that was blockign opam bootstrap cache regeneration [#4695 @rjbou]
 
 ## Shell
   * Run the shell hooks with closed stdin (bash, zsh) [#4692 @AltGr]

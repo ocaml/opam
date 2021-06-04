@@ -728,7 +728,7 @@ let setup
         (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
         (OpamConsole.colorise `bold @@ source root shell (init_file shell))
         (OpamConsole.colorise `bold @@ shell_eval_invocation shell (opam_env_invocation ()));
-      if OpamCoreConfig.is_answer_yes () then begin
+      if OpamCoreConfig.answer_is_yes () then begin
         OpamConsole.warning "Shell not updated in non-interactive mode: use --shell-setup";
         None
       end else

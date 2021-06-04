@@ -143,7 +143,8 @@ type global_options = {
   quiet : bool;
   color : OpamStd.Config.when_ option;
   opt_switch : string option;
-  answer : (OpamStd.Config.answer * [`Level | `Yes | `No]) option;
+  confirm_level : OpamStd.Config.answer option;
+  yes: bool option;
   strict : bool;
   opt_root : dirname option;
   git_version : bool;

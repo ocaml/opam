@@ -433,7 +433,8 @@ type global_options = {
   quiet : bool;
   color : OpamStd.Config.when_ option;
   opt_switch : string option;
-  answer : (OpamStd.Config.answer * [`Level | `Yes | `No]) option;
+  confirm_level : OpamStd.Config.answer option;
+  yes: bool option;
   strict : bool;
   opt_root : dirname option;
   git_version : bool;
@@ -466,16 +467,12 @@ let create_global_options
   let debug_level = OpamStd.Option.Op.(
       debug_level >>+ fun () -> if debug then Some 1 else None
     ) in
-  let answer =
-    match List.rev confirm_level, List.rev yes with
-    | [], [] -> None
-    | [], true::_ -> Some (`all_yes, `Yes)
-    | [], false::_ -> Some (`all_no, `No)
-    | c::_ , _ -> Some (c, `Level)
-  in
+  let get_last l = match List.rev l with [] -> None | x::_ -> Some x in
+  let yes = get_last yes in
+  let confirm_level = get_last confirm_level in
   let verbose = List.length verbose in
   let cli = OpamCLIVersion.current in
-  { git_version; debug_level; verbose; quiet; color; opt_switch; answer;
+  { git_version; debug_level; verbose; quiet; color; opt_switch; confirm_level; yes;
     strict; opt_root; external_solver; use_internal_solver;
     cudf_file; solver_preferences; best_effort; safe_mode; json;
     no_auto_upgrade; working_dir; ignore_pin_depends; cli }
@@ -499,15 +496,8 @@ let apply_global_options cli o =
       o.external_solver >>| fun s -> lazy (OpamCudfSolver.solver_of_string s)
   in
   let solver_prefs = o.solver_preferences >>| fun p -> lazy (Some p) in
+  let yes = OpamStd.Option.(map some o.yes) in
   init_opam_env_variabes cli;
-  let answer =
-    match o.answer with
-    | Some (a, `Level) -> Some a
-    | Some _ when OpamCoreConfig.E.confirmlevel () <> None -> None
-    | Some (_, `No) when OpamCoreConfig.E.yes () <> None -> None
-    | Some (a, _) -> Some a
-    | None -> None
-  in
   OpamClientConfig.opam_init
     (* - format options - *)
     ?strict:(flag o.strict)
@@ -520,7 +510,8 @@ let apply_global_options cli o =
     ?color:o.color
     (* ?utf8:[ `Extended | `Always | `Never | `Auto ] *)
     (* ?disp_status_line:[ `Always | `Never | `Auto ] *)
-    ?answer
+    ?confirm_level:o.confirm_level
+    ?yes
     ?safe_mode:(flag o.safe_mode)
     (* ?lock_retries:int *)
     (* ?log_dir:OpamTypes.dirname *)
