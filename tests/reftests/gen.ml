@@ -30,12 +30,13 @@ let opamroot_directory ~archive_hash =
 let run_rule ~base_name ~archive_hash =
   Format.sprintf {|
 (rule
+ (targets %s)
  (deps %s)
  (action
   (with-stdout-to
-   %s.out
+   %%{targets}
    (run ./run.exe %%{bin:opam} %%{dep:%s.test} %%{read-lines:testing-env}))))
-|} (opamroot_directory ~archive_hash) base_name base_name
+|} (base_name^".out") (opamroot_directory ~archive_hash) base_name
 
 let archive_download_rule archive_hash =
    Format.sprintf {|
