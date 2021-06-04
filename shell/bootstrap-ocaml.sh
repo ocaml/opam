@@ -25,11 +25,16 @@ if [ ! -e ${V}.tar.gz ]; then
 fi
 
 ACTUALMD5=`openssl md5 ${V}.tar.gz  2> /dev/null | cut -f 2 -d ' '`
-if [ "$ACTUALMD5" != "$MD5" ]; then
-  echo "Bad checksum for ${V}.tar.gz:"
-  echo "- expected: $MD5"
-  echo "- actual:   $ACTUALMD5"
+if [ -z "$ACTUALMD5" ]; then
+  echo "Blank checksum returned; is `openssl` installed?"
   exit 2
+else
+  if [ "$ACTUALMD5" != "$MD5" ]; then
+    echo "Bad checksum for ${V}.tar.gz:"
+    echo "- expected: $MD5"
+    echo "- actual:   $ACTUALMD5"
+    exit 2
+  fi
 fi
 
 if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
