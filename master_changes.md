@@ -138,6 +138,8 @@ New option/command/subcommand are prefixed with ◈.
   * Fix opam-devel.install not to install two files called opam [#4664 @dra27]
   * Build release tags as non-dev versions, as for release tarballs [#4665 @dra27 - fix #4656]
   * Disable dev version for tests (needed for format upgrade test) [#4638 @rjbou]
+  * Add a hint for missing `openssl` in `make cold` [#4702 @rjbou]
+  * Remove test field from opam-devel, they need the network [#4702 @rjbou]
 
 ## Infrastructure
   * Release scripts: switch to OCaml 4.10.2 by default, add macos/arm64 builds by default [#4559 @AltGr]
@@ -199,6 +201,7 @@ New option/command/subcommand are prefixed with ◈.
   * Add a test to test various case of opam root loading (several version, and several lock kinds) [#4638 @rjbou]
   * GHA: Bump bootstrap opam version to beta4 [#4695 @rjbou]
   * GHA: fix tilde expansion that was blockign opam bootstrap cache regeneration [#4695 @rjbou]
+  * Dune files compatible with dune < 2.0 [#4702 @rjbou]
 
 ## Shell
   * Run the shell hooks with closed stdin (bash, zsh) [#4692 @AltGr]
@@ -209,3 +212,4 @@ New option/command/subcommand are prefixed with ◈.
   * Remove useless span tag in manual [#4513 @dannywillems]
   * Fix typo [#4637 @UnixJunkie]
   * Add some release docs [#4681 @rjbou]
+  * Fix distributions page link in install [#4702 @rjbou - fix #4693]
