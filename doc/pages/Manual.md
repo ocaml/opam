@@ -973,14 +973,18 @@ files.
   considered incompatible. This is useful to define sets of mutually conflicting
   packages.
 
-- <a id="opamfield-depexts">
-  `depexts: [ [ <string> ... ] { <filter> }  ... ]`</a>:
-  the package external dependencies. This field may be used to describe the
-  dependencies of the package toward software or packages external to the <span
-  class="opam">opam</span> ecosystem, for various systems. Each
-  `[ <string> ... ] { <filter> }` element declares the strings to the left as
-  identifiers to required system-managed packages, while the filter to the right
-  allows one to select the systems they will be active on.
+- <a id="opamfield-depexts"> `depexts: [ [ <string> ... ] { <filter> } ... ]`</a>:
+  the package external dependencies. This field is used to describe the
+  dependencies of the package toward packages external to the <span
+  class="opam">opam</span> ecosystem; <span class="opam">opam</span> will then
+  use its knowledge of the system package manager to determine the availability
+  of the package, and install these external dependencies on the system as
+  prerequisites of the package, asking the user for administrator rights if
+  required.
+
+    Each `[ <string> ... ] { <filter> }` element declares the strings to the
+    left as identifiers to required system-managed packages, while the filter to
+    the right allows one to select the systems they will be active on.
 
     The filters typically use variables [`arch`](#opamvar-arch),
     [`os`](#opamvar-os), [`os-distribution`](#opamvar-os-distribution),
