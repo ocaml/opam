@@ -150,9 +150,11 @@ let check_availability ?permissive t set atoms =
       Some
         (Printf.sprintf
            "Package %s depends on the unavailable system package%s. You \
-            can use `--no-depexts' to attempt installation anyway."
+            can use `--no-depexts' to attempt installation anyway.%s"
            (OpamFormula.short_string_of_atom atom)
-           msg)
+           msg
+           (OpamStd.Option.map_default (Printf.sprintf "\n%s.") ""
+              (OpamSysInteract.repo_enablers ())))
     | None -> None
   in
   let check_atom (name, cstr as atom) =

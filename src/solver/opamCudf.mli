@@ -203,6 +203,13 @@ val cycle_conflict:
   version_map:int package_map -> Cudf.universe ->
   string list list -> ('a, conflict) result
 
+type explanation =
+  [ `Conflict of string option * string list * bool
+  | `Missing of string option * string *
+                (OpamPackage.Name.t * OpamFormula.version_formula)
+                  OpamFormula.formula
+  ]
+
 (** Convert a conflict to something readable by the user. The second argument
     should return a string explaining the unavailability, or the empty string,
     when called on an unavailable package (the reason can't be known this deep
@@ -211,12 +218,24 @@ val string_of_conflicts:
   package_set -> (name * OpamFormula.version_formula -> string) -> conflict ->
   string
 
+val string_of_explanations:
+  (name * OpamFormula.version_formula -> string) ->
+  explanation list * string list list ->
+  string
+
 (** Returns two lists:
     - the reasons why the request can't be satisfied with conflict explanations
     - the cycles in the actions to process (exclusive with the first) *)
 val conflict_explanations:
   package_set -> (name * OpamFormula.version_formula -> string) -> conflict ->
   (string * string list * string list) list * string list
+
+val string_of_explanation:
+  (name * OpamFormula.version_formula -> string) -> explanation ->
+  string * string list * string list
+
+val conflict_explanations_raw:
+  package_set -> conflict -> explanation list * string list list
 
 (** Properly concat a single conflict as returned by [conflict_explanations] for
    display *)

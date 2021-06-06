@@ -232,6 +232,19 @@ val is_switch_globally_set: 'a switch_state -> bool
 (** Returns a message about a package or version that couldn't be found *)
 val not_found_message: 'a switch_state -> atom -> string
 
+val unavailable_reason_raw:
+  'a switch_state -> name * OpamFormula.version_formula ->
+  [ `UnknownVersion
+  | `UnknownPackage
+  | `NoDefinition
+  | `Pinned of OpamPackage.t
+  | `Unavailable of string
+  | `ConflictsBase
+  | `ConflictsInvariant of string
+  | `MissingDepexts of string list
+  | `Default
+  ]
+
 (** Returns a printable explanation why a package is not currently available
     (pinned to an incompatible version, unmet [available:] constraints...).
     [default] is returned if no reason why it wouldn't be available was found
