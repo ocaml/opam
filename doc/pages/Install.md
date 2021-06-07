@@ -56,7 +56,7 @@ sudo install <downloaded file> /usr/local/bin/opam
 ## Using your distribution's package system
 
 This is generally the recommended way, **when available and up-to-date** (you
-can check [here](https://github.com/ocaml/opam/wiki/Distributions) the latest
+can check [here](Distribution.html) the latest
 available release per distribution). Here is a list of supported distributions:
 
 #### Arch Linux
