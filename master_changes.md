@@ -164,7 +164,7 @@ New option/command/subcommand are prefixed with ◈.
   * Add a --with-0install-solver option to the configure script to enable the 'builtin-0install' solver [#4646 @kit-ty-kate]
 
 ## Client
-  * ✘ Environment variables initialised only at opam client launch, no more via libraries [#4606 @rjbou]
+  * ✘ Environment variables initialised only at opam client launch, no more via libraries [#4606 #4703 @rjbou]
 
 ## Internal
   * Generalise `mk_tristate_opt` to `mk_state_opt` [#4575 @rjbou]

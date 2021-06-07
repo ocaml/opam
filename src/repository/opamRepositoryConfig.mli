@@ -19,6 +19,9 @@ module E : sig
     | REQUIRECHECKSUMS of bool option
     | RETRIES of int option
     | VALIDATIONHOOK of string option
+
+  val curl: unit -> string option
+  val fetch: unit -> string option
 end
 
 (** Toggles parsing of the tool's output to detect errors

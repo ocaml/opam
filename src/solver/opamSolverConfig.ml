@@ -26,6 +26,7 @@ module E = struct
     | UPGRADECRITERIA of string option
     | USEINTERNALSOLVER of bool option
     | VERSIONLAGPOWER of int option
+    | Z3DEBUG of string option
 
   open OpamStd.Config.E
   let besteffort = value (function BESTEFFORT b -> b | _ -> None)
@@ -45,6 +46,7 @@ module E = struct
   let useinternalsolver = value (function USEINTERNALSOLVER b -> b | _ -> None)
   let upgradecriteria = value (function UPGRADECRITERIA s -> s | _ -> None)
   let versionlagpower = value (function VERSIONLAGPOWER i -> i | _ -> None)
+  let z3debug = value (function Z3DEBUG s -> s | _ -> None)
 
 end
 
