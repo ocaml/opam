@@ -28,7 +28,10 @@ module E : sig
     | UPGRADECRITERIA of string option
     | USEINTERNALSOLVER of bool option
     | VERSIONLAGPOWER of int option
-    val externalsolver: unit -> string option
+    | Z3DEBUG of string option
+
+  val externalsolver: unit -> string option
+  val z3debug: unit -> string option
 end
 
 type t = private {

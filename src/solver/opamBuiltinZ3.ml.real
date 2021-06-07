@@ -413,7 +413,7 @@ let call ~criteria ?timeout (preamble, universe, _ as cudf) =
     def_criteria ctx opt cudf psym (Syntax.criteria_of_string criteria)
   in
   log "Resolving...";
-  (match OpamStd.Env.getopt "Z3DEBUG" with
+  (match OpamSolverConfig.E.z3debug () with
    | None -> ()
    | Some f ->
      let debug = open_out (f^".smt2") in
