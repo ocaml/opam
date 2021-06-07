@@ -9,10 +9,11 @@
  (deps (alias reftest-cli-versioning)))
 
 (rule
+ (targets cli-versioning.out)
  (deps root-632bc2e)
  (action
   (with-stdout-to
-   cli-versioning.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:cli-versioning.test} %{read-lines:testing-env}))))
 
 (alias
@@ -25,10 +26,11 @@
  (deps (alias reftest-conflict-4373)))
 
 (rule
+ (targets conflict-4373.out)
  (deps root-c1d23f0e)
  (action
   (with-stdout-to
-   conflict-4373.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:conflict-4373.test} %{read-lines:testing-env}))))
 
 (alias
@@ -41,10 +43,11 @@
  (deps (alias reftest-conflict-badversion)))
 
 (rule
+ (targets conflict-badversion.out)
  (deps root-f372039d)
  (action
   (with-stdout-to
-   conflict-badversion.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:conflict-badversion.test} %{read-lines:testing-env}))))
 
 (alias
@@ -57,10 +60,11 @@
  (deps (alias reftest-conflict-camlp4)))
 
 (rule
+ (targets conflict-camlp4.out)
  (deps root-f372039d)
  (action
   (with-stdout-to
-   conflict-camlp4.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:conflict-camlp4.test} %{read-lines:testing-env}))))
 
 (alias
@@ -73,10 +77,11 @@
  (deps (alias reftest-conflict-core)))
 
 (rule
+ (targets conflict-core.out)
  (deps root-f372039d)
  (action
   (with-stdout-to
-   conflict-core.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:conflict-core.test} %{read-lines:testing-env}))))
 
 (alias
@@ -89,10 +94,11 @@
  (deps (alias reftest-conflict-solo5)))
 
 (rule
+ (targets conflict-solo5.out)
  (deps root-f372039d)
  (action
   (with-stdout-to
-   conflict-solo5.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:conflict-solo5.test} %{read-lines:testing-env}))))
 
 (alias
@@ -105,10 +111,11 @@
  (deps (alias reftest-cudf-preprocess)))
 
 (rule
+ (targets cudf-preprocess.out)
  (deps root-ad4dd344)
  (action
   (with-stdout-to
-   cudf-preprocess.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:cudf-preprocess.test} %{read-lines:testing-env}))))
 
 (alias
@@ -121,10 +128,11 @@
  (deps (alias reftest-dot-install)))
 
 (rule
+ (targets dot-install.out)
  (deps root-632bc2e)
  (action
   (with-stdout-to
-   dot-install.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:dot-install.test} %{read-lines:testing-env}))))
 
 (alias
@@ -137,10 +145,11 @@
  (deps (alias reftest-init)))
 
 (rule
+ (targets init.out)
  (deps root-009e00fa)
  (action
   (with-stdout-to
-   init.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:init.test} %{read-lines:testing-env}))))
 
 (alias
@@ -153,10 +162,11 @@
  (deps (alias reftest-install-pgocaml)))
 
 (rule
+ (targets install-pgocaml.out)
  (deps root-f372039d)
  (action
   (with-stdout-to
-   install-pgocaml.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:install-pgocaml.test} %{read-lines:testing-env}))))
 
 (alias
@@ -169,10 +179,11 @@
  (deps (alias reftest-legacy-git)))
 
 (rule
+ (targets legacy-git.out)
  (deps root-632bc2e)
  (action
   (with-stdout-to
-   legacy-git.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:legacy-git.test} %{read-lines:testing-env}))))
 
 (alias
@@ -185,10 +196,11 @@
  (deps (alias reftest-legacy-local)))
 
 (rule
+ (targets legacy-local.out)
  (deps root-632bc2e)
  (action
   (with-stdout-to
-   legacy-local.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:legacy-local.test} %{read-lines:testing-env}))))
 
 (alias
@@ -201,10 +213,11 @@
  (deps (alias reftest-opamroot-versions)))
 
 (rule
+ (targets opamroot-versions.out)
  (deps root-632bc2e)
  (action
   (with-stdout-to
-   opamroot-versions.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:opamroot-versions.test} %{read-lines:testing-env}))))
 
 (alias
@@ -217,10 +230,11 @@
  (deps (alias reftest-pat-sub)))
 
 (rule
+ (targets pat-sub.out)
  (deps root-632bc2e)
  (action
   (with-stdout-to
-   pat-sub.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:pat-sub.test} %{read-lines:testing-env}))))
 
 (alias
@@ -233,10 +247,11 @@
  (deps (alias reftest-show)))
 
 (rule
+ (targets show.out)
  (deps root-009e00fa)
  (action
   (with-stdout-to
-   show.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:show.test} %{read-lines:testing-env}))))
 
 (alias
@@ -249,10 +264,11 @@
  (deps (alias reftest-switch-creation)))
 
 (rule
+ (targets switch-creation.out)
  (deps root-632bc2e)
  (action
   (with-stdout-to
-   switch-creation.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:switch-creation.test} %{read-lines:testing-env}))))
 
 (alias
@@ -265,10 +281,11 @@
  (deps (alias reftest-upgrade-format)))
 
 (rule
+ (targets upgrade-format.out)
  (deps root-009e00fa)
  (action
   (with-stdout-to
-   upgrade-format.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:upgrade-format.test} %{read-lines:testing-env}))))
 
 (alias
@@ -281,10 +298,11 @@
  (deps (alias reftest-var-option)))
 
 (rule
+ (targets var-option.out)
  (deps root-009e00fa)
  (action
   (with-stdout-to
-   var-option.out
+   %{targets}
    (run ./run.exe %{bin:opam} %{dep:var-option.test} %{read-lines:testing-env}))))
 
 (rule

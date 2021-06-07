@@ -15,11 +15,12 @@
  (modules gen))
 
 (rule
+(target dune.inc.gen)
  (deps
   (glob_files *.test))
  (action
   (with-stdout-to
-   dune.inc.gen
+   %{target}
    (run ./gen.exe))))
 
 (alias
