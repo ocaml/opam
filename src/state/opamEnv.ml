@@ -369,7 +369,7 @@ let eval_string gt ?(set_opamswitch=false) switch =
     let opamroot_cur = OpamFilename.Dir.to_string gt.root in
     let opamroot_env =
       OpamStd.Option.Op.(
-        OpamStd.Env.getopt "OPAMROOT" +!
+        OpamStateConfig.E.root () +!
         OpamFilename.Dir.to_string OpamStateConfig.(default.root_dir)
       ) in
     if opamroot_cur <> opamroot_env then
@@ -384,7 +384,7 @@ let eval_string gt ?(set_opamswitch=false) switch =
       let sw_cur = OpamSwitch.to_string sw in
       let sw_env =
         OpamStd.Option.Op.(
-          OpamStd.Env.getopt "OPAMSWITCH" ++
+          OpamStateConfig.E.switch () ++
           (OpamStateConfig.get_current_switch_from_cwd gt.root >>|
             OpamSwitch.to_string) ++
           (OpamFile.Config.switch gt.config >>| OpamSwitch.to_string)
