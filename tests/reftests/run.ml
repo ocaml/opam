@@ -11,11 +11,19 @@
 
 (* Simple CRAM-like test framework for opam tests.
    Features and format:
-   - first line is the git hash of the repository to use
-   - an opamroot is already initialised with that repo as "default"
+   - first line is
+     * the git hash of the opam repository to use, an opamroot is already
+       initialised with that repo as "default"
+     * or N0REP0 for no dependency on opam repository, and an opamroot is
+       already initialised with an empty `default` repository in `./REPO`
+       directory, that you need to populate and not forget to run `opam update`
    - 'opam' is automatically redirected to the correct binary
    - the command prefix is `### `
    - use `### <FILENAME>`, then the contents below to create a file verbatim
+   - use `### <pkg:NAME.VERSION>`, then the contents of an opam file below to
+     add this package to `default` repository in `./REPO`
+   - use `### <pkg:NAME.VERSION:FILENAME>`, then the contents below to add this
+     file as a extra-file of the given package in the `default` repository
    - `### FOO=x BAR=y` to export variables for subsequent commands
    - shell-like command handling:
      * **NO pattern expansion, shell pipes, sequences or redirections**
@@ -43,6 +51,8 @@ type test = {
 }
 
 let cmd_prompt = "### "
+let no_opam_repo = "N0REP0"
+let default_repo = "REPO"
 
 let is_prefix pfx s =
   String.length s >= String.length pfx &&
@@ -86,17 +96,9 @@ let load_test f =
   close_in ic;
   { repo_hash; commands }
 
-let cleanup_path path =
-  try
-    let prefix = Sys.getenv "OPAM_SWITCH_PREFIX" in
-    OpamStd.Sys.split_path_variable path |>
-    List.filter (fun p -> not (OpamStd.String.starts_with ~prefix p)) |>
-    String.concat (String.make 1 OpamStd.Sys.path_sep)
-  with Not_found -> path
-
 let base_env =
   let propagate v = try [v, Sys.getenv v] with Not_found -> [] in
-  (try ["PATH", (Sys.getenv "PATH" |> cleanup_path)] with Not_found -> []) @
+  propagate "PATH" @
   propagate "HOME" @
   propagate "COMSPEC" @
   propagate "LIB" @
@@ -295,9 +297,33 @@ module Parse = struct
       rep space;
     ]
 
+  let re_package =
+    seq [
+      str "<pkg:";
+      group @@ seq [ alpha; rep1 @@ alt [ alnum; set "_-+" ]];
+      char '.';
+      group @@ rep1 @@ alt [ alnum; set "-_+.~" ];
+      opt @@ seq [ char ':' ; group @@ rep1 @@ alt [ alnum; set "-_+.~" ]];
+      char '>'
+    ]
+
   let command str =
     if str.[0] = '<' && str.[String.length str - 1] = '>' then
-      let f = String.sub str 1 (String.length str - 2) in
+      let f =
+        try
+          let grs = exec (compile re_package) str in
+          let name = Group.get grs 1 in
+          let version = Group.get grs 2 in
+          try
+            let files = Group.get grs 3 in
+            Printf.sprintf "%s/packages/%s/%s.%s/files/%s"
+              default_repo name name version files
+          with Not_found ->
+            Printf.sprintf "%s/packages/%s/%s.%s/opam"
+              default_repo name name version
+        with Not_found ->
+          String.sub str 1 (String.length str - 2)
+      in
       File_contents f
     else if str.[0] = ':' || str.[0] = '#' then
       Comment str
@@ -425,6 +451,12 @@ let run_test ?(vars=[]) ~opam t =
     ignore @@ command "cp" ["-a"; opamroot0; opamroot];
   Sys.chdir dir;
   let dir = Sys.getcwd () in (* because it may need to be normalised on OSX *)
+  if t.repo_hash = no_opam_repo then
+    (mkdir_p (default_repo^"/packages");
+     write_file ~path:(default_repo^"/repo") ~contents:{|opam-version: "2.0"|};
+     ignore @@ command opam ~silent:true
+       [ "repository"; "set-url"; "default"; "./"^default_repo;
+         "--root"; opamroot]);
   ignore @@ command ~silent:true opam
     ["var"; "--quiet"; "--root"; opamroot; "--global"; "--cli=2.1";
      "sys-ocaml-version=4.08.0"];

@@ -1,4 +1,4 @@
-632bc2e
+N0REP0
 ### : UTILITARY SCRIPTS :
 ### <git-init.sh>
 set -ue
@@ -23,7 +23,8 @@ CACHEDIR=REPO/cache/md5/$(echo $MD5 |head -c2)
 mkdir -p $CACHEDIR
 cp "packages/$ARCHIVE" "$CACHEDIR/$MD5"
 ### : INIT :
-### mkdir REPO
+### rm REPO/repo
+### rmdir REPO/packages
 ### sh git-init.sh REPO README
 OK
 ### opam repo add test REPO --set-default --yes

@@ -10,7 +10,7 @@
 
 (rule
  (targets cli-versioning.out)
- (deps root-632bc2e)
+ (deps root-N0REP0)
  (action
   (with-stdout-to
    %{targets}
@@ -129,7 +129,7 @@
 
 (rule
  (targets dot-install.out)
- (deps root-632bc2e)
+ (deps root-N0REP0)
  (action
   (with-stdout-to
    %{targets}
@@ -180,7 +180,7 @@
 
 (rule
  (targets legacy-git.out)
- (deps root-632bc2e)
+ (deps root-N0REP0)
  (action
   (with-stdout-to
    %{targets}
@@ -197,7 +197,7 @@
 
 (rule
  (targets legacy-local.out)
- (deps root-632bc2e)
+ (deps root-N0REP0)
  (action
   (with-stdout-to
    %{targets}
@@ -214,7 +214,7 @@
 
 (rule
  (targets opamroot-versions.out)
- (deps root-632bc2e)
+ (deps root-N0REP0)
  (action
   (with-stdout-to
    %{targets}
@@ -231,7 +231,7 @@
 
 (rule
  (targets pat-sub.out)
- (deps root-632bc2e)
+ (deps root-N0REP0)
  (action
   (with-stdout-to
    %{targets}
@@ -265,7 +265,7 @@
 
 (rule
  (targets switch-creation.out)
- (deps root-632bc2e)
+ (deps root-N0REP0)
  (action
   (with-stdout-to
    %{targets}
@@ -299,11 +299,28 @@
 
 (rule
  (targets var-option.out)
- (deps root-009e00fa)
+ (deps root-N0REP0)
  (action
   (with-stdout-to
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:var-option.test} %{read-lines:testing-env}))))
+
+(rule
+ (targets opam-repo-N0REP0)
+ (action
+  (progn
+   (run mkdir -p %{targets}/packages)
+   (write-file repo "opam-version:\"2.0\"")
+   (run cp repo %{targets}/repo))))
+
+(rule
+  (targets root-N0REP0)
+  (action
+   (progn
+    (ignore-stdout
+    (run %{bin:opam} init --root=%{targets}
+           --no-setup --bypass-checks --no-opamrc --bare
+           file://%{dep:opam-repo-N0REP0})))))
 
 (rule
  (targets opam-archive-009e00fa.tar.gz)
@@ -313,7 +330,7 @@
   (targets opam-repo-009e00fa)
   (action
    (progn
-    (run mkdir %{targets})
+    (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-009e00fa.tar.gz} --strip-components=1))))
 
 (rule
@@ -326,26 +343,6 @@
            file://%{dep:opam-repo-009e00fa})))))
 
 (rule
- (targets opam-archive-632bc2e.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/632bc2e.tar.gz)))
-
-(rule
-  (targets opam-repo-632bc2e)
-  (action
-   (progn
-    (run mkdir %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-632bc2e.tar.gz} --strip-components=1))))
-
-(rule
-  (targets root-632bc2e)
-  (action
-   (progn
-    (ignore-stdout
-    (run %{bin:opam} init --root=%{targets}
-           --no-setup --bypass-checks --no-opamrc --bare
-           file://%{dep:opam-repo-632bc2e})))))
-
-(rule
  (targets opam-archive-ad4dd344.tar.gz)
  (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/ad4dd344.tar.gz)))
 
@@ -353,7 +350,7 @@
   (targets opam-repo-ad4dd344)
   (action
    (progn
-    (run mkdir %{targets})
+    (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-ad4dd344.tar.gz} --strip-components=1))))
 
 (rule
@@ -373,7 +370,7 @@
   (targets opam-repo-c1d23f0e)
   (action
    (progn
-    (run mkdir %{targets})
+    (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-c1d23f0e.tar.gz} --strip-components=1))))
 
 (rule
@@ -393,7 +390,7 @@
   (targets opam-repo-f372039d)
   (action
    (progn
-    (run mkdir %{targets})
+    (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-f372039d.tar.gz} --strip-components=1))))
 
 (rule
