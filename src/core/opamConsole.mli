@@ -114,8 +114,14 @@ val status_line : ('a, unit, string, unit) format4 -> 'a
 val clear_status : unit -> unit
 
 (** Ask the user to press Y/y/N/n to continue (returns a boolean).
-    Defaults to true (yes) if unspecified *)
-val confirm: ?default:bool -> ('a, unit, string, bool) format4 -> 'a
+    Defaults to true (yes) if unspecified.
+    If [require_unsafe_yes] is true, it automatically answer yes to the
+    question if automatic answering is set to [`unsafe_yes] ; otherwise it will
+    prompt and wait user input if it is set [`all_yes] (interactive). Its
+    default is false. *)
+val confirm:
+  ?require_unsafe_yes:bool -> ?default:bool ->
+  ('a, unit, string, bool) format4 -> 'a
 
 (** Read some input from the user (returns a string option) *)
 val read: ('a, unit, string, string option) format4 -> 'a
