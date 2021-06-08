@@ -1309,7 +1309,7 @@ module OpamFormat = struct
     | []    -> ""
     | [a]   -> a
     | [a;b] -> Printf.sprintf "%s %s %s" a last b
-    | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
+    | h::t  -> Printf.sprintf "%s, %s" h (pretty_list ~last t)
 
   let as_aligned_table ?(width=OpamSys.terminal_columns ()) l =
     let itlen =
