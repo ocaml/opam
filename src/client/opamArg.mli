@@ -134,6 +134,9 @@ val arg_list: string -> string -> 'a Arg.converter -> 'a list Term.t
 (** Generic argument list builder *)
 val nonempty_arg_list: string -> string -> 'a Arg.converter -> 'a list Term.t
 
+(** Confirmation level enum *)
+val confirm_enum: (validity * string * OpamStd.Config.answer) list
+
 (** {3 Global options} *)
 
 (** Type for global options *)

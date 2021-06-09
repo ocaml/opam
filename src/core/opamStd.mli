@@ -267,6 +267,10 @@ module String : sig
   val remove_prefix: prefix:string -> string -> string
   val remove_suffix: suffix:string -> string -> string
 
+  (** [is_prefix_of from full str] returns true if [str] if a prefix of [full],
+      with at least [from] first characters *)
+  val is_prefix_of: from:int -> full:string -> string -> bool
+
   (** {4 Transformations} *)
 
   (** Cut a string at the first occurrence of the given char *)

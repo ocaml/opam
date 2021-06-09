@@ -22,6 +22,7 @@ New option/command/subcommand are prefixed with ◈.
   * ◈ Add `--no` [#4582 @rjbou]
   * Initialise environment variables for plugins call/install [#4582 @rjbou]
   * `OPAMCONFIRMLEVEL` and `OPAMYES` now override "lower" CLI flags [#4683 @dra27 - fix #4682]
+  * Preprocess `--confirm-level` for plugins calls/install [#4694 @rjbou]
 
 ## Init
   * Introduce a `default-invariant` config field, restore the 2.0 semantics for
@@ -183,6 +184,8 @@ New option/command/subcommand are prefixed with ◈.
   * Harden cygpath wrapper [#4625 @dra27]
   * Reset the plugin symlinks when the root is upgraded [#4641 @dra27 - partial fix for #4619]
   * Formalise opam dev version detection with `OpamVersion.is_dev_version` [#4665 @dra27]
+  * Add `OpamStd.String.is_prefix_of` [#4694 @rjbou @dra27]
+  * Fix `OpamStd.Format.pretty_list`: `last` argument dropped if list contains more than 2 elements [#4694 @rjbou]
 
 ## Test
   * Make the reference tests dune-friendly [#4376 @emillon]

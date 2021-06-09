@@ -659,6 +659,16 @@ module OpamString = struct
     in
     aux 0
 
+  let is_prefix_of ~from ~full s =
+    let length_s = String.length s in
+    let length_full = String.length full in
+    if from < 0 || from > length_full then
+      invalid_arg "is_prefix_of"
+    else
+      length_s <= length_full
+      && length_s > from
+      && String.sub full 0 length_s = s
+
 end
 
 type warning_printer =
@@ -1309,7 +1319,7 @@ module OpamFormat = struct
     | []    -> ""
     | [a]   -> a
     | [a;b] -> Printf.sprintf "%s %s %s" a last b
-    | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
+    | h::t  -> Printf.sprintf "%s, %s" h (pretty_list ~last t)
 
   let as_aligned_table ?(width=OpamSys.terminal_columns ()) l =
     let itlen =
