@@ -71,23 +71,19 @@ let is_confirm_level =
   OpamStd.String.is_prefix_of ~from:4 ~full:"--confirm-level"
 
 (* Pre-process argv processing the --yes, --confirm-level, and --cli. Returns
-   Some cli, if --cli was encountered, a boolean indicating if a valid --yes/-y
-   was encountered (it returns false if multiple flags were encountered) and
+   Some cli, if --cli was encountered, a boolean indicating if --yes/-y and
    the list of arguments to continue with processing. *)
-let rec preprocess_argv cli yes confirm args =
-  let is_valid_yes = function [_] -> true | _ -> false in
+let rec preprocess_argv cli yes_args confirm args =
+  let yes = yes_args <> [] in
   match args with
   | [] ->
-    (cli, is_valid_yes yes, confirm, yes)
+    (cli, yes, confirm, yes_args)
   | "--" :: _ ->
-    (cli, is_valid_yes yes, confirm, yes @ args)
+    (cli, yes, confirm, yes_args @ args)
   (* Note that because this is evaluated before a sub-command, all the
      prefixes of --yes are assumed to valid at all times. *)
   | ("-y" | "--y" | "--ye" | "--yes") as yes_opt :: args ->
-    if yes = [] then
-      preprocess_argv cli [yes_opt] confirm args
-    else
-      (cli, false, confirm, yes @ [yes_opt])
+    preprocess_argv cli [yes_opt] confirm args
   | ([c] | c :: "--" :: _) when is_confirm_level c ->
     raise_invalid_confirm_level None
   | confirm_level :: cl_arg :: args when is_confirm_level confirm_level ->
@@ -97,8 +93,8 @@ let rec preprocess_argv cli yes confirm args =
       | Some (_, _, a) -> a
       | None -> raise_invalid_confirm_level (Some cl_arg)
     in
-    preprocess_argv cli yes (Some answer) args
-  | "--cl" :: args -> preprocess_argv cli yes confirm ("--cli"::args)
+    preprocess_argv cli yes_args (Some answer) args
+  | "--cl" :: args -> preprocess_argv cli yes_args confirm ("--cli"::args)
   | ["--cli"] | "--cli" :: "--" :: _ -> raise_invalid_cli (Error None)
   | "--cli" :: arg :: args ->
     let version =
@@ -109,20 +105,20 @@ let rec preprocess_argv cli yes confirm args =
           raise_invalid_cli (Ok ocli)
       | _ -> raise_invalid_cli (Error (Some arg))
     in
-    preprocess_argv (Some version) yes confirm args
+    preprocess_argv (Some version) yes_args confirm args
   | arg :: rest ->
     match OpamStd.String.cut_at arg '=' with
     | Some ("--cl", value)
     | Some ("--cli", value) ->
-      preprocess_argv cli yes confirm ("--cli"::value::rest)
+      preprocess_argv cli yes_args confirm ("--cli"::value::rest)
     | Some (pre, value) when is_confirm_level pre ->
-      preprocess_argv cli yes confirm ("--confirm-level"::value::rest)
+      preprocess_argv cli yes_args confirm ("--confirm-level"::value::rest)
     | _ ->
       if OpamCommands.is_builtin_command arg then
         let (cli, rest) = filter_cli_arg cli [] rest in
-        (cli, is_valid_yes yes, confirm, arg :: (yes @ rest))
+        (cli, yes, confirm, arg :: (yes_args @ rest))
       else
-        (cli, is_valid_yes yes, confirm, args)
+        (cli, yes, confirm, args)
 
 (* Handle git-like plugins *)
 let check_and_run_external_commands () =
