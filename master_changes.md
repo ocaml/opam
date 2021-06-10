@@ -142,6 +142,7 @@ New option/command/subcommand are prefixed with ◈.
   * Disable dev version for tests (needed for format upgrade test) [#4638 @rjbou]
   * Add a hint for missing `openssl` in `make cold` [#4702 @rjbou]
   * Remove test field from opam-devel, they need the network [#4702 @rjbou]
+  * Update src_ext for Dune and MCCS [#4704 @dra27]
 
 ## Infrastructure
   * Release scripts: switch to OCaml 4.10.2 by default, add macos/arm64 builds by default [#4559 @AltGr]
