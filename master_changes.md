@@ -220,3 +220,6 @@ New option/command/subcommand are prefixed with ◈.
   * Fix typo [#4637 @UnixJunkie]
   * Add some release docs [#4681 @rjbou]
   * Fix distributions page link in install [#4702 @rjbou - fix #4693]
+
+## Security fixes
+  * Add missing shell quoting to support space and special shell characters in switch directory path [#4707 @kit-ty-kate]
