@@ -23,6 +23,7 @@ New option/command/subcommand are prefixed with ◈.
   * Initialise environment variables for plugins call/install [#4582 @rjbou]
   * `OPAMCONFIRMLEVEL` and `OPAMYES` now override "lower" CLI flags [#4683 @dra27 - fix #4682]
   * Preprocess `--confirm-level` for plugins calls/install [#4694 @rjbou]
+  * Expect plugins to end in .exe on Windows [#4709 @dra27]
 
 ## Init
   * Introduce a `default-invariant` config field, restore the 2.0 semantics for
