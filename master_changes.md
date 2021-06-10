@@ -82,6 +82,7 @@ New option/command/subcommand are prefixed with ◈.
   * Fix W59 & E60 with VCS urls, don't check upstream if url has VCS backend [#4635 @rjbou]
   * Add E67 checksum specified with non archive url [#4635 @rjbou]
   * Disable subpath warning E63,W64 [#4638 @rjbou]
+  * Fix manpage listing [#4708 @rjbou]
 
 ## Lock
   * Don't write lock file with `--read-only', `--safe`, and `--dryrun` [#4562 @rjbou - fix #4320]
