@@ -283,11 +283,12 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
       (OpamFile.OPAM.format_errors t)
   in
   let cond num level msg ?detail cd =
-    if cd || all then
+    if all then Some (num, level, msg)
+    else if cd then
       let msg = match detail with
+        | None | Some [] -> msg
         | Some d ->
           Printf.sprintf "%s: \"%s\"" msg (String.concat "\", \"" d)
-        | None -> msg
       in
       Some (num, level, msg)
     else None
@@ -735,7 +736,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
              Some ("Source not found: "^src)
      in
      cond 60 `Error "Upstream check failed"
-       ~detail:[OpamStd.Option.default "" upstream_error]
+       ~detail:(OpamStd.Option.to_list upstream_error)
        (upstream_error <> None));
     (let with_test =
        List.exists ((=) (OpamVariable.Full.of_string "with-test"))
@@ -800,7 +801,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        ~detail:(List.map (fun u -> u.OpamUrl.path) relative)
        (relative <> []));
     (let maybe_bool =
-      (* Regexp from [OpamFilter.string_interp_regexp] *)
+       (* Regexp from [OpamFilter.string_interp_regexp] *)
        let re =
          let open Re in
          let notclose =
@@ -856,13 +857,13 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        (not_bool_strings <> []));
     cond 67 `Error
       "Checksum specified with a non archive url"
-      ~detail:OpamStd.Option.Op.([
-          Printf.sprintf "%s - %s"
-            ((t.url >>| OpamFile.URL.url >>| OpamUrl.to_string) +! "")
-            ((t.url >>| OpamFile.URL.checksum
-              >>| List.map OpamHash.to_string
-              >>| OpamStd.Format.pretty_list)
-             +! "")])
+      ?detail:(OpamStd.Option.map (fun url ->
+          [Printf.sprintf "%s - %s"
+             (OpamFile.URL.url url |> OpamUrl.to_string)
+             (OpamFile.URL.checksum url
+              |> List.map OpamHash.to_string
+              |> OpamStd.Format.pretty_list)])
+          t.url)
       (match t.url with
        | None -> false
        | Some urlf ->
