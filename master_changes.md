@@ -32,6 +32,7 @@ New option/command/subcommand are prefixed with ◈.
   * Send the 'opam root layout update' message to stderr [#4692 @AltGr]
   * If opam root is different from the binary, allow reading it and try to read in best effort mode  [#4638 @rjbou - fix #4636]
   * Don't check opam system dependencies on reinit after a format upgrade [#4638 @rjbou]
+  * Fix sys-ocaml-cc, sys-ocaml-arch and sys-ocaml-libc when no system compiler installed [#4706 @dra27]
 
 ## Config report
   * Fix `Not_found` (config file) error [#4570 @rjbou]
