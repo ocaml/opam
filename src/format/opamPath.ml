@@ -67,7 +67,7 @@ let plugins t = t / "plugins"
 let plugins_bin t = plugins t / "bin"
 
 let plugin_bin t name =
-  let sname = OpamPackage.Name.to_string name in
+  let sname = OpamPackage.Name.to_string name ^ OpamStd.Sys.executable_name "" in
   let basename =
     if OpamStd.String.starts_with ~prefix:plugin_prefix sname then sname
     else plugin_prefix ^ sname
