@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2.1.0~beta4"
+version: "2.1.0~rc"
 synopsis: "Meta-package for Dune"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
