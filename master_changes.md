@@ -45,6 +45,9 @@ New option/command/subcommand are prefixed with ◈.
 ## Lint
   *
 
+## Repository
+  * When several checksume are specified, instead of creating add in the cache only the first checksum, add best one and link others [#XXX rjbou]
+
 ## Lock
   *
 

@@ -32,6 +32,8 @@ val of_string_opt: string -> t option
     "md5/d4/d41d8cd98f00b204e9800998ecf8427e", as a list *)
 val to_path: t -> string list
 
+val compare_hash_kind: t -> t -> int
+
 val check_file: string -> t -> bool
 
 (** Like [check_file], but returns the actual mismatching hash of the file, or

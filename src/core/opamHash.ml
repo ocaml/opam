@@ -87,6 +87,9 @@ let of_json = function
 let to_path (kind,s) =
   [string_of_kind kind; String.sub s 0 2; s]
 
+let compare_hash_kind (_,s) (_,s') =
+  compare (String.length s) (String.length s')
+
 let compute ?(kind=default_kind) file = match kind with
   | `MD5 -> md5 (Digest.to_hex (Digest.file file))
   | (`SHA256 | `SHA512) as kind ->
