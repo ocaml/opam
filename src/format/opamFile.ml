@@ -1627,6 +1627,18 @@ module Switch_config = struct
   include Switch_configSyntax
   include SyntaxFile(Switch_configSyntax)
   module BestEffort = MakeBestEffort(Switch_configSyntax)
+
+  let raw_opam_version f =
+    try
+      let opamfile = OpamParser.file (OpamFilename.to_string (filename f)) in
+      Some (OpamStd.List.find_map (function
+          | Variable (_, "opam-version", String (_, version)) ->
+            Some (OpamVersion.of_string version)
+          | _ -> None)
+          opamfile.file_contents)
+    with
+    | Sys_error _ | Not_found -> None
+
 end
 
 module SwitchSelectionsSyntax = struct

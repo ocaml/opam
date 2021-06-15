@@ -903,6 +903,9 @@ module Switch_config: sig
   include IO_FILE with type t := t
 
   module BestEffort: BestEffortRead with type t := t
+
+  (** Raw read the switch config file to extract [opam-version] field value. *)
+  val raw_opam_version: 'a typed_file -> OpamVersion.t option
 end
 
 (** Pinned package files (only used for migration from 1.2, the inclusive State
