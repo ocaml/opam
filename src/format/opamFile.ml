@@ -1020,7 +1020,7 @@ module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
     | {file_contents = [{pelem = Variable({pelem = "opam-version"; _}, {pelem = String ver; _}); _ };
                         {pelem = Section {section_kind = {pelem = "#"; _}; _}; pos}]; _}
       when OpamVersion.(compare (nopatch (of_string ver)) (nopatch X.format_version)) <= 0 ->
-        raise (OpamPp.Bad_format (Some pos, "Parse error"))
+        raise (OpamPp.Bad_version (Some pos, "Parse error"))
     | opamfile -> opamfile
 
     let of_channel filename (ic:in_channel) =

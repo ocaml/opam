@@ -295,13 +295,15 @@ let resolve_local_switch root s =
   else s
 
 let get_current_switch_from_cwd root =
-  let open OpamStd.Option.Op in
-  OpamFilename.find_in_parents (fun dir ->
-      OpamSwitch.of_string (OpamFilename.Dir.to_string dir) |>
-      local_switch_exists root)
-    (OpamFilename.cwd ())
-  >>| OpamSwitch.of_dirname
-  >>| resolve_local_switch root
+  try
+    let open OpamStd.Option.Op in
+    OpamFilename.find_in_parents (fun dir ->
+        OpamSwitch.of_string (OpamFilename.Dir.to_string dir) |>
+        local_switch_exists root)
+      (OpamFilename.cwd ())
+    >>| OpamSwitch.of_dirname
+    >>| resolve_local_switch root
+  with OpamPp.Bad_version _ -> None
 
 (* do we want `load_defaults` to fail / run a format upgrade ? *)
 let load_defaults ?lock_kind root_dir =
