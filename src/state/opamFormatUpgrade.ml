@@ -1054,7 +1054,7 @@ let v2_1_alpha2 = OpamVersion.of_string "2.1~alpha2"
 (* config & sw config downgrade opam-version to 2.0 and add opam root version *)
 let v2_1_rc = OpamVersion.of_string "2.1~rc"
 
-let _v2_1 = OpamVersion.of_string "2.1"
+let v2_1 = OpamVersion.of_string "2.1"
 
 let from_2_0_to_2_1_alpha _ conf = conf
 
@@ -1094,7 +1094,9 @@ let from_2_1_alpha2_to_v2_1_rc root conf =
   downgrade_2_1_switches root conf;
   conf
 
-let from_2_0_to_v2_1_rc _ conf = conf
+let from_2_1_rc_to_v2_1 _ conf = conf
+
+let from_2_0_to_v2_1 _ conf = conf
 
 let latest_version = OpamFile.Config.root_version
 
@@ -1102,7 +1104,7 @@ let latest_hard_upgrade = (* to *) v2_0_beta5
 
 (* intermediates roots that need an hard upgrade *)
 let intermediate_roots = [
-  v2_1_alpha; v2_1_alpha2
+  v2_1_alpha; v2_1_alpha2; v2_1_rc
 ]
 
 let remove_missing_switches root conf =
@@ -1133,14 +1135,24 @@ let as_necessary requested_lock global_lock root config =
   let cmp = OpamVersion.(compare OpamFile.Config.root_version root_version) in
   if cmp <= 0 then config (* newer or same *) else
   let is_intermdiate_root = List.mem root_version intermediate_roots in
+  let keep_needed_upgrades =
+    List.filter (fun (v,_) -> OpamVersion.compare root_version v < 0)
+  in
   (* to generalise *)
-  let intermediates = [
-    v2_1_alpha,  from_2_0_to_2_1_alpha;
-    v2_1_alpha2, from_2_1_alpha_to_2_1_alpha2;
-    v2_1_rc,     from_2_1_alpha2_to_v2_1_rc;
-  ] in
+  let intermediates =
+    let hard = [
+      v2_1_alpha,  from_2_0_to_2_1_alpha;
+      v2_1_alpha2, from_2_1_alpha_to_2_1_alpha2;
+      v2_1_rc,     from_2_1_alpha2_to_v2_1_rc;
+    ] in
+    let light = [
+      v2_1,        from_2_1_rc_to_v2_1;
+    ] in
+    keep_needed_upgrades hard,
+    light
+  in
   let hard_upg, light_upg =
-    if is_intermdiate_root then intermediates, [] else
+    if is_intermdiate_root then intermediates else
       [
         v1_1,        from_1_0_to_1_1;
         v1_2,        from_1_1_to_1_2;
@@ -1154,9 +1166,9 @@ let as_necessary requested_lock global_lock root config =
         v2_0_beta,   from_2_0_alpha3_to_2_0_beta;
         v2_0_beta5,  from_2_0_beta_to_2_0_beta5;
         v2_0,        from_2_0_beta5_to_2_0;
-        v2_1_rc,     from_2_0_to_v2_1_rc;
+        v2_1,        from_2_0_to_v2_1;
       ]
-      |> List.filter (fun (v,_) -> OpamVersion.compare root_version v < 0)
+      |> keep_needed_upgrades
       |> List.partition (fun (v,_) ->
           OpamVersion.compare v latest_hard_upgrade <= 0)
   in
@@ -1270,7 +1282,7 @@ let hard_upgrade_from_2_1_intermediates ?global_lock root =
   let opam_root_version = OpamFile.Config.raw_root_version config_f in
   match opam_root_version with
   | Some v when OpamVersion.compare v v2_0 <= 0
-             || OpamVersion.compare v2_1_rc v <= 0 ->
+             || OpamVersion.compare v2_1 v <= 0 ->
     () (* do nothing, need to reraise parsing exception *)
   | _ ->
     log "Intermediate opam root detected%s, launch hard upgrade"
