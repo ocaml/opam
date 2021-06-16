@@ -1211,6 +1211,7 @@ let as_necessary requested_lock global_lock root config =
             | _ -> "they no longer exist");
          config
   in
+  if hard_upg = [] && light_upg = [] then config (* no upgrade to do *) else
   let is_dev = OpamVersion.is_dev_version () in
   log "%s config upgrade, from %s to %s"
     (if on_the_fly then "On-the-fly" else
