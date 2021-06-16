@@ -4,7 +4,12 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
 2.1.0~rc2:
-  * Remove OPAMZ3DEBUG evironment variable [#4720 @rjbou - fix #4718]
+* Remove OPAMZ3DEBUG evironment variable [#4720 @rjbou - fix #4717]
+* Fix format upgrade when there is missing local switches in the config file
+  [#4715 @rjbou - fix #4713]
+* Fix not recorded local switch handling, with format upgrade [#4715 @rjbou]
+* Set opam root version to 2.1 [#4715 @rjbou]
+* Improved and extended tests [#4715 @rjbou]
 
 2.1.0~rc:
 * (*) Environment variables initialised only at opam client launch, no more via
