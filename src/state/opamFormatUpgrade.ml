@@ -1059,40 +1059,18 @@ let v2_1 = OpamVersion.of_string "2.1"
 let from_2_0_to_2_1_alpha _ conf = conf
 
 let downgrade_2_1_switches root conf =
-  let downgrade f =
-    let filename = OpamFile.filename f in
-    let str_f = OpamFilename.to_string filename in
-    let opamfile = OpamParser.FullPos.file str_f in
-    let opamfile' =
-      let open OpamParserTypes.FullPos in
-      { opamfile with
-        file_contents =
-          List.map (fun item ->
-              match item.pelem with
-              | Variable (({pelem = "opam-version"; _} as opam_v),
-                          ({pelem = String "2.1"; _} as v)) ->
-                { item with
-                  pelem = Variable ({opam_v with pelem = "opam-version"},
-                                    {v with pelem = String "2.0"})}
-              | _ -> item) opamfile.file_contents}
-    in
-    let updated = opamfile' <> opamfile in
-    if updated then
-      OpamFilename.write filename (OpamPrinter.FullPos.opamfile opamfile')
-  in
   List.iter (fun switch ->
       let f = OpamPath.Switch.switch_config root switch in
-      downgrade f;
-      ignore @@ OpamFile.Switch_config.BestEffort.read f)
-    (OpamFile.Config.installed_switches conf)
+      OpamStd.Option.iter (OpamFile.Switch_config.write f)
+        (OpamStateConfig.downgrade_2_1_switch f))
+    (OpamFile.Config.installed_switches conf);
+  conf
 
 let from_2_1_alpha_to_2_1_alpha2 root conf =
-  downgrade_2_1_switches root conf;
-  conf
+  downgrade_2_1_switches root conf
 
 let from_2_1_alpha2_to_v2_1_rc root conf =
-  downgrade_2_1_switches root conf;
-  conf
+  downgrade_2_1_switches root conf
 
 let from_2_1_rc_to_v2_1 _ conf = conf
 
