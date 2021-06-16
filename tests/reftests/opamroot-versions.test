@@ -497,10 +497,11 @@ let opam_version = Printf.sprintf "opam-version: %S"
 let opam_version_2_0 = opam_version "2.0"
 let opam_version_2_1 = opam_version "2.1"
 let repo = {|repositories: "default"|}
-let installed_switches = {|
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+let installed_switches =
+Format.sprintf {|
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "%s%swhy-did-you-delete-me" "this-internal-error"]
 switch: "sw-sys-comp"
-|}
+|} (Sys.getcwd ()) Filename.dir_sep
 let default_compiler = {|default-compiler: ["i-am-sys-compiler" "i-am-compiler"]|}
 let default_invariant = {|default-invariant: ["i-am-sys-compiler"]|}
 let depext = {|
@@ -637,6 +638,7 @@ Done.
 ### # rw global state
 ### opam switch sw-comp
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Light config upgrade, from 2.0 to 2.1~rc
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version 2.1~rc, which can't be reverted.
 You may want to back it up before going further.
@@ -684,6 +686,7 @@ installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 ### sh switch-root.sh 2.1~alpha
 ### opam list
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Hard config upgrade, from 2.1~alpha to 2.1~rc
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha to version 2.1~rc, which can't be reverted.
 You may want to back it up before going further.
@@ -774,6 +777,7 @@ installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         Intermediate opam root detected, launch hard upgrade
 FMT_UPG                         Downgrade config opam-version to fix up
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Hard config upgrade, from 2.1~alpha2 to 2.1~rc
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha2 to version 2.1~rc, which can't be reverted.
 You may want to back it up before going further.
@@ -893,7 +897,7 @@ opam-version: "2.0"
 opam-root-version: "2.1~rc"
 repositories: "default"
 
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
 switch: "sw-sys-comp"
 
 eval-variables: [ sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version" ]
