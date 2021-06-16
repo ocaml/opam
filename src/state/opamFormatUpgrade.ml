@@ -1105,6 +1105,15 @@ let intermediate_roots = [
   v2_1_alpha; v2_1_alpha2
 ]
 
+let remove_missing_switches root conf =
+  let exists, missing =
+    List.partition (fun switch ->
+        OpamFilename.exists (OpamFile.filename
+                               (OpamPath.Switch.switch_config root switch)))
+      (OpamFile.Config.installed_switches conf)
+  in
+  OpamFile.Config.with_installed_switches exists conf, missing
+
 let as_necessary requested_lock global_lock root config =
   let root_version =
     match OpamFile.Config.opam_root_version_opt config with
@@ -1119,7 +1128,7 @@ let as_necessary requested_lock global_lock root config =
               (OpamPath.Switch.switch_config root switch))
           (OpamFile.Config.installed_switches config);
         v
-      with OpamPp.Bad_version _ -> v2_1_alpha
+      with Sys_error _ | OpamPp.Bad_version _ -> v2_1_alpha
   in
   let cmp = OpamVersion.(compare OpamFile.Config.root_version root_version) in
   if cmp <= 0 then config (* newer or same *) else
@@ -1188,6 +1197,22 @@ let as_necessary requested_lock global_lock root config =
         erase_plugin_links root;
         config)
       config hard_upg
+  in
+  let config =
+    let config, missing_switches = remove_missing_switches root config in
+    let global = List.filter (OpamSwitch.is_external @> not) missing_switches in
+    if not on_the_fly && global <> [] then
+      OpamConsole.warning "Removing global switch%s %s as %s"
+        (match global with | [_] -> "" | _ -> "es")
+        (OpamStd.Format.pretty_list
+           (List.map (OpamSwitch.to_string
+                      @> OpamConsole.colorise `bold
+                      @> Printf.sprintf "'%s'")
+              global))
+           (match global with
+            | [_] -> "it no longer exists"
+            | _ -> "they no longer exist");
+         config
   in
   let is_dev = OpamVersion.is_dev_version () in
   log "%s config upgrade, from %s to %s"
