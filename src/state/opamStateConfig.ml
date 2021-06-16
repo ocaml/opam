@@ -281,12 +281,45 @@ module Repos = struct
       (OpamPath.repos_config gt.root)
 end
 
+let downgrade_2_1_switch f =
+  let filename = OpamFile.filename f in
+  let str_f = OpamFilename.to_string filename in
+  let opamfile = OpamParser.FullPos.file str_f in
+  let opamfile' =
+    let open OpamParserTypes.FullPos in
+    { opamfile with
+      file_contents =
+        List.map (fun item ->
+            match item.pelem with
+            | Variable (({pelem = "opam-version"; _} as opam_v),
+                        ({pelem = String "2.1"; _} as v)) ->
+              { item with
+                pelem = Variable ({opam_v with pelem = "opam-version"},
+                                  {v with pelem = String "2.0"})}
+            | _ -> item)
+          opamfile.file_contents}
+  in
+  if opamfile' = opamfile then None else
+    Some (opamfile'
+          |> OpamPrinter.FullPos.opamfile
+          |> OpamFile.Switch_config.read_from_string)
+
 let local_switch_exists root switch =
   (* we don't use safe loading function to avoid errors displaying *)
-  OpamPath.Switch.switch_config root switch |>
-  OpamFile.Switch_config.BestEffort.read_opt |> function
+  let f = OpamPath.Switch.switch_config root switch in
+  match OpamFile.Switch_config.BestEffort.read_opt f with
   | None -> false
   | Some conf -> conf.OpamFile.Switch_config.opam_root = Some root
+  | exception (OpamPp.Bad_version _ as e) ->
+    match OpamFile.Config.raw_root_version (OpamPath.config root) with
+    | None -> raise e
+    | Some _ ->
+      match downgrade_2_1_switch f with
+      | None -> raise e
+      | Some conf ->
+        if conf.OpamFile.Switch_config.opam_root = Some root then
+          (OpamFile.Switch_config.write f conf; true)
+        else false
 
 let resolve_local_switch root s =
   let switch_root = OpamSwitch.get_root root s in
