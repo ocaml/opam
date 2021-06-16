@@ -6,7 +6,7 @@ set -ue
 # (c) Copyright Louis Gesbert OCamlPro 2014-2017
 
 VERSION='2.0.8'
-DEV_VERSION='2.1.0~rc'
+DEV_VERSION='2.1.0~rc2'
 DEFAULT_BINDIR=/usr/local/bin
 
 bin_sha512() {
