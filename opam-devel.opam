@@ -20,6 +20,7 @@ authors: [
 homepage: "https://opam.ocaml.org"
 bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "git+https://github.com/ocaml/opam.git"
+license: "LGPL-2.1-only WITH OCaml-LGPL-linking-exception"
 build: [
   ["./configure" "--disable-checks" "--prefix" prefix]
   [make "%{name}%.install"]
