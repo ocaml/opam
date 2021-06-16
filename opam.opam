@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2.1.0~rc"
+version: "2.1.0~rc2"
 synopsis: "Meta-package for Dune"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
@@ -16,6 +16,7 @@ authors: [
 ]
 homepage: "https://opam.ocaml.org/"
 bug-reports: "https://github.com/ocaml/opam/issues"
+license: "LGPL-2.1-only WITH OCaml-LGPL-linking-exception"
 depends: [
   "dune" {>= "1.11.0"}
   "opam-client" {= version}
