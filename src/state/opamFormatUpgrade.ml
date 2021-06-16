@@ -1133,16 +1133,6 @@ let as_necessary requested_lock global_lock root config =
   let cmp = OpamVersion.(compare OpamFile.Config.root_version root_version) in
   if cmp <= 0 then config (* newer or same *) else
   let is_intermdiate_root = List.mem root_version intermediate_roots in
-  let need_hard_upg =
-    OpamVersion.compare root_version latest_hard_upgrade < 0
-    || is_intermdiate_root
-  in
-  let on_the_fly, global_lock_kind =
-    if not need_hard_upg && requested_lock <> `Lock_write then
-      true, `Lock_read
-    else
-      false, `Lock_write
-  in
   (* to generalise *)
   let intermediates = [
     v2_1_alpha,  from_2_0_to_2_1_alpha;
@@ -1169,6 +1159,13 @@ let as_necessary requested_lock global_lock root config =
       |> List.filter (fun (v,_) -> OpamVersion.compare root_version v < 0)
       |> List.partition (fun (v,_) ->
           OpamVersion.compare v latest_hard_upgrade <= 0)
+  in
+  let need_hard_upg = hard_upg <> [] in
+  let on_the_fly, global_lock_kind =
+    if not need_hard_upg && requested_lock <> `Lock_write then
+      true, `Lock_read
+    else
+      false, `Lock_write
   in
   let erase_plugin_links root =
     let plugins_bin = OpamPath.plugins_bin root in
