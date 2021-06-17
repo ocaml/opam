@@ -700,39 +700,33 @@ RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ sw-comp
 STATE                           Switch state loaded in 0.000s
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
-switch: "sw-comp"
-download-jobs: 1
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-### cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-comp"
+### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+invariant: ["i-am-compiler" {>= "2"}]
 opam-version: "2.0"
 synopsis: "switch with compiler"
-invariant: [
-  "i-am-compiler" {>= "2"}
-]
 paths {
-  
+
 }
 variables {
-  
+
 }
-### cat $OPAMROOT/sw-comp/.opam-switch/switch-state
-opam-version: "2.0"
+### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-state
 compiler: ["i-am-compiler.2"]
-roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+opam-version: "2.0"
+roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 ### :V:1:b: From 2.0 root, local
 ### ocaml generate.ml 2.0 local
 ### # ro global state, ro repo state, ro switch state
@@ -776,44 +770,35 @@ You may want to back it up before going further.
 Continue? [Y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: [
-  "sw-sys-comp"
-  "sw-comp"
-  "${BASEDIR}"
-  "default"
-]
-switch: "sw-sys-comp"
-jobs: 4
-download-jobs: 1
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
+jobs: 4
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+### opam-cat _opam/.opam-switch/switch-config
+invariant: ["i-am-sys-compiler"]
+opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
-opam-root: "${BASEDIR}/OPAM"
-invariant: ["i-am-sys-compiler"]
 paths {
-  
+
 }
 variables {
-  
+
 }
-### cat _opam/.opam-switch/switch-state
-opam-version: "2.0"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### rm -rf _opam
 ### :V:1:c: From 2.0 root, local unknown from config
 ### ocaml generate.ml 2.0 orphaned
@@ -858,39 +843,35 @@ You may want to back it up before going further.
 Continue? [Y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
-switch: "sw-sys-comp"
-jobs: 4
-download-jobs: 1
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+jobs: 4
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+### opam-cat _opam/.opam-switch/switch-config
+invariant: ["i-am-sys-compiler"]
+opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
-opam-root: "${BASEDIR}/OPAM"
-invariant: ["i-am-sys-compiler"]
 paths {
-  
+
 }
 variables {
-  
+
 }
-### cat _opam/.opam-switch/switch-state
-opam-version: "2.0"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:1:d: Upgraded root and local 2.0 switch not recorded
 ### ocaml generate.ml 2.1 orphaned 2.0
 ### # ro global state, ro repo state, ro switch state
@@ -922,40 +903,36 @@ Done.
 ### opam option jobs=4
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 Set to '4' the field jobs in global configuration
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
-switch: "sw-sys-comp"
-jobs: 4
-download-jobs: 1
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
+jobs: 4
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+### opam-cat _opam/.opam-switch/switch-config
+invariant: ["i-am-sys-compiler"]
+opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
-opam-root: "${BASEDIR}/OPAM"
-invariant: ["i-am-sys-compiler"]
 paths {
-  
+
 }
 variables {
-  
+
 }
-### cat _opam/.opam-switch/switch-state
-opam-version: "2.0"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### rm -rf _opam
 ### :V:2:a: From 2.1~alpha root, global
 ### ocaml generate.ml 2.1~alpha
@@ -1011,46 +988,37 @@ RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ sw-comp
 STATE                           Switch state loaded in 0.000s
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
-switch: "sw-comp"
-download-jobs: 3
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
-default-invariant: [
-  "ocaml" {>= "4.05.0"}
-]
+default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-wrap-build-commands:
-  ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
-wrap-install-commands:
-  ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
-wrap-remove-commands:
-  ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
-### cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 3
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-comp"
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
+### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+invariant: ["i-am-compiler"]
 opam-version: "2.0"
 synopsis: "switch with compiler"
-invariant: ["i-am-compiler"]
 paths {
-  
+
 }
 variables {
-  
+
 }
-### cat $OPAMROOT/sw-comp/.opam-switch/switch-state
-opam-version: "2.0"
+### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-state
 compiler: ["i-am-compiler.2"]
-roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+opam-version: "2.0"
+roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 ### :V:2:b: From 2.1~alpha root, local
 ### ocaml generate.ml 2.1~alpha local
 ### opam list
@@ -1086,52 +1054,38 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
 Done.
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: [
-  "sw-sys-comp"
-  "sw-comp"
-  "${BASEDIR}"
-  "default"
-]
-switch: "sw-sys-comp"
-download-jobs: 3
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
-default-invariant: [
-  "ocaml" {>= "4.05.0"}
-]
+default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-wrap-build-commands:
-  ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
-wrap-install-commands:
-  ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
-wrap-remove-commands:
-  ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 3
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
+### opam-cat _opam/.opam-switch/switch-config
+invariant: ["i-am-sys-compiler" | "i-am-compiler"]
+opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
-opam-root: "${BASEDIR}/OPAM"
-invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 paths {
-  
+
 }
 variables {
-  
+
 }
-### cat _opam/.opam-switch/switch-state
-opam-version: "2.0"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### rm -rf _opam
 ### :V:2:c: From 2.1~alpha root, local unknown from config
 ### ocaml generate.ml 2.1~alpha orphaned
@@ -1169,47 +1123,38 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
 Done.
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
-switch: "sw-sys-comp"
-download-jobs: 3
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
-default-invariant: [
-  "ocaml" {>= "4.05.0"}
-]
+default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-wrap-build-commands:
-  ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
-wrap-install-commands:
-  ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
-wrap-remove-commands:
-  ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 3
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
+### opam-cat _opam/.opam-switch/switch-config
+invariant: ["i-am-sys-compiler" | "i-am-compiler"]
+opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
-opam-root: "${BASEDIR}/OPAM"
-invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 paths {
-  
+
 }
 variables {
-  
+
 }
-### cat _opam/.opam-switch/switch-state
-opam-version: "2.0"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:2:d: Upgraded root and local 2.1~alpha switch not recorded
 ### ocaml generate.ml 2.1 orphaned 2.1~alpha
 ### # ro global state, ro repo state, ro switch state
@@ -1240,40 +1185,36 @@ Done.
 ### opam option jobs=4
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 Set to '4' the field jobs in global configuration
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
-switch: "sw-sys-comp"
-jobs: 4
-download-jobs: 1
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
+jobs: 4
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+### opam-cat _opam/.opam-switch/switch-config
+invariant: ["i-am-sys-compiler" | "i-am-compiler"]
+opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
-opam-root: "${BASEDIR}/OPAM"
-invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 paths {
-  
+
 }
 variables {
-  
+
 }
-### cat _opam/.opam-switch/switch-state
-opam-version: "2.0"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### rm -rf _opam
 ### :V:3:a: From 2.1~alpha2 root, global
 ### ocaml generate.ml 2.1~alpha2
@@ -1332,46 +1273,37 @@ RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ sw-comp
 STATE                           Switch state loaded in 0.000s
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
-switch: "sw-comp"
-download-jobs: 3
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
-default-invariant: [
-  "ocaml" {>= "4.05.0"}
-]
+default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-wrap-build-commands:
-  ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
-wrap-install-commands:
-  ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
-wrap-remove-commands:
-  ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
-### cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 3
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-comp"
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
+### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+invariant: ["i-am-compiler"]
 opam-version: "2.0"
 synopsis: "switch with compiler"
-invariant: ["i-am-compiler"]
 paths {
-  
+
 }
 variables {
-  
+
 }
-### cat $OPAMROOT/sw-comp/.opam-switch/switch-state
-opam-version: "2.0"
+### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-state
 compiler: ["i-am-compiler.2"]
-roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+opam-version: "2.0"
+roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 ### :V:3:b: From 2.1~alpha2 root, local
 ### ocaml generate.ml 2.1~alpha2 local
 ### opam list
@@ -1409,52 +1341,38 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
 Done.
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: [
-  "sw-sys-comp"
-  "sw-comp"
-  "${BASEDIR}"
-  "default"
-]
-switch: "sw-sys-comp"
-download-jobs: 3
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
-default-invariant: [
-  "ocaml" {>= "4.05.0"}
-]
+default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-wrap-build-commands:
-  ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
-wrap-install-commands:
-  ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
-wrap-remove-commands:
-  ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 3
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
+### opam-cat _opam/.opam-switch/switch-config
+invariant: ["i-am-sys-compiler" | "i-am-compiler"]
+opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
-opam-root: "${BASEDIR}/OPAM"
-invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 paths {
-  
+
 }
 variables {
-  
+
 }
-### cat _opam/.opam-switch/switch-state
-opam-version: "2.0"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### rm -rf _opam
 ### :V:3:c: From 2.1~alpha2 root, local unknown from config
 ### ocaml generate.ml 2.1~alpha2 orphaned
@@ -1494,47 +1412,38 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
 Done.
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
-switch: "sw-sys-comp"
-download-jobs: 3
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
-default-invariant: [
-  "ocaml" {>= "4.05.0"}
-]
+default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-wrap-build-commands:
-  ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
-wrap-install-commands:
-  ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
-wrap-remove-commands:
-  ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 3
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
+### opam-cat _opam/.opam-switch/switch-config
+invariant: ["i-am-sys-compiler" | "i-am-compiler"]
+opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
-opam-root: "${BASEDIR}/OPAM"
-invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 paths {
-  
+
 }
 variables {
-  
+
 }
-### cat _opam/.opam-switch/switch-state
-opam-version: "2.0"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:3:d: Upgraded root and local 2.1~alpha2 switch not recorded
 ### ocaml generate.ml 2.1 orphaned 2.1~alpha2
 ### # ro global state, ro repo state, ro switch state
@@ -1565,40 +1474,36 @@ Done.
 ### opam option jobs=4
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 Set to '4' the field jobs in global configuration
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
-switch: "sw-sys-comp"
-jobs: 4
-download-jobs: 1
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
+jobs: 4
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+### opam-cat _opam/.opam-switch/switch-config
+invariant: ["i-am-sys-compiler" | "i-am-compiler"]
+opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
-opam-root: "${BASEDIR}/OPAM"
-invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 paths {
-  
+
 }
 variables {
-  
+
 }
-### cat _opam/.opam-switch/switch-state
-opam-version: "2.0"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### rm -rf _opam
 ### :V:4:a: From 2.1~rc root, global
 ### ocaml generate.ml 2.1~rc
@@ -1647,33 +1552,29 @@ You may want to back it up before going further.
 Continue? [Y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
-switch: "sw-sys-comp"
-jobs: 4
-download-jobs: 1
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-### cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+jobs: 4
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+invariant: ["i-am-compiler"]
 opam-version: "2.0"
 synopsis: "switch with compiler"
-invariant: ["i-am-compiler"]
-### cat $OPAMROOT/sw-comp/.opam-switch/switch-state
-opam-version: "2.0"
+### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-state
 compiler: ["i-am-compiler.2"]
-roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+opam-version: "2.0"
+roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 ### :V:4:b: From 2.1~rc root, local
 ### ocaml generate.ml 2.1~rc local
 ### opam list
@@ -1713,39 +1614,30 @@ You may want to back it up before going further.
 Continue? [Y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: [
-  "sw-sys-comp"
-  "sw-comp"
-  "${BASEDIR}"
-  "default"
-]
-switch: "sw-sys-comp"
-jobs: 4
-download-jobs: 1
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
+jobs: 4
+opam-root-version: "2.1"
 opam-version: "2.0"
-synopsis: "local switch"
+repositories: "default"
+switch: "sw-sys-comp"
+### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
-### cat _opam/.opam-switch/switch-state
 opam-version: "2.0"
+synopsis: "local switch"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### rm -rf _opam
 ### :V:4:c: From 2.1~rc root, local unknown from config
 ### ocaml generate.ml 2.1~rc local
@@ -1786,39 +1678,30 @@ You may want to back it up before going further.
 Continue? [Y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: [
-  "sw-sys-comp"
-  "sw-comp"
-  "${BASEDIR}"
-  "default"
-]
-switch: "sw-sys-comp"
-jobs: 4
-download-jobs: 1
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
+jobs: 4
+opam-root-version: "2.1"
 opam-version: "2.0"
-synopsis: "local switch"
+repositories: "default"
+switch: "sw-sys-comp"
+### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
-### cat _opam/.opam-switch/switch-state
 opam-version: "2.0"
+synopsis: "local switch"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:4:d: Upgraded root and local 2.1~rc switch not recorded
 ### ocaml generate.ml 2.1 orphaned 2.1~rc
 ### # ro global state, ro repo state, ro switch state
@@ -1848,34 +1731,30 @@ Done.
 ### opam option jobs=4
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 Set to '4' the field jobs in global configuration
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
-switch: "sw-sys-comp"
-jobs: 4
-download-jobs: 1
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
+jobs: 4
+opam-root-version: "2.1"
 opam-version: "2.0"
-synopsis: "local switch"
+repositories: "default"
+switch: "sw-sys-comp"
+### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
-### cat _opam/.opam-switch/switch-state
 opam-version: "2.0"
+synopsis: "local switch"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### rm -rf _opam
 ### :V:5:a: From 2.1 root, global
 ### ocaml generate.ml 2.1
@@ -1908,31 +1787,27 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-another-package.2
 Done.
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
-switch: "sw-sys-comp"
-
-eval-variables: [ sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version" ]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
-
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-
-### cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+depext-run-installs: true
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+invariant: ["i-am-compiler"]
 opam-version: "2.0"
 synopsis: "switch with compiler"
-invariant: ["i-am-compiler"]
-### cat $OPAMROOT/sw-comp/.opam-switch/switch-state
-opam-version: "2.0"
+### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-state
 compiler: ["i-am-compiler.2"]
-roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+opam-version: "2.0"
+roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 ### :V:5:b: From 2.1 root, local
 ### ocaml generate.ml 2.1 local
 ### opam list
@@ -1958,32 +1833,28 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
 Done.
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-
-installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
-switch: "sw-sys-comp"
-
-eval-variables: [ sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version" ]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
-
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
+opam-root-version: "2.1"
 opam-version: "2.0"
-synopsis: "local switch"
+repositories: "default"
+switch: "sw-sys-comp"
+### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
-### cat _opam/.opam-switch/switch-state
 opam-version: "2.0"
+synopsis: "local switch"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:5:c: From 2.1 root, local unknown from config
 ### ocaml generate.ml 2.1 local
 ### opam list
@@ -2008,32 +1879,28 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
 Done.
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-
-installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
-switch: "sw-sys-comp"
-
-eval-variables: [ sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version" ]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
-
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
+opam-root-version: "2.1"
 opam-version: "2.0"
-synopsis: "local switch"
+repositories: "default"
+switch: "sw-sys-comp"
+### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
-### cat _opam/.opam-switch/switch-state
 opam-version: "2.0"
+synopsis: "local switch"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:5:d: Upgraded root and local 2.1 switch not recorded
 ### ocaml generate.ml 2.1 orphaned 2.1
 ### # ro global state, ro repo state, ro switch state
@@ -2063,31 +1930,27 @@ Done.
 ### opam option jobs=4
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 Set to '4' the field jobs in global configuration
-### cat $OPAMROOT/config
-opam-version: "2.0"
-opam-root-version: "2.1"
-repositories: "default"
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
-switch: "sw-sys-comp"
-jobs: 4
-download-jobs: 1
-eval-variables: [
-  sys-comp-version
-  ["sh" "-c" "echo $OPAMSYSCOMP"]
-  "comp version"
-]
+### opam-cat $OPAMROOT/config
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
-depext-run-installs: true
 depext-cannot-install: false
-### cat _opam/.opam-switch/switch-config
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
+jobs: 4
+opam-root-version: "2.1"
 opam-version: "2.0"
-synopsis: "local switch"
+repositories: "default"
+switch: "sw-sys-comp"
+### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
-### cat _opam/.opam-switch/switch-state
 opam-version: "2.0"
+synopsis: "local switch"
+### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
