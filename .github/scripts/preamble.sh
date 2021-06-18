@@ -34,7 +34,7 @@ git config --global gc.autoDetach false
 
 # used only for TEST jobs
 init-bootstrap () {
-  if [ "$OPAM_TEST" = "1" ]; then
+  if [ "$OPAM_TEST" = "1" ] || [ -n "$SOLVER" ]; then
     set -e
     export OPAMROOT=$OPAMBSROOT
     # The system compiler will be picked up
