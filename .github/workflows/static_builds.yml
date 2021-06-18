@@ -1,0 +1,101 @@
+name: Generate static binaries
+on:
+  push:
+    branches:
+      - test-static-builds
+      - wip
+    tags:
+      - '*'
+
+jobs:
+  full-archive:
+    name: Builds a .tar.gz including opam and deps
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Set env
+        run: |
+          echo "VERSION=$(git describe ${GITHUB_REF#refs/*/})" >> $GITHUB_ENV
+          echo "OPAM_VERSION=$(git describe ${GITHUB_REF#refs/*/} | sed 's/-/~/g')" >> $GITHUB_ENV
+      - name: Fix the version
+        run: |
+          sed -i "s/^AC_INIT(opam,.*)/AC_INIT(opam,$OPAM_VERSION)/" configure.ac
+          make configure
+      - name: Download dependencies
+        run: |
+          make download-ext
+      - name: Create tar.gz
+        run: |
+          tar czf ../opam-full-$OPAM_VERSION.tar.gz --exclude-vcs --xform "s%^./%opam-full-$OPAM_VERSION/%" .
+      - name: Store the archive
+        uses: actions/upload-artifact@v2
+        with:
+          name: opam-full
+          path: |
+            ../opam-full-$OPAM_VERSION.tar.gz
+            $GITHUB_ENV
+  static-bin-linux:
+    name: Builds static Linux binaries
+    runs-on: ubuntu-latest
+    needs: full-archive
+    strategy:
+      matrix:
+        TARGET: [ x86_64-linux, i686-linux, armhf-linux, arm64-linux ]
+    steps:
+      # - name: Check out the repo
+      #   uses: actions/checkout@v2
+      - name: Download the full archive
+        uses: actions/download-artifact@v2
+        with:
+          name: opam-full
+      - name: Generate the binaries
+        run: |
+          tar xzf opam-full-$OPAM_VERSION.tar.gz
+          cd opam-full-$OPAM_VERSION
+          echo '(-noautolink -cclib -Wl,-Bstatic -cclib -lunix -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lstdc++ -cclib -static-libgcc)' \
+            > src/client/linking.sexp
+          docker run --rm -v .:/src \
+            -e VERSION="$VERSION" \
+            -e TARGET="$TARGET" \
+            alpine:3.14 \
+            sh -c "./configure --with-mccs && make lib-ext opam && strip opam"
+      - name: Store the generated binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: opam-$VERSION-$TARGET-linux
+          path: |
+            opam
+  static-bin-macos:
+    name: Builds static Macos binaries
+    runs-on: macos-latest
+    env:
+      OPAMYES: 1
+      OPAMDEPEXTYES: 1
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      # Need unreleased 2.1.0~rc
+      # - name: Retrieve opam
+      #   run: |
+      #     mkdir "$HOME/bin"
+      #     wget https://github.com/ocaml/opam/releases/download/2.1.0-beta2/opam-2.1.0-beta2-x86_64-macos -O $HOME/bin/opam
+      #     chmod a+x $HOME/bin/opam
+      #     echo "$HOME/bin" >> $GITHUB_PATH
+      - name: Install latest opam
+        run: |
+          brew install opam --HEAD
+      - name: Prepare build environment
+        run: |
+          opam init -a --bare
+          opam switch create . ocaml-base-compiler 'dune<2' --deps-only
+      - name: Build the binaries
+        run: |
+          ./scripts/setup-static-build.sh
+          opam exec -- make
+          otool -L _build/install/default/bin/*
+      - name: Archive static binaries
+        uses: actions/upload-artifact@v2
+        with:
+          name: static-binaries-macos
+          path: _build/install/default/bin/*
