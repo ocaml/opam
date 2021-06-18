@@ -15,9 +15,6 @@ add_mounts() {
     fi
 }
 
-# Even if TMPDIR is set, some applications uses /tmp directly
-add_mounts rw /tmp
-
 if [ -z ${TMPDIR+x} ]; then
   # Others applications obtain the per-user temporary
   # directory differently; the latter should be made readable/writable
