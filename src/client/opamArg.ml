@@ -196,8 +196,6 @@ let environment_variables =
       "see option `--use-internal-solver'.";
       "VERSIONLAGPOWER", cli_original, (fun v -> VERSIONLAGPOWER (env_int v)),
       "do not use.";
-      "Z3DEBUG", cli_from cli2_1, (fun v -> Z3DEBUG (env_string v)),
-      "Enable debug for Z3 backend";
     ] in
   let repository =
     let open OpamRepositoryConfig.E in [

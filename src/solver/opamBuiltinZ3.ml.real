@@ -413,12 +413,6 @@ let call ~criteria ?timeout (preamble, universe, _ as cudf) =
     def_criteria ctx opt cudf psym (Syntax.criteria_of_string criteria)
   in
   log "Resolving...";
-  (match OpamSolverConfig.E.z3debug () with
-   | None -> ()
-   | Some f ->
-     let debug = open_out (f^".smt2") in
-     output_string debug (Z3.Optimize.to_string opt);
-     close_out debug);
   match Z3.Optimize.check opt with
   | UNSATISFIABLE ->
     log "UNSAT";
