@@ -3,6 +3,9 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.1.0~rc2:
+  * Remove OPAMZ3DEBUG evironment variable [#4720 @rjbou - fix #4718]
+
 2.1.0~rc:
 * (*) Environment variables initialised only at opam client launch, no more via
   libraries [#4606 #4703 @rjbou]
