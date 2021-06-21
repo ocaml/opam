@@ -137,3 +137,12 @@ module Repos : sig
   val safe_read:
     ?lock_kind: 'a lock -> 'b global_state -> OpamFile.Repos_config.t
 end
+
+(* Raw read an switch config to downgrade its [opam-version] from 2.1 to 2.0.
+   It is necessary to handle opam root and switch upgrade from 2.1
+   intermediates roots to 2.1: this allows a workaround for a bug in versions
+   2.1~alpha which wrongly updated the declared switch versions, requiring that
+   we fix it during [OpamFormatUpgrade] from these specific intermediate
+   versions, and at switch loading for that specific case. *)
+val downgrade_2_1_switch:
+  OpamFile.Switch_config.t OpamFile.t -> OpamFile.Switch_config.t option

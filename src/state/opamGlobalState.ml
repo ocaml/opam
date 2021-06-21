@@ -200,7 +200,8 @@ let fix_switch_list gt =
     OpamFile.Config.with_installed_switches known_switches gt.config
   in
   let gt = { gt with config } in
-  if not OpamCoreConfig.(!r.safe_mode) then
+  if not OpamCoreConfig.(!r.safe_mode)
+  && OpamSystem.get_lock_flag gt.global_lock = `Lock_write then
     try
       snd @@ with_write_lock ~dontblock:true gt @@ fun gt ->
       write gt, gt

@@ -6,7 +6,7 @@
 
 (executable
  (name run)
- (libraries opam-core)
+ (libraries opam-core opam-file-format)
  (modules run))
 
 (executable
