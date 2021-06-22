@@ -103,7 +103,7 @@ New option/command/subcommand are prefixed with ◈.
   * Formalise opam dev version detection with `OpamVersion.is_dev_version` [#4665 @dra27]
   * Add `OpamStd.String.is_prefix_of` [#4694 @rjbou @dra27]
   * Fix `OpamStd.Format.pretty_list`: `last` argument dropped if list contains more than 2 elements [#4694 @rjbou]
-  *
+  * Add license and lowerbounds to opam files [#4714 @kit-ty-kate]
 
 ## Test
   *
