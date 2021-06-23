@@ -1,5 +1,5 @@
 dnl The line below must be formatted AC_INIT(opam,VERSION) with no extra spaces
-AC_INIT(opam,2.1.0~rc)
+AC_INIT(opam,2.2.0~alpha~dev)
 AC_COPYRIGHT(Copyright 2012-2019 OcamlPro SAS)
 
 AC_CONFIG_MACRO_DIR([m4])

@@ -263,7 +263,7 @@ RSTATE                          Cache found
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 GSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.2), aborting.
 # Return code 15 #
 ### :III:2:b: Good repo config file :
 ### cp repos-config $OPAMROOT/repo/repos-config
@@ -280,7 +280,7 @@ RSTATE                          Cache found
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 GSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.2), aborting.
 # Return code 15 #
 ### cp config.2.1~rc $OPAMROOT/config
 ### cp config-w-swfoo.2.2 $OPAMROOT/config
@@ -309,7 +309,7 @@ RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ foo
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.2), aborting.
 # Return code 15 #
 ### :III:3:b: Good switch config file :
 ### cp switch-config $OPAMROOT/foo/.opam-switch/switch-config
@@ -334,7 +334,7 @@ RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          root version (2.2) is greater than running binary's (2.1~rc); load with best-effort (read-only)
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ foo
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.2), aborting.
 # Return code 15 #
 ### :III:1:a: Bad config file
 ### cp config-w-swfoo.2.2.err $OPAMROOT/config
@@ -343,14 +343,14 @@ STATE                           LOAD-SWITCH-STATE @ foo
 FORMAT                          File errors in ${BASEDIR}/OPAM/config, ignored fields: At ${BASEDIR}/OPAM/config:7:0-7:8::
 Invalid field neant
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.2), aborting.
 # Return code 15 #
 ### :III:1:b: Good config file
 ### cp config-w-swfoo.2.2 $OPAMROOT/config
 ### # rw global state
 ### opam switch remove foo
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.2 > 2.2), aborting.
 # Return code 15 #
 ### :                                    :
 ### : Newer opam root & new file version :
@@ -445,14 +445,14 @@ unsupported or missing file format version; should be 2.0 or older
 ### # rw global state
 ### opam switch remove foo
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.3 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.3 > 2.2), aborting.
 # Return code 15 #
 ### :IV:1:b: Good config file
 ### cp config-w-swfoo.2.3 $OPAMROOT/config
 ### # rw global state
 ### opam switch remove foo
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.3 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (2.3 > 2.2), aborting.
 # Return code 15 #
 ### :                 :
 ### : Older opam root :
