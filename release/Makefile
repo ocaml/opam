@@ -6,9 +6,8 @@ GIT_URL = ..
 FULL_ARCHIVE_URL = https://github.com/ocaml/opam/releases/download/$(VERSION)/opam-full-$(VERSION).tar.gz
 
 TARGETS = x86_64-linux i686-linux armhf-linux arm64-linux
-# todo: x86_64-darwin
 
-OCAMLV = 4.10.2
+OCAMLV = 4.12.0
 # currently hardcoded in Dockerfile.in
 OCAML_URL = https://caml.inria.fr/pub/distrib/ocaml-$(basename $(OCAMLV))/ocaml-$(OCAMLV).tar.gz
 
@@ -31,26 +30,29 @@ out/opam-full-$(VERSION).tar.gz:
 	}
 
 build/Dockerfile.x86_64-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/amd64-jessie/g' $^ | sed 's/%CONF%//g' >$@
+	mkdir -p build && sed 's/%TARGET_TAG%/x86_64-v3.13/g' $^ | sed 's/%CONF%//g' >$@
 build/Dockerfile.i686-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/i386-jessie/g' $^ | sed 's/%CONF%/-host i686-linux/g' >$@
+	mkdir -p build && sed 's/%TARGET_TAG%/x86-v3.13/g' $^ | sed 's/%CONF%/-build i586-alpine-linux-musl/g' >$@
+
+# Need to lie about gnueabihf instead of musleabihf, because of a ./configure bug
 build/Dockerfile.armhf-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/armhf-jessie/g' $^ | sed 's/%CONF%//g' >$@
+	mkdir -p build && sed 's/%TARGET_TAG%/armv7-v3.13/g' $^ | sed 's/%CONF%//g' >$@
 build/Dockerfile.arm64-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/arm64-stretch/g' $^ | sed 's/%CONF%//g' >$@
+	mkdir -p build && sed 's/%TARGET_TAG%/arm64-v3.13/g' $^ | sed 's/%CONF%//g' >$@
 
 
 build/%.image: build/Dockerfile.%
 	docker build -t opam-build-$* -f $^ build
 	touch $@
 
-# Actually, this is for debian 8 jessie, and varies wildly
+# Actually, this is for alpine 3.13, and varies
 CLINKING_linux = \
 -Wl,-Bstatic \
 -lunix -lmccs_stubs -lmccs_glpk_stubs \
 -lstdc++ \
--Wl,-Bdynamic \
--static-libgcc
+-static-libgcc \
+-static
+# -Wl,-Bdynamic 
 
 CLINKING_macos = \
 -lunix -lmccs_stubs -lmccs_glpk_stubs \
@@ -96,8 +98,9 @@ host: out/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	  cd build/opam-full-$(VERSION) && \
 	  ./configure && \
 	  echo "$(call LINKING,$(HOST_OS))" >src/client/linking.sexp && \
-	  $(MAKE) lib-ext DUNE_ARGS="--root=`pwd`"; \
-	  $(MAKE) opam DUNE_ARGS="--root=`pwd`"; \
+	  $(MAKE) lib-ext && \
+	  sed -i 's/ -Wno-stringop-overflow//' src_ext/mccs/src/glpk/context_flags.ml && \
+	  $(MAKE) opam; \
 	)
 	cp build/opam-full-$(VERSION)/opam out/opam-$(VERSION)-$(HOST)
 	strip out/opam-$(VERSION)-$(HOST)

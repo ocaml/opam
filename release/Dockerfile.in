@@ -1,20 +1,23 @@
-FROM multiarch/debian-debootstrap:%TARGET_TAG%
+FROM multiarch/alpine:%TARGET_TAG%
 # May need configuration on the host:
 #    docker run --rm --privileged multiarch/qemu-user-static:register --reset
 LABEL Description="opam release builds" Vendor="OCamlPro" Version="1.0"
 
-RUN apt-get update && apt-get install bzip2 g++ make patch wget libltdl-dev --yes && apt-get clean --yes
-RUN useradd -U --create-home opam
+RUN apk add gcc g++ make coreutils openssl
 
-ADD https://caml.inria.fr/pub/distrib/ocaml-4.07/ocaml-4.07.1.tar.gz /root/
+RUN addgroup -S opam && adduser -S opam -G opam -s /bin/sh
+
+ADD https://caml.inria.fr/pub/distrib/ocaml-4.12/ocaml-4.12.0.tar.gz /root/
 
 WORKDIR /root
-RUN tar xzf ocaml-4.07.1.tar.gz
-WORKDIR ocaml-4.07.1
+RUN tar xzf ocaml-4.12.0.tar.gz
+WORKDIR ocaml-4.12.0
+RUN sed -i 's/gnueabi/*eabi/' configure
+RUN sed -i 's/musl/musl*/' configure
 RUN ./configure %CONF% -prefix /usr/local
-RUN make world opt.opt
-RUN make install
-RUN rm -rf /root/ocaml-4.07.1 /root/ocaml-4.07.1.tar.gz
+RUN make world opt.opt && make install && rm -rf /root/ocaml-4.12.0 /root/ocaml-4.12.0.tar.gz
+
+RUN apk add patch
 
 ENV PATH /usr/local/bin:/usr/bin:/bin
 USER opam
