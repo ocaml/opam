@@ -101,6 +101,7 @@ Prefixes used to help generate release notes, changes, and blog posts:
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]
+  * Fix ocaml link (http -> https) [#4729 @rjbou]
 
 ## Shell
   *
