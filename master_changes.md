@@ -61,7 +61,7 @@ Prefixes used to help generate release notes, changes, and blog posts:
   *
 
 ## Repository management
-  *
+  * [NEW] Add OPAMSKIPCERTIFICATECHECK for skipping SSL certificate checking [#4733 @mt-caret] [2.1.0~rc2 #4720]
 
 ## VCS
   *
