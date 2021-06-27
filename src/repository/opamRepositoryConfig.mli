@@ -34,7 +34,7 @@ type t = {
   validation_hook: OpamTypes.arg list option;
   retries: int;
   force_checksums: bool option;
-  skip_certificate_check: bool option;
+  skip_certificate_check: bool;
 }
 
 type 'a options_fun =
@@ -42,7 +42,7 @@ type 'a options_fun =
   ?validation_hook:OpamTypes.arg list option ->
   ?retries:int ->
   ?force_checksums:bool option ->
-  ?skip_certificate_check:bool option ->
+  ?skip_certificate_check:bool ->
   'a
 
 include OpamStd.Config.Sig

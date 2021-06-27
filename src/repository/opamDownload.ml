@@ -68,11 +68,7 @@ let ftp_args = [
 
 let download_args ~url ~out ~retry ?checksum ~compress () =
   let cmd, _ = Lazy.force OpamRepositoryConfig.(!r.download_tool) in
-  let skip_certificate_check =
-    match OpamRepositoryConfig.(!r.skip_certificate_check) with
-    | None -> false
-    | Some skip_certificate_check -> skip_certificate_check
-  in
+  let skip_certificate_check = OpamRepositoryConfig.(!r.skip_certificate_check) in
   let cmd =
     match cmd with
     | [(CIdent "wget"), _] -> cmd @ wget_args ~skip_certificate_check

@@ -39,7 +39,7 @@ type t = {
   validation_hook: arg list option;
   retries: int;
   force_checksums: bool option;
-  skip_certificate_check: bool option;
+  skip_certificate_check: bool;
 }
 
 type 'a options_fun =
@@ -47,7 +47,7 @@ type 'a options_fun =
   ?validation_hook:arg list option ->
   ?retries:int ->
   ?force_checksums:bool option ->
-  ?skip_certificate_check:bool option ->
+  ?skip_certificate_check:bool ->
   'a
 
 let default = {
@@ -79,7 +79,7 @@ let default = {
   validation_hook = None;
   retries = 3;
   force_checksums = None;
-  skip_certificate_check = None;
+  skip_certificate_check = false;
 }
 
 let setk k t
