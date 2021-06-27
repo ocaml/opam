@@ -19,6 +19,7 @@ module E = struct
     | REQUIRECHECKSUMS of bool option
     | RETRIES of int option
     | VALIDATIONHOOK of string option
+    | SKIPCERTIFICATECHECK of bool option
 
   open OpamStd.Config.E
   let curl = value (function CURL s -> s | _ -> None)
@@ -27,6 +28,7 @@ module E = struct
   let requirechecksums = value (function REQUIRECHECKSUMS b -> b | _ -> None)
   let retries = value (function RETRIES i -> i | _ -> None)
   let validationhook = value (function VALIDATIONHOOK s -> s | _ -> None)
+  let skipcertificatecheck = value (function SKIPCERTIFICATECHECK b -> b | _ -> None)
 
 end
 
@@ -37,6 +39,7 @@ type t = {
   validation_hook: arg list option;
   retries: int;
   force_checksums: bool option;
+  skip_certificate_check: bool option;
 }
 
 type 'a options_fun =
@@ -44,6 +47,7 @@ type 'a options_fun =
   ?validation_hook:arg list option ->
   ?retries:int ->
   ?force_checksums:bool option ->
+  ?skip_certificate_check:bool option ->
   'a
 
 let default = {
@@ -75,6 +79,7 @@ let default = {
   validation_hook = None;
   retries = 3;
   force_checksums = None;
+  skip_certificate_check = None;
 }
 
 let setk k t
@@ -82,6 +87,7 @@ let setk k t
     ?validation_hook
     ?retries
     ?force_checksums
+    ?skip_certificate_check
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -89,6 +95,7 @@ let setk k t
     validation_hook = t.validation_hook + validation_hook;
     retries = t.retries + retries;
     force_checksums = t.force_checksums + force_checksums;
+    skip_certificate_check = t.skip_certificate_check + skip_certificate_check;
   }
 
 let set t = setk (fun x () -> x) t
@@ -139,5 +146,6 @@ let initk k =
     ?validation_hook
     ?retries:(E.retries ())
     ?force_checksums
+    ?skip_certificate_check:(E.skipcertificatecheck ())
 
 let init ?noop:_ = initk (fun () -> ())

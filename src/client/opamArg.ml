@@ -218,6 +218,9 @@ let environment_variables =
       "VALIDATIONHOOK", cli_original, (fun v -> VALIDATIONHOOK (env_string v)),
       "if set, uses the `%{hook%}' command to validate \
        an opam repository update.";
+      "SKIPCERTIFICATECHECK", cli_original,
+      (fun v -> SKIPCERTIFICATECHECK (env_bool v)),
+      "skip checking of certificates (not recommended).";
     ] in
   let state =
     let open OpamStateConfig.E in [

@@ -20,7 +20,10 @@ let fail (s,l) = raise (Download_fail (s,l))
 let user_agent =
   CString (Printf.sprintf "opam/%s" (OpamVersion.(to_string current)))
 
-let curl_args = [
+let curl_args ~skip_certificate_check =
+  (if skip_certificate_check
+   then [ CString "--insecure", None ]
+   else []) @ [
   CString "--write-out", None;
   CString "%%{http_code}\\n", None;
   CString "--retry", None; CIdent "retry", None;
@@ -34,7 +37,10 @@ let curl_args = [
   CIdent "url", None;
 ]
 
-let wget_args = [
+let wget_args ~skip_certificate_check =
+  (if skip_certificate_check
+   then [ CString "--no-check-certificate", None ]
+   else []) @ [
   CString "--content-disposition", None;
   CString "-t", None; CIdent "retry", None;
   CString "-O", None; CIdent "out", None;
@@ -43,7 +49,10 @@ let wget_args = [
   CIdent "url", None;
 ]
 
-let fetch_args = [
+let fetch_args ~skip_certificate_check =
+  (if skip_certificate_check
+   then [ CString "--no-verify-peer", None ]
+   else []) @ [
   CString "-o", None; CIdent "out", None;
   CString "--user-agent", None; user_agent, None;
   CString "--", None; (* End list of options *)
@@ -59,12 +68,17 @@ let ftp_args = [
 
 let download_args ~url ~out ~retry ?checksum ~compress () =
   let cmd, _ = Lazy.force OpamRepositoryConfig.(!r.download_tool) in
+  let skip_certificate_check =
+    match OpamRepositoryConfig.(!r.skip_certificate_check) with
+    | None -> false
+    | Some skip_certificate_check -> skip_certificate_check
+  in
   let cmd =
     match cmd with
-    | [(CIdent "wget"), _] -> cmd @ wget_args
-    | [(CIdent "fetch"), _] -> cmd @ fetch_args
+    | [(CIdent "wget"), _] -> cmd @ wget_args ~skip_certificate_check
+    | [(CIdent "fetch"), _] -> cmd @ fetch_args ~skip_certificate_check
     | [(CIdent "ftp"), _] -> cmd @ ftp_args
-    | [_] -> cmd @ curl_args (* Assume curl if the command is a single arg *)
+    | [_] -> cmd @ curl_args ~skip_certificate_check (* Assume curl if the command is a single arg *)
     | _ -> cmd
   in
   OpamFilter.single_command (fun v ->

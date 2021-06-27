@@ -19,6 +19,7 @@ module E : sig
     | REQUIRECHECKSUMS of bool option
     | RETRIES of int option
     | VALIDATIONHOOK of string option
+    | SKIPCERTIFICATECHECK of bool option
 
   val curl: unit -> string option
   val fetch: unit -> string option
@@ -33,6 +34,7 @@ type t = {
   validation_hook: OpamTypes.arg list option;
   retries: int;
   force_checksums: bool option;
+  skip_certificate_check: bool option;
 }
 
 type 'a options_fun =
@@ -40,6 +42,7 @@ type 'a options_fun =
   ?validation_hook:OpamTypes.arg list option ->
   ?retries:int ->
   ?force_checksums:bool option ->
+  ?skip_certificate_check:bool option ->
   'a
 
 include OpamStd.Config.Sig
