@@ -2,7 +2,7 @@
 
 . .github/scripts/preamble.sh
 
-wget "http://caml.inria.fr/pub/distrib/ocaml-${OCAML_VERSION%.*}/ocaml-$OCAML_VERSION.tar.gz"
+wget "https://caml.inria.fr/pub/distrib/ocaml-${OCAML_VERSION%.*}/ocaml-$OCAML_VERSION.tar.gz"
 tar -xzf "ocaml-$OCAML_VERSION.tar.gz"
 
 cd "ocaml-$OCAML_VERSION"
