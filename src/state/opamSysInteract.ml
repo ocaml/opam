@@ -586,8 +586,9 @@ let packages_status packages =
 (* Install *)
 
 let install_packages_commands_t sys_packages =
+  let unsafe_yes = OpamCoreConfig.answer_is `unsafe_yes in
   let yes ?(no=[]) yes r =
-    if OpamCoreConfig.answer_is `unsafe_yes then
+    if unsafe_yes then
       yes @ r else no @ r
   in
   let packages =
@@ -613,7 +614,8 @@ let install_packages_commands_t sys_packages =
                  |> OpamStd.String.Set.remove epel_release
                  |> OpamStd.String.Set.elements);
        "rpm", "-q"::"--whatprovides"::packages], None
-  | Debian -> ["apt-get", "install"::yes ["-qq"; "-yy"] packages], None
+  | Debian -> ["apt-get", "install"::yes ["-qq"; "-yy"] packages],
+      (if unsafe_yes then Some ["DEBIAN_FRONTEND", "noninteractive"] else None)
   | Freebsd -> ["pkg", "install"::yes ["-y"] packages], None
   | Gentoo -> ["emerge", yes ~no:["-a"] [] packages], None
   | Homebrew ->

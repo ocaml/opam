@@ -55,7 +55,7 @@ Prefixes used to help generate release notes, changes, and blog posts:
   *
 
 ## External dependencies
-  *
+  * Set DEBIAN_FRONTEND=noninteractive for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731]
 
 ## Sandbox
   *
