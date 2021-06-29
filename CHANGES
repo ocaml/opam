@@ -8,6 +8,7 @@ are not marked). Those prefixed with "(+)" are new command/option (since
   [#4735 @dra27 - partially fix #4731]
 * Fix 2.1~alpha2 to 2.1 format upgrade with reinit [#4750 @rjbou - fix #4748]
 * Fix bypass-check handling on reinit [#4750 @rjbou]
+* fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
 
 2.1.0~rc2:
 * Remove OPAMZ3DEBUG evironment variable [#4720 @rjbou - fix #4717]
