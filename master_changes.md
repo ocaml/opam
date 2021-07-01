@@ -77,6 +77,7 @@ Prefixes used to help generate release notes, changes, and blog posts:
 
 ## Opam installer
   *
+  * Support `etc_root` and `etcexec_root` in `opam-installer` [#3958 @hongchangwu]
 
 ## State
   *
