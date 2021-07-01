@@ -3,6 +3,10 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.1.0:
+* Set DEBIAN_FRONTEND=noninteractive for unsafe-yes confirmation level
+  [#4735 @dra27 - partially fix #4731]
+
 2.1.0~rc2:
 * Remove OPAMZ3DEBUG evironment variable [#4720 @rjbou - fix #4717]
 * Fix format upgrade when there is missing local switches in the config file
