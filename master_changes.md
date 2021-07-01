@@ -104,7 +104,7 @@ Prefixes used to help generate release notes, changes, and blog posts:
   * Fix ocaml link (http -> https) [#4729 @rjbou]
 
 ## Shell
-  *
+  * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
 
 ## Doc
   *
