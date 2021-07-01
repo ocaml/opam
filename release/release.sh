@@ -15,18 +15,31 @@ fi
 
 TAG="$1"; shift
 
+OPAM_DEV_KEY='92C526AE50DF39470EB2911BED4CF1CA67CBAA92'
+
+sign() {
+    if ! [ -f "$1.sig" ] || ! gpg -u "$OPAM_DEV_KEY" --verify "$1.sig" "$1"; then
+        gpg -u "$OPAM_DEV_KEY" --detach-sign "$1"
+    fi
+}
+
 if [[ $# -eq 0 || " $* " =~ " archive " ]]; then
-  make TAG="$TAG" GIT_URL="https://github.com/ocaml/opam.git" "out/opam-full-$TAG.tar.gz"
-  ( cd out && git-upload-release ocaml opam "$TAG" "opam-full-$TAG.tar.gz"; )
+    make TAG="$TAG" GIT_URL="https://github.com/ocaml/opam.git" "out/opam-full-$TAG.tar.gz"
+    ( cd out &&
+          sign "opam-full-$TAG.tar.gz" &&
+          git-upload-release ocaml opam "$TAG" "opam-full-$TAG.tar.gz.sig" &&
+          git-upload-release ocaml opam "$TAG" "opam-full-$TAG.tar.gz"; )
 fi
 
 if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
   make TAG="$TAG" all &
-  make TAG="$TAG" remote REMOTE=some-osx-x86 REMOTE_DIR=opam-release &
-  make TAG="$TAG" remote REMOTE=some-osx-arm REMOTE_DIR=opam-release &
-  make TAG="$TAG" remote REMOTE=some-openbsd REMOTE_MAKE=gmake REMOTE_DIR=opam-release &
+  [ -f out/opam-$TAG-x86_64-macos ] || make TAG="$TAG" remote REMOTE=some-osx-x86 REMOTE_DIR=opam-release-$TAG &
+  [ -f out/opam-$TAG-arm64-macos ] || make TAG="$TAG" remote REMOTE=some-osx-arm REMOTE_DIR=opam-release-$TAG &
+  [ -f out/opam-$TAG-x86_64-openbsd ] || make TAG="$TAG" remote REMOTE=some-openbsd REMOTE_MAKE=gmake REMOTE_DIR=opam-release-$TAG &
   wait
   cd out && for f in opam-$TAG-*; do
-      git-upload-release ocaml opam "$TAG" $f
+      sign "$f"
+      git-upload-release ocaml opam "$TAG" "$f.sig"
+      git-upload-release ocaml opam "$TAG" "$f"
   done
 fi
