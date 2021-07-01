@@ -164,6 +164,17 @@ let is_newer_than_self ?lock_kind gt =
   is_readonly_opamroot_t ?lock_kind gt <> Some false
 
 let load_if_possible_raw ?lock_kind root version (read,read_wo_err) f =
+  (* Wrap possible error due to an opam 2.1 intermediate root *)
+  let wrap readf =
+    try readf f with (OpamPp.Bad_version _ as e) ->
+      (let root_version, opam_version = OpamFile.Config.raw_root_version f in
+       if root_version = Some (OpamVersion.of_string  "2.1~rc")
+       || (root_version = None
+           && opam_version  = Some (OpamVersion.of_string "2.1")) then
+         OpamConsole.error_and_exit `Aborted
+           "Please upgrade your opam root with opam 2.1"
+       else raise e)
+  in
   match is_readonly_opamroot_raw ?lock_kind version with
   | None ->
     OpamConsole.error_and_exit `Locked
@@ -172,8 +183,8 @@ let load_if_possible_raw ?lock_kind root version (read,read_wo_err) f =
       (OpamFilename.Dir.to_string root)
       (OpamStd.Option.to_string OpamVersion.to_string version)
       OpamVersion.(to_string current_nopatch)
-  | Some true -> read_wo_err f
-  | Some false -> read f
+  | Some true -> wrap read_wo_err
+  | Some false -> wrap read
 
 let load_if_possible_t ?lock_kind opamroot config readf f =
   load_if_possible_raw ?lock_kind
