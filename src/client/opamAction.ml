@@ -150,8 +150,8 @@ let download_package st nv =
   if OpamPackage.Set.mem nv st.pinned &&
      OpamFilename.exists_dir dir &&
      OpamStd.Option.Op.(
-       OpamPinned.find_opam_file_in_source nv.name dir >>=
-       OpamFile.OPAM.read_opt >>=
+       OpamPinned.find_opam_file_in_source nv.name dir >>|
+       OpamFile.OPAM.safe_read >>=
        OpamFile.OPAM.version_opt)
      = Some nv.version
   then
@@ -317,7 +317,7 @@ let prepare_package_source st nv dir =
       prepare_package_build st nv dir
 
 let compilation_env t opam =
-  OpamEnv.get_full ~force_path:true t ~updates:([
+  OpamEnv.get_full ~set_opamroot:true ~set_opamswitch:true ~force_path:true t ~updates:([
       "CDPATH", Eq, "", Some "shell env sanitization";
       "MAKEFLAGS", Eq, "", Some "make env sanitization";
       "MAKELEVEL", Eq, "", Some "make env sanitization";

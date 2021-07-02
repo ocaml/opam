@@ -11,10 +11,12 @@ if ! command -v bwrap >/dev/null; then
     exit 10
 fi
 
-ARGS=(--unshare-net --new-session)
+# --new-session requires bubblewrap 0.1.7
+# --die-with-parent requires bubblewrap 0.1.8
+ARGS=(--unshare-net --new-session --die-with-parent)
 ARGS=("${ARGS[@]}" --proc /proc --dev /dev)
-ARGS=("${ARGS[@]}" --bind "${TMPDIR:-/tmp}" /tmp)
-ARGS=("${ARGS[@]}" --setenv TMPDIR /tmp --setenv TMP /tmp --setenv TEMPDIR /tmp --setenv TEMP /tmp)
+ARGS=("${ARGS[@]}" --setenv TMPDIR /opam-tmp --setenv TMP /opam-tmp --setenv TEMPDIR /opam-tmp --setenv TEMP /opam-tmp)
+ARGS=("${ARGS[@]}" --tmpfs /opam-tmp)
 ARGS=("${ARGS[@]}" --tmpfs /run)
 
 add_mount() {
@@ -55,7 +57,7 @@ add_sys_mounts() {
 # use OPAM_USER_PATH_RO variable to add them
 # the OPAM_USER_PATH_RO format is the same as PATH
 # ie: export OPAM_USER_PATH_RO=/nix/store:/rw/usrlocal
-add_sys_mounts /usr /bin /lib /lib32 /lib64 /etc /opt /home /var
+add_sys_mounts /usr /bin /lib /lib32 /lib64 /etc /opt /home /var /tmp
 
 # C compilers using `ccache` will write to a shared cache directory
 # that remain writeable. ccache seems widespread in some Fedora systems.
@@ -76,45 +78,41 @@ add_ccache_mount() {
 }
 
 add_dune_cache_mount() {
-  u_cache=${XDG_CACHE_HOME:-$HOME/.cache}
-  u_dune_cache=$u_cache/dune
-  cache=$(readlink -m "$u_cache")
-  dune_cache=$cache/dune
-  dune_cache=$(readlink -m "$u_dune_cache")
+  local u_cache=${XDG_CACHE_HOME:-$HOME/.cache}
+  local u_dune_cache=$u_cache/dune
+  local cache=$(readlink -m "$u_cache")
+  local dune_cache=$cache/dune
+  local dune_cache=$(readlink -m "$u_dune_cache")
   mkdir -p "${dune_cache}"
   add_mount rw "$u_dune_cache" "$dune_cache"
 }
 
+# mount unusual path in ro
+if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
+   add_mounts ro $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
+fi
+
+# When using opam variable that must be defined at action time, add them also
+# at init check in OpamAuxCommands.check_and_revert_sandboxing (like
+# OPAM_SWITCH_PREFIX).
 # This case-switch should remain identical between the different sandbox implems
 COMMAND="$1"; shift
 case "$COMMAND" in
     build)
-        # mount unusual path in ro
-        if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
-           add_mounts ro $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
-        fi
         add_mounts ro "$OPAM_SWITCH_PREFIX"
         add_mounts rw "$PWD"
         add_ccache_mount
         add_dune_cache_mount
         ;;
     install)
-        # mount unusual path in ro
-        if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
-           add_mounts ro  $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
-        fi
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
         add_mounts rw "$PWD"
         ;;
     remove)
-        # mount unusual path in ro
-        if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
-           add_mounts ro $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
-        fi
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
-        if [ "X${PWD#$OPAM_SWITCH_PREFIX}/.opam-switch/" != "X${PWD}" ]; then
+        if [ "X${PWD#$OPAM_SWITCH_PREFIX/.opam-switch/}" != "X${PWD}" ]; then
           add_mounts rw "$PWD"
         fi
         ;;
@@ -124,4 +122,5 @@ case "$COMMAND" in
 esac
 
 # Note: we assume $1 can be trusted, see https://github.com/projectatomic/bubblewrap/issues/259
+# As of now we are compatible up to 0.1.8, '--' can be added here when we require >= 0.3.0
 exec bwrap "${ARGS[@]}" "$@"

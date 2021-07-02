@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -uex
 
-# This script is expected to run on Linux with docker available, and to have two
-# remotes "some-osx" and "some-openbsd", with the corresponding OSes, ocaml deps
-# installed
+# This script is expected to run on Linux with docker available, and to have
+# three remotes "some-osx-x86", "some-osx-arm" and "some-openbsd", with the
+# corresponding OSes, ocaml deps installed
 
 LC_ALL=C
 DIR=$(dirname $0)
@@ -22,7 +22,8 @@ fi
 
 if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
   make TAG="$TAG" all &
-  make TAG="$TAG" remote REMOTE=some-osx REMOTE_DIR=opam-release &
+  make TAG="$TAG" remote REMOTE=some-osx-x86 REMOTE_DIR=opam-release &
+  make TAG="$TAG" remote REMOTE=some-osx-arm REMOTE_DIR=opam-release &
   make TAG="$TAG" remote REMOTE=some-openbsd REMOTE_MAKE=gmake REMOTE_DIR=opam-release &
   wait
   cd out && for f in opam-$TAG-*; do

@@ -38,8 +38,8 @@ MD5_mccs = 13504d3b5dcbf0bdc6d95a62de20af4a
 
 $(call PKG_SAME,mccs)
 
-URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.0.0.tar.gz
-MD5_opam-file-format = d7852cb63df0f442bed14ba2c5740135
+URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.1.3.tar.gz
+MD5_opam-file-format = b805562dd2d86fc3c8e6d47884fd1da6
 
 $(call PKG_SAME,opam-file-format)
 

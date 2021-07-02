@@ -552,7 +552,8 @@ let get_compatible_compiler ?repos rt dir =
         "The default compiler selection: %s\n\
          is not compatible with the local packages found at %s, and the \
          packages don't specify an unambiguous compiler.\n\
-         You can use `--compiler` to manually select one."
+         You can manually specify a compiler with \
+         `opam switch create switch compiler`."
         (OpamFormula.to_string default_compiler)
         (OpamFilename.Dir.to_string dir);
       if OpamConsole.confirm

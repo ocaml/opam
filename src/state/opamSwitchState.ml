@@ -18,18 +18,23 @@ let slog = OpamConsole.slog
 
 open OpamStateTypes
 
-let load_selections gt switch =
-  OpamFile.SwitchSelections.safe_read (OpamPath.Switch.selections gt.root switch)
+let load_selections ?lock_kind gt switch =
+  OpamStateConfig.Switch.safe_read_selections ?lock_kind gt switch
 
-let load_switch_config gt switch =
-  let f = OpamPath.Switch.switch_config gt.root switch in
-  match OpamFile.Switch_config.read_opt f with
+let load_switch_config ?lock_kind gt switch =
+  match OpamStateConfig.Switch.read_opt ?lock_kind gt switch with
   | Some c -> c
+  | exception (OpamPp.Bad_version _ as e) ->
+(*
+    OpamFormatUpgrade.hard_upgrade_from_2_1_intermediates
+      ~global_lock:gt.global_lock gt.root;
+*)
+    raise e
   | None ->
-    OpamConsole.error
-      "No config file found for switch %s. Switch broken?"
-      (OpamSwitch.to_string switch);
-    OpamFile.Switch_config.empty
+    (OpamConsole.error
+       "No config file found for switch %s. Switch broken?"
+       (OpamSwitch.to_string switch);
+     OpamFile.Switch_config.empty)
 
 let compute_available_packages gt switch switch_config ~pinned ~opams =
   (* remove all versions of pinned packages, but the pinned-to version *)
@@ -98,21 +103,16 @@ let load lock_kind gt rt switch =
   let lock =
     OpamFilename.flock lock_kind (OpamPath.Switch.lock gt.root switch)
   in
-  let switch_config = load_switch_config gt switch in
-  if OpamVersion.compare
-      (OpamVersion.nopatch (switch_config.OpamFile.Switch_config.opam_version))
-      (OpamVersion.nopatch OpamFormatUpgrade.latest_version)
-     <> 0 then
-    OpamConsole.error_and_exit `Configuration_error
-      "Could not load opam switch %s: it reports version %s while %s was \
-       expected"
-      (OpamSwitch.to_string switch)
-      (OpamVersion.to_string
-         (switch_config.OpamFile.Switch_config.opam_version))
-      (OpamVersion.to_string OpamFormatUpgrade.latest_version);
+  let switch_config = load_switch_config ~lock_kind gt switch in
+  if OpamStateConfig.is_newer_than_self gt then
+    log "root version (%s) is greater than running binary's (%s); \
+         load with best-effort (read-only)"
+      (OpamStd.Option.to_string OpamVersion.to_string
+         (OpamFile.Config.opam_root_version gt.config))
+      (OpamVersion.to_string (OpamFile.Config.root_version));
   let { sel_installed = installed; sel_roots = installed_roots;
         sel_pinned = pinned; sel_compiler = compiler_packages; } =
-    load_selections gt switch
+    load_selections ~lock_kind gt switch
   in
   let pinned, pinned_opams =
     OpamPackage.Set.fold (fun nv (pinned,opams) ->
@@ -339,6 +339,10 @@ let unlock st =
   (st :> unlocked switch_state)
 
 let with_write_lock ?dontblock st f =
+  if OpamStateConfig.is_newer_than_self st.switch_global then
+    OpamConsole.error_and_exit `Locked
+      "The opam root has been upgraded by a newer version of opam-state \
+       and cannot be written to";
   let ret, st =
     OpamFilename.with_flock_upgrade `Lock_write ?dontblock st.switch_lock
     @@ fun _ -> f ({ st with switch_lock = st.switch_lock } : rw switch_state)
@@ -770,7 +774,9 @@ let do_backup lock st = match lock with
       | true -> OpamFilename.remove (OpamFile.filename file)
       | false ->
         (* Reload, in order to skip the message if there were no changes *)
-        let new_selections = load_selections st.switch_global st.switch in
+        let new_selections =
+          load_selections ~lock_kind:lock st.switch_global st.switch
+        in
         if new_selections.sel_installed = previous_selections.sel_installed
         then OpamFilename.remove (OpamFile.filename file)
         else
@@ -805,7 +811,7 @@ let with_ lock ?rt ?(switch=OpamStateConfig.get_switch ()) gt f =
 let update_repositories gt update_fun switch =
   OpamFilename.with_flock `Lock_write (OpamPath.Switch.lock gt.root switch)
   @@ fun _ ->
-  let conf = load_switch_config gt switch in
+  let conf = load_switch_config ~lock_kind:`Lock_write gt switch in
   let repos =
     match conf.OpamFile.Switch_config.repos with
     | None -> OpamGlobalState.repos_list gt

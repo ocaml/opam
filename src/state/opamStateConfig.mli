@@ -12,6 +12,7 @@
     initialisation) *)
 
 open OpamTypes
+open OpamStateTypes
 
 type t = private {
   root_dir: OpamFilename.Dir.t;
@@ -55,7 +56,8 @@ include OpamStd.Config.Sig
 val opamroot: ?root_dir:dirname -> unit -> dirname
 
 (** Loads the global configuration file, protecting against concurrent writes *)
-val load: dirname -> OpamFile.Config.t option
+val load: ?lock_kind: 'a lock -> dirname -> OpamFile.Config.t option
+val safe_load: ?lock_kind: 'a lock -> dirname -> OpamFile.Config.t
 
 (** Loads the config file from the OPAM root and updates default values for all
     related OpamXxxConfig modules. Doesn't read the env yet, the [init]
@@ -63,7 +65,8 @@ val load: dirname -> OpamFile.Config.t option
     initialised beforehand, as it may impact the config file loading.
 
     Returns the config file that was found, if any *)
-val load_defaults: OpamFilename.Dir.t -> OpamFile.Config.t option
+val load_defaults:
+  ?lock_kind:'a lock -> OpamFilename.Dir.t -> OpamFile.Config.t option
 
 (** Returns the current switch, failing with an error message is none is set. *)
 val get_switch: unit -> switch
@@ -82,3 +85,34 @@ val local_switch_exists: OpamFilename.Dir.t -> switch -> bool
 (** Resolves the switch if it is a link to a global switch in the given root
     (return unchanged otherwise) *)
 val resolve_local_switch: OpamFilename.Dir.t -> switch -> switch
+
+(** Given the required lock, returns [true] if the opam root is newer than the
+    binary, so that it can only be loaded read-only by the current binary. *)
+val is_newer_than_self: ?lock_kind:'a lock -> 'b global_state -> bool
+
+(** Check config root version regarding self-defined one *)
+val is_newer: OpamFile.Config.t ->  bool
+
+val load_config_root:
+  ?lock_kind:'a lock ->
+  ((OpamFile.Config.t OpamFile.t -> 'b) * (OpamFile.Config.t OpamFile.t -> 'b)) ->
+  dirname -> 'b
+
+module Switch : sig
+  val safe_load_t:
+    ?lock_kind: 'a lock -> dirname -> switch -> OpamFile.Switch_config.t
+  val safe_load:
+    ?lock_kind: 'a lock -> 'b global_state -> switch -> OpamFile.Switch_config.t
+  val safe_read_selections:
+    ?lock_kind: 'a lock -> 'b global_state -> switch -> switch_selections
+  val safe_read_selections_t:
+    ?lock_kind: 'a lock -> dirname -> switch -> switch_selections
+  val read_opt:
+    ?lock_kind: 'a lock -> 'b global_state -> switch ->
+    OpamFile.Switch_config.t option
+end
+
+module Repos : sig
+  val safe_read:
+    ?lock_kind: 'a lock -> 'b global_state -> OpamFile.Repos_config.t
+end

@@ -158,14 +158,14 @@ module MakeIO (F : IO_Arg) = struct
         log ~level:2 "Cannot find %a" (slog OpamFilename.to_string) f;
         F.empty
     with
-    | Pp.Bad_format _ as e->
+    | (Pp.Bad_version _ | Pp.Bad_format _) as e->
       OpamConsole.error "%s [skipped]\n"
         (Pp.string_of_bad_format ~file:(OpamFilename.to_string f) e);
       F.empty
 
   let read_from_f f input =
     try f input with
-    | Pp.Bad_format _ as e ->
+    | (Pp.Bad_version _ | Pp.Bad_format _) as e->
       if OpamFormatConfig.(!r.strict) then
         (OpamConsole.error "%s" (Pp.string_of_bad_format e);
          OpamConsole.error_and_exit `File_error "Strict mode: aborting")
@@ -875,15 +875,26 @@ module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
   module IO = struct
     let to_opamfile filename t = Pp.print X.pp (filename, t)
 
+    let catch_future_syntax_error = function
+      | {file_contents = [ Variable (_, "opam-version",
+                                     String (_, ver));
+                           Section (pos, {section_kind = "#"; _})]; _}
+        when OpamVersion.(compare (nopatch (of_string ver))
+                            (OpamVersion.of_string "2.0")) <= 0 ->
+        raise (OpamPp.Bad_format (Some pos, "Parse error"))
+      | opamfile -> opamfile
+
     let of_channel filename (ic:in_channel) =
-      Pp.parse X.pp ~pos:(pos_file filename) (Syntax.of_channel filename ic)
+      let opamfile = Syntax.of_channel filename ic |> catch_future_syntax_error in
+      Pp.parse X.pp ~pos:(pos_file filename) opamfile
       |> snd
 
     let to_channel filename oc t =
       Syntax.to_channel filename oc (to_opamfile filename t)
 
     let of_string (filename:filename) str =
-      Pp.parse X.pp ~pos:(pos_file filename) (Syntax.of_string filename str)
+      let opamfile = Syntax.of_string filename str |> catch_future_syntax_error in
+      Pp.parse X.pp ~pos:(pos_file filename) opamfile
       |> snd
 
     let to_string filename t =
@@ -896,6 +907,35 @@ module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
       include X
       include IO
     end)
+end
+
+(* Error less reading for forward compatibility of opam roots *)
+module type BestEffortArg = sig
+  include SyntaxFileArg
+
+  (* Construct the syntax pp, under some conditions. If [condition] is given,
+     it is passed to [OpamFormat.show_erros] call, for error display
+     conditions, default is to display it as a warning. *)
+  val pp_cond: ?condition:(t -> bool) -> unit -> (opamfile, filename * t) Pp.t
+end
+
+module type BestEffortRead = sig
+  type t
+  val read: t typed_file -> t
+  val read_opt: t typed_file -> t option
+  val safe_read: t typed_file -> t
+  val read_from_channel: ?filename:t typed_file -> in_channel -> t
+  val read_from_string: ?filename:t typed_file -> string -> t
+end
+
+module MakeBestEffort (S: BestEffortArg) : BestEffortRead
+  with type t := S.t = struct
+  module ES = struct
+    include S
+    let pp = pp_cond ~condition:(fun _ -> false) ()
+  end
+  include ES
+  include SyntaxFile(ES)
 end
 
 (** (1) Internal files *)
@@ -1029,8 +1069,14 @@ module ConfigSyntax = struct
 
   let internal = "config"
 
+  (* Unused, present as a hint *)
+  let _format_version = OpamVersion.of_string "2.0"
+  let _file_format_version = OpamVersion.of_string "2.0"
+  let root_version = OpamVersion.of_string "2.0"
+
   type t = {
     opam_version : opam_version;
+    opam_root_version: opam_version option;
     repositories : repository_name list;
     installed_switches : switch list;
     switch : switch option;
@@ -1049,6 +1095,7 @@ module ConfigSyntax = struct
   }
 
   let opam_version t = t.opam_version
+  let opam_root_version t = t.opam_root_version
   let repositories t = t.repositories
   let installed_switches t = t.installed_switches
   let switch t = t.switch
@@ -1071,6 +1118,8 @@ module ConfigSyntax = struct
   let default_compiler t = t.default_compiler
 
   let with_opam_version opam_version t = { t with opam_version }
+  let with_opam_root_version opam_root_version t =
+    { t with opam_root_version = Some opam_root_version }
   let with_repositories repositories t = { t with repositories }
   let with_installed_switches installed_switches t =
     { t with installed_switches }
@@ -1098,6 +1147,7 @@ module ConfigSyntax = struct
 
   let empty = {
     opam_version = OpamVersion.current_nopatch;
+    opam_root_version = None;
     repositories = [];
     installed_switches = [];
     switch = None;
@@ -1123,6 +1173,9 @@ module ConfigSyntax = struct
     [
       "opam-version", Pp.ppacc
         with_opam_version opam_version
+        (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
+      "opam-root-version", Pp.ppacc_opt
+        with_opam_root_version opam_root_version
         (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
       "repositories", Pp.ppacc
         with_repositories repositories
@@ -1202,16 +1255,39 @@ module ConfigSyntax = struct
       (fun (fld, ppacc) -> fld, Pp.embed with_wrappers wrappers ppacc)
       Wrappers.fields
 
-  let pp =
+  let pp_cond ?condition () =
     let name = internal in
     Pp.I.map_file @@
+    Pp.I.check_opam_version () -|
     Pp.I.fields ~name ~empty fields -|
-    Pp.I.show_errors ~name ~strict:OpamCoreConfig.(not !r.safe_mode) ()
+    Pp.I.show_errors ~name ?condition ()
+
+  let pp = pp_cond ()
 
 end
+
 module Config = struct
   include ConfigSyntax
   include SyntaxFile(ConfigSyntax)
+
+  module BestEffort = MakeBestEffort(ConfigSyntax)
+
+  let raw_root_version f =
+    try
+      let opamfile = OpamParser.file (OpamFilename.to_string (filename f)) in
+      let get_version field =
+        try
+          Some (OpamStd.List.find_map (function
+              | Variable (_, field', String (_, version))
+                when field' = field ->
+                Some (OpamVersion.of_string version)
+              | _ -> None)
+              opamfile.file_contents)
+        with Not_found -> None
+      in
+      get_version "opam-root-version", get_version "opam-version"
+    with
+    | Sys_error _ -> None, None
 end
 
 module InitConfigSyntax = struct
@@ -1457,16 +1533,19 @@ module Repos_configSyntax = struct
          OpamRepositoryName.Map.(of_list, bindings));
   ]
 
-  let pp =
+  let pp_cond ?condition () =
     let name = internal in
     Pp.I.map_file @@
     Pp.I.fields ~name ~empty fields -|
-    Pp.I.show_errors ~name ()
+    Pp.I.show_errors ~name ?condition ()
+
+  let pp = pp_cond ()
 
 end
 module Repos_config = struct
   include Repos_configSyntax
   include SyntaxFile(Repos_configSyntax)
+  module BestEffort = MakeBestEffort(Repos_configSyntax)
 end
 
 module Switch_configSyntax = struct
@@ -1535,11 +1614,13 @@ module Switch_configSyntax = struct
          fld, Pp.embed (fun wrappers t -> {t with wrappers}) (fun t -> t.wrappers) ppacc)
       Wrappers.fields
 
-  let pp =
+  let pp_cond ?condition () =
     let name = internal in
     Pp.I.map_file @@
     Pp.I.fields ~name ~empty ~sections fields -|
-    Pp.I.show_errors ~name ()
+    Pp.I.show_errors ~name ?condition ()
+
+  let pp = pp_cond ()
 
   let variable t s =
     try Some (List.assoc s t.variables)
@@ -1552,9 +1633,23 @@ module Switch_configSyntax = struct
   let wrappers t = t.wrappers
 
 end
+
 module Switch_config = struct
   include Switch_configSyntax
   include SyntaxFile(Switch_configSyntax)
+  module BestEffort = MakeBestEffort(Switch_configSyntax)
+
+  let raw_opam_version f =
+    try
+      let opamfile = OpamParser.file (OpamFilename.to_string (filename f)) in
+      Some (OpamStd.List.find_map (function
+          | Variable (_, "opam-version", String (_, version)) ->
+            Some (OpamVersion.of_string version)
+          | _ -> None)
+          opamfile.file_contents)
+    with
+    | Sys_error _ | Not_found -> None
+
 end
 
 module SwitchSelectionsSyntax = struct
@@ -1604,18 +1699,21 @@ module SwitchSelectionsSyntax = struct
        Pp.of_pair "Package set" OpamPackage.Set.(of_list, elements))
   ]
 
-  let pp =
+  let pp_cond ?condition () =
     let name = "switch-state" in
     Pp.I.map_file @@
     Pp.I.check_opam_version () -|
     Pp.I.fields ~name ~empty fields -|
-    Pp.I.show_errors ~name ()
+    Pp.I.show_errors ~name ?condition ()
+
+  let pp = pp_cond ()
 
 end
 
 module SwitchSelections = struct
   type t = switch_selections
   include SyntaxFile(SwitchSelectionsSyntax)
+  module BestEffort = MakeBestEffort(SwitchSelectionsSyntax)
 end
 
 (** Local repository config file (repo/<repo>/config) *)

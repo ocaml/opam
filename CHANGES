@@ -2,6 +2,45 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+2.0.9:
+* Fix the conflict with the environment variable name used by dune
+  [#4535 @smorimoto - fix ocaml/dune#4166]
+* Kill builds on Ctrl-C with bubblewrap [#4530 @kit-ty-kate - fix #4404]
+* Linux: mount existing TMPDIR read-only, re-bind `$TMPDIR` to a separate tmpfs
+  [#4589 @AltGr]
+* Fix the sandbox check [#4589 @AltGr]
+* Fix sandbox script shell mistake that made `PWD` read-write on remove actions
+  [#4589 @AltGr]
+* Port bwrap improvements to sandbox_exec [#4589 #4609 @AltGr]
+* Fix W59 & E60 with conf flag handling (no url required) [#4550 @rjbou - fix #4549]
+* Fix temporary file with a too long name causing errors on Windows
+  [#4590 @AltGr]
+* Switch to newer version of MCCS (based on newer GLPK) for src_ext
+  [#4559 @AltGr]
+* Fix version pin source retrieving: don't error if archive opam file is
+  malformed [#4580 @rjbou]
+* Release scripts: switch to OCaml 4.10.2 by default, add macos/arm64 builds by
+  default [#4559 @AltGr]
+* Fix opam-devel's tests on platforms without openssl, GNU-diff and a
+  system-wide ocaml [#4500 @kit-ty-kate]
+* Untag dune as a build dependency [#4229 @kit-ty-kate]
+* Fix configure check in github actions [#4593 @rjbou]
+* Add missing shell quoting to support space and special shell characters in
+  switch directory path [#4707 @kit-ty-kate]
+* The options `--root` and `--switch` are now reflected in environment
+  variables when building packages so that calls to `opam` during build access
+  the correct root and switch [#4668 @LasseBlaauwbroek]
+* If opam root is different from the binary, allow reading it and try to read
+  in best effort mode [#4638 @rjbou - fix #4636]
+* Differentiate bad format from bad (opam) version with `Bad_version`
+  exception, raised from `OpamFormat.check_opam_version` [#4638 @rjbou]
+* Add `BestEffort` modules with reading functions that don't show errors, given
+  the `opam_file_format` internal field [#4638 @rjbou - fix
+* Require opam-file-format 2.1.3+ in order to enforce opam-version: "2.1" as
+  first non-comment line [#4639 @dra27 - fix #4394]
+* Fix opam switch creation not compatible compiler message
+  [#4547 @rjbou - fix #4718]
+
 2.0.8:
 * Add colon for fish MANPATH fix. [#4084 @rjbou - fix #4078]
 * No error when linked directory doesn't exist (e.g. XDG defined)

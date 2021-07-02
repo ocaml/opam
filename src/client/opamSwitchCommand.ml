@@ -54,8 +54,7 @@ let list gt ~print_short =
           |> ifempty comp
         in
         let conf =
-          OpamFile.Switch_config.read_opt
-            (OpamPath.Switch.switch_config gt.root sw)
+          OpamStateConfig.Switch.read_opt ~lock_kind:`Lock_read gt sw
         in
         let descr = match conf with
           | Some c -> c.OpamFile.Switch_config.synopsis
@@ -497,7 +496,10 @@ let export ?(full=false) filename =
   let export =
     OpamFilename.with_flock `Lock_none (OpamPath.Switch.lock root switch)
     @@ fun _ ->
-    let selections = S.safe_read (OpamPath.Switch.selections root switch) in
+    let selections =
+      OpamStateConfig.Switch.safe_read_selections_t
+        ~lock_kind:`Lock_none root switch
+    in
     let overlays =
       read_overlays (fun nv ->
           OpamFileTools.read_opam

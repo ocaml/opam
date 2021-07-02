@@ -51,5 +51,5 @@ val set_global: full_variable -> string option -> unit
 (** Execute a command in a subshell, after variable expansion *)
 val exec:
   [< unlocked ] global_state ->
-  ?set_opamroot:bool -> ?set_opamswitch:bool -> inplace_path:bool ->
+  set_opamroot:bool -> set_opamswitch:bool -> inplace_path:bool ->
   string list -> unit

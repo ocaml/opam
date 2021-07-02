@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2.0.8"
+version: "2.0.9"
 synopsis: "opam 2.0 development libraries (solver)"
 description: """
 Solver and Cudf interaction. This library is based on the Cudf and Dose libraries, and handles calls to the external solver from opam.
@@ -30,5 +30,5 @@ depends: [
   "mccs" {>= "1.1+9"}
   "dose3" {>= "5" & < "6.0"}
   "cudf" {>= "0.7"}
-  "dune" {build & >= "1.2.1"}
+  "dune" {>= "1.2.1"}
 ]

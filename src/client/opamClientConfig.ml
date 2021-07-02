@@ -143,7 +143,7 @@ let opam_init ?root_dir ?strict =
   (* the init for OpamFormat is done in advance since (a) it has an effect on
      loading the global config (b) the global config has no effect on it *)
   OpamFormatConfig.initk ?strict @@ fun ?log_dir ->
-  let config = OpamStateConfig.load_defaults root in
+  let config = OpamStateConfig.load_defaults ~lock_kind:`Lock_read root in
   let initialised = config <> None in
   (* !X fixme: don't drop the loaded config file to reload it afterwards (when
      loading the global_state) like that... *)
