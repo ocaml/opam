@@ -3138,6 +3138,7 @@ module ChangesSyntax = struct
                   Pp.of_pair "digest" (digest_of_string, string_of_digest))))
 
   let fields = [
+    "opam-version", Pp.ppacc_ignore;
     "added", field
       (function Some dg -> Added dg
               | None -> Pp.bad_format "Missing digest")
@@ -3161,6 +3162,7 @@ module ChangesSyntax = struct
   ]
 
   let pp_contents =
+    Pp.I.check_opam_version ~optional:true () -|
     Pp.I.fields ~name:internal ~empty fields -|
     Pp.I.show_errors ~name:internal ()
 
