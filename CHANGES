@@ -6,6 +6,7 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0:
 * Set DEBIAN_FRONTEND=noninteractive for unsafe-yes confirmation level
   [#4735 @dra27 - partially fix #4731]
+* fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
 
 2.1.0~rc2:
 * Remove OPAMZ3DEBUG evironment variable [#4720 @rjbou - fix #4717]
