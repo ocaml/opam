@@ -40,6 +40,7 @@ are not marked).
   first non-comment line [#4639 @dra27 - fix #4394]
 * Fix opam switch creation not compatible compiler message
   [#4547 @rjbou - fix #4718]
+* fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
 
 2.0.8:
 * Add colon for fish MANPATH fix. [#4084 @rjbou - fix #4078]
