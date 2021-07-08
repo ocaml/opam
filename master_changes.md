@@ -46,7 +46,7 @@ Prefixes used to help generate release notes, changes, and blog posts:
   *
 
 ## Lint
-  * Added support for LGPL-3 linking exception
+  * Add support for LGPL-3 linking exception [#4747 @mseri]
 
 ## Lock
   *
