@@ -436,4 +436,5 @@ let exceptions = OpamStd.String.Set.of_list @@ List.map String.lowercase_ascii @
   "GCC-exception-2.0";
   "mif-exception";
   "OCaml-LGPL-linking-exception";
+  "LGPL-3.0-linking-exception";
 ]
