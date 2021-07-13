@@ -933,6 +933,60 @@ compiler: ["i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
+### :V:1:e: reinit from 2.0
+### ocaml generate.ml 2.0
+### opam init --reinit --bypass-checks --no-setup
+No configuration file found, using built-in defaults.
+Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
+FMT_UPG                         Light config upgrade, from 2.0 to 2.1
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version 2.1, which can't be reverted.
+You may want to back it up before going further.
+
+Continue? [Y/n] y
+Format upgrade done.
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/default
+### opam switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+#   switch                                     compiler             description
+->  ${BASEDIR}  i-am-sys-compiler.2  local switch
+    default                                                         default switch
+    sw-comp                                    i-am-compiler.2      switch with compiler
+    sw-sys-comp                                                     switch with system compiler
+
+[NOTE] Current switch has been selected based on the current directory.
+       The current global system switch is sw-sys-comp.
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# Name            # Installed # Synopsis
+i-am-package      2           One-line description
+i-am-sys-compiler 2           One-line description
+### opam-cat $OPAMROOT/config
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+default-invariant: ["ocaml" {>= "4.05.0"}]
+depext: true
+depext-cannot-install: false
+depext-run-installs: true
+download-jobs: 3
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
 ### rm -rf _opam
 ### :V:2:a: From 2.1~alpha root, global
 ### ocaml generate.ml 2.1~alpha
@@ -1215,6 +1269,65 @@ compiler: ["i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
+### :V:2:e: reinit from 2.1~alpha
+### ocaml generate.ml 2.1~alpha
+### opam init --reinit --bypass-checks --no-setup
+No configuration file found, using built-in defaults.
+Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
+FMT_UPG                         Hard config upgrade, from 2.1~alpha to 2.1
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha to version 2.1, which can't be reverted.
+You may want to back it up before going further.
+
+Perform the update and continue? [Y/n] y
+Format upgrade done.
+
+<><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/default
+Update done, please now retry your command.
+# Return code 10 #
+### opam switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+#   switch                                     compiler             description
+->  ${BASEDIR}  i-am-sys-compiler.2  local switch
+    default                                                         default switch
+    sw-comp                                    i-am-compiler.2      switch with compiler
+    sw-sys-comp                                                     switch with system compiler
+
+[NOTE] Current switch has been selected based on the current directory.
+       The current global system switch is sw-sys-comp.
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# Name            # Installed # Synopsis
+i-am-package      2           One-line description
+i-am-sys-compiler 2           One-line description
+### opam-cat $OPAMROOT/config
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+default-invariant: ["ocaml" {>= "4.05.0"}]
+depext: true
+depext-cannot-install: false
+depext-run-installs: true
+download-jobs: 3
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
 ### rm -rf _opam
 ### :V:3:a: From 2.1~alpha2 root, global
 ### ocaml generate.ml 2.1~alpha2
@@ -1504,6 +1617,65 @@ compiler: ["i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
+### :V:3:e: reinit from 2.1~alpha2
+### ocaml generate.ml 2.1~alpha2
+### opam init --reinit --bypass-checks --no-setup
+No configuration file found, using built-in defaults.
+FMT_UPG                         Intermediate opam root detected, launch hard upgrade
+FMT_UPG                         Downgrade config opam-version to fix up
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
+FMT_UPG                         Hard config upgrade, from 2.1~alpha2 to 2.1
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha2 to version 2.1, which can't be reverted.
+You may want to back it up before going further.
+
+Perform the update and continue? [Y/n] y
+Format upgrade done.
+
+<><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/default
+Update done, please now retry your command.
+# Return code 10 #
+### opam switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+#   switch                                     compiler             description
+->  ${BASEDIR}  i-am-sys-compiler.2  local switch
+    default                                                         default switch
+    sw-comp                                    i-am-compiler.2      switch with compiler
+    sw-sys-comp                                                     switch with system compiler
+
+[NOTE] Current switch has been selected based on the current directory.
+       The current global system switch is sw-sys-comp.
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# Name            # Installed # Synopsis
+i-am-package      2           One-line description
+i-am-sys-compiler 2           One-line description
+### opam-cat $OPAMROOT/config
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+default-invariant: ["ocaml" {>= "4.05.0"}]
+depext: true
+depext-cannot-install: false
+depext-run-installs: true
+download-jobs: 3
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
 ### rm -rf _opam
 ### :V:4:a: From 2.1~rc root, global
 ### ocaml generate.ml 2.1~rc
@@ -1755,6 +1927,60 @@ compiler: ["i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
+### :V:4:e: reinit from 2.1~rc
+### ocaml generate.ml 2.1~rc
+### opam init --reinit --bypass-checks --no-setup
+No configuration file found, using built-in defaults.
+Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
+FMT_UPG                         Light config upgrade, from 2.1~rc to 2.1
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~rc to version 2.1, which can't be reverted.
+You may want to back it up before going further.
+
+Continue? [Y/n] y
+Format upgrade done.
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/default
+### opam switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+#   switch                                     compiler             description
+->  ${BASEDIR}  i-am-sys-compiler.2  local switch
+    default                                                         default switch
+    sw-comp                                    i-am-compiler.2      switch with compiler
+    sw-sys-comp                                                     switch with system compiler
+
+[NOTE] Current switch has been selected based on the current directory.
+       The current global system switch is sw-sys-comp.
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# Name            # Installed # Synopsis
+i-am-package      2           One-line description
+i-am-sys-compiler 2           One-line description
+### opam-cat $OPAMROOT/config
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+default-invariant: ["i-am-sys-compiler"]
+depext: true
+depext-cannot-install: false
+depext-run-installs: true
+download-jobs: 3
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
 ### rm -rf _opam
 ### :V:5:a: From 2.1 root, global
 ### ocaml generate.ml 2.1
@@ -1954,3 +2180,51 @@ compiler: ["i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
+### :V:5:e: reinit from 2.1
+### ocaml generate.ml 2.1
+### opam init --reinit --bypass-checks --no-setup
+No configuration file found, using built-in defaults.
+Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/default
+### opam-cat $OPAMROOT/config
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+default-invariant: ["i-am-sys-compiler"]
+depext: true
+depext-cannot-install: false
+depext-run-installs: true
+download-jobs: 3
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
+### opam switch
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+#   switch                                     compiler             description
+->  ${BASEDIR}  i-am-sys-compiler.2  local switch
+    default                                                         default switch
+    sw-comp                                    i-am-compiler.2      switch with compiler
+    sw-sys-comp                                                     switch with system compiler
+    this-internal-error                                             Missing config file
+
+[NOTE] Current switch has been selected based on the current directory.
+       The current global system switch is sw-sys-comp.
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# Name            # Installed # Synopsis
+i-am-package      2           One-line description
+i-am-sys-compiler 2           One-line description
