@@ -371,10 +371,18 @@ let init cli =
           get_init_config ~no_sandboxing
             ~no_default_config_file:no_config_file ~add_config_file:config_file
         in
+        let config =
+          match OpamStateConfig.load ~lock_kind:`Lock_write root with
+          | Some c -> c
+          | exception (OpamPp.Bad_version _ as e) ->
+            OpamFormatUpgrade.hard_upgrade_from_2_1_intermediates root;
+            raise e
+          | None -> OpamFile.Config.empty
+        in
         OpamClient.reinit ~init_config ~interactive ~dot_profile
           ?update_config ?env_hook ?completion ~inplace
           ~check_sandbox:(not no_sandboxing)
-          (OpamStateConfig.safe_load ~lock_kind:`Lock_write root) shell;
+          config shell
       else
         (if not interactive &&
             update_config <> Some true && completion <> Some true && env_hook <> Some true then
