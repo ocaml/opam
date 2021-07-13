@@ -380,7 +380,7 @@ let init cli =
           | None -> OpamFile.Config.empty
         in
         OpamClient.reinit ~init_config ~interactive ~dot_profile
-          ?update_config ?env_hook ?completion ~inplace
+          ?update_config ?env_hook ?completion ~inplace ~bypass_checks
           ~check_sandbox:(not no_sandboxing)
           config shell
       else
