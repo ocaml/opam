@@ -937,7 +937,6 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### ocaml generate.ml 2.0
 ### opam init --reinit --bypass-checks --no-setup
 No configuration file found, using built-in defaults.
-Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Light config upgrade, from 2.0 to 2.1
@@ -1273,7 +1272,6 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### ocaml generate.ml 2.1~alpha
 ### opam init --reinit --bypass-checks --no-setup
 No configuration file found, using built-in defaults.
-Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Hard config upgrade, from 2.1~alpha to 2.1
@@ -1931,7 +1929,6 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### ocaml generate.ml 2.1~rc
 ### opam init --reinit --bypass-checks --no-setup
 No configuration file found, using built-in defaults.
-Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Light config upgrade, from 2.1~rc to 2.1
@@ -2184,7 +2181,6 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### ocaml generate.ml 2.1
 ### opam init --reinit --bypass-checks --no-setup
 No configuration file found, using built-in defaults.
-Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
