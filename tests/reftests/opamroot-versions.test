@@ -950,16 +950,12 @@ RSTATE                          Cache found
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
-### opam switch
+### opam switch --short
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-#   switch                                     compiler             description
-->  ${BASEDIR}  i-am-sys-compiler.2  local switch
-    default                                                         default switch
-    sw-comp                                    i-am-compiler.2      switch with compiler
-    sw-sys-comp                                                     switch with system compiler
-
-[NOTE] Current switch has been selected based on the current directory.
-       The current global system switch is sw-sys-comp.
+${BASEDIR}
+default
+sw-comp
+sw-sys-comp
 ### opam list
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -1290,16 +1286,12 @@ RSTATE                          Cache found
 [default] no changes from file://${BASEDIR}/default
 Update done, please now retry your command.
 # Return code 10 #
-### opam switch
+### opam switch --short
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-#   switch                                     compiler             description
-->  ${BASEDIR}  i-am-sys-compiler.2  local switch
-    default                                                         default switch
-    sw-comp                                    i-am-compiler.2      switch with compiler
-    sw-sys-comp                                                     switch with system compiler
-
-[NOTE] Current switch has been selected based on the current directory.
-       The current global system switch is sw-sys-comp.
+${BASEDIR}
+default
+sw-comp
+sw-sys-comp
 ### opam list
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -1638,16 +1630,12 @@ RSTATE                          Cache found
 [default] no changes from file://${BASEDIR}/default
 Update done, please now retry your command.
 # Return code 10 #
-### opam switch
+### opam switch --short
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-#   switch                                     compiler             description
-->  ${BASEDIR}  i-am-sys-compiler.2  local switch
-    default                                                         default switch
-    sw-comp                                    i-am-compiler.2      switch with compiler
-    sw-sys-comp                                                     switch with system compiler
-
-[NOTE] Current switch has been selected based on the current directory.
-       The current global system switch is sw-sys-comp.
+${BASEDIR}
+default
+sw-comp
+sw-sys-comp
 ### opam list
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -1942,16 +1930,12 @@ RSTATE                          Cache found
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
-### opam switch
+### opam switch --short
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-#   switch                                     compiler             description
-->  ${BASEDIR}  i-am-sys-compiler.2  local switch
-    default                                                         default switch
-    sw-comp                                    i-am-compiler.2      switch with compiler
-    sw-sys-comp                                                     switch with system compiler
-
-[NOTE] Current switch has been selected based on the current directory.
-       The current global system switch is sw-sys-comp.
+${BASEDIR}
+default
+sw-comp
+sw-sys-comp
 ### opam list
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -2203,17 +2187,13 @@ switch: "sw-sys-comp"
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
-### opam switch
+### opam switch --short
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-#   switch                                     compiler             description
-->  ${BASEDIR}  i-am-sys-compiler.2  local switch
-    default                                                         default switch
-    sw-comp                                    i-am-compiler.2      switch with compiler
-    sw-sys-comp                                                     switch with system compiler
-    this-internal-error                                             Missing config file
-
-[NOTE] Current switch has been selected based on the current directory.
-       The current global system switch is sw-sys-comp.
+${BASEDIR}
+default
+sw-comp
+sw-sys-comp
+this-internal-error
 ### opam list
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
