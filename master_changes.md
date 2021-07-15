@@ -22,7 +22,7 @@ Prefixes used to help generate release notes, changes, and blog posts:
   *
 
 ## Install
-  *
+  * Check if with-test & with-doc depends are installed to launch a reinstall [#4513 @rjbou - fix #4507]
 
 ## Remove
   *
