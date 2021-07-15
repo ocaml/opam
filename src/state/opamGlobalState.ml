@@ -60,7 +60,12 @@ let load lock_kind =
     OpamConsole.error_and_exit `Configuration_error
       "Opam has not been initialised, please run `opam init'";
   let config_lock = OpamFilename.flock lock_kind (OpamPath.config_lock root) in
-  let config = load_config lock_kind global_lock root in
+  let config =
+    try load_config lock_kind global_lock root
+    with OpamFormatUpgrade.Upgrade_done _ as e ->
+      OpamSystem.funlock config_lock;
+      raise e
+  in
   if OpamStateConfig.is_newer config && lock_kind <> `Lock_write then
     log "root version (%s) is greater than running binary's (%s); \
          load with best-effort (read-only)"

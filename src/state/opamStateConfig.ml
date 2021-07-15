@@ -232,9 +232,13 @@ let load_config_root ?lock_kind readf opamroot =
     (OpamFile.Config.raw_root_version f)
     readf f
 
+let safe read read' default =
+  let safe r f = OpamStd.Option.default default @@ r f in
+  safe read, safe read'
+
 let safe_load ?lock_kind opamroot =
   load_config_root ?lock_kind
-    OpamFile.Config.(safe_read, BestEffort.safe_read) opamroot
+    OpamFile.Config.(safe read_opt BestEffort.read_opt empty) opamroot
 
 let load ?lock_kind opamroot =
   load_config_root ?lock_kind
@@ -250,7 +254,7 @@ module Switch = struct
   let safe_load_t ?lock_kind root switch =
     let config = safe_load ~lock_kind:`Lock_read root in
     load_raw ?lock_kind root config
-      OpamFile.Switch_config.(safe_read, BestEffort.safe_read)
+      OpamFile.Switch_config.(safe read_opt BestEffort.read_opt empty)
       switch
 
   let load ?lock_kind gt readf switch =
@@ -258,7 +262,7 @@ module Switch = struct
 
   let safe_load ?lock_kind gt switch =
     load ?lock_kind gt
-      OpamFile.Switch_config.(safe_read, BestEffort.safe_read)
+      OpamFile.Switch_config.(safe read_opt BestEffort.read_opt empty)
       switch
 
   let read_opt ?lock_kind gt switch =
@@ -268,7 +272,7 @@ module Switch = struct
 
   let safe_read_selections ?lock_kind gt switch =
     load_if_possible ?lock_kind gt
-      OpamFile.SwitchSelections.(safe_read, BestEffort.safe_read)
+      OpamFile.SwitchSelections.(safe read_opt BestEffort.read_opt empty)
       (OpamPath.Switch.selections gt.root switch)
 
 end
@@ -277,7 +281,7 @@ end
 module Repos = struct
   let safe_read ?lock_kind gt =
     load_if_possible ?lock_kind gt
-      OpamFile.Repos_config.(safe_read, BestEffort.safe_read)
+      OpamFile.Repos_config.(safe read_opt BestEffort.read_opt empty)
       (OpamPath.repos_config gt.root)
 end
 

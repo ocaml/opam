@@ -573,11 +573,15 @@ let with_switch:
   | None ->
     let switch = OpamStateConfig.get_switch () in
     let switch_config =
-      try OpamStateConfig.Switch.safe_load ~lock_kind gt switch
-      with OpamPp.Bad_version _ as e ->
-        OpamFormatUpgrade.hard_upgrade_from_2_1_intermediates
-          ~global_lock:gt.global_lock gt.root;
-        raise e
+      if lock_kind = `Lock_write then
+        match OpamStateConfig.Switch.read_opt ~lock_kind gt switch with
+        | Some c -> c
+        | exception (OpamPp.Bad_version _ as e) ->
+          OpamFormatUpgrade.hard_upgrade_from_2_1_intermediates gt.root;
+          raise e
+        | None -> OpamFile.Switch_config.empty
+      else
+        OpamStateConfig.Switch.safe_load ~lock_kind gt switch
     in
     let lock_file = OpamPath.Switch.lock gt.root switch in
     if switch_config = OpamFile.Switch_config.empty then
