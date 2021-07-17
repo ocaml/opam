@@ -126,23 +126,23 @@ opam-%.install: $(DUNE_DEP)
 
 .PHONY: build-opam-installer
 build-opam-installer: $(DUNE_DEP) 
-	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-installer.install
+	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) opam-installer.install $(DUNE_PROMOTE_ARG)
 opam-installer.install: $(DUNE_DEP)
-	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-installer.install
+	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) opam-installer.install $(DUNE_PROMOTE_ARG)
 
 .PHONY: build-opam
 build-opam: $(DUNE_DEP)
-	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-installer.install opam.install
+	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) opam-installer.install opam.install $(DUNE_PROMOTE_ARG)
 opam.install: $(DUNE_DEP)
-	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-installer.install opam.install
+	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) opam-installer.install opam.install $(DUNE_PROMOTE_ARG)
 
 OPAMLIBS = core format solver repository state client
 
 opam-%: $(DUNE_DEP)
-	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) opam-$*.install
+	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) opam-$*.install $(DUNE_PROMOTE_ARG)
 
 opam-lib: $(DUNE_DEP)
-	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) $(DUNE_PROMOTE_ARG) $(patsubst %,opam-%.install,$(OPAMLIBS))
+	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) $(patsubst %,opam-%.install,$(OPAMLIBS)) $(DUNE_PROMOTE_ARG)
 
 installlib-%: opam-installer opam-%.install
 	$(if $(wildcard src_ext/lib/*),\
