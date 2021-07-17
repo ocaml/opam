@@ -32,7 +32,7 @@ URL_PKG_$(1) = $(URL_$(1))
 MD5_PKG_$(1) = $(MD5_$(1))
 endef
 
-SRC_EXTS = cppo extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result seq stdlib-shims
+SRC_EXTS = cppo base64 extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result seq stdlib-shims
 PKG_EXTS = $(SRC_EXTS) dune-local findlib ocamlbuild topkg mccs
 
 ifeq ($(MCCS_ENABLED),true)
