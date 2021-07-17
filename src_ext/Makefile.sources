@@ -38,8 +38,8 @@ MD5_mccs = 13504d3b5dcbf0bdc6d95a62de20af4a
 
 $(call PKG_SAME,mccs)
 
-URL_opam-0install-cudf = https://github.com/ocaml-opam/opam-0install-solver/releases/download/v0.4.1/opam-0install-cudf-v0.4.1.tbz
-MD5_opam-0install-cudf = 44e6d5a7fcdbc130db5dc86a6b9aeca6
+URL_opam-0install-cudf = https://github.com/ocaml-opam/opam-0install-solver/releases/download/v0.4.2/opam-0install-cudf-v0.4.2.tbz
+MD5_opam-0install-cudf = 8e1494e8b97fc6f9a463966c394e9bdd
 
 $(call PKG_SAME,opam-0install-cudf)
 
@@ -59,8 +59,8 @@ MD5_result = 1b82dec78849680b49ae9a8a365b831b
 $(call PKG_SAME,result)
 
 # NB If minimum OCaml version for Dune changes, update DUNE_SECONDARY in configure.ac
-URL_dune-local = https://github.com/ocaml/dune/releases/download/2.8.4/dune-2.8.4.tbz
-MD5_dune-local = 3b6044c7173fe5079c09341fc5373077
+URL_dune-local = https://github.com/ocaml/dune/releases/download/2.9.0/dune-2.9.0.tbz
+MD5_dune-local = 90a12dc2a312df699533cbe7d18ece11
 
 $(call PKG_SAME,dune-local)
 
