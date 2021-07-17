@@ -3,10 +3,15 @@ MD5_cppo = 65c668196c3dabf34d9e887952e5bbb4
 
 $(call PKG_SAME,cppo)
 
-URL_extlib = https://ygrek.org/p/release/ocaml-extlib/extlib-1.7.7.tar.gz
-MD5_extlib = 2c620993aecd4b31b3a362b21b55dd94
+URL_extlib = https://ygrek.org/p/release/ocaml-extlib/extlib-1.7.8.tar.gz
+MD5_extlib = 7e0df072af4e2daa094e5936a661cb11
 
 $(call PKG_SAME,extlib)
+
+URL_base64 = https://github.com/mirage/ocaml-base64/releases/download/v3.5.0/base64-v3.5.0.tbz
+MD5_base64 = 0179af18d6c1cf13d77671ee23901433
+
+$(call PKG_SAME,base64)
 
 URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.9.0/re-1.9.0.tbz
 MD5_re = bddaed4f386a22cace7850c9c7dac296

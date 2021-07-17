@@ -3,7 +3,7 @@
   (public_name extlib)
   ; -no-strict-sequence not added until 4.03!
   (flags (:standard \ -strict-sequence) -w -3)
-  (modules (:standard \ configure install uChar uTF8))
+  (modules (:standard \ configure install base64 unzip uChar uTF8))
   (preprocess (action (run %{bin:cppo} %{read-lines:compat-level} %{input-file})))
   (wrapped false))
 

@@ -47,6 +47,8 @@ opam-0install-cudf.pkgbuild: dune-local.pkgbuild cudf.pkgbuild 0install-solver.p
 
 stdlib-shims.pkgbuild: dune-local.pkgbuild
 
+base64.pkgbuild: dune-local.pkgbuild
+
 dune-local.pkgbuild: findlib.pkgbuild
 
 opam-file-format-pkg-build:
@@ -125,3 +127,7 @@ seq-pkg-build:
 stdlib-shims-pkg-build:
 	dune build @install -p stdlib-shims
 	dune install -p stdlib-shims stdlib-shims
+
+base64-pkg-build:
+	dune build @install -p base64
+	dune install -p base64 base64
