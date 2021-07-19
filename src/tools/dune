@@ -3,7 +3,7 @@
   (public_name  opam-admin.top)
   (synopsis     "OCaml Package Manager admin toplevel")
   (modules      opam_admin_top)
-  (libraries    opam-client opam-file-format compiler-libs.toplevel re)
+  (libraries    opam-client opam-file-format (re_export compiler-libs.toplevel) re)
   (wrapped      false))
 
 (executable

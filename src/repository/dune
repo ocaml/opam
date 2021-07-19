@@ -2,7 +2,7 @@
   (name        opam_repository)
   (public_name opam-repository)
   (synopsis    "OCaml Package Manager remote repository handling library")
-  (libraries   opam-format)
+  (libraries   (re_export opam-format))
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
                (:include ../ocaml-flags-configure.sexp)
