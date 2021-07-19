@@ -23,15 +23,15 @@
                (:include linking.sexp)))
   (libraries   opam-client
                (select link-opam-manifest from
-                       (opam-client.manifest -> pull-manifest)
-                       (                     -> dummy)
+                       (opam-client.manifest -> link-opam-manifest.pull)
+                       (                     -> link-opam-manifest.dummy)
                )))
 
 (rule
-  (with-stdout-to dummy (echo "")))
+  (with-stdout-to link-opam-manifest.dummy (echo "")))
 
 (rule
-  (targets pull-manifest)
+  (targets link-opam-manifest.pull)
   (deps    (:obj ../manifest/opam-manifest.o))
   (action  (progn (system "cp %{obj} opam-manifest.o 2> %{null} || copy %{obj} opam-manifest.o")
                   (with-stdout-to %{targets} (echo "")))))
