@@ -31,5 +31,5 @@ depends: [
   "ocaml" {>= "4.03.0"}
   "opam-format" {= version}
   "cmdliner" {>= "0.9.8"}
-  "dune" {>= "1.11.0"}
+  "dune" {>= "2.0.0"}
 ]

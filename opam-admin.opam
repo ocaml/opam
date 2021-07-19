@@ -17,7 +17,7 @@ homepage: "https://opam.ocaml.org/"
 bug-reports: "https://github.com/ocaml/opam/issues"
 license: "LGPL-2.1-only WITH OCaml-LGPL-linking-exception"
 depends: [
-  "dune" {>= "1.11.0"}
+  "dune" {>= "2.0.0"}
   "re" {>= "1.9.0"}
   "opam-file-format" {>= "2.1.3"}
 ]

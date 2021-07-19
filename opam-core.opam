@@ -31,7 +31,7 @@ depends: [
   "base-bigarray"
   "ocamlgraph"
   "re" {>= "1.9.0"}
-  "dune" {>= "1.11.0"}
+  "dune" {>= "2.0.0"}
   "cppo" {build & >= "1.1.0"}
 ]
 conflicts: "extlib-compat"

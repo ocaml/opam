@@ -28,5 +28,5 @@ build: [
 depends: [
   "ocaml" {>= "4.03.0"}
   "opam-format" {= version}
-  "dune" {>= "1.11.0"}
+  "dune" {>= "2.0.0"}
 ]
