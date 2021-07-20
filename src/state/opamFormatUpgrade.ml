@@ -17,7 +17,7 @@ open OpamFilename.Op
 let log fmt = OpamConsole.log "FMT_UPG" fmt
 let slog = OpamConsole.slog
 
-exception Upgrade_done of OpamFile.Config.t
+exception Upgrade_done of OpamFile.Config.t * (OpamFile.Config.t -> unit) option
 
 (* - Package and aux functions - *)
 
@@ -1094,7 +1094,7 @@ let remove_missing_switches root conf =
   in
   OpamFile.Config.with_installed_switches exists conf, missing
 
-let as_necessary requested_lock global_lock root config =
+let as_necessary ?reinit requested_lock global_lock root config =
   let root_version =
     match OpamFile.Config.opam_root_version_opt config with
     | Some v -> v
@@ -1237,7 +1237,7 @@ let as_necessary requested_lock global_lock root config =
           let config = hard config |> light in
           OpamConsole.msg "Format upgrade done.\n";
           (* We need to re run init in case of hard upgrade *)
-          raise (Upgrade_done config)
+          raise (Upgrade_done (config, reinit))
         else
           OpamStd.Sys.exit_because `Aborted
       else
@@ -1255,7 +1255,7 @@ let as_necessary requested_lock global_lock root config =
     OpamConsole.error_and_exit `Locked
       "Could not acquire lock for performing format upgrade."
 
-let hard_upgrade_from_2_1_intermediates ?global_lock root =
+let hard_upgrade_from_2_1_intermediates ?reinit ?global_lock root =
   let config_f = OpamPath.config root in
   let opam_root_version = OpamFile.Config.raw_root_version config_f in
   match opam_root_version with
@@ -1290,7 +1290,7 @@ let hard_upgrade_from_2_1_intermediates ?global_lock root =
       | None -> OpamFilename.flock `Lock_read (OpamPath.lock root)
     in
     (* it will trigger only hard upgrades that won't get back *)
-    ignore @@ as_necessary `Lock_write global_lock root
+    ignore @@ as_necessary `Lock_write global_lock root ?reinit
       (OpamFile.Config.with_opam_root_version v2_1_alpha2 config)
 
 let opam_file ?(quiet=false) ?filename opam =
