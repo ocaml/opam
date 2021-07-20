@@ -16,8 +16,10 @@ open OpamTypes
 open OpamStateTypes
 
 (** Raised when the opam root has been updated to a newer format, and further
-    action (opam init/update) is needed. *)
-exception Upgrade_done of OpamFile.Config.t
+    action (opam init/update) is needed.
+    [Upgrade_done conf reinit] specifies the new config file and a reinit
+    function to call instead of default (see [OpamCliMain.main_catch_all]). *)
+exception Upgrade_done of OpamFile.Config.t * (OpamFile.Config.t -> unit) option
 
 (** The latest version of the opam root format, that normal operation of this
     instance of opam requires *)
@@ -32,7 +34,8 @@ val latest_version: OpamVersion.t
     when it's done raises [Upgrade_done updated_config]. Otherwise, it returns
     the upgraded or unchanged config file.*)
 val as_necessary:
-  'a lock -> OpamSystem.lock -> dirname -> OpamFile.Config.t -> OpamFile.Config.t
+  ?reinit:(OpamFile.Config.t -> unit) -> 'a lock -> OpamSystem.lock -> dirname ->
+  OpamFile.Config.t -> OpamFile.Config.t
 
 (* Try to launch a hard upgrade from 2;1 alpha's & beta's root
    to 2.1~rc one. Raises [Upgrade_done] (catched by main
@@ -40,7 +43,8 @@ val as_necessary:
    It is intend to be called after a config file that error with
    [OpamPp.Bad_version] *)
 val hard_upgrade_from_2_1_intermediates:
-  ?global_lock: OpamSystem.lock -> dirname -> unit
+  ?reinit:(OpamFile.Config.t -> unit) -> ?global_lock: OpamSystem.lock ->
+  dirname -> unit
 
 (** Converts the opam file format, including rewriting availability conditions
     based on OCaml-related variables into dependencies. The filename is used to
