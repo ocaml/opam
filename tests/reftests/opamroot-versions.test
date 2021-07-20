@@ -1628,8 +1628,7 @@ RSTATE                          Cache found
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
-Update done, please now retry your command.
-# Return code 10 #
+Update done.
 ### opam switch --short
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 ${BASEDIR}
