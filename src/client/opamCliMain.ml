@@ -340,14 +340,20 @@ let rec main_catch_all f =
          Windows anyway. *)
     else
       Unix.execvpe cmd args env
-  | OpamFormatUpgrade.Upgrade_done conf ->
+  | OpamFormatUpgrade.Upgrade_done (conf, reinit) ->
     main_catch_all @@ fun () ->
     OpamConsole.header_msg "Rerunning init and update";
-    OpamClient.reinit ~interactive:true ~update_config:false ~bypass_checks:true
-      conf (OpamStd.Sys.guess_shell_compat ());
-    OpamConsole.msg
-      "Update done, please now retry your command.\n";
-    exit (OpamStd.Sys.get_exit_code `Aborted)
+    (match reinit with
+     | Some reinit ->
+       reinit conf;
+       OpamConsole.msg "Update done.\n";
+       exit (OpamStd.Sys.get_exit_code `Success)
+     | None ->
+       OpamClient.reinit ~interactive:true ~update_config:false
+         ~bypass_checks:true conf (OpamStd.Sys.guess_shell_compat ());
+       OpamConsole.msg
+         "Update done, please now retry your command.\n";
+       exit (OpamStd.Sys.get_exit_code `Aborted))
   | e ->
     flush stdout;
     flush stderr;
