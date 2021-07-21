@@ -225,15 +225,6 @@ let packages_status packages =
                 eol
               ])
       in
-      let is_installed =
-        Re.(compile @@ seq
-              [ bol;
-                repn space 4 (Some 4);
-                rep any;
-                str "installed";
-                eol
-              ])
-      in
       let repo_name =
         Re.(compile @@ seq
               [ bol;
@@ -243,8 +234,8 @@ let packages_status packages =
                 space
               ])
       in
-      let add_pkg dont pkg installed (inst,avail) =
-        if dont then (inst,avail) else
+      let add_pkg pkg repo installed (inst,avail) =
+        let pkg = match repo with Some r -> pkg^"@"^r | None -> pkg in
         if installed then pkg +++ inst, avail else inst, pkg +++ avail
       in
       to_string_list packages
@@ -253,31 +244,23 @@ let packages_status packages =
           | Some (pkg, _repo) -> pkg
           | None -> s)
       |> (fun l -> run_query_command "apk" ("policy"::l))
-      (* fst_version is here to do not add package while their informations
-         parsing it not yet finished, or at least a minimum complete *)
-      |> List.fold_left (fun (current, fst_version, installed, repo, instavail) l ->
-          try
-            let new_pkg = Re.(Group.get (exec pkg_name l) 1) in
-            let pkg = match repo with Some r -> current^"@"^r | None -> current in
-            let instavail = add_pkg fst_version pkg installed instavail in
-            new_pkg, true, false, None, instavail
+      |> List.fold_left (fun (pkg, installed, instavail) l ->
+          try (* package name *)
+            Re.(Group.get (exec pkg_name l) 1), false, instavail
           with Not_found ->
-            if l.[2] != ' ' then (* only version in after two spaces *)
-              let pkg = match repo with Some r -> current^"@"^r | None -> current in
-              let instavail = add_pkg fst_version pkg installed instavail in
-              current, false, false, None, instavail
-            else
-            if Re.execp is_installed l then
-              current, fst_version, true, repo, instavail
-            else
-            try
-              let grs = Re.exec repo_name l in
-              let repo = Some (Re.Group.get grs 1) in
-              current, fst_version, installed, repo, instavail
-            with Not_found ->
-              current, fst_version, installed, repo, instavail)
-        ("", true, false, None, OpamSysPkg.Set.(empty, empty))
-      |> (fun (_,_,_,_, instavail) -> instavail)
+            if l.[2] != ' ' then (* only version field is after two spaces *)
+              pkg, false, instavail
+            else if l = "    lib/apk/db/installed" then
+              (* from https://git.alpinelinux.org/apk-tools/tree/src/database.c#n58 *)
+              pkg, true, instavail
+            else (* repo (tagged and non-tagged) *)
+            let repo =
+              try Some Re.(Group.get (exec repo_name l) 1)
+              with Not_found -> None
+            in
+            pkg, installed, add_pkg pkg repo installed instavail)
+        ("", false,  OpamSysPkg.Set.(empty, empty))
+      |> (fun (_,_, instavail) -> instavail)
     in
     compute_sets sys_installed ~sys_available
   | Arch ->
