@@ -22,15 +22,13 @@
 
 (rule
   (targets opam-topics.inc)
-  (deps %{bin:opam})
   (mode promote)
-  (action (with-stdout-to %{targets} (run %{exe:dune_man.exe} opam))))
+  (action (with-stdout-to %{targets} (run %{exe:dune_man.exe} %{bin:opam} opam))))
 
 (rule
   (targets opam-admin-topics.inc)
-  (deps %{bin:opam})
   (mode promote)
-  (action (with-stdout-to %{targets} (run %{exe:dune_man.exe} opam admin))))
+  (action (with-stdout-to %{targets} (run %{exe:dune_man.exe} %{bin:opam} opam admin))))
 
 (include opam-topics.inc)
 

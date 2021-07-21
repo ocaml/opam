@@ -12,8 +12,8 @@ let gen_topic target_basename dline t =
 
 let () =
   let cmd,args = match Array.to_list Sys.argv with
-    | _::cmd::args -> cmd, args
-    | [] | [_]  -> invalid_arg "Missing command argument"
+    | _::_::cmd::args -> cmd, args
+    | _ -> invalid_arg "Missing command argument"
   in
   let cline = String.concat " " (cmd :: args) ^ " help topics" in
   let topics =
