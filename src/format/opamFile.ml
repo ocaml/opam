@@ -1518,6 +1518,9 @@ module Repos_configSyntax = struct
   let empty = OpamRepositoryName.Map.empty
 
   let fields = [
+    (* Since 2.1, opam-version is printed in almost all files *)
+    "opam-version", Pp.ppacc_opt (fun _ acc -> acc) (fun _ -> None)
+      (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
     "repositories",
     Pp.ppacc (fun x _ -> x) (fun x -> x)
       ((Pp.V.map_list ~depth:1 @@
@@ -1536,6 +1539,7 @@ module Repos_configSyntax = struct
   let pp_cond ?condition () =
     let name = internal in
     Pp.I.map_file @@
+    Pp.I.check_opam_version ~optional:true () -|
     Pp.I.fields ~name ~empty fields -|
     Pp.I.show_errors ~name ?condition ()
 
@@ -3075,6 +3079,9 @@ module Dot_installSyntax = struct
            OpamFilename.to_string)
     in
     [
+      (* Since 2.1, opam-version is printed in almost all files *)
+      "opam-version", Pp.ppacc_opt (fun _ acc -> acc) (fun _ -> None)
+        (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
       "lib", Pp.ppacc with_lib lib pp_field;
       "bin", Pp.ppacc with_bin bin pp_field;
       "sbin", Pp.ppacc with_sbin sbin pp_field;
@@ -3138,6 +3145,9 @@ module ChangesSyntax = struct
                   Pp.of_pair "digest" (digest_of_string, string_of_digest))))
 
   let fields = [
+    (* Since 2.1, opam-version is printed in almost all files *)
+    "opam-version", Pp.ppacc_opt (fun _ acc -> acc) (fun _ -> None)
+      (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
     "added", field
       (function Some dg -> Added dg
               | None -> Pp.bad_format "Missing digest")
@@ -3161,6 +3171,7 @@ module ChangesSyntax = struct
   ]
 
   let pp_contents =
+    Pp.I.check_opam_version ~optional:true () -|
     Pp.I.fields ~name:internal ~empty fields -|
     Pp.I.show_errors ~name:internal ()
 
@@ -3191,7 +3202,7 @@ module SwitchExportSyntax = struct
   let pp =
     let name = "export-file" in
     Pp.I.map_file @@
-    Pp.I.check_opam_version () -|
+    Pp.I.check_opam_version ~optional:true () -|
     Pp.I.partition (function
         | Section (_, { section_kind="package"; section_name=Some _; _ }) ->
           false

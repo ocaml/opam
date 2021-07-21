@@ -41,6 +41,7 @@ are not marked).
 * Fix opam switch creation not compatible compiler message
   [#4547 @rjbou - fix #4718]
 * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
+* Fix `opam-version' field reading in new roots [#4742 @dra27 @rjbou]
 
 2.0.8:
 * Add colon for fish MANPATH fix. [#4084 @rjbou - fix #4078]
