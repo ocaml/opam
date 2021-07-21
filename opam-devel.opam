@@ -29,7 +29,7 @@ build: [
 depends: [
   "ocaml" {>= "4.02.3"}
   "opam-client" {= version}
-  "cmdliner" {>= "0.9.8"}
+  "cmdliner" {>= "1.0.0"}
   "dune" {>= "1.2.1"}
   "conf-openssl" {with-test}
   "conf-diffutils" {with-test}

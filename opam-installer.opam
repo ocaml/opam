@@ -30,6 +30,6 @@ build: [
 depends: [
   "ocaml" {>= "4.02.3"}
   "opam-format" {= version}
-  "cmdliner" {>= "0.9.8"}
+  "cmdliner" {>= "1.0.0"}
   "dune" {>= "1.2.1"}
 ]
