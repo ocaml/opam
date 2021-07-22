@@ -14,8 +14,7 @@ AS_IF([ test -x bootstrap/ocaml/bin/ocamlc -o -x bootstrap/ocaml/bin/ocamlopt ],
   export PATH="$PATH_PREPEND$PATH"
 ])
 
-# XXX This isn't strictly correct for Windows
-MIN_OCAML_VERSION=4.03.0
+MIN_OCAML_VERSION=4.08.0
 
 AC_PROG_OCAML
 if test "x$OCAMLC" = "xno"; then
@@ -86,10 +85,7 @@ AC_SUBST(LIB_PREFIX,$LIB_PREFIX)
 AC_SUBST(CPATH,$CPATH)
 AC_SUBST(LIBRARY_PATH,$LIBRARY_PATH)
 
-# Check that OCaml version is greater or equal to 4.03.0
-# Native Windows builds require at least 4.06.0 for the Unicode runtime.
 AS_IF([test "x${enable_version_check}" != "xno"], [
-  AS_IF([ test ${WIN32} -eq 1 ],[MIN_OCAML_VERSION=4.06.0])
   AX_COMPARE_VERSION(
     [$OCAMLVERSION], [lt], [$MIN_OCAML_VERSION],
     AC_MSG_ERROR([Your version of OCaml ($OCAMLVERSION) is not supported]))

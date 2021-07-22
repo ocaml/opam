@@ -39,9 +39,9 @@ let of_json = function
   | `String x -> of_string_opt x
   | _ -> None
 
-let ( >= ) = OpamCompat.Stdlib.( >= )
-let ( < ) = OpamCompat.Stdlib.( < )
-let compare = OpamCompat.Stdlib.compare
+let ( >= ) = Stdlib.( >= )
+let ( < ) = Stdlib.( < )
+let compare = Stdlib.compare
 
 let previous cli =
   let f previous version =
@@ -64,9 +64,9 @@ module Sourced = struct
 end
 
 module Op = struct
-  let ( @>= ) (c,_) = OpamCompat.Stdlib.( >= ) c
-  let ( @< ) (c,_) = OpamCompat.Stdlib.( < ) c
-  let ( @= ) (c,_) = OpamCompat.Stdlib.( = ) c
+  let ( @>= ) (c,_) = Stdlib.( >= ) c
+  let ( @< ) (c,_) = Stdlib.( < ) c
+  let ( @= ) (c,_) = Stdlib.( = ) c
 end
 
 module O = struct
