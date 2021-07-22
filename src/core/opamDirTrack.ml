@@ -8,7 +8,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamCompat
 open OpamStd.Op
 open OpamProcess.Job.Op
 

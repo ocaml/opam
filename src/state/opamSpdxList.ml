@@ -1,6 +1,5 @@
 (* THIS FILE IS GENERATED. See dune file *)
 
-open OpamCompat
 let licenses = OpamStd.String.Set.of_list @@ List.map String.lowercase_ascii @@ [
   "0BSD";
   "AAL";

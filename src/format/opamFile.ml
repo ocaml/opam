@@ -1054,8 +1054,6 @@ module type BestEffortArg = sig
   include SyntaxFileArg
 
   (* Version of file format, as understood by [opam-file-format] *)
-  (* This attribute can be deleted when 4.02 is ditched *)
-  [@@@ocaml.warning "-32"]
   val file_format_version: OpamVersion.t [@@ocaml.warning "-32"]
 
   (* Construct the syntax pp, under some conditions. If [condition] is given,

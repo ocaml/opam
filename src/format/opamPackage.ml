@@ -9,7 +9,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamCompat
 open OpamStd.Op
 
 let log fmt = OpamConsole.log "PACKAGE" fmt

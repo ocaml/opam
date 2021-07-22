@@ -9,8 +9,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamCompat
-
 module type SET = sig
   include Set.S
   val map: (elt -> elt) -> t -> t
@@ -990,7 +988,7 @@ module OpamSys = struct
 
   let registered_at_exit = ref []
   let at_exit f =
-    Stdlib.at_exit f;
+    OpamCompat.Stdlib.at_exit f;
     registered_at_exit := f :: !registered_at_exit
   let exec_at_exit () =
     List.iter
@@ -1369,7 +1367,7 @@ module Exn = struct
   let finalise e f =
     let bt = Printexc.get_raw_backtrace () in
     f ();
-    Printexc.raise_with_backtrace e bt
+    OpamCompat.Printexc.raise_with_backtrace e bt
 
   let finally f k =
     match k () with

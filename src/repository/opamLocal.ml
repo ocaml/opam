@@ -10,7 +10,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamTypesBase
 open OpamProcess.Job.Op
 
 let log fmt = OpamConsole.log "RSYNC" fmt

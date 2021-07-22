@@ -11,7 +11,7 @@ src
 │   ├── opamJson.ml                     Wrapper on Jsonm; only needed for some debug options
 │   ├── opamStd.ml                      Generic stdlib functions (String, List, Option, Sys submodules...)
 │   ├── opamConsole.ml                  Console output, ANSI color, logging and user querying
-│   ├── opamCompat.ml.4.01/4.02         Compatibility layer (Bytes, etc.) for different OCaml versions
+│   ├── opamCompat.ml                   Compatibility layer for different OCaml versions
 │   │   # system handling
 │   ├── opamProcess.ml                  Process and job handling, with logs, termination status, etc.
 │   ├── opamSystem.ml                   Bindings of lots of filesystem and system operations

@@ -26,7 +26,7 @@ build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "ocaml" {>= "4.02.3"}
+  "ocaml" {>= "4.03.0"}
   "opam-state" {= version}
   "opam-solver" {= version}
   "base64" {>= "3.1.0"}

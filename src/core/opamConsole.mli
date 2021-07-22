@@ -46,30 +46,30 @@ val acolor : text_style -> unit -> string -> string
 val acolor_w : int -> text_style -> Format.formatter -> string -> unit
 
 module Symbols : sig
-  val rightwards_arrow : OpamCompat.Uchar.t
-  val box_drawings_light_down_and_right : OpamCompat.Uchar.t
-  val box_drawings_light_horizontal : OpamCompat.Uchar.t
-  val box_drawings_light_vertical : OpamCompat.Uchar.t
-  val box_drawings_light_up_and_right : OpamCompat.Uchar.t
-  val box_drawings_light_right : OpamCompat.Uchar.t
-  val circled_division_slash : OpamCompat.Uchar.t
-  val asterisk_operator : OpamCompat.Uchar.t
-  val north_east_arrow : OpamCompat.Uchar.t
-  val south_east_arrow : OpamCompat.Uchar.t
-  val clockwise_open_circle_arrow : OpamCompat.Uchar.t
-  val greek_small_letter_lambda : OpamCompat.Uchar.t
-  val latin_capital_letter_o_with_stroke : OpamCompat.Uchar.t
-  val six_pointed_black_star : OpamCompat.Uchar.t
-  val upwards_arrow : OpamCompat.Uchar.t
-  val downwards_arrow : OpamCompat.Uchar.t
-  val up_down_arrow : OpamCompat.Uchar.t
-  val downwards_double_arrow : OpamCompat.Uchar.t
-  val downwards_black_arrow : OpamCompat.Uchar.t
-  val black_down_pointing_triangle : OpamCompat.Uchar.t
+  val rightwards_arrow : Uchar.t
+  val box_drawings_light_down_and_right : Uchar.t
+  val box_drawings_light_horizontal : Uchar.t
+  val box_drawings_light_vertical : Uchar.t
+  val box_drawings_light_up_and_right : Uchar.t
+  val box_drawings_light_right : Uchar.t
+  val circled_division_slash : Uchar.t
+  val asterisk_operator : Uchar.t
+  val north_east_arrow : Uchar.t
+  val south_east_arrow : Uchar.t
+  val clockwise_open_circle_arrow : Uchar.t
+  val greek_small_letter_lambda : Uchar.t
+  val latin_capital_letter_o_with_stroke : Uchar.t
+  val six_pointed_black_star : Uchar.t
+  val upwards_arrow : Uchar.t
+  val downwards_arrow : Uchar.t
+  val up_down_arrow : Uchar.t
+  val downwards_double_arrow : Uchar.t
+  val downwards_black_arrow : Uchar.t
+  val black_down_pointing_triangle : Uchar.t
 end
 
 val utf8_symbol:
-  OpamCompat.Uchar.t -> ?alternates:OpamCompat.Uchar.t list -> string -> string
+  Uchar.t -> ?alternates:Uchar.t list -> string -> string
 
 (** Logging *)
 

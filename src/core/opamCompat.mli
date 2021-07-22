@@ -8,30 +8,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module String
-#if OCAML_VERSION >= (4, 3, 0)
-= String
-#else
-: sig
-  include module type of struct include String end
+module String = String
 
-  val lowercase_ascii : string -> string
-  val uppercase_ascii : string -> string
-  val capitalize_ascii : string -> string
-end
-#endif
-
-module Char
-#if OCAML_VERSION >= (4, 3, 0)
-= Char
-#else
-: sig
-  include module type of struct include Char end
-
-  val lowercase_ascii: char -> char
-  val uppercase_ascii: char -> char
-end
-#endif
+module Char = Char
 
 module Printexc
 #if OCAML_VERSION >= (4, 5, 0)
@@ -57,17 +36,7 @@ module Unix
 end
 #endif
 
-module Uchar
-#if OCAML_VERSION >= (4, 3, 0)
-= Uchar
-#else
-: sig
-  type t
-
-  val of_int : int -> t
-  external to_int : t -> int = "%identity"
-end
-#endif
+module Uchar = Uchar
 
 module Buffer
 #if OCAML_VERSION >= (4, 6, 0)
@@ -97,13 +66,13 @@ module Result
 #else
 : sig
   type ('a, 'e) t
-#if OCAML_VERSION >= (4, 3, 0)
     = ('a, 'e) result
-#endif
     = Ok of 'a | Error of 'e
 end
 #endif
 
 #if OCAML_VERSION < (4, 7, 0)
 module Stdlib = Pervasives
+#else
+module Stdlib = Stdlib
 #endif

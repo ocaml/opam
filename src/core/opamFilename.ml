@@ -400,7 +400,6 @@ let flock flag ?dontblock file = OpamSystem.flock flag ?dontblock (to_string fil
 let with_flock flag ?dontblock file f =
   let lock = OpamSystem.flock flag ?dontblock (to_string file) in
   try
-    let open OpamCompat in
     let (fd, ch) =
       match OpamSystem.get_lock_fd lock with
       | exception Not_found ->
@@ -410,14 +409,14 @@ let with_flock flag ?dontblock file f =
           else
             "/dev/null"
         in
-        let ch = Stdlib.open_out null in
+        let ch = OpamCompat.Stdlib.open_out null in
         Unix.descr_of_out_channel ch, Some ch
       | fd ->
         fd, None
     in
     let r = f fd in
     OpamSystem.funlock lock;
-    OpamStd.Option.iter Stdlib.close_out ch;
+    OpamStd.Option.iter OpamCompat.Stdlib.close_out ch;
     r
   with e ->
     OpamStd.Exn.finalise e @@ fun () ->

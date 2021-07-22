@@ -8,8 +8,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamCompat
-
 module E = struct
 
   type OpamStd.Config.E.t +=

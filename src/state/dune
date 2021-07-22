@@ -4,12 +4,11 @@
   (libraries   opam-repository re)
   (synopsis    "OCaml Package Manager instance management library")
   (modules_without_implementation OpamStateTypes)
-  (modules     :standard \ flags)
+  (modules     :standard)
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
                (:include ../ocaml-flags-configure.sexp)
-               (:include ../ocaml-context-flags.sexp)
-               (:include flags.sexp)))
+               (:include ../ocaml-context-flags.sexp)))
   (wrapped     false))
 
 (rule
@@ -27,7 +26,6 @@
   (action (with-stdout-to %{targets}
     (progn
       (echo "(* THIS FILE IS GENERATED. See dune file *)\n\n")
-      (echo "open OpamCompat\n")
       (echo "let licenses = OpamStd.String.Set.of_list @@ List.map String.lowercase_ascii @@ [\n")
       (cat spdx-license-list)
       (echo "]\n")
@@ -46,11 +44,3 @@
     (system
       "curl https://raw.githubusercontent.com/spdx/license-list-data/master/json/exceptions.json |
        jq -rc '.exceptions | map(\"  \\\"\" + .licenseExceptionId + \"\\\";\") | join(\"\\n\")'"))))
-
-(rule
-  (with-stdout-to flags.ml
-    (echo "print_string (if String.sub Sys.ocaml_version 0 5 = \"4.02.\" then \"(-w -50)\" else \"()\")")))
-
-(rule
-  (with-stdout-to flags.sexp
-    (run ocaml %{dep:flags.ml})))

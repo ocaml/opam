@@ -9,8 +9,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamCompat
-
 type install_warning =
   [ `Add_exe | `Install_dll | `Install_script | `Install_unknown | `Cygwin | `Cygwin_libraries ]
 type install_warning_fn = string -> install_warning -> unit

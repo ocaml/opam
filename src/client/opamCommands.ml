@@ -13,7 +13,6 @@ open Cmdliner
 open OpamArg
 open OpamTypes
 open OpamStateTypes
-open OpamTypesBase
 open OpamStd.Op
 
 let self_upgrade_exe opamroot =
