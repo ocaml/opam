@@ -1,0 +1,65 @@
+diff -u a/src/base64.ml b/src/base64.ml
+--- a/src/base64.ml	2021-02-08 10:46:48.000000000 +0000
++++ b/src/base64.ml	2021-07-22 18:33:44.577463613 +0100
+@@ -19,6 +19,10 @@
+  *
+  *)
+
++type ('a, 'b) result = ('a, 'b) Result.result =
++  | Ok of 'a
++  | Error of 'b
++
+ type alphabet = { emap : int array; dmap : int array }
+
+ type sub = string * int * int
+diff -u a/src/base64.mli b/src/base64.mli
+--- a/src/base64.mli	2021-02-08 10:46:48.000000000 +0000
++++ b/src/base64.mli	2021-07-22 18:28:56.223184396 +0100
+@@ -69,7 +69,7 @@
+   ?off:int ->
+   ?len:int ->
+   string ->
+-  (sub, [> `Msg of string ]) result
++  (sub, [> `Msg of string ]) Result.t
+ (** Same as {!decode_exn} but it returns a result type instead to raise an
+     exception. Then, it returns a {!sub} string. Decoded input [(str, off, len)]
+     will starting to [off] and will have [len] bytes - by this way, we ensure to
+@@ -81,7 +81,7 @@
+   ?off:int ->
+   ?len:int ->
+   string ->
+-  (string, [> `Msg of string ]) result
++  (string, [> `Msg of string ]) Result.t
+ (** Same as {!decode_exn}, but returns an explicit error message {!result} if it
+     fails. *)
+
+@@ -91,7 +91,7 @@
+   ?off:int ->
+   ?len:int ->
+   string ->
+-  (string, [> `Msg of string ]) result
++  (string, [> `Msg of string ]) Result.t
+ (** [encode s] encodes the string [s] into base64. If [pad] is false, no
+     trailing padding is added. [pad] defaults to [true], and [alphabet] to
+     {!default_alphabet}.
+@@ -109,7 +109,7 @@
+   ?off:int ->
+   ?len:int ->
+   string ->
+-  (sub, [> `Msg of string ]) result
++  (sub, [> `Msg of string ]) Result.t
+ (** Same as {!encode} but return a {!sub}-string instead a plain result. By this
+     way, we ensure to allocate only one time result. *)
+
+diff -u a/src/dune b/src/dune
+--- a/src/dune	2021-02-08 10:46:48.000000000 +0000
++++ b/src/dune	2021-07-22 18:28:17.846882519 +0100
+@@ -2,7 +2,7 @@
+  (name base64)
+  (modules unsafe base64)
+  (public_name base64)
+- (libraries bytes))
++ (libraries bytes result))
+
+ (rule
+  (copy %{read:../config/which-unsafe-file} unsafe.ml))
