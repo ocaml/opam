@@ -98,18 +98,20 @@ jobs:
     - name: Determine cache keys
       id: keys
       run: |
-        echo archives=archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}
-        echo ::set-output name=archives::archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}
-    - name: src_ext/archives Cache
-      id: src_ext-archives-cache
+        echo archives=archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
+        echo ::set-output name=archives::archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
+    - name: src_ext/archives and opam-repository Cache
+      id: archives
       uses: dra27/cache@opam
       with:
-        path: src_ext/archives
+        path: |
+          src_ext/archives
+          ~/opam-repository
         key: ${{ steps.keys.outputs.archives }}
         check-only: true
         force-gzip: true
-    - name: Create src_ext/archives cache
-      if: steps.src_ext-archives-cache.outputs.cache-hit != 'true'
+    - name: Create src_ext/archives and opam-repository cache
+      if: runner.os != 'Windows' && steps.archives.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/archives-cache.sh
 
 ####
@@ -135,11 +137,13 @@ jobs:
       run: sudo apt install bubblewrap
     - name: Checkout tree
       uses: actions/checkout@v2
-    - name: src_ext/archives Cache
+    - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: dra27/cache@opam
       with:
-        path: src_ext/archives
+        path: |
+          src_ext/archives
+          ~/opam-repository
         key: ${{ needs.Analyse.outputs.archives }}
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
@@ -212,11 +216,13 @@ jobs:
     - name: Install deps
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: sudo apt install bubblewrap
-    - name: src_ext/archives Cache
+    - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: dra27/cache@opam
       with:
-        path: src_ext/archives
+        path: |
+          src_ext/archives
+          ~/opam-repository
         key: ${{ needs.Analyse.outputs.archives }}
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache - test
@@ -270,11 +276,13 @@ jobs:
       run: sudo apt install bubblewrap
     - name: Checkout tree
       uses: actions/checkout@v2
-    - name: src_ext/archives Cache
+    - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: dra27/cache@opam
       with:
-        path: src_ext/archives
+        path: |
+          src_ext/archives
+          ~/opam-repository
         key: ${{ needs.Analyse.outputs.archives }}
         force-gzip: true
     - name: Cold
@@ -291,7 +299,7 @@ jobs:
 ####
   Solvers:
     runs-on: ${{ matrix.os }}
-    needs: [ Build ]
+    needs: [ Analyse, Build ]
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest ]
@@ -302,11 +310,20 @@ jobs:
       SOLVER: ${{ matrix.solver }}
       OPAMBSROOT: ~/.cache/opam.${{ matrix.solver }}.cached
     steps:
-    - name: Checkout tree
-      uses: actions/checkout@v2
     - name: Install deps
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: sudo apt install bubblewrap
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: src_ext/archives and opam-repository Cache
+      id: archives
+      uses: dra27/cache@opam
+      with:
+        path: |
+          src_ext/archives
+          ~/opam-repository
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache - test
       id: ocaml-cache-test
       uses: actions/cache@v2
@@ -384,10 +401,13 @@ jobs:
     steps:
     - name: Checkout tree
       uses: actions/checkout@v2
-    - name: src_ext/archives Cache
-      uses: actions/cache@v2
+    - name: src_ext/archives and opam-repository Cache
+      id: archives
+      uses: dra27/cache@opam
       with:
-        path: src_ext/archives
+        path: |
+          src_ext/archives
+          ~/opam-repository
         key: ${{ needs.Analyse.outputs.archives }}
         force-gzip: true
     - name: Get changed files

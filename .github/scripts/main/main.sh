@@ -149,7 +149,7 @@ fi
     # The SHA is fixed so that upstream changes shouldn't affect CI. The SHA needs
     # to be moved forwards when a new version of OCaml is added to ensure that the
     # ocaml-system package is available at the correct version.
-    opam init --bare default git+$OPAM_REPO#$OPAM_TEST_REPO_SHA
+    opam init --bare default git+$OPAM_REPO_CACHE#$OPAM_TEST_REPO_SHA
     cat >> $(opam var root --global 2>/dev/null)/config <<EOF
 archive-mirrors: "https://opam.ocaml.org/cache"
 EOF
