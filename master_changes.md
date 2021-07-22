@@ -76,6 +76,7 @@ Prefixes used to help generate release notes, changes, and blog posts:
 
 ## Build
   * Bump src_exts and fix build compat with Dune 2.9.0 [#4752 @dra27]
+  * Make opam partially compilable on stock macOS/FreeBSD [#4761 @kit-ty-kate]
 
 ## Infrastructure
   *

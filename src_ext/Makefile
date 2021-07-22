@@ -25,6 +25,12 @@ ifndef FETCH
   endif
 endif
 
+ifneq ($(shell command -v md5sum 2>/dev/null),)
+  MD5SUM = md5sum
+else
+  MD5SUM = md5 -q
+endif
+
 # Shorthand for designating that lib-ext and lib-pkg use the same version of a library
 PKG_SAME = $(eval $(call PKG_SAME_DEFS,$(1)))
 define PKG_SAME_DEFS
@@ -61,7 +67,7 @@ ifdef OCAML
 MD5CHECK = $(OCAML) ../shell/md5check.ml $(1) $(2)
 else
 MD5CHECK = { \
-  sum=`md5sum $(1) | sed -e 's/^[^a-f0-9]*\([a-f0-9]*\).*/\1/'`; \
+  sum=`$(MD5SUM) $(1) | sed -e 's/^[^a-f0-9]*\([a-f0-9]*\).*/\1/'`; \
   { test "$$sum" = "$(2)" && echo '$(1) has the expected MD5.'; } || \
   { rm -f $(1); \
     echo 'MD5 for $(1) differs:'; \
