@@ -10,6 +10,7 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 * Fix bypass-check handling on reinit [#4750 @rjbou]
 * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
 * Bump src_exts and fix build compat with Dune 2.9.0 [#4754 @dra27]
+* Fix depext alpine tagged repositories handling [#4758 @rjbou]
 
 2.1.0~rc2:
 * Remove OPAMZ3DEBUG evironment variable [#4720 @rjbou - fix #4717]
