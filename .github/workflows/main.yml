@@ -82,31 +82,42 @@ jobs:
 #        OCAML_VERSION: ${{ matrix.ocamlv }}
 #      run: bash -exu .github/scripts/main/ocaml-cache.sh ocaml
 
-  Archives:
+  Analyse:
     runs-on: ubuntu-latest
+    outputs:
+      archives: ${{ steps.keys.outputs.archives }}
     steps:
+    - name: Configure Git for Windows
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        git config --system core.autocrlf false
+        git config --system core.eol lf
     - name: Checkout tree
       uses: actions/checkout@v2
+    - name: Determine cache keys
+      id: keys
+      run: |
+        echo archives=archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}
+        echo ::set-output name=archives::archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}
     - name: src_ext/archives Cache
-      id: archives
-      uses: actions/cache@v2
+      id: src_ext-archives-cache
+      uses: dra27/cache@opam
       with:
         path: src_ext/archives
-        key: archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
+        key: ${{ steps.keys.outputs.archives }}
+        check-only: true
+        force-gzip: true
     - name: Create src_ext/archives cache
-      if: steps.archives.outputs.cache-hit != 'true'
-      run: |#bash -exu .github/scripts/main/caches.sh archives
-        rm -rf src_ext/archives
-        export PATH=~/.cache/ocaml-local/bin:$PATH
-        which ocaml && export OCAML=`which ocaml` || true
-        make -C src_ext cache-archives
-        ls src_ext/archives -al
+      if: steps.src_ext-archives-cache.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/main/archives-cache.sh
 
 ####
 # Build
 ####
   Build:
     runs-on: ${{ matrix.os }}
+    needs: Analyse
     strategy:
       matrix:
         os: [ ubuntu-latest ]
@@ -124,6 +135,13 @@ jobs:
       run: sudo apt install bubblewrap
     - name: Checkout tree
       uses: actions/checkout@v2
+    - name: src_ext/archives Cache
+      id: archives
+      uses: dra27/cache@opam
+      with:
+        path: src_ext/archives
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
       uses: actions/cache@v2
@@ -180,7 +198,7 @@ jobs:
 ####
   Test:
     runs-on: ${{ matrix.os }}
-    needs: [ Build, Archives ]
+    needs: [ Analyse, Build ]
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest ]
@@ -194,6 +212,13 @@ jobs:
     - name: Install deps
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: sudo apt install bubblewrap
+    - name: src_ext/archives Cache
+      id: archives
+      uses: dra27/cache@opam
+      with:
+        path: src_ext/archives
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache - test
       id: ocaml-cache-test
       uses: actions/cache@v2
@@ -232,7 +257,7 @@ jobs:
 ####
   Cold:
     runs-on: ${{ matrix.os }}
-    needs: [ Build, Archives ]
+    needs: [ Analyse, Build ]
     strategy:
       matrix:
 #        os: [ ubuntu-latest, macos-latest ]
@@ -246,10 +271,12 @@ jobs:
     - name: Checkout tree
       uses: actions/checkout@v2
     - name: src_ext/archives Cache
-      uses: actions/cache@v2
+      id: archives
+      uses: dra27/cache@opam
       with:
         path: src_ext/archives
-        key: archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
     - name: Cold
       env:
         OCAML_VERSION: ${{ matrix.ocamlv }}
@@ -353,7 +380,7 @@ jobs:
 ####
   Hygiene:
     runs-on: ubuntu-latest
-    needs: Archives
+    needs: Analyse
     steps:
     - name: Checkout tree
       uses: actions/checkout@v2
@@ -361,7 +388,8 @@ jobs:
       uses: actions/cache@v2
       with:
         path: src_ext/archives
-        key: archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
     - name: Get changed files
       id: files
       uses: jitterbit/get-changed-files@v1
