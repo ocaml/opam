@@ -67,7 +67,8 @@ MD5CHECK = OPAM_MD5_SILENT=true $(OCAML) ../shell/md5check.ml $(1) $(2)
 endif
 else
 MD5CHECK = { \
-  sum=`md5sum $(1) | sed -e 's/^[^a-f0-9]*\([a-f0-9]*\).*/\1/'`; \
+  sum=`md5sum $(1) 2>/dev/null | sed -e 's/^[^a-f0-9]*\([a-f0-9]*\).*/\1/'`; \
+  test -n "$$sum" || sum=`md5 $(1) | sed -e 's/^.* = //'`; \
   { test "$$sum" = "$(2)" $(if $(SILENT),,&& echo '$(1) has the expected MD5.'); } || \
   { rm -f $(1); \
     echo 'MD5 for $(1) differs:'; \
