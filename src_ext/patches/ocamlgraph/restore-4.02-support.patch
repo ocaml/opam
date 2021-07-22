@@ -1,6 +1,6 @@
 diff -Naur a/src/dot_lexer.mll b/src/dot_lexer.mll
 --- a/src/dot_lexer.mll	2020-10-02 13:47:57.000000000 +0000
-+++ b/src/dot_lexer.mll	2021-03-26 12:32:55.716136300 +0000
++++ b/src/dot_lexer.mll	2021-03-26 12:32:56.000000000 +0000
 @@ -35,7 +35,7 @@
  	"node", NODE;
  	"edge", EDGE;
@@ -12,7 +12,7 @@ diff -Naur a/src/dot_lexer.mll b/src/dot_lexer.mll
  
 diff -Naur a/src/dune b/src/dune
 --- a/src/dune	2020-10-02 13:47:57.000000000 +0000
-+++ b/src/dune	2021-03-26 12:33:07.160324274 +0000
++++ b/src/dune	2021-03-26 12:33:07.000000000 +0000
 @@ -3,6 +3,7 @@
  (library
   (name graph)

@@ -1,20 +1,20 @@
-diff -u a/src/base64.ml b/src/base64.ml
+diff -Naur a/src/base64.ml b/src/base64.ml
 --- a/src/base64.ml	2021-02-08 10:46:48.000000000 +0000
-+++ b/src/base64.ml	2021-07-22 18:33:44.577463613 +0100
++++ b/src/base64.ml	2021-07-22 17:33:45.000000000 +0000
 @@ -19,6 +19,10 @@
   *
   *)
-
+ 
 +type ('a, 'b) result = ('a, 'b) Result.result =
 +  | Ok of 'a
 +  | Error of 'b
 +
  type alphabet = { emap : int array; dmap : int array }
-
+ 
  type sub = string * int * int
-diff -u a/src/base64.mli b/src/base64.mli
+diff -Naur a/src/base64.mli b/src/base64.mli
 --- a/src/base64.mli	2021-02-08 10:46:48.000000000 +0000
-+++ b/src/base64.mli	2021-07-22 18:28:56.223184396 +0100
++++ b/src/base64.mli	2021-07-22 17:28:56.000000000 +0000
 @@ -69,7 +69,7 @@
    ?off:int ->
    ?len:int ->
@@ -32,7 +32,7 @@ diff -u a/src/base64.mli b/src/base64.mli
 +  (string, [> `Msg of string ]) Result.t
  (** Same as {!decode_exn}, but returns an explicit error message {!result} if it
      fails. *)
-
+ 
 @@ -91,7 +91,7 @@
    ?off:int ->
    ?len:int ->
@@ -50,16 +50,16 @@ diff -u a/src/base64.mli b/src/base64.mli
 +  (sub, [> `Msg of string ]) Result.t
  (** Same as {!encode} but return a {!sub}-string instead a plain result. By this
      way, we ensure to allocate only one time result. *)
-
-diff -u a/src/dune b/src/dune
+ 
+diff -Naur a/src/dune b/src/dune
 --- a/src/dune	2021-02-08 10:46:48.000000000 +0000
-+++ b/src/dune	2021-07-22 18:28:17.846882519 +0100
++++ b/src/dune	2021-07-22 17:28:18.000000000 +0000
 @@ -2,7 +2,7 @@
   (name base64)
   (modules unsafe base64)
   (public_name base64)
 - (libraries bytes))
 + (libraries bytes result))
-
+ 
  (rule
   (copy %{read:../config/which-unsafe-file} unsafe.ml))

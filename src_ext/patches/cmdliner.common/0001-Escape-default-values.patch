@@ -1,6 +1,6 @@
 diff -Naur a/src/cmdliner_docgen.ml b/src/cmdliner_docgen.ml
 --- a/src/cmdliner_docgen.ml	2019-06-14 09:55:03.000000000 +0000
-+++ b/src/cmdliner_docgen.ml	2019-11-21 14:29:33.193003934 +0000
++++ b/src/cmdliner_docgen.ml	2019-11-21 14:29:33.000000000 +0000
 @@ -146,7 +146,7 @@
    | Cmdliner_info.Val v ->
        match Lazy.force v with

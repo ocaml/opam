@@ -1,6 +1,6 @@
 diff -Naur a/Makefile b/Makefile
 --- a/Makefile	2017-03-21 14:39:23.000000000 +0000
-+++ b/Makefile	2019-11-21 14:29:33.684757960 +0000
++++ b/Makefile	2019-11-21 14:29:34.000000000 +0000
 @@ -2,6 +2,8 @@
  
  NAME = cudf

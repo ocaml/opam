@@ -1,6 +1,6 @@
-diff -u a/src/common/util.ml b/src/common/util.ml
---- a/src/common/util.ml	2021-07-22 08:14:19.000000000 +0100
-+++ b/src/common/util.ml	2021-07-22 18:34:12.933688582 +0100
+diff -Naur a/src/common/util.ml b/src/common/util.ml
+--- a/src/common/util.ml	2021-07-22 07:14:19.000000000 +0000
++++ b/src/common/util.ml	2021-07-22 17:34:13.000000000 +0000
 @@ -90,7 +90,7 @@
    let clean label =
      try
@@ -8,5 +8,5 @@ diff -u a/src/common/util.ml b/src/common/util.ml
 -      String.capitalize_ascii s
 +      String.capitalize s
      with Invalid_argument _ -> label
-
+ 
    let create ?(enabled = false) label =
