@@ -98,9 +98,8 @@ cudf-pkg-build:
 	make DOC= BINDIR=$(OCAMLBIN) all opt install
 
 dose3-pkg-build:
-	./configure $(if $(EXT_EXE),--prefix=$(OCAMLROOT),--bindir=/../../$(OCAMLBIN))
-	make libs apps
-	make install
+	dune build @install -p dose3
+	dune install -p dose3 dose3
 
 dune-local-pkg-build:
 	ocaml bootstrap.ml
