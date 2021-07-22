@@ -76,6 +76,7 @@ users)
   * Remove `bigarray` dependency [#5612 @kit-ty-kate]
   * Remove use of deprecated `Printf.kprintf" [#5612 @kit-ty-kate]
   * Fix "make cold" on Windows when gcc is available [#5635 @kit-ty-kate - fixes #5600]
+  * Control the Windows stubs using `(enabled_if)` [#4777 @dra27 - fix #4726]
 
 ## Infrastructure
 

@@ -428,12 +428,6 @@ AS_IF([test "x${with_private_runtime}" != "xno"],[
   ])
 ])
 
-rm -f src/stubs/win32/dune
-AS_IF([ test ${WIN32} -eq 1],[
-  cd src/stubs/win32
-  ${LN_S} -f dune-win32 dune
-  cd ../../..
-])
 rm -f src/stubs/libacl/dune
 AS_IF([ test "x${with_libacl}" = "xyes" ],[
   cd src/stubs/libacl
