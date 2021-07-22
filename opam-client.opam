@@ -35,3 +35,7 @@ depends: [
   "cmdliner" {>= "1.0.0"}
   "dune" {>= "1.11.0"}
 ]
+conflicts: [
+  "extlib" {< "1.7.8"}
+  "extlib-compat"
+]
