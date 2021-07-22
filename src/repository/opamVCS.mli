@@ -75,4 +75,4 @@ module type VCS = sig
 end
 
 (** Create a backend from a [VCS] implementation. *)
-module Make(VCS : VCS) : OpamRepositoryBackend.S
+module Make(_ : VCS) : OpamRepositoryBackend.S

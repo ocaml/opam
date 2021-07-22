@@ -4788,13 +4788,8 @@ fi
 
 fi
 
-CONF_OCAMLFLAGS="-w -67"
+CONF_OCAMLFLAGS=''
 
-if test "x${CI}" != "x"; then :
-
-  CONF_OCAMLFLAGS="${CONF_OCAMLFLAGS} -w -67"
-
-fi
 if test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"; then :
 
   if test "x${CCOMP_TYPE}" = "xmsvc"; then :

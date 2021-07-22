@@ -164,11 +164,8 @@ AS_IF([test "x${with_libacl}" = "xyes"],[
   ])
 ])
 
-CONF_OCAMLFLAGS="-w -67"
+CONF_OCAMLFLAGS=''
 
-AS_IF([test "x${CI}" != "x"], [
-  CONF_OCAMLFLAGS="${CONF_OCAMLFLAGS} -w -67"
-],[])
 AS_IF([test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"],[
   AS_IF([test "x${CCOMP_TYPE}" = "xmsvc"],[
     CONF_CFLAGS="\"/WX\""
