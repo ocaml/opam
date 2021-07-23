@@ -46,7 +46,7 @@ Prefixes used to help generate release notes, changes, and blog posts:
   *
 
 ## Lint
-  *
+  * W68: add warning for missing license field [#4766 @kit-ty-kate - partial fix #4598]
 
 ## Lock
   *
