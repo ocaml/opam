@@ -15,6 +15,7 @@ src_ext/cmdliner/
 src_ext/extlib/
 src_ext/mccs/
 src_ext/re/
+src_ext/base64/
 src_ext/ocamlgraph/
 src_ext/dune-local/
 src_ext/result/
