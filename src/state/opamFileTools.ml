@@ -869,6 +869,9 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        | Some urlf ->
          (OpamFile.URL.checksum urlf <> [])
          && url_is_archive <> Some true);
+    cond 68 `Warning
+      "Missing field 'license'"
+      (t.license = []);
   ]
   in
   format_errors @
