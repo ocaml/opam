@@ -24,6 +24,7 @@ appveyor_build.cmd
 appveyor_test.sh
 master_changes.md
 shell/install.sh
+release
 "
 changelog=master_changes.md
 diffile=/tmp/diff
