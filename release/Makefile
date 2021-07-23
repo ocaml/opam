@@ -13,12 +13,13 @@ OCAML_URL = https://caml.inria.fr/pub/distrib/ocaml-$(basename $(OCAMLV))/ocaml-
 
 HOST_OS = $(shell uname -s | tr A-Z a-z | sed 's/darwin/macos/')
 HOST = $(shell uname -m | sed 's/amd64/x86_64/')-$(HOST_OS)
+OUTDIR = out/$(TAG)
 
-all: $(patsubst %,out/opam-$(VERSION)-%,$(TARGETS))
+all: $(patsubst %,$(OUTDIR)/opam-$(VERSION)-%,$(TARGETS))
 
-out/opam-full-$(VERSION).tar.gz:
-	mkdir -p out
-	cd out && curl -OfL $(FULL_ARCHIVE_URL) || { \
+$(OUTDIR)/opam-full-$(VERSION).tar.gz:
+	mkdir -p "$(OUTDIR)"
+	cd "$(OUTDIR)" && curl -OfL $(FULL_ARCHIVE_URL) || { \
 	  git clone $(GIT_URL) -b $(TAG) --depth 1 opam-full-$(VERSION); \
 	  sed 's/^AC_INIT(opam,.*)/AC_INIT(opam,$(OPAM_VERSION))/' opam-full-$(VERSION)/configure.ac > \
 	    opam-full-$(VERSION)/configure.ac.tmp; \
@@ -69,7 +70,7 @@ LIBRARY_PATH=/usr/local/lib: \
 
 %: opam-$(VERSION)-%
 
-opam-$(VERSION)-%: out/opam-$(VERSION)-%
+opam-$(VERSION)-%: $(OUTDIR)/opam-$(VERSION)-%
 	ln -sf $^ $@
 
 # host: opam-$(VERSION)-$(HOST)
@@ -86,9 +87,9 @@ build/$(HOST).env:
 	rm -rf build/$(HOST)/ocaml-$(OCAMLV) build/$(HOST)/ocaml-$(OCAMLV).tar.gz
 	touch $@
 
-# Actually builds out/opam-$(VERSION)-$(HOST), but we don't want to override the
+# Actually builds $(OUTDIR)/opam-$(VERSION)-$(HOST), but we don't want to override the
 # rule that goes through a container
-host: out/opam-full-$(VERSION).tar.gz build/$(HOST).env
+host: $(OUTDIR)/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	rm -rf build/opam-full-$(VERSION)
 	cd build && tar xzf ../$<
 	( export \
@@ -99,20 +100,22 @@ host: out/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	  ./configure && \
 	  echo "$(call LINKING,$(HOST_OS))" >src/client/linking.sexp && \
 	  $(MAKE) lib-ext && \
-	  sed -i 's/ -Wno-stringop-overflow//' src_ext/mccs/src/glpk/context_flags.ml && \
+	  sed 's/ -Wno-stringop-overflow//' src_ext/mccs/src/glpk/context_flags.ml >src_ext/mccs/src/glpk/context_flags.ml.1 && \
+	  mv src_ext/mccs/src/glpk/context_flags.ml.1 src_ext/mccs/src/glpk/context_flags.ml && \
 	  $(MAKE) opam; \
 	)
-	cp build/opam-full-$(VERSION)/opam out/opam-$(VERSION)-$(HOST)
-	strip out/opam-$(VERSION)-$(HOST)
+	cp build/opam-full-$(VERSION)/opam $(OUTDIR)/opam-$(VERSION)-$(HOST)
+	strip $(OUTDIR)/opam-$(VERSION)-$(HOST)
 	rm -rf build/opam-full-$(VERSION)
 
 # Containerised builds
-out/opam-$(VERSION)-%-linux: build/%-linux.image out/opam-full-$(VERSION).tar.gz
-	docker run --rm -v `pwd`/out:/src \
+$(OUTDIR)/opam-$(VERSION)-%-linux: $(OUTDIR)/opam-full-$(VERSION).tar.gz build/%-linux.image
+	docker run --rm -i \
 	  -e "VERSION=$(VERSION)" \
 	  -e "TARGET=$*-linux" \
 	  -e "LINKING=$(call LINKING,$(HOST_OS))" \
-	  opam-build-$*-linux
+	  opam-build-$*-linux \
+	  <$< >$@
 
 clean:
 	rm -rf build
@@ -122,9 +125,9 @@ distclean: clean
 
 REMOTE_DIR = /tmp/opam-release
 REMOTE_MAKE = make
-remote: out/opam-full-$(VERSION).tar.gz
-	ssh "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/out"
+remote: $(OUTDIR)/opam-full-$(VERSION).tar.gz
+	ssh "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/${OUTDIR}"
 	scp Makefile "$(REMOTE):$(REMOTE_DIR)/"
 	scp "$^" "$(REMOTE):$(REMOTE_DIR)/$^"
 	ssh "$(REMOTE)" 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
-	scp "$(REMOTE):$(REMOTE_DIR)/out/opam-$(VERSION)*" out/
+	scp "$(REMOTE):$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"

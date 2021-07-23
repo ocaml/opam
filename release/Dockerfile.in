@@ -21,12 +21,11 @@ RUN apk add patch
 
 ENV PATH /usr/local/bin:/usr/bin:/bin
 USER opam
-VOLUME /src
 WORKDIR /home/opam/
-CMD tar xzf /src/opam-full-${VERSION}.tar.gz && \
-    cd opam-full-${VERSION} && \
+CMD tar xz >&2 && \
+    cd opam-full-${VERSION} >&2 && \
     echo "(${LINKING})" > src/client/linking.sexp && \
-    ./configure --with-mccs && \
-    make lib-ext opam && \
-    strip opam && \
-    cp opam /src/opam-${VERSION}-${TARGET}
+    ./configure --with-mccs >&2 && \
+    make lib-ext opam >&2 && \
+    strip opam >&2 && \
+    cat opam
