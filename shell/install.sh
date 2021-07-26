@@ -6,7 +6,7 @@ set -ue
 # (c) Copyright Louis Gesbert OCamlPro 2014-2017
 
 VERSION='2.1.0'
-#DEV_VERSION='2.2.0~alpha'
+DEV_VERSION='2.1.0'
 DEFAULT_BINDIR=/usr/local/bin
 
 bin_sha512() {
@@ -33,6 +33,14 @@ bin_sha512() {
     opam-2.0.8-x86_64-linux)    echo "66eee43400fa014e2128a2ffb82b36f7a9bcec4c1d243c7a38bb608ab86c8e814a7b1219e6f21beedac28b2b8c51b233377a8f7bd22fee2ff3c9c56f9264f3f0";;
     opam-2.0.8-x86_64-macos)    echo "17b7f6716dd0540f2405474451de80c3badfe4de06b8b747e9b9302d8897433f4235aa1166e8bf7c873254f92f5a7087525435b65b62e1fe00fa57d01936b430";;
     opam-2.0.8-x86_64-openbsd)  echo "05203d65d391b92350390dff7a1ffaca2b67bba9ca948cea26607f0cf7f19f30070d63f4f3bd78aff1b1c062d764e4a938106d072d8aa66740fb28480feabac5";;
+
+    opam-2.0.9-arm64-linux)     echo "4073dad3525a0f969e16eb6fbdd8d62a5d765155f3f08c782de47f51f8587f887541d1785d0ef983321f91a61e509dab0e74c6b39a3a48fb0e7e551eac4c9d98";;
+    opam-2.0.9-arm64-macos)     echo "429a849269bcfc6322aed0e4e7730283da5ba4ce425300535d38e172a31f5ae49a1e4cb7a686043a596245ff03aae626c778a5d714e2e98fdb870a4dcb1f0860";;
+    opam-2.0.9-armhf-linux)     echo "a19182d69b52461b09cb88c1b23c304e4f3a17444fa6c4424ff8d37b965025e7da8883c45b6876a84ce69f8d99be39305c04d7b05dab3c3f0463be7447b10a47";;
+    opam-2.0.9-i686-linux)      echo "ec3e33981838e93ec748c7b0873cfd205bf439f520917c11319f4ddb445d40758d51c01c46bd79d6f7fe25c24aa2e27b69f9e5a4f2279371862084efe22c3bee";;
+    opam-2.0.9-x86_64-linux)    echo "c0cde1b126dded4ade18d828e4ff25df09d1386b354021df393d0c565492160d852d3d2511258db4e7740ec315c7e8fcca42acc13a151a4f7d2ef339fd1ad11e";;
+    opam-2.0.9-x86_64-macos)    echo "6792d3d913cf800f974ff48f99348b58331d6ab7434c41d356ac6aae19292e16b213afdcad2cd387b4095d7c64b4d9c8dcd561f1679c7ce0513ffdb73f5a25d8";;
+    opam-2.0.9-x86_64-openbsd)  echo "d83cace0fb9541e3748e520ddfc81ade8ae258eea461089fcdc903c9b0845fbc3ea4071ff96b5854ec630d68bbddaef7bcbf5bd0a6324f18e1574ac6be811890";;
 
     opam-2.1.0-alpha-arm64-linux)     echo "1bf0acfa64aa01c3244e65eed60eef1caaa6de53aa8b32dd0d2446f91905a1e41591f53cd350e85b2b9f5edba9b137d723c32949115623e9753e77b707bb25b0";;
     opam-2.1.0-alpha-armhf-linux)     echo "87c12a422bd14a0d10a94ddaaa46de23700e3b89810a0c06232eff8d96b37c2fd43dcb5a8da5a2004aa8040d1b93293209f1ff1aab865ffd150364e24c87c716";;
@@ -138,8 +146,11 @@ DOWNLOAD_ONLY=
 while [ $# -gt 0 ]; do
     case "$1" in
         --dev)
+            if [ $VERSION = $DEV_VERSION ]; then
+              echo "There is no dev version. Launching with last release $VERSION."
+            fi
             VERSION=$DEV_VERSION
-            if [ -z "$NOBACKUP" ]; then NOBACKUP=0; fi;;
+            if [ -z "$NOBACKUP" ] && [ $VERSION != $DEV_VERSION ]; then NOBACKUP=0; fi;;
         --restore)
             if [ $# -lt 2 ]; then echo "Option $1 requires an argument"; exit 2; fi
             shift;
