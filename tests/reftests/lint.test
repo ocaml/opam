@@ -1,0 +1,29 @@
+N0REP0
+### <lint.opam>
+opam-version: "2.0"
+name: "lint"
+version: "1.0"
+synopsis: "A word"
+description: "Two words."
+maintainer: "opam-devel@lists.ocaml.org"
+authors: [ "Z" "A" "R" ]
+homepage: "x"
+bug-reports: "x"
+depends: [
+  "ocaml" {>= "4.02.3"}
+  "base-unix"
+  "base-bigarray"
+  "ocamlgraph"
+  "re" {>= "1.5.0"}
+  "dune" {>= "1.2.1"}
+  "cppo" {build}
+]
+conflicts: ["extlib-compat"]
+build: [
+  [ "./configure" ]
+  [ make ]
+]
+dev-repo: "git+https://github.com/ocaml/opam.git"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 68: Missing field 'license'
