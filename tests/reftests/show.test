@@ -126,6 +126,7 @@ synopsis: "A word"
 description: "Two words."
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [ "Z" "A" "R" ]
+license: "ISC"
 homepage: "x"
 bug-reports: "x"
 depends: [
@@ -151,6 +152,7 @@ synopsis: "A word"
 description: "Two words."
 maintainer: "opam-devel@lists.ocaml.org"
 authors: ["A" "R" "Z"]
+license: "ISC"
 homepage: "x"
 bug-reports: "x"
 depends: [
@@ -182,6 +184,7 @@ bug-reports "x"
 dev-repo    "git+https://github.com/ocaml/opam.git"
 authors     "A" "R" "Z"
 maintainer  "opam-devel@lists.ocaml.org"
+license     "ISC"
 depends     "base-bigarray"
             "base-unix"
             "ocamlgraph"
@@ -200,6 +203,7 @@ synopsis: "A word"
 description: "Two words."
 maintainer: "opam-devel@lists.ocaml.org"
 authors: ["A" "R" "Z"]
+license: "ISC"
 homepage: "x"
 bug-reports: "x"
 depends: [
@@ -233,6 +237,7 @@ synopsis: "A word"
 description: "Two words."
 maintainer: "opam-devel@lists.ocaml.org"
 authors: ["Z" "A" "R"]
+license: "ISC"
 homepage: "x"
 bug-reports: "x"
 depends: [
@@ -265,6 +270,7 @@ bug-reports "x"
 dev-repo    "git+https://github.com/ocaml/opam.git"
 authors     "Z" "A" "R"
 maintainer  "opam-devel@lists.ocaml.org"
+license     "ISC"
 depends     "ocaml" {>= "4.02.3"}
             "base-unix"
             "base-bigarray"

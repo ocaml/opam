@@ -204,6 +204,23 @@
    (run ./run.exe %{bin:opam} %{dep:legacy-local.test} %{read-lines:testing-env}))))
 
 (alias
+ (name reftest-lint)
+ (action
+  (diff lint.test lint.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-lint)))
+
+(rule
+ (targets lint.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:lint.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-opamroot-versions)
  (action
   (diff opamroot-versions.test opamroot-versions.out)))
