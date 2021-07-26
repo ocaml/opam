@@ -6,7 +6,8 @@ env:
   OPAMBSVERSION: 2.1.0
   OPAMBSROOT: ~/.cache/.opam.cached
   OPAM12CACHE: ~/.cache/opam1.2/cache
-  # This should be identical to the value in appveyor.yml
+  # These should be identical to the values in appveyor.yml and the other workflows
+  OPAM_REPO: https://github.com/ocaml/opam-repository.git
   OPAM_TEST_REPO_SHA: 02ead5a557d118a8d7de05edeae25d2301325a7a
   OPAM_REPO_SHA: 02ead5a557d118a8d7de05edeae25d2301325a7a
   # Default ocaml version for some jobs
