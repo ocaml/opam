@@ -3,6 +3,7 @@
 . .github/scripts/preamble.sh
 
 export OPAMYES=1
+export OPAMCONFIRMLEVEL=unsafe-yes
 export OCAMLRUNPARAM=b
 
 # All environment variable are overwritten in job description
@@ -23,6 +24,7 @@ case "$SOLVER" in
     ;;
 esac
 
+opam update --depexts
 opam switch create $SOLVER ocaml-system || true
 opam install $PKGS
 opam install . --deps
