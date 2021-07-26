@@ -2,15 +2,14 @@
 
 . .github/scripts/main/preamble.sh
 
-export OPAMYES=1
+eval $(opam env)
+OPAMCONFIRMLEVEL= OPAMCLI=2.0 opam upgrade --unlock-base --yes
+
+for package in core format installer ; do
+  opam pin add --yes --no-action opam-$package .
+done
+opam install  --deps-only --yes opam-core opam-format opam-installer
+
 export OCAMLRUNPARAM=b
 
-opam init default git+$OPAM_REPO_CACHE#$OPAM_REPO_SHA
-eval $(opam env)
-OPAMCLI=2.0 opam reinstall ocaml-system --unlock-base
-opam upgrade
-for package in core format installer ; do
-  opam pin add -yn opam-$package .
-done
-opam install opam-core opam-format opam-installer --deps-only
 dune build --profile=dev --only-packages opam-core,opam-format,opam-installer @install
