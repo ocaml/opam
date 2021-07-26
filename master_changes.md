@@ -55,7 +55,15 @@ Prefixes used to help generate release notes, changes, and blog posts:
   *
 
 ## External dependencies
-  * Set DEBIAN_FRONTEND=noninteractive for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731]
+  * Set DEBIAN_FRONTEND=noninteractive for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
+  * Fix depext alpine tagged repositories handling [#4763 @rjbou] [2.1.0~rc2 #4758]
+
+## Format upgrade
+  * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
+  * Fix not recorded local switch handling, with format upgrade [#4763 @rjbou] [2.1.0~rc2 #4715]
+  * Set opam root version to 2.1 [#4763 @rjbou] [2.1.0~rc2 #4715]
+  * Fix 2.1~alpha2 to 2.1 format upgrade with reinit [#4763 @rjbou - fix #4748] [2.1.0~rc2 #4750]
+  * Fix bypass-check handling on reinit [#4750 @rjbou] [#4763 @rjbou] [2.1.0~rc2 #4750 #4756]
 
 ## Sandbox
   *
@@ -97,7 +105,9 @@ Prefixes used to help generate release notes, changes, and blog posts:
 ## Test
 
 ## Reftests
-  *
+  * opam root version: add local switch cases [#4763 @rjbou] [2.1.0~rc2 #4715]
+  * opam root version: add reinit test casess [#4763 @rjbou] [2.1.0~rc2 #4750]
+  * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]

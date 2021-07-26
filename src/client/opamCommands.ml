@@ -371,13 +371,26 @@ let init cli =
           get_init_config ~no_sandboxing
             ~no_default_config_file:no_config_file ~add_config_file:config_file
         in
-        OpamClient.reinit ~init_config ~interactive ~dot_profile
-          ?update_config ?env_hook ?completion ~inplace
-          ~check_sandbox:(not no_sandboxing)
-          (OpamStateConfig.safe_load ~lock_kind:`Lock_write root) shell;
+        let reinit conf =
+          OpamClient.reinit ~init_config ~interactive ~dot_profile
+            ?update_config ?env_hook ?completion ~inplace ~bypass_checks
+            ~check_sandbox:(not no_sandboxing)
+            conf shell
+        in
+        let config =
+          match OpamStateConfig.load ~lock_kind:`Lock_write root with
+          | Some c -> c
+          | exception (OpamPp.Bad_version _ as e) ->
+            OpamFormatUpgrade.hard_upgrade_from_2_1_intermediates ~reinit root;
+            raise e
+          | None -> OpamFile.Config.empty
+        in
+        reinit config
       else
-        (if not interactive &&
-            update_config <> Some true && completion <> Some true && env_hook <> Some true then
+        (if not interactive
+            && update_config <> Some true
+            && completion <> Some true
+            && env_hook <> Some true then
            OpamConsole.msg
              "Opam was already initialised. If you want to set it up again, \
               use `--interactive', `--reinit', or choose a different \

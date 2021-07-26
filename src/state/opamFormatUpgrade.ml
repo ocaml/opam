@@ -17,7 +17,7 @@ open OpamFilename.Op
 let log fmt = OpamConsole.log "FMT_UPG" fmt
 let slog = OpamConsole.slog
 
-exception Upgrade_done of OpamFile.Config.t
+exception Upgrade_done of OpamFile.Config.t * (OpamFile.Config.t -> unit) option
 
 (* - Package and aux functions - *)
 
@@ -1054,47 +1054,27 @@ let v2_1_alpha2 = OpamVersion.of_string "2.1~alpha2"
 (* config & sw config downgrade opam-version to 2.0 and add opam root version *)
 let v2_1_rc = OpamVersion.of_string "2.1~rc"
 
-let _v2_1 = OpamVersion.of_string "2.1"
+let v2_1 = OpamVersion.of_string "2.1"
 
 let from_2_0_to_2_1_alpha _ conf = conf
 
 let downgrade_2_1_switches root conf =
-  let downgrade f =
-    let filename = OpamFile.filename f in
-    let str_f = OpamFilename.to_string filename in
-    let opamfile = OpamParser.FullPos.file str_f in
-    let opamfile' =
-      let open OpamParserTypes.FullPos in
-      { opamfile with
-        file_contents =
-          List.map (fun item ->
-              match item.pelem with
-              | Variable (({pelem = "opam-version"; _} as opam_v),
-                          ({pelem = String "2.1"; _} as v)) ->
-                { item with
-                  pelem = Variable ({opam_v with pelem = "opam-version"},
-                                    {v with pelem = String "2.0"})}
-              | _ -> item) opamfile.file_contents}
-    in
-    let updated = opamfile' <> opamfile in
-    if updated then
-      OpamFilename.write filename (OpamPrinter.FullPos.opamfile opamfile')
-  in
   List.iter (fun switch ->
       let f = OpamPath.Switch.switch_config root switch in
-      downgrade f;
-      ignore @@ OpamFile.Switch_config.BestEffort.read f)
-    (OpamFile.Config.installed_switches conf)
+      OpamStd.Option.iter (OpamFile.Switch_config.write f)
+        (OpamStateConfig.downgrade_2_1_switch f))
+    (OpamFile.Config.installed_switches conf);
+  conf
 
 let from_2_1_alpha_to_2_1_alpha2 root conf =
-  downgrade_2_1_switches root conf;
-  conf
+  downgrade_2_1_switches root conf
 
 let from_2_1_alpha2_to_v2_1_rc root conf =
-  downgrade_2_1_switches root conf;
-  conf
+  downgrade_2_1_switches root conf
 
-let from_2_0_to_v2_1_rc _ conf = conf
+let from_2_1_rc_to_v2_1 _ conf = conf
+
+let from_2_0_to_v2_1 _ conf = conf
 
 let latest_version = OpamFile.Config.root_version
 
@@ -1102,10 +1082,19 @@ let latest_hard_upgrade = (* to *) v2_0_beta5
 
 (* intermediates roots that need an hard upgrade *)
 let intermediate_roots = [
-  v2_1_alpha; v2_1_alpha2
+  v2_1_alpha; v2_1_alpha2; v2_1_rc
 ]
 
-let as_necessary requested_lock global_lock root config =
+let remove_missing_switches root conf =
+  let exists, missing =
+    List.partition (fun switch ->
+        OpamFilename.exists (OpamFile.filename
+                               (OpamPath.Switch.switch_config root switch)))
+      (OpamFile.Config.installed_switches conf)
+  in
+  OpamFile.Config.with_installed_switches exists conf, missing
+
+let as_necessary ?reinit requested_lock global_lock root config =
   let root_version =
     match OpamFile.Config.opam_root_version_opt config with
     | Some v -> v
@@ -1119,29 +1108,29 @@ let as_necessary requested_lock global_lock root config =
               (OpamPath.Switch.switch_config root switch))
           (OpamFile.Config.installed_switches config);
         v
-      with OpamPp.Bad_version _ -> v2_1_alpha
+      with Sys_error _ | OpamPp.Bad_version _ -> v2_1_alpha
   in
   let cmp = OpamVersion.(compare OpamFile.Config.root_version root_version) in
   if cmp <= 0 then config (* newer or same *) else
   let is_intermdiate_root = List.mem root_version intermediate_roots in
-  let need_hard_upg =
-    OpamVersion.compare root_version latest_hard_upgrade < 0
-    || is_intermdiate_root
-  in
-  let on_the_fly, global_lock_kind =
-    if not need_hard_upg && requested_lock <> `Lock_write then
-      true, `Lock_read
-    else
-      false, `Lock_write
+  let keep_needed_upgrades =
+    List.filter (fun (v,_) -> OpamVersion.compare root_version v < 0)
   in
   (* to generalise *)
-  let intermediates = [
-    v2_1_alpha,  from_2_0_to_2_1_alpha;
-    v2_1_alpha2, from_2_1_alpha_to_2_1_alpha2;
-    v2_1_rc,     from_2_1_alpha2_to_v2_1_rc;
-  ] in
+  let intermediates =
+    let hard = [
+      v2_1_alpha,  from_2_0_to_2_1_alpha;
+      v2_1_alpha2, from_2_1_alpha_to_2_1_alpha2;
+      v2_1_rc,     from_2_1_alpha2_to_v2_1_rc;
+    ] in
+    let light = [
+      v2_1,        from_2_1_rc_to_v2_1;
+    ] in
+    keep_needed_upgrades hard,
+    light
+  in
   let hard_upg, light_upg =
-    if is_intermdiate_root then intermediates, [] else
+    if is_intermdiate_root then intermediates else
       [
         v1_1,        from_1_0_to_1_1;
         v1_2,        from_1_1_to_1_2;
@@ -1155,11 +1144,18 @@ let as_necessary requested_lock global_lock root config =
         v2_0_beta,   from_2_0_alpha3_to_2_0_beta;
         v2_0_beta5,  from_2_0_beta_to_2_0_beta5;
         v2_0,        from_2_0_beta5_to_2_0;
-        v2_1_rc,     from_2_0_to_v2_1_rc;
+        v2_1,        from_2_0_to_v2_1;
       ]
-      |> List.filter (fun (v,_) -> OpamVersion.compare root_version v < 0)
+      |> keep_needed_upgrades
       |> List.partition (fun (v,_) ->
           OpamVersion.compare v latest_hard_upgrade <= 0)
+  in
+  let need_hard_upg = hard_upg <> [] in
+  let on_the_fly, global_lock_kind =
+    if not need_hard_upg && requested_lock <> `Lock_write then
+      true, `Lock_read
+    else
+      false, `Lock_write
   in
   let erase_plugin_links root =
     let plugins_bin = OpamPath.plugins_bin root in
@@ -1189,6 +1185,23 @@ let as_necessary requested_lock global_lock root config =
         config)
       config hard_upg
   in
+  let config =
+    let config, missing_switches = remove_missing_switches root config in
+    let global = List.filter (OpamSwitch.is_external @> not) missing_switches in
+    if not on_the_fly && global <> [] then
+      OpamConsole.warning "Removing global switch%s %s as %s"
+        (match global with | [_] -> "" | _ -> "es")
+        (OpamStd.Format.pretty_list
+           (List.map (OpamSwitch.to_string
+                      @> OpamConsole.colorise `bold
+                      @> Printf.sprintf "'%s'")
+              global))
+           (match global with
+            | [_] -> "it no longer exists"
+            | _ -> "they no longer exist");
+         config
+  in
+  if hard_upg = [] && light_upg = [] then config (* no upgrade to do *) else
   let is_dev = OpamVersion.is_dev_version () in
   log "%s config upgrade, from %s to %s"
     (if on_the_fly then "On-the-fly" else
@@ -1224,7 +1237,7 @@ let as_necessary requested_lock global_lock root config =
           let config = hard config |> light in
           OpamConsole.msg "Format upgrade done.\n";
           (* We need to re run init in case of hard upgrade *)
-          raise (Upgrade_done config)
+          raise (Upgrade_done (config, reinit))
         else
           OpamStd.Sys.exit_because `Aborted
       else
@@ -1242,12 +1255,12 @@ let as_necessary requested_lock global_lock root config =
     OpamConsole.error_and_exit `Locked
       "Could not acquire lock for performing format upgrade."
 
-let hard_upgrade_from_2_1_intermediates ?global_lock root =
+let hard_upgrade_from_2_1_intermediates ?reinit ?global_lock root =
   let config_f = OpamPath.config root in
   let opam_root_version = OpamFile.Config.raw_root_version config_f in
   match opam_root_version with
   | Some v when OpamVersion.compare v v2_0 <= 0
-             || OpamVersion.compare v2_1_rc v <= 0 ->
+             || OpamVersion.compare v2_1 v <= 0 ->
     () (* do nothing, need to reraise parsing exception *)
   | _ ->
     log "Intermediate opam root detected%s, launch hard upgrade"
@@ -1277,7 +1290,7 @@ let hard_upgrade_from_2_1_intermediates ?global_lock root =
       | None -> OpamFilename.flock `Lock_read (OpamPath.lock root)
     in
     (* it will trigger only hard upgrades that won't get back *)
-    ignore @@ as_necessary `Lock_write global_lock root
+    ignore @@ as_necessary `Lock_write global_lock root ?reinit
       (OpamFile.Config.with_opam_root_version v2_1_alpha2 config)
 
 let opam_file ?(quiet=false) ?filename opam =
