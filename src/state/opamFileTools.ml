@@ -18,15 +18,9 @@ let log ?level fmt = OpamConsole.log "opam-file" ?level fmt
 open OpamFile.OPAM
 
 let is_valid_license_id s =
-  let memplus s =
-    let s = OpamStd.String.remove_suffix ~suffix:"+" s in
-    OpamStd.String.Set.mem s OpamSpdxList.licenses
-  in
-  match OpamStd.String.split (String.lowercase_ascii s) ' ' with
-  | [s] -> memplus s
-  | [s; "with"; e] ->
-    memplus s && OpamStd.String.Set.mem e OpamSpdxList.exceptions
-  | _ -> false
+  match Spdx_licenses.parse s with
+  | Ok _ -> true
+  | Error _ -> false
 
 (** manipulation utilities *)
 

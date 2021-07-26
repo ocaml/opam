@@ -29,5 +29,6 @@ depends: [
   "ocaml" {>= "4.08.0"}
   "opam-repository" {= version}
   "re" {>= "1.9.0"}
+  "spdx_licenses" {>= "1.0.0"}
   "dune" {>= "2.0.0"}
 ]
