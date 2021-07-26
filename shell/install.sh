@@ -5,8 +5,8 @@ set -ue
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
 # (c) Copyright Louis Gesbert OCamlPro 2014-2017
 
-VERSION='2.0.8'
-DEV_VERSION='2.1.0~rc2'
+VERSION='2.1.0'
+#DEV_VERSION='2.2.0~alpha'
 DEFAULT_BINDIR=/usr/local/bin
 
 bin_sha512() {
@@ -99,6 +99,14 @@ bin_sha512() {
     opam-2.1.0-rc2-x86_64-linux)    echo "d07ea4a936a82d8fca17111f0c1a4d8915e90ca51f59245f9c60fcd082a54643160d2aeceae2e03113ef77568b867315307e88c06c58753ce7749be712b84bfd";;
     opam-2.1.0-rc2-x86_64-macos)    echo "48811556f65cd5afd3ad5b078c6f456df77e9e33cc2c14b289a2b17293a79f2417e99ae824cf704b953384e7a9ba47155839bd12b933efc9f0b7c6bc5033d470";;
     opam-2.1.0-rc2-x86_64-openbsd)  echo "2ae5e3d4820bad1cba322c43e12fd4d64d398f53887b520de734b49564071acd2224004151bbf4bdc6b572f037718b58d21c277157b1837cf71181fa7866bb08";;
+
+    opam-2.1.0-arm64-linux)     echo "216185106deb81db0e9cb329dd7f01d097173e1e7a055a1af8525cdb4dde6d443e4bf4ef8377f1cbd4c9fecdc7ea03e6f294dad30b10a0e83959476018e24972";;
+    opam-2.1.0-arm64-macos)     echo "c8a46b2d554e4b2a68d5004ad4cee24425c75a6957c40af49d21e05875925e59d29ef3c9f0d7703f9c209b3f50107959fa853b32143f9e7deb7b4cc54006d668";;
+    opam-2.1.0-armhf-linux)     echo "ed6448d5b4f4f8aa8d7f1d84aa09b851c9760a0ece0177ee9efecd6e6d778cd3d3c7bc6c5fb1be316d99288fdb3740dcdd88ed890b85218eb84e8b776137584f";;
+    opam-2.1.0-i686-linux)      echo "f401ae0b65ae86169d1125b6068bfd9ad897339b69882ef2a3d1e67df909e93f5f41967679d31d2336b3b8dd854806b5b97d8ab7b9fb05f7b21291ca506e6f33";;
+    opam-2.1.0-x86_64-linux)    echo "03c6a85f13a452749fdb2271731f3624a3993498ff2b304123231a8f2b26ccf1182d12119466e9a85f4de370fca51bd61d0eefe6280d3ca087cf4620fdc59a22";;
+    opam-2.1.0-x86_64-macos)    echo "1c9acee545c851dd3701229e3a6aa7b5650620e37e01400d797a4b1fbeeb614adc459411283684e223a72fda8b14ba6c6e5482661485f888819f6a2a02e4d279";;
+    opam-2.1.0-x86_64-openbsd)  echo "d53bab13e38f9e1304e08ad437b5486263451d754c9ba5feb638a34d2d2acaeef412eeae4bc9fb6bc7ee9c07539a88e02029162dbfbb095248255bc7d772213d";;
 
     *) echo "no sha";;
   esac
