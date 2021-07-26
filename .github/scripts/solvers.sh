@@ -2,7 +2,6 @@
 
 . .github/scripts/preamble.sh
 
-export OPAMYES=1
 export OPAMCONFIRMLEVEL=unsafe-yes
 export OCAMLRUNPARAM=b
 
