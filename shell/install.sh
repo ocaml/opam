@@ -116,6 +116,7 @@ usage() {
     echo "                           is from the 2.0 branch already)"
     echo "    --fresh                Create the opam $VERSION root from scratch"
     echo "    --restore   VERSION    Restore a backed up opam binary and root"
+    echo "    --version   VERSION    Install this specific version instead of $VERSION"
     echo
     echo "The default is to backup if the current version of opam is 1.*, or when"
     echo "using '--fresh' or '--dev'"
@@ -135,6 +136,10 @@ while [ $# -gt 0 ]; do
             if [ $# -lt 2 ]; then echo "Option $1 requires an argument"; exit 2; fi
             shift;
             RESTORE=$1;;
+        --version)
+            if [ $# -lt 2 ]; then echo "Option $1 requires an argument"; exit 2; fi
+            shift;
+            VERSION=$1;;
         --no-backup)
             NOBACKUP=1;;
         --backup)
