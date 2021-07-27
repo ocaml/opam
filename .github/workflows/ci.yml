@@ -3,7 +3,7 @@ name: Builds, tests & co
 on: [ push, pull_request ]
 
 env:
-  OPAMBSVERSION: 2.1.0-beta4
+  OPAMBSVERSION: 2.1.0
   OPAMBSROOT: ~/.cache/.opam.cached
   OPAM12CACHE: ~/.cache/opam1.2/cache
   # This should be identical to the value in appveyor.yml
