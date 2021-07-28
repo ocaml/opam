@@ -1,29 +1,6 @@
 #!/bin/bash -xue
 
-. .github/scripts/preamble.sh
-
-if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "x" = "x$BASE_REF_SHA$PR_REF_SHA" ] ; then
-  echo "Variables BASE_REF_SHA and PR_REF_SHA must be defined in a pull request job"
-  exit 2
-fi
-# Don't use BASE_REF_SHA and PR_REF_SHA on non pull request jobs, they are not
-# defined. See .github/workflows/ci.yml hygiene job.
-
-if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-  # needed for git diffs and rev-list
-  # we need to get history from base ref to head ref for check configure
-  depth=10
-  set +e
-  git cat-file -e $BASE_REF_SHA
-  r=$?
-  while [ $r -ne 0 ] ; do
-    git fetch origin $GITHUB_REF --depth=$depth
-    depth=$(( $depth + 10 ))
-    git cat-file -e $BASE_REF_SHA
-    r=$?
-  done
-  set -e
-fi
+. .github/scripts/hygiene-preamble.sh
 
 CheckConfigure () {
   GIT_INDEX_FILE=tmp-index git read-tree --reset -i "$1"
@@ -53,10 +30,6 @@ please run make configure and fixup the commit"
   fi
 }
 
-set +x
-
-ERROR=0
-
 ###
 # Check configure
 ###
@@ -78,52 +51,6 @@ case $GITHUB_EVENT_NAME in
     ;;
 esac
 (set +x ; echo -en "::endgroup::check configure\r") 2>/dev/null
-
-
-###
-# Check install.sh
-###
-
-if [[ $GITHUB_EVENT_NAME = 'pull_request' ]]; then
-  if ! git diff "$BASE_REF_SHA..$PR_REF_SHA" --name-only --exit-code -- shell/install.sh > /dev/null ; then
-    echo '::group::shell/install.sh updated - checking it'
-    eval $(grep '^\(OPAM_BIN_URL_BASE\|DEV_VERSION\|VERSION\)=' shell/install.sh)
-    echo "OPAM_BIN_URL_BASE = $OPAM_BIN_URL_BASE"
-    echo "VERSION = $VERSION; DEV_VERSION = $DEV_VERSION"
-    if [[ $DEV_VERSION != $VERSION ]]; then
-      ARCHES=2
-    else
-      ARCHES=1
-    fi
-    current_tag=''
-
-    while read -r line tag platform sha ; do
-      if [[ $tag != $current_tag ]]; then
-        current_tag="$tag"
-        if [[ $tag = $VERSION || $tag = $DEV_VERSION ]]; then
-          ((ARCHES--))
-        fi
-        echo "🐪 Checking binaries for opam ${tag//-/\~}"
-      fi
-      URL="$OPAM_BIN_URL_BASE$tag/opam-$tag-$platform"
-      echo "Downloading $URL"
-      check=$(curl -Ls "$URL" | sha512sum | cut -d' ' -f1)
-      if [[ $check = $sha ]] ; then
-        echo "         as expected ($sha)"
-      else
-        echo "::error file=shell/install.sh,line=$line::Incorrect checksum; got $check"
-        ERROR=1
-      fi
-    done < <(gawk 'match($0, /^ *opam-([0-9]\.[^)]*)-([^-)]*-[^-)]*)) *echo "([^"]*)".*/, m) { print NR " " m[1] " " m[2] " " m[3]; }' shell/install.sh)
-    if [[ $ARCHES -ne 0 ]] ; then
-      echo '::error file=shell/install.sh::No sha512 checksums were detected?!'
-      ERROR=1
-    fi
-    echo '::endgroup::'
-  else
-    echo 'No changes in shell/install.sh'
-  fi
-fi
 
 
 ###

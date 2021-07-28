@@ -1,6 +1,38 @@
 name: Builds, tests & co
 
-on: [ push, pull_request ]
+on:
+  push:
+    paths:
+    - 'src/**'
+    - '!src/tools/**'
+    - 'src_ext/**'
+    - 'dune'
+    - 'dune-project'
+    - '*.opam'
+    - 'Makefile*'
+    - 'configure*'
+    - '.github/**'
+  pull_request:
+    paths:
+    - 'src/**'
+    - '!src/tools/**'
+    - 'src_ext/**'
+    - 'dune'
+    - 'dune-project'
+    - '*.opam'
+    - 'Makefile*'
+    - 'configure*'
+    - '.github/**'
+#    paths-ignore:
+#    - 'release/**'
+#    - 'shell/**'
+#    - 'admin-scripts/**'
+#    - 'doc/**'
+#    - 'CHANGES'
+#    - 'LICENSE'
+#    - 'CONTRIBUTING.md'
+#    - 'master_changes.md'
+#    - 'README.md'
 
 env:
   OPAMBSVERSION: 2.1.0
@@ -292,4 +324,4 @@ jobs:
         # Defined only on pull request jobs
         BASE_REF_SHA: ${{ github.event.pull_request.base.sha }}
         PR_REF_SHA: ${{ github.event.pull_request.head.sha }}
-      run: bash -exu .github/scripts/hygiene.sh
+      run: bash -exu .github/scripts/hygiene-main.sh
