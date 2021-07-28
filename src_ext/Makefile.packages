@@ -47,6 +47,8 @@ opam-0install-cudf.pkgbuild: dune-local.pkgbuild cudf.pkgbuild 0install-solver.p
 
 stdlib-shims.pkgbuild: dune-local.pkgbuild
 
+base64.pkgbuild: dune-local.pkgbuild result.pkgbuild
+
 dune-local.pkgbuild: findlib.pkgbuild
 
 opam-file-format-pkg-build:
@@ -98,9 +100,8 @@ cudf-pkg-build:
 	make DOC= BINDIR=$(OCAMLBIN) all opt install
 
 dose3-pkg-build:
-	./configure $(if $(EXT_EXE),--prefix=$(OCAMLROOT),--bindir=/../../$(OCAMLBIN))
-	make libs apps
-	make install
+	dune build @install -p dose3
+	dune install -p dose3 dose3
 
 dune-local-pkg-build:
 	ocaml bootstrap.ml
@@ -126,3 +127,7 @@ seq-pkg-build:
 stdlib-shims-pkg-build:
 	dune build @install -p stdlib-shims
 	dune install -p stdlib-shims stdlib-shims
+
+base64-pkg-build:
+	dune build @install -p base64
+	dune install -p base64 base64

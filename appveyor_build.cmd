@@ -26,10 +26,11 @@ goto :EOF
 
 :CheckPackage
 "%CYG_ROOT%\bin\bash.exe" -lc "cygcheck -dc %1" | findstr %1 > nul
-if %ERRORLEVEL% equ 1 (
-  echo Cygwin package %1 will be installed
-  set CYGWIN_INSTALL_PACKAGES=%CYGWIN_INSTALL_PACKAGES%,%1
-)
+if %ERRORLEVEL% equ 0 goto :EOF
+set PKG=%1
+if "%PKG%" equ "flexdll" set PKG=flexdll=0.39-1
+echo Cygwin package %PKG% will be installed
+set CYGWIN_INSTALL_PACKAGES=%CYGWIN_INSTALL_PACKAGES%,%PKG%
 goto :EOF
 
 :UpgradeCygwin

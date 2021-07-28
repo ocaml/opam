@@ -7,7 +7,6 @@ unset-dev-version () {
   touch src/client/no-git-version
 }
 
-export OPAMYES=1
 export OCAMLRUNPARAM=b
 
 ( # Run subshell in bootstrap root env to build

@@ -16,6 +16,8 @@ OPAMBSROOT=`eval echo $OPAMBSROOT`
 
 OPAMBSSWITCH=opam-build
 
+export OPAMCONFIRMLEVEL=unsafe-yes
+
 case $GITHUB_EVENT_NAME in
   pull_request)
     BRANCH=$GITHUB_HEAD_REF
@@ -38,21 +40,21 @@ init-bootstrap () {
     set -e
     export OPAMROOT=$OPAMBSROOT
     # The system compiler will be picked up
-    opam init --yes --no-setup git+https://github.com/ocaml/opam-repository#$OPAM_REPO_SHA
+    opam init --no-setup git+https://github.com/ocaml/opam-repository#$OPAM_REPO_SHA
     eval $(opam env)
 #    opam update
     CURRENT_SWITCH=$(opam var switch)
     if [[ $CURRENT_SWITCH != "default" ]] ; then
       opam switch default
       eval $(opam env)
-      opam switch remove $CURRENT_SWITCH --yes
+      opam switch remove $CURRENT_SWITCH
     fi
 
     opam switch create $OPAMBSSWITCH ocaml-system
     eval $(opam env)
     # extlib is installed, since UChar.cmi causes problems with the search
     # order. See also the removal of uChar and uTF8 in src_ext/jbuild-extlib-src
-    opam install . --deps-only --yes
+    opam install . --deps-only
 
     rm -f "$OPAMBSROOT"/log/*
   fi

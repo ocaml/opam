@@ -90,7 +90,7 @@ let cudf_versions_map universe packages =
     pmap OpamPackage.Map.empty
 
 let name_to_cudf name =
-  Common.CudfAdd.encode (OpamPackage.Name.to_string name)
+  Dose_common.CudfAdd.encode (OpamPackage.Name.to_string name)
 
 let constraint_to_cudf version_map name (op,v) =
   let nv = OpamPackage.create name v in
@@ -343,7 +343,7 @@ let load_cudf_universe
       OpamConsole.error_and_exit `Solver_failure "Malformed CUDF universe (%s)" s
   in
   log ~level:3 "Secondary load of cudf universe: done in %.3fs" (chrono ());
-  (* let universe = Algo.Depsolver.trim universe in *)
+  (* let universe = Dose_algo.Depsolver.trim universe in *)
   cudf_universe
 
 let string_of_request r =
@@ -478,13 +478,13 @@ let installable universe =
       universe.u_available ~build:true ~post:true ()
   in
   let trimmed_universe =
-    (* Algo.Depsolver.trim simple_universe => this can explode memory, we need
+    (* Dose_algo.Depsolver.trim simple_universe => this can explode memory, we need
        to specify [~explain:false] *)
-    let open Algo in
+    let open Dose_algo in
     let open Depsolver in
     let trimmed_pkgs = ref [] in
     let callback d =
-      if Algo.Diagnostic.is_solution d then
+      if Dose_algo.Diagnostic.is_solution d then
         match d.Diagnostic.request with
         |[p] -> trimmed_pkgs := p::!trimmed_pkgs
         |_ -> assert false
@@ -515,12 +515,12 @@ let installable_subset universe packages =
       simple_universe
   in
   let trimmed_universe =
-    (* Algo.Depsolver.trimlist simple_universe with [~explain:false] *)
-    let open Algo in
+    (* Dose_algo.Depsolver.trimlist simple_universe with [~explain:false] *)
+    let open Dose_algo in
     let open Depsolver in
     let trimmed_pkgs = ref [] in
     let callback d =
-      if Algo.Diagnostic.is_solution d then
+      if Dose_algo.Diagnostic.is_solution d then
         match d.Diagnostic.request with
         |[p] -> trimmed_pkgs := p::!trimmed_pkgs
         |_ -> assert false
@@ -619,10 +619,10 @@ let coinstallability_check universe packages =
     opam2cudf universe ~depopts:false ~build:true ~post:true
       version_map packages
   in
-  match Algo.Depsolver.edos_coinstall cudf_universe cudf_packages with
-  | { Algo.Diagnostic.result = Algo.Diagnostic.Success _; _ } ->
+  match Dose_algo.Depsolver.edos_coinstall cudf_universe cudf_packages with
+  | { Dose_algo.Diagnostic.result = Dose_algo.Diagnostic.Success _; _ } ->
     None
-  | { Algo.Diagnostic.result = Algo.Diagnostic.Failure _; _ } as c ->
+  | { Dose_algo.Diagnostic.result = Dose_algo.Diagnostic.Failure _; _ } as c ->
     match OpamCudf.make_conflicts ~version_map cudf_universe c with
     | Conflicts cs -> Some cs
     | _ -> None
@@ -644,8 +644,8 @@ let atom_coinstallability_check universe atoms =
        opam2cudf universe version_map universe.u_available
          ~depopts:false ~build:true ~post:true)
   in
-  Algo.Depsolver.edos_install cudf_universe check_pkg
-  |> Algo.Diagnostic.is_solution
+  Dose_algo.Depsolver.edos_install cudf_universe check_pkg
+  |> Dose_algo.Diagnostic.is_solution
 
 let new_packages sol =
   OpamCudf.ActionGraph.fold_vertex (fun action packages ->
