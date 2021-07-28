@@ -319,7 +319,24 @@ jobs:
       with:
         path: src_ext/archives
         key: archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
+    - id: files
+      uses: jitterbit/get-changed-files@v1
+    - name: Changed files list
+      run: |
+        for changed_file in ${{ steps.files.outputs.modified }}; do
+          echo "M  ${changed_file}."
+        done
+        for changed_file in ${{ steps.files.outputs.removed }}; do
+          echo "D  ${changed_file}."
+        done
+        for changed_file in ${{ steps.files.outputs.added }}; do
+          echo "A  ${changed_file}."
+        done
+        for changed_file in ${{ steps.files.outputs.renamed }}; do
+          echo "AD ${changed_file}."
+        done
     - name: Hygiene
+      if: contains(steps.files.outputs.modified, 'configure.ac') || contains(steps.files.outputs.all, 'src_ext')
       env:
         # Defined only on pull request jobs
         BASE_REF_SHA: ${{ github.event.pull_request.base.sha }}
