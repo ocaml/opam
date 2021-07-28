@@ -11,9 +11,10 @@ environment:
     CYG_CACHE: C:/cygwin/var/cache/setup
     CYG_MIRROR: http://mirrors.kernel.org/sourceware/cygwin/
     DEP_MODE: lib-ext
-    # This should be identical to the value in .travis.yml
-    OPAM_REPO_SHA: b02110b549a0b5275806ce27444fabac71093a0e
-    OPAM_TEST_REPO_SHA: b02110b549a0b5275806ce27444fabac71093a0e
+    # These should be identical to the values in .github/workflows/*.yml
+    OPAM_REPO: https://github.com/ocaml/opam-repository.git
+    OPAM_REPO_SHA: 02ead5a557d118a8d7de05edeae25d2301325a7a
+    OPAM_TEST_REPO_SHA: 02ead5a557d118a8d7de05edeae25d2301325a7a
   matrix:
     - CYG_ROOT: cygwin
       CYG_ARCH: x86

@@ -10,7 +10,6 @@
 (**************************************************************************)
 
 open Cmdliner
-open OpamTypes
 open OpamStateTypes
 open OpamTypesBase
 open OpamStd.Op
@@ -24,7 +23,7 @@ exception InvalidFlagContent of string * (string * string) option
 exception InvalidNewFlag of OpamCLIVersion.Sourced.t * string * OpamCLIVersion.t
 
 let raise_invalid_cli :
-  (OpamCLIVersion.Sourced.t, string option) OpamCompat.Result.t -> 'a
+  (OpamCLIVersion.Sourced.t, string option) result -> 'a
   = function
     | Ok ocli -> raise (InvalidCLI ocli)
     | Error None -> raise (InvalidFlagContent ("cli", None))

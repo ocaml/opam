@@ -8,8 +8,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamCompat
-
 type t = int * int
 
 let supported_versions = [(2, 0); (2, 1)]
@@ -41,9 +39,9 @@ let of_json = function
   | `String x -> of_string_opt x
   | _ -> None
 
-let ( >= ) = Stdlib.( >= )
-let ( < ) = Stdlib.( < )
-let compare = Stdlib.compare
+let ( >= ) = OpamCompat.Stdlib.( >= )
+let ( < ) = OpamCompat.Stdlib.( < )
+let compare = OpamCompat.Stdlib.compare
 
 let previous cli =
   let f previous version =
@@ -66,9 +64,9 @@ module Sourced = struct
 end
 
 module Op = struct
-  let ( @>= ) (c,_) = Stdlib.( >= ) c
-  let ( @< ) (c,_) = Stdlib.( < ) c
-  let ( @= ) (c,_) = Stdlib.( = ) c
+  let ( @>= ) (c,_) = OpamCompat.Stdlib.( >= ) c
+  let ( @< ) (c,_) = OpamCompat.Stdlib.( < ) c
+  let ( @= ) (c,_) = OpamCompat.Stdlib.( = ) c
 end
 
 module O = struct

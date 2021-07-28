@@ -1,6 +1,6 @@
 
-(alias
- (name reftest-cli-versioning)
+(rule
+ (alias reftest-cli-versioning)
  (action
   (diff cli-versioning.test cli-versioning.out)))
 
@@ -16,8 +16,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:cli-versioning.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-conflict-4373)
+(rule
+ (alias reftest-conflict-4373)
  (action
   (diff conflict-4373.test conflict-4373.out)))
 
@@ -33,8 +33,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:conflict-4373.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-conflict-badversion)
+(rule
+ (alias reftest-conflict-badversion)
  (action
   (diff conflict-badversion.test conflict-badversion.out)))
 
@@ -50,8 +50,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:conflict-badversion.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-conflict-camlp4)
+(rule
+ (alias reftest-conflict-camlp4)
  (action
   (diff conflict-camlp4.test conflict-camlp4.out)))
 
@@ -67,8 +67,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:conflict-camlp4.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-conflict-core)
+(rule
+ (alias reftest-conflict-core)
  (action
   (diff conflict-core.test conflict-core.out)))
 
@@ -84,8 +84,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:conflict-core.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-conflict-solo5)
+(rule
+ (alias reftest-conflict-solo5)
  (action
   (diff conflict-solo5.test conflict-solo5.out)))
 
@@ -101,8 +101,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:conflict-solo5.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-cudf-preprocess)
+(rule
+ (alias reftest-cudf-preprocess)
  (action
   (diff cudf-preprocess.test cudf-preprocess.out)))
 
@@ -118,8 +118,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:cudf-preprocess.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-dot-install)
+(rule
+ (alias reftest-dot-install)
  (action
   (diff dot-install.test dot-install.out)))
 
@@ -135,8 +135,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:dot-install.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-init)
+(rule
+ (alias reftest-init)
  (action
   (diff init.test init.out)))
 
@@ -152,8 +152,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:init.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-install-pgocaml)
+(rule
+ (alias reftest-install-pgocaml)
  (action
   (diff install-pgocaml.test install-pgocaml.out)))
 
@@ -169,8 +169,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:install-pgocaml.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-legacy-git)
+(rule
+ (alias reftest-legacy-git)
  (action
   (diff legacy-git.test legacy-git.out)))
 
@@ -186,8 +186,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:legacy-git.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-legacy-local)
+(rule
+ (alias reftest-legacy-local)
  (action
   (diff legacy-local.test legacy-local.out)))
 
@@ -203,8 +203,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:legacy-local.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-lint)
+(rule
+ (alias reftest-lint)
  (action
   (diff lint.test lint.out)))
 
@@ -220,8 +220,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:lint.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-opamroot-versions)
+(rule
+ (alias reftest-opamroot-versions)
  (action
   (diff opamroot-versions.test opamroot-versions.out)))
 
@@ -237,8 +237,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:opamroot-versions.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-pat-sub)
+(rule
+ (alias reftest-pat-sub)
  (action
   (diff pat-sub.test pat-sub.out)))
 
@@ -254,8 +254,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:pat-sub.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-show)
+(rule
+ (alias reftest-show)
  (action
   (diff show.test show.out)))
 
@@ -271,8 +271,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:show.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-switch-creation)
+(rule
+ (alias reftest-switch-creation)
  (action
   (diff switch-creation.test switch-creation.out)))
 
@@ -288,8 +288,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:switch-creation.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-upgrade-format)
+(rule
+ (alias reftest-upgrade-format)
  (action
   (diff upgrade-format.test upgrade-format.out)))
 
@@ -305,8 +305,8 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:upgrade-format.test} %{read-lines:testing-env}))))
 
-(alias
- (name reftest-var-option)
+(rule
+ (alias reftest-var-option)
  (action
   (diff var-option.test var-option.out)))
 

@@ -1,7 +1,9 @@
 (library
   (name            opam_manifest)
   (public_name     opam-client.manifest)
-  (c_names         dummy)
+  (foreign_stubs
+    (language      c)
+    (names         dummy))
   (c_library_flags ("src/manifest/opam-manifest.o"))
   (synopsis        "mingw-w64 runtime manifest"))
 

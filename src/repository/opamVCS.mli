@@ -75,4 +75,4 @@ module type VCS = sig
 end
 
 (** Create a backend from a [VCS] implementation. *)
-module Make(VCS : VCS) : OpamRepositoryBackend.S [@@ocaml.warning "-67"] (* TODO: Remove this once we get past OCaml 4.02 *)
+module Make(VCS : VCS) : OpamRepositoryBackend.S

@@ -8,7 +8,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamCompat
 open OpamStd.Option.Op
 
 let command_output c =

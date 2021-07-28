@@ -8,7 +8,7 @@ homepage: "https://opam.ocaml.org"
 bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "git+https://github.com/ocaml/opam.git"
 depends: [
-  "ocaml" {>= "4.02.3"}
+  "ocaml" {>= "4.05.0"}
   "crowbar"
   "afl"
 ]

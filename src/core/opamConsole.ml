@@ -9,8 +9,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamCompat
-
 (* Global configuration *)
 
 let debug () = abs OpamCoreConfig.(!r.debug_level) > 0
@@ -165,7 +163,7 @@ let utf8_symbol main ?(alternates=[]) s =
           main
       in
       let b = Buffer.create 4 in
-      Buffer.add_utf_8_uchar b scalar;
+      OpamCompat.Buffer.add_utf_8_uchar b scalar;
       Buffer.contents b
     with Failure _
        | Not_found ->

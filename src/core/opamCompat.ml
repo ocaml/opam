@@ -8,30 +8,9 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module String =
-#if OCAML_VERSION >= (4, 3, 0)
-  String
-#else
-struct
-  include String
+module String = String
 
-  let lowercase_ascii = lowercase
-  let uppercase_ascii = uppercase
-  let capitalize_ascii = capitalize
-end
-#endif
-
-module Char =
-#if OCAML_VERSION >= (4, 3, 0)
-  Char
-#else
-struct
-  include Char
-
-  let lowercase_ascii = lowercase
-  let uppercase_ascii = uppercase
-end
-#endif
+module Char = Char
 
 module Printexc =
 #if OCAML_VERSION >= (4, 5, 0)
@@ -55,17 +34,7 @@ struct
 end
 #endif
 
-module Uchar =
-#if OCAML_VERSION >= (4, 3, 0)
-  Uchar
-#else
-struct
-  type t = int
-
-  let of_int i = i
-  external to_int : t -> int = "%identity"
-end
-#endif
+module Uchar = Uchar
 
 module Buffer =
 #if OCAML_VERSION >= (4, 6, 0)
@@ -117,13 +86,13 @@ module Result =
 #else
 struct
   type ('a, 'e) t
-#if OCAML_VERSION >= (4, 3, 0)
     = ('a, 'e) result
-#endif
     = Ok of 'a | Error of 'e
 end
 #endif
 
 #if OCAML_VERSION < (4, 7, 0)
 module Stdlib = Pervasives
+#else
+module Stdlib = Stdlib
 #endif

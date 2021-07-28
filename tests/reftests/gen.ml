@@ -10,8 +10,8 @@ let default_repo = "opam-repo-"^null_hash
 let diff_rule base_name =
   Format.sprintf
     {|
-(alias
- (name reftest-%s)
+(rule
+ (alias reftest-%s)
  (action
   (diff %s.test %s.out)))
 

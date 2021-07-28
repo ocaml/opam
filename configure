@@ -2185,7 +2185,7 @@ if  test -x bootstrap/ocaml/bin/ocamlc -o -x bootstrap/ocaml/bin/ocamlopt ; then
 fi
 
 # XXX This isn't strictly correct for Windows
-MIN_OCAML_VERSION=4.02.3
+MIN_OCAML_VERSION=4.03.0
 
   # checking for ocamlc
   if test -n "$ac_tool_prefix"; then
@@ -3504,7 +3504,7 @@ CPATH=$CPATH
 LIBRARY_PATH=$LIBRARY_PATH
 
 
-# Check that OCaml version is greater or equal to 4.02.3
+# Check that OCaml version is greater or equal to 4.03.0
 # Native Windows builds require at least 4.06.0 for the Unicode runtime.
 for ac_prog in gawk mawk nawk awk
 do
@@ -3585,7 +3585,7 @@ x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version
 
 
     if test "$ax_compare_version" = "true" ; then
-    as_fn_error $? "Your version of OCaml: $OCAMLVERSION is not supported" "$LINENO" 5
+    as_fn_error $? "Your version of OCaml ($OCAMLVERSION) is not supported" "$LINENO" 5
       fi
 
 

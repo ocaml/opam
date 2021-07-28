@@ -8,8 +8,10 @@
                    (:include ../../ocaml-flags-configure.sexp)
                    (:include ../../ocaml-context-flags.sexp)))
   (modules         opamWin32Stubs)
-  (c_names         opamInject opamWindows)
-  (c_flags         (:standard
+  (foreign_stubs
+    (language      c)
+    (names         opamInject opamWindows)
+    (flags         :standard
                    (:include ../c-flags.sexp)))
   (c_library_flags (:standard
                    (:include c-libraries.sexp)))

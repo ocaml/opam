@@ -89,7 +89,7 @@ val delete_glyph_checker : handle * handle -> unit
 (** Windows only. Given [(dc, font)], deletes the font object and releases the
     DC. *)
 
-val has_glyph : handle * handle -> OpamCompat.Uchar.t -> bool
+val has_glyph : handle * handle -> Uchar.t -> bool
 (** Windows only. [has_glyph (dc, font) scalar] returns [true] if [font]
     contains a glyph for [scalar].
 
