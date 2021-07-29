@@ -58,30 +58,6 @@ jobs:
 ####
 # Caches
 ####
-#  ocaml-cache:
-#    runs-on: ${{ matrix.os }}
-#    strategy:
-#      matrix:
-#        os: [ ubuntu-latest ]
-#        ocamlv: [ 4.02.3, 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1, 4.08.1, 4.09.1, 4.10.2, 4.11.2 ]
-#        include:
-#          - os: macos-latest
-#            ocamlv: 4.11.2
-#      fail-fast: false
-#    steps:
-#    - uses: actions/checkout@v2
-#    - name: ocaml ${{ matrix.ocamlv }} cache
-#      id: ocaml-cache
-#      uses: actions/cache@v2
-#      with:
-#        path: ${{ env.GH_OCAML_CACHE }}
-#        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
-#    - name: Building ocaml ${{ matrix.ocamlv }} cache
-#      if: steps.ocaml-cache.outputs.cache-hit != 'true'
-#      env:
-#        OCAML_VERSION: ${{ matrix.ocamlv }}
-#      run: bash -exu .github/scripts/main/ocaml-cache.sh ocaml
-
   Analyse:
     runs-on: ubuntu-latest
     outputs:
@@ -295,7 +271,6 @@ jobs:
     needs: [ Analyse, Build ]
     strategy:
       matrix:
-#        os: [ ubuntu-latest, macos-latest ]
         os: [ ubuntu-latest ]
         ocamlv: [ 4.13.1 ]
       fail-fast: false
