@@ -88,6 +88,8 @@ users)
   * Change minimum required OCaml to 4.08.0 for everything except opam-core, opam-format and opam-installer [#4775 @dra27]
   * Fix the cold target in presence of an older OCaml compiler version on macOS [#4802 @kit-ty-kate - fix #4801]
   * Harden the check for a C++ compiler [#4776 @dra27 - fix #3843]
+  * Add `--without-dune` to configure to force compiling vendored Dune [#4776 @dra27]
+  * Use `--without-dune` in `make cold` to avoid picking up external Dune [#4776 @dra27 - fix #3987]
 
 ## Infrastructure
   *

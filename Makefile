@@ -250,7 +250,7 @@ src_ext/secondary/ocaml/bin/ocaml:
 	env MAKE=$(MAKE) BOOTSTRAP_EXTRA_OPTS="--disable-ocamldoc --disable-debug-runtime --disable-debugger" BOOTSTRAP_OPT_TARGET=opt BOOTSTRAP_ROOT=../.. BOOTSTRAP_DIR=src_ext/secondary ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
 
 cold: compiler
-	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= ./configure --enable-cold-check $(CONFIGURE_ARGS)
+	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= ./configure --without-dune --enable-cold-check $(CONFIGURE_ARGS)
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= $(MAKE) lib-ext
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= $(MAKE)
 

@@ -76,6 +76,10 @@ AC_ARG_ENABLE([cold_check],
                  [Fail on some check necessary for make cold]),[COLD_CHECK=yes],[]
 )
 
+AC_ARG_WITH([dune],
+  AC_HELP_STRING([--without-dune],
+                 [Compile using vendored Dune instead of any in PATH]))
+
 AS_IF([test "x" != "x$LIB_PREFIX"], [
   CPATH=$CPATH:$LIB_PREFIX/include
   LIBRARY_PATH=$LIBRARY_PATH:$LIB_PREFIX/lib
@@ -257,6 +261,12 @@ AX_COMPARE_VERSION([$OCAMLVERSION], [lt], [4.08.0],
   [DUNE_SECONDARY=src_ext/secondary/ocaml/bin/ocaml],
   [DUNE_SECONDARY=])
 AC_SUBST([DUNE_SECONDARY])
+
+AS_CASE([$DUNE,$with_dune],
+  [,yes],     [AC_MSG_ERROR([Dune was not found in PATH])],
+  [*,no],     [DUNE=''],
+  [*,|*,yes], [],
+  [DUNE="$with_dune"])
 
 if test "x${COLD_CHECK}" = "xyes" ; then
   if test "x$PATCH"  = "x" ; then

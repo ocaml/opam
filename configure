@@ -746,6 +746,7 @@ with_0install_solver
 with_libacl
 with_private_runtime
 enable_cold_check
+with_dune
 enable_certificate_check
 '
       ac_precious_vars='build_alias
@@ -1403,6 +1404,7 @@ Optional Packages:
   --with-libacl           Compile opam with libacl support
   --with-private-runtime  For a mingw-w64 build, manifest the runtime DLLs
                           locally in Opam.Runtime.arch
+  --without-dune          Compile using vendored Dune instead of any in PATH
 
 Some influential environment variables:
   CC          C compiler command
@@ -3486,6 +3488,13 @@ fi
 # Check whether --enable-cold_check was given.
 if test "${enable_cold_check+set}" = set; then :
   enableval=$enable_cold_check; COLD_CHECK=yes
+fi
+
+
+
+# Check whether --with-dune was given.
+if test "${with_dune+set}" = set; then :
+  withval=$with_dune;
 fi
 
 
@@ -5665,6 +5674,17 @@ x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version
   fi
 
 
+
+case $DUNE,$with_dune in #(
+  ,yes) :
+    as_fn_error $? "Dune was not found in PATH" "$LINENO" 5 ;; #(
+  *,no) :
+    DUNE='' ;; #(
+  *,|*,yes) :
+     ;; #(
+  *) :
+    DUNE="$with_dune" ;;
+esac
 
 if test "x${COLD_CHECK}" = "xyes" ; then
   if test "x$PATCH"  = "x" ; then
