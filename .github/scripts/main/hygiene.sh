@@ -89,4 +89,19 @@ if [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$BRANCH" = "master" ]; then
   fi
 fi
 
+###
+# Workflow YAML files up-to-date
+###
+
+cd .github/workflows
+dune exec --root=. ./ci.exe
+cd ../..
+if git diff --quiet --exit-code ; then
+  (set +x; echo "Workflows up-to-date") 2>/dev/null
+else
+  (set +x; echo -e "[\e[31mERROR\e[0m] Workflows are out-of-date - \
+please run ocaml ../scripts/ci.ml from .github/workflows and fixup the commit") 2>/dev/null
+  ERROR=1
+fi
+
 exit $ERROR

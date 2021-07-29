@@ -227,9 +227,10 @@ let build_cache ?cond name =
 let unpack_cygwin ?cond host =
   run ?cond ~shell:"cmd" "Unpack Cygwin" [Printf.sprintf {|.github\scripts\cygwin.cmd %s|} host]
 
-let install_sys_opam ?cond platforms =
-  let linux_command = "sudo apt install opam" in
-  let macos_command = "brew install opam" in
+let install_sys_packages packages ~descr ?cond platforms =
+  let packages = String.concat " " packages in
+  let linux_command = "sudo apt install " ^ packages in
+  let macos_command = "brew install " ^ packages in
   match platforms with
   | [Windows] -> skip_step
   | _ ->
@@ -256,7 +257,10 @@ let install_sys_opam ?cond platforms =
             else
               commands
       in
-        run ?cond "Install system's opam package" commands
+        run ?cond descr commands
+
+let install_sys_opam ?cond = install_sys_packages ["opam"] ~descr:"Install system's opam package" ?cond
+let install_sys_dune ?cond = install_sys_packages ["dune"; "ocaml"] ~descr:"Install system's dune and ocaml packages" ?cond
 
 let analyse_job ~oc ~workflow ~platforms ~keys f =
   let outputs =
@@ -473,6 +477,7 @@ let upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_jo
 
 let hygiene_job ~analyse_job platform ~oc ~workflow f =
   job ~oc ~workflow ~section:"Around opam tests" ~runs_on:(Runner [platform]) ~needs:[analyse_job] "Hygiene"
+    ++ install_sys_dune [platform]
     ++ checkout ()
     ++ cache Archives
     ++ uses "Get changed files" ~id:"files" ~continue_on_error:true (* see https://github.com/jitterbit/get-changed-files/issues/19 *) "jitterbit/get-changed-files@v1"

@@ -640,6 +640,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: Analyse
     steps:
+    - name: Install system's dune and ocaml packages
+      run: sudo apt install dune ocaml || true
     - name: Checkout tree
       uses: actions/checkout@v2
     - name: src_ext/archives and opam-repository Cache
