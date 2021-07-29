@@ -6328,22 +6328,59 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-    # Curiously, CXX=g++ && GXX= seems to be how autoconf "signals" that no C++
-    # compiler was found.
-    if test "x$CXX" = "xg++" -a "x$GXX" != "xyes"; then :
 
-      if test "x$MCCS_DEFAULT" = "xyes"; then :
+fi
 
-        MCCS_ENABLED=false
+fi
+
+# Curiously, autoconf doesn't actually detect a C++ compiler!
+
+if test -n "$CXX"; then :
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CXX really is a C++ compiler" >&5
+$as_echo_n "checking whether $CXX really is a C++ compiler... " >&6; }
+  ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+       #ifndef __cplusplus
+       #error This is not a C++ compiler!
+       #endif
+
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+     CXX=''
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+  if test -z "$CXX"; then :
+
+    if test "x$MCCS_DEFAULT" = "xyes"; then :
+
+      MCCS_ENABLED=false
 
 
 else
 
-        if test "x${enable_checks}" != "xno"; then :
+      if test "x${enable_checks}" != "xno"; then :
 
-          as_fn_error $? "A C++ compiler is required to build mccs" "$LINENO" 5
-
-fi
+        as_fn_error $? "A C++ compiler is required to build mccs" "$LINENO" 5
 
 fi
 

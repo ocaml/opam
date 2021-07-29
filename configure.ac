@@ -341,15 +341,18 @@ dnl       AC_SUBST(OCAML_PKG_mccs,"no")])
 AS_IF([test "x$MCCS_ENABLED" = "xtrue"],[
   AS_IF([test "x${CCOMP_TYPE}" != "xmsvc"],[
     AC_PROG_CXX
-    # Curiously, CXX=g++ && GXX= seems to be how autoconf "signals" that no C++
-    # compiler was found.
-    AS_IF([test "x$CXX" = "xg++" -a "x$GXX" != "xyes"],[
-      AS_IF([test "x$MCCS_DEFAULT" = "xyes"],[
-        AC_SUBST(MCCS_ENABLED,false)
-      ],[
-        AS_IF([test "x${enable_checks}" != "xno"],[
-          AC_MSG_ERROR([A C++ compiler is required to build mccs])
-        ])
+  ])
+])
+
+# Curiously, autoconf doesn't actually detect a C++ compiler!
+AS_IF([test -n "$CXX"],[
+  CHECK_CXX_WORKS
+  AS_IF([test -z "$CXX"],[
+    AS_IF([test "x$MCCS_DEFAULT" = "xyes"],[
+      AC_SUBST(MCCS_ENABLED,false)
+    ],[
+      AS_IF([test "x${enable_checks}" != "xno"],[
+        AC_MSG_ERROR([A C++ compiler is required to build mccs])
       ])
     ])
   ])
