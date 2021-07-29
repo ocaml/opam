@@ -1,4 +1,4 @@
-ifneq ($(filter-out archives cache-archives lib-pkg,$(MAKECMDGOALS)),)
+ifneq ($(wildcard ../Makefile.config)$(filter-out archives cache-archives lib-pkg,$(MAKECMDGOALS)),)
 -include ../Makefile.config
 endif
 
