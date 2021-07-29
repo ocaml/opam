@@ -7746,6 +7746,16 @@ if test "x${VENDORED}" = "xtrue"; then :
 else
 
   ${MAKE:-make} --no-print-directory -C src_ext def-ignore
+  if test -z "${DUNE}"; then :
+
+    echo
+    $as_echo_n "Downloading dune... "
+    ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ dune-local.download
+    $as_echo done
+    $as_echo_n "Extracting dune... "
+    ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ dune-local.stamp
+    $as_echo done
 
 fi
 
+fi

@@ -480,5 +480,13 @@ AS_IF([test "x${VENDORED}" = "xtrue"],[
   AS_ECHO([done])
 ],[
   ${MAKE:-make} --no-print-directory -C src_ext def-ignore
+  AS_IF([test -z "${DUNE}"],[
+    echo
+    AS_ECHO_N(["Downloading dune... "])
+    ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ dune-local.download
+    AS_ECHO([done])
+    AS_ECHO_N(["Extracting dune... "])
+    ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ dune-local.stamp
+    AS_ECHO([done])
+  ])
 ])
-
