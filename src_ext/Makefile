@@ -72,7 +72,7 @@ MD5CHECK = { \
 }
 endif
 
-lib-ext: clone ensure-seq-patched.stamp
+lib-ext: clone
 	@
 
 ifeq ($(CAN_PKG),1)
