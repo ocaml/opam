@@ -114,7 +114,11 @@ opam-devel.install: $(DUNE_DEP)
 	sed -e "/lib\/opam\/opam/d" -e "s/bin:/libexec:/" opam.install > $@
 
 opam-%.install: $(DUNE_DEP)
+ifeq ($(VENDORED),true)
+	$(error Libraries cannot be built in vendored deps mode)
+else
 	$(DUNE) build $(DUNE_ARGS) -p opam-$* $@
+endif
 
 .PHONY: build-opam-installer
 build-opam-installer: $(DUNE_DEP) 
@@ -137,10 +141,12 @@ opam-lib: $(DUNE_DEP)
 	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) --promote-install-files -- $(patsubst %,opam-%.install,$(OPAMLIBS))
 
 installlib-%: opam-installer opam-%.install
-	$(if $(wildcard src_ext/lib/*),\
-	  $(error Installing the opam libraries is incompatible with embedding \
-	          the dependencies. Run 'make clean-ext' and try again))
+ifeq ($(VENDORED),true)
+	$(error Installing the opam libraries is incompatible with embedding \
+	        the dependencies. Run 'make clean-ext' and try again))
+else
 	$(OPAMINSTALLER) $(OPAMINSTALLER_FLAGS) opam-$*.install
+endif
 
 uninstalllib-%: opam-installer opam-%.install
 	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) opam-$*.install
@@ -250,8 +256,7 @@ src_ext/secondary/ocaml/bin/ocaml:
 	env MAKE=$(MAKE) BOOTSTRAP_EXTRA_OPTS="--disable-ocamldoc --disable-debug-runtime --disable-debugger" BOOTSTRAP_OPT_TARGET=opt BOOTSTRAP_ROOT=../.. BOOTSTRAP_DIR=src_ext/secondary ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
 
 cold: compiler
-	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= ./configure --without-dune --enable-cold-check $(CONFIGURE_ARGS)
-	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= $(MAKE) lib-ext
+	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= ./configure --with-vendored-deps --without-dune --enable-cold-check $(CONFIGURE_ARGS)
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= $(MAKE)
 
 cold-%:

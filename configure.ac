@@ -80,6 +80,10 @@ AC_ARG_WITH([dune],
   AC_HELP_STRING([--without-dune],
                  [Compile using vendored Dune instead of any in PATH]))
 
+AC_ARG_WITH([vendored-deps],
+  AC_HELP_STRING([--with-vendored-deps],
+                 [Use vendored dependencies instead of any available in the compiler installation]))
+
 AS_IF([test "x" != "x$LIB_PREFIX"], [
   CPATH=$CPATH:$LIB_PREFIX/include
   LIBRARY_PATH=$LIBRARY_PATH:$LIB_PREFIX/lib
@@ -395,14 +399,22 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$CPPO" = "x" ||
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue" ||
        test "x$OCAML_PKG_opam_0install_cudf$OPAM_0INSTALL_SOLVER_ENABLED" = "xnotrue";}],[
-  echo "============================================================================"
-  echo "Some dependencies are missing. If you are just interested in the stand-alone"
-  echo "'opam' binary, run 'make lib-ext' to download and include them."
-  echo "============================================================================"
-  echo
-  AC_SUBST(hasalldeps,"")
+  AS_IF([test "x${with_vendored_deps}" = "xno"],[
+    AC_MSG_ERROR([Dependencies missing and --without-vendored-deps given; override with --disable-checks])
+  ],[
+    AS_IF([test "x${with_vendored_deps}" != "xyes"],[
+      echo "============================================================================"
+      echo "Some dependencies are missing. Vendored mode has been automatically enabled."
+      echo "============================================================================"
+    ])
+    AC_SUBST(VENDORED,"true")
+  ])
 ],[
-  AC_SUBST(hasalldeps,"true")
+  AS_IF([test "x${with_vendored_deps}" = "xyes"],[
+    AC_SUBST(VENDORED,"true")
+  ],[
+    AC_SUBST(VENDORED,"false")
+  ])
 ])
 
 if test "x$prefix" = "xNONE"; then
@@ -457,3 +469,16 @@ AS_IF([test "x$MCCS_ENABLED" = "xfalse" -a "x$OPAM_0INSTALL_SOLVER_ENABLED" = "x
 echo
 echo Executables will be installed in ${bindir}
 echo Manual pages will be installed in ${mandir}
+
+AS_IF([test "x${VENDORED}" = "xtrue"],[
+  echo
+  AS_ECHO_N(["Downloading vendored dependencies... "])
+  ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ archives
+  AS_ECHO([done])
+  AS_ECHO_N(["Extracting vendored dependencies... "])
+  ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ clone
+  AS_ECHO([done])
+],[
+  ${MAKE:-make} --no-print-directory -C src_ext def-ignore
+])
+

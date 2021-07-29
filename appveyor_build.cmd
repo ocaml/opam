@@ -177,12 +177,12 @@ if "%OCAML_PORT%" equ "" (
   set POST_COMMAND=^&^& make opam-installer install
 )
 set LIB_EXT=
-if "%DEP_MODE%" equ "lib-ext" set LIB_EXT=^&^& make lib-ext
+if "%DEP_MODE%" equ "lib-ext" set VENDORED_DEPS=--with-vendored-deps
 set PRIVATE_RUNTIME=
 if "%OCAML_PORT:~0,5%" equ "mingw" set PRIVATE_RUNTIME=--with-private-runtime
 set WITH_MCCS=--with-mccs
 if "%DEP_MODE%" equ "lib-pkg" set WITH_MCCS=
-"%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER %LIB_PKG% && ./configure %PRIVATE_RUNTIME% %WITH_MCCS% %LIB_EXT%" || exit /b 1
+"%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER %LIB_PKG% && ./configure %VENDORED_DEPS% %PRIVATE_RUNTIME% %WITH_MCCS% %LIB_EXT%" || exit /b 1
 "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && echo DUNE_PROFILE=dev >> Makefile.config" || exit /b 1
 "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make opam %POST_COMMAND%" || exit /b 1
 goto :EOF

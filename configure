@@ -623,7 +623,7 @@ ac_includes_default="\
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
-hasalldeps
+VENDORED
 ac_ct_CXX
 CXXFLAGS
 CXX
@@ -747,6 +747,7 @@ with_libacl
 with_private_runtime
 enable_cold_check
 with_dune
+with_vendored_deps
 enable_certificate_check
 '
       ac_precious_vars='build_alias
@@ -1405,6 +1406,8 @@ Optional Packages:
   --with-private-runtime  For a mingw-w64 build, manifest the runtime DLLs
                           locally in Opam.Runtime.arch
   --without-dune          Compile using vendored Dune instead of any in PATH
+  --with-vendored-deps    Use vendored dependencies instead of any available
+                          in the compiler installation
 
 Some influential environment variables:
   CC          C compiler command
@@ -3495,6 +3498,13 @@ fi
 # Check whether --with-dune was given.
 if test "${with_dune+set}" = set; then :
   withval=$with_dune;
+fi
+
+
+
+# Check whether --with-vendored-deps was given.
+if test "${with_vendored_deps+set}" = set; then :
+  withval=$with_vendored_deps;
 fi
 
 
@@ -6467,18 +6477,37 @@ if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue" ||
        test "x$OCAML_PKG_opam_0install_cudf$OPAM_0INSTALL_SOLVER_ENABLED" = "xnotrue";}; then :
 
-  echo "============================================================================"
-  echo "Some dependencies are missing. If you are just interested in the stand-alone"
-  echo "'opam' binary, run 'make lib-ext' to download and include them."
-  echo "============================================================================"
-  echo
-  hasalldeps=""
+  if test "x${with_vendored_deps}" = "xno"; then :
+
+    as_fn_error $? "Dependencies missing and --without-vendored-deps given; override with --disable-checks" "$LINENO" 5
+
+else
+
+    if test "x${with_vendored_deps}" != "xyes"; then :
+
+      echo "============================================================================"
+      echo "Some dependencies are missing. Vendored mode has been automatically enabled."
+      echo "============================================================================"
+
+fi
+    VENDORED="true"
+
+
+fi
+
+else
+
+  if test "x${with_vendored_deps}" = "xyes"; then :
+
+    VENDORED="true"
 
 
 else
 
-  hasalldeps="true"
+    VENDORED="false"
 
+
+fi
 
 fi
 
@@ -7703,3 +7732,20 @@ fi
 echo
 echo Executables will be installed in ${bindir}
 echo Manual pages will be installed in ${mandir}
+
+if test "x${VENDORED}" = "xtrue"; then :
+
+  echo
+  $as_echo_n "Downloading vendored dependencies... "
+  ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ archives
+  $as_echo done
+  $as_echo_n "Extracting vendored dependencies... "
+  ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ clone
+  $as_echo done
+
+else
+
+  ${MAKE:-make} --no-print-directory -C src_ext def-ignore
+
+fi
+

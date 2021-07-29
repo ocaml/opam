@@ -23,9 +23,6 @@ export OCAMLRUNPARAM=b
     echo 'DUNE_PROFILE=dev' >> Makefile.config
   fi
 
-  if [[ $OPAM_TEST$OPAM_COLD -eq 0 ]] ; then
-    make lib-ext
-  fi
   if [ $OPAM_UPGRADE -eq 1 ]; then
     unset-dev-version
   fi
