@@ -105,7 +105,7 @@ if [ $OPAM_UPGRADE -eq 1 ]; then
     if [ "$RUNNER_OS" = "macOS" ]; then
       os="Darwin"
     fi
-    wget "https://github.com/ocaml/opam/releases/download/1.2.2/opam-1.2.2-x86_64-$os" -O $OPAM12
+    curl -sL "https://github.com/ocaml/opam/releases/download/1.2.2/opam-1.2.2-x86_64-$os" -o $OPAM12
     chmod +x $OPAM12
   fi
   export OPAMROOT=/tmp/opamroot

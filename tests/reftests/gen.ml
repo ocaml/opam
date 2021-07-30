@@ -45,7 +45,7 @@ let archive_download_rule archive_hash =
    Format.sprintf {|
 (rule
  (targets %s)
- (action (run wget --quiet -O %%{targets} https://github.com/ocaml/opam-repository/archive/%s.tar.gz)))
+ (action (run curl --silent -Lo %%{targets} https://github.com/ocaml/opam-repository/archive/%s.tar.gz)))
 |} (tgz_name ~archive_hash) archive_hash
 
 let default_repo_rule =

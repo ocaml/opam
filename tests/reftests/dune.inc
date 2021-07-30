@@ -650,7 +650,7 @@
 
 (rule
  (targets opam-archive-009e00fa.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/009e00fa.tar.gz)))
+ (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/009e00fa.tar.gz)))
 
 (rule
   (targets opam-repo-009e00fa)
@@ -670,7 +670,7 @@
 
 (rule
  (targets opam-archive-7090735c.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/7090735c.tar.gz)))
+ (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/7090735c.tar.gz)))
 
 (rule
   (targets opam-repo-7090735c)
@@ -690,7 +690,7 @@
 
 (rule
  (targets opam-archive-7371c1d9.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/7371c1d9.tar.gz)))
+ (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/7371c1d9.tar.gz)))
 
 (rule
   (targets opam-repo-7371c1d9)
@@ -710,7 +710,7 @@
 
 (rule
  (targets opam-archive-a5d7cdc0.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/a5d7cdc0.tar.gz)))
+ (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/a5d7cdc0.tar.gz)))
 
 (rule
   (targets opam-repo-a5d7cdc0)
@@ -730,7 +730,7 @@
 
 (rule
  (targets opam-archive-ad4dd344.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/ad4dd344.tar.gz)))
+ (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/ad4dd344.tar.gz)))
 
 (rule
   (targets opam-repo-ad4dd344)
@@ -750,7 +750,7 @@
 
 (rule
  (targets opam-archive-c1d23f0e.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/c1d23f0e.tar.gz)))
+ (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/c1d23f0e.tar.gz)))
 
 (rule
   (targets opam-repo-c1d23f0e)
@@ -770,7 +770,7 @@
 
 (rule
  (targets opam-archive-f372039d.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/f372039d.tar.gz)))
+ (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/f372039d.tar.gz)))
 
 (rule
   (targets opam-repo-f372039d)

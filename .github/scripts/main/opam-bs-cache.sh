@@ -10,7 +10,7 @@ if [ "$os" = "darwin" ] ; then
   os=macos
 fi
 
-wget -q -O $OPAM_LOCAL/bin/opam-bootstrap \
+curl -sL -o $OPAM_LOCAL/bin/opam-bootstrap \
   "https://github.com/ocaml/opam/releases/download/$OPAMBSVERSION/opam-$OPAMBSVERSION-$(uname -m)-$os"
 cp -f $OPAM_LOCAL/bin/opam-bootstrap $OPAM_LOCAL/bin/opam
 chmod a+x $OPAM_LOCAL/bin/opam
