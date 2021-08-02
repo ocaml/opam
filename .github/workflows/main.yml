@@ -321,6 +321,8 @@ jobs:
         key: archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
     - id: files
       uses: jitterbit/get-changed-files@v1
+      # see https://github.com/jitterbit/get-changed-files/issues/19
+      continue-on-error: true
     - name: Changed files list
       run: |
         for changed_file in ${{ steps.files.outputs.modified }}; do
