@@ -458,7 +458,7 @@ let run_test ?(vars=[]) ~opam t =
   else
     ignore @@ command "cp" ["-a"; opamroot0; opamroot];
   Sys.chdir dir;
-  let dir = Sys.getcwd () in (* because it may need to be normalised on OSX *)
+  let dir = Sys.getcwd () in (* because it may need to be normalised on macOS *)
   if t.repo_hash = no_opam_repo then
     (mkdir_p (default_repo^"/packages");
      write_file ~path:(default_repo^"/repo") ~contents:{|opam-version: "2.0"|};

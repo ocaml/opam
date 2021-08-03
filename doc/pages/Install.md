@@ -37,7 +37,7 @@ and run `sh install.sh`)
 
 We provide pre-compiled binaries for:
 - Linux i686, amd64, arm7, arm64
-- OSX (intel 64 bits, arm64)
+- macOS (intel 64 bits, arm64)
 - We do not at present provide an official Windows distribution of opam, but please see [this separately maintained distribution](https://fdopen.github.io/opam-repository-mingw/)
 (other platforms are available using the other methods below)
 
@@ -152,7 +152,7 @@ cd /usr/ports/devel/ocaml-opam
 make install
 ```
 
-#### OSX
+#### macOS
 
 [![badge](https://repology.org/badge/version-for-repo/homebrew/opam.svg)](https://repology.org/project/opam/versions) [![badge](https://repology.org/badge/version-for-repo/macports/opam.svg)](https://repology.org/project/opam/versions)
 
