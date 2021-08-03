@@ -1,6 +1,6 @@
 # This script check that the current master changelog has been updated by PR,
 # ignoring some internal files.
-# It is used byt the changelog_check github action.
+# It is used by the changelog_check github action.
 
 # (c) Copyright Raja Boujbel OCamlPro 2020
 
@@ -18,6 +18,8 @@ IGNORE="
 AUTHORS
 CONTRIBUTING.md
 README.md
+CHANGES
+LICENSE
 appveyor.patch
 appveyor.yml
 appveyor_build.cmd

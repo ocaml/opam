@@ -115,6 +115,10 @@ Prefixes used to help generate release notes, changes, and blog posts:
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]
   * Fix ocaml link (http -> https) [#4729 @rjbou]
+  * Separate code from install workflow [#4773 @rjbou]
+  * Specify whitelist of changed files to launch workflow [#473 @rjbou]
+  * Update changelog checker list [#4773 @rjbou]
+  * Launch main hygiene job on configure/src_ext changes [#4773 @rjbou]
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]

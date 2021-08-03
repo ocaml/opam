@@ -1,0 +1,22 @@
+name: Test scripts
+
+on:
+  pull_request:
+    paths:
+    - 'shell/install.sh'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  hygiene-scripts:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Check scripts
+      env:
+        # Defined only on pull request jobs
+        BASE_REF_SHA: ${{ github.event.pull_request.base.sha }}
+        PR_REF_SHA: ${{ github.event.pull_request.head.sha }}
+      run: bash -exu .github/scripts/hygiene-scripts.sh
