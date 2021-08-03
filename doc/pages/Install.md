@@ -24,7 +24,7 @@ Then see the [Upgrade guide](Upgrade_guide.html) to check the changes.
 The quickest way to get the latest opam up and working is to run
 [this script](https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh):
 ```
-sh <(curl -sL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)
+bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)"
 ```
 
 This will simply check your architecture, download and install the proper
