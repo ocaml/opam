@@ -220,8 +220,3 @@ for the latest version):
 Follow the instructions in the included
 [`README.md`](https://github.com/ocaml/opam#readme) to get opam built and
 installed from there.
-
-> Note that opam1.2.2 doesn't build from source with OCaml 4.06.0. Use this command to compile `lib_ext`
-> ```
-> OCAMLPARAM="safe-string=0,_" make lib-ext
-> ```
