@@ -5,6 +5,10 @@ Prefixes used to help generate release notes, changes, and blog posts:
 * ◈ New option/command/subcommand
 * [BUG] for bug fixes
 * [NEW] for new features (not a command itself)
+* [API] api updates 🕮
+If there is changes in the API (new non optional argument, function renamed or
+moved, etc.), please update the _API updates_ part (it helps opam library
+users)
 
 ## Version
   *
@@ -92,7 +96,7 @@ Prefixes used to help generate release notes, changes, and blog posts:
 ## State
   *
 
-# Opam file format
+## Opam file format
   *
 
 ## Solver
@@ -128,3 +132,11 @@ Prefixes used to help generate release notes, changes, and blog posts:
 
 ## Security fixes
   *
+
+# API updates
+## opam-client
+## opam-repository
+## opam-state
+## opam-solver
+## opam-format
+## opam-core
