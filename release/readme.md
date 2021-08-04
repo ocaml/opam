@@ -11,7 +11,7 @@
 
 [ once bump version & changes PRs merged ]
 * tag the release (git tag -a 2.2.0; git push origin 2.2.0)
-* /!\ Once the tag pushed, it can be updated only in case of severe issue
+* /!\ Once the tag pushed, it can be updated [different commit] only in case of severe issue
 * create a release (or prerelease if intermediate release) draft on github based on your tag (https://github.com/ocaml/opam/releases/new)
 * generate opam artifacts, using `shell/release.sh`, it requires to have Docker install with several remotes, the different arches
 * add releases notes (content of `master_changes.md`) in the release
@@ -27,3 +27,13 @@
 
 * a blog entry in opam.ocaml.org
 * a announcement in discuss.ocaml.org
+
+
+## After release
+
+* Bump the version with a `~dev` at the end (e.g. `2.2.0~alpha~dev`)
+* Check if reftests needs an update
+
+### On a release candidate
+* create a branch to a `x.y` for rc's and the final release
+* remove `shell/install.sh`
