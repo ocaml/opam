@@ -504,7 +504,7 @@ let check_and_revert_sandboxing root config =
   | [] -> config
   | cmd::_ ->
     (* All the provided sandboxing scripts are expected to define [TMPDIR] *)
-    let test_file = "$TMPDIR/opam-sandbox-check-out" in
+    let test_file = "${TMPDIR:-/tmp}/opam-sandbox-check-out" in
     let test_cmd =
       [ "sh"; "-c";
         Printf.sprintf "echo SUCCESS >%s && cat %s; rm -f %s"
