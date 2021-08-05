@@ -66,7 +66,7 @@ Prefixes used to help generate release notes, changes, and blog posts:
   * Fix bypass-check handling on reinit [#4750 @rjbou] [#4763 @rjbou] [2.1.0~rc2 #4750 #4756]
 
 ## Sandbox
-  *
+  * Add default TMPDIR value for sandbox checker [#4784 @rjbou - fix #4783]
 
 ## Repository management
   *
