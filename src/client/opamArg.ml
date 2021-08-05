@@ -130,7 +130,7 @@ let environment_variables =
          (string_of_enum when_enum));
       "UTF8MSGS", cli_original, (fun v -> UTF8MSGS (env_bool v)),
       "use extended UTF8 characters (camels) in opam messages. Implies \
-       $(i,OPAMUTF8). This is set by default on OSX only.";
+       $(i,OPAMUTF8). This is set by default on macOS only.";
       "VERBOSE", cli_original, (fun v -> VERBOSE (env_level v)),
       "see option `--verbose'.";
     ] in

@@ -58,10 +58,10 @@ OS/distrubtion, their latest opam version and their maintainers:
   * [Package definition](https://git.savannah.gnu.org/cgit/guix.git/tree/gnu/packages/ocaml.scm#n428)
   * Julien Lepiller [@roptat](https://github.com/roptat)
 
-* Homebrew (MacOS X)
+* Homebrew (macOS)
  [![Homebrew package](https://repology.org/badge/version-for-repo/homebrew/opam.svg?header=)](https://formulae.brew.sh/formula/opam)
 
-* Macports (MacOS X)
+* Macports (macOS)
  [![MacPorts package](https://repology.org/badge/version-for-repo/macports/opam.svg?header=)](https://ports.macports.org/port/opam/summary)
   * [Package definition](https://github.com/macports/macports-ports/blob/master/sysutils/opam/Portfile)
   * Perry E. Metzger [@pmetzger](https://www.github.com/pmetzger)

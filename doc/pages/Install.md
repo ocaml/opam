@@ -24,7 +24,7 @@ Then see the [Upgrade guide](Upgrade_guide.html) to check the changes.
 The quickest way to get the latest opam up and working is to run
 [this script](https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh):
 ```
-sh <(curl -sL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)
+bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)"
 ```
 
 This will simply check your architecture, download and install the proper
@@ -37,7 +37,7 @@ and run `sh install.sh`)
 
 We provide pre-compiled binaries for:
 - Linux i686, amd64, arm7, arm64
-- OSX (intel 64 bits, arm64)
+- macOS (intel 64 bits, arm64)
 - We do not at present provide an official Windows distribution of opam, but please see [this separately maintained distribution](https://fdopen.github.io/opam-repository-mingw/)
 (other platforms are available using the other methods below)
 
@@ -152,7 +152,7 @@ cd /usr/ports/devel/ocaml-opam
 make install
 ```
 
-#### OSX
+#### macOS
 
 [![badge](https://repology.org/badge/version-for-repo/homebrew/opam.svg)](https://repology.org/project/opam/versions) [![badge](https://repology.org/badge/version-for-repo/macports/opam.svg)](https://repology.org/project/opam/versions)
 
@@ -213,15 +213,10 @@ You can also download the full archives, including opam dependencies (these
 don't require any extra downloads, just the OCaml compiler -- 4.02.3 or later
 for the latest version):
 
-* [2.0.8](https://github.com/ocaml/opam/releases/download/2.0.8/opam-full-2.0.8.tar.gz)
- - MD5: 69e95d318fec8027b9eb6af6075a2a13
- - SHA384: f534860f511768f78f646be4248df58ecaf699dc55eea90e21f0d8d6e2bd23235a9ca132fcf17bf854cf3c25adfab4c8
+* [2.1.0](https://github.com/ocaml/opam/releases/download/2.1.0/opam-full-2.1.0.tar.gz)
+ - MD5: 24dbfb43515e8edc617485f6c5853802
+ - SHA384: ba4d375a1dea73937e8790c45c2fbd3d68ebbb0fddd2fd22af3e682037d50979abeda0c5cf17ffd8cc6a3951ff07242f
 
 Follow the instructions in the included
 [`README.md`](https://github.com/ocaml/opam#readme) to get opam built and
 installed from there.
-
-> Note that opam1.2.2 doesn't build from source with OCaml 4.06.0. Use this command to compile `lib_ext`
-> ```
-> OCAMLPARAM="safe-string=0,_" make lib-ext
-> ```
