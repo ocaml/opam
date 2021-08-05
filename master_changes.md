@@ -14,7 +14,7 @@ users)
   *
 
 ## Global CLI
-  *
+  * Fix typo in error message for opam var [#4786 @kit-ty-kate - fix #4785]
 
 ## Plugins
   *
