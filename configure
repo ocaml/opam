@@ -2184,8 +2184,7 @@ if  test -x bootstrap/ocaml/bin/ocamlc -o -x bootstrap/ocaml/bin/ocamlopt ; then
 
 fi
 
-# XXX This isn't strictly correct for Windows
-MIN_OCAML_VERSION=4.03.0
+MIN_OCAML_VERSION=4.08.0
 
   # checking for ocamlc
   if test -n "$ac_tool_prefix"; then
@@ -3504,8 +3503,6 @@ CPATH=$CPATH
 LIBRARY_PATH=$LIBRARY_PATH
 
 
-# Check that OCaml version is greater or equal to 4.03.0
-# Native Windows builds require at least 4.06.0 for the Unicode runtime.
 for ac_prog in gawk mawk nawk awk
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
@@ -3550,9 +3547,6 @@ done
 
 if test "x${enable_version_check}" != "xno"; then :
 
-  if  test ${WIN32} -eq 1 ; then :
-  MIN_OCAML_VERSION=4.06.0
-fi
 
 
 
@@ -4794,13 +4788,8 @@ fi
 
 fi
 
-CONF_OCAMLFLAGS="-w -67"
+CONF_OCAMLFLAGS=''
 
-if test "x${CI}" != "x"; then :
-
-  CONF_OCAMLFLAGS="${CONF_OCAMLFLAGS} -w -67"
-
-fi
 if test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"; then :
 
   if test "x${CCOMP_TYPE}" = "xmsvc"; then :

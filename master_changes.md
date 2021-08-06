@@ -76,13 +76,14 @@ users)
   *
 
 ## VCS
-  *
+  * Use 4.08's unnamed functor arguments to silence warning 67 [#4775 @dra27]
 
 ## Build
   * Bump src_exts and fix build compat with Dune 2.9.0 [#4752 @dra27]
   * Upgrade to dose3 >= 6.1 and vendor dose3 7.0.0 [#4760 @kit-ty-kate]
   * Change minimum required OCaml to 4.03.0 [#4770 @dra27]
   * Change minimum required Dune to 2.0 [#4770 @dra27]
+  * Change minimum required OCaml to 4.08.0 for everything except opam-core, opam-format and opam-installer [#4775 @dra27]
 
 ## Infrastructure
   *

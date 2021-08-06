@@ -108,14 +108,14 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
-        ocamlv: [ 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1, 4.08.1, 4.09.1, 4.10.2, 4.11.2, 4.12.0 ]
+        ocamlv: [ 4.08.1, 4.09.1, 4.10.2, 4.11.2, 4.12.0 ]
         include:
           - os: macos-latest
             ocamlv: 4.12.0
-      # Intentionnaly fail fast, no need to run all build if there is a
+      # Intentionally fail fast, no need to run all build if there is a
       # problem in a given version; usually it is functions not defined in lower
-      # versions of caml
-      # fail-fast: false
+      # versions of OCaml
+      fail-fast: true
     steps:
     - name: install deps
       if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -136,6 +136,39 @@ jobs:
       env:
         OCAML_VERSION: ${{ matrix.ocamlv }}
       run: bash -exu .github/scripts/main.sh
+
+####
+# Legacy
+####
+  legacy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ Linux ]
+        ocamlv: [ 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1 ]
+      # Intentionally fail fast, no need to run all build if there is a
+      # problem in a given version; usually it is functions not defined in lower
+      # versions of OCaml
+      fail-fast: true
+    steps:
+    - name: install deps
+      run: sudo apt install opam
+    - uses: actions/checkout@v2
+    - name: ocaml ${{ matrix.ocamlv }} cache
+      id: ocaml-cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ env.GH_OCAML_CACHE }}
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/ocaml-cache.sh', '.github/scripts/preamble.sh') }}
+    - name: Building ocaml ${{ matrix.ocamlv }} cache
+      if: steps.ocaml-cache.outputs.cache-hit != 'true'
+      env:
+        OCAML_VERSION: ${{ matrix.ocamlv }}
+      run: bash -exu .github/scripts/ocaml-cache.sh ocaml
+    - name: Build
+      env:
+        OCAML_VERSION: ${{ matrix.ocamlv }}
+      run: bash -exu .github/scripts/legacy.sh
 
 ####
 # Opam tests
