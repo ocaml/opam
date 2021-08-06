@@ -20,7 +20,7 @@ users)
   *
 
 ## Init
-  *
+  * Run the sandbox check in the temporary directory [#4787 @dra27 - fix #4783]
 
 ## Config report
   *
