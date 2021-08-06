@@ -73,7 +73,7 @@ users)
   *
 
 ## Repository management
-  *
+  * Pass --depth=1 to git-fetch in the Git repo backend [#4442 @dra27]
 
 ## VCS
   * Use 4.08's unnamed functor arguments to silence warning 67 [#4775 @dra27]
