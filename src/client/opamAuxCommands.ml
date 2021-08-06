@@ -503,12 +503,8 @@ let check_and_revert_sandboxing root config =
   match OpamFilter.commands env sdbx_wrappers with
   | [] -> config
   | cmd::_ ->
-    (* All the provided sandboxing scripts are expected to define [TMPDIR] *)
-    let test_file = "$TMPDIR/opam-sandbox-check-out" in
     let test_cmd =
-      [ "sh"; "-c";
-        Printf.sprintf "echo SUCCESS >%s && cat %s; rm -f %s"
-          test_file test_file test_file ]
+      [ "sh"; "-c"; "echo SUCCESS | tee check-write" ]
     in
     let working_or_noop =
       let env =
