@@ -287,7 +287,7 @@ let packages_status packages =
     compute_sets sys_installed ~sys_available
   | Centos ->
     (* XXX /!\ only checked on centos XXX *)
-    let lines = run_query_command "yum" ["-q"; "-C"; "list"] in
+    let lines = run_query_command "yum" ["-q"; "list"] in
     (* -C to retrieve from cache, no update but still quite long, 1,5 sec *)
     (* Return a list of installed packages then available ones:
        >Installed Packages
