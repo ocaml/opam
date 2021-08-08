@@ -63,6 +63,10 @@ users)
   * Set DEBIAN_FRONTEND=noninteractive for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
   * Fix depext alpine tagged repositories handling [#4763 @rjbou] [2.1.0~rc2 #4758]
   * Homebrew: Add support for casks and full-names [#4801 @kit-ty-kate]
+  * Disable the detection of available packages on RHEL-based distributions.
+    This fixes an issue on RHEL-based distributions where yum list used to detect available
+    and installed packages would wait for user input without showing any output and/or fail
+    in some cases [#4791 @kit-ty-kate - fixes #4790]
 
 ## Format upgrade
   * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
