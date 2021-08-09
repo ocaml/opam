@@ -352,8 +352,8 @@ let real_path p =
 
 type command = string list
 
-let default_env =
-  Unix.environment ()
+let default_env () =
+  OpamStd.Env.list () |> List.map (fun (var, v) -> var^"="^v) |> Array.of_list
 
 let env_var env var =
   let len = Array.length env in
@@ -454,7 +454,8 @@ let t_resolve_command =
       else
         `Denied
   in
-  fun ?(env=default_env) ?dir name ->
+  fun ?env ?dir name ->
+    let env = match env with None -> default_env () | Some e -> e in
     resolve env ?dir name
 
 let resolve_command ?env ?dir name =
@@ -495,9 +496,10 @@ let print_stats () =
 let log_file ?dir name = temp_file ?dir (OpamStd.Option.default "log" name)
 
 let make_command
-    ?verbose ?(env=default_env) ?name ?text ?metadata ?allow_stdin ?stdout
+    ?verbose ?env ?name ?text ?metadata ?allow_stdin ?stdout
     ?dir ?(resolve_path=true)
     cmd args =
+  let env = match env with None -> default_env () | Some e -> e in
   let name = log_file name in
   let verbose =
     OpamStd.Option.default OpamCoreConfig.(!r.verbose_level >= 2) verbose
@@ -518,7 +520,8 @@ let make_command
   | `Denied -> permission_denied cmd
 
 let run_process
-    ?verbose ?(env=default_env) ~name ?metadata ?stdout ?allow_stdin command =
+    ?verbose ?env ~name ?metadata ?stdout ?allow_stdin command =
+  let env = match env with None -> default_env () | Some e -> e in
   let chrono = OpamConsole.timer () in
   runs := command :: !runs;
   match command with

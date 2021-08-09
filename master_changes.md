@@ -141,3 +141,4 @@ users)
 ## opam-solver
 ## opam-format
 ## opam-core
+  * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
