@@ -91,3 +91,8 @@ URL_stdlib-shims = https://github.com/ocaml/stdlib-shims/releases/download/0.3.0
 MD5_stdlib-shims = 09db7af8b4a3a96048a61cb6ae2496ef
 
 $(call PKG_SAME,stdlib-shims)
+
+URL_spdx_licenses = https://github.com/kit-ty-kate/spdx_licenses/releases/download/v1.0.0/spdx_licenses-v1.0.0.tbz
+MD5_spdx_licenses = 5393e25f7aa3e2b2a4e880d8dcbcc8e4
+
+$(call PKG_SAME,spdx_licenses)

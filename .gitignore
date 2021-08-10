@@ -12,6 +12,7 @@ src_ext/cudf/
 src_ext/cppo/
 src_ext/dose3/
 src_ext/cmdliner/
+src_ext/spdx_licenses/
 src_ext/extlib/
 src_ext/mccs/
 src_ext/re/

@@ -51,6 +51,8 @@ base64.pkgbuild: dune-local.pkgbuild result.pkgbuild
 
 dune-local.pkgbuild: findlib.pkgbuild
 
+spdx_licenses.pkgbuild: dune-local.pkgbuild
+
 opam-file-format-pkg-build:
 	dune build @install -p opam-file-format
 	dune install -p opam-file-format opam-file-format
@@ -131,3 +133,7 @@ stdlib-shims-pkg-build:
 base64-pkg-build:
 	dune build @install -p base64
 	dune install -p base64 base64
+
+spdx_licenses-pkg-build:
+	dune build @install -p spdx_licenses
+	dune install -p spdx_licenses spdx_licenses

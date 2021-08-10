@@ -40,8 +40,8 @@ env:
   OPAM12CACHE: ~/.cache/opam1.2/cache
   # These should be identical to the values in appveyor.yml and the other workflows
   OPAM_REPO: https://github.com/ocaml/opam-repository.git
-  OPAM_TEST_REPO_SHA: 02ead5a557d118a8d7de05edeae25d2301325a7a
-  OPAM_REPO_SHA: 02ead5a557d118a8d7de05edeae25d2301325a7a
+  OPAM_TEST_REPO_SHA: 765662297a24d833c6a04752cd8b89c5bd72fe26
+  OPAM_REPO_SHA: 765662297a24d833c6a04752cd8b89c5bd72fe26
   # Default ocaml version for some jobs
   OCAML_VERSION: 4.11.2
   ## variables for cache paths
@@ -290,7 +290,7 @@ jobs:
         path: |
           ~/.cache/opam.${{ matrix.solver }}.cached
           ~/.cache/opam-local/bin/**
-        key: opam-${{ matrix.solver }}-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/opam-bs-cache.sh', '.github/scripts/preamble.sh') }}
+        key: opam-${{ matrix.solver }}-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/opam-bs-cache.sh', '.github/scripts/preamble.sh') }}
     - name: opam root cache
       env:
         OPAMBSROOT: ~/.cache/opam.${{ matrix.solver }}.cached
