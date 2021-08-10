@@ -422,7 +422,7 @@ let prepare_package_source st nv dir =
         ~silent_hits:true
         (OpamPackage.to_string nv ^ "/" ^ OpamFilename.Base.to_string basename)
         (OpamFilename.create dir basename)
-        (OpamFile.URL.checksum urlf)
+        (assert false (*List.map OpamHash.to_computable (OpamFile.URL.checksum urlf)*))
         (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
       @@| function
       | Result () | Up_to_date () -> None
@@ -449,7 +449,7 @@ let prepare_package_source st nv dir =
         let extra_files_dir =
           OpamPath.Switch.extra_files_dir st.switch_global.root st.switch
         in
-        OpamStd.List.filter_map (fun (base, hash) ->
+        assert false (* OpamStd.List.filter_map (fun (base, hash) ->
             let src =
               OpamFilename.create extra_files_dir
                 (OpamFilename.Base.of_string (OpamHash.contents hash))
@@ -457,14 +457,14 @@ let prepare_package_source st nv dir =
             if OpamFilename.exists src then
               Some (src, base, hash)
             else None)
-          xs
+          (xs :> (OpamFilename.Base.t * OpamHash.t) list)*)
     in
     let bad_hash =
       OpamStd.List.filter_map (fun (src, base, hash) ->
           if OpamHash.check_file (OpamFilename.to_string src) hash then
             (OpamFilename.copy ~src ~dst:(OpamFilename.create dir base); None)
           else
-            Some src) extra_files
+            Some src) (List.map (fun (f, n, k) -> f, n, assert false (*OpamHash.to_computable k*)) (extra_files :> (OpamTypes.filename * OpamTypes.basename * OpamHash.t) list))
     in
     if bad_hash = [] then None else
       Some (Failure

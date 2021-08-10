@@ -608,7 +608,7 @@ let from_1_3_dev2_to_1_3_dev5 root conf =
                 in
                 config |>
                 OpamFile.Dot_config.with_file_depends
-                  [ocamlc, OpamHash.compute (OpamFilename.to_string ocamlc)] |>
+                  [ocamlc, (OpamHash.compute (OpamFilename.to_string ocamlc) :> OpamHash.t)] |>
                 OpamFile.Dot_config.set
                   (OpamVariable.of_string "ocaml-version")
                   (Some (S (String.concat "" vnum)))

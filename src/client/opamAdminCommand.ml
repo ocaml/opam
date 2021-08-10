@@ -161,7 +161,7 @@ let package_files_to_cache repo_root cache_dir cache_urls ?link (nv, prefix) =
       | (first_checksum :: _) as checksums ->
         OpamRepository.pull_file_to_cache label
           ~cache_urls ~cache_dir
-          checksums
+          (assert false (* List.map OpamHash.to_computable checksums *))
           (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
         @@| fun r -> match OpamRepository.report_fetch_result nv r with
         | Not_available (_,m) ->
@@ -370,10 +370,10 @@ let add_hashes_command cli =
                ~cache_dir:(OpamRepositoryPath.download_cache
                              OpamStateConfig.(!r.root_dir))
                ~cache_urls
-               f known_hashes [url]
+               f (assert false (*List.map OpamHash.to_computable known_hashes*)) [url]
              @@| function
              | Result () | Up_to_date () ->
-               OpamHash.compute ~kind (OpamFilename.to_string f)
+               OpamHash.compute ~kind:(assert false (*Obj.magic kind*)) (OpamFilename.to_string f)
                |> OpamStd.Option.some
              | Not_available _ -> None)
       in
@@ -382,12 +382,12 @@ let add_hashes_command cli =
          List.iter (fun h0 ->
              Hashtbl.replace
                (snd (Hashtbl.find hash_tables (OpamHash.kind h0, kind)))
-               h0 h
+               h0 (h :> OpamHash.t)
            ) known_hashes;
          incr additions_count;
          if !additions_count mod 20 = 0 then save_hashes ()
        | None -> ());
-      h
+      (h :> OpamHash.t option)
   in
   let cmd global_options hash_types replace packages () =
     OpamArg.apply_global_options cli global_options;

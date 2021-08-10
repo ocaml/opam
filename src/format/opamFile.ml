@@ -2356,7 +2356,7 @@ module OPAMSyntax = struct
     metadata_dir: (repository_name option * string) option;
 
     (* Names and hashes of the files below files/ *)
-    extra_files: (OpamFilename.Base.t * OpamHash.t) list option;
+    extra_files: (OpamFilename.Base.t * OpamHash.computable_kind OpamHash.hash) list option;
 
     (* Stores any file errors for printing them later *)
     format_errors: (string * Pp.bad_format) list;
@@ -2902,7 +2902,7 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:2 @@
          Pp.V.map_pair
            pp_basename
-           (Pp.V.string -| Pp.of_module "checksum" (module OpamHash)));
+           (Pp.V.string -| Pp.of_pair "checksum" (assert false (* Obj.magic OpamHash.of_string_opt, Obj.magic OpamHash.to_string*))));
 
       (* deprecated fields, here for compat *)
       "configure-style", (Pp.ppacc_ignore, Pp.ppacc_ignore);

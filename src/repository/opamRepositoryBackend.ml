@@ -22,7 +22,7 @@ type update =
 module type S = sig
   val name: OpamUrl.backend
   val pull_url:
-    ?cache_dir:dirname -> ?subpath:string -> dirname -> OpamHash.t option -> url ->
+    ?cache_dir:dirname -> ?subpath:string -> dirname -> OpamHash.computable_kind OpamHash.hash option -> url ->
     filename option download OpamProcess.job
   val fetch_repo_update:
     repository_name -> ?cache_dir:dirname -> dirname -> url ->
@@ -59,8 +59,8 @@ let check_digest filename = function
          \                     got      %s\n\
           Metadata might be out of date, in this case use `opam update`."
          (OpamFilename.to_string filename)
-         (OpamHash.to_string expected)
-         (OpamHash.to_string bad_hash);
+         (OpamHash.to_string (expected :> OpamHash.t))
+         (OpamHash.to_string (bad_hash :> OpamHash.t));
        false)
   | _ -> true
 

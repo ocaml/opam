@@ -141,7 +141,7 @@ let get_init_config ~no_sandboxing ~no_default_config_file ~add_config_file =
               "Using configuration file from %s. \
                Please verify the following SHA256:\n    %s\n\
                Is this correct?"
-              (OpamUrl.to_string url) (OpamHash.contents hash)
+              (OpamUrl.to_string url) (OpamHash.contents (hash :> OpamHash.t))
           then OpamFile.make f
           else OpamStd.Sys.exit_because `Aborted
       ) add_config_file

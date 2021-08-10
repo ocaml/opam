@@ -181,7 +181,7 @@ let fetch_dev_package url srcdir ?(working_dir=false) ?subpath nv =
     (slog (OpamStd.Option.map_default (fun s -> " ("^s^")") "")) subpath;
   OpamRepository.pull_tree
     ~cache_dir:(OpamRepositoryPath.download_cache OpamStateConfig.(!r.root_dir))
-    (OpamPackage.to_string nv) srcdir checksum ~working_dir ?subpath mirrors
+    (OpamPackage.to_string nv) srcdir (assert false (*List.map OpamHash.to_computable checksum*)) ~working_dir ?subpath mirrors
   @@| OpamRepository.report_fetch_result nv
 
 let pinned_package st ?version ?(working_dir=false) name =
@@ -327,9 +327,9 @@ let pinned_package st ?version ?(working_dir=false) name =
           else
             OpamConsole.warning "Ignoring file %s with invalid hash"
               (OpamFilename.to_string file))
-        (OpamFile.OPAM.get_extra_files
+        (List.map (fun (f, n, k) -> f, n, assert false (*OpamHash.to_computable k*)) ((OpamFile.OPAM.get_extra_files
            ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
-           opam);
+           opam) :> (OpamTypes.filename * OpamTypes.basename * OpamHash.t) list));
       OpamFile.OPAM.write opam_file
         (OpamFile.OPAM.with_extra_files_opt None opam);
       opam
@@ -532,7 +532,7 @@ let download_package_source st nv dirname =
       (OpamRepository.pull_tree (OpamPackage.to_string nv)
         ~cache_dir ~cache_urls ?subpath:(OpamFile.URL.subpath u)
         dirname
-        (OpamFile.URL.checksum u)
+        (List.map (fun k -> assert false (* OpamHash.to_computable k*)) (OpamFile.URL.checksum u))
         (OpamFile.URL.url u :: OpamFile.URL.mirrors u))
       @@| fun r -> Some r
   in
@@ -542,7 +542,7 @@ let download_package_source st nv dirname =
       (OpamRepository.pull_file_to_cache
          (OpamPackage.to_string nv ^"/"^ OpamFilename.Base.to_string name)
          ~cache_dir ~cache_urls
-         (OpamFile.URL.checksum u)
+         (List.map (fun k -> assert false (*OpamHash.to_computable k*)) (OpamFile.URL.checksum u))
          (OpamFile.URL.url u :: OpamFile.URL.mirrors u))
       @@| fun r -> (OpamFilename.Base.to_string name, r) :: ret
   in

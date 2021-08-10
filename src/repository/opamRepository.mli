@@ -33,24 +33,24 @@ val update: repository -> dirname -> unit OpamProcess.job
     or synchronised directly if local and [working_dir] was set. *)
 val pull_tree:
   string -> ?cache_dir:dirname -> ?cache_urls:url list -> ?working_dir:bool ->
-  ?subpath:string -> dirname -> OpamHash.t list -> url list ->
+  ?subpath:string -> dirname -> OpamHash.computable_kind OpamHash.hash list -> url list ->
   string download OpamProcess.job
 
 (** Same as [pull_tree], but for fetching a single file. *)
 val pull_file:
   string -> ?cache_dir:dirname -> ?cache_urls:url list -> ?silent_hits:bool ->
-  filename -> OpamHash.t list -> url list ->
+  filename -> OpamHash.computable_kind OpamHash.hash list -> url list ->
   unit download OpamProcess.job
 
 (** Same as [pull_file], but without a destination file: just ensures the file
     is present in the cache. *)
 val pull_file_to_cache:
   string -> cache_dir:dirname -> ?cache_urls:url list ->
-  OpamHash.t list -> url list -> string download OpamProcess.job
+  OpamHash.computable_kind OpamHash.hash list -> url list -> string download OpamProcess.job
 
 (** The file where the file with the given hash is stored under cache at given
     dirname. *)
-val cache_file: dirname -> OpamHash.t -> filename
+val cache_file: dirname -> OpamHash.kind OpamHash.hash -> filename
 
 (** Get the optional revision associated to a backend (git hash, etc.). *)
 val revision: dirname -> url -> version option OpamProcess.job

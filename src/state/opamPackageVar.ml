@@ -183,7 +183,7 @@ let build_id st opam =
       (* no fixed source: build-id undefined *)
       raise Exit
     | _ ->
-      let hash_map, deps_hashes =
+      let (hash_map : OpamHash.computable_kind OpamHash.hash OpamPackage.Map.t), deps_hashes =
         OpamPackage.Set.fold (fun nv (hash_map, hashes) ->
             let hash_map, hash =
               aux hash_map nv (OpamPackage.Map.find nv st.opams)
@@ -198,15 +198,15 @@ let build_id st opam =
       let hash =
         OpamHash.compute_from_string ~kind
           (OpamStd.List.concat_map " " OpamHash.contents
-             (opam_hash :: deps_hashes))
+             ((opam_hash :> OpamHash.t) :: (deps_hashes :> OpamHash.t list)))
       in
-      OpamPackage.Map.add nv hash hash_map, hash
+      ((OpamPackage.Map.add nv hash hash_map) :> OpamHash.computable_kind OpamHash.hash OpamPackage.Map.t), (hash :> OpamHash.computable_kind OpamHash.hash)
   in
   try
     let _hash_map, hash =
       aux OpamPackage.Map.empty (OpamFile.OPAM.package opam) opam
     in
-    Some (OpamHash.contents hash)
+    Some (OpamHash.contents (hash :> OpamHash.t))
   with Exit -> None
 
 (* filter handling *)

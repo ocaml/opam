@@ -45,7 +45,7 @@ module type S = sig
       [checksum] can be used for retrieval but is NOT checked by this
       function. *)
   val pull_url:
-    ?cache_dir:dirname -> ?subpath:string -> dirname -> OpamHash.t option -> url ->
+    ?cache_dir:dirname -> ?subpath:string -> dirname -> OpamHash.computable_kind OpamHash.hash option -> url ->
     filename option download OpamProcess.job
 
   (** [pull_repo_update] fetches the remote update from [url] to the local
@@ -92,7 +92,7 @@ val compare: repository -> repository -> int
 
 (** [check_digest file expected] check that the [file] digest is the
     one [expected]. *)
-val check_digest: filename -> OpamHash.t option -> bool
+val check_digest: filename -> OpamHash.computable_kind OpamHash.hash option -> bool
 
 (** Adds a label to the given job, for the corresponding repository name and
     action *)

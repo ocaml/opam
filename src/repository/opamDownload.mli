@@ -19,13 +19,13 @@ exception Download_fail of string option * string
     doesn't match*)
 val download:
   ?quiet:bool -> ?validate:bool -> overwrite:bool -> ?compress:bool ->
-  ?checksum:OpamHash.t ->
+  ?checksum:(OpamHash.computable_kind OpamHash.hash) ->
   OpamUrl.t -> OpamFilename.Dir.t ->
   OpamFilename.t OpamProcess.job
 
 (** As [download], but with a specified output filename. *)
 val download_as:
   ?quiet:bool -> ?validate:bool -> overwrite:bool -> ?compress:bool ->
-  ?checksum:OpamHash.t ->
+  ?checksum:(OpamHash.computable_kind OpamHash.hash) ->
   OpamUrl.t -> OpamFilename.t ->
   unit OpamProcess.job

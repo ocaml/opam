@@ -64,7 +64,7 @@ let fetch_from_cache =
       "Conflicting file hashes, or broken or compromised cache!\n%s"
       (OpamStd.Format.itemize (fun ck ->
            OpamHash.to_string ck ^
-           if OpamHash.check_file (OpamFilename.to_string file) ck
+           if OpamHash.check_file (OpamFilename.to_string file) (assert false (*Obj.magic ck*))
            then OpamConsole.colorise `green " (match)"
            else OpamConsole.colorise `red " (MISMATCH)")
           checksums);
@@ -77,7 +77,7 @@ let fetch_from_cache =
     match url.OpamUrl.backend with
     | `http ->
       OpamDownload.download_as
-        ~quiet:true ~validate:false ~overwrite:true ~checksum
+        ~quiet:true ~validate:false ~overwrite:true ~checksum:(assert false (*Obj.magic checksum*))
         url file
     | `rsync ->
       begin match OpamUrl.local_file url with
@@ -101,7 +101,7 @@ let fetch_from_cache =
     in
     if List.for_all
         (fun ck -> ck = hit_checksum ||
-                   OpamHash.check_file (OpamFilename.to_string hit_file) ck)
+                   OpamHash.check_file (OpamFilename.to_string hit_file) (assert false (*Obj.magic ck*)))
         checksums
     then Done (Up_to_date (hit_file, OpamUrl.empty))
     else mismatch hit_file
@@ -123,7 +123,7 @@ let fetch_from_cache =
           dl_from_cache_job root_cache_url checksum tmpfile
           @@+ fun () ->
           if List.for_all (OpamHash.check_file (OpamFilename.to_string tmpfile))
-              checksums
+              (assert false (*Obj.magic checksums*))
           then
             (OpamFilename.move ~src:tmpfile ~dst:local_file;
              Done (Result (local_file, root_cache_url)))
@@ -144,14 +144,14 @@ let validate_and_add_to_cache label url cache_dir file checksums =
                       \  expected %s\n\
                       \  got      %s"
       label (OpamUrl.to_string url)
-      (OpamHash.to_string expected)
-      (OpamHash.to_string mismatch);
+      (OpamHash.to_string (expected :> OpamHash.t))
+      (OpamHash.to_string (mismatch :> OpamHash.t));
     OpamFilename.remove file;
     false
   with Not_found ->
     (match cache_dir, checksums with
      | Some dir, ck::_ ->
-       OpamFilename.copy ~src:file ~dst:(cache_file dir ck)
+       OpamFilename.copy ~src:file ~dst:(cache_file dir (ck :> OpamHash.t))
        (* idea: hardlink to the other checksums? *)
      | _ -> ());
     true
@@ -240,7 +240,7 @@ let pull_from_mirrors label ?working_dir ?subpath cache_dir destdir checksums ur
 
 let pull_tree
     label ?cache_dir ?(cache_urls=[]) ?working_dir ?subpath
-    local_dirname checksums remote_urls =
+    local_dirname (checksums: OpamHash.computable_kind OpamHash.hash list) remote_urls =
   let extract_archive f s =
     OpamFilename.cleandir local_dirname;
     OpamFilename.extract_job f local_dirname @@+ function
@@ -256,7 +256,7 @@ let pull_tree
    | Some cache_dir ->
      let text = OpamProcess.make_command_text label "dl" in
      OpamProcess.Job.with_text text @@
-     fetch_from_cache cache_dir cache_urls checksums
+     fetch_from_cache cache_dir cache_urls (checksums :> OpamHash.t list)
    | None ->
      assert (cache_urls = []);
      let m = "no cache" in
@@ -278,7 +278,7 @@ let pull_tree
           Some ("missing checksum"),
           label ^ ": Missing checksum, and `--require-checksums` was set."))
     else
-      pull_from_mirrors label ?working_dir ?subpath cache_dir local_dirname checksums
+      pull_from_mirrors label ?working_dir ?subpath cache_dir local_dirname (assert false (*Obj.magic checksums*))
         remote_urls
       @@+ function
       | _, Up_to_date None -> Done (Up_to_date "no changes")
@@ -296,12 +296,12 @@ let revision dirname url =
   B.revision dirname
 
 let pull_file label ?cache_dir ?(cache_urls=[])  ?(silent_hits=false)
-    file checksums remote_urls =
+    file (checksums: OpamHash.computable_kind OpamHash.hash list) remote_urls =
   (match cache_dir with
    | Some cache_dir ->
      let text = OpamProcess.make_command_text label "dl" in
      OpamProcess.Job.with_text text @@
-     fetch_from_cache cache_dir cache_urls checksums
+     fetch_from_cache cache_dir cache_urls (checksums :> OpamHash.t list)
    | None ->
      assert (cache_urls = []);
      let m = "no cache" in
@@ -328,24 +328,24 @@ let pull_file label ?cache_dir ?(cache_urls=[])  ?(silent_hits=false)
            label ^ ": Missing checksum, and `--require-checksums` was set."))
     else
       OpamFilename.with_tmp_dir_job (fun tmpdir ->
-          pull_from_mirrors label cache_dir tmpdir checksums remote_urls
+          pull_from_mirrors label cache_dir tmpdir (assert false (*Obj.magic checksums*)) remote_urls
           @@| function
           | _, Up_to_date _ -> assert false
           | _, Result (Some f) -> OpamFilename.move ~src:f ~dst:file; Result ()
           | _, Result None -> let m = "is a directory" in Not_available (Some m, m)
           | _, (Not_available _ as na) -> na)
 
-let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums remote_urls =
+let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) (checksums: OpamHash.computable_kind OpamHash.hash list) remote_urls =
   let text = OpamProcess.make_command_text label "dl" in
   OpamProcess.Job.with_text text @@
-  fetch_from_cache cache_dir cache_urls checksums @@+ function
+  fetch_from_cache cache_dir cache_urls (checksums :> OpamHash.t list) @@+ function
   | Up_to_date (_, _) ->
     Done (Up_to_date "cached")
   | Result (_, url) ->
     Done (Result (OpamUrl.to_string url))
   | Not_available _ ->
     OpamFilename.with_tmp_dir_job (fun tmpdir ->
-        pull_from_mirrors label (Some cache_dir) tmpdir checksums remote_urls
+        pull_from_mirrors label (Some cache_dir) tmpdir (assert false (*Obj.magic checksums*)) remote_urls
         @@| function
         | _, Up_to_date _ -> assert false
         | url, Result (Some _) -> Result (OpamUrl.to_string url)

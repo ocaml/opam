@@ -186,7 +186,7 @@ let do_upgrade repo_root =
     (fun url ->
        try Done (Some (Hashtbl.find url_md5 url))
        with Not_found ->
-         OpamFilename.with_tmp_dir_job @@ fun dir ->
+         (OpamFilename.with_tmp_dir_job @@ fun dir ->
          OpamProcess.Job.ignore_errors ~default:None
            (fun () ->
                 (* Download to package.patch, rather than allowing the name to be
@@ -198,8 +198,8 @@ let do_upgrade repo_root =
               in
               OpamDownload.download_as ~overwrite:false url f @@| fun () ->
               let hash = OpamHash.compute (OpamFilename.to_string f) in
-              Hashtbl.add url_md5 url hash;
-              Some hash)),
+              Hashtbl.add url_md5 url (hash :> OpamHash.t);
+              Some hash) :> OpamHash.t option OpamProcess.Job.Op.job)),
     (fun () ->
        Hashtbl.fold
          (fun url hash l -> [OpamUrl.to_string url; OpamHash.to_string hash]::l)

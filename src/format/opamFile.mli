@@ -304,7 +304,7 @@ module URL: sig
   include IO_FILE
 
   val create:
-    ?mirrors:url list -> ?checksum:OpamHash.t list -> ?subpath:string ->
+    ?mirrors:url list -> ?checksum:(OpamHash.t list) -> ?subpath:string ->
     url -> t
 
   (** URL address *)
@@ -313,11 +313,11 @@ module URL: sig
   val mirrors: t -> url list
 
   (** Archive checksum *)
-  val checksum: t -> OpamHash.t list
+  val checksum: t -> (OpamHash.t list)
 
   (** Constructor *)
   val with_url: url -> t -> t
-  val with_checksum: OpamHash.t list -> t -> t
+  val with_checksum: (OpamHash.t list) -> t -> t
   val with_subpath: string -> t -> t
   val with_subpath_opt: string option -> t -> t
 
@@ -389,7 +389,7 @@ module OPAM: sig
     metadata_dir: (repository_name option * string) option;
 
     (* Names and hashes of the files below files/ *)
-    extra_files: (OpamFilename.Base.t * OpamHash.t) list option;
+    extra_files: (OpamFilename.Base.t * OpamHash.computable_kind OpamHash.hash) list option;
 
     format_errors: (string * OpamPp.bad_format) list;
 
@@ -560,13 +560,13 @@ module OPAM: sig
     repos_roots:(repository_name -> dirname) -> t -> dirname option
 
   (** Names and hashes of the files below files/ *)
-  val extra_files: t -> (OpamFilename.Base.t * OpamHash.t) list option
+  val extra_files: t -> (OpamFilename.Base.t * OpamHash.computable_kind OpamHash.hash) list option
 
   (** Looks up the extra files, and returns their full paths, relative path to
       the package source, and hash. Doesn't check the hashes. *)
   val get_extra_files:
     repos_roots:(repository_name -> dirname) ->
-    t -> (filename * basename * OpamHash.t) list
+    t -> (filename * basename * OpamHash.computable_kind OpamHash.hash) list
 
   (** Returns the errors that were found when parsing the file, associated to
       their fields (that were consequently ignored) *)
@@ -680,8 +680,8 @@ module OPAM: sig
 
   val with_metadata_dir: (repository_name option * string) option -> t -> t
 
-  val with_extra_files: (OpamFilename.Base.t * OpamHash.t) list -> t -> t
-  val with_extra_files_opt: (OpamFilename.Base.t * OpamHash.t) list option -> t -> t
+  val with_extra_files: (OpamFilename.Base.t * OpamHash.computable_kind OpamHash.hash) list -> t -> t
+  val with_extra_files_opt: (OpamFilename.Base.t * OpamHash.computable_kind OpamHash.hash) list option -> t -> t
 
   val with_format_errors: (string * OpamPp.bad_format) list -> t -> t
 

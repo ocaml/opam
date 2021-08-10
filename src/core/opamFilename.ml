@@ -520,11 +520,11 @@ module Attribute = struct
     let perm = match t.perm with
       | None   -> []
       | Some p -> [Printf.sprintf "0o%o" p] in
-    Base.to_string t.base :: OpamHash.to_string t.md5 :: perm
+    Base.to_string t.base :: OpamHash.to_string (t.md5 :> OpamHash.t) :: perm
 
   let of_string_list = function
     | [base; md5]      ->
-      { base=Base.of_string base; md5=OpamHash.of_string md5; perm=None }
+      { base=Base.of_string base; md5=(OpamHash.of_string md5 :> OpamHash.t); perm=None }
     | [base;md5; perm] ->
       { base=Base.of_string base;
         md5=OpamHash.of_string md5;
@@ -582,4 +582,5 @@ let to_attribute root file =
     let s = Unix.stat (to_string file) in
     s.Unix.st_perm in
   let digest = OpamHash.compute ~kind:`MD5 (to_string file) in
-  Attribute.create basename digest (Some perm)
+  let digest = assert false (* OpamHash.to_computable (digest :> OpamHash.t)*) in
+  Attribute.create basename (digest :> OpamHash.t) (Some perm)

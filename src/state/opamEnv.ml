@@ -590,7 +590,7 @@ let write_custom_init_scripts root custom =
       if not (OpamFilename.exists hash_file)
       || (let same_hash =
           OpamHash.of_string_opt (OpamFilename.read hash_file) =
-          Some (OpamHash.compute ~kind (OpamFilename.to_string script_file))
+          Some (OpamHash.compute ~kind (OpamFilename.to_string script_file) :> OpamHash.t)
         in
         same_hash
         || not same_hash
@@ -599,8 +599,8 @@ let write_custom_init_scripts root custom =
              (OpamFilename.to_string script_file)) then
             (write_script hookdir (name, script);
             OpamFilename.chmod script_file 0o777;
-            write_script hookdir (hash_name, OpamHash.to_string hash))
-    ) custom
+            write_script hookdir (hash_name, OpamHash.to_string (hash :> OpamHash.t))
+            )) custom
 
 let write_dynamic_init_scripts st =
   let updates = updates ~set_opamroot:false ~set_opamswitch:false st in

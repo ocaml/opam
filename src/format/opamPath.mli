@@ -251,32 +251,32 @@ module Switch: sig
       a switch's layout in non-switch contexts *)
   module DefaultF : functor (L:LAYOUT) -> sig
     val lib: t -> L.ctx -> name -> dirname
-  
+
     val lib_dir: t -> L.ctx -> dirname
-  
+
     val stublibs: t -> L.ctx -> dirname
-  
+
     val toplevel: t -> L.ctx -> dirname
-  
+
     val doc: t -> L.ctx -> name -> dirname
-  
+
     val doc_dir: t -> L.ctx -> dirname
-  
+
     val share_dir: t -> L.ctx -> dirname
-  
+
     val share: t -> L.ctx -> name -> dirname
-  
+
     val etc_dir: t -> L.ctx -> dirname
-  
+
     val etc: t -> L.ctx -> name -> dirname
-  
+
     val man_dir: ?num:string -> t -> L.ctx -> dirname
-  
+
     val bin: t -> L.ctx -> dirname
-  
+
     val sbin: t -> L.ctx -> dirname
   end
-  
+
 
   (** Actual config handling the global-config.config indirections *)
 

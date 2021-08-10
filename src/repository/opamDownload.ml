@@ -57,7 +57,7 @@ let ftp_args = [
   CIdent "url", None;
 ]
 
-let download_args ~url ~out ~retry ?checksum ~compress () =
+let download_args ~url ~out ~retry ?(checksum : OpamHash.computable_kind OpamHash.hash option) ~compress () =
   let cmd, _ = Lazy.force OpamRepositoryConfig.(!r.download_tool) in
   let cmd =
     match cmd with
@@ -77,16 +77,16 @@ let download_args ~url ~out ~retry ?checksum ~compress () =
       | "compress" -> Some (B compress)
       | "opam-version" -> Some (S OpamVersion.(to_string current))
       | "checksum" ->
-        OpamStd.Option.map (fun c -> S OpamHash.(to_string c)) checksum
+        OpamStd.Option.map (fun c -> S OpamHash.(to_string c)) (checksum :> OpamHash.t option)
       | "hashalgo" ->
         OpamStd.Option.map (fun c -> S OpamHash.(string_of_kind (kind c)))
-          checksum
+          (checksum :> OpamHash.t option)
       | "hashpath" ->
         OpamStd.Option.map
           (fun c -> S (String.concat Filename.dir_sep OpamHash.(to_path c)))
-          checksum
+          (checksum :> OpamHash.t option)
       | "hashvalue" ->
-        OpamStd.Option.map (fun c -> S OpamHash.(contents c)) checksum
+        OpamStd.Option.map (fun c -> S OpamHash.(contents c)) (checksum :> OpamHash.t option)
       | _ -> None)
     cmd
 
@@ -116,7 +116,7 @@ let tool_return url ret =
                     code (OpamUrl.to_string url))
       else Done ()
 
-let download_command ~compress ?checksum ~url ~dst () =
+let download_command ~compress ?(checksum : OpamHash.computable_kind OpamHash.hash option) ~url ~dst () =
   let cmd, args =
     match
       download_args
@@ -135,7 +135,7 @@ let download_command ~compress ?checksum ~url ~dst () =
   OpamSystem.make_command ~allow_stdin:false cmd args @@> tool_return url
 
 let really_download
-    ?(quiet=false) ~overwrite ?(compress=false) ?checksum ?(validate=true)
+    ?(quiet=false) ~overwrite ?(compress=false) ?(checksum : OpamHash.computable_kind OpamHash.hash option) ?(validate=true)
     ~url ~dst () =
   assert (url.OpamUrl.backend = `http);
   let tmp_dst = dst ^ ".part" in
@@ -165,7 +165,7 @@ let really_download
         if not (OpamHash.check_file tmp_dst cksum) then
           fail (Some "Bad checksum",
                     Printf.sprintf "Bad checksum, expected %s"
-                      (OpamHash.to_string cksum)))
+                      (OpamHash.to_string (cksum :> OpamHash.t))))
       checksum;
   OpamSystem.mv tmp_dst dst;
   Done ()

@@ -8,11 +8,14 @@
 (*                                                                        *)
 (**************************************************************************)
 
-type kind = [ `MD5 | `SHA256 | `SHA512 ]
+type computable_kind = [ `MD5 | `SHA256 | `SHA512 ]
+
+type kind = [ computable_kind | `SWHID ]
 
 let default_kind = `MD5
 
-type t = kind * string
+type +'kind hash = 'kind * string constraint 'kind = [< kind ]
+type t = kind hash
 
 let kind = fst
 let contents = snd
@@ -26,12 +29,19 @@ let string_of_kind = function
   | `MD5 -> "md5"
   | `SHA256 -> "sha256"
   | `SHA512 -> "sha512"
+  | `SWHID -> "swhid"
 
-let kind_of_string s = match String.lowercase_ascii s with
+let kind_of_string_computable s = match String.lowercase_ascii s with
   | "md5" -> `MD5
   | "sha256" -> `SHA256
   | "sha512" -> `SHA512
-  | _ -> invalid_arg "OpamHash.kind_of_string"
+  | _s -> invalid_arg "OpamHash.kind_of_string_computable"
+
+let kind_of_string s = match String.lowercase_ascii s with
+  | "swhid" -> `SWHID
+  | s ->
+    try kind_of_string_computable s
+    with Invalid_argument _msg -> invalid_arg "OpamHash.kind_of_string"
 
 let is_hex_str len s =
   String.length s = len &&
@@ -47,8 +57,17 @@ let len = function
   | `MD5 -> 32
   | `SHA256 -> 64
   | `SHA512 -> 128
+  | `SWHID -> 50
 
-let valid kind = is_hex_str (len kind)
+let is_valid_swhid s =
+  String.length s = (len `SWHID) &&
+  match String.split_on_char ':' s with
+  | ["swh"; "1"; "rel" ; s] -> is_hex_str 40 s
+  | _l -> false
+
+let valid = function
+  | `MD5 | `SHA256 | `SHA512 as kind -> is_hex_str (len kind)
+  | `SWHID -> is_valid_swhid
 
 let make kind s =
   if valid kind s then kind, String.lowercase_ascii s
@@ -57,8 +76,20 @@ let make kind s =
 let md5 = make `MD5
 let sha256 = make `SHA256
 let sha512 = make `SHA512
+let swhid = make `SWHID
 
 let of_string_opt s =
+  try
+    let kind, s =
+      match OpamStd.String.cut_at s pfx_sep_char with
+      | None -> `MD5, s
+      | Some (skind, s) -> kind_of_string_computable skind, s
+    in
+    if valid kind s then Some (kind, String.lowercase_ascii s)
+    else None
+  with Invalid_argument _ -> None
+
+let computable_of_string_opt s =
   try
     let kind, s =
       match OpamStd.String.cut_at s pfx_sep_char with
@@ -74,6 +105,11 @@ let of_string s =
   | Some h -> h
   | None -> invalid_arg "OpamHash.of_string"
 
+let computable_of_string s =
+  match computable_of_string_opt s with
+  | Some h -> h
+  | None -> invalid_arg "OpamHash.computable_of_string"
+
 let to_string (kind,s) =
   String.concat pfx_sep_str [string_of_kind kind; s]
 
@@ -83,10 +119,13 @@ let of_json = function
 | _ -> None
 
 let to_path (kind,s) =
-  [string_of_kind kind; String.sub s 0 2; s]
+  match kind with
+  | `SWHID -> [string_of_kind `SWHID; String.sub s 10 2; String.sub s 10 40]
+  | `MD5 | `SHA256 | `SHA512 -> [string_of_kind kind; String.sub s 0 2; s]
 
-let compute ?(kind=default_kind) file = match kind with
-  | `MD5 -> md5 (Digest.to_hex (Digest.file file))
+let compute ?(kind=default_kind ) file =
+  match kind with
+  | `MD5  -> md5 (Digest.to_hex (Digest.file file))
   | (`SHA256 | `SHA512) as kind ->
     let sha =
       if not OpamCoreConfig.(!r.use_openssl) then
@@ -118,6 +157,11 @@ let check_file f (kind, _ as h) = compute ~kind f = h
 let mismatch f (kind, _ as h) =
   let hf = compute ~kind f in
   if hf = h then None else Some hf
+
+let to_computable (kind, h) =
+  match kind with
+  | `MD5 | `SHA256 | `SHA512 as kind -> kind, h
+  | `SWHID -> raise (Invalid_argument "to_computable")
 
 module O = struct
   type _t = t

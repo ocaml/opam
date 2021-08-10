@@ -401,8 +401,8 @@ let import_t ?ask importfile t =
   in
   OpamHash.Map.iter (fun hash content ->
       let value = Base64.decode_exn content in
-      let my = OpamHash.compute_from_string ~kind:(OpamHash.kind hash) value in
-      if OpamHash.contents my = OpamHash.contents hash then
+      let my = OpamHash.compute_from_string ~kind:(assert false (* Obj.magic OpamHash.kind hash*)) value in
+      if OpamHash.contents (my :> OpamHash.t) = OpamHash.contents hash then
         let dst =
           let base = OpamFilename.Base.of_string (OpamHash.contents hash) in
           OpamFilename.create xfiles_dir base
@@ -607,7 +607,7 @@ let export rt ?(freeze=false) ?(full=false)
                   if OpamFilename.exists file &&
                      OpamHash.check_file (OpamFilename.to_string file) hash then
                     let value = Base64.encode_string (OpamFilename.read file) in
-                    OpamHash.Map.add hash value hmap, err
+                    OpamHash.Map.add (hash :> OpamHash.Map.key) value hmap, err
                   else hmap, base::err)
                 (hmap,[]) files
             in

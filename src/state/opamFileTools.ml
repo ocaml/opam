@@ -263,7 +263,7 @@ let template nv =
   |> with_bug_reports [""]
   |> with_synopsis ""
 
-let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
+let t_lint ?(check_extra_files : ((OpamFilename.Base.t * (OpamHash.computable_kind OpamHash.hash -> bool))) list option) ?(check_upstream=false) ?(all=false) t =
   let format_errors =
     List.map (fun (field, (pos, msg)) ->
         3, `Error,
@@ -602,7 +602,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
          OpamStd.List.filter_map (fun (n, check_f) ->
              try if check_f (List.assoc n efiles) then None else Some n
              with Not_found -> Some n)
-           ffiles
+           @@ (ffiles :> ((OpamFilename.Base.t * (OpamHash.computable_kind OpamHash.hash -> bool)) list))
      in
      cond 53 `Error
        "Mismatching 'extra-files:' field"
@@ -685,7 +685,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
                    match OpamHash.mismatch (OpamFilename.to_string f) chk with
                    | Some m -> Some (m, chk)
                    | None -> None)
-                 chks
+                 (assert false (*List.map OpamHash.to_computable chks*))
              in
              if not_corresponding = [] then None
              else
@@ -696,7 +696,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
                  (OpamStd.Format.itemize (fun (good, bad) ->
                       Printf.sprintf "archive: %s, in opam file: %s"
                         (OpamHash.to_string good) (OpamHash.to_string bad))
-                     not_corresponding)
+                     (not_corresponding :> (OpamHash.t * OpamHash.t) list))
              in
              Some msg
          in
@@ -884,7 +884,7 @@ let extra_files_default filename =
        OpamHash.check_file (OpamFilename.to_string f))
     (OpamFilename.rec_files dir)
 
-let lint_gen ?check_extra_files ?check_upstream ?(handle_dirname=false)
+let lint_gen ?(check_extra_files : (OpamFilename.Base.t * (OpamHash.computable_kind OpamHash.hash -> bool)) list option) ?check_upstream ?(handle_dirname=false)
     reader filename =
   let warnings, t =
     let warn_of_bad_format (pos, msg) =
@@ -1125,7 +1125,7 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
                OpamHash.compute (OpamFilename.to_string file))
             ef
         in
-        OpamFile.OPAM.with_extra_files ef opam
+        OpamFile.OPAM.with_extra_files (ef :> (OpamFilename.Base.t * OpamHash.computable_kind OpamHash.hash) list) opam
       | Some ef, None ->
         log "Missing expected extra files %s at %s/files"
           (OpamStd.List.concat_map ", "
@@ -1144,7 +1144,7 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
                  else
                    basename::wr_check),
                 nf_opam, rest
-            ) ([], [], oef) ef
+            ) ([], [], List.map (fun (s, k) -> s, assert false (*OpamHash.to_computable k*)) (oef :> (OpamFilename.Base.t * OpamHash.t) list)) ef
         in
         let nf_file = List.map fst rest in
         if nf_file <> [] || wr_check <> [] || nf_opam <> [] then

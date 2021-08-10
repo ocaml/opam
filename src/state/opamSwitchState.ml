@@ -462,7 +462,7 @@ let load lock_kind gt rt switch =
               in
               let changed =
                 exists <> should_exist ||
-                exists && not (OpamHash.check_file (OpamFilename.to_string file) hash)
+                exists && not (OpamHash.check_file (OpamFilename.to_string file) (assert false (*Obj.magic hash*)))
               in
               if not exists && should_exist then
                 OpamConsole.warning
