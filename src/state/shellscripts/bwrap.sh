@@ -18,6 +18,7 @@ ARGS=("${ARGS[@]}" --proc /proc --dev /dev)
 ARGS=("${ARGS[@]}" --setenv TMPDIR /opam-tmp --setenv TMP /opam-tmp --setenv TEMPDIR /opam-tmp --setenv TEMP /opam-tmp)
 ARGS=("${ARGS[@]}" --tmpfs /opam-tmp)
 ARGS=("${ARGS[@]}" --tmpfs /run)
+# NOTE: When adding a new mount-point please sync with the loop below to avoid overriding the mount point
 
 add_mount() {
     case "$1" in
@@ -53,11 +54,21 @@ add_sys_mounts() {
     done
 }
 
-# remove some unusual paths (/nix/stored and /rw/usrlocal )
-# use OPAM_USER_PATH_RO variable to add them
-# the OPAM_USER_PATH_RO format is the same as PATH
-# ie: export OPAM_USER_PATH_RO=/nix/store:/rw/usrlocal
-add_sys_mounts /usr /bin /lib /lib32 /lib64 /etc /opt /home /var /tmp
+# NOTE: The list of moint-points to avoid is always to be sync'd with the list at the top of the file
+# It is due to a limitation of bubblewrap that we have to mount the directories one by one
+# See https://github.com/containers/bubblewrap/issues/413
+for dir in $(ls -a /); do
+    dir=/$dir
+    if test -d "$dir" &&
+       test "$dir" != "/." &&
+       test "$dir" != "/.." &&
+       test "$dir" != "/proc" &&
+       test "$dir" != "/dev" &&
+       test "$dir" != "/run" &&
+       test "$dir" != "/opam-tmp"; then
+      add_sys_mounts "$dir"
+    fi
+done
 
 # C compilers using `ccache` will write to a shared cache directory
 # that remain writeable. ccache seems widespread in some Fedora systems.
@@ -86,11 +97,6 @@ add_dune_cache_mount() {
   mkdir -p "${dune_cache}"
   add_mount rw "$u_dune_cache" "$dune_cache"
 }
-
-# mount unusual path in ro
-if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
-   add_mounts ro $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
-fi
 
 # When using opam variable that must be defined at action time, add them also
 # at init check in OpamAuxCommands.check_and_revert_sandboxing (like

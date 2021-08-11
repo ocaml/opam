@@ -95,6 +95,8 @@ enabled. Note, however, that:
   variable format is the same as `PATH`, you can add it in your shell
   configuration file, e.g `export OPAM_USER_PATH_RO=/rw/usrlocal:/media`.
   Contained paths are added as read-only.
+  Note: As of opam 2.2.0, the sandbox will always mount every directories readonly
+  and OPAM_USER_PATH_RO thus does nothing.
 - If needed, for special cases like unprivileged containers, sandboxing can be
   disabled on `opam init` with the `--disable-sandboxing` flag (only for
   non-initialised opam). Or by using a [custom
