@@ -90,6 +90,7 @@ users)
   * Complete upgrade mechanism to permit on the fly upgrade and write upgrade from repo and switch level [#6416 @rjbou]
 
 ## Sandbox
+  * Allow the macOS sandbox to write in the `/var/folders/` and `/var/db/mds/` directories as it is required by some of macOS core tools [#4797 @kit-ty-kate - fix #4389 #6460]
 
 ## VCS
   * Check the status of git submodules when checking if a repository is up-to-date [#6132 @kit-ty-kate]
