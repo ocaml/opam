@@ -1004,7 +1004,11 @@ module OpamSys = struct
         let rec f a =
           match input_line c with
           | x ->
-              if OpamString.ends_with ~suffix:"cygwin1.dll" (String.trim x) then
+              (* Treat MSYS2's variant of `cygwin1.dll` called `msys-2.0.dll` equivalently.
+                 Confer https://www.msys2.org/wiki/How-does-MSYS2-differ-from-Cygwin/ *)
+              let tx = String.trim x in
+              if (OpamString.ends_with ~suffix:"cygwin1.dll" tx ||
+                  OpamString.ends_with ~suffix:"msys-2.0.dll" tx) then
                 if OpamString.starts_with ~prefix:"  " x then
                   f `Cygwin
                 else if a <> `Cygwin then
