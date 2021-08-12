@@ -1207,6 +1207,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
 (* Apply a solution *)
 let apply ?ask t ~requested ?add_roots ?(assume_built=false)
     ?(download_only=false) ?force_remove solution =
+  let names = OpamPackage.names_of_packages requested in
   log "apply";
   if OpamSolver.solution_is_empty solution then
     (* The current state satisfies the request contraints *)
@@ -1245,19 +1246,19 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
         else ""
       in
       OpamSolver.print_solution ~messages ~append
-        ~requested ~reinstall:(Lazy.force t.reinstall)
+        ~requested:names ~reinstall:(Lazy.force t.reinstall)
         ~available:(Lazy.force t.available_packages)
         solution;
     );
     if not OpamClientConfig.(!r.show) &&
-       (download_only || confirmation ?ask requested solution)
+       (download_only || confirmation ?ask names solution)
     then (
       let t =
         install_depexts t @@ OpamPackage.Set.inter
           new_state.installed (OpamSolver.all_packages solution)
       in
       let requested =
-        OpamPackage.packages_of_names new_state.installed requested
+        OpamPackage.packages_of_names new_state.installed names
       in
       let run_job =
         if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake)

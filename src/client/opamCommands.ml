@@ -1270,7 +1270,7 @@ let config cli =
       OpamSwitchState.with_ `Lock_none gt @@ fun opam_state ->
       let opam_univ =
         OpamSwitchState.universe opam_state
-          ~requested:(OpamPackage.names_of_packages opam_state.packages)
+          ~requested:opam_state.packages
           Query
       in
       let dump oc = OpamSolver.dump_universe opam_univ oc in
@@ -1384,7 +1384,7 @@ let config cli =
           |> OpamSolver.dependencies ~depopts:true ~post:true ~build:true
             ~installed:true
             (OpamSwitchState.universe ~test:true ~doc:true
-               ~requested:OpamPackage.Name.Set.empty state Query)
+               ~requested:OpamPackage.Set.empty state Query)
           |> OpamPackage.Set.iter process;
           if List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
           then OpamConsole.warning

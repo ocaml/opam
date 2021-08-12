@@ -66,6 +66,7 @@ let update_dev_packages_t ?(only_installed=false) atoms t =
 let compute_upgrade_t
     ?(strict_upgrade=true) ?(auto_install=false) ?(only_installed=false)
     ~all atoms t =
+  let packages = OpamFormula.packages_of_atoms t.packages atoms in
   let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
   let atoms =
     if strict_upgrade then
@@ -115,7 +116,7 @@ let compute_upgrade_t
   if all then
     names,
     OpamSolution.resolve t Upgrade
-      ~requested:names
+      ~requested:packages
       ~reinstall:(Lazy.force t.reinstall)
       (OpamSolver.request
          ~install:to_install
@@ -125,7 +126,7 @@ let compute_upgrade_t
   else
   names,
   OpamSolution.resolve t Upgrade
-    ~requested:names
+    ~requested:packages
     (OpamSolver.request
        ~install:to_install
        ~upgrade:to_upgrade
@@ -177,7 +178,8 @@ let upgrade_t
          then `False
          else `Success)
     else
-    let t, result = OpamSolution.apply ?ask t ~requested solution in
+    let packages = OpamPackage.packages_of_names t.packages requested in
+    let t, result = OpamSolution.apply ?ask t ~requested:packages solution in
     if result = Nothing_to_do then (
       let to_check =
         if OpamPackage.Name.Set.is_empty requested then t.installed
@@ -332,7 +334,7 @@ let fixup t =
   let resolve pkgs =
     pkgs,
     OpamSolution.resolve t Upgrade
-      ~requested:(OpamPackage.names_of_packages pkgs)
+      ~requested:pkgs
       (OpamSolver.request
          ~install:(OpamSolution.atoms_of_packages pkgs)
          ~all:[]
@@ -375,9 +377,8 @@ let fixup t =
       t, Conflicts cs
     | Success solution ->
       let t, res =
-        OpamSolution.apply ~ask:true t
-          ~requested:(OpamPackage.names_of_packages requested)
-          solution in
+        OpamSolution.apply ~ask:true t ~requested solution
+      in
       t, Success res
   in
   OpamSolution.check_solution t result;
@@ -777,7 +778,7 @@ let init
           in
           let univ =
             OpamSwitchState.universe virt_st
-              ~requested:OpamPackage.Name.Set.empty Query
+              ~requested:OpamPackage.Set.empty Query
           in
           let univ = { univ with u_invariant = invariant } in
           let default_compiler =
@@ -884,7 +885,7 @@ let assume_built_restrictions ?available_packages t atoms =
     OpamSolver.dependencies ~build:false ~post:false
       ~depopts:false ~installed:true ~unavailable:false
       (OpamSwitchState.universe t
-         ~requested:(OpamPackage.names_of_packages pinned) Query)
+         ~requested:pinned Query)
       pinned
   in
   let available_packages =
@@ -929,6 +930,7 @@ let filter_unpinned_locally t atoms f =
 let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
     ?(download_only=false) atoms add_to_roots ~deps_only ~assume_built =
   log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
+  let packages = OpamFormula.packages_of_atoms t.packages atoms in
   let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
   let atoms =
@@ -1046,7 +1048,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
   let solution =
     let reinstall = if assume_built then Some pkg_reinstall else None in
     OpamSolution.resolve t Install
-      ~requested:names
+      ~requested:packages
       ?reinstall
       request in
   let t, solution = match solution with
@@ -1115,7 +1117,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
             add_to_roots
       in
       let t, res =
-        OpamSolution.apply ?ask t ~requested:names ?add_roots
+        OpamSolution.apply ?ask t ~requested:packages ?add_roots
           ~download_only ~assume_built solution in
       t, Some (Success res)
   in
@@ -1167,10 +1169,9 @@ let remove_t ?ask ~autoremove ~force atoms t =
     let packages = OpamPackage.Set.of_list packages in
     let universe =
       OpamSwitchState.universe t
-        ~requested:(OpamPackage.names_of_packages packages)
+        ~requested:packages
         Remove
     in
-    let requested = OpamPackage.names_of_packages packages in
     let to_remove =
       if autoremove then
         let keep =
@@ -1197,8 +1198,7 @@ let remove_t ?ask ~autoremove ~force atoms t =
     in
     let t, solution =
       OpamSolution.resolve_and_apply ?ask t Remove
-        ~force_remove:force
-        ~requested
+        ~force_remove:force ~requested:packages
         (OpamSolver.request
            ~remove:(OpamSolution.atoms_of_packages to_remove)
            ())
@@ -1246,7 +1246,7 @@ let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
     to_install @ OpamSolution.eq_atoms_of_packages reinstall in
 
   let requested =
-    OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
+    OpamFormula.packages_of_atoms t.installed atoms in
 
   let t, atoms =
     if assume_built then
@@ -1258,7 +1258,7 @@ let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
 
   let t, solution =
     OpamSolution.resolve_and_apply ?ask t Reinstall
-      ~reinstall:(OpamPackage.packages_of_names t.installed requested)
+      ~reinstall:requested
       ~requested
       ~assume_built
       request in
@@ -1459,9 +1459,13 @@ module PIN = struct
         OpamPackage.Set.fold (fun nv acc -> (nv.name, None) :: acc)
           installed_unpinned []
       in
+      let requested =
+        OpamPackage.packages_of_names pinned_before
+          (OpamPackage.Name.Set.of_list names)
+      in
       let st, solution =
         OpamSolution.resolve_and_apply st Upgrade
-          ~requested:(OpamPackage.Name.Set.of_list names)
+          ~requested
           (OpamSolver.request ~all ())
       in
       OpamSolution.check_solution st solution;

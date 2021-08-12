@@ -189,7 +189,7 @@ val universe:
   ?doc:bool ->
   ?force_dev_deps:bool ->
   ?reinstall:package_set ->
-  requested:name_set ->
+  requested:package_set ->
   user_action -> universe
 
 (** Dumps the current switch state in PEF format, for interaction with Dose

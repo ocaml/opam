@@ -216,7 +216,7 @@ let install_compiler
     (OpamFileTools.dep_formula_to_string invariant);
   let solution =
     OpamSolution.resolve t Switch
-      ~requested:roots
+      ~requested:(OpamPackage.packages_of_names t.packages roots)
       (OpamSolver.request ~install:additional_installs ())
   in
   let solution = match solution with
@@ -298,7 +298,7 @@ let install_compiler
   let t, result =
     OpamSolution.apply t
       ~ask:(OpamClientConfig.(!r.show) || ask)
-      ~requested:roots
+      ~requested:(OpamPackage.packages_of_names t.packages roots)
       ~add_roots:roots
       solution in
   OpamSolution.check_solution ~quiet:OpamClientConfig.(not !r.show) t
@@ -494,7 +494,7 @@ let import_t ?ask importfile t =
     let add_roots = OpamPackage.names_of_packages import_sel.sel_roots in
 
     OpamSolution.resolve_and_apply ?ask t Import
-      ~requested:(OpamPackage.Name.Set.of_list @@ List.map fst to_import)
+      ~requested:((to_install %% available) ++ unavailable_version)
       ~add_roots
       { wish_install = to_import;
         wish_remove  = [];
