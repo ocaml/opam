@@ -69,7 +69,7 @@ val writeRegistry :
   (** Windows only. [writeRegistry root key name value_type value] sets the
       value [name] of type [value_type] in registry key [key] of [root] to
       [value].
- 
+
       @raise Failure If the value could not be set.
       @raise Not_found If [key] does not exist. *)
 
@@ -123,6 +123,11 @@ val getParentProcessID : int32 -> int32
     of [pid].
 
     @raise Failure If walking the process tree fails to find the process. *)
+
+val getProcessName : int32 -> string
+(** Windows only. [getProcessName pid] returns the executable name of [pid].
+
+    @raise Failure If the process does not exist. *)
 
 val getConsoleAlias : string -> string -> string
 (** Windows only. [getConsoleAlias alias exeName] retrieves the value for a

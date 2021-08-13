@@ -300,6 +300,8 @@ users)
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
+  * pwsh,powershell: use $env: for opam env [#4816 @jonahbeckford]
+  * command prompt: use SET for opam env [#4816 @jonahbeckford]
 
 ## Doc
   * Standardise `macOS` use [#4782 @kit-ty-kate]

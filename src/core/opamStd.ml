@@ -728,6 +728,17 @@ module Env = struct
       Re.(replace (compile (set "\\\'")) ~f:(fun g -> "\\"^Group.get g 0))
     else
       Re.(replace_string (compile (char '\'')) ~by:"'\"'\"'")
+
+  let escape_powershell =
+    (* escape single quotes with two single quotes.
+       https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules?view=powershell-7.1 *)
+    Re.(replace_string (compile (char '\'')) ~by:"''")
+
+  let escape_windows_command_line s =
+    (* escape all Windows command line metacharacters with a caret (^) *)
+    List.fold_left
+      (fun acc ch -> Re.(replace_string (compile (char ch)) ~by:("^" ^ String.make 1 ch) acc))
+      s ['^'; '"'; '&'; '|'; '<'; '>']
 end
 
 
@@ -898,7 +909,11 @@ module OpamSys = struct
     ) in
     fun () -> Lazy.force os
 
-  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
+  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish | SH_pwsh
+    | SH_win_cmd | SH_win_powershell
+
+  let windows_default_shell = SH_win_cmd
+  let unix_default_shell = SH_sh
 
   let shell_of_string = function
     | "tcsh"
@@ -907,6 +922,7 @@ module OpamSys = struct
     | "zsh"  -> Some SH_zsh
     | "bash" -> Some SH_bash
     | "fish" -> Some SH_fish
+    | "pwsh" -> Some SH_pwsh
     | "sh"   -> Some SH_sh
     | _      -> None
 
@@ -920,50 +936,117 @@ module OpamSys = struct
     else
       fun x -> x
 
-  let guess_shell_compat () =
-    let parent_guess =
-      if Sys.win32 then
-        None
+  let windows_max_ancestor_depth = 5
+
+  (** [windows_ancestor_process_names] finds the names of the parent of the
+      current process and all of its ancestors up to [max_ancestor_depth]
+      in length.
+
+      The immediate parent of the current process will be first in the list.
+    *)
+  let windows_ancestor_process_names () =
+    let rec helper pid depth =
+      if depth > windows_max_ancestor_depth then []
       else
-        let ppid = Unix.getppid () in
-        let dir = Filename.concat "/proc" (string_of_int ppid) in
+      try
+        OpamStubs.(getProcessName pid ::
+                   helper
+                     (getParentProcessID pid)
+                     (depth + 1))
+      with Failure _ -> []
+    in
+    lazy (
+      try
+        let parent = OpamStubs.getCurrentProcessID () in
+        helper (OpamStubs.getParentProcessID parent) 0
+      with Failure _ -> []
+    )
+
+  type shell_choice = Reject | Accept of shell
+
+  let windows_get_shell =
+    let categorize_process = function
+      | "powershell.exe" | "powershell_ise.exe" -> Some (Accept SH_win_powershell)
+      | "pwsh.exe" -> Some (Accept SH_pwsh)
+      | "cmd.exe" -> Some (Accept SH_win_cmd)
+      | "env.exe" ->
+        (* If the nearest ancestor is env.exe it may be `env bash` or
+           even `env cmd.exe`. On Windows we can't see whether bash,
+           cmd or something else was chosen by `env ...`. So kick
+           out of categorization immediately. *)
+        Some Reject
+      | name ->
+        Option.map
+          (fun shell -> Accept shell)
+          (shell_of_string (Filename.chop_suffix name ".exe"))
+    in
+    lazy (
+      let ancestors = Lazy.force (windows_ancestor_process_names ()) in
+      match (List.map String.lowercase_ascii ancestors |>
+              OpamList.filter_map categorize_process) with
+      | [] -> None
+      | Reject :: _ -> None
+      | Accept most_relevant_shell :: _ -> Some most_relevant_shell
+    )
+
+  let guess_shell_compat () =
+    let parent_guess () =
+      let ppid = Unix.getppid () in
+      let dir = Filename.concat "/proc" (string_of_int ppid) in
+      try
+        Some (Unix.readlink (Filename.concat dir "exe"))
+      with e ->
+        fatal e;
         try
-          Some (Unix.readlink (Filename.concat dir "exe"))
-        with e ->
-          fatal e;
-          try
-            with_process_in "ps"
-              (Printf.sprintf "-p %d -o comm= 2>/dev/null" ppid)
-              (fun ic -> Some (input_line ic))
-          with
-          | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
-              try
-                let c = open_in_bin ("/proc/" ^ string_of_int ppid ^ "/cmdline") in
-                begin try
-                  let s = input_line c in
+          with_process_in "ps"
+            (Printf.sprintf "-p %d -o comm= 2>/dev/null" ppid)
+            (fun ic -> Some (input_line ic))
+        with
+        | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
+            try
+              let c = open_in_bin ("/proc/" ^ string_of_int ppid ^ "/cmdline") in
+              begin try
+                let s = input_line c in
+                close_in c;
+                Some (String.sub s 0 (String.index s '\000'))
+              with
+              | Not_found ->
+                  None
+              | e ->
                   close_in c;
-                  Some (String.sub s 0 (String.index s '\000'))
-                with
-                | Not_found ->
-                    None
-                | e ->
-                    close_in c;
-                    fatal e; None
-                end
-              with e ->
-                fatal e; None
+                  fatal e; None
+              end
+            with e ->
+              fatal e; None
     in
     let test shell = shell_of_string (Filename.basename shell) in
-    let shell =
-      match Option.replace test parent_guess with
-      | None ->
+    if Sys.win32 then
+      let shell =
+        match Lazy.force windows_get_shell with
+        | None ->
           Option.of_Not_found Env.get "SHELL" |> Option.replace test
-      | some ->
+        | some ->
           some
-    in
-    Option.default SH_sh shell
+        in
+      Option.default windows_default_shell shell
+    else
+      let shell =
+        match Option.replace test (parent_guess ()) with
+        | None ->
+            Option.of_Not_found Env.get "SHELL" |> Option.replace test
+        | some ->
+            some
+      in
+      Option.default unix_default_shell shell
 
   let guess_dot_profile shell =
+    let win_my_powershell f =
+      let p = Filename.concat (home ()) "Documents" in
+      if Sys.file_exists p then Filename.concat (Filename.concat p "PowerShell") f
+      else let p = Filename.concat (home ()) "My Documents" in
+      if Sys.file_exists p then Filename.concat (Filename.concat p "PowerShell") f
+      else f
+    in
     let home f =
       try Filename.concat (home ()) f
       with Not_found -> f in
@@ -992,7 +1075,13 @@ module OpamSys = struct
       let cshrc = home ".cshrc" in
       let tcshrc = home ".tcshrc" in
       if Sys.file_exists cshrc then cshrc else tcshrc
+    | SH_pwsh | SH_win_powershell ->
+      if Sys.win32 then win_my_powershell "Microsoft.Powershell_profile.ps1" else
+      List.fold_left Filename.concat (home ".config") ["powershell"; "Microsoft.Powershell_profile.ps1"]
     | SH_sh -> home ".profile"
+    | SH_win_cmd ->
+      (* cmd.exe does not have a concept of profiles *)
+      home ".profile"
 
 
   let registered_at_exit = ref []

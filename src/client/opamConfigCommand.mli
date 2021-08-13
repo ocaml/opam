@@ -23,8 +23,8 @@ open OpamStateTypes
 val env:
   'a global_state -> switch ->
   ?set_opamroot:bool -> ?set_opamswitch:bool ->
-  csh:bool -> sexp:bool -> fish:bool -> inplace_path:bool ->
-  unit
+  csh:bool -> sexp:bool -> fish:bool -> pwsh:bool -> cmd:bool ->
+  inplace_path:bool -> unit
 
 (** Ensures that the environment file exists in the given switch, regenerating
     it, if necessary. *)
@@ -32,7 +32,7 @@ val ensure_env: 'a global_state -> switch -> unit
 
 (** Like [env] but allows one to specify the precise env to print rather than
     compute it from a switch state *)
-val print_eval_env: csh:bool -> sexp:bool -> fish:bool -> env -> unit
+val print_eval_env: csh:bool -> sexp:bool -> fish:bool -> pwsh:bool -> cmd:bool -> env -> unit
 
 (** Display the content of all available packages variables *)
 val list: 'a switch_state -> name list -> unit

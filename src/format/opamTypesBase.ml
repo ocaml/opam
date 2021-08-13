@@ -48,6 +48,9 @@ let string_of_shell = function
   | SH_zsh  -> "zsh"
   | SH_sh   -> "sh"
   | SH_bash -> "bash"
+  | SH_pwsh -> "pwsh"
+  | SH_win_cmd -> "cmd"
+  | SH_win_powershell -> "powershell"
 
 let file_null = ""
 let pos_file filename =
