@@ -10,7 +10,8 @@
 (**************************************************************************)
 
 type install_warning =
-  [ `Add_exe | `Install_dll | `Install_script | `Install_unknown | `Cygwin | `Cygwin_libraries ]
+  [ `Add_exe | `Install_dll | `Install_script | `Install_unknown
+  | `Cygwin | `Msys2 | `Tainted of [`Msys2 | `Cygwin] | `Cygwin_libraries ]
 type install_warning_fn = string -> install_warning -> unit
 
 exception Process_error of OpamProcess.result
@@ -627,15 +628,60 @@ let copy_file src dst =
   copy_file_aux ~src ~dst ()
 
 let copy_dir src dst =
-  if Sys.file_exists dst then
+  (* MSYS2 requires special handling because its uses copying rather than
+     symlinks for maximum portability on Windows. However copying a source
+     directory containing symlinks presents a problem.
+
+     As a real example look at https://github.com/OCamlPro/ocp-indent/tree/1.8.2/tests/inplace:
+
+      $ ls -l tests/inplace/
+      total 0
+      -rw-r--r-- 1 user group  0 Aug 12 20:53 executable.ml
+      lrwxrwxrwx 1 user group 12 Aug 12 20:53 link.ml -> otherfile.ml
+      lrwxrwxrwx 1 user group  7 Aug 12 20:53 link2.ml -> link.ml
+      -rw-r--r-- 1 user group  0 Aug 12 20:53 otherfile.ml
+
+    With a regular copy:
+
+      cp -PRp ...\ocp-indent-1.8.1\tests ... \tmp\ocp-indent.1.8.1
+
+    it _can_ fail with:
+
+      # /usr/bin/cp: cannot create symbolic link 'C:\somewhere/tests/inplace/link.ml': No such file or directory
+      # /usr/bin/cp: cannot create symbolic link 'C:\somewhere/tests/inplace/link2.ml': No such file or directory
+
+    What is happening is that _if_ link2.ml is copied before link.ml, then the
+    copy of link2.ml will fail with "No such file or directory". What is worse,
+    it depends on the opaque order in which the files are copied; sometimes it
+    can work and sometimes it won't.
+
+    So we do a two-pass copy. The first pass copies everything except the
+    symlinks, and the second pass copies everything that remained. Rsync is the
+    perfect tool for that.
+   *)
+  if OpamStd.Sys.get_windows_executable_variant "rsync" = `Msys2 then
+    let convert_path = Lazy.force (get_cygpath_function ~command:"rsync") in
+    (* ensure that rsync doesn't recreate a subdir: add trailing '/' even if
+       cygpath may add one *)
+    let trailingslash_cygsrc =
+      (OpamStd.String.remove_suffix ~suffix:"/" (convert_path src)) ^ "/"
+    in
+    let cygdest = convert_path dst in
+    (if Sys.file_exists dst then () else mkdir (Filename.dirname dst);
+     command ~verbose:(verbose_for_base_commands ())
+       ([ "rsync"; "-a"; "--no-links"; trailingslash_cygsrc; cygdest ]);
+     command ~verbose:(verbose_for_base_commands ())
+       ([ "rsync"; "-a"; "--ignore-existing"; trailingslash_cygsrc; cygdest ]))
+  else if Sys.file_exists dst then
     if Sys.is_directory dst then
       match ls src with
       | [] -> ()
       | srcfiles ->
         command ~verbose:(verbose_for_base_commands ())
           ([ "cp"; "-PRp" ] @ srcfiles @ [ dst ])
-    else internal_error "Can not copy dir %s to %s, which is not a directory"
-        src dst
+    else
+      internal_error
+        "Can not copy dir %s to %s, which is not a directory" src dst
   else
     (mkdir (Filename.dirname dst);
      command ~verbose:(verbose_for_base_commands ())
@@ -722,21 +768,33 @@ let classify_executable file =
     `Unknown
 
 let default_install_warning dst = function
-| `Add_exe ->
+  | `Add_exe ->
     OpamConsole.warning "Automatically adding .exe to %s" dst
-| `Install_dll ->
-    (* TODO Installation of .dll to bin is unfortunate, but not sure if it should be a warning *)
+  | `Install_dll ->
+    (* TODO Installation of .dll to bin is unfortunate, but not sure if it
+       should be a warning *)
     ()
-| `Install_script ->
+  | `Install_script ->
     (* TODO Generate a .cmd wrapper (and warn about it - they're not perfect) *)
     OpamConsole.warning "%s is a script; the command won't be available" dst;
-| `Install_unknown ->
-    (* TODO Installation of a non-executable file is unexpected, but not sure if it should be a warning/error *)
+  | `Install_unknown ->
+    (* TODO Installation of a non-executable file is unexpected, but not sure
+       if it should be a warning/error *)
     ()
-| `Cygwin ->
+  | `Cygwin ->
     OpamConsole.warning "%s is a Cygwin-linked executable" dst
-| `Cygwin_libraries ->
-    OpamConsole.warning "%s links with a Cygwin-compiled DLL (almost certainly a packaging or environment error)" dst
+  | `Msys2 ->
+    OpamConsole.warning "%s is a MSYS2-linked executable" dst
+  | `Tainted `Cygwin ->
+    OpamConsole.warning
+      "%s is an executable which links to a Cygwin-linked library" dst
+  | `Tainted `Msys2 ->
+    OpamConsole.warning
+      "%s is an executable which links to a MSYS2-linked library" dst
+  | `Cygwin_libraries ->
+    OpamConsole.warning
+      "%s links with a Cygwin-compiled DLL (almost certainly a packaging \
+       or environment error)" dst
 
 let install ?(warning=default_install_warning) ?exec src dst =
   if Sys.is_directory src then
@@ -771,13 +829,11 @@ let install ?(warning=default_install_warning) ?exec src dst =
       in
       copy_file_aux ~src ~dst ();
       if cygcheck then
-        match OpamStd.Sys.is_cygwin_variant dst with
-          `Native ->
+        match OpamStd.Sys.get_windows_executable_variant dst with
+        | `Native ->
             ()
-        | `Cygwin ->
-            warning dst `Cygwin
-        | `CygLinked ->
-            warning dst `Cygwin_libraries
+        | (`Cygwin | `Msys2 | `Tainted _) as code ->
+            warning dst code
     end else
       copy_file_aux ~src ~dst ()
   else
