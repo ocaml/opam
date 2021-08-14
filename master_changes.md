@@ -62,6 +62,7 @@ users)
 ## External dependencies
   * Set DEBIAN_FRONTEND=noninteractive for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
   * Fix depext alpine tagged repositories handling [#4763 @rjbou] [2.1.0~rc2 #4758]
+  * Homebrew: Add support for casks and full-names [#4801 @kit-ty-kate]
 
 ## Format upgrade
   * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
