@@ -38,7 +38,7 @@ users)
   *
 
 ## List
-  *
+  * Do not list the package itself when running `--depends-on` and `--required-by` with `--required` [#4804 @LasseBlaauwbroek]
 
 ## Show
   *
