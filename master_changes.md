@@ -174,6 +174,7 @@ users)
   * [BUG] handle converted variables correctly when no_undef_expand is true [#4811 @timbertson]
   * [BUG] check Unix.has_symlink before using Unix.symlink [#4962 @jonahbeckford]
   * OpamCudf: provide machine-readable information on conflicts caused by cycles [#4039 @gasche]
+  * Remove memoization from `best_effort ()` to allow for multiple different settings during the same session (useful for libaray users) [#4805 @LasseBlaauwbroek]
 
 ## Test
   * Update crowbar with compare functions [#4918 @rjbou]
