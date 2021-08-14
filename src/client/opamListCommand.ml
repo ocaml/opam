@@ -226,10 +226,11 @@ let apply_selector ~base st = function
       | Depends_on _ -> OpamSolver.reverse_dependencies
       | _ -> assert false
     in
-    deps_fun ~depopts:tog.depopts ~build:tog.build ~post:tog.post
+    let deps = deps_fun ~depopts:tog.depopts ~build:tog.build ~post:tog.post
       ~installed:false ~unavailable:true
       (get_universe st tog)
-      (packages_of_atoms st atoms)
+      (packages_of_atoms st atoms) in
+    OpamPackage.Set.inter base deps
   | Required_by (tog, atoms) ->
     atom_dependencies st tog atoms |>
     OpamFormula.packages base
