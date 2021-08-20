@@ -427,6 +427,7 @@ let packages_status packages =
        exampe output
        >openssl@1.1
        >bmake
+       >koekeishiya/formulae/skhd
     *)
     let sys_installed =
       run_query_command "brew" ["list"; "--full-name"]
