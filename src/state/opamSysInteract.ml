@@ -427,14 +427,21 @@ let packages_status packages =
        exampe output
        >openssl@1.1
        >bmake
+       >koekeishiya/formulae/skhd
     *)
     let sys_installed =
-      run_query_command "brew" ["list"; "--formula"]
+      run_query_command "brew" ["list"; "--full-name"]
       |> List.fold_left (fun res s ->
           List.fold_left (fun res spkg ->
+              let parse_fullname pkg =
+                match List.rev (String.split_on_char '/' pkg) with
+                | [] -> assert false (* split_on_char is guaranteed to never return [] *)
+                | [pkg] -> [pkg]
+                | simple_name::_ -> [pkg; simple_name]
+              in
               match OpamStd.String.cut_at spkg '@' with
-              | Some (n,_v) -> n::spkg::res
-              | None -> spkg::res)
+              | Some (n,_v) -> parse_fullname n@parse_fullname spkg@res
+              | None -> parse_fullname spkg@res)
             res (OpamStd.String.split s ' ')) []
       |> List.map OpamSysPkg.of_string
       |> OpamSysPkg.Set.of_list
