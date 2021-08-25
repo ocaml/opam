@@ -617,12 +617,6 @@ let read_command_output ?verbose ?env ?metadata ?allow_stdin
 let verbose_for_base_commands () =
   OpamCoreConfig.(!r.verbose_level) >= 3
 
-let cygify f =
-  if Sys.win32 then
-    List.map (Lazy.force f)
-  else
-    fun x -> x
-
 let copy_file src dst =
   if (try Sys.is_directory src
       with Sys_error _ -> raise (File_not_found src))
@@ -695,12 +689,16 @@ let copy_dir src dst =
      command ~verbose:(verbose_for_base_commands ())
        [ "cp"; "-PRp"; src; dst ])
 
-let mv_aux f src dst =
+let mv src dst =
   if file_or_symlink_exists dst then remove_file dst;
   mkdir (Filename.dirname dst);
-  command ~verbose:(verbose_for_base_commands ()) ("mv"::(cygify f [src; dst]))
-
-let mv = mv_aux (get_cygpath_function ~command:"mv")
+  try
+    Unix.rename src dst
+  with
+  | Unix.Unix_error(Unix.EXDEV, _, _) ->
+    if Sys.is_directory src
+    then (copy_dir src dst; remove_dir src)
+    else (copy_file src dst; remove_file src)
 
 let is_exec file =
   let stat = Unix.stat file in
