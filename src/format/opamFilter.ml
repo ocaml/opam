@@ -203,13 +203,15 @@ let resolve_ident_raw ?(no_undef_expand=false) env fident =
       (Some true) names
     >>| fun b -> B b
   in
-  match converter, no_undef_expand with
-  | Some (iftrue, iffalse), false ->
+  match converter with
+  | Some (iftrue, iffalse) ->
     (match value_opt >>= bool_of_value with
      | Some true -> Some (S iftrue)
      | Some false -> Some (S iffalse)
-     | None -> Some (S iffalse))
-  | _ -> value_opt
+     | None ->
+         if no_undef_expand then value_opt else Some (S iffalse)
+    )
+  | None -> value_opt
 
 (* Resolves [FIdent] to string or bool, using its package and converter
    specification *)
