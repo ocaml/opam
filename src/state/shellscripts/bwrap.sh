@@ -63,6 +63,7 @@ add_sys_mounts() {
 for dir in /*; do
     case "$dir" in
     "/proc" | "/dev" | "/run" | "/opam-tmp") ;;
+    "/sys") ;; # Disabled without a corresponding bind, due to security concerns
     *) add_sys_mounts "$dir";;
     esac
 done
