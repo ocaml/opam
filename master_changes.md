@@ -86,6 +86,7 @@ users)
   * Change minimum required OCaml to 4.03.0 [#4770 @dra27]
   * Change minimum required Dune to 2.0 [#4770 @dra27]
   * Change minimum required OCaml to 4.08.0 for everything except opam-core, opam-format and opam-installer [#4775 @dra27]
+  * Fix the cold target in presence of an older OCaml compiler version on macOS [#4802 @kit-ty-kate - fix #4801]
 
 ## Infrastructure
   *
