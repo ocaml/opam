@@ -2,6 +2,9 @@
 
 set -ue
 
+# Used to make /* match all files (even those beginning with a '.')
+shopt -s dotglob
+
 if ! command -v bwrap >/dev/null; then
     echo "The 'bwrap' command was not found. Install 'bubblewrap' on your system, or" >&2
     echo "disable sandboxing in ${OPAMROOT:-~/.opam}/config at your own risk." >&2
@@ -21,20 +24,20 @@ ARGS=("${ARGS[@]}" --tmpfs /run)
 # NOTE: When adding a new mount-point please sync with the loop below to avoid overriding the mount point
 
 add_mount() {
-    case "$1" in
-        ro) B="--ro-bind";;
-        rw) B="--bind";;
-        sym) B="--symlink";;
-    esac
-    ARGS=("${ARGS[@]}" "$B" "$2" "$3")
+    if [ -d "$dir" ]; then
+      case "$1" in
+          ro) B="--ro-bind";;
+          rw) B="--bind";;
+          sym) B="--symlink";;
+      esac
+      ARGS=("${ARGS[@]}" "$B" "$2" "$3")
+    fi
 }
 
 add_mounts() {
     local flag="$1"; shift
     for dir in "$@"; do
-      if [ -d "$dir" ]; then
-        add_mount "$flag" "$dir" "$dir"
-      fi
+      add_mount "$flag" "$dir" "$dir"
     done
 }
 
@@ -57,17 +60,11 @@ add_sys_mounts() {
 # NOTE: The list of moint-points to avoid is always to be sync'd with the list at the top of the file
 # It is due to a limitation of bubblewrap that we have to mount the directories one by one
 # See https://github.com/containers/bubblewrap/issues/413
-for dir in $(ls -a /); do
-    dir=/$dir
-    if test -d "$dir" &&
-       test "$dir" != "/." &&
-       test "$dir" != "/.." &&
-       test "$dir" != "/proc" &&
-       test "$dir" != "/dev" &&
-       test "$dir" != "/run" &&
-       test "$dir" != "/opam-tmp"; then
-      add_sys_mounts "$dir"
-    fi
+for dir in /*; do
+    case "$dir" in
+    "/proc" | "/dev" | "/run" | "/opam-tmp") ;;
+    *) add_sys_mounts "$dir";;
+    esac
 done
 
 # C compilers using `ccache` will write to a shared cache directory
