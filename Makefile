@@ -40,7 +40,7 @@ src_ext/dune-local/dune.exe: src_ext/dune-local.stamp $(DUNE_SECONDARY)
 ifeq ($(DUNE_SECONDARY),)
 	cd src_ext/dune-local && ocaml bootstrap.ml
 else
-	cd src_ext/dune-local && ( unset OCAMLLIB ; PATH="$(dir $(realpath $(DUNE_SECONDARY))):$$PATH" ../../$(DUNE_SECONDARY) bootstrap.ml )
+	cd src_ext/dune-local && ( unset OCAMLLIB ; unset CAML_LD_LIBRARY_PATH ; PATH="$(dir $(realpath $(DUNE_SECONDARY))):$$PATH" ../../$(DUNE_SECONDARY) bootstrap.ml )
 endif
 
 src_ext/dune-local.stamp:
@@ -250,12 +250,12 @@ src_ext/secondary/ocaml/bin/ocaml:
 	env MAKE=$(MAKE) BOOTSTRAP_EXTRA_OPTS="--disable-ocamldoc --disable-debug-runtime --disable-debugger" BOOTSTRAP_OPT_TARGET=opt BOOTSTRAP_ROOT=../.. BOOTSTRAP_DIR=src_ext/secondary ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
 
 cold: compiler
-	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" ./configure --enable-cold-check $(CONFIGURE_ARGS)
-	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE) lib-ext
-	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE)
+	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= ./configure --enable-cold-check $(CONFIGURE_ARGS)
+	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= $(MAKE) lib-ext
+	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= $(MAKE)
 
 cold-%:
-	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" $(MAKE) $*
+	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= $(MAKE) $*
 
 .PHONY: run-appveyor-test
 run-appveyor-test:
