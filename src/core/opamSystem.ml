@@ -629,65 +629,59 @@ let copy_file src dst =
   log "copy %s -> %s" src dst;
   copy_file_aux ~src ~dst ()
 
-let copy_dir src dst =
-  (* MSYS2 requires special handling because its uses copying rather than
-     symlinks for maximum portability on Windows. However copying a source
-     directory containing symlinks presents a problem.
+let get_files dirname =
+  let dir = Unix.opendir dirname in
+  let rec aux files =
+    match Unix.readdir dir with
+    | "." | ".." -> aux files
+    | file -> aux (file :: files)
+    | exception End_of_file -> files
+  in
+  let files = aux [] in
+  Unix.closedir dir;
+  files
 
-     As a real example look at https://github.com/OCamlPro/ocp-indent/tree/1.8.2/tests/inplace:
-
-      $ ls -l tests/inplace/
-      total 0
-      -rw-r--r-- 1 user group  0 Aug 12 20:53 executable.ml
-      lrwxrwxrwx 1 user group 12 Aug 12 20:53 link.ml -> otherfile.ml
-      lrwxrwxrwx 1 user group  7 Aug 12 20:53 link2.ml -> link.ml
-      -rw-r--r-- 1 user group  0 Aug 12 20:53 otherfile.ml
-
-    With a regular copy:
-
-      cp -PRp ...\ocp-indent-1.8.1\tests ... \tmp\ocp-indent.1.8.1
-
-    it _can_ fail with:
-
-      # /usr/bin/cp: cannot create symbolic link 'C:\somewhere/tests/inplace/link.ml': No such file or directory
-      # /usr/bin/cp: cannot create symbolic link 'C:\somewhere/tests/inplace/link2.ml': No such file or directory
-
-    What is happening is that _if_ link2.ml is copied before link.ml, then the
-    copy of link2.ml will fail with "No such file or directory". What is worse,
-    it depends on the opaque order in which the files are copied; sometimes it
-    can work and sometimes it won't.
-
-    So we do a two-pass copy. The first pass copies everything except the
-    symlinks, and the second pass copies everything that remained. Rsync is the
-    perfect tool for that.
-   *)
-  if OpamStd.Sys.get_windows_executable_variant "rsync" = `Msys2 then
-    let convert_path = Lazy.force (get_cygpath_function ~command:"rsync") in
-    (* ensure that rsync doesn't recreate a subdir: add trailing '/' even if
-       cygpath may add one *)
-    let trailingslash_cygsrc =
-      (OpamStd.String.remove_suffix ~suffix:"/" (convert_path src)) ^ "/"
+let rec link src dst =
+  mkdir (Filename.dirname dst);
+  if file_or_symlink_exists dst then
+    remove_file dst;
+  try
+    log "ln -s %s %s" src dst;
+    Unix.symlink src dst
+  with Unix.Unix_error (Unix.EXDEV, _, _) ->
+    (* Fall back to copy if symlinks are not supported *)
+    let src =
+      if Filename.is_relative src then Filename.dirname dst / src
+      else src
     in
-    let cygdest = convert_path dst in
-    (if Sys.file_exists dst then () else mkdir (Filename.dirname dst);
-     command ~verbose:(verbose_for_base_commands ())
-       ([ "rsync"; "-a"; "--no-links"; trailingslash_cygsrc; cygdest ]);
-     command ~verbose:(verbose_for_base_commands ())
-       ([ "rsync"; "-a"; "--ignore-existing"; trailingslash_cygsrc; cygdest ]))
-  else if Sys.file_exists dst then
-    if Sys.is_directory dst then
-      match ls src with
-      | [] -> ()
-      | srcfiles ->
-        command ~verbose:(verbose_for_base_commands ())
-          ([ "cp"; "-PRp" ] @ srcfiles @ [ dst ])
+    if Sys.is_directory src then
+      copy_dir src dst
     else
-      internal_error
-        "Can not copy dir %s to %s, which is not a directory" src dst
-  else
-    (mkdir (Filename.dirname dst);
-     command ~verbose:(verbose_for_base_commands ())
-       [ "cp"; "-PRp"; src; dst ])
+      copy_file src dst
+
+and copy_dir src dst =
+  let files = get_files src in
+  mkdir dst;
+  List.iter (fun file ->
+    let src = Filename.concat src file in
+    let dst = Filename.concat dst file in
+    match Unix.lstat src with
+    | {Unix.st_kind = Unix.S_REG; _} ->
+      copy_file src dst
+    | {Unix.st_kind = Unix.S_DIR; _} ->
+      copy_dir src dst
+    | {Unix.st_kind = Unix.S_LNK; _} ->
+      let src = Unix.readlink src in
+      link src dst
+    | {Unix.st_kind = Unix.S_CHR; _} ->
+      failwith (Printf.sprintf "Copying character devices (%s) is unsupported" src)
+    | {Unix.st_kind = Unix.S_BLK; _} ->
+      failwith (Printf.sprintf "Copying block devices (%s) is unsupported" src)
+    | {Unix.st_kind = Unix.S_FIFO; _} ->
+      failwith (Printf.sprintf "Copying named pipes (%s) is unsupported" src)
+    | {Unix.st_kind = Unix.S_SOCK; _} ->
+      failwith (Printf.sprintf "Copying sockets (%s) is unsupported" src)
+  ) files
 
 let mv src dst =
   if file_or_symlink_exists dst then remove_file dst;
