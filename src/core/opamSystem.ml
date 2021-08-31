@@ -80,19 +80,62 @@ let mkdir dir =
     end in
   aux dir
 
-let rm_command =
-  if Sys.win32 then
-    "cmd /d /v:off /c rd /s /q"
-  else
-    "rm -rf"
+let get_files dirname =
+  let dir = Unix.opendir dirname in
+  let rec aux files =
+    match Unix.readdir dir with
+    | "." | ".." -> aux files
+    | file -> aux (file :: files)
+    | exception End_of_file -> files
+  in
+  let files = aux [] in
+  Unix.closedir dir;
+  files
+
+(* From stdune/src/fpath.ml *)
+let win32_unlink fn =
+  try Unix.unlink fn
+  with Unix.Unix_error (Unix.EACCES, _, _) as e -> (
+    try
+      (* Try removing the read-only attribute *)
+      Unix.chmod fn 0o666;
+      Unix.unlink fn
+    with _ -> raise e)
+
+let remove_file file =
+  if
+    try ignore (Unix.lstat file); true with Unix.Unix_error _ -> false
+  then (
+    try
+      log "rm %s" file;
+      if Sys.win32 then
+        win32_unlink file
+      else
+        Unix.unlink file
+    with Unix.Unix_error _ as e ->
+      internal_error "Cannot remove %s (%s)." file (Printexc.to_string e)
+  )
+
+let rec remove_dir dir =
+  let files = get_files dir in
+  List.iter (fun file ->
+    let file = Filename.concat dir file in
+    match Unix.lstat file with
+    | {Unix.st_kind = Unix.S_DIR; _} ->
+      remove_dir file
+    | {Unix.st_kind = Unix.(S_REG | S_LNK | S_CHR | S_BLK | S_FIFO | S_SOCK); _} ->
+      remove_file file
+  ) files;
+  Unix.rmdir dir
 
 let remove_dir dir =
   log "rmdir %s" dir;
-  if Sys.file_exists dir then (
-    let err = Sys.command (Printf.sprintf "%s %s" rm_command (Filename.quote dir)) in
-      if err <> 0 then
-        internal_error "Cannot remove %s (error %d)." dir err
-  )
+  if Sys.file_exists dir then begin
+    if Sys.is_directory dir then
+      remove_dir dir
+    else
+      remove_file dir
+  end
 
 let temp_files = Hashtbl.create 1024
 let logs_cleaner =
@@ -628,18 +671,6 @@ let copy_file src dst =
   mkdir (Filename.dirname dst);
   log "copy %s -> %s" src dst;
   copy_file_aux ~src ~dst ()
-
-let get_files dirname =
-  let dir = Unix.opendir dirname in
-  let rec aux files =
-    match Unix.readdir dir with
-    | "." | ".." -> aux files
-    | file -> aux (file :: files)
-    | exception End_of_file -> files
-  in
-  let files = aux [] in
-  Unix.closedir dir;
-  files
 
 let rec link src dst =
   mkdir (Filename.dirname dst);
