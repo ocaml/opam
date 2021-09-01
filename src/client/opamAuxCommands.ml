@@ -503,19 +503,17 @@ let check_and_revert_sandboxing root config =
   match OpamFilter.commands env sdbx_wrappers with
   | [] -> config
   | cmd::_ ->
-    (* All the provided sandboxing scripts are expected to define [TMPDIR] *)
-    let test_file = "$TMPDIR/opam-sandbox-check-out" in
     let test_cmd =
-      [ "sh"; "-c";
-        Printf.sprintf "echo SUCCESS >%s && cat %s; rm -f %s"
-          test_file test_file test_file ]
+      [ "sh"; "-c"; "echo SUCCESS | tee check-write" ]
     in
     let working_or_noop =
       let env =
         Array.append [| "OPAM_SWITCH_PREFIX=/dev/null" |] (Unix.environment ())
       in
       try
-        OpamSystem.read_command_output ~env ~allow_stdin:false (cmd @ test_cmd)
+        (* Don't assume that we can mount the CWD *)
+        OpamSystem.in_tmp_dir @@ fun () ->
+          OpamSystem.read_command_output ~env ~allow_stdin:false (cmd @ test_cmd)
         = ["SUCCESS"]
       with e ->
         (OpamConsole.error "Sandboxing is not working on your platform%s:\n%s"

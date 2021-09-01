@@ -302,6 +302,10 @@ let with_tmp_dir fn =
     OpamStd.Exn.finalise e @@ fun () ->
     remove_dir dir
 
+let in_tmp_dir fn =
+  with_tmp_dir @@ fun dir ->
+    in_dir dir fn
+
 let with_tmp_dir_job fjob =
   let dir = mk_temp_dir () in
   mkdir dir;

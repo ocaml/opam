@@ -31,8 +31,12 @@ exception Internal_error of string
 (** Raise [Internal_error] *)
 val internal_error: ('a, unit, string, 'b) format4 -> 'a
 
-(** [with_tmp_dir fn] executes [fn] in a tempory directory *)
+(** [with_tmp_dir fn] executes [fn] creates a temporary directory and
+    passes its name to [fn]. The directory is alwasy removed on completion. *)
 val with_tmp_dir: (string -> 'a) -> 'a
+
+(** [in_tmp_dir fn] executes [fn] in a temporary directory. *)
+val in_tmp_dir: (unit -> 'a) -> 'a
 
 (** Runs a job with a temp dir that is cleaned up afterwards *)
 val with_tmp_dir_job: (string -> 'a OpamProcess.job) -> 'a OpamProcess.job
