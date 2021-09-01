@@ -2,6 +2,7 @@ _build/
 _obuild/
 _opam/
 _olint/
+.vscode/
 bootstrap/
 tests/tmp/
 tests/.merlin
