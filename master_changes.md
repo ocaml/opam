@@ -72,7 +72,7 @@ users)
   * Fix bypass-check handling on reinit [#4750 @rjbou] [#4763 @rjbou] [2.1.0~rc2 #4750 #4756]
 
 ## Sandbox
-  *
+  * Sync the behaviour of the macOS sandbox script with Linux's: /tmp is now ready-only [#4719 @kit-ty-kate]
 
 ## Repository management
   * Pass --depth=1 to git-fetch in the Git repo backend [#4442 @dra27]
