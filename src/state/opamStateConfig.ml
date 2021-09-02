@@ -68,7 +68,11 @@ type t = {
 
 let default = {
   root_dir = OpamFilename.(
-      concat_and_resolve (Dir.of_string (OpamStd.Sys.home ())) ".opam"
+      if Sys.win32 then
+        (* CSIDL_LOCAL_APPDATA = 0x1c *)
+        concat_and_resolve (Dir.of_string (OpamStubs.(shGetFolderPath 0x1c SHGFP_TYPE_CURRENT))) "opam"
+      else
+        concat_and_resolve (Dir.of_string (OpamStd.Sys.home ())) ".opam"
     );
   current_switch = None;
   switch_from = `Default;
