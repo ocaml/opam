@@ -326,7 +326,7 @@ let create_process_env =
     environment can also be overridden if [env] is set. The environment
     which is used to run the process is recorded into [env_file] (if
     set). *)
-let create ?info_file ?env_file ?(allow_stdin=true) ?stdout_file ?stderr_file ?env ?(metadata=[]) ?dir
+let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stderr_file ?env ?(metadata=[]) ?dir
     ~verbose ~tmp_files cmd args =
   let nothing () = () in
   let tee f =
@@ -739,7 +739,7 @@ let dry_wait_one = function
 let run command =
   let command =
     { command with
-      cmd_stdin = OpamStd.Option.Op.(command.cmd_stdin ++ Some true) }
+      cmd_stdin = OpamStd.Option.Op.(command.cmd_stdin ++ Some (not Sys.win32)) }
   in
   let p = run_background command in
   try wait p with e ->
