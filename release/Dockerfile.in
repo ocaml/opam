@@ -25,7 +25,7 @@ WORKDIR /home/opam/
 CMD tar xz >&2 && \
     cd opam-full-${VERSION} >&2 && \
     echo "(${LINKING})" > src/client/linking.sexp && \
-    ./configure --with-mccs >&2 && \
-    make lib-ext opam >&2 && \
+    ./configure --with-mccs --with-vendored-deps >&2 && \
+    make opam >&2 && \
     strip opam >&2 && \
     cat opam

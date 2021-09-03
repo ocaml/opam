@@ -18,4 +18,9 @@ let () =
     Sys.remove file;
     exit 1
   ) else
-    Printf.printf "%s has the expected MD5.\n" file
+    let silent =
+      try Sys.getenv "OPAM_MD5_SILENT" = "true"
+      with Not_found -> false
+    in
+    if not silent then
+      Printf.printf "%s has the expected MD5.\n" file

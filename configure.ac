@@ -76,6 +76,14 @@ AC_ARG_ENABLE([cold_check],
                  [Fail on some check necessary for make cold]),[COLD_CHECK=yes],[]
 )
 
+AC_ARG_WITH([dune],
+  AC_HELP_STRING([--without-dune],
+                 [Compile using vendored Dune instead of any in PATH]))
+
+AC_ARG_WITH([vendored-deps],
+  AC_HELP_STRING([--with-vendored-deps],
+                 [Use vendored dependencies instead of any available in the compiler installation]))
+
 AS_IF([test "x" != "x$LIB_PREFIX"], [
   CPATH=$CPATH:$LIB_PREFIX/include
   LIBRARY_PATH=$LIBRARY_PATH:$LIB_PREFIX/lib
@@ -258,6 +266,12 @@ AX_COMPARE_VERSION([$OCAMLVERSION], [lt], [4.08.0],
   [DUNE_SECONDARY=])
 AC_SUBST([DUNE_SECONDARY])
 
+AS_CASE([$DUNE,$with_dune],
+  [,yes],     [AC_MSG_ERROR([Dune was not found in PATH])],
+  [*,no],     [DUNE=''],
+  [*,|*,yes], [],
+  [DUNE="$with_dune"])
+
 if test "x${COLD_CHECK}" = "xyes" ; then
   if test "x$PATCH"  = "x" ; then
     AC_MSG_ERROR([You must have patch installed.])
@@ -341,15 +355,18 @@ dnl       AC_SUBST(OCAML_PKG_mccs,"no")])
 AS_IF([test "x$MCCS_ENABLED" = "xtrue"],[
   AS_IF([test "x${CCOMP_TYPE}" != "xmsvc"],[
     AC_PROG_CXX
-    # Curiously, CXX=g++ && GXX= seems to be how autoconf "signals" that no C++
-    # compiler was found.
-    AS_IF([test "x$CXX" = "xg++" -a "x$GXX" != "xyes"],[
-      AS_IF([test "x$MCCS_DEFAULT" = "xyes"],[
-        AC_SUBST(MCCS_ENABLED,false)
-      ],[
-        AS_IF([test "x${enable_checks}" != "xno"],[
-          AC_MSG_ERROR([A C++ compiler is required to build mccs])
-        ])
+  ])
+])
+
+# Curiously, autoconf doesn't actually detect a C++ compiler!
+AS_IF([test -n "$CXX"],[
+  CHECK_CXX_WORKS
+  AS_IF([test -z "$CXX"],[
+    AS_IF([test "x$MCCS_DEFAULT" = "xyes"],[
+      AC_SUBST(MCCS_ENABLED,false)
+    ],[
+      AS_IF([test "x${enable_checks}" != "xno"],[
+        AC_MSG_ERROR([A C++ compiler is required to build mccs])
       ])
     ])
   ])
@@ -382,14 +399,22 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$CPPO" = "x" ||
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue" ||
        test "x$OCAML_PKG_opam_0install_cudf$OPAM_0INSTALL_SOLVER_ENABLED" = "xnotrue";}],[
-  echo "============================================================================"
-  echo "Some dependencies are missing. If you are just interested in the stand-alone"
-  echo "'opam' binary, run 'make lib-ext' to download and include them."
-  echo "============================================================================"
-  echo
-  AC_SUBST(hasalldeps,"")
+  AS_IF([test "x${with_vendored_deps}" = "xno"],[
+    AC_MSG_ERROR([Dependencies missing and --without-vendored-deps given; override with --disable-checks])
+  ],[
+    AS_IF([test "x${with_vendored_deps}" != "xyes"],[
+      echo "============================================================================"
+      echo "Some dependencies are missing. Vendored mode has been automatically enabled."
+      echo "============================================================================"
+    ])
+    AC_SUBST(VENDORED,"true")
+  ])
 ],[
-  AC_SUBST(hasalldeps,"true")
+  AS_IF([test "x${with_vendored_deps}" = "xyes"],[
+    AC_SUBST(VENDORED,"true")
+  ],[
+    AC_SUBST(VENDORED,"false")
+  ])
 ])
 
 if test "x$prefix" = "xNONE"; then
@@ -444,3 +469,24 @@ AS_IF([test "x$MCCS_ENABLED" = "xfalse" -a "x$OPAM_0INSTALL_SOLVER_ENABLED" = "x
 echo
 echo Executables will be installed in ${bindir}
 echo Manual pages will be installed in ${mandir}
+
+AS_IF([test "x${VENDORED}" = "xtrue"],[
+  echo
+  AS_ECHO_N(["Downloading vendored dependencies... "])
+  ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ archives
+  AS_ECHO([done])
+  AS_ECHO_N(["Extracting vendored dependencies... "])
+  ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ clone
+  AS_ECHO([done])
+],[
+  ${MAKE:-make} --no-print-directory -C src_ext def-ignore
+  AS_IF([test -z "${DUNE}"],[
+    echo
+    AS_ECHO_N(["Downloading dune... "])
+    ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ dune-local.download
+    AS_ECHO([done])
+    AS_ECHO_N(["Extracting dune... "])
+    ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ dune-local.stamp
+    AS_ECHO([done])
+  ])
+])

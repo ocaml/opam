@@ -81,10 +81,6 @@ MD5_PKG_topkg = e285f7a296d77ee7d831ba9a6bfb396f
 URL_seq = https://github.com/c-cube/seq/archive/0.2.2.tar.gz
 MD5_seq = 9033e02283aa3bde9f97f24e632902e3
 
-# This is necessary as long as a patch is used to rename seq.ml and seq.mli
-ensure-seq-patched.stamp: seq.stamp
-	rm -f seq/src/seq.ml seq/src/seq.mli
-
 $(call PKG_SAME,seq)
 
 URL_stdlib-shims = https://github.com/ocaml/stdlib-shims/releases/download/0.3.0/stdlib-shims-0.3.0.tbz

@@ -22,19 +22,16 @@ Either from an existing opam installation, use `opam pin add opam-devel
   - GNU make
   - OCaml >= 4.02.3 (or see [below](#compiling-without-ocaml))
   - A C++ compiler (unless building without a solver, see `./configure --without-mccs`)
-* Run `./configure`
-* Run `make lib-ext` as advertised by `./configure` if you don't have the
-  dependencies installed. This will locally take care of all OCaml dependencies
-  for you (downloading them, unless you used the inclusive archive we provide
-  for each release).
+* Run `./configure`. If you don't have the dependencies installed, this will
+  locally take care of all OCaml dependencies for you (downloading them, unless
+  you used the inclusive archive we provide for each release).
 * Run `make`
 * Run `make install`
 
 This is all you need for installing and using opam, but if you want to use the
 `opam-lib` (to work on opam-related tools), you need to link it to installed
-libraries, rather than use `make lib-ext` which would cause conflicts. It's
-easier to already have a working opam installation in this case, so you can do
-it as a second step.
+libraries. It's easier to already have a working opam installation in this case,
+so you can do it as a second step.
 
 * Make sure to have ocamlfind, ocamlgraph, cmdliner >= 1.0.0, cudf >= 0.7,
   dose3 >= 6.1, re >= 1.9.0, opam-file-format installed. Or run `opam install
@@ -68,7 +65,7 @@ The following Cygwin packages are required:
 * From Devel - `patch` (not required if OCaml and all required packages are
                         pre-installed)
 * From Interpreters - `m4` (unless required packages are pre-installed or built
-                            using `make lib-ext` rather than `make lib-pkg` - `m4`
+                            using vendored deps rather than `make lib-pkg` - `m4`
                             is required by findlib's build system)
 * From Devel - `mingw64-i686-gcc-core` & `mingw64-x86_64-gcc-core` (not required if
                                                                  building with MSVC)
@@ -132,7 +129,7 @@ requires the ability to create native symbolic links (and the `CYGWIN` variable
 elevated from an account with administrative privileges or your user account must be
 granted the SeCreateSymbolicLinkPrivilege either by enabling Developer mode on
 Windows 10, or using Local Security Policy on earlier versions of Windows.
-Alternatively, you may run `configure` and use `make lib-ext`, as advised.
+Alternatively, you may run `configure` and use vendored deps, as advised.
 
 You can then `configure` and build opam as above.
 

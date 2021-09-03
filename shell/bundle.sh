@@ -164,8 +164,7 @@ else
    echo "This may take a while. Output is in \$LOG"
    logged_cmd "Uncompressing" tar xzf "opam-full-$OPAMTAG.tar.gz"
    cd "opam-full-$OPAMTAG"
-   logged_cmd "Configuring" ./configure --prefix "\$PREFIX"
-   logged_cmd "Compiling extra dependencies" make lib-ext
+   logged_cmd "Configuring" ./configure --prefix "\$PREFIX" --with-vendored-deps
    logged_cmd "Compiling" make
    logged_cmd "Installing to temp prefix" make install
    cd "\$DIR"

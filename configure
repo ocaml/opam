@@ -623,7 +623,7 @@ ac_includes_default="\
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
-hasalldeps
+VENDORED
 ac_ct_CXX
 CXXFLAGS
 CXX
@@ -746,6 +746,8 @@ with_0install_solver
 with_libacl
 with_private_runtime
 enable_cold_check
+with_dune
+with_vendored_deps
 enable_certificate_check
 '
       ac_precious_vars='build_alias
@@ -1403,6 +1405,9 @@ Optional Packages:
   --with-libacl           Compile opam with libacl support
   --with-private-runtime  For a mingw-w64 build, manifest the runtime DLLs
                           locally in Opam.Runtime.arch
+  --without-dune          Compile using vendored Dune instead of any in PATH
+  --with-vendored-deps    Use vendored dependencies instead of any available
+                          in the compiler installation
 
 Some influential environment variables:
   CC          C compiler command
@@ -3486,6 +3491,20 @@ fi
 # Check whether --enable-cold_check was given.
 if test "${enable_cold_check+set}" = set; then :
   enableval=$enable_cold_check; COLD_CHECK=yes
+fi
+
+
+
+# Check whether --with-dune was given.
+if test "${with_dune+set}" = set; then :
+  withval=$with_dune;
+fi
+
+
+
+# Check whether --with-vendored-deps was given.
+if test "${with_vendored_deps+set}" = set; then :
+  withval=$with_vendored_deps;
 fi
 
 
@@ -5666,6 +5685,17 @@ x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version
 
 
 
+case $DUNE,$with_dune in #(
+  ,yes) :
+    as_fn_error $? "Dune was not found in PATH" "$LINENO" 5 ;; #(
+  *,no) :
+    DUNE='' ;; #(
+  *,|*,yes) :
+     ;; #(
+  *) :
+    DUNE="$with_dune" ;;
+esac
+
 if test "x${COLD_CHECK}" = "xyes" ; then
   if test "x$PATCH"  = "x" ; then
     as_fn_error $? "You must have patch installed." "$LINENO" 5
@@ -6328,22 +6358,59 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-    # Curiously, CXX=g++ && GXX= seems to be how autoconf "signals" that no C++
-    # compiler was found.
-    if test "x$CXX" = "xg++" -a "x$GXX" != "xyes"; then :
 
-      if test "x$MCCS_DEFAULT" = "xyes"; then :
+fi
 
-        MCCS_ENABLED=false
+fi
+
+# Curiously, autoconf doesn't actually detect a C++ compiler!
+
+if test -n "$CXX"; then :
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CXX really is a C++ compiler" >&5
+$as_echo_n "checking whether $CXX really is a C++ compiler... " >&6; }
+  ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+       #ifndef __cplusplus
+       #error This is not a C++ compiler!
+       #endif
+
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+     CXX=''
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+  if test -z "$CXX"; then :
+
+    if test "x$MCCS_DEFAULT" = "xyes"; then :
+
+      MCCS_ENABLED=false
 
 
 else
 
-        if test "x${enable_checks}" != "xno"; then :
+      if test "x${enable_checks}" != "xno"; then :
 
-          as_fn_error $? "A C++ compiler is required to build mccs" "$LINENO" 5
-
-fi
+        as_fn_error $? "A C++ compiler is required to build mccs" "$LINENO" 5
 
 fi
 
@@ -6410,18 +6477,37 @@ if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue" ||
        test "x$OCAML_PKG_opam_0install_cudf$OPAM_0INSTALL_SOLVER_ENABLED" = "xnotrue";}; then :
 
-  echo "============================================================================"
-  echo "Some dependencies are missing. If you are just interested in the stand-alone"
-  echo "'opam' binary, run 'make lib-ext' to download and include them."
-  echo "============================================================================"
-  echo
-  hasalldeps=""
+  if test "x${with_vendored_deps}" = "xno"; then :
+
+    as_fn_error $? "Dependencies missing and --without-vendored-deps given; override with --disable-checks" "$LINENO" 5
+
+else
+
+    if test "x${with_vendored_deps}" != "xyes"; then :
+
+      echo "============================================================================"
+      echo "Some dependencies are missing. Vendored mode has been automatically enabled."
+      echo "============================================================================"
+
+fi
+    VENDORED="true"
+
+
+fi
+
+else
+
+  if test "x${with_vendored_deps}" = "xyes"; then :
+
+    VENDORED="true"
 
 
 else
 
-  hasalldeps="true"
+    VENDORED="false"
 
+
+fi
 
 fi
 
@@ -7646,3 +7732,30 @@ fi
 echo
 echo Executables will be installed in ${bindir}
 echo Manual pages will be installed in ${mandir}
+
+if test "x${VENDORED}" = "xtrue"; then :
+
+  echo
+  $as_echo_n "Downloading vendored dependencies... "
+  ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ archives
+  $as_echo done
+  $as_echo_n "Extracting vendored dependencies... "
+  ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ clone
+  $as_echo done
+
+else
+
+  ${MAKE:-make} --no-print-directory -C src_ext def-ignore
+  if test -z "${DUNE}"; then :
+
+    echo
+    $as_echo_n "Downloading dune... "
+    ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ dune-local.download
+    $as_echo done
+    $as_echo_n "Extracting dune... "
+    ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ dune-local.stamp
+    $as_echo done
+
+fi
+
+fi
