@@ -132,9 +132,13 @@ let remove_file file =
   if
     try ignore (Unix.lstat file); true with Unix.Unix_error _ -> false
   then (
+    log "rm %s" file;
     try
-      log "rm %s" file;
-      Unix.unlink file
+      try Unix.unlink file
+      with Unix.Unix_error(EACCES, _, _) when Sys.win32 ->
+        (* Attempt to remove the read-only bit on Windows *)
+        Unix.chmod file 0o666;
+        Unix.unlink file
     with Unix.Unix_error _ as e ->
       internal_error "Cannot remove %s (%s)." file (Printexc.to_string e)
   )
@@ -184,18 +188,23 @@ let setup_copy ?(chmod = fun x -> x) ~src ~dst () =
             remove_file dst
       with Unix.Unix_error(ENOENT, _, _) -> ()
     in
-    let oc =
-      open_out_gen
-        [ Open_wronly; Open_creat; Open_trunc; Open_binary ]
-        perm dst
+    let fd =
+      let flags = Unix.[ O_WRONLY; O_CREAT; O_TRUNC ] in
+      try Unix.openfile dst flags perm
+      with Unix.Unix_error(EACCES, _, _) when Sys.win32 ->
+        (* Attempt to remove the read-only bit on Windows *)
+        begin
+          try Unix.chmod dst 0o666
+          with Unix.Unix_error(_, _, _) -> ()
+        end;
+        Unix.openfile dst flags perm
     in
-    let fd = Unix.descr_of_out_channel oc in
     try
       if Unix.((fstat fd).st_perm) <> perm then
         Unix.fchmod fd perm;
-      (ic, oc)
+      (ic, Unix.out_channel_of_descr fd)
     with exn ->
-      OpamStd.Exn.finalise exn (fun () -> close_out oc)
+      OpamStd.Exn.finalise exn (fun () -> Unix.close fd)
   with exn ->
     OpamStd.Exn.finalise exn (fun () -> close_in ic)
 
