@@ -459,10 +459,41 @@ let parallel_apply t
   let action_graph = (* Add build and fetch actions *)
     let noop_remove nv =
       OpamAction.noop_remove_package t nv in
-    PackageActionGraph.explicit
-      ~noop_remove
-      ~sources_needed:(fun p -> if OpamPackage.Set.mem p sources_needed then [p] else [])
-      action_graph
+    let sources_needed =
+      (* used to factorise fetches: creates [`Fetch] nodes with several
+         packages that download once the archive and copies its content in
+         source directories. Handles only http and rsync backend with at least
+         one checksum. *)
+      let shared_source =
+        OpamPackage.Set.fold (fun nv url_nvs ->
+            match OpamSwitchState.url t nv with
+            | Some url ->
+              let checksums = OpamFile.URL.checksum url in
+              let url = OpamFile.URL.url url in
+              (match url.OpamUrl.backend, checksums with
+               | (`http | `rsync ) , _::_
+                 when OpamFilename.is_archive
+                     (OpamFilename.of_string url.OpamUrl.path) ->
+                 OpamUrl.Map.update url
+                   (OpamPackage.Set.add nv)
+                   OpamPackage.Set.empty url_nvs
+               | _ -> url_nvs)
+            | None -> url_nvs)
+          sources_needed OpamUrl.Map.empty
+        |> OpamUrl.Map.values
+        |> List.filter (fun s -> not @@ OpamPackage.Set.is_singleton s)
+      in
+      log "Regroup shared source packages: %s"
+        (OpamStd.List.to_string OpamPackage.Set.to_string shared_source);
+      fun p ->
+        try
+          List.find (OpamPackage.Set.mem p) shared_source
+          |> OpamPackage.Set.elements
+        with Not_found ->
+        try [ OpamPackage.Set.find (OpamPackage.equal p) sources_needed ]
+        with Not_found -> []
+    in
+    PackageActionGraph.explicit ~noop_remove ~sources_needed action_graph
   in
   let action_graph =
     if download_only then
