@@ -498,7 +498,7 @@ let active_caches st nv =
           else Some OpamUrl.Op.(root_url / rel))
         (OpamFile.Repo.dl_cache repo_def)
   in
-  repo_cache @ global_cache
+  global_cache @ repo_cache
 
 let cleanup_source st old_opam_opt new_opam =
   let open OpamStd.Option.Op in
