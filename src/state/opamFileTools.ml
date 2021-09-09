@@ -296,7 +296,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
     t.url >>| OpamFile.URL.url >>| (fun u ->
         match u.OpamUrl.backend with
         | #OpamUrl.version_control -> false
-        | _ -> OpamSystem.is_archive (OpamUrl.base_url u))
+        | `http | `rsync -> true)
   in
   let check_upstream =
     check_upstream &&
