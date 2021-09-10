@@ -306,6 +306,8 @@ let packages_status packages =
          >Optional Deps   : python-setuptools
          >                  python-pip
          >[...]
+         
+         Format partially described in https://archlinux.org/pacman/PKGBUILD.5.html
       *)
       (* Discard stderr to not have it pollute output. Plus, exit code is the
          number of packages not found. *)
