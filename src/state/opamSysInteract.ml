@@ -192,6 +192,27 @@ let packages_status packages =
         |> OpamSysPkg.Set.add (OpamSysPkg.of_string short_name)
       ) OpamSysPkg.Set.empty l
   in
+  let compute_sets_with_virtual get_avail_w_virtuals get_installed  =
+    let sys_available, sys_provides = get_avail_w_virtuals () in
+    let need_inst_check =
+      OpamSysPkg.Map.fold (fun cp vps set ->
+          if OpamSysPkg.Set.(is_empty (inter vps packages)) then set else
+            OpamSysPkg.Set.add cp set)
+        sys_provides packages
+    in
+    let str_need_inst_check = to_string_list need_inst_check in
+    let sys_installed = get_installed str_need_inst_check in
+    let sys_installed =
+      (* Resolve installed "provides" packages;
+         assumes provides are not recursive *)
+      OpamSysPkg.Set.fold (fun p acc ->
+          match OpamSysPkg.Map.find_opt p sys_provides with
+          | None -> acc
+          | Some ps -> OpamSysPkg.Set.union acc ps)
+        sys_installed sys_installed
+    in
+    compute_sets sys_installed ~sys_available
+  in
   match family () with
   | Alpine ->
     (* Output format
@@ -297,7 +318,7 @@ let packages_status packages =
     in
     compute_sets sys_installed
   | Debian ->
-    let sys_available, sys_provides, _ =
+    let get_avail_w_virtuals () =
       let provides_sep = Re.(compile @@ str ", ") in
       let package_provided str =
         OpamSysPkg.of_string
@@ -338,15 +359,9 @@ let packages_status packages =
             None
           else avail, provides, latest)
         (OpamSysPkg.Set.empty, OpamSysPkg.Map.empty, None)
+      |> (fun (a,p,_) -> a,p)
     in
-    let need_inst_check =
-      OpamSysPkg.Map.fold (fun cp vps set ->
-          if OpamSysPkg.Set.(is_empty (inter vps packages)) then set else
-            OpamSysPkg.Set.add cp set
-        ) sys_provides packages
-    in
-    let str_need_inst_check = to_string_list need_inst_check in
-    let sys_installed =
+    let get_installed str_pkgs =
       (* ouput:
          >ii  uim-gtk3                 1:1.8.8-6.1  amd64    Universal ...
          >ii  uim-gtk3-immodule:amd64  1:1.8.8-6.1  amd64    Universal ...
@@ -361,20 +376,11 @@ let packages_status packages =
               ])
       in
       (* discard stderr as just nagging *)
-      run_command ~discard_err:true "dpkg-query" ("-l" :: str_need_inst_check)
+      run_command ~discard_err:true "dpkg-query" ("-l" :: str_pkgs)
       |> snd
       |> with_regexp_sgl re_pkg
     in
-    let sys_installed =
-      (* Resolve installed "provides" packages;
-         assumes provides are not recursive *)
-      OpamSysPkg.Set.fold (fun p acc ->
-          match OpamSysPkg.Map.find_opt p sys_provides with
-          | None -> acc
-          | Some ps -> OpamSysPkg.Set.union acc ps)
-        sys_installed sys_installed
-    in
-    compute_sets sys_installed ~sys_available
+    compute_sets_with_virtual get_avail_w_virtuals get_installed
   | Freebsd ->
     let sys_installed =
       run_query_command "pkg" ["query"; "%n\n%o"]
