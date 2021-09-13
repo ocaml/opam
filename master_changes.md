@@ -127,6 +127,7 @@ users)
 ## Internal: Windows
   * Support MSYS2: treat MSYS2 and Cygwin as equivalent [#4813 @jonahbeckford]
   * Process control: close stdin by default for Windows subprocesses and on all platforms for the download command [#4615 @dra27]
+  * [BUG] handle converted variables correctly when no_undef_expand is true [#4811 @timbertson]
 
 ## Test
 
