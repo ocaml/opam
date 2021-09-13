@@ -52,11 +52,6 @@ add_dune_cache_mount() {
   add_mounts rw "$dune_cache"
 }
 
-# mount unusual path in ro
-if  [ -n "${OPAM_USER_PATH_RO-}" ]; then
-   add_mounts ro $(echo "${OPAM_USER_PATH_RO}" | sed 's|:| |g')
-fi
-
 # When using opam variable that must be defined at action time, add them also
 # at init check in OpamAuxCommands.check_and_revert_sandboxing (like
 # OPAM_SWITCH_PREFIX).
