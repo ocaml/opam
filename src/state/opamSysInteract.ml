@@ -286,30 +286,16 @@ let packages_status packages =
     in
     compute_sets sys_installed ~sys_available
   | Centos ->
-    (* XXX /!\ only checked on centos XXX *)
-    let lines = run_query_command "yum" ["-q"; "-C"; "list"] in
-    (* -C to retrieve from cache, no update but still quite long, 1,5 sec *)
-    (* Return a list of installed packages then available ones:
-       >Installed Packages
-       >foo.arch    version   repo
-       >Available Packages
-       >bar.arch    version   repo
+    (* Output format:
+       >crypto-policies
+       >python3-pip-wheel
     *)
-    let sys_installed, sys_available, _ =
-      List.fold_left (fun (inst,avail,part) -> function
-          (* beware of locales!! *)
-          | "Installed Packages" -> inst, avail, `installed
-          | "Available Packages" -> inst, avail, `available
-          | l ->
-            (match part, OpamStd.String.split l '.' with
-             | `installed, pkg::_ ->
-               pkg +++ inst, avail, part
-             | `available, pkg::_ ->
-               inst, pkg +++ avail, part
-             | _ -> (* shouldn't happen *) inst, avail, part))
-        OpamSysPkg.Set.(empty, empty, `preamble) lines
+    let sys_installed =
+      run_query_command "rpm" ["-qa"; "--qf"; "%{NAME}\\n"]
+      |> List.map OpamSysPkg.of_string
+      |> OpamSysPkg.Set.of_list
     in
-    compute_sets sys_installed ~sys_available
+    compute_sets sys_installed
   | Debian ->
     let sys_available, sys_provides, _ =
       let provides_sep = Re.(compile @@ str ", ") in
@@ -589,6 +575,7 @@ let install_packages_commands_t sys_packages =
   | Arch -> ["pacman", "-Su"::yes ["--noconfirm"] packages], None
   | Centos ->
     (* TODO: check if they all declare "rhel" as primary family *)
+    (* Kate's answer: no they don't :( (e.g. Fedora, Oraclelinux define Nothing and "fedora" respectively)  *)
     (* When opam-packages specify the epel-release package, usually it
        means that other dependencies require the EPEL repository to be
        already setup when yum-install is called. Cf. opam-depext/#70,#76. *)
