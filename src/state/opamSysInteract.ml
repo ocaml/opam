@@ -192,6 +192,27 @@ let packages_status packages =
         |> OpamSysPkg.Set.add (OpamSysPkg.of_string short_name)
       ) OpamSysPkg.Set.empty l
   in
+  let compute_sets_with_virtual get_avail_w_virtuals get_installed  =
+    let sys_available, sys_provides = get_avail_w_virtuals () in
+    let need_inst_check =
+      OpamSysPkg.Map.fold (fun cp vps set ->
+          if OpamSysPkg.Set.(is_empty (inter vps packages)) then set else
+            OpamSysPkg.Set.add cp set)
+        sys_provides packages
+    in
+    let str_need_inst_check = to_string_list need_inst_check in
+    let sys_installed = get_installed str_need_inst_check in
+    let sys_installed =
+      (* Resolve installed "provides" packages;
+         assumes provides are not recursive *)
+      OpamSysPkg.Set.fold (fun p acc ->
+          match OpamSysPkg.Map.find_opt p sys_provides with
+          | None -> acc
+          | Some ps -> OpamSysPkg.Set.union acc ps)
+        sys_installed sys_installed
+    in
+    compute_sets sys_installed ~sys_available
+  in
   match family () with
   | Alpine ->
     (* Output format
@@ -264,27 +285,71 @@ let packages_status packages =
     in
     compute_sets sys_installed ~sys_available
   | Arch ->
-    (* output:
-       >extra/cmake 3.17.1-1 [installed]
-       >    A cross-platform open-source make system
-       >extra/cmark 0.29.0-1
-       >    CommonMark parsing and rendering library and program in C
-    *)
-    let re_installed = Re.(compile (seq [str "[installed]"; eol])) in
-    let re_pkg =
-      Re.(compile @@ seq
-            [ bol;
-              rep1 @@ alt [alnum; punct];
-              char '/';
-              group @@ rep1 @@ alt [alnum; punct];
-              space;
-            ])
+    let get_avail_w_virtuals () =
+      let package_provided str =
+        OpamSysPkg.of_string
+          (match OpamStd.String.cut_at str '=' with
+           | None -> str
+           | Some (p, _vc) -> p)
+      in
+      (* Output format:
+         >Repository      : core
+         >Name            : python
+         >Version         : 3.9.6-1
+         >Description     : Next generation of the python high-level scripting language
+         >Architecture    : x86_64
+         >URL             : https://www.python.org/
+         >Licenses        : custom
+         >Groups          : None
+         >Provides        : python3
+         >Depends On      : bzip2  expat  gdbm  libffi  libnsl  libxcrypt  openssl
+         >Optional Deps   : python-setuptools
+         >                  python-pip
+         >[...]
+         
+         Format partially described in https://archlinux.org/pacman/PKGBUILD.5.html
+      *)
+      (* Discard stderr to not have it pollute output. Plus, exit code is the
+         number of packages not found. *)
+      run_command ~discard_err:true "pacman" ["-Si"]
+      |> snd
+      |> List.fold_left (fun (avail, provides, latest) l ->
+          match OpamStd.String.split l ' ' with
+          | "Name"::":"::p::_ ->
+            p +++ avail, provides, Some (OpamSysPkg.of_string p)
+          | "Provides"::":"::"None"::[] -> avail, provides, latest
+          | "Provides"::":"::pkgs ->
+            let ps = OpamSysPkg.Set.of_list (List.map package_provided pkgs) in
+            let provides =
+              match latest with
+              | Some p -> OpamSysPkg.Map.add p ps provides
+              | None -> provides (* Bad pacman output ?? *)
+            in
+            ps ++ avail, provides, None
+          | _ -> avail, provides, latest)
+        (OpamSysPkg.Set.empty, OpamSysPkg.Map.empty, None)
+      |> (fun (a,p,_) -> a,p)
     in
-    let sys_installed, sys_available =
-      run_query_command "pacman" ["-Ss" ; names_re ()]
-      |> with_regexp_dbl ~re_installed ~re_pkg
+    let get_installed str_pkgs =
+      (* output:
+         >extra/cmake 3.17.1-1 [installed]
+         >    A cross-platform open-source make system
+         >extra/cmark 0.29.0-1
+         >    CommonMark parsing and rendering library and program in C
+      *)
+      let re_pkg =
+        Re.(compile @@ seq
+              [ bol;
+                rep1 @@ alt [alnum; punct];
+                char '/';
+                group @@ rep1 @@ alt [alnum; punct];
+                space;
+              ])
+      in
+      run_query_command "pacman" ["-Qs" ; names_re ~str_pkgs ()]
+      |> with_regexp_sgl re_pkg
     in
-    compute_sets sys_installed ~sys_available
+    compute_sets_with_virtual get_avail_w_virtuals get_installed
   | Centos ->
     (* Output format:
        >crypto-policies
@@ -297,7 +362,7 @@ let packages_status packages =
     in
     compute_sets sys_installed
   | Debian ->
-    let sys_available, sys_provides, _ =
+    let get_avail_w_virtuals () =
       let provides_sep = Re.(compile @@ str ", ") in
       let package_provided str =
         OpamSysPkg.of_string
@@ -338,15 +403,9 @@ let packages_status packages =
             None
           else avail, provides, latest)
         (OpamSysPkg.Set.empty, OpamSysPkg.Map.empty, None)
+      |> (fun (a,p,_) -> a,p)
     in
-    let need_inst_check =
-      OpamSysPkg.Map.fold (fun cp vps set ->
-          if OpamSysPkg.Set.(is_empty (inter vps packages)) then set else
-            OpamSysPkg.Set.add cp set
-        ) sys_provides packages
-    in
-    let str_need_inst_check = to_string_list need_inst_check in
-    let sys_installed =
+    let get_installed str_pkgs =
       (* ouput:
          >ii  uim-gtk3                 1:1.8.8-6.1  amd64    Universal ...
          >ii  uim-gtk3-immodule:amd64  1:1.8.8-6.1  amd64    Universal ...
@@ -361,20 +420,11 @@ let packages_status packages =
               ])
       in
       (* discard stderr as just nagging *)
-      run_command ~discard_err:true "dpkg-query" ("-l" :: str_need_inst_check)
+      run_command ~discard_err:true "dpkg-query" ("-l" :: str_pkgs)
       |> snd
       |> with_regexp_sgl re_pkg
     in
-    let sys_installed =
-      (* Resolve installed "provides" packages;
-         assumes provides are not recursive *)
-      OpamSysPkg.Set.fold (fun p acc ->
-          match OpamSysPkg.Map.find_opt p sys_provides with
-          | None -> acc
-          | Some ps -> OpamSysPkg.Set.union acc ps)
-        sys_installed sys_installed
-    in
-    compute_sets sys_installed ~sys_available
+    compute_sets_with_virtual get_avail_w_virtuals get_installed
   | Freebsd ->
     let sys_installed =
       run_query_command "pkg" ["query"; "%n\n%o"]
