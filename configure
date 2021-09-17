@@ -629,6 +629,7 @@ CXXFLAGS
 CXX
 OCAML_PKG_opam_0install_cudf
 OCAML_PKG_mccs
+OCAML_PKG_spdx_licenses
 OCAML_PKG_opam_file_format
 OCAML_PKG_dose3_algo
 OCAML_PKG_dose3_common
@@ -6036,6 +6037,30 @@ $as_echo "not found" >&6; }
 
 
 
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package spdx_licenses" >&5
+$as_echo_n "checking for OCaml findlib package spdx_licenses... " >&6; }
+
+  unset found
+  unset pkg
+  found=no
+  for pkg in spdx_licenses  ; do
+    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
+$as_echo "found" >&6; }
+      OCAML_PKG_spdx_licenses=$pkg
+      found=yes
+      break
+    fi
+  done
+  if test "$found" = "no" ; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
+$as_echo "not found" >&6; }
+    OCAML_PKG_spdx_licenses=no
+  fi
+
+
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package mccs" >&5
 $as_echo_n "checking for OCaml findlib package mccs... " >&6; }
 
@@ -6473,6 +6498,7 @@ if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_cudf" = "xno" ||
        test "x$OCAML_PKG_dose3_common" = "xno" ||
        test "x$OCAML_PKG_opam_file_format" = "xno" ||
+       test "x$OCAML_PKG_spdx_licenses" = "xno" ||
        test "x$CPPO" = "x" ||
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue" ||
        test "x$OCAML_PKG_opam_0install_cudf$OPAM_0INSTALL_SOLVER_ENABLED" = "xnotrue";}; then :

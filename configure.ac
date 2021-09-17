@@ -333,6 +333,7 @@ AC_CHECK_OCAML_PKG([cudf])
 AC_CHECK_OCAML_PKG(dose3.common,dose.common)
 AC_CHECK_OCAML_PKG(dose3.algo,dose.algo)
 AC_CHECK_OCAML_PKG([opam-file-format])
+AC_CHECK_OCAML_PKG([spdx_licenses])
 AC_CHECK_OCAML_PKG([mccs])
 AC_CHECK_OCAML_PKG([opam-0install-cudf])
 
@@ -396,6 +397,7 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_cudf" = "xno" ||
        test "x$OCAML_PKG_dose3_common" = "xno" ||
        test "x$OCAML_PKG_opam_file_format" = "xno" ||
+       test "x$OCAML_PKG_spdx_licenses" = "xno" ||
        test "x$CPPO" = "x" ||
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue" ||
        test "x$OCAML_PKG_opam_0install_cudf$OPAM_0INSTALL_SOLVER_ENABLED" = "xnotrue";}],[

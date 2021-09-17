@@ -99,6 +99,7 @@ users)
   * Use `--without-dune` in `make cold` to avoid picking up external Dune [#4776 @dra27 - fix #3987]
   * Add `--with-vendored-deps` to replace `make lib-ext` instruction [#4776 @dra27 - fix #4772]
   * Fix vendored build on mingw-w64 with g++ 11.2 [#4835 @dra27]
+  * Switch to vendored build if spdx_licenses is missing [#4842 @dra27]
 
 ## Infrastructure
   *
