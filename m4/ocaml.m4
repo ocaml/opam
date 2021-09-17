@@ -224,6 +224,28 @@ AC_DEFUN([AC_CHECK_OCAML_PKG],
   AC_SUBST(AS_TR_SH([OCAML_PKG_$1]))
 ])
 
+AC_DEFUN([AC_CHECK_OCAML_PKG_AT_LEAST],
+[dnl
+  AC_REQUIRE([AC_PROG_FINDLIB])dnl
+
+  AC_MSG_CHECKING([for OCaml findlib package $1 $2 or later])
+
+  AS_IF([version=`$OCAMLFIND query $1 -format '%v' 2>/dev/null`],[
+    AX_COMPARE_VERSION([$version],[lt],[$2],[
+      AC_MSG_RESULT([no ($version installed)])
+      AS_TR_SH([OCAML_PKG_$1])=no
+    ],[
+      AS_TR_SH([OCAML_PKG_$1])=$1
+      AC_MSG_RESULT([found $version])
+    ])
+  ],[
+    AC_MSG_RESULT([no])
+    AS_TR_SH([OCAML_PKG_$1])=no
+  ])
+
+  AC_SUBST(AS_TR_SH([OCAML_PKG_$1]))
+])
+
 
 AC_DEFUN([AC_CHECK_OCAML_MODULE],
 [dnl

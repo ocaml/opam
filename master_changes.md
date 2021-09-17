@@ -100,6 +100,7 @@ users)
   * Add `--with-vendored-deps` to replace `make lib-ext` instruction [#4776 @dra27 - fix #4772]
   * Fix vendored build on mingw-w64 with g++ 11.2 [#4835 @dra27]
   * Switch to vendored build if spdx_licenses is missing [#4842 @dra27]
+  * Check versions of findlib packages in configure [#4842 @dra27]
 
 ## Infrastructure
   *
