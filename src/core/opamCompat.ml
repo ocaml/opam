@@ -33,6 +33,17 @@ struct
 end
 #endif
 
+module Either =
+#if OCAML_VERSION >= (4, 12, 0)
+  Either
+#else
+struct
+  type ('a, 'b) t =
+  | Left of 'a
+  | Right of 'b
+end
+#endif
+
 module Printexc =
 #if OCAML_VERSION >= (4, 5, 0)
   Printexc

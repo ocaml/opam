@@ -19,6 +19,10 @@ type 'a error = [
 ]
 type ('a,'b) status = [ 'a success | 'b error ]
 
+type ('a, 'b) either = ('a, 'b) OpamCompat.Either.t =
+  | Left of 'a
+  | Right of 'b
+
 (** {2 Filenames} *)
 
 (** Basenames *)
