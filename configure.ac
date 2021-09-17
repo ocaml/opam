@@ -327,6 +327,7 @@ AC_CHECK_OCAML_PKG([bigarray])
 AC_CHECK_OCAML_PKG([extlib])
 AC_CHECK_OCAML_PKG([re])
 AC_CHECK_OCAML_PKG([re.glob])
+AC_CHECK_OCAML_PKG([base64])
 AC_CHECK_OCAML_PKG([cmdliner])
 AC_CHECK_OCAML_PKG([ocamlgraph])
 AC_CHECK_OCAML_PKG([cudf])
@@ -392,6 +393,7 @@ echo
 AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_extlib" = "xno" ||
        test "x$OCAML_PKG_re" = "xno" ||
+       test "x$OCAML_PKG_base64" = "xno" ||
        test "x$OCAML_PKG_cmdliner" = "xno" ||
        test "x$OCAML_PKG_ocamlgraph" = "xno" ||
        test "x$OCAML_PKG_cudf" = "xno" ||
