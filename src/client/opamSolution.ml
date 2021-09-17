@@ -351,9 +351,14 @@ let parallel_apply t
 
   let bypass_ref = ref (t.switch_config.OpamFile.Switch_config.depext_bypass) in
 
-  let add_to_install nv =
+  let add_to_install nv conf =
     let root = OpamPackage.Name.Set.mem nv.name root_installs in
-    t_ref := OpamSwitchAction.add_to_installed !t_ref ~root nv;
+    let t = !t_ref in
+    let conf_files =
+      let add_conf conf = OpamPackage.Name.Map.add nv.name conf t.conf_files in
+      OpamStd.Option.map_default add_conf t.conf_files conf
+    in
+    t_ref := OpamSwitchAction.add_to_installed {t with conf_files} ~root nv;
     let missing_depexts =
       (* Turns out these depexts weren't needed after all. Remember that and
          make the bypass permanent. *)
@@ -544,7 +549,7 @@ let parallel_apply t
       | `Install nv ->
         OpamConsole.msg "Faking installation of %s\n"
           (OpamPackage.to_string nv);
-        add_to_install nv;
+        add_to_install nv None;
         Done (`Successful (OpamPackage.Set.add nv installed, removed))
       | `Remove nv ->
         remove_from_install nv;
@@ -602,11 +607,11 @@ let parallel_apply t
       in
       let build_dir = OpamPackage.Map.find_opt nv inplace in
       (OpamAction.install_package t ~test ~doc ?build_dir nv @@+ function
-        | None ->
-          add_to_install nv;
+        | Left conf ->
+          add_to_install nv conf;
           store_time ();
           Done (`Successful (OpamPackage.Set.add nv installed, removed))
-        | Some exn ->
+        | Right exn ->
           store_time ();
           Done (`Exception exn))
     | `Remove nv ->
