@@ -322,19 +322,22 @@ AC_SUBST(CONF_MANIFEST_O)
 
 echo
 
+# Dependencies
 AC_CHECK_OCAML_PKG([unix])
 AC_CHECK_OCAML_PKG([bigarray])
-AC_CHECK_OCAML_PKG([extlib])
-AC_CHECK_OCAML_PKG([re])
-AC_CHECK_OCAML_PKG([re.glob])
+AC_CHECK_OCAML_PKG_AT_LEAST([re], [1.9.0])
+AC_CHECK_OCAML_PKG_AT_LEAST([base64], [3.1.0])
 AC_CHECK_OCAML_PKG([cmdliner])
 AC_CHECK_OCAML_PKG([ocamlgraph])
-AC_CHECK_OCAML_PKG([cudf])
-AC_CHECK_OCAML_PKG(dose3.common,dose.common)
-AC_CHECK_OCAML_PKG(dose3.algo,dose.algo)
-AC_CHECK_OCAML_PKG([opam-file-format])
-AC_CHECK_OCAML_PKG([mccs])
-AC_CHECK_OCAML_PKG([opam-0install-cudf])
+AC_CHECK_OCAML_PKG_AT_LEAST([cudf], [0.7])
+AC_CHECK_OCAML_PKG_AT_LEAST([dose3.common], [6.1])
+AC_CHECK_OCAML_PKG_AT_LEAST([dose3.algo], [6.1])
+AC_CHECK_OCAML_PKG_AT_LEAST([opam-file-format], [2.1.3])
+AC_CHECK_OCAML_PKG([spdx_licenses])
+
+# Optional dependencies
+AC_CHECK_OCAML_PKG_AT_LEAST([mccs],[1.1+9])
+AC_CHECK_OCAML_PKG_AT_LEAST([opam-0install-cudf],[0.4])
 
 AS_IF([test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"],
       [AC_MSG_ERROR([Option --without-mccs is not available without uninstalling the 'mccs' package])])
@@ -379,23 +382,19 @@ AS_IF([test "x$OPAM_0INSTALL_SOLVER_ENABLED" = "xtrue" -a "x$OCAML_PKG_opam_0ins
   ])
 ])
 
-dnl echo
-dnl echo "extlib........................ ${OCAML_PKG_extlib}"
-dnl echo "re............................ ${OCAML_PKG_re}"
-dnl echo "cmdliner...................... ${OCAML_PKG_cmdliner}"
-dnl echo "graph......................... ${OCAML_PKG_ocamlgraph}"
-dnl echo "cudf.......................... ${OCAML_PKG_cudf}"
-dnl echo "dose3......................... ${OCAML_PKG_dose3}"
 echo
 
 AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_extlib" = "xno" ||
        test "x$OCAML_PKG_re" = "xno" ||
+       test "x$OCAML_PKG_base64" = "xno" ||
        test "x$OCAML_PKG_cmdliner" = "xno" ||
        test "x$OCAML_PKG_ocamlgraph" = "xno" ||
        test "x$OCAML_PKG_cudf" = "xno" ||
        test "x$OCAML_PKG_dose3_common" = "xno" ||
+       test "x$OCAML_PKG_dose3_algo" = "xno" ||
        test "x$OCAML_PKG_opam_file_format" = "xno" ||
+       test "x$OCAML_PKG_spdx_licenses" = "xno" ||
        test "x$CPPO" = "x" ||
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue" ||
        test "x$OCAML_PKG_opam_0install_cudf$OPAM_0INSTALL_SOLVER_ENABLED" = "xnotrue";}],[
