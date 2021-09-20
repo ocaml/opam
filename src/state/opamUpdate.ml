@@ -479,29 +479,37 @@ let pinned_packages st ?(working_dir=OpamPackage.Name.Set.empty) names =
   OpamSwitchAction.add_to_reinstall st ~unpinned_only:false updates,
   updates
 
-let active_caches st nv =
+let active_caches st nvs =
   let global_cache = OpamFile.Config.dl_cache st.switch_global.config in
   let rt = st.switch_repos in
+  let repos_list = OpamSwitchState.repos_list st in
   let repo_cache =
-    match OpamRepositoryState.find_package_opt rt
-            (OpamSwitchState.repos_list st) nv
-    with
-    | None -> []
-    | Some (repo, _) ->
-      let repo_def = OpamRepositoryName.Map.find repo rt.repos_definitions in
-      let root_url = match OpamFile.Repo.root_url repo_def with
-        | None -> OpamSystem.internal_error "repo file of unknown origin"
-        | Some u -> u
-      in
-      OpamStd.List.filter_map (fun rel ->
-          if OpamStd.String.contains ~sub:"://" rel
-          then
-            let r = OpamUrl.parse_opt ~handle_suffix:false rel in
-            if r = None then
-              OpamConsole.warning "Invalid cache url %s, skipping" rel;
-            r
-          else Some OpamUrl.Op.(root_url / rel))
-        (OpamFile.Repo.dl_cache repo_def)
+    List.fold_left (fun (repos, caches as acc) nv ->
+        match OpamRepositoryState.find_package_opt rt repos_list nv with
+        | None -> acc
+        | Some (repo, _) ->
+          if List.mem repo repos then acc else
+          let repo_def = OpamRepositoryName.Map.find repo rt.repos_definitions in
+          let root_url = match OpamFile.Repo.root_url repo_def with
+            | None -> OpamSystem.internal_error "repo file of unknown origin"
+            | Some u -> u
+          in
+          let cache =
+            OpamStd.List.filter_map (fun rel ->
+                if OpamStd.String.contains ~sub:"://" rel
+                then
+                  let r = OpamUrl.parse_opt ~handle_suffix:false rel in
+                  if r = None then
+                    OpamConsole.warning "Invalid cache url %s, skipping" rel;
+                  r
+                else Some OpamUrl.Op.(root_url / rel))
+              (OpamFile.Repo.dl_cache repo_def)
+          in
+          repo::repos, cache::caches)
+      ([],[]) nvs
+    |> snd
+    |> List.rev
+    |> List.flatten
   in
   global_cache @ repo_cache
 
@@ -525,37 +533,52 @@ let cleanup_source st old_opam_opt new_opam =
     OpamFilename.rmdir
       (OpamSwitchState.source_dir st (OpamFile.OPAM.package new_opam))
 
-let download_package_source st nv dirname =
-  let opam = OpamSwitchState.opam st nv in
+let download_package_source_t st url nv_dirs =
   let cache_dir = OpamRepositoryPath.download_cache st.switch_global.root in
-  let cache_urls = active_caches st nv in
-
+  let cache_urls = active_caches st (List.map fst nv_dirs) in
   let fetch_source_job =
-    match OpamFile.OPAM.url opam with
-    | None   -> Done None
-    | Some u ->
-      (OpamRepository.pull_tree (OpamPackage.to_string nv)
-        ~cache_dir ~cache_urls ?subpath:(OpamFile.URL.subpath u)
-        dirname
-        (OpamFile.URL.checksum u)
-        (OpamFile.URL.url u :: OpamFile.URL.mirrors u))
+    match url with
+    | None -> Done None
+    | Some url ->
+      let dirnames =
+        List.map (fun (nv, dir) -> OpamPackage.to_string nv, dir) nv_dirs
+      in
+      (OpamRepository.pull_shared_tree ~cache_dir ~cache_urls
+         dirnames
+         (OpamFile.URL.checksum url)
+         (OpamFile.URL.url url :: OpamFile.URL.mirrors url))
       @@| fun r -> Some r
   in
-  let fetch_extra_source_job (name, u) = function
-    | (_, Not_available _) :: _ as err -> Done err
+  let fetch_extra_source_job (nv, name, u) = function
+    | (_, _, Not_available _) :: _ as err -> Done err
     | ret ->
       (OpamRepository.pull_file_to_cache
          (OpamPackage.to_string nv ^"/"^ OpamFilename.Base.to_string name)
          ~cache_dir ~cache_urls
          (OpamFile.URL.checksum u)
          (OpamFile.URL.url u :: OpamFile.URL.mirrors u))
-      @@| fun r -> (OpamFilename.Base.to_string name, r) :: ret
+      @@| fun r -> (nv, OpamFilename.Base.to_string name, r) :: ret
   in
   fetch_source_job @@+ function
   | Some (Not_available _) as r -> Done (r, [])
   | r ->
     OpamProcess.Job.seq
       (List.map fetch_extra_source_job
-         (OpamFile.OPAM.extra_sources opam))
+         (List.flatten @@ List.map (fun (nv,_) ->
+              List.map (fun (n,u) -> nv, n, u)
+                (OpamFile.OPAM.extra_sources (OpamSwitchState.opam st nv)))
+             nv_dirs))
       []
     @@| fun r1 -> r, r1
+
+let download_shared_package_source st url nvs =
+  download_package_source_t st url
+    (List.map (fun nv -> nv, OpamSwitchState.source_dir st nv) nvs)
+
+let download_package_source st nv dirname =
+  download_package_source_t st
+    (OpamFile.OPAM.url (OpamSwitchState.opam st nv))
+    [nv, dirname]
+  @@| fun (sources, extra_sources) ->
+  sources,
+  List.map (fun (_nv, name, failure) -> name, failure) extra_sources

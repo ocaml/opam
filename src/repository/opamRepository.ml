@@ -245,20 +245,66 @@ let pull_from_mirrors label ?working_dir ?subpath cache_dir destdir checksums ur
     url, Not_available (Some m, m)
   | ret -> ret
 
-let pull_tree
-    label ?cache_dir ?(cache_urls=[]) ?working_dir ?subpath
-    local_dirname checksums remote_urls =
-  let extract_archive f s =
-    OpamFilename.cleandir local_dirname;
-    OpamFilename.extract_job f local_dirname @@+ function
-    | None -> Done (Up_to_date s)
-    | Some (Failure s) ->
-      Done (Not_available (Some s, "Could not extract archive:\n"^s))
-    | Some (OpamSystem.Process_error pe) ->
-      Done (Not_available (Some (OpamProcess.result_summary pe),
-                           OpamProcess.string_of_result pe))
-    | Some e -> Done (Not_available (None, Printexc.to_string e))
+(* handle subpathes *)
+let pull_tree_t
+    ?cache_dir ?(cache_urls=[]) ?working_dir ?subpath
+    dirnames checksums remote_urls =
+  let extract_archive =
+    let fallback success = function
+      | None -> success ()
+      | Some (Failure s) ->
+        Done (Not_available (Some s, "Could not extract archive:\n"^s))
+      | Some (OpamSystem.Process_error pe) ->
+        Done (Not_available (Some (OpamProcess.result_summary pe),
+                             OpamProcess.string_of_result pe))
+      | Some e -> Done (Not_available (None, Printexc.to_string e))
+    in
+    match dirnames with
+    | [ _label, local_dirname ] ->
+      (fun archive msg ->
+         OpamFilename.cleandir local_dirname;
+         OpamFilename.extract_job archive local_dirname
+         @@+ fallback (fun () ->  Done (Up_to_date msg)))
+    | _ ->
+      fun archive msg ->
+        OpamFilename.with_tmp_dir_job @@ fun tmpdir ->
+        let copies () =
+          OpamParallel.map ~jobs:3
+            ~command:(fun (label, local_dirname) ->
+                let text = OpamProcess.make_command_text label label in
+                OpamProcess.Job.with_text text @@
+                (try
+                   OpamFilename.cleandir local_dirname;
+                   OpamFilename.copy_dir ~src:tmpdir ~dst:local_dirname;
+                   Done (Up_to_date label)
+                 with OpamSystem.Process_error r ->
+                   Done (Not_available
+                           (Some label, OpamProcess.result_summary r))))
+            dirnames
+        in
+        OpamFilename.extract_job archive tmpdir
+        @@+ fallback (fun () ->
+            let failing =
+              OpamStd.List.filter_map (function
+                  | Result _ | Up_to_date _ -> None
+                  | Not_available (Some s,l) -> Some (s,l)
+                  | Not_available (None, _) -> assert false
+                ) (copies ())
+            in
+            if failing = [] then Done (Up_to_date msg) else
+            let simple =
+              Printf.sprintf "Failed to copy source of %s"
+                (OpamStd.Format.pretty_list (List.map fst failing))
+            in
+            let long =
+              Printf.sprintf "Failed to copy source of:\n%s"
+                (OpamStd.Format.itemize (fun (nv, msg) ->
+                     Printf.sprintf "%s: %s" nv msg)
+                    failing)
+            in
+            Done (Not_available (Some simple, long)))
   in
+  let label = OpamStd.List.concat_map ", " fst dirnames in
   (match cache_dir with
    | Some cache_dir ->
      let text = OpamProcess.make_command_text label "dl" in
@@ -285,17 +331,38 @@ let pull_tree
           Some ("missing checksum"),
           label ^ ": Missing checksum, and `--require-checksums` was set."))
     else
-      pull_from_mirrors label ?working_dir ?subpath cache_dir local_dirname checksums
-        remote_urls
+      OpamFilename.with_tmp_dir_job @@ fun tmpdir ->
+      let extract url archive =
+        match dirnames with
+        | [_] ->
+          let tmp_archive = OpamFilename.(create tmpdir (basename archive)) in
+          OpamFilename.move ~src:archive ~dst:tmp_archive;
+          extract_archive tmp_archive (OpamUrl.to_string url)
+        | _ -> extract_archive archive (OpamUrl.to_string url)
+      in
+      let pull label =
+        match dirnames with
+        | [ label, local_dirname ] ->
+          pull_from_mirrors label ?working_dir ?subpath cache_dir local_dirname
+        | _ ->
+          pull_from_mirrors label cache_dir tmpdir
+      in
+      pull label checksums remote_urls
       @@+ function
       | _, Up_to_date None -> Done (Up_to_date "no changes")
       | url, (Up_to_date (Some archive) | Result (Some archive)) ->
-        OpamFilename.with_tmp_dir_job @@ fun tmpdir ->
-        let tmp_archive = OpamFilename.(create tmpdir (basename archive)) in
-        OpamFilename.move ~src:archive ~dst:tmp_archive;
-        extract_archive tmp_archive (OpamUrl.to_string url)
+        extract url archive
       | url, Result None -> Done (Result (OpamUrl.to_string url))
       | _, (Not_available _ as na) -> Done na
+
+
+let pull_tree label ?cache_dir ?(cache_urls=[]) ?working_dir ?subpath
+    local_dirname  =
+  pull_tree_t ?cache_dir ~cache_urls ?working_dir ?subpath
+  [label, local_dirname]
+
+let pull_shared_tree ?cache_dir ?(cache_urls=[]) dirnames checksums remote_urls =
+  pull_tree_t ?cache_dir ~cache_urls dirnames checksums remote_urls
 
 let revision dirname url =
   let kind = url.OpamUrl.backend in

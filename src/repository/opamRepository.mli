@@ -26,11 +26,22 @@ val packages_with_prefixes: dirname -> string option package_map
     achieved. *)
 val update: repository -> dirname -> unit OpamProcess.job
 
-(** Fetch an URL and put the resulting tree into the supplied directory. The URL
-    must either point to a tree (VCS, rsync) or to a known archive type. In case
-    of an archive, the cache is used and supplied the hashes verified, then the
-    archive uncompressed. In case of a version-controlled URL, it's checked out,
-    or synchronised directly if local and [working_dir] was set. *)
+(** [pull_shared_tree ?cache_dir ?cache_url labels_dirnames checksums urls]
+    Fetch an URL and put the resulting tree into the supplied directories
+    specified in [labels_dirnames]. The string in [labels_dirnames] are text
+    labels of this given dirname for display. [urls] must either point to a
+    tree (VCS, rsync) or to a known archive type. In case of an archive, the
+    [cache_dir] is used and supplied the hashes verified, then the archive
+    uncompressed. In case of a version-controlled URL, it's checked out, or
+    synchronised directly if local and [working_dir] was set.  [cache_urls] is
+    used to retrieve from repository caches. *)
+val pull_shared_tree:
+  ?cache_dir:dirname ->
+  ?cache_urls:OpamUrl.t list ->
+  (string * OpamFilename.Dir.t) list -> OpamHash.t list -> url list ->
+  string download OpamProcess.job
+
+(* Same as [pull_shared_tree], but for a unique label/dirname. *)
 val pull_tree:
   string -> ?cache_dir:dirname -> ?cache_urls:url list -> ?working_dir:bool ->
   ?subpath:string -> dirname -> OpamHash.t list -> url list ->
