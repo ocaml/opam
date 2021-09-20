@@ -20,14 +20,19 @@ let word = Buffer.create 57
 
 }
 
-let normalchar = [^' ' '\t' '\n' '\\']
+let normalchar = [^' ' '\t' '\r' '\n' '\\']
 
 rule main = parse
-| '\n'         { Lexing.new_line lexbuf; NEWLINE }
+| '\n' | "\r\n"
+               { Lexing.new_line lexbuf; NEWLINE }
 | [' ' '\t']+  { main lexbuf }
+| ('@' normalchar*) as w '\\'
+               { Buffer.reset word ; Buffer.add_string word w; escaped lexbuf }
+| ('@' normalchar*) as w
+               { if w = "@" then WORD "" else WORD w }
 | (normalchar* as w) '\\'
                { Buffer.reset word ; Buffer.add_string word w; escaped lexbuf }
-| (normalchar* as w)
+| (normalchar+ as w)
                { WORD w }
 | eof          { EOF }
 
@@ -42,7 +47,6 @@ and escaped = parse
 let main lexbuf =
   let rec aux lines words =
     match main lexbuf with
-    | WORD "" -> aux lines words
     | WORD s -> aux lines (s::words)
     | NEWLINE ->
       let lines = if words = [] then lines else List.rev words::lines in

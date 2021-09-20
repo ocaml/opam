@@ -303,7 +303,12 @@ module LinesBase = struct
       aux acc (i-1) in
     aux ([],0) (len - 1)
 
-  let escape_spaces str =
+  let escape_spaces = function
+  | "" ->
+      "@"
+  | "@" ->
+      "\\@"
+  | str ->
     let len = String.length str in
     match find_escapes str len with
     | [], _ -> str
