@@ -65,15 +65,20 @@ let list t ns =
   OpamStd.Format.align_table |>
   OpamConsole.print_table stdout ~sep:" "
 
+let possibly_unix_path_env_value k v =
+  if k = "PATH" then (Lazy.force OpamSystem.get_cygpath_path_transform) v
+  else v
+
 let rec print_env = function
   | [] -> ()
   | (k, v, comment) :: r ->
     if OpamConsole.verbose () then
       OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
     if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
-    then
+    then (
+      let v' = possibly_unix_path_env_value k v in
       OpamConsole.msg "%s='%s'; export %s;\n"
-        k (OpamStd.Env.escape_single_quotes v) k;
+        k (OpamStd.Env.escape_single_quotes v') k);
     print_env r
 
 let rec print_csh_env = function
@@ -82,9 +87,10 @@ let rec print_csh_env = function
     if OpamConsole.verbose () then
       OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
     if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
-    then
+    then (
+      let v' = possibly_unix_path_env_value k v in
       OpamConsole.msg "setenv %s '%s';\n"
-        k (OpamStd.Env.escape_single_quotes v);
+        k (OpamStd.Env.escape_single_quotes v'));
     print_csh_env r
 
 let print_sexp_env env =
@@ -130,7 +136,8 @@ let rec print_fish_env env =
          (* This function assumes that `v` does not include any variable
           * expansions and that the directory names are written in full. See the
           * opamState.ml for details *)
-         set_arr_cmd k v
+         let v' = possibly_unix_path_env_value k v in
+         set_arr_cmd k v'
        | "MANPATH" ->
          manpath_cmd v
        | _ ->
