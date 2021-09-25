@@ -300,6 +300,7 @@ users)
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
+  * dash: recognize dash as a POSIX shell for opam env [#4816 @jonahbeckford]
   * pwsh,powershell: use $env: for opam env [#4816 @jonahbeckford]
   * command prompt: use SET for opam env [#4816 @jonahbeckford]
 

@@ -923,6 +923,7 @@ module OpamSys = struct
     | "bash" -> Some SH_bash
     | "fish" -> Some SH_fish
     | "pwsh" -> Some SH_pwsh
+    | "dash"
     | "sh"   -> Some SH_sh
     | _      -> None
 
