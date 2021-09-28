@@ -285,6 +285,9 @@ val packages: Cudf.universe -> Cudf.package list
 val to_cudf: Cudf.universe -> Cudf_types.vpkg request
   -> Cudf.preamble * Cudf.universe * Cudf.request
 
+(** Like [OpamTypesBase.action_contents] but return the single package of
+    remove, install, reinstal, and change action *)
+val action_contents: 'a action -> 'a
 
 module Json: sig
   open Cudf_types

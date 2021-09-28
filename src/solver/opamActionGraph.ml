@@ -82,8 +82,17 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
     | `Install p, `Install q
     | `Reinstall p, `Reinstall q
     | `Build p, `Build q
-    | `Fetch p, `Fetch q
       -> P.compare p q
+    | `Fetch pl, `Fetch ql ->
+      let rec aux comp pl ql =
+        if comp <> 0 then comp else
+        match pl, ql with
+        | [], [] -> 0
+        | [], _::_ -> -1
+        | _::_, [] -> 1
+        | p::pl, q::ql -> aux (P.compare p q) pl ql
+      in
+      aux 0 (List.sort P.compare pl) (List.sort P.compare ql)
     | `Change (`Up,p0,p), `Change (`Up,q0,q)
     | `Change (`Down,p0,p), `Change (`Down,q0,q)
       ->
@@ -101,8 +110,11 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
   let equal t1 t2 = compare t1 t2 = 0
 
   let to_string a = match a with
-    | `Remove p | `Install p | `Reinstall p | `Build p | `Fetch p ->
+    | `Remove p | `Install p | `Reinstall p | `Build p ->
       Printf.sprintf "%s %s" (action_strings a) (P.to_string p)
+    | `Fetch pl ->
+      Printf.sprintf "%s %s" (action_strings a)
+        (OpamStd.List.concat_map ", " P.to_string pl)
     | `Change (_,p0,p) ->
       Printf.sprintf "%s.%s %s %s"
         (P.name_to_string p0)
@@ -111,19 +123,26 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
         (P.version_to_string p)
 
   let to_aligned_strings ?(append=(fun _ -> "")) l =
+    let pkg_to_string p =
+      [ OpamConsole.colorise `bold (P.name_to_string p);
+        P.version_to_string p ^ append p ]
+    in
     List.map (fun a ->
         let a = (a :> package action) in
         (if OpamConsole.utf8 ()
          then action_color a (symbol_of_action a)
          else "-")
         :: name_of_action a
-        :: OpamConsole.colorise `bold
-          (P.name_to_string (OpamTypesBase.action_contents a))
         :: match a with
-        | `Remove p | `Install p | `Reinstall p | `Build p | `Fetch p ->
-          (P.version_to_string p ^ append p) :: []
+        | `Remove p | `Install p | `Reinstall p | `Build p | `Fetch [p] ->
+          pkg_to_string p
+        | `Fetch pl ->
+          (OpamStd.List.concat_map ", " P.to_string pl)
+          (* this extra string is needed to maintain matrix consistency *)
+          ::""::[]
         | `Change (_,p0,p) ->
-          Printf.sprintf "%s to %s"
+          P.name_to_string p
+          :: Printf.sprintf "%s to %s"
             (P.version_to_string p0 ^ append p0)
             (P.version_to_string p ^ append p)
           :: [])
@@ -139,7 +158,7 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
       `O ["change", `A [dir_to_json d; P.to_json o;P.to_json p]]
     | `Reinstall p -> `O ["recompile", P.to_json p]
     | `Build p -> `O ["build", P.to_json p]
-    | `Fetch p -> `O ["fetch", P.to_json p]
+    | `Fetch pl -> `O ["fetch", `A (List.map P.to_json pl)]
 
   let of_json =
     let open OpamStd.Option.Op in
@@ -157,7 +176,8 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
       Some (`Change(d, o, p))
     | `O ["recompile", p] -> P.of_json p >>= (fun p -> Some (`Reinstall p))
     | `O ["build", p] -> P.of_json p >>= (fun p -> Some (`Build p))
-    | `O ["fetch", p] -> P.of_json p >>= (fun p -> Some (`Fetch p))
+    | `O ["fetch", `A (_::_ as pl)] ->
+      Some (`Fetch (OpamStd.List.filter_map P.of_json pl))
     | _ -> None
 
   module O = struct
@@ -178,7 +198,8 @@ module type SIG = sig
   include OpamParallel.GRAPH with type V.t = package OpamTypes.action
   val reduce: t -> t
   val explicit:
-    ?noop_remove:(package -> bool) -> sources_needed:(package -> bool) -> t -> t
+    ?noop_remove:(package -> bool) ->
+    sources_needed:(package -> package list) -> t -> t
   val fold_descendants: (V.t -> 'a -> 'a) -> 'a -> t -> V.t -> 'a
 end
 
@@ -290,7 +311,7 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
     let g = copy g0 in
     (* We insert a "build" action before any "install" action.
        Except, between the removal and installation of the same package
-       (the removal might be postponed after a succesfull build. *)
+       (the removal might be postponed after a successful build. *)
     iter_vertex (fun a ->
         match a with
         | `Install p | `Reinstall p | `Change (_,_,p) ->
@@ -315,24 +336,28 @@ module Make (A: ACTION) : SIG with type package = A.package = struct
           List.iter
             (fun b -> add_edge g b a)
             (closed_predecessors p)
-        | `Install _ | `Reinstall _ | `Change _ | `Build _ | `Fetch _ -> ())
+        | `Install _ | `Reinstall _ | `Change _
+        | `Build _ | `Fetch _ -> ())
       g;
-    (* Add a "fetch" action as a dependency for all "build" and "remove" actions
-       that require it (via [sources_needed]). *)
-    let acc_add_action (acc: vertex list Map.t)
-        (p: A.package) (a: vertex) : vertex list Map.t =
-      let acts = try Map.find p acc with Not_found -> [] in
-      Map.add p (a :: acts) acc
+    (* Add a "fetch" action as a dependency for all "build" and "remove"
+       actions that require it, and regroup packages with same shared source in
+       one node (via [sources_needed]). *)
+    let module MapSet = OpamStd.Map.Make (Set) in
+    let acc_add_action (acc: vertex list MapSet.t)
+        (p: Set.t) (a: vertex) : vertex list MapSet.t =
+      let acts = try MapSet.find p acc with Not_found -> [] in
+      MapSet.add p (a :: acts) acc
     in
     let m = fold_vertex (fun a acc ->
         match a with
         | `Build p | `Remove p ->
-          if sources_needed p then acc_add_action acc p a else acc
+          let packages = Set.of_list (sources_needed p) in
+          if Set.is_empty packages then acc else acc_add_action acc packages a
         | `Install _ | `Reinstall _ | `Change _ -> acc
         | `Fetch _ -> assert false
-      ) g Map.empty in
-    Map.iter (fun p acts ->
-        let f = `Fetch p in
+      ) g MapSet.empty in
+    MapSet.iter (fun p acts ->
+        let f = `Fetch (Set.elements p) in
         List.iter (fun a -> add_edge g f a) acts
       ) m;
     g

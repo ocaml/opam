@@ -256,7 +256,7 @@ let download_package st nv =
     OpamConsole.msg "%s retrieved %s.%s  (%s)\n"
       (if not (OpamConsole.utf8 ()) then "->"
        else OpamActionGraph.
-              (action_color (`Fetch ()) (action_strings (`Fetch ()))))
+              (action_color (`Fetch []) (action_strings (`Fetch []))))
       (OpamConsole.colorise `bold (OpamPackage.name_to_string nv))
       (OpamPackage.version_to_string nv)
       msg;

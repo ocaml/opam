@@ -24,7 +24,7 @@ val std_path_of_string: string -> std_path
 val all_std_paths: std_path list
 
 (** Extract a package from a package action. *)
-val action_contents: [< 'a action ] -> 'a
+val action_contents: [< 'a action ] -> 'a list
 
 val map_atomic_action: ('a -> 'b) -> 'a atomic_action -> 'b atomic_action
 val map_highlevel_action: ('a -> 'b) -> 'a highlevel_action -> 'b highlevel_action

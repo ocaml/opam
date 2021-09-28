@@ -24,7 +24,8 @@ exception Fetch_fail of string
 
 let post_message ?(failed=false) st action =
   match action, failed with
-  | `Remove _, _ | `Reinstall _, _ | `Build _, false | `Fetch _, _ -> ()
+  | `Remove _, _ | `Reinstall _, _ | `Build _, false
+  | `Fetch _, _ -> ()
   | `Build pkg, true | `Install pkg, _ | `Change (_,_,pkg), _ ->
     let opam = OpamSwitchState.opam st pkg in
     let messages = OpamFile.OPAM.post_messages opam in
@@ -211,9 +212,11 @@ let sanitize_atom_list ?(permissive=false) ?(installed=false) t atoms =
 
 (* Pretty-print errors *)
 let display_error (n, error) =
-  let f action nv =
+  let f action nvs =
     let disp =
-      OpamConsole.header_error "while %s %s" action (OpamPackage.to_string nv) in
+      OpamConsole.header_error "while %s %s" action
+        (OpamStd.Format.pretty_list (List.map OpamPackage.to_string nvs))
+    in
     match error with
     | Sys.Break | OpamParallel.Aborted -> ()
     | Failure s -> disp "%s" s
@@ -224,13 +227,13 @@ let display_error (n, error) =
         OpamConsole.errmsg "%s" (OpamStd.Exn.pretty_backtrace e)
   in
   match n with
-  | `Change (`Up, _, nv)   -> f "upgrading to" nv
-  | `Change (`Down, _, nv) -> f "downgrading to" nv
-  | `Install nv        -> f "installing" nv
-  | `Reinstall nv      -> f "recompiling" nv
-  | `Remove nv         -> f "removing" nv
-  | `Build nv          -> f "compiling" nv
-  | `Fetch nv          -> f "fetching sources for" nv
+  | `Change (`Up, _, nv)   -> f "upgrading to" [nv]
+  | `Change (`Down, _, nv) -> f "downgrading to" [nv]
+  | `Install nv        -> f "installing" [nv]
+  | `Reinstall nv      -> f "recompiling" [nv]
+  | `Remove nv         -> f "removing" [nv]
+  | `Build nv          -> f "compiling" [nv]
+  | `Fetch nvs         -> f "fetching sources for" nvs
 
 module Json = struct
   let output_request request user_action =
@@ -458,7 +461,7 @@ let parallel_apply t
       OpamAction.noop_remove_package t nv in
     PackageActionGraph.explicit
       ~noop_remove
-      ~sources_needed:(fun p -> OpamPackage.Set.mem p sources_needed)
+      ~sources_needed:(fun p -> if OpamPackage.Set.mem p sources_needed then [p] else [])
       action_graph
   in
   let action_graph =
@@ -535,9 +538,8 @@ let parallel_apply t
             (fun name _ -> OpamPackage.Set.exists (fun pkg -> OpamPackage.Name.equal name pkg.name) visible_installed)
             !t_ref.conf_files; }
     in
-    let nv = action_contents action in
-    let opam = OpamSwitchState.opam t nv in
-    let source_dir =
+    let source_dir nv =
+      let opam = OpamSwitchState.opam t nv in
       let raw = OpamSwitchState.source_dir t nv in
       match OpamFile.OPAM.url opam with
       | None -> raw
@@ -556,16 +558,17 @@ let parallel_apply t
       | `Remove nv ->
         remove_from_install nv;
         Done (`Successful (installed, OpamPackage.Set.add nv removed))
-      | _ -> assert false
+      | `Change _ | `Reinstall _ -> assert false
     else
     match action with
-    | `Fetch nv ->
+    | `Fetch [nv] ->
       log "Fetching sources for %s" (OpamPackage.to_string nv);
       (OpamAction.download_package t nv @@+ function
         | None ->
           store_time (); Done (`Successful (installed, removed))
         | Some (_short_error, long_error) ->
           Done (`Exception (Fetch_fail long_error)))
+    | `Fetch _ -> assert false
 
     | `Build nv ->
       if assume_built && OpamPackage.Set.mem nv requested then
@@ -590,6 +593,7 @@ let parallel_apply t
       let doc =
         OpamStateConfig.(!r.build_doc) && OpamPackage.Set.mem nv requested
       in
+      let source_dir = source_dir nv in
       (if OpamFilename.exists_dir source_dir
        then (if not is_inplace then
                OpamFilename.copy_dir ~src:source_dir ~dst:build_dir)
@@ -620,6 +624,7 @@ let parallel_apply t
       (if OpamAction.removal_needs_download t nv then
          let d = OpamPath.Switch.remove t.switch_global.root t.switch nv in
          OpamFilename.rmdir d;
+         let source_dir = source_dir nv in
          if OpamFilename.exists_dir source_dir
          then OpamFilename.copy_dir ~src:source_dir ~dst:d
          else OpamFilename.mkdir d;
@@ -632,7 +637,7 @@ let parallel_apply t
         nv;
       store_time ();
       `Successful (installed, OpamPackage.Set.add nv removed)
-    | _ -> assert false
+    | `Change _ | `Reinstall _ -> assert false
   in
 
   let action_results =
@@ -681,7 +686,7 @@ let parallel_apply t
         (* Report download failures *)
         let failed_downloads = List.fold_left (fun failed (a, err) ->
             match (a, err) with
-            | `Fetch pkg, `Exception (Fetch_fail long_error) ->
+            | `Fetch [pkg], `Exception (Fetch_fail long_error) ->
               OpamPackage.Map.add pkg long_error failed
             | _ ->
               failed
@@ -772,7 +777,7 @@ let parallel_apply t
           if not OpamClientConfig.(!r.keep_build_dir) then
             OpamFilename.rmdir build_dir
         | `Remove _ | `Install _ | `Build _ | `Fetch _ -> ()
-        | _ -> assert false)
+        | `Change _ | `Reinstall _  -> assert false)
       graph
   in
   let t =
@@ -834,9 +839,11 @@ let parallel_apply t
       (* Cleanup build/install actions when one of them failed, it's verbose and
          doesn't add information *)
       let successful =
+        let was_successful p = not @@ List.mem (`Install p) failed in
         List.filter (function
-            | `Fetch p | `Build p when List.mem (`Install p) failed -> false
-            | _ -> true)
+            | `Fetch ps -> List.for_all was_successful ps
+            | `Build p -> was_successful p
+            | `Change _ | `Install _ | `Reinstall _ | `Remove _ -> true)
           successful
       in
       let remaining =
@@ -844,18 +851,24 @@ let parallel_apply t
             | `Remove p | `Install p
               when List.mem (`Build p) failed -> false
             | `Remove p | `Install p | `Build p
-              when List.mem (`Fetch p) failed -> false
-            | _ -> true)
+              when List.exists (function
+                  | `Fetch ps -> List.mem p ps
+                  | _ -> false) failed
+              -> false
+            | `Build _ | `Change _ | `Fetch _ | `Install _
+            | `Reinstall _ | `Remove _ -> true)
           remaining
       in
       let removes_missing_source =
         List.filter (function
             | `Remove p as rem ->
-              let fetch = `Fetch p in
-              List.mem fetch failed &&
-              PackageActionGraph.mem_edge action_graph fetch rem
-            | _ -> false
-          )
+              let is_fetch = function `Fetch ps -> List.mem p ps | _ -> false in
+              List.exists is_fetch failed
+              && PackageActionGraph.fold_edges (fun v v' mem ->
+                  mem || (is_fetch v && PackageAction.equal v' rem))
+                action_graph false
+            | `Build _ | `Change _ | `Fetch _ | `Install _
+            | `Reinstall _ -> false)
           successful
       in
       let failed =
@@ -866,7 +879,8 @@ let parallel_apply t
               let succ = PackageActionGraph.succ action_graph a in
               not (List.for_all (fun a -> List.mem a removes_missing_source)
                      succ)
-            | _ -> true)
+            | `Build _ | `Change _ | `Install _ | `Reinstall _
+            | `Remove _ -> true)
           failed
       in
       let filter_graph l =
@@ -921,9 +935,9 @@ let parallel_apply t
          OpamConsole.warning
                  "The sources of the following couldn't be obtained, they may be \
                   uncleanly removed:\n%s"
-                 (OpamStd.Format.itemize
-                    (fun rm -> OpamPackage.to_string (action_contents rm))
-                    removes_missing_source));
+                 (OpamStd.Format.itemize OpamPackage.to_string
+                    (List.flatten
+                       (List.map action_contents removes_missing_source))));
       OpamConsole.msg "\n";
       OpamConsole.header_msg "Error report";
       if OpamConsole.debug () || OpamConsole.verbose () then
@@ -942,7 +956,7 @@ let parallel_apply t
         ~empty:"No changes have been performed"
         successful;
       t, err
-    | _ -> assert false
+    | Nothing_to_do | OK _  -> assert false
 
 let simulate_new_state state t =
   let installed =
@@ -969,7 +983,9 @@ let confirmation ?ask requested solution =
     let open PackageActionGraph in
     let solution_packages =
       fold_vertex (fun v acc ->
-          OpamPackage.Name.Set.add (OpamPackage.name (action_contents v)) acc)
+          List.map OpamPackage.name (action_contents v)
+          |> OpamPackage.Name.Set.of_list
+          |> OpamPackage.Name.Set.union acc)
         solution
         OpamPackage.Name.Set.empty in
     OpamPackage.Name.Set.equal requested solution_packages

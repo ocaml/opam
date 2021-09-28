@@ -762,7 +762,7 @@ let print_solution ~messages ~append ~requested ~reinstall ~available t =
   let actions, details =
     OpamCudf.ActionGraph.Topological.fold (fun a (actions,details) ->
         let cause =
-          try OpamCudf.Map.find (action_contents a) causes
+          try OpamCudf.Map.find (OpamCudf.action_contents a) causes
           with Not_found -> Unknown in
         let action = map_action OpamCudf.cudf2opam a in
         let cudf_name p = OpamPackage.name_to_string (OpamCudf.cudf2opam p) in
