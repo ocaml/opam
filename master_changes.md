@@ -113,6 +113,7 @@ users)
 
 ## State
   * Handle empty environment variable updates - missed cherry-pick from 2.0 [#4840 @dra27]
+  * Repository state: stop scanning directory once opam file is found [#4847 @rgrinberg]
 
 ## Opam file format
   *
