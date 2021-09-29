@@ -77,7 +77,7 @@ let load_opams_from_dir repo_name repo_root =
   let rec aux r dir =
     if OpamFilename.exists_dir dir then
       let fnames = Sys.readdir (OpamFilename.Dir.to_string dir) in
-      if Array.fold_left (fun a f -> a || f = "opam") false fnames then
+      if Array.exists (fun f -> f = "opam") fnames then
         match OpamFileTools.read_repo_opam ~repo_name ~repo_root dir with
         | Some opam ->
           (try
