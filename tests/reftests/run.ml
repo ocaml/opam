@@ -421,6 +421,7 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
   let env_vars = [
     "OPAM", opam;
     "OPAMROOT", opamroot;
+    "BASEDIR", dir;
   ] @ vars
   in
   let var_filters =
