@@ -1,5 +1,5 @@
 f372039d
-### opam switch create test --packages=camlp4,ocaml-system --show --yes
+### opam switch create test "--formula=[\"camlp4\" \"ocaml-system\"]" --show --yes
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["camlp4" "ocaml-system"]

@@ -657,7 +657,7 @@ Updated ${OPAMTMP}/test/packages/P3.1~weird-version.test/opam
 Updated ${OPAMTMP}/test/packages/P4.1/opam
 Updated ${OPAMTMP}/test/packages/P5.1/opam
 Now run 'opam upgrade' to apply any package updates.
-### opam switch create system --packages ocaml.system
+### opam switch create system "--formula=[\"ocaml\" {= \"system\"}]"
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ocaml" {= "system"}]
