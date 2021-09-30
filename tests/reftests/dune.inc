@@ -479,6 +479,23 @@
    (run ./run.exe %{bin:opam} %{dep:repository.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-shared-fetch)
+ (action
+  (diff shared-fetch.test shared-fetch.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-shared-fetch)))
+
+(rule
+ (targets shared-fetch.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:shared-fetch.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-show)
  (action
   (diff show.test show.out)))
