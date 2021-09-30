@@ -156,3 +156,11 @@ ${BASEDIR}/OPAM/cli-versioning/share
 ### OPAMCLI=2.0 OPAMBUILDDOC=1 opam config var share
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 ${BASEDIR}/OPAM/cli-versioning/share
+### # Switch creation with packages & formulaes
+### opam switch create errored baz --packages baz.2
+[ERROR] Individual packages, options --packages, --formula and --empty may not be specified at the same time
+# Return code 2 #
+### OPAMCLI=2.0 opam switch create working baz --packages baz.2 --show
+[WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
+[ERROR] Individual packages, options --packages, --formula and --empty may not be specified at the same time
+# Return code 2 #
