@@ -15,6 +15,7 @@ users)
 
 ## Global CLI
   * Fix typo in error message for opam var [#4786 @kit-ty-kate - fix #4785]
+  * Add cli 2.2 handling [#4853 @rjbou]
 
 ## Plugins
   *
@@ -32,7 +33,9 @@ users)
   *
 
 ## Switch
-  *
+  * Put back support for switch creation with packages argument and
+    `--packages` option with cli 2.0, and a specific error message for cli 2.1
+    [#4853 @rjbou - fix #4843]
 
 ## Pin
   *
