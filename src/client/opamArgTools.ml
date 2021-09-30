@@ -14,6 +14,7 @@ open OpamCLIVersion.Op
 
 let cli2_0 = OpamCLIVersion.of_string "2.0"
 let cli2_1 = OpamCLIVersion.of_string "2.1"
+let cli2_2 = OpamCLIVersion.of_string "2.2"
 
 type 'b validity_and_content = {
   valid: OpamCLIVersion.t;

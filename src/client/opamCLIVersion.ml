@@ -10,7 +10,7 @@
 
 type t = int * int
 
-let supported_versions = [(2, 0); (2, 1)]
+let supported_versions = [(2, 0); (2, 1); (2,2)]
 
 let is_supported v = List.mem v supported_versions
 
