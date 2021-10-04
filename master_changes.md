@@ -153,6 +153,7 @@ users)
 
 ## Doc
   * Standardise `macOS` use [#4782 @kit-ty-kate]
+  * Fix `span` tag in mannual [#4855 @rjbou - fix #4848]
 
 ## Security fixes
   *

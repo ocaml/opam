@@ -161,8 +161,7 @@ Switches are laid out thusly:
 - [`<switch-prefix>/.opam-switch/install/<pkgname>.install`](#lt-pkgname-gt-install):
   `.install` files used to install the given package
 - `<switch-prefix>/.opam-switch/install/<pkgname>.changes`: file system changes
-  done by the installation of the given package, as tracked by <span
-  class="opam">opam</span>
+  done by the installation of the given package, as tracked by <span class="opam">opam</span>
 - `<switch-prefix>/.opam-switch/packages/<pkgname>.<version>/`: metadata of the
   given package as it has been used for its installation
 - `<switch-prefix>/.opam-switch/sources/<pkgname>.<version>/` or `<pkgname>/`:
@@ -876,8 +875,8 @@ files.
     itself.
 
     This field contains typically just `[make "install"]`. If a
-    `package-name.install` is found at the source of the build directory, <span
-    class="opam">opam</span> will install files from there to the prefix
+    `package-name.install` is found at the source of the build directory, <span class="opam">opam</span>
+    will install files from there to the prefix
     according to its instructions after calling the commands specified in the
     `install:` field have been run, if any.
 
@@ -975,8 +974,8 @@ files.
 
 - <a id="opamfield-depexts"> `depexts: [ [ <string> ... ] { <filter> } ... ]`</a>:
   the package external dependencies. This field is used to describe the
-  dependencies of the package toward packages external to the <span
-  class="opam">opam</span> ecosystem; <span class="opam">opam</span> will then
+  dependencies of the package toward packages external to the <span class="opam">opam</span>
+  ecosystem; <span class="opam">opam</span> will then
   use its knowledge of the system package manager to determine the availability
   of the package, and install these external dependencies on the system as
   prerequisites of the package, asking the user for administrator rights if
@@ -1217,8 +1216,7 @@ allowed.
   installs to `<prefix>/lib/<pkgname>/`, but the `exec` bit is set (since
   opam 1.2.1)
 - <a id="installfield-libexec_root">`libexec_root:`</a>
-  installs to `<prefix>/lib/`, with the `exec` bit set (since <span
-  class="opam">opam</span> 2.0.0)
+  installs to `<prefix>/lib/`, with the `exec` bit set (since <span class="opam">opam</span> 2.0.0)
 - <a id="installfield-bin">`bin:`</a>
   installs to `<prefix>/bin/`, with the `exec` bit set
 - <a id="installfield-sbin">`sbin:`</a>
