@@ -2251,19 +2251,21 @@ module URLSyntax = struct
     url     : url;
     mirrors : url list;
     checksum: OpamHash.t list;
+    swhid: OpamSWHID.t option;
     errors  : (string * Pp.bad_format) list;
     subpath : subpath option;
   }
 
-  let create ?(mirrors=[]) ?(checksum=[]) ?subpath url =
+  let create ?(mirrors=[]) ?(checksum=[]) ?swhid ?subpath url =
     {
-      url; mirrors; checksum; errors = []; subpath;
+      url; mirrors; checksum; swhid; errors = []; subpath;
     }
 
   let empty = {
     url     = OpamUrl.empty;
     mirrors = [];
     checksum= [];
+    swhid = None;
     errors  = [];
     subpath = None;
   }
@@ -2271,11 +2273,14 @@ module URLSyntax = struct
   let url t = t.url
   let mirrors t = t.mirrors
   let checksum t = t.checksum
+  let swhid t = t.swhid
   let subpath t = t.subpath
 
   let with_url url t = { t with url }
   let with_mirrors mirrors t = { t with mirrors }
   let with_checksum checksum t = { t with checksum = checksum }
+  let with_swhid swhid t = { t with swhid = Some swhid }
+  let with_swhid_opt swhid t = { t with swhid = swhid }
   let with_subpath subpath t = { t with subpath = Some subpath }
   let with_subpath_opt subpath t = { t with subpath = subpath }
 
@@ -2317,7 +2322,26 @@ module URLSyntax = struct
       (fun ~pos t ->
          if t.url = OpamUrl.empty then OpamPp.bad_format ~pos "missing URL"
          else t)
-      (fun x -> x)
+      (fun x -> x) -|
+    Pp.pp ~name
+      (fun ~pos:_ t ->
+         let swhid, mirrors = OpamStd.List.pick OpamSWHID.is_valid t.mirrors in
+         match swhid with
+         | None -> t
+         | Some swhid_url ->
+           (match OpamSWHID.of_url swhid_url with
+            | None ->
+              Pp.warn "Bad format of SWHID url: %s" (OpamUrl.to_string swhid_url);
+              t
+            | swhid ->
+              { t with swhid ; mirrors }))
+      (fun t ->
+         match t.swhid with
+         | None -> t
+         | Some swhid ->
+           { t with
+             swhid = None;
+             mirrors = OpamSWHID.to_url swhid :: t.mirrors })
 
   let pp = Pp.I.map_file pp_contents
 
