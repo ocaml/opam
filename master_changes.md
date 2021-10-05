@@ -120,6 +120,7 @@ users)
   * Add `depexts` to default printer [#4898 @rjbou]
   * Make `opam show --list-files <pkg>` fail with not found when `<pkg>` is not installed [#4956 @kit-ty-kate - fix #4930]
   * Improve performance of opam show by 300% when the package to show is given explicitly or unique [#4998 @kit-ty-kate - fix #4997 and partially #4172]
+  * Add printer for `url.swhid:` [#4859 @rjbou]
 
 ## Var/Option
   * Don't error when displaying if switch is not set [#5027 @rjbou - fix #5025]
@@ -161,6 +162,7 @@ users)
   * Avoid reloading repository contents when the repo has no changes [#5043 @Armael]
   * Avoid rewriting cache is nothing changed [#5146 @rjbou]
   * On setting url fetch failure (sync or file error), revert url change and rollback to old one [#4967 @rjbou - fix #4780 #4779]
+  * Add Software heritage fallback when downloading archive source, triggered when all urls and cache fails, with confirmation [#4859 @rjbou @zapashcanon]
 
 ## Lock
   * Fix lock generation of multiple interdependent packages [#4993 @AltGr]
@@ -174,6 +176,7 @@ users)
   * Add `x-locked` extension fields for overlay internal use, it stores if the files originate from a locked file, if so its extension [#5080 @rjbou]
   * Set `depext-bypass` parsing with depth 1, no needed brakcet if single package [#5154 @rjbou]
   * [BUG] Variables are now expanded in build-env (as for setenv) [#5352 @dra27]
+  * Add swhid url handling in url field [#4859 @rjbou @zapashcanon]
 
 ## External dependencies
   * Support MSYS2 on Windows for depexts [#5348 @jonahbeckford #5433 @rjbou]
@@ -262,6 +265,8 @@ users)
   * Upgrade src_ext vendored bootstrap dependencies [#5437 @MisterDA]
   * Update bootstrap to use FlexDLL 0.42 from ocaml/flexdll [#5434 @MisterDA]
   * Bump the minimum requirement to build any of the opam libraries to OCaml >= 4.08 [#5466 @kit-ty-kate]
+  * shell/bootstrap-ocaml.sh: do not fail if curl/wget is missing [#5223 @kit-ty-kate]
+  * Add `swhid_core` dependency [#4859 @rjbou]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
@@ -412,6 +417,8 @@ users)
   * Add a windows test to check case insensitive environment variable handling [#5356 @dra27]
   * Fix the reftests on OCaml 5.0 [#5402 @kit-ty-kate]
 
+
+  * Add `swhid` print tests in show, and swh fallback test [#4859 @rjbou]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
@@ -527,6 +534,7 @@ users)
   * `OpamConfigCommand.global_allowed_fields`: add `archive-mirrors` (`dl_cache`) to allowed modifiable fields, extendable [#5321 @hannesm @rjbou]
   * `OpamClient.update_with_init_config`: Fix passing the `dl_cache` from `InitConfig` to `Config` [#5315 @hannesm]
   * `OpamAction`: in `build_package`, `install_package`, and `remove_package` expand `build-env` variables content added to the environment [#5352 @dra27]
+  * `OpamListCommand`: add `swhid` in `info` printable fields and its handling in `details_printer`
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
@@ -538,6 +546,7 @@ users)
   * `OpamRepository.update`: Return a change state result of the repo update [#5043 @Armael]
   * `OpamVCS.VCS`: add a `clean` function to the interface clearing all the uncommited files [#4879 @rjbou]
   * `OpamVCS.pull_url`: clean repository before fetching [#4879 @rjbou]
+  * `OpamDownload`: Add `SWHID` submodule that implements SWH fallback (retrieve url, download, check hash, and copy in target) [#4859 @rjbou]
 
 ## opam-state
   * `OpamSwitchState.universe`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
@@ -557,6 +566,8 @@ users)
 ` [#5268 @kit-ty-kate]
   * `OpamUpdate`: change `repository` output to update function option, to not write cache and new repo config if nothing changed in `repositories` [#5146 @rjbou]
   * Add `OpamPinned.version_opt` [#5325 @kit-ty-kate]
+  * `OpamUpdate.download_package_source`: add SWH fallback when archive remain not found [#4859 @rjbou]
+
   * Add optional argument `?env:(variable_contents option Lazy.t * string) OpamVariable.Map.t` to `OpamSysPoll` and `OpamSysInteract` functions. It is used to get syspolling variables from the environment first. [#4892 @rjbou]
   * `OpamSwitchState`: move and reimplement `opam-solver` `dependencies` and `reverse_dependencies` [#5337 @rjbou]
   * `OpamEnv`: add `env_expansion` [#5352 @dra27]
@@ -601,10 +612,13 @@ users)
   * `OpamFile.OPAM.effectively_equal`: return true if an extra-source url changes but not its checksum (as for url) [#5258 @kit-ty-kate]
   * `OpamFormula`: add generic `formula_to_cnf` and `formula_to_dnf`, and use them in `to_cnf` and `to_dnf` [#5171 @cannorin]
   * `OpamFilter`: add `?custom` argument in `to_string` to tweak the output [#5171 @cannorin]
+  * `OpamFile.URL`: add `swhid` field in `t` record, and its access functions [#4859 @rjbou]
+  * `OpamFile.URL`: add `with_mirrors` [#4859 @rjbou]
 
 ## opam-core
   * `OpamStd.Sys`: fix `get_windows_executable_variant` to distinguish MSYS2 from Cygwin, esp. for rsync rather than symlinking [#5404 @jonahbeckford]
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
+  * `OpamSystem`: avoid calling Unix.environment at top level [#4789 @hannesm]
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamFilename`, `OpamHash`, `OpamStd`, `OpamStd`, `OpamUrl`, and `OpamVersion` [#4918 @rjbou]
   * `OpamHash`: add `sort` from strongest to weakest kind
   * `OpamSystem.real_path`: Remove the double chdir trick on OCaml >= 4.13.0 [#4961 @kit-ty-kate]
@@ -637,3 +651,12 @@ users)
   * `OpamStd.Compare`: add module to flag polymorphic comparison functions in opam codebase [#5374 @kit-ty-kate @rjbou]
   * `OpamStd.Env.`: introduce OpamStd.Env.Name to abstract environment variable names [#5356 @dra27]
   * `OpamCompat`: Add `Fun.protect` [#5441 @kit-ty-kate]
+  * `OpamJson`: use `Jsonm` and add an `of_string` function [#5142 @rjbou]
+  * `OpamSystem`: avoid calling Unix.environment at top level [#4789 @hannesm]
+  * `OpamStd.String`: add `is_hex` [#4859 @rjbou]
+  * `OpamStd.List`: add `pick` [#4859 @rjbou]
+  * `OpamSHA`: add `sha1` support [#4859 @rjbou]
+  * `OpamHash`: add module `SWHID` that create and check Software Heritage IDs hashes format [#4859 @rjbou]
+  * `OpamURL`: add module `SWHID` that contains helpers from and to internal swhid url [#4859 @rjbou]
+  * `OpamSystem.read_command_output`: add an optional parameter to unmerge stdout and stderr [#4859 @rjbou]
+  * `OpamSWHID`: add module to handle swhid [#4859 @rjbou]
