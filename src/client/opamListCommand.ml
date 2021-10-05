@@ -541,9 +541,23 @@ let detail_printer ?prettify ?normalise ?(sort=false) st nv =
     +! ""
   | Raw_field f | Field f ->
     (try
-       OpamStd.List.assoc String.equal f
-         (OpamFile.OPAM.to_list (get_opam st nv))
-       |> mini_field_printer ?prettify ?normalise
+       let open OpamStd.Option.Op in
+       let opam = get_opam st nv in
+       let value =
+         match f with
+         | "url.swhid" ->
+           (match OpamFile.(OPAM.url opam >>= URL.swhid) with
+            | Some f -> OpamTypesBase.nullify_pos (String (OpamSWHID.to_string f))
+            | None -> raise Not_found)
+         | "url.mirrors" ->
+           OpamFile.(OPAM.with_url_opt
+                       (OPAM.url opam >>| URL.with_swhid_opt None)
+                       opam
+                     |> OPAM.to_list
+                     |> OpamStd.List.assoc String.equal f)
+         | _ -> OpamStd.List.assoc String.equal f (OpamFile.OPAM.to_list opam)
+       in
+       mini_field_printer ?prettify ?normalise value
      with Not_found -> "")
   | Installed_version ->
     (try OpamPackage.package_of_name st.installed nv.name |> fun inst_nv ->
@@ -745,6 +759,7 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
     Pinning_target;
     Source_hash;
     Field "url.src";
+    Field "url.swhid";
     Field "url.checksum";
     Field "homepage";
     Field "doc";
