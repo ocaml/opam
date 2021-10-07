@@ -34,7 +34,7 @@ val download_shared_source:
     extra downloads, overlays and patches from the package's metadata
     applied. *)
 val prepare_package_source:
-  rw switch_state -> package -> dirname -> exn option OpamProcess.job
+  'a switch_state -> package -> dirname -> exn option OpamProcess.job
 
 (** [prepare_package_build env opam pkg dir] is a lower level version
     of `prepare_package_source`, without requiring a switch and
