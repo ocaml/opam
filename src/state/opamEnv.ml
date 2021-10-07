@@ -29,14 +29,30 @@ let join_var l =
 (* To allow in-place updates, we store intermediate values of path-like as a
    pair of list [(rl1, l2)] such that the value is [List.rev_append rl1 l2] and
    the place where the new value should be inserted is in front of [l2] *)
-let unzip_to elt =
-  let rec aux acc = function
-    | [] -> None
-    | x::r ->
-      if x = elt then Some (acc, r)
-      else aux (x::acc) r
+
+
+let unzip_to elt current =
+  (* If [r = l @ rs] then [remove_prefix l r] is [Some rs], otherwise [None] *)
+  let rec remove_prefix l r =
+    match l, r with
+    | (l::ls, r::rs) when l = r ->
+      remove_prefix ls rs
+    | ([], rs) -> Some rs
+    | _ -> None
   in
-  aux []
+    match split_var elt with
+    | [] -> invalid_arg "OpamEnv.unzip_to"
+    | hd::tl ->
+      let rec aux acc = function
+      | [] -> None
+      | x::r ->
+        if x = hd then
+          match remove_prefix tl r with
+          | Some r -> Some (acc, r)
+          | None -> aux (x::acc) r
+        else aux (x::acc) r
+      in
+        aux [] current
 
 let rezip ?insert (l1, l2) =
   List.rev_append l1 (match insert with None -> l2 | Some i -> i::l2)
