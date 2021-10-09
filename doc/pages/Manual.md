@@ -802,8 +802,8 @@ files.
   a list of strings listing the original authors of the software.
 
 - <a id="opamfield-license">`license: [ <string> ... ]`</a>:
-  The SPDX ID of the license(s) under which the source software is available
-  (see http://spdx.org/licenses/).
+  The SPDX expression of the license(s) under which the source software is available
+  (see http://spdx.org/licenses/). The [SPDX standard](https://spdx.github.io/spdx-spec/appendix-IV-SPDX-license-expressions/) allows to define custom licenses if necessary using the `LicenseRef-your-custom-name` syntax (e.g. `license: "LicenseRef-My-Custom-Non-Commercial-License"`).
 
 - <a id="opamfield-homepage">`homepage: [ <string> ... ]`</a>,
   <a id="opamfield-doc">`doc: [ <string> ... ]`</a>,
