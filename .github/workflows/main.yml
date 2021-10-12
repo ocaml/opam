@@ -141,6 +141,7 @@ jobs:
 # Legacy
 ####
   legacy:
+    needs: [ build ]
     runs-on: ubuntu-latest
     strategy:
       matrix:
