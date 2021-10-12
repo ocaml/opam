@@ -39,6 +39,11 @@ init-bootstrap () {
     export OPAMROOT=$OPAMBSROOT
     # The system compiler will be picked up
     opam init --yes --no-setup git+https://github.com/ocaml/opam-repository#$OPAM_REPO_SHA
+
+    cat >> $OPAMROOT/config <<EOF
+archive-mirrors: "https://opam.ocaml.org/cache"
+EOF
+
     eval $(opam env)
 #    opam update
     CURRENT_SWITCH=$(opam var switch)
