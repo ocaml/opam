@@ -564,6 +564,23 @@
    (run ./run.exe %{bin:opam} %{dep:pin.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-rec-pin)
+ (action
+  (diff rec-pin.test rec-pin.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-rec-pin)))
+
+(rule
+ (targets rec-pin.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:rec-pin.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-reinstall)
  (action
   (diff reinstall.test reinstall.out)))
