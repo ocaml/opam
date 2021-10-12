@@ -147,6 +147,8 @@ users)
   * Specify whitelist of changed files to launch workflow [#473 @rjbou]
   * Update changelog checker list [#4773 @rjbou]
   * Launch main hygiene job on configure/src_ext changes [#4773 @rjbou]
+  * Add opam.ocaml.org cache to reach disappearing archive [#4865 @rjbou]
+  * Update ocaml version frm 4.11.2 to  4.12.0 (because of macos failure) [#4865 @rjbou]
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
