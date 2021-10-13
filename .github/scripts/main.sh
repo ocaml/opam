@@ -150,6 +150,9 @@ fi
     # to be moved forwards when a new version of OCaml is added to ensure that the
     # ocaml-system package is available at the correct version.
     opam init --bare default git+$OPAM_REPO#$OPAM_TEST_REPO_SHA
+    cat >> $(opam var root --global 2>/dev/null)/config <<EOF
+archive-mirrors: "https://opam.ocaml.org/cache"
+EOF
     opam switch create default ocaml-system
     eval $(opam env)
     opam install lwt
