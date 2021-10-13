@@ -107,7 +107,7 @@ set -eux
 
 # For systems that don't have an up to date compiler, to avoid ocaml-secondary
 echo 'default-invariant: [ "ocaml" {>= "4.09.0"} ]' > /opam/opamrc
-opam init --no-setup --disable-sandboxing --bare --config /opam/opamrc
+opam init --no-setup --disable-sandboxing --bare --config /opam/opamrc git+$OPAM_REPO#$OPAM_REPO_SHA
 opam switch create this-opam ocaml
 
 # Workdir is /github/workpaces
