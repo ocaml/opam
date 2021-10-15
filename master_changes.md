@@ -37,6 +37,7 @@ users)
     `--packages` option with cli 2.0, and a specific error message for cli 2.1
     [#4853 @rjbou - fix #4843]
   * Ensure setenv can use package variables defined during the build [#4841 @dra27]
+  * [BUG] Fix `set-invariant: default repos were loaded instead of switch repos [#4866 @rjbou]
 
 ## Pin
   *
@@ -142,6 +143,7 @@ users)
 ## Test
 
 ## Reftests
+  * Add switch-invariant test [#4866 @rjbou]
   * opam root version: add local switch cases [#4763 @rjbou] [2.1.0~rc2 #4715]
   * opam root version: add reinit test casess [#4763 @rjbou] [2.1.0~rc2 #4750]
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
