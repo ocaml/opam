@@ -2797,10 +2797,11 @@ let switch cli =
     | Some `set_invariant, params ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-      (match invariant_arg rt params with
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let repos = OpamSwitchState.repos_list st in
+      (match invariant_arg ~repos rt params with
        | exception Failure e -> `Error (false, e)
        | invariant_opt ->
-         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let invariant = match invariant_opt with
            | Some i -> i
            | None -> OpamSwitchState.infer_switch_invariant st
