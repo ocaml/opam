@@ -136,6 +136,23 @@
    (run ./run.exe %{bin:opam} %{dep:dot-install.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-env)
+ (action
+  (diff env.test env.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-env)))
+
+(rule
+ (targets env.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:env.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-init)
  (action
   (diff init.test init.out)))

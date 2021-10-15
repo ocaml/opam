@@ -117,6 +117,7 @@ users)
 ## State
   * Handle empty environment variable updates - missed cherry-pick from 2.0 [#4840 @dra27]
   * Repository state: stop scanning directory once opam file is found [#4847 @rgrinberg]
+  * Fix reverting environment additions to PATH-like variables when several dirs added at once [#4861 @dra27]
 
 ## Opam file format
   *
