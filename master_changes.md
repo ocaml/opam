@@ -36,6 +36,7 @@ users)
   * Put back support for switch creation with packages argument and
     `--packages` option with cli 2.0, and a specific error message for cli 2.1
     [#4853 @rjbou - fix #4843]
+  * Ensure setenv can use package variables defined during the build [#4841 @dra27]
 
 ## Pin
   *
@@ -143,6 +144,7 @@ users)
   * opam root version: add local switch cases [#4763 @rjbou] [2.1.0~rc2 #4715]
   * opam root version: add reinit test casess [#4763 @rjbou] [2.1.0~rc2 #4750]
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
+  * Add & update env tests [#4861 #4841 @rjbou @dra27]
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]
