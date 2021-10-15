@@ -25,6 +25,7 @@ val cli_original: validity
 
 val cli2_0: OpamCLIVersion.t
 val cli2_1: OpamCLIVersion.t
+val cli2_2: OpamCLIVersion.t
 
 val mk_flag:
   cli:OpamCLIVersion.Sourced.t -> validity -> ?section:string -> string list ->

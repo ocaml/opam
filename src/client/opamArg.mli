@@ -23,6 +23,7 @@ type validity
 
 val cli2_0: OpamCLIVersion.t
 val cli2_1: OpamCLIVersion.t
+val cli2_2: OpamCLIVersion.t
 
 (* [cli_from since] validity flag since [since], and no removal version *)
 val cli_from: OpamCLIVersion.t -> validity

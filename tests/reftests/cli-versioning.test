@@ -156,3 +156,17 @@ ${BASEDIR}/OPAM/cli-versioning/share
 ### OPAMCLI=2.0 OPAMBUILDDOC=1 opam config var share
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 ${BASEDIR}/OPAM/cli-versioning/share
+### # Switch creation with packages & formulaes
+### opam switch create errored baz --packages baz.2
+[ERROR] Individual package and option '--packages' can not be specified at the same time. Use just '--packages' instead, e.g.
+        opam switch create flambda --packages=ocaml.4.12.0,ocaml-option-flambda
+        or '--formula'
+        opam switch create flambda --formula='["ocaml" {="4.12.0"} "ocaml-option-flambda"]'
+# Return code 2 #
+### OPAMCLI=2.0 opam switch create working baz --packages baz.2 --show
+[WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["baz" "baz" {= "2"}]
+The following actions would be performed:
+  - install baz 2
