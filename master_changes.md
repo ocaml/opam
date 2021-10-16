@@ -104,6 +104,7 @@ users)
   * Fix vendored build on mingw-w64 with g++ 11.2 [#4835 @dra27]
   * Switch to vendored build if spdx_licenses is missing [#4842 @dra27]
   * Check versions of findlib packages in configure [#4842 @dra27]
+  * Fix dose3 download url since gforge is gone [#4870 @avsm]
 
 ## Infrastructure
   *
