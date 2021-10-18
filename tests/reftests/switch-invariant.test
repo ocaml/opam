@@ -30,7 +30,6 @@ The switch invariant was set to foo
 [WARNING] Packages foo don't have the 'compiler' flag set.
 The switch invariant was set to foo
 ### opam switch set-invariant bar
-[ERROR] No compiler matching `bar' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
-# Return code 5 #
+The switch invariant was set to bar
 ### opam switch set-invariant --package bar
 The switch invariant was set to bar
