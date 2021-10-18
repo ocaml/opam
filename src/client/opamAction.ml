@@ -22,7 +22,7 @@ module PackageActionGraph = OpamSolver.ActionGraph
 (* Preprocess install: returns a list of files to install, and their respective
    install functions *)
 let preprocess_dot_install_t st nv build_dir =
-  if not (OpamFilename.exists_dir build_dir) then [] else
+  if not (OpamFilename.exists_dir build_dir) then [], None else
   let root = st.switch_global.root in
   let switch_prefix = OpamPath.Switch.root root st.switch in
   let file_wo_prefix f = OpamFilename.remove_prefix switch_prefix f in
@@ -37,7 +37,7 @@ let preprocess_dot_install_t st nv build_dir =
     OpamFile.Dot_install.write install_loc install;
 
   (* .config *)
-  let files_and_installs =
+  let (files_and_installs, config) =
     let config_f = OpamPath.Builddir.config build_dir nv in
     let config = OpamFile.Dot_config.read_opt config_f in
     (match config with
@@ -51,8 +51,8 @@ let preprocess_dot_install_t st nv build_dir =
          let dot_config = OpamPath.Switch.config root st.switch name in
          OpamFile.Dot_config.write dot_config config; None
        in
-       [(file, inst)]
-     | None -> [])
+       ([(file, inst)], Some config)
+     | None -> ([], None))
   in
 
   let check ~src ~dst base =
@@ -183,11 +183,11 @@ let preprocess_dot_install_t st nv build_dir =
         (file, inst)) (I.misc install)
   in
 
-  List.rev_append files_and_installs misc_files
+  List.rev_append files_and_installs misc_files, config
 
 (* Returns function to install package files from [.install] *)
 let preprocess_dot_install st nv build_dir =
-  let files_and_installs = preprocess_dot_install_t st nv build_dir in
+  let files_and_installs, config = preprocess_dot_install_t st nv build_dir in
   let root = st.switch_global.root in
   let files, installs = List.split files_and_installs in
   let really_process_dot_install () =
@@ -235,7 +235,7 @@ let preprocess_dot_install st nv build_dir =
       if had_windows_warnings () then
         failwith "Strict mode is enabled - previous warnings considered fatal"
   in
-  files, really_process_dot_install
+  files, really_process_dot_install, config
 
 let download_package st nv =
   log "download_package: %a" (slog OpamPackage.to_string) nv;
@@ -947,30 +947,32 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
   let install_job () =
     pre_install ()
     @@+ function
-    | Some (_, result) -> Done (Some (OpamSystem.Process_error result))
+    | Some (_, result) -> Done (Right (OpamSystem.Process_error result))
     | None ->
       run_commands commands @@| function
-      | Some e -> Some e
+      | Some e -> Right e
       | None ->
         try
-          let _, process_dot_install = preprocess_dot_install t nv dir in
+          let _, process_dot_install, config = preprocess_dot_install t nv dir in
           process_dot_install ();
-          None
-        with e -> Some e
+          Left config
+        with e -> Right e
   in
   let install_and_track_job () =
     pre_install ()
     @@+ function
     | Some (_, result) ->
-      Done (Some (OpamSystem.Process_error result), OpamStd.String.Map.empty)
+      Done (Right (OpamSystem.Process_error result), OpamStd.String.Map.empty)
     | None ->
-      let installed_files, process_dot_install =
+      let installed_files, process_dot_install, config =
         preprocess_dot_install t nv dir
       in
       OpamDirTrack.track_files ~prefix:switch_prefix installed_files
         (fun () -> process_dot_install () ; Done None)
+      @@+ function
+      | _, changes -> Done (Left config, changes)
   in
-  let post_install error changes =
+  let post_install status changes =
     let local =
       let added =
         let open OpamDirTrack in
@@ -979,8 +981,8 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
             | _ -> None)
           (OpamStd.String.Map.bindings changes)
       in
-      opam_local_env_of_status (match error with
-          | Some (OpamSystem.Process_error r) -> Some r
+      opam_local_env_of_status (match status with
+          | Right (OpamSystem.Process_error r) -> Some r
           | _ -> None) |>
       OpamVariable.Map.add
         (OpamVariable.of_string "installed-files")
@@ -993,17 +995,17 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
     OpamProcess.Job.of_fun_list ~keep_going:true
       (List.map (fun cmd () -> mk_cmd cmd) hooks)
     @@+ fun error_post ->
-    match error, error_post with
-    | Some err, _ -> Done (Some err, changes)
-    | None, Some (_cmd, r) -> Done (Some (OpamSystem.Process_error r), changes)
-    | None, None ->
+    match status, error_post with
+    | Right err, _ -> Done (Right err, changes)
+    | _, Some (_cmd, r) -> Done (Right (OpamSystem.Process_error r), changes)
+    | Left config, None ->
       let changes =
         if has_hooks then
           OpamDirTrack.update switch_prefix changes
         else
           changes
       in
-      Done (None, changes)
+      Done (Left config, changes)
   in
   let rel_meta_dir =
     OpamFilename.(Base.of_string (remove_prefix_dir switch_prefix
@@ -1015,13 +1017,13 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
      OpamDirTrack.track switch_prefix
        ~except:(OpamFilename.Base.Set.singleton rel_meta_dir)
        install_job)
-  @@+ fun (error, changes) -> post_install error changes
+  @@+ fun (status, changes) -> post_install status changes
   @@+ function
-  | Some e, changes ->
+  | Right e, changes ->
     remove_package t ~silent:true ~changes ~build_dir:dir nv @@+ fun () ->
     OpamStd.Exn.fatal e;
-    Done (Some e)
-  | None, changes ->
+    Done (Right e)
+  | Left config, changes ->
     let changes_f = OpamPath.Switch.changes root t.switch nv.name in
     OpamFile.Changes.write changes_f changes;
     OpamConsole.msg "%s installed %s.%s\n"
@@ -1045,4 +1047,4 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
         OpamConsole.warning "%s claims to be a plugin but no %s file was found"
           name (OpamFilename.to_string target)
     );
-    Done None
+    Done (Left config)
