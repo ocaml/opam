@@ -1,0 +1,35 @@
+N0REP0
+### <pkg:foo.1>
+opam-version: "2.0"
+### <repo2/repo>
+opam-version: "2.0"
+### <repo2/packages/bar/bar.1/opam>
+opam-version: "2.0"
+### opam repository add --dont-select non-default ./repo2
+[non-default] Initialised
+### opam update --all
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+[non-default] no changes from file://${BASEDIR}/repo2
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create inv --empty --repo=default,non-default
+### opam switch set-invariant foo
+The switch invariant was set to foo
+### opam install foo
+The following actions will be performed:
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam switch set-invariant foo
+[WARNING] Packages foo don't have the 'compiler' flag set.
+The switch invariant was set to foo
+### opam switch set-invariant --package foo
+[WARNING] Packages foo don't have the 'compiler' flag set.
+The switch invariant was set to foo
+### opam switch set-invariant bar
+The switch invariant was set to bar
+### opam switch set-invariant --package bar
+The switch invariant was set to bar
