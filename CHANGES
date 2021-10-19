@@ -2,6 +2,12 @@ Changes prefixed with "(*)" are potentially breaking to scripts or existing
 repositories (changes that are automatically handled by the format upgrade tools
 are not marked).
 
+2.0.10:
+* Fix reverting environment additions to PATH-like variables when several dirs
+  added at once [#4861 @dra27]
+* Ensure setenv can use package variables defined during the build
+  [#4841 @dra27]
+
 2.0.9:
 * Fix the conflict with the environment variable name used by dune
   [#4535 @smorimoto - fix ocaml/dune#4166]
