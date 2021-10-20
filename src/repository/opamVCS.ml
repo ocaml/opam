@@ -23,7 +23,7 @@ module type VCS = sig
   val reset_tree: dirname -> url -> unit OpamProcess.job
   val patch_applied: dirname -> url -> unit OpamProcess.job
   val diff: dirname -> url -> filename option OpamProcess.job
-  val is_up_to_date: dirname -> url -> bool OpamProcess.job
+  val is_up_to_date: ?subpath:subpath -> dirname -> url -> bool OpamProcess.job
   val revision: dirname -> string option OpamProcess.job
   val versioned_files: dirname -> string list OpamProcess.job
   val vc_dir: dirname -> dirname
@@ -86,7 +86,7 @@ module Make (VCS: VCS) = struct
     @@ fun () ->
     if VCS.exists dirname then
       VCS.fetch ?cache_dir ?subpath dirname url @@+ fun () ->
-      VCS.is_up_to_date dirname url @@+ function
+      VCS.is_up_to_date ?subpath dirname url @@+ function
       | true -> Done (Up_to_date None)
       | false ->
         VCS.reset_tree dirname url @@+ fun () ->

@@ -210,9 +210,11 @@ module VCS : OpamVCS.VCS = struct
     else
       Done (Some (OpamFilename.of_string patch_file))
 
-  let is_up_to_date repo_root repo_url =
+  let is_up_to_date ?subpath repo_root repo_url =
     let rref = remote_ref repo_url in
-    git repo_root [ "diff" ; "--no-ext-diff" ; "--quiet" ; rref; "--" ]
+    git repo_root ([ "diff" ; "--no-ext-diff" ; "--quiet" ; rref; "--" ]
+                   @ List.map OpamFilename.SubPath.to_string
+                     (OpamStd.Option.to_list subpath))
     @@> function
     | { OpamProcess.r_code = 0; _ } -> Done true
     | { OpamProcess.r_code = 1; _ } as r ->

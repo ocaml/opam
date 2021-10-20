@@ -353,28 +353,20 @@ hoj
 ### git -C pinnes add a/i/new
 ### git -C pinnes commit -qm "thd"
 ### opam update | grep synchronised
-[root-a-i-j_g.2] synchronised (git+file://${BASEDIR}/pinnes#master(a/i/j))
+[root-a-i-j_g.2] synchronised (no changes)
 [root-a-i_g.2] synchronised (git+file://${BASEDIR}/pinnes#master(a/i))
 [root-a-k_p.2] synchronised (file://${BASEDIR}/pinnes(a/k))
 [root-a_p.2] synchronised (file://${BASEDIR}/pinnes(a))
-[root-b_g.2] synchronised (git+file://${BASEDIR}/pinnes#master(b))
+[root-b_g.2] synchronised (no changes)
 [root_g.2] synchronised (git+file://${BASEDIR}/pinnes#master)
 ### opam upgrade | unordered
 The following actions will be performed:
-=== recompile 6 packages
-  - recompile root-a-i_g   2 (pinned) [upstream or system changes]
-  - recompile root-a-k_p   2 (pinned) [upstream or system changes]
-  - recompile root-a_p     2 (pinned) [upstream or system changes]
-  - recompile root-b_g     2 (pinned) [upstream or system changes]
-  - recompile root_g       2 (pinned) [upstream or system changes]
-  - recompile root-a-i-j_g 2 (pinned) [upstream or system changes]
--> retrieved root-a-i-j_g.2  (no changes)
--> removed   root-a-i-j_g.2
--> installed root-a-i-j_g.2
+=== recompile 4 packages
+  - recompile root-a-i_g 2 (pinned) [upstream or system changes]
+  - recompile root-a-k_p 2 (pinned) [upstream or system changes]
+  - recompile root-a_p   2 (pinned) [upstream or system changes]
+  - recompile root_g     2 (pinned) [upstream or system changes]
 -> retrieved root-a-k_p.2  (no changes)
--> retrieved root-b_g.2  (no changes)
--> removed   root-b_g.2
--> installed root-b_g.2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   root_g.2
@@ -962,11 +954,11 @@ hoj
 ### # [root-b_g.l2] synchronised (git+file://${BASEDIR}/pinnes#master(b))
 ### # [root_g.l2] synchronised (git+file://${BASEDIR}/pinnes#master)
 ### opam update | grep synchronised
-[root-a-i-j_g.2] synchronised (git+file://${BASEDIR}/pinnes#master(a/i/j))
+[root-a-i-j_g.2] synchronised (no changes)
 [root-a-i_g.2] synchronised (git+file://${BASEDIR}/pinnes#master(a/i))
 [root-a-k_p.2] synchronised (file://${BASEDIR}/pinnes(a/k))
 [root-a_p.2] synchronised (file://${BASEDIR}/pinnes(a))
-[root-b_g.2] synchronised (git+file://${BASEDIR}/pinnes#master(b))
+[root-b_g.2] synchronised (no changes)
 [root_g.2] synchronised (git+file://${BASEDIR}/pinnes#master)
 ### # ERROR
 ### # ### opam upgrade | unordered

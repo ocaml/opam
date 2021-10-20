@@ -47,7 +47,7 @@ module type VCS = sig
 
   (** Returns true if the last fetched state is equal to the current, on-disk
       state *)
-  val is_up_to_date: dirname -> url -> bool OpamProcess.job
+  val is_up_to_date: ?subpath:subpath -> dirname -> url -> bool OpamProcess.job
 
   (** Returns an backend-specific identifier for the current revision. *)
   val revision: dirname -> string option OpamProcess.job
