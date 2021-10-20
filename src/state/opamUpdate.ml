@@ -402,7 +402,8 @@ let dev_package st ?working_dir nv =
     if (OpamFile.URL.url url).OpamUrl.backend = `http then
       Done ((fun st -> st), false)
     else
-      fetch_dev_package url (OpamSwitchState.source_dir st nv) ?working_dir nv
+      fetch_dev_package url (OpamSwitchState.source_dir st nv)
+        ?subpath:(OpamFile.URL.subpath url) ?working_dir nv
       @@| fun result ->
       (fun st -> st), match result with Result () -> true | _ -> false
 
