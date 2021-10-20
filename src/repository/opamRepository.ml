@@ -352,7 +352,14 @@ let pull_tree_t
       | _, Up_to_date None -> Done (Up_to_date "no changes")
       | url, (Up_to_date (Some archive) | Result (Some archive)) ->
         extract url archive
-      | url, Result None -> Done (Result (OpamUrl.to_string url))
+      | url, Result None ->
+        let url =
+          Printf.sprintf "%s%s"
+            (OpamUrl.to_string url)
+            (OpamStd.Option.to_string
+               OpamFilename.SubPath.pretty_string subpath)
+        in
+        Done (Result url)
       | _, (Not_available _ as na) -> Done na
 
 
