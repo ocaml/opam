@@ -842,12 +842,12 @@ let scan ~normalise ~recurse ?subpath url =
                   sb))
          pins)
   else
-    ["# Name"; "# Version"; "# Url" (*; "# Subpath"*)] ::
-    List.map (fun (name, version, _sb) ->
+    ["# Name"; "# Version"; "# Url" ; "# Subpath"] ::
+    List.map (fun (name, version, sb) ->
         [ OpamPackage.Name.to_string name;
           (version >>| OpamPackage.Version.to_string) +! "-";
           OpamUrl.to_string url;
-          (*(sb >>| OpamFilename.SubPath.normalised_string) +! "-"*) ]) pins
+          (sb >>| OpamFilename.SubPath.normalised_string) +! "-" ]) pins
     |> OpamStd.Format.align_table
     |> OpamConsole.print_table stdout ~sep:"  "
 
