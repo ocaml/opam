@@ -38,6 +38,7 @@ users)
 
 ## Actions
   *  Add a `'Fetch` action with several packages: one node to download once and prepare source once for packages that share same archive [#4893 @rjbou - fix #3741]
+  * Add subpath on actions listing urls [#4876 @rjbou]
 
 ## Install
   * Make the status of pinned packages more explicit during installation [#4987 @kit-ty-kate - fix #4925]
@@ -63,6 +64,9 @@ users)
   * Switch the default version when undefined from ~dev to dev [#4949 @kit-ty-kate]
   * ◈ New option `opam pin --current` to fix a package in its current state (avoiding pending reinstallations or removals from the repository) [#4973 @AltGr - fix #4970]
   * [BUG] Fix using `--working-dir` with non pinned packages: it was not downloading sources as they were remove from package that need sources [#5082 @rjbou - fix #5060]
+  * [NEW] Reactivate subpath and recursive pinning `--recursive` and `--subpath` [#4876 @rjbou]
+  * scan: show subpaths [#4876 @rjbou]
+  * Fix windows path for subpath, by introducing their own type in `OpamFilename` [#4876 @rjbou]
 
 ## List
   * Some optimisations to 'opam list --installable' queries combined with other filters [#4882 @altgr - fix #4311]
@@ -140,6 +144,7 @@ users)
   * Pass --depth=1 to git-fetch in the Git repo backend [#4442 @dra27]
   * Use 4.08's unnamed functor arguments to silence warning 67 [#4775 @dra27]
   * git: disable colored output [#4884 @rjbou]
+  * Check if a source is up to date with subpath [#4876 @rjbou]
 
 ## Build
   * Bump src_exts and fix build compat with Dune 2.9.0 [#4752 @dra27]
@@ -339,6 +344,7 @@ users)
   * New download functions for shared source, old ones kept [#4893 @rjbou]
   * `OpamClient.filter_unpinned_locally` now display a warning of skipped packages instead of debug log [#5083 @rjbou]
   * `OpamSolution.parallel_apply`: fix sources_needed package set, now integrate requested but not locally pinned packages [#5082 @rjbou]
+  * Add `?subpath` to `OpamRepository.fetch_dev_packages`, `OpamVCS.is_up_to_date` and vcs specific functions in `OpamDarcs`, `OpamHG`, and `OpamGit` [#4876 @rjbou]
 
 ## opam-state
   * `OpamSwitchState.universe`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
@@ -382,3 +388,4 @@ users)
   * `OpamSystem.copy_dir`: two-pass `rsync` copy for `MSYS2`, to handle symlinks [#4817 @jonahbeckford]
   * `OpamSHA`: use now only `sha`, some function removed (`shaxxx`, `shaxxx_bytes`, etc.) [#5042 @kit-ty-kate]
   * `OpamCoreConfig.r`: remove openssl related config: `use_openssl` parameter & config field, and `OPAMUSEOPENSSL` environment variable [#5042 @kit-ty-kate]
+  * `OpamFilename`: add a `SubPath` submodule to handle multi-platform subpath specifications. It has an effect on a lot of functions signatures [#4876 @rjbou]
