@@ -20,7 +20,7 @@ Either from an existing opam installation, use `opam pin add opam-devel
 
 * Make sure you have the required dependencies installed:
   - GNU make
-  - OCaml >= 4.02.3 (or see [below](#compiling-without-ocaml))
+  - OCaml >= 4.08 (or see [below](#compiling-without-ocaml))
   - A C++ compiler (unless building without a solver, see `./configure --without-mccs`)
 * Run `./configure`. If you don't have the dependencies installed, this will
   locally take care of all OCaml dependencies for you (downloading them, unless
