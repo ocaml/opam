@@ -1363,17 +1363,18 @@ let call_external_solver ~version_map univ req =
       let msg =
         Printf.sprintf
           "Solver failure: %s\nThis may be due to bad settings (solver or \
-           solver criteria) or a broken solver solver installation. Check \
+           solver criteria) or a broken solver installation. Check \
            $OPAMROOT/config, and the --solver and --criteria options."
           msg
       in
       raise (Solver_failure msg)
     | e ->
       OpamStd.Exn.fatal e;
+      let bt = Printexc.get_raw_backtrace () in
       let msg =
         Printf.sprintf "Solver failed: %s" (Printexc.to_string e)
       in
-      raise (Solver_failure msg)
+      Printexc.raise_with_backtrace (Solver_failure msg) bt
   else
     Dose_algo.Depsolver.Sat(None,Cudf.load_universe [])
 
