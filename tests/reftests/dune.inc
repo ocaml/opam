@@ -1,5 +1,22 @@
 
 (rule
+ (alias reftest-assume-built)
+ (action
+  (diff assume-built.test assume-built.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-assume-built)))
+
+(rule
+ (targets assume-built.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:assume-built.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-avoid-version)
  (action
   (diff avoid-version.test avoid-version.out)))
@@ -219,6 +236,23 @@
   (with-stdout-to
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:init.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-inplace)
+ (action
+  (diff inplace.test inplace.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-inplace)))
+
+(rule
+ (targets inplace.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:inplace.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-install-pgocaml)
@@ -613,6 +647,23 @@
   (with-stdout-to
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:var-option.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-working-dir)
+ (action
+  (diff working-dir.test working-dir.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-working-dir)))
+
+(rule
+ (targets working-dir.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:working-dir.test} %{read-lines:testing-env}))))
 
 (rule
  (targets opam-repo-N0REP0)
