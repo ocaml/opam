@@ -49,10 +49,11 @@ let (@@^) o l = match o with
   | None -> l
   | Some l1 -> List.rev_append l1 l
 
-let xrmap f l =
-  match List.fold_left (fun acc x -> f x @^ acc) [] l with
-  | [] -> None
-  | l -> Some l
+let xrmap f = function
+  | [] -> Some []
+  | l -> match List.fold_left (fun acc x -> f x @^ acc) [] l with
+    | [] -> None
+    | l -> Some l
 
 (*
 let xmap f l = match xrmap f l with
@@ -74,7 +75,7 @@ let mk_or ctx lopt =
   if List.exists Z3.Boolean.is_true l then
     Some (Z3.Boolean.mk_true ctx.z3)
   else match List.filter OpamStd.Op.(not @* Z3.Boolean.is_false) l with
-    | [] -> None
+    | [] -> Some (Z3.Boolean.mk_false ctx.z3)
     | [p] -> Some p
     | l -> Some (Z3.Boolean.mk_or ctx.z3 l)
 
@@ -90,8 +91,8 @@ let mk_and ctx lopt =
 let psym ctx = Hashtbl.find_opt ctx.pkgs
 
 let mk_constr ctx vpkgll pkgs =
-  let vpkgll = List.rev_map (List.sort compare) vpkgll in
-  let vpkgll = List.sort compare vpkgll in
+  let vpkgll = List.rev_map (List.sort_uniq compare) vpkgll in
+  let vpkgll = List.sort_uniq compare vpkgll in
   try Some (Hashtbl.find ctx.constrs vpkgll) with Not_found ->
     let c = mk_or ctx (xrmap (psym ctx) pkgs) in
     match c, pkgs with
