@@ -20,6 +20,8 @@ let is_present () = true
 
 let command_name = None
 
+let preemptive_check = false
+
 let default_criteria = {
   crit_default = "-removed,\
                   -count[avoid-version,changed],\

@@ -58,6 +58,7 @@ let of_backend backend : (module OpamCudfSolverSig.S) =
       | _ -> true
     let command_name = None
     let default_criteria = default_criteria
+    let preemptive_check = true
     let call = call backend !ext
   end)
 

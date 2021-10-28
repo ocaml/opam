@@ -86,6 +86,8 @@ module External (E: ExternalArg) : S = struct
 
   let command_name = Some E.command_name
 
+  let preemptive_check = true
+
   let default_criteria = E.default_criteria
 
   let call =
