@@ -401,9 +401,10 @@ end
 
 let parse_command = Parse.command
 
-let common_filters dir =
+let common_filters ?opam dir =
    let tmpdir = Filename.get_temp_dir_name () in
-    Re.[
+   let open Re in
+    [
       alt [str dir; str (OpamSystem.back_to_forward dir)],
       Sed "${BASEDIR}";
       seq [opt (str "/private");
@@ -413,10 +414,13 @@ let common_filters dir =
            str "opam-";
            rep1 (alt [alnum; char '-'])],
       Sed "${OPAMTMP}";
-    ]
+    ] @
+    (match opam with
+    | None -> []
+    | Some opam -> [ str opam, Sed "${OPAMBIN}" ])
 
 let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
-  let filter = common_filters dir @ filter in
+  let filter = common_filters ~opam dir @ filter in
   let opamroot = Filename.concat dir "OPAM" in
   let env_vars = [
     "OPAM", opam;
