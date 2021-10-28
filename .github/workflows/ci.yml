@@ -6,9 +6,8 @@ env:
   OPAMBSVERSION: 2.0.7
   OPAMBSROOT: ~/.cache/.opam.cached
   OPAM12CACHE: ~/.cache/opam1.2/cache
-  # This should be identical to the value in appveyor.yml
   OPAM_TEST_REPO_SHA: b02110b549a0b5275806ce27444fabac71093a0e
-  OPAM_REPO_SHA: 9355b17f9c22a2b44740e3fc5f25f24771929f26
+  OPAM_REPO_SHA: 754c005bee4b198787ffc01f82e6c1f9c6356c2c
   # Default ocaml version for some jobs
   OCAML_VERSION: 4.12.0
   ## variables for cache paths
