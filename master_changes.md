@@ -22,6 +22,8 @@ users)
 
 ## Init
   * Run the sandbox check in the temporary directory [#4787 @dra27 - fix #4783]
+  * Make "yes" the default answer to opam init's setup in interactive mode [#4877 @kit-ty-kate]
+  * Make the interactive mode of opam init's setup ask the user again when the answer isn't recognized instead of using the default value [#4877 @kit-ty-kate]
 
 ## Config report
   *

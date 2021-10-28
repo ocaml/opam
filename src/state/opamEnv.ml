@@ -748,12 +748,14 @@ let setup
         OpamConsole.warning "Shell not updated in non-interactive mode: use --shell-setup";
         None
       end else
+      let rec ask_loop () =
         match
           OpamConsole.read
-            "Do you want opam to modify %s? [N/y/f]\n\
-             (default is 'no', use 'f' to choose a different file)"
+            "Do you want opam to modify %s? [Y/n/f]\n\
+             (default is 'yes', use 'f' to choose a different file)"
             (OpamFilename.prettify dot_profile)
         with
+        | None (* Default is "yes" *)
         | Some ("y" | "Y" | "yes"  | "YES" ) -> Some dot_profile
         | Some ("f" | "F" | "file" | "FILE") ->
           begin
@@ -765,7 +767,12 @@ let setup
               None
             | Some f -> Some (OpamFilename.of_string f)
           end
-        | _ -> None
+        | Some ("n" | "N" | "no" | "NO") -> None
+        | Some answer ->
+          OpamConsole.error "Could not understand '%s'" answer;
+          ask_loop ()
+      in
+      ask_loop ()
   in
   let env_hook = match env_hook, interactive with
     | Some b, _ -> Some b
