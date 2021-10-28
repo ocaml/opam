@@ -35,6 +35,7 @@
      * rewrites: `| 'REGEXP' -> 'STR'` (can be repeated; set `STR` to `\c` to
        clear the line)
      * `| grep REGEXP`
+     * `| grep -v REGEXP`
      * `| unordered` compares lines without considering their ordering
      * variables from command outputs: `cmd args >$ VAR`
      * `### : comment`
@@ -127,6 +128,11 @@ let rec waitpid pid =
 
 exception Command_failure of int * string * string
 
+type filt_sort =
+  | Sed of string
+  | Grep
+  | GrepV
+
 let str_replace_path ?(escape=false) whichway filters s =
   let escape =
     if escape then Re.(replace_string (compile @@ char '\\') ~by:"\\\\")
@@ -137,12 +143,13 @@ let str_replace_path ?(escape=false) whichway filters s =
           seq [re; group (rep (diff any space))]
         ) in
       match by with
-      | Some by ->
+      | Sed by ->
         Re.replace (Re.compile re_path) s
           ~f:(fun g ->
               escape (by ^ whichway (Re.Group.get g 1)))
-      | None ->
-        if Re.execp (Re.compile re) s then s else "\\c")
+      | Grep | GrepV ->
+        let way = if by = Grep then fun x -> x else not in
+        if way @@ Re.execp (Re.compile re) s then s else "\\c")
     s filters
 
 let command
@@ -253,7 +260,7 @@ type command =
   | Run of { env: (string * string) list;
              cmd: string;
              args: string list; (* still escaped *)
-             filter: (Re.t * string option) list;
+             filter: (Re.t * filt_sort) list;
              output: string option;
              unordered: bool; }
   | Export of (string * string) list
@@ -356,9 +363,11 @@ module Parse = struct
       | "|" :: _ as rewr ->
         let rec get_rewr (unordered, acc) = function
           | "|" :: re :: "->" :: str :: r ->
-            get_rewr (unordered, (Posix.re (get_str re), Some (get_str str)) :: acc) r
+            get_rewr (unordered, (Posix.re (get_str re), Sed (get_str str)) :: acc) r
+          | "|" :: "grep" :: "-v" :: re :: r ->
+            get_rewr (unordered, (Posix.re (get_str re), GrepV) :: acc) r
           | "|" :: "grep" :: re :: r ->
-            get_rewr (unordered, (Posix.re (get_str re), None) :: acc) r
+            get_rewr (unordered, (Posix.re (get_str re), Grep) :: acc) r
           | "|" :: "unordered" :: r ->
             get_rewr (true, acc) r
           | ">$" :: output :: [] ->
@@ -396,14 +405,14 @@ let common_filters dir =
    let tmpdir = Filename.get_temp_dir_name () in
     Re.[
       alt [str dir; str (OpamSystem.back_to_forward dir)],
-      Some "${BASEDIR}";
+      Sed "${BASEDIR}";
       seq [opt (str "/private");
            alt [str tmpdir;
                 str (OpamSystem.back_to_forward tmpdir)];
            rep (set "/\\");
            str "opam-";
            rep1 (alt [alnum; char '-'])],
-      Some "${OPAMTMP}";
+      Sed "${OPAMTMP}";
     ]
 
 let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
@@ -418,7 +427,7 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
     List.rev_map (fun (v, x) ->
         Re.(alt [seq [str "${"; str v; str "}"];
                  seq [char '$'; str v; eow]];),
-        Some x)
+        Sed x)
       env_vars
   in
   let cmd = if cmd = "opam" then opam else cmd in
