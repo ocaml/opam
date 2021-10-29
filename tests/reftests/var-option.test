@@ -157,10 +157,10 @@ switch-foo
 ### opam var foo --global
 global-foo
 ### opam var ocaml-base-compiler:version
-[ERROR] Variable ocaml-base-compiler:version not found in in switch var-option
+[ERROR] Variable ocaml-base-compiler:version not found in switch var-option
 # Return code 5 #
 ### opam var ocaml-base-compiler:version --switch var-option
-[ERROR] Variable ocaml-base-compiler:version not found in in switch var-option
+[ERROR] Variable ocaml-base-compiler:version not found in switch var-option
 # Return code 5 #
 ### opam var --package ocaml | ".*build-id.*" -> '\c' | ".*opamfile.*" -> '\c' | "   *" -> " "
 Fatal error:

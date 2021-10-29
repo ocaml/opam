@@ -48,7 +48,7 @@ val build_package:
     metadata. See {!build_package} to build the package. *)
 val install_package:
   rw switch_state -> ?test:bool -> ?doc:bool -> ?build_dir:dirname -> package ->
-  exn option OpamProcess.job
+  (OpamFile.Dot_config.t option, exn) OpamCompat.Either.t OpamProcess.job
 
 (** Find out if the package source is needed for uninstall *)
 val removal_needs_download: 'a switch_state -> package -> bool

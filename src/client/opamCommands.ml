@@ -2564,6 +2564,25 @@ let switch cli =
         Some (OpamFormula.of_atom_formula (OpamFormula.ands atoms))
       | [], None, (Some f), false -> Some f
       | [], None, None, true -> Some OpamFormula.Empty
+      | _::_ as packages, Some atoms, None, false ->
+        if fst cli = cli2_0 then
+          let atoms = List.map (fun p -> Atom p) atoms in
+          let pkgs_formula =
+            OpamFormula.of_atom_formula (OpamFormula.ands atoms)
+          in
+          let args_formula =
+            OpamSwitchCommand.guess_compiler_invariant ?repos rt packages
+          in
+          Some (OpamFormula.And (args_formula, pkgs_formula))
+        else
+          OpamConsole.error_and_exit `Bad_arguments
+            "Individual package and option '--packages' can not be specified at \
+             the same time. Use just '--packages' instead, e.g.\n\
+             opam switch create flambda \
+             --packages=ocaml.4.12.0,ocaml-option-flambda\n\
+             or '--formula'\n\
+             opam switch create flambda \
+             --formula='[\"ocaml\" {=\"4.12.0\"} \"ocaml-option-flambda\"]'"
       | _ ->
         OpamConsole.error_and_exit `Bad_arguments
           "Individual packages, options --packages, --formula and --empty may \
@@ -2779,10 +2798,11 @@ let switch cli =
     | Some `set_invariant, params ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-      (match invariant_arg rt params with
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let repos = OpamSwitchState.repos_list st in
+      (match invariant_arg ~repos rt params with
        | exception Failure e -> `Error (false, e)
        | invariant_opt ->
-         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let invariant = match invariant_opt with
            | Some i -> i
            | None -> OpamSwitchState.infer_switch_invariant st

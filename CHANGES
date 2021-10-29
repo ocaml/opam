@@ -3,6 +3,32 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.1.1:
+* Fix typo in error message for opam var [#4786 @kit-ty-kate - fix #4785]
+* Run the sandbox check in the temporary directory [#4787 @dra27 - fix #4783]
+* OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
+* Homebrew: Add support for casks and full-names [#4801 @kit-ty-kate]
+* Fix the cold target in presence of an older OCaml compiler version on macOS
+  [#4802 @kit-ty-kate - fix #4801]
+* Archlinux: handle virtual package detection [#4833 @rjbou - partial fix #4759]
+* Disable the detection of available packages on RHEL-based distributions.
+  This fixes an issue on RHEL-based distributions where yum list used to detect
+  available and installed packages would wait for user input without showing
+  any output and/or fail in some cases [#4791 @kit-ty-kate - fixes #4790]
+* Handle empty environment variable updates - missed cherry-pick from 2.0
+  [#4840 @dra27]
+* Fix vendored build on mingw-w64 with g++ 11.2 [#4835 @dra27]
+* Put back support for switch creation with packages argument and
+  `--packages` option with cli 2.0, and a specific error message for cli 2.1
+  [#4853 @rjbou - fix #4843]
+* Fix reverting environment additions to PATH-like variables when several dirs
+  added at once [#4861 @dra27]
+* Fix dose3 download url since gforge is gone [#4870 @avsm]
+* Ensure setenv can use package variables defined during the build
+  [#4841 @dra27]
+* Fix `set-invariant: default repos were loaded instead of switch repos
+  [#4866 @rjbou]
+
 2.1.0:
 * Set DEBIAN_FRONTEND=noninteractive for unsafe-yes confirmation level
   [#4735 @dra27 - partially fix #4731]

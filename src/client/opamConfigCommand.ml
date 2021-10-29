@@ -982,7 +982,7 @@ let var_show_t resolve ?switch v =
     OpamConsole.error_and_exit `Not_found "Variable %s not found in %s" v
       (match switch with
            | None -> "global config"
-           | Some switch -> "in switch " ^ (OpamSwitch.to_string switch))
+           | Some switch -> "switch " ^ (OpamSwitch.to_string switch))
 
 let is_switch_defined_var switch_config v =
   OpamFile.Switch_config.variable switch_config
