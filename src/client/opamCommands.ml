@@ -623,7 +623,6 @@ let list ?(force_search=false) cli =
     in
     let filter =
       OpamFormula.ands [
-        state_selector;
         join
           (pattern_selector ::
            (if no_switch then Empty else
@@ -632,7 +631,8 @@ let list ?(force_search=false) cli =
            OpamStd.Option.Op.
              ((owns_file >>| fun f -> Atom (OpamListCommand.Owns_file f)) +!
               Empty) ::
-           List.map (fun x -> Atom x) selection)
+           List.map (fun x -> Atom x) selection);
+        state_selector;
       ]
     in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->

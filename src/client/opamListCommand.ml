@@ -216,8 +216,9 @@ let apply_selector ~base st = function
   | Compiler -> st.compiler_packages
   | Available -> Lazy.force st.available_packages
   | Installable ->
-    OpamSolver.installable
+    OpamSolver.installable_subset
       (OpamSwitchState.universe st ~requested:OpamPackage.Name.Set.empty Query)
+      base
   | Pinned -> OpamPinned.packages st
   | (Required_by ({recursive=true; _} as tog, atoms)
     | Depends_on ({recursive=true; _} as tog, atoms)) as direction ->
