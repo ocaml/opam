@@ -32,6 +32,11 @@ module type S = sig
 
   val default_criteria: criteria_def
 
+  val preemptive_check: bool
+  (** Should be true for solvers that may take a long time to detect that there
+      is no solution: in this case, dose's check is run beforehand ; otherwise
+      it's only run if the solver returns unsat, to extract the explanations. *)
+
   val call:
     criteria:string -> ?timeout:float -> Cudf.cudf ->
     Cudf.preamble option * Cudf.universe

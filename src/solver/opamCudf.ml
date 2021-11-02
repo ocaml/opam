@@ -1410,22 +1410,13 @@ let get_final_universe ~version_map univ req =
     Success (Cudf.load_universe [])
   | Dose_algo.Depsolver.Error str -> fail str
   | Dose_algo.Depsolver.Unsat r   ->
-    let msg =
-      Printf.sprintf
-        "The solver (%s) pretends there is no solution while that's apparently \
-         false.\n\
-         This is likely an issue with the solver interface, please try a \
-         different solver and report if you were using a supported one."
-        (let module Solver = (val OpamSolverConfig.(Lazy.force !r.solver)) in
-         Solver.name)
-    in
     match r with
-    | Some ({Dose_algo.Diagnostic.result = Dose_algo.Diagnostic.Failure _; _} as r) ->
-      OpamConsole.error "%s" msg;
+    | Some ({Dose_algo.Diagnostic.result = Dose_algo.Diagnostic.Failure _; _}
+            as r) ->
       make_conflicts ~version_map univ r
     | Some {Dose_algo.Diagnostic.result = Dose_algo.Diagnostic.Success _; _}
     | None ->
-      raise (Solver_failure msg)
+      conflict_empty ~version_map univ
 
 let diff univ sol =
   let before =
@@ -1454,9 +1445,31 @@ let actions_of_diff (install, remove) =
 let resolve ~extern ~version_map universe request =
   log "resolve request=%a" (slog string_of_request) request;
   let resp =
-    match check_request ~version_map universe request with
-    | Success _ when extern -> get_final_universe ~version_map universe request
-    | resp -> resp
+    let check () = check_request ~version_map universe request in
+    let solve () = get_final_universe ~version_map universe request in
+    if not extern then check () else
+    let module Solver : OpamCudfSolver.S =
+      (val Lazy.force OpamSolverConfig.(!r.solver))
+    in
+    let wrong_unsat_msg =
+      Printf.sprintf
+        "The solver (%s) pretends there is no solution while that's apparently \
+         false.\n\
+         This is likely an issue with the solver interface, please try a \
+         different solver and report if you were using a supported one."
+        Solver.name
+    in
+    if Solver.preemptive_check
+    then match check () with
+      | Conflicts _ as conflicts -> conflicts
+      | Success _ -> match solve () with
+        | Success _ as success -> success
+        | Conflicts _ -> raise (Solver_failure wrong_unsat_msg)
+    else match solve () with
+      | Success _ as success -> success
+      | Conflicts _ -> match check () with
+        | Success _ -> raise (Solver_failure wrong_unsat_msg)
+        | Conflicts _ as conflicts -> conflicts
   in
   let cleanup univ =
     Cudf.remove_package univ opam_invariant_package

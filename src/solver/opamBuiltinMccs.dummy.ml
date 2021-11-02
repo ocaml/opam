@@ -17,6 +17,8 @@ module S = struct
 
   let ext = ref None
 
+  let preemptive_check = false
+
   let command_name = None
 
   let default_criteria = {

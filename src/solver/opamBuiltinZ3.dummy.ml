@@ -18,6 +18,8 @@ let ext = ref None
 
 let command_name = None
 
+let preemptive_check = false
+
 let default_criteria = {
   crit_default = "";
   crit_upgrade = "";
