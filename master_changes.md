@@ -127,6 +127,7 @@ users)
 
 ## Solver
   * [BUG] Remove z3 debug output [#4723 @rjbou - fix #4717] [2.1.0~rc2 #4720]
+  * Fix and improve the Z3 solver backend [#4880 @altgr]
 
 ## Client
   *
