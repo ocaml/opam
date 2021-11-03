@@ -592,14 +592,29 @@ let parallel_apply t
       | `Change _ | `Reinstall _ -> assert false
     else
     match action with
-    | `Fetch [nv] ->
-      log "Fetching sources for %s" (OpamPackage.to_string nv);
-      (OpamAction.download_package t nv @@+ function
-        | None ->
-          store_time (); Done (`Successful (installed, removed))
-        | Some (_short_error, long_error) ->
-          Done (`Exception (Fetch_fail long_error)))
-    | `Fetch _ -> assert false
+    | `Fetch nvs ->
+      log "Fetching sources for %s"
+        (OpamStd.Format.pretty_list (List.map OpamPackage.to_string nvs));
+      ((match nvs with
+          | [nv] ->
+            OpamAction.download_package t nv
+          | _ ->
+            let url =
+              match OpamStd.List.filter_map (OpamSwitchState.url t) nvs with
+              | u::_ as urls ->
+                let checksums =
+                  List.map OpamFile.URL.checksum urls
+                  |> List.flatten
+                  |> List.sort_uniq OpamHash.compare
+                in
+                Some (OpamFile.URL.with_checksum checksums u)
+              | [] -> None
+            in
+            OpamAction.download_shared_source t url nvs) @@+ function
+       | None ->
+         store_time (); Done (`Successful (installed, removed))
+       | Some (_short_error, long_error) ->
+         Done (`Exception (Fetch_fail long_error)))
 
     | `Build nv ->
       if assume_built && OpamPackage.Set.mem nv requested then
