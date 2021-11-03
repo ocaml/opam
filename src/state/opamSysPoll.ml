@@ -10,6 +10,10 @@
 
 open OpamStd.Option.Op
 
+(* TODO: Horrible, do best (see opamPackageVar.ml) *)
+let priv_from_env_or = ref (Obj.magic ())
+let from_env_or ~default var_name = !priv_from_env_or ~default var_name
+
 let command_output c =
   match List.filter (fun s -> String.trim s <> "")
           (OpamSystem.read_command_output c)
@@ -47,7 +51,7 @@ let arch_lazy = lazy (
   | None | Some "" -> None
   | Some a -> Some (normalise_arch a)
 )
-let arch () = Lazy.force arch_lazy
+let arch () = from_env_or ~default:arch_lazy "arch"
 
 let normalise_os raw =
   match String.lowercase_ascii raw with
@@ -64,7 +68,7 @@ let os_lazy = lazy (
   | None | Some "" -> None
   | Some s -> Some (normalise_os s)
 )
-let os () = Lazy.force os_lazy
+let os () = from_env_or ~default:os_lazy "os"
 
 let os_release_field =
   let os_release_file = lazy (
@@ -108,7 +112,7 @@ let os_distribution_lazy = lazy (
      with Not_found -> linux)
   | os -> os
 )
-let os_distribution () = Lazy.force os_distribution_lazy
+let os_distribution () = from_env_or ~default:os_distribution_lazy "os-distribution"
 
 let os_version_lazy = lazy (
   match os () with
@@ -131,7 +135,7 @@ let os_version_lazy = lazy (
   | _ ->
     OpamStd.Sys.uname "-r" >>= norm
 )
-let os_version () = Lazy.force os_version_lazy
+let os_version () = from_env_or ~default:os_version_lazy "os-version"
 
 let os_family_lazy = lazy (
   match os () with
@@ -143,7 +147,7 @@ let os_family_lazy = lazy (
   | Some ("win32" | "cygwin") -> Some "windows"
   | _ -> os_distribution ()
 )
-let os_family () = Lazy.force os_family_lazy
+let os_family () = from_env_or ~default:os_family_lazy "os-family"
 
 let variables =
   List.map

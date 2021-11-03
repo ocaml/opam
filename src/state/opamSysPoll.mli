@@ -35,3 +35,7 @@ val cores: unit -> int
 (** Returns a string containing arch, os, os-distribution & os-version values,
     unknown if they are not available *)
 val to_string: unit -> string
+
+(** / *)
+(* TODO: Horrible, do best *)
+val priv_from_env_or : (default:string option Lazy.t -> string -> string option) ref

@@ -213,3 +213,11 @@ let fix_switch_list gt =
     with OpamSystem.Locked -> gt
   else gt
 
+(* TODO: Horrible, do best *)
+let () =
+  OpamSysPoll.priv_from_env_or := (fun ~default var_name ->
+    with_ `Lock_none @@ fun gt ->
+    match OpamPackageVar.resolve_global gt (OpamVariable.Full.of_string var_name) with
+    | None -> Lazy.force default
+    | Some v -> Some (OpamVariable.string_of_variable_contents v)
+  )
