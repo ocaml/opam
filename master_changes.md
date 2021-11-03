@@ -31,7 +31,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## List
-  *
+  * Some optimisations to 'opam list --installable' queries combined with other filters [#4882 @AltGr]
 
 ## Show
   *
