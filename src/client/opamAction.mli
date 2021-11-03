@@ -51,7 +51,7 @@ val build_package:
   exn option OpamProcess.job
 
 (** [install_package t pkg] installs an already built package. Returns
-    [None] on success, [Some exn] on error. Do not update OPAM's
+    [None] on success, [Some exn] on error. Do not update opam's
     metadata. See {!build_package} to build the package. *)
 val install_package:
   rw switch_state -> ?test:bool -> ?doc:bool -> ?build_dir:dirname -> package ->
