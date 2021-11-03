@@ -43,7 +43,7 @@ users)
   *
 
 ## List
-  *
+  * Some optimisations to 'opam list --installable' queries combined with other filters [@altgr]
 
 ## Show
   *
