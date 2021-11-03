@@ -50,6 +50,7 @@ module VCS : OpamVCS.VCS = struct
        *)
       git repo_root [ "config" ; "--local" ; "core.autocrlf"; "false"];
       git repo_root [ "config" ; "--local" ; "core.eol"; "lf"];
+      git repo_root [ "config" ; "--local" ; "color.ui"; "false" ];
       (* Document the remote for user-friendliness (we don't use it) *)
       git repo_root [ "remote"; "add"; "origin"; OpamUrl.base_url repo_url ];
     ] @@+ function
