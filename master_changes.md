@@ -36,7 +36,7 @@ users)
   * [BUG] Fix `opam init` and `opam init --reinit` when the `jobs` variable has been set in the opamrc or the current config. [#5056 @rjbou]
 
 ## Config report
-  *
+  * [BUG] Don't fail is no switch is set [#5198 @rjbou]
 
 ## Actions
   *  Add a `'Fetch` action with several packages: one node to download once and prepare source once for packages that share same archive [#4893 @rjbou - fix #3741]
