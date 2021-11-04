@@ -178,7 +178,8 @@ module Installed_cache = OpamCached.Make(struct
     let name = "installed"
   end)
 
-let depexts_status_of_packages_raw ~depexts global_config switch_config packages =
+let depexts_status_of_packages_raw
+    ~depexts ?env global_config switch_config packages =
   let open OpamSysPkg.Set.Op in
   let syspkg_set, syspkg_map =
     OpamPackage.Set.fold (fun nv (set, map) ->
@@ -195,7 +196,7 @@ let depexts_status_of_packages_raw ~depexts global_config switch_config packages
   in
   let syspkg_set = syspkg_set -- bypass in
   let ret =
-    match OpamSysInteract.packages_status syspkg_set with
+    match OpamSysInteract.packages_status ?env syspkg_set with
     | avail, not_found ->
       let avail, not_found =
         if OpamStateConfig.(!r.no_depexts) then
@@ -516,6 +517,7 @@ let load lock_kind gt rt switch =
       lazy OpamPackage.Map.empty
     else lazy (
       depexts_status_of_packages_raw gt.config switch_config
+        ~env:gt.global_variables
         (Lazy.force available_packages)
         ~depexts:(fun package ->
             let env =
@@ -771,7 +773,7 @@ let depexts st nv =
 
 let depexts_status_of_packages st set =
   depexts_status_of_packages_raw st.switch_global.config st.switch_config set
-    ~depexts:(depexts st)
+    ~env:st.switch_global.global_variables ~depexts:(depexts st)
 
 let depexts_unavailable st nv =
   depexts_unavailable_raw (Lazy.force st.sys_packages) nv

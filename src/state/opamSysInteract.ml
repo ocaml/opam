@@ -97,38 +97,35 @@ type families =
   | Suse
 
 (* System status *)
-let family =
-  let family = lazy (
-    match OpamSysPoll.os_family () with
-    | None ->
+let family ~env () =
+  match OpamSysPoll.os_family env with
+  | None ->
+    Printf.ksprintf failwith
+      "External dependency unusable, OS family not detected."
+  | Some family ->
+    match family with
+    | "alpine" -> Alpine
+    | "amzn" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol"
+    | "rhel" -> Centos
+    | "archlinux" | "arch" -> Arch
+    | "bsd" ->
+      begin match OpamSysPoll.os_distribution env with
+        | Some ("freebsd" | "dragonfly") -> Freebsd
+        | Some "netbsd" -> Netbsd
+        | Some "openbsd" -> Openbsd
+        | _ ->
+          Printf.ksprintf failwith
+            "External dependency handling not supported for OS family 'bsd'."
+      end
+    | "debian" | "ubuntu" -> Debian
+    | "gentoo" -> Gentoo
+    | "homebrew" -> Homebrew
+    | "macports" -> Macports
+    | "suse" | "opensuse" -> Suse
+    | family ->
       Printf.ksprintf failwith
-        "External dependency unusable, OS family not detected."
-    | Some family ->
-      match family with
-      | "alpine" -> Alpine
-      | "amzn" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol"
-      | "rhel" -> Centos
-      | "archlinux" | "arch" -> Arch
-      | "bsd" ->
-        begin match OpamSysPoll.os_distribution () with
-          | Some ("freebsd" | "dragonfly") -> Freebsd
-          | Some "netbsd" -> Netbsd
-          | Some "openbsd" -> Openbsd
-          | _ ->
-            Printf.ksprintf failwith
-              "External dependency handling not supported for OS family 'bsd'."
-        end
-      | "debian" | "ubuntu" -> Debian
-      | "gentoo" -> Gentoo
-      | "homebrew" -> Homebrew
-      | "macports" -> Macports
-      | "suse" | "opensuse" -> Suse
-      | family ->
-        Printf.ksprintf failwith
-          "External dependency handling not supported for OS family '%s'."
-          family
-  ) in
-  fun () -> Lazy.force family
+        "External dependency handling not supported for OS family '%s'."
+        family
 
 let yum_cmd = lazy begin
   if OpamSystem.resolve_command "yum" <> None then
@@ -139,7 +136,7 @@ let yum_cmd = lazy begin
     raise (OpamSystem.Command_not_found "yum or dnf")
 end
 
-let packages_status packages =
+let packages_status ?(env=OpamVariable.Map.empty) packages =
   let (+++) pkg set = OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set in
   (* Some package managers don't permit to request on available packages. In
      this case, we consider all non installed packages as [available]. *)
@@ -227,7 +224,7 @@ let packages_status packages =
     in
     compute_sets sys_installed ~sys_available
   in
-  match family () with
+  match family ~env () with
   | Alpine ->
     (* Output format
        >capnproto policy:
@@ -625,7 +622,7 @@ let packages_status packages =
 
 (* Install *)
 
-let install_packages_commands_t sys_packages =
+let install_packages_commands_t ?(env=OpamVariable.Map.empty) sys_packages =
   let unsafe_yes = OpamCoreConfig.answer_is `unsafe_yes in
   let yes ?(no=[]) yes r =
     if unsafe_yes then
@@ -634,7 +631,7 @@ let install_packages_commands_t sys_packages =
   let packages =
     List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements sys_packages)
   in
-  match family () with
+  match family ~env () with
   | Alpine -> ["apk", "add"::yes ~no:["-i"] [] packages], None
   | Arch -> ["pacman", "-Su"::yes ["--noconfirm"] packages], None
   | Centos ->
@@ -673,13 +670,13 @@ let install_packages_commands_t sys_packages =
   | Openbsd -> ["pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> ["zypper", yes ["--non-interactive"] ("install"::packages)], None
 
-let install_packages_commands sys_packages =
-  fst (install_packages_commands_t sys_packages)
+let install_packages_commands ?env sys_packages =
+  fst (install_packages_commands_t ?env sys_packages)
 
-let sudo_run_command ?vars cmd args =
+let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
   let cmd, args =
     let not_root = Unix.getuid () <> 0  in
-    match OpamSysPoll.os (), OpamSysPoll.os_distribution () with
+    match OpamSysPoll.os env, OpamSysPoll.os_distribution env with
     | Some "openbsd", _ when not_root ->
       "doas", cmd::args
     | Some ("linux" | "unix" | "freebsd" | "netbsd" | "dragonfly"), _
@@ -698,21 +695,21 @@ let sudo_run_command ?vars cmd args =
       "failed with exit code %d at command:\n    %s"
       code (String.concat " " (cmd::args))
 
-let install packages =
+let install ?env packages =
   if OpamSysPkg.Set.is_empty packages then
     log "Nothing to install"
   else
-    let commands, vars = install_packages_commands_t packages in
+    let commands, vars = install_packages_commands_t ?env packages in
     let vars = OpamStd.Option.map (List.map (fun x -> `add, x)) vars in
     List.iter
       (fun (cmd, args) ->
-         try sudo_run_command ?vars cmd args
+         try sudo_run_command ?env ?vars cmd args
          with Failure msg -> failwith ("System package install " ^ msg))
       commands
 
-let update () =
+let update ?(env=OpamVariable.Map.empty) () =
   let cmd =
-    match family () with
+    match family ~env () with
     | Alpine -> Some ("apk", ["update"])
     | Arch -> Some ("pacman", ["-Sy"])
     | Centos -> Some (Lazy.force yum_cmd, ["makecache"])
@@ -728,15 +725,15 @@ let update () =
   | None ->
     OpamConsole.warning
       "Unknown update command for %s, skipping system update"
-      OpamStd.Option.Op.(OpamSysPoll.os_family () +! "unknown")
+      OpamStd.Option.Op.(OpamSysPoll.os_family env +! "unknown")
   | Some (cmd, args) ->
-    try sudo_run_command cmd args
+    try sudo_run_command ~env cmd args
     with Failure msg -> failwith ("System package update " ^ msg)
 
-let repo_enablers () =
-  if family () <> Centos then None else
+let repo_enablers ?(env=OpamVariable.Map.empty) () =
+  if family ~env () <> Centos then None else
   let (needed, _) =
-    packages_status (OpamSysPkg.raw_set
+    packages_status ~env (OpamSysPkg.raw_set
                        (OpamStd.String.Set.singleton "epel-release"))
   in
   if OpamSysPkg.Set.is_empty needed then None
