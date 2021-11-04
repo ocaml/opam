@@ -14,7 +14,6 @@ build: [
   [ "ocaml" "shared.ml" ]
   [ "ocaml" "extra_uniq.ml" ]
 ]
-#patches: ["shared.patch"]
 ### <pkg:extra.3:extra_uniq.ml>
 print_endline "I am a non shared code"
 ### <pkg:non-shared.4>
@@ -48,8 +47,7 @@ The following actions will be performed:
 ===== 3 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved extra.3  (file://${BASEDIR}/shared.tgz)
--> retrieved no-extra.3  (cached)
+-> retrieved extra.3, no-extra.3  (file://${BASEDIR}/shared.tgz)
 -> retrieved non-shared.4  (file://${BASEDIR}/non-shared.tgz)
 -> installed extra.3
 -> installed no-extra.3
@@ -107,8 +105,7 @@ The following actions will be performed:
 ===== 3 to recompile =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved extra.3  (file://${BASEDIR}/shared.tgz)
--> retrieved no-extra.3  (cached)
+-> retrieved extra.3, no-extra.3  (file://${BASEDIR}/shared.tgz)
 -> retrieved non-shared.4  (file://${BASEDIR}/non-shared.tgz)
 -> removed   extra.3
 -> installed extra.3
@@ -119,22 +116,25 @@ The following actions will be performed:
 Done.
 ### cat dotty-actions-explicit.dot
 digraph G {
+  "fetch extra.3, no-extra.3";
   "install no-extra.3";
   "install non-shared.4";
-  "fetch extra.3";
+  "fetch non-shared.4";
   "build non-shared.4";
   "build no-extra.3";
   "install extra.3";
   "build extra.3";
   "remove extra.3";
-  "fetch no-extra.3";
   "remove non-shared.4";
   "remove no-extra.3";
-  "fetch non-shared.4";
   
   
-  "fetch extra.3" -> "remove extra.3";
-  "fetch extra.3" -> "build extra.3";
+  "fetch extra.3, no-extra.3" -> "remove extra.3";
+  "fetch extra.3, no-extra.3" -> "remove no-extra.3";
+  "fetch extra.3, no-extra.3" -> "build extra.3";
+  "fetch extra.3, no-extra.3" -> "build no-extra.3";
+  "fetch non-shared.4" -> "remove non-shared.4";
+  "fetch non-shared.4" -> "build non-shared.4";
   "build non-shared.4" -> "remove non-shared.4";
   "build non-shared.4" -> "install non-shared.4";
   "build no-extra.3" -> "remove no-extra.3";
@@ -142,12 +142,8 @@ digraph G {
   "build extra.3" -> "remove extra.3";
   "build extra.3" -> "install extra.3";
   "remove extra.3" -> "install extra.3";
-  "fetch no-extra.3" -> "remove no-extra.3";
-  "fetch no-extra.3" -> "build no-extra.3";
   "remove non-shared.4" -> "install non-shared.4";
   "remove no-extra.3" -> "install no-extra.3";
-  "fetch non-shared.4" -> "remove non-shared.4";
-  "fetch non-shared.4" -> "build non-shared.4";
   
   }
 ### : several hashes handling
@@ -211,11 +207,8 @@ The following actions will be performed:
 ===== 5 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved extra.3  (cached)
+-> retrieved extra.3, intra.3, no-extra.3, out.3  (cached)
 -> installed in.3
--> retrieved intra.3  (file://${BASEDIR}/shared.tgz)
--> retrieved no-extra.3  (cached)
--> retrieved out.3  (cached)
 -> installed no-extra.3
 -> installed extra.3
 -> installed intra.3
@@ -266,26 +259,27 @@ The following actions will be performed:
 ===== 5 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-[ERROR] extra.3: Checksum mismatch for file://${BASEDIR}/shared.tgz:
+[ERROR] Conflicting file hashes, or broken or compromised cache!
+          - md5=a-given-hash (MISMATCH)
+          - md5=a-given-hash (match)
+          - sha256=a-given-hash (match)
+          - sha512=a-given-hash (match)
+
+[ERROR] extra.3, intra.3, no-extra.3, out.3: Checksum mismatch for file://${BASEDIR}/shared.tgz:
           expected md5=a-given-hash
           got      md5=a-given-hash
-[ERROR] Failed to get sources of extra.3: Checksum mismatch
+[ERROR] Failed to get sources of extra.3, intra.3, no-extra.3, out.3 (file://${BASEDIR}/shared.tgz): Checksum mismatch
 -> installed in.3
--> retrieved intra.3  (cached)
--> retrieved no-extra.3  (cached)
--> retrieved out.3  (cached)
--> installed no-extra.3
 
 OpamSolution.Fetch_fail("Checksum mismatch")
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 +- The following actions failed
-| - fetch extra 3
+| - fetch extra.3, intra.3, no-extra.3, out.3 
 +- 
-+- The following changes have been performed (the rest was aborted)
-| - install in       3
-| - install no-extra 3
++- The following changes have been performed
+| - install in 3
 +- 
 
 The former state can be restored with:
