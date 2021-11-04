@@ -223,7 +223,11 @@ reftest-%: $(DUNE_DEP) src/client/no-git-version
 	$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . @reftest-$* --force
 
 reftests-meld:
-	meld `for t in tests/reftests/*.test; do echo --diff $$t _build/default/$${t%.test}.out; done`
+	meld `for t in tests/reftests/*.test; do \
+	  out=_build/default/$${t%.test}.out; \
+	  if test -f $$out && ! diff -q $$t $$out 2> /dev/null > /dev/null; then \
+	    echo --diff $$t $$out; \
+	  fi; done`
 
 .PHONY: doc
 doc: all
