@@ -68,6 +68,23 @@
    (run ./run.exe %{bin:opam} %{dep:cli-versioning.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-config)
+ (action
+  (diff config.test config.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-config)))
+
+(rule
+ (targets config.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:config.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-conflict-4373)
  (action
   (diff conflict-4373.test conflict-4373.out)))
