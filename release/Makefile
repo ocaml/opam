@@ -97,10 +97,9 @@ host: $(OUTDIR)/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	    MAKE=$(MAKE) \
 	    $(EXPORTS_$(HOST_OS)); \
 	  cd build/opam-full-$(VERSION) && \
-	  ./configure --with-vendored-deps && \
+	  ./configure && \
+	  { $(MAKE) lib-ext || ./configure --with-vendored-deps; } && \
 	  echo "$(call LINKING,$(HOST_OS))" >src/client/linking.sexp && \
-	  sed 's/ -Wno-stringop-overflow//' src_ext/mccs/src/glpk/context_flags.ml >src_ext/mccs/src/glpk/context_flags.ml.1 && \
-	  mv src_ext/mccs/src/glpk/context_flags.ml.1 src_ext/mccs/src/glpk/context_flags.ml && \
 	  $(MAKE) opam; \
 	)
 	cp build/opam-full-$(VERSION)/opam $(OUTDIR)/opam-$(VERSION)-$(HOST)
