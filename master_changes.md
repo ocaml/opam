@@ -30,6 +30,9 @@ users)
 ## Config report
   *
 
+## Actions
+  *  Add a `'Fetch` action with several packages: one node to download once and prepare source once for packages that share same archive [#4893 @rjbou - fix #3741]
+
 ## Install
   * Make the status of pinned packages more explicit during installation [#4987 @kit-ty-kate - fix #4925]
   * Better recognize depexts on Gentoo, NetBSD, OpenBSD [#5065 @mndrix]
@@ -272,6 +275,8 @@ users)
   * Add `OpamSwitchCommand.previous_switch` [#4910 @kit-ty-kate]
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
+  * New download functions for shared source, old ones kept [#4893 @rjbou]
+
 ## opam-state
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
@@ -281,11 +286,14 @@ users)
   * `OpamSolver.load_cudf_universe`: change staging of `add_invariant` [#5024 @AltGr]
   * `OpamSolver.coinstallable_subset`: add `add_invariant` optional argument [#5024 @AltGr]
   * `OpamSolver.installable`: use `installable_subset` that uses `coinstallable_subset` [#5024 @kit_ty_kate]
+  * `OpamSolver.explicit`: when adding fetch nodes, add shared source ones. Change of `sources_needed` argument type [#4893 @rjbou]
 ## opam-format
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamSysPkg` and `OpamVariable` [#4918 @rjbou]
   * Add OpamPackage.Version.default returning the version number used when no version is given for a package [#4949 @kit-ty-kate]
   * Add `OpamPath.Switch.man_dirs` [#4915 @rjbou]
   * `OpamFile.Config`: order list of installed switches according their last use, update `with_switch` accordingly, and add `previous_switch` [#4910 @AltGr]
+  * Change ``Fetch` action to take several packages, in order to handle shared fetching of packages [#4893 @rjbou]
+
 ## opam-core
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamFilename`, `OpamHash`, `OpamStd`, `OpamStd`, `OpamUrl`, and `OpamVersion` [#4918 @rjbou]
