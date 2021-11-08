@@ -753,6 +753,7 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
     Field "depopts";
     Field "conflicts";
     Field "conflict-class";
+    Field "depexts";
     Synopsis;
     Description;
   ] in
