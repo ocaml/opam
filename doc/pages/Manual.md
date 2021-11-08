@@ -1045,6 +1045,14 @@ files.
       fail to install if they don't pass. `conf` packages should have a name
       starting with `conf-`, and include the appropriate
       [`depexts:`](#opamfield-depexts) field.
+    - <a id="opamflag-avoid-version">`avoid-version`</a>: this gives the package
+      version lowest priority when computing the solution to user requests. The
+      priority is not only related to other versions of the same package: if all
+      of a package's versions are marked with `avoid-version`, the package will
+      only get installed if there are no alternatives, or if asked for
+      explicitely. This can be affected by the
+      [solver criteria](#configfield-solver-criteria). This can be useful for
+      beta releases, or to discourage installation of releases with known bugs.
 
 - <a id="opamfield-features">
   `features: [ <ident> { <pkgname> { <filtered-package-formula> } ... } { <string> } ... ]`
