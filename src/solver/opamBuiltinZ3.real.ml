@@ -501,12 +501,12 @@ let call ~criteria ?timeout (preamble, universe, _ as cudf) =
   Z3.Optimize.add opt ctx.constr_defs;
   Z3.Optimize.add opt request_def;
   log "Resolving...";
-  (match Sys.getenv "OPAMZ3DEBUG" with
-   | exception Not_found -> ()
-   | f ->
-     let debug = open_out (f^".smt2") in
-     output_string debug (Z3.Optimize.to_string opt);
-     close_out debug);
+  (* (match Sys.getenv "OPAMZ3DEBUG" with
+   *  | exception Not_found -> ()
+   *  | f ->
+   *    let debug = open_out (f^".smt2") in
+   *    output_string debug (Z3.Optimize.to_string opt);
+   *    close_out debug); *)
   match Z3.Optimize.check opt with
   | UNSATISFIABLE ->
     log "UNSAT";
