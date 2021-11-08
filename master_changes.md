@@ -168,6 +168,7 @@ users)
 ## Doc
   * Standardise `macOS` use [#4782 @kit-ty-kate]
   * Fix `span` tag in mannual [#4855 @rjbou - fix #4848]
+  * Add `avoid-version` doc [#4896 @AltGR - fix #4864]
 
 ## Security fixes
   *
