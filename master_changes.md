@@ -46,7 +46,7 @@ users)
   * Some optimisations to 'opam list --installable' queries combined with other filters [@altgr]
 
 ## Show
-  *
+  * Add `depexts` to default printer [#4898 @rjbou]
 
 ## Var
   *
