@@ -1575,6 +1575,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:resolve-variables.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-sandbox.unix)
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff sandbox.unix.test sandbox.unix.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-sandbox.unix)))
+
+(rule
+ (targets sandbox.unix.out)
+ (deps root-N0REP0)
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:sandbox.unix.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-shared-fetch)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
