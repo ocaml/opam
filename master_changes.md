@@ -86,10 +86,11 @@ users)
   * Always mount every directories under / on Linux [#4795 @kit-ty-kate]
   * Get rid of OPAM_USER_PATH_RO (never used on macOS and no longer needed on Linux) [#4795 @kit-ty-kate]
 
-## Repository management
-  * Pass --depth=1 to git-fetch in the Git repo backend [#4442 @dra27]
+## Repository
+  * Don't display global message when `this-switch` is given [#4899 @rjbou - fix #4889]
 
 ## VCS
+  * Pass --depth=1 to git-fetch in the Git repo backend [#4442 @dra27]
   * Use 4.08's unnamed functor arguments to silence warning 67 [#4775 @dra27]
   * git: disable colored output [#4884 @rjbou]
 
