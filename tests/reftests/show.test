@@ -14,6 +14,12 @@ authors     "The LLVM team"
 maintainer  "Kate <kit.ty.kate@disroot.org>"
 license     "MIT"
 flags       conf
+depexts     ["llvm@10"] {os-distribution = "homebrew" & os = "macos"}
+            ["llvm-10.0"] {os-distribution = "macports" & os = "macos"}
+            ["llvm-10-dev"] {os-family = "debian"}
+            ["llvm10-dev"] {os-distribution = "alpine"}
+            ["llvm10-devel"] {os-family = "suse"}
+            ["devel/llvm10"] {os = "freebsd"}
 synopsis    Virtual package relying on llvm library installation
 ### opam show --all-versions "conf-llvm>7.0.0"
 
@@ -30,6 +36,12 @@ authors     "The LLVM team"
 maintainer  "Kate <kit.ty.kate@disroot.org>"
 license     "MIT"
 flags       conf
+depexts     ["llvm@8"] {os-distribution = "homebrew" & os = "macos"}
+            ["llvm-8.0"] {os-distribution = "macports" & os = "macos"}
+            ["llvm-8-dev"] {os-family = "debian"}
+            ["llvm8-dev"] {os-distribution = "alpine"}
+            ["llvm8-devel"] {os-family = "suse"}
+            ["devel/llvm80"] {os = "freebsd"}
 synopsis    Virtual package relying on llvm library installation
 
 <><> Version-specific details <><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -41,6 +53,12 @@ authors     "The LLVM team"
 maintainer  "Kate <kit.ty.kate@disroot.org>"
 license     "MIT"
 flags       conf
+depexts     ["llvm@9"] {os-distribution = "homebrew" & os = "macos"}
+            ["llvm-9.0"] {os-distribution = "macports" & os = "macos"}
+            ["llvm-9-dev"] {os-family = "debian"}
+            ["llvm9-dev"] {os-distribution = "alpine"}
+            ["llvm9-devel"] {os-family = "suse"}
+            ["devel/llvm90"] {os = "freebsd"}
 synopsis    Virtual package relying on llvm library installation
 
 <><> Version-specific details <><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -52,6 +70,12 @@ authors     "The LLVM team"
 maintainer  "Kate <kit.ty.kate@disroot.org>"
 license     "MIT"
 flags       conf
+depexts     ["llvm@10"] {os-distribution = "homebrew" & os = "macos"}
+            ["llvm-10.0"] {os-distribution = "macports" & os = "macos"}
+            ["llvm-10-dev"] {os-family = "debian"}
+            ["llvm10-dev"] {os-distribution = "alpine"}
+            ["llvm10-devel"] {os-family = "suse"}
+            ["devel/llvm10"] {os = "freebsd"}
 synopsis    Virtual package relying on llvm library installation
 ### opam show  "conf-llvm>7.0.0" --raw
 opam-version: "2.0"
@@ -110,6 +134,12 @@ authors     "The LLVM team"
 maintainer  "Kate <kit.ty.kate@disroot.org>"
 license     "MIT"
 flags       conf
+depexts     ["devel/llvm10"] {os = "freebsd"}
+            ["llvm-10-dev"] {os-family = "debian"}
+            ["llvm-10.0"] {os-distribution = "macports" & os = "macos"}
+            ["llvm10-dev"] {os-distribution = "alpine"}
+            ["llvm10-devel"] {os-family = "suse"}
+            ["llvm@10"] {os-distribution = "homebrew" & os = "macos"}
 synopsis    Virtual package relying on llvm library installation
 ### opam show "conf-llvm>7.0.0" -f depexts: --sort
 ["devel/llvm10"] {os = "freebsd"}
