@@ -17,6 +17,7 @@ users)
   * Fix typo in error message for opam var [#4786 @kit-ty-kate - fix #4785]
   * Add cli 2.2 handling [#4853 @rjbou]
   * --no-depexts is the default in CLI 2.0 mode [#4908 @dra27]
+  * [BUG] Fix behaviour on closed stdout/stderr [#4901 @altgr - fix #4216]
 
 ## Plugins
   *

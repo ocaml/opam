@@ -323,6 +323,10 @@ let display_cli_error msg =
 let display_cli_error fmt =
   Format.ksprintf display_cli_error fmt
 
+let flush_all_noerror () =
+  (try flush stderr with _ -> ());
+  (try flush stdout with _ -> ())
+
 let rec main_catch_all f =
   try f () with
   | OpamStd.Sys.Exit 0 -> ()
@@ -354,8 +358,8 @@ let rec main_catch_all f =
          "Update done, please now retry your command.\n";
        exit (OpamStd.Sys.get_exit_code `Aborted))
   | e ->
-    flush stdout;
-    flush stderr;
+    Sys.set_signal Sys.sigpipe Sys.Signal_default;
+    flush_all_noerror ();
     if (OpamConsole.verbose ()) then
       OpamConsole.errmsg "'%s' failed.\n"
         (String.concat " " (Array.to_list Sys.argv));
@@ -465,8 +469,7 @@ let json_out () =
 
 let main () =
   OpamStd.Sys.at_exit (fun () ->
-      flush stderr;
-      flush stdout;
+      flush_all_noerror ();
       if OpamClientConfig.(!r.print_stats) then (
         OpamFile.Stats.print ();
         OpamSystem.print_stats ();
