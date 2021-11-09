@@ -73,6 +73,7 @@ users)
     and installed packages would wait for user input without showing any output and/or fail
     in some cases [#4791 @kit-ty-kate - fixes #4790]
   * Archlinux: handle virtual package detection [#4831 @rjbou - partial fix #4759]
+  * Fallback on dnf if yum does not exist on RHEL-based systems [#4825 @kit-ty-kate]
 
 ## Format upgrade
   * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
