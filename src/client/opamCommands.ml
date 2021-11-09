@@ -2067,7 +2067,7 @@ let repository cli =
       mk_vflag_all ~cli ~section:scope_section [
         cli_original, `No_selection, ["dont-select"],
           "Don't update any selections";
-        cli_original, `Current_switch, ["this-switch"],
+        cli_original, `This_switch, ["this-switch"],
           "Act on the selections for the current switch (this is the default)";
         cli_original, `Default, ["set-default"],
           "Act on the default repository selection that is used for newly \
@@ -2140,7 +2140,7 @@ let repository cli =
                 (OpamSwitch.to_string sw)
             else if List.mem sw acc then acc
             else acc @ [sw]
-          | `Current_switch ->
+          | `Current_switch | `This_switch ->
             match OpamStateConfig.get_switch_opt () with
             | None ->
               OpamConsole.warning "No switch is currently set, perhaps you meant \
@@ -2270,8 +2270,9 @@ let repository cli =
       let global = List.mem `Default scope in
       let switches =
         if scope = [] ||
-           List.exists (function `Current_switch | `Switch _ -> true
-                               | _ -> false)
+           List.exists (function
+               | `This_switch | `Current_switch | `Switch _ -> true
+               | _ -> false)
              scope
         then switches
         else []
