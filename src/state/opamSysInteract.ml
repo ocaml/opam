@@ -136,7 +136,7 @@ let yum_cmd = lazy begin
   else if OpamSystem.resolve_command "dnf" <> None then
     "dnf"
   else
-    failwith "Could not find either yum or dnf to install external dependencies"
+    raise (OpamSystem.Command_not_found "yum or dnf")
 end
 
 let packages_status packages =
