@@ -184,14 +184,16 @@ i-got-the-variables:etc ${BASEDIR}/OPAM/var-option/etc/i-got-the-variables # Etc
 i-got-the-variables:build ${BASEDIR}/OPAM/var-option/.opam-switch/build/i-got-the-variables.2.4.6 # Directory where the package was built
 i-got-the-variables:dev false # True if this is a development package
 ### opam var i-got-the-variables:version=1 | '…' -> '...' | '`' -> "'"
-[ERROR] Variable i-got-the-variables:version=1 not found in switch var-option
-# Return code 5 #
+opam: variable setting needs a scope, use '--global' or '--switch <switch>'
+Usage: opam var [--global] [--package=PACKAGE] [OPTION]... [VAR[=[VALUE]]]
+Try 'opam var --help' or 'opam --help' for more information.
+# Return code 2 #
 ### opam var i-got-the-variables:version=1 --switch var-option
-[ERROR] Variable i-got-the-variables:version=1 not found in switch var-option
-# Return code 5 #
+[ERROR] Only global variables may be set using this command
+# Return code 2 #
 ### opam var i-got-the-variables:version=1 --global
-[ERROR] Variable i-got-the-variables:version=1 not found in global config
-# Return code 5 #
+[ERROR] Only global variables may be set using this command
+# Return code 2 #
 ### opam var _:version
 [ERROR] Variable _:version not found in switch var-option
 # Return code 5 #
@@ -202,14 +204,16 @@ i-got-the-variables:dev false # True if this is a development package
 [ERROR] Variable _:version not found in global config
 # Return code 5 #
 ### opam var _:version=1 | '…' -> '...' | '`' -> "'"
-[ERROR] Variable _:version=1 not found in switch var-option
-# Return code 5 #
+opam: variable setting needs a scope, use '--global' or '--switch <switch>'
+Usage: opam var [--global] [--package=PACKAGE] [OPTION]... [VAR[=[VALUE]]]
+Try 'opam var --help' or 'opam --help' for more information.
+# Return code 2 #
 ### opam var _:version=1 --switch var-option
-[ERROR] Variable _:version=1 not found in switch var-option
-# Return code 5 #
+[ERROR] Only global variables may be set using this command
+# Return code 2 #
 ### opam var _:version=1 --global
-[ERROR] Variable _:version=1 not found in global config
-# Return code 5 #
+[ERROR] Only global variables may be set using this command
+# Return code 2 #
 ### opam option
 
 <><> Global configuration <><><><><><><><><><><><><><><><><><><><><><><><><><><>

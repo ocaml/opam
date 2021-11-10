@@ -445,7 +445,7 @@ let parse_update fv =
     Re.(compile @@ seq [
         group @@ seq [
           wordc;
-          opt @@ (seq [ rep @@ alt [ wordc ; char '-' ]; wordc ])
+          opt @@ (seq [ rep @@ alt [ wordc ; char '-' ; char ':' ]; wordc ])
         ];
         (opt @@ seq [
             (group @@ (alt [
