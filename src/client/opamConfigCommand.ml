@@ -490,6 +490,10 @@ let switch_doc switch =
   Printf.sprintf "switch %s"
     (OpamConsole.colorise `bold (OpamSwitch.to_string switch))
 
+let no_self_variable_error () =
+  OpamConsole.error_and_exit `Bad_arguments
+    "Self variables (`_:`) are not valid here";
+
 module OpamParser = OpamParser.FullPos
 module OpamPrinter = OpamPrinter.FullPos
 
@@ -863,12 +867,8 @@ type ('var,'config) var_confset =
     (* Global or switch specification, used to print final user message *)
   }
 
-let set_var svar value conf =
-  let var = OpamVariable.Full.of_string svar in
+let set_var var value conf =
   let conf = conf (OpamVariable.Full.variable var) in
-  if not (OpamVariable.Full.is_global var) then
-    OpamConsole.error_and_exit `Bad_arguments
-      "Only global variables may be set using this command";
   let global_vars = conf.stv_vars in
   let rest = List.filter (fun v -> not (conf.stv_find v)) global_vars in
   let config = conf.stv_remove_elem rest conf.stv_config in
@@ -881,40 +881,50 @@ let set_var svar value conf =
     else
       (conf.stv_write config;
        OpamConsole.msg "Removed variable %s in %s\n"
-         (OpamConsole.colorise `underline svar)
+         (OpamConsole.colorise `underline (OpamVariable.Full.to_string var))
          conf.stv_doc);
     config
 
-let set_var_global gt var value =
-  let config =
-    set_var var value @@
-    fun var ->
-    let global_vars = OpamFile.Config.global_variables gt.config in
-    { stv_vars = global_vars;
-      stv_find = (fun (k,_,_) -> k = var);
-      stv_config = gt.config;
-      stv_varstr = (fun v ->
-          OpamPrinter.Normalise.value (nullify_pos @@ List (nullify_pos @@ [
-              nullify_pos @@ Ident (OpamVariable.to_string var);
-              nullify_pos @@ String v;
-              nullify_pos @@ String "Set through 'opam var'"
-            ])));
-      stv_set_opt = (fun config value ->
-          let gt =
-            set_opt_global_t ~inner:true { gt with config }
-              "global-variables" value
-          in gt.config);
-      stv_remove_elem = (fun rest config ->
-          OpamFile.Config.with_global_variables rest config
-          |> OpamFile.Config.with_eval_variables
-            (List.filter (fun (k,_,_) -> k <> var)
-               (OpamFile.Config.eval_variables config)));
-      stv_write = (fun config -> OpamGlobalState.write { gt with config });
-      stv_doc = global_doc;
-    } in
-  { gt with config }
+let set_var_global gt svar value =
+  let var = OpamVariable.Full.of_string svar in
+  match OpamVariable.Full.scope var with
+  | Global ->
+    let config =
+      set_var var value @@
+      fun var ->
+      let global_vars = OpamFile.Config.global_variables gt.config in
+      { stv_vars = global_vars;
+        stv_find = (fun (k,_,_) -> k = var);
+        stv_config = gt.config;
+        stv_varstr = (fun v ->
+            OpamPrinter.Normalise.value (nullify_pos @@ List (nullify_pos @@ [
+                nullify_pos @@ Ident (OpamVariable.to_string var);
+                nullify_pos @@ String v;
+                nullify_pos @@ String "Set through 'opam var'"
+              ])));
+        stv_set_opt = (fun config value ->
+            let gt =
+              set_opt_global_t ~inner:true { gt with config }
+                "global-variables" value
+            in gt.config);
+        stv_remove_elem = (fun rest config ->
+            OpamFile.Config.with_global_variables rest config
+            |> OpamFile.Config.with_eval_variables
+              (List.filter (fun (k,_,_) -> k <> var)
+                 (OpamFile.Config.eval_variables config)));
+        stv_write = (fun config -> OpamGlobalState.write { gt with config });
+        stv_doc = global_doc;
+      } in
+    { gt with config }
+  | Self -> no_self_variable_error ()
+  | Package _ ->
+    OpamConsole.error_and_exit `Bad_arguments
+      "Package variables are read-only and \
+       cannot be updated using `opam var --global`"
 
-let set_var_switch gt ?st var value =
+
+let set_var_switch gt ?st svar value =
+  let var = OpamVariable.Full.of_string svar in
   let var_confset switch switch_config var =
     let switch_vars = switch_config.OpamFile.Switch_config.variables in
     { stv_vars = switch_vars;
@@ -937,7 +947,19 @@ let set_var_switch gt ?st var value =
     } in
   let switch_config =
     with_switch ~display:false gt `Lock_write st @@ fun sw swc ->
-    set_var var value (var_confset sw swc)
+    match OpamVariable.Full.scope var with
+    | Global -> set_var var value (var_confset sw swc)
+    | Self -> no_self_variable_error ()
+    | Package n ->
+      OpamConsole.error_and_exit `Bad_arguments
+        "%sPackage variables are read-only and \
+         cannot be updated using `opam var --global`"
+        (if OpamPackage.package_of_name_opt
+            (OpamStateConfig.Switch.safe_read_selections
+               ~lock_kind:`Lock_read gt sw).sel_installed n = None then
+           Printf.sprintf "Package %s is not installed. "
+             (OpamPackage.Name.to_string n)
+         else "")
   in
   OpamStd.Option.map (fun st -> { st with switch_config }) st
 
@@ -1131,15 +1153,27 @@ let option_show_switch gt ?st field =
 let option_show_global gt field =
   option_show OpamFile.Config.to_list (confset_global gt) field
 
-let var_show_t resolve ?switch v =
-  match resolve (OpamVariable.Full.of_string v) with
+let var_show_t resolve gt ?switch v =
+  let var = OpamVariable.Full.of_string v in
+  if OpamVariable.Full.scope var = OpamVariable.Full.Self then
+    no_self_variable_error ();
+  match resolve var with
   | Some c ->
     OpamConsole.msg "%s\n" (OpamVariable.string_of_variable_contents c)
   | None ->
-    OpamConsole.error_and_exit `Not_found "Variable %s not found in %s" v
+    OpamConsole.error_and_exit `Not_found "Variable %s not found in %s%s" v
       (match switch with
-           | None -> "global config"
-           | Some switch -> "switch " ^ (OpamSwitch.to_string switch))
+       | None -> "the global configuration"
+       | Some switch -> "switch " ^ (OpamSwitch.to_string switch))
+      (match switch, OpamVariable.Full.scope var with
+       | Some switch, Package n ->
+         if OpamPackage.package_of_name_opt
+             (OpamStateConfig.Switch.safe_read_selections
+                ~lock_kind:`Lock_read gt switch).sel_installed n = None then
+           Printf.sprintf "; package %s is not installed in this switch"
+             (OpamPackage.Name.to_string n)
+         else ""
+       | _ -> "")
 
 let is_switch_defined_var switch_config v =
   OpamFile.Switch_config.variable switch_config
@@ -1171,7 +1205,7 @@ let var_show_switch gt ?st v =
   if var_switch_raw gt v = None then
     let resolve_switch st =
       if is_switch_defined_var st.switch_config v then
-        var_show_t (OpamPackageVar.resolve st) ~switch:st.switch v
+        var_show_t (OpamPackageVar.resolve st) gt ~switch:st.switch v
       else
         OpamConsole.error_and_exit `Not_found
           "Variable %s not found in switch %s"
@@ -1181,7 +1215,7 @@ let var_show_switch gt ?st v =
     | Some st -> resolve_switch st
     | None -> OpamSwitchState.with_ `Lock_none gt resolve_switch
 
-let var_show_global gt f = var_show_t (OpamPackageVar.resolve_global gt) f
+let var_show_global gt f = var_show_t (OpamPackageVar.resolve_global gt) gt f
 
 let var_show gt v =
   if var_switch_raw gt v = None then
@@ -1194,7 +1228,7 @@ let var_show gt v =
         resolve,
         if is_switch_defined_var st.switch_config v then Some st.switch else None
     in
-    var_show_t resolve ?switch v
+    var_show_t resolve gt ?switch v
 
 (* detect scope *)
 let get_scope field =
