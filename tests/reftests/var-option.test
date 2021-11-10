@@ -16,12 +16,8 @@ Removed variable user in switch var-option
 Removed variable group in switch var-option
 ### opam var arch=x86_64 --global
 Added '[arch "x86_64" "Set through 'opam var'"]' to field global-variables in global configuration
-### opam var jobs=7 --global
-Added '[jobs "7" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam var make=make --global
 Added '[make "make" "Set through 'opam var'"]' to field global-variables in global configuration
-### opam var opam-version=68.79 --global
-Added '[opam-version "68.79" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam var os=linux --global
 Added '[os "linux" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam var os-distribution=lorem --global
@@ -42,6 +38,8 @@ Set to '[]' the field wrap-build-commands in global configuration
 Set to '[]' the field wrap-install-commands in global configuration
 ### opam option wrap-remove-commands=[] --global
 Set to '[]' the field wrap-remove-commands in global configuration
+### opam option jobs=7 --global
+Set to '7' the field jobs in global configuration
 ### opam install i-got-the-variables --yes
 The following actions will be performed:
 === install 2 packages
@@ -52,14 +50,13 @@ The following actions will be performed:
 -> installed base.2
 -> installed i-got-the-variables.2.4.6
 Done.
-### opam var | "   *" -> " " | "[.]exe " -> ""
+### opam var | "   *" -> " " | "[.]exe " -> "" | "opam-version.*" -> '\c'
 
 <><> Global opam variables ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 arch x86_64 # Set through 'opam var'
 exe # Suffix needed for executable filenames (Windows)
-jobs 7 # Set through 'opam var'
+jobs 7 # The number of parallel jobs set up in opam configuration
 make make # Set through 'opam var'
-opam-version 68.79 # Set through 'opam var'
 os linux # Set through 'opam var'
 os-distribution lorem # Set through 'opam var'
 os-family ipsum # Set through 'opam var'
@@ -110,12 +107,11 @@ etc      ${BASEDIR}/OPAM/var-option/etc
 man      ${BASEDIR}/OPAM/var-option/man
 toplevel ${BASEDIR}/OPAM/var-option/lib/toplevel
 stublibs ${BASEDIR}/OPAM/var-option/lib/stublibs
-### opam var --global | "   *" -> " " | "[.]exe " -> ""
+### opam var --global | "   *" -> " " | "[.]exe " -> "" | "opam-version.*" -> '\c'
 arch x86_64 # Set through 'opam var'
 exe # Suffix needed for executable filenames (Windows)
-jobs 7 # Set through 'opam var'
+jobs 7 # The number of parallel jobs set up in opam configuration
 make make # Set through 'opam var'
-opam-version 68.79 # Set through 'opam var'
 os linux # Set through 'opam var'
 os-distribution lorem # Set through 'opam var'
 os-family ipsum # Set through 'opam var'
@@ -190,7 +186,7 @@ depext-cannot-install          false
 depext-run-installs            true
 download-command               {}
 download-jobs                  3
-jobs                           {}
+jobs                           7
 post-build-commands            {}
 post-install-commands          {}
 post-remove-commands           {}
@@ -232,7 +228,9 @@ wrap-remove-commands   {}
 [ERROR] Field or section download-jobs not found
 # Return code 5 #
 ### opam option jobs
+7
 ### opam option jobs --global
+7
 ### opam option jobs --switch var-option
 [ERROR] Field or section jobs not found
 # Return code 5 #
@@ -416,7 +414,7 @@ Reverted field archive-mirrors in global configuration
 ### opam option archive-mirrors
 ### # Check that eval-variable is removed when a global variable is removed
 ### opam option global-variables
-[[foo "global-foo" "Set through 'opam var'"] [bin "global-bin" "Set through 'opam var'"] [os-version "dolor" "Set through 'opam var'"] [os-family "ipsum" "Set through 'opam var'"] [os-distribution "lorem" "Set through 'opam var'"] [os "linux" "Set through 'opam var'"] [opam-version "68.79" "Set through 'opam var'"] [make "make" "Set through 'opam var'"] [jobs "7" "Set through 'opam var'"] [arch "x86_64" "Set through 'opam var'"] [sys-ocaml-version "4.08.0" "Set through 'opam var'"]]
+[[foo "global-foo" "Set through 'opam var'"] [bin "global-bin" "Set through 'opam var'"] [os-version "dolor" "Set through 'opam var'"] [os-family "ipsum" "Set through 'opam var'"] [os-distribution "lorem" "Set through 'opam var'"] [os "linux" "Set through 'opam var'"] [make "make" "Set through 'opam var'"] [arch "x86_64" "Set through 'opam var'"] [sys-ocaml-version "4.08.0" "Set through 'opam var'"]]
 ### opam option 'eval-variables=[dolore ["mania"] "alica"]'
 Set to '[dolore ["mania"] "alica"]' the field eval-variables in global configuration
 ### opam option eval-variables
@@ -428,7 +426,7 @@ Removed variable dolore in global configuration
 ### opam option eval-variables
 []
 ### opam option global-variables
-[[foo "global-foo" "Set through 'opam var'"] [bin "global-bin" "Set through 'opam var'"] [os-version "dolor" "Set through 'opam var'"] [os-family "ipsum" "Set through 'opam var'"] [os-distribution "lorem" "Set through 'opam var'"] [os "linux" "Set through 'opam var'"] [opam-version "68.79" "Set through 'opam var'"] [make "make" "Set through 'opam var'"] [jobs "7" "Set through 'opam var'"] [arch "x86_64" "Set through 'opam var'"] [sys-ocaml-version "4.08.0" "Set through 'opam var'"]]
+[[foo "global-foo" "Set through 'opam var'"] [bin "global-bin" "Set through 'opam var'"] [os-version "dolor" "Set through 'opam var'"] [os-family "ipsum" "Set through 'opam var'"] [os-distribution "lorem" "Set through 'opam var'"] [os "linux" "Set through 'opam var'"] [make "make" "Set through 'opam var'"] [arch "x86_64" "Set through 'opam var'"] [sys-ocaml-version "4.08.0" "Set through 'opam var'"]]
 ### # Check unable operations
 ### opam option 'variables+={esse: "cillum"}'
 [ERROR] Field variables can't be directly appended to, use `opam var` instead
@@ -469,12 +467,36 @@ synopsis setenv depext-bypass pre-build-commands pre-install-commands pre-remove
 [ERROR] Variable download-jobs not found in global config
 # Return code 5 #
 ### opam var download-jobs=42 --global
-Added '[download-jobs "42" "Set through 'opam var'"]' to field global-variables in global configuration
+You are setting a variable that have the same name than a global option.
+Maybe you want to use 'opam option'
+Set variable download-jobs anyway? [y/n] n
+# Return code 10 #
 ### opam option download-jobs --global
 1
 ### opam var download-jobs --global
-42
-### opam var download-jobs=45 --switch var-option
+[ERROR] Variable download-jobs not found in global config
+# Return code 5 #
+### opam var download-jobs=43 --global --yes
+You are setting a variable that have the same name than a global option.
+Maybe you want to use 'opam option'
+Set variable download-jobs anyway? [y/n] y
+Added '[download-jobs "43" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam option download-jobs --global
+1
+### opam var download-jobs --global
+43
+### opam var download-jobs=44 --switch var-option
+You are setting a variable that have the same name than a global option.
+Maybe you want to use 'opam option'
+Set variable download-jobs anyway? [y/n] n
+# Return code 10 #
+### opam var download-jobs --switch var-option
+[ERROR] Variable download-jobs not found in switch var-option
+# Return code 5 #
+### opam var download-jobs=45 --switch var-option --yes
+You are setting a variable that have the same name than a global option.
+Maybe you want to use 'opam option'
+Set variable download-jobs anyway? [y/n] y
 Added 'download-jobs: "45"' to field variables in switch var-option
 ### opam var download-jobs --switch var-option
 45
@@ -482,28 +504,58 @@ Added 'download-jobs: "45"' to field variables in switch var-option
 [ERROR] Variable synopsis not found in global config
 # Return code 5 #
 ### opam var 'synopsis="lorem ipsum"' --global
-Added '[synopsis "\"lorem ipsum\"" "Set through 'opam var'"]' to field global-variables in global configuration
+You are setting a variable that have the same name than a switch option.
+Maybe you want to use 'opam option'
+Set variable synopsis anyway? [y/n] n
+# Return code 10 #
 ### opam var synopsis --global
-"lorem ipsum"
+[ERROR] Variable synopsis not found in global config
+# Return code 5 #
+### opam var 'synopsis="lorem"' --global --yes
+You are setting a variable that have the same name than a switch option.
+Maybe you want to use 'opam option'
+Set variable synopsis anyway? [y/n] y
+Added '[synopsis "\"lorem\"" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var synopsis --global
+"lorem"
 ### opam option synopsis --switch var-option
 ""
 ### opam var synopsis --switch var-option
 [ERROR] Variable synopsis not found in switch var-option
 # Return code 5 #
-### opam var 'synopsis="lorem ipsum"' --switch var-option
-Added 'synopsis: "\"lorem ipsum\""' to field variables in switch var-option
+### opam var 'synopsis="ipsum"' --switch var-option
+You are setting a variable that have the same name than a switch option.
+Maybe you want to use 'opam option'
+Set variable synopsis anyway? [y/n] n
+# Return code 10 #
 ### opam option synopsis --switch var-option
 ""
 ### opam var synopsis --switch var-option
-"lorem ipsum"
-### opam var synopsis= --global
+[ERROR] Variable synopsis not found in switch var-option
+# Return code 5 #
+### opam var 'synopsis="found"' --switch var-option --yes
+You are setting a variable that have the same name than a switch option.
+Maybe you want to use 'opam option'
+Set variable synopsis anyway? [y/n] y
+Added 'synopsis: "\"found\""' to field variables in switch var-option
+### opam option synopsis --switch var-option
+""
+### opam var synopsis --switch var-option
+"found"
+### opam var synopsis= --global -y
+You are setting a variable that have the same name than a switch option.
+Maybe you want to use 'opam option'
+Set variable synopsis anyway? [y/n] y
 Removed variable synopsis in global configuration
-### opam var download-jobs= --global
+### opam var download-jobs= --global -y
+You are setting a variable that have the same name than a global option.
+Maybe you want to use 'opam option'
+Set variable download-jobs anyway? [y/n] y
 Removed variable download-jobs in global configuration
 ### : when no switch is present
 ### opam switch remove var-option -y
 Switch var-option and all its packages will be wiped. Are you sure? [y/n] y
-### opam var | ' +#.*' -> '' | " +[.]exe" -> ""
+### opam var | ' +#.*' -> '' | " +[.]exe" -> "" | "opam-version.*" -> '\c'
 
 <><> Global opam variables ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 arch              x86_64
@@ -512,7 +564,6 @@ exe
 foo               global-foo
 jobs              7
 make              make
-opam-version      68.79
 os                linux
 os-distribution   lorem
 os-family         ipsum
@@ -543,14 +594,13 @@ PKG:hash
 PKG:dev
 PKG:build-id
 PKG:opamfile
-### opam var --global | ' +#.*' -> '' | " +[.]exe" -> ""
+### opam var --global | ' +#.*' -> '' | " +[.]exe" -> "" | "opam-version.*" -> '\c'
 arch              x86_64
 bin               global-bin
 exe
 foo               global-foo
 jobs              7
 make              make
-opam-version      68.79
 os                linux
 os-distribution   lorem
 os-family         ipsum
@@ -580,7 +630,7 @@ depext-cannot-install          false
 depext-run-installs            true
 download-command               {}
 download-jobs                  1
-jobs                           {}
+jobs                           7
 post-build-commands            {}
 post-install-commands          {}
 post-remove-commands           {}
@@ -609,7 +659,7 @@ depext-cannot-install          false
 depext-run-installs            true
 download-command               {}
 download-jobs                  1
-jobs                           {}
+jobs                           7
 post-build-commands            {}
 post-install-commands          {}
 post-remove-commands           {}
