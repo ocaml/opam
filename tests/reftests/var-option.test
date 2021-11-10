@@ -501,7 +501,7 @@ Removed variable dolore in global configuration
 []
 ### opam option global-variables
 [[foo "global-foo" "Set through 'opam var'"] [bin "global-bin" "Set through 'opam var'"] [os-version "dolor" "Set through 'opam var'"] [os-family "ipsum" "Set through 'opam var'"] [os-distribution "lorem" "Set through 'opam var'"] [os "linux" "Set through 'opam var'"] [opam-version "68.79" "Set through 'opam var'"] [make "make" "Set through 'opam var'"] [jobs "7" "Set through 'opam var'"] [arch "x86_64" "Set through 'opam var'"] [sys-ocaml-version "4.08.0" "Set through 'opam var'"]]
-### # Check uniable operations
+### # Check unable operations
 ### opam option 'variables+={esse: "cillum"}'
 [ERROR] Field variables can't be directly appended to, use `opam var` instead
 # Return code 2 #
@@ -534,6 +534,44 @@ jobs download-command download-jobs archive-mirrors solver-criteria solver-upgra
 [ERROR] There is no option named 'bar'. The allowed options are:
 synopsis setenv depext-bypass pre-build-commands pre-install-commands pre-remove-commands pre-session-commands wrap-build-commands wrap-install-commands wrap-remove-commands post-build-commands post-install-commands post-remove-commands post-session-commands variables
 # Return code 2 #
+### # Check option shadowing
+### opam option download-jobs
+1
+### opam var download-jobs
+[ERROR] Variable download-jobs not found in the global configuration
+# Return code 5 #
+### opam var download-jobs=42 --global
+Added '[download-jobs "42" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam option download-jobs --global
+1
+### opam var download-jobs --global
+42
+### opam var download-jobs=45 --switch var-option
+Added 'download-jobs: "45"' to field variables in switch var-option
+### opam var download-jobs --switch var-option
+45
+### opam var synopsis --global
+[ERROR] Variable synopsis not found in the global configuration
+# Return code 5 #
+### opam var 'synopsis="lorem ipsum"' --global
+Added '[synopsis "\"lorem ipsum\"" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var synopsis --global
+"lorem ipsum"
+### opam option synopsis --switch var-option
+""
+### opam var synopsis --switch var-option
+[ERROR] Variable synopsis not found in switch var-option
+# Return code 5 #
+### opam var 'synopsis="lorem ipsum"' --switch var-option
+Added 'synopsis: "\"lorem ipsum\""' to field variables in switch var-option
+### opam option synopsis --switch var-option
+""
+### opam var synopsis --switch var-option
+"lorem ipsum"
+### opam var synopsis= --global
+Removed variable synopsis in global configuration
+### opam var download-jobs= --global
+Removed variable download-jobs in global configuration
 ### : when no switch is present
 ### opam switch remove var-option -y
 Switch var-option and all its packages will be wiped. Are you sure? [y/n] y
