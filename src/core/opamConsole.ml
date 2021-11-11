@@ -506,12 +506,9 @@ let print_message =
 
 let timestamp () =
   let time = Unix.gettimeofday () -. global_start_time in
-  let tm = Unix.gmtime time in
-  let msec = time -. (floor time) in
-  Printf.ksprintf (colorise `blue) "%.2d:%.2d.%.3d"
-    (tm.Unix.tm_hour * 60 + tm.Unix.tm_min)
-    tm.Unix.tm_sec
-    (int_of_float (1000.0 *. msec))
+  Printf.ksprintf (colorise `blue) "%02.0f:%06.3f"
+    (time /. 60.)
+    (mod_float time 60.)
 
 let log_formatter, finalise_output =
   if Sys.win32 then

@@ -453,7 +453,11 @@ let resolve universe ~orphans request =
         (invariant_pkg.Cudf.package, invariant_pkg.Cudf.version);
       OpamCudf.to_actions add_orphan_packages u resp
     with OpamCudf.Solver_failure msg ->
-      OpamConsole.error_and_exit `Solver_failure "%s" msg
+      let bt = Printexc.get_raw_backtrace () in
+      OpamConsole.error "%s" msg;
+      Printexc.raise_with_backtrace
+        OpamStd.Sys.(Exit (get_exit_code `Solver_failure))
+        bt
   in
   match resolve simple_universe cudf_request with
   | Conflicts _ as c -> c
