@@ -1295,7 +1295,6 @@ let config cli =
           OpamStd.Option.Op.(OpamSysPoll.os_version () +! "unknown");
         try
           OpamGlobalState.with_ `Lock_none @@ fun gt ->
-          OpamSwitchState.with_ `Lock_none gt @@ fun state ->
           let module Solver = (val OpamSolverConfig.(Lazy.force !r.solver)) in
           print "solver" "%s"
             (OpamCudfSolver.get_name (module Solver));
@@ -1307,89 +1306,93 @@ let config cli =
             if n <> 0 then [Printf.sprintf "%d (%s)" n label]
             else [] in
           print "jobs" "%d" (Lazy.force OpamStateConfig.(!r.jobs));
-          print "repositories" "%s"
-            (let repos = state.switch_repos.repositories in
-             let default, nhttp, nlocal, nvcs =
-               OpamRepositoryName.Map.fold
-                 (fun _ repo (dft, nhttp, nlocal, nvcs) ->
-                    let dft =
-                      if OpamUrl.root repo.repo_url =
-                         OpamUrl.root OpamInitDefaults.repository_url
-                      then
-                        OpamRepositoryName.Map.find
-                          repo.repo_name
-                          state.switch_repos.repos_definitions |>
-                        OpamFile.Repo.stamp
-                      else dft
-                    in
-                    match repo.repo_url.OpamUrl.backend with
-                    | `http -> dft, nhttp+1, nlocal, nvcs
-                    | `rsync -> dft, nhttp, nlocal+1, nvcs
-                    | _ -> dft, nhttp, nlocal, nvcs+1)
-                 repos (None,0,0,0)
-             in
-             String.concat ", "
-               (nprint "http" nhttp @
-                nprint "local" nlocal @
-                nprint "version-controlled" nvcs) ^
-             match default with
-             | Some v -> Printf.sprintf " (default repo at %s)" v
-             | None -> ""
-            );
-          print "pinned" "%s"
-            (if OpamPackage.Set.is_empty state.pinned then "0" else
-             let pinnings =
-               OpamPackage.Set.fold (fun nv acc ->
-                   let opam = OpamSwitchState.opam state nv in
-                   let kind =
-                     if Some opam =
-                        OpamPackage.Map.find_opt nv state.repos_package_index
-                     then "version"
-                     else
-                       OpamStd.Option.to_string ~none:"local"
-                         (fun u -> OpamUrl.string_of_backend u.OpamUrl.backend)
-                         (OpamFile.OPAM.get_url opam)
-                   in
-                   OpamStd.String.Map.update kind succ 0 acc)
-                 state.pinned OpamStd.String.Map.empty
-             in
-             String.concat ", "
-               (List.flatten (List.map (fun (k,v) -> nprint k v)
-                                (OpamStd.String.Map.bindings pinnings)))
-            );
-          print "current-switch" "%s"
-            (OpamSwitch.to_string state.switch);
-          let process nv =
-            try
-              let conf = OpamSwitchState.package_config state nv.name in
-              let bindings =
-                let f (name, value) =
-                  (OpamVariable.Full.create nv.name name,
-                   OpamVariable.string_of_variable_contents value)
+          match OpamStateConfig.get_switch_opt () with
+          | None -> print "current-switch" "%s" "non set"; `Ok ()
+          | Some switch ->
+            OpamSwitchState.with_ `Lock_none ~switch gt @@ fun state ->
+            print "repositories" "%s"
+              (let repos = state.switch_repos.repositories in
+               let default, nhttp, nlocal, nvcs =
+                 OpamRepositoryName.Map.fold
+                   (fun _ repo (dft, nhttp, nlocal, nvcs) ->
+                      let dft =
+                        if OpamUrl.root repo.repo_url =
+                           OpamUrl.root OpamInitDefaults.repository_url
+                        then
+                          OpamRepositoryName.Map.find
+                            repo.repo_name
+                            state.switch_repos.repos_definitions |>
+                          OpamFile.Repo.stamp
+                        else dft
+                      in
+                      match repo.repo_url.OpamUrl.backend with
+                      | `http -> dft, nhttp+1, nlocal, nvcs
+                      | `rsync -> dft, nhttp, nlocal+1, nvcs
+                      | _ -> dft, nhttp, nlocal, nvcs+1)
+                   repos (None,0,0,0)
+               in
+               String.concat ", "
+                 (nprint "http" nhttp @
+                  nprint "local" nlocal @
+                  nprint "version-controlled" nvcs) ^
+               match default with
+               | Some v -> Printf.sprintf " (default repo at %s)" v
+               | None -> ""
+              );
+            print "pinned" "%s"
+              (if OpamPackage.Set.is_empty state.pinned then "0" else
+               let pinnings =
+                 OpamPackage.Set.fold (fun nv acc ->
+                     let opam = OpamSwitchState.opam state nv in
+                     let kind =
+                       if Some opam =
+                          OpamPackage.Map.find_opt nv state.repos_package_index
+                       then "version"
+                       else
+                         OpamStd.Option.to_string ~none:"local"
+                           (fun u -> OpamUrl.string_of_backend u.OpamUrl.backend)
+                           (OpamFile.OPAM.get_url opam)
+                     in
+                     OpamStd.String.Map.update kind succ 0 acc)
+                   state.pinned OpamStd.String.Map.empty
+               in
+               String.concat ", "
+                 (List.flatten (List.map (fun (k,v) -> nprint k v)
+                                  (OpamStd.String.Map.bindings pinnings)))
+              );
+            print "current-switch" "%s"
+              (OpamSwitch.to_string state.switch);
+            let process nv =
+              try
+                let conf = OpamSwitchState.package_config state nv.name in
+                let bindings =
+                  let f (name, value) =
+                    (OpamVariable.Full.create nv.name name,
+                     OpamVariable.string_of_variable_contents value)
+                  in
+                  List.map f (OpamFile.Dot_config.bindings conf)
                 in
-                List.map f (OpamFile.Dot_config.bindings conf)
-              in
-              let print (name, value) =
-                let name = OpamVariable.Full.to_string name in
-                print name "%s" value
-              in
-              List.iter print bindings
-            with Not_found -> ()
-          in
-          state.installed
-          |> OpamPackage.Set.filter (fun p ->
-              match OpamSwitchState.opam_opt state p with
-              | Some o -> OpamFile.OPAM.has_flag Pkgflag_Compiler o
-              | None -> false)
-          |> OpamSolver.dependencies ~depopts:true ~post:true ~build:true
-            ~installed:true
-            (OpamSwitchState.universe ~test:true ~doc:true ~tools:true
-               ~requested:OpamPackage.Set.empty state Query)
-          |> OpamPackage.Set.iter process;
-          if List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
-          then OpamConsole.warning
-              "PATH contains '.' : this is a likely cause of trouble.";
-          `Ok ()
+                let print (name, value) =
+                  let name = OpamVariable.Full.to_string name in
+                  print name "%s" value
+                in
+                List.iter print bindings
+              with Not_found -> ()
+            in
+            state.installed
+            |> OpamPackage.Set.filter (fun p ->
+                match OpamSwitchState.opam_opt state p with
+                | Some o -> OpamFile.OPAM.has_flag Pkgflag_Compiler o
+                | None -> false)
+            |> OpamSolver.dependencies ~depopts:true ~post:true ~build:true
+              ~installed:true
+              (OpamSwitchState.universe ~test:true ~doc:true ~tools:true
+                 ~requested:OpamPackage.Set.empty state Query)
+            |> OpamPackage.Set.iter process;
+            if List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
+            then OpamConsole.warning
+                "PATH contains '.' : this is a likely cause of trouble.";
+            `Ok ()
         with e -> print "read-state" "%s" (Printexc.to_string e); `Ok ())
     (* deprecated *)
     | Some `exec, (_::_ as c) ->
