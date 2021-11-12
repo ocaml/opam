@@ -44,6 +44,7 @@ users)
     [#4853 @rjbou - fix #4843]
   * Ensure setenv can use package variables defined during the build [#4841 @dra27]
   * [BUG] Fix `set-invariant: default repos were loaded instead of switch repos [#4866 @rjbou]
+  * Add support for `opam switch -` (go to previous non-local switch) [#4910 @kit-ty-kate - fix 4866]
 
 ## Pin
   * Switch the default version when undefined from ~dev to dev [#4949 @kit-ty-kate]
@@ -226,6 +227,7 @@ users)
   * Automatically update default repo when adding a package file [#5004 @AltGr]
   * Make all the tests work on macOS/arm64 [#5019 @kit-ty-kate]
   * Add unix only tests handling [#5031 @AltGr]
+  * Add switch-set test [#4910 @kit-ty-kate]
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]
@@ -260,6 +262,8 @@ users)
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamCLIVersion` [#4918 @rjbou]
   * `OpamConfigCommand`: add a labelled argument `no_switch` to `exec` [#4957 @kit-ty-kate]
   * `OpamClient`: fix `update_with_init_config`, when ``jobs` was set in `init_config`, it dropped rest of `config` update [#5056 @rjbou]
+  * Add an optional argument to `OpamArg.mk_subdoc` for extra default elements: `?extra_defaults:(validity * string * string) list` [#4910 @kit-ty-kate]
+  * Add `OpamSwitchCommand.previous_switch` [#4910 @kit-ty-kate]
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
 ## opam-state
@@ -270,6 +274,7 @@ users)
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamSysPkg` and `OpamVariable` [#4918 @rjbou]
   * Add OpamPackage.Version.default returning the version number used when no version is given for a package [#4949 @kit-ty-kate]
   * Add `OpamPath.Switch.man_dirs` [#4915 @rjbou]
+  * `OpamFile.Config`: order list of installed switches according their last use, update `with_switch` accordingly, and add `previous_switch` [#4910 @AltGr]
 ## opam-core
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamFilename`, `OpamHash`, `OpamStd`, `OpamStd`, `OpamUrl`, and `OpamVersion` [#4918 @rjbou]
