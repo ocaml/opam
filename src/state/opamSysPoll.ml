@@ -149,7 +149,10 @@ let variables =
   List.map
     (fun (n, v) ->
        OpamVariable.of_string n,
-       lazy (Lazy.force v >>| fun v -> OpamTypes.S v))
+       lazy (try Lazy.force v >>| fun v -> OpamTypes.S v
+             (* We need to catch the assert failure on
+                [OpamSys.with_process_in] for windows *)
+             with Assert_failure _ -> None))
     [
       "arch", arch_lazy;
       "os", os_lazy;
