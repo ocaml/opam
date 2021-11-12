@@ -1,0 +1,77 @@
+N0REP0
+### # Test the "go to previous switch" feature
+### opam switch create foo --empty
+### opam switch - --show
+[ERROR] No previously used switch could be found
+# Return code 5 #
+### opam switch create bar --empty
+### opam switch - --show
+Would select opam switch foo.
+### opam switch show
+bar
+### opam switch -
+Selecting opam switch foo.
+### opam switch - --show
+Would select opam switch bar.
+### opam switch show
+foo
+### opam switch -
+Selecting opam switch bar.
+### opam switch - --show
+Would select opam switch foo.
+### opam switch show
+bar
+### opam switch bar
+### opam switch - --show
+Would select opam switch foo.
+### opam switch -
+Selecting opam switch foo.
+### opam switch - --show
+Would select opam switch bar.
+### opam switch show
+foo
+### # check that switches with name "-" do not interfere with the "go to previous switch" feature
+### opam switch bar
+### opam switch - --show
+Would select opam switch foo.
+### opam switch create - --empty
+### opam switch - --show
+Would select opam switch bar.
+### opam switch set -
+### opam switch - --show
+Would select opam switch bar.
+### opam switch show
+-
+### opam switch bar
+### opam switch - --show
+Would select opam switch -.
+### opam switch --cli=2.1 -
+### opam switch - --show
+Would select opam switch bar.
+### opam switch show
+-
+### # behaviour with local switches
+### opam switch create . --empty
+### opam switch - --show
+Would select opam switch bar.
+### opam switch show
+${BASEDIR}
+### opam switch -
+Selecting opam switch bar.
+### opam switch - --show
+Would select opam switch -.
+### opam switch show
+${BASEDIR}
+### opam switch remove . --yes
+Switch ${BASEDIR} and all its packages will be wiped. Are you sure? [Y/n] y
+### # removed switch
+### opam switch foo
+### opam switch bar
+### opam switch remove foo --yes
+Switch foo and all its packages will be wiped. Are you sure? [Y/n] y
+### opam switch -
+Selecting opam switch -.
+### opam switch - --show
+Would select opam switch bar.
+### opam switch show
+-

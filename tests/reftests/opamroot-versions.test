@@ -709,7 +709,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["sw-comp" "sw-sys-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -1048,7 +1048,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["sw-comp" "sw-sys-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -1387,7 +1387,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["sw-comp" "sw-sys-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
