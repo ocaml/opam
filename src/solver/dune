@@ -2,16 +2,13 @@
   (name        opam_solver)
   (public_name opam-solver)
   (synopsis    "OCaml Package Manager solver interaction library")
-  (libraries   opam-format cudf dose3.algo re
+  (libraries   opam-format cudf dose3.algo re opam-0install-cudf
                (select opamBuiltinMccs.ml from
                  (mccs -> opamBuiltinMccs.real.ml)
                  (     -> opamBuiltinMccs.dummy.ml))
                (select opamBuiltinZ3.ml from
                  (z3 -> opamBuiltinZ3.real.ml)
-                 (   -> opamBuiltinZ3.dummy.ml))
-               (select opamBuiltin0install.ml from
-                 (opam-0install-cudf -> opamBuiltin0install.real.ml)
-                 (                   -> opamBuiltin0install.dummy.ml)))
+                 (   -> opamBuiltinZ3.dummy.ml)))
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
                (:include ../ocaml-flags-configure.sexp)
