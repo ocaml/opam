@@ -600,7 +600,7 @@ let create_build_options
     assume_depexts; no_depexts;
   }
 
-let apply_build_options b =
+let apply_build_options cli b =
   let open OpamStd.Option.Op in
   let flag f = if f then Some true else None in
   OpamRepositoryConfig.update
@@ -633,7 +633,7 @@ let apply_build_options b =
     ?show:(flag b.show)
     ?fake:(flag b.fake)
     ?skip_dev_update:(flag b.skip_update)
-    ?assume_depexts:(flag (b.assume_depexts || b.no_depexts))
+    ?assume_depexts:(flag (b.assume_depexts || b.no_depexts || OpamCLIVersion.Op.(cli @= cli2_0)))
     ~scrubbed_environment_variables
     ()
 
