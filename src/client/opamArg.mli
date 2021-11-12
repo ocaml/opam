@@ -192,7 +192,7 @@ val recurse: OpamCLIVersion.Sourced.t -> bool Term.t
 val subpath: OpamCLIVersion.Sourced.t -> string option Term.t
 
 (** Applly build options *)
-val apply_build_options: build_options -> unit
+val apply_build_options: OpamCLIVersion.Sourced.t -> build_options -> unit
 
 (** Lock options *)
 val locked: ?section:string -> OpamCLIVersion.Sourced.t -> bool Term.t

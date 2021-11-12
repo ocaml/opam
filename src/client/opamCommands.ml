@@ -310,7 +310,7 @@ let init cli =
       show_opamrc bypass_checks
       () =
     apply_global_options cli global_options;
-    apply_build_options build_options;
+    apply_build_options cli build_options;
     (* If show option is set, dump opamrc and exit *)
     if show_opamrc then
       (OpamFile.InitConfig.write_to_channel stdout @@
@@ -1614,7 +1614,7 @@ let install cli =
       restore destdir assume_built check recurse subpath depext_only
       download_only atoms_or_locals () =
     apply_global_options cli global_options;
-    apply_build_options build_options;
+    apply_build_options cli build_options;
     if atoms_or_locals = [] && not restore then
       `Error (true, "required argument PACKAGES is missing")
     else
@@ -1730,7 +1730,7 @@ let remove cli =
   let remove global_options build_options autoremove force destdir recurse
       subpath atom_locs () =
     apply_global_options cli global_options;
-    apply_build_options build_options;
+    apply_build_options cli build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     match destdir with
     | Some d ->
@@ -1803,7 +1803,7 @@ let reinstall cli =
   let reinstall global_options build_options assume_built recurse subpath
       atoms_locs cmd () =
     apply_global_options cli global_options;
-    apply_build_options build_options;
+    apply_build_options cli build_options;
     let open OpamPackage.Set.Op in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     match cmd, atoms_locs with
@@ -1974,7 +1974,7 @@ let upgrade cli =
   let upgrade global_options build_options fixup check only_installed all
       recurse subpath atom_locs () =
     apply_global_options cli global_options;
-    apply_build_options build_options;
+    apply_build_options cli build_options;
     let all = all || atom_locs = [] in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     if fixup then
@@ -2553,7 +2553,7 @@ let switch cli =
       OpamConsole.warning "Option %s is deprecated, ignoring it."
         (OpamConsole.colorise `bold "--no-autoinstall");
     apply_global_options cli global_options;
-    apply_build_options build_options;
+    apply_build_options cli build_options;
     let invariant_arg ?repos rt args =
       match args, packages, formula, empty with
       | [], None, None, false -> None
@@ -3107,7 +3107,7 @@ let pin ?(unpin_only=false) cli =
       with_version
       command params () =
     apply_global_options cli global_options;
-    apply_build_options build_options;
+    apply_build_options cli build_options;
     let locked = OpamStateConfig.(!r.locked) <> None in
     let action = not no_act in
     let get_command = function
