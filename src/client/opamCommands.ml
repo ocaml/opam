@@ -2448,7 +2448,14 @@ let switch cli =
           shell_eval_invocation shell
             (opam_env_invocation ~switch:"SWITCH" ~set_opamswitch:true ())
             |> Manpage.escape));
-  ] @ mk_subdoc ~cli ~defaults:["","list";"SWITCH","set"] commands
+  ] @
+    mk_subdoc ~cli ~defaults:["","list";"SWITCH","set"]
+      ~extra_defaults:[
+        cli_from cli2_2, "-",
+        "Switches back to the previous non-local switch (similar to $(b,git switch -)). \
+         To set the current switch to a switch named $(i,-) use $(b,--cli=2.1) \
+         or lower, or use $(b,opam switch set -)"
+      ] commands
     @ [
       `S Manpage.s_examples;
       `Pre "    opam switch create 4.08.0";
@@ -2792,6 +2799,10 @@ let switch cli =
       `Ok ()
     | Some `current, [] ->
       OpamSwitchCommand.show ();
+      `Ok ()
+    | Some `default "-", [] when OpamCLIVersion.Op.(cli @>= cli2_2) ->
+      OpamGlobalState.with_ `Lock_write @@ fun gt ->
+      OpamSwitchCommand.switch_previous `Lock_none gt;
       `Ok ()
     | Some `set, [switch]
     | Some `default switch, [] ->

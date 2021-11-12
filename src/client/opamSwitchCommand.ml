@@ -390,6 +390,19 @@ let switch lock gt switch =
     (OpamSwitch.to_string switch) (OpamSwitch.to_string switch)
     (OpamStd.Format.itemize OpamSwitch.to_string installed_switches)
 
+let switch_previous lock gt =
+  match OpamFile.Config.previous_switch gt.config with
+  | Some switch_name ->
+    OpamConsole.msg
+      (if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)
+       then "Would select opam switch %s.\n"
+       else "Selecting opam switch %s.\n")
+      (OpamConsole.colorise `yellow (OpamSwitch.to_string switch_name));
+    switch lock gt switch_name
+  | None ->
+    OpamConsole.error_and_exit `Not_found
+      "No previously used switch could be found"
+
 let import_t ?ask importfile t =
   log "import switch";
 
