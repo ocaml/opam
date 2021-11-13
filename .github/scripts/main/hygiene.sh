@@ -20,7 +20,7 @@ CheckConfigure () {
     git checkout -f "$1"
     mv configure configure.ref
     make configure
-    if ! diff -q configure configure.ref >/dev/null ; then
+    if ! diff -u configure configure.ref ; then
       echo -e "[\e[31mERROR\e[0m] configure.ac in $1 doesn't generate configure, \
 please run make configure and fixup the commit"
       ERROR=1
