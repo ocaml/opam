@@ -381,7 +381,7 @@ module Parse = struct
             unordered, List.rev acc, None
         in
         let unordered, rewr, out = get_rewr (false, []) rewr in
-        List.rev acc, unordered, rewr, out
+        List.rev acc, unordered, List.rev rewr, out
       | arg :: r -> get_args_rewr (arg :: acc) r
     in
     let args, unordered, rewr, output = get_args_rewr [] args in
