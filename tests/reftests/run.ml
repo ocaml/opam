@@ -146,7 +146,7 @@ let str_replace_path ?(escape=false) whichway filters s =
       | Sed by ->
         Re.replace (Re.compile re_path) s
           ~f:(fun g ->
-              escape (by ^ whichway (Re.Group.get g 1)))
+              escape (by ^ whichway (Re.Group.(get g (nb_groups g - 1)))))
       | Grep | GrepV ->
         let way = if by = Grep then fun x -> x else not in
         if way @@ Re.execp (Re.compile re) s then s else "\\c")
