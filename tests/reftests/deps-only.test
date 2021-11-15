@@ -1,0 +1,29 @@
+N0REP0
+### <pkg:foo.1>
+opam-version: "2.0"
+### <pkg:bar.1>
+opam-version: "2.0"
+depends: "foo"
+### <pkg:baz.1>
+opam-version: "2.0"
+depopts: "bar"
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create deps-only --empty
+### opam install foo baz | unordered
+The following actions will be performed:
+  - install foo 1
+  - install baz 1
+===== 2 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed baz.1
+-> installed foo.1
+Done.
+### opam install bar --deps-only --show
+The following actions would be performed:
+  - remove baz 1
+
