@@ -412,7 +412,7 @@ let common_filters ?opam dir =
                 str (OpamSystem.back_to_forward tmpdir)];
            rep (set "/\\");
            str "opam-";
-           rep1 (alt [alnum; char '-'])],
+           rep1 (alt [xdigit; char '-'])],
       Sed "${OPAMTMP}";
     ] @
     (match opam with
