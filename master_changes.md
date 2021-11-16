@@ -27,7 +27,7 @@ users)
   *
 
 ## Install
-  *
+  * When installing with deps-only, depopts are removed because on reinstall actions are explosed [#4914 @rjbou - fix #4911]
 
 ## Remove
   *
