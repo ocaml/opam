@@ -772,9 +772,9 @@ let dump_universe universe oc =
 
 let filter_solution filter t =
   let t = OpamCudf.ActionGraph.copy t in
-  let rec rm ?(not_reinstall=fun _ -> true) iter_deps v =
-    if OpamCudf.ActionGraph.mem_vertex t v && not_reinstall v then
-      (iter_deps (rm ~not_reinstall iter_deps) t v;
+  let rec rm ?(is_reinstall=fun _ -> false) iter_deps v =
+    if OpamCudf.ActionGraph.mem_vertex t v && not (is_reinstall v) then
+      (iter_deps (rm ~is_reinstall iter_deps) t v;
        OpamCudf.ActionGraph.remove_vertex t v)
   in
   OpamCudf.ActionGraph.iter_vertex (function
@@ -783,16 +783,16 @@ let filter_solution filter t =
       | (`Install nv | `Change (_,_,nv)) as a
         when not (filter (OpamCudf.cudf2opam nv)) ->
         (* If a predecessor is a remove, it is a reinstall fragmented *)
-        let not_reinstall v =
+        let is_reinstall v =
           match v with
           | `Install nv ->
-            List.for_all (function
-                | `Remove nv' -> OpamCudf.Package.compare nv nv' <> 0
-                | _ -> true)
+            List.exists (function
+                | `Remove nv' -> OpamCudf.Package.equal nv nv'
+                | _ -> false)
               (OpamCudf.ActionGraph.pred t v)
-          | _ -> true
+          | _ -> false
         in
-        rm OpamCudf.ActionGraph.iter_succ ~not_reinstall a
+        rm OpamCudf.ActionGraph.iter_succ ~is_reinstall a
       | _ -> ())
     t;
   t
