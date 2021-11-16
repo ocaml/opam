@@ -25,5 +25,4 @@ The following actions will be performed:
 Done.
 ### opam install bar --deps-only --show
 The following actions would be performed:
-  - remove baz 1
-
+  - recompile baz 1
