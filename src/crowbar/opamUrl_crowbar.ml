@@ -49,4 +49,4 @@ let url : OpamUrl.t gen = map [
 
 let check () =
   check_json_roundtrip ~name:"OpamUrl.t"
-    url (=) OpamUrl.to_json OpamUrl.of_json;
+    url (eq_of_comp OpamUrl.compare) OpamUrl.to_json OpamUrl.of_json;

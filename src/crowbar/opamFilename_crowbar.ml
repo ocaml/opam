@@ -32,8 +32,8 @@ let filename : t gen =
 
 let check () =
   check_json_roundtrip ~name:"OpamFilename.Base.t"
-    base (=) Base.to_json Base.of_json;
+    base (eq_of_comp Base.compare) Base.to_json Base.of_json;
   check_json_roundtrip ~name:"OpamFilename.Dir.t"
-    dir (=) Dir.to_json Dir.of_json;
+    dir (eq_of_comp Dir.compare) Dir.to_json Dir.of_json;
   check_json_roundtrip ~name:"OpamFilename.t"
-    filename (=) to_json of_json;
+    filename (eq_of_comp OpamFilename.compare) to_json of_json;
