@@ -1,4 +1,4 @@
-ifeq ($(findstring clean,$(MAKECMDGOALS)),)
+ifeq ($(filter distclean clean,$(MAKECMDGOALS)),)
 -include Makefile.config
 endif
 
