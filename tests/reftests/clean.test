@@ -1,0 +1,108 @@
+N0REP0
+### <pkg:things.1>
+opam-version: "2.0"
+build : [ "touch" "first" "second" ]
+install: [
+  [ "test" "!" "-f" "%{bin}%/first" ]
+  [ "cp" "first" "%{bin}%/first" ]
+  [ "test" "!" "-f" "%{lib}%/things/second" ]
+  [ "mkdir" "%{lib}%/things/" ]
+  [ "cp" "second" "%{lib}%/things/second" ]
+]
+### OPAMPRECISETRACKING=1 OPAMYES=1
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create clean --empty
+### opam install things
+The following actions will be performed:
+  - install things 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed things.1
+Done.
+### opam show --list-files things
+${BASEDIR}/OPAM/clean/bin/first
+${BASEDIR}/OPAM/clean/lib/things
+${BASEDIR}/OPAM/clean/lib/things/second
+
+### opam remove things
+The following actions will be performed:
+  - remove things 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   things.1
+Done.
+### opam install things
+The following actions will be performed:
+  - install things 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed things.1
+Done.
+### opam remove things --fake
+The following actions will be faked:
+  - remove things 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Done.
+### opam install things
+The following actions will be performed:
+  - install things 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The installation of things failed at "test ! -f ${BASEDIR}/OPAM/clean/bin/first".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install things 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam clean --untracked --dry-run
+Cleaning up switch clean
+rm -rf ${BASEDIR}/OPAM/clean/lib/things/second
+rm -rf ${BASEDIR}/OPAM/clean/lib/things
+rm -rf ${BASEDIR}/OPAM/clean/bin/first
+rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/backup"/*
+rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/build"/*
+rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/remove"/*
+rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/extra-files-cache"/*
+### opam clean --untracked
+Cleaning up switch clean
+Remaining directories and files:
+  - ${BASEDIR}/OPAM/clean/bin/first
+  - ${BASEDIR}/OPAM/clean/lib/things/second
+  - ${BASEDIR}/OPAM/clean/lib/things
+
+Remove them? [Y/n] y
+### opam install things
+The following actions will be performed:
+  - install things 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed things.1
+Done.
+### <OPAM/clean/bin/first>
+another content
+### opam remove things --no | '\\' -> '/'
+The following actions will be performed:
+  - remove things 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+While removing things.1: these files have been modified since installation:
+  - bin/first
+Remove them anyway? [y/N] n
+-> removed   things.1
+Done.
+### opam clean --untracked
+Cleaning up switch clean
+Remaining files:
+  - ${BASEDIR}/OPAM/clean/bin/first
+
+Remove them? [Y/n] y
