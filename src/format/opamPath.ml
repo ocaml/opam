@@ -155,6 +155,8 @@ module Switch = struct
   let installed_opam_files_dir t a nv =
     installed_package_dir t a nv / "files"
 
+  let mans = ["1";"1M";"2";"3";"4";"5";"6";"7";"9"]
+
   module DefaultF(L:LAYOUT) = struct
     let lib_dir = L.lib_dir
 
@@ -170,6 +172,8 @@ module Switch = struct
       match num with
       | None -> L.root t a / "man"
       | Some n -> L.root t a / "man" / ("man" ^ n)
+
+    let man_dirs t a = List.map (fun num -> man_dir ~num t a) mans
 
     let share_dir t a = L.root t a / "share"
 
@@ -225,6 +229,8 @@ module Switch = struct
     match num with
     | None -> base
     | Some n -> base / ("man" ^ n)
+
+  let man_dirs t a c = List.map (fun num -> man_dir ~num t a c) mans
 
   let share_dir t a c = lookup Share (prefix t a c) "share" c
 

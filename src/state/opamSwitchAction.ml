@@ -73,9 +73,7 @@ let create_empty_switch gt ?synopsis ?repos ?invariant switch =
     OpamFilename.mkdir (OpamPath.Switch.man_dir root switch config);
     OpamFilename.mkdir (OpamPath.Switch.install_dir root switch);
     OpamFilename.mkdir (OpamPath.Switch.config_dir root switch);
-    List.iter (fun num ->
-        OpamFilename.mkdir (OpamPath.Switch.man_dir ~num root switch config)
-      ) ["1";"1M";"2";"3";"4";"5";"6";"7";"9"];
+    List.iter OpamFilename.mkdir (OpamPath.Switch.man_dirs root switch config);
 
     install_switch_config root switch config;
 
