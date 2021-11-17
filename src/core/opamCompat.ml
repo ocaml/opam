@@ -24,7 +24,7 @@ end
 #endif
 
 module Int =
-#if OCAML_VERSION >= (4, 6, 0)
+#if OCAML_VERSION >= (4, 8, 0)
   Int
 #else
 struct

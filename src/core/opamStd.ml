@@ -50,6 +50,8 @@ module type MAP = sig
 end
 module type ABSTRACT = sig
   type t
+  val compare: t -> t -> int
+  val equal: t -> t -> bool
   val of_string: string -> t
   val to_string: t -> string
   val to_json: t -> OpamJson.t
@@ -384,6 +386,8 @@ end
 
 module AbstractString = struct
   type t = string
+  let compare = String.compare
+  let equal = String.equal
   let of_string x = x
   let to_string x = x
   let to_json x = `String x
@@ -404,7 +408,7 @@ end
 
 module OInt = struct
   type t = int
-  let compare = compare
+  let compare = OpamCompat.Int.compare
   let to_string = string_of_int
   let to_json i = `String (string_of_int i)
   let of_json = function
@@ -483,7 +487,7 @@ module OpamString = struct
 
   module OString = struct
     type t = string
-    let compare = compare
+    let compare = String.compare
     let to_string x = x
     let to_json x = `String x
     let of_json = function

@@ -41,7 +41,12 @@ let of_json = function
 
 let ( >= ) = Stdlib.( >= )
 let ( < ) = Stdlib.( < )
-let compare = Stdlib.compare
+let compare (vm, vn) (wm, wn) =
+  let open OpamCompat in
+  let major = Int.compare vm wm in
+  if major <> 0 then major else
+    Int.compare vn wn
+let equal v w = compare v w = 0
 
 let previous cli =
   let f previous version =

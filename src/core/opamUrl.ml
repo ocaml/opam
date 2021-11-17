@@ -29,6 +29,17 @@ let empty = {
   hash = None;
 }
 
+let compare u v =
+  let transport = String.compare u.transport v.transport in
+  if transport <> 0 then transport else
+  let path = String.compare u.path v.path in
+  if path <> 0 then path else
+  let hash = OpamStd.Option.compare String.compare u.hash v.hash in
+  if hash <> 0 then hash else
+    compare u.backend v.backend
+
+let equal u v = compare u v = 0
+
 exception Parse_error of string
 let parse_error s = raise (Parse_error s)
 
