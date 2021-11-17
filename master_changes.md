@@ -138,6 +138,7 @@ users)
 ## Internal
   * Add license and lowerbounds to opam files [#4714 @kit-ty-kate]
   * Bump version to 2.2.0~alpha~dev [#4725 @dra27]
+  * Add specific comparison function on several module (that includes `OpamStd.ABSTRACT`) [#4918 @rjbou]
 
 ## Internal: Windows
   * Support MSYS2: treat MSYS2 and Cygwin as equivalent [#4813 @jonahbeckford]
@@ -145,6 +146,7 @@ users)
   * [BUG] handle converted variables correctly when no_undef_expand is true [#4811 @timbertson]
 
 ## Test
+  * Update crowbar with compare functions [#4918 @rjbou]
 
 ## Reftests
   * Add switch-invariant test [#4866 @rjbou]
@@ -177,9 +179,13 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamCLIVersion` [#4918 @rjbou]
 ## opam-repository
 ## opam-state
 ## opam-solver
 ## opam-format
+  * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamSysPkg` and `OpamVariable` [#4918 @rjbou]
 ## opam-core
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
+  * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamFilename`, `OpamHash`, `OpamStd`, `OpamStd`, `OpamUrl`, and `OpamVersion` [#4918 @rjbou]
+
