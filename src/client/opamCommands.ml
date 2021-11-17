@@ -3674,11 +3674,110 @@ let clean cli =
     mk_flag ~cli cli_original ["a"; "all-switches"]
       "Run the switch cleanup commands in all switches. Implies $(b,--switch-cleanup)"
   in
+  let untracked =
+    mk_flag ~cli (cli_from cli2_2) ["untracked"]
+      "Clean untracked file and directories"
+  in
+  let remove_untracked ~dry_run st  =
+    let root = st.switch_global.root in
+    let sw = st.switch in
+    let open OpamFilename in
+    (* installed files *)
+    let files, dirs =
+      OpamPackage.Set.fold (fun nv (files, dirs) ->
+          let changes =
+            OpamFile.Changes.safe_read
+              (OpamPath.Switch.changes root sw (OpamPackage.name nv))
+          in
+          List.fold_left (fun (files, dirs) relpath ->
+              let path =
+                Op.(OpamPath.Switch.root root sw // relpath)
+              in
+              if exists path then Set.add path files, dirs else
+              let pathd =
+                Op.(OpamPath.Switch.root root sw / relpath)
+              in
+              if exists_dir pathd then files, Dir.Set.add pathd dirs
+              else files, dirs)
+            (files, dirs) (OpamStd.String.Map.keys changes))
+        st.installed (Set.empty, Dir.Set.empty)
+    in
+    let dirs_of_files =
+      Set.fold (fun f dof -> Dir.Set.add (dirname f) dof)
+        files Dir.Set.empty
+    in
+    let dirs = Dir.Set.Op.(dirs ++ dirs_of_files) in
+    (* current state *)
+    let top_internal_structure =
+      (* man dirs are in man, and stublibs & toplevel are in lib *)
+      OpamPath.Switch.[ lib_dir; doc_dir; etc_dir ; man_dir;
+                        bin; sbin; ]
+    in
+    let internal_structure =
+      (List.map (fun p -> p root sw st.switch_config)
+         (OpamPath.Switch.[ stublibs; toplevel; ]
+          @ top_internal_structure))
+      @ OpamPath.Switch.man_dirs root sw st.switch_config
+      |> Dir.Set.of_list
+    in
+    let all_files, all_dirs =
+      List.fold_left (fun (files, dirs) sysdir ->
+          Set.union files
+            (Set.of_list (rec_files
+                            (sysdir root sw st.switch_config))),
+          Dir.Set.union dirs
+            (Dir.Set.of_list (rec_dirs
+                                (sysdir root sw st.switch_config))))
+        (Set.empty, Dir.Set.empty) top_internal_structure
+    in
+    (* remaining ones *)
+    let remaining_files = Set.Op.(all_files -- files) in
+    let remaining_dirs =
+      Dir.Set.Op.(all_dirs -- dirs ++ internal_structure)
+    in
+    let remaining_dirs, remaining_files =
+      Dir.Set.fold (fun dir (dirmap, files) ->
+          if Dir.Set.mem dir internal_structure then dirmap, files else
+          let of_dir, files =
+            Set.partition (fun f -> Dir.equal (dirname f) dir) files
+          in
+          Dir.Map.add dir of_dir dirmap, files)
+        remaining_dirs (Dir.Map.empty, remaining_files)
+    in
+    let remaining_dirs =
+      Dir.Map.filter (fun _ files -> not (Set.is_empty files)) remaining_dirs
+    in
+    if Dir.Map.is_empty remaining_dirs && Set.is_empty remaining_files then ()
+    else if dry_run then
+      (let rms str e = OpamConsole.msg "rm -rf %s\n" (str e) in
+       Dir.Map.iter (fun dir files ->
+           Set.iter (rms to_string) files;
+           rms Dir.to_string dir)
+         remaining_dirs;
+       Set.iter (rms to_string) remaining_files)
+    else
+      (let remainings =
+         List.map to_string (Set.elements remaining_files)
+         @ ((List.map (fun (dir, files) ->
+             (List.map (fun file -> to_string file) (Set.elements files))
+             @ [ Dir.to_string dir ])
+             (Dir.Map.bindings remaining_dirs))
+            |> List.flatten)
+       in
+       OpamConsole.msg "Remaining %s:\n%s\n"
+         (if Dir.Map.is_empty remaining_dirs then "files"
+          else if Set.is_empty remaining_files then "directories"
+          else "directories and files")
+         (OpamStd.Format.itemize (fun x -> x) remainings);
+       if OpamConsole.confirm "Remove them?" then
+         Dir.Map.iter (fun dir _ -> rmdir dir) remaining_dirs;
+       Set.iter remove remaining_files)
+  in
   let clean global_options dry_run
-      download_cache repos repo_cache logs switch all_switches () =
+      download_cache repos repo_cache logs switch all_switches untracked () =
     apply_global_options cli global_options;
     let logs, download_cache, switch =
-      if logs || download_cache || repos || repo_cache || switch || all_switches
+      if logs || download_cache || repos || repo_cache || switch || all_switches || untracked
       then logs, download_cache, switch
       else true, true, true
     in
@@ -3709,7 +3808,7 @@ let clean cli =
     in
     let switches =
       if all_switches then OpamGlobalState.switches gt
-      else if switch then match OpamStateConfig.get_switch_opt () with
+      else if switch || untracked then match OpamStateConfig.get_switch_opt () with
         | Some s -> [s]
         | None -> []
       else []
@@ -3718,7 +3817,9 @@ let clean cli =
       (OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
        List.iter (fun sw ->
            OpamSwitchState.with_ `Lock_write gt ~rt ~switch:sw @@ fun st ->
-           OpamConsole.msg "Cleaning up switch %s\n" (OpamSwitch.to_string sw);
+           OpamConsole.msg "Cleaning up switch %s\n"
+             (OpamSwitch.to_string sw);
+           if untracked then remove_untracked ~dry_run st;
            cleandir (OpamPath.Switch.backup_dir root sw);
            cleandir (OpamPath.Switch.build_dir root sw);
            cleandir (OpamPath.Switch.remove_dir root sw);
@@ -3805,7 +3906,7 @@ let clean cli =
   in
   mk_command  ~cli cli_original "clean" ~doc ~man
     Term.(const clean $global_options cli $dry_run $download_cache $repos
-          $repo_cache $logs $switch $all_switches)
+          $repo_cache $logs $switch $all_switches $untracked)
 
 (* LOCK *)
 let lock_doc = "Create locked opam files to share build environments across hosts."
