@@ -44,7 +44,7 @@ jobs:
         key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
-        bash .github/scripts/generate-actions.sh alpine
+        bash .github/scripts/depexts/generate-actions.sh alpine
     - name: depexts actions alpine
       uses: ./.github/actions/alpine
       id: depexts-alpine
@@ -62,7 +62,7 @@ jobs:
         key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
-        bash .github/scripts/generate-actions.sh archlinux
+        bash .github/scripts/depexts/generate-actions.sh archlinux
     - name: depexts actions archlinux
       uses: ./.github/actions/archlinux
       id: depexts-archlinux
@@ -80,7 +80,7 @@ jobs:
         key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
-        bash .github/scripts/generate-actions.sh centos
+        bash .github/scripts/depexts/generate-actions.sh centos
     - name: depexts actions centos
       uses: ./.github/actions/centos
       id: depexts-centos
@@ -98,7 +98,7 @@ jobs:
         key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
-        bash .github/scripts/generate-actions.sh debian
+        bash .github/scripts/depexts/generate-actions.sh debian
     - name: depexts actions debian
       uses: ./.github/actions/debian
       id: depexts-debian
@@ -116,7 +116,7 @@ jobs:
         key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
-        bash .github/scripts/generate-actions.sh fedora
+        bash .github/scripts/depexts/generate-actions.sh fedora
     - name: depexts actions fedora
       uses: ./.github/actions/fedora
       id: depexts-fedora
@@ -134,7 +134,7 @@ jobs:
         key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
-        bash .github/scripts/generate-actions.sh opensuse
+        bash .github/scripts/depexts/generate-actions.sh opensuse
     - name: depexts actions opensuse
       uses: ./.github/actions/opensuse
       id: depexts-opensuse
@@ -152,7 +152,7 @@ jobs:
         key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
-        bash .github/scripts/generate-actions.sh oraclelinux
+        bash .github/scripts/depexts/generate-actions.sh oraclelinux
     - name: depexts actions oraclelinux
       uses: ./.github/actions/oraclelinux
       id: depexts-oraclelinux
@@ -170,7 +170,7 @@ jobs:
         key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
-        bash .github/scripts/generate-actions.sh ubuntu
+        bash .github/scripts/depexts/generate-actions.sh ubuntu
     - name: depexts actions ubuntu
       uses: ./.github/actions/ubuntu
       id: depexts-ubuntu

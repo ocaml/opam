@@ -1,3 +1,4 @@
+. .github/scripts/common/preamble.sh
 
 CWD=$PWD
 CACHE=~/.cache
@@ -17,18 +18,6 @@ OPAMBSROOT=`eval echo $OPAMBSROOT`
 OPAMBSSWITCH=opam-build
 
 export OPAMCONFIRMLEVEL=unsafe-yes
-
-case $GITHUB_EVENT_NAME in
-  pull_request)
-    BRANCH=$GITHUB_HEAD_REF
-    ;;
-  push)
-    BRANCH=${GITHUB_REF##*/}
-    ;;
-  *)
-  echo -e "Not handled event"
-  BRANCH=master
-esac
 
 git config --global user.email "gha@example.com"
 git config --global user.name "Github Actions CI"

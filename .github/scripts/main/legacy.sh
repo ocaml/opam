@@ -1,6 +1,6 @@
 #!/bin/bash -xue
 
-. .github/scripts/preamble.sh
+. .github/scripts/main/preamble.sh
 
 export OPAMYES=1
 export OCAMLRUNPARAM=b

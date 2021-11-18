@@ -1,6 +1,6 @@
 #!/bin/bash -xue
 
-. .github/scripts/hygiene-preamble.sh
+. .github/scripts/common/hygiene-preamble.sh
 
 CheckConfigure () {
   GIT_INDEX_FILE=tmp-index git read-tree --reset -i "$1"
