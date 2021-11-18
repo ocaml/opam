@@ -31,8 +31,19 @@ let opam_invariant_package_version = 1
 let opam_invariant_package =
   opam_invariant_package_name, opam_invariant_package_version
 
+let opam_deprequest_package_name =
+  Dose_common.CudfAdd.encode "=opam-deprequest"
+
+let opam_deprequest_package_version = 1
+
+let opam_deprequest_package =
+  opam_deprequest_package_name, opam_deprequest_package_version
+
 let is_opam_invariant p =
   p.Cudf.package = opam_invariant_package_name
+
+let is_opam_deprequest p =
+  p.Cudf.package = opam_deprequest_package_name
 
 let unavailable_package_name =
   Dose_common.CudfAdd.encode "=unavailable"
@@ -44,6 +55,10 @@ let cudf2opam cpkg =
   if is_opam_invariant cpkg then
     OpamConsole.error_and_exit `Internal_error
       "Internal error: tried to access the CUDF opam invariant as an opam \
+       package";
+  if is_opam_deprequest cpkg then
+    OpamConsole.error_and_exit `Internal_error
+      "Internal error: tried to access the CUDF dependency request as an opam \
        package";
   let sname = Cudf.lookup_package_property cpkg s_source in
   let name = OpamPackage.Name.of_string sname in
@@ -580,6 +595,7 @@ end
 let dose_dummy_request = Dose_algo.Depsolver.dummy_request.Cudf.package
 let is_artefact cpkg =
   is_opam_invariant cpkg ||
+  is_opam_deprequest cpkg ||
   cpkg.Cudf.package = dose_dummy_request
 
 let dependencies universe packages =
@@ -1221,22 +1237,27 @@ let remove_all_uninstalled_versions_but universe name constr =
   let packages = Cudf.get_packages ~filter universe in
   Cudf.load_universe packages
 
-let to_cudf univ req = (
+let to_cudf univ (req: Cudf_types.vpkg request) =
+  let install =
+    let conj = OpamFormula.ands_to_list req.wish_install in
+    OpamStd.List.filter_map (function
+        | Atom vpkg -> Some vpkg
+        | Empty -> None
+        | _ -> invalid_arg "OpamCudf.to_cudf: 'install' not a conjunction")
+      conj
+  in
   Dose_common.CudfAdd.add_properties default_preamble
     (List.map (fun s -> s, `Int (Some 0)) req.extra_attributes),
   univ,
   { Cudf.request_id = "opam";
-    install         = req.wish_install;
+    install         = install;
     remove          = req.wish_remove;
     upgrade         = req.wish_upgrade;
     req_extra       = [] }
-)
-
-
 
 let string_of_request r =
   Printf.sprintf "install:%s remove:%s upgrade:%s"
-    (string_of_vpkgs r.wish_install)
+    (OpamFormula.string_of_formula string_of_atom r.wish_install)
     (string_of_vpkgs r.wish_remove)
     (string_of_vpkgs r.wish_upgrade)
 
@@ -1379,10 +1400,12 @@ let preprocess_cudf_request (props, univ, creq) criteria =
     let to_install =
       vpkg2set univ creq.Cudf.install
       ++ Set.of_list (Cudf.lookup_packages univ opam_invariant_package_name)
+      ++ Set.of_list (Cudf.lookup_packages univ opam_deprequest_package_name)
     in
     let to_install_formula =
       List.map (fun x -> [x]) @@
       (opam_invariant_package_name, None) ::
+      (opam_deprequest_package_name, None) ::
       creq.Cudf.install @ creq.Cudf.upgrade
     in
     let packages =
@@ -1621,7 +1644,8 @@ let resolve ~extern ~version_map universe request =
         | Conflicts _ as conflicts -> conflicts
   in
   let cleanup univ =
-    Cudf.remove_package univ opam_invariant_package
+    Cudf.remove_package univ opam_invariant_package;
+    Cudf.remove_package univ opam_deprequest_package
   in
   let () = match resp with
     | Success univ -> cleanup univ

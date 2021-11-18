@@ -247,7 +247,9 @@ module Json = struct
     in
     let j = `O [
         "action", `String (string_of_user_action user_action);
-        "install", `A (atoms request.wish_install);
+        "install", `A (List.map (fun f ->
+            `String OpamFormula.(string_of_formula short_string_of_atom f))
+            (OpamFormula.ands_to_list request.wish_install));
         "remove", `A (atoms request.wish_remove);
         "upgrade", `A (atoms request.wish_upgrade);
         "all", `A (atoms request.wish_all);

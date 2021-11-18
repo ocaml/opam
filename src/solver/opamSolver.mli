@@ -77,6 +77,7 @@ val request:
   ?install:atom list ->
   ?upgrade:atom list ->
   ?remove:atom list ->
+  ?deprequest:atom OpamFormula.formula ->
   ?all:atom list ->
   unit -> atom request
 

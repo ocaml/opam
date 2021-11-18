@@ -37,25 +37,6 @@ let empty_universe =
     u_attrs = [];
   }
 
-let is_installed universe (name,_) =
-  OpamPackage.Set.exists (fun pkg ->
-      OpamPackage.name pkg = name
-    ) universe.u_installed
-
-let find_installed universe (name, _) =
-  let pkg = OpamPackage.Set.find (fun pkg ->
-      OpamPackage.name pkg = name
-    ) universe.u_installed in
-  OpamPackage.version pkg
-
-let is_available universe wish_remove (name, _ as c) =
-  let version = find_installed universe c in
-  OpamPackage.Set.exists (fun pkg ->
-      OpamPackage.name pkg = name && OpamPackage.version pkg = version
-    ) universe.u_available
-  &&
-  List.for_all (fun (n, _) -> n <> name) wish_remove
-
 let solution_to_json solution =
   OpamCudf.ActionGraph.to_json solution
 let solution_of_json json =
@@ -145,17 +126,17 @@ let atom2cudf _universe (version_map : int OpamPackage.Map.t) (name,cstr) =
   name_to_cudf name,
   OpamStd.Option.Op.(cstr >>= constraint_to_cudf version_map name)
 
-let opam_invariant_package version_map invariant =
+let opam_constraint_package version_map deps label package =
   let depends =
-    OpamFormula.to_atom_formula invariant
+    deps
     |> OpamFormula.map (fun at -> Atom (atom2cudf () version_map at))
     |> OpamFormula.cnf_of_formula
     |> OpamFormula.ands_to_list
     |> List.map (OpamFormula.fold_right (fun acc x -> x::acc) [])
   in {
     Cudf.
-    package = OpamCudf.opam_invariant_package_name;
-    version = snd OpamCudf.opam_invariant_package;
+    package = fst package;
+    version = snd package;
     depends;
     conflicts = [];
     provides = [];
@@ -163,10 +144,20 @@ let opam_invariant_package version_map invariant =
     was_installed = true;
     keep = `Keep_version;
     pkg_extra = [
-      OpamCudf.s_source, `String "SWITCH_INVARIANT";
+      OpamCudf.s_source, `String label;
       OpamCudf.s_source_number, `String "NULL";
     ];
   }
+
+let opam_invariant_package version_map deps =
+  opam_constraint_package version_map (OpamFormula.to_atom_formula deps)
+    "SWITCH_INVARIANT"
+    OpamCudf.opam_invariant_package
+
+let opam_deprequest_package version_map deps =
+  opam_constraint_package version_map deps
+    "DEP_REQUEST"
+    OpamCudf.opam_deprequest_package
 
 let lag_function =
   let rec power n x = if n <= 0 then 1 else x * power (n-1) x in
@@ -406,7 +397,7 @@ let load_cudf_universe_with_packages
 let string_of_request r =
   let to_string = OpamFormula.string_of_conjunction OpamFormula.string_of_atom in
   Printf.sprintf "install:%s remove:%s upgrade:%s"
-    (to_string r.wish_install)
+    OpamFormula.(string_of_formula string_of_atom r.wish_install)
     (to_string r.wish_remove)
     (to_string r.wish_upgrade)
 
@@ -434,34 +425,22 @@ let cudf_to_opam_graph cudf2opam cudf_graph =
   opam_graph
 
 let map_request f r =
-  let f = List.rev_map f in
-  { wish_install = f r.wish_install;
-    wish_remove  = f r.wish_remove;
-    wish_upgrade = f r.wish_upgrade;
-    wish_all = f r.wish_all;
+  let fl = List.rev_map f in
+  { wish_install = OpamFormula.map (fun x -> Atom (f x))  r.wish_install;
+    wish_remove  = fl r.wish_remove;
+    wish_upgrade = fl r.wish_upgrade;
+    wish_all = fl r.wish_all;
     criteria = r.criteria;
     extra_attributes = r.extra_attributes; }
 
 (* Remove duplicate packages *)
 (* Add upgrade constraints *)
 (* Remove constraints in best_effort mode *)
-let cleanup_request universe (req:atom request) =
+let cleanup_request _universe (req:atom request) =
   if OpamSolverConfig.best_effort () then
-    { req with wish_install = []; wish_upgrade = []; }
+    { req with wish_install = OpamFormula.Empty; wish_upgrade = []; }
   else
-  let wish_install =
-    List.filter (fun (n,_) -> not (List.mem_assoc n req.wish_upgrade))
-      req.wish_install in
-  let wish_upgrade =
-    List.rev_map (fun (n,c as pkg) ->
-        if c = None
-        && is_installed universe pkg
-        && is_available universe req.wish_remove pkg then
-          n, Some (`Geq, find_installed universe pkg)
-        else
-          pkg
-      ) req.wish_upgrade in
-  { req with wish_install; wish_upgrade }
+    req
 
 let cycle_conflict ~version_map univ cycles =
   OpamCudf.cycle_conflict ~version_map univ cycles
@@ -483,6 +462,14 @@ let resolve universe request =
     { request with extra_attributes }
   in
   let request = cleanup_request universe request in
+  let request, deprequest_pkg =
+    let conj = OpamFormula.ands_to_list request.wish_install in
+    let conj, deprequest =
+      List.partition (function Atom _ -> true | _ -> false) conj
+    in
+    {request with wish_install = OpamFormula.ands conj},
+    opam_deprequest_package version_map (OpamFormula.ands deprequest)
+  in
   let cudf_request = map_request (atom2cudf universe version_map) request in
   let invariant_pkg =
     opam_invariant_package version_map universe.u_invariant
@@ -490,9 +477,11 @@ let resolve universe request =
   let solution =
     try
       Cudf.add_package cudf_universe invariant_pkg;
+      Cudf.add_package cudf_universe deprequest_pkg;
       let resp =
         OpamCudf.resolve ~extern:true ~version_map cudf_universe cudf_request
       in
+      Cudf.remove_package cudf_universe OpamCudf.opam_deprequest_package;
       Cudf.remove_package cudf_universe OpamCudf.opam_invariant_package;
       OpamCudf.to_actions cudf_universe resp
     with OpamCudf.Solver_failure msg ->
@@ -839,8 +828,14 @@ let filter_solution filter t =
     t;
   t
 
-let request ?(criteria=`Default) ?(install=[]) ?(upgrade=[]) ?(remove=[])
-    ?(all=install@upgrade@remove) () =
-  { wish_install = install; wish_upgrade = upgrade; wish_remove = remove;
-    wish_all = all;
+let request ?(criteria=`Default)
+    ?(install=[]) ?(upgrade=[]) ?(remove=[])
+    ?(deprequest=OpamFormula.Empty)
+    ?(all=install@upgrade@remove@
+          OpamFormula.(atoms (of_atom_formula deprequest)))
+    () =
+  let wish_install =
+    OpamFormula.ands (deprequest :: List.map (fun x -> Atom x) install)
+  in
+  { wish_install; wish_upgrade = upgrade; wish_remove = remove; wish_all = all;
     criteria; extra_attributes = []; }

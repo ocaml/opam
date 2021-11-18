@@ -200,6 +200,9 @@ val opam_invariant_package_name: string
     switch invariants *)
 val opam_invariant_package: string * int
 
+val opam_deprequest_package_name: string
+val opam_deprequest_package: string * int
+
 val is_opam_invariant: Cudf.package -> bool
 
 (** dummy package that shouldn't exist and encodes unavailability (by depending on it) *)
@@ -281,7 +284,8 @@ val cudf2opam: Cudf.package -> package
 (** Returns the list of packages in a Cudf universe *)
 val packages: Cudf.universe -> Cudf.package list
 
-(** Converts an OPAM request to a Cudf request *)
+(** Converts an OPAM request to a Cudf request. The [wish_install] field is
+    required to be a conjunction *)
 val to_cudf: Cudf.universe -> Cudf_types.vpkg request
   -> Cudf.preamble * Cudf.universe * Cudf.request
 
