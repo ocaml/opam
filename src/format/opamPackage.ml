@@ -51,7 +51,7 @@ module Version = struct
     let res = Re.exec re v in
     let pfx = Re.Group.get res 1 in
     let num = Re.Group.get res 2 in
-    let nums = String.split_on_char '.' num in
+    let nums = OpamStd.String.split num '.' in
     let incr_compat_num nums =
       let aux = function
         | [] -> ["1"]
