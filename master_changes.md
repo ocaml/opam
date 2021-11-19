@@ -52,7 +52,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## External dependencies
-  * Fallback on dnf if yum does not exist on RHEL-based systems [#4825 @kit-ty-kate]
+  *
 
 ## Sandbox
   *
