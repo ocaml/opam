@@ -52,23 +52,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## External dependencies
-  *
-  * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
-  * Fix depext alpine tagged repositories handling [#4763 @rjbou] [2.1.0~rc2 #4758]
-  * Homebrew: Add support for casks and full-names [#4801 @kit-ty-kate]
-  * Disable the detection of available packages on RHEL-based distributions.
-    This fixes an issue on RHEL-based distributions where yum list used to detect available
-    and installed packages would wait for user input without showing any output and/or fail
-    in some cases [#4791 @kit-ty-kate - fixes #4790]
-  * Archlinux: handle virtual package detection [#4831 @rjbou - partial fix #4759]
   * Fallback on dnf if yum does not exist on RHEL-based systems [#4825 @kit-ty-kate]
-
-## Format upgrade
-  * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
-  * Fix not recorded local switch handling, with format upgrade [#4763 @rjbou] [2.1.0~rc2 #4715]
-  * Set opam root version to 2.1 [#4763 @rjbou] [2.1.0~rc2 #4715]
-  * Fix 2.1~alpha2 to 2.1 format upgrade with reinit [#4763 @rjbou - fix #4748] [2.1.0~rc2 #4750]
-  * Fix bypass-check handling on reinit [#4750 @rjbou] [#4763 @rjbou] [2.1.0~rc2 #4750 #4756]
 
 ## Sandbox
   *
