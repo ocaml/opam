@@ -479,10 +479,10 @@ let of_json = function
   | `String x -> (try Some (of_string x) with _ -> None)
   | _ -> None
 
-let compare f g =
-  let dir = Dir.compare f.dirname g.dirname in
+let compare {dirname; basename} f =
+  let dir = Dir.compare dirname f.dirname in
   if dir <> 0 then dir else
-    Base.compare f.basename g.basename
+    Base.compare basename f.basename
 
 let equal f g = compare f g = 0
 
@@ -574,12 +574,12 @@ module Attribute = struct
       end
     | _ -> None
 
-  let compare a b =
-    let base = Base.compare a.base b.base in
+  let compare {base; md5; perm} a =
+    let base = Base.compare base a.base in
     if base <> 0 then base else
-    let md5 = OpamHash.compare a.md5 b.md5 in
+    let md5 = OpamHash.compare md5 a.md5 in
     if md5 <> 0 then md5 else
-      OpamStd.Option.compare OpamCompat.Int.compare a.perm b.perm
+      OpamStd.Option.compare OpamCompat.Int.compare perm a.perm
 
   let equal a b = compare a b = 0
 

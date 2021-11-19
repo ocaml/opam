@@ -29,14 +29,14 @@ let empty = {
   hash = None;
 }
 
-let compare u v =
-  let transport = String.compare u.transport v.transport in
+let compare {transport; path; hash; backend} u =
+  let transport = String.compare transport u.transport in
   if transport <> 0 then transport else
-  let path = String.compare u.path v.path in
+  let path = String.compare path u.path in
   if path <> 0 then path else
-  let hash = OpamStd.Option.compare String.compare u.hash v.hash in
+  let hash = OpamStd.Option.compare String.compare hash u.hash in
   if hash <> 0 then hash else
-    compare u.backend v.backend
+    compare backend u.backend
 
 let equal u v = compare u v = 0
 
