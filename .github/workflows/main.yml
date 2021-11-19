@@ -345,7 +345,7 @@ jobs:
 ###
   hygiene:
     needs: [ archives-cache ]
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
     - name: src ext archives cache
