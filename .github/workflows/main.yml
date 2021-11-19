@@ -377,4 +377,6 @@ jobs:
         # Defined only on pull request jobs
         BASE_REF_SHA: ${{ github.event.pull_request.base.sha }}
         PR_REF_SHA: ${{ github.event.pull_request.head.sha }}
-      run: bash -exu .github/scripts/hygiene-main.sh
+      run: |
+        brew install automake
+        bash -exu .github/scripts/hygiene-main.sh
