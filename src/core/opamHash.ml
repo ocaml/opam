@@ -17,6 +17,14 @@ type t = kind * string
 let kind = fst
 let contents = snd
 
+let compare (k,h) (l,i) =
+  match k, l with
+  | `SHA512, `SHA512 | `SHA256, `SHA256 | `MD5, `MD5 -> String.compare h i
+  | `MD5, _ | _, `SHA512 -> -1
+  | `SHA512, _ | _, `MD5 -> 1
+
+let equal h h' = compare h h' = 0
+
 let log msg = OpamConsole.log "HASH" msg
 
 let pfx_sep_char = '='

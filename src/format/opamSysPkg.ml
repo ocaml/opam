@@ -15,6 +15,7 @@ type t = string
 let of_string s = s
 let to_string s = s
 let compare = OpamStd.String.compare_case
+let equal s r = compare s r = 0
 
 let to_json s =
   `O [ ("sys_package", `String s) ]

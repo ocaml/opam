@@ -23,4 +23,4 @@ let hash = map [kind; bytes] @@ fun kind string ->
 
 let check () =
   check_json_roundtrip ~name:"OpamHash.t"
-    hash (=) OpamHash.to_json OpamHash.of_json;
+    hash (eq_of_comp OpamHash.compare) OpamHash.to_json OpamHash.of_json;

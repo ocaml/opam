@@ -23,6 +23,15 @@ module Either
 end
 #endif
 
+module Int
+#if OCAML_VERSION >= (4, 12, 0)
+= Int
+#else
+: sig
+  val compare: int -> int -> int
+end
+#endif
+
 module Printexc
 #if OCAML_VERSION >= (4, 5, 0)
 = Printexc

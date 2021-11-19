@@ -21,6 +21,5 @@ let full = choose [
 ]
 
 let check () =
-  let equal v1 v2 = Full.to_string v1 = Full.to_string v2 in
   check_json_roundtrip ~name:"OpamVariable.t"
-    full equal Full.to_json Full.of_json;
+    full (eq_of_comp OpamVariable.Full.compare) Full.to_json Full.of_json;

@@ -23,6 +23,15 @@ struct
 end
 #endif
 
+module Int =
+#if OCAML_VERSION >= (4, 8, 0)
+  Int
+#else
+struct
+  let compare : int -> int -> int = Stdlib.compare
+end
+#endif
+
 module Printexc =
 #if OCAML_VERSION >= (4, 5, 0)
   Printexc

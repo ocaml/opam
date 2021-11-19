@@ -22,6 +22,7 @@ let of_json = function
 | _ -> None
 
 let compare v w = OpamVersionCompare.compare v w
+let equal v w = compare v w = 0
 
 module O = struct
   type t = string

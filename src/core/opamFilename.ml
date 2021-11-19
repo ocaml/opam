@@ -12,6 +12,9 @@
 module Base = struct
   include OpamStd.AbstractString
 
+  let compare = String.compare
+  let equal = String.equal
+
   let check_suffix filename s =
     Filename.check_suffix filename s
 
@@ -25,6 +28,9 @@ let slog = OpamConsole.slog
 module Dir = struct
 
   include OpamStd.AbstractString
+
+  let compare = String.compare
+  let equal = String.equal
 
   let of_string dirname =
     let dirname =
@@ -473,6 +479,13 @@ let of_json = function
   | `String x -> (try Some (of_string x) with _ -> None)
   | _ -> None
 
+let compare {dirname; basename} f =
+  let dir = Dir.compare dirname f.dirname in
+  if dir <> 0 then dir else
+    Base.compare basename f.basename
+
+let equal f g = compare f g = 0
+
 module O = struct
   type tmp = t
   type t = tmp
@@ -560,6 +573,15 @@ module Attribute = struct
         with Not_found -> None
       end
     | _ -> None
+
+  let compare {base; md5; perm} a =
+    let base = Base.compare base a.base in
+    if base <> 0 then base else
+    let md5 = OpamHash.compare md5 a.md5 in
+    if md5 <> 0 then md5 else
+      OpamStd.Option.compare OpamCompat.Int.compare perm a.perm
+
+  let equal a b = compare a b = 0
 
   module O = struct
     type tmp = t

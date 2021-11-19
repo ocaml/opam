@@ -108,6 +108,19 @@ module Full = struct
     | `String s -> (try Some (of_string s) with _ -> None)
     | _ -> None
 
+  let compare {scope; variable} fv =
+    match scope, fv.scope with
+    | Global, Global | Self, Self ->
+      String.compare variable fv.variable
+    | Package n, Package m ->
+      let package = OpamPackage.Name.compare n m in
+      if package <> 0 then package else
+        String.compare variable fv.variable
+    | Global, _ | _, Self -> 1
+    | Self, _ | _, Global -> -1
+
+  let equal f g = compare f g = 0
+
   module O = struct
     type tmp = t
     type t = tmp
