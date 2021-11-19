@@ -130,6 +130,14 @@ let family =
   ) in
   fun () -> Lazy.force family
 
+let yum_cmd = lazy begin
+  if OpamSystem.resolve_command "yum" <> None then
+    "yum"
+  else if OpamSystem.resolve_command "dnf" <> None then
+    "dnf"
+  else
+    raise (OpamSystem.Command_not_found "yum or dnf")
+end
 
 let packages_status packages =
   let (+++) pkg set = OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set in
@@ -632,11 +640,11 @@ let install_packages_commands_t sys_packages =
     let epel_release = "epel-release" in
     let install_epel rest =
       if List.mem epel_release packages then
-        ["yum", "install"::yes ["-y"] [epel_release]] @ rest
+        [Lazy.force yum_cmd, "install"::yes ["-y"] [epel_release]] @ rest
       else rest
     in
     install_epel
-      ["yum", "install"::yes ["-y"]
+      [Lazy.force yum_cmd, "install"::yes ["-y"]
                 (OpamStd.String.Set.of_list packages
                  |> OpamStd.String.Set.remove epel_release
                  |> OpamStd.String.Set.elements);
@@ -701,7 +709,7 @@ let update () =
     match family () with
     | Alpine -> Some ("apk", ["update"])
     | Arch -> Some ("pacman", ["-Sy"])
-    | Centos -> Some ("yum", ["makecache"])
+    | Centos -> Some (Lazy.force yum_cmd, ["makecache"])
     | Debian -> Some ("apt-get", ["update"])
     | Gentoo -> Some ("emerge", ["--sync"])
     | Homebrew -> Some ("brew", ["update"])
