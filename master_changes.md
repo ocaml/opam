@@ -164,6 +164,7 @@ users)
   * Add opam.ocaml.org cache to reach disappearing archive [#4865 @rjbou]
   * Update ocaml version frm 4.11.2 to  4.12.0 (because of macos failure) [#4865 @rjbou]
   * Add a depext checkup, launched only is `OpamSysInteract` is changed [#4788 @rjbou]
+  * Arrange scripts directory [#4922 @rjbou]
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
