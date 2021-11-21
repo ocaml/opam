@@ -345,7 +345,7 @@ jobs:
 ###
   hygiene:
     needs: [ archives-cache ]
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: src ext archives cache
@@ -378,5 +378,6 @@ jobs:
         BASE_REF_SHA: ${{ github.event.pull_request.base.sha }}
         PR_REF_SHA: ${{ github.event.pull_request.head.sha }}
       run: |
-        brew install automake
+        curl -LO http://ftp.debian.org/debian/pool/main/a/autoconf/autoconf_2.71-2_all.deb
+        sudo dpkg -i autoconf_2.71-2_all.deb
         bash -exu .github/scripts/hygiene-main.sh
