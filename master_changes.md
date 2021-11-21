@@ -110,6 +110,7 @@ users)
   * Switch to vendored build if spdx_licenses is missing [#4842 @dra27]
   * Check versions of findlib packages in configure [#4842 @dra27]
   * Fix dose3 download url since gforge is gone [#4870 @avsm]
+  * Upgrade from autoconf 2.69 to 2.71 to generate the configure script [#4924 @kit-ty-kate]
 
 ## Infrastructure
   *
