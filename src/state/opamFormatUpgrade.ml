@@ -1069,13 +1069,16 @@ let downgrade_2_1_switches root conf =
 let from_2_1_alpha_to_2_1_alpha2 root ~on_the_fly:_ conf =
   downgrade_2_1_switches root conf, Some `Switch
 
-let from_2_1_alpha2_to_v2_1_rc root ~on_the_fly:_ conf =
+let from_2_1_alpha2_to_2_1_rc root ~on_the_fly:_ conf =
   downgrade_2_1_switches root conf, Some `Switch
 
 let from_2_1_rc_to_2_1 _ ~on_the_fly:_ conf = conf, None
 
-let from_2_0_to_v2_1 _ ~on_the_fly:_ conf = conf, None
+let from_2_0_to_2_1 _ ~on_the_fly:_ conf = conf, None
 
+let v2_2_alpha = OpamVersion.of_string "2.2~alpha"
+
+let from_2_1_to_2_2_alpha _ ~on_the_fly:_ conf = conf, None
 
 let latest_version = OpamFile.Config.root_version
 
@@ -1134,10 +1137,11 @@ let as_necessary ?reinit requested_lock global_lock root config =
     let hard = [
       v2_1_alpha,  from_2_0_to_2_1_alpha;
       v2_1_alpha2, from_2_1_alpha_to_2_1_alpha2;
-      v2_1_rc,     from_2_1_alpha2_to_v2_1_rc;
+      v2_1_rc,     from_2_1_alpha2_to_2_1_rc;
     ] in
     let light = [
       v2_1,        from_2_1_rc_to_2_1;
+      v2_2_alpha,  from_2_1_to_2_2_alpha;
     ] in
     keep_needed_upgrades hard,
     light
@@ -1157,7 +1161,8 @@ let as_necessary ?reinit requested_lock global_lock root config =
         v2_0_beta,   from_2_0_alpha3_to_2_0_beta;
         v2_0_beta5,  from_2_0_beta_to_2_0_beta5;
         v2_0,        from_2_0_beta5_to_2_0;
-        v2_1,        from_2_0_to_v2_1;
+        v2_1,        from_2_0_to_2_1;
+        v2_2_alpha,  from_2_1_to_2_2_alpha;
       ]
       |> keep_needed_upgrades
       |> List.partition (fun (v,_) ->
