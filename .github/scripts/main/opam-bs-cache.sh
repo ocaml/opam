@@ -1,6 +1,6 @@
 #!/bin/bash -xue
 
-. .github/scripts/preamble.sh
+. .github/scripts/main/preamble.sh
 
 rm -f $OPAM_LOCAL/bin/opam-bootstrap
 mkdir -p $OPAM_LOCAL/bin/

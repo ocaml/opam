@@ -1,6 +1,6 @@
 #!/bin/bash -xue
 
-. .github/scripts/preamble.sh
+. .github/scripts/main/preamble.sh
 
 unset-dev-version () {
   # disable git versioning to allow OPAMYES use for upgrade

@@ -1,6 +1,6 @@
 #!/bin/bash -xue
 
-. .github/scripts/hygiene-preamble.sh
+. .github/scripts/common/hygiene-preamble.sh
 
 ###
 # Check install.sh
