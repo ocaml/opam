@@ -159,6 +159,12 @@ let str_replace_path ?(escape=false) whichway filters s =
         if way @@ Re.execp (Re.compile re) s then s else "\\c")
     s filters
 
+let filters_of_var =
+  List.rev_map (fun (v, x) ->
+      Re.(alt [seq [str "${"; str v; str "}"];
+               seq [char '$'; str v; eow]];),
+      Sed x)
+
 let command
     ?(allowed_codes = [0]) ?(vars=[]) ?(silent=false) ?(filter=[])
     cmd args =
@@ -263,7 +269,8 @@ let rec with_temp_dir f =
 
 type command =
   | File_contents of string
-  | Cat of string list
+  | Cat of { files: string list;
+             filter: (Re.t * filt_sort) list; }
   | Run of { env: (string * string) list;
              cmd: string;
              args: string list; (* still escaped *)
@@ -323,7 +330,7 @@ module Parse = struct
       char '>'
     ]
 
-  let command str =
+  let command ?(vars=[]) str =
     if str.[0] = '<' && str.[String.length str - 1] = '>' then
       let f =
         try
@@ -344,10 +351,6 @@ module Parse = struct
     else if str.[0] = ':' || str.[0] = '#' then
       Comment str
     else
-    match OpamStd.String.cut_at str ' ' with
-    | Some ("opam-cat", files) ->
-        Cat (OpamStd.String.split files ' ')
-    | _ ->
     let varbinds, pos =
       let gr = exec (compile @@ rep re_varbind) str in
       List.map (fun gr -> Group.get gr 1, get_str (Group.get gr 2))
@@ -365,16 +368,26 @@ module Parse = struct
       let grs = all ~pos (compile re_str_atom) str in
       List.map (fun gr -> Group.get gr 0) grs
     in
+    let get_str s =
+      str_replace_path OpamSystem.back_to_forward
+        (filters_of_var vars)
+        (get_str s)
+    in
+    let posix_re re =
+      try Posix.re (get_str re)
+      with Posix.Parse_error ->
+        failwith (Printf.sprintf "Parse error: %s" re)
+    in
     let rec get_args_rewr acc = function
       | [] -> List.rev acc, false, [], None
       | "|" :: _ as rewr ->
         let rec get_rewr (unordered, acc) = function
           | "|" :: re :: "->" :: str :: r ->
-            get_rewr (unordered, (Posix.re (get_str re), Sed (get_str str)) :: acc) r
+            get_rewr (unordered, (posix_re re, Sed (get_str str)) :: acc) r
           | "|" :: "grep" :: "-v" :: re :: r ->
-            get_rewr (unordered, (Posix.re (get_str re), GrepV) :: acc) r
+            get_rewr (unordered, (posix_re re, GrepV) :: acc) r
           | "|" :: "grep" :: re :: r ->
-            get_rewr (unordered, (Posix.re (get_str re), Grep) :: acc) r
+            get_rewr (unordered, (posix_re re, Grep) :: acc) r
           | "|" :: "unordered" :: r ->
             get_rewr (true, acc) r
           | ">$" :: output :: [] ->
@@ -393,6 +406,8 @@ module Parse = struct
     in
     let args, unordered, rewr, output = get_args_rewr [] args in
     match cmd with
+    | Some "opam-cat" ->
+      Cat { files = args; filter = rewr; }
     | Some cmd ->
       Run {
         env = varbinds;
@@ -435,13 +450,7 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
     "BASEDIR", dir;
   ] @ vars
   in
-  let var_filters =
-    List.rev_map (fun (v, x) ->
-        Re.(alt [seq [str "${"; str v; str "}"];
-                 seq [char '$'; str v; eow]];),
-        Sed x)
-      env_vars
-  in
+  let var_filters = filters_of_var env_vars in
   let cmd = if cmd = "opam" then opam else cmd in
   let args =
     List.map (fun a ->
@@ -494,7 +503,7 @@ let run_test ?(vars=[]) ~opam t =
     List.fold_left (fun vars (cmd, out) ->
         print_string cmd_prompt;
         print_endline cmd;
-        match parse_command cmd with
+        match parse_command ~vars cmd with
         | Comment _ -> vars
         | File_contents path ->
           let contents = String.concat "\n" out ^ "\n" in
@@ -505,7 +514,7 @@ let run_test ?(vars=[]) ~opam t =
           List.fold_left
             (fun vars (v, r) -> (v, r) :: List.filter (fun (w, _) -> v <> w) vars)
             vars bindings
-        | Cat files ->
+        | Cat { files; filter } ->
           let print_opamfile header file =
             let content =
               let open OpamParserTypes.FullPos in
@@ -513,8 +522,16 @@ let run_test ?(vars=[]) ~opam t =
               let rec mangle item =
                 match item.pelem with
                 | Section s ->
-                  {item with pelem = Section {s with section_name = OpamStd.Option.map (fun v -> {v with pelem = mangle_string v.pelem}) s.section_name;
-                                                     section_items = {s.section_items with pelem = List.map mangle s.section_items.pelem}}}
+                  {item with
+                   pelem =
+                     Section {s with
+                              section_name =
+                                OpamStd.Option.map (fun v ->
+                                    {v with pelem = mangle_string v.pelem})
+                                  s.section_name;
+                              section_items =
+                                {s.section_items with
+                                 pelem = List.map mangle s.section_items.pelem}}}
                 | Variable(name, value) ->
                   {item with pelem = Variable(name, mangle_value value)}
               and mangle_value item =
@@ -551,7 +568,7 @@ let run_test ?(vars=[]) ~opam t =
             let str = Printf.sprintf "%s%s" str content in
             let str =
               str_replace_path OpamSystem.back_to_forward
-                (common_filters dir) str
+                (filter @ common_filters dir) str
             in
             print_string str
           in
