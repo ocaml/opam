@@ -1,6 +1,7 @@
 009e00fa
 ### OPAMYES=1
 ### cp -R ${OPAMROOT}/repo/default .
+### opam option opam-root-version --global | '"' -> '' >$ OPAMROOTVERSION
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["false"] "no system compiler" ]
@@ -105,7 +106,7 @@ No configuration file found, using built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
-### opam-cat $OPAMROOT/config
+### opam-cat $OPAMROOT/config | 'opam-root-version: "${OPAMROOTVERSION}"' -> 'opam-root-version: current'
 default-compiler: ["ocaml-system" "ocaml-base-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
@@ -113,7 +114,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [[sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"] [sys-ocaml-arch ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^architecture: ' | sed -e 's/.*: //' -e 's/i386/i686/' -e 's/amd64/x86_64/'"] "Target architecture of the OCaml compiler present on your system"] [sys-ocaml-cc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^ccomp_type: ' | sed -e 's/.*: //'"] "Host C Compiler type of the OCaml compiler present on your system"] [sys-ocaml-libc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^os_type: ' | sed -e 's/.*: //' -e 's/Win32/msvc/' -e '/^msvc$/!s/.*/libc/'"] "Host C Runtime Library type of the OCaml compiler present on your system"]]
-opam-root-version: "2.1"
+opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
@@ -160,7 +161,7 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [norepo] Initialised
-### opam-cat $OPAMROOT/config
+### opam-cat $OPAMROOT/config | 'opam-root-version: "${OPAMROOTVERSION}"' -> 'opam-root-version: current'
 archive-mirrors: "file://${BASEDIR}/REPO/cache"
 default-compiler: ["comp"]
 default-invariant: ["comp" {= "1"}]
@@ -172,7 +173,7 @@ download-jobs: 8
 eval-variables: [var-to-eval ["true"] "tautology"]
 global-variables: [GLOB "glob" "Set throught opamrc"]
 jobs: 9
-opam-root-version: "2.1"
+opam-root-version: current
 opam-version: "2.0"
 post-build-commands: ["%{hooks}%/a-script.sh" "post-build"]
 post-install-commands: ["%{hooks}%/a-script.sh" "post-install"]
@@ -226,7 +227,7 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [norepo] Initialised
-### opam-cat $OPAMROOT/config
+### opam-cat $OPAMROOT/config | 'opam-root-version: "${OPAMROOTVERSION}"' -> 'opam-root-version: current'
 archive-mirrors: "file://${BASEDIR}/REPO/cache"
 default-compiler: ["comp"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
@@ -235,7 +236,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 8
 eval-variables: [var-to-eval ["true"] "tautology"]
-opam-root-version: "2.1"
+opam-root-version: current
 opam-version: "2.0"
 post-session-commands: ["%{hooks}%/a-script.sh" "post-session"]
 pre-build-commands: ["%{hooks}%/a-script.sh" "pre-build"]
