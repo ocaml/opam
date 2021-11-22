@@ -144,9 +144,16 @@ let str_replace_path ?(escape=false) whichway filters s =
         ) in
       match by with
       | Sed by ->
-        Re.replace (Re.compile re_path) s
-          ~f:(fun g ->
-              escape (by ^ whichway (Re.Group.(get g (nb_groups g - 1)))))
+        (* workaround to have several replacement, and handle paths *)
+        let rec loop prev =
+          let replaced =
+            Re.replace (Re.compile re_path) prev
+              ~f:(fun g ->
+                  escape (by ^ whichway (Re.Group.(get g (nb_groups g - 1)))))
+          in
+          if prev = replaced then  prev else loop replaced
+        in
+        loop s
       | Grep | GrepV ->
         let way = if by = Grep then fun x -> x else not in
         if way @@ Re.execp (Re.compile re) s then s else "\\c")
