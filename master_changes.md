@@ -11,7 +11,7 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
-  *
+  * Upgrade root version to 2.2~alpha [#4926 @rjbou]
 
 ## Global CLI
   * Fix typo in error message for opam var [#4786 @kit-ty-kate - fix #4785]
@@ -179,6 +179,7 @@ users)
   * Set opam root version to 2.1 [#4763 @rjbou] [2.1.0~rc2 #4715]
   * Fix 2.1~alpha2 to 2.1 format upgrade with reinit [#4763 @rjbou - fix #4748] [2.1.0~rc2 #4750]
   * Fix bypass-check handling on reinit [#4750 @rjbou] [#4763 @rjbou] [2.1.0~rc2 #4750 #4756]
+  * Reorganise intermediate roots that need an uipgrade handling (for 2.1, prone to generalisation) [#4926 @rjbou]
 
 ## Sandbox
   * Sync the behaviour of the macOS sandbox script with Linux's: /tmp is now ready-only [#4719 @kit-ty-kate]
