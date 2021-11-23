@@ -95,6 +95,15 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Reftests
 ### Tests
+  * Fix meld reftest: open only with failing ones [#4913 @rjbou]
+  * Add `BASEDIR` to environement [#4913 @rjbou]
+  * Replace opam bin path [#4913 @rjbou]
+  * Add `grep -v` command [#4913 @rjbou]
+  * Apply grep & seds on file order [#4913 @rjbou]
+  * Precise `OPAMTMP` regexp, `hexa` instead of `'alphanum` to avoid confusion with `BASEDIR` [#4913 @rjbou]
+  * Hackish way to have several replacement in a single line [#4913 @rjbou]
+  * Substitution in regexp pattern (for environment variables) [#4913 @rjbou]
+  * Substitution for opam-cat content [#4913 @rjbou]
   * Fix github url: `git://` form no more handled [#5097 @rjbou]
 
 ## Doc
