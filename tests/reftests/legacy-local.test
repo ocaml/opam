@@ -665,7 +665,7 @@ Switch invariant: ["ocaml" {= "system"}]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml.system
 Done.
-### opam exec -- ocamlc -config | 'ext_lib: .' -> '#' | '^[^#].*' -> '\c' | '^#' -> '' >$ LIB_EXT
+### opam exec -- ocamlc -config | '^#' -> '' | '^[^#].*' -> '\c'  | 'ext_lib: .' -> '#' >$ LIB_EXT
 ### opam var ext_lib=$LIB_EXT --switch system | .* -> '\c'
 ### : INSTALL-REMOVE :
 ### opam list -is --columns=package

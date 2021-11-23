@@ -153,8 +153,18 @@ users)
   * Add switch-invariant test [#4866 @rjbou]
   * opam root version: add local switch cases [#4763 @rjbou] [2.1.0~rc2 #4715]
   * opam root version: add reinit test casess [#4763 @rjbou] [2.1.0~rc2 #4750]
-  * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Add & update env tests [#4861 #4841 @rjbou @dra27]
+  * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
+  * Fix meld reftest: open only with failing ones [#4913 @rjbou]
+  * Add `BASEDIR` to environement [#4913 @rjbou]
+  * Replace opam bin path [#4913 @rjbou]
+  * Add `grep -v` command [#4913 @rjbou]
+  * Apply grep & seds on file order [#4913 @rjbou]
+  * Precise `OPAMTMP` regexp, `hexa` instead of `'alphanum` to avoid confusion with `BASEDIR` [#4913 @rjbou]
+  * Hackish way to have several replacement in a single line [#4913 @rjbou]
+  * Substitution in regexp pattern (for environment variables) [#4913 @rjbou]
+  * Substitution for opam-cat content [#4913 @rjbou]
+
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]
