@@ -729,7 +729,8 @@ let string_of_stats stats =
 let solution_is_empty t =
   OpamCudf.ActionGraph.is_empty t
 
-let print_solution ~messages ~append ~requested ~reinstall ~available t =
+let print_solution ~messages ~append ~requested ~reinstall ~available
+    ?(skip=OpamPackage.Map.empty) t =
   let dump_cudf sfx t = match OpamSolverConfig.(!r.cudf_file) with
     | None -> ()
     | Some f ->
@@ -746,11 +747,18 @@ let print_solution ~messages ~append ~requested ~reinstall ~available t =
   in
   let actions, details =
     OpamCudf.ActionGraph.fold_vertex (fun a (actions,details) ->
+        if OpamPackage.Map.mem OpamCudf.(cudf2opam (action_contents a)) skip
+        then actions, details
+        else
         let cause =
           try OpamCudf.Map.find (OpamCudf.action_contents a) causes
           with Not_found -> Unknown in
         let action = map_action OpamCudf.cudf2opam a in
-        let cudf_name p = OpamPackage.name_to_string (OpamCudf.cudf2opam p) in
+        let cudf_name p =
+          let nv = OpamCudf.cudf2opam p in
+          let nv = try OpamPackage.Map.find nv skip with Not_found -> nv in
+          OpamPackage.name_to_string nv
+        in
         let cause = string_of_cause cudf_name cause in
         let messages =
           match a with
@@ -810,11 +818,11 @@ let dump_universe universe oc =
           (OpamPackage.name_to_string nv) i (OpamPackage.version_to_string nv)
     ) version_map
 
-let filter_solution filter t =
+let filter_solution ?(recursive=true) filter t =
   let t = OpamCudf.ActionGraph.copy t in
   let rec rm iter_deps v =
     if OpamCudf.ActionGraph.mem_vertex t v then (
-      iter_deps (rm iter_deps) t v;
+      if recursive then iter_deps (rm iter_deps) t v;
       OpamCudf.ActionGraph.remove_vertex t v
     ) in
   OpamCudf.ActionGraph.iter_vertex

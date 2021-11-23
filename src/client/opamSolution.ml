@@ -1258,10 +1258,17 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   with Sys.Break as e -> OpamStd.Exn.finalise e give_up_msg
 
 (* Apply a solution *)
-let apply ?ask t ~requested ?add_roots ?(assume_built=false)
-    ?(download_only=false) ?force_remove solution =
+let apply ?ask t ~requested ?add_roots
+    ?(skip=OpamPackage.Map.empty)
+    ?(assume_built=false)
+    ?(download_only=false) ?force_remove solution0 =
   let names = OpamPackage.names_of_packages requested in
   log "apply";
+  let solution =
+    OpamSolver.filter_solution ~recursive:false
+      (fun nv -> not (OpamPackage.Map.mem nv skip))
+      solution0
+  in
   if OpamSolver.solution_is_empty solution then
     (* The current state satisfies the request contraints *)
     t, Nothing_to_do
@@ -1309,7 +1316,8 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
       OpamSolver.print_solution ~messages ~append
         ~requested:names ~reinstall:(Lazy.force t.reinstall)
         ~available:(Lazy.force t.available_packages)
-        solution;
+        ~skip
+        solution0;
     );
     if not OpamClientConfig.(!r.show) &&
        (download_only || confirmation ?ask names solution)

@@ -41,11 +41,13 @@ val string_of_stats: stats -> string
 (** Is the solution empty? *)
 val solution_is_empty: solution -> bool
 
-(** Display a solution *)
+(** Display a solution. [skip] skips printing the actions on the given packages
+    and replaces their names in other places where they appear *)
 val print_solution:
   messages:(package -> string list) ->
   append:(package -> string) ->
   requested:name_set -> reinstall:package_set -> available:package_set ->
+  ?skip:package OpamPackage.Map.t ->
   solution -> unit
 
 (** Serialize a solution *)
@@ -162,5 +164,6 @@ val coinstallable_subset :
 val dump_universe: universe -> out_channel -> unit
 
 (** Filters actions in a solution. Dependents of a removed actions are removed
-    to keep consistency *)
-val filter_solution: (package -> bool) -> solution -> solution
+    to keep consistency unless [recursive] is set to false *)
+val filter_solution:
+  ?recursive:bool -> (package -> bool) -> solution -> solution

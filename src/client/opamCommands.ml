@@ -1617,14 +1617,24 @@ let install cli =
        the required system dependencies, without affecting the opam switch \
        state or installing opam packages."
   in
+  let formula =
+    mk_opt ~cli (cli_from cli2_2) ["formula"] "FORMULA"
+      "Specify a dependency formula to be verified by the solution, in \
+       addition to the switch invariant."
+      OpamArg.dep_formula OpamFormula.Empty
+  in
   let install
       global_options build_options add_to_roots deps_only ignore_conflicts
-      restore destdir assume_built check recurse subpath depext_only
+      restore destdir assume_built check recurse subpath depext_only formula
       download_only atoms_or_locals () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
-    if atoms_or_locals = [] && not restore then
+    if atoms_or_locals = [] && not restore && formula = OpamFormula.Empty then
       `Error (true, "required argument PACKAGES is missing")
+    else
+    if assume_built && (deps_only || formula <> OpamFormula.Empty || depext_only) then
+      `Error (true, "option --assume-built is not compatible with --deps-only, \
+                     --formula or --depext-only")
     else
     if depext_only
     && (OpamClientConfig.(!r.assume_depexts)
@@ -1654,17 +1664,17 @@ let install cli =
           (OpamPackage.Set.elements to_restore)
       else atoms_or_locals
     in
-    if atoms_or_locals = [] then `Ok () else
+    if formula = OpamFormula.Empty && atoms_or_locals = [] then `Ok () else
     let st, atoms =
       OpamAuxCommands.autopin
         st ~recurse ?subpath ~quiet:check ~simulate:(deps_only||check||depext_only)
         atoms_or_locals
     in
-    if atoms = [] then
+    if formula = OpamFormula.Empty && atoms = [] then
       (OpamConsole.msg "Nothing to do\n";
        OpamStd.Sys.exit_because `Success);
     if check then
-      (let missing =
+       let missing =
          OpamPackage.Map.fold (fun _ -> OpamPackage.Name.Set.union)
            (OpamClient.check_installed ~build:true ~post:true st atoms)
            (OpamPackage.Name.Set.empty)
@@ -1677,9 +1687,10 @@ let install cli =
           OpamConsole.msg "%s\n"
             (OpamStd.List.concat_map " " OpamPackage.Name.to_string
                (OpamPackage.Name.Set.elements missing));
-          OpamStd.Sys.exit_because `False));
+          OpamStd.Sys.exit_because `False)
+    else
     let st =
-      OpamClient.install st atoms
+      OpamClient.install st atoms ~formula
         ~autoupdate:pure_atoms ?add_to_roots ~deps_only ~ignore_conflicts
         ~assume_built ~depext_only ~download_only
     in
@@ -1694,7 +1705,7 @@ let install cli =
     Term.(const install $global_options cli $build_options cli
           $add_to_roots $deps_only $ignore_conflicts $restore $destdir
           $assume_built cli $check $recurse cli $subpath cli $depext_only
-          $download_only $atom_or_local_list)
+          $formula $download_only $atom_or_local_list)
 
 (* REMOVE *)
 let remove_doc = "Remove a list of packages."

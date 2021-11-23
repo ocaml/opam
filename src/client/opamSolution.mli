@@ -26,12 +26,15 @@ val resolve:
 (** Apply a solution returned by the solver. If [ask] is not specified, prompts
     the user whenever the solution isn't obvious from the request. [add_roots]
     defaults to the set of newly installed packages that are part of
-    [requested].  If [force_remove] is true, modified files are not kept.*)
+    [requested]. If [force_remove] is true, modified files are not kept.
+    [skip] will ignore the actions on the supplied map keys, replacing them with
+    the map values when printing. *)
 val apply:
   ?ask:bool ->
   rw switch_state ->
   requested:package_set ->
   ?add_roots:OpamPackage.Name.Set.t ->
+  ?skip:package OpamPackage.Map.t ->
   ?assume_built:bool ->
   ?download_only:bool ->
   ?force_remove:bool ->
