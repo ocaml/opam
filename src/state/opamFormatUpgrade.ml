@@ -1084,8 +1084,8 @@ let latest_version = OpamFile.Config.root_version
 
 let latest_hard_upgrade = (* to *) v2_0_beta5
 
-(* intermediates roots that need an hard upgrade *)
-let intermediate_roots = [
+(* intermediates roots that needs an hard upgrade if upgraded from them *)
+let v2_1_intermediate_roots = [
   v2_1_alpha; v2_1_alpha2; v2_1_rc
 ]
 
@@ -1128,45 +1128,39 @@ let as_necessary ?reinit requested_lock global_lock root config =
   in
   let cmp = OpamVersion.(compare OpamFile.Config.root_version root_version) in
   if cmp <= 0 then config, None (* newer or same *) else
-  let is_intermdiate_root = List.mem root_version intermediate_roots in
-  let keep_needed_upgrades =
-    List.filter (fun (v,_) -> OpamVersion.compare root_version v < 0)
-  in
-  (* to generalise *)
-  let intermediates =
-    let hard = [
-      v2_1_alpha,  from_2_0_to_2_1_alpha;
-      v2_1_alpha2, from_2_1_alpha_to_2_1_alpha2;
-      v2_1_rc,     from_2_1_alpha2_to_2_1_rc;
-    ] in
-    let light = [
-      v2_1,        from_2_1_rc_to_2_1;
-      v2_2_alpha,  from_2_1_to_2_2_alpha;
-    ] in
-    keep_needed_upgrades hard,
-    light
-  in
   let hard_upg, light_upg =
-    if is_intermdiate_root then intermediates else
-      [
-        v1_1,        from_1_0_to_1_1;
-        v1_2,        from_1_1_to_1_2;
-        v1_3_dev2,   from_1_2_to_1_3_dev2;
-        v1_3_dev5,   from_1_3_dev2_to_1_3_dev5;
-        v1_3_dev6,   from_1_3_dev5_to_1_3_dev6;
-        v1_3_dev7,   from_1_3_dev6_to_1_3_dev7;
-        v2_0_alpha,  from_1_3_dev7_to_2_0_alpha;
-        v2_0_alpha2, from_2_0_alpha_to_2_0_alpha2;
-        v2_0_alpha3, from_2_0_alpha2_to_2_0_alpha3;
-        v2_0_beta,   from_2_0_alpha3_to_2_0_beta;
-        v2_0_beta5,  from_2_0_beta_to_2_0_beta5;
-        v2_0,        from_2_0_beta5_to_2_0;
-        v2_1,        from_2_0_to_2_1;
-        v2_2_alpha,  from_2_1_to_2_2_alpha;
-      ]
-      |> keep_needed_upgrades
-      |> List.partition (fun (v,_) ->
-          OpamVersion.compare v latest_hard_upgrade <= 0)
+    let is_2_1_intermediate_root =
+      List.exists (OpamVersion.equal root_version) v2_1_intermediate_roots
+    in
+    let latest_hard_upgrade =
+      if is_2_1_intermediate_root then v2_1_rc else latest_hard_upgrade
+    in
+    (if is_2_1_intermediate_root then [
+        v2_1_alpha,  from_2_0_to_2_1_alpha;
+        v2_1_alpha2, from_2_1_alpha_to_2_1_alpha2;
+        v2_1_rc,     from_2_1_alpha2_to_2_1_rc;
+        v2_1,        from_2_1_rc_to_2_1;
+      ] else [
+       v1_1,        from_1_0_to_1_1;
+       v1_2,        from_1_1_to_1_2;
+       v1_3_dev2,   from_1_2_to_1_3_dev2;
+       v1_3_dev5,   from_1_3_dev2_to_1_3_dev5;
+       v1_3_dev6,   from_1_3_dev5_to_1_3_dev6;
+       v1_3_dev7,   from_1_3_dev6_to_1_3_dev7;
+       v2_0_alpha,  from_1_3_dev7_to_2_0_alpha;
+       v2_0_alpha2, from_2_0_alpha_to_2_0_alpha2;
+       v2_0_alpha3, from_2_0_alpha2_to_2_0_alpha3;
+       v2_0_beta,   from_2_0_alpha3_to_2_0_beta;
+       v2_0_beta5,  from_2_0_beta_to_2_0_beta5;
+       v2_0,        from_2_0_beta5_to_2_0;
+       v2_1,        from_2_0_to_2_1;
+     ]) @ [
+      v2_2_alpha,  from_2_1_to_2_2_alpha;
+    ]
+    |> List.filter (fun (v,_) ->
+        OpamVersion.compare root_version v < 0)
+    |> List.partition (fun (v,_) ->
+        OpamVersion.compare v latest_hard_upgrade <= 0)
   in
   let need_hard_upg = hard_upg <> [] in
   let on_the_fly, global_lock_kind =
