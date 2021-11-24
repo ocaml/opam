@@ -6,8 +6,8 @@ env:
   OPAMBSVERSION: 2.0.7
   OPAMBSROOT: ~/.cache/.opam.cached
   OPAM12CACHE: ~/.cache/opam1.2/cache
-  OPAM_TEST_REPO_SHA: b02110b549a0b5275806ce27444fabac71093a0e
-  OPAM_REPO_SHA: 754c005bee4b198787ffc01f82e6c1f9c6356c2c
+  OPAM_TEST_REPO_SHA: 38e8f54c584fa3cfe779890f7a56fe88ee38be78
+  OPAM_REPO_SHA: 38e8f54c584fa3cfe779890f7a56fe88ee38be78
   # Default ocaml version for some jobs
   OCAML_VERSION: 4.12.0
   ## variables for cache paths
