@@ -40,7 +40,7 @@ users)
   * [BUG] Fix `set-invariant: default repos were loaded instead of switch repos [#4866 @rjbou]
 
 ## Pin
-  *
+  * Don't read opam file in source for version pin [#4931 @rjbou - #4608]
 
 ## List
   * Some optimisations to 'opam list --installable' queries combined with other filters [@altgr]
