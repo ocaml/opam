@@ -40,8 +40,8 @@ env:
   OPAM12CACHE: ~/.cache/opam1.2/cache
   # These should be identical to the values in appveyor.yml and the other workflows
   OPAM_REPO: https://github.com/ocaml/opam-repository.git
-  OPAM_TEST_REPO_SHA: 765662297a24d833c6a04752cd8b89c5bd72fe26
-  OPAM_REPO_SHA: 765662297a24d833c6a04752cd8b89c5bd72fe26
+  OPAM_TEST_REPO_SHA: ec07d6d5f363d1c5b9ed3b927d0df1d58dad333c
+  OPAM_REPO_SHA: ec07d6d5f363d1c5b9ed3b927d0df1d58dad333c
   # Default ocaml version for some jobs
   OCAML_VERSION: 4.12.0
   ## variables for cache paths
