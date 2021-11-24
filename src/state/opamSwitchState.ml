@@ -451,15 +451,14 @@ let load lock_kind gt rt switch =
   let ext_files_changed = lazy (
     OpamPackage.Name.Map.fold (fun name conf acc ->
         let nv = OpamPackage.package_of_name installed name in
+        let path = lazy (
+          OpamStd.Sys.split_path_variable (OpamStd.Env.get "PATH")
+          |> List.map OpamFilename.Dir.of_string
+        ) in
         if
           List.exists (fun (file, hash) ->
               let exists = OpamFilename.exists file in
-              let should_exist =
-                let count_not_zero c =
-                  function '0' -> c | _ -> succ c
-                in
-                OpamStd.String.fold_left count_not_zero 0 (OpamHash.contents hash) <> 0
-              in
+              let should_exist = OpamHash.is_null hash in
               let changed =
                 exists <> should_exist ||
                 exists && not (OpamHash.check_file (OpamFilename.to_string file) hash)
@@ -477,7 +476,21 @@ let load lock_kind gt rt switch =
                   "File %s, which package %s depends upon, was changed on your \
                    system.\n\
                    The package will need to be reinstalled."
-                  (OpamFilename.to_string file) (OpamPackage.to_string nv);
+                  (OpamFilename.to_string file) (OpamPackage.to_string nv)
+              else
+                (let exec_not_in_path =
+                   should_exist &&
+                   OpamFilename.is_exec file &&
+                   let dirname = OpamFilename.dirname file in
+                   not @@ List.exists (OpamFilename.Dir.equal dirname)
+                     (Lazy.force path)
+                 in
+                 if exec_not_in_path then
+                   OpamConsole.warning
+                     "File %s, which package %s depends upon, \
+                      is no longer in your %s."
+                     (OpamFilename.to_string file) (OpamPackage.to_string nv)
+                     (OpamConsole.colorise `bold "PATH"));
               changed)
             (OpamFile.Dot_config.file_depends conf)
         then OpamPackage.Set.add nv acc
