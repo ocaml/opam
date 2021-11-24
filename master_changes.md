@@ -154,6 +154,7 @@ users)
   * Add `with-tools` variable for recommended tools [#5016 @rjbou]
   * Add `x-locked` extension fields for overlay internal use, it stores if the files originate from a locked file, if so its extension [#5080 @rjbou]
   * Set `depext-bypass` parsing with depth 1, no needed brakcet if single package [#5154 @rjbou]
+  * `repo-config"`: add an optional field for repository initialisation state [#4933 @rjbou]
 
 ## External dependencies
   * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
@@ -187,6 +188,13 @@ users)
   * Get rid of OPAM_USER_PATH_RO (never used on macOS and no longer needed on Linux) [#4795 @kit-ty-kate]
   * Print error message if command doesn't exist [#4971 @kit-ty-kat - fix #4112]
   * Resolve symlink for `ccache` directory [#5267 @rjbou - fix #5194]
+
+## Repository
+  * Don't display global message when `this-switch` is given [#4899 @rjbou - fix #4889]
+  * Set the priority of user-set archive-mirrors higher than the repositories'.
+    This allows opam-repository to use the default opam.ocaml.org cache and be more resilient to changed/force-pushed or unavailable archives. [#4830 @kit-ty-kate - fixes #4411]
+  * [NEW] Add `--no-action` for `add` and `set-url` subcommands to permit delay the update [#XXXX rjbou - fix #4617]
+  * [NEW] Add `--no-action` for `add` and `set-url` subcommands to permit delay the update [#4933 rjbou - fix #4617]
 
 ## VCS
   * Pass --depth=1 to git-fetch in the Git repo backend [#4442 @dra27]
@@ -520,6 +528,8 @@ users)
   * `OpamFormula`: add generic `formula_to_cnf` and `formula_to_dnf`, and use them in `to_cnf` and `to_dnf` [#5171 @cannorin]
   * `OpamFilter`: add `?custom` argument in `to_string` to tweak the output [#5171 @cannorin]
 
+  * `OpamFile.repos_config.t`: add an initialised state argument in map value [#4933 @rjbou]
+  * `OpamFormat`: add `map_options_4` [#4933 @rjbou]
 ## opam-core
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamFilename`, `OpamHash`, `OpamStd`, `OpamStd`, `OpamUrl`, and `OpamVersion` [#4918 @rjbou]
