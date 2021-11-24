@@ -259,3 +259,95 @@ The following actions will be performed:
 -> removed   bar.2
 -> installed bar.3
 Done.
+### :: Url setting ::
+### <PORE/repo>
+opam-version: "2.0"
+### <PORE/packages/first/first.2/opam>
+opam-version: "2.0"
+### <PORE2/repo>
+opam-version: "2.0"
+### <PORE2/packages/second/second.2/opam>
+opam-version: "2.0"
+### <PORE3/repo>
+opam-version: "2.0"
+### <PORE3/packages/third/third.3/opam>
+opam-version: "2.0"
+### opam repository add pore ./PORE --set-default
+[pore] Initialised
+### opam switch create repos --empty --repositories pore
+### opam list --all --short
+first
+### :: repo addition ::
+### opam repository add pore2 ./PORE2
+[pore2] Initialised
+[NOTE] Repository pore2 has been added to the selections of switch repos only.
+       Run `opam repository add pore2 --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+
+### opam list --all --short
+first
+second
+### :: repo addition with no action ::
+### opam repository add pore3 ./PORE3 --no-action
+[NOTE] Repository pore3 has been added to the selections of switch repos only.
+       Run `opam repository add pore3 --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+
+### opam list --all --short
+first
+second
+### opam update pore3
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[pore3] Initialised
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all --short
+first
+second
+third
+### :: repo set-url ::
+### opam repository remove pore3
+Repositories removed from the selections of switch repos. Use '--all' to forget about them altogether.
+### opam repository set-url pore2 ./PORE3
+[pore2] Initialised
+### opam list --all --short
+first
+third
+### :: repo set-url with no-action ::
+### opam repository set-url pore2 ./PORE2 --no-action
+### opam list --all --short
+first
+### opam update pore2
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[pore2] Initialised
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all --short
+first
+second
+### :: add with wrong url ::
+### opam repository add pore4 ./PORE4
+[ERROR] Could not update repository "pore4": rsync failed
+[ERROR] Initial repository fetch failed
+# Return code 40 #
+### opam repository add pore4 ./PORE4 --no-action
+[NOTE] Repository pore4 has been added to the selections of switch repos only.
+       Run `opam repository add pore4 --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+
+### opam list --all --short
+first
+second
+### opam update pore4
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] Could not update repository "pore4": rsync failed
+# Return code 40 #
+### :: set-url with wrong url ::
+### opam repository set-url pore ./PORE4
+[ERROR] Could not update repository "pore": rsync failed
+### opam repository set-url pore ./PORE4 --no-action
+### opam list --all --short
+second
+### opam update pore
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] Could not update repository "pore": rsync failed
+# Return code 40 #
