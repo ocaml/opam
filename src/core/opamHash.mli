@@ -28,6 +28,9 @@ include OpamStd.ABSTRACT with type t := t
 
 val of_string_opt: string -> t option
 
+(** Check if [hash] contains only 0 *)
+val is_null: t -> bool
+
 (** returns a sub-path specific to this hash, e.g.
     "md5/d4/d41d8cd98f00b204e9800998ecf8427e", as a list *)
 val to_path: t -> string list
