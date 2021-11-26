@@ -639,8 +639,8 @@ let exit_status p return =
   if isset_verbose_f () then
     stop_verbose_f ()
   else if p.p_verbose then
-    (verbose_print_cmd p;
-     List.iter verbose_print_out stdout;
+    (List.iter verbose_print_out stdout;
+     if p.p_stdout <> p.p_stderr then
      List.iter verbose_print_out stderr;
      flush OpamCompat.Stdlib.stdout);
   let info =
