@@ -41,6 +41,9 @@ users)
 
 ## Pin
   * Don't read opam file in source for version pin [#4931 @rjbou - #4608]
+  * Fix "opam pin <pkg>.<version> <repo>" when the version number inside
+    the opam file in the <repo> is the same as <version>
+    [#4931 @kit-ty-kate]
 
 ## List
   * Some optimisations to 'opam list --installable' queries combined with other filters [@altgr]
