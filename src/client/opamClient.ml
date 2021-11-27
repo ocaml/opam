@@ -133,7 +133,6 @@ let get_installed_atoms t atoms =
 (* Check atoms for pinned packages, and update them. Returns the state that
    may have been reloaded if there were changes *)
 let update_dev_packages_t ?(only_installed=false) atoms t =
-  OpamRepositoryState.check_last_update ();
   if OpamClientConfig.(!r.skip_dev_update) then t else
   let working_dir = OpamClientConfig.(!r.working_dir || !r.inplace_build) in
   let to_update =

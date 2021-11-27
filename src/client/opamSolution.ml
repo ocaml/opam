@@ -1279,6 +1279,7 @@ let resolve t action ~orphans ?reinstall ~requested request =
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));
     OpamJson.append "switch" (OpamSwitch.to_json t.switch)
   );
+  OpamRepositoryState.check_last_update ();
   let universe =
     OpamSwitchState.universe t ~requested ?reinstall action
   in
