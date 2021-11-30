@@ -141,7 +141,8 @@ let cache_urls repo_root repo_def =
   repo_dl_cache @ global_dl_cache
 
 (* Downloads all urls of the given package to the given cache_dir *)
-let package_files_to_cache repo_root cache_dir cache_urls ?link (nv, prefix) =
+let package_files_to_cache repo_root cache_dir cache_urls
+    ~recheck ?link (nv, prefix) =
   match
     OpamFileTools.read_opam
       (OpamRepositoryPath.packages repo_root prefix nv)
@@ -159,18 +160,25 @@ let package_files_to_cache repo_root cache_dir cache_urls ?link (nv, prefix) =
           (OpamConsole.colorise `green label);
         Done errors
       | (first_checksum :: _) as checksums ->
-        OpamRepository.pull_file_to_cache label
-          ~cache_urls ~cache_dir
-          checksums
-          (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
-        @@| fun r -> match OpamRepository.report_fetch_result nv r with
-        | Not_available (_,m) ->
+        let cache_file =
+          OpamRepository.cache_file cache_dir first_checksum
+        in
+        let error_opt =
+          if not recheck && OpamFilename.exists cache_file then Done None
+          else
+            OpamRepository.pull_file_to_cache label
+              ~cache_urls ~cache_dir
+              checksums
+              (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
+            @@| fun r -> match OpamRepository.report_fetch_result nv r with
+            | Not_available (_,m) -> Some m
+            | Up_to_date () | Result () -> None
+        in
+        error_opt @@| function
+        | Some m ->
           OpamPackage.Map.update nv (fun l -> m::l) [] errors
-        | Up_to_date () | Result () ->
+        | None ->
           OpamStd.Option.iter (fun link_dir ->
-              let target =
-                OpamRepository.cache_file cache_dir first_checksum
-              in
               let name =
                 OpamStd.Option.default
                   (OpamUrl.basename (OpamFile.URL.url urlf))
@@ -179,7 +187,7 @@ let package_files_to_cache repo_root cache_dir cache_urls ?link (nv, prefix) =
               let link =
                 OpamFilename.Op.(link_dir / OpamPackage.to_string nv // name)
               in
-              OpamFilename.link ~relative:true ~target ~link)
+              OpamFilename.link ~relative:true ~target:cache_file ~link)
             link;
           errors
     in
@@ -226,8 +234,15 @@ let cache_command cli =
       "JOBS" "Number of parallel downloads"
       OpamArg.positive_integer 8
   in
-  let cmd global_options cache_dir no_repo_update link jobs () =
+  let recheck_arg =
+    OpamArg.mk_flag ~cli OpamArg.(cli_from cli2_2) ["check-all"; "c"]
+      "Run a full integrity check on the existing cache. If this is not set, \
+       only missing cache files are handled."
+  in
+  let cmd global_options cache_dir no_repo_update link jobs recheck () =
     OpamArg.apply_global_options cli global_options;
+    (* this option was the default until 2.1 *)
+    let recheck = recheck || OpamCLIVersion.Op.(cli @< OpamArg.cli2_2) in
     let repo_root = checked_repo_root () in
     let repo_file = OpamRepositoryPath.repo repo_root in
     let repo_def = OpamFile.Repo.safe_read repo_file in
@@ -239,7 +254,8 @@ let cache_command cli =
       OpamParallel.reduce ~jobs
         ~nil:OpamPackage.Map.empty
         ~merge:(OpamPackage.Map.union (fun a _ -> a))
-        ~command:(package_files_to_cache repo_root cache_dir cache_urls ?link)
+        ~command:(package_files_to_cache repo_root cache_dir cache_urls
+                    ~recheck ?link)
         (List.sort (fun (nv1,_) (nv2,_) ->
              (* Some pseudo-randomisation to avoid downloading all files from
                 the same host simultaneously *)
@@ -274,7 +290,8 @@ let cache_command cli =
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
     Term.(const cmd $ global_options cli $
-          cache_dir_arg $ no_repo_update_arg $ link_arg $ jobs_arg)
+          cache_dir_arg $ no_repo_update_arg $ link_arg $ jobs_arg $
+          recheck_arg)
 
 let add_hashes_command_doc =
   "Add archive hashes to an opam repository."
