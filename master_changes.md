@@ -25,7 +25,8 @@ users)
   * Refactored depext-related questions, with a flat menu instead of nested y/n questions [#5053 @AltGr - fix #5026]
   * [BUG] Fix default cli handling for simple flags [#5099 @rjbou]
   * Add `experimental` flags handling [#5099 @rjbou]
-  * Fix `OPAMCURL` and `OPAMFETCH` value setting [#5111 @rjbou - fix #5108]
+  * [BUG] Fix `OPAMCURL` and `OPAMFETCH` value setting [#5111 @rjbou - fix #5108]
+  * [BUG] Fix display of pinned packages in action list [#5079 @rjbou]
 
 ## Plugins
   *
@@ -70,7 +71,8 @@ users)
   * [BUG] Fix using `--working-dir` with non pinned packages: it was not downloading sources as they were remove from package that need sources [#5082 @rjbou - fix #5060]
   * [NEW] Reactivate subpath and recursive pinning `--recursive` and `--subpath` [#4876 @rjbou]
   * scan: show subpaths [#4876 @rjbou]
-  * Fix windows path for subpath, by introducing their own type in `OpamFilename` [#4876 @rjbou]
+  * [BUG] Fix windows path for subpath, by introducing their own type in `OpamFilename` [#4876 @rjbou]
+  * [BUG] Fix non repin of locked pins [#5079 @rjbou]
 
 ## List
   * Some optimisations to 'opam list --installable' queries combined with other filters [#4882 @altgr - fix #4311]
