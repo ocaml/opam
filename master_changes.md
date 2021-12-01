@@ -89,6 +89,8 @@ users)
 
 ## Repository
   * Don't display global message when `this-switch` is given [#4899 @rjbou - fix #4889]
+  * Set the priority of user-set archive-mirrors higher than the repositories'.
+    This allows opam-repository to use the default opam.ocaml.org cache and be more resilient to changed/force-pushed or unavailable archives. [#4830 @kit-ty-kate - fixes #4411]
 
 ## VCS
   * Pass --depth=1 to git-fetch in the Git repo backend [#4442 @dra27]
