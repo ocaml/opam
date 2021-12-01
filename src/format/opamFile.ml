@@ -796,7 +796,10 @@ module Syntax = struct
         aux [0] str
       in
       let pos_index (li,col) = lines_index.(li - 1) + col in
-      let extract start stop = String.sub str start (stop - start) in
+      let extract start stop =
+        if stop < start then raise Not_found;
+        String.sub str start (stop - start)
+      in
       let value_list_str lastpos vlst vlst_raw =
         let extract_pos start stop = extract (pos_index start) (pos_index stop) in
         let def_blank blank = OpamStd.Option.default "\n  " blank in
@@ -906,8 +909,10 @@ module Syntax = struct
         field :: padding :: strs, stop
       in
       let rem, (strs, lastpos) =
-        List.fold_left (fun (rem, (strs, lastpos)) item ->
-            List.filter (fun i -> it_ident i <> it_ident item) rem,
+        List.fold_left (fun (rem0, (strs, lastpos)) item ->
+            let rem =
+              List.filter (fun i -> it_ident i <> it_ident item) rem0
+            in
             let pos = item.pos in
             match item.pelem with
             | Variable (name, v) ->
@@ -920,13 +925,13 @@ module Syntax = struct
                  | Some { pelem = List
                               { pelem = [ { pelem = List
                                                 { pelem = []; _}; _}]; _}; _} ->
-                   strs, pos_index item.pos.stop
+                   rem, (strs, pos_index item.pos.stop)
                  | field_syn_t when
                      field_syn_t =
                      snd (Pp.print ppa (Pp.parse ppa ~pos (empty, Some v)))
                    ->
                    (* unchanged *)
-                   field_str item lastpos strs
+                   rem, (field_str item lastpos strs)
                  | _ ->
                    try
                      let field =
@@ -934,19 +939,20 @@ module Syntax = struct
                      in
                      let f = item_var_str name field in
                      let padding, stop = get_padding item lastpos in
-                     f :: padding :: strs, stop
-                   with Not_found -> strs, pos_index item.pos.stop
+                     rem, (f :: padding :: strs, stop)
+                   with Not_found -> rem0, (strs, pos_index item.pos.stop)
                with Not_found | OpamPp.Bad_format _ ->
                  if OpamStd.String.starts_with ~prefix:"x-" name &&
                     OpamStd.List.find_opt (fun i -> it_ident i = `Var name)
                       syn_t.file_contents <> None then
-                   field_str item lastpos strs
-                 else strs, pos_index item.pos.stop)
+                   rem, (field_str item lastpos strs)
+                 else rem0, (strs, pos_index item.pos.stop))
             | Section {section_kind; section_name; section_items} ->
               let section_kind = section_kind.pelem in
               let section_items = section_items.pelem in
               let section_name = OpamStd.Option.map (fun x -> x.pelem) section_name in
               (try
+                 rem,
                  let ppa = List.assoc section_kind sections in
                  let print_sec ppa t =
                    match snd (Pp.print ppa t) with
@@ -972,7 +978,7 @@ module Syntax = struct
                  let padding, stop = get_padding item lastpos in
                  (OpamPrinter.items f :: padding :: strs), stop
                with Not_found | OpamPp.Bad_format _ ->
-                 strs, pos_index item.pos.stop))
+                 rem0, (strs, pos_index item.pos.stop)))
           (syn_t.file_contents, ([], 0)) syn_file.file_contents
       in
       let str = String.concat "" (List.rev strs) in
