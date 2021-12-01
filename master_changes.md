@@ -62,7 +62,7 @@ users)
   *
 
 ## Opamfile
-  *
+  * Handle semantic versioning [#4532 @Keryan-dev - fix ~2976]
 
 ## External dependencies
   * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
