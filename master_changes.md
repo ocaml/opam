@@ -74,6 +74,7 @@ users)
   * [BUG] Fix windows path for subpath, by introducing their own type in `OpamFilename` [#4876 @rjbou]
   * [BUG] Fix repin of locked pins when there is no change in lock file [#5079 @rjbou - fix #4313]
   * [BUG] Fix `opam install ./file.opam` lock pinning [#5148 @rjbou - fix #4313]
+  * [BUG] Fix origin opam file retrieval when opam originate from locked file [#5079 @rjbou - fix #4936]
 
 ## List
   * Some optimisations to 'opam list --installable' queries combined with other filters [#4882 @altgr - fix #4311]
