@@ -13,8 +13,8 @@ environment:
     DEP_MODE: lib-ext
     # These should be identical to the values in .github/workflows/*.yml
     OPAM_REPO: https://github.com/ocaml/opam-repository.git
-    OPAM_REPO_SHA: 765662297a24d833c6a04752cd8b89c5bd72fe26
-    OPAM_TEST_REPO_SHA: 765662297a24d833c6a04752cd8b89c5bd72fe26
+    OPAM_REPO_SHA: ec07d6d5f363d1c5b9ed3b927d0df1d58dad333c
+    OPAM_TEST_REPO_SHA: ec07d6d5f363d1c5b9ed3b927d0df1d58dad333c
   matrix:
     - CYG_ROOT: cygwin
       CYG_ARCH: x86
