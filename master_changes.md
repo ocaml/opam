@@ -16,6 +16,7 @@ users)
 ## Global CLI
   * Fix typo in error message for opam var [#4786 @kit-ty-kate - fix #4785]
   * Add cli 2.2 handling [#4853 @rjbou]
+  * --no-depexts is the default in CLI 2.0 mode [#4908 @dra27]
 
 ## Plugins
   *
