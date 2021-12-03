@@ -1,9 +1,10 @@
+GH_USER = ocaml
 TAG = master
 VERSION = $(shell git describe $(TAG))
 OPAM_VERSION = $(subst -,~,$(VERSION))
 GIT_URL = ..
 
-FULL_ARCHIVE_URL = https://github.com/ocaml/opam/releases/download/$(VERSION)/opam-full-$(VERSION).tar.gz
+FULL_ARCHIVE_URL = https://github.com/$(GH_USER)/opam/releases/download/$(VERSION)/opam-full-$(VERSION).tar.gz
 
 TARGETS = x86_64-linux i686-linux armhf-linux arm64-linux
 
