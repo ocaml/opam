@@ -13,7 +13,12 @@
 * tag the release (git tag -a 2.2.0; git push origin 2.2.0)
 * /!\ Once the tag pushed, it can be updated [different commit] only in case of severe issue
 * create a release (or prerelease if intermediate release) draft on github based on your tag (https://github.com/ocaml/opam/releases/new)
-* generate opam artifacts, using `shell/release.sh`, it requires to have Docker install with several remotes, the different arches
+* Install the github-unix package from opam (needed to get git-upload-release)
+* Create a new token at https://github.com/settings/tokens
+* Create a new file at ~/.github/jar/infra with: {"scopes":[],"token":"ghp_XXX","app":{"name":"infra","url":"https://developer.github.com/v3/oauth_authorizations/"},"url":"https://api.github.com/authorizations/YYY","id":"YYY","note":"infra"}
+  * Replace XXX by the token
+  * Replace YYY by its ID
+* generate opam artifacts, using `release/release.sh`, it requires to have Docker install with several remotes, the different arches
 * add releases notes (content of `master_changes.md`) in the release
 * upload signature of artefacts
 * finalise the release (publish)
