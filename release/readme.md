@@ -14,7 +14,7 @@
 * /!\ Once the tag pushed, it can be updated [different commit] only in case of severe issue
 * create a release (or prerelease if intermediate release) draft on github based on your tag (https://github.com/ocaml/opam/releases/new)
 * Install the github-unix package from opam (needed to get git-upload-release)
-* Create a new token at https://github.com/settings/tokens
+* Create a new token at https://github.com/settings/tokens with the following rights: read:user, repo, user:email, write:packages
 * Create a new file at ~/.github/jar/infra with: {"scopes":[],"token":"ghp_XXX","app":{"name":"infra","url":"https://developer.github.com/v3/oauth_authorizations/"},"url":"https://api.github.com/authorizations/YYY","id":"YYY","note":"infra"}
   * Replace XXX by the token
   * Replace YYY by its ID
