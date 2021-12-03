@@ -15,6 +15,9 @@ HOST_OS = $(shell uname -s | tr A-Z a-z | sed 's/darwin/macos/')
 HOST = $(shell uname -m | sed 's/amd64/x86_64/')-$(HOST_OS)
 OUTDIR = out/$(TAG)
 
+# The equivalent of "which <cmd>". Taken from the GNU Make documentation
+pathsearch = $(firstword $(wildcard $(addsuffix /$(1),$(subst :, ,$(PATH)))))
+
 all: $(patsubst %,$(OUTDIR)/opam-$(VERSION)-%,$(TARGETS))
 
 $(OUTDIR)/opam-full-$(VERSION).tar.gz:
@@ -25,8 +28,8 @@ $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	    opam-full-$(VERSION)/configure.ac.tmp; \
 	  mv opam-full-$(VERSION)/configure.ac.tmp \
 	    opam-full-$(VERSION)/configure.ac; \
-	  $(MAKE) -C opam-full-$(VERSION) configure download-ext; \
-	  tar cz --exclude-vcs opam-full-$(VERSION) -f $(notdir $@); \
+	  $(MAKE) -C opam-full-$(VERSION) OCAML=$(call pathsearch,ocaml) configure download-ext; \
+	  tar cz -f $(notdir $@) --exclude-vcs opam-full-$(VERSION); \
 	  rm -rf opam-full-$(VERSION); \
 	}
 
