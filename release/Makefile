@@ -35,15 +35,15 @@ $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	}
 
 build/Dockerfile.x86_64-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/x86_64-v3.13/g' $^ | sed 's/%CONF%//g' >$@
+	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/x86_64-v3.13/g' -e 's/%CONF%//g' $^ >$@
 build/Dockerfile.i686-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/x86-v3.13/g' $^ | sed 's/%CONF%/-build i586-alpine-linux-musl/g' >$@
+	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/x86-v3.13/g' -e 's/%CONF%/-build i586-alpine-linux-musl/g' $^ >$@
 
 # Need to lie about gnueabihf instead of musleabihf, because of a ./configure bug
 build/Dockerfile.armhf-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/armv7-v3.13/g' $^ | sed 's/%CONF%//g' >$@
+	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/armv7-v3.13/g' -e 's/%CONF%//g' $^ >$@
 build/Dockerfile.arm64-linux: Dockerfile.in
-	mkdir -p build && sed 's/%TARGET_TAG%/arm64-v3.13/g' $^ | sed 's/%CONF%//g' >$@
+	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/arm64-v3.13/g' -e 's/%CONF%//g' $^ >$@
 
 
 build/%.image: build/Dockerfile.%
