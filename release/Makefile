@@ -6,8 +6,6 @@ GIT_URL = ..
 
 FULL_ARCHIVE_URL = https://github.com/$(GH_USER)/opam/releases/download/$(VERSION)/opam-full-$(VERSION).tar.gz
 
-TARGETS = x86_64-linux i686-linux armhf-linux arm64-linux
-
 OCAMLV = 4.13.1
 # currently hardcoded in Dockerfile.in
 OCAML_URL = https://caml.inria.fr/pub/distrib/ocaml-$(basename $(OCAMLV))/ocaml-$(OCAMLV).tar.gz
@@ -19,7 +17,10 @@ OUTDIR = out/$(TAG)
 # The equivalent of "which <cmd>". Taken from the GNU Make documentation
 pathsearch = $(firstword $(wildcard $(addsuffix /$(1),$(subst :, ,$(PATH)))))
 
-all: $(patsubst %,$(OUTDIR)/opam-$(VERSION)-%,$(TARGETS))
+x86_64-linux: $(OUTDIR)/opam-$(VERSION)-$@
+i686-linux: $(OUTDIR)/opam-$(VERSION)-$@
+armhf-linux: $(OUTDIR)/opam-$(VERSION)-$@
+arm64-linux: $(OUTDIR)/opam-$(VERSION)-$@
 
 $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	mkdir -p "$(OUTDIR)"

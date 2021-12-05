@@ -38,7 +38,10 @@ if [[ $# -eq 0 || " $* " =~ " archive " ]]; then
 fi
 
 if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
-  make GH_USER="${GH_USER}" TAG="$TAG" all &
+  make GH_USER="${GH_USER}" TAG="$TAG" x86_64-linux &
+  make GH_USER="${GH_USER}" TAG="$TAG" i686-linux &
+  make GH_USER="${GH_USER}" TAG="$TAG" armhf-linux &
+  make GH_USER="${GH_USER}" TAG="$TAG" arm64-linux &
   [ -f ${OUTDIR}/opam-$TAG-x86_64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" remote REMOTE=some-osx-x86 REMOTE_DIR=opam-release-$TAG &
   [ -f ${OUTDIR}/opam-$TAG-arm64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" remote REMOTE=some-osx-arm REMOTE_DIR=opam-release-$TAG &
   [ -f ${OUTDIR}/opam-$TAG-x86_64-openbsd ] || \
