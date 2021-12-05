@@ -41,7 +41,11 @@ if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
   make GH_USER="${GH_USER}" TAG="$TAG" all &
   [ -f ${OUTDIR}/opam-$TAG-x86_64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" remote REMOTE=some-osx-x86 REMOTE_DIR=opam-release-$TAG &
   [ -f ${OUTDIR}/opam-$TAG-arm64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" remote REMOTE=some-osx-arm REMOTE_DIR=opam-release-$TAG &
-  [ -f ${OUTDIR}/opam-$TAG-x86_64-openbsd ] || make GH_USER="${GH_USER}" TAG="$TAG" remote REMOTE=some-openbsd REMOTE_MAKE=gmake REMOTE_DIR=opam-release-$TAG &
+  [ -f ${OUTDIR}/opam-$TAG-x86_64-openbsd ] || \
+    ( (ssh -p 9999 root@localhost true || (qemu-system-x86_64 -drive "file=./qemu-base-images/OpenBSD-7.0-amd64.qcow2,format=qcow2" -nic "user,hostfwd=tcp::9999-:22" -m 1G & sleep 60)) &&
+      ssh -p 9999 root@localhost "pkg_add gmake curl bzip2" &&
+      make GH_USER="${GH_USER}" TAG="$TAG" qemu QEMU_PORT=9999 REMOTE_MAKE=gmake REMOTE_DIR=opam-release-$TAG &&
+      ssh -p 9999 root@localhost "shutdown -p now" ) &
   wait
   upload_failed=
   cd ${OUTDIR} && for f in opam-$TAG-*; do
