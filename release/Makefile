@@ -141,3 +141,10 @@ qemu: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	scp -P "$(QEMU_PORT)" "$^" "root@localhost:$(REMOTE_DIR)/$^"
 	ssh -p "$(QEMU_PORT)" root@localhost 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
 	scp -P "$(QEMU_PORT)" "root@localhost:$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
+
+macos-local: $(OUTDIR)/opam-full-$(VERSION).tar.gz
+	dir=$(mktemp -d) && \
+          mkdir -p "${dir}/${OUTDIR}" && \
+          cp Makefile "$^" "${dir}" && \
+          cd "${dir}" && ulimit -s 8192 && arch -arch $(ARCH) make host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV) && \
+          cp "${dir}/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"

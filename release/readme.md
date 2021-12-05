@@ -18,7 +18,7 @@
 * Create a new file at ~/.github/jar/infra with: {"scopes":[],"token":"ghp_XXX","app":{"name":"infra","url":"https://developer.github.com/v3/oauth_authorizations/"},"url":"https://api.github.com/authorizations/YYY","id":"YYY","note":"infra"}
   * Replace XXX by the token
   * Replace YYY by its ID
-* generate opam artifacts, using `release/release.sh`, it requires to have Docker install with several remotes, the different arches
+* generate opam artifacts, using `release/release.sh` from a macOS/arm64 machine, it requires to have Docker and QEMU installed
 * add releases notes (content of `master_changes.md`) in the release
 * upload signature of artefacts
 * finalise the release (publish)

@@ -16,6 +16,11 @@ if [[ $# -eq 0 || "x$1" =~ "x-" ]]; then
     exit 1
 fi
 
+if test "$(uname -s)" != Darwin -o "$(uname -m)" != arm64; then
+  echo "This script is required to be run on macOS/arm64"
+  exit 1
+fi
+
 TAG="$1"; shift
 OUTDIR="out/$TAG"
 
@@ -42,8 +47,8 @@ if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
   make GH_USER="${GH_USER}" TAG="$TAG" i686-linux &
   make GH_USER="${GH_USER}" TAG="$TAG" armhf-linux &
   make GH_USER="${GH_USER}" TAG="$TAG" arm64-linux &
-  [ -f ${OUTDIR}/opam-$TAG-x86_64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" remote REMOTE=some-osx-x86 REMOTE_DIR=opam-release-$TAG &
-  [ -f ${OUTDIR}/opam-$TAG-arm64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" remote REMOTE=some-osx-arm REMOTE_DIR=opam-release-$TAG &
+  [ -f ${OUTDIR}/opam-$TAG-x86_64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" macos-local ARCH=x86_64 REMOTE_DIR=opam-release-$TAG &
+  [ -f ${OUTDIR}/opam-$TAG-arm64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" macos-local ARCH=arm64 REMOTE_DIR=opam-release-$TAG &
   [ -f ${OUTDIR}/opam-$TAG-x86_64-openbsd ] || \
     ( ([ -f ./qemu-base-images ] || (git clone https://github.com/kit-ty-kate/qemu-base-images.git && qemu-img convert -O raw ./qemu-base-images/OpenBSD-7.0-amd64.qcow2 ./qemu-base-images/OpenBSD-7.0-amd64.raw)) &&
       (ssh -p 9999 root@localhost true || (qemu-system-x86_64 -drive "file=./qemu-base-images/OpenBSD-7.0-amd64.raw,format=raw" -nic "user,hostfwd=tcp::9999-:22" -m 1G & sleep 60)) &&
