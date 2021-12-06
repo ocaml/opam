@@ -9,6 +9,8 @@ set -uex
 GH_USER=ocaml
 
 LC_ALL=C
+CWD=$(pwd)
+JOBS=$(sysctl -n hw.ncpu)
 DIR=$(dirname $0)
 cd "$DIR"
 if [[ $# -eq 0 || "x$1" =~ "x-" ]]; then
@@ -43,20 +45,21 @@ if [[ $# -eq 0 || " $* " =~ " archive " ]]; then
 fi
 
 if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
-  make GH_USER="${GH_USER}" TAG="$TAG" x86_64-linux &
-  make GH_USER="${GH_USER}" TAG="$TAG" i686-linux &
-  make GH_USER="${GH_USER}" TAG="$TAG" armhf-linux &
-  make GH_USER="${GH_USER}" TAG="$TAG" arm64-linux &
-  [ -f ${OUTDIR}/opam-$TAG-x86_64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" macos-local ARCH=x86_64 REMOTE_DIR=opam-release-$TAG &
-  [ -f ${OUTDIR}/opam-$TAG-arm64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" macos-local ARCH=arm64 REMOTE_DIR=opam-release-$TAG &
+  make "-j${JOBS}" GH_USER="${GH_USER}" TAG="$TAG" x86_64-linux
+  make "-j${JOBS}" GH_USER="${GH_USER}" TAG="$TAG" i686-linux
+  make "-j${JOBS}" GH_USER="${GH_USER}" TAG="$TAG" armhf-linux
+  make "-j${JOBS}" GH_USER="${GH_USER}" TAG="$TAG" arm64-linux
+  [ -f ${OUTDIR}/opam-$TAG-x86_64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" JOBS=$(JOBS) macos-local MACOS_ARCH=x86_64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
+  [ -f ${OUTDIR}/opam-$TAG-arm64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" JOBS=$(JOBS) macos-local MACOS_ARCH=arm64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
   [ -f ${OUTDIR}/opam-$TAG-x86_64-openbsd ] || \
     ( ([ -d ./qemu-base-images ] || (git clone https://github.com/kit-ty-kate/qemu-base-images.git)) &&
-      qemu-img convert -O raw ./qemu-base-images/OpenBSD-7.0-amd64.qcow2 ./qemu-base-images/OpenBSD-7.0-amd64.raw &&
-      (ssh -p 9999 root@localhost true || (qemu-system-x86_64 -drive "file=./qemu-base-images/OpenBSD-7.0-amd64.raw,format=raw" -nic "user,hostfwd=tcp::9999-:22" -m 1G & sleep 60)) &&
+      (ssh -p 9999 root@localhost true ||
+       (qemu-img convert -O raw ./qemu-base-images/OpenBSD-7.0-amd64.qcow2 ./qemu-base-images/OpenBSD-7.0-amd64.raw &&
+        qemu-system-x86_64 -drive "file=./qemu-base-images/OpenBSD-7.0-amd64.raw,format=raw" -nic "user,hostfwd=tcp::9999-:22" -m 2G &
+        sleep 60)) &&
       ssh -p 9999 root@localhost "pkg_add gmake curl bzip2" &&
-      make GH_USER="${GH_USER}" TAG="$TAG" qemu QEMU_PORT=9999 REMOTE_MAKE=gmake REMOTE_DIR=opam-release-$TAG &&
-      ssh -p 9999 root@localhost "shutdown -p now" ) &
-  wait
+      make GH_USER="${GH_USER}" TAG="$TAG" JOBS=$(JOBS) qemu QEMU_PORT=9999 REMOTE_MAKE=gmake REMOTE_DIR=opam-release-$TAG &&
+      ssh -p 9999 root@localhost "shutdown -p now" )
   upload_failed=
   cd ${OUTDIR} && for f in opam-$TAG-*; do
       if [ "${f%.sig}" != "$f" ]; then continue; fi

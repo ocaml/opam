@@ -4,6 +4,7 @@ VERSION = $(shell git describe $(TAG))
 OPAM_VERSION = $(subst -,~,$(VERSION))
 GIT_URL = ..
 
+# TODO: For some reason Draft Releases do not have the $(VERSION) after download/ and instead have something like "untagged-<git-commit>"
 FULL_ARCHIVE_URL = https://github.com/$(GH_USER)/opam/releases/download/$(VERSION)/opam-full-$(VERSION).tar.gz
 
 OCAMLV = 4.13.1
@@ -17,10 +18,10 @@ OUTDIR = out/$(TAG)
 # The equivalent of "which <cmd>". Taken from the GNU Make documentation
 pathsearch = $(firstword $(wildcard $(addsuffix /$(1),$(subst :, ,$(PATH)))))
 
-x86_64-linux: $(OUTDIR)/opam-$(VERSION)-$@
-i686-linux: $(OUTDIR)/opam-$(VERSION)-$@
-armhf-linux: $(OUTDIR)/opam-$(VERSION)-$@
-arm64-linux: $(OUTDIR)/opam-$(VERSION)-$@
+x86_64-linux: $(OUTDIR)/opam-$(VERSION)-x86_64-linux
+i686-linux: $(OUTDIR)/opam-$(VERSION)-i686-linux
+armhf-linux: $(OUTDIR)/opam-$(VERSION)-armhf-linux
+arm64-linux: $(OUTDIR)/opam-$(VERSION)-arm64-linux
 
 $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	mkdir -p "$(OUTDIR)"
@@ -86,8 +87,8 @@ build/$(HOST).env:
 	cd build/$(HOST) && curl -OL $(OCAML_URL)
 	cd build/$(HOST) && tar xzf ocaml-$(OCAMLV).tar.gz
 	cd build/$(HOST)/ocaml-$(OCAMLV) && \
-	  ./configure -prefix $(shell pwd)/build/$(HOST) && \
-	  $(MAKE) world opt.opt && \
+	  ./configure --prefix "$(shell pwd)/build/$(HOST)" && \
+	  $(MAKE) -j$(MACOS_JOBS) && \
 	  $(MAKE) install
 	rm -rf build/$(HOST)/ocaml-$(OCAMLV) build/$(HOST)/ocaml-$(OCAMLV).tar.gz
 	touch $@
@@ -132,19 +133,19 @@ remote: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	ssh "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/${OUTDIR}"
 	scp Makefile "$(REMOTE):$(REMOTE_DIR)/"
 	scp "$^" "$(REMOTE):$(REMOTE_DIR)/$^"
-	ssh "$(REMOTE)" 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
+	ssh "$(REMOTE)" 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) -j$(JOBS) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
 	scp "$(REMOTE):$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
 
 qemu: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	ssh -p "$(QEMU_PORT)" root@localhost "mkdir -p $(REMOTE_DIR)/${OUTDIR}"
 	scp -P "$(QEMU_PORT)" Makefile "root@localhost:$(REMOTE_DIR)/"
 	scp -P "$(QEMU_PORT)" "$^" "root@localhost:$(REMOTE_DIR)/$^"
-	ssh -p "$(QEMU_PORT)" root@localhost 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
+	ssh -p "$(QEMU_PORT)" root@localhost 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) -j$(JOBS) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
 	scp -P "$(QEMU_PORT)" "root@localhost:$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
 
 macos-local: $(OUTDIR)/opam-full-$(VERSION).tar.gz
-	dir=$(mktemp -d) && \
-          mkdir -p "${dir}/${OUTDIR}" && \
-          cp Makefile "$^" "${dir}" && \
-          cd "${dir}" && ulimit -s 8192 && arch -arch $(ARCH) make host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV) && \
-          cp "${dir}/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
+	LOCAL_RELEASE_DIR=$(shell mktemp -d); \
+          mkdir -p "$${LOCAL_RELEASE_DIR}/${OUTDIR}" && \
+          cp Makefile "$^" "$${LOCAL_RELEASE_DIR}" && \
+          cd "$${LOCAL_RELEASE_DIR}" && ulimit -s 8192 && arch -arch $(MACOS_ARCH) make host MACOS_JOBS=$(JOBS) TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV) && \
+          cp $${LOCAL_RELEASE_DIR}/$(OUTDIR)/opam-$(VERSION)* "$(GIT_URL)/release/$(OUTDIR)/"
