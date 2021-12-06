@@ -136,7 +136,14 @@ type filt_sort =
   | Grep
   | GrepV
 
-let str_replace_path ?(escape=false) whichway filters s =
+let str_replace_path ?escape whichway filters s =
+  let unescape = escape = Some false in
+  let escape = escape = Some true in
+  let s =
+    if unescape then
+      Re.(replace_string (compile @@ str "\\\\") ~by:"\\" s)
+    else s
+  in
   let escape =
     if escape then Re.(replace_string (compile @@ char '\\') ~by:"\\\\")
     else fun s -> s
@@ -203,7 +210,7 @@ let command
   let rec filter_output ?(first=true) ic =
     match input_line ic with
     | s ->
-      let s = str_replace_path OpamSystem.back_to_forward filter s in
+      let s = str_replace_path ~escape:false OpamSystem.back_to_forward filter s in
       if s = "\\c" then filter_output ~first ic
       else
         (if not first then Buffer.add_char out_buf '\n';
