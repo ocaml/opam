@@ -1,18 +1,9 @@
 #!/usr/bin/env bash
 set -uex
 
-# This script is expected to run on Linux with docker available, and to have
-# three remotes "some-osx-x86", "some-osx-arm" and "some-openbsd", with the
-# corresponding OSes, ocaml deps installed
-
 # Change this to your github user if you only want to test the script
 GH_USER=ocaml
 
-LC_ALL=C
-CWD=$(pwd)
-JOBS=$(sysctl -n hw.ncpu)
-DIR=$(dirname $0)
-cd "$DIR"
 if [[ $# -eq 0 || "x$1" =~ "x-" ]]; then
     echo "Usage: $0 TAG [archive|builds]"
     exit 1
@@ -22,6 +13,12 @@ if test "$(uname -s)" != Darwin -o "$(uname -m)" != arm64; then
   echo "This script is required to be run on macOS/arm64"
   exit 1
 fi
+
+LC_ALL=C
+CWD=$(pwd)
+JOBS=$(sysctl -n hw.ncpu)
+DIR=$(dirname $0)
+cd "$DIR"
 
 TAG="$1"; shift
 OUTDIR="out/$TAG"
