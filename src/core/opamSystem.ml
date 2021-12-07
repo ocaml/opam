@@ -1092,7 +1092,8 @@ let rec flock_update
          if Sys.win32 && kind <> `Lock_none then
            Unix.(lockf fd F_ULOCK 0);
          Unix.lockf fd (unix_lock_op ~dontblock:true flag) 0
-       with Unix.Unix_error (Unix.EAGAIN,_,_) ->
+       with Unix.Unix_error (Unix.EAGAIN,_,_)
+          | Unix.Unix_error (Unix.EACCES,_,_) ->
          if dontblock then
            OpamConsole.error_and_exit `Locked
              "Another process has locked %s and non blocking mode enabled"
