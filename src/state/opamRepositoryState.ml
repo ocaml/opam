@@ -159,11 +159,12 @@ let load lock_kind gt =
          load with best-effort (read-only)"
       (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config))
       (OpamVersion.to_string (OpamFile.Config.root_version));
-  let mk_repo name url_opt = {
-    repo_name = name;
-    repo_url = OpamStd.Option.Op.((url_opt >>| fst) +! OpamUrl.empty);
-    repo_trust = OpamStd.Option.Op.(url_opt >>= snd);
-  } in
+  let mk_repo repo_name url_opt =
+    let repo_url, repo_initialised, repo_trust =
+      OpamStd.Option.Op.(url_opt +! (OpamUrl.empty, false, None))
+    in
+    { repo_name; repo_url; repo_trust; repo_initialised; }
+  in
   let uncached =
     (* Don't cache repositories without remote, as they should be editable
        in-place *)
@@ -294,7 +295,7 @@ let write_config rt =
   OpamFile.Repos_config.write (OpamPath.repos_config rt.repos_global.root)
     (OpamRepositoryName.Map.map (fun r ->
          if r.repo_url = OpamUrl.empty then None
-         else Some (r.repo_url, r.repo_trust))
+         else Some (r.repo_url, r.repo_initialised, r.repo_trust))
         rt.repositories)
 
 let check_last_update () =

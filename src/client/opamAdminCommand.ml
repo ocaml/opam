@@ -781,6 +781,7 @@ let get_virtual_switch_state repo_root env =
   let repo = {
     repo_name = OpamRepositoryName.of_string "local";
     repo_url = OpamUrl.empty;
+    repo_initialised = false;
     repo_trust = None;
   } in
   let repo_file = OpamRepositoryPath.repo repo_root in

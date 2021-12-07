@@ -164,9 +164,15 @@ let repositories rt repos =
     OpamProcess.Job.catch
       (fun ex ->
          OpamStd.Exn.fatal ex;
-         OpamConsole.error "Could not update repository %S: %s"
+         OpamConsole.error "Could not update repository %S: %s%s"
            (OpamRepositoryName.to_string repo.repo_name)
-           (match ex with Failure s -> s | ex -> Printexc.to_string ex);
+           (match ex with Failure s -> s | ex -> Printexc.to_string ex)
+           (if repo.repo_initialised then "" else
+              Printf.sprintf
+                "\nIt was added with url %s but not initialised\n\
+                 Check url and update it `opam repository set-url %s <new-url>'"
+                (OpamConsole.colorise `bold (OpamUrl.to_string repo.repo_url))
+                (OpamRepositoryName.to_string repo.repo_name));
          Done ([repo], None)) @@
     fun () -> repository rt repo @@|
     fun f -> [], f

@@ -1751,25 +1751,44 @@ end
 module Repos_configSyntax = struct
 
   let internal = "repos-config"
-  let format_version = OpamVersion.of_string "2.0"
+  let format_version = OpamVersion.of_string "2.1"
   let file_format_version = OpamVersion.of_string "2.0"
 
-  type t = ((url * trust_anchors option) option) OpamRepositoryName.Map.t
+  type t = ((url * bool * trust_anchors option) option) OpamRepositoryName.Map.t
 
   let empty = OpamRepositoryName.Map.empty
+
+  let pp_repository_def =
+    Pp.V.map_options_4
+      (Pp.V.string -|
+       Pp.of_module "repository" (module OpamRepositoryName))
+      (Pp.opt @@ Pp.singleton -| Pp.V.url)
+      (Pp.opt @@ Pp.singleton -| Pp.V.bool)
+      (Pp.map_list Pp.V.string)
+      (Pp.opt @@
+       Pp.singleton -| Pp.V.int -|
+       OpamPp.check ~name:"quorum" ~errmsg:"quorum must be >= 0" ((<=) 0)) -|
+    Pp.pp
+      (fun ~pos:_ (name, url, initialised, fingerprints, quorum) ->
+         name, url, not (initialised = Some false),
+         match fingerprints with [] -> None | fingerprints ->
+           Some {fingerprints; quorum = OpamStd.Option.default 1 quorum})
+      (fun (name, url, initialised, ta) -> match ta with
+         | Some ta ->  name, url, Some initialised, ta.fingerprints, Some ta.quorum
+         | None -> name, url, Some initialised, [], None)
 
   let fields = [
     "repositories",
     Pp.ppacc (fun x _ -> x) (fun x -> x)
       ((Pp.V.map_list ~depth:1 @@
-        InitConfigSyntax.pp_repository_def -|
+        pp_repository_def -|
         Pp.pp
           (fun ~pos:_ -> function
-             | (name, Some url, ta) -> name, Some (url, ta)
-             | (name, None, _) -> name, None)
+             | (name, Some url, init, ta) -> name, Some (url, init, ta)
+             | (name, None, _, _) -> name, None)
           (fun (name, def) -> match def with
-             | Some (url, ta) -> name, Some url, ta
-             | None -> name, None, None)) -|
+             | Some (url, init, ta) -> name, Some url, init, ta
+             | None -> name, None, false, None)) -|
        Pp.of_pair "repository-url-list"
          OpamRepositoryName.Map.(of_list, bindings));
   ]

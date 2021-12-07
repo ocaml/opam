@@ -769,8 +769,9 @@ let init
         in
         OpamFile.Config.write config_f config;
         let repos_config =
-          OpamRepositoryName.Map.of_list repos |>
-          OpamRepositoryName.Map.map OpamStd.Option.some
+          List.map (fun (n, (u,t)) -> (n, (u, true, t))) repos
+          |> OpamRepositoryName.Map.of_list
+          |> OpamRepositoryName.Map.map OpamStd.Option.some
         in
         OpamFile.Repos_config.write (OpamPath.repos_config root)
           repos_config;
