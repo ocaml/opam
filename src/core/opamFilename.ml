@@ -174,12 +174,6 @@ let touch t =
 let chmod t p =
   Unix.chmod (to_string t) p
 
-let written_since file =
-  let last_update =
-    (Unix.stat (to_string file)).Unix.st_mtime
-  in
-  (Unix.time () -. last_update)
-
 let of_string s =
   let dirname = Filename.dirname s in
   let basename = Filename.basename s in
@@ -226,6 +220,14 @@ let opt_file filename =
 
 let with_contents fn filename =
   fn (read filename)
+
+let written_since file =
+  if exists file then
+    let last_update =
+      (Unix.stat (to_string file)).Unix.st_mtime
+    in
+    (Unix.time () -. last_update)
+  else -1.
 
 let check_suffix filename s =
   Filename.check_suffix (to_string filename) s
