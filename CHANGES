@@ -5,6 +5,8 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 
 2.1.2:
 * Fallback on dnf if yum does not exist on RHEL-based systems [#4825 @kit-ty-kate]
+* Use --no-depexts in CLI 2.0 mode [#4908 @dra27]
+* bootstrap: update ocaml version (fixes the compilation of opam with mingw) [#4927 @kit-ty-kate]
 
 2.1.1:
 * Fix typo in error message for opam var [#4786 @kit-ty-kate - fix #4785]
