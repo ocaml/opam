@@ -1,1 +1,1 @@
-(dirs :standard \ bootstrap)
+(dirs :standard \ bootstrap release)
