@@ -244,6 +244,19 @@ module V = struct
       pp4 -|
     pp (fun ~pos:_ (((a,b),c),d) -> a,b,c,d) (fun (a,b,c,d) -> ((a,b),c),d)
 
+  let map_options_4 pp1 pp2 pp3 pp4 pp5 =
+    option_depth 4 -|
+    option_strict -| map_option_contents
+      (option_strict -| map_option_contents
+         (option_strict -| map_option_contents
+            (option_strict -| map_option_contents
+               pp1 pp2)
+            pp3)
+         pp4)
+      pp5 -|
+    pp (fun ~pos:_ ((((a,b),c),d), e) -> a,b,c,d,e)
+      (fun (a,b,c,d,e) -> (((a,b),c),d),e)
+
   let map_pair pp1 pp2 =
     pp ~name:(Printf.sprintf "[%s %s]" pp1.ppname pp2.ppname)
       (fun ~pos:_ v -> match v.pelem with
