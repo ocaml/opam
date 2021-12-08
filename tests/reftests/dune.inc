@@ -255,6 +255,23 @@
    (run ./run.exe %{bin:opam} %{dep:opamroot-versions.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-orphans)
+ (action
+  (diff orphans.test orphans.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-orphans)))
+
+(rule
+ (targets orphans.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:orphans.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-pat-sub)
  (action
   (diff pat-sub.test pat-sub.out)))
