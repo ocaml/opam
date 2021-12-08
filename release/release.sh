@@ -48,7 +48,7 @@ if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
   make "-j${JOBS}" GH_USER="${GH_USER}" TAG="$TAG" arm64-linux
   [ -f ${OUTDIR}/opam-$TAG-x86_64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" JOBS=$(JOBS) macos-local MACOS_ARCH=x86_64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
   [ -f ${OUTDIR}/opam-$TAG-arm64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" JOBS=$(JOBS) macos-local MACOS_ARCH=arm64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
-  [ -d ./qemu-base-images ] || git clone https://github.com/kit-ty-kate/qemu-base-images.git
+  [ -d ./qemu-base-images ] || git clone https://gitlab.com/kit-ty-kate/qemu-base-images.git
   [ -f ${OUTDIR}/opam-$TAG-x86_64-openbsd ] || \
     ( (ssh -p 9999 root@localhost true ||
        (qemu-img convert -O raw ./qemu-base-images/OpenBSD-7.0-amd64.qcow2 ./qemu-base-images/OpenBSD-7.0-amd64.raw &&
