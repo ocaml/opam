@@ -56,7 +56,7 @@ if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
         sleep 60)) &&
       ssh -p 9999 root@localhost "pkg_add gmake curl bzip2" &&
       make GH_USER="${GH_USER}" TAG="$TAG" JOBS=$(JOBS) qemu QEMU_PORT=9999 REMOTE_MAKE=gmake REMOTE_DIR=opam-release-$TAG &&
-      ssh -p 9999 root@localhost "shutdown -p now" )
+      ssh -p 9999 root@localhost "shutdown -p now" ) &
   [ -f ${OUTDIR}/opam-$TAG-x86_64-freebsd ] || \
     ( (ssh -p 9998 root@localhost true ||
        (qemu-img convert -O raw ./qemu-base-images/FreeBSD-13.0-RELEASE-amd64.qcow2 ./qemu-base-images/FreeBSD-13.0-RELEASE-amd64.raw &&
@@ -64,7 +64,8 @@ if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
         sleep 60)) &&
       ssh -p 9998 root@localhost "pkg install -y gmake curl bzip2" &&
       make GH_USER="${GH_USER}" TAG="$TAG" JOBS=$(JOBS) qemu QEMU_PORT=9998 REMOTE_MAKE=gmake REMOTE_DIR=opam-release-$TAG &&
-      ssh -p 9998 root@localhost "shutdown -p now" )
+      ssh -p 9998 root@localhost "shutdown -p now" ) &
+  wait
   upload_failed=
   cd ${OUTDIR} && for f in opam-$TAG-*; do
       if [ "${f%.sig}" != "$f" ]; then continue; fi
