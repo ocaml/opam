@@ -48,6 +48,7 @@
 
 * Bump the version with a `~dev` at the end (e.g. `2.2.0~alpha~dev`)
 * Check if reftests needs an update
+* Bring the changes to the changelog (CHANGES) from the branch of the release to the `master` branch
 
 ### On a release candidate
 * create a branch to a `x.y` for rc's and the final release
