@@ -122,7 +122,7 @@ $(OUTDIR)/opam-$(VERSION)-%-linux: $(OUTDIR)/opam-full-$(VERSION).tar.gz build/%
 	docker run --rm -i \
 	  -e "VERSION=$(VERSION)" \
 	  -e "TARGET=$*-linux" \
-	  -e "LINKING=$(call LINKING,$(HOST_OS))" \
+	  -e "LINKING=$(call LINKING,linux)" \
 	  opam-build-$*-linux \
 	  <$< >$@
 
