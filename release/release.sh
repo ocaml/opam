@@ -48,15 +48,23 @@ if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
   make "-j${JOBS}" GH_USER="${GH_USER}" TAG="$TAG" arm64-linux
   [ -f ${OUTDIR}/opam-$TAG-x86_64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" JOBS=$(JOBS) macos-local MACOS_ARCH=x86_64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
   [ -f ${OUTDIR}/opam-$TAG-arm64-macos ] || make GH_USER="${GH_USER}" TAG="$TAG" JOBS=$(JOBS) macos-local MACOS_ARCH=arm64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
+  [ -d ./qemu-base-images ] || git clone https://github.com/kit-ty-kate/qemu-base-images.git
   [ -f ${OUTDIR}/opam-$TAG-x86_64-openbsd ] || \
-    ( ([ -d ./qemu-base-images ] || (git clone https://github.com/kit-ty-kate/qemu-base-images.git)) &&
-      (ssh -p 9999 root@localhost true ||
+    ( (ssh -p 9999 root@localhost true ||
        (qemu-img convert -O raw ./qemu-base-images/OpenBSD-7.0-amd64.qcow2 ./qemu-base-images/OpenBSD-7.0-amd64.raw &&
         qemu-system-x86_64 -drive "file=./qemu-base-images/OpenBSD-7.0-amd64.raw,format=raw" -nic "user,hostfwd=tcp::9999-:22" -m 2G &
         sleep 60)) &&
       ssh -p 9999 root@localhost "pkg_add gmake curl bzip2" &&
       make GH_USER="${GH_USER}" TAG="$TAG" JOBS=$(JOBS) qemu QEMU_PORT=9999 REMOTE_MAKE=gmake REMOTE_DIR=opam-release-$TAG &&
       ssh -p 9999 root@localhost "shutdown -p now" )
+  [ -f ${OUTDIR}/opam-$TAG-x86_64-freebsd ] || \
+    ( (ssh -p 9998 root@localhost true ||
+       (qemu-img convert -O raw ./qemu-base-images/FreeBSD-13.0-RELEASE-amd64.qcow2 ./qemu-base-images/FreeBSD-13.0-RELEASE-amd64.raw &&
+        qemu-system-x86_64 -drive "file=./qemu-base-images/FreeBSD-13.0-RELEASE-amd64.raw,format=raw" -nic "user,hostfwd=tcp::9998-:22" -m 2G &
+        sleep 60)) &&
+      ssh -p 9998 root@localhost "pkg install -y gmake curl bzip2" &&
+      make GH_USER="${GH_USER}" TAG="$TAG" JOBS=$(JOBS) qemu QEMU_PORT=9998 REMOTE_MAKE=gmake REMOTE_DIR=opam-release-$TAG &&
+      ssh -p 9998 root@localhost "shutdown -p now" )
   upload_failed=
   cd ${OUTDIR} && for f in opam-$TAG-*; do
       if [ "${f%.sig}" != "$f" ]; then continue; fi

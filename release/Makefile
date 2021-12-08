@@ -66,10 +66,15 @@ CLINKING_macos = \
 -lstdc++
 
 CLINKING_openbsd = $(CLINKING_macos)
+CLINKING_freebsd = $(CLINKING_macos)
 
 LINKING = (-noautolink $(patsubst %,-cclib %,$(CLINKING_$(1))))
 
 EXPORTS_openbsd = \
+CPATH=/usr/local/include: \
+LIBRARY_PATH=/usr/local/lib: \
+
+EXPORTS_freebsd = \
 CPATH=/usr/local/include: \
 LIBRARY_PATH=/usr/local/lib: \
 
