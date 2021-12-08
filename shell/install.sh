@@ -5,8 +5,8 @@ set -ue
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
 # (c) Copyright Louis Gesbert OCamlPro 2014-2017
 
-VERSION='2.1.1'
-DEV_VERSION='2.1.1'
+VERSION='2.1.2'
+DEV_VERSION='2.1.2'
 DEFAULT_BINDIR=/usr/local/bin
 
 bin_sha512() {
@@ -135,6 +135,15 @@ bin_sha512() {
     opam-2.1.1-x86_64-linux)    echo "494d32320d09eb2cb4d94e06d0133db1cbfccdf7a673eacffca4f190684497d9f4273680222cb197d88353f67661219675df58753b393dd5faf32400bf8ce044";;
     opam-2.1.1-x86_64-macos)    echo "3b88eeaf523b4820b7909f4f38dce33b9ca77c27b5008cc2d1100176ee54c0f2df5b6c427973fbcc850bda942ea8c3d4b113c3bc05c3a8ddaf4a2d46f8eec65f";;
     opam-2.1.1-x86_64-openbsd)  echo "09d7f392754a12b812d698ef3dab646f53e1f1f5cd591e1fdffb017a948798e5ba8758207ffdc3be7a5fab97df711ca896bf4b2897ca85af2f88ff0f7ae78e28";;
+
+    opam-2.1.2-arm64-linux)     echo "439b4d67c2888058df81b265148a3468b753c14700a8be38d091b76bf2777b5da5e9c8752839a92878cd377dd4bfbd5c3a458e7a26bff73e35056b60591d30f0";;
+    opam-2.1.2-arm64-macos)     echo "55879f3e18bbc70c32d06f21f4ef785d54ef052920f57f1847c2cddc15af2f08e82d32022e7284fa43b07d56e4ba2f5155956b3673c3def8cd2f5c2cb8f68e48";;
+    opam-2.1.2-armhf-linux)     echo "b9ee73e04ebaab23348e990b6e1d678fa0a66f5c0124e397761c6b9b2f1a8cb6fb2fa97da119aed520097f47ac7f8a2095f310891c72b088be8088c9547362d7";;
+    opam-2.1.2-i686-linux)      echo "85a480d60e09a7d37fa0d0434ed97a3187434772ceb4e7e8faa5b06bc18423d004af3ad5849c7d35e72dca155103257fd6b1178872df8291583929eb8f884b6a";;
+    opam-2.1.2-x86_64-freebsd)  echo "50abe8d91bc2fde43565f40d12ff18a1eceaad51483db3d7c6619bce70920d0a3845fad8993b8bfad24c9d550c4b6a5c12d55fb8a5f26c0da25f221b68307f4b";;
+    opam-2.1.2-x86_64-linux)    echo "c0657ecbd4dc212587a4da70c5ff0402df95d148867be0e1eb1be8863a2851015f191437c3c99b7c2b153fcaa56cac99169c76ec94c5787750d7a59cd1fbb68b";;
+    opam-2.1.2-x86_64-macos)    echo "5ec63f3e4e4e93decb7580d0a114d3ab5eab49baea29edd80c8b4c86b7ab5224e654035903538ef4b63090ab3c2967d6efcc46bf0e8abf239ecc3e04ad7304e2";;
+    opam-2.1.2-x86_64-openbsd)  echo "7c16d69c3bb655a149511218663aebdca54f9dd4346f8e4770f2699ae9560651ac242eb7f7aa94b21ad1b579bd857143b6f1ef98b0a53bd3c7047f13fcf95219";;
 
     *) echo "no sha";;
   esac
