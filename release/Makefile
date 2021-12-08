@@ -140,7 +140,7 @@ qemu: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	ssh -p "$(QEMU_PORT)" root@localhost "mkdir -p $(REMOTE_DIR)/${OUTDIR}"
 	scp -P "$(QEMU_PORT)" Makefile "root@localhost:$(REMOTE_DIR)/"
 	scp -P "$(QEMU_PORT)" "$^" "root@localhost:$(REMOTE_DIR)/$^"
-	ssh -p "$(QEMU_PORT)" root@localhost 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) -j$(JOBS) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
+	ssh -p "$(QEMU_PORT)" root@localhost 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
 	scp -P "$(QEMU_PORT)" "root@localhost:$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
 
 macos-local: $(OUTDIR)/opam-full-$(VERSION).tar.gz
