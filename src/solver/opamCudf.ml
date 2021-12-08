@@ -1526,7 +1526,7 @@ let find_cycles g =
    out the closest neighbour that gets there. This way, if a -> b -> c and the
    user requests a to be installed, we can print:
    - install a - install b [required by a] - intall c [required by b] *)
-let compute_root_causes g requested reinstall =
+let compute_root_causes g requested reinstall available =
   let module StringSet = OpamStd.String.Set in
   let requested_pkgnames =
     OpamPackage.Name.Set.fold (fun n s ->
@@ -1556,6 +1556,7 @@ let compute_root_causes g requested reinstall =
     | Use a, Use b -> Use (a @ b), depth1
     | Conflicts_with a, Conflicts_with b -> Conflicts_with (a @ b), depth1
     | Requested, a | a, Requested
+    | Unavailable, a | a, Unavailable
     | Unknown, a | a, Unknown
     | Upstream_changes , a | a, Upstream_changes -> a, depth1
     | _, c -> c, depth1
@@ -1658,6 +1659,14 @@ let compute_root_causes g requested reinstall =
           | `Reinstall p ->
             (* need_reinstall p is not available here *)
             StringSet.mem p.Cudf.package reinstall_pkgnames
+          | _ -> false)
+    in
+    get_causes causes roots in
+  let causes =
+    (* Compute causes for no longer available packages *)
+    let roots =
+      make_roots causes Unavailable (function
+          | `Remove p -> not (OpamPackage.Set.mem (cudf2opam p) available)
           | _ -> false)
     in
     get_causes causes roots in

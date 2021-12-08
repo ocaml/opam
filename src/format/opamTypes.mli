@@ -253,6 +253,7 @@ type 'a cause =
   | Conflicts_with of 'a list
   | Upstream_changes
   | Requested
+  | Unavailable
   | Unknown
 
 (** Solver result *)

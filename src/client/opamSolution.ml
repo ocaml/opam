@@ -1190,6 +1190,7 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
       in
       OpamSolver.print_solution ~messages ~append
         ~requested ~reinstall:(Lazy.force t.reinstall)
+        ~available:(Lazy.force t.available_packages)
         solution;
       let total_actions = sum stats in
       if total_actions >= 2 then

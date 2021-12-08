@@ -112,10 +112,13 @@ val atomic_actions:
 
 (** Heuristic to compute the likely cause of all actions in a graph from the set
     of packages passed in the original request. Assumes a reduced graph. Takes
-    the set of requested package names, and the set of packages marked for
-    reinstall. *)
+    the set of requested package names, the set of packages marked for
+    reinstall, and the set of all available packages. *)
 val compute_root_causes:
-  ActionGraph.t -> OpamPackage.Name.Set.t -> OpamPackage.Set.t ->
+  ActionGraph.t ->
+  OpamPackage.Name.Set.t ->
+  OpamPackage.Set.t ->
+  OpamPackage.Set.t ->
   Cudf.package cause Map.t
 
 exception Solver_failure of string
