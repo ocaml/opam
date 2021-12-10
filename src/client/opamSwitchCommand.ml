@@ -204,7 +204,6 @@ let install_compiler
      OpamEnv.check_and_print_env_warning t);
     t
   end else
-  let () = OpamRepositoryState.check_last_update () in
   let atoms = OpamFormula.atoms invariant in
   let names_of_atoms at = OpamPackage.Name.Set.of_list (List.map fst at) in
   let comp_roots = names_of_atoms atoms in

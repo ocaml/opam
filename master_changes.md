@@ -138,7 +138,7 @@ users)
   * Refactored, fixed, improved and optimised the z3 solver backend [#4878 @altgr]
 
 ## Client
-  *
+  * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
 
 ## Internal
   * Add license and lowerbounds to opam files [#4714 @kit-ty-kate]
