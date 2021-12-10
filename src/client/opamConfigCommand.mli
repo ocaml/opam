@@ -47,6 +47,7 @@ val expand: 'a global_state -> string -> unit
 val exec:
   [< unlocked ] global_state ->
   set_opamroot:bool -> set_opamswitch:bool -> inplace_path:bool ->
+  no_switch:bool ->
   string list -> unit
 
 (** {2 Variables and options display and setting } *)

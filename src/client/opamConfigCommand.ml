@@ -231,7 +231,7 @@ let expand gt str =
     (OpamFilter.expand_string ~default:(fun _ -> "")
        (OpamPackageVar.resolve st) str)
 
-let exec gt ~set_opamroot ~set_opamswitch ~inplace_path command =
+let exec gt ~set_opamroot ~set_opamswitch ~inplace_path ~no_switch command =
   log "config-exec command=%a" (slog (String.concat " ")) command;
   let switch = OpamStateConfig.get_switch () in
   let st_lazy = lazy (
@@ -240,8 +240,14 @@ let exec gt ~set_opamroot ~set_opamswitch ~inplace_path command =
   ) in
   let env_file = OpamPath.Switch.environment gt.root switch in
   let env =
-    if OpamFile.exists env_file then
-      let base = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
+    let base = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
+    if no_switch then
+      let revert = OpamEnv.add [] [] in
+      List.map (fun ((var, _, _) as base) ->
+          match List.find_opt (fun (v,_,_) -> v = var) revert with
+          | Some reverted -> reverted
+          | None -> base) base
+    else if OpamFile.exists env_file then
       OpamEnv.get_opam_raw ~base
         ~set_opamroot ~set_opamswitch ~force_path:(not inplace_path)
         gt.root switch

@@ -1395,7 +1395,7 @@ let config cli =
     | Some `exec, (_::_ as c) ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.exec
-             gt ~set_opamroot ~set_opamswitch ~inplace_path c)
+             gt ~set_opamroot ~set_opamswitch ~inplace_path ~no_switch:false c)
     | Some (`set | `unset as cmd), var::value ->
       let args =
         match cmd,value with
@@ -1459,16 +1459,24 @@ let exec cli =
   let cmd =
     Arg.(non_empty & pos_all string [] & info ~docv:"COMMAND [ARG]..." [])
   in
-  let exec global_options inplace_path set_opamroot set_opamswitch cmd () =
+  let no_switch =
+    mk_flag ~cli (cli_from cli2_2) ["no-switch"]
+      "Execute the command with the updates to the environment done by opam \
+       reverted instead."
+  in
+  let exec global_options inplace_path set_opamroot set_opamswitch no_switch cmd () =
     apply_global_options cli global_options;
-    OpamGlobalState.with_ `Lock_none @@ fun gt ->
-    OpamConfigCommand.exec gt
-      ~set_opamroot ~set_opamswitch ~inplace_path cmd
+    if set_opamswitch && no_switch then
+      `Error (true, "--no-switch and --set-switch option can't be used together")
+    else
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      `Ok (OpamConfigCommand.exec gt
+             ~set_opamroot ~set_opamswitch ~inplace_path ~no_switch cmd)
   in
   let open Common_config_flags in
-  mk_command  ~cli cli_original "exec" ~doc ~man
+  mk_command_ret  ~cli cli_original "exec" ~doc ~man
     Term.(const exec $global_options cli $inplace_path cli
-          $set_opamroot cli $set_opamswitch cli
+          $set_opamroot cli $set_opamswitch cli $no_switch
           $cmd)
 
 (* ENV *)
