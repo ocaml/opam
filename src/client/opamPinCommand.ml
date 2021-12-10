@@ -364,7 +364,7 @@ exception Nothing_to_do
 
 let default_version st name =
   try OpamPackage.version (OpamSwitchState.get_package st name)
-  with Not_found -> OpamPackage.Version.of_string "~dev"
+  with Not_found -> OpamPackage.Version.default
 
 let fetch_all_pins st ?working_dir pins =
   let root = st.switch_global.root in

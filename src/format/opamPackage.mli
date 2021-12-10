@@ -24,6 +24,9 @@ module Version: sig
 
   (** Are two package versions equal? *)
   val equal: t -> t -> bool
+
+  (** Default version used when no version is given *)
+  val default : t
 end
 
 (** Names *)

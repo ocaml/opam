@@ -285,7 +285,7 @@ let pinned_package st ?version ?(working_dir=false) name =
              Some ((OpamFile.OPAM.version_opt o)
                    +! (OpamSwitchState.get_package st name |> OpamPackage.version))
            with Not_found -> None)
-          +! (OpamPackage.Version.of_string "~dev")
+          +! OpamPackage.Version.default
         in
         o |> OpamFile.OPAM.with_url_opt None
         |> OpamFile.OPAM.with_version v

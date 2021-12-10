@@ -41,7 +41,7 @@ users)
   * [BUG] Fix `set-invariant: default repos were loaded instead of switch repos [#4866 @rjbou]
 
 ## Pin
-  *
+  * Switch the default version when undefined from ~dev to dev [#4949 @kit-ty-kate]
 
 ## List
   * Some optimisations to 'opam list --installable' queries combined with other filters [@altgr]
@@ -202,6 +202,7 @@ users)
 ## opam-solver
 ## opam-format
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamSysPkg` and `OpamVariable` [#4918 @rjbou]
+  * Add OpamPackage.Version.default returning the version number used when no version is given for a package [#4949 @kit-ty-kate]
 ## opam-core
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamFilename`, `OpamHash`, `OpamStd`, `OpamStd`, `OpamUrl`, and `OpamVersion` [#4918 @rjbou]

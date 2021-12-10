@@ -32,6 +32,7 @@ module Version = struct
       x;
     x
 
+  let default = "dev"
 
   let compare = OpamVersionCompare.compare
 
