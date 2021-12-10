@@ -56,6 +56,9 @@ users)
 ## Option
   *
 
+## Exec
+  * [NEW] Add `opam exec --no-switch` [#4957 @kit-ty-kate - fix #4951]
+
 ## Lint
   * W68: add warning for missing license field [#4766 @kit-ty-kate - partial fix #4598]
   * W62: use the spdx_licenses library to check for valid licenses. This allows to use compound expressions such as "MIT AND (GPL-2.0-only OR LGPL-2.0-only)", as well as user defined licenses e.g. "LicenseRef-my-custom-license" [#4768 @kit-ty-kate - fixes #4598]
@@ -202,6 +205,7 @@ users)
 # API updates
 ## opam-client
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamCLIVersion` [#4918 @rjbou]
+  * `OpamConfigCommand`: add a labelled argument `no_switch` to `exec` [#4957 @kit-ty-kate]
 ## opam-repository
 ## opam-state
 ## opam-solver
