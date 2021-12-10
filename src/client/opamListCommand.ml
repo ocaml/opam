@@ -598,7 +598,10 @@ let detail_printer ?prettify ?normalise ?(sort=false) st nv =
       OpamPath.Switch.changes st.switch_global.root st.switch nv.name
     in
     (match OpamFile.Changes.read_opt changes_f with
-     | None -> ""
+     | None ->
+       OpamConsole.error_and_exit `Not_found
+         "Cannot list installed files: %s is not installed"
+         (OpamPackage.Name.to_string nv.name)
      | Some c ->
        OpamStd.Format.itemize ~bullet:""
          (fun (file, status) ->
