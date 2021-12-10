@@ -48,6 +48,7 @@ users)
 
 ## Show
   * Add `depexts` to default printer [#4898 @rjbou]
+  * Make `opam show --list-files <pkg>` fail with not found when `<pkg>` is not installed [#4956 @kit-ty-kate - fix #4930]
 
 ## Var
   *
