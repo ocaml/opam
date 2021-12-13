@@ -37,7 +37,7 @@ if [[ $# -eq 0 || " $* " =~ " archive " ]]; then
     make GH_USER="${GH_USER}" TAG="$TAG" GIT_URL="https://github.com/${GH_USER}/opam.git" "${OUTDIR}/opam-full-$TAG.tar.gz"
     ( cd ${OUTDIR} &&
           sign "opam-full-$TAG.tar.gz" &&
-          git-upload-release "${GH_USER}" opam "$TAG" "opam-full-$TAG.tar.gz.sig" &&
+          if [ -f "opam-full-$TAG.tar.gz.sig" ]; then git-upload-release "${GH_USER}" opam "$TAG" "opam-full-$TAG.tar.gz.sig"; fi &&
           git-upload-release "${GH_USER}" opam "$TAG" "opam-full-$TAG.tar.gz"; )
 fi
 
