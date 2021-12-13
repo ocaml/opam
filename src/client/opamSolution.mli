@@ -18,7 +18,6 @@ open OpamStateTypes
 val resolve:
   'a switch_state ->
   user_action ->
-  orphans:package_set ->
   ?reinstall:package_set ->
   requested:name_set ->
   atom request ->
@@ -48,7 +47,6 @@ val resolve_and_apply:
   ?ask:bool ->
   rw switch_state ->
   user_action ->
-  orphans:package_set ->
   ?reinstall:package_set ->
   requested:OpamPackage.Name.Set.t ->
   ?add_roots:OpamPackage.Name.Set.t ->

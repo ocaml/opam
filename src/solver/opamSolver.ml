@@ -413,26 +413,12 @@ let cycle_conflict ~version_map univ cycles =
              Action.to_string (map_action OpamCudf.cudf2opam a)))
        cycles)
 
-let resolve universe ~orphans request =
+let resolve universe request =
   log "resolve request=%a" (slog string_of_request) request;
-  let all_packages = universe.u_available ++ universe.u_installed ++ orphans in
+  let all_packages = universe.u_available ++ universe.u_installed in
   let version_map = cudf_versions_map universe all_packages in
   let univ_gen = load_cudf_universe universe ~version_map all_packages in
-  let simple_universe, cudf_orphans =
-    let u = univ_gen ~build:true ~post:true () in
-    let cudf_orphans =
-      OpamPackage.Set.fold (fun nv acc ->
-          let cnv = name_to_cudf nv.name, OpamPackage.Map.find nv version_map in
-          let cp = Cudf.lookup_package u cnv in
-          Cudf.remove_package u cnv;
-          cp :: acc)
-        orphans []
-    in
-    u, cudf_orphans
-  in
-  let add_orphan_packages u =
-    Cudf.load_universe (List.rev_append cudf_orphans (Cudf.get_packages u))
-  in
+  let simple_universe = univ_gen ~build:true ~post:true () in
   let request =
     let extra_attributes =
       OpamStd.List.sort_nodup compare
@@ -451,7 +437,7 @@ let resolve universe ~orphans request =
       let resp = OpamCudf.resolve ~extern:true ~version_map u req in
       Cudf.remove_package u
         (invariant_pkg.Cudf.package, invariant_pkg.Cudf.version);
-      OpamCudf.to_actions add_orphan_packages u resp
+      OpamCudf.to_actions (fun u -> u (*@LG trim here ?*)) u resp
     with OpamCudf.Solver_failure msg ->
       let bt = Printexc.get_raw_backtrace () in
       OpamConsole.error "%s" msg;

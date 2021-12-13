@@ -1274,7 +1274,7 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
       t, Aborted
   )
 
-let resolve t action ~orphans ?reinstall ~requested request =
+let resolve t action ?reinstall ~requested request =
   if OpamClientConfig.(!r.json_out <> None) then (
     OpamJson.append "command-line"
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));
@@ -1285,13 +1285,13 @@ let resolve t action ~orphans ?reinstall ~requested request =
     OpamSwitchState.universe t ~requested ?reinstall action
   in
   Json.output_request request action;
-  let r = OpamSolver.resolve universe ~orphans request in
+  let r = OpamSolver.resolve universe request in
   Json.output_solution t r;
   r
 
-let resolve_and_apply ?ask t action ~orphans ?reinstall ~requested ?add_roots
+let resolve_and_apply ?ask t action ?reinstall ~requested ?add_roots
     ?(assume_built=false) ?download_only ?force_remove request =
-  match resolve t action ~orphans ?reinstall ~requested request with
+  match resolve t action ?reinstall ~requested request with
   | Conflicts cs ->
     log "conflict!";
     OpamConsole.msg "%s"

@@ -261,7 +261,7 @@ let apply_selector ~base st = function
         with u_installed = OpamPackage.Set.empty;
              u_installed_roots = OpamPackage.Set.empty }
     in
-    (match OpamSolver.resolve universe ~orphans:OpamPackage.Set.empty
+    (match OpamSolver.resolve universe
              (OpamSolver.request ~install:atoms ()) with
     | Success s -> OpamSolver.new_packages s
     | Conflicts cs ->
