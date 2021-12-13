@@ -28,7 +28,8 @@
 ```
   * Replace XXX by the token
   * Replace YYY by its ID (you can find it in the url of the token page)
-* generate opam artifacts, using `release/release.sh <tag>` from a macOS/arm64 machine, it requires to have Docker and QEMU installed
+* fetch locally the tag
+* generate opam artifacts, using `release/release.sh <tag>` from a macOS/arm64 machine, it requires to have Docker and QEMU installed (see below device requirements)
 * add releases notes (content of `master_changes.md`) in the release draft
 * upload signature of artefacts
 * finalise the release (publish)
@@ -53,3 +54,12 @@
 ### On a release candidate
 * create a branch to a `x.y` for rc's and the final release
 * remove `shell/install.sh`
+
+---
+
+## Device requirements
+* Mac M1
+* installed: git, gpg
+* opam repo with the tag fetched
+* Have the secret key available, or comment signing function in release.sh
+* Launch docker `sudo launchctl start dockerd`
