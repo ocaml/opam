@@ -272,6 +272,23 @@
    (run ./run.exe %{bin:opam} %{dep:opamrt-big-upgrade.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-opamrt-dep-cycle)
+ (action
+  (diff opamrt-dep-cycle.test opamrt-dep-cycle.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-opamrt-dep-cycle)))
+
+(rule
+ (targets opamrt-dep-cycle.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:opamrt-dep-cycle.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-opamrt-reinstall)
  (action
   (diff opamrt-reinstall.test opamrt-reinstall.out)))
