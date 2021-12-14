@@ -999,13 +999,7 @@ let extract_in ~dir file =
   | None -> ()
 
 let link src dst =
-  mkdir (Filename.dirname dst);
-  if file_or_symlink_exists dst then
-    remove_file dst;
-  try
-    log "ln -s %s %s" src dst;
-    Unix.symlink src dst
-  with Unix.Unix_error (Unix.EXDEV, _, _) ->
+  let fallback () =
     (* Fall back to copy if symlinks are not supported *)
     let src =
       if Filename.is_relative src then Filename.dirname dst / src
@@ -1015,6 +1009,23 @@ let link src dst =
       copy_dir src dst
     else
       copy_file src dst
+  in
+  mkdir (Filename.dirname dst);
+  if file_or_symlink_exists dst then (
+    (* TODO: move this into remove_file *)
+    if Sys.win32 then Unix.chmod dst 0o640;
+    remove_file dst
+  );
+  if Unix.has_symlink () then
+    try
+      log "ln -s %s %s" src dst;
+      Unix.symlink src dst
+    with Unix.Unix_error (Unix.EXDEV, _, _) ->
+      fallback ()
+  else (
+    log "copy %s -> %s" src dst;
+    fallback ()
+  )
 
 type actual_lock_flag = [ `Lock_read | `Lock_write ]
 type lock_flag = [ `Lock_none | actual_lock_flag ]
