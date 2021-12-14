@@ -1012,7 +1012,8 @@ let link src dst =
   in
   mkdir (Filename.dirname dst);
   if file_or_symlink_exists dst then (
-    if Sys.win32 then Unix.chmod dst 0o640 else ();
+    (* TODO: move this into remove_file *)
+    if Sys.win32 then Unix.chmod dst 0o640;
     remove_file dst
   );
   if Unix.has_symlink () then
