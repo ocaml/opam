@@ -38,13 +38,20 @@ let orphans ?changes ?(transitive=false) t =
   let allnames = OpamPackage.names_of_packages all in
   let invalidated = Lazy.force t.invalidated in
   let universe =
-    OpamSwitchState.universe t ~requested:OpamPackage.Name.Set.empty Reinstall
+    (* Specifying the changes as 'requested' ensures that `u_reinstall` is
+       filtered to exclude packages out of their dependency cone *)
+    OpamSwitchState.universe t Reinstall
+      ~requested:(OpamPackage.names_of_packages
+                    (OpamStd.Option.default OpamPackage.Set.empty changes))
   in
   (* Basic definition of orphan packages *)
   let orphans =
     t.installed -- available
   in
   log "Base orphans: %a" (slog OpamPackage.Set.to_string) orphans;
+  (* invalidated packages forbid changes of their reverse dependencies, while
+     basic orphans do not *)
+  let orphans = orphans ++ invalidated in
   (* Restriction to the request-related packages *)
   let changes = match changes with
     | None -> None
@@ -66,13 +73,10 @@ let orphans ?changes ?(transitive=false) t =
         OpamSolver.reverse_dependencies
           ~depopts:true ~installed:true ~unavailable:true
           ~build:true ~post:false
-          universe ch
+          universe (ch ++ universe.u_reinstall)
       in
       orphans %% recompile_cone
   in
-  (* invalidated packages forbid changes of their reverse dependencies, while
-     basic orphans do not *)
-  let orphans = orphans ++ invalidated in
   (* Pinned versions of packages remain always available *)
   let orphans = orphans -- OpamPinned.packages t in
   (* Splits between full orphans (no version left) and partial ones *)

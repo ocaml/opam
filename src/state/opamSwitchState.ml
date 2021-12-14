@@ -568,7 +568,9 @@ let load lock_kind gt rt switch =
     Lazy.force sys_packages_changed
   ) in
   let invalidated = lazy (
-    Lazy.force ext_files_changed ++ Lazy.force sys_packages_changed
+    Lazy.force changed ++
+    Lazy.force ext_files_changed ++
+    Lazy.force sys_packages_changed
     -- Lazy.force available_packages
   ) in
   let st = {
@@ -923,7 +925,9 @@ let universe st
       |> OpamFormula.packages st.packages
     in
     let requested_deps =
-      OpamPackage.Set.fixpoint resolve_deps requested_allpkgs
+      if false (*OpamStateConfig.(!r.skip_reinstalls)*)
+      then requested_allpkgs
+      else OpamPackage.Set.fixpoint resolve_deps requested_allpkgs
     in
     requested_deps %% Lazy.force st.reinstall ++
     match reinstall with
