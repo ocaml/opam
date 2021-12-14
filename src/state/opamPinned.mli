@@ -31,18 +31,19 @@ val packages: 'a switch_state -> package_set
 
 (** Looks up an 'opam' file for the given named package in a source directory. *)
 val find_opam_file_in_source:
-  ?locked:bool -> name -> dirname -> OpamFile.OPAM.t OpamFile.t option
+  ?locked:string -> name -> dirname -> OpamFile.OPAM.t OpamFile.t option
 
 (** Finds all package definition files in a given source dir [opam],
     [pkgname.opam/opam], etc. This is affected by
     [OpamStateConfig.(!r.locked)] *)
 val files_in_source:
+  ?locked:string ->
   ?recurse:bool ->
   ?subpath:subpath ->
   dirname -> nameopt_and_file list
 
 val files_in_source_w_target:
-  ?recurse:bool -> ?subpath:subpath -> ?same_kind:(url -> bool) ->
+  ?locked:string -> ?recurse:bool -> ?subpath:subpath -> ?same_kind:(url -> bool) ->
   url -> dirname ->
   nameopt_and_file_w_url list
 
@@ -50,7 +51,7 @@ val files_in_source_w_target:
     the corresponding package name if specified ([<name>.opam] or
     [<name>.opam/opam]). This function doesn't check the project directory name
     itself, or the package name that might be specified within the file. *)
-val name_of_opam_filename: dirname -> filename -> name option
+val name_of_opam_filename: ?locked:string -> dirname -> filename -> name option
 
 (** Finds back the location of the opam file this package definition was loaded
     from *)

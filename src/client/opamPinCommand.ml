@@ -789,6 +789,7 @@ let scan ~normalise ~recurse ?subpath url =
   let open OpamStd.Option.Op in
   let pins_of_dir dir =
     OpamPinned.files_in_source_w_target
+      ?locked:OpamStateConfig.(!r.locked)
       ~recurse ?subpath url dir
     |> OpamStd.List.filter_map (fun nf ->
         let opam = OpamFile.OPAM.safe_read nf.pin.pin_file in

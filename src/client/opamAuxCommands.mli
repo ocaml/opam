@@ -31,13 +31,13 @@ val url_with_local_branch: url -> url
 
 (** From an in-source opam file, return the corresponding package name if it can
     be found, and the corresponding source directory *)
-val name_and_dir_of_opam_file: filename -> name option * dirname
+val name_and_dir_of_opam_file: ?locked:string -> filename -> name option * dirname
 
 (** From a directory, retrieve its opam files and returns packages name, opam
     file and subpath option *)
 val opams_of_dir:
-  ?recurse:bool -> ?subpath:subpath ->
-  OpamFilename.Dir.t ->  name_and_file list
+  ?locked:string -> ?recurse:bool -> ?subpath:subpath ->
+  OpamFilename.Dir.t -> name_and_file list
 
 (** Like [opam_of_dirs], but changes the pinning_url if needed. If given [url]
     is local dir with vcs backend, and opam files not versioned, its pinning url
@@ -45,7 +45,7 @@ val opams_of_dir:
     package information (name, opam file, new_url, subpath) are added to the
     returned list, otherwise it is discarded. *)
 val opams_of_dir_w_target:
-  ?recurse:bool -> ?subpath:subpath ->
+  ?locked:string -> ?recurse:bool -> ?subpath:subpath ->
   ?same_kind:(OpamUrl.t -> bool) -> OpamUrl.t -> OpamFilename.Dir.t ->
   name_and_file_w_url list
 
@@ -55,7 +55,7 @@ val opams_of_dir_w_target:
     the same package name appears multiple times.
 *)
 val resolve_locals:
-  ?quiet:bool -> ?recurse:bool -> ?subpath:subpath ->
+  ?quiet:bool -> ?locked:string -> ?recurse:bool -> ?subpath:subpath ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   name_and_file_w_url list * atom list
 
@@ -84,6 +84,7 @@ val autopin:
   rw switch_state ->
   ?simulate:bool ->
   ?quiet:bool ->
+  ?locked:string ->
   ?recurse:bool ->
   ?subpath:subpath ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
@@ -99,6 +100,7 @@ val simulate_autopin:
   'a switch_state ->
   ?quiet:bool ->
   ?for_view:bool ->
+  ?locked:string ->
   ?recurse:bool ->
   ?subpath:subpath ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->

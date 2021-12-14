@@ -35,7 +35,7 @@ exception Nothing_to_do
 val source_pin:
   rw switch_state -> name ->
   ?version:version -> ?edit:bool -> ?opam:OpamFile.OPAM.t -> ?quiet:bool ->
-  ?force:bool -> ?ignore_extra_pins:bool -> ?subpath:subpath -> ?locked:bool ->
+  ?force:bool -> ?ignore_extra_pins:bool -> ?subpath:subpath -> ?locked:string ->
   url option ->
   rw switch_state
 
