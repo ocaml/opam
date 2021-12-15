@@ -3570,18 +3570,18 @@ let lint cli =
           (OpamFilename.Dir.to_string d);
         []
       | l ->
-        List.map (fun (_name,f,_) -> Some f) l
+        List.map (fun (_name,f,_) -> `file f) l
     in
     let files = match files, package with
       | [], None -> (* Lookup in cwd if nothing was specified *)
         opam_files_in_dir (OpamFilename.cwd ())
       | files, None ->
         List.map (function
-            | None -> [None] (* this means '-' was specified for stdin *)
+            | None -> [`stdin] (* this means '-' was specified for stdin *)
             | Some (OpamFilename.D d) ->
               opam_files_in_dir d
             | Some (OpamFilename.F f) ->
-              [Some (OpamFile.make f)])
+              [`file (OpamFile.make f)])
           files
         |> List.flatten
       | [], Some pkg ->
@@ -3595,7 +3595,25 @@ let lint cli =
            let opam = OpamSwitchState.opam st nv in
            match OpamPinned.orig_opam_file st (OpamPackage.name nv) opam with
            | None -> raise Not_found
-           | some -> [some]
+           | Some f ->
+             let filename =
+               match OpamFile.OPAM.metadata_dir opam with
+               | None -> None
+               | Some (None, abs) ->
+                 let filename =
+                   if OpamFilename.starts_with
+                       (OpamPath.Switch.Overlay.dir gt.root st.switch)
+                       (OpamFilename.of_string abs) then
+                     Printf.sprintf "<pinned>/%s" (OpamPackage.to_string nv)
+                   else abs
+                 in
+                 Some filename
+               | Some (Some repo, _rel) ->
+                 Some (Printf.sprintf "<%s>/%s"
+                         (OpamRepositoryName.to_string repo)
+                         (OpamPackage.to_string nv))
+             in
+             [`pkg (OpamFilename.read (OpamFile.filename f), filename)]
          with Not_found ->
            OpamConsole.error_and_exit `Not_found "No opam file found for %s%s"
              (OpamPackage.Name.to_string (fst pkg))
@@ -3614,13 +3632,23 @@ let lint cli =
     let err,json =
       List.fold_left (fun (err,json) opam_f ->
           try
-            let warnings,opam =
+            let (warnings, opam), opam_f =
+              let to_file f = OpamFile.make (OpamFilename.of_string f) in
+              let stdin_f = to_file "-" in
               match opam_f with
-              | Some f ->
-                OpamFileTools.lint_file ~check_upstream ~handle_dirname:true f
-              | None ->
+              | `file f ->
+                OpamFileTools.lint_file ~check_upstream ~handle_dirname:true f,
+                Some (OpamFile.to_string f)
+              | `pkg (content, filename) ->
+                OpamFileTools.lint_string
+                  ~check_upstream ~handle_dirname:false
+                  OpamStd.Option.(default stdin_f (map to_file filename))
+                  content,
+                filename
+              | `stdin ->
                 OpamFileTools.lint_channel ~check_upstream ~handle_dirname:false
-                  (OpamFile.make (OpamFilename.of_string "-")) stdin
+                  stdin_f stdin,
+                None
             in
             let enabled =
               let default = match warnings_sel with
@@ -3646,14 +3674,11 @@ let lint cli =
             else if warnings = [] then
               (if not normalise then
                  msg "%s%s\n"
-                   (OpamStd.Option.to_string
-                      (fun f -> OpamFile.to_string f ^ ": ")
-                      opam_f)
+                   (OpamStd.Option.to_string (Printf.sprintf "%s: ") opam_f)
                    (OpamConsole.colorise `green "Passed."))
             else
               msg "%s%s\n%s\n"
-                (OpamStd.Option.to_string (fun f -> OpamFile.to_string f ^ ": ")
-                   opam_f)
+                (OpamStd.Option.to_string (Printf.sprintf "%s: ") opam_f)
                 (if failed then OpamConsole.colorise `red "Errors."
                  else OpamConsole.colorise `yellow "Warnings.")
                 (OpamFileTools.warns_to_string warnings);
@@ -3662,9 +3687,7 @@ let lint cli =
             let json =
               OpamStd.Option.map
                 (OpamStd.List.cons
-                   (OpamFileTools.warns_to_json
-                      ?filename:(OpamStd.Option.map OpamFile.to_string opam_f)
-                      warnings))
+                   (OpamFileTools.warns_to_json ?filename:opam_f warnings))
                 json
             in
             (err || failed), json
