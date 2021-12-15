@@ -74,6 +74,7 @@ users)
 ## Lint
   * W68: add warning for missing license field [#4766 @kit-ty-kate - partial fix #4598]
   * W62: use the spdx_licenses library to check for valid licenses. This allows to use compound expressions such as "MIT AND (GPL-2.0-only OR LGPL-2.0-only)", as well as user defined licenses e.g. "LicenseRef-my-custom-license" [#4768 @kit-ty-kate - fixes #4598]
+  * E57 (capital on synopsis) not trigger W47 (empty descr) [#5070 @rjbou]
 
 ## Repository
   * When several checksums are specified, instead of adding in the cache only the archive by first checksum, name by best one and link others to this archive [#4696 rjbou]
