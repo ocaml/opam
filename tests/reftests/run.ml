@@ -24,6 +24,9 @@
      add this package to `default` repository in `./REPO`
    - use `### <pkg:NAME.VERSION:FILENAME>`, then the contents below to add this
      file as a extra-file of the given package in the `default` repository
+   - use `### <pin:path>, then the contents below to create a minimal opam
+     file, it is extended by template defined fields to pin it without lint
+     errors
    - `### FOO=x BAR=y` to export variables for subsequent commands
    - shell-like command handling:
      * **NO pattern expansion, shell pipes, sequences or redirections**
@@ -269,6 +272,7 @@ let rec with_temp_dir f =
 
 type command =
   | File_contents of string
+  | Pin_file_content of string
   | Cat of { files: string list;
              filter: (Re.t * filt_sort) list; }
   | Run of { env: (string * string) list;
@@ -332,6 +336,9 @@ module Parse = struct
 
   let command ?(vars=[]) str =
     if str.[0] = '<' && str.[String.length str - 1] = '>' then
+      if String.length str > 4 && String.sub str 1 4 = "pin:" then
+        Pin_file_content (String.sub str 5 (String.length str - 6))
+      else
       let f =
         try
           let grs = exec (compile re_package) str in
@@ -478,6 +485,7 @@ let rec list_remove x = function
   | [] -> []
   | y :: r -> if x = y then r else y :: list_remove x r
 
+
 let print_opamfile file =
   try
     let open OpamParserTypes.FullPos in
@@ -530,6 +538,19 @@ let print_opamfile file =
   | Sys_error _ -> Printf.sprintf "# %s not found" file
   | e -> Printf.sprintf "# Error on file %s: %s" file (Printexc.to_string e)
 
+let template_opamfile =
+  OpamParser.FullPos.string {|
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+htpps://to@lo.ck"
+bug-reports: "https://nobug"
+|} "<nofile>"
+
 let run_test ?(vars=[]) ~opam t =
   let opamroot0 = Filename.concat (Sys.getcwd ()) ("root-"^t.repo_hash) in
   with_temp_dir @@ fun dir ->
@@ -563,6 +584,44 @@ let run_test ?(vars=[]) ~opam t =
           let contents = String.concat "\n" out ^ "\n" in
           write_file ~path ~contents;
           print_string contents;
+          vars
+        | Pin_file_content path ->
+          let open OpamParserTypes.FullPos in
+          let raw_content = (String.concat "\n" out) in
+          let opamfile = OpamParser.FullPos.string raw_content path in
+          let nullify_pos p =
+            {p with pos = { filename = path; start = -1, -1; stop = -1, -1; }}
+          in
+          let test_content, tpl_content =
+            List.fold_left (fun (test_content, tpl_content) item ->
+                match item with
+                | { pelem = Variable (name, _); _} ->
+                  let tpl_overwrite, test_content =
+                    List.partition (function
+                        | { pelem = Variable (n, _); _} -> n.pelem = name.pelem
+                        | _ -> false)
+                      test_content
+                  in
+                  let item =
+                    match tpl_overwrite with
+                    | [ item ] -> item
+                    | _ -> item
+                  in
+                  test_content, item::tpl_content
+                | { pelem = Section _ ; _} -> test_content, item::tpl_content
+              )
+              (opamfile.file_contents,[]) template_opamfile.file_contents
+          in
+          let file_contents =
+            List.rev_map nullify_pos tpl_content
+            @ List.map nullify_pos test_content
+          in
+          let contents =
+            Printf.sprintf "%s\n"
+              (OpamPrinter.FullPos.opamfile { opamfile with file_contents })
+          in
+          write_file ~path ~contents;
+          print_string (raw_content ^ "\n");
           vars
         | Export bindings ->
           List.fold_left
