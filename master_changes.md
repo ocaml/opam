@@ -146,6 +146,7 @@ users)
   * Add license and lowerbounds to opam files [#4714 @kit-ty-kate]
   * Bump version to 2.2.0~alpha~dev [#4725 @dra27]
   * Add specific comparison function on several module (that includes `OpamStd.ABSTRACT`) [#4918 @rjbou]
+  * Homogeneise is_archive tar & zip: if file exists check magic number, otherwise check extension [#4964 @rjbou]
 
 ## Internal: Windows
   * Support MSYS2: treat MSYS2 and Cygwin as equivalent [#4813 @jonahbeckford]
