@@ -64,7 +64,7 @@ let is_prefix pfx s =
   String.sub s 0 (String.length pfx) = pfx
 
 let rem_prefix pfx s =
-  if not (is_prefix pfx s) then invalid_arg "rem_prefix"
+  if not (is_prefix pfx s) || s = pfx then invalid_arg "rem_prefix"
   else String.sub s (String.length pfx) (String.length s - String.length pfx)
 
 (* Test file format: {v
