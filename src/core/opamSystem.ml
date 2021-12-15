@@ -841,12 +841,8 @@ module Tar = struct
              else None)
         None
         extensions in
-    match ext with
-    | Some t -> Some t
-    | None   ->
-      match guess_type file with
-      | Some t -> Some t
-      | _ -> None
+    if Sys.file_exists file then guess_type file
+    else ext
 
   let is_archive file =
     get_type file <> None
@@ -894,18 +890,22 @@ module Tar = struct
 end
 
 module Zip = struct
+
   let is_archive f =
-    try
-      let ic = open_in f in
-      let c1 = input_char ic in
-      let c2 = input_char ic in
-      let c3 = input_char ic in
-      let c4 = input_char ic in
-      close_in ic;
-      match c1, c2, c3, c4 with
-      | '\x50', '\x4b', '\x03', '\x04' -> true
-      | _ -> false
-    with Sys_error _ | End_of_file -> false
+    if Sys.file_exists f then
+      try
+        let ic = open_in f in
+        let c1 = input_char ic in
+        let c2 = input_char ic in
+        let c3 = input_char ic in
+        let c4 = input_char ic in
+        close_in ic;
+        match c1, c2, c3, c4 with
+        | '\x50', '\x4b', '\x03', '\x04' -> true
+        | _ -> false
+      with Sys_error _ | End_of_file -> false
+    else
+      Filename.check_suffix f "zip"
 
   let extract_command file =
     Some (fun dir -> make_command "unzip" [ file; "-d"; dir ])
