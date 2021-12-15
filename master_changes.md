@@ -122,6 +122,7 @@ users)
 ## Admin
   * ✘ `opam admin cache` now ignores all already present cache files. Option
     `--check-all` restores the previous behaviour of validating all checksums.
+  * [BUG] Fix repo-upgrade internal error [#4965 @AltGr]
 
 ## Opam installer
   *
