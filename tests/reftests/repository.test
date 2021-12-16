@@ -277,6 +277,93 @@ opam-version: "2.0"
 [oper] Initialised
 ### opam repository remove tarred --all
 ### opam switch create repos --empty
+### :: Reset repository at its state ::
+### ::: rsync - rsync :::
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### <OPER/packages/fantom/fantom.0/opam>
+opam-version: "2.0"
+### opam repository set-url oper ./OPER4
+[ERROR] Could not update repository "oper": rsync failed
+[ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
+# Return code 40 #
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### ::: rsync - git :::
+### opam repository set-url oper git+file://$BASEDIR/OPER4 | ': ".*git(.exe)?' -> ': "git'
+[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
+# Return code 40 #
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### opam repository set-url oper git+file://./OPER3#unknownbranch | ': ".*git(.exe)?' -> ': "git'
+[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to file://${BASEDIR}/OPER
+# Return code 40 #
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### ::: git - rsync :::
+### git -C ./OPER init -q
+### git -C ./OPER config core.autocrlf false
+### git -C ./OPER add repo
+### git -C ./OPER add packages/first
+### git -C ./OPER commit -qm "third"
+### opam repository set-url oper git+file://$BASEDIR/OPER
+[oper] Initialised
+### git -C ./OPER add packages/fantom
+### git -C ./OPER commit -qm "fantom"
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### opam repository set-url oper ./OPER4
+[ERROR] Could not update repository "oper": rsync failed
+[ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
+# Return code 40 #
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### ::: git - git :::
+### opam repository set-url oper git+file://$BASEDIR/OPER4 | ': ".*git(.exe)?' -> ': "git'
+[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
+# Return code 40 #
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### opam repository set-url oper git+file://./OPER3#unknownbranch | ': ".*git(.exe)?' -> ': "git'
+[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to git+file://${BASEDIR}/OPER
+# Return code 40 #
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### ::: check that fantom can be well fetched :::
+### opam update oper
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[oper] synchronised from git+file://${BASEDIR}/OPER
+Now run 'opam upgrade' to apply any package updates.
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+fantom --
+first  --
+### rm -rf OPER/.git OPER/packages/fantom
+### opam repository set-url oper ./OPER
+[oper] Initialised
+### :: Simply failing urls ::
 ### opam repository --this-switch add oper4 ./OPER4
 [ERROR] Could not update repository "oper4": rsync failed
 [ERROR] Initial repository fetch failed
@@ -287,10 +374,12 @@ opam-version: "2.0"
  1 oper file://${BASEDIR}/OPER
 ### opam repository --this-switch set-url oper ./OPER4
 [ERROR] Could not update repository "oper": rsync failed
+[ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
+# Return code 40 #
 ### opam repository --this-switch
 
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
- 1 oper file://${BASEDIR}/OPER4
+ 1 oper file://${BASEDIR}/OPER
 ### opam repository --this-switch add oper2 ./OPER2 --strict
 [oper2] Initialised
 [ERROR] In ${BASEDIR}/OPAM/repo/oper2/packages/second/second.2/opam:
@@ -302,24 +391,26 @@ opam-version: "2.0"
 ### opam repository --this-switch
 
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
- 1 oper file://${BASEDIR}/OPER4
+ 1 oper file://${BASEDIR}/OPER
 ### opam repository --this-switch set-url oper ./OPER2 --strict
 [oper] Initialised
 [ERROR] In ${BASEDIR}/OPAM/repo/oper/packages/second/second.2/opam:
         This file is for package 'second.2' but has mismatching fields 'version:2.2.
 [ERROR] Strict mode: aborting
 [ERROR] Could not update repository "oper": OpamStd.OpamSys.Exit(30)
+[ERROR] Fetching repository oper with file://${BASEDIR}/OPER2 fails, reverting to file://${BASEDIR}/OPER
+# Return code 40 #
 ### opam repository --this-switch
 
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
- 1 oper file://${BASEDIR}/OPER2
+ 1 oper file://${BASEDIR}/OPER
 ### opam repository --this-switch add oper3 ./OPER3 --strict
 [oper3] Initialised
 ### opam repository --this-switch
 
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
  1 oper3 file://${BASEDIR}/OPER3
- 2 oper  file://${BASEDIR}/OPER2
+ 2 oper  file://${BASEDIR}/OPER
 ### opam repository --this-switch set-url oper ./OPER3 --strict
 [oper] Initialised
 ### opam repository --this-switch
@@ -352,6 +443,93 @@ opam-version: "2.0"
 [oper] Initialised
 ### opam repository remove default --all
 ### opam switch create repos --empty
+### ::: Reset repository at its state :::
+### :::: rsync - rsync ::::
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### <OPER/packages/fantom/fantom.0/opam>
+opam-version: "2.0"
+### opam repository set-url oper ./OPER4
+[ERROR] Could not update repository "oper": rsync failed
+[ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
+# Return code 40 #
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### :::: rsync - git ::::
+### opam repository set-url oper git+file://$BASEDIR/OPER4 | ': ".*git(.exe)?' -> ': "git'
+[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
+# Return code 40 #
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### opam repository set-url oper git+file://./OPER3#unknownbranch | ': ".*git(.exe)?' -> ': "git'
+[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to file://${BASEDIR}/OPER
+# Return code 40 #
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### :::: git - rsync ::::
+### git -C ./OPER init -q
+### git -C ./OPER config core.autocrlf false
+### git -C ./OPER add repo
+### git -C ./OPER add packages/first
+### git -C ./OPER commit -qm "third"
+### opam repository set-url oper git+file://$BASEDIR/OPER
+[oper] Initialised
+### git -C ./OPER add packages/fantom
+### git -C ./OPER commit -qm "fantom"
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### opam repository set-url oper ./OPER4
+[ERROR] Could not update repository "oper": rsync failed
+[ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
+# Return code 40 #
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### :::: git - git ::::
+### opam repository set-url oper git+file://$BASEDIR/OPER4 | ': ".*git(.exe)?' -> ': "git'
+[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
+# Return code 40 #
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### opam repository set-url oper git+file://./OPER3#unknownbranch | ': ".*git(.exe)?' -> ': "git'
+[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to git+file://${BASEDIR}/OPER
+# Return code 40 #
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+first  --
+### ::: check that fantom can be well fetched :::
+### opam update oper
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[oper] synchronised from git+file://${BASEDIR}/OPER
+Now run 'opam upgrade' to apply any package updates.
+### opam list --available --repo=oper
+# Packages matching: from-repository(oper) & available
+# Name # Installed # Synopsis
+fantom --
+first  --
+### rm -rf OPER/.git OPER/packages/fantom
+### opam repository set-url oper ./OPER
+[oper] Initialised
+### ::: Simply failing urls :::
 ### opam repository --this-switch add oper4 ./OPER4
 [ERROR] Could not update repository "oper4": rsync failed
 [ERROR] Initial repository fetch failed
@@ -362,10 +540,12 @@ opam-version: "2.0"
  1 oper file://${BASEDIR}/OPER
 ### opam repository --this-switch set-url oper ./OPER4
 [ERROR] Could not update repository "oper": rsync failed
+[ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
+# Return code 40 #
 ### opam repository --this-switch
 
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
- 1 oper file://${BASEDIR}/OPER4
+ 1 oper file://${BASEDIR}/OPER
 ### opam repository --this-switch add oper2 ./OPER2 --strict
 [oper2] Initialised
 [ERROR] In ${BASEDIR}/OPAM/repo/oper2/packages/second/second.2/opam:
@@ -377,24 +557,26 @@ opam-version: "2.0"
 ### opam repository --this-switch
 
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
- 1 oper file://${BASEDIR}/OPER4
+ 1 oper file://${BASEDIR}/OPER
 ### opam repository --this-switch set-url oper ./OPER2 --strict
 [oper] Initialised
 [ERROR] In ${BASEDIR}/OPAM/repo/oper/packages/second/second.2/opam:
         This file is for package 'second.2' but has mismatching fields 'version:2.2.
 [ERROR] Strict mode: aborting
 [ERROR] Could not update repository "oper": OpamStd.OpamSys.Exit(30)
+[ERROR] Fetching repository oper with file://${BASEDIR}/OPER2 fails, reverting to file://${BASEDIR}/OPER
+# Return code 40 #
 ### opam repository --this-switch
 
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
- 1 oper file://${BASEDIR}/OPER2
+ 1 oper file://${BASEDIR}/OPER
 ### opam repository --this-switch add oper3 ./OPER3 --strict
 [oper3] Initialised
 ### opam repository --this-switch
 
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
  1 oper3 file://${BASEDIR}/OPER3
- 2 oper  file://${BASEDIR}/OPER2
+ 2 oper  file://${BASEDIR}/OPER
 ### opam repository --this-switch set-url oper ./OPER3 --strict
 [oper] Initialised
 ### opam repository --this-switch
