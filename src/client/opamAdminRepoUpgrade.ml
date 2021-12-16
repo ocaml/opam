@@ -350,8 +350,8 @@ let do_upgrade repo_root =
     let version = OpamPackage.Version.of_string str_version in
     let wrapper_nv = OpamPackage.create ocaml_wrapper_pkgname version in
     let upper_bound_v =
-      let g = Re.(exec @@ compile @@ seq [rep digit; eos]) str_version in
       try
+        let g = Re.(exec @@ compile @@ seq [rep1 digit; eos]) str_version in
         let sn = Re.Group.get g 0 in
         String.sub str_version 0 (fst (Re.Group.offset g 0)) ^
         (string_of_int (1 + int_of_string sn)) ^ "~"

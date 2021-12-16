@@ -70,7 +70,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Admin
-  *
+  * [BUG] Fix repo-upgrade internal error [#4965 @AltGr]
 
 ## Opam installer
   *
