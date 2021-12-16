@@ -745,6 +745,7 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-sys-compiler 2           One-line description
 ### # ro global state, ro repo state, rw switch state
+### OPAMSYSCOMP=2
 ### opam install i-am-package | "(${OPAMROOTVERSION})" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.0 to current

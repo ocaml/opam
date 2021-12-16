@@ -33,7 +33,7 @@ available: false
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
 ### opam reinstall foo
-[ERROR] Sorry, these packages are no longer available from the repositories: foo (= 1)
+[ERROR] foo: unmet availability conditions: 'false'
 # Return code 5 #
 ### : no action should be triggered on foo
 ### opam install baz --show
@@ -46,24 +46,26 @@ The following actions would be performed:
   - remove bar 1 [uses foo]
   - remove foo 1 [no longer available]
 ===== 2 to remove =====
+### opam upgrade --show --fixup
+The following actions would be performed:
+  - remove bar 1 [uses foo]
+  - remove foo 1 [no longer available]
+===== 2 to remove =====
 ### : dependency foo is installed but no longer available
 ### opam upgrade bar
-The following actions will be performed:
-  - recompile foo 1 [upstream or system changes]
-  - recompile bar 1
-===== 2 to recompile =====
+[ERROR] Package conflict!
+  * Missing dependency:
+    - foo.1: no longer available
 
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   bar.1
--> removed   foo.1
--> installed foo.1
--> installed bar.1
-Done.
+# Return code 20 #
 ### opam clean -s
 Cleaning up switch sw
 ### opam upgrade bar
-Already up-to-date.
-Nothing to do.
+[ERROR] Package conflict!
+  * Missing dependency:
+    - foo.1: no longer available
+
+# Return code 20 #
 ### : replay the same sequence but with another version of `foo` present
 ### <pkg:foo.2>
 opam-version: "2.0"
@@ -73,13 +75,10 @@ opam-version: "2.0"
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade --show
-[WARNING] Upgrade is not possible because of conflicts or packages that are no longer available:
-    - Missing dependency:
-    - foo < 2
-    unmet availability conditions: 'false'
-
-You may run "opam upgrade --fixup" to let opam fix the current state.
-# Return code 20 #
+The following actions would be performed:
+  - remove  bar 1      [conflicts with foo]
+  - upgrade foo 1 to 2
+===== 1 to upgrade | 1 to remove =====
 ### <pkg:bar.2>
 opam-version: "2.0"
 depends: "foo" {>= "1"}
@@ -88,6 +87,16 @@ depends: "foo" {>= "1"}
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
+### opam upgrade --show
+The following actions would be performed:
+  - upgrade foo 1 to 2
+  - upgrade bar 1 to 2
+===== 2 to upgrade =====
+### opam upgrade --show --fixup
+The following actions would be performed:
+  - upgrade foo 1 to 2 [required by bar]
+  - upgrade bar 1 to 2
+===== 2 to upgrade =====
 ### opam reinstall baz
 baz is not installed. Install it? [Y/n] y
 The following actions will be performed:
@@ -98,9 +107,13 @@ The following actions will be performed:
 Done.
 ### opam upgrade bar
 The following actions will be performed:
+  - upgrade foo 1 to 2 [required by bar]
   - upgrade bar 1 to 2
+===== 2 to upgrade =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   bar.1
+-> removed   foo.1
+-> installed foo.2
 -> installed bar.2
 Done.

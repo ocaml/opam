@@ -271,6 +271,17 @@ let opam2cudf universe version_map packages =
     OpamPackage.Map.map preresolve_deps
       (only_packages universe.u_depends)
   in
+  let depends_map =
+    let unav_dep =
+      OpamFormula.Atom (OpamCudf.unavailable_package_name, (FBool true, None))
+    in
+    OpamPackage.Set.fold (fun nv ->
+        OpamPackage.Map.update nv
+          (fun deps -> OpamFormula.ands [unav_dep; deps])
+          OpamFormula.Empty)
+      (universe.u_installed -- universe.u_available)
+      depends_map
+  in
   let depopts_map =
     OpamPackage.Map.map preresolve_deps
       (only_packages universe.u_depopts)
@@ -432,13 +443,6 @@ let resolve universe request =
     in
     { request with extra_attributes }
   in
-  let cudf_orphans =
-    OpamPackage.Set.fold (fun nv acc ->
-        Cudf.lookup_package cudf_universe
-          (name_to_cudf nv.name, OpamPackage.Map.find nv version_map)
-        :: acc)
-      (universe.u_installed -- universe.u_available) []
-  in
   let request = cleanup_request universe request in
   let cudf_request = map_request (atom2cudf universe version_map) request in
   let invariant_pkg =
@@ -446,18 +450,12 @@ let resolve universe request =
   in
   let solution =
     try
-      List.iter (fun p ->
-          Cudf.remove_package cudf_universe (p.Cudf.package, p.Cudf.version))
-        cudf_orphans;
       Cudf.add_package cudf_universe invariant_pkg;
       let resp =
         OpamCudf.resolve ~extern:true ~version_map cudf_universe cudf_request
       in
-      Cudf.remove_package cudf_universe
-        (invariant_pkg.Cudf.package, invariant_pkg.Cudf.version);
-      List.iter (Cudf.add_package cudf_universe) cudf_orphans;
-      OpamCudf.to_actions (fun u -> u (*@LG trim here ?*))
-        cudf_universe resp
+      Cudf.remove_package cudf_universe OpamCudf.opam_invariant_package;
+      OpamCudf.to_actions cudf_universe resp
     with OpamCudf.Solver_failure msg ->
       let bt = Printexc.get_raw_backtrace () in
       OpamConsole.error "%s" msg;

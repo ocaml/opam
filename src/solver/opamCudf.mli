@@ -111,8 +111,9 @@ val atomic_actions:
   ActionGraph.t
 
 (** Removes from a graph of actions the disjoint subgraphs that don't concern
-    requested packages. *)
-val trim_actions: OpamPackage.Name.Set.t -> ActionGraph.t -> unit
+   requested packages. The provided universe should *include*
+   [post]-dependencies so that they don't get trimmed away. *)
+val trim_actions: Cudf.universe -> OpamPackage.Name.Set.t -> ActionGraph.t -> unit
 
 (** Heuristic to compute the likely cause of all actions in a graph from the set
     of packages passed in the original request. Assumes a reduced graph. Takes
@@ -140,11 +141,8 @@ val resolve:
 (** Computes a list of actions to proceed from the result of [resolve].
     Note however than the action list is not yet complete: the transitive closure
     of reinstallations is not yet completed, as it requires to fold over the
-    dependency graph in considering the optional dependencies.
-    The first argument specifies a function that will be applied to the starting
-    universe before computation: useful to re-add orphan packages. *)
+    dependency graph in considering the optional dependencies. *)
 val to_actions:
-  (Cudf.universe -> Cudf.universe) ->
   Cudf.universe ->
   (Cudf.universe, conflict) result ->
   (Cudf.package atomic_action list, conflict) result
@@ -197,6 +195,11 @@ val opam_invariant_package_name: string
 val opam_invariant_package: string * int
 
 val is_opam_invariant: Cudf.package -> bool
+
+(** dummy package that shouldn't exist and encodes unavailability (by depending on it) *)
+val unavailable_package_name: string
+val unavailable_package: string * int
+val is_unavailable_package: Cudf.package -> bool
 
 (** {2 Pretty-printing} *)
 
