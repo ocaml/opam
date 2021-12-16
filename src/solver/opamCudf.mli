@@ -110,6 +110,10 @@ val atomic_actions:
   [< Cudf.package highlevel_action ] list ->
   ActionGraph.t
 
+(** Removes from a graph of actions the disjoint subgraphs that don't concern
+    requested packages. *)
+val trim_actions: OpamPackage.Name.Set.t -> ActionGraph.t -> unit
+
 (** Heuristic to compute the likely cause of all actions in a graph from the set
     of packages passed in the original request. Assumes a reduced graph. Takes
     the set of requested package names, the set of packages marked for

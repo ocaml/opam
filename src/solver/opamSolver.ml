@@ -418,7 +418,13 @@ let resolve universe request =
   let all_packages = universe.u_available ++ universe.u_installed in
   let version_map = cudf_versions_map universe all_packages in
   let univ_gen = load_cudf_universe universe ~version_map all_packages in
-  let simple_universe = univ_gen ~build:true ~post:true () in
+  let cudf_universe = univ_gen ~depopts:false ~build:true ~post:true () in
+  let requested_names =
+    OpamPackage.Name.Set.(Op.(
+        of_list (List.map fst request.wish_install) ++
+        of_list (List.map fst request.wish_upgrade) ++
+        of_list (List.map fst request.wish_remove)))
+  in
   let request =
     let extra_attributes =
       OpamStd.List.sort_nodup compare
@@ -426,18 +432,32 @@ let resolve universe request =
     in
     { request with extra_attributes }
   in
+  let cudf_orphans =
+    OpamPackage.Set.fold (fun nv acc ->
+        Cudf.lookup_package cudf_universe
+          (name_to_cudf nv.name, OpamPackage.Map.find nv version_map)
+        :: acc)
+      (universe.u_installed -- universe.u_available) []
+  in
   let request = cleanup_request universe request in
   let cudf_request = map_request (atom2cudf universe version_map) request in
-  let resolve u req =
+  let invariant_pkg =
+    opam_invariant_package version_map universe.u_invariant
+  in
+  let solution =
     try
-      let invariant_pkg =
-        opam_invariant_package version_map universe.u_invariant
+      List.iter (fun p ->
+          Cudf.remove_package cudf_universe (p.Cudf.package, p.Cudf.version))
+        cudf_orphans;
+      Cudf.add_package cudf_universe invariant_pkg;
+      let resp =
+        OpamCudf.resolve ~extern:true ~version_map cudf_universe cudf_request
       in
-      Cudf.add_package u invariant_pkg;
-      let resp = OpamCudf.resolve ~extern:true ~version_map u req in
-      Cudf.remove_package u
+      Cudf.remove_package cudf_universe
         (invariant_pkg.Cudf.package, invariant_pkg.Cudf.version);
-      OpamCudf.to_actions (fun u -> u (*@LG trim here ?*)) u resp
+      List.iter (Cudf.add_package cudf_universe) cudf_orphans;
+      OpamCudf.to_actions (fun u -> u (*@LG trim here ?*))
+        cudf_universe resp
     with OpamCudf.Solver_failure msg ->
       let bt = Printexc.get_raw_backtrace () in
       OpamConsole.error "%s" msg;
@@ -445,7 +465,7 @@ let resolve universe request =
         OpamStd.Sys.(Exit (get_exit_code `Solver_failure))
         bt
   in
-  match resolve simple_universe cudf_request with
+  match solution with
   | Conflicts _ as c -> c
   | Success actions ->
     let simple_universe = univ_gen ~depopts:true ~build:false ~post:false () in
@@ -454,6 +474,7 @@ let resolve universe request =
       let atomic_actions =
         OpamCudf.atomic_actions
           ~simple_universe ~complete_universe actions in
+      OpamCudf.trim_actions requested_names atomic_actions;
       Success atomic_actions
     with OpamCudf.Cyclic_actions cycles ->
       cycle_conflict ~version_map complete_universe cycles

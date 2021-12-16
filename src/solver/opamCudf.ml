@@ -1748,4 +1748,28 @@ let atomic_actions ~simple_universe ~complete_universe root_actions =
   | [] -> g
   | cycles -> raise (Cyclic_actions cycles)
 
+let trim_actions req g =
+  if OpamPackage.Name.Set.is_empty req then () else
+  let root_actions, other_actions =
+    ActionGraph.fold_vertex (fun a (root,other) ->
+        let pkg = action_contents a in
+        let name =
+          OpamPackage.Name.of_string (Cudf.lookup_package_property pkg s_source)
+        in
+        if OpamPackage.Name.Set.mem name req
+        then Action.Set.add a root, other
+        else root, Action.Set.add a other)
+      g Action.Set.(empty, empty)
+  in
+  let connex_actions =
+    Action.Set.fixpoint (fun a ->
+        ActionGraph.fold_succ Action.Set.add g a @@
+        ActionGraph.fold_pred Action.Set.add g a @@
+        Action.Set.empty)
+      root_actions
+  in
+  let discard_actions = Action.Set.diff other_actions connex_actions in
+  log "Removed unrelated actions: %s" (Action.Set.to_string discard_actions);
+  Action.Set.iter (ActionGraph.remove_vertex g) discard_actions
+
 let packages u = Cudf.get_packages u

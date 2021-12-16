@@ -171,11 +171,10 @@ let check_availability ?permissive t set atoms =
     then Some (OpamSwitchState.not_found_message t atom)
     else
     let f = name, match cstr with None -> Empty | Some c -> Atom c in
-    Some (Printf.sprintf "%s %s"
+    Some (Printf.sprintf "%s: %s"
             (OpamFormula.to_string (Atom f))
             (OpamSwitchState.unavailable_reason
-               ~default:"unavailable for unknown reasons (this may be a bug in \
-                         opam)"
+               ~default:"the package no longer exists"
                t f)) in
   let errors = OpamStd.List.filter_map check_atom atoms in
   if errors <> [] then
@@ -204,7 +203,7 @@ let sanitize_atom_list ?(permissive=false) t atoms =
       (OpamPackage.Set.union t.packages t.installed) atoms
   else
     check_availability t
-      (OpamPackage.Set.union (Lazy.force t.available_packages) t.installed)
+      (Lazy.force t.available_packages)
       atoms;
   atoms
 
