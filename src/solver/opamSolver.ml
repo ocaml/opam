@@ -472,7 +472,7 @@ let resolve universe request =
       let atomic_actions =
         OpamCudf.atomic_actions
           ~simple_universe ~complete_universe actions in
-      OpamCudf.trim_actions requested_names atomic_actions;
+      OpamCudf.trim_actions cudf_universe requested_names atomic_actions;
       Success atomic_actions
     with OpamCudf.Cyclic_actions cycles ->
       cycle_conflict ~version_map complete_universe cycles

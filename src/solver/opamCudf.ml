@@ -1767,8 +1767,30 @@ let atomic_actions ~simple_universe ~complete_universe root_actions =
   | [] -> g
   | cycles -> raise (Cyclic_actions cycles)
 
-let trim_actions req g =
+let trim_actions univ req g =
   if OpamPackage.Name.Set.is_empty req then () else
+  let post_dependencies_map =
+    let packages_actions =
+      ActionGraph.fold_vertex (fun a ->
+          Map.update (action_contents a) (Action.Set.add a) Action.Set.empty)
+        g Map.empty
+    in
+    let univ =
+      Cudf.load_universe @@ Cudf.get_packages univ
+        ~filter:(fun p -> Map.mem p packages_actions)
+    in
+    let deps univ p =
+      let p = Cudf.lookup_package univ (p.Cudf.package, p.Cudf.version) in
+      List.fold_right (List.fold_right Set.add)
+        (Dose_common.CudfAdd.who_depends univ p)
+        Set.empty
+    in
+    ActionGraph.fold_vertex (fun a ->
+        Action.Map.add a
+          (Set.fold (fun p -> Action.Set.union (Map.find p packages_actions))
+             (deps univ (action_contents a)) Action.Set.empty))
+      g Action.Map.empty
+  in
   let root_actions, other_actions =
     ActionGraph.fold_vertex (fun a (root,other) ->
         let pkg = action_contents a in
@@ -1784,7 +1806,7 @@ let trim_actions req g =
     Action.Set.fixpoint (fun a ->
         ActionGraph.fold_succ Action.Set.add g a @@
         ActionGraph.fold_pred Action.Set.add g a @@
-        Action.Set.empty)
+        Action.Map.find a post_dependencies_map)
       root_actions
   in
   let discard_actions = Action.Set.diff other_actions connex_actions in
