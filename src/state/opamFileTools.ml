@@ -531,7 +531,8 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
                            diff any (alt [blank; char '.']); eos]))
        in
        match t.descr with None -> false | Some d ->
-         not (Re.execp valid_re (OpamFile.Descr.synopsis d)));
+         let synopsis = OpamFile.Descr.synopsis d in
+         synopsis <> "" && not (Re.execp valid_re synopsis));
     cond 48 `Warning
       "The fields 'build-test:' and 'build-doc:' are deprecated, and should be \
        replaced by uses of the 'with-test' and 'with-doc' filter variables in \
