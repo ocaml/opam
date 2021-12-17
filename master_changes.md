@@ -88,6 +88,7 @@ users)
   * Sync the behaviour of the macOS sandbox script with Linux's: /tmp is now ready-only [#4719 @kit-ty-kate]
   * Always mount every directories under / on Linux [#4795 @kit-ty-kate]
   * Get rid of OPAM_USER_PATH_RO (never used on macOS and no longer needed on Linux) [#4795 @kit-ty-kate]
+  * Print error message if command doesn't exist [#4971 @kit-ty-kat - fix #4112]
 
 ## Repository
   * Don't display global message when `this-switch` is given [#4899 @rjbou - fix #4889]
