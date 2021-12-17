@@ -81,4 +81,9 @@ case "$COMMAND" in
         exit 2
 esac
 
+if ! command -v "$1" >/dev/null; then
+    echo "[ERROR] Command not found: $1" >&2
+    exit 10
+fi
+
 exec sandbox-exec -p "$POL" "$@"
