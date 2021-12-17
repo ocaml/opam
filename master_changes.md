@@ -100,6 +100,7 @@ users)
   * E57 (capital on synopsis) not trigger W47 (empty descr) [#5070 @rjbou]
   * [BUG] Fix linting packages from repository with tarred repositories, the file in temporary repository was no more avaiable when lint is done [#5068 @rjbou]
   * Update repository package filename display [#5068 @rjbou]
+  * E67: check checksums only for vcs urls [#4960 @rjbou]
 
 ## Repository
   * When several checksums are specified, instead of adding in the cache only the archive by first checksum, name by best one and link others to this archive [#4696 rjbou]
