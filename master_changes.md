@@ -149,9 +149,12 @@ users)
   * [BUG] Remove z3 debug output [#4723 @rjbou - fix #4717] [2.1.0~rc2 #4720]
   * Fix and improve the Z3 solver backend [#4880 @altgr]
   * Refactored, fixed, improved and optimised the z3 solver backend [#4878 @altgr]
+  * Add an explanation for "no longer available" packages [#4969 @AltGr]
+  * Orphan packages are now handled at the solver level instead of a pre-processing phase, better ensuring consistency [#4969 @altgr]
 
 ## Client
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
+  * ✘ It is no longer possible to process actions on packages that depend on a package that was removed upstream [#4969 @altgr]
 
 ## Internal
   * Add license and lowerbounds to opam files [#4714 @kit-ty-kate]
