@@ -57,7 +57,7 @@ New option/command/subcommand are prefixed with ◈.
   * Stop zypper from upgrading packages on updates on OpenSUSE [#4978 @kit-ty-kate]
 
 ## Sandbox
-  *
+  * Print error message if command doesn't exist [#4971 @kit-ty-kat - fix #4112]
 
 ## Repository management
   *
