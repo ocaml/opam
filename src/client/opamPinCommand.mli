@@ -39,6 +39,10 @@ val source_pin:
   url option ->
   rw switch_state
 
+(** Pins a package to its currently installed version *)
+val pin_current:
+  rw switch_state -> package -> rw switch_state
+
 (** Interactively handles the [pin-depends] in an opam file *)
 val handle_pin_depends:
   rw switch_state -> package -> OpamFile.OPAM.t -> rw switch_state

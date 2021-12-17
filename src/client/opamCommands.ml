@@ -1801,11 +1801,12 @@ let reinstall cli =
           "List packages that have been changed since installed and are \
                 marked for reinstallation";
         cli_original, `Forget_pending, ["forget-pending"],
-          "Forget about pending reinstallations of listed packages. This \
-                implies making opam assume that your packages were installed \
-                with a newer version of their metadata, so only use this if \
-                you know what you are doing, and the actual changes you are \
-                overriding."
+        "Forget about pending reinstallations of listed packages. This implies \
+         making opam assume that your packages were installed with a newer \
+         version of their metadata, so only use this if you know what you are \
+         doing, and the actual changes you are overriding. It may be safer to \
+         use $(b,opam pin --current) on the packages with pending reinstalls, \
+         explicitely locking them in their current state."
       ]
   in
   let reinstall global_options build_options assume_built recurse subpath
@@ -2896,13 +2897,13 @@ let pin ?(unpin_only=false) cli =
     cli_original, "add", `add, ["PACKAGE"; "TARGET"],
     "Pins package $(i,PACKAGE) to $(i,TARGET), which may be a version, a path, \
      or a URL.\n\
-     $(i,PACKAGE) can be omitted if $(i,TARGET) contains one or more \
-     package descriptions. $(i,TARGET) can be replaced by \
-     $(b,--dev-repo) if a package by that name is already known. If \
-     $(i,TARGET) is $(b,-), the package is pinned as a virtual package, \
-     without any source. opam will infer the kind of pinning from the format \
-     (and contents, if local) of $(i,TARGET), Use $(b,--kind) or an explicit \
-     URL to disable that behaviour.\n\
+     $(i,PACKAGE) can be omitted if $(i,TARGET) contains one or more package \
+     descriptions. $(i,TARGET) can be replaced by $(b,--dev-repo) if a package \
+     by that name is already known, or $(b,--current) if the package is \
+     already installed. If $(i,TARGET) is $(b,-), the package is pinned as a \
+     virtual package, without any source. opam will infer the kind of pinning \
+     from the format (and contents, if local) of $(i,TARGET), Use $(b,--kind) \
+     or an explicit URL to disable that behaviour.\n\
      Pins to version control systems may target a specific branch or commit \
      using $(b,#branch) e.g. $(b,git://host/me/pkg#testing).\n\
      If $(i,PACKAGE) is not a known package name, a new package by that name \
@@ -3016,6 +3017,13 @@ let pin ?(unpin_only=false) cli =
        adjusting the version in the package definition file."
       Arg.(some package_version) None
   in
+  let current =
+    mk_flag ~cli (cli_from cli2_2) ["current"]
+      "When pinning, use the currently installed version and metadata of the \
+       package: this will avoid reinstallations due to upstream metadata \
+       changes, and may also be used to keep a package that was removed \
+       upstream."
+  in
   let guess_names kind ~recurse ?subpath url k =
     let found, cleanup =
       match OpamUrl.local_dir url with
@@ -3112,13 +3120,19 @@ let pin ?(unpin_only=false) cli =
   let pin
       global_options build_options
       kind edit no_act dev_repo print_short recurse subpath normalise
-      with_version
+      with_version current
       command params () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
     let locked = OpamStateConfig.(!r.locked) <> None in
     let action = not no_act in
-    let get_command = function
+    let main_command =
+      let is_add =
+        match command with Some (`add | `default _) -> true | _ -> false
+      in
+      if dev_repo && current || not is_add && (dev_repo || current)
+      then `incorrect else
+      match command, params with
       | Some `list, [] | None, [] ->
         `list
       | Some `scan, [url] ->
@@ -3134,13 +3148,16 @@ let pin ?(unpin_only=false) cli =
         `add_normalised (p::pins)
       | Some `add, [nv] | Some `default nv, [] when dev_repo ->
         `add_dev nv
+      | Some `add, [nv] | Some `default nv, [] when current ->
+        `add_current nv
       | Some `add, [arg] | Some `default arg, [] ->
         `add_url arg
-      | Some `add, [n; target] | Some `default n, [target] ->
+      | Some `add, [n; target] | Some `default n, [target]
+        when not (current || dev_repo) ->
         `add_wtarget (n,target)
       | _ -> `incorrect
     in
-    match get_command (command, params) with
+    match main_command with
     | `list ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
@@ -3261,6 +3278,27 @@ let pin ?(unpin_only=false) cli =
          OpamClient.PIN.url_pins st ~locked ~edit ~action
            (List.map (fun (n,o,u,sb) -> n,with_version,o,sb,u) names);
          `Ok ())
+    | `add_current n ->
+      (match (fst package) n with
+       | `Error e -> `Error (false, e)
+       | `Ok (name,version) ->
+         OpamGlobalState.with_ `Lock_none @@ fun gt ->
+         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+         match OpamPackage.package_of_name_opt st.installed name, version with
+         | Some nv, Some v when nv.version <> v ->
+           OpamConsole.error_and_exit `Bad_arguments
+             "%s.%s is not installed (version %s is), invalid flag `--current'"
+             (OpamPackage.Name.to_string name)
+             (OpamPackage.Version.to_string v)
+             (OpamPackage.Version.to_string nv.version)
+         | None, _ ->
+           OpamConsole.error_and_exit `Bad_arguments
+             "%s is not installed, invalid flag `--current'"
+             (OpamPackage.Name.to_string name)
+         | Some nv, _ ->
+           OpamSwitchState.drop @@
+           OpamPinCommand.pin_current st nv;
+           `Ok ())
     | `add_wtarget (n, target) ->
       (match (fst package) n with
        | `Ok (name,version) ->
@@ -3283,7 +3321,7 @@ let pin ?(unpin_only=false) cli =
           $global_options cli $build_options cli
           $kind $edit $no_act $dev_repo $print_short_flag cli cli_original
           $recurse cli $subpath cli
-          $normalise $with_version
+          $normalise $with_version $current
           $command $params)
 
 (* SOURCE *)
