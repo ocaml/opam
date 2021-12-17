@@ -30,6 +30,8 @@ are not marked). Those prefixed with "(+)" are new command/option (since
   [#4978 @kit-ty-kate]
 * Clearer error message if a command doesn't exist
   [#4971 @kit-ty-kat - fix #4112]
+* [BUG] Remove windows double printing on commands and their output
+  [#4940 @rjbou]
 * Actually allow multiple state caches to co-exist
   [#4934 @dra27 - actually fixes #4554]
 * Update cold compiler to 4.13 to avoid issues with glibc 2.34 on Unix
