@@ -440,20 +440,30 @@ let parse_command = Parse.command
 let common_filters ?opam dir =
    let tmpdir = Filename.get_temp_dir_name () in
    let open Re in
-    [
-      seq [bol; str cmd_prompt],
-      Sed "##% ";
-      alt [str dir; str (OpamSystem.back_to_forward dir)],
-      Sed "${BASEDIR}";
-      seq [opt (str "/private");
-           alt [str tmpdir;
-                str (OpamSystem.back_to_forward tmpdir)];
-           rep (set "/\\");
-           str "opam-";
-           rep1 (alt [xdigit; char '-'])],
-      Sed "${OPAMTMP}";
-    ] @
-    (match opam with
+   [
+     seq [ bol;
+           alt [ str "#=== ERROR";
+                 seq [ str "# "; alt @@ List.map str
+                         [ "context";
+                           "path";
+                           "command";
+                           "exit-code";
+                           "env-file";
+                           "output-file"]]]],
+     GrepV;
+     seq [bol; str cmd_prompt],
+     Sed "##% ";
+     alt [str dir; str (OpamSystem.back_to_forward dir)],
+     Sed "${BASEDIR}";
+     seq [opt (str "/private");
+          alt [str tmpdir;
+               str (OpamSystem.back_to_forward tmpdir)];
+          rep (set "/\\");
+          str "opam-";
+          rep1 (alt [xdigit; char '-'])],
+     Sed "${OPAMTMP}";
+   ] @
+   (match opam with
     | None -> []
     | Some opam -> [ str opam, Sed "${OPAMBIN}" ])
 
