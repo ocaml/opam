@@ -154,14 +154,17 @@ let package_files_to_cache repo_root cache_dir cache_urls
         OpamPackage.to_string nv ^
         OpamStd.Option.to_string ((^) "/") name
       in
-      match OpamFile.URL.checksum urlf with
+      let checksums =
+        OpamHash.sort (OpamFile.URL.checksum urlf)
+      in
+      match checksums with
       | [] ->
         OpamConsole.warning "[%s] no checksum, not caching"
           (OpamConsole.colorise `green label);
         Done errors
-      | (first_checksum :: _) as checksums ->
+      | best_chks :: _ ->
         let cache_file =
-          OpamRepository.cache_file cache_dir first_checksum
+          OpamRepository.cache_file cache_dir best_chks
         in
         let error_opt =
           if not recheck && OpamFilename.exists cache_file then Done None

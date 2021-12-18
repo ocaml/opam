@@ -149,10 +149,17 @@ let validate_and_add_to_cache label url cache_dir file checksums =
     OpamFilename.remove file;
     false
   with Not_found ->
-    (match cache_dir, checksums with
-     | Some dir, ck::_ ->
-       OpamFilename.copy ~src:file ~dst:(cache_file dir ck)
-       (* idea: hardlink to the other checksums? *)
+    (let checksums = OpamHash.sort checksums in
+     match cache_dir, checksums with
+     | Some dir, best_chks :: others_chks ->
+       OpamFilename.copy ~src:file ~dst:(cache_file dir best_chks);
+       List.iter (fun checksum ->
+           let target = cache_file dir best_chks in
+           let link = cache_file dir checksum in
+           try
+             OpamFilename.link ~relative:true ~target ~link
+           with Sys_error _ -> ())
+         others_chks;
      | _ -> ());
     true
 

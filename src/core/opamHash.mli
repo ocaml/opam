@@ -32,6 +32,9 @@ val of_string_opt: string -> t option
     "md5/d4/d41d8cd98f00b204e9800998ecf8427e", as a list *)
 val to_path: t -> string list
 
+(** Sorts the list from best hash (SHA512, ...) to weakest (..., MD5) *)
+val sort : t list -> t list
+
 val check_file: string -> t -> bool
 
 (** Like [check_file], but returns the actual mismatching hash of the file, or

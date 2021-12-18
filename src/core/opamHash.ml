@@ -17,11 +17,17 @@ type t = kind * string
 let kind = fst
 let contents = snd
 
-let compare (k,h) (l,i) =
+(* Order by hash strength: MD5 < SHA256 < SHA512 *)
+let compare_kind k l =
   match k, l with
-  | `SHA512, `SHA512 | `SHA256, `SHA256 | `MD5, `MD5 -> String.compare h i
+  | `SHA512, `SHA512 | `SHA256, `SHA256 | `MD5, `MD5 -> 0
   | `MD5, _ | _, `SHA512 -> -1
   | `SHA512, _ | _, `MD5 -> 1
+
+let compare (k,h) (l,i) =
+  match compare_kind k l with
+  | 0 -> String.compare h i
+  | cmp -> cmp
 
 let equal h h' = compare h h' = 0
 
@@ -92,6 +98,9 @@ let of_json = function
 
 let to_path (kind,s) =
   [string_of_kind kind; String.sub s 0 2; s]
+
+let sort checksums =
+  List.sort (fun h h' -> compare h' h) checksums
 
 let compute ?(kind=default_kind) file = match kind with
   | `MD5 -> md5 (Digest.to_hex (Digest.file file))
