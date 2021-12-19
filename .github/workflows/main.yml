@@ -23,6 +23,7 @@ on:
     - 'Makefile*'
     - 'configure*'
     - '.github/**'
+    - 'tests/**'
 #    paths-ignore:
 #    - 'release/**'
 #    - 'shell/**'

@@ -164,10 +164,12 @@ users)
   * Update crowbar with compare functions [#4918 @rjbou]
 
 ## Reftests
+### Tests
   * Add switch-invariant test [#4866 @rjbou]
   * opam root version: add local switch cases [#4763 @rjbou] [2.1.0~rc2 #4715]
   * opam root version: add reinit test casess [#4763 @rjbou] [2.1.0~rc2 #4750]
   * Add & update env tests [#4861 #4841 @rjbou @dra27]
+### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
   * Add `BASEDIR` to environement [#4913 @rjbou]
@@ -178,6 +180,11 @@ users)
   * Hackish way to have several replacement in a single line [#4913 @rjbou]
   * Substitution in regexp pattern (for environment variables) [#4913 @rjbou]
   * Substitution for opam-cat content [#4913 @rjbou]
+  * Allow one char package name on repo [#4966 @AltGr]
+  * Remove opam output beginning with `###` [#4966 @AltGr]
+  * Add `<pin:path>` header to specify incomplete opam files to pin, it is updated from a template in reftest run (no lint errors) [#4966 @rjbou]
+  * Unescape output [#4966 @rjbou]
+  * Clean outputs from opam error reporting block [#4966 @rjbou]
 
 
 ## Github Actions
@@ -191,6 +198,7 @@ users)
   * Update ocaml version frm 4.11.2 to  4.12.0 (because of macos failure) [#4865 @rjbou]
   * Add a depext checkup, launched only is `OpamSysInteract` is changed [#4788 @rjbou]
   * Arrange scripts directory [#4922 @rjbou]
+  * Run ci on tests changes [#4966 @rjbou]
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
