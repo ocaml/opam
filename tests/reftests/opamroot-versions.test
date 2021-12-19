@@ -640,6 +640,7 @@ let _ =
     List.iter (write (Sys.getcwd ())) local
   | _ -> ()
 ### rm -rf $OPAMROOT
+### OPAMSYSCOMP=2
 ### opam init -na default ./default --bare --bypass-checks --no-opamrc --debug-level=0
 No configuration file found, using built-in defaults.
 

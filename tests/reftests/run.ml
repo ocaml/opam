@@ -24,6 +24,9 @@
      add this package to `default` repository in `./REPO`
    - use `### <pkg:NAME.VERSION:FILENAME>`, then the contents below to add this
      file as a extra-file of the given package in the `default` repository
+   - use `### <pin:path>, then the contents below to create a minimal opam
+     file, it is extended by template defined fields to pin it without lint
+     errors
    - `### FOO=x BAR=y` to export variables for subsequent commands
    - shell-like command handling:
      * **NO pattern expansion, shell pipes, sequences or redirections**
@@ -61,7 +64,7 @@ let is_prefix pfx s =
   String.sub s 0 (String.length pfx) = pfx
 
 let rem_prefix pfx s =
-  if not (is_prefix pfx s) then invalid_arg "rem_prefix"
+  if not (is_prefix pfx s) || s = pfx then invalid_arg "rem_prefix"
   else String.sub s (String.length pfx) (String.length s - String.length pfx)
 
 (* Test file format: {v
@@ -133,7 +136,14 @@ type filt_sort =
   | Grep
   | GrepV
 
-let str_replace_path ?(escape=false) whichway filters s =
+let str_replace_path ?escape whichway filters s =
+  let unescape = escape = Some false in
+  let escape = escape = Some true in
+  let s =
+    if unescape then
+      Re.(replace_string (compile @@ str "\\\\") ~by:"\\" s)
+    else s
+  in
   let escape =
     if escape then Re.(replace_string (compile @@ char '\\') ~by:"\\\\")
     else fun s -> s
@@ -200,7 +210,7 @@ let command
   let rec filter_output ?(first=true) ic =
     match input_line ic with
     | s ->
-      let s = str_replace_path OpamSystem.back_to_forward filter s in
+      let s = str_replace_path ~escape:false OpamSystem.back_to_forward filter s in
       if s = "\\c" then filter_output ~first ic
       else
         (if not first then Buffer.add_char out_buf '\n';
@@ -269,6 +279,7 @@ let rec with_temp_dir f =
 
 type command =
   | File_contents of string
+  | Pin_file_content of string
   | Cat of { files: string list;
              filter: (Re.t * filt_sort) list; }
   | Run of { env: (string * string) list;
@@ -323,7 +334,7 @@ module Parse = struct
   let re_package =
     seq [
       str "<pkg:";
-      group @@ seq [ alpha; rep1 @@ alt [ alnum; set "_-+" ]];
+      group @@ seq [ alpha; rep @@ alt [ alnum; set "_-+" ]];
       char '.';
       group @@ rep1 @@ alt [ alnum; set "-_+.~" ];
       opt @@ seq [ char ':' ; group @@ rep1 @@ alt [ alnum; set "-_+.~" ]];
@@ -332,6 +343,9 @@ module Parse = struct
 
   let command ?(vars=[]) str =
     if str.[0] = '<' && str.[String.length str - 1] = '>' then
+      if String.length str > 4 && String.sub str 1 4 = "pin:" then
+        Pin_file_content (String.sub str 5 (String.length str - 6))
+      else
       let f =
         try
           let grs = exec (compile re_package) str in
@@ -426,18 +440,30 @@ let parse_command = Parse.command
 let common_filters ?opam dir =
    let tmpdir = Filename.get_temp_dir_name () in
    let open Re in
-    [
-      alt [str dir; str (OpamSystem.back_to_forward dir)],
-      Sed "${BASEDIR}";
-      seq [opt (str "/private");
-           alt [str tmpdir;
-                str (OpamSystem.back_to_forward tmpdir)];
-           rep (set "/\\");
-           str "opam-";
-           rep1 (alt [xdigit; char '-'])],
-      Sed "${OPAMTMP}";
-    ] @
-    (match opam with
+   [
+     seq [ bol;
+           alt [ str "#=== ERROR";
+                 seq [ str "# "; alt @@ List.map str
+                         [ "context";
+                           "path";
+                           "command";
+                           "exit-code";
+                           "env-file";
+                           "output-file"]]]],
+     GrepV;
+     seq [bol; str cmd_prompt],
+     Sed "##% ";
+     alt [str dir; str (OpamSystem.back_to_forward dir)],
+     Sed "${BASEDIR}";
+     seq [opt (str "/private");
+          alt [str tmpdir;
+               str (OpamSystem.back_to_forward tmpdir)];
+          rep (set "/\\");
+          str "opam-";
+          rep1 (alt [xdigit; char '-'])],
+     Sed "${OPAMTMP}";
+   ] @
+   (match opam with
     | None -> []
     | Some opam -> [ str opam, Sed "${OPAMBIN}" ])
 
@@ -476,6 +502,72 @@ let rec list_remove x = function
   | [] -> []
   | y :: r -> if x = y then r else y :: list_remove x r
 
+
+let print_opamfile file =
+  try
+    let open OpamParserTypes.FullPos in
+    let original = OpamParser.FullPos.file file in
+    let rec mangle item =
+      match item.pelem with
+      | Section s ->
+        {item with
+         pelem =
+           Section {s with
+                    section_name =
+                      OpamStd.Option.map (fun v ->
+                          {v with pelem = mangle_string v.pelem})
+                        s.section_name;
+                    section_items =
+                      {s.section_items with
+                       pelem = List.map mangle s.section_items.pelem}}}
+      | Variable(name, value) ->
+        {item with pelem = Variable(name, mangle_value value)}
+    and mangle_value item =
+      match item.pelem with
+      | String s ->
+        {item with pelem = String(mangle_string s)}
+      | Relop(op, l, r) ->
+        {item with pelem = Relop(op, mangle_value l, mangle_value r)}
+      | Prefix_relop(relop, v) ->
+        {item with pelem = Prefix_relop(relop, mangle_value v)}
+      | Logop(op, l, r) ->
+        {item with pelem = Logop(op, mangle_value l, mangle_value r)}
+      | Pfxop(op, v) ->
+        {item with pelem = Pfxop(op, mangle_value v)}
+      | List l ->
+        {item with pelem = List{l with pelem = List.map mangle_value l.pelem}}
+      | Group l ->
+        {item with pelem = Group{l with pelem = List.map mangle_value l.pelem}}
+      | Option(v, l) ->
+        {item with pelem = Option(mangle_value v, {l with pelem = List.map mangle_value l.pelem})}
+      | Env_binding(name, op, v) ->
+        {item with pelem = Env_binding(name, op, mangle_value v)}
+      | Bool _
+      | Int _
+      | Ident _ -> item
+    and mangle_string = String.map (function '\\' -> '/' | c -> c)
+    in
+    let mangled =
+      {original with file_contents = List.map mangle original.file_contents}
+    in
+    OpamPrinter.FullPos.Normalise.opamfile mangled
+  with
+  | Sys_error _ -> Printf.sprintf "# %s not found" file
+  | e -> Printf.sprintf "# Error on file %s: %s" file (Printexc.to_string e)
+
+let template_opamfile =
+  OpamParser.FullPos.string {|
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+htpps://to@lo.ck"
+bug-reports: "https://nobug"
+|} "<nofile>"
+
 let run_test ?(vars=[]) ~opam t =
   let opamroot0 = Filename.concat (Sys.getcwd ()) ("root-"^t.repo_hash) in
   with_temp_dir @@ fun dir ->
@@ -510,76 +602,63 @@ let run_test ?(vars=[]) ~opam t =
           write_file ~path ~contents;
           print_string contents;
           vars
+        | Pin_file_content path ->
+          let open OpamParserTypes.FullPos in
+          let raw_content = (String.concat "\n" out) in
+          let opamfile = OpamParser.FullPos.string raw_content path in
+          let nullify_pos p =
+            {p with pos = { filename = path; start = -1, -1; stop = -1, -1; }}
+          in
+          let test_content, tpl_content =
+            List.fold_left (fun (test_content, tpl_content) item ->
+                match item with
+                | { pelem = Variable (name, _); _} ->
+                  let tpl_overwrite, test_content =
+                    List.partition (function
+                        | { pelem = Variable (n, _); _} -> n.pelem = name.pelem
+                        | _ -> false)
+                      test_content
+                  in
+                  let item =
+                    match tpl_overwrite with
+                    | [ item ] -> item
+                    | _ -> item
+                  in
+                  test_content, item::tpl_content
+                | { pelem = Section _ ; _} -> test_content, item::tpl_content
+              )
+              (opamfile.file_contents,[]) template_opamfile.file_contents
+          in
+          let file_contents =
+            List.rev_map nullify_pos tpl_content
+            @ List.map nullify_pos test_content
+          in
+          let contents =
+            Printf.sprintf "%s\n"
+              (OpamPrinter.FullPos.opamfile { opamfile with file_contents })
+          in
+          write_file ~path ~contents;
+          print_string (raw_content ^ "\n");
+          vars
         | Export bindings ->
           List.fold_left
             (fun vars (v, r) -> (v, r) :: List.filter (fun (w, _) -> v <> w) vars)
             vars bindings
         | Cat { files; filter } ->
-          let print_opamfile header file =
-            let content =
-              let open OpamParserTypes.FullPos in
-              let original = OpamParser.FullPos.file file in
-              let rec mangle item =
-                match item.pelem with
-                | Section s ->
-                  {item with
-                   pelem =
-                     Section {s with
-                              section_name =
-                                OpamStd.Option.map (fun v ->
-                                    {v with pelem = mangle_string v.pelem})
-                                  s.section_name;
-                              section_items =
-                                {s.section_items with
-                                 pelem = List.map mangle s.section_items.pelem}}}
-                | Variable(name, value) ->
-                  {item with pelem = Variable(name, mangle_value value)}
-              and mangle_value item =
-                match item.pelem with
-                | String s ->
-                  {item with pelem = String(mangle_string s)}
-                | Relop(op, l, r) ->
-                  {item with pelem = Relop(op, mangle_value l, mangle_value r)}
-                | Prefix_relop(relop, v) ->
-                  {item with pelem = Prefix_relop(relop, mangle_value v)}
-                | Logop(op, l, r) ->
-                  {item with pelem = Logop(op, mangle_value l, mangle_value r)}
-                | Pfxop(op, v) ->
-                  {item with pelem = Pfxop(op, mangle_value v)}
-                | List l ->
-                  {item with pelem = List{l with pelem = List.map mangle_value l.pelem}}
-                | Group l ->
-                  {item with pelem = Group{l with pelem = List.map mangle_value l.pelem}}
-                | Option(v, l) ->
-                  {item with pelem = Option(mangle_value v, {l with pelem = List.map mangle_value l.pelem})}
-                | Env_binding(name, op, v) ->
-                  {item with pelem = Env_binding(name, op, mangle_value v)}
-                | Bool _
-                | Int _
-                | Ident _ -> item
-              and mangle_string = String.map (function '\\' -> '/' | c -> c)
-              in
-              let mangled =
-                {original with file_contents = List.map mangle original.file_contents}
-              in
-              OpamPrinter.FullPos.Normalise.opamfile mangled
-            in
-            let str = if header then Printf.sprintf "=> %s <=\n" file else "" in
-            let str = Printf.sprintf "%s%s" str content in
-            let str =
-              str_replace_path OpamSystem.back_to_forward
-                (filter @ common_filters dir) str
-            in
-            print_string str
-          in
           let files =
             List.map (fun s -> Re.(replace_string (compile @@ str "$OPAMROOT")
                                      ~by:opamroot s)) files
           in
-          (match files with
-           | file::[] -> print_opamfile false file
-           | _::_  -> List.iter (print_opamfile true) files
-           | [] -> ());
+          let s =
+            match files with
+            | [file] -> print_opamfile file
+            | files  ->
+              OpamStd.List.concat_map "\n"
+                (fun f -> Printf.sprintf "=> %s <=\n%s" f (print_opamfile f))
+                files
+          in
+          print_string (str_replace_path OpamSystem.back_to_forward
+                          (filter @ common_filters dir) s);
           vars
         | Run {env; cmd; args; filter; output; unordered} ->
           let silent = output <> None || unordered in
