@@ -196,14 +196,16 @@ let fuzzy_name t name =
   | [name] -> name
   | _ -> name
 
-let sanitize_atom_list ?(permissive=false) t atoms =
+let sanitize_atom_list ?(permissive=false) ?(installed=false) t atoms =
   let atoms = List.map (fun (name,cstr) -> fuzzy_name t name, cstr) atoms in
+  let open OpamPackage.Set.Op in
   if permissive then
     check_availability ~permissive t
-      (OpamPackage.Set.union t.packages t.installed) atoms
+      (t.packages ++ t.installed) atoms
   else
     check_availability t
-      (Lazy.force t.available_packages)
+      (if installed then t.installed ++ Lazy.force t.available_packages
+       else Lazy.force t.available_packages)
       atoms;
   atoms
 
@@ -241,6 +243,7 @@ module Json = struct
         "install", `A (atoms request.wish_install);
         "remove", `A (atoms request.wish_remove);
         "upgrade", `A (atoms request.wish_upgrade);
+        "all", `A (atoms request.wish_all);
         "criteria", `String (OpamSolverConfig.criteria request.criteria);
       ]
     in

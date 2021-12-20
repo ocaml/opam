@@ -713,10 +713,13 @@ let unpin st names =
             string_of_pinned (OpamSwitchState.opam_opt st nv)
         in
         let st = unpin_one st nv in
-        if not OpamClientConfig.(!r.show) then
-          OpamSwitchAction.write_selections st;
-        OpamConsole.msg "Ok, %s is no longer %s\n"
-          (OpamPackage.Name.to_string name) pin_str;
+        if OpamClientConfig.(!r.show) then
+          OpamConsole.msg "Ok, %s would no longer be %s\n"
+            (OpamPackage.Name.to_string name) pin_str
+        else
+          (OpamSwitchAction.write_selections st;
+           OpamConsole.msg "Ok, %s is no longer %s\n"
+             (OpamPackage.Name.to_string name) pin_str);
         st
       | None ->
         OpamConsole.note "%s is not pinned." (OpamPackage.Name.to_string name);

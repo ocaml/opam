@@ -282,6 +282,7 @@ type 'a request = {
   wish_install: 'a conjunction;
   wish_remove : 'a conjunction;
   wish_upgrade: 'a conjunction;
+  wish_all: 'a conjunction;
   extra_attributes: string list;
 }
 

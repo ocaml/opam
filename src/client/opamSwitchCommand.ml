@@ -486,6 +486,7 @@ let import_t ?ask importfile t =
       { wish_install = to_import;
         wish_remove  = [];
         wish_upgrade = [];
+        wish_all = to_import;
         criteria = `Default;
         extra_attributes = []; }
   in

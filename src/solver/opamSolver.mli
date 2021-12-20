@@ -69,12 +69,15 @@ val load_cudf_universe:
   ?depopts:bool -> build:bool -> post:bool -> unit ->
   Cudf.universe
 
-(**  Build a request *)
+(** Build a request. [all] defaults to all atoms concerned by any action, and is
+    used for limiting the solution to the relevant packages, an empty list
+    implying all actions are relevant (no trimming) *)
 val request:
   ?criteria:solver_criteria ->
   ?install:atom list ->
   ?upgrade:atom list ->
   ?remove:atom list ->
+  ?all:atom list ->
   unit -> atom request
 
 (** Given a description of packages, return a solution preserving the

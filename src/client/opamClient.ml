@@ -130,6 +130,7 @@ let compute_upgrade_t
       (OpamSolver.request
          ~install:to_install
          ~upgrade:(upgrade_atoms requested_installed)
+         ~all:[]
          ~criteria:`Upgrade ())
   else
   names,
@@ -344,6 +345,7 @@ let fixup t =
       ~requested:(OpamPackage.names_of_packages pkgs)
       (OpamSolver.request
          ~install:(OpamSolution.atoms_of_packages pkgs)
+         ~all:[]
          ~criteria:`Fixup
          ())
   in
@@ -1177,38 +1179,36 @@ let remove_t ?ask ~autoremove ~force atoms t =
         ~requested:(OpamPackage.names_of_packages packages)
         Remove
     in
-    let to_remove =
-      OpamSolver.reverse_dependencies ~build:true ~post:true
-        ~depopts:false ~installed:true universe packages
-    in
-    let to_keep =
-      (if autoremove then t.installed_roots %% t.installed else t.installed)
-      ++ universe.u_base
-      -- to_remove
-    in
-    let to_keep =
-      OpamSolver.dependencies ~build:true ~post:true
-        ~depopts:true ~installed:true universe to_keep in
-    (* to_keep includes the depopts, because we don't want to autoremove
-       them. But that may re-include packages that we wanted removed, so we
-       need to remove them again *)
-    let to_keep = to_keep -- to_remove in
     let requested = OpamPackage.names_of_packages packages in
     let to_remove =
       if autoremove then
-        let to_remove1 = t.installed -- to_keep in
-        if atoms = [] then to_remove1
+        let remove_cone =
+          packages |> OpamSolver.reverse_dependencies universe
+            ~build:true ~post:true ~depopts:false ~installed:true
+        in
+        let keep =
+          universe.u_base ++ t.installed_roots %% t.installed -- remove_cone
+        in
+        let keep_cone =
+          keep |> OpamSolver.dependencies universe
+            ~build:true ~post:true ~depopts:true ~installed:true
+        in
+        let autoremove =
+          packages ++ (t.installed -- keep_cone)
+        in
+        if atoms = [] then autoremove
         else (* restrict to the dependency cone of removed pkgs *)
-          to_remove1 %%
-          (OpamSolver.dependencies ~build:true ~post:true
-             ~depopts:true ~installed:true universe to_remove)
-      else to_remove in
+          autoremove %%
+          (remove_cone |> OpamSolver.dependencies universe
+             ~build:true ~post:true ~depopts:false ~installed:true)
+      else
+        packages
+    in
     let t, solution =
       OpamSolution.resolve_and_apply ?ask t Remove
         ~force_remove:force
-        ~requested 
+        ~requested
         (OpamSolver.request
-           ~install:(OpamSolution.eq_atoms_of_packages to_keep)
            ~remove:(OpamSolution.atoms_of_packages to_remove)
            ())
     in
@@ -1220,7 +1220,7 @@ let remove_t ?ask ~autoremove ~force atoms t =
   ) else t
 
 let remove t ~autoremove ~force names =
-  let atoms = OpamSolution.sanitize_atom_list t names in
+  let atoms = OpamSolution.sanitize_atom_list ~installed:true t names in
   remove_t ~autoremove ~force atoms t
 
 let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
@@ -1466,14 +1466,15 @@ module PIN = struct
         OpamPackage.Set.fold (fun nv acc -> (nv.name, None) :: acc)
           (installed_unpinned %% Lazy.force st.available_packages) []
       in
-      let remove =
+      let all =
         OpamPackage.Set.fold (fun nv acc -> (nv.name, None) :: acc)
-          (installed_unpinned -- Lazy.force st.available_packages) []
+          (installed_unpinned -- Lazy.force st.available_packages)
+          upgrade
       in
       let st, solution =
         OpamSolution.resolve_and_apply st Upgrade
           ~requested:(OpamPackage.Name.Set.of_list names)
-          (OpamSolver.request ~upgrade ~remove ())
+          (OpamSolver.request ~upgrade ~all ())
       in
       OpamSolution.check_solution st solution;
       st

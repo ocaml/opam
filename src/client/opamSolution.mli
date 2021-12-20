@@ -102,8 +102,10 @@ val fuzzy_name: 'a switch_state -> name -> name
 (** Takes a "raw" list of atoms (from the user), and match it to existing
     packages. Match packages with the wrong capitalisation, and raises errors on
     non-existing packages, and unavailable ones unless [permissive] is set.
+    [installed] additionally accepts installed, but unavailable packages.
     Exits with a message on error. *)
-val sanitize_atom_list: ?permissive: bool -> 'a switch_state -> atom list -> atom list
+val sanitize_atom_list: ?permissive: bool -> ?installed: bool ->
+  'a switch_state -> atom list -> atom list
 
 (** {2 Stats} *)
 val sum: stats -> int

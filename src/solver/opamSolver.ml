@@ -392,6 +392,7 @@ let map_request f r =
   { wish_install = f r.wish_install;
     wish_remove  = f r.wish_remove;
     wish_upgrade = f r.wish_upgrade;
+    wish_all = f r.wish_all;
     criteria = r.criteria;
     extra_attributes = r.extra_attributes; }
 
@@ -431,10 +432,7 @@ let resolve universe request =
   let univ_gen = load_cudf_universe universe ~version_map all_packages in
   let cudf_universe = univ_gen ~depopts:false ~build:true ~post:true () in
   let requested_names =
-    OpamPackage.Name.Set.(Op.(
-        of_list (List.map fst request.wish_install) ++
-        of_list (List.map fst request.wish_upgrade) ++
-        of_list (List.map fst request.wish_remove)))
+    OpamPackage.Name.Set.of_list (List.map fst request.wish_all)
   in
   let request =
     let extra_attributes =
@@ -793,6 +791,8 @@ let filter_solution filter t =
     t;
   t
 
-let request ?(criteria=`Default) ?(install=[]) ?(upgrade=[]) ?(remove=[]) () =
+let request ?(criteria=`Default) ?(install=[]) ?(upgrade=[]) ?(remove=[])
+    ?(all=install@upgrade@remove) () =
   { wish_install = install; wish_upgrade = upgrade; wish_remove = remove;
+    wish_all = all;
     criteria; extra_attributes = []; }

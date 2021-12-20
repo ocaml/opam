@@ -112,7 +112,9 @@ val atomic_actions:
 
 (** Removes from a graph of actions the disjoint subgraphs that don't concern
    requested packages. The provided universe should *include*
-   [post]-dependencies so that they don't get trimmed away. *)
+   [post]-dependencies so that they don't get trimmed away.
+   Note: if the specified [requested] set is empty, all actions are supposed to
+   be meaningful. *)
 val trim_actions: Cudf.universe -> OpamPackage.Name.Set.t -> ActionGraph.t -> unit
 
 (** Heuristic to compute the likely cause of all actions in a graph from the set
