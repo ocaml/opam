@@ -1570,10 +1570,12 @@ let compute_root_causes g requested reinstall available =
       List.fold_left (fun l a -> if List.mem a l then l else a::l)
     in
     match c1, c2 with
-    | Unavailable, _ | _, Unavailable -> Unavailable, depth1
     | Required_by a, Required_by b -> Required_by (a @ b), depth1
     | Use a, Use b -> Use (a @ b), depth1
     | Conflicts_with a, Conflicts_with b -> Conflicts_with (a @ b), depth1
+    | Unavailable, Requested | Requested, Unavailable ->
+      Requested, depth1
+    | Unavailable, _ | _, Unavailable -> Unavailable, depth1
     | Requested, a | a, Requested
     | Unknown, a | a, Unknown
     | Upstream_changes , a | a, Upstream_changes -> a, depth1
@@ -1658,12 +1660,18 @@ let compute_root_causes g requested reinstall available =
             | `Change (`Up,_,_) -> true
             | _ -> false)
       else (Map.map (fun _ -> Requested, 0) requested_actions) in
-    get_causes causes roots in
+    let roots2 =
+      make_roots causes Unavailable (function
+          | `Remove p ->
+            not (OpamPackage.Set.mem (cudf2opam p) available)
+          | _ -> false)
+    in
+    get_causes causes (Map.union (fun a _ -> a)  roots roots2) in
   let causes =
-    (* Compute causes for no longer available packages *)
+    (* Compute causes for changed no longer available packages *)
     let roots =
       make_roots causes Unavailable (function
-          | `Remove p | `Change (_,p,_) ->
+          | `Change (_,p,_) ->
             not (OpamPackage.Set.mem (cudf2opam p) available)
           | _ -> false)
     in
