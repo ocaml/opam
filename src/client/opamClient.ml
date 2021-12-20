@@ -1462,14 +1462,21 @@ module PIN = struct
     let st = unpin st names in
     let installed_unpinned = (pinned_before -- st.pinned) %% st.installed in
     if action && not (OpamPackage.Set.is_empty installed_unpinned) then
-      let atoms =
+      let upgrade =
         OpamPackage.Set.fold (fun nv acc -> (nv.name, None) :: acc)
-          installed_unpinned []
+          (installed_unpinned %% Lazy.force st.available_packages) []
       in
-      upgrade_t
-        ~strict_upgrade:false ~auto_install:true ~ask:true ~all:false
-        ~terse:true
-        atoms st
+      let remove =
+        OpamPackage.Set.fold (fun nv acc -> (nv.name, None) :: acc)
+          (installed_unpinned -- Lazy.force st.available_packages) []
+      in
+      let st, solution =
+        OpamSolution.resolve_and_apply st Upgrade
+          ~requested:(OpamPackage.Name.Set.of_list names)
+          (OpamSolver.request ~upgrade ~remove ())
+      in
+      OpamSolution.check_solution st solution;
+      st
     else st
 
   let list = list
