@@ -188,6 +188,7 @@ d.1
 ### opam list -sA --roots
 d
 ### : 10/ Reinstall c
+### : # This used to be allowed, but not anymore
 ### opam reinstall c
 The following actions will be performed:
   - recompile c 1
@@ -200,7 +201,21 @@ The following actions will be performed:
 -> installed c.1
 -> installed d.1
 Done.
-### :TODO: here will need `opam pin b --current`
+### opam pin b --current
+b is now pinned locally (version 1)
+### : # Now OK
+### opam reinstall c
+The following actions will be performed:
+  - recompile c 1
+  - recompile d 1 [uses c]
+===== 2 to recompile =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   d.1
+-> removed   c.1
+-> installed c.1
+-> installed d.1
+Done.
 ### opam list -sV
 a.1
 b.1
@@ -239,12 +254,12 @@ c.2
 d.1
 ### opam list -sA --roots
 d
-### : 12/ Try to reinstall b (should work using the cache)
+### : 12/ Try to reinstall b (should work because of the pin)
 ### opam reinstall b
 The following actions will be performed:
-  - recompile b 1
-  - recompile c 2 [uses b]
-  - recompile d 1 [uses c]
+  - recompile b 1*
+  - recompile c 2  [uses b]
+  - recompile d 1  [uses c]
 ===== 3 to recompile =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -266,9 +281,9 @@ d
 ### opam reinstall a
 The following actions will be performed:
   - recompile a 1
-  - recompile b 1 [uses a]
-  - recompile c 2 [uses b]
-  - recompile d 1 [uses c]
+  - recompile b 1* [uses a]
+  - recompile c 2  [uses b]
+  - recompile d 1  [uses c]
 ===== 4 to recompile =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -289,6 +304,9 @@ d.1
 ### opam list -sA --roots
 d
 ### : 14/ Add a new version of a and upgrade
+### opam upgrade --show
+Already up-to-date.
+Nothing to do.
 ### <pkg:a.2>
 opam-version: "2.0"
 install: [ "mkdir" _:lib ]
@@ -297,7 +315,22 @@ install: [ "mkdir" _:lib ]
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
-### :TODO: the original test removes b, c, d. Here unpin b ?
+### opam upgrade --show
+The following actions would be performed:
+  - upgrade   a 1 to 2
+  - recompile b 1*     [uses a]
+  - recompile c 2      [uses b]
+  - recompile d 1      [uses c]
+===== 3 to recompile | 1 to upgrade =====
+### opam unpin b --show
+Ok, b is no longer pinned locally (version 1)
+The following actions would be performed:
+  - remove d 1 [uses c]
+  - remove c 2 [uses b]
+  - remove b 1
+===== 3 to remove =====
+### opam unpin b --no-action
+Ok, b is no longer pinned locally (version 1)
 ### opam upgrade
 The following actions will be performed:
   - remove  d 1      [uses c]
