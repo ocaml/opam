@@ -317,7 +317,7 @@ The following actions would be performed:
   - recompile d 1      [uses c]
 ===== 3 to recompile | 1 to upgrade =====
 ### opam unpin b --show
-Ok, b is no longer pinned locally (version 1)
+Ok, b would no longer be pinned locally (version 1)
 The following actions would be performed:
   - remove d 1 [uses c]
   - remove c 2 [uses b]

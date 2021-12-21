@@ -68,59 +68,49 @@ let compute_upgrade_t
     ~all atoms t =
   let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
   let atoms =
-    List.map (function
-        | (n,None) when strict_upgrade ->
-          (* force strict upgrade for unchanged, non dev or pinned packages
-             (strict update makes no sense for pinned packages which have
-             a fixed version) *)
-          (try
-             let nv = OpamSwitchState.find_installed_package_by_name t n in
-             if OpamSwitchState.is_dev_package t nv ||
-                OpamPackage.has_name t.pinned n ||
-                OpamPackage.Set.mem nv (Lazy.force t.reinstall)
-             then (n, None)
-             else
-             let atom = (n, Some (`Gt, nv.version)) in
-             if OpamPackage.Set.exists
-                 (fun nv ->
-                    OpamFormula.check atom nv &&
-                    (not (OpamFile.OPAM.has_flag Pkgflag_AvoidVersion (OpamSwitchState.opam t nv)) ||
-                     OpamSwitchState.can_upgrade_to_avoid_version (OpamPackage.name nv) t))
-                 (Lazy.force t.available_packages)
-             then atom
-             else (n, None)
-           with Not_found -> (n,None))
-        | atom -> atom
-      ) atoms in
-  let requested_installed, not_installed =
-    List.fold_left (fun (packages, not_installed) (n,_ as atom) ->
-        try
-          let nv =
-            OpamPackage.Set.find (fun nv -> nv.name = n)
-              t.installed in
-          OpamPackage.Set.add nv packages, not_installed
-        with Not_found ->
-          packages, atom :: not_installed)
-      (OpamPackage.Set.empty,[]) atoms in
-  let to_install =
-    if only_installed || not_installed = [] then [] else
-    if auto_install ||
-       OpamConsole.confirm "%s %s not installed. Install %s?"
+    if strict_upgrade then
+      List.map (fun (n, cstr as atom) ->
+          if cstr <> None then atom else
+          try
+            let nv = OpamSwitchState.find_installed_package_by_name t n in
+            let strict_upgrade_atom = (n, Some (`Gt, nv.version)) in
+            if not (OpamSwitchState.is_dev_package t nv) &&
+               not (OpamPackage.has_name t.pinned n) &&
+               not (OpamPackage.Set.mem nv (Lazy.force t.reinstall)) &&
+               OpamPackage.Set.exists
+                 (not @* OpamSwitchState.avoid_version t)
+                 (OpamFormula.packages_of_atoms
+                    (Lazy.force t.available_packages)
+                    [strict_upgrade_atom])
+            then strict_upgrade_atom
+            else atom
+          with Not_found -> atom)
+        atoms
+    else
+      atoms
+  in
+  let installed, not_installed =
+    List.partition (fun (n,_) -> OpamPackage.has_name t.installed n) atoms
+  in
+  let atoms =
+    if not_installed = [] ||
+       auto_install ||
+       not only_installed &&
+       OpamConsole.confirm
+         (match not_installed with
+          | [_] -> "%s is not installed. Install it?"
+          | _ -> "%s are not installed. Install them?")
          (OpamStd.Format.pretty_list
             (List.rev_map OpamFormula.short_string_of_atom not_installed))
-         (match not_installed with [_] -> "is" | _ -> "are")
-         (match not_installed with [_] -> "it" | _ -> "them")
-    then not_installed
-    else []
+    then atoms
+    else installed
   in
-  let upgrade_atoms to_upgrade =
-    (* packages corresponds to the currently installed versions.
-       Not what we are interested in, recover the original atom constraints *)
-    List.map (fun nv ->
-        let name = nv.name in
-        try name, List.assoc name atoms
-        with Not_found -> name, None)
-      (OpamPackage.Set.elements to_upgrade)
+  let to_install, to_upgrade =
+    List.partition (fun (n,_) ->
+        match OpamPackage.package_of_name_opt t.installed n with
+        | None -> true
+        | Some nv -> not (OpamPackage.Set.mem nv (Lazy.force t.available_packages)))
+      atoms
   in
   if all then
     names,
@@ -129,7 +119,7 @@ let compute_upgrade_t
       ~reinstall:(Lazy.force t.reinstall)
       (OpamSolver.request
          ~install:to_install
-         ~upgrade:(upgrade_atoms requested_installed)
+         ~upgrade:to_upgrade
          ~all:[]
          ~criteria:`Upgrade ())
   else
@@ -138,7 +128,7 @@ let compute_upgrade_t
     ~requested:names
     (OpamSolver.request
        ~install:to_install
-       ~upgrade:(upgrade_atoms requested_installed)
+       ~upgrade:to_upgrade
        ())
 
 let upgrade_t
@@ -1462,19 +1452,14 @@ module PIN = struct
     let st = unpin st names in
     let installed_unpinned = (pinned_before -- st.pinned) %% st.installed in
     if action && not (OpamPackage.Set.is_empty installed_unpinned) then
-      let upgrade =
-        OpamPackage.Set.fold (fun nv acc -> (nv.name, None) :: acc)
-          (installed_unpinned %% Lazy.force st.available_packages) []
-      in
       let all =
         OpamPackage.Set.fold (fun nv acc -> (nv.name, None) :: acc)
-          (installed_unpinned -- Lazy.force st.available_packages)
-          upgrade
+          installed_unpinned []
       in
       let st, solution =
         OpamSolution.resolve_and_apply st Upgrade
           ~requested:(OpamPackage.Name.Set.of_list names)
-          (OpamSolver.request ~upgrade ~all ())
+          (OpamSolver.request ~all ())
       in
       OpamSolution.check_solution st solution;
       st
