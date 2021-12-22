@@ -78,7 +78,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## State
-  *
+  * Actually allow multiple state caches to co-exist [#4934 @dra27 - fix #4554 properly this time]
 
 # Opam file format
   *

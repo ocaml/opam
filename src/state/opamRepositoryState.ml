@@ -36,8 +36,7 @@ module Cache = struct
     in
     List.iter remove_cache_file (OpamFilename.files cache_dir)
 
-  let save rt =
-    let file = OpamPath.state_cache rt.repos_global.root in
+  let marshall rt =
     (* Repository without remote are not cached, they are intended to be
        manually edited *)
     let filter_out_nourl repos_map =
@@ -49,7 +48,6 @@ module Cache = struct
            with Not_found -> false)
         repos_map
     in
-    let t =
       { cached_repofiles =
           OpamRepositoryName.Map.bindings
             (filter_out_nourl rt.repos_definitions);
@@ -57,9 +55,16 @@ module Cache = struct
           OpamRepositoryName.Map.bindings
             (filter_out_nourl rt.repo_opams);
       }
-    in
+
+  let file rt =
+    OpamPath.state_cache rt.repos_global.root
+
+  let save rt =
     remove ();
-    C.save file t
+    C.save (file rt) (marshall rt)
+
+  let save_new rt =
+    C.save (file rt) (marshall rt)
 
   let load root =
     let file = OpamPath.state_cache root in
@@ -231,7 +236,7 @@ let load lock_kind gt =
         repos_map (OpamRepositoryName.Map.empty, OpamRepositoryName.Map.empty)
     in
     let rt = make_rt repofiles opams in
-    Cache.save rt;
+    Cache.save_new rt;
     rt
 
 let find_package_opt rt repo_list nv =
