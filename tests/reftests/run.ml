@@ -150,20 +150,18 @@ let str_replace_path ?escape whichway filters s =
   in
   List.fold_left (fun s (re, by) ->
       let re_path = Re.(
-          seq [re; group (rep (diff any space))]
+          seq [re; group (rep (diff any (alt [set ":;$\"'"; space])))]
         ) in
       match by with
       | Sed by ->
-        Re.replace (Re.compile re_path) s
-          ~f:(fun g ->
-              escape (by ^ whichway (Re.Group.(get g (nb_groups g - 1)))))
+        Re.replace (Re.compile re_path) s ~f:(fun g ->
+            escape (by ^ whichway (Re.Group.(get g (nb_groups g - 1)))))
       | Grep | GrepV ->
-        let way = if by = Grep then fun x -> x else not in
-        if way @@ Re.execp (Re.compile re) s then s else "\\c")
+        if (by = Grep) = Re.execp (Re.compile re) s then s else "\\c")
     s filters
 
 let filters_of_var =
-  List.rev_map (fun (v, x) ->
+  List.map (fun (v, x) ->
       Re.(alt [seq [str "${"; str v; str "}"];
                seq [char '$'; str v; eow]];),
       Sed x)
@@ -383,7 +381,7 @@ module Parse = struct
     let posix_re re =
       try Posix.re (get_str re)
       with Posix.Parse_error ->
-        failwith (Printf.sprintf "Parse error: %s" re)
+        failwith (Printf.sprintf "Bad POSIX regexp: %s" re)
     in
     let rec get_args_rewr acc = function
       | [] -> List.rev acc, false, [], None
@@ -458,18 +456,11 @@ let common_filters ?opam dir =
    ] @
    (match opam with
     | None -> []
-    | Some opam -> [ str opam, Sed "${OPAMBIN}" ])
+    | Some opam -> [ str opam, Sed "${OPAM}" ])
 
 let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
-  let filter = common_filters ~opam dir @ filter in
-  let opamroot = Filename.concat dir "OPAM" in
-  let env_vars = [
-    "OPAM", opam;
-    "OPAMROOT", opamroot;
-    "BASEDIR", dir;
-  ] @ vars
-  in
-  let var_filters = filters_of_var env_vars in
+  let filter = filter @ common_filters ~opam dir in
+  let var_filters = filters_of_var vars in
   let cmd = if cmd = "opam" then opam else cmd in
   let args =
     List.map (fun a ->
@@ -482,7 +473,7 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
         Parse.get_str expanded)
       args
   in
-  try command ~vars:env_vars ~filter ~silent cmd args, None
+  try command ~vars ~filter ~silent cmd args, None
   with Command_failure (n,_, out) -> out, Some n
 
 let write_file ~path ~contents =
@@ -566,6 +557,12 @@ let run_test ?(vars=[]) ~opam t =
   with_temp_dir @@ fun dir ->
   let old_cwd = Sys.getcwd () in
   let opamroot = Filename.concat dir "OPAM" in
+  let vars = [
+    "OPAM", opam;
+    "OPAMROOT", opamroot;
+    "BASEDIR", dir;
+  ] @ vars
+  in
   if Sys.win32 then
     ignore @@ command ~allowed_codes:[0; 1] ~silent:true
       "robocopy"
