@@ -557,12 +557,6 @@ let run_test ?(vars=[]) ~opam t =
   with_temp_dir @@ fun dir ->
   let old_cwd = Sys.getcwd () in
   let opamroot = Filename.concat dir "OPAM" in
-  let vars = [
-    "OPAM", opam;
-    "OPAMROOT", opamroot;
-    "BASEDIR", dir;
-  ] @ vars
-  in
   if Sys.win32 then
     ignore @@ command ~allowed_codes:[0; 1] ~silent:true
       "robocopy"
@@ -571,6 +565,12 @@ let run_test ?(vars=[]) ~opam t =
     ignore @@ command "cp" ["-PR"; opamroot0; opamroot];
   Sys.chdir dir;
   let dir = Sys.getcwd () in (* because it may need to be normalised on macOS *)
+  let vars = [
+    "OPAM", opam;
+    "OPAMROOT", opamroot;
+    "BASEDIR", dir;
+  ] @ vars
+  in
   if t.repo_hash = no_opam_repo then
     (mkdir_p (default_repo^"/packages");
      write_file ~path:(default_repo^"/repo") ~contents:{|opam-version: "2.0"|};
