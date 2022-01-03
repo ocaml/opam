@@ -578,7 +578,7 @@ let run_test ?(vars=[]) ~opam t =
       "robocopy"
       ["/e"; "/copy:dat"; "/dcopy:dat"; "/sl"; opamroot0; opamroot]
   else
-    ignore @@ command "cp" ["-a"; opamroot0; opamroot];
+    ignore @@ command "cp" ["-PR"; opamroot0; opamroot];
   Sys.chdir dir;
   let dir = Sys.getcwd () in (* because it may need to be normalised on macOS *)
   if t.repo_hash = no_opam_repo then

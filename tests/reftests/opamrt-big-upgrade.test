@@ -1,0 +1,404 @@
+7090735c9d
+### OPAMYES=true
+### <init.export>
+opam-version: "2.0"
+roots: [
+  "async.109.42.00"
+  "async_graphics.0.5.1"
+  "base-bigarray.base"
+  "base-threads.base"
+  "base-unix.base"
+  "cohttp.0.9.11"
+  "core.109.47.00"
+  "core_bench.109.47.00"
+  "core_extended.109.47.00"
+  "cow.0.7.0"
+  "cryptokit.1.9"
+  "ctypes.0.2.2"
+  "github.0.6.1"
+  "lwt.2.4.4"
+  "menhir.20130912"
+  "mirari.0.9.7"
+  "mpp.0.1.3"
+  "omd.0.7.5"
+  "tuntap.0.7.0"
+  "utop.1.8"
+  "yojson.1.1.6"
+]
+installed: [
+  "async.109.42.00"
+  "async_core.109.47.00"
+  "async_extra.109.47.00"
+  "async_graphics.0.5.1"
+  "async_unix.109.47.00"
+  "atd.1.0.3"
+  "atdgen.1.2.4"
+  "base-bigarray.base"
+  "base-threads.base"
+  "base-unix.base"
+  "bin_prot.109.47.00"
+  "biniou.1.0.6"
+  "camomile.0.8.5"
+  "cmdliner.0.9.2"
+  "cohttp.0.9.11"
+  "comparelib.109.27.00"
+  "core.109.47.00"
+  "core_bench.109.47.00"
+  "core_extended.109.47.00"
+  "core_kernel.109.47.00"
+  "cow.0.7.0"
+  "cppo.0.9.3"
+  "cryptokit.1.9"
+  "cstruct.0.8.1"
+  "ctypes.0.2.2"
+  "custom_printf.109.27.00"
+  "dyntype.0.9.0"
+  "easy-format.1.0.1"
+  "fd-send-recv.1.0.1"
+  "fieldslib.109.20.00"
+  "github.0.6.1"
+  "herelib.109.35.00"
+  "ipaddr.0.2.3"
+  "lambda-term.1.5"
+  "lwt.2.4.4"
+  "menhir.20130912"
+  "mirari.0.9.7"
+  "mpp.0.1.3"
+  "ocamlfind.1.4.0"
+  "ocplib-endian.0.4"
+  "omd.0.7.5"
+  "optcomp.1.4"
+  "ounit.2.0.0"
+  "pa_ounit.109.36.00"
+  "pipebang.109.28.00"
+  "re.1.2.1"
+  "re2.109.45.02"
+  "react.0.9.4"
+  "res.4.0.3"
+  "sexplib.109.47.00"
+  "ssl.0.4.6"
+  "textutils.109.36.00"
+  "tuntap.0.7.0"
+  "type_conv.109.47.00"
+  "ulex.1.1"
+  "uri.1.3.11"
+  "utop.1.8"
+  "variantslib.109.15.00"
+  "xmlm.1.2.0"
+  "yojson.1.1.6"
+  "zed.1.2"
+]
+### opam switch import init.export --switch test-import --fake
+The following actions will be faked:
+  - install base-unix           base
+  - install ocaml-base-compiler 4.01.0beta1 [required by ocaml]
+  - install base-bigarray       base
+  - install base-threads        base
+  - install ocaml               4.01.0beta1 [required by yojson, variantslib, uri, etc.]
+  - install ocamlfind           1.4.0
+  - install cppo                0.9.3
+  - install xmlm                1.2.0
+  - install ulex                1.1
+  - install type_conv           109.47.00
+  - install ssl                 0.4.6
+  - install res                 4.0.3
+  - install react               0.9.4
+  - install re                  1.2.1
+  - install pipebang            109.28.00
+  - install ounit               2.0.0
+  - install optcomp             1.4
+  - install omd                 0.7.5
+  - install mpp                 0.1.3
+  - install menhir              20130912
+  - install ipaddr              0.2.3
+  - install herelib             109.35.00
+  - install fd-send-recv        1.0.1
+  - install easy-format         1.0.1
+  - install ctypes              0.2.2
+  - install cryptokit           1.9
+  - install cmdliner            0.9.2
+  - install camomile            0.8.5
+  - install variantslib         109.15.00
+  - install sexplib             109.47.00
+  - install fieldslib           109.20.00
+  - install dyntype             0.9.0
+  - install comparelib          109.27.00
+  - install bin_prot            109.47.00
+  - install lwt                 2.4.4
+  - install uri                 1.3.11
+  - install pa_ounit            109.36.00
+  - install ocplib-endian       0.4
+  - install tuntap              0.7.0
+  - install biniou              1.0.6
+  - install atd                 1.0.3
+  - install zed                 1.2
+  - install cow                 0.7.0
+  - install custom_printf       109.27.00
+  - install core_kernel         109.47.00
+  - install mirari              0.9.7
+  - install yojson              1.1.6
+  - install lambda-term         1.5
+  - install core                109.47.00
+  - install atdgen              1.2.4
+  - install utop                1.8
+  - install textutils           109.36.00
+  - install re2                 109.45.02
+  - install async_core          109.47.00
+  - install core_bench          109.47.00
+  - install core_extended       109.47.00
+  - install async_unix          109.47.00
+  - install async_extra         109.47.00
+  - install async               109.42.00
+  - install cstruct             0.8.1
+  - install async_graphics      0.5.1
+  - install cohttp              0.9.11
+  - install github              0.6.1
+===== 63 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.01.0beta1
+Faking installation of ocaml.4.01.0beta1
+Faking installation of cppo.0.9.3
+Faking installation of ocamlfind.1.4.0
+Faking installation of camomile.0.8.5
+Faking installation of cmdliner.0.9.2
+Faking installation of cryptokit.1.9
+Faking installation of ctypes.0.2.2
+Faking installation of easy-format.1.0.1
+Faking installation of biniou.1.0.6
+Faking installation of fd-send-recv.1.0.1
+Faking installation of herelib.109.35.00
+Faking installation of ipaddr.0.2.3
+Faking installation of menhir.20130912
+Faking installation of atd.1.0.3
+Faking installation of mpp.0.1.3
+Faking installation of omd.0.7.5
+Faking installation of optcomp.1.4
+Faking installation of ocplib-endian.0.4
+Faking installation of ounit.2.0.0
+Faking installation of pipebang.109.28.00
+Faking installation of re.1.2.1
+Faking installation of react.0.9.4
+Faking installation of res.4.0.3
+Faking installation of ssl.0.4.6
+Faking installation of lwt.2.4.4
+Faking installation of tuntap.0.7.0
+Faking installation of mirari.0.9.7
+Faking installation of type_conv.109.47.00
+Faking installation of bin_prot.109.47.00
+Faking installation of comparelib.109.27.00
+Faking installation of dyntype.0.9.0
+Faking installation of fieldslib.109.20.00
+Faking installation of pa_ounit.109.36.00
+Faking installation of sexplib.109.47.00
+Faking installation of custom_printf.109.27.00
+Faking installation of ulex.1.1
+Faking installation of uri.1.3.11
+Faking installation of variantslib.109.15.00
+Faking installation of core_kernel.109.47.00
+Faking installation of core.109.47.00
+Faking installation of async_core.109.47.00
+Faking installation of async_unix.109.47.00
+Faking installation of async_extra.109.47.00
+Faking installation of async.109.42.00
+Faking installation of async_graphics.0.5.1
+Faking installation of cstruct.0.8.1
+Faking installation of cohttp.0.9.11
+Faking installation of re2.109.45.02
+Faking installation of textutils.109.36.00
+Faking installation of core_bench.109.47.00
+Faking installation of core_extended.109.47.00
+Faking installation of xmlm.1.2.0
+Faking installation of cow.0.7.0
+Faking installation of yojson.1.1.6
+Faking installation of atdgen.1.2.4
+Faking installation of zed.1.2
+Faking installation of lambda-term.1.5
+Faking installation of github.0.6.1
+Faking installation of utop.1.8
+Done.
+### opam upgrade --fake
+The following actions will be faked:
+  - upgrade   uri            1.3.11 to 1.3.12
+  - upgrade   mpp            0.1.3 to 0.1.4
+  - upgrade   herelib        109.35.00 to 109.35.02
+  - upgrade   pipebang       109.28.00 to 109.28.02
+  - upgrade   atd            1.0.3 to 1.1.0
+  - upgrade   type_conv      109.47.00 to 109.53.02
+  - upgrade   optcomp        1.4 to 1.5
+  - upgrade   res            4.0.3 to 4.0.4
+  - upgrade   utop           1.8 to 1.10
+  - upgrade   ipaddr         0.2.3 to 1.0.0
+  - upgrade   omd            0.7.5 to 0.9.1
+  - upgrade   atdgen         1.2.4 to 1.3.0
+  - upgrade   variantslib    109.15.00 to 109.15.02
+  - upgrade   sexplib        109.47.00 to 109.55.02
+  - upgrade   pa_ounit       109.36.00 to 109.53.02
+  - upgrade   fieldslib      109.20.00 to 109.20.02
+  - upgrade   comparelib     109.27.00 to 109.27.02
+  - upgrade   bin_prot       109.47.00 to 109.53.02
+  - recompile dyntype        0.9.0                  [uses type_conv]
+  - recompile ocplib-endian  0.4                    [uses optcomp]
+  - recompile tuntap         0.7.0                  [uses ipaddr]
+  - install   pa_bench       109.55.02              [required by core_kernel]
+  - upgrade   custom_printf  109.27.00 to 109.27.02
+  - install   typerep        109.55.02              [required by core_kernel]
+  - upgrade   cow            0.7.0 to 0.9.1
+  - recompile mirari         0.9.7                  [uses ipaddr]
+  - upgrade   core_kernel    109.47.00 to 109.55.02
+  - install   pa_test        109.53.02              [required by core, async_core, core_extended]
+  - upgrade   core           109.47.00 to 109.55.02
+  - upgrade   re2            109.45.02 to 109.55.02
+  - upgrade   async_core     109.47.00 to 109.55.02
+  - upgrade   async_unix     109.47.00 to 109.55.02
+  - upgrade   async_extra    109.47.00 to 109.55.02
+  - upgrade   async          109.42.00 to 109.53.02
+  - upgrade   textutils      109.36.00 to 109.53.02
+  - upgrade   cstruct        0.8.1 to 1.0.1
+  - recompile async_graphics 0.5.1                  [uses async]
+  - upgrade   core_extended  109.47.00 to 109.55.02
+  - upgrade   core_bench     109.47.00 to 109.55.02
+  - upgrade   cohttp         0.9.11 to 0.9.14
+  - upgrade   github         0.6.1 to 0.7.0
+===== 3 to install | 5 to recompile | 33 to upgrade =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of atd.1.1.0
+Faking installation of atdgen.1.3.0
+Faking installation of herelib.109.35.02
+Faking installation of ipaddr.1.0.0
+Faking installation of mpp.0.1.4
+Faking installation of omd.0.9.1
+Faking installation of optcomp.1.5
+Faking installation of ocplib-endian.0.4
+Faking installation of pipebang.109.28.02
+Faking installation of res.4.0.4
+Faking installation of tuntap.0.7.0
+Faking installation of mirari.0.9.7
+Faking installation of type_conv.109.53.02
+Faking installation of bin_prot.109.53.02
+Faking installation of comparelib.109.27.02
+Faking installation of dyntype.0.9.0
+Faking installation of fieldslib.109.20.02
+Faking installation of pa_ounit.109.53.02
+Faking installation of pa_bench.109.55.02
+Faking installation of sexplib.109.55.02
+Faking installation of custom_printf.109.27.02
+Faking installation of typerep.109.55.02
+Faking installation of uri.1.3.12
+Faking installation of cow.0.9.1
+Faking installation of utop.1.10
+Faking installation of variantslib.109.15.02
+Faking installation of core_kernel.109.55.02
+Faking installation of pa_test.109.53.02
+Faking installation of core.109.55.02
+Faking installation of async_core.109.55.02
+Faking installation of async_unix.109.55.02
+Faking installation of async_extra.109.55.02
+Faking installation of async.109.53.02
+Faking installation of async_graphics.0.5.1
+Faking installation of cstruct.1.0.1
+Faking installation of cohttp.0.9.14
+Faking installation of github.0.7.0
+Faking installation of re2.109.55.02
+Faking installation of textutils.109.53.02
+Faking installation of core_bench.109.55.02
+Faking installation of core_extended.109.55.02
+Done.
+### opam switch export -
+opam-version: "2.0"
+compiler: ["ocaml-base-compiler.4.01.0beta1"]
+roots: [
+  "async.109.53.02"
+  "async_graphics.0.5.1"
+  "base-bigarray.base"
+  "base-threads.base"
+  "base-unix.base"
+  "cohttp.0.9.14"
+  "core.109.55.02"
+  "core_bench.109.55.02"
+  "core_extended.109.55.02"
+  "cow.0.9.1"
+  "cryptokit.1.9"
+  "ctypes.0.2.2"
+  "github.0.7.0"
+  "lwt.2.4.4"
+  "menhir.20130912"
+  "mirari.0.9.7"
+  "mpp.0.1.4"
+  "omd.0.9.1"
+  "tuntap.0.7.0"
+  "utop.1.10"
+  "yojson.1.1.6"
+]
+installed: [
+  "async.109.53.02"
+  "async_core.109.55.02"
+  "async_extra.109.55.02"
+  "async_graphics.0.5.1"
+  "async_unix.109.55.02"
+  "atd.1.1.0"
+  "atdgen.1.3.0"
+  "base-bigarray.base"
+  "base-threads.base"
+  "base-unix.base"
+  "bin_prot.109.53.02"
+  "biniou.1.0.6"
+  "camomile.0.8.5"
+  "cmdliner.0.9.2"
+  "cohttp.0.9.14"
+  "comparelib.109.27.02"
+  "core.109.55.02"
+  "core_bench.109.55.02"
+  "core_extended.109.55.02"
+  "core_kernel.109.55.02"
+  "cow.0.9.1"
+  "cppo.0.9.3"
+  "cryptokit.1.9"
+  "cstruct.1.0.1"
+  "ctypes.0.2.2"
+  "custom_printf.109.27.02"
+  "dyntype.0.9.0"
+  "easy-format.1.0.1"
+  "fd-send-recv.1.0.1"
+  "fieldslib.109.20.02"
+  "github.0.7.0"
+  "herelib.109.35.02"
+  "ipaddr.1.0.0"
+  "lambda-term.1.5"
+  "lwt.2.4.4"
+  "menhir.20130912"
+  "mirari.0.9.7"
+  "mpp.0.1.4"
+  "ocaml.4.01.0beta1"
+  "ocaml-base-compiler.4.01.0beta1"
+  "ocamlfind.1.4.0"
+  "ocplib-endian.0.4"
+  "omd.0.9.1"
+  "optcomp.1.5"
+  "ounit.2.0.0"
+  "pa_bench.109.55.02"
+  "pa_ounit.109.53.02"
+  "pa_test.109.53.02"
+  "pipebang.109.28.02"
+  "re.1.2.1"
+  "re2.109.55.02"
+  "react.0.9.4"
+  "res.4.0.4"
+  "sexplib.109.55.02"
+  "ssl.0.4.6"
+  "textutils.109.53.02"
+  "tuntap.0.7.0"
+  "type_conv.109.53.02"
+  "typerep.109.55.02"
+  "ulex.1.1"
+  "uri.1.3.12"
+  "utop.1.10"
+  "variantslib.109.15.02"
+  "xmlm.1.2.0"
+  "yojson.1.1.6"
+  "zed.1.2"
+]

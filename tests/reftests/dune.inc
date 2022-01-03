@@ -255,6 +255,74 @@
    (run ./run.exe %{bin:opam} %{dep:opamroot-versions.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-opamrt-big-upgrade)
+ (action
+  (diff opamrt-big-upgrade.test opamrt-big-upgrade.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-opamrt-big-upgrade)))
+
+(rule
+ (targets opamrt-big-upgrade.out)
+ (deps root-7090735c9d)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:opamrt-big-upgrade.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-opamrt-dep-cycle)
+ (action
+  (diff opamrt-dep-cycle.test opamrt-dep-cycle.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-opamrt-dep-cycle)))
+
+(rule
+ (targets opamrt-dep-cycle.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:opamrt-dep-cycle.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-opamrt-reinstall)
+ (action
+  (diff opamrt-reinstall.test opamrt-reinstall.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-opamrt-reinstall)))
+
+(rule
+ (targets opamrt-reinstall.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:opamrt-reinstall.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-orphans)
+ (action
+  (diff orphans.test orphans.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-orphans)))
+
+(rule
+ (targets orphans.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:orphans.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-pat-sub)
  (action
   (diff pat-sub.test pat-sub.out)))
@@ -392,6 +460,26 @@
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
            file://%{dep:opam-repo-009e00fa})))))
+
+(rule
+ (targets opam-archive-7090735c9d.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/7090735c9d.tar.gz)))
+
+(rule
+  (targets opam-repo-7090735c9d)
+  (action
+   (progn
+    (run mkdir -p %{targets})
+    (run tar -C %{targets} -xzf %{dep:opam-archive-7090735c9d.tar.gz} --strip-components=1))))
+
+(rule
+  (targets root-7090735c9d)
+  (action
+   (progn
+    (ignore-stdout
+    (run %{bin:opam} init --root=%{targets}
+           --no-setup --bypass-checks --no-opamrc --bare
+           file://%{dep:opam-repo-7090735c9d})))))
 
 (rule
  (targets opam-archive-ad4dd344.tar.gz)
