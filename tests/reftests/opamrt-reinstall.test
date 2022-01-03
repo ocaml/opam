@@ -128,9 +128,9 @@ Now run 'opam upgrade' to apply any package updates.
 ### : 7/ Upgrade
 ### opam upgrade
 The following actions will be performed:
-  - remove d 1
-  - remove c 1
-  - remove b 1
+  - remove d 1 [uses c]
+  - remove c 1 [uses b]
+  - remove b 1 [no longer available]
 ===== 3 to remove =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>

@@ -43,8 +43,8 @@ The following actions would be performed:
 foo.1
 ### opam upgrade --show
 The following actions would be performed:
-  - remove bar 1
-  - remove foo 1
+  - remove bar 1 [uses foo]
+  - remove foo 1 [no longer available]
 ===== 2 to remove =====
 ### : dependency foo is installed but no longer available
 ### opam upgrade bar
