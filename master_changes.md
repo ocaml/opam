@@ -174,6 +174,7 @@ users)
   * opam root version: add local switch cases [#4763 @rjbou] [2.1.0~rc2 #4715]
   * opam root version: add reinit test casess [#4763 @rjbou] [2.1.0~rc2 #4750]
   * Add & update env tests [#4861 #4841 @rjbou @dra27]
+  * Port opam-rt tests: orphans, dep-cycles, reinstall, and big-upgrade [#4979 @AltGr]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
@@ -190,6 +191,7 @@ users)
   * Add `<pin:path>` header to specify incomplete opam files to pin, it is updated from a template in reftest run (no lint errors) [#4966 @rjbou]
   * Unescape output [#4966 @rjbou]
   * Clean outputs from opam error reporting block [#4966 @rjbou]
+  * Avoid diff when the repo is too old [#4979 @AltGr]
 
 
 ## Github Actions
