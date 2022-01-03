@@ -714,7 +714,7 @@ let update () =
     | Gentoo -> Some ("emerge", ["--sync"])
     | Homebrew -> Some ("brew", ["update"])
     | Macports -> Some ("port", ["sync"])
-    | Suse -> Some ("zypper", ["--non-interactive"; "update"])
+    | Suse -> Some ("zypper", ["--non-interactive"; "refresh"])
     | Freebsd | Netbsd | Openbsd ->
       None
   in
