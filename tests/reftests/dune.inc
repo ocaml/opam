@@ -340,6 +340,23 @@
    (run ./run.exe %{bin:opam} %{dep:pat-sub.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-pin)
+ (action
+  (diff pin.test pin.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-pin)))
+
+(rule
+ (targets pin.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:pin.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-show)
  (action
   (diff show.test show.out)))
