@@ -95,6 +95,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Reftests
 ### Tests
+  * Port opam-rt tests: orphans, dep-cycles, reinstall, and big-upgrade [#4979 @AltGr]
 ### Engine
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
   * Add `BASEDIR` to environement [#4913 @rjbou]
@@ -110,6 +111,7 @@ New option/command/subcommand are prefixed with ◈.
   * Add `<pin:path>` header to specify incomplete opam files to pin, it is updated from a template in reftest run (no lint errors) [#4966 @rjbou]
   * Unescape output [#4966 @rjbou]
   * Clean outputs from opam error reporting block [#4966 @rjbou]
+  * Avoid diff when the repo is too old [#4979 @AltGr]
   * Fix github url: `git://` form no more handled [#5097 @rjbou]
 
 ## Doc
