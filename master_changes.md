@@ -54,7 +54,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## External dependencies
-  *
+  * Stop zypper from upgrading packages on updates on OpenSUSE [#4978 @kit-ty-kate]
 
 ## Sandbox
   *
