@@ -639,6 +639,39 @@ and source_pin
 
     st
 
+let pin_current st nv =
+  let root = st.switch_global.root in
+  let opam =
+    try OpamPackage.Map.find nv st.installed_opams
+    with Not_found ->
+      OpamConsole.error_and_exit `Not_found
+        "No metadata found for %s"
+        (OpamPackage.to_string nv)
+  in
+  let opam =
+    opam |>
+    OpamFile.OPAM.with_name nv.name |>
+    OpamFile.OPAM.with_version nv.version
+  in
+  let overlay =
+    OpamPath.Switch.Overlay.package root st.switch nv.name
+  in
+  OpamFilename.cleandir overlay;
+  OpamFile.OPAM.write_with_preserved_format
+    ~format_from:(OpamPath.Switch.installed_opam root st.switch nv)
+    (OpamPath.Switch.Overlay.opam st.switch_global.root st.switch nv.name)
+    opam;
+  let src = OpamPath.Switch.installed_opam_files_dir root st.switch nv in
+  if OpamFilename.exists_dir src then
+    OpamFilename.copy_dir ~src
+      ~dst:(OpamPath.Switch.Overlay.files root st.switch nv.name);
+  let st = OpamSwitchState.update_pin nv opam st in
+  OpamSwitchAction.write_selections st;
+  OpamConsole.msg "%s is now %s\n"
+    (OpamPackage.Name.to_string nv.name)
+    (string_of_pinned opam);
+  st
+
 (* pure *)
 let unpin_one st nv =
   let st =

@@ -207,6 +207,7 @@ let string_of_cause to_string =
   | Conflicts_with pkgs ->
     Printf.sprintf "conflicts with %s" (list_to_string pkgs)
   | Requested        -> ""
+  | Unavailable      -> "no longer available"
   | Unknown          -> ""
 
 let map_success f = function

@@ -45,7 +45,7 @@ val solution_is_empty: solution -> bool
 val print_solution:
   messages:(package -> string list) ->
   append:(package -> string) ->
-  requested:name_set -> reinstall:package_set ->
+  requested:name_set -> reinstall:package_set -> available:package_set ->
   solution -> unit
 
 (** Serialize a solution *)
