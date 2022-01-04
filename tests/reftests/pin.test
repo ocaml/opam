@@ -28,7 +28,6 @@ Done.
 foo is now pinned locally (version 1)
 ### opam unpin foo
 Ok, foo is no longer pinned locally (version 1)
-Already up-to-date.
 Nothing to do.
 ### rm -rf REPO/packages/foo
 ### opam update
