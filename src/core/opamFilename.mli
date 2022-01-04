@@ -32,7 +32,8 @@ val cwd: unit -> Dir.t
 (** Remove a directory *)
 val rmdir: Dir.t -> unit
 
-(** Cleans the contents of a directory, but keeps the directory in place. *)
+(** Cleans the contents of a directory, but keeps the directory in place.
+    Noop if directory doesn't exists. *)
 val cleandir: Dir.t -> unit
 
 (** Removes an empty directory, as well as any empty leading path components.
