@@ -750,12 +750,63 @@ type explanation =
                   OpamFormula.formula
   ]
 
+module Opam_dose_debug = struct
+  let pp_package fmt pkg =
+    let name = pkg.Cudf.package in
+    let version =
+      match List.assoc_opt "opam-version" pkg.Cudf.pkg_extra with
+      | Some (`String v) -> v
+      | None | Some _ -> "???"
+    in
+    Format.fprintf fmt "%s.%s" name version
+
+  let pp_relop fmt = function
+    | `Eq -> Format.pp_print_string fmt "="
+    | `Neq -> Format.pp_print_string fmt "!="
+    | `Geq -> Format.pp_print_string fmt ">="
+    | `Gt -> Format.pp_print_string fmt ">"
+    | `Leq -> Format.pp_print_string fmt "<="
+    | `Lt -> Format.pp_print_string fmt "<"
+
+  let pp_vpkg fmt = function
+    | pkg, None -> Format.pp_print_string fmt pkg
+    | pkg, Some (relop, n) ->
+      Format.pp_print_string fmt pkg;
+      pp_relop fmt relop;
+      Format.fprintf fmt "%d" n
+
+  let pp_list f fmt = function
+    | [] ->
+      Format.pp_print_string fmt "[]"
+    | x::xs ->
+      Format.fprintf fmt "[%a" f x;
+      List.iter (Format.fprintf fmt ", %a" f) xs;
+      Format.pp_print_string fmt "]"
+
+  let pp_reason fmt = function
+    | Dose_algo.Diagnostic.Conflict (a, b, vpkg) ->
+      Format.fprintf fmt "Conflict (%a, %a, %a)" pp_package a pp_package b pp_vpkg vpkg
+    | Dose_algo.Diagnostic.Dependency (a, vpkglist, pkglist) ->
+      Format.fprintf fmt "Dependency (%a, %a, %a)" pp_package a (pp_list pp_vpkg) vpkglist (pp_list pp_package) pkglist
+    | Dose_algo.Diagnostic.Missing (a, vpkglist) ->
+      Format.fprintf fmt "Missing (%a, %a)" pp_package a (pp_list pp_vpkg) vpkglist
+
+  let pp_reasonlist fmt = function
+    | [] ->
+      Format.pp_print_string fmt "[]"
+    | l ->
+      Format.pp_print_string fmt "[\n";
+      List.iter (Format.fprintf fmt "  %a;\n" pp_reason) l;
+      Format.pp_print_string fmt "]"
+end
+
 let extract_explanations packages cudfnv2opam reasons : explanation list =
   log "Conflict reporting";
   let open Dose_algo.Diagnostic in
   let open Set.Op in
   let module CS = ChainSet in
   (* Definitions and printers *)
+  log ~level:3 "Reasons: %a" Opam_dose_debug.pp_reasonlist reasons;
   let all_opam =
     let add p set =
       if is_artefact p then set
