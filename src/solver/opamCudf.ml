@@ -750,7 +750,7 @@ type explanation =
                   OpamFormula.formula
   ]
 
-module Opam_dose_debug = struct
+module Pp_dose_diagnostic = struct
   let pp_package fmt pkg =
     let name = pkg.Cudf.package in
     let version =
@@ -809,7 +809,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
   let open Set.Op in
   let module CS = ChainSet in
   (* Definitions and printers *)
-  log ~level:3 "Reasons: %a" (Opam_dose_debug.pp_reasonlist cudfnv2opam) reasons;
+  log ~level:3 "Reasons: %a" (Pp_dose_diagnostic.pp_reasonlist cudfnv2opam) reasons;
   let all_opam =
     let add p set =
       if is_artefact p then set
