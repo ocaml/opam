@@ -768,12 +768,15 @@ module Opam_dose_debug = struct
     | `Leq -> Format.pp_print_string fmt "<="
     | `Lt -> Format.pp_print_string fmt "<"
 
-  let pp_vpkg fmt = function
-    | pkg, None -> Format.pp_print_string fmt pkg
-    | pkg, Some (relop, n) ->
-      Format.pp_print_string fmt pkg;
+  let pp_vpkg cudfnv2opam fmt vpkg = match vpkg2atom cudfnv2opam vpkg with
+    | pkg, None ->
+      Format.pp_print_string fmt (OpamPackage.Name.to_string pkg)
+    | pkg, Some (relop, v) ->
+      Format.pp_print_string fmt (OpamPackage.Name.to_string pkg);
       pp_relop fmt relop;
-      Format.fprintf fmt "%d" n
+      Format.pp_print_string fmt (OpamPackage.Version.to_string v)
+    | exception Not_found ->
+      Format.pp_print_string fmt "??"
 
   let pp_list f fmt = function
     | [] ->
@@ -783,20 +786,20 @@ module Opam_dose_debug = struct
       List.iter (Format.fprintf fmt ", %a" f) xs;
       Format.pp_print_string fmt "]"
 
-  let pp_reason fmt = function
+  let pp_reason cudfnv2opam fmt = function
     | Dose_algo.Diagnostic.Conflict (a, b, vpkg) ->
-      Format.fprintf fmt "Conflict (%a, %a, %a)" pp_package a pp_package b pp_vpkg vpkg
+      Format.fprintf fmt "Conflict (%a, %a, %a)" pp_package a pp_package b (pp_vpkg cudfnv2opam) vpkg
     | Dose_algo.Diagnostic.Dependency (a, vpkglist, pkglist) ->
-      Format.fprintf fmt "Dependency (%a, %a, %a)" pp_package a (pp_list pp_vpkg) vpkglist (pp_list pp_package) pkglist
+      Format.fprintf fmt "Dependency (%a, %a, %a)" pp_package a (pp_list (pp_vpkg cudfnv2opam)) vpkglist (pp_list pp_package) pkglist
     | Dose_algo.Diagnostic.Missing (a, vpkglist) ->
-      Format.fprintf fmt "Missing (%a, %a)" pp_package a (pp_list pp_vpkg) vpkglist
+      Format.fprintf fmt "Missing (%a, %a)" pp_package a (pp_list (pp_vpkg cudfnv2opam)) vpkglist
 
-  let pp_reasonlist fmt = function
+  let pp_reasonlist cudfnv2opam fmt = function
     | [] ->
       Format.pp_print_string fmt "[]"
     | l ->
       Format.pp_print_string fmt "[\n";
-      List.iter (Format.fprintf fmt "  %a;\n" pp_reason) l;
+      List.iter (Format.fprintf fmt "  %a;\n" (pp_reason cudfnv2opam)) l;
       Format.pp_print_string fmt "]"
 end
 
@@ -806,7 +809,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
   let open Set.Op in
   let module CS = ChainSet in
   (* Definitions and printers *)
-  log ~level:3 "Reasons: %a" Opam_dose_debug.pp_reasonlist reasons;
+  log ~level:3 "Reasons: %a" (Opam_dose_debug.pp_reasonlist cudfnv2opam) reasons;
   let all_opam =
     let add p set =
       if is_artefact p then set
