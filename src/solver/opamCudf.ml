@@ -750,7 +750,7 @@ type explanation =
                   OpamFormula.formula
   ]
 
-module Pp_dose_diagnostic = struct
+module Pp_explanation = struct
   let pp_package fmt pkg =
     let name = pkg.Cudf.package in
     let version =
@@ -778,7 +778,7 @@ module Pp_dose_diagnostic = struct
     | exception Not_found ->
       Format.pp_print_string fmt "??"
 
-  let pp_list f fmt = function
+  let pp_inline_list f fmt = function
     | [] ->
       Format.pp_print_string fmt "[]"
     | x::xs ->
@@ -790,17 +790,40 @@ module Pp_dose_diagnostic = struct
     | Dose_algo.Diagnostic.Conflict (a, b, vpkg) ->
       Format.fprintf fmt "Conflict (%a, %a, %a)" pp_package a pp_package b (pp_vpkg cudfnv2opam) vpkg
     | Dose_algo.Diagnostic.Dependency (a, vpkglist, pkglist) ->
-      Format.fprintf fmt "Dependency (%a, %a, %a)" pp_package a (pp_list (pp_vpkg cudfnv2opam)) vpkglist (pp_list pp_package) pkglist
+      Format.fprintf fmt "Dependency (%a, %a, %a)" pp_package a (pp_inline_list (pp_vpkg cudfnv2opam)) vpkglist (pp_inline_list pp_package) pkglist
     | Dose_algo.Diagnostic.Missing (a, vpkglist) ->
-      Format.fprintf fmt "Missing (%a, %a)" pp_package a (pp_list (pp_vpkg cudfnv2opam)) vpkglist
+      Format.fprintf fmt "Missing (%a, %a)" pp_package a (pp_inline_list (pp_vpkg cudfnv2opam)) vpkglist
 
-  let pp_reasonlist cudfnv2opam fmt = function
+  let pp_list f fmt = function
     | [] ->
       Format.pp_print_string fmt "[]"
     | l ->
       Format.pp_print_string fmt "[\n";
-      List.iter (Format.fprintf fmt "  %a;\n" (pp_reason cudfnv2opam)) l;
+      List.iter (Format.fprintf fmt "  %a;\n" f) l;
       Format.pp_print_string fmt "]"
+
+  let pp_reasonlist cudfnv2opam fmt l = pp_list (pp_reason cudfnv2opam) fmt l
+
+  let pp_option f fmt = function
+    | None -> Format.pp_print_string fmt "None"
+    | Some x -> Format.fprintf fmt "Some (%a)" f x
+
+  let pp_formula fmt formula =
+    let aux (name, vformula) =
+      let aux (relop, v) =
+        Format.asprintf "%a%s" pp_relop relop (OpamPackage.Version.to_string v)
+      in
+      OpamPackage.Name.to_string name^" {"^OpamFormula.string_of_formula aux vformula^"}"
+    in
+    Format.pp_print_string fmt (OpamFormula.string_of_formula aux formula)
+
+  let pp_explanation fmt = function
+    | `Conflict (x, y, b) ->
+      Format.fprintf fmt "`Conflict (%a, %a, %b)" (pp_option Format.pp_print_string) x (pp_inline_list Format.pp_print_string) y b
+    | `Missing (x, y, formula) ->
+      Format.fprintf fmt "`Missing (%a, %s, %a)" (pp_option Format.pp_print_string) x y pp_formula formula
+
+  let pp_explanationlist fmt l = pp_list pp_explanation fmt l
 end
 
 let extract_explanations packages cudfnv2opam reasons : explanation list =
@@ -809,7 +832,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
   let open Set.Op in
   let module CS = ChainSet in
   (* Definitions and printers *)
-  log ~level:3 "Reasons: %a" (Pp_dose_diagnostic.pp_reasonlist cudfnv2opam) reasons;
+  log ~level:3 "Reasons: %a" (Pp_explanation.pp_reasonlist cudfnv2opam) reasons;
   let all_opam =
     let add p set =
       if is_artefact p then set
@@ -1044,6 +1067,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
         | `Missing (_, sdeps', fdeps') -> sdeps = sdeps' && fdeps = fdeps'
         | _ -> false)
   in
+  log ~level:3 "Explanations: %a" Pp_explanation.pp_explanationlist explanations;
   match explanations with
   | [] ->
     OpamConsole.error_and_exit `Internal_error
