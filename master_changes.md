@@ -160,6 +160,7 @@ users)
 ## Client
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
   * ✘ It is no longer possible to process actions on packages that depend on a package that was removed upstream [#4969 @altgr]
+  * Fix (at least some of the) empty conflict explanations [#4982 @kit-ty-kate]
 
 ## Internal
   * Add license and lowerbounds to opam files [#4714 @kit-ty-kate]
