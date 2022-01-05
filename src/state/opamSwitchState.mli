@@ -253,8 +253,10 @@ val unavailable_reason:
   'a switch_state -> ?default:string -> name * OpamFormula.version_formula ->
   string
 
-(** Returns whether or not the package can be upgraded to a version tagged with avoid-version *)
-val can_upgrade_to_avoid_version : OpamPackage.Name.t -> 'a switch_state -> bool
+(** Returns [true] when the package has the [avoid-version] flag and there isn't
+    already a version with that flag installed (which disables the
+    constraint) *)
+val avoid_version : 'a switch_state -> package -> bool
 
 (** Handle a cache of the opam files of installed packages *)
 module Installed_cache: sig

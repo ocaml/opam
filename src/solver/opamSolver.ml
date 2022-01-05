@@ -271,6 +271,17 @@ let opam2cudf universe version_map packages =
     OpamPackage.Map.map preresolve_deps
       (only_packages universe.u_depends)
   in
+  let depends_map =
+    let unav_dep =
+      OpamFormula.Atom (OpamCudf.unavailable_package_name, (FBool true, None))
+    in
+    OpamPackage.Set.fold (fun nv ->
+        OpamPackage.Map.update nv
+          (fun deps -> OpamFormula.ands [unav_dep; deps])
+          OpamFormula.Empty)
+      (universe.u_installed -- universe.u_available)
+      depends_map
+  in
   let depopts_map =
     OpamPackage.Map.map preresolve_deps
       (only_packages universe.u_depopts)
@@ -381,6 +392,7 @@ let map_request f r =
   { wish_install = f r.wish_install;
     wish_remove  = f r.wish_remove;
     wish_upgrade = f r.wish_upgrade;
+    wish_all = f r.wish_all;
     criteria = r.criteria;
     extra_attributes = r.extra_attributes; }
 
@@ -413,25 +425,14 @@ let cycle_conflict ~version_map univ cycles =
              Action.to_string (map_action OpamCudf.cudf2opam a)))
        cycles)
 
-let resolve universe ~orphans request =
+let resolve universe request =
   log "resolve request=%a" (slog string_of_request) request;
-  let all_packages = universe.u_available ++ universe.u_installed ++ orphans in
+  let all_packages = universe.u_available ++ universe.u_installed in
   let version_map = cudf_versions_map universe all_packages in
   let univ_gen = load_cudf_universe universe ~version_map all_packages in
-  let simple_universe, cudf_orphans =
-    let u = univ_gen ~build:true ~post:true () in
-    let cudf_orphans =
-      OpamPackage.Set.fold (fun nv acc ->
-          let cnv = name_to_cudf nv.name, OpamPackage.Map.find nv version_map in
-          let cp = Cudf.lookup_package u cnv in
-          Cudf.remove_package u cnv;
-          cp :: acc)
-        orphans []
-    in
-    u, cudf_orphans
-  in
-  let add_orphan_packages u =
-    Cudf.load_universe (List.rev_append cudf_orphans (Cudf.get_packages u))
+  let cudf_universe = univ_gen ~depopts:false ~build:true ~post:true () in
+  let requested_names =
+    OpamPackage.Name.Set.of_list (List.map fst request.wish_all)
   in
   let request =
     let extra_attributes =
@@ -442,16 +443,17 @@ let resolve universe ~orphans request =
   in
   let request = cleanup_request universe request in
   let cudf_request = map_request (atom2cudf universe version_map) request in
-  let resolve u req =
+  let invariant_pkg =
+    opam_invariant_package version_map universe.u_invariant
+  in
+  let solution =
     try
-      let invariant_pkg =
-        opam_invariant_package version_map universe.u_invariant
+      Cudf.add_package cudf_universe invariant_pkg;
+      let resp =
+        OpamCudf.resolve ~extern:true ~version_map cudf_universe cudf_request
       in
-      Cudf.add_package u invariant_pkg;
-      let resp = OpamCudf.resolve ~extern:true ~version_map u req in
-      Cudf.remove_package u
-        (invariant_pkg.Cudf.package, invariant_pkg.Cudf.version);
-      OpamCudf.to_actions add_orphan_packages u resp
+      Cudf.remove_package cudf_universe OpamCudf.opam_invariant_package;
+      OpamCudf.to_actions cudf_universe resp
     with OpamCudf.Solver_failure msg ->
       let bt = Printexc.get_raw_backtrace () in
       OpamConsole.error "%s" msg;
@@ -459,7 +461,7 @@ let resolve universe ~orphans request =
         OpamStd.Sys.(Exit (get_exit_code `Solver_failure))
         bt
   in
-  match resolve simple_universe cudf_request with
+  match solution with
   | Conflicts _ as c -> c
   | Success actions ->
     let simple_universe = univ_gen ~depopts:true ~build:false ~post:false () in
@@ -468,6 +470,7 @@ let resolve universe ~orphans request =
       let atomic_actions =
         OpamCudf.atomic_actions
           ~simple_universe ~complete_universe actions in
+      OpamCudf.trim_actions cudf_universe requested_names atomic_actions;
       Success atomic_actions
     with OpamCudf.Cyclic_actions cycles ->
       cycle_conflict ~version_map complete_universe cycles
@@ -788,6 +791,8 @@ let filter_solution filter t =
     t;
   t
 
-let request ?(criteria=`Default) ?(install=[]) ?(upgrade=[]) ?(remove=[]) () =
+let request ?(criteria=`Default) ?(install=[]) ?(upgrade=[]) ?(remove=[])
+    ?(all=install@upgrade@remove) () =
   { wish_install = install; wish_upgrade = upgrade; wish_remove = remove;
+    wish_all = all;
     criteria; extra_attributes = []; }

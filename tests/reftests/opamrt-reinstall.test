@@ -190,17 +190,11 @@ d
 ### : 10/ Reinstall c
 ### : # This used to be allowed, but not anymore
 ### opam reinstall c
-The following actions will be performed:
-  - recompile c 1
-  - recompile d 1 [uses c]
-===== 2 to recompile =====
+  * Missing dependency:
+    - b.1: no longer available
 
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   d.1
--> removed   c.1
--> installed c.1
--> installed d.1
-Done.
+No solution found, exiting
+# Return code 20 #
 ### opam pin b --current
 b is now pinned locally (version 1)
 ### : # Now OK
@@ -323,7 +317,7 @@ The following actions would be performed:
   - recompile d 1      [uses c]
 ===== 3 to recompile | 1 to upgrade =====
 ### opam unpin b --show
-Ok, b is no longer pinned locally (version 1)
+Ok, b would no longer be pinned locally (version 1)
 The following actions would be performed:
   - remove d 1 [uses c]
   - remove c 2 [uses b]
@@ -335,7 +329,7 @@ Ok, b is no longer pinned locally (version 1)
 The following actions will be performed:
   - remove  d 1      [uses c]
   - remove  c 2      [uses b]
-  - remove  b 1      [conflicts with a]
+  - remove  b 1      [no longer available]
   - upgrade a 1 to 2
 ===== 1 to upgrade | 3 to remove =====
 
@@ -358,7 +352,7 @@ a.2
 Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 The following actions will be performed:
-  - downgrade a 2 to 1
+  - downgrade a 2 to 1 [no longer available]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   a.2

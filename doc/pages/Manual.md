@@ -1055,6 +1055,9 @@ files.
       [solver criteria](#configfield-solver-criteria). This can be useful for
       beta releases, or to discourage installation of releases with known bugs.
 
+      Note that this behaviour is disabled when a flagged version of the package
+      is already installed.
+
 - <a id="opamfield-features">
   `features: [ <ident> { <pkgname> { <filtered-package-formula> } ... } { <string> } ... ]`
   </a> (EXPERIMENTAL):

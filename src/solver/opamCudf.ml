@@ -34,6 +34,12 @@ let opam_invariant_package =
 let is_opam_invariant p =
   p.Cudf.package = opam_invariant_package_name
 
+let unavailable_package_name =
+  Dose_common.CudfAdd.encode "=unavailable"
+let unavailable_package_version = 1
+let unavailable_package = unavailable_package_name, unavailable_package_version
+let is_unavailable_package p = p.Cudf.package = unavailable_package_name
+
 let cudf2opam cpkg =
   if is_opam_invariant cpkg then
     OpamConsole.error_and_exit `Internal_error
@@ -933,9 +939,21 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
               msg :: explanations, ct_chains
           | Missing (p, deps) ->
             let ct_chains, csp = cst ~hl_last:false ct_chains p in
-            let fdeps = formula_of_vpkgl cudfnv2opam packages deps in
-            let sdeps = OpamFormula.to_string fdeps in
-            let msg = `Missing (Some csp, sdeps, fdeps) in
+            let msg =
+              if List.exists
+                  (fun (name, _) -> name = unavailable_package_name)
+                  deps
+              then
+                let msg =
+                  Printf.sprintf "%s: no longer available"
+                    (OpamPackage.to_string (cudf2opam p))
+                in
+                `Missing (Some csp, msg, OpamFormula.Empty)
+              else
+              let fdeps = formula_of_vpkgl cudfnv2opam packages deps in
+              let sdeps = OpamFormula.to_string fdeps in
+              `Missing (Some csp, sdeps, fdeps)
+            in
             if List.mem msg explanations then raise Not_found else
               msg :: explanations, ct_chains
           | Dependency _ ->
@@ -1481,9 +1499,9 @@ let resolve ~extern ~version_map universe request =
   in
   resp
 
-let to_actions f universe result =
+let to_actions universe result =
   let aux u1 u2 =
-    let diff = diff (f u1) u2 in
+    let diff = diff u1 u2 in
     actions_of_diff diff
   in
   map_success (aux universe) result
@@ -1555,8 +1573,10 @@ let compute_root_causes g requested reinstall available =
     | Required_by a, Required_by b -> Required_by (a @ b), depth1
     | Use a, Use b -> Use (a @ b), depth1
     | Conflicts_with a, Conflicts_with b -> Conflicts_with (a @ b), depth1
+    | Unavailable, Requested | Requested, Unavailable ->
+      Requested, depth1
+    | Unavailable, _ | _, Unavailable -> Unavailable, depth1
     | Requested, a | a, Requested
-    | Unavailable, a | a, Unavailable
     | Unknown, a | a, Unknown
     | Upstream_changes , a | a, Upstream_changes -> a, depth1
     | _, c -> c, depth1
@@ -1640,6 +1660,21 @@ let compute_root_causes g requested reinstall available =
             | `Change (`Up,_,_) -> true
             | _ -> false)
       else (Map.map (fun _ -> Requested, 0) requested_actions) in
+    let roots2 =
+      make_roots causes Unavailable (function
+          | `Remove p ->
+            not (OpamPackage.Set.mem (cudf2opam p) available)
+          | _ -> false)
+    in
+    get_causes causes (Map.union (fun a _ -> a)  roots roots2) in
+  let causes =
+    (* Compute causes for changed no longer available packages *)
+    let roots =
+      make_roots causes Unavailable (function
+          | `Change (_,p,_) ->
+            not (OpamPackage.Set.mem (cudf2opam p) available)
+          | _ -> false)
+    in
     get_causes causes roots in
   let causes =
     (* Compute causes for remaining upgrades
@@ -1659,14 +1694,6 @@ let compute_root_causes g requested reinstall available =
           | `Reinstall p ->
             (* need_reinstall p is not available here *)
             StringSet.mem p.Cudf.package reinstall_pkgnames
-          | _ -> false)
-    in
-    get_causes causes roots in
-  let causes =
-    (* Compute causes for no longer available packages *)
-    let roots =
-      make_roots causes Unavailable (function
-          | `Remove p -> not (OpamPackage.Set.mem (cudf2opam p) available)
           | _ -> false)
     in
     get_causes causes roots in
@@ -1747,5 +1774,51 @@ let atomic_actions ~simple_universe ~complete_universe root_actions =
   match find_cycles g with
   | [] -> g
   | cycles -> raise (Cyclic_actions cycles)
+
+let trim_actions univ req g =
+  if OpamPackage.Name.Set.is_empty req then () else
+  let post_dependencies_map =
+    let packages_actions =
+      ActionGraph.fold_vertex (fun a ->
+          Map.update (action_contents a) (Action.Set.add a) Action.Set.empty)
+        g Map.empty
+    in
+    let univ =
+      Cudf.load_universe @@ Cudf.get_packages univ
+        ~filter:(fun p -> Map.mem p packages_actions)
+    in
+    let deps univ p =
+      let p = Cudf.lookup_package univ (p.Cudf.package, p.Cudf.version) in
+      List.fold_right (List.fold_right Set.add)
+        (Dose_common.CudfAdd.who_depends univ p)
+        Set.empty
+    in
+    ActionGraph.fold_vertex (fun a ->
+        Action.Map.add a
+          (Set.fold (fun p -> Action.Set.union (Map.find p packages_actions))
+             (deps univ (action_contents a)) Action.Set.empty))
+      g Action.Map.empty
+  in
+  let root_actions, other_actions =
+    ActionGraph.fold_vertex (fun a (root,other) ->
+        let pkg = action_contents a in
+        let name =
+          OpamPackage.Name.of_string (Cudf.lookup_package_property pkg s_source)
+        in
+        if OpamPackage.Name.Set.mem name req
+        then Action.Set.add a root, other
+        else root, Action.Set.add a other)
+      g Action.Set.(empty, empty)
+  in
+  let connex_actions =
+    Action.Set.fixpoint (fun a ->
+        ActionGraph.fold_succ Action.Set.add g a @@
+        ActionGraph.fold_pred Action.Set.add g a @@
+        Action.Map.find a post_dependencies_map)
+      root_actions
+  in
+  let discard_actions = Action.Set.diff other_actions connex_actions in
+  log "Removed unrelated actions: %s" (Action.Set.to_string discard_actions);
+  Action.Set.iter (ActionGraph.remove_vertex g) discard_actions
 
 let packages u = Cudf.get_packages u

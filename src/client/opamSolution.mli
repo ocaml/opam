@@ -18,7 +18,6 @@ open OpamStateTypes
 val resolve:
   'a switch_state ->
   user_action ->
-  orphans:package_set ->
   ?reinstall:package_set ->
   requested:name_set ->
   atom request ->
@@ -48,7 +47,6 @@ val resolve_and_apply:
   ?ask:bool ->
   rw switch_state ->
   user_action ->
-  orphans:package_set ->
   ?reinstall:package_set ->
   requested:OpamPackage.Name.Set.t ->
   ?add_roots:OpamPackage.Name.Set.t ->
@@ -104,8 +102,10 @@ val fuzzy_name: 'a switch_state -> name -> name
 (** Takes a "raw" list of atoms (from the user), and match it to existing
     packages. Match packages with the wrong capitalisation, and raises errors on
     non-existing packages, and unavailable ones unless [permissive] is set.
+    [installed] additionally accepts installed, but unavailable packages.
     Exits with a message on error. *)
-val sanitize_atom_list: ?permissive: bool -> 'a switch_state -> atom list -> atom list
+val sanitize_atom_list: ?permissive: bool -> ?installed: bool ->
+  'a switch_state -> atom list -> atom list
 
 (** {2 Stats} *)
 val sum: stats -> int

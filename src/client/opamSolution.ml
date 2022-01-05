@@ -171,11 +171,10 @@ let check_availability ?permissive t set atoms =
     then Some (OpamSwitchState.not_found_message t atom)
     else
     let f = name, match cstr with None -> Empty | Some c -> Atom c in
-    Some (Printf.sprintf "%s %s"
+    Some (Printf.sprintf "%s: %s"
             (OpamFormula.to_string (Atom f))
             (OpamSwitchState.unavailable_reason
-               ~default:"unavailable for unknown reasons (this may be a bug in \
-                         opam)"
+               ~default:"the package no longer exists"
                t f)) in
   let errors = OpamStd.List.filter_map check_atom atoms in
   if errors <> [] then
@@ -197,14 +196,16 @@ let fuzzy_name t name =
   | [name] -> name
   | _ -> name
 
-let sanitize_atom_list ?(permissive=false) t atoms =
+let sanitize_atom_list ?(permissive=false) ?(installed=false) t atoms =
   let atoms = List.map (fun (name,cstr) -> fuzzy_name t name, cstr) atoms in
+  let open OpamPackage.Set.Op in
   if permissive then
     check_availability ~permissive t
-      (OpamPackage.Set.union t.packages t.installed) atoms
+      (t.packages ++ t.installed) atoms
   else
     check_availability t
-      (OpamPackage.Set.union (Lazy.force t.available_packages) t.installed)
+      (if installed then t.installed ++ Lazy.force t.available_packages
+       else Lazy.force t.available_packages)
       atoms;
   atoms
 
@@ -242,6 +243,7 @@ module Json = struct
         "install", `A (atoms request.wish_install);
         "remove", `A (atoms request.wish_remove);
         "upgrade", `A (atoms request.wish_upgrade);
+        "all", `A (atoms request.wish_all);
         "criteria", `String (OpamSolverConfig.criteria request.criteria);
       ]
     in
@@ -1274,7 +1276,7 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
       t, Aborted
   )
 
-let resolve t action ~orphans ?reinstall ~requested request =
+let resolve t action ?reinstall ~requested request =
   if OpamClientConfig.(!r.json_out <> None) then (
     OpamJson.append "command-line"
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));
@@ -1285,13 +1287,13 @@ let resolve t action ~orphans ?reinstall ~requested request =
     OpamSwitchState.universe t ~requested ?reinstall action
   in
   Json.output_request request action;
-  let r = OpamSolver.resolve universe ~orphans request in
+  let r = OpamSolver.resolve universe request in
   Json.output_solution t r;
   r
 
-let resolve_and_apply ?ask t action ~orphans ?reinstall ~requested ?add_roots
+let resolve_and_apply ?ask t action ?reinstall ~requested ?add_roots
     ?(assume_built=false) ?download_only ?force_remove request =
-  match resolve t action ~orphans ?reinstall ~requested request with
+  match resolve t action ?reinstall ~requested request with
   | Conflicts cs ->
     log "conflict!";
     OpamConsole.msg "%s"

@@ -568,7 +568,9 @@ let load lock_kind gt rt switch =
     Lazy.force sys_packages_changed
   ) in
   let invalidated = lazy (
-    Lazy.force ext_files_changed ++ Lazy.force sys_packages_changed
+    Lazy.force changed ++
+    Lazy.force ext_files_changed ++
+    Lazy.force sys_packages_changed
     -- Lazy.force available_packages
   ) in
   let st = {
@@ -836,11 +838,13 @@ let get_conflicts st packages opams_map =
     (fun package -> OpamPackageVar.resolve_switch ~package st)
     packages opams_map
 
-let can_upgrade_to_avoid_version name st =
-  OpamPackage.Set.exists (fun pkg ->
-      OpamPackage.Name.equal (OpamPackage.name pkg) name &&
-      OpamFile.OPAM.has_flag Pkgflag_AvoidVersion (OpamPackage.Map.find pkg st.opams)
-    ) st.installed
+let avoid_version st nv =
+  let open OpamStd.Option.Op in
+  OpamFile.OPAM.has_flag Pkgflag_AvoidVersion (opam st nv) &&
+  not ((OpamPackage.package_of_name_opt st.installed nv.name >>=
+        (fun nv -> OpamPackage.Map.find_opt nv st.installed_opams) >>|
+        OpamFile.OPAM.has_flag Pkgflag_AvoidVersion)
+       +! false)
 
 let universe st
     ?(test=OpamStateConfig.(!r.build_test))
@@ -923,7 +927,9 @@ let universe st
       |> OpamFormula.packages st.packages
     in
     let requested_deps =
-      OpamPackage.Set.fixpoint resolve_deps requested_allpkgs
+      if false (*OpamStateConfig.(!r.skip_reinstalls)*)
+      then requested_allpkgs
+      else OpamPackage.Set.fixpoint resolve_deps requested_allpkgs
     in
     requested_deps %% Lazy.force st.reinstall ++
     match reinstall with
@@ -939,12 +945,7 @@ let universe st
       OpamPackage.Set.empty
   in
   let avoid_versions =
-    OpamPackage.Map.fold (fun nv opam acc ->
-        if OpamFile.OPAM.has_flag Pkgflag_AvoidVersion opam &&
-           not (can_upgrade_to_avoid_version (OpamFile.OPAM.name opam) st)
-        then OpamPackage.Set.add nv acc else acc)
-      st.opams
-      OpamPackage.Set.empty
+    OpamPackage.Set.filter (avoid_version st) u_available
   in
   let u =
 {
