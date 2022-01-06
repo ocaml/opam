@@ -16,14 +16,15 @@
        initialised with that repo as "default"
      * or N0REP0 for no dependency on opam repository, and an opamroot is
        already initialised with an empty `default` repository in `./REPO`
-       directory, that you need to populate and not forget to run `opam update`
+       directory, that you need to populate
    - 'opam' is automatically redirected to the correct binary
    - the command prefix is `### `
    - use `### <FILENAME>`, then the contents below to create a file verbatim
    - use `### <pkg:NAME.VERSION>`, then the contents of an opam file below to
      add this package to `default` repository in `./REPO`
    - use `### <pkg:NAME.VERSION:FILENAME>`, then the contents below to add this
-     file as a extra-file of the given package in the `default` repository
+     file as a extra-file of the given package in the `default` repository, and
+     implicitely run `opam update default`
    - use `### <pin:path>`, then the contents below to create a minimal opam
      file, it is extended by template defined fields to pin it without lint
      errors
@@ -284,6 +285,7 @@ let rec with_temp_dir f =
 
 type command =
   | File_contents of string
+  | Repo_pkg_file_contents of string
   | Pin_file_content of string
   | Cat of { files: string list;
              filter: (Re.t * filt_sort) list; }
@@ -351,22 +353,20 @@ module Parse = struct
       if String.length str > 4 && String.sub str 1 4 = "pin:" then
         Pin_file_content (String.sub str 5 (String.length str - 6))
       else
-      let f =
-        try
-          let grs = exec (compile re_package) str in
-          let name = Group.get grs 1 in
-          let version = Group.get grs 2 in
-          try
-            let files = Group.get grs 3 in
-            Printf.sprintf "%s/packages/%s/%s.%s/files/%s"
-              default_repo name name version files
-          with Not_found ->
-            Printf.sprintf "%s/packages/%s/%s.%s/opam"
-              default_repo name name version
-        with Not_found ->
-          String.sub str 1 (String.length str - 2)
-      in
-      File_contents f
+      try
+        let grs = exec (compile re_package) str in
+        let name = Group.get grs 1 in
+        let version = Group.get grs 2 in
+        Repo_pkg_file_contents
+          (try
+             let files = Group.get grs 3 in
+             Printf.sprintf "%s/packages/%s/%s.%s/files/%s"
+               default_repo name name version files
+           with Not_found ->
+             Printf.sprintf "%s/packages/%s/%s.%s/opam"
+               default_repo name name version)
+      with Not_found ->
+        File_contents (String.sub str 1 (String.length str - 2))
     else if str.[0] = ':' || str.[0] = '#' then
       Comment str
     else
@@ -605,6 +605,13 @@ let run_test ?(vars=[]) ~opam t =
           let contents = String.concat "\n" out ^ "\n" in
           write_file ~path ~contents;
           print_string contents;
+          vars
+        | Repo_pkg_file_contents path ->
+          let contents = String.concat "\n" out ^ "\n" in
+          write_file ~path ~contents;
+          print_string contents;
+          ignore @@ run_cmd ~opam ~dir ~vars ~silent:true
+            "opam" ["update"; "default"];
           vars
         | Pin_file_content path ->
           let open OpamParserTypes.FullPos in

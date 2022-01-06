@@ -5,11 +5,6 @@ flags: compiler
 ### <pkg:baz.2>
 opam-version: "2.0"
 flags: compiler
-### opam update default
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam option depext=false
 Set to 'false' the field depext in global configuration
 ### opam switch install cli-versioning --empty
@@ -101,11 +96,6 @@ build-env: [OPAMCLI = "2.1"]
 build: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.1'"]
 install: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.1'"]
 remove: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.1'"]
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam switch set-invariant --formula "[]"
 The switch invariant was set to []
 ### opam install env-2-0

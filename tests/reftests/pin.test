@@ -6,11 +6,6 @@ N0REP0
 ### <pkg:foo.1>
 opam-version:"2.0"
 build: [ "echo" "foo" ]
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam pin --current foo
 [ERROR] foo is not installed, invalid flag `--current'
 # Return code 2 #

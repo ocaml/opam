@@ -19,11 +19,6 @@ install: [ "mkdir" _:lib ]
 depends: "a" {= version}
 build:   [ "test" "-d" a:lib ]
 remove:  [ "test" "-d" a:lib ]
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam switch create system --empty
 ### opam install a.1
 The following actions will be performed:
