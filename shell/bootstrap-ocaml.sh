@@ -157,8 +157,8 @@ else
   PREFIX=`cd .. ; pwd`/ocaml
   if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
     ./configure --prefix "${PREFIX}" $BOOTSTRAP_EXTRA_OPTS --disable-stdlib-manpages
-    ${MAKE:-make} world
-    ${MAKE:-make} $BOOTSTRAP_OPT_TARGET
+    ${MAKE:-make} -j world
+    ${MAKE:-make} -j $BOOTSTRAP_OPT_TARGET
     ${MAKE:-make} install
   fi
   OCAMLLIB=${PREFIX}/lib/ocaml
