@@ -7,15 +7,15 @@ RUN apk add gcc g++ make coreutils openssl
 
 RUN addgroup -S opam && adduser -S opam -G opam -s /bin/sh
 
-ADD https://caml.inria.fr/pub/distrib/ocaml-4.12/ocaml-4.12.0.tar.gz /root/
+ADD https://caml.inria.fr/pub/distrib/ocaml-4.13/ocaml-4.13.1.tar.gz /root/
 
 WORKDIR /root
-RUN tar xzf ocaml-4.12.0.tar.gz
-WORKDIR ocaml-4.12.0
+RUN tar xzf ocaml-4.13.1.tar.gz
+WORKDIR ocaml-4.13.1
 RUN sed -i 's/gnueabi/*eabi/' configure
 RUN sed -i 's/musl/musl*/' configure
 RUN ./configure %CONF% -prefix /usr/local
-RUN make world opt.opt && make install && rm -rf /root/ocaml-4.12.0 /root/ocaml-4.12.0.tar.gz
+RUN make world opt.opt && make install && rm -rf /root/ocaml-4.13.1 /root/ocaml-4.13.1.tar.gz
 
 RUN apk add patch
 

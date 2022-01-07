@@ -14,7 +14,7 @@
                (:include ../ocaml-flags-configure.sexp)
                (:include ../ocaml-context-flags.sexp)))
   (preprocess  (per_module
-                  ((action (run %{bin:cppo} -V OCAML:%{ocaml_version} %{input-file})) opamCompat)
+                  ((action (run %{bin:cppo} -V OCAML:%{ocaml_version} %{input-file})) opamCompat opamSystem)
                   ((action (run %{bin:cppo} %{read-lines:developer} %{input-file})) opamCoreConfig)
                   ((action (run %{bin:cppo} -D "VERSION %{read-lines:version}" %{input-file})) opamVersion)))
   (wrapped     false))

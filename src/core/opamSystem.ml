@@ -317,6 +317,9 @@ let remove file =
   else
     remove_file file
 
+#if OCAML_VERSION >= (4, 13, 0)
+let normalize = Unix.realpath
+#else
 (* Sets path to s and returns the old path *)
 let getchdir s =
   let p =
@@ -330,6 +333,7 @@ let getchdir s =
 
 let normalize s =
   try getchdir (getchdir s) with File_not_found _ -> s
+#endif
 
 let real_path p =
   (* if Filename.is_relative p then *)

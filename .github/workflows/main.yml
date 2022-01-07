@@ -41,10 +41,10 @@ env:
   OPAM12CACHE: ~/.cache/opam1.2/cache
   # These should be identical to the values in appveyor.yml and the other workflows
   OPAM_REPO: https://github.com/ocaml/opam-repository.git
-  OPAM_TEST_REPO_SHA: ec07d6d5f363d1c5b9ed3b927d0df1d58dad333c
-  OPAM_REPO_SHA: ec07d6d5f363d1c5b9ed3b927d0df1d58dad333c
+  OPAM_TEST_REPO_SHA: fd4405c83bcd23f91373978b45479694079a8c79
+  OPAM_REPO_SHA: fd4405c83bcd23f91373978b45479694079a8c79
   # Default ocaml version for some jobs
-  OCAML_VERSION: 4.12.0
+  OCAML_VERSION: 4.13.1
   ## variables for cache paths
   GH_OCAML_CACHE: ~/.cache/ocaml-local/**
   SOLVER:
@@ -109,10 +109,10 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
-        ocamlv: [ 4.08.1, 4.09.1, 4.10.2, 4.11.2, 4.12.0 ]
+        ocamlv: [ 4.08.1, 4.09.1, 4.10.2, 4.11.2, 4.12.1, 4.13.1 ]
         include:
           - os: macos-latest
-            ocamlv: 4.12.0
+            ocamlv: 4.13.1
       # Intentionally fail fast, no need to run all build if there is a
       # problem in a given version; usually it is functions not defined in lower
       # versions of OCaml
@@ -181,7 +181,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest ]
-        ocamlv: [ 4.12.0 ]
+        ocamlv: [ 4.13.1 ]
       fail-fast: false
     env:
       OPAM_TEST: 1
@@ -233,7 +233,7 @@ jobs:
       matrix:
 #        os: [ ubuntu-latest, macos-latest ]
         os: [ ubuntu-latest ]
-        ocamlv: [ 4.12.0 ]
+        ocamlv: [ 4.13.1 ]
       fail-fast: false
     steps:
     - name: install deps
@@ -263,7 +263,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest ]
-        ocamlv: [ 4.12.0 ]
+        ocamlv: [ 4.13.1 ]
         solver: [ z3, 0install ]
       fail-fast: false
     env:
@@ -312,7 +312,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest ]
-        ocamlv: [ 4.12.0 ]
+        ocamlv: [ 4.13.1 ]
       fail-fast: false
     steps:
     - name: install deps
