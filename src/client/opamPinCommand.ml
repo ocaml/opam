@@ -22,8 +22,9 @@ let string_of_pinned opam =
     (OpamStd.Option.to_string ~none:(bold "locally")
        (fun u -> Printf.sprintf "to %s%s"
            (bold (OpamUrl.to_string (OpamFile.URL.url u)))
-           (OpamStd.Option.map_default (fun s -> bold (" ("^s^")"))
-              "" (OpamFile.URL.subpath u)))
+           (OpamStd.Option.to_string (fun sp ->
+                " " ^ OpamFilename.SubPath.pretty_string sp)
+               (OpamFile.URL.subpath u)))
        (OpamFile.OPAM.url opam))
     (bold (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
 
@@ -82,11 +83,8 @@ let get_source_definition ?version ?subpath ?locked st nv url =
   OpamUpdate.fetch_dev_package url srcdir ?subpath nv @@| function
   | Not_available (_,s) -> raise (Fetch_Fail s)
   | Up_to_date _ | Result _ ->
-    let subsrcdir =
-      match OpamFile.URL.subpath url with
-      | None -> srcdir
-      | Some subpath -> OpamFilename.Op.(srcdir / subpath) in
-    match OpamPinned.find_opam_file_in_source ?locked nv.name subsrcdir with
+    let srcdir = OpamFilename.SubPath.(srcdir /? subpath) in
+    match OpamPinned.find_opam_file_in_source ?locked nv.name srcdir with
     | None -> None
     | Some f ->
       match read_opam_file_for_pinning nv.name f (OpamFile.URL.url url) with
@@ -396,8 +394,10 @@ let fetch_all_pins st ?working_dir pins =
         installed:%s\n\
         Continue anyway?"
        (OpamStd.Format.itemize (fun (name, url, subpath) ->
-            name ^ ": " ^ OpamUrl.to_string url ^
-            (OpamStd.Option.to_string (fun s -> "("^s^")") subpath))
+            Printf.sprintf "%s:%s%s"
+              name (OpamUrl.to_string url)
+              (OpamStd.Option.to_string
+                 OpamFilename.SubPath.pretty_string subpath))
            errored)
   then
     to_pin
@@ -449,7 +449,8 @@ and source_pin
     (slog OpamPackage.Name.to_string) name
     (slog (OpamStd.Option.to_string OpamPackage.Version.to_string)) version
     (slog (OpamStd.Option.to_string ~none:"none" OpamUrl.to_string)) target_url
-    (slog (OpamStd.Option.to_string ~none:"" (fun x -> " ("^x^")"))) subpath;
+    (slog (OpamStd.Option.to_string OpamFilename.SubPath.pretty_string))
+    subpath;
  (* let installed_version =
     try
       Some (OpamPackage.version
@@ -744,9 +745,10 @@ let list st ~short =
         | Some url ->
           let u = OpamFile.URL.url url in
           let subpath =
-            match OpamFile.URL.subpath url with
-            | None -> ""
-            | Some s -> " ("^s^")" in
+            OpamStd.Option.to_string (fun sp ->
+                " " ^ OpamFilename.SubPath.pretty_string sp)
+              (OpamFile.URL.subpath url)
+          in
           OpamUrl.string_of_backend u.OpamUrl.backend,
           OpamUrl.to_string u ^ subpath
         | None -> "local definition", ""
@@ -835,7 +837,9 @@ let scan ~normalise ~recurse ?subpath url =
               scan_sep
               (OpamUrl.to_string url)
               (OpamStd.Option.to_string (fun sb ->
-                   (String.make 1 scan_sep) ^ sb) sb))
+                   (String.make 1 scan_sep)
+                   ^ OpamFilename.SubPath.to_string sb)
+                  sb))
          pins)
   else
     ["# Name"; "# Version"; "# Url" (*; "# Subpath"*)] ::
@@ -843,7 +847,7 @@ let scan ~normalise ~recurse ?subpath url =
         [ OpamPackage.Name.to_string name;
           (version >>| OpamPackage.Version.to_string) +! "-";
           OpamUrl.to_string url;
-          (*sb +! "-"*) ]) pins
+          (*(sb >>| OpamFilename.SubPath.normalised_string) +! "-"*) ]) pins
     |> OpamStd.Format.align_table
     |> OpamConsole.print_table stdout ~sep:"  "
 
@@ -876,7 +880,8 @@ let parse_pins pins =
           OpamStd.Option.map OpamPackage.Version.of_string
           @@ OpamStd.Option.of_Not_found (get groups) 2,
           OpamUrl.parse @@ get groups 3,
-          OpamStd.Option.of_Not_found (get groups) 4)
+          OpamStd.Option.map OpamFilename.SubPath.of_string
+          @@ OpamStd.Option.of_Not_found (get groups) 4)
         )
     with Not_found | Failure _ -> None
   in

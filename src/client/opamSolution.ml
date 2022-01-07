@@ -592,10 +592,8 @@ let parallel_apply t
       let raw = OpamSwitchState.source_dir t nv in
       match OpamFile.OPAM.url opam with
       | None -> raw
-      | Some url ->
-        match OpamFile.URL.subpath url with
-        | None -> raw
-        | Some subpath -> OpamFilename.Op.(raw / subpath) in
+      | Some url -> OpamFilename.SubPath.(raw /? OpamFile.URL.subpath url)
+    in
     if OpamClientConfig.(!r.fake) then
       match action with
       | `Build _ | `Fetch _ -> Done (`Successful (installed, removed))

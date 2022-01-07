@@ -169,7 +169,7 @@ let resolve_locals_pinned st ?(recurse=false) ?subpath atom_or_local_list =
          let open OpamStd.Option.Op in
          match subpath with
          | Some sp ->
-           let dir_sp = OpamFilename.Op.(dir / sp) in
+           let dir_sp = OpamFilename.SubPath.(dir / sp) in
            let url_sp_dir =
              OpamSwitchState.primary_url_with_subpath st nv >>= OpamUrl.local_dir
            in
@@ -264,10 +264,7 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath atom_or_local_list
   else
   let pinning_dirs =
     OpamStd.List.filter_map (function
-        | `Dirname d ->
-          (match subpath with
-           | Some s -> Some OpamFilename.Op.(d/s)
-           | None -> Some d)
+        | `Dirname d -> Some OpamFilename.SubPath.(d /? subpath)
         | _ -> None)
       atom_or_local_list
   in
@@ -276,7 +273,8 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath atom_or_local_list
          Printf.sprintf "%s => %s%s"
            (OpamPackage.Name.to_string name)
            (OpamUrl.to_string target)
-           (match subpath with None -> "" | Some s -> " ("^s^")")))
+           (OpamStd.Option.to_string
+              OpamFilename.SubPath.pretty_string subpath)))
     to_pin;
   let obsolete_pins =
     (* Packages not current but pinned to the same dirs *)

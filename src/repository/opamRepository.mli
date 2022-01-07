@@ -44,7 +44,7 @@ val pull_shared_tree:
 (* Same as [pull_shared_tree], but for a unique label/dirname. *)
 val pull_tree:
   string -> ?cache_dir:dirname -> ?cache_urls:url list -> ?working_dir:bool ->
-  ?subpath:string -> dirname -> OpamHash.t list -> url list ->
+  ?subpath:subpath -> dirname -> OpamHash.t list -> url list ->
   string download OpamProcess.job
 
 (** Same as [pull_tree], but for fetching a single file. *)
@@ -72,7 +72,7 @@ val current_branch: url -> string option OpamProcess.job
 
 (** Returns true if the url points to a local, version-controlled directory that
     has uncommitted changes *)
-val is_dirty: ?subpath:string -> url -> bool OpamProcess.job
+val is_dirty: ?subpath:subpath -> url -> bool OpamProcess.job
 
 (** Find a backend *)
 val find_backend: repository -> (module OpamRepositoryBackend.S)

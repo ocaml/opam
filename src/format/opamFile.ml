@@ -2233,7 +2233,7 @@ module URLSyntax = struct
     mirrors : url list;
     checksum: OpamHash.t list;
     errors  : (string * Pp.bad_format) list;
-    subpath : string option;
+    subpath : subpath option;
   }
 
   let create ?(mirrors=[]) ?(checksum=[]) ?subpath url =
@@ -2287,7 +2287,7 @@ module URLSyntax = struct
         (Pp.V.map_list ~depth:1 Pp.V.url);
       "subpath", Pp.ppacc_opt
         with_subpath subpath
-        Pp.V.string;
+        (Pp.V.string -| Pp.of_module "subpath" (module OpamFilename.SubPath));
     ]
 
   let pp_contents =
@@ -3070,7 +3070,8 @@ module OPAMSyntax = struct
       match OpamStd.String.Map.find_opt subpath_xfield t.extensions with
       | Some {pelem = String subpath;_} ->
         let url = match t.url with
-          | Some u -> Some (URL.with_subpath subpath u)
+          | Some u ->
+            Some (URL.with_subpath (OpamFilename.SubPath.of_string subpath) u)
           | None -> None
         in
         { t with url }
@@ -3085,7 +3086,8 @@ module OPAMSyntax = struct
       | Some ({ URL.subpath = Some sb ; _ } as url) ->
         if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
         else
-          add_extension t subpath_xfield (nullify_pos @@ String sb)
+          add_extension t subpath_xfield
+            (nullify_pos @@ String (OpamFilename.SubPath.to_string sb))
           |> with_url (URL.with_subpath_opt None url)
           |> Pp.print pp_constraint
       | _ -> t

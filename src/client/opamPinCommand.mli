@@ -35,7 +35,7 @@ exception Nothing_to_do
 val source_pin:
   rw switch_state -> name ->
   ?version:version -> ?edit:bool -> ?opam:OpamFile.OPAM.t -> ?quiet:bool ->
-  ?force:bool -> ?ignore_extra_pins:bool -> ?subpath: string -> ?locked:bool ->
+  ?force:bool -> ?ignore_extra_pins:bool -> ?subpath:subpath -> ?locked:bool ->
   url option ->
   rw switch_state
 
@@ -52,8 +52,8 @@ val handle_pin_depends:
     Ask for confirmation to continue if a fetching fails.
 *)
 val fetch_all_pins:
-  'a switch_state -> ?working_dir:bool -> (name * url * string option) list ->
-  (url * string option) list
+  'a switch_state -> ?working_dir:bool -> (name * url * subpath option) list ->
+  (url * subpath option) list
 
 (** Let the user edit a pinned package's opam file. If given, the version is put
     into the template in advance. Writes and returns the updated switch
@@ -76,13 +76,14 @@ val scan_sep: char
 (** Scan for available packages to pin, and display it on stdout. If
     [normalise] is true, displays it's normalised format
     `name.version[scan_sep]url[scan_sep]subpath`. *)
-val scan: normalise:bool -> recurse:bool -> ?subpath: string -> url -> unit
+val scan: normalise:bool -> recurse:bool -> ?subpath:subpath -> url -> unit
 
 (** Detect if a string is a normalised format of [scan]. *)
 val looks_like_normalised: string list -> bool
 
 (** Parse the normalised form of [scan], and returns pinning informations. *)
-val parse_pins: string list -> (name * version option * url * string option) list
+val parse_pins:
+  string list -> (name * version option * url * subpath option) list
 
 (** Lints the given opam file, prints warnings or errors accordingly (unless
     [quiet]), upgrades it to current format, adds references to files below the

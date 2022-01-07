@@ -3224,8 +3224,10 @@ let pin ?(unpin_only=false) cli =
                        | Some sp, true ->
                          (match spu with
                           | Some spp ->
-                            OpamUrl.Op.(OpamStd.String.starts_with
-                                          ~prefix:(url / sp).path (u / spp).path)
+                            let open OpamUrl.Op in
+                            OpamStd.String.starts_with
+                              ~prefix:(url / OpamFilename.SubPath.to_string sp).path
+                              (u / OpamFilename.SubPath.to_string spp).path
                           | None -> false)
                        | None, true ->
                          u.path = url.path
@@ -3454,7 +3456,7 @@ let source cli =
          in
          OpamProcess.Job.run job;
          if OpamPinned.find_opam_file_in_source nv.name
-             (OpamStd.Option.map_default (fun sp -> Op.(dir / sp)) dir subpath)
+             OpamFilename.SubPath.(dir /? subpath)
             = None
          then
            let f =
