@@ -28,7 +28,7 @@ users)
   *
 
 ## Install
-  *
+  * Make the status of pinned packages more explicit during installation [#4987 @kit-ty-kate - fix #4925]
 
 ## Remove
   *

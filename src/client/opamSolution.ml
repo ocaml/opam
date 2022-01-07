@@ -1187,7 +1187,7 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
         )  messages in
       let append nv =
         (* mark pinned packages with a star *)
-        if OpamPackage.Set.mem nv t.pinned then "*"
+        if OpamPackage.Set.mem nv t.pinned then " (pinned)"
         else ""
       in
       OpamSolver.print_solution ~messages ~append
