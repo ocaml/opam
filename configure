@@ -627,8 +627,8 @@ VENDORED
 ac_ct_CXX
 CXXFLAGS
 CXX
-OCAML_PKG_opam_0install_cudf
 OCAML_PKG_mccs
+OCAML_PKG_opam_0install_cudf
 OCAML_PKG_spdx_licenses
 OCAML_PKG_opam_file_format
 OCAML_PKG_dose3_algo
@@ -663,7 +663,6 @@ CONF_LIBACL_LINK
 EGREP
 GREP
 CPP
-OPAM_0INSTALL_SOLVER_ENABLED
 MCCS_ENABLED
 DEVELOPER
 OBJEXT
@@ -1398,9 +1397,8 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --without-mccs          Compile without a built-in Cudf solver (only works
                           if 'mccs' is not otherwise installed)
-  --with-0install-solver  Compile with the built-in 0install solver
-                          (--without-0install-solver only works if
-                          'opam-0install-cudf' is not otherwise installed)
+  --without-0install-solver
+                          Legacy option (does nothing)
 
   --with-libacl           Compile opam with libacl support
   --with-private-runtime  For a mingw-w64 build, manifest the runtime DLLs
@@ -3467,6 +3465,10 @@ if test "${with_0install_solver+set}" = set; then :
   withval=$with_0install_solver;
 fi
 
+if test "x$with_0install_solver" = xno; then :
+  as_fn_error $? "Compiling opam without 0install solver is no longer possible." "$LINENO" 5
+
+fi
 
 
 
@@ -4301,13 +4303,6 @@ if test "x${with_mccs}" = "xno"; then :
 
 else
   MCCS_ENABLED=true
-
-fi
-if test "x${with_0install_solver}" = "xyes"; then :
-  OPAM_0INSTALL_SOLVER_ENABLED=true
-
-else
-  OPAM_0INSTALL_SOLVER_ENABLED=false
 
 fi
 
@@ -6259,6 +6254,67 @@ $as_echo "not found" >&6; }
 
 
 
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package opam-0install-cudf 0.4 or later" >&5
+$as_echo_n "checking for OCaml findlib package opam-0install-cudf 0.4 or later... " >&6; }
+
+  if version=`$OCAMLFIND query opam-0install-cudf -format '%v' 2>/dev/null`; then :
+
+
+
+
+  # Used to indicate true or false condition
+  ax_compare_version=false
+
+  # Convert the two version strings to be compared into a format that
+  # allows a simple string comparison.  The end result is that a version
+  # string of the form 1.12.5-r617 will be converted to the form
+  # 0001001200050617.  In other words, each number is zero padded to four
+  # digits, and non digits are removed.
+
+  ax_compare_version_A=`echo "$version" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/[^0-9]//g'`
+
+
+  ax_compare_version_B=`echo "0.4" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/[^0-9]//g'`
+
+
+    ax_compare_version=`echo "x$ax_compare_version_A
+x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version_A}/false/;s/x${ax_compare_version_B}/true/;1q"`
+
+
+
+    if test "$ax_compare_version" = "true" ; then
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no ($version installed)" >&5
+$as_echo "no ($version installed)" >&6; }
+      OCAML_PKG_opam_0install_cudf=no
+
+    else
+      OCAML_PKG_opam_0install_cudf=opam-0install-cudf
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found $version" >&5
+$as_echo "found $version" >&6; }
+
+  fi
+
+
+else
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+    OCAML_PKG_opam_0install_cudf=no
+
+fi
+
+
+
+
 # Optional dependencies
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package mccs 1.1+9 or later" >&5
@@ -6322,77 +6378,8 @@ fi
 
 
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package opam-0install-cudf 0.4 or later" >&5
-$as_echo_n "checking for OCaml findlib package opam-0install-cudf 0.4 or later... " >&6; }
-
-  if version=`$OCAMLFIND query opam-0install-cudf -format '%v' 2>/dev/null`; then :
-
-
-
-
-  # Used to indicate true or false condition
-  ax_compare_version=false
-
-  # Convert the two version strings to be compared into a format that
-  # allows a simple string comparison.  The end result is that a version
-  # string of the form 1.12.5-r617 will be converted to the form
-  # 0001001200050617.  In other words, each number is zero padded to four
-  # digits, and non digits are removed.
-
-  ax_compare_version_A=`echo "$version" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
-                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/[^0-9]//g'`
-
-
-  ax_compare_version_B=`echo "0.4" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
-                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/[^0-9]//g'`
-
-
-    ax_compare_version=`echo "x$ax_compare_version_A
-x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version_A}/false/;s/x${ax_compare_version_B}/true/;1q"`
-
-
-
-    if test "$ax_compare_version" = "true" ; then
-
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no ($version installed)" >&5
-$as_echo "no ($version installed)" >&6; }
-      OCAML_PKG_opam_0install_cudf=no
-
-    else
-      OCAML_PKG_opam_0install_cudf=opam-0install-cudf
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found $version" >&5
-$as_echo "found $version" >&6; }
-
-  fi
-
-
-else
-
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-    OCAML_PKG_opam_0install_cudf=no
-
-fi
-
-
-
-
 if test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"; then :
   as_fn_error $? "Option --without-mccs is not available without uninstalling the 'mccs' package" "$LINENO" 5
-fi
-if test "x${with_0install_solver}" = "xno" && test "x$OCAML_PKG_opam_0install_cudf" != "xno"; then :
-  as_fn_error $? "Option --without-0install-solver is not available without uninstalling the 'opam-0install-cudf' package" "$LINENO" 5
-fi
-
-if test "x$OCAML_PKG_opam_0install_cudf" != "xno"; then :
-  OPAM_0INSTALL_SOLVER_ENABLED=true
-
 fi
 
 
@@ -6719,49 +6706,6 @@ fi
 
 fi
 
-if test "x$OPAM_0INSTALL_SOLVER_ENABLED" = "xtrue" -a "x$OCAML_PKG_opam_0install_cudf" = "xno"; then :
-
-
-
-
-  # Used to indicate true or false condition
-  ax_compare_version=false
-
-  # Convert the two version strings to be compared into a format that
-  # allows a simple string comparison.  The end result is that a version
-  # string of the form 1.12.5-r617 will be converted to the form
-  # 0001001200050617.  In other words, each number is zero padded to four
-  # digits, and non digits are removed.
-
-  ax_compare_version_A=`echo "$OCAMLVERSION" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
-                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/[^0-9]//g'`
-
-
-  ax_compare_version_B=`echo "4.08" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
-                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/[^0-9]//g'`
-
-
-    ax_compare_version=`echo "x$ax_compare_version_A
-x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version_A}/false/;s/x${ax_compare_version_B}/true/;1q"`
-
-
-
-    if test "$ax_compare_version" = "true" ; then
-
-    as_fn_error $? "Your version of OCaml: $OCAMLVERSION does not support the requested 0install-solver. \
-                  You can either re-run the configure script with --without-0install-solver or use make cold" "$LINENO" 5
-
-      fi
-
-
-fi
-
 echo
 
 if test "x${enable_checks}" != "xno" && {
@@ -6775,9 +6719,9 @@ if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_dose3_algo" = "xno" ||
        test "x$OCAML_PKG_opam_file_format" = "xno" ||
        test "x$OCAML_PKG_spdx_licenses" = "xno" ||
+       test "x$OCAML_PKG_opam_0install_cudf" = "xno" ||
        test "x$CPPO" = "x" ||
-       test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue" ||
-       test "x$OCAML_PKG_opam_0install_cudf$OPAM_0INSTALL_SOLVER_ENABLED" = "xnotrue";}; then :
+       test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue";}; then :
 
   if test "x${with_vendored_deps}" = "xno"; then :
 
@@ -8022,13 +7966,13 @@ bindir="`eval echo ${bindir}`"
 mandir="`eval echo ${mandir}`"
 mandir="`eval echo ${mandir}`"
 
-if test "x$MCCS_ENABLED" = "xfalse" -a "x$OPAM_0INSTALL_SOLVER_ENABLED" = "xfalse"; then :
+if test "x$MCCS_ENABLED" = "xfalse"; then :
 
-  echo "Opam will be built WITHOUT a built-in solver"
+  echo "Opam will be built WITHOUT its default built-in solver"
 
 else
 
-  echo "Opam will be built WITH a built-in solver"
+  echo "Opam will be built WITH its default built-in solver"
 
 fi
 echo

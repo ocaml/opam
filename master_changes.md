@@ -151,6 +151,7 @@ users)
   * Refactored, fixed, improved and optimised the z3 solver backend [#4878 @altgr]
   * Add an explanation for "no longer available" packages [#4969 @AltGr]
   * Orphan packages are now handled at the solver level instead of a pre-processing phase, better ensuring consistency [#4969 @altgr]
+  * Make the 0install solver non-optional [#4909 @kit-ty-kate]
 
 ## Client
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]

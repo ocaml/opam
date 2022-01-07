@@ -32,15 +32,11 @@ URL_PKG_$(1) = $(URL_$(1))
 MD5_PKG_$(1) = $(MD5_$(1))
 endef
 
-SRC_EXTS = cppo base64 extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result seq stdlib-shims spdx_licenses
+SRC_EXTS = cppo base64 extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result seq stdlib-shims spdx_licenses opam-0install-cudf 0install-solver
 PKG_EXTS = $(SRC_EXTS) dune-local findlib ocamlbuild topkg mccs
 
 ifeq ($(MCCS_ENABLED),true)
 SRC_EXTS := $(SRC_EXTS) mccs
-endif
-
-ifeq ($(OPAM_0INSTALL_SOLVER_ENABLED),true)
-SRC_EXTS := $(SRC_EXTS) opam-0install-cudf 0install-solver
 endif
 
 include Makefile.sources

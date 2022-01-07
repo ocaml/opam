@@ -29,6 +29,8 @@ src_ext/ocamlbuild
 src_ext/topkg
 src_ext/seq
 src_ext/secondary/
+src_ext/0install-solver/
+src_ext/opam-0install-cudf/
 src_ext/*.*stamp
 src_ext/*.tbz
 src_ext/*.tar.gz
