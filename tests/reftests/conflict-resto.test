@@ -414,3 +414,27 @@ Sorry, no solution found: there seems to be a problem with your request.
 
 [NOTE] Pinning command successful, but your installed packages may be out of sync.
 # Return code 20 #
+### : Minimal repro case
+### <REPO/repo>
+opam-version: "2.0"
+### <pkg:a.1>
+opam-version: "2.0"
+### <pkg:a.2>
+opam-version: "2.0"
+### <pkg:b.1>
+opam-version: "2.0"
+depends: "a" {< "2"}
+### <pkg:c.1>
+opam-version: "2.0"
+conflicts: "a" {< "2"}
+### opam repo add repo ./REPO
+[repo] Initialised
+[NOTE] Repository repo has been added to the selections of switch default only.
+       Run `opam repository add repo --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+
+### opam install b c --show
+[ERROR] Package conflict!
+Sorry, no solution found: there seems to be a problem with your request.
+
+No solution found, exiting
+# Return code 20 #
