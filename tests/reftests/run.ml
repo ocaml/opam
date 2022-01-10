@@ -24,7 +24,7 @@
      add this package to `default` repository in `./REPO`
    - use `### <pkg:NAME.VERSION:FILENAME>`, then the contents below to add this
      file as a extra-file of the given package in the `default` repository
-   - use `### <pin:path>, then the contents below to create a minimal opam
+   - use `### <pin:path>`, then the contents below to create a minimal opam
      file, it is extended by template defined fields to pin it without lint
      errors
    - `### FOO=x BAR=y` to export variables for subsequent commands
@@ -373,13 +373,13 @@ module Parse = struct
       let grs = all ~pos (compile re_str_atom) str in
       List.map (fun gr -> Group.get gr 0) grs
     in
-    let get_str s =
-      str_replace_path OpamSystem.back_to_forward
+    let get_str ?escape s =
+      str_replace_path ?escape OpamSystem.back_to_forward
         (filters_of_var vars)
         (get_str s)
     in
     let posix_re re =
-      try Posix.re (get_str re)
+      try Posix.re (get_str ~escape:true re)
       with Posix.Parse_error ->
         failwith (Printf.sprintf "Bad POSIX regexp: %s" re)
     in
