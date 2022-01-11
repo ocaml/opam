@@ -573,11 +573,20 @@ let download_package_source_t st url nv_dirs =
                                >>= OpamFile.URL.subpath))
           nv_dirs
       in
+      let checksums = OpamFile.URL.checksum url in
       (OpamRepository.pull_shared_tree ~cache_dir ~cache_urls
-         dirnames
-         (OpamFile.URL.checksum url)
+         dirnames checksums
          (OpamFile.URL.url url :: OpamFile.URL.mirrors url))
-      @@| fun r -> Some r
+      @@+ function
+      | Not_available (_s,_l) as source_result
+        when OpamFile.Config.swh_fallback st.switch_global.config ->
+        (OpamDownload.SWHID.archive_fallback url dirnames
+         @@| function
+         | Result None -> Some source_result
+         | Result (Some r) -> Some (Result r)
+         | Not_available (s,l) -> Some (Not_available (s,l))
+         | Up_to_date _ -> assert false)
+      | source_result -> Done (Some source_result)
   in
   let fetch_extra_source_job (nv, name, u) = function
     | (_, _, Not_available _) :: _ as err -> Done err
