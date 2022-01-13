@@ -553,9 +553,11 @@ bug-reports: "https://nobug"
 |} "<nofile>"
 
 let run_test ?(vars=[]) ~opam t =
-  let opamroot0 = Filename.concat (Sys.getcwd ()) ("root-"^t.repo_hash) in
-  with_temp_dir @@ fun dir ->
   let old_cwd = Sys.getcwd () in
+  let opamroot0 = Filename.concat old_cwd ("root-"^t.repo_hash) in
+  with_temp_dir @@ fun dir ->
+  Sys.chdir dir;
+  let dir = Sys.getcwd () in (* because it may need to be normalised on macOS *)
   let opamroot = Filename.concat dir "OPAM" in
   if Sys.win32 then
     ignore @@ command ~allowed_codes:[0; 1] ~silent:true
@@ -563,8 +565,6 @@ let run_test ?(vars=[]) ~opam t =
       ["/e"; "/copy:dat"; "/dcopy:dat"; "/sl"; opamroot0; opamroot]
   else
     ignore @@ command "cp" ["-PR"; opamroot0; opamroot];
-  Sys.chdir dir;
-  let dir = Sys.getcwd () in (* because it may need to be normalised on macOS *)
   let vars = [
     "OPAM", opam;
     "OPAMROOT", opamroot;
