@@ -3968,6 +3968,11 @@ let lock cli =
     if OpamPackage.Set.is_empty packages then
       OpamConsole.msg "No lock file generated\n"
     else
+    let st =
+      (* Suppose the packages are installed to avoid errors on mutual
+         dependencies *)
+      { st with installed = OpamPackage.Set.union st.installed packages }
+    in
     let pkg_done =
       OpamPackage.Set.fold (fun nv msgs ->
           let opam = OpamSwitchState.opam st nv in

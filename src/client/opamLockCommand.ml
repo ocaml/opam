@@ -85,11 +85,13 @@ let select_packages atom_locs st =
            in
            let missing =
              List.filter (fun (n,vc) ->
-                 let pkgs = (OpamPackage.packages_of_name st.installed n) in
+                 let pkgs =
+                   OpamPackage.packages_of_name
+                     (OpamPackage.Set.union st.installed packages)
+                     n
+                 in
                  OpamPackage.Set.is_empty pkgs ||
-                 OpamPackage.Set.fold (fun nv satisf ->
-                     satisf || not (OpamFormula.check (n,vc) nv))
-                   pkgs false)
+                 not (OpamPackage.Set.exists (OpamFormula.check (n,vc)) pkgs))
                atoms
            in
            if missing <> [] then
@@ -184,7 +186,11 @@ let lock_opam ?(only_direct=false) st opam =
         |> map_of_set (`other_dep typ)
         |> OpamPackage.Map.union (fun _v _o -> `other_dep typ) depends_map
     else
-      (OpamConsole.msg "Not all dependencies are satisfied, won't include them\n";
+      (OpamConsole.msg "Not all dependencies of %s are satisfied, not \
+                        including these: %s\n"
+         (OpamPackage.to_string nv)
+         (OpamStd.List.concat_map ", " OpamPackage.Name.to_string
+            (OpamPackage.Name.Set.elements uninstalled));
        OpamPackage.Map.empty)
   in
   (* variables are set here as a string *)
