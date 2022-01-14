@@ -1172,12 +1172,8 @@ let remove_t ?ask ~autoremove ~force atoms t =
     let requested = OpamPackage.names_of_packages packages in
     let to_remove =
       if autoremove then
-        let remove_cone =
-          packages |> OpamSolver.reverse_dependencies universe
-            ~build:true ~post:true ~depopts:false ~installed:true
-        in
         let keep =
-          universe.u_base ++ t.installed_roots %% t.installed -- remove_cone
+          universe.u_base ++ t.installed_roots %% t.installed -- packages
         in
         let keep_cone =
           keep |> OpamSolver.dependencies universe
@@ -1186,11 +1182,15 @@ let remove_t ?ask ~autoremove ~force atoms t =
         let autoremove =
           packages ++ (t.installed -- keep_cone)
         in
-        if atoms = [] then autoremove
-        else (* restrict to the dependency cone of removed pkgs *)
-          autoremove %%
-          (remove_cone |> OpamSolver.dependencies universe
-             ~build:true ~post:true ~depopts:false ~installed:true)
+        if atoms = [] then autoremove else
+        (* restrict to the dependency cone of removed pkgs *)
+        let remove_cone =
+          packages |> OpamSolver.reverse_dependencies universe
+            ~build:true ~post:true ~depopts:false ~installed:true
+        in
+        autoremove %%
+        (remove_cone |> OpamSolver.dependencies universe
+           ~build:true ~post:true ~depopts:false ~installed:true)
       else
         packages
     in
