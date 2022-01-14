@@ -144,7 +144,8 @@ users)
   * Actually allow multiple state caches to co-exist [#4934 @dra27 - fix #4554 properly this time]
 
 ## Opam file format
-  *
+  * ✘ Version comparison is now strictly as specified in the docs, and doesn't
+    handle Debian-like "epoch" prefixes or "revision" suffixes [@AltGr - fix #4272]
 
 ## Solver
   * [BUG] Remove z3 debug output [#4723 @rjbou - fix #4717] [2.1.0~rc2 #4720]
