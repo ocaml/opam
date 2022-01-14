@@ -1210,7 +1210,9 @@ let remove_t ?ask ~autoremove ~force atoms t =
   ) else t
 
 let remove t ~autoremove ~force names =
-  let atoms = OpamSolution.sanitize_atom_list ~installed:true t names in
+  let atoms =
+    OpamSolution.sanitize_atom_list ~installed:true ~permissive:true t names
+  in
   remove_t ~autoremove ~force atoms t
 
 let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
