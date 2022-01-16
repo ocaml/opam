@@ -45,7 +45,9 @@ users)
   * ◈ New option `opam pin --current` to fix a package in its current state (avoiding pending reinstallations or removals from the repository) [#4973 @AltGr - fix #4970]
 
 ## List
-  * Some optimisations to 'opam list --installable' queries combined with other filters [@altgr]
+  * Some optimisations to 'opam list --installable' queries combined with other filters [#4882 @altgr - fix #4311]
+  * Improve performance of some opam list combination (e.g. --available --installable) [#4999 @kit-ty-kate]
+  * Improve performance of opam list --conflicts-with when combined with other filters [#4999 @kit-ty-kate]
 
 ## Show
   * Add `depexts` to default printer [#4898 @rjbou]
