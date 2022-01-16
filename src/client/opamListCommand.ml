@@ -243,7 +243,7 @@ let apply_selector ~base st = function
       base
   | Conflicts_with packages ->
     OpamSwitchState.conflicts_with st (OpamPackage.Set.of_list packages)
-      (Lazy.force st.available_packages)
+      base
   | Coinstallable_with (tog, packages) ->
     let universe = get_universe st tog in
     let set = OpamPackage.Set.of_list packages in
