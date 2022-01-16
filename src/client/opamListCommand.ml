@@ -370,12 +370,12 @@ let apply_selector ~base st = function
 
 let rec filter ~base st = function
   | Empty -> base
-  | Atom select -> apply_selector ~base st select
+  | Atom select -> base %% apply_selector ~base st select
   | Block b -> filter ~base st b
   | And (a, b) ->
     let base = filter ~base st a in
     base %% filter ~base st b
-  | Or (a, b) -> filter ~base st a ++ filter ~base st b
+  | Or (a, b) -> base %% (filter ~base st a ++ filter ~base st b)
 
 type output_format =
   | Name
