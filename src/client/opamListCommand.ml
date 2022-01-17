@@ -820,7 +820,7 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
   List.iter (fun (name,_) ->
       (* Like OpamSwitchState.get_package, but restricted to [packages] *)
       let nvs = OpamPackage.packages_of_name packages name in
-      if all_versions then
+      if OpamPackage.Set.is_singleton nvs || all_versions then
         (header (OpamPackage.Set.max_elt nvs);
          OpamPackage.Set.iter output_package nvs)
       else
