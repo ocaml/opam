@@ -223,6 +223,7 @@ users)
   * Fix `span` tag in mannual [#4855 @rjbou - fix #4848]
   * Add `avoid-version` doc [#4896 @AltGR - fix #4864]
   * Document custom licenses [#4863 @kit-ty-kate - fix #4862]
+  * Add OpenBSD & FreeBSD in the precompiled binaries list [#5001 @mndrix]
 
 ## Security fixes
   *
