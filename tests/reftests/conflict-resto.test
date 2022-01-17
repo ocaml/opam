@@ -1,0 +1,440 @@
+a5d7cdc0c914
+### <resto/ezresto-directory.opam>
+opam-version: "2.0"
+synopsis: "A minimal OCaml library for type-safe HTTP/JSON RPCs"
+maintainer: "contact@nomadic-labs.com"
+authors: ["Nomadic Labs" "Ocamlpro"]
+license: "MIT"
+homepage: "https://gitlab.com/nomadic-labs/resto"
+bug-reports: "https://gitlab.com/nomadic-labs/resto/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "1.11"}
+  "ezresto" {= version}
+  "resto-directory" {= version}
+  "resto" {= version}
+  "resto-lwt" {= version}
+  "lwt" {>= "3.0.0" & < "6.0.0"}
+  "cohttp" {>= "4.0.0" & with-test}
+  "cohttp-lwt" {>= "4.0.0" & with-test}
+  "cohttp-lwt-unix" {>= "4.0.0" & with-test}
+  "ezjsonm" {>= "1.3.0" & with-test}
+  "json-data-encoding" {>= "0.9.1"}
+  "json-data-encoding-bson" {>= "0.9.1" & with-test}
+  "conduit-lwt-unix" {>= "5.0.0" & with-test}
+  "uri" {>= "4.2.0" & with-test}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
+### <resto/ezresto.opam>
+opam-version: "2.0"
+synopsis: "A minimal OCaml library for type-safe HTTP/JSON RPCs"
+maintainer: "contact@nomadic-labs.com"
+authors: ["Nomadic Labs" "Ocamlpro"]
+license: "MIT"
+homepage: "https://gitlab.com/nomadic-labs/resto"
+bug-reports: "https://gitlab.com/nomadic-labs/resto/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "1.11"}
+  "uri" {>= "1.9.0"}
+  "resto" {= version}
+  "resto-json" {= version}
+  "lwt" {with-test}
+  "base-unix" {with-test}
+  "cohttp" {>= "4.0.0" & with-test}
+  "cohttp-lwt" {>= "4.0.0" & with-test}
+  "cohttp-lwt-unix" {>= "4.0.0" & with-test}
+  "ezjsonm" {>= "1.3.0" & with-test}
+  "json-data-encoding" {>= "0.9.1"}
+  "json-data-encoding-bson" {>= "0.9.1" & with-test}
+  "conduit-lwt-unix" {>= "4.0.2" & with-test}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
+### <resto/resto-acl.opam>
+opam-version: "2.0"
+synopsis: "Access Control Lists for Resto"
+maintainer: "contact@nomadic-labs.com"
+authors: "Nomadic Labs"
+license: "MIT"
+homepage: "https://gitlab.com/nomadic-labs/resto"
+bug-reports: "https://gitlab.com/nomadic-labs/resto/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "1.11"}
+  "uri" {>= "1.9.0"}
+  "resto" {= version}
+  "cohttp" {>= "4.0.0" & with-test}
+  "cohttp-lwt" {>= "4.0.0" & with-test}
+  "cohttp-lwt-unix" {>= "4.0.0" & with-test}
+  "ezjsonm" {>= "1.3.0" & with-test}
+  "json-data-encoding" {>= "0.9.1" & with-test}
+  "json-data-encoding-bson" {>= "0.9.1" & with-test}
+  "lwt" {>= "5.5.0" & with-test}
+  "conduit-lwt-unix" {>= "4.0.2" & with-test}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
+### <resto/resto-client.opam>
+opam-version: "2.0"
+synopsis: "A generic resto client"
+maintainer: "contact@nomadic-labs.com"
+authors: ["Nomadic Labs" "Ocamlpro"]
+license: "MIT"
+homepage: "https://gitlab.com/nomadic-labs/resto"
+bug-reports: "https://gitlab.com/nomadic-labs/resto/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "1.11"}
+  "uri" {>= "1.9.0"}
+  "resto" {= version}
+  "resto-directory" {= version}
+  "resto-cohttp" {= version}
+  "resto-server" {= version}
+  "cohttp" {>= "4.0.0"}
+  "cohttp-lwt" {>= "4.0.0" & with-test}
+  "cohttp-lwt-unix" {>= "4.0.0" & with-test}
+  "ezjsonm" {>= "1.3.0" & with-test}
+  "json-data-encoding" {>= "0.9.1" & with-test}
+  "json-data-encoding-bson" {>= "0.9.1" & with-test}
+  "lwt" {>= "5.5.0" & with-test}
+  "conduit-lwt-unix" {>= "4.0.2" & with-test}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
+### <resto/resto-cohttp-client.opam>
+opam-version: "2.0"
+synopsis: "A minimal OCaml library for type-safe HTTP/JSON RPCs"
+maintainer: "contact@nomadic-labs.com"
+authors: ["Nomadic Labs" "Ocamlpro"]
+license: "MIT"
+homepage: "https://gitlab.com/nomadic-labs/resto"
+bug-reports: "https://gitlab.com/nomadic-labs/resto/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "1.11"}
+  "uri" {>= "1.9.0"}
+  "resto" {= version}
+  "resto-lwt" {= version}
+  "resto-directory" {= version}
+  "resto-cohttp" {= version}
+  "resto-client" {= version}
+  "resto-cohttp-server" {= version}
+  "cohttp-lwt" {>= "1.0.0"}
+  "lwt" {>= "3.0.0" & < "6.0.0"}
+  "cohttp" {>= "4.0.0"}
+  "cohttp-lwt-unix" {>= "4.0.0" & with-test}
+  "ezjsonm" {>= "1.3.0" & with-test}
+  "json-data-encoding" {>= "0.9.1" & with-test}
+  "json-data-encoding-bson" {>= "0.9.1" & with-test}
+  "conduit-lwt-unix" {>= "5.0.0" & with-test}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
+### <resto/resto-cohttp.opam>
+opam-version: "2.0"
+synopsis: "A minimal OCaml library for type-safe HTTP/JSON RPCs"
+maintainer: "contact@nomadic-labs.com"
+authors: ["Nomadic Labs" "Ocamlpro"]
+license: "MIT"
+homepage: "https://gitlab.com/nomadic-labs/resto"
+bug-reports: "https://gitlab.com/nomadic-labs/resto/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "1.11"}
+  "resto-directory" {= version}
+  "cohttp-lwt" {>= "1.0.0" & with-test}
+  "cohttp" {>= "4.0.0"}
+  "cohttp-lwt-unix" {>= "4.0.0" & with-test}
+  "ezjsonm" {>= "1.3.0" & with-test}
+  "json-data-encoding" {>= "0.9.1" & with-test}
+  "json-data-encoding-bson" {>= "0.9.1" & with-test}
+  "lwt" {>= "5.5.0" & with-test}
+  "conduit-lwt-unix" {>= "4.0.2" & with-test}
+  "uri" {>= "4.2.0" & with-test}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
+### <resto/resto-cohttp-self-serving-client.opam>
+opam-version: "2.0"
+synopsis: "A minimal OCaml library for type-safe HTTP/JSON RPCs"
+maintainer: "contact@nomadic-labs.com"
+authors: "Nomadic Labs"
+license: "MIT"
+homepage: "https://gitlab.com/nomadic-labs/resto"
+bug-reports: "https://gitlab.com/nomadic-labs/resto/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "1.11"}
+  "uri" {>= "1.9.0"}
+  "resto" {= version}
+  "resto-lwt" {= version}
+  "resto-acl" {= version}
+  "resto-directory" {= version}
+  "resto-cohttp" {= version}
+  "resto-cohttp-client" {= version}
+  "resto-cohttp-server" {= version}
+  "resto-self-serving-client" {= version}
+  "cohttp-lwt" {>= "1.0.0"}
+  "lwt" {>= "3.0.0" & < "6.0.0"}
+  "cohttp" {>= "4.0.0" & with-test}
+  "cohttp-lwt-unix" {>= "4.0.0" & with-test}
+  "ezjsonm" {>= "1.3.0" & with-test}
+  "json-data-encoding" {>= "0.9.1" & with-test}
+  "json-data-encoding-bson" {>= "0.9.1" & with-test}
+  "conduit-lwt-unix" {>= "5.0.0" & with-test}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
+### <resto/resto-cohttp-server.opam>
+opam-version: "2.0"
+synopsis:
+  "A minimal OCaml library for type-safe HTTP/JSON RPCs - server library"
+maintainer: "contact@nomadic-labs.com"
+authors: ["Nomadic Labs" "Ocamlpro"]
+license: "MIT"
+homepage: "https://gitlab.com/nomadic-labs/resto"
+bug-reports: "https://gitlab.com/nomadic-labs/resto/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "1.11"}
+  "resto" {>= version }
+  "resto-lwt" {>= version }
+  "resto-server" {= version}
+  "resto-directory" {= version}
+  "resto-cohttp" {= version}
+  "resto-acl" {= version}
+  "cohttp-lwt-unix" {>= "4.0.0"}
+  "conduit-lwt-unix" {>= "5.0.0"}
+  "lwt" {>= "3.0.0" & < "6.0.0"}
+  "cohttp" {>= "4.0.0"}
+  "cohttp-lwt" {>= "4.0.0"}
+  "ezjsonm" {>= "1.3.0" & with-test}
+  "json-data-encoding" {>= "0.9.1" & with-test}
+  "json-data-encoding-bson" {>= "0.9.1" & with-test}
+  "result" {>= "1.5"}
+  "uri" {>= "4.2.0" & with-test}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
+### <resto/resto-directory.opam>
+opam-version: "2.0"
+synopsis: "A minimal OCaml library for type-safe HTTP/JSON RPCs"
+maintainer: "contact@nomadic-labs.com"
+authors: ["Nomadic Labs" "Ocamlpro"]
+license: "MIT"
+homepage: "https://gitlab.com/nomadic-labs/resto"
+bug-reports: "https://gitlab.com/nomadic-labs/resto/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "1.11"}
+  "resto" {= version}
+  "resto-json" {= version & with-test}
+  "cohttp" {>= "4.0.0" & with-test}
+  "cohttp-lwt" {>= "4.0.0" & with-test}
+  "cohttp-lwt-unix" {>= "4.0.0" & with-test}
+  "ezjsonm" {>= "1.3.0" & with-test}
+  "json-data-encoding" {>= "0.9.1" & with-test}
+  "json-data-encoding-bson" {>= "0.9.1" & with-test}
+  "lwt" {>= "5.5.0" & with-test}
+  "conduit-lwt-unix" {>= "4.0.2" & with-test}
+  "uri" {>= "4.2.0" & with-test}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
+### <resto/resto-json.opam>
+opam-version: "2.0"
+synopsis: "A minimal OCaml library for type-safe HTTP/JSON RPCs"
+maintainer: "contact@nomadic-labs.com"
+authors: ["Nomadic Labs" "Ocamlpro"]
+license: "MIT"
+homepage: "https://gitlab.com/nomadic-labs/resto"
+bug-reports: "https://gitlab.com/nomadic-labs/resto/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "1.11"}
+  "resto" {= version}
+  "json-data-encoding" {>= "0.9.1"}
+  "json-data-encoding-bson" {>= "0.9.1"}
+  "cohttp" {>= "4.0.0" & with-test}
+  "cohttp-lwt" {>= "4.0.0" & with-test}
+  "cohttp-lwt-unix" {>= "4.0.0" & with-test}
+  "ezjsonm" {>= "1.3.0" & with-test}
+  "lwt" {>= "5.5.0" & with-test}
+  "conduit-lwt-unix" {>= "5.0.0" & with-test}
+  "uri" {>= "4.2.0" & with-test}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
+### <resto/resto-lwt.opam>
+opam-version: "2.0"
+synopsis: "A minimal OCaml library for type-safe HTTP/JSON RPCs"
+maintainer: "contact@nomadic-labs.com"
+authors: ["Nomadic Labs" "Ocamlpro"]
+license: "MIT"
+homepage: "https://gitlab.com/nomadic-labs/resto"
+bug-reports: "https://gitlab.com/nomadic-labs/resto/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "1.11"}
+  "uri" {>= "1.9.0" & with-test}
+  "resto" {= version}
+  "json-data-encoding" {>= "0.9.1" & with-test}
+  "json-data-encoding-bson" {>= "0.9.1" & with-test}
+  "ezjsonm" {with-test}
+  "lwt"
+  "base-unix" {with-test}
+  "cohttp-lwt" {>= "4.0.0"}
+  "cohttp-lwt-unix" {>= "4.0.0"}
+  "conduit-lwt-unix" {>= "5.0.0"}
+  "cohttp" {>= "4.0.0"}
+  "result" {>= "1.5"}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
+### <resto/resto.opam>
+opam-version: "2.0"
+synopsis: "A minimal OCaml library for type-safe HTTP/JSON RPCs"
+maintainer: "contact@nomadic-labs.com"
+authors: ["Nomadic Labs" "Ocamlpro"]
+license: "MIT"
+homepage: "https://gitlab.com/nomadic-labs/resto"
+bug-reports: "https://gitlab.com/nomadic-labs/resto/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "1.11"}
+  "uri" {>= "1.9.0"}
+  "json-data-encoding" {= "0.9.1" & with-test}
+  "json-data-encoding-bson" {= "0.9.1" & with-test}
+  "ezjsonm" {with-test}
+  "lwt" {with-test}
+  "base-unix" {with-test}
+  "cohttp" {>= "4.0.0"}
+  "cohttp-lwt" {>= "4.0.0" & with-test}
+  "cohttp-lwt-unix" {>= "4.0.0" & with-test}
+  "result" {>= "1.5"}
+  "conduit-lwt-unix" {>= "4.0.2" & with-test}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
+### <resto/resto-self-serving-client.opam>
+opam-version: "2.0"
+synopsis: "A minimal OCaml library for type-safe HTTP/JSON RPCs"
+maintainer: "contact@nomadic-labs.com"
+authors: "Nomadic Labs"
+license: "MIT"
+homepage: "https://gitlab.com/nomadic-labs/resto"
+bug-reports: "https://gitlab.com/nomadic-labs/resto/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "1.11"}
+  "uri" {>= "1.9.0"}
+  "resto" {= version}
+  "resto-acl" {= version}
+  "resto-cohttp" {= version}
+  "resto-client" {= version}
+  "resto-server" {= version}
+  "resto-directory" {= version}
+  "cohttp" {>= "4.0.0"}
+  "cohttp-lwt" {>= "4.0.0" & with-test}
+  "cohttp-lwt-unix" {>= "4.0.0" & with-test}
+  "ezjsonm" {>= "1.3.0" & with-test}
+  "json-data-encoding" {>= "0.9.1" & with-test}
+  "json-data-encoding-bson" {>= "0.9.1" & with-test}
+  "lwt" {>= "5.5.0" & with-test}
+  "conduit-lwt-unix" {>= "5.0.0" & with-test}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
+### <resto/resto-server.opam>
+opam-version: "2.0"
+synopsis: "A generic resto server"
+maintainer: "contact@nomadic-labs.com"
+authors: ["Nomadic Labs" "Ocamlpro"]
+license: "MIT"
+homepage: "https://gitlab.com/nomadic-labs/resto"
+bug-reports: "https://gitlab.com/nomadic-labs/resto/issues"
+depends: [
+  "ocaml" {>= "4.08"}
+  "dune" {>= "1.11"}
+  "resto" {= version}
+  "resto-acl" {= version}
+  "resto-cohttp" {= version}
+  "resto-directory" {= version}
+  "cohttp"
+  "cohttp-lwt" {>= "4.0.0" & with-test}
+  "cohttp-lwt-unix" {>= "4.0.0" & with-test}
+  "ezjsonm" {>= "1.3.0" & with-test}
+  "json-data-encoding" {>= "0.9.1" & with-test}
+  "json-data-encoding-bson" {>= "0.9.1" & with-test}
+  "lwt" {>= "5.5.0" & with-test}
+  "uri" {>= "4.2.0"}
+  "conduit-lwt-unix" {>= "5.0.0" & with-test}
+]
+build: ["dune" "build" "-p" name "-j" jobs]
+dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
+### opam switch create default 4.12.0 --fake | unordered
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "4.12.0"} | "ocaml-system" {= "4.12.0"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.12.0
+Faking installation of ocaml-config.2
+Faking installation of ocaml.4.12.0
+Faking installation of ocaml-options-vanilla.1
+Done.
+### opam pin resto/ --with-version=0.6.1 --show --yes | unordered
+This will pin the following packages: ezresto-directory, ezresto, resto-acl, resto-client, resto-cohttp-client, resto-cohttp-self-serving-client, resto-cohttp-server, resto-cohttp, resto-directory, resto-json, resto-lwt, resto-self-serving-client, resto-server, resto. Continue? [Y/n] y
+ezresto-directory is now pinned to file://${BASEDIR}/resto (version 0.6.1)
+ezresto is now pinned to file://${BASEDIR}/resto (version 0.6.1)
+resto-acl is now pinned to file://${BASEDIR}/resto (version 0.6.1)
+Package resto-client does not exist, create as a NEW package? [Y/n] y
+resto-client is now pinned to file://${BASEDIR}/resto (version 0.6.1)
+resto-cohttp-client is now pinned to file://${BASEDIR}/resto (version 0.6.1)
+resto-cohttp-self-serving-client is now pinned to file://${BASEDIR}/resto (version 0.6.1)
+resto-cohttp-server is now pinned to file://${BASEDIR}/resto (version 0.6.1)
+resto-cohttp is now pinned to file://${BASEDIR}/resto (version 0.6.1)
+resto-directory is now pinned to file://${BASEDIR}/resto (version 0.6.1)
+resto-json is now pinned to file://${BASEDIR}/resto (version 0.6.1)
+Package resto-lwt does not exist, create as a NEW package? [Y/n] y
+resto-lwt is now pinned to file://${BASEDIR}/resto (version 0.6.1)
+Package resto-self-serving-client does not exist, create as a NEW package? [Y/n] y
+resto-self-serving-client is now pinned to file://${BASEDIR}/resto (version 0.6.1)
+Package resto-server does not exist, create as a NEW package? [Y/n] y
+resto-server is now pinned to file://${BASEDIR}/resto (version 0.6.1)
+resto is now pinned to file://${BASEDIR}/resto (version 0.6.1)
+
+[ERROR] Package conflict!
+Sorry, no solution found: there seems to be a problem with your request.
+
+[NOTE] Pinning command successful, but your installed packages may be out of sync.
+# Return code 20 #
+### : Minimal repro case
+### <REPO/repo>
+opam-version: "2.0"
+### <pkg:a.1>
+opam-version: "2.0"
+### <pkg:a.2>
+opam-version: "2.0"
+### <pkg:b.1>
+opam-version: "2.0"
+depends: "a" {< "2"}
+### <pkg:c.1>
+opam-version: "2.0"
+conflicts: "a" {< "2"}
+### opam repo add repo ./REPO
+[repo] Initialised
+[NOTE] Repository repo has been added to the selections of switch default only.
+       Run `opam repository add repo --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+
+### opam install b c --show
+[ERROR] Package conflict!
+Sorry, no solution found: there seems to be a problem with your request.
+
+No solution found, exiting
+# Return code 20 #
