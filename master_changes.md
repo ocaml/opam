@@ -96,6 +96,7 @@ New option/command/subcommand are prefixed with ◈.
 ## Reftests
 ### Tests
   * Port opam-rt tests: orphans, dep-cycles, reinstall, and big-upgrade [#4979 @AltGr]
+  * Add & update env tests [#4861 #4841 #4974 @rjbou @dra27 @AltGr]
 ### Engine
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
   * Add `BASEDIR` to environement [#4913 @rjbou]
