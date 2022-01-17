@@ -1194,6 +1194,73 @@ let dump_cudf_error ~version_map univ req =
   | Some f -> f
   | None -> assert false
 
+let vpkg2set univ vp =
+  Set.of_list (Dose_common.CudfAdd.resolve_deps univ vp)
+
+let compute_conflicts univ packages =
+  let open Set.Op in
+  let to_map set =
+    Set.fold (fun p ->
+        OpamStd.String.Map.update p.Cudf.package (Set.add p) Set.empty)
+      set OpamStd.String.Map.empty
+  in
+  let direct_conflicts p =
+    let base_conflicts =
+      Set.filter (fun q -> not (String.equal q.Cudf.package p.Cudf.package))
+        (vpkg2set univ p.Cudf.conflicts)
+    in
+    (* Dependencies not matching constraints are also conflicts *)
+    List.fold_left (fun acc -> function
+        | (n, c) :: disj when List.for_all (fun (m, _) -> String.equal m n) disj ->
+          let coset = function
+            | Some (op, v) ->
+              let filter = Some (OpamFormula.neg_relop op, v) in
+              Set.of_list (Cudf.lookup_packages ~filter univ n)
+            | None -> Set.empty
+          in
+          acc ++
+          List.fold_left (fun acc (_, c) -> acc %% coset c) (coset c) disj
+        | _ -> acc)
+      base_conflicts p.Cudf.depends
+  in
+  let cache = Hashtbl.create 513 in
+  let cache_direct = Hashtbl.create 513 in
+  (* Don't explore deeper than that for transitive conflicts *)
+  let max_dig_depth = OpamSolverConfig.(!r.dig_depth) in
+  let rec transitive_conflicts seen p =
+    try Hashtbl.find cache p with Not_found ->
+      let direct =
+        try Hashtbl.find cache_direct p with Not_found ->
+          let conflicts = direct_conflicts p in
+          Hashtbl.add cache_direct p conflicts;
+          conflicts
+      in
+      if Set.mem p seen || Set.cardinal seen >= max_dig_depth - 1 then direct
+      else
+      let seen = Set.add p seen in
+      let conflicts =
+        direct ++
+        List.fold_left (fun acc disj ->
+            acc ++
+            Set.map_reduce ~default:Set.empty
+              (transitive_conflicts seen)
+              Set.inter
+              (vpkg2set univ disj))
+          Set.empty
+          p.Cudf.depends
+      in
+      Hashtbl.add cache p conflicts;
+      conflicts
+  in
+  OpamStd.String.Map.fold (fun _ ps acc ->
+      acc ++
+      Set.map_reduce ~default:Set.empty
+        (transitive_conflicts Set.empty)
+        Set.inter
+        ps)
+    (to_map packages)
+    Set.empty
+
 let preprocess_cudf_request (props, univ, creq) criteria =
   let chrono = OpamConsole.timer () in
   let univ0 = univ in
@@ -1220,20 +1287,14 @@ let preprocess_cudf_request (props, univ, creq) criteria =
   in
   let univ =
     let open Set.Op in
-    let vpkg2set vp = Set.of_list (Dose_common.CudfAdd.resolve_deps univ vp) in
     let to_install =
-      vpkg2set creq.Cudf.install
+      vpkg2set univ creq.Cudf.install
       ++ Set.of_list (Cudf.lookup_packages univ opam_invariant_package_name)
     in
     let to_install_formula =
       List.map (fun x -> [x]) @@
       (opam_invariant_package_name, None) ::
       creq.Cudf.install @ creq.Cudf.upgrade
-    in
-    let to_map set =
-      Set.fold (fun p ->
-          OpamStd.String.Map.update p.Cudf.package (Set.add p) Set.empty)
-        set OpamStd.String.Map.empty
     in
     let packages =
       match do_trimming with
@@ -1276,64 +1337,7 @@ let preprocess_cudf_request (props, univ, creq) criteria =
               (dependency_set univ p.Cudf.depends))
           interesting_set
     in
-    let direct_conflicts p =
-      let base_conflicts =
-        Set.filter (fun q -> q.Cudf.package <> p.Cudf.package)
-          (vpkg2set p.Cudf.conflicts)
-      in
-      (* Dependencies not matching constraints are also conflicts *)
-      List.fold_left (fun acc -> function
-          | (n, c) :: disj when List.for_all (fun (m, _) -> m = n) disj ->
-            let coset = function
-              | Some (op, v) ->
-                let filter = Some (OpamFormula.neg_relop op, v) in
-                Set.of_list (Cudf.lookup_packages ~filter univ n)
-              | None -> Set.empty
-            in
-            acc ++
-            List.fold_left (fun acc (_, c) -> acc %% coset c) (coset c) disj
-          | _ -> acc)
-        base_conflicts p.Cudf.depends
-    in
-    let cache = Hashtbl.create 513 in
-    let cache_direct = Hashtbl.create 513 in
-    (* Don't explore deeper than that for transitive conflicts *)
-    let max_dig_depth = OpamSolverConfig.(!r.dig_depth) in
-    let rec transitive_conflicts seen p =
-      try Hashtbl.find cache p with Not_found ->
-      let direct =
-        try Hashtbl.find cache_direct p with Not_found ->
-          let conflicts = direct_conflicts p in
-          Hashtbl.add cache_direct p conflicts;
-          conflicts
-      in
-      if Set.mem p seen || Set.cardinal seen >= max_dig_depth - 1 then direct
-      else
-      let seen = Set.add p seen in
-      let conflicts =
-        direct ++
-        List.fold_left (fun acc disj ->
-            acc ++
-            Set.map_reduce ~default:Set.empty
-              (transitive_conflicts seen)
-              Set.inter
-              (vpkg2set disj))
-          Set.empty
-          p.Cudf.depends
-      in
-      Hashtbl.add cache p conflicts;
-      conflicts
-    in
-    let conflicts =
-      OpamStd.String.Map.fold (fun _ ps acc ->
-          acc ++
-          Set.map_reduce ~default:Set.empty
-            (transitive_conflicts Set.empty)
-            Set.inter
-            ps)
-        (to_map to_install)
-        Set.empty
-    in
+    let conflicts = compute_conflicts univ to_install in
     log "Conflicts: %a (%a) pkgs to remove"
       (slog OpamStd.Op.(string_of_int @* Set.cardinal)) conflicts
       (slog OpamStd.Op.(string_of_int @* Set.cardinal)) (conflicts %% packages);
@@ -1346,6 +1350,25 @@ let preprocess_cudf_request (props, univ, creq) criteria =
     (Cudf.universe_size univ)
     (chrono ());
   props, univ, creq
+
+let trim_universe univ packages =
+  let chrono = OpamConsole.timer () in
+  let n = Cudf.universe_size univ in
+  let conflicts = compute_conflicts univ packages in
+  (* Set.iter (fun p -> Cudf.remove_package univ (p.Cudf.package, p.Cudf.version))
+   *   conflicts; *)
+  let univ = Cudf.load_universe (Cudf.get_packages ~filter:(fun p -> not (Set.mem p conflicts)) univ) in
+  log "Pre-remove conflicts (%s): from %d - %d to %d packages in %.2fs"
+    (Set.to_string packages)
+    n (Set.cardinal conflicts) (Cudf.universe_size univ) (chrono ());
+  (* Dose_common.CudfAdd. (
+   * (\* let install =
+   *  *   List.map (fun p -> p.Cudf.package, Some (`Eq,p.Cudf.version)) packages
+   *  * in *\)
+   * let _, univ, _ =
+   *   preprocess_cudf_request ((), univ, Cudf.default_request (\* with install *\)) "-new"
+   * in *)
+  univ
 
 exception Timeout of Dose_algo.Depsolver.solver_result option
 

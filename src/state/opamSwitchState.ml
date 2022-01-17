@@ -13,7 +13,7 @@ open OpamTypes
 open OpamStd.Op
 open OpamPackage.Set.Op
 
-let log fmt = OpamConsole.log "STATE" fmt
+let log ?level fmt = OpamConsole.log ?level "STATE" fmt
 let slog = OpamConsole.slog
 
 open OpamStateTypes
@@ -560,6 +560,12 @@ let load lock_kind gt rt switch =
                      (OpamSysPkg.Set.elements spkg)))
                (OpamPackage.Map.bindings missing_map)));
     changed
+  ) in
+  let available_packages = lazy (
+    let chrono = OpamConsole.timer () in
+    let r = Lazy.force available_packages in
+    log ~level:2 "Availability of packages computed in %.3fs." (chrono ());
+    r
   ) in
   let reinstall = lazy (
     OpamFile.PkgList.safe_read (OpamPath.Switch.reinstall gt.root switch) ++
