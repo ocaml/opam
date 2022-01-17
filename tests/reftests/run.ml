@@ -24,7 +24,7 @@
      add this package to `default` repository in `./REPO`
    - use `### <pkg:NAME.VERSION:FILENAME>`, then the contents below to add this
      file as a extra-file of the given package in the `default` repository
-   - use `### <pin:path>, then the contents below to create a minimal opam
+   - use `### <pin:path>`, then the contents below to create a minimal opam
      file, it is extended by template defined fields to pin it without lint
      errors
    - `### FOO=x BAR=y` to export variables for subsequent commands
@@ -150,27 +150,18 @@ let str_replace_path ?escape whichway filters s =
   in
   List.fold_left (fun s (re, by) ->
       let re_path = Re.(
-          seq [re; group (rep (diff any space))]
+          seq [re; group (rep (diff any (alt [set ":;$\"'"; space])))]
         ) in
       match by with
       | Sed by ->
-        (* workaround to have several replacement, and handle paths *)
-        let rec loop prev =
-          let replaced =
-            Re.replace (Re.compile re_path) prev
-              ~f:(fun g ->
-                  escape (by ^ whichway (Re.Group.(get g (nb_groups g - 1)))))
-          in
-          if prev = replaced then  prev else loop replaced
-        in
-        loop s
+        Re.replace (Re.compile re_path) s ~f:(fun g ->
+            escape (by ^ whichway (Re.Group.(get g (nb_groups g - 1)))))
       | Grep | GrepV ->
-        let way = if by = Grep then fun x -> x else not in
-        if way @@ Re.execp (Re.compile re) s then s else "\\c")
+        if (by = Grep) = Re.execp (Re.compile re) s then s else "\\c")
     s filters
 
 let filters_of_var =
-  List.rev_map (fun (v, x) ->
+  List.map (fun (v, x) ->
       Re.(alt [seq [str "${"; str v; str "}"];
                seq [char '$'; str v; eow]];),
       Sed x)
@@ -382,15 +373,15 @@ module Parse = struct
       let grs = all ~pos (compile re_str_atom) str in
       List.map (fun gr -> Group.get gr 0) grs
     in
-    let get_str s =
-      str_replace_path OpamSystem.back_to_forward
+    let get_str ?escape s =
+      str_replace_path ?escape OpamSystem.back_to_forward
         (filters_of_var vars)
         (get_str s)
     in
     let posix_re re =
-      try Posix.re (get_str re)
+      try Posix.re (get_str ~escape:true re)
       with Posix.Parse_error ->
-        failwith (Printf.sprintf "Parse error: %s" re)
+        failwith (Printf.sprintf "Bad POSIX regexp: %s" re)
     in
     let rec get_args_rewr acc = function
       | [] -> List.rev acc, false, [], None
@@ -415,7 +406,7 @@ module Parse = struct
             unordered, List.rev acc, None
         in
         let unordered, rewr, out = get_rewr (false, []) rewr in
-        List.rev acc, unordered, List.rev rewr, out
+        List.rev acc, unordered, rewr, out
       | arg :: r -> get_args_rewr (arg :: acc) r
     in
     let args, unordered, rewr, output = get_args_rewr [] args in
@@ -465,18 +456,11 @@ let common_filters ?opam dir =
    ] @
    (match opam with
     | None -> []
-    | Some opam -> [ str opam, Sed "${OPAMBIN}" ])
+    | Some opam -> [ str opam, Sed "${OPAM}" ])
 
 let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
-  let filter = common_filters ~opam dir @ filter in
-  let opamroot = Filename.concat dir "OPAM" in
-  let env_vars = [
-    "OPAM", opam;
-    "OPAMROOT", opamroot;
-    "BASEDIR", dir;
-  ] @ vars
-  in
-  let var_filters = filters_of_var env_vars in
+  let filter = filter @ common_filters ~opam dir in
+  let var_filters = filters_of_var vars in
   let cmd = if cmd = "opam" then opam else cmd in
   let args =
     List.map (fun a ->
@@ -489,7 +473,7 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
         Parse.get_str expanded)
       args
   in
-  try command ~vars:env_vars ~filter ~silent cmd args, None
+  try command ~vars ~filter ~silent cmd args, None
   with Command_failure (n,_, out) -> out, Some n
 
 let write_file ~path ~contents =
@@ -569,9 +553,11 @@ bug-reports: "https://nobug"
 |} "<nofile>"
 
 let run_test ?(vars=[]) ~opam t =
-  let opamroot0 = Filename.concat (Sys.getcwd ()) ("root-"^t.repo_hash) in
-  with_temp_dir @@ fun dir ->
   let old_cwd = Sys.getcwd () in
+  let opamroot0 = Filename.concat old_cwd ("root-"^t.repo_hash) in
+  with_temp_dir @@ fun dir ->
+  Sys.chdir dir;
+  let dir = Sys.getcwd () in (* because it may need to be normalised on macOS *)
   let opamroot = Filename.concat dir "OPAM" in
   if Sys.win32 then
     ignore @@ command ~allowed_codes:[0; 1] ~silent:true
@@ -579,8 +565,12 @@ let run_test ?(vars=[]) ~opam t =
       ["/e"; "/copy:dat"; "/dcopy:dat"; "/sl"; opamroot0; opamroot]
   else
     ignore @@ command "cp" ["-PR"; opamroot0; opamroot];
-  Sys.chdir dir;
-  let dir = Sys.getcwd () in (* because it may need to be normalised on macOS *)
+  let vars = [
+    "OPAM", opam;
+    "OPAMROOT", opamroot;
+    "BASEDIR", dir;
+  ] @ vars
+  in
   if t.repo_hash = no_opam_repo then
     (mkdir_p (default_repo^"/packages");
      write_file ~path:(default_repo^"/repo") ~contents:{|opam-version: "2.0"|};
