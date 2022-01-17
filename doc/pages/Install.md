@@ -36,8 +36,10 @@ pre-compiled binary, backup your opam data if from an older version, and run
 and run `sh install.sh`)
 
 We provide pre-compiled binaries for:
-- Linux i686, amd64, arm7, arm64
-- macOS (intel 64 bits, arm64)
+- Linux (amd64, arm64, arm7, i686)
+- macOS (amd64, arm64)
+- FreeBSD (amd64)
+- OpenBSD (amd64)
 - We do not at present provide an official Windows distribution of opam, but please see [this separately maintained distribution](https://fdopen.github.io/opam-repository-mingw/)
 (other platforms are available using the other methods below)
 
