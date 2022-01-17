@@ -36,7 +36,7 @@ New option/command/subcommand are prefixed with ◈.
   * Improve performance of opam list --conflicts-with when combined with other filters [#4999 @kit-ty-kate]
 
 ## Show
-  *
+  * Improve performance of opam show by 300% when the package to show is given explicitly or unique [#4998 @kit-ty-kate - fix #4997 and partially #4172]
 
 ## Var
   *
