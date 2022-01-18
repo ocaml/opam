@@ -272,6 +272,23 @@
    (run ./run.exe %{bin:opam} %{dep:lint.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-list)
+ (action
+  (diff list.test list.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-list)))
+
+(rule
+ (targets list.out)
+ (deps root-7371c1d9c53000840fb9a6d8ec13d87ffaa98401)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:list.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-opamroot-versions)
  (action
   (diff opamroot-versions.test opamroot-versions.out)))
@@ -548,6 +565,26 @@
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
            file://%{dep:opam-repo-7090735c9d})))))
+
+(rule
+ (targets opam-archive-7371c1d9c53000840fb9a6d8ec13d87ffaa98401.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/7371c1d9c53000840fb9a6d8ec13d87ffaa98401.tar.gz)))
+
+(rule
+  (targets opam-repo-7371c1d9c53000840fb9a6d8ec13d87ffaa98401)
+  (action
+   (progn
+    (run mkdir -p %{targets})
+    (run tar -C %{targets} -xzf %{dep:opam-archive-7371c1d9c53000840fb9a6d8ec13d87ffaa98401.tar.gz} --strip-components=1))))
+
+(rule
+  (targets root-7371c1d9c53000840fb9a6d8ec13d87ffaa98401)
+  (action
+   (progn
+    (ignore-stdout
+    (run %{bin:opam} init --root=%{targets}
+           --no-setup --bypass-checks --no-opamrc --bare
+           file://%{dep:opam-repo-7371c1d9c53000840fb9a6d8ec13d87ffaa98401})))))
 
 (rule
  (targets opam-archive-a5d7cdc0c914.tar.gz)
