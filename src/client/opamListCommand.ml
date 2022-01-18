@@ -243,7 +243,7 @@ let apply_selector ~base st = function
       base
   | Conflicts_with packages ->
     OpamSwitchState.conflicts_with st (OpamPackage.Set.of_list packages)
-      (Lazy.force st.available_packages)
+      base
   | Coinstallable_with (tog, packages) ->
     let universe = get_universe st tog in
     let set = OpamPackage.Set.of_list packages in
@@ -370,11 +370,11 @@ let apply_selector ~base st = function
 
 let rec filter ~base st = function
   | Empty -> base
-  | Atom select -> apply_selector ~base st select
+  | Atom select -> base %% apply_selector ~base st select
   | Block b -> filter ~base st b
   | And (a, b) ->
     let base = filter ~base st a in
-    base %% filter ~base st b
+    filter ~base st b
   | Or (a, b) -> filter ~base st a ++ filter ~base st b
 
 type output_format =
