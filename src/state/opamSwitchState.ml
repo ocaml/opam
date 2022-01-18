@@ -131,17 +131,7 @@ let infer_switch_invariant_raw
       compiler []
   in
   match List.sort (fun (_, c1) (_, c2) -> compare c1 c2) counts with
-  | (nv, _) :: _ ->
-    let versions =
-      OpamPackage.packages_of_name (Lazy.force available_packages) nv.name
-    in
-    let n = OpamPackage.Set.cardinal versions in
-    if n <= 1 then
-      OpamFormula.Atom (nv.name, Empty)
-    else if nv = OpamPackage.Set.max_elt versions then
-      OpamFormula.Atom (nv.name, Atom (`Geq, nv.version))
-    else
-      OpamFormula.Atom (nv.name, Atom (`Eq, nv.version))
+  | (nv, _) :: _ -> OpamFormula.Atom (nv.name, Atom (`Eq, nv.version))
   | [] -> OpamFormula.Empty
 
 let infer_switch_invariant st =
