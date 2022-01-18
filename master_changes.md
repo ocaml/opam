@@ -32,6 +32,8 @@ New option/command/subcommand are prefixed with ◈.
 
 ## List
   * Some optimisations to 'opam list --installable' queries combined with other filters [#4882 @AltGr]
+  * Improve performance of some opam list combination (e.g. --available --installable) [#4999 @kit-ty-kate]
+  * Improve performance of opam list --conflicts-with when combined with other filters [#4999 @kit-ty-kate]
 
 ## Show
   *
