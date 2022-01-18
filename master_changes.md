@@ -65,6 +65,7 @@ users)
   * [BUG] Fix `set-invariant: default repos were loaded instead of switch repos [#4866 @rjbou]
   * Add support for `opam switch -` (go to previous non-local switch) [#4910 @kit-ty-kate - fix 4866]
   * On loading, check for executable external files if they are in `PATH`, and warn if not the case [#4932 @rjbou - fix #4923]
+  * Avoid trying to be too clever when upgrading switches from opam 2.0 [#5002 @kit-ty-kate - fix #4501]
 
 ## Pin
   * Switch the default version when undefined from ~dev to dev [#4949 @kit-ty-kate]
