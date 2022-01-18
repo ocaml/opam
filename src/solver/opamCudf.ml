@@ -581,10 +581,23 @@ let dependencies universe packages =
 (* similar to Dose_algo.Depsolver.dependency_closure but with finer results on
    version sets *)
 
-let reverse_dependencies universe packages =
-  let graph = Graph.of_universe universe in
-  Set.fixpoint (fun p -> Set.of_list (Graph.pred graph p)) packages
-(* similar to Dose_algo.Depsolver.reverse_dependency_closure but more reliable *)
+let reverse_dependencies universe =
+  let tbl = Array.make (Cudf.universe_size universe) [] in
+  Cudf.iteri_packages (fun uid p ->
+      Set.iter
+        (fun q ->
+           let i = Cudf.uid_by_package universe q in
+           tbl.(i) <- uid :: tbl.(i))
+        (dependency_set universe p.Cudf.depends))
+    universe;
+  Set.fixpoint
+    (fun p ->
+       List.fold_left
+         (fun acc uid -> Set.add (Cudf.package_by_uid universe uid) acc)
+         Set.empty
+         tbl.(Cudf.uid_by_package universe p))
+(* similar to Dose_algo.Depsolver.reverse_dependency_closure but more reliable
+   and faster *)
 
 let dependency_sort universe packages =
   let graph = Graph.of_universe universe in
