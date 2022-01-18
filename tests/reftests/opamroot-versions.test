@@ -662,7 +662,7 @@ FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
-STATE                           Inferred invariant: from base packages { i-am-sys-compiler.1 }, (roots { i-am-sys-compiler.1 }) => ["i-am-sys-compiler"]
+STATE                           Inferred invariant: from base packages { i-am-sys-compiler.1 }, (roots { i-am-sys-compiler.1 }) => ["i-am-sys-compiler" {= "1"}]
 STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # Name               # Installed # Synopsis
@@ -679,7 +679,7 @@ RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ sw-comp
 STATE                           Definition missing for installed package i-am-compiler.2, copying from repo
 STATE                           Definition missing for installed package i-am-package.2, copying from repo
-STATE                           Inferred invariant: from base packages { i-am-compiler.2 }, (roots { i-am-compiler.2 }) => ["i-am-compiler" {>= "2"}]
+STATE                           Inferred invariant: from base packages { i-am-compiler.2 }, (roots { i-am-compiler.2 }) => ["i-am-compiler" {= "2"}]
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
@@ -716,7 +716,7 @@ opam-version: "2.0"
 repositories: "default"
 switch: "sw-comp"
 ### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-config
-invariant: ["i-am-compiler" {>= "2"}]
+invariant: ["i-am-compiler" {= "2"}]
 opam-version: "2.0"
 synopsis: "switch with compiler"
 paths {
@@ -740,7 +740,7 @@ FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
-STATE                           Inferred invariant: from base packages { i-am-sys-compiler.2 }, (roots { i-am-sys-compiler.2 }) => ["i-am-sys-compiler"]
+STATE                           Inferred invariant: from base packages { i-am-sys-compiler.2 }, (roots { i-am-sys-compiler.2 }) => ["i-am-sys-compiler" {= "2"}]
 STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # Name            # Installed # Synopsis
@@ -755,7 +755,7 @@ RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
-STATE                           Inferred invariant: from base packages { i-am-sys-compiler.2 }, (roots { i-am-sys-compiler.2 }) => ["i-am-sys-compiler"]
+STATE                           Inferred invariant: from base packages { i-am-sys-compiler.2 }, (roots { i-am-sys-compiler.2 }) => ["i-am-sys-compiler" {= "2"}]
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
@@ -789,7 +789,7 @@ opam-version: "2.0"
 repositories: "default"
 switch: "sw-sys-comp"
 ### opam-cat _opam/.opam-switch/switch-config
-invariant: ["i-am-sys-compiler"]
+invariant: ["i-am-sys-compiler" {= "2"}]
 opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
@@ -815,7 +815,7 @@ FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
-STATE                           Inferred invariant: from base packages { i-am-sys-compiler.2 }, (roots { i-am-sys-compiler.2 }) => ["i-am-sys-compiler"]
+STATE                           Inferred invariant: from base packages { i-am-sys-compiler.2 }, (roots { i-am-sys-compiler.2 }) => ["i-am-sys-compiler" {= "2"}]
 STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # Name            # Installed # Synopsis
@@ -829,7 +829,7 @@ RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
-STATE                           Inferred invariant: from base packages { i-am-sys-compiler.2 }, (roots { i-am-sys-compiler.2 }) => ["i-am-sys-compiler"]
+STATE                           Inferred invariant: from base packages { i-am-sys-compiler.2 }, (roots { i-am-sys-compiler.2 }) => ["i-am-sys-compiler" {= "2"}]
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
@@ -863,7 +863,7 @@ opam-version: "2.0"
 repositories: "default"
 switch: "sw-sys-comp"
 ### opam-cat _opam/.opam-switch/switch-config
-invariant: ["i-am-sys-compiler"]
+invariant: ["i-am-sys-compiler" {= "2"}]
 opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
@@ -886,7 +886,7 @@ GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
-STATE                           Inferred invariant: from base packages { i-am-sys-compiler.2 }, (roots { i-am-sys-compiler.2 }) => ["i-am-sys-compiler"]
+STATE                           Inferred invariant: from base packages { i-am-sys-compiler.2 }, (roots { i-am-sys-compiler.2 }) => ["i-am-sys-compiler" {= "2"}]
 STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # Name            # Installed # Synopsis
@@ -897,7 +897,7 @@ GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
-STATE                           Inferred invariant: from base packages { i-am-sys-compiler.2 }, (roots { i-am-sys-compiler.2 }) => ["i-am-sys-compiler"]
+STATE                           Inferred invariant: from base packages { i-am-sys-compiler.2 }, (roots { i-am-sys-compiler.2 }) => ["i-am-sys-compiler" {= "2"}]
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
@@ -925,7 +925,7 @@ opam-version: "2.0"
 repositories: "default"
 switch: "sw-sys-comp"
 ### opam-cat _opam/.opam-switch/switch-config
-invariant: ["i-am-sys-compiler"]
+invariant: ["i-am-sys-compiler" {= "2"}]
 opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
