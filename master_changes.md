@@ -173,6 +173,7 @@ users)
   * Process control: close stdin by default for Windows subprocesses and on all platforms for the download command [#4615 @dra27]
   * [BUG] handle converted variables correctly when no_undef_expand is true [#4811 @timbertson]
   * [BUG] check Unix.has_symlink before using Unix.symlink [#4962 @jonahbeckford]
+  * OpamCudf: provide machine-readable information on conflicts caused by cycles [#4039 @gasche]
 
 ## Test
   * Update crowbar with compare functions [#4918 @rjbou]
@@ -237,6 +238,8 @@ users)
 ## opam-repository
 ## opam-state
 ## opam-solver
+  * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
+  * `OpamCudf`: add `conflict_cycles` [#4039 @gasche]
 ## opam-format
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamSysPkg` and `OpamVariable` [#4918 @rjbou]
   * Add OpamPackage.Version.default returning the version number used when no version is given for a package [#4949 @kit-ty-kate]
@@ -244,5 +247,4 @@ users)
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamFilename`, `OpamHash`, `OpamStd`, `OpamStd`, `OpamUrl`, and `OpamVersion` [#4918 @rjbou]
   * `OpamHash`: add `sort` from strongest to weakest kind
-
-  * OpamSystem.real_path: Remove the double chdir trick on OCaml >= 4.13.0 [#4961 @kit-ty-kate]
+  * `OpamSystem.real_path`: Remove the double chdir trick on OCaml >= 4.13.0 [#4961 @kit-ty-kate]

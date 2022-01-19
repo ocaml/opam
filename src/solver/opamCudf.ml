@@ -421,7 +421,7 @@ exception Cyclic_actions of Action.t list list
 
 type conflict_case =
   | Conflict_dep of (unit -> Dose_algo.Diagnostic.reason list)
-  | Conflict_cycle of string list list
+  | Conflict_cycle of Cudf.package action list list
 type conflict =
   Cudf.universe * int package_map * conflict_case
 
@@ -974,7 +974,10 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
   | _ -> explanations
 
 let strings_of_cycles cycles =
-  List.map arrow_concat cycles
+  let string_of_cycle cycle =
+    List.map string_of_action cycle
+    |> arrow_concat in
+  List.map string_of_cycle cycles
 
 let string_of_conflict ?(start_column=0) (msg1, msg2, msg3) =
   let width = OpamStd.Sys.terminal_columns () - start_column - 2 in
@@ -1027,6 +1030,11 @@ let conflict_explanations packages unav_reasons = function
     List.rev_map (string_of_explanation unav_reasons) explanations, []
   | _univ, _version_map, Conflict_cycle cycles ->
     [], strings_of_cycles cycles
+
+let conflict_cycles = function
+  | _cudf_universe, _version_map, Conflict_cycle cycles ->
+     Some (List.map (List.map (map_action cudf2opam)) cycles)
+  | _ -> None
 
 let string_of_explanations unav_reasons (cflts, cycles) =
   let cflts = List.map (string_of_explanation unav_reasons) cflts in
