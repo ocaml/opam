@@ -270,6 +270,7 @@ users)
   * Add deprectaed flag test [#4523 @kit-ty-kate]
   * Escape for cmdliner.1.1.1 output chane [#5131 @rjbou]
   * Add deps-only, install formula [#4975 @AltGr]
+  * Update opam root version test do escape `OPAMROOTVERSION` sed, it matches generated hexa temporary directory names [#5007 @AltGr]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
