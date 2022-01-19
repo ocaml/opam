@@ -736,6 +736,15 @@ module OpamString = struct
       && length_s > from
       && String.sub full 0 length_s = s
 
+  let is_hex s =
+    try
+      String.iter (function
+          | '0'..'9' | 'A'..'F' | 'a'..'f' -> ()
+          | _ -> raise Exit)
+        s;
+      true
+    with Exit -> false
+
 end
 
 type warning_printer =

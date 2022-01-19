@@ -273,13 +273,6 @@ module VCS : OpamVCS.VCS = struct
 
   (** check if a hash or branch is present in remote origin and returns  *)
   let check_remote repo_root hash_or_b =
-    let is_hex str =
-      OpamStd.String.fold_left (fun hex ch ->
-          hex && match ch with
-          | '0'..'9' | 'A'..'F' | 'a'..'f' -> true
-          | _ -> false
-        ) true str
-    in
     (* get the hash of the branch *)
     let hash =
       git repo_root ["branch"] @@> fun r ->
@@ -290,13 +283,13 @@ module VCS : OpamVCS.VCS = struct
         if is_branch then
           git repo_root [ "rev-list"; hash_or_b; "-1" ] @@> fun r ->
           if OpamProcess.is_success r then
-            (match List.filter is_hex r.r_stdout with
+            (match List.filter OpamStd.String.is_hex r.r_stdout with
              | [hash] ->
                Done (Some hash)
              | _ -> Done None)
           else Done None
         else
-        if is_hex hash_or_b then
+        if OpamStd.String.is_hex hash_or_b then
           Done (Some hash_or_b)
         else Done None
       else
