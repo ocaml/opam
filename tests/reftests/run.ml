@@ -136,17 +136,31 @@ type filt_sort =
   | Grep
   | GrepV
 
+let escape_regexps s =
+  let buf = Buffer.create (String.length s * 2) in
+  String.iter (function
+    | ('|' | '(' | ')' | '*' | '+' | '?'
+    |  '[' | '.' | '^' | '$' | '{' | '\\') as c -> Buffer.add_char buf '\\'; Buffer.add_char buf c
+    | c -> Buffer.add_char buf c
+  ) s;
+  Buffer.contents buf
+
 let str_replace_path ?escape whichway filters s =
-  let unescape = escape = Some false in
-  let escape = escape = Some true in
   let s =
-    if unescape then
-      Re.(replace_string (compile @@ str "\\\\") ~by:"\\" s)
-    else s
+    match escape with
+    | Some `Unescape -> Re.(replace_string (compile @@ str "\\\\") ~by:"\\" s)
+    | Some (`Backslashes | `Regexps) | None -> s
   in
-  let escape =
-    if escape then Re.(replace_string (compile @@ char '\\') ~by:"\\\\")
-    else fun s -> s
+  let escape_backslashes =
+    match escape with
+    | Some (`Backslashes | `Regexps) -> Re.(replace_string (compile @@ char '\\') ~by:"\\\\")
+    | Some `Unescape | None -> fun s -> s
+  in
+  let escape_regexps =
+    match escape with
+    | Some `Regexps -> escape_regexps
+    | Some `Backslashes -> escape_backslashes
+    | Some `Unescape | None -> fun s -> s
   in
   List.fold_left (fun s (re, by) ->
       let re_path = Re.(
@@ -155,7 +169,7 @@ let str_replace_path ?escape whichway filters s =
       match by with
       | Sed by ->
         Re.replace (Re.compile re_path) s ~f:(fun g ->
-            escape (by ^ whichway (Re.Group.(get g (nb_groups g - 1)))))
+            escape_regexps by ^ escape_backslashes (whichway (Re.Group.(get g (nb_groups g - 1)))))
       | Grep | GrepV ->
         if (by = Grep) = Re.execp (Re.compile re) s then s else "\\c")
     s filters
@@ -201,7 +215,7 @@ let command
   let rec filter_output ?(first=true) ic =
     match input_line ic with
     | s ->
-      let s = str_replace_path ~escape:false OpamSystem.back_to_forward filter s in
+      let s = str_replace_path ~escape:`Unescape OpamSystem.back_to_forward filter s in
       if s = "\\c" then filter_output ~first ic
       else
         (if not first then Buffer.add_char out_buf '\n';
@@ -379,7 +393,7 @@ module Parse = struct
         (get_str s)
     in
     let posix_re re =
-      try Posix.re (get_str ~escape:true re)
+      try Posix.re (get_str ~escape:`Regexps re)
       with Posix.Parse_error ->
         failwith (Printf.sprintf "Bad POSIX regexp: %s" re)
     in
@@ -467,7 +481,7 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
         let expanded =
           if a <> "" && a.[0] = '\'' then a
           else
-            str_replace_path ~escape:true OpamSystem.forward_to_back
+            str_replace_path ~escape:`Backslashes OpamSystem.forward_to_back
               var_filters a
         in
         Parse.get_str expanded)
