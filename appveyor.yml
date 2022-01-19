@@ -1,6 +1,9 @@
 platform:
     - x64
 
+matrix:
+  fast_finish: true
+
 image: Visual Studio 2019
 
 environment:
