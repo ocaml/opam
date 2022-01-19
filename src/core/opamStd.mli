@@ -251,6 +251,7 @@ module String : sig
 
   val starts_with: prefix:string -> string -> bool
   val ends_with: suffix:string -> string -> bool
+  val for_all: (char -> bool) -> string -> bool
   val contains_char: string -> char -> bool
   val contains: sub:string -> string -> bool
   val exact_match: Re.re -> string -> bool
