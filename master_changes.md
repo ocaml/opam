@@ -70,6 +70,7 @@ users)
   * [BUG] Fix SWH liveness check [#6036 @rjbou - fix #5721]
   * Update SWH API request [#6036 @rjbou]
   * Rework SWH fallback to have a more correct archive retrieval and more fine grained error handling [#6036 @rjbou - fix #5721]
+  * Check that the repositories given to `opam repository remove` actually exist [#5014 @kit-ty-kate - fixes #5012]
 
 ## Lock
 
@@ -185,6 +186,7 @@ users)
 ## opam-client
   * `OpamArg.InvalidCLI`: export exception [#6150 @rjbou]
   * `OpamArg`: export `require_checksums` and `no_checksums`, that are shared with `build_options` [#5563 @rjbou]
+  * `OpamRepositoryCommand.switch_repos`: expose the function [#5014 @kit-ty-kate]
 
 ## opam-repository
   * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]

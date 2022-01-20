@@ -894,13 +894,14 @@ to-many-commits
 oper3
 oper
 ### opam repository remove does-not-exist
-Repositories removed from the selections of switch rm-unknown. Use '--all' to forget about them altogether.
+[WARNING] No configured repositories by these names found in the selection of switch 'rm-unknown': does-not-exist
 ### opam repository remove does-not-exist --all
 [WARNING] No configured repositories by these names found: does-not-exist
 ### opam repository remove does-not-exist oper
+[WARNING] No configured repositories by these names found in the selection of switch 'rm-unknown': does-not-exist
 Repositories removed from the selections of switch rm-unknown. Use '--all' to forget about them altogether.
 ### opam repository remove does-not-exist repo2
-Repositories removed from the selections of switch rm-unknown. Use '--all' to forget about them altogether.
+[WARNING] No configured repositories by these names found in the selection of switch 'rm-unknown': does-not-exist repo2
 ### opam repository remove does-not-exist repo2 --all
 [WARNING] No configured repositories by these names found: does-not-exist
 ### opam repository --all --short
