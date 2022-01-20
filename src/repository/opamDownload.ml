@@ -193,3 +193,28 @@ let download ?quiet ?validate ~overwrite ?compress ?checksum url dstdir =
   in
   download_as ?quiet ?validate ~overwrite ?compress ?checksum url dst @@|
   fun () -> dst
+
+
+(** Stdout output retrieval and post requests management *)
+
+let post_tools = ["wget"; "curl"]
+let check_post_tool () =
+  match Lazy.force OpamRepositoryConfig.(!r.download_tool) with
+  | [(CIdent cmd), _], _ -> List.mem cmd post_tools
+  | _ -> false
+
+let get_output ~post ?(args=[]) url =
+  let cmd_args =
+    download_args ~url ~out:"-" ~retry:OpamRepositoryConfig.(!r.retries)
+      ~compress:false ()
+    @ args
+  in
+  let cmd_args =
+    if post then
+      match cmd_args with
+      | ("wget"|"curl" as cmd)::args -> Some (cmd :: ["-X"; "POST"] @ args)
+      | _ -> None
+    else Some cmd_args
+  in
+  Done (OpamStd.Option.map
+          (OpamSystem.read_command_output ~ignore_stderr:true) cmd_args)
