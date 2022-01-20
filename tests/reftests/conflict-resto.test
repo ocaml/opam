@@ -411,8 +411,8 @@ resto is now pinned to file://${BASEDIR}/resto (version 0.6.1)
 
 [ERROR] Package conflict!
   * No agreement on the version of conduit-lwt-unix:
-    - resto-cohttp-server -> cohttp-lwt-unix >= 4.0.0 -> conduit-lwt-unix < 5.0.0
-    - resto-cohttp-server -> conduit-lwt-unix >= 5.0.0
+    - resto-lwt -> cohttp-lwt-unix >= 4.0.0 -> conduit-lwt-unix < 5.0.0
+    - resto-lwt -> conduit-lwt-unix >= 5.0.0
 
 [NOTE] Pinning command successful, but your installed packages may be out of sync.
 # Return code 20 #
