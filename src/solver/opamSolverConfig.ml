@@ -211,7 +211,8 @@ let initk k =
 let init ?noop:_ = initk (fun () -> ())
 
 let best_effort =
-  let r = lazy (
+  let already_warned = ref false in
+  fun () ->
     !r.best_effort &&
     let crit = match Lazy.force !r.solver_preferences_default with
       | Some c -> c
@@ -220,14 +221,15 @@ let best_effort =
     let pfx = Lazy.force !r.solver_preferences_best_effort_prefix in
     pfx <> None ||
     OpamStd.String.contains ~sub:"opam-query" crit ||
-    (OpamConsole.warning
-       "Your solver configuration does not support --best-effort, the option \
-        was ignored (you need to specify variable OPAMBESTEFFORTCRITERIA, or \
-        set your criteria to maximise the count for cudf attribute \
-        'opam-query')";
+    (if not !already_warned then begin
+       already_warned := true;
+       OpamConsole.warning
+         "Your solver configuration does not support --best-effort, the option \
+          was ignored (you need to specify variable OPAMBESTEFFORTCRITERIA, or \
+          set your criteria to maximise the count for cudf attribute \
+          'opam-query')"
+     end;
      false)
-  ) in
-  fun () -> Lazy.force r
 
 let criteria kind =
   let crit = match kind with
