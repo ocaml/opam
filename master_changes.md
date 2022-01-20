@@ -114,6 +114,7 @@ New option/command/subcommand are prefixed with ◈.
   * Clean outputs from opam error reporting block [#4966 @rjbou]
   * Avoid diff when the repo is too old [#4979 @AltGr]
   * Fix github url: `git://` form no more handled [#5097 @rjbou]
+  * Escape regexps characters in string replacements primitives [#5009 @kit-ty-kate]
 
 ## Doc
   * Add github `git://` protocol deprecation note [#5097 @rjbou]
