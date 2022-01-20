@@ -203,6 +203,7 @@ users)
   * Unescape output [#4966 @rjbou]
   * Clean outputs from opam error reporting block [#4966 @rjbou]
   * Avoid diff when the repo is too old [#4979 @AltGr]
+  * Escape regexps characters in string replacements primitives [#5009 @kit-ty-kate]
 
 
 ## Github Actions
