@@ -1071,7 +1071,9 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
   match explanations with
   | [] ->
     OpamConsole.error_and_exit `Internal_error
-      "Internal error while computing conflict explanations: sorry, please report."
+      "Internal error while computing conflict explanations:\n\
+       sorry about that. Please report how you got here in \
+       https://github.com/ocaml/opam/discussions/5130 if possible."
   | `Missing (_, sdeps, fdeps) :: rest when same_depexts sdeps fdeps rest ->
     [`Missing (None, sdeps, fdeps)]
   | _ -> explanations
