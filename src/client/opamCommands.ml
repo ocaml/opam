@@ -2211,24 +2211,9 @@ let repository cli =
           (OpamSwitch.to_string (OpamStateConfig.get_switch ()))
           (OpamRepositoryName.to_string name);
       `Ok ()
-    | Some `remove, [] ->
-      OpamConsole.error_and_exit `Not_found
-        "No repository name was given, \
-         please give at least one name in parameter"
     | Some `remove, names ->
       let names = List.map OpamRepositoryName.of_string names in
-      let seen_repos = ref [] in
-      let rm =
-        List.filter (fun n ->
-          (* TODO: Replace OpamRepositoryCommand.update_selection by
-                   something that does not require dealing with such
-                   horrible reference *)
-          let seen = List.mem n names in
-          if seen then begin
-            seen_repos := n :: !seen_repos;
-          end;
-          not seen)
-      in
+      let rm = List.filter (fun n -> not (List.mem n names)) in
       let full_wipe = List.mem `All scope in
       let global = global || full_wipe in
       let gt =
@@ -2247,14 +2232,7 @@ let repository cli =
           "Repositories removed from the selections of switch %s. \
            Use '--all' to forget about them altogether.\n"
           (OpamSwitch.to_string (OpamStateConfig.get_switch ()));
-      begin match List.filter (fun n -> not (List.mem n !seen_repos)) names with
-      | [] -> `Ok ()
-      | not_seen_repos ->
-        List.iter (fun repo ->
-          OpamConsole.error "No repository named %s" (OpamRepositoryName.to_string repo)
-        ) not_seen_repos;
-        OpamStd.Sys.exit_because `Not_found
-      end
+      `Ok ()
     | Some `add, [name] ->
       let name = OpamRepositoryName.of_string name in
       OpamRepositoryState.with_ `Lock_none gt (fun rt ->
