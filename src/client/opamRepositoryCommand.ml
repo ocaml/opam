@@ -24,19 +24,23 @@ let update_global_selection gt update_fun =
   gt
 
 let update_selection gt ~global ~switches update_fun =
-  List.iter (OpamSwitchState.update_repositories gt update_fun) switches;
-  if global then
-    (* ensure all unselected switches aren't modified by changing the default *)
-    (List.iter (fun sw ->
-         if not (List.mem sw switches) then
-           OpamSwitchState.update_repositories gt (fun r -> r) sw)
-        (OpamFile.Config.installed_switches gt.config);
-     let (), gt =
-       OpamGlobalState.with_write_lock gt @@ fun gt ->
-       (), update_global_selection gt update_fun
-     in
-     gt)
-  else gt
+  let updated =
+    List.filter_map
+      (OpamSwitchState.update_repositories gt update_fun)
+      switches
+  in
+  (if global then
+     (* ensure all unselected switches aren't modified by changing the default *)
+     (List.iter (fun sw ->
+          if not (List.mem sw switches) then
+            ignore @@ OpamSwitchState.update_repositories gt (fun r -> r) sw)
+         (OpamFile.Config.installed_switches gt.config);
+      let (), gt =
+        OpamGlobalState.with_write_lock gt @@ fun gt ->
+        (), update_global_selection gt update_fun
+      in
+      gt)
+   else gt), updated
 
 let update_repos_config rt repositories =
   (* Remove cached opam files for changed or removed repos *)

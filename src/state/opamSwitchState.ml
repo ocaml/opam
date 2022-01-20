@@ -1247,15 +1247,21 @@ let update_repositories gt update_fun switch =
   OpamFilename.with_flock `Lock_write (OpamPath.Switch.lock gt.root switch)
   @@ fun _ ->
   let conf = load_switch_config ~lock_kind:`Lock_write gt switch in
-  let repos =
+  let repos0 =
     match conf.OpamFile.Switch_config.repos with
     | None -> OpamGlobalState.repos_list gt
     | Some repos -> repos
   in
-  let conf =
-    { conf with
-      OpamFile.Switch_config.repos = Some (update_fun repos) }
-  in
-  OpamFile.Switch_config.write
-    (OpamPath.Switch.switch_config gt.root switch)
-    conf
+  let repos = update_fun repos0 in
+  if
+    List.sort OpamRepositoryName.compare repos
+    = List.sort OpamRepositoryName.compare repos0 then
+    None else
+    (let conf =
+       { conf with
+         OpamFile.Switch_config.repos = Some repos }
+     in
+     OpamFile.Switch_config.write
+       (OpamPath.Switch.switch_config gt.root switch)
+       conf;
+     Some (switch, conf))
