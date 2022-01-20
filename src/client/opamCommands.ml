@@ -2345,13 +2345,18 @@ let repository cli =
       OpamStd.List.insert_at rank new_repo
         (List.filter (( <> ) new_repo ) repos)
     in
-    let check_for_repos rt names err =
+    let check_for_repos' rt names err =
       match
         List.filter (fun n ->
             not (OpamRepositoryName.Map.mem n rt.repositories))
           names
-      with [] -> () | l ->
-        err (OpamStd.List.concat_map " " OpamRepositoryName.to_string l)
+      with [] -> true | l ->
+        err (OpamStd.List.concat_map " " OpamRepositoryName.to_string l);
+        List.compare_lengths l names <> 0
+    in
+    let check_for_repos rt names err =
+      let _has_known_repos : bool = check_for_repos' rt names err in
+      ()
     in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     let all_switches = OpamFile.Config.installed_switches gt.config in
@@ -2435,11 +2440,27 @@ let repository cli =
              "No configured repositories by these names found: %s");
         OpamRepositoryState.drop @@
         List.fold_left OpamRepositoryCommand.remove rt names
-      else if scope = [`Current_switch] then
-        OpamConsole.msg
-          "Repositories removed from the selections of switch %s. \
-           Use '--all' to forget about them altogether.\n"
-          (OpamSwitch.to_string (OpamStateConfig.get_switch ()));
+      else begin
+        let has_known_repos =
+          List.fold_left (fun has_known_repos switch ->
+              let rt =
+                OpamSwitchState.with_ `Lock_none ~switch gt @@ fun st ->
+                st.OpamStateTypes.switch_repos
+              in
+              check_for_repos' rt names
+                (OpamConsole.warning
+                   "No configured repositories by these names found in \
+                    the selection of switch '%s': %s"
+                   (OpamSwitch.to_string switch))
+              || has_known_repos)
+            false switches
+        in
+        if scope = [`Current_switch] && has_known_repos then
+          OpamConsole.msg
+            "Repositories removed from the selections of switch %s. \
+             Use '--all' to forget about them altogether.\n"
+            (OpamSwitch.to_string (OpamStateConfig.get_switch ()));
+      end;
       `Ok ()
     | Some `add, [name] ->
       let name = OpamRepositoryName.of_string name in

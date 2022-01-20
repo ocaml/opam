@@ -63,6 +63,7 @@ users)
 
 ## Repository
   * Accurately tag `curl` download command when loaded from global config file [#6270 @rjbou]
+  * Check that the repositories given to `opam repository remove` actually exist [#5014 @kit-ty-kate - fixes #5012]
 
 ## Lock
 
