@@ -1,5 +1,5 @@
-URL_cppo = https://github.com/ocaml-community/cppo/releases/download/v1.6.7/cppo-v1.6.7.tbz
-MD5_cppo = 65c668196c3dabf34d9e887952e5bbb4
+URL_cppo = https://github.com/ocaml-community/cppo/archive/v1.6.8.tar.gz
+MD5_cppo = fed401197d86f9089e89f6cbdf1d660d
 
 $(call PKG_SAME,cppo)
 
@@ -13,8 +13,8 @@ MD5_base64 = 0179af18d6c1cf13d77671ee23901433
 
 $(call PKG_SAME,base64)
 
-URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.9.0/re-1.9.0.tbz
-MD5_re = bddaed4f386a22cace7850c9c7dac296
+URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.10.3/re-1.10.3.tbz
+MD5_re = a36347dcfaf71c95916f96f72b0cf2ce
 
 $(call PKG_SAME,re)
 
@@ -64,8 +64,8 @@ MD5_result = 1b82dec78849680b49ae9a8a365b831b
 $(call PKG_SAME,result)
 
 # NB If minimum OCaml version for Dune changes, update DUNE_SECONDARY in configure.ac
-URL_dune-local = https://github.com/ocaml/dune/releases/download/2.9.0/dune-2.9.0.tbz
-MD5_dune-local = 90a12dc2a312df699533cbe7d18ece11
+URL_dune-local = https://github.com/ocaml/dune/releases/download/2.9.1/dune-2.9.1.tbz
+MD5_dune-local = 0929081f80064ecb836ffdef983100f4
 
 $(call PKG_SAME,dune-local)
 
@@ -75,8 +75,8 @@ MD5_PKG_findlib = 65e6dc9b305ccbed1267275fe180f538
 URL_PKG_ocamlbuild = https://github.com/ocaml/ocamlbuild/archive/0.14.0.tar.gz
 MD5_PKG_ocamlbuild = a7bf2fe594cd16907807c756b14d501f
 
-URL_PKG_topkg = http://erratique.ch/software/topkg/releases/topkg-1.0.3.tbz
-MD5_PKG_topkg = e285f7a296d77ee7d831ba9a6bfb396f
+URL_PKG_topkg = https://erratique.ch/software/topkg/releases/topkg-1.0.4.tbz
+MD5_PKG_topkg = 324330fc265a7839cf9577e9cc79f5c7
 
 URL_seq = https://github.com/c-cube/seq/archive/0.2.2.tar.gz
 MD5_seq = 9033e02283aa3bde9f97f24e632902e3
@@ -88,7 +88,7 @@ MD5_stdlib-shims = 09db7af8b4a3a96048a61cb6ae2496ef
 
 $(call PKG_SAME,stdlib-shims)
 
-URL_spdx_licenses = https://github.com/kit-ty-kate/spdx_licenses/releases/download/v1.0.0/spdx_licenses-v1.0.0.tbz
-MD5_spdx_licenses = 5393e25f7aa3e2b2a4e880d8dcbcc8e4
+URL_spdx_licenses = https://github.com/kit-ty-kate/spdx_licenses/releases/download/v1.1.0/spdx_licenses-v1.1.0.tbz
+MD5_spdx_licenses = af8493759aa35b629a324caa3f5ced65
 
 $(call PKG_SAME,spdx_licenses)
