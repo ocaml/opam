@@ -10,9 +10,8 @@ opam-version: "2.0"
 ### opam update --all
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
+[default] no changes from file://${BASEDIR}/REPO
 [non-default] no changes from file://${BASEDIR}/repo2
-Now run 'opam upgrade' to apply any package updates.
 ### opam switch create inv --empty --repo=default,non-default
 ### opam switch set-invariant foo
 The switch invariant was set to foo

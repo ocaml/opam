@@ -9,11 +9,6 @@ setenv: IGTV_PATH = "%{lib}%/stublibs"
 opam-version: "2.0"
 ### <pkg:base.2>
 opam-version: "2.0"
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam switch create var-option --empty
 ### opam var user= --switch var-option
 Removed variable user in switch var-option

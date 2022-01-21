@@ -187,6 +187,7 @@ users)
   * Add & update env tests [#4861 #4841 @rjbou @dra27]
   * Port opam-rt tests: orphans, dep-cycles, reinstall, and big-upgrade [#4979 @AltGr]
   * Add & update env tests [#4861 #4841 #4974 @rjbou @dra27 @AltGr]
+  * Add remove test [#5004 @AltGr]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
@@ -205,6 +206,7 @@ users)
   * Clean outputs from opam error reporting block [#4966 @rjbou]
   * Avoid diff when the repo is too old [#4979 @AltGr]
   * Escape regexps characters in string replacements primitives [#5009 @kit-ty-kate]
+  * Automatically update default repo when adding a package file [#5004 @AltGr]
 
 
 ## Github Actions

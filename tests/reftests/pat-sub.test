@@ -46,11 +46,6 @@ build: [
   ["grep" "ploplop" "bar"]
   ["grep" "ploplop" "baz"]
 ]
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam switch create sw --empty
 ### OPAMDEBUGSECTIONS="ACTION" opam install pat-sub -y --debug --debug-level=-1
 The following actions will be performed:

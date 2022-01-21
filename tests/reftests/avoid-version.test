@@ -2,11 +2,6 @@ N0REP0
 ### <pkg:a.2>
 opam-version: "2.0"
 flags: avoid-version
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam switch create default --empty
 ### OPAMFAKE=1
 ### OPAMYES=1
@@ -15,11 +10,6 @@ The following actions would be faked:
   - install a 2
 ### <pkg:a.1>
 opam-version: "2.0"
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam install a
 The following actions will be faked:
   - install a 1
@@ -36,11 +26,6 @@ However, you may "opam upgrade" these packages explicitly, which will ask permis
 Nothing to do.
 ### <pkg:a.1.1>
 opam-version: "2.0"
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade a
 The following actions will be faked:
   - upgrade a 1 to 1.1
@@ -50,11 +35,6 @@ Faking installation of a.1.1
 Done.
 ### <pkg:a.3>
 opam-version: "2.0"
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade a
 The following actions will be faked:
   - upgrade a 1.1 to 3
@@ -79,19 +59,9 @@ Done.
 ### <pkg:b.1>
 opam-version: "2.0"
 depends: "a"
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### <pkg:b.2>
 opam-version: "2.0"
 depends: "a" {= "2"}
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam install b
 The following actions will be faked:
   - install b 1
@@ -129,19 +99,9 @@ Done.
 ### <pkg:a.4>
 opam-version: "2.0"
 flags: avoid-version
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### <pkg:b.3>
 opam-version: "2.0"
 flags: avoid-version
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
 
