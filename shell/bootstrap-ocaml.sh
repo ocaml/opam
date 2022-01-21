@@ -12,7 +12,7 @@ else
 fi
 BOOTSTRAP_DIR=${BOOTSTRAP_DIR:-bootstrap}
 BOOTSTRAP_ROOT=${BOOTSTRAP_ROOT:-..}
-BOOTSTRAP_OPT_TARGET=${BOOTSTRAP_OPT_TARGET:-opt.opt}
+BOOTSTRAP_TARGETS=${BOOTSTRAP_TARGETS:-world.opt}
 mkdir -p "$BOOTSTRAP_DIR"
 cd "$BOOTSTRAP_DIR"
 URL=`sed -ne 's/URL_ocaml *= *//p' $BOOTSTRAP_ROOT/src_ext/Makefile | tr -d '\r'`
@@ -145,8 +145,9 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
                   --build=$BUILD --host=$HOST \
                   --disable-stdlib-manpages \
                   $BOOTSTRAP_EXTRA_OPTS
-    PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make -j world
-    PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make -j $BOOTSTRAP_OPT_TARGET
+    for target in $BOOTSTRAP_TARGETS; do
+      PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make -j $target
+    done
     PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make install
   fi
   OCAMLLIB=${WINPREFIX}/lib/ocaml
@@ -154,8 +155,9 @@ else
   PREFIX=`cd .. ; pwd`/ocaml
   if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
     ./configure --prefix "${PREFIX}" $BOOTSTRAP_EXTRA_OPTS --disable-stdlib-manpages
-    ${MAKE:-make} -j world
-    ${MAKE:-make} -j $BOOTSTRAP_OPT_TARGET
+    for target in $BOOTSTRAP_TARGETS; do
+      ${MAKE:-make} -j $target
+    done
     ${MAKE:-make} install
   fi
   OCAMLLIB=${PREFIX}/lib/ocaml
