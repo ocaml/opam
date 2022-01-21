@@ -2027,9 +2027,10 @@ let repository cli =
      enable a repository only to install its switches, you may be \
      looking for $(b,opam switch create --repositories=REPOS).";
     cli_original, "remove", `remove, ["NAME..."],
-    "Unselects the given repositories so that they will not be used to get \
-     package definitions anymore. With $(b,--all), makes opam forget about \
-     these repositories completely.";
+    "Removes the given repositories from the selected scopes (the default scope is the current switch, \
+     see $(b,--this-switch)). Repositories are removed completely with $(b,--all-switches). \
+     If the last repository is removed in the current switch scope, then the selection of \
+     repositories is restored to the default selection ($(b,opam list --set-default)).";
     cli_original, "set-repos", `set_repos, ["NAME..."],
     "Explicitly selects the list of repositories to look up package \
      definitions from, in the specified priority order (overriding previous \

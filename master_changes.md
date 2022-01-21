@@ -69,6 +69,7 @@ users)
 
 ## Repository
   * When several checksums are specified, instead of adding in the cache only the archive by first checksum, name by best one and link others to this archive [#4696 rjbou]
+  * Update opam repository man doc regarding removal of the last repository in a switch [#4435 - fixes #4381]
 
 ## Lock
   *
