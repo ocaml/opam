@@ -29,9 +29,9 @@ The following actions would be performed:
 Nothing to do.
 ### opam remove a --auto --show
 The following actions would be performed:
-  - remove c 1 [uses a]
-  - remove a 1
-===== 2 to remove =====
+  - remove    a 1
+  - recompile c 1 [uses a]
+===== 1 to recompile | 1 to remove =====
 ### :::::: message on removal of an unavailable package (#4890)
 ### <pkg:z.1>
 opam-version: "2.0"
@@ -40,8 +40,9 @@ available: false
 opam-version: "2.0"
 depends: "z"
 ### opam remove z
-[ERROR] z: unmet availability conditions: 'false'
-# Return code 5 #
+[NOTE] z is not installed.
+
+Nothing to do.
 ### opam remove w
 [NOTE] w is not installed.
 
