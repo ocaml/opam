@@ -26,8 +26,8 @@ let is_valid_license_id s =
 
 let names_of_formula flag f =
   OpamPackageVar.filter_depends_formula
-    ~build:true ~post:true ~dev:true ~test:flag ~doc:flag ~default:false
-    ~env:OpamStd.Option.none f
+    ~build:true ~post:true ~dev:true ~test:flag ~doc:flag ~tools:flag
+    ~default:false ~env:OpamStd.Option.none f
   |> OpamFormula.atoms
   |> List.map fst
   |> OpamPackage.Name.Set.of_list

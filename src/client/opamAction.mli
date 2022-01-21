@@ -47,14 +47,14 @@ val prepare_package_build:
     See {!download_package} and {!prepare_package_source} for the previous
     steps. *)
 val build_package:
-  rw switch_state -> ?test:bool -> ?doc:bool -> dirname -> package ->
+  rw switch_state -> ?test:bool -> ?doc:bool -> ?tools:bool -> dirname -> package ->
   exn option OpamProcess.job
 
 (** [install_package t pkg] installs an already built package. Returns
     [None] on success, [Some exn] on error. Do not update opam's
     metadata. See {!build_package} to build the package. *)
 val install_package:
-  rw switch_state -> ?test:bool -> ?doc:bool -> ?build_dir:dirname -> package ->
+  rw switch_state -> ?test:bool -> ?doc:bool -> ?tools:bool -> ?build_dir:dirname -> package ->
   (OpamFile.Dot_config.t option, exn) OpamCompat.Either.t OpamProcess.job
 
 (** Find out if the package source is needed for uninstall *)

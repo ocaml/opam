@@ -578,7 +578,7 @@ let variables_of_filtered_formula ff =
          acc f)
     [] ff
 
-let deps_var_env ~build ~post ?test ?doc ?dev var =
+let deps_var_env ~build ~post ?test ?doc ?tools ?dev var =
   let get_opt = function
     | Some b -> Some (B b)
     | None -> invalid_arg "filter_deps"
@@ -588,11 +588,15 @@ let deps_var_env ~build ~post ?test ?doc ?dev var =
   | "post" -> Some (B post)
   | "with-test" -> get_opt test
   | "with-doc" -> get_opt doc
+  | "with-tools" -> get_opt tools
   | "dev" -> get_opt dev
   | _ -> None
 
-let filter_deps ~build ~post ?test ?doc ?dev ?default_version ?default deps =
-  filter_formula ?default_version ?default (deps_var_env ~build ~post ?test ?doc ?dev) deps
+let filter_deps
+    ~build ~post ?test ?doc ?tools ?dev ?default_version ?default
+    deps =
+  filter_formula ?default_version ?default
+    (deps_var_env ~build ~post ?test ?doc ?tools ?dev) deps
 
 let rec simplify_extended_version_formula ef =
   let to_pure ef =
