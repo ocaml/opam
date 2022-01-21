@@ -127,9 +127,17 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
   if [ -n "${PATH_PREPEND}" ] ; then
     PATH_PREPEND="${PATH_PREPEND}:"
   fi
+  cd ..
+  if [ ! -e ${FLEXDLL} ]; then
+    cp $BOOTSTRAP_ROOT/src_ext/archives/${FLEXDLL} . 2>/dev/null || ${CURL} ${FV_URL}
+  fi
+  cd ${V}
   PREFIX=`cd .. ; pwd`/ocaml
   WINPREFIX=`echo ${PREFIX} | cygpath -f - -m`
   if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
+    tar -xzf $BOOTSTRAP_ROOT/${FLEXDLL}
+    rm -rf flexdll
+    mv flexdll-* flexdll
     PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" \
     Lib="${LIB_PREPEND}${Lib}" \
     Include="${INC_PREPEND}${Include}" \
@@ -137,17 +145,6 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
                   --build=$BUILD --host=$HOST \
                   --disable-stdlib-manpages \
                   $BOOTSTRAP_EXTRA_OPTS
-  fi
-  cd ..
-  if [ ! -e ${FLEXDLL} ]; then
-    cp $BOOTSTRAP_ROOT/src_ext/archives/${FLEXDLL} . 2>/dev/null || ${CURL} ${FV_URL}
-  fi
-  cd ${V}
-  if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
-    tar -xzf $BOOTSTRAP_ROOT/${FLEXDLL}
-    rm -rf flexdll
-    mv flexdll-* flexdll
-    PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make -j flexdll
     PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make -j world
     PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make -j $BOOTSTRAP_OPT_TARGET
     PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make install
