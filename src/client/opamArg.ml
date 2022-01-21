@@ -1366,7 +1366,7 @@ let build_options cli =
   in
   let with_tools =
     mk_flag ~cli (cli_from cli2_2) ["with-tools"] ~section
-      "Include development only dependencies."
+      "Include development tools only dependencies."
   in
   let make =
     mk_opt ~cli (cli_between cli2_0 cli2_1
@@ -1536,6 +1536,10 @@ let package_selection cli =
     mk_flag ~cli cli_original ["t";"test";"with-test"] ~section
       "Include test-only dependencies."
   in
+  let tools =
+    mk_flag ~cli (cli_from cli2_2) ["with-tools"] ~section
+      "Include development only dependencies."
+  in
   let field_match =
     mk_opt_all ~cli cli_original ["field-match"] "FIELD:PATTERN" ~section
       "Filter packages with a match for $(i,PATTERN) on the given $(i,FIELD)"
@@ -1564,12 +1568,12 @@ let package_selection cli =
   in
   let filter
       depends_on required_by conflicts_with coinstallable_with resolve recursive
-      depopts nobuild post dev doc_flag test field_match has_flag has_tag
+      depopts nobuild post dev doc_flag test tools field_match has_flag has_tag
     =
     let dependency_toggles = {
       OpamListCommand.
-      recursive; depopts; build = not nobuild; post; test; doc = doc_flag;
-      dev
+      recursive; depopts; build = not nobuild; post; test; tools;
+      doc = doc_flag; dev
     } in
     List.map (fun flag -> OpamListCommand.Flag flag) has_flag @
     List.map (fun tag -> OpamListCommand.Tag tag) has_tag @
@@ -1598,7 +1602,7 @@ let package_selection cli =
   Term.(const filter $
         depends_on $ required_by $ conflicts_with $ coinstallable_with $
         resolve $ recursive $ depopts $ nobuild $ post $ dev $ doc_flag $
-        test $ field_match $ has_flag $ has_tag)
+        test $ tools $ field_match $ has_flag $ has_tag)
 
 let package_listing_section = "OUTPUT FORMAT OPTIONS"
 
