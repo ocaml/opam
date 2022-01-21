@@ -1,5 +1,22 @@
 
 (alias
+ (name reftest-avoid-version)
+ (action
+  (diff avoid-version.test avoid-version.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-avoid-version)))
+
+(rule
+ (targets avoid-version.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:avoid-version.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-cli-versioning)
  (action
   (diff cli-versioning.test cli-versioning.out)))
@@ -321,6 +338,40 @@
   (with-stdout-to
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:pat-sub.test} %{read-lines:testing-env}))))
+
+(alias
+ (name reftest-pin)
+ (action
+  (diff pin.test pin.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-pin)))
+
+(rule
+ (targets pin.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:pin.test} %{read-lines:testing-env}))))
+
+(alias
+ (name reftest-remove)
+ (action
+  (diff remove.test remove.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-remove)))
+
+(rule
+ (targets remove.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:remove.test} %{read-lines:testing-env}))))
 
 (alias
  (name reftest-show)

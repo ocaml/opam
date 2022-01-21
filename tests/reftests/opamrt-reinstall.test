@@ -21,11 +21,6 @@ opam-version: "2.0"
 depends: "c"
 build:   [ "test" "-d" c:lib ]
 remove:  [ "test" "-d" c:lib ]
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam switch create system --empty
 ### : 1/ Install d
 ### opam install d
@@ -157,11 +152,6 @@ depends: "a"
 build:   [ "test" "-d" a:lib ]
 remove:  [ "test" "-d" a:lib ]
 install: [ "mkdir" _:lib ]
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam install d
 The following actions will be performed:
   - install b 1 [required by c]
@@ -215,11 +205,6 @@ depends: "b"
 build: [ "test" "-d" b:lib ]
 remove: [ "test" "-d" b:lib ]
 install: [ "mkdir" _:lib ]
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade c
 The following actions will be performed:
   - upgrade   c 1 to 2
@@ -292,12 +277,17 @@ d
 ### <pkg:a.2>
 opam-version: "2.0"
 install: [ "mkdir" _:lib ]
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
-### :TODO: the original test removes b, c, d. Here unpin b ?
+### opam upgrade --show
+The following actions would be performed:
+  - remove  d 1      [uses c]
+  - remove  c 2      [uses b]
+  - remove  b 1      [conflicts with a]
+  - upgrade a 1 to 2
+===== 1 to upgrade | 3 to remove =====
+### opam unpin b --show
+[NOTE] b is not pinned.
+### opam unpin b --no-action
+[NOTE] b is not pinned.
 ### opam upgrade
 The following actions will be performed:
   - remove  d 1      [uses c]

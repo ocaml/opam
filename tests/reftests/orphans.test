@@ -8,11 +8,6 @@ depends: "foo" {= "1"}
 ### <pkg:baz.1>
 opam-version: "2.0"
 ### OPAMYES=1
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam switch create sw --empty
 ### opam install bar
 The following actions will be performed:
@@ -27,11 +22,6 @@ Done.
 ### <pkg:foo.1>
 opam-version: "2.0"
 available: false
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam reinstall foo
 [ERROR] Sorry, these packages are no longer available from the repositories: foo (= 1)
 # Return code 5 #
@@ -67,11 +57,6 @@ Nothing to do.
 ### : replay the same sequence but with another version of `foo` present
 ### <pkg:foo.2>
 opam-version: "2.0"
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade --show
 [WARNING] Upgrade is not possible because of conflicts or packages that are no longer available:
     - Missing dependency:
@@ -83,11 +68,16 @@ You may run "opam upgrade --fixup" to let opam fix the current state.
 ### <pkg:bar.2>
 opam-version: "2.0"
 depends: "foo" {>= "1"}
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
+### opam upgrade --show
+The following actions would be performed:
+  - upgrade foo 1 to 2
+  - upgrade bar 1 to 2
+===== 2 to upgrade =====
+### opam upgrade --show --fixup
+The following actions would be performed:
+  - upgrade foo 1 to 2
+  - upgrade bar 1 to 2
+===== 2 to upgrade =====
 ### opam reinstall baz
 baz is not installed. Install it? [Y/n] y
 The following actions will be performed:

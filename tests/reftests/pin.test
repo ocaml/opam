@@ -1,0 +1,42 @@
+N0REP0
+### opam switch create pinning --empty
+### #  disabled as non implemented
+### # ### opam pin --current foo
+### # [ERROR] foo is not installed, invalid flag `--current'
+### # # Return code 2 #
+### # ### <pkg:foo.1>
+### # opam-version:"2.0"
+### # build: [ "echo" "foo" ]
+### # ### opam pin --current foo
+### # [ERROR] foo is not installed, invalid flag `--current'
+### # # Return code 2 #
+### # ### opam install foo
+### # The following actions will be performed:
+### #   - install foo 1
+### # 
+### # <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+### # -> installed foo.1
+### # Done.
+### # ### opam pin --current foo.2
+### # [ERROR] foo.2 is not installed (version 1 is), invalid flag `--current'
+### # # Return code 2 #
+### # ### opam pin --current foo
+### # foo is now pinned locally (version 1)
+### # ### opam unpin foo
+### # Ok, foo is no longer pinned locally (version 1)
+### # Nothing to do.
+### # ### rm -rf REPO/packages/foo
+### # ### opam update
+### # 
+### # <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+### # [default] synchronised from file://${BASEDIR}/REPO
+### # Now run 'opam upgrade' to apply any package updates.
+### # ### opam list --available --repo=default
+### # # Packages matching: from-repository(default) & available
+### # # No matches found
+### # ### opam list -A
+### # # Packages matching: any
+### # # Name # Installed # Synopsis
+### # foo    1
+### # ### opam pin --current foo
+### # foo is now pinned locally (version 1)

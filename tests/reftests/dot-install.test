@@ -64,11 +64,6 @@ bonjour
 saluton
 ### OPAMYES=1
 ### opam switch create inst --empty
-### opam update default
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### OPAMPRECISETRACKING=1 OPAMDEBUGSECTIONS="TRACK ACTION" OPAMDEBUG=-1
 ### opam install nodot
 The following actions will be performed:
