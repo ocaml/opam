@@ -16,6 +16,7 @@ module E = struct
     | CURL of string option
     | FETCH of string option
     | NOCHECKSUMS of bool option
+    | REPOSITORYTARRING of bool option
     | REQUIRECHECKSUMS of bool option
     | RETRIES of int option
     | VALIDATIONHOOK of string option
@@ -24,6 +25,7 @@ module E = struct
   let curl = value (function CURL s -> s | _ -> None)
   let fetch = value (function FETCH s -> s | _ -> None)
   let nochecksums = value (function NOCHECKSUMS b -> b | _ -> None)
+  let repositorytarring = value (function REPOSITORYTARRING b -> b | _ -> None)
   let requirechecksums = value (function REQUIRECHECKSUMS b -> b | _ -> None)
   let retries = value (function RETRIES i -> i | _ -> None)
   let validationhook = value (function VALIDATIONHOOK s -> s | _ -> None)
@@ -37,6 +39,7 @@ type t = {
   validation_hook: arg list option;
   retries: int;
   force_checksums: bool option;
+  repo_tarring : bool;
 }
 
 type 'a options_fun =
@@ -44,6 +47,7 @@ type 'a options_fun =
   ?validation_hook:arg list option ->
   ?retries:int ->
   ?force_checksums:bool option ->
+  ?repo_tarring:bool ->
   'a
 
 let default = {
@@ -75,6 +79,7 @@ let default = {
   validation_hook = None;
   retries = 3;
   force_checksums = None;
+  repo_tarring = false;
 }
 
 let setk k t
@@ -82,6 +87,7 @@ let setk k t
     ?validation_hook
     ?retries
     ?force_checksums
+    ?repo_tarring
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -89,6 +95,7 @@ let setk k t
     validation_hook = t.validation_hook + validation_hook;
     retries = t.retries + retries;
     force_checksums = t.force_checksums + force_checksums;
+    repo_tarring = t.repo_tarring + repo_tarring;
   }
 
 let set t = setk (fun x () -> x) t
@@ -139,5 +146,6 @@ let initk k =
     ?validation_hook
     ?retries:(E.retries ())
     ?force_checksums
+    ?repo_tarring:(E.repositorytarring ())
 
 let init ?noop:_ = initk (fun () -> ())

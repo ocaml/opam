@@ -16,6 +16,7 @@ module E : sig
     | CURL of string option
     | FETCH of string option
     | NOCHECKSUMS of bool option
+    | REPOSITORYTARRING of bool option
     | REQUIRECHECKSUMS of bool option
     | RETRIES of int option
     | VALIDATIONHOOK of string option
@@ -33,6 +34,7 @@ type t = {
   validation_hook: OpamTypes.arg list option;
   retries: int;
   force_checksums: bool option;
+  repo_tarring : bool;
 }
 
 type 'a options_fun =
@@ -40,6 +42,7 @@ type 'a options_fun =
   ?validation_hook:OpamTypes.arg list option ->
   ?retries:int ->
   ?force_checksums:bool option ->
+  ?repo_tarring:bool ->
   'a
 
 include OpamStd.Config.Sig
