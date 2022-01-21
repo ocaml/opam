@@ -32,6 +32,8 @@ users)
 
 ## Remove
   *
+  * Fix message when running `opam remove` on an unavailable package [@AltGr - fix #4890]
+  * Fix removal of root packages with `-a` and an optional dependency explicitely specified [@AltGr - fix #4727]
 
 ## Switch
   * Put back support for switch creation with packages argument and
