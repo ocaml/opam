@@ -388,7 +388,7 @@ Faking installation of ocaml-config.2
 Faking installation of ocaml.4.12.0
 Faking installation of ocaml-options-vanilla.1
 Done.
-### opam pin resto/ --with-version=0.6.1 --show --yes | unordered
+### OPAMVAR_os=linux opam pin resto/ --with-version=0.6.1 --show --yes | unordered
 This will pin the following packages: ezresto-directory, ezresto, resto-acl, resto-client, resto-cohttp-client, resto-cohttp-self-serving-client, resto-cohttp-server, resto-cohttp, resto-directory, resto-json, resto-lwt, resto-self-serving-client, resto-server, resto. Continue? [Y/n] y
 ezresto-directory is now pinned to file://${BASEDIR}/resto (version 0.6.1)
 ezresto is now pinned to file://${BASEDIR}/resto (version 0.6.1)
