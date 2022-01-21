@@ -27,6 +27,7 @@ module E = struct
     | ROOT of string option
     | SWITCH of string option
     | UNLOCKBASE of bool option
+    | WITHTOOLS of bool option
     | WITHDOC of bool option
     | WITHTEST of bool option
 
@@ -44,6 +45,7 @@ module E = struct
   let root = value (function ROOT s -> s | _ -> None)
   let switch = value (function SWITCH s -> s | _ -> None)
   let unlockbase = value (function UNLOCKBASE b -> b | _ -> None)
+  let withtools = value (function WITHTOOLS b -> b | _ -> None)
   let withdoc = value (function WITHDOC b -> b | _ -> None)
   let withtest = value (function WITHTEST b -> b | _ -> None)
 
@@ -57,6 +59,7 @@ type t = {
   dl_jobs: int;
   build_test: bool;
   build_doc: bool;
+  with_tools: bool;
   dryrun: bool;
   makecmd: string Lazy.t;
   ignore_constraints_on: name_set;
@@ -76,6 +79,7 @@ let default = {
   dl_jobs = 3;
   build_test = false;
   build_doc = false;
+  with_tools = false;
   dryrun = false;
   makecmd = lazy OpamStd.Sys.(
       match os () with
@@ -97,6 +101,7 @@ type 'a options_fun =
   ?dl_jobs:int ->
   ?build_test:bool ->
   ?build_doc:bool ->
+  ?with_tools:bool ->
   ?dryrun:bool ->
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:name_set ->
@@ -114,6 +119,7 @@ let setk k t
     ?dl_jobs
     ?build_test
     ?build_doc
+    ?with_tools
     ?dryrun
     ?makecmd
     ?ignore_constraints_on
@@ -132,6 +138,7 @@ let setk k t
     dl_jobs = t.dl_jobs + dl_jobs;
     build_test = t.build_test + build_test;
     build_doc = t.build_doc + build_doc;
+    with_tools = t.with_tools + with_tools;
     dryrun = t.dryrun + dryrun;
     makecmd = t.makecmd + makecmd;
     ignore_constraints_on = t.ignore_constraints_on + ignore_constraints_on;
@@ -162,6 +169,7 @@ let initk k =
     ?dl_jobs:(E.downloadjobs ())
     ?build_test:(E.withtest () ++ E.buildtest ())
     ?build_doc:(E.withdoc () ++ E.builddoc ())
+    ?with_tools:(E.withtools())
     ?dryrun:(E.dryrun ())
     ?makecmd:(E.makecmd () >>| fun s -> lazy s)
     ?ignore_constraints_on:

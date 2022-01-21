@@ -256,6 +256,8 @@ let environment_variables =
        by `opam env --switch=SWITCH --set-switch'.";
       "UNLOCKBASE", cli_original, (fun v -> UNLOCKBASE (env_bool v)),
       "see install option `--unlock-base'.";
+      "WITHTOOLS", cli_from cli2_2, (fun v -> WITHTOOLS (env_bool v)),
+      "see install option `--with-tools'.";
       "WITHDOC", cli_original, (fun v -> WITHDOC (env_bool v)),
       "see install option `--with-doc'.";
       "WITHTEST", cli_original, (fun v -> WITHTEST (env_bool v)),
@@ -580,6 +582,7 @@ type build_options = {
   req_checksums : bool;
   build_test    : bool;
   build_doc     : bool;
+  with_tools      : bool;
   show          : bool;
   dryrun        : bool;
   fake          : bool;
@@ -595,14 +598,14 @@ type build_options = {
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
-    req_checksums build_test build_doc show dryrun skip_update
+    req_checksums build_test build_doc with_tools show dryrun skip_update
     fake jobs ignore_constraints_on unlock_base locked lock_suffix
     assume_depexts no_depexts
     =
   {
     keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
-    req_checksums; build_test; build_doc; show; dryrun; skip_update; fake;
-    jobs; ignore_constraints_on; unlock_base; locked; lock_suffix;
+    req_checksums; build_test; build_doc; with_tools; show; dryrun; skip_update;
+    fake; jobs; ignore_constraints_on; unlock_base; locked; lock_suffix;
     assume_depexts; no_depexts;
   }
 
@@ -623,6 +626,7 @@ let apply_build_options cli b =
     (* ?no_base_packages:(flag o.no_base_packages) -- handled globally *)
     ?build_test:(flag b.build_test)
     ?build_doc:(flag b.build_doc)
+    ?with_tools:(flag b.with_tools)
     ?dryrun:(flag b.dryrun)
     ?makecmd:(b.make >>| fun m -> lazy m)
     ?ignore_constraints_on:
@@ -1360,6 +1364,10 @@ let build_options cli =
        the command-line. This is equivalent to setting $(b,\\$OPAMWITHDOC) \
        (or the deprecated $(b,\\$OPAMBUILDDOC)) to \"true\"."
   in
+  let with_tools =
+    mk_flag ~cli (cli_from cli2_2) ["with-tools"] ~section
+      "Include development only dependencies."
+  in
   let make =
     mk_opt ~cli (cli_between cli2_0 cli2_1
                    ~replaced:"opam config set[-global] make MAKE")
@@ -1425,9 +1433,10 @@ let build_options cli =
   in
   Term.(const create_build_options
         $keep_build_dir $reuse_build_dir $inplace_build $make
-        $no_checksums $req_checksums $build_test $build_doc $show $dryrun
-        $skip_update $fake $jobs_flag cli cli_original $ignore_constraints_on
-        $unlock_base $locked $lock_suffix $assume_depexts $no_depexts)
+        $no_checksums $req_checksums $build_test $build_doc $with_tools $show
+        $dryrun $skip_update $fake $jobs_flag cli cli_original
+        $ignore_constraints_on $unlock_base $locked $lock_suffix
+        $assume_depexts $no_depexts)
 
 (* Option common to install commands *)
 let assume_built cli =
