@@ -221,6 +221,8 @@ users)
   * Make all the tests work on macOS/arm64 [#5019 @kit-ty-kate]
 
   * Add clean test for untracked option [#4915 @rjbou]
+## Cram tests
+  * Add some unix-only cram tests to test for https://github.com/ocaml/opam/issues/4216 before fixing it [#5022 @kit-ty-kate]
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]
