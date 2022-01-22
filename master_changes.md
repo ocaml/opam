@@ -66,7 +66,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Build
-  *
+  * Update cold compiler to 4.13 [#5017 @dra27]
 
 ## Infrastructure
   *
