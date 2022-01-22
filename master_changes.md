@@ -190,6 +190,7 @@ users)
   * Port opam-rt tests: orphans, dep-cycles, reinstall, and big-upgrade [#4979 @AltGr]
   * Add & update env tests [#4861 #4841 #4974 @rjbou @dra27 @AltGr]
   * Add remove test [#5004 @AltGr]
+  * Add some simple tests for the "opam list" command [#5006 @kit-ty-kate]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
