@@ -26,6 +26,7 @@ users)
 ## Actions
 
 ## Install
+  * Remove unnecessary copies/move when fetching archives [#5018 @kit-ty-kate @rjbou]
 
 ## Remove
 
