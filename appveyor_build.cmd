@@ -188,6 +188,7 @@ if "%DEP_MODE%" equ "lib-pkg" set WITH_MCCS=
 goto :EOF
 
 :test
+goto :EOF
 rem Configure Git for Windows (for the testsuite, this isn't strictly necessary
 rem as Git-for-Windows will pick up $HOME/.gitconfig for Cygwin's git)
 git config --global user.email travis@example.com
