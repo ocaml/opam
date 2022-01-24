@@ -36,6 +36,7 @@ users)
 
 ## Build (package)
   * ◈ Add `--verbose-on` option to enable verbose mode on specified package names [#5682 @desumn @rjbou]
+  * Remove unnecessary copies/move when fetching archives [#5018 @kit-ty-kate @rjbou]
 
 ## Remove
 
