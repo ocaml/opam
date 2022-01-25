@@ -70,11 +70,10 @@ users)
   * Make `opam show --list-files <pkg>` fail with not found when `<pkg>` is not installed [#4956 @kit-ty-kate - fix #4930]
   * Improve performance of opam show by 300% when the package to show is given explicitly or unique [#4998 @kit-ty-kate - fix #4997 and partially #4172]
 
-## Var
-  *
-
-## Option
-  *
+## Var/Option
+  * Don't error when displaying if switch is not set [#5027 @rjbou - fix #5025]
+  * Try to set a variable with option `--switch <sw>` fails instead of writing a wrong `switch-config` file [#5027 @rjbou]
+  * When a field is defined in switch and global scope, try to determine the scope also by checking switch selection [#5027 @rjbou]
 
 ## Exec
   * [NEW] Add `opam exec --no-switch` [#4957 @kit-ty-kate - fix #4951]
@@ -240,6 +239,7 @@ users)
   * Fix github url: `git://` form no more handled [#5097 @rjbou]
   * Add source test [#5101 @rjbou]
   * Add upgrade (and update) test [#5106 @rjbou]
+  * Update var-option test with no switch examples [#5025]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
@@ -307,6 +307,7 @@ users)
   * Add `OpamSwitchCommand.previous_switch` [#4910 @kit-ty-kate]
   * `OpamClient`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
 
+  * `OpamConfigCommand`: `set_opt_switch`, `set_var_switch`, `options_list_switch`, and `var_list_switch` now raise configuration error exception (50) if no switch is found [#5027 @rjbou]
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
   * New download functions for shared source, old ones kept [#4893 @rjbou]
