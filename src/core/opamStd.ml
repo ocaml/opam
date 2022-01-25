@@ -518,6 +518,11 @@ module OpamString = struct
     let rec chk i = i >= x || suffix.[i] = s.[i+n-x] && chk (i+1) in
     chk 0
 
+  let for_all f s =
+    let len = String.length s in
+    let rec aux i = i >= len || f s.[i] && aux (i+1) in
+    aux 0
+
   let contains_char s c =
     try let _ = String.index s c in true
     with Not_found -> false
