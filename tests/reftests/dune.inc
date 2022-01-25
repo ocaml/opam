@@ -17,6 +17,23 @@
    (run ./run.exe %{bin:opam} %{dep:avoid-version.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-clean)
+ (action
+  (diff clean.test clean.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-clean)))
+
+(rule
+ (targets clean.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:clean.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-cli-versioning)
  (action
   (diff cli-versioning.test cli-versioning.out)))

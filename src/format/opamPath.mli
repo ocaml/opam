@@ -240,6 +240,9 @@ module Switch: sig
         [num] argument will add a {i manN } suffix if specified *)
     val man_dir: ?num:string -> t -> switch -> dirname
 
+    (** Man pages pathes: {i $prefix/man/manN/} *)
+    val man_dirs: t -> switch -> dirname list
+
     (** Installed binaries: {i $prefix/bin} *)
     val bin: t -> switch -> dirname
 
@@ -251,32 +254,34 @@ module Switch: sig
       a switch's layout in non-switch contexts *)
   module DefaultF : functor (L:LAYOUT) -> sig
     val lib: t -> L.ctx -> name -> dirname
-  
+
     val lib_dir: t -> L.ctx -> dirname
-  
+
     val stublibs: t -> L.ctx -> dirname
-  
+
     val toplevel: t -> L.ctx -> dirname
-  
+
     val doc: t -> L.ctx -> name -> dirname
-  
+
     val doc_dir: t -> L.ctx -> dirname
-  
+
     val share_dir: t -> L.ctx -> dirname
-  
+
     val share: t -> L.ctx -> name -> dirname
-  
+
     val etc_dir: t -> L.ctx -> dirname
-  
+
     val etc: t -> L.ctx -> name -> dirname
-  
+
     val man_dir: ?num:string -> t -> L.ctx -> dirname
-  
+
+    val man_dirs: t -> L.ctx -> dirname list
+
     val bin: t -> L.ctx -> dirname
-  
+
     val sbin: t -> L.ctx -> dirname
   end
-  
+
 
   (** Actual config handling the global-config.config indirections *)
 
@@ -306,6 +311,9 @@ module Switch: sig
   (** Man pages path: {i $prefix/man/}. The optional
       [num] argument will add a {i manN } suffix if specified *)
   val man_dir: ?num:string -> t -> switch -> OpamFile.Switch_config.t -> dirname
+
+  (** Man pages pathes: {i $prefix/man/manN/} *)
+  val man_dirs: t -> switch -> OpamFile.Switch_config.t -> dirname list
 
   (** Installed binaries: {i $prefix/bin} *)
   val bin: t -> switch -> OpamFile.Switch_config.t -> dirname

@@ -76,6 +76,9 @@ users)
 ## Lock
   *
 
+## Clean
+  * [NEW] Add `--untracked` option to remove interactively untracked files [{4915 @rjbou - fix #4831]
+
 ## Opamfile
   *
 
@@ -217,6 +220,7 @@ users)
   * Automatically update default repo when adding a package file [#5004 @AltGr]
   * Make all the tests work on macOS/arm64 [#5019 @kit-ty-kate]
 
+  * Add clean test for untracked option [#4915 @rjbou]
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]
@@ -257,6 +261,7 @@ users)
 ## opam-format
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamSysPkg` and `OpamVariable` [#4918 @rjbou]
   * Add OpamPackage.Version.default returning the version number used when no version is given for a package [#4949 @kit-ty-kate]
+  * Add `OpamPath.Switch.man_dirs` [#4915 @rjbou]
 ## opam-core
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamFilename`, `OpamHash`, `OpamStd`, `OpamStd`, `OpamUrl`, and `OpamVersion` [#4918 @rjbou]
