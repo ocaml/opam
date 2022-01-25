@@ -223,6 +223,7 @@ users)
 
   * Add clean test for untracked option [#4915 @rjbou]
 ## Cram tests
+### Cram tests
   * Add some unix-only cram tests to test for https://github.com/ocaml/opam/issues/4216 before fixing it [#5022 @kit-ty-kate]
 
 ## Github Actions
