@@ -604,12 +604,13 @@ Try `opam var --help' or `opam --help' for more information.
 ### opam var arch="somearch" --global
 Added '[arch "\"somearch\"" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam var arch="somearch" --switch phantom
-[ERROR] switch phantom not found, display default values
-Added 'arch: "\"somearch\""' to field variables in switch phantom
+[ERROR] The selected switch phantom is not installed
+# Return code 2 #
 ### opam option depext-bypass=["pkg"]
 [ERROR] No switch selected
 # Return code 50 #
 ### opam option depext-bypass=["otherpkg"] --global
 Set to '["otherpkg"]' the field depext-bypass in global configuration
 ### opam option depext-bypass=["yetanotherpkg"] --switch phantom
-Set to '["yetanotherpkg"]' the field depext-bypass in switch phantom
+[ERROR] The selected switch phantom is not installed
+# Return code 2 #
