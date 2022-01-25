@@ -10,11 +10,6 @@ install: [
   [ "cp" "second" "%{lib}%/things/second" ]
 ]
 ### OPAMPRECISETRACKING=1 OPAMYES=1
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam switch create clean --empty
 ### opam install things
 The following actions will be performed:
