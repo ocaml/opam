@@ -1063,8 +1063,9 @@ let get_scope field =
     with Invalid_argument _ -> field
   in
   let find l = OpamStd.List.find_opt (fun (f,_) -> f = field) l in
-  if find OpamFile.Switch_config.fields <> None
-  || find OpamFile.Switch_config.sections <> None then
+  if OpamStateConfig.get_switch_opt () <> None
+  && (find OpamFile.Switch_config.fields <> None
+      || find OpamFile.Switch_config.sections <> None) then
     `Switch
   else if find OpamFile.Config.fields <> None then
     `Global
