@@ -607,8 +607,7 @@ Added '[arch "\"somearch\"" "Set through 'opam var'"]' to field global-variables
 [ERROR] The selected switch phantom is not installed
 # Return code 2 #
 ### opam option depext-bypass=["pkg"]
-[ERROR] No switch selected
-# Return code 50 #
+Set to '["pkg"]' the field depext-bypass in global configuration
 ### opam option depext-bypass=["otherpkg"] --global
 Set to '["otherpkg"]' the field depext-bypass in global configuration
 ### opam option depext-bypass=["yetanotherpkg"] --switch phantom
