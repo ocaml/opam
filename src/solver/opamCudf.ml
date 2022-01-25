@@ -867,7 +867,10 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
               Map.update pkg (CS.union chain) CS.empty acc
             in
             let ds = get deps p in
-            let dsc = ds %% all_conflicting in
+            let dsc = match Hashtbl.length missing with
+              | 0 -> ds (* Hack to fix https://github.com/ocaml/opam/issues/4373. We should try to do better at some point *)
+              | _ -> ds %% all_conflicting
+            in
             if not (Set.is_empty dsc) then
               dsc ++ seen1, Set.fold append_to_chains (dsc -- seen1) new_chains
             else

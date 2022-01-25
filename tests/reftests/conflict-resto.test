@@ -388,7 +388,7 @@ Faking installation of ocaml-config.2
 Faking installation of ocaml.4.12.0
 Faking installation of ocaml-options-vanilla.1
 Done.
-### opam pin resto/ --with-version=0.6.1 --show --yes | unordered
+### OPAMVAR_os=linux opam pin resto/ --with-version=0.6.1 --show --yes | unordered
 This will pin the following packages: ezresto-directory, ezresto, resto-acl, resto-client, resto-cohttp-client, resto-cohttp-self-serving-client, resto-cohttp-server, resto-cohttp, resto-directory, resto-json, resto-lwt, resto-self-serving-client, resto-server, resto. Continue? [Y/n] y
 ezresto-directory is now pinned to file://${BASEDIR}/resto (version 0.6.1)
 ezresto is now pinned to file://${BASEDIR}/resto (version 0.6.1)
@@ -410,7 +410,9 @@ resto-server is now pinned to file://${BASEDIR}/resto (version 0.6.1)
 resto is now pinned to file://${BASEDIR}/resto (version 0.6.1)
 
 [ERROR] Package conflict!
-Sorry, no solution found: there seems to be a problem with your request.
+  * No agreement on the version of conduit-lwt-unix:
+    - resto-lwt -> cohttp-lwt-unix >= 4.0.0 -> conduit-lwt-unix < 5.0.0
+    - resto-lwt -> conduit-lwt-unix >= 5.0.0
 
 [NOTE] Pinning command successful, but your installed packages may be out of sync.
 # Return code 20 #
@@ -434,7 +436,9 @@ conflicts: "a" {< "2"}
 
 ### opam install b c --show
 [ERROR] Package conflict!
-Sorry, no solution found: there seems to be a problem with your request.
+  * Incompatible packages:
+    - b -> a < 2
+    - c
 
 No solution found, exiting
 # Return code 20 #
