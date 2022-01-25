@@ -448,3 +448,149 @@ jobs download-command download-jobs solver-criteria solver-upgrade-criteria solv
 [ERROR] There is no option named 'bar'. The allowed options are:
 synopsis setenv depext-bypass pre-build-commands pre-install-commands pre-remove-commands pre-session-commands wrap-build-commands wrap-install-commands wrap-remove-commands post-build-commands post-install-commands post-remove-commands post-session-commands variables
 # Return code 2 #
+### : when no switch is present
+### opam switch remove var-option -y
+Switch var-option and all its packages will be wiped. Are you sure? [y/n] y
+### opam var | ' +#.*' -> '' | " +[.]exe" -> ""
+
+<><> Global opam variables ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+arch              x86_64
+bin               global-bin
+exe
+foo               global-foo
+jobs              7
+make              make
+opam-version      68.79
+os                linux
+os-distribution   lorem
+os-family         ipsum
+os-version        dolor
+root              ${BASEDIR}/OPAM
+switch
+sys-ocaml-version 4.08.0
+
+<><> Configuration variables from the current switch ><><><><><><><><><><><><><>
+[ERROR] No switch is currently set. Please use 'opam switch' to set or install a switch
+# Return code 50 #
+### opam var --global | ' +#.*' -> '' | " +[.]exe" -> ""
+arch              x86_64
+bin               global-bin
+exe
+foo               global-foo
+jobs              7
+make              make
+opam-version      68.79
+os                linux
+os-distribution   lorem
+os-family         ipsum
+os-version        dolor
+root              ${BASEDIR}/OPAM
+switch
+sys-ocaml-version 4.08.0
+### opam var --switch phantom
+prefix   ${BASEDIR}/OPAM/phantom
+lib      ${BASEDIR}/OPAM/phantom/lib
+bin      ${BASEDIR}/OPAM/phantom/bin
+sbin     ${BASEDIR}/OPAM/phantom/sbin
+share    ${BASEDIR}/OPAM/phantom/share
+doc      ${BASEDIR}/OPAM/phantom/doc
+etc      ${BASEDIR}/OPAM/phantom/etc
+man      ${BASEDIR}/OPAM/phantom/man
+toplevel ${BASEDIR}/OPAM/phantom/lib/toplevel
+stublibs ${BASEDIR}/OPAM/phantom/lib/stublibs
+### opam option
+
+<><> Global configuration <><><><><><><><><><><><><><><><><><><><><><><><><><><>
+best-effort-prefix-criteria    {}
+depext                         true
+depext-bypass                  {}
+depext-cannot-install          false
+depext-run-installs            true
+download-command               {}
+download-jobs                  1
+jobs                           {}
+post-build-commands            {}
+post-install-commands          {}
+post-remove-commands           {}
+post-session-commands          {}
+pre-build-commands             {}
+pre-install-commands           {}
+pre-remove-commands            {}
+pre-session-commands           {}
+repository-validation-command  {}
+solver                         {}
+solver-criteria                {}
+solver-fixup-criteria          {}
+solver-upgrade-criteria        {}
+wrap-build-commands            {}
+wrap-install-commands          {}
+wrap-remove-commands           {}
+[ERROR] No switch is currently set. Please use 'opam switch' to set or install a switch
+# Return code 50 #
+### opam option --global
+best-effort-prefix-criteria    {}
+depext                         true
+depext-bypass                  {}
+depext-cannot-install          false
+depext-run-installs            true
+download-command               {}
+download-jobs                  1
+jobs                           {}
+post-build-commands            {}
+post-install-commands          {}
+post-remove-commands           {}
+post-session-commands          {}
+pre-build-commands             {}
+pre-install-commands           {}
+pre-remove-commands            {}
+pre-session-commands           {}
+repository-validation-command  {}
+solver                         {}
+solver-criteria                {}
+solver-fixup-criteria          {}
+solver-upgrade-criteria        {}
+wrap-build-commands            {}
+wrap-install-commands          {}
+wrap-remove-commands           {}
+### opam option --switch phantom
+[ERROR] switch phantom not found, display default values
+depext-bypass          {}
+post-build-commands    {}
+post-install-commands  {}
+post-remove-commands   {}
+post-session-commands  {}
+pre-build-commands     {}
+pre-install-commands   {}
+pre-remove-commands    {}
+pre-session-commands   {}
+setenv                 {}
+synopsis               ""
+wrap-build-commands    {}
+wrap-install-commands  {}
+wrap-remove-commands   {}
+### opam var root
+[ERROR] No switch is currently set. Please use 'opam switch' to set or install a switch
+# Return code 50 #
+### opam var root --global
+${BASEDIR}/OPAM
+### opam option depext
+true
+### opam option depext --global
+true
+### opam var arch="somearch"
+opam: variable setting needs a scope, use '--global' or '--switch <switch>'
+Usage: opam var [OPTION]... [VAR[=[VALUE]]]
+Try `opam var --help' or `opam --help' for more information.
+# Return code 2 #
+### opam var arch="somearch" --global
+Added '[arch "\"somearch\"" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var arch="somearch" --switch phantom
+[ERROR] switch phantom not found, display default values
+Added 'arch: "\"somearch\""' to field variables in switch phantom
+### opam option depext-bypass=["pkg"]
+[ERROR] No switch is currently set. Please use 'opam switch' to set or install a switch
+# Return code 50 #
+### opam option depext-bypass=["otherpkg"] --global
+Set to '["otherpkg"]' the field depext-bypass in global configuration
+### opam option depext-bypass=["yetanotherpkg"] --switch phantom
+Set to '["yetanotherpkg"]' the field depext-bypass in switch phantom
