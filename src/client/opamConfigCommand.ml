@@ -569,7 +569,7 @@ let confset_switch gt switch switch_config =
     stg_doc = switch_doc switch
   }
 
-let with_switch gt lock_kind st k =
+let with_switch ~display gt lock_kind st k =
   match st with
   | Some st -> k st.switch st.switch_config
   | None ->
@@ -590,8 +590,13 @@ let with_switch gt lock_kind st k =
       in
       let lock_file = OpamPath.Switch.lock gt.root switch in
       if switch_config = OpamFile.Switch_config.empty then
-        OpamConsole.error "switch %s not found, display default values"
-          (OpamSwitch.to_string switch);
+        if display then
+          OpamConsole.error "switch %s not found, display default values"
+            (OpamSwitch.to_string switch)
+        else
+          OpamConsole.error_and_exit `Bad_arguments
+            "The selected switch %s is not installed"
+            (OpamSwitch.to_string switch);
       OpamFilename.with_flock lock_kind lock_file @@ fun _ ->
       k switch switch_config
 
@@ -599,7 +604,7 @@ let set_opt_switch_t ?inner gt switch switch_config field value =
   set_opt ?inner field value (confset_switch gt switch switch_config)
 
 let set_opt_switch gt ?st field value =
-  with_switch gt `Lock_write st @@ fun sw swc ->
+  with_switch ~display:false gt `Lock_write st @@ fun sw swc ->
   let switch_config = set_opt_switch_t ~inner:false gt sw swc field value in
   OpamStd.Option.map (fun st -> { st with switch_config }) st
 
@@ -791,7 +796,7 @@ let set_var_switch gt ?st var value =
       stv_doc = switch_doc switch;
     } in
   let switch_config =
-    with_switch gt `Lock_write st @@ fun sw swc ->
+    with_switch ~display:false gt `Lock_write st @@ fun sw swc ->
     set_var var value (var_confset sw swc)
   in
   OpamStd.Option.map (fun st -> { st with switch_config }) st
@@ -851,7 +856,7 @@ let options_list_t to_list conf =
   print_fields (fields @ sections)
 
 let options_list_switch ?st gt =
-  with_switch gt `Lock_none st @@ fun sw swc ->
+  with_switch ~display:true gt `Lock_none st @@ fun sw swc ->
   options_list_t OpamFile.Switch_config.to_list (confset_switch gt sw swc)
 
 let options_list_global gt =
@@ -980,7 +985,7 @@ let option_show to_list conf field =
         "Field or section %s not found" field
 
 let option_show_switch gt ?st field =
-  with_switch gt `Lock_none st @@ fun sw swc ->
+  with_switch ~display:true gt `Lock_none st @@ fun sw swc ->
   option_show OpamFile.Switch_config.to_list (confset_switch gt sw swc) field
 
 let option_show_global gt field =
