@@ -102,6 +102,23 @@
    (run ./run.exe %{bin:opam} %{dep:conflict-core.test} %{read-lines:testing-env}))))
 
 (alias
+ (name reftest-conflict-resto)
+ (action
+  (diff conflict-resto.test conflict-resto.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-conflict-resto)))
+
+(rule
+ (targets conflict-resto.out)
+ (deps root-a5d7cdc0c914)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:conflict-resto.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-conflict-solo5)
  (action
   (diff conflict-solo5.test conflict-solo5.out)))
@@ -514,6 +531,26 @@
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
            file://%{dep:opam-repo-7090735c9d})))))
+
+(rule
+ (targets opam-archive-a5d7cdc0c914.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/a5d7cdc0c914.tar.gz)))
+
+(rule
+  (targets opam-repo-a5d7cdc0c914)
+  (action
+   (progn
+    (run mkdir -p %{targets})
+    (run tar -C %{targets} -xzf %{dep:opam-archive-a5d7cdc0c914.tar.gz} --strip-components=1))))
+
+(rule
+  (targets root-a5d7cdc0c914)
+  (action
+   (progn
+    (ignore-stdout
+    (run %{bin:opam} init --root=%{targets}
+           --no-setup --bypass-checks --no-opamrc --bare
+           file://%{dep:opam-repo-a5d7cdc0c914})))))
 
 (rule
  (targets opam-archive-ad4dd344.tar.gz)

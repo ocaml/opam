@@ -87,7 +87,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Client
-  *
+  * Fix (at least some of the) empty conflict explanations [#4982 @kit-ty-kate]
 
 ## Internal
   *
