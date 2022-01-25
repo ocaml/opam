@@ -12,7 +12,7 @@ Faking installation of ocaml-base-compiler.4.06.1
 Faking installation of ocaml-config.1
 Faking installation of ocaml.4.06.1
 Done.
-### opam install 'pgocaml<2.0' 'pgocaml>=1.7.1' --show
+### OPAMVAR_arch=x86_64 opam install 'pgocaml<2.0' 'pgocaml>=1.7.1' --show
 [ERROR] Package conflict!
   * No agreement on the version of ocaml:
     - (invariant) -> ocaml-base-compiler = 4.06.1 -> ocaml = 4.06.1

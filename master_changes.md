@@ -213,6 +213,7 @@ users)
   * Avoid diff when the repo is too old [#4979 @AltGr]
   * Escape regexps characters in string replacements primitives [#5009 @kit-ty-kate]
   * Automatically update default repo when adding a package file [#5004 @AltGr]
+  * Make all the tests work on macOS/arm64 [#5019 @kit-ty-kate]
 
 
 ## Github Actions
