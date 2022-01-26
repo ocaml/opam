@@ -57,7 +57,10 @@ if "%CYGWIN_CACHE_DIR%" equ "" (
 :: cache, so instead we require that the cache download is required and fail the
 :: job otherwise.
 set PATH=%CYGWIN_ROOT%\bin;%PATH%
-echo %CYGWIN_ROOT%\bin>> %GITHUB_PATH%
+:: COMBAK At present we clobber the PATH on purpose - this wants to be filtered or something
+::echo %CYGWIN_ROOT%\bin>> %GITHUB_PATH%
+echo Path=%CYGWIN_ROOT%\bin;C:\Program Files\Mercurial;C:\Program Files\Git\cmd;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\>> %GITHUB_ENV%
+
 
 pushd %CYGWIN_CACHE_DIR%
 
