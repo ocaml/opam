@@ -177,7 +177,7 @@ GET_ARCHIVE=\
 
 %.pkgcache:
 	@mkdir -p archives
-	@test -e archives/$(notdir $(URL_$*)) || \
+	@test -e archives/$(notdir $(URL_PKG_$*)) || \
           { $(call GET_ARCHIVE,$*,PKG_) && mv $(call ARCHIVE_FILE,$*,PKG_) archives/$(notdir $(URL_PKG_$*)); }
 
 .PRECIOUS: %.download
