@@ -32,7 +32,7 @@ make install
 (set +x ; echo -en "::endgroup::build opam\r") 2>/dev/null
 
 export PATH=~/local/bin:$PATH
-opam config report
+opam --version
 
 if [ "$OPAM_TEST" = "1" ]; then
   # test if an upgrade is needed
