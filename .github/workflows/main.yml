@@ -147,6 +147,8 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: Build
       run: bash -exu .github/scripts/main/main.sh
+    - name: Test (basic)
+      run: bash -exu .github/scripts/main/test.sh
 
   Build-macOS:
     runs-on: macos-latest
@@ -181,6 +183,8 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: Build
       run: bash -exu .github/scripts/main/main.sh
+    - name: Test (basic)
+      run: bash -exu .github/scripts/main/test.sh
 
 ####
 # Legacy
@@ -277,6 +281,8 @@ jobs:
         key: ${{ runner.os }}-opam-rt-${{ matrix.ocamlv }}
     - name: Build (and test)
       run: bash -exu .github/scripts/main/main.sh
+    - name: Test (opam-rt)
+      run: bash -exu .github/scripts/main/opam-rt.sh
 
   Test-macOS:
     runs-on: macos-latest
@@ -327,6 +333,8 @@ jobs:
         key: ${{ runner.os }}-opam-rt-${{ matrix.ocamlv }}
     - name: Build (and test)
       run: bash -exu .github/scripts/main/main.sh
+    - name: Test (opam-rt)
+      run: bash -exu .github/scripts/main/opam-rt.sh
 
 ####
 # Opam cold
@@ -355,6 +363,8 @@ jobs:
         make compiler
         make lib-pkg
         bash -exu .github/scripts/main/main.sh
+    - name: Test (basic)
+      run: bash -exu .github/scripts/main/test.sh
 
 ####
 # Compile solver backends
@@ -482,10 +492,12 @@ jobs:
     - name: Create OCaml ${{ matrix.ocamlv }} cache
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
-    - name: Test (upgrade)
+    - name: Build
       env:
         OPAM_UPGRADE: 1
       run: bash -exu .github/scripts/main/main.sh
+    - name: Test (upgrade)
+      run: bash -exu .github/scripts/main/upgrade.sh
 
   Upgrade-macOS:
     runs-on: macos-latest
@@ -511,10 +523,12 @@ jobs:
     - name: Create OCaml ${{ matrix.ocamlv }} cache
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
-    - name: Test (upgrade)
+    - name: Build
       env:
         OPAM_UPGRADE: 1
       run: bash -exu .github/scripts/main/main.sh
+    - name: Test (upgrade)
+      run: bash -exu .github/scripts/main/upgrade.sh
 
 ####
 # Around opam tests
