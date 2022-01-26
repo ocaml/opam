@@ -1,4 +1,2 @@
-(lang dune 2.7)
+(lang dune 2.0)
 (name opam)
-
-(cram enable)
