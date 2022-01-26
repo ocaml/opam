@@ -2,10 +2,20 @@
 
 . .github/scripts/main/preamble.sh
 
+PLATFORM="$1"
+
 curl -sLO "https://caml.inria.fr/pub/distrib/ocaml-${OCAML_VERSION%.*}/ocaml-$OCAML_VERSION.tar.gz"
 tar -xzf "ocaml-$OCAML_VERSION.tar.gz"
 
 cd "ocaml-$OCAML_VERSION"
+
+if [[ $PLATFORM = 'macOS' ]]; then
+  if [[ ! -e configure.ac ]]; then
+    # Fix build with XCode 12+ (cf. https://github.com/ocaml/opam/issues/4364)
+    sed -ib -e 's/opts=""/opts="-Wno-implicit-function-declaration"/' config/auto-aux/hasgot
+  fi
+fi
+
 if [[ $OPAM_TEST -ne 1 ]] ; then
   if [[ -e configure.ac ]]; then
     CONFIGURE_SWITCHES="--disable-debugger --disable-debug-runtime --disable-ocamldoc"

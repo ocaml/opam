@@ -152,7 +152,7 @@ jobs:
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       env:
         OCAML_VERSION: ${{ matrix.ocamlv }}
-      run: bash -exu .github/scripts/main/ocaml-cache.sh ocaml
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }}
     - name: Build
       env:
         OCAML_VERSION: ${{ matrix.ocamlv }}
@@ -196,7 +196,7 @@ jobs:
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       env:
         OCAML_VERSION: ${{ matrix.ocamlv }}
-      run: bash -exu .github/scripts/main/ocaml-cache.sh ocaml
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }}
     - name: Build
       env:
         OCAML_VERSION: ${{ matrix.ocamlv }}
@@ -240,7 +240,7 @@ jobs:
       if: steps.ocaml-cache-test.outputs.cache-hit != 'true'
       env:
         OCAML_VERSION: ${{ matrix.ocamlv }}
-      run: bash -exu .github/scripts/main/ocaml-cache.sh ocaml
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }}
     - name: opam bootstrap cache
       id: opam-bootstrap
       uses: actions/cache@v2
@@ -338,7 +338,7 @@ jobs:
       if: steps.ocaml-cache-test.outputs.cache-hit != 'true'
       env:
         OCAML_VERSION: ${{ matrix.ocamlv }}
-      run: bash -exu .github/scripts/main/ocaml-cache.sh ocaml
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }}
     - name: opam bootstrap Cache
       id: opam-bootstrap
       uses: actions/cache@v2
@@ -389,7 +389,7 @@ jobs:
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       env:
         OCAML_VERSION: ${{ matrix.ocamlv }}
-      run: bash -exu .github/scripts/main/ocaml-cache.sh ocaml
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }}
     - name: Test (upgrade)
       env:
         OCAML_VERSION: ${{ matrix.ocamlv }}
