@@ -1,5 +1,3 @@
 (cram
  (enabled_if (= %{os_type} "Unix"))
- (deps
-  (package opam-devel)
-  (sandbox always)))
+ (deps (package opam-devel)))
