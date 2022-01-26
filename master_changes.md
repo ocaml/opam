@@ -135,7 +135,6 @@ users)
   * Update bootstrap ocaml to 4.12.1 to integrate mingw fix [#4927 @rjbou]
   * Update bootstrap to use `-j` for Unix (Windows already does) [#4988 @dra27]
   * Update cold compiler to 4.13 [#5017 @dra27]
-  * Change minimum required Dune to 2.7 [#5022 @kit-ty-kate]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
