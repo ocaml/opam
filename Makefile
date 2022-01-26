@@ -8,6 +8,18 @@ all: opam opam-installer
 admin:
 	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) opam-admin.install
 
+# $(call CYGPATH,file) will convert file to a Windows path if opam is being
+# compiled for native Windows _and_ cygpath is available in PATH. The check
+# on PATH is done once only.
+ifeq ($(WIN32),1)
+  CYGPATH = \
+    $(eval CYGPATH = $(if $(shell command -v cygpath 2>/dev/null),\
+                          $$(shell cygpath -w '$$(1)'),\
+                          $$(1)))$(CYGPATH)
+else
+  CYGPATH = $(1)
+endif
+
 ifeq ($(DUNE),)
   DUNE_EXE = src_ext/dune-local/dune.exe
   ifeq ($(shell command -v cygpath 2>/dev/null),)
@@ -92,8 +104,8 @@ distclean: clean clean-ext
 	rm -f src/*.META src/*/.merlin src/manifest/dune src/manifest/install.inc src/stubs/libacl/dune src/stubs/win32/dune src/stubs/win32/cc64 src/ocaml-flags-configure.sexp src/stubs/libacl/c-libraries.sexp
 	rm -f src/client/linking.sexp src/stubs/c-flags.sexp src/core/developer src/core/version
 
-OPAMINSTALLER_FLAGS = --prefix "$(DESTDIR)$(prefix)"
-OPAMINSTALLER_FLAGS += --mandir "$(DESTDIR)$(mandir)"
+OPAMINSTALLER_FLAGS = --prefix "$(call CYGPATH,$(DESTDIR)$(prefix))"
+OPAMINSTALLER_FLAGS += --mandir "$(call CYGPATH,$(DESTDIR)$(mandir))"
 
 # With ocamlfind, prefer to install to the standard directory rather
 # than $(prefix) if there are no overrides
@@ -106,7 +118,7 @@ endif
 endif
 
 ifneq ($(LIBINSTALL_DIR),)
-    OPAMINSTALLER_FLAGS += --libdir "$(LIBINSTALL_DIR)" --docdir "$(LIBINSTALL_DIR)/../doc"
+    OPAMINSTALLER_FLAGS += --libdir "$(call CYGPATH,$(LIBINSTALL_DIR))" --docdir "$(call CYGPATH,$(LIBINSTALL_DIR)/../doc)"
 endif
 
 opam-devel.install: $(DUNE_DEP)
