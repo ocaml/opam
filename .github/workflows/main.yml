@@ -43,8 +43,6 @@ env:
   OPAM_REPO: https://github.com/ocaml/opam-repository.git
   OPAM_TEST_REPO_SHA: fd4405c83bcd23f91373978b45479694079a8c79
   OPAM_REPO_SHA: fd4405c83bcd23f91373978b45479694079a8c79
-  ## variables for cache paths
-  GH_OCAML_CACHE: ~/.cache/ocaml-local/**
   SOLVER:
 
 defaults:
@@ -61,6 +59,7 @@ jobs:
     outputs:
       archives: ${{ steps.keys.outputs.archives }}
       ocaml-secondary-compiler: ${{ steps.keys.outputs.ocaml-secondary-compiler }}
+      ocaml-cache: ${{ steps.keys.outputs.ocaml-cache }}
     steps:
     - name: Configure Git for Windows
       if: runner.os == 'Windows'
@@ -77,6 +76,8 @@ jobs:
         echo ::set-output name=archives::archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
         echo ocaml-secondary-compiler=legacy-${{ env.OPAM_REPO_SHA }}
         echo ::set-output name=ocaml-secondary-compiler::legacy-${{ env.OPAM_REPO_SHA }}
+        echo ocaml-cache=${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
+        echo ::set-output name=ocaml-cache::${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
     - name: src_ext/archives and opam-repository Cache
       id: archives
       if: runner.os == 'Linux'
@@ -139,8 +140,8 @@ jobs:
       id: ocaml-cache
       uses: actions/cache@v2
       with:
-        path: ${{ env.GH_OCAML_CACHE }}
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
     - name: Create OCaml ${{ matrix.ocamlv }} cache
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
@@ -173,8 +174,8 @@ jobs:
       id: ocaml-cache
       uses: actions/cache@v2
       with:
-        path: ${{ env.GH_OCAML_CACHE }}
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
     - name: Create OCaml ${{ matrix.ocamlv }} cache
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
@@ -214,8 +215,8 @@ jobs:
       id: ocaml-cache
       uses: actions/cache@v2
       with:
-        path: ${{ env.GH_OCAML_CACHE }}
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
     - name: Create OCaml ${{ matrix.ocamlv }} cache
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
@@ -227,7 +228,7 @@ jobs:
 ####
   Test-Linux:
     runs-on: ubuntu-latest
-    needs: [ Build-Linux, Analyse ]
+    needs: [ Analyse, Build-Linux ]
     strategy:
       matrix:
         ocamlv: [ 4.13.1 ]
@@ -248,14 +249,14 @@ jobs:
           ~/opam-repository
         key: ${{ needs.Analyse.outputs.archives }}
         force-gzip: true
-    - name: OCaml ${{ matrix.ocamlv }} Cache - test
-      id: ocaml-cache-test
+    - name: OCaml ${{ matrix.ocamlv }} Cache
+      id: ocaml-cache
       uses: actions/cache@v2
       with:
-        path: ${{ env.GH_OCAML_CACHE }}
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}-test
-    - name: Create OCaml ${{ matrix.ocamlv }} cache - test
-      if: steps.ocaml-cache-test.outputs.cache-hit != 'true'
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
+      if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: opam bootstrap Cache
       id: opam-bootstrap
@@ -279,7 +280,7 @@ jobs:
 
   Test-macOS:
     runs-on: macos-latest
-    needs: [ Build-macOS, Analyse ]
+    needs: [ Analyse, Build-macOS ]
     strategy:
       matrix:
         ocamlv: [ 4.13.1 ]
@@ -298,14 +299,14 @@ jobs:
           ~/opam-repository
         key: ${{ needs.Analyse.outputs.archives }}
         force-gzip: true
-    - name: OCaml ${{ matrix.ocamlv }} Cache - test
-      id: ocaml-cache-test
+    - name: OCaml ${{ matrix.ocamlv }} Cache
+      id: ocaml-cache
       uses: actions/cache@v2
       with:
-        path: ${{ env.GH_OCAML_CACHE }}
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}-test
-    - name: Create OCaml ${{ matrix.ocamlv }} cache - test
-      if: steps.ocaml-cache-test.outputs.cache-hit != 'true'
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
+      if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: opam bootstrap Cache
       id: opam-bootstrap
@@ -383,14 +384,14 @@ jobs:
           ~/opam-repository
         key: ${{ needs.Analyse.outputs.archives }}
         force-gzip: true
-    - name: OCaml ${{ matrix.ocamlv }} Cache - test
-      id: ocaml-cache-test
+    - name: OCaml ${{ matrix.ocamlv }} Cache
+      id: ocaml-cache
       uses: actions/cache@v2
       with:
-        path: ${{ env.GH_OCAML_CACHE }}
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ matrix.solver }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}-test
-    - name: Create OCaml ${{ matrix.ocamlv }} cache - test
-      if: steps.ocaml-cache-test.outputs.cache-hit != 'true'
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
+      if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: opam bootstrap Cache
       id: opam-bootstrap
@@ -429,14 +430,14 @@ jobs:
           ~/opam-repository
         key: ${{ needs.Analyse.outputs.archives }}
         force-gzip: true
-    - name: OCaml ${{ matrix.ocamlv }} Cache - test
-      id: ocaml-cache-test
+    - name: OCaml ${{ matrix.ocamlv }} Cache
+      id: ocaml-cache
       uses: actions/cache@v2
       with:
-        path: ${{ env.GH_OCAML_CACHE }}
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ matrix.solver }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}-test
-    - name: Create OCaml ${{ matrix.ocamlv }} cache - test
-      if: steps.ocaml-cache-test.outputs.cache-hit != 'true'
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
+      if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: opam bootstrap Cache
       id: opam-bootstrap
@@ -457,7 +458,7 @@ jobs:
 ####
   Upgrade-Linux:
     runs-on: ubuntu-latest
-    needs: Build-Linux
+    needs: [ Analyse, Build-Linux ]
     strategy:
       matrix:
         ocamlv: [ 4.13.1 ]
@@ -476,8 +477,8 @@ jobs:
       id: ocaml-cache
       uses: actions/cache@v2
       with:
-        path: ${{ env.GH_OCAML_CACHE }}
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
     - name: Create OCaml ${{ matrix.ocamlv }} cache
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
@@ -487,8 +488,8 @@ jobs:
       run: bash -exu .github/scripts/main/main.sh
 
   Upgrade-macOS:
-    needs: Build-macOS
     runs-on: macos-latest
+    needs: [ Analyse, Build-macOS ]
     strategy:
       matrix:
         ocamlv: [ 4.13.1 ]
@@ -505,8 +506,8 @@ jobs:
       id: ocaml-cache
       uses: actions/cache@v2
       with:
-        path: ${{ env.GH_OCAML_CACHE }}
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
     - name: Create OCaml ${{ matrix.ocamlv }} cache
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
