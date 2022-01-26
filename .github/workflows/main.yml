@@ -44,6 +44,13 @@ env:
   OPAM_TEST_REPO_SHA: fd4405c83bcd23f91373978b45479694079a8c79
   OPAM_REPO_SHA: fd4405c83bcd23f91373978b45479694079a8c79
   SOLVER:
+  # Cygwin configuration
+  CYGWIN_MIRROR: http://mirrors.kernel.org/sourceware/cygwin/
+  CYGWIN_ROOT: D:\cygwin
+  CYGWIN32_CACHE_DIR: D:\caches\cygwin32
+  CYGWIN64_CACHE_DIR: D:\caches\cygwin64
+  CYGWIN: winsymlinks:native
+  CYGWIN_EPOCH: 1
 
 defaults:
   run:
@@ -60,6 +67,7 @@ jobs:
       archives: ${{ steps.keys.outputs.archives }}
       ocaml-secondary-compiler: ${{ steps.keys.outputs.ocaml-secondary-compiler }}
       ocaml-cache: ${{ steps.keys.outputs.ocaml-cache }}
+      cygwin: ${{ steps.keys.outputs.cygwin }}
     steps:
     - name: Configure Git for Windows
       if: runner.os == 'Windows'
@@ -78,6 +86,8 @@ jobs:
         echo ::set-output name=ocaml-secondary-compiler::legacy-${{ env.OPAM_REPO_SHA }}
         echo ocaml-cache=${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
         echo ::set-output name=ocaml-cache::${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
+        echo cygwin=${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}
+        echo ::set-output name=cygwin::${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}
     - name: src_ext/archives and opam-repository Cache
       id: archives
       if: runner.os == 'Linux'
@@ -108,6 +118,37 @@ jobs:
     - name: Create ocaml-secondary-compiler cache
       if: runner.os != 'Windows' && steps.legacy.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/legacy-cache.sh
+
+  Cygwin:
+    runs-on: windows-latest
+    needs: Analyse
+    steps:
+    - name: Cygwin32 Cache
+      id: cygwin32
+      uses: dra27/cache@opam
+      with:
+        path: ${{ env.CYGWIN32_CACHE_DIR }}
+        key: cygwin32-${{ needs.Analyse.outputs.cygwin }}
+        check-only: true
+        force-gzip: true
+    - name: Cygwin64 Cache
+      id: cygwin64
+      uses: dra27/cache@opam
+      with:
+        path: ${{ env.CYGWIN64_CACHE_DIR }}
+        key: cygwin64-${{ needs.Analyse.outputs.cygwin }}
+        check-only: true
+    - name: Checkout tree
+      if: steps.cygwin32.outputs.cache-hit != 'true' || steps.cygwin64.outputs.cache-hit != 'true'
+      uses: actions/checkout@v2
+    - name: Create Cygwin32 cache
+      if: steps.cygwin32.outputs.cache-hit != 'true'
+      shell: cmd
+      run: .github\scripts\cygwin.cmd cygwin32
+    - name: Create Cygwin64 cache
+      if: steps.cygwin64.outputs.cache-hit != 'true'
+      shell: cmd
+      run: .github\scripts\cygwin.cmd cygwin64
 
 ####
 # Build
