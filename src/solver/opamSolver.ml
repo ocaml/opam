@@ -530,7 +530,7 @@ let dosetrim f =
       |_ -> assert false
   in
   ignore (f ~callback ~explain:false);
-  Cudf.load_universe !trimmed_pkgs
+  !trimmed_pkgs
 
 let installable universe =
   log "trim";
@@ -538,16 +538,16 @@ let installable universe =
     load_cudf_universe universe ~add_invariant:true
       universe.u_available ~build:true ~post:true ()
   in
-  let trimmed_universe =
+  let cudf_installable =
     dosetrim (fun ~callback ~explain ->
         Dose_algo.Depsolver.univcheck ~callback ~explain simple_universe)
   in
-  Cudf.fold_packages
-    (fun universe pkg ->
-       if pkg.package = OpamCudf.opam_invariant_package_name then universe
-       else OpamPackage.Set.add (OpamCudf.cudf2opam pkg) universe)
+  List.fold_left
+    (fun acc pkg ->
+       if pkg.Cudf.package = OpamCudf.opam_invariant_package_name then acc
+       else OpamPackage.Set.add (OpamCudf.cudf2opam pkg) acc)
     OpamPackage.Set.empty
-    trimmed_universe
+    cudf_installable
 
 let coinstallable_subset universe ?(add_invariant=true) set packages =
   log "subset of coinstallable with %a within %a"
@@ -564,12 +564,6 @@ let coinstallable_subset universe ?(add_invariant=true) set packages =
         OpamCudf.Set.add p set, OpamPackage.Map.add nv p map)
       set (OpamCudf.Set.empty, cudf_packages_map)
   in
-  let cudf_packages =
-    OpamPackage.Set.fold
-      (fun nv acc -> OpamPackage.Map.find nv cudf_packages_map :: acc)
-      packages
-      []
-  in
   let cudf_universe = map_to_cudf_universe cudf_packages_map in
   let cudf_set =
     if add_invariant then
@@ -579,16 +573,26 @@ let coinstallable_subset universe ?(add_invariant=true) set packages =
     else cudf_set
   in
   let cudf_universe = OpamCudf.trim_universe cudf_universe cudf_set in
-  let trimmed_universe =
+  let cudf_packages =
+    OpamPackage.Set.fold
+      (fun nv acc ->
+         let p = OpamPackage.Map.find nv cudf_packages_map in
+         if Cudf.mem_package cudf_universe (p.Cudf.package, p.Cudf.version)
+         then OpamPackage.Map.find nv cudf_packages_map :: acc
+         else acc)
+      packages
+      []
+  in
+  let cudf_coinstallable =
     dosetrim (fun ~callback ~explain ->
         Dose_algo.Depsolver.listcheck ~callback ~explain
           cudf_universe cudf_packages)
   in
-  Cudf.remove_package trimmed_universe OpamCudf.opam_invariant_package;
-  Cudf.fold_packages
-    (fun universe pkg -> OpamPackage.Set.add (OpamCudf.cudf2opam pkg) universe)
+  List.fold_left (fun acc pkg ->
+      if OpamCudf.is_opam_invariant pkg then acc
+      else OpamPackage.Set.add (OpamCudf.cudf2opam pkg) acc)
     OpamPackage.Set.empty
-    trimmed_universe
+    cudf_coinstallable
 
 let installable_subset universe packages =
   coinstallable_subset

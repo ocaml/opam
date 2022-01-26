@@ -1355,19 +1355,13 @@ let trim_universe univ packages =
   let chrono = OpamConsole.timer () in
   let n = Cudf.universe_size univ in
   let conflicts = compute_conflicts univ packages in
-  (* Set.iter (fun p -> Cudf.remove_package univ (p.Cudf.package, p.Cudf.version))
-   *   conflicts; *)
-  let univ = Cudf.load_universe (Cudf.get_packages ~filter:(fun p -> not (Set.mem p conflicts)) univ) in
+  let univ =
+    Cudf.load_universe
+      (Cudf.get_packages ~filter:(fun p -> not (Set.mem p conflicts)) univ)
+  in
   log "Pre-remove conflicts (%s): from %d - %d to %d packages in %.2fs"
     (Set.to_string packages)
     n (Set.cardinal conflicts) (Cudf.universe_size univ) (chrono ());
-  (* Dose_common.CudfAdd. (
-   * (\* let install =
-   *  *   List.map (fun p -> p.Cudf.package, Some (`Eq,p.Cudf.version)) packages
-   *  * in *\)
-   * let _, univ, _ =
-   *   preprocess_cudf_request ((), univ, Cudf.default_request (\* with install *\)) "-new"
-   * in *)
   univ
 
 exception Timeout of Dose_algo.Depsolver.solver_result option
