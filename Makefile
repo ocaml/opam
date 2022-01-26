@@ -179,9 +179,9 @@ tests: $(DUNE_DEP) src/client/no-git-version
 	@$(DUNE) runtest $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) src/ tests/ --no-buffer; \
 	ret=$$?; \
 	echo "###     TESTS RESULT SUMMARY     ###"; \
-	for t in _build/default/tests/reftests/*.test; do \
-	  printf "%-30s" $$(basename $$t .test); \
-	  if diff -q --strip-trailing-cr $$t $${t%.test}.out >/dev/null; \
+	for t in _build/default/tests/reftests/*.out; do \
+	  printf "%-30s" $$(basename $$t .out); \
+	  if diff -q --strip-trailing-cr $${t%.out}.test $$t >/dev/null; \
 	  then printf '\033[32m[ OK ]\033[m\n'; \
 	  else printf '\033[31m[FAIL]\033[m\n'; \
 	  fi; \

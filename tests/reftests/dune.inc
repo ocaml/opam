@@ -306,6 +306,26 @@
    (run ./run.exe %{bin:opam} %{dep:list.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-list.unix)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (diff list.unix.test list.unix.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Unix"))
+ (deps (alias reftest-list.unix)))
+
+(rule
+ (targets list.unix.out)
+ (deps root-0ec9bbf7)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:list.unix.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-opamroot-versions)
  (action
   (diff opamroot-versions.test opamroot-versions.out)))
@@ -562,6 +582,26 @@
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
            file://%{dep:opam-repo-009e00fa})))))
+
+(rule
+ (targets opam-archive-0ec9bbf7.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/0ec9bbf7.tar.gz)))
+
+(rule
+  (targets opam-repo-0ec9bbf7)
+  (action
+   (progn
+    (run mkdir -p %{targets})
+    (run tar -C %{targets} -xzf %{dep:opam-archive-0ec9bbf7.tar.gz} --strip-components=1))))
+
+(rule
+  (targets root-0ec9bbf7)
+  (action
+   (progn
+    (ignore-stdout
+    (run %{bin:opam} init --root=%{targets}
+           --no-setup --bypass-checks --no-opamrc --bare
+           file://%{dep:opam-repo-0ec9bbf7})))))
 
 (rule
  (targets opam-archive-7090735c9d.tar.gz)
