@@ -1,8 +1,12 @@
 . .github/scripts/common/preamble.sh
 
 CWD=$PWD
-CACHE=~/.cache
-CACHE=`eval echo $CACHE`
+if [ "$RUNNER_OS" = Windows ]; then
+  CACHE="$(cygpath 'D:\Cache')"
+else
+  CACHE=~/.cache
+  CACHE=$(eval echo $CACHE)
+fi
 echo "Cache -> $CACHE"
 OCAML_LOCAL=$CACHE/ocaml-local
 OPAM_LOCAL=$CACHE/opam-local

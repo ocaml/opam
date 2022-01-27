@@ -138,17 +138,18 @@ jobs:
         path: ${{ env.CYGWIN64_CACHE_DIR }}
         key: cygwin64-${{ needs.Analyse.outputs.cygwin }}
         check-only: true
+        force-gzip: true
     - name: Checkout tree
       if: steps.cygwin32.outputs.cache-hit != 'true' || steps.cygwin64.outputs.cache-hit != 'true'
       uses: actions/checkout@v2
     - name: Create Cygwin32 cache
       if: steps.cygwin32.outputs.cache-hit != 'true'
       shell: cmd
-      run: .github\scripts\cygwin.cmd cygwin32
+      run: .github\scripts\cygwin.cmd create i686-pc-cygwin
     - name: Create Cygwin64 cache
       if: steps.cygwin64.outputs.cache-hit != 'true'
       shell: cmd
-      run: .github\scripts\cygwin.cmd cygwin64
+      run: .github\scripts\cygwin.cmd create x86_64-pc-cygwin
 
 ####
 # Build
@@ -187,9 +188,99 @@ jobs:
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: Build
-      run: bash -exu .github/scripts/main/main.sh
+      run: bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
     - name: Test (basic)
       run: bash -exu .github/scripts/main/test.sh
+
+  Build-Windows:
+    runs-on: windows-latest
+    needs: [ Analyse, Cygwin ]
+    strategy:
+      matrix:
+        host: [ x86_64-pc-cygwin, i686-w64-mingw32, x86_64-w64-mingw32, i686-pc-windows, x86_64-pc-windows ]
+        build: [ x86_64-pc-cygwin ]
+        ocamlv: [ 4.13.1 ]
+        # Annoyingly, it does not appear to be possible to exclude or include by pattern, i.e. to have
+        # include:
+        #   - host: i686-pc-cygwin
+        #     build: i686-pc-cygwin
+        # and have GHA take the cross-product of that with ocamlv from the main matrix
+        # So we have to duplicate the ocamlv below...
+        include:
+          - ocamlv: 4.13.1
+            host: i686-pc-cygwin
+            build: i686-pc-cygwin
+      # Intentionally fail fast, no need to run all build if there is a
+      # problem in a given version; usually it is functions not defined in lower
+      # versions of OCaml
+      fail-fast: true
+    defaults:
+      run:
+        shell: D:\cygwin\bin\bash.exe {0}
+    steps:
+    - name: Configure LF checkout for Cygwin
+      if: endsWith(matrix.host, '-pc-cygwin')
+      shell: cmd
+      run: |
+        git config --system core.autocrlf false
+        git config --system core.eol lf
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: Cygwin32 Cache
+      id: cygwin32
+      if: matrix.build == 'i686-pc-cygwin'
+      uses: dra27/cache@opam
+      with:
+        path: ${{ env.CYGWIN32_CACHE_DIR }}
+        key: cygwin32-${{ needs.Analyse.outputs.cygwin }}
+        force-gzip: true
+    - name: Cygwin64 Cache
+      id: cygwin64
+      if: matrix.build == 'x86_64-pc-cygwin'
+      uses: dra27/cache@opam
+      with:
+        path: ${{ env.CYGWIN64_CACHE_DIR }}
+        key: cygwin64-${{ needs.Analyse.outputs.cygwin }}
+        force-gzip: true
+    - name: src_ext/archives and opam-repository Cache
+      id: archives
+      uses: dra27/cache@opam
+      with:
+        path: |
+          src_ext/archives
+          ~/opam-repository
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
+    - name: OCaml ${{ matrix.ocamlv }} Cache
+      id: ocaml-cache
+      uses: dra27/cache@opam
+      with:
+        path: D:\Cache\ocaml-local.tar
+        key: ${{ runner.os }}-${{ matrix.host }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+        force-gzip: true
+    - name: Unpack Cygwin
+      shell: cmd
+      run: .github\scripts\cygwin.cmd ${{ matrix.host }}
+    - name: Unpack OCaml ${{ matrix.ocamlv }}
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }} ${{ matrix.host }}
+    - name: Build
+      run: bash -exu .github/scripts/main/main.sh ${{ matrix.host }}
+    - name: Test (basic - Cygwin)
+      if: endsWith(matrix.host, '-pc-cygwin')
+      run: bash -exu .github/scripts/main/test.sh
+    - name: Test (basic - mingw-w64)
+      if: endsWith(matrix.host, '-mingw32') == true
+      shell: cmd
+      run: |
+        set Path=D:\Cache\ocaml-local\bin;%Path%
+        opam init --yes --bare default git+file://D:/opam-repository#${{ env.OPAM_TEST_REPO_SHA }} || exit /b 1
+        opam switch --yes create default ocaml-system || exit /b 1
+        opam env || exit /b 1
+        opam install --yes lwt || exit /b 1
+        opam list || exit /b 1
+        opam config report || exit /b 1
+    - name: Test (reftests)
+      run: bash -exu .github/scripts/main/reftests.sh ${{ matrix.host }}
 
   Build-macOS:
     runs-on: macos-latest
@@ -223,7 +314,7 @@ jobs:
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: Build
-      run: bash -exu .github/scripts/main/main.sh
+      run: bash -exu .github/scripts/main/main.sh x86_64-apple-darwin
     - name: Test (basic)
       run: bash -exu .github/scripts/main/test.sh
 
@@ -321,7 +412,7 @@ jobs:
         path: ~/.cache/opam-rt/**
         key: ${{ runner.os }}-opam-rt-${{ matrix.ocamlv }}
     - name: Build (and test)
-      run: bash -exu .github/scripts/main/main.sh
+      run: bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
     - name: Test (opam-rt)
       run: bash -exu .github/scripts/main/opam-rt.sh
 
@@ -373,7 +464,7 @@ jobs:
         path: ~/.cache/opam-rt/**
         key: ${{ runner.os }}-opam-rt-${{ matrix.ocamlv }}
     - name: Build (and test)
-      run: bash -exu .github/scripts/main/main.sh
+      run: bash -exu .github/scripts/main/main.sh x86_64-apple-darwin
     - name: Test (opam-rt)
       run: bash -exu .github/scripts/main/opam-rt.sh
 
@@ -403,7 +494,7 @@ jobs:
       run: |
         make compiler
         make lib-pkg
-        bash -exu .github/scripts/main/main.sh
+        bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
     - name: Test (basic)
       run: bash -exu .github/scripts/main/test.sh
 
@@ -536,7 +627,7 @@ jobs:
     - name: Build
       env:
         OPAM_UPGRADE: 1
-      run: bash -exu .github/scripts/main/main.sh
+      run: bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
     - name: Test (upgrade)
       run: bash -exu .github/scripts/main/upgrade.sh
 
@@ -567,7 +658,7 @@ jobs:
     - name: Build
       env:
         OPAM_UPGRADE: 1
-      run: bash -exu .github/scripts/main/main.sh
+      run: bash -exu .github/scripts/main/main.sh x86_64-apple-darwin
     - name: Test (upgrade)
       run: bash -exu .github/scripts/main/upgrade.sh
 

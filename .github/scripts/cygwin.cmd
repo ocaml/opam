@@ -15,7 +15,7 @@
 ::
 :: cygwin.cmd [distro]
 ::
-:: where distro is cygwin32 or cygwin64 and rebuilds the cache
+:: where distro is i686-pc-cygwin or x86_64-pc-cygwin and rebuilds the cache
 ::
 :: Environment variables:
 ::   CYGWIN32_CACHE_DIR - location of Cygwin32 cache files
@@ -24,13 +24,13 @@
 ::   CYGWIN_MIRROR      - Package repository mirror
 
 set CYGWIN_CACHE_DIR=
-if "%1" equ "cygwin32" (
+if "%2" equ "i686-pc-cygwin" (
   set CYGWIN_CACHE_DIR=%CYGWIN32_CACHE_DIR%
 ) else (
-  if "%1" equ "cygwin64" (
+  if "%2" equ "x86_64-pc-cygwin" (
     set CYGWIN_CACHE_DIR=%CYGWIN64_CACHE_DIR%
   ) else (
-    if "%1" equ "" (
+    if "%2" equ "" (
       if exist %CYGWIN32_CACHE_DIR%\cache.tar set CYGWIN_CACHE_DIR=%CYGWIN32_CACHE_DIR%
       if exist %CYGWIN64_CACHE_DIR%\cache.tar set CYGWIN_CACHE_DIR=%CYGWIN64_CACHE_DIR%
     ) else (
@@ -40,7 +40,7 @@ if "%1" equ "cygwin32" (
   )
 )
 
-if "%1" neq "" goto SetupCygwin
+if "%1" equ "create" goto SetupCygwin
 
 if "%CYGWIN_CACHE_DIR%" equ "" (
   echo Cache download failed - job failed
@@ -56,11 +56,15 @@ if "%CYGWIN_CACHE_DIR%" equ "" (
 :: but that adds instability at a saving of only a few tens of megabytes on the
 :: cache, so instead we require that the cache download is required and fail the
 :: job otherwise.
-set PATH=%CYGWIN_ROOT%\bin;%PATH%
 :: COMBAK At present we clobber the PATH on purpose - this wants to be filtered or something
-::echo %CYGWIN_ROOT%\bin>> %GITHUB_PATH%
-echo Path=%CYGWIN_ROOT%\bin;C:\Program Files\Mercurial;C:\Program Files\Git\cmd;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\>> %GITHUB_ENV%
+::        This should be filtered
+set Path=C:\Program Files\Mercurial;C:\Program Files\Git\cmd;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\
+set Path=%CYGWIN_ROOT%\bin;%Path%
+if "%1" equ "i686-w64-mingw32" set Path=%CYGWIN_ROOT%\usr\%1\sys-root\mingw\bin;%Path%
+if "%1" equ "x86_64-w64-mingw32" set Path=%CYGWIN_ROOT%\usr\%1\sys-root\mingw\bin;%Path%
 
+::echo %CYGWIN_ROOT%\bin>> %GITHUB_PATH%
+echo Path=%Path%>> %GITHUB_ENV%
 
 pushd %CYGWIN_CACHE_DIR%
 
@@ -81,6 +85,8 @@ goto :EOF
 
 :SetupCygwin
 
+shift
+
 echo ::group::Installing Cygwin
 
 :: The caching job sets up both Cygwin32 and Cygwin64, so ensure that any
@@ -90,7 +96,7 @@ md %CYGWIN_ROOT%
 
 :: Download the required setup program: the mingw-w64 compilers are only
 :: installed with Cygwin64.
-if "%1" equ "cygwin64" (
+if "%1" equ "x86_64-pc-cygwin" (
   curl -sLo %CYGWIN_ROOT%\setup.exe https://cygwin.com/setup-x86_64.exe
   set CYGWIN_PACKAGES=,mingw64-i686-gcc-g++,mingw64-x86_64-gcc-g++
 ) else (
@@ -100,7 +106,7 @@ if "%1" equ "cygwin64" (
 
 :: libicu-devel is needed until an alternative to the uconv call in MungeSymlinks
 :: is found
-set CYGWIN_PACKAGES=make,patch,curl,diffutils,tar,unzip,git,gcc-g++,flexdll,libicu-devel%CYGWIN_PACKAGES%
+set CYGWIN_PACKAGES=make,patch,curl,diffutils,tar,unzip,git,gcc-g++,libicu-devel%CYGWIN_PACKAGES%
 
 :: D:\cygwin-packages is specified just to keep the build directory clean; the
 :: files aren't preserved.

@@ -17,7 +17,16 @@ if [[ $OPAM_TEST -eq 1 ]] ; then
   eval $(opam env)
 fi
 
-./configure --prefix ~/local --with-mccs
+case "$1" in
+  *-pc-windows|*-w64-mingw32)
+    CONFIGURE_PREFIX='D:\Local'
+    PREFIX="$(cygpath "$CONFIGURE_PREFIX")";;
+  *)
+    PREFIX=~/local
+    CONFIGURE_PREFIX="$PREFIX";;
+esac
+
+./configure --prefix $CONFIGURE_PREFIX --with-mccs
 if [ "$OPAM_TEST" != "1" ]; then
   echo 'DUNE_PROFILE=dev' >> Makefile.config
 fi
@@ -27,11 +36,11 @@ if [ $OPAM_UPGRADE -eq 1 ]; then
 fi
 make all admin
 
-rm -f ~/local/bin/opam
+rm -f "$PREFIX/bin/opam"
 make install
 (set +x ; echo -en "::endgroup::build opam\r") 2>/dev/null
 
-export PATH=~/local/bin:$PATH
+export PATH="$PREFIX/bin:$PATH"
 opam --version
 
 if [ "$OPAM_TEST" = "1" ]; then
@@ -44,7 +53,7 @@ if [ "$OPAM_TEST" = "1" ]; then
     (set +x ; echo -en "::group::rebuild opam\r") 2>/dev/null
     unset-dev-version
     make all admin
-    rm -f ~/local/bin/opam
+    rm -f "$PREFIX/bin/opam"
     make install
     opam list 2> /dev/null
     rcode=$?

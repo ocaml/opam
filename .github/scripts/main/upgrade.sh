@@ -3,6 +3,7 @@
 . .github/scripts/main/preamble.sh
 
 export OCAMLRUNPARAM=b
+# XXX This should be matching up with $PREFIX in main
 export PATH=~/local/bin:$PATH
 
 OPAM12=$OPAM12CACHE/bin/opam
