@@ -199,6 +199,8 @@ users)
   * Add & update env tests [#4861 #4841 #4974 @rjbou @dra27 @AltGr]
   * Add remove test [#5004 @AltGr]
   * Add some simple tests for the "opam list" command [#5006 @kit-ty-kate]
+  * Add clean test for untracked option [#4915 @rjbou]
+  * Harmonise some repo hash to reduce opam repository checkout [#5031 @AltGr]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
@@ -219,8 +221,7 @@ users)
   * Escape regexps characters in string replacements primitives [#5009 @kit-ty-kate]
   * Automatically update default repo when adding a package file [#5004 @AltGr]
   * Make all the tests work on macOS/arm64 [#5019 @kit-ty-kate]
-
-  * Add clean test for untracked option [#4915 @rjbou]
+  * Add unix only tests handling [#5031 @AltGr]
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]
