@@ -1,4 +1,4 @@
-7371c1d9c53000840fb9a6d8ec13d87ffaa98401
+7371c1d9
 ### opam list --depends-on lacaml -s --all-versions
 gpr.1.2.1
 gpr.1.2.2

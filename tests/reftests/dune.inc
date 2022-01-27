@@ -129,7 +129,7 @@
 
 (rule
  (targets conflict-resto.out)
- (deps root-a5d7cdc0c914)
+ (deps root-a5d7cdc0)
  (action
   (with-stdout-to
    %{targets}
@@ -299,7 +299,7 @@
 
 (rule
  (targets list.out)
- (deps root-7371c1d9c53000840fb9a6d8ec13d87ffaa98401)
+ (deps root-7371c1d9)
  (action
   (with-stdout-to
    %{targets}
@@ -318,7 +318,7 @@
 
 (rule
  (targets list.unix.out)
- (deps root-0ec9bbf7)
+ (deps root-f372039d)
  (enabled_if (= %{os_type} "Unix"))
  (action
   (with-stdout-to
@@ -353,7 +353,7 @@
 
 (rule
  (targets opamrt-big-upgrade.out)
- (deps root-7090735c9d)
+ (deps root-7090735c)
  (action
   (with-stdout-to
    %{targets}
@@ -584,84 +584,64 @@
            file://%{dep:opam-repo-009e00fa})))))
 
 (rule
- (targets opam-archive-0ec9bbf7.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/0ec9bbf7.tar.gz)))
+ (targets opam-archive-7090735c.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/7090735c.tar.gz)))
 
 (rule
-  (targets opam-repo-0ec9bbf7)
+  (targets opam-repo-7090735c)
   (action
    (progn
     (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-0ec9bbf7.tar.gz} --strip-components=1))))
+    (run tar -C %{targets} -xzf %{dep:opam-archive-7090735c.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-0ec9bbf7)
+  (targets root-7090735c)
   (action
    (progn
     (ignore-stdout
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
-           file://%{dep:opam-repo-0ec9bbf7})))))
+           file://%{dep:opam-repo-7090735c})))))
 
 (rule
- (targets opam-archive-7090735c9d.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/7090735c9d.tar.gz)))
+ (targets opam-archive-7371c1d9.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/7371c1d9.tar.gz)))
 
 (rule
-  (targets opam-repo-7090735c9d)
+  (targets opam-repo-7371c1d9)
   (action
    (progn
     (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-7090735c9d.tar.gz} --strip-components=1))))
+    (run tar -C %{targets} -xzf %{dep:opam-archive-7371c1d9.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-7090735c9d)
+  (targets root-7371c1d9)
   (action
    (progn
     (ignore-stdout
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
-           file://%{dep:opam-repo-7090735c9d})))))
+           file://%{dep:opam-repo-7371c1d9})))))
 
 (rule
- (targets opam-archive-7371c1d9c53000840fb9a6d8ec13d87ffaa98401.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/7371c1d9c53000840fb9a6d8ec13d87ffaa98401.tar.gz)))
+ (targets opam-archive-a5d7cdc0.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/a5d7cdc0.tar.gz)))
 
 (rule
-  (targets opam-repo-7371c1d9c53000840fb9a6d8ec13d87ffaa98401)
+  (targets opam-repo-a5d7cdc0)
   (action
    (progn
     (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-7371c1d9c53000840fb9a6d8ec13d87ffaa98401.tar.gz} --strip-components=1))))
+    (run tar -C %{targets} -xzf %{dep:opam-archive-a5d7cdc0.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-7371c1d9c53000840fb9a6d8ec13d87ffaa98401)
+  (targets root-a5d7cdc0)
   (action
    (progn
     (ignore-stdout
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
-           file://%{dep:opam-repo-7371c1d9c53000840fb9a6d8ec13d87ffaa98401})))))
-
-(rule
- (targets opam-archive-a5d7cdc0c914.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/a5d7cdc0c914.tar.gz)))
-
-(rule
-  (targets opam-repo-a5d7cdc0c914)
-  (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-a5d7cdc0c914.tar.gz} --strip-components=1))))
-
-(rule
-  (targets root-a5d7cdc0c914)
-  (action
-   (progn
-    (ignore-stdout
-    (run %{bin:opam} init --root=%{targets}
-           --no-setup --bypass-checks --no-opamrc --bare
-           file://%{dep:opam-repo-a5d7cdc0c914})))))
+           file://%{dep:opam-repo-a5d7cdc0})))))
 
 (rule
  (targets opam-archive-ad4dd344.tar.gz)
