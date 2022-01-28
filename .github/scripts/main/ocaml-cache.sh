@@ -136,6 +136,15 @@ if [[ $OCAML_BRANCH -gt 407 ]]; then
   ocaml bootstrap.ml
   cp dune.exe "$PREFIX/bin/dune$EXE"
   cd ../..
+
+  ./configure
+  make
+  cp -a _build "$OCAML_LOCAL/"
+  rm -f "$OCAML_LOCAL/_build/log"
+  mv "$OCAML_LOCAL/_build/default/src_ext" "$OCAML_LOCAL/_build/"
+  rm -rf "$OCAML_LOCAL/_build/default"/* "$OCAML_LOCAL/_build/install"
+  mv "$OCAML_LOCAL/_build/src_ext" "$OCAML_LOCAL/_build/default/" 
+  git clean -dfX
 fi
 
 # The Windows BSD tar can't cope with symlinks, so we pre-tar the archive and cache that!
