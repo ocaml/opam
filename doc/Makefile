@@ -47,6 +47,7 @@ html:
 	rm -rf html
 	cd .. && $(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) @doc
 	cp -r ../_build/default/_doc/_html html
+	chmod -R +w html
 	sed 's/%{OPAMVERSION}%/'$(version)'/g' index.html > html/index.html
 # Not to break older links, add manpages to the `ocamldoc` dir
 	mkdir -p html/ocamldoc
