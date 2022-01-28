@@ -268,11 +268,13 @@ jobs:
     - name: Test (basic - Cygwin)
       if: endsWith(matrix.host, '-pc-cygwin')
       run: bash -exu .github/scripts/main/test.sh
-    - name: Test (basic - mingw-w64)
-      if: endsWith(matrix.host, '-mingw32') == true
+    - name: Test (basic - native Windows)
+      if: endsWith(matrix.host, '-pc-cygwin') == false
       shell: cmd
       run: |
         set Path=D:\Cache\ocaml-local\bin;%Path%
+        if "${{ matrix.host }}" equ "x86_64-pc-windows" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        if "${{ matrix.host }}" equ "i686-pc-windows" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
         opam init --yes --bare default git+file://D:/opam-repository#${{ env.OPAM_TEST_REPO_SHA }} || exit /b 1
         opam switch --yes create default ocaml-system || exit /b 1
         opam env || exit /b 1
