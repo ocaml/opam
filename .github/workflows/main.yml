@@ -418,7 +418,7 @@ jobs:
 
   Test-macOS:
     runs-on: macos-latest
-    needs: [ Analyse, Build-macOS ]
+    needs: Analyse
     strategy:
       matrix:
         ocamlv: [ 4.13.1 ]
