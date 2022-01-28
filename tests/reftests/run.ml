@@ -443,7 +443,7 @@ end
 let parse_command = Parse.command
 
 let common_filters ?opam dir =
-   let tmpdir = Filename.get_temp_dir_name () in
+   let tmpdir = OpamSystem.real_path (Filename.get_temp_dir_name ()) in
    let open Re in
    [
      seq [ bol;
@@ -570,8 +570,8 @@ let run_test ?(vars=[]) ~opam t =
   let old_cwd = Sys.getcwd () in
   let opamroot0 = Filename.concat old_cwd ("root-"^t.repo_hash) in
   with_temp_dir @@ fun dir ->
+  let dir = OpamSystem.real_path dir in
   Sys.chdir dir;
-  let dir = Sys.getcwd () in (* because it may need to be normalised on macOS *)
   let opamroot = Filename.concat dir "OPAM" in
   if Sys.win32 then
     ignore @@ command ~allowed_codes:[0; 1] ~silent:true
