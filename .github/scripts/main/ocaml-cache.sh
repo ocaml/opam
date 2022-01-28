@@ -7,11 +7,14 @@ OCAML_VERSION="$2"
 HOST="${3:-}"
 
 if [ "$PLATFORM" = Windows ]; then
+  EXE='.exe'
   if [ -e $OCAML_LOCAL.tar ]; then
     mkdir -p "$OCAML_LOCAL"
     tar -C "$OCAML_LOCAL" -pxf "$OCAML_LOCAL.tar"
     exit 0
   fi
+else
+  EXE=''
 fi
 
 # OCaml's build system doesn't support the triple-form for Cygwin building
@@ -66,10 +69,16 @@ if [[ -n $HOST ]]; then
   HOST=" --host=$HOST"
 fi
 
+OCAML_BRANCH="${OCAML_VERSION%.*}"
+case "$OCAML_BRANCH" in
+  ?.?) OCAML_BRANCH="${OCAML_BRANCH%.*}.0${OCAML_BRANCH#*.}";;
+esac
+OCAML_BRANCH="${OCAML_BRANCH/./}"
+
 if [[ $OPAM_TEST -ne 1 ]] ; then
   if [[ -e configure.ac ]]; then
     CONFIGURE_SWITCHES="--disable-debugger --disable-debug-runtime --disable-ocamldoc --disable-installing-bytecode-programs --disable-installing-source-artifacts"
-    if [[ ${OCAML_VERSION%.*} = '4.08' ]]; then
+    if [[ $OCAML_BRANCH -eq 408 ]]; then
       curl -L https://github.com/ocaml/ocaml/commit/c8ee39b320207717135d88cad67fb65d0901d6b6.patch -o pr8858.patch
       patch -p1 -i pr8858.patch
       CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES --disable-graph-lib"
@@ -80,10 +89,10 @@ if [[ $OPAM_TEST -ne 1 ]] ; then
       exit 2
     fi
     CONFIGURE_SWITCHES="-no-graph -no-debugger -no-ocamldoc"
-    if [[ ${OCAML_VERSION%.*} = '4.08' ]]; then
+    if [[ $OCAML_BRANCH = 408 ]]; then
       CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES --disable-graph-lib"
     fi
-    if [[ "$OCAML_VERSION" != "4.02.3" ]] ; then
+    if [[ $OCAML_BRANCH -gt 402 ]] ; then
       CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-ocamlbuild"
     fi
 
@@ -107,10 +116,11 @@ else
 fi
 
 make install
-if [[ $PLATFORM = 'Windows' ]]; then
-  # The Windows BSD tar can't cope with symlinks, so we pre-tar the archive and cache that!
-  tar -C "$OCAML_LOCAL" -pcf "$OCAML_LOCAL.tar" .
-else
+
+cd ..
+rm -rf "ocaml-$OCAML_VERSION"
+
+if [[ $PLATFORM != 'Windows' ]]; then
   echo > "$OCAML_LOCAL/bin/ocamldoc" <<"EOF"
 #!/bin/sh
 
@@ -120,5 +130,15 @@ EOF
   chmod +x "$OCAML_LOCAL/bin/ocamldoc"
 fi
 
-cd ..
-rm -rf "ocaml-$OCAML_VERSION"
+if [[ $OCAML_BRANCH -gt 407 ]]; then
+  make -C src_ext dune-local.stamp
+  cd src_ext/dune-local
+  ocaml bootstrap.ml
+  cp dune.exe "$PREFIX/bin/dune$EXE"
+  cd ../..
+fi
+
+# The Windows BSD tar can't cope with symlinks, so we pre-tar the archive and cache that!
+if [[ $PLATFORM = 'Windows' ]]; then
+  tar -C "$OCAML_LOCAL" -pcf "$OCAML_LOCAL.tar" .
+fi
