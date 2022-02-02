@@ -1,0 +1,124 @@
+N0REP0
+### rm -rf $OPAMROOT
+### opam init -na --bypass-checks --bare REPO --root root
+No configuration file found, using built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+### # we need the switch for variables file
+### opam switch create fake --empty --root root
+### ls root/opam-init | unordered
+complete.sh
+complete.zsh
+env_hook.csh
+env_hook.fish
+env_hook.sh
+env_hook.zsh
+hooks
+init.cmd
+init.csh
+init.fish
+init.ps1
+init.sh
+init.zsh
+variables.cmd
+variables.csh
+variables.fish
+variables.ps1
+variables.sh
+### : Init scripts :
+### cat root/opam-init/init.sh
+if [ -t 0 ]; then
+  test -r '${BASEDIR}/root/opam-init/complete.sh' && . '${BASEDIR}/root/opam-init/complete.sh' > /dev/null 2> /dev/null || true
+
+  test -r '${BASEDIR}/root/opam-init/env_hook.sh' && . '${BASEDIR}/root/opam-init/env_hook.sh' > /dev/null 2> /dev/null || true
+fi
+
+test -r '${BASEDIR}/root/opam-init/variables.sh' && . '${BASEDIR}/root/opam-init/variables.sh' > /dev/null 2> /dev/null || true
+### cat root/opam-init/init.zsh
+if [[ -o interactive ]]; then
+  [[ ! -r '${BASEDIR}/root/opam-init/complete.zsh' ]] || source '${BASEDIR}/root/opam-init/complete.zsh' > /dev/null 2> /dev/null
+
+  [[ ! -r '${BASEDIR}/root/opam-init/env_hook.zsh' ]] || source '${BASEDIR}/root/opam-init/env_hook.zsh' > /dev/null 2> /dev/null
+fi
+
+[[ ! -r '${BASEDIR}/root/opam-init/variables.sh' ]] || source '${BASEDIR}/root/opam-init/variables.sh' > /dev/null 2> /dev/null
+### cat root/opam-init/init.fish
+if isatty
+  source '${BASEDIR}/root/opam-init/env_hook.fish' > /dev/null 2> /dev/null; or true
+end
+
+source '${BASEDIR}/root/opam-init/variables.fish' > /dev/null 2> /dev/null; or true
+### cat root/opam-init/init.csh
+if ( $?prompt ) then
+  if ( -f '${BASEDIR}/root/opam-init/env_hook.csh' ) source '${BASEDIR}/root/opam-init/env_hook.csh' >& /dev/null
+endif
+
+if ( -f '${BASEDIR}/root/opam-init/variables.csh' ) source '${BASEDIR}/root/opam-init/variables.csh' >& /dev/null
+### cat root/opam-init/init.cmd
+if exist "${BASEDIR}/root/opam-init/variables.cmd" call "${BASEDIR}/root/opam-init/variables.cmd" >NUL 2>NUL
+### cat root/opam-init/init.ps1
+. "${BASEDIR}/root/opam-init/variables.ps1" *> $null
+### : Variables scripts :
+### cat root/opam-init/variables.sh | grep -v man | grep -v MANPATH
+# Prefix of the current opam switch
+OPAM_SWITCH_PREFIX='${BASEDIR}/root/fake'; export OPAM_SWITCH_PREFIX;
+# Binary dir for opam switch fake
+PATH='${BASEDIR}/root/fake/bin':"$PATH"; export PATH;
+### test -f root/opam-init/variables.zsh
+# Return code 1 #
+### cat root/opam-init/variables.fish | grep -v man | grep -v MANPATH
+# Prefix of the current opam switch
+set -gx OPAM_SWITCH_PREFIX '${BASEDIR}/root/fake';
+# Binary dir for opam switch fake
+set -gx PATH '${BASEDIR}/root/fake/bin' $PATH;
+### cat root/opam-init/variables.csh | grep -v man | grep -v MANPATH
+# Prefix of the current opam switch
+if ( ! ${?OPAM_SWITCH_PREFIX} ) setenv OPAM_SWITCH_PREFIX ""
+setenv OPAM_SWITCH_PREFIX '${BASEDIR}/root/fake'
+# Binary dir for opam switch fake
+if ( ! ${?PATH} ) setenv PATH ""
+setenv PATH '${BASEDIR}/root/fake/bin':"$PATH"
+### cat root/opam-init/variables.cmd | grep -v man | grep -v MANPATH
+:: Prefix of the current opam switch
+set "OPAM_SWITCH_PREFIX=${BASEDIR}/root/fake"
+:: Binary dir for opam switch fake
+set "PATH=${BASEDIR}/root/fake/bin:%PATH%"
+### cat root/opam-init/variables.ps1 | grep -v man | grep -v MANPATH
+# Prefix of the current opam switch
+$env:OPAM_SWITCH_PREFIX='${BASEDIR}/root/fake'
+# Binary dir for opam switch fake
+$env:PATH='${BASEDIR}/root/fake/bin:' + "$env:PATH"
+### : Env hook scripts :
+### cat root/opam-init/env_hook.sh
+OPAMNOENVNOTICE=true; export OPAMNOENVNOTICE;
+_opam_env_hook() {
+ local previous_exit_status=$?;
+ eval $(opam env --shell=bash --readonly 2> /dev/null <&- );
+ return $previous_exit_status;
+};
+if ! [[ "$PROMPT_COMMAND" =~ _opam_env_hook ]]; then
+    PROMPT_COMMAND="_opam_env_hook;$PROMPT_COMMAND";
+fi
+### cat root/opam-init/env_hook.zsh
+OPAMNOENVNOTICE=true; export OPAMNOENVNOTICE;
+_opam_env_hook() {
+    eval $(opam env --shell=zsh --readonly 2> /dev/null <&-);
+}
+typeset -ag precmd_functions;
+if [[ -z ${precmd_functions[(r)_opam_env_hook]} ]]; then
+    precmd_functions+=_opam_env_hook;
+fi
+### cat root/opam-init/env_hook.fish
+set -gx OPAMNOENVNOTICE true;
+function __opam_env_export_eval --on-event fish_prompt;
+    eval (opam env --shell=fish --readonly 2> /dev/null);
+end
+### cat root/opam-init/env_hook.csh
+if ( ! ${?OPAMNOENVNOTICE} ) setenv OPAMNOENVNOTICE ""
+setenv OPAMNOENVNOTICE true
+alias precmd 'eval `opam env --shell=csh --readonly`'
+### test -f root/opam-init/env_hook.cmd
+# Return code 1 #
+### test -f root/opam-init/env_hook.ps1
+# Return code 1 #

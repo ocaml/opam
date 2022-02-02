@@ -116,6 +116,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add init scripts tests [#5864 @rjbou]
 
 ### Engine
 
