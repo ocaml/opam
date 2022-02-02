@@ -555,7 +555,7 @@ let coinstallable_subset universe ?(add_invariant=true) set packages =
     (slog OpamPackage.Set.to_string) packages;
   let cudf_packages_map =
     load_cudf_packages ~add_invariant ~build:true ~post:true universe
-      (universe.u_available ++ packages) ()
+      (universe.u_available ++ set ++ packages) ()
   in
   let cudf_set, cudf_packages_map =
     OpamPackage.Set.fold (fun nv (set, map) ->
