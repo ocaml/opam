@@ -1,4 +1,4 @@
-a5d7cdc0c914
+a5d7cdc0
 ### <resto/ezresto-directory.opam>
 opam-version: "2.0"
 synopsis: "A minimal OCaml library for type-safe HTTP/JSON RPCs"
