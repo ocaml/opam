@@ -181,7 +181,9 @@ tests: $(DUNE_DEP) src/client/no-git-version
 	echo "###     TESTS RESULT SUMMARY     ###"; \
 	for t in _build/default/tests/reftests/*.test; do \
 	  printf "%-30s" $$(basename $$t .test); \
-	  if diff -q --strip-trailing-cr $$t $${t%.test}.out >/dev/null; \
+	  if [ ! -e $${t%.test}.out ]; \
+	  then printf '\033[33m[SKIP]\033[m\n'; \
+	  elif diff -q --strip-trailing-cr $$t $${t%.test}.out >/dev/null; \
 	  then printf '\033[32m[ OK ]\033[m\n'; \
 	  else printf '\033[31m[FAIL]\033[m\n'; \
 	  fi; \
