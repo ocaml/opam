@@ -462,6 +462,23 @@
    (run ./run.exe %{bin:opam} %{dep:remove.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-scripts)
+ (action
+  (diff scripts.test scripts.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-scripts)))
+
+(rule
+ (targets scripts.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:scripts.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-show)
  (action
   (diff show.test show.out)))

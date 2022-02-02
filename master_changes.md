@@ -238,6 +238,7 @@ users)
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
+  * Before sourcing `variables.sh`, check if opam env is set (`OPAM_SWITCH_PREFIX`) and revert it in that case [#5034 @rjbou - fix #4649]
 
 ## Doc
   * Standardise `macOS` use [#4782 @kit-ty-kate]

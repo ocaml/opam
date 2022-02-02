@@ -498,45 +498,101 @@ let env_hook_script shell =
       ^ script)
     (env_hook_script_base shell)
 
-let source root shell f =
+let if_expr ?(level=0) ~icond ~ithen ?ielse shell =
+  let pad = String.concat "" (List.init (level*2) (fun _ -> " ")) in
+  let ielse_expr else_opt = match else_opt with
+    | None -> ""
+    | Some e -> Printf.sprintf "else\n  %s%s\n" pad e
+  in
+  let ithen = pad ^ ithen ^ "\n" in
+  match shell with
+  | SH_sh | SH_bash ->
+    Printf.sprintf "%sif [ %s ]; then\n  %s%s%sfi"
+      pad icond ithen (ielse_expr ielse) pad
+  | SH_zsh ->
+    Printf.sprintf "%sif [[ %s ]]; then\n  %s%s%sfi"
+      pad icond ithen (ielse_expr ielse) pad
+  | SH_csh ->
+    Printf.sprintf "%sif ( %s ) then\n  %s%s%sendif"
+      pad icond ithen (ielse_expr ielse) pad
+  | SH_fish ->
+    Printf.sprintf "%sif %s\n  %s%s%send"
+      pad icond ithen (ielse_expr ielse) pad
+
+let source root shell ?pre f =
   let fname = OpamFilename.to_string (OpamPath.init root // f) in
   match shell with
   | SH_csh ->
-    Printf.sprintf "if ( -f %s ) source %s >& /dev/null\n" fname fname
+    let source = Printf.sprintf "source %s >& /dev/null" fname in
+    (match pre with
+     | None -> Printf.sprintf "if ( -f %s ) %s" fname source
+     | Some pre ->
+       if_expr SH_csh ~icond:(Printf.sprintf "-f %s" fname)
+         ~ithen:(Printf.sprintf "%s\n  %s" pre source))
   | SH_fish ->
-    Printf.sprintf "source %s > /dev/null 2> /dev/null; or true\n" fname
+    let source = Printf.sprintf "source %s > /dev/null 2> /dev/null" fname in
+    (match pre with
+     | None -> Printf.sprintf "%s; or true" source
+     | Some pre ->
+       Printf.sprintf "begin\n%s\n  %s\nend; or true" pre source)
   | SH_sh | SH_bash ->
-    Printf.sprintf "test -r %s && . %s > /dev/null 2> /dev/null || true\n"
-      fname fname
+    let source = Printf.sprintf ". %s > /dev/null 2> /dev/null" fname in
+    (match pre with
+     | None -> Printf.sprintf "test -r %s && %s || true" fname source
+     | Some pre ->
+       Printf.sprintf "test -r %s && { %s;\n  %s; } || true" fname pre source)
   | SH_zsh ->
-    Printf.sprintf "[[ ! -r %s ]] || source %s  > /dev/null 2> /dev/null\n"
-      fname fname
+    let source = Printf.sprintf "source %s  > /dev/null 2> /dev/null" fname in
+    (match pre with
+     | None -> Printf.sprintf "[[ ! -r %s ]] || %s" fname source
+     | Some pre ->
+       Printf.sprintf "[[ ! -r %s ]] || { %s;\n  %s; }"
+         fname pre source)
 
-let if_interactive_script shell t e =
-  let ielse else_opt = match else_opt with
-    |  None -> ""
-    | Some e -> Printf.sprintf "else\n  %s" e
+let source_variables root shell =
+  let variable_file = (variables_file shell) in
+  let iif ?(level=1) icond ithen = if_expr ~level shell ~icond ~ithen in
+  let revert =
+    match shell with
+    | SH_sh | SH_bash ->
+      iif {|"x$OPAM_SWITCH_PREFIX" != "x"|}
+        "eval $(opam env --revert --shell=bash --readonly 2> /dev/null <&- )"
+    | SH_zsh ->
+      iif {|-n "$OPAM_SWITCH_PREFIX"|}
+        "eval $(opam env --revert --shell=zsh --readonly 2> /dev/null <&- )"
+    | SH_csh ->
+      Printf.sprintf "%s\n%s"
+        (* XXX duplicated with variables.sh *)
+        (iif "! ${?OPAM_SWITCH_PREFIX}" {|setenv OPAM_SWITCH_PREFIX ""|})
+        (iif {|"x$OPAM_SWITCH_PREFIX" != "x"|}
+           "eval `opam env --revert --shell=csh --readonly`")
+    | SH_fish ->
+      iif {|test -n "$OPAM_SWITCH_PREFIX"|}
+        "eval (opam env --revert --shell=fish --readonly 2> /dev/null)"
   in
-  match shell with
-  | SH_sh| SH_bash ->
-    Printf.sprintf "if [ -t 0 ]; then\n  %s%sfi\n" t @@ ielse e
-  | SH_zsh ->
-    Printf.sprintf "if [[ -o interactive ]]; then\n  %s%sfi\n" t @@ ielse e
-  | SH_csh ->
-    Printf.sprintf "if ( $?prompt ) then\n  %s%sendif\n" t @@ ielse e
-  | SH_fish ->
-    Printf.sprintf "if isatty\n  %s%send\n" t @@ ielse e
+  source root shell ~pre:revert variable_file
+
+
+let if_interactive_script ~ithen ?ielse shell =
+  let icond =
+    match shell with
+    | SH_sh| SH_bash -> "-t 0"
+    | SH_zsh -> "-o interactive"
+    | SH_csh -> "$?prompt"
+    | SH_fish -> "isatty"
+  in
+  if_expr shell ~icond ~ithen ?ielse
 
 let init_script root shell =
   let interactive =
     List.map (source root shell) @@
     OpamStd.List.filter_some [complete_file shell; env_hook_file shell]
   in
-  String.concat "\n" @@
+  String.concat "\n\n" @@
   (if interactive <> [] then
-     [if_interactive_script shell (String.concat "\n  " interactive) None]
+     [if_interactive_script shell ~ithen:(String.concat "\n  " interactive)]
    else []) @
-  [source root shell (variables_file shell)]
+  [source_variables root shell]
 
 let string_of_update st shell updates =
   let fenv = OpamPackageVar.resolve st in
