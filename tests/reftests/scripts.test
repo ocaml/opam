@@ -12,31 +12,48 @@ Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
 ### cat root/opam-init/init.sh
 if [ -t 0 ]; then
   test -r ${BASEDIR}/root/opam-init/complete.sh && . ${BASEDIR}/root/opam-init/complete.sh > /dev/null 2> /dev/null || true
-
   test -r ${BASEDIR}/root/opam-init/env_hook.sh && . ${BASEDIR}/root/opam-init/env_hook.sh > /dev/null 2> /dev/null || true
 fi
 
-test -r ${BASEDIR}/root/opam-init/variables.sh && . ${BASEDIR}/root/opam-init/variables.sh > /dev/null 2> /dev/null || true
+test -r ${BASEDIR}/root/opam-init/variables.sh && {   if [ "x$OPAM_SWITCH_PREFIX" != "x" ]; then
+    eval $(opam env --revert --shell=bash --readonly 2> /dev/null <&- )
+  fi;
+  . ${BASEDIR}/root/opam-init/variables.sh > /dev/null 2> /dev/null; } || true
 ### cat root/opam-init/init.zsh
 if [[ -o interactive ]]; then
   [[ ! -r ${BASEDIR}/root/opam-init/complete.zsh ]] || source ${BASEDIR}/root/opam-init/complete.zsh  > /dev/null 2> /dev/null
-
   [[ ! -r ${BASEDIR}/root/opam-init/env_hook.zsh ]] || source ${BASEDIR}/root/opam-init/env_hook.zsh  > /dev/null 2> /dev/null
 fi
 
-[[ ! -r ${BASEDIR}/root/opam-init/variables.sh ]] || source ${BASEDIR}/root/opam-init/variables.sh  > /dev/null 2> /dev/null
+[[ ! -r ${BASEDIR}/root/opam-init/variables.sh ]] || {   if [[ -n "$OPAM_SWITCH_PREFIX" ]]; then
+    eval $(opam env --revert --shell=zsh --readonly 2> /dev/null <&- )
+  fi;
+  source ${BASEDIR}/root/opam-init/variables.sh  > /dev/null 2> /dev/null; }
 ### cat root/opam-init/init.fish
 if isatty
   source ${BASEDIR}/root/opam-init/env_hook.fish > /dev/null 2> /dev/null; or true
 end
 
-source ${BASEDIR}/root/opam-init/variables.fish > /dev/null 2> /dev/null; or true
+begin
+  if test -n "$OPAM_SWITCH_PREFIX"
+    eval (opam env --revert --shell=fish --readonly 2> /dev/null)
+  end
+  source ${BASEDIR}/root/opam-init/variables.fish > /dev/null 2> /dev/null
+end; or true
 ### cat root/opam-init/init.csh
 if ( $?prompt ) then
   if ( -f ${BASEDIR}/root/opam-init/env_hook.csh ) source ${BASEDIR}/root/opam-init/env_hook.csh >& /dev/null
 endif
 
-if ( -f ${BASEDIR}/root/opam-init/variables.csh ) source ${BASEDIR}/root/opam-init/variables.csh >& /dev/null
+if ( -f ${BASEDIR}/root/opam-init/variables.csh ) then
+    if ( ! ${?OPAM_SWITCH_PREFIX} ) then
+    setenv OPAM_SWITCH_PREFIX ""
+  endif
+  if ( "x$OPAM_SWITCH_PREFIX" != "x" ) then
+    eval `opam env --revert --shell=csh --readonly`
+  endif
+  source ${BASEDIR}/root/opam-init/variables.csh >& /dev/null
+endif
 ### : Variables scripts :
 ### cat root/opam-init/variables.sh
 # Prefix of the current opam switch
