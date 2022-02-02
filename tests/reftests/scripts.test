@@ -1,8 +1,7 @@
 N0REP0
 ### rm -rf $OPAMROOT
-### opam init -na --bare REPO --root root
+### opam init -na --bypass-checks --bare REPO --root root
 No configuration file found, using built-in defaults.
-Checking for available remotes: rsync and local, git, mercurial, darcs. Perfect!
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
