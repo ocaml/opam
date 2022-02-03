@@ -133,6 +133,8 @@ users)
   * [BUG] Fix directory display in dev mode [#5102 @rjbou]
   * Download source even if no switch is set [#4850 @rjbou @zapashcanon - fix #4809]
   * [NEW] Add `--no-switch` option [#4850 @rjbou - fix #4858]
+## Env
+  * Revert environment variables instead of setting them to an empty string [#5039 @rjbou]
 
 ## Lint
   * W68: add warning for missing license field [#4766 @kit-ty-kate - partial fix #4598]
