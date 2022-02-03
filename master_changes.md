@@ -246,6 +246,7 @@ users)
   * Document custom licenses [#4863 @kit-ty-kate - fix #4862]
   * Add OpenBSD & FreeBSD in the precompiled binaries list [#5001 @mndrix]
   * install.md: fix brew instructions, spelling [#4421 @johnwhitington]
+  * document the options of OpamSolver.dependencies [#5040 @gasche @Armael]
 
 ## Security fixes
   *
