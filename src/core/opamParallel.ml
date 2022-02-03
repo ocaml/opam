@@ -383,8 +383,12 @@ module MakeGraph (X: VERTEX) = struct
       let vertex_to_json (i, v) = (string_of_int i, X.to_json v) in
       `O (List.map vertex_to_json vertex_map) in
     let edges =
-      let vertex_inv_map = List.map (fun (i, v) -> (v, i)) vertex_map in
-      let index v = List.assoc v vertex_inv_map in
+      let module VertexMap = Map.Make(Vertex) in
+      let vertex_inv_map =
+        List.fold_left (fun m (i, v) -> VertexMap.add v i m)
+          VertexMap.empty vertex_map
+      in
+      let index v = VertexMap.find v vertex_inv_map in
       let index_to_json v = `String (string_of_int (index v)) in
       let edge_to_json edge =
         let () = E.label edge in
