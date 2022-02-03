@@ -877,6 +877,7 @@ let universe st
     ?reinstall
     ~requested
     user_action =
+  let chrono = OpamConsole.timer () in
   let names = OpamPackage.names_of_packages requested in
   let requested_allpkgs =
     OpamPackage.packages_of_names st.packages names
@@ -991,6 +992,7 @@ let universe st
                  "avoid-version", avoid_versions];
 }
   in
+  log ~level:2 "Universe load: %.3fs" (chrono ());
   u
 
 let dump_pef_state st oc =

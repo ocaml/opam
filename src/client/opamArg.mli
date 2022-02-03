@@ -114,6 +114,10 @@ val repo_kind_flag:
 val jobs_flag:
   OpamCLIVersion.Sourced.t -> validity -> int option Term.t
 
+(** --formula *)
+val formula_flag:
+  OpamCLIVersion.Sourced.t -> formula Term.t
+
 (** package names *)
 val name_list: name list Term.t
 

@@ -65,7 +65,7 @@ let update_dev_packages_t ?(only_installed=false) atoms t =
 
 let compute_upgrade_t
     ?(strict_upgrade=true) ?(auto_install=false) ?(only_installed=false)
-    ~all atoms t =
+    ~all ~formula atoms t =
   let packages = OpamFormula.packages_of_atoms t.packages atoms in
   let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
   let atoms =
@@ -121,6 +121,7 @@ let compute_upgrade_t
       (OpamSolver.request
          ~install:to_install
          ~upgrade:to_upgrade
+         ~deprequest:(OpamFormula.to_atom_formula formula)
          ~all:[]
          ~criteria:`Upgrade ())
   else
@@ -130,16 +131,25 @@ let compute_upgrade_t
     (OpamSolver.request
        ~install:to_install
        ~upgrade:to_upgrade
+       ~deprequest:(OpamFormula.to_atom_formula formula)
        ())
+
+let print_requested requested formula =
+  OpamFormula.fold_left
+    (fun req (name,_) -> OpamPackage.Name.Set.add name req)
+    requested formula
 
 let upgrade_t
     ?strict_upgrade ?auto_install ?ask ?(check=false) ?(terse=false)
-    ?only_installed ~all atoms t
+    ?only_installed ~all atoms ?(formula=OpamFormula.Empty) t
   =
   log "UPGRADE %a"
     (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
     atoms;
-  match compute_upgrade_t ?strict_upgrade ?auto_install ?only_installed ~all atoms t with
+  match
+    compute_upgrade_t ?strict_upgrade ?auto_install ?only_installed ~all
+      ~formula atoms t
+  with
   | requested, Conflicts cs ->
     log "conflict!";
     if not (OpamPackage.Name.Set.is_empty requested) then
@@ -179,7 +189,11 @@ let upgrade_t
          else `Success)
     else
     let packages = OpamPackage.packages_of_names t.packages requested in
-    let t, result = OpamSolution.apply ?ask t ~requested:packages solution in
+    let t, result =
+      OpamSolution.apply ?ask t ~requested:packages
+        ~print_requested:(print_requested requested formula)
+        solution
+    in
     if result = Nothing_to_do then (
       let to_check =
         if OpamPackage.Name.Set.is_empty requested then t.installed
@@ -323,12 +337,13 @@ let upgrade_t
     OpamSolution.check_solution t (Success result);
     t
 
-let upgrade t ?check ?only_installed ~all names =
+let upgrade t ?formula ?check ?only_installed ~all names =
   let atoms = OpamSolution.sanitize_atom_list t names in
   let t = update_dev_packages_t ?only_installed atoms t in
-  upgrade_t ?check ~strict_upgrade:(not all) ?only_installed ~all atoms t
+  upgrade_t ?check ~strict_upgrade:(not all) ?only_installed ~all
+    atoms ?formula t
 
-let fixup t =
+let fixup ?(formula=OpamFormula.Empty) t =
   (* @LG reimplement as an alias for 'opam upgrade --criteria=fixup --best-effort --update-invariant *)
   log "FIXUP";
   let resolve pkgs =
@@ -339,6 +354,7 @@ let fixup t =
          ~install:(OpamSolution.atoms_of_packages pkgs)
          ~all:[]
          ~criteria:`Fixup
+         ~deprequest:(OpamFormula.to_atom_formula formula)
          ())
   in
   let is_success = function
@@ -376,9 +392,14 @@ let fixup t =
            (OpamSwitchState.unavailable_reason t) cs);
       t, Conflicts cs
     | Success solution ->
-      let t, res =
-        OpamSolution.apply ~ask:true t ~requested solution
+      let print_requested =
+        print_requested (OpamPackage.names_of_packages requested) formula
       in
+      let t, res =
+        OpamSolution.apply ~ask:true t
+          ~requested
+          ~print_requested
+          solution in
       t, Success res
   in
   OpamSolution.check_solution t result;
@@ -1090,8 +1111,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
       ~deprequest:(OpamFormula.to_atom_formula formula)
   in
   let requested =
-    OpamPackage.Name.Set.of_list
-      (List.rev_map fst (atoms @ deps_atoms @ OpamFormula.atoms formula))
+    OpamPackage.Name.Set.of_list (List.rev_map fst (atoms @ deps_atoms))
   in
   let packages = OpamPackage.packages_of_names t.packages requested in
   let solution =
@@ -1156,7 +1176,10 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
           add_to_roots
       in
       let t, res =
-        OpamSolution.apply ?ask t ~requested:packages ?add_roots ~skip
+        OpamSolution.apply ?ask t
+          ~requested:packages
+          ~print_requested:(print_requested requested formula)
+          ?add_roots ~skip
           ~download_only ~assume_built solution in
       t, Some (Success res)
   in
@@ -1175,7 +1198,7 @@ let install t ?formula ?autoupdate ?add_to_roots
   install_t t atoms ?formula add_to_roots
     ~ignore_conflicts ~depext_only ~deps_only ~download_only ~assume_built
 
-let remove_t ?ask ~autoremove ~force atoms t =
+let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
   log "REMOVE autoremove:%b %a" autoremove
     (slog OpamFormula.string_of_atoms) atoms;
 
@@ -1206,13 +1229,11 @@ let remove_t ?ask ~autoremove ~force atoms t =
 
   if autoremove || packages <> [] then (
     let packages = OpamPackage.Set.of_list packages in
-    let universe =
-      OpamSwitchState.universe t
-        ~requested:packages
-        Remove
-    in
     let to_remove =
       if autoremove then
+        let universe =
+          OpamSwitchState.universe t ~requested:packages Remove
+        in
         let keep =
           universe.u_base ++ t.installed_roots %% t.installed -- packages
         in
@@ -1235,12 +1256,22 @@ let remove_t ?ask ~autoremove ~force atoms t =
       else
         packages
     in
+    let request =
+      OpamSolver.request
+        ~remove:(OpamSolution.atoms_of_packages to_remove)
+        ~deprequest:(OpamFormula.to_atom_formula formula)
+        ()
+    in
+    let print_requested =
+      print_requested (OpamPackage.names_of_packages packages) formula
+    in
     let t, solution =
       OpamSolution.resolve_and_apply ?ask t Remove
-        ~force_remove:force ~requested:packages
-        (OpamSolver.request
-           ~remove:(OpamSolution.atoms_of_packages to_remove)
-           ())
+        ~force_remove:force
+        ~requested:packages
+        ~print_requested
+        ~add_roots:OpamPackage.Name.Set.empty
+        request
     in
     OpamSolution.check_solution t solution;
     t
@@ -1249,11 +1280,11 @@ let remove_t ?ask ~autoremove ~force atoms t =
     t
   ) else t
 
-let remove t ~autoremove ~force names =
+let remove t ~autoremove ~force ?formula names =
   let atoms =
     OpamSolution.sanitize_atom_list ~installed:true ~permissive:true t names
   in
-  remove_t ~autoremove ~force atoms t
+  remove_t ~autoremove ~force ?formula atoms t
 
 let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
   log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;

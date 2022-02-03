@@ -98,7 +98,7 @@ val update:
     confirmation). The upgrade concerns them only unless [all] is specified. *)
 val upgrade:
   rw switch_state ->
-  ?check:bool -> ?only_installed:bool ->
+  ?formula:formula -> ?check:bool -> ?only_installed:bool ->
   all:bool -> atom list -> rw switch_state
 
 (** Low-level version of [upgrade], bypassing the package name sanitization and
@@ -108,14 +108,16 @@ val upgrade_t:
   ?strict_upgrade:bool -> ?auto_install:bool -> ?ask:bool -> ?check:bool ->
   ?terse:bool ->
   ?only_installed:bool ->
-  all:bool -> atom list -> rw switch_state -> rw switch_state
+  all:bool -> atom list -> ?formula:formula ->
+  rw switch_state -> rw switch_state
 
 (** Recovers from an inconsistent universe *)
-val fixup: rw switch_state -> rw switch_state
+val fixup: ?formula:formula -> rw switch_state -> rw switch_state
 
 (** Remove the given list of packages. *)
 val remove:
-  rw switch_state -> autoremove:bool -> force:bool -> atom list ->
+  rw switch_state -> autoremove:bool -> force:bool ->
+  ?formula:formula -> atom list ->
   rw switch_state
 
 module PIN: sig
