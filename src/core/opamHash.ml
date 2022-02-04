@@ -31,8 +31,6 @@ let compare (k,h) (l,i) =
 
 let equal h h' = compare h h' = 0
 
-let log msg = OpamConsole.log "HASH" msg
-
 let pfx_sep_char = '='
 let pfx_sep_str = String.make 1 pfx_sep_char
 
@@ -110,31 +108,11 @@ let sort checksums =
 
 let compute ?(kind=default_kind) file = match kind with
   | `MD5 -> md5 (Digest.to_hex (Digest.file file))
-  | (`SHA256 | `SHA512) as kind ->
-    let sha =
-      if not OpamCoreConfig.(!r.use_openssl) then
-        OpamSHA.hash kind file
-      else
-      try
-        match
-          OpamSystem.read_command_output ["openssl"; string_of_kind kind; file]
-        with
-        | [l] ->
-          let len = len kind in
-          String.sub l (String.length l - len) len
-        | _ ->
-          log "openssl error, use internal sha library";
-          OpamSHA.hash kind file
-      with OpamSystem.Command_not_found _ | OpamSystem.Process_error _ | OpamSystem.Permission_denied _ ->
-        log "openssl not found, use internal sha library";
-        OpamSHA.hash kind file
-    in
-    make kind sha
+  | (`SHA256 | `SHA512) as kind -> make kind (OpamSHA.hash_file kind file)
 
 let compute_from_string ?(kind=default_kind) str = match kind with
   | `MD5 -> md5 (Digest.to_hex (Digest.string str))
-  | (`SHA256 | `SHA512) as kind ->
-    make kind (OpamSHA.hash_bytes kind (Bytes.of_string str))
+  | (`SHA256 | `SHA512) as kind -> make kind (OpamSHA.hash_string kind str)
 
 let check_file f (kind, _ as h) = compute ~kind f = h
 

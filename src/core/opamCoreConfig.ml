@@ -23,7 +23,6 @@ module E = struct
     | PRECISETRACKING of bool option
     | SAFE of bool option
     | STATUSLINE of OpamStd.Config.when_ option
-    | USEOPENSSL of bool option
     | UTF8 of OpamStd.Config.when_ext option
     | UTF8MSGS of bool option
     | VERBOSE of OpamStd.Config.level option
@@ -42,7 +41,6 @@ module E = struct
   let precisetracking = value (function PRECISETRACKING b -> b | _ -> None)
   let safe = value (function SAFE b -> b | _ -> None)
   let statusline = value (function STATUSLINE c -> c | _ -> None)
-  let useopenssl = value (function USEOPENSSL b -> b | _ -> None)
   let utf8 = value (function UTF8 c -> c | _ -> None)
   let utf8msgs = value (function UTF8MSGS b -> b | _ -> None)
   let verbose = value (function VERBOSE l -> l | _ -> None)
@@ -64,7 +62,6 @@ type t = {
   keep_log_dir: bool;
   errlog_length: int;
   merged_output: bool;
-  use_openssl: bool;
   precise_tracking: bool;
   set: bool;
 }
@@ -83,7 +80,6 @@ type 'a options_fun =
   ?keep_log_dir:bool ->
   ?errlog_length:int ->
   ?merged_output:bool ->
-  ?use_openssl:bool ->
   ?precise_tracking:bool ->
   'a
 
@@ -104,7 +100,6 @@ let default = {
   keep_log_dir = false;
   errlog_length = 12;
   merged_output = true;
-  use_openssl = true;
   precise_tracking = false;
   set = false;
 }
@@ -123,7 +118,6 @@ let setk k t
     ?keep_log_dir
     ?errlog_length
     ?merged_output
-    ?use_openssl
     ?precise_tracking
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
@@ -144,7 +138,6 @@ let setk k t
     keep_log_dir = t.keep_log_dir + keep_log_dir;
     errlog_length = t.errlog_length + errlog_length;
     merged_output = t.merged_output + merged_output;
-    use_openssl = t.use_openssl + use_openssl;
     precise_tracking = t.precise_tracking + precise_tracking;
     set = true;
   }
@@ -185,7 +178,6 @@ let initk k =
     ?keep_log_dir:(E.keeplogs ())
     ?errlog_length:(E.errloglen ())
     ?merged_output:(E.mergeout ())
-    ?use_openssl:(E.useopenssl ())
     ?precise_tracking:(E.precisetracking ())
 
 let init ?noop:_ = initk (fun () -> ())

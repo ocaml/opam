@@ -162,6 +162,5 @@ val opam_init:
   ?keep_log_dir:bool ->
   ?errlog_length:int ->
   ?merged_output:bool ->
-  ?use_openssl:bool ->
   ?precise_tracking:bool ->
   unit -> unit
