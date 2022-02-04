@@ -1,0 +1,239 @@
+f372039d
+### OPAMFAKE=1
+### OPAMYES=1
+### OPAMVAR_os=linux
+### OPAMVAR_arch=x86_64
+### opam switch create ocaml-system
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-system"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-system.4.08.0
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.08.0
+Done.
+### opam install --formula '"mirage-solo5"'
+[WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.
+The following actions will be faked:
+=== install 21 packages
+  - install astring               0.8.3   [required by ocb-stubblr]
+  - install base-bytes            base    [required by astring]
+  - install bigarray-compat       1.0.0   [required by cstruct]
+  - install conf-m4               1       [required by ocamlfind]
+  - install conf-pkg-config       1.1     [required by ocaml-freestanding]
+  - install cppo                  1.6.6   [required by lwt]
+  - install cstruct               5.0.0   [required by mirage-solo5]
+  - install dune                  1.10.0  [required by cstruct]
+  - install logs                  0.6.3   [required by mirage-solo5]
+  - install lwt                   4.2.1   [required by mirage-solo5]
+  - install mirage-solo5          0.5.0
+  - install mmap                  1.1.0   [required by lwt]
+  - install ocaml-freestanding    0.4.5   [required by mirage-solo5]
+  - install ocaml-src             4.08.0  [required by ocaml-freestanding]
+  - install ocamlbuild            0.14.0  [required by mirage-solo5]
+  - install ocamlfind             1.8.0   [required by mirage-solo5]
+  - install ocb-stubblr           0.1.1-1 [required by mirage-solo5]
+  - install result                1.4     [required by lwt, topkg]
+  - install seq                   base    [required by lwt]
+  - install solo5-bindings-virtio 0.4.1   [required by mirage-solo5]
+  - install topkg                 1.0.0   [required by mirage-solo5]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of conf-m4.1
+Faking installation of conf-pkg-config.1.1
+Faking installation of dune.1.10.0
+Faking installation of bigarray-compat.1.0.0
+Faking installation of cppo.1.6.6
+Faking installation of cstruct.5.0.0
+Faking installation of mmap.1.1.0
+Faking installation of ocaml-src.4.08.0
+Faking installation of ocamlbuild.0.14.0
+Faking installation of ocamlfind.1.8.0
+Faking installation of base-bytes.base
+Faking installation of result.1.4
+Faking installation of seq.base
+Faking installation of lwt.4.2.1
+Faking installation of solo5-bindings-virtio.0.4.1
+Faking installation of ocaml-freestanding.0.4.5
+Faking installation of topkg.1.0.0
+Faking installation of astring.0.8.3
+Faking installation of logs.0.6.3
+Faking installation of ocb-stubblr.0.1.1-1
+Faking installation of mirage-solo5.0.5.0
+Done.
+
+<><> mirage-solo5.0.5.0 installed successfully ><><><><><><><><><><><><><><><><>
+=> As of MirageOS 3.2.0 / Solo5 0.4.0, the 'ukvm' target has been renamed to 'hvt'. Please refer to https://github.com/mirage/mirage/blob/master/CHANGES.md for further details on this change.
+### OPAMSHOW=1
+### opam install --formula '"mirage-solo5" | "mirage-no-solo5"'
+[WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.
+Nothing to do.
+### opam install --formula '"mirage-solo5" & "mirage-no-solo5"'
+[WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.
+[ERROR] Package conflict!
+  * Incompatible packages:
+    - mirage-no-solo5
+    - mirage-solo5
+
+No solution found, exiting
+# Return code 20 #
+### opam install --formula '"mirage-solo5"' mirage-no-solo5
+[WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.
+[ERROR] Package conflict!
+  * Incompatible packages:
+    - mirage-no-solo5
+    - mirage-solo5
+
+No solution found, exiting
+# Return code 20 #
+### opam upgrade --formula '"mirage-solo5" & "mirage-no-solo5"'
+[WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.
+[WARNING] Upgrade is not possible because of conflicts or packages that are no longer available:
+    - Incompatible packages:
+    - mirage-no-solo5
+    - mirage-solo5
+
+You may run "opam upgrade --fixup" to let opam fix the current state.
+# Return code 20 #
+### opam upgrade --formula '"mirage-solo5" | "mirage-no-solo5"'
+[WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.
+Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
+
+The following packages are not being upgraded because the new versions conflict with other installed packages:
+  - ocaml.4.10.0
+    -- ocaml-freestanding.0.4.5 is installed and requires ocaml (>= 4.05.0 & < 4.09.0)
+    -- ocaml-src.4.08.0 is installed and requires ocaml = 4.08.0
+However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+Nothing to do.
+### opam upgrade mirage-solo5 --formula '"mirage-no-solo5"' --best-effort
+[WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.
+The following actions would be faked:
+=== remove 1 package
+  - remove  mirage-solo5    0.5.0
+=== install 1 package
+  - install mirage-no-solo5 1
+### OPAMSHOW=0 opam switch create test --empty
+### opam install --formula '"ocaml-base-compiler" | "ocaml-system"'
+[WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.
+The following actions would be faked:
+=== install 6 packages
+  - install base-bigarray       base
+  - install base-threads        base
+  - install base-unix           base
+  - install ocaml               4.08.0
+  - install ocaml-base-compiler 4.08.0
+  - install ocaml-config        1
+### opam install ocaml --formula '"ocaml-variants" | "ocaml-system"'
+[WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.
+The following actions would be faked:
+=== install 6 packages
+  - install base-bigarray base
+  - install base-threads  base
+  - install base-unix     base
+  - install ocaml         4.08.0
+  - install ocaml-config  1      [required by ocaml]
+  - install ocaml-system  4.08.0
+### opam install ocaml.4.07.0 --formula '"ocaml-base-compiler" | "ocaml-system"'
+[WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.
+The following actions would be faked:
+=== install 6 packages
+  - install base-bigarray       base
+  - install base-threads        base
+  - install base-unix           base
+  - install ocaml               4.07.0
+  - install ocaml-base-compiler 4.07.0
+  - install ocaml-config        1      [required by ocaml]
+### opam install ocp-index.1.0.0 --formula '"ocaml-system" | "ocaml-variants"'
+[WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.
+The following actions would be faked:
+=== install 14 packages
+  - install base-bigarray   base
+  - install base-ocamlbuild base           [required by ocamlbuild]
+  - install base-threads    base
+  - install base-unix       base
+  - install cmdliner        0.9.7          [required by ocp-index]
+  - install conf-m4         1              [required by ocamlfind]
+  - install ocaml           4.01.0         [required by ocp-index]
+  - install ocaml-config    1              [required by ocaml]
+  - install ocaml-variants  4.01.0+profile
+  - install ocamlbuild      0              [required by cmdliner]
+  - install ocamlfind       1.8.0          [required by ocp-build]
+  - install ocp-build       1.99.19-beta   [required by ocp-index]
+  - install ocp-indent      1.4.0          [required by ocp-index]
+  - install ocp-index       1.0.0
+### OPAMNODEPEXTS=1
+### opam install genet --formula '["mysql" ("conf-mariadb" & "mariadb" | "conf-postgresql")]'
+[WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.
+The following actions would be faked:
+=== install 67 packages
+  - install base                    v0.12.2    [required by pcre]
+  - install base-bigarray           base
+  - install base-bytes              base       [required by ocamlnet]
+  - install base-threads            base       [required by dune]
+  - install base-unix               base       [required by cppo]
+  - install biniou                  1.2.0      [required by yojson]
+  - install calendar                2.04       [required by rdf]
+  - install camlp4                  4.05+1     [required by config-file, ocamldot]
+  - install cmdliner                1.0.4      [required by uuidm]
+  - install conf-glade              2          [required by genet]
+  - install conf-gmp                1          [required by conf-gmp-powm-sec, zarith]
+  - install conf-gmp-powm-sec       1          [required by cryptokit]
+  - install conf-gnomecanvas        2          [required by genet]
+  - install conf-gtksourceview      2          [required by lablgtk, lablgtk-extras]
+  - install conf-libpcre            1          [required by pcre]
+  - install conf-m4                 1          [required by ocamlfind]
+  - install conf-perl               1          [required by zarith]
+  - install conf-pkg-config         1.1        [required by conf-glade, conf-gnomecanvas]
+  - install conf-postgresql         1
+  - install conf-which              1          [required by biniou]
+  - install conf-zlib               1          [required by cryptokit]
+  - install config-file             1.2        [required by genet]
+  - install cppo                    1.6.6      [required by yojson]
+  - install cryptokit               1.13       [required by rdf]
+  - install dune                    1.10.0     [required by js_of_ocaml, uri, pcre, etc.]
+  - install easy-format             1.3.1      [required by yojson]
+  - install gen                     0.5.2      [required by sedlex]
+  - install genet                   0.6
+  - install iri                     0.4.0      [required by rdf, xtmpl]
+  - install jbuilder                transition [required by biniou]
+  - install js_of_ocaml             3.3.0      [required by xtmpl]
+  - install js_of_ocaml-compiler    3.4.0      [required by js_of_ocaml]
+  - install js_of_ocaml-ppx         3.4.0      [required by xtmpl]
+  - install jsonm                   1.0.1      [required by rdf]
+  - install lablgtk                 2.18.8     [required by genet]
+  - install lablgtk-extras          1.6        [required by genet]
+  - install menhir                  20190626   [required by genet]
+  - install mysql                   1.2.2
+  - install ocaml                   4.05.0     [required by genet, mysql]
+  - install ocaml-base-compiler     4.05.0     [required by ocaml]
+  - install ocaml-config            1          [required by ocaml]
+  - install ocaml-migrate-parsetree 1.4.0      [required by js_of_ocaml, js_of_ocaml-ppx]
+  - install ocamlbuild              0.14.0     [required by menhir, ocamlnet]
+  - install ocamldot                1.0        [required by genet]
+  - install ocamlfind               1.8.0      [required by genet, mysql]
+  - install ocamlnet                4.1.6      [required by genet]
+  - install pcre                    7.4.1      [required by genet]
+  - install ppx_derivers            1.2.1      [required by ocaml-migrate-parsetree]
+  - install ppx_tools               5.0+4.05.0 [required by xtmpl]
+  - install ppx_tools_versioned     5.2.3      [required by js_of_ocaml, js_of_ocaml-ppx]
+  - install rdf                     0.11.0     [required by genet]
+  - install re                      1.9.0      [required by xtmpl]
+  - install result                  1.4        [required by topkg, ocaml-migrate-parsetree]
+  - install sedlex                  1.99.3     [required by rdf, xtmpl]
+  - install seq                     0.1        [required by re]
+  - install sexplib0                v0.12.0    [required by base]
+  - install stringext               1.6.0      [required by uri]
+  - install topkg                   1.0.0      [required by jsonm, xmlm, uuidm]
+  - install uchar                   0.0.2      [required by jsonm, js_of_ocaml]
+  - install uri                     3.0.0      [required by rdf]
+  - install uuidm                   0.9.7      [required by rdf]
+  - install uunf                    12.0.0     [required by iri]
+  - install uutf                    1.0.2      [required by rdf, xtmpl]
+  - install xmlm                    1.3.0      [required by lablgtk-extras, rdf]
+  - install xtmpl                   0.17.0     [required by genet]
+  - install yojson                  1.7.0      [required by rdf]
+  - install zarith                  1.7        [required by cryptokit]

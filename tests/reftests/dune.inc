@@ -289,6 +289,23 @@
    (run ./run.exe %{bin:opam} %{dep:inplace.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-install-formula)
+ (action
+  (diff install-formula.test install-formula.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-install-formula)))
+
+(rule
+ (targets install-formula.out)
+ (deps root-f372039d)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:install-formula.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-install-pgocaml)
  (action
   (diff install-pgocaml.test install-pgocaml.out)))
