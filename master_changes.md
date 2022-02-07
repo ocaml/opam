@@ -83,6 +83,7 @@ users)
   * [BUG] Fix `opam install ./file.opam` lock pinning [#5148 @rjbou - fix #4313]
   * [BUG] Fix origin opam file retrieval when opam originate from locked file [#5079 @rjbou - fix #4936]
   * [BUG] When reinstalling a package that has a dirty source, if uncommitted changes are the same than the ones stored in opam's cache, opam consider that it is up to date and nothing is updated [4879 @rjbou]
+  * [BUG] Handle external dependencies when updating switch state pin status (all pins), instead as a post pin action (only when called with `opam pin` [#5047 @rjbou - fix #5046]
 
 ## List
   * Some optimisations to 'opam list --installable' queries combined with other filters [#4882 @altgr - fix #4311]
@@ -402,6 +403,7 @@ users)
   `OpamPinCommand.fetch_all_pins`: return the list of well fetched pins instead of fetched urls [#5080 @rjbou]
   * `OpamAuxCommand`: add `?locked` (and handle lock file then) argument to `name_and_dir_of_opam_file`, `opams_of_dir`, `opams_of_dir_w_target`, `resolve_locals`, `autopin`, and `simulate_autopin` [#5080 @rjbou]
   * `OpamClient.PIN`: change `?locked:bool` argument into `string`, to have lock extension name [#5080 @rjbou]
+  * `OpamClient.Pin.post_pin_action`: no more updates depexts information, moved to `OpamSwitchState.update_pin` [#5047 @rjbou]
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
@@ -426,6 +428,7 @@ users)
   * `OpamPinned`: add `?locked:string` (and handle lock file then) argument to `files_in_source`, and `name_of_opam_filename` [#5080 @rjbou]
   * `OpamPinned`: when looking at opam files, keep (and return) information about its locked origin [#5080 @rjbou]
   * `OpamUpdate.pinned_package`: use locked information to automatically update from locked file if present, if `?autolock` is given to true [#5080 @rjbou]
+  * `OpamSwitchState.update_pin`: updates depexts state informations (`sys_packages`, `avalaible_packages`) [#5047 @rjbou]
 
   * Add optional argument `?env:(variable_contents option Lazy.t * string) OpamVariable.Map.t` to `OpamSysPoll` and `OpamSysInteract` functions. It is used to get syspolling variables from the environment first. [#4892 @rjbou]
 ## opam-solver
