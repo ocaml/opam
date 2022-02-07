@@ -41,10 +41,10 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam switch create shared --empty
 ### opam install no-extra extra non-shared | unordered
 The following actions will be performed:
+=== install 3 packages
   - install extra      3
-  - install non-shared 4
   - install no-extra   3
-===== 3 to install =====
+  - install non-shared 4
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved extra.3, no-extra.3  (file://${BASEDIR}/shared.tgz)
@@ -99,10 +99,10 @@ done
 Now run 'opam upgrade' to apply any package updates.
 ### opam install no-extra extra non-shared --cudf dotty | unordered
 The following actions will be performed:
-  - recompile no-extra   3
+=== recompile 3 packages
   - recompile extra      3
+  - recompile no-extra   3
   - recompile non-shared 4
-===== 3 to recompile =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved extra.3, no-extra.3  (file://${BASEDIR}/shared.tgz)
@@ -189,9 +189,9 @@ echo "}" >> $file
 Now run 'opam upgrade' to apply any package updates.
 ### opam remove no-extra
 The following actions will be performed:
+=== remove 2 packages
   - remove extra    3 [uses no-extra]
   - remove no-extra 3
-===== 2 to remove =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   extra.3
@@ -199,12 +199,12 @@ The following actions will be performed:
 Done.
 ### opam install out
 The following actions will be performed:
-  - install in       3 [required by out]
-  - install no-extra 3 [required by extra]
+=== install 5 packages
   - install extra    3 [required by intra]
+  - install in       3 [required by out]
   - install intra    3 [required by out]
+  - install no-extra 3 [required by extra]
   - install out      3
-===== 5 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved extra.3, intra.3, no-extra.3, out.3  (cached)
@@ -216,12 +216,12 @@ The following actions will be performed:
 Done.
 ### opam remove no-extra in
 The following actions will be performed:
-  - remove out      3 [uses in]
-  - remove intra    3 [uses extra]
-  - remove in       3
+=== remove 5 packages
   - remove extra    3 [uses no-extra]
+  - remove in       3
+  - remove intra    3 [uses extra]
   - remove no-extra 3
-===== 5 to remove =====
+  - remove out      3 [uses in]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   out.3
@@ -251,12 +251,12 @@ echo "}" >> $file
 Now run 'opam upgrade' to apply any package updates.
 ### opam install out | '[0-9a-f]{32,}' -> "a-given-hash" | grep -v "switch import"
 The following actions will be performed:
-  - install in       3 [required by out]
-  - install no-extra 3 [required by extra]
+=== install 5 packages
   - install extra    3 [required by intra]
+  - install in       3 [required by out]
   - install intra    3 [required by out]
+  - install no-extra 3 [required by extra]
   - install out      3
-===== 5 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Conflicting file hashes, or broken or compromised cache!

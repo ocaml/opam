@@ -67,6 +67,7 @@ saluton
 ### OPAMPRECISETRACKING=1 OPAMDEBUGSECTIONS="TRACK ACTION" OPAMDEBUG=-1
 ### opam install nodot
 The following actions will be performed:
+=== install 1 package
   - install nodot ~dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -90,6 +91,7 @@ added: [
 ]
 ### opam install dot
 The following actions will be performed:
+=== install 1 package
   - install dot ~dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -113,6 +115,7 @@ added: [
 ### OPAMDEBUGSECTIONS="SYSTEM FILE(.config)" OPAMDEBUG=-1
 ### : check install files ordering :
 ### opam install lot-of-files | grep "mkdir\|install\|FILE"
+=== install 1 package
   - install lot-of-files ~dev
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in -> ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/lot-of-files.install.in

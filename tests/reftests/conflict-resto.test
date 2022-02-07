@@ -374,7 +374,7 @@ depends: [
 ]
 build: ["dune" "build" "-p" name "-j" jobs]
 dev-repo: "git+https://gitlab.com/nomadic-labs/resto"
-### opam switch create default 4.12.0 --fake | unordered
+### opam switch create default 4.12.0 --fake
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ocaml-base-compiler" {= "4.12.0"} | "ocaml-system" {= "4.12.0"}]

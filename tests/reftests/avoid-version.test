@@ -7,11 +7,13 @@ flags: avoid-version
 ### OPAMYES=1
 ### opam install a --show
 The following actions would be faked:
+=== install 1 package
   - install a 2
 ### <pkg:a.1>
 opam-version: "2.0"
 ### opam install a
 The following actions will be faked:
+=== install 1 package
   - install a 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -28,6 +30,7 @@ Nothing to do.
 opam-version: "2.0"
 ### opam upgrade a
 The following actions will be faked:
+=== upgrade 1 package
   - upgrade a 1 to 1.1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -37,6 +40,7 @@ Done.
 opam-version: "2.0"
 ### opam upgrade a
 The following actions will be faked:
+=== upgrade 1 package
   - upgrade a 1.1 to 3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -44,6 +48,7 @@ Faking installation of a.3
 Done.
 ### opam install a.2
 The following actions will be faked:
+=== downgrade 1 package
   - downgrade a 3 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -51,6 +56,7 @@ Faking installation of a.2
 Done.
 ### opam upgrade a
 The following actions will be faked:
+=== upgrade 1 package
   - upgrade a 2 to 3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -64,6 +70,7 @@ opam-version: "2.0"
 depends: "a" {= "2"}
 ### opam install b
 The following actions will be faked:
+=== install 1 package
   - install b 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -78,9 +85,10 @@ However, you may "opam upgrade" these packages explicitly, which will ask permis
 Nothing to do.
 ### opam upgrade b
 The following actions will be faked:
+=== downgrade 1 package
   - downgrade a 3 to 2 [required by b]
+=== upgrade 1 package
   - upgrade   b 1 to 2
-===== 1 to upgrade | 1 to downgrade =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of a.2
@@ -88,9 +96,10 @@ Faking installation of b.2
 Done.
 ### opam upgrade
 The following actions will be faked:
-  - upgrade   a 2 to 3
+=== downgrade 1 package
   - downgrade b 2 to 1 [uses a]
-===== 1 to upgrade | 1 to downgrade =====
+=== upgrade 1 package
+  - upgrade   a 2 to 3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of a.3
@@ -112,6 +121,7 @@ However, you may "opam upgrade" these packages explicitly, which will ask permis
 Nothing to do.
 ### opam upgrade b.3
 The following actions will be faked:
+=== upgrade 1 package
   - upgrade b 1 to 3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -119,6 +129,7 @@ Faking installation of b.3
 Done.
 ### opam install a.2
 The following actions will be faked:
+=== downgrade 1 package
   - downgrade a 3 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -126,6 +137,7 @@ Faking installation of a.2
 Done.
 ### opam upgrade
 The following actions will be faked:
+=== upgrade 1 package
   - upgrade a 2 to 4
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>

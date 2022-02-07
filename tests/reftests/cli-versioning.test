@@ -18,6 +18,7 @@ opam: install was removed in version 2.1 of the opam CLI, but version 2.2 has be
 # Return code 2 #
 ### opam install baz --assume-depexts --cli 2.1
 The following actions would be performed:
+=== install 1 package
   - install baz 2
 ### OPAMCLI=2.0 opam install baz --assume-depexts
 opam: --assume-depexts was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
@@ -54,10 +55,12 @@ opam: --update-invariant was added in version 2.1 of the opam CLI, but version 2
 # Return code 2 #
 ### opam install baz.2 --update-invariant
 The following actions would be performed:
+=== install 1 package
   - install baz 2
 ### OPAMCLI=2.0 opam install baz.2 --unlock-base
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 The following actions would be performed:
+=== install 1 package
   - install baz 2
 ### opam install baz.2 --unlock-base
 opam: --unlock-base was removed in version 2.1 of the opam CLI, but version 2.2 has been requested. Use --update-invariant instead or set OPAMCLI environment variable to 2.0.
@@ -100,6 +103,7 @@ remove: ["sh" "-c" "env | grep -qFx 'OPAMCLI=2.1'"]
 The switch invariant was set to []
 ### opam install env-2-0
 The following actions will be performed:
+=== install 1 package
   - install env-2-0 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -107,6 +111,7 @@ The following actions will be performed:
 Done.
 ### opam install env-2-1
 The following actions will be performed:
+=== install 1 package
   - install env-2-1 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -114,6 +119,7 @@ The following actions will be performed:
 Done.
 ### opam remove env-2-0
 The following actions will be performed:
+=== remove 1 package
   - remove env-2-0 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -121,6 +127,7 @@ The following actions will be performed:
 Done.
 ### opam remove env-2-1
 The following actions will be performed:
+=== remove 1 package
   - remove env-2-1 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -146,4 +153,5 @@ ${BASEDIR}/OPAM/cli-versioning/share
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["baz" "baz" {= "2"}]
 The following actions would be performed:
+=== install 1 package
   - install baz 2

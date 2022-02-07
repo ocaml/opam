@@ -11,6 +11,7 @@ build: [ "echo" "foo" ]
 # Return code 2 #
 ### opam install foo
 The following actions will be performed:
+=== install 1 package
   - install foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>

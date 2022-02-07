@@ -88,72 +88,72 @@ installed: [
   "yojson.1.1.6"
   "zed.1.2"
 ]
-### opam switch import init.export --switch test-import --fake | unordered
+### opam switch import init.export --switch test-import --fake
 The following actions will be faked:
-  - install base-unix           base
-  - install ocaml-base-compiler 4.01.0beta1 [required by ocaml]
+=== install 63 packages
+  - install async               109.42.00
+  - install async_core          109.47.00
+  - install async_extra         109.47.00
+  - install async_graphics      0.5.1
+  - install async_unix          109.47.00
+  - install atd                 1.0.3
+  - install atdgen              1.2.4
   - install base-bigarray       base
   - install base-threads        base
-  - install ocaml               4.01.0beta1 [required by yojson, variantslib, uri, etc.]
-  - install ocamlfind           1.4.0
-  - install cppo                0.9.3
-  - install xmlm                1.2.0
-  - install ulex                1.1
-  - install type_conv           109.47.00
-  - install ssl                 0.4.6
-  - install res                 4.0.3
-  - install react               0.9.4
-  - install re                  1.2.1
-  - install pipebang            109.28.00
-  - install ounit               2.0.0
-  - install optcomp             1.4
-  - install omd                 0.7.5
-  - install mpp                 0.1.3
-  - install menhir              20130912
-  - install ipaddr              0.2.3
-  - install herelib             109.35.00
-  - install fd-send-recv        1.0.1
-  - install easy-format         1.0.1
-  - install ctypes              0.2.2
-  - install cryptokit           1.9
-  - install cmdliner            0.9.2
-  - install camomile            0.8.5
-  - install variantslib         109.15.00
-  - install sexplib             109.47.00
-  - install fieldslib           109.20.00
-  - install dyntype             0.9.0
-  - install comparelib          109.27.00
+  - install base-unix           base
   - install bin_prot            109.47.00
-  - install lwt                 2.4.4
-  - install uri                 1.3.11
-  - install pa_ounit            109.36.00
-  - install ocplib-endian       0.4
-  - install tuntap              0.7.0
   - install biniou              1.0.6
-  - install atd                 1.0.3
-  - install zed                 1.2
-  - install cow                 0.7.0
-  - install custom_printf       109.27.00
-  - install core_kernel         109.47.00
-  - install mirari              0.9.7
-  - install yojson              1.1.6
-  - install lambda-term         1.5
+  - install camomile            0.8.5
+  - install cmdliner            0.9.2
+  - install cohttp              0.9.11
+  - install comparelib          109.27.00
   - install core                109.47.00
-  - install atdgen              1.2.4
-  - install utop                1.8
-  - install textutils           109.36.00
-  - install re2                 109.45.02
-  - install async_core          109.47.00
   - install core_bench          109.47.00
   - install core_extended       109.47.00
-  - install async_unix          109.47.00
-  - install async_extra         109.47.00
-  - install async               109.42.00
+  - install core_kernel         109.47.00
+  - install cow                 0.7.0
+  - install cppo                0.9.3
+  - install cryptokit           1.9
   - install cstruct             0.8.1
-  - install async_graphics      0.5.1
-  - install cohttp              0.9.11
+  - install ctypes              0.2.2
+  - install custom_printf       109.27.00
+  - install dyntype             0.9.0
+  - install easy-format         1.0.1
+  - install fd-send-recv        1.0.1
+  - install fieldslib           109.20.00
   - install github              0.6.1
-===== 63 to install =====
+  - install herelib             109.35.00
+  - install ipaddr              0.2.3
+  - install lambda-term         1.5
+  - install lwt                 2.4.4
+  - install menhir              20130912
+  - install mirari              0.9.7
+  - install mpp                 0.1.3
+  - install ocaml               4.01.0beta1 [required by yojson, variantslib, uri, etc.]
+  - install ocaml-base-compiler 4.01.0beta1 [required by ocaml]
+  - install ocamlfind           1.4.0
+  - install ocplib-endian       0.4
+  - install omd                 0.7.5
+  - install optcomp             1.4
+  - install ounit               2.0.0
+  - install pa_ounit            109.36.00
+  - install pipebang            109.28.00
+  - install re                  1.2.1
+  - install re2                 109.45.02
+  - install react               0.9.4
+  - install res                 4.0.3
+  - install sexplib             109.47.00
+  - install ssl                 0.4.6
+  - install textutils           109.36.00
+  - install tuntap              0.7.0
+  - install type_conv           109.47.00
+  - install ulex                1.1
+  - install uri                 1.3.11
+  - install utop                1.8
+  - install variantslib         109.15.00
+  - install xmlm                1.2.0
+  - install yojson              1.1.6
+  - install zed                 1.2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of base-bigarray.base
@@ -222,48 +222,50 @@ Faking installation of utop.1.8
 Done.
 ### opam upgrade --fake
 The following actions will be faked:
-  - upgrade   uri            1.3.11 to 1.3.12
-  - upgrade   mpp            0.1.3 to 0.1.4
-  - upgrade   herelib        109.35.00 to 109.35.02
-  - upgrade   pipebang       109.28.00 to 109.28.02
-  - upgrade   atd            1.0.3 to 1.1.0
-  - upgrade   type_conv      109.47.00 to 109.53.02
-  - upgrade   optcomp        1.4 to 1.5
-  - upgrade   res            4.0.3 to 4.0.4
-  - upgrade   utop           1.8 to 1.10
-  - upgrade   ipaddr         0.2.3 to 1.0.0
-  - upgrade   omd            0.7.5 to 0.9.1
-  - upgrade   atdgen         1.2.4 to 1.3.0
-  - upgrade   variantslib    109.15.00 to 109.15.02
-  - upgrade   sexplib        109.47.00 to 109.55.02
-  - upgrade   pa_ounit       109.36.00 to 109.53.02
-  - upgrade   fieldslib      109.20.00 to 109.20.02
-  - upgrade   comparelib     109.27.00 to 109.27.02
-  - upgrade   bin_prot       109.47.00 to 109.53.02
+=== recompile 5 packages
+  - recompile async_graphics 0.5.1                  [uses async]
   - recompile dyntype        0.9.0                  [uses type_conv]
+  - recompile mirari         0.9.7                  [uses ipaddr]
   - recompile ocplib-endian  0.4                    [uses optcomp]
   - recompile tuntap         0.7.0                  [uses ipaddr]
-  - install   pa_bench       109.55.02              [required by core_kernel]
-  - upgrade   custom_printf  109.27.00 to 109.27.02
-  - install   typerep        109.55.02              [required by core_kernel]
-  - upgrade   cow            0.7.0 to 0.9.1
-  - recompile mirari         0.9.7                  [uses ipaddr]
-  - upgrade   core_kernel    109.47.00 to 109.55.02
-  - install   pa_test        109.53.02              [required by core, async_core, core_extended]
-  - upgrade   core           109.47.00 to 109.55.02
-  - upgrade   re2            109.45.02 to 109.55.02
-  - upgrade   async_core     109.47.00 to 109.55.02
-  - upgrade   async_unix     109.47.00 to 109.55.02
-  - upgrade   async_extra    109.47.00 to 109.55.02
+=== upgrade 33 packages
   - upgrade   async          109.42.00 to 109.53.02
-  - upgrade   textutils      109.36.00 to 109.53.02
-  - upgrade   cstruct        0.8.1 to 1.0.1
-  - recompile async_graphics 0.5.1                  [uses async]
-  - upgrade   core_extended  109.47.00 to 109.55.02
-  - upgrade   core_bench     109.47.00 to 109.55.02
+  - upgrade   async_core     109.47.00 to 109.55.02
+  - upgrade   async_extra    109.47.00 to 109.55.02
+  - upgrade   async_unix     109.47.00 to 109.55.02
+  - upgrade   atd            1.0.3 to 1.1.0
+  - upgrade   atdgen         1.2.4 to 1.3.0
+  - upgrade   bin_prot       109.47.00 to 109.53.02
   - upgrade   cohttp         0.9.11 to 0.9.14
+  - upgrade   comparelib     109.27.00 to 109.27.02
+  - upgrade   core           109.47.00 to 109.55.02
+  - upgrade   core_bench     109.47.00 to 109.55.02
+  - upgrade   core_extended  109.47.00 to 109.55.02
+  - upgrade   core_kernel    109.47.00 to 109.55.02
+  - upgrade   cow            0.7.0 to 0.9.1
+  - upgrade   cstruct        0.8.1 to 1.0.1
+  - upgrade   custom_printf  109.27.00 to 109.27.02
+  - upgrade   fieldslib      109.20.00 to 109.20.02
   - upgrade   github         0.6.1 to 0.7.0
-===== 3 to install | 5 to recompile | 33 to upgrade =====
+  - upgrade   herelib        109.35.00 to 109.35.02
+  - upgrade   ipaddr         0.2.3 to 1.0.0
+  - upgrade   mpp            0.1.3 to 0.1.4
+  - upgrade   omd            0.7.5 to 0.9.1
+  - upgrade   optcomp        1.4 to 1.5
+  - upgrade   pa_ounit       109.36.00 to 109.53.02
+  - upgrade   pipebang       109.28.00 to 109.28.02
+  - upgrade   re2            109.45.02 to 109.55.02
+  - upgrade   res            4.0.3 to 4.0.4
+  - upgrade   sexplib        109.47.00 to 109.55.02
+  - upgrade   textutils      109.36.00 to 109.53.02
+  - upgrade   type_conv      109.47.00 to 109.53.02
+  - upgrade   uri            1.3.11 to 1.3.12
+  - upgrade   utop           1.8 to 1.10
+  - upgrade   variantslib    109.15.00 to 109.15.02
+=== install 3 packages
+  - install   pa_bench       109.55.02              [required by core_kernel]
+  - install   pa_test        109.53.02              [required by core, async_core, core_extended]
+  - install   typerep        109.55.02              [required by core_kernel]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of atd.1.1.0

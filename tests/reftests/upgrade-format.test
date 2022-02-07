@@ -76,21 +76,21 @@ opam-core is now pinned to file://${BASEDIR} (version 2.0.7)
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ocaml-system"]
 The following actions will be faked:
+=== install 14 packages
   - install base-bigarray base           [required by opam-core]
   - install base-threads  base           [required by dune]
   - install base-unix     base           [required by opam-core]
-  - install ocaml-system  4.08.0
   - install conf-m4       1              [required by ocamlfind]
-  - install ocaml-config  1              [required by ocaml]
-  - install ocaml         4.08.0         [required by opam-core]
-  - install seq           base           [required by re]
-  - install ocamlfind     1.8.1          [required by ocamlgraph]
-  - install dune          2.5.1          [required by opam-core]
-  - install ocamlgraph    1.8.8          [required by opam-core]
-  - install re            1.9.0          [required by opam-core]
   - install cppo          1.6.6          [required by opam-core]
+  - install dune          2.5.1          [required by opam-core]
+  - install ocaml         4.08.0         [required by opam-core]
+  - install ocaml-config  1              [required by ocaml]
+  - install ocaml-system  4.08.0
+  - install ocamlfind     1.8.1          [required by ocamlgraph]
+  - install ocamlgraph    1.8.8          [required by opam-core]
   - install opam-core     2.0.7 (pinned)
-===== 14 to install =====
+  - install re            1.9.0          [required by opam-core]
+  - install seq           base           [required by re]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of base-bigarray.base
@@ -125,10 +125,11 @@ opam-state is now pinned to git://github.com/ocaml/opam.git#59a71e3cf1 (version 
 [opam-format.2.1.0~beta3] synchronised (no changes)
 
 The following actions would be performed:
+=== upgrade 1 package
   - upgrade opam-core        2.0.7 to 2.1.0~beta3 (pinned) [required by opam-format]
+=== install 2 packages
   - install opam-file-format 2.0.0                         [required by opam-format]
   - install opam-format      2.1.0~beta3 (pinned)
-===== 2 to install | 1 to upgrade =====
 ### : Testing preserved format with upgrade :
 ### <packages/foo/foo.1/opam>
 opam-version: "2.0"

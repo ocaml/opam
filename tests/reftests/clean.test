@@ -13,6 +13,7 @@ install: [
 ### opam switch create clean --empty
 ### opam install things
 The following actions will be performed:
+=== install 1 package
   - install things 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -25,6 +26,7 @@ ${BASEDIR}/OPAM/clean/lib/things/second
 
 ### opam remove things
 The following actions will be performed:
+=== remove 1 package
   - remove things 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -32,6 +34,7 @@ The following actions will be performed:
 Done.
 ### opam install things
 The following actions will be performed:
+=== install 1 package
   - install things 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -39,12 +42,14 @@ The following actions will be performed:
 Done.
 ### opam remove things --fake
 The following actions will be faked:
+=== remove 1 package
   - remove things 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Done.
 ### opam install things
 The following actions will be performed:
+=== install 1 package
   - install things 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -78,6 +83,7 @@ Remaining directories and files:
 Remove them? [Y/n] y
 ### opam install things
 The following actions will be performed:
+=== install 1 package
   - install things 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -87,6 +93,7 @@ Done.
 another content
 ### opam remove things --no | '\\' -> '/'
 The following actions will be performed:
+=== remove 1 package
   - remove things 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>

@@ -79,11 +79,14 @@ However, you may "opam upgrade" these packages explicitly, which will ask permis
 Nothing to do.
 ### opam upgrade ocaml --fake
 The following actions will be faked:
+=== remove 1 package
   - remove    ocaml-system        4.07.0           [conflicts with ocaml]
-  - install   ocaml-base-compiler 4.10.0           [required by ocaml]
+=== recompile 1 package
   - recompile ocaml-config        1                [uses ocaml-system]
+=== upgrade 1 package
   - upgrade   ocaml               4.07.0 to 4.10.0
-===== 1 to install | 1 to recompile | 1 to upgrade | 1 to remove =====
+=== install 1 package
+  - install   ocaml-base-compiler 4.10.0           [required by ocaml]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of ocaml-base-compiler.4.10.0
