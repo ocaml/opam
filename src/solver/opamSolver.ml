@@ -433,15 +433,6 @@ let map_request f r =
     criteria = r.criteria;
     extra_attributes = r.extra_attributes; }
 
-(* Remove duplicate packages *)
-(* Add upgrade constraints *)
-(* Remove constraints in best_effort mode *)
-let cleanup_request _universe (req:atom request) =
-  if OpamSolverConfig.best_effort () then
-    { req with wish_install = OpamFormula.Empty; wish_upgrade = []; }
-  else
-    req
-
 let cycle_conflict ~version_map univ cycles =
   OpamCudf.cycle_conflict ~version_map univ cycles
 
@@ -461,7 +452,6 @@ let resolve universe request =
     in
     { request with extra_attributes }
   in
-  let request = cleanup_request universe request in
   let request, deprequest_pkg =
     let conj = OpamFormula.ands_to_list request.wish_install in
     let conj, deprequest =
@@ -842,8 +832,11 @@ let request ?(criteria=`Default)
     ?(all=install@upgrade@remove@
           OpamFormula.(atoms (of_atom_formula deprequest)))
     () =
-  let wish_install =
-    OpamFormula.ands (deprequest :: List.map (fun x -> Atom x) install)
+  let wish_install, wish_upgrade =
+    if OpamSolverConfig.best_effort () then
+      deprequest, []
+    else
+      OpamFormula.ands (deprequest :: List.map (fun x -> Atom x) install), upgrade
   in
-  { wish_install; wish_upgrade = upgrade; wish_remove = remove; wish_all = all;
+  { wish_install; wish_upgrade; wish_remove = remove; wish_all = all;
     criteria; extra_attributes = []; }
