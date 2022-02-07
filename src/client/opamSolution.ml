@@ -1220,7 +1220,6 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
     t, Nothing_to_do
   else (
     (* Otherwise, compute the actions to perform *)
-    let stats = OpamSolver.stats solution in
     let show_solution = ask <> Some false in
     let action_graph = OpamSolver.get_atomic_action_graph solution in
     let new_state = simulate_new_state t action_graph in
@@ -1256,9 +1255,6 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
         ~requested ~reinstall:(Lazy.force t.reinstall)
         ~available:(Lazy.force t.available_packages)
         solution;
-      let total_actions = sum stats in
-      if total_actions >= 2 then
-        OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
     );
     if not OpamClientConfig.(!r.show) &&
        (download_only || confirmation ?ask requested action_graph)

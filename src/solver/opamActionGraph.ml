@@ -131,8 +131,7 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
         let a = (a :> package action) in
         (if OpamConsole.utf8 ()
          then action_color a (symbol_of_action a)
-         else "-")
-        :: name_of_action a
+         else action_color a "- " ^ name_of_action a)
         :: match a with
         | `Remove p | `Install p | `Reinstall p | `Build p | `Fetch [p] ->
           pkg_to_string p

@@ -65,5 +65,9 @@ module Make (A: ACTION) : SIG with type package = A.package
 val action_strings:
   ?utf8:bool -> 'a action -> string
 
+val symbol_of_action: 'a action -> string
+
+val name_of_action: 'a action -> string
+
 (** Colorise string according to the action *)
 val action_color: 'a action -> string -> string

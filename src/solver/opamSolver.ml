@@ -760,7 +760,7 @@ let print_solution ~messages ~append ~requested ~reinstall ~available t =
     OpamCudf.compute_root_causes t requested reinstall available
   in
   let actions, details =
-    OpamCudf.ActionGraph.Topological.fold (fun a (actions,details) ->
+    OpamCudf.ActionGraph.fold_vertex (fun a (actions,details) ->
         let cause =
           try OpamCudf.Map.find (OpamCudf.action_contents a) causes
           with Not_found -> Unknown in
@@ -776,16 +776,40 @@ let print_solution ~messages ~append ~requested ~reinstall ~available t =
         action :: actions, (cause, messages) :: details
       ) t ([],[])
   in
-  let actions, details = List.rev actions, List.rev details in
-  Action.to_aligned_strings ~append actions |>
-  List.map2 (fun (cause, messages) line ->
-      " " :: line @
-      [if cause = "" then "" else Printf.sprintf "[%s]" cause] @
-      if messages = [] then []
-      else [String.concat "\n" messages]
-    ) details |>
-  OpamStd.Format.align_table |>
-  OpamConsole.print_table ~sep:" " stdout
+  let table =
+    List.map2 (fun action (cause, messages) ->
+        " " :: action @
+        [if cause = "" then "" else Printf.sprintf "[%s]" cause] @
+        if messages = [] then []
+        else [String.concat "\n" messages]
+      )
+      (Action.to_aligned_strings ~append actions)
+      details
+    |> OpamStd.Format.align_table
+  in
+  let actions_table = List.combine actions table in
+  let actions_table =
+    List.sort (fun a1 a2 ->
+        let ct (a, _) = OpamCudf.action_contents a in
+        OpamPackage.compare (ct a1) (ct a2))
+      actions_table
+  in
+  let print_actions filter =
+    match List.filter (fun (a, _) -> filter a) actions_table with
+    | [] -> ()
+    | ((a,_) :: _) as acts ->
+      OpamConsole.formatted_msg "%s %s %s %s\n"
+        (OpamActionGraph.action_color a "===")
+        (OpamActionGraph.name_of_action a)
+        (OpamConsole.colorise `bold (string_of_int ((List.length acts))))
+        (match acts with [_] -> "package" | _ -> "packages");
+      OpamConsole.print_table ~sep:" " stdout (List.map snd acts)
+  in
+  print_actions (function `Remove _ -> true | _ -> false);
+  print_actions (function `Change (`Down,_,_) -> true | _ -> false);
+  print_actions (function `Reinstall _ -> true | _ -> false);
+  print_actions (function `Change (`Up,_,_) -> true | _ -> false);
+  print_actions (function `Install _ -> true | _ -> false)
 
 let dump_universe universe oc =
   let version_map = cudf_versions_map universe in
