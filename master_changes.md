@@ -253,6 +253,7 @@ users)
   * Add a depext checkup, launched only is `OpamSysInteract` is changed [#4788 @rjbou]
   * Arrange scripts directory [#4922 @rjbou]
   * Run ci on tests changes [#4966 @rjbou]
+  * GHA: Fix caching for the "test" job [#5090 @dra27 @kit-ty-kate]
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
