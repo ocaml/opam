@@ -39,12 +39,10 @@ env:
   OPAMBSVERSION: 2.1.0
   OPAMBSROOT: ~/.cache/.opam.cached
   OPAM12CACHE: ~/.cache/opam1.2/cache
-  # These should be identical to the values in appveyor.yml and the other workflows
   OPAM_REPO: https://github.com/ocaml/opam-repository.git
   OPAM_TEST_REPO_SHA: fd4405c83bcd23f91373978b45479694079a8c79
   OPAM_REPO_SHA: fd4405c83bcd23f91373978b45479694079a8c79
   SOLVER:
-  # Cygwin configuration
   CYGWIN_MIRROR: http://mirrors.kernel.org/sourceware/cygwin/
   CYGWIN_ROOT: D:\cygwin
   CYGWIN32_CACHE_DIR: D:\caches\cygwin32
@@ -69,12 +67,6 @@ jobs:
       ocaml-cache: ${{ steps.keys.outputs.ocaml-cache }}
       cygwin: ${{ steps.keys.outputs.cygwin }}
     steps:
-    - name: Configure Git for Windows
-      if: runner.os == 'Windows'
-      shell: cmd
-      run: |
-        git config --system core.autocrlf false
-        git config --system core.eol lf
     - name: Checkout tree
       uses: actions/checkout@v2
     - name: Determine cache keys
@@ -84,13 +76,12 @@ jobs:
         echo ::set-output name=archives::archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
         echo ocaml-secondary-compiler=legacy-${{ env.OPAM_REPO_SHA }}
         echo ::set-output name=ocaml-secondary-compiler::legacy-${{ env.OPAM_REPO_SHA }}
-        echo ocaml-cache=${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh', 'src_ext/Makefile.dune') }}
-        echo ::set-output name=ocaml-cache::${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
+        echo ocaml-cache=${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
+        echo ::set-output name=ocaml-cache::${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
         echo cygwin=${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}
         echo ::set-output name=cygwin::${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      if: runner.os == 'Linux'
       uses: dra27/cache@opam
       with:
         path: |
@@ -100,23 +91,20 @@ jobs:
         check-only: true
         force-gzip: true
     - name: Create src_ext/archives and opam-repository cache
-      if: runner.os != 'Windows' && steps.archives.outputs.cache-hit != 'true'
+      if: steps.archives.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/archives-cache.sh
     - name: ocaml-secondary-compiler Cache
       id: legacy
-      if: runner.os != 'Windows'
       uses: dra27/cache@opam
       with:
         path: ~/.opam
         key: ${{ runner.os }}-${{ steps.keys.outputs.ocaml-secondary-compiler }}
         check-only: true
     - name: Install system's opam package
-      if: (runner.os == 'Linux' || runner.os == 'macOS') && steps.legacy.outputs.cache-hit != 'true'
-      run: |
-        ( test '${{ runner.os }}' == Linux && sudo apt install opam ) || true
-        ( test '${{ runner.os }}' == macOS && brew install opam ) || true
+      if: steps.legacy.outputs.cache-hit != 'true'
+      run: sudo apt install opam || true
     - name: Create ocaml-secondary-compiler cache
-      if: runner.os != 'Windows' && steps.legacy.outputs.cache-hit != 'true'
+      if: steps.legacy.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/legacy-cache.sh
 
   Cygwin:
@@ -160,9 +148,6 @@ jobs:
     strategy:
       matrix:
         ocamlv: [ 4.08.1, 4.09.1, 4.10.2, 4.11.2, 4.12.1, 4.13.1 ]
-      # Intentionally fail fast, no need to run all build if there is a
-      # problem in a given version; usually it is functions not defined in lower
-      # versions of OCaml
       fail-fast: true
     steps:
     - name: Install bubblewrap
@@ -200,19 +185,10 @@ jobs:
         host: [ x86_64-pc-cygwin, i686-w64-mingw32, x86_64-w64-mingw32, i686-pc-windows, x86_64-pc-windows ]
         build: [ x86_64-pc-cygwin ]
         ocamlv: [ 4.13.1 ]
-        # Annoyingly, it does not appear to be possible to exclude or include by pattern, i.e. to have
-        # include:
-        #   - host: i686-pc-cygwin
-        #     build: i686-pc-cygwin
-        # and have GHA take the cross-product of that with ocamlv from the main matrix
-        # So we have to duplicate the ocamlv below...
         include:
           - ocamlv: 4.13.1
             host: i686-pc-cygwin
             build: i686-pc-cygwin
-      # Intentionally fail fast, no need to run all build if there is a
-      # problem in a given version; usually it is functions not defined in lower
-      # versions of OCaml
       fail-fast: true
     defaults:
       run:
@@ -290,9 +266,6 @@ jobs:
     strategy:
       matrix:
         ocamlv: [ 4.13.1 ]
-      # Intentionally fail fast, no need to run all build if there is a
-      # problem in a given version; usually it is functions not defined in lower
-      # versions of OCaml
       fail-fast: true
     steps:
     - name: Checkout tree
@@ -324,20 +297,16 @@ jobs:
 # Legacy
 ####
   Legacy:
-    # If this is tested on platforms, these must be added to `needs` below
     runs-on: ${{ matrix.os }}-latest
     needs: [ Analyse, Build-Linux ]
     strategy:
       matrix:
         os: [ ubuntu ]
         ocamlv: [ 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1 ]
-      # Intentionally fail fast, no need to run all build if there is a
-      # problem in a given version; usually it is functions not defined in lower
-      # versions of OCaml
       fail-fast: true
     steps:
     - name: Install system's opam package
-      run: sudo apt install opam
+      run: sudo apt install opam || true
     - name: Checkout tree
       uses: actions/checkout@v2
     - name: ocaml-secondary-compiler Cache
@@ -455,7 +424,7 @@ jobs:
         path: |
           ${{ env.OPAMBSROOT }}/**
           ~/.cache/opam-local/bin/**
-        key: opam-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/main/opam-bs-cache.sh', '.github/scripts/main/preamble.sh') }}
+        key: opam-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
     - name: Create opam bootstrap cache
       if: steps.opam-bootstrap.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
@@ -544,7 +513,7 @@ jobs:
         path: |
           ${{ env.OPAMBSROOT }}/**
           ~/.cache/opam-local/bin/**
-        key: opam-${{ matrix.solver }}-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/main/opam-bs-cache.sh', '.github/scripts/main/preamble.sh') }}
+        key: opam-${{ matrix.solver }}-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
     - name: Create opam bootstrap cache
       if: steps.opam-bootstrap.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
@@ -590,7 +559,7 @@ jobs:
         path: |
           ${{ env.OPAMBSROOT }}/**
           ~/.cache/opam-local/bin/**
-        key: opam-${{ matrix.solver }}-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/main/opam-bs-cache.sh', '.github/scripts/main/preamble.sh') }}
+        key: opam-${{ matrix.solver }}-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
     - name: Create opam bootstrap cache
       if: steps.opam-bootstrap.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
@@ -685,7 +654,6 @@ jobs:
     - name: Get changed files
       id: files
       uses: jitterbit/get-changed-files@v1
-      # see https://github.com/jitterbit/get-changed-files/issues/19
       continue-on-error: true
     - name: Changed files list
       run: |
@@ -703,7 +671,6 @@ jobs:
         done
     - name: Hygiene
       env:
-        # Defined only on pull request jobs
         BASE_REF_SHA: ${{ github.event.pull_request.base.sha }}
         PR_REF_SHA: ${{ github.event.pull_request.head.sha }}
       if: contains(steps.files.outputs.modified, 'configure.ac') || contains(steps.files.outputs.all, 'src_ext')
