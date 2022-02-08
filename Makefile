@@ -239,9 +239,8 @@ doc: all
 man-html: opam opam-installer
 	$(MAKE) -C doc $@
 
-configure: configure.ac m4/*.m4
-	aclocal -I m4
-	autoconf
+configure: configure.ac m4/*.m4 shell/autogen
+	shell/autogen
 
 release-%:
 	$(MAKE) -C release TAG="$*"
