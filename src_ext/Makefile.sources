@@ -92,3 +92,8 @@ URL_spdx_licenses = https://github.com/kit-ty-kate/spdx_licenses/releases/downlo
 MD5_spdx_licenses = af8493759aa35b629a324caa3f5ced65
 
 $(call PKG_SAME,spdx_licenses)
+
+URL_bigarray-compat = https://github.com/mirage/bigarray-compat/releases/download/v1.1.0/bigarray-compat-1.1.0.tbz
+MD5_bigarray-compat = 72da26053d6ad1a4bca3240778a2e261
+
+$(call PKG_SAME,bigarray-compat)
