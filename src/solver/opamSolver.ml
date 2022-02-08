@@ -711,35 +711,31 @@ let stats sol =
 
 let string_of_stats stats =
   let utf = (OpamConsole.utf8 ()) in
-  let stats = [
-    stats.s_install;
-    stats.s_reinstall;
-    stats.s_upgrade;
-    stats.s_downgrade;
-    stats.s_remove;
+  let titles_stats = [
+    `Remove (), stats.s_remove;
+    `Change (`Down,(),()), stats.s_downgrade;
+    `Reinstall (), stats.s_reinstall;
+    `Change (`Up,(),()), stats.s_upgrade;
+    `Install (), stats.s_install;
   ] in
-  let titles =
-    List.map
-      (fun a ->
-         let s = OpamActionGraph.action_strings a in
-         if utf then OpamActionGraph.action_color a s else s)
-      [`Install ();
-       `Reinstall ();
-       `Change (`Up,(),());
-       `Change (`Down,(),());
-       `Remove ()]
+  let titles_stats = List.filter (fun (_, n) -> n <> 0) titles_stats in
+  let msgs =
+    let open OpamActionGraph in
+    List.map (fun (a, n) ->
+        let noun =
+          let sing, plur = noun_of_action a in
+          if n = 1 then sing else plur
+        in
+        String.concat " "
+          (if utf
+           then [ action_color a (symbol_of_action a);
+                  OpamConsole.colorise `bold (string_of_int n);
+                  noun ]
+           else [ OpamConsole.colorise `bold (string_of_int n);
+                  action_color a noun ]))
+      titles_stats
   in
-  let msgs = List.filter (fun (a,_) -> a <> 0) (List.combine stats titles) in
-  if utf then
-    OpamStd.List.concat_map "   "
-      (fun (n,t) -> Printf.sprintf "%s %s" t (string_of_int n))
-      msgs
-  else
-    OpamStd.List.concat_map " | "
-      (fun (n,t) ->
-        Printf.sprintf "%s to %s"
-          (OpamConsole.colorise `yellow (string_of_int n)) t)
-      msgs
+  OpamStd.Format.pretty_list msgs
 
 let solution_is_empty t =
   OpamCudf.ActionGraph.is_empty t

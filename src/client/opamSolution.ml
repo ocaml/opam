@@ -1022,20 +1022,13 @@ let simulate_new_state state t =
    the packages in the user request *)
 let confirmation ?ask requested solution =
   OpamCoreConfig.answer_is_yes () ||
-  match ask with
-  | Some false -> true
-  | Some true -> OpamConsole.confirm "Do you want to continue?"
-  | None ->
-    let open PackageActionGraph in
-    let solution_packages =
-      fold_vertex (fun v acc ->
-          List.map OpamPackage.name (action_contents v)
-          |> OpamPackage.Name.Set.of_list
-          |> OpamPackage.Name.Set.union acc)
-        solution
-        OpamPackage.Name.Set.empty in
-    OpamPackage.Name.Set.equal requested solution_packages
-    || OpamConsole.confirm "Do you want to continue?"
+  ask = Some false ||
+  let solution_packages =
+    OpamPackage.names_of_packages (OpamSolver.all_packages solution)
+  in
+  ask <> Some true && OpamPackage.Name.Set.equal requested solution_packages ||
+  let stats = OpamSolver.stats solution in
+  OpamConsole.confirm "\nProceed with %s?" (OpamSolver.string_of_stats stats)
 
 let run_hook_job t name ?(local=[]) ?(allow_stdout=false) w =
   let shell_env = OpamEnv.get_full ~set_opamroot:true ~set_opamswitch:true ~force_path:true t in
@@ -1257,7 +1250,7 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
         solution;
     );
     if not OpamClientConfig.(!r.show) &&
-       (download_only || confirmation ?ask requested action_graph)
+       (download_only || confirmation ?ask requested solution)
     then (
       let t =
         install_depexts t @@ OpamPackage.Set.inter

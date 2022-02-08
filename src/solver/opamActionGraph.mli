@@ -71,3 +71,7 @@ val name_of_action: 'a action -> string
 
 (** Colorise string according to the action *)
 val action_color: 'a action -> string -> string
+
+(** Returns a noun corresponding to the action name, singular and plural
+    forms *)
+val noun_of_action: 'a action -> string * string

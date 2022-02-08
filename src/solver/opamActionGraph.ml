@@ -31,6 +31,15 @@ let name_of_action = function
   | `Build _ -> "build"
   | `Fetch _ -> "fetch"
 
+let noun_of_action = function
+  | `Remove _ -> "removal", "removals"
+  | `Install _ -> "installation", "installations"
+  | `Change (`Up,_,_) -> "upgrade", "upgrades"
+  | `Change (`Down,_,_) -> "downgrade", "downgrades"
+  | `Reinstall _ -> "recompilation", "recompilations"
+  | `Build _ -> "build", "builds"
+  | `Fetch _ -> "fetch", "fetches"
+
 let symbol_of_action =
   let open OpamConsole in
   function
