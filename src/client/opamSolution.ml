@@ -961,7 +961,7 @@ let parallel_apply t
                (fun x -> x)
                (List.map (String.concat " ") @@
                 OpamStd.Format.align_table
-                  (PackageAction.to_aligned_strings actions)))
+                  (PackageAction.to_aligned_strings ~explicit:true actions)))
             (colorise tint
                (Printf.sprintf "%s%s "
                   (utf8_symbol Symbols.box_drawings_light_up_and_right "+")

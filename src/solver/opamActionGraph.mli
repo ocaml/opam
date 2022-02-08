@@ -19,7 +19,8 @@ module type ACTION = sig
   include OpamParallel.VERTEX with type t = package action
   val to_string: [< t ] -> string
   val to_aligned_strings:
-    ?append:(package -> string) -> [< t ] list -> string list list
+    ?explicit:bool -> ?append:(package -> string) -> [< t ] list ->
+    string list list
   module Set: OpamStd.SET with type elt = package action
   module Map: OpamStd.MAP with type key = package action
 end
