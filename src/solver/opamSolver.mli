@@ -96,7 +96,14 @@ val installable: universe -> package_set
 val installable_subset: universe -> package_set -> package_set
 
 (** Return the transitive dependency closures
-    of a collection of packages.*)
+    of a collection of packages.
+
+    [depopts]: include optional dependencies (depopts: foo)
+    [build]: include build dependencies (depends: foo {build})
+    [post]: include post dependencies (depends: foo {post})
+    [installed]: only consider already-installed packages
+    [unavaiable]: also consider unavailable packages
+*)
 val dependencies :
   depopts:bool -> build:bool -> post:bool ->
   installed:bool ->
@@ -105,7 +112,7 @@ val dependencies :
   package_set ->
   package_set
 
-(** Same as [dependencies] but for reverse dependencies *)
+(** Same as [dependencies] but for reverse dependencies. *)
 val reverse_dependencies :
   depopts:bool -> build:bool -> post:bool ->
   installed:bool ->
