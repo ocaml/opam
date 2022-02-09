@@ -45,8 +45,6 @@ env:
   SOLVER:
   CYGWIN_MIRROR: http://mirrors.kernel.org/sourceware/cygwin/
   CYGWIN_ROOT: D:\cygwin
-  CYGWIN32_CACHE_DIR: D:\caches\cygwin32
-  CYGWIN64_CACHE_DIR: D:\caches\cygwin64
   CYGWIN: winsymlinks:native
   CYGWIN_EPOCH: 1
 
@@ -115,7 +113,7 @@ jobs:
       id: cygwin32
       uses: dra27/cache@opam
       with:
-        path: ${{ env.CYGWIN32_CACHE_DIR }}
+        path: D:\Cache\cygwin\i686-pc-cygwin
         key: cygwin32-${{ needs.Analyse.outputs.cygwin }}
         check-only: true
         force-gzip: true
@@ -123,7 +121,7 @@ jobs:
       id: cygwin64
       uses: dra27/cache@opam
       with:
-        path: ${{ env.CYGWIN64_CACHE_DIR }}
+        path: D:\Cache\cygwin\x86_64-pc-cygwin
         key: cygwin64-${{ needs.Analyse.outputs.cygwin }}
         check-only: true
         force-gzip: true
@@ -133,11 +131,11 @@ jobs:
     - name: Create Cygwin32 cache
       if: steps.cygwin32.outputs.cache-hit != 'true'
       shell: cmd
-      run: .github\scripts\cygwin.cmd create i686-pc-cygwin
+      run: .github\scripts\cygwin.cmd i686-pc-cygwin D:\Cache\cygwin create
     - name: Create Cygwin64 cache
       if: steps.cygwin64.outputs.cache-hit != 'true'
       shell: cmd
-      run: .github\scripts\cygwin.cmd create x86_64-pc-cygwin
+      run: .github\scripts\cygwin.cmd x86_64-pc-cygwin D:\Cache\cygwin create
 
 ####
 # Build
@@ -207,7 +205,7 @@ jobs:
       if: matrix.build == 'i686-pc-cygwin'
       uses: dra27/cache@opam
       with:
-        path: ${{ env.CYGWIN32_CACHE_DIR }}
+        path: D:\Cache\cygwin\i686-pc-cygwin
         key: cygwin32-${{ needs.Analyse.outputs.cygwin }}
         force-gzip: true
     - name: Cygwin64 Cache
@@ -215,7 +213,7 @@ jobs:
       if: matrix.build == 'x86_64-pc-cygwin'
       uses: dra27/cache@opam
       with:
-        path: ${{ env.CYGWIN64_CACHE_DIR }}
+        path: D:\Cache\cygwin\x86_64-pc-cygwin
         key: cygwin64-${{ needs.Analyse.outputs.cygwin }}
         force-gzip: true
     - name: src_ext/archives and opam-repository Cache
@@ -236,7 +234,7 @@ jobs:
         force-gzip: true
     - name: Unpack Cygwin
       shell: cmd
-      run: .github\scripts\cygwin.cmd ${{ matrix.host }}
+      run: .github\scripts\cygwin.cmd ${{ matrix.build }} D:\Cache\cygwin ${{ matrix.host }}
     - name: Unpack OCaml ${{ matrix.ocamlv }}
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }} ${{ matrix.host }}
     - name: Build

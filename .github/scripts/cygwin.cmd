@@ -13,36 +13,26 @@
 :: This script configures Cygwin32 or Cygwin64 either from a cached copy or by
 :: downloading the Cygwin Setup program.
 ::
-:: cygwin.cmd [distro]
+:: cygwin.cmd distro cache-directory {create|host}
 ::
 :: where distro is i686-pc-cygwin or x86_64-pc-cygwin and rebuilds the cache
 ::
 :: Environment variables:
-::   CYGWIN32_CACHE_DIR - location of Cygwin32 cache files
-::   CYGWIN64_CACHE_DIR - location of Cygwin64 cache files
 ::   CYGWIN_ROOT        - Cygwin installation root directory
 ::   CYGWIN_MIRROR      - Package repository mirror
 
-set CYGWIN_CACHE_DIR=
-if "%2" equ "i686-pc-cygwin" (
-  set CYGWIN_CACHE_DIR=%CYGWIN32_CACHE_DIR%
-) else (
-  if "%2" equ "x86_64-pc-cygwin" (
-    set CYGWIN_CACHE_DIR=%CYGWIN64_CACHE_DIR%
-  ) else (
-    if "%2" equ "" (
-      if exist %CYGWIN32_CACHE_DIR%\cache.tar set CYGWIN_CACHE_DIR=%CYGWIN32_CACHE_DIR%
-      if exist %CYGWIN64_CACHE_DIR%\cache.tar set CYGWIN_CACHE_DIR=%CYGWIN64_CACHE_DIR%
-    ) else (
-      echo Invalid Cygwin distro: %1
-      exit /b 2
-    )
+set CYGWIN_CACHE_DIR=%2
+set CYGWIN_DISTRO=%1
+if "%CYGWIN_DISTRO%" neq "i686-pc-cygwin" (
+  if "%CYGWIN_DISTRO%" neq "x86_64-pc-cygwin" (
+    echo Invalid Cygwin distro: %1
+    exit /b 2
   )
 )
 
-if "%1" equ "create" goto SetupCygwin
+if "%3" equ "create" goto SetupCygwin
 
-if "%CYGWIN_CACHE_DIR%" equ "" (
+if not exist %CYGWIN_CACHE_DIR%\%CYGWIN_DISTRO%\cache.tar (
   echo Cache download failed - job failed
   exit /b 2
 )
@@ -60,8 +50,8 @@ if "%CYGWIN_CACHE_DIR%" equ "" (
 ::        This should be filtered
 set Path=C:\Program Files\Mercurial;C:\Program Files\Git\cmd;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\
 set Path=%CYGWIN_ROOT%\bin;%Path%
-if "%1" equ "i686-w64-mingw32" set Path=%CYGWIN_ROOT%\usr\%1\sys-root\mingw\bin;%Path%
-if "%1" equ "x86_64-w64-mingw32" set Path=%CYGWIN_ROOT%\usr\%1\sys-root\mingw\bin;%Path%
+if "%3" equ "i686-w64-mingw32" set Path=%CYGWIN_ROOT%\usr\%3\sys-root\mingw\bin;%Path%
+if "%3" equ "x86_64-w64-mingw32" set Path=%CYGWIN_ROOT%\usr\%3\sys-root\mingw\bin;%Path%
 
 ::echo %CYGWIN_ROOT%\bin>> %GITHUB_PATH%
 echo Path=%Path%>> %GITHUB_ENV%
@@ -70,13 +60,13 @@ pushd %CYGWIN_CACHE_DIR%
 
 if not exist %CYGWIN_ROOT%\bin\nul md %CYGWIN_ROOT%\bin
 :: Restore tar.exe (%CYGWIN_ROOT%\bin is already in PATH)
-copy bootstrap\* %CYGWIN_ROOT%\bin\
+copy %CYGWIN_DISTRO%\bootstrap\* %CYGWIN_ROOT%\bin\
 :: Read the /cygdrive form of the installation root
-for /f "delims=" %%P in (restore) do set CYGWIN_ROOT_NATIVE=%%P
+for /f "delims=" %%P in (%CYGWIN_DISTRO%\restore) do set CYGWIN_ROOT_NATIVE=%%P
 :: Bootstrap Cygwin
-cygtar -pxf cache.tar -C %CYGWIN_ROOT_NATIVE%
+cygtar -pxf %CYGWIN_DISTRO%/cache.tar -C %CYGWIN_ROOT_NATIVE%
 
-:: cache.tar doesn't include the /usr/bin/tar and /usr/bin/git symlinks
+:: The tarballs don't include the /usr/bin/tar and /usr/bin/git symlinks
 call :MungeSymlinks
 
 popd
@@ -84,8 +74,6 @@ popd
 goto :EOF
 
 :SetupCygwin
-
-shift
 
 echo ::group::Installing Cygwin
 
@@ -140,11 +128,11 @@ call :MungeSymlinks
 :: GitHub Actions uses Windows tar which is unable to process the LXSS symlinks
 :: which Cygwin uses. So we use Cygwin's tar to zip up Cygwin and place its
 :: tar.exe (along with the required DLLs) in %CYGWIN_CACHE_DIR%\bootstrap
-if not exist %CYGWIN_CACHE_DIR%\bootstrap\nul md %CYGWIN_CACHE_DIR%\bootstrap
+if not exist %CYGWIN_CACHE_DIR%\%CYGWIN_DISTRO%\bootstrap\nul md %CYGWIN_CACHE_DIR%\%CYGWIN_DISTRO%\bootstrap
 
 echo Setting up bootstrap process...
 echo   - tar.exe
-copy %CYGWIN_ROOT%\bin\cygtar.exe %CYGWIN_CACHE_DIR%\bootstrap\ > nul
+copy %CYGWIN_ROOT%\bin\cygtar.exe %CYGWIN_CACHE_DIR%\%CYGWIN_DISTRO%\bootstrap\ > nul
 echo ./bin/cygtar.exe> D:\exclude
 echo ./bin/tar>> D:\exclude
 echo ./bin/git>> D:\exclude
@@ -153,18 +141,18 @@ echo ./bin/git>> D:\exclude
 for /f "usebackq delims=" %%f in (`%CYGWIN_ROOT%\bin\bash -lc "ldd /bin/cygtar | sed -ne 's|.* => \(/usr/bin/.*\) ([^)]*)$|\1|p' | xargs cygpath -w"`) do (
   echo   - %%~nxf
   echo ./bin/%%~nxf>> D:\exclude
-  copy %%f %CYGWIN_CACHE_DIR%\bootstrap\ > nul
+  copy %%f %CYGWIN_CACHE_DIR%\%CYGWIN_DISTRO%\bootstrap\ > nul
 )
 
 :: tar up the entire Cygwin installation, excluding the files we copied to
 :: bootstrap. No compression since GitHub Actions caching will tar this again.
 :: This operation has to be done from the /cygdrive form of the root, so that
 :: the special files in /dev are correctly captured.
-%CYGWIN_ROOT%\bin\bash -lc "tar -pcf %CYGWIN_CACHE_DIR_NATIVE%/cache.tar --exclude-from=/cygdrive/d/exclude -C %CYGWIN_ROOT_NATIVE% ."
+%CYGWIN_ROOT%\bin\bash -lc "tar -pcf %CYGWIN_CACHE_DIR_NATIVE%/%CYGWIN_DISTRO%/cache.tar --exclude-from=/cygdrive/d/exclude -C %CYGWIN_ROOT_NATIVE% ."
 
 :: We won't have cygpath when restoring the archive, so write the path to
 :: restore the cache to into the cache itself.
-echo %CYGWIN_ROOT_NATIVE%> %CYGWIN_CACHE_DIR%\restore
+echo %CYGWIN_ROOT_NATIVE%> %CYGWIN_CACHE_DIR%\%CYGWIN_DISTRO%\restore
 
 del D:\exclude
 

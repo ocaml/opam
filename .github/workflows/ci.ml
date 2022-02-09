@@ -113,6 +113,8 @@ type _ cache_name =
 | OpamRoot : ((cache -> 'a) -> string -> 'a) cache_name
 | Opam12Root : ((cache -> 'a) -> 'a) cache_name
 
+let cygwin_cache_directory = {|D:\Cache\cygwin|}
+
 let get_cache_cont : type s . s cache_name -> s = function
   | Archives ->
       fun f -> f
@@ -136,14 +138,14 @@ let get_cache_cont : type s . s cache_name -> s = function
          build_shell = None}
   | Cygwin ->
       fun f arch ->
-        let key_arch = match arch with `x86 -> "32" | `x64 -> "64" in f
+        let (arch_name, key_arch) = match arch with `x86 -> ("i686", "32") | `x64 -> ("x86_64", "64") in f
         {name = (match arch with `x86 -> "Cygwin32" | `x64 -> "Cygwin64");
          key = Printf.sprintf "cygwin%s-${{ %s.outputs.cygwin }}" key_arch;
          id = "cygwin" ^ key_arch;
          force_gzip = true;
-         paths = [(if arch = `x86 then "${{ env.CYGWIN32_CACHE_DIR }}" else "${{ env.CYGWIN64_CACHE_DIR }}")]; (* XXX The env should be done away with and propagated to cygwin.cmd differently *)
+         paths = [Printf.sprintf "%s\\%s-pc-cygwin" cygwin_cache_directory arch_name];
          always_build = false;
-         build = [Printf.sprintf {|.github\scripts\cygwin.cmd create %s-pc-cygwin|} (if arch = `x86 then "i686" else "x86_64")];
+         build = [Printf.sprintf {|.github\scripts\cygwin.cmd %s-pc-cygwin %s create|} arch_name cygwin_cache_directory];
          build_shell = Some "cmd"}
   | OCaml ->
       fun f platform version host -> f
@@ -224,8 +226,8 @@ let build_cache ?cond name =
   in
   run ?cond ?shell:cache.build_shell (Printf.sprintf "%s %s%s" (if cache.always_build then "Unpack" else "Create") cache.name (if cache.always_build then "" else " cache")) cache.build)
 
-let unpack_cygwin ?cond host =
-  run ?cond ~shell:"cmd" "Unpack Cygwin" [Printf.sprintf {|.github\scripts\cygwin.cmd %s|} host]
+let unpack_cygwin ?cond build host =
+  run ?cond ~shell:"cmd" "Unpack Cygwin" [Printf.sprintf {|.github\scripts\cygwin.cmd %s %s %s|} build cygwin_cache_directory host]
 
 let install_sys_packages packages ~descr ?cond platforms =
   let packages = String.concat " " packages in
@@ -356,7 +358,7 @@ let main_build_job ~analyse_job ~cygwin_job ?section platform start_version ~oc 
     ++ only_on Windows (cache ~cond:(Predicate(true, Compare("matrix.build", "x86_64-pc-cygwin"))) Cygwin `x64)
     ++ cache Archives
     ++ cache OCaml platform "${{ matrix.ocamlv }}" host
-    ++ only_on Windows (unpack_cygwin "${{ matrix.host }}")
+    ++ only_on Windows (unpack_cygwin "${{ matrix.build }}" "${{ matrix.host }}")
     ++ build_cache OCaml platform "${{ matrix.ocamlv }}" host
     ++ run "Build" ["bash -exu .github/scripts/main/main.sh " ^ host]
     ++ not_on Windows (run "Test (basic)" ["bash -exu .github/scripts/main/test.sh"])
@@ -511,8 +513,6 @@ let main oc : unit =
     (* Cygwin configuration *)
     ("CYGWIN_MIRROR", "http://mirrors.kernel.org/sourceware/cygwin/");
     ("CYGWIN_ROOT", "D:\\cygwin");
-    ("CYGWIN32_CACHE_DIR", "D:\\caches\\cygwin32");
-    ("CYGWIN64_CACHE_DIR", "D:\\caches\\cygwin64");
     ("CYGWIN", "winsymlinks:native");
     ("CYGWIN_EPOCH", "1");
   ] in
