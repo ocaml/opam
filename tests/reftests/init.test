@@ -1,6 +1,6 @@
 009e00fa
 ### OPAMYES=1
-### tar xzf ${OPAMROOT}/repo/default.tar.gz
+### cp -R ${OPAMROOT}/repo/default .
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["false"] "no system compiler" ]

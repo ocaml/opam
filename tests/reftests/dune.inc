@@ -462,6 +462,23 @@
    (run ./run.exe %{bin:opam} %{dep:remove.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-repository)
+ (action
+  (diff repository.test repository.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-repository)))
+
+(rule
+ (targets repository.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:repository.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-show)
  (action
   (diff show.test show.out)))

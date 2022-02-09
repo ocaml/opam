@@ -149,6 +149,7 @@ val opam_init:
   ?validation_hook:OpamTypes.arg list option ->
   ?retries:int ->
   ?force_checksums:bool option ->
+  ?repo_tarring:bool ->
   ?debug_level:int ->
   ?debug_sections:OpamStd.Config.sections ->
   ?verbose_level:OpamStd.Config.level ->

@@ -115,8 +115,7 @@ added: [
 ### opam install lot-of-files | grep "mkdir\|install\|FILE"
   - install lot-of-files ~dev
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev
-SYSTEM                          mkdir ${OPAMTMP}
-SYSTEM                          copy ${OPAMTMP}/default/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in -> ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/lot-of-files.install.in
+SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in -> ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/lot-of-files.install.in
 FILE(.config)                   Wrote ${BASEDIR}/OPAM/inst/.opam-switch/config/lot-of-files.config in 0.000s
 SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/fichier -> ${BASEDIR}/OPAM/inst/bin/fichier (755)
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/lib/lot-of-files
@@ -134,4 +133,4 @@ SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/
 -> installed lot-of-files.~dev
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev/files
-SYSTEM                          copy ${OPAMTMP}/default/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in -> ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev/files/lot-of-files.install.in
+SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in -> ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev/files/lot-of-files.install.in

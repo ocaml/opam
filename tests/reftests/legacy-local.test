@@ -650,12 +650,12 @@ archive-mirrors: "cache"
 
 <><> Upgrading repositories from older opam format ><><><><><><><><><><><><><><>
 Upgrading repository "test"...
-Updated ${OPAMTMP}/test/packages/P1.0/opam
-Updated ${OPAMTMP}/test/packages/P1.1/opam
-Updated ${OPAMTMP}/test/packages/P2.1/opam
-Updated ${OPAMTMP}/test/packages/P3.1~weird-version.test/opam
-Updated ${OPAMTMP}/test/packages/P4.1/opam
-Updated ${OPAMTMP}/test/packages/P5.1/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P1.0/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P1.1/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P2.1/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P3.1~weird-version.test/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P4.1/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P5.1/opam
 Now run 'opam upgrade' to apply any package updates.
 ### opam switch create system "--formula=[\"ocaml\" {= \"system\"}]"
 
@@ -1025,15 +1025,15 @@ P5     --                   Testing optional dependencies
 
 <><> Upgrading repositories from older opam format ><><><><><><><><><><><><><><>
 Upgrading repository "test"...
-Updated ${OPAMTMP}/test/packages/P1.0/opam
-Updated ${OPAMTMP}/test/packages/P1.1/opam
-Updated ${OPAMTMP}/test/packages/P1.2/opam
-Updated ${OPAMTMP}/test/packages/P2.1/opam
-Updated ${OPAMTMP}/test/packages/P3.1~weird-version.test/opam
-Updated ${OPAMTMP}/test/packages/P4.1/opam
-Updated ${OPAMTMP}/test/packages/P4.2/opam
-Updated ${OPAMTMP}/test/packages/P4.3/opam
-Updated ${OPAMTMP}/test/packages/P5.1/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P1.0/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P1.1/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P1.2/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P2.1/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P3.1~weird-version.test/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P4.1/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P4.2/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P4.3/opam
+Updated ${BASEDIR}/OPAM/repo/test/packages/P5.1/opam
 Now run 'opam upgrade' to apply any package updates.
 ### : LIST :
 ### opam list -A
