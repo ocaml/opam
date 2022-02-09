@@ -190,7 +190,7 @@ jobs:
           - ocamlv: 4.13.1
             host: i686-pc-cygwin
             build: i686-pc-cygwin
-      fail-fast: true
+      fail-fast: false
     defaults:
       run:
         shell: D:\cygwin\bin\bash.exe {0}

@@ -329,7 +329,7 @@ let main_build_job ~analyse_job ~cygwin_job ?section platform start_version ~oc 
   (* Intentionally fail fast, no need to run all build if there is a
    * problem in a given version; usually it is functions not defined in lower
    * versions of OCaml. *)
-  let (fail_fast, matrix, _) = platform_ocaml_matrix ~fail_fast:true start_version in
+  let (_fail_fast, matrix, _) = platform_ocaml_matrix ~fail_fast:true start_version in
   let (matrix, includes) =
     if platform = Windows then
       let includes =
@@ -347,7 +347,7 @@ let main_build_job ~analyse_job ~cygwin_job ?section platform start_version ~oc 
         matrix, includes)
     else
       (matrix, []) in
-  let matrix = (fail_fast, matrix, includes) in
+  let matrix = ((platform <> Windows), matrix, includes) in
   let needs = if platform = Windows then [analyse_job; cygwin_job] else [analyse_job] in
   let host = host_of_platform platform in
   job ~oc ~workflow ~runs_on:(Runner [platform]) ?shell ?section ~needs ~matrix ("Build-" ^ name_of_platform platform)
