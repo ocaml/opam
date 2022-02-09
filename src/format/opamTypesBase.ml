@@ -201,14 +201,14 @@ let string_of_cause to_string =
     | a::b::c::_::_::_ -> Printf.sprintf "%s, %s, %s, etc." a b c
     | l -> String.concat ", " l in
   function
-  | Upstream_changes -> "upstream or system changes"
+  | Upstream_changes -> OpamConsole.colorise `bold "upstream or system changes"
   | Use pkgs         -> Printf.sprintf "uses %s" (list_to_string pkgs)
   | Required_by pkgs ->
     Printf.sprintf "required by %s" (list_to_string pkgs)
   | Conflicts_with pkgs ->
     Printf.sprintf "conflicts with %s" (list_to_string pkgs)
   | Requested        -> ""
-  | Unavailable      -> "no longer available"
+  | Unavailable      -> OpamConsole.colorise `bold "no longer available"
   | Unknown          -> ""
 
 let map_success f = function

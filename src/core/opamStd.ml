@@ -1424,6 +1424,7 @@ module Config = struct
   type when_ = [ `Always | `Never | `Auto ]
   type when_ext = [ `Extended | when_ ]
   type answer = [ `unsafe_yes | `all_yes | `all_no | `ask ]
+  type yes_answer = [ `unsafe_yes | `all_yes ]
 
   let env conv var =
     try Option.map conv (Env.getopt ("OPAM"^var))

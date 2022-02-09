@@ -202,7 +202,9 @@ let answer_is =
   fun a -> Lazy.force answer = a
 
 let answer_is_yes () =
-  answer_is `all_yes || answer_is `unsafe_yes
+  match answer () with
+  | #OpamStd.Config.yes_answer -> true
+  | _ -> false
 
 #ifdef DEVELOPER
 let developer = true

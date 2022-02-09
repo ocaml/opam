@@ -694,67 +694,93 @@ let header_error fmt =
         ) fmt
     ) fmt
 
+(* Reads a single char from the user when possible, a line otherwise *)
+let short_user_input ~prompt ?default f =
+  try
+    if OpamStd.Sys.(not tty_out || os () = Win32 || os () = Cygwin) then
+      let rec loop () =
+        prompt ();
+        let input = match String.lowercase_ascii (read_line ()) with
+          | "" -> default
+          | s -> Some s
+        in
+        match OpamStd.Option.Op.(input >>= f) with
+        | Some a -> a
+        | None -> loop ()
+      in
+      loop ()
+    else
+    let open Unix in
+    prompt ();
+    let buf = Bytes.create 1 in
+    let rec loop () =
+      let input =
+        match
+          if read stdin buf 0 1 = 0 then raise End_of_file
+          else String.lowercase_ascii (Bytes.to_string buf)
+        with
+        | "\n" -> default
+        | s -> Some s
+        | exception Unix.Unix_error (Unix.EINTR,_,_) -> None
+        | exception Unix.Unix_error _ -> raise End_of_file
+      in
+      match input with
+      | None -> loop ()
+      | Some i -> match f i with
+        | Some a -> print_endline i; a
+        | None -> loop ()
+    in
+    let attr = tcgetattr stdin in
+    let reset () =
+      tcsetattr stdin TCSAFLUSH attr;
+      tcflush stdin TCIFLUSH;
+    in
+    OpamStd.Exn.finally reset @@ fun () ->
+    tcsetattr stdin TCSAFLUSH
+      {attr with c_icanon = false; c_echo = false};
+    tcflush stdin TCIFLUSH;
+    loop ()
+  with
+  | Sys.Break as e -> OpamStd.Exn.finalise e (fun () -> msg "\n")
+  | Unix.Unix_error _ | End_of_file ->
+    match default with
+    | None -> OpamStd.Exn.finalise End_of_file (fun () -> msg "\n")
+    | Some d ->
+      msg "%s\n" d;
+      match f d with
+      | Some a -> a
+      | None -> assert false
+
+let pause fmt =
+  if OpamStd.Sys.tty_in then
+    Printf.ksprintf (fun s ->
+        short_user_input ~prompt:(fun () -> formatted_msg "%s" s) ~default:""
+        @@ fun _ -> Some ())
+      fmt
+  else
+    Printf.ifprintf () fmt
 
 let confirm ?(require_unsafe_yes=false) ?(default=true) fmt =
   Printf.ksprintf (fun s ->
-      try
-        if OpamCoreConfig.(!r.safe_mode) then false else
-        let prompt () =
-          formatted_msg "%s [%s] " s (if default then "Y/n" else "y/N")
-        in
-        if (require_unsafe_yes && OpamCoreConfig.answer_is `unsafe_yes)
-        || (not require_unsafe_yes && OpamCoreConfig.answer_is_yes ()) then
-          (prompt (); msg "y\n"; true)
-        else if OpamCoreConfig.answer_is `all_no ||
-                OpamStd.Sys.(not tty_in)
-        then
-          (prompt (); msg "n\n"; false)
-        else if OpamStd.Sys.(not tty_out || os () = Win32 || os () = Cygwin) then
-          let rec loop () =
-            prompt ();
-            match String.lowercase_ascii (read_line ()) with
-            | "y" | "yes" -> true
-            | "n" | "no" -> false
-            | "" -> default
-            | _  -> loop ()
-          in loop ()
-        else
-        let open Unix in
-        prompt ();
-        let buf = Bytes.create 1 in
-        let rec loop () =
-          let ans =
-            try
-              if read stdin buf 0 1 = 0 then raise End_of_file
-              else Some (Char.lowercase_ascii (Bytes.get buf 0))
-            with
-            | Unix.Unix_error (Unix.EINTR,_,_) -> None
-            | Unix.Unix_error _ -> raise End_of_file
-          in
-          match ans with
-          | Some 'y' -> print_endline (Bytes.to_string buf); true
-          | Some 'n' -> print_endline (Bytes.to_string buf); false
-          | Some '\n' -> print_endline (if default then "y" else "n"); default
-          | _ -> loop ()
-        in
-        let attr = tcgetattr stdin in
-        let reset () =
-          tcsetattr stdin TCSAFLUSH attr;
-          tcflush stdin TCIFLUSH;
-        in
-        try
-          tcsetattr stdin TCSAFLUSH
-            {attr with c_icanon = false; c_echo = false};
-          tcflush stdin TCIFLUSH;
-          let r = loop () in
-          reset ();
-          r
-        with e -> reset (); raise e
-      with
-      | Unix.Unix_error _ | End_of_file ->
-        msg "%s\n" (if default then "y" else "n"); default
-      | Sys.Break as e -> msg "\n"; raise e
-    ) fmt
+      if OpamCoreConfig.(!r.safe_mode) then false else
+      let prompt () =
+        formatted_msg "%s [%s] " s (if default then "Y/n" else "y/N")
+      in
+      if OpamCoreConfig.answer_is `unsafe_yes ||
+         not require_unsafe_yes && OpamCoreConfig.answer_is_yes ()
+      then
+        (prompt (); msg "y\n"; true)
+      else if OpamCoreConfig.answer_is `all_no ||
+              OpamStd.Sys.(not tty_in)
+      then
+        (prompt (); msg "n\n"; false)
+      else
+        short_user_input ~prompt ~default:(if default then "y" else "n")
+        @@ function
+        | "y" | "yes" -> Some true
+        | "n" | "no" -> Some false
+        | _  -> None)
+    fmt
 
 let read fmt =
   Printf.ksprintf (fun s ->
@@ -887,6 +913,65 @@ let print_table ?cut oc ~sep table =
       output_string str;
   in
   List.iter (fun l -> print_line (cleanup_trailing l)) table
+
+let menu ?default ?unsafe_yes ?yes ~no options fmt =
+  let _cmd_chars =
+    List.fold_right (fun (s, _, _) chars ->
+        assert (String.length s > 0 && not (List.mem s.[0] chars));
+        s.[0] :: chars)
+      options []
+  in
+  Printf.ksprintf (fun prompt_msg ->
+      List.map (fun (str, ans, msg) ->
+          let is_default = Some ans = default in
+          let color = if is_default then [`bold; `yellow] else [`yellow] in
+          let c =
+            let c = String.sub str 0 1 in
+            if is_default then String.uppercase_ascii c else c
+          in
+          [ Printf.sprintf "  - [%s%s]"
+              (colorise' (`underline::color) c)
+              (colorise' color (String.sub str 1 (String.length str-1)));
+            msg ])
+        options
+      |> OpamStd.Format.align_table
+      |> print_table stdout ~sep:"  ";
+      let default_s =
+        let open OpamStd.Option.Op in
+        default
+        >>| (fun df -> List.find (fun (_, ans, _) -> ans = df) options)
+        >>| (fun (s, _, _) -> s)
+      in
+      let options_str =
+        OpamStd.List.concat_map "/" (fun (s, ans, _) ->
+            let c = String.sub s 0 1 in
+            if Some ans = default then
+              colorise' [`bold; `yellow] (String.uppercase_ascii c)
+            else
+              colorise `yellow c)
+          options
+      in
+      let prompt () = formatted_msg "%s [%s] " prompt_msg options_str in
+      let select a =
+        let (s, _, _) = List.find (fun (_, a1, _) -> a = a1) options in
+        msg "%c\n" s.[0];
+        a
+      in
+      if OpamCoreConfig.(!r.safe_mode) then no else
+      match OpamCoreConfig.answer(), unsafe_yes, yes with
+      | `unsafe_yes, Some a, _ -> prompt(); select a
+      | #OpamStd.Config.yes_answer, _, Some a -> prompt (); select a
+      | `all_no, _, _ -> prompt (); select no
+      | _, _, _ ->
+        short_user_input ~prompt ?default:default_s @@ fun i ->
+        match
+          List.find_opt
+            (fun (s, _, _) -> OpamStd.String.starts_with ~prefix:i s)
+            options
+        with
+        | Some  (_, a, _) -> Some a
+        | None -> None
+    ) fmt
 
 (* This allows OpamStd.Config.env to display warning messages *)
 let () =
