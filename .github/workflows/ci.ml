@@ -160,7 +160,7 @@ let get_cache_cont : type s . s cache_name -> s = function
   | OpamBS ->
       fun f version key_prefix -> f
         {name = "opam bootstrap";
-         key = Fun.const (Printf.sprintf "opam%s-${{ runner.os }}-${{ env.OPAMBSVERSION }}-%s-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}" key_prefix version); (* XXX hashFiles shouldn't be here!! *)
+         key = Printf.sprintf "opam%s-${{ runner.os }}-${{ env.OPAMBSVERSION }}-%s-${{ env.OPAM_REPO_SHA }}-${{ %s.outputs.opam-bs-cache }}" key_prefix version;
          id = "opam-bootstrap";
          force_gzip = false;
          paths = ["${{ env.OPAMBSROOT }}/**"; "~/.cache/opam-local/bin/**"];
@@ -521,6 +521,7 @@ let main oc : unit =
     ("ocaml-secondary-compiler", "legacy-${{ env.OPAM_REPO_SHA }}");
     ("ocaml-cache", "${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}");
     ("cygwin", "${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}");
+    ("opam-bs-cache", "${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}");
   ] in
   workflow ~oc ~env "Builds, tests & co"
     ++ analyse_job ~keys ~platforms:[Linux] (fun analyse_job ->

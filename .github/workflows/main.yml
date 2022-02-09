@@ -64,6 +64,7 @@ jobs:
       ocaml-secondary-compiler: ${{ steps.keys.outputs.ocaml-secondary-compiler }}
       ocaml-cache: ${{ steps.keys.outputs.ocaml-cache }}
       cygwin: ${{ steps.keys.outputs.cygwin }}
+      opam-bs-cache: ${{ steps.keys.outputs.opam-bs-cache }}
     steps:
     - name: Checkout tree
       uses: actions/checkout@v2
@@ -78,6 +79,8 @@ jobs:
         echo ::set-output name=ocaml-cache::${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
         echo cygwin=${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}
         echo ::set-output name=cygwin::${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}
+        echo opam-bs-cache=${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
+        echo ::set-output name=opam-bs-cache::${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: dra27/cache@opam
@@ -370,7 +373,7 @@ jobs:
         path: |
           ${{ env.OPAMBSROOT }}/**
           ~/.cache/opam-local/bin/**
-        key: opam-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
+        key: opam-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ needs.Analyse.outputs.opam-bs-cache }}
     - name: Create opam bootstrap cache
       if: steps.opam-bootstrap.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
@@ -422,7 +425,7 @@ jobs:
         path: |
           ${{ env.OPAMBSROOT }}/**
           ~/.cache/opam-local/bin/**
-        key: opam-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
+        key: opam-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ needs.Analyse.outputs.opam-bs-cache }}
     - name: Create opam bootstrap cache
       if: steps.opam-bootstrap.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
@@ -511,7 +514,7 @@ jobs:
         path: |
           ${{ env.OPAMBSROOT }}/**
           ~/.cache/opam-local/bin/**
-        key: opam-${{ matrix.solver }}-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
+        key: opam-${{ matrix.solver }}-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ needs.Analyse.outputs.opam-bs-cache }}
     - name: Create opam bootstrap cache
       if: steps.opam-bootstrap.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
@@ -557,7 +560,7 @@ jobs:
         path: |
           ${{ env.OPAMBSROOT }}/**
           ~/.cache/opam-local/bin/**
-        key: opam-${{ matrix.solver }}-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
+        key: opam-${{ matrix.solver }}-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ needs.Analyse.outputs.opam-bs-cache }}
     - name: Create opam bootstrap cache
       if: steps.opam-bootstrap.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
