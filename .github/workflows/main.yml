@@ -109,7 +109,7 @@ jobs:
       run: bash -exu .github/scripts/main/legacy-cache.sh
 
   Cygwin:
-    runs-on: windows-latest
+    runs-on: windows-2019
     needs: Analyse
     steps:
     - name: Cygwin32 Cache
@@ -179,7 +179,7 @@ jobs:
       run: bash -exu .github/scripts/main/test.sh
 
   Build-Windows:
-    runs-on: windows-latest
+    runs-on: windows-2019
     needs: [ Analyse, Cygwin ]
     strategy:
       matrix:

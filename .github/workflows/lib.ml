@@ -92,7 +92,7 @@ let jobs = Hashtbl.create 15
 let find_need need = Hashtbl.find jobs need
 
 let emit_runs_on ~oc runs_on =
-  let runner_of_platform platform = runner_of_platform platform ^ "-latest" in
+  let runner_of_platform platform = if platform = Windows then "windows-2019" else runner_of_platform platform ^ "-latest" in
   let value =
     match runs_on with
     | Runner [platform] ->
