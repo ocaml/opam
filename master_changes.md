@@ -22,6 +22,7 @@ users)
   * Refresh the actions list output, now sorted by action/package rather than dependency [#5045 @kit-ty-kate @AltGr - fix #5041]
   * Put back the actions summary as part of confirmation question [#5045 @AltGr]
   * Error report display: print action name [#5045 @AltGr]
+  * Refactored depext-related questions, with a flat menu instead of nested y/n questions [#5053 @AltGr - fix #5026]
 
 ## Plugins
   *
