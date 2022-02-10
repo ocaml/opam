@@ -1112,7 +1112,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     else
       OpamSysPkg.Set.empty
   in
-  let pkg_manager_name =
+  let pkg_manager_name () =
     match OpamSysInteract.install_packages_commands OpamSysPkg.Set.empty with
     | (pkgman, _) :: _ -> pkgman
     | [] -> assert false
@@ -1143,7 +1143,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     let answer =
       OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
         "Let opam run %s to install the required system packages?"
-        (OpamConsole.colorise `yellow pkg_manager_name)
+        (OpamConsole.colorise `yellow (pkg_manager_name ()))
         ~options:[
           `Yes, "yes", "(may need root/sudo access)";
           `No, "no", "let me do the installation";
