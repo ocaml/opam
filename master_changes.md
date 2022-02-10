@@ -153,6 +153,7 @@ users)
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
+  * Small update to GHA scripts [#5055 @dra27]
 
 ## Admin
   * ✘ `opam admin cache` now ignores all already present cache files. Option
