@@ -126,7 +126,7 @@ val confirm:
   ?require_unsafe_yes:bool -> ?default:bool ->
   ('a, unit, string, bool) format4 -> 'a
 
-(** Prompts the user with multiple choices [(shortcut, answer, message)]. The
+(** Prompts the user with multiple choices [(answer, shortcut, message)]. The
     shortcuts must be lowercase and start with different characters.
 
     [unsafe_yes], [yes] are the options to choose if the corresponding global
@@ -135,8 +135,8 @@ val confirm:
     [default] is the option to choose on an active empty input ("\n"). *)
 val menu:
   ?default:'a -> ?unsafe_yes:'a -> ?yes:'a -> no:'a ->
-  (string * 'a * string) list ->
-  ('a, unit, string, 'a) format4 -> 'a
+  options:('a * string * string) list ->
+  ('b, unit, string, 'a) format4 -> 'b
 
 (** Read some input from the user (returns a string option) *)
 val read: ('a, unit, string, string option) format4 -> 'a

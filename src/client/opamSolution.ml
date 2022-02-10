@@ -1140,17 +1140,17 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     else
       manual_install t sys_packages
   and menu t sys_packages =
-    OpamConsole.msg
-      "\nLet opam run %s to install the required system packages?\n"
-      (OpamConsole.colorise `yellow pkg_manager_name);
     let answer =
       OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
-        [ "yes", `Yes, "(may need root/sudo access)";
-          "no", `No, "let me do the installation";
-          "ignore", `Ignore, "and continue, bypassing the checks (similar to \
-                              --assume-depexts)";
-          "quit", `Quit, "and abort"; ]
-        "Please choose one of the above."
+        "Let opam run %s to install the required system packages?"
+        (OpamConsole.colorise `yellow pkg_manager_name)
+        ~options:[
+          `Yes, "yes", "(may need root/sudo access)";
+          `No, "no", "let me do the installation";
+          `Ignore, "ignore", "and continue, registering an exception (similar \
+                              to --assume-depexts)";
+          `Quit, "quit", "and abort";
+        ]
     in
     OpamConsole.msg "\n";
     match answer with
@@ -1158,8 +1158,10 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     | `No ->
       OpamConsole.note "Use 'opam option depext-run-installs=false' \
                         if you don't want to be prompted again.";
+      OpamConsole.msg "\n";
       print_command sys_packages;
       OpamConsole.pause "Standing by, press enter to continue when done.";
+      OpamConsole.msg "\n";
       check_again t sys_packages
     | `Ignore -> bypass t
     | `Quit -> give_up_msg (); OpamStd.Sys.exit_because `Aborted
@@ -1173,16 +1175,18 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
        | [_] -> "This command should get the requirements installed:\n"
        | _ -> "These commands should get the requirements installed:\n");
     OpamConsole.msg "\n    %s\n\n"
-      (OpamStd.List.concat_map "\n    " (String.concat " ") commands)
+      (OpamConsole.colorise `bold
+         (OpamStd.List.concat_map "\n    " (String.concat " ") commands))
   and manual_install t sys_packages =
     print_command sys_packages;
     let answer =
-      OpamConsole.menu ~yes:`Continue ~no:`Quit
-        [ "yes", `Continue, "packages installed, continue normally";
-          "ignore", `Ignore, "and continue, bypassing the checks (similar to \
+      OpamConsole.menu ~default:`Continue ~no:`Quit "Continue?"
+        ~options:[
+          `Continue, "yes", "packages installed, continue normally";
+          `Ignore, "ignore", "and continue, bypassing the checks (similar to \
                               --assume-depexts)";
-          "quit", `Quit, "and abort"; ]
-        "Continue?"
+          `Quit, "quit", "and abort";
+        ]
     in
     OpamConsole.msg "\n";
     match answer with
@@ -1203,7 +1207,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
       map_sysmap (fun sysp -> OpamSysPkg.Set.diff sysp installed) t, needed
     in
     if OpamSysPkg.Set.is_empty sys_packages then t else
-      (OpamConsole.warning "These packages are still missing: %s"
+      (OpamConsole.warning "These packages are still missing: %s\n"
          (syspkgs_to_string sys_packages);
          entry_point t sys_packages)
   and bypass t =
@@ -1227,6 +1231,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   else
   try
     OpamConsole.header_msg "Handling external dependencies";
+    OpamConsole.msg "\n";
     entry_point t sys_packages
   with Sys.Break as e -> OpamStd.Exn.finalise e give_up_msg
 
