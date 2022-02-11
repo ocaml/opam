@@ -1141,15 +1141,19 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
       manual_install t sys_packages
   and menu t sys_packages =
     let answer =
+      let pkgman = OpamConsole.colorise `yellow (pkg_manager_name ()) in
       OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
-        "Let opam run %s to install the required system packages?"
-        (OpamConsole.colorise `yellow (pkg_manager_name ()))
+        "opam believes some required external dependencies are missing. opam \
+         can:"
         ~options:[
-          `Yes, "yes", "(may need root/sudo access)";
-          `No, "no", "let me do the installation";
-          `Ignore, "ignore", "and continue, registering an exception (similar \
-                              to --assume-depexts)";
-          `Quit, "quit", "and abort";
+          `Yes, Printf.sprintf
+            "Run %s to install them (may need root/sudo access)" pkgman;
+          `No, Printf.sprintf
+            "Display the recommended %s command and wait while you run it \
+             manually (e.g. in another terminal)" pkgman;
+          `Ignore, "Attempt installation anyway, and permanently register that \
+                    this external dependency is present, but not detectable";
+          `Quit, "Abort the installation";
         ]
     in
     OpamConsole.msg "\n";
@@ -1180,12 +1184,12 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   and manual_install t sys_packages =
     print_command sys_packages;
     let answer =
-      OpamConsole.menu ~default:`Continue ~no:`Quit "Continue?"
+      OpamConsole.menu ~default:`Continue ~no:`Quit "Would you like opam to:"
         ~options:[
-          `Continue, "yes", "packages installed, continue normally";
-          `Ignore, "ignore", "and continue, bypassing the checks (similar to \
-                              --assume-depexts)";
-          `Quit, "quit", "and abort";
+          `Continue, "Check again, as the package is now installed";
+          `Ignore, "Attempt installation anyway, and permanently register that \
+                    this external dependency is present, but not detectable";
+          `Quit, "Abort the installation";
         ]
     in
     OpamConsole.msg "\n";
@@ -1207,7 +1211,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
       map_sysmap (fun sysp -> OpamSysPkg.Set.diff sysp installed) t, needed
     in
     if OpamSysPkg.Set.is_empty sys_packages then t else
-      (OpamConsole.warning "These packages are still missing: %s\n"
+      (OpamConsole.error "These packages are still missing: %s\n"
          (syspkgs_to_string sys_packages);
          entry_point t sys_packages)
   and bypass t =

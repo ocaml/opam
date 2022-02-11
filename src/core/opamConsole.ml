@@ -696,6 +696,12 @@ let header_error fmt =
 
 (* Reads a single char from the user when possible, a line otherwise *)
 let short_user_input ~prompt ?default f =
+  let prompt () = match default with
+    | Some x ->
+      msg "%s%s" prompt x; carriage_delete (); print_string prompt
+    | None ->
+      print_string prompt; flush stdout
+  in
   try
     if OpamStd.Sys.(not tty_out || os () = Win32 || os () = Cygwin) then
       let rec loop () =
@@ -712,12 +718,14 @@ let short_user_input ~prompt ?default f =
     else
     let open Unix in
     prompt ();
-    let buf = Bytes.create 1 in
+    let buf = Bytes.create 3 in
     let rec loop () =
       let input =
         match
-          if read stdin buf 0 1 = 0 then raise End_of_file
-          else String.lowercase_ascii (Bytes.to_string buf)
+          (* Some keystrokes, e.g. arrows, can return 3 chars *)
+          let nr = read stdin buf 0 3 in
+          if nr < 1 then raise End_of_file
+          else String.uncapitalize_ascii (Bytes.sub_string buf 0 nr)
         with
         | "\n" -> default
         | s -> Some s
@@ -727,7 +735,9 @@ let short_user_input ~prompt ?default f =
       match input with
       | None -> loop ()
       | Some i -> match f i with
-        | Some a -> print_endline i; a
+        | Some a ->
+          if String.length i > 0 && i.[0] <> '\027' then print_endline i;
+          a
         | None -> loop ()
     in
     let attr = tcgetattr stdin in
@@ -754,8 +764,11 @@ let short_user_input ~prompt ?default f =
 let pause fmt =
   if OpamStd.Sys.tty_in then
     Printf.ksprintf (fun s ->
-        short_user_input ~prompt:(fun () -> formatted_msg "%s" s) ~default:""
-        @@ fun _ -> Some ())
+        let prompt = OpamStd.Format.reformat s in
+        short_user_input ~prompt ~default:""
+        @@ function
+        | "\027" -> OpamStd.Sys.exit_because `Aborted
+        | _ -> Some ())
       fmt
   else
     Printf.ifprintf () fmt
@@ -763,22 +776,25 @@ let pause fmt =
 let confirm ?(require_unsafe_yes=false) ?(default=true) fmt =
   Printf.ksprintf (fun s ->
       if OpamCoreConfig.(!r.safe_mode) then false else
-      let prompt () =
-        formatted_msg "%s [%s] " s (if default then "Y/n" else "y/N")
+      let prompt =
+        Printf.ksprintf OpamStd.Format.reformat "%s [%s/%s] " s
+          (colorise' (`blue :: if default then [`underline] else []) "y")
+          (colorise' (`blue :: if default then [] else [`underline]) "n")
       in
       if OpamCoreConfig.answer_is `unsafe_yes ||
          not require_unsafe_yes && OpamCoreConfig.answer_is_yes ()
       then
-        (prompt (); msg "y\n"; true)
+        (msg "%sy\n" prompt; true)
       else if OpamCoreConfig.answer_is `all_no ||
               OpamStd.Sys.(not tty_in)
       then
-        (prompt (); msg "n\n"; false)
+        (msg "%sn\n" prompt; false)
       else
         short_user_input ~prompt ~default:(if default then "y" else "n")
         @@ function
         | "y" | "yes" -> Some true
         | "n" | "no" -> Some false
+        | "\027" -> Some false (* echap *)
         | _  -> None)
     fmt
 
@@ -915,65 +931,42 @@ let print_table ?cut oc ~sep table =
   List.iter (fun l -> print_line (cleanup_trailing l)) table
 
 let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
-  let _cmd_chars =
-    List.fold_right (fun (_, s, _) chars ->
-        assert (String.length s > 0 && not (List.mem s.[0] chars));
-        s.[0] :: chars)
-      options []
+  assert (List.length options < 10);
+  let options_nums =
+    List.mapi (fun n (ans, _) -> ans, string_of_int (n+1)) options
   in
+  let nums_options = List.map (fun (a, n) -> n, a) options_nums in
   Printf.ksprintf (fun prompt_msg ->
       formatted_msg "%s\n" prompt_msg;
-      List.map (fun (ans, str, msg) ->
-          let is_default = Some ans = default in
-          let color = if is_default then [`bold; `yellow] else [`yellow] in
-          let c =
-            let c = String.sub str 0 1 in
-            if is_default then String.uppercase_ascii c else c
-          in
-          [ Printf.sprintf "  - [%s%s]"
-              (colorise' (`underline::color) c)
-              (colorise' color (String.sub str 1 (String.length str-1)));
-            msg ])
-        options
-      |> OpamStd.Format.align_table
-      |> print_table stdout ~sep:"  ";
+      List.iter (fun (ans, n) ->
+          formatted_msg ~indent:5 "  %s. %s\n"
+            (colorise `blue n)
+            (List.assoc ans options))
+        options_nums;
       let default_s =
-        let open OpamStd.Option.Op in
-        default
-        >>| (fun df -> List.find (fun (ans, _, _) -> ans = df) options)
-        >>| (fun (_, s, _) -> s)
+        OpamStd.Option.map (fun a -> (List.assoc a options_nums)) default
       in
-      let options_str =
-        OpamStd.List.concat_map "/" (fun (ans, s, _) ->
-            let c = String.sub s 0 1 in
-            if Some ans = default then
-              colorise' [`bold; `yellow] (String.uppercase_ascii c)
-            else
-              colorise `yellow c)
-          options
+      let prompt =
+        Printf.sprintf "\n> [%s] "
+          (OpamStd.List.concat_map "/" (fun (n, a) ->
+               colorise'
+                 (`blue :: if Some a = default then [`underline] else [])
+                 n)
+              nums_options)
       in
-      let prompt () = formatted_msg "\n> [%s] " options_str in
       let select a =
-        let (_, s, _) = List.find (fun (a1, _, _) -> a = a1) options in
-        msg "%c" s.[0];
-        a
+        msg "%s" (List.assoc a options_nums); a
       in
       if OpamCoreConfig.(!r.safe_mode) then no else
       match OpamCoreConfig.answer(), unsafe_yes, yes with
-      | `unsafe_yes, Some a, _ -> prompt(); select a
-      | #OpamStd.Config.yes_answer, _, Some a -> prompt (); select a
-      | `all_no, _, _ -> prompt (); select no
+      | `unsafe_yes, Some a, _ -> print_string prompt; select a
+      | #OpamStd.Config.yes_answer, _, Some a -> print_string prompt; select a
+      | `all_no, _, _ -> print_string prompt; select no
       | _, _, _ ->
         short_user_input ~prompt ?default:default_s @@ function
         | "" -> None
         | "\027" -> Some (select no) (* echap *)
-        | i -> match
-            OpamStd.List.find_opt
-              (fun (_, s, _) -> OpamStd.String.starts_with ~prefix:i s)
-              options
-          with
-          | Some  (a, _, _) -> Some a
-          | None -> None
+        | i -> OpamStd.List.assoc_opt i nums_options
     ) fmt
 
 (* This allows OpamStd.Config.env to display warning messages *)

@@ -175,14 +175,14 @@ GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
             - At ${BASEDIR}/OPAM/config:7:0-7:8::
               Invalid field neant
 
-Switch foo and all its packages will be wiped. Are you sure? [Y/n] y
+Switch foo and all its packages will be wiped. Are you sure? [y/n] y
 ### :I:1:b: Good config file
 ### opam switch create foo --empty --debug-level=0
 ### cp config-w-swfoo.$OPAMROOTVERSION $OPAMROOT/config
 ### # rw global state
 ### opam switch remove foo
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-Switch foo and all its packages will be wiped. Are you sure? [Y/n] y
+Switch foo and all its packages will be wiped. Are you sure? [y/n] y
 ### :                                                :
 ### :II: Current opam root & newer opam file version :
 ### :                                                :
@@ -697,7 +697,7 @@ FMT_UPG                         Light config upgrade, from 2.0 to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version current, which can't be reverted.
 You may want to back it up before going further.
 
-Continue? [Y/n] y
+Continue? [y/n] y
 Format upgrade done.
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -772,7 +772,7 @@ FMT_UPG                         Light config upgrade, from 2.0 to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version current, which can't be reverted.
 You may want to back it up before going further.
 
-Continue? [Y/n] y
+Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
@@ -846,7 +846,7 @@ FMT_UPG                         Light config upgrade, from 2.0 to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version current, which can't be reverted.
 You may want to back it up before going further.
 
-Continue? [Y/n] y
+Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
@@ -950,7 +950,7 @@ FMT_UPG                         Light config upgrade, from 2.0 to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version current, which can't be reverted.
 You may want to back it up before going further.
 
-Continue? [Y/n] y
+Continue? [y/n] y
 Format upgrade done.
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -999,7 +999,7 @@ FMT_UPG                         Hard config upgrade, from 2.1~alpha to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha to version current which can't be reverted.
 You may want to back it up before going further.
 
-Perform the update and continue? [Y/n] y
+Perform the update and continue? [y/n] y
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1085,7 +1085,7 @@ FMT_UPG                         Hard config upgrade, from 2.1~alpha to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha to version current which can't be reverted.
 You may want to back it up before going further.
 
-Perform the update and continue? [Y/n] y
+Perform the update and continue? [y/n] y
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1154,7 +1154,7 @@ FMT_UPG                         Hard config upgrade, from 2.1~alpha to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha to version current which can't be reverted.
 You may want to back it up before going further.
 
-Perform the update and continue? [Y/n] y
+Perform the update and continue? [y/n] y
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1285,7 +1285,7 @@ FMT_UPG                         Hard config upgrade, from 2.1~alpha to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha to version current which can't be reverted.
 You may want to back it up before going further.
 
-Perform the update and continue? [Y/n] y
+Perform the update and continue? [y/n] y
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1342,7 +1342,7 @@ FMT_UPG                         Hard config upgrade, from 2.1~alpha2 to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha2 to version current which can't be reverted.
 You may want to back it up before going further.
 
-Perform the update and continue? [Y/n] y
+Perform the update and continue? [y/n] y
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1430,7 +1430,7 @@ FMT_UPG                         Hard config upgrade, from 2.1~alpha2 to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha2 to version current which can't be reverted.
 You may want to back it up before going further.
 
-Perform the update and continue? [Y/n] y
+Perform the update and continue? [y/n] y
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1501,7 +1501,7 @@ FMT_UPG                         Hard config upgrade, from 2.1~alpha2 to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha2 to version current which can't be reverted.
 You may want to back it up before going further.
 
-Perform the update and continue? [Y/n] y
+Perform the update and continue? [y/n] y
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1633,7 +1633,7 @@ FMT_UPG                         Hard config upgrade, from 2.1~alpha2 to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~alpha2 to version current which can't be reverted.
 You may want to back it up before going further.
 
-Perform the update and continue? [Y/n] y
+Perform the update and continue? [y/n] y
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1722,7 +1722,7 @@ FMT_UPG                         Light config upgrade, from 2.1~rc to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~rc to version current which can't be reverted.
 You may want to back it up before going further.
 
-Continue? [Y/n] y
+Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
@@ -1785,7 +1785,7 @@ FMT_UPG                         Light config upgrade, from 2.1~rc to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~rc to version current which can't be reverted.
 You may want to back it up before going further.
 
-Continue? [Y/n] y
+Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
@@ -1850,7 +1850,7 @@ FMT_UPG                         Light config upgrade, from 2.1~rc to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~rc to version current which can't be reverted.
 You may want to back it up before going further.
 
-Continue? [Y/n] y
+Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
@@ -1941,7 +1941,7 @@ FMT_UPG                         Light config upgrade, from 2.1~rc to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1~rc to version current which can't be reverted.
 You may want to back it up before going further.
 
-Continue? [Y/n] y
+Continue? [y/n] y
 Format upgrade done.
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
