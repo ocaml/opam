@@ -25,6 +25,7 @@ users)
 
 ## Init
   * Run the sandbox check in the temporary directory [#4787 @dra27 - fix #4783]
+  * [BUG] Fix `opam init` and `opam init --reinit` when the `jobs` variable has been set in the opamrc or the current config. [#5056 @rjbou]
 
 ## Config report
   *
@@ -258,6 +259,7 @@ users)
 ## opam-client
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamCLIVersion` [#4918 @rjbou]
   * `OpamConfigCommand`: add a labelled argument `no_switch` to `exec` [#4957 @kit-ty-kate]
+  * `OpamClient`: fix `update_with_init_config`, when ``jobs` was set in `init_config`, it dropped rest of `config` update [#5056 @rjbou]
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
 ## opam-state
