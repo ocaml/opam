@@ -698,7 +698,11 @@ let header_error fmt =
 let short_user_input ~prompt ?default f =
   let prompt () = match default with
     | Some x ->
-      msg "%s%s" prompt x; carriage_delete (); print_string prompt
+      msg "%s%s" prompt x;
+      carriage_delete ();
+      (match List.rev (OpamStd.String.split prompt '\n') with
+       | lastline::_ -> print_string lastline
+       | [] -> ())
     | None ->
       print_string prompt; flush stdout
   in
