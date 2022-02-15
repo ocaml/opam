@@ -458,6 +458,12 @@ let carriage_delete =
   else
     carriage_delete_unix
 
+let rollback_terminal nlines =
+  for _ = 1 to nlines do
+    carriage_delete ();
+    Printf.printf "\027[A"
+  done
+
 let displaying_status = ref false
 
 let clear_status_unix () =
@@ -788,11 +794,11 @@ let confirm ?(require_unsafe_yes=false) ?(default=true) fmt =
       if OpamCoreConfig.answer_is `unsafe_yes ||
          not require_unsafe_yes && OpamCoreConfig.answer_is_yes ()
       then
-        (msg "%sy\n" prompt; true)
+        (formatted_msg "%sy\n" prompt; true)
       else if OpamCoreConfig.answer_is `all_no ||
               OpamStd.Sys.(not tty_in)
       then
-        (msg "%sn\n" prompt; false)
+        (formatted_msg "%sn\n" prompt; false)
       else
         short_user_input ~prompt ~default:(if default then "y" else "n")
         @@ function
@@ -977,8 +983,7 @@ let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
       let default_ref = ref default in
       let change_selection =
         fun opt ->
-          carriage_delete ();
-          Printf.printf "\027[%dA" nlines; (* restore cursor pos *)
+          rollback_terminal nlines; (* restore cursor pos *)
           default_ref := opt;
           raise Exit
       in
@@ -986,9 +991,9 @@ let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
         short_user_input ~prompt ~default:default_s @@ function
         | "" -> None
         | "\027" -> Some (select no) (* echap *)
-        | "\027[A" -> (* up *)
+        | "\027[A" (* up *) | "\027[D" (* left *) ->
           change_selection (prev_option default options)
-        | "\027[B" -> (* down *)
+        | "\027[B" (* down *) | "\027[C" (* right *) ->
           change_selection (prev_option default (List.rev options))
         | i -> OpamStd.List.assoc_opt i nums_options
       with Exit -> menu !default_ref
