@@ -530,6 +530,23 @@
    (run ./run.exe %{bin:opam} %{dep:switch-invariant.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-switch-set)
+ (action
+  (diff switch-set.test switch-set.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-switch-set)))
+
+(rule
+ (targets switch-set.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:switch-set.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-upgrade-format)
  (action
   (diff upgrade-format.test upgrade-format.out)))

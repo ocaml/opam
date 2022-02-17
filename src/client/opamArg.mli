@@ -307,7 +307,9 @@ val bad_subcommand:
 
 val mk_subdoc :
   cli:OpamCLIVersion.Sourced.t ->
-  ?defaults:(string * string) list -> 'a subcommands -> Manpage.block list
+  ?defaults:(string * string) list ->
+  ?extra_defaults:(validity * string * string) list ->
+  'a subcommands -> Manpage.block list
 (** [mk_subdoc cmds] is the documentation block for [cmds]. *)
 
 val make_command_alias:

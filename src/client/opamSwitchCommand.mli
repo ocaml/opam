@@ -66,6 +66,9 @@ val remove: rw global_state -> ?confirm:bool -> switch -> rw global_state
 (** Changes the currently active switch *)
 val switch: 'a lock -> rw global_state -> switch -> unit
 
+(** Changes the currently active switch to the previous active switch *)
+val switch_previous: 'a lock -> rw global_state -> unit
+
 (** Reinstall the given compiler switch. *)
 val reinstall: rw switch_state -> rw switch_state
 

@@ -462,7 +462,7 @@ let mk_enum_opt_all ~cli validity ?section flags value states doc =
 type 'a subcommand = validity * string * 'a * string list * string
 type 'a subcommands = 'a subcommand list
 
-let mk_subdoc ~cli ?(defaults=[]) commands =
+let mk_subdoc ~cli ?(defaults=[]) ?(extra_defaults=[]) commands =
   let bold s = Printf.sprintf "$(b,%s)" s in
   let it s = Printf.sprintf "$(i,%s)" s in
   `S Manpage.s_commands ::
@@ -474,6 +474,9 @@ let mk_subdoc ~cli ?(defaults=[]) commands =
          `I (it arg, Printf.sprintf "With a %s argument, defaults to %s %s."
                (it arg) (bold default) (it arg))
      ) defaults) @
+  (List.map (fun (validity, arg, doc) ->
+       `I (it arg, update_doc_w_cli doc ~cli validity))
+      extra_defaults) @
   List.map (fun (validity, c, _, args,d) ->
       let cmds = bold c ^ " " ^ OpamStd.List.concat_map " " it args in
       let d = update_doc_w_cli d ~cli validity in

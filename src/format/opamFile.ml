@@ -1265,6 +1265,14 @@ module ConfigSyntax = struct
   let repositories t = t.repositories
   let installed_switches t = t.installed_switches
   let switch t = t.switch
+  let previous_switch t =
+    let not_current = match t.switch with
+      | Some switch -> fun x -> not (OpamSwitch.equal switch x)
+      | None -> fun _ -> true
+    in
+    OpamStd.List.find_opt (fun switch ->
+        not_current switch && not (OpamSwitch.is_external switch))
+      t.installed_switches
   let jobs t = t.jobs
   let dl_tool t = t.dl_tool
   let dl_jobs t = t.dl_jobs
@@ -1295,8 +1303,16 @@ module ConfigSyntax = struct
   let with_repositories repositories t = { t with repositories }
   let with_installed_switches installed_switches t =
     { t with installed_switches }
-  let with_switch_opt switch t = { t with switch }
-  let with_switch switch t = { t with switch = Some switch }
+  let with_switch switch t =
+    let installed_switches =
+      switch :: List.filter (fun x -> not (OpamSwitch.equal switch x))
+        t.installed_switches
+    in
+    { t with switch = Some switch; installed_switches }
+  let with_switch_opt switch_opt t =
+    match switch_opt with
+    | Some switch -> with_switch switch t
+    | None -> { t with switch = None }
   let with_jobs jobs t = { t with jobs = Some jobs}
   let with_jobs_opt jobs t = { t with jobs }
   let with_dl_tool dl_tool t = { t with dl_tool = Some dl_tool }
