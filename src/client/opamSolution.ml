@@ -451,7 +451,19 @@ let parallel_apply t
   let sources_needed =
     let sources_needed = OpamAction.sources_needed t action_graph in
     if not OpamClientConfig.(!r.working_dir) then sources_needed else
-      OpamPackage.Set.Op.(sources_needed -- requested)
+    let no_sources = OpamPackage.Set.Op.(requested %% t.pinned) in
+    let no_sources =
+      OpamPackage.Set.filter (fun nv ->
+          OpamStd.Option.Op.(OpamSwitchState.primary_url t nv
+                             >>= OpamUrl.local_dir) <> None)
+        no_sources
+    in
+    if OpamPackage.Set.is_empty no_sources then
+      (OpamConsole.note
+         "--working-dir is given but no requested package is pinned";
+       sources_needed)
+    else
+      OpamPackage.Set.Op.(sources_needed -- no_sources)
   in
 
   (* 1/ process the package actions (fetch, build, installations and removals) *)
