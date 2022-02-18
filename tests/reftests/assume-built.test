@@ -121,6 +121,7 @@ Done.
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not active).
 [ongoing.dev] synchronised (no changes)
 
+[WARNING] Package qux is not pinned locally and assume built option is set, skipping
 The following actions will be performed:
 === install 1 package
   - install ongoing dev (pinned)
