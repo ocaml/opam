@@ -919,9 +919,10 @@ let filter_unpinned_locally t atoms f =
       then
         Some (f at)
       else
-        (log "Package %a is not pinned locally and assume built \
-              option is set, skipping"
-           (slog OpamPackage.Name.to_string) n;
+        (OpamConsole.warning
+           "Package %s is not pinned locally and assume built \
+            option is set, skipping"
+           (OpamPackage.Name.to_string n);
          None))
     atoms
 
