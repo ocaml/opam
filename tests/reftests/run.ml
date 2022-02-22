@@ -653,7 +653,12 @@ let run_test ?(vars=[]) ~opam t =
           vars
         | Export bindings ->
           List.fold_left
-            (fun vars (v, r) -> (v, r) :: List.filter (fun (w, _) -> v <> w) vars)
+            (fun vars (v, r) ->
+               let r =
+                 str_replace_path ~escape:`Backslashes
+                   OpamSystem.forward_to_back (filters_of_var vars) r
+               in
+               (v, r) :: List.filter (fun (w, _) -> not (String.equal v w)) vars)
             vars bindings
         | Cat { files; filter } ->
           let files =
