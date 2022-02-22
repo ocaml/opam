@@ -18,7 +18,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Install
-  *
+  * Better recognize depexts on Gentoo, NetBSD, OpenBSD [#5065 @mndrix]
 
 ## Remove
   *
