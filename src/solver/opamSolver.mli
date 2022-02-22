@@ -52,11 +52,11 @@ val print_solution:
 val solution_to_json : solution OpamJson.encoder
 val solution_of_json : solution OpamJson.decoder
 
-(** Computes an opam->cudf version map from a set of package *)
-val cudf_versions_map: universe -> package_set -> int OpamPackage.Map.t
+(** Computes an opam->cudf version map from an universe *)
+val cudf_versions_map: universe -> int OpamPackage.Map.t
 
 (** Creates a CUDF universe from an OPAM universe, including the given packages.
-    Evaluation of the first 4 arguments is staged. Warning: when [depopts] is
+    Evaluation of the first 3 arguments is staged. Warning: when [depopts] is
     [true], the optional dependencies may become strong dependencies.
 
     Use [add_invariant] if you expect to call the solver and need the switch
@@ -64,9 +64,9 @@ val cudf_versions_map: universe -> package_set -> int OpamPackage.Map.t
     [Cudf.remove_package universe OpamCudf.opam_invariant_package]
     before exporting the results *)
 val load_cudf_universe:
-  universe -> ?version_map:int package_map -> ?add_invariant:bool ->
+  universe -> ?version_map:int package_map ->
   package_set ->
-  ?depopts:bool -> build:bool -> post:bool -> unit ->
+  ?add_invariant:bool -> ?depopts:bool -> build:bool -> post:bool -> unit ->
   Cudf.universe
 
 (** Build a request. [all] defaults to all atoms concerned by any action, and is
@@ -151,9 +151,10 @@ val atom_coinstallability_check : universe -> atom list -> bool
 
 (** [coinstallable_subset univ set packages] returns the subset of [packages]
     which are individually co-installable with [set], i.e. that can be installed
-    if [set] while [set] remains installed. This returns the empty set if [set]
-    is already not coinstallable. *)
-val coinstallable_subset : universe -> package_set -> package_set -> package_set
+    while [set] remains installed. This returns the empty set if [set]
+    is already not coinstallable. `add_invariant` defaults to [true] *)
+val coinstallable_subset :
+  universe -> ?add_invariant:bool -> package_set -> package_set -> package_set
 
 (** Dumps a cudf file containing all available packages in the given universe,
     plus version bindings (as '#v2v' comments) for the other ones. *)

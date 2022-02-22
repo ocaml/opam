@@ -68,6 +68,10 @@ val reverse_dependencies: Cudf.universe -> Set.t -> Set.t
    if the universe was loaded with [post] dependencies enabled) *)
 val dependency_sort: Cudf.universe -> Set.t -> Cudf.package list
 
+(** Pre-process a universe to remove incompatible/unneeded packages and ease the
+    task of the solvers *)
+val trim_universe: Cudf.universe -> Set.t -> Cudf.universe
+
 (** Check if a request is satisfiable and return the reasons why not unless
     [explain] is set to [false] *)
 val check_request:

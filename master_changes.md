@@ -54,6 +54,7 @@ users)
   * Some optimisations to 'opam list --installable' queries combined with other filters [#4882 @altgr - fix #4311]
   * Improve performance of some opam list combination (e.g. --available --installable) [#4999 @kit-ty-kate]
   * Improve performance of opam list --conflicts-with when combined with other filters [#4999 @kit-ty-kate]
+  * Fix coinstallability filter corner case [#5024 @AltGr]
 
 ## Show
   * Add `depexts` to default printer [#4898 @rjbou]
@@ -167,6 +168,7 @@ users)
   * Orphan packages are now handled at the solver level instead of a pre-processing phase, better ensuring consistency [#4969 @altgr]
   * Make the 0install solver non-optional [#4909 @kit-ty-kate]
   * Optimised reverse dependencies calculation [#5005 @AltGr]
+  * Enable cudf preprocessing for (co)insallability calculation, resulting in a x20 speedup [@AltGr]
 
 ## Client
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
@@ -206,6 +208,7 @@ users)
   * Add clean test for untracked option [#4915 @rjbou]
   * Harmonise some repo hash to reduce opam repository checkout [#5031 @AltGr]
   * Add repo optim enable/disable test [#5015 @rjbou]
+  * Update list with co-instabillity [#5024 @AltGr]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
@@ -228,6 +231,7 @@ users)
   * Make all the tests work on macOS/arm64 [#5019 @kit-ty-kate]
   * Add unix only tests handling [#5031 @AltGr]
   * Add switch-set test [#4910 @kit-ty-kate]
+  * Replace vars on the right-hand of exports [#5024 @AltGr]
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]
@@ -270,6 +274,10 @@ users)
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
   * `OpamCudf`: add `conflict_cycles` [#4039 @gasche]
+  * `OpamCudf`: add `trim_universe` [#5024 @AltGr]
+  * `OpamSolver.cudf_versions_map`: no more takes a package set as argument, compute whole packages (repo + installed) and take accounet of invariant [#5024 @AltGr]
+  * `OpamSolver.load_cudf_universe`: change staging of `add_invariant` [#5024 @AltGr]
+  * `OpamSolver.coinstallable_subset`: add `add_inaviant` optional argument [#5024 @AltGr]
 ## opam-format
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamSysPkg` and `OpamVariable` [#4918 @rjbou]
   * Add OpamPackage.Version.default returning the version number used when no version is given for a package [#4949 @kit-ty-kate]
