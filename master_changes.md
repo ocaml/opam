@@ -32,6 +32,7 @@ users)
 
 ## Install
   * Make the status of pinned packages more explicit during installation [#4987 @kit-ty-kate - fix #4925]
+  * Better recognize depexts on Gentoo, NetBSD, OpenBSD [#5065 @mndrix]
 
 ## Remove
   *
