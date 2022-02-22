@@ -193,11 +193,17 @@ let packages_status packages =
         let short_name =
           match String.rindex pkg '/' with
           | exception Not_found -> pkg
-          | idx -> String.sub pkg idx (String.length pkg - idx)
+          | idx -> String.sub pkg (idx+1) (String.length pkg - idx - 1)
+        in
+        let no_flavor =
+          match String.index short_name ',' with
+          | exception Not_found -> short_name
+          | idx -> String.sub short_name 0 idx
         in
         set
         |> OpamSysPkg.Set.add (OpamSysPkg.of_string pkg)
         |> OpamSysPkg.Set.add (OpamSysPkg.of_string short_name)
+        |> OpamSysPkg.Set.add (OpamSysPkg.of_string no_flavor)
       ) OpamSysPkg.Set.empty l
   in
   let compute_sets_with_virtual get_avail_w_virtuals get_installed  =
