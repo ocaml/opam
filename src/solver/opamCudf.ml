@@ -466,6 +466,13 @@ let strong_and_weak_deps u deps =
     (OpamStd.String.Map.empty, OpamStd.String.Map.empty)
     deps
 
+let expand_deps u (deps: Cudf_types.vpkgformula) =
+  List.map (fun clause ->
+      List.concat_map (fun (name, cstr) ->
+          Cudf.lookup_packages ~filter:cstr u name
+      ) clause
+  ) deps
+
 (* From a CUDF dependency CNF, extract the set of packages that can possibly be
    part of a solution.
 
@@ -568,6 +575,33 @@ module Graph = struct
   let mirror = PO.O.mirror
 
   include PG
+end
+
+module Hypergraph = struct
+  type t = {
+    mutable vertices : Set.t;
+    mutable edges : Set.t list Map.t;
+  }
+
+  let add_vertex g p =
+    g.vertices <- Set.add p g.vertices
+
+  let set_edges g p (pss: Cudf.package list list) =
+    g.edges <- Map.add p (List.map Set.of_list pss) g.edges
+
+  let of_universe filter_edge_source u =
+    let g = { vertices = Set.empty; edges = Map.empty } in
+    Cudf.iter_packages (fun p ->
+        add_vertex g p;
+        if filter_edge_source p then
+          set_edges g p (expand_deps u p.Cudf.depends)
+      ) u;
+    g
+
+  let iter_edges f g =
+    Map.iter (fun p es ->
+        List.iter (fun ps -> f p ps) es
+      ) g.edges
 end
 
 (** Special package used by Dose internally, should generally be filtered out *)
@@ -1776,7 +1810,7 @@ let atomic_actions ~simple_universe ~complete_universe root_actions =
   (* Build the graph of atomic actions: Removals or installs *)
   let g = ActionGraph.create () in
   Set.iter (fun p -> ActionGraph.add_vertex g (`Remove p)) to_remove;
-  Set.iter (fun p -> ActionGraph.add_vertex g (`Install (p))) to_install;
+  Set.iter (fun p -> ActionGraph.add_vertex g (`Install p)) to_install;
   (* reinstalls and upgrades: remove first *)
   Set.iter
     (fun p1 ->
@@ -1784,21 +1818,41 @@ let atomic_actions ~simple_universe ~complete_universe root_actions =
          let p2 =
            Set.find (fun p2 -> p1.Cudf.package = p2.Cudf.package) to_install
          in
-         ActionGraph.add_edge g (`Remove p1) (`Install (p2))
+         ActionGraph.add_edge g (`Remove p1) (`Install p2)
        with Not_found -> ())
     to_remove;
-  (* uninstall order *)
+  (* uninstall order: remove a package before removing *any* of its potential
+     dependencies *)
   Graph.iter_edges (fun p1 p2 ->
       ActionGraph.add_edge g (`Remove p1) (`Remove p2)
     ) (pkggraph to_remove);
   (* install order *)
-  Graph.iter_edges (fun p1 p2 ->
-      if Set.mem p1 to_install then
-        let cause =
-          if Set.mem p2 to_install then `Install ( p2) else `Remove p2
-        in
-        ActionGraph.add_edge g cause (`Install ( p1))
-    ) (pkggraph (Set.union to_install to_remove));
+  let universe_base =
+    let installed =
+      Cudf.fold_packages (fun s pkg ->
+          if pkg.Cudf.installed then Set.add pkg s else s
+        ) Set.empty complete_universe in
+    Set.diff installed to_remove
+  in
+  let universe_hgraph =
+    Hypergraph.of_universe
+      (fun p -> Set.mem p to_install || Set.mem p to_remove)
+      complete_universe
+  in
+  Hypergraph.iter_edges (fun p1 ps ->
+      if Set.mem p1 to_install then begin
+        (* if any of the packages in [ps] is already installed and will stay
+           installed, the dependency is already satisfied so there's nothing to
+           do *)
+        if not (Set.disjoint ps universe_base) then () else
+          Set.iter (fun p2 ->
+              if Set.mem p2 to_install then
+                ActionGraph.add_edge g (`Install p2) (`Install p1)
+              else if Set.mem p2 to_remove then
+                ActionGraph.add_edge g (`Remove p2) (`Install p1)
+            ) ps
+      end
+    ) universe_hgraph;
   (* conflicts *)
   let conflicts_graph =
     let filter p = Set.mem p to_remove || Set.mem p to_install in
