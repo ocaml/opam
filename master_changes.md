@@ -169,6 +169,7 @@ users)
   * Make the 0install solver non-optional [#4909 @kit-ty-kate]
   * Optimised reverse dependencies calculation [#5005 @AltGr]
   * Enable cudf preprocessing for (co)insallability calculation, resulting in a x20 speedup [@AltGr]
+  * Fix false-positive detection of cyclic dependencies [@Armael #5066 - fix #4541]
 
 ## Client
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
