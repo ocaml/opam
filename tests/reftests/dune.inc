@@ -170,6 +170,23 @@
    (run ./run.exe %{bin:opam} %{dep:cudf-preprocess.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-cyclic)
+ (action
+  (diff cyclic.test cyclic.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-cyclic)))
+
+(rule
+ (targets cyclic.out)
+ (deps root-7371c1d9)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:cyclic.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-dot-install)
  (action
   (diff dot-install.test dot-install.out)))

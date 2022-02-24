@@ -1,0 +1,13 @@
+7371c1d9
+### # False-positive fixed in https://github.com/ocaml/opam/pull/5066
+### opam switch create test --empty
+### opam install --show graphics.5.1.2 ocamlfind.1.9.1 ocamlfind-secondary.1.9.1 dune.2.9.1
+This should not fail anymore but fails?
+### # Real cycle
+### opam install --show --with-doc --with-test mdx.2.0.0 odoc.2.0.0
+[ERROR] Package conflict!
+The actions to process have cyclic dependencies:
+  - install mdx (= 15) -> install odoc (= 15) -> install mdx (= 15)
+
+No solution found, exiting
+# Return code 20 #
