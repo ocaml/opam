@@ -2,7 +2,7 @@
 
 set -eu
 
-#for target in alpine debian archlinux centos opensuse fedora oraclelinux ubuntu; do
+#for target in alpine archlinux centos debian fedora opensuse oraclelinux ubuntu; do
 target=$1
 dir=.github/actions/$target
 
@@ -130,16 +130,19 @@ eval \$(opam env)
 make
 ./opam config report
 ./opam switch create confs --empty
-./opam install conf-gmp
-./opam install conf-which
-./opam install conf-autoconf
 EOF
+
+test_depext () {
+  for pkg in $@ ; do
+    echo "./opam install $pkg || true" >> $dir/entrypoint.sh
+  done
+}
+
+test_depext conf-gmp conf-which conf-autoconf
 
 # disable automake for centos, as os-family returns rhel
 if [ $target != "centos" ] && [ $target != "opensuse" ]; then
-  cat >>$dir/entrypoint.sh << EOF
-./opam install conf-automake
-EOF
+  test_depext conf-automake
 fi
 
 chmod +x $dir/entrypoint.sh

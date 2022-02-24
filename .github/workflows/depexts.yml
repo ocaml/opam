@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'src/state/opamSysInteract.ml'
+      - '.github/workflows/depexts.yml'
+      - '.github/scripts/depexts/'
 
 defaults:
   run:
