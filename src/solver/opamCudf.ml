@@ -468,7 +468,7 @@ let strong_and_weak_deps u deps =
 
 let expand_deps u (deps: Cudf_types.vpkgformula) =
   List.map (fun clause ->
-      List.concat_map (fun (name, cstr) ->
+      OpamCompat.List.concat_map (fun (name, cstr) ->
           Cudf.lookup_packages ~filter:cstr u name
       ) clause
   ) deps

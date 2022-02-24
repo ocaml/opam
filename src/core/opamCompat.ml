@@ -111,6 +111,18 @@ struct
 end
 #endif
 
+module List =
+#if OCAML_VERSION >= (4, 10, 0)
+  List
+#else
+struct
+  include List
+
+  let concat_map f l =
+    List.fold_left (fun acc x -> acc @ f x) [] l
+end
+#endif
+
 #if OCAML_VERSION < (4, 7, 0)
 module Stdlib = Pervasives
 #else

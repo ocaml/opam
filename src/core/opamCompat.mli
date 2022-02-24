@@ -91,6 +91,17 @@ module Result
 end
 #endif
 
+module List
+#if OCAML_VERSION >= (4, 10, 0)
+= List
+#else
+: sig
+  include module type of List
+
+  val concat_map : ('a -> 'b list) -> 'a list -> 'b list
+end
+#endif
+
 #if OCAML_VERSION < (4, 7, 0)
 module Stdlib = Pervasives
 #else
