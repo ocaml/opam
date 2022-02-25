@@ -278,7 +278,8 @@ users)
   * `OpamCudf`: add `trim_universe` [#5024 @AltGr]
   * `OpamSolver.cudf_versions_map`: no more takes a package set as argument, compute whole packages (repo + installed) and take accounet of invariant [#5024 @AltGr]
   * `OpamSolver.load_cudf_universe`: change staging of `add_invariant` [#5024 @AltGr]
-  * `OpamSolver.coinstallable_subset`: add `add_inaviant` optional argument [#5024 @AltGr]
+  * `OpamSolver.coinstallable_subset`: add `add_invariant` optional argument [#5024 @AltGr]
+  * `OpamSolver.installable`: use `installable_subset` that uses `coinstallable_subset` [#5024 @kit_ty_kate]
 ## opam-format
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamSysPkg` and `OpamVariable` [#4918 @rjbou]
   * Add OpamPackage.Version.default returning the version number used when no version is given for a package [#4949 @kit-ty-kate]

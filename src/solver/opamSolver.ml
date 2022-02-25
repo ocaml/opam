@@ -532,23 +532,6 @@ let dosetrim f =
   ignore (f ~callback ~explain:false);
   !trimmed_pkgs
 
-let installable universe =
-  log "trim";
-  let simple_universe =
-    load_cudf_universe universe ~add_invariant:true
-      universe.u_available ~build:true ~post:true ()
-  in
-  let cudf_installable =
-    dosetrim (fun ~callback ~explain ->
-        Dose_algo.Depsolver.univcheck ~callback ~explain simple_universe)
-  in
-  List.fold_left
-    (fun acc pkg ->
-       if pkg.Cudf.package = OpamCudf.opam_invariant_package_name then acc
-       else OpamPackage.Set.add (OpamCudf.cudf2opam pkg) acc)
-    OpamPackage.Set.empty
-    cudf_installable
-
 let coinstallable_subset universe ?(add_invariant=true) set packages =
   log "subset of coinstallable with %a within %a"
     (slog OpamPackage.Set.to_string) set
@@ -597,6 +580,9 @@ let coinstallable_subset universe ?(add_invariant=true) set packages =
 let installable_subset universe packages =
   coinstallable_subset
     universe ~add_invariant:true OpamPackage.Set.empty packages
+
+let installable universe =
+  installable_subset universe universe.u_available
 
 module PkgGraph = Graph.Imperative.Digraph.ConcreteBidirectional(OpamPackage)
 
