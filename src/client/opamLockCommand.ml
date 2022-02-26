@@ -139,8 +139,7 @@ let lock_opam ?(only_direct=false) st opam =
   let all_depends =
     OpamSolver.dependencies
       ~depopts:true ~build:true ~post:true ~installed:true
-      univ (OpamPackage.Set.singleton nv) |>
-    OpamPackage.Set.remove nv
+      univ (OpamPackage.Set.singleton nv)
   in
   let depends =
     if only_direct then
@@ -180,9 +179,10 @@ let lock_opam ?(only_direct=false) st opam =
       let depends_map = map_of_set `other installed in
       if only_direct then depends_map
       else
-        (OpamSolver.dependencies
-           ~depopts:false ~build:true ~post:true ~installed:true
-           univ installed
+        ((OpamSolver.dependencies
+            ~depopts:false ~build:true ~post:true ~installed:true
+            univ installed ++
+          installed)
          -- all_depends)
         |> map_of_set (`other_dep typ)
         |> OpamPackage.Map.union (fun _v _o -> `other_dep typ) depends_map

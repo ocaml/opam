@@ -270,15 +270,16 @@ module Set = struct
       then failwith (Printf.sprintf "duplicate entry %s" (O.to_string elt))
       else add elt t
 
-    let fixpoint f =
+    let fixpoint f curset =
       let open Op in
+      let make_newset set = fold (fun nv set -> set ++ f nv) set empty in
       let rec aux fullset curset =
         if is_empty curset then fullset else
-        let newset = fold (fun nv set -> set ++ f nv) curset empty in
+        let newset = make_newset curset in
         let fullset = fullset ++ curset in
         aux fullset (newset -- fullset)
       in
-      aux empty
+      aux empty (make_newset curset)
 
     let map_reduce ?default f op t =
       match choose_opt t with
