@@ -765,7 +765,18 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
       List.fold_left (fun acc item ->
           let contents = detail_printer ?normalise ~sort st nv item in
           if show_empty || contents <> "" then
-            [ OpamConsole.colorise `blue (string_of_field ~raw item); contents ]
+            let name = string_of_field ~raw item in
+            let name_url =
+              try
+                let basic_contents = detail_printer ~prettify:true ?normalise ~sort st nv item in
+                let contents_url = OpamUrl.parse basic_contents in
+                if OpamUrl.(contents_url.transport = "http" || contents_url.transport = "https") then
+                  OpamConsole.url ~ref:(OpamUrl.(to_string ({contents_url with backend = `http}))) ~label:name
+                else
+                  name
+              with OpamUrl.Parse_error _ -> name
+            in
+            [ OpamConsole.colorise `blue name_url; contents ]
             :: acc
           else acc)
         [] (List.rev fields)

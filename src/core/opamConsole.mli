@@ -44,6 +44,7 @@ val colorise : text_style -> string -> string
 val colorise' : text_style list -> string -> string
 val acolor : text_style -> unit -> string -> string
 val acolor_w : int -> text_style -> Format.formatter -> string -> unit
+val url : ref:string -> label:string -> string
 
 module Symbols : sig
   val rightwards_arrow : Uchar.t

@@ -1198,13 +1198,25 @@ module OpamFormat = struct
         | '\xc2'..'\xdf' -> aux (acc - min 1 (len - i)) (i + 2)
         | '\xe0'..'\xef' -> aux (acc - min 2 (len - i)) (i + 3)
         | '\xf0'..'\xf4' -> aux (acc - min 3 (len - i)) (i + 4)
-        | '\027' ->
-          (try
-             let j = String.index_from s (ofs+i+1) 'm' - ofs in
-             if j > len then acc - (len - i) else
-               aux (acc - (j - i + 1)) (j + 1)
-           with Not_found | Invalid_argument _ ->
-             acc - (len - i))
+        | '\027' when i < len - 1 ->
+          begin match s.[ofs + i + 1] with
+            | '[' ->
+              (try
+                 let j = String.index_from s (ofs+i+1) 'm' - ofs in
+                 if j > len then acc - (len - i) else
+                   aux (acc - (j - i + 1)) (j + 1)
+               with Not_found | Invalid_argument _ ->
+                 acc - (len - i))
+            | ']' ->
+              (try
+                 let esc_middle = String.index_from s (ofs+i+1) '\027' in
+                 let esc_end = String.index_from s (esc_middle+1) '\027' in
+                 if esc_middle > len || esc_end > len then acc - (len - i) else
+                   aux (acc - (esc_middle - i + 2) - 7) (esc_end + 7)
+               with Not_found | Invalid_argument _ ->
+                 acc - (len - i))
+            | _ -> acc - (len - i)
+          end
         | _ -> aux acc (i + 1)
     in
     aux len 0
