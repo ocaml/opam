@@ -1,29 +1,796 @@
 N0REP0
+### # Needed for extra file check
+### OPAMSTRICT=0
+### <pkg:lint.1>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+extra-files: [ "more-file" "md5=00000000000000000000000000000000" ]
+### <pkg:lint.1:more-file>
+and there is content!
+### opam switch create linting --empty
+### # needed for check upstream checks
+### <one-more-file>
+and it also has content
+### tar czf an-archive.tgz one-more-file
+### : W20: Field 'opam-version' refers to the patch version of opam, it should be of the form MAJOR.MINOR
+### : E21: Field 'opam-version' doesn't match the current version, validation may not be accurate
+### <lint.opam>
+opam-version: "2.0.256"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+           warning 20: Field 'opam-version' refers to the patch version of opam, it should be of the form MAJOR.MINOR: "2.0.256"
+             error 21: Field 'opam-version' doesn't match the current version, validation may not be accurate: "2.0.256"
+# Return code 1 #
+### : E22: Some fields are present but empty; remove or fill them
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+doc: ""
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 22: Some fields are present but empty; remove or fill them: "doc"
+# Return code 1 #
+### : E23: Missing field 'maintainer'
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 23: Missing field 'maintainer'
+# Return code 1 #
+### : E24: Field 'maintainer' has the old default value
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "contact@ocamlpro.com"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 24: Field 'maintainer' has the old default value
+# Return code 1 #
+### : W25: Missing field 'authors'
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 25: Missing field 'authors'
+### : W26: No field 'install', but a field 'remove': install instructions probably part of 'build'. Use the 'install' field or a .install file
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+remove: [ "true" ]
+build: [ "true" ]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 26: No field 'install', but a field 'remove': install instructions probably part of 'build'. Use the 'install' field or a .install file
+### : E28: Unknown package flags found
+### #ERROR: unreachable as there is a cleanup of unknown flags
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+flags: [unkn conf]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
+### opam show ./lint.opam --just-file --field flags --normalise
+conf
+### opam lint ./lint.opam --strict
+${BASEDIR}/lint.opam: Errors.
+             error  3: File format error in 'flags' at line 10, column 0: Unknown package flags unkn ignored
+# Return code 1 #
+### : E29: Package dependencies mention package variables
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: "foo" {_:innervar}
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 29: Package dependencies mention package variables: "_:innervar"
+# Return code 1 #
+### : E31: Fields 'depends' and 'depopts' refer to the same package names
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: "foo"
+depopts: "foo"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 31: Fields 'depends' and 'depopts' refer to the same package names: "foo"
+# Return code 1 #
+### : E32: Field 'ocaml-version:' and variable 'ocaml-version' are deprecated, use a dependency towards the 'ocaml' package instead for availability, and the 'ocaml:version' package variable for scripts
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+ocaml-version: [<"3.12"]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 32: Field 'ocaml-version:' and variable 'ocaml-version' are deprecated, use a dependency towards the 'ocaml' package instead for availability, and the 'ocaml:version' package variable for scripts
+# Return code 1 #
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: "foo" { ocaml-version = "3.12"}
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 32: Field 'ocaml-version:' and variable 'ocaml-version' are deprecated, use a dependency towards the 'ocaml' package instead for availability, and the 'ocaml:version' package variable for scripts
+# Return code 1 #
+### : E33: Field 'os' is deprecated, use 'available' and the 'os' variable instead
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+os: "jayceos"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 33: Field 'os' is deprecated, use 'available' and the 'os' variable instead
+# Return code 1 #
+### : E34: Field 'available:' contains references to package-local variables. It should only be determined from global configuration variables
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+available: _:version = "0.1"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 34: Field 'available:' contains references to package-local variables. It should only be determined from global configuration variables: "_:version"
+# Return code 1 #
+### : W35: Missing field 'homepage'
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 35: Missing field 'homepage'
+### : W36: Missing field 'bug-reports'
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 36: Missing field 'bug-reports'
+### : W37: Missing field 'dev-repo'
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+bug-reports: "https://nobug"
+url { src:"https://u.rl" }
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 37: Missing field 'dev-repo'
+### : E39: Command 'make' called directly, use the built-in variable instead
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+build: [ "make" ]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 39: Command 'make' called directly, use the built-in variable instead
+# Return code 1 #
+### : W41: Some packages are mentioned in package scripts or features, but there is no dependency or depopt toward them
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: "foo" { bar:innerenv }
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 29: Package dependencies mention package variables: "bar:innerenv"
+           warning 41: Some packages are mentioned in package scripts or features, but there is no dependency or depopt toward them: "bar"
+# Return code 1 #
+### : E42: The 'dev-repo:' field doesn't use version control. You should use URLs of the form "git://", "git+https://", "hg+https://"...
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "https://to@li.nt"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 42: The 'dev-repo:' field doesn't use version control. You should use URLs of the form "git://", "git+https://", "hg+https://"...
+# Return code 1 #
+### : E43: Conjunction used in 'conflicts:' field. Only '|' is allowed
+### #ERROR: unreachable as there is a cleanup of conflicts: conjunction are transformed as disjunction
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+conflicts: "foo" & "bar"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
+### opam show ./lint.opam --just-file --field conflicts --normalise
+["foo" "bar"]
+### opam lint ./lint.opam --strict
+${BASEDIR}/lint.opam: Errors.
+             error  3: File format error in 'conflicts' at line 10, column 0: Conflicts must be a disjunction, '&' is not supported (treated as '|').
+# Return code 1 #
+### : W44: The 'plugin' package flag is set but the package name doesn't begin with 'opam-'
 ### <lint.opam>
 opam-version: "2.0"
 name: "lint"
-version: "1.0"
 synopsis: "A word"
 description: "Two words."
-maintainer: "opam-devel@lists.ocaml.org"
-authors: [ "Z" "A" "R" ]
-homepage: "x"
-bug-reports: "x"
-depends: [
-  "ocaml" {>= "4.02.3"}
-  "base-unix"
-  "base-bigarray"
-  "ocamlgraph"
-  "re" {>= "1.5.0"}
-  "dune" {>= "1.2.1"}
-  "cppo" {build}
-]
-conflicts: ["extlib-compat"]
-build: [
-  [ "./configure" ]
-  [ make ]
-]
-dev-repo: "git+https://github.com/ocaml/opam.git"
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+flags: plugin
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 44: The 'plugin' package flag is set but the package name doesn't begin with 'opam-'
+### : E45: Unclosed variable interpolations in strings
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+post-messages: "installed version %{version"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 45: Unclosed variable interpolations in strings: "%{version"
+# Return code 1 #
+### : E46: Package is flagged "conf" but has source, install or remove instructions
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+flags: conf
+install : [ "install" ]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 46: Package is flagged "conf" but has source, install or remove instructions
+# Return code 1 #
+### : W47: Synopsis (or description first line) should start with a capital and not end with a dot
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "a word"
+description: "a words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 47: Synopsis (or description first line) should start with a capital and not end with a dot
+### <lint.opam>
+opam-version: "2.0"
+synopsis: ""
+description: "a words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 47: Synopsis (or description first line) should start with a capital and not end with a dot
+### : W48: The fields 'build-test:' and 'build-doc:' are deprecated, and should be replaced by uses of the 'with-test' and 'with-doc' filter variables in the 'build:' and 'install:' fields, and by the newer 'run-test:' field
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+build-test : ["test"]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 48: The fields 'build-test:' and 'build-doc:' are deprecated, and should be replaced by uses of the 'with-test' and 'with-doc' filter variables in the 'build:' and 'install:' fields, and by the newer 'run-test:' field
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+build-doc : ["doc"]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 48: The fields 'build-test:' and 'build-doc:' are deprecated, and should be replaced by uses of the 'with-test' and 'with-doc' filter variables in the 'build:' and 'install:' fields, and by the newer 'run-test:' field
+### : W49: The following URLs don't use version control but look like version control URLs
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "https://to@li.nt.git"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 42: The 'dev-repo:' field doesn't use version control. You should use URLs of the form "git://", "git+https://", "hg+https://"...
+           warning 49: The following URLs don't use version control but look like version control URLs: "https://to@li.nt.git"
+# Return code 1 #
+### : W50: The 'post' flag doesn't make sense with build or optional dependencies
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: [ "foo" {build & post} ]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 50: The 'post' flag doesn't make sense with build or optional dependencies
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depopts: "foo" {post}
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 50: The 'post' flag doesn't make sense with build or optional dependencies
+### : E51: The behaviour for negated dependency flags 'build' or 'post' is unspecified
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: "foo" { !build }
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 51: The behaviour for negated dependency flags 'build' or 'post' is unspecified
+# Return code 1 #
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: "foo" { !post }
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 51: The behaviour for negated dependency flags 'build' or 'post' is unspecified
+# Return code 1 #
+### : E52: Package is needlessly flagged "light-uninstall", since it has no remove instructions
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+flags: light-uninstall
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 52: Package is needlessly flagged "light-uninstall", since it has no remove instructions
+# Return code 1 #
+### : E53: Mismatching 'extra-files:' field
+### opam lint --package lint
+${BASEDIR}/OPAM/repo/default/packages/lint/lint.1/opam: Errors.
+             error 53: Mismatching 'extra-files:' field: "more-file"
+# Return code 1 #
+### OPAMREPOSITORYTARRING=1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
+### opam lint --package lint
+[ERROR] File ${OPAMTMP}/default/packages/lint/lint.1/opam not found
+# Return code 2 #
+### : W54: External dependencies should not contain spaces nor empty string
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depexts: ""
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 54: External dependencies should not contain spaces nor empty string: ""
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depexts: "a package"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 54: External dependencies should not contain spaces nor empty string: "a package"
+### : E55: Non-normalised OS or arch string being tested
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depexts: ["foo"] { arch = "i486" }
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 55: Non-normalised OS or arch string being tested: "i486 (use x86_32 instead)"
+# Return code 1 #
+### : W56: It is discouraged for non-compiler packages to use 'setenv:'
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+setenv: [ idoit="anyway" ]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 56: It is discouraged for non-compiler packages to use 'setenv:'
+### : E57: Synopsis and description must not be both empty
+### <lint.opam>
+opam-version: "2.0"
+synopsis: ""
+description: ""
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+           warning 47: Synopsis (or description first line) should start with a capital and not end with a dot
+             error 57: Synopsis and description must not be both empty
+# Return code 1 #
+### : W58: Found variable, predefined one
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: "foo" { test }
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 58: Found `test` variable, predefined one is `with-test`
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: "foo" { doc }
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 58: Found `doc` variable, predefined one is `with-doc`
+### : W59: url doesn't contain a checksum
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url { src:"an-archive.tgz" }
+### opam lint ./lint.opam --check-upstream
+${BASEDIR}/lint.opam: Warnings.
+           warning 59: url doesn't contain a checksum
+### : E60: Upstream check failed
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url { src:"another-archive.tgz" }
+### opam lint ./lint.opam --check-upstream
+${BASEDIR}/lint.opam: Errors.
+           warning 59: url doesn't contain a checksum
+             error 60: Upstream check failed: "Source not found: ${BASEDIR}/another-archive.tgz"
+# Return code 1 #
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url {
+  src:"an-archive.tgz"
+  checksum:"md5=00000000000000000000000000000000"
+}
+### opam lint ./lint.opam --check-upstream | grep -v md5
+${BASEDIR}/lint.opam: Errors.
+             error 60: Upstream check failed: "The archive doesn't match checksum:
+              ."
+# Return code 1 #
+### : W61: `with-test` variable in `run-test` is out of scope, it will be ignored
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+run-test: [ "test-it" { with-test } ]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 61: `with-test` variable in `run-test` is out of scope, it will be ignored
+### : W62: License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "DTFWYW"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 62: License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/: "DTFWYW"
+### : E65: URLs must be absolute
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url { src:"file://./my/path" }
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 65: URLs must be absolute: "./my/path"
+# Return code 1 #
+### : W66: String that can't be resolved to bool in filtered package formula
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: "foo" { "a-given-version" }
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 66: String that can't be resolved to bool in filtered package formula: ""a-given-version" in 'foo {"a-given-version"}'"
+### : E67: Checksum specified with a non archive url
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url {
+  src:"git+https://git.url/repo"
+  checksum:"md5=00000000000000000000000000000000"
+}
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 67: Checksum specified with a non archive url: "git+https://git.url/repo - md5=00000000000000000000000000000000"
+# Return code 1 #
+### : W68: Missing field 'license'
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
            warning 68: Missing field 'license'
