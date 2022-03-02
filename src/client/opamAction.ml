@@ -237,33 +237,55 @@ let preprocess_dot_install st nv build_dir =
   in
   files, really_process_dot_install, config
 
-let download_package st nv =
-  log "download_package: %a" (slog OpamPackage.to_string) nv;
+let download_shared_source st url nvs =
+  let labelise pkg_str = OpamStd.List.concat_map ", " pkg_str nvs in
+  log "download_package: %a%a"
+    (slog (fun _ -> labelise OpamPackage.to_string)) ()
+    (slog (fun url -> match url, nvs with
+         | None, _ | _, [_] -> ""
+         | Some url, _ -> " " ^ OpamUrl.to_string (OpamFile.URL.url url))) url;
   if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake)
-  then Done None
+  then Done None else
+  let nvs =
+    (* filter out version-pinned packages since we already have their source *)
+    List.filter (fun nv ->
+        let dir = OpamSwitchState.source_dir st nv in
+        not (OpamPackage.Set.mem nv st.pinned &&
+             OpamFilename.exists_dir dir &&
+             OpamStd.Option.Op.(
+               OpamPinned.find_opam_file_in_source nv.name dir >>|
+               OpamFile.OPAM.safe_read >>=
+               OpamFile.OPAM.version_opt) = Some nv.version))
+      nvs
+  in
+  if nvs = [] then Done None
   else
-  let dir = OpamSwitchState.source_dir st nv in
-  if OpamPackage.Set.mem nv st.pinned &&
-     OpamFilename.exists_dir dir &&
-     OpamStd.Option.Op.(
-       OpamPinned.find_opam_file_in_source nv.name dir >>|
-       OpamFile.OPAM.safe_read >>=
-       OpamFile.OPAM.version_opt)
-     = Some nv.version
-  then Done None
-  else
-  let print_action msg =
-    OpamConsole.msg "%s retrieved %s.%s  (%s)\n"
+  let print_action =
+    OpamConsole.msg "%s retrieved %s  (%s)\n"
       (if not (OpamConsole.utf8 ()) then "->"
        else OpamActionGraph.
-              (action_color (`Fetch ()) (action_strings (`Fetch ()))))
-      (OpamConsole.colorise `bold (OpamPackage.name_to_string nv))
-      (OpamPackage.version_to_string nv)
-      msg;
+              (action_color (`Fetch []) (action_strings (`Fetch []))))
   in
-  OpamUpdate.cleanup_source st
-    (OpamPackage.Map.find_opt nv st.installed_opams)
-    (OpamSwitchState.opam st nv);
+  let print_single_actions msgs =
+    List.iter (fun (nv, msg) ->
+        print_action
+          (OpamConsole.colorise `bold (OpamPackage.name_to_string nv)
+           ^ "." ^ (OpamPackage.version_to_string nv))
+          msg)
+      msgs
+  in
+  let print_full_action msg =
+    print_action
+      (labelise @@ fun nv ->
+       (OpamConsole.colorise `bold (OpamPackage.name_to_string nv))
+       ^ "." ^ (OpamPackage.version_to_string nv))
+      msg
+  in
+  List.iter (fun nv ->
+      OpamUpdate.cleanup_source st
+        (OpamPackage.Map.find_opt nv st.installed_opams)
+        (OpamSwitchState.opam st nv))
+    nvs;
   OpamProcess.Job.catch (fun e ->
       let na =
         match e with
@@ -272,30 +294,48 @@ let download_package st nv =
       in
       Done (Some na))
   @@ fun () ->
-  OpamUpdate.download_package_source st nv dir @@| function
+  OpamUpdate.download_shared_package_source st url nvs @@| function
   | Some (Not_available (s, l)), _ ->
-    let msg = match s with None -> l | Some s -> s in
-    OpamConsole.error "Failed to get sources of %s: %s"
-      (OpamPackage.to_string nv) msg;
+    let msg = OpamStd.Option.default l s in
+    OpamConsole.error "Failed to get sources of %s%s: %s"
+      (labelise OpamPackage.to_string)
+      (match url, nvs with
+       | None, _ | _, [_] -> ""
+       | Some url, _ ->
+         Printf.sprintf " (%s)" (OpamUrl.to_string (OpamFile.URL.url url)))
+      msg;
     Some (s, l)
-  | _, ((name, Not_available (s, l)) :: _) ->
+  | _, ((nv, name, Not_available (s, l)) :: _) ->
     let msg = match s with None -> l | Some s -> s in
     OpamConsole.error "Failed to get extra source \"%s\" of %s: %s"
       name (OpamPackage.to_string nv) msg;
     Some (s, l)
   | Some (Result msg), _ ->
-    print_action msg; None
+    print_full_action msg; None
   | Some (Up_to_date msg), _ ->
-    print_action msg; None
+    print_full_action msg; None
   | None, [] -> None
   | None, (e :: es as extras) ->
-    if List.for_all (function _, Up_to_date _ -> true | _ -> false) extras then
-      print_action "cached"
-    else begin match e, es with
-      | (_, Result msg), [] -> print_action msg
-      | _, _ -> print_action (Printf.sprintf "%d extra sources" (List.length extras))
-    end;
+    if List.for_all (function _, _, Up_to_date _ -> true | _ -> false) extras then
+      print_full_action "cached"
+    else
+      (match e, es with
+       | (_, _, Result msg), [] -> print_full_action msg
+       | _, _ ->
+         print_single_actions
+           (List.map (fun (nv, _, _) ->
+                nv,
+                (Printf.sprintf "%d extra sources"
+                   (List.length
+                      (List.filter (fun (nv',_,_) ->
+                           OpamPackage.compare nv nv' = 0)
+                          extras))))
+               extras));
     None
+
+let download_package st nv =
+  download_shared_source st
+    (OpamFile.OPAM.url (OpamSwitchState.opam st nv)) [nv]
 
 (* Prepare the package build:
    * apply the patches

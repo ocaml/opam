@@ -199,7 +199,7 @@ module Job: sig
   val of_fun_list: ?keep_going:bool -> (unit -> command) list ->
     (command * result) option Op.job
 
-  (** Returns the job made of the the given homogeneous jobs run sequentially *)
+  (** Returns the job made of the given homogeneous jobs run sequentially *)
   val seq: ('a -> 'a Op.job) list -> 'a -> 'a Op.job
 
   (** Sequentially maps jobs on a list *)

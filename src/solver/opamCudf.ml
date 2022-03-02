@@ -416,6 +416,12 @@ let string_of_action = Action.to_string
 let string_of_actions l =
   OpamStd.List.to_string (fun a -> " - " ^ string_of_action a) l
 
+let action_contents = function
+  | `Remove p | `Install p | `Reinstall p | `Change (_,_,p) -> p
+  | `Build _ | `Fetch _ ->
+    OpamConsole.error_and_exit `Internal_error
+      "Shouldn't have a multi package action on printing solution"
+
 exception Solver_failure of string
 exception Cyclic_actions of Action.t list list
 

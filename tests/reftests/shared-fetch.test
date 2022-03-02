@@ -1,0 +1,286 @@
+N0REP0
+### <shared.ml>
+print_endline "I am a shared code"
+### <non-shared.ml>
+print_endline "I am a non shared code"
+### tar czf shared.tgz shared.ml
+### tar czf non-shared.tgz non-shared.ml
+### <pkg:no-extra.3>
+opam-version: "2.0"
+build: [ "ocaml" "shared.ml" ]
+### <pkg:extra.3>
+opam-version: "2.0"
+build: [
+  [ "ocaml" "shared.ml" ]
+  [ "ocaml" "extra_uniq.ml" ]
+]
+### <pkg:extra.3:extra_uniq.ml>
+print_endline "I am a non shared code"
+### <pkg:non-shared.4>
+opam-version: "2.0"
+build: [ "ocaml" "non-shared.ml" ]
+### <mkurl.sh>
+arch=$1
+shift
+for p in $@; do
+  file="REPO/packages/${p%.*}/$p/opam"
+  echo "url {" >> $file
+  echo "src: \"$arch.tgz\"" >> $file
+  MD5=$(openssl md5 $arch.tgz | cut -d' ' -f2)
+  echo "checksum: \"md5=$MD5\"" >> $file
+  echo "}" >> $file
+done
+### sh mkurl.sh shared no-extra.3 extra.3
+### sh mkurl.sh non-shared non-shared.4
+### OPAMJOBS=1 OPAMDOWNLOADJOBS=1 OPAMYES=1
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create shared --empty
+### opam install no-extra extra non-shared | unordered
+The following actions will be performed:
+  - install extra      3
+  - install non-shared 4
+  - install no-extra   3
+===== 3 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved extra.3, no-extra.3  (file://${BASEDIR}/shared.tgz)
+-> retrieved non-shared.4  (file://${BASEDIR}/non-shared.tgz)
+-> installed extra.3
+-> installed no-extra.3
+-> installed non-shared.4
+Done.
+### : From archive with top directory and extra sources :
+### <shared/shared.ml>
+print_endline "I am a shared code"
+### <non-shared/non-shared.ml>
+print_endline "I am a non shared code"
+### tar czf shared.tgz shared
+### tar czf non-shared.tgz non-shared
+### <pkg:no-extra.3>
+opam-version: "2.0"
+build: [
+  [ "ocaml" "shared.ml" ]
+  [ "ocaml" "extra_source.ml" ]
+]
+### <pkg:extra.3>
+opam-version: "2.0"
+build: [
+  [ "ocaml" "shared.ml" ]
+  [ "ocaml" "extra_uniq.ml" ]
+  [ "ocaml" "extra_source.ml" ]
+]
+### <extra/extra_source.ml>
+print_endline "I am an extra sourced code!"
+### <pkg:non-shared.4>
+opam-version: "2.0"
+build: [ "ocaml" "non-shared.ml" ]
+### sh mkurl.sh shared no-extra.3 extra.3
+### sh mkurl.sh non-shared non-shared.4
+### <mkextrasource.sh>
+src=$1
+shift
+for p in $@; do
+  file="REPO/packages/${p%.*}/$p/opam"
+  echo "extra-source \"$src\" {" >> $file
+  echo "src: \"extra/$src\"" >> $file
+  MD5=$(openssl md5 extra/$src | cut -d' ' -f2)
+  echo "checksum: \"md5=$MD5\"" >> $file
+  echo "}" >> $file
+done
+### sh mkextrasource.sh extra_source.ml extra.3 no-extra.3
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install no-extra extra non-shared --cudf dotty | unordered
+The following actions will be performed:
+  - recompile no-extra   3
+  - recompile extra      3
+  - recompile non-shared 4
+===== 3 to recompile =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved extra.3, no-extra.3  (file://${BASEDIR}/shared.tgz)
+-> retrieved non-shared.4  (file://${BASEDIR}/non-shared.tgz)
+-> removed   extra.3
+-> installed extra.3
+-> removed   no-extra.3
+-> installed no-extra.3
+-> removed   non-shared.4
+-> installed non-shared.4
+Done.
+### cat dotty-actions-explicit.dot
+digraph G {
+  "fetch extra.3, no-extra.3";
+  "install no-extra.3";
+  "install non-shared.4";
+  "fetch non-shared.4";
+  "build non-shared.4";
+  "build no-extra.3";
+  "install extra.3";
+  "build extra.3";
+  "remove extra.3";
+  "remove non-shared.4";
+  "remove no-extra.3";
+  
+  
+  "fetch extra.3, no-extra.3" -> "remove extra.3";
+  "fetch extra.3, no-extra.3" -> "remove no-extra.3";
+  "fetch extra.3, no-extra.3" -> "build extra.3";
+  "fetch extra.3, no-extra.3" -> "build no-extra.3";
+  "fetch non-shared.4" -> "remove non-shared.4";
+  "fetch non-shared.4" -> "build non-shared.4";
+  "build non-shared.4" -> "remove non-shared.4";
+  "build non-shared.4" -> "install non-shared.4";
+  "build no-extra.3" -> "remove no-extra.3";
+  "build no-extra.3" -> "install no-extra.3";
+  "build extra.3" -> "remove extra.3";
+  "build extra.3" -> "install extra.3";
+  "remove extra.3" -> "install extra.3";
+  "remove non-shared.4" -> "install non-shared.4";
+  "remove no-extra.3" -> "install no-extra.3";
+  
+  }
+### : several hashes handling
+### <pkg:no-extra.3>
+opam-version: "2.0"
+build: [ "ocaml" "shared.ml" ]
+### <pkg:extra.3>
+opam-version: "2.0"
+build: [ "ocaml" "shared.ml" ]
+depends: [ "no-extra" ]
+### <pkg:intra.3>
+opam-version: "2.0"
+build: [ "ocaml" "shared.ml" ]
+depends: [ "extra" ]
+### <pkg:in.3>
+opam-version: "2.0"
+### <pkg:out.3>
+opam-version: "2.0"
+build: [ "ocaml" "shared.ml" ]
+depends: [ "intra" "in" ]
+### <mkurl.sh>
+arch=shared
+pkg=$1
+shift
+file="REPO/packages/${pkg%.*}/$pkg/opam"
+echo "url {" >> $file
+echo "src: \"$arch.tgz\"" >> $file
+echo "checksum: [" >> $file
+for h in $@; do
+  HASH=$(openssl $h $arch.tgz | cut -d' ' -f2)
+  echo "\"$h=$HASH\"" >> $file
+done
+echo "  ]" >> $file
+echo "}" >> $file
+### sh mkurl.sh extra.3 md5 sha512
+### sh mkurl.sh no-extra.3 sha256 sha512
+### sh mkurl.sh intra.3 sha512
+### sh mkurl.sh out.3 md5
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam remove no-extra
+The following actions will be performed:
+  - remove extra    3 [uses no-extra]
+  - remove no-extra 3
+===== 2 to remove =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   extra.3
+-> removed   no-extra.3
+Done.
+### opam install out
+The following actions will be performed:
+  - install in       3 [required by out]
+  - install no-extra 3 [required by extra]
+  - install extra    3 [required by intra]
+  - install intra    3 [required by out]
+  - install out      3
+===== 5 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved extra.3, intra.3, no-extra.3, out.3  (cached)
+-> installed in.3
+-> installed no-extra.3
+-> installed extra.3
+-> installed intra.3
+-> installed out.3
+Done.
+### opam remove no-extra in
+The following actions will be performed:
+  - remove out      3 [uses in]
+  - remove intra    3 [uses extra]
+  - remove in       3
+  - remove extra    3 [uses no-extra]
+  - remove no-extra 3
+===== 5 to remove =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   out.3
+-> removed   in.3
+-> removed   intra.3
+-> removed   extra.3
+-> removed   no-extra.3
+Done.
+### <pkg:extra.3>
+opam-version: "2.0"
+build: [ "ocaml" "shared.ml" ]
+depends: [ "no-extra" ]
+### <mkurl.sh>
+p=extra.3
+arch=shared
+file="REPO/packages/${p%.*}/$p/opam"
+echo "url {" >> $file
+echo "src: \"$arch.tgz\"" >> $file
+MD5="01234567890123456789012345678901"
+echo "checksum: \"md5=$MD5\"" >> $file
+echo "}" >> $file
+### sh mkurl.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install out | '[0-9a-f]{32,}' -> "a-given-hash" | grep -v "switch import"
+The following actions will be performed:
+  - install in       3 [required by out]
+  - install no-extra 3 [required by extra]
+  - install extra    3 [required by intra]
+  - install intra    3 [required by out]
+  - install out      3
+===== 5 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] Conflicting file hashes, or broken or compromised cache!
+          - md5=a-given-hash (MISMATCH)
+          - md5=a-given-hash (match)
+          - sha256=a-given-hash (match)
+          - sha512=a-given-hash (match)
+
+[ERROR] extra.3, intra.3, no-extra.3, out.3: Checksum mismatch for file://${BASEDIR}/shared.tgz:
+          expected md5=a-given-hash
+          got      md5=a-given-hash
+[ERROR] Failed to get sources of extra.3, intra.3, no-extra.3, out.3 (file://${BASEDIR}/shared.tgz): Checksum mismatch
+-> installed in.3
+
+OpamSolution.Fetch_fail("Checksum mismatch")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - fetch extra.3, intra.3, no-extra.3, out.3 
++- 
++- The following changes have been performed
+| - install in 3
++- 
+
+The former state can be restored with:
+# Return code 40 #

@@ -14,14 +14,21 @@
 open OpamTypes
 open OpamStateTypes
 
-(** [download t pkg] downloads the source of the package [pkg] into its locally
-    cached source dir. Returns [Some (short_errmsg option, long_errmsg)] on error,
-    [None] on success. See {!OpamTypes.Not_available}.
+(** [download_package t pkg] downloads the source of the package [pkg] into its
+    locally cached source dir. Returns [Some (short_errmsg option,
+    long_errmsg)] on error, [None] on success. See {!OpamTypes.Not_available}.
 
     This doesn't update dev packages that already have a locally cached
     source. *)
 val download_package:
   rw switch_state -> package -> (string option * string) option OpamProcess.job
+
+(** [download_same_source_package t url packages]
+    As [download_package], download upstream shared source [url] between
+    [packages]. *)
+val download_shared_source:
+  rw switch_state -> OpamFile.URL.t option -> package list ->
+  (string option * string) option OpamProcess.job
 
 (** [prepare_package_source t pkg dir] updates the given source [dir] with the
     extra downloads, overlays and patches from the package's metadata
@@ -44,7 +51,7 @@ val build_package:
   exn option OpamProcess.job
 
 (** [install_package t pkg] installs an already built package. Returns
-    [None] on success, [Some exn] on error. Do not update OPAM's
+    [None] on success, [Some exn] on error. Do not update opam's
     metadata. See {!build_package} to build the package. *)
 val install_package:
   rw switch_state -> ?test:bool -> ?doc:bool -> ?build_dir:dirname -> package ->

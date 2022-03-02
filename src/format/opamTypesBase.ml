@@ -170,12 +170,13 @@ let pkg_flag_of_string = function
   | s -> Pkgflag_Unknown s
 
 let action_contents = function
-  | `Remove p | `Install p | `Reinstall p | `Build p | `Fetch p -> p
-  | `Change (_,_,p) -> p
+  | `Remove p | `Install p | `Reinstall p | `Build p
+  | `Change (_,_,p) -> [p]
+  | `Fetch pl -> pl
 
 let full_action_contents = function
-  | `Remove p | `Install p | `Reinstall p | `Build p | `Fetch p -> [p]
   | `Change (_,p1,p2) -> [p1; p2]
+  | a -> action_contents a
 
 let map_atomic_action f = function
   | `Remove p -> `Remove (f p)
@@ -189,7 +190,7 @@ let map_highlevel_action f = function
 let map_concrete_action f = function
   | #atomic_action as a -> map_atomic_action f a
   | `Build p -> `Build (f p)
-  | `Fetch p -> `Fetch (f p)
+  | `Fetch pl -> `Fetch (List.map f pl)
 
 let map_action f = function
   | #highlevel_action as a -> map_highlevel_action f a
