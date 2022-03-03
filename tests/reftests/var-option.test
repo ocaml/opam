@@ -470,8 +470,27 @@ switch
 sys-ocaml-version 4.08.0
 
 <><> Configuration variables from the current switch ><><><><><><><><><><><><><>
-[ERROR] No switch is currently set. Please use 'opam switch' to set or install a switch
-# Return code 50 #
+No switch installed
+
+<><> Package variables ('opam var --package PKG' to show) <><><><><><><><><><><>
+PKG:name
+PKG:version
+PKG:depends
+PKG:installed
+PKG:enable
+PKG:pinned
+PKG:bin
+PKG:sbin
+PKG:lib
+PKG:man
+PKG:doc
+PKG:share
+PKG:etc
+PKG:build
+PKG:hash
+PKG:dev
+PKG:build-id
+PKG:opamfile
 ### opam var --global | ' +#.*' -> '' | " +[.]exe" -> ""
 arch              x86_64
 bin               global-bin
@@ -525,8 +544,9 @@ solver-upgrade-criteria        {}
 wrap-build-commands            {}
 wrap-install-commands          {}
 wrap-remove-commands           {}
-[ERROR] No switch is currently set. Please use 'opam switch' to set or install a switch
-# Return code 50 #
+
+<><> Switch configuration <><><><><><><><><><><><><><><><><><><><><><><><><><><>
+No switch installed
 ### opam option --global
 best-effort-prefix-criteria    {}
 depext                         true
@@ -569,8 +589,7 @@ wrap-build-commands    {}
 wrap-install-commands  {}
 wrap-remove-commands   {}
 ### opam var root
-[ERROR] No switch is currently set. Please use 'opam switch' to set or install a switch
-# Return code 50 #
+${BASEDIR}/OPAM
 ### opam var root --global
 ${BASEDIR}/OPAM
 ### opam option depext
@@ -588,7 +607,7 @@ Added '[arch "\"somearch\"" "Set through 'opam var'"]' to field global-variables
 [ERROR] switch phantom not found, display default values
 Added 'arch: "\"somearch\""' to field variables in switch phantom
 ### opam option depext-bypass=["pkg"]
-[ERROR] No switch is currently set. Please use 'opam switch' to set or install a switch
+[ERROR] No switch selected
 # Return code 50 #
 ### opam option depext-bypass=["otherpkg"] --global
 Set to '["otherpkg"]' the field depext-bypass in global configuration
