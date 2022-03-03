@@ -217,14 +217,7 @@ The following actions will be performed:
 -> removed   dep-quux.3
 Done.
 ### opam lock ./interlock
-[ERROR] Skipping bar.pinned, dependencies are not satisfied in this switch, not installed packages are:
-          - foo
-
-[ERROR] Skipping baz.pinned, dependencies are not satisfied in this switch, not installed packages are:
-          - bar
-
 [ERROR] Skipping corge.pinned, dependencies are not satisfied in this switch, not installed packages are:
-          - quux
           - dep-corge
 
 [ERROR] Skipping quux.pinned, dependencies are not satisfied in this switch, not installed packages are:
@@ -233,9 +226,17 @@ Done.
 Generated lock files for:
   - qux.pinned: ${BASEDIR}/qux.opam.locked
   - foo.pinned: ${BASEDIR}/foo.opam.locked
+  - baz.pinned: ${BASEDIR}/baz.opam.locked
+  - bar.pinned: ${BASEDIR}/bar.opam.locked
 ### opam show --just-file  --normalise ./foo.opam.locked -f version,depends
 version: "pinned"
 depends: ["dep-foo" {= "1"}]
+### opam show --just-file  --normalise ./bar.opam.locked -f version,depends
+version: "pinned"
+depends: ["dep-foo" {= "1"} "foo" {= "pinned"}]
+### opam show --just-file  --normalise ./baz.opam.locked -f version,depends
+version: "pinned"
+depends: ["bar" {= "pinned"} "dep-baz" {= "2"} "dep-foo" {= "1"} "foo" {= "pinned"}]
 ### opam show --just-file  --normalise ./qux.opam.locked -f version,depends
 version: "pinned"
 depends:
