@@ -326,6 +326,23 @@
    (run ./run.exe %{bin:opam} %{dep:list.unix.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-lock)
+ (action
+  (diff lock.test lock.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-lock)))
+
+(rule
+ (targets lock.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:lock.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-opamroot-versions)
  (action
   (diff opamroot-versions.test opamroot-versions.out)))

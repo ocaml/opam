@@ -1,0 +1,167 @@
+N0REP0
+### <pkg:foo.1>
+opam-version: "2.0"
+### <pkg:foo.2>
+opam-version: "2.0"
+### <pkg:bar.1>
+opam-version: "2.0"
+### <pkg:bar.3>
+opam-version: "2.0"
+### <pkg:baz.1>
+opam-version: "2.0"
+### <pkg:qux.1>
+opam-version: "2.0"
+### <pin:tolock/tolock.opam>
+opam-version: "2.0"
+depends: [ "foo" "bar" ]
+build: [ "test" "-f" "content" ]
+### <tolock/content>
+it's here
+### OPAMYES=1
+### : simple lock file :
+### opam switch create locking --empty
+### opam pin -n ./tolock --with-version 1
+Package tolock does not exist, create as a NEW package? [Y/n] y
+tolock is now pinned to file://${BASEDIR}/tolock (version 1)
+### opam lock tolock
+[ERROR] Skipping tolock.1, dependencies are not satisfied in this switch, not installed packages are:
+          - foo
+          - bar
+
+No lock file generated
+### opam install foo.1
+The following actions will be performed:
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam lock tolock
+[ERROR] Skipping tolock.1, dependencies are not satisfied in this switch, not installed packages are:
+          - bar
+
+No lock file generated
+### opam install bar.1
+The following actions will be performed:
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+Done.
+### opam lock tolock
+Generated lock files for:
+  - tolock.1: ${BASEDIR}/tolock.opam.locked
+### opam-cat tolock.opam.locked
+authors: "the testing team"
+bug-reports: "https://nobug"
+build: ["test" "-f" "content"]
+depends: ["bar" {= "1"} "foo" {= "1"}]
+description: "Two words."
+dev-repo: "hg+https://pkg@op.am"
+homepage: "egapemoh"
+license: "MIT"
+maintainer: "maint@tain.er"
+name: "tolock"
+opam-version: "2.0"
+synopsis: "A word"
+version: "1"
+url {
+src: "file://${BASEDIR}/tolock"
+}
+### opam lock tolock --lock-suffix new
+Generated lock files for:
+  - tolock.1: ${BASEDIR}/tolock.opam.new
+### opam show --just-file --normalise ./tolock.opam.new --field depends,depopts,conflicts
+depends:   ["bar" {= "1"} "foo" {= "1"}]
+depopts:
+conflicts:
+### <pin:tolock/tolock.opam>
+opam-version: "2.0"
+depends: [ "foo" "bar" ]
+depopts: "baz"
+build: [ "test" "-f" "content" ]
+### opam update tolock
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[tolock.1] synchronised (file://${BASEDIR}/tolock)
+[tolock] Installing new package description from upstream file://${BASEDIR}/tolock
+Now run 'opam upgrade' to apply any package updates.
+### opam lock tolock
+Generated lock files for:
+  - tolock.1: ${BASEDIR}/tolock.opam.locked
+### opam show --just-file --normalise ./tolock.opam.locked --field depends,depopts,conflicts
+depends:   ["bar" {= "1"} "foo" {= "1"}]
+depopts:
+conflicts: ["baz"]
+### opam install baz.1
+The following actions will be performed:
+  - install baz 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed baz.1
+Done.
+### opam lock tolock
+Generated lock files for:
+  - tolock.1: ${BASEDIR}/tolock.opam.locked
+### opam show --just-file --normalise ./tolock.opam.locked --field depends,depopts,conflicts
+depends:   ["bar" {= "1"} "baz" {= "1"} "foo" {= "1"}]
+depopts:
+conflicts:
+### : error or formulaes :
+### ### ERROR ###
+### <pin:tolock/tolock.opam>
+opam-version: "2.0"
+depends: [ "foo" ("bar" | "qux") ]
+depopts: "baz"
+build: [ "test" "-f" "content" ]
+### opam lock tolock
+[ERROR] Skipping tolock.1, dependencies are not satisfied in this switch, not installed packages are:
+          - qux
+
+No lock file generated
+### opam show --just-file --normalise ./tolock.opam.locked --field depends,depopts,conflicts
+depends:   ["bar" {= "1"} "baz" {= "1"} "foo" {= "1"}]
+depopts:
+conflicts:
+### : lock file install from directory :
+### mv tolock.opam.locked ./tolock/
+### opam switch create locking2 --empty
+### opam-cat tolock/tolock.opam.locked
+authors: "the testing team"
+bug-reports: "https://nobug"
+build: ["test" "-f" "content"]
+depends: ["bar" {= "1"} "baz" {= "1"} "foo" {= "1"}]
+description: "Two words."
+dev-repo: "hg+https://pkg@op.am"
+homepage: "egapemoh"
+license: "MIT"
+maintainer: "maint@tain.er"
+name: "tolock"
+opam-version: "2.0"
+synopsis: "A word"
+version: "1"
+url {
+src: "file://${BASEDIR}/tolock"
+}
+### opam pin -n ./tolock --locked
+Package tolock does not exist, create as a NEW package? [Y/n] y
+tolock is now pinned to file://${BASEDIR}/tolock (version 1)
+### opam show --normalise tolock --field depends:,depopts:,conflicts:
+depends:   ["bar" {= "1"} "baz" {= "1"} "foo" {= "1"}]
+depopts:
+conflicts:
+### opam unpin -n tolock
+Ok, tolock is no longer pinned to file://${BASEDIR}/tolock (version 1)
+### opam install ./tolock --show
+The following actions would be performed:
+  - install bar    3   [required by tolock]
+  - install foo    2   [required by tolock]
+  - install tolock dev
+===== 3 to install =====
+### opam install ./tolock --locked --show
+The following actions would be performed:
+  - install foo    1 [required by tolock]
+  - install bar    1 [required by tolock]
+  - install baz    1 [required by tolock]
+  - install tolock 1
+===== 4 to install =====
