@@ -410,8 +410,7 @@ license: "ISC"
 dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 ### opam lint ./lint.opam
-${BASEDIR}/lint.opam: Warnings.
-           warning 47: Synopsis (or description first line) should start with a capital and not end with a dot
+${BASEDIR}/lint.opam: Passed.
 ### : W48: The fields 'build-test:' and 'build-doc:' are deprecated, and should be replaced by uses of the 'with-test' and 'with-doc' filter variables in the 'build:' and 'install:' fields, and by the newer 'run-test:' field
 ### <lint.opam>
 opam-version: "2.0"
@@ -619,7 +618,6 @@ dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Errors.
-           warning 47: Synopsis (or description first line) should start with a capital and not end with a dot
              error 57: Synopsis and description must not be both empty
 # Return code 1 #
 ### : W58: Found variable, predefined one
