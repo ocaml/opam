@@ -88,7 +88,7 @@ users)
   * Repository tarring "optimisation" no more needed, removed in favor of a plain directory. It still can be used with environment variable `OPAMREPOSITORYTARRING`.  [#5015 @kit-ty-kate @rjbou @AltGr - fix #4586]
 
 ## Lock
-  *
+  * Fix lock generation of multiple interdependent packages [#4993 @AltGr]
 
 ## Clean
   * [NEW] Add `--untracked` option to remove interactively untracked files [{4915 @rjbou - fix #4831]

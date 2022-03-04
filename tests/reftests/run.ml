@@ -550,8 +550,8 @@ let print_opamfile file =
     in
     OpamPrinter.FullPos.Normalise.opamfile mangled
   with
-  | Sys_error _ -> Printf.sprintf "# %s not found" file
-  | e -> Printf.sprintf "# Error on file %s: %s" file (Printexc.to_string e)
+  | Sys_error _ -> Printf.sprintf "# %s not found\n" file
+  | e -> Printf.sprintf "# Error on file %s: %s\n" file (Printexc.to_string e)
 
 let template_opamfile =
   OpamParser.FullPos.string {|

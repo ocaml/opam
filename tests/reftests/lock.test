@@ -165,3 +165,78 @@ The following actions would be performed:
   - install baz    1 [required by tolock]
   - install tolock 1
 ===== 4 to install =====
+### : interdepedant locks :
+### <pkg:dep-foo.1>
+opam-version: "2.0"
+### <pkg:dep-baz.2>
+opam-version: "2.0"
+### <pkg:dep-quux.3>
+opam-version: "2.0"
+### <pkg:dep-corge.4>
+opam-version: "2.0"
+### opam switch create interdep --empty
+### <pin:interlock/foo.opam>
+version: "pinned"
+depends: "dep-foo"
+### <pin:interlock/bar.opam>
+version: "pinned"
+depends: "foo"
+### <pin:interlock/baz.opam>
+version: "pinned"
+depends: [ "bar" "dep-baz" ]
+### <pin:interlock/qux.opam>
+version: "pinned"
+### <pin:interlock/quux.opam>
+version: "pinned"
+depends: "dep-quux"
+### <pin:interlock/corge.opam>
+version: "pinned"
+depends: [ "quux" "dep-corge" ]
+### opam install ./interlock --deps-only
+The following actions will be performed:
+  - install dep-baz   2
+  - install dep-foo   1
+  - install dep-corge 4
+  - install dep-quux  3
+===== 4 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-baz.2
+-> installed dep-corge.4
+-> installed dep-foo.1
+-> installed dep-quux.3
+Done.
+### opam remove dep-quux dep-corge
+The following actions will be performed:
+  - remove dep-quux  3
+  - remove dep-corge 4
+===== 2 to remove =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dep-corge.4
+-> removed   dep-quux.3
+Done.
+### opam lock ./interlock
+[ERROR] Skipping corge.pinned, dependencies are not satisfied in this switch, not installed packages are:
+          - dep-corge
+
+[ERROR] Skipping quux.pinned, dependencies are not satisfied in this switch, not installed packages are:
+          - dep-quux
+
+Generated lock files for:
+  - qux.pinned: ${BASEDIR}/qux.opam.locked
+  - foo.pinned: ${BASEDIR}/foo.opam.locked
+  - baz.pinned: ${BASEDIR}/baz.opam.locked
+  - bar.pinned: ${BASEDIR}/bar.opam.locked
+### opam show --just-file  --normalise ./foo.opam.locked -f version,depends
+version: "pinned"
+depends: ["dep-foo" {= "1"}]
+### opam show --just-file  --normalise ./bar.opam.locked -f version,depends
+version: "pinned"
+depends: ["dep-foo" {= "1"} "foo" {= "pinned"}]
+### opam show --just-file  --normalise ./baz.opam.locked -f version,depends
+version: "pinned"
+depends: ["bar" {= "pinned"} "dep-baz" {= "2"} "dep-foo" {= "1"} "foo" {= "pinned"}]
+### opam show --just-file  --normalise ./qux.opam.locked -f version,depends
+version: "pinned"
+depends:
