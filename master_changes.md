@@ -145,6 +145,7 @@ users)
   * Update bootstrap to use `-j` for Unix (Windows already does) [#4988 @dra27]
   * Update cold compiler to 4.13 [#5017 @dra27]
   * Bring the autogen script from ocaml/ocaml to be compatible with non-ubuntu-patched autoconf [#5090 @kit-ty-kate @dra27]
+  * configure: Use gmake instead of make on Unix systems (fixes BSDs) [#5090 @kit-ty-kate]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
