@@ -17,10 +17,17 @@ AS_IF([ test -x bootstrap/ocaml/bin/ocamlc -o -x bootstrap/ocaml/bin/ocamlopt ],
 MIN_OCAML_VERSION=4.08.0
 
 AC_PROG_OCAML
-if test "x$OCAMLC" = "xno"; then
-   AC_MSG_ERROR([You must install the OCaml compiler, at least version $MIN_OCAML_VERSION (or run: make compiler)])
-fi
 AC_CHECK_OCAML_OS_TYPE
+
+AS_IF([test "x${MAKE}" = "x" && test "${OCAML_OS_TYPE}" = "Unix"],[
+  MAKE="$(if command -v gmake &> /dev/null; then echo gmake; else echo make; fi)"
+],[
+  MAKE=${MAKE:-make}
+])
+
+if test "x$OCAMLC" = "xno"; then
+   AC_MSG_ERROR([You must install the OCaml compiler, at least version $MIN_OCAML_VERSION (or run: $MAKE compiler)])
+fi
 AS_IF([ test "${OCAML_OS_TYPE}" = "Win32"],[
   OCAMLLIB="$(echo "${OCAMLLIB}" | tr -d '\015' | sed -e 's|\\|/|g')"
   WIN32=1
@@ -298,7 +305,7 @@ if test x"$FETCH" = x"curl" ; then
 elif test x"$FETCH" = x"wget" ; then
   AC_SUBST(fetch, "wget $wget_certificate_check -O \$(2) \$(1)")
 elif test x"${enable_checks}" != x"no" ; then
-  if ! ${MAKE:-make} -q -C src_ext has-archives 2>/dev/null ; then
+  if ! ${MAKE} -q -C src_ext has-archives 2>/dev/null ; then
     AC_MSG_ERROR([You must have either curl or wget installed.])
   fi
 fi
@@ -461,20 +468,20 @@ echo Manual pages will be installed in ${mandir}
 AS_IF([test "x${VENDORED}" = "xtrue"],[
   echo
   AS_ECHO_N(["Downloading vendored dependencies... "])
-  ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ archives
+  ${MAKE} --no-print-directory -C src_ext SILENT=@ archives
   AS_ECHO([done])
   AS_ECHO_N(["Extracting vendored dependencies... "])
-  ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ clone
+  ${MAKE} --no-print-directory -C src_ext SILENT=@ clone
   AS_ECHO([done])
 ],[
-  ${MAKE:-make} --no-print-directory -C src_ext def-ignore
+  ${MAKE} --no-print-directory -C src_ext def-ignore
   AS_IF([test -z "${DUNE}"],[
     echo
     AS_ECHO_N(["Downloading dune... "])
-    ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ dune-local.download
+    ${MAKE} --no-print-directory -C src_ext SILENT=@ dune-local.download
     AS_ECHO([done])
     AS_ECHO_N(["Extracting dune... "])
-    ${MAKE:-make} --no-print-directory -C src_ext SILENT=@ dune-local.stamp
+    ${MAKE} --no-print-directory -C src_ext SILENT=@ dune-local.stamp
     AS_ECHO([done])
   ])
 ])

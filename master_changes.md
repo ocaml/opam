@@ -144,6 +144,8 @@ users)
   * Update bootstrap ocaml to 4.12.1 to integrate mingw fix [#4927 @rjbou]
   * Update bootstrap to use `-j` for Unix (Windows already does) [#4988 @dra27]
   * Update cold compiler to 4.13 [#5017 @dra27]
+  * Bring the autogen script from ocaml/ocaml to be compatible with non-ubuntu-patched autoconf [#5090 @kit-ty-kate @dra27]
+  * configure: Use gmake instead of make on Unix systems (fixes BSDs) [#5090 @kit-ty-kate]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
@@ -252,6 +254,7 @@ users)
   * Add a depext checkup, launched only is `OpamSysInteract` is changed [#4788 @rjbou]
   * Arrange scripts directory [#4922 @rjbou]
   * Run ci on tests changes [#4966 @rjbou]
+  * GHA: Fix caching for the "test" job [#5090 @dra27 @kit-ty-kate]
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
