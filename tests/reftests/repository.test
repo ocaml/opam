@@ -16,6 +16,7 @@ repos-config
 test "-f" "bar" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.1)
 ### opam remove foo
 The following actions will be performed:
+=== remove 1 package
   - remove foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>

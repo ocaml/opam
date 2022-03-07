@@ -961,7 +961,7 @@ let parallel_apply t
                (fun x -> x)
                (List.map (String.concat " ") @@
                 OpamStd.Format.align_table
-                  (PackageAction.to_aligned_strings actions)))
+                  (PackageAction.to_aligned_strings ~explicit:true actions)))
             (colorise tint
                (Printf.sprintf "%s%s "
                   (utf8_symbol Symbols.box_drawings_light_up_and_right "+")
@@ -1022,20 +1022,13 @@ let simulate_new_state state t =
    the packages in the user request *)
 let confirmation ?ask requested solution =
   OpamCoreConfig.answer_is_yes () ||
-  match ask with
-  | Some false -> true
-  | Some true -> OpamConsole.confirm "Do you want to continue?"
-  | None ->
-    let open PackageActionGraph in
-    let solution_packages =
-      fold_vertex (fun v acc ->
-          List.map OpamPackage.name (action_contents v)
-          |> OpamPackage.Name.Set.of_list
-          |> OpamPackage.Name.Set.union acc)
-        solution
-        OpamPackage.Name.Set.empty in
-    OpamPackage.Name.Set.equal requested solution_packages
-    || OpamConsole.confirm "Do you want to continue?"
+  ask = Some false ||
+  let solution_packages =
+    OpamPackage.names_of_packages (OpamSolver.all_packages solution)
+  in
+  ask <> Some true && OpamPackage.Name.Set.equal requested solution_packages ||
+  let stats = OpamSolver.stats solution in
+  OpamConsole.confirm "\nProceed with %s?" (OpamSolver.string_of_stats stats)
 
 let run_hook_job t name ?(local=[]) ?(allow_stdout=false) w =
   let shell_env = OpamEnv.get_full ~set_opamroot:true ~set_opamswitch:true ~force_path:true t in
@@ -1220,7 +1213,6 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
     t, Nothing_to_do
   else (
     (* Otherwise, compute the actions to perform *)
-    let stats = OpamSolver.stats solution in
     let show_solution = ask <> Some false in
     let action_graph = OpamSolver.get_atomic_action_graph solution in
     let new_state = simulate_new_state t action_graph in
@@ -1256,12 +1248,9 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
         ~requested ~reinstall:(Lazy.force t.reinstall)
         ~available:(Lazy.force t.available_packages)
         solution;
-      let total_actions = sum stats in
-      if total_actions >= 2 then
-        OpamConsole.msg "===== %s =====\n" (OpamSolver.string_of_stats stats);
     );
     if not OpamClientConfig.(!r.show) &&
-       (download_only || confirmation ?ask requested action_graph)
+       (download_only || confirmation ?ask requested solution)
     then (
       let t =
         install_depexts t @@ OpamPackage.Set.inter

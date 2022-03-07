@@ -22,9 +22,9 @@ remove:  [ "test" "-d" a:lib ]
 ### opam switch create system --empty
 ### opam install a.1
 The following actions will be performed:
-  - install b 1 [required by a]
+=== install 2 packages
   - install a 1
-===== 2 to install =====
+  - install b 1 [required by a]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed b.1
@@ -35,9 +35,9 @@ a.1
 b.1
 ### opam upgrade
 The following actions will be performed:
+=== upgrade 2 packages
   - upgrade a 1 to 2
   - upgrade b 1 to 2
-===== 2 to upgrade =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   a.1
@@ -50,9 +50,9 @@ a.2
 b.2
 ### opam install a.1
 The following actions will be performed:
-  - downgrade b 2 to 1 [required by a]
+=== downgrade 2 packages
   - downgrade a 2 to 1
-===== 2 to downgrade =====
+  - downgrade b 2 to 1 [required by a]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   b.2
@@ -65,9 +65,9 @@ a.1
 b.1
 ### opam upgrade
 The following actions will be performed:
+=== upgrade 2 packages
   - upgrade a 1 to 2
   - upgrade b 1 to 2
-===== 2 to upgrade =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   a.1
@@ -80,6 +80,7 @@ a.2
 b.2
 ### opam remove b
 The following actions will be performed:
+=== remove 1 package
   - remove b 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -87,9 +88,10 @@ The following actions will be performed:
 Done.
 ### opam install a.1
 The following actions will be performed:
-  - install   b 1      [required by a]
+=== downgrade 1 package
   - downgrade a 2 to 1
-===== 1 to install | 1 to downgrade =====
+=== install 1 package
+  - install   b 1      [required by a]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   a.2

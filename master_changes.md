@@ -19,6 +19,9 @@ users)
   * --no-depexts is the default in CLI 2.0 mode [#4908 @dra27]
   * [BUG] Fix behaviour on closed stdout/stderr [#4901 @altgr - fix #4216]
   * Add `OPAMREPOSITORYTARRING` environment variable to enable repository tarring optimisation, it is disabled by default because it is an optimisation only on some os/configurations [#5015 @rjbou]
+  * Refresh the actions list output, now sorted by action/package rather than dependency [#5045 @kit-ty-kate @AltGr - fix #5041]
+  * Put back the actions summary as part of confirmation question [#5045 @AltGr]
+  * Error report display: print action name [#5045 @AltGr]
 
 ## Plugins
   *
@@ -292,6 +295,8 @@ users)
   * `OpamSolver.coinstallable_subset`: add `add_invariant` optional argument [#5024 @AltGr]
   * `OpamSolver.installable`: use `installable_subset` that uses `coinstallable_subset` [#5024 @kit_ty_kate]
   * `OpamSolver.explicit`: when adding fetch nodes, add shared source ones. Change of `sources_needed` argument type [#4893 @rjbou]
+  * `OpamActionGraph.to_aligned_strings`: add `explicit` optional argument to print action name in utf8 [#5045 @AltGr]
+  * `OpamSolver.print_solution`: change output format [#5045 @AltGr]
 ## opam-format
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamSysPkg` and `OpamVariable` [#4918 @rjbou]
   * Add OpamPackage.Version.default returning the version number used when no version is given for a package [#4949 @kit-ty-kate]

@@ -314,6 +314,7 @@ test-not-in-repo is now pinned to file://${BASEDIR}/test-not-in-repo (version de
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["test-not-in-repo"]
 The following actions will be performed:
+=== install 1 package
   - install test-not-in-repo dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -343,14 +344,14 @@ absolute
 abt
 ### opam install abella --show
 The following actions would be performed:
-  - install base-bigarray         base
-  - install ocaml-options-vanilla 1
-  - install base-threads          base
-  - install ocaml-base-compiler   4.12.1 [required by ocaml]
-  - install base-unix             base
-  - install ocaml-config          2      [required by ocaml]
-  - install ocaml                 4.12.1 [required by abella]
-  - install ocamlfind             1.9.1  [required by abella]
-  - install ocamlbuild            0.14.0 [required by abella]
+=== install 10 packages
   - install abella                2.0.7
-===== 10 to install =====
+  - install base-bigarray         base
+  - install base-threads          base
+  - install base-unix             base
+  - install ocaml                 4.12.1 [required by abella]
+  - install ocaml-base-compiler   4.12.1 [required by ocaml]
+  - install ocaml-config          2      [required by ocaml]
+  - install ocaml-options-vanilla 1
+  - install ocamlbuild            0.14.0 [required by abella]
+  - install ocamlfind             1.9.1  [required by abella]

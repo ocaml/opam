@@ -10,10 +10,10 @@ depends: "a" | "b"
 ### opam switch create default --empty
 ### opam install a b c
 The following actions will be performed:
-  - install b 1
+=== install 3 packages
   - install a 1
+  - install b 1
   - install c 1
-===== 3 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed a.1
@@ -22,16 +22,18 @@ The following actions will be performed:
 Done.
 ### opam remove a --show
 The following actions would be performed:
+=== remove 1 package
   - remove    a 1
+=== recompile 1 package
   - recompile c 1 [uses a]
-===== 1 to recompile | 1 to remove =====
 ### opam remove --auto --show
 Nothing to do.
 ### opam remove a --auto --show
 The following actions would be performed:
+=== remove 1 package
   - remove    a 1
+=== recompile 1 package
   - recompile c 1 [uses a]
-===== 1 to recompile | 1 to remove =====
 ### :::::: message on removal of an unavailable package (#4890)
 ### <pkg:z.1>
 opam-version: "2.0"

@@ -672,6 +672,7 @@ Done.
 ocaml.system
 ### opam install P1
 The following actions will be performed:
+=== install 1 package
   - install P1 1  I ll always bother you displaying this message
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -687,6 +688,7 @@ ocaml.system
 P1.1
 ### opam remove P1
 The following actions will be performed:
+=== remove 1 package
   - remove P1 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -709,9 +711,9 @@ P5     --          Testing optional dependencies
 ocaml.system
 ### opam install --yes P5 | unordered
 The following actions will be performed:
+=== install 2 packages
   - install P1 1 [required by P5] I ll always bother you displaying this message
   - install P5 1
-===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved P1.1  (cached)
@@ -730,6 +732,7 @@ P1.1
 P5.1
 ### opam remove P5
 The following actions will be performed:
+=== remove 1 package
   - remove P5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -740,6 +743,7 @@ ocaml.system
 P1.1
 ### opam install P5
 The following actions will be performed:
+=== install 1 package
   - install P5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -752,9 +756,9 @@ P1.1
 P5.1
 ### opam remove P5 -a --yes
 The following actions will be performed:
-  - remove P5 1
+=== remove 2 packages
   - remove P1 1
-===== 2 to remove =====
+  - remove P5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   P5.1
@@ -764,9 +768,9 @@ Done.
 ocaml.system
 ### opam install P5 --yes | unordered
 The following actions will be performed:
+=== install 2 packages
   - install P1 1 [required by P5] I ll always bother you displaying this message
   - install P5 1
-===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved P1.1  (cached)
@@ -782,11 +786,12 @@ Done.
 ocaml.system
 P1.1
 P5.1
-### opam install P2 --yes | unordered
+### opam install P2 --yes
 The following actions will be performed:
-  - install   P2 1
+=== recompile 1 package
   - recompile P5 1 [uses P2]
-===== 1 to install | 1 to recompile =====
+=== install 1 package
+  - install   P2 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved P2.1  (${BASEDIR}/REPO/cache)
@@ -803,6 +808,7 @@ P2.1
 P5.1
 ### opam remove P5 -a
 The following actions will be performed:
+=== remove 1 package
   - remove P5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -814,9 +820,9 @@ P1.1
 P2.1
 ### opam remove P2 -a --yes
 The following actions will be performed:
-  - remove P2 1
+=== remove 2 packages
   - remove P1 1
-===== 2 to remove =====
+  - remove P2 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   P2.1
@@ -826,10 +832,10 @@ Done.
 ocaml.system
 ### opam install P1 P2 P5 | unordered
 The following actions will be performed:
+=== install 3 packages
   - install P1 1  I ll always bother you displaying this message
   - install P2 1
   - install P5 1
-===== 3 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved P1.1  (cached)
@@ -851,9 +857,10 @@ P2.1
 P5.1
 ### opam remove P2 -a --yes
 The following actions will be performed:
+=== remove 1 package
   - remove    P2 1
+=== recompile 1 package
   - recompile P5 1 [uses P2]
-===== 1 to recompile | 1 to remove =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved P5.1  (cached)
@@ -868,9 +875,9 @@ P1.1
 P5.1
 ### opam remove P1 --yes
 The following actions will be performed:
-  - remove P5 1 [uses P1]
+=== remove 2 packages
   - remove P1 1
-===== 2 to remove =====
+  - remove P5 1 [uses P1]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   P5.1
@@ -893,6 +900,7 @@ P5     --          Testing optional dependencies
 ocaml.system
 ### opam install P1
 The following actions will be performed:
+=== install 1 package
   - install P1 1  I ll always bother you displaying this message
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -908,6 +916,7 @@ ocaml.system
 P1.1
 ### opam install P2
 The following actions will be performed:
+=== install 1 package
   - install P2 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -920,6 +929,7 @@ P1.1
 P2.1
 ### opam install P3
 The following actions will be performed:
+=== install 1 package
   - install P3 1~weird-version.test
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -933,6 +943,7 @@ P2.1
 P3.1~weird-version.test
 ### opam install P4
 The following actions will be performed:
+=== install 1 package
   - install P4 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -964,11 +975,11 @@ P3.1~weird-version.test
 P4.1
 ### opam reinstall P1 --yes | unordered
 The following actions will be performed:
+=== recompile 4 packages
   - recompile P1 1                                  I ll always bother you displaying this message
-  - recompile P3 1~weird-version.test [uses P1]
   - recompile P2 1                    [uses P1]
+  - recompile P3 1~weird-version.test [uses P1]
   - recompile P4 1                    [uses P2, P3]
-===== 4 to recompile =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved P1.1  (cached)
@@ -1056,11 +1067,12 @@ P4.1
   ("P1" "version1")
 ### opam upgrade --yes | unordered
 The following actions will be performed:
-  - upgrade   P1 1 to 2
-  - recompile P3 1~weird-version.test [uses P1]
+=== recompile 2 packages
   - recompile P2 1                    [uses P1]
+  - recompile P3 1~weird-version.test [uses P1]
+=== upgrade 2 packages
+  - upgrade   P1 1 to 2
   - upgrade   P4 1 to 3
-===== 2 to recompile | 2 to upgrade =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved P1.2  (${BASEDIR}/REPO/cache)
@@ -1103,11 +1115,12 @@ P3.1~weird-version.test
 P4.3
 ### opam install P4.2 --yes | unordered
 The following actions will be performed:
+=== downgrade 2 packages
   - downgrade P1 2 to 1               [required by P4] I ll always bother you displaying this message
-  - recompile P3 1~weird-version.test [uses P1]
-  - recompile P2 1                    [uses P1]
   - downgrade P4 3 to 2
-===== 2 to recompile | 2 to downgrade =====
+=== recompile 2 packages
+  - recompile P2 1                    [uses P1]
+  - recompile P3 1~weird-version.test [uses P1]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved P1.1  (cached)
@@ -1152,9 +1165,9 @@ P3.1~weird-version.test
 P4.2
 ### opam remove P3.1~weird-version.test P4.2
 The following actions will be performed:
-  - remove P4 2
+=== remove 2 packages
   - remove P3 1~weird-version.test
-===== 2 to remove =====
+  - remove P4 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   P4.2
@@ -1178,9 +1191,9 @@ Done.
 ocaml.system
 ### opam switch import test.export | unordered
 The following actions will be performed:
+=== install 2 packages
   - install P1 1  I ll always bother you displaying this message
   - install P2 1
-===== 2 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved P1.1  (cached)
@@ -1209,6 +1222,7 @@ Done.
 ocaml.20
 ### opam install P1
 The following actions will be performed:
+=== install 1 package
   - install P1 1  I ll always bother you displaying this message
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1249,12 +1263,12 @@ P2.1
 ### opam var ext_lib=$LIB_EXT --switch 10+a+b | '.*' -> '\c'
 ### opam install ocaml.10+a+b P1 P2 P3 P4 | unordered
 The following actions will be performed:
+=== install 5 packages
   - install ocaml 10+a+b
   - install P1    1                     I ll always bother you displaying this message
-  - install P3    1~weird-version.test
   - install P2    1
+  - install P3    1~weird-version.test
   - install P4    3
-===== 5 to install =====
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml.10+a+b
