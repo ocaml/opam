@@ -53,6 +53,10 @@ dune-local.pkgbuild: findlib.pkgbuild
 
 spdx_licenses.pkgbuild: dune-local.pkgbuild
 
+uutf.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild topkg.pkgbuild cmdliner.pkgbuild
+
+jsonm.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild topkg.pkgbuild  uutf.pkgbuild
+
 opam-file-format-pkg-build:
 	dune build @install -p opam-file-format
 	dune install -p opam-file-format opam-file-format
@@ -137,3 +141,11 @@ base64-pkg-build:
 spdx_licenses-pkg-build:
 	dune build @install -p spdx_licenses
 	dune install -p spdx_licenses spdx_licenses
+
+uutf-pkg-build:
+	ocaml pkg/pkg.ml build --pkg-name uutf --dev-pkg false --with-cmdliner true
+	ocamlfind install uutf _build/pkg/META $(addprefix _build/src/uutf.,$(EXTS1)) $(addprefix _build/src/uutf.cm,$(EXTS2)) _build/src/uutf*.cmx
+
+jsonm-pkg-build:
+	ocaml pkg/pkg.ml build --pkg-name jsonm --pinned false
+	ocamlfind install jsonm _build/pkg/META $(addprefix _build/src/jsonm.,$(EXTS1)) $(addprefix _build/src/jsonm.cm,$(EXTS2)) _build/src/jsonm*.cmx

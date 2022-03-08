@@ -1,0 +1,5 @@
+(library
+  (name uutf)
+  (public_name uutf)
+  (flags :standard -w -3)
+  (wrapped false))
