@@ -707,6 +707,7 @@ let wait_one processes =
     in
     let return = Hashtbl.find dead_childs p.p_pid in
     Hashtbl.remove dead_childs p.p_pid;
+    verbose_print_cmd p;
     p, exit_status p return
   with Not_found ->
     let rec aux () =
@@ -723,6 +724,7 @@ let wait_one processes =
           safe_wait (List.hd processes).p_pid Unix.wait () in
       try
         let p = List.find (fun p -> p.p_pid = pid) processes in
+        verbose_print_cmd p;
         p, exit_status p return
       with Not_found ->
         Hashtbl.add dead_childs pid return;
