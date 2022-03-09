@@ -83,7 +83,7 @@ jobs:
         echo ::set-output name=opam-bs-cache::${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: |
           src_ext/archives
@@ -96,7 +96,7 @@ jobs:
       run: bash -exu .github/scripts/main/archives-cache.sh
     - name: ocaml-secondary-compiler Cache
       id: legacy
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: ~/.opam
         key: ${{ runner.os }}-${{ steps.keys.outputs.ocaml-secondary-compiler }}
@@ -114,7 +114,7 @@ jobs:
     steps:
     - name: Cygwin32 Cache
       id: cygwin32
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: D:\Cache\cygwin\i686-pc-cygwin
         key: cygwin32-${{ needs.Analyse.outputs.cygwin }}
@@ -122,7 +122,7 @@ jobs:
         force-gzip: true
     - name: Cygwin64 Cache
       id: cygwin64
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: D:\Cache\cygwin\x86_64-pc-cygwin
         key: cygwin64-${{ needs.Analyse.outputs.cygwin }}
@@ -157,7 +157,7 @@ jobs:
       uses: actions/checkout@v2
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: |
           src_ext/archives
@@ -206,7 +206,7 @@ jobs:
     - name: Cygwin32 Cache
       id: cygwin32
       if: matrix.build == 'i686-pc-cygwin'
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: D:\Cache\cygwin\i686-pc-cygwin
         key: cygwin32-${{ needs.Analyse.outputs.cygwin }}
@@ -214,14 +214,14 @@ jobs:
     - name: Cygwin64 Cache
       id: cygwin64
       if: matrix.build == 'x86_64-pc-cygwin'
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: D:\Cache\cygwin\x86_64-pc-cygwin
         key: cygwin64-${{ needs.Analyse.outputs.cygwin }}
         force-gzip: true
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: |
           src_ext/archives
@@ -230,7 +230,7 @@ jobs:
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: D:\Cache\ocaml-local.tar
         key: ${{ runner.os }}-${{ matrix.host }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -273,7 +273,7 @@ jobs:
       uses: actions/checkout@v2
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: |
           src_ext/archives
@@ -350,7 +350,7 @@ jobs:
       run: sudo apt install bubblewrap
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: |
           src_ext/archives
@@ -402,7 +402,7 @@ jobs:
       uses: actions/checkout@v2
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: |
           src_ext/archives
@@ -455,7 +455,7 @@ jobs:
       uses: actions/checkout@v2
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: |
           src_ext/archives
@@ -491,7 +491,7 @@ jobs:
       uses: actions/checkout@v2
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: |
           src_ext/archives
@@ -537,7 +537,7 @@ jobs:
       uses: actions/checkout@v2
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: |
           src_ext/archives
@@ -647,7 +647,7 @@ jobs:
       uses: actions/checkout@v2
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: dra27/cache@opam
+      uses: ocaml-opam/cache@opam
       with:
         path: |
           src_ext/archives
