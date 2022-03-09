@@ -34,7 +34,6 @@ sed -e '/^runstatedir/d' \
     -e 's/ runstatedir//' \
     -e '/split(line, arg/s|" "|/[ \\r\\t]/|' \
     -e '/define|undef/s/|\\\$/|\\r?\\$/' \
-    -e '1d' \
     configure >> configure.tmp
 
 mv -f configure.tmp configure
