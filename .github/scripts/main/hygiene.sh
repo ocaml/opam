@@ -45,6 +45,7 @@ case $GITHUB_EVENT_NAME in
       echo "check configure for $commit"
       CheckConfigure "$commit"
     done
+    git checkout -f "$GITHUB_SHA"
     ;;
   *)
     echo "no configure to check for unknown event"
@@ -95,7 +96,7 @@ fi
 
 (set +x ; echo -en "::group::check workflow generation\r") 2>/dev/null
 cd .github/workflows
-dune exec --root=. ./ci.exe
+dune exec --root=. -- ./ci.exe
 cd ../..
 if git diff --quiet --exit-code .github/workflows/main.yml ; then
   (set +x; echo "Workflows up-to-date") 2>/dev/null
