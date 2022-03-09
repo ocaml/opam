@@ -30,8 +30,8 @@ module type SET = sig
 
   val of_list: elt list -> t
   val to_string: t -> string
-  val to_json: t -> OpamJson.t
-  val of_json: OpamJson.t -> t option
+  val to_json: t OpamJson.encoder
+  val of_json: t OpamJson.decoder
   val find: (elt -> bool) -> t -> elt
   val find_opt: (elt -> bool) -> t -> elt option
 
@@ -63,8 +63,8 @@ module type MAP = sig
   include Map.S
 
   val to_string: ('a -> string) -> 'a t  -> string
-  val to_json: ('a -> OpamJson.t) -> 'a t -> OpamJson.t
-  val of_json: (OpamJson.t -> 'a option) -> OpamJson.t -> 'a t option
+  val to_json: 'a OpamJson.encoder -> 'a t OpamJson.encoder
+  val of_json: 'a OpamJson.decoder -> 'a t OpamJson.decoder
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
   val find_opt: key -> 'a t -> 'a option
@@ -104,8 +104,8 @@ module type ABSTRACT = sig
   val equal: t -> t -> bool
   val of_string: string -> t
   val to_string: t -> string
-  val to_json: t -> OpamJson.t
-  val of_json: OpamJson.t -> t option
+  val to_json: t OpamJson.encoder
+  val of_json: t OpamJson.decoder
 
   module Set: SET with type elt = t
   module Map: MAP with type key = t
@@ -119,8 +119,8 @@ module AbstractString : ABSTRACT with type t = string
 module type OrderedType = sig
   include Set.OrderedType
   val to_string: t -> string
-  val to_json: t -> OpamJson.t
-  val of_json: OpamJson.t -> t option
+  val to_json: t OpamJson.encoder
+  val of_json: t OpamJson.decoder
 end
 
 module Set: sig
