@@ -1,0 +1,64 @@
+N0REP0
+### : opam internals parallised jobs
+### <pkg:foo.1>
+opam-version: "2.0"
+build: [ "sh" "sleep.sh" name ]
+### <pkg:foo.1:sleep.sh>
+sleep 1
+### <pkg:bar.1>
+opam-version: "2.0"
+build: [ "sh" "sleep.sh" name ]
+### <pkg:bar.1:sleep.sh>
+sleep 1
+echo woke up $1
+### <pkg:baz.1>
+opam-version: "2.0"
+build: [ "sh" "sleep.sh" name ]
+### <pkg:baz.1:sleep.sh>
+sleep 1
+echo woke up $1
+### <pkg:qux.1>
+opam-version: "2.0"
+build: [ "sh" "sleep.sh" name ]
+### <pkg:qux.1:sleep.sh>
+sleep 1
+### <pkg:top.1>
+opam-version: "2.0"
+depends: [ "foo" "bar" "baz" "qux" ]
+build: [ "sh" "shout.sh" ]
+install: [ "sh" "shout.sh" name ]
+### <pkg:top.1:shout.sh>
+if [ $# -eq 1 ]; then
+  echo "finally installed $1"
+fi
+### opam switch create parallel --empty
+### opam install foo bar baz qux top -vv | grep -v '^Processing' | '.*(/|\\|")sh(\.exe)?"? "' -> 'sh "' | unordered
+The following actions will be performed:
+=== install 5 packages
+  - install bar 1
+  - install baz 1
+  - install top 1
+  - install foo 1
+  - install qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+sh "sleep.sh" "bar" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/bar.1)
+- woke up bar
+-> compiled  bar.1
+-> installed bar.1
+sh "sleep.sh" "baz" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/baz.1)
+- woke up baz
+-> compiled  baz.1
+-> installed baz.1
+sh "sleep.sh" "foo" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/foo.1)
+-> compiled  foo.1
+-> installed foo.1
+sh "sleep.sh" "qux" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/qux.1)
+-> compiled  qux.1
+-> installed qux.1
+sh "shout.sh" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/top.1)
+-> compiled  top.1
+sh "shout.sh" "top" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/top.1)
+- finally installed top
+-> installed top.1
+Done.

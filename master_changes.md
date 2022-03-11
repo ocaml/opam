@@ -192,6 +192,7 @@ users)
   * Homogeneise is_archive tar & zip: if file exists check magic number, otherwise check extension [#4964 @rjbou]
   * [BUG] Remove windows double printing on commands and their output [#4940 @rjbou]
   * OpamParallel, MakeGraph(_).to_json: fix incorrect use of List.assoc [#5038 @Armael]
+  * [BUG] Fix display of command when parallelised [#5091 @rjbou]
 
 ## Internal: Windows
   * Support MSYS2: treat MSYS2 and Cygwin as equivalent [#4813 @jonahbeckford]
@@ -309,3 +310,4 @@ users)
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamFilename`, `OpamHash`, `OpamStd`, `OpamStd`, `OpamUrl`, and `OpamVersion` [#4918 @rjbou]
   * `OpamHash`: add `sort` from strongest to weakest kind
   * `OpamSystem.real_path`: Remove the double chdir trick on OCaml >= 4.13.0 [#4961 @kit-ty-kate]
+  * `OpamProcess.wait_one`: display command in verbose mode for finished found process [#5091 @rjbou]

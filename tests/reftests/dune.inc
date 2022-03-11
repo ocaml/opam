@@ -428,6 +428,23 @@
    (run ./run.exe %{bin:opam} %{dep:orphans.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-parallel)
+ (action
+  (diff parallel.test parallel.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-parallel)))
+
+(rule
+ (targets parallel.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:parallel.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-pat-sub)
  (action
   (diff pat-sub.test pat-sub.out)))
