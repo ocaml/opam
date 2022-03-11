@@ -67,14 +67,14 @@ include Makefile.dune
 
 $(call PKG_SAME,dune-local)
 
-URL_PKG_findlib = http://download.camlcity.org/download/findlib-1.9.1.tar.gz
-MD5_PKG_findlib = 65e6dc9b305ccbed1267275fe180f538
+URL_PKG_findlib = http://download.camlcity.org/download/findlib-1.9.3.tar.gz
+MD5_PKG_findlib = 24047dd8a0da5322253de9b7aa254e42
 
-URL_PKG_ocamlbuild = https://github.com/ocaml/ocamlbuild/archive/0.14.0.tar.gz
-MD5_PKG_ocamlbuild = a7bf2fe594cd16907807c756b14d501f
+URL_PKG_ocamlbuild = https://github.com/ocaml/ocamlbuild/archive/refs/tags/0.14.1.tar.gz
+MD5_PKG_ocamlbuild = 7027e507ed85f290923ad198f3d2cd1c
 
-URL_PKG_topkg = https://erratique.ch/software/topkg/releases/topkg-1.0.4.tbz
-MD5_PKG_topkg = 324330fc265a7839cf9577e9cc79f5c7
+URL_PKG_topkg = https://erratique.ch/software/topkg/releases/topkg-1.0.5.tbz
+MD5_PKG_topkg = b38175f11fb2f6bc57f6693879b61c8a
 
 URL_seq = https://github.com/c-cube/seq/archive/0.2.2.tar.gz
 MD5_seq = 9033e02283aa3bde9f97f24e632902e3
