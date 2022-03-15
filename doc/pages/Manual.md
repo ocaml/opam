@@ -651,7 +651,10 @@ URLs are provided as strings. They can refer to:
 - URLs of the form `http://`, `https://`, `ftp://`, `ssh://`, `file://`, `rsync://`
 - Version control URLs for git, mercurial and darcs: `git://`, `hg://`,
   `darcs://`. This assumes http transport for `hg` and `darcs`, _i.e._
-  `hg://` is short for `hg+http://`
+  `hg://` is short for `hg+http://`.
+  - Note that Github
+  [disabled](https://github.blog/2021-09-01-improving-git-protocol-security-github/)
+  `git://` protocol support.
 - Version control bound to a specific URL: `<vc>+<scheme>://`, e.g. `git://`,
   `hg+https://`, `git+file://`, etc. (**NOTE:** this has been added in opam 1.2.1)
 
