@@ -15,69 +15,56 @@ type t =
 type 'a encoder = 'a -> t
 type 'a decoder = t -> 'a option
 
-let addc b c = Buffer.add_char b c
-let adds b s = Buffer.add_string b s
-let adds_esc b s =
-  let len = String.length s in
-  let max_idx = len - 1 in
-  let flush b start i =
-    if start < len then Buffer.add_substring b s start (i - start);
+(* adapted snippets from jsonm maintainers
+   https://erratique.ch/repos/jsonm/tree/test/jtree.ml
+*)
+let of_string ?encoding str =
+  let dec d = match Jsonm.decode d with
+    | `Lexeme l -> l
+    | `Error _ -> raise Exit
+    | `End | `Await -> assert false
   in
-  let rec loop start i = match i > max_idx with
-  | true -> flush b start i
-  | false ->
-      let next = i + 1 in
-      match String.get s i with
-      | '"' -> flush b start i; adds b "\\\""; loop next next
-      | '\\' -> flush b start i; adds b "\\\\"; loop next next
-      | '\x00' .. '\x1F' | '\x7F' (* US-ASCII control chars *) as c ->
-          flush b start i;
-          adds b (Printf.sprintf "\\u%04X" (Char.code c));
-          loop next next
-      | _ -> loop start next
+  let rec value v k d = match v with
+    | `Os -> obj [] k d  | `As -> arr [] k d
+    | `Null | `Bool _ | `String _ | `Float _ as v -> k v d
+    | _ -> assert false
+  and arr vs k d = match dec d with
+    | `Ae -> k (`A (List.rev vs)) d
+    | v -> value v (fun v -> arr (v :: vs) k) d
+  and obj ms k d = match dec d with
+    | `Oe -> k (`O (List.rev ms)) d
+    | `Name n -> value (dec d) (fun v -> obj ((n, v) :: ms) k) d
+    | _ -> assert false
   in
-  loop 0 0
+  let d = Jsonm.decoder ?encoding (`String str) in
+  try Some (value (dec d) (fun v _ -> v) d)
+  with Exit -> None
 
-let enc_json_string b s = addc b '"'; adds_esc b s; addc b '"'
-let enc_vsep b = addc b ','
-let enc_lexeme b = function
-| `Null -> adds b "null"
-| `Bool true -> adds b "true"
-| `Bool false -> adds b "false"
-| `Float f -> Printf.bprintf b "%.16g" f
-| `String s -> enc_json_string b s
-| `Name n -> enc_json_string b n; addc b ':'
-| `As -> addc b '['
-| `Ae -> addc b ']'
-| `Os -> addc b '{'
-| `Oe -> addc b '}'
-
-let enc_json b (json:t) =
-  let enc = enc_lexeme in
-  let enc_sep seq enc_seq k b = match seq with
-  | [] -> enc_seq seq k b
-  | seq -> enc_vsep b; enc_seq seq k b
+let to_buffer ~minify buff json =
+  let enc e l = ignore (Jsonm.encode e (`Lexeme l)) in
+  let rec value v k e = match v with
+    | `A vs -> arr vs k e
+    | `O ms -> obj ms k e
+    | `Null | `Bool _ | `Float _ | `String _ as v -> enc e v; k e
+  and arr vs k e = enc e `As; arr_vs vs k e
+  and arr_vs vs k e = match vs with
+    | v :: vs' -> value v (arr_vs vs' k) e
+    | [] -> enc e `Ae; k e
+  and obj ms k e = enc e `Os; obj_ms ms k e
+  and obj_ms ms k e = match ms with
+    | (n, v) :: ms -> enc e (`Name n); value v (obj_ms ms k) e
+    | [] -> enc e `Oe; k e
   in
-  let rec value v k b = match v with
-    | `A vs -> arr vs k b
-    | `O ms -> obj ms k b
-    | `Null | `Bool _ | `Float _ | `String _ as v -> enc b v; k b
-  and arr vs k b = enc b `As; arr_vs vs k b
-  and arr_vs vs k b = match vs with
-    | v :: vs' -> value v (enc_sep vs' arr_vs k) b
-    | [] -> enc b `Ae; k b
-  and obj ms k b = enc b `Os; obj_ms ms k b
-  and obj_ms ms k b = match ms with
-    | (n, v) :: ms -> enc b (`Name n); value v (enc_sep ms obj_ms k) b
-    | [] -> enc b `Oe; k b
-  in
-  value json (fun _ -> ()) b
+  let e = Jsonm.encoder ~minify (`Buffer buff) in
+  let finish e = ignore (Jsonm.encode e `End) in
+  value json finish e
 
-let to_string (json:t) =
+let to_string ?(minify=false) j =
   let b = Buffer.create 1024 in
-  enc_json b json;
+  to_buffer ~minify b j;
   Buffer.contents b
 
+(* General json output *)
 let json_buffer =
   ref []
 
@@ -87,5 +74,5 @@ let append key json =
 let flush oc =
   let b = Buffer.create 1024 in
   let json = (`O (List.rev !json_buffer)) in
-  let json = enc_json b json; Buffer.contents b in
+  let json = to_buffer ~minify:true b json; Buffer.contents b in
   output_string oc json; flush oc
