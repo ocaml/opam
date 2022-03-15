@@ -43,7 +43,9 @@
      * `| unordered` compares lines without considering their ordering
      * variables from command outputs: `cmd args >$ VAR`
      * `### : comment`
-     * opam-cat: prints a nromalised opam file
+     * `opam-cat file`: prints a normalised opam file
+     * `json-cat file`: print a human readable opam output json file, with
+       replacement of some duration and temporary files names
    - if you need more shell power, create a script using <FILENAME> then run it.
      Or just use `sh -c`... but beware for compatibility.
 
@@ -289,6 +291,8 @@ type command =
   | Pin_file_content of string
   | Cat of { files: string list;
              filter: (Re.t * filt_sort) list; }
+  | Json of { files: string list;
+             filter: (Re.t * filt_sort) list; }
   | Run of { env: (string * string) list;
              cmd: string;
              args: string list; (* still escaped *)
@@ -427,6 +431,8 @@ module Parse = struct
     match cmd with
     | Some "opam-cat" ->
       Cat { files = args; filter = rewr; }
+    | Some "json-cat" ->
+      Json { files = args; filter = rewr; }
     | Some cmd ->
       Run {
         env = varbinds;
@@ -675,6 +681,58 @@ let run_test ?(vars=[]) ~opam t =
           in
           print_string (str_replace_path OpamSystem.back_to_forward
                           (filter @ common_filters dir) s);
+          vars
+        | Json { files; filter } ->
+          let files =
+            List.map (fun s ->
+                Re.(replace_string (compile @@ str "$OPAMROOT") ~by:opamroot s))
+              files
+          in
+          let json_filters =
+            let open Re in
+            let hex_output ext =
+              seq [ char '-'; rep1 digit;
+                    char '-'; repn xdigit 6 (Some 6);
+                    str ext ],
+              Sed ext
+            in
+            [
+              seq [ str {|"duration": |};
+                    rep1 digit; char '.';
+                    rep1 @@ alt [digit ; char 'e'; char '-'] ],
+              Sed {|"duration": 6.2831853071|};
+              hex_output ".env";
+              hex_output ".out";
+              str OpamVersion.(to_string (full ())), Sed "currentv";
+            ]
+          in
+          let to_string f =
+            let ic = open_in f in
+            let content =
+              let rec aux content =
+                try aux (input_line ic :: content)
+                with End_of_file -> content
+              in
+              aux []
+              |> List.rev
+              |> String.concat "\n"
+            in
+            close_in ic;
+            match OpamJson.of_string content with
+            | Some json ->
+              OpamJson.to_string ~minify:false json ^ "\n"
+            | None -> "# Return Error reading json\n"^content
+          in
+          let s =
+            match files with
+            | [file] -> to_string file
+            | files  ->
+              OpamStd.List.concat_map "\n"
+                (fun f -> Printf.sprintf "=> %s <=\n%s" f (to_string f))
+                files
+          in
+          print_string (str_replace_path OpamSystem.back_to_forward
+                          (filter @ common_filters ~opam dir @ json_filters) s);
           vars
         | Run {env; cmd; args; filter; output; unordered} ->
           let silent = output <> None || unordered in
