@@ -223,6 +223,7 @@ users)
   * Update list with co-instabillity [#5024 @AltGr]
   * Add lint test [#4967 @rjbou]
   * Add lock test [#4963 @rjbou]
+  * Add working dir/inplace/assume-built test [#5081 @rjbou]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]

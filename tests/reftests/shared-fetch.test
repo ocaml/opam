@@ -249,7 +249,7 @@ echo "}" >> $file
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
-### opam install out | '[0-9a-f]{32,}' -> "a-given-hash" | grep -v "switch import"
+### opam install out | '[0-9a-f]{32,}' -> "a-given-hash" | grep -v "switch import" | unordered
 The following actions will be performed:
 === install 5 packages
   - install extra    3 [required by intra]
