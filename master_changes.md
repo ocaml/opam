@@ -151,6 +151,8 @@ users)
   * configure: Use gmake instead of make on Unix systems (fixes BSDs) [#5090 @kit-ty-kate]
   * Patch AltGr/ocaml-mccs#36 in the src_ext build to fix Cygwin32 [#5094 @dra27]
   * Silence warning 70 [#5104 @dra27]
+  * Add `jsonm` (and `uutf`) dependency [#5098 @rjbou]
+  * Add `jsonm` (and `uutf`) dependency [#5098 @rjbou - fix #5085]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
