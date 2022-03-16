@@ -581,6 +581,23 @@
    (run ./run.exe %{bin:opam} %{dep:show.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-source)
+ (action
+  (diff source.test source.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-source)))
+
+(rule
+ (targets source.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:source.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-switch-creation)
  (action
   (diff switch-creation.test switch-creation.out)))
