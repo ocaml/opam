@@ -1034,7 +1034,7 @@ P1.1
 P2.1
 P3.1~weird-version.test
 P4.1
-### opam reinstall P1 --yes
+### opam reinstall P1 --yes | unordered
 The following actions will be performed:
 === recompile 4 packages
   - recompile P1 1                                  I ll always bother you displaying this message
