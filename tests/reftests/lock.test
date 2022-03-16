@@ -198,10 +198,10 @@ depends: [ "quux" "dep-corge" ]
 ### opam install ./interlock --deps-only
 The following actions will be performed:
 === install 4 packages
-  - install dep-baz   2
-  - install dep-corge 4
-  - install dep-foo   1
-  - install dep-quux  3
+  - install dep-baz   2 [required by baz]
+  - install dep-corge 4 [required by corge]
+  - install dep-foo   1 [required by foo]
+  - install dep-quux  3 [required by quux]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed dep-baz.2

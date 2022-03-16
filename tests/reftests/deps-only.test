@@ -22,24 +22,27 @@ depopts: "foo" { < "2" }
 ### opam install --deps-only foo
 The following actions would be performed:
 === install 1 package
-  - install truc 1
+  - install truc 1 [required by foo]
 ### opam install --deps-only bar
 The following actions would be performed:
 === install 1 package
-  - install foo 1
+  - install foo 1 [required by bar]
 ### opam install --deps-only baz
 The following actions would be performed:
 === install 2 packages
-  - install bar 1
-  - install foo 1
+  - install bar 1 [required by baz]
+  - install foo 1 [required by bar]
 ### opam install --deps-only foo bar
 Nothing to do.
 ### opam install --deps-only foo baz
-Nothing to do.
+The following actions would be performed:
+=== install 2 packages
+  - install bar 1 [required by baz]
+  - install foo 1 [required by bar]
 ### opam install --deps-only bar baz
 The following actions would be performed:
 === install 1 package
-  - install foo 1
+  - install foo 1 [required by bar]
 ### opam install --deps-only foo bar baz
 Nothing to do.
 ### opam install --deps-only truc
@@ -47,9 +50,9 @@ Nothing to do.
 ### opam install --deps-only truc baz
 The following actions would be performed:
 === install 2 packages
-  - install bar 1
-  - install foo 1
-### ::::::::::::::::::: Test for #4911 (broken!) ::::::::::::::::
+  - install bar 1 [required by baz]
+  - install foo 1 [required by bar]
+### ::::::::::::::::::: Test for #4911 ::::::::::::::::
 ### OPAMSHOW=0
 ### <pkg:buz.1>
 opam-version: "2.0"
@@ -64,10 +67,11 @@ The following actions will be performed:
 -> installed buz.1
 -> installed foo.1
 Done.
+### opam list --roots -s
+buz
+foo
 ### opam install --deps-only --show bar
-The following actions would be performed:
-=== remove 1 package
-  - remove buz 1
+Nothing to do.
 ### ::: check ability to install unavailable package :::
 ### <pkg:a.1>
 opam-version: "2.0"
@@ -79,4 +83,18 @@ depends: "a"
 opam-version: "2.0"
 depends: "b"
 ### opam install a c --deps-only
-Nothing to do.
+[ERROR] Package conflict!
+  * Missing dependency:
+    - a
+    unmet availability conditions: 'false'
+
+No solution found, exiting
+# Return code 20 #
+### opam install c --deps-only
+[ERROR] Package conflict!
+  * Missing dependency:
+    - a
+    unmet availability conditions: 'false'
+
+No solution found, exiting
+# Return code 20 #
