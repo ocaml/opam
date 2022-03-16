@@ -93,11 +93,12 @@ New option/command/subcommand are prefixed with ◈.
 ## Test
   *
 
-## Shell
-  *
+## Reftests
+### Tests
+  * Fix github url: `git://` form no more handled [#5097 @rjbou]
 
 ## Doc
-  *
+  * Add github `git://` protocol deprecation note [#5097 @rjbou]
 
 ## Security fixes
   *
