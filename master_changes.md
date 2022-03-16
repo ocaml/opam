@@ -224,6 +224,7 @@ users)
   * Add lint test [#4967 @rjbou]
   * Add lock test [#4963 @rjbou]
   * Add working dir/inplace/assume-built test [#5081 @rjbou]
+  * Fix github url: `git://` form no more handled [#5097 @rjbou]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
@@ -273,6 +274,7 @@ users)
   * Add OpenBSD & FreeBSD in the precompiled binaries list [#5001 @mndrix]
   * install.md: fix brew instructions, spelling [#4421 @johnwhitington]
   * document the options of OpamSolver.dependencies [#5040 @gasche @Armael]
+  * Add github `git://` protocol deprecation note [#5097 @rjbou]
 
 ## Security fixes
   *
