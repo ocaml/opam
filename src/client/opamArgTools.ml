@@ -142,8 +142,9 @@ let check_cli_validity_t ~newer ~default_cli ~older ~valid ?(cond=fun x -> x)
   | { removed = None ; valid = c; _ } when cond (cond_new cli c) ->
     newer c
   | { removed = Some (removal, instead); default = true; _ }
-    when (snd cli = `Default) && OpamCLIVersion.default < removal ->
-    (* default cli case : we dont even check if the condition is required *)
+    when (snd cli = `Default)
+      && OpamCLIVersion.default < removal
+      && cond true ->
     default_cli removal instead
   | { removed = Some (removal, instead); _ }
     when cond (cond_removed cli removal) ->
