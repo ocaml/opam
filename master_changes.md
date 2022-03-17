@@ -16,13 +16,15 @@ users)
 ## Global CLI
   * Fix typo in error message for opam var [#4786 @kit-ty-kate - fix #4785]
   * Add cli 2.2 handling [#4853 @rjbou]
-  * --no-depexts is the default in CLI 2.0 mode [#4908 @dra27]
+  * `--no-depexts` is the default in CLI 2.0 mode [#4908 @dra27]
   * [BUG] Fix behaviour on closed stdout/stderr [#4901 @altgr - fix #4216]
   * Add `OPAMREPOSITORYTARRING` environment variable to enable repository tarring optimisation, it is disabled by default because it is an optimisation only on some os/configurations [#5015 @rjbou]
   * Refresh the actions list output, now sorted by action/package rather than dependency [#5045 @kit-ty-kate @AltGr - fix #5041]
   * Put back the actions summary as part of confirmation question [#5045 @AltGr]
   * Error report display: print action name [#5045 @AltGr]
   * Refactored depext-related questions, with a flat menu instead of nested y/n questions [#5053 @AltGr - fix #5026]
+  * [BUG] Fix default cli handling for simple flags [#5099 @rjbou]
+  * Add `experimental` flags handling [#5099 @rjbou]
 
 ## Plugins
   *
@@ -312,6 +314,7 @@ users)
   * `OpamClient`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
 
   * `OpamConfigCommand`: `set_opt_switch`, `set_var_switch`, `options_list_switch`, and `var_list_switch` now raise configuration error exception (50) if no switch is found [#5027 @rjbou]
+  * `OpamArgs`, `OpamArgTools`: add `experimental` optional argument to `cli_from` and replace `default` by `option:['experimental | 'ëefault]` for `cli_between`, to handle experimental features [#5099 @rjbou]
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
   * New download functions for shared source, old ones kept [#4893 @rjbou]
