@@ -17,10 +17,10 @@ open Cmdliner
 
 type validity
 
-val cli_from: OpamCLIVersion.t -> validity
+val cli_from: ?experimental:bool -> OpamCLIVersion.t -> validity
 val cli_between:
-  OpamCLIVersion.t -> ?default:bool -> ?replaced:string ->
-  OpamCLIVersion.t -> validity
+  ?option:[`experimental | `default] -> OpamCLIVersion.t ->
+  ?replaced:string -> OpamCLIVersion.t -> validity
 val cli_original: validity
 
 val cli2_0: OpamCLIVersion.t
