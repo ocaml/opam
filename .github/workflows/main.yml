@@ -39,15 +39,14 @@ env:
   OPAMBSVERSION: 2.1.0
   OPAMBSROOT: ~/.cache/.opam.cached
   OPAM12CACHE: ~/.cache/opam1.2/cache
-  # These should be identical to the values in appveyor.yml and the other workflows
   OPAM_REPO: https://github.com/ocaml/opam-repository.git
   OPAM_TEST_REPO_SHA: fd4405c83bcd23f91373978b45479694079a8c79
   OPAM_REPO_SHA: fd4405c83bcd23f91373978b45479694079a8c79
-  # Default ocaml version for some jobs
-  OCAML_VERSION: 4.13.1
-  ## variables for cache paths
-  GH_OCAML_CACHE: ~/.cache/ocaml-local/**
   SOLVER:
+  CYGWIN_MIRROR: http://mirrors.kernel.org/sourceware/cygwin/
+  CYGWIN_ROOT: D:\cygwin
+  CYGWIN: winsymlinks:native
+  CYGWIN_EPOCH: 2
 
 defaults:
   run:
@@ -58,305 +57,606 @@ jobs:
 ####
 # Caches
 ####
-#  ocaml-cache:
-#    runs-on: ${{ matrix.os }}
-#    strategy:
-#      matrix:
-#        os: [ ubuntu-latest ]
-#        ocamlv: [ 4.02.3, 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1, 4.08.1, 4.09.1, 4.10.2, 4.11.2 ]
-#        include:
-#          - os: macos-latest
-#            ocamlv: 4.11.2
-#      fail-fast: false
-#    steps:
-#    - uses: actions/checkout@v2
-#    - name: ocaml ${{ matrix.ocamlv }} cache
-#      id: ocaml-cache
-#      uses: actions/cache@v2
-#      with:
-#        path: ${{ env.GH_OCAML_CACHE }}
-#        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
-#    - name: Building ocaml ${{ matrix.ocamlv }} cache
-#      if: steps.ocaml-cache.outputs.cache-hit != 'true'
-#      env:
-#        OCAML_VERSION: ${{ matrix.ocamlv }}
-#      run: bash -exu .github/scripts/main/ocaml-cache.sh ocaml
-
-  archives-cache:
+  Analyse:
     runs-on: ubuntu-latest
+    outputs:
+      archives: ${{ steps.keys.outputs.archives }}
+      ocaml-secondary-compiler: ${{ steps.keys.outputs.ocaml-secondary-compiler }}
+      ocaml-cache: ${{ steps.keys.outputs.ocaml-cache }}
+      cygwin: ${{ steps.keys.outputs.cygwin }}
+      opam-bs-cache: ${{ steps.keys.outputs.opam-bs-cache }}
     steps:
-    - uses: actions/checkout@v2
-    - name: src ext archives cache
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: Determine cache keys
+      id: keys
+      run: |
+        echo archives=archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
+        echo ::set-output name=archives::archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
+        echo ocaml-secondary-compiler=legacy-${{ env.OPAM_REPO_SHA }}
+        echo ::set-output name=ocaml-secondary-compiler::legacy-${{ env.OPAM_REPO_SHA }}
+        echo ocaml-cache=${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
+        echo ::set-output name=ocaml-cache::${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
+        echo cygwin=${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}
+        echo ::set-output name=cygwin::${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}
+        echo opam-bs-cache=${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
+        echo ::set-output name=opam-bs-cache::${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
+    - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: actions/cache@v2
+      uses: ocaml-opam/cache@opam
       with:
-        path: src_ext/archives
-        key: archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
-    - name: Retrieve archives
+        path: |
+          src_ext/archives
+          ~/opam-repository
+        key: ${{ steps.keys.outputs.archives }}
+        check-only: true
+        force-gzip: true
+    - name: Create src_ext/archives and opam-repository cache
       if: steps.archives.outputs.cache-hit != 'true'
-      run: |#bash -exu .github/scripts/main/caches.sh archives
-        rm -rf src_ext/archives
-        export PATH=~/.cache/ocaml-local/bin:$PATH
-        which ocaml && export OCAML=`which ocaml` || true
-        make -C src_ext cache-archives
-        ls src_ext/archives -al
+      run: bash -exu .github/scripts/main/archives-cache.sh
+    - name: ocaml-secondary-compiler Cache
+      id: legacy
+      uses: ocaml-opam/cache@opam
+      with:
+        path: ~/.opam
+        key: ${{ runner.os }}-${{ steps.keys.outputs.ocaml-secondary-compiler }}
+        check-only: true
+    - name: Install system's opam package
+      if: steps.legacy.outputs.cache-hit != 'true'
+      run: sudo apt install opam || true
+    - name: Create ocaml-secondary-compiler cache
+      if: steps.legacy.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/main/legacy-cache.sh
+
+  Cygwin:
+    runs-on: windows-2019
+    needs: Analyse
+    steps:
+    - name: Cygwin32 Cache
+      id: cygwin32
+      uses: ocaml-opam/cache@opam
+      with:
+        path: D:\Cache\cygwin\i686-pc-cygwin
+        key: cygwin32-${{ needs.Analyse.outputs.cygwin }}
+        check-only: true
+        force-gzip: true
+    - name: Cygwin64 Cache
+      id: cygwin64
+      uses: ocaml-opam/cache@opam
+      with:
+        path: D:\Cache\cygwin\x86_64-pc-cygwin
+        key: cygwin64-${{ needs.Analyse.outputs.cygwin }}
+        check-only: true
+        force-gzip: true
+    - name: Checkout tree
+      if: steps.cygwin32.outputs.cache-hit != 'true' || steps.cygwin64.outputs.cache-hit != 'true'
+      uses: actions/checkout@v2
+    - name: Create Cygwin32 cache
+      if: steps.cygwin32.outputs.cache-hit != 'true'
+      shell: cmd
+      run: .github\scripts\cygwin.cmd i686-pc-cygwin D:\Cache\cygwin create
+    - name: Create Cygwin64 cache
+      if: steps.cygwin64.outputs.cache-hit != 'true'
+      shell: cmd
+      run: .github\scripts\cygwin.cmd x86_64-pc-cygwin D:\Cache\cygwin create
 
 ####
 # Build
 ####
-  build:
-    runs-on: ${{ matrix.os }}
+  Build-Linux:
+    runs-on: ubuntu-latest
+    needs: Analyse
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
         ocamlv: [ 4.08.1, 4.09.1, 4.10.2, 4.11.2, 4.12.1, 4.13.1 ]
-        include:
-          - os: macos-latest
-            ocamlv: 4.13.1
-      # Intentionally fail fast, no need to run all build if there is a
-      # problem in a given version; usually it is functions not defined in lower
-      # versions of OCaml
       fail-fast: true
     steps:
-    - name: install deps
-      if: ${{ matrix.os == 'ubuntu-latest' }}
+    - name: Install bubblewrap
       run: sudo apt install bubblewrap
-    - uses: actions/checkout@v2
-    - name: ocaml ${{ matrix.ocamlv }} cache
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: src_ext/archives and opam-repository Cache
+      id: archives
+      uses: ocaml-opam/cache@opam
+      with:
+        path: |
+          src_ext/archives
+          ~/opam-repository
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
+    - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
       uses: actions/cache@v2
       with:
-        path: ${{ env.GH_OCAML_CACHE }}
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
-    - name: Building ocaml ${{ matrix.ocamlv }} cache
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
-      env:
-        OCAML_VERSION: ${{ matrix.ocamlv }}
-      run: bash -exu .github/scripts/main/ocaml-cache.sh ocaml
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: Build
-      env:
-        OCAML_VERSION: ${{ matrix.ocamlv }}
-      run: bash -exu .github/scripts/main/main.sh
+      run: bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
+    - name: Test (basic)
+      run: bash -exu .github/scripts/main/test.sh
+
+  Build-Windows:
+    runs-on: windows-2019
+    needs: [ Analyse, Cygwin ]
+    strategy:
+      matrix:
+        host: [ x86_64-pc-cygwin, i686-w64-mingw32, x86_64-w64-mingw32, i686-pc-windows, x86_64-pc-windows ]
+        build: [ x86_64-pc-cygwin ]
+        ocamlv: [ 4.13.1 ]
+        include:
+          - ocamlv: 4.13.1
+            host: i686-pc-cygwin
+            build: i686-pc-cygwin
+      fail-fast: false
+    defaults:
+      run:
+        shell: D:\cygwin\bin\bash.exe {0}
+    steps:
+    - name: Configure LF checkout for Cygwin
+      if: endsWith(matrix.host, '-pc-cygwin')
+      shell: cmd
+      run: |
+        git config --system core.autocrlf false
+        git config --system core.eol lf
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: Cygwin32 Cache
+      id: cygwin32
+      if: matrix.build == 'i686-pc-cygwin'
+      uses: ocaml-opam/cache@opam
+      with:
+        path: D:\Cache\cygwin\i686-pc-cygwin
+        key: cygwin32-${{ needs.Analyse.outputs.cygwin }}
+        force-gzip: true
+    - name: Cygwin64 Cache
+      id: cygwin64
+      if: matrix.build == 'x86_64-pc-cygwin'
+      uses: ocaml-opam/cache@opam
+      with:
+        path: D:\Cache\cygwin\x86_64-pc-cygwin
+        key: cygwin64-${{ needs.Analyse.outputs.cygwin }}
+        force-gzip: true
+    - name: src_ext/archives and opam-repository Cache
+      id: archives
+      uses: ocaml-opam/cache@opam
+      with:
+        path: |
+          src_ext/archives
+          ~/opam-repository
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
+    - name: OCaml ${{ matrix.ocamlv }} Cache
+      id: ocaml-cache
+      uses: ocaml-opam/cache@opam
+      with:
+        path: D:\Cache\ocaml-local.tar
+        key: ${{ runner.os }}-${{ matrix.host }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+        force-gzip: true
+    - name: Unpack Cygwin
+      shell: cmd
+      run: .github\scripts\cygwin.cmd ${{ matrix.build }} D:\Cache\cygwin ${{ matrix.host }}
+    - name: Unpack OCaml ${{ matrix.ocamlv }}
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }} ${{ matrix.host }}
+    - name: Build
+      run: bash -exu .github/scripts/main/main.sh ${{ matrix.host }}
+    - name: Test (basic - Cygwin)
+      if: endsWith(matrix.host, '-pc-cygwin')
+      run: bash -exu .github/scripts/main/test.sh
+    - name: Test (basic - native Windows)
+      if: endsWith(matrix.host, '-pc-cygwin') == false
+      shell: cmd
+      run: |
+        set Path=D:\Cache\ocaml-local\bin;%Path%
+        if "${{ matrix.host }}" equ "x86_64-pc-windows" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        if "${{ matrix.host }}" equ "i686-pc-windows" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+        opam init --yes --bare default git+file://D:/opam-repository#${{ env.OPAM_TEST_REPO_SHA }} || exit /b 1
+        opam switch --yes create default ocaml-system || exit /b 1
+        opam env || exit /b 1
+        opam install --yes lwt || exit /b 1
+        opam list || exit /b 1
+        opam config report || exit /b 1
+    - name: Test (reftests)
+      run: bash -exu .github/scripts/main/reftests.sh ${{ matrix.host }}
+
+  Build-macOS:
+    runs-on: macos-latest
+    needs: Analyse
+    strategy:
+      matrix:
+        ocamlv: [ 4.13.1 ]
+      fail-fast: true
+    steps:
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: src_ext/archives and opam-repository Cache
+      id: archives
+      uses: ocaml-opam/cache@opam
+      with:
+        path: |
+          src_ext/archives
+          ~/opam-repository
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
+    - name: OCaml ${{ matrix.ocamlv }} Cache
+      id: ocaml-cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
+      if: steps.ocaml-cache.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
+    - name: Build
+      run: bash -exu .github/scripts/main/main.sh x86_64-apple-darwin
+    - name: Test (basic)
+      run: bash -exu .github/scripts/main/test.sh
 
 ####
 # Legacy
 ####
-  legacy:
-    needs: [ build ]
-    runs-on: ubuntu-latest
+  Legacy:
+    runs-on: ${{ matrix.os }}-latest
+    needs: [ Analyse, Build-Linux ]
     strategy:
       matrix:
-        os: [ Linux ]
+        os: [ ubuntu ]
         ocamlv: [ 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1 ]
-      # Intentionally fail fast, no need to run all build if there is a
-      # problem in a given version; usually it is functions not defined in lower
-      # versions of OCaml
       fail-fast: true
     steps:
-    - name: install deps
-      run: sudo apt install opam
-    - uses: actions/checkout@v2
-    - name: ocaml ${{ matrix.ocamlv }} cache
+    - name: Install system's opam package
+      run: sudo apt install opam || true
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: ocaml-secondary-compiler Cache
+      id: legacy
+      uses: actions/cache@v2
+      with:
+        path: ~/.opam
+        key: ${{ runner.os }}-${{ needs.Analyse.outputs.ocaml-secondary-compiler }}
+    - name: Create ocaml-secondary-compiler cache
+      if: steps.legacy.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/main/legacy-cache.sh
+    - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
       uses: actions/cache@v2
       with:
-        path: ${{ env.GH_OCAML_CACHE }}
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
-    - name: Building ocaml ${{ matrix.ocamlv }} cache
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
-      env:
-        OCAML_VERSION: ${{ matrix.ocamlv }}
-      run: bash -exu .github/scripts/main/ocaml-cache.sh ocaml
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: Build
-      env:
-        OCAML_VERSION: ${{ matrix.ocamlv }}
       run: bash -exu .github/scripts/main/legacy.sh
 
 ####
 # Opam tests
 ####
-  test:
-    needs: [ build, archives-cache ]
-    runs-on: ${{ matrix.os }}
+  Test-Linux:
+    runs-on: ubuntu-latest
+    needs: [ Analyse, Build-Linux ]
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-latest ]
         ocamlv: [ 4.13.1 ]
       fail-fast: false
     env:
       OPAM_TEST: 1
     steps:
-    - uses: actions/checkout@v2
-    - name: install deps
-      if: ${{ matrix.os == 'ubuntu-latest' }}
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: Install bubblewrap
       run: sudo apt install bubblewrap
-    - name: ocaml ${{ matrix.ocamlv }} cache - test
-      id: ocaml-cache-test
+    - name: src_ext/archives and opam-repository Cache
+      id: archives
+      uses: ocaml-opam/cache@opam
+      with:
+        path: |
+          src_ext/archives
+          ~/opam-repository
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
+    - name: OCaml ${{ matrix.ocamlv }} Cache
+      id: ocaml-cache
       uses: actions/cache@v2
       with:
-        path: ${{ env.GH_OCAML_CACHE }}
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}-test
-    - name: Building ocaml ${{ env.OCAML_VERSION }} cache - test
-      if: steps.ocaml-cache-test.outputs.cache-hit != 'true'
-      env:
-        OCAML_VERSION: ${{ matrix.ocamlv }}
-      run: bash -exu .github/scripts/main/ocaml-cache.sh ocaml
-    - name: opam bootstrap cache
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
+      if: steps.ocaml-cache.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
+    - name: opam bootstrap Cache
       id: opam-bootstrap
       uses: actions/cache@v2
       with:
         path: |
           ${{ env.OPAMBSROOT }}/**
           ~/.cache/opam-local/bin/**
-        key: opam-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/main/opam-bs-cache.sh', '*.opam') }}
-    - name: opam root cache
+        key: opam-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ needs.Analyse.outputs.opam-bs-cache }}
+    - name: Create opam bootstrap cache
       if: steps.opam-bootstrap.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
-    - name: opam-rt cache
+    - name: opam-rt Cache
       id: opam-rt
       uses: actions/cache@v2
       with:
         path: ~/.cache/opam-rt/**
         key: ${{ runner.os }}-opam-rt-${{ matrix.ocamlv }}
-    - name: Test
-      env:
-        OCAML_VERSION: ${{ matrix.ocamlv }}
-      run: bash -exu .github/scripts/main/main.sh
+    - name: Build (and test)
+      run: bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
+    - name: Test (opam-rt)
+      run: bash -exu .github/scripts/main/opam-rt.sh
+
+  Test-macOS:
+    runs-on: macos-latest
+    needs: Analyse
+    strategy:
+      matrix:
+        ocamlv: [ 4.13.1 ]
+      fail-fast: false
+    env:
+      OPAM_TEST: 1
+    steps:
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: src_ext/archives and opam-repository Cache
+      id: archives
+      uses: ocaml-opam/cache@opam
+      with:
+        path: |
+          src_ext/archives
+          ~/opam-repository
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
+    - name: OCaml ${{ matrix.ocamlv }} Cache
+      id: ocaml-cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
+      if: steps.ocaml-cache.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
+    - name: opam bootstrap Cache
+      id: opam-bootstrap
+      uses: actions/cache@v2
+      with:
+        path: |
+          ${{ env.OPAMBSROOT }}/**
+          ~/.cache/opam-local/bin/**
+        key: opam-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ needs.Analyse.outputs.opam-bs-cache }}
+    - name: Create opam bootstrap cache
+      if: steps.opam-bootstrap.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/main/opam-bs-cache.sh
+    - name: opam-rt Cache
+      id: opam-rt
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/opam-rt/**
+        key: ${{ runner.os }}-opam-rt-${{ matrix.ocamlv }}
+    - name: Build (and test)
+      run: bash -exu .github/scripts/main/main.sh x86_64-apple-darwin
+    - name: Test (opam-rt)
+      run: bash -exu .github/scripts/main/opam-rt.sh
 
 ####
 # Opam cold
 ####
-  cold:
-    needs: [ build, archives-cache ]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-#        os: [ ubuntu-latest, macos-latest ]
-        os: [ ubuntu-latest ]
-        ocamlv: [ 4.13.1 ]
-      fail-fast: false
+  Cold-Linux:
+    runs-on: ubuntu-latest
+    needs: [ Analyse, Build-Linux ]
+    env:
+      OPAM_COLD: 1
     steps:
-    - name: install deps
-      if: ${{ matrix.os == 'ubuntu-latest' }}
+    - name: Install bubblewrap
       run: sudo apt install bubblewrap
-    - uses: actions/checkout@v2
-    - name: src ext archives cache
-      uses: actions/cache@v2
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: src_ext/archives and opam-repository Cache
+      id: archives
+      uses: ocaml-opam/cache@opam
       with:
-        path: src_ext/archives
-        key: archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
+        path: |
+          src_ext/archives
+          ~/opam-repository
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
     - name: Cold
-      env:
-        OCAML_VERSION: ${{ matrix.ocamlv }}
-        OPAM_COLD: 1
       run: |
         make compiler
         make lib-pkg
-        bash -exu .github/scripts/main/main.sh
+        bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
+    - name: Test (basic)
+      run: bash -exu .github/scripts/main/test.sh
 
 ####
 # Compile solver backends
 ####
-  solvers:
-    needs: [ build ]
-    runs-on: ${{ matrix.os }}
+  Solvers-Linux:
+    runs-on: ubuntu-latest
+    needs: [ Analyse, Build-Linux ]
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-latest ]
-        ocamlv: [ 4.13.1 ]
         solver: [ z3, 0install ]
+        ocamlv: [ 4.13.1 ]
       fail-fast: false
     env:
       SOLVER: ${{ matrix.solver }}
       OPAMBSROOT: ~/.cache/opam.${{ matrix.solver }}.cached
     steps:
-    - uses: actions/checkout@v2
-    - name: install deps
-      if: ${{ matrix.os == 'ubuntu-latest' }}
+    - name: Install bubblewrap
       run: sudo apt install bubblewrap
-    - name: ocaml ${{ matrix.ocamlv }} cache - test
-      id: ocaml-cache-test
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: src_ext/archives and opam-repository Cache
+      id: archives
+      uses: ocaml-opam/cache@opam
+      with:
+        path: |
+          src_ext/archives
+          ~/opam-repository
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
+    - name: OCaml ${{ matrix.ocamlv }} Cache
+      id: ocaml-cache
       uses: actions/cache@v2
       with:
-        path: ${{ env.GH_OCAML_CACHE }}
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ matrix.solver }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}-test
-    - name: Building ocaml ${{ env.OCAML_VERSION }} cache - test
-      if: steps.ocaml-cache-test.outputs.cache-hit != 'true'
-      env:
-        OCAML_VERSION: ${{ matrix.ocamlv }}
-      run: bash -exu .github/scripts/main/ocaml-cache.sh ocaml
-    - name: opam bootstrap cache
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
+      if: steps.ocaml-cache.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
+    - name: opam bootstrap Cache
       id: opam-bootstrap
       uses: actions/cache@v2
       with:
         path: |
-          ~/.cache/opam.${{ matrix.solver }}.cached
+          ${{ env.OPAMBSROOT }}/**
           ~/.cache/opam-local/bin/**
-        key: opam-${{ matrix.solver }}-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ hashFiles ('.github/scripts/main/opam-bs-cache.sh', '.github/scripts/main/preamble.sh') }}
-    - name: opam root cache
-      env:
-        OPAMBSROOT: ~/.cache/opam.${{ matrix.solver }}.cached
+        key: opam-${{ matrix.solver }}-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ needs.Analyse.outputs.opam-bs-cache }}
+    - name: Create opam bootstrap cache
       if: steps.opam-bootstrap.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
     - name: Compile
-      env:
-        OCAML_VERSION: ${{ matrix.ocamlv }}
+      run: bash -exu .github/scripts/main/solvers.sh
+
+  Solvers-macOS:
+    runs-on: macos-latest
+    needs: [ Analyse, Build-macOS ]
+    strategy:
+      matrix:
+        solver: [ z3, 0install ]
+        ocamlv: [ 4.13.1 ]
+      fail-fast: false
+    env:
+      SOLVER: ${{ matrix.solver }}
+      OPAMBSROOT: ~/.cache/opam.${{ matrix.solver }}.cached
+    steps:
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: src_ext/archives and opam-repository Cache
+      id: archives
+      uses: ocaml-opam/cache@opam
+      with:
+        path: |
+          src_ext/archives
+          ~/opam-repository
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
+    - name: OCaml ${{ matrix.ocamlv }} Cache
+      id: ocaml-cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
+      if: steps.ocaml-cache.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
+    - name: opam bootstrap Cache
+      id: opam-bootstrap
+      uses: actions/cache@v2
+      with:
+        path: |
+          ${{ env.OPAMBSROOT }}/**
+          ~/.cache/opam-local/bin/**
+        key: opam-${{ matrix.solver }}-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ needs.Analyse.outputs.opam-bs-cache }}
+    - name: Create opam bootstrap cache
+      if: steps.opam-bootstrap.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/main/opam-bs-cache.sh
+    - name: Compile
       run: bash -exu .github/scripts/main/solvers.sh
 
 ####
 # Upgrade from 1.2 to current
 ####
-  upgrade:
-    needs: [ build ]
-    runs-on: ${{ matrix.os }}
+  Upgrade-Linux:
+    runs-on: ubuntu-latest
+    needs: [ Analyse, Build-Linux ]
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-latest ]
         ocamlv: [ 4.13.1 ]
       fail-fast: false
     steps:
-    - name: install deps
-      if: ${{ matrix.os == 'ubuntu-latest' }}
+    - name: Install bubblewrap
       run: sudo apt install bubblewrap
-    - uses: actions/checkout@v2
-    - name: opam 1.2 root cache
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: opam 1.2 root Cache
       uses: actions/cache@v2
       with:
         path: ${{ env.OPAM12CACHE }}
         key: ${{ runner.os }}-opam1.2-root
-    - name: ocaml ${{ matrix.ocamlv }} cache
+    - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
       uses: actions/cache@v2
       with:
-        path: ${{ env.GH_OCAML_CACHE }}
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ hashFiles ('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
-    - name: Building ocaml ${{ matrix.ocamlv }} cache
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
+    - name: Build
       env:
-        OCAML_VERSION: ${{ matrix.ocamlv }}
-      run: bash -exu .github/scripts/main/ocaml-cache.sh ocaml
-    - name: Upgrade
-      env:
-        OCAML_VERSION: ${{ matrix.ocamlv }}
         OPAM_UPGRADE: 1
-      run: bash -exu .github/scripts/main/main.sh
+      run: bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
+    - name: Test (upgrade)
+      run: bash -exu .github/scripts/main/upgrade.sh
+
+  Upgrade-macOS:
+    runs-on: macos-latest
+    needs: [ Analyse, Build-macOS ]
+    strategy:
+      matrix:
+        ocamlv: [ 4.13.1 ]
+      fail-fast: false
+    steps:
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: opam 1.2 root Cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ env.OPAM12CACHE }}
+        key: ${{ runner.os }}-opam1.2-root
+    - name: OCaml ${{ matrix.ocamlv }} Cache
+      id: ocaml-cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
+      if: steps.ocaml-cache.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
+    - name: Build
+      env:
+        OPAM_UPGRADE: 1
+      run: bash -exu .github/scripts/main/main.sh x86_64-apple-darwin
+    - name: Test (upgrade)
+      run: bash -exu .github/scripts/main/upgrade.sh
 
 ####
 # Around opam tests
-###
-  hygiene:
-    needs: [ archives-cache ]
+####
+  Hygiene:
     runs-on: ubuntu-latest
+    needs: Analyse
     steps:
-    - uses: actions/checkout@v2
-    - name: src ext archives cache
-      uses: actions/cache@v2
+    - name: Install system's dune and ocaml packages
+      run: sudo apt install dune ocaml || true
+    - name: Checkout tree
+      uses: actions/checkout@v2
+    - name: src_ext/archives and opam-repository Cache
+      id: archives
+      uses: ocaml-opam/cache@opam
       with:
-        path: src_ext/archives
-        key: archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile') }}
-    - id: files
+        path: |
+          src_ext/archives
+          ~/opam-repository
+        key: ${{ needs.Analyse.outputs.archives }}
+        force-gzip: true
+    - name: Get changed files
+      id: files
       uses: jitterbit/get-changed-files@v1
-      # see https://github.com/jitterbit/get-changed-files/issues/19
       continue-on-error: true
     - name: Changed files list
       run: |
@@ -373,9 +673,8 @@ jobs:
           echo "AD ${changed_file}."
         done
     - name: Hygiene
-      if: contains(steps.files.outputs.modified, 'configure.ac') || contains(steps.files.outputs.all, 'src_ext')
       env:
-        # Defined only on pull request jobs
         BASE_REF_SHA: ${{ github.event.pull_request.base.sha }}
         PR_REF_SHA: ${{ github.event.pull_request.head.sha }}
+      if: contains(steps.files.outputs.modified, 'configure.ac') || contains(steps.files.outputs.all, 'src_ext')
       run: bash -exu .github/scripts/main/hygiene.sh
