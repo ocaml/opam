@@ -3416,8 +3416,9 @@ let source cli =
           OpamConsole.error_and_exit `Sync_error "%s is not available" u
         | Result _ | Up_to_date _ ->
           OpamConsole.formatted_msg
-            "Successfully fetched %s development repo to .%s%s%s\n"
-            (OpamPackage.name_to_string nv) Filename.dir_sep (OpamPackage.name_to_string nv) Filename.dir_sep
+            "Successfully fetched %s development repo to %s\n"
+            (OpamPackage.name_to_string nv)
+            (OpamFilename.Dir.to_string dir)
     ) else (
       let job =
         let open OpamProcess.Job.Op in
