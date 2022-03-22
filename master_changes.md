@@ -223,6 +223,7 @@ users)
   * Remove memoization from `best_effort ()` to allow for multiple different settings during the same session (useful for libaray users) [#4805 @LasseBlaauwbroek]
   * [BUG] Catch `EACCES` in lock function [#4948 @oandrieu - fix #4944]
   * Permissions: chmod+unlink before copy [#4827 @jonahbeckford @dra27]
+  * Support MSYS2: two-phase rsync on MSYS2 to allow MSYS2's behavior of copying rather than symlinking [#4817 @jonahbeckford]
 
 ## Test
   * Update crowbar with compare functions [#4918 @rjbou]
@@ -355,3 +356,5 @@ users)
   * `OpamProcess.wait_one`: display command in verbose mode for finished found process [#5091 @rjbou]
   * `OpamStd.Config.E`: add a `REMOVED` variant to allow removing completely an environment variable handling [#5112 @rjbou]
   * `OpamHash`: add `is_null`
+  * `OpamStd.Sys`: add `get_windows_executable_variant` to use instead of `is_cygwin_variant` [#4817 @jonahbeckford]
+  * `OpamSystem.copy_dir`: two-pass `rsync` copy for `MSYS2`, to handle symlinks [#4817 @jonahbeckford]
