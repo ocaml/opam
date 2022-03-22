@@ -166,7 +166,7 @@ let get_universe st ?requested tog =
   let requested =
     match requested with
     | Some r -> r
-    | None -> OpamPackage.names_of_packages st.packages
+    | None -> st.packages
   in
   OpamSwitchState.universe st
     ~test:tog.test ~doc:tog.doc ~force_dev_deps:tog.dev
@@ -217,7 +217,7 @@ let apply_selector ~base st = function
   | Available -> Lazy.force st.available_packages
   | Installable ->
     OpamSolver.installable_subset
-      (OpamSwitchState.universe st ~requested:OpamPackage.Name.Set.empty Query)
+      (OpamSwitchState.universe st ~requested:OpamPackage.Set.empty Query)
       base
   | Pinned -> OpamPinned.packages st
   | (Required_by ({recursive=true; _} as tog, atoms)
@@ -252,7 +252,6 @@ let apply_selector ~base st = function
     let universe =
       let requested =
         OpamFormula.packages_of_atoms st.packages atoms
-        |> OpamPackage.names_of_packages
       in
       get_universe st tog ~requested
     in
@@ -664,7 +663,7 @@ let display st format packages =
     if format.order = `Dependency then
       let universe =
         OpamSwitchState.universe st
-          ~requested:(OpamPackage.names_of_packages packages)
+          ~requested:packages
           Query
       in
       OpamSolver.dependency_sort ~depopts:true ~build:true ~post:false

@@ -19,7 +19,7 @@ val resolve:
   'a switch_state ->
   user_action ->
   ?reinstall:package_set ->
-  requested:name_set ->
+  requested:package_set ->
   atom request ->
   (OpamSolver.solution, OpamCudf.conflict) result
 
@@ -30,7 +30,7 @@ val resolve:
 val apply:
   ?ask:bool ->
   rw switch_state ->
-  requested:OpamPackage.Name.Set.t ->
+  requested:package_set ->
   ?add_roots:OpamPackage.Name.Set.t ->
   ?assume_built:bool ->
   ?download_only:bool ->
@@ -48,7 +48,7 @@ val resolve_and_apply:
   rw switch_state ->
   user_action ->
   ?reinstall:package_set ->
-  requested:OpamPackage.Name.Set.t ->
+  requested:package_set ->
   ?add_roots:OpamPackage.Name.Set.t ->
   ?assume_built:bool ->
   ?download_only:bool ->

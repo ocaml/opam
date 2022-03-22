@@ -181,6 +181,7 @@ users)
   * Make the 0install solver non-optional [#4909 @kit-ty-kate]
   * Optimised reverse dependencies calculation [#5005 @AltGr]
   * Enable cudf preprocessing for (co)insallability calculation, resulting in a x20 speedup [@AltGr]
+  * Make sure that `--best-effort` only installs root package versions that where requested [#4796 @LasseBlaauwbroek]
 
 ## Client
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
@@ -287,12 +288,16 @@ users)
   * `OpamClient`: fix `update_with_init_config`, when ``jobs` was set in `init_config`, it dropped rest of `config` update [#5056 @rjbou]
   * Add an optional argument to `OpamArg.mk_subdoc` for extra default elements: `?extra_defaults:(validity * string * string) list` [#4910 @kit-ty-kate]
   * Add `OpamSwitchCommand.previous_switch` [#4910 @kit-ty-kate]
+  * `OpamClient`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
+
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
   * New download functions for shared source, old ones kept [#4893 @rjbou]
   * `OpamClient.filter_unpinned_locally` now display a warning of skipped packages instead of debug log [#5083 @rjbou]
 
 ## opam-state
+  * `OpamSwitchState.universe`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
+
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
   * `OpamCudf`: add `conflict_cycles` [#4039 @gasche]

@@ -131,7 +131,7 @@ let lock_opam ?(only_direct=false) st opam =
   let nv = OpamFile.OPAM.package opam in
   let univ =
     OpamSwitchState.universe st
-      ~requested:(OpamPackage.Name.Set.singleton nv.name)
+      ~requested:(OpamPackage.Set.singleton nv)
       Query
   in
   (* Depends *)

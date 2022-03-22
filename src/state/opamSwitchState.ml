@@ -859,8 +859,9 @@ let universe st
     ?reinstall
     ~requested
     user_action =
+  let names = OpamPackage.names_of_packages requested in
   let requested_allpkgs =
-    OpamPackage.packages_of_names st.packages requested
+    OpamPackage.packages_of_names st.packages names
   in
   let env nv v =
     if List.mem v OpamPackageVar.predefined_depends_variables then
@@ -967,7 +968,7 @@ let universe st
   u_base      = base;
   u_invariant;
   u_reinstall;
-  u_attrs     = ["opam-query", requested_allpkgs;
+  u_attrs     = ["opam-query", requested;
                  "missing-depexts", missing_depexts;
                  "avoid-version", avoid_versions];
 }
