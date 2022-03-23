@@ -25,7 +25,6 @@ type options = {
 
 (* A wrapper on top of commands to either proceed, or output a script *)
 type commands = {
-  mkdir: OpamFilename.Dir.t -> unit;
   rmdir: opt:bool -> OpamFilename.Dir.t -> unit;
   cp: ?exec:bool -> opt:bool -> src:OpamFilename.t -> dst:OpamFilename.t -> unit -> unit;
   rm: opt:bool -> OpamFilename.t -> unit;
@@ -105,7 +104,7 @@ let do_commands project_root =
   let confirm s f =
     if OpamConsole.confirm "%s" s then f ()
   in
-  { mkdir; rmdir; cp; rm; confirm }
+  { rmdir; cp; rm; confirm }
 
 let script_commands project_root ochan =
   let made_dirs = ref [] in
@@ -150,7 +149,7 @@ let script_commands project_root ochan =
     f ();
     Printf.fprintf ochan "fi\n";
   in
-  { mkdir; rmdir; cp; rm; confirm }
+  { rmdir; cp; rm; confirm }
 
 (* [f (dest, file_list, is_exec)] should take care of the processing,
    where [dest src dst] returns the destination of a file with a
