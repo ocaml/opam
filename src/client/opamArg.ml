@@ -1039,9 +1039,9 @@ let shell_opt cli validity =
     None,"csh",SH_csh;
     None,"zsh",SH_zsh;
     None,"fish",SH_fish;
-    Some cli2_2,"pwsh",SH_pwsh;
+    Some cli2_2,"pwsh",SH_pwsh Powershell_pwsh;
     Some cli2_2,"cmd",SH_win_cmd;
-    Some cli2_2,"powershell",SH_win_powershell
+    Some cli2_2,"powershell",SH_pwsh Powershell
   ] |> List.map (fun (c,s,v) -> OpamStd.Option.map_default cli_from cli_original c, s, v)
   in
   mk_enum_opt ~cli validity ["shell"] "SHELL" enum

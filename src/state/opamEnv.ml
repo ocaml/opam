@@ -365,7 +365,7 @@ let is_up_to_date ?skip st =
 (** Returns shell-appropriate statement to evaluate [cmd]. *)
 let shell_eval_invocation shell cmd =
   match shell with
-  | SH_win_powershell | SH_pwsh ->
+  | SH_pwsh _ ->
     Printf.sprintf "(& %s) -split '\\r?\\n' | ForEach-Object { Invoke-Expression $_ }" cmd
   | SH_fish ->
     Printf.sprintf "eval (%s)" cmd
@@ -427,21 +427,21 @@ let shells_list = [ SH_sh; SH_zsh; SH_csh; SH_fish ]
 let complete_file = function
   | SH_sh | SH_bash -> Some "complete.sh"
   | SH_zsh -> Some "complete.zsh"
-  | SH_csh | SH_fish | SH_pwsh | SH_win_cmd | SH_win_powershell -> None
+  | SH_csh | SH_fish | SH_pwsh _ | SH_win_cmd -> None
 
 let env_hook_file = function
   | SH_sh | SH_bash -> Some "env_hook.sh"
   | SH_zsh -> Some "env_hook.zsh"
   | SH_csh -> Some "env_hook.csh"
   | SH_fish -> Some "env_hook.fish"
-  | SH_pwsh | SH_win_cmd | SH_win_powershell ->
+  | SH_pwsh _ | SH_win_cmd ->
     (* N/A because not present in `shells_list` yet *) None
 
 let variables_file = function
   | SH_sh | SH_bash | SH_zsh -> "variables.sh"
   | SH_csh -> "variables.csh"
   | SH_fish -> "variables.fish"
-  | SH_pwsh | SH_win_cmd | SH_win_powershell ->
+  | SH_pwsh _ | SH_win_cmd ->
     (* N/A because not present in `shells_list` yet *) "variables.sh"
 
 let init_file = function
@@ -449,21 +449,21 @@ let init_file = function
   | SH_zsh -> "init.zsh"
   | SH_csh -> "init.csh"
   | SH_fish -> "init.fish"
-  | SH_pwsh | SH_win_cmd | SH_win_powershell ->
+  | SH_pwsh _ | SH_win_cmd ->
     (* N/A because not present in `shells_list` yet *) "init.sh"
 
 let complete_script = function
   | SH_sh | SH_bash -> Some OpamScript.complete
   | SH_zsh -> Some OpamScript.complete_zsh
   | SH_csh | SH_fish -> None
-  | SH_pwsh | SH_win_cmd | SH_win_powershell -> None
+  | SH_pwsh _ | SH_win_cmd -> None
 
 let env_hook_script_base = function
   | SH_sh | SH_bash -> Some OpamScript.env_hook
   | SH_zsh -> Some OpamScript.env_hook_zsh
   | SH_csh -> Some OpamScript.env_hook_csh
   | SH_fish -> Some OpamScript.env_hook_fish
-  | SH_pwsh | SH_win_cmd | SH_win_powershell -> None
+  | SH_pwsh _ | SH_win_cmd -> None
 
 let export_in_shell shell =
   let make_comment comment_opt =
@@ -512,7 +512,7 @@ let export_in_shell shell =
   | SH_zsh | SH_bash | SH_sh -> sh
   | SH_fish -> fish
   | SH_csh -> csh
-  | SH_pwsh | SH_win_powershell -> pwsh
+  | SH_pwsh _ -> pwsh
   | SH_win_cmd -> win_cmd
 
 let env_hook_script shell =
@@ -535,9 +535,9 @@ let source root shell f =
     Printf.sprintf "[[ ! -r %s ]] || source %s  > /dev/null 2> /dev/null\n"
       fname fname
   | SH_win_cmd ->
-    Printf.sprintf "if exist \"%s\" call \"%s\" >NUL 2>NUL\n" fname fname
-  | SH_pwsh | SH_win_powershell ->
-    Printf.sprintf ". \"%s\" > $null 2> $null\n" fname
+    Printf.sprintf "if exist \"%s\" ( \"%s\" >NUL 2>NUL )\n" fname fname
+  | SH_pwsh _ ->
+    Printf.sprintf "& \"%s\" > $null 2> $null\n" fname
 
 let if_interactive_script shell t e =
   let ielse else_opt = match else_opt with
@@ -562,9 +562,9 @@ let if_interactive_script shell t e =
   | SH_fish ->
     Printf.sprintf "if isatty\n  %s%send\n" t @@ ielse e
   | SH_win_cmd ->
-    Printf.sprintf "timeout 0 >nul 2>nul\nif not errorlevel 1 (\n%s%s)\n" t @@ ielse_cmd e
-  | SH_pwsh | SH_win_powershell ->
-    Printf.sprintf "if ([Environment]::UserInteractive -and -not [Console]::IsInputRedirected) {\n  %s%s}\n" t @@ ielse_pwsh e
+    Printf.sprintf "echo %%cmdcmdline%% | find /i \"%%~0\" >nul\nif errorlevel 1 (\n%s%s)\n" t @@ ielse_cmd e
+  | SH_pwsh _ ->
+    Printf.sprintf "if ([Environment]::UserInteractive) {\n  %s%s}\n" t @@ ielse_pwsh e
 
 let init_script root shell =
   let interactive =

@@ -439,8 +439,9 @@ module Sys : sig
   val executable_name : string -> string
 
   (** The different families of shells we know about *)
-  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish | SH_pwsh
-    | SH_win_cmd | SH_win_powershell
+  type powershell_host = Powershell_pwsh | Powershell
+  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
+    | SH_pwsh of powershell_host | SH_win_cmd
 
   (** Guess the shell compat-mode *)
   val guess_shell_compat: unit -> shell

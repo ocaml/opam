@@ -1216,6 +1216,7 @@ let config cli =
       | Some s -> s
       | None -> OpamStd.Sys.guess_shell_compat ()
     in
+    let pwsh = match shell with SH_pwsh _ -> true | _ -> false in
     match command, params with
     | Some `env, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1225,8 +1226,7 @@ let config cli =
          `Ok (OpamConfigCommand.env gt sw
                 ~set_opamroot ~set_opamswitch
                 ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
-                ~pwsh:(shell=SH_pwsh || shell=SH_win_powershell)
-                ~cmd:(shell=SH_win_cmd)
+                ~pwsh ~cmd:(shell=SH_win_cmd)
                 ~inplace_path))
     | Some `revert_env, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1236,8 +1236,7 @@ let config cli =
          `Ok (OpamConfigCommand.ensure_env gt sw;
               OpamConfigCommand.print_eval_env
                 ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
-                ~pwsh:(shell=SH_pwsh || shell=SH_win_powershell)
-                ~cmd:(shell=SH_win_cmd)
+                ~pwsh ~cmd:(shell=SH_win_cmd)
                 (OpamEnv.add [] [])))
     | Some `list, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1529,6 +1528,7 @@ let env cli =
       | Some s -> s
       | None -> OpamStd.Sys.guess_shell_compat ()
     in
+    let pwsh = match shell with SH_pwsh _ -> true | _ -> false in
     match revert with
     | false ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1538,14 +1538,12 @@ let env cli =
          OpamConfigCommand.env gt sw
            ~set_opamroot ~set_opamswitch
            ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
-           ~pwsh:(shell=SH_pwsh || shell=SH_win_powershell)
-           ~cmd:(shell=SH_win_cmd)
+           ~pwsh ~cmd:(shell=SH_win_cmd)
            ~inplace_path);
     | true ->
       OpamConfigCommand.print_eval_env
         ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
-        ~pwsh:(shell=SH_pwsh || shell=SH_win_powershell)
-        ~cmd:(shell=SH_win_cmd)
+        ~pwsh ~cmd:(shell=SH_win_cmd)
         (OpamEnv.add [] [])
   in
   let open Common_config_flags in
