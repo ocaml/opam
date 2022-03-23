@@ -247,7 +247,7 @@ let pull_from_mirrors label ?working_dir ?subpath cache_dir destdir checksums ur
 
 (* handle subpathes *)
 let pull_tree_t
-    ?cache_dir ?(cache_urls=[]) ?working_dir ?subpath
+    ?cache_dir ?(cache_urls=[]) ?working_dir
     dirnames checksums remote_urls =
   let extract_archive =
     let fallback success = function
@@ -260,7 +260,7 @@ let pull_tree_t
       | Some e -> Done (Not_available (None, Printexc.to_string e))
     in
     match dirnames with
-    | [ _label, local_dirname ] ->
+    | [ _label, local_dirname, _subpath ] ->
       (fun archive msg ->
          OpamFilename.cleandir local_dirname;
          OpamFilename.extract_job archive local_dirname
@@ -270,7 +270,7 @@ let pull_tree_t
         OpamFilename.with_tmp_dir_job @@ fun tmpdir ->
         let copies () =
           OpamParallel.map ~jobs:3
-            ~command:(fun (label, local_dirname) ->
+            ~command:(fun (label, local_dirname, _subpath) ->
                 let text = OpamProcess.make_command_text label label in
                 OpamProcess.Job.with_text text @@
                 (try
@@ -304,7 +304,7 @@ let pull_tree_t
             in
             Done (Not_available (Some simple, long)))
   in
-  let label = OpamStd.List.concat_map ", " fst dirnames in
+  let label = OpamStd.List.concat_map ", " (fun (x,_,_) -> x) dirnames in
   (match cache_dir with
    | Some cache_dir ->
      let text = OpamProcess.make_command_text label "dl" in
@@ -337,36 +337,38 @@ let pull_tree_t
         | [_] ->
           let tmp_archive = OpamFilename.(create tmpdir (basename archive)) in
           OpamFilename.move ~src:archive ~dst:tmp_archive;
-          extract_archive tmp_archive (OpamUrl.to_string url)
-        | _ -> extract_archive archive (OpamUrl.to_string url)
+          extract_archive tmp_archive url
+        | _ -> extract_archive archive url
       in
-      let pull label =
+      let pull label checksums remote_urls =
         match dirnames with
-        | [ label, local_dirname ] ->
+        | [ label, local_dirname, subpath ] ->
           pull_from_mirrors label ?working_dir ?subpath cache_dir local_dirname
+            checksums remote_urls
+          @@| fun (url, res) ->
+          Printf.sprintf "%s%s"
+            (OpamUrl.to_string url)
+            (OpamStd.Option.to_string
+               OpamFilename.SubPath.pretty_string subpath),
+          res
         | _ ->
-          pull_from_mirrors label cache_dir tmpdir
+          pull_from_mirrors label ?working_dir cache_dir tmpdir
+            checksums remote_urls
+          @@| fun (url, res) -> OpamUrl.to_string url, res
       in
       pull label checksums remote_urls
       @@+ function
       | _, Up_to_date None -> Done (Up_to_date "no changes")
       | url, (Up_to_date (Some archive) | Result (Some archive)) ->
         extract url archive
-      | url, Result None ->
-        let url =
-          Printf.sprintf "%s%s"
-            (OpamUrl.to_string url)
-            (OpamStd.Option.to_string
-               OpamFilename.SubPath.pretty_string subpath)
-        in
-        Done (Result url)
+      | url, Result None -> Done (Result url)
       | _, (Not_available _ as na) -> Done na
 
 
 let pull_tree label ?cache_dir ?(cache_urls=[]) ?working_dir ?subpath
     local_dirname  =
-  pull_tree_t ?cache_dir ~cache_urls ?working_dir ?subpath
-  [label, local_dirname]
+  pull_tree_t ?cache_dir ~cache_urls ?working_dir
+  [label, local_dirname, subpath]
 
 let pull_shared_tree ?cache_dir ?(cache_urls=[]) dirnames checksums remote_urls =
   pull_tree_t ?cache_dir ~cache_urls dirnames checksums remote_urls

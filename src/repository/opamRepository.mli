@@ -38,8 +38,8 @@ val update: repository -> dirname -> unit OpamProcess.job
 val pull_shared_tree:
   ?cache_dir:dirname ->
   ?cache_urls:OpamUrl.t list ->
-  (string * OpamFilename.Dir.t) list -> OpamHash.t list -> url list ->
-  string download OpamProcess.job
+  (string * OpamFilename.Dir.t * subpath option) list -> OpamHash.t list ->
+  url list -> string download OpamProcess.job
 
 (* Same as [pull_shared_tree], but for a unique label/dirname. *)
 val pull_tree:

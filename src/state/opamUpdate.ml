@@ -540,7 +540,12 @@ let download_package_source_t st url nv_dirs =
     | None -> Done None
     | Some url ->
       let dirnames =
-        List.map (fun (nv, dir) -> OpamPackage.to_string nv, dir) nv_dirs
+        List.map (fun (nv, dir) ->
+            OpamPackage.to_string nv, dir,
+            OpamStd.Option.Op.(OpamSwitchState.opam st nv
+                               |> OpamFile.OPAM.url
+                               >>= OpamFile.URL.subpath))
+          nv_dirs
       in
       (OpamRepository.pull_shared_tree ~cache_dir ~cache_urls
          dirnames
