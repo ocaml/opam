@@ -21,6 +21,8 @@
 
 (rule (with-stdout-to opam_admin_topstart.ml (echo "include Opam_admin_top\n\nlet _ = Topmain.main ()")))
 
+(rule (write-file opam_installer.mli ""))
+
 (executable
   (name        opam_installer)
   (package     opam-installer)

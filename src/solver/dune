@@ -14,3 +14,6 @@
                (:include ../ocaml-flags-configure.sexp)
                (:include ../ocaml-context-flags.sexp)))
   (wrapped     false))
+
+(rule
+  (copy opamCudfSolverSig.ml opamCudfSolverSig.mli))

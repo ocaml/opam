@@ -150,6 +150,7 @@ users)
   * Bring the autogen script from ocaml/ocaml to be compatible with non-ubuntu-patched autoconf [#5090 @kit-ty-kate #5093 @dra27]
   * configure: Use gmake instead of make on Unix systems (fixes BSDs) [#5090 @kit-ty-kate]
   * Patch AltGr/ocaml-mccs#36 in the src_ext build to fix Cygwin32 [#5094 @dra27]
+  * Silence warning 70 [#5104 @dra27]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]

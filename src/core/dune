@@ -20,6 +20,9 @@
   (wrapped     false))
 
 (rule
+  (copy opamStubsTypes.ml opamStubsTypes.mli))
+
+(rule
   (targets version)
   (deps    ../../shell/get_version.ml ../../configure.ac)
   (action  (with-stdout-to %{targets} (run ocaml ../../shell/get_version.ml ../../configure.ac))))
