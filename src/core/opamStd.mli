@@ -504,7 +504,7 @@ module Sys : sig
   (** The different families of shells we know about *)
   type powershell_host = Powershell_pwsh | Powershell
   type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
-    | SH_pwsh of powershell_host | SH_win_cmd
+    | SH_pwsh of powershell_host | SH_cmd
 
   (** List of all supported shells *)
   val all_shells : shell list

@@ -1024,7 +1024,7 @@ module OpamSys = struct
 
   type powershell_host = Powershell_pwsh | Powershell
   type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
-    | SH_pwsh of powershell_host | SH_win_cmd
+    | SH_pwsh of powershell_host | SH_cmd
 
   let all_shells =
     [SH_sh; SH_bash;
@@ -1033,9 +1033,9 @@ module OpamSys = struct
      SH_fish;
      SH_pwsh Powershell_pwsh;
      SH_pwsh Powershell;
-     SH_win_cmd]
+     SH_cmd]
 
-  let windows_default_shell = SH_win_cmd
+  let windows_default_shell = SH_cmd
   let unix_default_shell = SH_sh
 
   let shell_of_string = function
@@ -1093,7 +1093,7 @@ module OpamSys = struct
       | "powershell.exe" | "powershell_ise.exe" ->
         Some (Accept (SH_pwsh Powershell))
       | "pwsh.exe" -> Some (Accept (SH_pwsh Powershell_pwsh))
-      | "cmd.exe" -> Some (Accept SH_win_cmd)
+      | "cmd.exe" -> Some (Accept SH_cmd)
       | "env.exe" -> Some (Accept SH_sh)
       | name ->
         Option.map
@@ -1198,7 +1198,7 @@ module OpamSys = struct
       if Sys.win32 then win_my_powershell "Microsoft.Powershell_profile.ps1" else
       List.fold_left Filename.concat (home ".config") ["powershell"; "Microsoft.Powershell_profile.ps1"]
     | SH_sh -> home ".profile"
-    | SH_win_cmd ->
+    | SH_cmd ->
       (* cmd.exe does not have a concept of profiles *)
       home ".profile"
 

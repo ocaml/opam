@@ -723,3 +723,6 @@ users)
   * `OpamSWHID`: add module to handle swhid [#4859 @rjbou]
   * `OpamProcess`: expose the `command` type as a private type [#5452 @Leonidas-from-XIV]
   * `OpamFilename`: add `with_open_out_bin` and `with_open_out_bin_atomic` [#5476 @dra27]
+  * `OpamStd.Sys`: add `SH_pwsh`, `SH_win_cmd` and `SH_win_powershell` to `shell` type [#4816 @jonahbeckford]
+    * unify powershell variant: `SH_win_powershell` and `SH_pwsh` to `SH_pwsh of powershell_host` [#5203 @dra27]
+    * change `SH_win_cmd` into `SH_cmd` [#5541 @dra27]

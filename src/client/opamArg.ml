@@ -1068,7 +1068,7 @@ let shell_opt ?section cli validity =
     None,"zsh",SH_zsh;
     None,"fish",SH_fish;
     Some cli2_2,"pwsh",SH_pwsh Powershell_pwsh;
-    Some cli2_2,"cmd",SH_win_cmd;
+    Some cli2_2,"cmd",SH_cmd;
     Some cli2_2,"powershell",SH_pwsh Powershell
   ] |> List.map (fun (c,s,v) -> OpamStd.Option.map_default cli_from cli_original c, s, v)
   in
