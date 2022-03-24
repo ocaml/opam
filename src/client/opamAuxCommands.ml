@@ -88,9 +88,10 @@ let url_with_local_branch = function
      | None -> url)
   | url -> url
 
-let opams_of_dir ?recurse ?subpath d =
-  let files = OpamPinned.files_in_source ?recurse ?subpath d in
-  List.fold_left (fun acc (n, f, subp) ->
+let opams_of_dir_t files_in_source get set dir =
+  let files = files_in_source dir in
+  List.fold_left (fun acc x ->
+      let n, f = get x in
       let name =
         let open OpamStd.Option.Op in
         n >>+ fun () ->
@@ -98,10 +99,10 @@ let opams_of_dir ?recurse ?subpath d =
         >>+ fun () ->
         match files with
         | [] | _::_::_ -> None
-        | [_] -> name_from_project_dirname d
+        | [_] -> name_from_project_dirname dir
       in
       match name with
-      | Some n -> (n, f, subp) :: acc
+      | Some n -> set n x :: acc
       | None ->
         OpamConsole.warning
           "Ignoring file at %s: could not infer package name"
@@ -109,41 +110,21 @@ let opams_of_dir ?recurse ?subpath d =
         acc)
     [] files
 
-let opams_of_dir_w_target ?(recurse=false) ?subpath
+
+let opams_of_dir ?recurse ?subpath dir =
+  opams_of_dir_t (OpamPinned.files_in_source ?recurse ?subpath)
+    (fun (n, f, _) -> n, f)
+    (fun n (_, f, s)-> n, f, s)
+    dir
+
+let opams_of_dir_w_target ?recurse ?subpath
     ?(same_kind=fun _ -> OpamClientConfig.(!r.pin_kind_auto)) url dir =
-  OpamStd.List.filter_map (fun (name, file, subp) ->
-      let url =
-        match url.OpamUrl.backend with
-        | #OpamUrl.version_control as vc ->
-          let module VCS =
-            (val match vc with
-               | `git -> (module OpamGit.VCS: OpamVCS.VCS)
-               | `hg -> (module OpamHg.VCS: OpamVCS.VCS)
-               | `darcs -> (module OpamDarcs.VCS: OpamVCS.VCS)
-               : OpamVCS.VCS)
-          in
-          let open OpamProcess.Job.Op in
-          let versioned_files =
-            OpamProcess.Job.run @@
-            VCS.versioned_files dir @@| fun files -> files
-          in
-          let opamfile =
-            OpamFilename.remove_prefix dir (OpamFile.filename file)
-          in
-          if List.mem opamfile versioned_files
-          || not (OpamStd.String.contains opamfile ~sub:Filename.dir_sep) then
-            url
-          else
-            { url with
-              transport = "file";
-              hash = None;
-              backend = `rsync }
-        | _ -> url
-      in
-      if same_kind url then
-        Some (name, file, url, subp)
-      else None)
-    (opams_of_dir ~recurse ?subpath dir)
+  opams_of_dir_t
+    (OpamPinned.files_in_source_w_target
+       ?recurse ?subpath ~same_kind url)
+    (fun (n, f, _, _) -> n, f)
+    (fun n (_, f, u, s)-> n, f, u, s)
+    dir
 
 let name_and_dir_of_opam_file f =
   let srcdir = OpamFilename.dirname f in

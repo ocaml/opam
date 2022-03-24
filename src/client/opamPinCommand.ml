@@ -783,12 +783,13 @@ let scan_sep = '^'
 let scan ~normalise ~recurse ?subpath url =
   let open OpamStd.Option.Op in
   let pins_of_dir dir =
-    OpamPinned.files_in_source ~recurse ?subpath dir
-    |> OpamStd.List.filter_map (fun (nf, opamf, sb) ->
+    OpamPinned.files_in_source_w_target
+      ~recurse ?subpath url dir
+    |> OpamStd.List.filter_map (fun (nf, opamf, url, sb) ->
         let opam = OpamFile.OPAM.safe_read opamf in
         match (nf ++ OpamFile.OPAM.name_opt opam) with
         | Some name ->
-          Some (name, (OpamFile.OPAM.version_opt opam), sb)
+          Some (name, (OpamFile.OPAM.version_opt opam), url, sb)
         | None ->
           OpamConsole.warning "Can not retrieve a package name from %s"
             (OpamFilename.to_string (OpamFile.filename opamf));
@@ -829,7 +830,7 @@ let scan ~normalise ~recurse ?subpath url =
   if normalise then
     OpamConsole.msg "%s"
       (OpamStd.List.concat_map "\n"
-         (fun (name, version, sb) ->
+         (fun (name, version, url, sb) ->
             Printf.sprintf "%s%s%c%s%s"
               (OpamPackage.Name.to_string name)
               (OpamStd.Option.to_string
@@ -843,7 +844,7 @@ let scan ~normalise ~recurse ?subpath url =
          pins)
   else
     ["# Name"; "# Version"; "# Url" ; "# Subpath"] ::
-    List.map (fun (name, version, sb) ->
+    List.map (fun (name, version, url, sb) ->
         [ OpamPackage.Name.to_string name;
           (version >>| OpamPackage.Version.to_string) +! "-";
           OpamUrl.to_string url;

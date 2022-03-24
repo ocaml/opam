@@ -231,6 +231,41 @@ let files_in_source ?(recurse=false) ?subpath d =
            (OpamFilename.to_string f);
          None)
 
+let files_in_source_w_target ?recurse ?subpath
+    ?(same_kind=fun _ -> true) url dir =
+  OpamStd.List.filter_map (fun (name_opt, file, subp) ->
+      let url =
+        match url.OpamUrl.backend with
+        | #OpamUrl.version_control as vc ->
+          let module VCS =
+            (val match vc with
+               | `git -> (module OpamGit.VCS: OpamVCS.VCS)
+               | `hg -> (module OpamHg.VCS: OpamVCS.VCS)
+               | `darcs -> (module OpamDarcs.VCS: OpamVCS.VCS)
+               : OpamVCS.VCS)
+          in
+          let open OpamProcess.Job.Op in
+          let versioned_files =
+            OpamProcess.Job.run @@
+            VCS.versioned_files dir @@| fun files -> files
+          in
+          let opamfile =
+            OpamFilename.remove_prefix dir (OpamFile.filename file)
+          in
+          if List.mem opamfile versioned_files
+          || not (OpamStd.String.contains opamfile ~sub:Filename.dir_sep) then
+            url
+          else
+            { url with
+              transport = "file";
+              hash = None;
+              backend = `rsync }
+        | _ -> url
+      in
+      if same_kind url then Some (name_opt, file, url, subp)
+      else None)
+    (files_in_source ?recurse ?subpath dir)
+
 let orig_opam_file st name opam =
   let open OpamStd.Option.Op in
   OpamFile.OPAM.get_metadata_dir

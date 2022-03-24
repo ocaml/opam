@@ -29,8 +29,7 @@ val package_opt: 'a switch_state -> name -> package option
 (** The set of all pinned packages with their pinning versions *)
 val packages: 'a switch_state -> package_set
 
-(** Looks up an 'opam' file for the given named package in a source directory.
-    if [locked] is true, look for a locked file. *)
+(** Looks up an 'opam' file for the given named package in a source directory. *)
 val find_opam_file_in_source:
   ?locked:bool -> name -> dirname -> OpamFile.OPAM.t OpamFile.t option
 
@@ -41,6 +40,11 @@ val files_in_source:
   ?recurse:bool ->
   ?subpath:subpath ->
   dirname -> (name option * OpamFile.OPAM.t OpamFile.t * subpath option) list
+
+val files_in_source_w_target:
+  ?recurse:bool -> ?subpath:subpath -> ?same_kind:(url -> bool) ->
+  url -> dirname ->
+  (name option * OpamFile.OPAM.t OpamFile.t * url * subpath option) list
 
 (** From an opam file location, sitting below the given project directory, find
     the corresponding package name if specified ([<name>.opam] or
