@@ -97,7 +97,7 @@ users)
   * [NEW] Add `--untracked` option to remove interactively untracked files [{4915 @rjbou - fix #4831]
 
 ## Opamfile
-  *
+  * Fix substring errors in preserved_format [#4941 @rjbou - fix #4936]
 
 ## External dependencies
   * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
@@ -316,6 +316,7 @@ users)
   * Add `OpamPath.Switch.man_dirs` [#4915 @rjbou]
   * `OpamFile.Config`: order list of installed switches according their last use, update `with_switch` accordingly, and add `previous_switch` [#4910 @AltGr]
   * Change ``Fetch` action to take several packages, in order to handle shared fetching of packages [#4893 @rjbou]
+  * `OpamFile.OPAM.to_string_with_preserved_format`: handle substring errors [#4941 @rjbou - fix #4936]
 
 ## opam-core
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
