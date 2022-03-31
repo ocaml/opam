@@ -64,16 +64,13 @@ The following Cygwin packages are required:
 * From Devel - `make`
 * From Devel - `patch` (not required if OCaml and all required packages are
                         pre-installed)
-* From Interpreters - `m4` (unless required packages are pre-installed or built
-                            using vendored deps rather than `make lib-pkg` - `m4`
-                            is required by findlib's build system)
 * From Devel - `mingw64-i686-gcc-core` & `mingw64-x86_64-gcc-core` (not required if
                                                                  building with MSVC)
 
 Alternatively, having downloaded Cygwin's setup program, Cygwin can be installed
 using the following command line:
 
-`setup-x86_64 --root=C:\cygwin64 --quiet-mode --no-desktop --no-startmenu --packages=make,mingw64-i686-gcc-core,mingw64-x86_64-gcc-core,m4,patch`
+`setup-x86_64 --root=C:\cygwin64 --quiet-mode --no-desktop --no-startmenu --packages=make,mingw64-i686-gcc-core,mingw64-x86_64-gcc-core,patch`
 
 The `--no-desktop` and `--no-startmenu` switches may be omitted in order to create
 shortcuts on the Desktop and Start Menu respectively. Executed this way, setup will
