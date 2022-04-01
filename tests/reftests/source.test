@@ -1,0 +1,101 @@
+N0REP0
+### <pandev/src/src.ml>
+print_endline "I am a source code"
+### <pandev/root.ml>
+print_endline "i'm root"
+### tar czf origin.tgz pandev
+### git -C ./pandev init -q
+### git -C ./pandev config core.autocrlf false
+### git -C ./pandev add -A
+### git -C ./pandev commit -qm "init"
+### <pkg:pandore.3>
+opam-version: "2.0"
+### <mkurl.sh>
+p=pandore.3
+arch=origin
+file="REPO/packages/${p%.*}/$p/opam"
+echo "url {" >> $file
+echo "src: \"$arch.tgz\"" >> $file
+MD5=$(openssl md5 $arch.tgz | cut -d' ' -f2)
+echo "checksum: \"md5=$MD5\"" >> $file
+echo "}" >> $file
+basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+echo "dev-repo: \"git+file://${basedir}/pandev\"" >> $file
+### sh mkurl.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create phantom --empty
+### opam source pandore
+Successfully extracted to ${BASEDIR}/pandore.3
+### find pandore.3 | unordered
+pandore.3
+pandore.3/opam
+pandore.3/root.ml
+pandore.3/src
+pandore.3/src/src.ml
+### opam source pandore
+[ERROR] Directory ${BASEDIR}/pandore.3 already exists. Please remove it or use a different one (see option `--dir')
+# Return code 2 #
+### opam source pandore --dir pandore2
+Successfully extracted to ${BASEDIR}/pandore2
+### find pandore2 | unordered
+pandore2
+pandore2/opam
+pandore2/root.ml
+pandore2/src
+pandore2/src/src.ml
+### rm -rf pandore.3
+### opam source pandore --dev | '\\' -> '/'
+Successfully fetched pandore development repo to ./pandore/
+### find pandore | grep -v '.git/' | unordered
+pandore
+pandore/.git
+pandore/root.ml
+pandore/src
+pandore/src/src.ml
+### # ERROR on message
+### opam source pandore --dev --dir pandore4 | '\\' -> '/'
+Successfully fetched pandore development repo to ./pandore/
+### find pandore4 | grep -v '.git/' | unordered
+pandore4
+pandore4/.git
+pandore4/root.ml
+pandore4/src
+pandore4/src/src.ml
+### rm -rf pandore.3
+### opam source pandore --pin
+Successfully extracted to ${BASEDIR}/pandore.3
+[pandore.3] synchronised (file://${BASEDIR}/pandore.3)
+[WARNING] Failed checks on pandore package definition from source at file://${BASEDIR}/pandore.3:
+             error 23: Missing field 'maintainer'
+           warning 25: Missing field 'authors'
+           warning 35: Missing field 'homepage'
+           warning 36: Missing field 'bug-reports'
+             error 57: Synopsis and description must not be both empty
+           warning 68: Missing field 'license'
+pandore is now pinned to file://${BASEDIR}/pandore.3 (version 3)
+
+The following actions will be performed:
+=== install 1 package
+  - install pandore 3 (pinned)
+
+Proceed with 1 installation? [Y/n] n
+[NOTE] Pinning command successful, but your installed packages may be out of sync.
+# Return code 10 #
+### find pandore.3 | unordered
+pandore.3
+pandore.3/opam
+pandore.3/root.ml
+pandore.3/src
+pandore.3/src/src.ml
+### opam pin
+pandore.3  (uninstalled)  rsync  file://${BASEDIR}/pandore.3
+### rm -rf pandore.3
+### opam switch remove phantom -y
+Switch phantom and all its packages will be wiped. Are you sure? [Y/n] y
+### opam source pandore
+[ERROR] No switch is currently set. Please use 'opam switch' to set or install a switch
+# Return code 50 #
