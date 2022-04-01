@@ -1,0 +1,386 @@
+N0REP0
+### <pkg:foo.1>
+opam-version: "2.0"
+### <pkg:bar.1>
+opam-version: "2.0"
+### <pkg:foo.2>
+opam-version: "2.0"
+### <pkg:foo.3>
+opam-version: "2.0"
+### <pkg:bar.2>
+opam-version: "2.0"
+### <pkg:baz.1>
+opam-version: "2.0"
+### OPAMYES=1
+### opam switch create upgrading --empty
+### opam install foo.1 bar.1 baz | unordered
+The following actions will be performed:
+=== install 3 packages
+  - install bar 1
+  - install baz 1
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+-> installed baz.1
+-> installed foo.1
+Done.
+### opam upgrade --check
+### opam upgrade | unordered
+The following actions will be performed:
+=== upgrade 2 packages
+  - upgrade bar 1 to 2
+  - upgrade foo 1 to 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.1
+-> removed   foo.1
+-> installed bar.2
+-> installed foo.3
+Done.
+### opam upgrade --check
+# Return code 1 #
+### opam install foo.1 bar.1 | unordered
+The following actions will be performed:
+=== downgrade 2 packages
+  - downgrade bar 2 to 1
+  - downgrade foo 3 to 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.2
+-> removed   foo.3
+-> installed bar.1
+-> installed foo.1
+Done.
+### opam upgrade --all | unordered
+The following actions will be performed:
+=== upgrade 2 packages
+  - upgrade bar 1 to 2
+  - upgrade foo 1 to 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.1
+-> removed   foo.1
+-> installed bar.2
+-> installed foo.3
+Done.
+### opam install foo.1 bar.1 | unordered
+The following actions will be performed:
+=== downgrade 2 packages
+  - downgrade bar 2 to 1
+  - downgrade foo 3 to 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.2
+-> removed   foo.3
+-> installed bar.1
+-> installed foo.1
+Done.
+### opam upgrade foo
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade foo 1 to 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> installed foo.3
+Done.
+### opam upgrade bar
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade bar 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.1
+-> installed bar.2
+Done.
+### opam install foo.1 bar.1 | unordered
+The following actions will be performed:
+=== downgrade 2 packages
+  - downgrade bar 2 to 1
+  - downgrade foo 3 to 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.2
+-> removed   foo.3
+-> installed bar.1
+-> installed foo.1
+Done.
+### opam upgrade "foo<3"
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade foo 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> installed foo.2
+Done.
+### # pinned packages
+### opam install foo.1
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade foo 2 to 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.2
+-> installed foo.1
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+### opam install ./quux
+Package quux does not exist, create as a NEW package? [y/n] y
+quux is now pinned to file://${BASEDIR}/quux (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install quux dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved quux.dev  (file://${BASEDIR}/quux)
+-> installed quux.dev
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+build: [ "true" ]
+### opam upgrade | unordered
+The following actions will be performed:
+=== upgrade 2 packages
+  - upgrade bar 1 to 2
+  - upgrade foo 1 to 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.1
+-> removed   foo.1
+-> installed bar.2
+-> installed foo.3
+Done.
+### opam install foo.1
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade foo 3 to 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.3
+-> installed foo.1
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+build: [ "echo" "true" ]
+### opam upgrade --all
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade foo 1 to 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> installed foo.3
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+build: [ "echo" "hey" ]
+### opam install foo.1
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade foo 3 to 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.3
+-> installed foo.1
+Done.
+### opam upgrade quux
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[quux.dev] synchronised (file://${BASEDIR}/quux)
+[quux] Installing new package description from upstream file://${BASEDIR}/quux
+
+The following actions will be performed:
+=== recompile 1 package
+  - recompile quux dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved quux.dev  (no changes)
+-> removed   quux.dev
+-> installed quux.dev
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+build: [ "echo" "hej" ]
+### opam upgrade foo
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade foo 1 to 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> installed foo.3
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+version: "dev2"
+### opam install foo.1
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade foo 3 to 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.3
+-> installed foo.1
+Done.
+### opam upgrade
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade foo 1 to 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> installed foo.3
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+version: "dev3"
+### opam install foo.1
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade foo 3 to 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.3
+-> installed foo.1
+Done.
+### opam upgrade --all
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade foo 1 to 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> installed foo.3
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+version: "dev4"
+### opam install foo.1
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade foo 3 to 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.3
+-> installed foo.1
+Done.
+### opam upgrade quux
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[quux.dev] synchronised (file://${BASEDIR}/quux)
+[quux] Installing new package description from upstream file://${BASEDIR}/quux
+
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade quux dev to dev4 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   quux.dev
+-> installed quux.dev4
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+version: "dev5"
+### opam upgrade ./quux
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[quux.dev4] synchronised (file://${BASEDIR}/quux)
+[quux] Installing new package description from upstream file://${BASEDIR}/quux
+
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade quux dev4 to dev5 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   quux.dev4
+-> installed quux.dev5
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+version: "dev6"
+### <pin:quux/quuux.opam>
+opam-version: "2.0"
+### opam pin ./quux --no-action
+This will pin the following packages: quuux, quux. Continue? [y/n] y
+Package quuux does not exist, create as a NEW package? [y/n] y
+quuux is now pinned to file://${BASEDIR}/quux (version dev)
+[NOTE] Package quux is already pinned to file://${BASEDIR}/quux (version dev5).
+quux is now pinned to file://${BASEDIR}/quux (version dev6)
+### opam upgrade ./quux --installed
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[quux.dev6] synchronised (no changes)
+
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade quux dev5 to dev6 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   quux.dev5
+-> installed quux.dev6
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+version: "dev7"
+build: [ "sh" "install.sh" ]
+### <quux/install.sh>
+echo "lib: [" > quux.install
+for i in `ls files`; do
+  echo "\"files/$i\"" >> quux.install
+done
+echo "]" >> quux.install
+### <pin:quux/quuux.opam>
+opam-version: "2.0"
+build: [ "true" ]
+### opam upgrade ./quux | unordered
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[quuux.dev] synchronised (file://${BASEDIR}/quux)
+[quux.dev6] synchronised (file://${BASEDIR}/quux)
+[quuux] Installing new package description from upstream file://${BASEDIR}/quux
+[quux] Installing new package description from upstream file://${BASEDIR}/quux
+
+quuux is not installed. Install it? [y/n] y
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade quux  dev6 to dev7 (pinned)
+=== install 1 package
+  - install quuux dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved quuux.dev  (file://${BASEDIR}/quux)
+-> removed   quux.dev6
+-> installed quux.dev7
+-> installed quuux.dev
+Done.
+### <quux/files/fichier>
+content
+### opam upgrade
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade foo 1 to 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> installed foo.3
+Done.
+### opam upgrade quux
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[quux.dev7] synchronised (file://${BASEDIR}/quux)
+
+The following actions will be performed:
+=== recompile 1 package
+  - recompile quux dev7 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   quux.dev7
+-> installed quux.dev7
+Done.
+### opam list quux --installed --columns=name,installed-files --normalise
+# Packages matching: name-match(quux) & installed
+# Name # Installed files
+quux   ${BASEDIR}/OPAM/upgrading/lib/quux ${BASEDIR}/OPAM/upgrading/lib/quux/fichier

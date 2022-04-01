@@ -649,6 +649,23 @@
    (run ./run.exe %{bin:opam} %{dep:switch-set.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-update-upgrade)
+ (action
+  (diff update-upgrade.test update-upgrade.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-update-upgrade)))
+
+(rule
+ (targets update-upgrade.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:update-upgrade.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-upgrade-format)
  (action
   (diff upgrade-format.test upgrade-format.out)))
@@ -664,6 +681,23 @@
   (with-stdout-to
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:upgrade-format.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-upgrade)
+ (action
+  (diff upgrade.test upgrade.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-upgrade)))
+
+(rule
+ (targets upgrade.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:upgrade.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-var-option)
