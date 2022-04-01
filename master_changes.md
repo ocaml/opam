@@ -268,6 +268,8 @@ users)
   * Arrange scripts directory [#4922 @rjbou]
   * Run ci on tests changes [#4966 @rjbou]
   * GHA: Fix caching for the "test" job [#5090 @dra27 @kit-ty-kate]
+  * Add gentoo depext test [#5067 @rjbou]
+  * Add more constraint path for launch of workflow [#5067 @rjbou]
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]

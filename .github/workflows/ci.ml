@@ -38,7 +38,6 @@ on:
     - '*.opam'
     - 'Makefile*'
     - 'configure*'
-    - '.github/**'
   pull_request:
     paths:
     - 'src/**'
@@ -49,7 +48,9 @@ on:
     - '*.opam'
     - 'Makefile*'
     - 'configure*'
-    - '.github/**'
+    - '.github/scripts/main/**'
+    - '.github/scripts/common/**'
+    - '.github/workflows/main.yml'
     - 'tests/**'
 #    paths-ignore:
 #    - 'release/**'

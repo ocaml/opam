@@ -2,7 +2,7 @@
 
 set -eu
 
-#for target in alpine debian archlinux centos opensuse fedora oraclelinux ubuntu; do
+#for target in alpine archlinux centos debian fedora gentoo opensuse oraclelinux ubuntu; do
 target=$1
 dir=.github/actions/$target
 
@@ -57,6 +57,19 @@ EOF
 FROM fedora
 RUN dnf install -y $mainlibs $ocaml diffutils
 RUN dnf install -y gcc-c++
+EOF
+    ;;
+  gentoo)
+  mainlibs=${mainlibs/git/dev-vcs\/git}
+  mainlibs=${mainlibs/tar/app-arch\/tar}
+  cat >$dir/Dockerfile << EOF
+# name the portage image
+FROM gentoo/portage as portage
+# image is based on stage3
+FROM gentoo/stage3
+# copy the entire portage volume in
+COPY --from=portage /var/db/repos/gentoo /var/db/repos/gentoo
+RUN emerge -qv $mainlibs
 EOF
     ;;
   opensuse)
@@ -130,17 +143,24 @@ eval \$(opam env)
 make
 ./opam config report
 ./opam switch create confs --empty
-./opam install conf-gmp
-./opam install conf-which
-./opam install conf-autoconf
 EOF
+
+test_depext () {
+  for pkg in $@ ; do
+    echo "./opam install $pkg || true" >> $dir/entrypoint.sh
+  done
+}
+
+test_depext conf-gmp conf-which conf-autoconf
 
 # disable automake for centos, as os-family returns rhel
 if [ $target != "centos" ] && [ $target != "opensuse" ]; then
-  cat >>$dir/entrypoint.sh << EOF
-./opam install conf-automake
-EOF
+  test_depext conf-automake
 fi
+
+# additionnal
+test_depext dpkg # gentoo
+test_depext lib-sundials-dev # os version check
 
 chmod +x $dir/entrypoint.sh
 

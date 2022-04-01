@@ -1,6 +1,12 @@
 name: depexts
+
 on:
   pull_request:
+    paths:
+      - 'src/state/opamSysInteract.ml'
+      - '.github/workflows/depexts.yml'
+      - '.github/scripts/depexts/**'
+  push:
     paths:
       - 'src/state/opamSysInteract.ml'
 
@@ -120,6 +126,24 @@ jobs:
     - name: depexts actions fedora
       uses: ./.github/actions/fedora
       id: depexts-fedora
+
+  depexts-gentoo:
+    needs: opam-cache
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: opam binary cache
+      uses: actions/cache@v2
+      with:
+        path: binary/opam
+        key: binary-${{ env.OPAMVERSION }}
+    - name: generate action
+      run: |
+        bash .github/scripts/depexts/generate-actions.sh gentoo
+    - name: depexts actions gentoo
+      uses: ./.github/actions/gentoo
+      id: depexts-gentoo
 
   depexts-opensuse:
     needs: opam-cache
