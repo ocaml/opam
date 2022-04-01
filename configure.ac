@@ -344,6 +344,8 @@ AC_CHECK_OCAML_PKG_AT_LEAST([dose3.algo], [6.1])
 AC_CHECK_OCAML_PKG_AT_LEAST([opam-file-format], [2.1.3])
 AC_CHECK_OCAML_PKG([spdx_licenses])
 AC_CHECK_OCAML_PKG_AT_LEAST([opam-0install-cudf],[0.4])
+AC_CHECK_OCAML_PKG([jsonm])
+AC_CHECK_OCAML_PKG([uutf])
 
 # Optional dependencies
 AC_CHECK_OCAML_PKG_AT_LEAST([mccs],[1.1+9])
