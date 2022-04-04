@@ -208,6 +208,7 @@ users)
   * OpamCudf: provide machine-readable information on conflicts caused by cycles [#4039 @gasche]
   * Remove memoization from `best_effort ()` to allow for multiple different settings during the same session (useful for libaray users) [#4805 @LasseBlaauwbroek]
   * [BUG] Catch `EACCES` in lock function [#4948 @oandrieu - fix #4944]
+  * Permissions: chmod+unlink before copy [#4827 @jonahbeckford @dra27]
 
 ## Test
   * Update crowbar with compare functions [#4918 @rjbou]
