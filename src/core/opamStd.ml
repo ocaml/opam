@@ -1540,8 +1540,9 @@ module Config = struct
     let updates l = r := l @ !r
 
     let find var = OpamList.find_map var !r
+    let value_t var = try Some (find var) with Not_found -> None
     let value var =
-      let l = lazy (try Some (find var); with Not_found -> None) in
+      let l = lazy (value_t var) in
       fun () -> Lazy.force l
   end
 

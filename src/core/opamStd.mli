@@ -640,7 +640,10 @@ module Config : sig
     type t = ..
     type t += REMOVED
     val find: (t -> 'a option) -> 'a
-    val value: (t -> 'a option) -> (unit ->'a option)
+    (* Lazy *)
+    val value: (t -> 'a option) -> (unit -> 'a option)
+    (* Not lazy *)
+    val value_t: (t -> 'a option) -> 'a option
     val update: t -> unit
     val updates: t list -> unit
   end
