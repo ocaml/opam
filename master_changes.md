@@ -25,6 +25,7 @@ users)
   * Refactored depext-related questions, with a flat menu instead of nested y/n questions [#5053 @AltGr - fix #5026]
   * [BUG] Fix default cli handling for simple flags [#5099 @rjbou]
   * Add `experimental` flags handling [#5099 @rjbou]
+  * Fix `OPAMCURL` and `OPAMFETCH` value setting [#5111 @rjbou - fix #5108]
 
 ## Plugins
   *
@@ -353,6 +354,7 @@ users)
   * `OpamClient.filter_unpinned_locally` now display a warning of skipped packages instead of debug log [#5083 @rjbou]
   * `OpamSolution.parallel_apply`: fix sources_needed package set, now integrate requested but not locally pinned packages [#5082 @rjbou]
   * Add `?subpath` to `OpamRepository.fetch_dev_packages`, `OpamVCS.is_up_to_date` and vcs specific functions in `OpamDarcs`, `OpamHG`, and `OpamGit` [#4876 @rjbou]
+  * `OpamRepositoryConfig.E`: add `curl_t` and `fetch_t` to get their respective environement vairbales value dynamically, without lazyness. It is used in `opamClient.InitDefaults`, that can be called at topelevel [#5111 @rjbou]
 
 ## opam-state
   * `OpamSwitchState.universe`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
@@ -399,3 +401,4 @@ users)
   * `OpamFilename`: add a `SubPath` submodule to handle multi-platform subpath specifications. It has an effect on a lot of functions signatures [#4876 @rjbou]
   * `OpamDirTrack`: Add `to_summary_string` to summarise changes [#5144 @na4zagin3]
   * `OpamJson`: use `Jsonm` and add an `of_string` function [#5142 @rjbou]
+  * `OpamStd.Config.E`: add `value_t` to allow getting environment variable value dynamically [#5111 @rjbou]
