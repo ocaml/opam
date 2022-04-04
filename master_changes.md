@@ -89,6 +89,7 @@ users)
   * Set the priority of user-set archive-mirrors higher than the repositories'.
     This allows opam-repository to use the default opam.ocaml.org cache and be more resilient to changed/force-pushed or unavailable archives. [#4830 @kit-ty-kate - fixes #4411]
   * Repository tarring "optimisation" no more needed, removed in favor of a plain directory. It still can be used with environment variable `OPAMREPOSITORYTARRING`.  [#5015 @kit-ty-kate @rjbou @AltGr - fix #4586]
+    * Fix loading a plain repository froma tarred one [#5109 @rjbou]
 
 ## Lock
   * Fix lock generation of multiple interdependent packages [#4993 @AltGr]
