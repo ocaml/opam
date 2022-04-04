@@ -159,3 +159,109 @@ The following actions will be performed:
 -> removed   foo.4
 -> installed foo.1
 Done.
+### : behaviour with multi repo / on cache write
+### <REPO2/repo>
+opam-version: "2.0"
+### <REPO2/packages/bar/bar.1/opam>
+opam-version: "2.0"
+build: ["test" "-f" "oof"]
+### <REPO2/packages/bar/bar.1/files/oof>
+some content
+### opam repository add repo2 ./REPO2 --this-switch
+[repo2] Initialised
+### opam update --debug-level=-3
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-003ACE73.cache in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/foo.1/opam in 0.000s
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[repo2] no changes from file://${BASEDIR}/REPO2
+[tarred] no changes from file://${BASEDIR}/REPO
+FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-003ACE73.cache ...
+CACHE(repository)               ${BASEDIR}/OPAM/repo/state-003ACE73.cache written in 0.000s
+### opam install bar.1
+The following actions will be performed:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+Done.
+### <REPO2/packages/bar/bar.2/opam>
+opam-version: "2.0"
+build: ["test" "-f" "oof"]
+### <REPO2/packages/bar/bar.2/files/oof>
+some content
+### opam update --debug-level=-3 | unordered
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-003ACE73.cache in 0.000s
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[repo2] synchronised from file://${BASEDIR}/REPO2
+FILE(repo)                      Read ${BASEDIR}/OPAM/repo/repo2/repo in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar.2/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar.1/opam in 0.000s
+[tarred] no changes from file://${BASEDIR}/REPO
+FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-003ACE73.cache ...
+CACHE(repository)               ${BASEDIR}/OPAM/repo/state-003ACE73.cache written in 0.000s
+Now run 'opam upgrade' to apply any package updates.
+### opam install bar.2
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade bar 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.1
+-> installed bar.2
+Done.
+### <REPO/packages/foo/foo.6/opam>
+opam-version: "2.0"
+build: ["test" "-f" "rab"]
+### <REPO/packages/foo/foo.6/files/rab>
+some content
+### <REPO2/packages/bar/bar.3/opam>
+opam-version: "2.0"
+build: ["test" "-f" "oof"]
+### <REPO2/packages/bar/bar.3/files/oof>
+some content
+### opam update --debug-level=-3 | unordered
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-003ACE73.cache in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/bar.2/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/foo.1/opam in 0.000s
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[repo2] synchronised from file://${BASEDIR}/REPO2
+FILE(repo)                      Read ${BASEDIR}/OPAM/repo/repo2/repo in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar.2/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar.3/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar.1/opam in 0.000s
+[tarred] synchronised from file://${BASEDIR}/REPO
+FILE(repo)                      Read ${BASEDIR}/OPAM/repo/tarred/repo in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.4/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.6/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.3/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.2/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.5/opam in 0.000s
+FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-003ACE73.cache ...
+CACHE(repository)               ${BASEDIR}/OPAM/repo/state-003ACE73.cache written in 0.000s
+Now run 'opam upgrade' to apply any package updates.
+### opam install bar.3 foo.6 | unordered
+The following actions will be performed:
+=== upgrade 2 packages
+  - upgrade bar 2 to 3
+  - upgrade foo 1 to 6
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> installed foo.6
+-> removed   bar.2
+-> installed bar.3
+Done.
