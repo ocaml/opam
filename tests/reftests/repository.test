@@ -131,7 +131,7 @@ The following actions will be performed:
 -> removed   foo.5
 -> installed foo.4
 Done.
-### opam update --debug-level=-3 | unordered
+### opam update --debug-level=-3
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
 CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-003ACE73.cache in 0.000s
@@ -139,12 +139,6 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packag
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [tarred] no changes from file://${BASEDIR}/REPO
-FILE(repo)                      Read ${BASEDIR}/OPAM/repo/tarred/repo in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.4/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.3/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.5/opam in 0.000s
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
 CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-003ACE73.cache ...
 CACHE(repository)               ${BASEDIR}/OPAM/repo/state-003ACE73.cache written in 0.000s
