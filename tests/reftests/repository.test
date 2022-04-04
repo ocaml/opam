@@ -87,27 +87,8 @@ some content
 tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR
 diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
 patch (CWD=${OPAMTMP}/tarred)
-tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR
-### opam install foo.5 -vv
-The following actions will be performed:
-=== upgrade 1 package
-  - upgrade foo 4 to 5
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-
-Sys_error("${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.5/files/quux: No such file or directory")
-
-
-<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-+- The following actions were aborted
-| - remove foo 4
-+- 
-+- The following actions failed
-| - build foo 5
-+- 
-- No changes have been performed
-'${OPAM} install foo.5 -vv' failed.
-# Return code 31 #
+### opam install foo.5 -vv | grep '^\+' | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR'
+test "-f" "quux" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.5)
 ### ls $OPAMROOT/repo | grep -v "cache"
 lock
 repos-config
@@ -116,5 +97,3 @@ tarred
 packages
 repo
 ### diff -ru ./REPO $OPAMROOT/repo/tarred
-Only in ./REPO/packages/foo: foo.5
-# Return code 1 #
