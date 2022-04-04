@@ -103,12 +103,12 @@ let req_dl_tools () =
   in
   let open OpamStd.Option.Op in
   let cmd =
-    (OpamRepositoryConfig.E.fetch ()
+    (OpamRepositoryConfig.E.fetch_t ()
      >>= fun s ->
      match OpamStd.String.split s ' ' with
      | c::_ -> Some c
      | _ -> None)
-    >>+ fun () -> OpamRepositoryConfig.E.curl ()
+    >>+ fun () -> OpamRepositoryConfig.E.curl_t ()
   in
   match cmd with
   | Some cmd ->
@@ -117,8 +117,8 @@ let req_dl_tools () =
 
 let dl_tool () =
   let open OpamStd.Option.Op in
-  (OpamRepositoryConfig.E.fetch ()
-   >>+ fun () -> OpamRepositoryConfig.E.curl ())
+  (OpamRepositoryConfig.E.fetch_t ()
+   >>+ fun () -> OpamRepositoryConfig.E.curl_t ())
   >>| fun cmd -> [(CString cmd), None]
 
 let recommended_tools () =
