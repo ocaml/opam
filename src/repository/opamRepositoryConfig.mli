@@ -23,6 +23,10 @@ module E : sig
 
   val curl: unit -> string option
   val fetch: unit -> string option
+
+ (* Non lazy access *)
+  val curl_t: unit -> string option
+  val fetch_t: unit -> string option
 end
 
 (** Toggles parsing of the tool's output to detect errors

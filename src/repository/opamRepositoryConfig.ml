@@ -30,6 +30,8 @@ module E = struct
   let retries = value (function RETRIES i -> i | _ -> None)
   let validationhook = value (function VALIDATIONHOOK s -> s | _ -> None)
 
+  let curl_t () = value_t (function CURL s -> s | _ -> None)
+  let fetch_t () = value_t (function FETCH s -> s | _ -> None)
 end
 
 type dl_tool_kind = [ `Curl | `Default ]
