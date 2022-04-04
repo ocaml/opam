@@ -270,6 +270,7 @@ users)
   * GHA: Fix caching for the "test" job [#5090 @dra27 @kit-ty-kate]
   * Add gentoo depext test [#5067 @rjbou]
   * Add more constraint path for launch of workflow [#5067 @rjbou]
+  * Upgrade packages for sovler jobs, in case depext changed [#5010 @rjbou]
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
