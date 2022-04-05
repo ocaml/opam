@@ -1518,6 +1518,7 @@ module Config = struct
 
   module E = struct
     type t = ..
+    type t += REMOVED
     let (r : t list ref) = ref []
 
     let update v = r := v :: !r
