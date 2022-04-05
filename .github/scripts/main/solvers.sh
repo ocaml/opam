@@ -24,6 +24,7 @@ esac
 
 opam update --depexts
 opam switch create $SOLVER ocaml-system || true
+opam upgrade --all
 opam install $PKGS
 opam install . --deps
 opam clean --logs --switch-cleanup
