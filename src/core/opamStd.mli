@@ -623,6 +623,7 @@ module Config : sig
   (* Opam environment variables handling *)
   module E : sig
     type t = ..
+    type t += REMOVED
     val find: (t -> 'a option) -> 'a
     val value: (t -> 'a option) -> (unit ->'a option)
     val update: t -> unit

@@ -332,3 +332,4 @@ users)
   * `OpamHash`: add `sort` from strongest to weakest kind
   * `OpamSystem.real_path`: Remove the double chdir trick on OCaml >= 4.13.0 [#4961 @kit-ty-kate]
   * `OpamProcess.wait_one`: display command in verbose mode for finished found process [#5091 @rjbou]
+  * `OpamStd.Config.E`: add a `REMOVED` variant to allow removing completely an environment variable handling [#5112 @rjbou]
