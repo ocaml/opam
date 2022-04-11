@@ -136,7 +136,7 @@ let repository rt repo =
             no longer needed once we have a tar.gz *)
          Hashtbl.add rt.repos_tmp repo.repo_name (lazy local_dir))
     else if OpamFilename.exists tarred_repo then
-      (OpamFilename.extract tarred_repo local_dir;
+      (OpamFilename.move_dir ~src:repo_root ~dst:local_dir;
        OpamFilename.remove tarred_repo);
     Done (
       (* Return an update function to make parallel execution possible *)
