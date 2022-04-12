@@ -159,6 +159,7 @@ users)
   * Silence warning 70 [#5104 @dra27]
   * Add `jsonm` (and `uutf`) dependency [#5098 @rjbou]
   * Add `jsonm` (and `uutf`) dependency [#5098 @rjbou - fix #5085]
+  * Bump opam-file-format to 2.1.4 [#5117 @kit-ty-kate - fix #5116]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
