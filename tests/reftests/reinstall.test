@@ -25,14 +25,15 @@ depends: ["b"]
 ### opam upgrade --show
 Already up-to-date.
 Nothing to do.
-### :::::: Check that a rebuild occurs if only the flags (plugin) changes (currently bugged)
+### :::::: Check that a rebuild occurs if only the flags (plugin) changes
 ### <pkg:a.1>
 opam-version: "2.0"
 flags: plugin
 depends: ["b"]
 ### opam upgrade --show
-Already up-to-date.
-Nothing to do.
+The following actions would be performed:
+=== recompile 1 package
+  - recompile a 1 [upstream or system changes]
 ### :::::: Check that nothing gets rebuild if only a constraint – that is already installed – changes
 ### <pkg:a.1>
 opam-version: "2.0"

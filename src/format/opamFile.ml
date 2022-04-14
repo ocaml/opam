@@ -3224,9 +3224,9 @@ module OPAM = struct
       available  = t.available;
       flags      =
         (List.filter (function
+             | Pkgflag_Plugin -> true
              | Pkgflag_LightUninstall
              | Pkgflag_Verbose
-             | Pkgflag_Plugin
              | Pkgflag_Compiler
              | Pkgflag_Conf
              | Pkgflag_AvoidVersion
