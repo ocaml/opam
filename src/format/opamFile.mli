@@ -412,12 +412,16 @@ module OPAM: sig
 
   (** Returns the opam value (including url, descr) with all non-effective (i.e.
       user-directed information that doesn't change opam's view on the package)
-      fields set to their empty values. Useful for comparisons. *)
-  val effective_part: t -> t
+      fields set to their empty values. Useful for comparisons.
+      @param ?modulo_state if [true], eliminates the fields relying on the state
+      of the switch (depends, available, …). This is [false] by default. *)
+  val effective_part: ?modulo_state:bool -> t -> t
 
   (** Returns true if the effective parts of the two package definitions are
-      equal *)
-  val effectively_equal: t -> t -> bool
+      equal.
+      @param ?modulo_state if [true], considers the fields relying on the state
+      of the switch (depends, available, …) equal. This is [false] by default *)
+  val effectively_equal: ?modulo_state:bool -> t -> t -> bool
 
   (** Compares two package definitions, ignoring the virtual fields bound to
       file location ([metadata_dir]...) *)

@@ -366,7 +366,7 @@ let load lock_kind gt rt switch =
     let changed =
       OpamPackage.Map.merge (fun _ opam_new opam_installed ->
           match opam_new, opam_installed with
-          | Some r, Some i when not (OpamFile.OPAM.effectively_equal i r) ->
+          | Some r, Some i when not (OpamFile.OPAM.effectively_equal ~modulo_state:true i r) ->
             Some ()
           | _ -> None)
         opams installed_opams

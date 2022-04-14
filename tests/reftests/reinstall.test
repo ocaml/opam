@@ -39,9 +39,8 @@ The following actions would be performed:
 opam-version: "2.0"
 depends: ["b" {= version}]
 ### opam upgrade --show
-The following actions would be performed:
-=== recompile 1 package
-  - recompile a 1 [upstream or system changes]
+Already up-to-date.
+Nothing to do.
 ### :::::: Check that a rebuild occurs if the build field changes
 ### <pkg:a.1>
 opam-version: "2.0"
@@ -82,7 +81,7 @@ opam-version: "2.0"
 ### opam upgrade --show
 The following actions would be performed:
 === recompile 2 packages
-  - recompile a 1 [uses b]
-  - recompile b 1 [upstream or system changes]
+  - recompile a 1
+  - recompile b 1
 === install 1 package
-  - install   c 1 [required by b]
+  - install   c 1
