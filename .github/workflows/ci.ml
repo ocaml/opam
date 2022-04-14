@@ -48,8 +48,7 @@ on:
     - '*.opam'
     - 'Makefile*'
     - 'configure*'
-    - '.github/scripts/main/**'
-    - '.github/scripts/common/**'
+    - '.github/scripts/**'
     - '.github/workflows/main.yml'
     - 'tests/**'
 #    paths-ignore:

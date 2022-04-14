@@ -105,6 +105,11 @@ set CYGWIN_PACKAGES=make,patch,curl,diffutils,tar,unzip,git,gcc-g++,libicu-devel
 :: up the call to ldd later!
 %CYGWIN_ROOT%\bin\bash -lc "uname -a"
 
+:: Mitigations added for CVE-2022-24765 cause error messages as the owner of the
+:: git checkout won't be correct. It simply doesn't matter on a CI system, so
+:: just add the directory to safe.directory to ignore it.
+%CYGWIN_ROOT%\bin\bash -c "git config --global --add safe.directory $PWD"
+
 echo ::endgroup::
 
 :: cygpath %CYGWIN_ROOT% will return / which isn't very helpful. Instead, call
