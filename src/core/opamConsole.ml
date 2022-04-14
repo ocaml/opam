@@ -464,6 +464,17 @@ let rollback_terminal nlines =
     Printf.printf "\027[A"
   done
 
+let left_1_char =
+  let left_1_char_unix () = Printf.printf "\027[D%!" in
+  if Sys.win32 then
+    let f = lazy (
+      match get_win32_console_shim `stdout Mode with
+      | Shim -> fun () -> () (* unimplemented *)
+      | VT100 force -> fun () -> force (); left_1_char_unix ()
+    ) in
+    fun () -> Lazy.force f ()
+  else left_1_char_unix
+
 let displaying_status = ref false
 
 let clear_status_unix () =
@@ -705,6 +716,7 @@ let short_user_input ~prompt ?default f =
   let prompt () = match default with
     | Some x ->
       msg "%s%s" prompt x;
+      left_1_char ();
       carriage_delete ();
       (match List.rev (OpamStd.String.split prompt '\n') with
        | lastline::_ -> print_string lastline
@@ -954,7 +966,7 @@ let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
   let rec menu default =
     let text =
       OpamStd.List.concat_map "" ~right:"\n" (fun (ans, n) ->
-          Printf.kprintf (OpamStd.Format.reformat ~indent:5) "%s %s. %s\n"
+          Printf.ksprintf (OpamStd.Format.reformat ~indent:5) "%s %s. %s\n"
             (if ans = default then ">" else " ")
             (colorise `blue n)
             (List.assoc ans options))
