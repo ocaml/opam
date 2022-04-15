@@ -48,17 +48,16 @@ pandore2/root.ml
 pandore2/src
 pandore2/src/src.ml
 ### rm -rf pandore.3
-### opam source pandore --dev | '\\' -> '/'
-Successfully fetched pandore development repo to ./pandore/
+### opam source pandore --dev
+Successfully fetched pandore development repo to ${BASEDIR}/pandore
 ### find pandore | grep -v '.git/' | unordered
 pandore
 pandore/.git
 pandore/root.ml
 pandore/src
 pandore/src/src.ml
-### # ERROR on message
-### opam source pandore --dev --dir pandore4 | '\\' -> '/'
-Successfully fetched pandore development repo to ./pandore/
+### opam source pandore --dev --dir pandore4
+Successfully fetched pandore development repo to ${BASEDIR}/pandore4
 ### find pandore4 | grep -v '.git/' | unordered
 pandore4
 pandore4/.git
