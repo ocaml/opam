@@ -117,8 +117,8 @@ val initk: 'a -> 'a options_fun
 
 (** Automatic answering levels
     * [`ask]: prompt and ask user
-    * [`no]: answer no to all opam questions
-    * [`yes]: answer yes to all opam questions
+    * [`all_no]: answer no to all opam questions
+    * [`all_yes]: answer yes to all opam questions
     * [`unsafe_yes]: answer yes to all opam question and launch system package
                      command wit non interactive options
     If confirm-level is set (from cli or environment variable), its value is

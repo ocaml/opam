@@ -553,6 +553,7 @@ module Config : sig
   type when_ = [ `Always | `Never | `Auto ]
   type when_ext = [ `Extended | when_ ]
   type answer = [ `unsafe_yes | `all_yes | `all_no | `ask ]
+  type yes_answer = [ `unsafe_yes | `all_yes ]
 
   (* Parse a envrionement variable boolean value *)
   val bool_of_string: string -> bool option

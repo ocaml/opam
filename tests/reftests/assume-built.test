@@ -14,7 +14,7 @@ versionned
 new!
 ### opam switch create assume-built --empty
 ### opam pin ./ongoing -n
-Package ongoing does not exist, create as a NEW package? [Y/n] y
+Package ongoing does not exist, create as a NEW package? [y/n] y
 ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
 ### : assume built
 ### opam install ongoing -v | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")sh(\.exe)?"? "' -> 'sh "' | '.*(/|\\|")touch(\.exe)?"? "' -> 'touch "'

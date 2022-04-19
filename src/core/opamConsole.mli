@@ -113,6 +113,9 @@ val status_line : ('a, unit, string, unit) format4 -> 'a
 (** Erase the status line and restore the cursor to the start of the line *)
 val clear_status : unit -> unit
 
+(** Show a prompt and wait for the user to press anything. *)
+val pause: ('a, unit, string, unit) format4 -> 'a
+
 (** Ask the user to press Y/y/N/n to continue (returns a boolean).
     Defaults to true (yes) if unspecified.
     If [require_unsafe_yes] is true, it automatically answer yes to the
@@ -122,6 +125,18 @@ val clear_status : unit -> unit
 val confirm:
   ?require_unsafe_yes:bool -> ?default:bool ->
   ('a, unit, string, bool) format4 -> 'a
+
+(** Prompts the user with multiple numbered choices [(answer, message)].
+
+    [unsafe_yes], [yes] are the options to choose if the corresponding global
+    options are set.
+    [no] is the option to choose otherwise, when non interactive, on [escape].
+    [default] is the option to choose on an active empty input ("\n").
+    Max 9 options. *)
+val menu:
+  ?default:'a -> ?unsafe_yes:'a -> ?yes:'a -> no:'a ->
+  options:('a * string) list ->
+  ('b, unit, string, 'a) format4 -> 'b
 
 (** Read some input from the user (returns a string option) *)
 val read: ('a, unit, string, string option) format4 -> 'a

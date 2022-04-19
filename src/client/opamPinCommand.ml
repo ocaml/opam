@@ -150,11 +150,10 @@ let copy_files st opam =
 (* Returns the new opam file, without writing it to disk *)
 let edit_raw name temp_file =
   let rec edit () =
-    if OpamStd.Sys.tty_in then
-      (OpamConsole.msg "Press enter to start \"%s\" (this can be customised by \
-                        setting EDITOR or OPAMEDITOR)... "
-         OpamClientConfig.(!r.editor);
-       ignore (read_line ()));
+    OpamConsole.pause
+      "Press enter to start \"%s\" (this can be customised by setting EDITOR \
+       or OPAMEDITOR)..."
+      OpamClientConfig.(!r.editor);
     let edited_ok =
       try
         Sys.command

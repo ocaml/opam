@@ -1112,21 +1112,10 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     else
       OpamSysPkg.Set.empty
   in
-  if OpamSysPkg.Set.is_empty sys_packages ||
-     OpamClientConfig.(!r.show) ||
-     OpamClientConfig.(!r.assume_depexts)
-  then t else
-  let print () =
-    let commands =
-      OpamSysInteract.install_packages_commands sys_packages
-      |> List.map (fun (c,a) -> c::a)
-    in
-    OpamConsole.formatted_msg
-      (match commands with
-       | [_] -> "This command should get the requirements installed:\n"
-       | _ -> "These commands should get the requirements installed:\n");
-    OpamConsole.msg "\n    %s\n\n"
-      (OpamStd.List.concat_map "\n    " (String.concat " ") commands)
+  let pkg_manager_name () =
+    match OpamSysInteract.install_packages_commands OpamSysPkg.Set.empty with
+    | (pkgman, _) :: _ -> pkgman
+    | [] -> assert false
   in
   let map_sysmap f t =
     let sys_packages =
@@ -1143,66 +1132,112 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     in
     { t with sys_packages = lazy sys_packages }
   in
-  let recheck t sys_packages =
-    let needed, _notfound = OpamSysInteract.packages_status sys_packages in
-    let installed = OpamSysPkg.Set.diff sys_packages needed in
-    map_sysmap (fun sysp -> OpamSysPkg.Set.diff sysp installed) t, needed
-  in
-  let rec wait msg sys_packages =
-    let give_up () =
-      OpamConsole.formatted_msg
-        "You can retry with '--assume-depexts' to skip this check, or run \
-         'opam option depext=false' to permanently disable handling of \
-         system packages altogether.\n";
-      OpamStd.Sys.exit_because `Aborted
+  let rec entry_point t sys_packages =
+    if OpamClientConfig.(!r.fake) then
+      (print_command sys_packages; t)
+    else if OpamFile.Config.depext_run_installs t.switch_global.config then
+      if confirm then menu t sys_packages else auto_install t sys_packages
+    else
+      manual_install t sys_packages
+  and menu t sys_packages =
+    let answer =
+      let pkgman = OpamConsole.colorise `yellow (pkg_manager_name ()) in
+      OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
+        "opam believes some required external dependencies are missing. opam \
+         can:"
+        ~options:[
+          `Yes, Printf.sprintf
+            "Run %s to install them (may need root/sudo access)" pkgman;
+          `No, Printf.sprintf
+            "Display the recommended %s command and wait while you run it \
+             manually (e.g. in another terminal)" pkgman;
+          `Ignore, "Attempt installation anyway, and permanently register that \
+                    this external dependency is present, but not detectable";
+          `Quit, "Abort the installation";
+        ]
     in
-    if not (OpamStd.Sys.tty_in && OpamCoreConfig.answer_is `ask) then
-      give_up ()
-    else if OpamConsole.confirm
-        "%s\nWhen you are done: check again and continue?"
-        msg
-    then
-      let t, to_install = recheck t sys_packages in
-      if OpamSysPkg.Set.is_empty to_install then t else
-      let msg =
-        Printf.sprintf
-          "\nThe following remain to be installed: %s"
-          (syspkgs_to_string to_install)
-      in
-      wait msg to_install
-    else if
-      OpamConsole.confirm ~default:false
-        "Do you want to attempt to proceed anyway?"
-    then t
-    else give_up ()
-  in
-  OpamConsole.header_msg "Handling external dependencies";
-  if not (OpamFile.Config.depext_run_installs t.switch_global.config) then
-    (print ();
-     wait "You may now install the packages on your system."
-       sys_packages)
-  else if OpamClientConfig.(!r.fake) then (print (); t)
-  else if
-    not confirm
-    || OpamConsole.confirm ~require_unsafe_yes:true
-      "Let opam run your package manager to install the required system \
-       packages?\n(answer 'n' for other options)"
-  then
+    OpamConsole.msg "\n";
+    match answer with
+    | `Yes -> auto_install t sys_packages
+    | `No ->
+      OpamConsole.note "Use 'opam option depext-run-installs=false' \
+                        if you don't want to be prompted again.";
+      OpamConsole.msg "\n";
+      print_command sys_packages;
+      OpamConsole.pause "Standing by, press enter to continue when done.";
+      OpamConsole.msg "\n";
+      check_again t sys_packages
+    | `Ignore -> bypass t
+    | `Quit -> give_up_msg (); OpamStd.Sys.exit_because `Aborted
+  and print_command sys_packages =
+    let commands =
+      OpamSysInteract.install_packages_commands sys_packages
+      |> List.map (fun (c,a) -> c::a)
+    in
+    OpamConsole.formatted_msg
+      (match commands with
+       | [_] -> "This command should get the requirements installed:\n"
+       | _ -> "These commands should get the requirements installed:\n");
+    OpamConsole.msg "\n    %s\n\n"
+      (OpamConsole.colorise `bold
+         (OpamStd.List.concat_map "\n    " (String.concat " ") commands))
+  and manual_install t sys_packages =
+    print_command sys_packages;
+    let answer =
+      OpamConsole.menu ~default:`Continue ~no:`Quit "Would you like opam to:"
+        ~options:[
+          `Continue, "Check again, as the package is now installed";
+          `Ignore, "Attempt installation anyway, and permanently register that \
+                    this external dependency is present, but not detectable";
+          `Quit, "Abort the installation";
+        ]
+    in
+    OpamConsole.msg "\n";
+    match answer with
+    | `Continue -> check_again t sys_packages
+    | `Ignore -> bypass t
+    | `Quit -> give_up ()
+  and auto_install t sys_packages =
     try
       OpamSysInteract.install sys_packages; (* handles dry_run *)
       map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
     with Failure msg ->
       OpamConsole.error "%s" msg;
-      if not confirm then (print (); t) else
-        wait "You can now try to get them installed manually."
-          sys_packages
+      check_again t sys_packages
+  and check_again t sys_packages =
+    let needed, _notfound = OpamSysInteract.packages_status sys_packages in
+    let installed = OpamSysPkg.Set.diff sys_packages needed in
+    let t, sys_packages =
+      map_sysmap (fun sysp -> OpamSysPkg.Set.diff sysp installed) t, needed
+    in
+    if OpamSysPkg.Set.is_empty sys_packages then t else
+      (OpamConsole.error "These packages are still missing: %s\n"
+         (syspkgs_to_string sys_packages);
+         entry_point t sys_packages)
+  and bypass t =
+    OpamConsole.note
+      "Run 'opam option depext=false' if you wish to permanently disable \
+       handling of system packages.\n";
+    t
+  and give_up_msg () =
+    OpamConsole.note
+      "You can retry with '--assume-depexts' to skip this check, or run 'opam \
+       option depext=false' to permanently disable handling of system \
+       packages.\n"
+  and give_up () =
+    give_up_msg ();
+    OpamStd.Sys.exit_because `Aborted
+  in
+  if OpamSysPkg.Set.is_empty sys_packages ||
+     OpamClientConfig.(!r.show) ||
+     OpamClientConfig.(!r.assume_depexts) then
+    t
   else
-    (OpamConsole.note "Use 'opam option depext-run-installs=false' \
-                       if you don't want to be prompted again.";
-     print ();
-     wait
-       "You may now install the packages manually on your system."
-       sys_packages)
+  try
+    OpamConsole.header_msg "Handling external dependencies";
+    OpamConsole.msg "\n";
+    entry_point t sys_packages
+  with Sys.Break as e -> OpamStd.Exn.finalise e give_up_msg
 
 (* Apply a solution *)
 let apply ?ask t ~requested ?add_roots ?(assume_built=false)

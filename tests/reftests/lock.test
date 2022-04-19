@@ -21,7 +21,7 @@ it's here
 ### : simple lock file :
 ### opam switch create locking --empty
 ### opam pin -n ./tolock --with-version 1
-Package tolock does not exist, create as a NEW package? [Y/n] y
+Package tolock does not exist, create as a NEW package? [y/n] y
 tolock is now pinned to file://${BASEDIR}/tolock (version 1)
 ### opam lock tolock
 [ERROR] Skipping tolock.1, dependencies are not satisfied in this switch, not installed packages are:
@@ -147,7 +147,7 @@ url {
 src: "file://${BASEDIR}/tolock"
 }
 ### opam pin -n ./tolock --locked
-Package tolock does not exist, create as a NEW package? [Y/n] y
+Package tolock does not exist, create as a NEW package? [y/n] y
 tolock is now pinned to file://${BASEDIR}/tolock (version 1)
 ### opam show --normalise tolock --field depends:,depopts:,conflicts:
 depends:   ["bar" {= "1"} "baz" {= "1"} "foo" {= "1"}]

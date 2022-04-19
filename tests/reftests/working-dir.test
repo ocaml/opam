@@ -11,7 +11,7 @@ versionned
 ### git -C ./ongoing commit -qm "init"
 ### opam switch create working-dir --empty
 ### opam pin ./ongoing
-Package ongoing does not exist, create as a NEW package? [Y/n] y
+Package ongoing does not exist, create as a NEW package? [y/n] y
 ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
 
 The following actions will be performed:
