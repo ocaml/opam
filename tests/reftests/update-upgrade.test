@@ -1,0 +1,423 @@
+N0REP0
+### <REPO/packages/d-foo/d-foo.1/opam>
+opam-version: "2.0"
+### <REPO/packages/d-bar/d-bar.1/opam>
+opam-version: "2.0"
+### <REPO/packages/d-baz/d-baz.1/opam>
+opam-version: "2.0"
+### <REPO2/packages/s-foo/s-foo.1/opam>
+opam-version: "2.0"
+### <REPO2/repo>
+opam-version: "2.0"
+### OPAMYES=1
+### opam switch create upgrading --empty
+### opam repository add second ./REPO2 --this-switch
+[second] Initialised
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] no changes from file://${BASEDIR}/REPO2
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install d-foo s-foo | unordered
+The following actions will be performed:
+=== install 2 packages
+  - install d-foo 1
+  - install s-foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed d-foo.1
+-> installed s-foo.1
+Done.
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] no changes from file://${BASEDIR}/REPO2
+[default] no changes from file://${BASEDIR}/REPO
+### <REPO/packages/d-foo/d-foo.2/opam>
+opam-version: "2.0"
+### <REPO2/packages/s-foo/s-foo.2/opam>
+opam-version: "2.0"
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] synchronised from file://${BASEDIR}/REPO2
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade
+The following actions will be performed:
+=== upgrade 2 packages
+  - upgrade d-foo 1 to 2
+  - upgrade s-foo 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   d-foo.1
+-> removed   s-foo.1
+-> installed d-foo.2
+-> installed s-foo.2
+Done.
+### <REPO/packages/d-foo/d-foo.3/opam>
+opam-version: "2.0"
+### <REPO2/packages/s-foo/s-foo.3/opam>
+opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade d-foo 2 to 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   d-foo.2
+-> installed d-foo.3
+Done.
+### <REPO/packages/d-foo/d-foo.4/opam>
+opam-version: "2.0"
+### <REPO2/packages/s-foo/s-foo.4/opam>
+opam-version: "2.0"
+### opam update s-foo
+[WARNING] The following are not development packages (no dynamic or version controlled upstream) and can't be updated individually: s-foo.2
+          You may want to update your repositories with just opam update or to upgrade your package with opam upgrade s-foo
+# Return code 40 #
+### opam update second
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] synchronised from file://${BASEDIR}/REPO2
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade s-foo
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade s-foo 2 to 4
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   s-foo.2
+-> installed s-foo.4
+Done.
+### <REPO/packages/d-foo/d-foo.5/opam>
+opam-version: "2.0"
+### opam update --check
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] no changes from file://${BASEDIR}/REPO2
+[default] synchronised from file://${BASEDIR}/REPO
+### opam update --check
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] no changes from file://${BASEDIR}/REPO2
+[default] no changes from file://${BASEDIR}/REPO
+# Return code 1 #
+### <REPO2/packages/s-foo/s-foo.5/opam>
+opam-version: "2.0"
+### opam update --upgrade
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] synchronised from file://${BASEDIR}/REPO2
+[default] no changes from file://${BASEDIR}/REPO
+
+The following actions will be performed:
+=== upgrade 2 packages
+  - upgrade d-foo 3 to 5
+  - upgrade s-foo 4 to 5
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   d-foo.3
+-> removed   s-foo.4
+-> installed d-foo.5
+-> installed s-foo.5
+Done.
+### <REPO2/packages/s-foo/s-foo.6/opam>
+opam-version: "2.0"
+### opam update --upgrade --check
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] synchronised from file://${BASEDIR}/REPO2
+[default] no changes from file://${BASEDIR}/REPO
+
+### opam update --upgrade --check
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] no changes from file://${BASEDIR}/REPO2
+[default] no changes from file://${BASEDIR}/REPO
+
+### # pinned packages
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+### opam install ./quux
+Package quux does not exist, create as a NEW package? [y/n] y
+quux is now pinned to file://${BASEDIR}/quux (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install quux dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved quux.dev  (file://${BASEDIR}/quux)
+-> installed quux.dev
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+build: [ "true" ]
+### opam update quux
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[quux.dev] synchronised (file://${BASEDIR}/quux)
+[quux] Installing new package description from upstream file://${BASEDIR}/quux
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade quux
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[quux.dev] synchronised (no changes)
+
+The following actions will be performed:
+=== recompile 1 package
+  - recompile quux dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved quux.dev  (no changes)
+-> removed   quux.dev
+-> installed quux.dev
+Done.
+### <quux/a-file>
+with a content
+### opam update --development
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[quux.dev] synchronised (file://${BASEDIR}/quux)
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade quux
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[quux.dev] synchronised (no changes)
+
+The following actions will be performed:
+=== recompile 1 package
+  - recompile quux dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved quux.dev  (no changes)
+-> removed   quux.dev
+-> installed quux.dev
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+build: [ "test" "-f" "a-file-bis" ]
+### <quux/a-file-bis>
+with a content
+### <quux/quux.install>
+lib: [ "a-file-bis" ]
+### opam update --development
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[quux.dev] synchronised (file://${BASEDIR}/quux)
+[quux] Installing new package description from upstream file://${BASEDIR}/quux
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade quux
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[quux.dev] synchronised (no changes)
+
+The following actions will be performed:
+=== recompile 1 package
+  - recompile quux dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved quux.dev  (no changes)
+-> removed   quux.dev
+-> installed quux.dev
+Done.
+### opam list quux --columns=installed-files --normalise
+# Packages matching: name-match(quux) & (installed | available)
+# Installed files
+${BASEDIR}/OPAM/upgrading/lib/quux ${BASEDIR}/OPAM/upgrading/lib/quux/a-file-bis
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+version: "dev2"
+build: [
+  [ "sh" "install.sh" ]
+]
+### <quux/install.sh>
+echo "lib: [" > quux.install
+for i in `ls files`; do
+  echo "\"files/$i\"" >> quux.install
+done
+echo "]" >> quux.install
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] no changes from file://${BASEDIR}/REPO2
+[default] no changes from file://${BASEDIR}/REPO
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[quux.dev] synchronised (file://${BASEDIR}/quux)
+[quux] Installing new package description from upstream file://${BASEDIR}/quux
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade | unordered
+The following actions will be performed:
+=== upgrade 2 packages
+  - upgrade quux  dev to dev2 (pinned)
+  - upgrade s-foo 5 to 6
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   quux.dev
+-> removed   s-foo.5
+-> installed quux.dev2
+-> installed s-foo.6
+Done.
+### <quux/files/fichier>
+content
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] no changes from file://${BASEDIR}/REPO2
+[default] no changes from file://${BASEDIR}/REPO
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[quux.dev2] synchronised (file://${BASEDIR}/quux)
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade
+The following actions will be performed:
+=== recompile 1 package
+  - recompile quux dev2 (pinned) [upstream or system changes]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   quux.dev2
+-> installed quux.dev2
+Done.
+### opam list quux --installed --columns=name,installed-files --normalise
+# Packages matching: name-match(quux) & installed
+# Name # Installed files
+quux   ${BASEDIR}/OPAM/upgrading/lib/quux ${BASEDIR}/OPAM/upgrading/lib/quux/fichier
+### <quux/files/fichier2>
+content
+### opam update quux
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[quux.dev2] synchronised (file://${BASEDIR}/quux)
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade
+The following actions will be performed:
+=== recompile 1 package
+  - recompile quux dev2 (pinned) [upstream or system changes]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   quux.dev2
+-> installed quux.dev2
+Done.
+### opam list quux --installed --columns=name,installed-files --normalise
+# Packages matching: name-match(quux) & installed
+# Name # Installed files
+quux   ${BASEDIR}/OPAM/upgrading/lib/quux ${BASEDIR}/OPAM/upgrading/lib/quux/fichier ${BASEDIR}/OPAM/upgrading/lib/quux/fichier2
+### <pin:quux-rdep/quux-rdep.opam>
+opam-version: "2.0"
+depends:"quux"
+### opam install ./quux-rdep
+Package quux-rdep does not exist, create as a NEW package? [y/n] y
+quux-rdep is now pinned to file://${BASEDIR}/quux-rdep (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install quux-rdep dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved quux-rdep.dev  (file://${BASEDIR}/quux-rdep)
+-> installed quux-rdep.dev
+Done.
+### <quux/files/fichier3>
+content
+### opam update quux
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[quux.dev2] synchronised (file://${BASEDIR}/quux)
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade
+The following actions will be performed:
+=== recompile 2 packages
+  - recompile quux      dev2 (pinned) [upstream or system changes]
+  - recompile quux-rdep dev (pinned)  [uses quux]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved quux-rdep.dev  (no changes)
+-> removed   quux-rdep.dev
+-> removed   quux.dev2
+-> installed quux.dev2
+-> installed quux-rdep.dev
+Done.
+### opam unpin quux-rdep
+Ok, quux-rdep is no longer pinned to file://${BASEDIR}/quux-rdep (version dev)
+The following actions will be performed:
+=== remove 1 package
+  - remove quux-rdep dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   quux-rdep.dev
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+version: "dev3"
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] no changes from file://${BASEDIR}/REPO2
+[default] no changes from file://${BASEDIR}/REPO
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[quux.dev2] synchronised (file://${BASEDIR}/quux)
+[quux] Installing new package description from upstream file://${BASEDIR}/quux
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade --all
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade quux dev2 to dev3 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   quux.dev2
+-> installed quux.dev3
+Done.
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+version: "dev4"
+### <REPO/packages/d-foo/d-foo.6/opam>
+opam-version: "2.0"
+### opam update --repositories
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] no changes from file://${BASEDIR}/REPO2
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade d-foo 5 to 6
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   d-foo.5
+-> installed d-foo.6
+Done.
+### <REPO2/packages/s-foo/s-foo.7/opam>
+opam-version: "2.0"
+### <pin:quux/quux.opam>
+opam-version: "2.0"
+version: "dev5"
+### opam update --repositories --development
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] synchronised from file://${BASEDIR}/REPO2
+[default] no changes from file://${BASEDIR}/REPO
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[quux.dev3] synchronised (file://${BASEDIR}/quux)
+[quux] Installing new package description from upstream file://${BASEDIR}/quux
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade
+The following actions will be performed:
+=== upgrade 2 packages
+  - upgrade quux  dev3 to dev5 (pinned)
+  - upgrade s-foo 6 to 7
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   quux.dev3
+-> removed   s-foo.6
+-> installed quux.dev5
+-> installed s-foo.7
+Done.

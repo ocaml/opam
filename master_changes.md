@@ -238,6 +238,7 @@ users)
   * Add working dir/inplace/assume-built test [#5081 @rjbou]
   * Fix github url: `git://` form no more handled [#5097 @rjbou]
   * Add source test [#5101 @rjbou]
+  * Add upgrade (and update) test [#5106 @rjbou]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
