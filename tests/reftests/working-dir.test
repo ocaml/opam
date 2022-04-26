@@ -183,26 +183,21 @@ Done.
 The following actions will be performed:
 === install 1 package
   - install qux 4
+[NOTE] --working-dir is given but no requested package is pinned
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-[ERROR] The compilation of qux.4 failed at "test -f present".
-
-
-
-
-<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-+- The following actions failed
-| - build qux 4
-+- 
-- No changes have been performed
-# Return code 31 #
-### opam remove ongoing
+-> retrieved qux.4  (file://${BASEDIR}/qux)
+-> installed qux.4
+Done.
+### opam remove qux ongoing
 The following actions will be performed:
-=== remove 1 package
+=== remove 2 packages
   - remove ongoing dev (pinned)
+  - remove qux     4
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
+-> removed   qux.4
 Done.
 ### <pin:ongoing/ongoing.opam>
 opam-version: "2.0"
@@ -223,29 +218,19 @@ The following actions will be performed:
   - install qux     4
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  1/4: [ongoing: test newfile.txt]
+Processing  1/5: [qux.4: rsync]
+Processing  2/5: [qux.4: rsync] [ongoing: test newfile.txt]
+-> retrieved qux.4  (file://${BASEDIR}/qux)
+Processing  2/5: [ongoing: test newfile.txt]
 test "-f" "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
-Processing  1/4: [ongoing: cat newfile.txt]
+Processing  2/5: [ongoing: cat newfile.txt]
 cat "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
 - new!
 -> compiled  ongoing.dev
-Processing  2/4: [qux: test present]
+Processing  3/5: [qux: test present]
 -> installed ongoing.dev
-Processing  3/4: [qux: test present]
+Processing  4/5: [qux: test present]
 test "-f" "present" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/qux.4)
-[ERROR] The compilation of qux.4 failed at "test -f present".
-
-
-
-
-<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-+- The following actions failed
-| - build qux 4
-+- 
-+- The following changes have been performed
-| - install ongoing dev
-+- 
-
-The former state can be restored with:
-'${OPAM} install qux ongoing --working-dir -v' failed.
-# Return code 31 #
+-> compiled  qux.4
+-> installed qux.4
+Done.
