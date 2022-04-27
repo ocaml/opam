@@ -13,7 +13,6 @@ let log fmt = OpamConsole.log "CONFIG" fmt
 let slog = OpamConsole.slog
 
 open OpamParserTypes.FullPos
-open OpamTypes
 open OpamTypesBase
 open OpamStateTypes
 
@@ -570,37 +569,42 @@ let confset_switch gt switch switch_config =
     stg_doc = switch_doc switch
   }
 
-let with_switch:
-  'a global_state -> 'b lock -> 'b switch_state option
-  -> (switch -> OpamFile.Switch_config.t -> 'c) -> 'c =
-  fun gt lock_kind st_opt k ->
-  match st_opt with
+let with_switch ~display gt lock_kind st k =
+  match st with
   | Some st -> k st.switch st.switch_config
   | None ->
-    let switch = OpamStateConfig.get_switch () in
-    let switch_config =
-      if lock_kind = `Lock_write then
-        match OpamStateConfig.Switch.read_opt ~lock_kind gt switch with
-        | Some c -> c
-        | exception (OpamPp.Bad_version _ as e) ->
-          OpamFormatUpgrade.hard_upgrade_from_2_1_intermediates gt.root;
-          raise e
-        | None -> OpamFile.Switch_config.empty
-      else
-        OpamStateConfig.Switch.safe_load ~lock_kind gt switch
-    in
-    let lock_file = OpamPath.Switch.lock gt.root switch in
-    if switch_config = OpamFile.Switch_config.empty then
-      OpamConsole.error "switch %s not found, display default values"
-        (OpamSwitch.to_string switch);
-    OpamFilename.with_flock lock_kind lock_file @@ fun _ ->
-    k switch switch_config
+    match OpamStateConfig.get_switch_opt () with
+    | None ->
+      OpamConsole.error_and_exit `Configuration_error "No switch selected"
+    | Some switch ->
+      let switch_config =
+        if lock_kind = `Lock_write then
+          match OpamStateConfig.Switch.read_opt ~lock_kind gt switch with
+          | Some c -> c
+          | exception (OpamPp.Bad_version _ as e) ->
+            OpamFormatUpgrade.hard_upgrade_from_2_1_intermediates gt.root;
+            raise e
+          | None -> OpamFile.Switch_config.empty
+        else
+          OpamStateConfig.Switch.safe_load ~lock_kind gt switch
+      in
+      let lock_file = OpamPath.Switch.lock gt.root switch in
+      if switch_config = OpamFile.Switch_config.empty then
+        if display then
+          OpamConsole.error "switch %s not found, display default values"
+            (OpamSwitch.to_string switch)
+        else
+          OpamConsole.error_and_exit `Bad_arguments
+            "The selected switch %s is not installed"
+            (OpamSwitch.to_string switch);
+      OpamFilename.with_flock lock_kind lock_file @@ fun _ ->
+      k switch switch_config
 
 let set_opt_switch_t ?inner gt switch switch_config field value =
   set_opt ?inner field value (confset_switch gt switch switch_config)
 
 let set_opt_switch gt ?st field value =
-  with_switch gt `Lock_write st @@ fun sw swc ->
+  with_switch ~display:false gt `Lock_write st @@ fun sw swc ->
   let switch_config = set_opt_switch_t ~inner:false gt sw swc field value in
   OpamStd.Option.map (fun st -> { st with switch_config }) st
 
@@ -792,7 +796,7 @@ let set_var_switch gt ?st var value =
       stv_doc = switch_doc switch;
     } in
   let switch_config =
-    with_switch gt `Lock_write st @@ fun sw swc ->
+    with_switch ~display:false gt `Lock_write st @@ fun sw swc ->
     set_var var value (var_confset sw swc)
   in
   OpamStd.Option.map (fun st -> { st with switch_config }) st
@@ -852,7 +856,7 @@ let options_list_t to_list conf =
   print_fields (fields @ sections)
 
 let options_list_switch ?st gt =
-  with_switch gt `Lock_none st @@ fun sw swc ->
+  with_switch ~display:true gt `Lock_none st @@ fun sw swc ->
   options_list_t OpamFile.Switch_config.to_list (confset_switch gt sw swc)
 
 let options_list_global gt =
@@ -861,9 +865,14 @@ let options_list_global gt =
 let options_list ?st gt =
   OpamConsole.header_msg "Global configuration";
   options_list_global gt;
-  OpamConsole.header_msg "Switch configuration (%s)"
-    (OpamSwitch.to_string (OpamStateConfig.get_switch ()));
-  options_list_switch ?st gt
+  let switch_header = OpamConsole.header_msg "Switch configuration%s" in
+  match OpamStateConfig.get_switch_opt () with
+  | None ->
+    switch_header "";
+    OpamConsole.msg "No switch installed\n"
+  | Some switch ->
+    switch_header (Printf.sprintf " (%s)" (OpamSwitch.to_string switch));
+    options_list_switch ?st gt
 
 let vars_list_global gt =
   let (%) s col = OpamConsole.colorise col s in
@@ -936,7 +945,9 @@ let vars_list ?st gt =
   OpamConsole.header_msg "Global opam variables";
   vars_list_global gt;
   OpamConsole.header_msg "Configuration variables from the current switch";
-  vars_list_switch ?st gt;
+  (match OpamStateConfig.get_switch_opt () with
+  | None -> OpamConsole.msg "No switch installed\n"
+  | Some _ -> vars_list_switch ?st gt);
   OpamConsole.header_msg "Package variables ('opam var --package PKG' to show)";
   List.map (fun (var, doc) -> [
         ("PKG:"^var) % `bold;
@@ -974,7 +985,7 @@ let option_show to_list conf field =
         "Field or section %s not found" field
 
 let option_show_switch gt ?st field =
-  with_switch gt `Lock_none st @@ fun sw swc ->
+  with_switch ~display:true gt `Lock_none st @@ fun sw swc ->
   option_show OpamFile.Switch_config.to_list (confset_switch gt sw swc) field
 
 let option_show_global gt field =
@@ -1034,11 +1045,16 @@ let var_show_global gt f = var_show_t (OpamPackageVar.resolve_global gt) f
 
 let var_show gt v =
   if var_switch_raw gt v = None then
-    OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-    let switch =
-      if is_switch_defined_var st.switch_config v then Some st.switch else None
+    let resolve, switch =
+      match OpamStateConfig.get_switch_opt () with
+      | None -> OpamPackageVar.resolve_global gt, None
+      | Some switch ->
+        OpamSwitchState.with_ `Lock_none ~switch gt @@ fun st ->
+        let resolve = (OpamPackageVar.resolve st ?opam:None ?local:None) in
+        resolve,
+        if is_switch_defined_var st.switch_config v then Some st.switch else None
     in
-    var_show_t (OpamPackageVar.resolve st) ?switch v
+    var_show_t resolve ?switch v
 
 (* detect scope *)
 let get_scope field =
@@ -1047,8 +1063,9 @@ let get_scope field =
     with Invalid_argument _ -> field
   in
   let find l = OpamStd.List.find_opt (fun (f,_) -> f = field) l in
-  if find OpamFile.Switch_config.fields <> None
-  || find OpamFile.Switch_config.sections <> None then
+  if OpamStateConfig.get_switch_opt () <> None
+  && (find OpamFile.Switch_config.fields <> None
+      || find OpamFile.Switch_config.sections <> None) then
     `Switch
   else if find OpamFile.Config.fields <> None then
     `Global
