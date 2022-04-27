@@ -7,9 +7,11 @@ OCAMLBIN:=$(dir $(shell PATH="$(PATH)" command -v ocamlc))
 ifeq ($(shell command -v cygpath 2>/dev/null),)
 OCAMLROOT:=$(dir $(abspath $(OCAMLBIN)))
 SITELIB=$(shell PATH="$(PATH)" ocamlfind printconf path)
+LDCONF=$(shell PATH="$(PATH)" ocamlfind printconf ldconf)
 else
 OCAMLROOT:=$(shell PATH="$(PATH)" echo $(dir $(abspath $(OCAMLBIN))) | cygpath -f - -m)
 SITELIB=$(shell PATH="$(PATH)" ocamlfind printconf path | cygpath -f - -m)
+LDCONF=$(shell PATH="$(PATH)" ocamlfind printconf ldconf | cygpath -f - -m)
 endif
 
 # Package dependencies
@@ -56,6 +58,9 @@ spdx_licenses.pkgbuild: dune-local.pkgbuild
 uutf.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild topkg.pkgbuild cmdliner.pkgbuild
 
 jsonm.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild topkg.pkgbuild  uutf.pkgbuild
+
+stublibs:
+	grep -q "$(SITELIB)/stublibs" $(LDCONF) || echo $(SITELIB)/stublibs >> $(LDCONF)
 
 opam-file-format-pkg-build:
 	dune build @install -p opam-file-format
@@ -113,7 +118,7 @@ dune-local-pkg-build:
 	ocaml bootstrap.ml
 	cp dune.exe $(OCAMLBIN)/dune$(EXT_EXE)
 
-mccs-pkg-build:
+mccs-pkg-build: stublibs
 	dune build @install -p mccs
 	ocamlfind install mccs $(addprefix _build/install/default/lib/,$(addprefix mccs/,META libmccs_stubs.$(EXT_LIB) mccs.*) stublibs/*.$(EXT_DLL))
 	cp -RL _build/install/default/lib/mccs/glpk $(SITELIB)/mccs/
