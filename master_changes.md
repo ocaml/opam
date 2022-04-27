@@ -159,9 +159,9 @@ users)
   * configure: Use gmake instead of make on Unix systems (fixes BSDs) [#5090 @kit-ty-kate]
   * Patch AltGr/ocaml-mccs#36 in the src_ext build to fix Cygwin32 [#5094 @dra27]
   * Silence warning 70 [#5104 @dra27]
-  * Add `jsonm` (and `uutf`) dependency [#5098 @rjbou]
   * Add `jsonm` (and `uutf`) dependency [#5098 @rjbou - fix #5085]
   * Bump opam-file-format to 2.1.4 [#5117 @kit-ty-kate - fix #5116]
+  * Add `sha` dependency [#5042 @kit-ty-kate]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
@@ -214,6 +214,7 @@ users)
   * OpamParallel, MakeGraph(_).to_json: fix incorrect use of List.assoc [#5038 @Armael]
   * [BUG] Fix display of command when parallelised [#5091 @rjbou]
   * Add some debug log to OpamCudf.extract_explanations to help debug #4373 [#4981 @kit-ty-kate]
+  * Make SHA computation faster by using ocaml-sha [#5042 @kit-ty-kate]
 
 ## Internal: Windows
   * Support MSYS2: treat MSYS2 and Cygwin as equivalent [#4813 @jonahbeckford]
@@ -359,3 +360,5 @@ users)
   * `OpamHash`: add `is_null`
   * `OpamStd.Sys`: add `get_windows_executable_variant` to use instead of `is_cygwin_variant` [#4817 @jonahbeckford]
   * `OpamSystem.copy_dir`: two-pass `rsync` copy for `MSYS2`, to handle symlinks [#4817 @jonahbeckford]
+  * `OpamSHA`: use now only `sha`, some function removed (`shaxxx`, `shaxxx_bytes`, etc.) [#5042 @kit-ty-kate]
+  * `OpamCoreConfig.r`: remove openssl related config: `use_openssl` parameter & config field, and `OPAMUSEOPENSSL` environment variable [#5042 @kit-ty-kate]
