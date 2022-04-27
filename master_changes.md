@@ -38,11 +38,10 @@ New option/command/subcommand are prefixed with ◈.
 ## Show
   * Improve performance of opam show by 300% when the package to show is given explicitly or unique [#4998 @kit-ty-kate - fix #4997 and partially #4172]
 
-## Var
-  *
-
-## Option
-  *
+## Var/Option
+  * Don't error when displaying if switch is not set [#5027 @rjbou - fix #5025]
+  * Try to set a variable with option `--switch <sw>` fails instead of writing a wrong `switch-config` file [#5027 @rjbou]
+  * When a field is defined in switch and global scope, try to determine the scope also by checking switch selection [#5027 @rjbou]
 
 ## Lint
   *
@@ -105,6 +104,7 @@ New option/command/subcommand are prefixed with ◈.
   * Harmonise some repo hash to reduce opam repository checkout [#5031 @AltGr]
   * Add repo optim enable/disable test [#5015 @rjbou]
   * Update list with co-instabillity [#5024 @AltGr]
+  * Update var-option test with no switch examples [#5025]
 ### Engine
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
   * Add `BASEDIR` to environement [#4913 @rjbou]
@@ -141,6 +141,8 @@ New option/command/subcommand are prefixed with ◈.
   * `OpamClient`: fix `update_with_init_config`, when ``jobs` was set in `init_config`, it dropped rest of `config` update [#5056 @rjbou]
   * Add an optional argument to `OpamArg.mk_subdoc` for extra default elements: `?extra_defaults:(validity * string * string) list` [#4910 @kit-ty-kate]
   * Add `OpamSwitchCommand.previous_switch` [#4910 @kit-ty-kate]
+  * `OpamConfigCommand`: `set_opt_switch`, `set_var_switch`, `options_list_switch`, and `var_list_switch` now raise configuration error exception (50) if no switch is found [#5027 @rjbou]
+
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
 ## opam-state

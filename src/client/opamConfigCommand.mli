@@ -87,7 +87,8 @@ val set_opt_global: rw global_state -> string -> update_op -> rw global_state
 (** As [set_opt_global], [set_opt_switch] updates switch config file in
     <opamroot>/<switch>/.opam-switch/switch-config. If switch state is given,
     uses its config and returns it with then new config. Otherwise, loads the
-    raw switch state and returns [None]. *)
+    raw switch state and returns [None].
+    Raises [OpamStd.Sys.Exit 50] ([`Configuration_error]) if no switch is set *)
 val set_opt_switch:
   'a global_state -> ?st:rw switch_state -> string -> update_op
   -> rw switch_state option
@@ -97,9 +98,11 @@ val set_opt_switch:
     the new variables to current set. If switch state is given, uses its
     config and returns it with then new config. Otherwise, loads the raw switch
     state and returns [None].
-    May raise [OpamStd.Sys.Exit 2]. *)
+    Raises [OpamStd.Sys.Exit 2] ([`Bad_argument]) if field is not modifiable *)
 val set_var_global:
   rw global_state -> string -> whole_op -> rw global_state
+
+(** Raises [OpamStd.Sys.Exit 50] ([`Configuration_error]) if no switch is set *)
 val set_var_switch:
     'a global_state -> ?st:rw switch_state -> string -> whole_op
     -> rw switch_state option
@@ -113,6 +116,8 @@ val set_var_switch:
 val options_list:
   ?st:unlocked switch_state -> 'a global_state -> unit
 val options_list_global: 'a global_state -> unit
+
+(** Raises [OpamStd.Sys.Exit 50] ([`Configuration_error]) if no switch is set *)
 val options_list_switch:
   ?st:unlocked switch_state -> 'a global_state -> unit
 
@@ -122,6 +127,8 @@ val options_list_switch:
 val vars_list:
   ?st:'a switch_state -> 'b global_state -> unit
 val vars_list_global: 'a global_state -> unit
+
+(** Raises [OpamStd.Sys.Exit 50] ([`Configuration_error]) if no switch is set *)
 val vars_list_switch:
   ?st:'a switch_state -> 'b global_state -> unit
 
@@ -133,6 +140,8 @@ val vars_list_switch:
     state. *)
 
 val option_show_global: 'a global_state -> string -> unit
+
+(** Raises [OpamStd.Sys.Exit 50] ([`Configuration_error]) if no switch is set *)
 val option_show_switch:
   'a global_state -> ?st:unlocked switch_state -> string -> unit
 
