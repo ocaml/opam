@@ -59,6 +59,8 @@ uutf.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild topkg.pkgbuild cmdliner.pkgb
 
 jsonm.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild topkg.pkgbuild  uutf.pkgbuild
 
+sha.pkgbuild: dune-local.pkgbuild stdlib-shims.pkgbuild
+
 stublibs:
 	grep -q "$(SITELIB)/stublibs" $(LDCONF) || echo $(SITELIB)/stublibs >> $(LDCONF)
 
@@ -154,3 +156,7 @@ uutf-pkg-build:
 jsonm-pkg-build:
 	ocaml pkg/pkg.ml build --pkg-name jsonm --pinned false
 	ocamlfind install jsonm _build/pkg/META $(addprefix _build/src/jsonm.,$(EXTS1)) $(addprefix _build/src/jsonm.cm,$(EXTS2)) _build/src/jsonm*.cmx
+
+sha-pkg-build: stublibs
+	dune build @install -p sha
+	dune install -p sha sha

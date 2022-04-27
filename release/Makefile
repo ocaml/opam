@@ -49,14 +49,14 @@ build/%.image: build/Dockerfile.%
 # Actually, this is for alpine 3.13, and varies
 CLINKING_linux = \
 -Wl,-Bstatic \
--lunix -lmccs_stubs -lmccs_glpk_stubs \
+-lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs \
 -lstdc++ \
 -static-libgcc \
 -static
 # -Wl,-Bdynamic 
 
 CLINKING_macos = \
--lunix -lmccs_stubs -lmccs_glpk_stubs \
+-lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs \
 -lstdc++
 
 CLINKING_openbsd = $(CLINKING_macos)

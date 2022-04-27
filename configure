@@ -628,6 +628,7 @@ ac_ct_CXX
 CXXFLAGS
 CXX
 OCAML_PKG_mccs
+OCAML_PKG_sha
 OCAML_PKG_uutf
 OCAML_PKG_jsonm
 OCAML_PKG_opam_0install_cudf
@@ -6364,6 +6365,30 @@ $as_echo "not found" >&6; }
 
 
 
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package sha" >&5
+$as_echo_n "checking for OCaml findlib package sha... " >&6; }
+
+  unset found
+  unset pkg
+  found=no
+  for pkg in sha  ; do
+    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
+$as_echo "found" >&6; }
+      OCAML_PKG_sha=$pkg
+      found=yes
+      break
+    fi
+  done
+  if test "$found" = "no" ; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
+$as_echo "not found" >&6; }
+    OCAML_PKG_sha=no
+  fi
+
+
+
+
 # Optional dependencies
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package mccs 1.1+9 or later" >&5
@@ -6771,6 +6796,7 @@ if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_opam_0install_cudf" = "xno" ||
        test "x$OCAML_PKG_jsonm" = "xno" ||
        test "x$OCAML_PKG_uutf" = "xno" ||
+       test "x$OCAML_PKG_sha" = "xno" ||
        test "x$CPPO" = "x" ||
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue";}; then :
 
