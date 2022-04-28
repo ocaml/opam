@@ -3210,23 +3210,24 @@ module OPAM = struct
 
   (** Extra stuff for opam files *)
 
-  let effective_part (t:t) =
+  let effective_part ?(modulo_state=false) (t:t) =
+    let t_modulo_state = if modulo_state then empty else t in
     {
       opam_version = empty.opam_version;
 
       name       = t.name;
       version    = t.version;
 
-      depends    = t.depends;
-      depopts    = t.depopts;
-      conflicts  = t.conflicts;
-      conflict_class = t.conflict_class;
-      available  = t.available;
+      depends    = t_modulo_state.depends;
+      depopts    = t_modulo_state.depopts;
+      conflicts  = t_modulo_state.conflicts;
+      conflict_class = t_modulo_state.conflict_class;
+      available  = t_modulo_state.available;
       flags      =
         (List.filter (function
+             | Pkgflag_Plugin -> true
              | Pkgflag_LightUninstall
              | Pkgflag_Verbose
-             | Pkgflag_Plugin
              | Pkgflag_Compiler
              | Pkgflag_Conf
              | Pkgflag_AvoidVersion
@@ -3285,8 +3286,8 @@ module OPAM = struct
       deprecated_build_doc = t.deprecated_build_doc;
     }
 
-  let effectively_equal o1 o2 =
-    effective_part o1 = effective_part o2
+  let effectively_equal ?(modulo_state=false) o1 o2 =
+    effective_part ~modulo_state o1 = effective_part ~modulo_state o2
 
   let equal o1 o2 =
     with_metadata_dir None o1 = with_metadata_dir None o2

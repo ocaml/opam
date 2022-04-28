@@ -1,0 +1,87 @@
+N0REP0
+### :::::: do not rebuild packages when only unimportant constraint has been changed (#4647)
+### <pkg:a.1>
+opam-version: "2.0"
+depends: ["b"]
+### <pkg:b.1>
+opam-version: "2.0"
+### opam switch create default --empty
+### opam install -y a
+The following actions will be performed:
+=== install 2 packages
+  - install a 1
+  - install b 1 [required by a]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed b.1
+-> installed a.1
+Done.
+### :::::: Check that nothing gets rebuild if only the synopsis and flags (verbose) changes
+### <pkg:a.1>
+opam-version: "2.0"
+synopsis: "test"
+flags: verbose
+depends: ["b"]
+### opam upgrade --show
+Already up-to-date.
+Nothing to do.
+### :::::: Check that a rebuild occurs if only the flags (plugin) changes
+### <pkg:a.1>
+opam-version: "2.0"
+flags: plugin
+depends: ["b"]
+### opam upgrade --show
+The following actions would be performed:
+=== recompile 1 package
+  - recompile a 1 [upstream or system changes]
+### :::::: Check that nothing gets rebuild if only a constraint – that is already installed – changes
+### <pkg:a.1>
+opam-version: "2.0"
+depends: ["b" {= version}]
+### opam upgrade --show
+Already up-to-date.
+Nothing to do.
+### :::::: Check that a rebuild occurs if the build field changes
+### <pkg:a.1>
+opam-version: "2.0"
+build: ["opam" "var" "switch"]
+depends: ["b" {= version}]
+### opam upgrade -y --verbose | '^\+ .+ "build"' -> '+' | '^\+ .+opam(\.exe)? ' -> '+ "opam" '
+The following actions will be performed:
+=== recompile 1 package
+  - recompile a 1 [upstream or system changes]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/4: [a: opam var]
++ "opam" "var" "switch" (CWD=${BASEDIR}/OPAM/default/.opam-switch/build/a.1)
+- default
+-> compiled  a.1
+-> removed   a.1
+-> installed a.1
+Done.
+### :::::: Check that the package gets removed if it is no longer installable
+### <pkg:a.1>
+opam-version: "2.0"
+build: ["opam" "var" "switch"]
+depends: ["b" {= "2"}]
+### opam upgrade --show
+The following actions would be performed:
+=== remove 1 package
+  - remove a 1
+### :::::: Check that rebuilding a dependency correctly rebuilds the package requiring it
+### <pkg:a.1>
+opam-version: "2.0"
+build: ["opam" "var" "switch"]
+depends: ["b" {= version}]
+### <pkg:b.1>
+opam-version: "2.0"
+depends: ["c"]
+### <pkg:c.1>
+opam-version: "2.0"
+### opam upgrade --show
+The following actions would be performed:
+=== recompile 2 packages
+  - recompile a 1
+  - recompile b 1
+=== install 1 package
+  - install   c 1

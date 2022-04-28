@@ -178,6 +178,8 @@ users)
   * Repository state: stop scanning directory once opam file is found [#4847 @rgrinberg]
   * Fix reverting environment additions to PATH-like variables when several dirs added at once [#4861 @dra27]
   * Actually allow multiple state caches to co-exist [#4934 @dra27 - fix #4554 properly this time]
+  * Don’t rebuild packages when updating dependencies or availablity, unless the current state needs to be changed [#5118 @kit-ty-kate - fix #4647]
+  * Rebuild packages when removing or adding the "plugin" flag [#5118 @kit-ty-kate]
 
 ## Opam file format
   *
@@ -336,6 +338,7 @@ users)
   * `OpamFile.Config`: order list of installed switches according their last use, update `with_switch` accordingly, and add `previous_switch` [#4910 @AltGr]
   * Change ``Fetch` action to take several packages, in order to handle shared fetching of packages [#4893 @rjbou]
   * `OpamFile.OPAM.to_string_with_preserved_format`: handle substring errors [#4941 @rjbou - fix #4936]
+  * `OpamFile.OPAM.effective_part` and `OpamFile.OPAM.effectively_equal` now take an optional `?modulo_state:bool` parameter, that if `true`, eliminates the fields relying on the state of the switch (depends, available, …). This is `false` by default. [#5118 @kit-ty-kate]
 
 ## opam-core
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
