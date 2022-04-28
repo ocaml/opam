@@ -243,6 +243,7 @@ users)
   * Add source test [#5101 @rjbou]
   * Add upgrade (and update) test [#5106 @rjbou]
   * Update var-option test with no switch examples [#5025]
+  * Escape for cmdliner.1.1.1 output chane [#5131 @rjbou]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
