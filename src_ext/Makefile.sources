@@ -53,8 +53,8 @@ MD5_0install-solver = 50daf035b04b29399a3c6e6f965ac447
 
 $(call PKG_SAME,0install-solver)
 
-URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.1.3.tar.gz
-MD5_opam-file-format = b805562dd2d86fc3c8e6d47884fd1da6
+URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.1.4.tar.gz
+MD5_opam-file-format = cd9dac41c2153d07067c5f30cdcf77db
 
 $(call PKG_SAME,opam-file-format)
 
