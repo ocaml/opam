@@ -66,6 +66,7 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Build
   * Update cold compiler to 4.13 [#5017 @dra27]
+  * Bump opam-file-format to 2.1.4 [#5117 @kit-ty-kate - fix #5116]
 
 ## Infrastructure
   *
@@ -105,6 +106,7 @@ New option/command/subcommand are prefixed with ◈.
   * Add repo optim enable/disable test [#5015 @rjbou]
   * Update list with co-instabillity [#5024 @AltGr]
   * Update var-option test with no switch examples [#5025]
+  * Escape for cmdliner.1.1.1 output chane [#5131 @rjbou]
 ### Engine
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
   * Add `BASEDIR` to environement [#4913 @rjbou]
