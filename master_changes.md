@@ -194,6 +194,7 @@ users)
   * Optimised reverse dependencies calculation [#5005 @AltGr]
   * Enable cudf preprocessing for (co)insallability calculation, resulting in a x20 speedup [@AltGr]
   * Make sure that `--best-effort` only installs root package versions that where requested [#4796 @LasseBlaauwbroek]
+  * Ask users to report errors when no explanations are given to them [#4981 @kit-ty-kate]
 
 ## Client
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
@@ -208,6 +209,7 @@ users)
   * [BUG] Remove windows double printing on commands and their output [#4940 @rjbou]
   * OpamParallel, MakeGraph(_).to_json: fix incorrect use of List.assoc [#5038 @Armael]
   * [BUG] Fix display of command when parallelised [#5091 @rjbou]
+  * Add some debug log to OpamCudf.extract_explanations to help debug #4373 [#4981 @kit-ty-kate]
 
 ## Internal: Windows
   * Support MSYS2: treat MSYS2 and Cygwin as equivalent [#4813 @jonahbeckford]
