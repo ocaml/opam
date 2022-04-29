@@ -4,7 +4,7 @@
 * update version in opam files, configure.ac
 * run `make configure` to regenerate `./configure` [checked by github actions]
 * update copyright headers
-* run `make tests`, `opam-rt` [checked by github actions & appveyor]
+* run `make tests`, `opam-rt` [checked by github actions]
 * update the CHANGE file: take `master_changes.md` content to fil it
 
 ## Github release
