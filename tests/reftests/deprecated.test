@@ -1,0 +1,160 @@
+N0REP0
+### <pkg:a.2>
+opam-version: "2.0"
+flags: deprecated
+### opam switch create default --empty
+### OPAMFAKE=1
+### OPAMYES=1
+### opam install a --show
+The following actions would be faked:
+=== install 1 package
+  - install a 2 (deprecated)
+### <pkg:a.1>
+opam-version: "2.0"
+### opam install a
+The following actions will be faked:
+=== install 1 package
+  - install a 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of a.1
+Done.
+### opam upgrade a
+Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
+
+The following packages are not being upgraded because the new versions conflict with other installed packages:
+  - a.2
+However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+Nothing to do.
+### <pkg:a.1.1>
+opam-version: "2.0"
+### opam upgrade a
+The following actions will be faked:
+=== upgrade 1 package
+  - upgrade a 1 to 1.1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of a.1.1
+Done.
+### <pkg:a.3>
+opam-version: "2.0"
+### opam upgrade a
+The following actions will be faked:
+=== upgrade 1 package
+  - upgrade a 1.1 to 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of a.3
+Done.
+### opam install a.2
+The following actions will be faked:
+=== downgrade 1 package
+  - downgrade a 3 to 2 (deprecated)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of a.2
+Done.
+
+<><> a.2 installed successfully <><><><><><><><><><><><><><><><><><><><><><><><>
+=> Note: This package is deprecated.
+### opam upgrade a
+The following actions will be faked:
+=== upgrade 1 package
+  - upgrade a 2 (deprecated) to 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of a.3
+Done.
+### <pkg:b.1>
+opam-version: "2.0"
+depends: "a"
+### <pkg:b.2>
+opam-version: "2.0"
+depends: "a" {= "2"}
+### opam install b
+The following actions will be faked:
+=== install 1 package
+  - install b 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of b.1
+Done.
+### opam upgrade
+Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
+
+The following packages are not being upgraded because the new versions conflict with other installed packages:
+  - b.2
+However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+Nothing to do.
+### opam upgrade b
+The following actions will be faked:
+=== downgrade 1 package
+  - downgrade a 3 to 2 (deprecated) [required by b]
+=== upgrade 1 package
+  - upgrade   b 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of a.2
+Faking installation of b.2
+Done.
+
+<><> a.2 installed successfully <><><><><><><><><><><><><><><><><><><><><><><><>
+=> Note: This package is deprecated.
+### opam upgrade
+The following actions will be faked:
+=== downgrade 1 package
+  - downgrade b 2 to 1              [uses a]
+=== upgrade 1 package
+  - upgrade   a 2 (deprecated) to 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of a.3
+Faking installation of b.1
+Done.
+### <pkg:a.4>
+opam-version: "2.0"
+flags: deprecated
+### <pkg:b.3>
+opam-version: "2.0"
+flags: deprecated
+### opam upgrade
+Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
+
+The following packages are not being upgraded because the new versions conflict with other installed packages:
+  - a.4
+  - b.3
+However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+Nothing to do.
+### opam upgrade b.3
+The following actions will be faked:
+=== upgrade 1 package
+  - upgrade b 1 to 3 (deprecated)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of b.3
+Done.
+
+<><> b.3 installed successfully <><><><><><><><><><><><><><><><><><><><><><><><>
+=> Note: This package is deprecated.
+### opam install a.2
+The following actions will be faked:
+=== downgrade 1 package
+  - downgrade a 3 to 2 (deprecated)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of a.2
+Done.
+
+<><> a.2 installed successfully <><><><><><><><><><><><><><><><><><><><><><><><>
+=> Note: This package is deprecated.
+### opam upgrade
+The following actions will be faked:
+=== upgrade 1 package
+  - upgrade a 2 (deprecated) to 4 (deprecated)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of a.4
+Done.
+
+<><> a.4 installed successfully <><><><><><><><><><><><><><><><><><><><><><><><>
+=> Note: This package is deprecated.

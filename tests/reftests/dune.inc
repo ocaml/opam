@@ -187,6 +187,23 @@
    (run ./run.exe %{bin:opam} %{dep:cudf-preprocess.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-deprecated)
+ (action
+  (diff deprecated.test deprecated.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-deprecated)))
+
+(rule
+ (targets deprecated.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:deprecated.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-dot-install)
  (action
   (diff dot-install.test dot-install.out)))
