@@ -278,7 +278,3 @@ cold: compiler
 
 cold-%:
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= $(MAKE) $*
-
-.PHONY: run-appveyor-test
-run-appveyor-test:
-	env -u OCAMLLIB -u CAML_LD_LIBRARY_PATH PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" ./appveyor_test.sh
