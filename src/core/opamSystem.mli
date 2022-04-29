@@ -67,6 +67,8 @@ type install_warning = [ `Add_exe          (* [.exe] had to be added *)
                        | `Install_script   (* Installation of script on Windows *)
                        | `Install_unknown  (* Installation of unknown file to bin/libexec *)
                        | `Cygwin           (* Installation of a Cygwin-linked executable *)
+                       | `Msys2            (* Installation of a MSYS2-linked executable *)
+                       | `Tainted of [`Msys2 | `Cygwin] (* Installation of an executable which itself is linked to a Cygwin or MSYS2-linked library *)
                        | `Cygwin_libraries (* Installation of a binary linked to a Cygwin library *)
                        ]
 (** Warnings which come from {!install} *)
