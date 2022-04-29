@@ -55,6 +55,7 @@ users)
   * Ensure setenv can use package variables defined during the build [#4841 @dra27]
   * [BUG] Fix `set-invariant: default repos were loaded instead of switch repos [#4866 @rjbou]
   * Add support for `opam switch -` (go to previous non-local switch) [#4910 @kit-ty-kate - fix 4866]
+  * On loading, check for executable external files if they are in `PATH`, and warn if not the case [#4932 @rjbou - fix #4923]
 
 ## Pin
   * Switch the default version when undefined from ~dev to dev [#4949 @kit-ty-kate]
@@ -353,3 +354,4 @@ users)
   * `OpamSystem.real_path`: Remove the double chdir trick on OCaml >= 4.13.0 [#4961 @kit-ty-kate]
   * `OpamProcess.wait_one`: display command in verbose mode for finished found process [#5091 @rjbou]
   * `OpamStd.Config.E`: add a `REMOVED` variant to allow removing completely an environment variable handling [#5112 @rjbou]
+  * `OpamHash`: add `is_null`
