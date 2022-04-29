@@ -568,7 +568,7 @@ let list ?(force_search=false) cli =
   in
   let silent =
     mk_flag_replaced ~cli [
-      cli_between ~default:true cli2_0 cli2_1 ~replaced:"--check", ["silent"];
+      cli_between ~option:`default cli2_0 cli2_1 ~replaced:"--check", ["silent"];
       cli_from cli2_1, ["check"]
     ] "Don't write anything in the output, exit with return code 0 if the list \
        is not empty, 1 otherwise."
@@ -1171,7 +1171,7 @@ let config cli =
     cli_original, "pef-universe", `pef, ["[FILE]"],
     "Outputs the current package universe in PEF format.";
     (* Deprecated options *)
-    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam exec", "exec",
+    cli_between ~option:`default cli2_0 cli2_1 ~replaced:"opam exec", "exec",
     `exec, ["[--] COMMAND"; "[ARG]..."],
     "Execute $(i,COMMAND) with the correct environment variables. This command \
      can be used to cross-compile between switches using $(b,opam config exec \
@@ -1179,15 +1179,15 @@ let config cli =
      command and args. If no switch is present on the command line or in the \
      $(i,OPAMSWITCH) environment variable, $(i,OPAMSWITCH) is not set in \
      $(i,COMMAND)'s environment. Can also be accessed through $(b,opam exec).";
-    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var", "set", `set,
+    cli_between ~option:`default cli2_0 cli2_1 ~replaced:"opam var", "set", `set,
     ["VAR";"VALUE"], "Set switch variable";
-    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var", "unset",
+    cli_between ~option:`default cli2_0 cli2_1 ~replaced:"opam var", "unset",
     `unset, ["VAR"], "Unset switch variable";
-    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var", "set-global",
+    cli_between ~option:`default cli2_0 cli2_1 ~replaced:"opam var", "set-global",
     `set_global, ["VAR";"VALUE"], "Set global variable";
-    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var",
+    cli_between ~option:`default cli2_0 cli2_1 ~replaced:"opam var",
     "unset-global", `unset_global, ["VAR"], "Unset global variable";
-    cli_between ~default:true cli2_0 cli2_1 ~replaced:"opam var", "var", `var,
+    cli_between ~option:`default cli2_0 cli2_1 ~replaced:"opam var", "var", `var,
     ["VAR"],
     "Return the value associated with variable $(i,VAR), looking in switch \
      first, global if not found. Package variables can be accessed with the \
