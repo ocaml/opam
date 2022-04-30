@@ -18,17 +18,8 @@ val sha512_file: string -> string
 val hash_file: [< `SHA256 | `SHA512 ] -> string -> string
 
 
-val sha256_bytes: Bytes.t -> string
+val sha256_string: string -> string
 
-val sha512_bytes: Bytes.t -> string
+val sha512_string: string -> string
 
-val hash_bytes: [< `SHA256 | `SHA512 ] -> Bytes.t -> string
-
-
-(** For compat, use the above *)
-
-val sha256: string -> string
-
-val sha512: string -> string
-
-val hash: [< `SHA256 | `SHA512 ] -> string -> string
+val hash_string: [< `SHA256 | `SHA512 ] -> string -> string

@@ -680,8 +680,8 @@ Additionally, the number of hexadecimal chars must match exactly what is
 expected by the corresponding algorithm (resp. 32, 64 and 128 for MD5, SHA256
 and SHA512).
 
-If `openssl` is installed on the system, it will be used for faster computation
-of SHA hashes.
+Until opam 2.2.0, if `openssl` was installed on the system, it would be used for
+faster computation of SHA hashes.
 
 ## Specific file formats
 

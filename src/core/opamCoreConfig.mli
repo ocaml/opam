@@ -25,7 +25,6 @@ module E : sig
     | PRECISETRACKING of bool option
     | SAFE of bool option
     | STATUSLINE of OpamStd.Config.when_ option
-    | USEOPENSSL of bool option
     | UTF8 of OpamStd.Config.when_ext option
     | UTF8MSGS of bool option
     | VERBOSE of OpamStd.Config.level option
@@ -69,9 +68,6 @@ type t = private {
   (** The number of log lines displayed on process error. 0 for all *)
   merged_output : bool;
   (** If set, stderr of commands is merged into their stdout *)
-  use_openssl : bool;
-  (** If false, will use built-in hash functions without checking for an openssl
-      executable first *)
   precise_tracking : bool;
   (** If set, will take full md5 of all files when checking diffs (to track
       installations), rather than rely on just file size and mtime *)
@@ -93,7 +89,6 @@ type 'a options_fun =
   ?keep_log_dir:bool ->
   ?errlog_length:int ->
   ?merged_output:bool ->
-  ?use_openssl:bool ->
   ?precise_tracking:bool ->
   'a
 

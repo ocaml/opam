@@ -122,7 +122,7 @@ let environment_variables =
       "STATUSLINE", cli_original, (fun v -> STATUSLINE (env_when v)),
       ("display a dynamic status line showing what's currently going on on \
         the terminal. (one of "^string_of_enum when_enum^")");
-      "USEOPENSSL", cli_original, (fun v -> USEOPENSSL (env_bool v)),
+      "USEOPENSSL", cli_between cli2_0 cli2_2, (fun _v -> OpamStd.Config.E.REMOVED),
       "force openssl use for hash computing.";
       "UTF8", cli_original, (fun v -> UTF8 (env_when_ext v)),
       (Printf.sprintf "use UTF8 characters in output (one of %s). By default \
