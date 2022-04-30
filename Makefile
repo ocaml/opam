@@ -186,6 +186,9 @@ uninstall: opam.install
 	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) $<
 	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) opam-installer.install
 
+.PHONY: test
+test: tests
+
 .PHONY: tests
 tests: $(DUNE_DEP) src/client/no-git-version
 	@$(DUNE) runtest $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) src/ tests/ --no-buffer; \

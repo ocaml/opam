@@ -162,6 +162,7 @@ users)
   * Add `jsonm` (and `uutf`) dependency [#5098 @rjbou - fix #5085]
   * Bump opam-file-format to 2.1.4 [#5117 @kit-ty-kate - fix #5116]
   * Add `sha` dependency [#5042 @kit-ty-kate]
+  * Add a 'test' target [#5129 @kit-ty-kate @mehdid - partially fixes #5058]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
