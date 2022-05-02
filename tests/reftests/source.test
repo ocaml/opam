@@ -93,8 +93,19 @@ pandore.3/src/src.ml
 ### opam pin
 pandore.3  (uninstalled)  rsync  file://${BASEDIR}/pandore.3
 ### rm -rf pandore.3
+### OPAMDEBUGSECTIONS="RSTATE GSTATE STATE" opam source pandore --no-switch --debug-level=-1
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+Successfully extracted to ${BASEDIR}/pandore.3
+### find pandore.3 | unordered
+pandore.3
+pandore.3/opam
+pandore.3/root.ml
+pandore.3/src
+pandore.3/src/src.ml
+### rm -rf pandore.3
 ### opam switch remove phantom -y
 Switch phantom and all its packages will be wiped. Are you sure? [y/n] y
 ### opam source pandore
-[ERROR] No switch is currently set. Please use 'opam switch' to set or install a switch
-# Return code 50 #
+Successfully extracted to ${BASEDIR}/pandore.3

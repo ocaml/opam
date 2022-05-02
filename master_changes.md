@@ -83,6 +83,8 @@ users)
 
 ## Source
   * [BUG] Fix directory display in dev mode [#5102 @rjbou]
+  * Download source even if no switch is set [#4850 @rjbou @zapashcanon - fix #4809]
+  * [NEW] Add `--no-switch` option [#4850 @rjbou - fix #4858]
 
 ## Lint
   * W68: add warning for missing license field [#4766 @kit-ty-kate - partial fix #4598]
@@ -322,6 +324,7 @@ users)
 
   * `OpamConfigCommand`: `set_opt_switch`, `set_var_switch`, `options_list_switch`, and `var_list_switch` now raise configuration error exception (50) if no switch is found [#5027 @rjbou]
   * `OpamArgs`, `OpamArgTools`: add `experimental` optional argument to `cli_from` and replace `default` by `option:['experimental | 'ëefault]` for `cli_between`, to handle experimental features [#5099 @rjbou]
+  * OpamAction: `prepare_package_source` can now take any switch state (previously required `rw`) [#4850 @rjbou]
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
   * New download functions for shared source, old ones kept [#4893 @rjbou]

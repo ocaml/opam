@@ -3359,97 +3359,123 @@ let source cli =
   let dir =
     mk_opt ~cli cli_original ["dir"] "DIR" "The directory where to put the source."
       Arg.(some dirname) None in
-  let source global_options atom dev_repo pin dir () =
+  let no_switch =
+    mk_flag ~cli (cli_from cli2_2) ["no-switch"]
+      "Choose package without consideration for \
+       the current (or any other) switch (installed or pinned packages, etc.)"
+  in
+  let source global_options atom dev_repo pin no_switch dir () =
     apply_global_options cli global_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
-    (* Fixme: this needs a write lock, because it uses the routines that
-       download to opam's shared switch cache.
-       (it's needed anyway when --pin is used) *)
-    OpamSwitchState.with_ `Lock_write gt @@ fun t ->
-    let nv =
-      try
-        OpamPackage.Set.max_elt
-          (OpamPackage.Set.filter (OpamFormula.check atom) t.packages)
-      with Not_found ->
-        OpamConsole.error_and_exit `Not_found
-          "No package matching %s found."
-          (OpamFormula.short_string_of_atom atom)
-    in
-    let dir = match dir with
-      | Some d -> d
-      | None ->
-        let dirname =
-          if dev_repo then OpamPackage.name_to_string nv
-          else OpamPackage.to_string nv in
-        OpamFilename.Op.(OpamFilename.cwd () / dirname)
-    in
-    let open OpamFilename in
-    if exists_dir dir then
-      OpamConsole.error_and_exit `Bad_arguments
-        "Directory %s already exists. Please remove it or use a different one \
-         (see option `--dir')"
-        (Dir.to_string dir);
-    let opam = OpamSwitchState.opam t nv in
-    let subpath =
-      OpamStd.Option.map_default OpamFile.URL.subpath
-        None (OpamFile.OPAM.url opam)
-    in
-    if dev_repo then (
-      match OpamFile.OPAM.dev_repo opam with
-      | None ->
-        OpamConsole.error_and_exit `Not_found
-          "Version-controlled repo for %s unknown \
-           (\"dev-repo\" field missing from metadata)"
-          (OpamPackage.to_string nv)
-      | Some url ->
-        mkdir dir;
-        match
-          OpamProcess.Job.run
-            (OpamRepository.pull_tree
-               ~cache_dir:(OpamRepositoryPath.download_cache
-                             OpamStateConfig.(!r.root_dir))
-               ?subpath
-               (OpamPackage.to_string nv) dir []
-               [url])
-        with
-        | Not_available (_,u) ->
-          OpamConsole.error_and_exit `Sync_error "%s is not available" u
-        | Result _ | Up_to_date _ ->
-          OpamConsole.formatted_msg
-            "Successfully fetched %s development repo to %s\n"
-            (OpamPackage.name_to_string nv)
-            (OpamFilename.Dir.to_string dir)
-    ) else (
-      let job =
-        let open OpamProcess.Job.Op in
-        OpamUpdate.download_package_source t nv dir @@+ function
-        | Some (Not_available (_,s)), _ | _, (_, Not_available (_, s)) :: _ ->
-          OpamConsole.error_and_exit `Sync_error "Download failed: %s" s
-        | None, _ | Some (Result _ | Up_to_date _), _ ->
-          OpamAction.prepare_package_source t nv dir @@| function
-          | None ->
-            OpamConsole.formatted_msg "Successfully extracted to %s\n"
-              (Dir.to_string dir)
-          | Some e ->
-            OpamConsole.warning "Some errors extracting to %s: %s\n"
-              (Dir.to_string dir) (Printexc.to_string e)
+    let get_package_dir t =
+      let nv =
+        try
+          OpamPackage.Set.max_elt
+            (OpamPackage.Set.filter (OpamFormula.check atom) t.packages)
+        with Not_found ->
+          OpamConsole.error_and_exit `Not_found
+            "No package matching %s found."
+            (OpamFormula.short_string_of_atom atom)
       in
-      OpamProcess.Job.run job;
-      if OpamPinned.find_opam_file_in_source nv.name
-          (OpamStd.Option.map_default (fun sp -> Op.(dir / sp)) dir subpath)
-         = None
-      then
-        let f =
-          if OpamFilename.exists_dir Op.(dir / "opam")
-          then OpamFile.make Op.(dir / "opam" // "opam")
-          else OpamFile.make Op.(dir // "opam")
-        in
-        OpamFile.OPAM.write f
-          (OpamFile.OPAM.with_substs [] @@
-           OpamFile.OPAM.with_patches [] @@
-           opam)
-    );
-    if pin then
+      let dir = match dir with
+        | Some d -> d
+        | None ->
+          let dirname =
+            if dev_repo then OpamPackage.name_to_string nv
+            else OpamPackage.to_string nv in
+          OpamFilename.Op.(OpamFilename.cwd () / dirname)
+      in
+      nv, dir
+    in
+    let get_source t nv dir =
+      let open OpamFilename in
+      if exists_dir dir then
+        OpamConsole.error_and_exit `Bad_arguments
+          "Directory %s already exists. Please remove it or use a different one \
+           (see option `--dir')"
+          (Dir.to_string dir);
+      let opam = OpamSwitchState.opam t nv in
+      let subpath =
+        OpamStd.Option.map_default OpamFile.URL.subpath
+          None (OpamFile.OPAM.url opam)
+      in
+      if dev_repo then
+        (match OpamFile.OPAM.dev_repo opam with
+         | None ->
+           OpamConsole.error_and_exit `Not_found
+             "Version-controlled repo for %s unknown \
+              (\"dev-repo\" field missing from metadata)"
+             (OpamPackage.to_string nv)
+         | Some url ->
+           mkdir dir;
+           match
+             OpamProcess.Job.run
+               (OpamRepository.pull_tree
+                  ~cache_dir:(OpamRepositoryPath.download_cache
+                                OpamStateConfig.(!r.root_dir))
+                  ?subpath
+                  (OpamPackage.to_string nv) dir []
+                  [url])
+           with
+           | Not_available (_,u) ->
+             OpamConsole.error_and_exit `Sync_error "%s is not available" u
+           | Result _ | Up_to_date _ ->
+             OpamConsole.formatted_msg
+               "Successfully fetched %s development repo to %s\n"
+               (OpamPackage.name_to_string nv)
+               (OpamFilename.Dir.to_string dir))
+      else
+        (let job =
+           let open OpamProcess.Job.Op in
+           OpamUpdate.download_package_source t nv dir @@+ function
+           | Some (Not_available (_,s)), _ | _, (_, Not_available (_, s)) :: _ ->
+             OpamConsole.error_and_exit `Sync_error "Download failed: %s" s
+           | None, _ | Some (Result _ | Up_to_date _), _ ->
+             OpamAction.prepare_package_source t nv dir @@| function
+             | None ->
+               OpamConsole.formatted_msg "Successfully extracted to %s\n"
+                 (Dir.to_string dir)
+             | Some e ->
+               OpamConsole.warning "Some errors extracting to %s: %s\n"
+                 (Dir.to_string dir) (Printexc.to_string e)
+         in
+         OpamProcess.Job.run job;
+         if OpamPinned.find_opam_file_in_source nv.name
+             (OpamStd.Option.map_default (fun sp -> Op.(dir / sp)) dir subpath)
+            = None
+         then
+           let f =
+             if OpamFilename.exists_dir Op.(dir / "opam")
+             then OpamFile.make Op.(dir / "opam" // "opam")
+             else OpamFile.make Op.(dir // "opam")
+           in
+           OpamFile.OPAM.write f
+             (OpamFile.OPAM.with_substs [] @@
+              OpamFile.OPAM.with_patches [] @@
+              opam))
+    in
+    if no_switch || OpamGlobalState.switches gt = [] then
+      (if pin then
+         OpamConsole.error_and_exit `Bad_arguments
+           (if no_switch then
+              "Options '--pin' and '--no-switch' may not be specified at the \
+               same time"
+            else
+              "No switch is defined in current opam root, \
+               pinning is impossible");
+       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+       let t = OpamSwitchState.load_virtual ?repos_list:None gt rt in
+       let nv, dir = get_package_dir t in
+       get_source t nv dir)
+    else if not pin then
+      OpamSwitchState.with_ `Lock_none gt @@ fun t ->
+      let nv, dir = get_package_dir t in
+      get_source t nv dir
+    else
+      OpamSwitchState.with_ `Lock_write gt @@ fun t ->
+      let nv, dir = get_package_dir t in
+      get_source t nv dir;
+      let opam = OpamSwitchState.opam t nv in
       let backend =
         if dev_repo then match OpamFile.OPAM.dev_repo opam with
           | Some {OpamUrl.backend = #OpamUrl.version_control as kind; _} -> kind
@@ -3465,7 +3491,7 @@ let source cli =
   in
   mk_command  ~cli cli_original "source" ~doc ~man
     Term.(const source
-          $global_options cli $atom $dev_repo $pin $dir)
+          $global_options cli $atom $dev_repo $pin $no_switch $dir)
 
 (* LINT *)
 let lint_doc = "Checks and validate package description ('opam') files."
