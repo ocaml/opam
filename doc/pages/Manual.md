@@ -1060,6 +1060,10 @@ files.
 
       Note that this behaviour is disabled when a flagged version of the package
       is already installed.
+    - <a id="opamflag-deprecated">`deprecated`</a>: this flag is equivalent to
+      [`avoid-version`](#opamflag-avoid-version) except for the addition of a
+      deprecation message after the package is installed as well as marked as
+      deprecated in the solution shown to the user upon installation.
 
 - <a id="opamfield-features">
   `features: [ <ident> { <pkgname> { <filtered-package-formula> } ... } { <string> } ... ]`

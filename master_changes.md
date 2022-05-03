@@ -202,6 +202,7 @@ users)
   * Enable cudf preprocessing for (co)insallability calculation, resulting in a x20 speedup [@AltGr]
   * Make sure that `--best-effort` only installs root package versions that where requested [#4796 @LasseBlaauwbroek]
   * Ask users to report errors when no explanations are given to them [#4981 @kit-ty-kate]
+  * Add bultin support for the 'deprecated' flag.  Any packages flagged with deprecated would be avoided by the solver unless there is no other choice (e.g. some user wants to install package a which depends on b which is deprecated) If it is installed, show up a note after installation notifying the user that the package is deprecated. [#4523 @kit-ty-kate]
 
 ## Client
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
@@ -254,7 +255,8 @@ users)
   * Add source test [#5101 @rjbou]
   * Add upgrade (and update) test [#5106 @rjbou]
   * Update var-option test with no switch examples [#5025]
-  * Escape for cmdliner.1.1.1 output chane [#5131 @rjbou]
+  * Escape for cmdliner.1.1.1 output change [#5131 @rjbou]
+  * Add deprectaed flag test [#4523 @kit-ty-kate]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]

@@ -40,6 +40,10 @@ let post_message ?(failed=false) st action =
     in
     let messages =
       let filter_env = OpamPackageVar.resolve ~opam ~local:local_variables st in
+      (if OpamFile.OPAM.has_flag Pkgflag_Deprecated opam then
+        ["Note: This package is deprecated."]
+      else
+        []) @
       OpamStd.List.filter_map (fun (message,filter) ->
           if OpamFilter.opt_eval_to_bool filter_env filter then
             Some (OpamFilter.expand_string ~default:(fun _ -> "")
@@ -1288,9 +1292,17 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
           else None
         )  messages in
       let append nv =
-        (* mark pinned packages with a star *)
-        if OpamPackage.Set.mem nv t.pinned then " (pinned)"
-        else ""
+        let pinned =
+          (* mark pinned packages *)
+          if OpamPackage.Set.mem nv t.pinned then " (pinned)"
+          else ""
+        and deprecated =
+          (* mark deprecated packages *)
+          let opam = OpamSwitchState.opam new_state nv in
+          if OpamFile.OPAM.has_flag Pkgflag_Deprecated opam then " (deprecated)"
+          else ""
+        in
+        pinned ^ deprecated
       in
       OpamSolver.print_solution ~messages ~append
         ~requested:names ~reinstall:(Lazy.force t.reinstall)
