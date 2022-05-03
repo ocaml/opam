@@ -282,7 +282,7 @@ type solver_criteria = [ `Default | `Upgrade | `Fixup ]
 (** Solver request *)
 type 'a request = {
   criteria: solver_criteria;
-  wish_install: 'a conjunction;
+  wish_install: 'a OpamFormula.formula;
   wish_remove : 'a conjunction;
   wish_upgrade: 'a conjunction;
   wish_all: 'a conjunction;

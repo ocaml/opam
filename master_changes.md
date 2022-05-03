@@ -42,6 +42,8 @@ users)
 ## Install
   * Make the status of pinned packages more explicit during installation [#4987 @kit-ty-kate - fix #4925]
   * Better recognize depexts on Gentoo, NetBSD, OpenBSD [#5065 @mndrix]
+  * Reimplement deps-only [#4975 @AltGr]
+  * ◈ Add `--formula` option to specify a formula to install [#4975 @AltGr]
 
 ## Remove
   *
@@ -257,6 +259,8 @@ users)
   * Update var-option test with no switch examples [#5025]
   * Escape for cmdliner.1.1.1 output change [#5131 @rjbou]
   * Add deprectaed flag test [#4523 @kit-ty-kate]
+  * Escape for cmdliner.1.1.1 output chane [#5131 @rjbou]
+  * Add deps-only, install formula [#4975 @AltGr]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
@@ -323,10 +327,13 @@ users)
   * Add an optional argument to `OpamArg.mk_subdoc` for extra default elements: `?extra_defaults:(validity * string * string) list` [#4910 @kit-ty-kate]
   * Add `OpamSwitchCommand.previous_switch` [#4910 @kit-ty-kate]
   * `OpamClient`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
-
   * `OpamConfigCommand`: `set_opt_switch`, `set_var_switch`, `options_list_switch`, and `var_list_switch` now raise configuration error exception (50) if no switch is found [#5027 @rjbou]
   * `OpamArgs`, `OpamArgTools`: add `experimental` optional argument to `cli_from` and replace `default` by `option:['experimental | 'ëefault]` for `cli_between`, to handle experimental features [#5099 @rjbou]
   * OpamAction: `prepare_package_source` can now take any switch state (previously required `rw`) [#4850 @rjbou]
+  * `OpamClient`: handle formula on several functions, adding a `formula` labelled or optional argument  (`upgrade_t`, `compute_upgrade_t`, `upgrade`, `fixup`, `install_t`, `install`, `remove_t`, and `remove`) [#4975 @AltGr]
+  * `OpamSolution`: add `print_requested` to print actions reasons [#4975 @AltGr]
+  * `OpamSolution.apply`: take an optional argument `skip`, to avoid filtering solution beforehand [#4975 @AltGr]
+
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
   * New download functions for shared source, old ones kept [#4893 @rjbou]
@@ -335,6 +342,7 @@ users)
 
 ## opam-state
   * `OpamSwitchState.universe`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
+  * `OpamSwitchState.universe`: add a chrono for universe loading [#4975 @AltGr]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
@@ -347,6 +355,11 @@ users)
   * `OpamSolver.explicit`: when adding fetch nodes, add shared source ones. Change of `sources_needed` argument type [#4893 @rjbou]
   * `OpamActionGraph.to_aligned_strings`: add `explicit` optional argument to print action name in utf8 [#5045 @AltGr]
   * `OpamSolver.print_solution`: change output format [#5045 @AltGr]
+  * `OpamSolver`, `OpamCudf`: Several changes to handle installation from a formula [#4975 @AltGr]
+  * `OpamCudf`: add `trim_universe`, `opam_deprequest_package_name`, and `opam_deprequest_package` [#4975 @AltGr]
+  * `OpamCudf.print_solution`: add optional `skip`, to avoid filtering solution beforehand [#4975 @AltGr]
+  * `OpamCudf.filter_solution`: can do not remove recursively actions with optional `~recursive:true` [#4975 @AltGr]
+
 ## opam-format
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamSysPkg` and `OpamVariable` [#4918 @rjbou]
   * Add OpamPackage.Version.default returning the version number used when no version is given for a package [#4949 @kit-ty-kate]
@@ -355,6 +368,7 @@ users)
   * Change ``Fetch` action to take several packages, in order to handle shared fetching of packages [#4893 @rjbou]
   * `OpamFile.OPAM.to_string_with_preserved_format`: handle substring errors [#4941 @rjbou - fix #4936]
   * `OpamFile.OPAM.effective_part` and `OpamFile.OPAM.effectively_equal` now take an optional `?modulo_state:bool` parameter, that if `true`, eliminates the fields relying on the state of the switch (depends, available, …). This is `false` by default. [#5118 @kit-ty-kate]
+  * `OpamTypes`: `request.wish_install` now takes a formula instead of  a conjunction [#4975 @AltGr]
 
 ## opam-core
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]

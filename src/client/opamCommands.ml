@@ -1619,12 +1619,16 @@ let install cli =
   in
   let install
       global_options build_options add_to_roots deps_only ignore_conflicts
-      restore destdir assume_built check recurse subpath depext_only
+      restore destdir assume_built check recurse subpath depext_only formula
       download_only atoms_or_locals () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
-    if atoms_or_locals = [] && not restore then
+    if atoms_or_locals = [] && not restore && formula = OpamFormula.Empty then
       `Error (true, "required argument PACKAGES is missing")
+    else
+    if assume_built && (deps_only || formula <> OpamFormula.Empty || depext_only) then
+      `Error (true, "option --assume-built is not compatible with --deps-only, \
+                     --formula or --depext-only")
     else
     if depext_only
     && (OpamClientConfig.(!r.assume_depexts)
@@ -1654,17 +1658,17 @@ let install cli =
           (OpamPackage.Set.elements to_restore)
       else atoms_or_locals
     in
-    if atoms_or_locals = [] then `Ok () else
+    if formula = OpamFormula.Empty && atoms_or_locals = [] then `Ok () else
     let st, atoms =
       OpamAuxCommands.autopin
         st ~recurse ?subpath ~quiet:check ~simulate:(deps_only||check||depext_only)
         atoms_or_locals
     in
-    if atoms = [] then
+    if formula = OpamFormula.Empty && atoms = [] then
       (OpamConsole.msg "Nothing to do\n";
        OpamStd.Sys.exit_because `Success);
     if check then
-      (let missing =
+       let missing =
          OpamPackage.Map.fold (fun _ -> OpamPackage.Name.Set.union)
            (OpamClient.check_installed ~build:true ~post:true st atoms)
            (OpamPackage.Name.Set.empty)
@@ -1677,9 +1681,10 @@ let install cli =
           OpamConsole.msg "%s\n"
             (OpamStd.List.concat_map " " OpamPackage.Name.to_string
                (OpamPackage.Name.Set.elements missing));
-          OpamStd.Sys.exit_because `False));
+          OpamStd.Sys.exit_because `False)
+    else
     let st =
-      OpamClient.install st atoms
+      OpamClient.install st atoms ~formula
         ~autoupdate:pure_atoms ?add_to_roots ~deps_only ~ignore_conflicts
         ~assume_built ~depext_only ~download_only
     in
@@ -1694,7 +1699,7 @@ let install cli =
     Term.(const install $global_options cli $build_options cli
           $add_to_roots $deps_only $ignore_conflicts $restore $destdir
           $assume_built cli $check $recurse cli $subpath cli $depext_only
-          $download_only $atom_or_local_list)
+          $formula_flag cli $download_only $atom_or_local_list)
 
 (* REMOVE *)
 let remove_doc = "Remove a list of packages."
@@ -1736,7 +1741,7 @@ let remove cli =
       Arg.(some dirname) None
   in
   let remove global_options build_options autoremove force destdir recurse
-      subpath atom_locs () =
+      subpath formula atom_locs () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1772,11 +1777,13 @@ let remove cli =
         @ pin_atoms
       in
       let autoremove = autoremove || OpamClientConfig.(!r.autoremove) in
-      OpamSwitchState.drop (OpamClient.remove st ~autoremove ~force atoms)
+      OpamSwitchState.drop
+        (OpamClient.remove st ~autoremove ~force ~formula atoms)
   in
   mk_command  ~cli cli_original "remove" ~doc ~man
     Term.(const remove $global_options cli $build_options cli $autoremove
-          $force $destdir $recurse cli $subpath cli $atom_or_dir_list)
+          $force $destdir $recurse cli $subpath cli $formula_flag cli
+          $atom_or_dir_list)
 
 (* REINSTALL *)
 let reinstall cli =
@@ -1981,7 +1988,7 @@ let upgrade cli =
       "When a directory is provided as argument, do not install pinned package \
        that are not yet installed." in
   let upgrade global_options build_options fixup check only_installed all
-      recurse subpath atom_locs () =
+      recurse subpath formula atom_locs () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
     let all = all || atom_locs = [] in
@@ -1991,17 +1998,21 @@ let upgrade cli =
         `Error (true, Printf.sprintf "--fixup doesn't allow extra arguments")
       else
         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-        OpamSwitchState.drop @@ OpamClient.fixup st;
+        OpamSwitchState.drop @@ OpamClient.fixup ~formula st;
         `Ok ()
     else
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let atoms = OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath atom_locs in
-      OpamSwitchState.drop @@ OpamClient.upgrade st ~check ~only_installed ~all atoms;
+      let atoms =
+        OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath atom_locs
+      in
+      OpamSwitchState.drop @@
+      OpamClient.upgrade st ~check ~only_installed ~all ~formula atoms;
       `Ok ()
   in
   mk_command_ret  ~cli cli_original "upgrade" ~doc ~man
     Term.(const upgrade $global_options cli $build_options cli $fixup $check
-          $installed $all $recurse cli $subpath cli $atom_or_dir_list)
+          $installed $all $recurse cli $subpath cli $formula_flag cli
+          $atom_or_dir_list)
 
 (* REPOSITORY *)
 let repository_doc = "Manage opam repositories."
@@ -2490,7 +2501,9 @@ let switch cli =
   let formula =
     mk_opt ~cli (cli_from cli2_1) ["formula"] "FORMULA"
       "Allows specifying a complete \"dependency formula\", possibly including \
-       disjunction cases, as the switch invariant."
+       disjunction cases, as the switch invariant. The format is the same as \
+       for expressing dependencies in package definition files, e.g. '\"foo\" \
+       {>= \"1.1\"}'"
       Arg.(some OpamArg.dep_formula) None in
   let empty =
     mk_flag ~cli cli_original ["empty"]

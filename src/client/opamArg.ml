@@ -1075,6 +1075,13 @@ let jobs_flag cli validity =
     $(b,\\$OPAMJOBS) environment variable."
     Arg.(some positive_integer) None
 
+let formula_flag cli =
+  mk_opt ~cli (cli_from ~experimental:true cli2_2) ["formula"] "FORMULA"
+    "Specify a dependency formula to be verified by the solution, in addition \
+     to the switch invariant. The format is the same as for expressing \
+     dependencies in package definition files, e.g. '\"foo\" {>= \"1.1\"}'"
+    dep_formula OpamFormula.Empty
+
 let name_list =
   arg_list "PACKAGES" "List of package names." package_name
 

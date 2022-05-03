@@ -496,12 +496,7 @@ let import_t ?ask importfile t =
     OpamSolution.resolve_and_apply ?ask t Import
       ~requested:((to_install %% available) ++ unavailable_version)
       ~add_roots
-      { wish_install = to_import;
-        wish_remove  = [];
-        wish_upgrade = [];
-        wish_all = to_import;
-        criteria = `Default;
-        extra_attributes = []; }
+      (OpamSolver.request ~install:to_import ())
   in
   OpamSolution.check_solution t solution;
   OpamFilename.rmdir xfiles_dir;

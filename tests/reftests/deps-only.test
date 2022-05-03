@@ -1,0 +1,100 @@
+N0REP0
+### <pkg:foo.1>
+opam-version: "2.0"
+### <pkg:foo.2>
+opam-version: "2.0"
+depends: "truc"
+### <pkg:bar.1>
+opam-version: "2.0"
+depends: "foo" {= "1"}
+### <pkg:baz.1>
+opam-version: "2.0"
+depends: "bar"
+### <pkg:baz.1>
+opam-version: "2.0"
+depends: "bar"
+### <pkg:truc.1>
+opam-version: "2.0"
+depopts: "foo" { < "2" }
+### OPAMYES=1
+### opam switch create x --empty
+### OPAMSHOW=1
+### opam install --deps-only foo
+The following actions would be performed:
+=== install 1 package
+  - install truc 1 [required by foo]
+### opam install --deps-only bar
+The following actions would be performed:
+=== install 1 package
+  - install foo 1 [required by bar]
+### opam install --deps-only baz
+The following actions would be performed:
+=== install 2 packages
+  - install bar 1 [required by baz]
+  - install foo 1 [required by bar]
+### opam install --deps-only foo bar
+Nothing to do.
+### opam install --deps-only foo baz
+The following actions would be performed:
+=== install 2 packages
+  - install bar 1 [required by baz]
+  - install foo 1 [required by bar]
+### opam install --deps-only bar baz
+The following actions would be performed:
+=== install 1 package
+  - install foo 1 [required by bar]
+### opam install --deps-only foo bar baz
+Nothing to do.
+### opam install --deps-only truc
+Nothing to do.
+### opam install --deps-only truc baz
+The following actions would be performed:
+=== install 2 packages
+  - install bar 1 [required by baz]
+  - install foo 1 [required by bar]
+### ::::::::::::::::::: Test for #4911 ::::::::::::::::
+### OPAMSHOW=0
+### <pkg:buz.1>
+opam-version: "2.0"
+depopts: "bar"
+### opam install foo.1 buz
+The following actions will be performed:
+=== install 2 packages
+  - install buz 1
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed buz.1
+-> installed foo.1
+Done.
+### opam list --roots -s
+buz
+foo
+### opam install --deps-only --show bar
+Nothing to do.
+### ::: check ability to install unavailable package :::
+### <pkg:a.1>
+opam-version: "2.0"
+available: false
+### <pkg:b.1>
+opam-version: "2.0"
+depends: "a"
+### <pkg:c.1>
+opam-version: "2.0"
+depends: "b"
+### opam install a c --deps-only
+[ERROR] Package conflict!
+  * Missing dependency:
+    - a
+    unmet availability conditions: 'false'
+
+No solution found, exiting
+# Return code 20 #
+### opam install c --deps-only
+[ERROR] Package conflict!
+  * Missing dependency:
+    - a
+    unmet availability conditions: 'false'
+
+No solution found, exiting
+# Return code 20 #

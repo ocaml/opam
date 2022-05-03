@@ -247,7 +247,9 @@ module Json = struct
     in
     let j = `O [
         "action", `String (string_of_user_action user_action);
-        "install", `A (atoms request.wish_install);
+        "install", `A (List.map (fun f ->
+            `String OpamFormula.(string_of_formula short_string_of_atom f))
+            (OpamFormula.ands_to_list request.wish_install));
         "remove", `A (atoms request.wish_remove);
         "upgrade", `A (atoms request.wish_upgrade);
         "all", `A (atoms request.wish_all);
@@ -1256,10 +1258,18 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   with Sys.Break as e -> OpamStd.Exn.finalise e give_up_msg
 
 (* Apply a solution *)
-let apply ?ask t ~requested ?add_roots ?(assume_built=false)
-    ?(download_only=false) ?force_remove solution =
+let apply ?ask t ~requested ?print_requested ?add_roots
+    ?(skip=OpamPackage.Map.empty)
+    ?(assume_built=false)
+    ?(download_only=false) ?force_remove solution0 =
   let names = OpamPackage.names_of_packages requested in
+  let print_requested = OpamStd.Option.default names print_requested in
   log "apply";
+  let solution =
+    OpamSolver.filter_solution ~recursive:false
+      (fun nv -> not (OpamPackage.Map.mem nv skip))
+      solution0
+  in
   if OpamSolver.solution_is_empty solution then
     (* The current state satisfies the request contraints *)
     t, Nothing_to_do
@@ -1293,11 +1303,9 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
         )  messages in
       let append nv =
         let pinned =
-          (* mark pinned packages *)
           if OpamPackage.Set.mem nv t.pinned then " (pinned)"
           else ""
         and deprecated =
-          (* mark deprecated packages *)
           let opam = OpamSwitchState.opam new_state nv in
           if OpamFile.OPAM.has_flag Pkgflag_Deprecated opam then " (deprecated)"
           else ""
@@ -1305,9 +1313,10 @@ let apply ?ask t ~requested ?add_roots ?(assume_built=false)
         pinned ^ deprecated
       in
       OpamSolver.print_solution ~messages ~append
-        ~requested:names ~reinstall:(Lazy.force t.reinstall)
+        ~requested:print_requested ~reinstall:(Lazy.force t.reinstall)
         ~available:(Lazy.force t.available_packages)
-        solution;
+        ~skip
+        solution0;
     );
     if not OpamClientConfig.(!r.show) &&
        (download_only || confirmation ?ask names solution)
@@ -1402,8 +1411,8 @@ let resolve t action ?reinstall ~requested request =
   Json.output_solution t r;
   r
 
-let resolve_and_apply ?ask t action ?reinstall ~requested ?add_roots
-    ?(assume_built=false) ?download_only ?force_remove request =
+let resolve_and_apply ?ask t action ?reinstall ~requested ?print_requested
+    ?add_roots ?(assume_built=false) ?download_only ?force_remove request =
   match resolve t action ?reinstall ~requested request with
   | Conflicts cs ->
     log "conflict!";
@@ -1414,7 +1423,8 @@ let resolve_and_apply ?ask t action ?reinstall ~requested ?add_roots
   | Success solution ->
     let t, res =
       apply ?ask t
-        ~requested ?add_roots ~assume_built ?download_only ?force_remove
+        ~requested ?print_requested ?add_roots ~assume_built
+        ?download_only ?force_remove
         solution
     in
     t, Success res

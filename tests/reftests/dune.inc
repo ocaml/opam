@@ -204,6 +204,23 @@
    (run ./run.exe %{bin:opam} %{dep:deprecated.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-deps-only)
+ (action
+  (diff deps-only.test deps-only.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-deps-only)))
+
+(rule
+ (targets deps-only.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:deps-only.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-dot-install)
  (action
   (diff dot-install.test dot-install.out)))
@@ -270,6 +287,23 @@
   (with-stdout-to
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:inplace.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-install-formula)
+ (action
+  (diff install-formula.test install-formula.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-install-formula)))
+
+(rule
+ (targets install-formula.out)
+ (deps root-f372039d)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:install-formula.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-install-pgocaml)
