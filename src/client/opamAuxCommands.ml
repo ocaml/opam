@@ -290,6 +290,14 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath ?locked
           let pinned_pkg = OpamPinned.package st nf.pin_name in
           OpamSwitchState.primary_url st pinned_pkg = Some nf.pin.pin_url
           &&
+          (match OpamSwitchState.opam_opt st pinned_pkg with
+           | Some opam ->
+             (match locked, OpamFile.OPAM.locked opam with
+              | Some ext , Some ext' -> String.equal ext ext'
+              | None, None -> true
+              | _ -> false)
+           | None -> false)
+          &&
           (* For `opam show`, we need to check does the opam file changed to
              perform a simulated pin if so *)
           (not for_view ||
