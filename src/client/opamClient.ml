@@ -1004,7 +1004,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
             in
             let conflicts =
               let vstring = OpamPackage.Version.to_string nv.version in
-              OpamFormula.ands
+              OpamFormula.ors
                 (Atom (nv.name, Atom (Constraint (`Neq, FString vstring))) ::
                  if ignore_conflicts then [] else [ O.conflicts opam ])
             in
