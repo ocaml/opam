@@ -30,7 +30,7 @@ let get_installed_atoms t atoms =
 
 (* Check atoms for pinned packages, and update them. Returns the state that
    may have been reloaded if there were changes *)
-let update_dev_packages_t ?(only_installed=false) atoms t =
+let update_dev_packages_t ?autolock ?(only_installed=false) atoms t =
   if OpamClientConfig.(!r.skip_dev_update) then t else
   let working_dir = OpamClientConfig.(!r.working_dir || !r.inplace_build) in
   let to_update =
@@ -54,7 +54,7 @@ let update_dev_packages_t ?(only_installed=false) atoms t =
         else None
       in
       let _success, t, _pkgs =
-        OpamUpdate.dev_packages t ?working_dir to_update in
+        OpamUpdate.dev_packages t ?autolock ?working_dir to_update in
       OpamConsole.msg "\n";
       t
     with e ->
@@ -339,7 +339,7 @@ let upgrade_t
 
 let upgrade t ?formula ?check ?only_installed ~all names =
   let atoms = OpamSolution.sanitize_atom_list t names in
-  let t = update_dev_packages_t ?only_installed atoms t in
+  let t = update_dev_packages_t ~autolock:true ?only_installed atoms t in
   upgrade_t ?check ~strict_upgrade:(not all) ?only_installed ~all
     atoms ?formula t
 
@@ -533,7 +533,9 @@ let update
         else None
       in
       OpamConsole.header_msg "Synchronising development packages";
-      let success, st, updates = OpamUpdate.dev_packages st ?working_dir packages in
+      let success, st, updates =
+        OpamUpdate.dev_packages st ~autolock:true ?working_dir packages
+      in
       if OpamClientConfig.(!r.json_out <> None) then
         OpamJson.append "dev-packages-updates"
           (OpamPackage.Set.to_json updates);

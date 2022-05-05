@@ -196,7 +196,7 @@ let fetch_dev_package url srcdir ?(working_dir=false) ?subpath nv =
     (OpamPackage.to_string nv) srcdir checksum ~working_dir ?subpath mirrors
   @@| OpamRepository.report_fetch_result nv
 
-let pinned_package st ?version ?(working_dir=false) name =
+let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
   log "update-pinned-package %s%a" (OpamPackage.Name.to_string name)
     (slog @@ function true -> " (working dir)" | false -> "") working_dir;
   let open OpamStd.Option.Op in
@@ -223,10 +223,11 @@ let pinned_package st ?version ?(working_dir=false) name =
       then OpamFileTools.add_aux_files ~files_subdir_hashes:true opam
       else opam
     in
+    let locked = if autolock then OpamFile.OPAM.locked opam else None in
     (* append subpath to source dir to retrieve opam files *)
     let srcdir_find = OpamFilename.SubPath.(srcdir /? subpath) in
     let old_source_opam_hash, old_source_opam =
-      match OpamPinned.find_opam_file_in_source name srcdir_find with
+      match OpamPinned.find_opam_file_in_source ?locked name srcdir_find with
       | None -> None, None
       | Some (f, lock) ->
         Some (OpamHash.compute (OpamFile.to_string f)),
@@ -265,7 +266,7 @@ let pinned_package st ?version ?(working_dir=false) name =
     (* Do the update *)
     fetch_dev_package urlf srcdir ~working_dir ?subpath nv @@+ fun result ->
     let new_source_opam =
-      OpamPinned.find_opam_file_in_source name srcdir_find
+      OpamPinned.find_opam_file_in_source ?locked name srcdir_find
       >>= fun (f, lock) ->
       let warns, opam_opt = OpamFileTools.lint_file f in
       let warns, opam_opt = match opam_opt with
@@ -398,11 +399,11 @@ let pinned_package st ?version ?(working_dir=false) name =
     | Result  _, _ ->
       Done ((fun st -> st), true)
 
-let dev_package st ?working_dir nv =
+let dev_package st ?autolock ?working_dir nv =
   log "update-dev-package %a" (slog OpamPackage.to_string) nv;
   if OpamSwitchState.is_pinned st nv.name &&
      not (OpamSwitchState.is_version_pinned st nv.name) then
-    pinned_package st ~version:nv.version ?working_dir nv.name
+    pinned_package st ?autolock ~version:nv.version ?working_dir nv.name
   else
   match OpamSwitchState.url st nv with
   | None     -> Done ((fun st -> st), false)
@@ -415,14 +416,14 @@ let dev_package st ?working_dir nv =
       @@| fun result ->
       (fun st -> st), match result with Result () -> true | _ -> false
 
-let dev_packages st ?(working_dir=OpamPackage.Set.empty) packages =
+let dev_packages st ?autolock ?(working_dir=OpamPackage.Set.empty) packages =
   log "update-dev-packages";
   let command nv =
     let working_dir = OpamPackage.Set.mem nv working_dir in
     OpamProcess.Job.ignore_errors
       ~default:(false, (fun st -> st), OpamPackage.Set.empty)
     @@ fun () ->
-    dev_package st ~working_dir nv @@| fun (st_update, changed) ->
+    dev_package st ?autolock ~working_dir nv @@| fun (st_update, changed) ->
     true, st_update, match changed with
     | true -> OpamPackage.Set.singleton nv
     | false -> OpamPackage.Set.empty
@@ -453,14 +454,14 @@ let dev_packages st ?(working_dir=OpamPackage.Set.empty) packages =
       selections1;
   success, st, updated_set
 
-let pinned_packages st ?(working_dir=OpamPackage.Name.Set.empty) names =
+let pinned_packages st ?autolock ?(working_dir=OpamPackage.Name.Set.empty) names =
   log "update-pinned-packages";
   let command name =
     let working_dir = OpamPackage.Name.Set.mem name working_dir in
     OpamProcess.Job.ignore_errors
       ~default:((fun st -> st), OpamPackage.Name.Set.empty)
     @@ fun () ->
-    pinned_package st ~working_dir name @@| fun (st_update, changed) ->
+    pinned_package st ?autolock ~working_dir name @@| fun (st_update, changed) ->
     st_update,
     match changed with
     | true -> OpamPackage.Name.Set.singleton name
