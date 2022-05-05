@@ -206,7 +206,6 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   tolock.dev
 Done.
-### # ERROR
 ### <pin:old1/opam/oldlock.opam>
 opam-version: "2.0"
 depends: "foo"
@@ -245,21 +244,27 @@ Done.
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [oldlock.dev] synchronised (file://${BASEDIR}/old1)
+[oldlock] Installing new package description from upstream file://${BASEDIR}/old1
 
 The following actions would be performed:
+=== downgrade 1 package
+  - downgrade foo     2 to 1       [required by oldlock]
 === install 1 package
-  - install oldlock dev (pinned)
+  - install   oldlock dev (pinned)
 ### opam install --locked oldlock
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [oldlock.dev] synchronised (no changes)
 
 The following actions will be performed:
+=== downgrade 1 package
+  - downgrade foo     2 to 1       [required by oldlock]
 === install 1 package
-  - install oldlock dev (pinned)
+  - install   oldlock dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved oldlock.dev  (file://${BASEDIR}/old1)
+-> removed   foo.2
+-> installed foo.1
 -> installed oldlock.dev
 Done.
 ### opam remove oldlock
@@ -270,19 +275,9 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   oldlock.dev
 Done.
-### # ERROR
 ### <pin:old2/opam/granpa.opam/opam>
 opam-version: "2.0"
 depends: "foo"
-### opam install foo.1
-The following actions will be performed:
-=== downgrade 1 package
-  - downgrade foo 2 to 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   foo.2
--> installed foo.1
-Done.
 ### opam pin -n old2
 Package granpa does not exist, create as a NEW package? [y/n] y
 granpa is now pinned to file://${BASEDIR}/old2 (version opam)
@@ -309,20 +304,27 @@ Done.
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [granpa.opam] synchronised (file://${BASEDIR}/old2)
+[granpa] Installing new package description from upstream file://${BASEDIR}/old2
 
 The following actions would be performed:
+=== downgrade 1 package
+  - downgrade foo    2 to 1        [required by granpa]
 === install 1 package
-  - install granpa opam (pinned)
+  - install   granpa opam (pinned)
 ### opam install --locked granpa
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [granpa.opam] synchronised (no changes)
 
 The following actions will be performed:
+=== downgrade 1 package
+  - downgrade foo    2 to 1        [required by granpa]
 === install 1 package
-  - install granpa opam (pinned)
+  - install   granpa opam (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.2
+-> installed foo.1
 -> installed granpa.opam
 Done.
 ### opam remove granpa
@@ -333,19 +335,9 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   granpa.opam
 Done.
-### # ERROR
 ### <pin:old3/ancestor.opam/opam>
 opam-version: "2.0"
 depends: "foo"
-### opam install foo.1
-The following actions will be performed:
-=== downgrade 1 package
-  - downgrade foo 2 to 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   foo.2
--> installed foo.1
-Done.
 ### opam pin -n old3
 Package ancestor does not exist, create as a NEW package? [y/n] y
 ancestor is now pinned to file://${BASEDIR}/old3 (version opam)
@@ -372,20 +364,27 @@ Done.
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [ancestor.opam] synchronised (file://${BASEDIR}/old3)
+[ancestor] Installing new package description from upstream file://${BASEDIR}/old3
 
 The following actions would be performed:
+=== downgrade 1 package
+  - downgrade foo      2 to 1        [required by ancestor]
 === install 1 package
-  - install ancestor opam (pinned)
+  - install   ancestor opam (pinned)
 ### opam install --locked ancestor
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [ancestor.opam] synchronised (no changes)
 
 The following actions will be performed:
+=== downgrade 1 package
+  - downgrade foo      2 to 1        [required by ancestor]
 === install 1 package
-  - install ancestor opam (pinned)
+  - install   ancestor opam (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.2
+-> installed foo.1
 -> installed ancestor.opam
 Done.
 ### opam remove ancestor
@@ -396,20 +395,10 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ancestor.opam
 Done.
-### # ERROR
 ### <pin:old/opam/opam>
 opam-version: "2.0"
 name: "silver"
 depends: "foo"
-### opam install foo.1
-The following actions will be performed:
-=== downgrade 1 package
-  - downgrade foo 2 to 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   foo.2
--> installed foo.1
-Done.
 ### # ERROR double silver
 ### opam pin -n old
 This will pin the following packages: silver, silver. Continue? [y/n] y
@@ -440,21 +429,27 @@ Done.
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [silver.dev] synchronised (file://${BASEDIR}/old)
+[silver] Installing new package description from upstream file://${BASEDIR}/old
 
 The following actions would be performed:
+=== downgrade 1 package
+  - downgrade foo    2 to 1       [required by silver]
 === install 1 package
-  - install silver dev (pinned)
+  - install   silver dev (pinned)
 ### opam install --locked silver
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [silver.dev] synchronised (no changes)
 
 The following actions will be performed:
+=== downgrade 1 package
+  - downgrade foo    2 to 1       [required by silver]
 === install 1 package
-  - install silver dev (pinned)
+  - install   silver dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved silver.dev  (file://${BASEDIR}/old)
+-> removed   foo.2
+-> installed foo.1
 -> installed silver.dev
 Done.
 ### opam remove silver
@@ -545,6 +540,7 @@ depends:
 version: "default-version"
 ### <pin:tolock-scan/tolock-scan.opam.locked>
 version: "locked-version"
+### # ERROR
 ### opam pin scan ./tolock-scan --locked | grep -v '# Name'
 tolock-scan  locked-version  file://${BASEDIR}/tolock-scan  -
 ### : git pin with lock file :
@@ -774,7 +770,6 @@ The following actions will be performed:
   - install tolock 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved tolock.1  (no changes)
 -> installed tolock.1
 Done.
 ### : upgrade with lock :
@@ -796,7 +791,6 @@ The following actions will be performed:
   - install tolock l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved tolock.l1  (file://${BASEDIR}/tolock)
 -> installed tolock.l1
 Done.
 ### <pin:tolock/tolock.opam.locked>

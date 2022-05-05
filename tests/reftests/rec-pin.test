@@ -665,7 +665,6 @@ The following actions will be performed:
   - install root-a-i-j_g l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved root_g.l1  (no changes)
 -> installed root_g.l1
 -> retrieved root-a_p.l1  (file://${BASEDIR}/pinnes(a))
 -> retrieved root-a-k_p.l1  (file://${BASEDIR}/pinnes(a/k))
@@ -863,176 +862,69 @@ version: "l2"
 [root-a_p.l1] synchronised (file://${BASEDIR}/pinnes(a))
 [root-b_g.l1] synchronised (git+file://${BASEDIR}/pinnes#master(b))
 [root_g.l1] synchronised (git+file://${BASEDIR}/pinnes#master)
-### # ERROR
-### #### opam upgrade | unordered # expected output
-### #The following actions will be performed:
-### #=== upgrade 6 packages
-### #  - upgrade root-a-i_g   l1 to l2 (pinned)
-### #  - upgrade root-a-k_p   l1 to l2 (pinned)
-### #  - upgrade root-a_p     l1 to l2 (pinned)
-### #  - upgrade root-b_g     l1 to l2 (pinned)
-### #  - upgrade root_g       l1 to l2 (pinned)
-### #  - upgrade root-a-i-j_g l1 to l2 (pinned)
-### # <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-### # -> removed   root_g.l1
-### # -> installed root_g.l2
-### # -> retrieved root-a_p.l2  (file://${BASEDIR}/pinnes(a))
-### # -> retrieved root-a-k_p.l2  (file://${BASEDIR}/pinnes(a/k))
-### # -> removed   root-a_p.l1
-### # -> installed root-a_p.l2
-### # -> retrieved root-a-i_g.l2  (no changes)
-### # -> removed   root-a-i_g.l1
-### # -> installed root-a-i_g.l2
-### # -> retrieved root-a-i-j_g.l2  (no changes)
-### # -> removed   root-a-i-j_g.l1
-### # -> installed root-a-i-j_g.l2
-### # -> removed   root-a-k_p.l1
-### # -> installed root-a-k_p.l2
-### # -> retrieved root-b_g.l2  (no changes)
-### # -> removed   root-b_g.l1
-### # -> installed root-b_g.l2
-### # Done.
 ### opam upgrade | unordered
 The following actions will be performed:
-=== downgrade 6 packages
-  - downgrade root-a-i-j_g l1 to 2 (pinned) [no longer available]
-  - downgrade root-a-i_g   l1 to 2 (pinned) [no longer available]
-  - downgrade root-a-k_p   l1 to 2 (pinned) [no longer available]
-  - downgrade root-a_p     l1 to 2 (pinned) [no longer available]
-  - downgrade root-b_g     l1 to 2 (pinned) [no longer available]
-  - downgrade root_g       l1 to 2 (pinned) [no longer available]
--> retrieved root-a-i-j_g.2  (no changes)
--> retrieved root-a-i_g.2  (no changes)
-[ERROR] The compilation of root-a-i-j_g.2 failed at "false".
-[ERROR] The compilation of root-a-i_g.2 failed at "false".
--> retrieved root-a-k_p.2  (file://${BASEDIR}/pinnes(a/k))
-[ERROR] The compilation of root-a-k_p.2 failed at "false".
--> retrieved root-a_p.2  (file://${BASEDIR}/pinnes(a))
--> retrieved root-b_g.2  (no changes)
-[ERROR] The compilation of root-a_p.2 failed at "false".
-[ERROR] The compilation of root-b_g.2 failed at "false".
-[ERROR] The compilation of root_g.2 failed at "false".
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-+- The following actions failed
-| - build root-a-i-j_g 2
-| - build root-a-i_g   2
-| - build root-a-k_p   2
-| - build root-a_p     2
-| - build root-b_g     2
-| - build root_g       2
-+- 
-- No changes have been performed
+=== upgrade 6 packages
+  - upgrade root-a-i-j_g l1 to l2 (pinned)
+  - upgrade root-a-i_g   l1 to l2 (pinned)
+  - upgrade root-a-k_p   l1 to l2 (pinned)
+  - upgrade root-a_p     l1 to l2 (pinned)
+  - upgrade root-b_g     l1 to l2 (pinned)
+  - upgrade root_g       l1 to l2 (pinned)
+-> retrieved root-a-i-j_g.l2  (no changes)
+-> removed   root-a-i-j_g.l1
+-> installed root-a-i-j_g.l2
+-> retrieved root-a-i_g.l2  (no changes)
+-> removed   root-a-i_g.l1
+-> installed root-a-i_g.l2
+-> retrieved root-a-k_p.l2  (file://${BASEDIR}/pinnes(a/k))
+-> removed   root-a-k_p.l1
+-> installed root-a-k_p.l2
+-> retrieved root-a_p.l2  (file://${BASEDIR}/pinnes(a))
+-> removed   root-a_p.l1
+-> installed root-a_p.l2
+-> retrieved root-b_g.l2  (no changes)
+-> removed   root-b_g.l1
+-> removed   root_g.l1
+-> installed root-b_g.l2
+-> installed root_g.l2
+Done.
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-# Return code 31 #
 ### <pinnes/a/i/new>
 hej
 ### <pinnes/a/k/new>
 hoj
 ### git -C pinnes add a/i/new
 ### git -C pinnes commit -qm "thd"
-### # ERROR
-### # ### opam update | grep synchronised
-### # [root-a-i-j_g.l2] synchronised (git+file://${BASEDIR}/pinnes#master(a/i/j))
-### # [root-a-i_g.l2] synchronised (git+file://${BASEDIR}/pinnes#master(a/i))
-### # [root-a-k_p.l2] synchronised (file://${BASEDIR}/pinnes(a/k))
-### # [root-a_p.l2] synchronised (file://${BASEDIR}/pinnes(a))
-### # [root-b_g.l2] synchronised (git+file://${BASEDIR}/pinnes#master(b))
-### # [root_g.l2] synchronised (git+file://${BASEDIR}/pinnes#master)
 ### opam update | grep synchronised
-[root-a-i-j_g.2] synchronised (no changes)
-[root-a-i_g.2] synchronised (git+file://${BASEDIR}/pinnes#master(a/i))
-[root-a-k_p.2] synchronised (file://${BASEDIR}/pinnes(a/k))
-[root-a_p.2] synchronised (file://${BASEDIR}/pinnes(a))
-[root-b_g.2] synchronised (no changes)
-[root_g.2] synchronised (git+file://${BASEDIR}/pinnes#master)
-### # ERROR
-### # ### opam upgrade | unordered
-### # The following actions will be performed:
-### # === recompile 5 packages
-### #   - recompile root-a-i_g   l2 (pinned) [upstream or system changes]
-### #   - recompile root-a-k_p   l2 (pinned) [upstream or system changes]
-### #   - recompile root-a_p     l2 (pinned) [upstream or system changes]
-### #   - recompile root-b_g     l2 (pinned) [upstream or system changes]
-### #   - recompile root-a-i-j_g l2 (pinned) [upstream or system changes]
-### # -> retrieved root-a-i-j_g.l2  (no changes)
-### # -> removed   root-a-i-j_g.l2
-### # -> installed root-a-i-j_g.l2
-### # -> retrieved root-a-k_p.l2  (no changes)
-### # -> retrieved root-b_g.l2  (no changes)
-### # -> removed   root-b_g.l2
-### # -> installed root-b_g.l2
-### # <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-### # -> retrieved root-a_p.l2  (no changes)
-### # -> removed   root-a_p.l2
-### # -> installed root-a_p.l2
-### # -> retrieved root-a-i_g.l2  (no changes)
-### # -> removed   root-a-i_g.l2
-### # -> installed root-a-i_g.l2
-### # -> removed   root-a-k_p.l2
-### # -> installed root-a-k_p.l2
-### # Done.
+[root-a-i-j_g.l2] synchronised (no changes)
+[root-a-i_g.l2] synchronised (git+file://${BASEDIR}/pinnes#master(a/i))
+[root-a-k_p.l2] synchronised (file://${BASEDIR}/pinnes(a/k))
+[root-a_p.l2] synchronised (file://${BASEDIR}/pinnes(a))
+[root-b_g.l2] synchronised (no changes)
+[root_g.l2] synchronised (git+file://${BASEDIR}/pinnes#master)
 ### opam upgrade | unordered
 The following actions will be performed:
-=== downgrade 6 packages
-  - downgrade root-a-i-j_g l1 to 2 (pinned) [no longer available]
-  - downgrade root-a-i_g   l1 to 2 (pinned) [no longer available]
-  - downgrade root-a-k_p   l1 to 2 (pinned) [no longer available]
-  - downgrade root-a_p     l1 to 2 (pinned) [no longer available]
-  - downgrade root-b_g     l1 to 2 (pinned) [no longer available]
-  - downgrade root_g       l1 to 2 (pinned) [no longer available]
--> retrieved root-a-i-j_g.2  (no changes)
--> retrieved root-a-i_g.2  (no changes)
-[ERROR] The compilation of root-a-i-j_g.2 failed at "false".
-[ERROR] The compilation of root-a-i_g.2 failed at "false".
--> retrieved root-a-k_p.2  (file://${BASEDIR}/pinnes(a/k))
-[ERROR] The compilation of root-a-k_p.2 failed at "false".
--> retrieved root-a_p.2  (file://${BASEDIR}/pinnes(a))
--> retrieved root-b_g.2  (no changes)
-[ERROR] The compilation of root-a_p.2 failed at "false".
-[ERROR] The compilation of root-b_g.2 failed at "false".
-[ERROR] The compilation of root_g.2 failed at "false".
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-+- The following actions failed
-| - build root-a-i-j_g 2
-| - build root-a-i_g   2
-| - build root-a-k_p   2
-| - build root-a_p     2
-| - build root-b_g     2
-| - build root_g       2
-+- 
-- No changes have been performed
+=== recompile 4 packages
+  - recompile root-a-i_g l2 (pinned) [upstream or system changes]
+  - recompile root-a-k_p l2 (pinned) [upstream or system changes]
+  - recompile root-a_p   l2 (pinned) [upstream or system changes]
+  - recompile root_g     l2 (pinned) [upstream or system changes]
+-> retrieved root-a-i_g.l2  (no changes)
+-> removed   root-a-i_g.l2
+-> installed root-a-i_g.l2
+-> retrieved root-a-k_p.l2  (no changes)
+-> removed   root-a-k_p.l2
+-> installed root-a-k_p.l2
+-> retrieved root-a_p.l2  (no changes)
+-> removed   root-a_p.l2
+-> removed   root_g.l2
+-> installed root-a_p.l2
+-> installed root_g.l2
+Done.
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-# Return code 31 #
 ### opam list -s
 root-a-i-j_g
 root-a-i_g
@@ -1041,35 +933,35 @@ root-a_p
 root-b_g
 root_g
 ### opam pin
-root-a-i-j_g.2  (not in sync)  git    git+file://${BASEDIR}/pinnes#master (a/i/j) (installed:l1)
-root-a-i_g.2    (not in sync)  git    git+file://${BASEDIR}/pinnes#master (a/i) (installed:l1)
-root-a-k_p.2    (not in sync)  rsync  file://${BASEDIR}/pinnes (a/k) (installed:l1)
-root-a_p.2      (not in sync)  rsync  file://${BASEDIR}/pinnes (a) (installed:l1)
-root-b_g.2      (not in sync)  git    git+file://${BASEDIR}/pinnes#master (b) (installed:l1)
-root_g.2        (not in sync)  git    git+file://${BASEDIR}/pinnes#master (installed:l1)
+root-a-i-j_g.l2    git    git+file://${BASEDIR}/pinnes#master (a/i/j)
+root-a-i_g.l2      git    git+file://${BASEDIR}/pinnes#master (a/i)
+root-a-k_p.l2      rsync  file://${BASEDIR}/pinnes (a/k)
+root-a_p.l2        rsync  file://${BASEDIR}/pinnes (a)
+root-b_g.l2        git    git+file://${BASEDIR}/pinnes#master (b)
+root_g.l2          git    git+file://${BASEDIR}/pinnes#master
 ### opam remove ./pinnes --recursive
-Ok, root_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (version 2)
-Ok, root-b_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (b) (version 2)
-Ok, root-a_p is no longer pinned to file://${BASEDIR}/pinnes (a) (version 2)
-Ok, root-a-k_p is no longer pinned to file://${BASEDIR}/pinnes (a/k) (version 2)
-Ok, root-a-i_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (a/i) (version 2)
-Ok, root-a-i-j_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (a/i/j) (version 2)
+Ok, root_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (version l2)
+Ok, root-b_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (b) (version l2)
+Ok, root-a_p is no longer pinned to file://${BASEDIR}/pinnes (a) (version l2)
+Ok, root-a-k_p is no longer pinned to file://${BASEDIR}/pinnes (a/k) (version l2)
+Ok, root-a-i_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (a/i) (version l2)
+Ok, root-a-i-j_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (a/i/j) (version l2)
 The following actions will be performed:
 === remove 6 packages
-  - remove root-a-i-j_g l1
-  - remove root-a-i_g   l1
-  - remove root-a-k_p   l1
-  - remove root-a_p     l1
-  - remove root-b_g     l1
-  - remove root_g       l1
+  - remove root-a-i-j_g l2
+  - remove root-a-i_g   l2
+  - remove root-a-k_p   l2
+  - remove root-a_p     l2
+  - remove root-b_g     l2
+  - remove root_g       l2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   root-a-i-j_g.l1
--> removed   root-a-i_g.l1
--> removed   root-a-k_p.l1
--> removed   root-a_p.l1
--> removed   root-b_g.l1
--> removed   root_g.l1
+-> removed   root-a-i-j_g.l2
+-> removed   root-a-i_g.l2
+-> removed   root-a-k_p.l2
+-> removed   root-a_p.l2
+-> removed   root-b_g.l2
+-> removed   root_g.l2
 Done.
 ### opam pin ./pinnes --subpath a --recursive -n
 This will pin the following packages: root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p. Continue? [y/n] y
