@@ -12,6 +12,7 @@
 open OpamTypes
 open OpamStateTypes
 open OpamStd.Op
+open OpamStd.Option.Op
 
 let log fmt = OpamConsole.log "COMMAND" fmt
 let slog = OpamConsole.slog
@@ -28,7 +29,7 @@ let string_of_pinned opam =
        (OpamFile.OPAM.url opam))
     (bold (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
 
-let read_opam_file_for_pinning ?(quiet=false) name f url =
+let read_opam_file_for_pinning ?locked ?(quiet=false) name f url =
   let opam0 =
     let dir = OpamFilename.dirname (OpamFile.filename f) in
     (* don't add aux files for [project/opam] *)
@@ -56,6 +57,7 @@ let read_opam_file_for_pinning ?(quiet=false) name f url =
           (OpamUrl.to_string url);
         OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string warns)));
   opam0
+  >>| OpamFile.OPAM.with_locked_opt locked
 
 
 exception Fetch_Fail of string
@@ -86,8 +88,8 @@ let get_source_definition ?version ?subpath ?locked st nv url =
     let srcdir = OpamFilename.SubPath.(srcdir /? subpath) in
     match OpamPinned.find_opam_file_in_source ?locked nv.name srcdir with
     | None -> None
-    | Some f ->
-      match read_opam_file_for_pinning nv.name f (OpamFile.URL.url url) with
+    | Some (f, locked) ->
+      match read_opam_file_for_pinning nv.name ?locked f (OpamFile.URL.url url) with
       | None ->
         let dst =
           OpamFile.filename
@@ -285,12 +287,11 @@ let edit st ?version name =
       OpamFilename.remove (OpamFile.filename temp_file);
 
       (* Save back to source *)
-      ignore OpamStd.Option.Op.(
+      ignore (
           OpamFile.OPAM.get_url opam >>= OpamUrl.local_dir >>| fun dir ->
           let src_opam =
-            OpamStd.Option.default
-              (OpamFile.make OpamFilename.Op.(dir // "opam"))
-              (OpamPinned.find_opam_file_in_source name dir)
+              (OpamPinned.find_opam_file_in_source name dir >>| fst)
+              +! (OpamFile.make OpamFilename.Op.(dir // "opam"))
           in
           let clean_opam =
             OpamFile.OPAM.with_url_opt None @*
@@ -462,8 +463,6 @@ and source_pin
               (OpamSwitchState.find_installed_package_by_name st name))
     with Not_found -> None
   in *)
-
-  let open OpamStd.Option.Op in
 
   let cur_version, cur_urlf =
     try
@@ -786,13 +785,15 @@ let list st ~short =
 let scan_sep = '^'
 
 let scan ~normalise ~recurse ?subpath url =
-  let open OpamStd.Option.Op in
   let pins_of_dir dir =
     OpamPinned.files_in_source_w_target
       ?locked:OpamStateConfig.(!r.locked)
       ~recurse ?subpath url dir
     |> OpamStd.List.filter_map (fun nf ->
-        let opam = OpamFile.OPAM.safe_read nf.pin.pin_file in
+        let opam =
+          OpamFile.OPAM.(safe_read nf.pin.pin_file
+                         |> with_locked_opt nf.pin.pin_locked)
+        in
         match (nf.pin_name ++ OpamFile.OPAM.name_opt opam) with
         | Some name ->
           Some { pinned_name = name;

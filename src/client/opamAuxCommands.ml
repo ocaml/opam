@@ -209,6 +209,7 @@ let resolve_locals ?(quiet=false) ?locked ?recurse ?subpath
           | Some n, srcdir ->
             { pin_name = n;
               pin = { pin_file = OpamFile.make f;
+                      pin_locked = None;
                       pin_url = target_dir srcdir;
                       pin_subpath = None;
                     }} :: to_pin,
@@ -233,9 +234,10 @@ let resolve_locals ?(quiet=false) ?locked ?recurse ?subpath
     OpamConsole.error_and_exit `Bad_arguments
       "Multiple files for the same package name were specified:\n%s"
       (OpamStd.Format.itemize (fun nf ->
-           Printf.sprintf "Package %s with definition %s %s %s"
+           Printf.sprintf "Package %s with %s definition %s %s %s"
              (OpamConsole.colorise `bold
                 (OpamPackage.Name.to_string nf.pin_name))
+             (if nf.pin.pin_locked = None then "" else "locked")
              (OpamFile.to_string nf.pin.pin_file)
              (OpamConsole.colorise `blue "=>")
              (OpamUrl.to_string nf.pin.pin_url))
@@ -257,8 +259,9 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath ?locked
   in
   log "autopin: %a"
     (slog @@ OpamStd.List.to_string (fun pin ->
-         Printf.sprintf "%s => %s%s"
+         Printf.sprintf "%s%s => %s%s"
            (OpamPackage.Name.to_string pin.pin_name)
+           (if pin.pin.pin_locked = None then "" else "[locked]")
            (OpamUrl.to_string pin.pin.pin_url)
            (OpamStd.Option.to_string
               OpamFilename.SubPath.pretty_string pin.pin.pin_subpath)))
@@ -294,7 +297,9 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath ?locked
              OpamSwitchState.opam_opt st pinned_pkg,
              OpamFile.OPAM.read_opt nf.pin.pin_file
            with
-           | Some opam0, Some opam -> OpamFile.OPAM.equal opam0 opam
+           | Some opam0, Some opam ->
+             let opam = OpamFile.OPAM.with_locked_opt nf.pin.pin_locked opam in
+             OpamFile.OPAM.equal opam0 opam
            | _, _ -> false)
         with Not_found -> false)
       to_pin
@@ -317,11 +322,12 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
   let local_opams =
     List.fold_left (fun map pin ->
         let { pin_name = name;
-              pin = { pin_file = file; pin_subpath = subpath;
-                      pin_url = target }} = pin
+              pin = { pin_file = file; pin_locked = locked;
+                      pin_subpath = subpath; pin_url = target }} = pin
         in
         match
-          OpamPinCommand.read_opam_file_for_pinning ?quiet name file target
+          OpamPinCommand.read_opam_file_for_pinning
+            ?locked ?quiet name file target
         with
         | None -> map
         | Some opam ->
@@ -442,10 +448,13 @@ let autopin st ?(simulate=false) ?quiet ?locked ?recurse ?subpath
     try
       List.fold_left (fun (st, pins) pin ->
           let { pin_name = name;
-                pin = { pin_file = file; pin_subpath = subpath;
-                        pin_url = target; _}} = pin
+                pin = { pin_file = file; pin_locked = locked;
+                        pin_subpath = subpath; pin_url = target }} = pin
           in
-          match OpamPinCommand.read_opam_file_for_pinning ?quiet name file target with
+          match
+            OpamPinCommand.read_opam_file_for_pinning
+              ?locked ?quiet name file target
+          with
           | None -> st, pins
           | Some opam ->
             let st =

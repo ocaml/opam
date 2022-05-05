@@ -174,6 +174,7 @@ type provenance = [ `Env          (** Environment variable *)
    directly ; use rather below defined types ;*)
 type 'url _topin_opamfile = {
   pin_file: OpamFile.OPAM.t OpamFile.t;
+  pin_locked: string option;
   pin_subpath: subpath option;
   pin_url: 'url;
 }

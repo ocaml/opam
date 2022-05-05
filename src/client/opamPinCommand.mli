@@ -90,7 +90,8 @@ val parse_pins:
     'files/' subdir (unless the file is directly below the specified, local
     [url]), and returns it *)
 val read_opam_file_for_pinning:
-  ?quiet:bool -> name -> OpamFile.OPAM.t OpamFile.t -> url -> OpamFile.OPAM.t option
+  ?locked:string -> ?quiet:bool -> name -> OpamFile.OPAM.t OpamFile.t -> url ->
+  OpamFile.OPAM.t option
 
 (** The default version for pinning a package: depends on the state, what is
     installed and available, and defaults to [~dev]. *)

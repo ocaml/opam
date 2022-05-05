@@ -64,6 +64,7 @@ let select_packages atom_locs st =
                  >>| OpamFile.URL.url
                  >>= OpamUrl.local_dir
                  >>= OpamPinned.find_opam_file_in_source name
+                 >>| fst
                  >>| OpamFile.OPAM.read
                with
                | Some opam ->

@@ -3070,7 +3070,10 @@ let pin ?(unpin_only=false) cli =
           |> List.map (fun nf ->
               { pinned_name = nf.pin_name;
                 pinned_version = None;
-                pinned_opam = OpamFile.OPAM.read_opt nf.pin.pin_file;
+                pinned_opam =
+                  OpamFile.OPAM.read_opt nf.pin.pin_file
+                  |> OpamStd.Option.map
+                    (OpamFile.OPAM.with_locked_opt nf.pin.pin_locked);
                 pinned_url = nf.pin.pin_url;
                 pinned_subpath = nf.pin.pin_subpath;
               })
@@ -3106,7 +3109,10 @@ let pin ?(unpin_only=false) cli =
               |> List.map (fun nf ->
                   { pinned_name = nf.pin_name;
                     pinned_version = None;
-                    pinned_opam = OpamFile.OPAM.read_opt nf.pin.pin_file;
+                    pinned_opam =
+                      OpamFile.OPAM.read_opt nf.pin.pin_file
+                      |> OpamStd.Option.map
+                        (OpamFile.OPAM.with_locked_opt nf.pin.pin_locked);
                     pinned_url = url;
                     pinned_subpath = nf.pin.pin_subpath;
                   })

@@ -228,11 +228,11 @@ let pinned_package st ?version ?(working_dir=false) name =
     let old_source_opam_hash, old_source_opam =
       match OpamPinned.find_opam_file_in_source name srcdir_find with
       | None -> None, None
-      | Some f ->
+      | Some (f, lock) ->
         Some (OpamHash.compute (OpamFile.to_string f)),
         try
           Some (OpamFile.OPAM.read f |> OpamFile.OPAM.with_name name |>
-                add_extra_files srcdir f)
+                add_extra_files srcdir f |> OpamFile.OPAM.with_locked_opt lock)
         with e -> OpamStd.Exn.fatal e; None
     in
     let repo_opam =
@@ -265,7 +265,8 @@ let pinned_package st ?version ?(working_dir=false) name =
     (* Do the update *)
     fetch_dev_package urlf srcdir ~working_dir ?subpath nv @@+ fun result ->
     let new_source_opam =
-      OpamPinned.find_opam_file_in_source name srcdir_find >>= fun f ->
+      OpamPinned.find_opam_file_in_source name srcdir_find
+      >>= fun (f, lock) ->
       let warns, opam_opt = OpamFileTools.lint_file f in
       let warns, opam_opt = match opam_opt with
         | Some opam0 ->
@@ -287,6 +288,7 @@ let pinned_package st ?version ?(working_dir=false) name =
          OpamConsole.errmsg "%s\n"
            (OpamFileTools.warns_to_string warns));
       opam_opt >>| OpamFile.OPAM.with_name name >>| add_extra_files srcdir f
+      >>| OpamFile.OPAM.with_locked_opt lock
     in
     let equal_opam a b =
       let cleanup_opam o =
