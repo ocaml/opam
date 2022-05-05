@@ -158,30 +158,30 @@ Ok, tolock is no longer pinned to file://${BASEDIR}/tolock (version 1)
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
-  - install bar    3   [required by tolock]
-  - install foo    2   [required by tolock]
-  - install tolock dev
+  - install bar    3            [required by tolock]
+  - install foo    2            [required by tolock]
+  - install tolock dev (pinned)
 ### # ERROR
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
-  - install bar    1 [required by tolock]
-  - install baz    1 [required by tolock]
-  - install foo    1 [required by tolock]
-  - install tolock 1
+  - install bar    1          [required by tolock]
+  - install baz    1          [required by tolock]
+  - install foo    1          [required by tolock]
+  - install tolock 1 (pinned)
 ### : install with filename :
 ### opam install ./tolock/tolock.opam --show
 The following actions would be performed:
 === install 3 packages
-  - install bar    3   [required by tolock]
-  - install foo    2   [required by tolock]
-  - install tolock dev
+  - install bar    3            [required by tolock]
+  - install foo    2            [required by tolock]
+  - install tolock dev (pinned)
 ### opam install ./tolock/tolock.opam --locked --show
 The following actions would be performed:
 === install 3 packages
-  - install bar    3   [required by tolock]
-  - install foo    2   [required by tolock]
-  - install tolock dev
+  - install bar    3            [required by tolock]
+  - install foo    2            [required by tolock]
+  - install tolock dev (pinned)
 ### opam install ./tolock/tolock.opam --locked
 Package tolock does not exist, create as a NEW package? [y/n] y
 tolock is now pinned to file://${BASEDIR}/tolock (version dev)
@@ -562,17 +562,17 @@ Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#master (version 1
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
-  - install bar    3   [required by tolock]
-  - install foo    2   [required by tolock]
-  - install tolock dev
+  - install bar    3            [required by tolock]
+  - install foo    2            [required by tolock]
+  - install tolock dev (pinned)
 ### # ERROR
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
-  - install bar    1 [required by tolock]
-  - install baz    1 [required by tolock]
-  - install foo    1 [required by tolock]
-  - install tolock 1
+  - install bar    1          [required by tolock]
+  - install baz    1          [required by tolock]
+  - install foo    1          [required by tolock]
+  - install tolock 1 (pinned)
 ### opam pin ./tolock -n
 Package tolock does not exist, create as a NEW package? [y/n] y
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version dev)
@@ -622,17 +622,17 @@ Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#master (version 1
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
-  - install bar    3   [required by tolock]
-  - install foo    2   [required by tolock]
-  - install tolock dev
+  - install bar    3            [required by tolock]
+  - install foo    2            [required by tolock]
+  - install tolock dev (pinned)
 ### # ERROR
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
-  - install bar    1 [required by tolock]
-  - install baz    1 [required by tolock]
-  - install foo    1 [required by tolock]
-  - install tolock 1
+  - install bar    1          [required by tolock]
+  - install baz    1          [required by tolock]
+  - install foo    1          [required by tolock]
+  - install tolock 1 (pinned)
 ### opam pin ./tolock -n
 Package tolock does not exist, create as a NEW package? [y/n] y
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version dev)
@@ -682,17 +682,17 @@ Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#master (version 1
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
-  - install bar    3   [required by tolock]
-  - install foo    2   [required by tolock]
-  - install tolock dev
+  - install bar    3            [required by tolock]
+  - install foo    2            [required by tolock]
+  - install tolock dev (pinned)
 ### # ERROR
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
-  - install bar    1 [required by tolock]
-  - install baz    1 [required by tolock]
-  - install foo    1 [required by tolock]
-  - install tolock 1
+  - install bar    1          [required by tolock]
+  - install baz    1          [required by tolock]
+  - install foo    1          [required by tolock]
+  - install tolock 1 (pinned)
 ### opam pin ./tolock -n
 Package tolock does not exist, create as a NEW package? [y/n] y
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version dev)
