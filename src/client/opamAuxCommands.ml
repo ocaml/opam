@@ -205,11 +205,18 @@ let resolve_locals ?(quiet=false) ?locked ?recurse ?subpath
           in
           to_pin, atoms
         | `Filename f ->
+          let f, locked =
+            match locked with
+            | None -> f, None
+            | Some ext ->
+              let flocked = OpamFilename.add_extension f ext in
+              if OpamFilename.exists flocked then flocked, locked else f, None
+          in
           match name_and_dir_of_opam_file ?locked f with
           | Some n, srcdir ->
             { pin_name = n;
               pin = { pin_file = OpamFile.make f;
-                      pin_locked = None;
+                      pin_locked = locked;
                       pin_url = target_dir srcdir;
                       pin_subpath = None;
                     }} :: to_pin,
