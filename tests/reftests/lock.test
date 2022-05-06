@@ -177,46 +177,40 @@ The following actions would be performed:
   - install tolock dev (pinned)
 ### opam install ./tolock/tolock.opam --locked --show
 The following actions would be performed:
-=== install 3 packages
-  - install bar    3            [required by tolock]
-  - install foo    2            [required by tolock]
-  - install tolock dev (pinned)
+=== install 4 packages
+  - install bar    1          [required by tolock]
+  - install baz    1          [required by tolock]
+  - install foo    1          [required by tolock]
+  - install tolock 1 (pinned)
 ### opam install ./tolock/tolock.opam --locked
 Package tolock does not exist, create as a NEW package? [y/n] y
-tolock is now pinned to file://${BASEDIR}/tolock (version dev)
+tolock is now pinned to file://${BASEDIR}/tolock (version 1)
 The following actions will be performed:
-=== install 3 packages
-  - install bar    3            [required by tolock]
-  - install foo    2            [required by tolock]
-  - install tolock dev (pinned)
+=== install 4 packages
+  - install bar    1          [required by tolock]
+  - install baz    1          [required by tolock]
+  - install foo    1          [required by tolock]
+  - install tolock 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed bar.3
--> installed foo.2
--> retrieved tolock.dev  (file://${BASEDIR}/tolock)
--> installed tolock.dev
+-> installed bar.1
+-> installed baz.1
+-> installed foo.1
+-> retrieved tolock.1  (file://${BASEDIR}/tolock)
+-> installed tolock.1
 Done.
 ### : subdirectories :
 ### opam remove tolock
 The following actions will be performed:
 === remove 1 package
-  - remove tolock dev (pinned)
+  - remove tolock 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   tolock.dev
+-> removed   tolock.1
 Done.
 ### <pin:old1/opam/oldlock.opam>
 opam-version: "2.0"
 depends: "foo"
-### opam install foo.1
-The following actions will be performed:
-=== downgrade 1 package
-  - downgrade foo 2 to 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   foo.2
--> installed foo.1
-Done.
 ### opam pin -n old1
 Package oldlock does not exist, create as a NEW package? [y/n] y
 oldlock is now pinned to file://${BASEDIR}/old1 (version dev)
