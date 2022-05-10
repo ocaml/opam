@@ -67,7 +67,8 @@ module VCS : OpamVCS.VCS = struct
      | Some sp ->
        git repo_root [ "config"; "--local"; "core.sparseCheckout"; "true" ]
        @@> fun r -> OpamSystem.raise_on_process_error r;
-       OpamFilename.write (repo_root / ".git" / "info" // "sparse-checkout") sp;
+       OpamFilename.write (repo_root / ".git" / "info" // "sparse-checkout")
+         (OpamFilename.SubPath.normalised_string sp);
        Done()
      | None -> Done())
     @@+ fun _ ->
@@ -126,11 +127,11 @@ module VCS : OpamVCS.VCS = struct
         (* the above might still fail on raw, untracked hashes: try to bind to
            the direct refspec, if found *)
         (git repo_root [ "update-ref" ; opam_ref; branch ] @@> fun r ->
-          if OpamProcess.check_success_and_cleanup r then
-            Done()
-          else
-            (* check if the commit exists *)
-            (git repo_root [ "fetch"; "-q" ] @@> fun r ->
+         if OpamProcess.check_success_and_cleanup r then
+           Done()
+         else
+           (* check if the commit exists *)
+           (git repo_root [ "fetch"; "-q" ] @@> fun r ->
             OpamSystem.raise_on_process_error r;
             git repo_root [ "show"; "-s"; "--format=%H"; branch ] @@> fun r ->
             if OpamProcess.check_success_and_cleanup r then
@@ -209,9 +210,11 @@ module VCS : OpamVCS.VCS = struct
     else
       Done (Some (OpamFilename.of_string patch_file))
 
-  let is_up_to_date repo_root repo_url =
+  let is_up_to_date ?subpath repo_root repo_url =
     let rref = remote_ref repo_url in
-    git repo_root [ "diff" ; "--no-ext-diff" ; "--quiet" ; rref; "--" ]
+    git repo_root ([ "diff" ; "--no-ext-diff" ; "--quiet" ; rref; "--" ]
+                   @ List.map OpamFilename.SubPath.to_string
+                     (OpamStd.Option.to_list subpath))
     @@> function
     | { OpamProcess.r_code = 0; _ } -> Done true
     | { OpamProcess.r_code = 1; _ } as r ->
@@ -221,7 +224,7 @@ module VCS : OpamVCS.VCS = struct
   let versioned_files repo_root =
     git repo_root ~verbose:false [ "ls-files" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
-    Done r.OpamProcess.r_stdout
+    Done (List.map OpamSystem.forward_to_back r.OpamProcess.r_stdout)
 
   let vc_dir repo_root = OpamFilename.Op.(repo_root / ".git")
 
@@ -237,7 +240,8 @@ module VCS : OpamVCS.VCS = struct
     let subpath =
       match subpath with
       | None -> []
-      | Some dir -> ["--" ; dir] in
+      | Some dir -> ["--" ; OpamFilename.SubPath.to_string dir]
+      in
     git dir ([ "diff"; "--no-ext-diff"; "--quiet" ; "HEAD" ] @ subpath)
     @@> function
     | { OpamProcess.r_code = 0; _ } ->

@@ -119,7 +119,7 @@ module VCS = struct
     with Not_found ->
       Done None
 
-  let is_up_to_date repo_root _repo_url =
+  let is_up_to_date ?subpath:_ repo_root _repo_url =
     darcs repo_root [ "log"; "-p"; opam_reverse_commit; "--last"; "2" ]
     (* last 2 since the tag counts as one *)
     @@> function

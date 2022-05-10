@@ -36,8 +36,8 @@ val name_and_dir_of_opam_file: filename -> name option * dirname
 (** From a directory, retrieve its opam files and returns packages name, opam
     file and subpath option *)
 val opams_of_dir:
-  ?recurse:bool -> ?subpath:string ->
-  OpamFilename.Dir.t -> (name * OpamFile.OPAM.t OpamFile.t * string option) list
+  ?recurse:bool -> ?subpath:subpath ->
+  OpamFilename.Dir.t -> (name * OpamFile.OPAM.t OpamFile.t * subpath option) list
 
 (** Like [opam_of_dirs], but changes the pinning_url if needed. If given [url]
     is local dir with vcs backend, and opam files not versioned, its pinning url
@@ -45,9 +45,9 @@ val opams_of_dir:
     package information (name, opam file, new_url, subpath) are added to the
     returned list, otherwise it is discarded. *)
 val opams_of_dir_w_target:
-  ?recurse:bool -> ?subpath:string ->
+  ?recurse:bool -> ?subpath:subpath ->
   ?same_kind:(OpamUrl.t -> bool) -> OpamUrl.t -> OpamFilename.Dir.t ->
-  (name * OpamFile.OPAM.t OpamFile.t * OpamUrl.t * string option) list
+  (name * OpamFile.OPAM.t OpamFile.t * OpamUrl.t * subpath option) list
 
 (** Resolves the opam files and directories in the list to package name and
     location, and returns the corresponding pinnings and atoms. May fail and
@@ -55,9 +55,10 @@ val opams_of_dir_w_target:
     the same package name appears multiple times.
 *)
 val resolve_locals:
-  ?quiet:bool -> ?recurse:bool -> ?subpath:string ->
+  ?quiet:bool -> ?recurse:bool -> ?subpath:subpath ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
-  (name * OpamUrl.t * string option * OpamFile.OPAM.t OpamFile.t) list * atom list
+  (name * OpamUrl.t * subpath option * OpamFile.OPAM.t OpamFile.t) list
+  * atom list
 
 (** Resolves the opam files and directories in the list to package name and
     location, according to what is currently pinned, and returns the
@@ -65,7 +66,7 @@ val resolve_locals:
     is pinned, or opam files corresponding to no pinned package.
 *)
 val resolve_locals_pinned:
-  'a switch_state -> ?recurse:bool -> ?subpath:string ->
+  'a switch_state -> ?recurse:bool -> ?subpath:subpath ->
   [ `Atom of atom | `Dirname of dirname ] list ->
   atom list
 
@@ -85,7 +86,7 @@ val autopin:
   ?simulate:bool ->
   ?quiet:bool ->
   ?recurse:bool ->
-  ?subpath:string ->
+  ?subpath:subpath ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   rw switch_state * atom list
 
@@ -100,7 +101,7 @@ val simulate_autopin:
   ?quiet:bool ->
   ?for_view:bool ->
   ?recurse:bool ->
-  ?subpath:string ->
+  ?subpath:subpath ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   'a switch_state * atom list
 

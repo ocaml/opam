@@ -696,7 +696,8 @@ let primary_url_with_subpath st nv =
     let url = OpamFile.URL.url urlf in
     match OpamFile.URL.subpath urlf with
     | None -> Some url
-    | Some subpath -> Some (OpamUrl.Op.(url / subpath))
+    | Some subpath ->
+      Some OpamUrl.Op.(url / (OpamFilename.SubPath.to_string subpath))
 
 let files st nv =
   match opam_opt st nv with

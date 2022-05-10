@@ -45,8 +45,8 @@ module type S = sig
       [checksum] can be used for retrieval but is NOT checked by this
       function. *)
   val pull_url:
-    ?cache_dir:dirname -> ?subpath:string -> dirname -> OpamHash.t option -> url ->
-    filename option download OpamProcess.job
+    ?cache_dir:dirname -> ?subpath:subpath -> dirname -> OpamHash.t option ->
+    url -> filename option download OpamProcess.job
 
   (** [pull_repo_update] fetches the remote update from [url] to the local
       repository at [dirname], but does not apply it, allowing for further
@@ -73,7 +73,8 @@ module type S = sig
       [pull_url], then remove deleted files, and finally copy via rsync
       unversioned & modified-uncommitted files. *)
   val sync_dirty:
-    ?subpath:string -> dirname -> url -> filename option download OpamProcess.job
+    ?subpath:subpath -> dirname -> url ->
+    filename option download OpamProcess.job
 
   (** [get_remote_url ?hash dirname] return the distant url of repo [dirname], \
       if found. When [hash] is specified, it checks that this hash (branch or \

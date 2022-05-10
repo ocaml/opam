@@ -79,7 +79,7 @@ module VCS = struct
     else
       Done (Some (OpamFilename.of_string patch_file))
 
-  let is_up_to_date repo_root repo_url =
+  let is_up_to_date ?subpath:_ repo_root repo_url =
     let mark = mark_from_url repo_url in
     hg repo_root [ "status"; "--subrepos"; "--rev"; mark ] @@> fun r ->
     OpamSystem.raise_on_process_error r;

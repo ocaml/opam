@@ -183,7 +183,8 @@ let fetch_dev_package url srcdir ?(working_dir=false) ?subpath nv =
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
   let checksum = OpamFile.URL.checksum url in
   log "updating %a%a" (slog OpamUrl.to_string) remote_url
-    (slog (OpamStd.Option.map_default (fun s -> " ("^s^")") "")) subpath;
+    (slog (OpamStd.Option.to_string OpamFilename.SubPath.pretty_string))
+    subpath;
   OpamRepository.pull_tree
     ~cache_dir:(OpamRepositoryPath.download_cache OpamStateConfig.(!r.root_dir))
     (OpamPackage.to_string nv) srcdir checksum ~working_dir ?subpath mirrors
@@ -217,10 +218,7 @@ let pinned_package st ?version ?(working_dir=false) name =
       else opam
     in
     (* append subpath to source dir to retrieve opam files *)
-    let srcdir_find =
-      OpamStd.Option.map_default
-        (fun x -> OpamFilename.Op.(srcdir / x)) srcdir subpath
-    in
+    let srcdir_find = OpamFilename.SubPath.(srcdir /? subpath) in
     let old_source_opam_hash, old_source_opam =
       match OpamPinned.find_opam_file_in_source name srcdir_find with
       | None -> None, None
@@ -255,7 +253,8 @@ let pinned_package st ?version ?(working_dir=false) name =
            OpamConsole.note
              "Ignoring uncommitted changes in %s%s (`--working-dir' not active)."
              url.OpamUrl.path
-             (match subpath with None -> "" | Some s -> "/" ^ s))
+             (OpamStd.Option.to_string (fun sp ->
+                  Filename.dir_sep ^ OpamFilename.SubPath.to_string sp) subpath))
     @@+ fun () ->
     (* Do the update *)
     fetch_dev_package urlf srcdir ~working_dir ?subpath nv @@+ fun result ->
@@ -403,7 +402,8 @@ let dev_package st ?working_dir nv =
     if (OpamFile.URL.url url).OpamUrl.backend = `http then
       Done ((fun st -> st), false)
     else
-      fetch_dev_package url (OpamSwitchState.source_dir st nv) ?working_dir nv
+      fetch_dev_package url (OpamSwitchState.source_dir st nv)
+        ?subpath:(OpamFile.URL.subpath url) ?working_dir nv
       @@| fun result ->
       (fun st -> st), match result with Result () -> true | _ -> false
 
@@ -541,7 +541,12 @@ let download_package_source_t st url nv_dirs =
     | None -> Done None
     | Some url ->
       let dirnames =
-        List.map (fun (nv, dir) -> OpamPackage.to_string nv, dir) nv_dirs
+        List.map (fun (nv, dir) ->
+            OpamPackage.to_string nv, dir,
+            OpamStd.Option.Op.(OpamSwitchState.opam st nv
+                               |> OpamFile.OPAM.url
+                               >>= OpamFile.URL.subpath))
+          nv_dirs
       in
       (OpamRepository.pull_shared_tree ~cache_dir ~cache_urls
          dirnames

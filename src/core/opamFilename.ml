@@ -498,6 +498,28 @@ end
 module Map = OpamStd.Map.Make(O)
 module Set = OpamStd.Set.Make(O)
 
+module SubPath = struct
+
+  include OpamStd.AbstractString
+
+  let compare = String.compare
+  let equal = String.equal
+
+  let of_string s =
+    OpamSystem.back_to_forward s
+    |> OpamStd.String.remove_prefix ~prefix:"./"
+    |> of_string
+  let to_string = OpamSystem.forward_to_back
+  let pretty_string s = "("^s^")"
+  let normalised_string s = s
+
+  let (/) d s = d / to_string s
+  let (/?) d = function
+    | None -> d
+    | Some s -> d / to_string s
+
+end
+
 module Op = struct
 
   let (/) = (/)

@@ -197,7 +197,7 @@ val assume_built: OpamCLIVersion.Sourced.t -> bool Term.t
    remove, (re)install
    Disabled *)
 val recurse: OpamCLIVersion.Sourced.t -> bool Term.t
-val subpath: OpamCLIVersion.Sourced.t -> string option Term.t
+val subpath: OpamCLIVersion.Sourced.t -> subpath option Term.t
 
 (** Applly build options *)
 val apply_build_options: OpamCLIVersion.Sourced.t -> build_options -> unit

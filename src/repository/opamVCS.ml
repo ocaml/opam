@@ -17,16 +17,18 @@ module type VCS = sig
   val name: OpamUrl.backend
   val exists: dirname -> bool
   val init: dirname -> url -> unit OpamProcess.job
-  val fetch: ?cache_dir:dirname -> ?subpath:string -> dirname -> url -> unit OpamProcess.job
+  val fetch:
+    ?cache_dir:dirname -> ?subpath:subpath -> dirname -> url ->
+    unit OpamProcess.job
   val reset_tree: dirname -> url -> unit OpamProcess.job
   val patch_applied: dirname -> url -> unit OpamProcess.job
   val diff: dirname -> url -> filename option OpamProcess.job
-  val is_up_to_date: dirname -> url -> bool OpamProcess.job
+  val is_up_to_date: ?subpath:subpath -> dirname -> url -> bool OpamProcess.job
   val revision: dirname -> string option OpamProcess.job
   val versioned_files: dirname -> string list OpamProcess.job
   val vc_dir: dirname -> dirname
   val current_branch: dirname -> string option OpamProcess.job
-  val is_dirty: ?subpath:string -> dirname -> bool OpamProcess.job
+  val is_dirty: ?subpath:subpath -> dirname -> bool OpamProcess.job
   val modified_files: dirname -> string list OpamProcess.job
   val get_remote_url: ?hash:string -> dirname -> url option OpamProcess.job
 end
@@ -84,7 +86,7 @@ module Make (VCS: VCS) = struct
     @@ fun () ->
     if VCS.exists dirname then
       VCS.fetch ?cache_dir ?subpath dirname url @@+ fun () ->
-      VCS.is_up_to_date dirname url @@+ function
+      VCS.is_up_to_date ?subpath dirname url @@+ function
       | true -> Done (Up_to_date None)
       | false ->
         VCS.reset_tree dirname url @@+ fun () ->
@@ -107,7 +109,8 @@ module Make (VCS: VCS) = struct
       | Some sp ->
         OpamStd.List.filter_map
           (fun f ->
-             if OpamStd.String.remove_prefix ~prefix:(sp ^ Filename.dir_sep) f
+             if OpamStd.String.remove_prefix
+                 ~prefix:(OpamFilename.SubPath.to_string sp ^ Filename.dir_sep) f
                 <> f then Some f else None)
           files
     in
