@@ -534,7 +534,7 @@ ${BASEDIR}/lint.opam: Errors.
 # Return code 1 #
 ### : E53: Mismatching 'extra-files:' field
 ### opam lint --package lint
-${BASEDIR}/OPAM/repo/default/packages/lint/lint.1/opam: Errors.
+<default>/lint.1: Errors.
              error 53: Mismatching 'extra-files:' field: "more-file"
 # Return code 1 #
 ### OPAMREPOSITORYTARRING=1
@@ -543,8 +543,9 @@ ${BASEDIR}/OPAM/repo/default/packages/lint/lint.1/opam: Errors.
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/REPO
 ### opam lint --package lint
-[ERROR] File ${OPAMTMP}/default/packages/lint/lint.1/opam not found
-# Return code 2 #
+<default>/lint.1: Errors.
+             error 53: Mismatching 'extra-files:' field: "more-file"
+# Return code 1 #
 ### : W54: External dependencies should not contain spaces nor empty string
 ### <lint.opam>
 opam-version: "2.0"
