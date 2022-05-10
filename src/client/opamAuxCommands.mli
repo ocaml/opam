@@ -37,7 +37,7 @@ val name_and_dir_of_opam_file: filename -> name option * dirname
     file and subpath option *)
 val opams_of_dir:
   ?recurse:bool -> ?subpath:subpath ->
-  OpamFilename.Dir.t -> (name * OpamFile.OPAM.t OpamFile.t * subpath option) list
+  OpamFilename.Dir.t ->  name_and_file list
 
 (** Like [opam_of_dirs], but changes the pinning_url if needed. If given [url]
     is local dir with vcs backend, and opam files not versioned, its pinning url
@@ -47,7 +47,7 @@ val opams_of_dir:
 val opams_of_dir_w_target:
   ?recurse:bool -> ?subpath:subpath ->
   ?same_kind:(OpamUrl.t -> bool) -> OpamUrl.t -> OpamFilename.Dir.t ->
-  (name * OpamFile.OPAM.t OpamFile.t * OpamUrl.t * subpath option) list
+  name_and_file_w_url list
 
 (** Resolves the opam files and directories in the list to package name and
     location, and returns the corresponding pinnings and atoms. May fail and
@@ -57,8 +57,7 @@ val opams_of_dir_w_target:
 val resolve_locals:
   ?quiet:bool -> ?recurse:bool -> ?subpath:subpath ->
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
-  (name * OpamUrl.t * subpath option * OpamFile.OPAM.t OpamFile.t) list
-  * atom list
+  name_and_file_w_url list * atom list
 
 (** Resolves the opam files and directories in the list to package name and
     location, according to what is currently pinned, and returns the

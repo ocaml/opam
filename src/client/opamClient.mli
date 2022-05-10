@@ -143,9 +143,7 @@ module PIN: sig
 
   val url_pins:
     rw switch_state -> ?edit:bool -> ?action:bool -> ?locked:bool ->
-    ?pre:((name * version option * OpamFile.OPAM.t option * url * subpath option)
-          -> unit) ->
-    (name * version option * OpamFile.OPAM.t option * url * subpath option) list ->
+    ?pre:(pinned_opam -> unit) -> pinned_opam list ->
     rw switch_state
 
   val unpin:

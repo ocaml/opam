@@ -1448,32 +1448,27 @@ module PIN = struct
     | OpamPinCommand.Nothing_to_do -> st
 
   let url_pins st ?edit ?(action=true) ?locked ?(pre=fun _ -> ()) pins =
-    let names = List.map (fun (n,_,_,_,_) -> n) pins in
+    let names = List.map (fun p -> p.pinned_name) pins in
     (match names with
-    | _::_::_ ->
-      if not (OpamConsole.confirm
-                "This will pin the following packages: %s. Continue?"
-                (OpamStd.List.concat_map ", " OpamPackage.Name.to_string names))
-      then
-        OpamStd.Sys.exit_because `Aborted
-    | _ -> ());
-    let pins =
-      let urls_ok =
-        OpamPinCommand.fetch_all_pins st
-          (List.map (fun (name, _, _, url, subpath) ->
-               name, url, subpath) pins)
-      in
-      List.filter (fun (_,_,_, url, subpath) ->
-          List.mem (url, subpath) urls_ok)
-        pins
-    in
+     | _::_::_ ->
+       if not (OpamConsole.confirm
+                 "This will pin the following packages: %s. Continue?"
+                 (OpamStd.List.concat_map ", "
+                    OpamPackage.Name.to_string names))
+       then
+         OpamStd.Sys.exit_because `Aborted
+     | _ -> ());
+    let pins = OpamPinCommand.fetch_all_pins st pins in
     let pinned = st.pinned in
     let st =
-      List.fold_left (fun st (name, version, opam, url, subpath as pin) ->
+      List.fold_left (fun st pin ->
           pre pin;
           try
-            OpamPinCommand.source_pin st name ?version ?opam
-              ?edit ?subpath ?locked (Some url)
+            OpamPinCommand.source_pin st pin.pinned_name
+              ?version:pin.pinned_version
+              ?opam:pin.pinned_opam
+              ?subpath:pin.pinned_subpath
+              ?edit ?locked (Some pin.pinned_url)
           with
           | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
           | OpamPinCommand.Nothing_to_do -> st)

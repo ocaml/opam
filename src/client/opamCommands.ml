@@ -791,7 +791,7 @@ let show cli =
   let opam_files_in_dir d =
     match OpamPinned.files_in_source d with
     | [] -> []
-    | l -> List.map (fun (_,f,_) -> f) l
+    | l -> List.map (fun nf -> nf.pin.pin_file) l
   in
   let show global_options fields show_empty raw where
       list_files file normalise no_lint just_file all_versions sort atom_locs
@@ -3065,7 +3065,13 @@ let pin ?(unpin_only=false) cli =
         in
         let pkgs =
           OpamAuxCommands.opams_of_dir_w_target ~recurse ?subpath ~same_kind url d
-          |> List.map (fun (n,o,u,b) -> (n, OpamFile.OPAM.read_opt o, b, u))
+          |> List.map (fun nf ->
+              { pinned_name = nf.pin_name;
+                pinned_version = None;
+                pinned_opam = OpamFile.OPAM.read_opt nf.pin.pin_file;
+                pinned_url = nf.pin.pin_url;
+                pinned_subpath = nf.pin.pin_subpath;
+              })
         in
         pkgs, None
       | None ->
@@ -3094,7 +3100,13 @@ let pin ?(unpin_only=false) cli =
           | Result _ | Up_to_date _ ->
             let pkgs =
               OpamAuxCommands.opams_of_dir ~recurse ?subpath pin_cache_dir
-              |> List.map (fun (n,o,b) -> (n, OpamFile.OPAM.read_opt o, b, url))
+              |> List.map (fun nf ->
+                  { pinned_name = nf.pin_name;
+                    pinned_version = None;
+                    pinned_opam = OpamFile.OPAM.read_opt nf.pin.pin_file;
+                    pinned_url = url;
+                    pinned_subpath = nf.pin.pin_subpath;
+                  })
             in
             pkgs, Some cleanup
         with e -> OpamStd.Exn.finalise e cleanup
@@ -3272,8 +3284,11 @@ let pin ?(unpin_only=false) cli =
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       OpamSwitchState.drop @@
       OpamClient.PIN.url_pins st ~locked ~edit ~action
-        (List.map (fun (n,v,u,sb) ->
-             n, OpamStd.Option.Op.(with_version ++ v), None, u, sb) pins);
+        (List.map (fun pin ->
+             { pin with
+               pinned_version =
+                 OpamStd.Option.Op.(with_version ++ pin.pinned_version)})
+            pins);
       `Ok ()
     | `add_dev nv ->
       (match (fst package) nv with
@@ -3303,7 +3318,9 @@ let pin ?(unpin_only=false) cli =
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          OpamSwitchState.drop @@
          OpamClient.PIN.url_pins st ~locked ~edit ~action
-           (List.map (fun (n,o,u,sb) -> n,with_version,o,sb,u) names);
+           (List.map (fun pin ->
+                { pin with pinned_version = with_version })
+               names);
          `Ok ())
     | `add_current n ->
       (match (fst package) n with
@@ -3570,7 +3587,7 @@ let lint cli =
           (OpamFilename.Dir.to_string d);
         []
       | l ->
-        List.map (fun (_name,f,_) -> `file f) l
+        List.map (fun nf -> `file nf.pin.pin_file) l
     in
     let files = match files, package with
       | [], None -> (* Lookup in cwd if nothing was specified *)

@@ -224,8 +224,13 @@ let files_in_source ?(recurse=false) ?subpath d =
          (* Ignore empty files *)
          if (Unix.stat (OpamFilename.to_string f)).Unix.st_size = 0 then None
          else
-           Some (name_of_opam_filename d f, OpamFile.make f,
-                 OpamStd.Option.map OpamFilename.SubPath.of_string subpath)
+           Some { pin_name = name_of_opam_filename d f;
+                  pin = {
+                    pin_file = OpamFile.make f;
+                    pin_subpath =
+                      OpamStd.Option.map OpamFilename.SubPath.of_string subpath;
+                    pin_url = ();
+                  }}
        with Unix.Unix_error _ ->
          OpamConsole.error "Can not read %s, ignored."
            (OpamFilename.to_string f);
@@ -233,8 +238,8 @@ let files_in_source ?(recurse=false) ?subpath d =
 
 let files_in_source_w_target ?recurse ?subpath
     ?(same_kind=fun _ -> true) url dir =
-  OpamStd.List.filter_map (fun (name_opt, file, subp) ->
-      let url =
+  OpamStd.List.filter_map (fun name_and_file ->
+      let pin_url =
         match url.OpamUrl.backend with
         | #OpamUrl.version_control as vc ->
           let module VCS =
@@ -250,7 +255,8 @@ let files_in_source_w_target ?recurse ?subpath
             VCS.versioned_files dir @@| fun files -> files
           in
           let opamfile =
-            OpamFilename.remove_prefix dir (OpamFile.filename file)
+            OpamFilename.remove_prefix dir
+              (OpamFile.filename name_and_file.pin.pin_file)
           in
           if List.mem opamfile versioned_files
           || not (OpamStd.String.contains opamfile ~sub:Filename.dir_sep) then
@@ -262,7 +268,8 @@ let files_in_source_w_target ?recurse ?subpath
               backend = `rsync }
         | _ -> url
       in
-      if same_kind url then Some (name_opt, file, url, subp)
+      if same_kind pin_url then
+        Some { name_and_file with pin = { name_and_file.pin with pin_url }}
       else None)
     (files_in_source ?recurse ?subpath dir)
 

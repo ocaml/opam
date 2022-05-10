@@ -39,12 +39,12 @@ val find_opam_file_in_source:
 val files_in_source:
   ?recurse:bool ->
   ?subpath:subpath ->
-  dirname -> (name option * OpamFile.OPAM.t OpamFile.t * subpath option) list
+  dirname -> nameopt_and_file list
 
 val files_in_source_w_target:
   ?recurse:bool -> ?subpath:subpath -> ?same_kind:(url -> bool) ->
   url -> dirname ->
-  (name option * OpamFile.OPAM.t OpamFile.t * url * subpath option) list
+  nameopt_and_file_w_url list
 
 (** From an opam file location, sitting below the given project directory, find
     the corresponding package name if specified ([<name>.opam] or
