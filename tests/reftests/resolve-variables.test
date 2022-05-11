@@ -7,9 +7,14 @@ opam-version: "2.0"
 opam-version: "2.0"
 depends: "d" {> build}
 ### opam install foo
-Fatal error:
-File "src/solver/opamSolver.ml", line 268, characters 18-24: Assertion failed
-# Return code 99 #
+[WARNING] Undefined filter variable build in dependencies of foo.1
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
 ### <pkg:foo.1>
 opam-version: "2.0"
 depends: "d" {build}
@@ -29,17 +34,27 @@ opam-version: "2.0"
 depends: "d" {> "1" & > build}
 ### opam switch create resolving3 --empty
 ### opam install foo
-Fatal error:
-File "src/solver/opamSolver.ml", line 268, characters 18-24: Assertion failed
-# Return code 99 #
+[WARNING] Undefined filter variable build in dependencies of foo.1
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
 ### <pkg:foo.1>
 opam-version: "2.0"
 depends: "d" {> undef}
 ### opam switch create resolving4 --empty
 ### opam install foo
-Fatal error:
-File "src/solver/opamSolver.ml", line 268, characters 18-24: Assertion failed
-# Return code 99 #
+[WARNING] Undefined filter variable undef in dependencies of foo.1
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
 ### <pkg:foo.1>
 opam-version: "2.0"
 depends: "d" {undef}
