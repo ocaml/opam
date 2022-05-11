@@ -1,0 +1,68 @@
+N0REP0
+### OPAMYES=1 OPAMSTRICT=0
+### <pkg:d.4>
+opam-version: "2.0"
+### opam switch create resolving --empty
+### <pkg:foo.1>
+opam-version: "2.0"
+depends: "d" {> build}
+### opam install foo
+Fatal error:
+File "src/solver/opamSolver.ml", line 268, characters 18-24: Assertion failed
+# Return code 99 #
+### <pkg:foo.1>
+opam-version: "2.0"
+depends: "d" {build}
+### opam switch create resolving2 --empty
+### opam install foo
+The following actions will be performed:
+=== install 2 packages
+  - install d   4 [required by foo]
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed d.4
+-> installed foo.1
+Done.
+### <pkg:foo.1>
+opam-version: "2.0"
+depends: "d" {> "1" & > build}
+### opam switch create resolving3 --empty
+### opam install foo
+Fatal error:
+File "src/solver/opamSolver.ml", line 268, characters 18-24: Assertion failed
+# Return code 99 #
+### <pkg:foo.1>
+opam-version: "2.0"
+depends: "d" {> undef}
+### opam switch create resolving4 --empty
+### opam install foo
+Fatal error:
+File "src/solver/opamSolver.ml", line 268, characters 18-24: Assertion failed
+# Return code 99 #
+### <pkg:foo.1>
+opam-version: "2.0"
+depends: "d" {undef}
+### opam switch create resolving5 --empty
+### opam install foo
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### <pkg:foo.1>
+opam-version: "2.0"
+depends: "d" {> defin}
+### opam switch create resolving6 --empty
+### OPAMVAR_defin=2 opam install foo
+The following actions will be performed:
+=== install 2 packages
+  - install d   4 [required by foo]
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed d.4
+-> installed foo.1
+Done.
