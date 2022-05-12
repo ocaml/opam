@@ -394,3 +394,4 @@ users)
   * `OpamCoreConfig.r`: remove openssl related config: `use_openssl` parameter & config field, and `OPAMUSEOPENSSL` environment variable [#5042 @kit-ty-kate]
   * `OpamFilename`: add a `SubPath` submodule to handle multi-platform subpath specifications. It has an effect on a lot of functions signatures [#4876 @rjbou]
   * `OpamDirTrack`: Add `to_summary_string` to summarise changes [#5144 @na4zagin3]
+  * `OpamJson`: use `Jsonm` and add an `of_string` function [#5142 @rjbou]
