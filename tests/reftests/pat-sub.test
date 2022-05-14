@@ -65,5 +65,6 @@ ACTION                          pat-sub: expanding opam variables in foo.in, gen
 
 ACTION                          Installing pat-sub.0.1.
 
+ACTION                          changes recorded for pat-sub.0.1: 0 items
 -> installed pat-sub.0.1
 Done.

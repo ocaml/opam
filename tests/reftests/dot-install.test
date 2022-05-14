@@ -77,6 +77,7 @@ ACTION                          Installing nodot.~dev.
 
 ACTION                          creating ${BASEDIR}/OPAM/inst/share/nodot
 TRACK                           after install: 19 elements, 3 added, scanned in 0.000s
+ACTION                          changes recorded for nodot.~dev: 3 items (addition: 3)
 -> installed nodot.~dev
 Done.
 ### ocaml cat.ml nodot
@@ -101,6 +102,7 @@ ACTION                          Installing dot.~dev.
 
 ACTION                          creating ${BASEDIR}/OPAM/inst/share/dot
 TRACK                           after install: 2 elements, 2 added, scanned in 0.000s
+ACTION                          changes recorded for dot.~dev: 2 items (addition: 2)
 -> installed dot.~dev
 Done.
 ### ocaml cat.ml dot

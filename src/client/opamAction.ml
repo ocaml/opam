@@ -1066,7 +1066,10 @@ let install_package t ?(test=false) ?(doc=false) ?build_dir nv =
   | Left config, changes ->
     let changes_f = OpamPath.Switch.changes root t.switch nv.name in
     if OpamStateConfig.(not !r.dryrun) then
-      OpamFile.Changes.write changes_f changes;
+      (log "changes recorded for %s: %a"
+         (OpamPackage.to_string nv)
+         (slog OpamDirTrack.to_summary_string) changes;
+       OpamFile.Changes.write changes_f changes);
     OpamConsole.msg "%s installed %s.%s\n"
       (if not (OpamConsole.utf8 ()) then "->"
        else OpamActionGraph.
