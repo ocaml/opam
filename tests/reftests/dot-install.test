@@ -133,6 +133,10 @@ Done.
 hellow
 ==> dot changes
 opam-version: "2.0"
+added: [
+  "share-dot" {"D"}
+  "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+]
 ### opam reinstall dot --debug-level=0
 The following actions will be performed:
 === recompile 1 package
@@ -195,7 +199,7 @@ Done.
 ==> dot installed file
 Not found: ${BASEDIR}/OPAM/inst/share/dot/file
 ==> dot changes
-opam-version: "2.0"
+Not found: ${BASEDIR}/OPAM/inst/.opam-switch/install/dot.changes
 ### OPAMDEBUGSECTIONS="SYSTEM FILE(.config)" OPAMDEBUG=-1
 ### : check install files ordering :
 ### opam install lot-of-files | grep "mkdir\|install\|FILE"
