@@ -45,6 +45,8 @@ users)
   * Better recognize depexts on Gentoo, NetBSD, OpenBSD [#5065 @mndrix]
   * Reimplement deps-only [#4975 @AltGr]
   * ◈ Add `--formula` option to specify a formula to install [#4975 @AltGr]
+  * [BUG] Prevent `.changes` files from being updated during dry-run [#5144 @na4zagin3 - fix #5132]
+  * Log a summary of recorded `.changes` as a `ACTION` trace log to help debug #4419 [#5144 @na4zagin3]
 
 ## Remove
   *
@@ -391,3 +393,4 @@ users)
   * `OpamSHA`: use now only `sha`, some function removed (`shaxxx`, `shaxxx_bytes`, etc.) [#5042 @kit-ty-kate]
   * `OpamCoreConfig.r`: remove openssl related config: `use_openssl` parameter & config field, and `OPAMUSEOPENSSL` environment variable [#5042 @kit-ty-kate]
   * `OpamFilename`: add a `SubPath` submodule to handle multi-platform subpath specifications. It has an effect on a lot of functions signatures [#4876 @rjbou]
+  * `OpamDirTrack`: Add `to_summary_string` to summarise changes [#5144 @na4zagin3]
