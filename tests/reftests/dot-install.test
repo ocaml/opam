@@ -3,13 +3,13 @@ N0REP0
 #load "str.cma"
 
 let read file =
-  let ic = open_in file in
-  let rec aux lines =
-    try aux (input_line ic :: lines)
-    with End_of_file -> lines
-  in
-  let r = Str.regexp "/\\|\\\\\\\\" in
   try
+    let ic = open_in file in
+    let rec aux lines =
+      try aux (input_line ic :: lines)
+      with End_of_file -> lines
+    in
+    let r = Str.regexp "/\\|\\\\\\\\" in
     List.rev_map
       (Str.global_replace r "-")
       (aux [])
@@ -77,6 +77,7 @@ ACTION                          Installing nodot.~dev.
 
 ACTION                          creating ${BASEDIR}/OPAM/inst/share/nodot
 TRACK                           after install: 19 elements, 3 added, scanned in 0.000s
+ACTION                          changes recorded for nodot.~dev: 3 items (addition: 3)
 -> installed nodot.~dev
 Done.
 ### ocaml cat.ml nodot
@@ -101,6 +102,7 @@ ACTION                          Installing dot.~dev.
 
 ACTION                          creating ${BASEDIR}/OPAM/inst/share/dot
 TRACK                           after install: 2 elements, 2 added, scanned in 0.000s
+ACTION                          changes recorded for dot.~dev: 2 items (addition: 2)
 -> installed dot.~dev
 Done.
 ### ocaml cat.ml dot
@@ -112,6 +114,94 @@ added: [
   "share-dot" {"D"}
   "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
 ]
+### : Check with dry-run
+### opam reinstall dot --dry-run
+The following actions will be simulated:
+=== recompile 1 package
+  - recompile dot ~dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          download_package: dot.~dev
+ACTION                          prepare_package_source: dot.~dev at ${BASEDIR}/OPAM/inst/.opam-switch/build/dot.~dev
+ACTION                          Removing dot.~dev
+-> removed   dot.~dev
+Installing dot.~dev.
+TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
+-> installed dot.~dev
+ACTION                          Cleaning up artefacts of dot.~dev
+Done.
+### ocaml cat.ml dot
+==> dot installed file
+hellow
+==> dot changes
+opam-version: "2.0"
+added: [
+  "share-dot" {"D"}
+  "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+]
+### opam reinstall dot --debug-level=0
+The following actions will be performed:
+=== recompile 1 package
+  - recompile dot ~dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dot.~dev
+-> installed dot.~dev
+Done.
+### ocaml cat.ml dot
+==> dot installed file
+hellow
+==> dot changes
+opam-version: "2.0"
+added: [
+  "share-dot" {"D"}
+  "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+]
+### opam remove dot --dry-run
+The following actions will be simulated:
+=== remove 1 package
+  - remove dot ~dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          Removing dot.~dev
+-> removed   dot.~dev
+ACTION                          Cleaning up artefacts of dot.~dev
+ACTION                          Removing the local metadata
+Done.
+### ocaml cat.ml dot
+==> dot installed file
+hellow
+==> dot changes
+opam-version: "2.0"
+added: [
+  "share-dot" {"D"}
+  "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+]
+### opam remove dot --debug-level=0
+The following actions will be performed:
+=== remove 1 package
+  - remove dot ~dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dot.~dev
+Done.
+### opam install --dry-run dot
+The following actions will be simulated:
+=== install 1 package
+  - install dot ~dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          download_package: dot.~dev
+ACTION                          prepare_package_source: dot.~dev at ${BASEDIR}/OPAM/inst/.opam-switch/build/dot.~dev
+Installing dot.~dev.
+TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
+-> installed dot.~dev
+Done.
+### ocaml cat.ml dot
+==> dot installed file
+Not found: ${BASEDIR}/OPAM/inst/share/dot/file
+==> dot changes
+Not found: ${BASEDIR}/OPAM/inst/.opam-switch/install/dot.changes
 ### OPAMDEBUGSECTIONS="SYSTEM FILE(.config)" OPAMDEBUG=-1
 ### : check install files ordering :
 ### opam install lot-of-files | grep "mkdir\|install\|FILE"

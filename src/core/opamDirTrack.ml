@@ -48,6 +48,22 @@ let to_string t =
         (String.capitalize_ascii (string_of_change change)) f)
     (SM.bindings t)
 
+let to_summary_string t =
+  let freq_table =
+    SM.fold (fun _ change ->
+        SM.union (+) (SM.singleton (string_of_change ~full:false change) 1))
+      t
+      SM.empty
+  in
+  let freq_list =
+    OpamStd.List.concat_map ~left:" (" ~right:")" ~nil:"" "; " (fun (change, freq) ->
+        Printf.sprintf "%s: %d" change freq)
+      (SM.bindings freq_table)
+  in
+  Printf.sprintf "%d items%s"
+    (SM.cardinal t)
+    freq_list
+
 (** uid, gid, perm *)
 type perms = int * int * int
 
