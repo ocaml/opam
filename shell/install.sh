@@ -162,6 +162,7 @@ usage() {
     echo "    --fresh                Create the opam $VERSION root from scratch"
     echo "    --restore   VERSION    Restore a backed up opam binary and root"
     echo "    --version   VERSION    Install this specific version instead of $VERSION"
+    echo "    --download-only        Download binary in current directory and check its sha512"
     echo
     echo "The default is to backup if the current version of opam is 1.*, or when"
     echo "using '--fresh' or '--dev'"
@@ -377,6 +378,19 @@ while true; do
 
     if [ -d "$BINDIR" ]; then break
     else
+        if [ "${BINDIR#\~/}" != "$BINDIR" ] ; then
+            RES_BINDIR="$HOME/${BINDIR#\~/}"
+            printf "## '$BINDIR' resolves to '$RES_BINDIR', do you confirm [Y/n] "
+            read R
+            case "$R" in
+                ""|"y"|"Y"|"yes")
+                   BINDIR="$RES_BINDIR"
+                   if [ -d "$BINDIR" ]; then break; fi
+                   ;;
+                *)
+                   ;;
+            esac
+        fi
         printf "## $BINDIR does not exist. Create ? [Y/n] "
         read R
         case "$R" in
