@@ -79,14 +79,6 @@ Done.
     "ok",
     "--json=out.json"
   ],
-  "command-line": [
-    "${OPAM}",
-    "switch",
-    "create",
-    "json-no-comp",
-    "ok",
-    "--json=out.json"
-  ],
   "switch": "json-no-comp",
   "request": {
     "action": "switch",
@@ -138,14 +130,6 @@ Done.
 ### json-cat out.json
 {
   "opam-version": "currentv",
-  "command-line": [
-    "${OPAM}",
-    "switch",
-    "create",
-    "json-comp",
-    "comp",
-    "--json=out.json"
-  ],
   "command-line": [
     "${OPAM}",
     "switch",
@@ -248,12 +232,6 @@ Done.
     "ok",
     "--json=out.json"
   ],
-  "command-line": [
-    "${OPAM}",
-    "install",
-    "ok",
-    "--json=out.json"
-  ],
   "switch": "json-empty",
   "request": {
     "action": "install",
@@ -318,12 +296,6 @@ The following actions will be performed:
 ### json-cat out.json | 'macos' -> 'linux'
 {
   "opam-version": "currentv",
-  "command-line": [
-    "${OPAM}",
-    "install",
-    "ko",
-    "--json=out.json"
-  ],
   "command-line": [
     "${OPAM}",
     "install",
@@ -416,13 +388,6 @@ Done.
     "ko",
     "--json=out.json"
   ],
-  "command-line": [
-    "${OPAM}",
-    "remove",
-    "ok",
-    "ko",
-    "--json=out.json"
-  ],
   "switch": "json-empty",
   "request": {
     "action": "remove",
@@ -483,13 +448,6 @@ The former state can be restored with:
 ### json-cat out.json | 'macos' -> 'linux'
 {
   "opam-version": "currentv",
-  "command-line": [
-    "${OPAM}",
-    "install",
-    "ok",
-    "ko",
-    "--json=out.json"
-  ],
   "command-line": [
     "${OPAM}",
     "install",
@@ -614,12 +572,6 @@ Done.
     "./nip",
     "--json=out.json"
   ],
-  "command-line": [
-    "${OPAM}",
-    "pin",
-    "./nip",
-    "--json=out.json"
-  ],
   "switch": "json-empty",
   "request": {
     "action": "upgrade",
@@ -682,12 +634,6 @@ Done.
     "nip",
     "--json=out.json"
   ],
-  "command-line": [
-    "${OPAM}",
-    "unpin",
-    "nip",
-    "--json=out.json"
-  ],
   "switch": "json-empty",
   "request": {
     "action": "upgrade",
@@ -734,12 +680,6 @@ Done.
 ### json-cat out.json
 {
   "opam-version": "currentv",
-  "command-line": [
-    "${OPAM}",
-    "install",
-    "./nip",
-    "--json=out.json"
-  ],
   "command-line": [
     "${OPAM}",
     "install",
