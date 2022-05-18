@@ -34,5 +34,6 @@ depends: [
   "dune" {>= "2.0.0"}
   "cppo" {build & >= "1.1.0"}
   "sha" {>= "1.13"}
+  "jsonm"
 ]
 conflicts: "extlib-compat"

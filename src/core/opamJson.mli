@@ -20,8 +20,10 @@ type t =
 type 'a encoder = 'a -> t
 type 'a decoder = t -> 'a option
 
-val to_string : t -> string
-
 val append: string -> t -> unit
 
 val flush: out_channel -> unit
+
+val to_string : ?minify:bool -> t -> string
+
+val of_string: ?encoding:Jsonm.encoding -> string -> t option
