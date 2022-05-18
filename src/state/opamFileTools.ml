@@ -291,17 +291,17 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
   let all_expanded_strings = all_expanded_strings t in
   let all_depends = all_depends t in
   (* Upstream is checked only if it is an archive and non vcs backend *)
-  let url_is_archive =
+  let url_vcs =
     let open OpamStd.Option.Op in
     t.url >>| OpamFile.URL.url >>| (fun u ->
         match u.OpamUrl.backend with
-        | #OpamUrl.version_control -> false
-        | _ -> OpamSystem.is_archive (OpamUrl.base_url u))
+        | #OpamUrl.version_control -> true
+        | _ -> false)
   in
   let check_upstream =
     check_upstream &&
     not (OpamFile.OPAM.has_flag Pkgflag_Conf t) &&
-    url_is_archive = Some true
+    url_vcs = Some false
   in
   let warnings = [
     cond 20 `Warning
@@ -859,11 +859,9 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
               |> List.map OpamHash.to_string
               |> OpamStd.Format.pretty_list)])
           t.url)
-      (match t.url with
-       | None -> false
-       | Some urlf ->
-         (OpamFile.URL.checksum urlf <> [])
-         && url_is_archive <> Some true);
+      (url_vcs = Some true
+       && OpamStd.Option.Op.(t.url >>| fun u -> OpamFile.URL.checksum u <> [])
+          = Some true);
     cond 68 `Warning
       "Missing field 'license'"
       (t.license = []);
