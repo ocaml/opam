@@ -357,6 +357,7 @@ users)
 ## opam-state
   * `OpamSwitchState.universe`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
   * `OpamSwitchState.universe`: add a chrono for universe loading [#4975 @AltGr]
+  * `OpamSwitchState.universe`: set to false unresolved variables used in constraint, and warn [#5141 @rjbou - fix #5139]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
