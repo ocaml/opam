@@ -220,6 +220,7 @@ users)
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
   * ✘ It is no longer possible to process actions on packages that depend on a package that was removed upstream [#4969 @altgr]
   * Fix (at least some of the) empty conflict explanations [#4982 @kit-ty-kate]
+  * Fix json double printing [#5143 @rjbou]
 
 ## Internal
   * Add license and lowerbounds to opam files [#4714 @kit-ty-kate]
@@ -269,9 +270,9 @@ users)
   * Update var-option test with no switch examples [#5025]
   * Escape for cmdliner.1.1.1 output change [#5131 @rjbou]
   * Add deprectaed flag test [#4523 @kit-ty-kate]
-  * Escape for cmdliner.1.1.1 output chane [#5131 @rjbou]
   * Add deps-only, install formula [#4975 @AltGr]
   * Update opam root version test do escape `OPAMROOTVERSION` sed, it matches generated hexa temporary directory names [#5007 @AltGr]
+  * Add json output test [#5143 @rjbou]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
@@ -295,6 +296,7 @@ users)
   * Add unix only tests handling [#5031 @AltGr]
   * Add switch-set test [#4910 @kit-ty-kate]
   * Replace vars on the right-hand of exports [#5024 @AltGr]
+  * Add `json-cat` printer, with some automatic remplacements [#5143 @rjbou]
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]

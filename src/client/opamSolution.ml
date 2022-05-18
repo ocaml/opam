@@ -1395,11 +1395,8 @@ let apply ?ask t ~requested ?print_requested ?add_roots
   )
 
 let resolve t action ?reinstall ~requested request =
-  if OpamClientConfig.(!r.json_out <> None) then (
-    OpamJson.append "command-line"
-      (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)));
-    OpamJson.append "switch" (OpamSwitch.to_json t.switch)
-  );
+  if OpamClientConfig.(!r.json_out <> None) then
+    OpamJson.append "switch" (OpamSwitch.to_json t.switch);
   OpamRepositoryState.check_last_update ();
   let universe =
     OpamSwitchState.universe t ~requested ?reinstall action

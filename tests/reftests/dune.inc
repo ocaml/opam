@@ -323,6 +323,26 @@
    (run ./run.exe %{bin:opam} %{dep:install-pgocaml.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-json.unix)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (diff json.unix.test json.unix.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Unix"))
+ (deps (alias reftest-json.unix)))
+
+(rule
+ (targets json.unix.out)
+ (deps root-N0REP0)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:json.unix.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-legacy-git)
  (action
   (diff legacy-git.test legacy-git.out)))

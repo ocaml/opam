@@ -1,0 +1,732 @@
+N0REP0
+### OPAMYES=1
+### <pkg:ok.1>
+opam-version:"2.0"
+### <pkg:ko.2>
+opam-version:"2.0"
+build: [ "false" ]
+### <pkg:comp.3>
+opam-version:"2.0"
+flags: compiler
+### rm -rf $OPAMROOT
+### opam init -na default REPO --bare --bypass-checks --no-opamrc --json=out.json
+No configuration file found, using built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+### json-cat out.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "init",
+    "-na",
+    "default",
+    "REPO",
+    "--bare",
+    "--bypass-checks",
+    "--no-opamrc",
+    "--json=out.json"
+  ]
+}
+### opam list --available --json=out.json
+# Packages matching: available
+# Name # Installed # Synopsis
+comp   --
+ko     --
+ok     --
+### json-cat out.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "list",
+    "--available",
+    "--json=out.json"
+  ]
+}
+### opam switch create json-empty --empty --json=out.json
+### json-cat out.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "switch",
+    "create",
+    "json-empty",
+    "--empty",
+    "--json=out.json"
+  ]
+}
+### opam switch create json-no-comp ok --json=out.json
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ok"]
+[NOTE] Packages ok.1 don't have the 'compiler' flag set (nor any of their direct dependencies).
+       You may want to use `opam switch set-invariant' to keep a stable compiler version on upgrades.
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ok.1
+Done.
+### json-cat out.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "switch",
+    "create",
+    "json-no-comp",
+    "ok",
+    "--json=out.json"
+  ],
+  "switch": "json-no-comp",
+  "request": {
+    "action": "switch",
+    "install": [],
+    "remove": [],
+    "upgrade": [],
+    "all": [],
+    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+  },
+  "solution": [
+    {
+      "install": {
+        "name": "ok",
+        "version": "1"
+      }
+    }
+  ],
+  "results": [
+    {
+      "action": {
+        "build": {
+          "name": "ok",
+          "version": "1"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    },
+    {
+      "action": {
+        "install": {
+          "name": "ok",
+          "version": "1"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    }
+  ]
+}
+### opam switch create json-comp comp --json=out.json
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["comp"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed comp.3
+Done.
+### json-cat out.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "switch",
+    "create",
+    "json-comp",
+    "comp",
+    "--json=out.json"
+  ],
+  "switch": "json-comp",
+  "request": {
+    "action": "switch",
+    "install": [],
+    "remove": [],
+    "upgrade": [],
+    "all": [],
+    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+  },
+  "solution": [
+    {
+      "install": {
+        "name": "comp",
+        "version": "3"
+      }
+    }
+  ],
+  "results": [
+    {
+      "action": {
+        "build": {
+          "name": "comp",
+          "version": "3"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    },
+    {
+      "action": {
+        "install": {
+          "name": "comp",
+          "version": "3"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    }
+  ]
+}
+### opam switch --json=out.json
+#   switch        compiler  description
+->  json-comp     comp.3    json-comp
+    json-empty              json-empty
+    json-no-comp  ok.1      json-no-comp
+### json-cat out.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "switch",
+    "--json=out.json"
+  ]
+}
+### opam switch show --json=out.json
+json-comp
+### json-cat out.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "switch",
+    "show",
+    "--json=out.json"
+  ]
+}
+### opam switch json-empty --json=out.json
+### json-cat out.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "switch",
+    "json-empty",
+    "--json=out.json"
+  ]
+}
+### opam install ok --json=out.json
+The following actions will be performed:
+=== install 1 package
+  - install ok 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ok.1
+Done.
+### json-cat out.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "install",
+    "ok",
+    "--json=out.json"
+  ],
+  "switch": "json-empty",
+  "request": {
+    "action": "install",
+    "install": [
+      "ok"
+    ],
+    "remove": [],
+    "upgrade": [],
+    "all": [
+      "ok"
+    ],
+    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+  },
+  "solution": [
+    {
+      "install": {
+        "name": "ok",
+        "version": "1"
+      }
+    }
+  ],
+  "results": [
+    {
+      "action": {
+        "build": {
+          "name": "ok",
+          "version": "1"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    },
+    {
+      "action": {
+        "install": {
+          "name": "ok",
+          "version": "1"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    }
+  ]
+}
+### opam install ko --json=out.json
+The following actions will be performed:
+=== install 1 package
+  - install ko 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of ko.2 failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build ko 2
++- 
+- No changes have been performed
+# Return code 31 #
+### json-cat out.json | 'macos' -> 'linux'
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "install",
+    "ko",
+    "--json=out.json"
+  ],
+  "switch": "json-empty",
+  "request": {
+    "action": "install",
+    "install": [
+      "ko"
+    ],
+    "remove": [],
+    "upgrade": [],
+    "all": [
+      "ko"
+    ],
+    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+  },
+  "solution": [
+    {
+      "install": {
+        "name": "ko",
+        "version": "2"
+      }
+    }
+  ],
+  "results": [
+    {
+      "action": {
+        "build": {
+          "name": "ko",
+          "version": "2"
+        }
+      },
+      "result": {
+        "process-error": {
+          "code": "1",
+          "duration": 6.2831853071,
+          "info": {
+            "context": "currentv | linux/x86_64 |  | file://${BASEDIR}/REPO",
+            "path": "${BASEDIR}/OPAM/json-empty/.opam-switch/build/ko.2",
+            "command": "${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh build false",
+            "exit-code": "1",
+            "env-file": "${BASEDIR}/OPAM/log/ko.env",
+            "output-file": "${BASEDIR}/OPAM/log/ko.out"
+          },
+          "output": []
+        }
+      },
+      "duration": 6.2831853071
+    },
+    {
+      "action": {
+        "install": {
+          "name": "ko",
+          "version": "2"
+        }
+      },
+      "result": {
+        "aborted": [
+          {
+            "build": {
+              "name": "ko",
+              "version": "2"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+### opam remove ok ko --json=out.json
+[NOTE] ko is not installed.
+
+The following actions will be performed:
+=== remove 1 package
+  - remove ok 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   ok.1
+Done.
+### json-cat out.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "remove",
+    "ok",
+    "ko",
+    "--json=out.json"
+  ],
+  "switch": "json-empty",
+  "request": {
+    "action": "remove",
+    "install": [],
+    "remove": [
+      "ok"
+    ],
+    "upgrade": [],
+    "all": [
+      "ok"
+    ],
+    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+  },
+  "solution": [
+    {
+      "remove": {
+        "name": "ok",
+        "version": "1"
+      }
+    }
+  ],
+  "results": [
+    {
+      "action": {
+        "remove": {
+          "name": "ok",
+          "version": "1"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    }
+  ]
+}
+### opam install ok ko --json=out.json | grep -v "switch import" | unordered
+The following actions will be performed:
+=== install 2 packages
+  - install ko 2
+  - install ok 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ok.1
+[ERROR] The compilation of ko.2 failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build ko 2
++- 
++- The following changes have been performed
+| - install ok 1
++- 
+
+The former state can be restored with:
+# Return code 31 #
+### json-cat out.json | 'macos' -> 'linux'
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "install",
+    "ok",
+    "ko",
+    "--json=out.json"
+  ],
+  "switch": "json-empty",
+  "request": {
+    "action": "install",
+    "install": [
+      "ok",
+      "ko"
+    ],
+    "remove": [],
+    "upgrade": [],
+    "all": [
+      "ok",
+      "ko"
+    ],
+    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+  },
+  "solution": [
+    {
+      "install": {
+        "name": "ko",
+        "version": "2"
+      }
+    },
+    {
+      "install": {
+        "name": "ok",
+        "version": "1"
+      }
+    }
+  ],
+  "results": [
+    {
+      "action": {
+        "build": {
+          "name": "ko",
+          "version": "2"
+        }
+      },
+      "result": {
+        "process-error": {
+          "code": "1",
+          "duration": 6.2831853071,
+          "info": {
+            "context": "currentv | linux/x86_64 |  | file://${BASEDIR}/REPO",
+            "path": "${BASEDIR}/OPAM/json-empty/.opam-switch/build/ko.2",
+            "command": "${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh build false",
+            "exit-code": "1",
+            "env-file": "${BASEDIR}/OPAM/log/ko.env",
+            "output-file": "${BASEDIR}/OPAM/log/ko.out"
+          },
+          "output": []
+        }
+      },
+      "duration": 6.2831853071
+    },
+    {
+      "action": {
+        "build": {
+          "name": "ok",
+          "version": "1"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    },
+    {
+      "action": {
+        "install": {
+          "name": "ko",
+          "version": "2"
+        }
+      },
+      "result": {
+        "aborted": [
+          {
+            "build": {
+              "name": "ko",
+              "version": "2"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "action": {
+        "install": {
+          "name": "ok",
+          "version": "1"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    }
+  ]
+}
+### <pin:nip/nip.opam>
+opam-version:"2.0"
+### opam pin ./nip --json=out.json
+Package nip does not exist, create as a NEW package? [y/n] y
+nip is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (file://${BASEDIR}/nip)
+-> installed nip.dev
+Done.
+### json-cat out.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "pin",
+    "./nip",
+    "--json=out.json"
+  ],
+  "switch": "json-empty",
+  "request": {
+    "action": "upgrade",
+    "install": [
+      "nip"
+    ],
+    "remove": [],
+    "upgrade": [],
+    "all": [
+      "nip"
+    ],
+    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+  },
+  "solution": [
+    {
+      "install": {
+        "name": "nip",
+        "version": "dev"
+      }
+    }
+  ],
+  "results": [
+    {
+      "action": {
+        "build": {
+          "name": "nip",
+          "version": "dev"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    },
+    {
+      "action": {
+        "install": {
+          "name": "nip",
+          "version": "dev"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    }
+  ]
+}
+### opam unpin nip --json=out.json
+Ok, nip is no longer pinned to file://${BASEDIR}/nip (version dev)
+The following actions will be performed:
+=== remove 1 package
+  - remove nip dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   nip.dev
+Done.
+### json-cat out.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "unpin",
+    "nip",
+    "--json=out.json"
+  ],
+  "switch": "json-empty",
+  "request": {
+    "action": "upgrade",
+    "install": [],
+    "remove": [],
+    "upgrade": [],
+    "all": [
+      "nip"
+    ],
+    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+  },
+  "solution": [
+    {
+      "remove": {
+        "name": "nip",
+        "version": "dev"
+      }
+    }
+  ],
+  "results": [
+    {
+      "action": {
+        "remove": {
+          "name": "nip",
+          "version": "dev"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    }
+  ]
+}
+### opam install ./nip --json=out.json
+Package nip does not exist, create as a NEW package? [y/n] y
+nip is now pinned to file://${BASEDIR}/nip (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (file://${BASEDIR}/nip)
+-> installed nip.dev
+Done.
+### json-cat out.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "install",
+    "./nip",
+    "--json=out.json"
+  ],
+  "switch": "json-empty",
+  "request": {
+    "action": "install",
+    "install": [
+      "nip.dev"
+    ],
+    "remove": [],
+    "upgrade": [],
+    "all": [
+      "nip.dev"
+    ],
+    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+  },
+  "solution": [
+    {
+      "install": {
+        "name": "nip",
+        "version": "dev"
+      }
+    }
+  ],
+  "results": [
+    {
+      "action": {
+        "build": {
+          "name": "nip",
+          "version": "dev"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    },
+    {
+      "action": {
+        "install": {
+          "name": "nip",
+          "version": "dev"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    }
+  ]
+}
