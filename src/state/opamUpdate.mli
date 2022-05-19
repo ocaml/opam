@@ -15,11 +15,12 @@ open OpamTypes
 open OpamStateTypes
 
 (*
-(** Update the given repository from its upstream. Returns a concurrency-safe
-    state update function *)
-val repository:
-  rw repos_state -> repository ->
-  ('a repos_state -> 'a repos_state) OpamProcess.job
+(** Update the given repository from its upstream. Returns an option: if
+    changes are detected, option contains concurrency-safe state update
+    function *)
+  val repository:
+    rw repos_state -> repository ->
+    ('a repos_state -> 'a repos_state) option OpamProcess.job
 *)
 
 (** Update the given repositories from their upstream, and returns the updated
