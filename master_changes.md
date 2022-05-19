@@ -112,6 +112,7 @@ users)
     This allows opam-repository to use the default opam.ocaml.org cache and be more resilient to changed/force-pushed or unavailable archives. [#4830 @kit-ty-kate - fixes #4411]
   * Repository tarring "optimisation" no more needed, removed in favor of a plain directory. It still can be used with environment variable `OPAMREPOSITORYTARRING`.  [#5015 @kit-ty-kate @rjbou @AltGr - fix #4586]
     * Fix loading a plain repository froma tarred one [#5109 @rjbou]
+  * Avoid reloading repository contents when the repo has no changes [#5043 @Armael]
 
 ## Lock
   * Fix lock generation of multiple interdependent packages [#4993 @AltGr]
@@ -360,6 +361,7 @@ users)
   * `OpamSolution.parallel_apply`: fix sources_needed package set, now integrate requested but not locally pinned packages [#5082 @rjbou]
   * Add `?subpath` to `OpamRepository.fetch_dev_packages`, `OpamVCS.is_up_to_date` and vcs specific functions in `OpamDarcs`, `OpamHG`, and `OpamGit` [#4876 @rjbou]
   * `OpamRepositoryConfig.E`: add `curl_t` and `fetch_t` to get their respective environement vairbales value dynamically, without lazyness. It is used in `opamClient.InitDefaults`, that can be called at topelevel [#5111 @rjbou]
+  * `OpamRepository.update`: Return a change state result of the repo update [#5043 @Armael]
 
 ## opam-state
   * `OpamSwitchState.universe`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
