@@ -898,17 +898,34 @@ let universe st
     if r = None then
       (if OpamFormatConfig.(!r.strict) then
          OpamConsole.error_and_exit `File_error
-           "undefined filter variable in dependencies of %s: %s"
+           "Undefined filter variable %s in dependencies of %s"
        else
          log
-           "ERR: undefined filter variable in dependencies of %s: %s")
-        (OpamPackage.to_string nv) (OpamVariable.Full.to_string v);
+           "ERR: Undefined filter variable %s in dependencies of %s")
+        (OpamVariable.Full.to_string v) (OpamPackage.to_string nv);
     r
+  in
+  let filter_undefined nv =
+    OpamFormula.map (fun (name, fc) ->
+        let fc =
+          OpamFormula.map (function
+              | Constraint (_, FIdent (_, v, _))
+              | Constraint (_, FUndef (FIdent (_, v, _))) ->
+                (if OpamFormatConfig.(!r.strict) then
+                   OpamConsole.error_and_exit `File_error
+                 else OpamConsole.warning)
+                  "Undefined filter variable %s in dependencies of %s"
+                  (OpamVariable.to_string v) (OpamPackage.to_string nv);
+                Atom (Filter (FBool false))
+              | f -> Atom f)
+            fc
+        in
+        Atom (name, fc))
   in
   let get_deps f opams =
     OpamPackage.Map.mapi (fun nv opam ->
         OpamFilter.partial_filter_formula (env nv) (f opam)
-      ) opams
+        |> filter_undefined nv) opams
   in
   let u_depends =
     let depend =

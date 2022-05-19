@@ -652,6 +652,23 @@
    (run ./run.exe %{bin:opam} %{dep:repository.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-resolve-variables)
+ (action
+  (diff resolve-variables.test resolve-variables.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-resolve-variables)))
+
+(rule
+ (targets resolve-variables.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:resolve-variables.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-shared-fetch)
  (action
   (diff shared-fetch.test shared-fetch.out)))
