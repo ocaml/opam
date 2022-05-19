@@ -139,9 +139,6 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packag
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [tarred] no changes from file://${BASEDIR}/REPO
-FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-003ACE73.cache ...
-CACHE(repository)               ${BASEDIR}/OPAM/repo/state-003ACE73.cache written in 0.000s
 ### opam list --all --all-versions
 # Packages matching: any
 # Package # Installed # Synopsis
@@ -178,9 +175,6 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packag
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [repo2] no changes from file://${BASEDIR}/REPO2
 [tarred] no changes from file://${BASEDIR}/REPO
-FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-003ACE73.cache ...
-CACHE(repository)               ${BASEDIR}/OPAM/repo/state-003ACE73.cache written in 0.000s
 ### opam install bar.1
 The following actions will be performed:
 === install 1 package
