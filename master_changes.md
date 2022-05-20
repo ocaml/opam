@@ -88,6 +88,9 @@ users)
   * Try to set a variable with option `--switch <sw>` fails instead of writing a wrong `switch-config` file [#5027 @rjbou]
   * When a field is defined in switch and global scope, try to determine the scope also by checking switch selection [#5027 @rjbou]
 
+## Update / Upgrade
+  * [BUG] if a package is pinned from a locked file, it is automatically updated/upgraded accordingly a lock file (same extension) [#5080 @rjbou]
+
 ## Exec
   * [NEW] Add `opam exec --no-switch` [#4957 @kit-ty-kate - fix #4951]
 
@@ -123,6 +126,7 @@ users)
 ## Opamfile
   * Fix substring errors in preserved_format [#4941 @rjbou - fix #4936]
   * Add `with-tools` variable for recommended tools [#5016 @rjbou]
+  * Add `x-locked` extension fields for overlay internal use, it stores if the files originate from a locked file, if so its extension [#5080 @rjbou]
 
 ## External dependencies
   * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
@@ -353,6 +357,10 @@ users)
   * `OpamSolution.apply`: take an optional argument `skip`, to avoid filtering solution beforehand [#4975 @AltGr]
   * `OpamAction`: add `?tools` filtering argument in `build_package`, `install_package` [#5016 @rjbou]
   * `OpamListCommand`: add `?tools` filtering argument in `dependency_toggles` [#5016 @rjbou]
+  * `OpamPinCommand`, `OpamClient`, `OpamAuxCommands`: use `OpamStateTypes` pin record types [#5080 @rjbou]
+  `OpamPinCommand.fetch_all_pins`: return the list of well fetched pins instead of fetched urls [#5080 @rjbou]
+  * `OpamAuxCommand`: add `?locked` (and handle lock file then) argument to `name_and_dir_of_opam_file`, `opams_of_dir`, `opams_of_dir_w_target`, `resolve_locals`, `autopin`, and `simulate_autopin` [#5080 @rjbou]
+  * `OpamClient.PIN`: change `?locked:bool` argument into `string`, to have lock extension name [#5080 @rjbou]
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
@@ -370,6 +378,11 @@ users)
   * `OpamStateConfig`: add with-tools support ; i.e. add `E.withtools`, add `with_tools` in config record [#5016 @rjbou]
   * `OpamPackageVar`: add `?tools` filtering argument in `filter_depends_formula`, `all_depends` [#5016 @rjbou]
   * `OpamSwitchState`: add `?tools` filtering argument in `universe` [#5016 @rjbou]
+  * `OpamStateTypes`: Add record types for to pin and pinned packages informations (in order to avoid n-uplet with `n` growing) ; `name_and_file`, `name_and_file_w_url`, `nameopt_and_file`, `nameopt_and_file_w_url`, and `pinned_opam` [#5080 @rjbou]
+  * `OpamPinned`: use pin record types [#5080 @rjbou]
+  * `OpamPinned`: add `?locked:string` (and handle lock file then) argument to `files_in_source`, and `name_of_opam_filename` [#5080 @rjbou]
+  * `OpamPinned`: when looking at opam files, keep (and return) information about its locked origin [#5080 @rjbou]
+  * `OpamUpdate.pinned_package`: use locked information to automatically update from locked file if present, if `?autolock` is given to true [#5080 @rjbou]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
@@ -397,6 +410,7 @@ users)
   * `OpamFile.OPAM.effective_part` and `OpamFile.OPAM.effectively_equal` now take an optional `?modulo_state:bool` parameter, that if `true`, eliminates the fields relying on the state of the switch (depends, available, …). This is `false` by default. [#5118 @kit-ty-kate]
   * `OpamTypes`: `request.wish_install` now takes a formula instead of  a conjunction [#4975 @AltGr]
   * `OpamFilter`: add `?tools` filtering argument in `filter_deps` [#5016 @rjbou]
+  * `OpamFile.OPAM`: Add `locked`, file origin and extension, in the record with its modifiers/getter [#5080 @rjbou]
 
 ## opam-core
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]

@@ -254,7 +254,8 @@ let download_shared_source st url nvs =
              OpamFilename.exists_dir dir &&
              OpamStd.Option.Op.(
                OpamPinned.find_opam_file_in_source nv.name dir >>|
-               OpamFile.OPAM.safe_read >>=
+               (fun (f, lock) ->
+               OpamFile.OPAM.(safe_read f |> with_locked_opt lock)) >>=
                OpamFile.OPAM.version_opt) = Some nv.version))
       nvs
   in

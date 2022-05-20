@@ -1,4 +1,6 @@
 N0REP0
+### OPAMYES=1
+### : --current option :
 ### opam switch create pinning --empty
 ### opam pin --current foo
 [ERROR] foo is not installed, invalid flag `--current'
@@ -40,3 +42,35 @@ Now run 'opam upgrade' to apply any package updates.
 foo    1
 ### opam pin --current foo
 foo is now pinned locally (version 1)
+### : check no repin in case of double 'install .' :
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+### opam install ./nip
+Package nip does not exist, create as a NEW package? [y/n] y
+nip is now pinned to file://${BASEDIR}/nip (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (file://${BASEDIR}/nip)
+-> installed nip.dev
+Done.
+### opam remove nip
+The following actions will be performed:
+=== remove 1 package
+  - remove nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   nip.dev
+Done.
+### opam install ./nip
+[nip.dev] synchronised (no changes)
+The following actions will be performed:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (file://${BASEDIR}/nip)
+-> installed nip.dev
+Done.

@@ -2380,6 +2380,9 @@ module OPAMSyntax = struct
     (* Names and hashes of the files below files/ *)
     extra_files: (OpamFilename.Base.t * OpamHash.t) list option;
 
+    (* Origin *)
+    locked: string option;
+
     (* Stores any file errors for printing them later *)
     format_errors: (string * Pp.bad_format) list;
 
@@ -2438,6 +2441,8 @@ module OPAMSyntax = struct
 
     metadata_dir = None;
     extra_files = None;
+
+    locked = None;
 
     format_errors = [];
 
@@ -2545,6 +2550,8 @@ module OPAMSyntax = struct
   let metadata_dir t = t.metadata_dir
   let extra_files t = t.extra_files
 
+  let locked t = t.locked
+
   (* Setters *)
 
   let with_opam_version opam_version t = { t with opam_version }
@@ -2638,6 +2645,8 @@ module OPAMSyntax = struct
   let with_metadata_dir metadata_dir t = { t with metadata_dir }
   let with_extra_files extra_files t = { t with extra_files = Some extra_files }
   let with_extra_files_opt extra_files t = { t with extra_files }
+
+  let with_locked_opt locked t = { t with locked }
 
   let with_format_errors format_errors t = { t with format_errors }
 
@@ -3094,6 +3103,35 @@ module OPAMSyntax = struct
     in
     Pp.pp parse print
 
+  let handle_locked =
+    let locked_xfield = "x-locked" in
+    let pp_constraint =
+      pp_minimal_opam_version (OpamVersion.of_string "2.1")
+    in
+    let parse ~pos t =
+      if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
+      else
+      match OpamStd.String.Map.find_opt locked_xfield t.extensions with
+      | Some {pelem = String locked;_} ->
+        { t with locked = Some locked }
+        |> Pp.parse ~pos pp_constraint
+      | Some {pos; _} ->
+        Pp.bad_format ~pos "Field %s must be a bool"
+          (OpamConsole.colorise `underline locked_xfield)
+      | None -> { t with locked = None }
+    in
+    let print t =
+      if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
+      else
+      match t.locked with
+      | None | Some "" ->
+        remove_extension t locked_xfield
+      | Some locked ->
+        add_extension t locked_xfield (nullify_pos @@ String locked)
+        |> Pp.print pp_constraint
+    in
+    Pp.pp parse print
+
   (* Doesn't handle package name encoded in directory name *)
   let pp_raw_fields =
     Pp.I.check_opam_version ~format_version () -|
@@ -3113,7 +3151,8 @@ module OPAMSyntax = struct
         OpamStd.Option.Op.(t.url >>= URL.subpath) = None)
       ~errmsg:"The url.subpath field is not allowed in files with \
                `opam-version` <= 2.0" -|
-    handle_subpath_2_0
+    handle_subpath_2_0 -|
+    handle_locked
 
   let pp_raw = Pp.I.map_file @@ pp_raw_fields
 
@@ -3279,6 +3318,8 @@ module OPAM = struct
 
       metadata_dir = empty.metadata_dir;
       extra_files = OpamStd.Option.Op.(t.extra_files ++ Some []);
+
+      locked = None;
 
       format_errors = empty.format_errors;
 

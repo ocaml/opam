@@ -394,6 +394,9 @@ module OPAM: sig
     (* Names and hashes of the files below files/ *)
     extra_files: (OpamFilename.Base.t * OpamHash.t) list option;
 
+    (* Origin with the extension *)
+    locked: string option;
+
     format_errors: (string * OpamPp.bad_format) list;
 
     (* Deprecated, for compat and proper linting *)
@@ -569,6 +572,9 @@ module OPAM: sig
   (** Names and hashes of the files below files/ *)
   val extra_files: t -> (OpamFilename.Base.t * OpamHash.t) list option
 
+  (** From locked opam file *)
+  val locked: t -> string option
+
   (** Looks up the extra files, and returns their full paths, relative path to
       the package source, and hash. Doesn't check the hashes. *)
   val get_extra_files:
@@ -689,6 +695,8 @@ module OPAM: sig
 
   val with_extra_files: (OpamFilename.Base.t * OpamHash.t) list -> t -> t
   val with_extra_files_opt: (OpamFilename.Base.t * OpamHash.t) list option -> t -> t
+
+  val with_locked_opt: string option -> t -> t
 
   val with_format_errors: (string * OpamPp.bad_format) list -> t -> t
 

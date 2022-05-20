@@ -35,7 +35,7 @@ exception Nothing_to_do
 val source_pin:
   rw switch_state -> name ->
   ?version:version -> ?edit:bool -> ?opam:OpamFile.OPAM.t -> ?quiet:bool ->
-  ?force:bool -> ?ignore_extra_pins:bool -> ?subpath:subpath -> ?locked:bool ->
+  ?force:bool -> ?ignore_extra_pins:bool -> ?subpath:subpath -> ?locked:string ->
   url option ->
   rw switch_state
 
@@ -52,8 +52,8 @@ val handle_pin_depends:
     Ask for confirmation to continue if a fetching fails.
 *)
 val fetch_all_pins:
-  'a switch_state -> ?working_dir:bool -> (name * url * subpath option) list ->
-  (url * subpath option) list
+  'a switch_state -> ?working_dir:bool -> pinned_opam list ->
+  pinned_opam list
 
 (** Let the user edit a pinned package's opam file. If given, the version is put
     into the template in advance. Writes and returns the updated switch
@@ -83,14 +83,15 @@ val looks_like_normalised: string list -> bool
 
 (** Parse the normalised form of [scan], and returns pinning informations. *)
 val parse_pins:
-  string list -> (name * version option * url * subpath option) list
+  string list -> pinned_opam list
 
 (** Lints the given opam file, prints warnings or errors accordingly (unless
     [quiet]), upgrades it to current format, adds references to files below the
     'files/' subdir (unless the file is directly below the specified, local
     [url]), and returns it *)
 val read_opam_file_for_pinning:
-  ?quiet:bool -> name -> OpamFile.OPAM.t OpamFile.t -> url -> OpamFile.OPAM.t option
+  ?locked:string -> ?quiet:bool -> name -> OpamFile.OPAM.t OpamFile.t -> url ->
+  OpamFile.OPAM.t option
 
 (** The default version for pinning a package: depends on the state, what is
     installed and available, and defaults to [~dev]. *)
