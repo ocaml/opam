@@ -157,13 +157,13 @@ let lock_opam ?(only_direct=false) st opam =
                                (OpamPackage.Set.elements set))
   in
   let depends_map = map_of_set `version depends in
-  (* others: dev, test, doc *)
+  (* others: dev, test, doc, with-tools *)
   let open OpamPackage.Set.Op in
-  let select ?(build=false) ?(test=false) ?(doc=false) ?(dev=false)
-      ?(default=false) ?(post=false) () =
+  let select ?(build=false) ?(test=false) ?(doc=false) ?(tools=false)
+      ?(dev=false) ?(default=false) ?(post=false) () =
     OpamFormula.packages st.packages
       (OpamFilter.filter_deps
-         ~build ~test ~doc ~dev ~default ~post
+         ~build ~test ~doc ~dev ~tools ~default ~post
          (OpamFile.OPAM.depends opam))
   in
   let default = select () in
@@ -199,6 +199,7 @@ let lock_opam ?(only_direct=false) st opam =
   in
   let test_depends_map = select_depends "with-test" (select ~test:true ()) in
   let doc_depends_map = select_depends "with-doc" (select ~doc:true ()) in
+  let tools_depends_map = select_depends "with-tools" (select ~tools:true ()) in
   let depends =
     let f a b =
       match a,b with
@@ -213,6 +214,7 @@ let lock_opam ?(only_direct=false) st opam =
       |> union f dev_depends_map
       |> union f test_depends_map
       |> union f doc_depends_map
+      |> union f tools_depends_map
     )
   in
   (* formulas *)
@@ -258,7 +260,7 @@ let lock_opam ?(only_direct=false) st opam =
   let all_depopts =
     OpamFormula.packages st.packages
       (OpamFilter.filter_deps
-         ~build:true ~test:true ~doc:true ~dev:true ~default:true ~post:false
+         ~build:true ~test:true ~doc:true ~tools:true ~default:true ~post:false
          (OpamFile.OPAM.depopts opam))
   in
   let installed_depopts = OpamPackage.Set.inter all_depopts st.installed in

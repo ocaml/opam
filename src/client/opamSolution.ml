@@ -649,11 +649,11 @@ let parallel_apply t
             OpamFilename.rmdir dir;
           false, dir
       in
-      let test =
-        OpamStateConfig.(!r.build_test) && OpamPackage.Set.mem nv requested
-      in
-      let doc =
-        OpamStateConfig.(!r.build_doc) && OpamPackage.Set.mem nv requested
+      let test, doc, tools =
+        let found = OpamPackage.Set.mem nv requested in
+        OpamStateConfig.(!r.build_test) && found,
+        OpamStateConfig.(!r.build_doc) && found,
+        OpamStateConfig.(!r.with_tools) && found
       in
       let source_dir = source_dir nv in
       (if OpamFilename.exists_dir source_dir
@@ -663,18 +663,18 @@ let parallel_apply t
        OpamAction.prepare_package_source t nv build_dir @@+ function
        | Some exn -> store_time (); Done (`Exception exn)
        | None ->
-         OpamAction.build_package t ~test ~doc build_dir nv @@+ function
+         OpamAction.build_package t ~test ~doc ~tools build_dir nv @@+ function
          | Some exn -> store_time (); Done (`Exception exn)
          | None -> store_time (); Done (`Successful (installed, removed)))
     | `Install nv ->
-      let test =
-        OpamStateConfig.(!r.build_test) && OpamPackage.Set.mem nv requested
-      in
-      let doc =
-        OpamStateConfig.(!r.build_doc) && OpamPackage.Set.mem nv requested
+      let test, doc, tools =
+        let found = OpamPackage.Set.mem nv requested in
+        OpamStateConfig.(!r.build_test) && found,
+        OpamStateConfig.(!r.build_doc) && found,
+        OpamStateConfig.(!r.with_tools) && found
       in
       let build_dir = OpamPackage.Map.find_opt nv inplace in
-      (OpamAction.install_package t ~test ~doc ?build_dir nv @@+ function
+      (OpamAction.install_package t ~test ~doc ~tools ?build_dir nv @@+ function
         | Left conf ->
           add_to_install nv conf;
           store_time ();

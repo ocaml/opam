@@ -409,9 +409,9 @@ three scopes:
 
 3. Some fields define their own local variables, like `success` in the field
    [`post-messages`](#opamfield-post-messages). Other examples of this include
-   the [`with-test`](#pkgvar-with-test) and [`with-doc`](#pkgvar-with-doc)
-   variables, available in the `depends:`, `depopts:`, `build:`, `install:` and
-   `remove:` fields.
+   the [`with-test`](#pkgvar-with-test), [`with-doc`](#pkgvar-with-doc) and
+   [`with-tools`](#pkgvar-with-tools) variables, available in the `depends:`,
+   `depopts:`, `build:`, `install:` and `remove:` fields.
 
     Within package definition files, the variables `name` and `version`, as
     shortcuts to `_:name` and `_:version`, corresponding to the package being
@@ -520,6 +520,8 @@ Additionally, the following are limited to some package fields (`depends:`,
 - <a id="pkgvar-with-test">`with-test`</a>: only true if tests have been
   enabled for this specific package
 - <a id="pkgvar-with-doc">`with-doc`</a>: similarly for documentation
+- <a id="pkgvar-with-tools">`with-tools`</a>: similarly for developer tools
+
 
 The following are only available in the `depends:` and `depopts:` fields, and
 are used as dependency flags (they don't have a defined `true` or `false` value
@@ -857,8 +859,9 @@ files.
     expected to be produced within the source directory subtree, _i.e._ below
     the command's `$PWD`, during this step.
 
-    The [`with-test`](#pkgvar-with-test) and [`with-doc`](#pkgvar-with-doc)
-    variables are available in the scope of this field: filter testing commands
+    The [`with-test`](#pkgvar-with-test), [`with-doc`](#pkgvar-with-doc), and
+    [`with-tools`](#pkgvar-with-tools) variables are available in the scope of
+    this field: filter testing commands
     with _e.g._ `[make "test"] {with-test}`. The `dev` variable can also be
     useful here to detect that the package is not installed from a release
     tarball, and may need additional preprocessing (_e.g._ `automake`).
@@ -884,9 +887,9 @@ files.
     according to its instructions after calling the commands specified in the
     `install:` field have been run, if any.
 
-    Variables [`with-test`](#pkgvar-with-test) and
-    [`with-doc`](#pkgvar-with-doc) are also available to the filters used in
-    this field, to run specific installation commands when tests or
+    Variables [`with-test`](#pkgvar-with-test), [`with-doc`](#pkgvar-with-doc),
+    and [`with-tools`](#pkgvar-with-tools) are also available to the filters
+    used in this field, to run specific installation commands when tests or
     documentation have been requested.
 
 - <a id="opamfield-build-doc">
@@ -928,8 +931,9 @@ files.
     The filtered package formula can access the global and switch variables, but
     not variables from other packages. Additionally, special boolean variables
     [`build`](#pkgvar-build), [`post`](#pkgvar-post),
-    [`with-test`](#pkgvar-with-test) and [`with-doc`](#pkgvar-with-doc) are
-    defined to allow limiting the scope of the dependency.
+    [`with-test`](#pkgvar-with-test), [`with-doc`](#pkgvar-with-doc), and
+    [`with-tools`](#pkgvar-with-tools) are defined to allow limiting the scope
+    of the dependency.
 
     * `build` dependencies are no longer needed at run-time: they won't trigger
       recompilations of your package.
@@ -942,6 +946,7 @@ files.
       package is explicitly installed with `--with-test`)
     * likewise, `with-doc` dependencies are only required when building the
       package documentation
+    * likewise, `with-tools` dependencies are only required for a developer tool
 
 - <a id="opamfield-depopts">
   `depopts: [ <pkgname> { <filtered-package-formula> } ... ]`</a>:

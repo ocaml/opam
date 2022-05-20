@@ -48,6 +48,7 @@ users)
   * ◈ Add `--formula` option to specify a formula to install [#4975 @AltGr]
   * [BUG] Prevent `.changes` files from being updated during dry-run [#5144 @na4zagin3 - fix #5132]
   * Log a summary of recorded `.changes` as a `ACTION` trace log to help debug #4419 [#5144 @na4zagin3]
+  * ◈ Add `--with-tools` option to install recommended development tools from opam file (as `with-test`/`with-doc`), and its environment variable `OPAMWITHTOOLS` [#5016 @rjbou]
 
 ## Remove
   *
@@ -120,6 +121,7 @@ users)
 
 ## Opamfile
   * Fix substring errors in preserved_format [#4941 @rjbou - fix #4936]
+  * Add `with-tools` variable for recommended tools [#5016 @rjbou]
 
 ## External dependencies
   * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
@@ -178,6 +180,7 @@ users)
   * Bump opam-file-format to 2.1.4 [#5117 @kit-ty-kate - fix #5116]
   * Add `sha` dependency [#5042 @kit-ty-kate]
   * Add a 'test' target [#5129 @kit-ty-kate @mehdid - partially fixes #5058]
+  * Add `with-tools` handling in selection process [#5016 @rjbou]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
@@ -347,6 +350,8 @@ users)
   * `OpamClient`: handle formula on several functions, adding a `formula` labelled or optional argument  (`upgrade_t`, `compute_upgrade_t`, `upgrade`, `fixup`, `install_t`, `install`, `remove_t`, and `remove`) [#4975 @AltGr]
   * `OpamSolution`: add `print_requested` to print actions reasons [#4975 @AltGr]
   * `OpamSolution.apply`: take an optional argument `skip`, to avoid filtering solution beforehand [#4975 @AltGr]
+  * `OpamAction`: add `?tools` filtering argument in `build_package`, `install_package` [#5016 @rjbou]
+  * `OpamListCommand`: add `?tools` filtering argument in `dependency_toggles` [#5016 @rjbou]
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
@@ -360,6 +365,9 @@ users)
   * `OpamSwitchState.universe`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
   * `OpamSwitchState.universe`: add a chrono for universe loading [#4975 @AltGr]
   * `OpamSwitchState.universe`: set to false unresolved variables used in constraint, and warn [#5141 @rjbou - fix #5139]
+  * `OpamStateConfig`: add with-tools support ; i.e. add `E.withtools`, add `with_tools` in config record [#5016 @rjbou]
+  * `OpamPackageVar`: add `?tools` filtering argument in `filter_depends_formula`, `all_depends` [#5016 @rjbou]
+  * `OpamSwitchState`: add `?tools` filtering argument in `universe` [#5016 @rjbou]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
@@ -386,6 +394,7 @@ users)
   * `OpamFile.OPAM.to_string_with_preserved_format`: handle substring errors [#4941 @rjbou - fix #4936]
   * `OpamFile.OPAM.effective_part` and `OpamFile.OPAM.effectively_equal` now take an optional `?modulo_state:bool` parameter, that if `true`, eliminates the fields relying on the state of the switch (depends, available, …). This is `false` by default. [#5118 @kit-ty-kate]
   * `OpamTypes`: `request.wish_install` now takes a formula instead of  a conjunction [#4975 @AltGr]
+  * `OpamFilter`: add `?tools` filtering argument in `filter_deps` [#5016 @rjbou]
 
 ## opam-core
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]

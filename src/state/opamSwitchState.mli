@@ -187,6 +187,7 @@ val universe:
   'a switch_state ->
   ?test:bool ->
   ?doc:bool ->
+  ?tools:bool ->
   ?force_dev_deps:bool ->
   ?reinstall:package_set ->
   requested:package_set ->

@@ -1383,7 +1383,7 @@ let config cli =
               | None -> false)
           |> OpamSolver.dependencies ~depopts:true ~post:true ~build:true
             ~installed:true
-            (OpamSwitchState.universe ~test:true ~doc:true
+            (OpamSwitchState.universe ~test:true ~doc:true ~tools:true
                ~requested:OpamPackage.Set.empty state Query)
           |> OpamPackage.Set.iter process;
           if List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
