@@ -161,7 +161,6 @@ The following actions would be performed:
   - install bar    3            [required by tolock]
   - install foo    2            [required by tolock]
   - install tolock dev (pinned)
-### # ERROR
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
@@ -540,7 +539,6 @@ depends:
 version: "default-version"
 ### <pin:tolock-scan/tolock-scan.opam.locked>
 version: "locked-version"
-### # ERROR
 ### opam pin scan ./tolock-scan --locked | grep -v '# Name'
 tolock-scan  locked-version  file://${BASEDIR}/tolock-scan  -
 ### : git pin with lock file :
@@ -558,14 +556,12 @@ depopts:
 conflicts:
 ### opam unpin -n tolock
 Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#master (version 1)
-### # ERROR
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
   - install bar    3            [required by tolock]
   - install foo    2            [required by tolock]
   - install tolock dev (pinned)
-### # ERROR
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
@@ -620,14 +616,12 @@ depopts:
 conflicts:
 ### opam unpin -n tolock
 Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#master (version 1)
-### # ERROR
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
   - install bar    3            [required by tolock]
   - install foo    2            [required by tolock]
   - install tolock dev (pinned)
-### # ERROR
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
@@ -682,14 +676,12 @@ depopts:
 conflicts:
 ### opam unpin -n tolock
 Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#master (version 1)
-### # ERROR
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
   - install bar    3            [required by tolock]
   - install foo    2            [required by tolock]
   - install tolock dev (pinned)
-### # ERROR
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
@@ -758,7 +750,6 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   tolock.1
 Done.
-### # ERROR double pin
 ### opam install ./tolock --locked
 [tolock.1] synchronised (no changes)
 The following actions will be performed:
