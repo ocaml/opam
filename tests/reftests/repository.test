@@ -97,3 +97,65 @@ tarred
 packages
 repo
 ### diff -ru ./REPO $OPAMROOT/repo/tarred
+### # Noop update with no changes
+### <REPO/packages/foo/foo.4/opam>
+opam-version: "2.0"
+build: ["test" "-f" "rab"]
+### <REPO/packages/foo/foo.4/files/rab>
+some content
+### OPAMDEBUGSECTIONS="FILE(opam) FILE(repo) FILE(repos-config)  CACHE(repository)"
+### opam update --debug-level=-3 | unordered
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-003ACE73.cache in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/foo.5/opam in 0.000s
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[tarred] synchronised from file://${BASEDIR}/REPO
+FILE(repo)                      Read ${BASEDIR}/OPAM/repo/tarred/repo in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.4/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.3/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.2/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.5/opam in 0.000s
+FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-003ACE73.cache ...
+CACHE(repository)               ${BASEDIR}/OPAM/repo/state-003ACE73.cache written in 0.000s
+Now run 'opam upgrade' to apply any package updates.
+### opam install foo.4
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade foo 5 to 4
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.5
+-> installed foo.4
+Done.
+### opam update --debug-level=-3
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-003ACE73.cache in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/foo.4/opam in 0.000s
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[tarred] no changes from file://${BASEDIR}/REPO
+FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-003ACE73.cache ...
+CACHE(repository)               ${BASEDIR}/OPAM/repo/state-003ACE73.cache written in 0.000s
+### opam list --all --all-versions
+# Packages matching: any
+# Package # Installed # Synopsis
+foo.1     4
+foo.2     4
+foo.3     4
+foo.4     4
+foo.5     4
+### opam install foo.1
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade foo 4 to 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.4
+-> installed foo.1
+Done.

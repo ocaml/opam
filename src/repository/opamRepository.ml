@@ -540,7 +540,8 @@ let update repo repo_root =
   | Update_empty ->
     log "update empty, no validation performed";
     apply_repo_update repo repo_root Update_empty @@+ fun () ->
-    B.repo_update_complete repo_root repo.repo_url
+    B.repo_update_complete repo_root repo.repo_url @@+ fun () ->
+    Done `No_changes
   | (Update_full _ | Update_patch _) as upd ->
     OpamProcess.Job.catch (fun exn ->
         cleanup_repo_update upd;
@@ -552,7 +553,8 @@ let update repo repo_root =
       failwith "Invalid repository signatures, update aborted"
     | true ->
       apply_repo_update repo repo_root upd @@+ fun () ->
-      B.repo_update_complete repo_root repo.repo_url
+      B.repo_update_complete repo_root repo.repo_url @@+ fun () ->
+      Done `Changes
 
 let on_local_version_control url ~default f =
   match url.OpamUrl.backend with

@@ -23,8 +23,9 @@ val packages_with_prefixes: dirname -> string option package_map
 (** {2 Repository backends} *)
 
 (** Update {i $opam/repo/$repo}. Raises [Failure] in case the update couldn't be
-    achieved. *)
-val update: repository -> dirname -> unit OpamProcess.job
+    achieved. Returns [`No_changes] if the update did not bring any changes, and
+    [`Changes] otherwise. *)
+val update: repository -> dirname -> [`Changes | `No_changes] OpamProcess.job
 
 (** [pull_shared_tree ?cache_dir ?cache_url labels_dirnames checksums urls]
     Fetch an URL and put the resulting tree into the supplied directories
