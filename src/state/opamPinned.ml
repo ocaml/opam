@@ -276,12 +276,19 @@ let files_in_source_w_target ?locked ?recurse ?subpath
     (files_in_source ?locked ?recurse ?subpath dir)
 
 let orig_opam_file st name opam =
-  let open OpamStd.Option.Op in
   OpamFile.OPAM.get_metadata_dir
     ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
     opam >>= fun dir ->
-  OpamStd.List.find_opt OpamFilename.exists [
+  let opam_files = [
     dir // (OpamPackage.Name.to_string name ^ ".opam");
     dir // "opam"
-  ] >>|
-  OpamFile.make
+  ] in
+  let locked_files =
+    match OpamFile.OPAM.locked opam with
+    | Some locked ->
+      List.map (fun f -> OpamFilename.add_extension f locked) opam_files
+    | None -> []
+  in
+  OpamStd.List.find_opt OpamFilename.exists locked_files
+  ++ OpamStd.List.find_opt OpamFilename.exists opam_files
+  >>| OpamFile.make
