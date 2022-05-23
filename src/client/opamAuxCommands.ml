@@ -290,6 +290,14 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath ?locked
           let pinned_pkg = OpamPinned.package st nf.pin_name in
           OpamSwitchState.primary_url st pinned_pkg = Some nf.pin.pin_url
           &&
+          (match OpamSwitchState.opam_opt st pinned_pkg with
+           | Some opam ->
+             (match locked, OpamFile.OPAM.locked opam with
+              | Some ext , Some ext' -> String.equal ext ext'
+              | None, None -> true
+              | _ -> false)
+           | None -> false)
+          &&
           (* For `opam show`, we need to check does the opam file changed to
              perform a simulated pin if so *)
           (not for_view ||
@@ -347,16 +355,11 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
   in
   let local_packages = OpamPackage.keys local_opams in
   let pinned =
-    if for_view then
-      (* For `opam show`, to display local files instead of the stored on, we
-         need to have on the pinned set only the new simulated pinned ones instead
-         of really pinned ones. *)
-      let open OpamPackage.Set.Op in
-      st.pinned
-      -- OpamPackage.packages_of_names st.pinned
-        (OpamPackage.names_of_packages local_packages)
-      ++ local_packages
-    else st.pinned
+    let open OpamPackage.Set.Op in
+    st.pinned
+    -- OpamPackage.packages_of_names st.pinned
+      (OpamPackage.names_of_packages local_packages)
+    ++ local_packages
   in
   let st = {
     st with
@@ -370,8 +373,7 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
            (fun nv -> not (OpamPackage.Name.Set.mem nv.name local_names))
            (Lazy.force st.available_packages))
         (OpamSwitchState.compute_available_packages
-           st.switch_global st.switch st.switch_config ~pinned:st.pinned
-           ~opams:local_opams)
+           st.switch_global st.switch st.switch_config ~pinned ~opams:local_opams)
     );
     pinned;
   } in
