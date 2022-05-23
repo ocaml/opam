@@ -72,7 +72,8 @@ users)
   * [NEW] Reactivate subpath and recursive pinning `--recursive` and `--subpath` [#4876 @rjbou]
   * scan: show subpaths [#4876 @rjbou]
   * [BUG] Fix windows path for subpath, by introducing their own type in `OpamFilename` [#4876 @rjbou]
-  * [BUG] Fix non repin of locked pins [#5079 @rjbou]
+  * [BUG] Fix repin of locked pins when there is no change in lock file [#5079 @rjbou - fix #4313]
+  * [BUG] Fix `opam install ./file.opam` lock pinning [#5148 @rjbou - fix #4313]
 
 ## List
   * Some optimisations to 'opam list --installable' queries combined with other filters [#4882 @altgr - fix #4311]
