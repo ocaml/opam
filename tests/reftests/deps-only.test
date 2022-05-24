@@ -98,3 +98,11 @@ No solution found, exiting
 
 No solution found, exiting
 # Return code 20 #
+### : conflicts :
+### <pkg:d.1>
+opam-version: "2.0"
+depends: "foo"
+conflicts: "bar"
+### opam install d --deps-only
+Fatal error: d != 1 & bar is not a valid disjunction
+# Return code 99 #
