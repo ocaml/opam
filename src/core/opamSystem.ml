@@ -327,30 +327,12 @@ let remove file =
   else
     remove_file file
 
-#if OCAML_VERSION >= (4, 13, 0)
-let normalize = Unix.realpath
-#else
-(* Sets path to s and returns the old path *)
-let getchdir s =
-  let p =
-    try Sys.getcwd ()
-    with Sys_error _ ->
-      let p = OpamCoreConfig.(!r.log_dir) in
-      mkdir p; p
-  in
-  chdir s;
-  p
-
-let normalize s =
-  try getchdir (getchdir s) with File_not_found _ -> s
-#endif
-
 let real_path p =
   (* if Filename.is_relative p then *)
     match (try Some (Sys.is_directory p) with Sys_error _ -> None) with
     | None ->
       let rec resolve dir =
-        if Sys.file_exists dir then normalize dir else
+        if Sys.file_exists dir then OpamCompat.Unix.normalise dir else
         let parent = Filename.dirname dir in
         if dir = parent then dir
         else Filename.concat (resolve parent) (Filename.basename dir)
@@ -360,9 +342,9 @@ let real_path p =
         else p
       in
       resolve p
-    | Some true -> normalize p
+    | Some true -> OpamCompat.Unix.normalise p
     | Some false ->
-      let dir = normalize (Filename.dirname p) in
+      let dir = OpamCompat.Unix.normalise (Filename.dirname p) in
       match Filename.basename p with
       | "." -> dir
       | base -> dir / base

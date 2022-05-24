@@ -44,15 +44,29 @@ end
 #endif
 
 module Unix =
-#if OCAML_VERSION >= (4, 6, 0)
-  Unix
-#else
 struct
   include Unix
 
-  let map_file = Bigarray.Genarray.map_file
+  #if OCAML_VERSION < (4, 6, 0)
+    let map_file = Bigarray.Genarray.map_file
+  #endif
+
+  #if OCAML_VERSION >= (4, 13, 0)
+  let normalise = realpath
+  #else
+  let normalise s =
+    let getchdir s =
+      let p =
+        try Sys.getcwd ()
+        with Sys_error _ -> Filename.get_temp_dir_name ()
+      in
+      Unix.chdir s;
+      p
+    in
+    try getchdir (getchdir s) with Unix.Unix_error _ -> s
+  #endif
+
 end
-#endif
 
 module Uchar = Uchar
 
