@@ -46,6 +46,7 @@ users)
   * Make the status of pinned packages more explicit during installation [#4987 @kit-ty-kate - fix #4925]
   * Better recognize depexts on Gentoo, NetBSD, OpenBSD [#5065 @mndrix]
   * Reimplement deps-only [#4975 @AltGr]
+    * Fix conflict handling [#5136 @AltGr]
   * ◈ Add `--formula` option to specify a formula to install [#4975 @AltGr]
   * [BUG] Prevent `.changes` files from being updated during dry-run [#5144 @na4zagin3 - fix #5132]
   * Log a summary of recorded `.changes` as a `ACTION` trace log to help debug #4419 [#5144 @na4zagin3]
