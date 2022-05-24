@@ -25,7 +25,7 @@ let run_command
       k (Some (OpamFilename.to_string f))
   in
   let verbose =
-    OpamStd.Option.default OpamCoreConfig.(!r.verbose_level >= 3) verbose
+    OpamStd.Option.default OpamCoreConfig.(!r.verbose_level > 3) verbose
   in
   let env =
     match vars with
