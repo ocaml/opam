@@ -43,18 +43,19 @@ module Printexc
 end
 #endif
 
-module Unix
-#if OCAML_VERSION >= (4, 6, 0)
-= Unix
-#else
-: sig
+module Unix : sig
   include module type of struct include Unix end
 
+  #if OCAML_VERSION < (4, 6, 0)
   val map_file : Unix.file_descr -> ?pos:int64 -> ('a, 'b) Bigarray.kind ->
                  'c Bigarray.layout -> bool -> int array ->
                  ('a, 'b, 'c) Bigarray.Genarray.t
+  #endif
+
+  (* `realpath` for OCaml >= 4.13.0,
+     implementation with double chdir otherwise *)
+  val normalise: string -> string
 end
-#endif
 
 module Uchar = Uchar
 
