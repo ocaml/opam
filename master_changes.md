@@ -329,6 +329,8 @@ users)
   * Add gentoo depext test [#5067 @rjbou]
   * Add more constraint path for launch of workflow [#5067 @rjbou]
   * Upgrade packages for sovler jobs, in case depext changed [#5010 @rjbou]
+  * Fix github safe directory issues in depext workflow [#5153 @rjbou]
+  * Update repo hash in depext workflow [#5153 @rjbou]
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
