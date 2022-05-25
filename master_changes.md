@@ -144,6 +144,7 @@ users)
   * Archlinux: handle virtual package detection [#4831 @rjbou - partial fix #4759]
   * Fallback on dnf if yum does not exist on RHEL-based systems [#4825 @kit-ty-kate]
   * Stop zypper from upgrading packages on updates on OpenSUSE [#4978 @kit-ty-kate]
+  * Increase verbose logging of command to 4 [#5151 @rjbou]
 
 ## Format upgrade
   * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
