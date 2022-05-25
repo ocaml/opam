@@ -434,3 +434,4 @@ users)
   * `OpamDirTrack`: Add `to_summary_string` to summarise changes [#5144 @na4zagin3]
   * `OpamJson`: use `Jsonm` and add an `of_string` function [#5142 @rjbou]
   * `OpamStd.Config.E`: add `value_t` to allow getting environment variable value dynamically [#5111 @rjbou]
+  * `OpamCompat.Unix`: add `realpath` for ocaml < 4.13, and use it in `OpamSystem` [#5152 @rjbou]
