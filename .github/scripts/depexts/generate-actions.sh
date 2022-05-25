@@ -118,6 +118,7 @@ cat >$dir/entrypoint.sh << EOF
 #!/bin/sh
 set -eux
 
+git config --global --add safe.directory /github/workspace
 # For systems that don't have an up to date compiler, to avoid ocaml-secondary
 echo 'default-invariant: [ "ocaml" {>= "4.09.0"} ]' > /opam/opamrc
 opam init --no-setup --disable-sandboxing --bare --config /opam/opamrc git+$OPAM_REPO#$OPAM_REPO_SHA
