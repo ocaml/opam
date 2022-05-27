@@ -1464,7 +1464,7 @@ module ConfigSyntax = struct
         Pp.V.bool;
       "depext-bypass", Pp.ppacc
         with_depext_bypass depext_bypass
-        (Pp.V.map_list
+        (Pp.V.map_list ~depth:1
            (Pp.V.string -| Pp.of_module "sys-package" (module OpamSysPkg)) -|
          Pp.of_pair "System package set" OpamSysPkg.Set.(of_list, elements));
 
@@ -1869,7 +1869,7 @@ module Switch_configSyntax = struct
     "depext-bypass", Pp.ppacc
       (fun depext_bypass t -> { t with depext_bypass})
       (fun t -> t.depext_bypass)
-      (Pp.V.map_list
+      (Pp.V.map_list ~depth:1
          (Pp.V.string -| Pp.of_module "sys-package" (module OpamSysPkg)) -|
        Pp.of_pair "System package set" OpamSysPkg.Set.(of_list, elements));
   ] @

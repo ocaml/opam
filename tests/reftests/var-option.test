@@ -343,33 +343,33 @@ Reverted field pre-session-commands in global configuration
 ### # Check addition & removal on set
 ### opam option depext-bypass
 []
-### opam option 'depext-bypass+=["tempor"]'
-Added '["tempor"]' to field depext-bypass in switch var-option
+### opam option 'depext-bypass+="tempor"'
+Added '"tempor"' to field depext-bypass in switch var-option
 ### opam option 'depext-bypass+=["incididunt"]'
 Added '["incididunt"]' to field depext-bypass in switch var-option
 ### opam option depext-bypass
 ["incididunt" "tempor"]
-### opam option 'depext-bypass-=["incididunt"]'
-Removed '["incididunt"]' from field depext-bypass in switch var-option
+### opam option 'depext-bypass-="incididunt"'
+Removed '"incididunt"' from field depext-bypass in switch var-option
 ### opam option depext-bypass
-["tempor"]
+"tempor"
 ### opam option 'depext-bypass=["incididunt" "tempor"]'
 Set to '["incididunt" "tempor"]' the field depext-bypass in switch var-option
 ### opam option 'depext-bypass-=["tempor"]'
 Removed '["tempor"]' from field depext-bypass in switch var-option
 ### opam option depext-bypass
-["incididunt"]
-### opam option 'depext-bypass-=["ut"]'
+"incididunt"
+### opam option 'depext-bypass-="ut"'
 No modification in switch var-option
 ### opam option depext-bypass
-["incididunt"]
+"incididunt"
 ### opam option 'depext-bypass-=[]'
 No modification in switch var-option
 ### opam option depext-bypass
-["incididunt"]
+"incididunt"
 ### opam option depext-bypass=
 Reverted field depext-bypass in switch var-option
-### opam option 'depext-bypass-=["tempor"]'
+### opam option 'depext-bypass-="tempor"'
 No modification in switch var-option
 ### opam option depext-bypass
 []
