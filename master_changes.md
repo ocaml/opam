@@ -150,6 +150,7 @@ users)
   * Fallback on dnf if yum does not exist on RHEL-based systems [#4825 @kit-ty-kate]
   * Stop zypper from upgrading packages on updates on OpenSUSE [#4978 @kit-ty-kate]
   * Increase verbose logging of command to 4 [#5151 @rjbou]
+  * [BUG] Avoid to loop eternally when `depext-runs-installs` is false in a script [#5156 @rjbou]
 
 ## Format upgrade
   * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
@@ -460,3 +461,4 @@ users)
   * `OpamStd.Config.E`: add `value_t` to allow getting environment variable value dynamically [#5111 @rjbou]
   * `OpamCompat.Unix`: add `realpath` for ocaml < 4.13, and use it in `OpamSystem` [#5152 @rjbou]
   * `OpamCompat`: add `Lazy` module and `Lazy.map` function [#5176 @dra27]
+  * `OpamConsole.menu`: add `noninteractive` option to choose a different default when output is not a tty [#5156 @rjbou]
