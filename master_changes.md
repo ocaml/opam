@@ -132,6 +132,7 @@ users)
   * Fix substring errors in preserved_format [#4941 @rjbou - fix #4936]
   * Add `with-tools` variable for recommended tools [#5016 @rjbou]
   * Add `x-locked` extension fields for overlay internal use, it stores if the files originate from a locked file, if so its extension [#5080 @rjbou]
+  * Set `depext-bypass` parsing with depth 1, no needed brakcet if single package [#5154 @rjbou]
 
 ## External dependencies
   * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
