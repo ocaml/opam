@@ -23,6 +23,7 @@ users)
   * Put back the actions summary as part of confirmation question [#5045 @AltGr]
   * Error report display: print action name [#5045 @AltGr]
   * Refactored depext-related questions, with a flat menu instead of nested y/n questions [#5053 @AltGr - fix #5026]
+    * Fix removal of interactive special characters is output is not tty [#5155 @rjbou]
   * [BUG] Fix default cli handling for simple flags [#5099 @rjbou]
   * Add `experimental` flags handling [#5099 @rjbou]
   * [BUG] Fix `OPAMCURL` and `OPAMFETCH` value setting [#5111 @rjbou - fix #5108]
