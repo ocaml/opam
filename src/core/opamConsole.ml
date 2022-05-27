@@ -952,7 +952,7 @@ let print_table ?cut oc ~sep table =
   in
   List.iter (fun l -> print_line (cleanup_trailing l)) table
 
-let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
+let menu ?default ?noninteractive ?unsafe_yes ?yes ~no ~options fmt =
   assert (List.length options < 10);
   let options_nums =
     List.mapi (fun n (ans, _) -> ans, string_of_int (n+1)) options
@@ -1012,7 +1012,12 @@ let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
   in
   Printf.ksprintf (fun prompt_msg ->
       formatted_msg "%s\n" prompt_msg;
-      let default = OpamStd.Option.default (fst (List.hd options)) default in
+      let default =
+        match default, noninteractive with
+        | _, Some d when not OpamStd.Sys.tty_out -> d
+        | Some d, _ -> d
+        | None, _ -> fst (List.hd options)
+      in
       menu default
     ) fmt
 
