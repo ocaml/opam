@@ -910,6 +910,23 @@
    (run ./run.exe %{bin:opam} %{dep:var-option.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-with-tools)
+ (action
+  (diff with-tools.test with-tools.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-with-tools)))
+
+(rule
+ (targets with-tools.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:with-tools.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-working-dir)
  (action
   (diff working-dir.test working-dir.out)))
