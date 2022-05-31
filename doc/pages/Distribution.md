@@ -97,9 +97,17 @@ OS/distrubtion, their latest opam version and their maintainers:
  [![Ubuntu 20.10 package](https://repology.org/badge/version-for-repo/ubuntu_20_10/opam.svg?header=)](https://packages.ubuntu.com/source/eoan/opam)
   * [Package search](http://packages.ubuntu.com/search?keywords=opam&searchon=names&suite=all&section=all)
 
+* Ubuntu Linux (20.04, LTS, focal)
+ [![Ubuntu 20.04 package](https://repology.org/badge/version-for-repo/ubuntu_20_04/opam.svg?header=)](https://packages.ubuntu.com/focal/opam)
+  * [Package search](https://packages.ubuntu.com/search?keywords=opam&searchon=names&suite=focal&section=all)
+
 * Ubuntu Linux (20.10, groovy)
  [![Ubuntu 20.10 package](https://repology.org/badge/version-for-repo/ubuntu_20_10/opam.svg?header=)](https://packages.ubuntu.com/source/groovy/opam)
   * [Package search](http://packages.ubuntu.com/search?keywords=opam&searchon=names&suite=all&section=all)
+
+* Ubuntu Linux (22.04, LTS, jammy)
+ [![Ubuntu 22.04 package](https://repology.org/badge/version-for-repo/ubuntu_22_04/opam.svg?header=)](https://packages.ubuntu.com/jammy/opam)
+  * [Package search](https://packages.ubuntu.com/search?keywords=opam&searchon=names&suite=jammy&section=all)
 
 ## Third party packages
 
