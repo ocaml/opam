@@ -347,6 +347,7 @@ users)
   * document the options of OpamSolver.dependencies [#5040 @gasche @Armael]
   * Add github `git://` protocol deprecation note [#5097 @rjbou]
   * Add src_ext/HACKING.md [#5095 @dra27]
+  * Update package versions for Ubuntu in distributions list
 
 ## Security fixes
   *
