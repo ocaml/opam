@@ -51,6 +51,7 @@ Done.
 
 <><> a.1 installed successfully <><><><><><><><><><><><><><><><><><><><><><><><>
 => Thanks for installing the packages
+=> and its tool dependencies too
 ### opam list a --column=installed-files
 # Packages matching: name-match(a) & (installed | available)
 # Installed files
