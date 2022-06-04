@@ -108,7 +108,7 @@ type _ cache_name =
 | Archives : ((cache -> 'a) -> 'a) cache_name
 | Secondary : ((cache -> 'a) -> 'a) cache_name
 | Cygwin : ((cache -> 'a) -> [ `x86 | `x64 ] -> 'a) cache_name
-| OCaml : ((cache -> 'a) -> platform -> string -> string -> 'a) cache_name
+| OCaml : ((cache -> 'a) -> _ platform -> string -> string -> 'a) cache_name
 | OpamBS : ((cache -> 'a) -> string -> string -> 'a) cache_name
 | OpamRoot : ((cache -> 'a) -> string -> 'a) cache_name
 | Opam12Root : ((cache -> 'a) -> 'a) cache_name
@@ -148,14 +148,20 @@ let get_cache_cont : type s . s cache_name -> s = function
          build = [Printf.sprintf {|.github\scripts\cygwin.cmd %s-pc-cygwin %s create|} arch_name cygwin_cache_directory];
          build_shell = Some "cmd"}
   | OCaml ->
-      fun f platform version host -> f
+      fun f (type a) (platform : a platform) version host ->
+        let if_windows =
+          match platform with
+          | Windows
+          | Specific (Windows, _) -> fun a _ -> a
+          | _ -> fun _ b -> b in
+        let is_windows = if_windows true false in f
         {name = Printf.sprintf "OCaml %s" version;
-         key = Printf.sprintf "${{ runner.os }}%s-ocaml-%s-${{ %s.outputs.ocaml-cache }}" (if platform = Windows then "-" ^ host else "") version;
+         key = Printf.sprintf "${{ runner.os }}%s-ocaml-%s-${{ %s.outputs.ocaml-cache }}" (if_windows ("-" ^ host) "") version;
          id = "ocaml-cache";
-         force_gzip = (platform = Windows);
-         paths = [(if platform = Windows then {|D:\Cache\ocaml-local.tar|} else "~/.cache/ocaml-local/**")];
-         always_build = (platform = Windows);
-         build = [Printf.sprintf "bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} %s%s" version (if platform = Windows then " " ^ host else "")];
+         force_gzip = is_windows;
+         paths = [if_windows {|D:\Cache\ocaml-local.tar|} "~/.cache/ocaml-local/**"];
+         always_build = is_windows;
+         build = [Printf.sprintf "bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} %s%s" version (if_windows (" " ^ host) "")];
          build_shell = None}
   | OpamBS ->
       fun f version key_prefix -> f
@@ -378,11 +384,11 @@ let main_build_job ~analyse_job ~cygwin_job ?section platform start_version ~oc 
     ++ only_on Windows (run "Test (reftests)" ["bash -exu .github/scripts/main/reftests.sh ${{ matrix.host }}"])
     ++ end_job f
 
-let legacy_build_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~platforms ~oc ~workflow f =
+let legacy_build_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~(platforms : os_only platform list) ~oc ~workflow f =
   let needs = analyse_job :: List.map (function Linux -> build_linux_job | Windows -> build_windows_job | MacOS -> build_macOS_job) platforms in
   let (fail_fast, matrix, _) = platform_ocaml_matrix ~dir:List.take_until ~fail_fast:true (4, 08) in
   let matrix =
-    (fail_fast, ("os", List.map runner_of_platform platforms)::matrix, [])
+    (fail_fast, ("os", List.map os_name_of_platform platforms)::matrix, [])
   in
   (* Not needed, so not implemented *)
   let _ = assert (not (List.mem Windows platforms)) in
@@ -477,9 +483,9 @@ let upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_jo
     ++ run "Test (upgrade)" ["bash -exu .github/scripts/main/upgrade.sh"]
     ++ end_job f
 
-let hygiene_job ~analyse_job platform ~oc ~workflow f =
+let hygiene_job (type a) ~analyse_job (platform : a platform) ~oc ~workflow f =
   job ~oc ~workflow ~section:"Around opam tests" ~runs_on:(Runner [platform]) ~needs:[analyse_job] "Hygiene"
-    ++ install_sys_dune [platform]
+    ++ install_sys_dune [os_of_platform platform]
     ++ checkout ()
     ++ cache Archives
     ++ uses "Get changed files" ~id:"files" ~continue_on_error:true (* see https://github.com/jitterbit/get-changed-files/issues/19 *) "jitterbit/get-changed-files@v1"
@@ -537,7 +543,7 @@ let main oc : unit =
        solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS (fun _ ->
        upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Upgrade from 1.2 to current" Linux (fun _ ->
        upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS (fun _ ->
-       hygiene_job ~analyse_job Linux (fun _ ->
+       hygiene_job ~analyse_job (Specific (Linux, "22.04")) (fun _ ->
        end_workflow))))))))))))))
 
 let () =

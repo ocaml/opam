@@ -215,6 +215,7 @@ users)
   * shell/bootstrap-ocaml.sh: do not fail if curl/wget is missing [#5223 #5233 @kit-ty-kate]
   * Upgrade to cmdliner >= 1.1 [#5269 @kit-ty-kate]
   * Cleared explanation of dependency vendoring in configure [#5277 @dra27 - fix #5271]
+  * Switch autoconf required version to 2.71 [#5161 @dra27]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
