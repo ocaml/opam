@@ -12,6 +12,9 @@ defaults:
   run:
     shell: bash
 
+permissions:
+  contents: read
+
 jobs:
   hygiene-scripts:
     runs-on: ubuntu-latest

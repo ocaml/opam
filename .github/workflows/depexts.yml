@@ -21,6 +21,8 @@ env:
 
 jobs:
   opam-cache:
+    permissions:
+      contents: none
     runs-on: ubuntu-latest
     steps:
     - name: opam binary cache
