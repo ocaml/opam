@@ -168,7 +168,7 @@ files in [doc/pages](https://github.com/ocaml/opam/tree/master/doc/pages).
 
 A more thorough technical document describing opam and specifying the package
 description format is available in the
-[developer manual](http://opam.ocaml.org/doc/manual/dev-manual.html). `make
+[developer manual](https://opam.ocaml.org/doc/Manual.html). `make
 doc` will otherwise make the API documentation available under `doc/`.
 
 ## Community
