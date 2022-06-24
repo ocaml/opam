@@ -201,7 +201,7 @@ The release cycle respects [Semantic Versioning](http://semver.org/).
   browsable HTML files for a given repository. It is used to generate
   http://opam.ocaml.org.
 - [opam-rt](https://github.com/ocaml/opam-rt) is the regression framework for opam.
-- [opam-publish](https://github.com/AltGr/opam-publish) is a tool to facilitate
+- [opam-publish](https://github.com/ocaml-opam/opam-publish) is a tool to facilitate
   the creation, update and publication of opam packages.
 
 ## Copyright and license
