@@ -348,6 +348,7 @@ users)
   * Add github `git://` protocol deprecation note [#5097 @rjbou]
   * Add src_ext/HACKING.md [#5095 @dra27]
   * Update package versions for Ubuntu in distributions list
+  * Fix typo in External Solvers docs [#5167 @metanivek]
   * Fix URL for opam-publish in README.md [#5168 @cnmade]
 
 ## Security fixes
