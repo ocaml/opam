@@ -416,6 +416,7 @@ users)
   * `OpamCudf.filter_solution`: can do not remove recursively actions with optional `~recursive:true` [#4975 @AltGr]
 
 ## opam-format
+  * Exposed `with_*` functions in `OpamFile.Dot_install` [#5169 @panglesd]
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamSysPkg` and `OpamVariable` [#4918 @rjbou]
   * Add OpamPackage.Version.default returning the version number used when no version is given for a package [#4949 @kit-ty-kate]
   * Add `OpamPath.Switch.man_dirs` [#4915 @rjbou]

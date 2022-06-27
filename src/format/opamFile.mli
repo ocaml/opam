@@ -897,6 +897,48 @@ module Dot_install: sig
   (** List of other files to install *)
   val misc: t -> (basename optional * filename) list
 
+  (** List of files to install in $bin/ *)
+  val with_bin : (basename optional * basename option) list -> t -> t
+
+  (** List of files to install in $sbin/ *)
+  val with_sbin : (basename optional * basename option) list -> t -> t
+
+  (** List of files to install in $lib/ *)
+  val with_lib : (basename optional * basename option) list -> t -> t
+
+  (** List of toplevel files *)
+  val with_toplevel : (basename optional * basename option) list -> t -> t
+
+  (** C bindings *)
+  val with_stublibs : (basename optional * basename option) list -> t -> t
+
+  (** List of architecture-independent files *)
+  val with_share : (basename optional * basename option) list -> t -> t
+
+  (** List of files under the more general share prefix *)
+  val with_share_root : (basename optional * basename option) list -> t -> t
+
+  (** List of etc files *)
+  val with_etc : (basename optional * basename option) list -> t -> t
+
+  (** List of doc files *)
+  val with_doc : (basename optional * basename option) list -> t -> t
+
+  (** Man pages *)
+  val with_man : (basename optional * basename option) list -> t -> t
+
+  (** Executable files under lib/ *)
+  val with_libexec : (basename optional * basename option) list -> t -> t
+
+  (** Not relative to the package's lib dir *)
+  val with_lib_root : (basename optional * basename option) list -> t -> t
+
+  (** Not relative to the package's lib dir, and with +x set *)
+  val with_libexec_root : (basename optional * basename option) list -> t -> t
+
+  (** List of other files to install *)
+  val with_misc : (basename optional * filename) list -> t -> t
+
 end
 
 (** .changes files, bound to the OpamDirTrack module *)
