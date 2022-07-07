@@ -602,8 +602,6 @@ let global_allowed_fields, global_allowed_sections =
   let allowed_fields =
     let open OpamStd.Option.Op in
     let open OpamFile in
-    let in_config = OpamInitDefaults.init_config () in
-    let wrapper_init = InitConfig.wrappers in_config in
     let upd_vars get set =
       (fun nc c ->  set (get nc @ get c) c),
       (fun nc c ->
@@ -612,7 +610,10 @@ let global_allowed_fields, global_allowed_sections =
              None = OpamStd.List.find_opt (fun (k',v',_) -> k = k' && v = v') gv)
              (get c)) c)
     in
-    lazy ([
+    lazy (
+      let in_config = OpamInitDefaults.init_config () in
+      let wrapper_init = InitConfig.wrappers in_config in
+      [
         "download-command", Atomic,
         Config.with_dl_tool_opt
           (InitConfig.dl_tool in_config ++ Config.dl_tool Config.empty);
