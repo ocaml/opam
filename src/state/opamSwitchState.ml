@@ -34,24 +34,28 @@ let load_switch_config ?lock_kind gt switch =
        (OpamSwitch.to_string switch);
      OpamFile.Switch_config.empty)
 
-let compute_available_packages gt switch switch_config ~pinned ~opams =
-  (* remove all versions of pinned packages, but the pinned-to version *)
-  let pinned_names = OpamPackage.names_of_packages pinned in
-  let opams =
-    OpamPackage.Map.filter
-      (fun nv _ ->
-         not (OpamPackage.Name.Set.mem nv.name pinned_names) ||
-         OpamPackage.Set.mem nv pinned)
-      opams
-  in
-  let avail_map =
+let filter_available_packages gt switch switch_config ~opams =
+  OpamPackage.keys @@
     OpamPackage.Map.filter (fun package opam ->
         OpamFilter.eval_to_bool ~default:false
           (OpamPackageVar.resolve_switch_raw ~package gt switch switch_config)
           (OpamFile.OPAM.available opam))
       opams
+
+let compute_available_and_pinned_packages gt switch switch_config ~pinned ~opams =
+  (* remove all versions of pinned packages, but the pinned-to version *)
+  let pinned_names = OpamPackage.names_of_packages pinned in
+  let (opams, pinned) =
+    OpamPackage.Map.partition
+      (fun nv _ ->
+         not (OpamPackage.Name.Set.mem nv.name pinned_names) ||
+         OpamPackage.Set.mem nv pinned)
+      opams
   in
-  OpamPackage.keys avail_map
+  (filter_available_packages gt switch switch_config ~opams, pinned)
+
+let compute_available_packages gt switch switch_config ~pinned ~opams =
+  fst @@ compute_available_and_pinned_packages gt switch switch_config ~pinned ~opams
 
 let repos_list_raw rt switch_config =
   let global, repos =
@@ -115,7 +119,7 @@ let infer_switch_invariant_raw
             deps dmap
         in
         dmap)
-      (OpamPackage.packages_of_names (Lazy.force available_packages) @@
+      (OpamPackage.packages_of_names available_packages @@
        OpamPackage.names_of_packages @@
        compiler)
       OpamPackage.Map.empty
@@ -133,7 +137,7 @@ let infer_switch_invariant_raw
   match List.sort (fun (_, c1) (_, c2) -> compare c1 c2) counts with
   | (nv, _) :: _ ->
     let versions =
-      OpamPackage.packages_of_name (Lazy.force available_packages) nv.name
+      OpamPackage.packages_of_name available_packages nv.name
     in
     let n = OpamPackage.Set.cardinal versions in
     if n <= 1 then
@@ -153,9 +157,10 @@ let infer_switch_invariant st =
         st.installed
     else st.compiler_packages
   in
+  let lazy available_packages = st.available_packages in
   infer_switch_invariant_raw
     st.switch_global st.switch st.switch_config st.opams
-    st.packages compiler_packages st.installed_roots st.available_packages
+    st.packages compiler_packages st.installed_roots available_packages
 
 let depexts_raw ~env nv opams =
   try
@@ -330,7 +335,7 @@ let load lock_kind gt rt switch =
     OpamPackage.Map.union (fun _ x -> x) repos_package_index pinned_opams
   in
   let available_packages =
-    lazy (compute_available_packages gt switch switch_config
+    lazy (compute_available_and_pinned_packages gt switch switch_config
             ~pinned ~opams)
   in
   let opams =
@@ -402,6 +407,11 @@ let load lock_kind gt rt switch =
     match switch_config.invariant with
     | Some invariant -> switch_config, invariant
     | None ->
+      let available_packages =
+        let lazy (available_packages, pinned) = available_packages in
+        OpamPackage.Set.union available_packages @@
+          filter_available_packages gt switch switch_config ~opams:pinned
+      in
       let invariant =
         infer_switch_invariant_raw
           gt switch switch_config opams
@@ -499,6 +509,7 @@ let load lock_kind gt rt switch =
       OpamPackage.Set.empty
   ) in
   (* depext check *)
+  let available_packages = OpamCompat.Lazy.map fst available_packages in
   let sys_packages =
     if not (OpamFile.Config.depext gt.config)
     || OpamStateConfig.(!r.no_depexts) then
