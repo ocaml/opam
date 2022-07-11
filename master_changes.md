@@ -352,6 +352,7 @@ users)
   * Update package versions for Ubuntu in distributions list
   * Fix typo in External Solvers docs [#5167 @metanivek]
   * Fix URL for opam-publish in README.md [#5168 @cnmade]
+  * Fix typo in `OpamArg` [@hannesm #5175]
 
 ## Security fixes
   *
