@@ -54,7 +54,7 @@ let preinit_environment_variables =
       "see options `--debug' and `--debug-level'.";
       "YES", (fun v -> YES (env_bool v)),
       "see options `--yes' and `--confirm-level`. \
-       $(b,OPAMYES) has has priority over $(b,OPAMNO) and is \
+       $(b,OPAMYES) has priority over $(b,OPAMNO) and is \
        ignored if $(b,OPAMCONFIRMLEVEL) is set.";
     ] in
   let client =
