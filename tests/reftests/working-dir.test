@@ -234,3 +234,46 @@ test "-f" "present" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/qux.4)
 -> compiled  qux.4
 -> installed qux.4
 Done.
+### : Shows that opam correctly handles updated constraints with --working-dir
+### : See https://github.com/ocaml/opam/issues/5178
+### opam pin remove ./ongoing
+Ok, ongoing is no longer pinned to git+file://${BASEDIR}/ongoing#master (version dev)
+The following actions will be performed:
+=== remove 1 package
+  - remove ongoing dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   ongoing.dev
+Done.
+### <pkg:qux.1>
+opam-version:"2.0"
+### <pin:ongoing/ongoing.opam>
+opam-version: "2.0"
+depends: ["qux"]
+### opam install ./ongoing --working-dir
+Package ongoing does not exist, create as a NEW package? [y/n] y
+ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
+The following actions will be performed:
+=== install 1 package
+  - install ongoing dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ongoing.dev
+Done.
+### <pin:ongoing/ongoing.opam>
+opam-version: "2.0"
+depends: ["qux" {= "1"}]
+### opam install ./ongoing --working-dir --show-action
+[NOTE] Package ongoing is already installed (current version is dev).
+### opam reinstall ./ongoing --working-dir --show-action
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
+[ongoing] Installing new package description from upstream git+file://${BASEDIR}/ongoing#master
+
+The following actions would be performed:
+=== downgrade 1 package
+  - downgrade qux     4 to 1       [required by ongoing]
+=== recompile 1 package
+  - recompile ongoing dev (pinned)

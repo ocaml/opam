@@ -315,6 +315,7 @@ users)
   * Add switch-set test [#4910 @kit-ty-kate]
   * Replace vars on the right-hand of exports [#5024 @AltGr]
   * Add `json-cat` printer, with some automatic remplacements [#5143 @rjbou]
+  * Add some tests showing how --working-dir behaves on updated dependency constraints [#5179 @kit-ty-kate]
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]
