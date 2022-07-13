@@ -425,6 +425,26 @@ let import_t ?ask importfile t =
   let import_sel = importfile.OpamFile.SwitchExport.selections in
   let import_opams = importfile.OpamFile.SwitchExport.overlays in
 
+  (* Check that pinned packages need reinstall *)
+  let to_reinstall =
+    OpamPackage.Name.Map.fold (fun name imported reinst ->
+        try
+          let pkg =
+            OpamSwitchState.find_installed_package_by_name t name
+          in
+          let installed = OpamSwitchState.opam t pkg in
+          if OpamFile.OPAM.effectively_equal
+              ~modulo_state:true installed imported then
+            reinst
+          else OpamPackage.Set.add pkg reinst
+        with Not_found -> reinst)
+      import_opams OpamPackage.Set.empty
+  in
+  let t =
+    { t with reinstall =
+               lazy OpamPackage.Set.Op.(Lazy.force t.reinstall ++ to_reinstall) }
+  in
+
   let opams =
     OpamPackage.Name.Map.fold (fun name opam opams ->
         let nv = OpamPackage.create name (OpamFile.OPAM.version opam) in
