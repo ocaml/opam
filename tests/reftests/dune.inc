@@ -737,6 +737,23 @@
    (run ./run.exe %{bin:opam} %{dep:switch-creation.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-switch-import)
+ (action
+  (diff switch-import.test switch-import.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-switch-import)))
+
+(rule
+ (targets switch-import.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:switch-import.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-switch-invariant)
  (action
   (diff switch-invariant.test switch-invariant.out)))

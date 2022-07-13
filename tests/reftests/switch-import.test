@@ -1,0 +1,104 @@
+N0REP0
+### OPAMYES=1
+### : Test that pinned packages are reinstalled if they are updated in the imported file :
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+install: [ "cp" "fst.out" "%{lib}%" ]
+### git -C nip init -q --initial-branch=fst-head
+### git -C nip config core.autocrlf false
+### git -C nip add -A
+### git -C nip commit -qm "init"
+### git -C nip branch snd-head
+### <nip/fst.out>
+fst branch
+### git -C nip add -A
+### git -C nip commit -qm "fst file"
+### git -C nip checkout snd-head
+Switched to branch 'snd-head'
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+install: [ "cp" "snd.out" "%{lib}%" ]
+### <nip/snd.out>
+snd branch
+### git -C nip add -A
+### git -C nip commit -qm "snd file"
+### opam switch create twice --empty
+### git -C nip checkout fst-head
+Switched to branch 'fst-head'
+### opam pin git+file://${BASEDIR}/nip#fst-head
+Package nip does not exist, create as a NEW package? [y/n] y
+nip is now pinned to git+file://${BASEDIR}/nip#fst-head (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (no changes)
+-> installed nip.dev
+Done.
+### opam list nip --installed --columns=name,installed-files --normalise | grep -v '^#'
+nip    ${BASEDIR}/OPAM/twice/lib/fst.out
+### opam switch export twice.xp
+### opam-cat twice.xp
+installed: ["nip.dev"]
+opam-version: "2.0"
+pinned: "nip.dev"
+roots: ["nip.dev"]
+package "nip" {
+opam-version: "2.0"
+version: "dev"
+synopsis: "A word"
+description: "Two words."
+maintainer: "maint@tain.er"
+authors: "the testing team"
+license: "MIT"
+homepage: "egapemoh"
+bug-reports: "https://nobug"
+install: ["cp" "fst.out" "%{lib}%"]
+dev-repo: "hg+https://pkg@op.am"
+url {
+src: "git+file://${BASEDIR}/nip#fst-head"
+}
+}
+### <twice.snd.xp>
+installed: ["nip.dev"]
+opam-version: "2.0"
+pinned: "nip.dev"
+roots: ["nip.dev"]
+package "nip" {
+opam-version: "2.0"
+version: "dev"
+synopsis: "A word"
+description: "Two words."
+maintainer: "maint@tain.er"
+authors: "the testing team"
+license: "MIT"
+homepage: "egapemoh"
+bug-reports: "https://nobug"
+install: ["cp" "snd.out" "%{lib}%"]
+dev-repo: "hg+https://pkg@op.am"
+url {
+### <add-hash.sh>
+basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+echo "src: \"git+file://${basedir}/nip#snd-head\"}}" >> twice.snd.xp
+### sh add-hash.sh
+### opam switch import twice.snd.xp
+Nothing to do.
+### opam pin
+nip.dev    git  git+file://${BASEDIR}/nip#snd-head
+### opam list nip --installed --columns=name,installed-files --normalise | grep -v '^#'
+nip    ${BASEDIR}/OPAM/twice/lib/fst.out
+### opam switch import twice.snd.xp --switch tierce
+The following actions will be performed:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (git+file://${BASEDIR}/nip#snd-head)
+-> installed nip.dev
+Done.
+### opam pin
+nip.dev    git  git+file://${BASEDIR}/nip#snd-head
+### opam list nip --installed --columns=name,installed-files --normalise --switch tierce | grep -v '^#'
+nip    ${BASEDIR}/OPAM/tierce/lib/snd.out
