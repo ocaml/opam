@@ -84,11 +84,19 @@ basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
 echo "src: \"git+file://${basedir}/nip#snd-head\"}}" >> twice.snd.xp
 ### sh add-hash.sh
 ### opam switch import twice.snd.xp
-Nothing to do.
+The following actions will be performed:
+=== recompile 1 package
+  - recompile nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (git+file://${BASEDIR}/nip#snd-head)
+-> removed   nip.dev
+-> installed nip.dev
+Done.
 ### opam pin
 nip.dev    git  git+file://${BASEDIR}/nip#snd-head
 ### opam list nip --installed --columns=name,installed-files --normalise | grep -v '^#'
-nip    ${BASEDIR}/OPAM/twice/lib/fst.out
+nip    ${BASEDIR}/OPAM/twice/lib/snd.out
 ### opam switch import twice.snd.xp --switch tierce
 The following actions will be performed:
 === install 1 package
