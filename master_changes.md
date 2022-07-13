@@ -69,6 +69,7 @@ users)
   * On loading, check for executable external files if they are in `PATH`, and warn if not the case [#4932 @rjbou - fix #4923]
   * When inferring a 2.1+ switch invariant from 2.0 base packages, don't filter out pinned packages as that causes very wide invariants for pinned compiler packages [#5176 @dra27 - fix #4501]
   * Really install invariant formula if not installed in switch [#5188 @rjbou]
+  * On import, check that installed pinned packages changed, reinstall if so [#5181 @rjbou - fix #5173]
 
 ## Pin
   * Switch the default version when undefined from ~dev to dev [#4949 @kit-ty-kate]
@@ -301,6 +302,7 @@ users)
   * Add json output test [#5143 @rjbou]
   * Add test for opam file write with format preserved bug in #4936, fixed in #4941 [#4159 @rjbou]
   * Add test for switch upgrade from 2.0 root, with pinned compiler [#5176 @rjbou @kit-ty-kate]
+  * Add switch import (for pinned packages) test [#5181 @rjbou]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
