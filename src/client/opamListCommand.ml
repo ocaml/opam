@@ -217,8 +217,9 @@ let apply_selector ~base st = function
   | Compiler -> st.compiler_packages
   | Available -> Lazy.force st.available_packages
   | Installable ->
-    OpamSolver.installable
+    OpamSolver.installable_subset
       (OpamSwitchState.universe st ~requested:OpamPackage.Name.Set.empty Query)
+      base
   | Pinned -> OpamPinned.packages st
   | (Required_by ({recursive=true; _} as tog, atoms)
     | Depends_on ({recursive=true; _} as tog, atoms)) as direction ->
@@ -243,7 +244,7 @@ let apply_selector ~base st = function
       base
   | Conflicts_with packages ->
     OpamSwitchState.conflicts_with st (OpamPackage.Set.of_list packages)
-      (Lazy.force st.available_packages)
+      base
   | Coinstallable_with (tog, packages) ->
     let universe = get_universe st tog in
     let set = OpamPackage.Set.of_list packages in
@@ -370,11 +371,11 @@ let apply_selector ~base st = function
 
 let rec filter ~base st = function
   | Empty -> base
-  | Atom select -> apply_selector ~base st select
+  | Atom select -> base %% apply_selector ~base st select
   | Block b -> filter ~base st b
   | And (a, b) ->
     let base = filter ~base st a in
-    base %% filter ~base st b
+    filter ~base st b
   | Or (a, b) -> filter ~base st a ++ filter ~base st b
 
 type output_format =
@@ -816,7 +817,7 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
   List.iter (fun (name,_) ->
       (* Like OpamSwitchState.get_package, but restricted to [packages] *)
       let nvs = OpamPackage.packages_of_name packages name in
-      if all_versions then
+      if OpamPackage.Set.is_singleton nvs || all_versions then
         (header (OpamPackage.Set.max_elt nvs);
          OpamPackage.Set.iter output_package nvs)
       else

@@ -1,5 +1,22 @@
 
 (alias
+ (name reftest-avoid-version)
+ (action
+  (diff avoid-version.test avoid-version.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-avoid-version)))
+
+(rule
+ (targets avoid-version.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:avoid-version.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-cli-versioning)
  (action
   (diff cli-versioning.test cli-versioning.out)))
@@ -83,6 +100,23 @@
   (with-stdout-to
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:conflict-core.test} %{read-lines:testing-env}))))
+
+(alias
+ (name reftest-conflict-resto)
+ (action
+  (diff conflict-resto.test conflict-resto.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-conflict-resto)))
+
+(rule
+ (targets conflict-resto.out)
+ (deps root-a5d7cdc0c914)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:conflict-resto.test} %{read-lines:testing-env}))))
 
 (alias
  (name reftest-conflict-solo5)
@@ -238,6 +272,74 @@
    (run ./run.exe %{bin:opam} %{dep:opamroot-versions.test} %{read-lines:testing-env}))))
 
 (alias
+ (name reftest-opamrt-big-upgrade)
+ (action
+  (diff opamrt-big-upgrade.test opamrt-big-upgrade.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-opamrt-big-upgrade)))
+
+(rule
+ (targets opamrt-big-upgrade.out)
+ (deps root-7090735c9d)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:opamrt-big-upgrade.test} %{read-lines:testing-env}))))
+
+(alias
+ (name reftest-opamrt-dep-cycle)
+ (action
+  (diff opamrt-dep-cycle.test opamrt-dep-cycle.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-opamrt-dep-cycle)))
+
+(rule
+ (targets opamrt-dep-cycle.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:opamrt-dep-cycle.test} %{read-lines:testing-env}))))
+
+(alias
+ (name reftest-opamrt-reinstall)
+ (action
+  (diff opamrt-reinstall.test opamrt-reinstall.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-opamrt-reinstall)))
+
+(rule
+ (targets opamrt-reinstall.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:opamrt-reinstall.test} %{read-lines:testing-env}))))
+
+(alias
+ (name reftest-orphans)
+ (action
+  (diff orphans.test orphans.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-orphans)))
+
+(rule
+ (targets orphans.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:orphans.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-pat-sub)
  (action
   (diff pat-sub.test pat-sub.out)))
@@ -253,6 +355,40 @@
   (with-stdout-to
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:pat-sub.test} %{read-lines:testing-env}))))
+
+(alias
+ (name reftest-pin)
+ (action
+  (diff pin.test pin.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-pin)))
+
+(rule
+ (targets pin.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:pin.test} %{read-lines:testing-env}))))
+
+(alias
+ (name reftest-remove)
+ (action
+  (diff remove.test remove.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-remove)))
+
+(rule
+ (targets remove.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:remove.test} %{read-lines:testing-env}))))
 
 (alias
  (name reftest-show)
@@ -375,6 +511,46 @@
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
            file://%{dep:opam-repo-009e00fa})))))
+
+(rule
+ (targets opam-archive-7090735c9d.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/7090735c9d.tar.gz)))
+
+(rule
+  (targets opam-repo-7090735c9d)
+  (action
+   (progn
+    (run mkdir -p %{targets})
+    (run tar -C %{targets} -xzf %{dep:opam-archive-7090735c9d.tar.gz} --strip-components=1))))
+
+(rule
+  (targets root-7090735c9d)
+  (action
+   (progn
+    (ignore-stdout
+    (run %{bin:opam} init --root=%{targets}
+           --no-setup --bypass-checks --no-opamrc --bare
+           file://%{dep:opam-repo-7090735c9d})))))
+
+(rule
+ (targets opam-archive-a5d7cdc0c914.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/a5d7cdc0c914.tar.gz)))
+
+(rule
+  (targets opam-repo-a5d7cdc0c914)
+  (action
+   (progn
+    (run mkdir -p %{targets})
+    (run tar -C %{targets} -xzf %{dep:opam-archive-a5d7cdc0c914.tar.gz} --strip-components=1))))
+
+(rule
+  (targets root-a5d7cdc0c914)
+  (action
+   (progn
+    (ignore-stdout
+    (run %{bin:opam} init --root=%{targets}
+           --no-setup --bypass-checks --no-opamrc --bare
+           file://%{dep:opam-repo-a5d7cdc0c914})))))
 
 (rule
  (targets opam-archive-ad4dd344.tar.gz)

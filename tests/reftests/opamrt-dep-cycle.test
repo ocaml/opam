@@ -1,0 +1,101 @@
+N0REP0
+### OPAMYES=true
+### : init_u
+### <pkg:a.1>
+opam-version: "2.0"
+install: [ "mkdir" _:lib ]
+depends: "b" {= version}
+build:   [ "test" "-d" b:lib ]
+remove:  [ "test" "-d" b:lib ]
+### <pkg:a.2>
+opam-version: "2.0"
+install: [ "mkdir" _:lib ]
+### <pkg:b.1>
+opam-version: "2.0"
+install: [ "mkdir" _:lib ]
+### <pkg:b.2>
+opam-version: "2.0"
+install: [ "mkdir" _:lib ]
+depends: "a" {= version}
+build:   [ "test" "-d" a:lib ]
+remove:  [ "test" "-d" a:lib ]
+### opam switch create system --empty
+### opam install a.1
+The following actions will be performed:
+  - install b 1 [required by a]
+  - install a 1
+===== 2 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed b.1
+-> installed a.1
+Done.
+### opam list -sV
+a.1
+b.1
+### opam upgrade
+The following actions will be performed:
+  - upgrade a 1 to 2
+  - upgrade b 1 to 2
+===== 2 to upgrade =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   a.1
+-> removed   b.1
+-> installed a.2
+-> installed b.2
+Done.
+### opam list -sV
+a.2
+b.2
+### opam install a.1
+The following actions will be performed:
+  - downgrade b 2 to 1 [required by a]
+  - downgrade a 2 to 1
+===== 2 to downgrade =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   b.2
+-> removed   a.2
+-> installed b.1
+-> installed a.1
+Done.
+### opam list -sV
+a.1
+b.1
+### opam upgrade
+The following actions will be performed:
+  - upgrade a 1 to 2
+  - upgrade b 1 to 2
+===== 2 to upgrade =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   a.1
+-> removed   b.1
+-> installed a.2
+-> installed b.2
+Done.
+### opam list -sV
+a.2
+b.2
+### opam remove b
+The following actions will be performed:
+  - remove b 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   b.2
+Done.
+### opam install a.1
+The following actions will be performed:
+  - install   b 1      [required by a]
+  - downgrade a 2 to 1
+===== 1 to install | 1 to downgrade =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   a.2
+-> installed b.1
+-> installed a.1
+Done.
+### opam list -sV
+a.1
+b.1

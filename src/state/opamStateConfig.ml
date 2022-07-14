@@ -214,7 +214,7 @@ let load_if_possible_raw ?lock_kind root version (read,read_wo_err) f =
        opam (%s > %s), aborting."
       (OpamFilename.Dir.to_string root)
       (OpamStd.Option.to_string OpamVersion.to_string version)
-      OpamVersion.(to_string current_nopatch)
+      OpamVersion.(to_string OpamFile.Config.root_version)
   | Some true -> read_wo_err f
   | Some false -> read f
 

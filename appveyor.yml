@@ -14,8 +14,8 @@ environment:
     DEP_MODE: lib-ext
     # This should be identical to the value in .travis.yml
     OPAM_REPO: https://github.com/ocaml/opam-repository.git
-    OPAM_REPO_SHA: 38e8f54c584fa3cfe779890f7a56fe88ee38be78
-    OPAM_TEST_REPO_SHA: 38e8f54c584fa3cfe779890f7a56fe88ee38be78
+    OPAM_REPO_SHA: 3d6779beedc761067596bf5c3f5c25ab57a7e3e7
+    OPAM_TEST_REPO_SHA: 3d6779beedc761067596bf5c3f5c25ab57a7e3e7
   matrix:
     - CYG_ROOT: cygwin
       CYG_ARCH: x86

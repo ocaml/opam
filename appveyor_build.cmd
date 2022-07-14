@@ -42,6 +42,10 @@ if %CYGWIN_UPGRADE_REQUIRED% equ 1 (
 )
 if "%CYGWIN_INSTALL_PACKAGES%" neq "" set CYGWIN_INSTALL_PACKAGES=--packages %CYGWIN_INSTALL_PACKAGES:~1%
 if "%CYGWIN_INSTALL_PACKAGES%%FLAG%" equ "" goto UpgradeCygwin_next
+pushd %CYG_ROOT%
+if exist setup-%CYG_ARCH%.exe del setup-%CYG_ARCH%.exe
+appveyor DownloadFile "https://cygwin.com/setup-%CYG_ARCH%.exe" -FileName "setup-%CYG_ARCH%.exe" || exit /b 1
+popd
 "%CYG_ROOT%\setup-%CYG_ARCH%.exe" --quiet-mode --no-shortcuts --no-startmenu --no-desktop --only-site --root "%CYG_ROOT%" --site "%CYG_MIRROR%" --local-package-dir "%CYG_CACHE%" %CYGWIN_INSTALL_PACKAGES% %CYGWIN_UPGRADE_FLAG% > nul
 set CYGWIN_INSTALL_PACKAGES=
 :UpgradeCygwin_next

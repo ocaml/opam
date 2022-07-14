@@ -1,0 +1,96 @@
+N0REP0
+### <pkg:foo.1>
+opam-version: "2.0"
+install: ["touch" "%{lib}%/foo.1"]
+### <pkg:bar.1>
+opam-version: "2.0"
+depends: "foo" {= "1"}
+### <pkg:baz.1>
+opam-version: "2.0"
+### OPAMYES=1
+### opam switch create sw --empty
+### opam install bar
+The following actions will be performed:
+  - install foo 1 [required by bar]
+  - install bar 1
+===== 2 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+-> installed bar.1
+Done.
+### <pkg:foo.1>
+opam-version: "2.0"
+available: false
+### opam reinstall foo
+[ERROR] Sorry, these packages are no longer available from the repositories: foo (= 1)
+# Return code 5 #
+### : no action should be triggered on foo
+### opam install baz --show
+The following actions would be performed:
+  - install baz 1
+### opam reinstall --list-pending
+foo.1
+### opam upgrade --show
+The following actions would be performed:
+  - remove bar 1
+  - remove foo 1
+===== 2 to remove =====
+### : dependency foo is installed but no longer available
+### opam upgrade bar
+The following actions will be performed:
+  - recompile foo 1 [upstream or system changes]
+  - recompile bar 1
+===== 2 to recompile =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.1
+-> removed   foo.1
+-> installed foo.1
+-> installed bar.1
+Done.
+### opam clean -s
+Cleaning up switch sw
+### opam upgrade bar
+Already up-to-date.
+Nothing to do.
+### : replay the same sequence but with another version of `foo` present
+### <pkg:foo.2>
+opam-version: "2.0"
+### opam upgrade --show
+[WARNING] Upgrade is not possible because of conflicts or packages that are no longer available:
+    - Missing dependency:
+    - foo < 2
+    unmet availability conditions: 'false'
+
+You may run "opam upgrade --fixup" to let opam fix the current state.
+# Return code 20 #
+### <pkg:bar.2>
+opam-version: "2.0"
+depends: "foo" {>= "1"}
+### opam upgrade --show
+The following actions would be performed:
+  - upgrade foo 1 to 2
+  - upgrade bar 1 to 2
+===== 2 to upgrade =====
+### opam upgrade --show --fixup
+The following actions would be performed:
+  - upgrade foo 1 to 2
+  - upgrade bar 1 to 2
+===== 2 to upgrade =====
+### opam reinstall baz
+baz is not installed. Install it? [Y/n] y
+The following actions will be performed:
+  - install baz 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed baz.1
+Done.
+### opam upgrade bar
+The following actions will be performed:
+  - upgrade bar 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.1
+-> installed bar.2
+Done.

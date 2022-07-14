@@ -1,0 +1,333 @@
+N0REP0
+### OPAMYES=true
+### : init_u
+### <pkg:a.1>
+opam-version: "2.0"
+install: [ "mkdir" _:lib ]
+### <pkg:b.1>
+opam-version: "2.0"
+depends: "a"
+build:   [ "test" "-d" a:lib ]
+remove:  [ "test" "-d" a:lib ]
+install: [ "mkdir" _:lib ]
+### <pkg:c.1>
+opam-version: "2.0"
+depends: "b"
+build:   [ "test" "-d" b:lib ]
+remove:  [ "test" "-d" b:lib ]
+install: [ "mkdir" _:lib ]
+### <pkg:d.1>
+opam-version: "2.0"
+depends: "c"
+build:   [ "test" "-d" c:lib ]
+remove:  [ "test" "-d" c:lib ]
+### opam switch create system --empty
+### : 1/ Install d
+### opam install d
+The following actions will be performed:
+  - install a 1 [required by b]
+  - install b 1 [required by c]
+  - install c 1 [required by d]
+  - install d 1
+===== 4 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed a.1
+-> installed b.1
+-> installed c.1
+-> installed d.1
+Done.
+### opam list -sV
+a.1
+b.1
+c.1
+d.1
+### opam list -sA --roots
+d
+### : 2/ Reinstall b
+### opam reinstall b
+The following actions will be performed:
+  - recompile b 1
+  - recompile c 1 [uses b]
+  - recompile d 1 [uses c]
+===== 3 to recompile =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   d.1
+-> removed   c.1
+-> removed   b.1
+-> installed b.1
+-> installed c.1
+-> installed d.1
+Done.
+### opam list -sV
+a.1
+b.1
+c.1
+d.1
+### opam list -sA --roots
+d
+### : 3/ Install d
+### opam install d
+[NOTE] Package d is already installed (current version is 1).
+### opam list -sV
+a.1
+b.1
+c.1
+d.1
+### opam list -sA --roots
+d
+### : 4/ Remove b
+### opam remove b
+The following actions will be performed:
+  - remove d 1 [uses c]
+  - remove c 1 [uses b]
+  - remove b 1
+===== 3 to remove =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   d.1
+-> removed   c.1
+-> removed   b.1
+Done.
+### opam list -sV
+a.1
+### opam list -sA --roots
+### : 5/ Install d
+### opam install d
+The following actions will be performed:
+  - install b 1 [required by c]
+  - install c 1 [required by d]
+  - install d 1
+===== 3 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed b.1
+-> installed c.1
+-> installed d.1
+Done.
+### opam list -sV
+a.1
+b.1
+c.1
+d.1
+### opam list -sA --roots
+d
+### : 6/ Remove b from upstream
+### rm -rf REPO/packages/b/b.1
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### : 7/ Upgrade
+### opam upgrade
+The following actions will be performed:
+  - remove d 1
+  - remove c 1
+  - remove b 1
+===== 3 to remove =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   d.1
+-> removed   c.1
+-> removed   b.1
+Done.
+### opam list -sV
+a.1
+### opam list -sA --roots
+### : 8/ Attempt to reinstall d
+### opam install d
+[ERROR] Package conflict!
+  * Missing dependency:
+    - b
+    unknown package
+
+No solution found, exiting
+# Return code 20 #
+### : 9/ Revert to the state with all packages installed and b removed upstream
+### <pkg:b.1>
+opam-version: "2.0"
+depends: "a"
+build:   [ "test" "-d" a:lib ]
+remove:  [ "test" "-d" a:lib ]
+install: [ "mkdir" _:lib ]
+### opam install d
+The following actions will be performed:
+  - install b 1 [required by c]
+  - install c 1 [required by d]
+  - install d 1
+===== 3 to install =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed b.1
+-> installed c.1
+-> installed d.1
+Done.
+### rm -rf REPO/packages/b/b.1
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -sV
+a.1
+b.1
+c.1
+d.1
+### opam list -sA --roots
+d
+### : 10/ Reinstall c
+### opam reinstall c
+The following actions will be performed:
+  - recompile c 1
+  - recompile d 1 [uses c]
+===== 2 to recompile =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   d.1
+-> removed   c.1
+-> installed c.1
+-> installed d.1
+Done.
+### :TODO: here will need `opam pin b --current`
+### opam list -sV
+a.1
+b.1
+c.1
+d.1
+### opam list -sA --roots
+d
+### : 11/ Add a new version of c, then upgrade
+### <pkg:c.2>
+opam-version: "2.0"
+depends: "b"
+build: [ "test" "-d" b:lib ]
+remove: [ "test" "-d" b:lib ]
+install: [ "mkdir" _:lib ]
+### opam upgrade c
+The following actions will be performed:
+  - upgrade   c 1 to 2
+  - recompile d 1      [uses c]
+===== 1 to recompile | 1 to upgrade =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   d.1
+-> removed   c.1
+-> installed c.2
+-> installed d.1
+Done.
+### opam list -sV
+a.1
+b.1
+c.2
+d.1
+### opam list -sA --roots
+d
+### : 12/ Try to reinstall b (should work using the cache)
+### opam reinstall b
+The following actions will be performed:
+  - recompile b 1
+  - recompile c 2 [uses b]
+  - recompile d 1 [uses c]
+===== 3 to recompile =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   d.1
+-> removed   c.2
+-> removed   b.1
+-> installed b.1
+-> installed c.2
+-> installed d.1
+Done.
+### opam list -sV
+a.1
+b.1
+c.2
+d.1
+### opam list -sA --roots
+d
+### : 13/ Try to reinstall a
+### opam reinstall a
+The following actions will be performed:
+  - recompile a 1
+  - recompile b 1 [uses a]
+  - recompile c 2 [uses b]
+  - recompile d 1 [uses c]
+===== 4 to recompile =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   d.1
+-> removed   c.2
+-> removed   b.1
+-> removed   a.1
+-> installed a.1
+-> installed b.1
+-> installed c.2
+-> installed d.1
+Done.
+### opam list -sV
+a.1
+b.1
+c.2
+d.1
+### opam list -sA --roots
+d
+### : 14/ Add a new version of a and upgrade
+### <pkg:a.2>
+opam-version: "2.0"
+install: [ "mkdir" _:lib ]
+### opam upgrade --show
+The following actions would be performed:
+  - remove  d 1      [uses c]
+  - remove  c 2      [uses b]
+  - remove  b 1      [conflicts with a]
+  - upgrade a 1 to 2
+===== 1 to upgrade | 3 to remove =====
+### opam unpin b --show
+[NOTE] b is not pinned.
+### opam unpin b --no-action
+[NOTE] b is not pinned.
+### opam upgrade
+The following actions will be performed:
+  - remove  d 1      [uses c]
+  - remove  c 2      [uses b]
+  - remove  b 1      [conflicts with a]
+  - upgrade a 1 to 2
+===== 1 to upgrade | 3 to remove =====
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   d.1
+-> removed   c.2
+-> removed   b.1
+-> removed   a.1
+-> installed a.2
+Done.
+### opam list -sV
+a.2
+### opam list -sA --roots
+### : 15/ Remove that new version of a and upgrade
+### rm -rf REPO/packages/a/a.2
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade
+The following actions will be performed:
+  - downgrade a 2 to 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   a.2
+-> installed a.1
+Done.
+### opam list -sV
+a.1
+### opam list -sA --roots
+### : 16/ Upgrade again
+### opam upgrade
+Already up-to-date.
+Nothing to do.
+### opam list -sV
+a.1
+### opam list -sA --roots

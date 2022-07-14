@@ -8,15 +8,12 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Global CLI
   *
-  * Fix typo in error message for opam var [#4786 @kit-ty-kate - fix #4785]
-  * Add cli 2.2 handling [#4853 @rjbou]
-  * --no-depexts is the default in CLI 2.0 mode [#4908 @dra27]
 
 ## Plugins
   *
 
 ## Init
-  *
+  * [BUG] Fix `opam init` and `opam init --reinit` when the `jobs` variable has been set in the opamrc or the current config. [#5056 @rjbou]
 
 ## Config report
   *
@@ -34,16 +31,17 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## List
-  *
+  * Some optimisations to 'opam list --installable' queries combined with other filters [#4882 @AltGr]
+  * Improve performance of some opam list combination (e.g. --available --installable) [#4999 @kit-ty-kate]
+  * Improve performance of opam list --conflicts-with when combined with other filters [#4999 @kit-ty-kate]
 
 ## Show
-  *
+  * Improve performance of opam show by 300% when the package to show is given explicitly or unique [#4998 @kit-ty-kate - fix #4997 and partially #4172]
 
-## Var
-  *
-
-## Option
-  *
+## Var/Option
+  * Don't error when displaying if switch is not set [#5027 @rjbou - fix #5025]
+  * Try to set a variable with option `--switch <sw>` fails instead of writing a wrong `switch-config` file [#5027 @rjbou]
+  * When a field is defined in switch and global scope, try to determine the scope also by checking switch selection [#5027 @rjbou]
 
 ## Lint
   *
@@ -55,10 +53,10 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## External dependencies
-  *
+  * Stop zypper from upgrading packages on updates on OpenSUSE [#4978 @kit-ty-kate]
 
 ## Sandbox
-  *
+  * Print error message if command doesn't exist [#4971 @kit-ty-kat - fix #4112]
 
 ## Repository management
   *
@@ -67,7 +65,8 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Build
-  *
+  * Update cold compiler to 4.13 [#5017 @dra27]
+  * Bump opam-file-format to 2.1.4 [#5117 @kit-ty-kate - fix #5116]
 
 ## Infrastructure
   *
@@ -79,7 +78,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## State
-  *
+  * Actually allow multiple state caches to co-exist [#4934 @dra27 - fix #4554 properly this time]
 
 # Opam file format
   *
@@ -88,34 +87,82 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Client
-  *
+  * Fix (at least some of the) empty conflict explanations [#4982 @kit-ty-kate]
 
 ## Internal
-  * Generalise `mk_tristate_opt` to `mk_state_opt` [#4575 @rjbou]
-  * Fix `mk_state_opt` and rename to `mk_enum_opt` [#4626 @rjbou]
-  * Add `mk_enum_opt_all` for state flags that appears more than once [#4582 @rjbou]
-  * Fix `opam exec` on native Windows when calling cygwin executables [#4588 @AltGr]
-  * Fix temporary file with a too long name causing errors on Windows [#4590 @AltGr]
-  * CLI: Add flag deprecation and replacement helper [#4595 @rjbou]
-  * Win32 Console: fix VT100 support [#3897 #4710 @dra27]
-  * Tidied the opam files [#4620 @dra27]
-  * Externalise cli versioning tools from `OpamArg` into `OpamArgTools` [#4606 @rjbou]
-  * Each library defines its own environment variables, that fills the config record [#4606 @rjbou]
-  * Harden cygpath wrapper [#4625 @dra27]
-  * Reset the plugin symlinks when the root is upgraded [#4641 @dra27 - partial fix for #4619]
-  * Formalise opam dev version detection with `OpamVersion.is_dev_version` [#4665 @dra27]
-  * Add `OpamStd.String.is_prefix_of` [#4694 @rjbou @dra27]
-  * Fix `OpamStd.Format.pretty_list`: `last` argument dropped if list contains more than 2 elements [#4694 @rjbou]
   *
 
 ## Test
   *
 
-## Shell
-  *
+## Reftests
+### Tests
+  * Port opam-rt tests: orphans, dep-cycles, reinstall, and big-upgrade [#4979 @AltGr]
+  * Add & update env tests [#4861 #4841 #4974 @rjbou @dra27 @AltGr]
+  * Add remove test [#5004 @AltGr]
+  * Add some simple tests for the "opam list" command [#5006 @kit-ty-kate]
+  * Add clean test for untracked option [#4915 @rjbou]
+  * Harmonise some repo hash to reduce opam repository checkout [#5031 @AltGr]
+  * Add repo optim enable/disable test [#5015 @rjbou]
+  * Update list with co-instabillity [#5024 @AltGr]
+  * Update var-option test with no switch examples [#5025]
+  * Escape for cmdliner.1.1.1 output chane [#5131 @rjbou]
+### Engine
+  * Fix meld reftest: open only with failing ones [#4913 @rjbou]
+  * Add `BASEDIR` to environement [#4913 @rjbou]
+  * Replace opam bin path [#4913 @rjbou]
+  * Add `grep -v` command [#4913 @rjbou]
+  * Apply grep & seds on file order [#4913 @rjbou]
+  * Precise `OPAMTMP` regexp, `hexa` instead of `'alphanum` to avoid confusion with `BASEDIR` [#4913 @rjbou]
+  * Hackish way to have several replacement in a single line [#4913 @rjbou]
+  * Substitution in regexp pattern (for environment variables) [#4913 @rjbou]
+  * Substitution for opam-cat content [#4913 @rjbou]
+  * Allow one char package name on repo [#4966 @AltGr]
+  * Remove opam output beginning with `###` [#4966 @AltGr]
+  * Add `<pin:path>` header to specify incomplete opam files to pin, it is updated from a template in reftest run (no lint errors) [#4966 @rjbou]
+  * Unescape output [#4966 @rjbou]
+  * Clean outputs from opam error reporting block [#4966 @rjbou]
+  * Avoid diff when the repo is too old [#4979 @AltGr]
+  * Escape regexps characters in string replacements primitives [#5009 @kit-ty-kate]
+  * Automatically update default repo when adding a package file [#5004 @AltGr]
+  * Fix github url: `git://` form no more handled [#5097 @rjbou]
+  * Escape regexps characters in string replacements primitives [#5009 @kit-ty-kate]
+  * Automatically update default repo when adding a package file [#5004 @AltGr]
+  * Replace vars on the right-hand of exports [#5024 @AltGr]
 
 ## Doc
-  *
+  * Add github `git://` protocol deprecation note [#5097 @rjbou]
 
 ## Security fixes
   *
+
+# API updates
+## opam-client
+  * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamCLIVersion` [#4918 @rjbou]
+  * `OpamConfigCommand`: add a labelled argument `no_switch` to `exec` [#4957 @kit-ty-kate]
+  * `OpamClient`: fix `update_with_init_config`, when ``jobs` was set in `init_config`, it dropped rest of `config` update [#5056 @rjbou]
+  * Add an optional argument to `OpamArg.mk_subdoc` for extra default elements: `?extra_defaults:(validity * string * string) list` [#4910 @kit-ty-kate]
+  * Add `OpamSwitchCommand.previous_switch` [#4910 @kit-ty-kate]
+  * `OpamConfigCommand`: `set_opt_switch`, `set_var_switch`, `options_list_switch`, and `var_list_switch` now raise configuration error exception (50) if no switch is found [#5027 @rjbou]
+
+## opam-repository
+  * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
+## opam-state
+## opam-solver
+  * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
+  * `OpamCudf`: add `conflict_cycles` [#4039 @gasche]
+  * `OpamCudf`: add `trim_universe` [#5024 @AltGr]
+  * `OpamSolver.cudf_versions_map`: no more takes a package set as argument, compute whole packages (repo + installed) and take accounet of invariant [#5024 @AltGr]
+  * `OpamSolver.load_cudf_universe`: change staging of `add_invariant` [#5024 @AltGr]
+  * `OpamSolver.coinstallable_subset`: add `add_inaviant` optional argument [#5024 @AltGr]
+## opam-format
+  * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamSysPkg` and `OpamVariable` [#4918 @rjbou]
+  * Add OpamPackage.Version.default returning the version number used when no version is given for a package [#4949 @kit-ty-kate]
+  * Add `OpamPath.Switch.man_dirs` [#4915 @rjbou]
+  * `OpamFile.Config`: order list of installed switches according their last use, update `with_switch` accordingly, and add `previous_switch` [#4910 @AltGr]
+## opam-core
+  * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
+  * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamFilename`, `OpamHash`, `OpamStd`, `OpamStd`, `OpamUrl`, and `OpamVersion` [#4918 @rjbou]
+  * `OpamHash`: add `sort` from strongest to weakest kind
+  * `OpamSystem.real_path`: Remove the double chdir trick on OCaml >= 4.13.0 [#4961 @kit-ty-kate]
+  * `OpamClient`: fix `update_with_init_config`, when ``jobs` was set in `init_config`, it dropped rest of `config` update [#5056 @rjbou]
