@@ -753,6 +753,11 @@ let env_arg cli =
        OpamArg.dir_sep OpamArg.dir_sep)
     Arg.(list string) []
 
+let keep_default_env_flag cli =
+  OpamArg.mk_flag ~cli (OpamArg.cli_from OpamArg.cli2_2) ["keep-default-environment"]
+    "Keep the default environment, even if --environment is passed"
+
+
 let state_selection_arg cli =
   OpamArg.mk_vflag ~cli ~section:OpamArg.package_selection_section
     OpamListCommand.Available [
@@ -770,7 +775,7 @@ let state_selection_arg cli =
      is never installable)";
   ]
 
-let get_virtual_switch_state repo_root env =
+let get_virtual_switch_state repo_root env keep_default_env =
   let env =
     List.map (fun s ->
         match OpamStd.String.cut_at s '=' with
@@ -818,7 +823,7 @@ let get_virtual_switch_state repo_root env =
   in
   OpamSwitchState.load_virtual
     ~repos_list:[repo.repo_name]
-    ~avail_default:(env = [])
+    ~avail_default:(env = [] || keep_default_env)
     gt rt
 
 let or_arg cli =
@@ -843,7 +848,7 @@ let list_command cli =
   in
   let cmd
       global_options package_selection disjunction state_selection
-      package_listing env packages () =
+      package_listing env keep_default_env packages () =
     OpamArg.apply_global_options cli global_options;
     let format =
       let force_all_versions =
@@ -871,7 +876,7 @@ let list_command cli =
               List.map (fun x -> Atom x) package_selection);
       ]
     in
-    let st = get_virtual_switch_state (OpamFilename.cwd ()) env in
+    let st = get_virtual_switch_state (OpamFilename.cwd ()) env keep_default_env in
     if not format.OpamListCommand.short && filter <> OpamFormula.Empty then
       OpamConsole.msg "# Packages matching: %s\n"
         (OpamListCommand.string_of_formula filter);
@@ -883,7 +888,7 @@ let list_command cli =
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
   Term.(const cmd $ global_options cli $ OpamArg.package_selection cli $
         or_arg cli $ state_selection_arg cli $ OpamArg.package_listing cli $
-        env_arg cli $ pattern_list_arg)
+        env_arg cli $ keep_default_env_flag cli $ pattern_list_arg)
 
 let filter_command_doc = "Filters a repository to only keep selected packages"
 let filter_command cli =
@@ -909,7 +914,7 @@ let filter_command cli =
       "List the removal commands, without actually performing them"
   in
   let cmd
-      global_options package_selection disjunction state_selection env
+      global_options package_selection disjunction state_selection env keep_default_env
       remove dryrun packages () =
     OpamArg.apply_global_options cli global_options;
     let repo_root = OpamFilename.cwd () in
@@ -925,7 +930,7 @@ let filter_command cli =
            List.map (fun x -> Atom x) package_selection)
       ]
     in
-    let st = get_virtual_switch_state repo_root env in
+    let st = get_virtual_switch_state repo_root env keep_default_env in
     let packages = OpamListCommand.filter ~base:st.packages st filter in
     if OpamPackage.Set.is_empty packages then
       if remove then
@@ -969,7 +974,7 @@ let filter_command cli =
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
   Term.(const cmd $ global_options cli $ OpamArg.package_selection cli $
-        or_arg cli $ state_selection_arg cli $ env_arg cli $ remove_arg $
+        or_arg cli $ state_selection_arg cli $ env_arg cli $ keep_default_env_flag cli $ remove_arg $
         dryrun_arg $
         pattern_list_arg)
 

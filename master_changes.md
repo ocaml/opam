@@ -201,6 +201,8 @@ users)
   * Bid a fond farewell to AppVeyor, with thanks for 5100+ CI builds [#5134 @dra27]
 
 ## Admin
+  * [NEW] a flag `--keep-default-environment` to keep the default resolver
+    environment available even when `--environment` is specified.
   * ✘ `opam admin cache` now ignores all already present cache files. Option
     `--check-all` restores the previous behaviour of validating all checksums.
   * [BUG] Fix repo-upgrade internal error [#4965 @AltGr]
