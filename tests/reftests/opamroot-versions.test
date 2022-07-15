@@ -524,7 +524,7 @@ let installed_switches =
     | _ -> ""
   in
   Format.sprintf {|
-installed-switches: ["sw-sys-comp" "sw-comp"%s "default" %S "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp"%s "default" %S "this-internal-error" "pinned-comp"]
 switch: "sw-sys-comp"
 |} local_switch (Filename.concat (Sys.getcwd ()) "why-did-you-delete-me")
 let default_compiler = {|default-compiler: ["i-am-sys-compiler" "i-am-compiler"]|}
@@ -550,6 +550,12 @@ compiler: ["i-am-sys-compiler.1"]
 roots: ["i-am-another-package.2" "i-am-sys-compiler.1"]
 installed: ["i-am-another-package.2" "i-am-package.2" "i-am-sys-compiler.1"]
 |}
+let sw_state_pinned_comp = {|
+compiler: ["i-am-compiler.1"]
+roots: ["i-am-package.1" "i-am-compiler.1"]
+installed: ["i-am-compiler.1" "i-am-package.1"]
+pinned: ["i-am-compiler.1"]
+|}
 let invariant_default = {|invariant: ["i-am-sys-compiler" | "i-am-compiler"]|}
 let invariant_sw_comp = {|invariant: ["i-am-compiler"]|}
 let invariant_sw_sys_comp = {|invariant: ["i-am-sys-compiler"]|}
@@ -563,7 +569,9 @@ let opam_20 =
     "sw-comp/.opam-switch/switch-config", [ opam_version_2_0; synopsis "switch with compiler" ];
     "sw-comp/.opam-switch/switch-state", [ opam_version_2_0; sw_state_sw_comp ];
     "sw-sys-comp/.opam-switch/switch-config", [ opam_version_2_0; synopsis "switch with system compiler" ];
-    "sw-sys-comp/.opam-switch/switch-state", [ opam_version_2_0; sw_state_sw_sys_comp ]
+    "sw-sys-comp/.opam-switch/switch-state", [ opam_version_2_0; sw_state_sw_sys_comp ];
+    "pinned-comp/.opam-switch/switch-config", [ opam_version_2_0; synopsis "switch with pinned compiler" ];
+    "pinned-comp/.opam-switch/switch-state", [ opam_version_2_0; sw_state_pinned_comp ];
   ], [
     "_opam/.opam-switch/switch-config", [ opam_version_2_0; synopsis "local switch"; opam_root ];
     "_opam/.opam-switch/switch-state", [ opam_version_2_0; sw_state_default ];
@@ -710,7 +718,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-comp" "sw-sys-comp" "default"]
+installed-switches: ["sw-comp" "sw-sys-comp" "default" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -782,7 +790,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "pinned-comp"]
 jobs: 4
 opam-root-version: current
 opam-version: "2.0"
@@ -856,7 +864,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "pinned-comp"]
 jobs: 4
 opam-root-version: current
 opam-version: "2.0"
@@ -918,7 +926,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error" "pinned-comp"]
 jobs: 4
 opam-root-version: current
 opam-version: "2.0"
@@ -961,6 +969,7 @@ RSTATE                          Cache found
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 ${BASEDIR}
 default
+pinned-comp
 sw-comp
 sw-sys-comp
 ### opam list
@@ -981,7 +990,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -1053,7 +1062,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-comp" "sw-sys-comp" "default"]
+installed-switches: ["sw-comp" "sw-sys-comp" "default" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -1120,7 +1129,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -1190,7 +1199,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -1253,7 +1262,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error" "pinned-comp"]
 jobs: 4
 opam-root-version: current
 opam-version: "2.0"
@@ -1301,6 +1310,7 @@ Update done, please now retry your command.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 ${BASEDIR}
 default
+pinned-comp
 sw-comp
 sw-sys-comp
 ### opam list
@@ -1321,7 +1331,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -1396,7 +1406,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-comp" "sw-sys-comp" "default"]
+installed-switches: ["sw-comp" "sw-sys-comp" "default" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -1465,7 +1475,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -1537,7 +1547,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -1600,7 +1610,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error" "pinned-comp"]
 jobs: 4
 opam-root-version: current
 opam-version: "2.0"
@@ -1648,6 +1658,7 @@ Update done.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 ${BASEDIR}
 default
+pinned-comp
 sw-comp
 sw-sys-comp
 ### opam list
@@ -1668,7 +1679,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -1733,7 +1744,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "pinned-comp"]
 jobs: 4
 opam-root-version: current
 opam-version: "2.0"
@@ -1796,7 +1807,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "pinned-comp"]
 jobs: 4
 opam-root-version: current
 opam-version: "2.0"
@@ -1861,7 +1872,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "pinned-comp"]
 jobs: 4
 opam-root-version: current
 opam-version: "2.0"
@@ -1915,7 +1926,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error" "pinned-comp"]
 jobs: 4
 opam-root-version: current
 opam-version: "2.0"
@@ -1952,6 +1963,7 @@ RSTATE                          Cache found
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 ${BASEDIR}
 default
+pinned-comp
 sw-comp
 sw-sys-comp
 ### opam list
@@ -1972,7 +1984,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -2020,7 +2032,7 @@ depext: true
 depext-cannot-install: false
 depext-run-installs: true
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -2067,7 +2079,7 @@ depext: true
 depext-cannot-install: false
 depext-run-installs: true
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -2114,7 +2126,7 @@ depext: true
 depext-cannot-install: false
 depext-run-installs: true
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -2167,7 +2179,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error" "pinned-comp"]
 jobs: 4
 opam-root-version: current
 opam-version: "2.0"
@@ -2201,7 +2213,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error" "pinned-comp"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -2213,6 +2225,7 @@ wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "ma
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 ${BASEDIR}
 default
+pinned-comp
 sw-comp
 sw-sys-comp
 this-internal-error
@@ -2226,3 +2239,19 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
+### ocaml generate.ml 2.0
+### opam upgrade --switch pinned-comp --show-action
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.0 to 2.1
+FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ pinned-comp
+STATE                           Definition missing for installed package i-am-compiler.1, copying from repo
+STATE                           Definition missing for installed package i-am-package.1, copying from repo
+STATE                           Inferred invariant: from base packages { i-am-compiler.1 }, (roots { i-am-compiler.1 }) => ["i-am-compiler"]
+STATE                           Switch state loaded in 0.000s
+STATE                           Detected changed packages (marked for reinstall): {}
+The following actions would be performed:
+=== upgrade 1 package
+  - upgrade i-am-package 1 to 2
