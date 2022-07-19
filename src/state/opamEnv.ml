@@ -626,7 +626,7 @@ let export_in_shell shell =
     let make_cmd_comment comment_opt =
       OpamStd.Option.to_string (Printf.sprintf "REM %s\n") comment_opt
     in
-    Printf.sprintf "%sSET \"%s=%s\"\n"
+    Printf.sprintf "%sset \"%s=%s\"\n"
       (make_cmd_comment comment) k v in
   match shell with
   | SH_zsh | SH_bash | SH_sh -> sh

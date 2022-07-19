@@ -114,9 +114,9 @@ let print_cmd_env env =
         | _ -> false
         in
         if OpamCompat.String.(exists is_special v || exists is_special k) then
-          OpamConsole.msg "SET \"%s=%s\"\n" k v
+          OpamConsole.msg "set \"%s=%s\"\n" k v
         else
-          OpamConsole.msg "SET %s=%s\n" k v
+          OpamConsole.msg "set %s=%s\n" k v
       end;
       aux r
   in
