@@ -105,9 +105,16 @@ let print_cmd_env env =
       if OpamConsole.verbose () then
         OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
       if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
-      then
-        OpamConsole.msg "SET %s=%s\n"
-          k (OpamStd.Env.escape_windows_command_line v);
+      then begin
+        let is_special = function
+        | '(' | ')' | '!' | '^' | '%' | '"' | '<' | '>' | '|' -> true
+        | _ -> false
+        in
+        if OpamCompat.String.(exists is_special v || exists is_special k) then
+          OpamConsole.msg "SET \"%s=%s\"\n" k v
+        else
+          OpamConsole.msg "SET %s=%s\n" k v
+      end;
       aux r
   in
   aux env

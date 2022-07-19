@@ -392,9 +392,6 @@ module Env : sig
 
   (** Utility function for PowerShell strings. *)
   val escape_powershell: string -> string
-
-  (** Utility function for Windows command line (cmd.exe) strings. *)
-  val escape_windows_command_line: string -> string
 end
 
 (** {2 System query and exit handling} *)

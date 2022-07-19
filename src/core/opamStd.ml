@@ -733,12 +733,6 @@ module Env = struct
     (* escape single quotes with two single quotes.
        https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules?view=powershell-7.1 *)
     Re.(replace_string (compile (char '\'')) ~by:"''")
-
-  let escape_windows_command_line s =
-    (* escape all Windows command line metacharacters with a caret (^) *)
-    List.fold_left
-      (fun acc ch -> Re.(replace_string (compile (char ch)) ~by:("^" ^ String.make 1 ch) acc))
-      s ['^'; '"'; '&'; '|'; '<'; '>']
 end
 
 

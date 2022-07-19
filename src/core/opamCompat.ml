@@ -8,7 +8,22 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module String = String
+module String =
+#if OCAML_VERSION >= (4, 13, 0)
+  String
+#else
+struct
+  include String
+
+  let exists p s =
+    let n = length s in
+    let rec loop i =
+      if i = n then false
+      else if p (unsafe_get s i) then true
+      else loop (succ i) in
+    loop 0
+end
+#endif
 
 module Char = Char
 

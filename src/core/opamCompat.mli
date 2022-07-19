@@ -8,7 +8,17 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module String = String
+module String
+#if OCAML_VERSION >= (4, 13, 0)
+= String
+#else
+: sig
+  include module type of struct include String end
+
+  val exists: (char -> bool) -> string -> bool
+end
+#endif
+
 
 module Char = Char
 
