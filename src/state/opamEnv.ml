@@ -624,7 +624,7 @@ let export_in_shell shell =
       (make_comment comment) k v in
   let cmd (k,v,comment) =
     let make_cmd_comment comment_opt =
-      OpamStd.Option.to_string (Printf.sprintf "REM %s\n") comment_opt
+      OpamStd.Option.to_string (Printf.sprintf ":: %s\n") comment_opt
     in
     Printf.sprintf "%sset \"%s=%s\"\n"
       (make_cmd_comment comment) k v in
