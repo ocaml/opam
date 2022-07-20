@@ -805,6 +805,23 @@
    (run ./run.exe %{bin:opam} %{dep:upgrade-format.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-upgrade-two-point-o)
+ (action
+  (diff upgrade-two-point-o.test upgrade-two-point-o.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-upgrade-two-point-o)))
+
+(rule
+ (targets upgrade-two-point-o.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:upgrade-two-point-o.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-upgrade)
  (action
   (diff upgrade.test upgrade.out)))
