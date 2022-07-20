@@ -19,6 +19,9 @@
   (wrapped         false))
 
 (rule
+  (copy opamWin32Stubs.ml opamWin32Stubs.mli))
+
+(rule
   (targets opam-putenv.exe)
   (deps    opamInject.c)
   (action  (run ocaml %{dep:build-putenv.ml} %{targets} %{dep:opam-putenv.c} %{dep:cc64})))
