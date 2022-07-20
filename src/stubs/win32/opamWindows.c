@@ -488,6 +488,7 @@ CAMLprim value OPAMW_HasGlyph(value checker, value scalar)
 CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
 {
   char* result;
+  DWORD dwProcessId = Int32_val(pid);
 
   if (!caml_string_is_c_safe(key) || !caml_string_is_c_safe(val))
     caml_invalid_argument("OPAMW_process_putenv");
@@ -500,10 +501,12 @@ CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
   if (caml_string_length(key) > 4095 || caml_string_length(val) > 4095)
     caml_invalid_argument("Strings too long");
 
+  caml_enter_blocking_section();
   result =
     InjectSetEnvironmentVariable(Int32_val(pid),
                                  String_val(key),
                                  String_val(val));
+  caml_leave_blocking_section();
 
   if (result == NULL)
     return Val_true;
@@ -553,7 +556,7 @@ CAMLprim value OPAMW_SHGetFolderPath(value nFolder, value dwFlags)
     caml_failwith("OPAMW_SHGetFolderPath");
 }
 
-CAMLprim value OPAMW_SendMessageTimeout(value hWnd,
+CAMLprim value OPAMW_SendMessageTimeout(value vhWnd,
                                         value uTimeout,
                                         value fuFlags,
                                         value vmsg,
@@ -567,6 +570,7 @@ CAMLprim value OPAMW_SendMessageTimeout(value hWnd,
   WPARAM wParam;
   LPARAM lParam;
   UINT msg;
+  HWND hWnd = (HWND)Nativeint_val(vhWnd);
 
   switch (Int_val(vmsg))
   {
@@ -586,6 +590,7 @@ CAMLprim value OPAMW_SendMessageTimeout(value hWnd,
       }
   }
 
+  caml_enter_blocking_section();
   lResult =
     SendMessageTimeout((HWND)Nativeint_val(hWnd),
                         msg,
@@ -594,6 +599,7 @@ CAMLprim value OPAMW_SendMessageTimeout(value hWnd,
                         Int_val(fuFlags),
                         Int_val(uTimeout),
                         &dwReturnValue);
+  caml_leave_blocking_section();
 
   switch (Int_val(vmsg))
   {
