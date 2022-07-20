@@ -248,17 +248,10 @@ CAMLprim value OPAMW_GetWindowsVersion(value unit)
 
   CAMLlocal1(result);
   result = caml_alloc_tuple(4);
-#if OCAML_VERSION >= 40600
   Store_field(result, 0, Val_int(caml_win32_major));
   Store_field(result, 1, Val_int(caml_win32_minor));
   Store_field(result, 2, Val_int(caml_win32_build));
   Store_field(result, 3, Val_int(caml_win32_revision));
-#else
-  Store_field(result, 0, Val_int(0));
-  Store_field(result, 1, Val_int(0));
-  Store_field(result, 2, Val_int(0));
-  Store_field(result, 3, Val_int(0));
-#endif
 
   CAMLreturn(result);
 }
