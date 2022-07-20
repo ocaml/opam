@@ -22,11 +22,6 @@
 #include <caml/signals.h>
 #include <caml/unixsupport.h>
 
-/* In a previous incarnation, dummy C stubs were generated for non-Windows
- * builds. Although this is no longer used, the C sources retain the ability to
- * be compiled this way. */
-#ifdef _WIN32
-
 #include <Windows.h>
 #include <Shlobj.h>
 #include <TlHelp32.h>
@@ -122,26 +117,17 @@ static char* getProcessInfo(HANDLE hProcessSnapshot,
 
 char* InjectSetEnvironmentVariable(DWORD pid, const char* key, const char* val);
 
-#define OPAMreturn CAMLreturn
-
-#else
-
-#define OPAMreturn(v) CAMLreturn(Val_unit)
-
-#endif
-
 /* Actual primitives from here */
 CAMLprim value OPAMW_GetCurrentProcessID(value unit)
 {
   CAMLparam1(unit);
 
-  OPAMreturn(caml_copy_int32(GetCurrentProcessId()));
+  CAMLreturn(caml_copy_int32(GetCurrentProcessId()));
 }
 
 CAMLprim value OPAMW_GetStdHandle(value nStdHandle)
 {
   CAMLparam1(nStdHandle);
-#ifdef _WIN32
   CAMLlocal1(result);
 
   HANDLE hResult;
@@ -151,15 +137,13 @@ CAMLprim value OPAMW_GetStdHandle(value nStdHandle)
 
   result = caml_alloc_custom(&HandleOps, sizeof(HANDLE), 0, 1);
   HANDLE_val(result) = hResult;
-#endif
 
-  OPAMreturn(result);
+  CAMLreturn(result);
 }
 
 CAMLprim value OPAMW_GetConsoleScreenBufferInfo(value hConsoleOutput)
 {
   CAMLparam1(hConsoleOutput);
-#ifdef _WIN32
   CAMLlocal2(result, coord);
 
   CONSOLE_SCREEN_BUFFER_INFO buffer;
@@ -187,9 +171,8 @@ CAMLprim value OPAMW_GetConsoleScreenBufferInfo(value hConsoleOutput)
   Store_field(coord, 0, Val_int(buffer.dwMaximumWindowSize.X));
   Store_field(coord, 1, Val_int(buffer.dwMaximumWindowSize.Y));
   Store_field(result, 4, coord);
-#endif
 
-  OPAMreturn(result);
+  CAMLreturn(result);
 }
 
 CAMLprim value OPAMW_SetConsoleTextAttribute(value hConsoleOutput,
@@ -197,13 +180,11 @@ CAMLprim value OPAMW_SetConsoleTextAttribute(value hConsoleOutput,
 {
   CAMLparam2(hConsoleOutput, wAttributes);
 
-#ifdef _WIN32
   if (!SetConsoleTextAttribute(HANDLE_val(hConsoleOutput),
                                Int_val(wAttributes)))
     caml_failwith("setConsoleTextAttribute");
-#endif
 
-  OPAMreturn(Val_unit);
+  CAMLreturn(Val_unit);
 }
 
 CAMLprim value OPAMW_FillConsoleOutputCharacter(value vhConsoleOutput,
@@ -213,7 +194,6 @@ CAMLprim value OPAMW_FillConsoleOutputCharacter(value vhConsoleOutput,
 {
   CAMLparam4(vhConsoleOutput, character, vnLength, vdwWriteCoord);
 
-#ifdef _WIN32
   HANDLE hConsoleOutput = HANDLE_val(vhConsoleOutput);
   CONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo;
   WCHAR cCharacter = Int_val(character) & 0xFF;
@@ -238,40 +218,34 @@ CAMLprim value OPAMW_FillConsoleOutputCharacter(value vhConsoleOutput,
       dwWriteCoord.X %= ConsoleScreenBufferInfo.dwSize.X;
     }
   }
-#endif
 
-  OPAMreturn(Val_bool(result));
+  CAMLreturn(Val_bool(result));
 }
 
 CAMLprim value OPAMW_GetConsoleMode(value hConsoleHandle)
 {
   CAMLparam1(hConsoleHandle);
 
-#ifdef _WIN32
   DWORD dwMode;
   if (!GetConsoleMode(HANDLE_val(hConsoleHandle), &dwMode))
-#endif
     caml_raise_not_found();
 
-  OPAMreturn(Val_int(dwMode));
+  CAMLreturn(Val_int(dwMode));
 }
 
 CAMLprim value OPAMW_SetConsoleMode(value hConsoleMode, value dwMode)
 {
   CAMLparam2(hConsoleMode, dwMode);
 
-#ifdef _WIN32
   BOOL result = SetConsoleMode(HANDLE_val(hConsoleMode), Int_val(dwMode));
-#endif
 
-  OPAMreturn(Val_bool(result));
+  CAMLreturn(Val_bool(result));
 }
 
 CAMLprim value OPAMW_GetWindowsVersion(value unit)
 {
   CAMLparam1(unit);
 
-#ifdef _WIN32
   CAMLlocal1(result);
   result = caml_alloc_tuple(4);
 #if OCAML_VERSION >= 40600
@@ -285,16 +259,14 @@ CAMLprim value OPAMW_GetWindowsVersion(value unit)
   Store_field(result, 2, Val_int(0));
   Store_field(result, 3, Val_int(0));
 #endif
-#endif
 
-  OPAMreturn(result);
+  CAMLreturn(result);
 }
 
 CAMLprim value OPAMW_IsWoW64(value unit)
 {
   CAMLparam1(unit);
 
-#ifdef _WIN32
   BOOL result = FALSE;
   /*
    * 32-bit versions may or may not have IsWow64Process (depends on age).
@@ -304,9 +276,8 @@ CAMLprim value OPAMW_IsWoW64(value unit)
    */
   if (has_IsWoW64Process() && !IsWoW64Process(GetCurrentProcess(), &result))
     result = FALSE;
-#endif
 
-  OPAMreturn(Val_bool(result));
+  CAMLreturn(Val_bool(result));
 }
 
 /*
@@ -314,7 +285,6 @@ CAMLprim value OPAMW_IsWoW64(value unit)
  */
 CAMLprim value OPAMW_waitpids(value vpid_reqs, value vpid_len)
 {
-#ifdef _WIN32
   int i;
   DWORD status, retcode;
   HANDLE pid_req;
@@ -351,9 +321,6 @@ CAMLprim value OPAMW_waitpids(value vpid_reqs, value vpid_len)
    */
   CloseHandle(pid_req);
   return alloc_process_status(pid_req, status);
-#else
-  return Val_unit;
-#endif
 }
 
 CAMLprim value OPAMW_WriteRegistry(value hKey,
@@ -364,7 +331,6 @@ CAMLprim value OPAMW_WriteRegistry(value hKey,
 {
   CAMLparam5(hKey, lpSubKey, lpValueName, dwType, lpData);
 
-#ifdef _WIN32
   HKEY key;
   const void* buf = NULL;
   DWORD cbData = 0;
@@ -418,23 +384,21 @@ CAMLprim value OPAMW_WriteRegistry(value hKey,
         break;
       }
   }
-#endif
 
-  OPAMreturn(Val_unit);
+  CAMLreturn(Val_unit);
 }
 
 CAMLprim value OPAMW_GetConsoleOutputCP(value unit)
 {
   CAMLparam1(unit);
 
-  OPAMreturn(Val_int(GetConsoleOutputCP()));
+  CAMLreturn(Val_int(GetConsoleOutputCP()));
 }
 
 CAMLprim value OPAMW_GetCurrentConsoleFontEx(value hConsoleOutput,
                                              value bMaximumWindow)
 {
   CAMLparam2(hConsoleOutput, bMaximumWindow);
-#ifdef _WIN32
   CAMLlocal3(result, coord, name);
 
   int len;
@@ -459,15 +423,13 @@ CAMLprim value OPAMW_GetCurrentConsoleFontEx(value hConsoleOutput,
   {
     caml_raise_not_found();
   }
-#endif
 
-  OPAMreturn(result);
+  CAMLreturn(result);
 }
 
 CAMLprim value OPAMW_CreateGlyphChecker(value fontName)
 {
   CAMLparam1(fontName);
-#ifdef _WIN32
   CAMLlocal2(result, handle);
 
   /*
@@ -510,19 +472,16 @@ CAMLprim value OPAMW_CreateGlyphChecker(value fontName)
   {
     caml_failwith("OPAMW_CheckGlyphs: GetDC");
   }
-#endif
 
-  OPAMreturn(result);
+  CAMLreturn(result);
 }
 
 CAMLprim value OPAMW_DeleteGlyphChecker(value checker)
 {
   CAMLparam1(checker);
 
-#ifdef _WIN32
   DeleteObject(HANDLE_val(Field(checker, 1)));
   ReleaseDC(NULL, HANDLE_val(Field(checker, 0)));
-#endif
 
   CAMLreturn(Val_unit);
 }
@@ -530,7 +489,6 @@ CAMLprim value OPAMW_DeleteGlyphChecker(value checker)
 CAMLprim value OPAMW_HasGlyph(value checker, value scalar)
 {
   CAMLparam2(checker, scalar);
-#ifdef _WIN32
   BOOL result = FALSE;
   HDC hDC = HANDLE_val(Field(checker, 0));
 
@@ -546,15 +504,13 @@ CAMLprim value OPAMW_HasGlyph(value checker, value scalar)
     default:
       caml_failwith("OPAMW_CheckGlyphs: GetGlyphIndicesW (unexpected return)");
   }
-#endif
 
-  OPAMreturn(Val_bool(index != 0xffff));
+  CAMLreturn(Val_bool(index != 0xffff));
 }
 
 CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
 {
   CAMLparam3(pid, key, val);
-#ifdef _WIN32
   CAMLlocal1(res);
 
   char* result;
@@ -584,16 +540,14 @@ CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
   {
     caml_failwith(result);
   }
-#endif
 
-  OPAMreturn(res);
+  CAMLreturn(res);
 }
 
 CAMLprim value OPAMW_IsWoW64Process(value pid)
 {
   CAMLparam1(pid);
 
-#ifdef _WIN32
   BOOL result = FALSE;
 
   if (has_IsWoW64Process())
@@ -608,9 +562,8 @@ CAMLprim value OPAMW_IsWoW64Process(value pid)
       CloseHandle(hProcess);
     }
   }
-#endif
 
-  OPAMreturn(Val_bool(result));
+  CAMLreturn(Val_bool(result));
 }
 
 /*
@@ -622,7 +575,6 @@ CAMLprim value OPAMW_IsWoW64Process(value pid)
 CAMLprim value OPAMW_SHGetFolderPath(value nFolder, value dwFlags)
 {
   CAMLparam2(nFolder, dwFlags);
-#ifdef _WIN32
   CAMLlocal1(result);
   TCHAR szPath[MAX_PATH];
 
@@ -634,9 +586,8 @@ CAMLprim value OPAMW_SHGetFolderPath(value nFolder, value dwFlags)
     result = caml_copy_string(szPath);
   else
     caml_failwith("OPAMW_SHGetFolderPath");
-#endif
 
-  OPAMreturn(result);
+  CAMLreturn(result);
 }
 
 CAMLprim value OPAMW_SendMessageTimeout(value hWnd,
@@ -648,7 +599,6 @@ CAMLprim value OPAMW_SendMessageTimeout(value hWnd,
 {
   CAMLparam5(hWnd, vmsg, vwParam, vlParam, fuFlags);
   CAMLxparam1(uTimeout);
-#ifdef _WIN32
   CAMLlocal1(result);
 
   DWORD_PTR dwReturnValue;
@@ -692,9 +642,8 @@ CAMLprim value OPAMW_SendMessageTimeout(value hWnd,
         break;
       }
   }
-#endif
 
-  OPAMreturn(result);
+  CAMLreturn(result);
 }
 
 CAMLprim value OPAMW_SendMessageTimeout_byte(value * v, int n)
@@ -706,7 +655,6 @@ CAMLprim value OPAMW_GetParentProcessID(value processId)
 {
   CAMLparam1(processId);
 
-#ifdef _WIN32
   PROCESSENTRY32 entry;
   char* msg;
   /*
@@ -721,9 +669,8 @@ CAMLprim value OPAMW_GetParentProcessID(value processId)
    * Finished with the snapshot
    */
   CloseHandle(hProcessSnapshot);
-#endif
 
-  OPAMreturn(caml_copy_int32(entry.th32ParentProcessID));
+  CAMLreturn(caml_copy_int32(entry.th32ParentProcessID));
 }
 
 CAMLprim value OPAMW_GetProcessName(value processId)
@@ -746,7 +693,6 @@ CAMLprim value OPAMW_GetProcessName(value processId)
 CAMLprim value OPAMW_GetConsoleAlias(value alias, value exeName)
 {
   CAMLparam2(alias, exeName);
-#ifdef _WIN32
   CAMLlocal1(result);
 
   DWORD nLength = 8192;
@@ -766,7 +712,6 @@ CAMLprim value OPAMW_GetConsoleAlias(value alias, value exeName)
   }
 
   free(buffer);
-#endif
 
-  OPAMreturn(result);
+  CAMLreturn(result);
 }
