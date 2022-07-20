@@ -50,21 +50,20 @@ static inline BOOL has_IsWoW64Process(void)
 }
 
 /*
- * Taken from otherlibs/win32unix/winwait.c (sadly declared static)
- * Altered only for CAML_NAME_SPACE
+ * Taken from otherlibs/unix/winwait.c (sadly declared static)
  */
 static value alloc_process_status(HANDLE pid, int status)
 {
-  value res, st;
+  CAMLparam0();
+  CAMLlocal1(st);
+  value res;
 
-  st = caml_alloc(1, 0);
+  st = caml_alloc_small(1, 0);
   Field(st, 0) = Val_int(status);
-  Begin_root (st);
-    res = caml_alloc_small(2, 0);
-    Field(res, 0) = Val_long((intnat) pid);
-    Field(res, 1) = st;
-  End_roots();
-  return res;
+  res = caml_alloc_small(2, 0);
+  Field(res, 0) = Val_long((intnat) pid);
+  Field(res, 1) = st;
+  CAMLreturn(res);
 }
 
 /* Order must match OpamStubsTypes.registry_root */
@@ -119,15 +118,12 @@ char* InjectSetEnvironmentVariable(DWORD pid, const char* key, const char* val);
 /* Actual primitives from here */
 CAMLprim value OPAMW_GetCurrentProcessID(value unit)
 {
-  CAMLparam1(unit);
-
-  CAMLreturn(caml_copy_int32(GetCurrentProcessId()));
+  return caml_copy_int32(GetCurrentProcessId());
 }
 
 CAMLprim value OPAMW_GetStdHandle(value nStdHandle)
 {
-  CAMLparam1(nStdHandle);
-  CAMLlocal1(result);
+  value result;
 
   HANDLE hResult;
 
@@ -137,38 +133,38 @@ CAMLprim value OPAMW_GetStdHandle(value nStdHandle)
   result = caml_alloc_custom(&HandleOps, sizeof(HANDLE), 0, 1);
   HANDLE_val(result) = hResult;
 
-  CAMLreturn(result);
+  return result;
 }
 
 CAMLprim value OPAMW_GetConsoleScreenBufferInfo(value hConsoleOutput)
 {
-  CAMLparam1(hConsoleOutput);
-  CAMLlocal2(result, coord);
-
+  CAMLparam0();
+  CAMLlocal1(result);
+  value coord;
   CONSOLE_SCREEN_BUFFER_INFO buffer;
 
   if (!GetConsoleScreenBufferInfo(HANDLE_val(hConsoleOutput), &buffer))
     caml_raise_not_found();
 
   result = caml_alloc(5, 0);
-  coord = caml_alloc(2, 0);
-  Store_field(coord, 0, Val_int(buffer.dwSize.X));
-  Store_field(coord, 1, Val_int(buffer.dwSize.Y));
+  coord = caml_alloc_small(2, 0);
+  Field(coord, 0) = Val_int(buffer.dwSize.X);
+  Field(coord, 1) = Val_int(buffer.dwSize.Y);
   Store_field(result, 0, coord);
-  coord = caml_alloc(2, 0);
-  Store_field(coord, 0, Val_int(buffer.dwCursorPosition.X));
-  Store_field(coord, 1, Val_int(buffer.dwCursorPosition.Y));
+  coord = caml_alloc_small(2, 0);
+  Field(coord, 0) = Val_int(buffer.dwCursorPosition.X);
+  Field(coord, 1) = Val_int(buffer.dwCursorPosition.Y);
   Store_field(result, 1, coord);
   Store_field(result, 2, Val_int(buffer.wAttributes));
-  coord = caml_alloc(4, 0);
-  Store_field(coord, 0, Val_int(buffer.srWindow.Left));
-  Store_field(coord, 1, Val_int(buffer.srWindow.Top));
-  Store_field(coord, 2, Val_int(buffer.srWindow.Right));
-  Store_field(coord, 3, Val_int(buffer.srWindow.Bottom));
+  coord = caml_alloc_small(4, 0);
+  Field(coord, 0) = Val_int(buffer.srWindow.Left);
+  Field(coord, 1) = Val_int(buffer.srWindow.Top);
+  Field(coord, 2) = Val_int(buffer.srWindow.Right);
+  Field(coord, 3) = Val_int(buffer.srWindow.Bottom);
   Store_field(result, 3, coord);
-  coord = caml_alloc(2, 0);
-  Store_field(coord, 0, Val_int(buffer.dwMaximumWindowSize.X));
-  Store_field(coord, 1, Val_int(buffer.dwMaximumWindowSize.Y));
+  coord = caml_alloc_small(2, 0);
+  Field(coord, 0) = Val_int(buffer.dwMaximumWindowSize.X);
+  Field(coord, 1) = Val_int(buffer.dwMaximumWindowSize.Y);
   Store_field(result, 4, coord);
 
   CAMLreturn(result);
@@ -177,13 +173,11 @@ CAMLprim value OPAMW_GetConsoleScreenBufferInfo(value hConsoleOutput)
 CAMLprim value OPAMW_SetConsoleTextAttribute(value hConsoleOutput,
                                              value wAttributes)
 {
-  CAMLparam2(hConsoleOutput, wAttributes);
-
   if (!SetConsoleTextAttribute(HANDLE_val(hConsoleOutput),
                                Int_val(wAttributes)))
     caml_failwith("setConsoleTextAttribute");
 
-  CAMLreturn(Val_unit);
+  return Val_unit;
 }
 
 CAMLprim value OPAMW_FillConsoleOutputCharacter(value vhConsoleOutput,
@@ -191,8 +185,6 @@ CAMLprim value OPAMW_FillConsoleOutputCharacter(value vhConsoleOutput,
                                                 value vnLength,
                                                 value vdwWriteCoord)
 {
-  CAMLparam4(vhConsoleOutput, character, vnLength, vdwWriteCoord);
-
   HANDLE hConsoleOutput = HANDLE_val(vhConsoleOutput);
   CONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo;
   WCHAR cCharacter = Int_val(character) & 0xFF;
@@ -218,47 +210,39 @@ CAMLprim value OPAMW_FillConsoleOutputCharacter(value vhConsoleOutput,
     }
   }
 
-  CAMLreturn(Val_bool(result));
+  return Val_bool(result);
 }
 
 CAMLprim value OPAMW_GetConsoleMode(value hConsoleHandle)
 {
-  CAMLparam1(hConsoleHandle);
-
   DWORD dwMode;
   if (!GetConsoleMode(HANDLE_val(hConsoleHandle), &dwMode))
     caml_raise_not_found();
 
-  CAMLreturn(Val_int(dwMode));
+  return Val_int(dwMode);
 }
 
 CAMLprim value OPAMW_SetConsoleMode(value hConsoleMode, value dwMode)
 {
-  CAMLparam2(hConsoleMode, dwMode);
-
   BOOL result = SetConsoleMode(HANDLE_val(hConsoleMode), Int_val(dwMode));
 
-  CAMLreturn(Val_bool(result));
+  return Val_bool(result);
 }
 
 CAMLprim value OPAMW_GetWindowsVersion(value unit)
 {
-  CAMLparam1(unit);
+  value result;
+  result = caml_alloc_small(4, 0);
+  Field(result, 0) = Val_int(caml_win32_major);
+  Field(result, 1) = Val_int(caml_win32_minor);
+  Field(result, 2) = Val_int(caml_win32_build);
+  Field(result, 3) = Val_int(caml_win32_revision);
 
-  CAMLlocal1(result);
-  result = caml_alloc_tuple(4);
-  Store_field(result, 0, Val_int(caml_win32_major));
-  Store_field(result, 1, Val_int(caml_win32_minor));
-  Store_field(result, 2, Val_int(caml_win32_build));
-  Store_field(result, 3, Val_int(caml_win32_revision));
-
-  CAMLreturn(result);
+  return result;
 }
 
 CAMLprim value OPAMW_IsWoW64(value unit)
 {
-  CAMLparam1(unit);
-
   BOOL result = FALSE;
   /*
    * 32-bit versions may or may not have IsWow64Process (depends on age).
@@ -269,7 +253,7 @@ CAMLprim value OPAMW_IsWoW64(value unit)
   if (has_IsWoW64Process() && !IsWoW64Process(GetCurrentProcess(), &result))
     result = FALSE;
 
-  CAMLreturn(Val_bool(result));
+  return Val_bool(result);
 }
 
 /*
@@ -282,8 +266,8 @@ CAMLprim value OPAMW_waitpids(value vpid_reqs, value vpid_len)
   HANDLE pid_req;
   DWORD err = 0;
   int len = Int_val(vpid_len);
-  HANDLE *lpHandles = (HANDLE*)malloc(sizeof(HANDLE) * len);
   value ptr = vpid_reqs;
+  HANDLE *lpHandles = (HANDLE*)malloc(sizeof(HANDLE) * len);
 
   if (lpHandles == NULL)
     caml_raise_out_of_memory();
@@ -321,8 +305,6 @@ CAMLprim value OPAMW_WriteRegistry(value hKey,
                                    value dwType,
                                    value lpData)
 {
-  CAMLparam5(hKey, lpSubKey, lpValueName, dwType, lpData);
-
   HKEY key;
   const void* buf = NULL;
   DWORD cbData = 0;
@@ -377,22 +359,20 @@ CAMLprim value OPAMW_WriteRegistry(value hKey,
       }
   }
 
-  CAMLreturn(Val_unit);
+  return Val_unit;
 }
 
 CAMLprim value OPAMW_GetConsoleOutputCP(value unit)
 {
-  CAMLparam1(unit);
-
-  CAMLreturn(Val_int(GetConsoleOutputCP()));
+  return Val_int(GetConsoleOutputCP());
 }
 
 CAMLprim value OPAMW_GetCurrentConsoleFontEx(value hConsoleOutput,
                                              value bMaximumWindow)
 {
-  CAMLparam2(hConsoleOutput, bMaximumWindow);
-  CAMLlocal3(result, coord, name);
-
+  CAMLparam0();
+  CAMLlocal1(result);
+  value coord;
   int len;
   CONSOLE_FONT_INFOEX fontInfo;
   fontInfo.cbSize = sizeof(fontInfo);
@@ -401,11 +381,11 @@ CAMLprim value OPAMW_GetCurrentConsoleFontEx(value hConsoleOutput,
                               Bool_val(bMaximumWindow),
                               &fontInfo))
   {
-    result = caml_alloc(5, 0);
+    result = caml_alloc_tuple(5);
     Store_field(result, 0, Val_int(fontInfo.nFont));
-    coord = caml_alloc(2, 0);
-    Store_field(coord, 0, Val_int(fontInfo.dwFontSize.X));
-    Store_field(coord, 0, Val_int(fontInfo.dwFontSize.Y));
+    coord = caml_alloc_small(2, 0);
+    Field(coord, 0) = Val_int(fontInfo.dwFontSize.X);
+    Field(coord, 1) = Val_int(fontInfo.dwFontSize.Y);
     Store_field(result, 1, coord);
     Store_field(result, 2, Val_int(fontInfo.FontFamily));
     Store_field(result, 3, Val_int(fontInfo.FontWeight));
@@ -421,8 +401,9 @@ CAMLprim value OPAMW_GetCurrentConsoleFontEx(value hConsoleOutput,
 
 CAMLprim value OPAMW_CreateGlyphChecker(value fontName)
 {
-  CAMLparam1(fontName);
-  CAMLlocal2(result, handle);
+  CAMLparam0();
+  CAMLlocal1(result);
+  value handle;
 
   /*
    * Any device context will do to load the font, so use the Screen DC.
@@ -470,17 +451,14 @@ CAMLprim value OPAMW_CreateGlyphChecker(value fontName)
 
 CAMLprim value OPAMW_DeleteGlyphChecker(value checker)
 {
-  CAMLparam1(checker);
-
   DeleteObject(HANDLE_val(Field(checker, 1)));
   ReleaseDC(NULL, HANDLE_val(Field(checker, 0)));
 
-  CAMLreturn(Val_unit);
+  return Val_unit;
 }
 
 CAMLprim value OPAMW_HasGlyph(value checker, value scalar)
 {
-  CAMLparam2(checker, scalar);
   BOOL result = FALSE;
   HDC hDC = HANDLE_val(Field(checker, 0));
 
@@ -497,14 +475,11 @@ CAMLprim value OPAMW_HasGlyph(value checker, value scalar)
       caml_failwith("OPAMW_CheckGlyphs: GetGlyphIndicesW (unexpected return)");
   }
 
-  CAMLreturn(Val_bool(index != 0xffff));
+  return Val_bool(index != 0xffff);
 }
 
 CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
 {
-  CAMLparam3(pid, key, val);
-  CAMLlocal1(res);
-
   char* result;
 
   /*
@@ -521,25 +496,15 @@ CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
                                  String_val(val));
 
   if (result == NULL)
-  {
-    res = Val_true;
-  }
+    return Val_true;
   else if (strlen(result) == 0)
-  {
-    res = Val_false;
-  }
+    return Val_false;
   else
-  {
     caml_failwith(result);
-  }
-
-  CAMLreturn(res);
 }
 
 CAMLprim value OPAMW_IsWoW64Process(value pid)
 {
-  CAMLparam1(pid);
-
   BOOL result = FALSE;
 
   if (has_IsWoW64Process())
@@ -555,7 +520,7 @@ CAMLprim value OPAMW_IsWoW64Process(value pid)
     }
   }
 
-  CAMLreturn(Val_bool(result));
+  return Val_bool(result);
 }
 
 /*
@@ -566,8 +531,6 @@ CAMLprim value OPAMW_IsWoW64Process(value pid)
  */
 CAMLprim value OPAMW_SHGetFolderPath(value nFolder, value dwFlags)
 {
-  CAMLparam2(nFolder, dwFlags);
-  CAMLlocal1(result);
   TCHAR szPath[MAX_PATH];
 
   if (SUCCEEDED(SHGetFolderPath(NULL,
@@ -575,11 +538,9 @@ CAMLprim value OPAMW_SHGetFolderPath(value nFolder, value dwFlags)
                                 NULL,
                                 Int_val(dwFlags),
                                 szPath)))
-    result = caml_copy_string(szPath);
+    return caml_copy_string(szPath);
   else
     caml_failwith("OPAMW_SHGetFolderPath");
-
-  CAMLreturn(result);
 }
 
 CAMLprim value OPAMW_SendMessageTimeout(value hWnd,
@@ -589,9 +550,7 @@ CAMLprim value OPAMW_SendMessageTimeout(value hWnd,
                                         value vwParam,
                                         value vlParam)
 {
-  CAMLparam5(hWnd, vmsg, vwParam, vlParam, fuFlags);
-  CAMLxparam1(uTimeout);
-  CAMLlocal1(result);
+  value result;
 
   DWORD_PTR dwReturnValue;
   HRESULT lResult;
@@ -628,14 +587,14 @@ CAMLprim value OPAMW_SendMessageTimeout(value hWnd,
   {
     case 0:
       {
-        result = caml_alloc(2, 0);
-        Store_field(result, 0, Val_int(lResult));
-        Store_field(result, 1, Val_int(dwReturnValue));
+        result = caml_alloc_small(2, 0);
+        Field(result, 0) = Val_int(lResult);
+        Field(result, 1) = Val_int(dwReturnValue);
         break;
       }
   }
 
-  CAMLreturn(result);
+  return result;
 }
 
 CAMLprim value OPAMW_SendMessageTimeout_byte(value * v, int n)
@@ -645,8 +604,6 @@ CAMLprim value OPAMW_SendMessageTimeout_byte(value * v, int n)
 
 CAMLprim value OPAMW_GetParentProcessID(value processId)
 {
-  CAMLparam1(processId);
-
   PROCESSENTRY32 entry;
   char* msg;
   /*
@@ -662,7 +619,7 @@ CAMLprim value OPAMW_GetParentProcessID(value processId)
    */
   CloseHandle(hProcessSnapshot);
 
-  CAMLreturn(caml_copy_int32(entry.th32ParentProcessID));
+  return caml_copy_int32(entry.th32ParentProcessID);
 }
 
 CAMLprim value OPAMW_GetProcessName(value processId)
@@ -684,8 +641,7 @@ CAMLprim value OPAMW_GetProcessName(value processId)
 
 CAMLprim value OPAMW_GetConsoleAlias(value alias, value exeName)
 {
-  CAMLparam2(alias, exeName);
-  CAMLlocal1(result);
+  value result;
 
   DWORD nLength = 8192;
   LPTSTR buffer = (LPTSTR)malloc(nLength);
@@ -705,5 +661,5 @@ CAMLprim value OPAMW_GetConsoleAlias(value alias, value exeName)
 
   free(buffer);
 
-  CAMLreturn(result);
+  return result;
 }
