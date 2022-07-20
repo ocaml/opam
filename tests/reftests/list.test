@@ -336,7 +336,7 @@ abt
 
 No solution found, exiting
 # Return code 20 #
-### opam switch set-invariant --formula '["ocaml" {>= "4.01.0"}]'
+### opam switch set-invariant --formula '["ocaml" {>= "4.01.0"}]' --no-action
 The switch invariant was set to ocaml >= 4.01.0
 ### opam list ab* -s --installable
 abella
