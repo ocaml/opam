@@ -24,7 +24,7 @@ synopsis: "switch with pinned compiler"
 ### OPAMDEBUGSECTIONS=STATE opam upgrade --show-action --debug-level=-1
 STATE                           LOAD-SWITCH-STATE @ pinned-comp
 STATE                           Definition missing for installed package i-am-compiler.1, copying from repo
-STATE                           Inferred invariant: from base packages { i-am-compiler.1 }, (roots { i-am-compiler.1 }) => ["i-am-compiler"]
+STATE                           Inferred invariant: from base packages { i-am-compiler.1 }, (roots { i-am-compiler.1 }) => ["i-am-compiler" {= "1"}]
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
@@ -34,6 +34,6 @@ Nothing to do.
 Ok, i-am-compiler is no longer pinned locally (version 1)
 Nothing to do.
 ### opam upgrade --show-action
-The following actions would be performed:
-=== upgrade 1 package
-  - upgrade i-am-compiler 1 to 2
+Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
+However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+Nothing to do.
