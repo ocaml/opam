@@ -11,15 +11,15 @@
 #include <Windows.h>
 
 /* SetEnvironmentVariable function pointer type */
-typedef LRESULT (WINAPI *SETENVIRONMENTVARIABLE)(LPCTSTR,LPCTSTR);
+typedef LRESULT (WINAPI *SETENVIRONMENTVARIABLE)(LPCWSTR,LPCWSTR);
 
 /*
  * Data structure to pass to the remote thread
  */
 typedef struct {
   SETENVIRONMENTVARIABLE SetEnvironmentVariable;
-  TCHAR lpName[4096];
-  TCHAR lpValue[4096];
+  WCHAR lpName[4096];
+  WCHAR lpValue[4096];
   BOOL result;
 } INJDATA, *PINJDATA;
 
@@ -49,16 +49,15 @@ static void AfterThreadFunc (void)
   return;
 }
 
-char* InjectSetEnvironmentVariable(DWORD pid, const char* key, const char* val)
+char* InjectSetEnvironmentVariable(DWORD dwProcessId, LPCWSTR lpName, LPCWSTR lpValue)
 {
   /*
    * Open the parent process for code injection
    */
-  HANDLE hProcess =
-    OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION
-                | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ,
-                FALSE, pid);
-  INJDATA payload = {NULL, "", "", FALSE};
+  DWORD dwDesiredAccess = PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION |
+                          PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ;
+  HANDLE hProcess = OpenProcess(dwDesiredAccess, FALSE, dwProcessId);
+  INJDATA payload = {NULL, L"", L"", FALSE};
   INJDATA* pData;
   DWORD* pCode;
   const int codeSize = ((LPBYTE)AfterThreadFunc - (LPBYTE)ThreadFunc);
@@ -68,14 +67,13 @@ char* InjectSetEnvironmentVariable(DWORD pid, const char* key, const char* val)
     return "OPAMW_process_putenv: could not open parent process";
 
   payload.SetEnvironmentVariable =
-    (SETENVIRONMENTVARIABLE)GetProcAddress(GetModuleHandle("kernel32"),
-                                           "SetEnvironmentVariableA");
+    (SETENVIRONMENTVARIABLE)GetProcAddress(GetModuleHandle(L"kernel32"), "SetEnvironmentVariableW");
 
   /*
    * Set-up the instruction
    */
-  strcpy(payload.lpName, key);
-  strcpy(payload.lpValue, val);
+  wcscpy(payload.lpName, lpName);
+  wcscpy(payload.lpValue, lpValue);
 
   /*
    * Allocate a page in the parent process to hold the instruction and copy the

@@ -12,7 +12,7 @@
     (language      c)
     (names         opamInject opamWindows)
     (flags         :standard
-                   -DCAML_NAME_SPACE
+                   -DUNICODE -D_UNICODE -DCAML_NAME_SPACE
                    (:include ../c-flags.sexp)))
   (c_library_flags (:standard
                    (:include c-libraries.sexp)))

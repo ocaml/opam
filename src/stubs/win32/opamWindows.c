@@ -8,9 +8,11 @@
 /*                                                                        */
 /**************************************************************************/
 
-/* We need the UTF16 conversion functions */
+/* We need the UTF16 conversion functions (which prior to 4.13 were internal)
+   and also the internal length calculations functions, which are still
+   internal. */
 #define CAML_INTERNALS
-#include <stdio.h>
+
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
 #include <caml/fail.h>
@@ -24,6 +26,8 @@
 #include <Windows.h>
 #include <Shlobj.h>
 #include <TlHelp32.h>
+
+#include <stdio.h>
 
 static struct custom_operations HandleOps =
 {
@@ -45,7 +49,7 @@ static inline BOOL has_IsWoW64Process(void)
 {
   return (IsWoW64Process
           || (IsWoW64Process =
-               (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle("kernel32"),
+               (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(L"kernel32"),
                                                    "IsWow64Process")));
 }
 
@@ -113,7 +117,7 @@ static char* getProcessInfo(HANDLE hProcessSnapshot,
   return NULL;
 }
 
-char* InjectSetEnvironmentVariable(DWORD pid, const char* key, const char* val);
+char* InjectSetEnvironmentVariable(DWORD, LPCWSTR, LPCWSTR);
 
 /* Actual primitives from here */
 CAMLprim value OPAMW_GetCurrentProcessID(value unit)
@@ -300,67 +304,55 @@ CAMLprim value OPAMW_waitpids(value vpid_reqs, value vpid_len)
 }
 
 CAMLprim value OPAMW_WriteRegistry(value hKey,
-                                   value lpSubKey,
-                                   value lpValueName,
+                                   value sub_key,
+                                   value value_name,
                                    value dwType,
-                                   value lpData)
+                                   value data)
 {
   HKEY key;
-  const void* buf = NULL;
+  LPVOID lpData = NULL;
   DWORD cbData = 0;
   DWORD type = 0;
+  LSTATUS ret;
+  LPWSTR lpSubKey, lpValueName;
 
-  if (!caml_string_is_c_safe(lpSubKey) || !caml_string_is_c_safe(lpValueName))
+  if (!caml_string_is_c_safe(sub_key) || !caml_string_is_c_safe(value_name))
     caml_invalid_argument("OPAMW_WriteRegistry");
 
-  switch (RegOpenKeyEx(roots[Int_val(hKey)],
-                       String_val(lpSubKey),
-                       0,
-                       KEY_WRITE,
-                       &key))
+  /* Cases match OpamStubsTypes.registry_value */
+  switch (Int_val(dwType))
   {
-    case ERROR_SUCCESS:
-      {
-        /* Cases match OpamStubsTypes.registry_value */
-        switch (Int_val(dwType))
-        {
-          case 0:
-            {
-              buf = String_val(lpData);
-              cbData = strlen(buf) + 1;
-              type = REG_SZ;
-              break;
-            }
-          default:
-            {
-              caml_failwith("OPAMW_WriteRegistry: value not implemented");
-              break;
-            }
-        }
-        if (RegSetValueEx(key,
-                          String_val(lpValueName),
-                          0,
-                          type,
-                          (LPBYTE)buf,
-                          cbData) != ERROR_SUCCESS)
-        {
-          RegCloseKey(key);
-          caml_failwith("RegSetValueEx");
-        }
-        RegCloseKey(key);
-        break;
-      }
-    case ERROR_FILE_NOT_FOUND:
-      {
-        caml_raise_not_found();
-        break;
-      }
+    case 0:
+      lpData = caml_stat_strdup_to_utf16(String_val(data));
+      cbData = win_multi_byte_to_wide_char(String_val(data), -1, NULL, 0);
+      type = REG_SZ;
+      break;
     default:
-      {
-        caml_failwith("RegOpenKeyEx");
-        break;
-      }
+      caml_failwith("OPAMW_WriteRegistry: value not implemented");
+      break;
   }
+
+  if (!(lpSubKey = caml_stat_strdup_to_utf16(String_val(sub_key)))) {
+    caml_stat_free(lpData);
+    caml_raise_out_of_memory();
+  }
+  if (!(lpValueName = caml_stat_strdup_to_utf16(String_val(value_name)))) {
+    caml_stat_free(lpData);
+    caml_stat_free(lpSubKey);
+    caml_raise_out_of_memory();
+  }
+
+  ret =
+    RegSetKeyValue(roots[Int_val(hKey)], lpSubKey, lpValueName, type, lpData, cbData);
+
+  caml_stat_free(lpSubKey);
+  caml_stat_free(lpValueName);
+  caml_stat_free(lpData);
+
+  if (ret == ERROR_FILE_NOT_FOUND)
+    caml_raise_not_found();
+  else if (ret != ERROR_SUCCESS)
+    caml_failwith("RegSetKeyValue");
 
   return Val_unit;
 }
@@ -488,6 +480,7 @@ CAMLprim value OPAMW_HasGlyph(value checker, value scalar)
 CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
 {
   char* result;
+  LPWSTR lpName, lpValue;
   DWORD dwProcessId = Int32_val(pid);
 
   if (!caml_string_is_c_safe(key) || !caml_string_is_c_safe(val))
@@ -501,11 +494,15 @@ CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
   if (caml_string_length(key) > 4095 || caml_string_length(val) > 4095)
     caml_invalid_argument("Strings too long");
 
+  if (!(lpName = caml_stat_strdup_to_utf16(String_val(key))))
+    caml_raise_out_of_memory();
+  if (!(lpValue = caml_stat_strdup_to_utf16(String_val(val)))) {
+    caml_stat_free(lpName);
+    caml_raise_out_of_memory();
+  }
+
   caml_enter_blocking_section();
-  result =
-    InjectSetEnvironmentVariable(Int32_val(pid),
-                                 String_val(key),
-                                 String_val(val));
+  result = InjectSetEnvironmentVariable(dwProcessId, lpName, lpValue);
   caml_leave_blocking_section();
 
   if (result == NULL)
@@ -544,14 +541,14 @@ CAMLprim value OPAMW_IsWoW64Process(value pid)
  */
 CAMLprim value OPAMW_SHGetFolderPath(value nFolder, value dwFlags)
 {
-  TCHAR szPath[MAX_PATH];
+  WCHAR szPath[MAX_PATH];
 
   if (SUCCEEDED(SHGetFolderPath(NULL,
                                 Int_val(nFolder),
                                 NULL,
                                 Int_val(dwFlags),
                                 szPath)))
-    return caml_copy_string(szPath);
+    return caml_copy_string_of_utf16(szPath);
   else
     caml_failwith("OPAMW_SHGetFolderPath");
 }
@@ -571,47 +568,32 @@ CAMLprim value OPAMW_SendMessageTimeout(value vhWnd,
   LPARAM lParam;
   UINT msg;
   HWND hWnd = (HWND)Nativeint_val(vhWnd);
+  LPWSTR lParam_string = NULL;
 
-  switch (Int_val(vmsg))
-  {
-    case 0:
-      {
-        msg = WM_SETTINGCHANGE;
-        wParam = Int_val(vwParam);
-        if (!caml_string_is_c_safe(vlParam))
-          caml_invalid_argument("OPAMW_SendMessageTimeout");
-        lParam = (LPARAM)String_val(vlParam);
-        break;
-      }
-    default:
-      {
-        caml_failwith("OPAMW_SendMessageTimeout: message not implemented");
-        break;
-      }
+  if (Int_val(vmsg) == 0) {
+    msg = WM_SETTINGCHANGE;
+    wParam = Int_val(vwParam);
+    if (!caml_string_is_c_safe(vlParam))
+      caml_invalid_argument("OPAMW_SendMessageTimeout");
+    if (!(lParam_string = caml_stat_strdup_to_utf16(String_val(vlParam))))
+      caml_raise_out_of_memory();
+    lParam = (LPARAM)lParam_string;
+  } else {
+    caml_failwith("OPAMW_SendMessageTimeout: message not implemented");
   }
 
   caml_enter_blocking_section();
   lResult =
-    SendMessageTimeout((HWND)Nativeint_val(hWnd),
-                        msg,
-                        wParam,
-                        lParam,
-                        Int_val(fuFlags),
-                        Int_val(uTimeout),
-                        &dwReturnValue);
+    SendMessageTimeout(hWnd, msg, wParam, lParam, Int_val(fuFlags),
+                       Int_val(uTimeout), &dwReturnValue);
   caml_leave_blocking_section();
 
-  switch (Int_val(vmsg))
-  {
-    case 0:
-      {
-        result = caml_alloc_small(2, 0);
-        Field(result, 0) = Val_int(lResult);
-        Field(result, 1) = Val_int(dwReturnValue);
-        break;
-      }
-  }
+  if (lParam_string)
+    caml_stat_free(lParam_string);
 
+  result = caml_alloc_small(2, 0);
+  Field(result, 0) = Val_int(lResult);
+  Field(result, 1) = Val_int(dwReturnValue);
   return result;
 }
 
@@ -654,33 +636,40 @@ CAMLprim value OPAMW_GetProcessName(value processId)
 
   CloseHandle(hProcessSnapshot);
 
-  CAMLreturn(caml_copy_string(entry.szExeFile));
+  CAMLreturn(caml_copy_string_of_utf16(entry.szExeFile));
 }
 
-CAMLprim value OPAMW_GetConsoleAlias(value alias, value exeName)
+CAMLprim value OPAMW_GetConsoleAlias(value alias, value exe_name)
 {
   value result;
 
   DWORD nLength = 8192;
-  LPTSTR buffer;
+  LPWSTR lpSource, lpTargetBuffer, lpExeName;
 
-  if (!caml_string_is_c_safe(alias) || !caml_string_is_c_safe(exeName))
+  if (!caml_string_is_c_safe(alias) || !caml_string_is_c_safe(exe_name))
     caml_invalid_argument("OPAMW_GetConsoleAlias");
 
-  if (!(buffer = (LPTSTR)malloc(nLength)))
+  if (!(lpTargetBuffer = (LPWSTR)malloc(nLength * sizeof(WCHAR))))
     caml_raise_out_of_memory();
-
-  if (GetConsoleAlias((LPTSTR)String_val(alias), buffer, nLength,
-                      (LPTSTR)String_val(exeName)))
-  {
-    result = caml_copy_string(buffer);
+  if (!(lpExeName = caml_stat_strdup_to_utf16(String_val(exe_name)))) {
+    free(lpTargetBuffer);
+    caml_raise_out_of_memory();
   }
+  ;
+  if (!(lpSource = caml_stat_strdup_to_utf16(String_val(alias)))) {
+    free(lpTargetBuffer);
+    caml_stat_free(lpExeName);
+    caml_raise_out_of_memory();
+  }
+
+  if (GetConsoleAlias(lpSource, lpTargetBuffer, nLength, lpExeName))
+    result = caml_copy_string_of_utf16(lpTargetBuffer);
   else
-  {
-    result = caml_copy_string("");
-  }
+    result = caml_alloc_string(0);
 
-  free(buffer);
+  free(lpTargetBuffer);
+  caml_stat_free(lpExeName);
+  caml_stat_free(lpSource);
 
   return result;
 }

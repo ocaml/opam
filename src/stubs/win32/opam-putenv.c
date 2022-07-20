@@ -9,6 +9,8 @@
 /**************************************************************************/
 
 #include <stdio.h>
+#include <fcntl.h>
+
 /*
  * This will be being built for a different architecture, so it's easier just to
  * #include the code, rather than having to deal with .o(obj) files for
@@ -29,39 +31,44 @@
  * potentially unstable) and injecting from a 32-bit process to a 64-bit parent
  * is phenomenally hard!
  */
-int main(int argc, char *argv[], char *envp[])
+void loop(DWORD dwProcessId)
 {
-  if (argc != 2)
-  {
-    printf("Invalid command line: this utility is an internal part of OPAM\n");
-  }
-  else
-  {
-    DWORD pid = atoi(argv[1]);
-    BOOL running = TRUE;
-    char* key = (char*)malloc(4097);
-    char* value = (char*)malloc(4097);
+  BOOL running = TRUE;
+  LPWSTR lpKey = (LPWSTR)malloc(4097 * sizeof(WCHAR));
+  LPWSTR lpValue = (LPWSTR)malloc(4097 * sizeof(WCHAR));
 
-    while (running)
+  while (running)
+  {
+    if (fgetws(lpKey, 4097, stdin))
     {
-      if (fgets(key, 4097, stdin))
+      if (wcscmp(lpKey, L"::QUIT\n") && fgetws(lpValue, 4097, stdin))
       {
-        if (strcmp(key, "::QUIT\n") && fgets(value, 4097, stdin))
-        {
-          key[strlen(key) - 1] = value[strlen(value) - 1] = '\0';
-          InjectSetEnvironmentVariable(pid, key, value);
-        }
-        else
-        {
-          running = FALSE;
-        }
+        lpKey[wcslen(lpKey) - 1] = lpValue[wcslen(lpValue) - 1] = L'\0';
+        InjectSetEnvironmentVariable(dwProcessId, lpKey, lpValue);
       }
       else
       {
         running = FALSE;
       }
     }
-    free(key);
-    free(value);
+    else
+    {
+      running = FALSE;
+    }
   }
+  free(lpKey);
+  free(lpValue);
+}
+
+int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
+{
+  _setmode(_fileno(stdin), _O_U16TEXT);
+  if (argc != 2)
+  {
+    printf("Invalid command line: this utility is an internal part of OPAM\n");
+    return 1;
+  }
+
+  loop(_wtoi(argv[1]));
+  return 0;
 }
