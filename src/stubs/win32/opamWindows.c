@@ -310,6 +310,9 @@ CAMLprim value OPAMW_WriteRegistry(value hKey,
   DWORD cbData = 0;
   DWORD type = 0;
 
+  if (!caml_string_is_c_safe(lpSubKey) || !caml_string_is_c_safe(lpValueName))
+    caml_invalid_argument("OPAMW_WriteRegistry");
+
   switch (RegOpenKeyEx(roots[Int_val(hKey)],
                        String_val(lpSubKey),
                        0,
@@ -404,11 +407,15 @@ CAMLprim value OPAMW_CreateGlyphChecker(value fontName)
   CAMLparam0();
   CAMLlocal1(result);
   value handle;
+  HDC hDC;
+
+  if (!caml_string_is_c_safe(fontName))
+    caml_invalid_argument("OPAMW_CreateGlyphChecker");
 
   /*
    * Any device context will do to load the font, so use the Screen DC.
    */
-  HDC hDC = GetDC(NULL);
+  hDC = GetDC(NULL);
 
   if (hDC)
   {
@@ -481,6 +488,9 @@ CAMLprim value OPAMW_HasGlyph(value checker, value scalar)
 CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
 {
   char* result;
+
+  if (!caml_string_is_c_safe(key) || !caml_string_is_c_safe(val))
+    caml_invalid_argument("OPAMW_process_putenv");
 
   /*
    * MSDN is all over the place as to what the technical limits are for
@@ -564,6 +574,8 @@ CAMLprim value OPAMW_SendMessageTimeout(value hWnd,
       {
         msg = WM_SETTINGCHANGE;
         wParam = Int_val(vwParam);
+        if (!caml_string_is_c_safe(vlParam))
+          caml_invalid_argument("OPAMW_SendMessageTimeout");
         lParam = (LPARAM)String_val(vlParam);
         break;
       }
@@ -644,9 +656,12 @@ CAMLprim value OPAMW_GetConsoleAlias(value alias, value exeName)
   value result;
 
   DWORD nLength = 8192;
-  LPTSTR buffer = (LPTSTR)malloc(nLength);
+  LPTSTR buffer;
 
-  if (!buffer)
+  if (!caml_string_is_c_safe(alias) || !caml_string_is_c_safe(exeName))
+    caml_invalid_argument("OPAMW_GetConsoleAlias");
+
+  if (!(buffer = (LPTSTR)malloc(nLength)))
     caml_raise_out_of_memory();
 
   if (GetConsoleAlias((LPTSTR)String_val(alias), buffer, nLength,
