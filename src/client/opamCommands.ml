@@ -2849,7 +2849,7 @@ let switch cli =
            if no_action || OpamFormula.satisfies_depends st.installed invariant
            then st
            else OpamClient.install_t
-               st ~ask:true [] None
+               st ~ask:true [] None ~formula:invariant
                ~deps_only:false ~assume_built:false
          in
          OpamSwitchState.drop st;
