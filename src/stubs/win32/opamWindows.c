@@ -8,7 +8,6 @@
 /*                                                                        */
 /**************************************************************************/
 
-#define CAML_NAME_SPACE
 /* We need the UTF16 conversion functions */
 #define CAML_INTERNALS
 #include <stdio.h>
