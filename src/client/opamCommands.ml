@@ -359,10 +359,9 @@ let init cli =
       | Some s -> s
       | None -> OpamStd.Sys.guess_shell_compat ()
     in
-    let dot_profile = match dot_profile_o with
-      | Some n -> n
-      | None ->
-        OpamFilename.of_string (OpamStd.Sys.guess_dot_profile shell)
+    let dot_profile =
+      OpamStd.Option.Op.(dot_profile_o >>+ fun () ->
+        OpamStd.Sys.guess_dot_profile shell >>| OpamFilename.of_string)
     in
     if already_init then
       if reinit then
@@ -371,7 +370,7 @@ let init cli =
             ~no_default_config_file:no_config_file ~add_config_file:config_file
         in
         let reinit conf =
-          OpamClient.reinit ~init_config ~interactive ~dot_profile
+          OpamClient.reinit ~init_config ~interactive ?dot_profile
             ?update_config ?env_hook ?completion ~inplace ~bypass_checks
             ~check_sandbox:(not no_sandboxing)
             conf shell
@@ -394,7 +393,7 @@ let init cli =
              "Opam was already initialised. If you want to set it up again, \
               use `--interactive', `--reinit', or choose a different \
               `--root'.\n";
-         OpamEnv.setup root ~interactive ~dot_profile ?update_config ?env_hook
+         OpamEnv.setup root ~interactive ?dot_profile ?update_config ?env_hook
            ?completion ~inplace shell)
     else
     let init_config =
@@ -410,7 +409,7 @@ let init cli =
     let gt, rt, default_compiler =
       OpamClient.init
         ~init_config ~interactive
-        ?repo ~bypass_checks ~dot_profile
+        ?repo ~bypass_checks ?dot_profile
         ?update_config ?env_hook ?completion
         ~check_sandbox:(not no_sandboxing)
         shell

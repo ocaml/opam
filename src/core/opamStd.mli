@@ -512,8 +512,9 @@ module Sys : sig
   (** Guess the shell compat-mode *)
   val guess_shell_compat: unit -> shell
 
-  (** Guess the location of .profile *)
-  val guess_dot_profile: shell -> string
+  (** Guess the location of .profile. Returns None if the shell doesn't
+      support the concept of a .profile file. *)
+  val guess_dot_profile: shell -> string option
 
   (** The separator character used in the PATH variable (varies depending on
       OS) *)

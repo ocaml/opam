@@ -1159,48 +1159,42 @@ module OpamSys = struct
       Option.default unix_default_shell shell
 
   let guess_dot_profile shell =
-    let win_my_powershell f =
-      let p = Filename.concat (home ()) "Documents" in
-      if Sys.file_exists p then Filename.concat (Filename.concat p "PowerShell") f
-      else let p = Filename.concat (home ()) "My Documents" in
-      if Sys.file_exists p then Filename.concat (Filename.concat p "PowerShell") f
-      else f
-    in
     let home f =
       try Filename.concat (home ()) f
       with Not_found -> f in
     match shell with
     | SH_fish ->
-      List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"]
-    | SH_zsh  -> home ".zshrc"
+      Some (List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"])
+    | SH_zsh  -> Some (home ".zshrc")
     | SH_bash ->
-      (try
-         List.find Sys.file_exists [
-           (* Bash looks up these 3 files in order and only loads the first,
-              for LOGIN shells *)
-           home ".bash_profile";
-           home ".bash_login";
-           home ".profile";
-           (* Bash loads .bashrc INSTEAD, for interactive NON login shells only;
-              but it's often included from the above.
-              We may include our variables in both to be sure ; for now we rely
-              on non-login shells inheriting their env from a login shell
-              somewhere... *)
-         ]
-       with Not_found ->
-         (* iff none of the above exist, creating this should be safe *)
-         home ".bash_profile")
+      let shell =
+        (try
+           List.find Sys.file_exists [
+             (* Bash looks up these 3 files in order and only loads the first,
+                for LOGIN shells *)
+             home ".bash_profile";
+             home ".bash_login";
+             home ".profile";
+             (* Bash loads .bashrc INSTEAD, for interactive NON login shells only;
+                but it's often included from the above.
+                We may include our variables in both to be sure ; for now we rely
+                on non-login shells inheriting their env from a login shell
+                somewhere... *)
+           ]
+         with Not_found ->
+           (* iff none of the above exist, creating this should be safe *)
+           home ".bash_profile")
+      in
+      Some shell
     | SH_csh ->
       let cshrc = home ".cshrc" in
       let tcshrc = home ".tcshrc" in
-      if Sys.file_exists cshrc then cshrc else tcshrc
+      Some (if Sys.file_exists cshrc then cshrc else tcshrc)
     | SH_pwsh _ ->
-      if Sys.win32 then win_my_powershell "Microsoft.Powershell_profile.ps1" else
-      List.fold_left Filename.concat (home ".config") ["powershell"; "Microsoft.Powershell_profile.ps1"]
-    | SH_sh -> home ".profile"
+      None
+    | SH_sh -> Some (home ".profile")
     | SH_cmd ->
-      (* cmd.exe does not have a concept of profiles *)
-      home ".profile"
+      None
 
 
   let registered_at_exit = ref []

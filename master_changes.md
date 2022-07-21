@@ -528,6 +528,7 @@ users)
   * dash: recognize dash as a POSIX shell for opam env [#4816 @jonahbeckford]
   * pwsh,powershell: use $env: for opam env [#4816 @jonahbeckford]
     * use `::` instead of REM [#5541 @dra27]
+    * Don't generate .profile for cmd & powershell [#5541 @dra27]
   * command prompt: use `SET` for opam env [#4816 @jonahbeckford]
     * use `set` instead [#5541 @dra27]
 
