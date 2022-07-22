@@ -1339,45 +1339,56 @@ module Win32 = struct
   let (set_parent_pid, parent_putenv) =
     let ppid = ref (lazy (OpamStubs.(getCurrentProcessID () |> getParentProcessID))) in
     let parent_putenv = lazy (
-      let ppid = Lazy.force !ppid in
-      if OpamStubs.isWoW64 () <> OpamStubs.isWoW64Process ppid then
-        (*
-         * Expect to see opam-putenv.exe in the same directory as opam.exe,
-         * rather than PATH (allow for crazy users like developers who may have
-         * both builds of opam)
-         *)
-        let putenv_exe =
-          Filename.(concat (dirname Sys.executable_name) "opam-putenv.exe")
+      let {contents = lazy ppid} = ppid in
+      let our_architecture = OpamStubs.getProcessArchitecture None in
+      let their_architecture = OpamStubs.getProcessArchitecture (Some ppid) in
+      let no_opam_putenv =
+        let warning = lazy (
+          !console.warning "opam-putenv was not found - \
+                            OPAM is unable to alter environment variables";
+          false)
         in
-        let ctrl = ref stdout in
-        let quit_putenv () =
-          if !ctrl <> stdout then
-            let () = Printf.fprintf !ctrl "::QUIT\n%!" in
-            ctrl := stdout
-        in
-        at_exit quit_putenv;
-        if Sys.file_exists putenv_exe then
-          fun key value ->
-            if !ctrl = stdout then begin
-              let (inCh, outCh) = Unix.pipe () in
-              let _ =
-                Unix.create_process putenv_exe
-                                    [| putenv_exe; Int32.to_string ppid |]
-                                    inCh Unix.stdout Unix.stderr
-              in
-              ctrl := (Unix.out_channel_of_descr outCh);
-              set_binary_mode_out !ctrl true;
-            end;
-            Printf.fprintf !ctrl "%s\n%s\n%!" key value;
-            if key = "::QUIT" then ctrl := stdout;
-            true
-        else
-          let warning = lazy (
-            !console.warning "opam-putenv was not found - \
-                              OPAM is unable to alter environment variables";
-            false)
+        fun _ _ -> Lazy.force warning
+      in
+      if our_architecture <> their_architecture then
+        match their_architecture with
+        | OpamStubs.ARM | ARM64 | IA64 | Unknown ->
+          (* ARM support not yet implemented - just ensure we don't inject Intel
+             code into an ARM process! *)
+          no_opam_putenv
+        | AMD64 | Intel ->
+          (*
+           * Expect to see opam-putenv.exe in the same directory as opam.exe,
+           * rather than PATH (allow for crazy users like developers who may have
+           * both builds of opam)
+           *)
+          let putenv_exe =
+            Filename.(concat (dirname Sys.executable_name) "opam-putenv.exe")
           in
-          fun _ _ -> Lazy.force warning
+          let ctrl = ref stdout in
+          let quit_putenv () =
+            if !ctrl <> stdout then
+              let () = Printf.fprintf !ctrl "::QUIT\n%!" in
+              ctrl := stdout
+          in
+          at_exit quit_putenv;
+          if Sys.file_exists putenv_exe then
+            fun key value ->
+              if !ctrl = stdout then begin
+                let (inCh, outCh) = Unix.pipe () in
+                let _ =
+                  Unix.create_process putenv_exe
+                                      [| putenv_exe; Int32.to_string ppid |]
+                                      inCh Unix.stdout Unix.stderr
+                in
+                ctrl := (Unix.out_channel_of_descr outCh);
+                set_binary_mode_out !ctrl true;
+              end;
+              Printf.fprintf !ctrl "%s\n%s\n%!" key value;
+              if key = "::QUIT" then ctrl := stdout;
+              true
+          else
+            no_opam_putenv
       else
         function "::QUIT" -> fun _ -> true
         | key -> OpamStubs.process_putenv ppid key)

@@ -37,10 +37,14 @@ let poll_arch () =
   let raw = match Sys.os_type with
     | "Unix" | "Cygwin" -> OpamStd.Sys.uname "-m"
     | "Win32" ->
-      if Sys.word_size = 32 && not (OpamStubs.isWoW64 ()) then
-        Some "i686"
-      else
-        Some "x86_64"
+      begin match OpamStubs.getArchitecture () with
+      | OpamStubs.AMD64 -> Some "x86_64"
+      | ARM -> Some "arm32"
+      | ARM64 -> Some "arm64"
+      | IA64 -> Some "ia64"
+      | Intel -> Some "x86_32"
+      | Unknown -> None
+      end
     | _ -> None
   in
   match raw with

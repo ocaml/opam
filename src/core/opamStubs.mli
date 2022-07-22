@@ -55,9 +55,8 @@ val getWindowsVersion : unit -> int * int * int * int
       [(major, minor, build, revision)]. This function only works if opam is
       compiled OCaml 4.06.0 or later, it returns [(0, 0, 0, 0)] otherwise. *)
 
-val isWoW64 : unit -> bool
-  (** Returns [false] unless this process is a 32-bit Windows process running
-      in the WoW64 sub-system (i.e. is being run on 64-bit Windows). *)
+val getArchitecture : unit -> windows_cpu_architecture
+  (** Windows only. Equivalent of [uname -m]. *)
 
 val waitpids : int list -> int -> int * Unix.process_status
   (** Windows only. Given a list [pids] with [length] elements,
@@ -95,9 +94,9 @@ val has_glyph : handle * handle -> Uchar.t -> bool
 
     @raise Failure If the call to [GetGlyphIndicesW] fails. *)
 
-val isWoW64Process : int32 -> bool
-(** Windows only. General version of {!isWoW64} for any given process ID. See
-    https://msdn.microsoft.com/en-us/library/windows/desktop/ms684139.aspx *)
+val getProcessArchitecture : int32 option -> windows_cpu_architecture
+(** Windows only. Returns the CPU architecture of the given process ID (or the
+    current process). *)
 
 val process_putenv : int32 -> string -> string -> bool
 (** Windows only. [process_putenv pid name value] sets the environment variable

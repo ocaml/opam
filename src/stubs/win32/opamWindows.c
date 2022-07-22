@@ -41,17 +41,9 @@ static struct custom_operations HandleOps =
 
 #define HANDLE_val(v) (*((HANDLE*)Data_custom_val(v)))
 
-typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS2) (HANDLE, USHORT *, USHORT *);
 
-static LPFN_ISWOW64PROCESS IsWoW64Process = NULL;
-
-static inline BOOL has_IsWoW64Process(void)
-{
-  return (IsWoW64Process
-          || (IsWoW64Process =
-               (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(L"kernel32"),
-                                                   "IsWow64Process")));
-}
+static LPFN_ISWOW64PROCESS2 pIsWow64Process2 = NULL;
 
 /*
  * Taken from otherlibs/unix/winwait.c (sadly declared static)
@@ -245,19 +237,95 @@ CAMLprim value OPAMW_GetWindowsVersion(value unit)
   return result;
 }
 
-CAMLprim value OPAMW_IsWoW64(value unit)
+static inline value get_native_cpu_architecture(void)
 {
-  BOOL result = FALSE;
-  /*
-   * 32-bit versions may or may not have IsWow64Process (depends on age).
-   * Recommended way is to use GetProcAddress to obtain IsWow64Process, rather
-   * than relying on Windows.h.
-   * See http://msdn.microsoft.com/en-gb/library/windows/desktop/ms684139.aspx
-   */
-  if (has_IsWoW64Process() && !IsWoW64Process(GetCurrentProcess(), &result))
-    result = FALSE;
+  SYSTEM_INFO SystemInfo;
+  GetNativeSystemInfo(&SystemInfo);
+  switch (SystemInfo.wProcessorArchitecture) {
+  case PROCESSOR_ARCHITECTURE_AMD64:
+    return Val_int(0);
+  case PROCESSOR_ARCHITECTURE_ARM:
+    return Val_int(1);
+  case PROCESSOR_ARCHITECTURE_ARM64:
+    return Val_int(2);
+  case PROCESSOR_ARCHITECTURE_IA64:
+    return Val_int(3); /* Wow! */
+  case PROCESSOR_ARCHITECTURE_INTEL:
+    return Val_int(4);
+  default: /* PROCESSOR_ARCHITECTURE_UNKNOWN */
+    return Val_int(5);
+  }
+}
 
-  return Val_bool(result);
+static inline value get_PE_cpu_architecture(USHORT image)
+{
+  switch (image) {
+  case IMAGE_FILE_MACHINE_I386:
+    return Val_int(4);
+  case IMAGE_FILE_MACHINE_ARM:
+  case IMAGE_FILE_MACHINE_THUMB:
+  case IMAGE_FILE_MACHINE_ARMNT:
+    return Val_int(1);
+  case IMAGE_FILE_MACHINE_IA64:
+    return Val_int(3); /* Wow! */
+  case IMAGE_FILE_MACHINE_AMD64:
+    return Val_int(0);
+  case IMAGE_FILE_MACHINE_ARM64:
+    return Val_int(2);
+  default:
+    return Val_int(5);
+  }
+}
+
+CAMLprim value OPAMW_GetArchitecture(value unit)
+{
+  USHORT ProcessMachine, NativeMachine;
+
+  if (!pIsWow64Process2)
+    pIsWow64Process2 =
+      (LPFN_ISWOW64PROCESS2)GetProcAddress(GetModuleHandle(L"kernel32"), "IsWow64Process2");
+
+  if (!pIsWow64Process2 || !pIsWow64Process2(GetCurrentProcess(), &ProcessMachine, &NativeMachine))
+    return get_native_cpu_architecture();
+  else
+    return get_PE_cpu_architecture(NativeMachine);
+}
+
+CAMLprim value OPAMW_GetProcessArchitecture(value pid)
+{
+  HANDLE hProcess;
+  USHORT ProcessMachine, NativeMachine;
+  BOOL Wow64Process;
+  value result;
+
+  if (!pIsWow64Process2)
+    pIsWow64Process2 =
+      (LPFN_ISWOW64PROCESS2)GetProcAddress(GetModuleHandle(L"kernel32"), "IsWow64Process");
+
+  if (Is_long(pid)) {
+    hProcess = GetCurrentProcess();
+  } else {
+    hProcess =
+      OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, Int32_val(Field(pid, 0)));
+  }
+
+  if (!pIsWow64Process2 || !pIsWow64Process2(hProcess, &ProcessMachine, &NativeMachine))
+    if (IsWow64Process(hProcess, &Wow64Process) && Wow64Process)
+      /* Must be x86_32 */
+      result = Val_int(4);
+    else
+      /* Will be either x86_32 or x86_64 */
+      result = get_native_cpu_architecture();
+  else
+    if (ProcessMachine == IMAGE_FILE_MACHINE_UNKNOWN)
+      result = get_PE_cpu_architecture(NativeMachine);
+    else
+      result = get_PE_cpu_architecture(ProcessMachine);
+
+  if (Is_block(pid))
+    CloseHandle(hProcess);
+
+  return result;
 }
 
 /*
@@ -511,26 +579,6 @@ CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
     return Val_false;
   else
     caml_failwith(result);
-}
-
-CAMLprim value OPAMW_IsWoW64Process(value pid)
-{
-  BOOL result = FALSE;
-
-  if (has_IsWoW64Process())
-  {
-    HANDLE hProcess =
-      OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, Int32_val(pid));
-
-    if (hProcess)
-    {
-      if (!IsWoW64Process(hProcess, &result))
-        result = FALSE;
-      CloseHandle(hProcess);
-    }
-  }
-
-  return Val_bool(result);
 }
 
 /*
