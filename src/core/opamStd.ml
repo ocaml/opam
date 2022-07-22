@@ -1060,36 +1060,13 @@ module OpamSys = struct
     else
       fun x -> x
 
-  let windows_max_ancestor_depth = 5
-
-  (** [windows_ancestor_process_names] finds the names of the parent of the
-      current process and all of its ancestors up to [max_ancestor_depth]
-      in length.
-
-      The immediate parent of the current process will be first in the list.
-    *)
-  let windows_ancestor_process_names () =
-    let rec helper pid depth =
-      if depth > windows_max_ancestor_depth then []
-      else
-      try
-        OpamStubs.(getProcessName pid ::
-                   helper
-                     (getParentProcessID pid)
-                     (depth + 1))
-      with Failure _ -> []
-    in
-    lazy (
-      try
-        let parent = OpamStubs.getCurrentProcessID () in
-        helper (OpamStubs.getParentProcessID parent) 0
-      with Failure _ -> []
-    )
+  let windows_process_ancestry = Lazy.from_fun OpamStubs.getProcessAncestry
 
   type shell_choice = Accept of shell
 
   let windows_get_shell =
-    let categorize_process = function
+    let categorize_process (_, image) =
+      match String.lowercase_ascii (Filename.basename image) with
       | "powershell.exe" | "powershell_ise.exe" ->
         Some (Accept (SH_pwsh Powershell))
       | "pwsh.exe" -> Some (Accept (SH_pwsh Powershell_pwsh))
@@ -1101,9 +1078,8 @@ module OpamSys = struct
           (shell_of_string (Filename.chop_suffix name ".exe"))
     in
     lazy (
-      let ancestors = Lazy.force (windows_ancestor_process_names ()) in
-      match (List.map String.lowercase_ascii ancestors |>
-              OpamList.filter_map categorize_process) with
+      let lazy ancestors = windows_process_ancestry in
+      match OpamList.filter_map categorize_process ancestors with
       | [] -> None
       | Accept most_relevant_shell :: _ -> Some most_relevant_shell
     )
@@ -1337,7 +1313,7 @@ module Win32 = struct
   end
 
   let (set_parent_pid, parent_putenv) =
-    let ppid = ref (lazy (OpamStubs.(getCurrentProcessID () |> getParentProcessID))) in
+    let ppid = ref (OpamCompat.Lazy.map (function (_::(pid, _)::_) -> pid | _ -> 0l) OpamSys.windows_process_ancestry) in
     let parent_putenv = lazy (
       let {contents = lazy ppid} = ppid in
       let our_architecture = OpamStubs.getProcessArchitecture None in

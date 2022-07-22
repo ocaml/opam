@@ -70,45 +70,6 @@ static HKEY roots[] =
    HKEY_LOCAL_MACHINE,
    HKEY_USERS};
 
-/*
- * OPAMW_process_putenv is implemented using Process Injection.
- * Idea inspired by Bill Stewart's editvar
- *   (see http://www.westmesatech.com/editv.html)
- * Full technical details at http://www.codeproject.com/Articles/4610/Three-Ways-to-Inject-Your-Code-into-Another-Proces#section_3
- */
-
-static char* getProcessInfo(HANDLE hProcessSnapshot,
-                            DWORD processId,
-                            PROCESSENTRY32 *entry)
-{
-  entry->dwSize = sizeof(PROCESSENTRY32);
-
-  if (hProcessSnapshot == INVALID_HANDLE_VALUE)
-    return "getProcessInfo: could not create snapshot";
-
-  /*
-   * Locate our process
-   */
-  if (!Process32First(hProcessSnapshot, entry))
-  {
-    CloseHandle(hProcessSnapshot);
-    return "getProcessInfo: could not walk process tree";
-  }
-  else
-  {
-    while (entry->th32ProcessID != processId)
-    {
-      if (!Process32Next(hProcessSnapshot, entry))
-      {
-        CloseHandle(hProcessSnapshot);
-        return "getProcessInfo: could not find process!";
-      }
-    }
-  }
-
-  return NULL;
-}
-
 char* InjectSetEnvironmentVariable(DWORD, LPCWSTR, LPCWSTR);
 
 /* Actual primitives from here */
@@ -545,6 +506,13 @@ CAMLprim value OPAMW_HasGlyph(value checker, value scalar)
   return Val_bool(index != 0xffff);
 }
 
+/*
+ * OPAMW_process_putenv is implemented using Process Injection.
+ * Idea inspired by Bill Stewart's editvar
+ *   (see http://www.westmesatech.com/editv.html)
+ * Full technical details at http://www.codeproject.com/Articles/4610/Three-Ways-to-Inject-Your-Code-into-Another-Proces#section_3
+ */
+
 CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
 {
   char* result;
@@ -650,41 +618,111 @@ CAMLprim value OPAMW_SendMessageTimeout_byte(value * v, int n)
   return OPAMW_SendMessageTimeout(v[0], v[1], v[2], v[3], v[4], v[5]);
 }
 
-CAMLprim value OPAMW_GetParentProcessID(value processId)
+CAMLprim value OPAMW_GetProcessAncestry(value unit)
 {
+  CAMLparam0();
+  CAMLlocal3(result, tail, info);
   PROCESSENTRY32 entry;
-  char* msg;
-  /*
-   * Create a Toolhelp Snapshot of running processes
-   */
-  HANDLE hProcessSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  HANDLE hProcessSnapshot, hProcess;
+  value cell;
+  ULARGE_INTEGER *processes, *cur;
+  int capacity = 512;
+  int length = 0;
+  DWORD target = GetCurrentProcessId();
+  BOOL read_entry = TRUE;
+  WCHAR ExeName[MAX_PATH + 1];
+  DWORD dwSize;
 
-  if ((msg = getProcessInfo(hProcessSnapshot, Int32_val(processId), &entry)))
-    caml_failwith(msg);
+  result = caml_alloc_small(2, 0);
+  Field(result, 0) = Val_int(0);
+  Field(result, 1) = Val_int(0);
+  tail = result;
 
-  /*
-   * Finished with the snapshot
-   */
-  CloseHandle(hProcessSnapshot);
+  /* Snapshot running processes */
+  hProcessSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (hProcessSnapshot != INVALID_HANDLE_VALUE) {
+    entry.dwSize = sizeof(PROCESSENTRY32);
+    /* Read the first entry (just because it's a special function) */
+    if (Process32First(hProcessSnapshot, &entry)) {
+      if ((processes = (ULARGE_INTEGER *)malloc(capacity * sizeof(ULARGE_INTEGER)))) {
+        /* Initialise the processes array */
+        if (entry.th32ProcessID == 0) {
+          processes->QuadPart = 0LL;
+        } else {
+          length = 1;
+          processes->LowPart = entry.th32ProcessID;
+          processes->HighPart = entry.th32ParentProcessID;
+          processes[1].QuadPart = 0LL;
+        }
 
-  return caml_copy_int32(entry.th32ParentProcessID);
-}
+        /* Build the process tree, starting with the current process */
+        do {
+          /* First search through processes we've already read */
+          for (cur = processes; cur->QuadPart != 0; cur++) {
+            if (cur->LowPart == target)
+              break;
+          }
 
-CAMLprim value OPAMW_GetProcessName(value processId)
-{
-  CAMLparam1(processId);
+          if (cur->QuadPart == 0LL) {
+            /* Keep reading process entries until we reach the end of the list */
+            while ((read_entry = Process32Next(hProcessSnapshot, &entry))) {
+              if (entry.th32ProcessID != 0) {
+                if (++length >= capacity) {
+                  ULARGE_INTEGER *ptr;
+                  capacity += 512;
+                  ptr = (ULARGE_INTEGER *)realloc(processes, capacity * sizeof(ULARGE_INTEGER));
+                  if (ptr == NULL) {
+                    read_entry = FALSE;
+                    break;
+                  } else {
+                    processes = ptr;
+                  }
+                }
+                cur->LowPart = entry.th32ProcessID;
+                cur->HighPart = entry.th32ParentProcessID;
+                if (cur->LowPart == target) {
+                  cur[1].QuadPart = 0LL;
+                  break;
+                } else {
+                  cur++;
+                }
+              }
+            }
+            if (!read_entry)
+              break;
+          }
 
-  PROCESSENTRY32 entry;
-  DWORD parent_pid;
-  char* msg;
-  HANDLE hProcessSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+          /* Found it - construct the list entry */
+          hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, target);
+          if (hProcess != NULL) {
+            dwSize = MAX_PATH + 1;
+            if (!QueryFullProcessImageName(hProcess, 0, ExeName, &dwSize))
+              ExeName[0] = L'\0';
+            CloseHandle(hProcess);
+          } else {
+            ExeName[0] = L'\0';
+          }
+          info = caml_alloc_tuple(2);
+          Store_field(info, 0, caml_copy_int32(target));
+          Store_field(info, 1, caml_copy_string_of_utf16(ExeName));
+          cell = caml_alloc_small(2, 0);
+          Field(cell, 0) = info;
+          Field(cell, 1) = Val_int(0);
+          Store_field(tail, 1, cell);
+          tail = cell;
+          /* Search for this process's parent on the next round */
+          target = cur->HighPart;
+          /* Guard against looping by zeroing out the parent */
+          cur->HighPart = 0;
+        } while (1);
+      }
+      free(processes);
+    }
 
-  if ((msg = getProcessInfo(hProcessSnapshot, Int32_val(processId), &entry)))
-    caml_failwith(msg);
+    CloseHandle(hProcessSnapshot);
+  }
 
-  CloseHandle(hProcessSnapshot);
-
-  CAMLreturn(caml_copy_string_of_utf16(entry.szExeFile));
+  CAMLreturn(Field(result, 1));
 }
 
 CAMLprim value OPAMW_GetConsoleAlias(value alias, value exe_name)

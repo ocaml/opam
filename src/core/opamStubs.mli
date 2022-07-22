@@ -117,16 +117,11 @@ val sendMessageTimeout :
     return value from SendMessageTimeout, [snd] depends on both the message and
     [fst]. See https://msdn.microsoft.com/en-us/library/windows/desktop/ms644952.aspx *)
 
-val getParentProcessID : int32 -> int32
-(** Windows only. [getParentProcessID pid] returns the process ID of the parent
-    of [pid].
-
-    @raise Failure If walking the process tree fails to find the process. *)
-
-val getProcessName : int32 -> string
-(** Windows only. [getProcessName pid] returns the executable name of [pid].
-
-    @raise Failure If the process does not exist. *)
+val getProcessAncestry : unit -> (int32 * string) list
+(** Windows only. Returns the pid and full path to the image for each entry in
+    the ancestry list for this process, starting with the process itself. If an
+    image name can't be determined, then [""] is returned; on failure, returns
+    [[]]. *)
 
 val getConsoleAlias : string -> string -> string
 (** Windows only. [getConsoleAlias alias exeName] retrieves the value for a

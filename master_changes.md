@@ -405,6 +405,7 @@ users)
   * [BUG] Fix case insensitive variable handling [#5356 @dra27]
   * Use OCaml code to copy/move/remove directories instead of unix commands [#4823 @kit-ty-kate - fix #1073]
   * Update Windows-on-Windows detection for ARM [#5541 @dra27]
+  * Overhaul parent process detection [#5541 @dra27]
 
 ## Test
   * Update crowbar with compare functions [#4918 @rjbou]
