@@ -71,8 +71,8 @@ jobs:
     - name: Determine cache keys
       id: keys
       run: |
-        echo archives=archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
-        echo ::set-output name=archives::archives-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
+        echo archives=archives-1-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
+        echo ::set-output name=archives::archives-1-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
         echo ocaml-secondary-compiler=legacy-${{ env.OPAM_REPO_SHA }}
         echo ::set-output name=ocaml-secondary-compiler::legacy-${{ env.OPAM_REPO_SHA }}
         echo ocaml-cache=${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
