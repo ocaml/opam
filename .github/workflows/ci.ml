@@ -514,7 +514,7 @@ let main oc : unit =
     ("CYGWIN_MIRROR", "http://mirrors.kernel.org/sourceware/cygwin/");
     ("CYGWIN_ROOT", "D:\\cygwin");
     ("CYGWIN", "winsymlinks:native");
-    ("CYGWIN_EPOCH", "2");
+    ("CYGWIN_EPOCH", "3");
   ] in
   let keys = [
     ("archives", "archives-1-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}");

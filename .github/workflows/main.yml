@@ -46,7 +46,7 @@ env:
   CYGWIN_MIRROR: http://mirrors.kernel.org/sourceware/cygwin/
   CYGWIN_ROOT: D:\cygwin
   CYGWIN: winsymlinks:native
-  CYGWIN_EPOCH: 2
+  CYGWIN_EPOCH: 3
 
 defaults:
   run:
