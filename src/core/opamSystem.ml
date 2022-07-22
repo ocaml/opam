@@ -506,7 +506,7 @@ let get_cygpath_function =
 let apply_cygpath_path_transform path =
   let r =
     OpamProcess.run
-      (OpamProcess.command ~name:(temp_file "command") ~verbose:false "cygpath" ["--path"; path])
+      (OpamProcess.command ~name:(temp_file "command") ~verbose:false "cygpath" ["--path"; "--"; path])
   in
   OpamProcess.cleanup ~force:true r;
   if OpamProcess.is_success r then
