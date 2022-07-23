@@ -261,6 +261,7 @@ users)
   * [BUG] Catch `EACCES` in lock function [#4948 @oandrieu - fix #4944]
   * Permissions: chmod+unlink before copy [#4827 @jonahbeckford @dra27]
   * Support MSYS2: two-phase rsync on MSYS2 to allow MSYS2's behavior of copying rather than symlinking [#4817 @jonahbeckford]
+  * Environment: translate PATH from Windows to Unix during opam env. [#4844 @jonahbeckford]
 
 ## Test
   * Update crowbar with compare functions [#4918 @rjbou]

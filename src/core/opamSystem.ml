@@ -485,6 +485,28 @@ let get_cygpath_function =
     let f = Lazy.from_val (fun x -> x) in
     fun ~command:_ -> f
 
+let apply_cygpath_path_transform path =
+  let r =
+    OpamProcess.run
+      (OpamProcess.command ~name:(temp_file "command") ~verbose:false "cygpath" ["--path"; "--"; path])
+  in
+  OpamProcess.cleanup ~force:true r;
+  if OpamProcess.is_success r then
+    List.hd r.OpamProcess.r_stdout
+  else
+    OpamConsole.error_and_exit `Internal_error "Could not apply cygpath --path to %s" path
+
+let get_cygpath_path_transform =
+  (* We are running in a functioning Cygwin or MSYS2 environment if and only
+     if `cygpath` is in the PATH. *)
+  if Sys.win32 then
+    lazy (
+      match resolve_command "cygpath" with
+      | Some _ -> apply_cygpath_path_transform
+      | None -> fun x -> x)
+  else
+    Lazy.from_val (fun x -> x)
+
 let runs = ref []
 let print_stats () =
   match !runs with
