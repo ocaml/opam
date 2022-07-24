@@ -1,9 +1,4 @@
-#!/usr/bin/env bash
-
-set -ue
-
-# Used to make /* match all files (even those beginning with a '.')
-shopt -s dotglob
+#!/bin/sh -e
 
 if ! command -v bwrap >/dev/null; then
     echo "The 'bwrap' command was not found. Install 'bubblewrap' on your system, or" >&2
@@ -16,29 +11,31 @@ fi
 
 # --new-session requires bubblewrap 0.1.7
 # --die-with-parent requires bubblewrap 0.1.8
-ARGS=(--unshare-net --new-session --die-with-parent)
-ARGS=("${ARGS[@]}" --proc /proc --dev /dev)
-ARGS=("${ARGS[@]}" --setenv TMPDIR /opam-tmp --setenv TMP /opam-tmp --setenv TEMPDIR /opam-tmp --setenv TEMP /opam-tmp)
-ARGS=("${ARGS[@]}" --tmpfs /opam-tmp)
-ARGS=("${ARGS[@]}" --tmpfs /run)
+ARGS="--unshare-net --new-session --die-with-parent"
+ARGS="$ARGS --proc /proc --dev /dev"
+ARGS="$ARGS --setenv TMPDIR /opam-tmp --setenv TMP /opam-tmp --setenv TEMPDIR /opam-tmp --setenv TEMP /opam-tmp"
+ARGS="$ARGS --tmpfs /opam-tmp"
+ARGS="$ARGS --tmpfs /run"
 # NOTE: When adding a new mount-point please sync with the loop below to avoid overriding the mount point
 
+#$1 is permission, $2 is host dir, $3 is sandbox dir
 add_mount() {
-    if [ -d "$dir" ]; then
-      case "$1" in
-          ro) B="--ro-bind";;
-          rw) B="--bind";;
-          sym) B="--symlink";;
-      esac
-      ARGS=("${ARGS[@]}" "$B" "$2" "$3")
-    fi
+  if [ -d "$2" ]; then
+          case $2 in
+                  ro) B="--ro-bind";;
+                  rw) B="--bind";;
+                  sym) B="--symlink";;
+          esac
+          ARGS="$ARGS $B $2 $3"
+  fi
 }
 
+#$1 is permission, rest are directories mapped 1-1 from host to sandbox
 add_mounts() {
-    local flag="$1"; shift
-    for dir in "$@"; do
-      add_mount "$flag" "$dir" "$dir"
-    done
+        flag=$1; shift
+        for dir in "$@"; do
+                add_mount "$flag" "$dir" "$dir"
+        done
 }
 
 # Mounts the standard system paths. Maintains symlinks, to handle cases
@@ -46,13 +43,18 @@ add_mounts() {
 # not `/foo`. We handle symlinks here but not in `add_mounts` because
 # system paths are pretty much guaranteed not to accidentally escape into
 # off-limits directories.
+
+# readlink -f isn't posix, so we do this cd/pwd instead
 add_sys_mounts() {
     for dir in "$@"; do
         if [ -L "$dir" ]; then
-            local src=$(readlink -f "$dir")
-            add_mount sym "$src" "$dir"
+            curr_dir="$PWD"
+            cd "$dir"
+            src=$(pwd -P)
+            cd "$curr_dir"
+            add_mount "sym" "$src" "$dir"
         else
-            add_mounts ro "$dir"
+            add_mounts "ro" "$dir"
         fi
     done
 }
@@ -72,28 +74,24 @@ done
 # that remain writeable. ccache seems widespread in some Fedora systems.
 add_ccache_mount() {
   if command -v ccache > /dev/null; then
-      ccache_dir_regex='cache_dir = (.*)$'
-      local IFS=$'\n'
-      for f in $(ccache -p 2>/dev/null); do
-        if [[ $f =~ $ccache_dir_regex ]]; then
-          ccache_dir=${BASH_REMATCH[1]}
-          break
-        fi
-      done
+      ccache_dir=$(ccache -p | awk -F '=' '/cache_dir/ { print $2; exit }')
       CCACHE_DIR=${CCACHE_DIR-$HOME/.ccache}
       ccache_dir=${ccache_dir-$CCACHE_DIR}
-      add_mounts rw "$ccache_dir"
+      add_mounts "rw" "$ccache_dir"
   fi
 }
 
+# replacing readlink -m is more tricky. Instead of figuring out the real path,
+# then making the directory, we will make the directory first using the possibly
+# symlinked path, then use the cd/pwd method used above
 add_dune_cache_mount() {
-  local u_cache=${XDG_CACHE_HOME:-$HOME/.cache}
-  local u_dune_cache=$u_cache/dune
-  local cache=$(readlink -m "$u_cache")
-  local dune_cache=$cache/dune
-  local dune_cache=$(readlink -m "$u_dune_cache")
-  mkdir -p "${dune_cache}"
-  add_mount rw "$u_dune_cache" "$dune_cache"
+    u_dune_cache="${XDG_CACHE_HOME:-$HOME/.cache}/dune"
+    mkdir -p "$u_dune_cache"
+    curr_dir="$PWD"
+    cd "$u_dune_cache"
+    dune_cache=$(pwd -P)
+    cd "$curr_dir"
+    add_mount "rw" "$dune_cache" "$u_dune_cache"
 }
 
 # When using opam variable that must be defined at action time, add them also
@@ -116,7 +114,7 @@ case "$COMMAND" in
     remove)
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
-        if [ "X${PWD#$OPAM_SWITCH_PREFIX/.opam-switch/}" != "X${PWD}" ]; then
+        if [ "X${PWD#"$OPAM_SWITCH_PREFIX"/.opam-switch/}" != "X${PWD}" ]; then
           add_mounts rw "$PWD"
         fi
         ;;
@@ -132,4 +130,4 @@ fi
 
 # Note: we assume $1 can be trusted, see https://github.com/projectatomic/bubblewrap/issues/259
 # As of now we are compatible up to 0.1.8, '--' can be added here when we require >= 0.3.0
-exec bwrap "${ARGS[@]}" "$@"
+exec bwrap "$ARGS" "$@"
