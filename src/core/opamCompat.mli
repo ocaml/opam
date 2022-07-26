@@ -118,3 +118,14 @@ end
 #if OCAML_VERSION < (4, 7, 0)
 module Stdlib = Pervasives
 #endif
+
+module Lazy
+#if OCAML_VERSION >= (4, 13, 0)
+= Lazy
+#else
+: sig
+  include module type of struct include Lazy end
+
+  val map : ('a -> 'b) -> 'a t -> 'b t
+end
+#endif

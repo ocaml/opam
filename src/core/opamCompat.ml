@@ -138,3 +138,15 @@ end
 #if OCAML_VERSION < (4, 7, 0)
 module Stdlib = Pervasives
 #endif
+
+module Lazy =
+#if OCAML_VERSION >= (4, 13, 0)
+  Lazy
+#else
+struct
+  include Lazy
+
+  let map f x =
+    lazy (f (force x))
+end
+#endif
