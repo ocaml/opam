@@ -66,6 +66,7 @@ users)
   * Add support for `opam switch -` (go to previous non-local switch) [#4910 @kit-ty-kate - fix 4866]
   * On loading, check for executable external files if they are in `PATH`, and warn if not the case [#4932 @rjbou - fix #4923]
   * When inferring a 2.1+ switch invariant from 2.0 base packages, don't filter out pinned packages as that causes very wide invariants for pinned compiler packages [#5176 @dra27 - fix #4501]
+  * Really install invariant formula if not installed in switch [#5188 @rjbou]
 
 ## Pin
   * Switch the default version when undefined from ~dev to dev [#4949 @kit-ty-kate]

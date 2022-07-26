@@ -29,7 +29,7 @@ Added 'cli: "version"' to field variables in switch cli-versioning
 ### OPAMCLI=2.0 opam config set cli version
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 Added 'cli: "version"' to field variables in switch cli-versioning
-### OPAMSHOW=0 opam switch set-invariant baz.1
+### OPAMSHOW=0 opam switch set-invariant baz.1 --no-action
 The switch invariant was set to baz = 1
 ### OPAMCLI=2.0 opam install baz.2
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.

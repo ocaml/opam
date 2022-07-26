@@ -5,6 +5,7 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <repo2/packages/bar/bar.1/opam>
 opam-version: "2.0"
+### OPAMYES=1
 ### opam repository add --dont-select non-default ./repo2
 [non-default] Initialised
 ### opam update --all
@@ -15,7 +16,6 @@ opam-version: "2.0"
 ### opam switch create inv --empty --repo=default,non-default
 ### opam switch set-invariant foo
 The switch invariant was set to foo
-### opam install foo
 The following actions will be performed:
 === install 1 package
   - install foo 1
@@ -31,5 +31,13 @@ The switch invariant was set to foo
 The switch invariant was set to foo
 ### opam switch set-invariant bar
 The switch invariant was set to bar
+The following actions will be performed:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+Done.
 ### opam switch set-invariant --package bar
+[WARNING] Packages bar don't have the 'compiler' flag set.
 The switch invariant was set to bar
