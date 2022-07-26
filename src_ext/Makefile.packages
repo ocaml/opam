@@ -36,7 +36,7 @@ topkg.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild result.pkgbuild
 
 cmdliner.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild result.pkgbuild topkg.pkgbuild
 
-cudf.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild extlib.pkgbuild
+cudf.pkgbuild: dune-local.pkgbuild extlib.pkgbuild
 
 dose3.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild cppo.pkgbuild extlib.pkgbuild re.pkgbuild ocamlgraph.pkgbuild cudf.pkgbuild
 
@@ -110,7 +110,8 @@ cmdliner-pkg-build:
 	ocamlfind install cmdliner _build/pkg/META $(addprefix _build/src/cmdliner.,$(EXTS1)) $(addprefix _build/src/cmdliner.cm,$(EXTS2)) _build/src/cmdliner*.cmx
 
 cudf-pkg-build:
-	make DOC= BINDIR=$(OCAMLBIN) all opt install
+	dune build @install -p cudf
+	dune install -p cudf cudf
 
 dose3-pkg-build:
 	dune build @install -p dose3
