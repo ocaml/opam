@@ -380,7 +380,7 @@ let shell_eval_invocation shell cmd =
     overrides *)
 let opam_env_invocation ?root ?switch ?(set_opamswitch=false) shell =
   let quoted_arg arg = match shell with
-    | SH_win_powershell | SH_pwsh -> Printf.sprintf " --%s=\"%s\"" arg
+    | SH_win_cmd | SH_win_powershell | SH_pwsh -> Printf.sprintf " --%s=\"%s\"" arg
     | _ -> Printf.sprintf " --%s='%s'" arg
   in
   let root = OpamStd.Option.map_default (quoted_arg "root") "" root in
