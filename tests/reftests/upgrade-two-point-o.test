@@ -1,0 +1,39 @@
+N0REP0
+### <pkg:i-am-compiler.1>
+opam-version: "2.0"
+flags: compiler
+### <pkg:i-am-compiler.2>
+opam-version: "2.0"
+flags: compiler
+### OPAMYES=1
+### <OPAM/config>
+opam-version: "2.0"
+repositories: "default"
+installed-switches: ["pinned-comp"]
+switch: "pinned-comp"
+default-compiler: ["i-am-compiler"]
+### <OPAM/pinned-comp/.opam-switch/switch-state>
+opam-version: "2.0"
+compiler: ["i-am-compiler.1"]
+roots: ["i-am-compiler.1"]
+installed: ["i-am-compiler.1"]
+pinned: ["i-am-compiler.1"]
+### <OPAM/pinned-comp/.opam-switch/switch-config>
+opam-version: "2.0"
+synopsis: "switch with pinned compiler"
+### OPAMDEBUGSECTIONS=STATE opam upgrade --show-action --debug-level=-1
+STATE                           LOAD-SWITCH-STATE @ pinned-comp
+STATE                           Definition missing for installed package i-am-compiler.1, copying from repo
+STATE                           Inferred invariant: from base packages { i-am-compiler.1 }, (roots { i-am-compiler.1 }) => ["i-am-compiler" {= "1"}]
+STATE                           Switch state loaded in 0.000s
+STATE                           Detected changed packages (marked for reinstall): {}
+Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
+However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+Nothing to do.
+### opam pin remove i-am-compiler
+Ok, i-am-compiler is no longer pinned locally (version 1)
+Nothing to do.
+### opam upgrade --show-action
+Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
+However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+Nothing to do.
