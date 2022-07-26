@@ -389,6 +389,9 @@ module Env : sig
       [using_backslashes] to escape both quotes and backslashes using
       backslashes *)
   val escape_single_quotes: ?using_backslashes:bool -> string -> string
+
+  (** Utility function for PowerShell strings. *)
+  val escape_powershell: string -> string
 end
 
 (** {2 System query and exit handling} *)
@@ -436,7 +439,8 @@ module Sys : sig
   val executable_name : string -> string
 
   (** The different families of shells we know about *)
-  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
+  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish | SH_pwsh
+    | SH_win_cmd | SH_win_powershell
 
   (** Guess the shell compat-mode *)
   val guess_shell_compat: unit -> shell

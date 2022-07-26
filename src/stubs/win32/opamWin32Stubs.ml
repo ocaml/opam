@@ -33,4 +33,5 @@ external process_putenv : int32 -> string -> string -> bool = "OPAMW_process_put
 external shGetFolderPath : int -> 'a -> string = "OPAMW_SHGetFolderPath"
 external sendMessageTimeout : nativeint -> int -> int -> 'a -> 'b -> 'c -> int * 'd = "OPAMW_SendMessageTimeout_byte" "OPAMW_SendMessageTimeout"
 external getParentProcessID : int32 -> int32 = "OPAMW_GetParentProcessID"
+external getProcessName : int32 -> string = "OPAMW_GetProcessName"
 external getConsoleAlias : string -> string -> string = "OPAMW_GetConsoleAlias"

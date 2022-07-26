@@ -1034,12 +1034,15 @@ let print_short_flag cli validity =
 
 let shell_opt cli validity =
   let enum = [
-    "bash",SH_bash;
-    "sh",SH_sh;
-    "csh",SH_csh;
-    "zsh",SH_zsh;
-    "fish",SH_fish;
-  ] |> List.map (fun (s,v) -> cli_original, s, v)
+    None,"bash",SH_bash;
+    None,"sh",SH_sh;
+    None,"csh",SH_csh;
+    None,"zsh",SH_zsh;
+    None,"fish",SH_fish;
+    Some cli2_2,"pwsh",SH_pwsh;
+    Some cli2_2,"cmd",SH_win_cmd;
+    Some cli2_2,"powershell",SH_win_powershell
+  ] |> List.map (fun (c,s,v) -> OpamStd.Option.map_default cli_from cli_original c, s, v)
   in
   mk_enum_opt ~cli validity ["shell"] "SHELL" enum
     (Printf.sprintf

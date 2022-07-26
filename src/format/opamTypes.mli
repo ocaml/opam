@@ -319,7 +319,8 @@ type pin_kind = [ `version | OpamUrl.backend ]
 
 (** Shell compatibility modes *)
 type shell = OpamStd.Sys.shell =
-    SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
+    SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish | SH_pwsh
+    | SH_win_cmd | SH_win_powershell
 
 (** {2 Generic command-line definitions with filters} *)
 

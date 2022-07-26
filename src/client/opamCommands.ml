@@ -1224,7 +1224,10 @@ let config cli =
        | Some sw ->
          `Ok (OpamConfigCommand.env gt sw
                 ~set_opamroot ~set_opamswitch
-                ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish) ~inplace_path))
+                ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
+                ~pwsh:(shell=SH_pwsh || shell=SH_win_powershell)
+                ~cmd:(shell=SH_win_cmd)
+                ~inplace_path))
     | Some `revert_env, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       (match OpamStateConfig.get_switch_opt () with
@@ -1233,6 +1236,8 @@ let config cli =
          `Ok (OpamConfigCommand.ensure_env gt sw;
               OpamConfigCommand.print_eval_env
                 ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
+                ~pwsh:(shell=SH_pwsh || shell=SH_win_powershell)
+                ~cmd:(shell=SH_win_cmd)
                 (OpamEnv.add [] [])))
     | Some `list, [] ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -1529,10 +1534,15 @@ let env cli =
        | Some sw ->
          OpamConfigCommand.env gt sw
            ~set_opamroot ~set_opamswitch
-           ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish) ~inplace_path);
+           ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
+           ~pwsh:(shell=SH_pwsh || shell=SH_win_powershell)
+           ~cmd:(shell=SH_win_cmd)
+           ~inplace_path);
     | true ->
       OpamConfigCommand.print_eval_env
         ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
+        ~pwsh:(shell=SH_pwsh || shell=SH_win_powershell)
+        ~cmd:(shell=SH_win_cmd)
         (OpamEnv.add [] [])
   in
   let open Common_config_flags in

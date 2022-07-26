@@ -726,6 +726,23 @@ CAMLprim value OPAMW_GetParentProcessID(value processId)
   OPAMreturn(caml_copy_int32(entry.th32ParentProcessID));
 }
 
+CAMLprim value OPAMW_GetProcessName(value processId)
+{
+  CAMLparam1(processId);
+
+  PROCESSENTRY32 entry;
+  DWORD parent_pid;
+  char* msg;
+  HANDLE hProcessSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+  if ((msg = getProcessInfo(hProcessSnapshot, Int32_val(processId), &entry)))
+    caml_failwith(msg);
+
+  CloseHandle(hProcessSnapshot);
+
+  CAMLreturn(caml_copy_string(entry.szExeFile));
+}
+
 CAMLprim value OPAMW_GetConsoleAlias(value alias, value exeName)
 {
   CAMLparam2(alias, exeName);

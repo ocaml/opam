@@ -93,6 +93,38 @@ let rec print_csh_env = function
         k (OpamStd.Env.escape_single_quotes v'));
     print_csh_env r
 
+let rec print_pwsh_env = function
+  | [] -> ()
+  | (k, v, comment) :: r ->
+    if OpamConsole.verbose () then
+      OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
+    if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
+    then
+      OpamConsole.msg "$env:%s = '%s'\n"
+        k (OpamStd.Env.escape_powershell v);
+    print_pwsh_env r
+
+let print_cmd_env env =
+  let rec aux = function
+    | [] -> ()
+    | (k, v, comment) :: r ->
+      if OpamConsole.verbose () then
+        OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
+      if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
+      then begin
+        let is_special = function
+        | '(' | ')' | '!' | '^' | '%' | '"' | '<' | '>' | '|' -> true
+        | _ -> false
+        in
+        if OpamCompat.String.(exists is_special v || exists is_special k) then
+          OpamConsole.msg "SET \"%s=%s\"\n" k v
+        else
+          OpamConsole.msg "SET %s=%s\n" k v
+      end;
+      aux r
+  in
+  aux env
+
 let print_sexp_env env =
   let rec aux = function
     | [] -> ()
@@ -145,13 +177,17 @@ let rec print_fish_env env =
            k (OpamStd.Env.escape_single_quotes ~using_backslashes:true v));
     print_fish_env r
 
-let print_eval_env ~csh ~sexp ~fish env =
+let print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env =
   if sexp then
     print_sexp_env env
   else if csh then
     print_csh_env env
   else if fish then
     print_fish_env env
+  else if pwsh then
+    print_pwsh_env env
+  else if cmd then
+    print_cmd_env env
   else
     print_env env
 
@@ -175,7 +211,7 @@ let ensure_env_aux ?(set_opamroot=false) ?(set_opamswitch=false) ?(force_path=tr
 let ensure_env gt switch = ignore (ensure_env_aux gt switch)
 
 let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
-    ~csh ~sexp ~fish ~inplace_path =
+    ~csh ~sexp ~fish ~pwsh ~cmd ~inplace_path =
   log "config-env";
   let opamroot_not_current =
     let current = gt.root in
@@ -220,7 +256,7 @@ let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
         ~set_opamroot ~set_opamswitch ~force_path
         gt.root switch
   in
-  print_eval_env ~csh ~sexp ~fish env
+  print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env
 [@@ocaml.warning "-16"]
 
 let subst gt fs =
