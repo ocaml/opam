@@ -25,7 +25,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Switch
-  *
+  * When inferring a 2.1+ switch invariant from 2.0 base packages, don't filter out pinned packages as that causes very wide invariants for pinned compiler packages [#5176 @dra27 - fix #4501]
 
 ## Pin
   *
@@ -106,7 +106,8 @@ New option/command/subcommand are prefixed with ◈.
   * Add repo optim enable/disable test [#5015 @rjbou]
   * Update list with co-instabillity [#5024 @AltGr]
   * Update var-option test with no switch examples [#5025]
-  * Escape for cmdliner.1.1.1 output chane [#5131 @rjbou]
+  * Escape for cmdliner.1.1.1 output change [#5131 @rjbou]
+  * Add test for switch upgrade from 2.0 root, with pinned compiler [#5176 @rjbou @kit-ty-kate]
 ### Engine
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
   * Add `BASEDIR` to environement [#4913 @rjbou]
@@ -166,3 +167,4 @@ New option/command/subcommand are prefixed with ◈.
   * `OpamHash`: add `sort` from strongest to weakest kind
   * `OpamSystem.real_path`: Remove the double chdir trick on OCaml >= 4.13.0 [#4961 @kit-ty-kate]
   * `OpamClient`: fix `update_with_init_config`, when ``jobs` was set in `init_config`, it dropped rest of `config` update [#5056 @rjbou]
+  * `OpamCompat`: add `Lazy` module and `Lazy.map` function [#5176 @dra27]
