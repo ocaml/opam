@@ -1502,7 +1502,7 @@ let env cli =
          to have further shell commands be evaluated in the proper opam \
          context."
         OpamEnv.(
-          shell_eval_invocation shell (opam_env_invocation ())
+          shell_eval_invocation shell (opam_env_invocation shell)
             |> Manpage.escape));
     `P "This is a shortcut, and equivalent to $(b,opam config env).";
   ] in
@@ -2470,7 +2470,7 @@ let switch cli =
          environment. For that, use $(i,%s)."
         OpamEnv.(
           shell_eval_invocation shell
-            (opam_env_invocation ~switch:"SWITCH" ~set_opamswitch:true ())
+            (opam_env_invocation ~switch:"SWITCH" ~set_opamswitch:true shell)
             |> Manpage.escape));
   ] @
     mk_subdoc ~cli ~defaults:["","list";"SWITCH","set"]

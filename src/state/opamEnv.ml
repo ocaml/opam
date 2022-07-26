@@ -378,9 +378,13 @@ let shell_eval_invocation shell cmd =
 
 (** Returns "opam env" invocation string together with optional root and switch
     overrides *)
-let opam_env_invocation ?root ?switch ?(set_opamswitch=false) () =
-  let root = OpamStd.Option.map_default (Printf.sprintf " --root=%s") "" root in
-  let switch = OpamStd.Option.map_default (Printf.sprintf " --switch=%s") "" switch in
+let opam_env_invocation ?root ?switch ?(set_opamswitch=false) shell =
+  let quoted_arg arg = match shell with
+    | SH_win_powershell | SH_pwsh -> Printf.sprintf " --%s=\"%s\"" arg
+    | _ -> Printf.sprintf " --%s='%s'" arg
+  in
+  let root = OpamStd.Option.map_default (quoted_arg "root") "" root in
+  let switch = OpamStd.Option.map_default (quoted_arg "switch") "" switch in
   let setswitch = if set_opamswitch then " --set-switch" else "" in
   Printf.sprintf "opam env%s%s%s" root switch setswitch
 
@@ -415,7 +419,7 @@ let eval_string gt ?(set_opamswitch=false) switch =
     OpamStd.Option.replace f switch
   in
   let shell = OpamStd.Sys.guess_shell_compat () in
-  shell_eval_invocation shell (opam_env_invocation ?root ?switch ~set_opamswitch ())
+  shell_eval_invocation shell (opam_env_invocation ?root ?switch ~set_opamswitch shell)
 
 
 (* -- Shell and init scripts handling -- *)
@@ -782,7 +786,7 @@ let setup
         (OpamConsole.colorise `bold @@ string_of_shell shell)
         (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
         (OpamConsole.colorise `bold @@ source root shell (init_file shell))
-        (OpamConsole.colorise `bold @@ shell_eval_invocation shell (opam_env_invocation ()));
+        (OpamConsole.colorise `bold @@ shell_eval_invocation shell (opam_env_invocation shell));
       if OpamCoreConfig.answer_is_yes () then begin
         OpamConsole.warning "Shell not updated in non-interactive mode: use --shell-setup";
         None

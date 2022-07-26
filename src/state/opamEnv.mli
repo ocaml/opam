@@ -78,7 +78,7 @@ val shell_eval_invocation:
 (** Returns "opam env" invocation string together with optional root and switch
     overrides *)
 val opam_env_invocation:
-  ?root:string -> ?switch:string -> ?set_opamswitch:bool -> unit -> string
+  ?root:string -> ?switch:string -> ?set_opamswitch:bool -> OpamTypes.shell -> string
 
 (** The shell command to run by the user to set his OPAM environment, adapted to
     the current shell (as returned by [eval `opam config env`]) *)
