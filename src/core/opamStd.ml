@@ -957,19 +957,14 @@ module OpamSys = struct
       with Failure _ -> []
     )
 
-  type shell_choice = Reject | Accept of shell
+  type shell_choice = Accept of shell
 
   let windows_get_shell =
     let categorize_process = function
       | "powershell.exe" | "powershell_ise.exe" -> Some (Accept SH_win_powershell)
       | "pwsh.exe" -> Some (Accept SH_pwsh)
       | "cmd.exe" -> Some (Accept SH_win_cmd)
-      | "env.exe" ->
-        (* If the nearest ancestor is env.exe it may be `env bash` or
-           even `env cmd.exe`. On Windows we can't see whether bash,
-           cmd or something else was chosen by `env ...`. So kick
-           out of categorization immediately. *)
-        Some Reject
+      | "env.exe" -> Some (Accept SH_sh)
       | name ->
         Option.map
           (fun shell -> Accept shell)
@@ -980,7 +975,6 @@ module OpamSys = struct
       match (List.map String.lowercase_ascii ancestors |>
               OpamList.filter_map categorize_process) with
       | [] -> None
-      | Reject :: _ -> None
       | Accept most_relevant_shell :: _ -> Some most_relevant_shell
     )
 
