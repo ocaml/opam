@@ -376,17 +376,56 @@ let shell_eval_invocation shell cmd =
   | _ ->
     Printf.sprintf "eval $(%s)" cmd
 
+(** Returns if the file path needs to be quoted by any supported {!shell}.
+
+    This function does not concern itself with how the file path should be
+    quoted.
+
+    This function treats variable expansions ($) and array expansions for
+    PowerShell (@) and history expansions (!) as needing quotes.
+
+    All other characters come from the following references:
+
+    Bash (metacharacter)
+      https://www.gnu.org/software/bash/manual/html_node/Definitions.html
+      SPACE TAB | & ; ( ) < >
+
+    PowerShell
+      https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_special_characters?view=powershell-5.1
+      https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules?view=powershell-5.1
+      SPACE `
+
+    Command Prompt
+      https://ss64.com/nt/syntax-esc.html
+      SPACE TAB & \ < > ^ | % = ( )
+*)
+let filepath_needs_quote path =
+  let f = function
+    | '$' | '@' | '!'
+    | ' ' | '\t' | '|' | '&' | ';' | '(' | ')' | '<' | '>'
+    | '`'
+    | '\\' | '^' | '%' -> true
+    | _ -> false
+  in
+  OpamCompat.String.exists f path
+
 (** Returns "opam env" invocation string together with optional root and switch
     overrides *)
 let opam_env_invocation ?root ?switch ?(set_opamswitch=false) shell =
-  let quoted_arg arg = match shell with
+  let shell_arg argname pathval =
+    let quoted = match shell with
     | SH_win_cmd | SH_win_powershell | SH_pwsh ->
-      Printf.sprintf " --%s=\"%s\"" arg
+      Printf.sprintf " \"--%s=%s\"" argname
     | SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish ->
-      Printf.sprintf " --%s='%s'" arg
+      Printf.sprintf " '--%s=%s'" argname
+    in
+    if filepath_needs_quote pathval then
+      quoted pathval
+    else
+      Printf.sprintf " --%s=%s" argname pathval
   in
-  let root = OpamStd.Option.map_default (quoted_arg "root") "" root in
-  let switch = OpamStd.Option.map_default (quoted_arg "switch") "" switch in
+  let root = OpamStd.Option.map_default (shell_arg "root") "" root in
+  let switch = OpamStd.Option.map_default (shell_arg "switch") "" switch in
   let setswitch = if set_opamswitch then " --set-switch" else "" in
   Printf.sprintf "opam env%s%s%s" root switch setswitch
 
