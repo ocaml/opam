@@ -1156,6 +1156,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     else
       manual_install t sys_packages
   and menu t sys_packages =
+    (* Called only if run install is true *)
     let answer =
       let pkgman = OpamConsole.colorise `yellow (pkg_manager_name ()) in
       OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
@@ -1200,7 +1201,8 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   and manual_install t sys_packages =
     print_command sys_packages;
     let answer =
-      OpamConsole.menu ~default:`Continue ~no:`Quit "Would you like opam to:"
+      OpamConsole.menu ~default:`Continue ~noninteractive:`Ignore ~no:`Quit
+        "Would you like opam to:"
         ~options:[
           `Continue, "Check again, as the package is now installed";
           `Ignore, "Attempt installation anyway, and permanently register that \
