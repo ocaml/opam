@@ -513,9 +513,13 @@ let list ?(force_search=false) cli =
                 (this calls the solver and may be more costly; a package \
                 depending on an unavailable package may be available, but is \
                 never installable)";
-        cli_original, OpamListCommand.Compiler, ["base"],
+        cli_between cli2_0 cli2_1 ~replaced:"--invariant",
+        OpamListCommand.Compiler, ["base"],
           "List only the immutable base of the current switch (i.e. \
                 compiler packages)";
+        cli_from cli2_2, OpamListCommand.Compiler, ["invariant"],
+          "List only the immutable base of the current switch (i.e. \
+                invariant packages)";
         cli_original, OpamListCommand.Pinned, ["pinned"],
           "List only the pinned packages";
       ]

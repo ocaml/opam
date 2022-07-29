@@ -46,12 +46,10 @@ The switch invariant was set to b
 ### opam switch list
 #   switch   compiler  description
 ->  display  a.1       display
-### opam list --base
-# Packages matching: base
+### opam list --invariant
+# Packages matching: invariant
 # Name # Installed # Synopsis
-a      1
 b      1
-e      1
 ### opam install c
 The following actions will be performed:
 === remove 1 package
@@ -70,12 +68,10 @@ Done.
 ### opam switch list
 #   switch   compiler  description
 ->  display  c.1       display
-### opam list --base
-# Packages matching: base
+### opam list --invariant
+# Packages matching: invariant
 # Name # Installed # Synopsis
 b      1
-c      1
-e      1
 ### opam install d
 The following actions will be performed:
 === recompile 1 package
@@ -91,13 +87,10 @@ Done.
 ### opam switch list
 #   switch   compiler  description
 ->  display  c.1,d.1   display
-### opam list --base
-# Packages matching: base
+### opam list --invariant
+# Packages matching: invariant
 # Name # Installed # Synopsis
 b      1
-c      1
-d      1
-e      1
 ### opam switch remove display
 Switch display and all its packages will be wiped. Are you sure? [y/n] y
 ### ::::::::::::::::::
@@ -106,12 +99,10 @@ opam-version: "2.0"
 # force dependency for reproducibility
 depends: "d"
 ### opam switch create display --empty
-### opam switch set-invariant b
-The switch invariant was set to b
+### opam install d
 The following actions will be performed:
-=== install 5 packages
-  - install b 1
-  - install d 1 [required by b]
+=== install 4 packages
+  - install d 1
   - install e 1 [required by d]
   - install f 1 [required by d]
   - install g 1
@@ -120,18 +111,24 @@ The following actions will be performed:
 -> installed e.1
 -> installed f.1
 -> installed d.1
--> installed b.1
 -> installed g.1
+Done.
+### opam switch set-invariant b
+The switch invariant was set to b
+The following actions will be performed:
+=== install 1 package
+  - install b 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed b.1
 Done.
 ### opam switch list
 #   switch   compiler  description
 ->  display  d.1       display
-### opam list --base
-# Packages matching: base
+### opam list --invariant
+# Packages matching: invariant
 # Name # Installed # Synopsis
 b      1
-d      1
-e      1
 ### opam switch remove display
 Switch display and all its packages will be wiped. Are you sure? [y/n] y
 ### :::::::::::::::::::
@@ -152,9 +149,15 @@ Done.
 ### opam switch list
 #   switch   compiler  description
 ->  display  d.1       display
-### opam list --base
-# Packages matching: base
+### opam list --invariant
+# Packages matching: invariant
 # Name # Installed # Synopsis
 b      1
-d      1
-e      1
+### <OPAM/display/.opam-switch/switch-config>
+opam-version: "2.0"
+invariant: ["b" { >= "1" } |"c" { >= "1" }]
+### opam install e
+[NOTE] Package e is already installed (current version is 1).
+### opam switch
+#   switch   compiler  description
+->  display  d.1       b >= 1 | c >= 1

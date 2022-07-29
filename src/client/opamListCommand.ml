@@ -82,7 +82,7 @@ let string_of_selector =
   | Any -> "any" % `cyan
   | Installed -> "installed" % `cyan
   | Root -> "root" % `cyan
-  | Compiler -> "base" % `cyan
+  | Compiler -> "invariant" % `cyan
   | Available -> "available" % `cyan
   | Installable -> "installable" % `cyan
   | Pinned -> "pinned" % `cyan
@@ -215,7 +215,7 @@ let apply_selector ~base st = function
   | Any -> base
   | Installed -> st.installed
   | Root -> st.installed_roots
-  | Compiler -> st.compiler_packages
+  | Compiler -> OpamSwitchState.invariant_root_packages st
   | Available -> Lazy.force st.available_packages
   | Installable ->
     OpamSolver.installable_subset
