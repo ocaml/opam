@@ -27,6 +27,7 @@ users)
   * Add `experimental` flags handling [#5099 @rjbou]
   * [BUG] Fix `OPAMCURL` and `OPAMFETCH` value setting [#5111 @rjbou - fix #5108]
   * [BUG] Fix display of pinned packages in action list [#5079 @rjbou]
+  * [BUG] Fix spaces in root and switch dirs [#5203 @jonahbeckford]
 
 ## Plugins
   *
@@ -276,9 +277,8 @@ users)
   * Add switch-invariant test [#4866 @rjbou]
   * opam root version: add local switch cases [#4763 @rjbou] [2.1.0~rc2 #4715]
   * opam root version: add reinit test casess [#4763 @rjbou] [2.1.0~rc2 #4750]
-  * Add & update env tests [#4861 #4841 @rjbou @dra27]
   * Port opam-rt tests: orphans, dep-cycles, reinstall, and big-upgrade [#4979 @AltGr]
-  * Add & update env tests [#4861 #4841 #4974 @rjbou @dra27 @AltGr]
+  * Add & update env tests [#4861 #4841 #4974 #5203 @rjbou @dra27 @AltGr]
   * Add remove test [#5004 @AltGr]
   * Add some simple tests for the "opam list" command [#5006 @kit-ty-kate]
   * Add clean test for untracked option [#4915 @rjbou]
