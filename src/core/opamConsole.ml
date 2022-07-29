@@ -714,14 +714,14 @@ let header_error fmt =
 (* Reads a single char from the user when possible, a line otherwise *)
 let short_user_input ~prompt ?default f =
   let prompt () = match default with
-    | Some x ->
+    | Some x when OpamStd.Sys.tty_out ->
       msg "%s%s" prompt x;
       left_1_char ();
       carriage_delete ();
       (match List.rev (OpamStd.String.split prompt '\n') with
        | lastline::_ -> print_string lastline
        | [] -> ())
-    | None ->
+    | _ ->
       print_string prompt; flush stdout
   in
   try
