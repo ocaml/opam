@@ -903,8 +903,9 @@ module OpamSys = struct
     ) in
     fun () -> Lazy.force os
 
-  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish | SH_pwsh
-    | SH_win_cmd | SH_win_powershell
+  type powershell_host = Powershell_pwsh | Powershell
+  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
+    | SH_pwsh of powershell_host | SH_win_cmd
 
   let windows_default_shell = SH_win_cmd
   let unix_default_shell = SH_sh
@@ -916,7 +917,7 @@ module OpamSys = struct
     | "zsh"  -> Some SH_zsh
     | "bash" -> Some SH_bash
     | "fish" -> Some SH_fish
-    | "pwsh" -> Some SH_pwsh
+    | "pwsh" -> Some (SH_pwsh Powershell_pwsh)
     | "dash"
     | "sh"   -> Some SH_sh
     | _      -> None
@@ -961,8 +962,9 @@ module OpamSys = struct
 
   let windows_get_shell =
     let categorize_process = function
-      | "powershell.exe" | "powershell_ise.exe" -> Some (Accept SH_win_powershell)
-      | "pwsh.exe" -> Some (Accept SH_pwsh)
+      | "powershell.exe" | "powershell_ise.exe" ->
+        Some (Accept (SH_pwsh Powershell))
+      | "pwsh.exe" -> Some (Accept (SH_pwsh Powershell_pwsh))
       | "cmd.exe" -> Some (Accept SH_win_cmd)
       | "env.exe" -> Some (Accept SH_sh)
       | name ->
@@ -1064,7 +1066,7 @@ module OpamSys = struct
       let cshrc = home ".cshrc" in
       let tcshrc = home ".tcshrc" in
       if Sys.file_exists cshrc then cshrc else tcshrc
-    | SH_pwsh | SH_win_powershell ->
+    | SH_pwsh _ ->
       if Sys.win32 then win_my_powershell "Microsoft.Powershell_profile.ps1" else
       List.fold_left Filename.concat (home ".config") ["powershell"; "Microsoft.Powershell_profile.ps1"]
     | SH_sh -> home ".profile"
