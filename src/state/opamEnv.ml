@@ -414,7 +414,7 @@ let filepath_needs_quote path =
 let opam_env_invocation ?root ?switch ?(set_opamswitch=false) shell =
   let shell_arg argname pathval =
     let quoted = match shell with
-    | SH_win_cmd | SH_win_powershell | SH_pwsh ->
+    | SH_win_cmd | SH_pwsh _ ->
       Printf.sprintf " \"--%s=%s\"" argname
     | SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish ->
       Printf.sprintf " '--%s=%s'" argname
