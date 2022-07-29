@@ -32,4 +32,4 @@ let () =
     f ();
     (prefix, suffix)
   in
-  exit (Sys.command (Printf.sprintf "%s%s%s%s" prefix Sys.argv.(1) suffix Sys.argv.(2)))
+  exit (Sys.command (Printf.sprintf "%s%s%s-DUNICODE -D_UNICODE %s" prefix Sys.argv.(1) suffix Sys.argv.(2)))

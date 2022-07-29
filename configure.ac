@@ -212,7 +212,7 @@ AS_IF([ test ${WIN32} -eq 1 ],[
     AC_CHECK_TOOL(CC64,[${T_CC64}],[no])
     AS_IF([ test "x${CC64}" != "xno" ],[
       echo "${CC64} -o " > src/stubs/win32/cc64
-      echo " -Wdeclaration-after-statement " >> src/stubs/win32/cc64
+      echo " -Wdeclaration-after-statement -municode " >> src/stubs/win32/cc64
     ])
   ],[
     AC_MSG_CHECKING([whether Microsoft Linker needs a PATH shim])

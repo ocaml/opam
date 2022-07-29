@@ -253,6 +253,7 @@ users)
   * Add some debug log to OpamCudf.extract_explanations to help debug #4373 [#4981 @kit-ty-kate]
   * Make SHA computation faster by using ocaml-sha [#5042 @kit-ty-kate]
   * Make OpamConfigCommand.global_allowed_fields fully lazy [#5162 @LasseBlaauwbroek]
+  * Overhaul Windows C stubs and update for Unicode [#5190 @dra27]
 
 ## Internal: Windows
   * Support MSYS2: treat MSYS2 and Cygwin as equivalent [#4813 @jonahbeckford]

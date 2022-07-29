@@ -12,10 +12,14 @@
     (language      c)
     (names         opamInject opamWindows)
     (flags         :standard
+                   -DUNICODE -D_UNICODE -DCAML_NAME_SPACE
                    (:include ../c-flags.sexp)))
   (c_library_flags (:standard
                    (:include c-libraries.sexp)))
   (wrapped         false))
+
+(rule
+  (copy opamWin32Stubs.ml opamWin32Stubs.mli))
 
 (rule
   (targets opam-putenv.exe)

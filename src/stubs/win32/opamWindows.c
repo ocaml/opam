@@ -8,10 +8,11 @@
 /*                                                                        */
 /**************************************************************************/
 
-#define CAML_NAME_SPACE
-/* We need the UTF16 conversion functions */
+/* We need the UTF16 conversion functions (which prior to 4.13 were internal)
+   and also the internal length calculations functions, which are still
+   internal. */
 #define CAML_INTERNALS
-#include <stdio.h>
+
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
 #include <caml/fail.h>
@@ -22,14 +23,11 @@
 #include <caml/signals.h>
 #include <caml/unixsupport.h>
 
-/* In a previous incarnation, dummy C stubs were generated for non-Windows
- * builds. Although this is no longer used, the C sources retain the ability to
- * be compiled this way. */
-#ifdef _WIN32
-
 #include <Windows.h>
 #include <Shlobj.h>
 #include <TlHelp32.h>
+
+#include <stdio.h>
 
 static struct custom_operations HandleOps =
 {
@@ -51,26 +49,25 @@ static inline BOOL has_IsWoW64Process(void)
 {
   return (IsWoW64Process
           || (IsWoW64Process =
-               (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle("kernel32"),
+               (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(L"kernel32"),
                                                    "IsWow64Process")));
 }
 
 /*
- * Taken from otherlibs/win32unix/winwait.c (sadly declared static)
- * Altered only for CAML_NAME_SPACE
+ * Taken from otherlibs/unix/winwait.c (sadly declared static)
  */
 static value alloc_process_status(HANDLE pid, int status)
 {
-  value res, st;
+  CAMLparam0();
+  CAMLlocal1(st);
+  value res;
 
-  st = caml_alloc(1, 0);
+  st = caml_alloc_small(1, 0);
   Field(st, 0) = Val_int(status);
-  Begin_root (st);
-    res = caml_alloc_small(2, 0);
-    Field(res, 0) = Val_long((intnat) pid);
-    Field(res, 1) = st;
-  End_roots();
-  return res;
+  res = caml_alloc_small(2, 0);
+  Field(res, 0) = Val_long((intnat) pid);
+  Field(res, 1) = st;
+  CAMLreturn(res);
 }
 
 /* Order must match OpamStubsTypes.registry_root */
@@ -120,29 +117,17 @@ static char* getProcessInfo(HANDLE hProcessSnapshot,
   return NULL;
 }
 
-char* InjectSetEnvironmentVariable(DWORD pid, const char* key, const char* val);
-
-#define OPAMreturn CAMLreturn
-
-#else
-
-#define OPAMreturn(v) CAMLreturn(Val_unit)
-
-#endif
+char* InjectSetEnvironmentVariable(DWORD, LPCWSTR, LPCWSTR);
 
 /* Actual primitives from here */
 CAMLprim value OPAMW_GetCurrentProcessID(value unit)
 {
-  CAMLparam1(unit);
-
-  OPAMreturn(caml_copy_int32(GetCurrentProcessId()));
+  return caml_copy_int32(GetCurrentProcessId());
 }
 
 CAMLprim value OPAMW_GetStdHandle(value nStdHandle)
 {
-  CAMLparam1(nStdHandle);
-#ifdef _WIN32
-  CAMLlocal1(result);
+  value result;
 
   HANDLE hResult;
 
@@ -151,59 +136,52 @@ CAMLprim value OPAMW_GetStdHandle(value nStdHandle)
 
   result = caml_alloc_custom(&HandleOps, sizeof(HANDLE), 0, 1);
   HANDLE_val(result) = hResult;
-#endif
 
-  OPAMreturn(result);
+  return result;
 }
 
 CAMLprim value OPAMW_GetConsoleScreenBufferInfo(value hConsoleOutput)
 {
-  CAMLparam1(hConsoleOutput);
-#ifdef _WIN32
-  CAMLlocal2(result, coord);
-
+  CAMLparam0();
+  CAMLlocal1(result);
+  value coord;
   CONSOLE_SCREEN_BUFFER_INFO buffer;
 
   if (!GetConsoleScreenBufferInfo(HANDLE_val(hConsoleOutput), &buffer))
     caml_raise_not_found();
 
   result = caml_alloc(5, 0);
-  coord = caml_alloc(2, 0);
-  Store_field(coord, 0, Val_int(buffer.dwSize.X));
-  Store_field(coord, 1, Val_int(buffer.dwSize.Y));
+  coord = caml_alloc_small(2, 0);
+  Field(coord, 0) = Val_int(buffer.dwSize.X);
+  Field(coord, 1) = Val_int(buffer.dwSize.Y);
   Store_field(result, 0, coord);
-  coord = caml_alloc(2, 0);
-  Store_field(coord, 0, Val_int(buffer.dwCursorPosition.X));
-  Store_field(coord, 1, Val_int(buffer.dwCursorPosition.Y));
+  coord = caml_alloc_small(2, 0);
+  Field(coord, 0) = Val_int(buffer.dwCursorPosition.X);
+  Field(coord, 1) = Val_int(buffer.dwCursorPosition.Y);
   Store_field(result, 1, coord);
   Store_field(result, 2, Val_int(buffer.wAttributes));
-  coord = caml_alloc(4, 0);
-  Store_field(coord, 0, Val_int(buffer.srWindow.Left));
-  Store_field(coord, 1, Val_int(buffer.srWindow.Top));
-  Store_field(coord, 2, Val_int(buffer.srWindow.Right));
-  Store_field(coord, 3, Val_int(buffer.srWindow.Bottom));
+  coord = caml_alloc_small(4, 0);
+  Field(coord, 0) = Val_int(buffer.srWindow.Left);
+  Field(coord, 1) = Val_int(buffer.srWindow.Top);
+  Field(coord, 2) = Val_int(buffer.srWindow.Right);
+  Field(coord, 3) = Val_int(buffer.srWindow.Bottom);
   Store_field(result, 3, coord);
-  coord = caml_alloc(2, 0);
-  Store_field(coord, 0, Val_int(buffer.dwMaximumWindowSize.X));
-  Store_field(coord, 1, Val_int(buffer.dwMaximumWindowSize.Y));
+  coord = caml_alloc_small(2, 0);
+  Field(coord, 0) = Val_int(buffer.dwMaximumWindowSize.X);
+  Field(coord, 1) = Val_int(buffer.dwMaximumWindowSize.Y);
   Store_field(result, 4, coord);
-#endif
 
-  OPAMreturn(result);
+  CAMLreturn(result);
 }
 
 CAMLprim value OPAMW_SetConsoleTextAttribute(value hConsoleOutput,
                                              value wAttributes)
 {
-  CAMLparam2(hConsoleOutput, wAttributes);
-
-#ifdef _WIN32
   if (!SetConsoleTextAttribute(HANDLE_val(hConsoleOutput),
                                Int_val(wAttributes)))
     caml_failwith("setConsoleTextAttribute");
-#endif
 
-  OPAMreturn(Val_unit);
+  return Val_unit;
 }
 
 CAMLprim value OPAMW_FillConsoleOutputCharacter(value vhConsoleOutput,
@@ -211,9 +189,6 @@ CAMLprim value OPAMW_FillConsoleOutputCharacter(value vhConsoleOutput,
                                                 value vnLength,
                                                 value vdwWriteCoord)
 {
-  CAMLparam4(vhConsoleOutput, character, vnLength, vdwWriteCoord);
-
-#ifdef _WIN32
   HANDLE hConsoleOutput = HANDLE_val(vhConsoleOutput);
   CONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo;
   WCHAR cCharacter = Int_val(character) & 0xFF;
@@ -238,63 +213,40 @@ CAMLprim value OPAMW_FillConsoleOutputCharacter(value vhConsoleOutput,
       dwWriteCoord.X %= ConsoleScreenBufferInfo.dwSize.X;
     }
   }
-#endif
 
-  OPAMreturn(Val_bool(result));
+  return Val_bool(result);
 }
 
 CAMLprim value OPAMW_GetConsoleMode(value hConsoleHandle)
 {
-  CAMLparam1(hConsoleHandle);
-
-#ifdef _WIN32
   DWORD dwMode;
   if (!GetConsoleMode(HANDLE_val(hConsoleHandle), &dwMode))
-#endif
     caml_raise_not_found();
 
-  OPAMreturn(Val_int(dwMode));
+  return Val_int(dwMode);
 }
 
 CAMLprim value OPAMW_SetConsoleMode(value hConsoleMode, value dwMode)
 {
-  CAMLparam2(hConsoleMode, dwMode);
-
-#ifdef _WIN32
   BOOL result = SetConsoleMode(HANDLE_val(hConsoleMode), Int_val(dwMode));
-#endif
 
-  OPAMreturn(Val_bool(result));
+  return Val_bool(result);
 }
 
 CAMLprim value OPAMW_GetWindowsVersion(value unit)
 {
-  CAMLparam1(unit);
+  value result;
+  result = caml_alloc_small(4, 0);
+  Field(result, 0) = Val_int(caml_win32_major);
+  Field(result, 1) = Val_int(caml_win32_minor);
+  Field(result, 2) = Val_int(caml_win32_build);
+  Field(result, 3) = Val_int(caml_win32_revision);
 
-#ifdef _WIN32
-  CAMLlocal1(result);
-  result = caml_alloc_tuple(4);
-#if OCAML_VERSION >= 40600
-  Store_field(result, 0, Val_int(caml_win32_major));
-  Store_field(result, 1, Val_int(caml_win32_minor));
-  Store_field(result, 2, Val_int(caml_win32_build));
-  Store_field(result, 3, Val_int(caml_win32_revision));
-#else
-  Store_field(result, 0, Val_int(0));
-  Store_field(result, 1, Val_int(0));
-  Store_field(result, 2, Val_int(0));
-  Store_field(result, 3, Val_int(0));
-#endif
-#endif
-
-  OPAMreturn(result);
+  return result;
 }
 
 CAMLprim value OPAMW_IsWoW64(value unit)
 {
-  CAMLparam1(unit);
-
-#ifdef _WIN32
   BOOL result = FALSE;
   /*
    * 32-bit versions may or may not have IsWow64Process (depends on age).
@@ -304,9 +256,8 @@ CAMLprim value OPAMW_IsWoW64(value unit)
    */
   if (has_IsWoW64Process() && !IsWoW64Process(GetCurrentProcess(), &result))
     result = FALSE;
-#endif
 
-  OPAMreturn(Val_bool(result));
+  return Val_bool(result);
 }
 
 /*
@@ -314,14 +265,13 @@ CAMLprim value OPAMW_IsWoW64(value unit)
  */
 CAMLprim value OPAMW_waitpids(value vpid_reqs, value vpid_len)
 {
-#ifdef _WIN32
   int i;
   DWORD status, retcode;
   HANDLE pid_req;
   DWORD err = 0;
   int len = Int_val(vpid_len);
-  HANDLE *lpHandles = (HANDLE*)malloc(sizeof(HANDLE) * len);
   value ptr = vpid_reqs;
+  HANDLE *lpHandles = (HANDLE*)malloc(sizeof(HANDLE) * len);
 
   if (lpHandles == NULL)
     caml_raise_out_of_memory();
@@ -351,92 +301,73 @@ CAMLprim value OPAMW_waitpids(value vpid_reqs, value vpid_len)
    */
   CloseHandle(pid_req);
   return alloc_process_status(pid_req, status);
-#else
-  return Val_unit;
-#endif
 }
 
 CAMLprim value OPAMW_WriteRegistry(value hKey,
-                                   value lpSubKey,
-                                   value lpValueName,
+                                   value sub_key,
+                                   value value_name,
                                    value dwType,
-                                   value lpData)
+                                   value data)
 {
-  CAMLparam5(hKey, lpSubKey, lpValueName, dwType, lpData);
-
-#ifdef _WIN32
   HKEY key;
-  const void* buf = NULL;
+  LPVOID lpData = NULL;
   DWORD cbData = 0;
   DWORD type = 0;
+  LSTATUS ret;
+  LPWSTR lpSubKey, lpValueName;
 
-  switch (RegOpenKeyEx(roots[Int_val(hKey)],
-                       String_val(lpSubKey),
-                       0,
-                       KEY_WRITE,
-                       &key))
+  if (!caml_string_is_c_safe(sub_key) || !caml_string_is_c_safe(value_name))
+    caml_invalid_argument("OPAMW_WriteRegistry");
+
+  /* Cases match OpamStubsTypes.registry_value */
+  switch (Int_val(dwType))
   {
-    case ERROR_SUCCESS:
-      {
-        /* Cases match OpamStubsTypes.registry_value */
-        switch (Int_val(dwType))
-        {
-          case 0:
-            {
-              buf = String_val(lpData);
-              cbData = strlen(buf) + 1;
-              type = REG_SZ;
-              break;
-            }
-          default:
-            {
-              caml_failwith("OPAMW_WriteRegistry: value not implemented");
-              break;
-            }
-        }
-        if (RegSetValueEx(key,
-                          String_val(lpValueName),
-                          0,
-                          type,
-                          (LPBYTE)buf,
-                          cbData) != ERROR_SUCCESS)
-        {
-          RegCloseKey(key);
-          caml_failwith("RegSetValueEx");
-        }
-        RegCloseKey(key);
-        break;
-      }
-    case ERROR_FILE_NOT_FOUND:
-      {
-        caml_raise_not_found();
-        break;
-      }
+    case 0:
+      lpData = caml_stat_strdup_to_utf16(String_val(data));
+      cbData = win_multi_byte_to_wide_char(String_val(data), -1, NULL, 0);
+      type = REG_SZ;
+      break;
     default:
-      {
-        caml_failwith("RegOpenKeyEx");
-        break;
-      }
+      caml_failwith("OPAMW_WriteRegistry: value not implemented");
+      break;
   }
-#endif
 
-  OPAMreturn(Val_unit);
+  if (!(lpSubKey = caml_stat_strdup_to_utf16(String_val(sub_key)))) {
+    caml_stat_free(lpData);
+    caml_raise_out_of_memory();
+  }
+  if (!(lpValueName = caml_stat_strdup_to_utf16(String_val(value_name)))) {
+    caml_stat_free(lpData);
+    caml_stat_free(lpSubKey);
+    caml_raise_out_of_memory();
+  }
+
+  ret =
+    RegSetKeyValue(roots[Int_val(hKey)], lpSubKey, lpValueName, type, lpData, cbData);
+
+  caml_stat_free(lpSubKey);
+  caml_stat_free(lpValueName);
+  caml_stat_free(lpData);
+
+  if (ret == ERROR_FILE_NOT_FOUND)
+    caml_raise_not_found();
+  else if (ret != ERROR_SUCCESS)
+    caml_failwith("RegSetKeyValue");
+
+  return Val_unit;
 }
 
 CAMLprim value OPAMW_GetConsoleOutputCP(value unit)
 {
-  CAMLparam1(unit);
-
-  OPAMreturn(Val_int(GetConsoleOutputCP()));
+  return Val_int(GetConsoleOutputCP());
 }
 
 CAMLprim value OPAMW_GetCurrentConsoleFontEx(value hConsoleOutput,
                                              value bMaximumWindow)
 {
-  CAMLparam2(hConsoleOutput, bMaximumWindow);
-#ifdef _WIN32
-  CAMLlocal3(result, coord, name);
-
+  CAMLparam0();
+  CAMLlocal1(result);
+  value coord;
   int len;
   CONSOLE_FONT_INFOEX fontInfo;
   fontInfo.cbSize = sizeof(fontInfo);
@@ -445,11 +376,11 @@ CAMLprim value OPAMW_GetCurrentConsoleFontEx(value hConsoleOutput,
                               Bool_val(bMaximumWindow),
                               &fontInfo))
   {
-    result = caml_alloc(5, 0);
+    result = caml_alloc_tuple(5);
     Store_field(result, 0, Val_int(fontInfo.nFont));
-    coord = caml_alloc(2, 0);
-    Store_field(coord, 0, Val_int(fontInfo.dwFontSize.X));
-    Store_field(coord, 0, Val_int(fontInfo.dwFontSize.Y));
+    coord = caml_alloc_small(2, 0);
+    Field(coord, 0) = Val_int(fontInfo.dwFontSize.X);
+    Field(coord, 1) = Val_int(fontInfo.dwFontSize.Y);
     Store_field(result, 1, coord);
     Store_field(result, 2, Val_int(fontInfo.FontFamily));
     Store_field(result, 3, Val_int(fontInfo.FontWeight));
@@ -459,21 +390,24 @@ CAMLprim value OPAMW_GetCurrentConsoleFontEx(value hConsoleOutput,
   {
     caml_raise_not_found();
   }
-#endif
 
-  OPAMreturn(result);
+  CAMLreturn(result);
 }
 
 CAMLprim value OPAMW_CreateGlyphChecker(value fontName)
 {
-  CAMLparam1(fontName);
-#ifdef _WIN32
-  CAMLlocal2(result, handle);
+  CAMLparam0();
+  CAMLlocal1(result);
+  value handle;
+  HDC hDC;
+
+  if (!caml_string_is_c_safe(fontName))
+    caml_invalid_argument("OPAMW_CreateGlyphChecker");
 
   /*
    * Any device context will do to load the font, so use the Screen DC.
    */
-  HDC hDC = GetDC(NULL);
+  hDC = GetDC(NULL);
 
   if (hDC)
   {
@@ -510,27 +444,20 @@ CAMLprim value OPAMW_CreateGlyphChecker(value fontName)
   {
     caml_failwith("OPAMW_CheckGlyphs: GetDC");
   }
-#endif
 
-  OPAMreturn(result);
+  CAMLreturn(result);
 }
 
 CAMLprim value OPAMW_DeleteGlyphChecker(value checker)
 {
-  CAMLparam1(checker);
-
-#ifdef _WIN32
   DeleteObject(HANDLE_val(Field(checker, 1)));
   ReleaseDC(NULL, HANDLE_val(Field(checker, 0)));
-#endif
 
-  CAMLreturn(Val_unit);
+  return Val_unit;
 }
 
 CAMLprim value OPAMW_HasGlyph(value checker, value scalar)
 {
-  CAMLparam2(checker, scalar);
-#ifdef _WIN32
   BOOL result = FALSE;
   HDC hDC = HANDLE_val(Field(checker, 0));
 
@@ -546,18 +473,18 @@ CAMLprim value OPAMW_HasGlyph(value checker, value scalar)
     default:
       caml_failwith("OPAMW_CheckGlyphs: GetGlyphIndicesW (unexpected return)");
   }
-#endif
 
-  OPAMreturn(Val_bool(index != 0xffff));
+  return Val_bool(index != 0xffff);
 }
 
 CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
 {
-  CAMLparam3(pid, key, val);
-#ifdef _WIN32
-  CAMLlocal1(res);
-
   char* result;
+  LPWSTR lpName, lpValue;
+  DWORD dwProcessId = Int32_val(pid);
+
+  if (!caml_string_is_c_safe(key) || !caml_string_is_c_safe(val))
+    caml_invalid_argument("OPAMW_process_putenv");
 
   /*
    * MSDN is all over the place as to what the technical limits are for
@@ -567,33 +494,27 @@ CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
   if (caml_string_length(key) > 4095 || caml_string_length(val) > 4095)
     caml_invalid_argument("Strings too long");
 
-  result =
-    InjectSetEnvironmentVariable(Int32_val(pid),
-                                 String_val(key),
-                                 String_val(val));
+  if (!(lpName = caml_stat_strdup_to_utf16(String_val(key))))
+    caml_raise_out_of_memory();
+  if (!(lpValue = caml_stat_strdup_to_utf16(String_val(val)))) {
+    caml_stat_free(lpName);
+    caml_raise_out_of_memory();
+  }
+
+  caml_enter_blocking_section();
+  result = InjectSetEnvironmentVariable(dwProcessId, lpName, lpValue);
+  caml_leave_blocking_section();
 
   if (result == NULL)
-  {
-    res = Val_true;
-  }
+    return Val_true;
   else if (strlen(result) == 0)
-  {
-    res = Val_false;
-  }
+    return Val_false;
   else
-  {
     caml_failwith(result);
-  }
-#endif
-
-  OPAMreturn(res);
 }
 
 CAMLprim value OPAMW_IsWoW64Process(value pid)
 {
-  CAMLparam1(pid);
-
-#ifdef _WIN32
   BOOL result = FALSE;
 
   if (has_IsWoW64Process())
@@ -608,9 +529,8 @@ CAMLprim value OPAMW_IsWoW64Process(value pid)
       CloseHandle(hProcess);
     }
   }
-#endif
 
-  OPAMreturn(Val_bool(result));
+  return Val_bool(result);
 }
 
 /*
@@ -621,80 +541,60 @@ CAMLprim value OPAMW_IsWoW64Process(value pid)
  */
 CAMLprim value OPAMW_SHGetFolderPath(value nFolder, value dwFlags)
 {
-  CAMLparam2(nFolder, dwFlags);
-#ifdef _WIN32
-  CAMLlocal1(result);
-  TCHAR szPath[MAX_PATH];
+  WCHAR szPath[MAX_PATH];
 
   if (SUCCEEDED(SHGetFolderPath(NULL,
                                 Int_val(nFolder),
                                 NULL,
                                 Int_val(dwFlags),
                                 szPath)))
-    result = caml_copy_string(szPath);
+    return caml_copy_string_of_utf16(szPath);
   else
     caml_failwith("OPAMW_SHGetFolderPath");
-#endif
-
-  OPAMreturn(result);
 }
 
-CAMLprim value OPAMW_SendMessageTimeout(value hWnd,
+CAMLprim value OPAMW_SendMessageTimeout(value vhWnd,
                                         value uTimeout,
                                         value fuFlags,
                                         value vmsg,
                                         value vwParam,
                                         value vlParam)
 {
-  CAMLparam5(hWnd, vmsg, vwParam, vlParam, fuFlags);
-  CAMLxparam1(uTimeout);
-#ifdef _WIN32
-  CAMLlocal1(result);
+  value result;
 
   DWORD_PTR dwReturnValue;
   HRESULT lResult;
   WPARAM wParam;
   LPARAM lParam;
   UINT msg;
+  HWND hWnd = (HWND)Nativeint_val(vhWnd);
+  LPWSTR lParam_string = NULL;
 
-  switch (Int_val(vmsg))
-  {
-    case 0:
-      {
-        msg = WM_SETTINGCHANGE;
-        wParam = Int_val(vwParam);
-        lParam = (LPARAM)String_val(vlParam);
-        break;
-      }
-    default:
-      {
-        caml_failwith("OPAMW_SendMessageTimeout: message not implemented");
-        break;
-      }
+  if (Int_val(vmsg) == 0) {
+    msg = WM_SETTINGCHANGE;
+    wParam = Int_val(vwParam);
+    if (!caml_string_is_c_safe(vlParam))
+      caml_invalid_argument("OPAMW_SendMessageTimeout");
+    if (!(lParam_string = caml_stat_strdup_to_utf16(String_val(vlParam))))
+      caml_raise_out_of_memory();
+    lParam = (LPARAM)lParam_string;
+  } else {
+    caml_failwith("OPAMW_SendMessageTimeout: message not implemented");
   }
 
+  caml_enter_blocking_section();
   lResult =
-    SendMessageTimeout((HWND)Nativeint_val(hWnd),
-                        msg,
-                        wParam,
-                        lParam,
-                        Int_val(fuFlags),
-                        Int_val(uTimeout),
-                        &dwReturnValue);
+    SendMessageTimeout(hWnd, msg, wParam, lParam, Int_val(fuFlags),
+                       Int_val(uTimeout), &dwReturnValue);
+  caml_leave_blocking_section();
 
-  switch (Int_val(vmsg))
-  {
-    case 0:
-      {
-        result = caml_alloc(2, 0);
-        Store_field(result, 0, Val_int(lResult));
-        Store_field(result, 1, Val_int(dwReturnValue));
-        break;
-      }
-  }
-#endif
+  if (lParam_string)
+    caml_stat_free(lParam_string);
 
-  OPAMreturn(result);
+  result = caml_alloc_small(2, 0);
+  Field(result, 0) = Val_int(lResult);
+  Field(result, 1) = Val_int(dwReturnValue);
+  return result;
 }
 
 CAMLprim value OPAMW_SendMessageTimeout_byte(value * v, int n)
@@ -704,9 +604,6 @@ CAMLprim value OPAMW_SendMessageTimeout_byte(value * v, int n)
 
 CAMLprim value OPAMW_GetParentProcessID(value processId)
 {
-  CAMLparam1(processId);
-
-#ifdef _WIN32
   PROCESSENTRY32 entry;
   char* msg;
   /*
@@ -721,9 +618,8 @@ CAMLprim value OPAMW_GetParentProcessID(value processId)
    * Finished with the snapshot
    */
   CloseHandle(hProcessSnapshot);
-#endif
 
-  OPAMreturn(caml_copy_int32(entry.th32ParentProcessID));
+  return caml_copy_int32(entry.th32ParentProcessID);
 }
 
 CAMLprim value OPAMW_GetProcessName(value processId)
@@ -740,33 +636,40 @@ CAMLprim value OPAMW_GetProcessName(value processId)
 
   CloseHandle(hProcessSnapshot);
 
-  CAMLreturn(caml_copy_string(entry.szExeFile));
+  CAMLreturn(caml_copy_string_of_utf16(entry.szExeFile));
 }
 
-CAMLprim value OPAMW_GetConsoleAlias(value alias, value exeName)
+CAMLprim value OPAMW_GetConsoleAlias(value alias, value exe_name)
 {
-  CAMLparam2(alias, exeName);
-#ifdef _WIN32
-  CAMLlocal1(result);
+  value result;
 
   DWORD nLength = 8192;
-  LPTSTR buffer = (LPTSTR)malloc(nLength);
+  LPWSTR lpSource, lpTargetBuffer, lpExeName;
 
-  if (!buffer)
+  if (!caml_string_is_c_safe(alias) || !caml_string_is_c_safe(exe_name))
+    caml_invalid_argument("OPAMW_GetConsoleAlias");
+
+  if (!(lpTargetBuffer = (LPWSTR)malloc(nLength * sizeof(WCHAR))))
     caml_raise_out_of_memory();
-
-  if (GetConsoleAlias((LPTSTR)String_val(alias), buffer, nLength,
-                      (LPTSTR)String_val(exeName)))
-  {
-    result = caml_copy_string(buffer);
+  if (!(lpExeName = caml_stat_strdup_to_utf16(String_val(exe_name)))) {
+    free(lpTargetBuffer);
+    caml_raise_out_of_memory();
   }
+  ;
+  if (!(lpSource = caml_stat_strdup_to_utf16(String_val(alias)))) {
+    free(lpTargetBuffer);
+    caml_stat_free(lpExeName);
+    caml_raise_out_of_memory();
+  }
+
+  if (GetConsoleAlias(lpSource, lpTargetBuffer, nLength, lpExeName))
+    result = caml_copy_string_of_utf16(lpTargetBuffer);
   else
-  {
-    result = caml_copy_string("");
-  }
+    result = caml_alloc_string(0);
 
-  free(buffer);
-#endif
+  free(lpTargetBuffer);
+  caml_stat_free(lpExeName);
+  caml_stat_free(lpSource);
 
-  OPAMreturn(result);
+  return result;
 }

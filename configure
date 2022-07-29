@@ -4945,7 +4945,7 @@ fi
     if  test "x${CC64}" != "xno" ; then :
 
       echo "${CC64} -o " > src/stubs/win32/cc64
-      echo " -Wdeclaration-after-statement " >> src/stubs/win32/cc64
+      echo " -Wdeclaration-after-statement -municode " >> src/stubs/win32/cc64
 
 fi
 
