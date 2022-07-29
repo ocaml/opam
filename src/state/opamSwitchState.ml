@@ -383,28 +383,6 @@ let load lock_kind gt rt switch =
       (slog OpamPackage.Set.to_string) changed;
     changed
   ) in
-  (* Detect and initialise missing switch description *)
-  let switch_config =
-    if switch_config <> OpamFile.Switch_config.empty &&
-       switch_config.synopsis = "" then
-      let synopsis =
-        match OpamPackage.Set.elements (compiler_packages %% installed_roots)
-        with
-        | [] -> OpamSwitch.to_string switch
-        | [nv] ->
-          let open OpamStd.Option.Op in
-          (OpamPackage.Map.find_opt nv opams >>= OpamFile.OPAM.synopsis) +!
-          OpamPackage.to_string nv
-        | pkgs -> OpamStd.List.concat_map " " OpamPackage.to_string pkgs
-      in
-      let conf = { switch_config with synopsis } in
-      if lock_kind = `Lock_write then (* auto-repair *)
-        OpamFile.Switch_config.write
-          (OpamPath.Switch.switch_config gt.root switch)
-          conf;
-      conf
-    else switch_config
-  in
   let switch_config, switch_invariant =
     match switch_config.invariant with
     | Some invariant -> switch_config, invariant
@@ -438,6 +416,24 @@ let load lock_kind gt rt switch =
           (OpamPath.Switch.switch_config gt.root switch)
           switch_config;
       switch_config, invariant
+  in
+  (* Detect and initialise missing switch description *)
+  let switch_config =
+    if switch_config <> OpamFile.Switch_config.empty &&
+       switch_config.synopsis = "" then
+      let synopsis =
+        if switch_invariant = OpamFormula.Empty then
+          OpamSwitch.to_string switch
+        else
+          OpamFormula.to_string switch_invariant
+      in
+      let conf = { switch_config with synopsis } in
+      if lock_kind = `Lock_write then (* auto-repair *)
+        OpamFile.Switch_config.write
+          (OpamPath.Switch.switch_config gt.root switch)
+          conf;
+      conf
+    else switch_config
   in
   let conf_files =
     let conf_files =

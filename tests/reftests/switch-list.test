@@ -148,7 +148,7 @@ Done.
 ["b"]
 ### opam switch list
 #   switch   compiler  description
-->  display  d.1       display
+->  display  d.1       b
 ### opam list --invariant
 # Packages matching: invariant
 # Name # Installed # Synopsis

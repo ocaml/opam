@@ -178,9 +178,9 @@ Done.
 }
 ### opam switch --json=out.json
 #   switch        compiler  description
-->  json-comp     comp.3    json-comp
+->  json-comp     comp.3    comp
     json-empty              json-empty
-    json-no-comp  ok.1      json-no-comp
+    json-no-comp  ok.1      ok
 ### json-cat out.json
 {
   "opam-version": "currentv",

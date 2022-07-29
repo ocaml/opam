@@ -244,13 +244,10 @@ let install_compiler
   let t =
     if t.switch_config.OpamFile.Switch_config.synopsis = "" then
       let synopsis =
-        match OpamPackage.Set.elements base_comp with
-        | [] -> OpamSwitch.to_string t.switch
-        | [pkg] ->
-          let open OpamStd.Option.Op in
-          (OpamSwitchState.opam_opt t pkg >>= OpamFile.OPAM.synopsis) +!
-          OpamPackage.to_string pkg
-        | pkgs -> OpamStd.List.concat_map " " OpamPackage.to_string pkgs
+        if invariant = OpamFormula.Empty then
+          OpamSwitch.to_string t.switch
+        else
+          OpamFormula.to_string invariant
       in
       let switch_config =
         { t.switch_config with OpamFile.Switch_config.synopsis }
