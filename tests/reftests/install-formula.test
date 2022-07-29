@@ -123,11 +123,6 @@ You may run "opam upgrade --fixup" to let opam fix the current state.
 ### opam upgrade --formula '"mirage-solo5" | "mirage-no-solo5"'
 [WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.
 Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
-
-The following packages are not being upgraded because the new versions conflict with other installed packages:
-  - ocaml.4.10.0
-    -- ocaml-freestanding.0.4.5 is installed and requires ocaml (>= 4.05.0 & < 4.09.0)
-    -- ocaml-src.4.08.0 is installed and requires ocaml = 4.08.0
 However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.
 ### opam upgrade mirage-solo5 --formula '"mirage-no-solo5"' --best-effort

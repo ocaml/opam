@@ -31,7 +31,6 @@ let empty_universe =
     u_action = Install;
     u_installed_roots = OpamPackage.Set.empty;
     u_pinned = OpamPackage.Set.empty;
-    u_base = OpamPackage.Set.empty;
     u_invariant = OpamFormula.Empty;
     u_reinstall = OpamPackage.Set.empty;
     u_attrs = [];

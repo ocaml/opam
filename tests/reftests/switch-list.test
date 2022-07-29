@@ -45,10 +45,13 @@ Done.
 The switch invariant was set to b
 ### opam switch list
 #   switch   compiler  description
-->  display            display
+->  display  a.1       display
 ### opam list --base
 # Packages matching: base
-# No matches found
+# Name # Installed # Synopsis
+a      1
+b      1
+e      1
 ### opam install c
 The following actions will be performed:
 === remove 1 package
@@ -66,11 +69,13 @@ The following actions will be performed:
 Done.
 ### opam switch list
 #   switch   compiler  description
-->  display  b.1       display
+->  display  c.1       display
 ### opam list --base
 # Packages matching: base
 # Name # Installed # Synopsis
 b      1
+c      1
+e      1
 ### opam install d
 The following actions will be performed:
 === recompile 1 package
@@ -85,11 +90,14 @@ The following actions will be performed:
 Done.
 ### opam switch list
 #   switch   compiler  description
-->  display  b.1       display
+->  display  c.1,d.1   display
 ### opam list --base
 # Packages matching: base
 # Name # Installed # Synopsis
 b      1
+c      1
+d      1
+e      1
 ### opam switch remove display
 Switch display and all its packages will be wiped. Are you sure? [y/n] y
 ### ::::::::::::::::::
@@ -117,11 +125,13 @@ The following actions will be performed:
 Done.
 ### opam switch list
 #   switch   compiler  description
-->  display  b.1       display
+->  display  d.1       display
 ### opam list --base
 # Packages matching: base
 # Name # Installed # Synopsis
 b      1
+d      1
+e      1
 ### opam switch remove display
 Switch display and all its packages will be wiped. Are you sure? [y/n] y
 ### :::::::::::::::::::
@@ -141,8 +151,10 @@ Done.
 ["b"]
 ### opam switch list
 #   switch   compiler  description
-->  display  b.1       display
+->  display  d.1       display
 ### opam list --base
 # Packages matching: base
 # Name # Installed # Synopsis
 b      1
+d      1
+e      1

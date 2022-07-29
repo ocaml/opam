@@ -238,13 +238,13 @@ The following actions will be performed:
 -> installed c.1
 Done.
 ### opam-cat OPAM/orig/.opam-switch/switch-state
-compiler: ["b.1"]
+compiler: ["a.1" "b.1"]
 installed: ["a.1" "b.1" "c.1"]
 opam-version: "2.0"
 roots: ["b.1" "c.1"]
 ### opam switch export orig.xp
 ### opam-cat orig.xp
-compiler: ["b.1"]
+compiler: ["a.1" "b.1"]
 installed: ["a.1" "b.1" "c.1"]
 opam-version: "2.0"
 roots: ["b.1" "c.1"]
@@ -258,15 +258,15 @@ Switch invariant: ["b" {= "2"}]
 -> installed b.2
 Done.
 ### opam-cat OPAM/toupd/.opam-switch/switch-state
-compiler: ["b.2"]
+compiler: ["a.2" "b.2"]
 installed: ["a.2" "b.2"]
 opam-version: "2.0"
 roots: ["b.2"]
 ### opam switch import orig.xp
-  * No agreement on the version of a:
-    - (invariant) -> b >= 2 -> a >= 2
-    - a < 2
-    You can temporarily relax the switch invariant with `--update-invariant'
+The following actions will be performed:
+=== install 1 package
+  - install c 1
 
-No solution found, exiting
-# Return code 20 #
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed c.1
+Done.

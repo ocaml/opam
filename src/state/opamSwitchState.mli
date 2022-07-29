@@ -242,6 +242,14 @@ val update_repositories:
   'a global_state -> (repository_name list -> repository_name list) ->
   switch -> unit
 
+(** {2 Invariant computation} *)
+
+(* Returns installed root packages of switch invariant *)
+val invariant_root_packages: 'a switch_state -> package_set
+
+(* Compute installed invariant dependency cone *)
+val compute_invariant_packages: 'a switch_state -> package_set
+
 (** {2 User interaction and reporting } *)
 
 (** Returns [true] if the switch of the state is the one set in

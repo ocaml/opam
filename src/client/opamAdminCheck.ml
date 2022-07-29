@@ -57,7 +57,6 @@ let get_universe ~with_test ~with_doc ~dev opams =
         opams;
     u_installed_roots = OpamPackage.Set.empty;
     u_pinned = OpamPackage.Set.empty;
-    u_base = OpamPackage.Set.empty;
     u_invariant = OpamFormula.Empty;
     u_attrs = [];
     u_reinstall = OpamPackage.Set.empty;

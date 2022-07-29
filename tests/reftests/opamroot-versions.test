@@ -718,6 +718,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-another-package.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2 }
 Done.
 ### # rw global state
 ### opam switch sw-comp | " ${OPAMROOTVERSION}($|,)" -> "current"
@@ -801,6 +802,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
@@ -883,6 +885,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
@@ -959,6 +962,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4
@@ -1100,6 +1104,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-another-package.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2 }
 Done.
 ### # rw global state
 ### opam switch sw-comp
@@ -1180,6 +1185,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
@@ -1256,6 +1262,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
@@ -1321,6 +1328,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4
@@ -1468,6 +1476,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-another-package.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2 }
 Done.
 ### # rw global state
 ### opam switch sw-comp
@@ -1550,6 +1559,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
@@ -1628,6 +1638,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
@@ -1693,6 +1704,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4
@@ -1827,6 +1839,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-another-package.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
@@ -1897,6 +1910,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
@@ -1969,6 +1983,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
@@ -2036,6 +2051,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4
@@ -2505,6 +2521,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-another-package.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2 }
 Done.
 ### # ro global state, rw repo state
 ### opam repo add root-config ./root-config
@@ -2573,6 +2590,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4
@@ -2632,6 +2650,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4
@@ -2692,6 +2711,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4

@@ -62,8 +62,6 @@ ok     --
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ok"]
-[NOTE] Packages ok.1 don't have the 'compiler' flag set (nor any of their direct dependencies).
-       You may want to use `opam switch set-invariant' to keep a stable compiler version on upgrades.
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ok.1
