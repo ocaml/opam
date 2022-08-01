@@ -761,9 +761,7 @@ end
 
 type explanation =
   [ `Conflict of string option * string list * bool
-  | `Missing of string option * string *
-                (OpamPackage.Name.t * OpamFormula.version_formula)
-                  OpamFormula.formula
+  | `Missing of string option * string * OpamFormula.t
   ]
 
 module Pp_explanation = struct
@@ -1026,6 +1024,44 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
     with Not_found -> false
   in
 
+  (* NOTE: The other possibility is to use OpamFormula.simplify_version_formula on it after the list is created *)
+  let rec is_included_formula formula1 formula2 =
+    match formula1, formula2 with
+    | Empty, Empty -> true
+    | Atom (name1, vformula1), Atom (name2, vformula2) ->
+        OpamPackage.Name.equal name1 name2 &&
+        let formula_eq x y = OpamFormula.compare_nc (name1, x) (name1, y) = 0 in
+        begin match OpamFormula.simplify_version_formula (And (vformula1, vformula2)) with
+        | Some simplified -> formula_eq simplified vformula1 || formula_eq simplified vformula2
+        | None -> false
+        end
+    | Block x, y | x, Block y -> is_included_formula x y
+    | And (x1, x2), And (y1, y2) | Or (x1, x2), Or (y1, y2) ->
+        is_included_formula x1 y1 &&
+        is_included_formula x2 y2
+    | Empty, _
+    | Atom _, _
+    | And _, _
+    | Or _, _ -> false
+  in
+
+  let is_equivalent_explanation expl1 expl2 =
+    match expl1, expl2 with
+    | `Conflict (pkg1, conflicting_pkgs1, has_invariant1),
+      `Conflict (pkg2, conflicting_pkgs2, has_invariant2) ->
+        (* TODO: Add OpamStd.Option.equal *)
+        OpamStd.Option.compare String.compare pkg1 pkg2 = 0 &&
+        List.equal String.equal conflicting_pkgs1 conflicting_pkgs2 &&
+        Bool.equal has_invariant1 has_invariant2
+    | `Missing (pkg1, _, formula1), `Missing (pkg2, _, formula2) ->
+        OpamStd.Option.compare String.compare pkg1 pkg2 = 0 &&
+        is_included_formula formula1 formula2
+    | `Conflict _, _
+    | `Missing _, _ -> false
+  in
+
+  let reasons = List.rev reasons in
+
   let explanations, _remaining_ct_chains =
     List.fold_left (fun (explanations, ct_chains) re ->
         let cst ?hl_last ct_chains p =
@@ -1050,7 +1086,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
                  not (List.exists (function `Conflict (_,_,has_invariant) -> has_invariant | _ -> false) explanations)
             in
             let msg = `Conflict (msg1, msg2, msg3) in
-            if List.mem msg explanations then raise Not_found else
+            if List.exists (is_equivalent_explanation msg) explanations then raise Not_found else
               msg :: explanations, ct_chains
           | Missing (p, deps) ->
             let ct_chains, csp = cst ~hl_last:false ct_chains p in
@@ -1069,7 +1105,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
               let sdeps = OpamFormula.to_string fdeps in
               `Missing (Some csp, sdeps, fdeps)
             in
-            if List.mem msg explanations then raise Not_found else
+            if List.exists (is_equivalent_explanation msg) explanations then raise Not_found else
               msg :: explanations, ct_chains
           | Dependency _ ->
             explanations, ct_chains
@@ -1090,7 +1126,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
       "Internal error while computing conflict explanations:\n\
        sorry about that. Please report how you got here in \
        https://github.com/ocaml/opam/discussions/5130 if possible."
-  | `Missing (_, sdeps, fdeps) :: rest when same_depexts sdeps fdeps rest ->
+  | `Missing (_, sdeps, fdeps) :: (_::_ as rest) when same_depexts sdeps fdeps rest ->
     [`Missing (None, sdeps, fdeps)]
   | _ -> explanations
 
