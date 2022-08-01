@@ -1051,7 +1051,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
       `Conflict (pkg2, conflicting_pkgs2, has_invariant2) ->
         (* TODO: Add OpamStd.Option.equal *)
         OpamStd.Option.compare String.compare pkg1 pkg2 = 0 &&
-        List.equal String.equal conflicting_pkgs1 conflicting_pkgs2 &&
+        OpamStd.List.equal String.equal conflicting_pkgs1 conflicting_pkgs2 &&
         Bool.equal has_invariant1 has_invariant2
     | `Missing (pkg1, _, formula1), `Missing (pkg2, _, formula2) ->
         OpamStd.Option.compare String.compare pkg1 pkg2 = 0 &&
