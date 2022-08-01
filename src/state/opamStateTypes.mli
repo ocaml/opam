@@ -42,6 +42,10 @@ type unlocked = [ `Lock_none | ro ]
 (** The super-type for all lock types *)
 type +'a lock = [< unlocked > `Lock_write ] as 'a
 
+(** Type of global state global variables *)
+type gt_variables =
+  (variable_contents option Lazy.t * string) OpamVariable.Map.t
+
 (** Global state corresponding to an opam root and its configuration *)
 type +'lock global_state = {
   global_lock: OpamSystem.lock;
@@ -57,8 +61,7 @@ type +'lock global_state = {
       may be overridden through the command-line or environment, see
       OpamStateConfig *)
 
-  global_variables:
-    (variable_contents option Lazy.t * string) OpamVariable.Map.t;
+  global_variables: gt_variables;
   (** A map of variables that have been defined globally, e.g. through
       `.opam/config`. They may need evaluation so are stored as lazy values.
       The extra string is the supplied variable documentation *)
