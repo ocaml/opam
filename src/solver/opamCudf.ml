@@ -732,24 +732,12 @@ module ChainSet = struct
     if Set.is_empty hds then []
     else hds :: transpose tls
 
-  (** cs1 precludes cs2 if it contains a list that is prefix to all elements of
-      cs2 *)
-  let precludes cs1 cs2 =
-    let rec list_is_prefix pfx l = match pfx, l with
-      | [], _ -> true
-      | a::r1, b::r2 when Package.equal a b -> list_is_prefix r1 r2
-      | _ -> false
-    in
-    exists (fun pfx -> for_all (fun l -> list_is_prefix pfx l) cs2) cs1
-
   let length cs = fold (fun l acc -> min (List.length l) acc) cs max_int
 end
 
 type explanation =
   [ `Conflict of string option * string list * bool
-  | `Missing of string option * string *
-                (OpamPackage.Name.t * OpamFormula.version_formula)
-                  OpamFormula.formula
+  | `Missing of string option * string * OpamFormula.t
   ]
 
 module Pp_explanation = struct
@@ -848,10 +836,17 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
       OpamPackage.Set.empty
       reasons
   in
-  let print_set pkgs =
+  let open (struct
+    type bold = bool
+    type construct =
+      | Invariant
+      | Request
+      | Formula of bold * OpamFormula.t
+  end) in
+  let construct_of_set pkgs =
     if Set.exists is_artefact pkgs then
-      if Set.exists is_opam_invariant pkgs then "(invariant)"
-      else "(request)"
+      if Set.exists is_opam_invariant pkgs then Invariant
+      else Request
     else
     let nvs =
       OpamPackage.to_map @@
@@ -864,10 +859,10 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
           let formula =
             OpamFormula.formula_of_version_set all_versions versions
           in
-          OpamFormula.to_string (Atom (name, formula)))
+          Atom (name, formula))
         nvs
     in
-    String.concat ", " (OpamPackage.Name.Map.values strs)
+    Formula (false, OpamFormula.ors (OpamPackage.Name.Map.values strs))
   in
   let cs_to_string ?(hl_last=true) cs =
     let rec aux vpkgl = function
@@ -882,12 +877,11 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
         in
         if Set.exists is_artefact pkgs then
           if Set.exists is_opam_invariant pkgs then
-            Printf.sprintf "(invariant)"
-            :: aux vpkgl1 r
-          else if r = [] then ["(request)"]
+            Invariant :: aux vpkgl1 r
+          else if r = [] then [Request]
           else aux vpkgl1 r (* request *)
         else if vpkgl = [] then
-          print_set pkgs :: aux vpkgl1 r
+          construct_of_set pkgs :: aux vpkgl1 r
         else
         let f =
           let vpkgl =
@@ -899,11 +893,9 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
           (* Dose is precise enough from what i'm seeing *)
           formula_of_vpkgl cudfnv2opam packages vpkgl
         in
-        let s = OpamFormula.to_string f in
-        (if hl_last && r = [] then OpamConsole.colorise' [`red;`bold]  s else s)
-        :: aux vpkgl1 r
+        Formula (hl_last && r = [], f) :: aux vpkgl1 r
     in
-    arrow_concat (aux [] (CS.transpose (CS.map List.rev cs)))
+    aux [] (CS.transpose (CS.map List.rev cs))
   in
   let get t x = try Hashtbl.find t x with Not_found -> Set.empty in
   let add_set t l set =
@@ -1000,18 +992,28 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
     with Not_found -> false
   in
 
-  let explanations, _remaining_ct_chains =
-    List.fold_left (fun (explanations, ct_chains) re ->
+  let construct_to_string cst =
+    let aux = function
+      | Invariant -> "(invariant)"
+      | Request -> "(request)"
+      | Formula (bold, f) ->
+        let s = OpamFormula.to_string f in
+        if bold then OpamConsole.colorise' [`red;`bold] s else s
+    in
+    arrow_concat (List.map aux cst)
+  in
+
+  let explanations =
+    List.fold_left (fun explanations re ->
         let cst ?hl_last ct_chains p =
           let chains = Map.find p ct_chains in
-          Map.filter (fun _ c -> not (CS.precludes chains c)) ct_chains,
           cs_to_string ?hl_last chains
         in
         try
           match re with
           | Conflict (l, r, _) ->
-            let ct_chains, csl = cst ct_chains l in
-            let ct_chains, csr = cst ct_chains r in
+            let csl = cst ct_chains l in
+            let csr = cst ct_chains r in
             let msg1 =
               if l.Cudf.package = r.Cudf.package then
                 Some (Package.name_to_string l)
@@ -1019,15 +1021,11 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
                 None
             in
             let msg2 = List.sort_uniq compare [csl; csr] in
-            let msg3 =
-              (has_invariant l || has_invariant r) &&
-                 not (List.exists (function `Conflict (_,_,has_invariant) -> has_invariant | _ -> false) explanations)
-            in
+            let msg3 = has_invariant l || has_invariant r in
             let msg = `Conflict (msg1, msg2, msg3) in
-            if List.mem msg explanations then raise Not_found else
-              msg :: explanations, ct_chains
+            msg :: explanations
           | Missing (p, deps) ->
-            let ct_chains, csp = cst ~hl_last:false ct_chains p in
+            let csp = cst ~hl_last:false ct_chains p in
             let msg =
               if List.exists
                   (fun (name, _) -> name = unavailable_package_name)
@@ -1037,19 +1035,125 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
                   Printf.sprintf "%s: no longer available"
                     (OpamPackage.to_string (cudf2opam p))
                 in
-                `Missing (Some csp, msg, OpamFormula.Empty)
+                let csp = construct_to_string csp in
+                `NoLongerAvailable (csp, msg, OpamFormula.Empty)
               else
               let fdeps = formula_of_vpkgl cudfnv2opam packages deps in
-              let sdeps = OpamFormula.to_string fdeps in
-              `Missing (Some csp, sdeps, fdeps)
+              `Missing (csp, fdeps)
             in
-            if List.mem msg explanations then raise Not_found else
-              msg :: explanations, ct_chains
+            msg :: explanations
           | Dependency _ ->
-            explanations, ct_chains
+            explanations
         with Not_found ->
-          explanations, ct_chains)
-      ([], ct_chains) reasons
+          explanations)
+      [] reasons
+  in
+
+  let rec simplify_formula formula1 formula2 =
+    let open OpamStd.Option.Op in
+    match formula1, formula2 with
+    | Empty, Empty -> Some Empty
+    | Atom (name1, vformula1), Atom (name2, vformula2) ->
+      if OpamPackage.Name.equal name1 name2 then
+        OpamFormula.simplify_version_formula (Or (vformula1, vformula2))
+        >>= fun vformula -> Some (Atom (name1, vformula))
+      else
+        None
+    | Block x, y | x, Block y -> simplify_formula x y
+    | And (x1, x2), And (y1, y2) ->
+        simplify_formula x1 y1 >>= fun z1 ->
+        simplify_formula x2 y2 >>= fun z2 ->
+        Some (And (z1, z2))
+    | Or (x1, x2), Or (y1, y2) ->
+        simplify_formula x1 y1 >>= fun z1 ->
+        simplify_formula x2 y2 >>= fun z2 ->
+        Some (Or (z1, z2))
+    | Empty, _
+    | Atom _, _
+    | And _, _
+    | Or _, _ -> None
+  in
+
+  (* Merge similar explanation together by removing duplicates
+     and merging every formula into one containing all of them *)
+  let explanations =
+    let simplify_cst f f' =
+      match f, f' with
+      | Invariant, Invariant
+      | Request, Request -> f
+      | Formula (bold, f), Formula (bold', f') ->
+        if Bool.equal bold bold' then
+          match simplify_formula f f' with
+          | Some simplified -> Formula (bold, simplified)
+          | None -> raise Not_found
+        else
+          raise Not_found
+      | Invariant, _ | Request, _ | Formula _, _ ->
+        raise Not_found
+    in
+    let rec simplify acc = function
+      | [] -> acc
+      | `Conflict x::xs ->
+        let x, xs =
+          List.fold_left (fun ((s, l, b) as x, xs) -> function
+              | `Conflict ((s', l', b') as y) ->
+                if OpamStd.Option.equal String.equal s s' &&
+                   Bool.equal b b' then
+                  match List.map2 (List.map2 simplify_cst) l l' with
+                  | new_l -> ((s, new_l, b), xs)
+                  | exception (Invalid_argument _ | Not_found) ->
+                    (x, `Conflict y :: xs)
+                else
+                  (x, `Conflict y :: xs)
+              | (`Missing _ | `NoLongerAvailable _) as y -> (x, y :: xs))
+            (x, []) xs
+        in
+        simplify (`Conflict x :: acc) (List.rev xs)
+      | `Missing x::xs ->
+        let x, xs =
+          List.fold_left (fun ((csp, fdeps) as x, xs) -> function
+              | (`Conflict _ | `NoLongerAvailable _) as y -> (x, y :: xs)
+              | `Missing ((csp', fdeps') as y) ->
+                (match List.map2 simplify_cst csp csp' with
+                 | simplified_csp ->
+                   (match simplify_formula fdeps fdeps' with
+                    | Some simplified_formula ->
+                      ((simplified_csp, simplified_formula), xs)
+                    | None -> (x, `Missing y :: xs))
+                 | exception (Invalid_argument _ | Not_found) ->
+                   (x, `Missing y :: xs)))
+            (x, []) xs
+        in
+        simplify (`Missing x :: acc) (List.rev xs)
+      | `NoLongerAvailable _ as x::xs ->
+        simplify (x :: acc) xs
+    in
+    simplify [] explanations
+  in
+
+  (* Make sure had_invariant only appears once *)
+  let explanations =
+    let rec reduce_invariant_msg acc had_invariant = function
+      | [] -> acc
+      | `Conflict (s, l, b)::xs ->
+        let l = List.map construct_to_string l in
+        reduce_invariant_msg
+          (`Conflict (s, l, b && not had_invariant) :: acc)
+          (had_invariant || b)
+          xs
+      | `Missing (csp, fdeps)::xs ->
+        let csp = construct_to_string csp in
+        reduce_invariant_msg
+          (`Missing (Some csp, OpamFormula.to_string fdeps, fdeps) :: acc)
+          had_invariant
+          xs
+      | `NoLongerAvailable (csp, sdeps, fdeps)::xs ->
+        reduce_invariant_msg
+          (`Missing (Some csp, sdeps, fdeps) :: acc)
+          had_invariant
+          xs
+    in
+    reduce_invariant_msg [] false explanations
   in
 
   let same_depexts sdeps fdeps =

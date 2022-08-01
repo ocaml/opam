@@ -141,6 +141,7 @@ users)
   * Add support for the `-count[avoid-version,solution]` criteria with the `builtin-0install` solver, to avoid packages marked with `avoid-version` flag [#6130 @kit-ty-kate]
   * The default criteria for the `builtin-0install` solver changed from empty to `-changed,-count[avoid-version,solution]` [#6130 @kit-ty-kate]
   * The upgrade and fixup criteria for the `builtin-0install` solver changed from empty to `-count[avoid-version,solution]` [#6130 @kit-ty-kate]
+  * Fix some of the unhelpful conflict messages by merging formulas that include each other [#5210 @kit-ty-kate]
 
 ## Client
 
