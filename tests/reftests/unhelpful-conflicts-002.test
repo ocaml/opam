@@ -28,40 +28,7 @@ ocaml-config is now pinned locally (version 1)
 ### opam install --show expect.0.0.6
 [ERROR] Package conflict!
   * Missing dependency:
-    - expect >= 0.0.6 -> batteries -> ocaml < 4.00.0
-    not available because the package is pinned to version 4.12.0
-  * Missing dependency:
-    - expect >= 0.0.6 -> batteries -> ocaml < 4.01.0
-    not available because the package is pinned to version 4.12.0
-  * Missing dependency:
-    - expect >= 0.0.6 -> batteries -> ocaml < 4.02.0
-    not available because the package is pinned to version 4.12.0
-  * Missing dependency:
-    - expect >= 0.0.6 -> batteries -> ocaml < 4.03.0
-    not available because the package is pinned to version 4.12.0
-  * Missing dependency:
-    - expect >= 0.0.6 -> batteries -> ocaml < 4.04.0
-    not available because the package is pinned to version 4.12.0
-  * Missing dependency:
-    - expect >= 0.0.6 -> batteries -> ocaml < 4.05.0
-    not available because the package is pinned to version 4.12.0
-  * Missing dependency:
-    - expect >= 0.0.6 -> batteries -> ocaml < 4.06.0
-    not available because the package is pinned to version 4.12.0
-  * Missing dependency:
-    - expect >= 0.0.6 -> batteries -> ocaml < 4.07.0
-    not available because the package is pinned to version 4.12.0
-  * Missing dependency:
-    - expect >= 0.0.6 -> batteries -> ocaml < 4.08.0
-    not available because the package is pinned to version 4.12.0
-  * Missing dependency:
-    - expect >= 0.0.6 -> batteries -> ocaml < 4.10.0
-    not available because the package is pinned to version 4.12.0
-  * Missing dependency:
-    - expect >= 0.0.6 -> batteries -> ocaml < 4.11.0
-    not available because the package is pinned to version 4.12.0
-  * Missing dependency:
-    - expect >= 0.0.6 -> batteries -> ocaml < 4.12.0
+    - ocaml < 4.12.0
     not available because the package is pinned to version 4.12.0
 
 No solution found, exiting

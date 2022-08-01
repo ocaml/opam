@@ -101,6 +101,7 @@ users)
 ## Opam file format
 
 ## Solver
+  * Fix some of the unhelpful conflict messages by merging formulas that include each other [#5210 @kit-ty-kate]
 
 ## Client
 
