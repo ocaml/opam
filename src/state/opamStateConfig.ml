@@ -70,8 +70,22 @@ type t = {
 }
 
 let default = {
-  root_dir = OpamFilename.(
+  root_dir = (
+    (* On Windows, if a .opam directory is found in %HOME% or %USERPROFILE% then
+       then we'll use it. Otherwise, we use %LOCALAPPDATA%. *)
+    let home_location =
+      let open OpamFilename in
       concat_and_resolve (Dir.of_string (OpamStd.Sys.home ())) ".opam"
+    in
+    if not Sys.win32 || OpamFilename.exists_dir home_location then
+      home_location
+    else
+      let open OpamFilename in
+      let local_appdata =
+        (* CSIDL_LOCAL_APPDATA = 0x1c *)
+        Dir.of_string (OpamStubs.(shGetFolderPath 0x1c SHGFP_TYPE_CURRENT))
+      in
+      concat_and_resolve local_appdata "opam"
     );
   current_switch = None;
   switch_from = `Default;

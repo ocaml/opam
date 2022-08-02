@@ -37,6 +37,7 @@ users)
 ## Init
   * Run the sandbox check in the temporary directory [#4787 @dra27 - fix #4783]
   * [BUG] Fix `opam init` and `opam init --reinit` when the `jobs` variable has been set in the opamrc or the current config. [#5056 @rjbou]
+  * Use `.opam` from `%HOME%` or `%USERPROFILE%` on Windows, only if found; otherwise use `%LOCALAPPDATA%\opam` as root. [#5212 @dra27]
 
 ## Config report
   * [BUG] Don't fail is no switch is set [#5198 @rjbou]
