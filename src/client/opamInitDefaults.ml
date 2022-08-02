@@ -53,6 +53,8 @@ let freebsd_filter = os_filter "freebsd"
 let not_open_free_bsd_filter =
   FNot (FOr (openbsd_filter,  freebsd_filter))
 let win32_filter = os_filter "win32"
+let not_win32_filter =
+  FOp (FIdent ([], OpamVariable.of_string "os", None), `Neq, FString "win32")
 let sandbox_filter = FOr (linux_filter, macos_filter)
 
 let gpatch_filter = FOr (openbsd_filter, freebsd_filter)
@@ -125,7 +127,7 @@ let recommended_tools () =
   let make = OpamStateConfig.(Lazy.force !r.makecmd) in
   [
     [make], None, None;
-    ["cc"], None, None;
+    ["cc"], None, Some not_win32_filter;
   ]
 
 let required_tools ~sandboxing () =
