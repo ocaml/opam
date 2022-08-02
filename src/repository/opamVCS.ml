@@ -86,6 +86,7 @@ module Make (VCS: VCS) = struct
          Done (Not_available (None, OpamUrl.to_string url)))
     @@ fun () ->
     if VCS.exists dirname then
+      VCS.clean dirname @@+ fun () ->
       VCS.fetch ?cache_dir ?subpath dirname url @@+ fun () ->
       VCS.is_up_to_date ?subpath dirname url @@+ function
       | true -> Done (Up_to_date None)
