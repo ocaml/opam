@@ -48,6 +48,7 @@ users)
   * Use `.opam` from `%HOME%` or `%USERPROFILE%` on Windows, only if found; otherwise use `%LOCALAPPDATA%\opam` as root. [#5212 @dra27]
   * Display actual location of OPAMROOT in `opam init` if `--root` or `OPAMROOT` have been set [#5212 @dra27 - fix #4992]
   * Surround and add a comment describing the role of the lines added to the ~/.profile or equivalent [#5456 @kit-ty-kate]
+  * Don't require cc on Windows [#5541 @dra27]
 
 ## Config report
   * [BUG] Don't fail is no switch is set [#5198 @rjbou]
@@ -606,6 +607,7 @@ users)
   * `OpamVCS.pull_url`: clean repository before fetching [#4879 @rjbou]
   * `OpamDownload`: Add `SWHID` submodule that implements SWH fallback (retrieve url, download, check hash, and copy in target) [#4859 @rjbou]
   * `OpamCLIVersion.of_string`: print version when failing to parse it [#5566 @MisterDA]
+  * `OpamInitdefaults.recommended_tools`: don't require `cc` on Windows [#5541 @dra27]
 
 ## opam-state
   * `OpamSwitchState.universe`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
