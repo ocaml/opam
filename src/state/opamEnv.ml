@@ -798,12 +798,12 @@ let check_and_print_env_warning st =
 let setup
     root ~interactive ?dot_profile ?update_config ?env_hook ?completion
     ?inplace shell =
-  let update_dot_profile =
+  let update_dot_profile, env_hook =
     match update_config, dot_profile, interactive with
-    | Some false, _, _ -> None
+    | Some false, _, _ -> None, env_hook
     | _, None, _ -> invalid_arg "OpamEnv.setup"
-    | Some true, Some dot_profile, _ -> Some dot_profile
-    | None, _, false -> None
+    | Some true, Some dot_profile, _ -> Some dot_profile, env_hook
+    | None, _, false -> None, env_hook
     | None, Some dot_profile, true ->
       OpamConsole.header_msg "Required setup - please read";
 
@@ -817,51 +817,63 @@ let setup
          \n\
         \    %s\
          \n\
-        \  Otherwise, every time you want to access your opam installation, you will\n\
-        \  need to run:\n\
-         \n\
-        \    %s\n\
-         \n\
         \  You can always re-run this setup with 'opam init' later.\n\n"
         Filename.dir_sep
         (OpamConsole.colorise `bold @@ string_of_shell shell)
         (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
-        (OpamConsole.colorise `bold @@ source root shell (init_file shell))
-        (OpamConsole.colorise `bold @@ shell_eval_invocation shell (opam_env_invocation shell));
+        (OpamConsole.colorise `bold @@ source root shell (init_file shell));
       if OpamCoreConfig.answer_is_yes () then begin
         OpamConsole.warning "Shell not updated in non-interactive mode: use --shell-setup";
-        None
+        None, env_hook
       end else
+      let rec menu shell dot_profile default =
+        let opam_env_inv =
+          OpamConsole.colorise `bold @@ shell_eval_invocation shell (opam_env_invocation shell)
+        in
         match
-          OpamConsole.read
-            "Do you want opam to modify %s? [N/y/f]\n\
-             (default is 'no', use 'f' to choose a different file)"
-            (OpamFilename.prettify dot_profile)
+          OpamConsole.menu "Do you want opam to configure %s?"
+            (OpamConsole.colorise `bold (string_of_shell shell))
+            ~default ~noninteractive:`No ~no:`No ~options:[
+              `Yes, Printf.sprintf "Yes, update %s"
+                (OpamConsole.colorise `cyan (OpamFilename.prettify dot_profile));
+              `No_hooks, Printf.sprintf "Yes, but don't setup any hooks. You'll \
+                                         have to run %s whenever you change \
+                                         your current 'opam switch'"
+                opam_env_inv;
+              `Change_shell, "Select a different shell";
+              `Change_file, "Specify another config file to update instead";
+              `No, Printf.sprintf "No, I'll remember to run %s when I need opam"
+                opam_env_inv;
+          ]
         with
-        | Some ("y" | "Y" | "yes"  | "YES" ) -> Some dot_profile
-        | Some ("f" | "F" | "file" | "FILE") ->
-          begin
-            match OpamConsole.read "  Enter the name of the file to update:"
-            with
-            | None   ->
-              OpamConsole.msg "Alright, assuming you changed your mind, not \
-                               performing any changes.\n";
-              None
-            | Some f -> Some (OpamFilename.of_string f)
-          end
-        | _ -> None
-  in
-  let env_hook = match env_hook, interactive with
-    | Some b, _ -> Some b
-    | None, false -> None
-    | None, true ->
-      (* not just interactive mode *)
-      if update_config <> None || completion <> None then None else
-          Some
-          (OpamConsole.confirm ~default:false
-             "A hook can be added to opam's init scripts to ensure that the \
-              shell remains in sync with the opam environment when they are \
-              loaded. Set that up?")
+        | `No -> None, env_hook
+        | `Yes -> Some dot_profile, Some true
+        | `No_hooks -> Some dot_profile, Some false
+        | `Change_shell ->
+          let shell = OpamConsole.menu ~default:shell ~no:shell
+              "Please select a shell to configure"
+              ~options: (List.map (fun s -> s, string_of_shell s) shells_list)
+          in
+          menu shell (OpamFilename.of_string (OpamStd.Sys.guess_dot_profile shell))
+            `Yes
+        | `Change_file ->
+          let open OpamStd.Option.Op in
+          let dot_profile =
+            (OpamConsole.read "Enter the name of the file to update:"
+             >>| (fun f ->
+                 if Filename.is_implicit f then Filename.concat (OpamStd.Sys.home ()) f
+                 else f)
+             >>| OpamFilename.of_string)
+            +! dot_profile
+          in
+          menu shell dot_profile `Yes
+      in
+      let default = match env_hook with
+        | Some true -> `Yes
+        | Some false -> `No_hooks
+        | None -> `No
+      in
+      menu shell dot_profile default
   in
   update_user_setup root ?dot_profile:update_dot_profile shell;
   write_static_init_scripts root ?completion ?env_hook ?inplace ()

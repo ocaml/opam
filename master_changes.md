@@ -29,6 +29,7 @@ users)
   * [BUG] Fix `OPAMCURL` and `OPAMFETCH` value setting [#5111 @rjbou - fix #5108]
   * [BUG] Fix display of pinned packages in action list [#5079 @rjbou]
   * [BUG] Fix spaces in root and switch dirs [#5203 @jonahbeckford]
+  * Use menu for init setup [#5057 @AltGr]
 
 ## Plugins
   *
