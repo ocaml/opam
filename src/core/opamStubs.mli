@@ -131,3 +131,7 @@ val getConsoleAlias : string -> string -> string
 val win_create_process : string -> string -> string option -> Unix.file_descr ->
                          Unix.file_descr -> Unix.file_descr -> int
 (** Windows only. Provided by OCaml's win32unix library. *)
+
+val getConsoleWindowClass : unit -> string option
+(** Windows only. Returns the name of the class for the Console window or [None]
+    if there is no console. *)

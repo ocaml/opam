@@ -38,6 +38,12 @@ let disp_status_line () =
   | `Auto -> OpamStd.Sys.tty_out && (color () || not (Lazy.force dumb_term))
 
 let utf8, utf8_extended =
+  let use_auto_utf8_extended = lazy (
+    match OpamStd.Sys.os () with
+    | Darwin -> true
+    | Win32 -> OpamStubs.getConsoleWindowClass () <> Some "ConsoleWindowClass"
+    | _ -> false
+  ) in
   let auto = lazy (
     if Sys.win32 then
       let attempt handle =
@@ -73,9 +79,9 @@ let utf8, utf8_extended =
      | `Never -> false
      | `Auto -> Lazy.force auto),
   (fun () -> match OpamCoreConfig.(!r.utf8) with
-     | `Extended -> not Sys.win32
+     | `Extended -> true
      | `Always | `Never -> false
-     | `Auto -> Lazy.force auto && OpamStd.Sys.(os () = Darwin))
+     | `Auto -> Lazy.force auto && Lazy.force use_auto_utf8_extended)
 
 module Symbols = struct
   let rightwards_arrow = Uchar.of_int 0x2192
@@ -122,7 +128,7 @@ let utf8_symbol main ?(alternates=[]) s =
   if utf8 () then
     try
       let scalar =
-        if Sys.win32 then
+        if Sys.win32 && not (utf8_extended ()) then
           let current_font =
             let open OpamStubs in
             try
