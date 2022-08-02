@@ -70,10 +70,14 @@ module type VCS = sig
   val is_dirty: ?subpath:subpath -> dirname -> bool OpamProcess.job
 
   (** Returns the list of files under version control, modified in the working
-      tree but not comitted *)
+      tree but not committed *)
   val modified_files: dirname -> string list OpamProcess.job
 
+  (* Returns associated remote url, if found *)
   val get_remote_url: ?hash:string -> dirname -> url option OpamProcess.job
+
+  (* Remove uncommitted changes *)
+  val clean: dirname -> unit OpamProcess.job
 end
 
 (** Create a backend from a [VCS] implementation. *)
