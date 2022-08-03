@@ -51,11 +51,12 @@ val build_package:
   exn option OpamProcess.job
 
 (** [install_package t pkg] installs an already built package. Returns
-    [None] on success, [Some exn] on error. Do not update opam's
-    metadata. See {!build_package} to build the package. *)
+    updated .config file on success, the exception on error. Do not update
+    opam's metadata. See {!build_package} to build the package. *)
 val install_package:
-  rw switch_state -> ?test:bool -> ?doc:bool -> ?tools:bool -> ?build_dir:dirname -> package ->
-  (OpamFile.Dot_config.t option, exn) OpamCompat.Either.t OpamProcess.job
+  rw switch_state -> ?test:bool -> ?doc:bool -> ?tools:bool ->
+  ?build_dir:dirname -> package ->
+  (OpamFile.Dot_config.t option, exn) either OpamProcess.job
 
 (** Find out if the package source is needed for uninstall *)
 val removal_needs_download: 'a switch_state -> package -> bool
