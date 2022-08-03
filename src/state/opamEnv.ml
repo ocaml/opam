@@ -25,10 +25,20 @@ type _ env_classification =
 | Separator : char env_classification
 | Split : (string -> string list) env_classification
 
-let get_env_property : type s . string -> s env_classification -> s = fun _ classification ->
+let get_env_property : type s . string -> s env_classification -> s = fun var classification ->
+  let split_delim = Fun.flip OpamStd.String.split in
+  let separator, split =
+    match String.uppercase_ascii var with
+    | "CAML_LD_LIBRARY_PATH" ->
+      OpamStd.Sys.path_sep, split_delim OpamStd.Sys.path_sep
+    | "PKG_CONFIG_PATH" | "MANPATH" ->
+      ':', split_delim ':'
+    | _ ->
+      OpamStd.Sys.path_sep, OpamStd.Sys.split_path_variable ~clean:false
+  in
   match classification with
-  | Separator -> OpamStd.Sys.path_sep
-  | Split -> OpamStd.Sys.split_path_variable ~clean:false
+  | Separator -> separator
+  | Split -> split
 
 let split_var (var : OpamStd.Env.Name.t) =
   get_env_property (var :> string) Split

@@ -408,6 +408,7 @@ users)
   * Update Windows-on-Windows detection for ARM [#5541 @dra27]
   * Overhaul parent process detection [#5541 @dra27]
   * Tweak UTF-8 support for Windows Terminal [#5541 @dra27]
+  * Handle Windows specific environment variables [#5541 @dra27]
 
 ## Test
   * Update crowbar with compare functions [#4918 @rjbou]
