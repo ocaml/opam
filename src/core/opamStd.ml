@@ -907,6 +907,15 @@ module OpamSys = struct
   type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
     | SH_pwsh of powershell_host | SH_win_cmd
 
+  let all_shells =
+    [SH_sh; SH_bash;
+     SH_zsh;
+     SH_csh;
+     SH_fish;
+     SH_pwsh Powershell_pwsh;
+     SH_pwsh Powershell;
+     SH_win_cmd]
+
   let windows_default_shell = SH_win_cmd
   let unix_default_shell = SH_sh
 

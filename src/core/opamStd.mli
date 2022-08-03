@@ -443,6 +443,9 @@ module Sys : sig
   type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
     | SH_pwsh of powershell_host | SH_win_cmd
 
+  (** List of all supported shells *)
+  val all_shells : shell list
+
   (** Guess the shell compat-mode *)
   val guess_shell_compat: unit -> shell
 

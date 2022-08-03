@@ -852,7 +852,7 @@ let setup
         | `Change_shell ->
           let shell = OpamConsole.menu ~default:shell ~no:shell
               "Please select a shell to configure"
-              ~options: (List.map (fun s -> s, string_of_shell s) shells_list)
+              ~options: (List.map (fun s -> s, string_of_shell s) OpamStd.Sys.all_shells)
           in
           menu shell (OpamFilename.of_string (OpamStd.Sys.guess_dot_profile shell))
             default
