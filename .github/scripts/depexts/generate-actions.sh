@@ -33,8 +33,7 @@ EOF
 # no automake
     cat >$dir/Dockerfile << EOF
 FROM archlinux
-RUN pacman -Sy
-RUN pacman -S --noconfirm $mainlibs $ocaml gcc diffutils
+RUN pacman -Syu --noconfirm $mainlibs $ocaml gcc diffutils
 EOF
     ;;
  centos)
