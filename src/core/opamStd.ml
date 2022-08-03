@@ -972,7 +972,14 @@ module OpamSys = struct
     ) in
     fun () -> Lazy.force home
 
-  let etc () = "/etc"
+  let etc =
+    if Sys.win32 then
+      fun () ->
+        (* CSIDL_COMMON_APPDATA = 0x23 *)
+        let root = OpamStubs.(shGetFolderPath 0x23 SHGFP_TYPE_CURRENT) in
+        Filename.concat root "opam"
+    else
+      fun () -> "/etc"
 
   let uname =
     let memo = Hashtbl.create 7 in
