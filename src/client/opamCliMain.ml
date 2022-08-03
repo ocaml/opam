@@ -358,6 +358,7 @@ let rec main_catch_all f =
          "Update done, please now retry your command.\n";
        exit (OpamStd.Sys.get_exit_code `Aborted))
   | e ->
+    OpamStd.Exn.register_backtrace e;
     (try Sys.set_signal Sys.sigpipe Sys.Signal_default
      with Invalid_argument _ -> ());
     flush_all_noerror ();

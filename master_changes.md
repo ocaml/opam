@@ -261,6 +261,7 @@ users)
   * Overhaul Windows C stubs and update for Unicode [#5190 @dra27]
   * Unify constructors for powershell hosts [#5203 @dra27]
   * Fix lazy compilation of regular expression in OpamFormula.atom_of_string [#5211 @dra27]
+  * [BUG] Display correct exception backtrace on uncaught exception on Windows [#5216 @dra27]
 
 ## Internal: Windows
   * Support MSYS2: treat MSYS2 and Cygwin as equivalent [#4813 @jonahbeckford]
