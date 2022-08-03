@@ -188,9 +188,11 @@ let fetch_dev_package url srcdir ?(working_dir=false) ?subpath nv =
   let remote_url = OpamFile.URL.url url in
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
   let checksum = OpamFile.URL.checksum url in
-  log "updating %a%a" (slog OpamUrl.to_string) remote_url
+  log "updating %a" (slog (OpamUrl.to_string_w_subpath subpath)) remote_url;
+(*
     (slog (OpamStd.Option.to_string OpamFilename.SubPath.pretty_string))
     subpath;
+*)
   OpamRepository.pull_tree
     ~cache_dir:(OpamRepositoryPath.download_cache OpamStateConfig.(!r.root_dir))
     (OpamPackage.to_string nv) srcdir checksum ~working_dir ?subpath mirrors
