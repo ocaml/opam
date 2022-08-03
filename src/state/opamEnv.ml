@@ -562,7 +562,7 @@ let eval_string gt ?(set_opamswitch=false) switch =
 
 (** The shells for which we generate init scripts (bash and sh are the same
     entry) *)
-let shells_list = [ SH_sh; SH_zsh; SH_csh; SH_fish ]
+let shells_list = [ SH_sh; SH_zsh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd ]
 
 let complete_file = function
   | SH_sh | SH_bash -> Some "complete.sh"
@@ -574,23 +574,22 @@ let env_hook_file = function
   | SH_zsh -> Some "env_hook.zsh"
   | SH_csh -> Some "env_hook.csh"
   | SH_fish -> Some "env_hook.fish"
-  | SH_pwsh _ | SH_cmd ->
-    (* N/A because not present in `shells_list` yet *) None
+  | SH_pwsh _ | SH_cmd -> None
 
 let variables_file = function
   | SH_sh | SH_bash | SH_zsh -> "variables.sh"
   | SH_csh -> "variables.csh"
   | SH_fish -> "variables.fish"
-  | SH_pwsh _ | SH_cmd ->
-    (* N/A because not present in `shells_list` yet *) "variables.sh"
+  | SH_pwsh _ -> "variables.ps1"
+  | SH_cmd -> "variables.cmd"
 
 let init_file = function
   | SH_sh | SH_bash -> "init.sh"
   | SH_zsh -> "init.zsh"
   | SH_csh -> "init.csh"
   | SH_fish -> "init.fish"
-  | SH_pwsh _ | SH_cmd ->
-    (* N/A because not present in `shells_list` yet *) "init.sh"
+  | SH_pwsh _ -> "init.ps1"
+  | SH_cmd -> "init.cmd"
 
 let complete_script = function
   | SH_sh | SH_bash -> Some OpamScript.complete
@@ -640,7 +639,7 @@ let export_in_shell shell =
         (make_comment comment) k v
   in
   let pwsh (k,v,comment) =
-    Printf.sprintf "%s$env:%s=%s;\n"
+    Printf.sprintf "%s$env:%s=%s\n"
       (make_comment comment) k v in
   let cmd (k,v,comment) =
     let make_cmd_comment comment_opt =
@@ -675,9 +674,9 @@ let source root shell f =
     Printf.sprintf "[[ ! -r %s ]] || source %s  > /dev/null 2> /dev/null\n"
       fname fname
   | SH_cmd ->
-    Printf.sprintf "if exist \"%s\" ( \"%s\" >NUL 2>NUL )\n" fname fname
+    Printf.sprintf "if exist \"%s\" call \"%s\" >NUL 2>NUL\n" fname fname
   | SH_pwsh _ ->
-    Printf.sprintf "& \"%s\" > $null 2> $null\n" fname
+    Printf.sprintf ". \"%s\" *> $null\n" fname
 
 let if_interactive_script shell t e =
   let ielse else_opt = match else_opt with
@@ -726,11 +725,26 @@ let string_of_update st shell updates =
     in
     let key, value =
       ident, match symbol with
-      | Eq  -> Printf.sprintf "'%s'" string
+      | Eq ->
+        (match shell with
+         | SH_pwsh _ ->
+           Printf.sprintf "'%s'" (OpamStd.Env.escape_powershell string)
+         | SH_cmd -> string
+         | _ -> Printf.sprintf "'%s'" string)
       | PlusEq | ColonEq | EqPlusEq ->
-        Printf.sprintf "'%s':\"$%s\"" string ident
+        let sep = get_env_property ident Separator in
+        (match shell with
+         | SH_pwsh _ ->
+           Printf.sprintf "'%s%c' + \"$env:%s\""
+             (OpamStd.Env.escape_powershell string) sep ident
+         | SH_cmd -> Printf.sprintf "%s%c%%%s%%" string sep ident
+         | _ -> Printf.sprintf "'%s':\"$%s\"" string ident)
       | EqColon | EqPlus ->
-        Printf.sprintf "\"$%s\":'%s'" ident string
+        let sep = get_env_property ident Separator in
+        (match shell with
+         | SH_pwsh _ -> Printf.sprintf "\"$env:%s\" + '%c%s'" ident sep string
+         | SH_cmd -> Printf.sprintf "%%%s%%%c%s" ident sep string
+         | _ -> Printf.sprintf "\"$%s\":'%s'" ident string)
     in
     export_in_shell shell (key, value, comment) in
   OpamStd.List.concat_map "" aux updates
@@ -810,7 +824,7 @@ let write_dynamic_init_scripts st =
       (fun shell ->
          write_script (OpamPath.init st.switch_global.root)
            (variables_file shell, string_of_update st shell updates))
-      [SH_sh; SH_csh; SH_fish]
+      [SH_sh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd]
   with OpamSystem.Locked ->
     OpamConsole.warning
       "Global shell init scripts not installed (could not acquire lock)"
@@ -818,7 +832,7 @@ let write_dynamic_init_scripts st =
 let clear_dynamic_init_scripts gt =
   List.iter (fun shell ->
       OpamFilename.remove (OpamPath.init gt.root // variables_file shell))
-    [SH_sh; SH_csh; SH_fish]
+    [SH_sh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd]
 
 let dot_profile_needs_update root dot_profile =
   if not (OpamFilename.exists dot_profile) then `yes else

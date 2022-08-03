@@ -49,6 +49,7 @@ users)
   * Display actual location of OPAMROOT in `opam init` if `--root` or `OPAMROOT` have been set [#5212 @dra27 - fix #4992]
   * Surround and add a comment describing the role of the lines added to the ~/.profile or equivalent [#5456 @kit-ty-kate]
   * Don't require cc on Windows [#5541 @dra27]
+  * Generate init and variables for Windows [#5541 @dra27]
 
 ## Config report
   * [BUG] Don't fail is no switch is set [#5198 @rjbou]
@@ -643,6 +644,7 @@ users)
   * `OpamSwitchState.load`: fill empty switch synopsis with invariant formula instead of compiler package name [#5208 @rjbou]
   * `OpamSwitchState`: add `compiler_packages` that returns set of installed compilers, with their dependencies including only build & depopt [#5480 @rjbou]
   * `OpamEnv`: generalise splitting of environment variables [#5541 @dra27]
+  * `OpamEnv`: add handling of `SH_pwsh` and `SH_cmd` in shell lists [#5541 @dra27]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
