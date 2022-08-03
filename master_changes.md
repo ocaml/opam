@@ -78,6 +78,7 @@ users)
   * ◈ New option `opam pin --current` to fix a package in its current state (avoiding pending reinstallations or removals from the repository) [#4973 @AltGr - fix #4970]
   * [BUG] Fix using `--working-dir` with non pinned packages: it was not downloading sources as they were remove from package that need sources [#5082 @rjbou - fix #5060]
   * [NEW] Reactivate subpath and recursive pinning `--recursive` and `--subpath` [#4876 @rjbou]
+    * Change display from `git+https://url#hash (subpath)` to `/subpath in git+https://url#hash` [#5219 @rjbou]
   * scan: show subpaths [#4876 @rjbou]
   * [BUG] Fix windows path for subpath, by introducing their own type in `OpamFilename` [#4876 @rjbou]
   * [BUG] Fix repin of locked pins when there is no change in lock file [#5079 @rjbou - fix #4313]
@@ -482,3 +483,5 @@ users)
   * `OpamCompat`: add `Lazy` module and `Lazy.map` function [#5176 @dra27]
   * `OpamConsole.menu`: add `noninteractive` option to choose a different default when output is not a tty [#5156 @rjbou]
   * `OpamStd.Sys`: add `all_shells` list of all supported shells [#5217 @dra27]
+  * `OpamUrl`: add `to_string_w_subpath` to display subpath inside urls (before hash) [#5219 @rjbou]
+  * `OpamFilename.SubPath`: remove `pretty_string` in favor to `OpamUrl.to_string_w_subpath` [#5219 @rjbou]
