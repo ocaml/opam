@@ -855,7 +855,7 @@ let setup
               ~options: (List.map (fun s -> s, string_of_shell s) shells_list)
           in
           menu shell (OpamFilename.of_string (OpamStd.Sys.guess_dot_profile shell))
-            `Yes
+            default
         | `Change_file ->
           let open OpamStd.Option.Op in
           let dot_profile =
