@@ -21,17 +21,27 @@ let slog = OpamConsole.slog
 
 (* - Environment and updates handling - *)
 
-let split_var v = OpamStd.Sys.split_path_variable ~clean:false v
+type _ env_classification =
+| Separator : char env_classification
+| Split : (string -> string list) env_classification
 
-let join_var l =
-  String.concat (String.make 1 OpamStd.Sys.path_sep) l
+let get_env_property : type s . string -> s env_classification -> s = fun _ classification ->
+  match classification with
+  | Separator -> OpamStd.Sys.path_sep
+  | Split -> OpamStd.Sys.split_path_variable ~clean:false
+
+let split_var (var : OpamStd.Env.Name.t) =
+  get_env_property (var :> string) Split
+
+let join_var (var : OpamStd.Env.Name.t) l =
+  String.concat (String.make 1 (get_env_property (var :> string) Separator)) l
 
 (* To allow in-place updates, we store intermediate values of path-like as a
    pair of list [(rl1, l2)] such that the value is [List.rev_append rl1 l2] and
    the place where the new value should be inserted is in front of [l2] *)
 
 
-let unzip_to elt current =
+let unzip_to var elt current =
   (* If [r = l @ rs] then [remove_prefix l r] is [Some rs], otherwise [None] *)
   let rec remove_prefix l r =
     match l, r with
@@ -40,7 +50,7 @@ let unzip_to elt current =
     | ([], rs) -> Some rs
     | _ -> None
   in
-  match (if String.equal elt "" then [""] else split_var elt) with
+  match (if String.equal elt "" then [""] else split_var var elt) with
   | [] -> invalid_arg "OpamEnv.unzip_to"
   | hd::tl ->
     let rec aux acc = function
@@ -57,8 +67,8 @@ let unzip_to elt current =
 let rezip ?insert (l1, l2) =
   List.rev_append l1 (match insert with None -> l2 | Some i -> i::l2)
 
-let rezip_to_string ?insert z =
-  join_var (rezip ?insert z)
+let rezip_to_string var ?insert z =
+  join_var var (rezip ?insert z)
 
 let apply_op_zip op arg (rl1,l2 as zip) =
   let colon_eq ?(eqcol=false) = function (* prepend a, but keep ":"s *)
@@ -90,23 +100,23 @@ let apply_op_zip op arg (rl1,l2 as zip) =
     position of the matching element and allow [=+=] to be applied later. A pair
     or empty lists is returned if the variable should be unset or has an unknown
     previous value. *)
-let reverse_env_update op arg cur_value =
+let reverse_env_update var op arg cur_value =
   if String.equal arg  "" && op <> Eq then None else
   match op with
   | Eq ->
-    if arg = join_var cur_value
+    if arg = join_var var cur_value
     then Some ([],[]) else None
-  | PlusEq | EqPlusEq -> unzip_to arg cur_value
+  | PlusEq | EqPlusEq -> unzip_to var arg cur_value
   | EqPlus ->
-    (match unzip_to arg (List.rev cur_value) with
+    (match unzip_to var arg (List.rev cur_value) with
      | None -> None
      | Some (rl1, l2) -> Some (List.rev l2, List.rev rl1))
   | ColonEq ->
-    (match unzip_to arg cur_value with
+    (match unzip_to var arg cur_value with
      | Some ([], [""]) -> Some ([], [])
      | r -> r)
   | EqColon ->
-    (match unzip_to arg (List.rev cur_value) with
+    (match unzip_to var arg (List.rev cur_value) with
      | Some ([], [""]) -> Some ([], [])
      | Some (rl1, l2) -> Some (List.rev l2, List.rev rl1)
      | None -> None)
@@ -173,10 +183,10 @@ let expand (updates: env_update list) : env =
             match Option.map rezip v_opt with
             | Some v -> v
             | None ->
-              OpamStd.Option.map_default split_var []
+              OpamStd.Option.map_default (split_var var) []
                 (OpamStd.Env.getopt (var :> string))
           in
-          match reverse_env_update op arg v with
+          match reverse_env_update var op arg v with
           | Some v -> (var, v)::defs
           | None -> defs0)
         updates []
@@ -207,7 +217,7 @@ let expand (updates: env_update list) : env =
           | Some z, reverts -> z, reverts
           | None, _ ->
             match OpamStd.Env.getopt (var :> string) with
-            | Some s -> ([], split_var s), reverts
+            | Some s -> ([], split_var var s), reverts
             | None -> ([], []), reverts
       in
       let acc =
@@ -221,9 +231,9 @@ let expand (updates: env_update list) : env =
     | [] ->
       List.rev @@
       List.rev_append
-        (List.rev_map (fun (var, z, doc) -> var, rezip_to_string z, doc) acc) @@
+        (List.rev_map (fun (var, z, doc) -> var, rezip_to_string var z, doc) acc) @@
       List.rev_map (fun (var, z) ->
-          var, rezip_to_string z, Some "Reverting previous opam update")
+          var, rezip_to_string var z, Some "Reverting previous opam update")
         reverts
   in
   apply_updates reverts [] updates
@@ -388,7 +398,7 @@ let is_up_to_date_raw ?(skip=OpamStateConfig.(!r.no_env_notice)) updates =
         match OpamStd.Env.getopt_full var with
         | _, None -> upd::notutd
         | var, Some v ->
-          if reverse_env_update op arg (split_var v) = None then upd::notutd
+          if reverse_env_update var op arg (split_var var v) = None then upd::notutd
           else List.filter (fun (v, _, _, _) ->
               OpamStd.Env.Name.equal_string var v) notutd)
       []

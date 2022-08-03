@@ -641,6 +641,7 @@ users)
   * `OpamSysInteract`: add global config argument to function, in order to be able to retrieve system package manager path for MSYS2, and in the future Cygwin, etc. [#5433 @rjbou]
   * `OpamSwitchState.load`: fill empty switch synopsis with invariant formula instead of compiler package name [#5208 @rjbou]
   * `OpamSwitchState`: add `compiler_packages` that returns set of installed compilers, with their dependencies including only build & depopt [#5480 @rjbou]
+  * `OpamEnv`: generalise splitting of environment variables [#5541 @dra27]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
