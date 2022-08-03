@@ -349,6 +349,7 @@ users)
   * Upgrade packages for sovler jobs, in case depext changed [#5010 @rjbou]
   * Fix github safe directory issues in depext workflow [#5153 @rjbou]
   * Update repo hash in depext workflow [#5153 @rjbou]
+  * Fix the archlinux script [#5218 @kit-ty-kate]
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
