@@ -29,7 +29,7 @@ module E : sig
     | ROOT of string option
     | SWITCH of string option
     | UNLOCKBASE of bool option
-    | WITHTOOLS of bool option
+    | WITHDEVSETUP of bool option
     | WITHDOC of bool option
     | WITHTEST of bool option
   val root: unit -> string option
@@ -44,7 +44,7 @@ type t = private {
   dl_jobs: int;
   build_test: bool;
   build_doc: bool;
-  with_tools: bool;
+  dev_setup: bool;
   dryrun: bool;
   makecmd: string Lazy.t;
   ignore_constraints_on: name_set;
@@ -62,7 +62,7 @@ type 'a options_fun =
   ?dl_jobs:int ->
   ?build_test:bool ->
   ?build_doc:bool ->
-  ?with_tools:bool ->
+  ?dev_setup:bool ->
   ?dryrun:bool ->
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:name_set ->

@@ -47,14 +47,15 @@ val prepare_package_build:
     See {!download_package} and {!prepare_package_source} for the previous
     steps. *)
 val build_package:
-  rw switch_state -> ?test:bool -> ?doc:bool -> ?tools:bool -> dirname -> package ->
+  rw switch_state -> ?test:bool -> ?doc:bool -> ?dev_setup:bool ->
+  dirname -> package ->
   exn option OpamProcess.job
 
 (** [install_package t pkg] installs an already built package. Returns
     updated .config file on success, the exception on error. Do not update
     opam's metadata. See {!build_package} to build the package. *)
 val install_package:
-  rw switch_state -> ?test:bool -> ?doc:bool -> ?tools:bool ->
+  rw switch_state -> ?test:bool -> ?doc:bool -> ?dev_setup:bool ->
   ?build_dir:dirname -> package ->
   (OpamFile.Dot_config.t option, exn) either OpamProcess.job
 

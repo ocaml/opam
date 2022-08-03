@@ -61,11 +61,11 @@ let check_locked ?locked default =
        in
        let base_formula =
          OpamFilter.filter_deps ~build:true ~post:true ~test:false ~doc:false
-           ~tools:false ~dev:false base_depends
+           ~dev_setup:false ~dev:false base_depends
        in
        let lock_formula =
          OpamFilter.filter_deps ~build:true ~post:true ~test:false ~doc:false
-           ~tools:false ~dev:false lock_depends
+           ~dev_setup:false ~dev:false lock_depends
        in
        let lpkg_f =
          lock_formula

@@ -91,7 +91,7 @@ let infer_switch_invariant_raw
   let env nv v =
     if List.mem v OpamPackageVar.predefined_depends_variables then
       match OpamVariable.Full.to_string v with
-      | "dev" | "with-test" | "with-doc" | "with-tools" -> Some (B false)
+      | "dev" | "with-test" | "with-doc" | "with-dev-setup" -> Some (B false)
       | _ -> None
     else
       OpamPackageVar.resolve_switch_raw ~package:nv gt switch switch_config v
@@ -887,7 +887,7 @@ let avoid_version st nv =
 let universe st
     ?(test=OpamStateConfig.(!r.build_test))
     ?(doc=OpamStateConfig.(!r.build_doc))
-    ?(tools=OpamStateConfig.(!r.with_tools))
+    ?(dev_setup=OpamStateConfig.(!r.dev_setup))
     ?(force_dev_deps=false)
     ?reinstall
     ~requested
@@ -906,8 +906,8 @@ let universe st
         Some (B (test && OpamPackage.Set.mem nv requested_allpkgs))
       | "with-doc" ->
         Some (B (doc && OpamPackage.Set.mem nv requested_allpkgs))
-      | "with-tools" ->
-        Some (B (tools && OpamPackage.Set.mem nv requested_allpkgs))
+      | "with-dev-setup" ->
+        Some (B (dev_setup && OpamPackage.Set.mem nv requested_allpkgs))
       | _ -> None (* Computation delayed to the solver *)
     else
     let r = OpamPackageVar.resolve_switch ~package:nv st v in

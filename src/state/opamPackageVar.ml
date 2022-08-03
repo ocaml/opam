@@ -51,7 +51,7 @@ let package_variable_names = [
 
 let predefined_depends_variables =
   List.map OpamVariable.Full.of_string [
-    "build"; "post"; "with-test"; "with-doc"; "with-tools"; "dev";
+    "build"; "post"; "with-test"; "with-doc"; "with-dev-setup"; "dev";
   ]
 
 let resolve_global gt full_var =
@@ -134,7 +134,7 @@ let filter_depends_formula
     ?(post=false)
     ?(test=OpamStateConfig.(!r.build_test))
     ?(doc=OpamStateConfig.(!r.build_doc))
-    ?(tools=OpamStateConfig.(!r.with_tools))
+    ?(dev_setup=OpamStateConfig.(!r.dev_setup))
     ?(dev=false)
     ?default
     ~env
@@ -144,9 +144,9 @@ let filter_depends_formula
   OpamFilter.partial_filter_formula (fun v ->
       if List.mem v predefined_depends_variables then None
       else env v) |>
-  OpamFilter.filter_deps ~build ~post ~test ~doc ~tools ~dev ?default
+  OpamFilter.filter_deps ~build ~post ~test ~doc ~dev_setup ~dev ?default
 
-let all_depends ?build ?post ?test ?doc ?tools ?dev ?(filter_default=false)
+let all_depends ?build ?post ?test ?doc ?dev_setup ?dev ?(filter_default=false)
     ?(depopts=true) st opam =
   let dev = match dev with None -> is_dev_package st opam | Some d -> d in
   let deps =
@@ -154,7 +154,7 @@ let all_depends ?build ?post ?test ?doc ?tools ?dev ?(filter_default=false)
       (OpamFile.OPAM.depends opam ::
        if depopts then [OpamFile.OPAM.depopts opam] else [])
   in
-  filter_depends_formula ?build ?post ?test ?doc ?tools ~dev
+  filter_depends_formula ?build ?post ?test ?doc ?dev_setup ~dev
     ~default:filter_default
     ~env:(resolve_switch ~package:(OpamFile.OPAM.package opam) st) deps
 

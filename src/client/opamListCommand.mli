@@ -23,7 +23,7 @@ type dependency_toggles = {
   build: bool;
   post: bool;
   test: bool;
-  tools: bool;
+  dev_setup: bool;
   doc: bool;
   dev: bool;
 }

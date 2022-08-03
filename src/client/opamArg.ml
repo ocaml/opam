@@ -256,8 +256,8 @@ let environment_variables =
        by `opam env --switch=SWITCH --set-switch'.";
       "UNLOCKBASE", cli_original, (fun v -> UNLOCKBASE (env_bool v)),
       "see install option `--unlock-base'.";
-      "WITHTOOLS", cli_from cli2_2, (fun v -> WITHTOOLS (env_bool v)),
-      "see install option `--with-tools'.";
+      "WITHDEVSETUP", cli_from cli2_2, (fun v -> WITHDEVSETUP (env_bool v)),
+      "see install option `--with-dev-setup'.";
       "WITHDOC", cli_original, (fun v -> WITHDOC (env_bool v)),
       "see install option `--with-doc'.";
       "WITHTEST", cli_original, (fun v -> WITHTEST (env_bool v)),
@@ -582,7 +582,7 @@ type build_options = {
   req_checksums : bool;
   build_test    : bool;
   build_doc     : bool;
-  with_tools      : bool;
+  dev_setup       : bool;
   show          : bool;
   dryrun        : bool;
   fake          : bool;
@@ -598,13 +598,13 @@ type build_options = {
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
-    req_checksums build_test build_doc with_tools show dryrun skip_update
+    req_checksums build_test build_doc dev_setup show dryrun skip_update
     fake jobs ignore_constraints_on unlock_base locked lock_suffix
     assume_depexts no_depexts
     =
   {
     keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
-    req_checksums; build_test; build_doc; with_tools; show; dryrun; skip_update;
+    req_checksums; build_test; build_doc; dev_setup; show; dryrun; skip_update;
     fake; jobs; ignore_constraints_on; unlock_base; locked; lock_suffix;
     assume_depexts; no_depexts;
   }
@@ -626,7 +626,7 @@ let apply_build_options cli b =
     (* ?no_base_packages:(flag o.no_base_packages) -- handled globally *)
     ?build_test:(flag b.build_test)
     ?build_doc:(flag b.build_doc)
-    ?with_tools:(flag b.with_tools)
+    ?dev_setup:(flag b.dev_setup)
     ?dryrun:(flag b.dryrun)
     ?makecmd:(b.make >>| fun m -> lazy m)
     ?ignore_constraints_on:
@@ -1393,8 +1393,8 @@ let build_options cli =
        the command-line. This is equivalent to setting $(b,\\$OPAMWITHDOC) \
        (or the deprecated $(b,\\$OPAMBUILDDOC)) to \"true\"."
   in
-  let with_tools =
-    mk_flag ~cli (cli_from cli2_2) ["with-tools"] ~section
+  let dev_setup =
+    mk_flag ~cli (cli_from cli2_2) ["with-dev-setup"] ~section
       "Include development tools only dependencies."
   in
   let make =
@@ -1462,7 +1462,7 @@ let build_options cli =
   in
   Term.(const create_build_options
         $keep_build_dir $reuse_build_dir $inplace_build $make
-        $no_checksums $req_checksums $build_test $build_doc $with_tools $show
+        $no_checksums $req_checksums $build_test $build_doc $dev_setup $show
         $dryrun $skip_update $fake $jobs_flag ~section cli cli_original
         $ignore_constraints_on $unlock_base $locked $lock_suffix
         $assume_depexts $no_depexts)
@@ -1562,9 +1562,9 @@ let package_selection cli =
     mk_flag ~cli cli_original ["t";"test";"with-test"] ~section
       "Include test-only dependencies."
   in
-  let tools =
-    mk_flag ~cli (cli_from cli2_2) ["with-tools"] ~section
-      "Include development only dependencies."
+  let dev_setup =
+    mk_flag ~cli (cli_from cli2_2) ["with-dev-setup"] ~section
+      "Include developer only dependencies."
   in
   let field_match =
     mk_opt_all ~cli cli_original ["field-match"] "FIELD:PATTERN" ~section
@@ -1593,12 +1593,13 @@ let package_selection cli =
       Arg.string
   in
   let filter
-      depends_on required_by conflicts_with coinstallable_with resolve recursive
-      depopts nobuild post dev doc_flag test tools field_match has_flag has_tag
+      depends_on required_by conflicts_with coinstallable_with resolve
+      recursive depopts nobuild post dev doc_flag test dev_setup field_match
+      has_flag has_tag
     =
     let dependency_toggles = {
       OpamListCommand.
-      recursive; depopts; build = not nobuild; post; test; tools;
+      recursive; depopts; build = not nobuild; post; test; dev_setup;
       doc = doc_flag; dev
     } in
     List.map (fun flag -> OpamListCommand.Flag flag) has_flag @
@@ -1628,7 +1629,7 @@ let package_selection cli =
   Term.(const filter $
         depends_on $ required_by $ conflicts_with $ coinstallable_with $
         resolve $ recursive $ depopts $ nobuild $ post $ dev $ doc_flag $
-        test $ tools $ field_match $ has_flag $ has_tag)
+        test $ dev_setup $ field_match $ has_flag $ has_tag)
 
 let package_listing_section = "OUTPUT FORMAT OPTIONS"
 

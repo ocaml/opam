@@ -39,8 +39,8 @@ let post_message ?(failed=false) st action =
         (Some (B failed)) local_variables
     in
     let local_variables =
-      OpamVariable.Map.add (OpamVariable.of_string "with-tools")
-        (Some (B OpamStateConfig.(!r.with_tools))) local_variables
+      OpamVariable.Map.add (OpamVariable.of_string "with-dev-setup")
+        (Some (B OpamStateConfig.(!r.dev_setup))) local_variables
     in
     let messages =
       let filter_env = OpamPackageVar.resolve ~opam ~local:local_variables st in
@@ -654,11 +654,11 @@ let parallel_apply t
             OpamFilename.rmdir dir;
           false, dir
       in
-      let test, doc, tools =
+      let test, doc, dev_setup =
         let found = OpamPackage.Set.mem nv requested in
         OpamStateConfig.(!r.build_test) && found,
         OpamStateConfig.(!r.build_doc) && found,
-        OpamStateConfig.(!r.with_tools) && found
+        OpamStateConfig.(!r.dev_setup) && found
       in
       let source_dir = source_dir nv in
       (if OpamFilename.exists_dir source_dir
@@ -668,25 +668,27 @@ let parallel_apply t
        OpamAction.prepare_package_source t nv build_dir @@+ function
        | Some exn -> store_time (); Done (`Exception exn)
        | None ->
-         OpamAction.build_package t ~test ~doc ~tools build_dir nv @@+ function
+         OpamAction.build_package t ~test ~doc ~dev_setup build_dir nv
+         @@+ function
          | Some exn -> store_time (); Done (`Exception exn)
          | None -> store_time (); Done (`Successful (installed, removed)))
     | `Install nv ->
-      let test, doc, tools =
+      let test, doc, dev_setup =
         let found = OpamPackage.Set.mem nv requested in
         OpamStateConfig.(!r.build_test) && found,
         OpamStateConfig.(!r.build_doc) && found,
-        OpamStateConfig.(!r.with_tools) && found
+        OpamStateConfig.(!r.dev_setup) && found
       in
       let build_dir = OpamPackage.Map.find_opt nv inplace in
-      (OpamAction.install_package t ~test ~doc ~tools ?build_dir nv @@+ function
-        | Left conf ->
-          add_to_install nv conf;
-          store_time ();
-          Done (`Successful (OpamPackage.Set.add nv installed, removed))
-        | Right exn ->
-          store_time ();
-          Done (`Exception exn))
+      (OpamAction.install_package t ~test ~doc ~dev_setup ?build_dir nv
+       @@+ function
+       | Left conf ->
+         add_to_install nv conf;
+         store_time ();
+         Done (`Successful (OpamPackage.Set.add nv installed, removed))
+       | Right exn ->
+         store_time ();
+         Done (`Exception exn))
     | `Remove nv ->
       (if OpamAction.removal_needs_download t nv then
          let d = OpamPath.Switch.remove t.switch_global.root t.switch nv in

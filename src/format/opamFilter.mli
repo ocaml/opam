@@ -186,14 +186,16 @@ val variables_of_filtered_formula: filtered_formula -> full_variable list
     specified. If test, doc or dev are unspecified, they are assumed to be
     filtered out already and encountering them will raise an assert. *)
 val filter_deps:
-  build:bool -> post:bool -> ?test:bool -> ?doc:bool -> ?tools:bool -> ?dev:bool ->
-  ?default_version:version -> ?default:bool ->
-  filtered_formula -> formula
+  build:bool -> post:bool -> ?test:bool -> ?doc:bool -> ?dev_setup:bool ->
+  ?dev:bool -> ?default_version:version -> ?default:bool -> filtered_formula ->
+  formula
 
 (** The environment used in resolving the dependency filters, as per
     [filter_deps]. *)
 val deps_var_env:
-  build:bool -> post:bool -> ?test:bool -> ?doc:bool -> ?tools:bool -> ?dev:bool -> env
+  build:bool -> post:bool -> ?test:bool -> ?doc:bool -> ?dev_setup:bool ->
+  ?dev:bool ->
+  env
 
 (** Like [OpamFormula.simplify_version_formula], but on filtered formulas
     (filters are kept unchanged, but put in front) *)
