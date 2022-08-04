@@ -798,12 +798,12 @@ let check_and_print_env_warning st =
 let setup
     root ~interactive ?dot_profile ?update_config ?env_hook ?completion
     ?inplace shell =
-  let update_dot_profile, env_hook =
+  let shell, update_dot_profile, env_hook =
     match update_config, dot_profile, interactive with
-    | Some false, _, _ -> None, env_hook
+    | Some false, _, _ -> shell, None, env_hook
     | _, None, _ -> invalid_arg "OpamEnv.setup"
-    | Some true, Some dot_profile, _ -> Some dot_profile, env_hook
-    | None, _, false -> None, env_hook
+    | Some true, Some dot_profile, _ -> shell, Some dot_profile, env_hook
+    | None, _, false -> shell, None, env_hook
     | None, Some dot_profile, true ->
       OpamConsole.header_msg "Required setup - please read";
 
@@ -824,7 +824,7 @@ let setup
         (OpamConsole.colorise `bold @@ source root shell (init_file shell));
       if OpamCoreConfig.answer_is_yes () then begin
         OpamConsole.warning "Shell not updated in non-interactive mode: use --shell-setup";
-        None, env_hook
+        shell, None, env_hook
       end else
       let rec menu shell dot_profile default =
         let opam_env_inv =
@@ -846,16 +846,16 @@ let setup
                 opam_env_inv;
           ]
         with
-        | `No -> None, env_hook
-        | `Yes -> Some dot_profile, Some true
-        | `No_hooks -> Some dot_profile, Some false
+        | `No -> shell, None, env_hook
+        | `Yes -> shell, Some dot_profile, Some true
+        | `No_hooks -> shell, Some dot_profile, Some false
         | `Change_shell ->
           let shell = OpamConsole.menu ~default:shell ~no:shell
               "Please select a shell to configure"
-              ~options: (List.map (fun s -> s, string_of_shell s) shells_list)
+              ~options: (List.map (fun s -> s, string_of_shell s) OpamStd.Sys.all_shells)
           in
           menu shell (OpamFilename.of_string (OpamStd.Sys.guess_dot_profile shell))
-            `Yes
+            default
         | `Change_file ->
           let open OpamStd.Option.Op in
           let dot_profile =

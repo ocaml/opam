@@ -29,7 +29,7 @@ users)
   * [BUG] Fix `OPAMCURL` and `OPAMFETCH` value setting [#5111 @rjbou - fix #5108]
   * [BUG] Fix display of pinned packages in action list [#5079 @rjbou]
   * [BUG] Fix spaces in root and switch dirs [#5203 @jonahbeckford]
-  * Use menu for init setup [#5057 @AltGr]
+  * Use menu for init setup [#5057 @AltGr; #5217 @dra27]
 
 ## Plugins
   *
@@ -472,3 +472,4 @@ users)
   * `OpamCompat.Unix`: add `realpath` for ocaml < 4.13, and use it in `OpamSystem` [#5152 @rjbou]
   * `OpamCompat`: add `Lazy` module and `Lazy.map` function [#5176 @dra27]
   * `OpamConsole.menu`: add `noninteractive` option to choose a different default when output is not a tty [#5156 @rjbou]
+  * `OpamStd.Sys`: add `all_shells` list of all supported shells [#5217 @dra27]
