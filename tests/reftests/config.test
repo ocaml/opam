@@ -1,0 +1,9 @@
+N0REP0
+### OPAMVAR_os=another opam config report | grep another | '.*os=another.*' -> 'found!'
+found!
+### opam var os=yetanother --global | grep another | '.*os=another.*' -> 'found!'
+Added '[os "yetanother" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam config report | grep another | '.*os=yetanother.*' -> 'found!'
+found!
+### OPAMVAR_os=another opam config report | grep another | '.*os=another.*' -> 'found!'
+found!

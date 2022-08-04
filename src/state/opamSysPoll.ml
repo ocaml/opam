@@ -9,6 +9,7 @@
 (**************************************************************************)
 
 open OpamStd.Option.Op
+open OpamCompat
 
 let command_output c =
   match List.filter (fun s -> String.trim s <> "")
@@ -33,7 +34,7 @@ let normalise_arch raw =
         ["armv5"; "armv6"; "earmv6"; "armv7"; "earmv7"] -> "arm32"
   | s -> s
 
-let arch_lazy = lazy (
+let poll_arch () =
   let raw = match Sys.os_type with
     | "Unix" | "Cygwin" -> OpamStd.Sys.uname "-m"
     | "Win32" ->
@@ -46,15 +47,14 @@ let arch_lazy = lazy (
   match raw with
   | None | Some "" -> None
   | Some a -> Some (normalise_arch a)
-)
-let arch () = Lazy.force arch_lazy
+let arch = Lazy.from_fun poll_arch
 
 let normalise_os raw =
   match String.lowercase_ascii raw with
   | "darwin" | "osx" -> "macos"
   | s -> s
 
-let os_lazy = lazy (
+let poll_os () =
   let raw =
     match Sys.os_type with
     | "Unix" -> OpamStd.Sys.uname "-s"
@@ -63,8 +63,7 @@ let os_lazy = lazy (
   match raw with
   | None | Some "" -> None
   | Some s -> Some (normalise_os s)
-)
-let os () = Lazy.force os_lazy
+let os = Lazy.from_fun poll_os
 
 let os_release_field =
   let os_release_file = lazy (
@@ -89,8 +88,9 @@ let is_android, android_release =
   (fun () -> Lazy.force prop <> None),
   (fun () -> Lazy.force prop)
 
-let os_distribution_lazy = lazy (
-  match os () with
+let poll_os_distribution () =
+  let lazy os = os in
+  match os with
   | Some "macos" as macos ->
     if OpamSystem.resolve_command "brew" <> None then Some "homebrew"
     else if OpamSystem.resolve_command "port" <> None then Some "macports"
@@ -107,11 +107,11 @@ let os_distribution_lazy = lazy (
        fun s -> Scanf.sscanf s " %s " norm
      with Not_found -> linux)
   | os -> os
-)
-let os_distribution () = Lazy.force os_distribution_lazy
+let os_distribution = Lazy.from_fun poll_os_distribution
 
-let os_version_lazy = lazy (
-  match os () with
+let poll_os_version () =
+  let lazy os = os in
+  match os with
   | Some "linux" ->
     android_release () >>= norm >>+ fun () ->
     command_output ["lsb_release"; "-s"; "-r"] >>= norm >>+ fun () ->
@@ -130,41 +130,56 @@ let os_version_lazy = lazy (
     OpamStd.Sys.uname "-U" >>= norm
   | _ ->
     OpamStd.Sys.uname "-r" >>= norm
-)
-let os_version () = Lazy.force os_version_lazy
+let os_version = Lazy.from_fun poll_os_version
 
-let os_family_lazy = lazy (
-  match os () with
+let poll_os_family () =
+  let lazy os = os in
+  match os with
   | Some "linux" ->
     (os_release_field "ID_LIKE" >>= fun s ->
      Scanf.sscanf s " %s" norm (* first word *))
-    >>+ os_distribution
+    ++ Lazy.force os_distribution
   | Some ("freebsd" | "openbsd" | "netbsd" | "dragonfly") -> Some "bsd"
   | Some ("win32" | "cygwin") -> Some "windows"
-  | _ -> os_distribution ()
-)
-let os_family () = Lazy.force os_family_lazy
+  | _ -> Lazy.force os_distribution
+let os_family = Lazy.from_fun poll_os_family
 
 let variables =
   List.map
     (fun (n, v) ->
        OpamVariable.of_string n,
-       lazy (Lazy.force v >>| fun v -> OpamTypes.S v))
+       Lazy.map (OpamStd.Option.map (fun v -> OpamTypes.S v)) v)
     [
-      "arch", arch_lazy;
-      "os", os_lazy;
-      "os-distribution", os_distribution_lazy;
-      "os-version", os_version_lazy;
-      "os-family", os_family_lazy;
+      "arch", arch;
+      "os", os;
+      "os-distribution", os_distribution;
+      "os-version", os_version;
+      "os-family", os_family;
     ]
 
-let cores_lazy = lazy (OpamSystem.cpu_count ())
-let cores () = Lazy.force cores_lazy
+let cores =
+  let v = Lazy.from_fun OpamSystem.cpu_count in
+  fun () -> Lazy.force v
 
-let to_string () =
+(* Exported functions *)
+let resolve_or_poll var poll env =
+  match OpamVariable.Full.read_from_env (OpamVariable.Full.of_string var) with
+  | Some (S c) -> Some c
+  | _ ->
+    match OpamVariable.Map.find_opt (OpamVariable.of_string var) env with
+    | Some (lazy (Some (OpamTypes.S c)), _) -> Some c
+    | _ -> Lazy.force poll
+
+let arch = resolve_or_poll "arch" arch
+let os = resolve_or_poll "os" os
+let os_distribution = resolve_or_poll "os-distribution" os_distribution
+let os_version = resolve_or_poll "os-version" os_version
+let os_family = resolve_or_poll "os-family" os_family
+
+let to_string env =
   let open OpamStd.Option.Op in
   Printf.sprintf "arch=%s os=%s os-distribution=%s os-version=%s"
-    (arch () +! "unknown")
-    (os () +! "unknown")
-    (os_distribution () +! "unknown")
-    (os_version () +! "unknown")
+    (arch env +! "unknown")
+    (os env +! "unknown")
+    (os_distribution env +! "unknown")
+    (os_version env +! "unknown")

@@ -1292,13 +1292,9 @@ let config cli =
              OpamFilename.prettify
                (fst (self_upgrade_exe (OpamStateConfig.(!r.root_dir))))
            else "no");
-        print "system" "arch=%s os=%s os-distribution=%s os-version=%s"
-          OpamStd.Option.Op.(OpamSysPoll.arch () +! "unknown")
-          OpamStd.Option.Op.(OpamSysPoll.os () +! "unknown")
-          OpamStd.Option.Op.(OpamSysPoll.os_distribution () +! "unknown")
-          OpamStd.Option.Op.(OpamSysPoll.os_version () +! "unknown");
         try
           OpamGlobalState.with_ `Lock_none @@ fun gt ->
+          print "system" "%s" (OpamSysPoll.to_string gt.global_variables);
           let module Solver = (val OpamSolverConfig.(Lazy.force !r.solver)) in
           print "solver" "%s"
             (OpamCudfSolver.get_name (module Solver));

@@ -98,6 +98,8 @@ users)
   * Don't error when displaying if switch is not set [#5027 @rjbou - fix #5025]
   * Try to set a variable with option `--switch <sw>` fails instead of writing a wrong `switch-config` file [#5027 @rjbou]
   * When a field is defined in switch and global scope, try to determine the scope also by checking switch selection [#5027 @rjbou]
+## Var
+  * Resolve and use global config and environment variable before polling system informations (os, os-family, etc.) [#4892 @rjbou - fix #4883]
 
 ## Update / Upgrade
   * [BUG] if a package is pinned from a locked file, it is automatically updated/upgraded accordingly a lock file (same extension) [#5080 @rjbou]
@@ -330,6 +332,7 @@ users)
   * Replace vars on the right-hand of exports [#5024 @AltGr]
   * Add `json-cat` printer, with some automatic remplacements [#5143 @rjbou]
   * Add some tests showing how --working-dir behaves on updated dependency constraints [#5179 @kit-ty-kate]
+  * Add config (report) test [#4892 @rjbou]
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]
@@ -420,6 +423,7 @@ users)
   * `OpamPinned`: when looking at opam files, keep (and return) information about its locked origin [#5080 @rjbou]
   * `OpamUpdate.pinned_package`: use locked information to automatically update from locked file if present, if `?autolock` is given to true [#5080 @rjbou]
 
+  * Add optional argument `?env:(variable_contents option Lazy.t * string) OpamVariable.Map.t` to `OpamSysPoll` and `OpamSysInteract` functions. It is used to get syspolling variables from the environment first. [#4892 @rjbou]
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
   * `OpamCudf`: add `conflict_cycles` [#4039 @gasche]

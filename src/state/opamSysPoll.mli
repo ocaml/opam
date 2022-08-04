@@ -8,14 +8,18 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamStateTypes
+
 (** This module polls various aspects of the host, to define the [arch], [os],
     etc. variables *)
 
-val arch: unit -> string option
-val os: unit -> string option
-val os_distribution: unit -> string option
-val os_version: unit -> string option
-val os_family: unit -> string option
+(** Functions to get host specification. It checks if variables value is
+    defined in the environment map before polling. *)
+val arch: gt_variables -> string option
+val os: gt_variables -> string option
+val os_distribution: gt_variables -> string option
+val os_version: gt_variables -> string option
+val os_family: gt_variables -> string option
 
 val variables: (OpamVariable.t * OpamTypes.variable_contents option Lazy.t) list
 
@@ -33,5 +37,6 @@ val normalise_os: string -> string
 val cores: unit -> int
 
 (** Returns a string containing arch, os, os-distribution & os-version values,
-    unknown if they are not available *)
-val to_string: unit -> string
+    unknown if they are not available.
+    [env] is used to determine host specification. *)
+val to_string: gt_variables -> string

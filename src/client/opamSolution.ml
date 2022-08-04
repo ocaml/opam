@@ -159,7 +159,8 @@ let check_availability ?permissive t set atoms =
            (OpamFormula.short_string_of_atom atom)
            msg
            (OpamStd.Option.map_default (Printf.sprintf "\n%s.") ""
-              (OpamSysInteract.repo_enablers ())))
+              (OpamSysInteract.repo_enablers
+                 ~env:t.switch_global.global_variables ())))
     | None -> None
   in
   let check_atom (name, cstr as atom) =
@@ -1128,8 +1129,10 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     else
       OpamSysPkg.Set.empty
   in
+  let env = t.switch_global.global_variables in
   let pkg_manager_name () =
-    match OpamSysInteract.install_packages_commands OpamSysPkg.Set.empty with
+    match OpamSysInteract.install_packages_commands
+            ~env OpamSysPkg.Set.empty with
     | (pkgman, _) :: _ -> pkgman
     | [] -> assert false
   in
@@ -1188,7 +1191,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     | `Quit -> give_up_msg (); OpamStd.Sys.exit_because `Aborted
   and print_command sys_packages =
     let commands =
-      OpamSysInteract.install_packages_commands sys_packages
+      OpamSysInteract.install_packages_commands sys_packages ~env
       |> List.map (fun (c,a) -> c::a)
     in
     OpamConsole.formatted_msg
@@ -1217,7 +1220,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     | `Quit -> give_up ()
   and auto_install t sys_packages =
     try
-      OpamSysInteract.install sys_packages; (* handles dry_run *)
+      OpamSysInteract.install ~env sys_packages; (* handles dry_run *)
       map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
     with Failure msg ->
       OpamConsole.error "%s" msg;
@@ -1231,7 +1234,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     if OpamSysPkg.Set.is_empty sys_packages then t else
       (OpamConsole.error "These packages are still missing: %s\n"
          (syspkgs_to_string sys_packages);
-         entry_point t sys_packages)
+       entry_point t sys_packages)
   and bypass t =
     OpamConsole.note
       "Run 'opam option depext=false' if you wish to permanently disable \

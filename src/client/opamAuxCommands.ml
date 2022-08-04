@@ -532,7 +532,7 @@ let check_and_revert_sandboxing root config =
       with e ->
         (OpamConsole.error "Sandboxing is not working on your platform%s:\n%s"
            (OpamStd.Option.to_string (fun os -> " "^os)
-              (OpamSysPoll.os_distribution ()))
+              (OpamSysPoll.os_distribution OpamVariable.Map.empty))
            (Printexc.to_string e);
          not (OpamConsole.confirm ~default:false
                 "Do you want to disable it?  Note that this will result in \
