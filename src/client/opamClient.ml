@@ -1348,39 +1348,16 @@ module PIN = struct
   open OpamPinCommand
 
   let post_pin_action st was_pinned names =
-    let pkgs =
-      let newly = st.pinned -- was_pinned in
-      let old =
-        OpamPackage.packages_of_names was_pinned
-          OpamPackage.Name.Set.Op.(
-            OpamPackage.Name.Set.of_list names
-            -- OpamPackage.names_of_packages newly)
-      in
-      newly ++ old
-    in
-    let no_depexts =
-      not (OpamFile.Config.depext st.switch_global.config)
-      || OpamSysPkg.Set.is_empty
-        ((OpamPackage.Set.fold (fun pkg acc ->
-             OpamSysPkg.Set.union acc (OpamSwitchState.depexts st pkg)))
-           pkgs OpamSysPkg.Set.empty)
+    let names =
+      OpamPackage.Set.Op.(st.pinned -- was_pinned)
+      |> OpamPackage.names_of_packages
+      |> (fun s ->
+          List.fold_left
+            (fun s p -> OpamPackage.Name.Set.add p s)
+            s names)
+      |> OpamPackage.Name.Set.elements
     in
     try
-      let st =
-        if no_depexts then st else
-        let st =
-          { st with sys_packages =  lazy (
-                OpamPackage.Map.union (fun _ n -> n)
-                  (Lazy.force st.sys_packages)
-                  (OpamSwitchState.depexts_status_of_packages st pkgs)
-              )}
-        in
-        { st with available_packages = lazy (
-              OpamPackage.Set.filter (fun nv ->
-                  OpamSwitchState.depexts_unavailable st nv = None)
-                (Lazy.force st.available_packages)
-            )}
-      in
       upgrade_t
         ~strict_upgrade:false ~auto_install:true ~ask:true ~terse:true
         ~all:false

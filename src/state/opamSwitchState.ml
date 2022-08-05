@@ -1221,15 +1221,28 @@ let update_pin nv opam st =
     OpamStd.Option.default nv.version (OpamFile.OPAM.version_opt opam)
   in
   let nv = OpamPackage.create nv.name version in
-  update_package_metadata nv opam @@
-  { st with
-    pinned =
-      OpamPackage.Set.add nv
-        (OpamPackage.filter_name_out st.pinned nv.name);
-    available_packages = lazy (
-      OpamPackage.filter_name_out (Lazy.force st.available_packages) nv.name
-    );
-  }
+  let pinned =
+    OpamPackage.Set.add nv (OpamPackage.filter_name_out st.pinned nv.name)
+  in
+  let available_packages = lazy (
+    OpamPackage.filter_name_out (Lazy.force st.available_packages) nv.name
+  ) in
+  let st =
+    update_package_metadata nv opam { st with pinned; available_packages }
+  in
+  if not (OpamFile.Config.depext st.switch_global.config)
+  || OpamSysPkg.Set.is_empty (depexts st nv)
+  then st else
+  let sys_packages = lazy (
+    OpamPackage.Map.union (fun _ n -> n)
+      (Lazy.force st.sys_packages)
+      (depexts_status_of_packages st (OpamPackage.Set.singleton nv))
+  ) in
+  let available_packages = lazy (
+    OpamPackage.Set.filter (fun nv -> depexts_unavailable st nv = None)
+      (Lazy.force st.available_packages)
+  ) in
+  { st with sys_packages; available_packages }
 
 let do_backup lock st = match lock with
   | `Lock_write ->
