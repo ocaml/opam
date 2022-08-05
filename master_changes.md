@@ -82,6 +82,7 @@ users)
   * [BUG] Fix repin of locked pins when there is no change in lock file [#5079 @rjbou - fix #4313]
   * [BUG] Fix `opam install ./file.opam` lock pinning [#5148 @rjbou - fix #4313]
   * [BUG] Fix origin opam file retrieval when opam originate from locked file [#5079 @rjbou - fix #4936]
+  * [BUG] When reinstalling a package that has a dirty source, if uncommitted changes are the same than the ones stored in opam's cache, opam consider that it is up to date and nothing is updated [4879 @rjbou]
 
 ## List
   * Some optimisations to 'opam list --installable' queries combined with other filters [#4882 @altgr - fix #4311]
@@ -410,6 +411,8 @@ users)
   * Add `?subpath` to `OpamRepository.fetch_dev_packages`, `OpamVCS.is_up_to_date` and vcs specific functions in `OpamDarcs`, `OpamHG`, and `OpamGit` [#4876 @rjbou]
   * `OpamRepositoryConfig.E`: add `curl_t` and `fetch_t` to get their respective environement vairbales value dynamically, without lazyness. It is used in `opamClient.InitDefaults`, that can be called at topelevel [#5111 @rjbou]
   * `OpamRepository.update`: Return a change state result of the repo update [#5043 @Armael]
+  * `OpamVCS.VCS`: add a `clean` function to the interface clearing all the uncommited files [#4879 @rjbou]
+  * `OpamVCS.pull_url`: clean repository before fetching [#4879 @rjbou]
 
 ## opam-state
   * `OpamSwitchState.universe`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]

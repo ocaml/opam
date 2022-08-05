@@ -56,6 +56,12 @@ module VCS = struct
       if String.length full > 8 then Done (Some (String.sub full 0 8))
       else Done (Some full)
 
+  let clean repo_root =
+    hg repo_root ["revert"; "--all"; "--no-backup"]
+    @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    Done ()
+
   let reset_tree repo_root repo_url =
     let mark = mark_from_url repo_url in
     hg repo_root [ "update"; "--clean"; "--rev"; mark ] @@> fun r ->

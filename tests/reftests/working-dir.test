@@ -89,7 +89,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
 Done.
-### opam install ongoing -v | grep -v "^#" | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")cat(\.exe)?"? "' -> 'cat "'
+### opam install ongoing -v | grep -v "^#" | '.*(/|\\|")test(\.exe)?"? "' -> 'test "'
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
@@ -106,25 +106,23 @@ Processing  1/3: [ongoing.dev: git]
 -> retrieved ongoing.dev  (no changes)
 Processing  2/3: [ongoing: test newfile.txt]
 test "-f" "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
-Processing  2/3: [ongoing: cat newfile.txt]
-cat "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
-- new!
--> compiled  ongoing.dev
--> installed ongoing.dev
-Done.
-### opam remove ongoing
-The following actions will be performed:
-=== remove 1 package
-  - remove ongoing dev (pinned)
+[ERROR] The compilation of ongoing.dev failed at "test -f newfile.txt".
 
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   ongoing.dev
-Done.
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build ongoing dev
++- 
+- No changes have been performed
+'${OPAM} install ongoing -v' failed.
+# Return code 31 #
 ### opam install ongoing --working-dir -v | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")cat(\.exe)?"? "' -> 'cat "'
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]
-[ongoing.dev] synchronised (no changes)
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
 
 The following actions will be performed:
 === install 1 package
