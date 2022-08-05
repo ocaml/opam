@@ -167,7 +167,7 @@ let environment_variables =
       "EXTERNALSOLVER", cli_original, (fun v -> EXTERNALSOLVER (env_string v)),
       "see option `--solver'.";
       "FIXUPCRITERIA", cli_original, (fun v -> FIXUPCRITERIA (env_string v)),
-      "same as $(i,OPAMUPGRADECRITERIA), but specific to fixup.";
+      "same as $(i,OPAMUPGRADECRITERIA), but specific to fixup and reinstall.";
       "NOASPCUD", cli_original, (fun v -> NOASPCUD (env_bool v)),
       "Deprecated.";
       "PREPRO", cli_original, (fun v -> PREPRO (env_bool v)),
@@ -1228,7 +1228,7 @@ let global_options cli =
   let solver_preferences =
     mk_opt ~cli cli_original ~section ["criteria"] "CRITERIA"
       ("Specify user $(i,preferences) for dependency solving for this run. \
-        Overrides both $(b,\\$OPAMCRITERIA) and $(b,\\$OPAMUPGRADECRITERIA). \
+        Overrides $(b,\\$OPAMCRITERIA), $(b,\\$OPAMFIXUPCRITERIA) and $(b,\\$OPAMUPGRADECRITERIA). \
         For details on the supported language, and the external solvers available, see \
         $(i, http://opam.ocaml.org/doc/External_solvers.html). \
         A general guide to using solver preferences can be found at \
