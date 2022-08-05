@@ -1,0 +1,264 @@
+a5d7cdc0
+### <pin:foo/opam-core.opam>
+version: "2.2.0~alpha~dev"
+depends: [
+  "ocaml" {(>= "4.03.0" & os != "win32") | >= "4.06.0"}
+  "base-unix"
+  "base-bigarray"
+  "ocamlgraph"
+  "re" {>= "1.9.0"}
+  "dune" {>= "2.0.0"}
+  "cppo" {build & >= "1.1.0"}
+  "sha" {>= "1.13"}
+  "jsonm"
+]
+conflicts: "extlib-compat"
+### <pin:foo/opam-format.opam>
+version: "2.2.0~alpha~dev"
+depends: [
+  "ocaml" {(>= "4.03.0" & os != "win32") | >= "4.06.0"}
+  "opam-core" {= version}
+  "opam-file-format" {>= "2.1.0"}
+  "re" {>= "1.9.0"}
+  "dune" {>= "2.0.0"}
+]
+### OPAMYES=1 OPAMFAKE=1
+### opam switch create foo/ --deps-only
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml" {>= "4.05.0"}]
+The following actions will be faked:
+=== install 21 packages
+  - install base-bigarray         base
+  - install base-threads          base
+  - install base-unix             base
+  - install cppo                  1.6.8
+  - install dune                  2.9.1
+  - install jsonm                 1.0.1
+  - install ocaml                 4.13.1
+  - install ocaml-base-compiler   4.13.1 [required by ocaml]
+  - install ocaml-config          2      [required by ocaml]
+  - install ocaml-options-vanilla 1
+  - install ocamlbuild            0.14.0
+  - install ocamlfind             1.9.1
+  - install ocamlgraph            2.0.0
+  - install opam-file-format      2.1.3
+  - install re                    1.10.3
+  - install seq                   base
+  - install sha                   1.15.1
+  - install stdlib-shims          0.3.0
+  - install topkg                 1.0.4
+  - install uchar                 0.0.2
+  - install uutf                  1.0.2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.13.1
+Faking installation of ocaml-config.2
+Faking installation of ocaml.4.13.1
+Faking installation of dune.2.9.1
+Faking installation of cppo.1.6.8
+Faking installation of ocaml-options-vanilla.1
+Faking installation of ocamlbuild.0.14.0
+Faking installation of ocamlfind.1.9.1
+Faking installation of opam-file-format.2.1.3
+Faking installation of seq.base
+Faking installation of re.1.10.3
+Faking installation of stdlib-shims.0.3.0
+Faking installation of ocamlgraph.2.0.0
+Faking installation of sha.1.15.1
+Faking installation of topkg.1.0.4
+Faking installation of uchar.0.0.2
+Faking installation of uutf.1.0.2
+Faking installation of jsonm.1.0.1
+Done.
+### opam pin --switch=foo/
+opam-core.2.2.0~alpha~dev     (no definition found)
+opam-format.2.2.0~alpha~dev   (no definition found)
+### : BROKEN -- should be empty
+### opam list --switch=foo/
+# Packages matching: installed
+# Name                # Installed # Synopsis
+base-bigarray         base
+base-threads          base
+base-unix             base
+cppo                  1.6.8       Code preprocessor like cpp for OCaml
+dune                  2.9.1       Fast, portable, and opinionated build system
+jsonm                 1.0.1       Non-blocking streaming JSON codec for OCaml
+ocaml                 4.13.1      The OCaml compiler (virtual package)
+ocaml-base-compiler   4.13.1      Official release 4.13.1
+ocaml-config          2           OCaml Switch Configuration
+ocaml-options-vanilla 1           Ensure that OCaml is compiled with no special options enabled
+ocamlbuild            0.14.0      OCamlbuild is a build system with builtin rules to easily build most OCaml projects.
+ocamlfind             1.9.1       A library manager for OCaml
+ocamlgraph            2.0.0       A generic graph library for OCaml
+opam-file-format      2.1.3       Parser and printer for the opam file syntax
+re                    1.10.3      RE is a regular expression library for OCaml
+seq                   base        Compatibility package for OCaml's standard iterator type starting from 4.07.
+sha                   1.15.1      Binding to the SHA cryptographic functions
+stdlib-shims          0.3.0       Backport some of the new stdlib features to older compiler
+topkg                 1.0.4       The transitory OCaml software packager
+uchar                 0.0.2       Compatibility library for OCaml's Uchar module
+uutf                  1.0.2       Non-blocking streaming Unicode codec for OCaml
+### opam switch remove foo/
+Switch ${BASEDIR}/foo and all its packages will be wiped. Are you sure? [y/n] y
+### opam switch create testopam --empty
+### opam install foo/ --deps-only
+The following actions will be faked:
+=== install 21 packages
+  - install base-bigarray         base   [required by opam-core]
+  - install base-threads          base   [required by dune]
+  - install base-unix             base   [required by opam-core]
+  - install cppo                  1.6.8  [required by opam-core]
+  - install dune                  2.9.1  [required by opam-core, opam-format]
+  - install jsonm                 1.0.1  [required by opam-core]
+  - install ocaml                 4.13.1 [required by opam-core, opam-format]
+  - install ocaml-base-compiler   4.13.1 [required by ocaml]
+  - install ocaml-config          2      [required by ocaml]
+  - install ocaml-options-vanilla 1
+  - install ocamlbuild            0.14.0 [required by jsonm]
+  - install ocamlfind             1.9.1  [required by jsonm]
+  - install ocamlgraph            2.0.0  [required by opam-core]
+  - install opam-file-format      2.1.3  [required by opam-format]
+  - install re                    1.10.3 [required by opam-core, opam-format]
+  - install seq                   base   [required by re]
+  - install sha                   1.15.1 [required by opam-core]
+  - install stdlib-shims          0.3.0  [required by ocamlgraph, sha]
+  - install topkg                 1.0.4  [required by jsonm]
+  - install uchar                 0.0.2  [required by jsonm]
+  - install uutf                  1.0.2  [required by jsonm]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.13.1
+Faking installation of ocaml-config.2
+Faking installation of ocaml.4.13.1
+Faking installation of dune.2.9.1
+Faking installation of cppo.1.6.8
+Faking installation of ocaml-options-vanilla.1
+Faking installation of ocamlbuild.0.14.0
+Faking installation of ocamlfind.1.9.1
+Faking installation of opam-file-format.2.1.3
+Faking installation of seq.base
+Faking installation of re.1.10.3
+Faking installation of stdlib-shims.0.3.0
+Faking installation of ocamlgraph.2.0.0
+Faking installation of sha.1.15.1
+Faking installation of topkg.1.0.4
+Faking installation of uchar.0.0.2
+Faking installation of uutf.1.0.2
+Faking installation of jsonm.1.0.1
+Done.
+### opam pin
+opam-core.2.2.0~alpha~dev     (no definition found)
+opam-format.2.2.0~alpha~dev   (no definition found)
+### : BROKEN -- should be empty
+### opam list
+# Packages matching: installed
+# Name                # Installed # Synopsis
+base-bigarray         base
+base-threads          base
+base-unix             base
+cppo                  1.6.8       Code preprocessor like cpp for OCaml
+dune                  2.9.1       Fast, portable, and opinionated build system
+jsonm                 1.0.1       Non-blocking streaming JSON codec for OCaml
+ocaml                 4.13.1      The OCaml compiler (virtual package)
+ocaml-base-compiler   4.13.1      Official release 4.13.1
+ocaml-config          2           OCaml Switch Configuration
+ocaml-options-vanilla 1           Ensure that OCaml is compiled with no special options enabled
+ocamlbuild            0.14.0      OCamlbuild is a build system with builtin rules to easily build most OCaml projects.
+ocamlfind             1.9.1       A library manager for OCaml
+ocamlgraph            2.0.0       A generic graph library for OCaml
+opam-file-format      2.1.3       Parser and printer for the opam file syntax
+re                    1.10.3      RE is a regular expression library for OCaml
+seq                   base        Compatibility package for OCaml's standard iterator type starting from 4.07.
+sha                   1.15.1      Binding to the SHA cryptographic functions
+stdlib-shims          0.3.0       Backport some of the new stdlib features to older compiler
+topkg                 1.0.4       The transitory OCaml software packager
+uchar                 0.0.2       Compatibility library for OCaml's Uchar module
+uutf                  1.0.2       Non-blocking streaming Unicode codec for OCaml
+### opam install foo/ opam-file-format.2.1.0
+opam-format is now pinned to file://${BASEDIR}/foo (version 2.2.0~alpha~dev)
+opam-core is now pinned to file://${BASEDIR}/foo (version 2.2.0~alpha~dev)
+[opam-core.2.2.0~alpha~dev] synchronised (file://${BASEDIR}/foo)
+[opam-format.2.2.0~alpha~dev] synchronised (file://${BASEDIR}/foo)
+The following actions will be faked:
+=== downgrade 1 package
+  - downgrade opam-file-format 2.1.3 to 2.1.0
+=== install 2 packages
+  - install   opam-core        2.2.0~alpha~dev (pinned)
+  - install   opam-format      2.2.0~alpha~dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of opam-core.2.2.0~alpha~dev
+Faking installation of opam-file-format.2.1.0
+Faking installation of opam-format.2.2.0~alpha~dev
+Done.
+### <pin:foo/opam-format-bis.opam>
+version: "2.2.0~alpha~dev"
+depends: [
+  "ocaml" {(>= "4.03.0" & os != "win32") | >= "4.06.0"}
+  "opam-core" {= version}
+  "opam-file-format" {>= "2.1.3"}
+  "re" {>= "1.9.0"}
+  "dune" {>= "2.0.0"}
+]
+### opam install foo/ --deps-only --show
+The following actions would be faked:
+=== recompile 1 package
+  - recompile opam-format      2.2.0~alpha~dev (pinned) [uses opam-file-format]
+=== upgrade 1 package
+  - upgrade   opam-file-format 2.1.0 to 2.1.3           [required by opam-format, opam-format-bis]
+### opam install foo/ --deps-only
+[opam-core.2.2.0~alpha~dev] synchronised (file://${BASEDIR}/foo)
+[opam-format.2.2.0~alpha~dev] synchronised (file://${BASEDIR}/foo)
+The following actions will be faked:
+=== recompile 1 package
+  - recompile opam-format      2.2.0~alpha~dev (pinned) [uses opam-file-format]
+=== upgrade 1 package
+  - upgrade   opam-file-format 2.1.0 to 2.1.3           [required by opam-format, opam-format-bis]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of opam-file-format.2.1.3
+Faking installation of opam-format.2.2.0~alpha~dev
+Done.
+### opam list
+[ERROR] No definition found for the following installed packages: { deps-of-opam-core.2.2.0~alpha~dev, deps-of-opam-format.2.2.0~alpha~dev }
+        This switch may need to be reinstalled
+# Packages matching: installed
+# Name                # Installed     # Synopsis
+base-bigarray         base
+base-threads          base
+base-unix             base
+cppo                  1.6.8           Code preprocessor like cpp for OCaml
+deps-of-opam-core     2.2.0~alpha~dev
+deps-of-opam-format   2.2.0~alpha~dev
+dune                  2.9.1           Fast, portable, and opinionated build system
+jsonm                 1.0.1           Non-blocking streaming JSON codec for OCaml
+ocaml                 4.13.1          The OCaml compiler (virtual package)
+ocaml-base-compiler   4.13.1          Official release 4.13.1
+ocaml-config          2               OCaml Switch Configuration
+ocaml-options-vanilla 1               Ensure that OCaml is compiled with no special options enabled
+ocamlbuild            0.14.0          OCamlbuild is a build system with builtin rules to easily build most OCaml projects.
+ocamlfind             1.9.1           A library manager for OCaml
+ocamlgraph            2.0.0           A generic graph library for OCaml
+opam-core             2.2.0~alpha~dev pinned to version 2.2.0~alpha~dev at file://${BASEDIR}/foo
+opam-file-format      2.1.3           Parser and printer for the opam file syntax
+opam-format           2.2.0~alpha~dev pinned to version 2.2.0~alpha~dev at file://${BASEDIR}/foo
+re                    1.10.3          RE is a regular expression library for OCaml
+seq                   base            Compatibility package for OCaml's standard iterator type starting from 4.07.
+sha                   1.15.1          Binding to the SHA cryptographic functions
+stdlib-shims          0.3.0           Backport some of the new stdlib features to older compiler
+topkg                 1.0.4           The transitory OCaml software packager
+uchar                 0.0.2           Compatibility library for OCaml's Uchar module
+uutf                  1.0.2           Non-blocking streaming Unicode codec for OCaml
+### opam pin
+[ERROR] No definition found for the following installed packages: { deps-of-opam-core.2.2.0~alpha~dev, deps-of-opam-format.2.2.0~alpha~dev }
+        This switch may need to be reinstalled
+opam-core.2.2.0~alpha~dev                                rsync  file://${BASEDIR}/foo
+opam-format.2.2.0~alpha~dev                              rsync  file://${BASEDIR}/foo
+opam-format-bis.2.2.0~alpha~dev   (no definition found)
