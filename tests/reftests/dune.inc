@@ -394,6 +394,26 @@
    (run ./run.exe %{bin:opam} %{dep:pin.test} %{read-lines:testing-env}))))
 
 (alias
+ (name reftest-pin.unix)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (diff pin.unix.test pin.unix.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Unix"))
+ (deps (alias reftest-pin.unix)))
+
+(rule
+ (targets pin.unix.out)
+ (deps root-N0REP0)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:pin.unix.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-remove)
  (action
   (diff remove.test remove.out)))
