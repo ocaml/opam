@@ -405,7 +405,7 @@ module Parse = struct
     in
     let rec get_args_rewr acc = function
       | [] -> List.rev acc, false, [], None
-      | "|" :: _ as rewr ->
+      | ("|"|">$") :: _ as rewr ->
         let rec get_rewr (unordered, acc) = function
           | "|" :: re :: "->" :: str :: r ->
             get_rewr (unordered, (posix_re re, Sed (get_str str)) :: acc) r
