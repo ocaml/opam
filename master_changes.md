@@ -65,6 +65,7 @@ users)
   * ◈ Add `--with-tools` option to install recommended development tools from opam file (as `with-test`/`with-doc`), and its environment variable `OPAMWITHTOOLS` [#5016 @rjbou]
     * Resolve `with-tools` for post messages too [#5160 @rjbou]
     * ◈ Rename --with-tools` to `--with-dev-setup` [#5214 @rjbou - fix #4959]
+  * Use the default criteria during reinstall/upgrade when requesting at least one non-installed package [#5228 @kit-ty-kate]
 
 ## Remove
   *

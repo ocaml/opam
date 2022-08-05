@@ -86,7 +86,6 @@ The following actions would be performed:
 === install 1 package
   - install   c 1
 ### :::::: Check that reinstalling a non-installed package is equivalent to installing it
-### :::::: TODO: This is currently broken
 ### <pkg:d.1>
 opam-version: "2.0"
 ### opam reinstall d --cudf=reinstall --show --yes
@@ -99,15 +98,10 @@ The following actions would be performed:
 === install 1 package
   - install d 1
 ### diff install-1.cudf reinstall-1.cudf
-2c2
-< # Criteria: -removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed
----
-> # Criteria: -changed,-count[avoid-version:,true],-count[version-lag:,false],-count[missing-depexts:,true]
 48d47
 < opam-query: 1
 # Return code 1 #
 ### :::::: Check again with one install and one non-installed
-### :::::: TODO: This is currently broken
 ### opam reinstall d a --cudf=reinstall --show --yes
 d is not installed. Install it? [y/n] y
 The following actions would be performed:
@@ -127,10 +121,6 @@ The following actions would be performed:
   - install   c 1
   - install   d 1
 ### diff install-1.cudf reinstall-1.cudf
-2c2
-< # Criteria: -removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed
----
-> # Criteria: -changed,-count[avoid-version:,true],-count[version-lag:,false],-count[missing-depexts:,true]
 20a21
 > reinstall: true
 49d49
