@@ -66,6 +66,7 @@ users)
     * Resolve `with-tools` for post messages too [#5160 @rjbou]
     * ◈ Rename --with-tools` to `--with-dev-setup` [#5214 @rjbou - fix #4959]
   * Use the default criteria during reinstall/upgrade when requesting at least one non-installed package [#5228 @kit-ty-kate]
+  * Show the reason for installing packages when using opam reinstall [#5229 @kit-ty-kate]
 
 ## Remove
   *

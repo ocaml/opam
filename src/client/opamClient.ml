@@ -1304,6 +1304,8 @@ let remove t ~autoremove ~force ?formula names =
 let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
   log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
 
+  let packages = OpamFormula.packages_of_atoms t.packages atoms in
+
   let atoms =
     if assume_built then filter_unpinned_locally t atoms (fun x -> x)
     else atoms
@@ -1347,7 +1349,7 @@ let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
   let t, solution =
     OpamSolution.resolve_and_apply ?ask t Reinstall
       ~reinstall:requested
-      ~requested
+      ~requested:packages
       ~assume_built
       request in
 
