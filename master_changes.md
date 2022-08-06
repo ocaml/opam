@@ -54,6 +54,7 @@ users)
   * [BUG] Prevent `.changes` files from being updated during dry-run [#5144 @na4zagin3 - fix #5132]
   * Log a summary of recorded `.changes` as a `ACTION` trace log to help debug #4419 [#5144 @na4zagin3]
   * ◈ Add `--with-tools` option to install recommended development tools from opam file (as `with-test`/`with-doc`), and its environment variable `OPAMWITHTOOLS` [#5016 @rjbou]
+    * Resolve `with-tools` for post messages too [#5160 @rjbou]
 
 ## Remove
   *
@@ -310,6 +311,7 @@ users)
   * Add test for opam file write with format preserved bug in #4936, fixed in #4941 [#4159 @rjbou]
   * Add test for switch upgrade from 2.0 root, with pinned compiler [#5176 @rjbou @kit-ty-kate]
   * Add switch import (for pinned packages) test [#5181 @rjbou]
+  * Add `--with-tools` test [#5160 @rjbou]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]

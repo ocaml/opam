@@ -38,6 +38,10 @@ let post_message ?(failed=false) st action =
       OpamVariable.Map.add (OpamVariable.of_string "failure")
         (Some (B failed)) local_variables
     in
+    let local_variables =
+      OpamVariable.Map.add (OpamVariable.of_string "with-tools")
+        (Some (B OpamStateConfig.(!r.with_tools))) local_variables
+    in
     let messages =
       let filter_env = OpamPackageVar.resolve ~opam ~local:local_variables st in
       (if OpamFile.OPAM.has_flag Pkgflag_Deprecated opam then

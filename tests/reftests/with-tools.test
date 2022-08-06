@@ -1,0 +1,58 @@
+N0REP0
+### <pkg:a.1>
+opam-version: "2.0"
+depends: [ "b" "tool" {with-tools} ]
+build: [ [ "touch" "one" ] [ "touch" "two" ] {with-tools} ]
+install: [ [ "cp" "one" "%{lib}%" ] [ "cp" "two" "%{lib}%" ] {with-tools} ]
+post-messages:
+[ "Thanks for installing the packages"
+  "and its tool dependencies too" {with-tools} ]
+### <pkg:b.1>
+opam-version: "2.0"
+### <pkg:tool.1>
+opam-version: "2.0"
+### OPAMYES=1
+### opam switch create tooling --empty
+### opam install a
+The following actions will be performed:
+=== install 2 packages
+  - install a 1
+  - install b 1 [required by a]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed b.1
+-> installed a.1
+Done.
+
+<><> a.1 installed successfully <><><><><><><><><><><><><><><><><><><><><><><><>
+=> Thanks for installing the packages
+### opam list a --column=installed-files
+# Packages matching: name-match(a) & (installed | available)
+# Installed files
+${BASEDIR}/OPAM/tooling/lib/one
+### opam remove a
+The following actions will be performed:
+=== remove 1 package
+  - remove a 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   a.1
+Done.
+### opam install a --with-tools
+The following actions will be performed:
+=== install 2 packages
+  - install a    1
+  - install tool 1 [required by a]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed tool.1
+-> installed a.1
+Done.
+
+<><> a.1 installed successfully <><><><><><><><><><><><><><><><><><><><><><><><>
+=> Thanks for installing the packages
+=> and its tool dependencies too
+### opam list a --column=installed-files
+# Packages matching: name-match(a) & (installed | available)
+# Installed files
+${BASEDIR}/OPAM/tooling/lib/one ${BASEDIR}/OPAM/tooling/lib/two
