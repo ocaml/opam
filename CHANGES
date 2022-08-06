@@ -37,13 +37,12 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 * Bump opam-file-format to 2.1.4 [#5117 @kit-ty-kate - fix #5116]
 * Fix some empty conflict explanations
   [#4982 @kit-ty-kate - partially fix #4373]
-* [BUG] Fix `make doc` with Dune 2.7 (unblocks `opam2web` build)
-  [#5030 @kit-ty-kate]
 * Port some tests from master [#4841 #4974 #4861 #4915 #4979 #5004 #5006 #5015
   #5024 #5025 #5031 #5131 #5176 @AltGr @dra27 @kit-ty-kate]
 * Update test engine to allow for additional tests [#4913 #4966 #4979 #5004
   #5009 #5024 #5097 @AltGr @kit-ty-kate @rjbou]
 * Update for git protocol deprecation on GitHub [#5097 @rjbou]
+* When building opam, do not fail if curl/wget is missing [#5223 @kit-ty-kate]
 
 2.1.2:
 * Fallback on dnf if yum does not exist on RHEL-based systems [#4825 @kit-ty-kate]
