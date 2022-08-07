@@ -532,6 +532,23 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:var-option.test} %{read-lines:testing-env}))))
 
+(alias
+ (name reftest-working-dir)
+ (action
+  (diff working-dir.test working-dir.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-working-dir)))
+
+(rule
+ (targets working-dir.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:working-dir.test} %{read-lines:testing-env}))))
+
 (rule
  (targets opam-repo-N0REP0)
  (action

@@ -29,6 +29,9 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 * [BUG] Handle external dependencies when updating switch state pin status (all
   pins), instead as a post pin action (only when called with `opam pin`
   [#5047 @rjbou - fix #5046]
+* [BUG] When reinstalling a package that has a dirty source, if uncommitted
+  changes are the same than the ones stored in opam's cache, opam consider that
+  it is up to date and nothing is updated [4879 @rjbou]
 * Stop Zypper from upgrading packages on updates on OpenSUSE
   [#4978 @kit-ty-kate]
 * Clearer error message if a command doesn't exist
