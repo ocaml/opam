@@ -740,7 +740,7 @@ let pattern_list_arg =
 
 let env_arg cli =
   OpamArg.mk_opt ~cli OpamArg.cli_original ["environment"]
-    "VAR=VALUE[;VAR=VALUE]"
+    "VAR=VALUE[,VAR=VALUE]"
     (Printf.sprintf
        "Use the given opam environment, in the form of a list of \
         comma-separated 'var=value' bindings, when resolving variables. This \
