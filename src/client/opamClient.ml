@@ -1008,10 +1008,16 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
                 (Atom (nv.name, Atom (Constraint (`Neq, FString vstring))) ::
                  if ignore_conflicts then [] else [ O.conflicts opam ])
             in
+            let url =
+              if OpamSwitchState.is_dev_package t nv then
+                Some (OpamFile.URL.create OpamUrl.{empty with backend = `git})
+              else None
+            in
             let dopam =
               O.create dnv |>
               O.with_depends depends |>
               O.with_conflicts conflicts |>
+              O.with_url_opt url |>
               (* Note: the following avoids selecting unavailable versions as
                  much possible, but it won't really work for packages that
                  already have the flag *)
