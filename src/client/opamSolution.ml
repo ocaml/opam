@@ -1133,7 +1133,7 @@ let get_depexts ?(recover=false) t packages =
 
 let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   let sys_packages =
-    if force_depext || OpamFile.Config.depext t.switch_global.config then
+    if force_depext || not OpamStateConfig.(!r.no_depexts) then
       get_depexts ~recover:force_depext t packages
     else
       OpamSysPkg.Set.empty
