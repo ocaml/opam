@@ -1117,7 +1117,18 @@ let get_depexts ?(recover=false) t packages =
     if recover then
       OpamSwitchState.depexts_status_of_packages t packages
     else
-      Lazy.force t.sys_packages
+      let base = Lazy.force t.sys_packages in
+      (* workaround: st.sys_packages is not always updated with added
+         packages *)
+      let more_pkgs =
+        OpamPackage.Set.filter (fun nv ->
+            (* dirty heuristic: recompute for all non-canonical packages *)
+            OpamPackage.Map.find_opt nv t.repos_package_index
+            <> OpamSwitchState.opam_opt t nv)
+          packages
+      in
+      OpamPackage.Map.union (fun _ x -> x) base
+        (OpamSwitchState.depexts_status_of_packages t more_pkgs)
   in
   let avail, nf =
     OpamPackage.Set.fold (fun pkg (avail,nf) ->
@@ -1282,13 +1293,28 @@ let apply ?ask t ~requested ?print_requested ?add_roots
       solution0
   in
   if OpamSolver.solution_is_empty solution then
-    (* The current state satisfies the request contraints *)
+    (* The current state satisfies the request contraints,
+       but there might be depexts missing *)
+    let virt_inst =
+      OpamPackage.Set.Op.((t.installed %% requested) ++ (OpamPackage.keys skip))
+    in
+    let t =
+      if OpamClientConfig.(!r.show) then
+        let _ = get_depexts t virt_inst in t
+        (* Prints the msg about additional depexts to install *)
+      else install_depexts t virt_inst
+    in
     t, Nothing_to_do
   else (
     (* Otherwise, compute the actions to perform *)
     let show_solution = ask <> Some false in
     let action_graph = OpamSolver.get_atomic_action_graph solution in
     let new_state = simulate_new_state t action_graph in
+    let new_state0 =
+      { new_state with installed =
+                         OpamPackage.Set.union new_state.installed
+                           (OpamPackage.keys skip) }
+    in
     OpamPackage.Set.iter
       (fun p ->
          try OpamFile.OPAM.print_errors (OpamSwitchState.opam new_state p)
@@ -1330,13 +1356,13 @@ let apply ?ask t ~requested ?print_requested ?add_roots
         solution0;
     );
     if OpamClientConfig.(!r.show) then
-      let _ = get_depexts t new_state.installed in
+      let _ = get_depexts t new_state0.installed in
       (* Prints the msg about additional depexts to install *)
       t, Aborted
     else if download_only || confirmation ?ask names solution then (
       let t =
-        install_depexts t @@ OpamPackage.Set.inter
-          new_state.installed (OpamSolver.all_packages solution)
+        install_depexts t  @@ OpamPackage.Set.inter
+          new_state0.installed (OpamSolver.all_packages solution0)
       in
       let requested =
         OpamPackage.packages_of_names new_state.installed names

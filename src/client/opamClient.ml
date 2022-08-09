@@ -1017,6 +1017,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
               O.create dnv |>
               O.with_depends depends |>
               O.with_conflicts conflicts |>
+              O.with_depexts (O.depexts opam) |>
               O.with_url_opt url |>
               (* Note: the following avoids selecting unavailable versions as
                  much possible, but it won't really work for packages that

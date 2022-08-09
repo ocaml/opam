@@ -288,18 +288,21 @@ let install_compiler
     else t
   in
   let t = { t with compiler_packages = base_comp } in
-  let solution =
+  let skip =
     if deps_only then
-      OpamSolver.filter_solution (fun nv ->
-          not (OpamPackage.Name.Set.mem nv.name add_names))
-        solution
-    else solution
+      let pkgs =
+        OpamPackage.packages_of_names (OpamSolver.new_packages solution)
+          add_names
+      in
+      OpamPackage.Set.fold (fun nv map -> OpamPackage.Map.add nv nv map)
+        pkgs OpamPackage.Map.empty
+    else OpamPackage.Map.empty
   in
   let t, result =
     OpamSolution.apply t
       ~ask:(OpamClientConfig.(!r.show) || ask)
       ~requested:(OpamPackage.packages_of_names t.packages roots)
-      ~add_roots:roots
+      ~add_roots:roots ~skip
       solution in
   OpamSolution.check_solution ~quiet:OpamClientConfig.(not !r.show) t
     (Success result);
@@ -335,13 +338,13 @@ let create
       let switch_config =
         OpamSwitchAction.gen_switch_config gt.root ?repos switch ~invariant
       in
-      let st = { st with switch_invariant = invariant } in
+      let st = { st with switch_invariant = invariant; switch_config } in
       let available_packages =
         lazy (OpamSwitchState.compute_available_packages gt switch switch_config
                 ~pinned:OpamPackage.Set.empty
                 ~opams:st.opams)
       in
-      gt, { st with switch; switch_config; available_packages }
+      gt, { st with switch; available_packages }
   in
   match post st with
   | ret, st ->
