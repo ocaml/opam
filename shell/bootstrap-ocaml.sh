@@ -7,7 +7,7 @@ if command -v curl > /dev/null; then
 elif command -v wget > /dev/null; then
   CURL=wget
 else
-  echo "[WARNING] This script requires curl or wget"
+  echo "[WARNING] This script may need curl or wget"
 fi
 BOOTSTRAP_DIR=${BOOTSTRAP_DIR:-bootstrap}
 BOOTSTRAP_ROOT=${BOOTSTRAP_ROOT:-..}
