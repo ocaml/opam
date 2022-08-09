@@ -29,6 +29,7 @@ module type VCS = sig
   val is_dirty: ?subpath:string -> dirname -> bool OpamProcess.job
   val modified_files: dirname -> string list OpamProcess.job
   val get_remote_url: ?hash:string -> dirname -> url option OpamProcess.job
+  val clean: dirname -> unit OpamProcess.job
 end
 
 let convert_path =
@@ -83,6 +84,7 @@ module Make (VCS: VCS) = struct
          Done (Not_available (None, OpamUrl.to_string url)))
     @@ fun () ->
     if VCS.exists dirname then
+      VCS.clean dirname @@+ fun () ->
       VCS.fetch ?cache_dir ?subpath dirname url @@+ fun () ->
       VCS.is_up_to_date dirname url @@+ function
       | true -> Done (Up_to_date None)

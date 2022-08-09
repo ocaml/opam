@@ -81,10 +81,14 @@ module VCS = struct
     OpamSystem.raise_on_process_error r;
     Done ()
 
-  let reset_tree repo_root _repo_url =
+  let clean repo_root =
     darcs repo_root [ "obliterate"; "--all"; "-t"; opam_local_tag ]
     @@> fun r ->
     OpamSystem.raise_on_process_error r;
+    Done ()
+
+  let reset_tree repo_root _repo_url =
+    clean repo_root @@+ fun () ->
     darcs repo_root [ "obliterate"; "--all"; "-p"; opam_reverse_commit ]
     @@> fun r ->
     (* returns 0 even if patch doesn't exist *)

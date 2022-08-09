@@ -112,7 +112,7 @@
 
 (rule
  (targets conflict-resto.out)
- (deps root-a5d7cdc0c914)
+ (deps root-a5d7cdc0)
  (action
   (with-stdout-to
    %{targets}
@@ -255,6 +255,26 @@
    (run ./run.exe %{bin:opam} %{dep:legacy-local.test} %{read-lines:testing-env}))))
 
 (alias
+ (name reftest-list.unix)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (diff list.unix.test list.unix.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Unix"))
+ (deps (alias reftest-list.unix)))
+
+(rule
+ (targets list.unix.out)
+ (deps root-f372039d)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:list.unix.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-opamroot-versions)
  (action
   (diff opamroot-versions.test opamroot-versions.out)))
@@ -282,7 +302,7 @@
 
 (rule
  (targets opamrt-big-upgrade.out)
- (deps root-7090735c9d)
+ (deps root-7090735c)
  (action
   (with-stdout-to
    %{targets}
@@ -372,6 +392,26 @@
   (with-stdout-to
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:pin.test} %{read-lines:testing-env}))))
+
+(alias
+ (name reftest-pin.unix)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (diff pin.unix.test pin.unix.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Unix"))
+ (deps (alias reftest-pin.unix)))
+
+(rule
+ (targets pin.unix.out)
+ (deps root-N0REP0)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:pin.unix.test} %{read-lines:testing-env}))))
 
 (alias
  (name reftest-remove)
@@ -492,6 +532,23 @@
    %{targets}
    (run ./run.exe %{bin:opam} %{dep:var-option.test} %{read-lines:testing-env}))))
 
+(alias
+ (name reftest-working-dir)
+ (action
+  (diff working-dir.test working-dir.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-working-dir)))
+
+(rule
+ (targets working-dir.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:working-dir.test} %{read-lines:testing-env}))))
+
 (rule
  (targets opam-repo-N0REP0)
  (action
@@ -530,44 +587,44 @@
            file://%{dep:opam-repo-009e00fa})))))
 
 (rule
- (targets opam-archive-7090735c9d.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/7090735c9d.tar.gz)))
+ (targets opam-archive-7090735c.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/7090735c.tar.gz)))
 
 (rule
-  (targets opam-repo-7090735c9d)
+  (targets opam-repo-7090735c)
   (action
    (progn
     (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-7090735c9d.tar.gz} --strip-components=1))))
+    (run tar -C %{targets} -xzf %{dep:opam-archive-7090735c.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-7090735c9d)
+  (targets root-7090735c)
   (action
    (progn
     (ignore-stdout
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
-           file://%{dep:opam-repo-7090735c9d})))))
+           file://%{dep:opam-repo-7090735c})))))
 
 (rule
- (targets opam-archive-a5d7cdc0c914.tar.gz)
- (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/a5d7cdc0c914.tar.gz)))
+ (targets opam-archive-a5d7cdc0.tar.gz)
+ (action (run wget --quiet -O %{targets} https://github.com/ocaml/opam-repository/archive/a5d7cdc0.tar.gz)))
 
 (rule
-  (targets opam-repo-a5d7cdc0c914)
+  (targets opam-repo-a5d7cdc0)
   (action
    (progn
     (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-a5d7cdc0c914.tar.gz} --strip-components=1))))
+    (run tar -C %{targets} -xzf %{dep:opam-archive-a5d7cdc0.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-a5d7cdc0c914)
+  (targets root-a5d7cdc0)
   (action
    (progn
     (ignore-stdout
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
-           file://%{dep:opam-repo-a5d7cdc0c914})))))
+           file://%{dep:opam-repo-a5d7cdc0})))))
 
 (rule
  (targets opam-archive-ad4dd344.tar.gz)
