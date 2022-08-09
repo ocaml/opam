@@ -42,7 +42,7 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 * Update test engine to allow for additional tests [#4913 #4966 #4979 #5004
   #5009 #5024 #5097 @AltGr @kit-ty-kate @rjbou]
 * Update for git protocol deprecation on GitHub [#5097 @rjbou]
-* When building opam, do not fail if curl/wget is missing [#5223 @kit-ty-kate]
+* When building opam, do not fail if curl/wget is missing [#5223 #5233 @kit-ty-kate]
 
 2.1.2:
 * Fallback on dnf if yum does not exist on RHEL-based systems [#4825 @kit-ty-kate]
