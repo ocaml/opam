@@ -1329,9 +1329,11 @@ let apply ?ask t ~requested ?print_requested ?add_roots
         ~skip
         solution0;
     );
-    if not OpamClientConfig.(!r.show) &&
-       (download_only || confirmation ?ask names solution)
-    then (
+    if OpamClientConfig.(!r.show) then
+      let _ = get_depexts t new_state.installed in
+      (* Prints the msg about additional depexts to install *)
+      t, Aborted
+    else if download_only || confirmation ?ask names solution then (
       let t =
         install_depexts t @@ OpamPackage.Set.inter
           new_state.installed (OpamSolver.all_packages solution)
