@@ -1112,7 +1112,8 @@ let print_depext_msg (avail, nf) =
 
 (* Gets depexts from the state, without checking again, unless [recover] is
    true. *)
-let get_depexts ?(recover=false) t packages =
+let get_depexts ?(force=false) ?(recover=false) t packages =
+  if not force && OpamStateConfig.(!r.no_depexts) then OpamSysPkg.Set.empty else
   let sys_packages =
     if recover then
       OpamSwitchState.depexts_status_of_packages t packages
@@ -1144,10 +1145,7 @@ let get_depexts ?(recover=false) t packages =
 
 let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   let sys_packages =
-    if force_depext || not OpamStateConfig.(!r.no_depexts) then
-      get_depexts ~recover:force_depext t packages
-    else
-      OpamSysPkg.Set.empty
+    get_depexts ~force:force_depext ~recover:force_depext t packages
   in
   let env = t.switch_global.global_variables in
   let map_sysmap f t =
