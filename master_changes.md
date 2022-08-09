@@ -206,7 +206,7 @@ users)
   * Add a 'test' target [#5129 @kit-ty-kate @mehdid - partially fixes #5058]
   * Add `with-tools` handling in selection process [#5016 @rjbou]
   * Bump cudf to 0.10 [#5195 @kit-ty-kate]
-  * shell/bootstrap-ocaml.sh: do not fail if curl/wget is missing [#5223 @kit-ty-kate]
+  * shell/bootstrap-ocaml.sh: do not fail if curl/wget is missing [#5223 #5233 @kit-ty-kate]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
