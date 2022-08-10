@@ -485,23 +485,25 @@ let rec sort comp f=
 let atoms t =
   fold_right (fun accu x -> x::accu) [] (to_atom_formula t)
 
-let to_cnf t =
-  let atf = to_atom_formula t in
+let formula_to_cnf t =
   let atoms = fold_right (fun acc a -> a::acc) [] in
-  let conj = rev_ands_to_list atf in
+  let conj = rev_ands_to_list t in
   if List.for_all is_disjunction conj then
     List.rev_map atoms conj (* this gives a nice speedup *)
   else
-    List.rev_map atoms @@ rev_ands_to_list @@ cnf_of_formula atf
+    List.rev_map atoms @@ rev_ands_to_list @@ cnf_of_formula t
 
-let to_dnf t =
-  let atf = to_atom_formula t in
+let to_cnf t = formula_to_cnf @@ to_atom_formula t
+
+let formula_to_dnf t =
+  let disj = rev_ors_to_list t in
   let atoms = fold_right (fun acc a -> a::acc) [] in
-  let disj = rev_ors_to_list atf in
   if List.for_all is_conjunction disj then
     List.rev_map atoms disj
   else
-    List.rev_map atoms @@ rev_ors_to_list @@ dnf_of_formula atf
+    List.rev_map atoms @@ rev_ors_to_list @@ dnf_of_formula t
+
+let to_dnf t = formula_to_dnf @@ to_atom_formula t
 
 let to_conjunction t =
   if is_conjunction t then atoms t
