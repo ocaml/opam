@@ -35,8 +35,14 @@
 
 open OpamTypes
 
-(** Pretty-print *)
-val to_string: filter -> string
+(** Pretty-print
+    [custom ?context ?paren filter] is a function that permit to customise part
+    of filter pretty-printing. *)
+val to_string:
+  ?custom:(context:[> `And | `Defined | `Not | `Or | `Relop ] ->
+           paren:(?cond:bool -> string -> string) ->
+           filter -> string option) ->
+  filter -> string
 
 (** Folds on the tree of a filter *)
 val fold_down_left: ('a -> filter -> 'a) -> 'a -> filter -> 'a

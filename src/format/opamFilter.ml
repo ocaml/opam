@@ -24,40 +24,50 @@ type env = full_variable -> variable_contents option
 
 type fident = name option list * variable * (string * string) option
 
-let to_string t =
+let to_string ?custom t =
+  let custom ~context ~paren t =
+    match custom with
+    | None -> None
+    | Some f -> f ~context ~paren t
+  in
   let rec aux ?(context=`Or) t =
     let paren ?(cond=false) f =
       if cond || OpamFormatConfig.(!r.all_parens)
       then Printf.sprintf "(%s)" f else f
     in
-    match t with
-    | FBool b    -> string_of_bool b
-    | FString s  -> Printf.sprintf "%S" s
-    | FIdent (pkgs,var,converter) ->
-      OpamStd.List.concat_map "+"
-        (function None -> "_" | Some p -> OpamPackage.Name.to_string p) pkgs ^
-      (if pkgs <> [] then ":" else "") ^
-      OpamVariable.to_string var ^
-      (match converter with
-       | Some (it,ifu) -> "?"^it^":"^ifu
-       | None -> "")
-    | FOp(e,s,f) ->
-      paren ~cond:(context <> `Or && context <> `And)
-        (Printf.sprintf "%s %s %s"
-           (aux ~context:`Relop e) (OpamPrinter.relop_kind s) (aux ~context:`Relop f))
-    | FAnd (e,f) ->
-      paren ~cond:(context <> `Or && context <> `And)
-        (Printf.sprintf "%s & %s" (aux ~context:`And e) (aux ~context:`And f))
-    | FOr (e,f)  ->
-      paren ~cond:(context <> `Or)
-        (Printf.sprintf "%s | %s" (aux e) (aux f))
-    | FNot e     ->
-      paren ~cond:(context = `Relop)
-        (Printf.sprintf "!%s" (aux ~context:`Not e))
-    | FDefined e ->
-      paren ~cond:(context = `Relop)
-        (Printf.sprintf "?%s" (aux ~context:`Defined e))
-    | FUndef f -> Printf.sprintf "#undefined(%s)" (aux f)
+    match custom ~context ~paren t with
+    | Some str -> str
+    | None ->
+      match t with
+      | FBool b    -> string_of_bool b
+      | FString s  -> Printf.sprintf "%S" s
+      | FIdent (pkgs,var,converter) ->
+        OpamStd.List.concat_map "+"
+          (function None -> "_" | Some p -> OpamPackage.Name.to_string p) pkgs
+        ^ (if pkgs <> [] then ":" else "")
+        ^ OpamVariable.to_string var
+        ^ (match converter with
+            | Some (it,ifu) -> "?"^it^":"^ifu
+            | None -> "")
+      | FOp(e,s,f) ->
+        paren ~cond:(context <> `Or && context <> `And)
+          (Printf.sprintf "%s %s %s"
+             (aux ~context:`Relop e)
+             (OpamPrinter.relop_kind s)
+             (aux ~context:`Relop f))
+      | FAnd (e,f) ->
+        paren ~cond:(context <> `Or && context <> `And)
+          (Printf.sprintf "%s & %s" (aux ~context:`And e) (aux ~context:`And f))
+      | FOr (e,f)  ->
+        paren ~cond:(context <> `Or)
+          (Printf.sprintf "%s | %s" (aux e) (aux f))
+      | FNot e     ->
+        paren ~cond:(context = `Relop)
+          (Printf.sprintf "!%s" (aux ~context:`Not e))
+      | FDefined e ->
+        paren ~cond:(context = `Relop)
+          (Printf.sprintf "?%s" (aux ~context:`Defined e))
+      | FUndef f -> Printf.sprintf "#undefined(%s)" (aux f)
   in
   aux t
 
