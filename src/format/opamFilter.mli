@@ -198,8 +198,7 @@ val deps_var_env:
 (** Like [OpamFormula.simplify_version_formula], but on filtered formulas
     (filters are kept unchanged, but put in front) *)
 val simplify_extended_version_formula:
-  filter filter_or_constraint OpamFormula.formula ->
-  filter filter_or_constraint OpamFormula.formula option
+  condition -> condition option
 
 val atomise_extended:
   filtered_formula ->
@@ -209,6 +208,5 @@ val atomise_extended:
 (* Uses [OpamFormula.sort] to sort on names, and sort version formulas with
    [simplify_extended_version_formula]. *)
 val sort_filtered_formula:
-  ((name * filter filter_or_constraint OpamFormula.formula)
-  -> (name * filter filter_or_constraint OpamFormula.formula) -> int)
-  -> filtered_formula -> filtered_formula
+  ((name * condition) -> (name * condition) -> int) -> filtered_formula ->
+  filtered_formula
