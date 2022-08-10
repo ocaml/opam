@@ -210,6 +210,9 @@ module List : sig
       @raise Not_found if all of them yield [None] *)
   val find_map: ('a -> 'b option) -> 'a list -> 'b
 
+  (** Like [find_map], but returns [Some _] if succeeded and [None] if failed. *)
+  val find_map_opt: ('a -> 'b option) -> 'a list -> 'b option
+
   (** Insert a value in an ordered list *)
   val insert: ('a -> 'a -> int) -> 'a -> 'a list -> 'a list
 
@@ -231,6 +234,8 @@ module List : sig
       bound. *)
   val update_assoc: 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
 
+  (** Like [List.fold_left], but also performs [List.map] at the same time *)
+  val fold_left_map: ('s -> 'a -> ('s * 'b)) -> 's -> 'a list -> 's * 'b list
 end
 
 module String : sig
