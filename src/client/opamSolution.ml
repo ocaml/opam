@@ -1039,6 +1039,9 @@ let simulate_new_state state t =
       t state.installed in
   { state with installed }
 
+let dry_run state solution =
+  simulate_new_state state (OpamSolver.get_atomic_action_graph solution)
+
 (* Ask confirmation whenever the packages to modify are not exactly
    the packages in the user request *)
 let confirmation ?ask requested solution =
