@@ -1,0 +1,390 @@
+N0REP0
+### <pkg:a.1>
+opam-version: "2.0"
+### <pkg:b.1>
+opam-version: "2.0"
+depends: "a"
+### <pkg:c.1>
+opam-version: "2.0"
+depends: "b"
+### <pkg:d.1>
+opam-version: "2.0"
+### OPAMYES=1
+### # should fail with a no switch error
+### opam tree a
+[ERROR] No switch is currently set. Please use 'opam switch' to set or install a switch
+# Return code 50 #
+### opam switch create tree --empty
+### # should fail with a no package installed error
+### opam tree
+[ERROR] No package is installed
+# Return code 5 #
+### opam tree a
+The following actions are simulated:
+=== install 1 package
+  - install a 1
+
+a.1
+### opam install c
+The following actions will be performed:
+=== install 3 packages
+  - install a 1 [required by b]
+  - install b 1 [required by c]
+  - install c 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed a.1
+-> installed b.1
+-> installed c.1
+Done.
+### opam tree
+c.1
+'-- b.1
+    '-- a.1
+### opam tree a
+a.1
+### opam tree a d
+The following actions are simulated:
+=== install 1 package
+  - install d 1
+
+a.1
+
+d.1
+### # should fail with a no package to display error
+### opam tree --rev-deps d
+[WARNING] Not installed package d, skipping
+[ERROR] No package to display
+# Return code 5 #
+### # should fail with an installation error
+### opam tree nonsense
+[ERROR] Could not simulate installing the specified package(s) to this switch:
+  * Missing dependency:
+    - nonsense
+    unknown package
+
+# Return code 20 #
+### opam tree b
+b.1
+'-- a.1
+### opam tree c
+c.1
+'-- b.1
+    '-- a.1
+### <pkg:c-build.1>
+opam-version: "2.0"
+### <pkg:c.1>
+opam-version: "2.0"
+depends: [ "b" "a" "c-build" {build} ]
+### opam tree c
+c.1
+|-- a.1
+'-- b.1
+    '-- a.1 [*]
+### <pkg:e.1>
+opam-version: "2.0"
+depends: [ "a" "d" {<"2" & with-test}  "b" {post} ]
+### opam install e --with-test
+The following actions will be performed:
+=== install 2 packages
+  - install d 1 [required by e]
+  - install e 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed d.1
+-> installed e.1
+Done.
+### opam tree
+c.1
+|-- a.1
+'-- b.1
+    '-- a.1 [*]
+
+d.1
+
+e.1
+'-- a.1 [*]
+### opam tree e
+e.1
+'-- a.1
+### opam tree e --with-test
+e.1
+|-- a.1
+'-- d.1 (< 2 & with-test)
+### opam tree e --post
+e.1
+|-- a.1
+'-- b.1 (post)
+    '-- a.1 [*]
+### <pkg:f.1>
+opam-version: "2.0"
+depends: [ "b" {<"2"} ]
+### <pkg:g.1>
+opam-version: "2.0"
+depends: [ "b" {>="1" & <"3"} ]
+### <pkg:h.1>
+opam-version: "2.0"
+depends: [ "f" "g" ]
+### opam install h
+The following actions will be performed:
+=== install 3 packages
+  - install f 1 [required by h]
+  - install g 1 [required by h]
+  - install h 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed f.1
+-> installed g.1
+-> installed h.1
+Done.
+### opam tree h
+h.1
+|-- f.1
+|   '-- b.1 (< 2)
+|       '-- a.1
+'-- g.1
+    '-- b.1 (>= 1 & < 3) [*]
+### opam tree --rev-deps --leads-to h
+a.1
+'-- b.1
+    |-- (< 2) f.1
+    |   '-- h.1
+    '-- (>= 1 & < 3) g.1
+        '-- h.1 [*]
+### opam tree --rev-deps b
+b.1
+|-- c.1
+|-- (< 2) f.1
+|   '-- h.1
+'-- (>= 1 & < 3) g.1
+    '-- h.1 [*]
+### opam tree --leads-to b
+c.1
+'-- b.1
+
+h.1
+|-- f.1
+|   '-- b.1 (< 2) [*]
+'-- g.1
+    '-- b.1 (>= 1 & < 3) [*]
+### <pkg:i.1>
+opam-version: "2.0"
+depends: [
+  "b" {
+    <"3"
+    & (!with-test | <  "2")
+    & (!with-doc  | >= "1")
+  }
+]
+### opam install i
+The following actions will be performed:
+=== install 1 package
+  - install i 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i.1
+Done.
+### opam tree i
+i.1
+'-- b.1 (< 3)
+    '-- a.1
+### opam tree i --with-test
+i.1
+'-- b.1 (< 3 & (!with-test | < 2))
+    '-- a.1
+### opam tree i --with-doc
+i.1
+'-- b.1 (< 3 & (!with-doc | >= 1))
+    '-- a.1
+### opam tree i --with-test --with-doc
+i.1
+'-- b.1 (< 3 & (!with-test | < 2) & (!with-doc | >= 1))
+    '-- a.1
+### opam tree i --no-constraint
+i.1
+'-- b.1
+    '-- a.1
+### <pkg:j.1>
+opam-version: "2.0"
+depends: [ "a" "k" {with-test} ]
+### <pkg:k.1>
+opam-version: "2.0"
+### opam install j
+The following actions will be performed:
+=== install 1 package
+  - install j 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed j.1
+Done.
+### opam tree j
+j.1
+'-- a.1
+### opam tree
+c.1
+|-- a.1
+'-- b.1
+    '-- a.1 [*]
+
+d.1
+
+e.1
+'-- a.1 [*]
+
+h.1
+|-- f.1
+|   '-- b.1 (< 2) [*]
+'-- g.1
+    '-- b.1 (>= 1 & < 3) [*]
+
+i.1
+'-- b.1 (< 3) [*]
+
+j.1
+'-- a.1 [*]
+### opam switch create void --empty
+### opam tree f h
+The following actions are simulated:
+=== install 5 packages
+  - install a 1 [required by b]
+  - install b 1 [required by f]
+  - install f 1
+  - install g 1 [required by h]
+  - install h 1
+
+f.1
+'-- b.1 (< 2)
+    '-- a.1
+
+h.1
+|-- f.1 [*]
+'-- g.1
+    '-- b.1 (>= 1 & < 3) [*]
+### opam tree j --with-test
+The following actions are simulated:
+=== install 2 packages
+  - install a 1 [required by j]
+  - install j 1
+
+j.1
+'-- a.1
+### opam tree e
+The following actions are simulated:
+=== install 3 packages
+  - install a 1 [required by e]
+  - install b 1
+  - install e 1
+
+e.1
+'-- a.1
+### opam tree --leads-to a
+[WARNING] Not installed package a, skipping
+[ERROR] No package to display
+# Return code 5 #
+### opam tree --no-switch | '…' -> '...' | '`' -> "'"
+opam: --no-switch can't be used without specifying a name
+Usage: opam tree [OPTION]... [PACKAGES]...
+Try 'opam tree --help' or 'opam --help' for more information.
+# Return code 2 #
+### opam tree f h --no-switch
+The following actions are simulated:
+=== install 5 packages
+  - install a 1 [required by b]
+  - install b 1 [required by f]
+  - install f 1
+  - install g 1 [required by h]
+  - install h 1
+
+f.1
+'-- b.1 (< 2)
+    '-- a.1
+
+h.1
+|-- f.1 [*]
+'-- g.1
+    '-- b.1 (>= 1 & < 3) [*]
+### opam tree a b c d e f g h i j k --no-switch
+The following actions are simulated:
+=== install 12 packages
+  - install a       1
+  - install b       1
+  - install c       1
+  - install c-build 1 [required by c]
+  - install d       1
+  - install e       1
+  - install f       1
+  - install g       1
+  - install h       1
+  - install i       1
+  - install j       1
+  - install k       1
+
+a.1
+
+b.1
+'-- a.1 [*]
+
+c.1
+|-- a.1 [*]
+|-- b.1 [*]
+'-- c-build.1 (build)
+
+d.1
+
+e.1
+'-- a.1 [*]
+
+f.1
+'-- b.1 (< 2) [*]
+
+g.1
+'-- b.1 (>= 1 & < 3) [*]
+
+h.1
+|-- f.1 [*]
+'-- g.1 [*]
+
+i.1
+'-- b.1 (< 3) [*]
+
+j.1
+'-- a.1 [*]
+
+k.1
+### <pkg:j.1>
+opam-version: "2.0"
+depends: "a" {  os = "inexistant"}
+### opam install a
+The following actions will be performed:
+=== install 1 package
+  - install a 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed a.1
+Done.
+### opam tree j --no-switch
+The following actions are simulated:
+=== install 1 package
+  - install j 1
+
+j.1
+### <pkg:h.1>
+opam-version: "2.0"
+flags: compiler
+conflicts: "a"
+### opam switch create h
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["h"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed h.1
+Done.
+### opam tree e
+[ERROR] Could not simulate installing the specified package(s) to this switch:
+  * Incompatible packages:
+    - (invariant) -> h
+    - e -> a
+    You can temporarily relax the switch invariant with `--update-invariant'
+
+# Return code 20 #
