@@ -148,3 +148,27 @@ val read: ('a, unit, string, string option) format4 -> 'a
 val print_table:
   ?cut:[`Wrap of string | `Truncate | `None] -> out_channel -> sep:string ->
   string list list -> unit
+
+(** Tree printing *)
+module Tree : sig
+  type 'elt t
+
+  (** Creates a tree node. *)
+  val create: ?children:'a t list -> 'a -> 'a t
+
+  (** The symbols to be used in the tree printer. *)
+  type symbols = {
+    vert: string; (** | *)
+    hor:  string; (** - *)
+    tee:  string; (** |- *)
+    hook: string; (** '- *)
+  }
+
+  (** Returns UTF8 or ASCII tree symbols depending on [utf8 ()]. *)
+  val get_default_symbols: unit -> symbols
+
+  (** Prints the given tree as a Unicode/ASCII art.
+      @param printer may return a multi-line string, but should not return an
+      empty string. *)
+  val print: ?symbols:symbols -> printer:('a -> string) -> 'a t -> unit
+end

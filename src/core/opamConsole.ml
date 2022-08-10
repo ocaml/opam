@@ -84,6 +84,7 @@ module Symbols = struct
   let box_drawings_light_vertical = Uchar.of_int 0x2502
   let box_drawings_light_up_and_right = Uchar.of_int 0x2514
   let box_drawings_light_right = Uchar.of_int 0x2576
+  let box_drawings_light_vertical_and_right = Uchar.of_int 0x251C
   let circled_division_slash = Uchar.of_int 0x2298
   let asterisk_operator = Uchar.of_int 0x2217
   let north_east_arrow = Uchar.of_int 0x2197
@@ -1020,6 +1021,94 @@ let menu ?default ?noninteractive ?unsafe_yes ?yes ~no ~options fmt =
       in
       menu default
     ) fmt
+
+
+(** Tree printing *)
+module Tree = struct
+
+  type 'elt t = {
+    value: 'elt;
+    children: 'elt t list
+  }
+
+  let create ?(children=[]) value = { value; children }
+
+  type symbols = {
+    vert: string; (** |  *)
+    hor:  string; (** -- *)
+    tee:  string; (** |- *)
+    hook: string; (** '- *)
+  }
+
+  let get_default_symbols () =
+    let vert = utf8_symbol Symbols.box_drawings_light_vertical "|" in
+    let hor  = utf8_symbol Symbols.box_drawings_light_horizontal "-" in
+    let tee  = utf8_symbol Symbols.box_drawings_light_vertical_and_right "|-" in
+    let hook = utf8_symbol Symbols.box_drawings_light_up_and_right "'-" in
+    { vert; hor; tee; hook }
+
+  let repeat count s =
+    let rec aux count acc =
+      if count < 1 then acc else aux (count -1) (acc ^ s)
+    in
+    aux count ""
+  let spaces count = String.init count (fun _ -> ' ')
+  let utf8_length s = Uutf.String.fold_utf_8 (fun state _ _ -> state+1) 0 s
+
+  let to_parts { vert; hor; tee; hook } =
+    let indent =
+      vert ^ spaces (4 - utf8_length vert)
+    in
+    let child =
+      let len = utf8_length tee in
+      tee ^ repeat (3 - len) hor ^ " "
+    in
+    let child_end =
+      let len = utf8_length hook in
+      hook ^ repeat (3 - len) hor ^ " "
+    in
+    (indent, child, child_end)
+
+  let print ?symbols ~printer { value; children } =
+    let symbols =
+      match symbols with
+      | Some x -> x
+      | None -> get_default_symbols ()
+    in
+    let indent, child, child_end = to_parts symbols in
+    let blank = spaces 4 in
+    let buff = Buffer.create 512 in
+    let rec go indents (is_end: bool) { value; children } =
+      let new_indents () =
+        if is_end then indents ^ blank
+        else indents ^ indent
+      in
+      match OpamStd.String.split (printer value) '\n' with
+      | [] -> go_children (new_indents ()) children
+      | first :: rest ->
+        Buffer.add_string buff indents;
+        Buffer.add_string buff (if is_end then child_end else child);
+        Buffer.add_string buff first;
+        Buffer.add_char buff '\n';
+        let indents = new_indents () in
+        List.iter (fun line ->
+            Buffer.add_string buff indents;
+            Buffer.add_string buff line;
+            Buffer.add_char buff '\n';
+          ) rest;
+        go_children indents children
+    and go_children indents children =
+      let child_end = List.length children - 1 in
+      List.iteri (fun i child ->
+          go indents (OpamCompat.Int.equal i child_end) child)
+        children
+    in
+    Buffer.add_string buff (printer value);
+    Buffer.add_char buff '\n';
+    go_children "" children;
+    msg "%s" (Buffer.contents buff)
+
+end
 
 (* This allows OpamStd.Config.env to display warning messages *)
 let () =
