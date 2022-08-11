@@ -158,6 +158,7 @@ users)
   * Stop zypper from upgrading packages on updates on OpenSUSE [#4978 @kit-ty-kate]
   * Increase verbose logging of command to 4 [#5151 @rjbou]
   * [BUG] Avoid to loop eternally when `depext-runs-installs` is false in a script [#5156 @rjbou]
+  * Improve the error message when neither MacPorts or Homebrew could be detected on macOS [#5240 @kit-ty-kate]
 
 ## Format upgrade
   * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
