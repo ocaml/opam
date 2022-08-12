@@ -21,12 +21,12 @@ if test "$(uname -s)" != Darwin -o "$(uname -m)" != arm64; then
   exit 1
 fi
 
+DIR=$(dirname $0)
+cd "$DIR"
+
 LC_ALL=C
 CWD=$(pwd)
 JOBS=$(sysctl -n hw.ncpu)
-
-DIR=$(dirname $0)
-cd "$DIR"
 SSH="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 
 OUTDIR="out/$TAG"
