@@ -27,6 +27,7 @@ JOBS=$(sysctl -n hw.ncpu)
 
 DIR=$(dirname $0)
 cd "$DIR"
+SSH="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 
 OUTDIR="out/$TAG"
 mkdir -p "$OUTDIR"
@@ -38,14 +39,14 @@ qemu_build() {
   local make=$4
   local arch=$5
 
-  if ! ssh -p "${port}" root@localhost true; then
+  if ! ${SSH} -p "${port}" root@localhost true; then
       qemu-img convert -O raw "./qemu-base-images/${image}.qcow2" "./qemu-base-images/${image}.raw"
       "qemu-system-${arch}" -drive "file=./qemu-base-images/${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 2G -smp "${JOBS}" &
       sleep 60
   fi
-  ssh -p "${port}" root@localhost "${install}"
+  ${SSH} -p "${port}" root@localhost "${install}"
   make GH_USER="${GH_USER}" TAG="$TAG" JOBS="${JOBS}" qemu QEMU_PORT="${port}" REMOTE_MAKE="${make}" REMOTE_DIR=opam-release-$TAG
-  ssh -p "${port}" root@localhost "shutdown -p now"
+  ${SSH} -p "${port}" root@localhost "shutdown -p now"
 }
 
 make GH_USER="${GH_USER}" TAG="$TAG" GIT_URL="https://github.com/${GH_USER}/opam.git" "${OUTDIR}/opam-full-$TAG.tar.gz"

@@ -134,19 +134,21 @@ distclean: clean
 
 REMOTE_DIR = /tmp/opam-release
 REMOTE_MAKE = make
+SSH = ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
+SCP = scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
 remote: $(OUTDIR)/opam-full-$(VERSION).tar.gz
-	ssh "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/${OUTDIR}"
-	scp Makefile "$(REMOTE):$(REMOTE_DIR)/"
-	scp "$^" "$(REMOTE):$(REMOTE_DIR)/$^"
-	ssh "$(REMOTE)" 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) -j$(JOBS) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
-	scp "$(REMOTE):$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
+	$(SSH) "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/${OUTDIR}"
+	$(SCP) Makefile "$(REMOTE):$(REMOTE_DIR)/"
+	$(SCP) "$^" "$(REMOTE):$(REMOTE_DIR)/$^"
+	$(SSH) "$(REMOTE)" 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
+	$(SCP) "$(REMOTE):$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
 
 qemu: $(OUTDIR)/opam-full-$(VERSION).tar.gz
-	ssh -p "$(QEMU_PORT)" root@localhost "mkdir -p $(REMOTE_DIR)/${OUTDIR}"
-	scp -P "$(QEMU_PORT)" Makefile "root@localhost:$(REMOTE_DIR)/"
-	scp -P "$(QEMU_PORT)" "$^" "root@localhost:$(REMOTE_DIR)/$^"
-	ssh -p "$(QEMU_PORT)" root@localhost 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
-	scp -P "$(QEMU_PORT)" "root@localhost:$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
+	$(SSH) -p "$(QEMU_PORT)" root@localhost "mkdir -p $(REMOTE_DIR)/${OUTDIR}"
+	$(SCP) -P "$(QEMU_PORT)" Makefile "root@localhost:$(REMOTE_DIR)/"
+	$(SCP) -P "$(QEMU_PORT)" "$^" "root@localhost:$(REMOTE_DIR)/$^"
+	$(SSH) -p "$(QEMU_PORT)" root@localhost 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host JOBS=$(JOBS) TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
+	$(SCP) -P "$(QEMU_PORT)" "root@localhost:$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
 
 macos-local: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	LOCAL_RELEASE_DIR=$(shell mktemp -d); \
