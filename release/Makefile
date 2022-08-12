@@ -1,11 +1,7 @@
-GH_USER = ocaml
 TAG = master
 VERSION = $(shell git describe $(TAG))
 OPAM_VERSION = $(subst -,~,$(VERSION))
 GIT_URL = ..
-
-# TODO: For some reason Draft Releases do not have the $(VERSION) after download/ and instead have something like "untagged-<git-commit>"
-FULL_ARCHIVE_URL = https://github.com/$(GH_USER)/opam/releases/download/$(VERSION)/opam-full-$(VERSION).tar.gz
 
 OCAMLV = 4.13.1
 # currently hardcoded in Dockerfile.in
@@ -25,16 +21,14 @@ arm64-linux: $(OUTDIR)/opam-$(VERSION)-arm64-linux
 
 $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	mkdir -p "$(OUTDIR)"
-	cd "$(OUTDIR)" && curl -OfL $(FULL_ARCHIVE_URL) || { \
-	  git clone $(GIT_URL) -b $(TAG) --depth 1 opam-full-$(VERSION); \
-	  sed 's/^AC_INIT(opam,.*)/AC_INIT(opam,$(OPAM_VERSION))/' opam-full-$(VERSION)/configure.ac > \
-	    opam-full-$(VERSION)/configure.ac.tmp; \
-	  mv opam-full-$(VERSION)/configure.ac.tmp \
-	    opam-full-$(VERSION)/configure.ac; \
-	  $(MAKE) -C opam-full-$(VERSION) OCAML=$(call pathsearch,ocaml) configure download-ext; \
-	  tar cz -f $(notdir $@) --exclude .git/ opam-full-$(VERSION); \
-	  rm -rf opam-full-$(VERSION); \
-	}
+	git clone $(GIT_URL) -b $(TAG) "$(OUTDIR)/opam-full-$(VERSION)"
+	sed 's/^AC_INIT(opam,.*)/AC_INIT(opam,$(OPAM_VERSION))/' "$(OUTDIR)/opam-full-$(VERSION)/configure.ac" > \
+	  "$(OUTDIR)/opam-full-$(VERSION)/configure.ac.tmp"
+	mv "$(OUTDIR)/opam-full-$(VERSION)/configure.ac.tmp" \
+	  "$(OUTDIR)/opam-full-$(VERSION)/configure.ac"
+	$(MAKE) -C "$(OUTDIR)/opam-full-$(VERSION)" OCAML=$(call pathsearch,ocaml) configure download-ext
+	cd "$(OUTDIR)" && tar cz -f $(notdir $@) --exclude .git/ opam-full-$(VERSION)
+	rm -rf "$(OUTDIR)/opam-full-$(VERSION)"
 
 build/Dockerfile.x86_64-linux: Dockerfile.in
 	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/x86_64-v3.13/g' -e 's/%CONF%//g' $^ >$@
@@ -93,7 +87,7 @@ build/$(HOST).env:
 	cd build/$(HOST) && tar xzf ocaml-$(OCAMLV).tar.gz
 	cd build/$(HOST)/ocaml-$(OCAMLV) && \
 	  ./configure --prefix "$(shell pwd)/build/$(HOST)" && \
-	  $(MAKE) -j$(MACOS_JOBS) && \
+	  $(MAKE) -j$(JOBS) && \
 	  $(MAKE) install
 	rm -rf build/$(HOST)/ocaml-$(OCAMLV) build/$(HOST)/ocaml-$(OCAMLV).tar.gz
 	touch $@
@@ -154,5 +148,5 @@ macos-local: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	LOCAL_RELEASE_DIR=$(shell mktemp -d); \
           mkdir -p "$${LOCAL_RELEASE_DIR}/${OUTDIR}" && \
           cp Makefile "$^" "$${LOCAL_RELEASE_DIR}" && \
-          cd "$${LOCAL_RELEASE_DIR}" && ulimit -s 8192 && arch -arch $(MACOS_ARCH) make host MACOS_JOBS=$(JOBS) TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV) && \
+          cd "$${LOCAL_RELEASE_DIR}" && ulimit -s 8192 && arch -arch $(MACOS_ARCH) make host JOBS=$(JOBS) TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV) && \
           cp $${LOCAL_RELEASE_DIR}/$(OUTDIR)/opam-$(VERSION)* "$(GIT_URL)/release/$(OUTDIR)/"
