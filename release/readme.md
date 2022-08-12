@@ -13,25 +13,10 @@
 * tag the release (git tag -am 2.2.0 2.2.0; git push origin 2.2.0)
 * /!\ Once the tag pushed, it can be updated [different commit] only in case of severe issue
 * create a release (or prerelease if intermediate release) draft on github based on your tag (https://github.com/ocaml/opam/releases/new)
-* Install the github-unix package from opam (needed to get git-upload-release)
-* Create a new token at https://github.com/settings/tokens with the following rights: repo, write:packages, read:user, user:email
-* Create a new file at ~/.github/jar/infra with:
-```
-{
-  "scopes":[],
-  "token":"ghp_XXX",
-  "app":{"name":"infra","url":"https://developer.github.com/v3/oauth_authorizations/"},
-  "url":"https://api.github.com/authorizations/YYY",
-  "id":"YYY",
-  "note":"infra"
-}
-```
-  * Replace XXX by the token
-  * Replace YYY by its ID (you can find it in the url of the token page)
 * fetch locally the tag
 * generate opam artifacts, using `release/release.sh <tag>` from a macOS/arm64 machine, it requires to have Docker and QEMU installed (see below device requirements)
 * add releases notes (content of `master_changes.md`) in the release draft
-* upload signature of artefacts
+* upload everything from `release/out/<tag>`
 * finalise the release (publish)
 
 ## Publish the release
@@ -61,5 +46,5 @@
 * Mac M1
 * installed: git, gpg
 * opam repo with the tag fetched
-* Have the secret key available, or comment signing function in release.sh
-* Launch docker `sudo launchctl start dockerd`
+* Have the secret key available
+* Launch docker using the Docker GUI macOS app
