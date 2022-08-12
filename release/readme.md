@@ -15,6 +15,7 @@
 * create a release (or prerelease if intermediate release) draft on github based on your tag (https://github.com/ocaml/opam/releases/new)
 * fetch locally the tag
 * generate opam artifacts, using `release/release.sh <tag>` from a macOS/arm64 machine, it requires to have Docker and QEMU installed (see below device requirements)
+* generate the signatures using `release/sign.sh <tag>`
 * add releases notes (content of `master_changes.md`) in the release draft
 * upload everything from `release/out/<tag>`
 * finalise the release (publish)
