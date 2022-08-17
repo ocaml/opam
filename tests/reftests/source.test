@@ -4,7 +4,7 @@ print_endline "I am a source code"
 ### <pandev/root.ml>
 print_endline "i'm root"
 ### tar czf origin.tgz pandev
-### git -C ./pandev init -q
+### git -C ./pandev init -q --initial-branch=master
 ### git -C ./pandev config core.autocrlf false
 ### git -C ./pandev add -A
 ### git -C ./pandev commit -qm "init"
