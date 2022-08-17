@@ -848,6 +848,13 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
   let open Set.Op in
   let module CS = ChainSet in
   (* Definitions and printers *)
+  let reasons =
+    (* Filter out conflicts of a package against itself (necessary for CUDF but invariant for opam) *)
+    List.filter (function
+        | Conflict (l, r, _) -> not (String.equal l.Cudf.package r.Cudf.package)
+        | Dependency _ | Missing _ -> true
+      ) reasons
+  in
   log ~level:3 "Reasons: %a" (Pp_explanation.pp_reasonlist cudfnv2opam) reasons;
   let all_opam =
     let add p set =
@@ -991,20 +998,13 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
     (* order "reasons" by most interesting first: version conflicts then package
        then missing + shortest chains first *)
     let clen p = try CS.length (Map.find p ct_chains) with Not_found -> 0 in
-    let version_conflict = function
-        | Conflict (l, r, _) -> l.Cudf.package = r.Cudf.package
-        | _ -> false
-    in
     let cmp a b = match a, b with
       | Conflict (l1, r1, _), Conflict (l2, r2, _) ->
-        let va = version_conflict a and vb = version_conflict b in
-        if va && not vb then -1 else
-        if vb && not va then 1 else
-          (match compare (clen l1 + clen r1) (clen l2 + clen r2) with
-           | 0 -> (match Package.compare l1 l2 with
-               | 0 -> Package.compare r1 r2
-               | n -> n)
-           | n -> n)
+        (match compare (clen l1 + clen r1) (clen l2 + clen r2) with
+         | 0 -> (match Package.compare l1 l2 with
+             | 0 -> Package.compare r1 r2
+             | n -> n)
+         | n -> n)
       | _, Conflict _ -> 1
       | Conflict _, _ -> -1
       | Missing (p1, _), Missing (p2, _) ->
@@ -1038,18 +1038,12 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
           | Conflict (l, r, _) ->
             let ct_chains, csl = cst ct_chains l in
             let ct_chains, csr = cst ct_chains r in
-            let msg1 =
-              if l.Cudf.package = r.Cudf.package then
-                Some (Package.name_to_string l)
-              else
-                None
-            in
             let msg2 = List.sort_uniq compare [csl; csr] in
             let msg3 =
               (has_invariant l || has_invariant r) &&
                  not (List.exists (function `Conflict (_,_,has_invariant) -> has_invariant | _ -> false) explanations)
             in
-            let msg = `Conflict (msg1, msg2, msg3) in
+            let msg = `Conflict (None, msg2, msg3) in
             if List.mem msg explanations then raise Not_found else
               msg :: explanations, ct_chains
           | Missing (p, deps) ->
