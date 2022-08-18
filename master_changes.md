@@ -252,6 +252,7 @@ users)
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
   * ✘ It is no longer possible to process actions on packages that depend on a package that was removed upstream [#4969 @altgr]
   * Fix (at least some of the) empty conflict explanations [#4982 @kit-ty-kate]
+  * Fix some more empty conflict messages by filtering out conflicts of a package against itself early [#5251 @kit-ty-kate]
   * Fix json double printing [#5143 @rjbou]
 
 ## Internal
@@ -313,6 +314,7 @@ users)
   * Add test for switch upgrade from 2.0 root, with pinned compiler [#5176 @rjbou @kit-ty-kate]
   * Add switch import (for pinned packages) test [#5181 @rjbou]
   * Add `--with-tools` test [#5160 @rjbou]
+  * Add a series of reftests showing empty conflict messages [#5253 @kit-ty-kate]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
