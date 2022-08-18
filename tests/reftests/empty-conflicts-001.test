@@ -1,0 +1,20 @@
+297366c
+### OPAMYES=1 OPAMSTRICT=0
+### opam switch create test ocaml-base-compiler.4.07.1 --fake
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "4.07.1"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.07.1
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.07.1
+Done.
+### opam install --show h2-mirage.0.9.0
+[ERROR] Package conflict!
+[ERROR] Internal error while computing conflict explanations:
+        sorry about that. Please report how you got here in https://github.com/ocaml/opam/discussions/5130 if possible.
+# Return code 99 #
