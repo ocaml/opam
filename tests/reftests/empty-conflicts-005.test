@@ -1,0 +1,21 @@
+de897adf36c4230dfea812f40c98223b31c4521a
+### OPAMYES=1 OPAMSTRICT=0
+### OPAMVAR_arch=arm64 OPAMVAR_os=linux OPAMVAR_os_family=arch OPAMVAR_os_distribution=archarm
+### opam switch create test ocaml-variants.4.12.0+trunk --fake
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-variants" {= "4.12.0+trunk"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-variants.4.12.0+trunk
+Faking installation of ocaml-config.2
+Faking installation of ocaml.4.12.0
+Done.
+### opam install --show pgocaml_ppx.4.2.2
+[ERROR] Package conflict!
+[ERROR] Internal error while computing conflict explanations:
+        sorry about that. Please report how you got here in https://github.com/ocaml/opam/discussions/5130 if possible.
+# Return code 99 #
