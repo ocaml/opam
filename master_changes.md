@@ -252,6 +252,7 @@ users)
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
   * ✘ It is no longer possible to process actions on packages that depend on a package that was removed upstream [#4969 @altgr]
   * Fix (at least some of the) empty conflict explanations [#4982 @kit-ty-kate]
+  * Fix some more empty conflict messages by filtering out conflicts of a package against itself early [#5251 @kit-ty-kate]
   * Fix json double printing [#5143 @rjbou]
 
 ## Internal
