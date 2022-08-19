@@ -842,6 +842,13 @@ module Pp_explanation = struct
   let pp_explanationlist fmt l = pp_list pp_explanation fmt l
 end
 
+let check flag p =
+  try Cudf.lookup_typed_package_property p flag = `Bool true
+  with Not_found -> false
+
+let need_reinstall = check s_reinstall
+let is_pinned = check s_pinned
+
 let extract_explanations packages cudfnv2opam reasons : explanation list =
   log "Conflict reporting";
   let open Dose_algo.Diagnostic in
@@ -942,7 +949,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
   let roots =
     let add_artefacts set =
       Hashtbl.fold (fun p _ acc ->
-          if is_artefact p then Set.add p acc else acc)
+          if is_artefact p || is_pinned p then Set.add p acc else acc)
         set
     in
     Set.empty |> add_artefacts deps |> add_artefacts missing |> add_artefacts ct
@@ -1183,18 +1190,6 @@ let string_of_explanations unav_reasons (cflts, cycles) =
 let string_of_conflicts packages unav_reasons conflict =
   string_of_explanations unav_reasons
     (conflict_explanations_raw packages conflict)
-
-let check flag p =
-  try Cudf.lookup_typed_package_property p flag = `Bool true
-  with Not_found -> false
-
-let need_reinstall = check s_reinstall
-
-(*
-let is_installed_root = check s_installed_root
-
-let is_pinned = check s_pinned
-*)
 
 let default_preamble =
   let l = [
