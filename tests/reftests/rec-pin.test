@@ -55,7 +55,7 @@ build: [ "test" "-f" "%{name}%.t" ]
 piou
 ### <pinnes/b/root-b_g.install>
 lib: ["root-b_g.t"]
-### git -C ./pinnes init -q
+### git -C ./pinnes init -q --initial-branch=master
 ### git -C ./pinnes config core.autocrlf false
 ### git -C ./pinnes add a/i b root_g.opam root_g.t root_g.install
 ### git -C ./pinnes commit -qm "fst"
@@ -604,7 +604,7 @@ version: "l1"
 build: [ "false" ]
 ### <pin:pinnes/b/root-b_g.opam.locked>
 version: "l1"
-### git -C ./pinnes init -q
+### git -C ./pinnes init -q --initial-branch=master
 ### git -C ./pinnes config core.autocrlf false
 ### git -C ./pinnes add a/i b root_g.opam root_g.opam.locked
 ### git -C ./pinnes commit -qm "fst"
