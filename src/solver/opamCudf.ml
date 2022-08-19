@@ -907,6 +907,8 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
             :: aux vpkgl1 r
           else if r = [] then ["(request)"]
           else aux vpkgl1 r (* request *)
+        else if Set.exists is_pinned pkgs then
+          "(pinned)" :: print_set pkgs :: aux vpkgl1 r
         else if vpkgl = [] then
           print_set pkgs :: aux vpkgl1 r
         else
