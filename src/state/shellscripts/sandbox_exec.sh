@@ -4,6 +4,7 @@ set -ue
 POL='(version 1)(allow default)(deny network*)(deny file-write*)'
 POL="$POL"'(allow network* (remote unix))'
 POL="$POL"'(allow file-write* (literal "/dev/null") (literal "/dev/dtracehelper"))'
+POL="$POL"'(deny file-read* (regex #"^(/private)?/var/folders/"))'
 
 add_mounts() {
     if [ -d "$2" ]; then
