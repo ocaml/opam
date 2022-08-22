@@ -1158,7 +1158,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     else if OpamFile.Config.depext_run_installs t.switch_global.config then
       if confirm then menu t sys_packages else auto_install t sys_packages
     else
-      manual_install t sys_packages
+      manual_install ~noninteractive:`Ignore t sys_packages
   and menu t sys_packages =
     (* Called only if run install is true *)
     let answer =
@@ -1205,10 +1205,10 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     OpamConsole.msg "\n    %s\n\n"
       (OpamConsole.colorise `bold
          (OpamStd.List.concat_map "\n    " (String.concat " ") commands))
-  and manual_install t sys_packages =
+  and manual_install ~noninteractive t sys_packages =
     print_command sys_packages;
     let answer =
-      OpamConsole.menu ~default:`Continue ~noninteractive:`Ignore ~no:`Quit
+      OpamConsole.menu ~default:`Continue ~noninteractive ~no:`Quit
         "Would you like opam to:"
         ~options:[
           `Continue, "Check again, as the package is now installed";
@@ -1228,7 +1228,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
       map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
     with Failure msg ->
       OpamConsole.error "%s" msg;
-      check_again t sys_packages
+      manual_install ~noninteractive:`Quit t sys_packages
   and check_again t sys_packages =
     let needed, _notfound = OpamSysInteract.packages_status sys_packages in
     let installed = OpamSysPkg.Set.diff sys_packages needed in

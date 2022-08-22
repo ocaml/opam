@@ -168,6 +168,7 @@ users)
   * Improve the error message when neither MacPorts or Homebrew could be detected on macOS [#5240 @kit-ty-kate]
   * Introduce dummy-success & dummy-failure os-family to make testing depexts behaviour easier [#5268 @kit-ty-kate]
   * Run command as admin only when needed [#5268 @kit-ty-kate]
+  * [BUG] Do not infinitly check for depexts when the system package manager fails [#5257 @kit-ty-kate]
 
 ## Format upgrade
   * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
