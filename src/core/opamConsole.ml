@@ -981,9 +981,12 @@ let menu ?default ?noninteractive ?unsafe_yes ?yes ~no ~options fmt =
             nums_options)
     in
     let nlines = List.length Re.(all (compile (char '\n')) text) in
-    msg "%s" text;
+    if not (OpamCoreConfig.answer_is_yes ()) then
+      msg "%s" text;
     let select a =
-      msg "%s" (List.assoc a options_nums); a
+      if not (OpamCoreConfig.answer_is_yes ()) then
+        msg "%s" (List.assoc a options_nums);
+      a
     in
     let default_s = List.assoc default options_nums in
     if OpamCoreConfig.(!r.safe_mode) then no else
@@ -1011,7 +1014,8 @@ let menu ?default ?noninteractive ?unsafe_yes ?yes ~no ~options fmt =
       with Exit -> menu !default_ref
   in
   Printf.ksprintf (fun prompt_msg ->
-      formatted_msg "%s\n" prompt_msg;
+      if not (OpamCoreConfig.answer_is_yes ()) then
+        formatted_msg "%s\n" prompt_msg;
       let default =
         match default, noninteractive with
         | _, Some d when not OpamStd.Sys.tty_out -> d
