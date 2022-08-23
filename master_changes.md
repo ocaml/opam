@@ -365,6 +365,7 @@ users)
   * dash: recognize dash as a POSIX shell for opam env [#4816 @jonahbeckford]
   * pwsh,powershell: use $env: for opam env [#4816 @jonahbeckford]
   * command prompt: use SET for opam env [#4816 @jonahbeckford]
+  * silence env hooks errors [#5260 @Firobe]
 
 ## Doc
   * Standardise `macOS` use [#4782 @kit-ty-kate]
