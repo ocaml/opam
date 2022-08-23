@@ -3253,6 +3253,13 @@ module OPAM = struct
 
   let effective_part ?(modulo_state=false) (t:t) =
     let t_modulo_state = if modulo_state then empty else t in
+    let effective_url u =
+      match URL.checksum u with
+      | [] -> URL.create (URL.url u) (* ignore mirrors *)
+      | cksum::_ ->
+        URL.with_checksum [cksum] URL.empty
+        (* ignore actual url and extra checksums *)
+    in
     {
       opam_version = empty.opam_version;
 
@@ -3287,7 +3294,7 @@ module OPAM = struct
       patches    = t.patches;
       build_env  = t.build_env;
       features   = t.features;
-      extra_sources = t.extra_sources;
+      extra_sources = List.map (fun (name, u) -> (name, effective_url u)) t.extra_sources;
 
       messages   = empty.messages;
       post_messages = empty.post_messages;
@@ -3306,14 +3313,7 @@ module OPAM = struct
       bug_reports = empty.bug_reports;
 
       extensions  = empty.extensions;
-      url         =
-        (match t.url with
-         | None -> None
-         | Some u -> match URL.checksum u with
-           | [] -> Some (URL.create (URL.url u)) (* ignore mirrors *)
-           | cksum::_ ->
-             Some (URL.with_checksum [cksum] URL.empty));
-             (* ignore actual url and extra checksums *)
+      url         = OpamStd.Option.map effective_url t.url;
       descr       = empty.descr;
 
       metadata_dir = empty.metadata_dir;
