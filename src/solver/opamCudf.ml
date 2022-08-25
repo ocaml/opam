@@ -704,7 +704,7 @@ let formula_of_vpkgl cudfnv2opam all_packages vpkgl =
     List.map (fun name ->
         let formula =
           OpamFormula.ors (List.map (function
-              | n, Some atom when n = name -> Atom atom
+              | n, Some atom when OpamPackage.Name.equal n name -> Atom atom
               | _ -> Empty)
               atoms)
         in
@@ -939,9 +939,11 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
         let f =
           let vpkgl =
             List.filter
-              (fun (n, _) -> Set.exists (fun p -> p.package = n) pkgs)
+              (fun (n, _) -> Set.exists (fun p -> String.equal p.package n) pkgs)
               vpkgl
           in
+          (* TODO: We should aim to use what does give us not guess the formula *)
+          (* Dose is precise enough from what i'm seeing *)
           formula_of_vpkgl cudfnv2opam packages vpkgl
         in
         let s = OpamFormula.to_string f in
@@ -1120,7 +1122,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
             let ct_chains, csp = cst ~hl_last:false ct_chains p in
             let msg =
               if List.exists
-                  (fun (name, _) -> name = unavailable_package_name)
+                  (fun (name, _) -> String.equal name unavailable_package_name)
                   deps
               then
                 let msg =
