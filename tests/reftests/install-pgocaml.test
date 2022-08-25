@@ -18,6 +18,9 @@ Done.
     - (invariant) -> ocaml-base-compiler = 4.06.1 -> ocaml = 4.06.1
     - pgocaml < 2.0 -> ocaml < 4.06.0
     You can temporarily relax the switch invariant with `--update-invariant'
+  * Missing dependency:
+    - pgocaml < 2.0 -> extlib = 1.5.3 -> ocaml < 4.05.0 -> ocaml-variants >= 3.09.3 -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
 
 No solution found, exiting
 # Return code 20 #

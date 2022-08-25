@@ -78,6 +78,13 @@ Nothing to do.
   * Incompatible packages:
     - mirage-no-solo5
     - mirage-solo5
+  * Incompatible packages:
+    - (invariant) -> ocaml-system
+    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml < 4.04.0 -> ocaml-base-compiler < 3.07+1
+    You can temporarily relax the switch invariant with `--update-invariant'
+  * Missing dependency:
+    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml < 4.04.0 -> ocaml-variants -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
 
 No solution found, exiting
 # Return code 20 #
@@ -87,6 +94,13 @@ No solution found, exiting
   * Incompatible packages:
     - mirage-no-solo5
     - mirage-solo5
+  * Incompatible packages:
+    - (invariant) -> ocaml-system
+    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml < 4.04.0 -> ocaml-base-compiler < 3.07+1
+    You can temporarily relax the switch invariant with `--update-invariant'
+  * Missing dependency:
+    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml < 4.04.0 -> ocaml-variants -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
 
 No solution found, exiting
 # Return code 20 #
@@ -96,6 +110,13 @@ No solution found, exiting
     - Incompatible packages:
     - mirage-no-solo5
     - mirage-solo5
+  - Incompatible packages:
+    - (invariant) -> ocaml-system
+    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml < 4.04.0 -> ocaml-base-compiler < 3.07+1
+    You can temporarily relax the switch invariant with `--update-invariant'
+  - Missing dependency:
+    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml < 4.04.0 -> ocaml-variants -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
 
 You may run "opam upgrade --fixup" to let opam fix the current state.
 # Return code 20 #

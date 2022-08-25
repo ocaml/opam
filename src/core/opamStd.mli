@@ -93,6 +93,9 @@ module type MAP = sig
   val map_reduce:
     ?default:'b -> (key -> 'a -> 'b) -> ('b -> 'b -> 'b) -> 'a t -> 'b
 
+  (** Accumulates the resulting maps of a function of key/value until a fixpoint
+      is reached *)
+  val fixpoint: (key -> 'a -> 'a t) -> 'a t -> 'a t
 end
 
 (** A signature for handling abstract keys and collections thereof *)

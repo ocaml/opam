@@ -769,12 +769,8 @@ type explanation =
 module Pp_explanation = struct
   let pp_package fmt pkg =
     let name = pkg.Cudf.package in
-    let version =
-      match List.assoc_opt "opam-version" pkg.Cudf.pkg_extra with
-      | Some (`String v) -> v
-      | None | Some _ -> "???"
-    in
-    Format.fprintf fmt "%s.%s" name version
+    let version = pkg.Cudf.version in
+    Format.fprintf fmt "%s.%d" name version
 
   let pp_relop fmt = function
     | `Eq -> Format.pp_print_string fmt "="
@@ -784,15 +780,13 @@ module Pp_explanation = struct
     | `Leq -> Format.pp_print_string fmt "<="
     | `Lt -> Format.pp_print_string fmt "<"
 
-  let pp_vpkg cudfnv2opam fmt vpkg = match vpkg2atom cudfnv2opam vpkg with
+  let pp_vpkg fmt = function
     | pkg, None ->
-      Format.pp_print_string fmt (OpamPackage.Name.to_string pkg)
+      Format.pp_print_string fmt pkg
     | pkg, Some (relop, v) ->
-      Format.pp_print_string fmt (OpamPackage.Name.to_string pkg);
+      Format.pp_print_string fmt pkg;
       pp_relop fmt relop;
-      Format.pp_print_string fmt (OpamPackage.Version.to_string v)
-    | exception Not_found ->
-      Format.pp_print_string fmt "??"
+      Format.pp_print_int fmt v
 
   let pp_inline_list f fmt = function
     | [] ->
@@ -802,13 +796,13 @@ module Pp_explanation = struct
       List.iter (Format.fprintf fmt ", %a" f) xs;
       Format.pp_print_string fmt "]"
 
-  let pp_reason cudfnv2opam fmt = function
+  let pp_reason fmt = function
     | Dose_algo.Diagnostic.Conflict (a, b, vpkg) ->
-      Format.fprintf fmt "Conflict (%a, %a, %a)" pp_package a pp_package b (pp_vpkg cudfnv2opam) vpkg
+      Format.fprintf fmt "Conflict (%a, %a, %a)" pp_package a pp_package b pp_vpkg vpkg
     | Dose_algo.Diagnostic.Dependency (a, vpkglist, pkglist) ->
-      Format.fprintf fmt "Dependency (%a, %a, %a)" pp_package a (pp_inline_list (pp_vpkg cudfnv2opam)) vpkglist (pp_inline_list pp_package) pkglist
+      Format.fprintf fmt "Dependency (%a, %a, %a)" pp_package a (pp_inline_list pp_vpkg) vpkglist (pp_inline_list pp_package) pkglist
     | Dose_algo.Diagnostic.Missing (a, vpkglist) ->
-      Format.fprintf fmt "Missing (%a, %a)" pp_package a (pp_inline_list (pp_vpkg cudfnv2opam)) vpkglist
+      Format.fprintf fmt "Missing (%a, %a)" pp_package a (pp_inline_list pp_vpkg) vpkglist
 
   let pp_list f fmt = function
     | [] ->
@@ -818,7 +812,7 @@ module Pp_explanation = struct
       List.iter (Format.fprintf fmt "  %a;\n" f) l;
       Format.pp_print_string fmt "]"
 
-  let pp_reasonlist cudfnv2opam fmt l = pp_list (pp_reason cudfnv2opam) fmt l
+  let pp_reasonlist fmt l = pp_list pp_reason fmt l
 
   let pp_option f fmt = function
     | None -> Format.pp_print_string fmt "None"
@@ -855,7 +849,37 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
   let open Set.Op in
   let module CS = ChainSet in
   (* Definitions and printers *)
-  log ~level:3 "Reasons: %a" (Pp_explanation.pp_reasonlist cudfnv2opam) reasons;
+  (*Format.printf "%a\n" Pp_explanation.pp_reasonlist reasons;*)
+(*  let artefacts =
+    List.find_all (function
+        | Dependency (pkg, _, _) -> is_artefact pkg
+        | Conflict _ | Missing _ -> false
+      ) reasons |>
+    List.map (function
+        | Dependency (pkg, x, y) -> (pkg, x, y)
+        | Conflict _ | Missing _ -> assert false
+      )
+    in
+ (* let _invariant, _request = match artefacts with
+    | [(pkg1, _, _) as x; (pkg2, _, _) as y] when is_opam_invariant pkg1 && not (is_opam_invariant pkg2) -> (x, y)
+    | [(pkg1, _, _) as x; (pkg2, _, _) as y] when is_opam_invariant pkg2 && not (is_opam_invariant pkg1) -> (y, x)
+    | _ -> assert false
+    in *)
+  let is_mentioned_by_artifacts pkg =
+    List.exists (fun (_, _, l) ->
+        List.exists (fun p ->
+            String.equal pkg.Cudf.package p.Cudf.package &&
+            Int.equal pkg.Cudf.version p.Cudf.version
+          ) l
+      ) artefacts
+     in
+  let reasons =
+    (* Filter out conflicts of a package against itself (necessary for CUDF but invariant for opam) *)
+    List.filter (function
+        | Conflict (l, r, _) -> not (String.equal l.Cudf.package r.Cudf.package && not (is_mentioned_by_artifacts l))
+        | Dependency _ | Missing _ -> true
+      ) reasons
+     in *)
   let all_opam =
     let add p set =
       if is_artefact p then set
@@ -926,6 +950,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
     in
     arrow_concat (aux [] (CS.transpose (CS.map List.rev cs)))
   in
+  let module Hashtbl = Hashtbl.Make(Package) in
   let get t x = try Hashtbl.find t x with Not_found -> Set.empty in
   let add_set t l set =
     match Hashtbl.find t l with
@@ -938,15 +963,21 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
   let rdeps = Hashtbl.create 53 in
   let missing = Hashtbl.create 53 in
   List.iter (function
-      | Conflict (l, r, _) ->
+      | Conflict (l, r, (_pkgname, _constr)) ->
+        (*if String.equal l.Cudf.package r.Cudf.package &&
+           String.equal l.Cudf.package pkgname &&
+           constr = None then begin*)
         add_set ct l (Set.singleton r);
-        add_set ct r (Set.singleton l)
+        add_set ct r (Set.singleton l);
+          (*end;*)
       | Dependency (l, _, rs) ->
         add_set deps l (Set.of_list rs);
         List.iter (fun r -> add_set rdeps r (Set.singleton l)) rs
       | Missing (p, deps) ->
         Hashtbl.add missing p deps)
     reasons;
+  (*let print_cudf pkg = pkg.Cudf.package ^ "." ^ string_of_int pkg.Cudf.version in*)
+  (*print_endline (Hashtbl.to_seq deps |> Seq.fold_left (fun acc (k, x) -> (print_cudf k ^ ": "^Set.to_string x)::acc) [] |> String.concat "\n");*)
   (* Get paths from the conflicts to requested or invariant packages *)
   let roots =
     let add_artefacts set =
@@ -956,7 +987,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
     in
     Set.empty |> add_artefacts deps |> add_artefacts missing |> add_artefacts ct
   in
-  let conflicting =
+  (*let conflicting =
     Hashtbl.fold (fun p _ -> Set.add p) ct Set.empty
   in
   let all_conflicting =
@@ -995,7 +1026,30 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
       Set.fold (fun p -> Map.add p (CS.singleton [p])) roots Map.empty
     in
     aux init_chains roots Map.empty
+    in*)
+  let ct_chains =
+    let rec aux chain ct_chains =
+      Map.fold (fun pkg chains ct_chains ->
+          let dependencies = get deps pkg in
+          Hashtbl.remove deps pkg;
+          Set.fold (fun dep ct_chains ->
+              let chain = CS.map (fun c -> dep :: c) chains in
+              let ct_chains = Map.update pkg (CS.union chain) CS.empty ct_chains in
+              aux (Map.add dep chain Map.empty) ct_chains
+            ) dependencies ct_chains
+        ) chain
+        (Map.union CS.union chain ct_chains)
+    in
+    let init_chains =
+      Set.fold (fun p -> Map.add p (CS.singleton [p])) roots Map.empty
+    in
+    aux init_chains Map.empty
   in
+  let ct_chains =
+    (* TODO: choose is probably not the right thing here *)
+    Map.map (fun x -> CS.singleton (CS.choose x)) ct_chains
+  in
+  (*print_endline (Map.to_string CS.to_string ct_chains);*)
   let reasons =
     (* order "reasons" by most interesting first: version conflicts then package
        then missing + shortest chains first *)
@@ -1045,6 +1099,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
         try
           match re with
           | Conflict (l, r, _) ->
+            (*print_endline (l.Cudf.package ^ "." ^ string_of_int l.Cudf.version ^ " & " ^ r.Cudf.package ^ "." ^ string_of_int r.Cudf.version);*)
             let ct_chains, csl = cst ct_chains l in
             let ct_chains, csr = cst ct_chains r in
             let msg1 =

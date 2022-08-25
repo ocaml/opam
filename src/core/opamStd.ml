@@ -47,6 +47,7 @@ module type MAP = sig
   val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
   val map_reduce:
     ?default:'b -> (key -> 'a -> 'b) -> ('b -> 'b -> 'b) -> 'a t -> 'b
+  val fixpoint: (key -> 'a -> 'a t) -> 'a t -> 'a t
 end
 module type ABSTRACT = sig
   type t
@@ -380,6 +381,15 @@ module Map = struct
         match default with
         | Some d -> d
         | None -> invalid_arg "Map.map_reduce"
+
+    let fixpoint f =
+      let rec aux fullmap curmap =
+        if is_empty curmap then fullmap else
+        let newmap = fold (fun k v map -> union (fun _ _ -> assert false) (f k v) map) curmap empty in
+        let fullmap = union (fun _ _ -> assert false) fullmap curmap in
+        aux fullmap (fold (fun k _ acc -> remove k acc) fullmap newmap)
+      in
+      aux empty
   end
 
 end

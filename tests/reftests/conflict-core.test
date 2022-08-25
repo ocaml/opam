@@ -18,6 +18,9 @@ Done.
     - (invariant) -> ocaml-base-compiler >= 4.08.0 -> ocaml = 4.08.0
     - core < 112.17.00 -> ocaml < 4.00.1
     You can temporarily relax the switch invariant with `--update-invariant'
+  * Missing dependency:
+    - core < 112.17.00 -> ocaml < 4.00.1 -> ocaml-variants -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
 
 No solution found, exiting
 # Return code 20 #
