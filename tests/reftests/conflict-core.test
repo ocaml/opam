@@ -1,4 +1,5 @@
 f372039d
+### OPAMVAR_arch=x86_64 OPAMVAR_os=linux OPAMVAR_os_family=arch OPAMVAR_os_distribution=archarm
 ### opam switch create ocaml-base-compiler.4.08.0 --fake
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
@@ -18,6 +19,12 @@ Done.
     - (invariant) -> ocaml-base-compiler >= 4.08.0 -> ocaml = 4.08.0
     - core < 112.17.00 -> ocaml < 4.00.1
     You can temporarily relax the switch invariant with `--update-invariant'
+  * No agreement on the version of ocaml-base-compiler:
+    - (invariant) -> ocaml-base-compiler >= 4.08.0
+    - core < 112.17.00 -> ocaml < 4.00.1 -> ocaml-base-compiler = 3.07+2
+  * Missing dependency:
+    - core < 112.17.00 -> ocaml < 4.00.1 -> ocaml-variants >= 3.09.3 -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
 
 No solution found, exiting
 # Return code 20 #

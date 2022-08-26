@@ -16,6 +16,34 @@ Faking installation of ocaml.4.07.1
 Done.
 ### opam install --show h2-mirage.0.9.0
 [ERROR] Package conflict!
-[ERROR] Internal error while computing conflict explanations:
-        sorry about that. Please report how you got here in https://github.com/ocaml/opam/discussions/5130 if possible.
-# Return code 99 #
+  * No agreement on the version of ocaml:
+    - (invariant) -> ocaml-base-compiler = 4.07.1 -> ocaml = 4.07.1
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> ocaml >= 4.08.0
+    You can temporarily relax the switch invariant with `--update-invariant'
+  * No agreement on the version of ocaml-base-compiler:
+    - (invariant) -> ocaml-base-compiler = 4.07.1
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> ocaml >= 4.08.0 -> ocaml-base-compiler >= 4.12.0~
+  * No agreement on the version of cstruct:
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> cstruct < 4.0.0
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> cstruct >= 6.0.0
+  * No agreement on the version of cstruct:
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> cstruct < 6.0.0
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> cstruct >= 6.0.0
+  * Missing dependency:
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> dns-client >= 5.0.0 -> mirage-crypto-rng >= 0.8.0 -> mirage-crypto = 0.8.1
+    unmet availability conditions: 'false'
+  * Missing dependency:
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> dns-client >= 5.0.0 -> mirage-crypto-rng >= 0.8.0 -> mirage-crypto = 0.8.2
+    unmet availability conditions: 'false'
+  * Missing dependency:
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> dns-client >= 5.0.0 -> mirage-crypto-rng >= 0.8.0 -> mirage-crypto = 0.8.3
+    unmet availability conditions: 'false'
+  * Missing dependency:
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> dns-client >= 5.0.0 -> mirage-crypto-rng >= 0.8.0 -> mirage-crypto = 0.8.4
+    unmet availability conditions: 'false'
+  * Missing dependency:
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> sexplib < 113.01.00 -> ocaml < 4.03.0 -> ocaml-variants -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
+
+No solution found, exiting
+# Return code 20 #

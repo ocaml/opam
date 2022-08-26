@@ -16,6 +16,31 @@ Faking installation of ocaml.4.12.0
 Done.
 ### opam install --show pgocaml_ppx.4.2.2
 [ERROR] Package conflict!
-[ERROR] Internal error while computing conflict explanations:
-        sorry about that. Please report how you got here in https://github.com/ocaml/opam/discussions/5130 if possible.
-# Return code 99 #
+  * No agreement on the version of ocaml:
+    - (invariant) -> ocaml-variants = 4.12.0+trunk -> ocaml = 4.12.0
+    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.06.0
+    You can temporarily relax the switch invariant with `--update-invariant'
+  * No agreement on the version of ocaml-variants:
+    - (invariant) -> ocaml-variants = 4.12.0+trunk
+    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.06.0 -> ocaml-variants < 3.09.2~
+  * No agreement on the version of ocaml-migrate-parsetree:
+    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0
+    - pgocaml_ppx >= 4.2.2 -> ppx_deriving >= 4.0 -> ppxlib >= 0.20.0 -> ocaml-migrate-parsetree >= 2.1.0
+  * Missing dependency:
+    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.09.0 -> ocaml-variants < 4.08.2~ -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
+  * Missing dependency:
+    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.11 -> ocaml-variants < 4.10.1~ -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
+  * Missing dependency:
+    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.11 -> ocaml-variants < 4.10.2~ -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
+  * Missing dependency:
+    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.12 -> ocaml-variants < 4.11.1~ -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
+  * Missing dependency:
+    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.12 -> ocaml-variants < 4.11.3~ -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
+
+No solution found, exiting
+# Return code 20 #
