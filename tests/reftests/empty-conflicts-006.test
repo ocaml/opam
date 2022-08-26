@@ -1,0 +1,35 @@
+c1842d168d
+### OPAMYES=1 OPAMSTRICT=0
+### OPAMVAR_arch=arm64 OPAMVAR_os=linux OPAMVAR_os_family=arch OPAMVAR_os_distribution=archarm
+### opam var --global enable-ocaml-beta-repository=true
+Added '[enable-ocaml-beta-repository "true" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam switch create test ocaml-variants.4.12.0+trunk --fake
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-variants" {= "4.12.0+trunk"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-beta.disabled
+Faking installation of ocaml-variants.4.12.0+trunk
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.12.0
+Done.
+### : Fixed by https://github.com/ocaml/opam/pull/4982
+### opam install --show gen_js_api.1.0.6
+[ERROR] Package conflict!
+  * No agreement on the version of ocaml-variants:
+    - (invariant) -> ocaml-variants = 4.12.0+trunk
+    - gen_js_api >= 1.0.6 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml-variants = 4.08.0+beta2
+    You can temporarily relax the switch invariant with `--update-invariant'
+  * No agreement on the version of ocaml:
+    - (invariant) -> ocaml-variants = 4.12.0+trunk -> ocaml = 4.12.0
+    - gen_js_api >= 1.0.6 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.06.0
+  * No agreement on the version of ocaml-migrate-parsetree:
+    - gen_js_api >= 1.0.6 -> ocaml-migrate-parsetree < 2.0.0
+    - gen_js_api >= 1.0.6 -> ppxlib >= 0.9 -> ocaml-migrate-parsetree >= 2.1.0
+
+No solution found, exiting
+# Return code 20 #

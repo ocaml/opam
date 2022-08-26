@@ -1,0 +1,56 @@
+11ea1cb
+### OPAMYES=1 OPAMSTRICT=0
+### OPAMVAR_arch=x86_64 OPAMVAR_os=linux OPAMVAR_os_family=arch OPAMVAR_os_distribution=archarm
+### opam switch create test ocaml-base-compiler.4.14.0 --fake
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "4.14.0"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.14.0
+Faking installation of ocaml-config.2
+Faking installation of ocaml.4.14.0
+Faking installation of ocaml-options-vanilla.1
+Done.
+### opam pin add -k version -n ppx_deriving_yojson.3.7.0 3.7.0
+ppx_deriving_yojson is now pinned to version 3.7.0
+### opam install ppx_deriving_yojson.3.7.0 --fake
+The following actions will be faked:
+=== install 13 packages
+  - install cppo                1.6.9          [required by ppx_deriving, yojson]
+  - install dune                3.4.1          [required by ppx_deriving_yojson]
+  - install ocaml-compiler-libs v0.12.4        [required by ppxlib]
+  - install ocamlfind           1.9.5          [required by ppx_deriving]
+  - install ppx_derivers        1.2.1          [required by ppx_deriving]
+  - install ppx_deriving        5.2.1          [required by ppx_deriving_yojson]
+  - install ppx_deriving_yojson 3.7.0 (pinned)
+  - install ppxlib              0.27.0         [required by ppx_deriving_yojson]
+  - install result              1.5            [required by ppx_deriving_yojson]
+  - install seq                 base           [required by yojson]
+  - install sexplib0            v0.15.1        [required by ppxlib]
+  - install stdlib-shims        0.3.0          [required by ppxlib]
+  - install yojson              2.0.2          [required by ppx_deriving_yojson]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of dune.3.4.1
+Faking installation of cppo.1.6.9
+Faking installation of ocaml-compiler-libs.v0.12.4
+Faking installation of ocamlfind.1.9.5
+Faking installation of ppx_derivers.1.2.1
+Faking installation of result.1.5
+Faking installation of seq.base
+Faking installation of sexplib0.v0.15.1
+Faking installation of stdlib-shims.0.3.0
+Faking installation of ppxlib.0.27.0
+Faking installation of ppx_deriving.5.2.1
+Faking installation of yojson.2.0.2
+Faking installation of ppx_deriving_yojson.3.7.0
+Done.
+### opam install --show fstar.2022.01.15
+[ERROR] Package conflict!
+[ERROR] Internal error while computing conflict explanations:
+        sorry about that. Please report how you got here in https://github.com/ocaml/opam/discussions/5130 if possible.
+# Return code 99 #
