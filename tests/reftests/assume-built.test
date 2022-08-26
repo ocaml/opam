@@ -6,7 +6,7 @@ build: [[ "test" "-f" "ongoing.txt" ] [ "sh" "-c" "cat ongoing.txt > out" ]]
 install: [ ["test" "-f" "out" ] ["touch" "installed"] ]
 ### <ongoing/ongoing.txt>
 versionned
-### git -C ./ongoing init -q
+### git -C ./ongoing init -q --initial-branch=master
 ### git -C ./ongoing config core.autocrlf false
 ### git -C ./ongoing add -A
 ### git -C ./ongoing commit -qm "inplace test"

@@ -28,6 +28,7 @@ export OPAMCONFIRMLEVEL=unsafe-yes
 git config --global user.email "gha@example.com"
 git config --global user.name "Github Actions CI"
 git config --global gc.autoDetach false
+git config --global init.defaultBranch thisShouldNotHappen
 
 if [ -d ~/opam-repository ]; then
   OPAM_REPO_CACHE=file://$HOME/opam-repository

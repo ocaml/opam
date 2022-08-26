@@ -336,6 +336,7 @@ users)
   * Escape regexps characters in string replacements primitives [#5009 @kit-ty-kate]
   * Automatically update default repo when adding a package file [#5004 @AltGr]
   * Make all the tests work on macOS/arm64 [#5019 @kit-ty-kate]
+  * Make all the tests work on archlinux/arm64 [#5252 @kit-ty-kate]
   * Add unix only tests handling [#5031 @AltGr]
   * Add switch-set test [#4910 @kit-ty-kate]
   * Replace vars on the right-hand of exports [#5024 @AltGr]

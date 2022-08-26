@@ -14,7 +14,7 @@ echo "pin-depends: [ \"qux.dev\" \"file://$BASEDIR/qux\" ]" >> bar/bar.opam
 opam-version: "2.0"
 depexts: [ "another-inexistant" ]
 ### opam switch create pinning --empty
-### opam pin ./bar | '(apt-get|brew|port)' -> 'syspkgmanager'
+### opam pin ./bar | '(apt-get|brew|port)' -> 'syspkgmanager' | 'pacman -Su' -> 'syspkgmanager install'
 Package bar does not exist, create as a NEW package? [y/n] y
 The following additional pinnings are required by bar.dev:
   - qux.dev at file://${BASEDIR}/qux
@@ -70,7 +70,7 @@ The following actions will be performed:
 Done.
 ### opam option 'depext-bypass-=["another-inexistant" "inexistant"]'
 Removed '["another-inexistant" "inexistant"]' from field depext-bypass in switch pinning
-### opam install ./bar | '(apt-get|brew|port)' -> 'syspkgmanager'
+### opam install ./bar | '(apt-get|brew|port)' -> 'syspkgmanager' | 'pacman -Su' -> 'syspkgmanager install'
 Package bar does not exist, create as a NEW package? [y/n] y
 The following additional pinnings are required by bar.dev:
   - qux.dev at file://${BASEDIR}/qux

@@ -276,7 +276,7 @@ Done.
     }
   ]
 }
-### opam install ko --json=out.json
+### OPAMVAR_os=linux OPAMVAR_arch=x86_64 opam install ko --json=out.json
 The following actions will be performed:
 === install 1 package
   - install ko 2
@@ -293,7 +293,7 @@ The following actions will be performed:
 +- 
 - No changes have been performed
 # Return code 31 #
-### json-cat out.json | 'macos' -> 'linux'
+### json-cat out.json
 {
   "opam-version": "currentv",
   "command-line": [
@@ -422,7 +422,7 @@ Done.
     }
   ]
 }
-### opam install ok ko --json=out.json | grep -v "switch import" | unordered
+### OPAMVAR_os=linux OPAMVAR_arch=x86_64 opam install ok ko --json=out.json | grep -v "switch import" | unordered
 The following actions will be performed:
 === install 2 packages
   - install ko 2
@@ -445,7 +445,7 @@ The following actions will be performed:
 
 The former state can be restored with:
 # Return code 31 #
-### json-cat out.json | 'macos' -> 'linux'
+### json-cat out.json
 {
   "opam-version": "currentv",
   "command-line": [

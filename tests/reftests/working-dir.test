@@ -5,7 +5,7 @@ opam-version: "2.0"
 build: [[ "test" "-f" "ongoing.txt" ] [ "cat" "ongoing.txt" ]]
 ### <ongoing/ongoing.txt>
 versionned
-### git -C ./ongoing init -q
+### git -C ./ongoing init -q --initial-branch=master
 ### git -C ./ongoing config core.autocrlf false
 ### git -C ./ongoing add -A
 ### git -C ./ongoing commit -qm "init"
