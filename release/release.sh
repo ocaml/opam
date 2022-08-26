@@ -1,54 +1,62 @@
 #!/usr/bin/env bash
 set -uex
 
-# This script is expected to run on Linux with docker available, and to have
-# three remotes "some-osx-x86", "some-osx-arm" and "some-openbsd", with the
-# corresponding OSes, ocaml deps installed
-
-LC_ALL=C
-DIR=$(dirname $0)
-cd "$DIR"
-if [[ $# -eq 0 || "x$1" =~ "x-" ]]; then
-    echo "Usage: $0 TAG [archive|builds]"
+usage() {
+    echo "Usage: $0 TAG"
     exit 1
-fi
-
-TAG="$1"; shift
-OUTDIR="out/$TAG"
-
-OPAM_DEV_KEY='92C526AE50DF39470EB2911BED4CF1CA67CBAA92'
-
-sign() {
-    if ! [ -f "$1.sig" ] || ! gpg -u "$OPAM_DEV_KEY" --verify "$1.sig" "$1"; then
-        gpg -u "$OPAM_DEV_KEY" --detach-sign "$1"
-    fi
 }
 
+if [[ $# -lt 1 || $# -gt 1 || "x$1" =~ "x-" ]]; then
+  usage
+fi
+
+TAG="$1"
+shift
+
+if test "$(uname -s)" != Darwin -o "$(uname -m)" != arm64; then
+  echo "This script is required to be run on macOS/arm64"
+  exit 1
+fi
+
+DIR=$(dirname $0)
+cd "$DIR"
+
+LC_ALL=C
+CWD=$(pwd)
+JOBS=$(sysctl -n hw.ncpu)
+JOBS=$(echo "${JOBS} / 1.5" | bc)
+SSH="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+
+OUTDIR="out/$TAG"
 mkdir -p "$OUTDIR"
 
-if [[ $# -eq 0 || " $* " =~ " archive " ]]; then
-    make TAG="$TAG" GIT_URL="https://github.com/ocaml/opam.git" "${OUTDIR}/opam-full-$TAG.tar.gz"
-    ( cd ${OUTDIR} &&
-          sign "opam-full-$TAG.tar.gz" &&
-          git-upload-release ocaml opam "$TAG" "opam-full-$TAG.tar.gz.sig" &&
-          git-upload-release ocaml opam "$TAG" "opam-full-$TAG.tar.gz"; )
-fi
+qemu_build() {
+  local port=$1
+  local image=$2
+  local install=$3
+  local make=$4
+  local arch=$5
 
-if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
-  make TAG="$TAG" all &
-  [ -f ${OUTDIR}/opam-$TAG-x86_64-macos ] || make TAG="$TAG" remote REMOTE=some-osx-x86 REMOTE_DIR=opam-release-$TAG &
-  [ -f ${OUTDIR}/opam-$TAG-arm64-macos ] || make TAG="$TAG" remote REMOTE=some-osx-arm REMOTE_DIR=opam-release-$TAG &
-  [ -f ${OUTDIR}/opam-$TAG-x86_64-openbsd ] || make TAG="$TAG" remote REMOTE=some-openbsd REMOTE_MAKE=gmake REMOTE_DIR=opam-release-$TAG &
-  wait
-  upload_failed=
-  cd ${OUTDIR} && for f in opam-$TAG-*; do
-      if [ "${f%.sig}" != "$f" ]; then continue; fi
-      sign "$f"
-      git-upload-release ocaml opam "$TAG" "$f.sig" || upload_failed="$upload_failed $f.sig"
-      git-upload-release ocaml opam "$TAG" "$f" || upload_failed="$upload_failed $f"
-  done
-fi
-if [ -n "$upload_failed" ]; then
-    echo "Failed uploads: $upload_failed"
-    exit 10
-fi
+  if ! ${SSH} -p "${port}" root@localhost true; then
+      qemu-img convert -O raw "./qemu-base-images/${image}.qcow2" "./qemu-base-images/${image}.raw"
+      "qemu-system-${arch}" -drive "file=./qemu-base-images/${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 2G &
+      sleep 60
+  fi
+  ${SSH} -p "${port}" root@localhost "${install}"
+  # NOTE: JOBS=1 because qemu does not support proper multithreading from arm64 to x86_64 yet because of memory model differences.
+  # See https://wiki.qemu.org/Features/tcg-multithread
+  make TAG="$TAG" JOBS=1 qemu QEMU_PORT="${port}" REMOTE_MAKE="${make}" REMOTE_DIR=opam-release-$TAG
+  ${SSH} -p "${port}" root@localhost "shutdown -p now"
+}
+
+make JOBS="${JOBS}" TAG="$TAG" "${OUTDIR}/opam-full-$TAG.tar.gz"
+make JOBS="${JOBS}" TAG="$TAG" x86_64-linux
+make JOBS="${JOBS}" TAG="$TAG" i686-linux
+make JOBS="${JOBS}" TAG="$TAG" armhf-linux
+make JOBS="${JOBS}" TAG="$TAG" arm64-linux
+[ -f "${OUTDIR}/opam-$TAG-x86_64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=x86_64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
+[ -f "${OUTDIR}/opam-$TAG-arm64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=arm64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
+[ -d ./qemu-base-images ] || git clone https://gitlab.com/kit-ty-kate/qemu-base-images.git
+[ -f "${OUTDIR}/opam-$TAG-x86_64-openbsd" ] || qemu_build 9999 OpenBSD-7.0-amd64 "pkg_add gmake curl bzip2" gmake x86_64 &
+[ -f "${OUTDIR}/opam-$TAG-x86_64-freebsd" ] || qemu_build 9998 FreeBSD-13.0-RELEASE-amd64 "pkg install -y gmake curl bzip2" gmake x86_64 &
+wait

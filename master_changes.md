@@ -214,6 +214,9 @@ users)
   * Adapt Windows CI to new safe.directory setting [#5119 @dra27]
   * Bid a fond farewell to AppVeyor, with thanks for 5100+ CI builds [#5134 @dra27]
 
+## Release scripts
+  * Make the release script setup-less using QEMU, Docker and Rosetta 2 [#4947 @kit-ty-kate]
+
 ## Admin
   * ✘ `opam admin cache` now ignores all already present cache files. Option
     `--check-all` restores the previous behaviour of validating all checksums.
