@@ -47,9 +47,10 @@ if not exist %CYGWIN_CACHE_DIR%\%CYGWIN_DISTRO%\cache.tar (
 :: cache, so instead we require that the cache download is required and fail the
 :: job otherwise.
 :: COMBAK At present we clobber the PATH on purpose - this wants to be filtered or something
-::        This should be filtered
-set Path=C:\Program Files\Mercurial;C:\Program Files\Git\cmd;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\
-set Path=%CYGWIN_ROOT%\bin;%Path%
+::        This should be filtered. The main thing is that %CYGWIN_ROOT%\bin is _before_
+::        C:\Windows\system32 (overriding curl, bash, etc. in System32) but after Mercurial
+::        and Git (so that they are not overridden).
+set Path=C:\Program Files\Mercurial;C:\Program Files\Git\cmd;%CYGWIN_ROOT%\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\
 if "%3" equ "i686-w64-mingw32" set Path=%CYGWIN_ROOT%\usr\%3\sys-root\mingw\bin;%Path%
 if "%3" equ "x86_64-w64-mingw32" set Path=%CYGWIN_ROOT%\usr\%3\sys-root\mingw\bin;%Path%
 
