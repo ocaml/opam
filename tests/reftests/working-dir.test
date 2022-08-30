@@ -204,10 +204,9 @@ opam-version: "2.0"
 ### <pin:ongoing/ongoing.opam>
 opam-version: "2.0"
 build: [[ "test" "-f" "newfile.txt" ] [ "cat" "newfile.txt" ]]
-### opam install qux ongoing --working-dir -v | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")cat(\.exe)?"? "' -> 'cat "' | grep -v "switch import"
+### opam install qux ongoing --working-dir -v | '^Processing .+$' -> '\c' | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")cat(\.exe)?"? "' -> 'cat "' | grep -v "switch import" | unordered
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
-Processing  1/1: [ongoing.dev: git]
 [ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
 
 The following actions will be performed:
@@ -216,18 +215,12 @@ The following actions will be performed:
   - install qux     4
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  1/5: [qux.4: rsync]
-Processing  2/5: [qux.4: rsync] [ongoing: test newfile.txt]
 -> retrieved qux.4  (file://${BASEDIR}/qux)
-Processing  2/5: [ongoing: test newfile.txt]
 test "-f" "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
-Processing  2/5: [ongoing: cat newfile.txt]
 cat "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
 - new!
 -> compiled  ongoing.dev
-Processing  3/5: [qux: test present]
 -> installed ongoing.dev
-Processing  4/5: [qux: test present]
 test "-f" "present" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/qux.4)
 -> compiled  qux.4
 -> installed qux.4
