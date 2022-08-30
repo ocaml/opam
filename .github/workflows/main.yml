@@ -195,8 +195,7 @@ jobs:
       run:
         shell: D:\cygwin\bin\bash.exe {0}
     steps:
-    - name: Configure LF checkout for Cygwin
-      if: endsWith(matrix.host, '-pc-cygwin')
+    - name: Configure LF checkout for Windows
       shell: cmd
       run: |
         git config --system core.autocrlf false

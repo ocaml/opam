@@ -352,7 +352,7 @@ let main_build_job ~analyse_job ~cygwin_job ?section platform start_version ~oc 
   let host = host_of_platform platform in
   job ~oc ~workflow ~runs_on:(Runner [platform]) ?shell ?section ~needs ~matrix ("Build-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
-    ++ only_on Windows (git_lf_checkouts ~cond:(Predicate(true, EndsWith("matrix.host", "-pc-cygwin"))) ~shell:"cmd" ~title:"Configure LF checkout for Cygwin" ())
+    ++ only_on Windows (git_lf_checkouts ~shell:"cmd" ~title:"Configure LF checkout for Windows" ())
     ++ checkout ()
     ++ only_on Windows (cache ~cond:(Predicate(true, Compare("matrix.build", "i686-pc-cygwin"))) Cygwin `x86)
     ++ only_on Windows (cache ~cond:(Predicate(true, Compare("matrix.build", "x86_64-pc-cygwin"))) Cygwin `x64)
