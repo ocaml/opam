@@ -171,6 +171,7 @@ users)
   * Always mount every directories under / on Linux [#4795 @kit-ty-kate]
   * Get rid of OPAM_USER_PATH_RO (never used on macOS and no longer needed on Linux) [#4795 @kit-ty-kate]
   * Print error message if command doesn't exist [#4971 @kit-ty-kat - fix #4112]
+  * Resolve symlink for `ccache` directory [#5267 @rjbou - fix #5194]
 
 ## VCS
   * Pass --depth=1 to git-fetch in the Git repo backend [#4442 @dra27]
