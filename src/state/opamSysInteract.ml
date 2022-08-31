@@ -88,6 +88,8 @@ type families =
   | Arch
   | Centos
   | Debian
+  | DummySuccess
+  | DummyFailure
   | Freebsd
   | Gentoo
   | Homebrew
@@ -118,6 +120,8 @@ let family ~env () =
             "External dependency handling not supported for OS family 'bsd'."
       end
     | "debian" | "ubuntu" -> Debian
+    | "dummy-success" -> DummySuccess
+    | "dummy-failure" -> DummyFailure
     | "gentoo" -> Gentoo
     | "homebrew" -> Homebrew
     | "macports" -> Macports
@@ -440,6 +444,7 @@ let packages_status ?(env=OpamVariable.Map.empty) packages =
       |> with_regexp_sgl re_pkg
     in
     compute_sets_with_virtual get_avail_w_virtuals get_installed
+  | DummySuccess | DummyFailure -> compute_sets OpamSysPkg.Set.empty
   | Freebsd ->
     let sys_installed =
       run_query_command "pkg" ["query"; "%n\n%o"]
@@ -658,6 +663,8 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) sys_packages =
        "rpm", "-q"::"--whatprovides"::packages], None
   | Debian -> ["apt-get", "install"::yes ["-qq"; "-yy"] packages],
       (if unsafe_yes then Some ["DEBIAN_FRONTEND", "noninteractive"] else None)
+  | DummySuccess -> ["echo", packages], None
+  | DummyFailure -> ["false", []], None
   | Freebsd -> ["pkg", "install"::yes ["-y"] packages], None
   | Gentoo -> ["emerge", yes ~no:["-a"] [] packages], None
   | Homebrew ->
@@ -723,6 +730,8 @@ let update ?(env=OpamVariable.Map.empty) () =
     | Arch -> Some ("pacman", ["-Sy"])
     | Centos -> Some (Lazy.force yum_cmd, ["makecache"])
     | Debian -> Some ("apt-get", ["update"])
+    | DummySuccess -> None
+    | DummyFailure -> Some ("false", [])
     | Gentoo -> Some ("emerge", ["--sync"])
     | Homebrew -> Some ("brew", ["update"])
     | Macports -> Some ("port", ["sync"])
