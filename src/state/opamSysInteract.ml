@@ -121,6 +121,10 @@ let family ~env () =
     | "gentoo" -> Gentoo
     | "homebrew" -> Homebrew
     | "macports" -> Macports
+    | "macos" ->
+      failwith
+        "External dependency handling for macOS requires either \
+         MacPorts or Homebrew - neither could be found"
     | "suse" | "opensuse" -> Suse
     | family ->
       Printf.ksprintf failwith
