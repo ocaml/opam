@@ -68,6 +68,13 @@ for dir in /*; do
     esac
 done
 
+mount_linked_cache() {
+  local l_cache=$1
+  local cache=$(readlink -m "$l_cache")
+  mkdir -p "$cache"
+  add_mount rw "$l_cache" "$cache"
+}
+
 # C compilers using `ccache` will write to a shared cache directory
 # that remain writeable. ccache seems widespread in some Fedora systems.
 add_ccache_mount() {
@@ -82,18 +89,13 @@ add_ccache_mount() {
       done
       CCACHE_DIR=${CCACHE_DIR-$HOME/.ccache}
       ccache_dir=${ccache_dir-$CCACHE_DIR}
-      add_mounts rw "$ccache_dir"
+      mount_linked_cache "$ccache_dir"
   fi
 }
 
 add_dune_cache_mount() {
-  local u_cache=${XDG_CACHE_HOME:-$HOME/.cache}
-  local u_dune_cache=$u_cache/dune
-  local cache=$(readlink -m "$u_cache")
-  local dune_cache=$cache/dune
-  local dune_cache=$(readlink -m "$u_dune_cache")
-  mkdir -p "${dune_cache}"
-  add_mount rw "$u_dune_cache" "$dune_cache"
+  local dune_cache=${XDG_CACHE_HOME:-$HOME/.cache}/dune
+  mount_linked_cache "$dune_cache"
 }
 
 # When using opam variable that must be defined at action time, add them also
