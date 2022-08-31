@@ -34,6 +34,23 @@
    (run ./run.exe %{bin:opam} %{dep:avoid-version.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-best-effort)
+ (action
+  (diff best-effort.test best-effort.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-best-effort)))
+
+(rule
+ (targets best-effort.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:best-effort.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-clean)
  (action
   (diff clean.test clean.out)))
