@@ -850,7 +850,15 @@ module OpamSys = struct
        forcing the environment in this function that is used
        before the .init() functions are called -- see
        OpamStateConfig.default. *)
-    let home = lazy (try Unix.getenv "HOME" with Not_found -> Sys.getcwd ()) in
+    let home = lazy (
+      try Unix.getenv "HOME"
+      with Not_found ->
+        if Sys.win32 then
+          (* CSIDL_PROFILE = 0x28 *)
+          OpamStubs.(shGetFolderPath 0x28 SHGFP_TYPE_CURRENT)
+        else
+          Sys.getcwd ()
+    ) in
     fun () -> Lazy.force home
 
   let etc () = "/etc"

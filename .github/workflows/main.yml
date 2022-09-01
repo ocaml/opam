@@ -246,6 +246,8 @@ jobs:
       if: endsWith(matrix.host, '-pc-cygwin')
       run: bash -exu .github/scripts/main/test.sh
     - name: Test (basic - native Windows)
+      env:
+        OPAMROOT: D:\a\opam\opam\.opam
       if: endsWith(matrix.host, '-pc-cygwin') == false
       shell: cmd
       run: |

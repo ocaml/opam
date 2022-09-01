@@ -798,6 +798,14 @@ let check_and_print_env_warning st =
 let setup
     root ~interactive ?dot_profile ?update_config ?env_hook ?completion
     ?inplace shell =
+  let opam_root_msg =
+    let current = OpamFilename.prettify_dir root in
+    if root = OpamStateConfig.(default.root_dir) then
+      current
+    else
+      let default = OpamFilename.prettify_dir OpamStateConfig.(default.root_dir) in
+      Printf.sprintf "your opam root\n    (%s by default; currently %s)" default current
+  in
   let shell, update_dot_profile, env_hook =
     match update_config, dot_profile, interactive with
     | Some false, _, _ -> shell, None, env_hook
@@ -809,7 +817,7 @@ let setup
 
       OpamConsole.msg
         "\n\
-        \  In normal operation, opam only alters files within ~%s.opam.\n\
+        \  In normal operation, opam only alters files within %s.\n\
          \n\
         \  However, to best integrate with your system, some environment variables\n\
         \  should be set. If you allow it to, this initialisation step will update\n\
@@ -818,7 +826,7 @@ let setup
         \    %s\
          \n\
         \  You can always re-run this setup with 'opam init' later.\n\n"
-        Filename.dir_sep
+        opam_root_msg
         (OpamConsole.colorise `bold @@ string_of_shell shell)
         (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
         (OpamConsole.colorise `bold @@ source root shell (init_file shell));

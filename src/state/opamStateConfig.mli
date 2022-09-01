@@ -76,6 +76,9 @@ include OpamStd.Config.Sig
   with type t := t
    and type 'a options_fun := 'a options_fun
 
+(** Default state values *)
+val default : t
+
 (** Get the initial opam root value (from default, env or optional argument).
     This allows one to get it before doing the init, which is useful to get the
     configuration file used to fill some options to init() *)
