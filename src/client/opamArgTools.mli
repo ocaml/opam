@@ -38,11 +38,11 @@ val mk_flag_replaced:
 
 val mk_opt:
   cli:OpamCLIVersion.Sourced.t -> validity -> section:string -> ?vopt:'a ->
-  string list -> string -> string -> 'a Arg.converter -> 'a -> 'a Term.t
+  string list -> string -> string -> 'a Arg.conv -> 'a -> 'a Term.t
 
 val mk_opt_all:
   cli:OpamCLIVersion.Sourced.t -> validity -> section:string -> ?vopt:'a ->
-  ?default:'a list -> string list -> string -> string -> 'a Arg.converter ->
+  ?default:'a list -> string list -> string -> string -> 'a Arg.conv ->
   'a list Term.t
 
 val mk_vflag:
@@ -89,20 +89,19 @@ val mk_subdoc :
   ?extra_defaults:(validity * string * string) list ->
   'a subcommands -> Manpage.block list
 
-type command = unit Term.t * Term.info
+type command = unit Term.t * Cmd.info
 
 val mk_command:
   cli:OpamCLIVersion.Sourced.t -> validity ->
   (cli:OpamCLIVersion.Sourced.t -> string -> doc:string ->
-   man:Manpage.block list -> Term.info) ->
+   man:Manpage.block list -> Cmd.info) ->
   string -> doc:string ->
   man:Manpage.block list -> (unit -> unit) Term.t -> command
 
 val mk_command_ret:
   cli:OpamCLIVersion.Sourced.t -> validity ->
   (cli:OpamCLIVersion.Sourced.t -> string -> doc:string ->
-   man:Manpage.block
-       list -> Term.info) ->
+   man:Manpage.block list -> Cmd.info) ->
   string -> doc:string -> man:Manpage.block list ->
   (unit -> unit Term.ret) Term.t -> command
 

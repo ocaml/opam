@@ -730,7 +730,7 @@ let package_version =
   let print ppf ver = pr_str ppf (OpamPackage.Version.to_string ver) in
   parse, print
 
-let positive_integer : int Arg.converter =
+let positive_integer : int Arg.conv =
   let (parser, printer) = Arg.int in
   let parser s =
     match parser s with
@@ -1014,7 +1014,7 @@ let mk_enum_opt ~cli validity ?(section=Manpage.s_options) flags value states
 
 let term_info ~cli title ~doc ~man =
   let man = man @ help_sections cli in
-  Term.info ~sdocs:global_option_section ~docs:Manpage.s_commands
+  Cmd.info ~sdocs:global_option_section ~docs:Manpage.s_commands
     ~doc ~man title
 
 let mk_command ~cli validity name ~doc ~man =
@@ -1025,7 +1025,9 @@ let mk_command_ret ~cli validity name ~doc ~man =
 
 let make_command_alias ~cli cmd ?(options="") name =
   let term, info = cmd in
-  let orig = Term.name info in
+  (* TODO: Remove that horror whenever https://github.com/dbuenzli/cmdliner/pull/161 is merged *)
+  let name_of_new_api_info info = Cmd.name (Cmd.v info (Term.const ())) in
+  let orig = name_of_new_api_info info in
   let doc = Printf.sprintf "An alias for $(b,%s%s)." orig options in
   let man = [
     `S Manpage.s_description;
@@ -1037,7 +1039,7 @@ let make_command_alias ~cli cmd ?(options="") name =
   ] @ help_sections cli
   in
   term,
-  Term.info name
+  Cmd.info name
     ~docs:"COMMAND ALIASES" ~sdocs:global_option_section
     ~doc ~man
 

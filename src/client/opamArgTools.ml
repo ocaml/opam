@@ -663,7 +663,7 @@ let bad_subcommand ~cli subcommands (command, usersubcommand, userparams) =
 
 (* Commands *)
 
-type command = unit Term.t * Term.info
+type command = unit Term.t * Cmd.info
 
 (* As [term_info] is defined later, we need to have it as argument *)
 let mk_command ~cli validity term_info name ~doc ~man cmd =
