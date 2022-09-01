@@ -1,0 +1,13 @@
+N0REP0
+### opam switch create best-effort --empty
+### : Check that --best-effort works as intended when requesting a specific version of a package
+### <pkg:unavailable.1>
+opam-version: "2.0"
+available: false
+### <pkg:test.1>
+opam-version: "2.0"
+### <pkg:test.2>
+opam-version: "2.0"
+depends: ["unavailable"]
+### opam install --show --best-effort test.2
+Nothing to do.

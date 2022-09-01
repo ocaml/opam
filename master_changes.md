@@ -249,7 +249,7 @@ users)
   * Make the 0install solver non-optional [#4909 @kit-ty-kate]
   * Optimised reverse dependencies calculation [#5005 @AltGr]
   * Enable cudf preprocessing for (co)insallability calculation, resulting in a x20 speedup [@AltGr]
-  * Make sure that `--best-effort` only installs root package versions that where requested [#4796 @LasseBlaauwbroek]
+  * Make sure that `--best-effort` only installs root package versions that where requested [#4796 #5261 @LasseBlaauwbroek]
   * Ask users to report errors when no explanations are given to them [#4981 @kit-ty-kate]
   * Add bultin support for the 'deprecated' flag.  Any packages flagged with deprecated would be avoided by the solver unless there is no other choice (e.g. some user wants to install package a which depends on b which is deprecated) If it is installed, show up a note after installation notifying the user that the package is deprecated. [#4523 @kit-ty-kate]
 
@@ -321,6 +321,7 @@ users)
   * Add `--with-tools` test [#5160 @rjbou]
   * Add a series of reftests showing empty conflict messages [#5253 @kit-ty-kate]
   * Fix the reftests under some heavy parallel hardwear [#5262 @kit-ty-kate]
+  * Add some tests for --best-effort to avoid further regressions when trying to install specific versions of packages [@5261 @kit-ty-kate]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]

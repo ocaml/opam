@@ -1116,7 +1116,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
   let requested =
     OpamPackage.Name.Set.of_list (List.rev_map fst (atoms @ deps_atoms))
   in
-  let packages = OpamPackage.packages_of_names t.packages requested in
+  let packages = OpamFormula.packages_of_atoms t.packages (atoms @ deps_atoms) in
   let solution =
     let reinstall = if assume_built then Some pkg_reinstall else None in
     OpamSolution.resolve t Install
