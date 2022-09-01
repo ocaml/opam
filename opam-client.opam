@@ -32,7 +32,7 @@ depends: [
   "base64" {>= "3.1.0"}
   "opam-repository" {= version}
   "re" {>= "1.9.0"}
-  "cmdliner" {>= "1.0.0"}
+  "cmdliner" {>= "1.1.0"}
   "dune" {>= "2.0.0"}
 ]
 conflicts: [
