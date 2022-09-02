@@ -1,0 +1,269 @@
+c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a
+### OPAMYES=1 OPAMSTRICT=0
+### OPAMVAR_arch=arm64 OPAMVAR_os=macos OPAMVAR_os_family=homebrew OPAMVAR_os_distribution=homebrew
+### opam switch create test ocaml-base-compiler.5.0.0~alpha0 --fake
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "5.0.0~alpha0"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.5.0.0~alpha0
+Faking installation of ocaml-config.3
+Faking installation of ocaml.5.0.0
+Faking installation of base-domains.base
+Faking installation of base-nnp.base
+Faking installation of ocaml-options-vanilla.1
+Done.
+### opam install dune-release
+[ERROR] Package conflict!
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler < 3.07+1 | ocaml-system < 3.07+1 | ocaml-variants < 3.8~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions: 'sys-ocaml-version = "3.07"'
+    no matching version
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.07+1 | ocaml-system = 3.07+1 | ocaml-variants < 3.8~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions: 'sys-ocaml-version = "3.07+1"'
+    no matching version
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.07+2 | ocaml-system = 3.07+2 | ocaml-variants < 3.8~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions: 'sys-ocaml-version = "3.07+2"'
+    no matching version
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.08.0 | ocaml-system < 3.08.1~ | ocaml-variants < 3.08.1~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.0"'
+    no matching version
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.08.1 | ocaml-system < 3.08.2~ | ocaml-variants < 3.08.2~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.1"'
+    no matching version
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.08.2 | ocaml-system < 3.08.3~ | ocaml-variants < 3.08.3~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.2"'
+    no matching version
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.08.3 | ocaml-system < 3.08.4~ | ocaml-variants < 3.08.4~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.3"'
+    no matching version
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.08.4 | ocaml-system < 3.08.5~ | ocaml-variants < 3.08.5~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.4"'
+    no matching version
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.09.0 | ocaml-system < 3.09.1~ | ocaml-variants < 3.09.1~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.09.0"'
+    no matching version
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.09.1 | ocaml-system < 3.09.2~ | ocaml-variants < 3.09.2~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.09.1"'
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.09.2 | ocaml-system < 3.09.3~ | ocaml-variants < 3.09.3~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.09.2"'
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.09.3 | ocaml-system < 3.09.4~ | ocaml-variants < 3.09.4~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.09.3"'
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.10.0 | ocaml-system < 3.10.1~ | ocaml-variants < 3.10.1~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.10.0"'
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.10.1 | ocaml-system < 3.10.2~ | ocaml-variants < 3.10.2~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.10.1"'
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.10.2 | ocaml-system < 3.10.3~ | ocaml-variants < 3.10.3~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.10.2"'
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.11.0 | ocaml-system < 3.11.1~ | ocaml-variants < 3.11.1~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.11.0"'
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.11.1 | ocaml-system < 3.11.2~ | ocaml-variants < 3.11.2~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.11.1"'
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.11.2 | ocaml-system < 3.11.3~ | ocaml-variants < 3.11.3~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.11.2"'
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.12.0 | ocaml-system < 3.12.1~ | ocaml-variants < 3.12.1~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.12.0"'
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.12.1 | ocaml-system < 3.12.2~ | ocaml-variants < 3.12.2~
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.12.1"'
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.00.0 | ocaml-system < 4.00.1~ | ocaml-variants < 4.00.1~
+    unmet availability conditions: 'arch != "arm64" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.00.0"'
+    unmet availability conditions, e.g. 'false'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.00.1 | ocaml-system < 4.00.2~ | ocaml-variants < 4.00.2~
+    unmet availability conditions: 'arch != "arm64" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.00.1"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.01.0 | ocaml-system < 4.01.1~ | ocaml-variants < 4.01.1~
+    unmet availability conditions: 'arch != "arm64" & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.01.0"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.02.0 | ocaml-system < 4.02.1~ | ocaml-variants < 4.02.1~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64") & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.02.0"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.02.1 | ocaml-system < 4.02.2~ | ocaml-variants < 4.02.2~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64") & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.02.1"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.02.2 | ocaml-system < 4.02.3~ | ocaml-variants < 4.02.3~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64") & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.02.2"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.02.3 | ocaml-system < 4.02.4~ | ocaml-variants < 4.02.4~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64") & arch != "ppc64"'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.02.3"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.02.4 | ocaml-system < 4.02.5~ | ocaml-variants < 4.02.5~
+    no matching version
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.02.3"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.03.0 | ocaml-system < 4.03.1~ | ocaml-variants < 4.03.1~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.03.0"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.03.1 | ocaml-system < 4.03.2~ | ocaml-variants < 4.03.2~
+    no matching version
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.03.0"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.04.0 | ocaml-system < 4.04.1~ | ocaml-variants < 4.04.1~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.04.0"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.04.1 | ocaml-system < 4.04.2~ | ocaml-variants < 4.04.2~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.04.1"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.04.2 | ocaml-system < 4.04.3~ | ocaml-variants < 4.04.3~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.04.2"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.04.3 | ocaml-system < 4.04.4~ | ocaml-variants < 4.04.4~
+    no matching version
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.04.2"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.05.0 | ocaml-system < 4.05.1~ | ocaml-variants < 4.05.1~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.05.0"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.05.1 | ocaml-system < 4.05.2~ | ocaml-variants < 4.05.2~
+    no matching version
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.05.0"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 5.0 -> ocaml-base-compiler = 4.06.0 | ocaml-system < 4.06.1~ | ocaml-variants < 4.06.1~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.06.0"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 5.0 -> ocaml-base-compiler = 4.06.1 | ocaml-system < 4.06.2~ | ocaml-variants < 4.06.2~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.06.1"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 5.0 -> ocaml-base-compiler = 4.06.2 | ocaml-system < 4.06.3~ | ocaml-variants < 4.06.3~
+    no matching version
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.06.1"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 5.0 -> ocaml-base-compiler = 4.07.0 | ocaml-system < 4.07.1~ | ocaml-variants < 4.07.1~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.07.0"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 5.0 -> ocaml-base-compiler = 4.07.1 | ocaml-system < 4.07.2~ | ocaml-variants < 4.07.2~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.07.1"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 5.0 -> ocaml-base-compiler = 4.07.2 | ocaml-system < 4.07.3~ | ocaml-variants < 4.07.3~
+    no matching version
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.07.1"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 5.0 -> ocaml-base-compiler = 4.08.1 | ocaml-system >= 4.08.1 | ocaml-variants < 4.08.2~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.08.1"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 5.0 -> ocaml-base-compiler = 4.08.2 | ocaml-system >= 4.08.2 | ocaml-variants < 4.08.3~
+    no matching version
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.14.0"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 5.0 -> ocaml-base-compiler = 4.09.0 | ocaml-system >= 4.09.0 | ocaml-variants < 4.09.1~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.09.0"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 5.0 -> ocaml-base-compiler = 4.09.1 | ocaml-system >= 4.09.1 | ocaml-variants < 4.09.2~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.09.1"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 5.0 -> ocaml-base-compiler = 4.09.2 | ocaml-system >= 4.09.2 | ocaml-variants < 4.09.3~
+    no matching version
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.14.0"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 5.0 -> ocaml-base-compiler = 4.10.0 | ocaml-system >= 4.10.0 | ocaml-variants < 4.10.1~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.10.0"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+  * Missing dependency:
+    - dune-release -> fmt < 0.8.7 -> ocaml < 5.0 -> ocaml-base-compiler = 4.10.1 | ocaml-system >= 4.10.1 | ocaml-variants < 4.10.2~
+    unmet availability conditions: '!(os = "macos" & arch = "arm64")'
+    unmet availability conditions, e.g. 'sys-ocaml-version = "4.10.1"'
+    unmet availability conditions, e.g. '!(os = "macos" & arch = "arm64")'
+
+No solution found, exiting
+# Return code 20 #
