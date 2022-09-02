@@ -324,6 +324,7 @@ users)
   * Add a series of reftests showing empty conflict messages [#5253 @kit-ty-kate]
   * Fix the reftests under some heavy parallel hardwear [#5262 @kit-ty-kate]
   * Add some tests for --best-effort to avoid further regressions when trying to install specific versions of packages [@5261 @kit-ty-kate]
+  * Add unhelpful conflict error message test [#5270 @kit-ty-kate]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
