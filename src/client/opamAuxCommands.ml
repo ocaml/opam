@@ -266,12 +266,10 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath ?locked
   in
   log "autopin: %a"
     (slog @@ OpamStd.List.to_string (fun pin ->
-         Printf.sprintf "%s%s => %s%s"
+         Printf.sprintf "%s%s => %s"
            (OpamPackage.Name.to_string pin.pin_name)
            (if pin.pin.pin_locked = None then "" else "[locked]")
-           (OpamUrl.to_string pin.pin.pin_url)
-           (OpamStd.Option.to_string
-              OpamFilename.SubPath.pretty_string pin.pin.pin_subpath)))
+           (OpamUrl.to_string_w_subpath pin.pin.pin_subpath pin.pin.pin_url)))
     to_pin;
   let obsolete_pins =
     (* Packages not current but pinned to the same dirs *)

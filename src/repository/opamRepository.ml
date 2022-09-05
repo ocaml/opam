@@ -346,10 +346,7 @@ let pull_tree_t
           pull_from_mirrors label ?working_dir ?subpath cache_dir local_dirname
             checksums remote_urls
           @@| fun (url, res) ->
-          Printf.sprintf "%s%s"
-            (OpamUrl.to_string url)
-            (OpamStd.Option.to_string
-               OpamFilename.SubPath.pretty_string subpath),
+          (OpamUrl.to_string_w_subpath subpath url),
           res
         | _ ->
           pull_from_mirrors label ?working_dir cache_dir tmpdir

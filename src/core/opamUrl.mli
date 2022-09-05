@@ -50,6 +50,10 @@ val parse_opt:
 
 include OpamStd.ABSTRACT with type t := t
 
+(* [to_string_w_subpath subpath url] Return string of [url] with [subpath]
+   integrated *)
+val to_string_w_subpath: OpamFilename.SubPath.t option -> t -> string
+
 (** Dummy filler url *)
 val empty: t
 

@@ -333,9 +333,6 @@ module SubPath: sig
   (* Directory concatenation with an optional argument *)
   val (/?): Dir.t -> t option -> Dir.t
 
-  (* Pretty printing of subath, i.e. '(sub/path)' *)
-  val pretty_string: t -> string
-
   (* Subpath string with no file separator conversion *)
   val normalised_string: t -> string
 

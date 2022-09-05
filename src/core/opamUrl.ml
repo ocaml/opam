@@ -184,17 +184,27 @@ let parse_opt ?(quiet=false) ?backend ?handle_suffix ?from_file s =
 
 let of_string url = parse ~handle_suffix:false url
 
-let to_string url =
+let to_string_t ?subpath url =
   let hash = match url.hash with Some h -> "#" ^ h | None -> "" in
+  let subpath =
+    match subpath with
+    | Some sb ->
+      Printf.sprintf "directory /%s in "
+        (OpamFilename.SubPath.normalised_string sb)
+    | None -> ""
+  in
   match url.backend with
   | #version_control as vc ->
     let vc = string_of_backend vc in
     if url.transport = vc then (* Don't be redundant on e.g git:// protocols *)
-      Printf.sprintf "%s://%s%s" vc url.path hash
+      Printf.sprintf "%s%s://%s%s" subpath vc url.path hash
     else
-      Printf.sprintf "%s+%s://%s%s" vc url.transport url.path hash
+      Printf.sprintf "%s%s+%s://%s%s" subpath vc url.transport url.path hash
   | `rsync | `http ->
-    Printf.sprintf "%s://%s%s" url.transport url.path hash
+    Printf.sprintf "%s%s://%s%s" subpath url.transport url.path hash
+
+let to_string url = to_string_t url
+let to_string_w_subpath subpath = to_string_t ?subpath
 
 let base_url url =
   match url.transport with

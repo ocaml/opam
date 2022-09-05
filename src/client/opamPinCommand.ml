@@ -17,16 +17,20 @@ open OpamStd.Option.Op
 let log fmt = OpamConsole.log "COMMAND" fmt
 let slog = OpamConsole.slog
 
-let string_of_pinned opam =
+let string_of_pinned ?(subpath_prefix=true) opam =
   let bold = OpamConsole.colorise `bold in
-  Printf.sprintf "pinned %s (version %s)"
+  let url, subpath =
+    match OpamFile.OPAM.url opam with
+    | None -> None, None
+    | Some u -> OpamFile.URL.(Some (url u), subpath u)
+  in
+  Printf.sprintf "%spinned %s (version %s)"
+    (if subpath_prefix && subpath <> None then "subpath-" else "")
     (OpamStd.Option.to_string ~none:(bold "locally")
-       (fun u -> Printf.sprintf "to %s%s"
-           (bold (OpamUrl.to_string (OpamFile.URL.url u)))
-           (OpamStd.Option.to_string (fun sp ->
-                " " ^ OpamFilename.SubPath.pretty_string sp)
-               (OpamFile.URL.subpath u)))
-       (OpamFile.OPAM.url opam))
+       (fun u -> Printf.sprintf "to %s"
+           (bold (OpamUrl.to_string_w_subpath subpath
+                    u)))
+       url)
     (bold (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
 
 let read_opam_file_for_pinning ?locked ?(quiet=false) name f url =
@@ -396,11 +400,10 @@ let fetch_all_pins st ?working_dir pins =
         installed:%s\n\
         Continue anyway?"
        (OpamStd.Format.itemize (fun p ->
-            Printf.sprintf "%s:%s%s"
+            Printf.sprintf "%s:%s"
               (OpamPackage.Name.to_string p.pinned_name)
-              (OpamUrl.to_string p.pinned_url)
-              (OpamStd.Option.to_string
-                 OpamFilename.SubPath.pretty_string p.pinned_subpath))
+              (OpamUrl.to_string_w_subpath p.pinned_subpath
+                 p.pinned_url))
            (List.rev errored))
   then
     List.rev to_pin
@@ -451,12 +454,11 @@ and source_pin
     ?subpath ?locked
     target_url
   =
-  log "pin %a to %a %a%a"
+  log "pin %a to %a %a"
     (slog OpamPackage.Name.to_string) name
     (slog (OpamStd.Option.to_string OpamPackage.Version.to_string)) version
-    (slog (OpamStd.Option.to_string ~none:"none" OpamUrl.to_string)) target_url
-    (slog (OpamStd.Option.to_string OpamFilename.SubPath.pretty_string))
-    subpath;
+    (slog (OpamStd.Option.to_string ~none:"none"
+             (OpamUrl.to_string_w_subpath subpath))) target_url;
  (* let installed_version =
     try
       Some (OpamPackage.version
@@ -714,7 +716,8 @@ let unpin st names =
       | Some nv ->
         let pin_str =
           OpamStd.Option.to_string ~none:"pinned"
-            string_of_pinned (OpamSwitchState.opam_opt st nv)
+            (string_of_pinned ~subpath_prefix:false)
+            (OpamSwitchState.opam_opt st nv)
         in
         let st = unpin_one st nv in
         if OpamClientConfig.(!r.show) then
@@ -748,13 +751,8 @@ let list st ~short =
         match url with
         | Some url ->
           let u = OpamFile.URL.url url in
-          let subpath =
-            OpamStd.Option.to_string (fun sp ->
-                " " ^ OpamFilename.SubPath.pretty_string sp)
-              (OpamFile.URL.subpath url)
-          in
           OpamUrl.string_of_backend u.OpamUrl.backend,
-          OpamUrl.to_string u ^ subpath
+          OpamUrl.to_string_w_subpath (OpamFile.URL.subpath url) u
         | None -> "local definition", ""
       in
       let state, extra =

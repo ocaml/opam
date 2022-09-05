@@ -510,7 +510,6 @@ module SubPath = struct
     |> OpamStd.String.remove_prefix ~prefix:"./"
     |> of_string
   let to_string = OpamSystem.forward_to_back
-  let pretty_string s = "("^s^")"
   let normalised_string s = s
 
   let (/) d s = d / to_string s
