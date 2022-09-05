@@ -237,6 +237,7 @@ users)
   * Actually allow multiple state caches to co-exist [#4934 @dra27 - fix #4554 properly this time]
   * Don’t rebuild packages when updating dependencies or availablity, unless the current state needs to be changed [#5118 @kit-ty-kate - fix #4647]
   * Rebuild packages when removing or adding the "plugin" flag [#5118 @kit-ty-kate]
+  * Do not rebuild packages when an extra-source's url changes but not its checksum [#5258 @kit-ty-kate]
 
 ## Opam file format
   *
@@ -325,6 +326,7 @@ users)
   * Fix the reftests under some heavy parallel hardwear [#5262 @kit-ty-kate]
   * Add some tests for --best-effort to avoid further regressions when trying to install specific versions of packages [@5261 @kit-ty-kate]
   * Add unhelpful conflict error message test [#5270 @kit-ty-kate]
+  * Add rebuild test [#5258 @rjbou]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
@@ -476,6 +478,8 @@ users)
   * `OpamTypes`: `request.wish_install` now takes a formula instead of  a conjunction [#4975 @AltGr]
   * `OpamFilter`: add `?tools` filtering argument in `filter_deps` [#5016 @rjbou]
   * `OpamFile.OPAM`: Add `locked`, file origin and extension, in the record with its modifiers/getter [#5080 @rjbou]
+  * `OpamFile.OPAM.effective_part`: empty extra-source url if checksum is specified and take first one (as for url) [#5258 @kit-ty-kate]
+  * `OpamFile.OPAM.effectively_equal`: return true if an extra-source url changes but not its checksum (as for url) [#5258 @kit-ty-kate]
 
 ## opam-core
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
