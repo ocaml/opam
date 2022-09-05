@@ -1,0 +1,91 @@
+N0REP0
+### OPAMYES=1
+### ::I: test rebuild in case url changes but its checksum remains the same ::
+### <something>
+i am source
+### tar czf source-orig.tgz something
+### cp source-orig.tgz source-rpl.tgz
+### <pkg:a.1>
+opam-version: "2.0"
+build: [ "test" "-f" "something" ]
+### <mkurl.sh>
+file="REPO/packages/a/a.1/opam"
+basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+url="$basedir/$1.tgz"
+echo "url {" >> $file
+echo "src:\"$url\"" >> $file
+MD5=$(openssl md5 $url | cut -d' ' -f2)
+echo "checksum: \"md5=$MD5\"" >> $file
+echo "}" >> $file
+### sh mkurl.sh source-orig
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create rebuild --empty
+### opam install a
+The following actions will be performed:
+=== install 1 package
+  - install a 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved a.1  (file://${BASEDIR}/source-orig.tgz)
+-> installed a.1
+Done.
+### <pkg:a.1>
+opam-version: "2.0"
+build: [ "test" "-f" "something" ]
+### sh mkurl.sh source-rpl
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade
+Already up-to-date.
+Nothing to do.
+### ::II: test rebuild in case extra-sources url changes but its checksum remains the same ::
+### <other-sources/original>
+i'm extra source!
+### <other-sources/replacement>
+i'm extra source!
+### <pkg:b.1>
+opam-version: "2.0"
+install: [ "test" "-f" "i-am-extra-source" ]
+### <mkxsrc.sh>
+file="REPO/packages/b/b.1/opam"
+basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+xsrc="$basedir/other-sources/$1"
+echo "extra-source \"i-am-extra-source\" {" >> $file
+echo "src: \"$xsrc\"" >> $file
+MD5=$(openssl md5 $xsrc | cut -d' ' -f2)
+echo "checksum: \"md5=$MD5\"" >> $file
+echo "}" >> $file
+### sh mkxsrc.sh original
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install b
+The following actions will be performed:
+=== install 1 package
+  - install b 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved b.1  (file://${BASEDIR}/other-sources/original)
+-> installed b.1
+Done.
+### <pkg:b.1>
+opam-version: "2.0"
+install: [ "test" "-f" "i-am-extra-source" ]
+### sh mkxsrc.sh replacement
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade
+Already up-to-date.
+Nothing to do.

@@ -740,6 +740,23 @@
    (run ./run.exe %{bin:opam} %{dep:pin.unix.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-rebuild)
+ (action
+  (diff rebuild.test rebuild.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-rebuild)))
+
+(rule
+ (targets rebuild.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:rebuild.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-rec-pin)
  (action
   (diff rec-pin.test rec-pin.out)))
