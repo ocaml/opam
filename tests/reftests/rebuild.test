@@ -87,12 +87,5 @@ install: [ "test" "-f" "i-am-extra-source" ]
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
-The following actions will be performed:
-=== recompile 1 package
-  - recompile b 1 [upstream or system changes]
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved b.1  (cached)
--> removed   b.1
--> installed b.1
-Done.
+Already up-to-date.
+Nothing to do.
