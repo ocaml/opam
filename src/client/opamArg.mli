@@ -96,27 +96,27 @@ val escape_path: string -> string
 
 (** --short *)
 val print_short_flag:
-  OpamCLIVersion.Sourced.t -> validity -> bool Term.t
+  ?section:string -> OpamCLIVersion.Sourced.t -> validity -> bool Term.t
 
 (** --shell *)
 val shell_opt:
-  OpamCLIVersion.Sourced.t -> validity -> shell option Term.t
+  ?section:string -> OpamCLIVersion.Sourced.t -> validity -> shell option Term.t
 
 (** --dot-profile *)
 val dot_profile_flag:
-  OpamCLIVersion.Sourced.t -> validity -> filename option Term.t
+  ?section:string -> OpamCLIVersion.Sourced.t -> validity -> filename option Term.t
 
 (** --http/ --git/ --local *)
 val repo_kind_flag:
-  OpamCLIVersion.Sourced.t -> validity -> OpamUrl.backend option Term.t
+  ?section:string -> OpamCLIVersion.Sourced.t -> validity -> OpamUrl.backend option Term.t
 
 (** --jobs *)
 val jobs_flag:
-  OpamCLIVersion.Sourced.t -> validity -> int option Term.t
+  ?section:string -> OpamCLIVersion.Sourced.t -> validity -> int option Term.t
 
 (** --formula *)
 val formula_flag:
-  OpamCLIVersion.Sourced.t -> formula Term.t
+  ?section:string -> OpamCLIVersion.Sourced.t -> formula Term.t
 
 (** package names *)
 val name_list: name list Term.t
@@ -188,16 +188,17 @@ type build_options
 val man_build_option_section: Manpage.block list
 
 (** Build options *)
-val build_options: OpamCLIVersion.Sourced.t -> build_options Term.t
+val build_options:
+  OpamCLIVersion.Sourced.t -> build_options Term.t
 
 (** Install and reinstall options *)
-val assume_built: OpamCLIVersion.Sourced.t -> bool Term.t
+val assume_built:
+  ?section:string -> OpamCLIVersion.Sourced.t -> bool Term.t
 
 (* Options common to all path based/related commands, e.g. (un)pin, upgrade,
-   remove, (re)install
-   Disabled *)
-val recurse: OpamCLIVersion.Sourced.t -> bool Term.t
-val subpath: OpamCLIVersion.Sourced.t -> subpath option Term.t
+   remove, (re)install *)
+val recurse: ?section:string -> OpamCLIVersion.Sourced.t -> bool Term.t
+val subpath: ?section:string -> OpamCLIVersion.Sourced.t -> subpath option Term.t
 
 (** Applly build options *)
 val apply_build_options: OpamCLIVersion.Sourced.t -> build_options -> unit

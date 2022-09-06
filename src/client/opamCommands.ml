@@ -1053,7 +1053,7 @@ let var cli =
     Arg.(value & pos 0 (some string) None & info ~docv ~doc [])
   in
   let package =
-    mk_opt ~cli cli_original ["package"] "PACKAGE"
+    mk_opt ~cli cli_original ~section:Manpage.s_options ["package"] "PACKAGE"
       "List all variables defined for the given package"
       Arg.(some package_name) None
   in

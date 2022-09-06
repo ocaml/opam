@@ -28,33 +28,33 @@ val cli2_1: OpamCLIVersion.t
 val cli2_2: OpamCLIVersion.t
 
 val mk_flag:
-  cli:OpamCLIVersion.Sourced.t -> validity -> ?section:string -> string list ->
+  cli:OpamCLIVersion.Sourced.t -> validity -> section:string -> string list ->
   string -> bool Term.t
 
 val mk_flag_replaced:
-  cli:OpamCLIVersion.Sourced.t -> ?section:string ->
+  cli:OpamCLIVersion.Sourced.t -> section:string ->
   (validity * string list) list ->
   string -> bool Term.t
 
 val mk_opt:
-  cli:OpamCLIVersion.Sourced.t -> validity -> ?section:string -> ?vopt:'a ->
+  cli:OpamCLIVersion.Sourced.t -> validity -> section:string -> ?vopt:'a ->
   string list -> string -> string -> 'a Arg.converter -> 'a -> 'a Term.t
 
 val mk_opt_all:
-  cli:OpamCLIVersion.Sourced.t -> validity -> ?section:string -> ?vopt:'a ->
+  cli:OpamCLIVersion.Sourced.t -> validity -> section:string -> ?vopt:'a ->
   ?default:'a list -> string list -> string -> string -> 'a Arg.converter ->
   'a list Term.t
 
 val mk_vflag:
-  cli:OpamCLIVersion.Sourced.t -> ?section:string -> 'a ->
+  cli:OpamCLIVersion.Sourced.t -> section:string -> 'a ->
   (validity * 'a * string list * string) list -> 'a Term.t
 
 val mk_vflag_all:
-  cli:OpamCLIVersion.Sourced.t -> ?section:string -> ?default:'a list ->
+  cli:OpamCLIVersion.Sourced.t -> section:string -> ?default:'a list ->
   (validity * 'a * string list * string) list -> 'a list Term.t
 
 val mk_enum_opt:
-  cli:OpamCLIVersion.Sourced.t -> validity -> ?section:string -> string list ->
+  cli:OpamCLIVersion.Sourced.t -> validity -> section:string -> string list ->
   string -> (validity * string * 'a) list -> string -> 'a option Term.t
 
 (** [opt_all] with enums. Check each flag content cli, purge non corresponding
@@ -62,7 +62,7 @@ val mk_enum_opt:
     removed or newer flag contents), it raises an error ; otherwise only
     display warnings on wrong cli contents. *)
 val mk_enum_opt_all:
-  cli:OpamCLIVersion.Sourced.t -> validity -> ?section:string -> string list ->
+  cli:OpamCLIVersion.Sourced.t -> validity -> section:string -> string list ->
   string -> (validity * string * 'a) list -> string -> 'a list Term.t
 
 val string_of_enum: (validity * string * 'a) list -> string

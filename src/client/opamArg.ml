@@ -988,6 +988,30 @@ let opamlist_columns =
   in
   parse, print
 
+let mk_flag ~cli validity ?(section=Manpage.s_options) flags name =
+  mk_flag ~cli validity ~section flags name
+
+let mk_flag_replaced ~cli ?(section=Manpage.s_options) flags doc =
+ mk_flag_replaced ~cli ~section flags doc
+
+let mk_opt ~cli validity ?(section=Manpage.s_options) ?vopt flags value doc
+    kind default =
+  mk_opt ~cli validity ~section ?vopt flags value doc kind default
+
+let mk_opt_all ~cli validity ?(section=Manpage.s_options) ?vopt ?default flags
+    value doc kind =
+  mk_opt_all ~cli validity ~section ?vopt ?default flags value doc kind
+
+let mk_vflag ~cli ?(section=Manpage.s_options) default flags =
+  mk_vflag ~cli ~section default flags
+
+let mk_vflag_all ~cli ?(section=Manpage.s_options) ?default flags =
+  mk_vflag_all ~cli ~section ?default flags
+
+let mk_enum_opt ~cli validity ?(section=Manpage.s_options) flags value states
+    doc =
+  mk_enum_opt ~cli validity ~section flags value states doc
+
 let term_info ~cli title ~doc ~man =
   let man = man @ help_sections cli in
   Term.info ~sdocs:global_option_section ~docs:Manpage.s_commands
@@ -1028,11 +1052,11 @@ let nonempty_arg_list name doc kind =
 
 (** Common flags *)
 
-let print_short_flag cli validity =
-  mk_flag ~cli validity ["s";"short"]
+let print_short_flag ?section cli validity =
+  mk_flag ~cli validity ?section ["s";"short"]
     "Output raw lists of names, one per line, skipping any details."
 
-let shell_opt cli validity =
+let shell_opt ?section cli validity =
   let enum = [
     None,"bash",SH_bash;
     None,"sh",SH_sh;
@@ -1044,15 +1068,15 @@ let shell_opt cli validity =
     Some cli2_2,"powershell",SH_pwsh Powershell
   ] |> List.map (fun (c,s,v) -> OpamStd.Option.map_default cli_from cli_original c, s, v)
   in
-  mk_enum_opt ~cli validity ["shell"] "SHELL" enum
+  mk_enum_opt ~cli validity ?section ["shell"] "SHELL" enum
     (Printf.sprintf
        "Sets the configuration mode for opam environment appropriate for \
         $(docv). One of %s. Guessed from the parent processes and the \\$SHELL \
         variable by default."
        (string_of_enum enum))
 
-let dot_profile_flag cli validity =
-  mk_opt ~cli validity ["dot-profile"]
+let dot_profile_flag ?section cli validity =
+  mk_opt ~cli validity ?section ["dot-profile"]
     "FILENAME"
     (Printf.sprintf
       "Name of the configuration file to update instead of \
@@ -1060,7 +1084,7 @@ let dot_profile_flag cli validity =
       dir_sep dir_sep)
     (Arg.some filename) None
 
-let repo_kind_flag cli validity =
+let repo_kind_flag ?section cli validity =
   let main_kinds = [
     "http" , `http;
     "local", `rsync;
@@ -1075,19 +1099,19 @@ let repo_kind_flag cli validity =
     "rsync", `rsync;
   ] |> List.map (fun (s,v) -> cli_original, s, v)
   in
-  mk_enum_opt ~cli validity ["k";"kind"] "KIND" (main_kinds @ aliases_kinds)
+  mk_enum_opt ~cli validity ?section ["k";"kind"] "KIND" (main_kinds @ aliases_kinds)
     (Printf.sprintf "Specify the kind of the repository to be used (%s)."
        (string_of_enum main_kinds))
 
-let jobs_flag cli validity =
-  mk_opt ~cli validity ["j";"jobs"] "JOBS"
+let jobs_flag ?section cli validity =
+  mk_opt ~cli validity ?section ["j";"jobs"] "JOBS"
     "Set the maximal number of concurrent jobs to use. The default value is \
     calculated from the number of cores. You can also set it using the \
     $(b,\\$OPAMJOBS) environment variable."
     Arg.(some positive_integer) None
 
-let formula_flag cli =
-  mk_opt ~cli (cli_from ~experimental:true cli2_2) ["formula"] "FORMULA"
+let formula_flag ?section cli =
+  mk_opt ~cli (cli_from ~experimental:true cli2_2) ?section ["formula"] "FORMULA"
     "Specify a dependency formula to be verified by the solution, in addition \
      to the switch invariant. The format is the same as for expressing \
      dependencies in package definition files, e.g. '\"foo\" {>= \"1.1\"}'"
@@ -1174,7 +1198,7 @@ let global_options cli =
                 This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
       Arg.(some string) None in
   let yes =
-    mk_vflag_all ~cli [
+    mk_vflag_all ~cli ~section [
       cli_original, true, ["y";"yes"],
       "Answer yes to all opam yes/no questions without prompting. \
        See also $(b,--confirm-level). \
@@ -1298,8 +1322,8 @@ let global_options cli =
         $d_no_aspcud $cli_arg)
 
 (* lock options *)
-let locked ?(section=Manpage.s_options) cli =
-  mk_flag ~cli cli_original ~section ["locked"]
+let locked ?section cli =
+  mk_flag ~cli cli_original ?section ["locked"]
     "In commands that use opam files found from pinned sources, if a variant \
      of the file with an added .$(i,locked) extension is found (e.g. \
      $(b,foo.opam.locked) besides $(b,foo.opam)), that will be used instead. \
@@ -1309,8 +1333,8 @@ let locked ?(section=Manpage.s_options) cli =
      of the dependencies currently installed on the host. This is equivalent \
      to setting the $(b,\\$OPAMLOCKED) environment variable. Note that this \
      option doesn't generally affect already pinned packages."
-let lock_suffix ?(section=Manpage.s_options) cli =
-  mk_opt ~cli (cli_from cli2_1) ~section ["lock-suffix"] "SUFFIX"
+let lock_suffix ?section cli =
+  mk_opt ~cli (cli_from cli2_1) ?section ["lock-suffix"] "SUFFIX"
     "Set locked files suffix to $(i,SUFFIX)."
     Arg.(string) ("locked")
 
@@ -1437,13 +1461,13 @@ let build_options cli =
   Term.(const create_build_options
         $keep_build_dir $reuse_build_dir $inplace_build $make
         $no_checksums $req_checksums $build_test $build_doc $with_tools $show
-        $dryrun $skip_update $fake $jobs_flag cli cli_original
+        $dryrun $skip_update $fake $jobs_flag ~section cli cli_original
         $ignore_constraints_on $unlock_base $locked $lock_suffix
         $assume_depexts $no_depexts)
 
 (* Option common to install commands *)
-let assume_built cli =
-  mk_flag ~cli cli_original  ["assume-built"]
+let assume_built ?section cli =
+  mk_flag ~cli cli_original  ?section ["assume-built"]
     "For use on locally-pinned packages: assume they have already \
      been correctly built, and only run their installation \
      instructions, directly from their source directory. This \
@@ -1452,17 +1476,14 @@ let assume_built cli =
      No locally-pinned packages will be skipped."
 
 (* Options common to all path based/related commands, e.g. (un)pin, upgrade,
-   remove, (re)install.
-   Disabled *)
-(* let recurse _cli = Term.const false *)
+   remove, (re)install. *)
 
-let recurse cli =
-  mk_flag ~cli (cli_from cli2_2) ["recursive"]
+let recurse ?section cli =
+  mk_flag ~cli (cli_from cli2_2) ?section ["recursive"]
     "Allow recursive lookups of (b,*.opam) files. Cf. $(i,--subpath) also."
 
-(* let subpath _cli = Term.const None *)
-let subpath cli =
-  mk_opt ~cli (cli_from cli2_2) ["subpath"] "PATH"
+let subpath ?section cli =
+  mk_opt ~cli (cli_from cli2_2) ?section ["subpath"] "PATH"
     "$(b,*.opam) files are retrieved from the given sub directory instead of \
       top directory. Sources are then taken from the targeted sub directory, \
       internally only this subdirectory is copied/fetched.  It can be combined \
