@@ -34,7 +34,7 @@ result.pkgbuild: dune-local.pkgbuild findlib.pkgbuild
 
 topkg.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild result.pkgbuild
 
-cmdliner.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild result.pkgbuild topkg.pkgbuild
+cmdliner.pkgbuild: dune-local.pkgbuild
 
 cudf.pkgbuild: dune-local.pkgbuild extlib.pkgbuild
 
@@ -106,8 +106,8 @@ topkg-pkg-build:
 	ocamlfind install topkg _build/pkg/META $(addprefix _build/src/topkg.,$(EXTS1)) $(addprefix _build/src/topkg.cm,$(EXTS2)) _build/src/topkg*.cmx
 
 cmdliner-pkg-build:
-	ocaml pkg/pkg.ml build --pinned false
-	ocamlfind install cmdliner _build/pkg/META $(addprefix _build/src/cmdliner.,$(EXTS1)) $(addprefix _build/src/cmdliner.cm,$(EXTS2)) _build/src/cmdliner*.cmx
+	dune build @install -p cmdliner
+	dune install -p cmdliner cmdliner
 
 cudf-pkg-build:
 	dune build @install -p cudf
