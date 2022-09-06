@@ -424,6 +424,8 @@ users)
   * `OpamAuxCommand`: add `?locked` (and handle lock file then) argument to `name_and_dir_of_opam_file`, `opams_of_dir`, `opams_of_dir_w_target`, `resolve_locals`, `autopin`, and `simulate_autopin` [#5080 @rjbou]
   * `OpamClient.PIN`: change `?locked:bool` argument into `string`, to have lock extension name [#5080 @rjbou]
   * `OpamClient.Pin.post_pin_action`: no more updates depexts information, moved to `OpamSwitchState.update_pin` [#5047 @rjbou]
+  * `OpamArgTools`: all flag definition takes now a section as a labelled argument [#5275 @rjbou]
+  * `OpamArg`: all flag definition takes now a section as an optional argument, default is set to `Manpage.s_options` [#5275 @rjbou]
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
