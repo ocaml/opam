@@ -598,7 +598,7 @@ true
 true
 ### opam var arch="somearch" | '…' -> '...' | '`' -> "'"
 opam: variable setting needs a scope, use '--global' or '--switch <switch>'
-Usage: opam var [OPTION]... [VAR[=[VALUE]]]
+Usage: opam var [--global] [--package=PACKAGE] [OPTION]... [VAR[=[VALUE]]]
 Try 'opam var --help' or 'opam --help' for more information.
 # Return code 2 #
 ### opam var arch="somearch" --global
