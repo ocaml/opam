@@ -221,6 +221,7 @@ users)
 
 ## Release scripts
   * Make the release script setup-less using QEMU, Docker and Rosetta 2 [#4947 @kit-ty-kate]
+  * Update release notes for messages in opam-repository [#5276 @dra27]
 
 ## Admin
   * ✘ `opam admin cache` now ignores all already present cache files. Option
