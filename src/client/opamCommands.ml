@@ -1157,8 +1157,7 @@ let config cli =
       OpamEnv.(shell_eval_invocation shell "opam config env" |> Manpage.escape);
     cli_original, "list", `list, ["[PACKAGE]..."],
     "Without argument, prints a documented list of all available variables. \
-     With $(i,PACKAGE), lists all the variables available for these packages. \
-     Use $(i,-) to include global configuration variables for this switch.";
+     With $(i,PACKAGE), lists all the variables available for these packages.";
     cli_original, "expand", `expand, ["STRING"],
     "Expand variable interpolations in the given string";
     cli_original, "subst", `subst, ["FILE..."],

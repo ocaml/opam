@@ -21,14 +21,6 @@ let list t ns =
   log "config-list";
   if ns = [] then () else
   let list_vars name =
-    if OpamPackage.Name.to_string name = "-" then
-      let conf = t.switch_config in
-      List.map (fun (v,c) ->
-          OpamVariable.Full.global v,
-          OpamVariable.string_of_variable_contents c,
-          "")
-        (conf.OpamFile.Switch_config.variables)
-    else
     let nv = OpamSwitchState.get_package t name in
     let pkg_vars =
       try
