@@ -21,31 +21,36 @@ let list t ns =
   log "config-list";
   if ns = [] then () else
   let list_vars name =
-    let nv = OpamSwitchState.get_package t name in
-    let pkg_vars =
-      try
-        let opam = OpamSwitchState.opam t nv in
-        let env = OpamPackageVar.resolve ~opam t in
-        OpamStd.List.filter_map (fun (vname, desc) ->
-            let v = OpamVariable.(Full.create name (of_string vname)) in
-            try
-              let c = OpamFilter.ident_string env (OpamFilter.ident_of_var v) in
-              Some (v, c, desc)
-            with Failure _ -> None)
-          OpamPackageVar.package_variable_names
-      with Not_found -> []
-    in
-    let conf_vars =
-      try
-        let conf = OpamSwitchState.package_config t name in
-        List.map (fun (v,c) ->
-            OpamVariable.Full.create name v,
-            OpamVariable.string_of_variable_contents c,
-            "")
-          (OpamFile.Dot_config.bindings conf)
-      with Not_found -> []
-    in
-    pkg_vars @ conf_vars
+    try
+      let nv = OpamSwitchState.get_package t name in
+      let pkg_vars =
+        try
+          let opam = OpamSwitchState.opam t nv in
+          let env = OpamPackageVar.resolve ~opam t in
+          OpamStd.List.filter_map (fun (vname, desc) ->
+              let v = OpamVariable.(Full.create name (of_string vname)) in
+              try
+                let c = OpamFilter.ident_string env (OpamFilter.ident_of_var v) in
+                Some (v, c, desc)
+              with Failure _ -> None)
+            OpamPackageVar.package_variable_names
+        with Not_found -> []
+      in
+      let conf_vars =
+        try
+          let conf = OpamSwitchState.package_config t name in
+          List.map (fun (v,c) ->
+              OpamVariable.Full.create name v,
+              OpamVariable.string_of_variable_contents c,
+              "")
+            (OpamFile.Dot_config.bindings conf)
+        with Not_found -> []
+      in
+      pkg_vars @ conf_vars
+    with Not_found ->
+      OpamConsole.error "Package %s not found, skipping"
+        (OpamPackage.Name.to_string name);
+      []
   in
   let vars = List.flatten (List.map list_vars ns) in
   let (%) s col = OpamConsole.colorise col s in
