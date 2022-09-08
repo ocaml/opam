@@ -44,9 +44,10 @@ Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-var
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ocaml" {>= "4.05.0"}]
 The following actions will be performed:
-=== install 5 packages
+=== install 6 packages
   - install base            1
   - install buildy          1
+  - install devvy           1
   - install foo-file-format 3
   - install ocaml           5
   - install other           1
@@ -54,6 +55,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed base.1
 -> installed buildy.1
+-> installed devvy.1
 -> installed foo-file-format.3
 -> installed ocaml.5
 -> installed other.1
@@ -64,6 +66,7 @@ Done.
 # Name          # Installed # Synopsis
 base            1
 buildy          1
+devvy           1
 foo-file-format 3
 ocaml           5
 other           1
@@ -72,9 +75,10 @@ Switch ${BASEDIR}/foo and all its packages will be wiped. Are you sure? [y/n] y
 ### opam switch create fooism --empty
 ### opam install ./foo --deps-only
 The following actions will be performed:
-=== install 5 packages
+=== install 6 packages
   - install base            1 [required by foo-core]
   - install buildy          1 [required by foo-core]
+  - install devvy           1 [required by foo-core]
   - install foo-file-format 3 [required by foo-format]
   - install ocaml           5 [required by foo-core, foo-format]
   - install other           1 [required by foo-format]
@@ -82,6 +86,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed base.1
 -> installed buildy.1
+-> installed devvy.1
 -> installed foo-file-format.3
 -> installed ocaml.5
 -> installed other.1
@@ -92,6 +97,7 @@ Done.
 # Name          # Installed # Synopsis
 base            1
 buildy          1
+devvy           1
 foo-file-format 3
 ocaml           5
 other           1
@@ -101,8 +107,7 @@ foo-core is now pinned to file://${BASEDIR}/foo (version 2.0)
 The following actions will be performed:
 === downgrade 1 package
   - downgrade foo-file-format 3 to 2
-=== install 3 packages
-  - install   devvy           1            [required by foo-core]
+=== install 2 packages
   - install   foo-core        2.0 (pinned)
   - install   foo-format      2.0 (pinned)
 
@@ -123,7 +128,6 @@ echo "some-depext"
 - some-depext
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed devvy.1
 -> retrieved foo-core.2.0  (file://${BASEDIR}/foo)
 -> removed   foo-file-format.3
 -> installed foo-core.2.0
