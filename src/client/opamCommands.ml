@@ -1053,7 +1053,7 @@ let var cli =
     Arg.(value & pos 0 (some string) None & info ~docv ~doc [])
   in
   let package =
-    mk_opt ~cli cli_original ["package"] "PACKAGE"
+    mk_opt ~cli cli_original ~section:Manpage.s_options ["package"] "PACKAGE"
       "List all variables defined for the given package"
       Arg.(some package_name) None
   in
@@ -4121,8 +4121,8 @@ let help =
           List.iter (OpamConsole.msg "%s\n") cmds; `Ok ()
       | `Ok t -> `Help (man_format, Some t) in
 
-  Term.(ret (const help $Term.man_format $Term.choice_names $topic)),
-  Term.info "help" ~doc ~man
+  Term.(ret (const help $Arg.man_format $Term.choice_names $topic)),
+  Cmd.info "help" ~doc ~man
 
 let default cli =
   let doc = "source-based package management" in
@@ -4169,7 +4169,7 @@ let default cli =
       OpamAdminCommand.admin_command_doc
   in
   Term.(const usage $global_options cli),
-  Term.info "opam"
+  Cmd.info "opam"
     ~version:(OpamVersion.to_string OpamVersion.current)
     ~sdocs:global_option_section
     ~doc
@@ -4179,7 +4179,7 @@ let admin =
   (* cmdliner never sees the admin subcommand, so this "can't happen" *)
   let doc = "Internal opam error - main admin command invoked" in
   Term.(ret (const (`Error (true, doc)))),
-  Term.info "admin" ~doc:OpamAdminCommand.admin_command_doc
+  Cmd.info "admin" ~doc:OpamAdminCommand.admin_command_doc
 
 (* Note: for cli versionning check, all commands must be constructed with
    [OpamArg.mk_command] or [OpamArg.mk_command_ret]. *)
@@ -4213,19 +4213,22 @@ let commands cli =
 
 let current_commands = commands OpamCLIVersion.Sourced.current
 
+(* TODO: Remove that horror whenever https://github.com/dbuenzli/cmdliner/pull/161 is merged *)
+let name_of_new_api_info info = Cmd.name (Cmd.v info (Term.const ()))
+
 let is_builtin_command prefix =
   List.exists (fun (_,info) ->
-                 OpamStd.String.starts_with ~prefix (Term.name info))
+                 OpamStd.String.starts_with ~prefix (name_of_new_api_info info))
               current_commands
 
 let is_admin_subcommand prefix =
   prefix = "admin" ||
   let matches =
     List.filter (fun (_,info) ->
-                   OpamStd.String.starts_with ~prefix (Term.name info))
+                   OpamStd.String.starts_with ~prefix (name_of_new_api_info info))
                 current_commands in
   match matches with
-  | [(_,info)] when Term.name info = "admin" -> true
+  | [(_,info)] when name_of_new_api_info info = "admin" -> true
   | _ -> false
 
 let get_cmdliner_parser cli =

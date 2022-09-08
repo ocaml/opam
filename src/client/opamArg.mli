@@ -65,14 +65,14 @@ val mk_flag_replaced:
 val mk_opt:
   cli:OpamCLIVersion.Sourced.t -> validity ->
   ?section:string -> ?vopt:'a -> string list -> string -> string ->
-  'a Arg.converter -> 'a ->
+  'a Arg.conv -> 'a ->
   'a Term.t
 
 val mk_opt_all:
   cli:OpamCLIVersion.Sourced.t -> validity ->
   ?section:string -> ?vopt:'a -> ?default:'a list ->
   string list -> string -> string ->
-  'a Arg.converter -> 'a list Term.t
+  'a Arg.conv -> 'a list Term.t
 
 val mk_vflag:
   cli:OpamCLIVersion.Sourced.t ->
@@ -96,27 +96,27 @@ val escape_path: string -> string
 
 (** --short *)
 val print_short_flag:
-  OpamCLIVersion.Sourced.t -> validity -> bool Term.t
+  ?section:string -> OpamCLIVersion.Sourced.t -> validity -> bool Term.t
 
 (** --shell *)
 val shell_opt:
-  OpamCLIVersion.Sourced.t -> validity -> shell option Term.t
+  ?section:string -> OpamCLIVersion.Sourced.t -> validity -> shell option Term.t
 
 (** --dot-profile *)
 val dot_profile_flag:
-  OpamCLIVersion.Sourced.t -> validity -> filename option Term.t
+  ?section:string -> OpamCLIVersion.Sourced.t -> validity -> filename option Term.t
 
 (** --http/ --git/ --local *)
 val repo_kind_flag:
-  OpamCLIVersion.Sourced.t -> validity -> OpamUrl.backend option Term.t
+  ?section:string -> OpamCLIVersion.Sourced.t -> validity -> OpamUrl.backend option Term.t
 
 (** --jobs *)
 val jobs_flag:
-  OpamCLIVersion.Sourced.t -> validity -> int option Term.t
+  ?section:string -> OpamCLIVersion.Sourced.t -> validity -> int option Term.t
 
 (** --formula *)
 val formula_flag:
-  OpamCLIVersion.Sourced.t -> formula Term.t
+  ?section:string -> OpamCLIVersion.Sourced.t -> formula Term.t
 
 (** package names *)
 val name_list: name list Term.t
@@ -138,10 +138,10 @@ val atom_or_dir_list:
   [ `Atom of atom | `Dirname of dirname ] list Term.t
 
 (** Generic argument list builder *)
-val arg_list: string -> string -> 'a Arg.converter -> 'a list Term.t
+val arg_list: string -> string -> 'a Arg.conv -> 'a list Term.t
 
 (** Generic argument list builder *)
-val nonempty_arg_list: string -> string -> 'a Arg.converter -> 'a list Term.t
+val nonempty_arg_list: string -> string -> 'a Arg.conv -> 'a list Term.t
 
 (** Confirmation level enum *)
 val confirm_enum: (validity * string * OpamStd.Config.answer) list
@@ -188,16 +188,17 @@ type build_options
 val man_build_option_section: Manpage.block list
 
 (** Build options *)
-val build_options: OpamCLIVersion.Sourced.t -> build_options Term.t
+val build_options:
+  OpamCLIVersion.Sourced.t -> build_options Term.t
 
 (** Install and reinstall options *)
-val assume_built: OpamCLIVersion.Sourced.t -> bool Term.t
+val assume_built:
+  ?section:string -> OpamCLIVersion.Sourced.t -> bool Term.t
 
 (* Options common to all path based/related commands, e.g. (un)pin, upgrade,
-   remove, (re)install
-   Disabled *)
-val recurse: OpamCLIVersion.Sourced.t -> bool Term.t
-val subpath: OpamCLIVersion.Sourced.t -> subpath option Term.t
+   remove, (re)install *)
+val recurse: ?section:string -> OpamCLIVersion.Sourced.t -> bool Term.t
+val subpath: ?section:string -> OpamCLIVersion.Sourced.t -> subpath option Term.t
 
 (** Applly build options *)
 val apply_build_options: OpamCLIVersion.Sourced.t -> build_options -> unit
@@ -226,57 +227,57 @@ val package_listing:
 (** {3 Converters} *)
 
 (** Repository name converter *)
-val repository_name: repository_name Arg.converter
+val repository_name: repository_name Arg.conv
 
 (** URL converter *)
-val url: url Arg.converter
+val url: url Arg.conv
 
 (** Filename converter *)
-val filename: filename Arg.converter
+val filename: filename Arg.conv
 
 (** Filename converter also accepting "-" for stdin/stdout *)
-val existing_filename_or_dash: filename option Arg.converter
+val existing_filename_or_dash: filename option Arg.conv
 
 (** Dirnam converter *)
-val dirname: dirname Arg.converter
+val dirname: dirname Arg.conv
 
 val existing_filename_dirname_or_dash:
-  OpamFilename.generic_file option Arg.converter
+  OpamFilename.generic_file option Arg.conv
 
-val positive_integer: int Arg.converter
+val positive_integer: int Arg.conv
 
 (** Package name converter *)
-val package_name: name Arg.converter
+val package_name: name Arg.conv
 
 (** Package version converter *)
-val package_version: version Arg.converter
+val package_version: version Arg.conv
 
 (** [name{.version}] (or [name=version]) *)
-val package: (name * version option) Arg.converter
+val package: (name * version option) Arg.conv
 
 (** [name.version] (or [name=version]) *)
-val package_with_version: package Arg.converter
+val package_with_version: package Arg.conv
 
 (** [name{(.|=|!=|>|<|>=|<=)version}] converter*)
-val atom: atom Arg.converter
+val atom: atom Arg.conv
 
 (** Accepts [atom] but also (explicit) file and directory names *)
 val atom_or_local:
-  [ `Atom of atom | `Filename of filename | `Dirname of dirname ] Arg.converter
+  [ `Atom of atom | `Filename of filename | `Dirname of dirname ] Arg.conv
 
 val atom_or_dir:
-  [ `Atom of atom | `Dirname of dirname ] Arg.converter
+  [ `Atom of atom | `Dirname of dirname ] Arg.conv
 
 (** Formula, in the same format as [depends:] in opam files *)
-val dep_formula: formula Arg.converter
+val dep_formula: formula Arg.conv
 
 (** [var=value,...] argument *)
-val variable_bindings: (OpamVariable.t * string) list Arg.converter
+val variable_bindings: (OpamVariable.t * string) list Arg.conv
 
 (** Warnings string ["+3..10-4"] *)
-val warn_selector: (int * bool) list Arg.converter
+val warn_selector: (int * bool) list Arg.conv
 
-val opamlist_columns: OpamListCommand.output_format list Arg.converter
+val opamlist_columns: OpamListCommand.output_format list Arg.conv
 
 (** {2 Subcommands} *)
 
@@ -322,8 +323,8 @@ val mk_subdoc :
 
 val make_command_alias:
   cli:OpamCLIVersion.Sourced.t ->
-  'a Term.t * Term.info -> ?options:string -> string ->
-  'a Term.t * Term.info
+  'a Term.t * Cmd.info -> ?options:string -> string ->
+  'a Term.t * Cmd.info
 (** Create an alias for an existing command. [options] can be used to add extra
     options after the original command in the doc (eg like `unpin` is an alias
     for `pin remove`). *)
@@ -333,7 +334,7 @@ val make_command_alias:
 (* All commands must be defined using [mk_command] and [mk_command_ret] for
    prior cli validation. *)
 
-type command = unit Term.t * Term.info
+type command = unit Term.t * Cmd.info
 
 val mk_command:
   cli:OpamCLIVersion.Sourced.t -> validity -> string -> doc:string ->

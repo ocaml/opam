@@ -443,9 +443,13 @@ let run () =
       OpamCommands.get_cmdliner_parser cli, argv
   in
   let argv = Array.of_list argv1 in
-  match Term.eval_choice ~catch:false ~argv default commands with
-  | `Error _ -> exit (OpamStd.Sys.get_exit_code `Bad_arguments)
-  | _        -> exit (OpamStd.Sys.get_exit_code `Success)
+  (* TODO: Get rid of this whenever https://github.com/dbuenzli/cmdliner/pull/161 is available *)
+  let to_new_cmdliner_api (term, info) = Cmd.v info term in
+  let default, default_info = default in
+  let commands = List.map to_new_cmdliner_api commands in
+  match Cmd.eval_value ~catch:false ~argv (Cmd.group ~default default_info commands) with
+  | Error _ -> exit (OpamStd.Sys.get_exit_code `Bad_arguments)
+  | Ok _    -> exit (OpamStd.Sys.get_exit_code `Success)
 
 let json_out () =
   match OpamClientConfig.(!r.json_out) with

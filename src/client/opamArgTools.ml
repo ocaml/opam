@@ -250,40 +250,40 @@ let split_clis_all l =
 
 (* Arguments *)
 
-let mk_flag ~cli validity ?section flags doc =
+let mk_flag ~cli validity ~section flags doc =
   let doc = update_doc_w_cli doc ~cli validity in
-  let doc = Arg.info ?docs:section ~doc flags in
+  let doc = Arg.info ~docs:section ~doc flags in
   let check elem =
     check_cli_validity cli validity ~cond:(fun c -> c && elem) elem
       (Flags flags)
   in
   term_cli_check ~check Arg.(flag & doc)
 
-let mk_opt ~cli validity ?section ?vopt flags value doc kind default =
+let mk_opt ~cli validity ~section ?vopt flags value doc kind default =
   let doc = update_doc_w_cli doc ~cli validity in
-  let doc = Arg.info ?docs:section ~docv:value ~doc flags in
+  let doc = Arg.info ~docs:section ~docv:value ~doc flags in
   let check elem =
     check_cli_validity cli validity
       ~cond:(fun c -> c && default <> elem) elem (Flags flags)
   in
   term_cli_check ~check Arg.(opt ?vopt kind default & doc)
 
-let mk_opt_all ~cli validity ?section ?vopt ?(default=[])
+let mk_opt_all ~cli validity ~section ?vopt ?(default=[])
     flags value doc kind =
   let doc = update_doc_w_cli doc ~cli validity in
-  let doc = Arg.info ?docs:section ~docv:value ~doc flags in
+  let doc = Arg.info ~docs:section ~docv:value ~doc flags in
   let check elem =
     check_cli_validity cli validity
       ~cond:(fun c -> c && default <> elem) elem (Flags flags)
   in
   term_cli_check ~check Arg.(opt_all ?vopt kind default & doc)
 
-let mk_vflag ~cli ?section default flags =
+let mk_vflag ~cli ~section default flags =
   let flags = List.map (fun (v,c,f,d) -> contented_validity v c, f, d) flags in
   let info_flags =
     List.map (fun (validity, flag, doc) ->
         let doc = update_doc_w_cli doc ~cli validity in
-        validity.content, Arg.info ?docs:section flag ~doc)
+        validity.content, Arg.info ~docs:section flag ~doc)
       flags
   in
   let check elem =
@@ -298,16 +298,16 @@ let mk_vflag ~cli ?section default flags =
   in
   term_cli_check ~check Arg.(vflag (Valid default) info_flags)
 
-let mk_flag_replaced ~cli ?section flags doc =
+let mk_flag_replaced ~cli ~section flags doc =
   let flags = List.map (fun (c,f) -> c, true, f, doc) flags in
-  mk_vflag ~cli ?section false flags
+  mk_vflag ~cli ~section false flags
 
-let mk_vflag_all ~cli ?section ?(default=[]) flags =
+let mk_vflag_all ~cli ~section ?(default=[]) flags =
   let flags = List.map (fun (v,c,f,d) -> contented_validity v c, f, d) flags in
   let info_flags =
     List.map (fun (validity, flag, doc) ->
         let doc = update_doc_w_cli doc ~cli validity in
-        validity.content, Arg.info ?docs:section flag ~doc)
+        validity.content, Arg.info ~docs:section flag ~doc)
       flags
   in
   let check selected =
@@ -412,9 +412,9 @@ let mk_vflag_all ~cli ?section ?(default=[]) flags =
 let string_of_enum enum =
   Arg.doc_alts_enum (List.map (fun (_, s, v) -> s,v) enum)
 
-let mk_enum_opt ~cli validity ?section flags value states doc =
+let mk_enum_opt ~cli validity ~section flags value states doc =
   let doc = update_doc_w_cli doc ~cli validity in
-  let doc = Arg.info ?docs:section ~docv:value ~doc flags in
+  let doc = Arg.info ~docs:section ~docv:value ~doc flags in
   let check elem =
     (* first check validity of flag *)
     let flag_validity =
@@ -434,9 +434,9 @@ let mk_enum_opt ~cli validity ?section flags value states doc =
   let states = List.map (fun (_, s, v) -> s,v) states in
   term_cli_check ~check Arg.(opt (some (enum states)) None & doc)
 
-let mk_enum_opt_all ~cli validity ?section flags value states doc =
+let mk_enum_opt_all ~cli validity ~section flags value states doc =
   let doc = update_doc_w_cli doc ~cli validity in
-  let doc = Arg.info ?docs:section ~docv:value ~doc flags in
+  let doc = Arg.info ~docs:section ~docv:value ~doc flags in
   let check elems =
     (* first check validity of flag *)
     let flag_validity =
@@ -663,7 +663,7 @@ let bad_subcommand ~cli subcommands (command, usersubcommand, userparams) =
 
 (* Commands *)
 
-type command = unit Term.t * Term.info
+type command = unit Term.t * Cmd.info
 
 (* As [term_info] is defined later, we need to have it as argument *)
 let mk_command ~cli validity term_info name ~doc ~man cmd =

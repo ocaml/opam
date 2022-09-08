@@ -30,6 +30,7 @@ users)
   * [BUG] Fix display of pinned packages in action list [#5079 @rjbou]
   * [BUG] Fix spaces in root and switch dirs [#5203 @jonahbeckford]
   * Use menu for init setup [#5057 @AltGr; #5217 @dra27]
+  * Do not show --yes and --no as special global options when using cmdliner >= 1.1 [#5269 @kit-ty-kate]
 
 ## Plugins
   *
@@ -212,6 +213,7 @@ users)
   * Add `with-tools` handling in selection process [#5016 @rjbou]
   * Bump cudf to 0.10 [#5195 @kit-ty-kate]
   * shell/bootstrap-ocaml.sh: do not fail if curl/wget is missing [#5223 #5233 @kit-ty-kate]
+  * Upgrade to cmdliner >= 1.1 [#5269 @kit-ty-kate]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
@@ -425,6 +427,8 @@ users)
   * `OpamAuxCommand`: add `?locked` (and handle lock file then) argument to `name_and_dir_of_opam_file`, `opams_of_dir`, `opams_of_dir_w_target`, `resolve_locals`, `autopin`, and `simulate_autopin` [#5080 @rjbou]
   * `OpamClient.PIN`: change `?locked:bool` argument into `string`, to have lock extension name [#5080 @rjbou]
   * `OpamClient.Pin.post_pin_action`: no more updates depexts information, moved to `OpamSwitchState.update_pin` [#5047 @rjbou]
+  * `OpamArgTools`: all flag definition takes now a section as a labelled argument [#5275 @rjbou]
+  * `OpamArg`: all flag definition takes now a section as an optional argument, default is set to `Manpage.s_options` [#5275 @rjbou]
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]

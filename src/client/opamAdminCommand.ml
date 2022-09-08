@@ -14,7 +14,7 @@ open OpamProcess.Job.Op
 open OpamStateTypes
 open Cmdliner
 
-type command = unit Cmdliner.Term.t * Cmdliner.Term.info
+type command = unit Cmdliner.Term.t * Cmdliner.Cmd.info
 
 let checked_repo_root () =
   let repo_root = OpamFilename.cwd () in
@@ -1077,7 +1077,7 @@ let add_constraint_command cli =
       pkg_prefixes
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
-  Term.(pure cmd $ global_options cli $ force_arg $ atom_arg)
+  Term.(const cmd $ global_options cli $ force_arg $ atom_arg)
 
 (* HELP *)
 let help =
@@ -1102,8 +1102,8 @@ let help =
           List.iter (OpamConsole.msg "%s\n") cmds; `Ok ()
       | `Ok t -> `Help (man_format, Some t) in
 
-  Term.(ret (const help $Term.man_format $Term.choice_names $topic)),
-  Term.info "help" ~doc ~man
+  Term.(ret (const help $Arg.man_format $Term.choice_names $topic)),
+  Cmd.info "help" ~doc ~man
 
 let admin_subcommands cli =
   let index_command = index_command cli in
@@ -1146,7 +1146,7 @@ let default_subcommand cli =
       upgrade_command_doc
   in
   Term.(const usage $ global_options cli),
-  Term.info "opam admin"
+  Cmd.info "opam admin"
     ~version:(OpamVersion.to_string OpamVersion.current)
     ~sdocs:OpamArg.global_option_section
     ~doc:admin_command_doc
