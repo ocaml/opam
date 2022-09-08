@@ -44,10 +44,9 @@ Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-var
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ocaml" {>= "4.05.0"}]
 The following actions will be performed:
-=== install 6 packages
+=== install 5 packages
   - install base            1
   - install buildy          1
-  - install devvy           1
   - install foo-file-format 3
   - install ocaml           5
   - install other           1
@@ -55,21 +54,16 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed base.1
 -> installed buildy.1
--> installed devvy.1
 -> installed foo-file-format.3
 -> installed ocaml.5
 -> installed other.1
 Done.
 ### opam pin --switch=./foo
-foo-core.2.0     (no definition found)
-foo-format.2.0   (no definition found)
-### : BROKEN -- should be empty
 ### opam list --switch=./foo
 # Packages matching: installed
 # Name          # Installed # Synopsis
 base            1
 buildy          1
-devvy           1
 foo-file-format 3
 ocaml           5
 other           1
@@ -93,9 +87,6 @@ The following actions will be performed:
 -> installed other.1
 Done.
 ### opam pin
-foo-core.2.0     (no definition found)
-foo-format.2.0   (no definition found)
-### : BROKEN -- should be empty
 ### opam list
 # Packages matching: installed
 # Name          # Installed # Synopsis
@@ -107,8 +98,6 @@ other           1
 ### opam install ./foo foo-file-format.2 | sed-cmd echo
 foo-format is now pinned to file://${BASEDIR}/foo (version 2.0)
 foo-core is now pinned to file://${BASEDIR}/foo (version 2.0)
-[foo-core.2.0] synchronised (file://${BASEDIR}/foo)
-[foo-format.2.0] synchronised (file://${BASEDIR}/foo)
 The following actions will be performed:
 === downgrade 1 package
   - downgrade foo-file-format 3 to 2
@@ -134,10 +123,12 @@ echo "some-depext"
 - some-depext
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   foo-file-format.3
 -> installed devvy.1
+-> retrieved foo-core.2.0  (file://${BASEDIR}/foo)
+-> removed   foo-file-format.3
 -> installed foo-core.2.0
 -> installed foo-file-format.2
+-> retrieved foo-format.2.0  (file://${BASEDIR}/foo)
 -> installed foo-format.2.0
 Done.
 ### <pin:foo/foo-format-bis.opam>
@@ -205,9 +196,8 @@ other              1
 ### opam pin
 [ERROR] No definition found for the following installed packages: { deps-of-foo-core.2.0, deps-of-foo-format.2.0 }
         This switch may need to be reinstalled
-foo-core.2.0                                rsync  file://${BASEDIR}/foo
-foo-format.2.0                              rsync  file://${BASEDIR}/foo
-foo-format-bis.2.0   (no definition found)
+foo-core.2.0      rsync  file://${BASEDIR}/foo
+foo-format.2.0    rsync  file://${BASEDIR}/foo
 ### opam install ./foo --depext-only | sed-cmd echo
 [ERROR] No definition found for the following installed packages: { deps-of-foo-core.2.0, deps-of-foo-format.2.0 }
         This switch may need to be reinstalled
