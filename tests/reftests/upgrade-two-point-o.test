@@ -27,6 +27,7 @@ STATE                           Definition missing for installed package i-am-co
 STATE                           Inferred invariant: from base packages { i-am-compiler.1 }, (roots { i-am-compiler.1 }) => ["i-am-compiler" {= "1"}]
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
+STATE                           depexts loaded in 0.000s
 Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
 However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.
