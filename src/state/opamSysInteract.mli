@@ -22,7 +22,8 @@ val packages_status:
 (* Return the commands to run to install given system packages.
    [env] is used to determine host specification. *)
 val install_packages_commands:
-  ?env:gt_variables -> OpamSysPkg.Set.t -> (string * string list) list
+  ?env:gt_variables -> OpamSysPkg.Set.t ->
+  ([`AsAdmin of string | `AsUser of string] * string list) list
 
 (* Install given system packages, by calling local system package manager.
    [env] is used to determine host specification. *)

@@ -641,8 +641,8 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) sys_packages =
     List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements sys_packages)
   in
   match family ~env () with
-  | Alpine -> ["apk", "add"::yes ~no:["-i"] [] packages], None
-  | Arch -> ["pacman", "-Su"::yes ["--noconfirm"] packages], None
+  | Alpine -> [`AsAdmin "apk", "add"::yes ~no:["-i"] [] packages], None
+  | Arch -> [`AsAdmin "pacman", "-Su"::yes ["--noconfirm"] packages], None
   | Centos ->
     (* TODO: check if they all declare "rhel" as primary family *)
     (* Kate's answer: no they don't :( (e.g. Fedora, Oraclelinux define Nothing and "fedora" respectively)  *)
@@ -652,57 +652,56 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) sys_packages =
     let epel_release = "epel-release" in
     let install_epel rest =
       if List.mem epel_release packages then
-        [Lazy.force yum_cmd, "install"::yes ["-y"] [epel_release]] @ rest
+        [`AsAdmin (Lazy.force yum_cmd), "install"::yes ["-y"] [epel_release]] @ rest
       else rest
     in
     install_epel
-      [Lazy.force yum_cmd, "install"::yes ["-y"]
+      [`AsAdmin (Lazy.force yum_cmd), "install"::yes ["-y"]
                 (OpamStd.String.Set.of_list packages
                  |> OpamStd.String.Set.remove epel_release
                  |> OpamStd.String.Set.elements);
-       "rpm", "-q"::"--whatprovides"::packages], None
-  | Debian -> ["apt-get", "install"::yes ["-qq"; "-yy"] packages],
+       `AsUser "rpm", "-q"::"--whatprovides"::packages], None
+  | Debian -> [`AsAdmin "apt-get", "install"::yes ["-qq"; "-yy"] packages],
       (if unsafe_yes then Some ["DEBIAN_FRONTEND", "noninteractive"] else None)
-  | DummySuccess -> ["echo", packages], None
-  | DummyFailure -> ["false", []], None
-  | Freebsd -> ["pkg", "install"::yes ["-y"] packages], None
-  | Gentoo -> ["emerge", yes ~no:["-a"] [] packages], None
+  | DummySuccess -> [`AsUser "echo", packages], None
+  | DummyFailure -> [`AsUser "false", []], None
+  | Freebsd -> [`AsAdmin "pkg", "install"::yes ["-y"] packages], None
+  | Gentoo -> [`AsAdmin "emerge", yes ~no:["-a"] [] packages], None
   | Homebrew ->
-    ["brew", "install"::packages], (* NOTE: Does not have any interactive mode *)
+    [`AsUser "brew", "install"::packages], (* NOTE: Does not have any interactive mode *)
     Some (["HOMEBREW_NO_AUTO_UPDATE","yes"])
   | Macports ->
     let packages = (* Separate variants from their packages *)
       List.map (fun p -> OpamStd.String.split p ' ')  packages
       |> List.flatten
     in
-    ["port", yes ["-N"] ("install"::packages)],
+    [`AsAdmin "port", yes ["-N"] ("install"::packages)],
     None
-  | Netbsd -> ["pkgin", yes ["-y"] ("install" :: packages)], None
-  | Openbsd -> ["pkg_add", yes ~no:["-i"] ["-I"] packages], None
-  | Suse -> ["zypper", yes ["--non-interactive"] ("install"::packages)], None
+  | Netbsd -> [`AsAdmin "pkgin", yes ["-y"] ("install" :: packages)], None
+  | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
+  | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
 
 let install_packages_commands ?env sys_packages =
   fst (install_packages_commands_t ?env sys_packages)
 
 let package_manager_name ?env () =
   match install_packages_commands ?env OpamSysPkg.Set.empty with
-  | (pkgman, _) :: _ -> pkgman
+  | ((`AsAdmin pkgman | `AsUser pkgman), _) :: _ -> pkgman
   | [] -> assert false
 
 let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
   let cmd, args =
     let not_root = Unix.getuid () <> 0  in
-    match OpamSysPoll.os env, OpamSysPoll.os_distribution env with
-    | Some "openbsd", _ when not_root ->
+    match cmd, OpamSysPoll.os env with
+    | `AsAdmin cmd, Some "openbsd" when not_root -> (* TODO: alpine is also switching to doas in 3.16 *)
       "doas", cmd::args
-    | Some ("linux" | "unix" | "freebsd" | "netbsd" | "dragonfly"), _
-    | Some "macos", Some "macports" when not_root ->
+    | `AsAdmin cmd, Some ("linux" | "unix" | "freebsd" | "netbsd" | "dragonfly" | "macos") when not_root ->
       if OpamSystem.resolve_command "sudo" = None then
         "su",
         ["root"; "-c"; Printf.sprintf "%S" (String.concat " " (cmd::args))]
       else
         "sudo", cmd::args
-    | _ -> cmd, args
+    | (`AsUser cmd | `AsAdmin cmd), _ -> cmd, args
   in
   match run_command_exit_code ?vars ~allow_stdin:true ~verbose:true cmd args with
   | 0 -> ()
@@ -726,16 +725,16 @@ let install ?env packages =
 let update ?(env=OpamVariable.Map.empty) () =
   let cmd =
     match family ~env () with
-    | Alpine -> Some ("apk", ["update"])
-    | Arch -> Some ("pacman", ["-Sy"])
-    | Centos -> Some (Lazy.force yum_cmd, ["makecache"])
-    | Debian -> Some ("apt-get", ["update"])
+    | Alpine -> Some (`AsAdmin "apk", ["update"])
+    | Arch -> Some (`AsAdmin "pacman", ["-Sy"])
+    | Centos -> Some (`AsAdmin (Lazy.force yum_cmd), ["makecache"])
+    | Debian -> Some (`AsAdmin "apt-get", ["update"])
     | DummySuccess -> None
-    | DummyFailure -> Some ("false", [])
-    | Gentoo -> Some ("emerge", ["--sync"])
-    | Homebrew -> Some ("brew", ["update"])
-    | Macports -> Some ("port", ["sync"])
-    | Suse -> Some ("zypper", ["--non-interactive"; "refresh"])
+    | DummyFailure -> Some (`AsUser "false", [])
+    | Gentoo -> Some (`AsAdmin "emerge", ["--sync"])
+    | Homebrew -> Some (`AsUser "brew", ["update"])
+    | Macports -> Some (`AsAdmin "port", ["sync"])
+    | Suse -> Some (`AsAdmin "zypper", ["--non-interactive"; "refresh"])
     | Freebsd | Netbsd | Openbsd ->
       None
   in

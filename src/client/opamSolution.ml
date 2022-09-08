@@ -1196,7 +1196,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   and print_command sys_packages =
     let commands =
       OpamSysInteract.install_packages_commands sys_packages ~env
-      |> List.map (fun (c,a) -> c::a)
+      |> List.map (fun ((`AsAdmin c | `AsUser c), a) -> c::a)
     in
     OpamConsole.formatted_msg
       (match commands with
