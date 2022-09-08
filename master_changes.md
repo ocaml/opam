@@ -104,8 +104,8 @@ users)
   * Don't error when displaying if switch is not set [#5027 @rjbou - fix #5025]
   * Try to set a variable with option `--switch <sw>` fails instead of writing a wrong `switch-config` file [#5027 @rjbou]
   * When a field is defined in switch and global scope, try to determine the scope also by checking switch selection [#5027 @rjbou]
-## Var
   * Resolve and use global config and environment variable before polling system informations (os, os-family, etc.) [#4892 @rjbou - fix #4883]
+  * Catch an package not found error and print skipping message [#5280 @rjbou - fix #5279]
 
 ## Update / Upgrade
   * [BUG] if a package is pinned from a locked file, it is automatically updated/upgraded accordingly a lock file (same extension) [#5080 @rjbou]
