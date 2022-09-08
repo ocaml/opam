@@ -474,7 +474,7 @@ echo Manual pages will be installed in ${mandir}
 
 AS_IF([test "x${VENDORED}" = "xtrue"],[
   echo
-  AS_ECHO_N(["Downloading vendored source dependencies... "])
+  AS_ECHO(["Downloading vendored source dependencies..."])
   ${MAKE} --no-print-directory -C src_ext SILENT=@ archives
   AS_ECHO([done])
   AS_ECHO_N(["Extracting vendored source dependencies in src_ext/... "])

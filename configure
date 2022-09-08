@@ -8060,7 +8060,7 @@ echo Manual pages will be installed in ${mandir}
 if test "x${VENDORED}" = "xtrue"; then :
 
   echo
-  $as_echo_n "Downloading vendored source dependencies... "
+  $as_echo "Downloading vendored source dependencies..."
   ${MAKE} --no-print-directory -C src_ext SILENT=@ archives
   $as_echo done
   $as_echo_n "Extracting vendored source dependencies in src_ext/... "
