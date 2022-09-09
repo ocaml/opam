@@ -30,17 +30,33 @@ end
 
 let fprintf = Printf.fprintf
 
-type platform = MacOS | Linux | Windows
+type _ platform = MacOS : os_only platform
+                | Linux : os_only platform
+                | Windows : os_only platform
+                | Specific : os_only platform * string -> with_runner_version platform
+and os_only = Os_only
+and with_runner_version = With_runner_version
 
-let name_of_platform = function
-| MacOS -> "macOS"
-| Linux -> "Linux"
-| Windows -> "Windows"
+let rec name_of_platform (type a) (platform : a platform) =
+  match platform with
+  | MacOS -> "macOS"
+  | Linux -> "Linux"
+  | Windows -> "Windows"
+  | Specific (platform, _) -> name_of_platform platform
 
-let runner_of_platform = function
-| MacOS -> "macos"
-| Linux -> "ubuntu"
-| Windows -> "windows"
+let os_of_platform (type a) (platform : a platform) =
+  match platform with
+  | MacOS
+  | Linux
+  | Windows as platform -> platform
+  | Specific (platform, _) -> platform
+
+let rec os_name_of_platform (type a) (platform : a platform) =
+  match platform with
+  | MacOS -> "macos"
+  | Linux -> "ubuntu"
+  | Windows -> "windows"
+  | Specific (platform, _) -> os_name_of_platform platform
 
 let emit_map ~oc ?(indent=4) name map =
   let indent = String.make indent ' ' in
@@ -84,7 +100,7 @@ let emit_strategy ~oc (fail_fast, matrix, includes) =
   end;
   fprintf oc "      fail-fast: %b\n" fail_fast
 
-type runs_on = Runner of platform list | Matrix of string
+type 'a runs_on = Runner of 'a platform list | Matrix of string
 
 type job = ..
 let jobs = Hashtbl.create 15
@@ -92,7 +108,13 @@ let jobs = Hashtbl.create 15
 let find_need need = Hashtbl.find jobs need
 
 let emit_runs_on ~oc runs_on =
-  let runner_of_platform platform = if platform = Windows then "windows-2019" else runner_of_platform platform ^ "-latest" in
+  let runner_of_platform (type a) (platform : a platform) =
+    match platform with
+    | Windows -> "windows-2019"
+    | MacOS
+    | Linux as platform -> os_name_of_platform platform ^ "-latest"
+    | Specific (platform, version) -> os_name_of_platform platform ^ "-" ^ version
+  in
   let value =
     match runs_on with
     | Runner [platform] ->
@@ -137,7 +159,7 @@ type condition =
 | Or of condition * condition
 | Predicate of bool * variable
 and variable =
-| Runner of platform
+| Runner of os_only platform
 | CacheMiss of string
 | EndsWith of string * string
 | Contains of string * string
@@ -216,10 +238,12 @@ let skip_step ~oc ~workflow ~job f = f ~oc ~workflow ~job
 (* Appends `|| exit /b 1` to a series of cmd commands *)
 let run_or_fail = List.map (Fun.flip (^) " || exit /b 1")
 
-let host_of_platform = function
-| Windows -> "${{ matrix.host }}"
-| Linux -> "x86_64-pc-linux-gnu"
-| MacOS -> "x86_64-apple-darwin"
+let rec host_of_platform (type a) (platform : a platform) =
+  match platform with
+  | Windows -> "${{ matrix.host }}"
+  | Linux -> "x86_64-pc-linux-gnu"
+  | MacOS -> "x86_64-apple-darwin"
+  | Specific (platform, _) -> host_of_platform platform
 
 let gen_on op platform target step =
   if op target platform then

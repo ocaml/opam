@@ -640,7 +640,7 @@ jobs:
 # Around opam tests
 ####
   Hygiene:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: Analyse
     steps:
     - name: Install system's dune and ocaml packages
