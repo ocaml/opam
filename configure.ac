@@ -406,6 +406,7 @@ AS_IF([test "x${enable_checks}" != "xno" && {
     AS_IF([test "x${with_vendored_deps}" != "xyes"],[
       echo "============================================================================"
       echo "Some dependencies are missing. Vendored mode has been automatically enabled."
+      echo "The sources for opam's dependencies will be extracted in src_ext and built."
       echo "============================================================================"
     ])
     AC_SUBST(VENDORED,"true")
@@ -473,20 +474,20 @@ echo Manual pages will be installed in ${mandir}
 
 AS_IF([test "x${VENDORED}" = "xtrue"],[
   echo
-  AS_ECHO_N(["Downloading vendored dependencies... "])
+  AS_ECHO(["Downloading vendored source dependencies..."])
   ${MAKE} --no-print-directory -C src_ext SILENT=@ archives
   AS_ECHO([done])
-  AS_ECHO_N(["Extracting vendored dependencies... "])
+  AS_ECHO_N(["Extracting vendored source dependencies in src_ext/... "])
   ${MAKE} --no-print-directory -C src_ext SILENT=@ clone
   AS_ECHO([done])
 ],[
   ${MAKE} --no-print-directory -C src_ext def-ignore
   AS_IF([test -z "${DUNE}"],[
     echo
-    AS_ECHO_N(["Downloading dune... "])
+    AS_ECHO_N(["Downloading dune sources... "])
     ${MAKE} --no-print-directory -C src_ext SILENT=@ dune-local.download
     AS_ECHO([done])
-    AS_ECHO_N(["Extracting dune... "])
+    AS_ECHO_N(["Extracting dune sources to src_ext/dune-local/... "])
     ${MAKE} --no-print-directory -C src_ext SILENT=@ dune-local.stamp
     AS_ECHO([done])
   ])

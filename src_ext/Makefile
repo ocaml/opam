@@ -165,7 +165,8 @@ https://opam.ocaml.org/cache/md5/$(shell echo $(MD5_$(2)$(1)) | cut -c -2)/$(MD5
 endef
 
 GET_ARCHIVE=\
-  { { { $(call FETCH,$(URL_$(2)$(1)),$(call ARCHIVE_FILE,$(1),$(2))) && $(call MD5CHECK,$(call ARCHIVE_FILE,$(1),$(2)),$(MD5_$(2)$(1))); } \
+  { echo ' * Downloading $(1)...' && \
+    { { $(call FETCH,$(URL_$(2)$(1)),$(call ARCHIVE_FILE,$(1),$(2))) && $(call MD5CHECK,$(call ARCHIVE_FILE,$(1),$(2)),$(MD5_$(2)$(1))); } \
       || { echo 'Failed to download $(URL_$(2)$(1))'; false; }; } || \
     { { $(call FETCH,$(call cache_url,$(1),$(2)),$(call ARCHIVE_FILE,$(1),$(2))) && $(call MD5CHECK,$(call ARCHIVE_FILE,$(1),$(2)),$(MD5_$(2)$(1))) && echo 'Warning: downloaded $(URL_$(2)$(1)) from opam cache'; } \
       || { echo 'Failed to download $(1) from opam cache'; false; }; }; }
