@@ -379,6 +379,7 @@ users)
   * Fix github safe directory issues in depext workflow [#5153 @rjbou]
   * Update repo hash in depext workflow [#5153 @rjbou]
   * Fix the archlinux script [#5218 @kit-ty-kate]
+  * Fix Cygwin Cache [#5281 @dra27]
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
