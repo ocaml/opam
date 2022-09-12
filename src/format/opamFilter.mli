@@ -35,8 +35,14 @@
 
 open OpamTypes
 
-(** Pretty-print *)
-val to_string: filter -> string
+(** Pretty-print
+    [custom ?context ?paren filter] is a function that permit to customise part
+    of filter pretty-printing. *)
+val to_string:
+  ?custom:(context:[> `And | `Defined | `Not | `Or | `Relop ] ->
+           paren:(?cond:bool -> string -> string) ->
+           filter -> string option) ->
+  filter -> string
 
 (** Folds on the tree of a filter *)
 val fold_down_left: ('a -> filter -> 'a) -> 'a -> filter -> 'a
@@ -192,8 +198,7 @@ val deps_var_env:
 (** Like [OpamFormula.simplify_version_formula], but on filtered formulas
     (filters are kept unchanged, but put in front) *)
 val simplify_extended_version_formula:
-  filter filter_or_constraint OpamFormula.formula ->
-  filter filter_or_constraint OpamFormula.formula option
+  condition -> condition option
 
 val atomise_extended:
   filtered_formula ->
@@ -203,6 +208,5 @@ val atomise_extended:
 (* Uses [OpamFormula.sort] to sort on names, and sort version formulas with
    [simplify_extended_version_formula]. *)
 val sort_filtered_formula:
-  ((name * filter filter_or_constraint OpamFormula.formula)
-  -> (name * filter filter_or_constraint OpamFormula.formula) -> int)
-  -> filtered_formula -> filtered_formula
+  ((name * condition) -> (name * condition) -> int) -> filtered_formula ->
+  filtered_formula

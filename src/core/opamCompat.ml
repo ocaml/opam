@@ -44,6 +44,7 @@ module Int =
 #else
 struct
   let compare : int -> int -> int = Stdlib.compare
+  let equal : int -> int -> bool = Stdlib.(=)
 end
 #endif
 

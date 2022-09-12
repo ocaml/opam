@@ -31,6 +31,8 @@ users)
   * [BUG] Fix spaces in root and switch dirs [#5203 @jonahbeckford]
   * Use menu for init setup [#5057 @AltGr; #5217 @dra27]
   * Do not show --yes and --no as special global options when using cmdliner >= 1.1 [#5269 @kit-ty-kate]
+  * ◈ Add `tree` subcommand to display a dependency tree of currently installed packages [#5171 @cannorin - fix #3775]
+  * ◈ Add `why` subcommand to examine how the versions of currently installed packages get constrained (alias to `tree --rev-deps`) [#5171 @cannorin - fix #3775]
 
 ## Plugins
   *
@@ -333,6 +335,8 @@ users)
   * Add some tests for --best-effort to avoid further regressions when trying to install specific versions of packages [@5261 @kit-ty-kate]
   * Add unhelpful conflict error message test [#5270 @kit-ty-kate]
   * Add rebuild test [#5258 @rjbou]
+  * Add test for opam tree command [#5171 @cannorin]
+
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
@@ -433,6 +437,9 @@ users)
   * `OpamArgTools`: all flag definition takes now a section as a labelled argument [#5275 @rjbou]
   * `OpamArg`: all flag definition takes now a section as an optional argument, default is set to `Manpage.s_options` [#5275 @rjbou]
 
+  * Add `OpamTreeCommand` [#5171 @cannorin]
+  * `OpamSolution`: add `dry_run` to simulate the new switch state after applying a solution [#5171 @cannorin]
+  
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
   * New download functions for shared source, old ones kept [#4893 @rjbou]
@@ -489,6 +496,8 @@ users)
   * `OpamFile.OPAM`: Add `locked`, file origin and extension, in the record with its modifiers/getter [#5080 @rjbou]
   * `OpamFile.OPAM.effective_part`: empty extra-source url if checksum is specified and take first one (as for url) [#5258 @kit-ty-kate]
   * `OpamFile.OPAM.effectively_equal`: return true if an extra-source url changes but not its checksum (as for url) [#5258 @kit-ty-kate]
+  * `OpamFormula`: add generic `formula_to_cnf` and `formula_to_dnf`, and use them in `to_cnf` and `to_dnf` [#5171 @cannorin]
+  * `OpamFilter`: add `?custom` argument in `to_string` to tweak the output [#5171 @cannorin]
 
 ## opam-core
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
@@ -512,3 +521,6 @@ users)
   * `OpamStd.Sys`: add `all_shells` list of all supported shells [#5217 @dra27]
   * `OpamUrl`: add `to_string_w_subpath` to display subpath inside urls (before hash) [#5219 @rjbou]
   * `OpamFilename.SubPath`: remove `pretty_string` in favor to `OpamUrl.to_string_w_subpath` [#5219 @rjbou]
+  * `OpamConsole`: add a `Tree` submodule to draw a unicode/ascii-art tree [#5171 @cannorin]
+  * `OpamStd.List`: add `find_map_opt` (for ocaml < 4.10) and `fold_left_map` (for ocaml < 4.11) [#5171 @cannorin]
+  * `OpamCompat`: add `Int.equal` (for ocaml < 4.12)

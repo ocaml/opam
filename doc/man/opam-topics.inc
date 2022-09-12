@@ -217,6 +217,24 @@
                  (diff opam-show.err %{dep:opam-show.0}))))
 
 (rule
+  (with-stdout-to opam-why.0 (echo "")))
+(rule
+  (targets opam-why.1 opam-why.err)
+  (deps using-built-opam)
+  (action (progn (with-stderr-to opam-why.err
+                   (with-stdout-to opam-why.1 (run %{bin:opam} why --help=groff)))
+                 (diff opam-why.err %{dep:opam-why.0}))))
+
+(rule
+  (with-stdout-to opam-tree.0 (echo "")))
+(rule
+  (targets opam-tree.1 opam-tree.err)
+  (deps using-built-opam)
+  (action (progn (with-stderr-to opam-tree.err
+                   (with-stdout-to opam-tree.1 (run %{bin:opam} tree --help=groff)))
+                 (diff opam-tree.err %{dep:opam-tree.0}))))
+
+(rule
   (with-stdout-to opam-search.0 (echo "")))
 (rule
   (targets opam-search.1 opam-search.err)
@@ -271,6 +289,8 @@
     opam-install.1 
     opam-info.1 
     opam-show.1 
+    opam-why.1 
+    opam-tree.1 
     opam-search.1 
     opam-list.1 
     opam-init.1))

@@ -71,6 +71,10 @@ val check_solution:
   (solution_result, 'conflict) result ->
   unit
 
+(** Simulate the new [switch_state] after applying the [solution]
+    without actually performing the action(s) on disk. *)
+val dry_run: 'a switch_state -> OpamSolver.solution -> 'a switch_state
+
 (* Install external dependencies of the given package set, according the depext
    configuration. If [confirm] is false, install commands are directly
    launched, without asking user (used by the `--depext-only` option). If

@@ -961,6 +961,23 @@
    (run ./run.exe %{bin:opam} %{dep:switch-set.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-tree)
+ (action
+  (diff tree.test tree.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-tree)))
+
+(rule
+ (targets tree.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:tree.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-unhelpful-conflicts-001)
  (action
   (diff unhelpful-conflicts-001.test unhelpful-conflicts-001.out)))

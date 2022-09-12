@@ -173,8 +173,14 @@ val compare_nc:
 (** Convert a formula to CNF *)
 val cnf_of_formula: 'a formula -> 'a formula
 
+(** Convert a formula to CNF, but as a nested list *)
+val formula_to_cnf: 'a formula -> 'a cnf
+
 (** Convert a formula to DNF *)
 val dnf_of_formula: 'a formula -> 'a formula
+
+(** Convert a formula to DNF, but as a nested list *)
+val formula_to_dnf: 'a formula -> 'a dnf
 
 (** Transform a formula where versions can be expressed using formulas
     to a flat atom formula *)

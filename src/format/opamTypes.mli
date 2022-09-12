@@ -212,8 +212,10 @@ type 'a filter_or_constraint =
   | Filter of filter
   | Constraint of (relop * 'a)
 
+type condition = filter filter_or_constraint generic_formula
+
 type filtered_formula =
-  (name * filter filter_or_constraint OpamFormula.formula) OpamFormula.formula
+  (name * condition) OpamFormula.formula
 
 (** {2 Solver} *)
 

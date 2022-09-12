@@ -139,6 +139,12 @@ module OpamList = struct
       | Some r -> r
       | None -> find_map f r
 
+  let rec find_map_opt f = function
+    | [] -> None
+    | x::r -> match f x with
+      | Some r -> Some r
+      | None -> find_map_opt f r
+
   let insert comp x l =
     let rec aux = function
       | [] -> [x]
@@ -172,6 +178,15 @@ module OpamList = struct
         else aux (b::acc) r
     in
     aux [] l
+
+  let fold_left_map f s l =
+    let s, l_rev =
+      List.fold_left (fun (s, l_rev) x ->
+          let s, y = f s x in
+          s, y :: l_rev)
+        (s, []) l
+    in
+    s, List.rev l_rev
 
 end
 

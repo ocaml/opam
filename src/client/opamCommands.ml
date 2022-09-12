@@ -710,6 +710,118 @@ let list ?(force_search=false) cli =
           $no_switch $depexts $vars $repos $owns_file $disjunction $search
           $silent $no_depexts $package_listing cli $pattern_list)
 
+(* TREE *)
+let tree_doc = "Draw the dependency forest of installed packages."
+let tree ?(why=false) cli =
+  let doc = tree_doc in
+  let build_docs = "TREE BUILDING OPTIONS" in
+  let filter_docs = "TREE FILTERING OPTIONS" in
+  let selection_docs = OpamArg.package_selection_section in
+  let display_docs = OpamArg.package_listing_section in
+  let man = [
+    `S Manpage.s_description;
+    `P "This command displays the forest of currently installed \
+        packages as a Unicode/ASCII-art.";
+    `P "Without argument, it draws the dependency forest of packages with no \
+        dependants. With packages arguments, draws the forest of the specified \
+        packages. When non-installed packages are specified in the arguments, \
+        it will try to simulate installing them before drawing the forest.";
+    `P "When the $(b,--rev-deps) option is used, it draws the \
+        reverse-dependency forest instead. Without argument, draws the forest \
+        of packages with no dependencies. With packages arguments, draws the \
+        forest of the specified packages. Note that non-installed packages are \
+        ignored when this option is used.";
+    `P ("When a package appears twice or more in the forest, the second or \
+         later occurrences of the said package will be marked as a duplicate, \
+         and be annotated with the $(i,"^OpamTreeCommand.duplicate_symbol^") \
+         symbol. Any sub-trees rooted from such duplicates will be truncated \
+         to avoid redundancy.");
+    `P ("See section $(b,"^filter_docs^") and $(b,"^selection_docs^") for all \
+         the ways to select the packages to be displayed, and section \
+         $(b,"^display_docs^") to customise the output format.");
+    `P "For a flat list of packages which may not be installed, \
+        see $(b,opam list).";
+    `S Manpage.s_arguments;
+    `S build_docs;
+    `S filter_docs;
+    `P "These options only take effect when $(i,PACKAGES) are present.";
+    `S selection_docs;
+    `S display_docs;
+  ] in
+  let mode =
+    let default = OpamTreeCommand.(if why then ReverseDeps else Deps) in
+    mk_vflag default ~cli ~section:build_docs [
+      cli_from cli2_2, OpamTreeCommand.Deps, ["deps"],
+      "Draw a dependency forest, starting from the packages not required by \
+       any other packages (this is the default).";
+      cli_from cli2_2, OpamTreeCommand.ReverseDeps, ["rev-deps"],
+      "Draw a reverse-dependency forest, starting from the packages which \
+       have no dependencies.";
+    ]
+  in
+  let filter =
+    let default = OpamTreeCommand.Roots_from in
+    mk_vflag default ~cli ~section:filter_docs [
+      cli_from cli2_2, OpamTreeCommand.Roots_from, ["roots-from"],
+      "Display only the trees which roots from one of the $(i,PACKAGES) \
+       (this is the default).";
+      cli_from cli2_2, OpamTreeCommand.Leads_to,   ["leads-to"],
+      "Display only the branches which leads to one of the $(i,PACKAGES).";
+    ]
+  in
+  let post =
+    mk_flag ~cli (cli_from cli2_2) ["post"] ~section:selection_docs
+      "Include dependencies tagged as $(i,post)."
+  in
+  let dev =
+    mk_flag ~cli (cli_from cli2_2) ["dev"] ~section:selection_docs
+      "Include development packages in dependencies."
+  in
+  let doc_flag =
+    mk_flag ~cli (cli_from cli2_2) ["doc";"with-doc"] ~section:selection_docs
+      "Include doc-only dependencies."
+  in
+  let test =
+    mk_flag ~cli (cli_from cli2_2) ["t";"test";"with-test"]
+      ~section:selection_docs
+      "Include test-only dependencies."
+  in
+  let tools =
+    mk_flag ~cli (cli_from cli2_2) ["with-tools"] ~section:selection_docs
+      "Include development only dependencies."
+  in
+  let no_cstr =
+    mk_flag ~cli (cli_from cli2_2) ["no-constraint"] ~section:display_docs
+      "Do not display the version constraints e.g. $(i,(>= 1.0.0))."
+  in
+  let no_switch =
+    mk_flag ~cli (cli_from cli2_2) ["no-switch"] ~section:selection_docs
+      "Ignore active switch and simulate installing packages from an empty \
+       switch to draw the forest"
+  in
+  let tree global_options mode filter post dev doc test tools no_constraint
+      no_switch names () =
+    if names = [] && no_switch then
+      `Error
+        (true, "--no-switch can't be used without specifying a name")
+    else
+      (apply_global_options cli global_options;
+       OpamGlobalState.with_ `Lock_none @@ fun gt ->
+       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+       let tog = OpamListCommand.{
+           post; test; doc; dev; tools;
+           recursive = false;
+           depopts = false;
+           build = true;
+         } in
+       OpamTreeCommand.run st tog ~no_constraint ~no_switch mode filter names;
+       `Ok ())
+  in
+  mk_command_ret ~cli (cli_from cli2_2) "tree" ~doc ~man
+    Term.(const tree $global_options cli $mode $filter
+          $post $dev $doc_flag $test $tools
+          $no_cstr $no_switch
+          $name_list)
 
 (* SHOW *)
 let show_doc = "Display information about specific packages."
@@ -4192,6 +4304,8 @@ let commands cli =
     init cli;
     list cli;
     make_command_alias ~cli (list ~force_search:true cli) ~options:" --search" "search";
+    tree cli;
+    make_command_alias ~cli (tree ~why:true cli) ~options:" --rev-deps" "why";
     show; make_command_alias ~cli show "info";
     install cli;
     remove; make_command_alias ~cli remove "uninstall";

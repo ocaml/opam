@@ -39,6 +39,7 @@ module Int
 #else
 : sig
   val compare: int -> int -> int
+  val equal : int -> int -> bool
 end
 #endif
 
