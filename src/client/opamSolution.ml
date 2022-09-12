@@ -1137,12 +1137,6 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
       OpamSysPkg.Set.empty
   in
   let env = t.switch_global.global_variables in
-  let pkg_manager_name () =
-    match OpamSysInteract.install_packages_commands
-            ~env OpamSysPkg.Set.empty with
-    | (pkgman, _) :: _ -> pkgman
-    | [] -> assert false
-  in
   let map_sysmap f t =
     let sys_packages =
       OpamPackage.Set.fold (fun nv sys_map ->
@@ -1168,7 +1162,10 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   and menu t sys_packages =
     (* Called only if run install is true *)
     let answer =
-      let pkgman = OpamConsole.colorise `yellow (pkg_manager_name ()) in
+      let pkgman =
+        OpamConsole.colorise `yellow
+          (OpamSysInteract.package_manager_name ~env ())
+      in
       OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
         "opam believes some required external dependencies are missing. opam \
          can:"

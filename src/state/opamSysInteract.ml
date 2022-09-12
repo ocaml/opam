@@ -677,6 +677,11 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) sys_packages =
 let install_packages_commands ?env sys_packages =
   fst (install_packages_commands_t ?env sys_packages)
 
+let package_manager_name ?env () =
+  match install_packages_commands ?env OpamSysPkg.Set.empty with
+  | (pkgman, _) :: _ -> pkgman
+  | [] -> assert false
+
 let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
   let cmd, args =
     let not_root = Unix.getuid () <> 0  in
