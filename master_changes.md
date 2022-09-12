@@ -165,6 +165,8 @@ users)
   * Increase verbose logging of command to 4 [#5151 @rjbou]
   * [BUG] Avoid to loop eternally when `depext-runs-installs` is false in a script [#5156 @rjbou]
   * Improve the error message when neither MacPorts or Homebrew could be detected on macOS [#5240 @kit-ty-kate]
+  * Introduce dummy-success & dummy-failure os-family to make testing depexts behaviour easier [#5268 @kit-ty-kate]
+  * Run command as admin only when needed [#5268 @kit-ty-kate]
 
 ## Format upgrade
   * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
@@ -336,6 +338,7 @@ users)
   * Add unhelpful conflict error message test [#5270 @kit-ty-kate]
   * Add rebuild test [#5258 @rjbou]
   * Add test for opam tree command [#5171 @cannorin]
+  * Update and reintegrate pin & depext test `pin.unix` in `pin` test, with test environment, there is no more need to have it only on unix [#5268 @rjbou @kit-ty-kate]
 
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
@@ -436,10 +439,9 @@ users)
   * `OpamClient.Pin.post_pin_action`: no more updates depexts information, moved to `OpamSwitchState.update_pin` [#5047 @rjbou]
   * `OpamArgTools`: all flag definition takes now a section as a labelled argument [#5275 @rjbou]
   * `OpamArg`: all flag definition takes now a section as an optional argument, default is set to `Manpage.s_options` [#5275 @rjbou]
-
   * Add `OpamTreeCommand` [#5171 @cannorin]
   * `OpamSolution`: add `dry_run` to simulate the new switch state after applying a solution [#5171 @cannorin]
-  
+
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
   * New download functions for shared source, old ones kept [#4893 @rjbou]
@@ -464,6 +466,9 @@ users)
   * `OpamPinned`: when looking at opam files, keep (and return) information about its locked origin [#5080 @rjbou]
   * `OpamUpdate.pinned_package`: use locked information to automatically update from locked file if present, if `?autolock` is given to true [#5080 @rjbou]
   * `OpamSwitchState.update_pin`: updates depexts state informations (`sys_packages`, `avalaible_packages`) [#5047 @rjbou]
+  * `OpamSysInteract`: add `package_manager_name` [#5268 @rjbou]
+  * `OpamSysInteract.install_packages_command`: change return type to `(['AsAdmin of string | 'AsUser of string] * string list) list
+` [#5268 @kit-ty-kate]
 
   * Add optional argument `?env:(variable_contents option Lazy.t * string) OpamVariable.Map.t` to `OpamSysPoll` and `OpamSysInteract` functions. It is used to get syspolling variables from the environment first. [#4892 @rjbou]
 ## opam-solver
