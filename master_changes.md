@@ -83,6 +83,9 @@ users)
   * Really install invariant formula if not installed in switch [#5188 @rjbou]
   * On import, check that installed pinned packages changed, reinstall if so [#5181 @rjbou - fix #5173]
 
+## Config
+  * Reset the "jobs" config variable when upgrading from opam 2.0 [#5284 @kit-ty-kate]
+
 ## Pin
   * Switch the default version when undefined from ~dev to dev [#4949 @kit-ty-kate]
   * ◈ New option `opam pin --current` to fix a package in its current state (avoiding pending reinstallations or removals from the repository) [#4973 @AltGr - fix #4970]

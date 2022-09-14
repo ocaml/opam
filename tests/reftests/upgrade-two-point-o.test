@@ -22,6 +22,8 @@ pinned: ["i-am-compiler.1"]
 opam-version: "2.0"
 synopsis: "switch with pinned compiler"
 ### OPAMDEBUGSECTIONS=STATE opam upgrade --show-action --debug-level=-1
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. If it really was intended, you can set it again using:
+           opam option jobs=1 --global
 STATE                           LOAD-SWITCH-STATE @ pinned-comp
 STATE                           Definition missing for installed package i-am-compiler.1, copying from repo
 STATE                           Inferred invariant: from base packages { i-am-compiler.1 }, (roots { i-am-compiler.1 }) => ["i-am-compiler" {= "1"}]
@@ -31,9 +33,13 @@ Everything as up-to-date as possible (run with --verbose to show unavailable upg
 However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.
 ### opam pin remove i-am-compiler
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. If it really was intended, you can set it again using:
+           opam option jobs=1 --global
 Ok, i-am-compiler is no longer pinned locally (version 1)
 Nothing to do.
 ### opam upgrade --show-action
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. If it really was intended, you can set it again using:
+           opam option jobs=1 --global
 Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
 However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.
