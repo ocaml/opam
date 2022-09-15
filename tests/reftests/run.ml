@@ -470,35 +470,58 @@ end
 
 let parse_command = Parse.command
 
-let common_filters ?opam dir =
-   let tmpdir = OpamSystem.real_path (Filename.get_temp_dir_name ()) in
-   let open Re in
-   [
-     seq [ bol;
-           alt [ str "#=== ERROR";
-                 seq [ str "# "; alt @@ List.map str
-                         [ "context";
-                           "path";
-                           "command";
-                           "exit-code";
-                           "env-file";
-                           "output-file"]]]],
-     GrepV;
-     seq [bol; str cmd_prompt],
-     Sed "##% ";
-     alt [str dir; str (OpamSystem.back_to_forward dir)],
-     Sed "${BASEDIR}";
-     seq [opt (str "/private");
-          alt [str tmpdir;
-               str (OpamSystem.back_to_forward tmpdir)];
-          rep (set "/\\");
-          str "opam-";
-          rep1 (alt [xdigit; char '-'])],
-     Sed "${OPAMTMP}";
-   ] @
-   (match opam with
-    | None -> []
-    | Some opam -> [ str opam.as_seen_in_opam, Sed "${OPAM}" ])
+let common_filters =
+  let tmpdir = OpamSystem.real_path (Filename.get_temp_dir_name ()) in
+  let cygwin_prefix =
+    if not Sys.win32 then None else
+    match
+      OpamSystem.(read_command_output [ "cygpath"; "-m"; "/" ])
+    with
+    | x::_ when not (String.equal x "") ->
+      Some OpamSystem.(back_to_forward x, forward_to_back x)
+    | _ -> None
+  in
+  let open Re in
+  let re_dir dir =
+    let dir, pre =
+      match cygwin_prefix with
+      | Some (cygpre_fwd, cygpre_bck) ->
+        OpamStd.String.remove_prefix ~prefix:cygpre_bck dir
+        |> OpamStd.String.remove_prefix ~prefix:cygpre_fwd,
+        [opt @@ alt [ str cygpre_fwd;
+                      str cygpre_bck ]]
+      | None -> dir, []
+    in
+    seq @@ pre @ [
+        alt [  str dir ; str @@ OpamSystem.back_to_forward dir ]
+      ]
+  in
+  fun ?opam dir ->
+    [
+      seq [ bol;
+            alt [ str "#=== ERROR";
+                  seq [ str "# "; alt @@ List.map str
+                          [ "context";
+                            "path";
+                            "command";
+                            "exit-code";
+                            "env-file";
+                            "output-file"]]]],
+      GrepV;
+      seq [bol; str cmd_prompt],
+      Sed "##% ";
+      re_dir dir,
+      Sed "${BASEDIR}";
+      seq [opt (str "/private");
+           re_dir tmpdir;
+           rep (set "/\\");
+           str "opam-";
+           rep1 (alt [xdigit; char '-'])],
+      Sed "${OPAMTMP}";
+    ] @
+    (match opam with
+     | None -> []
+     | Some opam -> [ str opam.as_seen_in_opam, Sed "${OPAM}" ])
 
 let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
   let filter = filter @ common_filters ~opam dir in
