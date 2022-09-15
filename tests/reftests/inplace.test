@@ -16,7 +16,7 @@ new!
 ### opam pin ./ongoing -n
 Package ongoing does not exist, create as a NEW package? [y/n] y
 ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
-### opam install ongoing -v | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")cat(\.exe)?"? "' -> 'cat "' | '.*(/|\\|")touch(\.exe)?"? "' -> 'touch "'
+### opam install ongoing -v | sed-cmd test | sed-cmd cat | sed-cmd touch
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
@@ -51,7 +51,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
 Done.
-### opam install ongoing --inplace -v | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")cat(\.exe)?"? "' -> 'cat "' | '.*(/|\\|")touch(\.exe)?"? "' -> 'touch "'
+### opam install ongoing --inplace -v | sed-cmd test | sed-cmd cat | sed-cmd touch
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]
@@ -89,7 +89,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
 Done.
-### opam install ongoing --inplace --working-dir -v | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")cat(\.exe)?"? "' -> 'cat "' | '.*(/|\\|")touch(\.exe)?"? "' -> 'touch "'
+### opam install ongoing --inplace --working-dir -v | sed-cmd test | sed-cmd cat | sed-cmd touch
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]

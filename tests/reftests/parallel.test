@@ -32,7 +32,7 @@ if [ $# -eq 1 ]; then
   echo "finally installed $1"
 fi
 ### opam switch create parallel --empty
-### opam install foo bar baz qux top -vv | grep -v '^Processing' | '.*(/|\\|")sh(\.exe)?"? "' -> 'sh "' | unordered
+### opam install foo bar baz qux top -vv | grep -v '^Processing' | sed-cmd sh | unordered
 The following actions will be performed:
 === install 5 packages
   - install bar 1

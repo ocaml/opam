@@ -17,7 +17,7 @@ new!
 Package ongoing does not exist, create as a NEW package? [y/n] y
 ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
 ### : assume built
-### opam install ongoing -v | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")sh(\.exe)?"? "' -> 'sh "' | '.*(/|\\|")touch(\.exe)?"? "' -> 'touch "'
+### opam install ongoing -v | sed-cmd test | sed-cmd sh | sed-cmd touch
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
@@ -51,7 +51,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
 Done.
-### opam install ongoing --assume-built -v | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")touch(\.exe)?"? "' -> 'touch "' | grep -v "switch import"
+### opam install ongoing --assume-built -v | sed-cmd test | sed-cmd touch | grep -v "switch import"
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
@@ -81,7 +81,7 @@ test "-f" "out" (CWD=${BASEDIR}/ongoing)
 '${OPAM} install ongoing --assume-built -v' failed.
 # Return code 31 #
 ### touch ongoing/out
-### opam install ongoing --assume-built -v | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")touch(\.exe)?"? "' -> 'touch "'
+### opam install ongoing --assume-built -v | sed-cmd test | sed-cmd touch
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
@@ -147,7 +147,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
 Done.
-### opam install ongoing --assume-built --working-dir -v | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")touch(\.exe)?"? "' -> 'touch "'
+### opam install ongoing --assume-built --working-dir -v | sed-cmd test | sed-cmd touch
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]
