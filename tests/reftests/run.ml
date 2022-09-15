@@ -36,11 +36,13 @@
        (`foo'bar'` is not translated to `foobar`)
      * Variable expansion in arguments (`$FOO` or `${FOO}`). Undefined variables
        are left as-is
-     * rewrites: `| 'REGEXP' -> 'STR'` (can be repeated; set `STR` to `\c` to
-       clear the line)
-     * `| grep REGEXP`
-     * `| grep -v REGEXP`
-     * `| unordered` compares lines without considering their ordering
+     * rewrites:
+       * `| 'REGEXP' -> 'STR'` (can be repeated; set `STR` to `\c` to
+         clear the line)
+       * `| grep REGEXP`
+       * `| grep -v REGEXP`
+       * `| unordered` compares lines without considering their ordering
+       * `| sed-cmd command` replaces full path resolved command by `command`
      * variables from command outputs: `cmd args >$ VAR`
      * `### : comment`
      * `opam-cat file`: prints a normalised opam file
@@ -413,6 +415,20 @@ module Parse = struct
             get_rewr (unordered, (posix_re re, Grep) :: acc) r
           | "|" :: "unordered" :: r ->
             get_rewr (true, acc) r
+          | "|" :: "sed-cmd" :: cmd :: r ->
+            let re =
+              seq [
+                rep any;
+                alt [ set "/\\\"" ];
+                Re.str cmd;
+                opt @@ Re.str ".exe";
+                opt @@ char '"';
+                Re.str " \""
+              ]
+(*                 Printf.sprintf ".*(/|\\\\|\")%s(\\.exe)?\"? \"" cmd *)
+                in
+            let str = Printf.sprintf "%s \"" cmd in
+            get_rewr (unordered, (re, Sed str) :: acc) r
           | ">$" :: output :: [] ->
             unordered, List.rev acc, Some (get_str output)
           | [] ->
