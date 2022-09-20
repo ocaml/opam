@@ -342,6 +342,7 @@ users)
   * Add rebuild test [#5258 @rjbou]
   * Add test for opam tree command [#5171 @cannorin]
   * Update and reintegrate pin & depext test `pin.unix` in `pin` test, with test environment, there is no more need to have it only on unix [#5268 @rjbou @kit-ty-kate]
+  * Add a reftest testing for system package manager failure [#5257 @kit-ty-kate]
 
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
