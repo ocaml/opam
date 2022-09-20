@@ -35,7 +35,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
 Done.
-### opam install ongoing -v | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")cat(\.exe)?"? "' -> 'cat "'
+### opam install ongoing -v | sed-cmd test | sed-cmd cat
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
@@ -58,7 +58,7 @@ cat "ongoing.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.de
 -> compiled  ongoing.dev
 -> installed ongoing.dev
 Done.
-### opam install ongoing --working-dir -v | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")cat(\.exe)?"? "' -> 'cat "'
+### opam install ongoing --working-dir -v | sed-cmd test | sed-cmd cat
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]
@@ -89,7 +89,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
 Done.
-### opam install ongoing -v | grep -v "^#" | '.*(/|\\|")test(\.exe)?"? "' -> 'test "'
+### opam install ongoing -v | grep -v "^#" | sed-cmd test
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
@@ -118,7 +118,7 @@ test "-f" "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongo
 - No changes have been performed
 '${OPAM} install ongoing -v' failed.
 # Return code 31 #
-### opam install ongoing --working-dir -v | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")cat(\.exe)?"? "' -> 'cat "'
+### opam install ongoing --working-dir -v | sed-cmd test | sed-cmd cat
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]
@@ -204,7 +204,7 @@ opam-version: "2.0"
 ### <pin:ongoing/ongoing.opam>
 opam-version: "2.0"
 build: [[ "test" "-f" "newfile.txt" ] [ "cat" "newfile.txt" ]]
-### opam install qux ongoing --working-dir -v | '^Processing .+$' -> '\c' | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*(/|\\|")cat(\.exe)?"? "' -> 'cat "' | grep -v "switch import" | unordered
+### opam install qux ongoing --working-dir -v | '^Processing .+$' -> '\c' | sed-cmd test | sed-cmd cat | grep -v "switch import" | unordered
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)

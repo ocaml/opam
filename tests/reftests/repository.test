@@ -6,14 +6,14 @@ build: ["test" "-f" "bar"]
 some content
 ### opam switch create tarring --empty
 ### : Internal repository storage as archive or plain directory :
-### opam update -vv | grep '^\+' | '.*(/|\\)diff(\.exe)?"? "' -> 'diff "' | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
+### opam update -vv | grep '^\+' | sed-cmd diff | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
 diff "-ruaN" "default" "default.new" (CWD=${BASEDIR}/OPAM/repo)
 patch (CWD=${BASEDIR}/OPAM/repo/default)
 ### ls $OPAMROOT/repo | grep -v "cache"
 default
 lock
 repos-config
-### opam install foo.1 -vv | grep '^\+' | '.*(/|\\|")test(\.exe)?"? "' -> 'test "'
+### opam install foo.1 -vv | grep '^\+' | sed-cmd test
 test "-f" "bar" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.1)
 ### opam repository add plain ./REPO --this-switch
 [plain] Initialised
@@ -24,7 +24,7 @@ opam-version: "2.0"
 build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.2/files/baz>
 some content
-### opam update default -vv | grep '^\+' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)default\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/default.tar.gz -C TMPDIR' | '.*tar(\.exe)?"? "cfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)default\.tar\.gz\.tmp" "-C" ".*" "default"' -> 'tar cfz OPAM/repo/default.tar.gz.tmp -C TMPDIR default' | '.*(/|\\)diff(\.exe)?"? "' -> 'diff "' | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
+### opam update default -vv | grep '^\+' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)default\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/default.tar.gz -C TMPDIR' | '.*tar(\.exe)?"? "cfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)default\.tar\.gz\.tmp" "-C" ".*" "default"' -> 'tar cfz OPAM/repo/default.tar.gz.tmp -C TMPDIR default' | sed-cmd diff | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
 diff "-ruaN" "default" "default.new" (CWD=${BASEDIR}/OPAM/repo)
 patch (CWD=${BASEDIR}/OPAM/repo/default)
 tar cfz OPAM/repo/default.tar.gz.tmp -C TMPDIR default
@@ -33,7 +33,7 @@ default.tar.gz
 lock
 plain
 repos-config
-### opam install foo.2 -vv | grep '^\+' | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)default\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/default.tar.gz -C TMPDIR'
+### opam install foo.2 -vv | grep '^\+' | sed-cmd test | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)default\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/default.tar.gz -C TMPDIR'
 tar xfz OPAM/repo/default.tar.gz -C TMPDIR
 test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.2)
 ### opam repository remove default --all
@@ -51,7 +51,7 @@ lock
 plain
 repos-config
 tarred.tar.gz
-### opam install foo.3 -vv | grep '^\+' | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR'
+### opam install foo.3 -vv | grep '^\+' | sed-cmd test | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR'
 tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR
 test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.3)
 ### opam repository remove plain --all
@@ -61,12 +61,12 @@ opam-version: "2.0"
 build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.4/files/baz>
 some content
-### opam update -vv | grep '^\+' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR' | '.*tar(\.exe)?"? "cfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz\.tmp" "-C" ".*" "tarred"' -> 'tar cfz OPAM/repo/tarred.tar.gz.tmp -C TMPDIR tarred' | '.*(/|\\)diff(\.exe)?"? "' -> 'diff "' | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
+### opam update -vv | grep '^\+' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR' | '.*tar(\.exe)?"? "cfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz\.tmp" "-C" ".*" "tarred"' -> 'tar cfz OPAM/repo/tarred.tar.gz.tmp -C TMPDIR tarred' | sed-cmd diff | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
 tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR
 diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
 patch (CWD=${OPAMTMP}/tarred)
 tar cfz OPAM/repo/tarred.tar.gz.tmp -C TMPDIR tarred
-### opam install foo.4 -vv | grep '^\+' | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR'
+### opam install foo.4 -vv | grep '^\+' | sed-cmd test | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR'
 tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR
 test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.4)
 ### mkdir tarred-ext
@@ -83,11 +83,11 @@ opam-version: "2.0"
 build: ["test" "-f" "quux"]
 ### <REPO/packages/foo/foo.5/files/quux>
 some content
-### opam update -vv | grep '^\+' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR' | '.*(/|\\)diff(\.exe)?"? "' -> 'diff "' | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
+### opam update -vv | grep '^\+' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR' | sed-cmd diff | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
 tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR
 diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
 patch (CWD=${OPAMTMP}/tarred)
-### opam install foo.5 -vv | grep '^\+' | '.*(/|\\|")test(\.exe)?"? "' -> 'test "' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR'
+### opam install foo.5 -vv | grep '^\+' | sed-cmd test | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR'
 test "-f" "quux" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.5)
 ### ls $OPAMROOT/repo | grep -v "cache"
 lock

@@ -364,6 +364,7 @@ users)
   * Add `json-cat` printer, with some automatic remplacements [#5143 @rjbou]
   * Add some tests showing how --working-dir behaves on updated dependency constraints [#5179 @kit-ty-kate]
   * Add config (report) test [#4892 @rjbou]
+  * Add `sed-cmd` command to replace resolved path command printing by command name only [#5285 @rjbou]
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]
