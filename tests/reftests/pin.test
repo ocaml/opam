@@ -74,3 +74,104 @@ The following actions will be performed:
 -> retrieved nip.dev  (file://${BASEDIR}/nip)
 -> installed nip.dev
 Done.
+### : depext update :
+### OPAMNODEPEXTS=0
+### opam var --global os-family=dummy-success
+Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
+### <pin:bar/bar.opam>
+opam-version: "2.0"
+depends: "qux"
+depexts: [ "inexistant" ]
+### <add_pin_depends.sh>
+basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+echo "pin-depends: [ \"qux.dev\" \"file://$basedir/qux\" ]" >> bar/bar.opam
+### sh add_pin_depends.sh
+### <pin:qux/qux.opam>
+opam-version: "2.0"
+depexts: [ "another-inexistant" ]
+### opam pin ./bar | '.*(/|\\|")echo(\.exe)?"? "' -> 'echo "'
+Package bar does not exist, create as a NEW package? [y/n] y
+The following additional pinnings are required by bar.dev:
+  - qux.dev at file://${BASEDIR}/qux
+Pin and install them? [y/n] y
+Package qux does not exist, create as a NEW package? [y/n] y
+[qux.dev] synchronised (no changes)
+qux is now pinned to file://${BASEDIR}/qux (version dev)
+bar is now pinned to file://${BASEDIR}/bar (version dev)
+
+The following actions will be performed:
+=== install 2 packages
+  - install bar dev (pinned)
+  - install qux dev (pinned)
+
+The following system packages will first need to be installed:
+    another-inexistant inexistant
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+echo "another-inexistant" "inexistant"
+- another-inexistant inexistant
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved bar.dev  (file://${BASEDIR}/bar)
+-> retrieved qux.dev  (file://${BASEDIR}/qux)
+-> installed qux.dev
+-> installed bar.dev
+Done.
+### opam unpin bar qux
+Ok, qux is no longer pinned to file://${BASEDIR}/qux (version dev)
+Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
+[WARNING] Opam packages bar.dev and qux.dev depend on the following system packages that are no longer installed: another-inexistant inexistant
+The following actions will be performed:
+=== remove 2 packages
+  - remove bar dev
+  - remove qux dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.dev
+-> removed   qux.dev
+Done.
+### opam install ./bar | '.*(/|\\|")echo(\.exe)?"? "' -> 'echo "'
+Package bar does not exist, create as a NEW package? [y/n] y
+The following additional pinnings are required by bar.dev:
+  - qux.dev at file://${BASEDIR}/qux
+Pin and install them? [y/n] y
+Package qux does not exist, create as a NEW package? [y/n] y
+[qux.dev] synchronised (no changes)
+qux is now pinned to file://${BASEDIR}/qux (version dev)
+bar is now pinned to file://${BASEDIR}/bar (version dev)
+The following actions will be performed:
+=== install 2 packages
+  - install bar dev (pinned)
+  - install qux dev (pinned) [required by bar]
+
+The following system packages will first need to be installed:
+    another-inexistant inexistant
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+echo "another-inexistant" "inexistant"
+- another-inexistant inexistant
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved bar.dev  (file://${BASEDIR}/bar)
+-> retrieved qux.dev  (file://${BASEDIR}/qux)
+-> installed qux.dev
+-> installed bar.dev
+Done.
