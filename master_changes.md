@@ -409,6 +409,7 @@ users)
   * Fix typo in `OpamArg` [@hannesm #5175]
   * Fix `OpamAction.install_package` documentation [#5215 @rjbou - fix #5207]
   * Fix the documentation of OPAMFIXUPCRITERIA and --criteria [#5226 @kit-ty-kate]
+  * Finer definition of the --ignore-constraints-on documentation [#5289 @kit-ty-kate]
 
 ## Security fixes
   *
