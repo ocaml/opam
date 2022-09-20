@@ -4,11 +4,6 @@ set -xue
 
 . .github/scripts/main/preamble.sh
 
-unset-dev-version () {
-  # disable git versioning to allow OPAMYES use for upgrade
-  touch src/client/no-git-version
-}
-
 export OCAMLRUNPARAM=b
 
 (set +x ; echo -en "::group::build opam\r") 2>/dev/null
@@ -37,9 +32,6 @@ if [ "$OPAM_TEST" != "1" ]; then
   echo 'DUNE_PROFILE=dev' >> Makefile.config
 fi
 
-if [ $OPAM_UPGRADE -eq 1 ]; then
-  unset-dev-version
-fi
 # Disable implicit transitive deps
 sed -i -e '/(implicit_transitive_deps /s/true/false/' dune-project
 make all admin
@@ -60,7 +52,6 @@ if [ "$OPAM_TEST" = "1" ]; then
   if [ $rcode -eq 10 ]; then
     echo "Recompiling for an opam root upgrade"
     (set +x ; echo -en "::group::rebuild opam\r") 2>/dev/null
-    unset-dev-version
     make all admin
     rm -f "$PREFIX/bin/opam"
     make install

@@ -426,7 +426,7 @@ let upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_jo
     ++ cache Opam12Root
     ++ cache OCaml platform ocamlv host
     ++ build_cache OCaml platform ocamlv host
-    ++ run "Build" ~env:[("OPAM_UPGRADE", "1")] ["bash -exu .github/scripts/main/main.sh " ^ host]
+    ++ run "Build" ~env:[("OPAM_BUILD_NO_GIT_VERSION", "1")] ["bash -exu .github/scripts/main/main.sh " ^ host]
     ++ run "Test (upgrade)" ["bash -exu .github/scripts/main/upgrade.sh"]
     ++ end_job f
 

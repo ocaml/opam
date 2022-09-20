@@ -79,7 +79,6 @@ autom4te.cache
 src/ocaml-flags-configure.sexp
 src/**/.merlin
 src/client/linking.sexp
-src/client/no-git-version
 src/core/developer
 src/manifest/dune
 src/manifest/install.inc

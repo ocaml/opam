@@ -522,7 +522,7 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: Build
       env:
-        OPAM_UPGRADE: 1
+        OPAM_BUILD_NO_GIT_VERSION: 1
       run: bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
     - name: Test (upgrade)
       run: bash -exu .github/scripts/main/upgrade.sh
@@ -553,7 +553,7 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: Build
       env:
-        OPAM_UPGRADE: 1
+        OPAM_BUILD_NO_GIT_VERSION: 1
       run: bash -exu .github/scripts/main/main.sh x86_64-apple-darwin
     - name: Test (upgrade)
       run: bash -exu .github/scripts/main/upgrade.sh

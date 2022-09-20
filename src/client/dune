@@ -54,22 +54,19 @@
   (action  (ignore-stderr (with-stdout-to %{targets} (system "git describe --exact HEAD || echo [dev]")))))
 
 (rule
-  (targets no-git-version)
-  (mode fallback)
-  (action (copy git-sha %{targets})))
-
-(rule
   (with-stdout-to get_git_version.ml
-    (echo "print_string @@ \
-             let v = \"%{read-lines:no-git-version}\" in \
-             let w = \"%{read-lines:git-describe}\" in \
-             if v = \"\" || v = \".\" || w <> \"[dev]\" then \
-               \"let version = None\" \
-             else \
-               \"let version = Some \\\"\" ^ v ^ \"\\\"\"")))
+    (progn
+     (echo "print_endline @@\n")
+     (echo "  let force_no_git_version = int_of_string Sys.argv.(1) in\n")
+     (echo "  let v = \"%{read-lines:git-sha}\" in\n")
+     (echo "  let w = \"%{read-lines:git-describe}\" in\n")
+     (echo "  if force_no_git_version = 1 || v = \".\" || w <> \"[dev]\" then\n")
+     (echo "    \"let version = None\"\n")
+     (echo "  else\n")
+     (echo "    \"let version = Some \\\"\" ^ v ^ \"\\\"\"\n"))))
 
 (rule
-  (with-stdout-to opamGitVersion.ml (run ocaml %{dep:get_git_version.ml})))
+  (with-stdout-to opamGitVersion.ml (run ocaml %{dep:get_git_version.ml} %{env:OPAM_BUILD_NO_GIT_VERSION=0})))
 
 (rule
   (targets linking.sexp)
