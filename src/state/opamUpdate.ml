@@ -50,11 +50,11 @@ let eval_redirect gt repo repo_root =
 let repository rt repo =
   let max_loop = 10 in
   let gt = rt.repos_global in
-  if repo.repo_url = OpamUrl.empty then Done (fun rt -> rt) else
+  if repo.repo_url = OpamUrl.empty then Done None else
   let repo_root = OpamRepositoryState.get_repo_root rt repo in
   (* Recursively traverse redirection links, but stop after 10 steps or if
      we cycle back to the initial repo. *)
-  let rec job r n =
+  let rec job r redirect n =
     if n = 0 then
       (OpamConsole.warning "%s: Too many redirections, stopping."
          (OpamRepositoryName.to_string repo.repo_name);
@@ -67,6 +67,7 @@ let repository rt repo =
     in
     OpamProcess.Job.with_text text @@
     OpamRepository.update r repo_root @@+ fun has_changes ->
+    let has_changes = if redirect then `Changes else has_changes in
     if n <> max_loop && r = repo then
       (OpamConsole.warning "%s: Cyclic redirections, stopping."
          (OpamRepositoryName.to_string repo.repo_name);
@@ -84,9 +85,9 @@ let repository rt repo =
           (OpamConsole.colorise `bold "permanently")
           (OpamUrl.to_string new_url)
           reason;
-        job { r with repo_url = new_url } (n-1)
+        job { r with repo_url = new_url } true (n-1)
   in
-  job repo max_loop @@+ fun (repo, has_changes) ->
+  job repo false max_loop @@+ fun (repo, has_changes) ->
   let repo_file_path = OpamRepositoryPath.repo repo_root in
   if not (OpamFile.exists repo_file_path) then
     OpamConsole.warning
@@ -97,7 +98,7 @@ let repository rt repo =
   match has_changes with
   | `No_changes ->
     log "Repository did not change: nothing to do.";
-    Done (fun rt -> rt)
+    Done None
   | `Changes ->
     log "Repository has new changes";
     let repo_file = OpamFile.Repo.safe_read repo_file_path in
@@ -144,19 +145,19 @@ let repository rt repo =
       else if OpamFilename.exists tarred_repo then
         (OpamFilename.move_dir ~src:repo_root ~dst:local_dir;
          OpamFilename.remove tarred_repo);
-      Done (
-        (* Return an update function to make parallel execution possible *)
-        fun rt ->
-          { rt with
-            repositories =
-              OpamRepositoryName.Map.add repo.repo_name repo rt.repositories;
-            repos_definitions =
-              OpamRepositoryName.Map.add repo.repo_name repo_file
-                rt.repos_definitions;
-            repo_opams =
-              OpamRepositoryName.Map.add repo.repo_name opams rt.repo_opams;
-          }
-      )
+      Done (Some (
+          (* Return an update function to make parallel execution possible *)
+          fun rt ->
+            { rt with
+              repositories =
+                OpamRepositoryName.Map.add repo.repo_name repo rt.repositories;
+              repos_definitions =
+                OpamRepositoryName.Map.add repo.repo_name repo_file
+                  rt.repos_definitions;
+              repo_opams =
+                OpamRepositoryName.Map.add repo.repo_name opams rt.repo_opams;
+            }
+        ))
 
 let repositories rt repos =
   let command repo =
@@ -166,22 +167,34 @@ let repositories rt repos =
          OpamConsole.error "Could not update repository %S: %s"
            (OpamRepositoryName.to_string repo.repo_name)
            (match ex with Failure s -> s | ex -> Printexc.to_string ex);
-         Done ([repo], fun t -> t)) @@
+         Done ([repo], None)) @@
     fun () -> repository rt repo @@|
     fun f -> [], f
+  in
+  let merge (failed1, f1) (failed2, f2) =
+    failed1 @ failed2,
+    match f1, f2 with
+    | None, None -> None
+    | Some f1, Some f2 -> Some (f1 @* f2)
+    | Some f, None | None, Some f -> Some f
   in
   let failed, rt_update =
     OpamParallel.reduce
       ~jobs:OpamStateConfig.(!r.dl_jobs)
-      ~command
-      ~merge:(fun (failed1, f1) (failed2, f2) -> failed1 @ failed2, f1 @* f2)
-      ~nil:([], fun x -> x)
+      ~command ~merge
+      ~nil:([], None)
       ~dry_run:OpamStateConfig.(!r.dryrun)
       repos
   in
-  let rt = rt_update rt in
-  OpamRepositoryState.write_config rt;
-  OpamRepositoryState.Cache.save rt;
+  let rt =
+    match rt_update with
+    | Some rt_update ->
+      let rt = rt_update rt in
+      OpamRepositoryState.write_config rt;
+      OpamRepositoryState.Cache.save rt;
+      rt
+    | None -> rt
+  in
   failed, rt
 
 let fetch_dev_package url srcdir ?(working_dir=false) ?subpath nv =

@@ -138,6 +138,7 @@ users)
   * Repository tarring "optimisation" no more needed, removed in favor of a plain directory. It still can be used with environment variable `OPAMREPOSITORYTARRING`.  [#5015 @kit-ty-kate @rjbou @AltGr - fix #4586]
     * Fix loading a plain repository froma tarred one [#5109 @rjbou]
   * Avoid reloading repository contents when the repo has no changes [#5043 @Armael]
+  * Avoid rewriting cache is nothing changed [#5146 @rjbou]
 
 ## Lock
   * Fix lock generation of multiple interdependent packages [#4993 @AltGr]
@@ -471,6 +472,7 @@ users)
   * `OpamSysInteract`: add `package_manager_name` [#5268 @rjbou]
   * `OpamSysInteract.install_packages_command`: change return type to `(['AsAdmin of string | 'AsUser of string] * string list) list
 ` [#5268 @kit-ty-kate]
+  * `OpamUpdate`: change `repository` output to update function option, to not write cache and new repo config if nothing changed in `repositories` [#5146 @rjbou]
 
   * Add optional argument `?env:(variable_contents option Lazy.t * string) OpamVariable.Map.t` to `OpamSysPoll` and `OpamSysInteract` functions. It is used to get syspolling variables from the environment first. [#4892 @rjbou]
 ## opam-solver
