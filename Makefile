@@ -96,6 +96,7 @@ clean-ext:
 clean:
 	$(MAKE) -C doc $@
 	rm -f *.install *.env *.err *.info *.out opam$(EXE) opam-admin.top$(EXE) opam-installer$(EXE)
+	rm -f src/client/no-git-version
 	rm -rf _build Opam.Runtime.*
 
 distclean: clean clean-ext

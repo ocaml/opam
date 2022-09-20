@@ -218,6 +218,7 @@ users)
   * Upgrade to cmdliner >= 1.1 [#5269 @kit-ty-kate]
   * Cleared explanation of dependency vendoring in configure [#5277 @dra27 - fix #5271]
   * Switch autoconf required version to 2.71 [#5161 @dra27]
+  * Remove src/client/no-git-version when calling make clean [#5290 @kit-ty-kate]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
