@@ -418,16 +418,17 @@ module Parse = struct
           | "|" :: "sed-cmd" :: cmd :: r ->
             let re =
               seq [
+                Re.str "+ ";
                 rep any;
                 alt [ set "/\\\"" ];
                 Re.str cmd;
                 opt @@ Re.str ".exe";
                 opt @@ char '"';
-                Re.str " \""
+                Re.str " "
               ]
-(*                 Printf.sprintf ".*(/|\\\\|\")%s(\\.exe)?\"? \"" cmd *)
+(*                 Printf.sprintf "+ .*(/|\\\\|\")%s(\\.exe)?\"? " cmd *)
                 in
-            let str = Printf.sprintf "%s \"" cmd in
+            let str = Printf.sprintf "%s " cmd in
             get_rewr (unordered, (re, Sed str) :: acc) r
           | ">$" :: output :: [] ->
             unordered, List.rev acc, Some (get_str output)
