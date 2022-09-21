@@ -1,0 +1,44 @@
+N0REP0
+### <pkg:a.1>
+opam-version: "2.0"
+depexts: "depext-1"
+### OPAMNODEPEXTS=0
+### opam var --global os-family=dummy-failure
+Added '[os-family "dummy-failure" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam switch create test --empty
+### : Erroneous package manager install is not blocking :
+### opam install a | sed-cmd false
+The following actions will be performed:
+=== install 1 package
+  - install a 1
+
+The following system packages will first need to be installed:
+    depext-1
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run false to install them (may need root/sudo access)
+  2. Display the recommended false command and wait while you run it manually (e.g. in another terminal)
+  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+false 
+[ERROR] System package install failed with exit code 1 at command:
+            false
+This command should get the requirements installed:
+
+    false
+
+Would you like opam to:
+  1. Check again, as the package is now installed
+  2. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+> 3. Abort the installation
+
+[1/2/3] 3
+
+[NOTE] You can retry with '--assume-depexts' to skip this check, or run 'opam option depext=false' to permanently disable handling of system packages.
+
+# Return code 10 #

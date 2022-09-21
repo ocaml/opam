@@ -221,6 +221,23 @@
    (run ./run.exe %{bin:opam} %{dep:cudf-preprocess.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-depexts)
+ (action
+  (diff depexts.test depexts.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-depexts)))
+
+(rule
+ (targets depexts.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:depexts.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-deprecated)
  (action
   (diff deprecated.test deprecated.out)))

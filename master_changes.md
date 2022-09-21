@@ -168,6 +168,7 @@ users)
   * Improve the error message when neither MacPorts or Homebrew could be detected on macOS [#5240 @kit-ty-kate]
   * Introduce dummy-success & dummy-failure os-family to make testing depexts behaviour easier [#5268 @kit-ty-kate]
   * Run command as admin only when needed [#5268 @kit-ty-kate]
+  * [BUG] Do not infinitly check for depexts when the system package manager fails [#5257 @kit-ty-kate]
 
 ## Format upgrade
   * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
@@ -342,6 +343,7 @@ users)
   * Add rebuild test [#5258 @rjbou]
   * Add test for opam tree command [#5171 @cannorin]
   * Update and reintegrate pin & depext test `pin.unix` in `pin` test, with test environment, there is no more need to have it only on unix [#5268 @rjbou @kit-ty-kate]
+  * Add a reftest testing for system package manager failure [#5257 @kit-ty-kate]
 
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
@@ -371,6 +373,7 @@ users)
   * Add some tests showing how --working-dir behaves on updated dependency constraints [#5179 @kit-ty-kate]
   * Add config (report) test [#4892 @rjbou]
   * Add `sed-cmd` command to replace resolved path command printing by command name only [#5285 @rjbou]
+  * Update sed-cmd to handle commands without any arguments [#5257 @kit-ty-kate]
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]
