@@ -301,6 +301,7 @@ users)
   * Permissions: chmod+unlink before copy [#4827 @jonahbeckford @dra27]
   * Support MSYS2: two-phase rsync on MSYS2 to allow MSYS2's behavior of copying rather than symlinking [#4817 @jonahbeckford]
   * Environment: translate PATH from Windows to Unix during opam env. [#4844 @jonahbeckford]
+  * Correct invocation of Cygwin binaries when Cygwin bin directory is first in PATH [#5293 @dra27]
 
 ## Test
   * Update crowbar with compare functions [#4918 @rjbou]

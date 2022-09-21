@@ -153,7 +153,7 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
         end else
           Some (key ^ "=" ^ String.concat " " settings)
     | "path" ->
-        let path_dirs = OpamStd.Sys.split_path_variable item in
+        let path_dirs = OpamStd.Sys.split_path_variable value in
         let winsys = Filename.concat (OpamStd.Sys.system ()) "." |> String.lowercase_ascii in
         let rec f prefix suffix = function
         | dir::dirs ->
@@ -175,7 +175,7 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
         | [] ->
             assert false
         in
-        Some (String.concat ";" (f [] [] path_dirs))
+        Some (key ^ "=" ^ String.concat ";" (f [] [] path_dirs))
     | _ ->
         Some item in
   let env = OpamStd.List.filter_map f env in
