@@ -841,7 +841,7 @@ let setup
         match
           OpamConsole.menu "Do you want opam to configure %s?"
             (OpamConsole.colorise `bold (string_of_shell shell))
-            ~default ~noninteractive:`No ~no:`No ~options:[
+            ~default ~no:`No ~options:[
               `Yes, Printf.sprintf "Yes, update %s"
                 (OpamConsole.colorise `cyan (OpamFilename.prettify dot_profile));
               `No_hooks, Printf.sprintf "Yes, but don't setup any hooks. You'll \

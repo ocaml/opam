@@ -132,10 +132,9 @@ val confirm:
     options are set.
     [no] is the option to choose otherwise, when non interactive, on [escape].
     [default] is the option to choose on an active empty input ("\n").
-    [noninteractive] is the default in non tty output.
     Max 9 options. *)
 val menu:
-  ?default:'a -> ?noninteractive:'a -> ?unsafe_yes:'a -> ?yes:'a -> no:'a ->
+  ?default:'a -> ?unsafe_yes:'a -> ?yes:'a -> no:'a ->
   options:('a * string) list ->
   ('b, unit, string, 'a) format4 -> 'b
 
