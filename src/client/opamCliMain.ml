@@ -234,7 +234,7 @@ let check_and_run_external_commands () =
         let prefixed_name = OpamPath.plugin_prefix ^ name in
         let candidates =
           OpamPackage.packages_of_names
-            (Lazy.force st.available_packages)
+            st.packages
             (OpamPackage.Name.Set.of_list @@
              (OpamStd.List.filter_map
                 (fun s ->
@@ -246,6 +246,12 @@ let check_and_run_external_commands () =
           OpamPackage.Set.filter (fun nv ->
               OpamFile.OPAM.has_flag Pkgflag_Plugin (OpamSwitchState.opam st nv))
             candidates
+        in
+        let plugins =
+          if OpamPackage.Set.is_empty plugins then
+            plugins
+          else
+            OpamPackage.Set.inter plugins (Lazy.force st.available_packages)
         in
         let installed = OpamPackage.Set.inter plugins st.installed in
         if OpamPackage.Set.is_empty candidates then (cli, argv)
