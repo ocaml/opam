@@ -2,7 +2,7 @@ N0REP0
 ### <pkg:a.1>
 opam-version: "2.0"
 depexts: "depext-1"
-### OPAMNODEPEXTS=0
+### OPAMNODEPEXTS=0 OPAMCONFIRMLEVEL=unsafe-yes
 ### opam var --global os-family=dummy-failure
 Added '[os-family "dummy-failure" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam switch create test --empty
@@ -28,16 +28,7 @@ opam believes some required external dependencies are missing. opam can:
 false 
 [ERROR] System package install failed with exit code 1 at command:
             false
-This command should get the requirements installed:
-
-    false
-
-Would you like opam to:
-  1. Check again, as the package is now installed
-  2. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
-> 3. Abort the installation
-
-[1/2/3] 3
+[ERROR] These packages are still missing: depext-1
 
 [NOTE] You can retry with '--assume-depexts' to skip this check, or run 'opam option depext=false' to permanently disable handling of system packages.
 

@@ -75,7 +75,7 @@ The following actions will be performed:
 -> installed nip.dev
 Done.
 ### : depext update :
-### OPAMNODEPEXTS=0
+### OPAMNODEPEXTS=0 OPAMCONFIRMLEVEL=unsafe-yes
 ### opam var --global os-family=dummy-success
 Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
 ### <pin:bar/bar.opam>
