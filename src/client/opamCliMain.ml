@@ -248,6 +248,8 @@ let check_and_run_external_commands () =
             candidates
         in
         let plugins =
+          (* NOTE: Delay the availablity check as late as possible for performance reasons *)
+          (* See https://github.com/ocaml/opam/issues/5296 *)
           if OpamPackage.Set.is_empty plugins then
             plugins
           else
