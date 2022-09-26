@@ -1431,9 +1431,9 @@ let build_options cli =
     mk_opt ~cli cli_original ~section ["ignore-constraints-on"] "PACKAGES"
       "Forces opam to ignore version constraints on all dependencies to the \
        listed packages. This can be used to test compatibility, but expect \
-       builds to break when using this. Note that version constraints on \
-       optional dependencies and conflicts are unaffected. This is equivalent \
-       to setting $(b,\\$OPAMIGNORECONSTRAINTS)."
+       builds to break when using this. Note that availability of the packages \
+       as well as version constraints on optional dependencies and conflicts \
+       are unaffected. This is equivalent to setting $(b,\\$OPAMIGNORECONSTRAINTS)."
       Arg.(some (list package_name)) None ~vopt:(Some [])
   in
   let unlock_base =
