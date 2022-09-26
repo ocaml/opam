@@ -33,6 +33,7 @@ users)
   * Do not show --yes and --no as special global options when using cmdliner >= 1.1 [#5269 @kit-ty-kate]
   * ◈ Add `tree` subcommand to display a dependency tree of currently installed packages [#5171 @cannorin - fix #3775]
   * ◈ Add `why` subcommand to examine how the versions of currently installed packages get constrained (alias to `tree --rev-deps`) [#5171 @cannorin - fix #3775]
+  * Make the plugin lookup faster when mistyping a subcommand [#5297 @kit-ty-kate]
 
 ## Plugins
   *
