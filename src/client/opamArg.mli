@@ -212,6 +212,13 @@ val lock_suffix: ?section:string -> OpamCLIVersion.Sourced.t -> string Term.t
 (** Man section name *)
 val package_selection_section: string
 
+(** Some package selection flags. Default section is âckage seletion one *)
+val post: ?section:string -> OpamCLIVersion.Sourced.t -> bool Term.t
+val dev: ?section:string -> OpamCLIVersion.Sourced.t -> bool Term.t
+val doc_flag: ?section:string -> OpamCLIVersion.Sourced.t -> bool Term.t
+val test: ?section:string -> OpamCLIVersion.Sourced.t -> bool Term.t
+val dev_setup: ?section:string -> OpamCLIVersion.Sourced.t -> bool Term.t
+
 (** Build a package selection filter *)
 val package_selection: OpamCLIVersion.Sourced.t -> OpamListCommand.selector list Term.t
 
