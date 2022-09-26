@@ -17,7 +17,7 @@ let ocamls = [
   (* Legacy versions - core libraries only *)
   "4.03.0"; "4.04.2"; "4.05.0"; "4.06.1"; "4.07.1"; 
   (* Fully supported versions *)
-   "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1"
+   "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1"; "4.14.0";
 ]
 
 (* Entry point for the workflow. Workflows are specified as continuations where

@@ -224,6 +224,7 @@ users)
   * Cleared explanation of dependency vendoring in configure [#5277 @dra27 - fix #5271]
   * Switch autoconf required version to 2.71 [#5161 @dra27]
   * Remove src/client/no-git-version when calling make clean [#5290 @kit-ty-kate]
+  * Update the bootstrap compiler to 4.14.0 [#5250 @kit-ty-kate]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]

@@ -3,7 +3,7 @@ VERSION = $(shell git describe $(TAG))
 OPAM_VERSION = $(subst -,~,$(VERSION))
 GIT_URL = ..
 
-OCAMLV = 4.13.1
+OCAMLV = 4.14.0
 # currently hardcoded in Dockerfile.in
 OCAML_URL = https://caml.inria.fr/pub/distrib/ocaml-$(basename $(OCAMLV))/ocaml-$(OCAMLV).tar.gz
 
