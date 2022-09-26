@@ -452,6 +452,7 @@ users)
   * `OpamArg`: all flag definition takes now a section as an optional argument, default is set to `Manpage.s_options` [#5275 @rjbou]
   * Add `OpamTreeCommand` [#5171 @cannorin]
   * `OpamSolution`: add `dry_run` to simulate the new switch state after applying a solution [#5171 @cannorin]
+  * `OpamArg`: externalise `post`, `dev`, `doc_flag`, `test`, and `devsetup` package selection flags, to avoid redefining them [#5299 @rjbou]
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
