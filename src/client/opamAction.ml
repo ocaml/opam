@@ -872,18 +872,18 @@ let remove_package t ?silent ?changes ?force ?build_dir nv =
   else
     remove_package_aux t ?silent ?changes ?force ?build_dir nv
 
-let local_vars ~test ~doc ~tools =
+let local_vars ~test ~doc ~dev_setup =
   OpamVariable.Map.of_list [
     OpamVariable.of_string "with-test", Some (B test);
     OpamVariable.of_string "with-doc", Some (B doc);
-    OpamVariable.of_string "with-tools", Some (B tools);
+    OpamVariable.of_string "with-dev-setup", Some (B dev_setup);
   ]
 
-let build_package t ?(test=false) ?(doc=false) ?(tools=false) build_dir nv =
+let build_package t ?(test=false) ?(doc=false) ?(dev_setup=false) build_dir nv =
   let opam = OpamSwitchState.opam t nv in
   let commands =
     OpamFilter.commands
-      (OpamPackageVar.resolve ~opam ~local:(local_vars ~test ~doc ~tools) t)
+      (OpamPackageVar.resolve ~opam ~local:(local_vars ~test ~doc ~dev_setup) t)
       (OpamFile.OPAM.build opam) @
     (if test then
        OpamFilter.commands (OpamPackageVar.resolve ~opam t)
@@ -943,12 +943,14 @@ let build_package t ?(test=false) ?(doc=false) ?(tools=false) build_dir nv =
 
 (* Assumes the package has already been compiled in its build dir.
    Does not register the installation in the metadata! *)
-let install_package t ?(test=false) ?(doc=false) ?(tools=false) ?build_dir nv =
+let install_package t ?(test=false) ?(doc=false) ?(dev_setup=false) ?build_dir
+    nv =
   let opam = OpamSwitchState.opam t nv in
   let commands =
     OpamFile.OPAM.install opam |>
     OpamFilter.commands
-      (OpamPackageVar.resolve ~opam ~local:(local_vars ~test ~doc ~tools) t) |>
+      (OpamPackageVar.resolve ~opam
+         ~local:(local_vars ~test ~doc ~dev_setup) t) |>
     OpamStd.List.filter_map
       (function [] -> None | cmd::args -> Some (cmd, args))
   in

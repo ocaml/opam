@@ -786,9 +786,9 @@ let tree ?(why=false) cli =
       ~section:selection_docs
       "Include test-only dependencies."
   in
-  let tools =
-    mk_flag ~cli (cli_from cli2_2) ["with-tools"] ~section:selection_docs
-      "Include development only dependencies."
+  let dev_setup =
+    mk_flag ~cli (cli_from cli2_2) ["with-dev-setup"] ~section:selection_docs
+      "Include developper only dependencies."
   in
   let no_cstr =
     mk_flag ~cli (cli_from cli2_2) ["no-constraint"] ~section:display_docs
@@ -799,7 +799,7 @@ let tree ?(why=false) cli =
       "Ignore active switch and simulate installing packages from an empty \
        switch to draw the forest"
   in
-  let tree global_options mode filter post dev doc test tools no_constraint
+  let tree global_options mode filter post dev doc test dev_setup no_constraint
       no_switch names () =
     if names = [] && no_switch then
       `Error
@@ -809,7 +809,7 @@ let tree ?(why=false) cli =
        OpamGlobalState.with_ `Lock_none @@ fun gt ->
        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
        let tog = OpamListCommand.{
-           post; test; doc; dev; tools;
+           post; test; doc; dev; dev_setup;
            recursive = false;
            depopts = false;
            build = true;
@@ -819,7 +819,7 @@ let tree ?(why=false) cli =
   in
   mk_command_ret ~cli (cli_from cli2_2) "tree" ~doc ~man
     Term.(const tree $global_options cli $mode $filter
-          $post $dev $doc_flag $test $tools
+          $post $dev $doc_flag $test $dev_setup
           $no_cstr $no_switch
           $name_list)
 
@@ -1497,7 +1497,7 @@ let config cli =
                 | None -> false)
             |> OpamSolver.dependencies ~depopts:true ~post:true ~build:true
               ~installed:true
-              (OpamSwitchState.universe ~test:true ~doc:true ~tools:true
+              (OpamSwitchState.universe ~test:true ~doc:true ~dev_setup:true
                  ~requested:OpamPackage.Set.empty state Query)
             |> OpamPackage.Set.iter process;
             if List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))

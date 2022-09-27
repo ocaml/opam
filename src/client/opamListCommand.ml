@@ -24,7 +24,7 @@ type dependency_toggles = {
   build: bool;
   post: bool;
   test: bool;
-  tools: bool;
+  dev_setup: bool;
   doc: bool;
   dev: bool;
 }
@@ -35,7 +35,7 @@ let default_dependency_toggles = {
   build = true;
   post = false;
   test = false;
-  tools = false;
+  dev_setup = false;
   doc = false;
   dev = false;
 }
@@ -153,7 +153,7 @@ let package_dependencies st tog nv =
   get_opam st nv |>
   OpamPackageVar.all_depends
     ~build:tog.build ~post:tog.post
-    ~test:tog.test ~doc:tog.doc ~tools:tog.tools ~dev:tog.dev
+    ~test:tog.test ~doc:tog.doc ~dev_setup:tog.dev_setup ~dev:tog.dev
     ~depopts:tog.depopts
     st
 
@@ -171,7 +171,7 @@ let get_universe st ?requested tog =
     | None -> st.packages
   in
   OpamSwitchState.universe st
-    ~test:tog.test ~doc:tog.doc ~tools:tog.tools ~force_dev_deps:tog.dev
+    ~test:tog.test ~doc:tog.doc ~dev_setup:tog.dev_setup ~force_dev_deps:tog.dev
     ~requested Query
 
 let rec value_strings value =

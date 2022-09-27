@@ -1077,21 +1077,21 @@
    (run ./run.exe %{bin:opam} %{dep:var-option.test} %{read-lines:testing-env}))))
 
 (rule
- (alias reftest-with-tools)
+ (alias reftest-with-dev-setup)
  (action
-  (diff with-tools.test with-tools.out)))
+  (diff with-dev-setup.test with-dev-setup.out)))
 
 (alias
  (name reftest)
- (deps (alias reftest-with-tools)))
+ (deps (alias reftest-with-dev-setup)))
 
 (rule
- (targets with-tools.out)
+ (targets with-dev-setup.out)
  (deps root-N0REP0)
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:with-tools.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{bin:opam} %{dep:with-dev-setup.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-working-dir)

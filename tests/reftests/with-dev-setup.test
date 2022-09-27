@@ -1,12 +1,12 @@
 N0REP0
 ### <pkg:a.1>
 opam-version: "2.0"
-depends: [ "b" "tool" {with-tools} ]
-build: [ [ "touch" "one" ] [ "touch" "two" ] {with-tools} ]
-install: [ [ "cp" "one" "%{lib}%" ] [ "cp" "two" "%{lib}%" ] {with-tools} ]
+depends: [ "b" "tool" {with-dev-setup} ]
+build: [ [ "touch" "one" ] [ "touch" "two" ] {with-dev-setup} ]
+install: [ [ "cp" "one" "%{lib}%" ] [ "cp" "two" "%{lib}%" ] {with-dev-setup} ]
 post-messages:
 [ "Thanks for installing the packages"
-  "and its tool dependencies too" {with-tools} ]
+  "and its tool dependencies too" {with-dev-setup} ]
 ### <pkg:b.1>
 opam-version: "2.0"
 ### <pkg:tool.1>
@@ -38,7 +38,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   a.1
 Done.
-### opam install a --with-tools
+### opam install a --with-dev-setup
 The following actions will be performed:
 === install 2 packages
   - install a    1

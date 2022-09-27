@@ -836,9 +836,9 @@ let check_installed ~build ~post t atoms =
   in
   let test = OpamStateConfig.(!r.build_test) in
   let doc = OpamStateConfig.(!r.build_doc) in
-  let tools = OpamStateConfig.(!r.with_tools) in
+  let dev_setup = OpamStateConfig.(!r.dev_setup) in
   let env p =
-    OpamFilter.deps_var_env ~build ~post ~test ~doc ~tools
+    OpamFilter.deps_var_env ~build ~post ~test ~doc ~dev_setup
       ~dev:(OpamSwitchState.is_dev_package t p)
   in
   OpamPackage.Name.Map.fold (fun name versions map ->

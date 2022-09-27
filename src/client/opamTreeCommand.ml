@@ -54,7 +54,7 @@ let installed st names =
 
 let build_condition_map tog st =
   let OpamListCommand.{ recursive = _; depopts = _;
-                        build; post; test; tools; doc; dev; } = tog in
+                        build; post; test; dev_setup; doc; dev; } = tog in
   let partial_env =
     let vars = [
       "build", build;
@@ -62,7 +62,7 @@ let build_condition_map tog st =
       "dev", dev;
       "with-doc", doc;
       "with-test", test;
-      "with-tools", tools;
+      "with-dev-setup", dev_setup;
     ] |> List.map (fun (v, f) -> v, if f then None else Some (B false))
     in
     fun var ->
@@ -88,8 +88,8 @@ let build_condition_map tog st =
                     is_valid, orig
                   else
                   let filtered =
-                    OpamFilter.filter_deps ~build ~post ~doc ~test ~tools ~dev
-                      ~default:true (Atom orig)
+                    OpamFilter.filter_deps ~build ~post ~doc ~test ~dev_setup
+                    ~dev ~default:true (Atom orig)
                   in
                   match filtered with
                   | Atom (name, _) ->
@@ -339,8 +339,8 @@ let print_solution st new_st missing solution =
 (** Setting states for building *)
 
 let get_universe tog st =
-  let OpamListCommand.{doc; test; tools; _} = tog in
-  OpamSwitchState.universe st ~doc ~test ~tools ~requested:st.installed Query
+  let OpamListCommand.{doc; test; dev_setup; _} = tog in
+  OpamSwitchState.universe st ~doc ~test ~dev_setup ~requested:st.installed Query
 
 let simulate_new_state tog st universe install names =
   match OpamSolver.resolve universe
@@ -363,7 +363,7 @@ let dry_install tog st universe missing =
     (OpamPackage.Name.Set.of_list missing)
 
 let raw_state tog st names =
-  let OpamListCommand.{doc; test; tools; _} = tog in
+  let OpamListCommand.{doc; test; dev_setup; _} = tog in
   let install = List.map (fun name -> name, None) names in
   let names = OpamPackage.Name.Set.of_list names in
   let requested =
@@ -372,7 +372,7 @@ let raw_state tog st names =
       names
   in
   let universe =
-    OpamSwitchState.universe st ~doc ~test ~tools ~requested Query
+    OpamSwitchState.universe st ~doc ~test ~dev_setup ~requested Query
   in
   let universe =
     { universe

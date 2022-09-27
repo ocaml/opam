@@ -126,7 +126,7 @@ val opam_init:
   ?dl_jobs:int ->
   ?build_test:bool ->
   ?build_doc:bool ->
-  ?with_tools:bool ->
+  ?dev_setup:bool ->
   ?dryrun:bool ->
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:OpamPackage.Name.Set.t ->
