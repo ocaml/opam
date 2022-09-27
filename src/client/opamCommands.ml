@@ -769,27 +769,6 @@ let tree ?(why=false) cli =
       "Display only the branches which leads to one of the $(i,PACKAGES).";
     ]
   in
-  let post =
-    mk_flag ~cli (cli_from cli2_2) ["post"] ~section:selection_docs
-      "Include dependencies tagged as $(i,post)."
-  in
-  let dev =
-    mk_flag ~cli (cli_from cli2_2) ["dev"] ~section:selection_docs
-      "Include development packages in dependencies."
-  in
-  let doc_flag =
-    mk_flag ~cli (cli_from cli2_2) ["doc";"with-doc"] ~section:selection_docs
-      "Include doc-only dependencies."
-  in
-  let test =
-    mk_flag ~cli (cli_from cli2_2) ["t";"test";"with-test"]
-      ~section:selection_docs
-      "Include test-only dependencies."
-  in
-  let dev_setup =
-    mk_flag ~cli (cli_from cli2_2) ["with-dev-setup"] ~section:selection_docs
-      "Include developper only dependencies."
-  in
   let no_cstr =
     mk_flag ~cli (cli_from cli2_2) ["no-constraint"] ~section:display_docs
       "Do not display the version constraints e.g. $(i,(>= 1.0.0))."
@@ -819,7 +798,7 @@ let tree ?(why=false) cli =
   in
   mk_command_ret ~cli (cli_from cli2_2) "tree" ~doc ~man
     Term.(const tree $global_options cli $mode $filter
-          $post $dev $doc_flag $test $dev_setup
+          $post cli $dev cli $doc_flag cli $test cli $dev_setup cli
           $no_cstr $no_switch
           $name_list)
 

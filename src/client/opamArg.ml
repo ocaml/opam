@@ -1494,6 +1494,26 @@ let subpath ?section cli =
 
 let package_selection_section = "PACKAGE SELECTION OPTIONS"
 
+let post ?(section=package_selection_section) cli =
+  mk_flag ~cli cli_original ["post"]  ~section
+    "Include dependencies tagged as $(i,post)."
+
+let dev ?(section=package_selection_section) cli =
+  mk_flag ~cli cli_original ["dev"]  ~section
+    "Include development packages in dependencies."
+
+let doc_flag ?(section=package_selection_section) cli =
+  mk_flag ~cli cli_original ["doc";"with-doc"] ~section
+    "Include doc-only dependencies."
+
+let test ?(section=package_selection_section) cli =
+  mk_flag ~cli cli_original ["t";"test";"with-test"] ~section
+    "Include test-only dependencies."
+
+let dev_setup ?(section=package_selection_section) cli =
+  mk_flag ~cli (cli_from cli2_2) ["with-dev-setup"] ~section
+    "Include developer only dependencies."
+
 let package_selection cli =
   let section = package_selection_section in
   let depends_on =
@@ -1545,26 +1565,6 @@ let package_selection cli =
   let nobuild =
     mk_flag ~cli cli_original ["nobuild"]  ~section
       "Exclude build dependencies (they are included by default)."
-  in
-  let post =
-    mk_flag ~cli cli_original ["post"]  ~section
-      "Include dependencies tagged as $(i,post)."
-  in
-  let dev =
-    mk_flag ~cli cli_original ["dev"]  ~section
-      "Include development packages in dependencies."
-  in
-  let doc_flag =
-    mk_flag ~cli cli_original ["doc";"with-doc"] ~section
-      "Include doc-only dependencies."
-  in
-  let test =
-    mk_flag ~cli cli_original ["t";"test";"with-test"] ~section
-      "Include test-only dependencies."
-  in
-  let dev_setup =
-    mk_flag ~cli (cli_from cli2_2) ["with-dev-setup"] ~section
-      "Include developer only dependencies."
   in
   let field_match =
     mk_opt_all ~cli cli_original ["field-match"] "FIELD:PATTERN" ~section
@@ -1628,8 +1628,9 @@ let package_selection cli =
   in
   Term.(const filter $
         depends_on $ required_by $ conflicts_with $ coinstallable_with $
-        resolve $ recursive $ depopts $ nobuild $ post $ dev $ doc_flag $
-        test $ dev_setup $ field_match $ has_flag $ has_tag)
+        resolve $ recursive $ depopts $ nobuild $ post cli $ dev cli $
+        doc_flag cli $ test cli $ dev_setup cli $ field_match $ has_flag $
+        has_tag)
 
 let package_listing_section = "OUTPUT FORMAT OPTIONS"
 
