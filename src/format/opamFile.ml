@@ -1265,6 +1265,7 @@ module ConfigSyntax = struct
     depext_cannot_install : bool;
     depext_bypass: OpamSysPkg.Set.t;
     sys_pkg_manager_cmd: filename OpamStd.String.Map.t;
+    swh_fallback: bool;
   }
 
   let opam_version t = t.opam_version
@@ -1308,6 +1309,8 @@ module ConfigSyntax = struct
   let depext_bypass t = t.depext_bypass
 
   let sys_pkg_manager_cmd t = t.sys_pkg_manager_cmd
+
+  let swh_fallback t = t.swh_fallback
 
   let with_opam_version opam_version t = { t with opam_version }
   let with_opam_root_version opam_root_version t = { t with opam_root_version }
@@ -1357,6 +1360,7 @@ module ConfigSyntax = struct
   let with_depext_bypass depext_bypass t = { t with depext_bypass }
   let with_sys_pkg_manager_cmd sys_pkg_manager_cmd t =
     { t with sys_pkg_manager_cmd }
+  let with_swh_fallback swh_fallback t = { t with swh_fallback }
 
   let empty = {
     opam_version = file_format_version;
@@ -1382,6 +1386,7 @@ module ConfigSyntax = struct
     depext_cannot_install = false;
     depext_bypass = OpamSysPkg.Set.empty;
     sys_pkg_manager_cmd = OpamStd.String.Map.empty;
+    swh_fallback = true;
   }
 
   (* When adding a field, make sure to add it in
@@ -1485,6 +1490,9 @@ module ConfigSyntax = struct
                Pp.V.string
                (Pp.V.string -| Pp.of_module "filename" (module OpamFilename))))
          -| Pp.of_pair "Distribution Map" OpamStd.String.Map.(of_list, bindings));
+      "swh-fallback", Pp.ppacc
+        with_swh_fallback swh_fallback
+        Pp.V.bool;
 
       (* deprecated fields *)
       "alias", Pp.ppacc_opt

@@ -171,6 +171,8 @@ module Config: sig
   val with_depext_bypass: OpamSysPkg.Set.t -> t -> t
   val with_sys_pkg_manager_cmd: filename OpamStd.String.Map.t -> t -> t
 
+  val with_swh_fallback: bool -> t -> t
+
   (** Return the opam version *)
   val opam_version: t  -> opam_version
 
@@ -226,6 +228,10 @@ module Config: sig
   val depext_bypass: t -> OpamSysPkg.Set.t
 
   val sys_pkg_manager_cmd: t -> filename OpamStd.String.Map.t
+
+  (* Enable or disable Software Heritage fallback for unreachable package
+     sources *)
+  val swh_fallback: t -> bool
 
   val fields: (string * (t, value) OpamPp.field_parser) list
 

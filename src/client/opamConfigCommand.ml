@@ -736,7 +736,8 @@ let global_allowed_fields, global_allowed_sections =
                Config.with_sys_pkg_manager_cmd nmap c)
           ),
         Config.with_sys_pkg_manager_cmd (Config.sys_pkg_manager_cmd Config.empty);
-
+        "swh-fallback", Atomic,
+        Config.with_swh_fallback (Config.swh_fallback Config.empty);
       ] @ List.map (fun f ->
         f, Atomic, Config.with_criteria
           (Config.criteria Config.empty))

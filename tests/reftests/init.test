@@ -117,6 +117,7 @@ eval-variables: [[sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
+swh-fallback: true
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
@@ -188,6 +189,7 @@ solver: "a-solver"
 solver-criteria: "solver-criteri"
 solver-fixup-criteria: "fixup-criteri"
 solver-upgrade-criteria: "upgrade-criteri"
+swh-fallback: true
 wrap-build-commands: ["%{hooks}%/a-script.sh" "wrap-build"]
 wrap-install-commands: ["%{hooks}%/a-script.sh" "wrap-install"]
 wrap-remove-commands: ["%{hooks}%/a-script.sh" "wrap-remove"]
@@ -241,6 +243,7 @@ opam-version: "2.0"
 post-session-commands: ["%{hooks}%/a-script.sh" "post-session"]
 pre-build-commands: ["%{hooks}%/a-script.sh" "pre-build"]
 repositories: "norepo"
+swh-fallback: true
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/a-script.sh" "wrap-install"]
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
