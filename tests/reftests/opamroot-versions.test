@@ -260,16 +260,16 @@ RSTATE                          root version (4.8) is greater than running binar
 RSTATE                          Cache found
 # No matches found
 ### # ro global state, rw repo state
-### opam repo add root-config ./root-config --set-default | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam repo add root-config ./root-config --set-default | "[(]?${OPAMROOTVERSION}[)]" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 GSTATE                          root version (4.8) is greater than running binary's current; load with best-effort (read-only)
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (4.8 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (4.8 > current, aborting.
 # Return code 15 #
 ### :III:2:b: Good repo config file :
 ### cp repos-config $OPAMROOT/repo/repos-config
 ### # ro global state, ro repo state
-### opam list --no-switch | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam list --no-switch | "[(]?${OPAMROOTVERSION}[)]" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 GSTATE                          root version (4.8) is greater than running binary's current; load with best-effort (read-only)
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -277,11 +277,11 @@ RSTATE                          root version (4.8) is greater than running binar
 RSTATE                          Cache found
 # No matches found
 ### # ro global state, rw repo state
-### opam repo add root-config ./root-config --set-default | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam repo add root-config ./root-config --set-default | "[(]?${OPAMROOTVERSION}[)]" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 GSTATE                          root version (4.8) is greater than running binary's current; load with best-effort (read-only)
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (4.8 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (4.8 > current, aborting.
 # Return code 15 #
 ### cp config.$OPAMROOTVERSION $OPAMROOT/config
 ### cp config-w-swfoo.4.8 $OPAMROOT/config
@@ -303,14 +303,14 @@ STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # No matches found
 ### # ro global state, ro repo state, rw switch state
-### opam install bar | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam install bar | "[(]?${OPAMROOTVERSION}[)]" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 GSTATE                          root version (4.8) is greater than running binary's current; load with best-effort (read-only)
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          root version (4.8) is greater than running binary's current; load with best-effort (read-only)
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ foo
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (4.8 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (4.8 > current, aborting.
 # Return code 15 #
 ### :III:3:b: Good switch config file :
 ### cp switch-config $OPAMROOT/foo/.opam-switch/switch-config
@@ -328,30 +328,30 @@ STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # No matches found
 ### # ro global state, ro repo state, rw switch state
-### opam install bar | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam install bar | "[(]?${OPAMROOTVERSION}[)]" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 GSTATE                          root version (4.8) is greater than running binary's current; load with best-effort (read-only)
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          root version (4.8) is greater than running binary's current; load with best-effort (read-only)
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ foo
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (4.8 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (4.8 > current, aborting.
 # Return code 15 #
 ### :III:1:a: Bad config file
 ### cp config-w-swfoo.4.8.err $OPAMROOT/config
 ### # rw global state
-### opam switch remove foo | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam switch remove foo | "[(]?${OPAMROOTVERSION}[)]" -> "current"
 FORMAT                          File errors in ${BASEDIR}/OPAM/config, ignored fields: At ${BASEDIR}/OPAM/config:7:0-7:8::
 Invalid field neant
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (4.8 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (4.8 > current, aborting.
 # Return code 15 #
 ### :III:1:b: Good config file
 ### cp config-w-swfoo.4.8 $OPAMROOT/config
 ### # rw global state
-### opam switch remove foo | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam switch remove foo | "[(]?${OPAMROOTVERSION}[)]" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (4.8 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (4.8 > current, aborting.
 # Return code 15 #
 ### :                                       :
 ### : IV:Newer opam root & new file version :
@@ -444,16 +444,16 @@ unsupported or missing file format version; should be 2.0 or older
 ### :IV:1:a: Bad config file
 ### cp config-w-swfoo.9.6.err $OPAMROOT/config
 ### # rw global state
-### opam switch remove foo | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam switch remove foo | "${OPAMROOTVERSION}[)]" -> "current)"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (9.6 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (9.6 > current), aborting.
 # Return code 15 #
 ### :IV:1:b: Good config file
 ### cp config-w-swfoo.9.6 $OPAMROOT/config
 ### # rw global state
-### opam switch remove foo | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam switch remove foo | "${OPAMROOTVERSION}[)]" -> "current)"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (9.6 > 2.1), aborting.
+[ERROR] Refusing write access to ${BASEDIR}/OPAM, which is more recent than this version of opam (9.6 > current), aborting.
 # Return code 15 #
 ### :                                                             :
 ### : V:Older opam root, intermediate upgrade from 2.0 to current :
@@ -650,14 +650,14 @@ No configuration file found, using built-in defaults.
 ### :V:1:a: From 2.0 root, global
 ### ocaml generate.ml 2.0
 ### # ro global state
-### opam option jobs | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam option jobs | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-FMT_UPG                         On-the-fly config upgrade, from 2.0 to 2.1
+FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
 FMT_UPG                         Format upgrade done
 ### # ro global state, ro repo state, ro switch state
-### opam list | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam list | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-FMT_UPG                         On-the-fly config upgrade, from 2.0 to 2.1
+FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
 FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -670,9 +670,9 @@ i-am-another-package 2           One-line description
 i-am-package         2           One-line description
 i-am-sys-compiler    1           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-another-package --switch sw-comp | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam install i-am-another-package --switch sw-comp | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-FMT_UPG                         On-the-fly config upgrade, from 2.0 to 2.1
+FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
 FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -690,11 +690,11 @@ The following actions will be performed:
 -> installed i-am-another-package.2
 Done.
 ### # rw global state
-### opam switch sw-comp | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam switch sw-comp | " ${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
-FMT_UPG                         Light config upgrade, from 2.0 to 2.1
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version 2.1, which can't be reverted.
+FMT_UPG                         Light config upgrade, from 2.0 tocurrent
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to versioncurrent which can't be reverted.
 You may want to back it up before going further.
 
 Continue? [y/n] y
@@ -733,9 +733,9 @@ roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 ### :V:1:b: From 2.0 root, local
 ### ocaml generate.ml 2.0 local
 ### # ro global state, ro repo state, ro switch state
-### opam list | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam list | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-FMT_UPG                         On-the-fly config upgrade, from 2.0 to 2.1
+FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
 FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -747,9 +747,9 @@ STATE                           Switch state loaded in 0.000s
 i-am-sys-compiler 2           One-line description
 ### # ro global state, ro repo state, rw switch state
 ### OPAMSYSCOMP=2
-### opam install i-am-package | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam install i-am-package | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-FMT_UPG                         On-the-fly config upgrade, from 2.0 to 2.1
+FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
 FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -765,11 +765,11 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
 Done.
-### opam option jobs=4 | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
-FMT_UPG                         Light config upgrade, from 2.0 to 2.1
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version 2.1, which can't be reverted.
+FMT_UPG                         Light config upgrade, from 2.0 to current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version current which can't be reverted.
 You may want to back it up before going further.
 
 Continue? [y/n] y
@@ -808,9 +808,9 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:1:c: From 2.0 root, local unknown from config
 ### ocaml generate.ml 2.0 orphaned
 ### # ro global state, ro repo state, ro switch state
-### opam list | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam list | "${OPAMROOTVERSION}$" -> " current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-FMT_UPG                         On-the-fly config upgrade, from 2.0 to 2.1
+FMT_UPG                         On-the-fly config upgrade, from 2.0 to  current
 FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -821,9 +821,9 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-sys-compiler 2           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-package | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam install i-am-package | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-FMT_UPG                         On-the-fly config upgrade, from 2.0 to 2.1
+FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
 FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -839,11 +839,11 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
 Done.
-### opam option jobs=4 | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
-FMT_UPG                         Light config upgrade, from 2.0 to 2.1
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version 2.1, which can't be reverted.
+FMT_UPG                         Light config upgrade, from 2.0 to current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version current which can't be reverted.
 You may want to back it up before going further.
 
 Continue? [y/n] y
@@ -942,12 +942,12 @@ opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:1:e: reinit from 2.0
 ### ocaml generate.ml 2.0
-### opam init --reinit --bypass-checks --no-setup | "[(]${OPAMROOTVERSION}[)]" -> "current"
+### opam init --reinit --bypass-checks --no-setup | "${OPAMROOTVERSION}($|,)" -> "current"
 No configuration file found, using built-in defaults.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
-FMT_UPG                         Light config upgrade, from 2.0 to 2.1
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version 2.1, which can't be reverted.
+FMT_UPG                         Light config upgrade, from 2.0 to current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version current which can't be reverted.
 You may want to back it up before going further.
 
 Continue? [y/n] y
