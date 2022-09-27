@@ -273,7 +273,8 @@ let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
          OpamRepository.is_dirty ?subpath url
          @@| function false -> () | true ->
            OpamConsole.note
-             "Ignoring uncommitted changes in %s%s (`--working-dir' not active)."
+             "Ignoring uncommitted changes in %s%s \
+              (`--working-dir' not specified or specified with no argument)."
              url.OpamUrl.path
              (OpamStd.Option.to_string (fun sp ->
                   Filename.dir_sep ^ OpamFilename.SubPath.to_string sp) subpath))
