@@ -21,7 +21,7 @@ ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
-[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not active).
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not specified or specified with no argument).
 Processing  1/1: [ongoing.dev: git]
 [ongoing.dev] synchronised (no changes)
 
@@ -55,7 +55,7 @@ Done.
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
-[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not active).
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not specified or specified with no argument).
 Processing  1/1: [ongoing.dev: git]
 [ongoing.dev] synchronised (no changes)
 
@@ -85,7 +85,7 @@ test "-f" "out" (CWD=${BASEDIR}/ongoing)
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
-[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not active).
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not specified or specified with no argument).
 Processing  1/1: [ongoing.dev: git]
 [ongoing.dev] synchronised (no changes)
 
@@ -118,7 +118,7 @@ Done.
 ### opam install ongoing qux --assume-built
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
-[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not active).
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not specified or specified with no argument).
 [ongoing.dev] synchronised (no changes)
 
 [WARNING] Package qux is not pinned locally and assume built option is set, skipping

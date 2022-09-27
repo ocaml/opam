@@ -455,7 +455,7 @@ build: [[ "test" "-f" "newfile.txt" ] [ "cat" "newfile.txt" ]]
 [default] no changes from file://${BASEDIR}/REPO
 
 <><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
-[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not active).
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not specified or specified with no argument).
 [ongoing.dev] synchronised (no changes)
 [quux.dev5] synchronised (no changes)
 ### opam update --working-dir
@@ -465,7 +465,7 @@ build: [[ "test" "-f" "newfile.txt" ] [ "cat" "newfile.txt" ]]
 [default] no changes from file://${BASEDIR}/REPO
 
 <><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
-[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not active).
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not specified or specified with no argument).
 [ongoing.dev] synchronised (no changes)
 [quux.dev5] synchronised (no changes)
 ### opam update --working-dir ongoing
