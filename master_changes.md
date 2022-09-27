@@ -114,6 +114,7 @@ users)
 
 ## Update / Upgrade
   * [BUG] if a package is pinned from a locked file, it is automatically updated/upgraded accordingly a lock file (same extension) [#5080 @rjbou]
+  * More clear message for pinned package update that have local changes, with no working dir given, or no arguments specified [#5300 @rjbou - fix #5294]
 
 ## Exec
   * [NEW] Add `opam exec --no-switch` [#4957 @kit-ty-kate - fix #4951]
