@@ -94,6 +94,10 @@ opam install ocp-indent ocp-index.1.0.2
 opam install "ocamlfind>=1.4.0"
 ```
 
+If package source is not found, opam tries to retrieve it from [Software
+Heritage](www.softwareheritage.org) archives (see related [opam
+option](Manual.html#configfield-swh-fallback)).
+
 ### opam upgrade
 
 Will attempt to upgrade the installed packages to their newest versions. You
