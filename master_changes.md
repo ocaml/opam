@@ -333,7 +333,7 @@ users)
   * Escape for cmdliner.1.1.1 output change [#5131 @rjbou]
   * Add deprectaed flag test [#4523 @kit-ty-kate]
   * Add deps-only, install formula [#4975 @AltGr]
-  * Update opam root version test do escape `OPAMROOTVERSION` sed, it matches generated hexa temporary directory names [#5007 @AltGr]
+  * Update opam root version test do escape `OPAMROOTVERSION` sed, it matches generated hexa temporary directory names [#5007 @AltGr #5301 @rjbou]
   * Add json output test [#5143 @rjbou]
   * Add test for opam file write with format preserved bug in #4936, fixed in #4941 [#4159 @rjbou]
   * Add test for switch upgrade from 2.0 root, with pinned compiler [#5176 @rjbou @kit-ty-kate]
@@ -347,7 +347,6 @@ users)
   * Add test for opam tree command [#5171 @cannorin]
   * Update and reintegrate pin & depext test `pin.unix` in `pin` test, with test environment, there is no more need to have it only on unix [#5268 @rjbou @kit-ty-kate]
   * Add a reftest testing for system package manager failure [#5257 @kit-ty-kate]
-
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
