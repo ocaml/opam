@@ -20,7 +20,7 @@ ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
-[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not active).
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not specified or specified with no argument).
 Processing  1/1: [ongoing.dev: git]
 [ongoing.dev] synchronised (no changes)
 

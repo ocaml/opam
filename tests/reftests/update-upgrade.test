@@ -421,3 +421,88 @@ The following actions will be performed:
 -> installed quux.dev5
 -> installed s-foo.7
 Done.
+### : with working-dir :
+### <pin:ongoing/ongoing.opam>
+opam-version: "2.0"
+build: [[ "test" "-f" "ongoing.txt" ] [ "cat" "ongoing.txt" ]]
+### <ongoing/ongoing.txt>
+versionned
+### git -C ./ongoing init -q --initial-branch=master
+### git -C ./ongoing config core.autocrlf false
+### git -C ./ongoing add -A
+### git -C ./ongoing commit -qm "init"
+### opam pin ./ongoing
+Package ongoing does not exist, create as a NEW package? [y/n] y
+ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install ongoing dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved ongoing.dev  (no changes)
+-> installed ongoing.dev
+Done.
+### <ongoing/newfile.txt>
+new!
+### <pin:ongoing/ongoing.opam>
+opam-version: "2.0"
+build: [[ "test" "-f" "newfile.txt" ] [ "cat" "newfile.txt" ]]
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] no changes from file://${BASEDIR}/REPO2
+[default] no changes from file://${BASEDIR}/REPO
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not specified or specified with no argument).
+[ongoing.dev] synchronised (no changes)
+[quux.dev5] synchronised (no changes)
+### opam update --working-dir
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] no changes from file://${BASEDIR}/REPO2
+[default] no changes from file://${BASEDIR}/REPO
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not specified or specified with no argument).
+[ongoing.dev] synchronised (no changes)
+[quux.dev5] synchronised (no changes)
+### opam update --working-dir ongoing
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
+[ongoing] Installing new package description from upstream git+file://${BASEDIR}/ongoing#master
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade --working-dir
+The following actions will be performed:
+=== recompile 1 package
+  - recompile ongoing dev (pinned) [upstream or system changes]
+[NOTE] --working-dir is given but no requested package is pinned
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved ongoing.dev  (git+file://${BASEDIR}/ongoing#master)
+[ERROR] The compilation of ongoing.dev failed at "test -f newfile.txt".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build ongoing dev
++- 
+- No changes have been performed
+# Return code 31 #
+### opam upgrade --working-dir ongoing
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
+
+The following actions will be performed:
+=== recompile 1 package
+  - recompile ongoing dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   ongoing.dev
+-> installed ongoing.dev
+Done.
