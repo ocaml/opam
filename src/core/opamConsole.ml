@@ -1028,6 +1028,9 @@ module Tree = struct
     children: 'elt t list
   }
 
+  let value { value; _ } = value
+  let children { children; _ } = children
+
   let create ?(children=[]) value = { value; children }
 
   type symbols = {
