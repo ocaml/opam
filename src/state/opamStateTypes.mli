@@ -51,7 +51,7 @@ type +'lock global_state = {
   global_lock: OpamSystem.lock;
 
   root: OpamPath.t;
-  (** The global OPAM root path (caution: this is stored here but some code may
+  (** The global opam root path (caution: this is stored here but some code may
       rely on OpamStateConfig.root_dir ; in other words, multiple root handling
       isn't really supported at the moment) *)
 
@@ -65,6 +65,11 @@ type +'lock global_state = {
   (** A map of variables that have been defined globally, e.g. through
       `.opam/config`. They may need evaluation so are stored as lazy values.
       The extra string is the supplied variable documentation *)
+
+  global_state_to_upgrade: ([ `Repo | `Switch ] * OpamVersion.t) option;
+  (** If remaining, the xtate that need to be upgraded after a root upgrade
+      (version update), and the old root version. *)
+
 } constraint 'lock = 'lock lock
 
 (** State corresponding to the repo/ subdir: all available packages and

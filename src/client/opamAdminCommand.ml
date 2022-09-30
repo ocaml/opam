@@ -795,6 +795,7 @@ let get_virtual_switch_state repo_root env =
         load ~lock_kind:`Lock_read !r.root_dir) +!
                                 OpamFile.Config.empty);
     global_variables = OpamVariable.Map.empty;
+    global_state_to_upgrade = None;
   } in
   let singl x = OpamRepositoryName.Map.singleton repo.repo_name x in
   let repos_tmp =
