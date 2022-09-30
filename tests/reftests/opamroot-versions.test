@@ -745,7 +745,7 @@ repositories: "default"
 switch: "sw-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-config
 invariant: ["i-am-compiler" {>= "2"}]
 opam-version: "2.0"
@@ -823,7 +823,7 @@ repositories: "default"
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler"]
 opam-root: "${BASEDIR}/OPAM"
@@ -902,7 +902,7 @@ repositories: "default"
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler"]
 opam-root: "${BASEDIR}/OPAM"
@@ -1111,7 +1111,7 @@ wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-config
 invariant: ["i-am-compiler"]
 opam-version: "2.0"
@@ -1183,7 +1183,7 @@ wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
@@ -1258,7 +1258,7 @@ wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
@@ -1474,7 +1474,7 @@ wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-config
 invariant: ["i-am-compiler"]
 opam-version: "2.0"
@@ -1548,7 +1548,7 @@ wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
@@ -1625,7 +1625,7 @@ wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
@@ -1830,7 +1830,7 @@ repositories: "default"
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-config
 invariant: ["i-am-compiler"]
 opam-version: "2.0"
@@ -1899,7 +1899,7 @@ repositories: "default"
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
@@ -1970,7 +1970,7 @@ repositories: "default"
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
@@ -2135,12 +2135,40 @@ Done.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.1 to 2.2~alpha
 FMT_UPG                         Format upgrade done
+Perform the update and continue? [y/n] y
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 [root-config] Initialised
 [NOTE] Repository root-config has been added to the selections of switch sw-sys-comp only.
        Run `opam repository add root-config --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
 
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+default-invariant: ["i-am-sys-compiler"]
+depext: true
+depext-cannot-install: false
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+opam-root-version: current
+opam-version: "2.0"
+repositories: "default"
+switch: "sw-sys-comp"
+### opam-cat $OPAMROOT/repo/repos-config
+opam-version: "2.0"
+repositories: ["default" {"file://${BASEDIR}/default"} {true} "root-config" {"file://${BASEDIR}/root-config"} {true}]
+### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+invariant: ["i-am-compiler"]
+opam-version: "2.0"
+synopsis: "switch with compiler"
+### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-state
+compiler: ["i-am-compiler.2"]
+installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+opam-version: "2.0"
+roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+### :V:5:a:aleph: From 2.1 root, global upgrade from global state
+### ocaml generate.ml 2.1
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
@@ -2168,16 +2196,16 @@ repositories: "default"
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: ["default" {"file://${BASEDIR}/default"} "root-config" {"file://${BASEDIR}/root-config"}]
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-config
 invariant: ["i-am-compiler"]
 opam-version: "2.0"
 synopsis: "switch with compiler"
 ### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-state
 compiler: ["i-am-compiler.2"]
-installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+installed: ["i-am-compiler.2" "i-am-package.2"]
 opam-version: "2.0"
-roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+roots: ["i-am-package.2" "i-am-compiler.2"]
 ### :V:5:b: From 2.1 root, local
 ### ocaml generate.ml 2.1 local
 ### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
@@ -2236,7 +2264,7 @@ repositories: "default"
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
@@ -2306,7 +2334,7 @@ repositories: "default"
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
@@ -2376,7 +2404,7 @@ repositories: "default"
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "default" {"file://${BASEDIR}/default"}
+repositories: "default" {"file://${BASEDIR}/default"} {true}
 ### opam-cat _opam/.opam-switch/switch-config
 invariant: ["i-am-sys-compiler" | "i-am-compiler"]
 opam-root: "${BASEDIR}/OPAM"
@@ -2500,7 +2528,7 @@ repositories: "default"
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: ["default" {"file://${BASEDIR}/default"} "root-config" {"file://${BASEDIR}/root-config"}]
+repositories: ["default" {"file://${BASEDIR}/default"} {true} "root-config" {"file://${BASEDIR}/root-config"} {true}]
 ### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-config
 invariant: ["i-am-compiler"]
 opam-version: "2.0"
