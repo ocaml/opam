@@ -35,7 +35,11 @@ val latest_version: OpamVersion.t
     the upgraded or unchanged config file.*)
 val as_necessary:
   ?reinit:(OpamFile.Config.t -> unit) -> 'a lock -> OpamSystem.lock -> dirname ->
-  OpamFile.Config.t -> OpamFile.Config.t
+  OpamFile.Config.t ->
+  OpamFile.Config.t * ([ `Repo | `Switch ] * OpamVersion.t) option
+
+val finish_hard_upgrade:
+  OpamVersion.t -> OpamSystem.lock -> dirname -> OpamFile.Config.t -> unit
 
 (* Try to launch a hard upgrade from 2;1 alpha's & beta's root
    to 2.1~rc one. Raises [Upgrade_done] (catched by main

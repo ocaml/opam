@@ -75,3 +75,6 @@ val fix_switch_list: 'a global_state -> 'a global_state
 
 (** Description used for system inferred variables *)
 val inferred_from_system: string
+
+val check_upgrade_todo:
+  'a lock -> [ `Repo | `Switch ] -> 'b global_state -> unit
