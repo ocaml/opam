@@ -522,6 +522,7 @@ let mode =
   | s -> failwith s
 
 let opamroot = Sys.getenv "OPAMROOT"
+
 let opam_version = Printf.sprintf "opam-version: %S"
 let opam_version_2_0 = opam_version "2.0"
 let opam_version_2_1 = opam_version "2.1"
@@ -568,7 +569,7 @@ let opam_root = Printf.sprintf "opam-root: %S" opamroot
 let repos_config = Printf.sprintf {|
 opam-version: "2.0"
 repositories: "default" {"file://%s/default"}
-|} (Sys.getenv "BASEDIR")
+|} (Sys.getenv "BASEDIR" |> String.map (function '\\' -> '/' | c -> c))
 let opam_20 =
   [ "config", [ opam_version_2_0; repo; installed_switches; eval; default_compiler ];
     "repo/repos-config", [ repos_config ];
