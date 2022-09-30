@@ -33,6 +33,7 @@ users)
   * Use menu for init setup [#5057 @AltGr; #5217 @dra27]
   * Do not show --yes and --no as special global options when using cmdliner >= 1.1 [#5269 @kit-ty-kate]
   * ◈ Add `tree` subcommand to display a dependency tree of currently installed packages [#5171 @cannorin - fix #3775]
+  * ◈ `tree` subcommand now supports `--json` option [#5303 @cannorin - fix #5298]
   * ◈ Add `why` subcommand to examine how the versions of currently installed packages get constrained (alias to `tree --rev-deps`) [#5171 @cannorin - fix #3775]
   * Make the plugin lookup faster when mistyping a subcommand [#5297 @kit-ty-kate]
 
@@ -363,6 +364,7 @@ users)
     * to escape `OPAMROOTVERSION` sed, it matches generated hexa temporary directory names [#5007 @AltGr #5301 @rjbou]
     * several improvments: add repo config check, update generator [#5303 @rjbou]
   * Add json output test [#5143 @rjbou]
+    * Add tree json output [#5303 @cannorin @rjbou]
   * Add test for opam file write with format preserved bug in #4936, fixed in #4941 [#4159 @rjbou]
   * Add test for switch upgrade from 2.0 root, with pinned compiler [#5176 @rjbou @kit-ty-kate]
   * Add switch import (for pinned packages) test [#5181 @rjbou]
@@ -589,3 +591,4 @@ users)
   * `OpamStd.Map`: add `filter_map` [#5337 @rjbou]
   * `OpamStd.Set`: Add `to_list_map` [#5308 @kit-ty-kate]
   * `OpamConsole.header_msg`: remove trailing space when there is no left padding [#5363 @rjbou]
+  * `OpamConsole.Tree`: add `valu` and `children` getters [#5303 @cannorin]
