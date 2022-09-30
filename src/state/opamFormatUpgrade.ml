@@ -1078,7 +1078,14 @@ let from_2_0_to_2_1 _ ~on_the_fly:_ conf = conf, None
 
 let v2_2_alpha = OpamVersion.of_string "2.2~alpha"
 
-let from_2_1_to_2_2_alpha _ ~on_the_fly:_ conf = conf, None
+let from_2_1_to_2_2_alpha_repo root _conf =
+  let f = OpamPath.repos_config root in
+  OpamStd.Option.iter (OpamFile.Repos_config.write f)
+    (OpamFile.Repos_config.read_opt f)
+
+let from_2_1_to_2_2_alpha root ~on_the_fly conf =
+  if not on_the_fly then from_2_1_to_2_2_alpha_repo root conf;
+  conf, Some `Repo
 
 let latest_version = OpamFile.Config.root_version
 
@@ -1273,6 +1280,7 @@ let finish_hard_upgrade old_root_version global_lock root config =
   let is_dev = OpamVersion.is_dev_version () in
   let upgrades =
     [
+      v2_2_alpha, from_2_1_to_2_2_alpha_repo
     ]
     |> List.filter (fun (v,_) ->
         OpamVersion.compare old_root_version v < 0)
