@@ -124,7 +124,9 @@ let load lock_kind =
   { global_lock = config_lock;
     root;
     config;
-    global_variables; }
+    global_variables;
+    global_upgrade_status;
+    }
 
 let switches gt =
   OpamFile.Config.installed_switches gt.config
