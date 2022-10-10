@@ -110,15 +110,15 @@ AS_IF([test "x${enable_version_check}" != "xno"], [
 ])
 
 AC_MSG_CHECKING([for compiler type])
-CCOMP_TYPE=`$OCAML shell/print_config.ml ccomp_type 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/ccomp_type: //p"`
+CCOMP_TYPE=`$OCAML shell/print_config.ml ccomp_type 2>/dev/null | grep -F -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/ccomp_type: //p"`
 AS_IF([ test "$?" -eq 0 ],,[AC_MSG_ERROR([failed])] )
 AC_MSG_RESULT([$CCOMP_TYPE])
 AC_MSG_CHECKING([for compiler architecture])
-ARCH=`$OCAML shell/print_config.ml arch 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/architecture: //p"`
+ARCH=`$OCAML shell/print_config.ml arch 2>/dev/null | grep -F -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/architecture: //p"`
 AS_IF([ test "$?" -eq 0 ],,[AC_MSG_ERROR([failed])] )
 AC_MSG_RESULT([$ARCH])
 AC_MSG_CHECKING([for compiler system])
-SYSTEM=`$OCAML shell/print_config.ml system 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/system: //p"`
+SYSTEM=`$OCAML shell/print_config.ml system 2>/dev/null | grep -F -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/system: //p"`
 AC_MSG_RESULT([$SYSTEM])
 AC_SUBST(SYSTEM)
 
@@ -293,7 +293,7 @@ fi
 AS_IF([test "${OCAML_OS_TYPE}" = "Win32"],[
   AC_MSG_CHECKING([for a workable solution for ln -s])
   ln -s configure conftestLink
-  AS_IF([test "`cmd /c dir conftestLink 2>/dev/null | fgrep SYMLINK`" = ""],[LN_S="cp -a"],[LN_S="ln -s"])
+  AS_IF([test "`cmd /c dir conftestLink 2>/dev/null | grep -F SYMLINK`" = ""],[LN_S="cp -a"],[LN_S="ln -s"])
   AC_MSG_RESULT([$LN_S])
 ],[
   LN_S="ln -s"

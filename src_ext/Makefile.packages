@@ -1,6 +1,6 @@
 EXT_LIB:=$(shell PATH="$(PATH)" ocamlc -config | tr -d '\r' | sed -ne "s/ext_lib: \.//p")
 EXT_DLL:=$(shell PATH="$(PATH)" ocamlc -config | tr -d '\r' | sed -ne "s/ext_dll: \.//p")
-EXT_EXE:=$(if $(filter Win32,$(shell PATH="$(PATH)" ocamlc -config | fgrep os_type)),.exe)
+EXT_EXE:=$(if $(filter Win32,$(shell PATH="$(PATH)" ocamlc -config | grep -F os_type)),.exe)
 OCAMLBIN:=$(dir $(shell PATH="$(PATH)" command -v ocamlc))
 # SITELIB must *not* be evaluated with := (because it must be evaluated *after*
 # ocamlfind has been compiled)

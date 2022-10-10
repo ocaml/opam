@@ -4167,7 +4167,7 @@ fi
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for compiler type" >&5
 printf %s "checking for compiler type... " >&6; }
-CCOMP_TYPE=`$OCAML shell/print_config.ml ccomp_type 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/ccomp_type: //p"`
+CCOMP_TYPE=`$OCAML shell/print_config.ml ccomp_type 2>/dev/null | grep -F -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/ccomp_type: //p"`
 if  test "$?" -eq 0
 then :
 
@@ -4178,7 +4178,7 @@ fi
 printf "%s\n" "$CCOMP_TYPE" >&6; }
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for compiler architecture" >&5
 printf %s "checking for compiler architecture... " >&6; }
-ARCH=`$OCAML shell/print_config.ml arch 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/architecture: //p"`
+ARCH=`$OCAML shell/print_config.ml arch 2>/dev/null | grep -F -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/architecture: //p"`
 if  test "$?" -eq 0
 then :
 
@@ -4189,7 +4189,7 @@ fi
 printf "%s\n" "$ARCH" >&6; }
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for compiler system" >&5
 printf %s "checking for compiler system... " >&6; }
-SYSTEM=`$OCAML shell/print_config.ml system 2>/dev/null | fgrep -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/system: //p"`
+SYSTEM=`$OCAML shell/print_config.ml system 2>/dev/null | grep -F -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/system: //p"`
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $SYSTEM" >&5
 printf "%s\n" "$SYSTEM" >&6; }
 
@@ -6090,7 +6090,7 @@ then :
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for a workable solution for ln -s" >&5
 printf %s "checking for a workable solution for ln -s... " >&6; }
   ln -s configure conftestLink
-  if test "`cmd /c dir conftestLink 2>/dev/null | fgrep SYMLINK`" = ""
+  if test "`cmd /c dir conftestLink 2>/dev/null | grep -F SYMLINK`" = ""
 then :
   LN_S="cp -a"
 else $as_nop

@@ -294,6 +294,7 @@ users)
   * Unify constructors for powershell hosts [#5203 @dra27]
   * Fix lazy compilation of regular expression in OpamFormula.atom_of_string [#5211 @dra27]
   * [BUG] Display correct exception backtrace on uncaught exception on Windows [#5216 @dra27]
+  * Use grep -F instead of fgrep, as the latter is deprecated [#5309 @MisterDA]
 
 ## Internal: Windows
   * Support MSYS2: treat MSYS2 and Cygwin as equivalent [#4813 @jonahbeckford]
