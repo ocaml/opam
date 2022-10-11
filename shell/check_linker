@@ -5,7 +5,7 @@ FIRST=1
 FAULT=0
 PREPEND=
 while IFS= read -r line; do
-  OUTPUT=$("$line" --version 2>/dev/null | head -1 | fgrep "Microsoft (R) Incremental Linker")
+  OUTPUT=$("$line" --version 2>/dev/null | head -1 | grep -F "Microsoft (R) Incremental Linker")
   if [ "x$OUTPUT" = "x" -a $FIRST -eq 1 ] ; then
     FAULT=1
   elif [ $FAULT -eq 1 ] ; then
