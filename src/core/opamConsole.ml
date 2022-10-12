@@ -713,7 +713,8 @@ let header_error fmt =
     ) fmt
 
 (* Reads a single char from the user when possible, a line otherwise *)
-let short_user_input ~prompt ?default f =
+let short_user_input ~prompt ?default ?on_eof f =
+  let on_eof = OpamStd.Option.Op.(on_eof ++ default) in
   let prompt () = match default with
     | Some x when OpamStd.Sys.tty_out ->
       msg "%s%s" prompt x;
@@ -776,7 +777,7 @@ let short_user_input ~prompt ?default f =
   with
   | Sys.Break as e -> OpamStd.Exn.finalise e (fun () -> msg "\n")
   | Unix.Unix_error _ | End_of_file ->
-    match default with
+    match on_eof with
     | None -> OpamStd.Exn.finalise End_of_file (fun () -> msg "\n")
     | Some d ->
       msg "%s\n" d;
@@ -789,9 +790,9 @@ let pause fmt =
     Printf.ksprintf (fun s ->
         let prompt = OpamStd.Format.reformat s in
         short_user_input ~prompt ~default:""
-        @@ function
+        (function
         | "\027" -> OpamStd.Sys.exit_because `Aborted
-        | _ -> Some ())
+        | _ -> Some ()))
       fmt
   else
     Printf.ifprintf () fmt
@@ -814,11 +815,11 @@ let confirm ?(require_unsafe_yes=false) ?(default=true) fmt =
         (formatted_msg "%sn\n" prompt; false)
       else
         short_user_input ~prompt ~default:(if default then "y" else "n")
-        @@ function
+        (function
         | "y" | "yes" -> Some true
         | "n" | "no" -> Some false
         | "\027" -> Some false (* echap *)
-        | _  -> None)
+        | _  -> None))
     fmt
 
 let read fmt =
@@ -953,7 +954,7 @@ let print_table ?cut oc ~sep table =
   in
   List.iter (fun l -> print_line (cleanup_trailing l)) table
 
-let menu ?default ?noninteractive ?unsafe_yes ?yes ~no ~options fmt =
+let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
   assert (List.length options < 10);
   let options_nums =
     List.mapi (fun n (ans, _) -> ans, string_of_int (n+1)) options
@@ -984,9 +985,10 @@ let menu ?default ?noninteractive ?unsafe_yes ?yes ~no ~options fmt =
     let nlines = List.length Re.(all (compile (char '\n')) text) in
     msg "%s" text;
     let select a =
-      msg "%s" (List.assoc a options_nums); a
+      msg "%s\n" (List.assoc a options_nums); a
     in
     let default_s = List.assoc default options_nums in
+    let no_s = List.assoc no options_nums in
     if OpamCoreConfig.(!r.safe_mode) then no else
     match OpamCoreConfig.answer(), unsafe_yes, yes with
     | `unsafe_yes, Some a, _ -> print_string prompt; select a
@@ -1001,7 +1003,7 @@ let menu ?default ?noninteractive ?unsafe_yes ?yes ~no ~options fmt =
           raise Exit
       in
       try
-        short_user_input ~prompt ~default:default_s @@ function
+        short_user_input ~prompt ~default:default_s ~on_eof:no_s @@ function
         | "" -> None
         | "\027" -> Some (select no) (* echap *)
         | "\027[A" (* up *) | "\027[D" (* left *) ->
@@ -1013,12 +1015,7 @@ let menu ?default ?noninteractive ?unsafe_yes ?yes ~no ~options fmt =
   in
   Printf.ksprintf (fun prompt_msg ->
       formatted_msg "%s\n" prompt_msg;
-      let default =
-        match default, noninteractive with
-        | _, Some d when not OpamStd.Sys.tty_out -> d
-        | Some d, _ -> d
-        | None, _ -> fst (List.hd options)
-      in
+      let default = OpamStd.Option.default (fst (List.hd options)) default in
       menu default
     ) fmt
 

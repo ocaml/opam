@@ -1160,9 +1160,8 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     else if OpamFile.Config.depext_run_installs t.switch_global.config then
       if confirm then menu t sys_packages else auto_install t sys_packages
     else
-      manual_install ~noninteractive:`Ignore t sys_packages
+      manual_install t sys_packages
   and menu t sys_packages =
-    (* Called only if run install is true *)
     let answer =
       let pkgman =
         OpamConsole.colorise `yellow
@@ -1207,11 +1206,10 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     OpamConsole.msg "\n    %s\n\n"
       (OpamConsole.colorise `bold
          (OpamStd.List.concat_map "\n    " (String.concat " ") commands))
-  and manual_install ~noninteractive t sys_packages =
+  and manual_install t sys_packages =
     print_command sys_packages;
     let answer =
-      OpamConsole.menu ~default:`Continue ~noninteractive ~no:`Quit
-        "Would you like opam to:"
+      OpamConsole.menu ~default:`Continue ~no:`Quit "Would you like opam to:"
         ~options:[
           `Continue, "Check again, as the package is now installed";
           `Ignore, "Attempt installation anyway, and permanently register that \
@@ -1230,9 +1228,9 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
       map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
     with Failure msg ->
       OpamConsole.error "%s" msg;
-      manual_install ~noninteractive:`Quit t sys_packages
+      check_again t sys_packages
   and check_again t sys_packages =
-    let needed, _notfound = OpamSysInteract.packages_status sys_packages in
+    let needed, _notfound = OpamSysInteract.packages_status ~env sys_packages in
     let installed = OpamSysPkg.Set.diff sys_packages needed in
     let t, sys_packages =
       map_sysmap (fun sysp -> OpamSysPkg.Set.diff sysp installed) t, needed
@@ -1240,7 +1238,8 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     if OpamSysPkg.Set.is_empty sys_packages then t else
       (OpamConsole.error "These packages are still missing: %s\n"
          (syspkgs_to_string sys_packages);
-       entry_point t sys_packages)
+       if OpamStd.Sys.tty_in then entry_point t sys_packages
+       else give_up ())
   and bypass t =
     OpamConsole.note
       "Run 'opam option depext=false' if you wish to permanently disable \
@@ -1250,7 +1249,10 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     OpamConsole.note
       "You can retry with '--assume-depexts' to skip this check, or run 'opam \
        option depext=false' to permanently disable handling of system \
-       packages.\n"
+       packages.\n%s"
+      (if OpamStd.Sys.tty_in || OpamCoreConfig.answer_is `unsafe_yes then ""
+       else "Running the system package manager non-interactively requires \
+             '--confirm-level=unsafe-yes'.\n")
   and give_up () =
     give_up_msg ();
     OpamStd.Sys.exit_because `Aborted
