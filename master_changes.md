@@ -24,6 +24,7 @@ users)
   * Error report display: print action name [#5045 @AltGr]
   * Refactored depext-related questions, with a flat menu instead of nested y/n questions [#5053 @AltGr - fix #5026]
     * Fix removal of interactive special characters is output is not tty [#5155 @rjbou]
+    * Fix behaviour of menu and depexts in non-interactive environments [#5295 @AltGr]
   * [BUG] Fix default cli handling for simple flags [#5099 @rjbou]
   * Add `experimental` flags handling [#5099 @rjbou]
   * [BUG] Fix `OPAMCURL` and `OPAMFETCH` value setting [#5111 @rjbou - fix #5108]
@@ -167,11 +168,9 @@ users)
   * Fallback on dnf if yum does not exist on RHEL-based systems [#4825 @kit-ty-kate]
   * Stop zypper from upgrading packages on updates on OpenSUSE [#4978 @kit-ty-kate]
   * Increase verbose logging of command to 4 [#5151 @rjbou]
-  * [BUG] Avoid to loop eternally when `depext-runs-installs` is false in a script [#5156 @rjbou]
   * Improve the error message when neither MacPorts or Homebrew could be detected on macOS [#5240 @kit-ty-kate]
   * Introduce dummy-success & dummy-failure os-family to make testing depexts behaviour easier [#5268 @kit-ty-kate]
   * Run command as admin only when needed [#5268 @kit-ty-kate]
-  * [BUG] Do not infinitly check for depexts when the system package manager fails [#5257 @kit-ty-kate]
 
 ## Format upgrade
   * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
@@ -536,7 +535,6 @@ users)
   * `OpamStd.Config.E`: add `value_t` to allow getting environment variable value dynamically [#5111 @rjbou]
   * `OpamCompat.Unix`: add `realpath` for ocaml < 4.13, and use it in `OpamSystem` [#5152 @rjbou]
   * `OpamCompat`: add `Lazy` module and `Lazy.map` function [#5176 @dra27]
-  * `OpamConsole.menu`: add `noninteractive` option to choose a different default when output is not a tty [#5156 @rjbou]
   * `OpamStd.Sys`: add `all_shells` list of all supported shells [#5217 @dra27]
   * `OpamUrl`: add `to_string_w_subpath` to display subpath inside urls (before hash) [#5219 @rjbou]
   * `OpamFilename.SubPath`: remove `pretty_string` in favor to `OpamUrl.to_string_w_subpath` [#5219 @rjbou]
