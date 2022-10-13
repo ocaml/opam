@@ -16,7 +16,7 @@ Done.
 [ERROR] Package conflict!
   * No agreement on the version of ocaml:
     - (invariant) -> ocaml-base-compiler >= 4.08.0 -> ocaml = 4.08.0
-    - core < 112.17.00 -> ocaml < 4.00.1
+    - core < 112.17.00 -> ocaml < 4.03
     You can temporarily relax the switch invariant with `--update-invariant'
 
 No solution found, exiting

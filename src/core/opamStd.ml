@@ -71,6 +71,12 @@ let max_print = 100
 
 module OpamList = struct
 
+  let rec equal f x y = match x, y with
+    | [], [] -> true
+    | x::xs, y::ys when f x y -> equal f xs ys
+    | _::xs, _::ys -> equal f xs ys
+    | [], _::_ | _::_, [] -> false
+
   let cons x xs = x :: xs
 
   let concat_map ?(left="") ?(right="") ?nil ?last_sep sep f =

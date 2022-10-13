@@ -140,7 +140,7 @@ a.1
 ### opam install d
 [ERROR] Package conflict!
   * Missing dependency:
-    - b
+    - d -> c -> b
     unknown package
 
 No solution found, exiting
@@ -181,7 +181,7 @@ d
 ### : # This used to be allowed, but not anymore
 ### opam reinstall c
   * Missing dependency:
-    - b.1: no longer available
+    - c -> b -> b.1: no longer available
 
 No solution found, exiting
 # Return code 20 #
