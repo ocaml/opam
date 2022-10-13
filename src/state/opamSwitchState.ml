@@ -744,7 +744,9 @@ let is_dev_package st nv =
     if OpamPackage.Set.mem nv st.pinned then
       opam_opt st nv
     else
-      OpamPackage.Map.find_opt nv st.repos_package_index
+      match OpamPackage.Map.find_opt nv st.repos_package_index with
+      | None -> opam_opt st nv
+      | some -> some
   in
   match opam_opt with
   | Some opam -> OpamPackageVar.is_dev_package st opam

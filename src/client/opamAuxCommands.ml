@@ -325,8 +325,11 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath ?locked
   atoms, to_pin, obsolete_pins, already_pinned_set
 
 let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
-  assert (not (for_view &&
-               OpamSystem.get_lock_flag st.switch_lock = `Lock_write));
+  (* Safety check: it would be nice to ensure here we won't write the state with
+     the temporarily modified pinned package set, but at the moment we do have
+     'show' requests that use a write lock.*)
+  (* assert (not (for_view &&
+   *              OpamSystem.get_lock_flag st.switch_lock = `Lock_write)); *)
   let local_names =
     List.fold_left (fun set nf ->
         OpamPackage.Name.Set.add nf.pin_name set)
@@ -360,11 +363,16 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
   in
   let local_packages = OpamPackage.keys local_opams in
   let pinned =
-    let open OpamPackage.Set.Op in
-    st.pinned
-    -- OpamPackage.packages_of_names st.pinned
-      (OpamPackage.names_of_packages local_packages)
-    ++ local_packages
+    if for_view then
+      (* For `opam show`, to display local files instead of the stored on, we
+         need to have on the pinned set only the new simulated pinned ones instead
+         of really pinned ones. *)
+      let open OpamPackage.Set.Op in
+      st.pinned
+      -- OpamPackage.packages_of_names st.pinned
+        (OpamPackage.names_of_packages local_packages)
+      ++ local_packages
+    else st.pinned
   in
   let st = {
     st with
@@ -378,7 +386,8 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
            (fun nv -> not (OpamPackage.Name.Set.mem nv.name local_names))
            (Lazy.force st.available_packages))
         (OpamSwitchState.compute_available_packages
-           st.switch_global st.switch st.switch_config ~pinned ~opams:local_opams)
+           st.switch_global st.switch st.switch_config ~pinned
+           ~opams:local_opams)
     );
     pinned;
   } in
@@ -420,7 +429,7 @@ let simulate_autopin st ?quiet ?(for_view=false) ?locked ?recurse ?subpath
 let autopin st ?(simulate=false) ?quiet ?locked ?recurse ?subpath
     atom_or_local_list =
   if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) then
-    simulate_autopin st ?quiet ?locked atom_or_local_list
+    simulate_autopin st ?quiet ?locked ~for_view:true atom_or_local_list
   else
   let atoms, to_pin, obsolete_pins, already_pinned_set =
     autopin_aux st ?quiet ?recurse ?subpath ?locked atom_or_local_list

@@ -987,12 +987,12 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
         names OpamPackage.Name.Map.empty
     else OpamPackage.Name.Map.empty
   in
-  let t =
+  let t, deps_of_packages =
     (* add deps-of-xxx packages to replace each atom *)
-    OpamPackage.Name.Map.fold (fun name dname t ->
+    OpamPackage.Name.Map.fold (fun name dname (t, deps_of_packages) ->
         let ats = List.filter (fun (n,_) -> n = name) atoms in
         let nvs = OpamSwitchState.packages_of_atoms t ats in
-        OpamPackage.Set.fold (fun nv t ->
+        OpamPackage.Set.fold (fun nv (t, deps_of_packages) ->
             let module O = OpamFile.OPAM in
             let dnv = OpamPackage.create dname nv.version in
             let opam = OpamSwitchState.opam t nv in
@@ -1008,10 +1008,17 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
                 (Atom (nv.name, Atom (Constraint (`Neq, FString vstring))) ::
                  if ignore_conflicts then [] else [ O.conflicts opam ])
             in
+            let url =
+              if OpamSwitchState.is_dev_package t nv then
+                Some (OpamFile.URL.create OpamUrl.{empty with backend = `git})
+              else None
+            in
             let dopam =
               O.create dnv |>
               O.with_depends depends |>
               O.with_conflicts conflicts |>
+              O.with_depexts (O.depexts opam) |>
+              O.with_url_opt url |>
               (* Note: the following avoids selecting unavailable versions as
                  much possible, but it won't really work for packages that
                  already have the flag *)
@@ -1023,9 +1030,10 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
               then {t with installed = OpamPackage.Set.add dnv t.installed}
               else t
             in
-            OpamSwitchState.update_package_metadata dnv dopam t)
-          nvs t)
-      dname_map t
+            OpamSwitchState.update_package_metadata dnv dopam t,
+            OpamPackage.Set.add dnv deps_of_packages)
+          nvs (t, deps_of_packages))
+      dname_map (t, OpamPackage.Set.empty)
   in
   let atoms, deps_atoms =
     if deps_only then
@@ -1123,6 +1131,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
       ~requested:packages
       ?reinstall
       request in
+  let t = {t with installed = t.installed -- deps_of_packages} in
   let t, solution = match solution with
     | Conflicts cs ->
       log "conflict!";

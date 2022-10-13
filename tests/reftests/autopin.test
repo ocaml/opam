@@ -1,0 +1,322 @@
+N0REP0
+### <pkg:foo-core.0.1>
+opam-version: "2.0"
+### <pkg:foo-format.0.1>
+opam-version: "2.0"
+### <pkg:ocaml.5>
+opam-version: "2.0"
+flags: compiler
+### <pkg:base.1>
+opam-version: "2.0"
+### <pkg:buildy.1>
+opam-version: "2.0"
+### <pkg:devvy.1>
+opam-version: "2.0"
+### <pkg:other.1>
+opam-version: "2.0"
+### <pkg:foo-file-format.3>
+opam-version: "2.0"
+### <pkg:foo-file-format.2>
+opam-version: "2.0"
+### <pin:foo/foo-core.opam>
+version: "2.0"
+depends: [
+ "ocaml"
+ "base"
+ "buildy" {build}
+ "devvy" {dev}
+]
+conflicts: "conflicty"
+### <pin:foo/foo-format.opam>
+version: "2.0"
+depends: [
+  "ocaml"
+  "foo-core" {=version}
+  "foo-file-format"
+  "other"
+]
+depexts: ["some-depext"]
+### OPAMNODEPEXTS=0 OPAMCONFIRMLEVEL=unsafe-yes
+### opam var --global os-family=dummy-success
+Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam switch create ./foo --deps-only | sed-cmd echo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml" {>= "4.05.0"}]
+The following actions will be performed:
+=== install 6 packages
+  - install base            1 [required by foo-core]
+  - install buildy          1 [required by foo-core]
+  - install devvy           1 [required by foo-core]
+  - install foo-file-format 3 [required by foo-format]
+  - install ocaml           5
+  - install other           1 [required by foo-format]
+
+The following system packages will first need to be installed:
+    some-depext
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+echo "some-depext"
+- some-depext
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed base.1
+-> installed buildy.1
+-> installed devvy.1
+-> installed foo-file-format.3
+-> installed ocaml.5
+-> installed other.1
+Done.
+### opam pin --switch=./foo
+### opam list --switch=./foo
+# Packages matching: installed
+# Name          # Installed # Synopsis
+base            1
+buildy          1
+devvy           1
+foo-file-format 3
+ocaml           5
+other           1
+### opam switch remove ./foo
+Switch ${BASEDIR}/foo and all its packages will be wiped. Are you sure? [y/n] y
+### opam switch create fooism --empty
+### opam install ./foo --deps-only | sed-cmd echo
+The following actions will be performed:
+=== install 6 packages
+  - install base            1 [required by foo-core]
+  - install buildy          1 [required by foo-core]
+  - install devvy           1 [required by foo-core]
+  - install foo-file-format 3 [required by foo-format]
+  - install ocaml           5 [required by foo-core, foo-format]
+  - install other           1 [required by foo-format]
+
+The following system packages will first need to be installed:
+    some-depext
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+echo "some-depext"
+- some-depext
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed base.1
+-> installed buildy.1
+-> installed devvy.1
+-> installed foo-file-format.3
+-> installed ocaml.5
+-> installed other.1
+Done.
+### opam pin
+### opam list
+# Packages matching: installed
+# Name          # Installed # Synopsis
+base            1
+buildy          1
+devvy           1
+foo-file-format 3
+ocaml           5
+other           1
+### opam install ./foo foo-file-format.2 | sed-cmd echo
+foo-format is now pinned to file://${BASEDIR}/foo (version 2.0)
+foo-core is now pinned to file://${BASEDIR}/foo (version 2.0)
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade foo-file-format 3 to 2
+=== install 2 packages
+  - install   foo-core        2.0 (pinned)
+  - install   foo-format      2.0 (pinned)
+
+The following system packages will first need to be installed:
+    some-depext
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+echo "some-depext"
+- some-depext
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved foo-core.2.0  (file://${BASEDIR}/foo)
+-> removed   foo-file-format.3
+-> installed foo-core.2.0
+-> installed foo-file-format.2
+-> retrieved foo-format.2.0  (file://${BASEDIR}/foo)
+-> installed foo-format.2.0
+Done.
+### <pin:foo/foo-format-bis.opam>
+version: "2.0"
+depends: [
+  "ocaml"
+  "foo-core" {=version}
+  "foo-file-format" {>= "3"}
+  "other"
+]
+### opam install ./foo --deps-only --show
+[WARNING] Opam package foo-format.2.0 depends on the following system package that can no longer be found: some-depext
+The following actions would be performed:
+=== recompile 1 package
+  - recompile foo-format      2.0 (pinned) [uses foo-file-format]
+=== upgrade 1 package
+  - upgrade   foo-file-format 2 to 3       [required by foo-format, foo-format-bis]
+
+The following system packages will first need to be installed:
+    some-depext
+### opam install ./foo --deps-only | sed-cmd echo
+[foo-core.2.0] synchronised (file://${BASEDIR}/foo)
+[foo-format.2.0] synchronised (file://${BASEDIR}/foo)
+[WARNING] Opam package foo-format.2.0 depends on the following system package that can no longer be found: some-depext
+The following actions will be performed:
+=== recompile 1 package
+  - recompile foo-format      2.0 (pinned) [uses foo-file-format]
+=== upgrade 1 package
+  - upgrade   foo-file-format 2 to 3       [required by foo-format, foo-format-bis]
+
+The following system packages will first need to be installed:
+    some-depext
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+echo "some-depext"
+- some-depext
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo-format.2.0
+-> removed   foo-file-format.2
+-> installed foo-file-format.3
+-> installed foo-format.2.0
+Done.
+### opam list
+# Packages matching: installed
+# Name          # Installed # Synopsis
+base            1
+buildy          1
+devvy           1
+foo-core        2.0         pinned to version 2.0 at file://${BASEDIR}/foo
+foo-file-format 3
+foo-format      2.0         pinned to version 2.0 at file://${BASEDIR}/foo
+ocaml           5
+other           1
+### opam pin
+foo-core.2.0      rsync  file://${BASEDIR}/foo
+foo-format.2.0    rsync  file://${BASEDIR}/foo
+### opam install ./foo --depext-only | sed-cmd echo
+[foo-core.2.0] synchronised (no changes)
+[foo-format.2.0] synchronised (no changes)
+[WARNING] Opam package foo-format.2.0 depends on the following system package that can no longer be found: some-depext
+
+The following system packages will first need to be installed:
+    some-depext
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+echo "some-depext"
+- some-depext
+### opam remove foo-format | grep -v import
+[WARNING] Opam package foo-format.2.0 depends on the following system package that can no longer be found: some-depext
+The following actions will be performed:
+=== remove 1 package
+  - remove    foo-format 2.0 (pinned)
+=== recompile 1 package
+  - recompile foo-core   2.0 (pinned) [uses foo-format]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo-format.2.0
+-> removed   foo-core.2.0
+-> installed foo-core.2.0
+Done.
+### opam pin -n ./foo
+This will pin the following packages: foo-core, foo-format-bis, foo-format. Continue? [y/n] y
+[NOTE] Package foo-core is already pinned to file://${BASEDIR}/foo (version 2.0).
+foo-core is now pinned to file://${BASEDIR}/foo (version 2.0)
+Package foo-format-bis does not exist, create as a NEW package? [y/n] y
+foo-format-bis is now pinned to file://${BASEDIR}/foo (version 2.0)
+[NOTE] Package foo-format is already pinned to file://${BASEDIR}/foo (version 2.0).
+foo-format is now pinned to file://${BASEDIR}/foo (version 2.0)
+### opam install ./foo --deps-only --show
+
+The following system packages will first need to be installed:
+    some-depext
+Nothing to do.
+### opam install ./foo --deps-only --dry-run
+
+The following system packages will first need to be installed:
+    some-depext
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+Nothing to do.
+### opam install ./foo --show
+[NOTE] Package foo-core is already installed (current version is 2.0).
+The following actions would be performed:
+=== install 2 packages
+  - install foo-format     2.0 (pinned)
+  - install foo-format-bis 2.0 (pinned)
+
+The following system packages will first need to be installed:
+    some-depext
+### opam install ./foo --depext-only --show
+[NOTE] Package foo-core is already installed (current version is 2.0).
+
+The following system packages will first need to be installed:
+    some-depext
+### opam install ./foo --deps-only | sed-cmd echo
+[foo-core.2.0] synchronised (no changes)
+[foo-format.2.0] synchronised (no changes)
+[foo-format-bis.2.0] synchronised (no changes)
+
+The following system packages will first need to be installed:
+    some-depext
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+echo "some-depext"
+- some-depext
+Nothing to do.

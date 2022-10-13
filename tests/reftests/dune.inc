@@ -17,6 +17,23 @@
    (run ./run.exe %{bin:opam} %{dep:assume-built.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-autopin)
+ (action
+  (diff autopin.test autopin.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-autopin)))
+
+(rule
+ (targets autopin.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:autopin.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-avoid-version)
  (action
   (diff avoid-version.test avoid-version.out)))

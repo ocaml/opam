@@ -57,6 +57,8 @@ users)
   * Better recognize depexts on Gentoo, NetBSD, OpenBSD [#5065 @mndrix]
   * Reimplement deps-only [#4975 @AltGr]
     * Fix conflict handling [#5136 @AltGr]
+    * Ensure correct handling of dev dependencies [#5236 @AltGr - fix #5177]
+    * Ensure correct handling of external dependencies [#5236 @AltGr - fix #5185]
   * ◈ Add `--formula` option to specify a formula to install [#4975 @AltGr]
   * [BUG] Prevent `.changes` files from being updated during dry-run [#5144 @na4zagin3 - fix #5132]
   * Log a summary of recorded `.changes` as a `ACTION` trace log to help debug #4419 [#5144 @na4zagin3]
@@ -171,6 +173,7 @@ users)
   * Improve the error message when neither MacPorts or Homebrew could be detected on macOS [#5240 @kit-ty-kate]
   * Introduce dummy-success & dummy-failure os-family to make testing depexts behaviour easier [#5268 @kit-ty-kate]
   * Run command as admin only when needed [#5268 @kit-ty-kate]
+  * Print depexts together with action list on `--show` [#5236 @AltGr]
 
 ## Format upgrade
   * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
@@ -348,6 +351,8 @@ users)
   * Add test for opam tree command [#5171 @cannorin]
   * Update and reintegrate pin & depext test `pin.unix` in `pin` test, with test environment, there is no more need to have it only on unix [#5268 @rjbou @kit-ty-kate]
   * Add a reftest testing for system package manager failure [#5257 @kit-ty-kate]
+  * Add autopin test including deps-only, dev-deps, depexts; instrument depext handling to allow depext reftesting [#5236 @AltGr]
+
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
