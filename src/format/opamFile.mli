@@ -997,7 +997,7 @@ module Repo_config_legacy : sig
 end
 
 module Repos_config: sig
-  type t = (url * trust_anchors option) option OpamRepositoryName.Map.t
+  type t = (url * bool * trust_anchors option) option OpamRepositoryName.Map.t
   include IO_FILE with type t := t
   module BestEffort: BestEffortRead with type t := t
 end

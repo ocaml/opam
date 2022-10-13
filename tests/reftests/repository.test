@@ -121,6 +121,7 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/fo
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
 CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-003ACE73.cache ...
 CACHE(repository)               ${BASEDIR}/OPAM/repo/state-003ACE73.cache written in 0.000s
+FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### opam install foo.4
 The following actions will be performed:
@@ -139,6 +140,7 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packag
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [tarred] no changes from file://${BASEDIR}/REPO
+FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
 ### opam list --all --all-versions
 # Packages matching: any
 # Package # Installed # Synopsis
@@ -175,6 +177,7 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packag
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [repo2] no changes from file://${BASEDIR}/REPO2
 [tarred] no changes from file://${BASEDIR}/REPO
+FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
 ### opam install bar.1
 The following actions will be performed:
 === install 1 package
@@ -202,6 +205,7 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
 CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-003ACE73.cache ...
 CACHE(repository)               ${BASEDIR}/OPAM/repo/state-003ACE73.cache written in 0.000s
+FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### opam install bar.2
 The following actions will be performed:
@@ -246,6 +250,7 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/fo
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
 CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-003ACE73.cache ...
 CACHE(repository)               ${BASEDIR}/OPAM/repo/state-003ACE73.cache written in 0.000s
+FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### opam install bar.3 foo.6 | unordered
 The following actions will be performed:
@@ -259,3 +264,116 @@ The following actions will be performed:
 -> removed   bar.2
 -> installed bar.3
 Done.
+### :: Url setting ::
+### <PORE/repo>
+opam-version: "2.0"
+### <PORE/packages/first/first.2/opam>
+opam-version: "2.0"
+### <PORE2/repo>
+opam-version: "2.0"
+### <PORE2/packages/second/second.2/opam>
+opam-version: "2.0"
+### <PORE3/repo>
+opam-version: "2.0"
+### <PORE3/packages/third/third.3/opam>
+opam-version: "2.0"
+### opam repository add pore ./PORE --set-default
+[pore] Initialised
+### opam switch create repos --empty --repositories pore
+### opam list --all --short
+first
+### :: repo addition ::
+### opam repository add pore2 ./PORE2
+[pore2] Initialised
+[NOTE] Repository pore2 has been added to the selections of switch repos only.
+       Run `opam repository add pore2 --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+
+### opam-cat $OPAMROOT/repo/repos-config
+opam-version: "2.0"
+repositories: ["pore" {"file://${BASEDIR}/PORE"} {true} "pore2" {"file://${BASEDIR}/PORE2"} {true} "repo2" {"file://${BASEDIR}/REPO2"} {true} "tarred" {"file://${BASEDIR}/REPO"} {true}]
+### opam list --all --short
+first
+second
+### :: repo addition with no action ::
+### opam repository add pore3 ./PORE3 --no-action
+[NOTE] Repository pore3 has been added to the selections of switch repos only.
+       Run `opam repository add pore3 --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+
+### opam list --all --short
+first
+second
+### opam-cat $OPAMROOT/repo/repos-config
+opam-version: "2.0"
+repositories: ["pore" {"file://${BASEDIR}/PORE"} {true} "pore2" {"file://${BASEDIR}/PORE2"} {true} "pore3" {"file://${BASEDIR}/PORE3"} {false} "repo2" {"file://${BASEDIR}/REPO2"} {true} "tarred" {"file://${BASEDIR}/REPO"} {true}]
+### opam update pore3
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[pore3] Initialised
+Now run 'opam upgrade' to apply any package updates.
+### opam-cat $OPAMROOT/repo/repos-config
+opam-version: "2.0"
+repositories: ["pore" {"file://${BASEDIR}/PORE"} {true} "pore2" {"file://${BASEDIR}/PORE2"} {true} "pore3" {"file://${BASEDIR}/PORE3"} {true} "repo2" {"file://${BASEDIR}/REPO2"} {true} "tarred" {"file://${BASEDIR}/REPO"} {true}]
+### opam list --all --short
+first
+second
+third
+### :: repo set-url ::
+### opam repository remove pore3
+Repositories removed from the selections of switch repos. Use '--all' to forget about them altogether.
+### opam repository set-url pore2 ./PORE3
+[pore2] Initialised
+### opam list --all --short
+first
+third
+### :: repo set-url with no-action ::
+### opam repository set-url pore2 ./PORE2 --no-action
+### opam list --all --short
+first
+### opam update pore2
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[pore2] Initialised
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all --short
+first
+second
+### :: add with wrong url ::
+### opam repository add pore4 ./PORE4
+[ERROR] Could not update repository "pore4": rsync failed
+        It was added with url file://${BASEDIR}/PORE4 but not initialised
+        Check url and update it `opam repository set-url pore4 <new-url>'
+[ERROR] Initial repository fetch failed
+# Return code 40 #
+### opam repository add pore4 ./PORE4 --no-action
+[NOTE] Repository pore4 has been added to the selections of switch repos only.
+       Run `opam repository add pore4 --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+
+### opam-cat $OPAMROOT/repo/repos-config
+opam-version: "2.0"
+repositories: ["pore" {"file://${BASEDIR}/PORE"} {true} "pore2" {"file://${BASEDIR}/PORE2"} {true} "pore3" {"file://${BASEDIR}/PORE3"} {true} "pore4" {"file://${BASEDIR}/PORE4"} {false} "repo2" {"file://${BASEDIR}/REPO2"} {true} "tarred" {"file://${BASEDIR}/REPO"} {true}]
+### opam list --all --short
+first
+second
+### opam update pore4
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] Could not update repository "pore4": rsync failed
+        It was added with url file://${BASEDIR}/PORE4 but not initialised
+        Check url and update it `opam repository set-url pore4 <new-url>'
+# Return code 40 #
+### opam-cat $OPAMROOT/repo/repos-config
+opam-version: "2.0"
+repositories: ["pore" {"file://${BASEDIR}/PORE"} {true} "pore2" {"file://${BASEDIR}/PORE2"} {true} "pore3" {"file://${BASEDIR}/PORE3"} {true} "pore4" {"file://${BASEDIR}/PORE4"} {false} "repo2" {"file://${BASEDIR}/REPO2"} {true} "tarred" {"file://${BASEDIR}/REPO"} {true}]
+### :: set-url with wrong url ::
+### opam repository set-url pore ./PORE4
+[ERROR] Could not update repository "pore": rsync failed
+### opam repository set-url pore ./PORE4 --no-action
+### opam list --all --short
+second
+### opam update pore
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] Could not update repository "pore": rsync failed
+        It was added with url file://${BASEDIR}/PORE4 but not initialised
+        Check url and update it `opam repository set-url pore <new-url>'
+# Return code 40 #

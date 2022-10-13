@@ -11,7 +11,7 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
-  *
+  * Upgrade root version to 2.2~alpha [#4926 @rjbou]
 
 ## Global CLI
   * Fix typo in error message for opam var [#4786 @kit-ty-kate - fix #4785]
@@ -155,6 +155,7 @@ users)
   * Add `with-tools` variable for recommended tools [#5016 @rjbou]
   * Add `x-locked` extension fields for overlay internal use, it stores if the files originate from a locked file, if so its extension [#5080 @rjbou]
   * Set `depext-bypass` parsing with depth 1, no needed brakcet if single package [#5154 @rjbou]
+  * `repo-config"`: add an optional field for repository initialisation state [#4933 @rjbou]
 
 ## External dependencies
   * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
@@ -178,6 +179,7 @@ users)
   * Set opam root version to 2.1 [#4763 @rjbou] [2.1.0~rc2 #4715]
   * Fix 2.1~alpha2 to 2.1 format upgrade with reinit [#4763 @rjbou - fix #4748] [2.1.0~rc2 #4750]
   * Fix bypass-check handling on reinit [#4750 @rjbou] [#4763 @rjbou] [2.1.0~rc2 #4750 #4756]
+  * Reorganise intermediate roots that need an uipgrade handling (for 2.1, prone to generalisation) [#4926 @rjbou]
 
 ## Sandbox
   * Sync the behaviour of the macOS sandbox script with Linux's: /tmp is now ready-only [#4719 @kit-ty-kate]
@@ -185,6 +187,13 @@ users)
   * Get rid of OPAM_USER_PATH_RO (never used on macOS and no longer needed on Linux) [#4795 @kit-ty-kate]
   * Print error message if command doesn't exist [#4971 @kit-ty-kat - fix #4112]
   * Resolve symlink for `ccache` directory [#5267 @rjbou - fix #5194]
+
+## Repository
+  * Don't display global message when `this-switch` is given [#4899 @rjbou - fix #4889]
+  * Set the priority of user-set archive-mirrors higher than the repositories'.
+    This allows opam-repository to use the default opam.ocaml.org cache and be more resilient to changed/force-pushed or unavailable archives. [#4830 @kit-ty-kate - fixes #4411]
+  * [NEW] Add `--no-action` for `add` and `set-url` subcommands to permit delay the update [#XXXX rjbou - fix #4617]
+  * [NEW] Add `--no-action` for `add` and `set-url` subcommands to permit delay the update [#4933 rjbou - fix #4617]
 
 ## VCS
   * Pass --depth=1 to git-fetch in the Git repo backend [#4442 @dra27]
@@ -334,7 +343,9 @@ users)
   * Escape for cmdliner.1.1.1 output change [#5131 @rjbou]
   * Add deprectaed flag test [#4523 @kit-ty-kate]
   * Add deps-only, install formula [#4975 @AltGr]
-  * Update opam root version test do escape `OPAMROOTVERSION` sed, it matches generated hexa temporary directory names [#5007 @AltGr #5301 @rjbou]
+  * Update opam root version test:
+    * to escape `OPAMROOTVERSION` sed, it matches generated hexa temporary directory names [#5007 @AltGr #5301 @rjbou]
+    * several improvments: add repo config check, update generator [#5303 @rjbou]
   * Add json output test [#5143 @rjbou]
   * Add test for opam file write with format preserved bug in #4936, fixed in #4941 [#4159 @rjbou]
   * Add test for switch upgrade from 2.0 root, with pinned compiler [#5176 @rjbou @kit-ty-kate]
@@ -517,6 +528,8 @@ users)
   * `OpamFormula`: add generic `formula_to_cnf` and `formula_to_dnf`, and use them in `to_cnf` and `to_dnf` [#5171 @cannorin]
   * `OpamFilter`: add `?custom` argument in `to_string` to tweak the output [#5171 @cannorin]
 
+  * `OpamFile.repos_config.t`: add an initialised state argument in map value [#4933 @rjbou]
+  * `OpamFormat`: add `map_options_4` [#4933 @rjbou]
 ## opam-core
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamFilename`, `OpamHash`, `OpamStd`, `OpamStd`, `OpamUrl`, and `OpamVersion` [#4918 @rjbou]

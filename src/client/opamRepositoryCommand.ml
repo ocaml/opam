@@ -79,7 +79,7 @@ let add rt name url trust_anchors =
       (OpamRepositoryName.to_string name)
       (OpamUrl.to_string url)
   | None ->
-    let repo = { repo_name = name; repo_url = url;
+    let repo = { repo_name = name; repo_url = url; repo_initialised = false;
                  repo_trust = trust_anchors; }
     in
     if OpamFilename.exists_dir (OpamRepositoryPath.root root name) ||
@@ -224,6 +224,17 @@ let update_with_auto_upgrade rt repo_names =
   let repos = List.map (OpamRepositoryState.get_repo rt) repo_names in
   let failed, rt = OpamUpdate.repositories rt repos in
   let failed = List.map (fun r -> r.repo_name) failed in
+  let rt = {
+    rt with
+    repositories =
+      (OpamRepositoryName.Map.mapi (fun name repo ->
+           { repo with
+             repo_initialised =
+               List.for_all (fun n ->
+                   not (OpamRepositoryName.equal name n)) failed })
+          rt.repositories)
+  } in
+  OpamRepositoryState.write_config rt;
   if OpamFormatConfig.(!r.skip_version_checks) ||
      OpamClientConfig.(!r.no_auto_upgrade)
   then

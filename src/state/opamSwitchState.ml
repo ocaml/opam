@@ -229,6 +229,7 @@ let depexts_unavailable_raw sys_packages nv =
   | _ -> None
 
 let load lock_kind gt rt switch =
+  OpamGlobalState.check_upgrade_todo lock_kind `Switch gt;
   let chrono = OpamConsole.timer () in
   log "LOAD-SWITCH-STATE %@ %a" (slog OpamSwitch.to_string) switch;
   if not (OpamGlobalState.switch_exists gt switch) then

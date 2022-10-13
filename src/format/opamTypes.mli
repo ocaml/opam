@@ -179,6 +179,7 @@ type repository = {
   repo_name    : repository_name;
   repo_url     : url;
   repo_trust   : trust_anchors option;
+  repo_initialised: bool;
 }
 
 (** {2 Variable-based filters} *)

@@ -65,6 +65,8 @@ type +'lock global_state = {
   (** A map of variables that have been defined globally, e.g. through
       `.opam/config`. They may need evaluation so are stored as lazy values.
       The extra string is the supplied variable documentation *)
+
+  global_upgrade_status: ([ `Repo | `Switch ] * OpamVersion.t) option;
 } constraint 'lock = 'lock lock
 
 (** State corresponding to the repo/ subdir: all available packages and

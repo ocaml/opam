@@ -781,6 +781,7 @@ let get_virtual_switch_state repo_root env =
   let repo = {
     repo_name = OpamRepositoryName.of_string "local";
     repo_url = OpamUrl.empty;
+    repo_initialised = false;
     repo_trust = None;
   } in
   let repo_file = OpamRepositoryPath.repo repo_root in
@@ -795,6 +796,7 @@ let get_virtual_switch_state repo_root env =
         load ~lock_kind:`Lock_read !r.root_dir) +!
                                 OpamFile.Config.empty);
     global_variables = OpamVariable.Map.empty;
+    global_upgrade_status = None;
   } in
   let singl x = OpamRepositoryName.Map.singleton repo.repo_name x in
   let repos_tmp =
