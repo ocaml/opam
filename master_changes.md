@@ -337,7 +337,9 @@ users)
   * Escape for cmdliner.1.1.1 output change [#5131 @rjbou]
   * Add deprectaed flag test [#4523 @kit-ty-kate]
   * Add deps-only, install formula [#4975 @AltGr]
-  * Update opam root version test do escape `OPAMROOTVERSION` sed, it matches generated hexa temporary directory names [#5007 @AltGr #5301 @rjbou]
+  * Update opam root version test:
+    * to escape `OPAMROOTVERSION` sed, it matches generated hexa temporary directory names [#5007 @AltGr #5301 @rjbou]
+    * several improvments: add repo config check, update generator [#5303 @rjbou]
   * Add json output test [#5143 @rjbou]
   * Add test for opam file write with format preserved bug in #4936, fixed in #4941 [#4159 @rjbou]
   * Add test for switch upgrade from 2.0 root, with pinned compiler [#5176 @rjbou @kit-ty-kate]
