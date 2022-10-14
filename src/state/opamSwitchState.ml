@@ -976,7 +976,7 @@ let universe st
        would be much more involved, but some solvers might struggle without any
        cleanup at this point *)
     (* remove_conflicts st base *)
-    (Lazy.force st.available_packages)
+    st.available_packages
   in
   let u_reinstall =
     (* Ignore reinstalls outside of the dependency cone of
@@ -1005,7 +1005,7 @@ let universe st
       OpamPackage.Set.empty
   in
   let avoid_versions =
-    OpamPackage.Set.filter (avoid_version st) u_available
+    OpamPackage.Set.filter (avoid_version st) st.packages
   in
   let u =
 {
