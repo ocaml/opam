@@ -16,6 +16,7 @@ module type SET = sig
   val choose_one : t -> elt
   val choose_opt : t -> elt option
   val of_list: elt list -> t
+  val to_list_map: (elt -> 'b) -> t -> 'b list
   val to_string: t -> string
   val to_json: t OpamJson.encoder
   val of_json: t OpamJson.decoder
@@ -221,6 +222,9 @@ module Set = struct
 
     let of_list l =
       List.fold_left (fun set e -> add e set) empty l
+
+    let to_list_map f set =
+      fold (fun x acc -> f x :: acc) set []
 
     let to_string s =
       if S.cardinal s > max_print then

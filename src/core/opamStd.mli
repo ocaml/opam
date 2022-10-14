@@ -29,6 +29,7 @@ module type SET = sig
   val choose_opt: t -> elt option
 
   val of_list: elt list -> t
+  val to_list_map: (elt -> 'b) -> t -> 'b list
   val to_string: t -> string
   val to_json: t OpamJson.encoder
   val of_json: t OpamJson.decoder
