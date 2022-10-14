@@ -1346,7 +1346,7 @@ let dependencies_filter_to_formula_t ~build ~post st nv =
   OpamFilter.filter_formula ~default:true env
 
 let dependencies_t st base_deps_compute deps_compute
-    ~depopts ~installed ?(unavailable=false) packages =
+    ~depopts ~installed ~unavailable packages =
   if OpamPackage.Set.is_empty packages then OpamPackage.Set.empty else
   let base =
     packages ++

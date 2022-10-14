@@ -1585,7 +1585,7 @@ let config cli =
                 | Some o -> OpamFile.OPAM.has_flag Pkgflag_Compiler o
                 | None -> false)
             |> OpamSwitchState.dependencies ~depopts:true ~post:true ~build:true
-              ~installed:true state
+              ~installed:true ~unavailable:false state
             |> OpamPackage.Set.iter process;
             if not Sys.win32 && List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
             then OpamConsole.warning

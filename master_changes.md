@@ -191,8 +191,10 @@ users)
 
 ## opam-state
  * `OpamStateConfig.opamroot_with_provenance`: restore previous behaviour to `OpamStateConfig.opamroot` for compatibility with third party code [#6047 @dra27]
+ * Make `OpamSwitchState.{,reverse_}dependencies ?unavailable` a non-optional argument to enforce speedups when availablity information is not needed [#5317 @kit-ty-kate]
 
 ## opam-solver
+ * Make `OpamSolver.dependency_graph ?unavailable` a non-optional argument to enforce speedups when availablity information is not needed [#5317 @kit-ty-kate]
 
 ## opam-format
   * Add `OpamTypesBase.switch_selections_{compare,equal}`: proper comparison functions for `OpamTypes.switch_selections` [#6102 @kit-ty-kate]

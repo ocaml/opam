@@ -569,7 +569,7 @@ let installable universe =
 module PkgGraph = Graph.Imperative.Digraph.ConcreteBidirectional(OpamPackage)
 
 let dependency_graph
-    ~depopts ~build ~post ~installed ?(unavailable=false)
+    ~depopts ~build ~post ~installed ~unavailable
     universe =
   let u_packages =
     if installed then universe.u_installed else
