@@ -36,7 +36,7 @@ let get_universe ~with_test ~with_doc ~dev opams =
     u_packages = packages;
     u_action = Query;
     u_installed = OpamPackage.Set.empty;
-    u_available = packages;
+    u_available = lazy packages;
     u_depends =
       OpamPackage.Map.mapi
         (fun nv o ->
