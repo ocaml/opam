@@ -193,6 +193,12 @@ let rec fold_right f i = function
   | And(x,y) -> fold_right f (fold_right f i y) x
   | Or(x,y)  -> fold_right f (fold_right f i y) x
 
+let rec exists f = function
+  | Empty    -> false
+  | Atom x   -> f x
+  | Block x  -> exists f x
+  | And(x,y) | Or(x,y) -> exists f x || exists f y
+
 type version_formula = version_constraint formula
 
 type t = (OpamPackage.Name.t * version_formula) formula
