@@ -301,7 +301,7 @@ type user_action =
 type universe = {
   u_packages : package_set;
   u_installed: package_set;
-  u_available: package_set;
+  u_available: package_set Lazy.t;
   u_depends  : filtered_formula package_map;
   u_depopts  : filtered_formula package_map;
   u_conflicts: formula package_map;
@@ -310,7 +310,7 @@ type universe = {
   u_pinned   : package_set;
   u_invariant: formula;
   u_reinstall: package_set;
-  u_attrs    : (string * package_set) list;
+  u_attrs    : (string * package_set Lazy.t) list;
 }
 
 (** {2 Command line arguments} *)
