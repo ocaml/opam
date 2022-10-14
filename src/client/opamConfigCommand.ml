@@ -673,6 +673,19 @@ let global_allowed_fields, global_allowed_sections =
         "jobs", Atomic,
         Config.with_jobs_opt
           (InitConfig.jobs in_config ++ Config.jobs Config.empty);
+        "archive-mirrors", Modifiable (
+          (fun nc c ->
+             Config.with_dl_cache (Config.dl_cache nc @ Config.dl_cache c) c),
+          (fun nc c ->
+             let to_remove = Config.dl_cache nc in
+             let dl_cache =
+               List.filter (fun url ->
+                   None = OpamStd.List.find_opt (OpamUrl.equal url) to_remove)
+                 (Config.dl_cache c)
+             in
+             Config.with_dl_cache dl_cache c)),
+        Config.with_dl_cache
+          (InitConfig.dl_cache in_config @ Config.dl_cache Config.empty);
         "best-effort-prefix-criteria", Atomic,
         Config.with_best_effort_prefix_opt
           (Config.best_effort_prefix Config.empty);
