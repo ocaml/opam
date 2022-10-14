@@ -645,6 +645,7 @@ let update_with_init_config ?(overwrite=false) config init_config =
       | Some j -> setifnew C.jobs C.with_jobs j
       | None -> fun c -> c) |>
   setifnew C.dl_tool C.with_dl_tool_opt (I.dl_tool init_config) |>
+  setifnew C.dl_cache C.with_dl_cache (I.dl_cache init_config) |>
   setifnew C.dl_jobs C.with_dl_jobs
     (OpamStd.Option.default OpamStateConfig.(default.dl_jobs)
        (I.dl_jobs init_config)) |>
