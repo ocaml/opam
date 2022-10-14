@@ -216,9 +216,11 @@ users)
 
 ## opam-state
  * `OpamStateConfig.opamroot_with_provenance`: restore previous behaviour to `OpamStateConfig.opamroot` for compatibility with third party code [#6047 @dra27]
+  * `OpamSwitchState.{,reverse_}dependencies`: make `unavailable` a non-optional argument to enforce speedups when availability information is not needed [#5317 @kit-ty-kate]
 
 ## opam-solver
  * `OpamCudfCriteria`, `OpamBuiltinZ3.Syntax`: Move `OpamBuiltinZ3.Syntax` into a dedicated module `OpamCudfCriteria` [#6130 @kit-ty-kate]
+ * `OpamSolver.dependency_graph`: make `unavailable` a non-optional argument to enforce speedups when availability information is not needed [#5317 @kit-ty-kate]
 
 ## opam-format
   * Add `OpamTypesBase.switch_selections_{compare,equal}`: proper comparison functions for `OpamTypes.switch_selections` [#6102 @kit-ty-kate]

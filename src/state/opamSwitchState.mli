@@ -167,20 +167,23 @@ val depexts: 'a switch_state -> package -> OpamSysPkg.Set.t
 (** Return the transitive dependency closures
     of a collection of packages.
 
-    [depopts]: include optional dependencies (depopts: foo)
-    [build]: include build dependencies (depends: foo {build})
-    [post]: include post dependencies (depends: foo {post})
-    [installed]: only consider already-installed packages
-    [unavaiable]: also consider unavailable packages
+    @param depopts include optional dependencies (depopts: foo)
+    @param build include build dependencies (depends: foo {build})
+    @param post include post dependencies (depends: foo {post})
+    @param installed only consider already-installed packages
+    @param unavaiable also consider unavailable packages.
+                      If the availability of packages hasn't been computed yet,
+                      setting this [false] can have a significant performance
+                      impact depending on the platform.
 *)
 val dependencies:
   'a switch_state -> build:bool -> post:bool -> depopts:bool ->
-  installed:bool -> ?unavailable:bool -> package_set -> package_set
+  installed:bool -> unavailable:bool -> package_set -> package_set
 
 (** Same as [dependencies] but for reverse dependencies. *)
 val reverse_dependencies:
   'a switch_state -> build:bool -> post:bool -> depopts:bool ->
-  installed:bool -> ?unavailable:bool -> package_set -> package_set
+  installed:bool -> unavailable:bool -> package_set -> package_set
 
 (** Returns required system packages of each of the given packages (elements are
     not added to the map  if they don't have system dependencies) *)
