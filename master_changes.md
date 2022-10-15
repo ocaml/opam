@@ -52,6 +52,7 @@ users)
 
 ## List
   * ◈ Add a new `--latests-only` option to only list the latest packages [#5375 @kit-ty-kate]
+  * Speedup `opam list` on options that do not use availibility information [#5317 @kit-ty-kate - fix #5314]
 
 ## Show
 

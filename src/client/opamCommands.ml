@@ -750,7 +750,8 @@ let list ?(force_search=false) cli =
     let results =
       OpamListCommand.filter ~base:all st filter
     in
-    if not no_depexts && not silent then
+    if not no_depexts && not silent &&
+       OpamFormula.exists OpamListCommand.uses_depexts state_selector then
       (let drop_by_depexts =
          List.fold_left (fun missing str ->
              let is_missing pkgs =

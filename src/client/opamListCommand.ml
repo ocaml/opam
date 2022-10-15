@@ -217,6 +217,30 @@ let pattern_selector patterns =
               Atom (Pattern (version_patt, version))])
         patterns)
 
+let uses_depexts = function
+  | Any
+  | Installed
+  | Root
+  | Compiler
+  | Pinned
+  | Latests_only
+  | Pattern _
+  | Atoms _
+  | Flag _
+  | NotFlag _
+  | Tag _
+  | From_repository _
+  | Owns_file _
+    -> false
+  | Available
+  | Installable
+  | Depends_on _
+  | Required_by _
+  | Conflicts_with _
+  | Coinstallable_with _
+  | Solution _
+    -> true
+
 let apply_selector ~base st = function
   | Any -> base
   | Installed -> st.installed

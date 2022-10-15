@@ -63,6 +63,10 @@ type selector =
   | From_repository of repository_name list
   | Owns_file of filename
 
+(** Returns [true] if the selector might require depexts availibility
+    information when applied using {!filter}. Returns [false] otherwise. *)
+val uses_depexts : selector -> bool
+
 (** Applies a formula of selectors to filter the package from a given switch
     state *)
 val filter:
