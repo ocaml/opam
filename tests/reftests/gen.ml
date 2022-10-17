@@ -38,7 +38,7 @@ let run_rule ~base_name ~archive_hash ~condition =
  (action
   (with-stdout-to
    %%{targets}
-   (run ./run.exe %%{bin:opam} %%{dep:%s.test} %%{read-lines:testing-env}))))
+   (run ./run.exe %%{exe:../../src/client/opamMain.exe} %%{dep:%s.test} %%{read-lines:testing-env}))))
 |} (base_name^".out") (opamroot_directory ~archive_hash) condition base_name
 
 let archive_download_rule archive_hash =
