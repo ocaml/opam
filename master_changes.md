@@ -281,6 +281,7 @@ users)
   * ✘ It is no longer possible to process actions on packages that depend on a package that was removed upstream [#4969 @altgr]
   * Fix (at least some of the) empty conflict explanations [#4982 @kit-ty-kate]
   * Fix json double printing [#5143 @rjbou]
+  * [BUG] Fix passing `archive-mirrors` field from init config file to config [#5315 @hannesm]
 
 ## Internal
   * Add license and lowerbounds to opam files [#4714 @kit-ty-kate]
@@ -355,6 +356,7 @@ users)
   * Update and reintegrate pin & depext test `pin.unix` in `pin` test, with test environment, there is no more need to have it only on unix [#5268 @rjbou @kit-ty-kate]
   * Add a reftest testing for system package manager failure [#5257 @kit-ty-kate]
   * Add autopin test including deps-only, dev-deps, depexts; instrument depext handling to allow depext reftesting [#5236 @AltGr]
+  * Add test for init configuration with opamrc [#5315 @rjbou]
 
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
@@ -463,6 +465,7 @@ users)
   * `OpamSolution`: add `dry_run` to simulate the new switch state after applying a solution [#5171 @cannorin]
   * `OpamArg`: externalise `post`, `dev`, `doc_flag`, `test`, and `devsetup` package selection flags, to avoid redefining them [#5299 @rjbou]
   * `OpamConfigCommand.global_allowed_fields`: add `archive-mirrors` (`dl_cache`) to allowed modifiable fields, extendable [#5321 @hannesm @rjbou]
+  * `OpamClient.update_with_init_config`: Fix passing the `dl_cache` from `InitConfig` to `Config` [#5315 @hannesm]
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
