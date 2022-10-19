@@ -715,7 +715,7 @@
 
 (rule
  (targets init.out)
- (deps root-009e00fa)
+ (deps root-N0REP0)
  (package opam)
  (action
   (with-stdout-to
