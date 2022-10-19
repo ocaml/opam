@@ -182,6 +182,7 @@ i-got-the-variables:dev false # True if this is a development package
 ### opam option
 
 <><> Global configuration <><><><><><><><><><><><><><><><><><><><><><><><><><><>
+archive-mirrors                {}
 best-effort-prefix-criteria    {}
 depext                         true
 depext-bypass                  {}
@@ -398,6 +399,21 @@ Reverted field setenv in switch var-option
 No modification in switch var-option
 ### opam option setenv
 []
+### opam option 'archive-mirrors="http://lorem.labore"'
+Set to '"http://lorem.labore"' the field archive-mirrors in global configuration
+### opam option archive-mirrors
+"http://lorem.labore"
+### opam option 'archive-mirrors+="http://ipsum.dolore"'
+Added '"http://ipsum.dolore"' to field archive-mirrors in global configuration
+### opam option archive-mirrors
+["http://ipsum.dolore" "http://lorem.labore"]
+### opam option 'archive-mirrors-="http://lorem.labore"'
+Removed '"http://lorem.labore"' from field archive-mirrors in global configuration
+### opam option archive-mirrors
+"http://ipsum.dolore"
+### opam option archive-mirrors=
+Reverted field archive-mirrors in global configuration
+### opam option archive-mirrors
 ### # Check that eval-variable is removed when a global variable is removed
 ### opam option global-variables
 [[foo "global-foo" "Set through 'opam var'"] [bin "global-bin" "Set through 'opam var'"] [os-version "dolor" "Set through 'opam var'"] [os-family "ipsum" "Set through 'opam var'"] [os-distribution "lorem" "Set through 'opam var'"] [os "linux" "Set through 'opam var'"] [opam-version "68.79" "Set through 'opam var'"] [make "make" "Set through 'opam var'"] [jobs "7" "Set through 'opam var'"] [arch "x86_64" "Set through 'opam var'"] [sys-ocaml-version "4.08.0" "Set through 'opam var'"]]
@@ -440,7 +456,7 @@ Removed variable dolore in global configuration
 # Return code 2 #
 ### opam option bar=sit --global
 [ERROR] There is no option named 'bar'. The allowed options are:
-jobs download-command download-jobs solver-criteria solver-upgrade-criteria solver-fixup-criteria best-effort-prefix-criteria solver global-variables eval-variables repository-validation-command depext depext-run-installs depext-cannot-install depext-bypass pre-build-commands pre-install-commands pre-remove-commands pre-session-commands wrap-build-commands wrap-install-commands wrap-remove-commands post-build-commands post-install-commands post-remove-commands post-session-commands
+jobs download-command download-jobs archive-mirrors solver-criteria solver-upgrade-criteria solver-fixup-criteria best-effort-prefix-criteria solver global-variables eval-variables repository-validation-command depext depext-run-installs depext-cannot-install depext-bypass pre-build-commands pre-install-commands pre-remove-commands pre-session-commands wrap-build-commands wrap-install-commands wrap-remove-commands post-build-commands post-install-commands post-remove-commands post-session-commands
 # Return code 2 #
 ### opam option bar=sit --switch var-option
 [ERROR] There is no option named 'bar'. The allowed options are:
@@ -518,6 +534,7 @@ stublibs ${BASEDIR}/OPAM/phantom/lib/stublibs
 ### opam option
 
 <><> Global configuration <><><><><><><><><><><><><><><><><><><><><><><><><><><>
+archive-mirrors                {}
 best-effort-prefix-criteria    {}
 depext                         true
 depext-bypass                  {}
@@ -546,6 +563,7 @@ wrap-remove-commands           {}
 <><> Switch configuration <><><><><><><><><><><><><><><><><><><><><><><><><><><>
 No switch installed
 ### opam option --global
+archive-mirrors                {}
 best-effort-prefix-criteria    {}
 depext                         true
 depext-bypass                  {}
