@@ -2549,12 +2549,14 @@ let switch cli =
          $(b,--no-install) is specified."
         OpamArg.dir_sep OpamSwitch.external_dirname);
     `P (Printf.sprintf
-         "$(b,opam switch set) sets the default switch globally, but it is also \
-         possible to select a switch in a given shell session, using the \
-         environment. For that, use $(i,%s)."
-        OpamEnv.(
-          shell_eval_invocation shell
-            (opam_env_invocation ~switch:"SWITCH" ~set_opamswitch:true shell)
+          "$(b,opam switch set) sets the default switch globally. The shell \
+           hook, when enabled, synchronises the current shell session with \
+           this switch, unless the current directory is a local switch, when \
+           that local switch is used instead. You can always use $(i,%s) to \
+           specify the switch explicitly, which overrides the shell hook."
+          OpamEnv.(
+            shell_eval_invocation shell
+              (opam_env_invocation ~switch:"SWITCH" ~set_opamswitch:true shell)
             |> Manpage.escape));
   ] @
     mk_subdoc ~cli ~defaults:["","list";"SWITCH","set"]
