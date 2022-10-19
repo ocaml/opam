@@ -1,103 +1,208 @@
-009e00fa
+N0REP0
 ### OPAMYES=1
-### cp -R ${OPAMROOT}/repo/default .
+### : Init with invariant :
+### <pkg:comp.1>
+opam-version: "2.0"
+depends: [ "syscomp" {= "1"} | "basecomp" {= "1"} ]
+flags: conf
+### <pkg:syscomp.1>
+opam-version: "2.0"
+available: sys-version = "1"
+flags: compiler
+conflict-class: "comp"
+### <pkg:basecomp.1>
+opam-version: "2.0"
+flags: compiler
+conflict-class: "comp"
+### :---:
+### <pkg:comp.2>
+opam-version: "2.0"
+depends: [ "syscomp" {= "2"} | "basecomp" {= "2"} ]
+flags: conf
+### <pkg:syscomp.2>
+opam-version: "2.0"
+available: sys-version = "2"
+flags: compiler
+conflict-class: "comp"
+### <pkg:basecomp.2>
+opam-version: "2.0"
+flags: compiler
+conflict-class: "comp"
+### :---:
+### <pkg:comp.3>
+opam-version: "2.0"
+depends: [ "syscomp" {= "3"} | "basecomp" {= "3"} ]
+flags: conf
+### <pkg:syscomp.3>
+opam-version: "2.0"
+available: sys-version = "3"
+flags: compiler
+conflict-class: "comp"
+### <pkg:basecomp.3>
+opam-version: "2.0"
+flags: compiler
+conflict-class: "comp"
+### :---:
+### <pkg:comp.4>
+opam-version: "2.0"
+depends: [ "syscomp" {= "4"} | "basecomp" {= "4"} ]
+flags: conf
+### <pkg:syscomp.4>
+opam-version: "2.0"
+available: sys-version = "4"
+flags: compiler
+conflict-class: "comp"
+### <pkg:basecomp.4>
+opam-version: "2.0"
+flags: compiler
+conflict-class: "comp"
+### :---:
+### <pkg:comp.5>
+opam-version: "2.0"
+depends: [ "syscomp" {= "5"} | "basecomp" {= "5"} ]
+flags: conf
+### <pkg:syscomp.5>
+opam-version: "2.0"
+available: sys-version = "5"
+flags: compiler
+conflict-class: "comp"
+### <pkg:basecomp.5>
+opam-version: "2.0"
+flags: compiler
+conflict-class: "comp"
+### :---:
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
-eval-variables: [ sys-ocaml-version ["false"] "no system compiler" ]
-### opam init --no-setup --bypass-checks default default/ --fake --config opamrc
+default-invariant: ["comp" {>= "3"}]
+default-compiler: ["syscomp" "basecomp"]
+eval-variables: [ sys-version ["false"] "no system compiler" ]
+### opam init --no-setup --bypass-checks default REPO/ --config opamrc
 Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
 
-<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-base-compiler)
+<><> Creating initial switch 'default' (invariant ["comp" {>= "3"}] - initially with basecomp)
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
-Switch invariant: ["ocaml" {>= "4.05.0"}]
+Switch invariant: ["comp" {>= "3"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Faking installation of base-bigarray.base
-Faking installation of base-threads.base
-Faking installation of base-unix.base
-Faking installation of ocaml-base-compiler.4.10.0
-Faking installation of ocaml-config.1
-Faking installation of ocaml.4.10.0
+-> installed basecomp.5
+-> installed comp.5
 Done.
 ### opam switch invariant
-["ocaml" {>= "4.05.0"}]
+["comp" {>= "3"}]
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
-eval-variables: [ sys-ocaml-version ["echo" "4.02.3"] "old system compiler" ]
-### opam init --no-setup --bypass-checks default default/ --fake --config opamrc
+default-invariant: ["comp" {>= "3"}]
+default-compiler: ["syscomp" "basecomp"]
+eval-variables: [ sys-version ["echo" "2"] "old system compiler" ]
+### opam init --no-setup --bypass-checks default REPO/ --config opamrc
 Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
 
-<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-base-compiler)
+<><> Creating initial switch 'default' (invariant ["comp" {>= "3"}] - initially with basecomp)
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
-Switch invariant: ["ocaml" {>= "4.05.0"}]
+Switch invariant: ["comp" {>= "3"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Faking installation of base-bigarray.base
-Faking installation of base-threads.base
-Faking installation of base-unix.base
-Faking installation of ocaml-base-compiler.4.10.0
-Faking installation of ocaml-config.1
-Faking installation of ocaml.4.10.0
+-> installed basecomp.5
+-> installed comp.5
 Done.
 ### opam switch invariant
-["ocaml" {>= "4.05.0"}]
+["comp" {>= "3"}]
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
-eval-variables: [ sys-ocaml-version ["echo" "4.07.0"] "new system compiler" ]
-### opam init --no-setup --bypass-checks default default/ --fake --config opamrc
+default-invariant: ["comp" {>= "3"}]
+default-compiler: ["syscomp" "basecomp"]
+eval-variables: [ sys-version ["echo" "4"] "new system compiler" ]
+### opam init --no-setup --bypass-checks default REPO/ --config opamrc
 Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
 
-<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-system)
+<><> Creating initial switch 'default' (invariant ["comp" {>= "3"}] - initially with syscomp)
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
-Switch invariant: ["ocaml" {>= "4.05.0"}]
+Switch invariant: ["comp" {>= "3"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Faking installation of base-bigarray.base
-Faking installation of base-threads.base
-Faking installation of base-unix.base
-Faking installation of ocaml-system.4.07.0
-Faking installation of ocaml-config.1
-Faking installation of ocaml.4.07.0
+-> installed syscomp.4
+-> installed comp.4
 Done.
 ### opam switch invariant
-["ocaml" {>= "4.05.0"}]
-### opam upgrade --fake
+["comp" {>= "3"}]
+### opam upgrade
 Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
 However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.
-### opam upgrade ocaml --fake
-The following actions will be faked:
+### opam upgrade comp
+The following actions will be performed:
 === remove 1 package
-  - remove    ocaml-system        4.07.0           [conflicts with ocaml-base-compiler]
-=== recompile 1 package
-  - recompile ocaml-config        1                [uses ocaml-base-compiler]
+  - remove  syscomp  4      [conflicts with basecomp]
 === upgrade 1 package
-  - upgrade   ocaml               4.07.0 to 4.10.0
+  - upgrade comp     4 to 5
 === install 1 package
-  - install   ocaml-base-compiler 4.10.0           [required by ocaml]
+  - install basecomp 5      [required by comp]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Faking installation of ocaml-base-compiler.4.10.0
-Faking installation of ocaml-config.1
-Faking installation of ocaml.4.10.0
+-> removed   comp.4
+-> removed   syscomp.4
+-> installed basecomp.5
+-> installed comp.5
+Done.
+### : Init with invariant and no conflict-class :
+### rm -rf REPO/packages/syscomp REPO/packages/basecomp
+### <pkg:syscomp.2>
+opam-version: "2.0"
+available: sys-version = "2"
+flags: compiler
+### <pkg:basecomp.2>
+opam-version: "2.0"
+flags: compiler
+### :---:
+### <pkg:syscomp.3>
+opam-version: "2.0"
+available: sys-version = "3"
+flags: compiler
+### <pkg:basecomp.3>
+opam-version: "2.0"
+flags: compiler
+### rm -rf $OPAMROOT
+### <opamrc>
+default-invariant: ["comp" {>= "3"}]
+default-compiler: ["syscomp" "basecomp"]
+eval-variables: [ sys-version ["echo" "2"] "old system compiler" ]
+### # ERROR: syscomp should'nt be installed
+### OPAMDEBUGSECTIONS=CUDF OPAMDEBUG=-1 opam init --no-setup --bypass-checks default REPO/ --config opamrc
+Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+
+<><> Creating initial switch 'default' (invariant ["comp" {>= "3"}] - initially with syscomp)
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["comp" {>= "3"}]
+CUDF                            resolve request=install:syscomp remove:() upgrade:()
+CUDF                            Checking request...
+CUDF                            Request checked in 0.000s
+CUDF                            Conflicts: 2 (0) pkgs to remove
+CUDF                            Preprocess cudf request (trimming: full): from 10 to 7 packages in 0.00s
+CUDF                            Solver call done in 0.000s
+CUDF                            Removed unrelated actions: { install basecomp (= 3), install comp (= 3) }
+[NOTE] Packages  don't have the 'compiler' flag set (nor any of their direct dependencies).
+       You may want to use `opam switch set-invariant' to keep a stable compiler version on upgrades.
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed syscomp.2
 Done.
 ### : Init with config file :
-### <REPO/repo>
-opam-version: "2.0"
-### <pkg:comp.1>
-opam-version: "2.0"
 ### :: default setup ::
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup default REPO/
