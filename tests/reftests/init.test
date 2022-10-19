@@ -161,6 +161,7 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [norepo] Initialised
 ### opam-cat $OPAMROOT/config
+archive-mirrors: "file://${BASEDIR}/REPO/cache"
 default-compiler: ["comp"]
 default-invariant: ["comp" {= "1"}]
 depext: true
@@ -226,6 +227,7 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [norepo] Initialised
 ### opam-cat $OPAMROOT/config
+archive-mirrors: "file://${BASEDIR}/REPO/cache"
 default-compiler: ["comp"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
