@@ -221,6 +221,7 @@ users)
   * git: disable colored output [#4884 @rjbou]
   * Check if a source is up to date with subpath [#4876 @rjbou]
   * git, hg: Use the full SHA1 revision instead of just the 8 first characters [#5342 @reynir]
+  * Git: differentiate non initialised repo and branch not found errors [#5326 @rjbou - fix #5324]
 
 ## Build
   * Bump vendored base64 to 3.5.1 to fix compilation on OCaml >= 5.0 in vendored mode [#5464 @deech]
