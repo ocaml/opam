@@ -112,8 +112,9 @@ users)
   * Don't error when displaying if switch is not set [#5027 @rjbou - fix #5025]
   * Try to set a variable with option `--switch <sw>` fails instead of writing a wrong `switch-config` file [#5027 @rjbou]
   * When a field is defined in switch and global scope, try to determine the scope also by checking switch selection [#5027 @rjbou]
-  * Resolve and use global config and environment variable before polling system informations (os, os-family, etc.) [#4892 @rjbou - fix #4883]
+  * Resolve and use global config and environment variable before polling system informations (os, os-family, etc.) [4892 @rjbou - fix #4883]
   * Catch an package not found error and print skipping message [#5280 @rjbou - fix #5279]
+  * Make `archive-mirrors` modifiablei (extendable) via opam config [#5321 @hannesm @rjbou - fix #5316]
 
 ## Update / Upgrade
   * [BUG] if a package is pinned from a locked file, it is automatically updated/upgraded accordingly a lock file (same extension) [#5080 @rjbou]
@@ -461,6 +462,7 @@ users)
   * Add `OpamTreeCommand` [#5171 @cannorin]
   * `OpamSolution`: add `dry_run` to simulate the new switch state after applying a solution [#5171 @cannorin]
   * `OpamArg`: externalise `post`, `dev`, `doc_flag`, `test`, and `devsetup` package selection flags, to avoid redefining them [#5299 @rjbou]
+  * `OpamConfigCommand.global_allowed_fields`: add `archive-mirrors` (`dl_cache`) to allowed modifiable fields, extendable [#5321 @hannesm @rjbou]
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
