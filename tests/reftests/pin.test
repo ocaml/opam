@@ -257,7 +257,7 @@ pin-empty is now pinned to git+file://${BASEDIR}/pin-empty#master (version dev)
 Ok, pin-empty is no longer pinned to git+file://${BASEDIR}/pin-empty#master (version dev)
 ### opam pin --no-action ./pin-empty#inexistant
 [ERROR] Could not synchronize ${BASEDIR}/OPAM/pinning/.opam-switch/sources/pin-empty from "git+file://${BASEDIR}/pin-empty#inexistant":
-        Git repository seems just initialized, try again after your first commit
+        Branch inexistant not found
 Could not retrieve some package sources, they will not be pinned nor installed:
   - pin-empty:git+file://${BASEDIR}/pin-empty#inexistant
 
