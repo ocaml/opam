@@ -3036,8 +3036,8 @@ let pin ?(unpin_only=false) cli =
      For source pinnings, the package version may be specified by using the \
      format $(i,NAME).$(i,VERSION) for $(i,PACKAGE), in the source opam file, \
      or with $(b,edit).";
-    cli_original, "remove", `remove, ["NAMES...|TARGET"],
-    "Unpins packages $(i,NAMES), restoring their definition from the \
+    cli_original, "remove", `remove, ["PACKAGES...|TARGET"],
+    "Unpins packages $(i,PACKAGES), restoring their definition from the \
      repository, if any. With a $(i,TARGET), unpins everything that is \
      currently pinned to that target.";
     cli_original, "edit", `edit, ["NAME"],
@@ -3363,8 +3363,15 @@ let pin ?(unpin_only=false) cli =
             match as_url with
             | Some ((_::_) as url) -> err, url @ acc
             | _->
-              match (fst package_name) arg with
-              | `Ok name -> err, name::acc
+              match (fst package) arg with
+              | `Ok (name, None) -> err, name::acc
+              | `Ok (name, Some version) ->
+                (match OpamPinned.version_opt st name with
+                 | Some v when not (OpamPackage.Version.equal v version) ->
+                   OpamConsole.error "%s is pinned but not to version %s. Skipping."
+                     (OpamPackage.Name.to_string name) (OpamPackage.Version.to_string version);
+                   true, acc
+                 | Some _ | None -> err, name::acc)
               | `Error _ ->
                 OpamConsole.error
                   "No package pinned to this target found, or invalid package \

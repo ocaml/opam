@@ -182,8 +182,7 @@ foo.1      local definition
 nip.dev    rsync             file://${BASEDIR}/nip
 qux.dev    rsync             file://${BASEDIR}/qux
 ### opam pin remove --no-action bar.dev
-[ERROR] No package pinned to this target found, or invalid package name/url: bar.dev
-# Return code 2 #
+Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
 ### opam pin remove --no-action nip.wrong-version
-[ERROR] No package pinned to this target found, or invalid package name/url: nip.wrong-version
+[ERROR] nip is pinned but not to version wrong-version. Skipping.
 # Return code 2 #
