@@ -22,6 +22,8 @@ let package_opt st name = try Some (package st name) with Not_found -> None
 
 let version st name = (package st name).version
 
+let version_opt st name = try Some (version st name) with Not_found -> None
+
 let packages st = st.pinned
 
 let possible_definition_filenames dir name = [
