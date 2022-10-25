@@ -93,3 +93,156 @@ Faking installation of ocaml-base-compiler.4.10.0
 Faking installation of ocaml-config.1
 Faking installation of ocaml.4.10.0
 Done.
+### : Init with config file :
+### <REPO/repo>
+opam-version: "2.0"
+### <pkg:comp.1>
+opam-version: "2.0"
+### :: default setup ::
+### rm -rf $OPAMROOT
+### opam init --bypass-checks --bare --no-setup default REPO/
+No configuration file found, using built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+### opam-cat $OPAMROOT/config
+default-compiler: ["ocaml-system" "ocaml-base-compiler"]
+default-invariant: ["ocaml" {>= "4.05.0"}]
+depext: true
+depext-cannot-install: false
+depext-run-installs: true
+download-jobs: 3
+eval-variables: [[sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"] [sys-ocaml-arch ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^architecture: ' | sed -e 's/.*: //' -e 's/i386/i686/' -e 's/amd64/x86_64/'"] "Target architecture of the OCaml compiler present on your system"] [sys-ocaml-cc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^ccomp_type: ' | sed -e 's/.*: //'"] "Host C Compiler type of the OCaml compiler present on your system"] [sys-ocaml-libc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^os_type: ' | sed -e 's/.*: //' -e 's/Win32/msvc/' -e '/^msvc$/!s/.*/libc/'"] "Host C Runtime Library type of the OCaml compiler present on your system"]]
+opam-root-version: "2.1"
+opam-version: "2.0"
+repositories: "default"
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
+### :: full configred opamrc ::
+### rm -rf $OPAMROOT
+### <opamrc>
+opam-version: "2.0"
+repositories: "norepo" {"REPO/"}
+default-compiler: "comp"
+default-invariant: "comp" { = "1"}
+jobs: 9
+download-command: "dl-tool"
+download-jobs: 8
+archive-mirrors: "REPO/cache"
+solver-criteria: "solver-criteri"
+solver-upgrade-criteria: "upgrade-criteri"
+solver-fixup-criteria: "fixup-criteri"
+solver: "a-solver"
+global-variables: [ GLOB "glob" "Set throught opamrc" ]
+eval-variables: [ var-to-eval ["true"] "tautology" ]
+recommended-tools: [ "recommended" ]
+required-tools: [ "required" { "tautology" } ]
+init-scripts:
+[ "a-script.sh"
+  """\
+#!/usr/bin/env bash
+echo "script $1 launched STOP i repeat STOP script $1 launched"
+""" ]
+pre-build-commands: ["%{hooks}%/a-script.sh" "pre-build" ]
+pre-install-commands: ["%{hooks}%/a-script.sh" "pre-install" ]
+pre-remove-commands: ["%{hooks}%/a-script.sh" "pre-remove" ]
+pre-session-commands: ["%{hooks}%/a-script.sh" "pre-session" ]
+wrap-build-commands: ["%{hooks}%/a-script.sh" "wrap-build" ]
+wrap-install-commands: ["%{hooks}%/a-script.sh" "wrap-install" ]
+wrap-remove-commands: ["%{hooks}%/a-script.sh" "wrap-remove" ]
+post-build-commands: ["%{hooks}%/a-script.sh" "post-build" ]
+post-install-commands: ["%{hooks}%/a-script.sh" "post-install" ]
+post-remove-commands: ["%{hooks}%/a-script.sh" "post-remove" ]
+post-session-commands: ["%{hooks}%/a-script.sh" "post-session" ]
+### opam init --bypass-checks --bare --no-setup --config opamrc
+Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[norepo] Initialised
+### opam-cat $OPAMROOT/config
+archive-mirrors: "file://${BASEDIR}/REPO/cache"
+default-compiler: ["comp"]
+default-invariant: ["comp" {= "1"}]
+depext: true
+depext-cannot-install: false
+depext-run-installs: true
+download-command: "dl-tool"
+download-jobs: 8
+eval-variables: [var-to-eval ["true"] "tautology"]
+global-variables: [GLOB "glob" "Set throught opamrc"]
+jobs: 9
+opam-root-version: "2.1"
+opam-version: "2.0"
+post-build-commands: ["%{hooks}%/a-script.sh" "post-build"]
+post-install-commands: ["%{hooks}%/a-script.sh" "post-install"]
+post-remove-commands: ["%{hooks}%/a-script.sh" "post-remove"]
+post-session-commands: ["%{hooks}%/a-script.sh" "post-session"]
+pre-build-commands: ["%{hooks}%/a-script.sh" "pre-build"]
+pre-install-commands: ["%{hooks}%/a-script.sh" "pre-install"]
+pre-remove-commands: ["%{hooks}%/a-script.sh" "pre-remove"]
+pre-session-commands: ["%{hooks}%/a-script.sh" "pre-session"]
+repositories: "norepo"
+solver: "a-solver"
+solver-criteria: "solver-criteri"
+solver-fixup-criteria: "fixup-criteri"
+solver-upgrade-criteria: "upgrade-criteri"
+wrap-build-commands: ["%{hooks}%/a-script.sh" "wrap-build"]
+wrap-install-commands: ["%{hooks}%/a-script.sh" "wrap-install"]
+wrap-remove-commands: ["%{hooks}%/a-script.sh" "wrap-remove"]
+### opam-cat $OPAMROOT/repo/repos-config
+opam-version: "2.0"
+repositories: "norepo" {"file://${BASEDIR}/REPO"}
+### sh $OPAMROOT/opam-init/hooks/a-script.sh test
+script test launched STOP i repeat STOP script test launched
+### :: partially configured opamrc ::
+### rm -rf $OPAMROOT
+### <opamrc>
+opam-version: "2.0"
+repositories: "norepo" {"REPO/"}
+default-compiler: "comp"
+download-jobs: 8
+archive-mirrors: "REPO/cache"
+eval-variables: [ var-to-eval ["true"] "tautology" ]
+required-tools: [ "required" { "tautology" } ]
+# As fields are overriden, it is needed to recreate sandbox script
+init-scripts: [
+[ "a-script.sh"
+  """\
+#!/usr/bin/env bash
+echo "script $1 launched STOP i repeat STOP script $1 launched"
+""" ]
+[ "sandbox.sh"
+  """\
+#!/usr/bin/env bash
+echo "SUCCESS"
+""" ]
+]
+pre-build-commands: ["%{hooks}%/a-script.sh" "pre-build" ]
+wrap-install-commands: ["%{hooks}%/a-script.sh" "wrap-install" ]
+post-session-commands: ["%{hooks}%/a-script.sh" "post-session" ]
+### opam init --bypass-checks --bare --no-setup --config opamrc
+Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[norepo] Initialised
+### opam-cat $OPAMROOT/config
+archive-mirrors: "file://${BASEDIR}/REPO/cache"
+default-compiler: ["comp"]
+default-invariant: ["ocaml" {>= "4.05.0"}]
+depext: true
+depext-cannot-install: false
+depext-run-installs: true
+download-jobs: 8
+eval-variables: [var-to-eval ["true"] "tautology"]
+opam-root-version: "2.1"
+opam-version: "2.0"
+post-session-commands: ["%{hooks}%/a-script.sh" "post-session"]
+pre-build-commands: ["%{hooks}%/a-script.sh" "pre-build"]
+repositories: "norepo"
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands: ["%{hooks}%/a-script.sh" "wrap-install"]
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
+### opam-cat $OPAMROOT/repo/repos-config
+opam-version: "2.0"
+repositories: "norepo" {"file://${BASEDIR}/REPO"}
