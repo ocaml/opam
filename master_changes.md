@@ -279,7 +279,7 @@ users)
 ## Client
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
   * ✘ It is no longer possible to process actions on packages that depend on a package that was removed upstream [#4969 @altgr]
-  * Fix (at least some of the) empty conflict explanations [#4982 @kit-ty-kate]
+  * [BUG] Fix all empty conflict explanations [#4982 #5263 @kit-ty-kate]
   * Fix json double printing [#5143 @rjbou]
   * [BUG] Fix passing `archive-mirrors` field from init config file to config [#5315 @hannesm]
 

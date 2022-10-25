@@ -51,6 +51,19 @@ Faking installation of ppx_deriving_yojson.3.7.0
 Done.
 ### opam install --show fstar.2022.01.15
 [ERROR] Package conflict!
-[ERROR] Internal error while computing conflict explanations:
-        sorry about that. Please report how you got here in https://github.com/ocaml/opam/discussions/5130 if possible.
-# Return code 99 #
+  * No agreement on the version of ocaml:
+    - (invariant) -> ocaml-base-compiler = 4.14.0 -> ocaml = 4.14.0
+    - fstar >= 2022.01.15 -> ppxlib < 0.26.0 -> ocaml < 4.14
+    You can temporarily relax the switch invariant with `--update-invariant'
+  * No agreement on the version of ocaml-base-compiler:
+    - (invariant) -> ocaml-base-compiler = 4.14.0
+    - fstar >= 2022.01.15 -> ppxlib < 0.26.0 -> ocaml < 4.08.0 -> ocaml-base-compiler = 3.08.4
+  * No agreement on the version of ppxlib:
+    - fstar >= 2022.01.15 -> ppx_deriving_yojson -> ppxlib >= 0.26.0
+    - fstar >= 2022.01.15 -> ppxlib < 0.26.0
+  * Missing dependency:
+    - fstar >= 2022.01.15 -> ppxlib < 0.26.0 -> ocaml < 4.08.0 -> ocaml-variants >= 3.11.1 -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
+
+No solution found, exiting
+# Return code 20 #

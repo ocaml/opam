@@ -845,7 +845,6 @@ end
 let extract_explanations packages cudfnv2opam reasons : explanation list =
   log "Conflict reporting";
   let open Dose_algo.Diagnostic in
-  let open Set.Op in
   let module CS = ChainSet in
   (* Definitions and printers *)
   log ~level:3 "Reasons: %a" (Pp_explanation.pp_reasonlist cudfnv2opam) reasons;
@@ -909,6 +908,8 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
               (fun (n, _) -> Set.exists (fun p -> p.package = n) pkgs)
               vpkgl
           in
+          (* TODO: We should aim to use what does give us not guess the formula *)
+          (* Dose is precise enough from what i'm seeing *)
           formula_of_vpkgl cudfnv2opam packages vpkgl
         in
         let s = OpamFormula.to_string f in
@@ -929,9 +930,9 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
   let rdeps = Hashtbl.create 53 in
   let missing = Hashtbl.create 53 in
   List.iter (function
-      | Conflict (l, r, _) ->
+      | Conflict (l, r, (_pkgname, _constr)) ->
         add_set ct l (Set.singleton r);
-        add_set ct r (Set.singleton l)
+        add_set ct r (Set.singleton l);
       | Dependency (l, _, rs) ->
         add_set deps l (Set.of_list rs);
         List.iter (fun r -> add_set rdeps r (Set.singleton l)) rs
@@ -947,45 +948,31 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
     in
     Set.empty |> add_artefacts deps |> add_artefacts missing |> add_artefacts ct
   in
-  let conflicting =
-    Hashtbl.fold (fun p _ -> Set.add p) ct Set.empty
-  in
-  let all_conflicting =
-    Hashtbl.fold (fun k _ acc -> Set.add k acc) missing conflicting
-  in
-  let ct_chains =
-    (* get a covering tree from the roots to all reachable packages.
-       We keep only shortest chains, but all of them *)
-    (* The chains are stored as lists from packages back to the roots *)
-    let rec aux pchains seen acc =
-      if Map.is_empty pchains then acc else
-      let seen, new_chains =
-        Map.fold (fun p chains (seen1, new_chains) ->
-            let append_to_chains pkg acc =
-              let chain = CS.map (fun c -> pkg :: c) chains in
-              Map.update pkg (CS.union chain) CS.empty acc
-            in
-            let ds = get deps p in
-            let dsc = match Hashtbl.length missing with
-              | 0 -> ds (* Hack to fix https://github.com/ocaml/opam/issues/4373. We should try to do better at some point *)
-              | _ -> ds %% all_conflicting
-            in
-            if not (Set.is_empty dsc) then
-              dsc ++ seen1, Set.fold append_to_chains (dsc -- seen1) new_chains
-            else
-              Set.fold (fun d (seen1, new_chains) ->
-                  if Set.mem d seen then seen1, new_chains
-                  else Set.add d seen1, append_to_chains d new_chains)
-                ds (seen1, new_chains))
-          pchains (seen, Map.empty)
-      in
-      aux new_chains seen @@
-      Map.union (fun _ _ -> assert false) pchains acc
+  let _seen, ct_chains =
+    (* get a covering tree from the roots to all reachable packages. *)
+    let rec aux seen ct_chains =
+      Map.fold (fun pkg parent_chain (seen, ct_chains) ->
+          if Set.mem pkg seen then (seen, ct_chains) else
+          let dependencies = get deps pkg in
+          let seen = Set.add pkg seen in
+          Set.fold (fun dep (seen, ct_chains) ->
+              let chain = CS.map (fun c -> dep :: c) parent_chain in
+              let ct_chains = Map.update dep (CS.union chain) CS.empty ct_chains in
+              aux seen ct_chains
+            ) dependencies (seen, ct_chains)
+        ) ct_chains
+        (seen, ct_chains)
     in
     let init_chains =
       Set.fold (fun p -> Map.add p (CS.singleton [p])) roots Map.empty
     in
-    aux init_chains roots Map.empty
+    aux Set.empty init_chains
+  in
+  let ct_chains =
+    (* We keep only shortest chains. *)
+    (* TODO: choose is probably not the right thing here. *)
+    (* e.g. if two lists have the size, we should probably have both. *)
+    Map.map (fun x -> CS.singleton (CS.choose x)) ct_chains
   in
   let reasons =
     (* order "reasons" by most interesting first: version conflicts then package

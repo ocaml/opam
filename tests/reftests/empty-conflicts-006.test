@@ -20,16 +20,16 @@ Done.
 ### : Fixed by https://github.com/ocaml/opam/pull/4982
 ### opam install --show gen_js_api.1.0.6
 [ERROR] Package conflict!
-  * No agreement on the version of ocaml-variants:
-    - (invariant) -> ocaml-variants = 4.12.0+trunk
-    - gen_js_api >= 1.0.6 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml-variants = 4.08.0+beta2
-    You can temporarily relax the switch invariant with `--update-invariant'
   * No agreement on the version of ocaml:
     - (invariant) -> ocaml-variants = 4.12.0+trunk -> ocaml = 4.12.0
     - gen_js_api >= 1.0.6 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.06.0
+    You can temporarily relax the switch invariant with `--update-invariant'
   * No agreement on the version of ocaml-migrate-parsetree:
     - gen_js_api >= 1.0.6 -> ocaml-migrate-parsetree < 2.0.0
     - gen_js_api >= 1.0.6 -> ppxlib >= 0.9 -> ocaml-migrate-parsetree >= 2.1.0
+  * No agreement on the version of ocaml-variants:
+    - (invariant) -> ocaml-variants = 4.12.0+trunk
+    - gen_js_api >= 1.0.6 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.06.0 -> ocaml-variants < 4.00.2~
 
 No solution found, exiting
 # Return code 20 #
