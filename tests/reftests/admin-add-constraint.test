@@ -5,6 +5,4 @@ depends: [
   "ocaml" {>= "5.00"}
 ]
 ### opam admin add-constraint 'ocaml<5.0'
-Fatal error:
-Not_found
-# Return code 99 #
+[WARNING] In package test.1, updated constraint ocaml {< "5.0" & >= "5.00"} cannot be satisfied, not updating (use `--force' to update anyway)

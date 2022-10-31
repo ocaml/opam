@@ -555,7 +555,7 @@ let simplify_ineq_formula vcomp f =
   let val_of_int i = vals_a.(i/2) in
   let int_of_val =
     let m = List.mapi (fun i v -> v, 2 * i + 1) vals in
-    fun v -> List.assoc v m
+    fun v -> snd (List.find (fun (v', _) -> vcomp v v' = 0) m)
   in
   (* One integer for each value appearing in f, plus one for each interval *)
   let rec mk_ranges acc n = if n < 0 then acc else mk_ranges (n::acc) (n-1) in
