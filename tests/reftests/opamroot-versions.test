@@ -713,7 +713,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-another-package 2
+  install i-am-another-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-another-package.2
@@ -793,7 +793,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
@@ -872,7 +872,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
@@ -945,7 +945,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
@@ -1082,7 +1082,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-another-package 2
+  install i-am-another-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-another-package.2
@@ -1161,7 +1161,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
@@ -1236,7 +1236,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
@@ -1300,7 +1300,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
@@ -1445,7 +1445,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-another-package 2
+  install i-am-another-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-another-package.2
@@ -1526,7 +1526,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
@@ -1603,7 +1603,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
@@ -1667,7 +1667,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
@@ -1799,7 +1799,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-another-package 2
+  install i-am-another-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-another-package.2
@@ -1868,7 +1868,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
@@ -1939,7 +1939,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
@@ -2005,7 +2005,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
@@ -2120,7 +2120,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-another-package 2
+  install i-am-another-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-another-package.2
@@ -2187,7 +2187,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
@@ -2245,7 +2245,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2
@@ -2304,7 +2304,7 @@ STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
 === install 1 package
-  - install i-am-package 2
+  install i-am-package 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i-am-package.2

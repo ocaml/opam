@@ -218,7 +218,7 @@ json-comp
 ### opam install ok --json=out.json
 The following actions will be performed:
 === install 1 package
-  - install ok 1
+  install ok 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ok.1
@@ -279,7 +279,7 @@ Done.
 ### OPAMVAR_os=linux OPAMVAR_arch=x86_64 opam install ko --json=out.json
 The following actions will be performed:
 === install 1 package
-  - install ko 2
+  install ko 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] The compilation of ko.2 failed at "false".
@@ -289,7 +289,7 @@ The following actions will be performed:
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 +- The following actions failed
-| - build ko 2
+| build ko 2
 +- 
 - No changes have been performed
 # Return code 31 #
@@ -373,7 +373,7 @@ The following actions will be performed:
 
 The following actions will be performed:
 === remove 1 package
-  - remove ok 1
+  remove ok 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ok.1
@@ -425,8 +425,8 @@ Done.
 ### OPAMVAR_os=linux OPAMVAR_arch=x86_64 opam install ok ko --json=out.json | grep -v "switch import" | unordered
 The following actions will be performed:
 === install 2 packages
-  - install ko 2
-  - install ok 1
+  install ko 2
+  install ok 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ok.1
@@ -437,10 +437,10 @@ The following actions will be performed:
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 +- The following actions failed
-| - build ko 2
+| build ko 2
 +- 
 +- The following changes have been performed
-| - install ok 1
+| install ok 1
 +- 
 
 The former state can be restored with:
@@ -557,7 +557,7 @@ nip is now pinned to file://${BASEDIR}/nip (version dev)
 
 The following actions will be performed:
 === install 1 package
-  - install nip dev (pinned)
+  install nip dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved nip.dev  (file://${BASEDIR}/nip)
@@ -620,7 +620,7 @@ Done.
 Ok, nip is no longer pinned to file://${BASEDIR}/nip (version dev)
 The following actions will be performed:
 === remove 1 package
-  - remove nip dev
+  remove nip dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   nip.dev
@@ -671,7 +671,7 @@ Package nip does not exist, create as a NEW package? [y/n] y
 nip is now pinned to file://${BASEDIR}/nip (version dev)
 The following actions will be performed:
 === install 1 package
-  - install nip dev (pinned)
+  install nip dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved nip.dev  (file://${BASEDIR}/nip)
