@@ -175,3 +175,14 @@ echo "another-inexistant" "inexistant"
 -> installed qux.dev
 -> installed bar.dev
 Done.
+### : Test opam pin remove <pkg>.<version>
+### opam pin
+bar.dev    rsync             file://${BASEDIR}/bar
+foo.1      local definition
+nip.dev    rsync             file://${BASEDIR}/nip
+qux.dev    rsync             file://${BASEDIR}/qux
+### opam pin remove --no-action bar.dev
+Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
+### opam pin remove --no-action nip.wrong-version
+[ERROR] nip is pinned but not to version wrong-version. Skipping.
+# Return code 2 #

@@ -99,6 +99,7 @@ users)
   * [BUG] Fix origin opam file retrieval when opam originate from locked file [#5079 @rjbou - fix #4936]
   * [BUG] When reinstalling a package that has a dirty source, if uncommitted changes are the same than the ones stored in opam's cache, opam consider that it is up to date and nothing is updated [4879 @rjbou]
   * [BUG] Handle external dependencies when updating switch state pin status (all pins), instead as a post pin action (only when called with `opam pin` [#5047 @rjbou - fix #5046]
+  * Allow opam pin remove to take a package (<pkg>.<version>) as argument [#5325 @kit-ty-kate]
 
 ## List
   * Some optimisations to 'opam list --installable' queries combined with other filters [#4882 @altgr - fix #4311]
@@ -360,6 +361,7 @@ users)
   * Add a reftest testing for system package manager failure [#5257 @kit-ty-kate]
   * Add autopin test including deps-only, dev-deps, depexts; instrument depext handling to allow depext reftesting [#5236 @AltGr]
   * Add test for init configuration with opamrc [#5315 @rjbou]
+  * Test opam pin remove <pkg>.<version> [#5325 @kit-ty-kate]
 
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
@@ -498,6 +500,7 @@ users)
   * `OpamSysInteract.install_packages_command`: change return type to `(['AsAdmin of string | 'AsUser of string] * string list) list
 ` [#5268 @kit-ty-kate]
   * `OpamUpdate`: change `repository` output to update function option, to not write cache and new repo config if nothing changed in `repositories` [#5146 @rjbou]
+  * Add `OpamPinned.version_opt` [#5325 @kit-ty-kate]
 
   * Add optional argument `?env:(variable_contents option Lazy.t * string) OpamVariable.Map.t` to `OpamSysPoll` and `OpamSysInteract` functions. It is used to get syspolling variables from the environment first. [#4892 @rjbou]
 ## opam-solver

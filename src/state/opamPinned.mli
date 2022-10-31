@@ -18,6 +18,10 @@ open OpamStateTypes
     @raise Not_found when appropriate *)
 val version: 'a switch_state -> name -> version
 
+(** If the package is pinned, returns its version.
+    Otherwise returns [None]. *)
+val version_opt: 'a switch_state -> name -> version option
+
 (** Returns the package with the pinned-to version from a pinned package name.
     @raise Not_found when appropriate *)
 val package: 'a switch_state -> name -> package
