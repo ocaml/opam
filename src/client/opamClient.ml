@@ -300,7 +300,7 @@ let upgrade_t
          if not (OpamPackage.Set.is_empty unopt) then
            (let bullet =
               OpamConsole.(colorise `red
-                             (utf8_symbol Symbols.asterisk_operator "--"))
+                             (utf8_symbol Symbols.asterisk_operator "*"))
               ^ " "
             in
             let string_dep pkg map reason =
