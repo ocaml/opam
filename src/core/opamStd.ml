@@ -47,6 +47,7 @@ module type MAP = sig
   val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
   val map_reduce:
     ?default:'b -> (key -> 'a -> 'b) -> ('b -> 'b -> 'b) -> 'a t -> 'b
+  val filter_map: (key -> 'a -> 'b option) -> 'a t -> 'b t
 end
 module type ABSTRACT = sig
   type t
@@ -316,6 +317,13 @@ module Map = struct
     let mapi f map =
       fold (fun key value map ->
           add key (f key value) map
+        ) map empty
+
+    let filter_map f map =
+      fold (fun key value map ->
+          match f key value with
+          | Some value -> add key value map
+          | None -> map
         ) map empty
 
     let values map =
