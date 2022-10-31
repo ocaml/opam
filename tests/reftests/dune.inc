@@ -1,5 +1,22 @@
 
 (rule
+ (alias reftest-admin-add-constraint)
+ (action
+  (diff admin-add-constraint.test admin-add-constraint.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-admin-add-constraint)))
+
+(rule
+ (targets admin-add-constraint.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:admin-add-constraint.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-assume-built)
  (action
   (diff assume-built.test assume-built.out)))
