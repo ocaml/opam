@@ -22,27 +22,27 @@ depopts: "foo" { < "2" }
 ### opam install --deps-only foo
 The following actions would be performed:
 === install 1 package
-  - install truc 1 [required by foo]
+  install truc 1 [required by foo]
 ### opam install --deps-only bar
 The following actions would be performed:
 === install 1 package
-  - install foo 1 [required by bar]
+  install foo 1 [required by bar]
 ### opam install --deps-only baz
 The following actions would be performed:
 === install 2 packages
-  - install bar 1 [required by baz]
-  - install foo 1 [required by bar]
+  install bar 1 [required by baz]
+  install foo 1 [required by bar]
 ### opam install --deps-only foo bar
 Nothing to do.
 ### opam install --deps-only foo baz
 The following actions would be performed:
 === install 2 packages
-  - install bar 1 [required by baz]
-  - install foo 1 [required by bar]
+  install bar 1 [required by baz]
+  install foo 1 [required by bar]
 ### opam install --deps-only bar baz
 The following actions would be performed:
 === install 1 package
-  - install foo 1 [required by bar]
+  install foo 1 [required by bar]
 ### opam install --deps-only foo bar baz
 Nothing to do.
 ### opam install --deps-only truc
@@ -50,8 +50,8 @@ Nothing to do.
 ### opam install --deps-only truc baz
 The following actions would be performed:
 === install 2 packages
-  - install bar 1 [required by baz]
-  - install foo 1 [required by bar]
+  install bar 1 [required by baz]
+  install foo 1 [required by bar]
 ### ::::::::::::::::::: Test for #4911 ::::::::::::::::
 ### OPAMSHOW=0
 ### <pkg:buz.1>
@@ -60,8 +60,8 @@ depopts: "bar"
 ### opam install foo.1 buz
 The following actions will be performed:
 === install 2 packages
-  - install buz 1
-  - install foo 1
+  install buz 1
+  install foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed buz.1

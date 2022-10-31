@@ -12,8 +12,8 @@ opam-version: "2.0"
 ### opam install bar
 The following actions will be performed:
 === install 2 packages
-  - install bar 1
-  - install foo 1 [required by bar]
+  install bar 1
+  install foo 1 [required by bar]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed foo.1
@@ -29,19 +29,19 @@ available: false
 ### opam install baz --show
 The following actions would be performed:
 === install 1 package
-  - install baz 1
+  install baz 1
 ### opam reinstall --list-pending
 foo.1
 ### opam upgrade --show
 The following actions would be performed:
 === remove 2 packages
-  - remove bar 1 [uses foo]
-  - remove foo 1 [no longer available]
+  remove bar 1 [uses foo]
+  remove foo 1 [no longer available]
 ### opam upgrade --show --fixup
 The following actions would be performed:
 === remove 2 packages
-  - remove bar 1 [uses foo]
-  - remove foo 1 [no longer available]
+  remove bar 1 [uses foo]
+  remove foo 1 [no longer available]
 ### : dependency foo is installed but no longer available
 ### opam upgrade bar
 [ERROR] Package conflict!
@@ -63,27 +63,27 @@ opam-version: "2.0"
 ### opam upgrade --show
 The following actions would be performed:
 === remove 1 package
-  - remove  bar 1      [conflicts with foo]
+  remove  bar 1      [conflicts with foo]
 === upgrade 1 package
-  - upgrade foo 1 to 2
+  upgrade foo 1 to 2
 ### <pkg:bar.2>
 opam-version: "2.0"
 depends: "foo" {>= "1"}
 ### opam upgrade --show
 The following actions would be performed:
 === upgrade 2 packages
-  - upgrade bar 1 to 2
-  - upgrade foo 1 to 2
+  upgrade bar 1 to 2
+  upgrade foo 1 to 2
 ### opam upgrade --show --fixup
 The following actions would be performed:
 === upgrade 2 packages
-  - upgrade bar 1 to 2
-  - upgrade foo 1 to 2 [required by bar]
+  upgrade bar 1 to 2
+  upgrade foo 1 to 2 [required by bar]
 ### opam reinstall baz
 baz is not installed. Install it? [y/n] y
 The following actions will be performed:
 === install 1 package
-  - install baz 1
+  install baz 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed baz.1
@@ -91,8 +91,8 @@ Done.
 ### opam upgrade bar
 The following actions will be performed:
 === upgrade 2 packages
-  - upgrade bar 1 to 2
-  - upgrade foo 1 to 2 [required by bar]
+  upgrade bar 1 to 2
+  upgrade foo 1 to 2 [required by bar]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   bar.1

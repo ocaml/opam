@@ -16,9 +16,9 @@ opam-version: "2.0"
 ### opam install foo.1 bar.1 baz | unordered
 The following actions will be performed:
 === install 3 packages
-  - install bar 1
-  - install baz 1
-  - install foo 1
+  install bar 1
+  install baz 1
+  install foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed bar.1
@@ -29,8 +29,8 @@ Done.
 ### opam upgrade | unordered
 The following actions will be performed:
 === upgrade 2 packages
-  - upgrade bar 1 to 2
-  - upgrade foo 1 to 3
+  upgrade bar 1 to 2
+  upgrade foo 1 to 3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   bar.1
@@ -43,8 +43,8 @@ Done.
 ### opam install foo.1 bar.1 | unordered
 The following actions will be performed:
 === downgrade 2 packages
-  - downgrade bar 2 to 1
-  - downgrade foo 3 to 1
+  downgrade bar 2 to 1
+  downgrade foo 3 to 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   bar.2
@@ -55,8 +55,8 @@ Done.
 ### opam upgrade --all | unordered
 The following actions will be performed:
 === upgrade 2 packages
-  - upgrade bar 1 to 2
-  - upgrade foo 1 to 3
+  upgrade bar 1 to 2
+  upgrade foo 1 to 3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   bar.1
@@ -67,8 +67,8 @@ Done.
 ### opam install foo.1 bar.1 | unordered
 The following actions will be performed:
 === downgrade 2 packages
-  - downgrade bar 2 to 1
-  - downgrade foo 3 to 1
+  downgrade bar 2 to 1
+  downgrade foo 3 to 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   bar.2
@@ -79,7 +79,7 @@ Done.
 ### opam upgrade foo
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade foo 1 to 3
+  upgrade foo 1 to 3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.1
@@ -88,7 +88,7 @@ Done.
 ### opam upgrade bar
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade bar 1 to 2
+  upgrade bar 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   bar.1
@@ -97,8 +97,8 @@ Done.
 ### opam install foo.1 bar.1 | unordered
 The following actions will be performed:
 === downgrade 2 packages
-  - downgrade bar 2 to 1
-  - downgrade foo 3 to 1
+  downgrade bar 2 to 1
+  downgrade foo 3 to 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   bar.2
@@ -109,7 +109,7 @@ Done.
 ### opam upgrade "foo<3"
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade foo 1 to 2
+  upgrade foo 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.1
@@ -119,7 +119,7 @@ Done.
 ### opam install foo.1
 The following actions will be performed:
 === downgrade 1 package
-  - downgrade foo 2 to 1
+  downgrade foo 2 to 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.2
@@ -132,7 +132,7 @@ Package quux does not exist, create as a NEW package? [y/n] y
 quux is now pinned to file://${BASEDIR}/quux (version dev)
 The following actions will be performed:
 === install 1 package
-  - install quux dev (pinned)
+  install quux dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved quux.dev  (file://${BASEDIR}/quux)
@@ -144,8 +144,8 @@ build: [ "true" ]
 ### opam upgrade | unordered
 The following actions will be performed:
 === upgrade 2 packages
-  - upgrade bar 1 to 2
-  - upgrade foo 1 to 3
+  upgrade bar 1 to 2
+  upgrade foo 1 to 3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   bar.1
@@ -156,7 +156,7 @@ Done.
 ### opam install foo.1
 The following actions will be performed:
 === downgrade 1 package
-  - downgrade foo 3 to 1
+  downgrade foo 3 to 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.3
@@ -168,7 +168,7 @@ build: [ "echo" "true" ]
 ### opam upgrade --all
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade foo 1 to 3
+  upgrade foo 1 to 3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.1
@@ -180,7 +180,7 @@ build: [ "echo" "hey" ]
 ### opam install foo.1
 The following actions will be performed:
 === downgrade 1 package
-  - downgrade foo 3 to 1
+  downgrade foo 3 to 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.3
@@ -194,7 +194,7 @@ Done.
 
 The following actions will be performed:
 === recompile 1 package
-  - recompile quux dev (pinned)
+  recompile quux dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved quux.dev  (no changes)
@@ -207,7 +207,7 @@ build: [ "echo" "hej" ]
 ### opam upgrade foo
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade foo 1 to 3
+  upgrade foo 1 to 3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.1
@@ -219,7 +219,7 @@ version: "dev2"
 ### opam install foo.1
 The following actions will be performed:
 === downgrade 1 package
-  - downgrade foo 3 to 1
+  downgrade foo 3 to 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.3
@@ -228,7 +228,7 @@ Done.
 ### opam upgrade
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade foo 1 to 3
+  upgrade foo 1 to 3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.1
@@ -240,7 +240,7 @@ version: "dev3"
 ### opam install foo.1
 The following actions will be performed:
 === downgrade 1 package
-  - downgrade foo 3 to 1
+  downgrade foo 3 to 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.3
@@ -249,7 +249,7 @@ Done.
 ### opam upgrade --all
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade foo 1 to 3
+  upgrade foo 1 to 3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.1
@@ -261,7 +261,7 @@ version: "dev4"
 ### opam install foo.1
 The following actions will be performed:
 === downgrade 1 package
-  - downgrade foo 3 to 1
+  downgrade foo 3 to 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.3
@@ -275,7 +275,7 @@ Done.
 
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade quux dev to dev4 (pinned)
+  upgrade quux dev to dev4 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   quux.dev
@@ -292,7 +292,7 @@ version: "dev5"
 
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade quux dev4 to dev5 (pinned)
+  upgrade quux dev4 to dev5 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   quux.dev4
@@ -316,7 +316,7 @@ quux is now pinned to file://${BASEDIR}/quux (version dev6)
 
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade quux dev5 to dev6 (pinned)
+  upgrade quux dev5 to dev6 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   quux.dev5
@@ -346,9 +346,9 @@ build: [ "true" ]
 quuux is not installed. Install it? [y/n] y
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade quux  dev6 to dev7 (pinned)
+  upgrade quux  dev6 to dev7 (pinned)
+  install quuux dev (pinned)
 === install 1 package
-  - install quuux dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved quuux.dev  (file://${BASEDIR}/quux)
@@ -361,7 +361,7 @@ content
 ### opam upgrade
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade foo 1 to 3
+  upgrade foo 1 to 3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.1
@@ -374,7 +374,7 @@ Done.
 
 The following actions will be performed:
 === recompile 1 package
-  - recompile quux dev7 (pinned)
+  recompile quux dev7 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   quux.dev7

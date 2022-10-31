@@ -45,8 +45,8 @@ Set to '[]' the field wrap-remove-commands in global configuration
 ### opam install i-got-the-variables --yes
 The following actions will be performed:
 === install 2 packages
-  - install base                2     [required by i-got-the-variables]
-  - install i-got-the-variables 2.4.6
+  install base                2     [required by i-got-the-variables]
+  install i-got-the-variables 2.4.6
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed base.2

@@ -22,8 +22,8 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam install d-foo s-foo | unordered
 The following actions will be performed:
 === install 2 packages
-  - install d-foo 1
-  - install s-foo 1
+  install d-foo 1
+  install s-foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed d-foo.1
@@ -47,8 +47,8 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 The following actions will be performed:
 === upgrade 2 packages
-  - upgrade d-foo 1 to 2
-  - upgrade s-foo 1 to 2
+  upgrade d-foo 1 to 2
+  upgrade s-foo 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   d-foo.1
@@ -68,7 +68,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade d-foo 2 to 3
+  upgrade d-foo 2 to 3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   d-foo.2
@@ -90,7 +90,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade s-foo
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade s-foo 2 to 4
+  upgrade s-foo 2 to 4
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   s-foo.2
@@ -119,8 +119,8 @@ opam-version: "2.0"
 
 The following actions will be performed:
 === upgrade 2 packages
-  - upgrade d-foo 3 to 5
-  - upgrade s-foo 4 to 5
+  upgrade d-foo 3 to 5
+  upgrade s-foo 4 to 5
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   d-foo.3
@@ -150,7 +150,7 @@ Package quux does not exist, create as a NEW package? [y/n] y
 quux is now pinned to file://${BASEDIR}/quux (version dev)
 The following actions will be performed:
 === install 1 package
-  - install quux dev (pinned)
+  install quux dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved quux.dev  (file://${BASEDIR}/quux)
@@ -172,7 +172,7 @@ Now run 'opam upgrade' to apply any package updates.
 
 The following actions will be performed:
 === recompile 1 package
-  - recompile quux dev (pinned)
+  recompile quux dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved quux.dev  (no changes)
@@ -193,7 +193,7 @@ Now run 'opam upgrade' to apply any package updates.
 
 The following actions will be performed:
 === recompile 1 package
-  - recompile quux dev (pinned)
+  recompile quux dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved quux.dev  (no changes)
@@ -220,7 +220,7 @@ Now run 'opam upgrade' to apply any package updates.
 
 The following actions will be performed:
 === recompile 1 package
-  - recompile quux dev (pinned)
+  recompile quux dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved quux.dev  (no changes)
@@ -256,8 +256,8 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade | unordered
 The following actions will be performed:
 === upgrade 2 packages
-  - upgrade quux  dev to dev2 (pinned)
-  - upgrade s-foo 5 to 6
+  upgrade quux  dev to dev2 (pinned)
+  upgrade s-foo 5 to 6
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   quux.dev
@@ -279,7 +279,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 The following actions will be performed:
 === recompile 1 package
-  - recompile quux dev2 (pinned) [upstream or system changes]
+  recompile quux dev2 (pinned) [upstream or system changes]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   quux.dev2
@@ -299,7 +299,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 The following actions will be performed:
 === recompile 1 package
-  - recompile quux dev2 (pinned) [upstream or system changes]
+  recompile quux dev2 (pinned) [upstream or system changes]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   quux.dev2
@@ -317,7 +317,7 @@ Package quux-rdep does not exist, create as a NEW package? [y/n] y
 quux-rdep is now pinned to file://${BASEDIR}/quux-rdep (version dev)
 The following actions will be performed:
 === install 1 package
-  - install quux-rdep dev (pinned)
+  install quux-rdep dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved quux-rdep.dev  (file://${BASEDIR}/quux-rdep)
@@ -333,8 +333,8 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 The following actions will be performed:
 === recompile 2 packages
-  - recompile quux      dev2 (pinned) [upstream or system changes]
-  - recompile quux-rdep dev (pinned)  [uses quux]
+  recompile quux      dev2 (pinned) [upstream or system changes]
+  recompile quux-rdep dev (pinned)  [uses quux]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved quux-rdep.dev  (no changes)
@@ -347,7 +347,7 @@ Done.
 Ok, quux-rdep is no longer pinned to file://${BASEDIR}/quux-rdep (version dev)
 The following actions will be performed:
 === remove 1 package
-  - remove quux-rdep dev
+  remove quux-rdep dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   quux-rdep.dev
@@ -368,7 +368,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade --all
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade quux dev2 to dev3 (pinned)
+  upgrade quux dev2 to dev3 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   quux.dev2
@@ -388,7 +388,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade d-foo 5 to 6
+  upgrade d-foo 5 to 6
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   d-foo.5
@@ -412,8 +412,8 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 The following actions will be performed:
 === upgrade 2 packages
-  - upgrade quux  dev3 to dev5 (pinned)
-  - upgrade s-foo 6 to 7
+  upgrade quux  dev3 to dev5 (pinned)
+  upgrade s-foo 6 to 7
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   quux.dev3
@@ -437,7 +437,7 @@ ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
 
 The following actions will be performed:
 === install 1 package
-  - install ongoing dev (pinned)
+  install ongoing dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved ongoing.dev  (no changes)
@@ -477,7 +477,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade --working-dir
 The following actions will be performed:
 === recompile 1 package
-  - recompile ongoing dev (pinned) [upstream or system changes]
+  recompile ongoing dev (pinned) [upstream or system changes]
 [NOTE] --working-dir is given but no requested package is pinned
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -489,7 +489,7 @@ The following actions will be performed:
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 +- The following actions failed
-| - build ongoing dev
+| build ongoing dev
 +- 
 - No changes have been performed
 # Return code 31 #
@@ -500,7 +500,7 @@ The following actions will be performed:
 
 The following actions will be performed:
 === recompile 1 package
-  - recompile ongoing dev (pinned)
+  recompile ongoing dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev

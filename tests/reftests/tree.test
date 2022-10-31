@@ -22,15 +22,15 @@ opam-version: "2.0"
 ### opam tree a
 The following actions are simulated:
 === install 1 package
-  - install a 1
+  install a 1
 
 a.1
 ### opam install c
 The following actions will be performed:
 === install 3 packages
-  - install a 1 [required by b]
-  - install b 1 [required by c]
-  - install c 1
+  install a 1 [required by b]
+  install b 1 [required by c]
+  install c 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed a.1
@@ -46,7 +46,7 @@ a.1
 ### opam tree a d
 The following actions are simulated:
 === install 1 package
-  - install d 1
+  install d 1
 
 a.1
 
@@ -87,8 +87,8 @@ depends: [ "a" "d" {<"2" & with-test}  "b" {post} ]
 ### opam install e --with-test
 The following actions will be performed:
 === install 2 packages
-  - install d 1 [required by e]
-  - install e 1
+  install d 1 [required by e]
+  install e 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed d.1
@@ -128,9 +128,9 @@ depends: [ "f" "g" ]
 ### opam install h
 The following actions will be performed:
 === install 3 packages
-  - install f 1 [required by h]
-  - install g 1 [required by h]
-  - install h 1
+  install f 1 [required by h]
+  install g 1 [required by h]
+  install h 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed f.1
@@ -179,7 +179,7 @@ depends: [
 ### opam install i
 The following actions will be performed:
 === install 1 package
-  - install i 1
+  install i 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed i.1
@@ -212,7 +212,7 @@ opam-version: "2.0"
 ### opam install j
 The following actions will be performed:
 === install 1 package
-  - install j 1
+  install j 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed j.1
@@ -246,11 +246,11 @@ j.1
 ### opam tree f h
 The following actions are simulated:
 === install 5 packages
-  - install a 1 [required by b]
-  - install b 1 [required by f]
-  - install f 1
-  - install g 1 [required by h]
-  - install h 1
+  install a 1 [required by b]
+  install b 1 [required by f]
+  install f 1
+  install g 1 [required by h]
+  install h 1
 
 f.1
 '-- b.1 (< 2)
@@ -263,17 +263,17 @@ h.1
 ### opam tree j --with-test
 The following actions are simulated:
 === install 2 packages
-  - install a 1 [required by j]
-  - install j 1
+  install a 1 [required by j]
+  install j 1
 
 j.1
 '-- a.1
 ### opam tree e
 The following actions are simulated:
 === install 3 packages
-  - install a 1 [required by e]
-  - install b 1
-  - install e 1
+  install a 1 [required by e]
+  install b 1
+  install e 1
 
 e.1
 '-- a.1
@@ -289,11 +289,11 @@ Try 'opam tree --help' or 'opam --help' for more information.
 ### opam tree f h --no-switch
 The following actions are simulated:
 === install 5 packages
-  - install a 1 [required by b]
-  - install b 1 [required by f]
-  - install f 1
-  - install g 1 [required by h]
-  - install h 1
+  install a 1 [required by b]
+  install b 1 [required by f]
+  install f 1
+  install g 1 [required by h]
+  install h 1
 
 f.1
 '-- b.1 (< 2)
@@ -306,18 +306,18 @@ h.1
 ### opam tree a b c d e f g h i j k --no-switch
 The following actions are simulated:
 === install 12 packages
-  - install a       1
-  - install b       1
-  - install c       1
-  - install c-build 1 [required by c]
-  - install d       1
-  - install e       1
-  - install f       1
-  - install g       1
-  - install h       1
-  - install i       1
-  - install j       1
-  - install k       1
+  install a       1
+  install b       1
+  install c       1
+  install c-build 1 [required by c]
+  install d       1
+  install e       1
+  install f       1
+  install g       1
+  install h       1
+  install i       1
+  install j       1
+  install k       1
 
 a.1
 
@@ -357,7 +357,7 @@ depends: "a" {  os = "inexistant"}
 ### opam install a
 The following actions will be performed:
 === install 1 package
-  - install a 1
+  install a 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed a.1
@@ -365,7 +365,7 @@ Done.
 ### opam tree j --no-switch
 The following actions are simulated:
 === install 1 package
-  - install j 1
+  install j 1
 
 j.1
 ### <pkg:h.1>

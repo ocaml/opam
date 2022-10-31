@@ -9,8 +9,8 @@ opam-version: "2.0"
 ### opam install -y a
 The following actions will be performed:
 === install 2 packages
-  - install a 1
-  - install b 1 [required by a]
+  install a 1
+  install b 1 [required by a]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed b.1
@@ -33,7 +33,7 @@ depends: ["b"]
 ### opam upgrade --show
 The following actions would be performed:
 === recompile 1 package
-  - recompile a 1 [upstream or system changes]
+  recompile a 1 [upstream or system changes]
 ### :::::: Check that nothing gets rebuild if only a constraint – that is already installed – changes
 ### <pkg:a.1>
 opam-version: "2.0"
@@ -49,7 +49,7 @@ depends: ["b" {= version}]
 ### opam upgrade -y --verbose | '^\+ .+ "build"' -> '+' | '^\+ .+opam(\.exe)? ' -> '+ "opam" '
 The following actions will be performed:
 === recompile 1 package
-  - recompile a 1 [upstream or system changes]
+  recompile a 1 [upstream or system changes]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  2/4: [a: opam var]
@@ -67,7 +67,7 @@ depends: ["b" {= "2"}]
 ### opam upgrade --show
 The following actions would be performed:
 === remove 1 package
-  - remove a 1
+  remove a 1
 ### :::::: Check that rebuilding a dependency correctly rebuilds the package requiring it
 ### <pkg:a.1>
 opam-version: "2.0"
@@ -81,7 +81,7 @@ opam-version: "2.0"
 ### opam upgrade --show
 The following actions would be performed:
 === recompile 2 packages
-  - recompile a 1
-  - recompile b 1
+  recompile a 1
+  recompile b 1
 === install 1 package
-  - install   c 1
+  install   c 1

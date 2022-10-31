@@ -18,7 +18,7 @@ opam-version: "2.0"
 The switch invariant was set to foo
 The following actions will be performed:
 === install 1 package
-  - install foo 1
+  install foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed foo.1
@@ -33,7 +33,7 @@ The switch invariant was set to foo
 The switch invariant was set to bar
 The following actions will be performed:
 === install 1 package
-  - install bar 1
+  install bar 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed bar.1

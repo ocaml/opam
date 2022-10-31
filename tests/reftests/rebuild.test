@@ -27,7 +27,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam install a
 The following actions will be performed:
 === install 1 package
-  - install a 1
+  install a 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved a.1  (file://${BASEDIR}/source-orig.tgz)
@@ -71,7 +71,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam install b
 The following actions will be performed:
 === install 1 package
-  - install b 1
+  install b 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved b.1  (file://${BASEDIR}/other-sources/original)

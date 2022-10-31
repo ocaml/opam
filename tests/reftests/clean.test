@@ -14,7 +14,7 @@ install: [
 ### opam install things
 The following actions will be performed:
 === install 1 package
-  - install things 1
+  install things 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed things.1
@@ -27,7 +27,7 @@ ${BASEDIR}/OPAM/clean/lib/things/second
 ### opam remove things
 The following actions will be performed:
 === remove 1 package
-  - remove things 1
+  remove things 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   things.1
@@ -35,7 +35,7 @@ Done.
 ### opam install things
 The following actions will be performed:
 === install 1 package
-  - install things 1
+  install things 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed things.1
@@ -43,14 +43,14 @@ Done.
 ### opam remove things --fake
 The following actions will be faked:
 === remove 1 package
-  - remove things 1
+  remove things 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Done.
 ### opam install things
 The following actions will be performed:
 === install 1 package
-  - install things 1
+  install things 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] The installation of things failed at "test ! -f ${BASEDIR}/OPAM/clean/bin/first".
@@ -60,7 +60,7 @@ The following actions will be performed:
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 +- The following actions failed
-| - install things 1
+| install things 1
 +- 
 - No changes have been performed
 # Return code 31 #
@@ -84,7 +84,7 @@ Remove them? [y/n] y
 ### opam install things
 The following actions will be performed:
 === install 1 package
-  - install things 1
+  install things 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed things.1
@@ -94,7 +94,7 @@ another content
 ### opam remove things --no | '\\' -> '/'
 The following actions will be performed:
 === remove 1 package
-  - remove things 1
+  remove things 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 While removing things.1: these files have been modified since installation:

@@ -26,7 +26,7 @@ Processing  1/1: [ongoing.dev: git]
 
 The following actions will be performed:
 === install 1 package
-  - install ongoing dev (pinned)
+  install ongoing dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/3: [ongoing.dev: git]
@@ -46,7 +46,7 @@ Done.
 ### opam remove ongoing
 The following actions will be performed:
 === remove 1 package
-  - remove ongoing dev (pinned)
+  remove ongoing dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
@@ -59,7 +59,7 @@ Processing  1/1: [ongoing.dev: git]
 
 The following actions will be performed:
 === install 1 package
-  - install ongoing dev (pinned)
+  install ongoing dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/3: [ongoing.dev: git]
@@ -84,7 +84,7 @@ install: [ "touch" "installed"]
 ### opam remove ongoing
 The following actions will be performed:
 === remove 1 package
-  - remove ongoing dev (pinned)
+  remove ongoing dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
@@ -98,7 +98,7 @@ Processing  1/1: [ongoing.dev: git]
 
 The following actions will be performed:
 === install 1 package
-  - install ongoing dev (pinned)
+  install ongoing dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/2: [ongoing: test newfile.txt]
@@ -118,7 +118,7 @@ opam-version:"2.0"
 ### opam remove ongoing
 The following actions will be performed:
 === remove 1 package
-  - remove ongoing dev (pinned)
+  remove ongoing dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
@@ -130,8 +130,8 @@ Done.
 
 The following actions will be performed:
 === install 2 packages
-  - install ongoing dev (pinned)
-  - install qux     u
+  install ongoing dev (pinned)
+  install qux     u
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved ongoing.dev  (git+file://${BASEDIR}/ongoing#master)

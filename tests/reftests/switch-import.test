@@ -31,7 +31,7 @@ nip is now pinned to git+file://${BASEDIR}/nip#fst-head (version dev)
 
 The following actions will be performed:
 === install 1 package
-  - install nip dev (pinned)
+  install nip dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved nip.dev  (no changes)
@@ -86,7 +86,7 @@ echo "src: \"git+file://${basedir}/nip#snd-head\"}}" >> twice.snd.xp
 ### opam switch import twice.snd.xp
 The following actions will be performed:
 === recompile 1 package
-  - recompile nip dev (pinned)
+  recompile nip dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved nip.dev  (git+file://${BASEDIR}/nip#snd-head)
@@ -100,7 +100,7 @@ nip    ${BASEDIR}/OPAM/twice/lib/snd.out
 ### opam switch import twice.snd.xp --switch tierce
 The following actions will be performed:
 === install 1 package
-  - install nip dev (pinned)
+  install nip dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved nip.dev  (git+file://${BASEDIR}/nip#snd-head)

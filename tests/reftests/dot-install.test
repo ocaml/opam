@@ -68,7 +68,7 @@ saluton
 ### opam install nodot
 The following actions will be performed:
 === install 1 package
-  - install nodot ~dev
+  install nodot ~dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ACTION                          download_package: nodot.~dev
@@ -93,7 +93,7 @@ added: [
 ### opam install dot
 The following actions will be performed:
 === install 1 package
-  - install dot ~dev
+  install dot ~dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ACTION                          download_package: dot.~dev
@@ -118,7 +118,7 @@ added: [
 ### opam reinstall dot --dry-run
 The following actions will be simulated:
 === recompile 1 package
-  - recompile dot ~dev
+  recompile dot ~dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ACTION                          download_package: dot.~dev
@@ -142,7 +142,7 @@ added: [
 ### opam reinstall dot --debug-level=0
 The following actions will be performed:
 === recompile 1 package
-  - recompile dot ~dev
+  recompile dot ~dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   dot.~dev
@@ -160,7 +160,7 @@ added: [
 ### opam remove dot --dry-run
 The following actions will be simulated:
 === remove 1 package
-  - remove dot ~dev
+  remove dot ~dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ACTION                          Removing dot.~dev
@@ -180,7 +180,7 @@ added: [
 ### opam remove dot --debug-level=0
 The following actions will be performed:
 === remove 1 package
-  - remove dot ~dev
+  remove dot ~dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   dot.~dev
@@ -188,7 +188,7 @@ Done.
 ### opam install --dry-run dot
 The following actions will be simulated:
 === install 1 package
-  - install dot ~dev
+  install dot ~dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ACTION                          download_package: dot.~dev
@@ -206,7 +206,7 @@ Not found: ${BASEDIR}/OPAM/inst/.opam-switch/install/dot.changes
 ### : check install files ordering :
 ### opam install lot-of-files | grep "mkdir\|install\|FILE"
 === install 1 package
-  - install lot-of-files ~dev
+  install lot-of-files ~dev
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in -> ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/lot-of-files.install.in
 FILE(.config)                   Wrote ${BASEDIR}/OPAM/inst/.opam-switch/config/lot-of-files.config in 0.000s
