@@ -681,11 +681,15 @@ No configuration file found, using built-in defaults.
 ### opam option jobs | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. If it really was intended, you can set it again using:
+           opam option jobs=1 --global
 FMT_UPG                         Format upgrade done
 ### # ro global state, ro repo state, ro switch state
 ### opam list | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. If it really was intended, you can set it again using:
+           opam option jobs=1 --global
 FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
@@ -702,6 +706,8 @@ i-am-sys-compiler    1           One-line description
 ### opam install i-am-another-package --switch sw-comp | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. If it really was intended, you can set it again using:
+           opam option jobs=1 --global
 FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -727,6 +733,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. If it really was intended, you can set it again using:
+           opam option jobs=1 --global
 Format upgrade done.
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -768,6 +776,8 @@ roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 ### opam list | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. If it really was intended, you can set it again using:
+           opam option jobs=1 --global
 FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
@@ -783,6 +793,8 @@ i-am-sys-compiler 2           One-line description
 ### opam install i-am-package | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. If it really was intended, you can set it again using:
+           opam option jobs=1 --global
 FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -807,6 +819,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. If it really was intended, you can set it again using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
@@ -848,6 +862,8 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### opam list | "${OPAMROOTVERSION}$" -> " current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.0 to  current
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. If it really was intended, you can set it again using:
+           opam option jobs=1 --global
 FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
@@ -862,6 +878,8 @@ i-am-sys-compiler 2           One-line description
 ### opam install i-am-package | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. If it really was intended, you can set it again using:
+           opam option jobs=1 --global
 FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -886,6 +904,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. If it really was intended, you can set it again using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
@@ -998,6 +1018,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. If it really was intended, you can set it again using:
+           opam option jobs=1 --global
 Format upgrade done.
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
