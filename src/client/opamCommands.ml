@@ -1474,8 +1474,8 @@ let config cli =
                 match OpamSwitchState.opam_opt state p with
                 | Some o -> OpamFile.OPAM.has_flag Pkgflag_Compiler o
                 | None -> false)
-            |> OpamSolver.dependencies ~depopts:true ~post:true ~build:true
-              ~installed:true
+            |> OpamSwitchState.dependencies ~depopts:true ~post:true ~build:true
+              ~installed:true state
               (OpamSwitchState.universe ~test:true ~doc:true ~dev_setup:true
                  ~requested:OpamPackage.Set.empty state Query)
             |> OpamPackage.Set.iter process;
