@@ -125,7 +125,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam install foo.4
 The following actions will be performed:
 === downgrade 1 package
-  - downgrade foo 5 to 4
+  downgrade foo 5 to 4
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.5
@@ -150,7 +150,7 @@ foo.5     4
 ### opam install foo.1
 The following actions will be performed:
 === downgrade 1 package
-  - downgrade foo 4 to 1
+  downgrade foo 4 to 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.4
@@ -178,7 +178,7 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packag
 ### opam install bar.1
 The following actions will be performed:
 === install 1 package
-  - install bar 1
+  install bar 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed bar.1
@@ -206,7 +206,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam install bar.2
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade bar 1 to 2
+  upgrade bar 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   bar.1
@@ -250,8 +250,8 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam install bar.3 foo.6 | unordered
 The following actions will be performed:
 === upgrade 2 packages
-  - upgrade bar 2 to 3
-  - upgrade foo 1 to 6
+  upgrade bar 2 to 3
+  upgrade foo 1 to 6
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.1

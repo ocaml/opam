@@ -20,19 +20,19 @@ ppx_deriving_yojson is now pinned to version 3.7.0
 ### opam install ppx_deriving_yojson.3.7.0 --fake
 The following actions will be faked:
 === install 13 packages
-  - install cppo                1.6.9          [required by ppx_deriving, yojson]
-  - install dune                3.4.1          [required by ppx_deriving_yojson]
-  - install ocaml-compiler-libs v0.12.4        [required by ppxlib]
-  - install ocamlfind           1.9.5          [required by ppx_deriving]
-  - install ppx_derivers        1.2.1          [required by ppx_deriving]
-  - install ppx_deriving        5.2.1          [required by ppx_deriving_yojson]
-  - install ppx_deriving_yojson 3.7.0 (pinned)
-  - install ppxlib              0.27.0         [required by ppx_deriving_yojson]
-  - install result              1.5            [required by ppx_deriving_yojson]
-  - install seq                 base           [required by yojson]
-  - install sexplib0            v0.15.1        [required by ppxlib]
-  - install stdlib-shims        0.3.0          [required by ppxlib]
-  - install yojson              2.0.2          [required by ppx_deriving_yojson]
+  install cppo                1.6.9          [required by ppx_deriving, yojson]
+  install dune                3.4.1          [required by ppx_deriving_yojson]
+  install ocaml-compiler-libs v0.12.4        [required by ppxlib]
+  install ocamlfind           1.9.5          [required by ppx_deriving]
+  install ppx_derivers        1.2.1          [required by ppx_deriving]
+  install ppx_deriving        5.2.1          [required by ppx_deriving_yojson]
+  install ppx_deriving_yojson 3.7.0 (pinned)
+  install ppxlib              0.27.0         [required by ppx_deriving_yojson]
+  install result              1.5            [required by ppx_deriving_yojson]
+  install seq                 base           [required by yojson]
+  install sexplib0            v0.15.1        [required by ppxlib]
+  install stdlib-shims        0.3.0          [required by ppxlib]
+  install yojson              2.0.2          [required by ppx_deriving_yojson]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of dune.3.4.1

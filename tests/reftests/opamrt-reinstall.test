@@ -26,10 +26,10 @@ remove:  [ "test" "-d" c:lib ]
 ### opam install d
 The following actions will be performed:
 === install 4 packages
-  - install a 1 [required by b]
-  - install b 1 [required by c]
-  - install c 1 [required by d]
-  - install d 1
+  install a 1 [required by b]
+  install b 1 [required by c]
+  install c 1 [required by d]
+  install d 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed a.1
@@ -48,9 +48,9 @@ d
 ### opam reinstall b
 The following actions will be performed:
 === recompile 3 packages
-  - recompile b 1
-  - recompile c 1 [uses b]
-  - recompile d 1 [uses c]
+  recompile b 1
+  recompile c 1 [uses b]
+  recompile d 1 [uses c]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   d.1
@@ -81,9 +81,9 @@ d
 ### opam remove b
 The following actions will be performed:
 === remove 3 packages
-  - remove b 1
-  - remove c 1 [uses b]
-  - remove d 1 [uses c]
+  remove b 1
+  remove c 1 [uses b]
+  remove d 1 [uses c]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   d.1
@@ -97,9 +97,9 @@ a.1
 ### opam install d
 The following actions will be performed:
 === install 3 packages
-  - install b 1 [required by c]
-  - install c 1 [required by d]
-  - install d 1
+  install b 1 [required by c]
+  install c 1 [required by d]
+  install d 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed b.1
@@ -124,9 +124,9 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 The following actions will be performed:
 === remove 3 packages
-  - remove b 1 [no longer available]
-  - remove c 1 [uses b]
-  - remove d 1 [uses c]
+  remove b 1 [no longer available]
+  remove c 1 [uses b]
+  remove d 1 [uses c]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   d.1
@@ -155,9 +155,9 @@ install: [ "mkdir" _:lib ]
 ### opam install d
 The following actions will be performed:
 === install 3 packages
-  - install b 1 [required by c]
-  - install c 1 [required by d]
-  - install d 1
+  install b 1 [required by c]
+  install c 1 [required by d]
+  install d 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed b.1
@@ -191,8 +191,8 @@ b is now pinned locally (version 1)
 ### opam reinstall c
 The following actions will be performed:
 === recompile 2 packages
-  - recompile c 1
-  - recompile d 1 [uses c]
+  recompile c 1
+  recompile d 1 [uses c]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   d.1
@@ -217,9 +217,9 @@ install: [ "mkdir" _:lib ]
 ### opam upgrade c
 The following actions will be performed:
 === recompile 1 package
-  - recompile d 1      [uses c]
+  recompile d 1      [uses c]
 === upgrade 1 package
-  - upgrade   c 1 to 2
+  upgrade   c 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   d.1
@@ -238,9 +238,9 @@ d
 ### opam reinstall b
 The following actions will be performed:
 === recompile 3 packages
-  - recompile b 1 (pinned)
-  - recompile c 2          [uses b]
-  - recompile d 1          [uses c]
+  recompile b 1 (pinned)
+  recompile c 2          [uses b]
+  recompile d 1          [uses c]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   d.1
@@ -261,10 +261,10 @@ d
 ### opam reinstall a
 The following actions will be performed:
 === recompile 4 packages
-  - recompile a 1
-  - recompile b 1 (pinned) [uses a]
-  - recompile c 2          [uses b]
-  - recompile d 1          [uses c]
+  recompile a 1
+  recompile b 1 (pinned) [uses a]
+  recompile c 2          [uses b]
+  recompile d 1          [uses c]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   d.1
@@ -293,28 +293,28 @@ install: [ "mkdir" _:lib ]
 ### opam upgrade --show
 The following actions would be performed:
 === recompile 3 packages
-  - recompile b 1 (pinned) [uses a]
-  - recompile c 2          [uses b]
-  - recompile d 1          [uses c]
+  recompile b 1 (pinned) [uses a]
+  recompile c 2          [uses b]
+  recompile d 1          [uses c]
 === upgrade 1 package
-  - upgrade   a 1 to 2
+  upgrade   a 1 to 2
 ### opam unpin b --show
 Ok, b would no longer be pinned locally (version 1)
 The following actions would be performed:
 === remove 3 packages
-  - remove b 1
-  - remove c 2 [uses b]
-  - remove d 1 [uses c]
+  remove b 1
+  remove c 2 [uses b]
+  remove d 1 [uses c]
 ### opam unpin b --no-action
 Ok, b is no longer pinned locally (version 1)
 ### opam upgrade
 The following actions will be performed:
 === remove 3 packages
-  - remove  b 1      [no longer available]
-  - remove  c 2      [uses b]
-  - remove  d 1      [uses c]
+  remove  b 1      [no longer available]
+  remove  c 2      [uses b]
+  remove  d 1      [uses c]
 === upgrade 1 package
-  - upgrade a 1 to 2
+  upgrade a 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   d.1
@@ -336,7 +336,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 The following actions will be performed:
 === downgrade 1 package
-  - downgrade a 2 to 1 [no longer available]
+  downgrade a 2 to 1 [no longer available]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   a.2

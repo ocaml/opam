@@ -14,7 +14,7 @@ build: [ "echo" "foo" ]
 ### opam install foo
 The following actions will be performed:
 === install 1 package
-  - install foo 1
+  install foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed foo.1
@@ -50,7 +50,7 @@ Package nip does not exist, create as a NEW package? [y/n] y
 nip is now pinned to file://${BASEDIR}/nip (version dev)
 The following actions will be performed:
 === install 1 package
-  - install nip dev (pinned)
+  install nip dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved nip.dev  (file://${BASEDIR}/nip)
@@ -59,7 +59,7 @@ Done.
 ### opam remove nip
 The following actions will be performed:
 === remove 1 package
-  - remove nip dev (pinned)
+  remove nip dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   nip.dev
@@ -68,7 +68,7 @@ Done.
 [nip.dev] synchronised (no changes)
 The following actions will be performed:
 === install 1 package
-  - install nip dev (pinned)
+  install nip dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved nip.dev  (file://${BASEDIR}/nip)
@@ -101,8 +101,8 @@ bar is now pinned to file://${BASEDIR}/bar (version dev)
 
 The following actions will be performed:
 === install 2 packages
-  - install bar dev (pinned)
-  - install qux dev (pinned)
+  install bar dev (pinned)
+  install qux dev (pinned)
 
 The following system packages will first need to be installed:
     another-inexistant inexistant
@@ -132,8 +132,8 @@ Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
 [WARNING] Opam packages bar.dev and qux.dev depend on the following system packages that are no longer installed: another-inexistant inexistant
 The following actions will be performed:
 === remove 2 packages
-  - remove bar dev
-  - remove qux dev
+  remove bar dev
+  remove qux dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   bar.dev
@@ -150,8 +150,8 @@ qux is now pinned to file://${BASEDIR}/qux (version dev)
 bar is now pinned to file://${BASEDIR}/bar (version dev)
 The following actions will be performed:
 === install 2 packages
-  - install bar dev (pinned)
-  - install qux dev (pinned) [required by bar]
+  install bar dev (pinned)
+  install qux dev (pinned) [required by bar]
 
 The following system packages will first need to be installed:
     another-inexistant inexistant

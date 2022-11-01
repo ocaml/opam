@@ -32,7 +32,7 @@ No lock file generated
 ### opam install foo.1
 The following actions will be performed:
 === install 1 package
-  - install foo 1
+  install foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed foo.1
@@ -45,7 +45,7 @@ No lock file generated
 ### opam install bar.1
 The following actions will be performed:
 === install 1 package
-  - install bar 1
+  install bar 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed bar.1
@@ -98,7 +98,7 @@ conflicts: ["baz"]
 ### opam install baz.1
 The following actions will be performed:
 === install 1 package
-  - install baz 1
+  install baz 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed baz.1
@@ -158,39 +158,39 @@ Ok, tolock is no longer pinned to file://${BASEDIR}/tolock (version 1)
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
-  - install bar    3            [required by tolock]
-  - install foo    2            [required by tolock]
-  - install tolock dev (pinned)
+  install bar    3            [required by tolock]
+  install foo    2            [required by tolock]
+  install tolock dev (pinned)
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
-  - install bar    1          [required by tolock]
-  - install baz    1          [required by tolock]
-  - install foo    1          [required by tolock]
-  - install tolock 1 (pinned)
+  install bar    1          [required by tolock]
+  install baz    1          [required by tolock]
+  install foo    1          [required by tolock]
+  install tolock 1 (pinned)
 ### : install with filename :
 ### opam install ./tolock/tolock.opam --show
 The following actions would be performed:
 === install 3 packages
-  - install bar    3            [required by tolock]
-  - install foo    2            [required by tolock]
-  - install tolock dev (pinned)
+  install bar    3            [required by tolock]
+  install foo    2            [required by tolock]
+  install tolock dev (pinned)
 ### opam install ./tolock/tolock.opam --locked --show
 The following actions would be performed:
 === install 4 packages
-  - install bar    1          [required by tolock]
-  - install baz    1          [required by tolock]
-  - install foo    1          [required by tolock]
-  - install tolock 1 (pinned)
+  install bar    1          [required by tolock]
+  install baz    1          [required by tolock]
+  install foo    1          [required by tolock]
+  install tolock 1 (pinned)
 ### opam install ./tolock/tolock.opam --locked
 Package tolock does not exist, create as a NEW package? [y/n] y
 tolock is now pinned to file://${BASEDIR}/tolock (version 1)
 The following actions will be performed:
 === install 4 packages
-  - install bar    1          [required by tolock]
-  - install baz    1          [required by tolock]
-  - install foo    1          [required by tolock]
-  - install tolock 1 (pinned)
+  install bar    1          [required by tolock]
+  install baz    1          [required by tolock]
+  install foo    1          [required by tolock]
+  install tolock 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed bar.1
@@ -203,7 +203,7 @@ Done.
 ### opam remove tolock
 The following actions will be performed:
 === remove 1 package
-  - remove tolock 1 (pinned)
+  remove tolock 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   tolock.1
@@ -227,7 +227,7 @@ conflicts:
 ### opam install foo.2
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade foo 1 to 2
+  upgrade foo 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.1
@@ -241,9 +241,9 @@ Done.
 
 The following actions would be performed:
 === downgrade 1 package
-  - downgrade foo     2 to 1       [required by oldlock]
+  downgrade foo     2 to 1       [required by oldlock]
 === install 1 package
-  - install   oldlock dev (pinned)
+  install   oldlock dev (pinned)
 ### opam install --locked oldlock
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
@@ -251,9 +251,9 @@ The following actions would be performed:
 
 The following actions will be performed:
 === downgrade 1 package
-  - downgrade foo     2 to 1       [required by oldlock]
+  downgrade foo     2 to 1       [required by oldlock]
 === install 1 package
-  - install   oldlock dev (pinned)
+  install   oldlock dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.2
@@ -263,7 +263,7 @@ Done.
 ### opam remove oldlock
 The following actions will be performed:
 === remove 1 package
-  - remove oldlock dev (pinned)
+  remove oldlock dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   oldlock.dev
@@ -287,7 +287,7 @@ conflicts:
 ### opam install foo.2
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade foo 1 to 2
+  upgrade foo 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.1
@@ -301,9 +301,9 @@ Done.
 
 The following actions would be performed:
 === downgrade 1 package
-  - downgrade foo    2 to 1        [required by granpa]
+  downgrade foo    2 to 1        [required by granpa]
 === install 1 package
-  - install   granpa opam (pinned)
+  install   granpa opam (pinned)
 ### opam install --locked granpa
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
@@ -311,9 +311,9 @@ The following actions would be performed:
 
 The following actions will be performed:
 === downgrade 1 package
-  - downgrade foo    2 to 1        [required by granpa]
+  downgrade foo    2 to 1        [required by granpa]
 === install 1 package
-  - install   granpa opam (pinned)
+  install   granpa opam (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.2
@@ -323,7 +323,7 @@ Done.
 ### opam remove granpa
 The following actions will be performed:
 === remove 1 package
-  - remove granpa opam (pinned)
+  remove granpa opam (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   granpa.opam
@@ -347,7 +347,7 @@ conflicts:
 ### opam install foo.2
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade foo 1 to 2
+  upgrade foo 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.1
@@ -361,9 +361,9 @@ Done.
 
 The following actions would be performed:
 === downgrade 1 package
-  - downgrade foo      2 to 1        [required by ancestor]
+  downgrade foo      2 to 1        [required by ancestor]
 === install 1 package
-  - install   ancestor opam (pinned)
+  install   ancestor opam (pinned)
 ### opam install --locked ancestor
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
@@ -371,9 +371,9 @@ The following actions would be performed:
 
 The following actions will be performed:
 === downgrade 1 package
-  - downgrade foo      2 to 1        [required by ancestor]
+  downgrade foo      2 to 1        [required by ancestor]
 === install 1 package
-  - install   ancestor opam (pinned)
+  install   ancestor opam (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.2
@@ -383,7 +383,7 @@ Done.
 ### opam remove ancestor
 The following actions will be performed:
 === remove 1 package
-  - remove ancestor opam (pinned)
+  remove ancestor opam (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ancestor.opam
@@ -412,7 +412,7 @@ conflicts:
 ### opam install foo.2
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade foo 1 to 2
+  upgrade foo 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.1
@@ -426,9 +426,9 @@ Done.
 
 The following actions would be performed:
 === downgrade 1 package
-  - downgrade foo    2 to 1       [required by silver]
+  downgrade foo    2 to 1       [required by silver]
 === install 1 package
-  - install   silver dev (pinned)
+  install   silver dev (pinned)
 ### opam install --locked silver
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
@@ -436,9 +436,9 @@ The following actions would be performed:
 
 The following actions will be performed:
 === downgrade 1 package
-  - downgrade foo    2 to 1       [required by silver]
+  downgrade foo    2 to 1       [required by silver]
 === install 1 package
-  - install   silver dev (pinned)
+  install   silver dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.2
@@ -448,7 +448,7 @@ Done.
 ### opam remove silver
 The following actions will be performed:
 === remove 1 package
-  - remove silver dev (pinned)
+  remove silver dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   silver.dev
@@ -483,10 +483,10 @@ depends: [ "quux" "dep-corge" ]
 ### opam install ./interlock --deps-only
 The following actions will be performed:
 === install 4 packages
-  - install dep-baz   2 [required by baz]
-  - install dep-corge 4 [required by corge]
-  - install dep-foo   1 [required by foo]
-  - install dep-quux  3 [required by quux]
+  install dep-baz   2 [required by baz]
+  install dep-corge 4 [required by corge]
+  install dep-foo   1 [required by foo]
+  install dep-quux  3 [required by quux]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed dep-baz.2
@@ -497,8 +497,8 @@ Done.
 ### opam remove dep-quux dep-corge
 The following actions will be performed:
 === remove 2 packages
-  - remove dep-corge 4
-  - remove dep-quux  3
+  remove dep-corge 4
+  remove dep-quux  3
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   dep-corge.4
@@ -553,42 +553,42 @@ Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#master (version 1
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
-  - install bar    3            [required by tolock]
-  - install foo    2            [required by tolock]
-  - install tolock dev (pinned)
+  install bar    3            [required by tolock]
+  install foo    2            [required by tolock]
+  install tolock dev (pinned)
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
-  - install bar    1          [required by tolock]
-  - install baz    1          [required by tolock]
-  - install foo    1          [required by tolock]
-  - install tolock 1 (pinned)
+  install bar    1          [required by tolock]
+  install baz    1          [required by tolock]
+  install foo    1          [required by tolock]
+  install tolock 1 (pinned)
 ### opam pin ./tolock -n
 Package tolock does not exist, create as a NEW package? [y/n] y
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version dev)
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
-  - install bar    3            [required by tolock]
-  - install foo    2            [required by tolock]
-  - install tolock dev (pinned)
+  install bar    3            [required by tolock]
+  install foo    2            [required by tolock]
+  install tolock dev (pinned)
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
-  - install bar    1          [required by tolock]
-  - install baz    1          [required by tolock]
-  - install foo    1          [required by tolock]
-  - install tolock 1 (pinned)
+  install bar    1          [required by tolock]
+  install baz    1          [required by tolock]
+  install foo    1          [required by tolock]
+  install tolock 1 (pinned)
 ### opam install ./tolock --locked
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/tolock (`--working-dir' not specified or specified with no argument).
 [tolock.1] synchronised (no changes)
 The following actions will be performed:
 === install 4 packages
-  - install bar    1          [required by tolock]
-  - install baz    1          [required by tolock]
-  - install foo    1          [required by tolock]
-  - install tolock 1 (pinned)
+  install bar    1          [required by tolock]
+  install baz    1          [required by tolock]
+  install foo    1          [required by tolock]
+  install tolock 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed bar.1
@@ -613,42 +613,42 @@ Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#master (version 1
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
-  - install bar    3            [required by tolock]
-  - install foo    2            [required by tolock]
-  - install tolock dev (pinned)
+  install bar    3            [required by tolock]
+  install foo    2            [required by tolock]
+  install tolock dev (pinned)
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
-  - install bar    1          [required by tolock]
-  - install baz    1          [required by tolock]
-  - install foo    1          [required by tolock]
-  - install tolock 1 (pinned)
+  install bar    1          [required by tolock]
+  install baz    1          [required by tolock]
+  install foo    1          [required by tolock]
+  install tolock 1 (pinned)
 ### opam pin ./tolock -n
 Package tolock does not exist, create as a NEW package? [y/n] y
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version dev)
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
-  - install bar    3            [required by tolock]
-  - install foo    2            [required by tolock]
-  - install tolock dev (pinned)
+  install bar    3            [required by tolock]
+  install foo    2            [required by tolock]
+  install tolock dev (pinned)
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
-  - install bar    1          [required by tolock]
-  - install baz    1          [required by tolock]
-  - install foo    1          [required by tolock]
-  - install tolock 1 (pinned)
+  install bar    1          [required by tolock]
+  install baz    1          [required by tolock]
+  install foo    1          [required by tolock]
+  install tolock 1 (pinned)
 ### opam install ./tolock --locked
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/tolock (`--working-dir' not specified or specified with no argument).
 [tolock.1] synchronised (no changes)
 The following actions will be performed:
 === install 4 packages
-  - install bar    1          [required by tolock]
-  - install baz    1          [required by tolock]
-  - install foo    1          [required by tolock]
-  - install tolock 1 (pinned)
+  install bar    1          [required by tolock]
+  install baz    1          [required by tolock]
+  install foo    1          [required by tolock]
+  install tolock 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed bar.1
@@ -673,41 +673,41 @@ Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#master (version 1
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
-  - install bar    3            [required by tolock]
-  - install foo    2            [required by tolock]
-  - install tolock dev (pinned)
+  install bar    3            [required by tolock]
+  install foo    2            [required by tolock]
+  install tolock dev (pinned)
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
-  - install bar    1          [required by tolock]
-  - install baz    1          [required by tolock]
-  - install foo    1          [required by tolock]
-  - install tolock 1 (pinned)
+  install bar    1          [required by tolock]
+  install baz    1          [required by tolock]
+  install foo    1          [required by tolock]
+  install tolock 1 (pinned)
 ### opam pin ./tolock -n
 Package tolock does not exist, create as a NEW package? [y/n] y
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version dev)
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
-  - install bar    3            [required by tolock]
-  - install foo    2            [required by tolock]
-  - install tolock dev (pinned)
+  install bar    3            [required by tolock]
+  install foo    2            [required by tolock]
+  install tolock dev (pinned)
 ### opam install ./tolock --locked --show
 The following actions would be performed:
 === install 4 packages
-  - install bar    1          [required by tolock]
-  - install baz    1          [required by tolock]
-  - install foo    1          [required by tolock]
-  - install tolock 1 (pinned)
+  install bar    1          [required by tolock]
+  install baz    1          [required by tolock]
+  install foo    1          [required by tolock]
+  install tolock 1 (pinned)
 ### opam install ./tolock --locked
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
 [tolock.1] synchronised (no changes)
 The following actions will be performed:
 === install 4 packages
-  - install bar    1          [required by tolock]
-  - install baz    1          [required by tolock]
-  - install foo    1          [required by tolock]
-  - install tolock 1 (pinned)
+  install bar    1          [required by tolock]
+  install baz    1          [required by tolock]
+  install foo    1          [required by tolock]
+  install tolock 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed bar.1
@@ -720,7 +720,7 @@ Done.
 Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#master (version 1)
 The following actions will be performed:
 === remove 1 package
-  - remove tolock 1
+  remove tolock 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   tolock.1
@@ -730,7 +730,7 @@ Package tolock does not exist, create as a NEW package? [y/n] y
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
 The following actions will be performed:
 === install 1 package
-  - install tolock 1 (pinned)
+  install tolock 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved tolock.1  (git+file://${BASEDIR}/tolock#master)
@@ -739,7 +739,7 @@ Done.
 ### opam remove tolock
 The following actions will be performed:
 === remove 1 package
-  - remove tolock 1 (pinned)
+  remove tolock 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   tolock.1
@@ -748,7 +748,7 @@ Done.
 [tolock.1] synchronised (no changes)
 The following actions will be performed:
 === install 1 package
-  - install tolock 1 (pinned)
+  install tolock 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed tolock.1
@@ -769,7 +769,7 @@ tolock is now pinned to file://${BASEDIR}/tolock (version l1)
 
 The following actions will be performed:
 === install 1 package
-  - install tolock l1 (pinned)
+  install tolock l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed tolock.l1
@@ -794,7 +794,7 @@ build
 
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade tolock l1 to l2 (pinned)
+  upgrade tolock l1 to l2 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved tolock.l2  (file://${BASEDIR}/tolock)
@@ -821,7 +821,7 @@ build   ["echo" "locked"]
 ### opam upgrade
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade tolock l2 to l3 (pinned)
+  upgrade tolock l2 to l3 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved tolock.l3  (file://${BASEDIR}/tolock)
@@ -847,7 +847,7 @@ build
 ### opam upgrade
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade tolock l3 to l4 (pinned)
+  upgrade tolock l3 to l4 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved tolock.l4  (file://${BASEDIR}/tolock)
@@ -873,7 +873,7 @@ User metadata backed up in ${BASEDIR}/OPAM/backup/tolock.bak
 
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade tolock l4 to l5 (pinned)
+  upgrade tolock l4 to l5 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved tolock.l5  (file://${BASEDIR}/tolock)
@@ -897,7 +897,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 The following actions will be performed:
 === recompile 1 package
-  - recompile tolock l5 (pinned) [upstream or system changes]
+  recompile tolock l5 (pinned) [upstream or system changes]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved tolock.l5  (no changes)
@@ -922,7 +922,7 @@ Now run 'opam upgrade' to apply any package updates.
 
 The following actions will be performed:
 === recompile 1 package
-  - recompile tolock l5 (pinned)
+  recompile tolock l5 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved tolock.l5  (no changes)

@@ -23,8 +23,8 @@ remove:  [ "test" "-d" a:lib ]
 ### opam install a.1
 The following actions will be performed:
 === install 2 packages
-  - install a 1
-  - install b 1 [required by a]
+  install a 1
+  install b 1 [required by a]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed b.1
@@ -36,8 +36,8 @@ b.1
 ### opam upgrade
 The following actions will be performed:
 === upgrade 2 packages
-  - upgrade a 1 to 2
-  - upgrade b 1 to 2
+  upgrade a 1 to 2
+  upgrade b 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   a.1
@@ -51,8 +51,8 @@ b.2
 ### opam install a.1
 The following actions will be performed:
 === downgrade 2 packages
-  - downgrade a 2 to 1
-  - downgrade b 2 to 1 [required by a]
+  downgrade a 2 to 1
+  downgrade b 2 to 1 [required by a]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   b.2
@@ -66,8 +66,8 @@ b.1
 ### opam upgrade
 The following actions will be performed:
 === upgrade 2 packages
-  - upgrade a 1 to 2
-  - upgrade b 1 to 2
+  upgrade a 1 to 2
+  upgrade b 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   a.1
@@ -81,7 +81,7 @@ b.2
 ### opam remove b
 The following actions will be performed:
 === remove 1 package
-  - remove b 2
+  remove b 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   b.2
@@ -89,9 +89,9 @@ Done.
 ### opam install a.1
 The following actions will be performed:
 === downgrade 1 package
-  - downgrade a 2 to 1
+  downgrade a 2 to 1
 === install 1 package
-  - install   b 1      [required by a]
+  install   b 1      [required by a]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   a.2

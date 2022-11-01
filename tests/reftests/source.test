@@ -79,7 +79,7 @@ pandore is now pinned to file://${BASEDIR}/pandore.3 (version 3)
 
 The following actions will be performed:
 === install 1 package
-  - install pandore 3 (pinned)
+  install pandore 3 (pinned)
 
 Proceed with 1 installation? [y/n] n
 [NOTE] Pinning command successful, but your installed packages may be out of sync.

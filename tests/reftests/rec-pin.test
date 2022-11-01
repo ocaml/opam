@@ -110,12 +110,12 @@ Package root-b_g does not exist, create as a NEW package? [y/n] y
 
 The following actions will be performed:
 === install 6 packages
-  - install root-a-i_g   dev (pinned)
-  - install root-a-k_p   dev (pinned)
-  - install root-a_p     dev (pinned)
-  - install root-b_g     dev (pinned)
-  - install root_g       dev (pinned)
-  - install root-a-i-j_g dev (pinned)
+  install root-a-i-j_g dev (pinned)
+  install root-a-i_g   dev (pinned)
+  install root-a-k_p   dev (pinned)
+  install root-a_p     dev (pinned)
+  install root-b_g     dev (pinned)
+  install root_g       dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved root_g.dev  (no changes)
@@ -147,12 +147,12 @@ Ok, root-a-i-j_g is no longer pinned to directory /a/i/j in git+file://${BASEDIR
 Ok, root_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (version dev)
 The following actions will be performed:
 === remove 6 packages
-  - remove root-a-i-j_g dev
-  - remove root-a-i_g   dev
-  - remove root-a-k_p   dev
-  - remove root-a_p     dev
-  - remove root-b_g     dev
-  - remove root_g       dev
+  remove root-a-i-j_g dev
+  remove root-a-i_g   dev
+  remove root-a-k_p   dev
+  remove root-a_p     dev
+  remove root-b_g     dev
+  remove root_g       dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   root_g.dev
@@ -172,7 +172,7 @@ Package root_g does not exist, create as a NEW package? [y/n] y
 root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version dev)
 The following actions will be performed:
 === install 1 package
-  - install root_g dev (pinned)
+  install root_g dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved root_g.dev  (git+file://${BASEDIR}/pinnes#master)
@@ -188,7 +188,7 @@ root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (vers
 -> retrieved root-a_p.dev  (directory /a in file://${BASEDIR}/pinnes)
 The following actions will be performed:
 === install 1 package
-  - install root-a_p dev (pinned)
+  install root-a_p dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed root-a_p.dev
@@ -205,7 +205,7 @@ root-b_g is now subpath-pinned to directory /b in git+file://${BASEDIR}/pinnes#m
 -> retrieved root-b_g.dev  (directory /b in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
 === install 1 package
-  - install root-b_g dev (pinned)
+  install root-b_g dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed root-b_g.dev
@@ -224,7 +224,7 @@ root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinn
 -> retrieved root-a-i_g.dev  (directory /a/i in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
 === install 1 package
-  - install root-a-i_g dev (pinned)
+  install root-a-i_g dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed root-a-i_g.dev
@@ -245,7 +245,7 @@ root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/
 -> retrieved root-a-i-j_g.dev  (directory /a/i/j in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
 === install 1 package
-  - install root-a-i-j_g dev (pinned)
+  install root-a-i-j_g dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed root-a-i-j_g.dev
@@ -268,7 +268,7 @@ root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (
 -> retrieved root-a-k_p.dev  (directory /a/k in file://${BASEDIR}/pinnes)
 The following actions will be performed:
 === install 1 package
-  - install root-a-k_p dev (pinned)
+  install root-a-k_p dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed root-a-k_p.dev
@@ -320,12 +320,12 @@ version: "2"
 ### opam upgrade | unordered
 The following actions will be performed:
 === downgrade 6 packages
-  - downgrade root-a-i_g   dev to 2 (pinned) [no longer available]
-  - downgrade root-a-k_p   dev to 2 (pinned) [no longer available]
-  - downgrade root-a_p     dev to 2 (pinned) [no longer available]
-  - downgrade root-b_g     dev to 2 (pinned) [no longer available]
-  - downgrade root_g       dev to 2 (pinned) [no longer available]
-  - downgrade root-a-i-j_g dev to 2 (pinned) [no longer available]
+  downgrade root-a-i-j_g dev to 2 (pinned) [no longer available]
+  downgrade root-a-i_g   dev to 2 (pinned) [no longer available]
+  downgrade root-a-k_p   dev to 2 (pinned) [no longer available]
+  downgrade root-a_p     dev to 2 (pinned) [no longer available]
+  downgrade root-b_g     dev to 2 (pinned) [no longer available]
+  downgrade root_g       dev to 2 (pinned) [no longer available]
 -> retrieved root-a-k_p.2  (directory /a/k in file://${BASEDIR}/pinnes)
 -> retrieved root-a_p.2  (directory /a in file://${BASEDIR}/pinnes)
 -> installed root_g.2
@@ -362,10 +362,10 @@ hoj
 ### opam upgrade | unordered
 The following actions will be performed:
 === recompile 4 packages
-  - recompile root-a-i_g 2 (pinned) [upstream or system changes]
-  - recompile root-a-k_p 2 (pinned) [upstream or system changes]
-  - recompile root-a_p   2 (pinned) [upstream or system changes]
-  - recompile root_g     2 (pinned) [upstream or system changes]
+  recompile root-a-i_g 2 (pinned) [upstream or system changes]
+  recompile root-a-k_p 2 (pinned) [upstream or system changes]
+  recompile root-a_p   2 (pinned) [upstream or system changes]
+  recompile root_g     2 (pinned) [upstream or system changes]
 -> retrieved root-a-k_p.2  (no changes)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -398,7 +398,7 @@ root_g.2          git    git+file://${BASEDIR}/pinnes#master
 Ok, root_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (version 2)
 The following actions will be performed:
 === remove 1 package
-  - remove root_g 2
+  remove root_g 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   root_g.2
@@ -407,7 +407,7 @@ Done.
 Ok, root-a_p is no longer pinned to directory /a in file://${BASEDIR}/pinnes (version 2)
 The following actions will be performed:
 === remove 1 package
-  - remove root-a_p 2
+  remove root-a_p 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   root-a_p.2
@@ -416,7 +416,7 @@ Done.
 Ok, root-b_g is no longer pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version 2)
 The following actions will be performed:
 === remove 1 package
-  - remove root-b_g 2
+  remove root-b_g 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   root-b_g.2
@@ -425,7 +425,7 @@ Done.
 Ok, root-a-i_g is no longer pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version 2)
 The following actions will be performed:
 === remove 1 package
-  - remove root-a-i_g 2
+  remove root-a-i_g 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   root-a-i_g.2
@@ -434,7 +434,7 @@ Done.
 Ok, root-a-i-j_g is no longer pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version 2)
 The following actions will be performed:
 === remove 1 package
-  - remove root-a-i-j_g 2
+  remove root-a-i-j_g 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   root-a-i-j_g.2
@@ -443,7 +443,7 @@ Done.
 Ok, root-a-k_p is no longer pinned to directory /a/k in file://${BASEDIR}/pinnes (version 2)
 The following actions will be performed:
 === remove 1 package
-  - remove root-a-k_p 2
+  remove root-a-k_p 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   root-a-k_p.2
@@ -659,12 +659,12 @@ Package root-b_g does not exist, create as a NEW package? [y/n] y
 
 The following actions will be performed:
 === install 6 packages
-  - install root-a-i_g   l1 (pinned)
-  - install root-a-k_p   l1 (pinned)
-  - install root-a_p     l1 (pinned)
-  - install root-b_g     l1 (pinned)
-  - install root_g       l1 (pinned)
-  - install root-a-i-j_g l1 (pinned)
+  install root-a-i-j_g l1 (pinned)
+  install root-a-i_g   l1 (pinned)
+  install root-a-k_p   l1 (pinned)
+  install root-a_p     l1 (pinned)
+  install root-b_g     l1 (pinned)
+  install root_g       l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed root_g.l1
@@ -686,12 +686,12 @@ Ok, root-a-i-j_g is no longer pinned to directory /a/i/j in git+file://${BASEDIR
 Ok, root_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (version l1)
 The following actions will be performed:
 === remove 6 packages
-  - remove root-a-i-j_g l1
-  - remove root-a-i_g   l1
-  - remove root-a-k_p   l1
-  - remove root-a_p     l1
-  - remove root-b_g     l1
-  - remove root_g       l1
+  remove root-a-i-j_g l1
+  remove root-a-i_g   l1
+  remove root-a-k_p   l1
+  remove root-a_p     l1
+  remove root-b_g     l1
+  remove root_g       l1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   root_g.l1
@@ -708,7 +708,7 @@ Package root_g does not exist, create as a NEW package? [y/n] y
 root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version l1)
 The following actions will be performed:
 === install 1 package
-  - install root_g l1 (pinned)
+  install root_g l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved root_g.l1  (git+file://${BASEDIR}/pinnes#master)
@@ -724,7 +724,7 @@ root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (vers
 -> retrieved root-a_p.l1  (directory /a in file://${BASEDIR}/pinnes)
 The following actions will be performed:
 === install 1 package
-  - install root-a_p l1 (pinned)
+  install root-a_p l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed root-a_p.l1
@@ -741,7 +741,7 @@ root-b_g is now subpath-pinned to directory /b in git+file://${BASEDIR}/pinnes#m
 -> retrieved root-b_g.l1  (directory /b in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
 === install 1 package
-  - install root-b_g l1 (pinned)
+  install root-b_g l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed root-b_g.l1
@@ -760,7 +760,7 @@ root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinn
 -> retrieved root-a-i_g.l1  (directory /a/i in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
 === install 1 package
-  - install root-a-i_g l1 (pinned)
+  install root-a-i_g l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed root-a-i_g.l1
@@ -781,7 +781,7 @@ root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/
 -> retrieved root-a-i-j_g.l1  (directory /a/i/j in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
 === install 1 package
-  - install root-a-i-j_g l1 (pinned)
+  install root-a-i-j_g l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed root-a-i-j_g.l1
@@ -804,7 +804,7 @@ root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (
 -> retrieved root-a-k_p.l1  (directory /a/k in file://${BASEDIR}/pinnes)
 The following actions will be performed:
 === install 1 package
-  - install root-a-k_p l1 (pinned)
+  install root-a-k_p l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed root-a-k_p.l1
@@ -865,12 +865,12 @@ version: "l2"
 ### opam upgrade | unordered
 The following actions will be performed:
 === upgrade 6 packages
-  - upgrade root-a-i-j_g l1 to l2 (pinned)
-  - upgrade root-a-i_g   l1 to l2 (pinned)
-  - upgrade root-a-k_p   l1 to l2 (pinned)
-  - upgrade root-a_p     l1 to l2 (pinned)
-  - upgrade root-b_g     l1 to l2 (pinned)
-  - upgrade root_g       l1 to l2 (pinned)
+  upgrade root-a-i-j_g l1 to l2 (pinned)
+  upgrade root-a-i_g   l1 to l2 (pinned)
+  upgrade root-a-k_p   l1 to l2 (pinned)
+  upgrade root-a_p     l1 to l2 (pinned)
+  upgrade root-b_g     l1 to l2 (pinned)
+  upgrade root_g       l1 to l2 (pinned)
 -> retrieved root-a-i-j_g.l2  (no changes)
 -> removed   root-a-i-j_g.l1
 -> installed root-a-i-j_g.l2
@@ -907,10 +907,10 @@ hoj
 ### opam upgrade | unordered
 The following actions will be performed:
 === recompile 4 packages
-  - recompile root-a-i_g l2 (pinned) [upstream or system changes]
-  - recompile root-a-k_p l2 (pinned) [upstream or system changes]
-  - recompile root-a_p   l2 (pinned) [upstream or system changes]
-  - recompile root_g     l2 (pinned) [upstream or system changes]
+  recompile root-a-i_g l2 (pinned) [upstream or system changes]
+  recompile root-a-k_p l2 (pinned) [upstream or system changes]
+  recompile root-a_p   l2 (pinned) [upstream or system changes]
+  recompile root_g     l2 (pinned) [upstream or system changes]
 -> retrieved root-a-i_g.l2  (no changes)
 -> removed   root-a-i_g.l2
 -> installed root-a-i_g.l2
@@ -948,12 +948,12 @@ Ok, root-a-i_g is no longer pinned to directory /a/i in git+file://${BASEDIR}/pi
 Ok, root-a-i-j_g is no longer pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version l2)
 The following actions will be performed:
 === remove 6 packages
-  - remove root-a-i-j_g l2
-  - remove root-a-i_g   l2
-  - remove root-a-k_p   l2
-  - remove root-a_p     l2
-  - remove root-b_g     l2
-  - remove root_g       l2
+  remove root-a-i-j_g l2
+  remove root-a-i_g   l2
+  remove root-a-k_p   l2
+  remove root-a_p     l2
+  remove root-b_g     l2
+  remove root_g       l2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   root-a-i-j_g.l2

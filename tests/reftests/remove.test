@@ -11,9 +11,9 @@ depends: "a" | "b"
 ### opam install a b c
 The following actions will be performed:
 === install 3 packages
-  - install a 1
-  - install b 1
-  - install c 1
+  install a 1
+  install b 1
+  install c 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed a.1
@@ -23,17 +23,17 @@ Done.
 ### opam remove a --show
 The following actions would be performed:
 === remove 1 package
-  - remove    a 1
+  remove    a 1
 === recompile 1 package
-  - recompile c 1 [uses a]
+  recompile c 1 [uses a]
 ### opam remove --auto --show
 Nothing to do.
 ### opam remove a --auto --show
 The following actions would be performed:
 === remove 1 package
-  - remove    a 1
+  remove    a 1
 === recompile 1 package
-  - recompile c 1 [uses a]
+  recompile c 1 [uses a]
 ### :::::: message on removal of an unavailable package (#4890)
 ### <pkg:z.1>
 opam-version: "2.0"

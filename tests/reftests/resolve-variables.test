@@ -10,7 +10,7 @@ depends: "d" {> build}
 [WARNING] Undefined filter variable build in dependencies of foo.1
 The following actions will be performed:
 === install 1 package
-  - install foo 1
+  install foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed foo.1
@@ -22,8 +22,8 @@ depends: "d" {build}
 ### opam install foo
 The following actions will be performed:
 === install 2 packages
-  - install d   4 [required by foo]
-  - install foo 1
+  install d   4 [required by foo]
+  install foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed d.4
@@ -37,7 +37,7 @@ depends: "d" {> "1" & > build}
 [WARNING] Undefined filter variable build in dependencies of foo.1
 The following actions will be performed:
 === install 1 package
-  - install foo 1
+  install foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed foo.1
@@ -50,7 +50,7 @@ depends: "d" {> undef}
 [WARNING] Undefined filter variable undef in dependencies of foo.1
 The following actions will be performed:
 === install 1 package
-  - install foo 1
+  install foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed foo.1
@@ -62,7 +62,7 @@ depends: "d" {undef}
 ### opam install foo
 The following actions will be performed:
 === install 1 package
-  - install foo 1
+  install foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed foo.1
@@ -74,8 +74,8 @@ depends: "d" {> defin}
 ### OPAMVAR_defin=2 opam install foo
 The following actions will be performed:
 === install 2 packages
-  - install d   4 [required by foo]
-  - install foo 1
+  install d   4 [required by foo]
+  install foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed d.4
