@@ -144,12 +144,12 @@ users)
   * When several checksums are specified, instead of adding in the cache only the archive by first checksum, name by best one and link others to this archive [#4696 rjbou]
   * Update opam repository man doc regarding removal of the last repository in a switch [#4435 - fixes #4381]
   * Don't display global message when `this-switch` is given [#4899 @rjbou - fix #4889]
-  * Set the priority of user-set archive-mirrors higher than the repositories'.
-    This allows opam-repository to use the default opam.ocaml.org cache and be more resilient to changed/force-pushed or unavailable archives. [#4830 @kit-ty-kate - fixes #4411]
+  * Set the priority of user-set archive-mirrors higher than the repositories'.  This allows opam-repository to use the default opam.ocaml.org cache and be more resilient to changed/force-pushed or unavailable archives. [#4830 @kit-ty-kate - fixes #4411]
   * Repository tarring "optimisation" no more needed, removed in favor of a plain directory. It still can be used with environment variable `OPAMREPOSITORYTARRING`.  [#5015 @kit-ty-kate @rjbou @AltGr - fix #4586]
     * Fix loading a plain repository froma tarred one [#5109 @rjbou]
   * Avoid reloading repository contents when the repo has no changes [#5043 @Armael]
   * Avoid rewriting cache is nothing changed [#5146 @rjbou]
+  * On setting url fetch failure (sync or file error), revert url change and rollback to old one [#4967 @rjbou - fix #4780 #4779]
 
 ## Lock
   * Fix lock generation of multiple interdependent packages [#4993 @AltGr]
@@ -560,3 +560,4 @@ users)
   * `OpamConsole`: add a `Tree` submodule to draw a unicode/ascii-art tree [#5171 @cannorin]
   * `OpamStd.List`: add `find_map_opt` (for ocaml < 4.10) and `fold_left_map` (for ocaml < 4.11) [#5171 @cannorin]
   * `OpamCompat`: add `Int.equal` (for ocaml < 4.12)
+  * `OpamFilename.clean_dir`: as the directory is recreated after removal, checks that the directory exists beforhand. It avoid creating a new empty directory uselessly [#4967 @rjbou]

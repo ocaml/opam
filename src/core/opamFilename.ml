@@ -76,10 +76,15 @@ let cwd () =
 let mkdir dirname =
   OpamSystem.mkdir (Dir.to_string dirname)
 
+let exists_dir dirname =
+  try (Unix.stat (Dir.to_string dirname)).Unix.st_kind = Unix.S_DIR
+  with Unix.Unix_error _ -> false
+
 let cleandir dirname =
-  log "cleandir %a" (slog Dir.to_string) dirname;
-  OpamSystem.remove (Dir.to_string dirname);
-  mkdir dirname
+  if exists_dir dirname then
+    (log "cleandir %a" (slog Dir.to_string) dirname;
+     OpamSystem.remove (Dir.to_string dirname);
+     mkdir dirname)
 
 let rec_dirs d =
   let fs = OpamSystem.rec_dirs (Dir.to_string d) in
@@ -106,10 +111,6 @@ let exec dirname ?env ?name ?metadata ?keep_going cmds =
 let move_dir ~src ~dst =
   OpamSystem.command ~verbose:(OpamSystem.verbose_for_base_commands ())
     [ "mv"; Dir.to_string src; Dir.to_string dst ]
-
-let exists_dir dirname =
-  try (Unix.stat (Dir.to_string dirname)).Unix.st_kind = Unix.S_DIR
-  with Unix.Unix_error _ -> false
 
 let opt_dir dirname =
   if exists_dir dirname then Some dirname else None
