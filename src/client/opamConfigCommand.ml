@@ -451,7 +451,7 @@ let set_opt ?(inner=false) field value conf =
              (OpamParser.string str_value "<command-line>").file_contents]))
   in
   let new_config =
-    match OpamStd.List.assoc_opt field fields, value with
+    match OpamStd.List.assoc_opt String.equal field fields, value with
     | None, _ ->
       OpamConsole.error
         "There is no option named '%s'. The allowed options are:"
@@ -1015,14 +1015,14 @@ let vars_list ?st gt =
 (* Specified option/var display *)
 
 let option_show to_list conf field =
-  match OpamStd.List.assoc_opt field conf.stg_fields with
+  match OpamStd.List.assoc_opt String.equal field conf.stg_fields with
   | Some pp ->
     (match OpamPp.print pp conf.stg_config with
      | _, Some value ->
        OpamConsole.msg "%s\n" (OpamPrinter.Normalise.value value)
      | _, None -> ())
   | None ->
-    if List.mem_assoc field conf.stg_sections then
+    if OpamStd.List.mem_assoc String.equal field conf.stg_sections then
       let name_value = to_list conf.stg_config in
       let sections =
         OpamStd.List.filter_map (fun (name, v) ->

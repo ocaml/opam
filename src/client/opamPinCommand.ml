@@ -278,7 +278,8 @@ let edit st ?version name =
             OpamFilename.Base.of_string @@
             OpamFilename.remove_prefix (path OpamPath.Switch.Overlay.files) f
           in
-          if not (List.mem_assoc base opam_extra) then
+          if not (OpamStd.List.mem_assoc
+                    OpamFilename.Base.equal base opam_extra) then
             (OpamConsole.note "Removing obsolete overlay file %s"
                (OpamFilename.to_string f);
              OpamFilename.remove f))

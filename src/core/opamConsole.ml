@@ -971,7 +971,7 @@ let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
           Printf.ksprintf (OpamStd.Format.reformat ~indent:5) "%s %s. %s\n"
             (if ans = default then ">" else " ")
             (colorise `blue n)
-            (List.assoc ans options))
+            (OpamStd.(List.assoc Compare.equal ans options)))
         options_nums
     in
     let prompt =
@@ -985,10 +985,10 @@ let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
     let nlines = List.length Re.(all (compile (char '\n')) text) in
     msg "%s" text;
     let select a =
-      msg "%s\n" (List.assoc a options_nums); a
+      msg "%s\n" OpamStd.(List.assoc Compare.equal a options_nums); a
     in
-    let default_s = List.assoc default options_nums in
-    let no_s = List.assoc no options_nums in
+    let default_s = OpamStd.(List.assoc Compare.equal default options_nums) in
+    let no_s = OpamStd.(List.assoc Compare.equal no options_nums) in
     if OpamCoreConfig.(!r.safe_mode) then no else
     match OpamCoreConfig.answer(), unsafe_yes, yes with
     | `unsafe_yes, Some a, _ -> print_string prompt; select a
@@ -1010,7 +1010,7 @@ let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
           change_selection (prev_option default options)
         | "\027[B" (* down *) | "\027[C" (* right *) ->
           change_selection (prev_option default (List.rev options))
-        | i -> OpamStd.List.assoc_opt i nums_options
+        | i -> OpamStd.List.assoc_opt String.equal i nums_options
       with Exit -> menu !default_ref
   in
   Printf.ksprintf (fun prompt_msg ->

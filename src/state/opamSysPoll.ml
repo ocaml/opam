@@ -80,7 +80,7 @@ let os_release_field =
         with Scanf.Scan_failure _ | End_of_file -> None)
   ) in
   fun f ->
-    try Some (List.assoc f (Lazy.force os_release_file))
+    try Some (OpamStd.List.assoc String.equal f (Lazy.force os_release_file))
     with Not_found -> None
 
 let is_android, android_release =

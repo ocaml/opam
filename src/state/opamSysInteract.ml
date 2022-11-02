@@ -34,9 +34,10 @@ let run_command
       let env = OpamStd.Env.list () in
       let set_vars, kept_vars, env =
         List.fold_left (fun (n,p,e) (op, (name, content as var)) ->
-            match  OpamStd.List.assoc_opt name env, op with
+            match OpamStd.List.assoc_opt String.equal name env, op with
             | Some c, `add when String.compare c content = 0 -> n, p, e
-            | Some _, `set -> var::n, p, (List.remove_assoc name env)
+            | Some _, `set ->
+              var::n, p, (OpamStd.List.remove_assoc String.equal name env)
             | Some _, _ -> n, var::p, e
             | None, _ -> var::n, p, e
           )

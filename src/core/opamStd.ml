@@ -398,8 +398,8 @@ module Map = struct
             let get_pair = function
               | `O binding ->
                 begin match
-                    O.of_json (List.assoc "key" binding),
-                    value_of_json (List.assoc "value" binding)
+                    O.of_json (OpamList.assoc String.equal "key" binding),
+                    value_of_json (OpamList.assoc String.equal "value" binding)
                   with
                   | Some key, Some value -> (key, value)
                   | _ -> raise Not_found
@@ -779,7 +779,7 @@ module Env = struct
         let n = String.uppercase_ascii n in
         snd (List.find (fun (k,_) -> String.uppercase_ascii k = n) (list ()))
     else
-      fun n -> List.assoc n (list ())
+      fun n -> OpamList.assoc String.equal n (list ())
 
   let getopt n = try Some (get n) with Not_found -> None
 
@@ -1252,7 +1252,7 @@ module OpamSys = struct
     `User_interrupt, 130;
   ]
 
-  let get_exit_code reason = List.assoc reason exit_codes
+  let get_exit_code reason = OpamList.assoc OpamCompare.equal reason exit_codes
 
   let exit_because reason = exit (get_exit_code reason)
 

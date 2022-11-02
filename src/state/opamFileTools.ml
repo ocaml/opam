@@ -598,10 +598,15 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        | Some fs, Some [] -> List.map fst fs
        | Some efiles, Some ffiles ->
          OpamStd.List.filter_map (fun (n, _) ->
-             if List.mem_assoc n ffiles then None else Some n)
+             if OpamStd.List.mem_assoc OpamFilename.Base.equal
+                 n ffiles then
+               None else Some n)
            efiles @
          OpamStd.List.filter_map (fun (n, check_f) ->
-             try if check_f (List.assoc n efiles) then None else Some n
+             try
+               if check_f (OpamStd.List.assoc OpamFilename.Base.equal
+                             n efiles) then
+                 None else Some n
              with Not_found -> Some n)
            ffiles
      in
@@ -1134,7 +1139,8 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
       | Some oef, Some ef ->
         let wr_check, nf_opam, rest =
           List.fold_left (fun (wr_check, nf_opam, rest) (file, basename) ->
-              match OpamStd.List.pick_assoc basename rest with
+              match OpamStd.List.pick_assoc
+                      OpamFilename.Base.equal basename rest with
               | None, rest ->
                 wr_check, (basename::nf_opam), rest
               | Some ohash, rest ->

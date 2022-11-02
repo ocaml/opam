@@ -833,7 +833,8 @@ let string_of_result ?(color=`yellow) r =
 
 let result_summary r =
   Printf.sprintf "%S exited with code %d%s"
-    (try List.assoc "command" r.r_info with Not_found -> "command")
+    (try OpamStd.List.assoc String.equal "command" r.r_info
+     with Not_found -> "command")
     r.r_code
     (if r.r_code = 0 then "" else
      match r.r_stderr, r.r_stdout with
