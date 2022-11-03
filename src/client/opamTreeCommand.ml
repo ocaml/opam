@@ -148,7 +148,8 @@ let build_deps_forest st universe tog filter names =
   let root, graph =
     let graph =
       OpamSolver.dependency_graph
-        ~depopts:false ~build ~post ~installed:true universe
+        ~depopts:false ~build ~post ~installed:true ~unavailable:false
+        universe
     in
     let root =
       st.installed |> OpamPackage.Set.filter (is_root graph)
@@ -196,7 +197,8 @@ let build_revdeps_forest st universe tog filter names =
   let root, graph =
     let graph =
       OpamSolver.dependency_graph
-        ~depopts:false ~build ~post ~installed:true universe
+        ~depopts:false ~build ~post ~installed:true ~unavailable:false
+        universe
     in
     let root =
       st.installed |> OpamPackage.Set.filter (is_leaf graph)

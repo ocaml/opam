@@ -301,7 +301,7 @@ type user_action =
 type universe = {
   u_packages : package_set;
   u_installed: package_set;
-  u_available: package_set;
+  u_available: package_set Lazy.t;
   u_depends  : filtered_formula package_map;
   u_depopts  : filtered_formula package_map;
   u_conflicts: formula package_map;

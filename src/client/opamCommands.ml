@@ -660,7 +660,29 @@ let list ?(force_search=false) cli =
     let results =
       OpamListCommand.filter ~base:all st filter
     in
-    if not no_depexts && not silent then
+    let uses_depexts = function
+      | OpamListCommand.Any
+      | OpamListCommand.Installed
+      | OpamListCommand.Root
+      | OpamListCommand.Compiler
+      | OpamListCommand.Pinned
+      | OpamListCommand.Pattern _
+      | OpamListCommand.Atoms _
+      | OpamListCommand.Flag _
+      | OpamListCommand.Tag _
+      | OpamListCommand.From_repository _
+      | OpamListCommand.Owns_file _
+        -> false
+      | OpamListCommand.Available
+      | OpamListCommand.Installable
+      | OpamListCommand.Depends_on _
+      | OpamListCommand.Required_by _
+      | OpamListCommand.Conflicts_with _
+      | OpamListCommand.Coinstallable_with _
+      | OpamListCommand.Solution _
+        -> true
+    in
+    if not no_depexts && not silent && OpamFormula.exists uses_depexts state_selector then
       (let drop_by_depexts =
          List.fold_left (fun missing str ->
              let is_missing pkgs =
@@ -1475,7 +1497,7 @@ let config cli =
                 | Some o -> OpamFile.OPAM.has_flag Pkgflag_Compiler o
                 | None -> false)
             |> OpamSolver.dependencies ~depopts:true ~post:true ~build:true
-              ~installed:true
+              ~installed:true ~unavailable:false
               (OpamSwitchState.universe ~test:true ~doc:true ~dev_setup:true
                  ~requested:OpamPackage.Set.empty state Query)
             |> OpamPackage.Set.iter process;
