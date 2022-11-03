@@ -355,3 +355,66 @@ The following actions would be performed:
   - install ocaml-options-vanilla 1
   - install ocamlbuild            0.14.0 [required by abella]
   - install ocamlfind             1.9.1  [required by abella]
+### : Dependencies on disjunction :
+### <REPO/repo>
+opam-version: "2.0"
+### <pkg:top.1>
+opam-version: "2.0"
+depends: [
+  "unrelated"
+  ( "choice" | "other-choice" { >= "2" & <= "4" } )
+]
+### <pkg:unrelated.1>
+opam-version: "2.0"
+### <pkg:choice.1>
+opam-version: "2.0"
+### <pkg:other-choice.1>
+opam-version: "2.0"
+depends: "shouldnt"
+### <pkg:shouldnt.1>
+opam-version: "2.0"
+### <pkg:other-choice.2>
+opam-version: "2.0"
+### <pkg:other-choice.3>
+opam-version: "2.0"
+### <pkg:other-choice.4>
+opam-version: "2.0"
+### opam switch create deps --empty
+### opam repo add norepo REPO/ --this-switch
+[norepo] Initialised
+### opam repo remove default --this-switch
+### # ERROR shouldnt is listed as a depenpency
+### opam list --required-by top --recursive --all-versions --short
+choice.1
+other-choice.1
+other-choice.2
+other-choice.3
+other-choice.4
+shouldnt.1
+top.1
+unrelated.1
+### <pkg:top.1>
+opam-version: "2.0"
+depends: [
+  "unrelated"
+  ( "choice" | "other-choice" { >= "2" & <= "4" } | "other-choice" )
+]
+### <pkg:other-choice.1>
+opam-version: "2.0"
+depends: "should"
+### <pkg:should.1>
+opam-version: "2.0"
+### opam update norepo
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[norepo] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list --required-by top --recursive --all-versions --short
+choice.1
+other-choice.1
+other-choice.2
+other-choice.3
+other-choice.4
+should.1
+top.1
+unrelated.1
