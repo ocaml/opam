@@ -483,7 +483,7 @@ let strong_and_weak_deps u deps =
           (fun name _ -> not (OpamStd.String.Map.mem name strong_deps))
           by_name
       in
-      strong_deps, OpamStd.String.Map.union Set.union weak_deps by_name)
+      strong_deps, OpamStd.String.Map.union Set.inter weak_deps by_name)
     (OpamStd.String.Map.empty, OpamStd.String.Map.empty)
     deps
 
