@@ -676,3 +676,17 @@ module Config : sig
   end
 
 end
+
+(** {2 Polymorphic comparison functions}
+    We use this module in opam codebase to flag polymorphic comparison usage.
+*)
+module Compare : sig
+  val compare: 'a -> 'a -> int
+  val equal: 'a -> 'a -> bool
+  val (=): 'a -> 'a -> bool
+  val (<>): 'a -> 'a -> bool
+  val (<): 'a -> 'a -> bool
+  val (>): 'a -> 'a -> bool
+  val (<=): 'a -> 'a -> bool
+  val (>=): 'a -> 'a -> bool
+end

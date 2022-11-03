@@ -69,6 +69,17 @@ module type OrderedType = sig
   val of_json: t OpamJson.decoder
 end
 
+module OpamCompare = struct
+  external compare : 't -> 't -> int = "%compare"
+  external equal : 't -> 't -> bool = "%equal"
+  external (=) : 't -> 't -> bool = "%equal"
+  external (<>) : 't -> 't -> bool = "%notequal"
+  external (<) : 't -> 't -> bool = "%lessthan"
+  external (>) : 't -> 't -> bool = "%greaterthan"
+  external (<=) : 't -> 't -> bool = "%lessequal"
+  external (>=) : 't -> 't -> bool = "%greaterequal"
+end
+
 let max_print = 100
 
 module OpamList = struct
@@ -1690,3 +1701,4 @@ module List = OpamList
 module String = OpamString
 module Sys = OpamSys
 module Format = OpamFormat
+module Compare = OpamCompare
