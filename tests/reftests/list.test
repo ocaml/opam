@@ -386,11 +386,9 @@ opam-version: "2.0"
 ### # ERROR shouldnt is listed as a depenpency
 ### opam list --required-by top --recursive --all-versions --short
 choice.1
-other-choice.1
 other-choice.2
 other-choice.3
 other-choice.4
-shouldnt.1
 top.1
 unrelated.1
 ### <pkg:top.1>

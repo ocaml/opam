@@ -80,9 +80,9 @@ Nothing to do.
 ### opam upgrade ocaml --fake
 The following actions will be faked:
 === remove 1 package
-  - remove    ocaml-system        4.07.0           [conflicts with ocaml]
+  - remove    ocaml-system        4.07.0           [conflicts with ocaml-base-compiler]
 === recompile 1 package
-  - recompile ocaml-config        1                [uses ocaml-system]
+  - recompile ocaml-config        1                [uses ocaml-base-compiler]
 === upgrade 1 package
   - upgrade   ocaml               4.07.0 to 4.10.0
 === install 1 package
