@@ -278,7 +278,8 @@ users)
   * Enable cudf preprocessing for (co)insallability calculation, resulting in a x20 speedup [@AltGr]
   * Make sure that `--best-effort` only installs root package versions that where requested [#4796 #5261 @LasseBlaauwbroek]
   * Ask users to report errors when no explanations are given to them [#4981 @kit-ty-kate]
-  * Add bultin support for the 'deprecated' flag.  Any packages flagged with deprecated would be avoided by the solver unless there is no other choice (e.g. some user wants to install package a which depends on b which is deprecated) If it is installed, show up a note after installation notifying the user that the package is deprecated. [#4523 @kit-ty-kate]
+  * Add builtin support for the 'deprecated' flag.  Any packages flagged with deprecated would be avoided by the solver unless there is no other choice (e.g. some user wants to install package a which depends on b which is deprecated) If it is installed, show up a note after installation notifying the user that the package is deprecated. [#4523 @kit-ty-kate]
+  * [BUG] On cudf strong and weak dependencies computation, some weak dependencies were wrongly kept, from #4627 [#5338 @rjbou @AltGr]
 
 ## Client
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
