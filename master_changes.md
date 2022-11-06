@@ -442,6 +442,7 @@ users)
   * Fix the documentation of OPAMFIXUPCRITERIA and --criteria [#5226 @kit-ty-kate]
   * Finer definition of the --ignore-constraints-on documentation [#5289 @kit-ty-kate]
   * Up-to-date synchronisation with shell session in switch man page: mention shell hooks [#5311 @rjbou - fix #5307]
+  * Fix info for IRC channels in README.md and FAQ.md [#5340 @purplearmadillo77]
 
 ## Security fixes
   *

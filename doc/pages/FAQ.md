@@ -320,7 +320,7 @@ mailing-list](http://lists.ocaml.org/listinfo/opam-devel).
 
 - https://discuss.ocaml.org is a good place for community assistance.
 
-- You may also try IRC channel `#ocaml` on Freenode.
+- You may also try IRC channel `#ocaml` on Libera.Chat.
 
 ---
 

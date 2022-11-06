@@ -178,7 +178,7 @@ Keep track of development and community news.
 * Have a question that's not a feature request or bug report?
   [Ask on the mailing list](http://lists.ocaml.org/listinfo/infrastructure).
 
-* Chat with fellow opamers on IRC. On the `irc.freenode.net` server,
+* Chat with fellow opamers on IRC. On the `irc.libera.chat` server,
   in the `#ocaml` or the `#opam` channel.
 
 ## Contributing
