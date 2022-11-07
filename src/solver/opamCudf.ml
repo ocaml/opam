@@ -598,29 +598,6 @@ let is_artefact cpkg =
   is_opam_deprequest cpkg ||
   cpkg.Cudf.package = dose_dummy_request
 
-let dependencies universe packages =
-  Set.fixpoint (fun p -> dependency_set universe p.Cudf.depends) packages
-(* similar to Dose_algo.Depsolver.dependency_closure but with finer results on
-   version sets *)
-
-let reverse_dependencies universe =
-  let tbl = Array.make (Cudf.universe_size universe) [] in
-  Cudf.iteri_packages (fun uid p ->
-      Set.iter
-        (fun q ->
-           let i = Cudf.uid_by_package universe q in
-           tbl.(i) <- uid :: tbl.(i))
-        (dependency_set universe p.Cudf.depends))
-    universe;
-  Set.fixpoint
-    (fun p ->
-       List.fold_left
-         (fun acc uid -> Set.add (Cudf.package_by_uid universe uid) acc)
-         Set.empty
-         tbl.(Cudf.uid_by_package universe p))
-(* similar to Dose_algo.Depsolver.reverse_dependency_closure but more reliable
-   and faster *)
-
 let dependency_sort universe packages =
   let graph = Graph.of_universe universe in
   Graph.linearize graph packages |> List.rev

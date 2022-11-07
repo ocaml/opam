@@ -585,35 +585,6 @@ let dependency_graph
     cudf_graph;
   g
 
-let filter_dependencies
-    f_direction ~depopts ~build ~post ~installed
-    ?(unavailable=false) universe packages =
-  if OpamPackage.Set.is_empty packages then OpamPackage.Set.empty else
-  let u_packages =
-    packages ++
-    if installed then universe.u_installed else
-    if unavailable then universe.u_packages else
-      universe.u_available in
-  log ~level:3 "filter_dependencies packages=%a"
-    (slog OpamPackage.Set.to_string) packages;
-  let cudf_universe, cudf_packages =
-    load_cudf_universe_with_packages
-      ~depopts ~build ~post universe u_packages packages
-  in
-  log ~level:3 "filter_dependencies: dependency";
-  let clos_packages = f_direction cudf_universe cudf_packages in
-  let result =
-    OpamCudf.Set.fold (fun cp -> OpamPackage.Set.add (OpamCudf.cudf2opam cp))
-      clos_packages OpamPackage.Set.empty
-  in
-  log "filter_dependencies result=%a"
-    (slog OpamPackage.Set.to_string) result;
-  result
-
-let dependencies = filter_dependencies OpamCudf.dependencies
-
-let reverse_dependencies = filter_dependencies OpamCudf.reverse_dependencies
-
 let dependency_sort ~depopts ~build ~post universe packages =
   let cudf_universe, cudf_packages =
     load_cudf_universe_with_packages
