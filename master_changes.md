@@ -199,6 +199,7 @@ users)
   * Use 4.08's unnamed functor arguments to silence warning 67 [#4775 @dra27]
   * git: disable colored output [#4884 @rjbou]
   * Check if a source is up to date with subpath [#4876 @rjbou]
+  * git, hg: Use the full SHA1 revision instead of just the 8 first characters [#5342 @reynir]
 
 ## Build
   * Bump src_exts and fix build compat with Dune 2.9.0 [#4752 @dra27]
