@@ -130,3 +130,14 @@ The following actions would be performed:
 ---
 > install: d , a = 1
 # Return code 1 #
+### :::::: Check that we still get the reason for installing a package when using opam reinstall
+### :::::: TODO: This is currently broken
+### <pkg:e.1>
+opam-version: "2.0"
+depends: ["d"]
+### opam reinstall e --yes --show
+e is not installed. Install it? [y/n] y
+The following actions would be performed:
+=== install 2 packages
+  - install d 1
+  - install e 1
