@@ -85,3 +85,48 @@ The following actions would be performed:
   - recompile b 1
 === install 1 package
   - install   c 1
+### :::::: Check that reinstalling a non-installed package is equivalent to installing it
+### <pkg:d.1>
+opam-version: "2.0"
+### opam reinstall d --cudf=reinstall --show --yes
+d is not installed. Install it? [y/n] y
+The following actions would be performed:
+=== install 1 package
+  - install d 1
+### opam install d --cudf=install --show --yes
+The following actions would be performed:
+=== install 1 package
+  - install d 1
+### diff install-1.cudf reinstall-1.cudf
+48d47
+< opam-query: 1
+# Return code 1 #
+### :::::: Check again with one install and one non-installed
+### opam reinstall d a --cudf=reinstall --show --yes
+d is not installed. Install it? [y/n] y
+The following actions would be performed:
+=== recompile 2 packages
+  - recompile a 1
+  - recompile b 1
+=== install 2 packages
+  - install   c 1
+  - install   d 1
+### opam install d a --cudf=install --show --yes
+[NOTE] Package a is already installed (current version is 1).
+The following actions would be performed:
+=== recompile 2 packages
+  - recompile a 1
+  - recompile b 1
+=== install 2 packages
+  - install   c 1
+  - install   d 1
+### diff install-1.cudf reinstall-1.cudf
+20a21
+> reinstall: true
+49d49
+< opam-query: 1
+54c54
+< install: d , a
+---
+> install: d , a = 1
+# Return code 1 #

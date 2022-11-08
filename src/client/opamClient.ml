@@ -113,6 +113,7 @@ let compute_upgrade_t
         | Some nv -> not (OpamPackage.Set.mem nv (Lazy.force t.available_packages)))
       atoms
   in
+  let criteria = if to_install = [] then `Upgrade else `Default in
   if all then
     names,
     OpamSolution.resolve t Upgrade
@@ -123,7 +124,7 @@ let compute_upgrade_t
          ~upgrade:to_upgrade
          ~deprequest:(OpamFormula.to_atom_formula formula)
          ~all:[]
-         ~criteria:`Upgrade ())
+         ~criteria ())
   else
   names,
   OpamSolution.resolve t Upgrade
@@ -132,6 +133,7 @@ let compute_upgrade_t
        ~install:to_install
        ~upgrade:to_upgrade
        ~deprequest:(OpamFormula.to_atom_formula formula)
+       ~criteria
        ())
 
 let print_requested requested formula =
@@ -1337,7 +1339,10 @@ let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
     else t, atoms
   in
 
-  let request = OpamSolver.request ~install:atoms ~criteria:`Fixup () in
+  let request =
+    let criteria = if to_install = [] then `Fixup else `Default in
+    OpamSolver.request ~install:atoms ~criteria ()
+  in
 
   let t, solution =
     OpamSolution.resolve_and_apply ?ask t Reinstall

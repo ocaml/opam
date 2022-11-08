@@ -65,6 +65,7 @@ users)
   * ◈ Add `--with-tools` option to install recommended development tools from opam file (as `with-test`/`with-doc`), and its environment variable `OPAMWITHTOOLS` [#5016 @rjbou]
     * Resolve `with-tools` for post messages too [#5160 @rjbou]
     * ◈ Rename --with-tools` to `--with-dev-setup` [#5214 @rjbou - fix #4959]
+  * Use the default criteria during reinstall/upgrade when requesting at least one non-installed package [#5228 @kit-ty-kate]
 
 ## Remove
   *
@@ -366,6 +367,7 @@ users)
   * Add autopin test including deps-only, dev-deps, depexts; instrument depext handling to allow depext reftesting [#5236 @AltGr]
   * Add test for init configuration with opamrc [#5315 @rjbou]
   * Test opam pin remove <pkg>.<version> [#5325 @kit-ty-kate]
+  * Add a test checking that reinstalling a non-installed package is equivalent to installing it [#5228 @kit-ty-kate]
 
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
