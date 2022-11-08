@@ -366,6 +366,7 @@ users)
   * Add autopin test including deps-only, dev-deps, depexts; instrument depext handling to allow depext reftesting [#5236 @AltGr]
   * Add test for init configuration with opamrc [#5315 @rjbou]
   * Test opam pin remove <pkg>.<version> [#5325 @kit-ty-kate]
+  * Add a test checking that reinstalling a non-installed package is equivalent to installing it [#5228 @kit-ty-kate]
 
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
