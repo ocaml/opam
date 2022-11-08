@@ -250,6 +250,7 @@ users)
     `--check-all` restores the previous behaviour of validating all checksums.
   * [BUG] Fix repo-upgrade internal error [#4965 @AltGr]
   * [BUG] Fix `--environment` documentation [#5235 @rjbou - fix #5184]
+  * [BUG] Fix opam admin add-constraint failing with Not_found in some situations [#5336 @kit-ty-kate - fix #5334]
 
 ## Opam installer
   *

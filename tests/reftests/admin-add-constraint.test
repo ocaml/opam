@@ -1,0 +1,8 @@
+N0REP0
+### <packages/test/test.1/opam>
+opam-version: "2.0"
+depends: [
+  "ocaml" {>= "5.00"}
+]
+### opam admin add-constraint 'ocaml<5.0'
+[WARNING] In package test.1, updated constraint ocaml {< "5.0" & >= "5.00"} cannot be satisfied, not updating (use `--force' to update anyway)
