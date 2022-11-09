@@ -98,9 +98,6 @@ The following actions would be performed:
 === install 1 package
   - install d 1
 ### diff install-1.cudf reinstall-1.cudf
-48d47
-< opam-query: 1
-# Return code 1 #
 ### :::::: Check again with one install and one non-installed
 ### opam reinstall d a --cudf=reinstall --show --yes
 d is not installed. Install it? [y/n] y
@@ -123,10 +120,18 @@ The following actions would be performed:
 ### diff install-1.cudf reinstall-1.cudf
 20a21
 > reinstall: true
-49d49
-< opam-query: 1
-54c54
+54c55
 < install: d , a
 ---
 > install: d , a = 1
 # Return code 1 #
+### :::::: Check that we still get the reason for installing a package when using opam reinstall
+### <pkg:e.1>
+opam-version: "2.0"
+depends: ["d"]
+### opam reinstall e --yes --show
+e is not installed. Install it? [y/n] y
+The following actions would be performed:
+=== install 2 packages
+  - install d 1 [required by e]
+  - install e 1
