@@ -108,6 +108,7 @@ users)
   * Improve performance of some opam list combination (e.g. --available --installable) [#4999 @kit-ty-kate]
   * Improve performance of opam list --conflicts-with when combined with other filters [#4999 @kit-ty-kate]
   * Fix coinstallability filter corner case [#5024 @AltGr]
+  * Do not list the package itself when running `opam list --depends-on`/`--required-by` [#5075 @kit-ty-kate - fix #4446]
 
 ## Show
   * Add `depexts` to default printer [#4898 @rjbou]

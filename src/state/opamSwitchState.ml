@@ -989,6 +989,7 @@ let universe st
       |> OpamFormula.packages st.packages
     in
     let requested_deps =
+      requested_allpkgs ++
       OpamPackage.Set.fixpoint resolve_deps requested_allpkgs
     in
     requested_deps %% Lazy.force st.reinstall ++
