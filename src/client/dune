@@ -27,6 +27,11 @@
                        (                     -> link-opam-manifest.dummy)
                )))
 
+; Hack to make the tests work on Cygwin
+(rule
+ (targets opamMain.exe.exe)
+ (action (copy opamMain.exe %{targets})))
+
 (rule
   (with-stdout-to link-opam-manifest.dummy (echo "")))
 
