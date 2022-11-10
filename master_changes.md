@@ -196,6 +196,12 @@ users)
   * Print error message if command doesn't exist [#4971 @kit-ty-kat - fix #4112]
   * Resolve symlink for `ccache` directory [#5267 @rjbou - fix #5194]
 
+## Repository
+  * Don't display global message when `this-switch` is given [#4899 @rjbou - fix #4889]
+  * Set the priority of user-set archive-mirrors higher than the repositories'.
+    This allows opam-repository to use the default opam.ocaml.org cache and be more resilient to changed/force-pushed or unavailable archives. [#4830 @kit-ty-kate - fixes #4411]
+  * Check that the repositories given to "opam repository remove" actually exist [#5014 @kit-ty-kate - fixes #5012]
+
 ## VCS
   * Pass --depth=1 to git-fetch in the Git repo backend [#4442 @dra27]
   * Use 4.08's unnamed functor arguments to silence warning 67 [#4775 @dra27]

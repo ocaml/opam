@@ -220,7 +220,7 @@ val update_pin: package -> OpamFile.OPAM.t -> 'a switch_state -> 'a switch_state
     repositories in any case, even if unchanged from the defaults. *)
 val update_repositories:
   'a global_state -> (repository_name list -> repository_name list) ->
-  switch -> unit
+  switch -> (switch * OpamFile.Switch_config.t) option
 
 (** {2 User interaction and reporting } *)
 

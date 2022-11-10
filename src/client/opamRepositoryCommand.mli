@@ -43,7 +43,7 @@ val update_global_selection:
 val update_selection:
   'a global_state -> global:bool -> switches:switch list ->
   (repository_name list -> repository_name list) ->
-  'a global_state
+  'a global_state * (switch * OpamFile.Switch_config.t) list
 
 (** Change the registered address of a repo *)
 val set_url:
