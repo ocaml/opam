@@ -1263,8 +1263,10 @@ let global_options cli =
   let cudf_file =
     mk_opt ~cli cli_original ~section ["cudf"] "FILENAME"
       "Debug option: Save the CUDF requests sent to the solver to \
-       $(docv)-<n>.cudf."
-      Arg.(some string) None in
+       $(docv)-<n>.cudf where <n> is the n-th call to the solver during \
+       the opam run."
+      Arg.(some string) None
+  in
   let best_effort =
     mk_flag ~cli cli_original ~section ["best-effort"]
       "Don't fail if all requested packages can't be installed: try to install \
