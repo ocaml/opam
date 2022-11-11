@@ -12,7 +12,7 @@ unset-dev-version () {
 export OCAMLRUNPARAM=b
 
 (set +x ; echo -en "::group::build opam\r") 2>/dev/null
-if [[ $OPAM_TEST -eq 1 ]] ; then
+if [[ $OPAM_TEST -eq 1 ]] || [[ $OPAM_DOC -eq 1 ]] ; then
   export OPAMROOT=$OPAMBSROOT
   # If the cached root is newer, regenerate a binary compatible root
   opam env || { rm -rf $OPAMBSROOT; init-bootstrap; }
@@ -51,6 +51,30 @@ make install
 
 export PATH="$PREFIX/bin:$PATH"
 opam --version
+
+if [ "$OPAM_DOC" = "1" ]; then
+  rm -rf src_ext/
+  make -C doc html man-html pages
+
+  if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+    . .github/scripts/common/hygiene-preamble.sh
+    diff="git diff $BASE_REF_SHA..$PR_REF_SHA"
+    set +e
+    files="`$diff --name-only --diff-filter=A | grep 'src/.*mli'`"
+    set -e
+    if [ -n "$files" ]; then
+      echo '::group::new module added - checking it'
+      if $diff --name-only --exit-code -- doc/index.html ; then
+        echo '::error new module added but index not updates'
+        echo "$files"
+        exit 3
+      fi
+      echo '::engroup::'
+    else
+      echo 'No new module added'
+    fi
+  fi
+fi
 
 if [ "$OPAM_TEST" = "1" ]; then
   # test if an upgrade is needed
