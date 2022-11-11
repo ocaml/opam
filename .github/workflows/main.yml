@@ -411,6 +411,60 @@ jobs:
       run: bash -exu .github/scripts/main/test.sh
 
 ####
+# Compile doc
+####
+  Doc-Linux:
+    runs-on: ubuntu-latest
+    needs: [ Analyse, Build-Linux ]
+    strategy:
+      matrix:
+        ocamlv: [ 4.14.2, 5.2.0 ]
+      fail-fast: false
+    env:
+      OPAM_DOC: 1
+    steps:
+    - name: Install bubblewrap
+      run: sudo apt install bubblewrap
+    - name: Install man2html
+      run: sudo apt install man2html
+    - name: Checkout tree
+      uses: actions/checkout@v4
+    - name: src_ext/archives and opam-repository Cache
+      id: archives
+      uses: actions/cache@v4
+      with:
+        path: |
+          src_ext/archives
+          ~/opam-repository
+        key: ${{ needs.Analyse.outputs.archives }}
+        enableCrossOsArchive: true
+    - name: OCaml ${{ matrix.ocamlv }} Cache
+      id: ocaml-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ocaml-local/**
+        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
+      if: steps.ocaml-cache.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
+    - name: opam bootstrap Cache
+      id: opam-bootstrap
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ env.OPAMBSROOT }}/**
+          ~/.cache/opam-local/bin/**
+        key: opamdoc-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ needs.Analyse.outputs.opam-bs-cache }}
+    - name: Create opam bootstrap cache
+      if: steps.opam-bootstrap.outputs.cache-hit != 'true'
+      run: bash -exu .github/scripts/main/opam-bs-cache.sh
+    - name: Compile
+      env:
+        BASE_REF_SHA: ${{ github.event.pull_request.base.sha }}
+        PR_REF_SHA: ${{ github.event.pull_request.head.sha }}
+      run: bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
+
+####
 # Compile solver backends
 ####
   Solvers-Linux:
