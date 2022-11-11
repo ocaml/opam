@@ -58,12 +58,6 @@ module ActionGraph: OpamActionGraph.SIG with type package = Package.t
 (** Abstract type that may be returned in case of conflicts *)
 type conflict
 
-(** Return the transitive closure of dependencies of [set] *)
-val dependencies: Cudf.universe -> Set.t -> Set.t
-
-(** Return the transitive closure of reverse dependencies of [set] *)
-val reverse_dependencies: Cudf.universe -> Set.t -> Set.t
-
 (** Sorts the given packages topolgically (be careful if there are cycles, e.g.
    if the universe was loaded with [post] dependencies enabled) *)
 val dependency_sort: Cudf.universe -> Set.t -> Cudf.package list

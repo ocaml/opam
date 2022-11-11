@@ -909,9 +909,9 @@ let assume_built_restrictions ?available_packages t atoms =
       t.pinned
   in
   let installed_dependencies =
-    OpamSolver.dependencies ~build:false ~post:false
+    OpamSwitchState.dependencies ~build:false ~post:false
       ~depopts:false ~installed:true ~unavailable:false
-      (OpamSwitchState.universe t
+      t (OpamSwitchState.universe t
          ~requested:pinned Query)
       pinned
   in
@@ -1253,7 +1253,7 @@ let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
           universe.u_base ++ t.installed_roots %% t.installed -- packages
         in
         let keep_cone =
-          keep |> OpamSolver.dependencies universe
+          keep |> OpamSwitchState.dependencies t universe
             ~build:true ~post:true ~depopts:true ~installed:true
         in
         let autoremove =
@@ -1262,11 +1262,11 @@ let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
         if atoms = [] then autoremove else
         (* restrict to the dependency cone of removed pkgs *)
         let remove_cone =
-          packages |> OpamSolver.reverse_dependencies universe
+          packages |> OpamSwitchState.reverse_dependencies t universe
             ~build:true ~post:true ~depopts:false ~installed:true
         in
         autoremove %%
-        (remove_cone |> OpamSolver.dependencies universe
+        (remove_cone |> OpamSwitchState.dependencies t universe
            ~build:true ~post:true ~depopts:false ~installed:true)
       else
         packages

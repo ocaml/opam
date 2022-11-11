@@ -93,6 +93,7 @@ module type MAP = sig
   val map_reduce:
     ?default:'b -> (key -> 'a -> 'b) -> ('b -> 'b -> 'b) -> 'a t -> 'b
 
+  val filter_map: (key -> 'a -> 'b option) -> 'a t -> 'b t
 end
 
 (** A signature for handling abstract keys and collections thereof *)

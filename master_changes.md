@@ -108,6 +108,7 @@ users)
   * Improve performance of some opam list combination (e.g. --available --installable) [#4999 @kit-ty-kate]
   * Improve performance of opam list --conflicts-with when combined with other filters [#4999 @kit-ty-kate]
   * Fix coinstallability filter corner case [#5024 @AltGr]
+  * Improve performance for recursive `--required-by` and `depends-on` [#5337 @rjbou]
 
 ## Show
   * Add `depexts` to default printer [#4898 @rjbou]
@@ -511,8 +512,9 @@ users)
 ` [#5268 @kit-ty-kate]
   * `OpamUpdate`: change `repository` output to update function option, to not write cache and new repo config if nothing changed in `repositories` [#5146 @rjbou]
   * Add `OpamPinned.version_opt` [#5325 @kit-ty-kate]
-
   * Add optional argument `?env:(variable_contents option Lazy.t * string) OpamVariable.Map.t` to `OpamSysPoll` and `OpamSysInteract` functions. It is used to get syspolling variables from the environment first. [#4892 @rjbou]
+  * `OpamSwitchState`: move and reimplement `opam-solver` `dependencies` and `reverse_dependencies` [#5337 @rjbou]
+
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
   * `OpamCudf`: add `conflict_cycles` [#4039 @gasche]
@@ -528,6 +530,7 @@ users)
   * `OpamCudf`: add `trim_universe`, `opam_deprequest_package_name`, and `opam_deprequest_package` [#4975 @AltGr]
   * `OpamCudf.print_solution`: add optional `skip`, to avoid filtering solution beforehand [#4975 @AltGr]
   * `OpamCudf.filter_solution`: can do not remove recursively actions with optional `~recursive:true` [#4975 @AltGr]
+  * `OpamSolver`, `OpamCudf`: remove `dependencies` and `reverse_dependencies` [#5337 @rjbou]
 
 ## opam-format
   * Exposed `with_*` functions in `OpamFile.Dot_install` [#5169 @panglesd]
@@ -571,3 +574,4 @@ users)
   * `OpamStd.List`: add `find_map_opt` (for ocaml < 4.10) and `fold_left_map` (for ocaml < 4.11) [#5171 @cannorin]
   * `OpamCompat`: add `Int.equal` (for ocaml < 4.12)
   * `OpamFilename.clean_dir`: as the directory is recreated after removal, checks that the directory exists beforhand. It avoid creating a new empty directory uselessly [#4967 @rjbou]
+  * `OpamStd.Map`: add `filter_map` [#5337 @rjbou]

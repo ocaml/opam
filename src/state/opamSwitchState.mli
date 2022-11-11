@@ -162,6 +162,26 @@ val source_dir: 'a switch_state -> package -> dirname
     from the values of the system-specific variables *)
 val depexts: 'a switch_state -> package -> OpamSysPkg.Set.t
 
+(* {2} Helpers to retrieve computed data *)
+
+(** Return the transitive dependency closures
+    of a collection of packages.
+
+    [depopts]: include optional dependencies (depopts: foo)
+    [build]: include build dependencies (depends: foo {build})
+    [post]: include post dependencies (depends: foo {post})
+    [installed]: only consider already-installed packages
+    [unavaiable]: also consider unavailable packages
+*)
+val dependencies:
+  'a switch_state -> build:bool -> post:bool -> depopts:bool ->
+  installed:bool -> ?unavailable:bool -> universe -> package_set -> package_set
+
+(** Same as [dependencies] but for reverse dependencies. *)
+val reverse_dependencies:
+  'a switch_state -> build:bool -> post:bool -> depopts:bool ->
+  installed:bool -> ?unavailable:bool -> universe -> package_set -> package_set
+
 (** Returns required system packages of each of the given packages (elements are
     not added to the map  if they don't have system dependencies) *)
 val depexts_status_of_packages:
