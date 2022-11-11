@@ -84,6 +84,7 @@ users)
   * When inferring a 2.1+ switch invariant from 2.0 base packages, don't filter out pinned packages as that causes very wide invariants for pinned compiler packages [#5176 @dra27 - fix #4501]
   * Really install invariant formula if not installed in switch [#5188 @rjbou]
   * On import, check that installed pinned packages changed, reinstall if so [#5181 @rjbou - fix #5173]
+  * Release the switch lock prior to erasing a failed switch - eliminates further error message on Windows [#5351 @dra27]
 
 ## Config
   * Reset the "jobs" config variable when upgrading from opam 2.0 [#5284 @kit-ty-kate]

@@ -363,16 +363,19 @@ let create
           (OpamSwitch.to_string st.switch)
     in
     OpamStd.Exn.finalise e @@ fun () ->
-    let gt, st =
-      if OpamConsole.confirm "Switch initialisation failed: clean up? \
-                              ('n' will leave the switch partially installed)"
-      then clear_switch gt st.switch, st
-      else if update_config && not simulate
-      then gt, OpamSwitchAction.set_current_switch gt st
-      else gt, st
-    in
-    OpamSwitchState.drop st;
-    OpamGlobalState.drop gt
+    if OpamConsole.confirm "Switch initialisation failed: clean up? \
+                            ('n' will leave the switch partially installed)"
+    then begin
+           OpamSwitchState.drop st;
+           OpamGlobalState.drop (clear_switch gt st.switch)
+         end
+    else let st =
+           if update_config && not simulate then
+             OpamSwitchAction.set_current_switch gt st
+           else st
+         in
+         OpamSwitchState.drop st;
+         OpamGlobalState.drop gt
 
 let switch lock gt switch =
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
