@@ -12,7 +12,7 @@ unset-dev-version () {
 export OCAMLRUNPARAM=b
 
 (set +x ; echo -en "::group::build opam\r") 2>/dev/null
-if [[ $OPAM_TEST -eq 1 ]] ; then
+if [[ $OPAM_TEST -eq 1 ]] || [[ $OPAM_DOC -eq 1 ]] ; then
   export OPAMROOT=$OPAMBSROOT
   # If the cached root is newer, regenerate a binary compatible root
   opam env || { rm -rf $OPAMBSROOT; init-bootstrap; }
@@ -51,6 +51,48 @@ make install
 
 export PATH="$PREFIX/bin:$PATH"
 opam --version
+
+if [[ $OPAM_DOC -eq 1 ]]; then
+  make -C doc html man-html pages
+
+  if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+    . .github/scripts/common/hygiene-preamble.sh
+    diff="git diff $BASE_REF_SHA..$PR_REF_SHA"
+    set +e
+    files="$($diff --name-only --diff-filter=A -- src/**/*.mli)"
+    set -e
+    if [ -n "$files" ]; then
+      echo '::group::new module(s) added - check index updated too'
+      if $diff --name-only --exit-code -- doc/index.html ; then
+        echo '::error new module(s) added but doc/index.html not updated'
+        echo "$files"
+        exit 3
+      fi
+      echo '::endgroup::new module added - checking it'
+    else
+      echo 'No new modules added'
+    fi
+  fi
+
+  htmlfiles=$(ls doc/pages/*.md | sed -e 's/\.md/.html/')
+  manfiles=$(opam --help=groff | grep '^\\fB\w' | sed 's/\\fB\(.*\)\\fR .*/doc\/man-html\/opam-\1.html/' | grep -v 'opam-opam')
+
+  echo '::group::checking for generated files'
+  echo "htmlfiles: $htmlfiles"
+  echo "manfiles: $manfiles"
+  files="$htmlfiles $manfiles"
+  missing=""
+  for file in $files; do
+    if ! test -f $file ; then
+      missing="$missing $file"
+    fi
+  done
+  if [ "x$missing" != "x" ]; then
+    echo "::error missing generated doc files: $missing"
+    exit 4
+  fi
+  echo '::endgroup::checking generated files'
+fi
 
 if [ "$OPAM_TEST" = "1" ]; then
   # test if an upgrade is needed
