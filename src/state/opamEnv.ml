@@ -91,6 +91,7 @@ let apply_op_zip op arg (rl1,l2 as zip) =
     or empty lists is returned if the variable should be unset or has an unknown
     previous value. *)
 let reverse_env_update op arg cur_value =
+  if String.equal arg  "" && op <> Eq then None else
   match op with
   | Eq ->
     if arg = join_var cur_value
@@ -157,9 +158,13 @@ let expand (updates: env_update list) : env =
             | Some s -> ([], split_var s), reverts
             | None -> ([], []), reverts
       in
+      let acc =
+        if String.equal arg "" && op <> Eq then acc else
+          ((var, apply_op_zip op arg zip, doc) :: acc)
+      in
       apply_updates
         reverts
-        ((var, apply_op_zip op arg zip, doc) :: acc)
+        acc
         updates
     | [] ->
       List.rev @@
