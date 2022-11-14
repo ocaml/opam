@@ -40,19 +40,19 @@ let unzip_to elt current =
     | ([], rs) -> Some rs
     | _ -> None
   in
-    match split_var elt with
-    | [] -> invalid_arg "OpamEnv.unzip_to"
-    | hd::tl ->
-      let rec aux acc = function
+  match (if String.equal elt "" then [""] else split_var elt) with
+  | [] -> invalid_arg "OpamEnv.unzip_to"
+  | hd::tl ->
+    let rec aux acc = function
       | [] -> None
       | x::r ->
-        if x = hd then
+        if String.equal x hd then
           match remove_prefix tl r with
           | Some r -> Some (acc, r)
           | None -> aux (x::acc) r
         else aux (x::acc) r
-      in
-        aux [] current
+    in
+    aux [] current
 
 let rezip ?insert (l1, l2) =
   List.rev_append l1 (match insert with None -> l2 | Some i -> i::l2)
