@@ -60,6 +60,11 @@ type test = {
   commands: (string * string list) list;
 }
 
+type opam = {
+  as_called : string;
+  as_seen_in_opam : string;
+}
+
 let cmd_prompt = "### "
 let no_opam_repo = "N0REP0"
 let default_repo = "REPO"
@@ -493,12 +498,12 @@ let common_filters ?opam dir =
    ] @
    (match opam with
     | None -> []
-    | Some opam -> [ str opam, Sed "${OPAM}" ])
+    | Some opam -> [ str opam.as_seen_in_opam, Sed "${OPAM}" ])
 
 let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
   let filter = filter @ common_filters ~opam dir in
   let var_filters = filters_of_var vars in
-  let cmd = if cmd = "opam" then opam else cmd in
+  let cmd = if cmd = "opam" then opam.as_called else cmd in
   let args =
     List.map (fun a ->
         let expanded =
@@ -603,7 +608,7 @@ let run_test ?(vars=[]) ~opam t =
   else
     ignore @@ command "cp" ["-PR"; opamroot0; opamroot];
   let vars = [
-    "OPAM", opam;
+    "OPAM", opam.as_seen_in_opam;
     "OPAMROOT", opamroot;
     "BASEDIR", dir;
   ] @ vars
@@ -611,10 +616,10 @@ let run_test ?(vars=[]) ~opam t =
   if t.repo_hash = no_opam_repo then
     (mkdir_p (default_repo^"/packages");
      write_file ~path:(default_repo^"/repo") ~contents:{|opam-version: "2.0"|};
-     ignore @@ command opam ~silent:true
+     ignore @@ command opam.as_called ~silent:true
        [ "repository"; "set-url"; "default"; "./"^default_repo;
          "--root"; opamroot]);
-  ignore @@ command ~silent:true opam
+  ignore @@ command ~silent:true opam.as_called
     ["var"; "--quiet"; "--root"; opamroot; "--global"; "--cli=2.1";
      "sys-ocaml-version=4.08.0"];
   print_endline t.repo_hash;
@@ -790,6 +795,13 @@ let () =
   match Array.to_list Sys.argv with
   | _ :: opam :: input :: env ->
     let opam = OpamFilename.(to_string (of_string opam)) in
+    let opam =
+      (* NOTE: We need that to be able to have the same output from Sys.executable_name when calling the opam binary *)
+      let opam_without_double_exe = Filename.chop_suffix opam ".exe" in
+      if Sys.cygwin
+      then {as_called = opam; as_seen_in_opam = opam_without_double_exe}
+      else {as_called = opam_without_double_exe; as_seen_in_opam = opam_without_double_exe}
+    in
     let vars =
       List.map (fun s -> match OpamStd.String.cut_at s '=' with
           | Some (var, value) -> var, value

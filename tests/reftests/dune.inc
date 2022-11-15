@@ -14,7 +14,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:admin-add-constraint.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:admin-add-constraint.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-assume-built)
@@ -31,7 +31,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:assume-built.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:assume-built.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-autopin)
@@ -48,7 +48,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:autopin.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:autopin.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-avoid-version)
@@ -65,7 +65,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:avoid-version.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:avoid-version.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-best-effort)
@@ -82,7 +82,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:best-effort.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:best-effort.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-clean)
@@ -99,7 +99,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:clean.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:clean.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-cli-versioning)
@@ -116,7 +116,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:cli-versioning.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:cli-versioning.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-config)
@@ -133,7 +133,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:config.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:config.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-conflict-4373)
@@ -150,7 +150,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:conflict-4373.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:conflict-4373.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-conflict-badversion)
@@ -167,7 +167,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:conflict-badversion.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:conflict-badversion.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-conflict-camlp4)
@@ -184,7 +184,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:conflict-camlp4.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:conflict-camlp4.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-conflict-core)
@@ -201,7 +201,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:conflict-core.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:conflict-core.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-conflict-resto)
@@ -218,7 +218,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:conflict-resto.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:conflict-resto.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-conflict-solo5)
@@ -235,7 +235,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:conflict-solo5.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:conflict-solo5.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-cudf-preprocess)
@@ -252,7 +252,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:cudf-preprocess.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:cudf-preprocess.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-depexts)
@@ -269,7 +269,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:depexts.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:depexts.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-deprecated)
@@ -286,7 +286,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:deprecated.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:deprecated.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-deps-only)
@@ -303,7 +303,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:deps-only.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:deps-only.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-dot-install)
@@ -320,7 +320,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:dot-install.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:dot-install.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-empty-conflicts-001)
@@ -337,7 +337,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:empty-conflicts-001.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:empty-conflicts-001.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-empty-conflicts-002)
@@ -354,7 +354,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:empty-conflicts-002.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:empty-conflicts-002.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-empty-conflicts-003)
@@ -371,7 +371,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:empty-conflicts-003.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:empty-conflicts-003.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-empty-conflicts-004)
@@ -388,7 +388,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:empty-conflicts-004.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:empty-conflicts-004.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-empty-conflicts-005)
@@ -405,7 +405,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:empty-conflicts-005.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:empty-conflicts-005.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-empty-conflicts-006)
@@ -422,7 +422,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:empty-conflicts-006.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:empty-conflicts-006.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-env)
@@ -439,7 +439,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:env.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:env.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-init)
@@ -456,7 +456,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:init.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:init.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-inplace)
@@ -473,7 +473,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:inplace.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:inplace.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-install-formula)
@@ -490,7 +490,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:install-formula.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:install-formula.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-install-pgocaml)
@@ -507,7 +507,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:install-pgocaml.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:install-pgocaml.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-json.unix)
@@ -527,7 +527,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:json.unix.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:json.unix.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-legacy-git)
@@ -544,7 +544,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:legacy-git.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:legacy-git.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-legacy-local)
@@ -561,7 +561,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:legacy-local.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:legacy-local.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-lint)
@@ -578,7 +578,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:lint.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:lint.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-list)
@@ -595,7 +595,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:list.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:list.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-list.unix)
@@ -615,7 +615,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:list.unix.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:list.unix.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-lock)
@@ -632,7 +632,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:lock.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:lock.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-opamroot-versions)
@@ -649,7 +649,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:opamroot-versions.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:opamroot-versions.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-opamrt-big-upgrade)
@@ -666,7 +666,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:opamrt-big-upgrade.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:opamrt-big-upgrade.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-opamrt-dep-cycle)
@@ -683,7 +683,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:opamrt-dep-cycle.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:opamrt-dep-cycle.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-opamrt-reinstall)
@@ -700,7 +700,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:opamrt-reinstall.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:opamrt-reinstall.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-orphans)
@@ -717,7 +717,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:orphans.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:orphans.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-parallel)
@@ -734,7 +734,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:parallel.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:parallel.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-pat-sub)
@@ -751,7 +751,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:pat-sub.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:pat-sub.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-pin)
@@ -768,7 +768,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:pin.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:pin.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-rebuild)
@@ -785,7 +785,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:rebuild.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:rebuild.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-rec-pin)
@@ -802,7 +802,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:rec-pin.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:rec-pin.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-reinstall)
@@ -819,7 +819,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:reinstall.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:reinstall.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-remove)
@@ -836,7 +836,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:remove.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:remove.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-repository)
@@ -853,7 +853,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:repository.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:repository.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-resolve-variables)
@@ -870,7 +870,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:resolve-variables.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:resolve-variables.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-shared-fetch)
@@ -887,7 +887,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:shared-fetch.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:shared-fetch.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-show)
@@ -904,7 +904,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:show.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:show.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-source)
@@ -921,7 +921,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:source.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:source.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-switch-creation)
@@ -938,7 +938,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:switch-creation.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:switch-creation.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-switch-import)
@@ -955,7 +955,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:switch-import.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:switch-import.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-switch-invariant)
@@ -972,7 +972,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:switch-invariant.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:switch-invariant.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-switch-set)
@@ -989,7 +989,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:switch-set.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:switch-set.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-tree)
@@ -1006,7 +1006,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:tree.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:tree.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-unhelpful-conflicts-001)
@@ -1023,7 +1023,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:unhelpful-conflicts-001.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:unhelpful-conflicts-001.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-update-upgrade)
@@ -1040,7 +1040,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:update-upgrade.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:update-upgrade.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-upgrade-format)
@@ -1057,7 +1057,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:upgrade-format.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:upgrade-format.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-upgrade-two-point-o)
@@ -1074,7 +1074,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:upgrade-two-point-o.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:upgrade-two-point-o.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-upgrade)
@@ -1091,7 +1091,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:upgrade.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:upgrade.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-var-option)
@@ -1108,7 +1108,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:var-option.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:var-option.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-with-dev-setup)
@@ -1125,7 +1125,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:with-dev-setup.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:with-dev-setup.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-working-dir)
@@ -1142,7 +1142,7 @@
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{bin:opam} %{dep:working-dir.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:working-dir.test} %{read-lines:testing-env}))))
 
 (rule
  (targets opam-repo-N0REP0)
