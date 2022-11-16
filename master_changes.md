@@ -341,6 +341,7 @@ users)
   * Support MSYS2: two-phase rsync on MSYS2 to allow MSYS2's behavior of copying rather than symlinking [#4817 @jonahbeckford]
   * Environment: translate PATH from Windows to Unix during opam env. [#4844 @jonahbeckford]
   * Correct invocation of Cygwin binaries when Cygwin bin directory is first in PATH [#5293 @dra27]
+  * [BUG] Fix case insensitive variable handling [#5356 @dra27]
 
 ## Test
   * Update crowbar with compare functions [#4918 @rjbou]
@@ -392,6 +393,7 @@ users)
   * Test opam pin remove <pkg>.<version> [#5325 @kit-ty-kate]
   * Add a test checking that reinstalling a non-installed package is equivalent to installing it [#5228 @kit-ty-kate]
   * Add a test showing that we still get the reason for installing a package when using opam reinstall on non-installed packages [#5229 @kit-ty-kate]
+  * Add a windows test to check case insensitive environment variable handling [#5356 @dra27]
 
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
@@ -611,3 +613,4 @@ users)
   * `OpamStd.List`: add comparison function argument to some `OpamList` functions [#5374 @kit-ty-kate @rjbou]
   * `OpamStd.Option`: add `equal` function [#5374 @rjbou]
   * `OpamStd.Compare`: add module to flag polymorphic comparison functions in opam codebase [#5374 @kit-ty-kate @rjbou]
+  * `OpamStd.Env.`: introduce OpamStd.Env.Name to abstract environment variable names [#5356 @dra27]

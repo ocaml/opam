@@ -105,12 +105,12 @@ let env_array l =
   (* The env list may contain successive bindings of the same variable, make
      sure to keep only the last *)
   let bindings =
-    List.fold_left (fun acc (k,v,_) -> OpamStd.String.Map.add k v acc)
-      OpamStd.String.Map.empty l
+    List.fold_left (fun acc (k,v,_) -> OpamStd.Env.Name.Map.add k v acc)
+      OpamStd.Env.Name.Map.empty l
   in
-  let a = Array.make (OpamStd.String.Map.cardinal bindings) "" in
-  OpamStd.String.Map.fold
-    (fun k v i -> a.(i) <- String.concat "=" [k;v]; succ i)
+  let a = Array.make (OpamStd.Env.Name.Map.cardinal bindings) "" in
+  OpamStd.Env.Name.Map.fold
+    (fun k v i -> a.(i) <- (k :> string) ^ "=" ^ v; succ i)
     bindings 0
   |> ignore;
   a

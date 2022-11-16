@@ -413,11 +413,21 @@ module Env : sig
 
   (** {3 Environment variable handling} *)
 
+  (** Environment variable names *)
+  module Name : sig
+    include ABSTRACT with type t = private string
+
+    val equal_string: t -> string -> bool
+
+  end
+
   val get: string -> string
 
   val getopt: string -> string option
 
-  val list: unit -> (string * string) list
+  val getopt_full: Name.t -> Name.t * string option
+
+  val list: unit -> (Name.t * string) list
 end
 
 (** {2 System query and exit handling} *)

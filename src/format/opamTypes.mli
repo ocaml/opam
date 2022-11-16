@@ -401,7 +401,7 @@ type stats = {
 }
 
 (** Environement variables: var name, value, optional comment *)
-type env = (string * string * string option) list
+type env = (OpamStd.Env.Name.t * string * string option) list
 
 (** Environment updates *)
 type env_update = string * OpamParserTypes.FullPos.env_update_op_kind * string * string option

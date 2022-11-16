@@ -773,6 +773,39 @@ module Env = struct
        https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules?view=powershell-7.1 *)
     Re.(replace_string (compile (char '\'')) ~by:"''")
 
+  module Name = struct
+    module M = struct
+      include AbstractString
+
+      let compare =
+        if Sys.win32 then
+          fun l r ->
+            String.(compare (lowercase_ascii l) (lowercase_ascii r))
+        else
+          String.compare
+    end
+
+    type t = string
+
+    let of_string = M.of_string
+    let to_string = M.to_string
+    let of_json = M.of_json
+    let to_json = M.to_json
+    let compare = M.compare
+
+    let equal =
+      if Sys.win32 then
+        fun l r ->
+          String.(equal (lowercase_ascii l) (lowercase_ascii r))
+      else
+        String.equal
+
+    let equal_string = equal
+
+    module Set = Set.Make(M)
+    module Map = Map.Make(M)
+  end
+
   let list =
     let lazy_env = lazy (
       let e = Unix.environment () in
@@ -784,15 +817,15 @@ module Env = struct
     ) in
     fun () -> Lazy.force lazy_env
 
-  let get =
-    if Sys.win32 then
-      fun n ->
-        let n = String.uppercase_ascii n in
-        snd (List.find (fun (k,_) -> String.uppercase_ascii k = n) (list ()))
-    else
-      fun n -> OpamList.assoc String.equal n (list ())
+  let get_full n = List.find (fun (k,_) -> Name.equal k n) (list ())
 
-  let getopt n = try Some (get n) with Not_found -> None
+  let get n = snd (get_full n)
+
+  let getopt = Option.of_Not_found get
+
+  let getopt_full n =
+    try let (n, v) = get_full n in (n, Some v)
+    with Not_found -> (n, None)
 end
 
 

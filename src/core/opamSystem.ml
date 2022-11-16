@@ -353,7 +353,9 @@ let real_path p =
 type command = string list
 
 let default_env () =
-  OpamStd.Env.list () |> List.map (fun (var, v) -> var^"="^v) |> Array.of_list
+  (OpamStd.Env.list () :> (string * string) list)
+    |> List.map (fun (var, v) -> var^"="^v)
+    |> Array.of_list
 
 let env_var env var =
   let len = Array.length env in

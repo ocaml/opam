@@ -111,6 +111,20 @@ let reverse_env_update op arg cur_value =
      | Some (rl1, l2) -> Some (List.rev l2, List.rev rl1)
      | None -> None)
 
+let map_update_names env_keys updates =
+  let convert (k, o, a, d) =
+    let k =
+      try
+        let k = OpamStd.Env.Name.of_string k in
+        (OpamStd.Env.Name.(Set.find (equal k) env_keys) :> string)
+      with Not_found -> k
+    in
+    k, o, a, d
+  in
+  List.map convert updates
+
+let global_env_keys = lazy (OpamStd.Env.Name.Set.of_list (List.map fst (OpamStd.Env.list ())))
+
 let updates_from_previous_instance = lazy (
   match OpamStd.Env.getopt "OPAM_SWITCH_PREFIX" with
   | None -> None
@@ -118,21 +132,35 @@ let updates_from_previous_instance = lazy (
     let env_file =
       OpamPath.Switch.env_relative_to_prefix (OpamFilename.Dir.of_string pfx)
     in
-    try OpamFile.Environment.read_opt env_file
+    try OpamStd.Option.map (map_update_names (Lazy.force global_env_keys))
+                           (OpamFile.Environment.read_opt env_file)
     with e -> OpamStd.Exn.fatal e; None
 )
 
 let expand (updates: env_update list) : env =
+  let updates =
+    if Sys.win32 then
+      (* Preserve the case of updates which are already in env *)
+      map_update_names (Lazy.force global_env_keys) updates
+    else
+      updates
+  in
   (* Reverse all previous updates, in reverse order, on current environment *)
   let reverts =
     match Lazy.force updates_from_previous_instance with
     | None -> []
     | Some updates ->
       List.fold_right (fun (var, op, arg, _) defs0 ->
-          let v_opt, defs = OpamStd.List.pick_assoc String.equal var defs0 in
+          let var = OpamStd.Env.Name.of_string var in
+          let v_opt, defs =
+            OpamStd.List.pick_assoc OpamStd.Env.Name.equal var defs0
+          in
           let v =
-            OpamStd.Option.Op.((v_opt >>| rezip >>+ fun () ->
-                                OpamStd.Env.getopt var >>| split_var) +! [])
+            match Option.map rezip v_opt with
+            | Some v -> v
+            | None ->
+              OpamStd.Option.map_default split_var []
+                (OpamStd.Env.getopt (var :> string))
           in
           match reverse_env_update op arg v with
           | Some v -> (var, v)::defs
@@ -142,19 +170,16 @@ let expand (updates: env_update list) : env =
   (* And apply the new ones *)
   let rec apply_updates reverts acc = function
     | (var, op, arg, doc) :: updates ->
+      let var = OpamStd.Env.Name.of_string var in
       let zip, reverts =
-        let f, var =
-          if Sys.win32 then
-            String.uppercase_ascii, String.uppercase_ascii var
-          else (fun x -> x), var
-        in
-        match OpamStd.List.find_opt (fun (v, _, _) -> f v = var) acc with
+        match OpamStd.List.find_opt (fun (v, _, _) ->
+            OpamStd.Env.Name.equal var v) acc with
         | Some (_, z, _doc) -> z, reverts
         | None ->
-          match OpamStd.List.pick_assoc String.equal var reverts with
+          match OpamStd.List.pick_assoc OpamStd.Env.Name.equal var reverts with
           | Some z, reverts -> z, reverts
           | None, _ ->
-            match OpamStd.Env.getopt var with
+            match OpamStd.Env.getopt (var :> string) with
             | Some s -> ([], split_var s), reverts
             | None -> ([], []), reverts
       in
@@ -177,16 +202,23 @@ let expand (updates: env_update list) : env =
   apply_updates reverts [] updates
 
 let add (env: env) (updates: env_update list) =
-  let env =
+  let updates =
     if Sys.win32 then
-      (*
-       * Environment variable names are case insensitive on Windows
-       *)
-      let updates = List.rev_map (fun (u,_,_,_) -> (String.uppercase_ascii u, "", "", None)) updates in
-      List.filter (fun (k,_,_) -> let k = String.uppercase_ascii k in List.for_all (fun (u,_,_,_) -> u <> k) updates) env
+      (* Preserve the case of updates which are already in env *)
+      map_update_names (OpamStd.Env.Name.Set.of_list
+                          (List.map (fun (k, _, _) -> k) env)) updates
     else
-      List.filter (fun (k,_,_) -> List.for_all (fun (u,_,_,_) -> u <> k) updates)
-        env
+      updates
+  in
+  let update_keys =
+    List.fold_left (fun m (k,_,_,_) ->
+        OpamStd.Env.Name.(Set.add (of_string k) m))
+      OpamStd.Env.Name.Set.empty updates
+  in
+  let env =
+    List.filter (fun (k,_,_) ->
+        not (OpamStd.Env.Name.Set.mem k update_keys))
+      env
   in
   env @ expand updates
 
@@ -273,24 +305,27 @@ let get_opam_raw ~set_opamroot ~set_opamswitch ?(base=[])
   let env_file = OpamPath.Switch.environment root switch in
   let upd = OpamFile.Environment.safe_read env_file in
   let upd =
-    ("OPAM_SWITCH_PREFIX", Eq,
-     OpamFilename.Dir.to_string (OpamPath.Switch.root root switch),
-     Some "Prefix of the current opam switch") ::
-    List.filter (function ("OPAM_SWITCH_PREFIX", Eq, _, _) -> false | _ -> true)
-      upd
+    let remove_OPAM_SWITCH_PREFIX (var, op, _, _) =
+      String.uppercase_ascii var <> "OPAM_SWITCH_PREFIX" || op <> Eq
+    in
+    List.filter remove_OPAM_SWITCH_PREFIX upd
   in
   let upd =
-    if force_path then
+    ("OPAM_SWITCH_PREFIX", Eq,
+     OpamFilename.Dir.to_string (OpamPath.Switch.root root switch),
+     Some "Prefix of the current opam switch") :: upd
+  in
+  let upd =
+    let from_op, to_op =
+      if force_path then
+        EqPlusEq, PlusEq
+      else
+        PlusEq, EqPlusEq
+    in
       List.map (function
-          | "PATH", EqPlusEq, v, doc -> "PATH", PlusEq, v, doc
-          | e -> e)
-        upd
-    else
-      List.map (function
-          | "PATH", PlusEq, v, doc -> "PATH", EqPlusEq, v, doc
-          | e -> e)
-        upd
-
+          | var, op, v, doc when String.uppercase_ascii var = "PATH" && op = from_op ->
+            var, to_op, v, doc
+          | e -> e) upd
   in
   add base
     (updates_common ~set_opamroot ~set_opamswitch root switch @
@@ -301,14 +336,13 @@ let get_full
     st =
   let env =
     let env = OpamStd.Env.list () in
-    let map =
-      if Sys.win32 then
-        String.uppercase_ascii
-      else
-        (fun x -> x)
+    let scrub =
+      let add set elt =
+        OpamStd.Env.Name.(Set.add (of_string elt) set)
+      in
+      List.fold_left add OpamStd.Env.Name.Set.empty scrub
     in
-    let scrub = List.rev_map map scrub |> OpamStd.String.Set.of_list in
-    List.filter (fun (name, _) -> not (OpamStd.String.Set.mem (map name) scrub)) env
+    List.filter (fun (name, _) -> not (OpamStd.Env.Name.Set.mem name scrub)) env
   in
   let env0 = List.map (fun (v,va) -> v,va,None) env in
   let updates = u @ updates ~set_opamroot ~set_opamswitch ~force_path st in
@@ -318,11 +352,13 @@ let is_up_to_date_raw ?(skip=OpamStateConfig.(!r.no_env_notice)) updates =
   skip ||
   let not_utd =
     List.fold_left (fun notutd (var, op, arg, _doc as upd) ->
-        match OpamStd.Env.getopt var with
-        | None -> upd::notutd
-        | Some v ->
+        let var = OpamStd.Env.Name.of_string var in
+        match OpamStd.Env.getopt_full var with
+        | _, None -> upd::notutd
+        | var, Some v ->
           if reverse_env_update op arg (split_var v) = None then upd::notutd
-          else List.filter (fun (v, _, _, _) -> v <> var) notutd)
+          else List.filter (fun (v, _, _, _) ->
+              OpamStd.Env.Name.equal_string var v) notutd)
       []
       updates
   in
@@ -356,7 +392,9 @@ let switch_path_update ~force_path root switch =
 
 let path ~force_path root switch =
   let env = expand (switch_path_update ~force_path root switch) in
-  let (_, path_value, _) = List.find (fun (v, _, _) -> v = "PATH") env in
+  let (_, path_value, _) =
+    List.find (fun (v, _, _) -> OpamStd.Env.Name.equal_string v "PATH") env
+  in
   path_value
 
 let full_with_path ~force_path ?(updates=[]) root switch =
