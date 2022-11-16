@@ -3,8 +3,8 @@ MD5_cppo = fed401197d86f9089e89f6cbdf1d660d
 
 $(call PKG_SAME,cppo)
 
-URL_extlib = https://ygrek.org/p/release/ocaml-extlib/extlib-1.7.8.tar.gz
-MD5_extlib = 7e0df072af4e2daa094e5936a661cb11
+URL_extlib = https://github.com/ygrek/ocaml-extlib/releases/download/1.7.9/extlib-1.7.9.tar.gz
+MD5_extlib = f7ca7f1c82e15a99603b88f730fd7b8a
 
 $(call PKG_SAME,extlib)
 
@@ -28,8 +28,8 @@ MD5_ocamlgraph = 2d07fcf3501e1d4997c03fa94cea22f0
 
 $(call PKG_SAME,ocamlgraph)
 
-URL_cudf = https://github.com/ocaml/opam-source-archives/raw/main/cudf-0.9.tar.gz
-MD5_cudf = a4c0e652e56e74c7b388a43f9258d119
+URL_cudf = https://gitlab.com/irill/cudf/-/archive/v0.10/cudf-v0.10.tar.gz
+MD5_cudf = ed8fea314d0c6dc0d8811ccf860c53dd
 
 $(call PKG_SAME,cudf)
 
