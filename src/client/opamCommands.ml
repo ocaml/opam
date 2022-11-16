@@ -3184,6 +3184,10 @@ let pin ?(unpin_only=false) cli =
        changes, and may also be used to keep a package that was removed \
        upstream."
   in
+  let all =
+    mk_flag ~cli (cli_from cli2_2) ["all"]
+      "When unpinning, removes all pins in the given switch."
+  in
   let guess_names kind ?locked ~recurse ?subpath url k =
     let found, cleanup =
       match OpamUrl.local_dir url with
@@ -3300,7 +3304,7 @@ let pin ?(unpin_only=false) cli =
   let pin
       global_options build_options
       kind edit no_act dev_repo print_short recurse subpath normalise
-      with_version current
+      with_version current all
       command params () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
@@ -3317,6 +3321,10 @@ let pin ?(unpin_only=false) cli =
         `list
       | Some `scan, [url] ->
         `scan url
+      | Some `remove, [] when all ->
+        `remove_all
+      | _, _ when all ->
+        `incorrect
       | Some `remove, (_::_ as arg) ->
         `remove arg
       | Some `edit, [nv]  ->
@@ -3418,6 +3426,14 @@ let pin ?(unpin_only=false) cli =
       else
         (OpamSwitchState.drop @@ OpamClient.PIN.unpin st ~action to_unpin;
          `Ok ())
+    | `remove_all ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let to_unpin =
+        OpamPackage.Set.to_list_map OpamPackage.name (OpamPinned.packages st)
+      in
+      OpamSwitchState.drop @@ OpamClient.PIN.unpin st ~action to_unpin;
+      `Ok ()
     | `edit nv  ->
       (match (fst package) nv with
        | `Ok (name, version) ->
@@ -3515,7 +3531,7 @@ let pin ?(unpin_only=false) cli =
           $global_options cli $build_options cli
           $kind $edit $no_act $dev_repo $print_short_flag cli cli_original
           $recurse cli $subpath cli
-          $normalise $with_version $current
+          $normalise $with_version $current $all
           $command $params)
 
 (* SOURCE *)

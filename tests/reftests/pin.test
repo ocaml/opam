@@ -176,13 +176,61 @@ echo "another-inexistant" "inexistant"
 -> installed bar.dev
 Done.
 ### : Test opam pin remove <pkg>.<version>
-### opam pin
-bar.dev    rsync             file://${BASEDIR}/bar
-foo.1      local definition
-nip.dev    rsync             file://${BASEDIR}/nip
-qux.dev    rsync             file://${BASEDIR}/qux
 ### opam pin remove --no-action bar.dev
 Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
 ### opam pin remove --no-action nip.wrong-version
 [ERROR] nip is pinned but not to version wrong-version. Skipping.
 # Return code 2 #
+### : Test opam pin remove --all
+### OPAMNODEPEXTS=1
+### opam pin add --no-action bar.dev ./bar
+[bar.dev] synchronised (file://${BASEDIR}/bar)
+bar is now pinned to file://${BASEDIR}/bar (version dev)
+### opam pin
+bar.dev    rsync             file://${BASEDIR}/bar
+foo.1      local definition
+nip.dev    rsync             file://${BASEDIR}/nip
+qux.dev    rsync             file://${BASEDIR}/qux
+### opam pin remove --no-action --all
+Ok, qux is no longer pinned to file://${BASEDIR}/qux (version dev)
+Ok, nip is no longer pinned to file://${BASEDIR}/nip (version dev)
+Ok, foo is no longer pinned locally (version 1)
+Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
+### opam pin
+### opam pin ./bar
+The following additional pinnings are required by bar.dev:
+  - qux.dev at file://${BASEDIR}/qux
+Pin and install them? [y/n] y
+[qux.dev] synchronised (no changes)
+qux is now pinned to file://${BASEDIR}/qux (version dev)
+bar is now pinned to file://${BASEDIR}/bar (version dev)
+
+Already up-to-date.
+Nothing to do.
+### opam pin --current foo
+foo is now pinned locally (version 1)
+### opam pin
+bar.dev    rsync             file://${BASEDIR}/bar
+foo.1      local definition
+qux.dev    rsync             file://${BASEDIR}/qux
+### opam pin remove --all foo
+opam: opamMain.exe: Too many arguments.
+      Usage: opamMain.exe pin [OPTION]... remove PACKAGES...|TARGET
+      
+# Return code 2 #
+### opam pin remove --all
+Ok, qux is no longer pinned to file://${BASEDIR}/qux (version dev)
+Ok, foo is no longer pinned locally (version 1)
+Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
+The following actions will be performed:
+=== remove 3 packages
+  - remove bar dev
+  - remove foo 1
+  - remove qux dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.dev
+-> removed   foo.1
+-> removed   qux.dev
+Done.
+### opam pin

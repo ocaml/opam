@@ -102,6 +102,7 @@ users)
   * [BUG] When reinstalling a package that has a dirty source, if uncommitted changes are the same than the ones stored in opam's cache, opam consider that it is up to date and nothing is updated [4879 @rjbou]
   * [BUG] Handle external dependencies when updating switch state pin status (all pins), instead as a post pin action (only when called with `opam pin` [#5047 @rjbou - fix #5046]
   * Allow opam pin remove to take a package (<pkg>.<version>) as argument [#5325 @kit-ty-kate]
+  * ◈ Add opam pin remove --all to remove all the pinned packages from a switch [#5308 @kit-ty-kate]
 
 ## List
   * Some optimisations to 'opam list --installable' queries combined with other filters [#4882 @altgr - fix #4311]
@@ -577,3 +578,4 @@ users)
   * `OpamCompat`: add `Int.equal` (for ocaml < 4.12)
   * `OpamFilename.clean_dir`: as the directory is recreated after removal, checks that the directory exists beforhand. It avoid creating a new empty directory uselessly [#4967 @rjbou]
   * `OpamStd.Map`: add `filter_map` [#5337 @rjbou]
+  * `OpamStd.Set`: Add `to_list_map` [#5308 @kit-ty-kate]
