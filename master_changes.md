@@ -239,6 +239,7 @@ users)
   * Remove src/client/no-git-version when calling make clean [#5290 @kit-ty-kate]
   * Update the bootstrap compiler to 4.14.0 [#5250 @kit-ty-kate]
   * Upgrade the vendored dune to 3.5.0 to fix make cold in an OCaml 5.0 env [#5355 @kit-ty-kate]
+  * Upgrade vendored deps to support lib-ext in OCaml 5.0 [#5355 @kit-ty-kate / @dra27]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
