@@ -1479,7 +1479,7 @@ let config cli =
               (OpamSwitchState.universe ~test:true ~doc:true ~dev_setup:true
                  ~requested:OpamPackage.Set.empty state Query)
             |> OpamPackage.Set.iter process;
-            if List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
+            if not Sys.win32 && List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
             then OpamConsole.warning
                 "PATH contains '.' : this is a likely cause of trouble.";
             `Ok ()
