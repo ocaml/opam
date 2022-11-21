@@ -88,7 +88,7 @@ ocamlbuild-pkg-build:
 
 re-pkg-build:
 	dune build @install -p re
-	cp -LR _build/install/default/lib/re $(SITELIB)/re/
+	dune install "--prefix=$(OCAMLROOT)" -p re re
 
 ocamlgraph-pkg-build:
 	dune installed-libraries
