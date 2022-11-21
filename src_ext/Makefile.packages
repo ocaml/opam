@@ -19,7 +19,7 @@ opam-file-format.pkgbuild: findlib.pkgbuild dune-local.pkgbuild
 
 cppo.pkgbuild: dune-local.pkgbuild
 
-extlib.pkgbuild: findlib.pkgbuild cppo.pkgbuild
+extlib.pkgbuild: dune-local.pkgbuild cppo.pkgbuild
 
 ocamlbuild.pkgbuild: findlib.pkgbuild
 
@@ -38,7 +38,7 @@ cmdliner.pkgbuild: dune-local.pkgbuild
 
 cudf.pkgbuild: dune-local.pkgbuild extlib.pkgbuild
 
-dose3.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild cppo.pkgbuild extlib.pkgbuild re.pkgbuild ocamlgraph.pkgbuild cudf.pkgbuild
+dose3.pkgbuild: dune-local.pkgbuild extlib.pkgbuild base64.pkgbuild re.pkgbuild ocamlgraph.pkgbuild cudf.pkgbuild stdlib-shims.pkgbuild
 
 # mccs.pkgbuild depends on findlib because the files are explicitly installed using it
 mccs.pkgbuild: dune-local.pkgbuild cudf.pkgbuild findlib.pkgbuild
@@ -79,7 +79,8 @@ cppo-pkg-build:
 	cp _build/install/default/lib/cppo/META $(SITELIB)/cppo/
 
 extlib-pkg-build:
-	make minimal=1 build install
+	dune build @install -p extlib
+	dune install -p extlib extlib
 
 ocamlbuild-pkg-build:
 	make -f configure.make all OCAMLBUILD_PREFIX=$(OCAMLROOT) OCAMLBUILD_BINDIR=$(OCAMLBIN) OCAMLBUILD_LIBDIR=$(SITELIB) OCAML_NATIVE=true OCAML_NATIVE_TOOLS=true
