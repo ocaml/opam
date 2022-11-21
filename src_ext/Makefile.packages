@@ -66,7 +66,7 @@ stublibs:
 
 opam-file-format-pkg-build:
 	dune build @install -p opam-file-format
-	dune install -p opam-file-format opam-file-format
+	dune install "--prefix=$(OCAMLROOT)" -p opam-file-format opam-file-format
 
 findlib-pkg-build:
 	./configure
@@ -80,7 +80,7 @@ cppo-pkg-build:
 
 extlib-pkg-build:
 	dune build @install -p extlib
-	dune install -p extlib extlib
+	dune install "--prefix=$(OCAMLROOT)" -p extlib extlib
 
 ocamlbuild-pkg-build:
 	make -f configure.make all OCAMLBUILD_PREFIX=$(OCAMLROOT) OCAMLBUILD_BINDIR=$(OCAMLBIN) OCAMLBUILD_LIBDIR=$(SITELIB) OCAML_NATIVE=true OCAML_NATIVE_TOOLS=true
@@ -93,7 +93,7 @@ re-pkg-build:
 ocamlgraph-pkg-build:
 	dune installed-libraries
 	dune build @install -p ocamlgraph
-	dune install -p ocamlgraph ocamlgraph
+	dune install "--prefix=$(OCAMLROOT)" -p ocamlgraph ocamlgraph
 
 result-pkg-build:
 	dune build @install -p result
@@ -108,15 +108,15 @@ topkg-pkg-build:
 
 cmdliner-pkg-build:
 	dune build @install -p cmdliner
-	dune install -p cmdliner cmdliner
+	dune install "--prefix=$(OCAMLROOT)" -p cmdliner cmdliner
 
 cudf-pkg-build:
 	dune build @install -p cudf
-	dune install -p cudf cudf
+	dune install "--prefix=$(OCAMLROOT)" -p cudf cudf
 
 dose3-pkg-build:
 	dune build @install -p dose3
-	dune install -p dose3 dose3
+	dune install "--prefix=$(OCAMLROOT)" -p dose3 dose3
 
 dune-local-pkg-build:
 	ocaml bootstrap.ml
@@ -129,27 +129,27 @@ mccs-pkg-build: stublibs
 
 opam-0install-cudf-pkg-build:
 	dune build @install -p opam-0install-cudf
-	dune install -p opam-0install-cudf opam-0install-cudf
+	dune install "--prefix=$(OCAMLROOT)" -p opam-0install-cudf opam-0install-cudf
 
 0install-solver-pkg-build:
 	dune build @install -p 0install-solver
-	dune install -p 0install-solver 0install-solver
+	dune install "--prefix=$(OCAMLROOT)" -p 0install-solver 0install-solver
 
 seq-pkg-build:
 	dune build @install -p seq
-	dune install -p seq seq
+	dune install "--prefix=$(OCAMLROOT)" -p seq seq
 
 stdlib-shims-pkg-build:
 	dune build @install -p stdlib-shims
-	dune install -p stdlib-shims stdlib-shims
+	dune install "--prefix=$(OCAMLROOT)" -p stdlib-shims stdlib-shims
 
 base64-pkg-build:
 	dune build @install -p base64
-	dune install -p base64 base64
+	dune install "--prefix=$(OCAMLROOT)" -p base64 base64
 
 spdx_licenses-pkg-build:
 	dune build @install -p spdx_licenses
-	dune install -p spdx_licenses spdx_licenses
+	dune install "--prefix=$(OCAMLROOT)" -p spdx_licenses spdx_licenses
 
 uutf-pkg-build:
 	ocaml pkg/pkg.ml build --pkg-name uutf --dev-pkg false --with-cmdliner true
@@ -161,4 +161,4 @@ jsonm-pkg-build:
 
 sha-pkg-build: stublibs
 	dune build @install -p sha
-	dune install -p sha sha
+	dune install "--prefix=$(OCAMLROOT)" -p sha sha
