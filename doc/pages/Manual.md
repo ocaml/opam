@@ -1186,12 +1186,18 @@ files.
   build, install and remove scripts.
 
     The following environment variables are set by opam (but can be overridden by `build-env`):
-    - `CDPATH=`
-    - `MAKEFLAGS=`
-    - `MAKELEVEL=`
-    - `OPAM_PACKAGE_NAME=<pkg>` (`<pkg>` is the name of the package being built/installed/removed)
-    - `OPAM_PACKAGE_VERSION=<ver>` (`<ver>` is the version of the package being built/installed/removed)
-    - `OPAMCLI=2.0` (since opam 2.1)
+    - can be overridden by `build-env`:
+      - `CDPATH=`
+      - `MAKEFLAGS=`
+      - `MAKELEVEL=`
+      - `OPAM_PACKAGE_NAME=<pkg>` (`<pkg>` is the name of the package being built/installed/removed)
+      - `OPAM_PACKAGE_VERSION=<ver>` (`<ver>` is the version of the package being built/installed/removed)
+      - `OPAMCLI=2.0` (since opam 2.1)
+    - non overwritable:
+      - `OPAMROOT`=<opam root path>`
+      - `OPAMSWITCH=<switch name>`
+      - `OPAM_SWITCH_PREFIX=<switch prefix>`
+    - `PATH` is updated with the current switch binary directory
     - `TMP` and `TMPDIR` are set by the sandbox script (bubblewrap), but should not be relied on since the sandbox is not used on all platforms and can be disabled by the user.
     - `CYGWIN=winsymlinks:native` on Windows, or `CYGWIN=$CYGWIN winsymlinks:native` if `CYGWIN` is defined and not empty and `CYGWIN` does not contain either `winsymlinks:native` or `winsymlinks:nativestrict` already (since opam 2.2). In some cases `noglob` can also be added to this variable, such that the default value becomes `CYGWIN=winsymlinks:native noglob` (since opam 2.1)
 
