@@ -94,8 +94,8 @@ topkg-pkg-build:
 	ocamlfind install topkg _build/pkg/META $(addprefix _build/src/topkg.,$(EXTS1)) $(addprefix _build/src/topkg.cm,$(EXTS2)) _build/src/topkg*.cmx
 
 cmdliner-pkg-build:
-	ocaml pkg/pkg.ml build --pinned false
-	ocamlfind install cmdliner _build/pkg/META $(addprefix _build/src/cmdliner.,$(EXTS1)) $(addprefix _build/src/cmdliner.cm,$(EXTS2)) _build/src/cmdliner*.cmx
+	dune build @install -p cmdliner
+	dune install "--prefix=$(OCAMLROOT)" -p cmdliner cmdliner
 
 cudf-pkg-build:
 	dune build @install -p cudf
@@ -111,8 +111,7 @@ dune-local-pkg-build:
 
 mccs-pkg-build:
 	dune build @install -p mccs
-	ocamlfind install mccs $(addprefix _build/install/default/lib/,$(addprefix mccs/,META libmccs_stubs.$(EXT_LIB) mccs.*) stublibs/*.$(EXT_DLL))
-	cp -RL _build/install/default/lib/mccs/glpk $(SITELIB)/mccs/
+	dune install "--prefix=$(OCAMLROOT)" -p mccs mccs
 
 opam-0install-cudf-pkg-build:
 	dune build @install -p opam-0install-cudf
