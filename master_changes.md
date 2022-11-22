@@ -166,6 +166,7 @@ users)
   * Add `with-tools` variable for recommended tools [#5016 @rjbou]
   * Add `x-locked` extension fields for overlay internal use, it stores if the files originate from a locked file, if so its extension [#5080 @rjbou]
   * Set `depext-bypass` parsing with depth 1, no needed brakcet if single package [#5154 @rjbou]
+  * [BUG] Variables are now expanded in build-env (as for setenv) [#5352 @dra27]
 
 ## External dependencies
   * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
@@ -485,6 +486,7 @@ users)
   * `OpamArg`: externalise `post`, `dev`, `doc_flag`, `test`, and `devsetup` package selection flags, to avoid redefining them [#5299 @rjbou]
   * `OpamConfigCommand.global_allowed_fields`: add `archive-mirrors` (`dl_cache`) to allowed modifiable fields, extendable [#5321 @hannesm @rjbou]
   * `OpamClient.update_with_init_config`: Fix passing the `dl_cache` from `InitConfig` to `Config` [#5315 @hannesm]
+  * `OpamAction`: in `build_package`, `install_package`, and `remove_package` expand `build-env` variables content added to the environment [#5352 @dra27]
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
@@ -517,6 +519,7 @@ users)
   * Add `OpamPinned.version_opt` [#5325 @kit-ty-kate]
   * Add optional argument `?env:(variable_contents option Lazy.t * string) OpamVariable.Map.t` to `OpamSysPoll` and `OpamSysInteract` functions. It is used to get syspolling variables from the environment first. [#4892 @rjbou]
   * `OpamSwitchState`: move and reimplement `opam-solver` `dependencies` and `reverse_dependencies` [#5337 @rjbou]
+  * `OpamEnv`: add `env_expansion` [#5352 @dra27]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
