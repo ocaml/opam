@@ -1080,17 +1080,18 @@ let from_2_1_alpha2_to_v2_1_rc ~on_the_fly:_ root conf =
 
 let from_2_1_rc_to_v2_1 ~on_the_fly:_ _ conf = conf, gtc_none
 
-let from_2_0_to_v2_1 ~on_the_fly:_ _ conf =
+let from_2_0_to_v2_1 ~on_the_fly _ conf =
   (* In opam < 2.1 "jobs" was set during initialisation
      This creates problems when upgrading from opam 2.0 as it
      sets the job count for good even if the CPU is replaced.
      See https://github.com/ocurrent/ocaml-dockerfile/pull/92 *)
   let info_jobs_changed ~prev_jobs =
-    OpamConsole.note
-      "The 'jobs' option was reset, its value was %d and its new value \
-       will vary according to the current number of cores on your machine. \
-       If it really was intended, you can set it again using:\n    \
-       opam option jobs=%d --global" prev_jobs prev_jobs;
+    if not on_the_fly then
+      OpamConsole.note
+        "The 'jobs' option was reset, its value was %d and its new value \
+         will vary according to the current number of cores on your machine. \
+         You can restore the fixed value using:\n    \
+         opam option jobs=%d --global" prev_jobs prev_jobs;
   in
   (* We print a note in case the previous value of 'jobs' does not
      match the default in opam 2.0 as we can't determine if the value
