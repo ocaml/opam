@@ -124,8 +124,7 @@ dune-local-pkg-build:
 
 mccs-pkg-build: stublibs
 	dune build @install -p mccs
-	ocamlfind install mccs $(addprefix _build/install/default/lib/,$(addprefix mccs/,META libmccs_stubs.$(EXT_LIB) mccs.*) stublibs/*.$(EXT_DLL))
-	cp -RL _build/install/default/lib/mccs/glpk $(SITELIB)/mccs/
+	dune install "--prefix=$(OCAMLROOT)" -p mccs mccs
 
 opam-0install-cudf-pkg-build:
 	dune build @install -p opam-0install-cudf
