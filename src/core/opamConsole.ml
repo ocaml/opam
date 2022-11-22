@@ -673,14 +673,14 @@ let header_msg fmt =
       let wpad = header_width () - String.length str - 2 in
       let wpadl = 4 in
       let wpadr = wpad - wpadl - if utf8_extended () then 4 else 0 in
-      print_message `stdout "\n%s %s %s%s\n"
+      print_message `stdout "\n%s %s%s%s\n"
         (colorise `cyan (String.sub padding 0 wpadl))
         (colorise `bold str)
         (if wpadr > 0 then
            let padding =
              String.sub padding (String.length padding - wpadr) wpadr
            in
-           colorise `cyan padding
+           " " ^ colorise `cyan padding
          else
            "")
         (if wpadr >= 0 && utf8_extended () then
