@@ -280,6 +280,8 @@ users)
   * Don’t rebuild packages when updating dependencies or availablity, unless the current state needs to be changed [#5118 @kit-ty-kate - fix #4647]
   * Rebuild packages when removing or adding the "plugin" flag [#5118 @kit-ty-kate]
   * Do not rebuild packages when an extra-source's url changes but not its checksum [#5258 @kit-ty-kate]
+  * Correctly handle empty environment variable additions [#5350 @dra27]
+  * Skip empty environment variable additions [#5350 @dra27]
 
 ## Opam file format
   *
@@ -537,6 +539,8 @@ users)
   * Add optional argument `?env:(variable_contents option Lazy.t * string) OpamVariable.Map.t` to `OpamSysPoll` and `OpamSysInteract` functions. It is used to get syspolling variables from the environment first. [#4892 @rjbou]
   * `OpamSwitchState`: move and reimplement `opam-solver` `dependencies` and `reverse_dependencies` [#5337 @rjbou]
   * `OpamEnv`: add `env_expansion` [#5352 @dra27]
+  * `OpamEnv`: fix invalid argument raised when trying to unzip empty string [#5350 @dra27]
+  * `OpamEnv`: skip environment updates and revert with empty strings [#5350 @dra27]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
