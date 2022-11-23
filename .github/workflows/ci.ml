@@ -202,7 +202,7 @@ let cache ?cond ?(key_prefix="needs.Analyse") ?(check_only=false) name =
       if cache.force_gzip || check_only then
         "ocaml-opam/cache@opam"
       else
-        "actions/cache@v2"
+        "actions/cache@v3"
     in
     let withs =
       if cache.force_gzip then

@@ -231,7 +231,7 @@ let uses name ?id ?cond ?(continue_on_error=false) ?(withs=[]) action ~oc ~workf
   f ~oc ~workflow ~job
 
 let checkout ?cond () =
-  uses "Checkout tree" ?id:None ?cond "actions/checkout@v2"
+  uses "Checkout tree" ?id:None ?cond "actions/checkout@v3"
 
 let skip_step ~oc ~workflow ~job f = f ~oc ~workflow ~job
 
