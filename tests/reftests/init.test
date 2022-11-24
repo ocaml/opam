@@ -10,7 +10,7 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
 
-<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-base-compiler) 
+<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-base-compiler)
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ocaml" {>= "4.05.0"}]
@@ -34,7 +34,7 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
 
-<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-base-compiler) 
+<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-base-compiler)
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ocaml" {>= "4.05.0"}]
@@ -58,7 +58,7 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
 
-<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-system) 
+<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-system)
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ocaml" {>= "4.05.0"}]

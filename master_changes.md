@@ -579,3 +579,4 @@ users)
   * `OpamFilename.clean_dir`: as the directory is recreated after removal, checks that the directory exists beforhand. It avoid creating a new empty directory uselessly [#4967 @rjbou]
   * `OpamStd.Map`: add `filter_map` [#5337 @rjbou]
   * `OpamStd.Set`: Add `to_list_map` [#5308 @kit-ty-kate]
+  * `OpamConsole.header_msg`: remove trailing space when there is no left padding [#5363 @rjbou]
