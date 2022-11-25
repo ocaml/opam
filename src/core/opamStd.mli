@@ -386,6 +386,9 @@ end
 (** {2 Manipulation and query of environment variables} *)
 
 module Env : sig
+
+  (** {3 Generic functions} *)
+
   (** Remove from a c-separated list of string the ones with the given prefix *)
   val reset_value: prefix:string -> char -> string -> string list
 
@@ -395,12 +398,6 @@ module Env : sig
       other elements with the same [prefix] they are kept in the second list.
   *)
   val cut_value: prefix:string -> char -> string -> string list * string list
-
-  val get: string -> string
-
-  val getopt: string -> string option
-
-  val list: unit -> (string * string) list
 
   (** Utility function for shell single-quoted strings. In most shells,
       backslash escapes are not allowed and a single quote needs to be replaced
@@ -413,6 +410,14 @@ module Env : sig
 
   (** Utility function for PowerShell strings. *)
   val escape_powershell: string -> string
+
+  (** {3 Environment variable handling} *)
+
+  val get: string -> string
+
+  val getopt: string -> string option
+
+  val list: unit -> (string * string) list
 end
 
 (** {2 System query and exit handling} *)

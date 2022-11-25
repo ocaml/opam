@@ -762,6 +762,17 @@ module Env = struct
       | curr::after -> aux (curr::before) after
     in aux [] v
 
+  let escape_single_quotes ?(using_backslashes=false) =
+    if using_backslashes then
+      Re.(replace (compile (set "\\\'")) ~f:(fun g -> "\\"^Group.get g 0))
+    else
+      Re.(replace_string (compile (char '\'')) ~by:"'\"'\"'")
+
+  let escape_powershell =
+    (* escape single quotes with two single quotes.
+       https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules?view=powershell-7.1 *)
+    Re.(replace_string (compile (char '\'')) ~by:"''")
+
   let list =
     let lazy_env = lazy (
       let e = Unix.environment () in
@@ -782,17 +793,6 @@ module Env = struct
       fun n -> OpamList.assoc String.equal n (list ())
 
   let getopt n = try Some (get n) with Not_found -> None
-
-  let escape_single_quotes ?(using_backslashes=false) =
-    if using_backslashes then
-      Re.(replace (compile (set "\\\'")) ~f:(fun g -> "\\"^Group.get g 0))
-    else
-      Re.(replace_string (compile (char '\'')) ~by:"'\"'\"'")
-
-  let escape_powershell =
-    (* escape single quotes with two single quotes.
-       https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules?view=powershell-7.1 *)
-    Re.(replace_string (compile (char '\'')) ~by:"''")
 end
 
 
