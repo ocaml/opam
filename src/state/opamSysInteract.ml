@@ -502,7 +502,28 @@ let packages_status ?(env=OpamVariable.Map.empty) packages =
       |> List.map OpamSysPkg.of_string
       |> OpamSysPkg.Set.of_list
     in
-    compute_sets sys_installed
+    let sys_available =
+      let query = Printf.sprintf "/%s/" (names_re ()) in
+      let max_query_length = 500 in
+      (* brew prints an error message if the query length is too long *)
+      if String.length query > max_query_length then OpamSysPkg.Set.empty
+      else
+        run_query_command "brew" ["search"; "--formula"; query ] |> (function
+        | [] -> []
+        | header :: formulae -> begin
+            let expected_header = "==> Formulae" in
+            if String.equal header expected_header then formulae else (
+              OpamConsole.warning
+                "Expected output of `brew search ...` to be '%s' but instead got '%s'"
+                expected_header
+                header;
+              []
+            )
+        end)
+        |> List.map OpamSysPkg.of_string
+        |> OpamSysPkg.Set.of_list
+    in
+    compute_sets ~sys_available sys_installed
   | Macports ->
     let variants_map, packages =
       OpamSysPkg.(Set.fold (fun spkg (map, set) ->
