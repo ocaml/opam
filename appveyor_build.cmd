@@ -139,7 +139,8 @@ if %ERRORLEVEL% equ 1 (
   "%CYG_ROOT%\bin\diff.exe" bootstrap/installed-packages current-lib-pkg-list | "%CYG_ROOT%\bin\sed.exe" -ne "s/</Remove/p" -e "s/>/Add/p" | "%CYG_ROOT%\bin\gawk.exe" "BEGIN{FS="" ""}$2!=k{if(k!="""")print o==f?w:o;w=$0;k=$2;f=o=$2"" ""$3;next}{o=""Switch ""o"" --> ""$3}END{print o==f?w:o}"
   echo lib-pkg will be re-built
   "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make --no-print-directory -C src_ext reset-lib-pkg"
-  del bootstrap\installed-packages
+  rd /s/q bootstrap
+  if exist src_ext\archives\nul rd /s/q src_ext\archives
 ) else (
   del current-lib-pkg-list
 )
