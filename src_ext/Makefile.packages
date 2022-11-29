@@ -69,7 +69,8 @@ opam-file-format-pkg-build:
 	dune install "--prefix=$(OCAMLROOT)" -p opam-file-format opam-file-format
 
 findlib-pkg-build:
-	./configure
+	./configure -sitelib "$(OCAMLROOT)lib"
+	echo "$(OCAMLROOT)lib/stublibs" >> "$(OCAMLROOT)lib/ocaml/ld.conf"
 	make all opt install
 
 cppo-pkg-build:
