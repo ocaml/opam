@@ -1,0 +1,29 @@
+diff -Naur a/src/common/dune b/src/common/dune
+--- a/src/common/dune	2021-07-22 07:14:19.000000000 +0000
++++ b/src/common/dune	2022-11-30 09:23:33.675462359 +0000
+@@ -2,6 +2,8 @@
+  (name dose_common)
+  (public_name dose3.common)
+  (libraries extlib cudf re.pcre stdlib-shims unix)
++ (preprocess  (per_module
++                 ((action (run %{bin:cppo} -V OCAML:%{ocaml_version} %{input-file})) Util)))
+  (flags (:standard)))
+ 
+ (ocamllex shell_lexer)
+diff -Naur a/src/common/util.ml b/src/common/util.ml
+--- a/src/common/util.ml	2021-07-22 07:14:19.000000000 +0000
++++ b/src/common/util.ml	2022-11-30 09:24:25.192693206 +0000
+@@ -9,6 +9,13 @@
+ (*  library, see the COPYING file for more information.                      *)
+ (*****************************************************************************)
+ 
++#if OCAML_VERSION < (4, 3, 0)
++module String = struct
++  include String
++  let capitalize_ascii = capitalize
++end
++#endif
++
+ (** return a unique identifier *)
+ let uuid () =
+   let rand =

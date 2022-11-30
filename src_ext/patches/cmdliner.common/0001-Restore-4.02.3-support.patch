@@ -1,26 +1,6 @@
-diff -Naur a/_tags b/_tags
---- a/_tags	2019-06-14 09:55:03.000000000 +0000
-+++ b/_tags	2019-11-21 14:29:33.236981936 +0000
-@@ -1,3 +1,3 @@
--true : bin_annot, safe_string
-+true : bin_annot, safe_string, package(bytes), package(result)
- <src> : include
- <test> : include
-\ No newline at end of file
-diff -Naur a/pkg/META b/pkg/META
---- a/pkg/META	2019-06-14 09:55:03.000000000 +0000
-+++ b/pkg/META	2019-11-21 14:29:33.236981936 +0000
-@@ -1,6 +1,6 @@
- version = "v1.0.4"
- description = "Declarative definition of command line interfaces"
--requires = ""
-+requires = "bytes result"
- archive(byte) = "cmdliner.cma"
- archive(native) = "cmdliner.cmxa"
- plugin(byte) = "cmdliner.cma"
 diff -Naur a/src/cmdliner.ml b/src/cmdliner.ml
 --- a/src/cmdliner.ml	2019-06-14 09:55:03.000000000 +0000
-+++ b/src/cmdliner.ml	2019-11-21 14:29:33.236981936 +0000
++++ b/src/cmdliner.ml	2022-11-30 10:23:01.914609707 +0000
 @@ -4,11 +4,12 @@
     cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
@@ -56,7 +36,7 @@ diff -Naur a/src/cmdliner.ml b/src/cmdliner.ml
    let eval_choice
 diff -Naur a/src/cmdliner.mli b/src/cmdliner.mli
 --- a/src/cmdliner.mli	2019-06-14 09:55:03.000000000 +0000
-+++ b/src/cmdliner.mli	2019-11-21 14:29:33.240979936 +0000
++++ b/src/cmdliner.mli	2022-11-30 10:23:01.914609707 +0000
 @@ -26,6 +26,8 @@
  
  (** {1:top Interface} *)
@@ -76,7 +56,7 @@ diff -Naur a/src/cmdliner.mli b/src/cmdliner.mli
  let lines =
 diff -Naur a/src/cmdliner_arg.ml b/src/cmdliner_arg.ml
 --- a/src/cmdliner_arg.ml	2019-06-14 09:55:03.000000000 +0000
-+++ b/src/cmdliner_arg.ml	2019-11-21 14:29:33.240979936 +0000
++++ b/src/cmdliner_arg.ml	2022-11-30 10:23:01.914609707 +0000
 @@ -6,6 +6,8 @@
  
  let rev_compare n0 n1 = compare n1 n0
@@ -88,7 +68,7 @@ diff -Naur a/src/cmdliner_arg.ml b/src/cmdliner_arg.ml
  let err_not_opt = "Option argument without name"
 diff -Naur a/src/cmdliner_arg.mli b/src/cmdliner_arg.mli
 --- a/src/cmdliner_arg.mli	2019-06-14 09:55:03.000000000 +0000
-+++ b/src/cmdliner_arg.mli	2019-11-21 14:29:33.240979936 +0000
++++ b/src/cmdliner_arg.mli	2022-11-30 10:23:01.914609707 +0000
 @@ -4,6 +4,8 @@
     cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
@@ -100,19 +80,24 @@ diff -Naur a/src/cmdliner_arg.mli b/src/cmdliner_arg.mli
  type 'a parser = string -> [ `Ok of 'a | `Error of string ]
 diff -Naur a/src/cmdliner_base.ml b/src/cmdliner_base.ml
 --- a/src/cmdliner_base.ml	2019-06-14 09:55:03.000000000 +0000
-+++ b/src/cmdliner_base.ml	2019-11-21 14:29:33.240979936 +0000
-@@ -280,7 +280,7 @@
-   in
-   parse, print
++++ b/src/cmdliner_base.ml	2022-11-30 10:24:47.705442090 +0000
+@@ -4,6 +4,13 @@
+    cmdliner v1.0.4
+   ---------------------------------------------------------------------------*)
  
--let env_bool_parse s = match String.lowercase_ascii s with
-+let env_bool_parse s = match String.lowercase s with
- | "" | "false" | "no" | "n" | "0" -> `Ok false
- | "true" | "yes" | "y" | "1" -> `Ok true
- | s -> `Error (err_invalid_val s (alts_str ["true"; "yes"; "false"; "no" ]))
++#if OCAML_VERSION < (4, 3, 0)
++module String = struct
++  include String
++  let lowercase_ascii = lowercase
++end
++#endif
++
+ (* Invalid argument strings *)
+ 
+ let err_empty_list = "empty list"
 diff -Naur a/src/cmdliner_cline.ml b/src/cmdliner_cline.ml
 --- a/src/cmdliner_cline.ml	2019-06-14 09:55:03.000000000 +0000
-+++ b/src/cmdliner_cline.ml	2019-11-21 14:29:33.240979936 +0000
++++ b/src/cmdliner_cline.ml	2022-11-30 10:23:01.918609815 +0000
 @@ -4,6 +4,9 @@
     cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
@@ -134,7 +119,7 @@ diff -Naur a/src/cmdliner_cline.ml b/src/cmdliner_cline.ml
    in
 diff -Naur a/src/cmdliner_cline.mli b/src/cmdliner_cline.mli
 --- a/src/cmdliner_cline.mli	2019-06-14 09:55:03.000000000 +0000
-+++ b/src/cmdliner_cline.mli	2019-11-21 14:29:33.240979936 +0000
++++ b/src/cmdliner_cline.mli	2022-11-30 10:23:01.918609815 +0000
 @@ -4,6 +4,8 @@
     cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
@@ -146,41 +131,26 @@ diff -Naur a/src/cmdliner_cline.mli b/src/cmdliner_cline.mli
  type t
 diff -Naur a/src/cmdliner_docgen.ml b/src/cmdliner_docgen.ml
 --- a/src/cmdliner_docgen.ml	2019-11-21 14:29:33.193003934 +0000
-+++ b/src/cmdliner_docgen.ml	2019-11-21 14:29:33.240979936 +0000
-@@ -170,7 +170,7 @@
-     | true, true -> (* optional by name *)
-         let key names =
-           let k = List.hd (List.sort rev_compare names) in
--          let k = String.lowercase_ascii k in
-+          let k = String.lowercase k in
-           if k.[1] = '-' then String.sub k 1 (String.length k - 1) else k
-         in
-         compare
-@@ -178,8 +178,8 @@
-           (key @@ Cmdliner_info.arg_opt_names a1)
-     | false, false -> (* positional by variable *)
-         compare
--          (String.lowercase_ascii @@ Cmdliner_info.arg_docv a0)
--          (String.lowercase_ascii @@ Cmdliner_info.arg_docv a1)
-+          (String.lowercase @@ Cmdliner_info.arg_docv a0)
-+          (String.lowercase @@ Cmdliner_info.arg_docv a1)
-     | true, false -> -1 (* positional first *)
-     | false, true -> 1  (* optional after *)
-   in
-@@ -310,8 +310,8 @@
++++ b/src/cmdliner_docgen.ml	2022-11-30 10:27:28.685668460 +0000
+@@ -4,6 +4,15 @@
+    cmdliner v1.0.4
+   ---------------------------------------------------------------------------*)
  
- let title ei =
-   let main = Cmdliner_info.eval_main ei in
--  let exec = String.capitalize_ascii (Cmdliner_info.term_name main) in
--  let name = String.uppercase_ascii (invocation ~sep:'-' ei) in
-+  let exec = String.capitalize (Cmdliner_info.term_name main) in
-+  let name = String.uppercase (invocation ~sep:'-' ei) in
-   let center_header = esc @@ strf "%s Manual" exec in
-   let left_footer =
-     let version = match Cmdliner_info.term_version main with
++#if OCAML_VERSION < (4, 3, 0)
++module String = struct
++  include String
++  let capitalize_ascii = capitalize
++  let lowercase_ascii = lowercase
++  let uppercase_ascii = uppercase
++end
++#endif
++
+ let rev_compare n0 n1 = compare n1 n0
+ let strf = Printf.sprintf
+ 
 diff -Naur a/src/cmdliner_manpage.ml b/src/cmdliner_manpage.ml
 --- a/src/cmdliner_manpage.ml	2019-06-14 09:55:03.000000000 +0000
-+++ b/src/cmdliner_manpage.ml	2019-11-21 14:29:33.240979936 +0000
++++ b/src/cmdliner_manpage.ml	2022-11-30 10:23:01.918609815 +0000
 @@ -4,6 +4,8 @@
     cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
@@ -192,7 +162,7 @@ diff -Naur a/src/cmdliner_manpage.ml b/src/cmdliner_manpage.ml
  type block =
 diff -Naur a/src/cmdliner_term.ml b/src/cmdliner_term.ml
 --- a/src/cmdliner_term.ml	2019-06-14 09:55:03.000000000 +0000
-+++ b/src/cmdliner_term.ml	2019-11-21 14:29:33.240979936 +0000
++++ b/src/cmdliner_term.ml	2022-11-30 10:23:01.918609815 +0000
 @@ -4,6 +4,8 @@
     cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
@@ -204,7 +174,7 @@ diff -Naur a/src/cmdliner_term.ml b/src/cmdliner_term.ml
    | `Help of Cmdliner_manpage.format * string option ]
 diff -Naur a/src/cmdliner_term.mli b/src/cmdliner_term.mli
 --- a/src/cmdliner_term.mli	2019-06-14 09:55:03.000000000 +0000
-+++ b/src/cmdliner_term.mli	2019-11-21 14:29:33.240979936 +0000
++++ b/src/cmdliner_term.mli	2022-11-30 10:23:01.918609815 +0000
 @@ -4,6 +4,8 @@
     cmdliner v1.0.4
    ---------------------------------------------------------------------------*)
@@ -216,10 +186,12 @@ diff -Naur a/src/cmdliner_term.mli b/src/cmdliner_term.mli
  type term_escape =
 diff -Naur a/src/dune b/src/dune
 --- a/src/dune	2019-06-14 09:55:03.000000000 +0000
-+++ b/src/dune	2019-11-21 14:29:33.240979936 +0000
-@@ -1,4 +1,5 @@
++++ b/src/dune	2022-11-30 10:23:01.918609815 +0000
+@@ -1,4 +1,7 @@
  (library
   (public_name cmdliner)
 + (libraries result)
++ (preprocess  (per_module
++                 ((action (run %{bin:cppo} -V OCAML:%{ocaml_version} %{input-file})) Cmdliner_base Cmdliner_docgen)))
   (flags :standard -w -3-6-27-32-35)
   (wrapped false))
