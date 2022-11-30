@@ -10,6 +10,8 @@
 
 open OpamTypes
 open OpamPackage.Set.Op
+[@@@ocaml.warning "-33"]
+open OpamDoseCompat
 
 let env ~with_test ~with_doc ~dev nv v =
   match OpamVariable.Full.scope v,

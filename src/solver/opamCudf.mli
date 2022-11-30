@@ -13,6 +13,8 @@
     solution *)
 
 open OpamTypes
+[@@@ocaml.warning "-33"]
+open OpamDoseCompat
 
 module Package : sig
   type t = Cudf.package

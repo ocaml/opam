@@ -9,6 +9,8 @@
 (**************************************************************************)
 
 open OpamCudfSolverSig
+[@@@ocaml.warning "-33"]
+open OpamDoseCompat
 
 let name solver_backend = "builtin-"^Mccs.get_solver_id ~solver:solver_backend ()
 

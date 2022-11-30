@@ -9,6 +9,8 @@
 (**************************************************************************)
 
 open OpamTypes
+[@@@ocaml.warning "-33"]
+open OpamDoseCompat
 
 include OpamCudfSolverSig
 

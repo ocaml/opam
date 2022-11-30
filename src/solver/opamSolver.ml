@@ -12,6 +12,8 @@
 open OpamTypes
 open OpamTypesBase
 open OpamPackage.Set.Op
+[@@@ocaml.warning "-33"]
+open OpamDoseCompat
 
 let log ?level fmt = OpamConsole.log ?level "SOLVER" fmt
 let slog = OpamConsole.slog

@@ -11,6 +11,8 @@
 
 open OpamTypes
 open OpamTypesBase
+[@@@ocaml.warning "-33"]
+open OpamDoseCompat
 
 let log ?level fmt = OpamConsole.log ?level "CUDF" fmt
 let slog = OpamConsole.slog

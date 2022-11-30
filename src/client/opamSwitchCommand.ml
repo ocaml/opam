@@ -13,6 +13,8 @@ open OpamTypes
 open OpamStateTypes
 open OpamPackage.Set.Op
 open OpamStd.Op
+[@@@ocaml.warning "-33"]
+open OpamBase64Compat
 
 module S = OpamFile.SwitchSelections
 

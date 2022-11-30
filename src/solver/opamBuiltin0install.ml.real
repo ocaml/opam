@@ -9,6 +9,8 @@
 (**************************************************************************)
 
 open OpamCudfSolverSig
+[@@@ocaml.warning "-33"]
+open OpamDoseCompat
 
 let log ?level f = OpamConsole.log "0install" ?level f
 

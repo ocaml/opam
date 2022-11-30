@@ -3,6 +3,14 @@
   (public_name opam-solver)
   (synopsis    "OCaml Package Manager solver interaction library")
   (libraries   opam-format cudf dose3.algo
+               (select opamDoseCompat.ml from
+                 (!dose3.opam -> opamDoseCompat.ml.6)
+                 (dose3.dose_src_ext_vendor -> opamDoseCompat.ml.6)
+                 (           -> opamDoseCompat.ml.5))
+               (select opamDoseCompat.mli from
+                 (!dose3.opam -> opamDoseCompat.mli.6)
+                 (dose3.dose_src_ext_vendor -> opamDoseCompat.mli.6)
+                 (           -> opamDoseCompat.mli.5))
                (select opamBuiltinMccs.ml from
                  (mccs -> opamBuiltinMccs.ml.real)
                  (     -> opamBuiltinMccs.ml.dummy))
@@ -17,3 +25,8 @@
                (:include ../ocaml-flags-configure.sexp)
                (:include ../ocaml-context-flags.sexp)))
   (wrapped     false))
+
+(rule
+  (with-stdout-to opamDoseCompat.ml.6 (run echo "")))
+(rule
+  (with-stdout-to opamDoseCompat.mli.6 (run echo "")))
