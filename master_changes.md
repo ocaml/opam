@@ -244,6 +244,7 @@ users)
   * Small update to GHA scripts [#5055 @dra27]
   * Adapt Windows CI to new safe.directory setting [#5119 @dra27]
   * Bid a fond farewell to AppVeyor, with thanks for 5100+ CI builds [#5134 @dra27]
+  * Remove Cygwin32 from testing, as it's been retired upstream [#5365 @dra27]
 
 ## Release scripts
   * Make the release script setup-less using QEMU, Docker and Rosetta 2 [#4947 @kit-ty-kate]
@@ -425,6 +426,7 @@ users)
   * Update repo hash in depext workflow [#5153 @rjbou]
   * Fix the archlinux script [#5218 @kit-ty-kate]
   * Fix Cygwin Cache [#5281 @dra27]
+  * Upgrade actions version for new infrastructure: `actions/cache` to `v3`, `actions/checkout` to `v3`, and `jitterbit/get-changed-files@v1` to `Ana06/get-changed-files` [#5365 @rjbou]
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]

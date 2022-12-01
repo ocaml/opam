@@ -67,20 +67,20 @@ jobs:
       opam-bs-cache: ${{ steps.keys.outputs.opam-bs-cache }}
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Determine cache keys
       id: keys
       run: |
         echo archives=archives-1-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
-        echo ::set-output name=archives::archives-1-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
+        echo archives=archives-1-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }} >> $GITHUB_OUTPUT
         echo ocaml-secondary-compiler=legacy-${{ env.OPAM_REPO_SHA }}
-        echo ::set-output name=ocaml-secondary-compiler::legacy-${{ env.OPAM_REPO_SHA }}
-        echo ocaml-cache=${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
-        echo ::set-output name=ocaml-cache::${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
+        echo ocaml-secondary-compiler=legacy-${{ env.OPAM_REPO_SHA }} >> $GITHUB_OUTPUT
+        echo ocaml-cache=${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/create-ocaml-cache.sh') }}
+        echo ocaml-cache=${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/create-ocaml-cache.sh') }} >> $GITHUB_OUTPUT
         echo cygwin=${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}
-        echo ::set-output name=cygwin::${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}
+        echo cygwin=${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }} >> $GITHUB_OUTPUT
         echo opam-bs-cache=${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
-        echo ::set-output name=opam-bs-cache::${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
+        echo opam-bs-cache=${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }} >> $GITHUB_OUTPUT
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam
@@ -112,14 +112,6 @@ jobs:
     runs-on: windows-2019
     needs: Analyse
     steps:
-    - name: Cygwin32 Cache
-      id: cygwin32
-      uses: ocaml-opam/cache@opam
-      with:
-        path: D:\Cache\cygwin\i686-pc-cygwin
-        key: cygwin32-${{ needs.Analyse.outputs.cygwin }}
-        check-only: true
-        force-gzip: true
     - name: Cygwin64 Cache
       id: cygwin64
       uses: ocaml-opam/cache@opam
@@ -129,12 +121,8 @@ jobs:
         check-only: true
         force-gzip: true
     - name: Checkout tree
-      if: steps.cygwin32.outputs.cache-hit != 'true' || steps.cygwin64.outputs.cache-hit != 'true'
-      uses: actions/checkout@v2
-    - name: Create Cygwin32 cache
-      if: steps.cygwin32.outputs.cache-hit != 'true'
-      shell: cmd
-      run: .github\scripts\cygwin.cmd i686-pc-cygwin D:\Cache\cygwin create
+      if: steps.cygwin64.outputs.cache-hit != 'true'
+      uses: actions/checkout@v3
     - name: Create Cygwin64 cache
       if: steps.cygwin64.outputs.cache-hit != 'true'
       shell: cmd
@@ -154,7 +142,7 @@ jobs:
     - name: Install bubblewrap
       run: sudo apt install bubblewrap
     - name: Checkout tree
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam
@@ -166,7 +154,7 @@ jobs:
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -186,10 +174,6 @@ jobs:
         host: [ x86_64-pc-cygwin, i686-w64-mingw32, x86_64-w64-mingw32, i686-pc-windows, x86_64-pc-windows ]
         build: [ x86_64-pc-cygwin ]
         ocamlv: [ 4.14.0 ]
-        include:
-          - ocamlv: 4.14.0
-            host: i686-pc-cygwin
-            build: i686-pc-cygwin
       fail-fast: false
     defaults:
       run:
@@ -202,15 +186,7 @@ jobs:
         git config --system core.autocrlf false
         git config --system core.eol lf
     - name: Checkout tree
-      uses: actions/checkout@v2
-    - name: Cygwin32 Cache
-      id: cygwin32
-      if: matrix.build == 'i686-pc-cygwin'
-      uses: ocaml-opam/cache@opam
-      with:
-        path: D:\Cache\cygwin\i686-pc-cygwin
-        key: cygwin32-${{ needs.Analyse.outputs.cygwin }}
-        force-gzip: true
+      uses: actions/checkout@v3
     - name: Cygwin64 Cache
       id: cygwin64
       if: matrix.build == 'x86_64-pc-cygwin'
@@ -272,7 +248,7 @@ jobs:
       fail-fast: true
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam
@@ -284,7 +260,7 @@ jobs:
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -311,10 +287,10 @@ jobs:
     - name: Install system's opam package
       run: sudo apt install opam || true
     - name: Checkout tree
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: ocaml-secondary-compiler Cache
       id: legacy
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.opam
         key: ${{ runner.os }}-${{ needs.Analyse.outputs.ocaml-secondary-compiler }}
@@ -323,7 +299,7 @@ jobs:
       run: bash -exu .github/scripts/main/legacy-cache.sh
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -347,7 +323,7 @@ jobs:
       OPAM_TEST: 1
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Install bubblewrap
       run: sudo apt install bubblewrap
     - name: src_ext/archives and opam-repository Cache
@@ -361,7 +337,7 @@ jobs:
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -370,7 +346,7 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: opam bootstrap Cache
       id: opam-bootstrap
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ${{ env.OPAMBSROOT }}/**
@@ -381,7 +357,7 @@ jobs:
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
     - name: opam-rt Cache
       id: opam-rt
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/opam-rt/**
         key: ${{ runner.os }}-opam-rt-${{ matrix.ocamlv }}
@@ -401,7 +377,7 @@ jobs:
       OPAM_TEST: 1
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam
@@ -413,7 +389,7 @@ jobs:
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -422,7 +398,7 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: opam bootstrap Cache
       id: opam-bootstrap
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ${{ env.OPAMBSROOT }}/**
@@ -433,7 +409,7 @@ jobs:
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
     - name: opam-rt Cache
       id: opam-rt
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/opam-rt/**
         key: ${{ runner.os }}-opam-rt-${{ matrix.ocamlv }}
@@ -454,7 +430,7 @@ jobs:
     - name: Install bubblewrap
       run: sudo apt install bubblewrap
     - name: Checkout tree
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam
@@ -490,7 +466,7 @@ jobs:
     - name: Install bubblewrap
       run: sudo apt install bubblewrap
     - name: Checkout tree
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam
@@ -502,7 +478,7 @@ jobs:
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -511,7 +487,7 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: opam bootstrap Cache
       id: opam-bootstrap
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ${{ env.OPAMBSROOT }}/**
@@ -536,7 +512,7 @@ jobs:
       OPAMBSROOT: ~/.cache/opam.${{ matrix.solver }}.cached
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam
@@ -548,7 +524,7 @@ jobs:
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -557,7 +533,7 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: opam bootstrap Cache
       id: opam-bootstrap
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ${{ env.OPAMBSROOT }}/**
@@ -583,15 +559,15 @@ jobs:
     - name: Install bubblewrap
       run: sudo apt install bubblewrap
     - name: Checkout tree
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: opam 1.2 root Cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ${{ env.OPAM12CACHE }}
         key: ${{ runner.os }}-opam1.2-root
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -614,15 +590,15 @@ jobs:
       fail-fast: false
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: opam 1.2 root Cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ${{ env.OPAM12CACHE }}
         key: ${{ runner.os }}-opam1.2-root
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -646,7 +622,7 @@ jobs:
     - name: Install system's dune and ocaml packages
       run: sudo apt install dune ocaml || true
     - name: Checkout tree
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam
@@ -658,8 +634,7 @@ jobs:
         force-gzip: true
     - name: Get changed files
       id: files
-      uses: jitterbit/get-changed-files@v1
-      continue-on-error: true
+      uses: Ana06/get-changed-files@v2.2.0
     - name: Changed files list
       run: |
         for changed_file in ${{ steps.files.outputs.modified }}; do

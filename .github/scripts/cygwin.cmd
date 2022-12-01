@@ -15,7 +15,7 @@
 ::
 :: cygwin.cmd distro cache-directory {create|host}
 ::
-:: where distro is i686-pc-cygwin or x86_64-pc-cygwin and rebuilds the cache
+:: where distro is x86_64-pc-cygwin and rebuilds the cache
 ::
 :: Environment variables:
 ::   CYGWIN_ROOT        - Cygwin installation root directory
@@ -23,11 +23,9 @@
 
 set CYGWIN_CACHE_DIR=%2
 set CYGWIN_DISTRO=%1
-if "%CYGWIN_DISTRO%" neq "i686-pc-cygwin" (
-  if "%CYGWIN_DISTRO%" neq "x86_64-pc-cygwin" (
-    echo Invalid Cygwin distro: %1
-    exit /b 2
-  )
+if "%CYGWIN_DISTRO%" neq "x86_64-pc-cygwin" (
+  echo Invalid Cygwin distro: %1
+  exit /b 2
 )
 
 if "%3" equ "create" goto SetupCygwin
@@ -53,7 +51,6 @@ if not exist %CYGWIN_CACHE_DIR%\%CYGWIN_DISTRO%\cache.tar (
 set Path=C:\Program Files\Mercurial;C:\Program Files\Git\cmd;%CYGWIN_ROOT%\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\
 if "%3" equ "i686-w64-mingw32" set Path=%CYGWIN_ROOT%\usr\%3\sys-root\mingw\bin;%Path%
 if "%3" equ "x86_64-w64-mingw32" set Path=%CYGWIN_ROOT%\usr\%3\sys-root\mingw\bin;%Path%
-if "%3" equ "i686-pc-cygwin" set Path=%CYGWIN_ROOT%\bin;%Path%
 if "%3" equ "x86_64-pc-cygwin" set Path=%CYGWIN_ROOT%\bin;%Path%
 
 ::echo %CYGWIN_ROOT%\bin>> %GITHUB_PATH%
