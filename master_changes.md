@@ -244,6 +244,7 @@ users)
   * Small update to GHA scripts [#5055 @dra27]
   * Adapt Windows CI to new safe.directory setting [#5119 @dra27]
   * Bid a fond farewell to AppVeyor, with thanks for 5100+ CI builds [#5134 @dra27]
+  * Remove Cygwin32 from testing, as it's been retired upstream [#5365 @dra27]
 
 ## Release scripts
   * Make the release script setup-less using QEMU, Docker and Rosetta 2 [#4947 @kit-ty-kate]

@@ -112,14 +112,6 @@ jobs:
     runs-on: windows-2019
     needs: Analyse
     steps:
-    - name: Cygwin32 Cache
-      id: cygwin32
-      uses: ocaml-opam/cache@opam
-      with:
-        path: D:\Cache\cygwin\i686-pc-cygwin
-        key: cygwin32-${{ needs.Analyse.outputs.cygwin }}
-        check-only: true
-        force-gzip: true
     - name: Cygwin64 Cache
       id: cygwin64
       uses: ocaml-opam/cache@opam
@@ -129,12 +121,8 @@ jobs:
         check-only: true
         force-gzip: true
     - name: Checkout tree
-      if: steps.cygwin32.outputs.cache-hit != 'true' || steps.cygwin64.outputs.cache-hit != 'true'
+      if: steps.cygwin64.outputs.cache-hit != 'true'
       uses: actions/checkout@v3
-    - name: Create Cygwin32 cache
-      if: steps.cygwin32.outputs.cache-hit != 'true'
-      shell: cmd
-      run: .github\scripts\cygwin.cmd i686-pc-cygwin D:\Cache\cygwin create
     - name: Create Cygwin64 cache
       if: steps.cygwin64.outputs.cache-hit != 'true'
       shell: cmd
@@ -186,10 +174,6 @@ jobs:
         host: [ x86_64-pc-cygwin, i686-w64-mingw32, x86_64-w64-mingw32, i686-pc-windows, x86_64-pc-windows ]
         build: [ x86_64-pc-cygwin ]
         ocamlv: [ 4.14.0 ]
-        include:
-          - ocamlv: 4.14.0
-            host: i686-pc-cygwin
-            build: i686-pc-cygwin
       fail-fast: false
     defaults:
       run:
@@ -203,14 +187,6 @@ jobs:
         git config --system core.eol lf
     - name: Checkout tree
       uses: actions/checkout@v3
-    - name: Cygwin32 Cache
-      id: cygwin32
-      if: matrix.build == 'i686-pc-cygwin'
-      uses: ocaml-opam/cache@opam
-      with:
-        path: D:\Cache\cygwin\i686-pc-cygwin
-        key: cygwin32-${{ needs.Analyse.outputs.cygwin }}
-        force-gzip: true
     - name: Cygwin64 Cache
       id: cygwin64
       if: matrix.build == 'x86_64-pc-cygwin'
