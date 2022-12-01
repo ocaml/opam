@@ -72,15 +72,15 @@ jobs:
       id: keys
       run: |
         echo archives=archives-1-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
-        echo ::set-output name=archives::archives-1-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
+        echo archives=archives-1-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }} >> $GITHUB_OUTPUT
         echo ocaml-secondary-compiler=legacy-${{ env.OPAM_REPO_SHA }}
-        echo ::set-output name=ocaml-secondary-compiler::legacy-${{ env.OPAM_REPO_SHA }}
+        echo ocaml-secondary-compiler=legacy-${{ env.OPAM_REPO_SHA }} >> $GITHUB_OUTPUT
         echo ocaml-cache=${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
-        echo ::set-output name=ocaml-cache::${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}
+        echo ocaml-cache=${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }} >> $GITHUB_OUTPUT
         echo cygwin=${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}
-        echo ::set-output name=cygwin::${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}
+        echo cygwin=${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }} >> $GITHUB_OUTPUT
         echo opam-bs-cache=${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
-        echo ::set-output name=opam-bs-cache::${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}
+        echo opam-bs-cache=${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }} >> $GITHUB_OUTPUT
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam

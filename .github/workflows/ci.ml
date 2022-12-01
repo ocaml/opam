@@ -279,7 +279,7 @@ let analyse_job ~oc ~workflow ~platforms ~keys f =
   let keys =
     let set_key (name, value) =
       [Printf.sprintf "echo %s=%s" name value;
-       Printf.sprintf "echo ::set-output name=%s::%s" name value]
+       Printf.sprintf "echo %s=%s >> $GITHUB_OUTPUT" name value]
     in
     List.flatten (List.map set_key keys)
   in
