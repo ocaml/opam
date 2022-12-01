@@ -477,7 +477,7 @@ let hygiene_job (type a) ~analyse_job (platform : a platform) ~oc ~workflow f =
     ++ install_sys_dune [os_of_platform platform]
     ++ checkout ()
     ++ cache Archives
-    ++ uses "Get changed files" ~id:"files" ~continue_on_error:true (* see https://github.com/jitterbit/get-changed-files/issues/19 *) "jitterbit/get-changed-files@v1"
+    ++ uses "Get changed files" ~id:"files" (* ~continue_on_error:true see https://github.com/jitterbit/get-changed-files/issues/19 *) "Ana06/get-changed-files@v2.2.0" (* see https://github.com/jitterbit/get-changed-files/issues/55 ; Ana06'fork contains #19 and #55 fixes *) 
     ++ run "Changed files list" [
          "for changed_file in ${{ steps.files.outputs.modified }}; do";
          "  echo \"M  ${changed_file}.\"";

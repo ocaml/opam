@@ -634,8 +634,7 @@ jobs:
         force-gzip: true
     - name: Get changed files
       id: files
-      uses: jitterbit/get-changed-files@v1
-      continue-on-error: true
+      uses: Ana06/get-changed-files@v2.2.0
     - name: Changed files list
       run: |
         for changed_file in ${{ steps.files.outputs.modified }}; do
