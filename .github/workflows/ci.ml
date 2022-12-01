@@ -514,7 +514,7 @@ let main oc : unit =
   let keys = [
     ("archives", "archives-1-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}");
     ("ocaml-secondary-compiler", "legacy-${{ env.OPAM_REPO_SHA }}");
-    ("ocaml-cache", "${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}");
+    ("ocaml-cache", "${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/create-ocaml-cache.sh') }}");
     ("cygwin", "${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}");
     ("opam-bs-cache", "${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}");
   ] in
