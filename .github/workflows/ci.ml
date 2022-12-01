@@ -235,6 +235,7 @@ let unpack_cygwin ?cond build host =
   run ?cond ~shell:"cmd" "Unpack Cygwin" [Printf.sprintf {|.github\scripts\cygwin.cmd %s %s %s|} build cygwin_cache_directory host]
 
 let install_sys_packages packages ~descr ?cond platforms =
+  let platforms = List.map os_of_platform platforms in
   let packages = String.concat " " packages in
   let linux_command = "sudo apt install " ^ packages in
   let macos_command = "brew install " ^ packages in
@@ -270,6 +271,7 @@ let install_sys_opam ?cond = install_sys_packages ["opam"] ~descr:"Install syste
 let install_sys_dune ?cond = install_sys_packages ["dune"; "ocaml"] ~descr:"Install system's dune and ocaml packages" ?cond
 
 let analyse_job ~oc ~workflow ~platforms ~keys f =
+  let oses = List.map os_of_platform platforms in
   let outputs =
     let f (key, _) = (key, Printf.sprintf "${{ steps.keys.outputs.%s }}" key) in
     List.map f keys
@@ -282,18 +284,18 @@ let analyse_job ~oc ~workflow ~platforms ~keys f =
     List.flatten (List.map set_key keys)
   in
   let only_with platform step =
-    if List.mem platform platforms then
+    if List.mem platform oses then
       step
     else
       skip_step
   in
   let linux_guard =
-    match platforms with
+    match oses with
     | [Linux] -> None
     | _ -> Some (Predicate(true, Runner Linux))
   in
   let not_windows_guard =
-    if List.mem Windows platforms then
+    if List.mem Windows oses then
       Some (Predicate(false, Runner Windows))
     else
       None
@@ -317,7 +319,8 @@ let cygwin_job ~analyse_job ~oc ~workflow f =
     ++ build_cache Cygwin
     ++ end_job f
 
-let main_build_job ~analyse_job ~cygwin_job ?section platform start_version ~oc ~workflow f =
+let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~workflow f =
+  let platform = os_of_platform runner in
   let only_on target = only_on platform target in
   let not_on target = not_on platform target in
   let shell =
@@ -339,7 +342,7 @@ let main_build_job ~analyse_job ~cygwin_job ?section platform start_version ~oc 
   let matrix = ((platform <> Windows), matrix, includes) in
   let needs = if platform = Windows then [analyse_job; cygwin_job] else [analyse_job] in
   let host = host_of_platform platform in
-  job ~oc ~workflow ~runs_on:(Runner [platform]) ?shell ?section ~needs ~matrix ("Build-" ^ name_of_platform platform)
+  job ~oc ~workflow ~runs_on:(Runner [runner]) ?shell ?section ~needs ~matrix ("Build-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
     ++ only_on Windows (git_lf_checkouts ~cond:(Predicate(true, EndsWith("matrix.host", "-pc-cygwin"))) ~shell:"cmd" ~title:"Configure LF checkout for Cygwin" ())
     ++ checkout ()
@@ -385,7 +388,8 @@ let legacy_build_job ~analyse_job ~build_linux_job ~build_windows_job ~build_mac
     ++ run "Build" ["bash -exu .github/scripts/main/legacy.sh"]
     ++ end_job f
 
-let main_test_job ~analyse_job ~build_linux_job ~build_windows_job:_ ~build_macOS_job:_ ?section platform ~oc ~workflow f =
+let main_test_job ~analyse_job ~build_linux_job ~build_windows_job:_ ~build_macOS_job:_ ?section runner ~oc ~workflow f =
+  let platform = os_of_platform runner in
   let _ = assert (platform <> Windows) in
   let only_on target = only_on platform target in
   let needs =
@@ -397,7 +401,7 @@ let main_test_job ~analyse_job ~build_linux_job ~build_windows_job:_ ~build_macO
   let matrix = platform_ocaml_matrix ~fail_fast:false latest_ocaml in
   let host = host_of_platform platform in
   let ocamlv = "${{ matrix.ocamlv }}" in
-  job ~oc ~workflow ?section ~runs_on:(Runner [platform]) ~env:[("OPAM_TEST", "1")] ~matrix ~needs ("Test-" ^ name_of_platform platform)
+  job ~oc ~workflow ?section ~runs_on:(Runner [runner]) ~env:[("OPAM_TEST", "1")] ~matrix ~needs ("Test-" ^ name_of_platform platform)
     ++ checkout ()
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
     ++ cache Archives
@@ -410,12 +414,13 @@ let main_test_job ~analyse_job ~build_linux_job ~build_windows_job:_ ~build_macO
     ++ run "Test (opam-rt)" ["bash -exu .github/scripts/main/opam-rt.sh"]
     ++ end_job f
 
-let cold_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ?section platform ~oc ~workflow f =
+let cold_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ?section runner ~oc ~workflow f =
+  let platform = os_of_platform runner in
   (* TODO Windows steps not all here *)
   let host = host_of_platform platform in
   let only_on target = only_on platform target in
   let needs = [analyse_job; (match platform with Linux -> build_linux_job | Windows -> build_windows_job | MacOS -> build_macOS_job)] in
-  job ~oc ~workflow ?section ~runs_on:(Runner [platform]) ~env:[("OPAM_COLD", "1")] ~needs ("Cold-" ^ name_of_platform platform)
+  job ~oc ~workflow ?section ~runs_on:(Runner [runner]) ~env:[("OPAM_COLD", "1")] ~needs ("Cold-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
     ++ checkout ()
     ++ cache Archives
@@ -426,7 +431,8 @@ let cold_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ?
     ++ run "Test (basic)" ["bash -exu .github/scripts/main/test.sh"]
     ++ end_job f
 
-let solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ?section platform ~oc ~workflow f =
+let solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ?section runner ~oc ~workflow f =
+  let platform = os_of_platform runner in
   (* TODO Windows steps not all here *)
   let host = host_of_platform platform in
   let only_on target = only_on platform target in
@@ -437,7 +443,7 @@ let solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_jo
     (fail_fast, ("solver", ["z3"; "0install"])::matrix, [])
   in
   let ocamlv = "${{ matrix.ocamlv }}" in
-  job ~oc ~workflow ?section ~runs_on:(Runner [platform]) ~env ~needs ~matrix ("Solvers-" ^ name_of_platform platform)
+  job ~oc ~workflow ?section ~runs_on:(Runner [runner]) ~env ~needs ~matrix ("Solvers-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
     ++ checkout ()
     ++ cache Archives
@@ -448,14 +454,15 @@ let solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_jo
     ++ run "Compile" ["bash -exu .github/scripts/main/solvers.sh"]
     ++ end_job f
 
-let upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ?section platform ~oc ~workflow f =
+let upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ?section runner ~oc ~workflow f =
+  let platform = os_of_platform runner in
   let _ = assert (platform <> Windows) in (* No opam 1.x for Windows *)
   let host = host_of_platform platform in
   let only_on target = only_on platform target in
   let needs = [analyse_job; (match platform with Linux -> build_linux_job | Windows -> build_windows_job | MacOS -> build_macOS_job)] in
   let matrix = platform_ocaml_matrix ~fail_fast:false latest_ocaml in
   let ocamlv = "${{ matrix.ocamlv }}" in
-  job ~oc ~workflow ?section ~runs_on:(Runner [platform]) ~needs ~matrix ("Upgrade-" ^ name_of_platform platform)
+  job ~oc ~workflow ?section ~runs_on:(Runner [runner]) ~needs ~matrix ("Upgrade-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
     ++ checkout ()
     ++ cache Opam12Root
