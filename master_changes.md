@@ -426,6 +426,7 @@ users)
   * Update repo hash in depext workflow [#5153 @rjbou]
   * Fix the archlinux script [#5218 @kit-ty-kate]
   * Fix Cygwin Cache [#5281 @dra27]
+  * Upgrade actions version for new infrastructure: `actions/cache` to `v3`, `actions/checkout` to `v3`, and `jitterbit/get-changed-files@v1` to `Ana06/get-changed-files` [#5365 @rjbou]
 
 ## Shell
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
