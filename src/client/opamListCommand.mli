@@ -49,6 +49,7 @@ type selector =
   | Available
   | Installable
   | Pinned
+  | Latests_only
   | Depends_on of dependency_toggles * atom list
   | Required_by of dependency_toggles * atom list
   | Conflicts_with of package list

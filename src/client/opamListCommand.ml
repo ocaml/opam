@@ -64,6 +64,7 @@ type selector =
   | Available
   | Installable
   | Pinned
+  | Latests_only
   | Depends_on of dependency_toggles * atom list
   | Required_by of dependency_toggles * atom list
   | Conflicts_with of package list
@@ -86,6 +87,7 @@ let string_of_selector =
   | Available -> "available" % `cyan
   | Installable -> "installable" % `cyan
   | Pinned -> "pinned" % `cyan
+  | Latests_only -> "latest-only" % `cyan
   | Depends_on (tog,atoms) ->
     Printf.sprintf "%s(%s)"
       ((if tog.recursive then "rec-depends-on" else "depends-on") % `blue)
@@ -222,6 +224,11 @@ let apply_selector ~base st = function
       (OpamSwitchState.universe st ~requested:OpamPackage.Set.empty Query)
       base
   | Pinned -> OpamPinned.packages st
+  | Latests_only ->
+    OpamPackage.to_map base |>
+    OpamPackage.Name.Map.map (fun vset ->
+      OpamPackage.Version.Set.singleton (OpamPackage.Version.Set.max_elt vset)) |>
+    OpamPackage.of_map
   | (Required_by ({recursive=true; _} as tog, atoms)
     | Depends_on ({recursive=true; _} as tog, atoms)) as direction ->
     let deps_fun = match direction with
