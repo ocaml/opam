@@ -47,6 +47,7 @@ users)
 ## Pin
 
 ## List
+  * ◈ Add a new `--latests-only` option to only list the latest packages [#5375 @kit-ty-kate]
 
 ## Show
 

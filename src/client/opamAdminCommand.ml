@@ -866,6 +866,8 @@ let state_selection_arg cli =
      $(b,environment) (this calls the solver and may be more costly; \
      a package depending on an unavailable one may be available, but \
      is never installable)";
+    OpamArg.cli_from OpamArg.cli2_3, OpamListCommand.Latests_only,
+    ["latests-only"], "List only the latest version of each package.";
   ]
 
 let get_virtual_switch_state repo_root env =

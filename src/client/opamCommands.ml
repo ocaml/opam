@@ -593,6 +593,8 @@ let list ?(force_search=false) cli =
         OpamListCommand.Compiler, ["base"],
           "List only the immutable base of the current switch (i.e. \
                 compiler packages)";
+        cli_from cli2_3, OpamListCommand.Latests_only, ["latests-only"],
+          "List only the latest version of each package.";
         cli_from cli2_2, OpamListCommand.Compiler, ["invariant"],
           "List only the immutable base of the current switch (i.e. \
                 invariant packages)";
