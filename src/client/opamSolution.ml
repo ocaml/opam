@@ -1277,11 +1277,22 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     entry_point t sys_packages
   with Sys.Break as e -> OpamStd.Exn.finalise e give_up_msg
 
+let gc_compact () =
+  let get_heap () =
+    let {Gc.heap_words; _} = Gc.quick_stat () in
+    heap_words * Sys.word_size / 8 / 1024 / 1024
+  in
+  let before = get_heap () in
+  Gc.compact ();
+  let after = get_heap () in
+  log "GC compact (heap %d MB -> %d MB)" before after
+
 (* Apply a solution *)
 let apply ?ask t ~requested ?print_requested ?add_roots
     ?(skip=OpamPackage.Map.empty)
     ?(assume_built=false)
     ?(download_only=false) ?force_remove solution0 =
+  gc_compact ();
   let names = OpamPackage.names_of_packages requested in
   let print_requested = OpamStd.Option.default names print_requested in
   log "apply";
