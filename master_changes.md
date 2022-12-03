@@ -293,7 +293,7 @@ users)
   * [BUG] Fix all empty conflict explanations [#4982 #5263 @kit-ty-kate]
   * Fix json double printing [#5143 @rjbou]
   * [BUG] Fix passing `archive-mirrors` field from init config file to config [#5315 @hannesm]
-  * Run GC compaction before applying solutions
+  * Run GC compaction before applying solutions [#5376 @kkeundotnet]
 
 ## Internal
   * Add license and lowerbounds to opam files [#4714 @kit-ty-kate]
