@@ -17,6 +17,7 @@ module E = struct
     | DROPWORKINGDIR of bool option
     | EDITOR of string option
     | FAKE of bool option
+    | GCBEFOREACTION of bool option
     | IGNOREPINDEPENDS of bool option
     | INPLACEBUILD of bool option
     | JSON of string option
@@ -39,6 +40,7 @@ module E = struct
   let dropworkingdir = value (function DROPWORKINGDIR b -> b | _ -> None)
   let editor = value (function EDITOR s -> s | _ -> None)
   let fake = value (function FAKE b -> b | _ -> None)
+  let gcbeforeaction = value (function GCBEFOREACTION b -> b | _ -> None)
   let ignorepindepends = value (function IGNOREPINDEPENDS b -> b | _ -> None)
   let inplacebuild = value (function INPLACEBUILD b -> b | _ -> None)
   let json = value (function JSON s -> s | _ -> None)
@@ -76,6 +78,7 @@ type t = {
   assume_depexts: bool;
   cli: OpamCLIVersion.t;
   scrubbed_environment_variables: string list;
+  gc_before_action: bool;
 }
 
 let default = {
@@ -98,6 +101,7 @@ let default = {
   assume_depexts = false;
   cli = OpamCLIVersion.current;
   scrubbed_environment_variables = [];
+  gc_before_action = false;
 }
 
 type 'a options_fun =
@@ -120,6 +124,7 @@ type 'a options_fun =
   ?assume_depexts:bool ->
   ?cli:OpamCLIVersion.t ->
   ?scrubbed_environment_variables:string list ->
+  ?gc_before_action:bool ->
   'a
 
 let setk k t
@@ -142,6 +147,7 @@ let setk k t
     ?assume_depexts
     ?cli
     ?scrubbed_environment_variables
+    ?gc_before_action
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -163,7 +169,8 @@ let setk k t
     no_auto_upgrade = t.no_auto_upgrade + no_auto_upgrade;
     assume_depexts = t.assume_depexts + assume_depexts;
     cli = t.cli + cli;
-    scrubbed_environment_variables = t.scrubbed_environment_variables + scrubbed_environment_variables
+    scrubbed_environment_variables = t.scrubbed_environment_variables + scrubbed_environment_variables;
+    gc_before_action = t.gc_before_action + gc_before_action;
   }
 
 let set t = setk (fun x () -> x) t
@@ -198,6 +205,7 @@ let initk k =
     ?assume_depexts:(E.assumedepexts ())
     ?cli:None
     ?scrubbed_environment_variables:None
+    ?gc_before_action:(E.gcbeforeaction ())
 
 let init ?noop:_ = initk (fun () -> ())
 

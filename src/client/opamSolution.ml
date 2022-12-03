@@ -1292,7 +1292,7 @@ let apply ?ask t ~requested ?print_requested ?add_roots
     ?(skip=OpamPackage.Map.empty)
     ?(assume_built=false)
     ?(download_only=false) ?force_remove solution0 =
-  gc_compact ();
+  if OpamClientConfig.(!r.gc_before_action) then gc_compact ();
   let names = OpamPackage.names_of_packages requested in
   let print_requested = OpamStd.Option.default names print_requested in
   log "apply";

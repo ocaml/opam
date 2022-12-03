@@ -19,6 +19,7 @@ module E: sig
     | DROPWORKINGDIR of bool option
     | EDITOR of string option
     | FAKE of bool option
+    | GCBEFOREACTION of bool option
     | IGNOREPINDEPENDS of bool option
     | INPLACEBUILD of bool option
     | JSON of string option
@@ -59,6 +60,7 @@ type t = private {
   assume_depexts: bool;
   cli: OpamCLIVersion.t;
   scrubbed_environment_variables: string list;
+  gc_before_action: bool;
 }
 
 type 'a options_fun =
@@ -82,6 +84,7 @@ type 'a options_fun =
   ?assume_depexts:bool ->
   ?cli:OpamCLIVersion.t ->
   ?scrubbed_environment_variables:string list ->
+  ?gc_before_action:bool ->
   'a
   (* constraint 'a = 'b -> 'c *)
 
@@ -120,6 +123,7 @@ val opam_init:
   ?assume_depexts:bool ->
   ?cli:OpamCLIVersion.t ->
   ?scrubbed_environment_variables:string list ->
+  ?gc_before_action:bool ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:OpamStateTypes.provenance ->
   ?jobs:int Lazy.t ->

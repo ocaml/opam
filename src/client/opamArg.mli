@@ -171,6 +171,7 @@ type global_options = {
   working_dir : bool;
   ignore_pin_depends : bool;
   cli : OpamCLIVersion.t;
+  gc_before_action: bool;
 }
 
 (** Global options *)

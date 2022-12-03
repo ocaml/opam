@@ -278,6 +278,8 @@ let environment_variables =
        and $(i,\\$VISUAL).";
       "FAKE", cli_original, (fun v -> FAKE (env_bool v)),
       "see option `--fake'.";
+      "GCBEFOREACTION", cli_original, (fun v -> GCBEFOREACTION (env_bool v)),
+      "see option `--gc-before-action'.";
       "IGNOREPINDEPENDS", cli_original,
       (fun v -> IGNOREPINDEPENDS (env_bool v)),
       "see option `--ignore-pin-depends'.";
@@ -457,6 +459,7 @@ type global_options = {
   working_dir : bool;
   ignore_pin_depends : bool;
   cli : OpamCLIVersion.t;
+  gc_before_action: bool;
 }
 
 (* The --cli passed by cmdliner is ignored (it's only there for --help) *)
@@ -467,7 +470,7 @@ let create_global_options
     opt_root external_solver use_internal_solver
     cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade
     working_dir ignore_pin_depends
-    d_no_aspcud _ =
+    d_no_aspcud _ gc_before_action =
   if d_no_aspcud then
     OpamConsole.warning
       "Option %s is deprecated, ignoring it."
@@ -483,7 +486,7 @@ let create_global_options
   { git_version; debug_level; verbose; quiet; color; opt_switch; confirm_level; yes;
     strict; opt_root; external_solver; use_internal_solver;
     cudf_file; solver_preferences; best_effort; safe_mode; json;
-    no_auto_upgrade; working_dir; ignore_pin_depends; cli }
+    no_auto_upgrade; working_dir; ignore_pin_depends; cli; gc_before_action }
 
 let apply_global_options cli o =
   if o.git_version then (
@@ -563,6 +566,7 @@ let apply_global_options cli o =
     (* ?autoremove:bool *)
     (* ?editor:string *)
     ~cli:o.cli
+    ?gc_before_action:(flag o.gc_before_action)
     ();
   if OpamClientConfig.(!r.json_out <> None) then (
     OpamJson.append "opam-version" (`String OpamVersion.(to_string (full ())));
@@ -1316,6 +1320,13 @@ let global_options cli =
        through $(i,opam pin) or through $(i,opam install DIR). This is \
        equivalent to setting $(b,IGNOREPINDEPENDS=true)."
   in
+  let gc_before_action =
+    mk_flag ~cli cli_original ~section ["gc-before-action"]
+      "Run garbage collection before running actions. This could be helpful for \
+       small-RAM machines that have out-of-memory issues when building libraries \
+       in $(i,opam install). This is equivalent to set environment variable \
+       $(b,\\$OPAMGCBEFOREACTION)."
+  in
   Term.(const create_global_options
         $git_version $debug $debug_level $verbose $quiet $color $switch
         $yes $confirm_level
@@ -1323,7 +1334,7 @@ let global_options cli =
         $use_internal_solver $cudf_file $solver_preferences $best_effort
         $safe_mode $json_flag $no_auto_upgrade $working_dir
         $ignore_pin_depends
-        $d_no_aspcud $cli_arg)
+        $d_no_aspcud $cli_arg $gc_before_action)
 
 (* lock options *)
 let locked ?section cli =
