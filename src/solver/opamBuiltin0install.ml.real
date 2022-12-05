@@ -9,6 +9,8 @@
 (**************************************************************************)
 
 open OpamCudfSolverSig
+[@@@ocaml.warning "-33"]
+open OpamDoseCompat
 
 let log ?level f = OpamConsole.log "0install" ?level f
 
@@ -115,4 +117,4 @@ let call ~criteria ?timeout:_ (preamble, universe, request) =
   | Error problem ->
     log "No solution. Solve took %.2f s" (timer ());
     log ~level:3 "%a" (OpamConsole.slog Opam_0install_cudf.diagnostics) problem;
-    raise Common.CudfSolver.Unsat
+    raise Dose_common.CudfSolver.Unsat

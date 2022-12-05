@@ -1,0 +1,43 @@
+diff -Naur a/src/base64.ml b/src/base64.ml
+--- a/src/base64.ml	2021-02-08 10:46:48.000000000 +0000
++++ b/src/base64.ml	2022-11-30 09:20:26.410980144 +0000
+@@ -19,6 +19,8 @@
+  *
+  *)
+ 
++type ('a, 'e) result = ('a, 'e) Result.result = Ok of 'a | Error of 'e
++
+ type alphabet = { emap : int array; dmap : int array }
+ 
+ type sub = string * int * int
+diff -Naur a/src/base64.mli b/src/base64.mli
+--- a/src/base64.mli	2021-02-08 10:46:48.000000000 +0000
++++ b/src/base64.mli	2022-11-30 09:19:47.890056251 +0000
+@@ -63,6 +63,8 @@
+ 
+     @raise if Invalid_argument [s] is not a valid Base64 string. *)
+ 
++type ('a, 'e) result = ('a, 'e) Result.result = Ok of 'a | Error of 'e
++
+ val decode_sub :
+   ?pad:bool ->
+   ?alphabet:alphabet ->
+diff -Naur a/src/dune b/src/dune
+--- a/src/dune	2021-02-08 10:46:48.000000000 +0000
++++ b/src/dune	2022-11-30 09:20:03.322426472 +0000
+@@ -2,7 +2,7 @@
+  (name base64)
+  (modules unsafe base64)
+  (public_name base64)
+- (libraries bytes))
++ (libraries result))
+ 
+ (rule
+  (copy %{read:../config/which-unsafe-file} unsafe.ml))
+@@ -10,5 +10,4 @@
+ (library
+  (name base64_rfc2045)
+  (modules base64_rfc2045)
+- (public_name base64.rfc2045)
+- (libraries bytes))
++ (public_name base64.rfc2045))

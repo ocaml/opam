@@ -1,0 +1,41 @@
+diff -Naur a/src/common/dune b/src/common/dune
+--- a/src/common/dune	2021-07-22 07:14:19.000000000 +0000
++++ b/src/common/dune	2022-11-30 12:03:28.593510312 +0000
+@@ -2,8 +2,20 @@
+  (name dose_common)
+  (public_name dose3.common)
+  (libraries extlib cudf re.pcre stdlib-shims unix)
++ (preprocess  (per_module
++                 ((action (run %{bin:cppo} -V OCAML:%{ocaml_version} %{input-file})) Util)))
++ (modules :standard \ Dose_src_ext_vendor)
+  (flags (:standard)))
+ 
++(library
++  (name dose_src_ext_vendor)
++  (public_name dose3.dose_src_ext_vendor)
++  (modules dose_src_ext_vendor)
++  (wrapped false))
++
++(rule (with-stdout-to dose_src_ext_vendor.ml (echo "")))
++(rule (copy dose_src_ext_vendor.ml dose_src_ext_vendor.mli))
++
+ (ocamllex shell_lexer)
+ 
+ (rule
+diff -Naur a/src/common/util.ml b/src/common/util.ml
+--- a/src/common/util.ml	2021-07-22 07:14:19.000000000 +0000
++++ b/src/common/util.ml	2022-11-30 11:49:43.317431156 +0000
+@@ -9,6 +9,13 @@
+ (*  library, see the COPYING file for more information.                      *)
+ (*****************************************************************************)
+ 
++#if OCAML_VERSION < (4, 3, 0)
++module String = struct
++  include String
++  let capitalize_ascii = capitalize
++end
++#endif
++
+ (** return a unique identifier *)
+ let uuid () =
+   let rand =

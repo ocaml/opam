@@ -3,12 +3,25 @@
   (public_name opam-client)
   (synopsis    "OCaml Package Manager client and CLI library")
   (modules     (:standard \ opamMain get_git_version))
-  (libraries   opam-state opam-solver opam-repository re extlib cmdliner)
+  (libraries   opam-state opam-solver opam-repository re base64 cmdliner
+               (select opamBase64Compat.ml from
+                 (!dose3.opam -> opamBase64Compat.ml.6)
+                 (dose3.dose_src_ext_vendor -> opamBase64Compat.ml.6)
+                 (           -> opamBase64Compat.ml.5))
+               (select opamBase64Compat.mli from
+                 (!dose3.opam -> opamBase64Compat.mli.6)
+                 (dose3.dose_src_ext_vendor -> opamBase64Compat.mli.6)
+                 (           -> opamBase64Compat.mli.5)))
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
                (:include ../ocaml-flags-configure.sexp)
                (:include ../ocaml-context-flags.sexp)))
   (wrapped     false))
+
+(rule
+  (with-stdout-to opamBase64Compat.ml.6 (run echo "")))
+(rule
+  (with-stdout-to opamBase64Compat.mli.6 (run echo "")))
 
 (executable
   (name        opamMain)

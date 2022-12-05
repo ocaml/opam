@@ -1,0 +1,4 @@
+module Base64 : sig
+  val decode_exn : ?alphabet:string -> string -> string
+  val encode_string : ?pad:bool -> ?alphabet:string -> string -> string
+end

@@ -1,0 +1,12 @@
+diff -Naur a/lib/dune b/lib/dune
+--- a/lib/dune	2022-07-23 15:55:36.000000000 +0000
++++ b/lib/dune	2022-11-30 09:28:20.002294305 +0000
+@@ -1,7 +1,7 @@
+ (library
+  (public_name cudf)
+  (wrapped false)
+- (libraries extlib))
++ (libraries extlib stdlib-shims))
+ 
+ (ocamllex cudf_822_lexer cudf_type_lexer)
+ (ocamlyacc cudf_822_parser cudf_type_parser)

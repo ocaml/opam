@@ -10,6 +10,8 @@
 
 open OpamTypes
 open OpamPackage.Set.Op
+[@@@ocaml.warning "-33"]
+open OpamDoseCompat
 
 let env ~with_test ~with_doc ~dev nv v =
   match OpamVariable.Full.scope v,
@@ -110,9 +112,9 @@ let cycle_check univ =
   in
   (* conflicts break cycles *)
   let conflicts =
-    Algo.Defaultgraphs.PackageGraph.conflict_graph cudf_univ
+    Dose_algo.Defaultgraphs.PackageGraph.conflict_graph cudf_univ
   in
-  let module CGraph = Algo.Defaultgraphs.PackageGraph.UG in
+  let module CGraph = Dose_algo.Defaultgraphs.PackageGraph.UG in
   CGraph.iter_edges (fun nv1 nv2 ->
       OpamCudf.Graph.remove_edge graph nv1 nv2;
       OpamCudf.Graph.remove_edge graph nv2 nv1)
@@ -127,7 +129,7 @@ let cycle_check univ =
         let univ = Cudf.load_universe pkgs in
         let g = OpamCudf.Graph.of_universe univ in
         let conflicts =
-          Algo.Defaultgraphs.PackageGraph.conflict_graph univ
+          Dose_algo.Defaultgraphs.PackageGraph.conflict_graph univ
         in
         (* Simplify the graph by merging all equivalent versions of each
            package *)
