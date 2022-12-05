@@ -472,18 +472,41 @@ let parse_command = Parse.command
 
 let common_filters =
   let tmpdir = OpamSystem.real_path (Filename.get_temp_dir_name ()) in
-  let cygwin_prefix =
+  let cygpath ?(f=fun _ -> true) args =
     if not Sys.win32 then None else
     match
-      OpamSystem.(read_command_output [ "cygpath"; "-m"; "/" ])
+      OpamSystem.read_command_output ([ "cygpath" ] @ args)
     with
-    | x::_ when not (String.equal x "") ->
+    | x::_ when not (String.equal x "") && f x ->
       Some OpamSystem.(back_to_forward x, forward_to_back x)
     | _ -> None
   in
+  let cygwin_prefix = cygpath [ "-m"; "/" ] in
+  let get_cygwinpath, get_winpath =
+    if not Sys.win32 then
+      (fun _ -> None), (fun _ -> None)
+    else
+    let get_path opt path =
+      cygpath ~f:(fun x -> not (String.equal x path)) [ opt ; String.escaped path ]
+    in
+    get_path "-u", get_path "-w"
+  in
   let open Re in
   let re_dir dir =
+    if not Sys.win32 then str dir else
+    (* Some outputs contain both Windows-like path C:\ and cygwin-like path /cygdrive/c *)
+    let cygwinpath =
+      match get_cygwinpath dir with
+      | Some (cwp_fwd, cwp_bck) -> [ str cwp_fwd ; str cwp_bck ]
+      | None -> []
+    in
+    let winpath =
+      match get_winpath dir with
+      | Some (wp_fwd, wp_bck) -> [ str wp_fwd ; str wp_bck ]
+      | None -> []
+    in
     let dir, pre =
+      (* Some outputs contains cygwin paths without cygwin prefix *)
       match cygwin_prefix with
       | Some (cygpre_fwd, cygpre_bck) ->
         OpamStd.String.remove_prefix ~prefix:cygpre_bck dir
@@ -493,7 +516,8 @@ let common_filters =
       | None -> dir, []
     in
     seq @@ pre @ [
-        alt [  str dir ; str @@ OpamSystem.back_to_forward dir ]
+        alt @@ winpath @ cygwinpath
+               @ [  str dir ; str @@ OpamSystem.back_to_forward dir ]
       ]
   in
   fun ?opam dir ->
