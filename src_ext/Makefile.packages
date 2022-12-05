@@ -19,7 +19,7 @@ opam-file-format.pkgbuild: findlib.pkgbuild dune-local.pkgbuild
 
 cppo.pkgbuild: dune-local.pkgbuild
 
-extlib.pkgbuild: findlib.pkgbuild cppo.pkgbuild
+extlib.pkgbuild: dune-local.pkgbuild cppo.pkgbuild
 
 ocamlbuild.pkgbuild: findlib.pkgbuild
 
@@ -38,7 +38,7 @@ cmdliner.pkgbuild: dune-local.pkgbuild
 
 cudf.pkgbuild: dune-local.pkgbuild extlib.pkgbuild
 
-dose3.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild cppo.pkgbuild extlib.pkgbuild re.pkgbuild ocamlgraph.pkgbuild cudf.pkgbuild
+dose3.pkgbuild: dune-local.pkgbuild extlib.pkgbuild base64.pkgbuild re.pkgbuild ocamlgraph.pkgbuild cudf.pkgbuild stdlib-shims.pkgbuild
 
 # mccs.pkgbuild depends on findlib because the files are explicitly installed using it
 mccs.pkgbuild: dune-local.pkgbuild cudf.pkgbuild findlib.pkgbuild
@@ -66,10 +66,11 @@ stublibs:
 
 opam-file-format-pkg-build:
 	dune build @install -p opam-file-format
-	dune install -p opam-file-format opam-file-format
+	dune install "--prefix=$(OCAMLROOT)" -p opam-file-format opam-file-format
 
 findlib-pkg-build:
-	./configure
+	./configure -sitelib "$(OCAMLROOT)lib"
+	echo "$(OCAMLROOT)lib/stublibs" >> "$(OCAMLROOT)lib/ocaml/ld.conf"
 	make all opt install
 
 cppo-pkg-build:
@@ -79,7 +80,8 @@ cppo-pkg-build:
 	cp _build/install/default/lib/cppo/META $(SITELIB)/cppo/
 
 extlib-pkg-build:
-	make minimal=1 build install
+	dune build @install -p extlib
+	dune install "--prefix=$(OCAMLROOT)" -p extlib extlib
 
 ocamlbuild-pkg-build:
 	make -f configure.make all OCAMLBUILD_PREFIX=$(OCAMLROOT) OCAMLBUILD_BINDIR=$(OCAMLBIN) OCAMLBUILD_LIBDIR=$(SITELIB) OCAML_NATIVE=true OCAML_NATIVE_TOOLS=true
@@ -87,12 +89,12 @@ ocamlbuild-pkg-build:
 
 re-pkg-build:
 	dune build @install -p re
-	cp -LR _build/install/default/lib/re $(SITELIB)/re/
+	dune install "--prefix=$(OCAMLROOT)" -p re re
 
 ocamlgraph-pkg-build:
 	dune installed-libraries
 	dune build @install -p ocamlgraph
-	dune install -p ocamlgraph ocamlgraph
+	dune install "--prefix=$(OCAMLROOT)" -p ocamlgraph ocamlgraph
 
 result-pkg-build:
 	dune build @install -p result
@@ -107,15 +109,15 @@ topkg-pkg-build:
 
 cmdliner-pkg-build:
 	dune build @install -p cmdliner
-	dune install -p cmdliner cmdliner
+	dune install "--prefix=$(OCAMLROOT)" -p cmdliner cmdliner
 
 cudf-pkg-build:
 	dune build @install -p cudf
-	dune install -p cudf cudf
+	dune install "--prefix=$(OCAMLROOT)" -p cudf cudf
 
 dose3-pkg-build:
 	dune build @install -p dose3
-	dune install -p dose3 dose3
+	dune install "--prefix=$(OCAMLROOT)" -p dose3 dose3
 
 dune-local-pkg-build:
 	ocaml bootstrap.ml
@@ -123,32 +125,31 @@ dune-local-pkg-build:
 
 mccs-pkg-build: stublibs
 	dune build @install -p mccs
-	ocamlfind install mccs $(addprefix _build/install/default/lib/,$(addprefix mccs/,META libmccs_stubs.$(EXT_LIB) mccs.*) stublibs/*.$(EXT_DLL))
-	cp -RL _build/install/default/lib/mccs/glpk $(SITELIB)/mccs/
+	dune install "--prefix=$(OCAMLROOT)" -p mccs mccs
 
 opam-0install-cudf-pkg-build:
 	dune build @install -p opam-0install-cudf
-	dune install -p opam-0install-cudf opam-0install-cudf
+	dune install "--prefix=$(OCAMLROOT)" -p opam-0install-cudf opam-0install-cudf
 
 0install-solver-pkg-build:
 	dune build @install -p 0install-solver
-	dune install -p 0install-solver 0install-solver
+	dune install "--prefix=$(OCAMLROOT)" -p 0install-solver 0install-solver
 
 seq-pkg-build:
 	dune build @install -p seq
-	dune install -p seq seq
+	dune install "--prefix=$(OCAMLROOT)" -p seq seq
 
 stdlib-shims-pkg-build:
 	dune build @install -p stdlib-shims
-	dune install -p stdlib-shims stdlib-shims
+	dune install "--prefix=$(OCAMLROOT)" -p stdlib-shims stdlib-shims
 
 base64-pkg-build:
 	dune build @install -p base64
-	dune install -p base64 base64
+	dune install "--prefix=$(OCAMLROOT)" -p base64 base64
 
 spdx_licenses-pkg-build:
 	dune build @install -p spdx_licenses
-	dune install -p spdx_licenses spdx_licenses
+	dune install "--prefix=$(OCAMLROOT)" -p spdx_licenses spdx_licenses
 
 uutf-pkg-build:
 	ocaml pkg/pkg.ml build --pkg-name uutf --dev-pkg false --with-cmdliner true
@@ -160,4 +161,4 @@ jsonm-pkg-build:
 
 sha-pkg-build: stublibs
 	dune build @install -p sha
-	dune install -p sha sha
+	dune install "--prefix=$(OCAMLROOT)" -p sha sha
