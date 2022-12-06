@@ -1258,24 +1258,17 @@ module OpamSys = struct
           let {Unix.st_uid; st_gid; st_perm; st_kind; _} = Unix.stat f in
           if st_kind <> Unix.S_REG then false else
           let groups =
-            IntSet.of_list (Unix.getegid () :: Array.to_list (Unix.getgroups ()))
+            Unix.getegid () :: Array.to_list (Unix.getgroups ())
           in
           let mask =
             if Unix.geteuid () = (st_uid : int) then
               0o100
-            else if IntSet.mem st_gid groups then
+            else if List.mem st_gid groups then
               0o010
             else
               0o001
           in
-          if (st_perm land mask) <> 0 then
-            true
-          else
-          match OpamACL.get_acl_executable_info f st_uid with
-          | None -> false
-          | Some [] -> true
-          | Some gids ->
-            not (IntSet.is_empty (IntSet.inter (IntSet.of_list gids) groups))
+          (st_perm land mask) <> 0
         with e -> fatal e; false
     in
     let resolve ?dir env name =

@@ -157,6 +157,7 @@ users)
   * Reduce allocations in OpamVersionCompare [#6144 @talex5]
   * Speedup OpamVersionCompare by 25% by removing the unused handling of epoch [#5518 @kit-ty-kate]
   * Fix error in `OpamSystem.transform_patch` - patches were only applied when debugging [#6182 @dra27 regression since #3449]
+  * Remove `--with-acl` option from the configure script and its related C stubs (reverts a Cygwin fix in #4265) [#5381 @kit-ty-kate - fix #5373]
 
 ## Internal: Windows
 
@@ -271,3 +272,4 @@ users)
   * `OpamHash`: export `compare_kind` [#5561 @rjbou]
   * `OpamFilename`: add `might_escape` to check if a path is escapable, ie contains `<sep>..<sep>` [#5561 @rjbou]
   * Add `OpamStd.Sys.getconf` [#5950 @kit-ty-kate]
+  * `OpamACL`: remove module [#5381 @kit-ty-kate]
