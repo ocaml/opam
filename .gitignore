@@ -85,8 +85,6 @@ src/client/no-git-version
 src/core/developer
 src/manifest/dune
 src/manifest/install.inc
-src/stubs/libacl/dune
-src/stubs/libacl/c-libraries.sexp
 src/stubs/win32/cc64
 src/stubs/win32/dune
 src/stubs/c-flags.sexp

@@ -584,3 +584,4 @@ users)
   * `OpamStd.Map`: add `filter_map` [#5337 @rjbou]
   * `OpamStd.Set`: Add `to_list_map` [#5308 @kit-ty-kate]
   * `OpamConsole.header_msg`: remove trailing space when there is no left padding [#5363 @rjbou]
+  * Fix opam unable to find executables on systems where users belong to more than 32 groups when opam is built using musl libc [#5381 @kit-ty-kate - fix #5373]

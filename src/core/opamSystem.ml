@@ -388,32 +388,9 @@ let t_resolve_command =
     let name = forward_to_back name in
     OpamStd.String.contains_char name Filename.dir_sep.[0]
   in
-  let check_perms =
-    if Sys.win32 then fun f ->
-      try (Unix.stat f).Unix.st_kind = Unix.S_REG
-      with e -> OpamStd.Exn.fatal e; false
-    else fun f ->
-      try
-        let open Unix in
-        let uid = geteuid () in
-        let groups = OpamStd.IntSet.of_list (getegid () :: Array.to_list (getgroups ())) in
-        let {st_uid; st_gid; st_perm; _} = stat f in
-        let mask =
-          if uid = st_uid then
-            0o100
-          else if OpamStd.IntSet.mem st_gid groups then
-            0o010
-          else
-            0o001
-        in
-        if (st_perm land mask) <> 0 then
-          true
-        else
-          match OpamACL.get_acl_executable_info f st_uid with
-          | None -> false
-          | Some [] -> true
-          | Some gids -> OpamStd.IntSet.(not (is_empty (inter (of_list gids) groups)))
-      with e -> OpamStd.Exn.fatal e; false
+  let check_perms f =
+    try Unix.access f (Unix.R_OK :: if Sys.win32 then [] else [Unix.X_OK]); true
+    with Unix.Unix_error _ -> false
   in
   let resolve ?dir env name =
     if not (Filename.is_relative name) then begin
