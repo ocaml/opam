@@ -141,3 +141,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * Fix opam unable to find executables on systems where users belong to more than 32 groups when opam is built using musl libc [#5381 @kit-ty-kate - fix #5373]
