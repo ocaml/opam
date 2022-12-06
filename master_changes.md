@@ -272,4 +272,5 @@ users)
   * `OpamHash`: export `compare_kind` [#5561 @rjbou]
   * `OpamFilename`: add `might_escape` to check if a path is escapable, ie contains `<sep>..<sep>` [#5561 @rjbou]
   * Add `OpamStd.Sys.getconf` [#5950 @kit-ty-kate]
+  * `OpamStd.Sys.resolve_command`: Fix opam unable to find executables on systems where users belong to more than 32 groups when opam is built using musl libc [#5381 @kit-ty-kate - fix #5373]
   * `OpamACL`: remove module [#5381 @kit-ty-kate]

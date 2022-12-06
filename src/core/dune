@@ -11,6 +11,14 @@
                (:include ../ocaml-flags-standard.sexp)
                (:include ../ocaml-flags-configure.sexp)
                (:include ../ocaml-context-flags.sexp)))
+  (foreign_stubs
+    (language c)
+    (names opamCommonStubs)
+    (flags :standard
+           -DUNICODE -D_UNICODE -DCAML_NAME_SPACE
+           (:include ../stubs/c-flags.sexp)))
+  (c_library_flags (:standard
+                   (:include c-libraries.sexp)))
   (wrapped     false))
 
 (rule
@@ -41,3 +49,6 @@
   (targets developer)
   (mode    fallback)
   (action  (with-stdout-to %{targets} (echo ""))))
+
+(rule
+  (with-stdout-to c-libraries.sexp (run ocaml %{dep:../../shell/context_flags.ml} clibs)))

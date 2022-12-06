@@ -1249,33 +1249,11 @@ module OpamSys = struct
   (* OCaml 4.05.0 no longer follows the updated PATH to resolve commands. This
      makes unqualified commands absolute as a workaround. *)
   let resolve_command =
-    let check_perms =
-      if Sys.win32 then fun f ->
-        try (Unix.stat f).Unix.st_kind = Unix.S_REG
-        with e -> fatal e; false
-      else fun f ->
-        try
-          let {Unix.st_uid; st_gid; st_perm; st_kind; _} = Unix.stat f in
-          if st_kind <> Unix.S_REG then false else
-          let groups =
-            Unix.getegid () :: Array.to_list (Unix.getgroups ())
-          in
-          let mask =
-            if Unix.geteuid () = (st_uid : int) then
-              0o100
-            else if List.mem st_gid groups then
-              0o010
-            else
-              0o001
-          in
-          (st_perm land mask) <> 0
-        with e -> fatal e; false
-    in
     let resolve ?dir env name =
       if not (Filename.is_relative name) then begin
         (* absolute path *)
         if not (Sys.file_exists name) then `Not_found
-        else if not (check_perms name) then `Denied
+        else if not (OpamStubs.is_executable name) then `Denied
         else `Cmd name
       end else if is_external_cmd name then begin
         (* relative path *)
@@ -1284,7 +1262,7 @@ module OpamSys = struct
           | Some d -> Filename.concat d name
         in
         if not (Sys.file_exists cmd) then `Not_found
-        else if not (check_perms cmd) then `Denied
+        else if not (OpamStubs.is_executable cmd) then `Denied
         else `Cmd cmd
       end else
       (* bare command, lookup in PATH *)
@@ -1298,7 +1276,7 @@ module OpamSys = struct
          expected name but not the right permissions are skipped silently.
          Therefore, only two outcomes are possible in that case, [`Cmd ..] or
          [`Not_found]. *)
-      match List.find check_perms possibles with
+      match List.find OpamStubs.is_executable possibles with
       | cmdname -> `Cmd cmdname
       | exception Not_found ->
         if possibles = [] then

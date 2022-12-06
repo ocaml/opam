@@ -342,7 +342,7 @@ AS_IF([test "${enable_static}" = yes],[
   ],[
     unix_lib_name=unixnat
   ])
-  echo "(-noautolink -cclib -l${unix_lib_name} -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lsha_stubs ${platform_dependent_stuff})" > src/client/linking.sexp
+  echo "(-noautolink -cclib -l${unix_lib_name} -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lsha_stubs -cclib -lopam_core_stubs ${platform_dependent_stuff})" > src/client/linking.sexp
   AC_MSG_RESULT([static])
 ],[
   AC_MSG_RESULT([shared])
