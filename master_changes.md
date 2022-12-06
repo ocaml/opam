@@ -73,6 +73,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Client
+  * [BUG] Fix all empty conflict explanations [#4982 #5263 @kit-ty-kate]
 
 ## Internal
   *
@@ -93,6 +94,7 @@ New option/command/subcommand are prefixed with ◈.
   * Add some simple tests for the "opam list" command [#5006 @kit-ty-kate]
   * Add clean test for untracked option [#4915 @rjbou]
   * Harmonise some repo hash to reduce opam repository checkout [#5031 @AltGr]
+  * Add a series of reftests showing empty conflict messages [#5253 @kit-ty-kate]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]

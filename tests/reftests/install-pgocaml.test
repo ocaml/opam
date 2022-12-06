@@ -1,4 +1,5 @@
 f372039d
+### OPAMVAR_arch=x86_64 OPAMVAR_os=linux OPAMVAR_os_family=arch OPAMVAR_os_distribution=archarm
 ### opam switch create --fake 4.06.1
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
@@ -14,10 +15,16 @@ Faking installation of ocaml.4.06.1
 Done.
 ### opam install 'pgocaml<2.0' 'pgocaml>=1.7.1' --show
 [ERROR] Package conflict!
+  * No agreement on the version of ocaml-base-compiler:
+    - (invariant) -> ocaml-base-compiler = 4.06.1
+    - pgocaml < 2.0 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.05.0
+    You can temporarily relax the switch invariant with `--update-invariant'
   * No agreement on the version of ocaml:
     - (invariant) -> ocaml-base-compiler = 4.06.1 -> ocaml = 4.06.1
-    - pgocaml < 2.0 -> ocaml < 4.06.0
-    You can temporarily relax the switch invariant with `--update-invariant'
+    - pgocaml < 2.0 -> extlib = 1.5.3 -> ocaml < 4.05.0
+  * Missing dependency:
+    - pgocaml < 2.0 -> extlib = 1.5.3 -> ocaml < 4.05.0 -> ocaml-variants >= 3.10.1 -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
 
 No solution found, exiting
 # Return code 20 #

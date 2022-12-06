@@ -1,0 +1,49 @@
+297366c
+### OPAMYES=1 OPAMSTRICT=0
+### OPAMVAR_arch=x86_64 OPAMVAR_os=linux OPAMVAR_os_family=arch OPAMVAR_os_distribution=archarm
+### opam switch create test ocaml-base-compiler.4.07.1 --fake
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "4.07.1"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of ocaml-base-compiler.4.07.1
+Faking installation of ocaml-config.1
+Faking installation of ocaml.4.07.1
+Done.
+### opam install --show h2-mirage.0.9.0
+[ERROR] Package conflict!
+  * No agreement on the version of ocaml:
+    - (invariant) -> ocaml-base-compiler = 4.07.1 -> ocaml = 4.07.1
+    - h2-mirage >= 0.9.0 -> conduit-mirage >= 2.0.2 -> ocaml >= 4.08.0
+    You can temporarily relax the switch invariant with `--update-invariant'
+  * No agreement on the version of ocaml-base-compiler:
+    - (invariant) -> ocaml-base-compiler = 4.07.1
+    - h2-mirage >= 0.9.0 -> conduit-mirage >= 2.0.2 -> tls -> ocaml >= 4.08.0 -> ocaml-base-compiler = 4.08.0
+  * No agreement on the version of cstruct:
+    - h2-mirage >= 0.9.0 -> conduit-mirage >= 2.0.2 -> tls -> cstruct < 4.0.0
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> cstruct >= 6.0.0
+  * No agreement on the version of cstruct:
+    - h2-mirage >= 0.9.0 -> conduit-mirage >= 2.0.2 -> tls -> cstruct < 6.0.0
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> cstruct >= 6.0.0
+  * Missing dependency:
+    - h2-mirage >= 0.9.0 -> conduit-mirage >= 2.0.2 -> dns-client >= 5.0.0 -> mirage-crypto-rng >= 0.8.0 -> mirage-crypto = 0.8.1
+    unmet availability conditions: 'false'
+  * Missing dependency:
+    - h2-mirage >= 0.9.0 -> conduit-mirage >= 2.0.2 -> dns-client >= 5.0.0 -> mirage-crypto-rng >= 0.8.0 -> mirage-crypto = 0.8.2
+    unmet availability conditions: 'false'
+  * Missing dependency:
+    - h2-mirage >= 0.9.0 -> conduit-mirage >= 2.0.2 -> dns-client >= 5.0.0 -> mirage-crypto-rng >= 0.8.0 -> mirage-crypto = 0.8.3
+    unmet availability conditions: 'false'
+  * Missing dependency:
+    - h2-mirage >= 0.9.0 -> conduit-mirage >= 2.0.2 -> dns-client >= 5.0.0 -> mirage-crypto-rng >= 0.8.0 -> mirage-crypto = 0.8.4
+    unmet availability conditions: 'false'
+  * Missing dependency:
+    - h2-mirage >= 0.9.0 -> conduit-mirage >= 2.0.2 -> tls -> nocrypto < 0.2.0 -> ocaml < 4.02.0 -> ocaml-variants >= 3.09.3 -> ocaml-beta
+    unmet availability conditions: 'enable-ocaml-beta-repository'
+
+No solution found, exiting
+# Return code 20 #
