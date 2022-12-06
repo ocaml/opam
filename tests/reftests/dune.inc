@@ -146,7 +146,7 @@
 
 (rule
  (targets conflict-4373.out)
- (deps root-c1d23f0e)
+ (deps root-f372039d)
  (action
   (with-stdout-to
    %{targets}
@@ -628,7 +628,7 @@
 
 (rule
  (targets list.out)
- (deps root-7371c1d9)
+ (deps root-a5d7cdc0)
  (action
   (with-stdout-to
    %{targets}
@@ -1319,26 +1319,6 @@
            file://%{dep:opam-repo-7090735c})))))
 
 (rule
- (targets opam-archive-7371c1d9.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/7371c1d9.tar.gz)))
-
-(rule
-  (targets opam-repo-7371c1d9)
-  (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-7371c1d9.tar.gz} --strip-components=1))))
-
-(rule
-  (targets root-7371c1d9)
-  (action
-   (progn
-    (ignore-stdout
-    (run %{bin:opam} init --root=%{targets}
-           --no-setup --bypass-checks --no-opamrc --bare
-           file://%{dep:opam-repo-7371c1d9})))))
-
-(rule
  (targets opam-archive-a5d7cdc0.tar.gz)
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/a5d7cdc0.tar.gz)))
 
@@ -1417,26 +1397,6 @@
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
            file://%{dep:opam-repo-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a})))))
-
-(rule
- (targets opam-archive-c1d23f0e.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/c1d23f0e.tar.gz)))
-
-(rule
-  (targets opam-repo-c1d23f0e)
-  (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-c1d23f0e.tar.gz} --strip-components=1))))
-
-(rule
-  (targets root-c1d23f0e)
-  (action
-   (progn
-    (ignore-stdout
-    (run %{bin:opam} init --root=%{targets}
-           --no-setup --bypass-checks --no-opamrc --bare
-           file://%{dep:opam-repo-c1d23f0e})))))
 
 (rule
  (targets opam-archive-de897adf36c4230dfea812f40c98223b31c4521a.tar.gz)
