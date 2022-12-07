@@ -1,0 +1,565 @@
+N0REP0
+### mv REPO OPER
+### opam repository set-url default OPER/ --set-default
+[default] Initialised
+### : upgrade :
+### <old-compiler.1.2+1/opam>
+opam-version: "1.2"
+version: "1.2"
+build: [ [ "false" ] ]
+packages: [ "base-comp" ]
+### <old-compiler.1.2/opam>
+opam-version: "1.2"
+version: "1.2"
+build: [ [ "false" ] ]
+packages: [ "base-comp" ]
+### tar czf old-comp.1.2.tgz old-compiler.1.2
+### tar czf old-comp.1.2+1.tgz old-compiler.1.2+1
+### <repo>
+opam-version: "1.2"
+### <compilers/1.2/1.2/1.2.comp>
+opam-version: "1.2"
+version: "1.2"
+src: "./old-comp.1.2.tgz"
+build: [ [ "false" ] ]
+packages: [ "base-comp" ]
+### <compilers/1.2/1.2/1.2.descr>
+1.2 compiler release
+### <compilers/1.2/1.2+1/1.2+1.comp>
+opam-version: "1.2"
+version: "1.2"
+src: "./old-comp.1.2+1.tgz"
+build: [ [ "false" ] ]
+packages: [ "base-comp" ]
+### <compilers/1.2/1.2/1.2.descr>
+1.2+1 compiler release
+### <packages/base-comp/base-comp.base/opam>
+opam-version: "1"
+### <packages/base-comp/base-comp.base/descr>
+base package
+### <packages/an-old-package/an-old-package.12/opam>
+opam-version: "1.2"
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "MIT"
+doc: "https//doc.of/old/package"
+dev-repo: "hg+https://pkg@op.am"
+bug-reports: "https://nobug"
+build: "false"
+### <packages/an-old-package/an-old-package.12/descr>
+A description for an-old-package
+### <packages/an-old-package/an-old-package.12/url>
+archive: "http://an-archi.ve"
+checksum: "00000000000000000000000000000000"
+### :::::::::::::
+### :I: Upgrade :
+### :::::::::::::
+### opam admin upgrade
+Compiler 1.2 successfully converted to package ocaml-base-compiler.1.2
+Compiler 1.2+1 successfully converted to package ocaml-variants.1.2+1
+Updated ${BASEDIR}/packages/an-old-package/an-old-package.12/opam
+Updated ${BASEDIR}/packages/base-comp/base-comp.base/opam
+### find packages | unordered
+packages
+packages/base-comp
+packages/base-comp/base-comp.base
+packages/base-comp/base-comp.base/opam
+packages/ocaml-base-compiler
+packages/ocaml-base-compiler/ocaml-base-compiler.1.2
+packages/ocaml-base-compiler/ocaml-base-compiler.1.2/opam
+packages/an-old-package
+packages/an-old-package/an-old-package.12
+packages/an-old-package/an-old-package.12/opam
+packages/ocaml
+packages/ocaml/ocaml.1.2
+packages/ocaml/ocaml.1.2/opam
+packages/ocaml/ocaml.1.2/files
+packages/ocaml/ocaml.1.2/files/gen_ocaml_config.ml.in
+packages/ocaml-variants
+packages/ocaml-variants/ocaml-variants.1.2+1
+packages/ocaml-variants/ocaml-variants.1.2+1/opam
+packages/ocaml-system
+packages/ocaml-system/ocaml-system.1.2
+packages/ocaml-system/ocaml-system.1.2/opam
+packages/ocaml-system/ocaml-system.1.2/files
+packages/ocaml-system/ocaml-system.1.2/files/gen_ocaml_config.ml.in
+### opam-cat packages/base-comp/base-comp.base/opam
+depends: ["ocaml"]
+opam-version: "2.0"
+synopsis: "base package"
+### opam-cat packages/ocaml-base-compiler/ocaml-base-compiler.1.2/opam | '=[0-9a-f]{32}"' -> =HASH
+conflict-class: "ocaml-core-compiler"
+depends: ["ocaml" {= "1.2" & post} "base-comp" {post}]
+flags: compiler
+install: "false"
+maintainer: "platform@lists.ocaml.org"
+opam-version: "2.0"
+synopsis: "1.2+1 compiler release"
+url {
+src: "file://${BASEDIR}/old-comp.1.2.tgz"
+checksum: "md5=HASH
+}
+### opam-cat packages/ocaml/ocaml.1.2/opam
+build: ["ocaml" "-I" "+unix" "unix.cma" "gen_ocaml_config.ml"]
+build-env: CAML_LD_LIBRARY_PATH = ""
+depends: ["ocaml-base-compiler" {= "1.2"} | "ocaml-variants" {>= "1.2" & < "1.3~"} | "ocaml-system" {= "1.2"}]
+description: "This package requires a matching implementation of OCaml,\nand polls it to initialise specific variables like `ocaml:native-dynlink`"
+maintainer: "platform@lists.ocaml.org"
+opam-version: "2.0"
+setenv: [[CAML_LD_LIBRARY_PATH = "%{_:stubsdir}%"] [CAML_LD_LIBRARY_PATH += "%{lib}%/stublibs"] [OCAML_TOPLEVEL_PATH = "%{toplevel}%"]]
+substs: "gen_ocaml_config.ml"
+synopsis: "The OCaml compiler (virtual package)"
+### cat packages/ocaml/ocaml.1.2/files/gen_ocaml_config.ml.in
+let () =
+  let ocaml_version =
+    let v = Sys.ocaml_version in
+    try String.sub v 0 (String.index v '+') with Not_found -> v
+  in
+  if ocaml_version <> "%{_:version}%" then
+    (Printf.eprintf
+       "OCaml version mismatch: %%s, expected %{_:version}%"
+       ocaml_version;
+     exit 1)
+  else
+  let oc = open_out "%{_:name}%.config" in
+  let exe = ".exe" in
+  let (ocaml, suffix) =
+    let s = Sys.executable_name in
+    if Filename.check_suffix s exe then
+      (Filename.chop_suffix s exe, exe)
+    else
+      (s, "")
+  in
+  let ocamlc = ocaml^"c"^suffix in
+  let libdir =
+    let ic = Unix.open_process_in (ocamlc^" -where") in
+    set_binary_mode_in ic false;
+    let r = input_line ic in
+    if Unix.close_process_in ic <> Unix.WEXITED 0 then 
+      failwith "Bad return from 'ocamlc -where'";
+    r
+  in
+  let stubsdir =
+    let ic = open_in (Filename.concat libdir "ld.conf") in
+    let rec r acc = try r (input_line ic::acc) with End_of_file -> acc in
+    let lines = List.rev (r []) in
+    close_in ic;
+    String.concat ":" lines
+  in
+  let p fmt = Printf.fprintf oc (fmt ^^ "\n") in
+  p "opam-version: \"2.0\"";
+  p "variables {";
+  p "  native: %%b"
+    (Sys.file_exists (ocaml^"opt"^suffix));
+  p "  native-tools: %%b"
+    (Sys.file_exists (ocamlc^".opt"^suffix));
+  p "  native-dynlink: %%b"
+    (Sys.file_exists (Filename.concat libdir "dynlink.cmxa"));
+  p "  stubsdir: %%S"
+    stubsdir;
+  p "  preinstalled: %{ocaml-system:installed}%";
+  p "  compiler: \"%{ocaml-system:installed?system:}%%{ocaml-base-compiler:version}%%{ocaml-variants:version}%\"";
+  p "}";
+  close_out oc
+### opam-cat packages/ocaml-variants/ocaml-variants.1.2+1/opam | '=[0-9a-f]{32}"' -> =HASH
+conflict-class: "ocaml-core-compiler"
+depends: ["ocaml" {= "1.2" & post} "base-comp" {post}]
+flags: compiler
+install: "false"
+maintainer: "platform@lists.ocaml.org"
+opam-version: "2.0"
+url {
+src: "file://${BASEDIR}/old-comp.1.2+1.tgz"
+checksum: "md5=HASH
+}
+### opam-cat packages/ocaml-system/ocaml-system.1.2/opam
+available: sys-ocaml-version = "1.2"
+build: ["ocaml" "gen_ocaml_config.ml"]
+conflict-class: "ocaml-core-compiler"
+depends: ["ocaml" {post} "base-unix" {post} "base-threads" {post} "base-bigarray" {post}]
+flags: compiler
+maintainer: "platform@lists.ocaml.org"
+opam-version: "2.0"
+substs: "gen_ocaml_config.ml"
+synopsis: "The OCaml compiler (system version, from outside of opam)"
+### cat packages/ocaml-system/ocaml-system.1.2/files/gen_ocaml_config.ml.in
+let () =
+  let exe = ".exe" in
+  let ocamlc =
+    let (base, suffix) =
+      let s = Sys.executable_name in
+      if Filename.check_suffix s exe then
+        (Filename.chop_suffix s exe, exe)
+      else
+        (s, "") in
+    base ^ "c" ^ suffix in
+  if Sys.ocaml_version <> "%{_:version}%" then
+    (Printf.eprintf
+       "ERROR: The compiler found at %%s has version %%s,\n\
+        and this package requires %{_:version}%.\n\
+        You should use e.g. 'opam switch create %{_:name}%.%%s' \
+        instead."
+       ocamlc Sys.ocaml_version Sys.ocaml_version;
+     exit 1)
+  else
+  let ocamlc_digest = Digest.to_hex (Digest.file ocamlc) in
+  let libdir =
+    if Sys.command (ocamlc^" -where > %{_:name}%.config") = 0 then
+      let ic = open_in "%{_:name}%.config" in
+      let r = input_line ic in
+      close_in ic;
+      Sys.remove "%{_:name}%.config";
+      r
+    else
+      failwith "Bad return from 'ocamlc -where'"
+  in
+  let graphics = Filename.concat libdir "graphics.cmi" in
+  let graphics_digest =
+    if Sys.file_exists graphics then
+      Digest.to_hex (Digest.file graphics)
+    else
+      String.make 32 '0'
+  in
+  let oc = open_out "%{_:name}%.config" in
+  Printf.fprintf oc "opam-version: \"2.0\"\n\
+                     file-depends: [ [ %%S %%S ] [ %%S %%S ] ]\n\
+                     variables { path: %%S }\n"
+    ocamlc ocamlc_digest graphics graphics_digest (Filename.dirname ocamlc);
+  close_out oc
+### opam-cat packages/an-old-package/an-old-package.12/opam
+authors: "the testing team"
+bug-reports: "https://nobug"
+build: "false"
+depends: ["ocaml"]
+dev-repo: "hg+https://pkg@op.am"
+doc: "https//doc.of/old/package"
+homepage: "egapemoh"
+license: "MIT"
+maintainer: "maint@tain.er"
+opam-version: "2.0"
+synopsis: "A description for an-old-package"
+url {
+src: "http://an-archi.ve"
+checksum: "md5=00000000000000000000000000000000"
+}
+### <packages/lorem/lorem.1.0/opam>
+opam-version: "2.0"
+### <packages/lorem/lorem.0.1/opam>
+opam-version: "2.0"
+### <packages/lorem/lorem.2.0/opam>
+opam-version: "2.0"
+### <packages/lorem/lorem.2.1/opam>
+opam-version: "2.0"
+### <packages/ipsum/ipsum.1/opam>
+opam-version: "2.0"
+### <packages/dolor/dolor.1/opam>
+opam-version: "2.0"
+### <packages/sit/sit.1/opam>
+opam-version: "2.0"
+### <packages/amet/amet.1/opam>
+opam-version: "2.0"
+### <packages/consectetur/consectetur.1/opam>
+opam-version: "2.0"
+### <packages/adipiscing/adipiscing.1/opam>
+opam-version: "2.0"
+depends: "lorem" { > "2" }
+### <packages/elit/elit.1/opam>
+opam-version: "2.0"
+depends: "lorem" { > "1" }
+### <packages/sed/sed.1/opam>
+opam-version: "2.0"
+depends: "lorem" { < "1" }
+### <packages/non/non.1/opam>
+opam-version: "2.0"
+depends: "lorem"
+### <add-content.sh>
+for op in `ls packages/*/*/opam`; do
+  grep -q synopsis $op || echo 'synopsis: "A word"' >> $op
+  grep -q description $op || echo 'description: "Two words."' >> $op
+  grep -q authors $op || echo 'authors: "the testing team"' >> $op
+  grep -q homepage $op || echo 'homepage: "egapemoh"' >> $op
+  grep -q maintainer $op || echo 'maintainer: "maint@tain.er"' >> $op
+  grep -q license $op || echo 'license: "MIT"' >> $op
+  grep -q dev-repo $op || echo 'dev-repo: "hg+https://pkg@op.am"' >> $op
+  grep -q bug-reports $op || echo 'bug-reports: "https://nobug"' >> $op
+done
+### sh add-content.sh
+### <packages/risus/risus.1/opam>
+opam-version: "2.0"
+depends: "not-found"
+### :::::::::::
+### :II: list :
+### :::::::::::
+### opam admin list | grep -v ^#
+adipiscing          --          A word
+amet                --          A word
+an-old-package      --          A description for an-old-package
+base-comp           --          base package
+consectetur         --          A word
+dolor               --          A word
+elit                --          A word
+ipsum               --          A word
+lorem               --          A word
+non                 --          A word
+ocaml               --          The OCaml compiler (virtual package)
+ocaml-base-compiler --          1.2+1 compiler release
+ocaml-system        --          The OCaml compiler (system version, from outside of opam)
+ocaml-variants      --          A word
+risus               --
+sed                 --          A word
+sit                 --          A word
+### :::::::::::::
+### :III: check :
+### :::::::::::::
+### opam admin check
+Checking installability of every package. This may take a few minutes...
+[ERROR] These packages are not installable (2):
+        ocaml-system.1.2 risus.1
+Summary: out of 20 packages (17 distinct names)
+- 2 uninstallable roots
+
+# Return code 1 #
+### : index :
+### opam admin index
+Generating urls.txt...
+Generating index.tar.gz...
+Done.
+### test -f urls.txt
+### tar --list -f index.tar.gz | unordered
+packages/
+packages/base-comp/
+packages/base-comp/base-comp.base/
+packages/base-comp/base-comp.base/opam
+packages/risus/
+packages/risus/risus.1/
+packages/risus/risus.1/opam
+packages/ocaml-base-compiler/
+packages/ocaml-base-compiler/ocaml-base-compiler.1.2/
+packages/ocaml-base-compiler/ocaml-base-compiler.1.2/opam
+packages/dolor/
+packages/dolor/dolor.1/
+packages/dolor/dolor.1/opam
+packages/amet/
+packages/amet/amet.1/
+packages/amet/amet.1/opam
+packages/an-old-package/
+packages/an-old-package/an-old-package.12/
+packages/an-old-package/an-old-package.12/opam
+packages/adipiscing/
+packages/adipiscing/adipiscing.1/
+packages/adipiscing/adipiscing.1/opam
+packages/sit/
+packages/sit/sit.1/
+packages/sit/sit.1/opam
+packages/ipsum/
+packages/ipsum/ipsum.1/
+packages/ipsum/ipsum.1/opam
+packages/lorem/
+packages/lorem/lorem.2.0/
+packages/lorem/lorem.2.0/opam
+packages/lorem/lorem.2.1/
+packages/lorem/lorem.2.1/opam
+packages/lorem/lorem.1.0/
+packages/lorem/lorem.1.0/opam
+packages/lorem/lorem.0.1/
+packages/lorem/lorem.0.1/opam
+packages/non/
+packages/non/non.1/
+packages/non/non.1/opam
+packages/consectetur/
+packages/consectetur/consectetur.1/
+packages/consectetur/consectetur.1/opam
+packages/elit/
+packages/elit/elit.1/
+packages/elit/elit.1/opam
+packages/ocaml/
+packages/ocaml/ocaml.1.2/
+packages/ocaml/ocaml.1.2/opam
+packages/ocaml/ocaml.1.2/files/
+packages/ocaml/ocaml.1.2/files/gen_ocaml_config.ml.in
+packages/sed/
+packages/sed/sed.1/
+packages/sed/sed.1/opam
+packages/ocaml-variants/
+packages/ocaml-variants/ocaml-variants.1.2+1/
+packages/ocaml-variants/ocaml-variants.1.2+1/opam
+packages/ocaml-system/
+packages/ocaml-system/ocaml-system.1.2/
+packages/ocaml-system/ocaml-system.1.2/opam
+packages/ocaml-system/ocaml-system.1.2/files/
+packages/ocaml-system/ocaml-system.1.2/files/gen_ocaml_config.ml.in
+repo
+### : lint :
+### opam admin lint
+[KIn base-comp.base:
+           warning 47: Synopsis should start with a capital and not end with a dot
+[KIn risus.1:
+             error 23: Missing field 'maintainer'
+           warning 25: Missing field 'authors'
+           warning 35: Missing field 'homepage'
+           warning 36: Missing field 'bug-reports'
+             error 57: Synopsis must not be empty
+           warning 68: Missing field 'license'
+# Return code 1 #
+### :::::::::::::::::::::
+### :IV: add-constraint :
+### :::::::::::::::::::::
+### opam admin add-constraint lorem>1.2
+[WARNING] In package sed.1, updated constraint lorem {> "1.2" & < "1"} cannot be satisfied, not updating (use `--force' to update anyway)
+### opam show --just-file ./packages/non/non.1/opam --field depends
+"lorem" {> "1.2"}
+### opam show --just-file ./packages/sed/sed.1/opam --field depends
+"lorem" {< "1"}
+### opam show --just-file ./packages/elit/elit.1/opam --field depends
+"lorem" {> "1.2"}
+### opam show --just-file ./packages/adipiscing/adipiscing.1/opam --field depends
+"lorem" {> "2"}
+### opam show --just-file ./packages/amet/amet.1/opam --field depends
+
+### opam admin add-constraint lorem>1.2 --force
+### opam show --just-file ./packages/sed/sed.1/opam --field depends
+"lorem" {> "1.2" & < "1"}
+### <packages/adipiscing/adipiscing.1/opam>
+opam-version: "2.0"
+depends: "lorem" { > "2" }
+### <packages/elit/elit.1/opam>
+opam-version: "2.0"
+depends: "lorem" { > "1" }
+### <packages/sed/sed.1/opam>
+opam-version: "2.0"
+depends: "lorem" { < "1" }
+### <packages/non/non.1/opam>
+opam-version: "2.0"
+depends: "lorem"
+### opam admin add-constraint lorem<1.2
+[WARNING] In package adipiscing.1, updated constraint lorem {< "1.2" & > "2"} cannot be satisfied, not updating (use `--force' to update anyway)
+### opam show --just-file ./packages/non/non.1/opam --field depends
+"lorem" {< "1.2"}
+### opam show --just-file ./packages/sed/sed.1/opam --field depends
+"lorem" {< "1"}
+### opam show --just-file ./packages/elit/elit.1/opam --field depends
+"lorem" {> "1" & < "1.2"}
+### opam show --just-file ./packages/adipiscing/adipiscing.1/opam --field depends
+"lorem" {> "2"}
+### opam admin add-constraint lorem<1.2 --force
+### opam show --just-file ./packages/adipiscing/adipiscing.1/opam --field depends
+"lorem" {< "1.2" & > "2"}
+### <packages/adipiscing/adipiscing.1/opam>
+opam-version: "2.0"
+depends: "lorem" { > "2" }
+### <packages/elit/elit.1/opam>
+opam-version: "2.0"
+depends: "lorem" { > "1" }
+### <packages/sed/sed.1/opam>
+opam-version: "2.0"
+depends: "lorem" { < "1" }
+### <packages/non/non.1/opam>
+opam-version: "2.0"
+depends: "lorem"
+### opam admin add-constraint lorem=1.2
+[WARNING] In package adipiscing.1, updated constraint lorem {= "1.2" & > "2"} cannot be satisfied, not updating (use `--force' to update anyway)
+[WARNING] In package sed.1, updated constraint lorem {= "1.2" & < "1"} cannot be satisfied, not updating (use `--force' to update anyway)
+### opam show --just-file ./packages/non/non.1/opam --field depends
+"lorem" {= "1.2"}
+### opam show --just-file ./packages/sed/sed.1/opam --field depends
+"lorem" {< "1"}
+### opam show --just-file ./packages/elit/elit.1/opam --field depends
+"lorem" {= "1.2"}
+### opam show --just-file ./packages/adipiscing/adipiscing.1/opam --field depends
+"lorem" {> "2"}
+### opam admin add-constraint lorem=1.2 --force
+### opam show --just-file ./packages/sed/sed.1/opam --field depends
+"lorem" {= "1.2" & < "1"}
+### opam show --just-file ./packages/adipiscing/adipiscing.1/opam --field depends
+"lorem" {= "1.2" & > "2"}
+### <packages/sed/sed.1/opam>
+opam-version: "2.0"
+depends: "lorem" { > "1" }
+### <packages/non/non.1/opam>
+opam-version: "2.0"
+depends: "lorem"
+### <packages/elit/elit.1/opam>
+opam-version: "2.0"
+depends: "lorem" { > "1" }
+### opam admin add-constraint lorem=1.2 --packages not-found,non.1,sed,elit.2,amet
+[WARNING] Not found packages not-found and elit.2. Ignoring them.
+### opam show --just-file ./packages/non/non.1/opam --field depends
+"lorem" {= "1.2"}
+### opam show --just-file ./packages/sed/sed.1/opam --field depends
+"lorem" {= "1.2"}
+### opam show --just-file ./packages/elit/elit.1/opam --field depends
+"lorem" {> "1"}
+### sh add-content.sh
+### ::::::::::::::::
+### :V: add-hashes :
+### ::::::::::::::::
+### # random archives
+### tar czf arch1.tgz add-content.sh
+### tar czf arch2.tgz repo
+### <add-urls.sh>
+arch=$1
+shift
+hsh=$1
+shift
+for p in $@; do
+  p=$p.1
+  file="packages/${p%.*}/$p/opam"
+  echo "url {" >> $file
+  echo "src: \"$arch.tgz\"" >> $file
+  if [ $hsh -eq 1 ] ; then
+    MD5=$(openssl md5 $arch.tgz | cut -d' ' -f2)
+    echo "checksum: \"md5=$MD5\"" >> $file
+  fi
+  echo "}" >> $file
+done
+### sh add-urls.sh arch1 0 dolor
+### sh add-urls.sh arch2 1 sit
+### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+url.src:      file://${BASEDIR}/arch1.tgz
+url.checksum:
+### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+url.src:      file://${BASEDIR}/arch2.tgz
+url.checksum: md5=HASH
+### opam admin add-hashes md5
+### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+url.src:      file://${BASEDIR}/arch1.tgz
+url.checksum: md5=HASH
+### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+url.src:      file://${BASEDIR}/arch2.tgz
+url.checksum: md5=HASH
+### opam admin add-hashes sha256 --packages not-found,dolor,sit.1,sit.2,sed,sed.2
+[WARNING] Not found packages not-found, sit.2 and sed.2. Ignoring them.
+### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+url.src:      file://${BASEDIR}/arch1.tgz
+url.checksum: md5=HASH sha256=HASH
+### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+url.src:      file://${BASEDIR}/arch2.tgz
+url.checksum: md5=HASH sha256=HASH
+### opam show --just-file ./packages/sed/sed.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+url.src:
+url.checksum:
+### rm -r packages/an-old-package
+### opam admin add-hashes sha512
+[file://${BASEDIR}/arch1.tgz] found in cache
+[file://${BASEDIR}/arch2.tgz] found in cache
+### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+url.src:      file://${BASEDIR}/arch1.tgz
+url.checksum: md5=HASH sha256=HASH sha512=HASH
+### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+url.src:      file://${BASEDIR}/arch2.tgz
+url.checksum: md5=HASH sha256=HASH sha512=HASH
+### opam lint --check-upstream ./packages/dolor/dolor.1/opam ./packages/sit/sit.1/opam
+${BASEDIR}/packages/dolor/dolor.1/opam: Passed.
+${BASEDIR}/packages/sit/sit.1/opam: Passed.
+### :::::::::::::::::::::
+### :VI: Specific cases :
+### :::::::::::::::::::::
+### : Package version comparison error (#5334)
+### <packages/fail-5334/fail-5334.1/opam>
+opam-version: "2.0"
+depends: [
+  "ocaml" {>= "5.00"}
+]
+### opam admin add-constraint 'ocaml<5.0'
+[WARNING] In package fail-5334.1, updated constraint ocaml {< "5.0" & >= "5.00"} cannot be satisfied, not updating (use `--force' to update anyway)
