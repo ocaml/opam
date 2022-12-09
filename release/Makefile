@@ -52,17 +52,19 @@ build/%.image: build/Dockerfile.%
 	docker build -t opam-build-$* -f $^ build
 	touch $@
 
+SHA_LINK = $(if $(shell tar xOf "$(OUTDIR)/opam-full-$(VERSION).tar.gz" opam-full-$(VERSION)/src_ext/Makefile.sources | grep -F URL_sha),-lsha_stubs)
+
 # Actually, this is for alpine 3.13, and varies
 CLINKING_linux = \
 -Wl,-Bstatic \
--lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs \
+-lunix -lmccs_stubs -lmccs_glpk_stubs $(SHA_LINK) \
 -lstdc++ \
 -static-libgcc \
 -static
 # -Wl,-Bdynamic
 
 CLINKING_macos = \
--lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs \
+-lunix -lmccs_stubs -lmccs_glpk_stubs $(SHA_LINK) \
 -lstdc++
 
 CLINKING_openbsd = $(CLINKING_macos)
