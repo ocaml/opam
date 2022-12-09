@@ -3,6 +3,10 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.1.4:
+* Add support for OCaml 5.0. Dose3 >= 6.1 and base64 >= 3.1.0 are now required [#5357 @kit-ty-kate @dra27 - fix #5354]
+* [BUG] Fix all empty conflict explanation messages [#5378 @kit-ty-kate - partial fix #4373]
+
 2.1.3:
 * [BUG] Fix `opam init` and `opam init --reinit` when the `jobs` variable has
   been set in the opamrc or the current config. [#5056 @rjbou]
