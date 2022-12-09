@@ -4,6 +4,7 @@ FROM multiarch/alpine:%TARGET_TAG%
 LABEL Description="opam release builds" Vendor="OCamlPro" Version="1.0"
 
 RUN apk add gcc g++ make coreutils openssl
+RUN sed -i -e '/ NGROUPS_MAX /s/32/65536/' /usr/include/limits.h
 
 RUN addgroup -S opam && adduser -S opam -G opam -s /bin/sh
 

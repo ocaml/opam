@@ -71,6 +71,7 @@ users)
 ## Infrastructure
 
 ## Release scripts
+  * Workaround incorrect `NGROUPS_MAX` in `<limits.h>` in musl for release builds [#5383 @dra27]
 
 ## Admin
 
