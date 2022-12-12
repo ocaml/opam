@@ -149,7 +149,9 @@ if %ERRORLEVEL% equ 1 (
 
 "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make --no-print-directory -C src_ext cache-archives" || exit /b 1
 
+set RECOMPILED=0
 if not exist bootstrap\nul (
+  set RECOMPILED=1
   "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make compiler" || exit /b 1
   for /f "delims=" %%U in ('type bootstrap\installed-tarball') do echo %%U %DEP_MODE%> bootstrap\installed-tarball
   if exist bootstrap\ocaml-*.tar.gz del bootstrap\ocaml-*.tar.gz
@@ -169,6 +171,7 @@ if not exist bootstrap\nul (
 )
 
 if exist current-lib-pkg-list (
+  set RECOMPILED=1
   "%CYG_ROOT%\bin\bash.exe" -lc "cd $APPVEYOR_BUILD_FOLDER && make lib-pkg" || exit /b 1
   move current-lib-pkg-list bootstrap\installed-packages
 )
@@ -192,6 +195,10 @@ if "%DEP_MODE%" equ "lib-pkg" set WITH_MCCS=
 goto :EOF
 
 :test
+if %RECOMPILED% equ 1 (
+  echo Testing skipped for this run to avoid timeout
+  goto :EOF
+)
 rem Configure Git for Windows (for the testsuite, this isn't strictly necessary
 rem as Git-for-Windows will pick up $HOME/.gitconfig for Cygwin's git)
 git config --global user.email travis@example.com
