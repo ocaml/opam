@@ -390,7 +390,7 @@ let switch_previous lock gt =
     OpamConsole.error_and_exit `Not_found
       "No previously used switch could be found"
 
-let import_t ?ask importfile t =
+let import_t ?ask ?(deps_only=false) importfile t =
   log "import switch";
 
   let extra_files = importfile.OpamFile.SwitchExport.extra_files in
@@ -461,6 +461,11 @@ let import_t ?ask importfile t =
     else
       t.compiler_packages,
       import_sel.sel_installed -- import_sel.sel_compiler
+  in
+  let to_install =
+    if deps_only then
+      to_install -- (import_sel.sel_roots -- import_sel.sel_compiler)
+    else to_install
   in
 
   let t =
@@ -679,7 +684,7 @@ let reinstall init_st =
              overlays = OpamPackage.Name.Map.empty; }
     st
 
-let import st filename =
+let import st ?deps_only filename =
   let import_str = match filename with
     | None   -> OpamSystem.string_of_channel stdin
     | Some f -> OpamFilename.read (OpamFile.filename f)
@@ -695,7 +700,7 @@ let import st filename =
           overlays = OpamPackage.Name.Map.empty }
       with e1 -> OpamStd.Exn.fatal e1; raise e
   in
-  import_t importfile st
+  import_t ?deps_only importfile st
 
 let set_invariant ?(force=false) st invariant =
   let satisfied = OpamFormula.satisfies_depends st.installed invariant in
