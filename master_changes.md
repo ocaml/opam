@@ -34,6 +34,7 @@ users)
 ## Remove
 
 ## Switch
+  * ◈ Add `opam switch import --deps-only` option to install only dependencies of root package at import [#5388 @rjbou - fix #5200]
 
 ## Config
 

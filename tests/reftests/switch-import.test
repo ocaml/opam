@@ -387,13 +387,11 @@ opam-version: "2.0"
 roots: ["bar.1" "foo.1"]
 ### opam switch import deps.xp --switch deps --deps-only
 The following actions will be performed:
-=== install 3 packages
-  - install bar 1
+=== install 2 packages
   - install baz 1
   - install foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed baz.1
--> installed bar.1
 -> installed foo.1
 Done.

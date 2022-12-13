@@ -2779,7 +2779,8 @@ let switch cli =
     mk_flag ~cli cli_original ["deps-only"]
       "When creating a local switch in a project directory (i.e. a directory \
        containing opam package definitions), install the dependencies of the \
-       project but not the project itself."
+       project but not the project itself. When importing a switch, do not \
+       install root packages."
   in
   let force =
     mk_flag ~cli (cli_from cli2_1) ["force"]
@@ -2997,7 +2998,7 @@ let switch cli =
               ~update_config:(not no_switch)
               switch
             @@ fun st ->
-            let st = OpamSwitchCommand.import st import_source in
+            let st = OpamSwitchCommand.import st ~deps_only import_source in
             let invariant = OpamSwitchState.infer_switch_invariant st in
             let st = OpamSwitchCommand.set_invariant_raw st invariant in
             st.switch_global, st
@@ -3011,7 +3012,8 @@ let switch cli =
           OpamConsole.warning
             "Switch exists, '--repositories' argument ignored";
         OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
-        OpamSwitchState.drop @@ OpamSwitchCommand.import st import_source
+        OpamSwitchState.drop
+        @@ OpamSwitchCommand.import st ~deps_only import_source
       end;
       `Ok ()
     | Some `remove, switches ->
