@@ -1,4 +1,5 @@
 N0REP0
+### : Misleading version :
 ### <packages/test/test.1/opam>
 opam-version: "2.0"
 depends: [
@@ -6,3 +7,21 @@ depends: [
 ]
 ### opam admin add-constraint 'ocaml<5.0'
 [WARNING] In package test.1, updated constraint ocaml {< "5.0" & >= "5.00"} cannot be satisfied, not updating (use `--force' to update anyway)
+### : add-constraint with package selection :
+### <packages/sed/sed.1/opam>
+opam-version: "2.0"
+depends: "lorem" { > "1" }
+### <packages/non/non.1/opam>
+opam-version: "2.0"
+depends: "lorem"
+### <packages/elit/elit.1/opam>
+opam-version: "2.0"
+depends: "lorem" { > "1" }
+### opam admin add-constraint lorem=1.2 --packages not-found,non.1,sed,elit.2,amet
+[WARNING] Not found packages not-found, elit.2 and amet. Ignoring them.
+### opam show --just-file ./packages/non/non.1/opam --field depends
+"lorem" {= "1.2"}
+### opam show --just-file ./packages/sed/sed.1/opam --field depends
+"lorem" {= "1.2"}
+### opam show --just-file ./packages/elit/elit.1/opam --field depends
+"lorem" {> "1"}

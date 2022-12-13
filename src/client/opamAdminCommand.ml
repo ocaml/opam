@@ -296,6 +296,41 @@ let cache_command cli =
           cache_dir_arg $ no_repo_update_arg $ link_arg $ jobs_arg $
           recheck_arg)
 
+let packages_with_prefixes repo_root packages =
+  let pkgs_map = OpamRepository.packages_with_prefixes repo_root in
+  if packages = [] then pkgs_map else
+  let pkgs_map, missing_pkgs =
+    List.fold_left (fun (map, missing) (n,vo)->
+        match vo with
+        | Some v ->
+          let nv = OpamPackage.create n v in
+          (match OpamPackage.Map.find_opt nv pkgs_map with
+           | Some pre ->( OpamPackage.Map.add nv pre map), missing
+           | None -> map, (n,vo)::missing)
+        | None ->
+          let n_map = OpamPackage.packages_of_name_map pkgs_map n in
+          if OpamPackage.Map.is_empty n_map then
+            map, (n,vo)::missing
+          else
+            (OpamPackage.Map.union (fun _nv _nv' ->
+                 OpamStd.Sys.exit_because `Internal_error)
+                n_map map),
+            missing
+      ) (OpamPackage.Map.empty, []) packages
+  in
+  if missing_pkgs <> [] then
+    OpamConsole.warning "Not found package%s %s. Ignoring them."
+      (match missing_pkgs with | [_] -> "" | _ -> "s")
+      (OpamStd.Format.pretty_list
+         (List.map
+            (fun (n,vo) ->
+               OpamConsole.colorise `underline
+                 (match vo with
+                  | Some v -> OpamPackage.to_string (OpamPackage.create n v)
+                  | None -> OpamPackage.Name.to_string n))
+            (List.rev missing_pkgs)));
+  pkgs_map
+
 let add_hashes_command_doc =
   "Add archive hashes to an opam repository."
 let add_hashes_command cli =
@@ -341,10 +376,10 @@ let add_hashes_command cli =
               let t_mapping = Hashtbl.create 187 in
               (OpamStd.Option.default [] (OpamFile.Lines.read_opt cache_file)
                |> List.iter @@ function
-                | [src; dst] ->
-                  Hashtbl.add t_mapping
-                    (OpamHash.of_string src) (OpamHash.of_string dst)
-                | _ -> failwith ("Bad cache at "^OpamFile.to_string cache_file));
+               | [src; dst] ->
+                 Hashtbl.add t_mapping
+                   (OpamHash.of_string src) (OpamHash.of_string dst)
+               | _ -> failwith ("Bad cache at "^OpamFile.to_string cache_file));
               Hashtbl.add t (k1,k2) (cache_file, t_mapping);
             ))
           hash_kinds
@@ -416,38 +451,7 @@ let add_hashes_command cli =
       cache_urls repo_root
         (OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo_root))
     in
-    let pkg_prefixes =
-      let pkgs_map = OpamRepository.packages_with_prefixes repo_root in
-      if packages = [] then pkgs_map
-      else
-        (let pkgs_map, missing_pkgs =
-           List.fold_left (fun ((map: string option OpamPackage.Map.t),error)  (n,vo)->
-               match vo with
-               | Some v ->
-                 let nv = OpamPackage.create n v in
-                 (match OpamPackage.Map.find_opt nv pkgs_map with
-                  | Some pre ->( OpamPackage.Map.add nv pre map), error
-                  | None -> map, (n,vo)::error)
-               | None ->
-                 let n_map = OpamPackage.packages_of_name_map pkgs_map n in
-                 if OpamPackage.Map.is_empty n_map then
-                   map, (n,vo)::error
-                 else
-                   (OpamPackage.Map.union (fun _nv _nv' -> assert false) n_map map),
-                   error
-             ) (OpamPackage.Map.empty, []) packages
-         in
-         if missing_pkgs <> [] then
-           OpamConsole.warning "Not found package%s %s. Ignoring them."
-             (if List.length missing_pkgs = 1 then "" else "s")
-             (OpamStd.List.concat_map ~left:"" ~right:"" ~last_sep:" and " ", "
-                (fun (n,vo) ->
-                   OpamConsole.colorise `underline
-                     (match vo with
-                      | Some v -> OpamPackage.to_string (OpamPackage.create n v)
-                      | None -> OpamPackage.Name.to_string n)) missing_pkgs);
-         pkgs_map)
-    in
+    let pkg_prefixes = packages_with_prefixes repo_root packages in
     let has_error =
       OpamPackage.Map.fold (fun nv prefix has_error ->
           let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
@@ -460,30 +464,30 @@ let add_hashes_command cli =
             else has_error
           in
           let process_url has_error urlf =
-              let hashes = OpamFile.URL.checksum urlf in
-              let hashes =
-                if replace then
-                  List.filter (fun h -> List.mem (OpamHash.kind h) hash_types)
-                    hashes
-                else hashes
-              in
-              let has_error, hashes =
-                List.fold_left (fun (has_error, hashes) kind ->
-                    if List.exists (fun h -> OpamHash.kind h = kind) hashes
-                    then has_error, hashes else
-                    match get_hash cache_urls kind hashes
-                            (OpamFile.URL.url urlf)
-                    with
-                    | Some h -> has_error, hashes @ [h]
-                    | None ->
-                      OpamConsole.error "Could not get hash for %s: %s"
-                        (OpamPackage.to_string nv)
-                        (OpamUrl.to_string (OpamFile.URL.url urlf));
-                      true, hashes)
-                  (has_error, hashes)
-                  hash_types
-              in
-              has_error, OpamFile.URL.with_checksum hashes urlf
+            let hashes = OpamFile.URL.checksum urlf in
+            let hashes =
+              if replace then
+                List.filter (fun h -> List.mem (OpamHash.kind h) hash_types)
+                  hashes
+              else hashes
+            in
+            let has_error, hashes =
+              List.fold_left (fun (has_error, hashes) kind ->
+                  if List.exists (fun h -> OpamHash.kind h = kind) hashes
+                  then has_error, hashes else
+                  match get_hash cache_urls kind hashes
+                          (OpamFile.URL.url urlf)
+                  with
+                  | Some h -> has_error, hashes @ [h]
+                  | None ->
+                    OpamConsole.error "Could not get hash for %s: %s"
+                      (OpamPackage.to_string nv)
+                      (OpamUrl.to_string (OpamFile.URL.url urlf));
+                    true, hashes)
+                (has_error, hashes)
+                hash_types
+            in
+            has_error, OpamFile.URL.with_checksum hashes urlf
           in
           let has_error, url_opt =
             match OpamFile.OPAM.url opam with
@@ -1006,10 +1010,15 @@ let add_constraint_command cli =
        $(b,<2)). The default in this case is to print a warning and keep \
        the existing constraint unchanged."
   in
-  let cmd global_options force atom () =
+  let packages =
+    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_2) ["p";"packages"]
+      "PACKAGES" "Only add constraints for the given packages"
+      Arg.(list OpamArg.package) []
+  in
+  let cmd global_options force atom packages () =
     OpamArg.apply_global_options cli global_options;
     let repo_root = checked_repo_root () in
-    let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
+    let pkg_prefixes = packages_with_prefixes repo_root packages in
     let name, cstr_opt = atom in
     let cstr = match cstr_opt with
       | Some (relop, v) ->
@@ -1078,7 +1087,7 @@ let add_constraint_command cli =
       pkg_prefixes
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
-  Term.(const cmd $ global_options cli $ force_arg $ atom_arg)
+  Term.(const cmd $ global_options cli $ force_arg $ atom_arg $ packages)
 
 (* HELP *)
 let help =
