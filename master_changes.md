@@ -294,11 +294,11 @@ users)
   * Speedup the compiler compilation phase for the docker builds [#5387 @kit-ty-kate]
 
 ## Admin
-  * ✘ `opam admin cache` now ignores all already present cache files. Option
-    `--check-all` restores the previous behaviour of validating all checksums.
+  * ✘ `opam admin cache` now ignores all already present cache files. Option `--check-all` restores the previous behaviour of validating all checksums.
   * [BUG] Fix repo-upgrade internal error [#4965 @AltGr]
   * [BUG] Fix `--environment` documentation [#5235 @rjbou - fix #5184]
   * [BUG] Fix opam admin add-constraint failing with Not_found in some situations [#5336 @kit-ty-kate - fix #5334]
+  * ✘ Add `opam admin add-constraint <cst> --packages` to select a subset of packages to apply constraints [#5386 @rjbou]
 
 ## Opam installer
   *
@@ -427,6 +427,8 @@ users)
   * Add a test showing that we still get the reason for installing a package when using opam reinstall on non-installed packages [#5229 @kit-ty-kate]
   * Add a windows test to check case insensitive environment variable handling [#5356 @dra27]
   * Fix the reftests on OCaml 5.0 [#5402 @kit-ty-kate]
+  * Add `admin` command reftest [#5385 #5336 @rjbou @kit-ty-kate]
+  * Add `admin` command reftest [#5386 #5385 #5336 @rjbou @kit-ty-kate]
 
 
   * Add `swhid` print tests in show, and swh fallback test [#4859 @rjbou]
