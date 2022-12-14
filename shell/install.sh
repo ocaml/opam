@@ -5,8 +5,8 @@ set -ue
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
 # (c) Copyright Louis Gesbert OCamlPro 2014-2017
 
-VERSION='2.1.3'
-DEV_VERSION='2.1.3'
+VERSION='2.1.4'
+DEV_VERSION='2.1.4'
 DEFAULT_BINDIR=/usr/local/bin
 
 bin_sha512() {
