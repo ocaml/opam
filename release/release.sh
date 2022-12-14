@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -uex
 
+unset $(env | cut -d= -f1 | grep -Fvx HOME | grep -Fvx PWD | grep -Fvx USER | grep -Fvx SHELL | grep -Fvx TERM)
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin
+
 usage() {
     echo "Usage: $0 TAG"
     exit 1
