@@ -3,6 +3,107 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.1.4:
+* Add support for OCaml 5.0. Dose3 >= 6.1 and base64 >= 3.1.0 are now required [#5357 @kit-ty-kate @dra27 - fix #5354]
+* [BUG] Fix all empty conflict explanation messages [#5378 @kit-ty-kate - partial fix #4373]
+
+2.1.3:
+* [BUG] Fix `opam init` and `opam init --reinit` when the `jobs` variable has
+  been set in the opamrc or the current config. [#5056 @rjbou]
+* When inferring a 2.1+ switch invariant from 2.0 base packages, don't filter
+  out pinned packages as that causes very wide invariants for pinned compiler
+  packages [#5176 @dra27 - fix #4501]
+* [BUG] Fix an internal error on repository upgrade from OPAM 1.2
+  [#4965 @AltGr]
+* Some optimisations to `opam list --installable` queries combined with other
+  filters [#4882 @AltGr - fix #4311]
+* Improve performance of some opam list combinations (e.g. `--available`,
+  `--installable`) [#4999 @kit-ty-kate]
+* Improve performance of `opam list --conflicts-with` when combined with other
+  filters [#4999 @kit-ty-kate]
+* Improve performance of `opam show` by as much as 300% when the package to
+  show is given explicitly or is unique [#4998 @kit-ty-kate - fix #4997 and
+  partially #4172]
+* [BUG] `opam var` no longer fails if no switch is set
+  [#5027 @rjbou - fix #5025]
+* [BUG] Setting a variable with option `--switch <sw>` fails instead of writing
+  an invalid `switch-config` file [#5027 @rjbou]
+* When a field is defined in switch and global scope, try to determine the
+  scope also by checking switch selection [#5027 @rjbou]
+* [BUG] Handle external dependencies when updating switch state pin status (all
+  pins), instead as a post pin action (only when called with `opam pin`
+  [#5047 @rjbou - fix #5046]
+* [BUG] When reinstalling a package that has a dirty source, if uncommitted
+  changes are the same than the ones stored in opam's cache, opam consider that
+  it is up to date and nothing is updated [4879 @rjbou]
+* Stop Zypper from upgrading packages on updates on OpenSUSE
+  [#4978 @kit-ty-kate]
+* Clearer error message if a command doesn't exist
+  [#4971 @kit-ty-kat - fix #4112]
+* [BUG] Remove windows double printing on commands and their output
+  [#4940 @rjbou]
+* Actually allow multiple state caches to co-exist
+  [#4934 @dra27 - actually fixes #4554]
+* Update cold compiler to 4.13 to avoid issues with glibc 2.34 on Unix
+  [#5017 @dra27]
+* Bump opam-file-format to 2.1.4 [#5117 @kit-ty-kate - fix #5116]
+* Fix some empty conflict explanations
+  [#4982 @kit-ty-kate - partially fix #4373]
+* Port some tests from master [#4841 #4974 #4861 #4915 #4979 #5004 #5006 #5015
+  #5024 #5025 #5031 #5131 #5176 @AltGr @dra27 @kit-ty-kate]
+* Update test engine to allow for additional tests [#4913 #4966 #4979 #5004
+  #5009 #5024 #5097 @AltGr @kit-ty-kate @rjbou]
+* Update for git protocol deprecation on GitHub [#5097 @rjbou]
+* When building opam, do not fail if curl/wget is missing [#5223 #5233 @kit-ty-kate]
+
+2.1.2:
+* Fallback on dnf if yum does not exist on RHEL-based systems [#4825 @kit-ty-kate]
+* Use --no-depexts in CLI 2.0 mode [#4908 @dra27]
+* bootstrap: update ocaml version (fixes the compilation of opam with mingw) [#4927 @kit-ty-kate]
+
+2.1.1:
+* Fix typo in error message for opam var [#4786 @kit-ty-kate - fix #4785]
+* Run the sandbox check in the temporary directory [#4787 @dra27 - fix #4783]
+* OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
+* Homebrew: Add support for casks and full-names [#4801 @kit-ty-kate]
+* Fix the cold target in presence of an older OCaml compiler version on macOS
+  [#4802 @kit-ty-kate - fix #4801]
+* Archlinux: handle virtual package detection [#4833 @rjbou - partial fix #4759]
+* Disable the detection of available packages on RHEL-based distributions.
+  This fixes an issue on RHEL-based distributions where yum list used to detect
+  available and installed packages would wait for user input without showing
+  any output and/or fail in some cases [#4791 @kit-ty-kate - fixes #4790]
+* Handle empty environment variable updates - missed cherry-pick from 2.0
+  [#4840 @dra27]
+* Fix vendored build on mingw-w64 with g++ 11.2 [#4835 @dra27]
+* Put back support for switch creation with packages argument and
+  `--packages` option with cli 2.0, and a specific error message for cli 2.1
+  [#4853 @rjbou - fix #4843]
+* Fix reverting environment additions to PATH-like variables when several dirs
+  added at once [#4861 @dra27]
+* Fix dose3 download url since gforge is gone [#4870 @avsm]
+* Ensure setenv can use package variables defined during the build
+  [#4841 @dra27]
+* Fix `set-invariant: default repos were loaded instead of switch repos
+  [#4866 @rjbou]
+
+2.1.0:
+* Set DEBIAN_FRONTEND=noninteractive for unsafe-yes confirmation level
+  [#4735 @dra27 - partially fix #4731]
+* Fix 2.1~alpha2 to 2.1 format upgrade with reinit [#4750 #4756 @rjbou - fix #4748]
+* Fix bypass-check handling on reinit [#4750 @rjbou]
+* fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
+* Bump src_exts and fix build compat with Dune 2.9.0 [#4754 @dra27]
+* Fix depext alpine tagged repositories handling [#4758 @rjbou]
+
+2.1.0~rc2:
+* Remove OPAMZ3DEBUG evironment variable [#4720 @rjbou - fix #4717]
+* Fix format upgrade when there is missing local switches in the config file
+  [#4715 @rjbou - fix #4713]
+* Fix not recorded local switch handling, with format upgrade [#4715 @rjbou]
+* Set opam root version to 2.1 [#4715 @rjbou]
+* Improved and extended tests [#4715 @rjbou]
+
 2.1.0~rc:
 * (*) Environment variables initialised only at opam client launch, no more via
   libraries [#4606 #4703 @rjbou]
