@@ -97,6 +97,7 @@ users)
 ## Shell
 
 ## Internal
+  * Run `Gc.compact` in OpamParallel, when the main process is waiting for the children processes for the first time [#5396 @kkeundotnet]
 
 ## Internal: Windows
 
@@ -127,3 +128,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamParallel.*.{map,reduce,iter}`: Run `Gc.compact` when the main process is waiting for the children processes for the first time [#5396 @kkeundotnet]
