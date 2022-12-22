@@ -1645,7 +1645,7 @@ let patch ?(preprocess=true) ~dir p =
     else
       p
   in
-  make_command ~name:"git apply" ~dir "git" ["apply"; "-p1"; p'] @@> fun r ->
+  make_command ~name:"git apply" ~dir "git" ["apply"; "--unsafe-paths"; "-p1"; p'] @@> fun r ->
     if not (OpamConsole.debug ()) then Sys.remove p';
     if OpamProcess.is_success r then Done None
     else Done (Some (Process_error r))
