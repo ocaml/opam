@@ -563,7 +563,7 @@ users)
   * `OpamFilter`: add `?custom` argument in `to_string` to tweak the output [#5171 @cannorin]
 
 ## opam-core
-  * `OpamStd.Sys`: fix `get_windows_executable_variant` to distinguish MSYS2 from Cygwin, esp. for rsync rather than symlinking [@jonahbeckford]
+  * `OpamStd.Sys`: fix `get_windows_executable_variant` to distinguish MSYS2 from Cygwin, esp. for rsync rather than symlinking [#5404 @jonahbeckford]
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamFilename`, `OpamHash`, `OpamStd`, `OpamStd`, `OpamUrl`, and `OpamVersion` [#4918 @rjbou]
   * `OpamHash`: add `sort` from strongest to weakest kind
