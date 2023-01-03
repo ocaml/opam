@@ -1176,6 +1176,8 @@ module OpamSys = struct
       fun _ -> `Native
 
   let is_cygwin_variant cmd =
+    (* Treat MSYS2's variant of `cygwin1.dll` called `msys-2.0.dll` equivalently.
+       Confer https://www.msys2.org/wiki/How-does-MSYS2-differ-from-Cygwin/ *)
     match get_windows_executable_variant cmd with
     | `Native -> `Native
     | `Cygwin
