@@ -95,6 +95,7 @@ type families =
   | Homebrew
   | Macports
   | Netbsd
+  | Nixos
   | Openbsd
   | Suse
 
@@ -129,6 +130,7 @@ let family ~env () =
       failwith
         "External dependency handling for macOS requires either \
          MacPorts or Homebrew - neither could be found"
+    | "nixos" -> Nixos
     | "suse" | "opensuse" -> Suse
     | family ->
       Printf.ksprintf failwith
@@ -596,6 +598,108 @@ let packages_status ?(env=OpamVariable.Map.empty) packages =
       |> package_set_of_pkgpath
     in
     compute_sets sys_installed
+  | Nixos ->
+      let nix_env = "nix-env" in
+      let is_package_installed package =
+        (* takes a single package and checks whether it is installed *)
+        let pname = OpamSysPkg.to_string package in
+        let args = ["--query"; pname] in
+        match run_command nix_env args with
+        | (0, _) -> true
+        | (1, _) -> false
+        | (code, output) ->
+          Printf.ksprintf failwith
+            "failed with unexpected exit code %d running command:\n    %s\n\nOutput:\n%s"
+            code (String.concat " " (nix_env::args)) (String.concat "\n" output)
+      in
+      let all_pnames_of_nix_package_json : OpamJson.t -> string list option = function
+        (* expects a json object such as this one, and returns a list
+           conatining the "pname" of each package, or None if the format
+           was unexpected:
+           {
+             "nixpkgs.cmake": {
+               "name": "cmake-3.24.2",
+               "pname": "cmake",
+               "version": "3.24.2",
+               "system": "x86_64-linux",
+               "outputName": "out",
+               "outputs": {
+                 "out": null
+               }
+             },
+             "nixos.python310": {
+               "name": "python3-3.10.4",
+               "pname": "python3",
+               "version": "3.10.4",
+               "system": "x86_64-linux",
+               "outputName": "out",
+               "outputs": {
+                 "debug": null,
+                 "out": null
+               }
+             }
+           }
+        *)
+        | (`O packages) ->
+            let maybe_pnames = List.map (fun (_key, package_json) ->
+              match package_json with
+              | `O fields -> begin
+                match List.assoc_opt "pname" fields with
+                | Some (`String pname) -> Some pname
+                | _ -> None
+              end
+              | _ -> None) packages
+            in
+            if List.exists Option.is_none maybe_pnames
+            then None
+            else Some (List.filter_map Fun.id maybe_pnames)
+        |  _ -> None
+      in
+      let get_all_available_package_names () =
+        (* Returns a list containing the names of all available packages. We
+           use this to determine which specified packages are available in the
+           repo. The command for querying whether a single package is available
+           is slow, and takes the same amount of time as listing all the
+           packages (~30s). We need to check the availability of multiple
+           packages, so it's faster to list all packages once and then search
+           the output for the specified packages.
+        *)
+        let args = ["--query"; "--available"; "--json"] in
+        let (code, output_lines) = run_command nix_env args in
+        let output = String.concat "\n" output_lines in
+        if code <> 0 then
+          Printf.ksprintf failwith
+            "failed with unexpected exit code %d running command:\n    %s\n\nOutput:\n%s"
+            code (String.concat " " (nix_env::args)) output;
+        match OpamJson.of_string output with
+        | Some json ->
+          begin match all_pnames_of_nix_package_json json with
+            | Some pnames -> pnames
+            | None ->
+              Printf.ksprintf failwith
+                "unexpected format of json string produced by running command:\n    %s\n\nOutput:\n%s"
+                (String.concat " " (nix_env::args)) output
+          end
+        | None ->
+          Printf.ksprintf failwith
+            "failed to parse output as json from running command:\n    %s\n\nOutput:\n%s"
+            (String.concat " " (nix_env::args)) output
+      in
+      let not_installed = OpamSysPkg.Set.filter (Fun.negate is_package_installed) packages in
+      if OpamSysPkg.Set.is_empty not_installed then
+        OpamSysPkg.Set.empty, OpamSysPkg.Set.empty
+      else
+        let not_installed_by_str =
+          OpamSysPkg.Set.elements not_installed
+          |> List.map (fun pkg -> OpamSysPkg.to_string pkg, pkg)
+          |> OpamStd.String.Map.of_list
+        in
+        let available_to_install =
+          get_all_available_package_names ()
+          |> List.filter_map (fun pname -> OpamStd.String.Map.find_opt pname not_installed_by_str)
+          |> OpamSysPkg.Set.of_list
+        in
+        (available_to_install, OpamSysPkg.Set.diff not_installed available_to_install)
   | Openbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-mqP"]
@@ -678,6 +782,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) sys_packages =
     [`AsAdmin "port", yes ["-N"] ("install"::packages)],
     None
   | Netbsd -> [`AsAdmin "pkgin", yes ["-y"] ("install" :: packages)], None
+  | Nixos -> [`AsUser "nix-env", "--install" :: packages], None
   | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
 
@@ -734,6 +839,7 @@ let update ?(env=OpamVariable.Map.empty) () =
     | Gentoo -> Some (`AsAdmin "emerge", ["--sync"])
     | Homebrew -> Some (`AsUser "brew", ["update"])
     | Macports -> Some (`AsAdmin "port", ["sync"])
+    | Nixos -> Some (`AsUser "nix-channel", ["--update"])
     | Suse -> Some (`AsAdmin "zypper", ["--non-interactive"; "refresh"])
     | Freebsd | Netbsd | Openbsd ->
       None
