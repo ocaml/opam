@@ -41,7 +41,6 @@ CAMLprim value OPAM_get_acl_executable_info(value file, value owner)
   if (acl)
   {
     acl_entry_t entry;
-    size_t siz;
 
     if (acl_get_entry(acl, ACL_FIRST_ENTRY, &entry) == 1)
     {
