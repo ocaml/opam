@@ -297,6 +297,7 @@ users)
   * Add builtin support for the 'deprecated' flag.  Any packages flagged with deprecated would be avoided by the solver unless there is no other choice (e.g. some user wants to install package a which depends on b which is deprecated) If it is installed, show up a note after installation notifying the user that the package is deprecated. [#4523 @kit-ty-kate]
   * [BUG] On cudf strong and weak dependencies computation, some weak dependencies were wrongly kept, from #4627 [#5338 @rjbou @AltGr]
   * [BUG] Fix "opam list -s --coinstallable-with pkg.1 pkg.2" listing pkg.2 as coinstallable with pkg.1 [#5414 @kit-ty-kate]
+  * Log the time dose3's check_request takes [#5407 @kit-ty-kate]
 
 ## Client
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
