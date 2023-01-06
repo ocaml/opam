@@ -168,6 +168,7 @@ users)
   * Set `depext-bypass` parsing with depth 1, no needed brakcet if single package [#5154 @rjbou]
 
 ## External dependencies
+  * Support MSYS2 on Windows for depexts [#5348 @jonahbeckford]
   * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
   * Fix depext alpine tagged repositories handling [#4763 @rjbou] [2.1.0~rc2 #4758]
   * Homebrew: Add support for casks and full-names [#4801 @kit-ty-kate]
