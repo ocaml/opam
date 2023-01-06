@@ -61,6 +61,7 @@ EOF
   gentoo)
   mainlibs=${mainlibs/git/dev-vcs\/git}
   mainlibs=${mainlibs/tar/app-arch\/tar}
+  mainlibs=${mainlibs/bzip2/app-arch\/bzip2}
   cat >$dir/Dockerfile << EOF
 # name the portage image
 FROM gentoo/portage as portage
