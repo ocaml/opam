@@ -1,4 +1,6 @@
-#!/bin/bash -xue
+#!/bin/bash
+
+set -xue
 
 . .github/scripts/main/preamble.sh
 

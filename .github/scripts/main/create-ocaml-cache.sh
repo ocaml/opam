@@ -1,4 +1,6 @@
-#!/bin/bash -xue
+#!/bin/bash
+
+set -xue
 
 OCAML_BRANCH="$1"
 PREFIX="$2"
