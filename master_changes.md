@@ -427,6 +427,7 @@ users)
   * Run ci on tests changes [#4966 @rjbou]
   * GHA: Fix caching for the "test" job [#5090 @dra27 @kit-ty-kate]
   * Add gentoo depext test [#5067 @rjbou]
+    * specify app-arch for bzip2 [#5410 @rjbou]
   * Add more constraint path for launch of workflow [#5067 @rjbou]
   * Upgrade packages for sovler jobs, in case depext changed [#5010 @rjbou]
   * Fix github safe directory issues in depext workflow [#5153 @rjbou]
