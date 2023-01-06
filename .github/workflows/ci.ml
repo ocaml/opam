@@ -251,8 +251,8 @@ let install_sys_packages packages ~descr ?cond platforms =
       in
       let commands =
         match platforms with
-        | [Linux] -> [linux_command ^ " || true"]
-        | [MacOS] -> [macos_command ^ " || true"]
+        | [Linux] -> [linux_command]
+        | [MacOS] -> [macos_command]
         | _ ->
             let commands =
               if List.mem MacOS platforms then
