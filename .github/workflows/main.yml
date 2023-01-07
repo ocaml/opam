@@ -103,7 +103,7 @@ jobs:
         check-only: true
     - name: Install system's opam package
       if: steps.legacy.outputs.cache-hit != 'true'
-      run: sudo apt install opam || true
+      run: sudo apt install opam
     - name: Create ocaml-secondary-compiler cache
       if: steps.legacy.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/legacy-cache.sh
@@ -285,7 +285,7 @@ jobs:
       fail-fast: true
     steps:
     - name: Install system's opam package
-      run: sudo apt install opam || true
+      run: sudo apt install opam
     - name: Checkout tree
       uses: actions/checkout@v3
     - name: ocaml-secondary-compiler Cache
@@ -620,7 +620,7 @@ jobs:
     needs: Analyse
     steps:
     - name: Install system's dune and ocaml packages
-      run: sudo apt install dune ocaml || true
+      run: sudo apt install dune ocaml
     - name: Checkout tree
       uses: actions/checkout@v3
     - name: src_ext/archives and opam-repository Cache

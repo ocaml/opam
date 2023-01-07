@@ -1,4 +1,6 @@
-#!/bin/bash -xue
+#!/bin/bash
+
+set -xue
 
 . .github/scripts/main/preamble.sh
 
@@ -12,6 +14,11 @@ echo $OPAMROOT
 case "$SOLVER" in
   z3)
     PKGS=$SOLVER
+    if [[ $RUNNER_OS = 'macOS' ]]; then
+      # brew may require extra flags to override the system-installed python,
+      # so we assume the presence of python3 on the macOS runners.
+      opam option --global 'depext-bypass=["python@3"]'
+    fi
     ;;
   0install)
     PKGS="$SOLVER opam-0install-cudf"
