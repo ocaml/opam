@@ -94,9 +94,27 @@ type families =
   | Gentoo
   | Homebrew
   | Macports
+  | Msys2
   | Netbsd
   | Openbsd
   | Suse
+
+let resolve_t env var content_ex =
+  match OpamVariable.Full.read_from_env (OpamVariable.Full.of_string var) with
+  | Some (S c) -> c
+  | _ ->
+    match OpamVariable.Map.find_opt (OpamVariable.of_string var) env with
+    | Some (lazy (Some (OpamTypes.S c)), _) -> c
+    | _ ->
+      Printf.ksprintf failwith
+        "Variable '%s' must be set for '%s'. Use 'opam var --global %s=%s'."
+        var (OpamStd.Option.default "<none>" (OpamSysPoll.os_distribution env))
+        var content_ex
+
+let get_sys_pkg_manager_path env =
+  resolve_t env
+    "sys-pkg-manager-cmd-msys2"
+    "<path-to-msys2-system-package-manager>"
 
 (* System status *)
 let family ~env () =
@@ -130,6 +148,14 @@ let family ~env () =
         "External dependency handling for macOS requires either \
          MacPorts or Homebrew - neither could be found"
     | "suse" | "opensuse" -> Suse
+    | "windows" ->
+      (match OpamSysPoll.os_distribution env with
+       | Some "msys2" -> Msys2
+       | _ ->
+         failwith
+           "External dependency handling not supported for Windows unless \
+            MSYS2 is installed. In particular 'os-distribution' must be set \
+            to 'msys2'.")
     | family ->
       Printf.ksprintf failwith
         "External dependency handling not supported for OS family '%s'."
@@ -232,6 +258,73 @@ let packages_status ?(env=OpamVariable.Map.empty) packages =
     in
     compute_sets sys_installed ~sys_available
   in
+  let compute_sets_for_arch ~pacman =
+    let get_avail_w_virtuals () =
+      let package_provided str =
+        OpamSysPkg.of_string
+          (match OpamStd.String.cut_at str '=' with
+           | None -> str
+           | Some (p, _vc) -> p)
+      in
+      (* Output format:
+         >Repository      : core
+         >Name            : python
+         >Version         : 3.9.6-1
+         >Description     : Next generation of the python high-level scripting language
+         >Architecture    : x86_64
+         >URL             : https://www.python.org/
+         >Licenses        : custom
+         >Groups          : None
+         >Provides        : python3
+         >Depends On      : bzip2  expat  gdbm  libffi  libnsl  libxcrypt  openssl
+         >Optional Deps   : python-setuptools
+         >                  python-pip
+         >[...]
+
+         Format partially described in https://archlinux.org/pacman/PKGBUILD.5.html
+      *)
+      (* Discard stderr to not have it pollute output. Plus, exit code is the
+         number of packages not found. *)
+      run_command ~discard_err:true pacman ["-Si"]
+      |> snd
+      |> List.fold_left (fun (avail, provides, latest) l ->
+          match OpamStd.String.split l ' ' with
+          | "Name"::":"::p::_ ->
+            p +++ avail, provides, Some (OpamSysPkg.of_string p)
+          | "Provides"::":"::"None"::[] -> avail, provides, latest
+          | "Provides"::":"::pkgs ->
+            let ps = OpamSysPkg.Set.of_list (List.map package_provided pkgs) in
+            let provides =
+              match latest with
+              | Some p -> OpamSysPkg.Map.add p ps provides
+              | None -> provides (* Bad pacman output ?? *)
+            in
+            ps ++ avail, provides, None
+          | _ -> avail, provides, latest)
+        (OpamSysPkg.Set.empty, OpamSysPkg.Map.empty, None)
+      |> (fun (a,p,_) -> a,p)
+    in
+    let get_installed str_pkgs =
+      (* output:
+         >extra/cmake 3.17.1-1 [installed]
+         >    A cross-platform open-source make system
+         >extra/cmark 0.29.0-1
+         >    CommonMark parsing and rendering library and program in C
+      *)
+      let re_pkg =
+        Re.(compile @@ seq
+              [ bol;
+                rep1 @@ alt [alnum; punct];
+                char '/';
+                group @@ rep1 @@ alt [alnum; punct];
+                space;
+              ])
+      in
+      run_query_command pacman ["-Qs" ; names_re ~str_pkgs ()]
+      |> with_regexp_sgl re_pkg
+    in
+    compute_sets_with_virtual get_avail_w_virtuals get_installed
+  in
   match family ~env () with
   | Alpine ->
     (* Output format
@@ -304,71 +397,7 @@ let packages_status ?(env=OpamVariable.Map.empty) packages =
     in
     compute_sets sys_installed ~sys_available
   | Arch ->
-    let get_avail_w_virtuals () =
-      let package_provided str =
-        OpamSysPkg.of_string
-          (match OpamStd.String.cut_at str '=' with
-           | None -> str
-           | Some (p, _vc) -> p)
-      in
-      (* Output format:
-         >Repository      : core
-         >Name            : python
-         >Version         : 3.9.6-1
-         >Description     : Next generation of the python high-level scripting language
-         >Architecture    : x86_64
-         >URL             : https://www.python.org/
-         >Licenses        : custom
-         >Groups          : None
-         >Provides        : python3
-         >Depends On      : bzip2  expat  gdbm  libffi  libnsl  libxcrypt  openssl
-         >Optional Deps   : python-setuptools
-         >                  python-pip
-         >[...]
-         
-         Format partially described in https://archlinux.org/pacman/PKGBUILD.5.html
-      *)
-      (* Discard stderr to not have it pollute output. Plus, exit code is the
-         number of packages not found. *)
-      run_command ~discard_err:true "pacman" ["-Si"]
-      |> snd
-      |> List.fold_left (fun (avail, provides, latest) l ->
-          match OpamStd.String.split l ' ' with
-          | "Name"::":"::p::_ ->
-            p +++ avail, provides, Some (OpamSysPkg.of_string p)
-          | "Provides"::":"::"None"::[] -> avail, provides, latest
-          | "Provides"::":"::pkgs ->
-            let ps = OpamSysPkg.Set.of_list (List.map package_provided pkgs) in
-            let provides =
-              match latest with
-              | Some p -> OpamSysPkg.Map.add p ps provides
-              | None -> provides (* Bad pacman output ?? *)
-            in
-            ps ++ avail, provides, None
-          | _ -> avail, provides, latest)
-        (OpamSysPkg.Set.empty, OpamSysPkg.Map.empty, None)
-      |> (fun (a,p,_) -> a,p)
-    in
-    let get_installed str_pkgs =
-      (* output:
-         >extra/cmake 3.17.1-1 [installed]
-         >    A cross-platform open-source make system
-         >extra/cmark 0.29.0-1
-         >    CommonMark parsing and rendering library and program in C
-      *)
-      let re_pkg =
-        Re.(compile @@ seq
-              [ bol;
-                rep1 @@ alt [alnum; punct];
-                char '/';
-                group @@ rep1 @@ alt [alnum; punct];
-                space;
-              ])
-      in
-      run_query_command "pacman" ["-Qs" ; names_re ~str_pkgs ()]
-      |> with_regexp_sgl re_pkg
-    in
-    compute_sets_with_virtual get_avail_w_virtuals get_installed
+    compute_sets_for_arch ~pacman:"pacman"
   | Centos ->
     (* Output format:
        >crypto-policies
@@ -590,6 +619,8 @@ let packages_status ?(env=OpamVariable.Map.empty) packages =
       |> snd
     in
     compute_sets sys_installed ~sys_available
+  | Msys2 ->
+    compute_sets_for_arch ~pacman:(get_sys_pkg_manager_path env)
   | Netbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-Q"; "PKGPATH"; "-a"]
@@ -677,6 +708,12 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) sys_packages =
     in
     [`AsAdmin "port", yes ["-N"] ("install"::packages)],
     None
+  | Msys2 ->
+    (* NOTE: MSYS2 interactive mode may break (not show output until key pressed)
+       when called from opam. Confer
+       https://www.msys2.org/wiki/Terminals/#mixing-msys2-and-windows. *)
+    [`AsUser (get_sys_pkg_manager_path env),
+     "-Su"::"--noconfirm"::packages], None
   | Netbsd -> [`AsAdmin "pkgin", yes ["-y"] ("install" :: packages)], None
   | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
@@ -734,6 +771,7 @@ let update ?(env=OpamVariable.Map.empty) () =
     | Gentoo -> Some (`AsAdmin "emerge", ["--sync"])
     | Homebrew -> Some (`AsUser "brew", ["update"])
     | Macports -> Some (`AsAdmin "port", ["sync"])
+    | Msys2 -> Some (`AsUser (get_sys_pkg_manager_path env), ["-Sy"])
     | Suse -> Some (`AsAdmin "zypper", ["--non-interactive"; "refresh"])
     | Freebsd | Netbsd | Openbsd ->
       None
