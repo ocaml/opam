@@ -522,7 +522,7 @@ let coinstallable_subset universe ?(add_invariant=true) set packages =
   let cudf_set, cudf_packages_map =
     OpamPackage.Set.fold (fun nv (set, map) ->
         let p = OpamPackage.Map.find nv cudf_packages_map in
-        let p = { p with Cudf.keep = `Keep_version } in
+        let p = { p with Cudf.keep = `Keep_version; installed = true } in
         OpamCudf.Set.add p set, OpamPackage.Map.add nv p map)
       set (OpamCudf.Set.empty, cudf_packages_map)
   in
