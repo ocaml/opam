@@ -581,6 +581,23 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:lint.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-list-coinstallable)
+ (action
+  (diff list-coinstallable.test list-coinstallable.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-list-coinstallable)))
+
+(rule
+ (targets list-coinstallable.out)
+ (deps root-7371c1d9)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:list-coinstallable.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-list)
  (action
   (diff list.test list.out)))
