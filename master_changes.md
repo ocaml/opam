@@ -640,6 +640,7 @@ users)
   * `OpamFile.URL`: add `swhid` field in `t` record, and its access functions [#4859 @rjbou]
   * `OpamFile.URL`: add `with_mirrors` [#4859 @rjbou]
   * `OpamTypes.universe`: remove `u_base` field, as it is no more needed with switch invariant [#5208 @rjbou]
+  * `OpamFile`: add `atomic` value in `IO_Arg` to enable/disable atomic file writing [#5476 @dra27]
 
 ## opam-core
   * `OpamStd.Sys`: fix `get_windows_executable_variant` to distinguish MSYS2 from Cygwin, esp. for rsync rather than symlinking [#5404 @jonahbeckford]
@@ -687,3 +688,4 @@ users)
   * `OpamSystem.read_command_output`: add an optional parameter to unmerge stdout and stderr [#4859 @rjbou]
   * `OpamSWHID`: add module to handle swhid [#4859 @rjbou]
   * `OpamProcess`: expose the `command` type as a private type [#5452 @Leonidas-from-XIV]
+  * `OpamFilename`: add `with_open_out_bin` and `with_open_out_bin_atomic` [#5476 @dra27]

@@ -218,6 +218,38 @@ let write filename raw =
 let remove filename =
   OpamSystem.remove_file (to_string filename)
 
+let with_open_out_bin_aux open_out_bin filename f =
+  let v, oc =
+    mkdir (dirname filename);
+    try open_out_bin filename
+    with Sys_error _ -> raise (OpamSystem.File_not_found (to_string filename))
+  in
+  try
+    Unix.lockf (Unix.descr_of_out_channel oc) Unix.F_LOCK 0;
+    f oc;
+    close_out oc;
+    v
+  with e ->
+    OpamStd.Exn.finalise e @@ fun () ->
+    close_out oc; remove filename
+
+let with_open_out_bin =
+  with_open_out_bin_aux (fun f -> (), open_out_bin f)
+
+let with_open_out_bin_atomic filename f =
+  let open_temp_file filename =
+    let mode = [Open_binary] in
+    let perms = 0o666 in
+    let temp_dir = Dir.to_string (dirname filename) in
+    Filename.open_temp_file ~mode ~perms ~temp_dir "opam-atomic" ".tmp"
+  in
+  let temp_file = with_open_out_bin_aux open_temp_file filename f in
+  try
+    Sys.rename temp_file (to_string filename)
+  with Sys_error _ ->
+    OpamSystem.remove_file temp_file;
+    raise (OpamSystem.File_not_found (to_string filename))
+
 let exists filename =
   try (Unix.stat (to_string filename)).Unix.st_kind = Unix.S_REG
   with Unix.Unix_error _ -> false

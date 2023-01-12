@@ -143,6 +143,15 @@ val open_in_bin: t -> in_channel
 val open_out: t -> out_channel
 val open_out_bin: t -> out_channel
 
+(** [with_open_out_bin filename f] opens [f] and passes the out_channel to [f].
+    If [f] raises an exception, then [filename] is deleted and then exception is
+    propagated. The out_channel does not have to be closed by [f]. *)
+val with_open_out_bin: t -> (out_channel -> unit) -> unit
+
+(** As {!with_open_out_bin} except that the file is written atomically. If [f]
+    raises an exception, then [filename] will be unaltered. *)
+val with_open_out_bin_atomic: t -> (out_channel -> unit) -> unit
+
 (** Removes everything in [filename] if existed. *)
 val remove: t -> unit
 
