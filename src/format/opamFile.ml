@@ -548,7 +548,7 @@ end
 module Environment = LineFile(struct
 
     let internal = "environment"
-    let atomic = false
+    let atomic = true
 
     type t = env_update list
 

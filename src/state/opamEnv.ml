@@ -305,17 +305,6 @@ let get_opam_raw ~set_opamroot ~set_opamswitch ?(base=[])
   let env_file = OpamPath.Switch.environment root switch in
   let upd = OpamFile.Environment.safe_read env_file in
   let upd =
-    let remove_OPAM_SWITCH_PREFIX (var, op, _, _) =
-      String.uppercase_ascii var <> "OPAM_SWITCH_PREFIX" || op <> Eq
-    in
-    List.filter remove_OPAM_SWITCH_PREFIX upd
-  in
-  let upd =
-    ("OPAM_SWITCH_PREFIX", Eq,
-     OpamFilename.Dir.to_string (OpamPath.Switch.root root switch),
-     Some "Prefix of the current opam switch") :: upd
-  in
-  let upd =
     let from_op, to_op =
       if force_path then
         EqPlusEq, PlusEq

@@ -96,6 +96,7 @@ users)
   * Display a warning on hard upgrade when the `jobs` config variable is re-written [#5305 @rjbou]
     * update note [#5305 @rjbou]
   * Add `sys-pkg-manager-cmd` field to store specific system package manager command paths [#5433 @rjbou]
+  * Regenerate the environment file when a local switch is moved [#5476 @dra27 - fix #3411]
 
 ## Pin
   * Switch the default version when undefined from ~dev to dev [#4949 @kit-ty-kate]
@@ -641,6 +642,7 @@ users)
   * `OpamFile.URL`: add `with_mirrors` [#4859 @rjbou]
   * `OpamTypes.universe`: remove `u_base` field, as it is no more needed with switch invariant [#5208 @rjbou]
   * `OpamFile`: add `atomic` value in `IO_Arg` to enable/disable atomic file writing [#5476 @dra27]
+  * `OpamFile.Environment`: enable atomic writing [#5476 @dra27]
 
 ## opam-core
   * `OpamStd.Sys`: fix `get_windows_executable_variant` to distinguish MSYS2 from Cygwin, esp. for rsync rather than symlinking [#5404 @jonahbeckford]
