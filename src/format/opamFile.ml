@@ -76,6 +76,7 @@ end
 
 module type IO_Arg = sig
   val internal : string
+  val atomic : bool
   type t
   val empty : t
   val of_channel : 'a typed_file -> in_channel  -> t
@@ -106,7 +107,33 @@ module MakeIO (F : IO_Arg) = struct
     OpamConsole.log (Printf.sprintf "FILE(%s)" F.internal) ?level fmt
   let slog = OpamConsole.slog
 
-  let write f v =
+  let write_atomic f v =
+    let filename = OpamFilename.to_string f in
+    let chrono = OpamConsole.timer () in
+    let temp_file, oc =
+      OpamFilename.(mkdir (dirname f));
+      let mode = [Open_wronly; Open_creat; Open_trunc; Open_binary] in
+      let perms = 0o666 in
+      let temp_dir = Filename.dirname filename in
+      try Filename.open_temp_file ~mode ~perms ~temp_dir "opam-atomic" ".tmp"
+      with Sys_error _ -> raise (OpamSystem.File_not_found filename)
+    in
+    begin try
+      F.to_channel f oc v;
+      close_out oc;
+    with e ->
+      OpamStd.Exn.finalise e @@ fun () ->
+      close_out oc; Sys.remove temp_file
+    end;
+    try
+      Sys.rename temp_file filename;
+      Stats.write_files := filename :: !Stats.write_files;
+      log "Wrote %s in %.3fs atomically via %s" filename (chrono ()) temp_file;
+    with e ->
+      OpamStd.Exn.finalise e @@ fun () ->
+      OpamFilename.remove f
+
+  let write_non_atomic f v =
     let filename = OpamFilename.to_string f in
     let chrono = OpamConsole.timer () in
     let oc =
@@ -123,6 +150,12 @@ module MakeIO (F : IO_Arg) = struct
     with e ->
       OpamStd.Exn.finalise e @@ fun () ->
       close_out oc; OpamFilename.remove f
+
+  let write =
+    if F.atomic then
+      write_atomic
+    else
+      write_non_atomic
 
   let read_opt f =
     let filename = OpamFilename.prettify f in
@@ -199,6 +232,7 @@ end
 module DescrIO = struct
 
   let internal = "descr"
+  let atomic = false
   let format_version = OpamVersion.of_string "0"
 
   type t = string * string
@@ -290,6 +324,8 @@ module LinesBase = struct
   let empty = []
 
   let internal = "lines"
+
+  let atomic = false
 
   let find_escapes s len =
     let rec aux acc i =
@@ -385,23 +421,38 @@ module type LineFileArg = sig
   val pp: (string list list, t) Pp.t
 end
 
+module LineFileOps(X: LineFileArg) = struct
+  include X
+
+  let format_version = OpamVersion.of_string "0"
+
+  let to_channel _ oc t = Pp.print (Lines.pp_channel stdin oc -| pp) t
+
+  let to_string _ t = Pp.print (Lines.pp_string -| pp) t
+
+  let of_channel filename ic =
+    Pp.parse (Lines.pp_channel ic stdout -| pp) ~pos:(pos_file filename) ()
+
+  let of_string filename str =
+    Pp.parse (Lines.pp_string -| pp)
+      ~pos:{ pos_null with filename = OpamFilename.to_string filename }
+      str
+end
+
 module LineFile (X: LineFileArg) = struct
   module IO = struct
-    include X
+    include LineFileOps(X)
+    let atomic = false
+  end
 
-    let format_version = OpamVersion.of_string "0"
+  include IO
+  include MakeIO(IO)
+end
 
-    let to_channel _ oc t = Pp.print (Lines.pp_channel stdin oc -| pp) t
-
-    let to_string _ t = Pp.print (Lines.pp_string -| pp) t
-
-    let of_channel filename ic =
-      Pp.parse (Lines.pp_channel ic stdout -| pp) ~pos:(pos_file filename) ()
-
-    let of_string filename str =
-      Pp.parse (Lines.pp_string -| pp)
-        ~pos:{ pos_null with filename = OpamFilename.to_string filename }
-        str
+module AtomicLineFile (X: LineFileArg) = struct
+  module IO = struct
+    include LineFileOps(X)
+    let atomic = true
   end
 
   include IO
@@ -1059,6 +1110,7 @@ module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
   include MakeIO(struct
       include X
       include IO
+      let atomic = false
     end)
 
 end
