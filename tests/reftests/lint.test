@@ -579,21 +579,6 @@ depexts: ["foo"] { arch = "i486" }
 ${BASEDIR}/lint.opam: Errors.
              error 55: Non-normalised OS or arch string being tested: "i486 (use x86_32 instead)"
 # Return code 1 #
-### : W56: It is discouraged for non-compiler packages to use 'setenv:'
-### <lint.opam>
-opam-version: "2.0"
-synopsis: "A word"
-description: "Two words."
-authors: "the testing team"
-homepage: "egapemoh"
-maintainer: "maint@tain.er"
-license: "ISC"
-dev-repo: "hg+https://to@li.nt"
-bug-reports: "https://nobug"
-setenv: [ idoit="anyway" ]
-### opam lint ./lint.opam
-${BASEDIR}/lint.opam: Warnings.
-           warning 56: It is discouraged for non-compiler packages to use 'setenv:'
 ### : E57: Synopsis must not be empty
 ### <lint.opam>
 opam-version: "2.0"

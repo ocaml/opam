@@ -650,9 +650,13 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
                       used norm)
                   bad_os_arch_values)
        (bad_os_arch_values <> []));
+    (* Retired, since `OPAM_LAST_ENV` allows environment updates to be reliably
+       reverted. *)
+(*
     cond 56 `Warning
       "It is discouraged for non-compiler packages to use 'setenv:'"
       (t.env <> [] && not (has_flag Pkgflag_Compiler t));
+*)
     cond 57 `Error
       "Synopsis must not be empty"
       (match t.descr with None -> true | Some d -> String.equal (OpamFile.Descr.synopsis d) "");
