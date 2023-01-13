@@ -187,6 +187,8 @@ The following actions will be faked:
 Faking installation of test.1
 Done.
 ### opam switch export --freeze switch-freeze.export
+[ERROR] test url doesn't have an associated checksum, it can't be exported with --freeze.
+# Return code 5 #
 ### opam-cat switch-freeze.export
 installed: ["test.1"]
 opam-version: "2.0"
@@ -200,5 +202,6 @@ checksum: "md5=6aef5a674977ebc5ec853dc4f85cf2bb"
 }
 extra-source "file" {
 src: "https://example.com/some/fake/extra/source"
+checksum: "md5=6aef5a674977ebc5ec853dc4f85cf2bb"
 }
 }

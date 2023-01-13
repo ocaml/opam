@@ -546,39 +546,49 @@ let import_t ?ask importfile t =
   end;
   t
 
-let freeze_opam src_dir nv opam =
-  match OpamFile.OPAM.url opam with
-  | None -> opam
-  | Some url ->
-    let url_t = OpamFile.URL.url url in
-    match url_t.backend with
-    | #OpamUrl.version_control ->
-      (match OpamProcess.Job.run
-               (OpamRepository.revision (src_dir nv) url_t) with
-      | None ->
-        OpamConsole.error_and_exit `Not_found
-          "Unable to retrieve %s url revision: %s, \
-           it can't be exported with --freeze."
-          (OpamPackage.to_string nv)
-          (OpamUrl.to_string url_t)
-      | Some hash ->
-        OpamFile.OPAM.with_url
-          (OpamFile.URL.with_url
-             { url_t with hash = Some (OpamPackage.Version.to_string hash) }
-             url)
-          opam)
-    | `http ->
-      (match OpamFile.URL.checksum url with
-       | [] ->
-         OpamConsole.error_and_exit `Not_found
-           "%s url doesn't have an associated checksum, \
-            it can't be exported with --freeze."
-           (OpamPackage.Name.to_string nv.name)
-       | _ -> opam)
-    | `rsync ->
+let freeze_url src_dir nv url =
+  let url_t = OpamFile.URL.url url in
+  match url_t.backend with
+  | #OpamUrl.version_control ->
+    (match OpamProcess.Job.run
+             (OpamRepository.revision (src_dir nv) url_t) with
+    | None ->
       OpamConsole.error_and_exit `Not_found
-        "%s is path pinned, it can't be exported with --freeze."
-        (OpamPackage.Name.to_string nv.name)
+        "Unable to retrieve %s url revision: %s, \
+         it can't be exported with --freeze."
+        (OpamPackage.to_string nv)
+        (OpamUrl.to_string url_t)
+    | Some hash ->
+      OpamFile.URL.with_url
+        { url_t with hash = Some (OpamPackage.Version.to_string hash) }
+        url)
+  | `http ->
+    (match OpamFile.URL.checksum url with
+     | [] ->
+       OpamConsole.error_and_exit `Not_found
+         "%s url doesn't have an associated checksum, \
+          it can't be exported with --freeze."
+         (OpamPackage.Name.to_string nv.name)
+     | _ -> url)
+  | `rsync ->
+    OpamConsole.error_and_exit `Not_found
+      "%s is path pinned, it can't be exported with --freeze."
+      (OpamPackage.Name.to_string nv.name)
+
+let freeze_opam src_dir nv opam =
+  let url =
+    OpamStd.Option.map
+      (fun url -> freeze_url src_dir nv url)
+      (OpamFile.OPAM.url opam)
+  in
+  let extra_sources =
+    List.map
+      (fun (name, url) -> (name, freeze_url src_dir nv url))
+      (OpamFile.OPAM.extra_sources opam)
+  in
+  opam |>
+  OpamFile.OPAM.with_url_opt url |>
+  OpamFile.OPAM.with_extra_sources extra_sources
 
 let export rt ?(freeze=false) ?(full=false)
     ?(switch=OpamStateConfig.get_switch ()) filename =
