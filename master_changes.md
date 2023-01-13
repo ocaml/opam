@@ -99,6 +99,9 @@ users)
   * Add `sys-pkg-manager-cmd` field to store specific system package manager command paths [#5433 @rjbou]
   * Regenerate the environment file when a local switch is moved [#5476 @dra27 - fix #3411]
   * Regenerate the environment file in `opam exec` [#5476 @dra27]
+  * Regenerate the environment file when a local switch is moved [#5417 @dra27 - fix #3411]
+  * Regenerate the environment file in `opam exec` [#5417 @dra27]
+  * Store the exact environment in `OPAM_LAST_ENV` [#5417 @dra27 - fix #3411]
 
 ## Pin
   * Switch the default version when undefined from ~dev to dev [#4949 @kit-ty-kate]

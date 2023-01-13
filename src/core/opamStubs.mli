@@ -137,3 +137,7 @@ val getConsoleAlias : string -> string -> string
 val win_create_process : string -> string -> string option -> Unix.file_descr ->
                          Unix.file_descr -> Unix.file_descr -> int
 (** Windows only. Provided by OCaml's win32unix library. *)
+
+val uptime : unit -> float
+(** Returns the number of seconds the system has been running on, or [0.0] if
+    this cannot be determined. *)

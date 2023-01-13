@@ -35,3 +35,4 @@ external sendMessageTimeout : nativeint -> int -> int -> 'a -> 'b -> 'c -> int *
 external getParentProcessID : int32 -> int32 = "OPAMW_GetParentProcessID"
 external getProcessName : int32 -> string = "OPAMW_GetProcessName"
 external getConsoleAlias : string -> string -> string = "OPAMW_GetConsoleAlias"
+external uptime : unit -> float = "OPAMW_uptime"

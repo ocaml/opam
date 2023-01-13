@@ -15,7 +15,7 @@ match Sys.argv.(1) with
       print_string "i686"
 | "clibs" ->
     if Sys.win32 then
-      print_string "(-ladvapi32 -lgdi32 -luser32 -lshell32)"
+      print_string "(-ladvapi32 -lgdi32 -luser32 -lshell32 -lpdh)"
     else
       print_string "()"
 | _ ->
