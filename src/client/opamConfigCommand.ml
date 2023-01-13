@@ -256,10 +256,38 @@ let load_and_verify_env ~set_opamroot ~set_opamswitch ~force_path
        gt switch env_file)
   else upd
 
+(* Posix specifies that processes should not rely on the persistence of files in
+   /tmp between invocations; in practice we can assume that they'll persist
+   until a restart. Windows does not prune its temporary directory, so some
+   garbage collection is needed. *)
+let prune_last_env_files temp_dir =
+  try
+    let files = Sys.readdir temp_dir in
+    let stamp =
+      let uptime = OpamStubs.uptime () in
+      if uptime < 1.0 then
+        (* Uptime isn't available available *)
+        raise Exit
+      else
+        (* Prune files older than 24 hours before the system started *)
+        Unix.time () -. uptime -. 86400.
+    in
+    let check file =
+      if OpamStd.String.starts_with ~prefix:"env-" file then
+        let file = Filename.concat temp_dir file in
+        try
+          let {Unix.st_mtime; _} = Unix.stat file in
+          if st_mtime < stamp then
+            Sys.remove file
+        with e -> OpamStd.Exn.fatal e
+    in
+    Array.iter check files
+  with e -> OpamStd.Exn.fatal e
+
 (* Returns [Some file] where [file] contains [updates]. [hash] should be
    [OpamEnv.hash_env_updates updates] and [n] should initially be [0]. If for
    whatever reason the file cannot be created, returns [None]. *)
-let  write_last_env_file gt updates =
+let write_last_env_file gt updates =
   let updates = check_writeable updates in
   let temp_dir = OpamPath.last_env gt.root in
   let hash = OpamEnv.hash_env_updates updates in
@@ -288,7 +316,9 @@ let  write_last_env_file gt updates =
       aux n
     with e -> OpamStd.Exn.fatal e; None
   in
-  aux 0
+  let result = aux 0 in
+  prune_last_env_files (OpamFilename.Dir.to_string temp_dir);
+  result
 
 let ensure_env_aux ?(base=[]) ?(set_opamroot=false) ?(set_opamswitch=false)
     ?(force_path=true) gt switch =

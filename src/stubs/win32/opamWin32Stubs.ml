@@ -40,3 +40,4 @@ external getConsoleWindowClass : unit -> string option = "OPAMW_GetConsoleWindow
 external setErrorMode : int -> int = "OPAMW_SetErrorMode"
 external getErrorMode : unit -> int = "OPAMW_GetErrorMode"
 external setConsoleToUTF8 : unit -> unit = "OPAMW_SetConsoleToUTF8"
+external uptime : unit -> float = "OPAMW_uptime"
