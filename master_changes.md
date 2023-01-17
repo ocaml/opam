@@ -254,6 +254,7 @@ users)
   * Remove Cygwin32 from testing, as it's been retired upstream [#5365 @dra27]
   * Ensure all the compilers can be built on Ubuntu 22.04 [#5391 @dra27]
   * Workaround brew problem on macOS GHA runner testing Z3 [#5405 @dra27]
+  * Adopt the OCaml Code of Conduct [#5419 @dra27]
 
 ## Release scripts
   * Make the release script setup-less using QEMU, Docker and Rosetta 2 [#4947 @kit-ty-kate]
