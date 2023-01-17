@@ -104,7 +104,7 @@ if git diff --quiet --exit-code .github/workflows/main.yml ; then
   (set +x; echo "Workflows up-to-date") 2>/dev/null
 else
   (set +x; echo -e "[\e[31mERROR\e[0m] Workflows are out-of-date - \
-please run ocaml ../scripts/ci.ml from .github/workflows and fixup the commit") 2>/dev/null
+please run dune exec --root=. -- ./ci.exe from .github/workflows and fixup the commit") 2>/dev/null
   ERROR=1
 fi
 (set +x ; echo -en "::endgroup::check workflow generation\r") 2>/dev/null
