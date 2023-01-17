@@ -67,6 +67,7 @@ users)
 ## Infrastructure
 
 ## Release scripts
+  * Add ppc64le and s390x support [#5420 @kit-ty-kate]
 
 ## Admin
 
