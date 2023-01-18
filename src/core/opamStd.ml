@@ -1137,11 +1137,8 @@ module OpamSys = struct
         let rec f a =
           match input_line c with
           | x ->
-            (* Treat MSYS2's variant of `cygwin1.dll` called `msys-2.0.dll` equivalently.
-               Confer https://www.msys2.org/wiki/How-does-MSYS2-differ-from-Cygwin/ *)
             let tx = String.trim x in
-            if (OpamString.ends_with ~suffix:"cygwin1.dll" tx ||
-                OpamString.ends_with ~suffix:"msys-2.0.dll" tx) then
+            if OpamString.ends_with ~suffix:"cygwin1.dll" tx then
               if OpamString.starts_with ~prefix:"  " x then
                 f `Cygwin
               else if a = `Native then
@@ -1179,6 +1176,8 @@ module OpamSys = struct
       fun _ -> `Native
 
   let is_cygwin_variant cmd =
+    (* Treat MSYS2's variant of `cygwin1.dll` called `msys-2.0.dll` equivalently.
+       Confer https://www.msys2.org/wiki/How-does-MSYS2-differ-from-Cygwin/ *)
     match get_windows_executable_variant cmd with
     | `Native -> `Native
     | `Cygwin
