@@ -39,9 +39,11 @@ val install_compiler:
   ?additional_installs:atom list -> ?deps_only:bool -> ?ask:bool ->
   rw switch_state -> rw switch_state
 
-(** Import a file which contains the packages to install.  *)
+(** Import a file which contains the packages to install.
+    If [deps_only] is true do not install root packages. *)
 val import:
   rw switch_state ->
+  ?deps_only:bool ->
   OpamFile.SwitchExport.t OpamFile.t option ->
   rw switch_state
 
