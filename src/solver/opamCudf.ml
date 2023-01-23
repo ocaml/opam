@@ -1514,7 +1514,11 @@ let call_external_solver ~version_map univ req =
     Dose_algo.Depsolver.Sat(None,Cudf.load_universe [])
 
 let check_request ?(explain=true) ~version_map univ req =
-  match Dose_algo.Depsolver.check_request ~explain (to_cudf univ req) with
+  let chrono = OpamConsole.timer () in
+  log "Checking request...";
+  let result = Dose_algo.Depsolver.check_request ~explain (to_cudf univ req) in
+  log "Request checked in %.3fs" (chrono ());
+  match result with
   | Dose_algo.Depsolver.Unsat
       (Some ({Dose_algo.Diagnostic.result = Dose_algo.Diagnostic.Failure _; _} as r)) ->
     make_conflicts ~version_map univ r
