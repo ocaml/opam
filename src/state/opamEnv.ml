@@ -185,18 +185,22 @@ let add (env: env) (updates: env_update list) =
   in
   env @ expand updates
 
+let env_expansion ?opam st (name, op, str, cmt) =
+  let fenv v =
+    try OpamPackageVar.resolve st ?opam v
+    with Not_found ->
+      log "Undefined variable: %s" (OpamVariable.Full.to_string v);
+      None
+  in
+  let s = OpamFilter.expand_string ~default:(fun _ -> "") fenv str in
+  name, op, s, cmt
+
 let compute_updates ?(force_path=false) st =
   (* Todo: put these back into their packages!
   let perl5 = OpamPackage.Name.of_string "perl5" in
   let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch t.switch_config perl5 in
   let new_perl5lib = "PERL5LIB", "+=", OpamFilename.Dir.to_string add_to_perl5lib in
 *)
-  let fenv ?opam v =
-    try OpamPackageVar.resolve st ?opam v
-    with Not_found ->
-      log "Undefined variable: %s" (OpamVariable.Full.to_string v);
-      None
-  in
   let bindir =
     OpamPath.Switch.bin st.switch_global.root st.switch st.switch_config
   in
@@ -218,21 +222,17 @@ let compute_updates ?(force_path=false) st =
             st.switch_global.root st.switch st.switch_config),
       Some "Current opam switch man dir"]
   in
-  let env_expansion ?opam (name,op,str,cmt) =
-    let s = OpamFilter.expand_string ~default:(fun _ -> "") (fenv ?opam) str in
-    name, op, s, cmt
-  in
   let switch_env =
     ("OPAM_SWITCH_PREFIX", Eq,
      OpamFilename.Dir.to_string
        (OpamPath.Switch.root st.switch_global.root st.switch),
      Some "Prefix of the current opam switch") ::
-    List.map env_expansion st.switch_config.OpamFile.Switch_config.env
+    List.map (env_expansion st) st.switch_config.OpamFile.Switch_config.env
   in
   let pkg_env = (* XXX: Does this need a (costly) topological sort? *)
     OpamPackage.Set.fold (fun nv acc ->
         match OpamPackage.Map.find_opt nv st.opams with
-        | Some opam -> List.map (env_expansion ~opam) (OpamFile.OPAM.env opam) @ acc
+        | Some opam -> List.map (env_expansion ~opam st) (OpamFile.OPAM.env opam) @ acc
         | None -> acc)
       st.installed []
   in
