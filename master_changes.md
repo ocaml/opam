@@ -246,6 +246,7 @@ users)
   * Upgrade vendored deps to support lib-ext in OCaml 5.0 [#5355 @kit-ty-kate / @dra27]
   * Remove unused variable in opamACL.c [#5403 @purplearmadillo77]
   * Upgrade spdx_licenses to 1.2.0 [#5412 @kit-ty-kate]
+  * Upgrade the vendored sha to 1.15.4 [#5424 @kit-ty-kate]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
