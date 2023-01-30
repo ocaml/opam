@@ -101,7 +101,7 @@ MD5_jsonm = e2ca39eaefd55b8d155c4f1ec5885311
 
 $(call PKG_SAME,jsonm)
 
-URL_sha = https://github.com/djs55/ocaml-sha/releases/download/1.15.2/sha-1.15.2.tbz
-MD5_sha = b78eea17a52b705b5a068fc7f5b6c6ae
+URL_sha = https://github.com/djs55/ocaml-sha/releases/download/v1.15.4/sha-1.15.4.tbz
+MD5_sha = 08bc953d9a26380bc220b05d680791fb
 
 $(call PKG_SAME,sha)
