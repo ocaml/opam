@@ -1159,10 +1159,10 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
       in
       let extra_message =
         if has_missing_depexts then
+          let gt = t.switch_global in
           OpamStd.Option.map_default (fun s -> s ^ ".\n\n") ""
-            (OpamSysInteract.repo_enablers ())
-        else
-          ""
+            (OpamSysInteract.repo_enablers ~env:gt.global_variables gt.config)
+        else ""
       in
       OpamConsole.errmsg "%s%s"
         (OpamCudf.string_of_explanations

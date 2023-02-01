@@ -196,7 +196,7 @@ let depexts_status_of_packages_raw
   in
   let syspkg_set = syspkg_set -- bypass in
   let ret =
-    match OpamSysInteract.packages_status ?env syspkg_set with
+    match OpamSysInteract.packages_status ?env global_config syspkg_set with
     | avail, not_found ->
       let avail, not_found =
         if OpamStateConfig.(!r.no_depexts) then

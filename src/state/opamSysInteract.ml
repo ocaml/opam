@@ -175,7 +175,7 @@ let yum_cmd = lazy begin
     raise (OpamSystem.Command_not_found "yum or dnf")
 end
 
-let packages_status ?(env=OpamVariable.Map.empty) packages =
+let packages_status ?(env=OpamVariable.Map.empty) _config packages =
   let (+++) pkg set = OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set in
   (* Some package managers don't permit to request on available packages. In
      this case, we consider all non installed packages as [available]. *)
@@ -667,7 +667,7 @@ let packages_status ?(env=OpamVariable.Map.empty) packages =
 
 (* Install *)
 
-let install_packages_commands_t ?(env=OpamVariable.Map.empty) sys_packages =
+let install_packages_commands_t ?(env=OpamVariable.Map.empty) _config sys_packages =
   let unsafe_yes = OpamCoreConfig.answer_is `unsafe_yes in
   let yes ?(no=[]) yes r =
     if unsafe_yes then
@@ -723,11 +723,11 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) sys_packages =
   | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
 
-let install_packages_commands ?env sys_packages =
-  fst (install_packages_commands_t ?env sys_packages)
+let install_packages_commands ?env _config sys_packages =
+  fst (install_packages_commands_t ?env _config sys_packages)
 
-let package_manager_name ?env () =
-  match install_packages_commands ?env OpamSysPkg.Set.empty with
+let package_manager_name ?env _config =
+  match install_packages_commands ?env _config OpamSysPkg.Set.empty with
   | ((`AsAdmin pkgman | `AsUser pkgman), _) :: _ -> pkgman
   | [] -> assert false
 
@@ -752,11 +752,11 @@ let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
       "failed with exit code %d at command:\n    %s"
       code (String.concat " " (cmd::args))
 
-let install ?env packages =
+let install ?env _config packages =
   if OpamSysPkg.Set.is_empty packages then
     log "Nothing to install"
   else
-    let commands, vars = install_packages_commands_t ?env packages in
+    let commands, vars = install_packages_commands_t ?env _config packages in
     let vars = OpamStd.Option.map (List.map (fun x -> `add, x)) vars in
     List.iter
       (fun (cmd, args) ->
@@ -764,7 +764,7 @@ let install ?env packages =
          with Failure msg -> failwith ("System package install " ^ msg))
       commands
 
-let update ?(env=OpamVariable.Map.empty) () =
+let update ?(env=OpamVariable.Map.empty) _config =
   let cmd =
     match family ~env () with
     | Alpine -> Some (`AsAdmin "apk", ["update"])
@@ -790,10 +790,10 @@ let update ?(env=OpamVariable.Map.empty) () =
     try sudo_run_command ~env cmd args
     with Failure msg -> failwith ("System package update " ^ msg)
 
-let repo_enablers ?(env=OpamVariable.Map.empty) () =
+let repo_enablers ?(env=OpamVariable.Map.empty) _config =
   if family ~env () <> Centos then None else
   let (needed, _) =
-    packages_status ~env (OpamSysPkg.raw_set
+    packages_status ~env _config (OpamSysPkg.raw_set
                        (OpamStd.String.Set.singleton "epel-release"))
   in
   if OpamSysPkg.Set.is_empty needed then None

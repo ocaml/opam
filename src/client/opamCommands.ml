@@ -2023,9 +2023,9 @@ let update cli =
       ?jobs:OpamStd.Option.Op.(jobs >>| fun j -> lazy j)
       ();
     OpamClientConfig.update ();
-    if depexts_only then OpamSysInteract.update ();
-    if depexts_only && not (repos_only || dev_only) then () else
     OpamGlobalState.with_ `Lock_write @@ fun gt ->
+    if depexts_only then OpamSysInteract.update gt.config;
+    if depexts_only && not (repos_only || dev_only) then () else
     let success, changed, rt =
       OpamClient.update gt
         ~repos_only:(repos_only && not dev_only)
