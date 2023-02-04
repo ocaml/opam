@@ -65,6 +65,7 @@ users)
 
 ## Build
   * Run autoupdate to silence autogen warnings [#5555 @MisterDA]
+  * Update bootstrap to use FlexDLL 0.43 from ocaml/flexdll [#5579 @MisterDA]
 
 ## Infrastructure
 
