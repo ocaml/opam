@@ -248,6 +248,7 @@ users)
   * Upgrade spdx_licenses to 1.2.0 [#5412 @kit-ty-kate]
   * Upgrade the vendored sha to 1.15.4 [#5424 @kit-ty-kate]
   * Upgrade src_ext vendored bootstrap dependencies [#5437 @MisterDA]
+  * Update bootstrap to use FlexDLL 0.42 from ocaml/flexdll [#5434 @MisterDA]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]

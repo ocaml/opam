@@ -44,11 +44,11 @@ case "$HOST" in
     PREFIX="$OCAML_LOCAL";;
 esac
 
-FLEXDLL_VERSION=0.40
+FLEXDLL_VERSION=0.42
 
 curl -sLO "https://caml.inria.fr/pub/distrib/ocaml-${OCAML_VERSION%.*}/ocaml-$OCAML_VERSION.tar.gz"
 if [[ $PLATFORM = 'Windows' ]] ; then
-  curl -sLO "https://github.com/alainfrisch/flexdll/archive/refs/tags/$FLEXDLL_VERSION.tar.gz"
+  curl -sLO "https://github.com/ocaml/flexdll/archive/refs/tags/$FLEXDLL_VERSION.tar.gz"
 fi
 
 tar -xzf "ocaml-$OCAML_VERSION.tar.gz"
