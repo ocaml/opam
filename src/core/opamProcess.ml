@@ -249,8 +249,6 @@ type t = {
   p_tmp_files: string list;
 }
 
-let open_flags =  [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND]
-
 let output_lines oc lines =
   List.iter (fun line ->
     output_string oc line;
@@ -330,7 +328,8 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
     ~verbose ~tmp_files cmd args =
   let nothing () = () in
   let tee f =
-    let fd = Unix.openfile f open_flags 0o644 in
+    let flags = [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND; Unix.O_SHARE_DELETE] in
+    let fd = Unix.openfile f flags 0o644 in
     let close_fd () = Unix.close fd in
     fd, close_fd in
   let oldcwd = Sys.getcwd () in

@@ -327,6 +327,7 @@ users)
   * Fix lazy compilation of regular expression in OpamFormula.atom_of_string [#5211 @dra27]
   * [BUG] Display correct exception backtrace on uncaught exception on Windows [#5216 @dra27]
   * Use grep -F instead of fgrep, as the latter is deprecated [#5309 @MisterDA]
+  * Always open files with `O_SHARE_DELETE`, which eliminates unnecessary "access denied" errors in various situations on Windows. [#5435 @dra27]
 
 ## Internal: Windows
   * Support MSYS2: treat MSYS2 and Cygwin as equivalent [#4813 @jonahbeckford]
