@@ -499,11 +499,18 @@ module Option = struct
     | None -> dft
     | Some x -> f x
 
-  let compare cmp o1 o2 = match o1,o2 with
+  let compare cmp o1 o2 =
+    match o1,o2 with
     | None, None -> 0
     | Some _, None -> 1
     | None, Some _ -> -1
     | Some x1, Some x2 -> cmp x1 x2
+
+  let equal f o1 o2 =
+    match o1, o2 with
+    | Some o1, Some o2 -> f o1 o2
+    | None, None -> true
+    | _ , _  -> false
 
   let to_string ?(none="") f = function
     | Some x -> f x

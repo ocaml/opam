@@ -160,6 +160,8 @@ module Option: sig
 
   val compare: ('a -> 'a -> int) -> 'a option -> 'a option -> int
 
+  val equal: ('a -> 'a -> bool) -> 'a option -> 'a option -> bool
+
   val to_string: ?none:string -> ('a -> string) -> 'a option -> string
 
   val to_list: 'a option -> 'a list
