@@ -114,15 +114,13 @@ module OpamList = struct
   let to_string f =
     concat_map ~left:"{ " ~right:" }" ~nil:"{}" ", " f
 
-  let rec remove_duplicates_eq eq = function
-    | a::(b::_ as r) when eq a b -> remove_duplicates_eq eq r
-    | a::r -> a::remove_duplicates_eq eq r
+  let rec remove_duplicates eq = function
+    | a::(b::_ as r) when eq a b -> remove_duplicates eq r
+    | a::r -> a::remove_duplicates eq r
     | [] -> []
 
-  let remove_duplicates l = remove_duplicates_eq ( = ) l
-
   let sort_nodup cmp l =
-    remove_duplicates_eq (fun a b -> cmp a b = 0) (List.sort cmp l)
+    remove_duplicates (fun a b -> cmp a b = 0) (List.sort cmp l)
 
   let filter_map f l =
     let rec loop accu = function
@@ -159,24 +157,41 @@ module OpamList = struct
     | l when index <= 0 -> value :: l
     | x::l -> x :: insert_at (index - 1) value l
 
-  let rec assoc_opt x = function
-      [] -> None
-    | (a,b)::l -> if compare a x = 0 then Some b else assoc_opt x l
+  let rec assoc eq x = function
+    | [] -> raise Not_found
+    | (a,b)::r -> if eq a x then b else assoc eq x r
 
-  let pick_assoc x l =
+  let rec assoc_opt eq x = function
+    |  [] -> None
+    | (a,b)::l -> if eq a x then Some b else assoc_opt eq x l
+
+  let pick_assoc eq x l =
     let rec aux acc = function
       | [] -> None, l
       | (k,v) as b::r ->
-        if k = x then Some v, List.rev_append acc r
+        if eq k x then Some v, List.rev_append acc r
         else aux (b::acc) r
     in
     aux [] l
 
-  let update_assoc k v l =
+  let rec mem_assoc eq x = function
+    | [] -> false
+    | (a,_)::r -> eq a x || mem_assoc eq x r
+
+  let update_assoc eq k v l =
     let rec aux acc = function
       | [] -> List.rev ((k,v)::acc)
       | (k1,_) as b::r ->
-        if k1 = k then List.rev_append acc ((k,v)::r)
+        if eq k1 k then List.rev_append acc ((k,v)::r)
+        else aux (b::acc) r
+    in
+    aux [] l
+
+  let remove_assoc eq k l =
+    let rec aux acc = function
+      | [] -> List.rev acc
+      | (k1,_) as b::r ->
+        if eq k1 k then List.rev_append acc r
         else aux (b::acc) r
     in
     aux [] l
