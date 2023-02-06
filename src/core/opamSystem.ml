@@ -1188,7 +1188,7 @@ and flock: 'a. ([< lock_flag ] as 'a) -> ?dontblock:bool -> string -> lock =
   | flag ->
     mkdir (Filename.dirname file);
     let rdflag = if (flag :> lock_flag) = `Lock_write then Unix.O_RDWR else Unix.O_RDONLY in
-    let fd = Unix.openfile file Unix.([O_CREAT; O_CLOEXEC; rdflag]) 0o666 in
+    let fd = Unix.openfile file Unix.([O_CREAT; O_CLOEXEC; O_SHARE_DELETE; rdflag]) 0o666 in
     Hashtbl.add locks fd ();
     let lock = { fd = Some fd; file; kind = `Lock_none } in
     flock_update flag ?dontblock lock;
