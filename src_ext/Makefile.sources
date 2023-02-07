@@ -86,7 +86,7 @@ MD5_stdlib-shims = 09db7af8b4a3a96048a61cb6ae2496ef
 
 $(call PKG_SAME,stdlib-shims)
 
-URL_spdx_licenses = https://github.com/kit-ty-kate/spdx_licenses/releases/download/v1.2.0/spdx_licenses-v1.2.0.tar.gz
+URL_spdx_licenses = https://github.com/kit-ty-kate/spdx_licenses/releases/download/v1.2.0/spdx_licenses-1.2.0.tar.gz
 MD5_spdx_licenses = b581124aeebd7facb856d8b942cb58a5
 
 $(call PKG_SAME,spdx_licenses)
