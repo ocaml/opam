@@ -254,13 +254,15 @@ let in_dir dir fn =
   with e ->
     OpamStd.Exn.finalise e reset_cwd
 
-let list kind dir =
+let with_path dir files = List.map (Filename.concat dir) files
+
+let list ?(map = with_path) kind dir =
   try
     in_dir dir (fun () ->
       let d = Sys.readdir (Sys.getcwd ()) in
       let d = Array.to_list d in
       let l = List.filter kind d in
-      List.map (Filename.concat dir) (List.sort compare l)
+      map dir (List.sort compare l)
     )
   with File_not_found _ -> []
 
@@ -573,11 +575,11 @@ let run_process
     | `Not_found -> command_not_found cmd
     | `Denied -> permission_denied cmd
 
-let command ?verbose ?env ?name ?metadata ?allow_stdin cmd =
+let command ?(success=raise_on_process_error) ?verbose ?env ?name ?metadata ?allow_stdin cmd =
   let name = log_file name in
   let r = run_process ?verbose ?env ~name ?metadata ?allow_stdin cmd in
   OpamProcess.cleanup r;
-  raise_on_process_error r
+  success r
 
 let commands ?verbose ?env ?name ?metadata ?(keep_going=false) commands =
   let name = log_file name in
@@ -631,6 +633,12 @@ let copy_file src dst =
   log "copy %s -> %s" src dst;
   copy_file_aux ~src ~dst ()
 
+let robocopy_success r =
+  let open OpamProcess in
+  (* XXX Comment this! *)
+  if r.r_code <> 0 && r.r_code <> 1 then
+    raise (Process_error r)
+
 let copy_dir src dst =
   (* MSYS2 requires special handling because its uses copying rather than
      symlinks for maximum portability on Windows. However copying a source
@@ -678,18 +686,36 @@ let copy_dir src dst =
        ([ "rsync"; "-a"; "--ignore-existing"; trailingslash_cygsrc; cygdest ]))
   else if Sys.file_exists dst then
     if Sys.is_directory dst then
-      match ls src with
+      let files =
+        (* XXX This mechanism isn't necessary - robocopy prefers not to have wildcards anyway *)
+        if Sys.win32 then
+          list ~map:(fun _ x -> x) (fun _ -> true) src
+        else
+          list (fun _ -> true) src in
+      match files with
       | [] -> ()
       | srcfiles ->
-        command ~verbose:(verbose_for_base_commands ())
-          ([ "cp"; "-PRp" ] @ srcfiles @ [ dst ])
+        if Sys.win32 then
+          (* XXX Apply the slightly strange quoting rules for robocopy here - trailing space, etc. *)
+          command ~success:robocopy_success ~verbose:(verbose_for_base_commands ())
+            (* How recent are /DCOPY:DATE and /SJ + /SL
+               XXX /SJ and /DCOPY:E are't present in 1809 / Server 2019 *)
+            ([ "robocopy"; "/E"; "/COPY:DAT"; "/SL"; (*"/SJ";*) "/DCOPY:DAT"; src; dst ])
+        else
+          command ~success:robocopy_success ~verbose:(verbose_for_base_commands ())
+            ([ "cp"; "-PRp" ] @ srcfiles @ [ dst ])
     else
       internal_error
         "Can not copy dir %s to %s, which is not a directory" src dst
   else
     (mkdir (Filename.dirname dst);
-     command ~verbose:(verbose_for_base_commands ())
-       [ "cp"; "-PRp"; src; dst ])
+     if Sys.win32 then
+       (* XXX Apply the slightly strange quoting rules for robocopy here - trailing space, etc. *)
+       command ~success:robocopy_success ~verbose:(verbose_for_base_commands ())
+         [ "robocopy"; "/E"; "/COPY:DAT"; "/SL"; (*"/SJ";*) "/DCOPY:DAT"; src; dst ]
+     else
+       command ~verbose:(verbose_for_base_commands ())
+         [ "cp"; "-PRp"; src; dst ])
 
 let mv_aux f src dst =
   if file_or_symlink_exists dst then remove_file dst;

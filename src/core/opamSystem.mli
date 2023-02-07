@@ -197,10 +197,10 @@ val get_cygpath_function: command:string -> (string -> string) lazy_t
 val get_cygpath_path_transform: (string -> string) lazy_t
 
 (** [command cmd] executes the command [cmd] in the correct OPAM
-    environment. *)
-val command: ?verbose:bool -> ?env:string array -> ?name:string ->
-  ?metadata:(string * string) list -> ?allow_stdin:bool ->
-  command -> unit
+    environment. [~success] defaults to {!raise_on_process_error} *)
+val command: ?success:(OpamProcess.result -> unit) -> ?verbose:bool ->
+  ?env:string array -> ?name:string -> ?metadata:(string * string) list ->
+  ?allow_stdin:bool -> command -> unit
 
 (** [commands cmds] executes the commands [cmds] in the correct OPAM
     environment. It stops whenever one command fails unless [keep_going] is set
