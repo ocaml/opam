@@ -204,6 +204,7 @@ solver                         {}
 solver-criteria                {}
 solver-fixup-criteria          {}
 solver-upgrade-criteria        {}
+sys-pkg-manager-cmd            {}
 wrap-build-commands            {}
 wrap-install-commands          {}
 wrap-remove-commands           {}
@@ -372,6 +373,35 @@ Reverted field depext-bypass in switch var-option
 No modification in switch var-option
 ### opam option depext-bypass
 []
+### # Check addition & removal on map
+### opam option sys-pkg-manager-cmd
+[]
+### opam option 'sys-pkg-manager-cmd+=["tempor" "path/to"]'
+Added '["tempor" "path/to"]' to field sys-pkg-manager-cmd in global configuration
+### opam option 'sys-pkg-manager-cmd+=["incididunt" "path/to"]'
+Added '["incididunt" "path/to"]' to field sys-pkg-manager-cmd in global configuration
+### opam option sys-pkg-manager-cmd
+[["incididunt" "${BASEDIR}/path/to"] ["tempor" "${BASEDIR}/path/to"]]
+### opam option 'sys-pkg-manager-cmd-=["incididunt" "path/to"]'
+Removed '["incididunt" "path/to"]' from field sys-pkg-manager-cmd in global configuration
+### opam option sys-pkg-manager-cmd
+["tempor" "${BASEDIR}/path/to"]
+### opam option 'sys-pkg-manager-cmd=[["incididunt" "path/to"]["tempor" "path/to"]]'
+Set to '[["incididunt" "path/to"]["tempor" "path/to"]]' the field sys-pkg-manager-cmd in global configuration
+### opam option 'sys-pkg-manager-cmd-=["tempor" "path/to"]'
+Removed '["tempor" "path/to"]' from field sys-pkg-manager-cmd in global configuration
+### opam option sys-pkg-manager-cmd
+["incididunt" "${BASEDIR}/path/to"]
+### opam option 'sys-pkg-manager-cmd-=["ut" "/inexist/ant"]'
+No modification in global configuration
+### opam option sys-pkg-manager-cmd
+["incididunt" "${BASEDIR}/path/to"]
+### opam option sys-pkg-manager-cmd=
+Reverted field sys-pkg-manager-cmd in global configuration
+### opam option 'sys-pkg-manager-cmd-=["tempor" "path/to"]'
+No modification in global configuration
+### opam option sys-pkg-manager-cmd
+[]
 ### # Check addition & removal on list
 ### opam option 'setenv+=lorem="labore"'
 Added 'lorem="labore"' to field setenv in switch var-option
@@ -456,7 +486,7 @@ Removed variable dolore in global configuration
 # Return code 2 #
 ### opam option bar=sit --global
 [ERROR] There is no option named 'bar'. The allowed options are:
-jobs download-command download-jobs archive-mirrors solver-criteria solver-upgrade-criteria solver-fixup-criteria best-effort-prefix-criteria solver global-variables eval-variables repository-validation-command depext depext-run-installs depext-cannot-install depext-bypass pre-build-commands pre-install-commands pre-remove-commands pre-session-commands wrap-build-commands wrap-install-commands wrap-remove-commands post-build-commands post-install-commands post-remove-commands post-session-commands
+jobs download-command download-jobs archive-mirrors solver-criteria solver-upgrade-criteria solver-fixup-criteria best-effort-prefix-criteria solver global-variables eval-variables repository-validation-command depext depext-run-installs depext-cannot-install depext-bypass sys-pkg-manager-cmd pre-build-commands pre-install-commands pre-remove-commands pre-session-commands wrap-build-commands wrap-install-commands wrap-remove-commands post-build-commands post-install-commands post-remove-commands post-session-commands
 # Return code 2 #
 ### opam option bar=sit --switch var-option
 [ERROR] There is no option named 'bar'. The allowed options are:
@@ -556,6 +586,7 @@ solver                         {}
 solver-criteria                {}
 solver-fixup-criteria          {}
 solver-upgrade-criteria        {}
+sys-pkg-manager-cmd            {}
 wrap-build-commands            {}
 wrap-install-commands          {}
 wrap-remove-commands           {}
@@ -585,6 +616,7 @@ solver                         {}
 solver-criteria                {}
 solver-fixup-criteria          {}
 solver-upgrade-criteria        {}
+sys-pkg-manager-cmd            {}
 wrap-build-commands            {}
 wrap-install-commands          {}
 wrap-remove-commands           {}

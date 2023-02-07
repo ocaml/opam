@@ -1264,6 +1264,7 @@ module ConfigSyntax = struct
     depext_run_installs : bool;
     depext_cannot_install : bool;
     depext_bypass: OpamSysPkg.Set.t;
+    sys_pkg_manager_cmd: filename OpamStd.String.Map.t;
   }
 
   let opam_version t = t.opam_version
@@ -1306,6 +1307,7 @@ module ConfigSyntax = struct
   let depext_cannot_install t = t.depext_cannot_install
   let depext_bypass t = t.depext_bypass
 
+  let sys_pkg_manager_cmd t = t.sys_pkg_manager_cmd
 
   let with_opam_version opam_version t = { t with opam_version }
   let with_opam_root_version opam_root_version t = { t with opam_root_version }
@@ -1353,6 +1355,8 @@ module ConfigSyntax = struct
   let with_depext_cannot_install depext_cannot_install t =
     { t with depext_cannot_install }
   let with_depext_bypass depext_bypass t = { t with depext_bypass }
+  let with_sys_pkg_manager_cmd sys_pkg_manager_cmd t =
+    { t with sys_pkg_manager_cmd }
 
   let empty = {
     opam_version = file_format_version;
@@ -1377,6 +1381,7 @@ module ConfigSyntax = struct
     depext_run_installs = true;
     depext_cannot_install = false;
     depext_bypass = OpamSysPkg.Set.empty;
+    sys_pkg_manager_cmd = OpamStd.String.Map.empty;
   }
 
   (* When adding a field, make sure to add it in
@@ -1473,6 +1478,13 @@ module ConfigSyntax = struct
         (Pp.V.map_list ~depth:1
            (Pp.V.string -| Pp.of_module "sys-package" (module OpamSysPkg)) -|
          Pp.of_pair "System package set" OpamSysPkg.Set.(of_list, elements));
+      "sys-pkg-manager-cmd", Pp.ppacc
+        with_sys_pkg_manager_cmd sys_pkg_manager_cmd
+        ((Pp.V.map_list ~depth:2
+            (Pp.V.map_pair
+               Pp.V.string
+               (Pp.V.string -| Pp.of_module "filename" (module OpamFilename))))
+         -| Pp.of_pair "Distribution Map" OpamStd.String.Map.(of_list, bindings));
 
       (* deprecated fields *)
       "alias", Pp.ppacc_opt
