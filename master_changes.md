@@ -247,6 +247,7 @@ users)
   * Remove unused variable in opamACL.c [#5403 @purplearmadillo77]
   * Upgrade spdx_licenses to 1.2.0 [#5412 @kit-ty-kate]
   * Upgrade the vendored sha to 1.15.4 [#5424 @kit-ty-kate]
+  * Upgrade src_ext vendored bootstrap dependencies [#5437 @MisterDA]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
