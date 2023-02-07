@@ -167,7 +167,7 @@ let really_download
                     Printf.sprintf "Bad checksum, expected %s"
                       (OpamHash.to_string cksum)))
       checksum;
-  OpamSystem.mv tmp_dst dst;
+  Sys.rename tmp_dst dst;
   Done ()
 
 let download_as ?quiet ?validate ~overwrite ?compress ?checksum url dst =

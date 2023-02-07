@@ -109,8 +109,10 @@ let exec dirname ?env ?name ?metadata ?keep_going cmds =
     (fun () -> OpamSystem.commands ?env ?name ?metadata ?keep_going cmds)
 
 let move_dir ~src ~dst =
-  OpamSystem.command ~verbose:(OpamSystem.verbose_for_base_commands ())
-    [ "mv"; Dir.to_string src; Dir.to_string dst ]
+  (* XXX Windows - destination must be on the same drive or this fails *)
+  Sys.rename (Dir.to_string src) (Dir.to_string dst)
+  (*OpamSystem.command ~verbose:(OpamSystem.verbose_for_base_commands ())
+    [ "mv"; Dir.to_string src; Dir.to_string dst ]*)
 
 let opt_dir dirname =
   if exists_dir dirname then Some dirname else None
@@ -260,8 +262,10 @@ let install ?warning ?exec ~src ~dst () =
 
 let move ~src ~dst =
   if src <> dst then
-    OpamSystem.command ~verbose:(OpamSystem.verbose_for_base_commands ())
-      [ "mv"; to_string src; to_string dst ]
+    (* XXX Can either be a directory in reality? If yes, Windows drive limitations *)
+    Sys.rename (to_string src) (to_string dst)
+    (*OpamSystem.command ~verbose:(OpamSystem.verbose_for_base_commands ())
+      [ "mv"; to_string src; to_string dst ]*)
 
 let readlink src =
   if exists src then

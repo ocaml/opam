@@ -997,7 +997,7 @@ let make_tar_gz_job ~dir file =
   Tar.compress_command tmpfile dir @@> fun r ->
   OpamProcess.cleanup r;
   if OpamProcess.is_success r then
-    (mv tmpfile file; Done None)
+    (Sys.rename tmpfile file; Done None)
   else
     (remove_file tmpfile; Done (Some (Process_error r)))
 
