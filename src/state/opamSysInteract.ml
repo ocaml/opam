@@ -86,6 +86,24 @@ let run_command_exit_code ?vars ?allow_stdin ?verbose cmd args =
   in
   code
 
+(* Internal module to get package manager commands defined in global config file *)
+module Commands = struct
+
+  let get_cmd config family =
+    match OpamStd.String.Map.find_opt family
+            (OpamFile.Config.sys_pkg_manager_cmd config) with
+    | Some cmd -> OpamFilename.to_string cmd
+    | None ->
+      let field = "sys-pkg-manager-cmd" in
+      Printf.ksprintf failwith
+        "Config field '%s' must be set for '%s'. \
+         Use opam option --global '%s+=[\"%s\" \"<path-to-%s-system-package-manager>\"]'"
+        field family field family family
+
+  let msys2 config = get_cmd config "msys2"
+
+end
+
 (* Please keep this alphabetically ordered, in the type definition, and in
    below pattern matching *)
 type families =
@@ -103,23 +121,6 @@ type families =
   | Netbsd
   | Openbsd
   | Suse
-
-let resolve_t env var content_ex =
-  match OpamVariable.Full.read_from_env (OpamVariable.Full.of_string var) with
-  | Some (S c) -> c
-  | _ ->
-    match OpamVariable.Map.find_opt (OpamVariable.of_string var) env with
-    | Some (lazy (Some (OpamTypes.S c)), _) -> c
-    | _ ->
-      Printf.ksprintf failwith
-        "Variable '%s' must be set for '%s'. Use 'opam var --global %s=%s'."
-        var (OpamStd.Option.default "<none>" (OpamSysPoll.os_distribution env))
-        var content_ex
-
-let get_sys_pkg_manager_path env =
-  resolve_t env
-    "sys-pkg-manager-cmd-msys2"
-    "<path-to-msys2-system-package-manager>"
 
 (* System status *)
 let family ~env () =
@@ -175,7 +176,7 @@ let yum_cmd = lazy begin
     raise (OpamSystem.Command_not_found "yum or dnf")
 end
 
-let packages_status ?(env=OpamVariable.Map.empty) _config packages =
+let packages_status ?(env=OpamVariable.Map.empty) config packages =
   let (+++) pkg set = OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set in
   (* Some package managers don't permit to request on available packages. In
      this case, we consider all non installed packages as [available]. *)
@@ -625,7 +626,7 @@ let packages_status ?(env=OpamVariable.Map.empty) _config packages =
     in
     compute_sets sys_installed ~sys_available
   | Msys2 ->
-    compute_sets_for_arch ~pacman:(get_sys_pkg_manager_path env)
+    compute_sets_for_arch ~pacman:(Commands.msys2 config)
   | Netbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-Q"; "PKGPATH"; "-a"]
@@ -667,7 +668,7 @@ let packages_status ?(env=OpamVariable.Map.empty) _config packages =
 
 (* Install *)
 
-let install_packages_commands_t ?(env=OpamVariable.Map.empty) _config sys_packages =
+let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_packages =
   let unsafe_yes = OpamCoreConfig.answer_is `unsafe_yes in
   let yes ?(no=[]) yes r =
     if unsafe_yes then
@@ -717,17 +718,17 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) _config sys_packag
     (* NOTE: MSYS2 interactive mode may break (not show output until key pressed)
        when called from opam. Confer
        https://www.msys2.org/wiki/Terminals/#mixing-msys2-and-windows. *)
-    [`AsUser (get_sys_pkg_manager_path env),
+    [`AsUser (Commands.msys2 config),
      "-Su"::"--noconfirm"::packages], None
   | Netbsd -> [`AsAdmin "pkgin", yes ["-y"] ("install" :: packages)], None
   | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
 
-let install_packages_commands ?env _config sys_packages =
-  fst (install_packages_commands_t ?env _config sys_packages)
+let install_packages_commands ?env config sys_packages =
+  fst (install_packages_commands_t ?env config sys_packages)
 
-let package_manager_name ?env _config =
-  match install_packages_commands ?env _config OpamSysPkg.Set.empty with
+let package_manager_name ?env config =
+  match install_packages_commands ?env config OpamSysPkg.Set.empty with
   | ((`AsAdmin pkgman | `AsUser pkgman), _) :: _ -> pkgman
   | [] -> assert false
 
@@ -752,11 +753,11 @@ let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
       "failed with exit code %d at command:\n    %s"
       code (String.concat " " (cmd::args))
 
-let install ?env _config packages =
+let install ?env config packages =
   if OpamSysPkg.Set.is_empty packages then
     log "Nothing to install"
   else
-    let commands, vars = install_packages_commands_t ?env _config packages in
+    let commands, vars = install_packages_commands_t ?env config packages in
     let vars = OpamStd.Option.map (List.map (fun x -> `add, x)) vars in
     List.iter
       (fun (cmd, args) ->
@@ -764,7 +765,7 @@ let install ?env _config packages =
          with Failure msg -> failwith ("System package install " ^ msg))
       commands
 
-let update ?(env=OpamVariable.Map.empty) _config =
+let update ?(env=OpamVariable.Map.empty) config =
   let cmd =
     match family ~env () with
     | Alpine -> Some (`AsAdmin "apk", ["update"])
@@ -776,7 +777,7 @@ let update ?(env=OpamVariable.Map.empty) _config =
     | Gentoo -> Some (`AsAdmin "emerge", ["--sync"])
     | Homebrew -> Some (`AsUser "brew", ["update"])
     | Macports -> Some (`AsAdmin "port", ["sync"])
-    | Msys2 -> Some (`AsUser (get_sys_pkg_manager_path env), ["-Sy"])
+    | Msys2 -> Some (`AsUser (Commands.msys2 config), ["-Sy"])
     | Suse -> Some (`AsAdmin "zypper", ["--non-interactive"; "refresh"])
     | Freebsd | Netbsd | Openbsd ->
       None
@@ -790,10 +791,10 @@ let update ?(env=OpamVariable.Map.empty) _config =
     try sudo_run_command ~env cmd args
     with Failure msg -> failwith ("System package update " ^ msg)
 
-let repo_enablers ?(env=OpamVariable.Map.empty) _config =
+let repo_enablers ?(env=OpamVariable.Map.empty) config =
   if family ~env () <> Centos then None else
   let (needed, _) =
-    packages_status ~env _config (OpamSysPkg.raw_set
+    packages_status ~env config (OpamSysPkg.raw_set
                        (OpamStd.String.Set.singleton "epel-release"))
   in
   if OpamSysPkg.Set.is_empty needed then None
