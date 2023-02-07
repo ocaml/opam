@@ -21,7 +21,7 @@ let to_json s =
   `O [ ("sys_package", `String s) ]
 let of_json = function
   | `O dict ->
-    (match List.assoc "sys_package" dict with
+    (match OpamStd.List.assoc String.equal "sys_package" dict with
      | `String s -> Some (of_string s)
      | _ -> None
      | exception Not_found -> None)

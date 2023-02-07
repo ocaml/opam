@@ -582,14 +582,16 @@ module Attribute = struct
     | `O dict ->
       begin try
           let open OpamStd.Option.Op in
-          Base.of_json (List.assoc "base" dict) >>= fun base ->
-          OpamHash.of_json (List.assoc "md5" dict) >>= fun md5 ->
+          Base.of_json (OpamStd.List.assoc String.equal "base" dict)
+          >>= fun base ->
+          OpamHash.of_json (OpamStd.List.assoc String.equal "md5" dict)
+          >>= fun md5 ->
           let perm =
-            if not (List.mem_assoc "perm" dict) then None
-            else match List.assoc "perm" dict with
-            | `String hash ->
-              (try Some (int_of_string hash) with _ -> raise Not_found)
-            | _ -> raise Not_found
+            if not (OpamStd.List.mem_assoc String.equal "perm" dict) then None
+            else match OpamStd.List.assoc String.equal "perm" dict with
+              | `String hash ->
+                (try Some (int_of_string hash) with _ -> raise Not_found)
+              | _ -> raise Not_found
           in
           Some { base; md5; perm }
         with Not_found -> None

@@ -129,7 +129,7 @@ let expand (updates: env_update list) : env =
     | None -> []
     | Some updates ->
       List.fold_right (fun (var, op, arg, _) defs0 ->
-          let v_opt, defs = OpamStd.List.pick_assoc var defs0 in
+          let v_opt, defs = OpamStd.List.pick_assoc String.equal var defs0 in
           let v =
             OpamStd.Option.Op.((v_opt >>| rezip >>+ fun () ->
                                 OpamStd.Env.getopt var >>| split_var) +! [])
@@ -151,7 +151,7 @@ let expand (updates: env_update list) : env =
         match OpamStd.List.find_opt (fun (v, _, _) -> f v = var) acc with
         | Some (_, z, _doc) -> z, reverts
         | None ->
-          match OpamStd.List.pick_assoc var reverts with
+          match OpamStd.List.pick_assoc String.equal var reverts with
           | Some z, reverts -> z, reverts
           | None, _ ->
             match OpamStd.Env.getopt var with

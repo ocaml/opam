@@ -770,7 +770,9 @@ let parallel_apply t
               match a with
               | `Fetch _ -> acc
               | _ ->
-                let r = match List.assoc a results with
+                let r =
+                  match OpamStd.List.assoc
+                          PackageActionGraph.Parallel.G.V.equal a results with
                   | `Successful _ -> `String "OK"
                   | `Exception e -> Json.exc e
                   | `Error (`Aborted deps) ->
@@ -1070,7 +1072,7 @@ let run_hook_job t name ?(local=[]) ?(allow_stdout=false) w =
     | [] -> None
   in
   let env v =
-    try Some (List.assoc v local)
+    try Some (OpamStd.List.assoc OpamVariable.Full.equal v local)
     with Not_found -> OpamPackageVar.resolve_switch t v
   in
   let rec iter_commands = function

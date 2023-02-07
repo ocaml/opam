@@ -608,3 +608,6 @@ users)
   * `OpamStd.Set`: Add `to_list_map` [#5308 @kit-ty-kate]
   * `OpamConsole.header_msg`: remove trailing space when there is no left padding [#5363 @rjbou]
   * `OpamConsole.Tree`: add `valu` and `children` getters [#5303 @cannorin]
+  * `OpamStd.List`: add comparison function argument to some `OpamList` functions [#5374 @kit-ty-kate @rjbou]
+  * `OpamStd.Option`: add `equal` function [#5374 @rjbou]
+  * `OpamStd.Compare`: add module to flag polymorphic comparison functions in opam codebase [#5374 @kit-ty-kate @rjbou]

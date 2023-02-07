@@ -588,8 +588,9 @@ let init_checks ?(hard_fail_exn=true) init_config =
   in
   let env v =
     let vs = OpamVariable.Full.variable v in
-    OpamStd.Option.Op.(OpamStd.Option.of_Not_found (List.assoc vs)
-                         OpamSysPoll.variables >>= Lazy.force)
+    OpamStd.Option.(Op.(of_Not_found
+                          (OpamStd.List.assoc OpamVariable.equal vs)
+                          OpamSysPoll.variables >>= Lazy.force))
   in
   let filter_tools =
     OpamStd.List.filter_map (fun (cmd,str,oflt) ->
@@ -676,8 +677,9 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
   let custom_init_scripts =
     let env v =
       let vs = OpamVariable.Full.variable v in
-      OpamStd.Option.Op.(OpamStd.Option.of_Not_found
-                           (List.assoc vs) OpamSysPoll.variables >>= Lazy.force)
+      OpamStd.Option.(Op.(of_Not_found
+                            (OpamStd.List.assoc OpamVariable.equal vs)
+                            OpamSysPoll.variables >>= Lazy.force))
     in
     OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
         | None -> Some (nam,scr)
@@ -755,8 +757,9 @@ let init
         let custom_scripts =
           let env v =
             let vs = OpamVariable.Full.variable v in
-            OpamStd.Option.Op.(OpamStd.Option.of_Not_found (List.assoc vs)
-                                 OpamSysPoll.variables >>= Lazy.force)
+            OpamStd.Option.(Op.(of_Not_found
+                                  (OpamStd.List.assoc OpamVariable.equal vs)
+                                  OpamSysPoll.variables >>= Lazy.force))
           in
           let scripts = OpamFile.InitConfig.init_scripts init_config in
           OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with

@@ -384,7 +384,8 @@ let prepare_package_build env opam nv dir =
     aux patches
   in
   let subst_patches, subst_others =
-    List.partition (fun f -> List.mem_assoc f patches)
+    List.partition (fun f ->
+        OpamStd.List.mem_assoc OpamFilename.Base.equal f patches)
       (OpamFile.OPAM.substs opam)
   in
   if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake) then

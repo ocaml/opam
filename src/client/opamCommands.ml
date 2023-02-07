@@ -903,7 +903,7 @@ let show cli =
       let opam_content_list = OpamFile.OPAM.to_list opam in
       let get_field f =
         try OpamListCommand.mini_field_printer ~prettify:true ~normalise
-              (List.assoc f opam_content_list)
+              (OpamStd.List.assoc String.equal f opam_content_list)
         with Not_found -> ""
       in
       match fields with

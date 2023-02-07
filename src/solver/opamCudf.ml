@@ -153,12 +153,12 @@ module Json = struct
       fst_field fst_of_json
       snd_field snd_of_json : OpamJson.t -> _ = function
     | `O dict ->
-      begin try
-          fst_of_json (List.assoc fst_field dict) >>= fun fst ->
-          snd_of_json (List.assoc snd_field dict) >>= fun snd ->
-          Some (fst, snd)
-        with Not_found -> None
-      end
+      (try
+         fst_of_json (OpamStd.List.assoc String.equal fst_field dict)
+         >>= fun fst ->
+         snd_of_json (OpamStd.List.assoc String.equal snd_field dict)
+         >>= fun snd -> Some (fst, snd)
+       with Not_found -> None)
     | _ -> None
 
   let version_to_json n = int_to_json n
@@ -384,28 +384,37 @@ module Json = struct
 
   let package_of_json = function
     | `O dict ->
-      begin try
-          pkgname_of_json (List.assoc "name" dict) >>= fun package ->
-          version_of_json (List.assoc "version" dict) >>= fun version ->
-          vpkgformula_of_json (List.assoc "depends" dict) >>= fun depends ->
-          vpkglist_of_json (List.assoc "conflicts" dict) >>= fun conflicts ->
-          veqpkglist_of_json (List.assoc "provides" dict) >>= fun provides ->
-          bool_of_json (List.assoc "installed" dict) >>= fun installed ->
-          bool_of_json (List.assoc "was_installed" dict) >>= fun was_installed ->
-          enum_keep_of_json (List.assoc "keep" dict) >>= fun keep ->
-          stanza_of_json typed_value_of_json (List.assoc "pkg_extra" dict) >>= fun pkg_extra ->
-          Some { Cudf.package = package;
-            version;
-            depends;
-            conflicts;
-            provides;
-            installed;
-            was_installed;
-            keep;
-            pkg_extra;
-          }
-        with Not_found -> None
-      end
+      (try
+         pkgname_of_json (OpamStd.List.assoc String.equal "name" dict)
+         >>= fun package ->
+         version_of_json (OpamStd.List.assoc String.equal "version" dict)
+         >>= fun version ->
+         vpkgformula_of_json (OpamStd.List.assoc String.equal "depends" dict)
+         >>= fun depends ->
+         vpkglist_of_json (OpamStd.List.assoc String.equal "conflicts" dict)
+         >>= fun conflicts ->
+         veqpkglist_of_json (OpamStd.List.assoc String.equal "provides" dict)
+         >>= fun provides ->
+         bool_of_json (OpamStd.List.assoc String.equal "installed" dict)
+         >>= fun installed ->
+         bool_of_json (OpamStd.List.assoc String.equal "was_installed" dict)
+         >>= fun was_installed ->
+         enum_keep_of_json (OpamStd.List.assoc String.equal "keep" dict)
+         >>= fun keep ->
+         stanza_of_json typed_value_of_json
+           (OpamStd.List.assoc String.equal "pkg_extra" dict)
+         >>= fun pkg_extra ->
+         Some { Cudf.package = package;
+                version;
+                depends;
+                conflicts;
+                provides;
+                installed;
+                was_installed;
+                keep;
+                pkg_extra;
+              }
+       with Not_found -> None)
     | _ -> None
 end
 
@@ -747,7 +756,8 @@ module Pp_explanation = struct
   let pp_package fmt pkg =
     let name = pkg.Cudf.package in
     let version =
-      match List.assoc_opt "opam-version" pkg.Cudf.pkg_extra with
+      match OpamStd.List.assoc_opt String.equal
+              "opam-version" pkg.Cudf.pkg_extra with
       | Some (`String v) -> v
       | None | Some _ -> "???"
     in

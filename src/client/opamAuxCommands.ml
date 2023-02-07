@@ -518,8 +518,9 @@ let check_and_revert_sandboxing root config =
     match OpamVariable.Map.find_opt fv (OpamEnv.hook_env root) with
     | Some c -> c
     | None ->
-      OpamStd.Option.Op.(OpamStd.Option.of_Not_found (List.assoc fv)
-                           OpamSysPoll.variables >>= Lazy.force)
+      OpamStd.Option.(Op.(of_Not_found
+                            (OpamStd.List.assoc OpamVariable.equal fv)
+                            OpamSysPoll.variables >>= Lazy.force))
   in
   match OpamFilter.commands env sdbx_wrappers with
   | [] -> config
