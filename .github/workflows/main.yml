@@ -136,7 +136,7 @@ jobs:
     needs: Analyse
     strategy:
       matrix:
-        ocamlv: [ 4.08.1, 4.09.1, 4.10.2, 4.11.2, 4.12.1, 4.13.1, 4.14.0 ]
+        ocamlv: [ 4.08.1, 4.09.1, 4.10.2, 4.11.2, 4.12.1, 4.13.1, 4.14.1 ]
       fail-fast: true
     steps:
     - name: Install bubblewrap
@@ -173,7 +173,7 @@ jobs:
       matrix:
         host: [ x86_64-pc-cygwin, i686-w64-mingw32, x86_64-w64-mingw32, i686-pc-windows, x86_64-pc-windows ]
         build: [ x86_64-pc-cygwin ]
-        ocamlv: [ 4.14.0 ]
+        ocamlv: [ 4.14.1 ]
       fail-fast: false
     defaults:
       run:
@@ -244,7 +244,7 @@ jobs:
     needs: Analyse
     strategy:
       matrix:
-        ocamlv: [ 4.14.0 ]
+        ocamlv: [ 4.14.1 ]
       fail-fast: true
     steps:
     - name: Checkout tree
@@ -317,7 +317,7 @@ jobs:
     needs: [ Analyse, Build-Linux ]
     strategy:
       matrix:
-        ocamlv: [ 4.14.0 ]
+        ocamlv: [ 4.14.1 ]
       fail-fast: false
     env:
       OPAM_TEST: 1
@@ -371,7 +371,7 @@ jobs:
     needs: Analyse
     strategy:
       matrix:
-        ocamlv: [ 4.14.0 ]
+        ocamlv: [ 4.14.1 ]
       fail-fast: false
     env:
       OPAM_TEST: 1
@@ -457,7 +457,7 @@ jobs:
     strategy:
       matrix:
         solver: [ z3, 0install ]
-        ocamlv: [ 4.14.0 ]
+        ocamlv: [ 4.14.1 ]
       fail-fast: false
     env:
       SOLVER: ${{ matrix.solver }}
@@ -505,7 +505,7 @@ jobs:
     strategy:
       matrix:
         solver: [ z3, 0install ]
-        ocamlv: [ 4.14.0 ]
+        ocamlv: [ 4.14.1 ]
       fail-fast: false
     env:
       SOLVER: ${{ matrix.solver }}
@@ -553,7 +553,7 @@ jobs:
     needs: [ Analyse, Build-Linux ]
     strategy:
       matrix:
-        ocamlv: [ 4.14.0 ]
+        ocamlv: [ 4.14.1 ]
       fail-fast: false
     steps:
     - name: Install bubblewrap
@@ -586,7 +586,7 @@ jobs:
     needs: [ Analyse, Build-macOS ]
     strategy:
       matrix:
-        ocamlv: [ 4.14.0 ]
+        ocamlv: [ 4.14.1 ]
       fail-fast: false
     steps:
     - name: Checkout tree
