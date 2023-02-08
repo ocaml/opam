@@ -175,6 +175,7 @@ let rec print_fish_env env =
     print_fish_env r
 
 let print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env =
+  let env = (env : OpamTypes.env :> (string * string * string option) list) in
   if sexp then
     print_sexp_env env
   else if csh then
@@ -283,7 +284,7 @@ let exec gt ~set_opamroot ~set_opamswitch ~inplace_path ~no_switch command =
     if no_switch then
       let revert = OpamEnv.add [] [] in
       List.map (fun ((var, _, _) as base) ->
-          match List.find_opt (fun (v,_,_) -> v = var) revert with
+          match List.find_opt (fun (v,_,_) -> OpamStd.Env.Name.equal v var) revert with
           | Some reverted -> reverted
           | None -> base) base
     else if OpamFile.exists env_file then

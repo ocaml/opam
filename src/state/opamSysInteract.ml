@@ -32,12 +32,16 @@ let run_command
     | None -> None
     | Some vars ->
       let env = OpamStd.Env.list () in
+      let vars =
+        List.map (fun (c, (n, v)) -> c, (OpamStd.Env.Name.of_string n, v)) vars
+      in
       let set_vars, kept_vars, env =
         List.fold_left (fun (n,p,e) (op, (name, content as var)) ->
-            match OpamStd.List.assoc_opt String.equal name env, op with
-            | Some c, `add when String.compare c content = 0 -> n, p, e
+            match OpamStd.(List.assoc_opt Env.Name.equal name env), op with
+            | Some c, `add when String.equal c content -> n, p, e
             | Some _, `set ->
-              var::n, p, (OpamStd.List.remove_assoc String.equal name env)
+              var::n, p, (List.filter (fun (k, _) ->
+                  not (OpamStd.Env.Name.equal k name)) env)
             | Some _, _ -> n, var::p, e
             | None, _ -> var::n, p, e
           )
@@ -47,12 +51,12 @@ let run_command
       if set_vars = [] then
         ((if kept_vars <> [] then
             log "Won't override %s"
-              (OpamStd.List.to_string str_var kept_vars));
+              (OpamStd.List.to_string str_var (kept_vars :> (string * string) list)));
          None)
       else
         (log "Adding to env %s"
-           (OpamStd.List.to_string str_var set_vars);
-         Some (set_vars @ env
+           (OpamStd.List.to_string str_var (set_vars :> (string * string) list));
+         Some ((set_vars @ env :> (string * string) list)
                |> List.rev_map str_var
                |> Array.of_list))
   in
