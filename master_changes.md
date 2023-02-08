@@ -186,6 +186,8 @@ users)
   * Introduce dummy-success & dummy-failure os-family to make testing depexts behaviour easier [#5268 @kit-ty-kate]
   * Run command as admin only when needed [#5268 @kit-ty-kate]
   * Print depexts together with action list on `--show` [#5236 @AltGr]
+  * [BUG] when checking again, more accurate check of missing packages (available and not found) [#5157 @rjbou]
+  * Don't display system package manager helper if packages are not found [#5157 @rjbou]
 
 ## Format upgrade
   * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
