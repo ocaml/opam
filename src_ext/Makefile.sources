@@ -1,5 +1,5 @@
-URL_cppo = https://github.com/ocaml-community/cppo/archive/v1.6.8.tar.gz
-MD5_cppo = fed401197d86f9089e89f6cbdf1d660d
+URL_cppo = https://github.com/ocaml-community/cppo/archive/v1.6.9.tar.gz
+MD5_cppo = d23ffe85ac7dc8f0afd1ddf622770d09
 
 $(call PKG_SAME,cppo)
 
@@ -13,12 +13,12 @@ MD5_base64 = 0179af18d6c1cf13d77671ee23901433
 
 $(call PKG_SAME,base64)
 
-URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.10.3/re-1.10.3.tbz
-MD5_re = a36347dcfaf71c95916f96f72b0cf2ce
+URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.10.4/re-1.10.4.tbz
+MD5_re = 68c427f8b55507f8b61c613ee6a5b3da
 
 $(call PKG_SAME,re)
 
-URL_cmdliner = http://erratique.ch/software/cmdliner/releases/cmdliner-1.1.1.tbz
+URL_cmdliner = https://erratique.ch/software/cmdliner/releases/cmdliner-1.1.1.tbz
 MD5_cmdliner = 26b9af55a7456290b710e1c96a0ca231
 
 $(call PKG_SAME,cmdliner)
@@ -38,23 +38,23 @@ MD5_dose3 = bc99cbcea8fca29dca3ebbee54be45e1
 
 $(call PKG_SAME,dose3)
 
-URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+13.tar.gz
-MD5_mccs = 13504d3b5dcbf0bdc6d95a62de20af4a
+URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+14.tar.gz
+MD5_mccs = 9bfa9ff1eb3948403d44521e4e71933a
 
 $(call PKG_SAME,mccs)
 
-URL_opam-0install-cudf = https://github.com/ocaml-opam/opam-0install-solver/releases/download/v0.4.2/opam-0install-cudf-v0.4.2.tbz
-MD5_opam-0install-cudf = 8e1494e8b97fc6f9a463966c394e9bdd
+URL_opam-0install-cudf = https://github.com/ocaml-opam/opam-0install-solver/releases/download/v0.4.3/opam-0install-cudf-0.4.3.tbz
+MD5_opam-0install-cudf = ae0c197deace373ad87737468a04f76b
 
 $(call PKG_SAME,opam-0install-cudf)
 
-URL_0install-solver = https://github.com/0install/0install/releases/download/v2.17/0install-v2.17.tbz
-MD5_0install-solver = 50daf035b04b29399a3c6e6f965ac447
+URL_0install-solver = https://github.com/0install/0install/releases/download/v2.18/0install-2.18.tbz
+MD5_0install-solver = 030edc9b1d3676c06d51397ffb5a737d
 
 $(call PKG_SAME,0install-solver)
 
-URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/2.1.4.tar.gz
-MD5_opam-file-format = cd9dac41c2153d07067c5f30cdcf77db
+URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/refs/tags/2.1.5.tar.gz
+MD5_opam-file-format = 46dadff2565d8371cdc606d33d408fc4
 
 $(call PKG_SAME,opam-file-format)
 
@@ -67,17 +67,17 @@ include Makefile.dune
 
 $(call PKG_SAME,dune-local)
 
-URL_PKG_findlib = http://download.camlcity.org/download/findlib-1.9.3.tar.gz
-MD5_PKG_findlib = 24047dd8a0da5322253de9b7aa254e42
+URL_PKG_findlib = http://download.camlcity.org/download/findlib-1.9.5.tar.gz
+MD5_PKG_findlib = 8b893525ce36cb3d4d4952483bcc7cf4
 
-URL_PKG_ocamlbuild = https://github.com/ocaml/ocamlbuild/archive/refs/tags/0.14.1.tar.gz
-MD5_PKG_ocamlbuild = 7027e507ed85f290923ad198f3d2cd1c
+URL_PKG_ocamlbuild = https://github.com/ocaml/ocamlbuild/archive/refs/tags/0.14.2.tar.gz
+MD5_PKG_ocamlbuild = 2f407fadd57b073155a6aead887d9676
 
-URL_PKG_topkg = https://erratique.ch/software/topkg/releases/topkg-1.0.5.tbz
-MD5_PKG_topkg = b38175f11fb2f6bc57f6693879b61c8a
+URL_PKG_topkg = https://erratique.ch/software/topkg/releases/topkg-1.0.6.tbz
+MD5_PKG_topkg = 12f6f0a0220da2e4f685a94cb5248157
 
-URL_seq = https://github.com/c-cube/seq/archive/0.2.2.tar.gz
-MD5_seq = 9033e02283aa3bde9f97f24e632902e3
+URL_seq = https://github.com/c-cube/seq/archive/v0.3.1.tar.gz
+MD5_seq = de05d9dedd492fa4e3c0c87bc2792475
 
 $(call PKG_SAME,seq)
 
@@ -86,7 +86,7 @@ MD5_stdlib-shims = 09db7af8b4a3a96048a61cb6ae2496ef
 
 $(call PKG_SAME,stdlib-shims)
 
-URL_spdx_licenses = https://github.com/kit-ty-kate/spdx_licenses/releases/download/v1.2.0/spdx_licenses-v1.2.0.tar.gz
+URL_spdx_licenses = https://github.com/kit-ty-kate/spdx_licenses/releases/download/v1.2.0/spdx_licenses-1.2.0.tar.gz
 MD5_spdx_licenses = b581124aeebd7facb856d8b942cb58a5
 
 $(call PKG_SAME,spdx_licenses)
