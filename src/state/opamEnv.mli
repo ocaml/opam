@@ -94,6 +94,9 @@ val path: force_path:bool -> dirname -> switch -> string
 val full_with_path:
   force_path:bool -> ?updates:env_update list -> dirname -> switch -> env
 
+(** Performs variable expansion on the strings in an environment update *)
+val env_expansion: ?opam:OpamFile.OPAM.t -> 'a switch_state -> env_update -> env_update
+
 (** {2 Shell and initialisation support} *)
 
 (** Sets the opam configuration in the user shell, after detailing the process

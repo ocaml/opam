@@ -903,7 +903,7 @@ let show cli =
       let opam_content_list = OpamFile.OPAM.to_list opam in
       let get_field f =
         try OpamListCommand.mini_field_printer ~prettify:true ~normalise
-              (List.assoc f opam_content_list)
+              (OpamStd.List.assoc String.equal f opam_content_list)
         with Not_found -> ""
       in
       match fields with
@@ -1479,7 +1479,7 @@ let config cli =
               (OpamSwitchState.universe ~test:true ~doc:true ~dev_setup:true
                  ~requested:OpamPackage.Set.empty state Query)
             |> OpamPackage.Set.iter process;
-            if List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
+            if not Sys.win32 && List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
             then OpamConsole.warning
                 "PATH contains '.' : this is a likely cause of trouble.";
             `Ok ()

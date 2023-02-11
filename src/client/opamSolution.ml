@@ -770,7 +770,9 @@ let parallel_apply t
               match a with
               | `Fetch _ -> acc
               | _ ->
-                let r = match List.assoc a results with
+                let r =
+                  match OpamStd.List.assoc
+                          PackageActionGraph.Parallel.G.V.equal a results with
                   | `Successful _ -> `String "OK"
                   | `Exception e -> Json.exc e
                   | `Error (`Aborted deps) ->
@@ -1070,7 +1072,7 @@ let run_hook_job t name ?(local=[]) ?(allow_stdout=false) w =
     | [] -> None
   in
   let env v =
-    try Some (List.assoc v local)
+    try Some (OpamStd.List.assoc OpamVariable.Full.equal v local)
     with Not_found -> OpamPackageVar.resolve_switch t v
   in
   let rec iter_commands = function
@@ -1239,12 +1241,21 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
       OpamConsole.error "%s" msg;
       check_again t sys_packages
   and check_again t sys_packages =
-    let needed, _notfound = OpamSysInteract.packages_status ~env sys_packages in
-    let installed = OpamSysPkg.Set.diff sys_packages needed in
-    let t, sys_packages =
-      map_sysmap (fun sysp -> OpamSysPkg.Set.diff sysp installed) t, needed
+    let open OpamSysPkg.Set.Op in
+    let needed, notfound = OpamSysInteract.packages_status ~env sys_packages in
+    let still_missing = needed ++ notfound in
+    let installed = sys_packages -- still_missing in
+    let t =
+      map_sysmap (fun sysp -> OpamSysPkg.Set.diff sysp installed) t
     in
-    if OpamSysPkg.Set.is_empty sys_packages then t else
+    if OpamSysPkg.Set.is_empty still_missing then t else
+    if OpamSysPkg.Set.(not (is_empty notfound) && is_empty needed) then
+      (OpamConsole.error
+         "These packages are still missing and not found via \
+          your system package manager: %s\n"
+         (syspkgs_to_string notfound);
+       manual_install t still_missing)
+    else
       (OpamConsole.error "These packages are still missing: %s\n"
          (syspkgs_to_string sys_packages);
        if OpamStd.Sys.tty_in then entry_point t sys_packages

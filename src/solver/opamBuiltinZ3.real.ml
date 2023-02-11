@@ -346,7 +346,8 @@ let def_criterion ctx opt (preamble, universe, request as cudf)
         | `Bool false -> 0
         | _ -> 0
         | exception Not_found ->
-          match List.assoc prop preamble.Cudf.property with
+          match OpamStd.(List.assoc Compare.equal
+                           prop preamble.Cudf.property) with
           | `Int (Some n) | `Nat (Some n) -> n
           | `Bool (Some true) -> 1
           | `Bool (Some false) -> 0

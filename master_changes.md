@@ -33,6 +33,7 @@ users)
   * Use menu for init setup [#5057 @AltGr; #5217 @dra27]
   * Do not show --yes and --no as special global options when using cmdliner >= 1.1 [#5269 @kit-ty-kate]
   * ◈ Add `tree` subcommand to display a dependency tree of currently installed packages [#5171 @cannorin - fix #3775]
+  * ◈ `tree` subcommand now supports `--json` option [#5303 @cannorin - fix #5298]
   * ◈ Add `why` subcommand to examine how the versions of currently installed packages get constrained (alias to `tree --rev-deps`) [#5171 @cannorin - fix #3775]
   * Make the plugin lookup faster when mistyping a subcommand [#5297 @kit-ty-kate]
 
@@ -166,8 +167,10 @@ users)
   * Add `with-tools` variable for recommended tools [#5016 @rjbou]
   * Add `x-locked` extension fields for overlay internal use, it stores if the files originate from a locked file, if so its extension [#5080 @rjbou]
   * Set `depext-bypass` parsing with depth 1, no needed brakcet if single package [#5154 @rjbou]
+  * [BUG] Variables are now expanded in build-env (as for setenv) [#5352 @dra27]
 
 ## External dependencies
+  * Support MSYS2 on Windows for depexts [#5348 @jonahbeckford]
   * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
   * Fix depext alpine tagged repositories handling [#4763 @rjbou] [2.1.0~rc2 #4758]
   * Homebrew: Add support for casks and full-names [#4801 @kit-ty-kate]
@@ -183,6 +186,8 @@ users)
   * Introduce dummy-success & dummy-failure os-family to make testing depexts behaviour easier [#5268 @kit-ty-kate]
   * Run command as admin only when needed [#5268 @kit-ty-kate]
   * Print depexts together with action list on `--show` [#5236 @AltGr]
+  * [BUG] when checking again, more accurate check of missing packages (available and not found) [#5157 @rjbou]
+  * Don't display system package manager helper if packages are not found [#5157 @rjbou]
 
 ## Format upgrade
   * Fix format upgrade when there is missing local switches in the config file [#4763 @rjbou - fix #4713] [2.1.0~rc2 #4715]
@@ -242,6 +247,10 @@ users)
   * Upgrade the vendored dune to 3.5.0 to fix make cold in an OCaml 5.0 env [#5355 @kit-ty-kate]
   * Upgrade vendored deps to support lib-ext in OCaml 5.0 [#5355 @kit-ty-kate / @dra27]
   * Remove unused variable in opamACL.c [#5403 @purplearmadillo77]
+  * Upgrade spdx_licenses to 1.2.0 [#5412 @kit-ty-kate]
+  * Upgrade the vendored sha to 1.15.4 [#5424 @kit-ty-kate]
+  * Upgrade src_ext vendored bootstrap dependencies [#5437 @MisterDA]
+  * Update bootstrap to use FlexDLL 0.42 from ocaml/flexdll [#5434 @MisterDA]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
@@ -251,6 +260,7 @@ users)
   * Remove Cygwin32 from testing, as it's been retired upstream [#5365 @dra27]
   * Ensure all the compilers can be built on Ubuntu 22.04 [#5391 @dra27]
   * Workaround brew problem on macOS GHA runner testing Z3 [#5405 @dra27]
+  * Adopt the OCaml Code of Conduct [#5419 @dra27]
 
 ## Release scripts
   * Make the release script setup-less using QEMU, Docker and Rosetta 2 [#4947 @kit-ty-kate]
@@ -275,6 +285,8 @@ users)
   * Don’t rebuild packages when updating dependencies or availablity, unless the current state needs to be changed [#5118 @kit-ty-kate - fix #4647]
   * Rebuild packages when removing or adding the "plugin" flag [#5118 @kit-ty-kate]
   * Do not rebuild packages when an extra-source's url changes but not its checksum [#5258 @kit-ty-kate]
+  * Correctly handle empty environment variable additions [#5350 @dra27]
+  * Skip empty environment variable additions [#5350 @dra27]
 
 ## Opam file format
   *
@@ -293,6 +305,8 @@ users)
   * Ask users to report errors when no explanations are given to them [#4981 @kit-ty-kate]
   * Add builtin support for the 'deprecated' flag.  Any packages flagged with deprecated would be avoided by the solver unless there is no other choice (e.g. some user wants to install package a which depends on b which is deprecated) If it is installed, show up a note after installation notifying the user that the package is deprecated. [#4523 @kit-ty-kate]
   * [BUG] On cudf strong and weak dependencies computation, some weak dependencies were wrongly kept, from #4627 [#5338 @rjbou @AltGr]
+  * [BUG] Fix "opam list -s --coinstallable-with pkg.1 pkg.2" listing pkg.2 as coinstallable with pkg.1 [#5414 @kit-ty-kate]
+  * Log the time dose3's check_request takes [#5407 @kit-ty-kate]
 
 ## Client
   * Check whether the repository might need updating more often [#4935 @kit-ty-kate]
@@ -317,6 +331,7 @@ users)
   * Fix lazy compilation of regular expression in OpamFormula.atom_of_string [#5211 @dra27]
   * [BUG] Display correct exception backtrace on uncaught exception on Windows [#5216 @dra27]
   * Use grep -F instead of fgrep, as the latter is deprecated [#5309 @MisterDA]
+  * Always open files with `O_SHARE_DELETE`, which eliminates unnecessary "access denied" errors in various situations on Windows. [#5435 @dra27]
   * Run `Gc.compact` in OpamParallel, when the main process is waiting for the children processes for the first time [#5396 @kkeundotnet]
 
 ## Internal: Windows
@@ -331,6 +346,7 @@ users)
   * Support MSYS2: two-phase rsync on MSYS2 to allow MSYS2's behavior of copying rather than symlinking [#4817 @jonahbeckford]
   * Environment: translate PATH from Windows to Unix during opam env. [#4844 @jonahbeckford]
   * Correct invocation of Cygwin binaries when Cygwin bin directory is first in PATH [#5293 @dra27]
+  * [BUG] Fix case insensitive variable handling [#5356 @dra27]
 
 ## Test
   * Update crowbar with compare functions [#4918 @rjbou]
@@ -364,6 +380,7 @@ users)
     * to escape `OPAMROOTVERSION` sed, it matches generated hexa temporary directory names [#5007 @AltGr #5301 @rjbou]
     * several improvments: add repo config check, update generator [#5303 @rjbou]
   * Add json output test [#5143 @rjbou]
+    * Add tree json output [#5303 @cannorin @rjbou]
   * Add test for opam file write with format preserved bug in #4936, fixed in #4941 [#4159 @rjbou]
   * Add test for switch upgrade from 2.0 root, with pinned compiler [#5176 @rjbou @kit-ty-kate]
   * Add switch import (for pinned packages) test [#5181 @rjbou]
@@ -381,6 +398,7 @@ users)
   * Test opam pin remove <pkg>.<version> [#5325 @kit-ty-kate]
   * Add a test checking that reinstalling a non-installed package is equivalent to installing it [#5228 @kit-ty-kate]
   * Add a test showing that we still get the reason for installing a package when using opam reinstall on non-installed packages [#5229 @kit-ty-kate]
+  * Add a windows test to check case insensitive environment variable handling [#5356 @dra27]
 
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
@@ -496,6 +514,7 @@ users)
   * `OpamArg`: externalise `post`, `dev`, `doc_flag`, `test`, and `devsetup` package selection flags, to avoid redefining them [#5299 @rjbou]
   * `OpamConfigCommand.global_allowed_fields`: add `archive-mirrors` (`dl_cache`) to allowed modifiable fields, extendable [#5321 @hannesm @rjbou]
   * `OpamClient.update_with_init_config`: Fix passing the `dl_cache` from `InitConfig` to `Config` [#5315 @hannesm]
+  * `OpamAction`: in `build_package`, `install_package`, and `remove_package` expand `build-env` variables content added to the environment [#5352 @dra27]
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
@@ -528,6 +547,9 @@ users)
   * Add `OpamPinned.version_opt` [#5325 @kit-ty-kate]
   * Add optional argument `?env:(variable_contents option Lazy.t * string) OpamVariable.Map.t` to `OpamSysPoll` and `OpamSysInteract` functions. It is used to get syspolling variables from the environment first. [#4892 @rjbou]
   * `OpamSwitchState`: move and reimplement `opam-solver` `dependencies` and `reverse_dependencies` [#5337 @rjbou]
+  * `OpamEnv`: add `env_expansion` [#5352 @dra27]
+  * `OpamEnv`: fix invalid argument raised when trying to unzip empty string [#5350 @dra27]
+  * `OpamEnv`: skip environment updates and revert with empty strings [#5350 @dra27]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
@@ -564,6 +586,7 @@ users)
   * `OpamFilter`: add `?custom` argument in `to_string` to tweak the output [#5171 @cannorin]
 
 ## opam-core
+  * `OpamStd.Sys`: fix `get_windows_executable_variant` to distinguish MSYS2 from Cygwin, esp. for rsync rather than symlinking [#5404 @jonahbeckford]
   * OpamSystem: avoid calling Unix.environment at top level [#4789 @hannesm]
   * `OpamStd.ABSTRACT`: add `compare` and `equal`, that added those functions to `OpamFilename`, `OpamHash`, `OpamStd`, `OpamStd`, `OpamUrl`, and `OpamVersion` [#4918 @rjbou]
   * `OpamHash`: add `sort` from strongest to weakest kind
@@ -591,3 +614,8 @@ users)
   * `OpamStd.Map`: add `filter_map` [#5337 @rjbou]
   * `OpamStd.Set`: Add `to_list_map` [#5308 @kit-ty-kate]
   * `OpamConsole.header_msg`: remove trailing space when there is no left padding [#5363 @rjbou]
+  * `OpamConsole.Tree`: add `valu` and `children` getters [#5303 @cannorin]
+  * `OpamStd.List`: add comparison function argument to some `OpamList` functions [#5374 @kit-ty-kate @rjbou]
+  * `OpamStd.Option`: add `equal` function [#5374 @rjbou]
+  * `OpamStd.Compare`: add module to flag polymorphic comparison functions in opam codebase [#5374 @kit-ty-kate @rjbou]
+  * `OpamStd.Env.`: introduce OpamStd.Env.Name to abstract environment variable names [#5356 @dra27]

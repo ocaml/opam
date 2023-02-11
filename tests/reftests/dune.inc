@@ -442,6 +442,26 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:env.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-env.win32)
+ (enabled_if (= %{os_type} "Win32"))
+ (action
+  (diff env.win32.test env.win32.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Win32"))
+ (deps (alias reftest-env.win32)))
+
+(rule
+ (targets env.win32.out)
+ (deps root-N0REP0)
+ (enabled_if (= %{os_type} "Win32"))
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:env.win32.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-init)
  (action
   (diff init.test init.out)))
@@ -579,6 +599,23 @@
   (with-stdout-to
    %{targets}
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:lint.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-list-coinstallable)
+ (action
+  (diff list-coinstallable.test list-coinstallable.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-list-coinstallable)))
+
+(rule
+ (targets list-coinstallable.out)
+ (deps root-7371c1d9)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:list-coinstallable.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-list)

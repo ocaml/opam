@@ -152,6 +152,9 @@ val print_table:
 module Tree : sig
   type 'elt t
 
+  val value: 'elt t -> 'elt
+  val children: 'elt t -> 'elt t list
+
   (** Creates a tree node. *)
   val create: ?children:'a t list -> 'a -> 'a t
 

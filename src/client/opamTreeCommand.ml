@@ -300,6 +300,55 @@ let print ?no_constraint = function
     trees |> List.iter (fun tree -> print_newline (); Tree.print ~printer tree)
   | DepsForest [] | RevdepsForest [] -> ()
 
+let name_version_json nv =
+  [ "name", OpamPackage.Name.to_json (OpamPackage.name nv);
+    "version", OpamPackage.Version.to_json (OpamPackage.version nv) ]
+
+let deps_to_json_fields ?(no_constraint=false) =
+  function
+  | Root p -> name_version_json p
+  | Dependency { package; satisfies; is_dup } ->
+    let p = name_version_json package in
+    let s =
+      if no_constraint then [] else
+      match satisfies with
+      | None | Some Empty -> ["satisfies", `Null]
+      | Some c -> ["satisfies", `String (string_of_condition c)]
+    in
+    let d = ["is_duplicate", `Bool is_dup] in
+    p @ s @ d
+
+let revdeps_to_json_fields ?(no_constraint=false) = function
+  | Root p -> name_version_json p
+  | Requirement { package; demands; is_dup } ->
+    let p = name_version_json package in
+    let s =
+      if no_constraint then [] else
+      match demands with
+      | None | Some Empty -> ["demands", `Null]
+      | Some c -> ["demands", `String (string_of_condition c)]
+    in
+    let d = ["is_duplicate", `Bool is_dup] in
+    p @ s @ d
+
+let rec tree_to_json children value_to_fields t =
+  let cs =
+    List.map (tree_to_json children value_to_fields)
+      (Tree.children t)
+  in
+  `O (value_to_fields (Tree.value t) @ [children, `A cs])
+
+let forest_to_json ?no_constraint forest =
+  match forest with
+  | DepsForest xs ->
+    `A (List.map
+          (tree_to_json "dependencies" (deps_to_json_fields ?no_constraint))
+          xs)
+  | RevdepsForest xs ->
+    `A (List.map
+          (tree_to_json "requirements" (revdeps_to_json_fields ?no_constraint))
+          xs)
+
 let print_solution st new_st missing solution =
   OpamConsole.msg "The following actions are simulated:\n";
   let messages p =
@@ -410,5 +459,9 @@ let run st tog ?no_constraint ?(no_switch=false) mode filter names =
   if OpamPackage.Set.is_empty st.installed then
     OpamConsole.error_and_exit `Not_found "No package is installed"
   else
-    print ?no_constraint
-      (build st universe tog mode filter names)
+  let forest = build st universe tog mode filter names in
+  print ?no_constraint forest;
+  if OpamClientConfig.(!r.json_out) <> None then
+    (if not no_switch then
+       OpamJson.append "switch" (OpamSwitch.to_json st.switch);
+     OpamJson.append "tree" (forest_to_json ?no_constraint forest))

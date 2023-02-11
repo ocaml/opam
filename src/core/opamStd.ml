@@ -69,6 +69,17 @@ module type OrderedType = sig
   val of_json: t OpamJson.decoder
 end
 
+module OpamCompare = struct
+  external compare : 't -> 't -> int = "%compare"
+  external equal : 't -> 't -> bool = "%equal"
+  external (=) : 't -> 't -> bool = "%equal"
+  external (<>) : 't -> 't -> bool = "%notequal"
+  external (<) : 't -> 't -> bool = "%lessthan"
+  external (>) : 't -> 't -> bool = "%greaterthan"
+  external (<=) : 't -> 't -> bool = "%lessequal"
+  external (>=) : 't -> 't -> bool = "%greaterequal"
+end
+
 let max_print = 100
 
 module OpamList = struct
@@ -114,15 +125,13 @@ module OpamList = struct
   let to_string f =
     concat_map ~left:"{ " ~right:" }" ~nil:"{}" ", " f
 
-  let rec remove_duplicates_eq eq = function
-    | a::(b::_ as r) when eq a b -> remove_duplicates_eq eq r
-    | a::r -> a::remove_duplicates_eq eq r
+  let rec remove_duplicates eq = function
+    | a::(b::_ as r) when eq a b -> remove_duplicates eq r
+    | a::r -> a::remove_duplicates eq r
     | [] -> []
 
-  let remove_duplicates l = remove_duplicates_eq ( = ) l
-
   let sort_nodup cmp l =
-    remove_duplicates_eq (fun a b -> cmp a b = 0) (List.sort cmp l)
+    remove_duplicates (fun a b -> cmp a b = 0) (List.sort cmp l)
 
   let filter_map f l =
     let rec loop accu = function
@@ -159,24 +168,41 @@ module OpamList = struct
     | l when index <= 0 -> value :: l
     | x::l -> x :: insert_at (index - 1) value l
 
-  let rec assoc_opt x = function
-      [] -> None
-    | (a,b)::l -> if compare a x = 0 then Some b else assoc_opt x l
+  let rec assoc eq x = function
+    | [] -> raise Not_found
+    | (a,b)::r -> if eq a x then b else assoc eq x r
 
-  let pick_assoc x l =
+  let rec assoc_opt eq x = function
+    |  [] -> None
+    | (a,b)::l -> if eq a x then Some b else assoc_opt eq x l
+
+  let pick_assoc eq x l =
     let rec aux acc = function
       | [] -> None, l
       | (k,v) as b::r ->
-        if k = x then Some v, List.rev_append acc r
+        if eq k x then Some v, List.rev_append acc r
         else aux (b::acc) r
     in
     aux [] l
 
-  let update_assoc k v l =
+  let rec mem_assoc eq x = function
+    | [] -> false
+    | (a,_)::r -> eq a x || mem_assoc eq x r
+
+  let update_assoc eq k v l =
     let rec aux acc = function
       | [] -> List.rev ((k,v)::acc)
       | (k1,_) as b::r ->
-        if k1 = k then List.rev_append acc ((k,v)::r)
+        if eq k1 k then List.rev_append acc ((k,v)::r)
+        else aux (b::acc) r
+    in
+    aux [] l
+
+  let remove_assoc eq k l =
+    let rec aux acc = function
+      | [] -> List.rev acc
+      | (k1,_) as b::r ->
+        if eq k1 k then List.rev_append acc r
         else aux (b::acc) r
     in
     aux [] l
@@ -372,8 +398,8 @@ module Map = struct
             let get_pair = function
               | `O binding ->
                 begin match
-                    O.of_json (List.assoc "key" binding),
-                    value_of_json (List.assoc "value" binding)
+                    O.of_json (OpamList.assoc String.equal "key" binding),
+                    value_of_json (OpamList.assoc String.equal "value" binding)
                   with
                   | Some key, Some value -> (key, value)
                   | _ -> raise Not_found
@@ -473,11 +499,18 @@ module Option = struct
     | None -> dft
     | Some x -> f x
 
-  let compare cmp o1 o2 = match o1,o2 with
+  let compare cmp o1 o2 =
+    match o1,o2 with
     | None, None -> 0
     | Some _, None -> 1
     | None, Some _ -> -1
     | Some x1, Some x2 -> cmp x1 x2
+
+  let equal f o1 o2 =
+    match o1, o2 with
+    | Some o1, Some o2 -> f o1 o2
+    | None, None -> true
+    | _ , _  -> false
 
   let to_string ?(none="") f = function
     | Some x -> f x
@@ -729,6 +762,50 @@ module Env = struct
       | curr::after -> aux (curr::before) after
     in aux [] v
 
+  let escape_single_quotes ?(using_backslashes=false) =
+    if using_backslashes then
+      Re.(replace (compile (set "\\\'")) ~f:(fun g -> "\\"^Group.get g 0))
+    else
+      Re.(replace_string (compile (char '\'')) ~by:"'\"'\"'")
+
+  let escape_powershell =
+    (* escape single quotes with two single quotes.
+       https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules?view=powershell-7.1 *)
+    Re.(replace_string (compile (char '\'')) ~by:"''")
+
+  module Name = struct
+    module M = struct
+      include AbstractString
+
+      let compare =
+        if Sys.win32 then
+          fun l r ->
+            String.(compare (lowercase_ascii l) (lowercase_ascii r))
+        else
+          String.compare
+    end
+
+    type t = string
+
+    let of_string = M.of_string
+    let to_string = M.to_string
+    let of_json = M.of_json
+    let to_json = M.to_json
+    let compare = M.compare
+
+    let equal =
+      if Sys.win32 then
+        fun l r ->
+          String.(equal (lowercase_ascii l) (lowercase_ascii r))
+      else
+        String.equal
+
+    let equal_string = equal
+
+    module Set = Set.Make(M)
+    module Map = Map.Make(M)
+  end
+
   let list =
     let lazy_env = lazy (
       let e = Unix.environment () in
@@ -740,26 +817,15 @@ module Env = struct
     ) in
     fun () -> Lazy.force lazy_env
 
-  let get =
-    if Sys.win32 then
-      fun n ->
-        let n = String.uppercase_ascii n in
-        snd (List.find (fun (k,_) -> String.uppercase_ascii k = n) (list ()))
-    else
-      fun n -> List.assoc n (list ())
+  let get_full n = List.find (fun (k,_) -> Name.equal k n) (list ())
 
-  let getopt n = try Some (get n) with Not_found -> None
+  let get n = snd (get_full n)
 
-  let escape_single_quotes ?(using_backslashes=false) =
-    if using_backslashes then
-      Re.(replace (compile (set "\\\'")) ~f:(fun g -> "\\"^Group.get g 0))
-    else
-      Re.(replace_string (compile (char '\'')) ~by:"'\"'\"'")
+  let getopt = Option.of_Not_found get
 
-  let escape_powershell =
-    (* escape single quotes with two single quotes.
-       https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules?view=powershell-7.1 *)
-    Re.(replace_string (compile (char '\'')) ~by:"''")
+  let getopt_full n =
+    try let (n, v) = get_full n in (n, Some v)
+    with Not_found -> (n, None)
 end
 
 
@@ -1137,11 +1203,8 @@ module OpamSys = struct
         let rec f a =
           match input_line c with
           | x ->
-            (* Treat MSYS2's variant of `cygwin1.dll` called `msys-2.0.dll` equivalently.
-               Confer https://www.msys2.org/wiki/How-does-MSYS2-differ-from-Cygwin/ *)
             let tx = String.trim x in
-            if (OpamString.ends_with ~suffix:"cygwin1.dll" tx ||
-                OpamString.ends_with ~suffix:"msys-2.0.dll" tx) then
+            if OpamString.ends_with ~suffix:"cygwin1.dll" tx then
               if OpamString.starts_with ~prefix:"  " x then
                 f `Cygwin
               else if a = `Native then
@@ -1179,6 +1242,8 @@ module OpamSys = struct
       fun _ -> `Native
 
   let is_cygwin_variant cmd =
+    (* Treat MSYS2's variant of `cygwin1.dll` called `msys-2.0.dll` equivalently.
+       Confer https://www.msys2.org/wiki/How-does-MSYS2-differ-from-Cygwin/ *)
     match get_windows_executable_variant cmd with
     | `Native -> `Native
     | `Cygwin
@@ -1220,7 +1285,7 @@ module OpamSys = struct
     `User_interrupt, 130;
   ]
 
-  let get_exit_code reason = List.assoc reason exit_codes
+  let get_exit_code reason = OpamList.assoc OpamCompare.equal reason exit_codes
 
   let exit_because reason = exit (get_exit_code reason)
 
@@ -1676,3 +1741,4 @@ module List = OpamList
 module String = OpamString
 module Sys = OpamSys
 module Format = OpamFormat
+module Compare = OpamCompare

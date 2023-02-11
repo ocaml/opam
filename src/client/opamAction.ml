@@ -384,7 +384,8 @@ let prepare_package_build env opam nv dir =
     aux patches
   in
   let subst_patches, subst_others =
-    List.partition (fun f -> List.mem_assoc f patches)
+    List.partition (fun f ->
+        OpamStd.List.mem_assoc OpamFilename.Base.equal f patches)
       (OpamFile.OPAM.substs opam)
   in
   if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake) then
@@ -520,6 +521,9 @@ let prepare_package_source st nv dir =
 
 let compilation_env t opam =
   let open OpamParserTypes in
+  let build_env =
+    List.map (OpamEnv.env_expansion ~opam t) (OpamFile.OPAM.build_env opam)
+  in
   let scrub = OpamClientConfig.(!r.scrubbed_environment_variables) in
   OpamEnv.get_full ~scrub ~set_opamroot:true ~set_opamswitch:true
     ~force_path:true t ~updates:([
@@ -534,7 +538,7 @@ let compilation_env t opam =
       Some "build environment definition";
       "OPAMCLI", Eq, "2.0", Some "opam CLI version";
     ] @
-      OpamFile.OPAM.build_env opam)
+      build_env)
 
 let installed_opam_opt st nv =
   OpamStd.Option.Op.(

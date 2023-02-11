@@ -160,6 +160,8 @@ module Option: sig
 
   val compare: ('a -> 'a -> int) -> 'a option -> 'a option -> int
 
+  val equal: ('a -> 'a -> bool) -> 'a option -> 'a option -> bool
+
   val to_string: ?none:string -> ('a -> string) -> 'a option -> string
 
   val to_list: 'a option -> 'a list
@@ -196,7 +198,7 @@ module List : sig
   val to_string: ('a -> string) -> 'a list -> string
 
   (** Removes consecutive duplicates in a list *)
-  val remove_duplicates: 'a list -> 'a list
+  val remove_duplicates: ('a -> 'a -> bool) -> 'a list -> 'a list
 
   (** Sorts the list, removing duplicates *)
   val sort_nodup: ('a -> 'a -> int) -> 'a list -> 'a list
@@ -222,19 +224,31 @@ module List : sig
       end if index < 0 or > length respectively). Not tail-recursive *)
   val insert_at: int -> 'a -> 'a list -> 'a list
 
-  (** Like [List.find], but returning option instead of raising *)
-  val assoc_opt: 'a -> ('a * 'b) list -> 'b option
+  (** Like [List.assoc] with an equality function. *)
+  val assoc: ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> 'b
 
-  (** Like [List.assoc], but as an option, and also returns the list with the
-      binding removed, e.g. equivalent to
-      [(List.assoc_opt x l, List.remove_assoc x l)]
+  (** Like [assoc], but returning option instead of raising [Not_found] *)
+  val assoc_opt: ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> 'b option
+
+  (** Like [assoc], but as an option, and also returns the list with the
+      binding removed, e.g. equivalent to [(assoc_opt x l, remove_assoc x l)]
       (but tail-recursive and more efficient) *)
-  val pick_assoc: 'a -> ('a * 'b) list -> 'b option * ('a * 'b) list
+  val pick_assoc:
+    ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> 'b option * ('a * 'b) list
+
+  (** Like [assoc], but returns a boolean instead of associated value *)
+  val mem_assoc: ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> bool
+
+  (** [remove_assoc eq k l] removes first association of [k] from list [l]
+      (tail-recursive). *)
+  val remove_assoc:
+    ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> ('a * 'b) list
 
   (** [update_assoc key value list] updates the first value bound to [key] in
       the associative list [list], or appends [(key, value)] if the key is not
       bound. *)
-  val update_assoc: 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
+  val update_assoc:
+    ('a -> 'a -> bool) -> 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
 
   (** Like [List.fold_left], but also performs [List.map] at the same time *)
   val fold_left_map: ('s -> 'a -> ('s * 'b)) -> 's -> 'a list -> 's * 'b list
@@ -372,6 +386,9 @@ end
 (** {2 Manipulation and query of environment variables} *)
 
 module Env : sig
+
+  (** {3 Generic functions} *)
+
   (** Remove from a c-separated list of string the ones with the given prefix *)
   val reset_value: prefix:string -> char -> string -> string list
 
@@ -381,12 +398,6 @@ module Env : sig
       other elements with the same [prefix] they are kept in the second list.
   *)
   val cut_value: prefix:string -> char -> string -> string list * string list
-
-  val get: string -> string
-
-  val getopt: string -> string option
-
-  val list: unit -> (string * string) list
 
   (** Utility function for shell single-quoted strings. In most shells,
       backslash escapes are not allowed and a single quote needs to be replaced
@@ -399,6 +410,46 @@ module Env : sig
 
   (** Utility function for PowerShell strings. *)
   val escape_powershell: string -> string
+
+  (** {3 Environment variable handling} *)
+
+  (** Environment variable names. Windows has complicated semantics for
+      environment variables. The retrieval functions are case insensitive, but
+      it's "legal" for the environment block to contain entries which differ
+      only by case. If environment variables are set entirely using CRT or Win32
+      API functions, then there isn't usually a problem, the issue arises when
+      creating a program where the environment block is instead passed. In this
+      model, it's very easy to end up with two bindings in the same block. When
+      dealing with Windows programs, this will mostly be transparent, but it's a
+      problem with Cygwin which actively allows "duplicate" entries which differ
+      by case only and implements Posix semantics on top of this. The problem is
+      constantly with us thanks to the use of PATH on Unix, and Path on Windows!
+      opam tries to ensure that environment variables are looked up according to
+      the OS semantics (so case insensitively on Windows) and OpamEnv goes to
+      some trouble to ensure that updates to environment variables are case
+      preserving (i.e. PATH+=foo gets transformed to Path+=foo if Path exists
+      in the environment block).
+
+      Key to this is not accidentally treating environment variable names as
+      strings, without using the appropriate comparison functions. Name.t
+      represents environment variable names as private strings, providing
+      comparison operators to handle them, and still allowing the possibility
+      to coerce them to strings.
+      *)
+  module Name : sig
+    include ABSTRACT with type t = private string
+
+    val equal_string: t -> string -> bool
+
+  end
+
+  val get: string -> string
+
+  val getopt: string -> string option
+
+  val getopt_full: Name.t -> Name.t * string option
+
+  val list: unit -> (Name.t * string) list
 end
 
 (** {2 System query and exit handling} *)
@@ -663,4 +714,18 @@ module Config : sig
     val updates: t list -> unit
   end
 
+end
+
+(** {2 Polymorphic comparison functions}
+    We use this module in opam codebase to flag polymorphic comparison usage.
+*)
+module Compare : sig
+  val compare: 'a -> 'a -> int
+  val equal: 'a -> 'a -> bool
+  val (=): 'a -> 'a -> bool
+  val (<>): 'a -> 'a -> bool
+  val (<): 'a -> 'a -> bool
+  val (>): 'a -> 'a -> bool
+  val (<=): 'a -> 'a -> bool
+  val (>=): 'a -> 'a -> bool
 end

@@ -353,7 +353,9 @@ let real_path p =
 type command = string list
 
 let default_env () =
-  OpamStd.Env.list () |> List.map (fun (var, v) -> var^"="^v) |> Array.of_list
+  (OpamStd.Env.list () :> (string * string) list)
+    |> List.map (fun (var, v) -> var^"="^v)
+    |> Array.of_list
 
 let env_var env var =
   let len = Array.length env in
@@ -1188,7 +1190,7 @@ and flock: 'a. ([< lock_flag ] as 'a) -> ?dontblock:bool -> string -> lock =
   | flag ->
     mkdir (Filename.dirname file);
     let rdflag = if (flag :> lock_flag) = `Lock_write then Unix.O_RDWR else Unix.O_RDONLY in
-    let fd = Unix.openfile file Unix.([O_CREAT; O_CLOEXEC; rdflag]) 0o666 in
+    let fd = Unix.openfile file Unix.([O_CREAT; O_CLOEXEC; O_SHARE_DELETE; rdflag]) 0o666 in
     Hashtbl.add locks fd ();
     let lock = { fd = Some fd; file; kind = `Lock_none } in
     flock_update flag ?dontblock lock;

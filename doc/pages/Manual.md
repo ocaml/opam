@@ -647,6 +647,10 @@ other system).
   by opam, the new value will replace the old one at the same position instead
   of being put in front.
 
+`FOO = ""` causes `FOO` to be set _but empty_ on Unix but _unset_ on Windows.
+
+`FOO += ""`, `FOO := ""`, etc. are all ignored - i.e. opam never adds empty segments to an existing variable.
+
 ### URLs
 
 URLs are provided as strings. They can refer to:

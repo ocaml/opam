@@ -918,7 +918,7 @@ module Syntax = struct
             | Variable (name, v) ->
               let name = name.pelem in
               (try
-                 let ppa = List.assoc name fields in
+                 let ppa = OpamStd.List.assoc String.equal name fields in
                  match snd (Pp.print ppa t) with
                  | None
                  | Some { pelem = List { pelem = []; _}; _}
@@ -953,12 +953,15 @@ module Syntax = struct
               let section_name = OpamStd.Option.map (fun x -> x.pelem) section_name in
               (try
                  rem,
-                 let ppa = List.assoc section_kind sections in
+                 let ppa =
+                   OpamStd.List.assoc String.equal section_kind sections
+                 in
                  let print_sec ppa t =
                    match snd (Pp.print ppa t) with
                    | None -> None
                    | Some v ->
-                     try Some (List.assoc section_name v) with Not_found -> None
+                     OpamStd.List.assoc_opt (OpamStd.Option.equal String.equal)
+                       section_name v
                  in
                  let sec_field_t = print_sec ppa t in
                  if sec_field_t <> None &&
@@ -1286,7 +1289,7 @@ module ConfigSyntax = struct
   let criteria t = t.solver_criteria
   let best_effort_prefix t = t.best_effort_prefix
   let criterion kind t =
-    try Some (List.assoc kind t.solver_criteria)
+    try Some OpamStd.(List.assoc Compare.equal kind t.solver_criteria)
     with Not_found -> None
   let solver t = t.solver
   let wrappers t = t.wrappers
@@ -1327,8 +1330,11 @@ module ConfigSyntax = struct
   let with_dl_cache dl_cache t = { t with dl_cache = Some dl_cache }
   let with_criteria solver_criteria t = { t with solver_criteria }
   let with_criterion kind criterion t =
-    { t with solver_criteria =
-               (kind,criterion)::List.remove_assoc kind t.solver_criteria }
+    let solver_criteria =
+      (kind, criterion)::OpamStd.(List.remove_assoc Compare.equal
+                                    kind t.solver_criteria)
+    in
+    { t with solver_criteria }
   let with_best_effort_prefix s t = { t with best_effort_prefix = Some s }
   let with_best_effort_prefix_opt s t = { t with best_effort_prefix = s }
   let with_solver solver t = { t with solver = Some solver }
@@ -1556,6 +1562,8 @@ module InitConfigSyntax = struct
   let recommended_tools t = t.recommended_tools
   let required_tools t = t.required_tools
   let init_scripts t = t.init_scripts
+  let criterion kind t =
+    OpamStd.(List.assoc_opt Compare.equal kind t.solver_criteria)
 
   let with_opam_version opam_version t = {t with opam_version}
   let with_repositories repositories t = {t with repositories}
@@ -1573,14 +1581,12 @@ module InitConfigSyntax = struct
   let with_recommended_tools recommended_tools t = {t with recommended_tools}
   let with_required_tools required_tools t = {t with required_tools}
   let with_init_scripts init_scripts t = {t with init_scripts}
-
-  let criterion kind t =
-    try Some (List.assoc kind t.solver_criteria)
-    with Not_found -> None
-
   let with_criterion kind criterion t =
-    { t with solver_criteria =
-               (kind,criterion)::List.remove_assoc kind t.solver_criteria }
+    let solver_criteria =
+      (kind, criterion)::OpamStd.(List.remove_assoc Compare.equal
+                                    kind t.solver_criteria)
+    in
+    { t with solver_criteria }
 
   let empty = {
     opam_version = format_version;
@@ -1729,9 +1735,12 @@ module InitConfigSyntax = struct
       dl_cache = opt t2.dl_cache t1.dl_cache;
       solver_criteria =
         List.fold_left (fun acc c ->
-            try (c, List.assoc c t2.solver_criteria) :: acc with Not_found ->
-            try (c, List.assoc c t1.solver_criteria) :: acc with Not_found ->
-              acc)
+            try
+              (c, OpamStd.(List.assoc Compare.equal c t2.solver_criteria))::acc
+            with Not_found ->
+            try
+              (c, OpamStd.(List.assoc Compare.equal c t1.solver_criteria))::acc
+            with Not_found -> acc)
           [] [`Fixup; `Upgrade; `Default];
       solver = opt t2.solver t1.solver;
       wrappers = Wrappers.with_default ~default:t1.wrappers t2.wrappers;
@@ -1890,12 +1899,10 @@ module Switch_configSyntax = struct
   let pp = pp_cond ()
 
   let variable t s =
-    try Some (List.assoc s t.variables)
-    with Not_found -> None
+    OpamStd.List.assoc_opt OpamVariable.equal s t.variables
 
   let path t p =
-    try Some (List.assoc p t.paths)
-    with Not_found -> None
+    OpamStd.(List.assoc_opt Compare.equal p t.paths)
 
   let wrappers t = t.wrappers
 
@@ -2112,11 +2119,11 @@ module Dot_configSyntax = struct
   let bindings t = t.vars
 
   let variable t s =
-    try Some (List.assoc s t.vars)
+    try Some (OpamStd.List.assoc OpamVariable.equal s t.vars)
     with Not_found -> None
 
   let set k v t =
-    let vars = List.remove_assoc k t.vars in
+    let vars = OpamStd.List.remove_assoc OpamVariable.equal k t.vars in
     let vars =
       match v with
       | Some v -> (k,v) :: vars
@@ -3227,15 +3234,18 @@ module OPAMSyntax = struct
   let to_list = Syntax.to_list pp
 
   let print_field_as_syntax field t =
-    let field = try List.assoc field alias_fields with Not_found -> field in
     if List.mem field deprecated_fields then raise Not_found;
+    let field =
+      try OpamStd.List.assoc String.equal field alias_fields
+      with Not_found -> field
+    in
     match OpamStd.String.cut_at field '.' with
     | None ->
       if is_ext_field field
       then OpamStd.String.Map.find_opt field t.extensions
-      else snd (Pp.print (List.assoc field fields) t)
+      else snd (Pp.print (OpamStd.List.assoc String.equal field fields) t)
     | Some (sec, field) ->
-      match snd (Pp.print (List.assoc sec sections) t) with
+      match snd (Pp.print (OpamStd.List.assoc String.equal sec sections) t) with
       | None -> None
       | Some items ->
         (* /!\ returns only the first result for multiple named sections *)

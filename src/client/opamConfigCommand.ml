@@ -175,6 +175,7 @@ let rec print_fish_env env =
     print_fish_env r
 
 let print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env =
+  let env = (env : OpamTypes.env :> (string * string * string option) list) in
   if sexp then
     print_sexp_env env
   else if csh then
@@ -283,7 +284,7 @@ let exec gt ~set_opamroot ~set_opamswitch ~inplace_path ~no_switch command =
     if no_switch then
       let revert = OpamEnv.add [] [] in
       List.map (fun ((var, _, _) as base) ->
-          match List.find_opt (fun (v,_,_) -> v = var) revert with
+          match List.find_opt (fun (v,_,_) -> OpamStd.Env.Name.equal v var) revert with
           | Some reverted -> reverted
           | None -> base) base
     else if OpamFile.exists env_file then
@@ -451,7 +452,7 @@ let set_opt ?(inner=false) field value conf =
              (OpamParser.string str_value "<command-line>").file_contents]))
   in
   let new_config =
-    match OpamStd.List.assoc_opt field fields, value with
+    match OpamStd.List.assoc_opt String.equal field fields, value with
     | None, _ ->
       OpamConsole.error
         "There is no option named '%s'. The allowed options are:"
@@ -1015,14 +1016,14 @@ let vars_list ?st gt =
 (* Specified option/var display *)
 
 let option_show to_list conf field =
-  match OpamStd.List.assoc_opt field conf.stg_fields with
+  match OpamStd.List.assoc_opt String.equal field conf.stg_fields with
   | Some pp ->
     (match OpamPp.print pp conf.stg_config with
      | _, Some value ->
        OpamConsole.msg "%s\n" (OpamPrinter.Normalise.value value)
      | _, None -> ())
   | None ->
-    if List.mem_assoc field conf.stg_sections then
+    if OpamStd.List.mem_assoc String.equal field conf.stg_sections then
       let name_value = to_list conf.stg_config in
       let sections =
         OpamStd.List.filter_map (fun (name, v) ->

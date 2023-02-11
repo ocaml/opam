@@ -158,13 +158,13 @@ let to_json nv =
      ]
 let of_json = function
   | `O dict ->
-    begin try
-        let open OpamStd.Option.Op in
-        Name.of_json (List.assoc "name" dict) >>= fun name ->
-        Version.of_json (List.assoc "version" dict) >>= fun version ->
-        Some {name; version}
-      with Not_found -> None
-    end
+    (try
+       let open OpamStd.Option.Op in
+       Name.of_json (OpamStd.List.assoc String.equal "name" dict)
+       >>= fun name ->
+       Version.of_json (OpamStd.List.assoc String.equal "version" dict)
+       >>= fun version -> Some {name; version}
+     with Not_found -> None)
   | _ -> None
 
 module O = struct

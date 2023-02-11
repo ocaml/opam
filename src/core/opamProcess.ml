@@ -249,8 +249,6 @@ type t = {
   p_tmp_files: string list;
 }
 
-let open_flags =  [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND]
-
 let output_lines oc lines =
   List.iter (fun line ->
     output_string oc line;
@@ -330,7 +328,8 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
     ~verbose ~tmp_files cmd args =
   let nothing () = () in
   let tee f =
-    let fd = Unix.openfile f open_flags 0o644 in
+    let flags = [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND; Unix.O_SHARE_DELETE] in
+    let fd = Unix.openfile f flags 0o644 in
     let close_fd () = Unix.close fd in
     fd, close_fd in
   let oldcwd = Sys.getcwd () in
@@ -834,7 +833,8 @@ let string_of_result ?(color=`yellow) r =
 
 let result_summary r =
   Printf.sprintf "%S exited with code %d%s"
-    (try List.assoc "command" r.r_info with Not_found -> "command")
+    (try OpamStd.List.assoc String.equal "command" r.r_info
+     with Not_found -> "command")
     r.r_code
     (if r.r_code = 0 then "" else
      match r.r_stderr, r.r_stdout with

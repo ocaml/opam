@@ -191,7 +191,7 @@ let opam2cudf_map universe version_map packages =
   let pinned_to_current_version_map = set_to_bool_map universe.u_pinned in
   let avoid_versions =
     OpamStd.Option.default OpamPackage.Set.empty @@
-    OpamStd.List.assoc_opt "avoid-version" universe.u_attrs
+    OpamStd.List.assoc_opt String.equal "avoid-version" universe.u_attrs
   in
   let version_lag_map =
     OpamPackage.Name.Map.fold (fun name version_set acc ->
@@ -522,7 +522,7 @@ let coinstallable_subset universe ?(add_invariant=true) set packages =
   let cudf_set, cudf_packages_map =
     OpamPackage.Set.fold (fun nv (set, map) ->
         let p = OpamPackage.Map.find nv cudf_packages_map in
-        let p = { p with Cudf.keep = `Keep_version } in
+        let p = { p with Cudf.keep = `Keep_version; installed = true } in
         OpamCudf.Set.add p set, OpamPackage.Map.add nv p map)
       set (OpamCudf.Set.empty, cudf_packages_map)
   in

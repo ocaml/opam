@@ -8,6 +8,7 @@ tests/tmp/
 tests/.merlin
 tests/reftests/.merlin
 .*.swp
+.envrc
 src_ext/*.*download
 src_ext/*.*stamp
 src_ext/*.pkgbuild
