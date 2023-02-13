@@ -268,6 +268,8 @@ users)
   * Speedup the compiler compilation phase for the docker builds [#5387 @kit-ty-kate]
 
 ## Admin
+  * [NEW] a flag `--keep-default-environment` to keep the default resolver
+    environment available even when `--environment` is specified.
   * ✘ `opam admin cache` now ignores all already present cache files. Option
     `--check-all` restores the previous behaviour of validating all checksums.
   * [BUG] Fix repo-upgrade internal error [#4965 @AltGr]
