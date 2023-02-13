@@ -385,7 +385,7 @@ install : [ "install" ]
 ${BASEDIR}/lint.opam: Errors.
              error 46: Package is flagged "conf" but has source, install or remove instructions
 # Return code 1 #
-### : W47: Synopsis (or description first line) should start with a capital and not end with a dot
+### : W47: Synopsis should start with a capital and not end with a dot
 ### <lint.opam>
 opam-version: "2.0"
 synopsis: "a word"
@@ -399,18 +399,6 @@ bug-reports: "https://nobug"
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
            warning 47: Synopsis should start with a capital and not end with a dot
-### <lint.opam>
-opam-version: "2.0"
-synopsis: ""
-description: "a words."
-authors: "the testing team"
-homepage: "egapemoh"
-maintainer: "maint@tain.er"
-license: "ISC"
-dev-repo: "hg+https://to@li.nt"
-bug-reports: "https://nobug"
-### opam lint ./lint.opam
-${BASEDIR}/lint.opam: Passed.
 ### : W48: The fields 'build-test:' and 'build-doc:' are deprecated, and should be replaced by uses of the 'with-test' and 'with-doc' filter variables in the 'build:' and 'install:' fields, and by the newer 'run-test:' field
 ### <lint.opam>
 opam-version: "2.0"
@@ -606,7 +594,19 @@ setenv: [ idoit="anyway" ]
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
            warning 56: It is discouraged for non-compiler packages to use 'setenv:'
-### : E57: Synopsis and description must not be both empty
+### : E57: Synopsis must not be empty
+### <lint.opam>
+opam-version: "2.0"
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 57: Synopsis must not be empty
+# Return code 1 #
 ### <lint.opam>
 opam-version: "2.0"
 synopsis: ""
@@ -619,7 +619,34 @@ dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Errors.
-             error 57: Synopsis and description must not be both empty
+             error 57: Synopsis must not be empty
+# Return code 1 #
+### <lint.opam>
+opam-version: "2.0"
+description: "a words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 57: Synopsis must not be empty
+# Return code 1 #
+### <lint.opam>
+opam-version: "2.0"
+synopsis: ""
+description: "a words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 57: Synopsis must not be empty
 # Return code 1 #
 ### : W58: Found variable, predefined one
 ### <lint.opam>

@@ -73,7 +73,7 @@ Successfully extracted to ${BASEDIR}/pandore.3
            warning 25: Missing field 'authors'
            warning 35: Missing field 'homepage'
            warning 36: Missing field 'bug-reports'
-             error 57: Synopsis and description must not be both empty
+             error 57: Synopsis must not be empty
            warning 68: Missing field 'license'
 pandore is now pinned to file://${BASEDIR}/pandore.3 (version 3)
 

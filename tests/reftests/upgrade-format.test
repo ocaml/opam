@@ -35,7 +35,7 @@ conflicts: "extlib-compat"
 available: ocaml-version >= "4.02.3"
 ### opam show --raw ./opam-core.opam
 [WARNING] Failed checks on opam-core package definition from source at file://${BASEDIR}:
-             error 57: Synopsis and description must not be both empty
+             error 57: Synopsis must not be empty
 opam-version: "2.0"
 name: "opam-core"
 version: "2.0.7"

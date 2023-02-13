@@ -145,6 +145,7 @@ users)
   * [BUG] Fix linting packages from repository with tarred repositories, the file in temporary repository was no more avaiable when lint is done [#5068 @rjbou]
   * Update repository package filename display [#5068 @rjbou]
   * E67: check checksums only for vcs urls [#4960 @rjbou]
+  * E57: Enforce synopsis to always be there, restoring behaviour from opam 2.1 [#5442 @kit-ty-kate]
 
 ## Repository
   * When several checksums are specified, instead of adding in the cache only the archive by first checksum, name by best one and link others to this archive [#4696 rjbou]
