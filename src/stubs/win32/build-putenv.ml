@@ -1,3 +1,4 @@
+#directory "+unix";;
 #load "unix.cma"
 
 let () =

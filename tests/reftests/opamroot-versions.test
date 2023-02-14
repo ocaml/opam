@@ -502,6 +502,7 @@ done
 ### sh generate_dirs.sh
 ### ocaml generate_repo.ml
 ### <generate.ml>
+#directory "+unix";;
 #load "unix.cma";;
 
 let rec mkdir_p dir =

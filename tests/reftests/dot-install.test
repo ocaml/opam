@@ -1,5 +1,6 @@
 N0REP0
 ### <cat.ml>
+#directory "+str";;
 #load "str.cma"
 
 let read file =

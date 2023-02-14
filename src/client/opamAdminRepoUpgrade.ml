@@ -362,7 +362,7 @@ let do_upgrade repo_root =
       O.with_substs [OpamFilename.Base.of_string conf_script_name] |>
       O.with_build [
         List.map (fun s -> CString s, None)
-          [ "ocaml"; "unix.cma"; conf_script_name ],
+          [ "ocaml"; "-I"; "+unix"; "unix.cma"; conf_script_name ],
         None
       ] |>
       O.with_maintainer [ "platform@lists.ocaml.org" ] |>
