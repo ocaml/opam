@@ -40,13 +40,13 @@ let unzip_to elt current =
     | ([], rs) -> Some rs
     | _ -> None
   in
-  match (if String.equal elt "" then [""] else split_var elt) with
+  match (if elt = "" then [""] else split_var elt) with
   | [] -> invalid_arg "OpamEnv.unzip_to"
   | hd::tl ->
     let rec aux acc = function
       | [] -> None
       | x::r ->
-        if String.equal x hd then
+        if (x : string) = hd then
           match remove_prefix tl r with
           | Some r -> Some (acc, r)
           | None -> aux (x::acc) r
@@ -91,7 +91,7 @@ let apply_op_zip op arg (rl1,l2 as zip) =
     or empty lists is returned if the variable should be unset or has an unknown
     previous value. *)
 let reverse_env_update op arg cur_value =
-  if String.equal arg  "" && op <> Eq then None else
+  if arg = "" && op <> Eq then None else
   match op with
   | Eq ->
     if arg = join_var cur_value
@@ -159,7 +159,7 @@ let expand (updates: env_update list) : env =
             | None -> ([], []), reverts
       in
       let acc =
-        if String.equal arg "" && op <> Eq then acc else
+        if arg = "" && op <> Eq then acc else
           ((var, apply_op_zip op arg zip, doc) :: acc)
       in
       apply_updates
