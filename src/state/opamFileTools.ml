@@ -524,8 +524,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        (t.install <> [] || t.remove <> [] || t.url <> None ||
         t.extra_sources <> []));
     cond 47 `Warning
-      "Synopsis (or description first line) should start with a capital and \
-       not end with a dot"
+      "Synopsis should start with a capital and not end with a dot"
       (let valid_re =
          Re.(compile (seq [bos; diff any (alt [blank; lower]); rep any;
                            diff any (alt [blank; char '.']); eos]))

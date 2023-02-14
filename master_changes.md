@@ -138,6 +138,7 @@ users)
   * [NEW] Add `--no-switch` option [#4850 @rjbou - fix #4858]
 
 ## Lint
+  * W47: remove the mention of the opam 1.2 descr file in the warning message [#5069 @rjbou - fix #4989]
   * W68: add warning for missing license field [#4766 @kit-ty-kate - partial fix #4598]
   * W62: use the spdx_licenses library to check for valid licenses. This allows to use compound expressions such as "MIT AND (GPL-2.0-only OR LGPL-2.0-only)", as well as user defined licenses e.g. "LicenseRef-my-custom-license" [#4768 @kit-ty-kate - fixes #4598]
   * E57 (capital on synopsis) not trigger W47 (empty descr) [#5070 @rjbou]

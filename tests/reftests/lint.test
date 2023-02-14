@@ -398,7 +398,7 @@ dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
-           warning 47: Synopsis (or description first line) should start with a capital and not end with a dot
+           warning 47: Synopsis should start with a capital and not end with a dot
 ### <lint.opam>
 opam-version: "2.0"
 synopsis: ""
