@@ -158,3 +158,15 @@ struct
     lazy (f (force x))
 end
 #endif
+
+module Fun =
+#if OCAML_VERSION >= (4, 08, 0)
+  Fun
+#else
+struct
+  let protect ~finally work =
+    match work () with
+    | v -> finally (); v
+    | exception e -> finally (); raise e
+end
+#endif

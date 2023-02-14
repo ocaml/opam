@@ -618,3 +618,4 @@ users)
   * `OpamStd.Option`: add `equal` function [#5374 @rjbou]
   * `OpamStd.Compare`: add module to flag polymorphic comparison functions in opam codebase [#5374 @kit-ty-kate @rjbou]
   * `OpamStd.Env.`: introduce OpamStd.Env.Name to abstract environment variable names [#5356 @dra27]
+  * `OpamCompat`: Add `Fun.protect` [#5441 @kit-ty-kate]

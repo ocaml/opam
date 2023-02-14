@@ -119,3 +119,12 @@ module Lazy
   val map : ('a -> 'b) -> 'a t -> 'b t
 end
 #endif
+
+module Fun
+#if OCAML_VERSION >= (4, 08, 0)
+= Fun
+#else
+: sig
+  val protect : finally:(unit -> unit) -> (unit -> 'a) -> 'a
+end
+#endif
