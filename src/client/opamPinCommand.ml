@@ -398,7 +398,7 @@ let fetch_all_pins st ?working_dir pins =
   if errored = []
   || OpamConsole.confirm
        "Could not retrieve some package sources, they will not be pinned nor \
-        installed:%s\n\
+        installed:\n%s\n\
         Continue anyway?"
        (OpamStd.Format.itemize (fun p ->
             Printf.sprintf "%s:%s"
