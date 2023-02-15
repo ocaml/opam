@@ -110,3 +110,98 @@ Done.
 nip.dev    git  git+file://${BASEDIR}/nip#snd-head
 ### opam list nip --installed --columns=name,installed-files --normalise --switch tierce | grep -v '^#'
 nip    ${BASEDIR}/OPAM/tierce/lib/snd.out
+### opam switch create test-switch-export-freeze --empty
+### opam switch export --freeze switch-freeze.export
+### opam-cat switch-freeze.export
+opam-version: "2.0"
+### <pkg:test.1>
+opam-version: "2.0"
+url {
+  src: "https://example.com/some/fake/url.tar.gz"
+  checksum: "md5=6aef5a674977ebc5ec853dc4f85cf2bb"
+}
+extra-source "file" {
+  src: "https://example.com/some/fake/extra/source"
+  checksum: "md5=6aef5a674977ebc5ec853dc4f85cf2bb"
+}
+### opam install --fake test.1
+The following actions will be faked:
+=== install 1 package
+  - install test 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of test.1
+Done.
+### opam switch export --freeze switch-freeze.export
+### opam-cat switch-freeze.export
+installed: ["test.1"]
+opam-version: "2.0"
+roots: ["test.1"]
+package "test" {
+opam-version: "2.0"
+version: "1"
+url {
+src: "https://example.com/some/fake/url.tar.gz"
+checksum: "md5=6aef5a674977ebc5ec853dc4f85cf2bb"
+}
+extra-source "file" {
+src: "https://example.com/some/fake/extra/source"
+checksum: "md5=6aef5a674977ebc5ec853dc4f85cf2bb"
+}
+}
+### <pkg:test.1>
+opam-version: "2.0"
+url {
+  src: "https://example.com/some/fake/url.tar.gz"
+}
+extra-source "file" {
+  src: "https://example.com/some/fake/extra/source"
+  checksum: "md5=6aef5a674977ebc5ec853dc4f85cf2bb"
+}
+### opam install --fake test.1
+The following actions will be faked:
+=== recompile 1 package
+  - recompile test 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of test.1
+Done.
+### opam switch export --freeze switch-freeze.export
+[ERROR] test url doesn't have an associated checksum, it can't be exported with --freeze.
+# Return code 5 #
+### <pkg:test.1>
+opam-version: "2.0"
+url {
+  src: "https://example.com/some/fake/url.tar.gz"
+  checksum: "md5=6aef5a674977ebc5ec853dc4f85cf2bb"
+}
+extra-source "file" {
+  src: "https://example.com/some/fake/extra/source"
+}
+### opam install --fake test.1
+The following actions will be faked:
+=== recompile 1 package
+  - recompile test 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of test.1
+Done.
+### opam switch export --freeze switch-freeze.export
+[ERROR] test url doesn't have an associated checksum, it can't be exported with --freeze.
+# Return code 5 #
+### opam-cat switch-freeze.export
+installed: ["test.1"]
+opam-version: "2.0"
+roots: ["test.1"]
+package "test" {
+opam-version: "2.0"
+version: "1"
+url {
+src: "https://example.com/some/fake/url.tar.gz"
+checksum: "md5=6aef5a674977ebc5ec853dc4f85cf2bb"
+}
+extra-source "file" {
+src: "https://example.com/some/fake/extra/source"
+checksum: "md5=6aef5a674977ebc5ec853dc4f85cf2bb"
+}
+}
