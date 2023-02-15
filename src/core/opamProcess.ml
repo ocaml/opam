@@ -334,7 +334,14 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
     fd, close_fd in
   let oldcwd = Sys.getcwd () in
   let cwd = OpamStd.Option.default oldcwd dir in
-  OpamStd.Option.iter Unix.chdir dir;
+  let with_chdir dir =
+    match dir with
+    | None -> (fun f -> f ())
+    | Some dir ->
+      Unix.chdir dir;
+      OpamCompat.Fun.protect ~finally:(fun () -> Unix.chdir oldcwd)
+  in
+  with_chdir dir @@ fun () ->
   let stdin_fd,close_stdin =
     if allow_stdin then Unix.stdin, nothing else
     let fd,outfd = Unix.pipe () in
@@ -454,7 +461,6 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
   close_stdin  ();
   close_stdout ();
   close_stderr ();
-  Unix.chdir oldcwd;
   {
     p_name   = cmd;
     p_args   = args;

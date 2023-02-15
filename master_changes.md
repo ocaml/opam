@@ -333,6 +333,7 @@ users)
   * [BUG] Display correct exception backtrace on uncaught exception on Windows [#5216 @dra27]
   * Use grep -F instead of fgrep, as the latter is deprecated [#5309 @MisterDA]
   * Always open files with `O_SHARE_DELETE`, which eliminates unnecessary "access denied" errors in various situations on Windows. [#5435 @dra27]
+  * Ensure the cwd is restored when launching a process fails [#5441 @dra27]
 
 ## Internal: Windows
   * Support MSYS2: treat MSYS2 and Cygwin as equivalent [#4813 @jonahbeckford]
@@ -620,3 +621,4 @@ users)
   * `OpamStd.Option`: add `equal` function [#5374 @rjbou]
   * `OpamStd.Compare`: add module to flag polymorphic comparison functions in opam codebase [#5374 @kit-ty-kate @rjbou]
   * `OpamStd.Env.`: introduce OpamStd.Env.Name to abstract environment variable names [#5356 @dra27]
+  * `OpamCompat`: Add `Fun.protect` [#5441 @kit-ty-kate]
