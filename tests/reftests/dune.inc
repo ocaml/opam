@@ -1199,15 +1199,29 @@
            file://%{dep:opam-repo-N0REP0})))))
 
 (rule
- (targets opam-archive-0070613707.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/0070613707.tar.gz)))
+ (targets opam-repository.git)
+ (action
+  (progn
+   (run git clone -q --bare --single-branch https://github.com/ocaml/opam-repository)
+   (run git -C ./opam-repository.git branch local-branch-0070613707 0070613707)
+   (run git -C ./opam-repository.git branch local-branch-009e00fa 009e00fa)
+   (run git -C ./opam-repository.git branch local-branch-11ea1cb 11ea1cb)
+   (run git -C ./opam-repository.git branch local-branch-297366c 297366c)
+   (run git -C ./opam-repository.git branch local-branch-3235916 3235916)
+   (run git -C ./opam-repository.git branch local-branch-7090735c 7090735c)
+   (run git -C ./opam-repository.git branch local-branch-7371c1d9 7371c1d9)
+   (run git -C ./opam-repository.git branch local-branch-a5d7cdc0 a5d7cdc0)
+   (run git -C ./opam-repository.git branch local-branch-ad4dd344 ad4dd344)
+   (run git -C ./opam-repository.git branch local-branch-c1842d168d c1842d168d)
+   (run git -C ./opam-repository.git branch local-branch-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a)
+   (run git -C ./opam-repository.git branch local-branch-c1d23f0e c1d23f0e)
+   (run git -C ./opam-repository.git branch local-branch-de897adf36c4230dfea812f40c98223b31c4521a de897adf36c4230dfea812f40c98223b31c4521a)
+   (run git -C ./opam-repository.git branch local-branch-f372039d f372039d))))
 
 (rule
   (targets opam-repo-0070613707)
   (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-0070613707.tar.gz} --strip-components=1))))
+   (run git clone -q -b local-branch-0070613707 --single-branch %{dep:./opam-repository.git} %{targets})))
 
 (rule
   (targets root-0070613707)
@@ -1219,15 +1233,9 @@
            file://%{dep:opam-repo-0070613707})))))
 
 (rule
- (targets opam-archive-009e00fa.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/009e00fa.tar.gz)))
-
-(rule
   (targets opam-repo-009e00fa)
   (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-009e00fa.tar.gz} --strip-components=1))))
+   (run git clone -q -b local-branch-009e00fa --single-branch %{dep:./opam-repository.git} %{targets})))
 
 (rule
   (targets root-009e00fa)
@@ -1239,15 +1247,9 @@
            file://%{dep:opam-repo-009e00fa})))))
 
 (rule
- (targets opam-archive-11ea1cb.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/11ea1cb.tar.gz)))
-
-(rule
   (targets opam-repo-11ea1cb)
   (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-11ea1cb.tar.gz} --strip-components=1))))
+   (run git clone -q -b local-branch-11ea1cb --single-branch %{dep:./opam-repository.git} %{targets})))
 
 (rule
   (targets root-11ea1cb)
@@ -1259,15 +1261,9 @@
            file://%{dep:opam-repo-11ea1cb})))))
 
 (rule
- (targets opam-archive-297366c.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/297366c.tar.gz)))
-
-(rule
   (targets opam-repo-297366c)
   (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-297366c.tar.gz} --strip-components=1))))
+   (run git clone -q -b local-branch-297366c --single-branch %{dep:./opam-repository.git} %{targets})))
 
 (rule
   (targets root-297366c)
@@ -1279,15 +1275,9 @@
            file://%{dep:opam-repo-297366c})))))
 
 (rule
- (targets opam-archive-3235916.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/3235916.tar.gz)))
-
-(rule
   (targets opam-repo-3235916)
   (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-3235916.tar.gz} --strip-components=1))))
+   (run git clone -q -b local-branch-3235916 --single-branch %{dep:./opam-repository.git} %{targets})))
 
 (rule
   (targets root-3235916)
@@ -1299,15 +1289,9 @@
            file://%{dep:opam-repo-3235916})))))
 
 (rule
- (targets opam-archive-7090735c.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/7090735c.tar.gz)))
-
-(rule
   (targets opam-repo-7090735c)
   (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-7090735c.tar.gz} --strip-components=1))))
+   (run git clone -q -b local-branch-7090735c --single-branch %{dep:./opam-repository.git} %{targets})))
 
 (rule
   (targets root-7090735c)
@@ -1319,15 +1303,9 @@
            file://%{dep:opam-repo-7090735c})))))
 
 (rule
- (targets opam-archive-7371c1d9.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/7371c1d9.tar.gz)))
-
-(rule
   (targets opam-repo-7371c1d9)
   (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-7371c1d9.tar.gz} --strip-components=1))))
+   (run git clone -q -b local-branch-7371c1d9 --single-branch %{dep:./opam-repository.git} %{targets})))
 
 (rule
   (targets root-7371c1d9)
@@ -1339,15 +1317,9 @@
            file://%{dep:opam-repo-7371c1d9})))))
 
 (rule
- (targets opam-archive-a5d7cdc0.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/a5d7cdc0.tar.gz)))
-
-(rule
   (targets opam-repo-a5d7cdc0)
   (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-a5d7cdc0.tar.gz} --strip-components=1))))
+   (run git clone -q -b local-branch-a5d7cdc0 --single-branch %{dep:./opam-repository.git} %{targets})))
 
 (rule
   (targets root-a5d7cdc0)
@@ -1359,15 +1331,9 @@
            file://%{dep:opam-repo-a5d7cdc0})))))
 
 (rule
- (targets opam-archive-ad4dd344.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/ad4dd344.tar.gz)))
-
-(rule
   (targets opam-repo-ad4dd344)
   (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-ad4dd344.tar.gz} --strip-components=1))))
+   (run git clone -q -b local-branch-ad4dd344 --single-branch %{dep:./opam-repository.git} %{targets})))
 
 (rule
   (targets root-ad4dd344)
@@ -1379,15 +1345,9 @@
            file://%{dep:opam-repo-ad4dd344})))))
 
 (rule
- (targets opam-archive-c1842d168d.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/c1842d168d.tar.gz)))
-
-(rule
   (targets opam-repo-c1842d168d)
   (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-c1842d168d.tar.gz} --strip-components=1))))
+   (run git clone -q -b local-branch-c1842d168d --single-branch %{dep:./opam-repository.git} %{targets})))
 
 (rule
   (targets root-c1842d168d)
@@ -1399,15 +1359,9 @@
            file://%{dep:opam-repo-c1842d168d})))))
 
 (rule
- (targets opam-archive-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a.tar.gz)))
-
-(rule
   (targets opam-repo-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a)
   (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a.tar.gz} --strip-components=1))))
+   (run git clone -q -b local-branch-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a --single-branch %{dep:./opam-repository.git} %{targets})))
 
 (rule
   (targets root-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a)
@@ -1419,15 +1373,9 @@
            file://%{dep:opam-repo-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a})))))
 
 (rule
- (targets opam-archive-c1d23f0e.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/c1d23f0e.tar.gz)))
-
-(rule
   (targets opam-repo-c1d23f0e)
   (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-c1d23f0e.tar.gz} --strip-components=1))))
+   (run git clone -q -b local-branch-c1d23f0e --single-branch %{dep:./opam-repository.git} %{targets})))
 
 (rule
   (targets root-c1d23f0e)
@@ -1439,15 +1387,9 @@
            file://%{dep:opam-repo-c1d23f0e})))))
 
 (rule
- (targets opam-archive-de897adf36c4230dfea812f40c98223b31c4521a.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/de897adf36c4230dfea812f40c98223b31c4521a.tar.gz)))
-
-(rule
   (targets opam-repo-de897adf36c4230dfea812f40c98223b31c4521a)
   (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-de897adf36c4230dfea812f40c98223b31c4521a.tar.gz} --strip-components=1))))
+   (run git clone -q -b local-branch-de897adf36c4230dfea812f40c98223b31c4521a --single-branch %{dep:./opam-repository.git} %{targets})))
 
 (rule
   (targets root-de897adf36c4230dfea812f40c98223b31c4521a)
@@ -1459,15 +1401,9 @@
            file://%{dep:opam-repo-de897adf36c4230dfea812f40c98223b31c4521a})))))
 
 (rule
- (targets opam-archive-f372039d.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/f372039d.tar.gz)))
-
-(rule
   (targets opam-repo-f372039d)
   (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-f372039d.tar.gz} --strip-components=1))))
+   (run git clone -q -b local-branch-f372039d --single-branch %{dep:./opam-repository.git} %{targets})))
 
 (rule
   (targets root-f372039d)
