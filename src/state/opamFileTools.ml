@@ -654,8 +654,8 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
       "It is discouraged for non-compiler packages to use 'setenv:'"
       (t.env <> [] && not (has_flag Pkgflag_Compiler t));
     cond 57 `Error
-      "Synopsis and description must not be both empty"
-      (t.descr = None || t.descr = Some OpamFile.Descr.empty);
+      "Synopsis must not be empty"
+      (match t.descr with None -> true | Some d -> String.equal (OpamFile.Descr.synopsis d) "");
     (let vars = all_variables ~exclude_post:false ~command:[] t in
      let exists svar =
        List.exists (fun v -> v = OpamVariable.Full.of_string svar) vars
