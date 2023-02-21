@@ -1201,27 +1201,12 @@
 (rule
  (targets opam-repository.git)
  (action
-  (progn
-   (run git clone -q --bare --single-branch https://github.com/ocaml/opam-repository)
-   (run git -C ./opam-repository.git branch local-branch-0070613707 0070613707)
-   (run git -C ./opam-repository.git branch local-branch-009e00fa 009e00fa)
-   (run git -C ./opam-repository.git branch local-branch-11ea1cb 11ea1cb)
-   (run git -C ./opam-repository.git branch local-branch-297366c 297366c)
-   (run git -C ./opam-repository.git branch local-branch-3235916 3235916)
-   (run git -C ./opam-repository.git branch local-branch-7090735c 7090735c)
-   (run git -C ./opam-repository.git branch local-branch-7371c1d9 7371c1d9)
-   (run git -C ./opam-repository.git branch local-branch-a5d7cdc0 a5d7cdc0)
-   (run git -C ./opam-repository.git branch local-branch-ad4dd344 ad4dd344)
-   (run git -C ./opam-repository.git branch local-branch-c1842d168d c1842d168d)
-   (run git -C ./opam-repository.git branch local-branch-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a)
-   (run git -C ./opam-repository.git branch local-branch-c1d23f0e c1d23f0e)
-   (run git -C ./opam-repository.git branch local-branch-de897adf36c4230dfea812f40c98223b31c4521a de897adf36c4230dfea812f40c98223b31c4521a)
-   (run git -C ./opam-repository.git branch local-branch-f372039d f372039d))))
+  (run git clone -q --bare --single-branch https://github.com/ocaml/opam-repository)))
 
 (rule
   (targets opam-repo-0070613707)
   (action
-   (run git clone -q -b local-branch-0070613707 --single-branch %{dep:./opam-repository.git} %{targets})))
+   (run git -C %{dep:./opam-repository.git} worktree add -q ../%{targets} 0070613707)))
 
 (rule
   (targets root-0070613707)
@@ -1235,7 +1220,7 @@
 (rule
   (targets opam-repo-009e00fa)
   (action
-   (run git clone -q -b local-branch-009e00fa --single-branch %{dep:./opam-repository.git} %{targets})))
+   (run git -C %{dep:./opam-repository.git} worktree add -q ../%{targets} 009e00fa)))
 
 (rule
   (targets root-009e00fa)
@@ -1249,7 +1234,7 @@
 (rule
   (targets opam-repo-11ea1cb)
   (action
-   (run git clone -q -b local-branch-11ea1cb --single-branch %{dep:./opam-repository.git} %{targets})))
+   (run git -C %{dep:./opam-repository.git} worktree add -q ../%{targets} 11ea1cb)))
 
 (rule
   (targets root-11ea1cb)
@@ -1263,7 +1248,7 @@
 (rule
   (targets opam-repo-297366c)
   (action
-   (run git clone -q -b local-branch-297366c --single-branch %{dep:./opam-repository.git} %{targets})))
+   (run git -C %{dep:./opam-repository.git} worktree add -q ../%{targets} 297366c)))
 
 (rule
   (targets root-297366c)
@@ -1277,7 +1262,7 @@
 (rule
   (targets opam-repo-3235916)
   (action
-   (run git clone -q -b local-branch-3235916 --single-branch %{dep:./opam-repository.git} %{targets})))
+   (run git -C %{dep:./opam-repository.git} worktree add -q ../%{targets} 3235916)))
 
 (rule
   (targets root-3235916)
@@ -1291,7 +1276,7 @@
 (rule
   (targets opam-repo-7090735c)
   (action
-   (run git clone -q -b local-branch-7090735c --single-branch %{dep:./opam-repository.git} %{targets})))
+   (run git -C %{dep:./opam-repository.git} worktree add -q ../%{targets} 7090735c)))
 
 (rule
   (targets root-7090735c)
@@ -1305,7 +1290,7 @@
 (rule
   (targets opam-repo-7371c1d9)
   (action
-   (run git clone -q -b local-branch-7371c1d9 --single-branch %{dep:./opam-repository.git} %{targets})))
+   (run git -C %{dep:./opam-repository.git} worktree add -q ../%{targets} 7371c1d9)))
 
 (rule
   (targets root-7371c1d9)
@@ -1319,7 +1304,7 @@
 (rule
   (targets opam-repo-a5d7cdc0)
   (action
-   (run git clone -q -b local-branch-a5d7cdc0 --single-branch %{dep:./opam-repository.git} %{targets})))
+   (run git -C %{dep:./opam-repository.git} worktree add -q ../%{targets} a5d7cdc0)))
 
 (rule
   (targets root-a5d7cdc0)
@@ -1333,7 +1318,7 @@
 (rule
   (targets opam-repo-ad4dd344)
   (action
-   (run git clone -q -b local-branch-ad4dd344 --single-branch %{dep:./opam-repository.git} %{targets})))
+   (run git -C %{dep:./opam-repository.git} worktree add -q ../%{targets} ad4dd344)))
 
 (rule
   (targets root-ad4dd344)
@@ -1347,7 +1332,7 @@
 (rule
   (targets opam-repo-c1842d168d)
   (action
-   (run git clone -q -b local-branch-c1842d168d --single-branch %{dep:./opam-repository.git} %{targets})))
+   (run git -C %{dep:./opam-repository.git} worktree add -q ../%{targets} c1842d168d)))
 
 (rule
   (targets root-c1842d168d)
@@ -1361,7 +1346,7 @@
 (rule
   (targets opam-repo-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a)
   (action
-   (run git clone -q -b local-branch-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a --single-branch %{dep:./opam-repository.git} %{targets})))
+   (run git -C %{dep:./opam-repository.git} worktree add -q ../%{targets} c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a)))
 
 (rule
   (targets root-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a)
@@ -1375,7 +1360,7 @@
 (rule
   (targets opam-repo-c1d23f0e)
   (action
-   (run git clone -q -b local-branch-c1d23f0e --single-branch %{dep:./opam-repository.git} %{targets})))
+   (run git -C %{dep:./opam-repository.git} worktree add -q ../%{targets} c1d23f0e)))
 
 (rule
   (targets root-c1d23f0e)
@@ -1389,7 +1374,7 @@
 (rule
   (targets opam-repo-de897adf36c4230dfea812f40c98223b31c4521a)
   (action
-   (run git clone -q -b local-branch-de897adf36c4230dfea812f40c98223b31c4521a --single-branch %{dep:./opam-repository.git} %{targets})))
+   (run git -C %{dep:./opam-repository.git} worktree add -q ../%{targets} de897adf36c4230dfea812f40c98223b31c4521a)))
 
 (rule
   (targets root-de897adf36c4230dfea812f40c98223b31c4521a)
@@ -1403,7 +1388,7 @@
 (rule
   (targets opam-repo-f372039d)
   (action
-   (run git clone -q -b local-branch-f372039d --single-branch %{dep:./opam-repository.git} %{targets})))
+   (run git -C %{dep:./opam-repository.git} worktree add -q ../%{targets} f372039d)))
 
 (rule
   (targets root-f372039d)

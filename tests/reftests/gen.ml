@@ -40,19 +40,13 @@ let run_rule ~base_name ~archive_hash ~condition =
    (run ./run.exe %%{exe:../../src/client/opamMain.exe.exe} %%{dep:%s.test} %%{read-lines:testing-env}))))
 |} (base_name^".out") (opamroot_directory ~archive_hash) condition base_name
 
-let archive_download_rule archive_hashes =
-  let init_local_branch archive_hash =
-   Format.sprintf {|
-   (run git -C ./opam-repository.git branch local-branch-%s %s)|}
-     archive_hash archive_hash
-  in
+let archive_download_rule () =
   Format.sprintf {|
 (rule
  (targets opam-repository.git)
  (action
-  (progn
-   (run git clone -q --bare --single-branch https://github.com/ocaml/opam-repository)%s)))
-|} (String.concat "" (List.map init_local_branch (StringSet.elements archive_hashes)))
+  (run git clone -q --bare --single-branch https://github.com/ocaml/opam-repository)))
+|}
 
 let default_repo_rule =
   Format.sprintf {|
@@ -71,7 +65,7 @@ let archive_unpack_rule archive_hash =
 (rule
   (targets %s)
   (action
-   (run git clone -q -b local-branch-%s --single-branch %%{dep:./opam-repository.git} %%{targets})))
+   (run git -C %%{dep:./opam-repository.git} worktree add -q ../%%{targets} %s)))
 |} (repo_directory ~archive_hash) archive_hash
 
 let opam_init_rule archive_hash =
@@ -116,7 +110,7 @@ let () =
   in
   print_string default_repo_rule;
   print_string (opam_init_rule null_hash);
-  print_string (archive_download_rule archive_hashes);
+  print_string (archive_download_rule ());
   StringSet.iter
     (fun archive_hash ->
        print_string (archive_unpack_rule archive_hash);
