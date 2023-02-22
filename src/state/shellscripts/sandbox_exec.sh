@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -ue
 
 POL='(version 1)(allow default)(deny network*)(deny file-write*)'
