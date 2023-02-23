@@ -71,6 +71,12 @@ type t = {
   no_depexts: bool;
 }
 
+let win_space_redirection root =
+  let redirected = OpamPath.redirected root in
+  if OpamFilename.exists redirected then
+    OpamFilename.Dir.of_string (OpamFilename.read redirected)
+  else root
+
 let default_root =
   (* On Windows, if a .opam directory is found in %HOME% or %USERPROFILE% then
      then we'll use it. Otherwise, we use %LOCALAPPDATA%. *)
@@ -88,7 +94,7 @@ let default_root =
   concat_and_resolve local_appdata "opam"
 
 let default = {
-  root_dir = default_root;
+  root_dir = win_space_redirection default_root;
   original_root_dir = default_root;
   root_from = `Default;
   current_switch = None;
@@ -185,7 +191,7 @@ let initk k =
     | None -> None, None, None
     | Some root ->
       let root = OpamFilename.Dir.of_string root in
-      Some root, Some root, Some `Env
+      Some (win_space_redirection root), Some root, Some `Env
   in
   let current_switch, switch_from =
     match E.switch () with
@@ -219,11 +225,11 @@ let init ?noop:_ = initk (fun () -> ())
 
 let opamroot ?root_dir () =
   match root_dir with
-  | Some root -> `Command_line, root
+  | Some root -> `Command_line, win_space_redirection root
   | None ->
     match OpamStd.Env.getopt "OPAMROOT" with
     | Some root ->
-      `Env, OpamFilename.Dir.of_string root
+      `Env, win_space_redirection (OpamFilename.Dir.of_string root)
     | None ->
       `Default, default.root_dir
 

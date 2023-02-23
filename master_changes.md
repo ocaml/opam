@@ -29,6 +29,7 @@ users)
   * Enhance the Git menu by warning if the user appears to need to restart the shell to pick up PATH changes [#5963 @dra27]
   * Include Git for Windows installations in the list of possibilities where the user instructed Git-for-Windows setup not to update PATH [#5963 @dra27]
   * [BUG] Fail if `--git-location` points to a directory not containing git [#6000 @dra27]
+  * Redirect the opam root to `C:\opamroot-xxx` when the opam root contains spaces on Windows [#5457 @rjbou @dra27]
 
 ## Config report
 
