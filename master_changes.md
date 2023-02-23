@@ -177,6 +177,7 @@ users)
   * Expose `OpamSolution.print_depext_msg` [#5994 @dra27]
   * Extracted `OpamSolution.install_sys_packages` from `OpamSolution.install_depexts` [#5994 @dra27]
   * `OpamInitDefaults.required_packages_for_cygwin`: no longer includes git; as the need to add that is computed in `OpamClient` [#6000 @dra27]
+  * `OpamClientConfig.opam_init`: add `original_root_dir` argument that contains the original roo directory before redirection [#5457 @rjbou]
 
 ## opam-repository
   * `OpamDownload.download_command`: separate output from stdout and stderr [#5984 @kit-ty-kate]
@@ -185,6 +186,7 @@ users)
   * `OpamEnv.cygwin_non_shadowed_programs`: exposes the list of executables (not including git) which should always come from Cygwin [#6000 @dra27]
   * `opamSysInteract.Cygwin.install`: de-label `packages` argument [#6000 @dra27]
   * `OpamSysInteract.Cygwin.check_install` renamed to `analyse_install` which now also returns whether the installation found was MSYS2 or Cygwin [#6000 @dra27]
+  * `OpamStateConfig.r`, `OpamStateConfig.init`: add `original_root_dir` field to config record and argument that contains the original root directory before redirection [#5457 @rjbou]
 
 ## opam-solver
 

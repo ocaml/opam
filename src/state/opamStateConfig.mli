@@ -38,6 +38,7 @@ end
 
 type t = private {
   root_dir: OpamFilename.Dir.t;
+  original_root_dir: OpamFilename.Dir.t;
   current_switch: OpamSwitch.t option;
   switch_from: provenance;
   jobs: int Lazy.t;
@@ -56,6 +57,7 @@ type t = private {
 
 type 'a options_fun =
   ?root_dir:OpamFilename.Dir.t ->
+  ?original_root_dir:OpamFilename.Dir.t ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:provenance ->
   ?jobs:(int Lazy.t) ->
