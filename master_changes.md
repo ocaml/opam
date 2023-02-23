@@ -192,6 +192,7 @@ users)
   * `OpamPath`: remove `OpamPath.Switch.last_env` function in favor to `OpamPath.last_env` as the files are no more stored in switch directory [#5962 @moyodiallo - fix #5823]
   * `OpamFilter.map_up`: correct handling of FDefined [#5983 @dra27]
   * `OpamFilter.fold_down_left`: correct handling of FDefined and FUndef [#5983 @dra27]
+  * `OpamPath`: add `redirected` the file name of redirected opam root [#5457 @rjbou]
 
 ## opam-core
   * `OpamStd.String`: add `split_quoted` that preserves quoted separator [#5935 @dra27]

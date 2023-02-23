@@ -31,6 +31,9 @@ val lock: t -> filename
 (** Main configuration file: {i $opam/config} *)
 val config: t -> OpamFile.Config.t OpamFile.t
 
+(** Redirection file for opam root: {i $opam/redirected-opamroot} *)
+val redirected: t -> OpamFilename.t
+
 (** The list of configuration files location used by default ({i /etc/opamrc}
     and {i ~/.opamrc}). More general (lower priority) first. *)
 val init_config_files: unit -> OpamFile.InitConfig.t OpamFile.t list

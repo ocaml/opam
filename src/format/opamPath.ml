@@ -19,6 +19,8 @@ let ( /- ) dir f = OpamFile.make (dir // f)
 
 let config t = t /- "config"
 
+let redirected t = t // "redirected-opamroot"
+
 let init_config_files () =
   List.map OpamFile.make [
     OpamFilename.Dir.of_string (OpamStd.Sys.etc ()) // "opamrc";
