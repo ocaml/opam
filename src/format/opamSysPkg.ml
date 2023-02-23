@@ -43,24 +43,3 @@ module Map = OpamStd.Map.Make(O)
 let raw_set set =
   OpamStd.String.Set.fold (fun spkg set-> Set.add (of_string spkg) set)
     set Set.empty
-
-type status =
-  {
-    s_available : Set.t;
-    (** Package available but not installed *)
-
-    s_not_found : Set.t;
-    (** Package unavailable on this system *)
-  }
-
-
-let status_empty =
-  {
-    s_available  = Set.empty;
-    s_not_found  = Set.empty;
-  }
-
-let string_of_status sp =
-  Printf.sprintf "available: %s; not_found: %s"
-    (Set.to_string sp.s_available)
-    (Set.to_string sp.s_not_found)

@@ -76,3 +76,8 @@ val all_package_flags: package_flag list
 (** Map on a solver result *)
 val map_success: ('a -> 'b) -> ('a,'fail) result -> ('b,'fail) result
 val iter_success: ('a -> unit) -> ('a, 'b) result -> unit
+
+(** System packages *)
+val sys_pkg_status_empty: sys_pkg_status
+val string_of_sys_pkg_status: sys_pkg_status -> string
+

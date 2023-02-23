@@ -221,3 +221,14 @@ let map_success f = function
 let iter_success f = function
   | Success x -> f x
   | Conflicts _ -> ()
+
+(** System packages *)
+let sys_pkg_status_empty = {
+  sys_available  = OpamSysPkg.Set.empty;
+  sys_not_found  = OpamSysPkg.Set.empty;
+}
+
+let string_of_sys_pkg_status sp =
+  Printf.sprintf "available: %s; not_found: %s"
+    (OpamSysPkg.Set.to_string sp.sys_available)
+    (OpamSysPkg.Set.to_string sp.sys_not_found)

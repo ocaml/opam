@@ -419,4 +419,10 @@ type json = OpamJson.t
 
 type sys_package = OpamSysPkg.t
 
-type sys_pkg_status = OpamSysPkg.status
+type sys_pkg_status = {
+  sys_available : OpamSysPkg.Set.t;
+  (** Package available but not installed *)
+
+  sys_not_found : OpamSysPkg.Set.t;
+  (** Package unavailable on this system *)
+}

@@ -379,7 +379,7 @@ let parallel_apply t
       (* Turns out these depexts weren't needed after all. Remember that and
          make the bypass permanent. *)
       try
-        (OpamPackage.Map.find nv (Lazy.force !t_ref.sys_packages)).s_available
+        (OpamPackage.Map.find nv (Lazy.force !t_ref.sys_packages)).sys_available
       with Not_found -> OpamSysPkg.Set.empty
     in
     let bypass = OpamSysPkg.Set.union missing_depexts !bypass_ref in
@@ -1137,8 +1137,8 @@ let get_depexts ?(force=false) ?(recover=false) t packages =
     OpamPackage.Set.fold (fun pkg (avail,nf) ->
         match OpamPackage.Map.find_opt pkg sys_packages with
         | Some sys ->
-          OpamSysPkg.(Set.union avail sys.s_available),
-          OpamSysPkg.(Set.union nf sys.s_not_found)
+          OpamSysPkg.(Set.union avail sys.sys_available),
+          OpamSysPkg.(Set.union nf sys.sys_not_found)
         | None -> avail, nf)
       packages (OpamSysPkg.Set.empty, OpamSysPkg.Set.empty)
   in
@@ -1157,8 +1157,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
           match OpamPackage.Map.find_opt nv sys_map with
           | Some status ->
             OpamPackage.Map.add
-              nv { status with OpamSysPkg.s_available =
-                                 f status.OpamSysPkg.s_available }
+              nv { status with sys_available = f status.sys_available }
               sys_map
           | None -> sys_map)
         packages

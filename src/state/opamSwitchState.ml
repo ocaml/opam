@@ -209,8 +209,8 @@ let depexts_status_of_packages_raw
           avail, not_found
       in
       OpamPackage.Map.map (fun set ->
-          { OpamSysPkg.s_available = set %% avail;
-            OpamSysPkg.s_not_found = set %% not_found}
+          { sys_available = set %% avail;
+            sys_not_found = set %% not_found}
         ) syspkg_map
     | exception (Failure msg) ->
       OpamConsole.note "%s\nYou can disable this check using 'opam \
@@ -223,9 +223,9 @@ let depexts_status_of_packages_raw
 
 let depexts_unavailable_raw sys_packages nv =
   match OpamPackage.Map.find_opt nv sys_packages with
-  | Some { OpamSysPkg.s_not_found; _}
-    when not (OpamSysPkg.Set.is_empty s_not_found) ->
-    Some s_not_found
+  | Some { sys_not_found; _}
+    when not (OpamSysPkg.Set.is_empty sys_not_found) ->
+    Some sys_not_found
   | _ -> None
 
 let load lock_kind gt rt switch =
@@ -536,8 +536,8 @@ let load lock_kind gt rt switch =
     let sys_packages =
       OpamPackage.Map.filter (fun pkg spkg ->
           OpamPackage.Set.mem pkg installed
-          && not (OpamSysPkg.Set.is_empty spkg.OpamSysPkg.s_available
-                  && OpamSysPkg.Set.is_empty spkg.OpamSysPkg.s_not_found))
+          && not (OpamSysPkg.Set.is_empty spkg.sys_available
+                  && OpamSysPkg.Set.is_empty spkg.sys_not_found))
         (Lazy.force sys_packages)
     in
     if OpamPackage.Map.is_empty sys_packages then
@@ -548,8 +548,7 @@ let load lock_kind gt rt switch =
     let sgl_pkg = OpamPackage.Set.is_singleton changed in
     let open OpamSysPkg.Set.Op in
     let missing_map =
-      OpamPackage.Map.map (fun sys ->
-          sys.OpamSysPkg.s_available ++ sys.OpamSysPkg.s_not_found)
+      OpamPackage.Map.map (fun sys -> sys.sys_available ++ sys.sys_not_found)
         sys_packages
     in
     let missing_set =
@@ -994,8 +993,7 @@ let universe st
   in
   let missing_depexts =
     OpamPackage.Map.fold (fun nv status acc ->
-        if OpamSysPkg.Set.is_empty status.OpamSysPkg.s_available
-        then acc
+        if OpamSysPkg.Set.is_empty status.sys_available then acc
         else OpamPackage.Set.add nv acc)
       (Lazy.force st.sys_packages)
       OpamPackage.Set.empty
