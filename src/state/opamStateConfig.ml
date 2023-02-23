@@ -53,6 +53,7 @@ end
 
 type t = {
   root_dir: OpamFilename.Dir.t;
+  original_root_dir: OpamFilename.Dir.t;
   current_switch: OpamSwitch.t option;
   switch_from: provenance;
   jobs: int Lazy.t;
@@ -87,6 +88,7 @@ let default = {
       in
       concat_and_resolve local_appdata "opam"
     );
+  original_root_dir = default_root ();
   current_switch = None;
   switch_from = `Default;
   jobs = lazy (max 1 (OpamSysPoll.cores () - 1));
@@ -109,6 +111,7 @@ let default = {
 
 type 'a options_fun =
   ?root_dir:OpamFilename.Dir.t ->
+  ?original_root_dir:OpamFilename.Dir.t ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:provenance ->
   ?jobs:(int Lazy.t) ->
@@ -127,6 +130,7 @@ type 'a options_fun =
 
 let setk k t
     ?root_dir
+    ?original_root_dir
     ?current_switch
     ?switch_from
     ?jobs
@@ -145,6 +149,7 @@ let setk k t
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
     root_dir = t.root_dir + root_dir;
+    original_root_dir = t.original_root_dir + original_root_dir;
     current_switch =
       (match current_switch with None -> t.current_switch | s -> s);
     switch_from = t.switch_from + switch_from;
@@ -177,6 +182,7 @@ let initk k =
   in
   setk (setk (fun c -> r := c; k)) !r
     ?root_dir:(E.root () >>| OpamFilename.Dir.of_string)
+    ?original_root_dir:(E.root () >>| OpamFilename.Dir.of_string)
     ?current_switch
     ?switch_from
     ?jobs:(E.jobs () >>| fun s -> lazy s)
