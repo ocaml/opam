@@ -86,6 +86,12 @@ let run_command_exit_code ?vars ?allow_stdin ?verbose cmd args =
   in
   code
 
+type test_setup = {
+  install: bool;
+  installed: [ `all | `none | `set of OpamSysPkg.Set.t];
+  available: [ `all | `none | `set of OpamSysPkg.Set.t];
+}
+
 (* Internal module to get package manager commands defined in global config file *)
 module Commands = struct
 
@@ -111,8 +117,7 @@ type families =
   | Arch
   | Centos
   | Debian
-  | DummySuccess
-  | DummyFailure
+  | Dummy of test_setup
   | Freebsd
   | Gentoo
   | Homebrew
@@ -128,6 +133,42 @@ let family ~env () =
   | None ->
     Printf.ksprintf failwith
       "External dependency unusable, OS family not detected."
+  | Some family when OpamStd.String.starts_with ~prefix:"dummy-" family ->
+    let error () =
+      OpamConsole.error_and_exit `Bad_arguments
+        "Syntax error on dummy depext test family. Syntax is \
+         dummy-<success|failure>[:<*|0|pkgslist>:*|0|pkgslist>]"
+    in
+    let install, installed, available =
+      match OpamStd.String.cut_at family ':' with
+      | Some (install, packages) ->
+        let installed, available =
+          match OpamStd.String.cut_at packages ':' with
+          | Some (installed, available) ->
+            Some installed, Some available
+          | None -> error ()
+        in
+        install, installed, available
+      | None -> family, None, None
+    in
+    let install =
+      match install with
+      | "dummy-success" -> true
+      | "dummy-failure" -> false
+      | _ -> error()
+    in
+    let parse_packages ~default = function
+      | Some "" | None -> default
+      | Some "*" -> `all
+      | Some "0" -> `none
+      | Some set ->
+        `set (OpamStd.String.split set ','
+              |> List.map OpamSysPkg.of_string
+              |> OpamSysPkg.Set.of_list)
+    in
+    let installed = parse_packages ~default:`none installed in
+    let available = parse_packages ~default:`all available in
+    Dummy { install; installed; available; }
   | Some family ->
     match family with
     | "alpine" -> Alpine
@@ -144,8 +185,6 @@ let family ~env () =
             "External dependency handling not supported for OS family 'bsd'."
       end
     | "debian" | "ubuntu" -> Debian
-    | "dummy-success" -> DummySuccess
-    | "dummy-failure" -> DummyFailure
     | "gentoo" -> Gentoo
     | "homebrew" -> Homebrew
     | "macports" -> Macports
@@ -479,7 +518,20 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       |> with_regexp_sgl re_pkg
     in
     compute_sets_with_virtual get_avail_w_virtuals get_installed
-  | DummySuccess | DummyFailure -> compute_sets OpamSysPkg.Set.empty
+  | Dummy test ->
+    let sys_installed =
+      match test.installed with
+      | `all -> packages
+      | `none -> OpamSysPkg.Set.empty
+      | `set pkgs -> pkgs %% packages
+    in
+    let sys_available =
+      match test.available with
+      | `all -> packages
+      | `none -> OpamSysPkg.Set.empty
+      | `set pkgs -> pkgs %% packages
+    in
+    compute_sets ~sys_available sys_installed
   | Freebsd ->
     let sys_installed =
       run_query_command "pkg" ["query"; "%n\n%o"]
@@ -700,8 +752,11 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
        `AsUser "rpm", "-q"::"--whatprovides"::packages], None
   | Debian -> [`AsAdmin "apt-get", "install"::yes ["-qq"; "-yy"] packages],
       (if unsafe_yes then Some ["DEBIAN_FRONTEND", "noninteractive"] else None)
-  | DummySuccess -> [`AsUser "echo", packages], None
-  | DummyFailure -> [`AsUser "false", []], None
+  | Dummy test ->
+    if test.install then
+      [`AsUser "echo", packages], None
+    else
+      [`AsUser "false", []], None
   | Freebsd -> [`AsAdmin "pkg", "install"::yes ["-y"] packages], None
   | Gentoo -> [`AsAdmin "emerge", yes ~no:["-a"] [] packages], None
   | Homebrew ->
@@ -772,8 +827,9 @@ let update ?(env=OpamVariable.Map.empty) config =
     | Arch -> Some (`AsAdmin "pacman", ["-Sy"])
     | Centos -> Some (`AsAdmin (Lazy.force yum_cmd), ["makecache"])
     | Debian -> Some (`AsAdmin "apt-get", ["update"])
-    | DummySuccess -> None
-    | DummyFailure -> Some (`AsUser "false", [])
+    | Dummy test ->
+      if test.install then None else
+        Some (`AsUser "false", [])
     | Gentoo -> Some (`AsAdmin "emerge", ["--sync"])
     | Homebrew -> Some (`AsUser "brew", ["update"])
     | Macports -> Some (`AsAdmin "port", ["sync"])
