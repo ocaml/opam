@@ -1,0 +1,25 @@
+N0REP0
+### : Redirection :
+### rm -rf $OPAMROOT
+### OPAMROOT="roots/with path"
+### opam init -na --bare --bypass-checks default REPO/
+No configuration file found, using built-in defaults.
+[NOTE] Your opam root path '${BASEDIR}/roots/with path' contains a space, we'll redirect to '/tmp/opamroot'
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+### opam var root --debug --debug-level=-1
+CLI                             Parsing CLI version 2.2
+GSTATE                          LOAD-GLOBAL-STATE @ C:\tmp\opamroot
+C:\tmp\opamroot
+### cat 'roots/with path/redirected-opamroot'
+/tmp/opamroot
+### opam switch create --empty test
+### opam switch --debug --debug-level=-1
+CLI                             Parsing CLI version 2.2
+GSTATE                          LOAD-GLOBAL-STATE @ C:\tmp\opamroot
+SWITCH                          list
+#   switch  compiler  description
+->  test              test
+### echo $OPAMROOT
+roots/with path
