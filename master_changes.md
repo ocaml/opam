@@ -678,3 +678,4 @@ users)
   * `OpamURL`: add module `SWHID` that contains helpers from and to internal swhid url [#4859 @rjbou]
   * `OpamSystem.read_command_output`: add an optional parameter to unmerge stdout and stderr [#4859 @rjbou]
   * `OpamSWHID`: add module to handle swhid [#4859 @rjbou]
+  * `OpamProcess`: expose the `command` type as a private type [#5452 @Leonidas-from-XIV]

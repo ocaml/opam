@@ -12,7 +12,18 @@
 (** Process and job handling, with logs, termination status, etc. *)
 
 (** The type of shell commands *)
-type command
+type command = private {
+  cmd: string;
+  args: string list;
+  cmd_text: string option;
+  cmd_dir: string option;
+  cmd_env: string array option;
+  cmd_stdin: bool option;
+  cmd_stdout: string option;
+  cmd_verbose: bool option;
+  cmd_name: string option;
+  cmd_metadata: (string * string) list option;
+}
 
 (** Builds a shell command for later execution.
     @param env         environment for the command
