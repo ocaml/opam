@@ -33,3 +33,199 @@ false
 [NOTE] You can retry with '--assume-depexts' to skip this check, or run 'opam option depext=false' to permanently disable handling of system packages.
 
 # Return code 10 #
+### : filter with installed :
+### opam var --global os-family=dummy-success
+Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
+### <pkg:conf-b.1>
+opam-version: "2.0"
+depends: "conf-os"
+### <pkg:conf-os.1>
+opam-version: "2.0"
+depends: [ "conf-os1" | "conf-os2" ]
+depexts:[
+  [ "os1-depext" ] { conf-os1:installed }
+  [ "os2-depext" ] { conf-os2:installed }
+]
+### <pkg:conf-os2.1>
+opam-version: "2.0"
+conflicts: "conf-os1"
+### <pkg:conf-os1.1>
+opam-version: "2.0"
+conflicts: "conf-os2"
+### opam install conf-os | sed-cmd echo
+The following actions will be performed:
+=== install 2 packages
+  - install conf-os  1
+  - install conf-os1 1 [required by conf-os]
+
+The following system packages will first need to be installed:
+    os1-depext
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+echo "os1-depext"
+- os1-depext
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed conf-os1.1
+-> installed conf-os.1
+Done.
+### opam remove conf-os
+[WARNING] Opam package conf-os.1 depends on the following system package that can no longer be found: os1-depext
+The following actions will be performed:
+=== remove 1 package
+  - remove conf-os 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   conf-os.1
+Done.
+### OPAMVAR_os_family=dummy-success::0 opam install conf-os --show
+[ERROR] Package conf-os depends on the unavailable system package 'os1-depext'. You can use `--no-depexts' to attempt installation anyway.
+# Return code 5 #
+### OPAMVAR_os_family=dummy-success::0 opam install conf-os
+[ERROR] Package conf-os depends on the unavailable system package 'os1-depext'. You can use `--no-depexts' to attempt installation anyway.
+# Return code 5 #
+### opam remove conf-os1 -a
+The following actions will be performed:
+=== remove 1 package
+  - remove conf-os1 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   conf-os1.1
+Done.
+### OPAMVAR_os_family=dummy-success::0 opam install conf-os --show
+The following actions would be performed:
+=== install 2 packages
+  - install conf-os  1
+  - install conf-os1 1 [required by conf-os]
+[WARNING] These additional system packages are required, but not available on your system: os1-depext
+### OPAMVAR_os_family=dummy-success::0 opam install conf-os
+The following actions will be performed:
+=== install 2 packages
+  - install conf-os  1
+  - install conf-os1 1 [required by conf-os]
+[WARNING] These additional system packages are required, but not available on your system: os1-depext
+[ERROR] Some packages have missing dependencies after resolution:
+           - conf-os.1: os1-depext
+
+# Return code 5 #
+### OPAMVAR_os_family=dummy-success::os1-depext opam install conf-os --show
+The following actions would be performed:
+=== install 2 packages
+  - install conf-os  1
+  - install conf-os1 1 [required by conf-os]
+
+The following system packages will first need to be installed:
+    os1-depext
+### OPAMVAR_os_family=dummy-success::os1-depext opam install conf-os | sed-cmd echo
+The following actions will be performed:
+=== install 2 packages
+  - install conf-os  1
+  - install conf-os1 1 [required by conf-os]
+
+The following system packages will first need to be installed:
+    os1-depext
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+echo "os1-depext"
+- os1-depext
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed conf-os1.1
+-> installed conf-os.1
+Done.
+### opam remove conf-os -a
+[WARNING] Opam package conf-os.1 depends on the following system package that can no longer be found: os1-depext
+The following actions will be performed:
+=== remove 2 packages
+  - remove conf-os  1
+  - remove conf-os1 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   conf-os.1
+-> removed   conf-os1.1
+Done.
+### OPAMVAR_os_family=dummy-success:os1-depext:os2-depext opam install conf-os
+The following actions will be performed:
+=== install 2 packages
+  - install conf-os  1
+  - install conf-os1 1 [required by conf-os]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed conf-os1.1
+-> installed conf-os.1
+Done.
+### opam remove conf-os -a
+[WARNING] Opam package conf-os.1 depends on the following system package that can no longer be found: os1-depext
+The following actions will be performed:
+=== remove 2 packages
+  - remove conf-os  1
+  - remove conf-os1 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   conf-os.1
+-> removed   conf-os1.1
+Done.
+### <pkg:c.3>
+opam-version: "2.0"
+### <pkg:conf-b.1>
+opam-version: "2.0"
+depends: "conf-os"
+### <pkg:conf-oss.1>
+opam-version: "2.0"
+depends: [ "conf-os1" | "conf-os2" "c" ]
+depexts:[
+  [ "depext-1" ]   { os-family="dummy-success" }
+  [ "os1-depext" ] { os-family="dummy-success" & conf-os1:installed }
+  [ "os2-depext" ] { os-family="dummy-success" & conf-os1:installed & c:version > "2"}
+  [ "os3-depext" ] { os-family="dummy-success" & conf-os1:installed & c:version > "4"}
+]
+### opam install conf-oss | sed-cmd echo
+The following actions will be performed:
+=== install 3 packages
+  - install c        3 [required by conf-oss]
+  - install conf-os1 1 [required by conf-oss]
+  - install conf-oss 1
+
+The following system packages will first need to be installed:
+    depext-1 os1-depext os2-depext
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+echo "depext-1" "os1-depext" "os2-depext"
+- depext-1 os1-depext os2-depext
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed c.3
+-> installed conf-os1.1
+-> installed conf-oss.1
+Done.
+### opam option depext-bypass --global
+[]
+### opam option depext-bypass --switch test
+[]
