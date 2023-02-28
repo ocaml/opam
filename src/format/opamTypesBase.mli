@@ -81,3 +81,4 @@ val iter_success: ('a -> unit) -> ('a, 'b) result -> unit
 val sys_pkg_status_empty: sys_pkg_status
 val string_of_sys_pkg_status: sys_pkg_status -> string
 
+val sys_pkg_status_wf_empty: sys_pkg_status_w_filter

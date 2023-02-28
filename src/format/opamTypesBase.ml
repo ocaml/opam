@@ -232,3 +232,8 @@ let string_of_sys_pkg_status sp =
   Printf.sprintf "available: %s; not_found: %s"
     (OpamSysPkg.Set.to_string sp.sys_available)
     (OpamSysPkg.Set.to_string sp.sys_not_found)
+
+let sys_pkg_status_wf_empty = {
+  sys_available_wf  = OpamSysPkg.Map.empty;
+  sys_not_found_wf  = OpamSysPkg.Map.empty;
+}

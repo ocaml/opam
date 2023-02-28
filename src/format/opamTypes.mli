@@ -426,3 +426,10 @@ type sys_pkg_status = {
   sys_not_found : OpamSysPkg.Set.t;
   (** Package unavailable on this system *)
 }
+
+(** List [sys_pkg_status] but keep filter with unresolved variable at switch
+    load, in order to be resolved when applying solution *)
+type sys_pkg_status_w_filter = {
+  sys_available_wf :  filter OpamSysPkg.Map.t ;
+  sys_not_found_wf :  filter OpamSysPkg.Map.t;
+}
