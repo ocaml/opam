@@ -135,7 +135,7 @@ type +'lock switch_state = {
   packages: package_set;
   (** The set of all known packages *)
 
-  sys_packages: sys_pkg_status package_map Lazy.t;
+  sys_packages: sys_pkg_status_w_filter package_map Lazy.t;
   (** Map of package and their system dependencies packages status. Only
       initialised for otherwise available packages *)
 

@@ -379,7 +379,10 @@ let parallel_apply t
       (* Turns out these depexts weren't needed after all. Remember that and
          make the bypass permanent. *)
       try
-        (OpamPackage.Map.find nv (Lazy.force !t_ref.sys_packages)).sys_available
+        (* Filters already resolved at this stage *)
+        (OpamPackage.Map.find nv (Lazy.force !t_ref.sys_packages)).sys_available_wf
+        |> OpamSysPkg.Map.keys
+        |> OpamSysPkg.Set.of_list
       with Not_found -> OpamSysPkg.Set.empty
     in
     let bypass = OpamSysPkg.Set.union missing_depexts !bypass_ref in
@@ -1115,12 +1118,35 @@ let print_depext_msg (avail, nf) =
 (* Gets depexts from the state, without checking again, unless [recover] is
    true. *)
 let get_depexts ?(force=false) ?(recover=false) t packages =
-  if not force && OpamStateConfig.(!r.no_depexts) then OpamSysPkg.Set.empty else
+  if not force && OpamStateConfig.(!r.no_depexts) then
+    OpamSysPkg.Set.empty, OpamPackage.Map.empty
+  else
+  let sys_packages, sys_packages_status =
+    let env =
+      OpamPackageVar.resolve
+        OpamPackage.Set.Op.{t with installed = t.installed ++ packages}
+    in
+    let eval map =
+      OpamSysPkg.Map.fold (fun spkg filter (set, map) ->
+          if OpamFilter.eval_to_bool ~default:false env filter then
+            OpamSysPkg.Set.add spkg set,
+            OpamSysPkg.Map.add spkg (FBool true) map
+          else
+            set, map)
+        map (OpamSysPkg.Set.empty, OpamSysPkg.Map.empty)
+    in
+    OpamPackage.Map.fold (fun nv status_wf (spkg, spkgf) ->
+        let sys_available, sys_available_wf = eval status_wf.sys_available_wf in
+        let sys_not_found, sys_not_found_wf = eval status_wf.sys_not_found_wf in
+        OpamPackage.Map.add nv { sys_available; sys_not_found } spkg,
+        OpamPackage.Map.add nv { sys_available_wf; sys_not_found_wf } spkgf)
+      (Lazy.force t.sys_packages) OpamPackage.Map.(empty, empty)
+  in
   let sys_packages =
     if recover then
       OpamSwitchState.depexts_status_of_packages t packages
     else
-      let base = Lazy.force t.sys_packages in
+      let base = sys_packages in
       (* workaround: st.sys_packages is not always updated with added
          packages *)
       let more_pkgs =
@@ -1143,12 +1169,13 @@ let get_depexts ?(force=false) ?(recover=false) t packages =
       packages (OpamSysPkg.Set.empty, OpamSysPkg.Set.empty)
   in
   print_depext_msg (avail, nf);
-  avail
+  avail, sys_packages_status
 
 let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
-  let sys_packages =
+  let sys_packages, sys_packages_status =
     get_depexts ~force:force_depext ~recover:force_depext t packages
   in
+  let t = { t with sys_packages = lazy sys_packages_status } in
   let env = t.switch_global.global_variables in
   let config = t.switch_global.config in
   let map_sysmap f t =
@@ -1157,7 +1184,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
           match OpamPackage.Map.find_opt nv sys_map with
           | Some status ->
             OpamPackage.Map.add
-              nv { status with sys_available = f status.sys_available }
+              nv { status with sys_available_wf = f status.sys_available_wf }
               sys_map
           | None -> sys_map)
         packages
@@ -1236,7 +1263,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   and auto_install t sys_packages =
     try
       OpamSysInteract.install ~env config sys_packages; (* handles dry_run *)
-      map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
+      map_sysmap (fun _ -> OpamSysPkg.Map.empty) t
     with Failure msg ->
       OpamConsole.error "%s" msg;
       check_again t sys_packages
@@ -1248,7 +1275,10 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     let still_missing = needed ++ notfound in
     let installed = sys_packages -- still_missing in
     let t =
-      map_sysmap (fun sysp -> OpamSysPkg.Set.diff sysp installed) t
+      map_sysmap (fun sysp ->
+          OpamSysPkg.Set.fold (fun spkg map -> OpamSysPkg.Map.remove spkg map)
+            installed sysp)
+        t
     in
     if OpamSysPkg.Set.is_empty still_missing then t else
     if OpamSysPkg.Set.(not (is_empty notfound) && is_empty needed) then
@@ -1397,7 +1427,7 @@ let apply ?ask t ~requested ?print_requested ?add_roots
       let depexts =
         OpamPackage.Set.fold (fun nv depexts ->
             OpamSysPkg.Set.union depexts
-              (OpamSwitchState.depexts t nv))
+              (OpamSwitchState.depexts new_state0 nv))
           new_state.installed OpamSysPkg.Set.empty
       in
       let wrappers =
