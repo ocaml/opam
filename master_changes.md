@@ -89,6 +89,7 @@ users)
 
 ## Config
   * Reset the "jobs" config variable when upgrading from opam 2.0 [#5284 @kit-ty-kate]
+  * Display a warning on hard upgrade when the `jobs` config variable is re-written [#5305 @rjbou]
 
 ## Pin
   * Switch the default version when undefined from ~dev to dev [#4949 @kit-ty-kate]
@@ -198,6 +199,7 @@ users)
   * Set opam root version to 2.1 [#4763 @rjbou] [2.1.0~rc2 #4715]
   * Fix 2.1~alpha2 to 2.1 format upgrade with reinit [#4763 @rjbou - fix #4748] [2.1.0~rc2 #4750]
   * Fix bypass-check handling on reinit [#4750 @rjbou] [#4763 @rjbou] [2.1.0~rc2 #4750 #4756]
+  * Fix root format upgrade when only an inner file format is upgraded : new mechanism does the usual on-the-fly upgrade and keeps the information of needed inner upgrade or no, to perform them when a write lock is required [#5305 @rjbou]
 
 ## Sandbox
   * Sync the behaviour of the macOS sandbox script with Linux's: /tmp is now ready-only [#4719 @kit-ty-kate]
@@ -554,6 +556,10 @@ users)
   * `OpamEnv`: add `env_expansion` [#5352 @dra27]
   * `OpamEnv`: fix invalid argument raised when trying to unzip empty string [#5350 @dra27]
   * `OpamEnv`: skip environment updates and revert with empty strings [#5350 @dra27]
+  * `OpamFormatUpgrade`: add `repo_switch_hard_upgrade` to perform inner layers hard upgrade when needed if write lock is required [#5305 @rjbou]
+  * `OpamGlobalState`: add `as_necessary_repo_switch_upgrade` that checks conditions and call `OpamFormatUpgrade.repo_switch_hard_upgrade` [#5305 @rjbou]
+  * `OpamSwitchState`, `OpamRepositoryState`: at the beginning of `load` function, check if an upgrade is needed with `OpamGlobalState.as_necessary_repo_switch_upgrade` [#5305 @rjbou]
+  * `OpamStataTypes.global_state`: add `global_state_to_upgrade` field to keep incomplete upgrade information [#5305 @rjbou]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]

@@ -46,12 +46,14 @@ type +'a lock = [< unlocked > `Lock_write ] as 'a
 type gt_variables =
   (variable_contents option Lazy.t * string) OpamVariable.Map.t
 
+type gt_changes = { gtc_repo: bool; gtc_switch: bool }
+
 (** Global state corresponding to an opam root and its configuration *)
 type +'lock global_state = {
   global_lock: OpamSystem.lock;
 
   root: OpamPath.t;
-  (** The global OPAM root path (caution: this is stored here but some code may
+  (** The global opam root path (caution: this is stored here but some code may
       rely on OpamStateConfig.root_dir ; in other words, multiple root handling
       isn't really supported at the moment) *)
 
@@ -65,6 +67,11 @@ type +'lock global_state = {
   (** A map of variables that have been defined globally, e.g. through
       `.opam/config`. They may need evaluation so are stored as lazy values.
       The extra string is the supplied variable documentation *)
+
+  global_state_to_upgrade: gt_changes;
+  (** If the global config was upgraded on-the-fly, indicates if the either the repo or switch config
+    require the global config to be written (i.e. a hard upgrade to the global config) *)
+
 } constraint 'lock = 'lock lock
 
 (** State corresponding to the repo/ subdir: all available packages and

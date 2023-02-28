@@ -60,7 +60,7 @@ let load lock_kind =
     OpamConsole.error_and_exit `Configuration_error
       "Opam has not been initialised, please run `opam init'";
   let config_lock = OpamFilename.flock lock_kind (OpamPath.config_lock root) in
-  let config =
+  let config, global_state_to_upgrade =
     try load_config lock_kind global_lock root
     with OpamFormatUpgrade.Upgrade_done _ as e ->
       OpamSystem.funlock config_lock;
@@ -124,7 +124,9 @@ let load lock_kind =
   { global_lock = config_lock;
     root;
     config;
-    global_variables; }
+    global_variables;
+    global_state_to_upgrade;
+    }
 
 let switches gt =
   OpamFile.Config.installed_switches gt.config
@@ -212,4 +214,3 @@ let fix_switch_list gt =
       write gt, gt
     with OpamSystem.Locked -> gt
   else gt
-
