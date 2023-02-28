@@ -32,6 +32,7 @@ users)
   * [BUG] Fix display of pinned packages in action list [#5079 @rjbou]
   * [BUG] Fix spaces in root and switch dirs [#5203 @jonahbeckford]
   * Use menu for init setup [#5057 @AltGr; #5217 @dra27]
+    * ✘ Change default from no to yes for shell update [#5456 @rjbou]
   * Do not show --yes and --no as special global options when using cmdliner >= 1.1 [#5269 @kit-ty-kate]
   * ◈ Add `tree` subcommand to display a dependency tree of currently installed packages [#5171 @cannorin - fix #3775]
   * ◈ `tree` subcommand now supports `--json` option [#5303 @cannorin - fix #5298]
