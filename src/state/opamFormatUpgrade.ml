@@ -1075,12 +1075,12 @@ let downgrade_2_1_switches root conf =
 let from_2_1_alpha_to_2_1_alpha2 ~on_the_fly:_ root conf =
   downgrade_2_1_switches root conf, gtc_none
 
-let from_2_1_alpha2_to_v2_1_rc ~on_the_fly:_ root conf =
+let from_2_1_alpha2_to_2_1_rc ~on_the_fly:_ root conf =
   downgrade_2_1_switches root conf, gtc_none
 
-let from_2_1_rc_to_v2_1 ~on_the_fly:_ _ conf = conf, gtc_none
+let from_2_1_rc_to_2_1 ~on_the_fly:_ _ conf = conf, gtc_none
 
-let from_2_0_to_v2_1 ~on_the_fly _ conf =
+let from_2_0_to_2_1 ~on_the_fly _ conf =
   (* In opam < 2.1 "jobs" was set during initialisation
      This creates problems when upgrading from opam 2.0 as it
      sets the job count for good even if the CPU is replaced.
@@ -1102,6 +1102,10 @@ let from_2_0_to_v2_1 ~on_the_fly _ conf =
    | None -> info_jobs_changed ~prev_jobs:1);
   OpamFile.Config.with_jobs_opt None conf, gtc_none
 
+let v2_2_alpha = OpamVersion.of_string "2.2~alpha"
+
+let from_2_1_to_2_2_alpha ~on_the_fly:_ _ conf = conf, gtc_none
+
 (* To add an upgrade layer
    * If it is a light upgrade, returns as second element if the repo or switch
      need an light upgrade with `gtc_*` values.
@@ -1113,8 +1117,8 @@ let latest_version = OpamFile.Config.root_version
 
 let latest_hard_upgrade = (* to *) v2_0_beta5
 
-(* intermediates roots that need an hard upgrade *)
-let intermediate_roots = [
+(* intermediate roots that need a hard upgrade when upgrading from them *)
+let v2_1_intermediate_roots = [
   v2_1_alpha; v2_1_alpha2; v2_1_rc
 ]
 
@@ -1169,43 +1173,39 @@ let as_necessary ?reinit requested_lock global_lock root config =
   in
   let cmp = OpamVersion.(compare OpamFile.Config.root_version root_version) in
   if cmp <= 0 then config, gtc_none (* newer or same *) else
-  let is_intermdiate_root = List.mem root_version intermediate_roots in
-  let keep_needed_upgrades =
-    List.filter (fun (v,_) -> OpamVersion.compare root_version v < 0)
-  in
-  (* to generalise *)
-  let intermediates =
-    let hard = [
-      v2_1_alpha,  from_2_0_to_2_1_alpha;
-      v2_1_alpha2, from_2_1_alpha_to_2_1_alpha2;
-      v2_1_rc,     from_2_1_alpha2_to_v2_1_rc;
-    ] in
-    let light = [
-      v2_1,        from_2_1_rc_to_v2_1;
-    ] in
-    keep_needed_upgrades hard,
-    light
-  in
   let hard_upg, light_upg =
-    if is_intermdiate_root then intermediates else
-      [
-        v1_1,        from_1_0_to_1_1;
-        v1_2,        from_1_1_to_1_2;
-        v1_3_dev2,   from_1_2_to_1_3_dev2;
-        v1_3_dev5,   from_1_3_dev2_to_1_3_dev5;
-        v1_3_dev6,   from_1_3_dev5_to_1_3_dev6;
-        v1_3_dev7,   from_1_3_dev6_to_1_3_dev7;
-        v2_0_alpha,  from_1_3_dev7_to_2_0_alpha;
-        v2_0_alpha2, from_2_0_alpha_to_2_0_alpha2;
-        v2_0_alpha3, from_2_0_alpha2_to_2_0_alpha3;
-        v2_0_beta,   from_2_0_alpha3_to_2_0_beta;
-        v2_0_beta5,  from_2_0_beta_to_2_0_beta5;
-        v2_0,        from_2_0_beta5_to_2_0;
-        v2_1,        from_2_0_to_v2_1;
-      ]
-      |> keep_needed_upgrades
-      |> List.partition (fun (v,_) ->
-          OpamVersion.compare v latest_hard_upgrade <= 0)
+    let is_2_1_intermediate_root =
+      List.exists (OpamVersion.equal root_version) v2_1_intermediate_roots
+    in
+    let latest_hard_upgrade =
+      if is_2_1_intermediate_root then v2_1_rc else latest_hard_upgrade
+    in
+    (if is_2_1_intermediate_root then [
+        v2_1_alpha,  from_2_0_to_2_1_alpha;
+        v2_1_alpha2, from_2_1_alpha_to_2_1_alpha2;
+        v2_1_rc,     from_2_1_alpha2_to_2_1_rc;
+        v2_1,        from_2_1_rc_to_2_1;
+      ] else [
+       v1_1,        from_1_0_to_1_1;
+       v1_2,        from_1_1_to_1_2;
+       v1_3_dev2,   from_1_2_to_1_3_dev2;
+       v1_3_dev5,   from_1_3_dev2_to_1_3_dev5;
+       v1_3_dev6,   from_1_3_dev5_to_1_3_dev6;
+       v1_3_dev7,   from_1_3_dev6_to_1_3_dev7;
+       v2_0_alpha,  from_1_3_dev7_to_2_0_alpha;
+       v2_0_alpha2, from_2_0_alpha_to_2_0_alpha2;
+       v2_0_alpha3, from_2_0_alpha2_to_2_0_alpha3;
+       v2_0_beta,   from_2_0_alpha3_to_2_0_beta;
+       v2_0_beta5,  from_2_0_beta_to_2_0_beta5;
+       v2_0,        from_2_0_beta5_to_2_0;
+       v2_1,        from_2_0_to_2_1;
+     ]) @ [
+      v2_2_alpha,  from_2_1_to_2_2_alpha;
+    ]
+    |> List.filter (fun (v,_) ->
+        OpamVersion.compare root_version v < 0)
+    |> List.partition (fun (v,_) ->
+        OpamVersion.compare v latest_hard_upgrade <= 0)
   in
   let need_hard_upg = hard_upg <> [] in
   let on_the_fly, global_lock_kind =

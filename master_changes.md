@@ -11,7 +11,7 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
-  *
+  * Upgrade root version to 2.2~alpha [#4926 @rjbou]
 
 ## Global CLI
   * Fix typo in error message for opam var [#4786 @kit-ty-kate - fix #4785]
@@ -200,6 +200,7 @@ users)
   * Fix 2.1~alpha2 to 2.1 format upgrade with reinit [#4763 @rjbou - fix #4748] [2.1.0~rc2 #4750]
   * Fix bypass-check handling on reinit [#4750 @rjbou] [#4763 @rjbou] [2.1.0~rc2 #4750 #4756]
   * Fix root format upgrade when only an inner file format is upgraded : new mechanism does the usual on-the-fly upgrade and keeps the information of needed inner upgrade or no, to perform them when a write lock is required [#5305 @rjbou]
+  * Reorganise intermediate roots that need an uipgrade handling (for 2.1, prone to generalisation) [#4926 @rjbou]
 
 ## Sandbox
   * Sync the behaviour of the macOS sandbox script with Linux's: /tmp is now ready-only [#4719 @kit-ty-kate]
@@ -383,7 +384,7 @@ users)
   * Add deps-only, install formula [#4975 @AltGr]
   * Update opam root version test:
     * to escape `OPAMROOTVERSION` sed, it matches generated hexa temporary directory names [#5007 @AltGr #5301 @rjbou]
-    * several improvments: add repo config check, update generator [#5303 @rjbou]
+    * several improvments: add repo config check, update generator [#5304 @rjbou]
   * Add json output test [#5143 @rjbou]
     * Add tree json output [#5303 @cannorin @rjbou]
   * Add test for opam file write with format preserved bug in #4936, fixed in #4941 [#4159 @rjbou]
