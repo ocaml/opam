@@ -1,4 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# This script is only used on macOS, where /bin/bash is both guaranteed to exist and
+# and to be for the native architecture, which is why /usr/bin/env bash is not used.
+# See https://github.com/ocaml/opam/issues/5450
 set -ue
 
 POL='(version 1)(allow default)(deny network*)(deny file-write*)'

@@ -208,6 +208,7 @@ users)
   * Get rid of OPAM_USER_PATH_RO (never used on macOS and no longer needed on Linux) [#4795 @kit-ty-kate]
   * Print error message if command doesn't exist [#4971 @kit-ty-kat - fix #4112]
   * Resolve symlink for `ccache` directory [#5267 @rjbou - fix #5194]
+  * Enforce the macOS sandbox script to use /bin/bash instead of /usr/bin/env bash for a more consistent experience [#5451 @kit-ty-kate]
 
 ## VCS
   * Pass --depth=1 to git-fetch in the Git repo backend [#4442 @dra27]
