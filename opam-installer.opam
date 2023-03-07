@@ -28,7 +28,7 @@ build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "ocaml" {(>= "4.03.0" & os != "win32") | >= "4.06.0"}
+  "ocaml" {>= "4.08.0"}
   "opam-format" {= version}
   "cmdliner" {>= "0.9.8"}
   "dune" {>= "2.0.0"}

@@ -61,7 +61,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       archives: ${{ steps.keys.outputs.archives }}
-      ocaml-secondary-compiler: ${{ steps.keys.outputs.ocaml-secondary-compiler }}
       ocaml-cache: ${{ steps.keys.outputs.ocaml-cache }}
       cygwin: ${{ steps.keys.outputs.cygwin }}
       opam-bs-cache: ${{ steps.keys.outputs.opam-bs-cache }}
@@ -73,8 +72,6 @@ jobs:
       run: |
         echo archives=archives-1-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}
         echo archives=archives-1-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }} >> $GITHUB_OUTPUT
-        echo ocaml-secondary-compiler=legacy-${{ env.OPAM_REPO_SHA }}
-        echo ocaml-secondary-compiler=legacy-${{ env.OPAM_REPO_SHA }} >> $GITHUB_OUTPUT
         echo ocaml-cache=${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/create-ocaml-cache.sh') }}
         echo ocaml-cache=${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/create-ocaml-cache.sh') }} >> $GITHUB_OUTPUT
         echo cygwin=${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}
@@ -94,19 +91,6 @@ jobs:
     - name: Create src_ext/archives and opam-repository cache
       if: steps.archives.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/archives-cache.sh
-    - name: ocaml-secondary-compiler Cache
-      id: legacy
-      uses: ocaml-opam/cache@opam
-      with:
-        path: ~/.opam
-        key: ${{ runner.os }}-${{ steps.keys.outputs.ocaml-secondary-compiler }}
-        check-only: true
-    - name: Install system's opam package
-      if: steps.legacy.outputs.cache-hit != 'true'
-      run: sudo apt install opam
-    - name: Create ocaml-secondary-compiler cache
-      if: steps.legacy.outputs.cache-hit != 'true'
-      run: bash -exu .github/scripts/main/legacy-cache.sh
 
   Cygwin:
     runs-on: windows-2019
@@ -271,43 +255,6 @@ jobs:
       run: bash -exu .github/scripts/main/main.sh x86_64-apple-darwin
     - name: Test (basic)
       run: bash -exu .github/scripts/main/test.sh
-
-####
-# Legacy
-####
-  Legacy:
-    runs-on: ${{ matrix.os }}-latest
-    needs: [ Analyse, Build-Linux ]
-    strategy:
-      matrix:
-        os: [ ubuntu ]
-        ocamlv: [ 4.03.0, 4.04.2, 4.05.0, 4.06.1, 4.07.1 ]
-      fail-fast: true
-    steps:
-    - name: Install system's opam package
-      run: sudo apt install opam
-    - name: Checkout tree
-      uses: actions/checkout@v3
-    - name: ocaml-secondary-compiler Cache
-      id: legacy
-      uses: actions/cache@v3
-      with:
-        path: ~/.opam
-        key: ${{ runner.os }}-${{ needs.Analyse.outputs.ocaml-secondary-compiler }}
-    - name: Create ocaml-secondary-compiler cache
-      if: steps.legacy.outputs.cache-hit != 'true'
-      run: bash -exu .github/scripts/main/legacy-cache.sh
-    - name: OCaml ${{ matrix.ocamlv }} Cache
-      id: ocaml-cache
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/ocaml-local/**
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
-    - name: Create OCaml ${{ matrix.ocamlv }} cache
-      if: steps.ocaml-cache.outputs.cache-hit != 'true'
-      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
-    - name: Build
-      run: bash -exu .github/scripts/main/legacy.sh
 
 ####
 # Opam tests

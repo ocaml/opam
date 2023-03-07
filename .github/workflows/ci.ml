@@ -14,8 +14,6 @@
 open Lib
 
 let ocamls = [
-  (* Legacy versions - core libraries only *)
-  "4.03.0"; "4.04.2"; "4.05.0"; "4.06.1"; "4.07.1"; 
   (* Fully supported versions *)
    "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1"; "4.14.1";
 ]
@@ -106,7 +104,6 @@ type cache = {
 
 type _ cache_name =
 | Archives : ((cache -> 'a) -> 'a) cache_name
-| Secondary : ((cache -> 'a) -> 'a) cache_name
 | Cygwin : ((cache -> 'a) -> 'a) cache_name
 | OCaml : ((cache -> 'a) -> _ platform -> string -> string -> 'a) cache_name
 | OpamBS : ((cache -> 'a) -> string -> string -> 'a) cache_name
@@ -125,16 +122,6 @@ let get_cache_cont : type s . s cache_name -> s = function
          paths = ["src_ext/archives"; "~/opam-repository"];
          always_build = false;
          build = ["bash -exu .github/scripts/main/archives-cache.sh"];
-         build_shell = None}
-  | Secondary ->
-      fun f -> f
-        {name = "ocaml-secondary-compiler";
-         key = Printf.sprintf "${{ runner.os }}-${{ %s.outputs.ocaml-secondary-compiler }}";
-         id = "legacy";
-         force_gzip = false;
-         paths = ["~/.opam"];
-         always_build = false;
-         build = ["bash -exu .github/scripts/main/legacy-cache.sh"];
          build_shell = None}
   | Cygwin ->
       fun f -> f
@@ -306,9 +293,6 @@ let analyse_job ~oc ~workflow ~platforms ~keys f =
     ++ run "Determine cache keys" ~id:"keys" keys
     ++ cache ?cond:linux_guard ~key_prefix:"steps.keys" ~check_only:true Archives 
     ++ build_cache ?cond:not_windows_guard Archives
-    ++ cache ?cond:not_windows_guard ~key_prefix:"steps.keys" ~check_only:true Secondary 
-    ++ install_sys_opam ~cond:(Predicate(true, CacheMiss (get_cache Secondary).id)) platforms
-    ++ build_cache ?cond:not_windows_guard Secondary
     ++ end_job f
 
 let cygwin_job ~analyse_job ~oc ~workflow f =
@@ -367,25 +351,6 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
            {|opam config report|};
           ]))
     ++ only_on Windows (run "Test (reftests)" ["bash -exu .github/scripts/main/reftests.sh ${{ matrix.host }}"])
-    ++ end_job f
-
-let legacy_build_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~(platforms : os_only platform list) ~oc ~workflow f =
-  let needs = analyse_job :: List.map (function Linux -> build_linux_job | Windows -> build_windows_job | MacOS -> build_macOS_job) platforms in
-  let (fail_fast, matrix, _) = platform_ocaml_matrix ~dir:List.take_until ~fail_fast:true (4, 08) in
-  let matrix =
-    (fail_fast, ("os", List.map os_name_of_platform platforms)::matrix, [])
-  in
-  (* Not needed, so not implemented *)
-  let _ = assert (not (List.mem Windows platforms)) in
-  job ~oc ~workflow ~runs_on:(Matrix "${{ matrix.os }}-latest") ~section:"Legacy" ~needs ~matrix "Legacy"
-    ++ install_sys_opam platforms
-    ++ checkout ()
-    ++ cache Secondary
-    ++ build_cache Secondary
-    (* Little bit hacky, but the host and platform parameters for the OCaml cache affect Windows only *)
-    ++ cache OCaml Linux "${{ matrix.ocamlv }}" ""
-    ++ build_cache OCaml Linux "${{ matrix.ocamlv }}" ""
-    ++ run "Build" ["bash -exu .github/scripts/main/legacy.sh"]
     ++ end_job f
 
 let main_test_job ~analyse_job ~build_linux_job ~build_windows_job:_ ~build_macOS_job:_ ?section runner ~oc ~workflow f =
@@ -513,7 +478,6 @@ let main oc : unit =
   ] in
   let keys = [
     ("archives", "archives-1-${{ hashFiles('src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}");
-    ("ocaml-secondary-compiler", "legacy-${{ env.OPAM_REPO_SHA }}");
     ("ocaml-cache", "${{ hashFiles('.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/create-ocaml-cache.sh') }}");
     ("cygwin", "${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}");
     ("opam-bs-cache", "${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}");
@@ -524,7 +488,6 @@ let main oc : unit =
        main_build_job ~analyse_job ~cygwin_job ~section:"Build" Linux (4, 08) (fun build_linux_job ->
        main_build_job ~analyse_job ~cygwin_job Windows latest_ocaml (fun build_windows_job ->
        main_build_job ~analyse_job ~cygwin_job MacOS latest_ocaml (fun build_macOS_job ->
-       legacy_build_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~platforms:[Linux] (fun _ ->
        main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam tests" Linux (fun _ ->
        main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS (fun _ ->
        cold_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam cold" Linux (fun _ ->
@@ -533,7 +496,7 @@ let main oc : unit =
        upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Upgrade from 1.2 to current" Linux (fun _ ->
        upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS (fun _ ->
        hygiene_job ~analyse_job (Specific (Linux, "22.04")) (fun _ ->
-       end_workflow))))))))))))))
+       end_workflow)))))))))))))
 
 let () =
   let oc = open_out "main.yml" in
