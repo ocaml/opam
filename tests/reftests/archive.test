@@ -285,6 +285,10 @@ Done.
 ### opam source good-md5
 Successfully extracted to ${BASEDIR}/good-md5.1
 ### test -f good-md5.1/hello
+### rm -r good-md5.1
+### opam source good-md5 --require-checksums
+Successfully extracted to ${BASEDIR}/good-md5.1
+### test -f good-md5.1/hello
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :I:2: good sha256
@@ -319,6 +323,10 @@ The following actions will be performed:
 -> installed good-sha256.1
 Done.
 ### opam source good-sha256
+Successfully extracted to ${BASEDIR}/good-sha256.1
+### test -f good-sha256.1/hello
+### rm -r good-sha256.1
+### opam source good-sha256 --require-checksums
 Successfully extracted to ${BASEDIR}/good-sha256.1
 ### test -f good-sha256.1/hello
 ### opam clean --download-cache
@@ -375,6 +383,10 @@ Done.
 ### opam source good-md5-good-sha256
 Successfully extracted to ${BASEDIR}/good-md5-good-sha256.1
 ### test -f good-md5-good-sha256.1/hello
+### rm -r good-md5-good-sha256.1
+### opam source good-md5-good-sha256 --require-checksums
+Successfully extracted to ${BASEDIR}/good-md5-good-sha256.1
+### test -f good-md5-good-sha256.1/hello
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :I:4: good sha256 & good md5
@@ -426,6 +438,10 @@ Done.
 ### opam source good-sha256-good-md5
 Successfully extracted to ${BASEDIR}/good-sha256-good-md5.1
 ### test -f good-sha256-good-md5.1/hello
+### rm -r good-sha256-good-md5.1
+### opam source good-sha256-good-md5 --require-checksums
+Successfully extracted to ${BASEDIR}/good-sha256-good-md5.1
+### test -f good-sha256-good-md5.1/hello
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :I:5: no checksum
@@ -471,6 +487,12 @@ OpamSolution.Fetch_fail("no-checksum.1: Missing checksum, and `--require-checksu
 ### opam source no-checksum
 Successfully extracted to ${BASEDIR}/no-checksum.1
 ### test -f no-checksum.1/hello
+### rm -r no-checksum.1
+### opam source no-checksum --require-checksums
+[ERROR] Download failed: no-checksum.1: Missing checksum, and `--require-checksums` was set.
+# Return code 40 #
+### test -f no-checksum.1/hello
+# Return code 1 #
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :I:6: multiple md5
@@ -530,6 +552,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 # Return code 40 #
 ### test -f multiple-md5.1/hello
 # Return code 1 #
+### rm -r multiple-md5.1
+### opam source multiple-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
+[ERROR] multiple-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
+          expected md5=hash
+          got      md5=hash
+[ERROR] Download failed: Checksum mismatch
+# Return code 40 #
+### test -f multiple-md5.1/hello
+# Return code 1 #
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :I:7: bad md5
@@ -582,6 +613,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 - No changes have been performed
 # Return code 40 #
 ### opam source bad-md5 | '[0-9a-z]{32}' -> 'hash'
+[ERROR] bad-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
+          expected md5=hash
+          got      md5=hash
+[ERROR] Download failed: Checksum mismatch
+# Return code 40 #
+### test -f bad-md5.1/hello
+# Return code 1 #
+### rm -r bad-md5.1
+### opam source bad-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
 [ERROR] bad-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
           expected md5=hash
           got      md5=hash
@@ -718,6 +758,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 # Return code 40 #
 ### test -f good-md5-bad-sha256.1/hello
 # Return code 1 #
+### rm -r good-md5-bad-sha256.1
+### opam source good-md5-bad-sha256 --require-checksums | '[0-9a-z]{64}' -> 'md5'
+[ERROR] good-md5-bad-sha256.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
+          expected sha256=md5
+          got      sha256=md5
+[ERROR] Download failed: Checksum mismatch
+# Return code 40 #
+### test -f good-md5-bad-sha256.1/hello
+# Return code 1 #
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :I:9: good sha256 & bad md5
@@ -770,6 +819,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 - No changes have been performed
 # Return code 40 #
 ### opam source good-sha256-bad-md5 | '[0-9a-z]{32}' -> 'hash'
+[ERROR] good-sha256-bad-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
+          expected md5=hash
+          got      md5=hash
+[ERROR] Download failed: Checksum mismatch
+# Return code 40 #
+### test -f good-sha256-bad-md5.1/hello
+# Return code 1 #
+### rm -r good-sha256-bad-md5.1
+### opam source good-sha256-bad-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
 [ERROR] good-sha256-bad-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
           expected md5=hash
           got      md5=hash
@@ -914,6 +972,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 - No changes have been performed
 # Return code 40 #
 ### opam source clash-with-all-md5s | '[0-9a-z]{32}' -> 'hash'
+[ERROR] clash-with-all-md5s.666: Checksum mismatch for file://${BASEDIR}/archive.tgz:
+          expected md5=hash
+          got      md5=hash
+[ERROR] Download failed: Checksum mismatch
+# Return code 40 #
+### test -f clash-with-all-md5s.666/hello
+# Return code 1 #
+### rm -r clash-with-all-md5s.666
+### opam source clash-with-all-md5s --require-checksums | '[0-9a-z]{32}' -> 'hash'
 [ERROR] clash-with-all-md5s.666: Checksum mismatch for file://${BASEDIR}/archive.tgz:
           expected md5=hash
           got      md5=hash
