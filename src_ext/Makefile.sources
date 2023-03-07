@@ -58,11 +58,6 @@ MD5_opam-file-format = 46dadff2565d8371cdc606d33d408fc4
 
 $(call PKG_SAME,opam-file-format)
 
-URL_result = https://github.com/janestreet/result/releases/download/1.5/result-1.5.tbz
-MD5_result = 1b82dec78849680b49ae9a8a365b831b
-
-$(call PKG_SAME,result)
-
 include Makefile.dune
 
 $(call PKG_SAME,dune-local)
