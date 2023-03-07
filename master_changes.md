@@ -407,6 +407,7 @@ users)
   * Add a test showing that we still get the reason for installing a package when using opam reinstall on non-installed packages [#5229 @kit-ty-kate]
   * Add a windows test to check case insensitive environment variable handling [#5356 @dra27]
   * Fix the reftests on OCaml 5.0 [#5402 @kit-ty-kate]
+  * Factorise some repo hashes [#5379 @rjbou]
 
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
