@@ -218,6 +218,7 @@ users)
   * git, hg: Use the full SHA1 revision instead of just the 8 first characters [#5342 @reynir]
 
 ## Build
+  * Bump vendored base64 to 3.5.1 to fix compilation on OCaml >= 5.0 in vendored mode [#5464 @deech]
   * Bump src_exts and fix build compat with Dune 2.9.0 [#4752 @dra27]
   * Upgrade to dose3 >= 6.1 and vendor dose3 7.0.0 [#4760 @kit-ty-kate]
   * Change minimum required OCaml to 4.03.0 [#4770 @dra27]
