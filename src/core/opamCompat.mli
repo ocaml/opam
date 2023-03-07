@@ -19,9 +19,6 @@ module String
 end
 #endif
 
-
-module Char = Char
-
 module Either
 #if OCAML_VERSION >= (4, 12, 0)
 = Either
@@ -33,81 +30,13 @@ module Either
 end
 #endif
 
-module Int
-#if OCAML_VERSION >= (4, 12, 0)
-= Int
-#else
-: sig
-  val compare: int -> int -> int
-  val equal : int -> int -> bool
-end
-#endif
-
-module Printexc
-#if OCAML_VERSION >= (4, 5, 0)
-= Printexc
-#else
-: sig
-  include module type of struct include Printexc end
-
-  val raise_with_backtrace: exn -> raw_backtrace -> 'a
-end
-#endif
-
 module Unix : sig
   include module type of struct include Unix end
-
-  #if OCAML_VERSION < (4, 6, 0)
-  val map_file : Unix.file_descr -> ?pos:int64 -> ('a, 'b) Bigarray.kind ->
-                 'c Bigarray.layout -> bool -> int array ->
-                 ('a, 'b, 'c) Bigarray.Genarray.t
-  #endif
 
   (* `realpath` for OCaml >= 4.13.0,
      implementation with double chdir otherwise *)
   val normalise: string -> string
 end
-
-module Uchar = Uchar
-
-module Buffer
-#if OCAML_VERSION >= (4, 6, 0)
-= Buffer
-#else
-: sig
-  include module type of struct include Buffer end
-
-  val add_utf_8_uchar : t -> Uchar.t -> unit
-end
-#endif
-
-module Filename
-#if OCAML_VERSION >= (4, 4, 0)
-= Filename
-#else
-: sig
-  include module type of struct include Filename end
-
-  val extension : string -> string
-end
-#endif
-
-module Result
-#if OCAML_VERSION >= (4, 8, 0)
-= Result
-#else
-: sig
-  type ('a, 'e) t
-    = ('a, 'e) result
-    = Ok of 'a | Error of 'e
-end
-#endif
-
-#if OCAML_VERSION < (4, 7, 0)
-module Stdlib = Pervasives
-#else
-module Stdlib = Stdlib
-#endif
 
 module Lazy
 #if OCAML_VERSION >= (4, 13, 0)
@@ -117,14 +46,5 @@ module Lazy
   include module type of struct include Lazy end
 
   val map : ('a -> 'b) -> 'a t -> 'b t
-end
-#endif
-
-module Fun
-#if OCAML_VERSION >= (4, 08, 0)
-= Fun
-#else
-: sig
-  val protect : finally:(unit -> unit) -> (unit -> 'a) -> 'a
 end
 #endif

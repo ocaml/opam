@@ -339,7 +339,7 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
     | None -> (fun f -> f ())
     | Some dir ->
       Unix.chdir dir;
-      OpamCompat.Fun.protect ~finally:(fun () -> Unix.chdir oldcwd)
+      Fun.protect ~finally:(fun () -> Unix.chdir oldcwd)
   in
   with_chdir dir @@ fun () ->
   let stdin_fd,close_stdin =
@@ -647,7 +647,7 @@ let exit_status p return =
     (List.iter verbose_print_out stdout;
      if p.p_stdout <> p.p_stderr then
      List.iter verbose_print_out stderr;
-     flush OpamCompat.Stdlib.stdout);
+     flush Stdlib.stdout);
   let info =
     make_info ?code ?signal
       ~cmd:p.p_name ~args:p.p_args ~cwd:p.p_cwd ~metadata:p.p_metadata

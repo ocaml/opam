@@ -12,8 +12,6 @@
 open OpamParserTypes.FullPos
 open OpamTypes
 
-include OpamCompat
-
 let std_path_of_string = function
   | "prefix" -> Prefix
   | "lib" -> Lib

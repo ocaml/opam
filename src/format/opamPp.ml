@@ -247,7 +247,7 @@ let fallback pp1 pp2 =
       OpamStd.Exn.fatal e;
       let bt = Printexc.get_raw_backtrace () in
       try pp2.parse ~pos x with _ ->
-        OpamCompat.Printexc.raise_with_backtrace e bt
+        Printexc.raise_with_backtrace e bt
   in
   { pp1 with parse }
 

@@ -432,7 +432,7 @@ module MakeGraph (X: VERTEX) = struct
               | `String s -> (try int_of_string s with _ -> raise Not_found)
               | _ -> raise Not_found in
             let find kj =
-              OpamStd.List.assoc OpamCompat.Int.equal (int_of_jsonstring kj) vertex_map
+              OpamStd.List.assoc Int.equal (int_of_jsonstring kj) vertex_map
             in
             let edge_of_json = function
               | `O dict ->

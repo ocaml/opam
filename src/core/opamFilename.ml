@@ -416,14 +416,14 @@ let with_flock flag ?dontblock file f =
           else
             "/dev/null"
         in
-        let ch = OpamCompat.Stdlib.open_out null in
+        let ch = Stdlib.open_out null in
         Unix.descr_of_out_channel ch, Some ch
       | fd ->
         fd, None
     in
     let r = f fd in
     OpamSystem.funlock lock;
-    OpamStd.Option.iter OpamCompat.Stdlib.close_out ch;
+    OpamStd.Option.iter Stdlib.close_out ch;
     r
   with e ->
     OpamStd.Exn.finalise e @@ fun () ->
@@ -603,7 +603,7 @@ module Attribute = struct
     if base <> 0 then base else
     let md5 = OpamHash.compare md5 a.md5 in
     if md5 <> 0 then md5 else
-      OpamStd.Option.compare OpamCompat.Int.compare perm a.perm
+      OpamStd.Option.compare Int.compare perm a.perm
 
   let equal a b = compare a b = 0
 
