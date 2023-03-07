@@ -60,6 +60,7 @@ users)
 ## Exec
 
 ## Source
+  * [NEW] Add options `--require-checksums` and `--no-checksums` to harmonise with `opam install` [#5563 @rjbou]
 
 ## Lint
 

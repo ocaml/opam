@@ -3703,8 +3703,19 @@ let source cli =
       "Choose package without consideration for \
        the current (or any other) switch (installed or pinned packages, etc.)"
   in
-  let source global_options atom dev_repo pin no_switch dir () =
+  let no_checksums = no_checksums cli (cli_from cli2_4) in
+  let req_checksums = require_checksums cli (cli_from cli2_4) in
+  let source global_options atom dev_repo pin no_switch dir
+      no_checksums req_checksums () =
     apply_global_options cli global_options;
+    let force_checksums =
+      if req_checksums then Some (Some true)
+      else if no_checksums then Some (Some false)
+      else None
+    in
+    OpamStd.Option.iter (fun force_checksums ->
+        OpamRepositoryConfig.update ~force_checksums ())
+      force_checksums;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     let get_package_dir t =
       let nv =
@@ -3829,9 +3840,11 @@ let source cli =
       OpamSwitchState.drop
         (OpamClient.PIN.pin t nv.name ~version:nv.version target)
   in
-  mk_command  ~cli cli_original "source" ~doc ~man
+  mk_command ~cli cli_original "source" ~doc ~man
     Term.(const source
-          $global_options cli $atom $dev_repo $pin $no_switch $dir)
+          $global_options cli
+          $atom $dev_repo $pin $no_switch $dir
+          $no_checksums $req_checksums)
 
 (* LINT *)
 let lint_doc = "Checks and validate package description ('opam') files."

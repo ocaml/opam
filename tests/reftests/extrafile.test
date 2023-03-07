@@ -196,6 +196,10 @@ Done.
 ### opam source good-md5
 Successfully extracted to ${BASEDIR}/good-md5.1
 ### test -f good-md5.1/p.patch
+### rm -r good-md5.1
+### opam source good-md5 --require-checksums
+Successfully extracted to ${BASEDIR}/good-md5.1
+### test -f good-md5.1/p.patch
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :I:2: good md5 & sha256
@@ -232,6 +236,10 @@ The following actions will be performed:
 -> installed good-md5-good-sha256.1
 Done.
 ### opam source good-md5-good-sha256
+Successfully extracted to ${BASEDIR}/good-md5-good-sha256.1
+### test -f good-md5-good-sha256.1/p.patch
+### rm -r good-md5-good-sha256.1
+### opam source good-md5-good-sha256 --require-checksums
 Successfully extracted to ${BASEDIR}/good-md5-good-sha256.1
 ### test -f good-md5-good-sha256.1/p.patch
 ### opam clean --download-cache
@@ -284,6 +292,12 @@ Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p
 
 ### test -f bad-md5.1/p.patch
 # Return code 1 #
+### rm -r bad-md5.1
+### opam source bad-md5 --require-checksums | '.n"' -> '"'
+[WARNING] Some errors extracting to ${BASEDIR}/bad-md5.1: Failure("Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch")
+
+### test -f bad-md5.1/p.patch
+# Return code 1 #
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :I:4: good md5 & bad sha256
@@ -330,6 +344,11 @@ Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-
 - No changes have been performed
 # Return code 31 #
 ### opam source good-md5-bad-sha256 | '.n"' -> '"'
+[WARNING] Some errors extracting to ${BASEDIR}/good-md5-bad-sha256.1: Failure("Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch")
+
+### test -f good-md5-bad-sha256.1/p.patch
+### rm -r good-md5-bad-sha256.1
+### opam source good-md5-bad-sha256 --require-checksums | '.n"' -> '"'
 [WARNING] Some errors extracting to ${BASEDIR}/good-md5-bad-sha256.1: Failure("Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch")
 
 ### test -f good-md5-bad-sha256.1/p.patch
@@ -395,6 +414,11 @@ The following actions will be performed:
 Successfully extracted to ${BASEDIR}/no-checksum.1
 ### test -f no-checksum.1/p.patch
 # Return code 1 #
+### rm -r no-checksum.1
+### opam source no-checksum --require-checksums
+Successfully extracted to ${BASEDIR}/no-checksum.1
+### test -f no-checksum.1/p.patch
+# Return code 1 #
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :::::::::::::::::
@@ -444,6 +468,11 @@ The following actions will be performed:
 - No changes have been performed
 # Return code 31 #
 ### opam source not-mentioned
+Successfully extracted to ${BASEDIR}/not-mentioned.1
+### test -f not-mentioned.1/p.patch
+# Return code 1 #
+### rm -r not-mentioned.1
+### opam source not-mentioned --require-checksums
 Successfully extracted to ${BASEDIR}/not-mentioned.1
 ### test -f not-mentioned.1/p.patch
 # Return code 1 #
