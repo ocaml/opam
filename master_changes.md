@@ -69,6 +69,7 @@ users)
 ## Source
 
 ## Lint
+  * Add E70 to check `extra-files:` duplicated fields [#5561 @rjbou]
 
 ## Repository
  * Mitigate curl/curl#13845 by falling back from --write-out to --fail if exit code 43 is returned by curl [#6168 @dra27 - fix #6120]
@@ -186,6 +187,7 @@ users)
   * lint: add E72 test [#5561 @rjbou]
   * lint: add E73 test [#5561 @rjbou]
   * lint: add more test cases for E59: special cases (conf, git url), with and without option `--with-check-upstream` [#5561 @rjbou]
+  * lint: add E70 test [#5561 @rjbou]
 
 ### Engine
   * Add a test filtering mechanism [#6105 @Keryan-dev]
