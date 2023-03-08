@@ -475,12 +475,15 @@ Successfully extracted to ${BASEDIR}/no-checksum.1
 Clearing cache of downloaded files
 ### :I:6: multiple md5
 ### opam lint --package multiple-md5
-<default>/multiple-md5.1: Passed.
+<default>/multiple-md5.1: Errors.
+             error 71: Field 'url.checksum' contains duplicated checksums: "md5: 2 occurences"
+# Return code 1 #
 ### opam lint --package multiple-md5 --check-upstream | '[0-9a-z]{32}' -> 'hash'
 <default>/multiple-md5.1: Errors.
              error 60: Upstream check failed: "The archive doesn't match checksum:
                 - archive: md5=hash, in opam file: md5=hash
               ."
+             error 71: Field 'url.checksum' contains duplicated checksums: "md5: 2 occurences"
 # Return code 1 #
 ### opam install multiple-md5 | '[0-9a-z]{32}' -> 'hash'
 The following actions will be performed:
@@ -781,7 +784,9 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 Clearing cache of downloaded files
 ### :I:10: clash with all md5
 ### opam lint --package clash-with-all-md5s
-<default>/clash-with-all-md5s.666: Passed.
+<default>/clash-with-all-md5s.666: Errors.
+             error 71: Field 'url.checksum' contains duplicated checksums: "md5: 17 occurences"
+# Return code 1 #
 ### opam lint --package clash-with-all-md5s --check-upstream | '[0-9a-z]{32,64}' -> 'hash'
 <default>/clash-with-all-md5s.666: Errors.
              error 60: Upstream check failed: "The archive doesn't match checksums:
@@ -803,6 +808,7 @@ Clearing cache of downloaded files
                 - archive: md5=hash, in opam file: md5=hash
                 - archive: sha256=hash, in opam file: sha256=hash
               ."
+             error 71: Field 'url.checksum' contains duplicated checksums: "md5: 17 occurences"
 # Return code 1 #
 ### opam install clash-with-all-md5s | '[0-9a-z]{32}' -> 'hash'
 The following actions will be performed:
