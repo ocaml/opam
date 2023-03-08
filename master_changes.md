@@ -123,3 +123,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamHash`: export `compare_kind` [#5561 @rjbou]
