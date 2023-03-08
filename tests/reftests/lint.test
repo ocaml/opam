@@ -585,6 +585,7 @@ echo "extra-files: [ \"more-file-good-md5\" \"md5=$hsh\" ]" >> REPO/packages/lin
 # Return code 1 #
 ### opam lint --package lint.2
 <default>/lint.2: Passed.
+### OPAMREPOSITORYTARRING=0
 ### : W54: External dependencies should not contain spaces nor empty string
 ### <lint.opam>
 opam-version: "2.0"
@@ -912,3 +913,70 @@ bug-reports: "https://nobug"
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
            warning 68: Missing field 'license'
+### : E69: Field 'extra-files' contains duplicated files
+### <pkg:lint.3>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### <pkg:lint.3:single-file>
+file
+### <pkg:lint.3:double-file>
+file
+### <pkg:lint.3:quadra-file>
+file
+### <hash.sh>
+set -ue
+path=REPO/packages/lint/lint.3
+md5=`openssl md5 $path/files/single-file | cut -f2 -d' '`
+echo "extra-files:[" >> $path/opam
+echo "  [\"single-file\" \"md5=$md5\"]" >> $path/opam
+echo "  [\"double-file\" \"md5=$md5\"]" >> $path/opam
+echo "  [\"double-file\" \"md5=$md5\"]" >> $path/opam
+echo "  [\"quadra-file\" \"md5=$md5\"]" >> $path/opam
+echo "  [\"quadra-file\" \"md5=$md5\"]" >> $path/opam
+echo "  [\"quadra-file\" \"md5=$md5\"]" >> $path/opam
+echo "  [\"quadra-file\" \"md5=$md5\"]" >> $path/opam
+echo "]" >> $path/opam
+### sh hash.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam lint --package lint.3
+<default>/lint.3: Errors.
+             error 69: Field 'extra-files' contains duplicated files: "double-file: 2 occurences", "quadra-file: 4 occurences"
+# Return code 1 #
+### : several extra-source
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+extra-source "double-file" {
+  src:"https://git.url/repo.tgz"
+  checksum:"md5=00000000000000000000000000000000"
+}
+extra-source "single-file" {
+  src:"https://git.url/repo.tgz"
+  checksum:"md5=00000000000000000000000000000000"
+}
+extra-source "double-file" {
+  src:"https://git.url/repo.tgz"
+  checksum:"md5=00000000000000000000000000000000"
+}
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error  3: File format error in 'extra-source': Duplicate section extra-source
+# Return code 1 #
