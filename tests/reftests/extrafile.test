@@ -200,9 +200,13 @@ Successfully extracted to ${BASEDIR}/good-md5.1
 Clearing cache of downloaded files
 ### :I:2: good md5 & sha256
 ### opam lint --package good-md5-good-sha256
-<default>/good-md5-good-sha256.1: Passed.
+<default>/good-md5-good-sha256.1: Errors.
+             error 70: Field 'extra-files' contains duplicated files: "p.patch: 2 occurences"
+# Return code 1 #
 ### opam lint --package good-md5-good-sha256 --check-upstream
-<default>/good-md5-good-sha256.1: Passed.
+<default>/good-md5-good-sha256.1: Errors.
+             error 70: Field 'extra-files' contains duplicated files: "p.patch: 2 occurences"
+# Return code 1 #
 ### opam install good-md5-good-sha256
 The following actions will be performed:
 === install 1 package
@@ -284,9 +288,13 @@ Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p
 Clearing cache of downloaded files
 ### :I:4: good md5 & bad sha256
 ### opam lint --package good-md5-bad-sha256
-<default>/good-md5-bad-sha256.1: Passed.
+<default>/good-md5-bad-sha256.1: Errors.
+             error 70: Field 'extra-files' contains duplicated files: "p.patch: 2 occurences"
+# Return code 1 #
 ### opam lint --package good-md5-bad-sha256 --check-upstream
-<default>/good-md5-bad-sha256.1: Passed.
+<default>/good-md5-bad-sha256.1: Errors.
+             error 70: Field 'extra-files' contains duplicated files: "p.patch: 2 occurences"
+# Return code 1 #
 ### opam install good-md5-bad-sha256
 The following actions will be performed:
 === install 1 package

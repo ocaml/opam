@@ -48,6 +48,7 @@ users)
 ## Source
 
 ## Lint
+  * Add E69 to check `extra-files:` duplicated fields [#5561 @rjbou]
 
 ## Repository
 
@@ -100,6 +101,7 @@ users)
 ## Reftests
 ### Tests
   * lint: update W37, E59, and E65 tests [#5561 @rjbou]
+  * lint: add E70 test [#5561 @rjbou]
 
 ### Engine
 
