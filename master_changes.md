@@ -73,6 +73,7 @@ users)
   * Add E71 to check if the same checksum algorithm is used several times for a given url in `url` section [#5561 @rjbou]
   * Add E72 to check if the same checksum algorithm is used several times for a given url in `extra-sources` section [#5561 @rjbou]
   * Add E73 to check that paths in `extra-files:` are not escapable [#5561 @rjbou]
+  * Update W59 (no checksum in `url`) to always display a warning, untying it from `--check-upstream` [#5561 @rjbou]
 
 ## Repository
  * Mitigate curl/curl#13845 by falling back from --write-out to --fail if exit code 43 is returned by curl [#6168 @dra27 - fix #6120]

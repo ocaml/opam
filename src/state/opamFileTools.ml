@@ -396,11 +396,11 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
         | #OpamUrl.version_control -> true
         | _ -> false)
   in
-  let check_upstream =
-    check_upstream &&
+  let is_url_archive =
     not (OpamFile.OPAM.has_flag Pkgflag_Conf t) &&
     url_vcs = Some false
   in
+  let check_upstream = check_upstream && is_url_archive in
   let check_double compare to_str lst =
     let double =
       List.sort compare lst
@@ -811,7 +811,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
         Printf.sprintf "Found %s variable%s, predefined one%s" var s_ nvar)
        (rem_test || rem_doc));
     cond 59 `Warning "url doesn't contain a checksum"
-      (check_upstream &&
+      (is_url_archive &&
        OpamStd.Option.map OpamFile.URL.checksum t.url = Some []);
     (let upstream_error =
        if not check_upstream then None else

@@ -352,7 +352,10 @@ homepage: "egapemoh"
 maintainer: "maint@tain.er"
 license: "ISC"
 bug-reports: "https://nobug"
-url { src:"https://u.rl" }
+url {
+  src:"an-archive.tgz"
+  checksum: "md5=00000000000000000000000000000000"
+}
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
            warning 37: Missing field 'dev-repo'
@@ -852,7 +855,8 @@ dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 url { src:"an-archive.tgz" }
 ### opam lint ./lint.opam
-${BASEDIR}/lint.opam: Passed.
+${BASEDIR}/lint.opam: Warnings.
+           warning 59: url doesn't contain a checksum
 ### opam lint ./lint.opam --check-upstream
 ${BASEDIR}/lint.opam: Warnings.
            warning 59: url doesn't contain a checksum
