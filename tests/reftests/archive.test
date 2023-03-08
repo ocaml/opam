@@ -430,7 +430,8 @@ Successfully extracted to ${BASEDIR}/good-sha256-good-md5.1
 Clearing cache of downloaded files
 ### :I:5: no checksum
 ### opam lint --package no-checksum
-<default>/no-checksum.1: Passed.
+<default>/no-checksum.1: Warnings.
+           warning 59: url doesn't contain a checksum
 ### opam lint --package no-checksum --check-upstream
 <default>/no-checksum.1: Warnings.
            warning 59: url doesn't contain a checksum

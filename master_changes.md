@@ -51,6 +51,7 @@ users)
   * Add E69 to check `extra-files:` duplicated fields [#5561 @rjbou]
   * Add E71 to check same kind duplicated url checksums [#5561 @rjbou]
   * Add E72 to check that paths in `extra-files:` are not escapable [#5561 @rjbou]
+  * Update W59 (no checksum in `url`) to always display a warning, untie it from `--check-upstream` option [#5561 @rjbou]
 
 ## Repository
 
