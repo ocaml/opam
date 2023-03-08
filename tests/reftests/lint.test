@@ -356,6 +356,18 @@ url { src:"https://u.rl" }
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
            warning 37: Missing field 'dev-repo'
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+bug-reports: "https://nobug"
+### # no url doesn't trigger the lint warning
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
 ### : E39: Command 'make' called directly, use the built-in variable instead
 ### <lint.opam>
 opam-version: "2.0"
