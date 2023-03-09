@@ -171,6 +171,7 @@ users)
 
 ## Lock
   * Fix lock generation of multiple interdependent packages [#4993 @AltGr]
+  * Remove url section from lock file, it is ignored on pinning [#5465 @rjbou]
 
 ## Clean
   * [NEW] Add `--untracked` option to remove interactively untracked files [{4915 @rjbou - fix #4831]
