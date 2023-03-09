@@ -234,3 +234,10 @@ The following actions will be performed:
 -> removed   qux.dev
 Done.
 ### opam pin
+### : check edit & tty :
+### opam pin inexistent ./bar
+Package inexistent does not exist, create as a NEW package? [y/n] y
+[inexistent.dev] synchronised (file://${BASEDIR}/bar)
+[NOTE] No package definition found for inexistent.dev: please complete the template
+[ERROR] No valid package definition found
+# Return code 5 #
