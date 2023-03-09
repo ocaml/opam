@@ -64,6 +64,7 @@ users)
   * Accurately tag `curl` download command when loaded from global config file [#6270 @rjbou]
 
 ## Lock
+  * [BUG] Fix `pin-depends` for `with-*` dependencies [#5471 @rjbou - fix #5428]
 
 ## Clean
 
