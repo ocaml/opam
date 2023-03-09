@@ -946,12 +946,6 @@ pin-depends: [
 ]
 ### <tolock/content>
 it's here
-### <pin:a-simple-dep/a-simple-dep.opam>
-opam-version: "2.0"
-### <pin:a-test-dep/a-test-dep.opam>
-opam-version: "2.0"
-### <pin:a-doc-dep/a-doc-dep.opam>
-opam-version: "2.0"
 ### <pin:opam>
 opam-version: "2.0"
 version: "dev"
@@ -1013,7 +1007,7 @@ license: "MIT"
 maintainer: "maint@tain.er"
 name: "tolock"
 opam-version: "2.0"
-pin-depends: ["a-simple-dep.dev" "git+https://github.com/dbuenzli/cmdliner#f239981642a"]
+pin-depends: [["a-doc-dep.dev" "git+https://github.com/dbuenzli/cmdliner#e8f8890fe48"] ["a-simple-dep.dev" "git+https://github.com/dbuenzli/cmdliner#f239981642a"] ["a-test-dep.dev" "git+https://github.com/dbuenzli/cmdliner#1de361182ab"]]
 synopsis: "A word"
 version: "dev"
 ### : Goblint format preserved error :
