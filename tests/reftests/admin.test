@@ -570,7 +570,7 @@ opam-version: "2.0"
 ### <packages/no-extra/no-extra.1/files/missing-file>
 nothing here
 ### OPAMDEBUGSECTIONS="opam-file" OPAMDEBUG=-2 opam admin list
-opam-file                       Missing extra-files field for missing-file, adding them.
+opam-file                       Missing extra-files field for missing-file for no-extra.1, adding them.
 # Packages matching: available
 # Name   # Installed # Synopsis
 no-extra --
