@@ -1315,6 +1315,6 @@ license: "MIT"
 maintainer: "maint@tain.er"
 name: "tolock"
 opam-version: "2.0"
-pin-depends: ["a-simple-dep.dev" "git+https://github.com/dbuenzli/cmdliner#f239981642a"]
+pin-depends: [["a-doc-dep.dev" "git+https://github.com/dbuenzli/cmdliner#e8f8890fe48"] ["a-simple-dep.dev" "git+https://github.com/dbuenzli/cmdliner#f239981642a"] ["a-test-dep.dev" "git+https://github.com/dbuenzli/cmdliner#1de361182ab"]]
 synopsis: "A word"
 version: "dev"
