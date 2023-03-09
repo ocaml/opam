@@ -152,81 +152,83 @@ let copy_files st opam =
   OpamFile.OPAM.with_extra_files (List.rev files) opam
 
 (* Returns the new opam file, without writing it to disk *)
-let edit_raw name temp_file =
-  let rec edit () =
-    OpamConsole.pause
-      "Press enter to start \"%s\" (this can be customised by setting EDITOR \
-       or OPAMEDITOR)..."
-      OpamClientConfig.(!r.editor);
-    let edited_ok =
+let edit_raw =
+  if not OpamStd.Sys.tty_in then fun _ _ -> None else
+  fun name temp_file ->
+    let rec edit () =
+      OpamConsole.pause
+        "Press enter to start \"%s\" (this can be customised by setting EDITOR \
+         or OPAMEDITOR)..."
+        OpamClientConfig.(!r.editor);
+      let edited_ok =
+        try
+          Sys.command
+            (Printf.sprintf "%s %s"
+               (OpamClientConfig.(!r.editor))
+               (OpamFile.to_string temp_file))
+          = 0 &&
+          match OpamFilename.read (OpamFile.filename temp_file)
+          with "" | "\n" -> false | _ -> true
+        with _ -> false
+      in
+      if not edited_ok then
+        (OpamFilename.remove (OpamFile.filename temp_file);
+         OpamConsole.error "Empty file or editor error, aborting.";
+         None)
+      else
       try
-        Sys.command
-          (Printf.sprintf "%s %s"
-             (OpamClientConfig.(!r.editor))
-             (OpamFile.to_string temp_file))
-        = 0 &&
-        match OpamFilename.read (OpamFile.filename temp_file)
-        with "" | "\n" -> false | _ -> true
-      with _ -> false
+        let warnings, opam_opt =
+          OpamFileTools.lint_file temp_file
+        in
+        let opam = match opam_opt with
+          | None ->
+            OpamConsole.msg "Invalid opam file:\n%s\n"
+              (OpamFileTools.warns_to_string warnings);
+            failwith "Syntax errors"
+          | Some opam -> opam
+        in
+        let namecheck = match OpamFile.OPAM.name_opt opam with
+          | Some n when n <> name ->
+            OpamConsole.error "Bad \"name: %S\" field, package name is %s"
+              (OpamPackage.Name.to_string n) (OpamPackage.Name.to_string name);
+            false
+          | _ -> true
+        in
+        let versioncheck = match OpamFile.OPAM.version_opt opam with
+          | None ->
+            OpamConsole.error "Missing \"version\" field.";
+            false
+          | Some _ -> true
+        in
+        if not namecheck || not versioncheck then failwith "Bad name/version";
+        match warnings with
+        | [] -> Some opam
+        | ws ->
+          OpamConsole.warning "The opam file didn't pass validation:";
+          OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string ws);
+          if OpamConsole.confirm "Proceed anyway ('no' will re-edit)?"
+          then Some opam
+          else edit ()
+      with e ->
+        OpamStd.Exn.fatal e;
+        (match e with
+         | Failure _ -> ()
+         | e -> OpamConsole.error "%s" (Printexc.to_string e));
+        if OpamStd.Sys.tty_in &&
+           OpamConsole.confirm "Errors in %s, edit again?"
+             (OpamFile.to_string temp_file)
+        then edit ()
+        else None
     in
-    if not edited_ok then
-      (OpamFilename.remove (OpamFile.filename temp_file);
-       OpamConsole.error "Empty file or editor error, aborting.";
-       None)
-    else
-    try
-      let warnings, opam_opt =
-        OpamFileTools.lint_file temp_file
-      in
-      let opam = match opam_opt with
-        | None ->
-          OpamConsole.msg "Invalid opam file:\n%s\n"
-            (OpamFileTools.warns_to_string warnings);
-          failwith "Syntax errors"
-        | Some opam -> opam
-      in
-      let namecheck = match OpamFile.OPAM.name_opt opam with
-        | Some n when n <> name ->
-          OpamConsole.error "Bad \"name: %S\" field, package name is %s"
-            (OpamPackage.Name.to_string n) (OpamPackage.Name.to_string name);
-          false
-        | _ -> true
-      in
-      let versioncheck = match OpamFile.OPAM.version_opt opam with
-        | None ->
-          OpamConsole.error "Missing \"version\" field.";
-          false
-        | Some _ -> true
-      in
-      if not namecheck || not versioncheck then failwith "Bad name/version";
-      match warnings with
-      | [] -> Some opam
-      | ws ->
-        OpamConsole.warning "The opam file didn't pass validation:";
-        OpamConsole.errmsg "%s\n" (OpamFileTools.warns_to_string ws);
-        if OpamConsole.confirm "Proceed anyway ('no' will re-edit)?"
-        then Some opam
-        else edit ()
-    with e ->
-      OpamStd.Exn.fatal e;
-      (match e with
-       | Failure _ -> ()
-       | e -> OpamConsole.error "%s" (Printexc.to_string e));
-      if OpamStd.Sys.tty_in &&
-         OpamConsole.confirm "Errors in %s, edit again?"
-           (OpamFile.to_string temp_file)
-      then edit ()
-      else None
-  in
-  match edit () with
-  | None -> None
-  | Some new_opam ->
-    OpamConsole.msg
-      "You can edit this file again with \"opam pin edit %s\", export it with \
-       \"opam show %s --raw\"\n"
-      (OpamPackage.Name.to_string name)
-      (OpamPackage.Name.to_string name);
-    Some new_opam
+    match edit () with
+    | None -> None
+    | Some new_opam ->
+      OpamConsole.msg
+        "You can edit this file again with \"opam pin edit %s\", export it with \
+         \"opam show %s --raw\"\n"
+        (OpamPackage.Name.to_string name)
+        (OpamPackage.Name.to_string name);
+      Some new_opam
 
 let edit st ?version name =
   log "pin-edit %a" (slog OpamPackage.Name.to_string) name;
