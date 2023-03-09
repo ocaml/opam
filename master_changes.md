@@ -194,6 +194,8 @@ users)
   * lint: add E71 test [#5561 @rjbou]
   * lint: add E72 test [#5561 @rjbou]
   * lint: add E73 test [#5561 @rjbou]
+  * lint: add more test cases for E59: special cases (conf, git url), with and without option `--with-check-upstream` [#5561 @rjbou]
+  * lint: add more test cases for W59: special cases (conf, git url), with and without `--with-check-upstream` [#5561 @rjbou]
 
 ### Engine
   * Add a test filtering mechanism [#6105 @Keryan-dev]

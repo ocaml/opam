@@ -851,9 +851,48 @@ license: "ISC"
 dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 url { src:"an-archive.tgz" }
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
 ### opam lint ./lint.opam --check-upstream
 ${BASEDIR}/lint.opam: Warnings.
            warning 59: url doesn't contain a checksum
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url { src:"an-archive.tgz" }
+flags: conf
+### # package with conf flag
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 46: Package is flagged "conf" but has source, install or remove instructions
+# Return code 1 #
+### opam lint ./lint.opam --check-upstream
+${BASEDIR}/lint.opam: Errors.
+             error 46: Package is flagged "conf" but has source, install or remove instructions
+# Return code 1 #
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url { src:"git+https://a/repo" }
+### # package with git url
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
+### opam lint ./lint.opam --check-upstream
+${BASEDIR}/lint.opam: Passed.
 ### : E60: Upstream check failed
 ### <lint.opam>
 opam-version: "2.0"
