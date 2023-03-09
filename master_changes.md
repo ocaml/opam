@@ -99,7 +99,7 @@ users)
 
 ## Reftests
 ### Tests
-  * lint: update W37 test [#5561 @rjbou]
+  * lint: update W37 & E59 tests [#5561 @rjbou]
 
 ### Engine
 
