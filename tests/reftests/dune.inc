@@ -1012,6 +1012,23 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:switch-invariant.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-switch-reinstall)
+ (action
+  (diff switch-reinstall.test switch-reinstall.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-switch-reinstall)))
+
+(rule
+ (targets switch-reinstall.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:switch-reinstall.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-switch-set)
  (action
   (diff switch-set.test switch-set.out)))

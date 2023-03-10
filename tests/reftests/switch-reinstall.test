@@ -1,0 +1,113 @@
+N0REP0
+### <pkg:foo.1>
+opam-version: "2.0"
+install: [
+  ["cp" "foo" "%{bin}%/foo"]
+  ["chmod" "+x" "%{bin}%/foo"]
+]
+flags: compiler
+### <pkg:foo.1:foo>
+echo "yes i'm a here, it's amazing!"
+### : abort reinstall :
+### opam switch create reinstall foo -y
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam exec -- foo
+yes i'm a here, it's amazing!
+### opam switch export xp
+### cat xp
+opam-version: "2.0"
+compiler: ["foo.1"]
+roots: ["foo.1"]
+installed: ["foo.1"]
+### opam switch reinstall reinstall -y
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam exec -- foo
+yes i'm a here, it's amazing!
+### opam switch export xp
+### cat xp
+opam-version: "2.0"
+compiler: ["foo.1"]
+roots: ["foo.1"]
+installed: ["foo.1"]
+### opam switch reinstall reinstall -n
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+Proceed with 1 installation? [y/n] n
+# Return code 10 #
+### opam exec -- foo
+[ERROR] Command not found 'foo'
+# Return code 127 #
+### opam switch export xp
+### cat xp
+opam-version: "2.0"
+compiler: ["foo.1"]
+roots: ["foo.1"]
+installed: ["foo.1"]
+### : fail reinstall :
+### <pkg:bar.1>
+opam-version: "2.0"
+build: "false"
+### opam switch create broken-reinstall foo -y
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam install bar --fake
+The following actions will be faked:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of bar.1
+Done.
+### opam exec -- foo
+yes i'm a here, it's amazing!
+### opam switch export xp
+### cat xp
+opam-version: "2.0"
+compiler: ["foo.1"]
+roots: ["bar.1" "foo.1"]
+installed: ["bar.1" "foo.1"]
+### opam switch reinstall broken-reinstall -y
+The following actions will be performed:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of bar.1 failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build bar 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam exec -- foo
+[ERROR] Command not found 'foo'
+# Return code 127 #
+### opam switch export xp
+### cat xp
+opam-version: "2.0"
+compiler: ["foo.1"]
+roots: ["bar.1" "foo.1"]
+installed: ["bar.1" "foo.1"]
