@@ -961,6 +961,26 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:source.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-swhid.unix)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (diff swhid.unix.test swhid.unix.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Unix"))
+ (deps (alias reftest-swhid.unix)))
+
+(rule
+ (targets swhid.unix.out)
+ (deps root-N0REP0)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:swhid.unix.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-switch-creation)
  (action
   (diff switch-creation.test switch-creation.out)))

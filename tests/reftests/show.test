@@ -348,3 +348,54 @@ depexts devel/llvm90 llvm-9-dev
 name    conf-llvm
 version 10.0.0
 depexts devel/llvm10 llvm-10-dev
+### : check swhid handling :
+### <pin:swhid.opam>
+opam-version: "2.0"
+url {
+  src:"https://an.arch/i/ve.tgz"
+  mirrors:
+    [ "https://a.mi/rror"
+      "http://swhid.opam.ocaml.org/swh:1:dir:309cf2674ee7a0749978cf8265ab91a60aea0f7d" ]
+}
+### opam show ./swhid.opam
+
+<><> swhid: information on all versions <><><><><><><><><><><><><><><><><><><><>
+name         swhid
+all-versions dev
+
+<><> Version-specific details <><><><><><><><><><><><><><><><><><><><><><><><><>
+version     dev
+pin         https://an.arch/i/ve.tgz
+url.src     "https://an.arch/i/ve.tgz"
+url.swhid   "swh:1:dir:309cf2674ee7a0749978cf8265ab91a60aea0f7d"
+homepage    "egapemoh"
+bug-reports "https://nobug"
+dev-repo    "hg+https://pkg@op.am"
+authors     "the testing team"
+maintainer  "maint@tain.er"
+license     "MIT"
+synopsis    A word
+description Two words.
+### opam show ./swhid.opam --raw
+opam-version: "2.0"
+name: "swhid"
+version: "dev"
+synopsis: "A word"
+description: "Two words."
+maintainer: "maint@tain.er"
+authors: "the testing team"
+license: "MIT"
+homepage: "egapemoh"
+bug-reports: "https://nobug"
+dev-repo: "hg+https://pkg@op.am"
+url {
+  src: "https://an.arch/i/ve.tgz"
+  mirrors: [
+    "https://swhid.opam.ocaml.org/swh:1:dir:309cf2674ee7a0749978cf8265ab91a60aea0f7d"
+    "https://a.mi/rror"
+  ]
+}
+### opam show ./swhid.opam -f url.src:,url.swhid:,url.mirrors:
+url.src:     "https://an.arch/i/ve.tgz"
+url.swhid:   "swh:1:dir:309cf2674ee7a0749978cf8265ab91a60aea0f7d"
+url.mirrors: "https://a.mi/rror"

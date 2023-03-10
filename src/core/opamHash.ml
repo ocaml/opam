@@ -46,14 +46,7 @@ let kind_of_string s = match String.lowercase_ascii s with
   | _ -> invalid_arg "OpamHash.kind_of_string"
 
 let is_hex_str len s =
-  String.length s = len &&
-  try
-    String.iter (function
-        | '0'..'9' | 'A'..'F' | 'a'..'f' -> ()
-        | _ -> raise Exit)
-      s;
-    true
-  with Exit -> false
+  String.length s = len && OpamStd.String.is_hex s
 
 let len = function
   | `MD5 -> 32

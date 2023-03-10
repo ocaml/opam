@@ -61,6 +61,8 @@ jsonm.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild topkg.pkgbuild  uutf.pkgbui
 
 sha.pkgbuild: dune-local.pkgbuild stdlib-shims.pkgbuild
 
+swhid_core.pkgbuild: dune-local.pkgbuild
+
 stublibs:
 	grep -q "$(SITELIB)/stublibs" $(LDCONF) || echo $(SITELIB)/stublibs >> $(LDCONF)
 
@@ -162,3 +164,7 @@ jsonm-pkg-build:
 sha-pkg-build: stublibs
 	dune build @install -p sha
 	dune install "--prefix=$(OCAMLROOT)" -p sha sha
+
+swhid_core-pkg-build:
+	dune build @install -p swhid_core
+	dune install "--prefix=$(OCAMLROOT)" -p swhid_core swhid_core

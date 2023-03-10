@@ -1,0 +1,162 @@
+N0REP0
+### OPAMYES=1
+### <pkg:snappy-ok.1>
+opam-version: "2.0"
+build: [
+  [ "test" "-f" "src/snappy.ml"]
+  [ "test" "-f" "test.ml" ]
+]
+url {
+  src: "https://ygrek.org/p/release/ocaml-snappy/ocaml-snappy-0.1.2.tar.gz"
+  checksum: "md5=039a77d9ffb9b22ab845df30436390c1"
+}
+### opam switch create fallback --empty
+### opam install snappy-ok
+The following actions will be performed:
+=== install 1 package
+  - install snappy-ok 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved snappy-ok.1  (https://ygrek.org/p/release/ocaml-snappy/ocaml-snappy-0.1.2.tar.gz)
+-> installed snappy-ok.1
+Done.
+### opam clean -c
+Clearing cache of downloaded files
+### <pkg:snappy-ko.2>
+opam-version: "2.0"
+url {
+  src: "https://fa.ke/url.tar.gz"
+  checksum: "md5=039a77d9ffb9b22ab845df30436390c1"
+}
+### opam option download-command=curl
+Set to 'curl' the field download-command in global configuration
+### opam install snappy-ko | '"/.*curl' -> '"curl'
+The following actions will be performed:
+=== install 1 package
+  - install snappy-ko 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] Failed to get sources of snappy-ko.2: Download command failed
+
+OpamSolution.Fetch_fail("https://fa.ke/url.tar.gz (Download command failed: \"curl --write-out %{http_code}\\n --retry 3 --retry-delay 2 --user-agent opam/2.2.0~alpha~dev -L -o ${BASEDIR}/OPAM/fallback/.opam-switch/sources/snappy-ko.2/url.tar.gz.part -- https://fa.ke/url.tar.gz\" exited with code 6)")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - fetch snappy-ko 2
++- 
+- No changes have been performed
+# Return code 40 #
+### opam clean -c
+Clearing cache of downloaded files
+### <pkg:snappy-swhid-dir.2>
+opam-version: "2.0"
+url {
+  src: "https://fa.ke/url.tar.gz"
+  checksum: "md5=039a77d9ffb9b22ab845df30436390c1"
+  mirrors: "https://swhid.opam.ocaml.org/swh:1:dir:9f2be900491e1dabfc027848204ae01aa88fc71d"
+}
+### opam option swh-fallback=false
+Set to 'false' the field swh-fallback in global configuration
+### opam install snappy-swhid-dir -v | '"/.*curl' -> '"curl'
+The following actions will be performed:
+=== install 1 package
+  - install snappy-swhid-dir 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/3: [snappy-swhid-dir.2: http]
+[ERROR] Failed to get sources of snappy-swhid-dir.2: Download command failed
+
+OpamSolution.Fetch_fail("https://fa.ke/url.tar.gz (Download command failed: \"curl --write-out %{http_code}\\n --retry 3 --retry-delay 2 --user-agent opam/2.2.0~alpha~dev -L -o ${BASEDIR}/OPAM/fallback/.opam-switch/sources/snappy-swhid-dir.2/url.tar.gz.part -- https://fa.ke/url.tar.gz\" exited with code 6)")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - fetch snappy-swhid-dir 2
++- 
+- No changes have been performed
+'${OPAM} install snappy-swhid-dir -v' failed.
+# Return code 40 #
+### opam option swh-fallback=true
+Set to 'true' the field swh-fallback in global configuration
+### opam install snappy-swhid-dir -v | grep -v '^Processing'
+The following actions will be performed:
+=== install 1 package
+  - install snappy-swhid-dir 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Source https://fa.ke/url.tar.gz is not available. Do you want to try to retrieve it from Software Heritage cache (https://www.softwareheritage.org)? It may take few minutes. [y/n] y
+-> retrieved snappy-swhid-dir.2  (SWH fallback)
+-> installed snappy-swhid-dir.2
+Done.
+### opam remove snappy-swhid-dir
+The following actions will be performed:
+=== remove 1 package
+  - remove snappy-swhid-dir 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   snappy-swhid-dir.2
+Done.
+### opam clean -c
+Clearing cache of downloaded files
+### opam option download-command=wget
+Set to 'wget' the field download-command in global configuration
+### opam install snappy-swhid-dir -v | grep -v '^Processing'
+The following actions will be performed:
+=== install 1 package
+  - install snappy-swhid-dir 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Source https://fa.ke/url.tar.gz is not available. Do you want to try to retrieve it from Software Heritage cache (https://www.softwareheritage.org)? It may take few minutes. [y/n] y
+-> retrieved snappy-swhid-dir.2  (SWH fallback)
+-> installed snappy-swhid-dir.2
+Done.
+### opam clean -c
+Clearing cache of downloaded files
+### opam option download-command=curl
+Set to 'curl' the field download-command in global configuration
+### <pkg:snappy-swhid-ko.2>
+opam-version: "2.0"
+url {
+  src: "https://fa.ke/url.tar.gz"
+  checksum: "md5=039a77d9ffb9b22ab845df30436390c1"
+  mirrors: "https://swhid.opam.ocaml.org/swh:1:dir:0000000000000000000000000000000000000000"
+}
+### opam install snappy-swhid-ko
+The following actions will be performed:
+=== install 1 package
+  - install snappy-swhid-ko 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Source https://fa.ke/url.tar.gz is not available. Do you want to try to retrieve it from Software Heritage cache (https://www.softwareheritage.org)? It may take few minutes. [y/n] y
+[ERROR] Failed to get sources of snappy-swhid-ko.2: SWH fallback: Unknown swhid
+
+OpamSolution.Fetch_fail("SWH fallback: Unknown swhid")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - fetch snappy-swhid-ko 2
++- 
+- No changes have been performed
+# Return code 40 #
+### # unkown download command
+### opam option download-command=fetch
+Set to 'fetch' the field download-command in global configuration
+### opam install snappy-swhid-ko
+The following actions will be performed:
+=== install 1 package
+  - install snappy-swhid-ko 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] Failed to get sources of snappy-swhid-ko.2: SWH fallback: no retrieval
+
+OpamSolution.Fetch_fail("SWH fallback: Download tool permitting post request (wget and curl) not set as download tool")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - fetch snappy-swhid-ko 2
++- 
+- No changes have been performed
+# Return code 40 #

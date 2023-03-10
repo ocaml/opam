@@ -84,6 +84,8 @@ val pinned_package:
     given directory. Also places all of the package extra files (that have a
     known hash) into the cache. For non-VC remotes, verifies the checksum if
     any.
+    If an archive is not found, it launches Software Heritage fallback (see
+    [OpamDownload.SWHID]).
 
     Stops on first error. The extra downloads list is reverted, so that the
     error is always first if any.

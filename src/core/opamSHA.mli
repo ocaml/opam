@@ -11,15 +11,19 @@
 (** Pure OCaml implementation of SHA256/512 hashing functions. The hash is
     returned as an hex string. *)
 
+val sha1_file: string -> string
+
 val sha256_file: string -> string
 
 val sha512_file: string -> string
 
-val hash_file: [< `SHA256 | `SHA512 ] -> string -> string
+val hash_file: [< `SHA1 | `SHA256 | `SHA512 ] -> string -> string
 
+
+val sha1_string: string -> string
 
 val sha256_string: string -> string
 
 val sha512_string: string -> string
 
-val hash_string: [< `SHA256 | `SHA512 ] -> string -> string
+val hash_string: [< `SHA1 | `SHA256 | `SHA512 ] -> string -> string

@@ -204,6 +204,7 @@ solver                         {}
 solver-criteria                {}
 solver-fixup-criteria          {}
 solver-upgrade-criteria        {}
+swh-fallback                   true
 sys-pkg-manager-cmd            {}
 wrap-build-commands            {}
 wrap-install-commands          {}
@@ -486,7 +487,7 @@ Removed variable dolore in global configuration
 # Return code 2 #
 ### opam option bar=sit --global
 [ERROR] There is no option named 'bar'. The allowed options are:
-jobs download-command download-jobs archive-mirrors solver-criteria solver-upgrade-criteria solver-fixup-criteria best-effort-prefix-criteria solver global-variables eval-variables repository-validation-command depext depext-run-installs depext-cannot-install depext-bypass sys-pkg-manager-cmd pre-build-commands pre-install-commands pre-remove-commands pre-session-commands wrap-build-commands wrap-install-commands wrap-remove-commands post-build-commands post-install-commands post-remove-commands post-session-commands
+jobs download-command download-jobs archive-mirrors solver-criteria solver-upgrade-criteria solver-fixup-criteria best-effort-prefix-criteria solver global-variables eval-variables repository-validation-command depext depext-run-installs depext-cannot-install depext-bypass sys-pkg-manager-cmd swh-fallback pre-build-commands pre-install-commands pre-remove-commands pre-session-commands wrap-build-commands wrap-install-commands wrap-remove-commands post-build-commands post-install-commands post-remove-commands post-session-commands
 # Return code 2 #
 ### opam option bar=sit --switch var-option
 [ERROR] There is no option named 'bar'. The allowed options are:
@@ -586,6 +587,7 @@ solver                         {}
 solver-criteria                {}
 solver-fixup-criteria          {}
 solver-upgrade-criteria        {}
+swh-fallback                   true
 sys-pkg-manager-cmd            {}
 wrap-build-commands            {}
 wrap-install-commands          {}
@@ -616,6 +618,7 @@ solver                         {}
 solver-criteria                {}
 solver-fixup-criteria          {}
 solver-upgrade-criteria        {}
+swh-fallback                   true
 sys-pkg-manager-cmd            {}
 wrap-build-commands            {}
 wrap-install-commands          {}

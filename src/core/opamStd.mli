@@ -250,6 +250,9 @@ module List : sig
   val update_assoc:
     ('a -> 'a -> bool) -> 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
 
+  (** Like [pick_assoc], but with a test function that takes a list element *)
+  val pick: ('a -> bool) -> 'a list -> 'a option * 'a list
+
   (** Like [List.fold_left], but also performs [List.map] at the same time *)
   val fold_left_map: ('s -> 'a -> ('s * 'b)) -> 's -> 'a list -> 's * 'b list
 end
@@ -312,6 +315,8 @@ module String : sig
   val split_delim: string -> char -> string list
 
   val fold_left: ('a -> char -> 'a) -> 'a -> string -> 'a
+
+  val is_hex: string -> bool
 
 end
 

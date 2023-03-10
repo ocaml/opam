@@ -1511,6 +1511,11 @@ them modified with [`opam option --global`](man/opam-option.html).
   assume the listed system packages to be already installed, bypassing the
   checks normally done when `depext` is enabled.
 
+- <a id="configfield-swh-fallback">`swh-fallback: <bool>`</a>:
+  If `true`, opam try to retrieve a unreachable package source from [Software
+  Heritage](www.softwareheritage.org) archive if the `swhid` is present in the
+  opam file.
+
 #### switch-config
 
 This file is located in `<switch-prefix>/.opam-switch/switch-config` and

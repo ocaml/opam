@@ -9,6 +9,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamTypes
+
 (** Configuration init and handling of downloading commands *)
 
 exception Download_fail of string option * string
@@ -29,3 +31,17 @@ val download_as:
   ?checksum:OpamHash.t ->
   OpamUrl.t -> OpamFilename.t ->
   unit OpamProcess.job
+
+
+(** Software Heritage fallback *)
+module SWHID: sig
+
+  (* [archive_fallback ?timeout url dirnames] downloads archived archive from
+     SWH platform and copies it in target directory. [dirnames] is the list of
+     dirnames in which the archive will be copied:
+     string label * dirname * subpath option. *)
+  val archive_fallback:
+    ?max_tries:int -> OpamFile.URL.t ->
+    (string * dirname * subpath option) list ->
+    string option download OpamProcess.job
+end

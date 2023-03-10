@@ -171,6 +171,8 @@ module Config: sig
   val with_depext_bypass: OpamSysPkg.Set.t -> t -> t
   val with_sys_pkg_manager_cmd: filename OpamStd.String.Map.t -> t -> t
 
+  val with_swh_fallback: bool -> t -> t
+
   (** Return the opam version *)
   val opam_version: t  -> opam_version
 
@@ -226,6 +228,10 @@ module Config: sig
   val depext_bypass: t -> OpamSysPkg.Set.t
 
   val sys_pkg_manager_cmd: t -> filename OpamStd.String.Map.t
+
+  (* Enable or disable Software Heritage fallback for unreachable package
+     sources *)
+  val swh_fallback: t -> bool
 
   val fields: (string * (t, value) OpamPp.field_parser) list
 
@@ -310,7 +316,8 @@ module URL: sig
   include IO_FILE
 
   val create:
-    ?mirrors:url list -> ?checksum:OpamHash.t list -> ?subpath:subpath ->
+    ?mirrors:url list -> ?checksum:OpamHash.t list ->
+    ?swhid:OpamSWHID.t -> ?subpath:subpath ->
     url -> t
 
   (** URL address *)
@@ -320,10 +327,14 @@ module URL: sig
 
   (** Archive checksum *)
   val checksum: t -> OpamHash.t list
+  val swhid: t -> OpamSWHID.t option
 
   (** Constructor *)
   val with_url: url -> t -> t
   val with_checksum: OpamHash.t list -> t -> t
+  val with_mirrors: OpamUrl.t list -> t -> t
+  val with_swhid: OpamSWHID.t -> t -> t
+  val with_swhid_opt: OpamSWHID.t option -> t -> t
   val with_subpath: subpath -> t -> t
   val with_subpath_opt: subpath option -> t -> t
 

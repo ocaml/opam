@@ -601,11 +601,13 @@ let commands ?verbose ?env ?name ?metadata ?(keep_going=false) commands =
   | `Error e -> process_error e
   | `Exception e -> raise e
 
-let read_command_output ?verbose ?env ?metadata ?allow_stdin cmd =
+let read_command_output ?verbose ?env ?metadata ?allow_stdin
+    ?(ignore_stderr=false) cmd =
   let name = log_file None in
+  let stdout = name ^ (if ignore_stderr then ".stdout" else ".out") in
   let r =
     run_process ?verbose ?env ~name ?metadata ?allow_stdin
-      ~stdout:(name^".out")
+      ~stdout
       cmd
   in
   OpamProcess.cleanup r;

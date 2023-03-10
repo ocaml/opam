@@ -1265,6 +1265,7 @@ module ConfigSyntax = struct
     depext_cannot_install : bool;
     depext_bypass: OpamSysPkg.Set.t;
     sys_pkg_manager_cmd: filename OpamStd.String.Map.t;
+    swh_fallback: bool;
   }
 
   let opam_version t = t.opam_version
@@ -1308,6 +1309,8 @@ module ConfigSyntax = struct
   let depext_bypass t = t.depext_bypass
 
   let sys_pkg_manager_cmd t = t.sys_pkg_manager_cmd
+
+  let swh_fallback t = t.swh_fallback
 
   let with_opam_version opam_version t = { t with opam_version }
   let with_opam_root_version opam_root_version t = { t with opam_root_version }
@@ -1357,6 +1360,7 @@ module ConfigSyntax = struct
   let with_depext_bypass depext_bypass t = { t with depext_bypass }
   let with_sys_pkg_manager_cmd sys_pkg_manager_cmd t =
     { t with sys_pkg_manager_cmd }
+  let with_swh_fallback swh_fallback t = { t with swh_fallback }
 
   let empty = {
     opam_version = file_format_version;
@@ -1382,6 +1386,7 @@ module ConfigSyntax = struct
     depext_cannot_install = false;
     depext_bypass = OpamSysPkg.Set.empty;
     sys_pkg_manager_cmd = OpamStd.String.Map.empty;
+    swh_fallback = true;
   }
 
   (* When adding a field, make sure to add it in
@@ -1485,6 +1490,9 @@ module ConfigSyntax = struct
                Pp.V.string
                (Pp.V.string -| Pp.of_module "filename" (module OpamFilename))))
          -| Pp.of_pair "Distribution Map" OpamStd.String.Map.(of_list, bindings));
+      "swh-fallback", Pp.ppacc
+        with_swh_fallback swh_fallback
+        Pp.V.bool;
 
       (* deprecated fields *)
       "alias", Pp.ppacc_opt
@@ -2251,19 +2259,21 @@ module URLSyntax = struct
     url     : url;
     mirrors : url list;
     checksum: OpamHash.t list;
+    swhid: OpamSWHID.t option;
     errors  : (string * Pp.bad_format) list;
     subpath : subpath option;
   }
 
-  let create ?(mirrors=[]) ?(checksum=[]) ?subpath url =
+  let create ?(mirrors=[]) ?(checksum=[]) ?swhid ?subpath url =
     {
-      url; mirrors; checksum; errors = []; subpath;
+      url; mirrors; checksum; swhid; errors = []; subpath;
     }
 
   let empty = {
     url     = OpamUrl.empty;
     mirrors = [];
     checksum= [];
+    swhid = None;
     errors  = [];
     subpath = None;
   }
@@ -2271,11 +2281,14 @@ module URLSyntax = struct
   let url t = t.url
   let mirrors t = t.mirrors
   let checksum t = t.checksum
+  let swhid t = t.swhid
   let subpath t = t.subpath
 
   let with_url url t = { t with url }
   let with_mirrors mirrors t = { t with mirrors }
   let with_checksum checksum t = { t with checksum = checksum }
+  let with_swhid swhid t = { t with swhid = Some swhid }
+  let with_swhid_opt swhid t = { t with swhid = swhid }
   let with_subpath subpath t = { t with subpath = Some subpath }
   let with_subpath_opt subpath t = { t with subpath = subpath }
 
@@ -2317,7 +2330,26 @@ module URLSyntax = struct
       (fun ~pos t ->
          if t.url = OpamUrl.empty then OpamPp.bad_format ~pos "missing URL"
          else t)
-      (fun x -> x)
+      (fun x -> x) -|
+    Pp.pp ~name
+      (fun ~pos:_ t ->
+         let swhid, mirrors = OpamStd.List.pick OpamSWHID.is_valid t.mirrors in
+         match swhid with
+         | None -> t
+         | Some swhid_url ->
+           (match OpamSWHID.of_url swhid_url with
+            | None ->
+              Pp.warn "Bad format of SWHID url: %s" (OpamUrl.to_string swhid_url);
+              t
+            | swhid ->
+              { t with swhid ; mirrors }))
+      (fun t ->
+         match t.swhid with
+         | None -> t
+         | Some swhid ->
+           { t with
+             swhid = None;
+             mirrors = OpamSWHID.to_url swhid :: t.mirrors })
 
   let pp = Pp.I.map_file pp_contents
 

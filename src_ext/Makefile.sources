@@ -105,3 +105,8 @@ URL_sha = https://github.com/djs55/ocaml-sha/releases/download/v1.15.4/sha-1.15.
 MD5_sha = 08bc953d9a26380bc220b05d680791fb
 
 $(call PKG_SAME,sha)
+
+URL_swhid_core = https://github.com/OCamlPro/swhid_core/archive/refs/tags/0.1.tar.gz
+MD5_swhid_core = 77d88d4b1d96261c866f140c64d89af8
+
+$(call PKG_SAME,swhid_core)
