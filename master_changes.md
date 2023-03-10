@@ -36,6 +36,7 @@ users)
   * ◈ `tree` subcommand now supports `--json` option [#5303 @cannorin - fix #5298]
   * ◈ Add `why` subcommand to examine how the versions of currently installed packages get constrained (alias to `tree --rev-deps`) [#5171 @cannorin - fix #3775]
   * Make the plugin lookup faster when mistyping a subcommand [#5297 @kit-ty-kate]
+  * Write config files atomically to avoid their deletion eg. if no more disk space available [#5473 @rjbou - fix #2715 #4157 #5440]
 
 ## Plugins
   *
