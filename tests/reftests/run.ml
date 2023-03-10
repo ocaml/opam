@@ -487,7 +487,7 @@ let common_filters =
       (fun _ -> None), (fun _ -> None)
     else
     let get_path opt path =
-      cygpath ~f:(fun x -> not (String.equal x path)) [ opt ; String.escaped path ]
+      cygpath ~f:(fun x -> not (String.equal x path)) [ opt ; "--"; String.escaped path ]
     in
     get_path "-u", get_path "-w"
   in
