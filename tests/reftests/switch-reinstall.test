@@ -47,10 +47,10 @@ The following actions will be performed:
   - install foo 1
 
 Proceed with 1 installation? [y/n] n
+[ERROR] Failure during switch reinstall, rolling back to previous state
 # Return code 10 #
 ### opam exec -- foo
-[ERROR] Command not found 'foo'
-# Return code 127 #
+yes i'm a here, it's amazing!
 ### opam switch export xp
 ### cat xp
 opam-version: "2.0"
@@ -101,10 +101,10 @@ The following actions will be performed:
 | - build bar 1
 +- 
 - No changes have been performed
+[ERROR] Failure during switch reinstall, rolling back to previous state
 # Return code 31 #
 ### opam exec -- foo
-[ERROR] Command not found 'foo'
-# Return code 127 #
+yes i'm a here, it's amazing!
 ### opam switch export xp
 ### cat xp
 opam-version: "2.0"
