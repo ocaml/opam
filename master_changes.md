@@ -39,6 +39,7 @@ users)
 
 ## Switch
   * [BUG] Fix `opam switch remove <dir>` failure when it is a linked switch [#6276 @btjorge - fix #6275]
+  * [BUG] Failing switch reinstall partially delete switch layout [#5475 @rjbou - fix #5347]
 
 ## Config
 
