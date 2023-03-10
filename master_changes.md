@@ -129,6 +129,7 @@ users)
 ## Reftests
 ### Tests
   * Add switch removal test: failure on removal linked switch [#6276 @btjorge]
+  * Add switch reinstall test with failures [#5475 @rjbou]
 
 ### Engine
 
