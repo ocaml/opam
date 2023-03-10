@@ -40,7 +40,10 @@ fi
 if [ $OPAM_UPGRADE -eq 1 ]; then
   unset-dev-version
 fi
+# Disable implicit transitive deps
+sed -i -e '/(implicit_transitive_deps /s/true/false/' dune-project
 make all admin
+sed -i -e '/(implicit_transitive_deps /s/false/true/' dune-project
 
 rm -f "$PREFIX/bin/opam"
 make install
