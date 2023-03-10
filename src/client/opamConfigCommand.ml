@@ -722,6 +722,21 @@ let global_allowed_fields, global_allowed_sections =
                 (Config.depext_bypass c -- Config.depext_bypass nc) c)
           )),
         Config.with_depext_bypass (Config.depext_bypass Config.empty);
+        "sys-pkg-manager-cmd", Modifiable (
+            (fun nc c -> Config.with_sys_pkg_manager_cmd
+                (OpamStd.String.Map.union (fun nc _c -> nc)
+                (Config.sys_pkg_manager_cmd nc) (Config.sys_pkg_manager_cmd c)) c),
+            (fun nc c ->
+               let to_remove = OpamStd.String.Map.keys (Config.sys_pkg_manager_cmd nc) in
+               let nmap =
+                 List.fold_left (fun map key ->
+                     OpamStd.String.Map.remove key map)
+                   (Config.sys_pkg_manager_cmd c) to_remove
+               in
+               Config.with_sys_pkg_manager_cmd nmap c)
+          ),
+        Config.with_sys_pkg_manager_cmd (Config.sys_pkg_manager_cmd Config.empty);
+
       ] @ List.map (fun f ->
         f, Atomic, Config.with_criteria
           (Config.criteria Config.empty))

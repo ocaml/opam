@@ -17,24 +17,25 @@ open OpamStateTypes
      * second one, not found set: packages not found on the defined repositories
    [env] is used to determine host specification. *)
 val packages_status:
-  ?env:gt_variables -> OpamSysPkg.Set.t -> OpamSysPkg.Set.t * OpamSysPkg.Set.t
+  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
+  OpamSysPkg.Set.t * OpamSysPkg.Set.t
 
 (* Return the commands to run to install given system packages.
    [env] is used to determine host specification. *)
 val install_packages_commands:
-  ?env:gt_variables -> OpamSysPkg.Set.t ->
+  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
   ([`AsAdmin of string | `AsUser of string] * string list) list
 
 (* Install given system packages, by calling local system package manager.
    [env] is used to determine host specification. *)
-val install: ?env:gt_variables -> OpamSysPkg.Set.t -> unit
+val install: ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t -> unit
 
-val update: ?env:gt_variables -> unit -> unit
+val update: ?env:gt_variables -> OpamFile.Config.t -> unit
 
-val package_manager_name: ?env:gt_variables -> unit -> string
+val package_manager_name: ?env:gt_variables -> OpamFile.Config.t -> string
 
 (* Determine if special packages may need installing to enable other
    repositories.
    Presently used to check for epel-release on CentOS and RHEL.
    [env] is used to determine host specification. *)
-val repo_enablers: ?env:gt_variables -> unit -> string option
+val repo_enablers: ?env:gt_variables -> OpamFile.Config.t -> string option

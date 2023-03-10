@@ -164,7 +164,7 @@ let check_availability ?permissive t set atoms =
            msg
            (OpamStd.Option.map_default (Printf.sprintf "\n%s.") ""
               (OpamSysInteract.repo_enablers
-                 ~env:t.switch_global.global_variables ())))
+                 ~env:t.switch_global.global_variables t.switch_global.config)))
     | None -> None
   in
   let check_atom (name, cstr as atom) =
@@ -1150,6 +1150,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     get_depexts ~force:force_depext ~recover:force_depext t packages
   in
   let env = t.switch_global.global_variables in
+  let config = t.switch_global.config in
   let map_sysmap f t =
     let sys_packages =
       OpamPackage.Set.fold (fun nv sys_map ->
@@ -1176,7 +1177,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     let answer =
       let pkgman =
         OpamConsole.colorise `yellow
-          (OpamSysInteract.package_manager_name ~env ())
+          (OpamSysInteract.package_manager_name ~env config)
       in
       OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
         "opam believes some required external dependencies are missing. opam \
@@ -1207,7 +1208,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     | `Quit -> give_up_msg (); OpamStd.Sys.exit_because `Aborted
   and print_command sys_packages =
     let commands =
-      OpamSysInteract.install_packages_commands sys_packages ~env
+      OpamSysInteract.install_packages_commands ~env config sys_packages
       |> List.map (fun ((`AsAdmin c | `AsUser c), a) -> c::a)
     in
     OpamConsole.formatted_msg
@@ -1235,14 +1236,16 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     | `Quit -> give_up ()
   and auto_install t sys_packages =
     try
-      OpamSysInteract.install ~env sys_packages; (* handles dry_run *)
+      OpamSysInteract.install ~env config sys_packages; (* handles dry_run *)
       map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
     with Failure msg ->
       OpamConsole.error "%s" msg;
       check_again t sys_packages
   and check_again t sys_packages =
     let open OpamSysPkg.Set.Op in
-    let needed, notfound = OpamSysInteract.packages_status ~env sys_packages in
+    let needed, notfound =
+      OpamSysInteract.packages_status ~env config sys_packages
+    in
     let still_missing = needed ++ notfound in
     let installed = sys_packages -- still_missing in
     let t =

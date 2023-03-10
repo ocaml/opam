@@ -90,6 +90,8 @@ users)
 ## Config
   * Reset the "jobs" config variable when upgrading from opam 2.0 [#5284 @kit-ty-kate]
   * Display a warning on hard upgrade when the `jobs` config variable is re-written [#5305 @rjbou]
+    * update note [#5305 @rjbou]
+  * Add `sys-pkg-manager-cmd` field to store specific system package manager command paths [#5433 @rjbou]
 
 ## Pin
   * Switch the default version when undefined from ~dev to dev [#4949 @kit-ty-kate]
@@ -174,7 +176,7 @@ users)
   * [BUG] Variables are now expanded in build-env (as for setenv) [#5352 @dra27]
 
 ## External dependencies
-  * Support MSYS2 on Windows for depexts [#5348 @jonahbeckford]
+  * Support MSYS2 on Windows for depexts [#5348 @jonahbeckford #5433 @rjbou]
   * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
   * Fix depext alpine tagged repositories handling [#4763 @rjbou] [2.1.0~rc2 #4758]
   * Homebrew: Add support for casks and full-names [#4801 @kit-ty-kate]
@@ -563,6 +565,7 @@ users)
   * `OpamGlobalState`: add `as_necessary_repo_switch_upgrade` that checks conditions and call `OpamFormatUpgrade.repo_switch_hard_upgrade` [#5305 @rjbou]
   * `OpamSwitchState`, `OpamRepositoryState`: at the beginning of `load` function, check if an upgrade is needed with `OpamGlobalState.as_necessary_repo_switch_upgrade` [#5305 @rjbou]
   * `OpamStataTypes.global_state`: add `global_state_to_upgrade` field to keep incomplete upgrade information [#5305 @rjbou]
+  * `OpamSysInteract`: add global config argument to function, in order to be able to retrieve system package manager path for MSYS2, and in the future Cygwin, etc. [#5433 @rjbou]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]

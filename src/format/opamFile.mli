@@ -169,6 +169,7 @@ module Config: sig
   val with_depext_run_installs: bool -> t -> t
   val with_depext_cannot_install: bool -> t -> t
   val with_depext_bypass: OpamSysPkg.Set.t -> t -> t
+  val with_sys_pkg_manager_cmd: filename OpamStd.String.Map.t -> t -> t
 
   (** Return the opam version *)
   val opam_version: t  -> opam_version
@@ -223,6 +224,8 @@ module Config: sig
   val depext_run_installs: t -> bool
   val depext_cannot_install: t -> bool
   val depext_bypass: t -> OpamSysPkg.Set.t
+
+  val sys_pkg_manager_cmd: t -> filename OpamStd.String.Map.t
 
   val fields: (string * (t, value) OpamPp.field_parser) list
 
