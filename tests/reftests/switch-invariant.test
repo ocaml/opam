@@ -24,10 +24,8 @@ The following actions will be performed:
 -> installed foo.1
 Done.
 ### opam switch set-invariant foo
-[WARNING] Packages foo don't have the 'compiler' flag set.
 The switch invariant was set to foo
 ### opam switch set-invariant --package foo
-[WARNING] Packages foo don't have the 'compiler' flag set.
 The switch invariant was set to foo
 ### opam switch set-invariant bar
 The switch invariant was set to bar
@@ -39,7 +37,6 @@ The following actions will be performed:
 -> installed bar.1
 Done.
 ### opam switch set-invariant --package bar
-[WARNING] Packages bar don't have the 'compiler' flag set.
 The switch invariant was set to bar
 ### <pkg:bar.1>
 opam-version: "2.0"

@@ -710,21 +710,6 @@ let set_invariant ?(force=false) st invariant =
       (OpamStd.List.concat_map ", "
          OpamPackage.Name.to_string
          (OpamPackage.Name.Set.elements name_unknown));
-  let packages = OpamFormula.packages st.installed invariant in
-  let not_comp =
-    OpamPackage.Set.filter (fun nv ->
-        match OpamSwitchState.opam_opt st nv with
-        | Some opam -> not (OpamFile.OPAM.has_flag Pkgflag_Compiler opam)
-        | None -> false)
-      packages
-  in
-  if not (OpamPackage.Set.is_empty not_comp) then
-    OpamConsole.warning
-      "Packages %s don't have the 'compiler' flag set."
-      (OpamStd.Format.pretty_list
-         (List.map OpamPackage.Name.to_string
-            (OpamPackage.Name.Set.elements
-               (OpamPackage.names_of_packages not_comp))));
   set_invariant_raw st invariant
 
 let get_compiler_packages ?repos rt =

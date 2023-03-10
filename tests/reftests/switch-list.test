@@ -41,7 +41,6 @@ The following actions will be performed:
 -> installed g.1
 Done.
 ### opam switch set-invariant b
-[WARNING] Packages b don't have the 'compiler' flag set.
 The switch invariant was set to b
 ### opam switch list
 #   switch   compiler  description
