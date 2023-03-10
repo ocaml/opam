@@ -1234,8 +1234,8 @@ RSTATE                          loaded opam files from repo default in 0.000s
 Update done, please now retry your command.
 # Return code 10 #
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-package
-FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config in 0.000s
+### opam install i-am-package | 'opam-atomic.*' -> 'opam-atomic.tmp'
+FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config in 0.000s atomically via ${BASEDIR}/_opam/.opam-switch/opam-atomic.tmp
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -1288,8 +1288,8 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:2:d: Upgraded root and local 2.1~alpha switch not recorded
 ### ocaml generate.ml $OPAMROOTVERSION orphaned 2.1~alpha
 ### # ro global state, ro repo state, ro switch state
-### opam list
-FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config in 0.000s
+### opam list | 'opam-atomic.*' -> 'opam-atomic.tmp'
+FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config in 0.000s atomically via ${BASEDIR}/_opam/.opam-switch/opam-atomic.tmp
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
@@ -1601,8 +1601,8 @@ RSTATE                          loaded opam files from repo default in 0.000s
 Update done, please now retry your command.
 # Return code 10 #
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-package
-FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config in 0.000s
+### opam install i-am-package | 'opam-atomic.*' -> 'opam-atomic.tmp'
+FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config in 0.000s atomically via ${BASEDIR}/_opam/.opam-switch/opam-atomic.tmp
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -1655,8 +1655,8 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:3:d: Upgraded root and local 2.1~alpha2 switch not recorded
 ### ocaml generate.ml $OPAMROOTVERSION orphaned 2.1~alpha2
 ### # ro global state, ro repo state, ro switch state
-### opam list
-FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config in 0.000s
+### opam list | 'opam-atomic.*' -> 'opam-atomic.tmp'
+FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config in 0.000s atomically via ${BASEDIR}/_opam/.opam-switch/opam-atomic.tmp
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found

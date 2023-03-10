@@ -1132,6 +1132,7 @@ end
 module type SyntaxFileArg = sig
   val internal: string
   val format_version: OpamVersion.t
+  val atomic: bool
   type t
   val empty: t
   val pp: (opamfile, filename * t) OpamPp.t
