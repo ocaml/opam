@@ -461,7 +461,7 @@ end
 
 module OInt = struct
   type t = int
-  let compare = OpamCompat.Int.compare
+  let compare = Int.compare
   let to_string = string_of_int
   let to_json i = `String (string_of_int i)
   let of_json = function
@@ -1187,7 +1187,7 @@ module OpamSys = struct
 
   let registered_at_exit = ref []
   let at_exit f =
-    OpamCompat.Stdlib.at_exit f;
+    Stdlib.at_exit f;
     registered_at_exit := f :: !registered_at_exit
   let exec_at_exit () =
     List.iter
@@ -1583,7 +1583,7 @@ module Exn = struct
   let finalise e f =
     let bt = Printexc.get_raw_backtrace () in
     f ();
-    OpamCompat.Printexc.raise_with_backtrace e bt
+    Printexc.raise_with_backtrace e bt
 
   let finally f k =
     match k () with

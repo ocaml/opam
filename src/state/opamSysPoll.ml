@@ -9,7 +9,6 @@
 (**************************************************************************)
 
 open OpamStd.Option.Op
-open OpamCompat
 
 let command_output c =
   match List.filter (fun s -> String.trim s <> "")
@@ -148,7 +147,7 @@ let variables =
   List.map
     (fun (n, v) ->
        OpamVariable.of_string n,
-       Lazy.map (OpamStd.Option.map (fun v -> OpamTypes.S v)) v)
+       OpamCompat.Lazy.map (OpamStd.Option.map (fun v -> OpamTypes.S v)) v)
     [
       "arch", arch;
       "os", os;

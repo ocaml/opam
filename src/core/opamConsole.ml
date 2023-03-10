@@ -164,7 +164,7 @@ let utf8_symbol main ?(alternates=[]) s =
           main
       in
       let b = Buffer.create 4 in
-      OpamCompat.Buffer.add_utf_8_uchar b scalar;
+      Buffer.add_utf_8_uchar b scalar;
       Buffer.contents b
     with Failure _
        | Not_found ->
@@ -1100,7 +1100,7 @@ module Tree = struct
     and go_children indents children =
       let child_end = List.length children - 1 in
       List.iteri (fun i child ->
-          go indents (OpamCompat.Int.equal i child_end) child)
+          go indents (Int.equal i child_end) child)
         children
     in
     Buffer.add_string buff (printer value);

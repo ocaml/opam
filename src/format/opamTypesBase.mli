@@ -17,8 +17,6 @@
 open OpamParserTypes.FullPos
 open OpamTypes
 
-include module type of struct include OpamCompat end
-
 val string_of_std_path: std_path -> string
 val std_path_of_string: string -> std_path
 val all_std_paths: std_path list
