@@ -2,7 +2,7 @@
   (name        opam_core)
   (public_name opam-core)
   (synopsis    "OCaml Package Manager core internal stdlib")
-  (libraries   re (re_export ocamlgraph) unix bigarray sha jsonm swhid_core
+  (libraries   re (re_export ocamlgraph) unix bigarray sha jsonm swhid_core uutf
                (select opamACL.ml from
                        (opam-core.libacl -> opamACL.libacl.ml)
                        (                 -> opamACL.dummy.ml))
