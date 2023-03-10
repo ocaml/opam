@@ -86,6 +86,7 @@ users)
   * Really install invariant formula if not installed in switch [#5188 @rjbou]
   * On import, check that installed pinned packages changed, reinstall if so [#5181 @rjbou - fix #5173]
   * [BUG] Enforce extra-source to have a checksum when using "opam switch export --freeze" [#5418 @kit-ty-kate]
+  * [BUG] Failing switch reinstall partially delete switch layout [#5475 @rjbou - fix #5347]
 
 ## Config
   * Reset the "jobs" config variable when upgrading from opam 2.0 [#5284 @kit-ty-kate]
@@ -411,6 +412,7 @@ users)
   * Add a test showing that we still get the reason for installing a package when using opam reinstall on non-installed packages [#5229 @kit-ty-kate]
   * Add a windows test to check case insensitive environment variable handling [#5356 @dra27]
   * Fix the reftests on OCaml 5.0 [#5402 @kit-ty-kate]
+  * Add switch reinstall test with failures [#5475 @rjbou]
 
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
