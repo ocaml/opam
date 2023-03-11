@@ -234,3 +234,32 @@ The following actions will be performed:
 -> removed   qux.dev
 Done.
 ### opam pin
+### : Error retrieving git pin :
+### mkdir pin-empty
+### git -C pin-empty init -q --initial-branch=master
+### git -C pin-empty config core.autocrlf false
+### <pin:pin-empty/opam>
+opam-version: "2.0"
+### opam pin --no-action ./pin-empty
+[ERROR] Could not synchronize ${BASEDIR}/OPAM/pinning/.opam-switch/sources/pin-empty from "git+file://${BASEDIR}/pin-empty#master":
+        Git repository seems just initialized, try again after your first commit
+Could not retrieve some package sources, they will not be pinned nor installed:
+  - pin-empty:git+file://${BASEDIR}/pin-empty#master
+
+Continue anyway? [y/n] y
+### opam pin
+### git -C pin-empty add -A
+### git -C pin-empty commit -qm 'opam'
+### opam pin --no-action ./pin-empty
+Package pin-empty does not exist, create as a NEW package? [y/n] y
+pin-empty is now pinned to git+file://${BASEDIR}/pin-empty#master (version dev)
+### opam unpin pin-empty
+Ok, pin-empty is no longer pinned to git+file://${BASEDIR}/pin-empty#master (version dev)
+### opam pin --no-action ./pin-empty#inexistant
+[ERROR] Could not synchronize ${BASEDIR}/OPAM/pinning/.opam-switch/sources/pin-empty from "git+file://${BASEDIR}/pin-empty#inexistant":
+        Branch inexistant not found
+Could not retrieve some package sources, they will not be pinned nor installed:
+  - pin-empty:git+file://${BASEDIR}/pin-empty#inexistant
+
+Continue anyway? [y/n] y
+### opam pin

@@ -139,14 +139,12 @@ module VCS : OpamVCS.VCS = struct
             else failwith "Commit not found on repository"))
       else
       let error = r in
-      git repo_root ["ls-files"] @@> function
+      git repo_root ["branch"; "-a"] @@> function
       | { OpamProcess.r_code = 0; OpamProcess.r_stdout = []; _ } ->
-        git repo_root ["show"] @@> fun r ->
-        if OpamProcess.is_failure r then
-          failwith "Git repository seems just initialized, \
-                    try again after your first commit"
-        else
-          OpamSystem.process_error error
+        failwith "Git repository seems just initialized, \
+                  try again after your first commit"
+      | { OpamProcess.r_code = 0; OpamProcess.r_stdout = _::_; _ } ->
+        failwith (Printf.sprintf "Branch %s not found" branch)
       | _ -> OpamSystem.process_error error
 
   let revision repo_root =
