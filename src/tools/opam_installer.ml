@@ -194,6 +194,8 @@ let iter_install f instfile o =
       dest_pkg                    D.share,    S.share instfile,      false;
       dest_global                 D.share_dir,S.share_root instfile, false;
       dest_pkg                    D.etc,      S.etc instfile,        false;
+      dest_global                 D.etc_dir,  S.etc_root instfile,   false;
+      dest_global                 D.etc_dir,  S.etcexec_root instfile, true;
       dest_pkg    ?fix:o.docdir   D.doc,      S.doc instfile,        false; ]
 
 let install options =

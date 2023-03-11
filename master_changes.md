@@ -295,6 +295,7 @@ users)
 
 ## Opam installer
   *
+  * Support `etc_root` and `etcexec_root` in `opam-installer` [#3958 @hongchangwu]
 
 ## State
   * Handle empty environment variable updates - missed cherry-pick from 2.0 [#4840 @dra27]

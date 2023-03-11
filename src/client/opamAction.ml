@@ -152,6 +152,8 @@ let preprocess_dot_install_t st nv build_dir =
 
     (* Etc files *)
     false, (instdir_pkg P.etc), I.etc;
+    false, (instdir_gen P.etc_dir), I.etc_root;
+    true, (instdir_gen P.etc_dir), I.etcexec_root;
 
     (* Documentation files *)
     false, (instdir_pkg P.doc), I.doc;
@@ -754,6 +756,8 @@ let remove_package_aux
     remove_files_and_dir OpamPath.Switch.share OpamFile.Dot_install.share;
     remove_files OpamPath.Switch.share_dir OpamFile.Dot_install.share_root;
     remove_files_and_dir OpamPath.Switch.etc OpamFile.Dot_install.etc;
+    remove_files OpamPath.Switch.etc_dir OpamFile.Dot_install.etc_root;
+    remove_files OpamPath.Switch.etc_dir OpamFile.Dot_install.etcexec_root;
     remove_files (OpamPath.Switch.man_dir ?num:None) OpamFile.Dot_install.man;
     remove_files_and_dir OpamPath.Switch.doc OpamFile.Dot_install.doc;
 

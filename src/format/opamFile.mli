@@ -893,6 +893,12 @@ module Dot_install: sig
   (** List of etc files *)
   val etc: t -> (basename optional * basename option) list
 
+  (** List of etc files not relative to the package's dir *)
+  val etc_root: t -> (basename optional * basename option) list
+
+  (** List of etc files not relative to the package's dir and with +x set *)
+  val etcexec_root: t -> (basename optional * basename option) list
+
   (** List of doc files *)
   val doc: t -> (basename optional * basename option) list
 
