@@ -29,10 +29,7 @@ seq.pkgbuild: dune-local.pkgbuild
 
 ocamlgraph.pkgbuild: dune-local.pkgbuild stdlib-shims.pkgbuild
 
-# result.pkgbuild depends on findlib because the files are explicitly installed using it
-result.pkgbuild: dune-local.pkgbuild findlib.pkgbuild
-
-topkg.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild result.pkgbuild
+topkg.pkgbuild: findlib.pkgbuild ocamlbuild.pkgbuild
 
 cmdliner.pkgbuild: dune-local.pkgbuild
 
@@ -49,7 +46,7 @@ opam-0install-cudf.pkgbuild: dune-local.pkgbuild cudf.pkgbuild 0install-solver.p
 
 stdlib-shims.pkgbuild: dune-local.pkgbuild
 
-base64.pkgbuild: dune-local.pkgbuild result.pkgbuild
+base64.pkgbuild: dune-local.pkgbuild
 
 dune-local.pkgbuild: findlib.pkgbuild
 
@@ -97,10 +94,6 @@ ocamlgraph-pkg-build:
 	dune installed-libraries
 	dune build @install -p ocamlgraph
 	dune install "--prefix=$(OCAMLROOT)" -p ocamlgraph ocamlgraph
-
-result-pkg-build:
-	dune build @install -p result
-	ocamlfind install result $(addprefix _build/install/default/lib/result/,META result.*)
 
 EXTS1=$(EXT_LIB) mli
 EXTS2=a i ti xa xs
