@@ -383,28 +383,6 @@ let load lock_kind gt rt switch =
       (slog OpamPackage.Set.to_string) changed;
     changed
   ) in
-  (* Detect and initialise missing switch description *)
-  let switch_config =
-    if switch_config <> OpamFile.Switch_config.empty &&
-       switch_config.synopsis = "" then
-      let synopsis =
-        match OpamPackage.Set.elements (compiler_packages %% installed_roots)
-        with
-        | [] -> OpamSwitch.to_string switch
-        | [nv] ->
-          let open OpamStd.Option.Op in
-          (OpamPackage.Map.find_opt nv opams >>= OpamFile.OPAM.synopsis) +!
-          OpamPackage.to_string nv
-        | pkgs -> OpamStd.List.concat_map " " OpamPackage.to_string pkgs
-      in
-      let conf = { switch_config with synopsis } in
-      if lock_kind = `Lock_write then (* auto-repair *)
-        OpamFile.Switch_config.write
-          (OpamPath.Switch.switch_config gt.root switch)
-          conf;
-      conf
-    else switch_config
-  in
   let switch_config, switch_invariant =
     match switch_config.invariant with
     | Some invariant -> switch_config, invariant
@@ -438,6 +416,24 @@ let load lock_kind gt rt switch =
           (OpamPath.Switch.switch_config gt.root switch)
           switch_config;
       switch_config, invariant
+  in
+  (* Detect and initialise missing switch description *)
+  let switch_config =
+    if switch_config <> OpamFile.Switch_config.empty &&
+       switch_config.synopsis = "" then
+      let synopsis =
+        if switch_invariant = OpamFormula.Empty then
+          OpamSwitch.to_string switch
+        else
+          OpamFormula.to_string switch_invariant
+      in
+      let conf = { switch_config with synopsis } in
+      if lock_kind = `Lock_write then (* auto-repair *)
+        OpamFile.Switch_config.write
+          (OpamPath.Switch.switch_config gt.root switch)
+          conf;
+      conf
+    else switch_config
   in
   let conf_files =
     let conf_files =
@@ -966,7 +962,6 @@ let universe st
   in
   let u_depopts = get_deps OpamFile.OPAM.depopts st.opams in
   let u_conflicts = get_conflicts st st.packages st.opams in
-  let base = st.compiler_packages in
   let u_invariant =
     if OpamStateConfig.(!r.unlock_base) then OpamFormula.Empty
     else st.switch_invariant
@@ -1019,7 +1014,6 @@ let universe st
   u_conflicts;
   u_installed_roots = st.installed_roots;
   u_pinned    = OpamPinned.packages st;
-  u_base      = base;
   u_invariant;
   u_reinstall;
   u_attrs     = ["opam-query", requested;
@@ -1037,7 +1031,7 @@ let dump_pef_state st oc =
     Printf.fprintf oc "version: %s\n" (OpamPackage.version_to_string nv);
     let installed = OpamPackage.Set.mem nv st.installed in
     (* let root = OpamPackage.Set.mem nv st.installed_roots in *)
-    let base = OpamPackage.Set.mem nv st.compiler_packages in
+    let inv = OpamPackage.Set.mem nv st.compiler_packages in
     let pinned = OpamPackage.Set.mem nv st.pinned in
     let available = OpamPackage.Set.mem nv (Lazy.force st.available_packages) in
     let reinstall = OpamPackage.Set.mem nv (Lazy.force st.reinstall) in
@@ -1046,7 +1040,7 @@ let dump_pef_state st oc =
     Printf.fprintf oc "available: %b\n" available;
     if installed then output_string oc "installed: true\n";
     if pinned then output_string oc "pinned: true\n";
-    if base then output_string oc "base: true\n";
+    if inv then output_string oc "invariant-pkg: true\n";
     if reinstall then output_string oc "reinstall: true\n";
 
     (* metadata (resolved for the current switch) *)
@@ -1439,3 +1433,13 @@ let reverse_dependencies st ~build ~post =
            | Some nv -> OpamPackage.Set.add nv result
            | None -> OpamStd.Sys.exit_because `Internal_error)
          int_revdeps packages)
+
+(* invariant computation *)
+
+let invariant_root_packages st =
+  OpamPackage.Set.filter (OpamFormula.verifies st.switch_invariant) st.installed
+
+let compute_invariant_packages st =
+  let pkgs = invariant_root_packages st in
+  dependencies ~build:false ~post:true ~depopts:false ~installed:true
+    ~unavailable:false st (universe st ~requested:pkgs Query) pkgs

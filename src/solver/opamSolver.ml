@@ -31,7 +31,6 @@ let empty_universe =
     u_action = Install;
     u_installed_roots = OpamPackage.Set.empty;
     u_pinned = OpamPackage.Set.empty;
-    u_base = OpamPackage.Set.empty;
     u_invariant = OpamFormula.Empty;
     u_reinstall = OpamPackage.Set.empty;
     u_attrs = [];
@@ -638,6 +637,14 @@ let new_packages sol =
       | `Install p | `Change (_,_,p) ->
         OpamPackage.Set.add (OpamCudf.cudf2opam p) packages
       | `Reinstall _ | `Remove _ | `Build _ | `Fetch _ -> packages
+  ) sol OpamPackage.Set.empty
+
+let removed_packages sol =
+  OpamCudf.ActionGraph.fold_vertex (fun action packages ->
+      match action with
+      | `Remove p | `Change (_,p,_) ->
+        OpamPackage.Set.add (OpamCudf.cudf2opam p) packages
+      | `Install _ | `Reinstall _ | `Build _ | `Fetch _ -> packages
   ) sol OpamPackage.Set.empty
 
 let all_packages sol =

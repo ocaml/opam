@@ -62,8 +62,6 @@ ok     --
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ok"]
-[NOTE] Packages ok.1 don't have the 'compiler' flag set (nor any of their direct dependencies).
-       You may want to use `opam switch set-invariant' to keep a stable compiler version on upgrades.
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ok.1
@@ -180,9 +178,9 @@ Done.
 }
 ### opam switch --json=out.json
 #   switch        compiler  description
-->  json-comp     comp.3    json-comp
+->  json-comp     comp.3    comp
     json-empty              json-empty
-    json-no-comp  ok.1      json-no-comp
+    json-no-comp  ok.1      ok
 ### json-cat out.json
 {
   "opam-version": "currentv",

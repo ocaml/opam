@@ -612,7 +612,7 @@ let make_command st opam ?dir ?text_command (cmd, args) =
          (OpamSysPoll.arch env +! "unknown"));
       (OpamStd.List.concat_map " " OpamPackage.to_string
          OpamPackage.Set.(elements @@
-                          inter st.compiler_packages st.installed_roots));
+                          OpamSwitchState.invariant_root_packages st));
       if OpamPackage.Set.mem nv st.pinned then
         match OpamFile.OPAM.url opam with
         | None -> "pinned"

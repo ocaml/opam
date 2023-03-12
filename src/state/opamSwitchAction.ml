@@ -174,9 +174,6 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
   let installed = installed +! st.installed in
   let reinstall0 = Lazy.force st.reinstall in
   let reinstall = (reinstall +! reinstall0) %% installed in
-  let compiler_packages =
-    OpamPackage.Set.filter (OpamFormula.verifies st.switch_invariant) installed
-  in
   let old_selections = OpamSwitchState.selections st in
   let st =
     { st with
@@ -184,8 +181,12 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
       installed_roots = installed_roots +! st.installed_roots;
       reinstall = lazy reinstall;
       pinned = pinned +! st.pinned;
-      compiler_packages; }
+       }
   in
+  let compiler_packages =
+    OpamSwitchState.compute_invariant_packages st
+  in
+  let st = { st with compiler_packages } in
   if not OpamStateConfig.(!r.dryrun) then (
     if OpamSwitchState.selections st <> old_selections then write_selections st;
     if not (OpamPackage.Set.equal reinstall0 reinstall) then

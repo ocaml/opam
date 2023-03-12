@@ -312,7 +312,13 @@ Faking installation of core_extended.109.55.02
 Done.
 ### opam switch export -
 opam-version: "2.0"
-compiler: ["ocaml-base-compiler.4.01.0beta1"]
+compiler: [
+  "base-bigarray.base"
+  "base-threads.base"
+  "base-unix.base"
+  "ocaml.4.01.0beta1"
+  "ocaml-base-compiler.4.01.0beta1"
+]
 roots: [
   "async.109.53.02"
   "async_graphics.0.5.1"

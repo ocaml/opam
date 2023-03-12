@@ -82,7 +82,7 @@ let string_of_selector =
   | Any -> "any" % `cyan
   | Installed -> "installed" % `cyan
   | Root -> "root" % `cyan
-  | Compiler -> "base" % `cyan
+  | Compiler -> "invariant" % `cyan
   | Available -> "available" % `cyan
   | Installable -> "installable" % `cyan
   | Pinned -> "pinned" % `cyan
@@ -215,7 +215,7 @@ let apply_selector ~base st = function
   | Any -> base
   | Installed -> st.installed
   | Root -> st.installed_roots
-  | Compiler -> st.compiler_packages
+  | Compiler -> OpamSwitchState.invariant_root_packages st
   | Available -> Lazy.force st.available_packages
   | Installable ->
     OpamSolver.installable_subset
@@ -564,8 +564,12 @@ let detail_printer ?prettify ?normalise ?(sort=false) st nv =
          OpamPackage.version_to_string inst_nv |> fun s ->
          if OpamPackage.Set.mem inst_nv st.pinned then s % [`blue] else
          if OpamPackage.has_name st.pinned nv.name then s % [`bold;`red] else
-         if nv <> inst_nv &&
-            not (OpamPackage.Set.mem inst_nv st.compiler_packages)
+         (* If package is not installed one, check if it is part of invariant
+            formula package, and if it checks formula *)
+         if nv <> inst_nv
+         && (not (OpamPackage.Set.mem inst_nv
+                    (OpamFormula.packages st.installed st.switch_invariant))
+             || OpamFormula.verifies st.switch_invariant nv)
          then s % [`bold;`yellow] else
            s % [`magenta]
      with Not_found -> "--" % [`cyan])

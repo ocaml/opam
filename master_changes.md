@@ -83,9 +83,12 @@ users)
   * Add support for `opam switch -` (go to previous non-local switch) [#4910 @kit-ty-kate - fix 4866]
   * On loading, check for executable external files if they are in `PATH`, and warn if not the case [#4932 @rjbou - fix #4923]
   * When inferring a 2.1+ switch invariant from 2.0 base packages, don't filter out pinned packages as that causes very wide invariants for pinned compiler packages [#5176 @dra27 - fix #4501]
-  * Really install invariant formula if not installed in switch [#5188 @rjbou]
+  * When setting invariant, really install invariant formula if not installed in switch [#5188 @rjbou]
+  * When setting invariant, update switch state to compute invariant packages [#5208 @rjbou]
   * On import, check that installed pinned packages changed, reinstall if so [#5181 @rjbou - fix #5173]
   * [BUG] Enforce extra-source to have a checksum when using "opam switch export --freeze" [#5418 @kit-ty-kate]
+  * Update compiler / base packages handling: always updated, the field contains installed packages resolving invariant formula [#5208 @rjbou]
+  * Fill empty switch synopsis with invariant formula instead of compiler package name [#5208 @rjbou]
 
 ## Config
   * Reset the "jobs" config variable when upgrading from opam 2.0 [#5284 @kit-ty-kate]
@@ -115,6 +118,8 @@ users)
   * Improve performance of opam list --conflicts-with when combined with other filters [#4999 @kit-ty-kate]
   * Fix coinstallability filter corner case [#5024 @AltGr]
   * Improve performance for recursive `--required-by` and `depends-on` [#5337 @rjbou]
+  * Colorise as unavailable (magenta) packages that are specified in the invariant formula and that do not verify it (previous was non installed compiler package) [#5208 @rjbou]
+  * ✘ Change `--base` into `--invariant`, column name and the content is invariant formula installed dependencies [#5208 @rjbou]
 
 ## Show
   * Add `depexts` to default printer [#4898 @rjbou]
@@ -270,6 +275,7 @@ users)
   * shell/bootstrap-ocaml.sh: do not fail if curl/wget is missing [#5223 @kit-ty-kate]
   * Add `swhid_core` dependency [#4859 @rjbou]
   * Remove unused vendored dependency: result [#5465 @kit-ty-kate]
+  * `opam-state` depends on `opam-solver` [#5208 @rjbou]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
@@ -333,6 +339,7 @@ users)
   * [BUG] Fix all empty conflict explanations [#4982 #5263 @kit-ty-kate]
   * Fix json double printing [#5143 @rjbou]
   * [BUG] Fix passing `archive-mirrors` field from init config file to config [#5315 @hannesm]
+  * PEF output: change `base` field into `invariant-pkg` [#5208 @rjbou]
 
 ## Internal
   * Add license and lowerbounds to opam files [#4714 @kit-ty-kate]
@@ -422,6 +429,7 @@ users)
 
 
   * Add `swhid` print tests in show, and swh fallback test [#4859 @rjbou]
+  * Add `switch list` test, add some in `switch invariant` and `switch import` [#5208 @rjbou]
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
@@ -538,6 +546,8 @@ users)
   * `OpamClient.update_with_init_config`: Fix passing the `dl_cache` from `InitConfig` to `Config` [#5315 @hannesm]
   * `OpamAction`: in `build_package`, `install_package`, and `remove_package` expand `build-env` variables content added to the environment [#5352 @dra27]
   * `OpamListCommand`: add `swhid` in `info` printable fields and its handling in `details_printer`
+  * ✘ `OpamListCommand.apply_selector`, `string_of_selector`: change column name base to invariant, and the content is invariant formula installed dependencies [#5208 @rjbou]
+  * `OpamSwitchCommand.install_compiler`: fill empty switch synopsis with invariant formula instead of compiler package name [#5208 @rjbou]
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
@@ -581,6 +591,7 @@ users)
   * `OpamSwitchState`, `OpamRepositoryState`: at the beginning of `load` function, check if an upgrade is needed with `OpamGlobalState.as_necessary_repo_switch_upgrade` [#5305 @rjbou]
   * `OpamStataTypes.global_state`: add `global_state_to_upgrade` field to keep incomplete upgrade information [#5305 @rjbou]
   * `OpamSysInteract`: add global config argument to function, in order to be able to retrieve system package manager path for MSYS2, and in the future Cygwin, etc. [#5433 @rjbou]
+  * `OpamSwitchState.load`: fill empty switch synopsis with invariant formula instead of compiler package name [#5208 @rjbou]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
@@ -598,6 +609,9 @@ users)
   * `OpamCudf.print_solution`: add optional `skip`, to avoid filtering solution beforehand [#4975 @AltGr]
   * `OpamCudf.filter_solution`: can do not remove recursively actions with optional `~recursive:true` [#4975 @AltGr]
   * `OpamSolver`, `OpamCudf`: remove `dependencies` and `reverse_dependencies` [#5337 @rjbou]
+  * `OpamSwitchState`: add `invariant_root_packages`, `compute_invariant_packages`, `compute_compiler_packages` [#5208 @rjbou]
+  * `OpamSwitchAction.update_switch_state`: `compiler_packages` now computes dependency cone of invariant formula [#5208 @rjbou]
+  * `OpamSolver`: add `removed_packages` to retrieve packages that are removed from solution [#5208 @rjbou]
 
 ## opam-format
   * Exposed `with_*` functions in `OpamFile.Dot_install` [#5169 @panglesd]
@@ -617,6 +631,7 @@ users)
   * `OpamFilter`: add `?custom` argument in `to_string` to tweak the output [#5171 @cannorin]
   * `OpamFile.URL`: add `swhid` field in `t` record, and its access functions [#4859 @rjbou]
   * `OpamFile.URL`: add `with_mirrors` [#4859 @rjbou]
+  * `OpamTypes.universe`: remove `u_base` field, as it is no more needed with switch invariant [#5208 @rjbou]
 
 ## opam-core
   * `OpamStd.Sys`: fix `get_windows_executable_variant` to distinguish MSYS2 from Cygwin, esp. for rsync rather than symlinking [#5404 @jonahbeckford]

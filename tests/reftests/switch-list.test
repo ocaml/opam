@@ -1,0 +1,162 @@
+N0REP0
+### <pkg:a.1>
+opam-version: "2.0"
+flags: compiler
+depends: [ "e" "f" {build} "g" {post} ]
+### <pkg:b.1>
+opam-version: "2.0"
+depends: [ "a" | "c" | "d" ]
+### <pkg:c.1>
+opam-version: "2.0"
+conflicts: "a"
+depends: [ "e" "f" {build} "g" {post} ]
+flags: compiler
+### <pkg:d.1>
+opam-version: "2.0"
+depends: [ "e" "f" {build} "g" {post} ]
+flags: compiler
+### <pkg:e.1>
+opam-version: "2.0"
+### <pkg:f.1>
+opam-version: "2.0"
+### <pkg:g.1>
+opam-version: "2.0"
+### OPAMYES=1
+### OCAMLRUNPARAM=b
+### opam switch create display --empty
+### opam install b a
+The following actions will be performed:
+=== install 5 packages
+  - install a 1
+  - install b 1
+  - install e 1 [required by a]
+  - install f 1 [required by a]
+  - install g 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed e.1
+-> installed f.1
+-> installed a.1
+-> installed b.1
+-> installed g.1
+Done.
+### opam switch set-invariant b
+The switch invariant was set to b
+### opam switch list
+#   switch   compiler  description
+->  display  a.1       display
+### opam list --invariant
+# Packages matching: invariant
+# Name # Installed # Synopsis
+b      1
+### opam install c
+The following actions will be performed:
+=== remove 1 package
+  - remove    a 1 [conflicts with c]
+=== recompile 1 package
+  - recompile b 1 [uses c]
+=== install 1 package
+  - install   c 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   b.1
+-> removed   a.1
+-> installed c.1
+-> installed b.1
+Done.
+### opam switch list
+#   switch   compiler  description
+->  display  c.1       display
+### opam list --invariant
+# Packages matching: invariant
+# Name # Installed # Synopsis
+b      1
+### opam install d
+The following actions will be performed:
+=== recompile 1 package
+  - recompile b 1 [uses d]
+=== install 1 package
+  - install   d 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   b.1
+-> installed d.1
+-> installed b.1
+Done.
+### opam switch list
+#   switch   compiler  description
+->  display  c.1,d.1   display
+### opam list --invariant
+# Packages matching: invariant
+# Name # Installed # Synopsis
+b      1
+### opam switch remove display
+Switch display and all its packages will be wiped. Are you sure? [y/n] y
+### ::::::::::::::::::
+### <pkg:b.1>
+opam-version: "2.0"
+# force dependency for reproducibility
+depends: "d"
+### opam switch create display --empty
+### opam install d
+The following actions will be performed:
+=== install 4 packages
+  - install d 1
+  - install e 1 [required by d]
+  - install f 1 [required by d]
+  - install g 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed e.1
+-> installed f.1
+-> installed d.1
+-> installed g.1
+Done.
+### opam switch set-invariant b
+The switch invariant was set to b
+The following actions will be performed:
+=== install 1 package
+  - install b 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed b.1
+Done.
+### opam switch list
+#   switch   compiler  description
+->  display  d.1       display
+### opam list --invariant
+# Packages matching: invariant
+# Name # Installed # Synopsis
+b      1
+### opam switch remove display
+Switch display and all its packages will be wiped. Are you sure? [y/n] y
+### :::::::::::::::::::
+### opam switch create display --package b
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["b"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed e.1
+-> installed f.1
+-> installed d.1
+-> installed b.1
+-> installed g.1
+Done.
+### opam switch invariant
+["b"]
+### opam switch list
+#   switch   compiler  description
+->  display  d.1       b
+### opam list --invariant
+# Packages matching: invariant
+# Name # Installed # Synopsis
+b      1
+### <OPAM/display/.opam-switch/switch-config>
+opam-version: "2.0"
+invariant: ["b" { >= "1" } |"c" { >= "1" }]
+### opam install e
+[NOTE] Package e is already installed (current version is 1).
+### opam switch
+#   switch   compiler  description
+->  display  d.1       b >= 1 | c >= 1

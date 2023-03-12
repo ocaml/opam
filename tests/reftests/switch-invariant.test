@@ -24,10 +24,8 @@ The following actions will be performed:
 -> installed foo.1
 Done.
 ### opam switch set-invariant foo
-[WARNING] Packages foo don't have the 'compiler' flag set.
 The switch invariant was set to foo
 ### opam switch set-invariant --package foo
-[WARNING] Packages foo don't have the 'compiler' flag set.
 The switch invariant was set to foo
 ### opam switch set-invariant bar
 The switch invariant was set to bar
@@ -39,5 +37,72 @@ The following actions will be performed:
 -> installed bar.1
 Done.
 ### opam switch set-invariant --package bar
-[WARNING] Packages bar don't have the 'compiler' flag set.
 The switch invariant was set to bar
+### <pkg:bar.1>
+opam-version: "2.0"
+### <pkg:bar.2>
+opam-version: "2.0"
+### <pkg:baz.1>
+opam-version: "2.0"
+flags: compiler
+depends: [ "bar" { = version } ]
+### <pkg:baz.2>
+opam-version: "2.0"
+flags: compiler
+depends: [ "bar" { = version } ]
+### opam switch create tonotupgrade baz.1
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["baz" {= "1"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+-> installed baz.1
+Done.
+### opam upgrade -v
+Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
+However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+Nothing to do.
+### <pkg:baz.1>
+opam-version: "2.0"
+flags: compiler
+depends: [ "bar" ]
+### <pkg:baz.2>
+opam-version: "2.0"
+flags: compiler
+depends: [ "bar" ]
+### opam switch create tonupgrade baz.1
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["baz" {= "1"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.2
+-> installed baz.1
+Done.
+### opam install bar.1
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade bar 2 to 1
+=== recompile 1 package
+  - recompile baz 1      [uses bar]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   baz.1
+-> removed   bar.2
+-> installed bar.1
+-> installed baz.1
+Done.
+### opam upgrade -v
+The following actions will be performed:
+=== recompile 1 package
+  - recompile baz 1      [uses bar]
+=== upgrade 1 package
+  - upgrade   bar 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   baz.1
+-> removed   bar.1
+-> installed bar.2
+-> installed baz.1
+Done.

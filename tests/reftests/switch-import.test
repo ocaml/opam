@@ -205,3 +205,68 @@ src: "https://example.com/some/fake/extra/source"
 checksum: "md5=6aef5a674977ebc5ec853dc4f85cf2bb"
 }
 }
+### # Test that invariant is not changed when importing a switch
+### <pkg:a.1>
+opam-version: "2.0"
+flags: compiler
+### <pkg:a.2>
+opam-version: "2.0"
+flags: compiler
+### <pkg:b.1>
+opam-version: "2.0"
+depends: [ "a" { = "1" } ]
+### <pkg:b.2>
+opam-version: "2.0"
+depends: [ "a" { = "2" } ]
+### <pkg:c.1>
+opam-version: "2.0"
+### opam switch create orig b.1
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["b" {= "1"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed a.1
+-> installed b.1
+Done.
+### opam install c
+The following actions will be performed:
+=== install 1 package
+  - install c 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed c.1
+Done.
+### opam-cat OPAM/orig/.opam-switch/switch-state
+compiler: ["a.1" "b.1"]
+installed: ["a.1" "b.1" "c.1"]
+opam-version: "2.0"
+roots: ["b.1" "c.1"]
+### opam switch export orig.xp
+### opam-cat orig.xp
+compiler: ["a.1" "b.1"]
+installed: ["a.1" "b.1" "c.1"]
+opam-version: "2.0"
+roots: ["b.1" "c.1"]
+### opam switch create toupd b.2
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["b" {= "2"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed a.2
+-> installed b.2
+Done.
+### opam-cat OPAM/toupd/.opam-switch/switch-state
+compiler: ["a.2" "b.2"]
+installed: ["a.2" "b.2"]
+opam-version: "2.0"
+roots: ["b.2"]
+### opam switch import orig.xp
+The following actions will be performed:
+=== install 1 package
+  - install c 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed c.1
+Done.

@@ -1253,7 +1253,10 @@ let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
           OpamSwitchState.universe t ~requested:packages Remove
         in
         let keep =
-          universe.u_base ++ t.installed_roots %% t.installed -- packages
+          OpamSwitchState.invariant_root_packages t
+          ++ t.installed_roots
+             %% t.installed
+          -- packages
         in
         let keep_cone =
           keep |> OpamSwitchState.dependencies t universe

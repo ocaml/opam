@@ -513,9 +513,13 @@ let list ?(force_search=false) cli =
                 (this calls the solver and may be more costly; a package \
                 depending on an unavailable package may be available, but is \
                 never installable)";
-        cli_original, OpamListCommand.Compiler, ["base"],
+        cli_between cli2_0 cli2_1 ~replaced:"--invariant",
+        OpamListCommand.Compiler, ["base"],
           "List only the immutable base of the current switch (i.e. \
                 compiler packages)";
+        cli_from cli2_2, OpamListCommand.Compiler, ["invariant"],
+          "List only the immutable base of the current switch (i.e. \
+                invariant packages)";
         cli_original, OpamListCommand.Pinned, ["pinned"],
           "List only the pinned packages";
       ]
@@ -2981,9 +2985,9 @@ let switch cli =
            (OpamFormula.to_string invariant);
          let st =
            if no_action || OpamFormula.satisfies_depends st.installed invariant
-           then st
-           else OpamClient.install_t
-               st ~ask:true [] None ~formula:invariant
+           then OpamSwitchAction.update_switch_state st
+           else
+               OpamClient.install_t st ~ask:true [] None ~formula:invariant
                ~deps_only:false ~assume_built:false
          in
          OpamSwitchState.drop st;

@@ -43,7 +43,7 @@ let list gt ~print_short =
         in
         let comp =
           OpamPackage.Map.filter
-            (fun nv _ -> OpamPackage.Set.mem nv sel.sel_roots)
+            (fun nv _ -> OpamPackage.Set.mem nv sel.sel_compiler)
             opams
           |> ifempty opams
         in
@@ -237,46 +237,17 @@ let install_compiler
         "Inconsistent resolution of packages:\n%s"
         (OpamSolver.string_of_stats stats)
   in
-  let to_install_pkgs = OpamSolver.new_packages solution in
-  let base_comp = OpamPackage.packages_of_names to_install_pkgs comp_roots in
-  let has_comp_flag =
-    let is_comp nv =
-      try OpamFile.OPAM.has_flag Pkgflag_Compiler (OpamSwitchState.opam t nv)
-      with Not_found -> false
-    in
-    (* Packages with the Compiler flag, or with a direct dependency with that
-       flag (just for the warning) *)
-    OpamPackage.Set.filter
-      (fun nv ->
-         is_comp nv ||
-         OpamPackage.Set.exists is_comp
-           (OpamFormula.packages t.packages
-              (OpamPackageVar.all_depends ~filter_default:true t
-                 (OpamSwitchState.opam t nv))))
-      base_comp
-  in
   if invariant = OpamFormula.Empty then
     OpamConsole.note
       "No invariant was set, you may want to use `opam switch set-invariant' \
-       to keep a stable compiler version on upgrades."
-  else if OpamPackage.Set.is_empty has_comp_flag then
-    OpamConsole.note
-      "Packages %s don't have the 'compiler' flag set (nor any of their \
-       direct dependencies).\n\
-       You may want to use `opam switch set-invariant' to keep a stable \
-       compiler version on upgrades."
-      (OpamStd.List.concat_map ", " OpamPackage.to_string
-         (OpamPackage.Set.elements base_comp));
+       to keep a stable compiler version on upgrades.";
   let t =
     if t.switch_config.OpamFile.Switch_config.synopsis = "" then
       let synopsis =
-        match OpamPackage.Set.elements base_comp with
-        | [] -> OpamSwitch.to_string t.switch
-        | [pkg] ->
-          let open OpamStd.Option.Op in
-          (OpamSwitchState.opam_opt t pkg >>= OpamFile.OPAM.synopsis) +!
-          OpamPackage.to_string pkg
-        | pkgs -> OpamStd.List.concat_map " " OpamPackage.to_string pkgs
+        if invariant = OpamFormula.Empty then
+          OpamSwitch.to_string t.switch
+        else
+          OpamFormula.to_string invariant
       in
       let switch_config =
         { t.switch_config with OpamFile.Switch_config.synopsis }
@@ -287,7 +258,15 @@ let install_compiler
       { t with switch_config }
     else t
   in
-  let t = { t with compiler_packages = base_comp } in
+  let t =
+    let base_comp =
+      OpamSwitchState.compute_invariant_packages
+        { t with installed = t.installed
+                             -- (OpamSolver.removed_packages solution)
+                             ++ (OpamSolver.new_packages solution) }
+    in
+    { t with compiler_packages = base_comp }
+  in
   let skip =
     if deps_only then
       let pkgs =
@@ -306,6 +285,7 @@ let install_compiler
       solution in
   OpamSolution.check_solution ~quiet:OpamClientConfig.(not !r.show) t
     (Success result);
+  OpamSwitchAction.write_selections t;
   t
 
 let create
@@ -730,21 +710,6 @@ let set_invariant ?(force=false) st invariant =
       (OpamStd.List.concat_map ", "
          OpamPackage.Name.to_string
          (OpamPackage.Name.Set.elements name_unknown));
-  let packages = OpamFormula.packages st.installed invariant in
-  let not_comp =
-    OpamPackage.Set.filter (fun nv ->
-        match OpamSwitchState.opam_opt st nv with
-        | Some opam -> not (OpamFile.OPAM.has_flag Pkgflag_Compiler opam)
-        | None -> false)
-      packages
-  in
-  if not (OpamPackage.Set.is_empty not_comp) then
-    OpamConsole.warning
-      "Packages %s don't have the 'compiler' flag set."
-      (OpamStd.Format.pretty_list
-         (List.map OpamPackage.Name.to_string
-            (OpamPackage.Name.Set.elements
-               (OpamPackage.names_of_packages not_comp))));
   set_invariant_raw st invariant
 
 let get_compiler_packages ?repos rt =
