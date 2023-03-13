@@ -107,7 +107,7 @@ let build_condition_map tog st =
             in
             if is_valid then Some result else None
           )
-        |> Option.default []
+        |> OpamStd.Option.default []
         |> OpamPackage.Name.Map.of_list
       in
       cmap |> OpamPackage.Map.add package map

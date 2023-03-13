@@ -2,7 +2,8 @@
   (name        opam_format)
   (public_name opam-format)
   (synopsis    "OCaml Package Manager file format handling library")
-  (libraries   opam-core opam-file-format re)
+  ; TODO: Remove (re_export ...) when CI uses the OCaml version that includes https://github.com/ocaml/ocaml/pull/11989
+  (libraries   (re_export opam-core) (re_export opam-file-format) re)
   (modules_without_implementation OpamTypes)
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
