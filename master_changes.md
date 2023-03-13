@@ -48,6 +48,7 @@ users)
 
 ## Config report
   * [BUG] Don't fail is no switch is set [#5198 @rjbou]
+  * Add invariant and compiler packages fields [#5480 @rjbou - fix #5478]
 
 ## Actions
   *  Add a `'Fetch` action with several packages: one node to download once and prepare source once for packages that share same archive [#4893 @rjbou - fix #3741]
@@ -593,6 +594,7 @@ users)
   * `OpamStataTypes.global_state`: add `global_state_to_upgrade` field to keep incomplete upgrade information [#5305 @rjbou]
   * `OpamSysInteract`: add global config argument to function, in order to be able to retrieve system package manager path for MSYS2, and in the future Cygwin, etc. [#5433 @rjbou]
   * `OpamSwitchState.load`: fill empty switch synopsis with invariant formula instead of compiler package name [#5208 @rjbou]
+  * `OpamSwitchState`: add `compiler_packages` that returns set of installed compilers, with their dependencies including only build & depopt [#5480 @rjbou]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
