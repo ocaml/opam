@@ -2,6 +2,7 @@
   (name        opam_core)
   (public_name opam-core)
   (synopsis    "OCaml Package Manager core internal stdlib")
+  ; TODO: Remove (re_export ...) when CI uses the OCaml version that includes https://github.com/ocaml/ocaml/pull/11989
   (libraries   re (re_export ocamlgraph) unix bigarray sha jsonm swhid_core uutf
                (select opamACL.ml from
                        (opam-core.libacl -> opamACL.libacl.ml)

@@ -2,6 +2,7 @@
   (name        opam_repository)
   (public_name opam-repository)
   (synopsis    "OCaml Package Manager remote repository handling library")
+  ; TODO: Remove (re_export ...) when CI uses the OCaml version that includes https://github.com/ocaml/ocaml/pull/11989
   (libraries   (re_export opam-format))
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
