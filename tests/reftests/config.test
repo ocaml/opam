@@ -53,6 +53,8 @@ Set to '"-removed"' the field solver-upgrade-criteria in global configuration
 # repositories         1 (local)
 # pinned               0
 # current-switch       an-empty-switch
+# invariant            []
+# compiler-packages    none
 ### # full configuration
 ### <pkg:meta-compiler.1>
 opam-version: "2.0"
@@ -67,10 +69,13 @@ depends: [
   "meta-compiler" {post}
   "post-dep-compiler" {post}
 ]
+depopts: [ "depopt-compiler" ]
 flags: compiler
 ### <pkg:dep-compiler.1>
 opam-version: "2.0"
 ### <pkg:post-dep-compiler.1>
+opam-version: "2.0"
+### <pkg:depopt-compiler.1>
 opam-version: "2.0"
 ### <pkg:a-package.1>
 opam-version: "2.0"
@@ -118,4 +123,94 @@ Done.
 # repositories         2 (local)
 # pinned               1 (rsync)
 # current-switch       a-switch
+# invariant            meta-compiler = 1
+# compiler-packages    compiler.1, dep-compiler.1
+# meta-compiler:compvar something
+### opam repository remove second --all
+### # empty invariant with compiler installed
+### opam switch create an-empty-invariant-with-compiler --empty
+### opam install meta-compiler -y
+The following actions will be performed:
+=== install 4 packages
+  - install compiler          1 [required by meta-compiler]
+  - install dep-compiler      1 [required by compiler]
+  - install meta-compiler     1
+  - install post-dep-compiler 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-compiler.1
+-> installed compiler.1
+-> installed meta-compiler.1
+-> installed post-dep-compiler.1
+Done.
+### opam config report | "${OPAMVERSION}" -> "current"
+# opam config report
+# opam-version         current
+# self-upgrade         no
+# system               arch=an-arch os=an-os os-distribution=an-os-distribution os-version=an-os-version
+# solver               builtin-mccs+glpk
+# install-criteria     -removed
+# upgrade-criteria     -removed
+# jobs                 1
+# repositories         1 (local)
+# pinned               0
+# current-switch       an-empty-invariant-with-compiler
+# invariant            []
+# compiler-packages    compiler.1, dep-compiler.1
+# meta-compiler:compvar something
+### # invariant not a "compiler"
+### opam switch create a-package-invariant a-package
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["a-package"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-compiler.1
+-> installed compiler.1
+-> installed meta-compiler.1
+-> installed a-package.1
+-> installed post-dep-compiler.1
+Done.
+### opam config report
+# opam config report
+# opam-version         2.2.0~alpha~dev
+# self-upgrade         no
+# system               arch=an-arch os=an-os os-distribution=an-os-distribution os-version=an-os-version
+# solver               builtin-mccs+glpk
+# install-criteria     -removed
+# upgrade-criteria     -removed
+# jobs                 1
+# repositories         1 (local)
+# pinned               0
+# current-switch       a-package-invariant
+# invariant            a-package
+# compiler-packages    compiler.1, dep-compiler.1
+# meta-compiler:compvar something
+### # compiler with depopt
+### opam switch create a-compiler-with-depopt --packages meta-compiler,depopt-compiler
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["meta-compiler" "depopt-compiler"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-compiler.1
+-> installed depopt-compiler.1
+-> installed compiler.1
+-> installed meta-compiler.1
+-> installed post-dep-compiler.1
+Done.
+### opam config report
+# opam config report
+# opam-version         2.2.0~alpha~dev
+# self-upgrade         no
+# system               arch=an-arch os=an-os os-distribution=an-os-distribution os-version=an-os-version
+# solver               builtin-mccs+glpk
+# install-criteria     -removed
+# upgrade-criteria     -removed
+# jobs                 1
+# repositories         1 (local)
+# pinned               0
+# current-switch       a-compiler-with-depopt
+# invariant            meta-compiler & depopt-compiler
+# compiler-packages    compiler.1, dep-compiler.1, depopt-compiler.1
 # meta-compiler:compvar something

@@ -1456,6 +1456,14 @@ let config cli =
               );
             print "current-switch" "%s"
               (OpamSwitch.to_string state.switch);
+            print "invariant" "%s"
+              (OpamFormula.to_string state.switch_invariant);
+            print "compiler-packages" "%s"
+              (let packages = OpamSwitchState.compiler_packages state in
+               if OpamPackage.Set.is_empty packages then "none" else
+                 String.concat ", "
+                   (List.map OpamPackage.to_string
+                      (OpamPackage.Set.elements packages)));
             let process nv =
               try
                 let conf = OpamSwitchState.package_config state nv.name in
