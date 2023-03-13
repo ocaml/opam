@@ -1,4 +1,5 @@
 N0REP0
+### :I: Resolve variable before syspolling :
 ### OPAMVAR_os=another opam config report | grep another | '.*os=another.*' -> 'found!'
 found!
 ### opam var os=yetanother --global | grep another | '.*os=another.*' -> 'found!'
@@ -7,3 +8,114 @@ Added '[os "yetanother" "Set through 'opam var'"]' to field global-variables in 
 found!
 ### OPAMVAR_os=another opam config report | grep another | '.*os=another.*' -> 'found!'
 found!
+### :II: general config report :
+### opam option jobs=1 --global
+Set to '1' the field jobs in global configuration
+### opam var arch=an-arch --global
+Added '[arch "an-arch" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var os=an-os --global
+Added '[os "an-os" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var os-distribution=an-os-distribution --global
+Added '[os-distribution "an-os-distribution" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var os-version=an-os-version --global
+Added '[os-version "an-os-version" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam option solver=builtin-mccs+glpk --global
+Set to 'builtin-mccs+glpk' the field solver in global configuration
+### opam option 'solver-criteria="-removed"' --global
+Set to '"-removed"' the field solver-criteria in global configuration
+### opam option 'solver-fixup-criteria="-removed"' --global
+Set to '"-removed"' the field solver-fixup-criteria in global configuration
+### opam option 'solver-upgrade-criteria="-removed"' --global
+Set to '"-removed"' the field solver-upgrade-criteria in global configuration
+### opam --version >$ OPAMVERSION
+### # no switch
+### opam config report | "${OPAMVERSION}" -> "current"
+# opam config report
+# opam-version         current 
+# self-upgrade         no
+# system               arch=an-arch os=an-os os-distribution=an-os-distribution os-version=an-os-version
+# solver               builtin-mccs+glpk
+# install-criteria     -removed
+# upgrade-criteria     -removed
+# jobs                 1
+# current-switch       non set
+### # empty switch
+### opam switch create an-empty-switch --empty
+### opam config report | "${OPAMVERSION}" -> "current"
+# opam config report
+# opam-version         current 
+# self-upgrade         no
+# system               arch=an-arch os=an-os os-distribution=an-os-distribution os-version=an-os-version
+# solver               builtin-mccs+glpk
+# install-criteria     -removed
+# upgrade-criteria     -removed
+# jobs                 1
+# repositories         1 (local)
+# pinned               0
+# current-switch       an-empty-switch
+### # full configuration
+### <pkg:meta-compiler.1>
+opam-version: "2.0"
+depends: "compiler"
+### <pkg:meta-compiler.1:meta-compiler.config>
+opam-version: "2.0"
+variables { compvar: "something" }
+### <pkg:compiler.1>
+opam-version: "2.0"
+depends: [
+  "dep-compiler"
+  "meta-compiler" {post}
+  "post-dep-compiler" {post}
+]
+flags: compiler
+### <pkg:dep-compiler.1>
+opam-version: "2.0"
+### <pkg:post-dep-compiler.1>
+opam-version: "2.0"
+### <pkg:a-package.1>
+opam-version: "2.0"
+depends: "meta-compiler"
+### <pin:pinned-package/pinned-package.opam>
+opam-version: "2.0"
+depends: "meta-compiler"
+### opam switch create a-switch meta-compiler.1
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["meta-compiler" {= "1"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-compiler.1
+-> installed compiler.1
+-> installed meta-compiler.1
+-> installed post-dep-compiler.1
+Done.
+### <REPO2/repo>
+opam-version: "2.0"
+### mkdir REPO2/packages
+### opam repository add second ./REPO2 --this-switch
+[second] Initialised
+### opam pin pinned-package -y
+Package pinned-package does not exist, create as a NEW package? [y/n] y
+pinned-package is now pinned to file://${BASEDIR}/pinned-package (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install pinned-package dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved pinned-package.dev  (file://${BASEDIR}/pinned-package)
+-> installed pinned-package.dev
+Done.
+### opam config report | "${OPAMVERSION}" -> "current"
+# opam config report
+# opam-version         current 
+# self-upgrade         no
+# system               arch=an-arch os=an-os os-distribution=an-os-distribution os-version=an-os-version
+# solver               builtin-mccs+glpk
+# install-criteria     -removed
+# upgrade-criteria     -removed
+# jobs                 1
+# repositories         2 (local)
+# pinned               1 (rsync)
+# current-switch       a-switch
+# meta-compiler:compvar something
