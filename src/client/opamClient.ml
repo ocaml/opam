@@ -1182,8 +1182,10 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
           dname_map OpamPackage.Map.empty
       in
       if depext_only then
-        (OpamSolution.install_depexts ~force_depext:true ~confirm:false t
-           (OpamSolver.all_packages solution)), None
+        (match OpamSolution.install_depexts ~force_depext:true
+                 ~confirm:false t (OpamSolver.all_packages solution) with
+        | Success t -> t, None
+        | Conflicts not_found -> t, Some (Success (Missing_depexts not_found)))
       else
       let add_roots =
         OpamStd.Option.map (function

@@ -275,6 +275,7 @@ type solution_result =
   | OK of package action list (** List of successful actions *)
   | Aborted
   | Partial_error of actions_result
+  | Missing_depexts of OpamSysPkg.Set.t package_map
 
 (** Solver result *)
 type ('a, 'b) result =

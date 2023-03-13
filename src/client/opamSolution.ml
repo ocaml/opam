@@ -113,6 +113,18 @@ let check_solution ?(quiet=false) st = function
   | Success Aborted ->
     if not OpamClientConfig.(!r.show) then
       OpamStd.Sys.exit_because `Aborted
+  | Success (Missing_depexts not_found) ->
+    OpamConsole.error
+      "Some packages have missing dependencies after resolution:\n %s"
+      (OpamStd.Format.itemize (fun (nv, nf) ->
+           Printf.sprintf "%s: %s"
+             (OpamPackage.to_string nv)
+             (OpamStd.Format.pretty_list
+                (List.map OpamSysPkg.to_string
+                   (OpamSysPkg.Set.elements nf))))
+          (OpamPackage.Map.bindings not_found));
+    OpamStd.Sys.exit_because `Not_found
+
 
 let sum stats =
   stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
@@ -1030,7 +1042,7 @@ let parallel_apply t
         ~empty:"No changes have been performed"
         successful;
       t, err
-    | Nothing_to_do | OK _  -> assert false
+    | Nothing_to_do | OK _ | Missing_depexts _ -> assert false
 
 let simulate_new_state state t =
   let installed =
@@ -1176,6 +1188,14 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     get_depexts ~force:force_depext ~recover:force_depext t packages
   in
   let t = { t with sys_packages = lazy sys_packages_status } in
+  let not_found =
+    OpamPackage.Set.fold (fun nv map ->
+        match OpamSwitchState.depexts_unavailable t nv with
+        | Some not_found -> OpamPackage.Map.add nv not_found map
+        | None -> map)
+      packages OpamPackage.Map.empty
+  in
+  if not (OpamPackage.Map.is_empty not_found) then Conflicts not_found else
   let env = t.switch_global.global_variables in
   let config = t.switch_global.config in
   let map_sysmap f t =
@@ -1194,7 +1214,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   in
   let rec entry_point t sys_packages =
     if OpamClientConfig.(!r.fake) then
-      (print_command sys_packages; t)
+      (print_command sys_packages; Success t)
     else if OpamFile.Config.depext_run_installs t.switch_global.config then
       if confirm then menu t sys_packages else auto_install t sys_packages
     else
@@ -1263,7 +1283,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   and auto_install t sys_packages =
     try
       OpamSysInteract.install ~env config sys_packages; (* handles dry_run *)
-      map_sysmap (fun _ -> OpamSysPkg.Map.empty) t
+      Success (map_sysmap (fun _ -> OpamSysPkg.Map.empty) t)
     with Failure msg ->
       OpamConsole.error "%s" msg;
       check_again t sys_packages
@@ -1280,7 +1300,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
             installed sysp)
         t
     in
-    if OpamSysPkg.Set.is_empty still_missing then t else
+    if OpamSysPkg.Set.is_empty still_missing then Success t else
     if OpamSysPkg.Set.(not (is_empty notfound) && is_empty needed) then
       (OpamConsole.error
          "These packages are still missing and not found via \
@@ -1296,7 +1316,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     OpamConsole.note
       "Run 'opam option depext=false' if you wish to permanently disable \
        handling of system packages.\n";
-    t
+    Success t
   and give_up_msg () =
     OpamConsole.note
       "You can retry with '--assume-depexts' to skip this check, or run 'opam \
@@ -1312,7 +1332,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   if OpamSysPkg.Set.is_empty sys_packages ||
      OpamClientConfig.(!r.show) ||
      OpamClientConfig.(!r.assume_depexts) then
-    t
+    Success t
   else
   try
     OpamConsole.header_msg "Handling external dependencies";
@@ -1339,13 +1359,13 @@ let apply ?ask t ~requested ?print_requested ?add_roots
     let virt_inst =
       OpamPackage.Set.Op.((t.installed %% requested) ++ (OpamPackage.keys skip))
     in
-    let t =
-      if OpamClientConfig.(!r.show) then
-        let _ = get_depexts t virt_inst in t
-        (* Prints the msg about additional depexts to install *)
-      else install_depexts t virt_inst
-    in
-    t, Nothing_to_do
+    if OpamClientConfig.(!r.show) then
+      let _ = get_depexts t virt_inst in t, Nothing_to_do
+      (* Prints the msg about additional depexts to install *)
+    else
+    match install_depexts t virt_inst with
+    | Success t -> t, Nothing_to_do
+    | Conflicts not_found -> t, Missing_depexts not_found
   else (
     (* Otherwise, compute the actions to perform *)
     let show_solution = ask <> Some false in
@@ -1401,10 +1421,13 @@ let apply ?ask t ~requested ?print_requested ?add_roots
       (* Prints the msg about additional depexts to install *)
       t, Aborted
     else if download_only || confirmation ?ask names solution then (
-      let t =
+      let result =
         install_depexts t  @@ OpamPackage.Set.inter
           new_state0.installed (OpamSolver.all_packages solution0)
       in
+      match result with
+      | Conflicts not_found -> t, Missing_depexts not_found
+      | Success t ->
       let requested =
         OpamPackage.packages_of_names new_state.installed names
       in
