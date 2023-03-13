@@ -31,19 +31,19 @@ Set to '"-removed"' the field solver-upgrade-criteria in global configuration
 ### # no switch
 ### opam config report | "${OPAMVERSION}" -> "current"
 # opam config report
-# opam-version         current 
+# opam-version         current
 # self-upgrade         no
 # system               arch=an-arch os=an-os os-distribution=an-os-distribution os-version=an-os-version
 # solver               builtin-mccs+glpk
 # install-criteria     -removed
 # upgrade-criteria     -removed
 # jobs                 1
-# current-switch       non set
+# current-switch       none set
 ### # empty switch
 ### opam switch create an-empty-switch --empty
 ### opam config report | "${OPAMVERSION}" -> "current"
 # opam config report
-# opam-version         current 
+# opam-version         current
 # self-upgrade         no
 # system               arch=an-arch os=an-os os-distribution=an-os-distribution os-version=an-os-version
 # solver               builtin-mccs+glpk
@@ -108,7 +108,7 @@ The following actions will be performed:
 Done.
 ### opam config report | "${OPAMVERSION}" -> "current"
 # opam config report
-# opam-version         current 
+# opam-version         current
 # self-upgrade         no
 # system               arch=an-arch os=an-os os-distribution=an-os-distribution os-version=an-os-version
 # solver               builtin-mccs+glpk
