@@ -101,6 +101,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Detect change in root version when switching branches and re-build test roots [#5481 @dra27]
   * Admin: add a full test [#5385 @rjbou]
   * Lint
     * E29: Add conflicts test and simplify W41 to no more trigger E29 [#5535 @rjbou]

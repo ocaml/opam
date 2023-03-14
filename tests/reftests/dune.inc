@@ -1317,6 +1317,7 @@
 
 (rule
   (targets root-N0REP0)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
@@ -1337,6 +1338,7 @@
 
 (rule
   (targets root-0070613707)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
@@ -1357,6 +1359,7 @@
 
 (rule
   (targets root-009e00fa)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
@@ -1377,6 +1380,7 @@
 
 (rule
   (targets root-11ea1cb)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
@@ -1397,6 +1401,7 @@
 
 (rule
   (targets root-297366c)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
@@ -1417,6 +1422,7 @@
 
 (rule
   (targets root-3235916)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
@@ -1437,6 +1443,7 @@
 
 (rule
   (targets root-7090735c)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
@@ -1457,6 +1464,7 @@
 
 (rule
   (targets root-7371c1d9)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
@@ -1477,6 +1485,7 @@
 
 (rule
   (targets root-a5d7cdc0)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
@@ -1497,6 +1506,7 @@
 
 (rule
   (targets root-ad4dd344)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
@@ -1517,6 +1527,7 @@
 
 (rule
   (targets root-c1842d168d)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
@@ -1537,6 +1548,7 @@
 
 (rule
   (targets root-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
@@ -1557,6 +1569,7 @@
 
 (rule
   (targets root-c1d23f0e)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
@@ -1577,6 +1590,7 @@
 
 (rule
   (targets root-de897adf36c4230dfea812f40c98223b31c4521a)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
@@ -1597,6 +1611,7 @@
 
 (rule
   (targets root-f372039d)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
