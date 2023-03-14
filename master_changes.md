@@ -433,10 +433,10 @@ users)
   * Fix the reftests on OCaml 5.0 [#5402 @kit-ty-kate]
   * Add `admin` command reftest [#5385 #5336 @rjbou @kit-ty-kate]
   * Add `admin` command reftest [#5386 #5385 #5336 @rjbou @kit-ty-kate]
-
-
   * Add `swhid` print tests in show, and swh fallback test [#4859 @rjbou]
   * Add `switch list` test, add some in `switch invariant` and `switch import` [#5208 @rjbou]
+  * Add opam env hooks test: change switch, set switch via `OPAMSWITCH`, entering directory, moving switch ; and opam exec with missing environment file [#5476 @rjbou @dra27]
+
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
