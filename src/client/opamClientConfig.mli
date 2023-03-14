@@ -120,6 +120,7 @@ val opam_init:
   ?assume_depexts:bool ->
   ?cli:OpamCLIVersion.t ->
   ?scrubbed_environment_variables:string list ->
+  ?original_root_dir:OpamTypes.dirname ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:OpamStateTypes.provenance ->
   ?jobs:int Lazy.t ->

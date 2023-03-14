@@ -713,7 +713,20 @@ let init
     shell =
   log "INIT %a"
     (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
-  let root = OpamStateConfig.(!r.root_dir) in
+  let root =
+    let root = OpamStateConfig.(!r.root_dir) in
+    if Sys.win32 &&
+       OpamStd.String.contains_char (OpamFilename.Dir.to_string root) ' ' then
+      (let new_root_f = "/tmp/opamroot" in
+       OpamConsole.note
+         "Your opam root path '%s' contains a space, we'll redirect to '%s'"
+         (OpamFilename.Dir.to_string root) new_root_f;
+       let new_root = OpamFilename.Dir.of_string new_root_f in
+       OpamFilename.write (OpamPath.redirected root) new_root_f;
+       OpamStateConfig.update ~root_dir:new_root ();
+       new_root)
+    else root
+  in
   let config_f = OpamPath.config root in
   let root_empty =
     not (OpamFilename.exists_dir root) || OpamFilename.dir_is_empty root in

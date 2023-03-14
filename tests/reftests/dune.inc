@@ -442,6 +442,26 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:env.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-env.unix)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (diff env.unix.test env.unix.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Unix"))
+ (deps (alias reftest-env.unix)))
+
+(rule
+ (targets env.unix.out)
+ (deps root-N0REP0)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:env.unix.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-env.win32)
  (enabled_if (= %{os_type} "Win32"))
  (action
@@ -477,6 +497,26 @@
   (with-stdout-to
    %{targets}
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:init.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-init.win32)
+ (enabled_if (= %{os_type} "Win32"))
+ (action
+  (diff init.win32.test init.win32.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Win32"))
+ (deps (alias reftest-init.win32)))
+
+(rule
+ (targets init.win32.out)
+ (deps root-N0REP0)
+ (enabled_if (= %{os_type} "Win32"))
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:init.win32.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-inplace)
