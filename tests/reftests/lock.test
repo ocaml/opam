@@ -67,9 +67,6 @@ name: "tolock"
 opam-version: "2.0"
 synopsis: "A word"
 version: "1"
-url {
-src: "file://${BASEDIR}/tolock"
-}
 ### opam lock tolock --lock-suffix new
 Generated lock files for:
   - tolock.1: ${BASEDIR}/tolock.opam.new
@@ -143,9 +140,6 @@ name: "tolock"
 opam-version: "2.0"
 synopsis: "A word"
 version: "1"
-url {
-src: "file://${BASEDIR}/tolock"
-}
 ### opam pin -n ./tolock --locked
 Package tolock does not exist, create as a NEW package? [y/n] y
 tolock is now pinned to file://${BASEDIR}/tolock (version 1)

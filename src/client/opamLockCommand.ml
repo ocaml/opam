@@ -304,8 +304,9 @@ let lock_opam ?(only_direct=false) st opam =
       all_depends []
     |> List.rev
   in
-  opam |>
-  OpamFile.OPAM.with_depopts OpamFormula.Empty |>
-  OpamFile.OPAM.with_depends depends_formula |>
-  OpamFile.OPAM.with_conflicts conflicts |>
-  OpamFile.OPAM.with_pin_depends pin_depends
+  opam
+  |> OpamFile.OPAM.with_depopts OpamFormula.Empty
+  |> OpamFile.OPAM.with_depends depends_formula
+  |> OpamFile.OPAM.with_conflicts conflicts
+  |> OpamFile.OPAM.with_pin_depends pin_depends
+  |> OpamFile.OPAM.with_url_opt None
