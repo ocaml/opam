@@ -140,8 +140,8 @@ The following actions will be performed:
 -> retrieved waste.1  (file://${BASEDIR}/waste.tgz)
 -> installed waste.1
 Done.
-### test -d OPAM/clean/.opam-switch/sources/waste
-# Return code 1 #
+### ls OPAM/clean/.opam-switch/sources/
+waste.1
 ### opam remove waste
 The following actions will be performed:
 === remove 1 package
@@ -150,8 +150,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   waste.1
 Done.
-### test -d OPAM/clean/.opam-switch/sources/waste
-# Return code 1 #
+### ls OPAM/clean/.opam-switch/sources
 ### opam install waste
 The following actions will be performed:
 === install 1 package
@@ -171,8 +170,7 @@ The following actions will be performed:
 -> removed   waste.1
 -> installed waste.1
 Done.
-### test -d OPAM/clean/.opam-switch/sources/waste
-# Return code 1 #
+### ls OPAM/clean/.opam-switch/sources
 ### opam remove waste
 The following actions will be performed:
 === remove 1 package
@@ -191,7 +189,8 @@ The following actions will be performed:
 -> retrieved waste.1  (file://${BASEDIR}/waste)
 -> installed waste.1
 Done.
-### test -d OPAM/clean/.opam-switch/sources/waste
+### ls OPAM/clean/.opam-switch/sources
+waste
 ### opam unpin waste
 Ok, waste is no longer pinned to file://${BASEDIR}/waste (version 1)
 The following actions will be performed:
@@ -223,7 +222,8 @@ The following actions will be performed:
 -> retrieved waste.1  (file://./waste)
 -> installed waste.1
 Done.
-### test -d OPAM/clean/.opam-switch/sources/waste
+### ls OPAM/clean/.opam-switch/sources
+waste
 ### opam unpin waste
 Ok, waste is no longer pinned to file://./waste (version 1)
 The following actions will be performed:
@@ -254,7 +254,8 @@ The following actions will be performed:
 -> retrieved waste.1  (cached)
 -> installed waste.1
 Done.
-### test -d OPAM/clean/.opam-switch/sources/waste
+### ls OPAM/clean/.opam-switch/sources
+waste
 ### opam install waste-local
 The following actions will be performed:
 === install 1 package
@@ -264,5 +265,6 @@ The following actions will be performed:
 -> retrieved waste-local.1  (file://./waste)
 -> installed waste-local.1
 Done.
-### test -d OPAM/clean/.opam-switch/sources/waste-local
-# Return code 1 #
+### ls OPAM/clean/.opam-switch/sources
+waste
+waste-local.1
