@@ -199,6 +199,7 @@ users)
   * Increase verbose logging of command to 4 [#5151 @rjbou]
   * Improve the error message when neither MacPorts or Homebrew could be detected on macOS [#5240 @kit-ty-kate]
   * Introduce dummy-success & dummy-failure os-family to make testing depexts behaviour easier [#5268 @kit-ty-kate]
+    * Add specification of installed/available packages: `dummy-<success|failure>[:<*|0|pkgslist>:*|0|pkgslist>]"` [#5453 @rjbou @dra27]
   * Run command as admin only when needed [#5268 @kit-ty-kate]
   * Print depexts together with action list on `--show` [#5236 @AltGr]
   * [BUG] when checking again, more accurate check of missing packages (available and not found) [#5157 @rjbou]
