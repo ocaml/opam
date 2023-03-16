@@ -1443,3 +1443,14 @@ let compute_invariant_packages st =
   let pkgs = invariant_root_packages st in
   dependencies ~build:false ~post:true ~depopts:false ~installed:true
     ~unavailable:false st (universe st ~requested:pkgs Query) pkgs
+
+let compiler_packages st =
+  let compiler_packages =
+    OpamPackage.Set.filter (fun nv ->
+        try OpamFile.OPAM.has_flag Pkgflag_Compiler (opam st nv)
+        with Not_found -> false)
+      st.installed
+  in
+  dependencies ~build:true ~post:false ~depopts:true ~installed:true
+    ~unavailable:false st (universe st ~requested:compiler_packages Query)
+    compiler_packages

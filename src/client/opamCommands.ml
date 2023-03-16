@@ -1379,7 +1379,7 @@ let config cli =
     | Some `report, [] -> (
         let print label fmt = OpamConsole.msg ("# %-20s "^^fmt^^"\n") label in
         OpamConsole.msg "# opam config report\n";
-        print "opam-version" "%s "
+        print "opam-version" "%s"
           (OpamVersion.to_string (OpamVersion.full ()));
         print "self-upgrade" "%s"
           (if self_upgrade_status global_options = `Running then
@@ -1401,7 +1401,7 @@ let config cli =
             else [] in
           print "jobs" "%d" (Lazy.force OpamStateConfig.(!r.jobs));
           match OpamStateConfig.get_switch_opt () with
-          | None -> print "current-switch" "%s" "non set"; `Ok ()
+          | None -> print "current-switch" "%s" "none set"; `Ok ()
           | Some switch ->
             OpamSwitchState.with_ `Lock_none ~switch gt @@ fun state ->
             print "repositories" "%s"
@@ -1456,6 +1456,14 @@ let config cli =
               );
             print "current-switch" "%s"
               (OpamSwitch.to_string state.switch);
+            print "invariant" "%s"
+              (OpamFormula.to_string state.switch_invariant);
+            print "compiler-packages" "%s"
+              (let packages = OpamSwitchState.compiler_packages state in
+               if OpamPackage.Set.is_empty packages then "none" else
+                 String.concat ", "
+                   (List.map OpamPackage.to_string
+                      (OpamPackage.Set.elements packages)));
             let process nv =
               try
                 let conf = OpamSwitchState.package_config state nv.name in

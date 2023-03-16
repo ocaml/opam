@@ -250,6 +250,10 @@ val invariant_root_packages: 'a switch_state -> package_set
 (* Compute installed invariant dependency cone *)
 val compute_invariant_packages: 'a switch_state -> package_set
 
+(* Returns set of packages of installed compiler packages and their
+   dependencies (only build & depopts) *)
+val compiler_packages: 'a switch_state -> package_set
+
 (** {2 User interaction and reporting } *)
 
 (** Returns [true] if the switch of the state is the one set in
