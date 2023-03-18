@@ -36,6 +36,7 @@ users)
   * ◈ `tree` subcommand now supports `--json` option [#5303 @cannorin - fix #5298]
   * ◈ Add `why` subcommand to examine how the versions of currently installed packages get constrained (alias to `tree --rev-deps`) [#5171 @cannorin - fix #3775]
   * Make the plugin lookup faster when mistyping a subcommand [#5297 @kit-ty-kate]
+  * Do not evaluate opam hooks when .envrc from direnv present [#5486 @jonahbeckford]
 
 ## Plugins
   *
