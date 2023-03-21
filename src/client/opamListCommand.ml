@@ -389,7 +389,9 @@ let apply_selector ~base st = function
        in
        let selections =
          if switch = st.switch then OpamSwitchState.selections st
-         else OpamSwitchState.load_selections st.switch_global switch
+         else
+           OpamSwitchState.load_selections ~lock_kind:`Lock_none
+             st.switch_global switch
        in
        List.fold_left (fun acc f ->
            let name =

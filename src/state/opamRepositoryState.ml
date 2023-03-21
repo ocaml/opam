@@ -159,7 +159,7 @@ let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE %@ %a" (slog OpamFilename.Dir.to_string) gt.root;
   let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
   let repos_map = OpamStateConfig.Repos.safe_read ~lock_kind gt in
-  if OpamStateConfig.is_newer_than_self gt then
+  if OpamStateConfig.is_newer_than_self ~lock_kind gt then
     log "root version (%s) is greater than running binary's (%s); \
          load with best-effort (read-only)"
       (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config))
@@ -260,7 +260,8 @@ let drop ?cleanup rt =
   let _ = unlock ?cleanup rt in ()
 
 let with_write_lock ?dontblock rt f =
-  if OpamStateConfig.is_newer_than_self rt.repos_global then
+  if OpamStateConfig.is_newer_than_self ~lock_kind:`Lock_write rt.repos_global
+  then
     OpamConsole.error_and_exit `Locked
       "The opam root has been upgraded by a newer version of opam-state \
        and cannot be written to";

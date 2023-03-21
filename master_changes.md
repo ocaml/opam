@@ -225,6 +225,8 @@ users)
   * `OpamDownload.download`: more fine grained HTTP request error code detection for curl [#6036 @rjbou]
 
 ## opam-state
+  * `OpamStateConfig`: Make the `?lock_kind` parameters non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]
+  * `OpamSwitchState.load_selections`: Make the `?lock_kind` parameter non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]
 
 ## opam-solver
 

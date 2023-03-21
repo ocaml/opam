@@ -18,11 +18,11 @@ let slog = OpamConsole.slog
 
 open OpamStateTypes
 
-let load_selections ?lock_kind gt switch =
-  OpamStateConfig.Switch.safe_read_selections ?lock_kind gt switch
+let load_selections ~lock_kind gt switch =
+  OpamStateConfig.Switch.safe_read_selections ~lock_kind gt switch
 
-let load_switch_config ?lock_kind gt switch =
-  match OpamStateConfig.Switch.read_opt ?lock_kind gt switch with
+let load_switch_config ~lock_kind gt switch =
+  match OpamStateConfig.Switch.read_opt ~lock_kind gt switch with
   | Some c -> c
   | exception (OpamPp.Bad_version _ as e) ->
     OpamFormatUpgrade.hard_upgrade_from_2_1_intermediates
@@ -257,7 +257,7 @@ let load lock_kind gt rt switch =
     OpamFilename.flock lock_kind (OpamPath.Switch.lock gt.root switch)
   in
   let switch_config = load_switch_config ~lock_kind gt switch in
-  if OpamStateConfig.is_newer_than_self gt then
+  if OpamStateConfig.is_newer_than_self ~lock_kind gt then
     log "root version (%s) is greater than running binary's (%s); \
          load with best-effort (read-only)"
       (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config))
@@ -672,7 +672,8 @@ let drop st =
   let _ = unlock st in ()
 
 let with_write_lock ?dontblock st f =
-  if OpamStateConfig.is_newer_than_self st.switch_global then
+  if OpamStateConfig.is_newer_than_self ~lock_kind:`Lock_write st.switch_global
+  then
     OpamConsole.error_and_exit `Locked
       "The opam root has been upgraded by a newer version of opam-state \
        and cannot be written to";

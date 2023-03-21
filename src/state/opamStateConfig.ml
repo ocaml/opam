@@ -246,21 +246,21 @@ let is_newer config =
 (** none -> shouldn't load (write attempt in readonly)
     Some true -> everything is fine normal read
     Some false -> readonly accorded, load with best effort *)
-let is_readonly_opamroot_raw ?(lock_kind=`Lock_write) version =
+let is_readonly_opamroot_raw ~lock_kind version =
   let newer = is_newer_raw version in
   let write = lock_kind = `Lock_write in
   if newer && write then None else
     Some (newer && not write)
 
-let is_readonly_opamroot_t ?lock_kind gt =
-  is_readonly_opamroot_raw ?lock_kind
+let is_readonly_opamroot_t ~lock_kind gt =
+  is_readonly_opamroot_raw ~lock_kind
     (Some (OpamFile.Config.opam_root_version gt.config))
 
-let is_newer_than_self ?lock_kind gt =
-  is_readonly_opamroot_t ?lock_kind gt <> Some false
+let is_newer_than_self ~lock_kind gt =
+  is_readonly_opamroot_t ~lock_kind gt <> Some false
 
-let load_if_possible_raw ?lock_kind root version (read,read_wo_err) f =
-  match is_readonly_opamroot_raw ?lock_kind version with
+let load_if_possible_raw ~lock_kind root version (read,read_wo_err) f =
+  match is_readonly_opamroot_raw ~lock_kind version with
   | None ->
     OpamConsole.error_and_exit `Locked
       "Refusing write access to %s, which is more recent than this version of \
@@ -271,16 +271,16 @@ let load_if_possible_raw ?lock_kind root version (read,read_wo_err) f =
   | Some true -> read_wo_err f
   | Some false -> read f
 
-let load_if_possible_t ?lock_kind opamroot config readf f =
-  load_if_possible_raw ?lock_kind
+let load_if_possible_t ~lock_kind opamroot config readf f =
+  load_if_possible_raw ~lock_kind
     opamroot (Some (OpamFile.Config.opam_root_version config)) readf f
 
-let load_if_possible ?lock_kind gt =
-  load_if_possible_t ?lock_kind gt.root gt.config
+let load_if_possible ~lock_kind gt =
+  load_if_possible_t ~lock_kind gt.root gt.config
 
-let load_config_root ?lock_kind readf opamroot =
+let load_config_root ~lock_kind readf opamroot =
   let f = OpamPath.config opamroot in
-  load_if_possible_raw ?lock_kind
+  load_if_possible_raw ~lock_kind
     opamroot
     (OpamFile.Config.raw_root_version f)
     readf f
@@ -289,42 +289,42 @@ let safe read read' default =
   let safe r f = OpamStd.Option.default default @@ r f in
   safe read, safe read'
 
-let safe_load ?lock_kind opamroot =
-  load_config_root ?lock_kind
+let safe_load ~lock_kind opamroot =
+  load_config_root ~lock_kind
     OpamFile.Config.(safe read_opt BestEffort.read_opt empty) opamroot
 
-let load ?lock_kind opamroot =
-  load_config_root ?lock_kind
+let load ~lock_kind opamroot =
+  load_config_root ~lock_kind
     OpamFile.Config.(read_opt, BestEffort.read_opt) opamroot
 
 (* switches *)
 module Switch = struct
 
-  let load_raw ?lock_kind root config readf switch =
-    load_if_possible_t ?lock_kind root config readf
+  let load_raw ~lock_kind root config readf switch =
+    load_if_possible_t ~lock_kind root config readf
       (OpamPath.Switch.switch_config root switch)
 
-  let safe_load_t ?lock_kind root switch =
+  let safe_load_t ~lock_kind root switch =
     let config = safe_load ~lock_kind:`Lock_read root in
-    load_raw ?lock_kind root config
+    load_raw ~lock_kind root config
       OpamFile.Switch_config.(safe read_opt BestEffort.read_opt empty)
       switch
 
-  let load ?lock_kind gt readf switch =
-    load_raw ?lock_kind gt.root gt.config readf switch
+  let load ~lock_kind gt readf switch =
+    load_raw ~lock_kind gt.root gt.config readf switch
 
-  let safe_load ?lock_kind gt switch =
-    load ?lock_kind gt
+  let safe_load ~lock_kind gt switch =
+    load ~lock_kind gt
       OpamFile.Switch_config.(safe read_opt BestEffort.read_opt empty)
       switch
 
-  let read_opt ?lock_kind gt switch =
-    load ?lock_kind gt
+  let read_opt ~lock_kind gt switch =
+    load ~lock_kind gt
       OpamFile.Switch_config.(read_opt, BestEffort.read_opt)
       switch
 
-  let safe_read_selections ?lock_kind gt switch =
-    load_if_possible ?lock_kind gt
+  let safe_read_selections ~lock_kind gt switch =
+    load_if_possible ~lock_kind gt
       OpamFile.SwitchSelections.(safe read_opt BestEffort.read_opt empty)
       (OpamPath.Switch.selections gt.root switch)
 
@@ -332,8 +332,8 @@ end
 
 (* repos *)
 module Repos = struct
-  let safe_read ?lock_kind gt =
-    load_if_possible ?lock_kind gt
+  let safe_read ~lock_kind gt =
+    load_if_possible ~lock_kind gt
       OpamFile.Repos_config.(safe read_opt BestEffort.read_opt empty)
       (OpamPath.repos_config gt.root)
 end
@@ -396,13 +396,13 @@ let get_current_switch_from_cwd root =
   with OpamPp.Bad_version _ -> None
 
 (* do we want `load_defaults` to fail / run a format upgrade ? *)
-let load_defaults ?lock_kind root_dir =
+let load_defaults ~lock_kind root_dir =
   let current_switch =
     match E.switch () with
     | Some "" | None -> get_current_switch_from_cwd root_dir
     | _ -> (* OPAMSWITCH is set, no need to lookup *) None
   in
-  match try load ?lock_kind root_dir with OpamPp.Bad_version _ -> None with
+  match try load ~lock_kind root_dir with OpamPp.Bad_version _ -> None with
   | None ->
     update ?current_switch ();
     None

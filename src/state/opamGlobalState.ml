@@ -190,7 +190,7 @@ let drop gt =
   let _ = unlock gt in ()
 
 let with_write_lock ?dontblock gt f =
-  if OpamStateConfig.is_newer_than_self gt then
+  if OpamStateConfig.is_newer_than_self ~lock_kind:`Lock_write gt then
     OpamConsole.error_and_exit `Locked
       "The opam root has been upgraded by a newer version of opam-state \
        and cannot be written to";
