@@ -380,6 +380,7 @@ users)
 
 ## Test
   * Update crowbar with compare functions [#4918 @rjbou]
+  * No more mute test debug output (level < 0) if `--readonly` is given with `--debug-level` [#5476 @rjbou]
 
 ## Reftests
 ### Tests
