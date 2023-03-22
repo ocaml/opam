@@ -147,6 +147,8 @@ users)
   * [BUG] Fix directory display in dev mode [#5102 @rjbou]
   * Download source even if no switch is set [#4850 @rjbou @zapashcanon - fix #4809]
   * [NEW] Add `--no-switch` option [#4850 @rjbou - fix #4858]
+## Env
+  * Revert environment variables instead of setting them to an empty string [#5039 @rjbou]
 
 ## Lint
   * W47: remove the mention of the opam 1.2 descr file in the warning message [#5069 @rjbou - fix #4989]

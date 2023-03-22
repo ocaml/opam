@@ -72,10 +72,13 @@ let rec print_env = function
     if OpamConsole.verbose () then
       OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
     if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
-    then (
+    then
       let v' = possibly_unix_path_env_value k v in
-      OpamConsole.msg "%s='%s'; export %s;\n"
-        k (OpamStd.Env.escape_single_quotes v') k);
+      if String.equal v' "" then
+        OpamConsole.msg "unset %s;\n" k
+      else
+        OpamConsole.msg "%s='%s'; export %s;\n"
+          k (OpamStd.Env.escape_single_quotes v') k;
     print_env r
 
 let rec print_csh_env = function
@@ -84,10 +87,13 @@ let rec print_csh_env = function
     if OpamConsole.verbose () then
       OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
     if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
-    then (
+    then
       let v' = possibly_unix_path_env_value k v in
-      OpamConsole.msg "setenv %s '%s';\n"
-        k (OpamStd.Env.escape_single_quotes v'));
+      if String.equal v' "" then
+        OpamConsole.msg "unsetenv %s;\n" k
+      else
+        OpamConsole.msg "setenv %s '%s';\n"
+          k (OpamStd.Env.escape_single_quotes v');
     print_csh_env r
 
 let rec print_pwsh_env = function
@@ -137,6 +143,9 @@ let print_sexp_env env =
 let rec print_fish_env env =
   let set_arr_cmd ?(modf=fun x -> x) k v =
     let v = modf @@ OpamStd.String.split v ':' in
+    if v = [] then
+      OpamConsole.msg "set -ge %s;\n" k
+    else
     OpamConsole.msg "set -gx %s %s;\n" k
       (OpamStd.List.concat_map " "
          (fun v ->
@@ -170,8 +179,7 @@ let rec print_fish_env env =
        | "MANPATH" ->
          manpath_cmd v
        | _ ->
-         OpamConsole.msg "set -gx %s '%s';\n"
-           k (OpamStd.Env.escape_single_quotes ~using_backslashes:true v));
+         set_arr_cmd k v);
     print_fish_env r
 
 let print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env =
