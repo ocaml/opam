@@ -123,25 +123,33 @@ let map_update_names env_keys updates =
   in
   List.map convert updates
 
-let global_env_keys = lazy (OpamStd.Env.Name.Set.of_list (List.map fst (OpamStd.Env.list ())))
+let global_env_keys = lazy (
+  OpamStd.Env.list ()
+  |> List.map fst
+  |> OpamStd.Env.Name.Set.of_list)
 
 let updates_from_previous_instance = lazy (
+  let get_env env_file =
+    OpamStd.Option.map
+      (map_update_names (Lazy.force global_env_keys))
+      (OpamFile.Environment.read_opt env_file)
+  in
   let open OpamStd.Option.Op in
-  OpamStd.Env.getopt "OPAM_LAST_ENV"
-  >>= fun env_file ->
-    try OpamFile.Environment.read_opt (OpamFile.make (OpamFilename.of_string env_file))
-    with e -> OpamStd.Exn.fatal e; None
-  >>+ fun () ->
-    OpamStd.Env.getopt "OPAM_SWITCH_PREFIX"
-    >>= fun pfx ->
+  (OpamStd.Env.getopt "OPAM_LAST_ENV"
+   >>= fun env_file ->
+   try
+     OpamFilename.of_string env_file
+     |> OpamFile.make
+     |> get_env
+   with e -> OpamStd.Exn.fatal e; None)
+  >>+ (fun () ->
+      OpamStd.Env.getopt "OPAM_SWITCH_PREFIX"
+      >>= fun pfx ->
       let env_file =
         OpamPath.Switch.env_relative_to_prefix (OpamFilename.Dir.of_string pfx)
       in
-      try
-        OpamStd.Option.map (map_update_names (Lazy.force global_env_keys))
-          (OpamFile.Environment.read_opt env_file)
-      with e -> OpamStd.Exn.fatal e; None
-)
+      try get_env env_file
+      with e -> OpamStd.Exn.fatal e; None))
 
 let expand (updates: env_update list) : env =
   let updates =
@@ -343,18 +351,16 @@ let get_opam_raw ~set_opamroot ~set_opamswitch ?(base=[]) ~force_path
   add base upd
 
 let hash_env_updates upd =
-  let string_of_op = function
-    | Eq -> "="
-    | PlusEq -> "+="
-    | EqPlus -> "=+"
-    | ColonEq -> ":="
-    | EqColon -> "=:"
-    | EqPlusEq -> "=+="
-  in
+  (* Should we use OpamFile.Environment.write_to_string ? cons: it contains
+     tabulations *)
   let to_string (name, op, value, _) =
-    String.escaped name ^ string_of_op op ^ String.escaped value
+    String.escaped name
+    ^ OpamPrinter.FullPos.env_update_op_kind op
+    ^ String.escaped value
   in
-  Digest.string (String.concat "\n" (List.rev_map to_string upd))
+  List.rev_map to_string upd
+  |> String.concat "\n"
+  |> Digest.string
   |> Digest.to_hex
 
 let get_full

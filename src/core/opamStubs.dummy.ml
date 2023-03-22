@@ -37,4 +37,3 @@ let getParentProcessID = that's_a_no_no
 let getProcessName = that's_a_no_no
 let getConsoleAlias _ = that's_a_no_no
 let win_create_process _ _ _ _ _ = that's_a_no_no
-let uptime () = 0.0

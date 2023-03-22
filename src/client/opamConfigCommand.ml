@@ -226,105 +226,62 @@ let load_and_verify_env ~set_opamroot ~set_opamswitch ~force_path
        gt switch env_file)
   else upd
 
-(* Posix specifies that processes should not rely on the persistence of files in
-   /tmp between invocations; in practice we can assume that they'll persist
-   until a restart. Windows does not prune its temporary directory, so some
-   garbage collection is needed. *)
-let prune_last_env_files temp_dir =
-  try
-    let files = Sys.readdir temp_dir in
-    let stamp =
-      let uptime = OpamStubs.uptime () in
-      if uptime < 1.0 then
-        (* Uptime isn't available available *)
-        raise Exit
-      else
-        (* Prune files older than 24 hours before the system started *)
-        Unix.time () -. uptime -. 86400.
-    in
-    let check file =
-      if OpamStd.String.starts_with ~prefix:"env-" file then
-        let file = Filename.concat temp_dir file in
-        try
-          let {Unix.st_mtime; _} = Unix.stat file in
-          if st_mtime < stamp then
-            Sys.remove file
-        with e -> OpamStd.Exn.fatal e
-    in
-    Array.iter check files
-  with e -> OpamStd.Exn.fatal e
-
 (* Returns [Some file] where [file] contains [updates]. [hash] should be
    [OpamEnv.hash_env_updates updates] and [n] should initially be [0]. If for
    whatever reason the file cannot be created, returns [None]. *)
-let rec write_last_env_file updates hash n =
-  (* The principal aim here is not to spam /tmp with gazillions of files, but
-     also to be sure that the file present has the correct content. [n] is used
-     to avoid content collisions. If an existing file is used, it is touched as
-     this is used on Windows to allow garbage collection. *)
-  let trial = "env-" ^ hash ^ "-" ^ string_of_int n in
-  let temp_dir = Filename.concat (Filename.get_temp_dir_name ()) "opam-last-env" in
-  let target = Filename.concat temp_dir trial in
-  let result =
-    if Sys.file_exists target then
+let  write_last_env_file gt switch updates =
+  let temp_dir = OpamPath.Switch.last_env gt.root switch in
+  let hash = OpamEnv.hash_env_updates updates in
+  let rec aux  n =
+    (* The principal aim here is not to spam /tmp with gazillions of files, but
+       also to be sure that the file present has the correct content. [n] is used
+       to avoid content collisions. If an existing file is used, it is touched as
+       this is used on Windows to allow garbage collection. *)
+    let trial = "env-" ^ hash ^ "-" ^ string_of_int n in
+    let target = OpamFilename.Op.(temp_dir // trial) in
+    if OpamFilename.exists target then
       (* File already exists - check its content *)
       let target_hash =
-        OpamFile.Environment.read_opt (OpamFile.make (OpamFilename.of_string target))
+        OpamFile.make target
+        |> OpamFile.Environment.read_opt
         |> Option.map OpamEnv.hash_env_updates
       in
-      if target_hash = Some hash then begin
-        (* Touch it *)
-        begin try Unix.utimes target 0.0 0.0
-        with Unix.Unix_error _ -> () end;
-        (* Small chance that another process GC'd that file while we were trying to
-           touch it, so re-check that it exists *)
-        if Sys.file_exists target then
-          Some target
-        else
-          write_last_env_file updates hash n
-      end else
+      if target_hash = Some hash then Some target else
         (* Content collision/corruption, so try with higher [n] *)
-        write_last_env_file updates hash (succ n)
-    else try
-      (* Atomically create the file *)
-      OpamSystem.mkdir temp_dir;
-      let (temporary_file, oc) =
-        let mode = [Open_wronly; Open_creat; Open_trunc; Open_binary] in
-        let perms = 0o666 in
-        Filename.open_temp_file ~temp_dir ~mode ~perms "opam-env-" ".tmp"
-      in
-      begin try
-        OpamStd.Exn.finally
-          (fun () -> close_out oc)
-          (fun () -> OpamFile.Environment.write_to_channel oc updates);
-        Sys.rename temporary_file target
-      with e -> OpamStd.Exn.finalise e @@ fun () -> OpamSystem.remove temporary_file end;
+        aux (succ n)
+    else
+    try
+      (* Environment files are written atomically *)
+      OpamFile.Environment.write (OpamFile.make target) updates;
       (* File should now exist with the correct content *)
-      write_last_env_file updates hash n
+      aux n
     with e -> OpamStd.Exn.fatal e; None
   in
-  prune_last_env_files temp_dir;
-  result
+  aux 0
 
 let ensure_env_aux ?(base=[]) ?(set_opamroot=false) ?(set_opamswitch=false)
-?(force_path=true) gt switch =
+    ?(force_path=true) gt switch =
   let env_file = OpamPath.Switch.environment gt.root switch in
   let updates =
     if OpamFile.exists env_file then
-      load_and_verify_env ~set_opamroot ~set_opamswitch ~force_path gt switch env_file
+      load_and_verify_env ~set_opamroot ~set_opamswitch ~force_path
+        gt switch env_file
     else begin
       log "Missing environment file, regenerate it";
-      regenerate_env ~set_opamroot ~set_opamswitch ~force_path gt switch env_file
+      regenerate_env ~set_opamroot ~set_opamswitch ~force_path
+        gt switch env_file
     end
   in
   let updates =
-    List.filter (function ("OPAM_LAST_ENV", _, _, _) -> false | _ -> true) updates
+    List.filter (function ("OPAM_LAST_ENV", _, _, _) -> false | _ -> true)
+      updates
   in
-  let last_env_file =
-    write_last_env_file updates (OpamEnv.hash_env_updates updates) 0
-  in
+  let last_env_file = write_last_env_file gt switch updates in
   let updates =
-    OpamStd.Option.map_default (fun target -> ("OPAM_LAST_ENV", OpamParserTypes.Eq, target, None)::updates) updates last_env_file
+    OpamStd.Option.map_default (fun target ->
+        ("OPAM_LAST_ENV", OpamParserTypes.Eq, OpamFilename.to_string target, None)
+        ::updates)
+      updates last_env_file
   in
   OpamEnv.add base updates
 
