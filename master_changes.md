@@ -96,6 +96,8 @@ users)
   * Display a warning on hard upgrade when the `jobs` config variable is re-written [#5305 @rjbou]
     * update note [#5305 @rjbou]
   * Add `sys-pkg-manager-cmd` field to store specific system package manager command paths [#5433 @rjbou]
+  * Regenerate the environment file when a local switch is moved [#5476 @dra27 - fix #3411]
+  * Regenerate the environment file in `opam exec` [#5476 @dra27]
 
 ## Pin
   * Switch the default version when undefined from ~dev to dev [#4949 @kit-ty-kate]
@@ -380,6 +382,7 @@ users)
 
 ## Test
   * Update crowbar with compare functions [#4918 @rjbou]
+  * No more mute test debug output (level < 0) if `--readonly` is given with `--debug-level` [#5476 @rjbou]
 
 ## Reftests
 ### Tests
@@ -432,10 +435,10 @@ users)
   * Fix the reftests on OCaml 5.0 [#5402 @kit-ty-kate]
   * Add `admin` command reftest [#5385 #5336 @rjbou @kit-ty-kate]
   * Add `admin` command reftest [#5386 #5385 #5336 @rjbou @kit-ty-kate]
-
-
   * Add `swhid` print tests in show, and swh fallback test [#4859 @rjbou]
   * Add `switch list` test, add some in `switch invariant` and `switch import` [#5208 @rjbou]
+  * Add opam env hooks test: change switch, set switch via `OPAMSWITCH`, entering directory, moving switch ; and opam exec with missing environment file [#5476 @rjbou @dra27]
+
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
   * Fix meld reftest: open only with failing ones [#4913 @rjbou]
@@ -639,6 +642,8 @@ users)
   * `OpamFile.URL`: add `swhid` field in `t` record, and its access functions [#4859 @rjbou]
   * `OpamFile.URL`: add `with_mirrors` [#4859 @rjbou]
   * `OpamTypes.universe`: remove `u_base` field, as it is no more needed with switch invariant [#5208 @rjbou]
+  * `OpamFile`: add `atomic` value in `IO_Arg` to enable/disable atomic file writing [#5476 @dra27]
+  * `OpamFile.Environment`: enable atomic writing [#5476 @dra27]
 
 ## opam-core
   * `OpamStd.Sys`: fix `get_windows_executable_variant` to distinguish MSYS2 from Cygwin, esp. for rsync rather than symlinking [#5404 @jonahbeckford]
@@ -686,3 +691,4 @@ users)
   * `OpamSystem.read_command_output`: add an optional parameter to unmerge stdout and stderr [#4859 @rjbou]
   * `OpamSWHID`: add module to handle swhid [#4859 @rjbou]
   * `OpamProcess`: expose the `command` type as a private type [#5452 @Leonidas-from-XIV]
+  * `OpamFilename`: add `with_open_out_bin` and `with_open_out_bin_atomic` [#5476 @dra27]

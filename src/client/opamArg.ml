@@ -512,7 +512,9 @@ let apply_global_options cli o =
     (* ?skip_version_checks:bool *)
     (* ?all_parens:bool *)
     (* - core options - *)
-    ?debug_level:(if o.safe_mode then Some 0 else o.debug_level)
+    ?debug_level:(match o.debug_level with
+        | Some x when x < 0 -> o.debug_level
+        | _ -> if o.safe_mode then Some 0 else o.debug_level)
     ?verbose_level:(if o.quiet then Some 0 else
                     if o.verbose = 0 then None else Some o.verbose)
     ?color:o.color
