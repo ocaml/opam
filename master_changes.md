@@ -75,6 +75,7 @@ users)
 ## Env
 
 ## Opamfile
+  * Make all writes atomic [#5489 @kit-ty-kate]
 
 ## External dependencies
  * Always pass --no-version-check and --no-write-registry to Cygwin setup [#6046 @dra27]
