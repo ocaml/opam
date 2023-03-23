@@ -1244,7 +1244,7 @@ Update done, please now retry your command.
 # Return code 10 #
 ### # ro global state, ro repo state, rw switch state
 ### opam install i-am-package
-FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config in 0.000s
+FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config atomically in 0.000s
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -1297,7 +1297,7 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### ocaml generate.ml $OPAMROOTVERSION orphaned 2.1~alpha
 ### # ro global state, ro repo state, ro switch state
 ### opam list
-FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config in 0.000s
+FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config atomically in 0.000s
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
@@ -1616,7 +1616,7 @@ Update done, please now retry your command.
 # Return code 10 #
 ### # ro global state, ro repo state, rw switch state
 ### opam install i-am-package
-FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config in 0.000s
+FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config atomically in 0.000s
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -1669,7 +1669,7 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### ocaml generate.ml $OPAMROOTVERSION orphaned 2.1~alpha2
 ### # ro global state, ro repo state, ro switch state
 ### opam list
-FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config in 0.000s
+FILE(switch-config)             Wrote ${BASEDIR}/_opam/.opam-switch/switch-config atomically in 0.000s
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
