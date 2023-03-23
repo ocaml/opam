@@ -233,9 +233,6 @@ let with_open_out_bin_aux open_out_bin filename f =
     OpamStd.Exn.finalise e @@ fun () ->
     close_out oc; remove filename
 
-let with_open_out_bin =
-  with_open_out_bin_aux (fun f -> (), open_out_bin f)
-
 let with_open_out_bin_atomic filename f =
   let open_temp_file filename =
     let mode = [Open_binary] in
