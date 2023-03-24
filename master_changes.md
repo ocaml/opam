@@ -69,6 +69,7 @@ users)
 ## Clean
 
 ## Env
+  * Fix parsing of `OPAMFETCH` (support quotes / proper POSIX shell syntax) [#5492 @kit-ty-kate - fix #5490]
 
 ## Opamfile
 
@@ -197,6 +198,7 @@ users)
   * `OpamVariable.variable_contents_equal`: was added [#6644 @kit-ty-kate]
 
 ## opam-core
+  * `OpamCmd`: Create the module and add `of_string` [#5492 @kit-ty-kate]
   * `OpamConsole.log`: does not keep log messages before initialization if the code is ran through a library [#6487 @kit-ty-kate]
   * `OpamCoreConfig.in_opam`: was added [#6487 @kit-ty-kate]
   * `OpamSystem.cpu_count`: now uses a C binding instead of system utilities to get the number of cores of the current machine [#6634 @kit-ty-kate]
