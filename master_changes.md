@@ -77,6 +77,7 @@ users)
 ## Clean
 
 ## Env
+  * Fix parsing of `OPAMFETCH` (support quotes / proper POSIX shell syntax) [#5492 @kit-ty-kate - fix #5490]
 
 ## Opamfile
 
@@ -203,6 +204,7 @@ users)
   * `OpamFile.Repos_config.t`: change the type to not allow repositories without an URL [#6249 @kit-ty-kate]
 
 ## opam-core
+  * `OpamCmd`: Create the module and add `of_string` [#5492 @kit-ty-kate]
   * `OpamStd.List.split`: Improve performance [#6210 @kit-ty-kate]
   * `OpamStd.Char`: Create the module and export `is_whitespace` [#5492 @kit-ty-kate]
   * `OpamStd.Sys.{get_terminal_columns,uname,getconf,guess_shell_compat}`: Harden the process calls to account for failures [#6230 @kit-ty-kate - fix #6215]
