@@ -70,6 +70,8 @@ let split_url =
     match Re.Group.all (Re.exec re u) with
     | [| _; vc; transport; path; suffix; hash |] ->
       let opt = function "" -> None | s -> Some s in
+      if OpamFilename.is_escapable path then
+        parse_error ("Url must not contain '..': "^path);
       opt vc, opt transport, path, opt suffix, opt hash
     | _ -> assert false
 

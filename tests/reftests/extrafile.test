@@ -155,7 +155,6 @@ Now run 'opam upgrade' to apply any package updates.
 ### :::::::::::::::::
 ### sh -c "rm OPAM/repo/state-*.cache"
 ### OPAMDEBUGSECTIONS="opam-file" OPAMDEBUG=-2 opam list good-md5 -s | unordered
-opam-file                       Missing expected extra files ../../../no-checksum/no-checksum.1/files/p.patch at ${BASEDIR}/OPAM/repo/default/packages/escape-good-md5/escape-good-md5.1/files
 opam-file                       Missing extra-files field for p.patch for no-checksum.1, adding them.
 opam-file                       Missing extra-files field for p.patch for not-mentioned.1, adding them.
 opam-file                       Missing expected extra files p.patch at ${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files
@@ -527,18 +526,17 @@ Clearing cache of downloaded files
 ### :III:2: good md5
 ### opam lint --package escape-good-md5
 <default>/escape-good-md5.1: Errors.
-             error 53: Mismatching 'extra-files:' field: "../../../no-checksum/no-checksum.1/files/p.patch"
+             error  3: File format error in 'extra-files' at line 11, column 3: while expecting file: Path must not contain '..': ../../../no-checksum/no-checksum.1/files/p.patch
 # Return code 1 #
 ### opam lint --package escape-good-md5 --check-upstream
 <default>/escape-good-md5.1: Errors.
-             error 53: Mismatching 'extra-files:' field: "../../../no-checksum/no-checksum.1/files/p.patch"
+             error  3: File format error in 'extra-files' at line 11, column 3: while expecting file: Path must not contain '..': ../../../no-checksum/no-checksum.1/files/p.patch
 # Return code 1 #
-### # ERROR it copies it to build dir ^ relative path -> escape!!!!
-### # currently writing in /tmp as a common it copies in
-### # /tmp/build_d2b6ce_dune/opam-reftest-8f9413/escape-good-md5.1/../../../no-checksum/no-checksum.1/files
-### # This is needed for test portability, windows doesn't check path before resolving it
-### mkdir ${BASEDIR}/OPAM/repo/default/packages/escape-good-md5/escape-good-md5.1/files
 ### opam install escape-good-md5
+[ERROR] In the opam file for escape-good-md5.1:
+          - At ${BASEDIR}/OPAM/repo/default/packages/escape-good-md5/escape-good-md5.1/opam:11:3-11:53::
+            while expecting file: Path must not contain '..': ../../../no-checksum/no-checksum.1/files/p.patch
+        'extra-files' has been ignored.
 The following actions will be performed:
 === install 1 package
   - install escape-good-md5 1
@@ -556,6 +554,10 @@ The following actions will be performed:
 - No changes have been performed
 # Return code 31 #
 ### opam install escape-good-md5 --require-checksums
+[ERROR] In the opam file for escape-good-md5.1:
+          - At ${BASEDIR}/OPAM/repo/default/packages/escape-good-md5/escape-good-md5.1/opam:11:3-11:53::
+            while expecting file: Path must not contain '..': ../../../no-checksum/no-checksum.1/files/p.patch
+        'extra-files' has been ignored.
 The following actions will be performed:
 === install 1 package
   - install escape-good-md5 1

@@ -865,7 +865,12 @@ pin-depends: [
 ]
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Errors.
-             error 65: URLs must be absolute: "./my/url/path", "/wrong/../mirror", "./../to@li.nt", "/my/./../extrasource/path", "/my/extrasource..path.patch", "/my/../pinned/package"
+             error  3: File format error in 'dev-repo' at line 8, column 0: while expecting vc-url: OpamUrl.Parse_error("Url must not contain '..': ./../to@li.nt")
+             error  3: File format error in 'pin-depends' at line 28, column 15: while expecting URL: OpamUrl.Parse_error("Url must not contain '..': /my/../pinned/package")
+             error  3: File format error in 'extra-source': missing URL
+             error  3: File format error in 'url.mirrors' at line 15, column 4: while expecting url: OpamUrl.Parse_error("Url must not contain '..': /wrong/../mirror")
+           warning 37: Missing field 'dev-repo'
+             error 65: URLs must be absolute: "./my/url/path"
 # Return code 1 #
 ### : W66: String that can't be resolved to bool in filtered package formula
 ### <lint.opam>

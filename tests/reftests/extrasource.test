@@ -1243,23 +1243,33 @@ Done.
 Successfully extracted to ${BASEDIR}/escape-absolute.1
 ### test -f escape-absolute.1/etc/passwd
 ### :IV:2: good md5
-### # /!\ all escape!!!
 ### opam lint --package escape-build-good-md5
-<default>/escape-build-good-md5.1: Passed.
+<default>/escape-build-good-md5.1: Errors.
+             error  3: File format error in 'extra-source': Path must not contain '..': ../../../../../shouldnt-exist
+# Return code 1 #
 ### opam lint --package escape-build-good-md5 --check-upstream
-<default>/escape-build-good-md5.1: Passed.
+<default>/escape-build-good-md5.1: Errors.
+             error  3: File format error in 'extra-source': Path must not contain '..': ../../../../../shouldnt-exist
+# Return code 1 #
 ### opam install escape-build-good-md5
+[ERROR] In the opam file for escape-build-good-md5.1:
+          - In ${BASEDIR}/OPAM/repo/default/packages/escape-build-good-md5/escape-build-good-md5.1/opam:
+            Path must not contain '..': ../../../../../shouldnt-exist
+        'extra-source' has been ignored.
 The following actions will be performed:
 === install 1 package
   - install escape-build-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved escape-build-good-md5.1  (cached)
 -> installed escape-build-good-md5.1
 Done.
 ### test -f shouldnt-exist
-### rm shouldnt-exist
+# Return code 1 #
 ### opam remove escape-build-good-md5
+[ERROR] In the opam file for escape-build-good-md5.1:
+          - In ${BASEDIR}/OPAM/repo/default/packages/escape-build-good-md5/escape-build-good-md5.1/opam:
+            Path must not contain '..': ../../../../../shouldnt-exist
+        'extra-source' has been ignored.
 The following actions will be performed:
 === remove 1 package
   - remove escape-build-good-md5 1
@@ -1268,16 +1278,19 @@ The following actions will be performed:
 -> removed   escape-build-good-md5.1
 Done.
 ### opam install escape-build-good-md5 --require-checksums
+[ERROR] In the opam file for escape-build-good-md5.1:
+          - In ${BASEDIR}/OPAM/repo/default/packages/escape-build-good-md5/escape-build-good-md5.1/opam:
+            Path must not contain '..': ../../../../../shouldnt-exist
+        'extra-source' has been ignored.
 The following actions will be performed:
 === install 1 package
   - install escape-build-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved escape-build-good-md5.1  (cached)
 -> installed escape-build-good-md5.1
 Done.
 ### test -f shouldnt-exist
-### rm shouldnt-exist
+# Return code 1 #
 ### opam source escape-source-good-md5
 Successfully extracted to ${BASEDIR}/escape-source-good-md5.1
 ### test -f shouldnt-exist
