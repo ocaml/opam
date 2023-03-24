@@ -528,10 +528,12 @@ Clearing cache of downloaded files
 ### opam lint --package escape-good-md5
 <default>/escape-good-md5.1: Errors.
              error 53: Mismatching 'extra-files:' field: "../../../no-checksum/no-checksum.1/files/p.patch"
+             error 73: Field 'extra-files' contains path with '..': "../../../no-checksum/no-checksum.1/files/p.patch"
 # Return code 1 #
 ### opam lint --package escape-good-md5 --check-upstream
 <default>/escape-good-md5.1: Errors.
              error 53: Mismatching 'extra-files:' field: "../../../no-checksum/no-checksum.1/files/p.patch"
+             error 73: Field 'extra-files' contains path with '..': "../../../no-checksum/no-checksum.1/files/p.patch"
 # Return code 1 #
 ### # ERROR it copies it to build dir ^ relative path -> escape!!!!
 ### # currently writing in /tmp as a common it copies in

@@ -952,7 +952,7 @@ pin-depends: [
 ]
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Errors.
-             error 65: URLs must be absolute: "./my/url/path", "/wrong/../mirror", "./../to@li.nt", "/my/./../extrasource/path", "/my/extrasource..path.patch", "/my/../pinned/package"
+             error 65: URLs must be absolute: "./my/url/path", "/wrong/../mirror", "./../to@li.nt", "/my/./../extrasource/path", "/my/../pinned/package"
 # Return code 1 #
 ### : W66: String that can't be resolved to bool in filtered package formula
 ### <lint.opam>
@@ -1156,4 +1156,30 @@ extra-source "double-file3" {
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Errors.
              error 72: Field 'extra-sources' contains duplicated checksums: "double-file have md5: 2 occurences and sha256: 3 occurences", "double-file2 have md5: 2 occurences"
+# Return code 1 #
+### : E73: Field 'extra-files' contains path with '..'
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+extra-source "double-file" {
+  src:"https://git.url/repo.tgz"
+  checksum:"md5=00000000000000000000000000000000"
+}
+extra-files: [
+  [ "./relative/path"            "md5=00000000000000000000000000000000"]
+  [ "/absolute/../relative/path" "md5=00000000000000000000000000000000"]
+  [ "/absolute/path"             "md5=00000000000000000000000000000000"]
+  [ "extra-files..patch.patch"   "md5=00000000000000000000000000000000"]
+]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 53: Mismatching 'extra-files:' field: "./relative/path", "/absolute/../relative/path", "/absolute/path", "extra-files..patch.patch"
+             error 73: Field 'extra-files' contains path with '..': "/absolute/../relative/path"
 # Return code 1 #

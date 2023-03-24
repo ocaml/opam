@@ -930,7 +930,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
               ("file" | "path" | "local" | "rsync") -> true
             | _, _ -> false)
            && (Filename.is_relative u.path
-               || OpamStd.String.contains ~sub:".." u.path))
+               || OpamFilename.might_escape ~sep:`Unix u.path))
          (all_urls t)
      in
      cond 65 `Error
@@ -1078,6 +1078,20 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
      cond 72 `Error
        "Field 'extra-sources' contains duplicated checksums"
        ?detail has_double);
+    (let relative =
+       match t.extra_files with
+       | None -> []
+       | Some extra_files ->
+         List.filter_map (fun (base, _) ->
+             let path = OpamFilename.Base.to_string base in
+             if OpamFilename.might_escape ~sep:`Unix path then
+               Some path else None)
+           extra_files
+     in
+     cond 73 `Error
+       "Field 'extra-files' contains path with '..'"
+       ~detail:relative
+       (relative <> []));
   ]
   in
   format_errors @
