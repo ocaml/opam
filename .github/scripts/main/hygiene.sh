@@ -77,10 +77,9 @@ esac
 ###
 
 (set +x ; echo -en "::group::check src_ext patches\r") 2>/dev/null
-# Check that the lib-ext/lib-pkg patches are "simple"
+# Check that the lib-ext patches are "simple"
 make -C src_ext PATCH="busybox patch" clone
-make -C src_ext PATCH="busybox patch" clone-pkg
-# Check that the lib-ext/lib-pkg patches have been re-packaged
+# Check that the lib-ext patches have been re-packaged
 cd src_ext
 ../shell/re-patch.sh
 if [[ $(find patches -name \*.old | wc -l) -ne 0 ]] ; then

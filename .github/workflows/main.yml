@@ -390,7 +390,6 @@ jobs:
     - name: Cold
       run: |
         make compiler
-        make lib-pkg
         bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
     - name: Test (basic)
       run: bash -exu .github/scripts/main/test.sh

@@ -385,7 +385,6 @@ let cold_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ?
     ++ cache Archives
     ++ run "Cold" [
          "make compiler";
-         "make lib-pkg";
          "bash -exu .github/scripts/main/main.sh " ^ host]
     ++ run "Test (basic)" ["bash -exu .github/scripts/main/test.sh"]
     ++ end_job f

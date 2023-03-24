@@ -18,10 +18,6 @@ for package in $(cd patches ; find . -maxdepth 1 -mindepth 1 -type d | sed -e 's
 
   # Determine which directories contain patches and which modes to test (lib-pkg/lib-ext)
   locs=''
-  if [[ -d patches/$package.common ]] ; then
-    locs="../patches/$package.common/*.patch"
-    modes="stamp pkgstamp"
-  fi
   if [[ -d patches/$package ]] ; then
     modes=${modes:-stamp}
     libext_locs="../patches/$package/*.patch"
