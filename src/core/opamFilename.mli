@@ -12,6 +12,9 @@
 (** Higher level file and directory name manipulation AND file operations,
     wrappers on OpamSystem using the filename type *)
 
+(* Returns [true] if string contains '/../' or '\..\' *)
+val is_escapable: string -> bool
+
 (** Basenames *)
 module Base: sig
   include OpamStd.ABSTRACT

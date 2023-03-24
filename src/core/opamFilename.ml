@@ -9,6 +9,16 @@
 (*                                                                        *)
 (**************************************************************************)
 
+let is_escapable =
+  let re =
+    Re.(compile @@ seq [
+        alt [ char '/'; char '\\'];
+        str "..";
+        alt [ char '/'; char '\\']
+      ])
+  in
+  fun s -> Re.matches re s <> []
+
 module Base = struct
   include OpamStd.AbstractString
 
