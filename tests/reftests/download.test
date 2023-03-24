@@ -331,9 +331,8 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [qux.1: http]
-+ sh "./fetch.sh" "\"a" "b\"" "c"
-- "a
-- b"
++ sh "./fetch.sh" "a b" "c"
+- a b
 - c
 [ERROR] Failed to get sources of qux.1: Downloaded file not found
 

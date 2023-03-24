@@ -83,6 +83,7 @@ users)
 ## Clean
 
 ## Env
+  * Fix parsing of `OPAMFETCH` (support quotes / proper POSIX shell syntax) [#5492 @kit-ty-kate - fix #5490]
 
 ## Opamfile
 
