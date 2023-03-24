@@ -14,7 +14,7 @@ module E = struct
 
   type OpamStd.Config.E.t +=
     | CURL of string option
-    | FETCH of string option
+    | FETCH of string list option
     | NOCHECKSUMS of bool option
     | REPOSITORYTARRING of bool option
     | REQUIRECHECKSUMS of bool option
@@ -109,9 +109,7 @@ let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 let initk k =
   let open OpamStd.Option.Op in
   let download_tool =
-    E.fetch () >>= (fun s ->
-        let args = OpamStd.String.split s ' ' in
-        match args with
+    E.fetch () >>= (function
         | cmd::a ->
           let cmd, kind =
             if OpamStd.String.ends_with ~suffix:"curl" cmd then
