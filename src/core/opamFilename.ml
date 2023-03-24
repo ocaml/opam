@@ -9,6 +9,10 @@
 (*                                                                        *)
 (**************************************************************************)
 
+let might_escape path =
+  List.exists (String.equal Filename.parent_dir_name)
+    Re.(split (compile (str Filename.dir_sep)) path)
+
 module Base = struct
   include OpamStd.AbstractString
 

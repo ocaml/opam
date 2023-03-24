@@ -125,3 +125,4 @@ users)
 
 ## opam-core
   * `OpamHash`: export `compare_kind` [#5561 @rjbou]
+  * `OpamFilename`: add `might_escape` to check if a path is escapable, ie contains `<sep>..<sep>` [#5561 @rjbou]
