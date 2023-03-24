@@ -286,3 +286,4 @@ users)
   * `OpamFilename.patch`: use variants to make the input either `Filename.t` or reuse `Patch.diffs` directly. Remove the `?preprocess` argument since the preprocess logic is moved to the `OpamFilename.parse_patch` function that is called only in `OpamVCS` (mirroring the previous logic). [#6614 @arozovyk]
   * `OpamSystem.patch`: change the signature to work directly with `Patch.diffs` (implementation is now the previously `internal_patch` function), parsing is now done separately. [#6614 @arozovyk]
   * `OpamCompat.Lazy`: add `map_val` [#6679 @rjbou]
+  * `OpamShellCommand`: Create the module and add `of_string` [#5492 @kit-ty-kate]
