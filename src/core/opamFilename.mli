@@ -12,6 +12,9 @@
 (** Higher level file and directory name manipulation AND file operations,
     wrappers on OpamSystem using the filename type *)
 
+(* Returns [true] if string contains '..' between directory separators *)
+val might_escape: sep:[`Unix | `Windows | `Unspecified ] -> string -> bool
+
 (** Basenames *)
 module Base: sig
   include OpamStd.ABSTRACT

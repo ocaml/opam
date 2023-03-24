@@ -253,3 +253,4 @@ users)
 ## opam-core
   * `OpamStd.Env`: add `env_string_list` for parsing string list environment variables (comma separated) [#5682 @desumn]
   * `OpamHash`: export `compare_kind` [#5561 @rjbou]
+  * `OpamFilename`: add `might_escape` to check if a path is escapable, ie contains `<sep>..<sep>` [#5561 @rjbou]
