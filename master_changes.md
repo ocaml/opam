@@ -50,6 +50,7 @@ users)
 ## Lint
   * Add E69 to check `extra-files:` duplicated fields [#5561 @rjbou]
   * Add E71 to check same kind duplicated url checksums [#5561 @rjbou]
+  * Add E72 to check that paths in `extra-files:` are not escapable [#5561 @rjbou]
 
 ## Repository
 
@@ -102,7 +103,7 @@ users)
 ## Reftests
 ### Tests
   * lint: update W37, E59, and E65 tests [#5561 @rjbou]
-  * lint: add E70 & E71 test [#5561 @rjbou]
+  * lint: add E70, E71, and E72 tests [#5561 @rjbou]
 
 ### Engine
 
