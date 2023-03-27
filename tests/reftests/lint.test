@@ -559,9 +559,7 @@ echo "extra-files: [ \"more-file-good-md5\" \"md5=$hsh\" ]" >> REPO/packages/lin
              error 53: Mismatching 'extra-files:' field: "more-file-bad-md5"
 # Return code 1 #
 ### opam lint --package lint.2
-<default>/lint.2: Errors.
-             error 53: Mismatching 'extra-files:' field: "more-file-good-md5"
-# Return code 1 #
+<default>/lint.2: Passed.
 ### OPAMREPOSITORYTARRING=1
 ### opam update default
 
@@ -572,9 +570,7 @@ echo "extra-files: [ \"more-file-good-md5\" \"md5=$hsh\" ]" >> REPO/packages/lin
              error 53: Mismatching 'extra-files:' field: "more-file-bad-md5"
 # Return code 1 #
 ### opam lint --package lint.2
-<default>/lint.2: Errors.
-             error 53: Mismatching 'extra-files:' field: "more-file-good-md5"
-# Return code 1 #
+<default>/lint.2: Passed.
 ### : W54: External dependencies should not contain spaces nor empty string
 ### <lint.opam>
 opam-version: "2.0"
