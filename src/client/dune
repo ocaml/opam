@@ -31,6 +31,7 @@
 ; Hack to make the tests work on Cygwin
 (rule
  (targets opamMain.exe.exe)
+ (package opam)
  (action (copy opamMain.exe %{targets})))
 
 (rule

@@ -35,6 +35,7 @@ let run_rule ~base_name ~archive_hash ~condition =
 (rule
  (targets %s)
  (deps %s)%s
+ (package opam)
  (action
   (with-stdout-to
    %%{targets}

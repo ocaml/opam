@@ -28,13 +28,15 @@
   (targets opam-topics.inc)
   (deps %{bin:opam} using-built-opam)
   (mode promote)
-  (action (with-stdout-to %{targets} (run %{exe:dune_man.exe} opam))))
+  (action (with-stdout-to %{targets} (run %{exe:dune_man.exe} opam)))
+  (package opam))
 
 (rule
   (targets opam-admin-topics.inc)
   (deps %{bin:opam} using-built-opam)
   (mode promote)
-  (action (with-stdout-to %{targets} (run %{exe:dune_man.exe} opam admin))))
+  (action (with-stdout-to %{targets} (run %{exe:dune_man.exe} opam admin)))
+  (package opam))
 
 (include opam-topics.inc)
 
@@ -50,5 +52,6 @@
     (echo "let s = Sys.argv.(1) in exit (if not (Filename.is_implicit s) && Filename.is_relative s then 0 else 1)")))
 
 (rule
-  (with-stdout-to using-built-opam (run ocaml %{dep:check_local_build.ml} %{bin:opam})))
-
+  (action
+    (with-stdout-to using-built-opam (run ocaml %{dep:check_local_build.ml} %{bin:opam})))
+  (package opam))
