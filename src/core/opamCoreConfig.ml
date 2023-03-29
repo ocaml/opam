@@ -198,8 +198,4 @@ let answer_is_yes () =
   | #OpamStd.Config.yes_answer -> true
   | _ -> false
 
-#ifdef DEVELOPER
-let developer = true
-#else
-let developer = false
-#endif
+let developer = not (String.equal OpamCoreConfigDeveloper.value "")

@@ -36,7 +36,7 @@ module Set = OpamStd.Set.Make(O)
 
 module Map = OpamStd.Map.Make(O)
 
-let current_raw = STRINGIFY(VERSION)
+let current_raw = OpamVersionInfo.version
 
 let current = of_string current_raw
 
