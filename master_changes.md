@@ -279,6 +279,7 @@ users)
   * Bump the minimum requirement to build any of the opam libraries to OCaml >= 4.08 [#5466 @kit-ty-kate]
   * shell/bootstrap-ocaml.sh: do not fail if curl/wget is missing [#5223 @kit-ty-kate]
   * Add `swhid_core` dependency [#4859 @rjbou]
+    * Check for the presence of swhid_core in the configure script [#5497 @kit-ty-kate]
   * Remove unused vendored dependency: result [#5465 @kit-ty-kate]
   * `opam-state` depends on `opam-solver` [#5208 @rjbou]
 

@@ -654,6 +654,7 @@ ac_ct_CXX
 CXXFLAGS
 CXX
 OCAML_PKG_mccs
+OCAML_PKG_swhid_core
 OCAML_PKG_sha
 OCAML_PKG_uutf
 OCAML_PKG_jsonm
@@ -6783,6 +6784,30 @@ printf "%s\n" "not found" >&6; }
 
 
 
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package swhid_core" >&5
+printf %s "checking for OCaml findlib package swhid_core... " >&6; }
+
+  unset found
+  unset pkg
+  found=no
+  for pkg in swhid_core  ; do
+    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: found" >&5
+printf "%s\n" "found" >&6; }
+      OCAML_PKG_swhid_core=$pkg
+      found=yes
+      break
+    fi
+  done
+  if test "$found" = "no" ; then
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: not found" >&5
+printf "%s\n" "not found" >&6; }
+    OCAML_PKG_swhid_core=no
+  fi
+
+
+
+
 # Optional dependencies
 
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package mccs 1.1+9 or later" >&5
@@ -7318,6 +7343,7 @@ if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_jsonm" = "xno" ||
        test "x$OCAML_PKG_uutf" = "xno" ||
        test "x$OCAML_PKG_sha" = "xno" ||
+       test "x$OCAML_PKG_swhid_core" = "xno" ||
        test "x$CPPO" = "x" ||
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue";}
 then :
