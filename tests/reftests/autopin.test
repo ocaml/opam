@@ -60,7 +60,7 @@ The following system packages will first need to be installed:
 opam believes some required external dependencies are missing. opam can:
 > 1. Run echo to install them (may need root/sudo access)
   2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
-  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
   4. Abort the installation
 
 [1/2/3/4] 1
@@ -107,7 +107,7 @@ The following system packages will first need to be installed:
 opam believes some required external dependencies are missing. opam can:
 > 1. Run echo to install them (may need root/sudo access)
   2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
-  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
   4. Abort the installation
 
 [1/2/3/4] 1
@@ -151,7 +151,7 @@ The following system packages will first need to be installed:
 opam believes some required external dependencies are missing. opam can:
 > 1. Run echo to install them (may need root/sudo access)
   2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
-  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
   4. Abort the installation
 
 [1/2/3/4] 1
@@ -203,7 +203,7 @@ The following system packages will first need to be installed:
 opam believes some required external dependencies are missing. opam can:
 > 1. Run echo to install them (may need root/sudo access)
   2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
-  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
   4. Abort the installation
 
 [1/2/3/4] 1
@@ -279,7 +279,7 @@ The following system packages will first need to be installed:
 opam believes some required external dependencies are missing. opam can:
 > 1. Run echo to install them (may need root/sudo access)
   2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
-  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
   4. Abort the installation
 
 [1/2/3/4] 1
@@ -312,7 +312,7 @@ The following system packages will first need to be installed:
 opam believes some required external dependencies are missing. opam can:
 > 1. Run echo to install them (may need root/sudo access)
   2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
-  3. Attempt installation anyway, and permanently register that this external dependency is present, but not detectable
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
   4. Abort the installation
 
 [1/2/3/4] 1
