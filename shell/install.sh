@@ -364,15 +364,25 @@ usage() {
     echo "    --restore   VERSION    Restore a backed up opam binary and root"
     echo "    --version   VERSION    Install this specific version instead of $VERSION"
     echo "    --download-only        Download binary in current directory and check its sha512"
+    echo "    --tty                  Allow interactive questions to be asked even if the script is being piped to (e.g. curl https://../install.sh | sh)"
     echo
     echo "The default is to backup if the current version of opam is 1.*, or when"
     echo "using '--fresh' or '--dev'"
+}
+
+read_tty() {
+  if [ "$TTY" = 1 ]; then
+    read -r "$1" < /dev/tty
+  else
+    read -r "$1"
+  fi
 }
 
 RESTORE=
 NOBACKUP=
 FRESH=
 DOWNLOAD_ONLY=
+TTY=
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -398,6 +408,8 @@ while [ $# -gt 0 ]; do
             FRESH=1;;
         --download-only)
             DOWNLOAD_ONLY=1;;
+        --tty)
+            TTY=1;;
         --help|-h)
             usage; exit 0;;
         *)
@@ -552,7 +564,7 @@ if [ -n "$RESTORE" ]; then
     fi
     if [ "$NOBACKUP" = 1 ]; then
         printf "## This will clear %s and %s. Continue ? [Y/n] " "$OPAM" "$OPAMROOT"
-        read -r R
+        read_tty R
         case "$R" in
             ""|"y"|"Y"|"yes")
                 xsudo rm -f "$OPAM"
@@ -584,7 +596,7 @@ fi
 
 while true; do
     printf "## Where should it be installed ? [%s] " "$DEFAULT_BINDIR"
-    read -r BINDIR
+    read_tty BINDIR
     if [ -z "$BINDIR" ]; then BINDIR="$DEFAULT_BINDIR"; fi
 
     if [ -d "$BINDIR" ]; then break
@@ -592,7 +604,7 @@ while true; do
         if [ "${BINDIR#\~/}" != "$BINDIR" ] ; then
             RES_BINDIR="$HOME/${BINDIR#\~/}"
             printf "## '%s' resolves to '%s', do you confirm [Y/n] " "$BINDIR" "$RES_BINDIR"
-            read -r R
+            read_tty R
             case "$R" in
                 ""|"y"|"Y"|"yes")
                    BINDIR="$RES_BINDIR"
@@ -603,7 +615,7 @@ while true; do
             esac
         fi
         printf "## %s does not exist. Create ? [Y/n] " "$BINDIR"
-        read -r R
+        read_tty R
         case "$R" in
             ""|"y"|"Y"|"yes")
             xsudo mkdir -p "$BINDIR"
@@ -625,7 +637,7 @@ if [ -d "$OPAMROOT" ]; then
     if [ "$FRESH" = 1 ]; then
         if [ "$NOBACKUP" = 1 ]; then
             printf "## This will clear %s. Continue ? [Y/n] " "$OPAMROOT"
-            read -r R
+            read_tty R
             case "$R" in
                 ""|"y"|"Y"|"yes")
                     rm -rf "$OPAMROOT";;
