@@ -478,6 +478,13 @@ echo "## opam $VERSION installed to $BINDIR"
 if [ ! "$FRESH" = 1 ]; then
     echo "## Converting the opam root format & updating"
     "$BINDIR/opam" init --reinit -ni
+else
+  echo "## Running opam init for this fresh install"
+  if [ "$TTY" = 1 ]; then
+  "$BINDIR/opam" init </dev/tty
+  else
+  "$BINDIR/opam" init
+  fi
 fi
 
 WHICH=$(command -v opam || echo notfound)
