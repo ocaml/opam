@@ -5,3 +5,5 @@
 
 (rule
   (with-stdout-to ocaml-context-flags.sexp (run ocaml %{dep:../shell/context_flags.ml} flags)))
+
+(vendored_dirs crowbar)

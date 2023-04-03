@@ -11,6 +11,7 @@
 (rule
  (targets admin-add-constraint.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -28,6 +29,7 @@
 (rule
  (targets assume-built.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -45,6 +47,7 @@
 (rule
  (targets autopin.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -62,6 +65,7 @@
 (rule
  (targets avoid-version.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -79,6 +83,7 @@
 (rule
  (targets best-effort.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -96,6 +101,7 @@
 (rule
  (targets clean.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -113,6 +119,7 @@
 (rule
  (targets cli-versioning.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -130,6 +137,7 @@
 (rule
  (targets config.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -147,6 +155,7 @@
 (rule
  (targets conflict-4373.out)
  (deps root-c1d23f0e)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -164,6 +173,7 @@
 (rule
  (targets conflict-badversion.out)
  (deps root-f372039d)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -181,6 +191,7 @@
 (rule
  (targets conflict-camlp4.out)
  (deps root-f372039d)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -198,6 +209,7 @@
 (rule
  (targets conflict-core.out)
  (deps root-f372039d)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -215,6 +227,7 @@
 (rule
  (targets conflict-resto.out)
  (deps root-a5d7cdc0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -232,6 +245,7 @@
 (rule
  (targets conflict-solo5.out)
  (deps root-f372039d)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -249,6 +263,7 @@
 (rule
  (targets cudf-preprocess.out)
  (deps root-ad4dd344)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -266,6 +281,7 @@
 (rule
  (targets depexts.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -283,6 +299,7 @@
 (rule
  (targets deprecated.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -300,6 +317,7 @@
 (rule
  (targets deps-only.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -317,6 +335,7 @@
 (rule
  (targets dot-install.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -334,6 +353,7 @@
 (rule
  (targets empty-conflicts-001.out)
  (deps root-297366c)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -351,6 +371,7 @@
 (rule
  (targets empty-conflicts-002.out)
  (deps root-11ea1cb)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -368,6 +389,7 @@
 (rule
  (targets empty-conflicts-003.out)
  (deps root-3235916)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -385,6 +407,7 @@
 (rule
  (targets empty-conflicts-004.out)
  (deps root-0070613707)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -402,6 +425,7 @@
 (rule
  (targets empty-conflicts-005.out)
  (deps root-de897adf36c4230dfea812f40c98223b31c4521a)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -419,6 +443,7 @@
 (rule
  (targets empty-conflicts-006.out)
  (deps root-c1842d168d)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -436,6 +461,7 @@
 (rule
  (targets env.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -456,6 +482,7 @@
  (targets env.win32.out)
  (deps root-N0REP0)
  (enabled_if (= %{os_type} "Win32"))
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -473,6 +500,7 @@
 (rule
  (targets init.out)
  (deps root-009e00fa)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -490,6 +518,7 @@
 (rule
  (targets inplace.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -507,6 +536,7 @@
 (rule
  (targets install-formula.out)
  (deps root-f372039d)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -524,6 +554,7 @@
 (rule
  (targets install-pgocaml.out)
  (deps root-f372039d)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -544,6 +575,7 @@
  (targets json.unix.out)
  (deps root-N0REP0)
  (enabled_if (= %{os_type} "Unix"))
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -561,6 +593,7 @@
 (rule
  (targets legacy-git.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -578,6 +611,7 @@
 (rule
  (targets legacy-local.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -595,6 +629,7 @@
 (rule
  (targets lint.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -612,6 +647,7 @@
 (rule
  (targets list-coinstallable.out)
  (deps root-7371c1d9)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -629,6 +665,7 @@
 (rule
  (targets list.out)
  (deps root-7371c1d9)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -649,6 +686,7 @@
  (targets list.unix.out)
  (deps root-f372039d)
  (enabled_if (= %{os_type} "Unix"))
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -666,6 +704,7 @@
 (rule
  (targets lock.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -683,6 +722,7 @@
 (rule
  (targets opamroot-versions.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -700,6 +740,7 @@
 (rule
  (targets opamrt-big-upgrade.out)
  (deps root-7090735c)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -717,6 +758,7 @@
 (rule
  (targets opamrt-dep-cycle.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -734,6 +776,7 @@
 (rule
  (targets opamrt-reinstall.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -751,6 +794,7 @@
 (rule
  (targets orphans.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -768,6 +812,7 @@
 (rule
  (targets parallel.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -785,6 +830,7 @@
 (rule
  (targets pat-sub.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -802,6 +848,7 @@
 (rule
  (targets pin.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -819,6 +866,7 @@
 (rule
  (targets rebuild.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -836,6 +884,7 @@
 (rule
  (targets rec-pin.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -853,6 +902,7 @@
 (rule
  (targets reinstall.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -870,6 +920,7 @@
 (rule
  (targets remove.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -887,6 +938,7 @@
 (rule
  (targets repository.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -904,6 +956,7 @@
 (rule
  (targets resolve-variables.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -921,6 +974,7 @@
 (rule
  (targets shared-fetch.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -938,6 +992,7 @@
 (rule
  (targets show.out)
  (deps root-009e00fa)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -955,6 +1010,7 @@
 (rule
  (targets source.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -975,6 +1031,7 @@
  (targets swhid.unix.out)
  (deps root-N0REP0)
  (enabled_if (= %{os_type} "Unix"))
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -992,6 +1049,7 @@
 (rule
  (targets switch-creation.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -1009,6 +1067,7 @@
 (rule
  (targets switch-import.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -1026,6 +1085,7 @@
 (rule
  (targets switch-invariant.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -1043,6 +1103,7 @@
 (rule
  (targets switch-list.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -1060,6 +1121,7 @@
 (rule
  (targets switch-set.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -1077,6 +1139,7 @@
 (rule
  (targets tree.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -1094,6 +1157,7 @@
 (rule
  (targets unhelpful-conflicts-001.out)
  (deps root-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -1111,6 +1175,7 @@
 (rule
  (targets update-upgrade.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -1128,6 +1193,7 @@
 (rule
  (targets upgrade-format.out)
  (deps root-009e00fa)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -1145,6 +1211,7 @@
 (rule
  (targets upgrade-two-point-o.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -1162,6 +1229,7 @@
 (rule
  (targets upgrade.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -1179,6 +1247,7 @@
 (rule
  (targets var-option.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -1196,6 +1265,7 @@
 (rule
  (targets with-dev-setup.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}
@@ -1213,6 +1283,7 @@
 (rule
  (targets working-dir.out)
  (deps root-N0REP0)
+ (package opam)
  (action
   (with-stdout-to
    %{targets}

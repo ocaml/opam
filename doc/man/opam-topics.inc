@@ -7,7 +7,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-help.err
                    (with-stdout-to opam-help.1 (run %{bin:opam} help --help=groff)))
-                 (diff opam-help.err %{dep:opam-help.0}))))
+                 (diff opam-help.err %{dep:opam-help.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-admin.0 (echo "")))
@@ -16,7 +17,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-admin.err
                    (with-stdout-to opam-admin.1 (run %{bin:opam} admin --help=groff)))
-                 (diff opam-admin.err %{dep:opam-admin.0}))))
+                 (diff opam-admin.err %{dep:opam-admin.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-lock.0 (echo "")))
@@ -25,7 +27,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-lock.err
                    (with-stdout-to opam-lock.1 (run %{bin:opam} lock --help=groff)))
-                 (diff opam-lock.err %{dep:opam-lock.0}))))
+                 (diff opam-lock.err %{dep:opam-lock.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-clean.0 (echo "")))
@@ -34,7 +37,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-clean.err
                    (with-stdout-to opam-clean.1 (run %{bin:opam} clean --help=groff)))
-                 (diff opam-clean.err %{dep:opam-clean.0}))))
+                 (diff opam-clean.err %{dep:opam-clean.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-lint.0 (echo "")))
@@ -43,7 +47,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-lint.err
                    (with-stdout-to opam-lint.1 (run %{bin:opam} lint --help=groff)))
-                 (diff opam-lint.err %{dep:opam-lint.0}))))
+                 (diff opam-lint.err %{dep:opam-lint.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-source.0 (echo "")))
@@ -52,7 +57,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-source.err
                    (with-stdout-to opam-source.1 (run %{bin:opam} source --help=groff)))
-                 (diff opam-source.err %{dep:opam-source.0}))))
+                 (diff opam-source.err %{dep:opam-source.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-unpin.0 (echo "")))
@@ -61,7 +67,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-unpin.err
                    (with-stdout-to opam-unpin.1 (run %{bin:opam} unpin --help=groff)))
-                 (diff opam-unpin.err %{dep:opam-unpin.0}))))
+                 (diff opam-unpin.err %{dep:opam-unpin.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-pin.0 (echo "")))
@@ -70,7 +77,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-pin.err
                    (with-stdout-to opam-pin.1 (run %{bin:opam} pin --help=groff)))
-                 (diff opam-pin.err %{dep:opam-pin.0}))))
+                 (diff opam-pin.err %{dep:opam-pin.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-switch.0 (echo "")))
@@ -79,7 +87,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-switch.err
                    (with-stdout-to opam-switch.1 (run %{bin:opam} switch --help=groff)))
-                 (diff opam-switch.err %{dep:opam-switch.0}))))
+                 (diff opam-switch.err %{dep:opam-switch.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-remote.0 (echo "")))
@@ -88,7 +97,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-remote.err
                    (with-stdout-to opam-remote.1 (run %{bin:opam} remote --help=groff)))
-                 (diff opam-remote.err %{dep:opam-remote.0}))))
+                 (diff opam-remote.err %{dep:opam-remote.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-repository.0 (echo "")))
@@ -97,7 +107,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-repository.err
                    (with-stdout-to opam-repository.1 (run %{bin:opam} repository --help=groff)))
-                 (diff opam-repository.err %{dep:opam-repository.0}))))
+                 (diff opam-repository.err %{dep:opam-repository.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-env.0 (echo "")))
@@ -106,7 +117,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-env.err
                    (with-stdout-to opam-env.1 (run %{bin:opam} env --help=groff)))
-                 (diff opam-env.err %{dep:opam-env.0}))))
+                 (diff opam-env.err %{dep:opam-env.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-exec.0 (echo "")))
@@ -115,7 +127,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-exec.err
                    (with-stdout-to opam-exec.1 (run %{bin:opam} exec --help=groff)))
-                 (diff opam-exec.err %{dep:opam-exec.0}))))
+                 (diff opam-exec.err %{dep:opam-exec.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-config.0 (echo "")))
@@ -124,7 +137,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-config.err
                    (with-stdout-to opam-config.1 (run %{bin:opam} config --help=groff)))
-                 (diff opam-config.err %{dep:opam-config.0}))))
+                 (diff opam-config.err %{dep:opam-config.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-option.0 (echo "")))
@@ -133,7 +147,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-option.err
                    (with-stdout-to opam-option.1 (run %{bin:opam} option --help=groff)))
-                 (diff opam-option.err %{dep:opam-option.0}))))
+                 (diff opam-option.err %{dep:opam-option.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-var.0 (echo "")))
@@ -142,7 +157,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-var.err
                    (with-stdout-to opam-var.1 (run %{bin:opam} var --help=groff)))
-                 (diff opam-var.err %{dep:opam-var.0}))))
+                 (diff opam-var.err %{dep:opam-var.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-upgrade.0 (echo "")))
@@ -151,7 +167,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-upgrade.err
                    (with-stdout-to opam-upgrade.1 (run %{bin:opam} upgrade --help=groff)))
-                 (diff opam-upgrade.err %{dep:opam-upgrade.0}))))
+                 (diff opam-upgrade.err %{dep:opam-upgrade.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-update.0 (echo "")))
@@ -160,7 +177,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-update.err
                    (with-stdout-to opam-update.1 (run %{bin:opam} update --help=groff)))
-                 (diff opam-update.err %{dep:opam-update.0}))))
+                 (diff opam-update.err %{dep:opam-update.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-reinstall.0 (echo "")))
@@ -169,7 +187,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-reinstall.err
                    (with-stdout-to opam-reinstall.1 (run %{bin:opam} reinstall --help=groff)))
-                 (diff opam-reinstall.err %{dep:opam-reinstall.0}))))
+                 (diff opam-reinstall.err %{dep:opam-reinstall.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-uninstall.0 (echo "")))
@@ -178,7 +197,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-uninstall.err
                    (with-stdout-to opam-uninstall.1 (run %{bin:opam} uninstall --help=groff)))
-                 (diff opam-uninstall.err %{dep:opam-uninstall.0}))))
+                 (diff opam-uninstall.err %{dep:opam-uninstall.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-remove.0 (echo "")))
@@ -187,7 +207,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-remove.err
                    (with-stdout-to opam-remove.1 (run %{bin:opam} remove --help=groff)))
-                 (diff opam-remove.err %{dep:opam-remove.0}))))
+                 (diff opam-remove.err %{dep:opam-remove.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-install.0 (echo "")))
@@ -196,7 +217,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-install.err
                    (with-stdout-to opam-install.1 (run %{bin:opam} install --help=groff)))
-                 (diff opam-install.err %{dep:opam-install.0}))))
+                 (diff opam-install.err %{dep:opam-install.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-info.0 (echo "")))
@@ -205,7 +227,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-info.err
                    (with-stdout-to opam-info.1 (run %{bin:opam} info --help=groff)))
-                 (diff opam-info.err %{dep:opam-info.0}))))
+                 (diff opam-info.err %{dep:opam-info.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-show.0 (echo "")))
@@ -214,7 +237,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-show.err
                    (with-stdout-to opam-show.1 (run %{bin:opam} show --help=groff)))
-                 (diff opam-show.err %{dep:opam-show.0}))))
+                 (diff opam-show.err %{dep:opam-show.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-why.0 (echo "")))
@@ -223,7 +247,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-why.err
                    (with-stdout-to opam-why.1 (run %{bin:opam} why --help=groff)))
-                 (diff opam-why.err %{dep:opam-why.0}))))
+                 (diff opam-why.err %{dep:opam-why.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-tree.0 (echo "")))
@@ -232,7 +257,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-tree.err
                    (with-stdout-to opam-tree.1 (run %{bin:opam} tree --help=groff)))
-                 (diff opam-tree.err %{dep:opam-tree.0}))))
+                 (diff opam-tree.err %{dep:opam-tree.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-search.0 (echo "")))
@@ -241,7 +267,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-search.err
                    (with-stdout-to opam-search.1 (run %{bin:opam} search --help=groff)))
-                 (diff opam-search.err %{dep:opam-search.0}))))
+                 (diff opam-search.err %{dep:opam-search.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-list.0 (echo "")))
@@ -250,7 +277,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-list.err
                    (with-stdout-to opam-list.1 (run %{bin:opam} list --help=groff)))
-                 (diff opam-list.err %{dep:opam-list.0}))))
+                 (diff opam-list.err %{dep:opam-list.0})))
+  (package opam))
 
 (rule
   (with-stdout-to opam-init.0 (echo "")))
@@ -259,7 +287,8 @@
   (deps using-built-opam)
   (action (progn (with-stderr-to opam-init.err
                    (with-stdout-to opam-init.1 (run %{bin:opam} init --help=groff)))
-                 (diff opam-init.err %{dep:opam-init.0}))))
+                 (diff opam-init.err %{dep:opam-init.0})))
+  (package opam))
 
 (install
   (section man)
