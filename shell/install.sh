@@ -367,7 +367,6 @@ if [ -n "$RESTORE" ]; then
     fi
     if [ "$NOBACKUP" = 1 ]; then
         prompt "## This will clear $OPAM and $OPAMROOT. Continue ? [Y/n] "
-        R=$?
         case "$R" in
             ""|"y"|"Y"|"yes")
                 xsudo rm -f "$OPAM"
