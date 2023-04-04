@@ -25,6 +25,7 @@ users)
   * Refactored depext-related questions, with a flat menu instead of nested y/n questions [#5053 @AltGr - fix #5026]
     * Fix removal of interactive special characters is output is not tty [#5155 @rjbou]
     * Fix behaviour of menu and depexts in non-interactive environments [#5295 @AltGr]
+    * Reword message for the ignore path to avoid ambiguity [#5499 @AltGr]
   * [BUG] Fix default cli handling for simple flags [#5099 @rjbou]
   * Add `experimental` flags handling [#5099 @rjbou]
   * [BUG] Fix `OPAMCURL` and `OPAMFETCH` value setting [#5111 @rjbou - fix #5108]

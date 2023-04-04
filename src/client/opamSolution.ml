@@ -1188,8 +1188,9 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
           `No, Printf.sprintf
             "Display the recommended %s command and wait while you run it \
              manually (e.g. in another terminal)" pkgman;
-          `Ignore, "Attempt installation anyway, and permanently register that \
-                    this external dependency is present, but not detectable";
+          `Ignore, "Continue anyway, and, upon success, permanently register \
+                    that this external dependency is present, but not \
+                    detectable";
           `Quit, "Abort the installation";
         ]
     in
@@ -1224,8 +1225,9 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
       OpamConsole.menu ~default:`Continue ~no:`Quit "Would you like opam to:"
         ~options:[
           `Continue, "Check again, as the package is now installed";
-          `Ignore, "Attempt installation anyway, and permanently register that \
-                    this external dependency is present, but not detectable";
+          `Ignore, "Continue anyway, and, upon success, permanently register \
+                    that this external dependency is present, but not \
+                    detectable";
           `Quit, "Abort the installation";
         ]
     in
