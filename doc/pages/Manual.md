@@ -1119,6 +1119,8 @@ files.
     - `CDPATH=`
     - `MAKEFLAGS=`
     - `MAKELEVEL=`
+    - `OPAM_SWITCH_PREFIX=<switch prefix>`
+    - `OPAMSWITCH=<switch name>`
     - `OPAM_PACKAGE_NAME=<pkg>` (`<pkg>` is the name of the package being built/installed/removed)
     - `OPAM_PACKAGE_VERSION=<ver>` (`<ver>` is the version of the package being built/installed/removed)
     - `OPAMCLI=2.0` (since opam 2.1)

@@ -522,6 +522,7 @@ users)
   * Up-to-date synchronisation with shell session in switch man page: mention shell hooks [#5311 @rjbou - fix #5307]
   * Fix info for IRC channels in README.md and FAQ.md [#5340 @purplearmadillo77]
   * Update `--cudf` manpage description to specify what is the `<n>` (n(the solver-cal) [#5343 @kit-ty-kate]
+  * Add some missing environment variable added during a build [#5363 @kit-ty-kate]
 
 ## Security fixes
   *
