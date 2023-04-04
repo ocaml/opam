@@ -14,14 +14,27 @@
                (:include ../ocaml-flags-standard.sexp)
                (:include ../ocaml-flags-configure.sexp)
                (:include ../ocaml-context-flags.sexp)))
-  (preprocess  (per_module
-                  ((action (run %{bin:cppo} -V OCAML:%{ocaml_version} %{input-file})) opamCompat opamSystem)
-                  ((action (run %{bin:cppo} %{read-lines:developer} %{input-file})) opamCoreConfig)
-                  ((action (run %{bin:cppo} -D "VERSION %{read-lines:version}" %{input-file})) opamVersion)))
   (wrapped     false))
 
 (rule
+  (with-stdin-from opamCompat.pp.ml
+                   (with-stdout-to opamCompat.ml
+                                   (run ./gen/gen.exe))))
+(rule
+  (with-stdin-from opamCompat.pp.mli
+                   (with-stdout-to opamCompat.mli
+                                   (run ./gen/gen.exe))))
+
+(rule
   (copy opamStubsTypes.ml opamStubsTypes.mli))
+
+(rule
+  (write-file opamCoreConfigDeveloper.ml
+    "let value = \"%{read-strings:developer}\""))
+
+(rule
+  (write-file opamVersionInfo.ml
+              "let version = \"%{read-strings:version}\""))
 
 (rule
   (targets version)
