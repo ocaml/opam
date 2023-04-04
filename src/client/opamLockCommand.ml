@@ -130,16 +130,11 @@ let get_git_url url nv dir =
 
 let lock_opam ?(only_direct=false) st opam =
   let nv = OpamFile.OPAM.package opam in
-  let univ =
-    OpamSwitchState.universe st
-      ~requested:(OpamPackage.Set.singleton nv)
-      Query
-  in
   (* Depends *)
   let all_depends =
     OpamSwitchState.dependencies
       ~depopts:true ~build:true ~post:true ~installed:true
-      st univ (OpamPackage.Set.singleton nv) |>
+      st (OpamPackage.Set.singleton nv) |>
     OpamPackage.Set.remove nv
   in
   let depends =
@@ -182,7 +177,7 @@ let lock_opam ?(only_direct=false) st opam =
       else
         (OpamSwitchState.dependencies
            ~depopts:false ~build:true ~post:true ~installed:true
-           st univ installed
+           st installed
          -- all_depends)
         |> map_of_set (`other_dep typ)
         |> OpamPackage.Map.union (fun _v _o -> `other_dep typ) depends_map

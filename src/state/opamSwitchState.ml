@@ -1332,26 +1332,38 @@ let dependencies_filter_to_formula_t ~build ~post st nv =
   in
   OpamFilter.filter_formula ~default:true env
 
-let dependencies_t base_deps_compute deps_compute
-    ~depopts ~installed ?(unavailable=false) universe packages =
+let dependencies_t st base_deps_compute deps_compute
+    ~depopts ~installed ?(unavailable=false) packages =
   if OpamPackage.Set.is_empty packages then OpamPackage.Set.empty else
   let base =
     packages ++
-    if installed then  universe.u_installed
-    else if unavailable then universe.u_packages
-    else universe.u_available
+    if installed then st.installed
+    else if unavailable then st.packages
+    else Lazy.force st.available_packages
   in
   log ~level:3 "dependencies packages=%a"
     (slog OpamPackage.Set.to_string) packages;
   let timer = OpamConsole.timer () in
   let base_depends =
     let filter = base_deps_compute base in
+    let get_deps =
+      get_dependencies_t st
+        ~force_dev_deps:false ~test:false ~doc:false
+        ~dev_setup:false ~requested_allpkgs:packages
+    in
+    let opams =
+      OpamPackage.Set.fold (fun pkg opams ->
+          OpamPackage.Map.add pkg (OpamPackage.Map.find pkg st.opams) opams)
+        base OpamPackage.Map.empty
+    in
+    let u_depends = get_deps OpamFile.OPAM.depends opams in
     let depends =
-      OpamPackage.Map.filter_map filter universe.u_depends
+      OpamPackage.Map.filter_map filter u_depends
     in
     if depopts then
+      let u_depopts = get_deps OpamFile.OPAM.depopts opams in
       let depopts =
-        OpamPackage.Map.filter_map filter universe.u_depopts
+        OpamPackage.Map.filter_map filter u_depopts
       in
       OpamPackage.Map.union (fun d d' -> OpamFormula.And (d, d'))
         depopts depends
@@ -1364,7 +1376,7 @@ let dependencies_t base_deps_compute deps_compute
   result
 
 let dependencies st ~build ~post =
-  dependencies_t
+  dependencies_t st
     (fun base nv ff ->
        if OpamPackage.Set.mem nv base then Some ff else None)
     (fun base base_depends packages ->
@@ -1389,7 +1401,7 @@ let dependencies st ~build ~post =
        aux packages packages)
 
 let reverse_dependencies st ~build ~post =
-  dependencies_t
+  dependencies_t st
     (fun base nv ff ->
        if OpamPackage.Set.mem nv base then
          Some (dependencies_filter_to_formula_t ~build ~post st nv ff)
@@ -1458,7 +1470,7 @@ let invariant_root_packages st =
 let compute_invariant_packages st =
   let pkgs = invariant_root_packages st in
   dependencies ~build:false ~post:true ~depopts:false ~installed:true
-    ~unavailable:false st (universe st ~requested:pkgs Query) pkgs
+    ~unavailable:false st pkgs
 
 let compiler_packages st =
   let compiler_packages =
@@ -1468,5 +1480,4 @@ let compiler_packages st =
       st.installed
   in
   dependencies ~build:true ~post:false ~depopts:true ~installed:true
-    ~unavailable:false st (universe st ~requested:compiler_packages Query)
-    compiler_packages
+    ~unavailable:false st compiler_packages

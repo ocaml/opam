@@ -14,7 +14,6 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed foo.1
-[WARNING] Undefined filter variable build in dependencies of foo.1
 Done.
 ### <pkg:foo.1>
 opam-version: "2.0"
@@ -42,7 +41,6 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed foo.1
-[WARNING] Undefined filter variable build in dependencies of foo.1
 Done.
 ### <pkg:foo.1>
 opam-version: "2.0"
@@ -56,7 +54,6 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed foo.1
-[WARNING] Undefined filter variable undef in dependencies of foo.1
 Done.
 ### <pkg:foo.1>
 opam-version: "2.0"
