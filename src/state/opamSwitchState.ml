@@ -884,43 +884,33 @@ let avoid_version st nv =
            has_avoid_flag)
           +! false)
 
-let universe st
-    ?(test=OpamStateConfig.(!r.build_test))
-    ?(doc=OpamStateConfig.(!r.build_doc))
-    ?(dev_setup=OpamStateConfig.(!r.dev_setup))
-    ?(force_dev_deps=false)
-    ?reinstall
-    ~requested
-    user_action =
-  let chrono = OpamConsole.timer () in
-  let names = OpamPackage.names_of_packages requested in
-  let requested_allpkgs =
-    OpamPackage.packages_of_names st.packages names
-  in
-  let env nv v =
-    if List.mem v OpamPackageVar.predefined_depends_variables then
-      match OpamVariable.Full.to_string v with
-      | "dev" ->
-        Some (B (force_dev_deps || is_dev_package st nv))
-      | "with-test" ->
-        Some (B (test && OpamPackage.Set.mem nv requested_allpkgs))
-      | "with-doc" ->
-        Some (B (doc && OpamPackage.Set.mem nv requested_allpkgs))
-      | "with-dev-setup" ->
-        Some (B (dev_setup && OpamPackage.Set.mem nv requested_allpkgs))
-      | _ -> None (* Computation delayed to the solver *)
-    else
-    let r = OpamPackageVar.resolve_switch ~package:nv st v in
-    if r = None then
-      (if OpamFormatConfig.(!r.strict) then
-         OpamConsole.error_and_exit `File_error
-           "Undefined filter variable %s in dependencies of %s"
-       else
-         log
-           "ERR: Undefined filter variable %s in dependencies of %s")
-        (OpamVariable.Full.to_string v) (OpamPackage.to_string nv);
-    r
-  in
+let package_env_t st ~force_dev_deps ~test ~doc ~dev_setup
+    ~requested_allpkgs nv v =
+  if List.mem v OpamPackageVar.predefined_depends_variables then
+    match OpamVariable.Full.to_string v with
+    | "dev" ->
+      Some (B (force_dev_deps || is_dev_package st nv))
+    | "with-test" ->
+      Some (B (test && OpamPackage.Set.mem nv requested_allpkgs))
+    | "with-doc" ->
+      Some (B (doc && OpamPackage.Set.mem nv requested_allpkgs))
+    | "with-dev-setup" ->
+      Some (B (dev_setup && OpamPackage.Set.mem nv requested_allpkgs))
+    | _ -> None (* Computation delayed to the solver *)
+  else
+  let r = OpamPackageVar.resolve_switch ~package:nv st v in
+  if r = None then
+    (if OpamFormatConfig.(!r.strict) then
+       OpamConsole.error_and_exit `File_error
+         "Undefined filter variable %s in dependencies of %s"
+     else
+       log
+         "ERR: Undefined filter variable %s in dependencies of %s")
+      (OpamVariable.Full.to_string v) (OpamPackage.to_string nv);
+  r
+
+let get_dependencies_t st ~force_dev_deps ~test ~doc ~dev_setup
+    ~requested_allpkgs deps opams =
   let filter_undefined nv =
     OpamFormula.map (fun (name, fc) ->
         let fc =
@@ -938,10 +928,35 @@ let universe st
         in
         Atom (name, fc))
   in
-  let get_deps f opams =
-    OpamPackage.Map.mapi (fun nv opam ->
-        OpamFilter.partial_filter_formula (env nv) (f opam)
-        |> filter_undefined nv) opams
+  OpamPackage.Map.mapi (fun nv opam ->
+      OpamFilter.partial_filter_formula
+        (package_env_t st ~force_dev_deps ~test ~doc
+           ~dev_setup ~requested_allpkgs nv)
+        (deps opam)
+      |> filter_undefined nv) opams
+
+let universe st
+    ?(test=OpamStateConfig.(!r.build_test))
+    ?(doc=OpamStateConfig.(!r.build_doc))
+    ?(dev_setup=OpamStateConfig.(!r.dev_setup))
+    ?(force_dev_deps=false)
+    ?reinstall
+    ~requested
+    user_action =
+  let chrono = OpamConsole.timer () in
+  let names = OpamPackage.names_of_packages requested in
+  let requested_allpkgs =
+    OpamPackage.packages_of_names st.packages names
+  in
+  let env =
+    package_env_t st
+      ~force_dev_deps ~test ~doc ~dev_setup
+      ~requested_allpkgs
+  in
+  let get_deps =
+    get_dependencies_t st
+      ~force_dev_deps ~test ~doc ~dev_setup
+      ~requested_allpkgs
   in
   let u_depends =
     let depend =
