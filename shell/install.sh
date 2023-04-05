@@ -186,13 +186,19 @@ usage() {
     echo "using '--fresh' or '--dev'"
 }
 
+# Conditionally connect /dev/tty when
+# the environment variable TTY is set to 1
+TTY="${TTY-0}"
 R=
 prompt() {
-  # expects to be called as prompt "Do you want to do this? [Y/n]"
+  # expects to be called as prompt "Do you want to do this? [Y/n] "
   printf "$1"
-  read R </dev/tty
+  if [ "$TTY" = 1 ]; then
+    read R </dev/tty
+  else
+    read R
+  fi
 }
-
 
 RESTORE=
 NOBACKUP=
