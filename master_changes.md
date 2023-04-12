@@ -285,6 +285,7 @@ users)
   * `opam-state` depends on `opam-solver` [#5208 @rjbou]
   * Specify the `opam` package for all rules that need `opamMain.exe.exe` [#5496 @Leonidas-from-XIV]
   * Replace CPPO dependency with simple conditional compilation helper [#5498 @Leonidas-from-XIV]
+  * Remove conditional compilation [#5508 @Leonidas-from-XIV]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
