@@ -9,13 +9,16 @@
 (**************************************************************************)
 
 module String = struct
-  include struct
-    [@@@warning "-33"]
-    include OpamCompatPolyfill.String
-    include Stdlib.String
+  [@@@warning "-32"]
+  let exists p s =
+    let n = String.length s in
+    let rec loop i =
+      if i = n then false
+      else if p (String.unsafe_get s i) then true
+      else loop (succ i) in
+    loop 0
 
-    let exists = exists
-  end
+  include Stdlib.String
 end
 
 module Either = struct
@@ -31,21 +34,25 @@ module Either = struct
 end
 
 module Unix = struct
-  include struct
-    [@@@warning "-33"]
-    include OpamCompatPolyfill.Unix
-    include Unix
+  [@@@warning "-32"]
+  let realpath s =
+    let getchdir s =
+      let p =
+        try Sys.getcwd ()
+        with Sys_error _ -> Filename.get_temp_dir_name ()
+      in
+      Unix.chdir s;
+      p
+    in
+    try getchdir (getchdir s) with Unix.Unix_error _ -> s
 
-    let realpath = realpath
-  end
+  include Unix
 end
 
 module Lazy = struct
-  include struct
-    [@@@warning "-33"]
-    include OpamCompatPolyfill.Lazy
-    include Stdlib.Lazy
+  [@@@warning "-32"]
+  let map f x =
+    lazy (f (Lazy.force x))
 
-    let map = map
-  end
+  include Stdlib.Lazy
 end
