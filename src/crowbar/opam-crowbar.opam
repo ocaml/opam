@@ -1,5 +1,7 @@
 opam-version: "2.0"
 version: "2.0.0"
+synopsis: "Internal dependency package for fuzz testing"
+license: "LGPL-2.1-only WITH OCaml-LGPL-linking-exception"
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "Gabriel Scherer <gabriel.scherer@gmail.com>"
@@ -14,7 +16,7 @@ depends: [
 ]
 
 messages: """
-  This file is for easy use of (opam install --deps-only),
-  use the Makefile targets 'crowbar' and 'crowbar-afl' at the root
- for actual usage. (crowbar-afl requires being in a +afl switch.
+This file is for easy use of (opam install --deps-only),
+use the Makefile targets 'crowbar' and 'crowbar-afl' at the root
+for actual usage. (crowbar-afl requires being in a +afl switch).
 """
