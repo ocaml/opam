@@ -10,7 +10,7 @@
 
 include sig
   [@@@warning "-33"]
-  open OpamCompatPolyfill
+  open OpamCompatPolyfill.EitherPolyfill
   open Stdlib
 
   module String : sig
@@ -19,7 +19,7 @@ include sig
   end
 
   module Either : sig
-    type ('a, 'b) t =
+    type ('a, 'b) t = ('a, 'b) Either.t =
       | Left of 'a
       | Right of 'b
   end
