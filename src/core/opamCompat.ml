@@ -10,6 +10,7 @@
 
 module String = struct
   [@@@warning "-32"]
+
   let exists p s =
     let n = String.length s in
     let rec loop i =
@@ -22,19 +23,14 @@ module String = struct
 end
 
 module Either = struct
-  include struct
-    [@@@warning "-33"]
-    include OpamCompatPolyfill.EitherPolyfill
-    include Stdlib
-
-    type ('a, 'b) t = ('a, 'b) Either.t =
-      | Left of 'a
-      | Right of 'b
-  end
+  type ('a, 'b) t =
+    | Left of 'a
+    | Right of 'b
 end
 
 module Unix = struct
   [@@@warning "-32"]
+
   let realpath s =
     let getchdir s =
       let p =
@@ -51,6 +47,7 @@ end
 
 module Lazy = struct
   [@@@warning "-32"]
+
   let map f x =
     lazy (f (Lazy.force x))
 
