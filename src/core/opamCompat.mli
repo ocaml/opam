@@ -9,16 +9,19 @@
 (**************************************************************************)
 
 module String : sig
+  (* NOTE: OCaml >= 4.13 *)
   val exists: (char -> bool) -> string -> bool
 end
 
 module Either : sig
+  (* NOTE: OCaml >= 4.12 *)
   type ('a, 'b) t =
     | Left of 'a
     | Right of 'b
 end
 
 module Lazy : sig
+  (* NOTE: OCaml >= 4.13 *)
   val map : ('a -> 'b) -> 'a Lazy.t -> 'b Lazy.t
 end
 
