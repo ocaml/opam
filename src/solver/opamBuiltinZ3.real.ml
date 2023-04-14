@@ -382,13 +382,14 @@ let extract_solution_packages universe opt =
       []
   | None -> failwith "no model ??"
 
-let call ~criteria ?timeout (preamble, universe, _ as cudf) =
+let call ~criteria ?timeout ?tolerance:_ (preamble, universe, _ as cudf) =
   (* try *)
   log "Generating problem...";
   let cfg = match timeout with
     | None -> []
     | Some secs -> ["timeout", string_of_int (int_of_float (1000. *. secs))]
   in
+  (* TODO: use tolerance. Maybe the rlimit cfg option + intermediate solution could be used *)
   let ctx = {
     z3 = Z3.mk_context cfg;
     pkgs = Hashtbl.create 2731;

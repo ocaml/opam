@@ -146,6 +146,7 @@ val opam_init:
   ?solver_preferences_fixup:string option Lazy.t ->
   ?solver_preferences_best_effort_prefix: string option Lazy.t ->
   ?solver_timeout:float option ->
+  ?solver_tolerance:float option ->
   ?solver_allow_suboptimal:bool ->
   ?cudf_trim:string option ->
   ?dig_depth:int ->

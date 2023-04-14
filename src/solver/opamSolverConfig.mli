@@ -25,6 +25,7 @@ module E : sig
     | PREPRO of bool option
     | SOLVERALLOWSUBOPTIMAL of bool option
     | SOLVERTIMEOUT of float option
+    | SOLVERTOLERANCE of float option
     | UPGRADECRITERIA of string option
     | USEINTERNALSOLVER of bool option
     | VERSIONLAGPOWER of int option
@@ -40,6 +41,7 @@ type t = private {
   solver_preferences_fixup: string option Lazy.t;
   solver_preferences_best_effort_prefix: string option Lazy.t;
   solver_timeout: float option;
+  solver_tolerance: float option;
   solver_allow_suboptimal: bool;
   cudf_trim: string option;
   dig_depth: int;
@@ -56,6 +58,7 @@ type 'a options_fun =
   ?solver_preferences_fixup:string option Lazy.t ->
   ?solver_preferences_best_effort_prefix:string option Lazy.t ->
   ?solver_timeout:float option ->
+  ?solver_tolerance:float option ->
   ?solver_allow_suboptimal:bool ->
   ?cudf_trim:string option ->
   ?dig_depth:int ->
