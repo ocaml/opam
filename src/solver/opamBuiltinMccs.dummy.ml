@@ -28,7 +28,7 @@ module S = struct
     crit_best_effort_prefix = None;
   }
 
-  let call ~criteria:_ ?timeout:_ _cudf =
+  let call ~criteria:_ ?timeout:_ ?tolerance:_ _cudf =
     failwith "This opam was compiled without a solver built in"
 end
 

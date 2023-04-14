@@ -38,7 +38,7 @@ module type S = sig
       it's only run if the solver returns unsat, to extract the explanations. *)
 
   val call:
-    criteria:string -> ?timeout:float -> Cudf.cudf ->
+    criteria:string -> ?timeout:float -> ?tolerance:float -> Cudf.cudf ->
     Cudf.preamble option * Cudf.universe
 
 end

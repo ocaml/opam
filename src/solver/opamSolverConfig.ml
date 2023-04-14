@@ -23,6 +23,7 @@ module E = struct
     | PREPRO of bool option
     | SOLVERALLOWSUBOPTIMAL of bool option
     | SOLVERTIMEOUT of float option
+    | SOLVERTOLERANCE of float option
     | UPGRADECRITERIA of string option
     | USEINTERNALSOLVER of bool option
     | VERSIONLAGPOWER of int option
@@ -42,6 +43,7 @@ module E = struct
   let solverallowsuboptimal =
     value (function SOLVERALLOWSUBOPTIMAL b -> b | _ -> None)
   let solvertimeout = value (function SOLVERTIMEOUT f -> f | _ -> None)
+  let solvertolerance = value (function SOLVERTOLERANCE f -> f | _ -> None)
   let useinternalsolver = value (function USEINTERNALSOLVER b -> b | _ -> None)
   let upgradecriteria = value (function UPGRADECRITERIA s -> s | _ -> None)
   let versionlagpower = value (function VERSIONLAGPOWER i -> i | _ -> None)
@@ -59,6 +61,7 @@ type t = {
   solver_preferences_fixup: string option Lazy.t;
   solver_preferences_best_effort_prefix: string option Lazy.t;
   solver_timeout: float option;
+  solver_tolerance: float option;
   solver_allow_suboptimal: bool;
   cudf_trim: string option;
   dig_depth: int;
@@ -75,6 +78,7 @@ type 'a options_fun =
   ?solver_preferences_fixup:string option Lazy.t ->
   ?solver_preferences_best_effort_prefix:string option Lazy.t ->
   ?solver_timeout:float option ->
+  ?solver_tolerance:float option ->
   ?solver_allow_suboptimal:bool ->
   ?cudf_trim:string option ->
   ?dig_depth:int ->
@@ -95,6 +99,7 @@ let default =
     solver_preferences_fixup = lazy None;
     solver_preferences_best_effort_prefix = lazy None;
     solver_timeout = Some 60.;
+    solver_tolerance = Some 0.0;
     solver_allow_suboptimal = true;
     cudf_trim = None;
     dig_depth = 2;
@@ -111,6 +116,7 @@ let setk k t
     ?solver_preferences_fixup
     ?solver_preferences_best_effort_prefix
     ?solver_timeout
+    ?solver_tolerance
     ?solver_allow_suboptimal
     ?cudf_trim
     ?dig_depth
@@ -133,6 +139,8 @@ let setk k t
       solver_preferences_best_effort_prefix;
     solver_timeout =
       t.solver_timeout + solver_timeout;
+    solver_tolerance =
+      t.solver_tolerance + solver_tolerance;
     solver_allow_suboptimal =
       t.solver_allow_suboptimal + solver_allow_suboptimal;
     cudf_trim = t.cudf_trim + cudf_trim;
@@ -193,6 +201,8 @@ let initk k =
     E.besteffortprefixcriteria () >>| fun c -> (lazy (Some c)) in
   let solver_timeout =
     E.solvertimeout () >>| fun f -> if f <= 0. then None else Some f in
+  let solver_tolerance =
+    E.solvertolerance () >>| fun f -> if f <= 0. then None else Some f in
   setk (setk (fun c -> r := with_auto_criteria c; k)) !r
     ~cudf_file:(E.cudffile ())
     ~solver
@@ -202,6 +212,7 @@ let initk k =
     ?solver_preferences_fixup:fixup_criteria
     ?solver_preferences_best_effort_prefix:best_effort_prefix_criteria
     ?solver_timeout
+    ?solver_tolerance
     ?solver_allow_suboptimal:(E.solverallowsuboptimal ())
     ~cudf_trim:(E.cudftrim ())
     ?dig_depth:(E.digdepth ())
@@ -253,6 +264,6 @@ let call_solver ~criteria cudf =
   OpamConsole.log "SOLVER" "Calling solver %s with criteria %s"
     (OpamCudfSolver.get_name (module S)) criteria;
   let chrono = OpamConsole.timer () in
-  let r = S.call ~criteria ?timeout:(!r.solver_timeout) cudf in
+  let r = S.call ~criteria ?timeout:(!r.solver_timeout) ?tolerance:(!r.solver_tolerance) cudf in
   OpamConsole.log "SOLVER" "External solver took %.3fs" (chrono ());
   r

@@ -31,7 +31,7 @@ let default_criteria = {
   crit_best_effort_prefix = Some "+count[opam-query:,false],";
 }
 
-let call solver_backend ext ~criteria ?timeout cudf =
+let call solver_backend ext ~criteria ?timeout ?tolerance cudf =
   let solver = match solver_backend, ext with
     | `LP _, Some ext -> `LP ext
     | _ -> solver_backend
@@ -39,7 +39,8 @@ let call solver_backend ext ~criteria ?timeout cudf =
   match
     Mccs.resolve_cudf
       ~solver
-      ~verbose:OpamCoreConfig.(abs !r.debug_level >= 2)
+      ?mip_gap:tolerance
+      ~verbosity:(!OpamCoreConfig.r.debug_level - 1) (*  *)
       ?timeout criteria cudf
   with
   | None -> raise Dose_common.CudfSolver.Unsat

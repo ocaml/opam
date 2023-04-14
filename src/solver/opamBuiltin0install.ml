@@ -104,7 +104,7 @@ let parse_criteria criteria =
     OpamConsole.warning "Criteria '%s' is not supported by the 0install solver" criteria;
     default
 
-let call ~criteria ?timeout:_ (preamble, universe, request) =
+let call ~criteria ?timeout:_ ?tolerance:_ (preamble, universe, request) =
   let {drop_installed_packages; prefer_oldest} = parse_criteria criteria in
   let timer = OpamConsole.timer () in
   let pkgs, constraints = create_spec ~drop_installed_packages universe request in
