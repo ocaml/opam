@@ -402,23 +402,15 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_swhid_core" = "xno" ||
        test "x$CPPO" = "x" ||
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue";}],[
-  AS_IF([test "x${with_vendored_deps}" = "xno"],[
-    AC_MSG_ERROR([Dependencies missing and --without-vendored-deps given; override with --disable-checks])
-  ],[
-    AS_IF([test "x${with_vendored_deps}" != "xyes"],[
-      echo "============================================================================"
-      echo "Some dependencies are missing. Vendored mode has been automatically enabled."
-      echo "The sources for opam's dependencies will be extracted in src_ext and built."
-      echo "============================================================================"
-    ])
-    AC_SUBST(VENDORED,"true")
+  AS_IF([test "x${with_vendored_deps}" != "xyes"],[
+    AC_MSG_ERROR([Dependencies missing. Use --with-vendored-deps or --disable-checks])
   ])
+])
+
+AS_IF([test "x${with_vendored_deps}" = "xyes"],[
+  AC_SUBST(VENDORED,"true")
 ],[
-  AS_IF([test "x${with_vendored_deps}" = "xyes"],[
-    AC_SUBST(VENDORED,"true")
-  ],[
-    AC_SUBST(VENDORED,"false")
-  ])
+  AC_SUBST(VENDORED,"false")
 ])
 
 if test "x$prefix" = "xNONE"; then
@@ -482,15 +474,4 @@ AS_IF([test "x${VENDORED}" = "xtrue"],[
   AS_ECHO_N(["Extracting vendored source dependencies in src_ext/... "])
   ${MAKE} --no-print-directory -C src_ext SILENT=@ clone
   AS_ECHO([done])
-],[
-  ${MAKE} --no-print-directory -C src_ext def-ignore
-  AS_IF([test -z "${DUNE}"],[
-    echo
-    AS_ECHO_N(["Downloading dune sources... "])
-    ${MAKE} --no-print-directory -C src_ext SILENT=@ dune-local.download
-    AS_ECHO([done])
-    AS_ECHO_N(["Extracting dune sources to src_ext/dune-local/... "])
-    ${MAKE} --no-print-directory -C src_ext SILENT=@ dune-local.stamp
-    AS_ECHO([done])
-  ])
 ])
