@@ -107,7 +107,33 @@ module MakeIO (F : IO_Arg) = struct
     OpamConsole.log (Printf.sprintf "FILE(%s)" F.internal) ?level fmt
   let slog = OpamConsole.slog
 
-  let write f v =
+  let write_atomic f v =
+    let filename = OpamFilename.to_string f in
+    let chrono = OpamConsole.timer () in
+    let temp_file, oc =
+      OpamFilename.(mkdir (dirname f));
+      let mode = [Open_wronly; Open_creat; Open_trunc; Open_binary] in
+      let perms = 0o666 in
+      let temp_dir = Filename.dirname filename in
+      try Filename.open_temp_file ~mode ~perms ~temp_dir "opam-atomic" ".tmp"
+      with Sys_error _ -> raise (OpamSystem.File_not_found filename)
+    in
+    begin try
+      F.to_channel f oc v;
+      close_out oc;
+    with e ->
+      OpamStd.Exn.finalise e @@ fun () ->
+      close_out oc; Sys.remove temp_file
+    end;
+    try
+      Sys.rename temp_file filename;
+      Stats.write_files := filename :: !Stats.write_files;
+      log "Wrote %s in %.3fs atomically via %s" filename (chrono ()) temp_file;
+    with e ->
+      OpamStd.Exn.finalise e @@ fun () ->
+      OpamFilename.remove f
+
+  let write_non_atomic f v =
     let filename = OpamFilename.to_string f in
     let chrono = OpamConsole.timer () in
     let write =
@@ -119,6 +145,12 @@ module MakeIO (F : IO_Arg) = struct
     write f (fun oc -> F.to_channel f oc v);
     Stats.write_files := filename :: !Stats.write_files;
     log "Wrote %s%s in %.3fs" filename (if F.atomic then " atomically" else "") (chrono ())
+
+  let write =
+    if F.atomic then
+      write_atomic
+    else
+      write_non_atomic
 
   let read_opt f =
     let filename = OpamFilename.prettify f in
@@ -385,23 +417,28 @@ module type LineFileArg = sig
   val pp: (string list list, t) Pp.t
 end
 
+module LineFileOps(X: LineFileArg) = struct
+  include X
+
+  let format_version = OpamVersion.of_string "0"
+
+  let to_channel _ oc t = Pp.print (Lines.pp_channel stdin oc -| pp) t
+
+  let to_string _ t = Pp.print (Lines.pp_string -| pp) t
+
+  let of_channel filename ic =
+    Pp.parse (Lines.pp_channel ic stdout -| pp) ~pos:(pos_file filename) ()
+
+  let of_string filename str =
+    Pp.parse (Lines.pp_string -| pp)
+      ~pos:{ pos_null with filename = OpamFilename.to_string filename }
+      str
+end
+
 module LineFile (X: LineFileArg) = struct
   module IO = struct
-    include X
-
-    let format_version = OpamVersion.of_string "0"
-
-    let to_channel _ oc t = Pp.print (Lines.pp_channel stdin oc -| pp) t
-
-    let to_string _ t = Pp.print (Lines.pp_string -| pp) t
-
-    let of_channel filename ic =
-      Pp.parse (Lines.pp_channel ic stdout -| pp) ~pos:(pos_file filename) ()
-
-    let of_string filename str =
-      Pp.parse (Lines.pp_string -| pp)
-        ~pos:{ pos_null with filename = OpamFilename.to_string filename }
-        str
+    include LineFileOps(X)
+    let atomic = false
   end
 
   include IO
@@ -1028,6 +1065,7 @@ module type SyntaxFileArg = sig
   val internal: string
   val atomic: bool
   val format_version: OpamVersion.t
+  val atomic : bool
   type t
   val empty: t
   val pp: (opamfile, filename * t) Pp.t
@@ -1248,6 +1286,7 @@ module ConfigSyntax = struct
   let format_version = OpamVersion.of_string "2.1"
   let file_format_version = OpamVersion.of_string "2.0"
   let root_version = OpamVersion.of_string "2.2~alpha"
+  let atomic = true
 
   let default_old_root_version = OpamVersion.of_string "2.1~~previous"
 
@@ -1557,6 +1596,7 @@ module InitConfigSyntax = struct
   let internal = "init-config"
   let atomic = false
   let format_version = OpamVersion.of_string "2.0"
+  let atomic = false
 
   type t = {
     opam_version : opam_version;
@@ -1794,6 +1834,7 @@ module Repos_configSyntax = struct
   let atomic = false
   let format_version = OpamVersion.of_string "2.0"
   let file_format_version = OpamVersion.of_string "2.0"
+  let atomic = true
 
   type t = ((url * trust_anchors option) option) OpamRepositoryName.Map.t
 
@@ -1840,6 +1881,7 @@ module Switch_configSyntax = struct
   let format_version = OpamVersion.of_string "2.1"
   let file_format_version = OpamVersion.of_string "2.0"
   let oldest_compatible_format_version = OpamVersion.of_string "2.0"
+  let atomic = true
 
   type t = {
     opam_version: OpamVersion.t;
@@ -1954,6 +1996,7 @@ module SwitchSelectionsSyntax = struct
   let atomic = false
   let format_version = OpamVersion.of_string "2.0"
   let file_format_version = OpamVersion.of_string "2.0"
+  let atomic = true
 
   type t = switch_selections
 
@@ -2024,6 +2067,7 @@ module Repo_config_legacySyntax = struct
   let internal = "repo-file"
   let atomic = false
   let format_version = OpamVersion.of_string "1.2"
+  let atomic = false
 
   type t = {
     repo_name : repository_name;
@@ -2089,6 +2133,7 @@ module Dot_configSyntax = struct
   let internal = ".config"
   let atomic = false
   let format_version = OpamVersion.of_string "2.0"
+  let atomic = false
 
   type t = {
     vars: (variable * variable_contents) list;
@@ -2182,6 +2227,7 @@ module RepoSyntax = struct
   let internal = "repo"
   let atomic = false
   let format_version = OpamVersion.of_string "2.0"
+  let atomic = true
 
   type t = {
     opam_version : OpamVersion.t option;
@@ -2272,6 +2318,7 @@ module URLSyntax = struct
   let internal = "url-file"
   let atomic = false
   let format_version = OpamVersion.of_string "1.2"
+  let atomic = false
 
   type t = {
     url     : url;
@@ -2386,6 +2433,7 @@ module OPAMSyntax = struct
   let internal = "opam"
   let atomic = false
   let format_version = OpamVersion.of_string "2.0"
+  let atomic = false
 
   type t = {
     opam_version: opam_version;
@@ -3462,6 +3510,7 @@ module Dot_installSyntax = struct
   let internal = ".install"
   let atomic = false
   let format_version = OpamVersion.of_string "2.0"
+  let atomic = false
 
   type t =  {
     bin     : (basename optional * basename option) list;
@@ -3630,6 +3679,7 @@ module ChangesSyntax = struct
   let internal = "changes"
   let atomic = false
   let format_version = OpamVersion.of_string "2.0"
+  let atomic = false
 
   open OpamDirTrack
 
@@ -3696,6 +3746,7 @@ module SwitchExportSyntax = struct
   let internal = "switch-export"
   let atomic = false
   let format_version = OpamVersion.of_string "2.1"
+  let atomic = false
 
   type t = {
     selections: switch_selections;
@@ -3774,6 +3825,7 @@ module CompSyntax = struct
   let internal = "comp"
   let atomic = false
   let format_version = OpamVersion.of_string "1.2"
+  let atomic = false
 
   type compiler = string
   type compiler_version = string
