@@ -332,7 +332,7 @@ let real_path p =
     match (try Some (Sys.is_directory p) with Sys_error _ -> None) with
     | None ->
       let rec resolve dir =
-        if Sys.file_exists dir then OpamCompat.Unix.normalise dir else
+        if Sys.file_exists dir then OpamCompat.Unix.realpath dir else
         let parent = Filename.dirname dir in
         if dir = parent then dir
         else Filename.concat (resolve parent) (Filename.basename dir)
@@ -342,9 +342,9 @@ let real_path p =
         else p
       in
       resolve p
-    | Some true -> OpamCompat.Unix.normalise p
+    | Some true -> OpamCompat.Unix.realpath p
     | Some false ->
-      let dir = OpamCompat.Unix.normalise (Filename.dirname p) in
+      let dir = OpamCompat.Unix.realpath (Filename.dirname p) in
       match Filename.basename p with
       | "." -> dir
       | base -> dir / base

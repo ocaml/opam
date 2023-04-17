@@ -8,42 +8,33 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module String =
-#if OCAML_VERSION >= (4, 13, 0)
-  String
-#else
-struct
-  include String
+module String = struct
+  [@@@warning "-32"]
 
+  (** NOTE: OCaml >= 4.13 *)
   let exists p s =
-    let n = length s in
+    let n = String.length s in
     let rec loop i =
       if i = n then false
-      else if p (unsafe_get s i) then true
+      else if p (String.unsafe_get s i) then true
       else loop (succ i) in
     loop 0
-end
-#endif
 
-module Either =
-#if OCAML_VERSION >= (4, 12, 0)
-  Either
-#else
-struct
+  include Stdlib.String
+end
+
+module Either = struct
+  (** NOTE: OCaml >= 4.12 *)
   type ('a, 'b) t =
-  | Left of 'a
-  | Right of 'b
+    | Left of 'a
+    | Right of 'b
 end
-#endif
 
-module Unix =
-struct
-  include Unix
+module Unix = struct
+  [@@@warning "-32"]
 
-  #if OCAML_VERSION >= (4, 13, 0)
-  let normalise = realpath
-  #else
-  let normalise s =
+  (** NOTE: OCaml >= 4.13 *)
+  let realpath s =
     let getchdir s =
       let p =
         try Sys.getcwd ()
@@ -53,18 +44,16 @@ struct
       p
     in
     try getchdir (getchdir s) with Unix.Unix_error _ -> s
-  #endif
 
+  include Unix
 end
 
-module Lazy =
-#if OCAML_VERSION >= (4, 13, 0)
-  Lazy
-#else
-struct
-  include Lazy
+module Lazy = struct
+  [@@@warning "-32"]
 
+  (** NOTE: OCaml >= 4.13 *)
   let map f x =
-    lazy (f (force x))
+    lazy (f (Lazy.force x))
+
+  include Stdlib.Lazy
 end
-#endif

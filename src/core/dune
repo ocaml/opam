@@ -17,15 +17,6 @@
   (wrapped     false))
 
 (rule
-  (with-stdin-from opamCompat.pp.ml
-                   (with-stdout-to opamCompat.ml
-                                   (run ./gen/gen.exe))))
-(rule
-  (with-stdin-from opamCompat.pp.mli
-                   (with-stdout-to opamCompat.mli
-                                   (run ./gen/gen.exe))))
-
-(rule
   (copy opamStubsTypes.ml opamStubsTypes.mli))
 
 (rule
