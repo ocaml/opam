@@ -792,21 +792,28 @@ let update_dot_profile root dot_profile shell =
       pretty_dot_profile
   | `yes       ->
     let init_file = init_file shell in
-    let body =
+    let old_body =
       if OpamFilename.exists dot_profile then
         OpamFilename.read dot_profile
       else
         "" in
     OpamConsole.msg "  Updating %s.\n" pretty_dot_profile;
     bash_src();
-    let body =
+    let count_lines str = List.length (String.split_on_char '\n' str) in
+    let opam_section =
       Printf.sprintf
-        "%s\n\n\
-         # opam configuration\n\
-         %s"
-        (OpamStd.String.strip body) (source root shell init_file) in
-    OpamFilename.write dot_profile body
-
+        "\n\n\
+         # BEGIN opam configuration\n\
+         # This is useful if you're using opam as it adds:\n\
+         #   - the correct directories to the PATH\n\
+         #   - auto-completion for the opam binary\n\
+         # This section can be safely removed at any time if needed.\n\
+         %s\
+         # END opam configuration\n"
+        (source root shell init_file) in
+    OpamFilename.write dot_profile (old_body ^ opam_section);
+    OpamConsole.msg "  Added %d lines after line %d in %s.\n"
+      (count_lines opam_section - 1) (count_lines old_body) pretty_dot_profile
 
 let update_user_setup root ?dot_profile shell =
   if dot_profile <> None then (
