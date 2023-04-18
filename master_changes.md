@@ -297,6 +297,7 @@ users)
   * Workaround brew problem on macOS GHA runner testing Z3 [#5405 @dra27]
   * Adopt the OCaml Code of Conduct [#5419 @dra27]
   * Use (implicit_transitive_deps false) in CI [#4771 @dra27]
+  * gha: update to checkout@v3 [#5515 @MisterDA]
 
 ## Release scripts
   * Make the release script setup-less using QEMU, Docker and Rosetta 2 [#4947 @kit-ty-kate]

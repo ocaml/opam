@@ -16,7 +16,7 @@ jobs:
   hygiene-scripts:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Check scripts
       env:
         # Defined only on pull request jobs
