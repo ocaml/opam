@@ -326,7 +326,8 @@ users)
   * Skip empty environment variable additions [#5350 @dra27]
 
 ## Opam file format
-  *
+  * ✘ Version comparison is now strictly as specified in the docs, and doesn't
+    handle Debian-like "epoch" prefixes or "revision" suffixes [@AltGr - fix #4272]
 
 ## Solver
   * [BUG] Remove z3 debug output [#4723 @rjbou - fix #4717] [2.1.0~rc2 #4720]
