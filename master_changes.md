@@ -286,6 +286,7 @@ users)
   * Specify the `opam` package for all rules that need `opamMain.exe.exe` [#5496 @Leonidas-from-XIV]
   * Replace CPPO dependency with simple conditional compilation helper [#5498 @Leonidas-from-XIV]
   * Remove conditional compilation [#5508 @Leonidas-from-XIV]
+  * Update msvs-detect [#5514 @MisterDA]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]

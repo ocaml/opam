@@ -4,7 +4,7 @@
 # ################################################################################################ #
 # Microsoft C Compiler Environment Detection Script                                                #
 # ################################################################################################ #
-# Copyright (c) 2016, 2017, 2018, 2019, 2020 MetaStack Solutions Ltd.                              #
+# Copyright (c) 2016, 2017, 2018, 2019, 2020, 2021 MetaStack Solutions Ltd.                        #
 # ################################################################################################ #
 # Author: David Allsopp                                                                            #
 # 16-Feb-2016                                                                                      #
@@ -27,7 +27,7 @@
 # of this software, even if advised of the possibility of such damage.                             #
 # ################################################################################################ #
 
-VERSION=0.4.1
+VERSION=0.5.0
 
 # debug [level=2] message
 debug ()
@@ -204,13 +204,6 @@ SCAN_ENV=0
 # Various PATH messing around means it's sensible to know where tools are now
 WHICH=$(which which)
 
-if [[ $(uname --operating-system 2>/dev/null) = "Msys" ]] ; then
-  # Prevent MSYS from translating command line switches to paths
-  SWITCH_PREFIX='//'
-else
-  SWITCH_PREFIX='/'
-fi
-
 # Parse command-line. At the moment, the short option which usefully combines with anything is -d,
 # so for the time being, combining short options is not permitted, as the loop becomes even less
 # clear with getopts. GNU getopt isn't installed by default on Cygwin...
@@ -337,7 +330,7 @@ if [[ $MODE -eq 1 ]] ; then
   MSVS_PREFERENCE=
   SCAN_ENV=1
 elif [[ -z ${MSVS_PREFERENCE+x} ]] ; then
-  MSVS_PREFERENCE='@;VS16.*;VS15.*;VS14.0;VS12.0;VS11.0;10.0;9.0;8.0;7.1;7.0'
+  MSVS_PREFERENCE='@;VS17.*;VS16.*;VS15.*;VS14.0;VS12.0;VS11.0;10.0;9.0;8.0;7.1;7.0'
 fi
 
 MSVS_PREFERENCE=${MSVS_PREFERENCE//;/ }
@@ -479,6 +472,9 @@ COMPILERS=(
     ["VSWHERE"]="1")'
   ["VS16.*"]='(
     ["NAME"]="Visual Studio 2019"
+    ["VSWHERE"]="1")'
+  ["VS17.*"]='(
+    ["NAME"]="Visual Studio 2022"
     ["VSWHERE"]="1")'
   ["SDK5.2"]='(
     ["NAME"]="Windows Server 2003 SP1 SDK"
@@ -733,7 +729,7 @@ if [[ -x $VSWHERE ]] ; then
           warning "vcvarsall.bat not found for $INSTANCE"
         fi;;
     esac
-  done < <("$VSWHERE" -all -nologo | tr -d '\r')
+  done < <("$VSWHERE" -all -products '*' -nologo | tr -d '\r')
 fi
 
 if [[ $DEBUG -gt 1 ]] ; then
@@ -920,6 +916,8 @@ for i in "${TEST[@]}" ; do
     if [[ $DEBUG -gt 3 ]] ; then
       printf "Scanning %s... " "$(basename "$SCRIPT") $ARCH_SWITCHES $SCRIPT_SWITCHES">&2
     fi
+    # Setting MSYS2_ARG_CONV_EXCL to * inhibits attempts to convert the flags to COMSPEC as
+    # command line parameters.
     num=0
     while IFS= read -r line; do
       case $num in
@@ -933,7 +931,8 @@ for i in "${TEST[@]}" ; do
       ((num++))
     done < <(INCLUDE='' LIB='' PATH="?msvs-detect?:$DIR:$PATH" ORIGINALPATH='' \
              EXEC_SCRIPT="$(basename "$SCRIPT") $ARCH_SWITCHES $SCRIPT_SWITCHES" \
-             $(cygpath "$COMSPEC") ${SWITCH_PREFIX}v:on ${SWITCH_PREFIX}c $COMMAND 2>/dev/null | grep -F XMARKER -A 3 | tr -d '\015' | tail -3)
+             MSYS2_ARG_CONV_EXCL='*' \
+             $(cygpath "$COMSPEC") /v:on /c $COMMAND 2>/dev/null | grep -F XMARKER -A 3 | tr -d '\015' | tail -3)
     if [[ $DEBUG -gt 3 ]] ; then
       echo done>&2
     fi
@@ -977,8 +976,12 @@ for i in "${TEST[@]}" ; do
         TEST_cl=${TEST_cl,,}
         TEST_cl=${TEST_cl/bin\/*_/bin\/}
         if [[ $TEST_cl = $ENV_cl ]] ; then
-          if [[ ${!ENV_INC/"$MSVS_INC"/} != "${!ENV_INC}" && \
-                ${!ENV_LIB/"$MSVS_LIB"/} != "${!ENV_LIB}" ]] ; then
+          # Create trailing semi-colon versions of the expansions of ENV_ for comparison with MSVS_
+          ENV_EXPAND_INC="${!ENV_INC%%;};"
+          ENV_EXPAND_LIB="${!ENV_LIB%%;};"
+
+          if [[ ${ENV_EXPAND_INC/"$MSVS_INC"/} != "${ENV_EXPAND_INC}" && \
+                ${ENV_EXPAND_LIB/"$MSVS_LIB"/} != "${ENV_EXPAND_LIB}" ]] ; then
             debug "$i-$arch is a strong candidate for the Environment C compiler"
             if [[ -n ${ENV_COMPILER+x} ]] ; then
               if [[ -z ${ENV_COMPILER} ]] ; then
