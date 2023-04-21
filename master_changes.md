@@ -391,6 +391,7 @@ users)
   * Update crowbar with compare functions [#4918 @rjbou]
   * No more mute test debug output (level < 0) if `--readonly` is given with `--debug-level` [#5476 @rjbou]
   * Setup benchmarking using current-bench [#5525 @kit-ty-kate]
+  * Add a disabled-by-default unit-test showing validity and speedup of a new implementation of OpamVersionCompare [#5518 @kit-ty-kate]
 
 ## Reftests
 ### Tests
@@ -700,3 +701,4 @@ users)
   * `OpamSWHID`: add module to handle swhid [#4859 @rjbou]
   * `OpamProcess`: expose the `command` type as a private type [#5452 @Leonidas-from-XIV]
   * `OpamFilename`: add `with_open_out_bin` and `with_open_out_bin_atomic` [#5476 @dra27]
+  * Speedup OpamVersionCompare by 15% [#5518 @kit-ty-kate]
