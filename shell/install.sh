@@ -200,6 +200,8 @@ prompt() {
   fi
 }
 
+INIT="${INIT-0}"
+
 RESTORE=
 NOBACKUP=
 FRESH=
@@ -479,11 +481,13 @@ if [ ! "$FRESH" = 1 ]; then
     echo "## Converting the opam root format & updating"
     "$BINDIR/opam" init --reinit -ni
 else
-  echo "## Running opam init for this fresh install"
-  if [ "$TTY" = 1 ]; then
-  "$BINDIR/opam" init </dev/tty
-  else
-  "$BINDIR/opam" init
+  if [ "$INIT" = 1 ]; then
+    echo "## Running opam init for this fresh install"
+    if [ "$TTY" = 1 ]; then
+    "$BINDIR/opam" init </dev/tty
+    else
+    "$BINDIR/opam" init
+    fi
   fi
 fi
 
