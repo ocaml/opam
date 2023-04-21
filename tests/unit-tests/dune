@@ -1,0 +1,5 @@
+(test
+ (name opam_version_compare)
+ (enabled_if false)
+ (package opam-format)
+ (libraries opam-core opam-format posix-time2))
