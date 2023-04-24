@@ -49,6 +49,7 @@ on:
     - '.github/scripts/**'
     - '.github/workflows/main.yml'
     - 'tests/**'
+    - 'shell/'
 #    paths-ignore:
 #    - 'release/**'
 #    - 'shell/**'
