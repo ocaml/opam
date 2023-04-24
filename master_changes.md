@@ -66,6 +66,7 @@ users)
 ## Build
   * Run autoupdate to silence autogen warnings [#5555 @MisterDA]
   * Update bootstrap to use FlexDLL 0.43 from ocaml/flexdll [#5579 @MisterDA]
+  * configure: Ensure a complementary (32bit on 64bit platforms and 64bit on 32bit platforms) C compiler is installed on Windows [#5522 @kit-ty-kate]
 
 ## Infrastructure
 
