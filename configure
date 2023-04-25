@@ -1421,6 +1421,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --without-mccs          Compile without a built-in Cudf solver (only works
                           if 'mccs' is not otherwise installed)
+
   --without-0install-solver
                           Legacy option (does nothing)
 
@@ -4000,9 +4001,6 @@ fi
 if test ${with_mccs+y}
 then :
   withval=$with_mccs;
-else $as_nop
-  MCCS_DEFAULT=yes
-
 fi
 
 
@@ -7305,20 +7303,10 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
   if test -z "$CXX"
 then :
 
-    if test "x$MCCS_DEFAULT" = "xyes"
+    if test "x${enable_checks}" != "xno"
 then :
 
-      MCCS_ENABLED=false
-
-
-else $as_nop
-
-      if test "x${enable_checks}" != "xno"
-then :
-
-        as_fn_error $? "A C++ compiler is required to build mccs" "$LINENO" 5
-
-fi
+      as_fn_error $? "A C++ compiler is required to build mccs" "$LINENO" 5
 
 fi
 
