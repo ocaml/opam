@@ -103,3 +103,5 @@ doc/dev-manual/*.out
 doc/pages/*.html
 doc/*.build
 src/x_build_libs.ocp
+# dev setup
+/.ocamlinit

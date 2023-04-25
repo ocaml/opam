@@ -378,6 +378,7 @@ users)
   * Always open files with `O_SHARE_DELETE`, which eliminates unnecessary "access denied" errors in various situations on Windows. [#5435 @dra27]
   * Ensure the cwd is restored when launching a process fails [#5441 @dra27]
   * Fix linting on opam-crowbar.opam [#5507 @kit-ty-kate]
+  * Move the .ocamlinit script out of the root directory [#5526 @kit-ty-kate]
 
 ## Internal: Windows
   * Support MSYS2: treat MSYS2 and Cygwin as equivalent [#4813 @jonahbeckford]
