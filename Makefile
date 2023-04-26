@@ -190,6 +190,10 @@ uninstall: opam.install
 .PHONY: test
 test: tests
 
+.PHONY: bench
+bench:
+	@$(DUNE) exec --display=quiet $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) -- ./tests/bench/bench.exe
+
 .PHONY: tests
 tests: $(DUNE_DEP) src/client/no-git-version
 	@$(DUNE) runtest $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) src/ tests/ --no-buffer; \
