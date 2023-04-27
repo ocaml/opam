@@ -7348,41 +7348,25 @@ if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue";}
 then :
 
-  if test "x${with_vendored_deps}" = "xno"
+  if test "x${with_vendored_deps}" != "xyes"
 then :
 
-    as_fn_error $? "Dependencies missing and --without-vendored-deps given; override with --disable-checks" "$LINENO" 5
-
-else $as_nop
-
-    if test "x${with_vendored_deps}" != "xyes"
-then :
-
-      echo "============================================================================"
-      echo "Some dependencies are missing. Vendored mode has been automatically enabled."
-      echo "The sources for opam's dependencies will be extracted in src_ext and built."
-      echo "============================================================================"
-
-fi
-    VENDORED="true"
-
+    as_fn_error $? "Dependencies missing. Use --with-vendored-deps or --disable-checks" "$LINENO" 5
 
 fi
 
-else $as_nop
+fi
 
-  if test "x${with_vendored_deps}" = "xyes"
+if test "x${with_vendored_deps}" = "xyes"
 then :
 
-    VENDORED="true"
+  VENDORED="true"
 
 
 else $as_nop
 
-    VENDORED="false"
+  VENDORED="false"
 
-
-fi
 
 fi
 
@@ -8618,22 +8602,6 @@ then :
   printf %s "Extracting vendored source dependencies in src_ext/... "
   ${MAKE} --no-print-directory -C src_ext SILENT=@ clone
   printf "%s\n" done
-
-else $as_nop
-
-  ${MAKE} --no-print-directory -C src_ext def-ignore
-  if test -z "${DUNE}"
-then :
-
-    echo
-    printf %s "Downloading dune sources... "
-    ${MAKE} --no-print-directory -C src_ext SILENT=@ dune-local.download
-    printf "%s\n" done
-    printf %s "Extracting dune sources to src_ext/dune-local/... "
-    ${MAKE} --no-print-directory -C src_ext SILENT=@ dune-local.stamp
-    printf "%s\n" done
-
-fi
 
 fi
 
