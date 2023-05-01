@@ -171,7 +171,7 @@ let upgrade_t
       OpamConsole.errmsg "%s\n%s\n"
         (OpamStd.Format.itemize (fun x -> x) cycles)
         "You may try upgrading packages individually to work around this."
-    end else begin
+    end else if reasons <> [] then begin
       OpamConsole.warning
         "Upgrade is not possible because of conflicts or packages that \
          are no longer available:";
