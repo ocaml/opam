@@ -45,6 +45,7 @@ users)
 ## Source
 
 ## Lint
+  * E29: The conflicts field's filter does not support package variables [#5535 @kit-ty-kate]
 
 ## Repository
 

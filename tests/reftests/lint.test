@@ -145,7 +145,7 @@ bug-reports: "https://nobug"
 depends: "foo" {_:innervar}
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Errors.
-             error 29: Package dependencies mention package variables: "_:innervar"
+             error 29: Package dependencies or conflicts mention package variables: "_:innervar"
 # Return code 1 #
 ### <lint.opam>
 opam-version: "2.0"
@@ -159,7 +159,9 @@ dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 conflicts: "foo" {_:innervar}
 ### opam lint ./lint.opam
-${BASEDIR}/lint.opam: Passed.
+${BASEDIR}/lint.opam: Errors.
+             error 29: Package dependencies or conflicts mention package variables: "_:innervar"
+# Return code 1 #
 ### : E31: Fields 'depends' and 'depopts' refer to the same package names
 ### <lint.opam>
 opam-version: "2.0"

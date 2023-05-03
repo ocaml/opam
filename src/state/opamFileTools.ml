@@ -363,12 +363,13 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        (unk_flags <> []));
     (let filtered_vars =
        OpamFilter.variables_of_filtered_formula t.depends @
-       OpamFilter.variables_of_filtered_formula t.depopts
+       OpamFilter.variables_of_filtered_formula t.depopts @
+       OpamFilter.variables_of_filtered_formula t.conflicts
        |> List.filter (fun v -> not (OpamVariable.Full.is_global v))
        |> List.map OpamVariable.Full.to_string
      in
      cond 29 `Error
-       "Package dependencies mention package variables"
+       "Package dependencies or conflicts mention package variables"
        ~detail:filtered_vars
        (filtered_vars <> []));
 (*
