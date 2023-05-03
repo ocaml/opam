@@ -68,6 +68,7 @@ users)
 ## VCS
 
 ## Build
+  * Unset OPAM_SWITCH_PREFIX when using make cold [#5534 @kit-ty-kate]
 
 ## Infrastructure
 
