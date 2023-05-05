@@ -363,18 +363,12 @@ The following actions will be performed:
   - install good-sha256 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved good-sha256.1  (cached)
-[ERROR] The compilation of good-sha256.1 failed at "test -f hello".
+[ERROR] Conflicting file hashes, or broken or compromised cache!
+          - sha256=hash (MISMATCH)
 
-
-
-
-<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-+- The following actions failed
-| - build good-sha256 1
-+- 
-- No changes have been performed
-# Return code 31 #
+-> retrieved good-sha256.1  (file://${BASEDIR}/archive.tgz)
+-> installed good-sha256.1
+Done.
 ### sh check-cache.sh
 MD5: link, to sha256 archive
-SHA256: archive, with mismatching checksum
+SHA256: archive, with matching checksum
