@@ -286,3 +286,95 @@ Done.
 ### sh check-cache.sh
 MD5: link, to sha256 archive
 SHA256: archive, with matching checksum
+### <pkg:good-sha256.1>
+opam-version: "2.0"
+maintainer: "nobody"
+authors: "nobody neither"
+homepage: "https://no.bo.dy"
+bug-reports: "https://still.nobo.dy"
+dev-repo: "git+https://no.were"
+license: "MIT"
+synopsis: "Initially empty"
+build: [ "test" "-f" "hello" ]
+url {
+  src: "archive.tgz"
+  checksum: [
+    "sha256=good-sha256"
+  ]
+}
+### sh update-hash.sh good-sha256.1 archive sha256
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### sh check-cache.sh
+MD5: link, to sha256 archive
+SHA256: archive, with matching checksum
+### opam install good-sha256.1
+The following actions will be performed:
+=== install 1 package
+  - install good-sha256 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved good-sha256.1  (cached)
+-> installed good-sha256.1
+Done.
+### sh check-cache.sh
+MD5: link, to sha256 archive
+SHA256: archive, with matching checksum
+### opam remove good-sha256.1
+The following actions will be performed:
+=== remove 1 package
+  - remove good-sha256 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   good-sha256.1
+Done.
+### rm "$ARCHIVE_SHA256_PATH"
+### opam install good-sha256.1
+The following actions will be performed:
+=== install 1 package
+  - install good-sha256 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved good-sha256.1  (file://${BASEDIR}/archive.tgz)
+-> installed good-sha256.1
+Done.
+### sh check-cache.sh
+MD5: link, to sha256 archive
+SHA256: archive, with matching checksum
+### opam remove good-sha256.1
+The following actions will be performed:
+=== remove 1 package
+  - remove good-sha256 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   good-sha256.1
+Done.
+### rm "$ARCHIVE_SHA256_PATH"
+### tar czf "$ARCHIVE_SHA256_PATH" p.patch
+### sh check-cache.sh
+MD5: link, to sha256 archive
+SHA256: archive, with mismatching checksum
+### opam install good-sha256.1 | '[0-9a-z]{32,64}' -> 'hash'
+The following actions will be performed:
+=== install 1 package
+  - install good-sha256 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved good-sha256.1  (cached)
+[ERROR] The compilation of good-sha256.1 failed at "test -f hello".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build good-sha256 1
++- 
+- No changes have been performed
+# Return code 31 #
+### sh check-cache.sh
+MD5: link, to sha256 archive
+SHA256: archive, with mismatching checksum
