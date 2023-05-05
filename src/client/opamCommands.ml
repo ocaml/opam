@@ -3351,7 +3351,16 @@ let pin ?(unpin_only=false) cli =
         `add_url arg
       | Some `add, [n; target] | Some `default n, [target]
         when not (current || dev_repo) ->
-        `add_wtarget (n,target)
+        `add_wtarget ([n],target)
+      | Some `add, (_n1 :: _n2 :: _ :: _ as ns_and_target)
+        when not (current || dev_repo) ->
+        let ns, target =
+          match List.rev ns_and_target with
+          | target :: ns_rev ->
+            List.rev ns_rev, target
+          | _ -> assert false
+        in
+        `add_wtarget (ns, target)
       | _ -> `incorrect
     in
     match main_command with
@@ -3518,19 +3527,34 @@ let pin ?(unpin_only=false) cli =
            OpamSwitchState.drop @@
            OpamPinCommand.pin_current st nv;
            `Ok ())
-    | `add_wtarget (n, target) ->
-      (match (fst package) n with
-       | `Ok (name,version) ->
-         let pin =
-           match pin_target kind target, with_version with
-           | `Version v, Some v' -> `Source_version (v, v')
-           | p, _ -> p
-         in
-         let version = OpamStd.Option.Op.(with_version ++ version) in
+    | `add_wtarget (ns, target) ->
+      let pins =
+        List.fold_left
+          (fun acc n ->
+             match acc, (fst package) n with
+             | `Error e, _ -> `Error e
+             | _, `Error e -> `Error e
+             | `Ok acc, `Ok (name, version) ->
+               let pin =
+                 match pin_target kind target, with_version with
+                 | `Version v, Some v' -> `Source_version (v, v')
+                 | p, _ -> p
+               in
+               `Ok ((pin, name, version) :: acc))
+          (`Ok [])
+          ns
+      in
+      (match pins with
+       | `Ok pins ->
+         (* let pins = List.rev pins in *)
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          OpamSwitchState.drop @@
-         OpamClient.PIN.pin st name ?locked ?version ~edit ~action ?subpath pin;
+         List.fold_left (fun st (pin, name, version) ->
+             let version = OpamStd.Option.Op.(with_version ++ version) in
+             OpamClient.PIN.pin st name ?locked ?version ~edit ~action ?subpath pin)
+           st
+           pins;
          `Ok ()
        | `Error e -> `Error (false, e))
     | `incorrect -> bad_subcommand ~cli commands ("pin", command, params)
