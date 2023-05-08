@@ -729,3 +729,4 @@ users)
   * `OpamProcess`: expose the `command` type as a private type [#5452 @Leonidas-from-XIV]
   * `OpamFilename`: add `with_open_out_bin` and `with_open_out_bin_atomic` [#5476 @dra27]
   * `OpamCoreConfig`: add `cygbin`, the cygwin install binary path [#5543 @rjbou]
+  * `OpamStd.Env`: add `cyg_env` that returns the environment with PATH containing cygwin binary path [#5543 @rjbou]
