@@ -95,10 +95,13 @@ type test_setup = {
 (* Internal module to get package manager commands defined in global config file *)
 module Commands = struct
 
+  let get_cmd_opt config family =
+    OpamStd.String.Map.find_opt family
+            (OpamFile.Config.sys_pkg_manager_cmd config)
+
   let get_cmd config family =
-    match OpamStd.String.Map.find_opt family
-            (OpamFile.Config.sys_pkg_manager_cmd config) with
-    | Some cmd -> OpamFilename.to_string cmd
+    match get_cmd_opt config family with
+    | Some cmd -> cmd
     | None ->
       let field = "sys-pkg-manager-cmd" in
       Printf.ksprintf failwith
@@ -106,7 +109,7 @@ module Commands = struct
          Use opam option --global '%s+=[\"%s\" \"<path-to-%s-system-package-manager>\"]'"
         field family field family family
 
-  let msys2 config = get_cmd config "msys2"
+  let msys2 config = OpamFilename.to_string (get_cmd config "msys2")
 
 end
 
