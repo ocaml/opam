@@ -634,6 +634,7 @@ users)
   * `OpamSwitchState.load`: fill empty switch synopsis with invariant formula instead of compiler package name [#5208 @rjbou]
   * `OpamSwitchState`: add `compiler_packages` that returns set of installed compilers, with their dependencies including only build & depopt [#5480 @rjbou]
   * `OpamSysInteract.Cygwin`: add `cygbin_opt` to retrieve cygwin binary path from config file [#5543 @rjbou]
+  * `OpamGlobalState.load`: Retrieve cygwin binary path from config to add it to opamCoreConfig.r.cygbin [#5543 @rjbou]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
