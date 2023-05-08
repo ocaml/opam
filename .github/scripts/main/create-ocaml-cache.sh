@@ -20,7 +20,7 @@ if [[ $OCAML_BRANCH -gt 407 ]]; then
   cp dune.exe "$PREFIX/bin/dune$EXE"
   cd ../..
 
-  ./configure
+  ./configure --with-vendored-deps
   make
   cp -a _build "$OCAML_LOCAL/"
   rm -f "$OCAML_LOCAL/_build/log"
