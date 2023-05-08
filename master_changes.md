@@ -646,6 +646,7 @@ users)
   * `OpamEnv`: generalise splitting of environment variables [#5541 @dra27]
   * `OpamEnv`: add handling of `SH_pwsh` and `SH_cmd` in shell lists [#5541 @dra27]
   * `OpamSysInteract.Cygwin`: add `cygbin_opt` to retrieve cygwin binary path from config file [#5543 @rjbou]
+  * `OpamGlobalState.load`: Retrieve cygwin binary path from config to add it to opamCoreConfig.r.cygbin [#5543 @rjbou]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
