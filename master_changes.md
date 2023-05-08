@@ -393,6 +393,7 @@ users)
   * Environment: translate PATH from Windows to Unix during opam env. [#4844 @jonahbeckford]
   * Correct invocation of Cygwin binaries when Cygwin bin directory is first in PATH [#5293 @dra27]
   * [BUG] Fix case insensitive variable handling [#5356 @dra27]
+  * Use OCaml code to copy/move/remove directories instead of unix commands [#4823 @kit-ty-kate - fix #1073]
 
 ## Test
   * Update crowbar with compare functions [#4918 @rjbou]
