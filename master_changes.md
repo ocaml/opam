@@ -143,6 +143,7 @@ users)
   * Resolve and use global config and environment variable before polling system informations (os, os-family, etc.) [4892 @rjbou - fix #4883]
   * Catch an package not found error and print skipping message [#5280 @rjbou - fix #5279]
   * Make `archive-mirrors` modifiablei (extendable) via opam config [#5321 @hannesm @rjbou - fix #5316]
+  * Don't shadow options, ask to use if it is the good command [#4904 @rjbou - fix #4730]
 
 ## Update / Upgrade
   * [BUG] if a package is pinned from a locked file, it is automatically updated/upgraded accordingly a lock file (same extension) [#5080 @rjbou]

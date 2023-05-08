@@ -864,6 +864,20 @@ type ('var,'config) var_confset =
   }
 
 let set_var svar value conf =
+  let global_option =
+    List.exists (fun (name, _) -> String.equal svar name) OpamFile.Config.fields
+  in
+  let switch_option =
+    List.exists (fun (name, _) -> String.equal svar name)
+      OpamFile.Switch_config.fields
+  in
+  if global_option || switch_option then
+    (OpamConsole.msg
+       "You are setting a variable that have the same name than a %s option.\n\
+        Maybe you want to use 'opam option'\n"
+       (if global_option then "global" else "switch");
+     if not (OpamConsole.confirm "Set variable %s anyway?" svar) then
+       OpamStd.Sys.exit_because `Aborted);
   let var = OpamVariable.Full.of_string svar in
   let conf = conf (OpamVariable.Full.variable var) in
   if not (OpamVariable.Full.is_global var) then
