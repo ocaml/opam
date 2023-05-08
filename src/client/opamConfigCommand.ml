@@ -189,7 +189,7 @@ let print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env =
   else
     print_env env
 
-let regenerate_env ?(base=[]) ~set_opamroot ~set_opamswitch ~force_path
+let regenerate_env ~set_opamroot ~set_opamswitch ~force_path
     gt switch env_file =
   OpamSwitchState.with_ `Lock_none ~switch gt @@ fun st ->
   let upd =
@@ -200,18 +200,20 @@ let regenerate_env ?(base=[]) ~set_opamroot ~set_opamswitch ~force_path
        OpamSwitchState.with_write_lock st @@ fun st ->
        (OpamFile.Environment.write env_file upd), st
      in OpamSwitchState.drop st);
-  OpamEnv.add base upd
+  upd
 
-let load_and_verify_env ?base ~set_opamroot ~set_opamswitch ~force_path
+let load_and_verify_env ~set_opamroot ~set_opamswitch ~force_path
     gt switch env_file =
   let upd =
-    OpamEnv.get_opam_raw ?base ~set_opamroot ~set_opamswitch ~force_path
+    OpamEnv.get_opam_raw_updates ~set_opamroot ~set_opamswitch ~force_path
       gt.root switch
   in
   let environment_opam_switch_prefix =
-    List.find_opt (function "OPAM_SWITCH_PREFIX", _, _ -> true | _ -> false)
-      (upd :> (string * string * string option) list)
-    |> OpamStd.Option.map_default (fun (_, v, _) -> v) ""
+    List.find_opt (function
+        | "OPAM_SWITCH_PREFIX", OpamParserTypes.Eq, _, _ -> true
+        | _ -> false)
+      upd
+    |> OpamStd.Option.map_default (fun (_, _, v, _) -> v) ""
   in
   let actual_opam_switch_prefix =
     OpamFilename.Dir.to_string (OpamPath.Switch.root gt.root switch)
@@ -224,16 +226,64 @@ let load_and_verify_env ?base ~set_opamroot ~set_opamswitch ~force_path
        gt switch env_file)
   else upd
 
-let ensure_env_aux ?base ?(set_opamroot=false) ?(set_opamswitch=false)
+(* Returns [Some file] where [file] contains [updates]. [hash] should be
+   [OpamEnv.hash_env_updates updates] and [n] should initially be [0]. If for
+   whatever reason the file cannot be created, returns [None]. *)
+let  write_last_env_file gt switch updates =
+  let temp_dir = OpamPath.Switch.last_env gt.root switch in
+  let hash = OpamEnv.hash_env_updates updates in
+  let rec aux  n =
+    (* The principal aim here is not to spam /tmp with gazillions of files, but
+       also to be sure that the file present has the correct content. [n] is used
+       to avoid content collisions. If an existing file is used, it is touched as
+       this is used on Windows to allow garbage collection. *)
+    let trial = "env-" ^ hash ^ "-" ^ string_of_int n in
+    let target = OpamFilename.Op.(temp_dir // trial) in
+    if OpamFilename.exists target then
+      (* File already exists - check its content *)
+      let target_hash =
+        OpamFile.make target
+        |> OpamFile.Environment.read_opt
+        |> Option.map OpamEnv.hash_env_updates
+      in
+      if target_hash = Some hash then Some target else
+        (* Content collision/corruption, so try with higher [n] *)
+        aux (succ n)
+    else
+    try
+      (* Environment files are written atomically *)
+      OpamFile.Environment.write (OpamFile.make target) updates;
+      (* File should now exist with the correct content *)
+      aux n
+    with e -> OpamStd.Exn.fatal e; None
+  in
+  aux 0
+
+let ensure_env_aux ?(base=[]) ?(set_opamroot=false) ?(set_opamswitch=false)
     ?(force_path=true) gt switch =
   let env_file = OpamPath.Switch.environment gt.root switch in
-  if OpamFile.exists env_file then
-    load_and_verify_env ?base ~set_opamroot ~set_opamswitch ~force_path
-      gt switch env_file
-  else
-    (log "Missing environment file, regenerate it";
-     regenerate_env ?base ~set_opamroot ~set_opamswitch ~force_path
-       gt switch env_file)
+  let updates =
+    if OpamFile.exists env_file then
+      load_and_verify_env ~set_opamroot ~set_opamswitch ~force_path
+        gt switch env_file
+    else begin
+      log "Missing environment file, regenerate it";
+      regenerate_env ~set_opamroot ~set_opamswitch ~force_path
+        gt switch env_file
+    end
+  in
+  let updates =
+    List.filter (function ("OPAM_LAST_ENV", _, _, _) -> false | _ -> true)
+      updates
+  in
+  let last_env_file = write_last_env_file gt switch updates in
+  let updates =
+    OpamStd.Option.map_default (fun target ->
+        ("OPAM_LAST_ENV", OpamParserTypes.Eq, OpamFilename.to_string target, None)
+        ::updates)
+      updates last_env_file
+  in
+  OpamEnv.add base updates
 
 let ensure_env gt switch =
   ignore (ensure_env_aux gt switch)

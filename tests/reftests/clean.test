@@ -73,6 +73,7 @@ rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/backup"/*
 rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/build"/*
 rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/remove"/*
 rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/extra-files-cache"/*
+rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/last-env"/*
 ### opam clean --untracked
 Cleaning up switch clean
 Remaining directories and files:

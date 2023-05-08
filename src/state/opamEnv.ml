@@ -123,19 +123,33 @@ let map_update_names env_keys updates =
   in
   List.map convert updates
 
-let global_env_keys = lazy (OpamStd.Env.Name.Set.of_list (List.map fst (OpamStd.Env.list ())))
+let global_env_keys = lazy (
+  OpamStd.Env.list ()
+  |> List.map fst
+  |> OpamStd.Env.Name.Set.of_list)
 
 let updates_from_previous_instance = lazy (
-  match OpamStd.Env.getopt "OPAM_SWITCH_PREFIX" with
-  | None -> None
-  | Some pfx ->
-    let env_file =
-      OpamPath.Switch.env_relative_to_prefix (OpamFilename.Dir.of_string pfx)
-    in
-    try OpamStd.Option.map (map_update_names (Lazy.force global_env_keys))
-                           (OpamFile.Environment.read_opt env_file)
-    with e -> OpamStd.Exn.fatal e; None
-)
+  let get_env env_file =
+    OpamStd.Option.map
+      (map_update_names (Lazy.force global_env_keys))
+      (OpamFile.Environment.read_opt env_file)
+  in
+  let open OpamStd.Option.Op in
+  (OpamStd.Env.getopt "OPAM_LAST_ENV"
+   >>= fun env_file ->
+   try
+     OpamFilename.of_string env_file
+     |> OpamFile.make
+     |> get_env
+   with e -> OpamStd.Exn.fatal e; None)
+  >>+ (fun () ->
+      OpamStd.Env.getopt "OPAM_SWITCH_PREFIX"
+      >>= fun pfx ->
+      let env_file =
+        OpamPath.Switch.env_relative_to_prefix (OpamFilename.Dir.of_string pfx)
+      in
+      try get_env env_file
+      with e -> OpamStd.Exn.fatal e; None))
 
 let expand (updates: env_update list) : env =
   let updates =
@@ -166,6 +180,19 @@ let expand (updates: env_update list) : env =
           | Some v -> (var, v)::defs
           | None -> defs0)
         updates []
+  in
+  (* OPAM_LAST_ENV and OPAM_SWITCH_PREFIX must be reverted if they were set *)
+  let reverts =
+    if OpamStd.Env.getopt "OPAM_LAST_ENV" <> None then
+      (OpamStd.Env.Name.of_string "OPAM_LAST_ENV", ([], []))::reverts
+    else
+      reverts
+  in
+  let reverts =
+    if OpamStd.Env.getopt "OPAM_SWITCH_PREFIX" <> None then
+      (OpamStd.Env.Name.of_string "OPAM_SWITCH_PREFIX", ([], []))::reverts
+    else
+      reverts
   in
   (* And apply the new ones *)
   let rec apply_updates reverts acc = function
@@ -299,9 +326,7 @@ let get_pure ?(updates=[]) () =
 let get_opam ~set_opamroot ~set_opamswitch ~force_path st =
   add [] (updates ~set_opamroot ~set_opamswitch ~force_path st)
 
-let get_opam_raw ~set_opamroot ~set_opamswitch ?(base=[])
-    ~force_path
-    root switch =
+let get_opam_raw_updates ~set_opamroot ~set_opamswitch ~force_path root switch =
   let env_file = OpamPath.Switch.environment root switch in
   let upd = OpamFile.Environment.safe_read env_file in
   let upd =
@@ -316,9 +341,27 @@ let get_opam_raw ~set_opamroot ~set_opamswitch ?(base=[])
             var, to_op, v, doc
           | e -> e) upd
   in
-  add base
-    (updates_common ~set_opamroot ~set_opamswitch root switch @
-     upd)
+    updates_common ~set_opamroot ~set_opamswitch root switch @ upd
+
+let get_opam_raw ~set_opamroot ~set_opamswitch ?(base=[]) ~force_path
+  root switch =
+  let upd =
+    get_opam_raw_updates ~set_opamroot ~set_opamswitch ~force_path root switch
+  in
+  add base upd
+
+let hash_env_updates upd =
+  (* Should we use OpamFile.Environment.write_to_string ? cons: it contains
+     tabulations *)
+  let to_string (name, op, value, _) =
+    String.escaped name
+    ^ OpamPrinter.FullPos.env_update_op_kind op
+    ^ String.escaped value
+  in
+  List.rev_map to_string upd
+  |> String.concat "\n"
+  |> Digest.string
+  |> Digest.to_hex
 
 let get_full
     ~set_opamroot ~set_opamswitch ~force_path ?updates:(u=[]) ?(scrub=[])
