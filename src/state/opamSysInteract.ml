@@ -835,27 +835,28 @@ let update ?(env=OpamVariable.Map.empty) config =
   let env = merge_env config env in
   let cmd =
     match family ~env () with
-    | Alpine -> Some (`AsAdmin "apk", ["update"])
-    | Arch -> Some (`AsAdmin "pacman", ["-Sy"])
-    | Centos -> Some (`AsAdmin (Lazy.force yum_cmd), ["makecache"])
-    | Debian -> Some (`AsAdmin "apt-get", ["update"])
+    | Alpine -> `AsAdmin ("apk", ["update"])
+    | Arch -> `AsAdmin ("pacman", ["-Sy"])
+    | Centos -> `AsAdmin ((Lazy.force yum_cmd), ["makecache"])
+    | Debian -> `AsAdmin ("apt-get", ["update"])
     | Dummy test ->
-      if test.install then None else
-        Some (`AsUser "false", [])
-    | Gentoo -> Some (`AsAdmin "emerge", ["--sync"])
-    | Homebrew -> Some (`AsUser "brew", ["update"])
-    | Macports -> Some (`AsAdmin "port", ["sync"])
-    | Msys2 -> Some (`AsUser (Commands.msys2 config), ["-Sy"])
-    | Suse -> Some (`AsAdmin "zypper", ["--non-interactive"; "refresh"])
-    | Freebsd | Netbsd | Openbsd ->
-      None
+      if test.install then `None else `AsUser ("false", [])
+    | Freebsd -> `None
+    | Gentoo -> `AsAdmin ("emerge", ["--sync"])
+    | Homebrew -> `AsUser ("brew", ["update"])
+    | Macports -> `AsAdmin ("port", ["sync"])
+    | Msys2 -> `AsUser ((Commands.msys2 config), ["-Sy"])
+    | Netbsd -> `None
+    | Openbsd -> `None
+    | Suse -> `AsAdmin ("zypper", ["--non-interactive"; "refresh"])
   in
   match cmd with
-  | None ->
+  | `None ->
     OpamConsole.warning
       "Unknown update command for %s, skipping system update"
       OpamStd.Option.Op.(OpamSysPoll.os_family env +! "unknown")
-  | Some (cmd, args) ->
+  | `AsAdmin (c, args) | `AsUser (c, args) ->
+    let cmd = match cmd with `AsAdmin _ -> `AsAdmin c | _ -> `AsUser c in
     try sudo_run_command ~env cmd args
     with Failure msg -> failwith ("System package update " ^ msg)
 
