@@ -726,3 +726,4 @@ users)
   * `OpamSWHID`: add module to handle swhid [#4859 @rjbou]
   * `OpamProcess`: expose the `command` type as a private type [#5452 @Leonidas-from-XIV]
   * `OpamFilename`: add `with_open_out_bin` and `with_open_out_bin_atomic` [#5476 @dra27]
+  * `OpamCoreConfig`: add `cygbin`, the cygwin install binary path [#5543 @rjbou]

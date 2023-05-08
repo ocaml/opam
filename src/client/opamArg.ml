@@ -523,6 +523,7 @@ let apply_global_options cli o =
     ?confirm_level:o.confirm_level
     ?yes
     ?safe_mode:(flag o.safe_mode)
+    (* ?cygbin:string option *)
     (* ?lock_retries:int *)
     (* ?log_dir:OpamTypes.dirname *)
     (* ?keep_log_dir:bool *)
