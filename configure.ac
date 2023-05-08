@@ -61,7 +61,7 @@ AC_ARG_ENABLE([developer_mode],
 
 AC_ARG_WITH([mccs],
   AC_HELP_STRING([--without-mccs],
-                 [Compile without a built-in Cudf solver (only works if 'mccs' is not otherwise installed)]),[],[MCCS_DEFAULT=yes]
+                 [Compile without a built-in Cudf solver (only works if 'mccs' is not otherwise installed)])
 )
 AC_ARG_WITH([0install-solver],
   AC_HELP_STRING([--without-0install-solver],
@@ -372,12 +372,8 @@ AS_IF([test "x$MCCS_ENABLED" = "xtrue"],[
 AS_IF([test -n "$CXX"],[
   CHECK_CXX_WORKS
   AS_IF([test -z "$CXX"],[
-    AS_IF([test "x$MCCS_DEFAULT" = "xyes"],[
-      AC_SUBST(MCCS_ENABLED,false)
-    ],[
-      AS_IF([test "x${enable_checks}" != "xno"],[
-        AC_MSG_ERROR([A C++ compiler is required to build mccs])
-      ])
+    AS_IF([test "x${enable_checks}" != "xno"],[
+      AC_MSG_ERROR([A C++ compiler is required to build mccs])
     ])
   ])
 ])
