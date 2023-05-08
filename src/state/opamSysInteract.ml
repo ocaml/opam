@@ -111,6 +111,11 @@ module Commands = struct
 
   let msys2 config = OpamFilename.to_string (get_cmd config "msys2")
 
+
+  let cygwin_t = "cygwin"
+  let cygcheck_opt config = get_cmd_opt config cygwin_t
+  let cygcheck config = OpamFilename.to_string (get_cmd config cygwin_t)
+
 end
 
 let merge_env config env =
@@ -125,6 +130,7 @@ type families =
   | Alpine
   | Arch
   | Centos
+  | Cygwin
   | Debian
   | Dummy of test_setup
   | Freebsd
@@ -205,15 +211,39 @@ let family ~env () =
     | "windows" ->
       (match OpamSysPoll.os_distribution env with
        | Some "msys2" -> Msys2
+       | Some "cygwin" -> Cygwin
        | _ ->
          failwith
            "External dependency handling not supported for Windows unless \
-            MSYS2 is installed. In particular 'os-distribution' must be set \
-            to 'msys2'.")
+            MSYS2 or Cygwin is installed. In particular 'os-distribution' \
+            must be set to 'msys2' or 'cygwin'.")
     | family ->
       Printf.ksprintf failwith
         "External dependency handling not supported for OS family '%s'."
         family
+
+module Cygwin = struct
+
+  let setupexe = "setup-x86_64.exe"
+  let cygcheck_opt = Commands.cygcheck_opt
+  open OpamStd.Option.Op
+  let cygbin_opt config =
+    cygcheck_opt config
+    >>| OpamFilename.dirname
+  let cygroot_opt config =
+    cygbin_opt config
+    >>| OpamFilename.dirname_dir
+  let cygsetup_raw cygroot = OpamFilename.Op.(cygroot // setupexe)
+  let cygsetup_opt config =
+    cygroot_opt config
+    >>| cygsetup_raw
+  let get_opt = function
+    | Some c -> c
+    | None -> failwith "Cygwin install not found"
+  let cygroot config = get_opt (cygroot_opt config)
+  let cygsetup config = get_opt (cygsetup_opt config)
+
+end
 
 let yum_cmd = lazy begin
   if OpamSystem.resolve_command "yum" <> None then
@@ -460,6 +490,25 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     *)
     let sys_installed =
       run_query_command "rpm" ["-qa"; "--qf"; "%{NAME}\\n"]
+      |> List.map OpamSysPkg.of_string
+      |> OpamSysPkg.Set.of_list
+    in
+    compute_sets sys_installed
+  | Cygwin ->
+    (* Output format:
+       >Cygwin Package Information
+       >Package         Version
+       >git             2.35.1-1
+       >binutils        2.37-2
+    *)
+    let sys_installed =
+      run_query_command (Commands.cygcheck config)
+      ([ "-c"; "-d" ] @ to_string_list packages)
+      |> (function | _::_::l -> l | _ -> [])
+      |> OpamStd.List.filter_map (fun l ->
+          match OpamStd.String.split l ' ' with
+          | pkg::_ -> Some pkg
+          | _ -> None)
       |> List.map OpamSysPkg.of_string
       |> OpamSysPkg.Set.of_list
     in
@@ -761,8 +810,21 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
                  |> OpamStd.String.Set.remove epel_release
                  |> OpamStd.String.Set.elements);
        `AsUser "rpm", "-q"::"--whatprovides"::packages], None
-  | Debian -> [`AsAdmin "apt-get", "install"::yes ["-qq"; "-yy"] packages],
-      (if unsafe_yes then Some ["DEBIAN_FRONTEND", "noninteractive"] else None)
+  | Cygwin ->
+    [ `AsUser (OpamFilename.to_string (Cygwin.cygsetup config)),
+      [ "--root"; (OpamFilename.Dir.to_string (Cygwin.cygroot config));
+        "--quiet-mode";
+        "--no-shortcuts";
+        "--no-startmenu";
+        "--no-desktop";
+        "--no-admin";
+        "--packages";
+        String.concat "," packages
+      ]],
+    None
+  | Debian ->
+    [`AsAdmin "apt-get", "install"::yes ["-qq"; "-yy"] packages],
+    (if unsafe_yes then Some ["DEBIAN_FRONTEND", "noninteractive"] else None)
   | Dummy test ->
     if test.install then
       [`AsUser "echo", packages], None
@@ -838,6 +900,7 @@ let update ?(env=OpamVariable.Map.empty) config =
     | Alpine -> `AsAdmin ("apk", ["update"])
     | Arch -> `AsAdmin ("pacman", ["-Sy"])
     | Centos -> `AsAdmin ((Lazy.force yum_cmd), ["makecache"])
+    | Cygwin -> `None
     | Debian -> `AsAdmin ("apt-get", ["update"])
     | Dummy test ->
       if test.install then `None else `AsUser ("false", [])
