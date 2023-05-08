@@ -528,10 +528,15 @@ let apply_cygpath name =
 let get_cygpath_function =
   if Sys.win32 then
     fun ~command ->
-      lazy (if OpamStd.(Option.map_default Sys.is_cygwin_variant `Native (resolve_command command)) = `Cygwin then
-              apply_cygpath
-            else
-              fun x -> x)
+      lazy (
+        if OpamStd.Option.map_default
+            (OpamStd.Sys.is_cygwin_variant
+               ~cygbin:(OpamCoreConfig.(!r.cygbin)))
+               false
+               (resolve_command command) then
+          apply_cygpath
+        else fun x -> x
+      )
   else
     let f = Lazy.from_val (fun x -> x) in
     fun ~command:_ -> f
@@ -876,11 +881,10 @@ let install ?(warning=default_install_warning) ?exec src dst =
       in
       copy_file_aux ~src ~dst ();
       if cygcheck then
-        match OpamStd.Sys.get_windows_executable_variant dst with
-        | `Native ->
-            ()
-        | (`Cygwin | `Msys2 | `Tainted _) as code ->
-            warning dst code
+        match OpamStd.Sys.get_windows_executable_variant
+                ~cygbin:OpamCoreConfig.(!r.cygbin) dst with
+        | `Native -> ()
+        | (`Cygwin | `Msys2 | `Tainted _) as code -> warning dst code
     end else
       copy_file_aux ~src ~dst ()
   else

@@ -309,11 +309,13 @@ let resolve_command cmd = !resolve_command_fn cmd
 let create_process_env =
   if Sys.win32 then
     fun cmd ->
-      let resolved_cmd = resolve_command cmd in
-      if OpamStd.(Option.map_default Sys.is_cygwin_variant `Native resolved_cmd) = `Cygwin then
+      if OpamStd.Option.map_default
+          (OpamStd.Sys.is_cygwin_variant
+             ~cygbin:(OpamCoreConfig.(!r.cygbin)))
+             false
+             (resolve_command cmd) then
         cygwin_create_process_env cmd
-      else
-        Unix.create_process_env cmd
+      else Unix.create_process_env cmd
   else
     Unix.create_process_env
 
@@ -441,14 +443,8 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
           cmd, args
       else
         cmd, args in
-    let create_process, cmd, args =
-      if Sys.win32 && OpamStd.Sys.is_cygwin_variant cmd = `Cygwin then
-        cygwin_create_process_env, cmd, args
-      else
-        Unix.create_process_env, cmd, args
-    in
     try
-      create_process
+      create_process_env
         cmd
         (Array.of_list (cmd :: args))
         env
