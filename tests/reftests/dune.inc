@@ -377,6 +377,23 @@
    (run ./run.exe %{bin:opam} %{dep:list.unix.test} %{read-lines:testing-env}))))
 
 (alias
+ (name reftest-local-cache)
+ (action
+  (diff local-cache.test local-cache.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-local-cache)))
+
+(rule
+ (targets local-cache.out)
+ (deps root-N0REP0)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{bin:opam} %{dep:local-cache.test} %{read-lines:testing-env}))))
+
+(alias
  (name reftest-opamroot-versions)
  (action
   (diff opamroot-versions.test opamroot-versions.out)))
