@@ -39,3 +39,11 @@ val package_manager_name: ?env:gt_variables -> OpamFile.Config.t -> string
    Presently used to check for epel-release on CentOS and RHEL.
    [env] is used to determine host specification. *)
 val repo_enablers: ?env:gt_variables -> OpamFile.Config.t -> string option
+
+
+module Cygwin : sig
+
+  (* Return Cygwin binary path *)
+  val cygbin_opt: OpamFile.Config.t -> OpamFilename.Dir.t option
+
+end
