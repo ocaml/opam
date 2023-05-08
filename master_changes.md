@@ -250,7 +250,7 @@ users)
   * Add `--without-dune` to configure to force compiling vendored Dune [#4776 @dra27]
   * Use `--without-dune` in `make cold` to avoid picking up external Dune [#4776 @dra27 - fix #3987]
   * Add `--with-vendored-deps` to replace `make lib-ext` instruction [#4776 @dra27 - fix #4772]
-    * Stop the configure script from downloading and vendoring dependencies by default [#5511 @kit-ty-kate]
+    * Stop the configure script from downloading and vendoring dependencies by default [#5511 @kit-ty-kate #5539 @rjbou]
   * Fix vendored build on mingw-w64 with g++ 11.2 [#4835 @dra27]
   * Switch to vendored build if spdx_licenses is missing [#4842 @dra27]
   * Check versions of findlib packages in configure [#4842 @dra27]
