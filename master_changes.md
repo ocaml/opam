@@ -32,6 +32,7 @@ users)
   * [BUG] Fix display of pinned packages in action list [#5079 @rjbou]
   * [BUG] Fix spaces in root and switch dirs [#5203 @jonahbeckford]
   * Use menu for init setup [#5057 @AltGr; #5217 @dra27]
+    * ✘ Change default from no to yes for shell update [#5456 @rjbou]
   * Do not show --yes and --no as special global options when using cmdliner >= 1.1 [#5269 @kit-ty-kate]
   * ◈ Add `tree` subcommand to display a dependency tree of currently installed packages [#5171 @cannorin - fix #3775]
   * ◈ `tree` subcommand now supports `--json` option [#5303 @cannorin - fix #5298]
@@ -46,6 +47,7 @@ users)
   * [BUG] Fix `opam init` and `opam init --reinit` when the `jobs` variable has been set in the opamrc or the current config. [#5056 @rjbou]
   * Use `.opam` from `%HOME%` or `%USERPROFILE%` on Windows, only if found; otherwise use `%LOCALAPPDATA%\opam` as root. [#5212 @dra27]
   * Display actual location of OPAMROOT in `opam init` if `--root` or `OPAMROOT` have been set [#5212 @dra27 - fix #4992]
+  * Surround and add a comment describing the role of the lines added to the ~/.profile or equivalent [#5456 @kit-ty-kate]
 
 ## Config report
   * [BUG] Don't fail is no switch is set [#5198 @rjbou]
