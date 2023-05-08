@@ -571,8 +571,9 @@ The following are allowed in filters:
 - Idents
 - Parentheses
 - Logical operators (binary AND `&`, binary OR `|`, prefix, unary NOT `!`)
-- The unary operator `?` for detecting whether an expression contains undefined
-  variables
+- The unary operator `?` for detecting whether a value is defined. `?expr`
+  evaluates to `true` if `expr` evaluates to a defined value, and `false` if it
+  evaluates to an undefined value.
 - Binary relational operators (`=`, `!=`, `<`, `<=`, `>`, `>=`)
 
 The comparisons are done using [Version Order](#version-ordering), including for

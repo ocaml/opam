@@ -537,6 +537,7 @@ users)
   * Up-to-date synchronisation with shell session in switch man page: mention shell hooks [#5311 @rjbou - fix #5307]
   * Fix info for IRC channels in README.md and FAQ.md [#5340 @purplearmadillo77]
   * Update `--cudf` manpage description to specify what is the `<n>` (n(the solver-cal) [#5343 @kit-ty-kate]
+  * Improve the documentation of the `?expr` filter [#5512 @emillon]
 
 ## Security fixes
   *
