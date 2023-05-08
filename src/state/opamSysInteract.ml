@@ -113,6 +113,12 @@ module Commands = struct
 
 end
 
+let merge_env config env =
+  List.fold_left (fun map (var, content, comment) ->
+      OpamVariable.Map.update var (fun c -> c)
+        (lazy (Some content), comment) map)
+    env (OpamFile.Config.global_variables config)
+
 (* Please keep this alphabetically ordered, in the type definition, and in
    below pattern matching *)
 type families =
@@ -373,6 +379,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     in
     compute_sets_with_virtual get_avail_w_virtuals get_installed
   in
+  let env = merge_env config env in
   match family ~env () with
   | Alpine ->
     (* Output format
@@ -732,6 +739,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
   let packages =
     List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements sys_packages)
   in
+  let env = merge_env config env in
   match family ~env () with
   | Alpine -> [`AsAdmin "apk", "add"::yes ~no:["-i"] [] packages], None
   | Arch -> [`AsAdmin "pacman", "-Su"::yes ["--noconfirm"] packages], None
@@ -824,6 +832,7 @@ let install ?env config packages =
       commands
 
 let update ?(env=OpamVariable.Map.empty) config =
+  let env = merge_env config env in
   let cmd =
     match family ~env () with
     | Alpine -> Some (`AsAdmin "apk", ["update"])
@@ -851,6 +860,7 @@ let update ?(env=OpamVariable.Map.empty) config =
     with Failure msg -> failwith ("System package update " ^ msg)
 
 let repo_enablers ?(env=OpamVariable.Map.empty) config =
+  let env = merge_env config env in
   if family ~env () <> Centos then None else
   let (needed, _) =
     packages_status ~env config (OpamSysPkg.raw_set
