@@ -631,7 +631,6 @@ users)
   * `OpamUpdate`: change `repository` output to update function option, to not write cache and new repo config if nothing changed in `repositories` [#5146 @rjbou]
   * Add `OpamPinned.version_opt` [#5325 @kit-ty-kate]
   * `OpamUpdate.download_package_source`: add SWH fallback when archive remain not found [#4859 @rjbou]
-
   * Add optional argument `?env:(variable_contents option Lazy.t * string) OpamVariable.Map.t` to `OpamSysPoll` and `OpamSysInteract` functions. It is used to get syspolling variables from the environment first. [#4892 @rjbou]
   * `OpamSwitchState`: move and reimplement `opam-solver` `dependencies` and `reverse_dependencies` [#5337 @rjbou]
   * `OpamEnv`: add `env_expansion` [#5352 @dra27]
@@ -646,6 +645,7 @@ users)
   * `OpamSwitchState`: add `compiler_packages` that returns set of installed compilers, with their dependencies including only build & depopt [#5480 @rjbou]
   * `OpamEnv`: generalise splitting of environment variables [#5541 @dra27]
   * `OpamEnv`: add handling of `SH_pwsh` and `SH_cmd` in shell lists [#5541 @dra27]
+  * `OpamSysInteract.Cygwin`: add `cygbin_opt` to retrieve cygwin binary path from config file [#5543 @rjbou]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
