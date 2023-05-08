@@ -923,7 +923,7 @@ let setup
         match
           OpamConsole.menu "Do you want opam to configure %s?"
             (OpamConsole.colorise `bold (string_of_shell shell))
-            ~default ~no:`Yes ~options:[
+            ~default ~no:`No ~options:[
               `Yes, Printf.sprintf "Yes, update %s"
                 (OpamConsole.colorise `cyan (OpamFilename.prettify dot_profile));
               `No_hooks, Printf.sprintf "Yes, but don't setup any hooks. You'll \
@@ -961,7 +961,7 @@ let setup
       let default = match env_hook with
         | Some true -> `Yes
         | Some false -> `No_hooks
-        | None -> `No
+        | None -> `Yes
       in
       menu shell dot_profile default
   in
