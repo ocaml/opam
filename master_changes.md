@@ -597,6 +597,7 @@ users)
   * `OpamListCommand`: add `swhid` in `info` printable fields and its handling in `details_printer`
   * ✘ `OpamListCommand.apply_selector`, `string_of_selector`: change column name base to invariant, and the content is invariant formula installed dependencies [#5208 @rjbou]
   * `OpamSwitchCommand.install_compiler`: fill empty switch synopsis with invariant formula instead of compiler package name [#5208 @rjbou]
+  * `OpamArg.opam_init`: retrieve cygwin binary path from config (low level reading) to add it to opamCoreConfig.r.cygbin [#5543 @rjbou]
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
