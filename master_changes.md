@@ -746,3 +746,6 @@ users)
   * `OpamCoreConfig`: add `cygbin`, the cygwin install binary path [#5543 @rjbou]
   * `OpamStd.Env`: add `cyg_env` that returns the environment with PATH containing cygwin binary path [#5543 @rjbou]
   * `OpamCompat`: add `Filename.quote_command` [#5543 @rjbou]
+  * `OpamStd.Sys.get_windows_executable`: Add `cygbin` argument to pass cygwin binary path [#5543 @rjbou]
+  * `OpamStd.Sys.is_cygwin_variant`: returns a boolean [#5543 @rjbou]
+  * `OpamStd.Sys`: add `is_cygwin_cygcheck` anf `get_cygwin_variant` [#5543 @rjbou]
