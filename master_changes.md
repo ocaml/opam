@@ -172,6 +172,7 @@ users)
   * Avoid rewriting cache is nothing changed [#5146 @rjbou]
   * On setting url fetch failure (sync or file error), revert url change and rollback to old one [#4967 @rjbou - fix #4780 #4779]
   * Add Software heritage fallback when downloading archive source, triggered when all urls and cache fails, with confirmation [#4859 @rjbou @zapashcanon]
+  * [SECURITY] Fix opam installing packages without checking their checksum when the local cache is corrupted in some cases [#5538 @kit-ty-kate]
 
 ## Lock
   * Fix lock generation of multiple interdependent packages [#4993 @AltGr]
@@ -448,6 +449,7 @@ users)
   * Add `swhid` print tests in show, and swh fallback test [#4859 @rjbou]
   * Add `switch list` test, add some in `switch invariant` and `switch import` [#5208 @rjbou]
   * Add opam env hooks test: change switch, set switch via `OPAMSWITCH`, entering directory, moving switch ; and opam exec with missing environment file [#5476 @rjbou @dra27]
+  * Add a new reftest ensuring that the local cache is checked and behave correctly when corrupted [#5538 @kit-ty-kate @rjbou]
 
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]
