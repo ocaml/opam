@@ -744,3 +744,4 @@ users)
     * unify powershell variant: `SH_win_powershell` and `SH_pwsh` to `SH_pwsh of powershell_host` [#5203 @dra27]
     * change `SH_win_cmd` into `SH_cmd` [#5541 @dra27]
   * `OpamCoreConfig`: add `cygbin`, the cygwin install binary path [#5543 @rjbou]
+  * `OpamStd.Env`: add `cyg_env` that returns the environment with PATH containing cygwin binary path [#5543 @rjbou]

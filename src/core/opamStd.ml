@@ -824,16 +824,29 @@ module Env = struct
     module Map = Map.Make(M)
   end
 
+  let to_list env =
+    List.rev_map (fun s ->
+        match OpamString.cut_at s '=' with
+        | None   -> s, ""
+        | Some p -> p)
+      (Array.to_list env)
+
+  let raw_env = Unix.environment
+
   let list =
-    let lazy_env = lazy (
-      let e = Unix.environment () in
-      List.rev_map (fun s ->
-          match OpamString.cut_at s '=' with
-          | None   -> s, ""
-          | Some p -> p
-        ) (Array.to_list e)
-    ) in
+    let lazy_env = lazy (to_list (raw_env ())) in
     fun () -> Lazy.force lazy_env
+
+  let cyg_env cygbin =
+    let env = raw_env () in
+    let f v =
+      match OpamString.cut_at v '=' with
+      | Some (path, c) when Name.equal_string path "path" ->
+        Printf.sprintf "%s=%s;%s"
+          path cygbin c
+      | _ -> v
+    in
+    Array.map f env
 
   let get_full n = List.find (fun (k,_) -> Name.equal k n) (list ())
 

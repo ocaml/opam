@@ -455,6 +455,8 @@ module Env : sig
   val getopt_full: Name.t -> Name.t * string option
 
   val list: unit -> (Name.t * string) list
+  val raw_env: unit -> string Array.t
+  val cyg_env: string -> string Array.t
 end
 
 (** {2 System query and exit handling} *)
