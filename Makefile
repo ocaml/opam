@@ -286,3 +286,7 @@ cold: compiler
 
 cold-%:
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= $(MAKE) $*
+
+# Temorary fix to make sure all rules are run serially as in its current state
+# this Makefile does not support it
+.NOTPARALLEL:
