@@ -50,6 +50,7 @@ users)
   * Surround and add a comment describing the role of the lines added to the ~/.profile or equivalent [#5456 @kit-ty-kate]
   * Don't require cc on Windows [#5541 @dra27]
   * Generate init and variables for Windows [#5541 @dra27]
+  * On Windows, ask for pre-existent Cygwin installation, check it, and configure opam with it [#5544 @dra27 @rjbou]
 
 ## Config report
   * [BUG] Don't fail is no switch is set [#5198 @rjbou]
