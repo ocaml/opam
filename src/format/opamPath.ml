@@ -79,6 +79,8 @@ let plugin t name =
   assert (sname <> "bin");
   plugins t / sname
 
+let cygwin_setup_ini t = init t // "cygwin_setup_ini"
+
 module type LAYOUT = sig
   type ctx
   val root : dirname -> ctx -> dirname
