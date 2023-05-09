@@ -572,11 +572,30 @@ let apply_global_options cli o =
     OpamJson.append "command-line"
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)))
   );
-  ignore @@ let open OpamStd.Option.Op in
-   OpamStateConfig.load ~lock_kind:`Lock_none OpamStateConfig.(!r.root_dir)
-   >>= OpamSysInteract.Cygwin.cygbin_opt
-   >>| OpamFilename.Dir.to_string
-   >>| (fun cygbin -> OpamCoreConfig.update ~cygbin ())
+  (try
+     let opamfile =
+       OpamParser.FullPos.file
+         (OpamFilename.to_string
+            (OpamFile.filename
+               (OpamPath.config OpamStateConfig.(!r.root_dir))))
+     in
+     List.iter OpamParserTypes.FullPos.(function
+         | { pelem = Variable ({ pelem = "sys-package-manager-cmd"; _},
+                               {pelem = List { pelem = elements; _}; _}); _} ->
+           let rec aux last elements =
+             match last, elements with
+             | _, [] -> ()
+             | Some { pelem = String "cygwin"; _},
+               { pelem = String cygcheck; _}::_  ->
+               let cygbin = Filename.dirname cygcheck in
+               OpamCoreConfig.update ~cygbin ()
+             | _, element::elements -> aux (Some element) elements
+           in
+           aux None elements
+         | _ -> ())
+       opamfile.file_contents
+   with
+   | Sys_error _ | Not_found -> ())
 
 (** Build options *)
 
