@@ -510,14 +510,22 @@ let resolve_command ?env ?dir name =
   | `Denied | `Not_found -> None
 
 let apply_cygpath name =
-  let r =
-    OpamProcess.run
-      (OpamProcess.command ~name:(temp_file "command") ~allow_stdin:false ~verbose:false "cygpath" ["--"; name])
-  in
-  OpamProcess.cleanup ~force:true r;
-  if OpamProcess.is_success r then
-    List.hd r.OpamProcess.r_stdout
-  else
+  (* XXX Deeper bug, looking in the cygvoke code (see OpamProcess.create) *)
+  match resolve_command "cygpath" with
+  | Some cygpath ->
+    let r =
+      OpamProcess.run
+        (OpamProcess.command ~name:(temp_file "command")
+           ~allow_stdin:false ~verbose:false cygpath ["--"; name])
+    in
+    OpamProcess.cleanup ~force:true r;
+    if OpamProcess.is_success r then
+      match r.OpamProcess.r_stdout with
+      | l::_ -> l
+      | _ -> ""
+    else
+      OpamConsole.error_and_exit `Internal_error "Could not apply cygpath to %s" name
+  | None ->
     OpamConsole.error_and_exit `Internal_error "Could not apply cygpath to %s" name
 
 let get_cygpath_function =
