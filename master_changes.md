@@ -749,3 +749,5 @@ users)
   * `OpamStd.Sys.get_windows_executable`: Add `cygbin` argument to pass cygwin binary path [#5543 @rjbou]
   * `OpamStd.Sys.is_cygwin_variant`: returns a boolean [#5543 @rjbou]
   * `OpamStd.Sys`: add `is_cygwin_cygcheck` anf `get_cygwin_variant` [#5543 @rjbou]
+  * `OpamProcess`: add `default_env` to retrieve environment, if cygwin is set, adds cygwin binary path to environment ; and use it instead of `Unix.environment` [#5543 @rjbou]
+
