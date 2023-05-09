@@ -227,6 +227,8 @@ module Cygwin = struct
   let url_setupexe = OpamUrl.of_string "https://cygwin.com/setup-x86_64.exe"
 
   let setupexe = "setup-x86_64.exe"
+  let cygcheckexe = "cygcheck.exe"
+
   let cygcheck_opt = Commands.cygcheck_opt
   open OpamStd.Option.Op
   let cygbin_opt config =
@@ -245,6 +247,8 @@ module Cygwin = struct
   let cygroot config = get_opt (cygroot_opt config)
   let cygsetup config = get_opt (cygsetup_opt config)
 
+  let local_install = "cygwin_local_install"
+
   let download_setupexe dst =
     let open OpamProcess.Job.Op in
     OpamFilename.with_tmp_dir_job @@ fun dir ->
@@ -252,6 +256,49 @@ module Cygwin = struct
     (* XXX check signature *)
     OpamFilename.(mkdir (dirname dst));
     OpamFilename.move ~src:filename ~dst
+
+  let install ~packages =
+    let open OpamProcess.Job.Op in
+    let open OpamFilename.Op in
+    let cygwin_path = OpamStateConfig.(!r.root_dir) / local_install in
+    let cygwin_bin = cygwin_path / "bin" in
+    let cygcheck = cygwin_bin // cygcheckexe in
+    let local_cygwin_setupexe = cygsetup_raw cygwin_path in
+    if OpamFilename.exists cygcheck then
+      OpamConsole.warning "Cygwin already installed in root %s"
+        (OpamFilename.Dir.to_string cygwin_path)
+    else
+      (* rjbou: dry run ? there is no dry run on install, from where this
+         function is called *)
+      (OpamProcess.Job.run @@
+       (* download setup.exe *)
+       download_setupexe local_cygwin_setupexe @@+ fun () ->
+       (* launch install *)
+       let args = [
+         "--root"; OpamFilename.Dir.to_string cygwin_path;
+         "--arch"; "x86_64";
+         "--only-site";
+         "--site"; "https://cygwin.mirror.constant.com/";
+         "--no-admin";
+         "--no-desktop";
+         "--no-replaceonreboot";
+         "--no-shortcuts";
+         "--no-startmenu";
+         "--no-write-registry";
+         "--quiet-mode";
+       ] @
+         match packages with
+         | [] -> []
+         | spkgs ->
+           [ "--packages";
+             OpamStd.List.concat_map "," OpamSysPkg.to_string spkgs ]
+       in
+       OpamSystem.make_command
+         (OpamFilename.to_string local_cygwin_setupexe)
+         args @@> fun r ->
+       OpamSystem.raise_on_process_error r;
+       Done ());
+    cygcheck
 
   let check_install ~path ~setup =
     let cygcheck =
