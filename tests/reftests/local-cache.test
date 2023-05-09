@@ -115,7 +115,6 @@ Now run 'opam upgrade' to apply any package updates.
 ### :I:11:a: install with removed md5 frome cache, and kept sha256
 ### opam install good-sha256-good-md5
 The following actions will be performed:
-=== install 1 package
   - install good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -123,12 +122,11 @@ The following actions will be performed:
 -> installed good-sha256-good-md5.1
 Done.
 ### sh check-cache.sh
-MD5: link, to sha256 archive
+MD5: not found
 SHA256: archive, with matching checksum
-### rm "$ARCHIVE_MD5_PATH"
+### : rm "$ARCHIVE_MD5_PATH"
 ### opam remove good-sha256-good-md5
 The following actions will be performed:
-=== remove 1 package
   - remove good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -139,7 +137,6 @@ MD5: not found
 SHA256: archive, with matching checksum
 ### opam install good-sha256-good-md5
 The following actions will be performed:
-=== install 1 package
   - install good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -154,7 +151,6 @@ SHA256: archive, with matching checksum
 Clearing cache of downloaded files
 ### opam reinstall good-sha256-good-md5
 The following actions will be performed:
-=== recompile 1 package
   - recompile good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -163,23 +159,21 @@ The following actions will be performed:
 -> installed good-sha256-good-md5.1
 Done.
 ### sh check-cache.sh
-MD5: link, to sha256 archive
+MD5: not found
 SHA256: archive, with matching checksum
 ### rm "$ARCHIVE_SHA256_PATH"
 ### opam remove good-sha256-good-md5
 The following actions will be performed:
-=== remove 1 package
   - remove good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   good-sha256-good-md5.1
 Done.
 ### sh check-cache.sh
-MD5: link, to sha256 archive
+MD5: not found
 SHA256: not found
 ### opam install good-sha256-good-md5
 The following actions will be performed:
-=== install 1 package
   - install good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -187,29 +181,27 @@ The following actions will be performed:
 -> installed good-sha256-good-md5.1
 Done.
 ### sh check-cache.sh
-MD5: link, to sha256 archive
+MD5: not found
 SHA256: archive, with matching checksum
 ### :I:11:c: corrupt md5 archive in cache
 ### sh check-cache.sh
-MD5: link, to sha256 archive
+MD5: not found
 SHA256: archive, with matching checksum
 ### opam remove good-sha256-good-md5
 The following actions will be performed:
-=== remove 1 package
   - remove good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   good-sha256-good-md5.1
 Done.
-### rm "$ARCHIVE_MD5_PATH"
-### tar czf "$ARCHIVE_MD5_PATH" p.patch
+### : rm "$ARCHIVE_MD5_PATH"
+### : tar czf "$ARCHIVE_MD5_PATH" p.patch
 ### sh check-cache.sh
-MD5: archive, with mismatching checksum
+MD5: not found
 SHA256: archive, with matching checksum
 ### # it's only sha256 that is checked, as it is good, it doesn't check other cache files
 ### opam install good-sha256-good-md5
 The following actions will be performed:
-=== install 1 package
   - install good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -217,30 +209,28 @@ The following actions will be performed:
 -> installed good-sha256-good-md5.1
 Done.
 ### sh check-cache.sh
-MD5: archive, with mismatching checksum
+MD5: not found
 SHA256: archive, with matching checksum
 ### :I:11:d: corrupt sha256 archive in cache
 ### sh check-cache.sh
-MD5: archive, with mismatching checksum
+MD5: not found
 SHA256: archive, with matching checksum
 ### opam remove good-sha256-good-md5
 The following actions will be performed:
-=== remove 1 package
   - remove good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   good-sha256-good-md5.1
 Done.
-### cp archive.tgz "$ARCHIVE_MD5_PATH"
+### : cp archive.tgz "$ARCHIVE_MD5_PATH"
 ### rm "$ARCHIVE_SHA256_PATH"
 ### tar czf "$ARCHIVE_SHA256_PATH" p.patch
 ### sh check-cache.sh
-MD5: archive, with matching checksum
+MD5: not found
 SHA256: archive, with mismatching checksum
 ### # what happens here is that sha256 is checked first, there is a mismatch on sha256 archive (checking its sha256 & md5), so it is remove, returns file not available, and then it downloads the archive from url
 ### opam install good-sha256-good-md5 | '[0-9a-z]{32,64}' -> 'hash'
 The following actions will be performed:
-=== install 1 package
   - install good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -252,12 +242,11 @@ The following actions will be performed:
 -> installed good-sha256-good-md5.1
 Done.
 ### sh check-cache.sh
-MD5: link, to sha256 archive
+MD5: not found
 SHA256: archive, with matching checksum
 ### :I:11:e: Both corrupted
 ### opam remove good-sha256-good-md5
 The following actions will be performed:
-=== remove 1 package
   - remove good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -265,14 +254,13 @@ The following actions will be performed:
 Done.
 ### rm "$ARCHIVE_SHA256_PATH"
 ### tar czf "$ARCHIVE_SHA256_PATH" p.patch
-### rm "$ARCHIVE_MD5_PATH"
-### tar czf "$ARCHIVE_MD5_PATH" p.patch
+### : rm "$ARCHIVE_MD5_PATH"
+### : tar czf "$ARCHIVE_MD5_PATH" p.patch
 ### sh check-cache.sh
-MD5: archive, with mismatching checksum
+MD5: not found
 SHA256: archive, with mismatching checksum
 ### opam install good-sha256-good-md5 | '[0-9a-z]{32,64}' -> 'hash'
 The following actions will be performed:
-=== install 1 package
   - install good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -284,7 +272,7 @@ The following actions will be performed:
 -> installed good-sha256-good-md5.1
 Done.
 ### sh check-cache.sh
-MD5: link, to sha256 archive
+MD5: not found
 SHA256: archive, with matching checksum
 ### <pkg:good-sha256.1>
 opam-version: "2.0"
@@ -309,11 +297,10 @@ url {
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
 ### sh check-cache.sh
-MD5: link, to sha256 archive
+MD5: not found
 SHA256: archive, with matching checksum
 ### opam install good-sha256.1
 The following actions will be performed:
-=== install 1 package
   - install good-sha256 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -321,11 +308,10 @@ The following actions will be performed:
 -> installed good-sha256.1
 Done.
 ### sh check-cache.sh
-MD5: link, to sha256 archive
+MD5: not found
 SHA256: archive, with matching checksum
 ### opam remove good-sha256.1
 The following actions will be performed:
-=== remove 1 package
   - remove good-sha256 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -334,7 +320,6 @@ Done.
 ### rm "$ARCHIVE_SHA256_PATH"
 ### opam install good-sha256.1
 The following actions will be performed:
-=== install 1 package
   - install good-sha256 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -342,11 +327,10 @@ The following actions will be performed:
 -> installed good-sha256.1
 Done.
 ### sh check-cache.sh
-MD5: link, to sha256 archive
+MD5: not found
 SHA256: archive, with matching checksum
 ### opam remove good-sha256.1
 The following actions will be performed:
-=== remove 1 package
   - remove good-sha256 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -355,11 +339,10 @@ Done.
 ### rm "$ARCHIVE_SHA256_PATH"
 ### tar czf "$ARCHIVE_SHA256_PATH" p.patch
 ### sh check-cache.sh
-MD5: link, to sha256 archive
+MD5: not found
 SHA256: archive, with mismatching checksum
 ### opam install good-sha256.1 | '[0-9a-z]{32,64}' -> 'hash'
 The following actions will be performed:
-=== install 1 package
   - install good-sha256 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -370,5 +353,5 @@ The following actions will be performed:
 -> installed good-sha256.1
 Done.
 ### sh check-cache.sh
-MD5: link, to sha256 archive
+MD5: not found
 SHA256: archive, with matching checksum
