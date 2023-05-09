@@ -717,13 +717,13 @@ let windows_checks config =
                 let options = [
                   `manual,
                   "Manually enter prefix of an existing Cygwin installation \
-                   (e.g. C:\\cygwin64)";
+                   (e.g. D:\\cygwin64)";
                   `default,
                   (Printf.sprintf "Use default Cygwin installation at %s"
                      OpamSysInteract.Cygwin.default_cygroot);
                   `abort, "Abort initialisation";
                 ] in
-                OpamConsole.menu "Opam needs pre-existent Cygwin installation"
+                OpamConsole.menu "Cygwin location"
                   ~default:`default ~no:`default ~options
               in
               (match prompt_cygroot () with
@@ -756,16 +756,37 @@ let windows_checks config =
             Some (success cygcheck)
           | None -> None
         in
-        match enter_paths () with
-        | Some config -> config
-        | None -> menu ()
+        let prompt () =
+          let options = [
+            `Internal,
+            "Automatically create an internal Cygwin installation \
+             that will be managed by opam";
+            `Specify, "Enter the location of an existing Cygwin installation";
+            `Abort, "Abort initialisation";
+          ] in
+          OpamConsole.menu "How should opam handle Cygwin?"
+            ~no:`Internal ~options
+        in
+        match prompt () with
+        | `Abort -> OpamStd.Sys.exit_because `Aborted
+        | `Internal ->
+          let cygcheck =
+            OpamSysInteract.Cygwin.install
+              ~packages:OpamInitDefaults.required_packages_for_cygwin
+          in
+          let config = success cygcheck in
+          config
+        | `Specify ->
+          match enter_paths () with
+          | Some config -> config
+          | None -> menu ()
       in
       OpamConsole.header_msg "Unix support infrastructure";
       OpamConsole.msg
         "\n\
-         opam and the OCaml ecosystem in general depend on various Unix tools \
-         in order to operate correctly. At present, this requires \
-         a pre-existing Cygwin installation.\n\n";
+         opam and the OCaml ecosystem in general require various Unix tools \
+         in order to operate correctly. At present, this requires the \
+         installation of Cygwin to provide these tools.\n\n";
       menu ()
   in
   let config =
