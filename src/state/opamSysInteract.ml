@@ -925,8 +925,11 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
         "--no-shortcuts";
         "--no-startmenu";
         "--no-desktop";
+        (*"--only-site"; XXX Commenting out forces use of previous mirror for now
+          "--site"; mirror; (* Use same mirror as from before? *)*)
         "--no-admin";
         "--packages";
+        (* "--upgrade-also";  if internal cygwin install *)
         String.concat "," packages
       ]],
     None

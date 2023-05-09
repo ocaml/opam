@@ -727,16 +727,34 @@ let windows_checks config =
             | Ok cygcheck -> Some (success cygcheck)
             | Error msg -> OpamConsole.error "%s" msg; None
         in
-        match enter_paths () with
-        | Some config -> config
-        | None -> menu ()
+        let prompt () =
+          let options = [
+            `Internal, "Install and maintain an internal Cygwin installation";
+            `Specify, "Enter the location of a Cygwin installation and setup path";
+            `Abort, "Abort initialisation";
+          ] in
+          OpamConsole.menu "How should opam acquire Cygwin?" ~no:`Internal ~options
+        in
+        match prompt () with
+        | `Abort -> OpamStd.Sys.exit_because `Aborted
+        | `Internal ->
+          let cygcheck =
+            OpamSysInteract.Cygwin.install
+              ~packages:OpamInitDefaults.required_packages_for_cygwin
+          in
+          let config = success cygcheck in
+          config
+        | `Specify ->
+          match enter_paths () with
+          | Some config -> config
+          | None -> menu ()
       in
       OpamConsole.header_msg "Unix support infrastructure";
       OpamConsole.msg
         "\n\
          opam and the OCaml ecosystem in general require various Unix tools \
-         in order to operate correctly. At present, this requires \
-         an already present Cygwin installation to provide these tools.\n\n";
+         in order to operate correctly. At present, this requires the \
+         installation of Cygwin to provide these tools.\n\n";
       menu ()
   in
   let config =
