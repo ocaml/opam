@@ -216,12 +216,16 @@ let family ~env () =
         family
 
 module Cygwin = struct
+  open OpamFilename.Op
 
   let url_setupexe = OpamUrl.of_string "https://cygwin.com/setup-x86_64.exe"
   let url_setupexe_sha512 = OpamUrl.of_string "https://cygwin.com/sha512.sum"
+  let mirror = "https://cygwin.mirror.constant.com/"
 
   (* Cygwin setup exe must be stored at Cygwin installation root *)
   let setupexe = "setup-x86_64.exe"
+  let cygcheckexe = "cygcheck.exe"
+
   let cygcheck_opt = Commands.cygcheck_opt
   open OpamStd.Option.Op
   let cygbin_opt config =
@@ -234,8 +238,15 @@ module Cygwin = struct
     | Some c -> c
     | None -> failwith "Cygwin install not found"
   let cygroot config = get_opt (cygroot_opt config)
-  let cygsetup () =
-    OpamFilename.Op.(OpamStateConfig.(!r.root_dir) / ".cygwin" // setupexe)
+
+  let internal_cygwin =
+    let internal =
+      Lazy.from_fun @@ fun () -> (OpamStateConfig.(!r.root_dir) / ".cygwin")
+    in
+    fun () -> Lazy.force internal
+  let internal_cygroot () = internal_cygwin () / "root"
+  let internal_cygcache () = internal_cygwin () / "cache"
+  let cygsetup () = internal_cygwin () // setupexe
 
   let download_setupexe dst =
     let overwrite = true in
@@ -260,6 +271,50 @@ module Cygwin = struct
       with Not_found -> None
     in
     OpamDownload.download_as ~overwrite ?checksum url_setupexe dst
+
+  let install ~packages =
+    let open OpamProcess.Job.Op in
+    let cygwin_root = internal_cygroot () in
+    let cygwin_bin = cygwin_root / "bin" in
+    let cygcheck = cygwin_bin // cygcheckexe in
+    let local_cygwin_setupexe = cygsetup () in
+    if OpamFilename.exists cygcheck then
+      OpamConsole.warning "Cygwin already installed in root %s"
+        (OpamFilename.Dir.to_string cygwin_root)
+    else
+      (* rjbou: dry run ? there is no dry run on install, from where this
+         function is called *)
+      (OpamProcess.Job.run @@
+       (* download setup.exe *)
+       download_setupexe local_cygwin_setupexe @@+ fun () ->
+       (* launch install *)
+       let args = [
+         "--root"; OpamFilename.Dir.to_string cygwin_root;
+         "--arch"; "x86_64";
+         "--only-site";
+         "--site"; mirror;
+         "--local-package-dir";
+         OpamFilename.Dir.to_string (internal_cygcache ());
+         "--no-admin";
+         "--no-desktop";
+         "--no-replaceonreboot";
+         "--no-shortcuts";
+         "--no-startmenu";
+         "--no-write-registry";
+         "--quiet-mode";
+       ] @
+         match packages with
+         | [] -> []
+         | spkgs ->
+           [ "--packages";
+             OpamStd.List.concat_map "," OpamSysPkg.to_string spkgs ]
+       in
+       OpamSystem.make_command
+         (OpamFilename.to_string local_cygwin_setupexe)
+         args @@> fun r ->
+       OpamSystem.raise_on_process_error r;
+       Done ());
+    cygcheck
 
   let default_cygroot = "C:\\cygwin64"
 
