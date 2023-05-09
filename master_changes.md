@@ -74,6 +74,7 @@ users)
     * ◈ Rename --with-tools` to `--with-dev-setup` [#5214 @rjbou - fix #4959]
   * Use the default criteria during reinstall/upgrade when requesting at least one non-installed package [#5228 @kit-ty-kate]
   * Show the reason for installing packages when using opam reinstall [#5229 @kit-ty-kate]
+  * When defined, add cygwin binary path to build environment [#5543 @rjbou]
 
 ## Remove
   *
@@ -598,6 +599,7 @@ users)
   * ✘ `OpamListCommand.apply_selector`, `string_of_selector`: change column name base to invariant, and the content is invariant formula installed dependencies [#5208 @rjbou]
   * `OpamSwitchCommand.install_compiler`: fill empty switch synopsis with invariant formula instead of compiler package name [#5208 @rjbou]
   * `OpamArg.opam_init`: retrieve cygwin binary path from config (low level reading) to add it to opamCoreConfig.r.cygbin [#5543 @rjbou]
+  * `OpamAction`: when defined, add cygwin binary path to build environment [#5543 @rjbou]
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
