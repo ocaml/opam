@@ -635,6 +635,125 @@ let init_checks ?(hard_fail_exn=true) init_config =
   if hard_fail && hard_fail_exn then OpamStd.Sys.exit_because `Configuration_error
   else not (soft_fail || hard_fail)
 
+let windows_checks config =
+  let env = OpamVariable.Map.empty in
+  let success cygcheck =
+    let config =
+      let vars = OpamFile.Config.global_variables config in
+      let os_distribution = OpamVariable.of_string "os-distribution" in
+      OpamFile.Config.with_global_variables
+        ((os_distribution, S "cygwin", "Set by opam init")::
+         List.filter (fun (v,_,_) -> not (OpamVariable.equal v os_distribution))
+           vars)
+        config
+    in
+    OpamFile.Config.with_sys_pkg_manager_cmd
+      (OpamStd.String.Map.add "cygwin" cygcheck
+         (OpamFile.Config.sys_pkg_manager_cmd config))
+      config
+  in
+  let get_cygwin = function
+    | Some cygcheck
+      when OpamFilename.exists cygcheck
+        && OpamStd.Sys.is_cygwin_variant
+             ~cygbin:(Some OpamFilename.(Dir.to_string (dirname cygcheck)))
+             (OpamFilename.to_string cygcheck) ->
+      (* Should display the name using the converted path of /, not the bin dir *)
+      OpamConsole.note "Using Cygwin installation at %s for depexts"
+        (OpamFilename.(Dir.to_string (dirname cygcheck)));
+      success cygcheck
+    | Some _ | None ->
+      let rec menu () =
+        let enter_paths () =
+          let prompt_setup () =
+            let options = [
+              `manual, "Specify Cygwin setup path";
+              `download,
+              "Let opam downloads Cygwin setup and stores it in \
+               Cygwin installation path";
+              `abort, "Abort initialisation";
+            ]
+            in
+            OpamConsole.menu "Opam needs Cygwin setup executable" ~no:`download ~options
+          in
+          let rec enter_path () =
+            match OpamConsole.read "Enter the path to the Cygwin installation:" with
+            | None -> None
+            | Some "" ->
+              OpamConsole.msg "Empty path\n";
+              enter_path ()
+            | Some entry -> enter_setup entry
+          and enter_setup entry =
+            match prompt_setup () with
+            | `abort -> OpamStd.Sys.exit_because `Aborted
+            | `download -> Some (entry, None)
+            | `manual ->
+              match OpamConsole.read "Enter path of Cygwin setup:" with
+              | None -> None
+              | Some "" -> OpamConsole.msg "Empty path\n"; enter_setup entry
+              | Some setup when OpamFilename.(exists (of_string setup)) ->
+                Some (entry, Some setup)
+              | Some wrong_setup ->
+                OpamConsole.msg "Cygwin setup executable doesn't exist at %s\n" wrong_setup;
+                enter_setup entry;
+          in
+          match enter_path () with
+          | None -> None
+          | Some (entry, setup) ->
+            let cygcheck =
+              OpamSysInteract.Cygwin.check_install ~path:entry
+                ~setup:(OpamStd.Option.map OpamFilename.of_string setup)
+            in
+            match cygcheck with
+            | Ok cygcheck -> Some (success cygcheck)
+            | Error msg -> OpamConsole.error "%s" msg; None
+        in
+        match enter_paths () with
+        | Some config -> config
+        | None -> menu ()
+      in
+      OpamConsole.header_msg "Unix support infrastructure";
+      OpamConsole.msg
+        "\n\
+         opam and the OCaml ecosystem in general require various Unix tools \
+         in order to operate correctly. At present, this requires \
+         an already present Cygwin installation to provide these tools.\n\n";
+      menu ()
+  in
+  let config =
+    if OpamSysPoll.os env = Some "win32" then
+      match OpamSysPoll.os_distribution env with
+      | Some "win32" ->
+        (* If there's a "cygwin" entry in sys-pkg-manager-cmd, but os-distribution
+           hasn't (yet) been set to "cygwin", then that'll be done here.
+           Otherwise, the user must either allow opam to install Cygwin or must
+           provide the path to it.
+
+           Note that a depext solution is _mandatory_ on Windows for now, because
+           there are commands opam requires which are only provided using it
+           (patch, etc.). MSYS2 avoids this by requiring os-distribution to be
+           set. *)
+        get_cygwin
+          (OpamSysInteract.Cygwin.cygcheck_opt config)
+      | Some "cygwin" ->
+        (* We check that current install is good *)
+        (match OpamSysInteract.Cygwin.cygroot_opt config with
+         | Some cygroot ->
+           (match OpamSysInteract.Cygwin.check_install
+                    ~path:(OpamFilename.Dir.to_string cygroot) ~setup:None with
+           | Ok cygcheck -> success cygcheck
+           | Error err -> OpamConsole.error "%s" err; get_cygwin None)
+         | None -> get_cygwin None)
+      | _ -> config
+    else
+      config
+  in
+  OpamCoreConfig.update
+    ?cygbin:OpamStd.Option.Op.(
+        OpamSysInteract.Cygwin.cygbin_opt config
+        >>| OpamFilename.Dir.to_string) ();
+  config
+
 let update_with_init_config ?(overwrite=false) config init_config =
   let module I = OpamFile.InitConfig in
   let module C = OpamFile.Config in
@@ -670,6 +789,7 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
     config shell =
   let root = OpamStateConfig.(!r.root_dir) in
   let config = update_with_init_config config init_config in
+  let config = windows_checks config in
   let _all_ok =
     if bypass_checks then false else
       init_checks ~hard_fail_exn:false init_config
@@ -745,6 +865,7 @@ let init
             init_config |>
           OpamFile.Config.with_repositories (List.map fst repos)
         in
+        let config = windows_checks config in
 
         let dontswitch =
           if bypass_checks then false else
