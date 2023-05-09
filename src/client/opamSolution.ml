@@ -1130,6 +1130,7 @@ let get_depexts ?(force=false) ?(recover=false) t packages =
             <> OpamSwitchState.opam_opt t nv)
           packages
       in
+      if OpamPackage.Set.is_empty more_pkgs then base else
       OpamPackage.Map.union (fun _ x -> x) base
         (OpamSwitchState.depexts_status_of_packages t more_pkgs)
   in
