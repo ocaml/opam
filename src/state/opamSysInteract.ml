@@ -224,6 +224,8 @@ let family ~env () =
 
 module Cygwin = struct
 
+  let url_setupexe = OpamUrl.of_string "https://cygwin.com/setup-x86_64.exe"
+
   let setupexe = "setup-x86_64.exe"
   let cygcheck_opt = Commands.cygcheck_opt
   open OpamStd.Option.Op
@@ -242,6 +244,65 @@ module Cygwin = struct
     | None -> failwith "Cygwin install not found"
   let cygroot config = get_opt (cygroot_opt config)
   let cygsetup config = get_opt (cygsetup_opt config)
+
+  let download_setupexe dst =
+    let open OpamProcess.Job.Op in
+    OpamFilename.with_tmp_dir_job @@ fun dir ->
+    OpamDownload.download ~overwrite:true url_setupexe dir @@| fun filename ->
+    (* XXX check signature *)
+    OpamFilename.(mkdir (dirname dst));
+    OpamFilename.move ~src:filename ~dst
+
+  let check_install ~path ~setup =
+    let cygcheck =
+      if not (Sys.file_exists path) then
+        Error (Printf.sprintf "%s not found!" path)
+      else if Filename.basename path = "cygcheck.exe" then
+        (* We have cygcheck.exe path *)
+        let cygbin = Some (Filename.dirname path) in
+        if OpamStd.Sys.is_cygwin_cygcheck ~cygbin then
+          Ok path
+        else
+          Error
+            (Printf.sprintf
+               "%s found, but it is not from a Cygwin installation"
+               path)
+      else if not (Sys.is_directory path) then
+        Error (Printf.sprintf "%s is not a directory" path)
+      else
+      let cygbin = Filename.concat path "bin" in
+      (* We have cygroot path *)
+      if Sys.file_exists cygbin then
+        if OpamStd.Sys.is_cygwin_cygcheck ~cygbin:(Some cygbin) then
+          Ok (Filename.concat cygbin "cygcheck.exe")
+        else
+          Error
+            (Printf.sprintf
+               "%s found, but it does not appear to be a Cygwin installation"
+               path)
+      else
+        Error
+          (Printf.sprintf "bin\\cygcheck.exe not found in %s"
+             path)
+    in
+    (* Set setup.exe in the good place, ie in cygroot/ *)
+    match cygcheck with
+    | Error e -> Error e
+    | Ok cygcheck ->
+      let cygcheck = OpamFilename.of_string cygcheck in
+      let cygroot = OpamFilename.(dirname_dir (dirname cygcheck)) in
+      let dst =OpamFilename.Op.(cygroot // setupexe) in
+      if OpamFilename.exists dst then () else
+        (match setup with
+         | Some setup ->
+           OpamConsole.note "Copying %s into %s"
+             (OpamFilename.to_string setup)
+             (OpamFilename.Dir.to_string cygroot);
+           OpamFilename.copy ~src:setup ~dst
+         | None ->
+           log "Donwloading setup exe";
+           OpamProcess.Job.run @@ download_setupexe dst);
+      Ok cygcheck
 
 end
 
