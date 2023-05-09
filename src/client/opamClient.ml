@@ -743,6 +743,7 @@ let windows_checks config =
               ~packages:OpamInitDefaults.required_packages_for_cygwin
           in
           let config = success cygcheck in
+          OpamSysInteract.Cygwin.update config;
           config
         | `Specify ->
           match enter_paths () with

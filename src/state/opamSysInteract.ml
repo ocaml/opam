@@ -225,6 +225,9 @@ let family ~env () =
 module Cygwin = struct
 
   let url_setupexe = OpamUrl.of_string "https://cygwin.com/setup-x86_64.exe"
+  let cache () = OpamPath.cygwin_setup_ini (OpamStateConfig.(!r.root_dir))
+  let cache = Lazy.from_fun cache
+  let default_mirror = "https://ftp.lip6.fr/pub/cygwin"
 
   let setupexe = "setup-x86_64.exe"
   let cygcheckexe = "cygcheck.exe"
@@ -248,6 +251,93 @@ module Cygwin = struct
   let cygsetup config = get_opt (cygsetup_opt config)
 
   let local_install = "cygwin_local_install"
+
+  let update config =
+    let cache = Lazy.force cache in
+    let mirror =
+      let cygroot = cygroot config in
+      let setup =
+        OpamProcess.read_lines
+          OpamFilename.(to_string Op.( cygroot / "etc" / "setup" // "setup.rc"))
+      in
+      (* XXX Should also be recording the setup version here, as that allows the cygwin_local_install copy to be updated *)
+      let rec aux = function
+        | [] -> default_mirror
+        | "last-mirror"::mirror::_ -> String.trim mirror
+        | _::l -> aux l
+      in
+      aux setup ^ "/x86_64/setup.ini"
+    in
+    let mirror = OpamUrl.of_string mirror in
+    (* XXX Should definitely be downloading the compressed version! *)
+    let lines =
+      let open OpamProcess.Job.Op in
+      OpamProcess.Job.run @@
+      OpamFilename.with_tmp_dir_job @@ fun dir ->
+      OpamDownload.download ~overwrite:true mirror dir @@| fun filename ->
+      OpamProcess.read_lines (OpamFilename.to_string filename)
+    in
+    if lines = [] then (* XXX *) assert false else
+    let timestamp, packages =
+      let rec aux = function
+        | [] | [""] -> None, lines
+        | header::r ->
+          match OpamStd.String.cut_at header ':' with
+          | Some ("setup-timestamp", timestamp) -> Some (String.trim timestamp), r
+          | _ -> aux r
+      in
+      aux lines
+    in
+    let packages, last =
+      List.fold_left (fun (pkgs,tmp) line ->
+          match OpamStd.String.split line ' ' with
+          | "@"::pkg::[] -> pkgs, Some pkg
+          | "category:"::categories
+            when List.exists (String.equal "_obsolete") categories ->
+            pkgs, None
+          | [] ->
+            (match tmp with
+             | Some pkg -> pkg::pkgs, None
+             | None -> pkgs, None)
+          | _ -> pkgs, tmp)
+        ([], None) packages
+    in
+    let buff = Buffer.create 4096 in
+    let timestamp =
+      OpamStd.Option.default (string_of_float (Unix.time ())) timestamp
+    in
+    Buffer.add_string buff timestamp;
+    Buffer.add_char buff '\n';
+    List.iter (fun pkg ->
+        Buffer.add_string buff pkg;
+        Buffer.add_char buff '\n')
+      packages;
+    OpamStd.Option.iter (Buffer.add_string buff) last;
+    OpamFilename.remove cache;
+    OpamFilename.write cache (Buffer.contents buff)
+
+  let available_packages () =
+    let cache = Lazy.force cache  in
+    let error () =
+      OpamConsole.error
+        "Malformed internal cygwin setup.ini, please run opam update --depexts";
+      None
+    in
+    if OpamFilename.exists cache then
+      let content = OpamProcess.read_lines (OpamFilename.to_string cache) in
+      match content with
+      | timestamp :: pkgs ->
+        (if (Unix.gettimeofday () -. float_of_string timestamp)
+            > float_of_int (3600*24*21) then
+           OpamConsole.note
+             "It seems you have not updated your Cygwin repositories \
+              for a while. Consider updating them with:\n%s\n"
+             (OpamConsole.colorise `bold "opam update --depext-only"));
+        Some (List.fold_left (fun set pkg ->
+            OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set)
+            OpamSysPkg.Set.empty pkgs)
+      | _ -> error ()
+    else error ()
 
   let download_setupexe dst =
     let open OpamProcess.Job.Op in
@@ -620,7 +710,8 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       |> List.map OpamSysPkg.of_string
       |> OpamSysPkg.Set.of_list
     in
-    compute_sets sys_installed
+    let sys_available = Cygwin.available_packages () in
+    compute_sets sys_installed ?sys_available
   | Debian ->
     let get_avail_w_virtuals () =
       let provides_sep = Re.(compile @@ str ", ") in
@@ -1011,7 +1102,7 @@ let update ?(env=OpamVariable.Map.empty) config =
     | Alpine -> `AsAdmin ("apk", ["update"])
     | Arch -> `AsAdmin ("pacman", ["-Sy"])
     | Centos -> `AsAdmin ((Lazy.force yum_cmd), ["makecache"])
-    | Cygwin -> `None
+    | Cygwin -> `Internal (fun () -> Cygwin.update config)
     | Debian -> `AsAdmin ("apt-get", ["update"])
     | Dummy test ->
       if test.install then `None else `AsUser ("false", [])
@@ -1029,6 +1120,7 @@ let update ?(env=OpamVariable.Map.empty) config =
     OpamConsole.warning
       "Unknown update command for %s, skipping system update"
       OpamStd.Option.Op.(OpamSysPoll.os_family env +! "unknown")
+  | `Internal f -> f ()
   | `AsAdmin (c, args) | `AsUser (c, args) ->
     let cmd = match cmd with `AsAdmin _ -> `AsAdmin c | _ -> `AsUser c in
     try sudo_run_command ~env cmd args

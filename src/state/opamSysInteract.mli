@@ -47,6 +47,9 @@ module Cygwin : sig
 val install: packages:OpamSysPkg.t list -> OpamFilename.t
 
 (* *)
+val update: OpamFile.Config.t -> unit
+
+(* *)
 val check_install: path:string -> setup:OpamFilename.t option -> (OpamFilename.t, string) result
 
 (* *)
