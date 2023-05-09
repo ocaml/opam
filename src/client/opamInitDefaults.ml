@@ -146,6 +146,16 @@ let required_tools ~sandboxing () =
     ["sandbox-exec"], None, Some macos_filter;
   ] else []
 
+let required_packages_for_cygwin =
+  [
+    "diffutils";
+    "git"; (* XXX hg & mercurial ? *)
+    "make";
+    "patch";
+    "tar";
+    "unzip";
+  ] |> List.map OpamSysPkg.of_string
+
 let init_scripts () = [
   ("sandbox.sh", OpamScript.bwrap), Some bwrap_filter;
   ("sandbox.sh", OpamScript.sandbox_exec), Some macos_filter;
