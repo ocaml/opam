@@ -745,3 +745,4 @@ users)
     * change `SH_win_cmd` into `SH_cmd` [#5541 @dra27]
   * `OpamCoreConfig`: add `cygbin`, the cygwin install binary path [#5543 @rjbou]
   * `OpamStd.Env`: add `cyg_env` that returns the environment with PATH containing cygwin binary path [#5543 @rjbou]
+  * `OpamCompat`: add `Filename.quote_command` [#5543 @rjbou]
