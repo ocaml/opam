@@ -180,8 +180,7 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
                 List.rev_append prefix (dir::(List.rev_append suffix dirs))
               end else
                 f prefix (dir::suffix) dirs
-        | [] ->
-            assert false
+        | [] -> []
         in
         Some (key ^ "=" ^ String.concat ";" (f [] [] path_dirs))
     | _ ->
