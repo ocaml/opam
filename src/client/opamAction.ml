@@ -524,6 +524,12 @@ let compilation_env t opam =
   let build_env =
     List.map (OpamEnv.env_expansion ~opam t) (OpamFile.OPAM.build_env opam)
   in
+  let cygwin_env =
+    match OpamSysInteract.Cygwin.cygbin_opt t.switch_global.config with
+    | Some cygbin ->
+      [ "PATH", EqPlus, OpamFilename.Dir.to_string cygbin, Some "Cygwin path" ]
+    | None -> []
+  in
   let scrub = OpamClientConfig.(!r.scrubbed_environment_variables) in
   OpamEnv.get_full ~scrub ~set_opamroot:true ~set_opamswitch:true
     ~force_path:true t ~updates:([
@@ -538,7 +544,8 @@ let compilation_env t opam =
       Some "build environment definition";
       "OPAMCLI", Eq, "2.0", Some "opam CLI version";
     ] @
-      build_env)
+      build_env
+      @ cygwin_env)
 
 let installed_opam_opt st nv =
   OpamStd.Option.Op.(
