@@ -401,11 +401,6 @@ let real_path p =
 
 type command = string list
 
-let default_env () =
-  (OpamStd.Env.list () :> (string * string) list)
-    |> List.map (fun (var, v) -> var^"="^v)
-    |> Array.of_list
-
 let env_var env var =
   let len = Array.length env in
   let f = if Sys.win32 then String.uppercase_ascii else fun x -> x in
@@ -506,7 +501,7 @@ let t_resolve_command =
         `Denied
   in
   fun ?env ?dir name ->
-    let env = match env with None -> default_env () | Some e -> e in
+    let env = match env with None -> OpamProcess.default_env () | Some e -> e in
     resolve env ?dir name
 
 let resolve_command ?env ?dir name =
@@ -577,7 +572,7 @@ let make_command
     ?verbose ?env ?name ?text ?metadata ?allow_stdin ?stdout
     ?dir ?(resolve_path=true)
     cmd args =
-  let env = match env with None -> default_env () | Some e -> e in
+  let env = match env with None -> OpamProcess.default_env () | Some e -> e in
   let name = log_file name in
   let verbose =
     OpamStd.Option.default OpamCoreConfig.(!r.verbose_level >= 2) verbose
@@ -599,7 +594,7 @@ let make_command
 
 let run_process
     ?verbose ?env ~name ?metadata ?stdout ?allow_stdin command =
-  let env = match env with None -> default_env () | Some e -> e in
+  let env = match env with None -> OpamProcess.default_env () | Some e -> e in
   let chrono = OpamConsole.timer () in
   runs := command :: !runs;
   match command with
