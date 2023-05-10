@@ -636,16 +636,36 @@ let init_checks ?(hard_fail_exn=true) init_config =
   else not (soft_fail || hard_fail)
 
 let windows_checks config =
-  let env = OpamVariable.Map.empty in
+  let vars = OpamFile.Config.global_variables config in
+  let env =
+    List.map (fun (v, c, s) -> v, (lazy (Some c), s)) vars
+    |> OpamVariable.Map.of_list
+  in
   let success cygcheck =
     let config =
-      let vars = OpamFile.Config.global_variables config in
       let os_distribution = OpamVariable.of_string "os-distribution" in
-      OpamFile.Config.with_global_variables
-        ((os_distribution, S "cygwin", "Set by opam init")::
-         List.filter (fun (v,_,_) -> not (OpamVariable.equal v os_distribution))
-           vars)
-        config
+      let update vars =
+        OpamFile.Config.with_global_variables
+          ((os_distribution, S "cygwin", "Set by opam init")::vars)
+          config
+      in
+      match OpamStd.List.pick (fun (v,_,_) ->
+          OpamVariable.equal v os_distribution)
+          vars with
+      | Some (_, S "cygwin", _), _ -> config
+      | None, vars ->  update vars
+      | Some (_, vc, _), vars ->
+        OpamConsole.warning
+          "'os-distribution' already set to another value %s"
+          (OpamVariable.string_of_variable_contents vc);
+        if OpamConsole.confirm ~default:false "Override?" then
+          (OpamConsole.msg
+             "You can revert this setting using \
+              'opam var --global os-distribution=%s'"
+             (OpamVariable.string_of_variable_contents vc);
+           update vars)
+        else
+          OpamStd.Sys.exit_because `Aborted
     in
     OpamFile.Config.with_sys_pkg_manager_cmd
       (OpamStd.String.Map.add "cygwin" cygcheck
@@ -655,9 +675,8 @@ let windows_checks config =
   let get_cygwin = function
     | Some cygcheck
       when OpamFilename.exists cygcheck
-        && OpamStd.Sys.is_cygwin_variant
-             ~cygbin:(Some OpamFilename.(Dir.to_string (dirname cygcheck)))
-             (OpamFilename.to_string cygcheck) ->
+        && OpamStd.Sys.is_cygwin_cygcheck
+             ~cygbin:(Some OpamFilename.(Dir.to_string (dirname cygcheck))) ->
       (* Should display the name using the converted path of /, not the bin dir *)
       OpamConsole.note "Using Cygwin installation at %s for depexts"
         (OpamFilename.(Dir.to_string (dirname cygcheck)));
@@ -743,7 +762,13 @@ let windows_checks config =
                     ~path:(OpamFilename.Dir.to_string cygroot) ~setup:None with
            | Ok cygcheck -> success cygcheck
            | Error err -> OpamConsole.error "%s" err; get_cygwin None)
-         | None -> get_cygwin None)
+         | None ->
+           (* Cygwin is detected from environment (path), we check the install
+              in that case and stores it in config *)
+           OpamSystem.resolve_command "cygcheck"
+           |> OpamStd.Option.map OpamFilename.of_string
+           |> get_cygwin
+        )
       | _ -> config
     else
       config
