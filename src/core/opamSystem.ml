@@ -401,11 +401,6 @@ let real_path p =
 
 type command = string list
 
-let default_env () =
-  (OpamStd.Env.list () :> (string * string) list)
-    |> List.map (fun (var, v) -> var^"="^v)
-    |> Array.of_list
-
 let env_var env var =
   let len = Array.length env in
   let f = if Sys.win32 then String.uppercase_ascii else fun x -> x in
@@ -506,7 +501,7 @@ let t_resolve_command =
         `Denied
   in
   fun ?env ?dir name ->
-    let env = match env with None -> default_env () | Some e -> e in
+    let env = match env with None -> OpamProcess.default_env () | Some e -> e in
     resolve env ?dir name
 
 let resolve_command ?env ?dir name =
@@ -515,23 +510,36 @@ let resolve_command ?env ?dir name =
   | `Denied | `Not_found -> None
 
 let apply_cygpath name =
-  let r =
-    OpamProcess.run
-      (OpamProcess.command ~name:(temp_file "command") ~allow_stdin:false ~verbose:false "cygpath" ["--"; name])
-  in
-  OpamProcess.cleanup ~force:true r;
-  if OpamProcess.is_success r then
-    List.hd r.OpamProcess.r_stdout
-  else
+  (* XXX Deeper bug, looking in the cygvoke code (see OpamProcess.create) *)
+  match resolve_command "cygpath" with
+  | Some cygpath ->
+    let r =
+      OpamProcess.run
+        (OpamProcess.command ~name:(temp_file "command")
+           ~allow_stdin:false ~verbose:false cygpath ["--"; name])
+    in
+    OpamProcess.cleanup ~force:true r;
+    if OpamProcess.is_success r then
+      match r.OpamProcess.r_stdout with
+      | l::_ -> l
+      | _ -> ""
+    else
+      OpamConsole.error_and_exit `Internal_error "Could not apply cygpath to %s" name
+  | None ->
     OpamConsole.error_and_exit `Internal_error "Could not apply cygpath to %s" name
 
 let get_cygpath_function =
   if Sys.win32 then
     fun ~command ->
-      lazy (if OpamStd.(Option.map_default Sys.is_cygwin_variant `Native (resolve_command command)) = `Cygwin then
-              apply_cygpath
-            else
-              fun x -> x)
+      lazy (
+        if OpamStd.Option.map_default
+            (OpamStd.Sys.is_cygwin_variant
+               ~cygbin:(OpamCoreConfig.(!r.cygbin)))
+               false
+               (resolve_command command) then
+          apply_cygpath
+        else fun x -> x
+      )
   else
     let f = Lazy.from_val (fun x -> x) in
     fun ~command:_ -> f
@@ -572,7 +580,7 @@ let make_command
     ?verbose ?env ?name ?text ?metadata ?allow_stdin ?stdout
     ?dir ?(resolve_path=true)
     cmd args =
-  let env = match env with None -> default_env () | Some e -> e in
+  let env = match env with None -> OpamProcess.default_env () | Some e -> e in
   let name = log_file name in
   let verbose =
     OpamStd.Option.default OpamCoreConfig.(!r.verbose_level >= 2) verbose
@@ -594,7 +602,7 @@ let make_command
 
 let run_process
     ?verbose ?env ~name ?metadata ?stdout ?allow_stdin command =
-  let env = match env with None -> default_env () | Some e -> e in
+  let env = match env with None -> OpamProcess.default_env () | Some e -> e in
   let chrono = OpamConsole.timer () in
   runs := command :: !runs;
   match command with
@@ -876,11 +884,10 @@ let install ?(warning=default_install_warning) ?exec src dst =
       in
       copy_file_aux ~src ~dst ();
       if cygcheck then
-        match OpamStd.Sys.get_windows_executable_variant dst with
-        | `Native ->
-            ()
-        | (`Cygwin | `Msys2 | `Tainted _) as code ->
-            warning dst code
+        match OpamStd.Sys.get_windows_executable_variant
+                ~cygbin:OpamCoreConfig.(!r.cygbin) dst with
+        | `Native -> ()
+        | (`Cygwin | `Msys2 | `Tainted _) as code -> warning dst code
     end else
       copy_file_aux ~src ~dst ()
   else

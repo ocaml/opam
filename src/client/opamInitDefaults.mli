@@ -29,3 +29,5 @@ val sandbox_wrappers:
 (** Default initial configuration file for use by [opam init] if nothing is
     supplied. *)
 val init_config: ?sandboxing:bool -> unit -> OpamFile.InitConfig.t
+
+val required_packages_for_cygwin: sys_package list

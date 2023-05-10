@@ -78,6 +78,8 @@ val plugin_bin: t -> name -> filename
     forbidden. *)
 val plugin: t -> name -> dirname
 
+val cygwin_setup_ini: t -> filename
+
 module type LAYOUT = sig
   type ctx
   val root : dirname -> ctx -> dirname

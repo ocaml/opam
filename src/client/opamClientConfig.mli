@@ -164,4 +164,5 @@ val opam_init:
   ?errlog_length:int ->
   ?merged_output:bool ->
   ?precise_tracking:bool ->
+  ?cygbin:string ->
   unit -> unit
