@@ -147,11 +147,13 @@ let required_tools ~sandboxing () =
   ] else []
 
 let required_packages_for_cygwin =
-  [ "diffutils";
+  [
+    "diffutils";
     "git"; (* XXX hg & mercurial ? *)
+    "make";
     "patch";
     "tar";
-    "make"
+    "unzip";
   ] |> List.map OpamSysPkg.of_string
 
 let init_scripts () = [
