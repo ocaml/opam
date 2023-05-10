@@ -854,11 +854,10 @@ let fatal e = match e with
   | Assert_failure _ | Match_failure _ -> raise e
   | _ -> ()
 
-module OpamSys = struct
+module Path = struct
+  let sep = if Sys.win32 then ';' else ':'
 
-  let path_sep = if Sys.win32 then ';' else ':'
-
-  let split_path_variable ?(clean=true) =
+  let split_variable ?(clean=true) =
     if Sys.win32 then fun path ->
       let length = String.length path in
       let rec f acc index current last normal =
@@ -879,21 +878,67 @@ module OpamSys = struct
       f [] 0 "" 0 true
     else fun path ->
       let split = if clean then OpamString.split else OpamString.split_delim in
-      split path path_sep
+      split path sep
+end
 
-  let with_process_in cmd args f =
+module type Runner = sig
+  type 'a t
+
+  val bind : 'a t -> ('a -> 'b t) -> 'b t
+
+  val map : 'a t -> ('a -> 'b) -> 'b t
+
+  val return : 'a -> 'a t
+
+  val with_process_in : string -> string -> string t
+
+  val run : string -> string -> string option t
+
+  val escape : 'a t -> 'a
+end
+
+module UnitRunner : Runner = struct
+  type 'a t = unit -> 'a
+
+  let bind v f = f (v ())
+
+  let return v = (fun () -> v)
+
+  let map v f = return (f (v ()))
+
+  let with_process_in cmd args =
     if Sys.win32 then
       assert false;
-    let path = split_path_variable (Env.get "PATH") in
+    let path = Path.split_variable (Env.get "PATH") in
     let cmd =
       List.find Sys.file_exists (List.map (fun d -> Filename.concat d cmd) path)
     in
-    let ic = Unix.open_process_in (cmd^" "^args) in
+    let ic = Unix.open_process_in (cmd ^ " " ^ args) in
     try
-      let r = f ic in
-      ignore (Unix.close_process_in ic) ; r
+      let r = input_line ic in
+      ignore (Unix.close_process_in ic);
+      return r
     with exn ->
-      ignore (Unix.close_process_in ic) ; raise exn
+      ignore (Unix.close_process_in ic);
+      raise exn
+
+  let run cmd arg =
+    try
+      let line = with_process_in cmd arg in
+      map line (fun line ->
+        Some (OpamString.strip line))
+    with Unix.Unix_error _ | Sys_error _ | Not_found -> return None
+
+  let escape v = v ()
+end
+
+module OpamSysRunnable(R : Runner) = struct
+
+  let path_sep = Path.sep
+
+  let split_path_variable = Path.split_variable
+
+  let with_process_in = R.with_process_in
 
   let tty_out = Unix.isatty Unix.stdout
 
@@ -906,28 +951,29 @@ module OpamSys = struct
       | Not_found
       | Failure _ -> default
     in
-    if cols > 0 then cols else default
+    if cols > 0 then R.return cols else R.return default
   )
 
   let get_terminal_columns () =
     let fallback = 80 in
     let cols =
       try (* terminfo *)
-        with_process_in "tput" "cols"
-          (fun ic -> int_of_string (input_line ic))
+        R.map (with_process_in "tput" "cols")
+          (fun s -> int_of_string s)
       with
       | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
         try (* GNU stty *)
-          with_process_in "stty" "size"
-            (fun ic ->
-               match OpamString.split (input_line ic) ' ' with
+          R.map (with_process_in "stty" "size")
+            (fun s ->
+               match OpamString.split s ' ' with
                | [_ ; v] -> int_of_string v
                | _ -> failwith "stty")
         with
         | Unix.Unix_error _ | Sys_error _ | Failure _
-        | End_of_file | Not_found -> fallback
+        | End_of_file | Not_found -> R.return fallback
     in
-    if cols > 0 then cols else fallback
+    R.map cols (fun cols ->
+      if cols > 0 then cols else fallback)
 
   let win32_get_console_width default_columns =
     try
@@ -935,7 +981,7 @@ module OpamSys = struct
       let {OpamStubs.size = (width, _); _} =
         OpamStubs.getConsoleScreenBufferInfo hConsoleOutput
       in
-      width
+      R.return width
     with Not_found ->
       Lazy.force default_columns
 
@@ -974,18 +1020,8 @@ module OpamSys = struct
 
   let etc () = "/etc"
 
-  let uname =
-    let memo = Hashtbl.create 7 in
-    fun arg ->
-      try Hashtbl.find memo arg with Not_found ->
-        let r =
-          try
-            with_process_in "uname" arg
-              (fun ic -> Some (OpamString.strip (input_line ic)))
-          with Unix.Unix_error _ | Sys_error _ | Not_found -> None
-        in
-        Hashtbl.add memo arg r;
-        r
+  let uname arg =
+    R.run "uname" arg
 
   let system () =
     (* CSIDL_SYSTEM = 0x25 *)
@@ -1007,18 +1043,19 @@ module OpamSys = struct
     let os = lazy (
       match Sys.os_type with
       | "Unix" -> begin
-          match uname "-s" with
+        let res = uname "-s" in
+        R.map res (function
           | Some "Darwin"    -> Darwin
           | Some "Linux"     -> Linux
           | Some "FreeBSD"   -> FreeBSD
           | Some "OpenBSD"   -> OpenBSD
           | Some "NetBSD"    -> NetBSD
           | Some "DragonFly" -> DragonFly
-          | _                -> Unix
+          | _                -> Unix)
         end
-      | "Win32"  -> Win32
-      | "Cygwin" -> Cygwin
-      | s        -> Other s
+      | "Win32"  -> R.return Win32
+      | "Cygwin" -> R.return Cygwin
+      | s        -> R.return (Other s)
     ) in
     fun () -> Lazy.force os
 
@@ -1113,13 +1150,13 @@ module OpamSys = struct
       let ppid = Unix.getppid () in
       let dir = Filename.concat "/proc" (string_of_int ppid) in
       try
-        Some (Unix.readlink (Filename.concat dir "exe"))
+        R.return (Some (Unix.readlink (Filename.concat dir "exe")))
       with e ->
         fatal e;
         try
-          with_process_in "ps"
-            (Printf.sprintf "-p %d -o comm= 2>/dev/null" ppid)
-            (fun ic -> Some (input_line ic))
+          R.map (with_process_in "ps"
+            (Printf.sprintf "-p %d -o comm= 2>/dev/null" ppid))
+            Option.some
         with
         | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
             try
@@ -1127,16 +1164,18 @@ module OpamSys = struct
               begin try
                 let s = input_line c in
                 close_in c;
-                Some (String.sub s 0 (String.index s '\000'))
+                R.return (Some (String.sub s 0 (String.index s '\000')))
               with
               | Not_found ->
-                  None
+                  R.return None
               | e ->
                   close_in c;
-                  fatal e; None
+                  fatal e;
+                  R.return None
               end
             with e ->
-              fatal e; None
+              fatal e;
+              R.return None
     in
     let test shell = shell_of_string (Filename.basename shell) in
     if Sys.win32 then
@@ -1147,16 +1186,19 @@ module OpamSys = struct
         | some ->
           some
         in
-      Option.default windows_default_shell shell
+      R.return (Option.default windows_default_shell shell)
     else
       let shell =
-        match Option.replace test (parent_guess ()) with
-        | None ->
-            Option.of_Not_found Env.get "SHELL" |> Option.replace test
-        | some ->
-            some
+        let res = parent_guess () in
+        R.map res (fun guess ->
+          match Option.replace test guess with
+          | None ->
+              Option.of_Not_found Env.get "SHELL" |> Option.replace test
+          | some ->
+              some)
       in
-      Option.default unix_default_shell shell
+      R.map shell (fun shell ->
+        Option.default unix_default_shell shell)
 
   let guess_dot_profile shell =
     let win_my_powershell f =
@@ -1318,6 +1360,30 @@ module OpamSys = struct
       console := printer
 end
 
+module OpamSysUnit = OpamSysRunnable(UnitRunner)
+
+module OpamSys = struct
+  include OpamSysUnit
+
+  let uname =
+    let memo = Hashtbl.create 7 in
+    fun arg ->
+      try
+        Hashtbl.find memo arg
+      with Not_found ->
+        let r = UnitRunner.escape @@ OpamSysUnit.uname arg in
+        Hashtbl.add memo arg r;
+        r
+
+  let terminal_columns () =
+    UnitRunner.escape @@ OpamSysUnit.terminal_columns ()
+
+  let os () =
+    UnitRunner.escape @@ OpamSysUnit.os ()
+
+  let guess_shell_compat () =
+    UnitRunner.escape @@ guess_shell_compat ()
+end
 
 module Win32 = struct
   module RegistryHive = struct
