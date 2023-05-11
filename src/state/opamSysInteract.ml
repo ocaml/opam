@@ -95,10 +95,13 @@ type test_setup = {
 (* Internal module to get package manager commands defined in global config file *)
 module Commands = struct
 
+  let get_cmd_opt config family =
+    OpamStd.String.Map.find_opt family
+            (OpamFile.Config.sys_pkg_manager_cmd config)
+
   let get_cmd config family =
-    match OpamStd.String.Map.find_opt family
-            (OpamFile.Config.sys_pkg_manager_cmd config) with
-    | Some cmd -> OpamFilename.to_string cmd
+    match get_cmd_opt config family with
+    | Some cmd -> cmd
     | None ->
       let field = "sys-pkg-manager-cmd" in
       Printf.ksprintf failwith
@@ -106,7 +109,11 @@ module Commands = struct
          Use opam option --global '%s+=[\"%s\" \"<path-to-%s-system-package-manager>\"]'"
         field family field family family
 
-  let msys2 config = get_cmd config "msys2"
+  let msys2 config = OpamFilename.to_string (get_cmd config "msys2")
+
+  let cygwin_t = "cygwin"
+  let cygcheck_opt config = get_cmd_opt config cygwin_t
+  let cygcheck config = OpamFilename.to_string (get_cmd config cygwin_t)
 
 end
 
@@ -116,6 +123,7 @@ type families =
   | Alpine
   | Arch
   | Centos
+  | Cygwin
   | Debian
   | Dummy of test_setup
   | Freebsd
@@ -196,15 +204,40 @@ let family ~env () =
     | "windows" ->
       (match OpamSysPoll.os_distribution env with
        | Some "msys2" -> Msys2
+       | Some "cygwin" -> Cygwin
        | _ ->
          failwith
            "External dependency handling not supported for Windows unless \
-            MSYS2 is installed. In particular 'os-distribution' must be set \
-            to 'msys2'.")
+            MSYS2 or Cygwin is installed. In particular 'os-distribution' \
+            must be set to 'msys2' or 'cygwin'.")
     | family ->
       Printf.ksprintf failwith
         "External dependency handling not supported for OS family '%s'."
         family
+
+module Cygwin = struct
+
+  (* Cygwin setup exe must be stored at Cygwin installation root *)
+  let setupexe = "setup-x86_64.exe"
+  let cygcheck_opt = Commands.cygcheck_opt
+  open OpamStd.Option.Op
+  let cygbin_opt config =
+    cygcheck_opt config
+    >>| OpamFilename.dirname
+  let cygroot_opt config =
+    cygbin_opt config
+    >>| OpamFilename.dirname_dir
+  let cygsetup_raw cygroot = OpamFilename.Op.(cygroot // setupexe)
+  let cygsetup_opt config =
+    cygroot_opt config
+    >>| cygsetup_raw
+  let get_opt = function
+    | Some c -> c
+    | None -> failwith "Cygwin install not found"
+  let cygroot config = get_opt (cygroot_opt config)
+  let cygsetup config = get_opt (cygsetup_opt config)
+
+end
 
 let yum_cmd = lazy begin
   if OpamSystem.resolve_command "yum" <> None then
@@ -450,6 +483,25 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     *)
     let sys_installed =
       run_query_command "rpm" ["-qa"; "--qf"; "%{NAME}\\n"]
+      |> List.map OpamSysPkg.of_string
+      |> OpamSysPkg.Set.of_list
+    in
+    compute_sets sys_installed
+  | Cygwin ->
+    (* Output format:
+       >Cygwin Package Information
+       >Package         Version
+       >git             2.35.1-1
+       >binutils        2.37-2
+    *)
+    let sys_installed =
+      run_query_command (Commands.cygcheck config)
+      ([ "-c"; "-d" ] @ to_string_list packages)
+      |> (function | _::_::l -> l | _ -> [])
+      |> OpamStd.List.filter_map (fun l ->
+          match OpamStd.String.split l ' ' with
+          | pkg::_ -> Some pkg
+          | _ -> None)
       |> List.map OpamSysPkg.of_string
       |> OpamSysPkg.Set.of_list
     in
@@ -750,8 +802,23 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
                  |> OpamStd.String.Set.remove epel_release
                  |> OpamStd.String.Set.elements);
        `AsUser "rpm", "-q"::"--whatprovides"::packages], None
-  | Debian -> [`AsAdmin "apt-get", "install"::yes ["-qq"; "-yy"] packages],
-      (if unsafe_yes then Some ["DEBIAN_FRONTEND", "noninteractive"] else None)
+  | Cygwin ->
+    (* We use setp_x86_64 to install package instead of `cygcheck` that is
+       stored in `sys-pkg-manager-cmd` field *)
+    [`AsUser (OpamFilename.to_string (Cygwin.cygsetup config)),
+      [ "--root"; (OpamFilename.Dir.to_string (Cygwin.cygroot config));
+        "--quiet-mode";
+        "--no-shortcuts";
+        "--no-startmenu";
+        "--no-desktop";
+        "--no-admin";
+        "--packages";
+        String.concat "," packages
+      ]],
+    None
+  | Debian ->
+    [`AsAdmin "apt-get", "install"::yes ["-qq"; "-yy"] packages],
+    (if unsafe_yes then Some ["DEBIAN_FRONTEND", "noninteractive"] else None)
   | Dummy test ->
     if test.install then
       [`AsUser "echo", packages], None
@@ -826,17 +893,18 @@ let update ?(env=OpamVariable.Map.empty) config =
     | Alpine -> Some (`AsAdmin "apk", ["update"])
     | Arch -> Some (`AsAdmin "pacman", ["-Sy"])
     | Centos -> Some (`AsAdmin (Lazy.force yum_cmd), ["makecache"])
+    | Cygwin -> None
     | Debian -> Some (`AsAdmin "apt-get", ["update"])
     | Dummy test ->
-      if test.install then None else
-        Some (`AsUser "false", [])
+      if test.install then None else Some (`AsUser "false", [])
+    | Freebsd -> None
     | Gentoo -> Some (`AsAdmin "emerge", ["--sync"])
     | Homebrew -> Some (`AsUser "brew", ["update"])
     | Macports -> Some (`AsAdmin "port", ["sync"])
     | Msys2 -> Some (`AsUser (Commands.msys2 config), ["-Sy"])
+    | Netbsd -> None
+    | Openbsd -> None
     | Suse -> Some (`AsAdmin "zypper", ["--non-interactive"; "refresh"])
-    | Freebsd | Netbsd | Openbsd ->
-      None
   in
   match cmd with
   | None ->
