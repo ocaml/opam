@@ -196,6 +196,7 @@ users)
   * Add swhid url handling in url field [#4859 @rjbou @zapashcanon]
 
 ## External dependencies
+  * Depexts support Cygwin on Windows [#5542 @rjbou]
   * Support MSYS2 on Windows for depexts [#5348 @jonahbeckford #5433 @rjbou]
   * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
   * Fix depext alpine tagged repositories handling [#4763 @rjbou] [2.1.0~rc2 #4758]
