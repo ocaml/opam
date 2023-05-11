@@ -831,15 +831,15 @@ let update ?(env=OpamVariable.Map.empty) config =
     | Centos -> Some (`AsAdmin (Lazy.force yum_cmd), ["makecache"])
     | Debian -> Some (`AsAdmin "apt-get", ["update"])
     | Dummy test ->
-      if test.install then None else
-        Some (`AsUser "false", [])
+      if test.install then None else Some (`AsUser "false", [])
+    | Freebsd -> None
     | Gentoo -> Some (`AsAdmin "emerge", ["--sync"])
     | Homebrew -> Some (`AsUser "brew", ["update"])
     | Macports -> Some (`AsAdmin "port", ["sync"])
     | Msys2 -> Some (`AsUser (Commands.msys2 config), ["-Sy"])
+    | Netbsd -> None
+    | Openbsd -> None
     | Suse -> Some (`AsAdmin "zypper", ["--non-interactive"; "refresh"])
-    | Freebsd | Netbsd | Openbsd ->
-      None
   in
   match cmd with
   | None ->
