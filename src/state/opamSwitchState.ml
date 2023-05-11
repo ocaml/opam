@@ -180,6 +180,7 @@ module Installed_cache = OpamCached.Make(struct
 
 let depexts_status_of_packages_raw
     ~depexts ?env global_config switch_config packages =
+  if OpamPackage.Set.is_empty packages then OpamPackage.Map.empty else
   let open OpamSysPkg.Set.Op in
   let syspkg_set, syspkg_map =
     OpamPackage.Set.fold (fun nv (set, map) ->
