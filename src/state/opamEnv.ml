@@ -40,19 +40,19 @@ let unzip_to elt current =
     | ([], rs) -> Some rs
     | _ -> None
   in
-    match split_var elt with
-    | [] -> invalid_arg "OpamEnv.unzip_to"
-    | hd::tl ->
-      let rec aux acc = function
+  match (if elt = "" then [""] else split_var elt) with
+  | [] -> invalid_arg "OpamEnv.unzip_to"
+  | hd::tl ->
+    let rec aux acc = function
       | [] -> None
       | x::r ->
-        if x = hd then
+        if (x : string) = hd then
           match remove_prefix tl r with
           | Some r -> Some (acc, r)
           | None -> aux (x::acc) r
         else aux (x::acc) r
-      in
-        aux [] current
+    in
+    aux [] current
 
 let rezip ?insert (l1, l2) =
   List.rev_append l1 (match insert with None -> l2 | Some i -> i::l2)
@@ -91,6 +91,7 @@ let apply_op_zip op arg (rl1,l2 as zip) =
     or empty lists is returned if the variable should be unset or has an unknown
     previous value. *)
 let reverse_env_update op arg cur_value =
+  if arg = "" && op <> Eq then None else
   match op with
   | Eq ->
     if arg = join_var cur_value
@@ -157,9 +158,13 @@ let expand (updates: env_update list) : env =
             | Some s -> ([], split_var s), reverts
             | None -> ([], []), reverts
       in
+      let acc =
+        if arg = "" && op <> Eq then acc else
+          ((var, apply_op_zip op arg zip, doc) :: acc)
+      in
       apply_updates
         reverts
-        ((var, apply_op_zip op arg zip, doc) :: acc)
+        acc
         updates
     | [] ->
       List.rev @@
@@ -185,18 +190,22 @@ let add (env: env) (updates: env_update list) =
   in
   env @ expand updates
 
+let env_expansion ?opam st (name, op, str, cmt) =
+  let fenv v =
+    try OpamPackageVar.resolve st ?opam v
+    with Not_found ->
+      log "Undefined variable: %s" (OpamVariable.Full.to_string v);
+      None
+  in
+  let s = OpamFilter.expand_string ~default:(fun _ -> "") fenv str in
+  name, op, s, cmt
+
 let compute_updates ?(force_path=false) st =
   (* Todo: put these back into their packages!
   let perl5 = OpamPackage.Name.of_string "perl5" in
   let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch t.switch_config perl5 in
   let new_perl5lib = "PERL5LIB", "+=", OpamFilename.Dir.to_string add_to_perl5lib in
 *)
-  let fenv ?opam v =
-    try OpamPackageVar.resolve st ?opam v
-    with Not_found ->
-      log "Undefined variable: %s" (OpamVariable.Full.to_string v);
-      None
-  in
   let bindir =
     OpamPath.Switch.bin st.switch_global.root st.switch st.switch_config
   in
@@ -218,21 +227,17 @@ let compute_updates ?(force_path=false) st =
             st.switch_global.root st.switch st.switch_config),
       Some "Current opam switch man dir"]
   in
-  let env_expansion ?opam (name,op,str,cmt) =
-    let s = OpamFilter.expand_string ~default:(fun _ -> "") (fenv ?opam) str in
-    name, op, s, cmt
-  in
   let switch_env =
     ("OPAM_SWITCH_PREFIX", Eq,
      OpamFilename.Dir.to_string
        (OpamPath.Switch.root st.switch_global.root st.switch),
      Some "Prefix of the current opam switch") ::
-    List.map env_expansion st.switch_config.OpamFile.Switch_config.env
+    List.map (env_expansion st) st.switch_config.OpamFile.Switch_config.env
   in
   let pkg_env = (* XXX: Does this need a (costly) topological sort? *)
     OpamPackage.Set.fold (fun nv acc ->
         match OpamPackage.Map.find_opt nv st.opams with
-        | Some opam -> List.map (env_expansion ~opam) (OpamFile.OPAM.env opam) @ acc
+        | Some opam -> List.map (env_expansion ~opam st) (OpamFile.OPAM.env opam) @ acc
         | None -> acc)
       st.installed []
   in

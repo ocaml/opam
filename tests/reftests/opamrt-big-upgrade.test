@@ -88,7 +88,7 @@ installed: [
   "yojson.1.1.6"
   "zed.1.2"
 ]
-### opam switch import init.export --switch test-import --fake
+### opam switch import init.export --switch test-import --fake | unordered
 The following actions will be faked:
   - install base-unix           base
   - install ocaml-base-compiler 4.01.0beta1 [required by ocaml]

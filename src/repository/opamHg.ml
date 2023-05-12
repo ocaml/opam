@@ -53,8 +53,7 @@ module VCS = struct
     match r.OpamProcess.r_stdout with
     | [] -> Done None
     | full::_ ->
-      if String.length full > 8 then Done (Some (String.sub full 0 8))
-      else Done (Some full)
+      Done (Some full)
 
   let clean repo_root =
     hg repo_root ["revert"; "--all"; "--no-backup"]
