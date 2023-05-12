@@ -3,6 +3,17 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.1.5:
+* [BUG] Variables are now expanded in build-env (as for setenv) [#5352 @dra27]
+* Correctly handle empty environment variable additions [#5350 @dra27]
+* Skip empty environment variable additions [#5350 @dra27]
+* [BUG] Fix passing `archive-mirrors` field from init config file to config
+  [#5315 @hannesm]
+* git, hg: Use the full SHA1 revision instead of just the 8 first characters
+  [#5342 @reynir]
+* [BUG] Fix opam installing packages without checking their checksum when the
+  local cache is corrupted in some case [#5538 @kit-ty-kate]
+
 2.1.4:
 * Add support for OCaml 5.0. Dose3 >= 6.1 and base64 >= 3.1.0 are now required [#5357 @kit-ty-kate @dra27 - fix #5354]
 * [BUG] Fix all empty conflict explanation messages [#5378 @kit-ty-kate - partial fix #4373]
