@@ -890,9 +890,9 @@ module type Runner = sig
 
   val return : 'a -> 'a t
 
-  val with_process_in : string -> string -> string t
+  val with_process_in : prog:string -> argv:string list -> string t
 
-  val run : string -> string -> string option t
+  val run : prog:string -> argv:string list -> string option t
 
   val escape : 'a t -> 'a
 end
@@ -906,25 +906,27 @@ module UnitRunner : Runner = struct
 
   let map v f = return (f (v ()))
 
-  let with_process_in cmd args =
+  let with_process_in ~prog ~argv =
     if Sys.win32 then
       assert false;
     let path = Path.split_variable (Env.get "PATH") in
     let cmd =
-      List.find Sys.file_exists (List.map (fun d -> Filename.concat d cmd) path)
+      List.find Sys.file_exists (List.map (fun d -> Filename.concat d prog) path)
     in
-    let ic = Unix.open_process_in (cmd ^ " " ^ args) in
+    let argv = Array.of_list argv in
+    let stdio = Unix.open_process_full cmd argv in
+    let (stdout, _, _) = stdio in
     try
-      let r = input_line ic in
-      ignore (Unix.close_process_in ic);
+      let r = input_line stdout in
+      let _ : Unix.process_status = Unix.close_process_full stdio in
       return r
     with exn ->
-      ignore (Unix.close_process_in ic);
+      let _ : Unix.process_status = Unix.close_process_full stdio in
       raise exn
 
-  let run cmd arg =
+  let run ~prog ~argv =
     try
-      let line = with_process_in cmd arg in
+      let line = with_process_in ~prog ~argv in
       map line (fun line ->
         Some (OpamString.strip line))
     with Unix.Unix_error _ | Sys_error _ | Not_found -> return None
@@ -958,12 +960,12 @@ module OpamSysRunnable(R : Runner) = struct
     let fallback = 80 in
     let cols =
       try (* terminfo *)
-        R.map (with_process_in "tput" "cols")
+        R.map (with_process_in ~prog:"tput" ~argv:["cols"])
           (fun s -> int_of_string s)
       with
       | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
         try (* GNU stty *)
-          R.map (with_process_in "stty" "size")
+          R.map (with_process_in ~prog:"stty" ~argv:["size"])
             (fun s ->
                match OpamString.split s ' ' with
                | [_ ; v] -> int_of_string v
@@ -1020,8 +1022,8 @@ module OpamSysRunnable(R : Runner) = struct
 
   let etc () = "/etc"
 
-  let uname arg =
-    R.run "uname" arg
+  let uname argv =
+    R.run ~prog:"uname" ~argv
 
   let system () =
     (* CSIDL_SYSTEM = 0x25 *)
@@ -1043,7 +1045,7 @@ module OpamSysRunnable(R : Runner) = struct
     let os = lazy (
       match Sys.os_type with
       | "Unix" -> begin
-        let res = uname "-s" in
+        let res = uname ["-s"] in
         R.map res (function
           | Some "Darwin"    -> Darwin
           | Some "Linux"     -> Linux
@@ -1154,8 +1156,8 @@ module OpamSysRunnable(R : Runner) = struct
       with e ->
         fatal e;
         try
-          R.map (with_process_in "ps"
-            (Printf.sprintf "-p %d -o comm= 2>/dev/null" ppid))
+          R.map (with_process_in ~prog:"ps"
+            ~argv:["-p"; (string_of_int ppid); "-o"; "comm="])
             Option.some
         with
         | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
@@ -1371,7 +1373,7 @@ module OpamSys = struct
       try
         Hashtbl.find memo arg
       with Not_found ->
-        let r = UnitRunner.escape @@ OpamSysUnit.uname arg in
+        let r = UnitRunner.escape @@ OpamSysUnit.uname [arg] in
         Hashtbl.add memo arg r;
         r
 

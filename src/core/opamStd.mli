@@ -469,9 +469,9 @@ module type Runner = sig
 
   val return : 'a -> 'a t
 
-  val with_process_in : string -> string -> string t
+  val with_process_in : prog:string -> argv:string list -> string t
 
-  val run : string -> string -> string option t
+  val run : prog:string -> argv:string list -> string option t
 
   val escape : 'a t -> 'a
 end
@@ -502,7 +502,7 @@ module OpamSysRunnable (R : Runner) : sig
 
   val os: unit -> os R.t
 
-  val uname: string -> string option R.t
+  val uname: string list -> string option R.t
 
   val executable_name : string -> string
 
