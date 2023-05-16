@@ -735,7 +735,10 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
            OpamLocal.rsync_file url filename
            @@| function
            | Up_to_date f | Result f -> check_checksum f
-           | Not_available (_,src) ->
+           | Not_available (Checksum_error _) ->
+             (* no checksums passed *)
+             assert false
+           | Not_available (Generic_error (_,src)) ->
              Some ("Source not found: "^src)
      in
      cond 60 `Error "Upstream check failed"

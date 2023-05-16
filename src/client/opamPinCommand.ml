@@ -87,7 +87,10 @@ let get_source_definition ?version ?subpath ?locked st nv url =
     | _, _ -> url
   in
   OpamUpdate.fetch_dev_package url srcdir ?subpath nv @@| function
-  | Not_available (_,s) -> raise (Fetch_Fail s)
+  | Not_available (Checksum_error _) ->
+    (* no checksums passed, can't fail this way *)
+    assert false
+  | Not_available (Generic_error (_,s)) -> raise (Fetch_Fail s)
   | Up_to_date _ | Result _ ->
     let srcdir = OpamFilename.SubPath.(srcdir /? subpath) in
     match OpamPinned.find_opam_file_in_source ?locked nv.name srcdir with
@@ -828,7 +831,10 @@ let scan ~normalise ~recurse ?subpath url =
           ~cache_dir:(OpamRepositoryPath.download_cache
                         OpamStateConfig.(!r.root_dir))
           basename pin_cache_dir [] [url] @@| function
-        | Not_available (_,u) ->
+        | Not_available (Checksum_error _) ->
+          (* no checksums passed *)
+          assert false
+        | Not_available (Generic_error (_,u)) ->
           OpamConsole.error_and_exit `Sync_error
             "Could not retrieve %s" u
         | Result _ | Up_to_date _ ->

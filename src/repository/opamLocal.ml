@@ -78,12 +78,12 @@ let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
     ]
   in
   if not(remote || Sys.file_exists src) then
-    Done (Not_available (None, src))
+    Done (Not_available (Generic_error (None, src)))
   else if src = dst then
     Done (Up_to_date [])
-  else if overlap src dst then
-    (OpamConsole.error "Cannot sync %s into %s: they overlap" src dst;
-     Done (Not_available (None, src)))
+  else if overlap src dst then (
+    OpamConsole.error "Cannot sync %s into %s: they overlap" src dst;
+    Done (Not_available (Generic_error (None, src))))
   else (
     OpamSystem.mkdir dst;
     let convert_path = Lazy.force convert_path in
@@ -91,7 +91,8 @@ let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
       ( rsync_arg :: args @ exclude_args @
         [ "--delete"; "--delete-excluded"; convert_path src; convert_path dst; ])
     @@| function
-    | None -> Not_available (None, src)
+    | None ->
+       Not_available (Generic_error (None, src))
     | Some [] -> Up_to_date []
     | Some lines -> Result lines
   )
@@ -104,13 +105,15 @@ let rsync_dirs ?args ?exclude_vcdirs url dst =
   if not (is_remote url) &&
      not (OpamFilename.exists_dir (OpamFilename.Dir.of_string src_s))
   then
-    Done (Not_available (None, Printf.sprintf "Directory %s does not exist" src_s))
+    let na = Generic_error (None, Printf.sprintf "Directory %s does not exist" src_s) in
+    Done (Not_available na)
   else
   rsync ?args ?exclude_vcdirs src_s dst_s @@| function
   | Not_available _ as na -> na
   | Result _ ->
     if OpamFilename.exists_dir dst then Result dst
-    else Not_available (None, dst_s)
+    else
+      Not_available (Generic_error (None, dst_s))
   | Up_to_date _ -> Up_to_date dst
 
 let rsync_file ?(args=[]) url dst =
@@ -118,7 +121,8 @@ let rsync_file ?(args=[]) url dst =
   let dst_s = OpamFilename.to_string dst in
   log "rsync_file src=%s dst=%s" src_s dst_s;
   if not (is_remote url || OpamFilename.(exists (of_string src_s))) then
-    Done (Not_available (None, src_s))
+    let na = Generic_error (None, src_s) in
+    Done (Not_available na)
   else if src_s = dst_s then
     Done (Up_to_date dst)
   else
@@ -127,11 +131,11 @@ let rsync_file ?(args=[]) url dst =
      call_rsync (fun () -> Sys.file_exists dst_s)
        ( rsync_arg :: args @ [ convert_path src_s; convert_path dst_s ])
      @@| function
-     | None -> Not_available (None, src_s)
+     | None -> Not_available (Generic_error (None, src_s))
      | Some [] -> Up_to_date dst
      | Some [_] ->
        if OpamFilename.exists dst then Result dst
-       else Not_available (None, src_s)
+       else Not_available (Generic_error (None, src_s))
      | Some l ->
        OpamSystem.internal_error
          "unknown rsync output: {%s}"
@@ -222,13 +226,14 @@ module B = struct
       in
       if OpamFilename.exists filename then res (Some filename)
       else
-        Not_available
-          (None, Printf.sprintf
-             "Could not find target file %s after rsync with %s. \
-              Perhaps you meant %s/ ?"
-             (OpamUrl.basename remote_url)
-             (OpamUrl.to_string remote_url)
-             (OpamUrl.to_string remote_url))
+        Not_available (
+          Generic_error (
+            (None, Printf.sprintf
+               "Could not find target file %s after rsync with %s. \
+                Perhaps you meant %s/ ?"
+               (OpamUrl.basename remote_url)
+               (OpamUrl.to_string remote_url)
+               (OpamUrl.to_string remote_url))))
 
   let revision _ =
     Done None
