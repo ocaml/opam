@@ -476,7 +476,7 @@ module type Runner = sig
   val escape : 'a t -> 'a
 end
 
-module OpamSysRunnable (R : Runner) : sig
+module type OpamSysRunnableT = functor (R : Runner) -> sig
   val tty_out : bool
 
   val tty_in : bool
@@ -548,10 +548,15 @@ module OpamSysRunnable (R : Runner) : sig
   type warning_printer =
     {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
   val set_warning_printer : warning_printer -> unit
+
 end
+
+(* module Hest = (Set : OpamSysRunnableT) *)
+(* module OpamSysRunnable = functor (R : Runner) : OpamSysRunnable(R : Runner) *)
+
 (**/**)
 
-module Sys : sig
+module type Sys = sig
 
   (** {3 Querying} *)
 
@@ -680,6 +685,8 @@ module Sys : sig
     {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
   val set_warning_printer : warning_printer -> unit
 end
+
+module Sys : Sys
 
 (** {2 Windows-specific functions} *)
 module Win32 : sig

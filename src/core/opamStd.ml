@@ -1362,7 +1362,157 @@ module OpamSysRunnable(R : Runner) = struct
       console := printer
 end
 
-module OpamSysUnit = OpamSysRunnable(UnitRunner)
+module type OpamSysRunnableT = functor (R : Runner) -> sig 
+  val tty_out : bool
+
+  val tty_in : bool
+
+  val terminal_columns : unit -> int R.t
+
+  val home: unit -> string
+
+  val etc: unit -> string
+
+  val system: unit -> string
+
+  type os = Darwin
+          | Linux
+          | FreeBSD
+          | OpenBSD
+          | NetBSD
+          | DragonFly
+          | Cygwin
+          | Win32
+          | Unix
+          | Other of string
+
+  val os: unit -> os R.t
+
+  val uname: string list -> string option R.t
+
+  val executable_name : string -> string
+
+  type powershell_host = Powershell_pwsh | Powershell
+  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
+    | SH_pwsh of powershell_host | SH_win_cmd
+
+  val all_shells : shell list
+
+  val guess_shell_compat: unit -> shell R.t
+
+  val guess_dot_profile: shell -> string
+
+  val path_sep: char
+
+  val split_path_variable: ?clean:bool -> string -> string list
+
+  val get_windows_executable_variant:
+    string -> [ `Native | `Cygwin | `Tainted of [ `Msys2 | `Cygwin] | `Msys2 ]
+
+  val is_cygwin_variant: string -> [ `Native | `Cygwin | `CygLinked ]
+
+  val at_exit: (unit -> unit) -> unit
+
+  val exec_at_exit: unit -> unit
+
+  exception Exit of int
+
+  exception Exec of string * string array * string array
+
+  type exit_reason =
+    [ `Success | `False | `Bad_arguments | `Not_found | `Aborted | `Locked
+    | `No_solution | `File_error | `Package_operation_error | `Sync_error
+    | `Configuration_error | `Solver_failure | `Internal_error
+    | `User_interrupt ]
+
+  val exit_codes : (exit_reason * int) list
+
+  val get_exit_code : exit_reason -> int
+
+  val exit_because: exit_reason -> 'a
+
+  type warning_printer =
+    {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
+  val set_warning_printer : warning_printer -> unit
+end
+
+module OpamSysRunnable' = (OpamSysRunnable : OpamSysRunnableT)
+module OpamSysUnit = OpamSysRunnable'(UnitRunner)
+(* module OpamSysUnit = OpamSysRunnable(UnitRunner) *)
+
+module type Sys = sig
+  val tty_out : bool
+
+  val tty_in : bool
+
+  val terminal_columns : unit -> int
+
+  val home: unit -> string
+
+  val etc: unit -> string
+
+  val system: unit -> string
+
+  type os = Darwin
+          | Linux
+          | FreeBSD
+          | OpenBSD
+          | NetBSD
+          | DragonFly
+          | Cygwin
+          | Win32
+          | Unix
+          | Other of string
+
+  val os: unit -> os
+
+  val uname: string -> string option
+
+  val executable_name : string -> string
+
+  type powershell_host = Powershell_pwsh | Powershell
+  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
+    | SH_pwsh of powershell_host | SH_win_cmd
+
+  val all_shells : shell list
+
+  val guess_shell_compat: unit -> shell
+
+  val guess_dot_profile: shell -> string
+
+  val path_sep: char
+
+  val split_path_variable: ?clean:bool -> string -> string list
+
+  val get_windows_executable_variant:
+    string -> [ `Native | `Cygwin | `Tainted of [ `Msys2 | `Cygwin] | `Msys2 ]
+
+  val is_cygwin_variant: string -> [ `Native | `Cygwin | `CygLinked ]
+
+  val at_exit: (unit -> unit) -> unit
+
+  val exec_at_exit: unit -> unit
+
+  exception Exit of int
+
+  exception Exec of string * string array * string array
+
+  type exit_reason =
+    [ `Success | `False | `Bad_arguments | `Not_found | `Aborted | `Locked
+    | `No_solution | `File_error | `Package_operation_error | `Sync_error
+    | `Configuration_error | `Solver_failure | `Internal_error
+    | `User_interrupt ]
+
+  val exit_codes : (exit_reason * int) list
+
+  val get_exit_code : exit_reason -> int
+
+  val exit_because: exit_reason -> 'a
+
+  type warning_printer =
+    {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
+  val set_warning_printer : warning_printer -> unit
+end
 
 module OpamSys = struct
   include OpamSysUnit
