@@ -102,6 +102,7 @@ users)
 ## Reftests
 ### Tests
   * Lint: add test for W53, to test extra file with good hash [#5639 @rjbou]
+  * Add several checksum & cache validation checks for extra-source section, and extra-file field [#5560 @rjbou]
 
 ### Engine
 

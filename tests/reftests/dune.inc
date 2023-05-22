@@ -489,6 +489,42 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:env.win32.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-extrafile)
+ (action
+  (diff extrafile.test extrafile.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-extrafile)))
+
+(rule
+ (targets extrafile.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:extrafile.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-extrasource)
+ (action
+  (diff extrasource.test extrasource.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-extrasource)))
+
+(rule
+ (targets extrasource.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:extrasource.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-init)
  (action
   (diff init.test init.out)))

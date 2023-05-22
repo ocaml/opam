@@ -1,0 +1,570 @@
+N0REP0
+### ::: Setup :::
+### <p.patch>
+Trust me, im' a patch!
+### openssl md5 p.patch | '.*= ' -> '' >$ PATCH_MD5
+### openssl sha256 p.patch | '.*= ' -> '' >$ PATCH_SHA256
+### <add-files.sh>
+set -ue
+pkg=$1
+pkgpath="REPO/packages/${pkg%.*}/$pkg"
+if [ ! -d $pkgpath/files ] ; then
+  mkdir $pkgpath/files
+  cp p.patch $pkgpath/files/
+fi
+### ::: Setup: extra-file field :::
+### <pkg:good-md5.1>
+opam-version: "2.0"
+maintainer: "nobody"
+authors: "nobody neither"
+homepage: "https://no.bo.dy"
+bug-reports: "https://still.nobo.dy"
+dev-repo: "git+https://no.were"
+license: "MIT"
+synopsis: "Initially empty"
+build: [ "test" "-f" "p.patch" ]
+extra-files: [
+  ["p.patch" "md5=patch-md5"]
+]
+### sh add-files.sh good-md5.1
+### <pkg:good-md5-good-sha256.1>
+opam-version: "2.0"
+maintainer: "nobody"
+authors: "nobody neither"
+homepage: "https://no.bo.dy"
+bug-reports: "https://still.nobo.dy"
+dev-repo: "git+https://no.were"
+license: "MIT"
+synopsis: "Initially empty"
+build: [ "test" "-f" "p.patch" ]
+extra-files: [
+  ["p.patch" "md5=patch-md5"]
+  ["p.patch" "sha256=patch-sha256"]
+]
+### sh add-files.sh good-md5-good-sha256.1
+### <pkg:bad-md5.1>
+opam-version: "2.0"
+maintainer: "nobody"
+authors: "nobody neither"
+homepage: "https://no.bo.dy"
+bug-reports: "https://still.nobo.dy"
+dev-repo: "git+https://no.were"
+license: "MIT"
+synopsis: "Initially empty"
+build: [ "test" "-f" "p.patch" ]
+extra-files: [
+  ["p.patch" "md5=00000000000000000000000000000000"]
+]
+### sh add-files.sh bad-md5.1
+### <pkg:good-md5-bad-sha256.1>
+opam-version: "2.0"
+maintainer: "nobody"
+authors: "nobody neither"
+homepage: "https://no.bo.dy"
+bug-reports: "https://still.nobo.dy"
+dev-repo: "git+https://no.were"
+license: "MIT"
+synopsis: "Initially empty"
+build: [ "test" "-f" "p.patch" ]
+extra-files: [
+  ["p.patch" "md5=patch-md5"]
+  ["p.patch" "sha256=0000000000000000000000000000000000000000000000000000000000000000"]
+]
+### sh add-files.sh good-md5-bad-sha256.1
+### <pkg:no-checksum.1>
+opam-version: "2.0"
+maintainer: "nobody"
+authors: "nobody neither"
+homepage: "https://no.bo.dy"
+bug-reports: "https://still.nobo.dy"
+dev-repo: "git+https://no.were"
+license: "MIT"
+synopsis: "Initially empty"
+build: [ "test" "-f" "p.patch" ]
+extra-files: [
+  ["p.patch"]
+]
+### sh add-files.sh no-checksum.1
+### <pkg:not-mentioned.1>
+opam-version: "2.0"
+maintainer: "nobody"
+authors: "nobody neither"
+homepage: "https://no.bo.dy"
+bug-reports: "https://still.nobo.dy"
+dev-repo: "git+https://no.were"
+license: "MIT"
+synopsis: "Initially empty"
+build: [ "test" "-f" "p.patch" ]
+### sh add-files.sh not-mentioned.1
+### <pkg:not-present.1>
+opam-version: "2.0"
+maintainer: "nobody"
+authors: "nobody neither"
+homepage: "https://no.bo.dy"
+bug-reports: "https://still.nobo.dy"
+dev-repo: "git+https://no.were"
+license: "MIT"
+synopsis: "Initially empty"
+build: [ "test" "-f" "p.patch" ]
+extra-files: [
+  ["p.patch" "md5=00000000000000000000000000000000"]
+]
+### <pkg:escape-absolute.1>
+opam-version: "2.0"
+maintainer: "nobody"
+authors: "nobody neither"
+homepage: "https://no.bo.dy"
+bug-reports: "https://still.nobo.dy"
+dev-repo: "git+https://no.were"
+license: "MIT"
+synopsis: "Initially empty"
+extra-files: [
+  ["/etc/passwdd" "md5=c316eacc19a12732bb894667a08e9c14"]
+]
+### <pkg:escape-good-md5.1>
+opam-version: "2.0"
+maintainer: "nobody"
+authors: "nobody neither"
+homepage: "https://no.bo.dy"
+bug-reports: "https://still.nobo.dy"
+dev-repo: "git+https://no.were"
+license: "MIT"
+synopsis: "Initially empty"
+build: [ "test" "-f" "p.patch" ]
+extra-files: [
+  ["../../../no-checksum/no-checksum.1/files/p.patch" "md5=patch-md5"]
+]
+### <update-hashes.sh>
+set -ue
+
+for p in `ls REPO/packages/*/*/opam`; do
+  sed -i.bak "s/patch-md5/$PATCH_MD5/" $p
+  sed -i.bak "s/patch-sha256/$PATCH_SHA256/" $p
+done
+### sh update-hashes.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### ::: End setup :::
+### opam switch create --empty robur
+### OPAMSTRICT=no
+### :::::::::::::::::
+### :I: Hashes
+### :::::::::::::::::
+### sh -c "rm OPAM/repo/state-*.cache"
+### OPAMDEBUGSECTIONS="opam-file" OPAMDEBUG=-2 opam list good-md5 -s | unordered
+opam-file                       Missing expected extra files ../../../no-checksum/no-checksum.1/files/p.patch at ${BASEDIR}/OPAM/repo/default/packages/escape-good-md5/escape-good-md5.1/files
+opam-file                       Missing extra-files field for p.patch for no-checksum.1, adding them.
+opam-file                       Missing extra-files field for p.patch for not-mentioned.1, adding them.
+opam-file                       Missing expected extra files p.patch at ${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/good-md5-good-sha256/good-md5-good-sha256.1: missing from 'files' directory (1)
+opam-file                       Missing expected extra files /etc/passwdd at ${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1: missing from 'files' directory (1)
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1: wrong checksum (1)
+good-md5.1
+### :I:1: good md5
+### opam lint --package good-md5
+<default>/good-md5.1: Passed.
+### opam lint --package good-md5 --check-upstream
+<default>/good-md5.1: Passed.
+### opam install good-md5
+The following actions will be performed:
+=== install 1 package
+  - install good-md5 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed good-md5.1
+Done.
+### opam remove good-md5
+The following actions will be performed:
+=== remove 1 package
+  - remove good-md5 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   good-md5.1
+Done.
+### opam install good-md5 --require-checksums
+The following actions will be performed:
+=== install 1 package
+  - install good-md5 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed good-md5.1
+Done.
+### opam source good-md5
+Successfully extracted to ${BASEDIR}/good-md5.1
+### test -f good-md5.1/p.patch
+### opam clean --download-cache
+Clearing cache of downloaded files
+### :I:2: good md5 & sha256
+### opam lint --package good-md5-good-sha256
+<default>/good-md5-good-sha256.1: Passed.
+### opam lint --package good-md5-good-sha256 --check-upstream
+<default>/good-md5-good-sha256.1: Passed.
+### opam install good-md5-good-sha256
+The following actions will be performed:
+=== install 1 package
+  - install good-md5-good-sha256 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed good-md5-good-sha256.1
+Done.
+### opam remove good-md5-good-sha256
+The following actions will be performed:
+=== remove 1 package
+  - remove good-md5-good-sha256 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   good-md5-good-sha256.1
+Done.
+### opam install good-md5-good-sha256 --require-checksums
+The following actions will be performed:
+=== install 1 package
+  - install good-md5-good-sha256 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed good-md5-good-sha256.1
+Done.
+### opam source good-md5-good-sha256
+Successfully extracted to ${BASEDIR}/good-md5-good-sha256.1
+### test -f good-md5-good-sha256.1/p.patch
+### opam clean --download-cache
+Clearing cache of downloaded files
+### :I:3: bad md5
+### opam lint --package bad-md5
+<default>/bad-md5.1: Errors.
+             error 53: Mismatching 'extra-files:' field: "p.patch"
+# Return code 1 #
+### opam lint --package bad-md5 --check-upstream
+<default>/bad-md5.1: Errors.
+             error 53: Mismatching 'extra-files:' field: "p.patch"
+# Return code 1 #
+### opam install bad-md5
+The following actions will be performed:
+=== install 1 package
+  - install bad-md5 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+
+Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build bad-md5 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam install bad-md5 --require-checksums
+The following actions will be performed:
+=== install 1 package
+  - install bad-md5 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+
+Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build bad-md5 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam source bad-md5 | '.n"' -> '"'
+[WARNING] Some errors extracting to ${BASEDIR}/bad-md5.1: Failure("Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch")
+
+### test -f bad-md5.1/p.patch
+# Return code 1 #
+### opam clean --download-cache
+Clearing cache of downloaded files
+### :I:4: good md5 & bad sha256
+### opam lint --package good-md5-bad-sha256
+<default>/good-md5-bad-sha256.1: Passed.
+### opam lint --package good-md5-bad-sha256 --check-upstream
+<default>/good-md5-bad-sha256.1: Passed.
+### opam install good-md5-bad-sha256
+The following actions will be performed:
+=== install 1 package
+  - install good-md5-bad-sha256 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+
+Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build good-md5-bad-sha256 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam install good-md5-bad-sha256 --require-checksums
+The following actions will be performed:
+=== install 1 package
+  - install good-md5-bad-sha256 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+
+Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build good-md5-bad-sha256 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam source good-md5-bad-sha256 | '.n"' -> '"'
+[WARNING] Some errors extracting to ${BASEDIR}/good-md5-bad-sha256.1: Failure("Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch")
+
+### test -f good-md5-bad-sha256.1/p.patch
+### opam clean --download-cache
+Clearing cache of downloaded files
+### :I:5: no checksum
+### opam lint --package no-checksum
+<default>/no-checksum.1: Errors.
+             error  3: File format error in 'extra-files' at line 11, column 2: expected [file checksum]
+# Return code 1 #
+### opam lint --package no-checksum --check-upstream
+<default>/no-checksum.1: Errors.
+             error  3: File format error in 'extra-files' at line 11, column 2: expected [file checksum]
+# Return code 1 #
+### # extra files is added with its checksum at repo loading
+### opam install no-checksum
+[ERROR] In the opam file for no-checksum.1:
+          - At ${BASEDIR}/OPAM/repo/default/packages/no-checksum/no-checksum.1/opam:11:2-11:13::
+            expected [file checksum]
+        'extra-files' has been ignored.
+The following actions will be performed:
+=== install 1 package
+  - install no-checksum 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed no-checksum.1
+Done.
+### opam remove no-checksum
+[ERROR] In the opam file for no-checksum.1:
+          - At ${BASEDIR}/OPAM/repo/default/packages/no-checksum/no-checksum.1/opam:11:2-11:13::
+            expected [file checksum]
+        'extra-files' has been ignored.
+The following actions will be performed:
+=== remove 1 package
+  - remove no-checksum 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   no-checksum.1
+Done.
+### opam install no-checksum --require-checksums
+[ERROR] In the opam file for no-checksum.1:
+          - At ${BASEDIR}/OPAM/repo/default/packages/no-checksum/no-checksum.1/opam:11:2-11:13::
+            expected [file checksum]
+        'extra-files' has been ignored.
+The following actions will be performed:
+=== install 1 package
+  - install no-checksum 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed no-checksum.1
+Done.
+### opam source no-checksum
+Successfully extracted to ${BASEDIR}/no-checksum.1
+### test -f no-checksum.1/p.patch
+### opam clean --download-cache
+Clearing cache of downloaded files
+### :::::::::::::::::
+### :II: Presence
+### :::::::::::::::::
+### :II:1: not mentioned
+### opam lint --package not-mentioned
+<default>/not-mentioned.1: Passed.
+### opam lint --package not-mentioned --check-upstream
+<default>/not-mentioned.1: Passed.
+### opam install not-mentioned
+The following actions will be performed:
+=== install 1 package
+  - install not-mentioned 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed not-mentioned.1
+Done.
+### opam remove not-mentioned
+The following actions will be performed:
+=== remove 1 package
+  - remove not-mentioned 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   not-mentioned.1
+Done.
+### opam install not-mentioned --require-checksums
+The following actions will be performed:
+=== install 1 package
+  - install not-mentioned 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed not-mentioned.1
+Done.
+### opam source not-mentioned
+Successfully extracted to ${BASEDIR}/not-mentioned.1
+### test -f not-mentioned.1/p.patch
+### opam clean --download-cache
+Clearing cache of downloaded files
+### :II:2: not present
+### opam lint --package not-present
+<default>/not-present.1: Errors.
+             error 53: Mismatching 'extra-files:' field: "p.patch"
+# Return code 1 #
+### opam lint --package not-present --check-upstream
+<default>/not-present.1: Errors.
+             error 53: Mismatching 'extra-files:' field: "p.patch"
+# Return code 1 #
+### opam install not-present
+The following actions will be performed:
+=== install 1 package
+  - install not-present 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+
+Sys_error("${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files/p.patch: No such file or directory")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build not-present 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam install not-present --require-checksums
+The following actions will be performed:
+=== install 1 package
+  - install not-present 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+
+Sys_error("${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files/p.patch: No such file or directory")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build not-present 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam source not-present
+Fatal error:
+Sys_error("${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files/p.patch: No such file or directory")
+# Return code 99 #
+### test -f not-present.1/p.patch
+# Return code 1 #
+### opam clean --download-cache
+Clearing cache of downloaded files
+### :::::::::::::::::
+### :III: Escaping
+### :::::::::::::::::
+### :III:1: absolute
+### opam lint --package escape-absolute
+<default>/escape-absolute.1: Errors.
+             error 53: Mismatching 'extra-files:' field: "/etc/passwdd"
+# Return code 1 #
+### opam lint --package escape-absolute --check-upstream
+<default>/escape-absolute.1: Errors.
+             error 53: Mismatching 'extra-files:' field: "/etc/passwdd"
+# Return code 1 #
+### opam install escape-absolute
+The following actions will be performed:
+=== install 1 package
+  - install escape-absolute 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+
+Sys_error("${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files//etc/passwdd: No such file or directory")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build escape-absolute 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam install escape-absolute --require-checksums
+The following actions will be performed:
+=== install 1 package
+  - install escape-absolute 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+
+Sys_error("${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files//etc/passwdd: No such file or directory")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build escape-absolute 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam source escape-absolute
+Fatal error:
+Sys_error("${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files//etc/passwdd: No such file or directory")
+# Return code 99 #
+### test -f escape-absolute.1/p.patch
+# Return code 1 #
+### opam clean --download-cache
+Clearing cache of downloaded files
+### :III:2: good md5
+### opam lint --package escape-good-md5
+<default>/escape-good-md5.1: Errors.
+             error 53: Mismatching 'extra-files:' field: "../../../no-checksum/no-checksum.1/files/p.patch"
+# Return code 1 #
+### opam lint --package escape-good-md5 --check-upstream
+<default>/escape-good-md5.1: Errors.
+             error 53: Mismatching 'extra-files:' field: "../../../no-checksum/no-checksum.1/files/p.patch"
+# Return code 1 #
+### # ERROR it copies it to build dir ^ relative path -> escape!!!!
+### # currently writing in /tmp as a common it copies in
+### # /tmp/build_d2b6ce_dune/opam-reftest-8f9413/escape-good-md5.1/../../../no-checksum/no-checksum.1/files
+### # This is needed for test portability, windows doesn't check path before resolving it
+### mkdir ${BASEDIR}/OPAM/repo/default/packages/escape-good-md5/escape-good-md5.1/files
+### opam install escape-good-md5
+The following actions will be performed:
+=== install 1 package
+  - install escape-good-md5 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of escape-good-md5.1 failed at "test -f p.patch".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build escape-good-md5 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam install escape-good-md5 --require-checksums
+The following actions will be performed:
+=== install 1 package
+  - install escape-good-md5 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of escape-good-md5.1 failed at "test -f p.patch".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build escape-good-md5 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam source escape-good-md5
+Successfully extracted to ${BASEDIR}/escape-good-md5.1
+### test -f escape-good-md5.1/p.patch
+# Return code 1 #
