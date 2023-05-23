@@ -22,7 +22,7 @@ arm64-linux: $(OUTDIR)/opam-$(VERSION)-arm64-linux
 $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	mkdir -p "$(OUTDIR)"
 	git clone $(GIT_URL) -b $(TAG) "$(OUTDIR)/opam-full-$(VERSION)"
-	sed 's/^AC_INIT(opam,.*)/AC_INIT(opam,$(OPAM_VERSION))/' "$(OUTDIR)/opam-full-$(VERSION)/configure.ac" > \
+	sed 's/^AC_INIT(\[opam\],\[.*\])/AC_INIT([opam],[$(OPAM_VERSION)])/' "$(OUTDIR)/opam-full-$(VERSION)/configure.ac" > \
 	  "$(OUTDIR)/opam-full-$(VERSION)/configure.ac.tmp"
 	mv "$(OUTDIR)/opam-full-$(VERSION)/configure.ac.tmp" \
 	  "$(OUTDIR)/opam-full-$(VERSION)/configure.ac"
@@ -53,7 +53,7 @@ CLINKING_linux = \
 -lstdc++ \
 -static-libgcc \
 -static
-# -Wl,-Bdynamic 
+# -Wl,-Bdynamic
 
 CLINKING_macos = \
 -lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs \

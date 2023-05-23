@@ -64,6 +64,7 @@ users)
 ## VCS
 
 ## Build
+  * Run autoupdate to silence autogen warnings [#5555 @MisterDA]
 
 ## Infrastructure
 
