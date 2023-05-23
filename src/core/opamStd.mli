@@ -549,10 +549,12 @@ module type OpamSysRunnableT = functor (R : Runner) -> sig
     {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
   val set_warning_printer : warning_printer -> unit
 
+  module R : Runner with type 'a t = 'a R.t
 end
 
-(* module Hest = (Set : OpamSysRunnableT) *)
-(* module OpamSysRunnable = functor (R : Runner) : OpamSysRunnable(R : Runner) *)
+module OpamSysRunnable' : OpamSysRunnableT
+
+module UnitRunner : Runner
 
 (**/**)
 

@@ -29,8 +29,27 @@ let normalise_os raw =
   | "darwin" | "osx" -> "macos"
   | s -> s
 
-module Include (OpamStdSys : OpamStd.Sys) = struct
-  let command_output c =
+module type IncludeT = functor (Runnable : OpamStd.OpamSysRunnableT) (Runner : OpamStd.Runner) -> sig
+  val poll_arch : unit -> string option Runnable(Runner).R.t
+  val arch : string option Runnable(Runner).R.t Lazy.t
+
+  val poll_os : unit -> string option Runnable(Runner).R.t
+  val os : string option Runnable(Runner).R.t Lazy.t
+
+  val poll_os_version : unit -> string option Runnable(Runner).R.t
+  val os_version : string option Runnable(Runner).R.t Lazy.t
+
+  val poll_os_distribution : unit -> string option Runnable(Runner).R.t
+  val os_distribution : string option Runnable(Runner).R.t Lazy.t
+
+  val variables : (OpamVariable.t * OpamVariable.variable_contents option Runnable(Runner).R.t lazy_t) list
+end
+
+module Include' (OpamStdSys : OpamStd.OpamSysRunnableT) (Runner : OpamStd.Runner) = struct
+  module OpamStdSys = OpamStdSys(Runner)
+
+  let command_output ~prog ~argv =
+    let c = prog::argv in
     match List.filter (fun s -> String.trim s <> "")
             (OpamSystem.read_command_output c)
     with
@@ -42,32 +61,32 @@ module Include (OpamStdSys : OpamStd.Sys) = struct
 
   let poll_arch () =
     let raw = match Sys.os_type with
-      | "Unix" | "Cygwin" -> OpamStdSys.uname "-m"
+      | "Unix" | "Cygwin" -> OpamStdSys.uname ["-m"]
       | "Win32" ->
         if Sys.word_size = 32 && not (OpamStubs.isWoW64 ()) then
-          Some "i686"
+          OpamStdSys.R.return (Some "i686")
         else
-          Some "x86_64"
-      | _ -> None
+          OpamStdSys.R.return (Some "x86_64")
+      | _ -> OpamStdSys.R.return None
     in
-    match raw with
-    | None | Some "" -> None
-    | Some a -> Some (normalise_arch a)
+    OpamStdSys.R.map raw (function
+      | None | Some "" -> None
+      | Some a -> Some (normalise_arch a))
   let arch = Lazy.from_fun poll_arch
 
   let poll_os () =
     let raw =
       match Sys.os_type with
-      | "Unix" -> OpamStdSys.uname "-s"
-      | s -> norm s
+      | "Unix" -> OpamStdSys.uname ["-s"]
+      | s -> OpamStdSys.R.return (norm s)
     in
-    match raw with
-    | None | Some "" -> None
-    | Some s -> Some (normalise_os s)
+    OpamStdSys.R.map raw (function
+      | None | Some "" -> None
+      | Some s -> Some (normalise_os s))
   let os = Lazy.from_fun poll_os
 
   let is_android, android_release =
-    let prop = lazy (command_output ["getprop"; "ro.build.version.release"]) in
+    let prop = lazy (command_output ~prog:"getprop" ~argv:["ro.build.version.release"]) in
     (fun () -> Lazy.force prop <> None),
     (fun () -> Lazy.force prop)
 
@@ -90,76 +109,107 @@ module Include (OpamStdSys : OpamStd.Sys) = struct
       with Not_found -> None
 
   let poll_os_version () =
+    let return = OpamStdSys.R.return in
     let lazy os = os in
-    match os with
-    | Some "linux" ->
-      android_release () >>= norm >>+ fun () ->
-      command_output ["lsb_release"; "-s"; "-r"] >>= norm >>+ fun () ->
-      os_release_field "VERSION_ID" >>= norm
-    | Some "macos" ->
-      command_output ["sw_vers"; "-productVersion"] >>= norm
-    | Some "win32" ->
-      let (major, minor, build, _) = OpamStubs.getWindowsVersion () in
-      OpamStd.Option.some @@ Printf.sprintf "%d.%d.%d" major minor build
-    | Some "cygwin" ->
-      (try
-         command_output ["cmd"; "/C"; "ver"] >>= fun s ->
-         Scanf.sscanf s "%_s@[ Version %s@]" norm
-       with Scanf.Scan_failure _ | End_of_file -> None)
-    | Some "freebsd" ->
-      OpamStdSys.uname "-U" >>= norm
-    | _ ->
-      OpamStdSys.uname "-r" >>= norm
+    OpamStdSys.R.bind os (function
+      | Some "linux" -> (
+        match android_release () with
+        | Some android -> return (norm android)
+        | None ->
+          match command_output ~prog:"lsb_release" ~argv:["-s"; "-r"] with
+          | Some lsb -> return (norm lsb) 
+          | None ->
+            os_release_field "VERSION_ID" >>= norm |> return)
+      | Some "macos" ->
+        command_output ~prog:"sw_vers" ~argv:["-productVersion"] >>= norm |> return
+      | Some "win32" ->
+        let (major, minor, build, _) = OpamStubs.getWindowsVersion () in
+        OpamStd.Option.some @@ Printf.sprintf "%d.%d.%d" major minor build
+        |> return 
+      | Some "cygwin" ->
+        (try
+           command_output ~prog:"cmd" ~argv:["/C"; "ver"] >>= fun s ->
+           Scanf.sscanf s "%_s@[ Version %s@]" norm
+         with Scanf.Scan_failure _ | End_of_file -> None)
+        |> return
+      | Some "freebsd" ->
+        let uname = OpamStdSys.uname ["-U"] in
+        OpamStdSys.R.map uname (fun uname -> Option.bind uname norm)
+      | _ ->
+        let uname = OpamStdSys.uname ["-r"] in
+        OpamStdSys.R.map uname (fun uname -> Option.bind uname norm))
   let os_version = Lazy.from_fun poll_os_version
 
   let poll_os_distribution () =
     let lazy os = os in
-    match os with
-    | Some "macos" as macos ->
-      if OpamSystem.resolve_command "brew" <> None then Some "homebrew"
-      else if OpamSystem.resolve_command "port" <> None then Some "macports"
-      else macos
-    | Some "linux" as linux ->
-      (if is_android () then Some "android" else
-       os_release_field "ID" >>= norm >>+ fun () ->
-       command_output ["lsb_release"; "-i"; "-s"] >>= norm >>+ fun () ->
-       try
-         List.find Sys.file_exists ["/etc/redhat-release";
-                                    "/etc/centos-release";
-                                    "/etc/gentoo-release";
-                                    "/etc/issue"] |>
-         fun s -> Scanf.sscanf s " %s " norm
-       with Not_found -> linux)
-    | os -> os
+    OpamStdSys.R.map os (function
+      | Some "macos" as macos ->
+        if OpamSystem.resolve_command "brew" <> None then Some "homebrew"
+        else if OpamSystem.resolve_command "port" <> None then Some "macports"
+        else macos
+      | Some "linux" as linux ->
+        (if is_android () then Some "android" else
+         os_release_field "ID" >>= norm >>+ fun () ->
+         command_output ~prog:"lsb_release" ~argv:["-i"; "-s"] >>= norm >>+ fun () ->
+         try
+           List.find Sys.file_exists ["/etc/redhat-release";
+                                      "/etc/centos-release";
+                                      "/etc/gentoo-release";
+                                      "/etc/issue"] |>
+           fun s -> Scanf.sscanf s " %s " norm
+         with Not_found -> linux)
+      | os -> os)
   let os_distribution = Lazy.from_fun poll_os_distribution
 
   let poll_os_family () =
+    let return = OpamStdSys.R.return in
     let lazy os = os in
-    match os with
-    | Some "linux" ->
-      (os_release_field "ID_LIKE" >>= fun s ->
-       Scanf.sscanf s " %s" norm (* first word *))
-      ++ Lazy.force os_distribution
-    | Some ("freebsd" | "openbsd" | "netbsd" | "dragonfly") -> Some "bsd"
-    | Some ("win32" | "cygwin") -> Some "windows"
-    | _ -> Lazy.force os_distribution
+    OpamStdSys.R.bind os (function
+      | Some "linux" -> (
+        let id_like = os_release_field "ID_LIKE" >>= fun s ->
+          (* first word *)
+          Scanf.sscanf s " %s" norm
+        in
+        match id_like with
+        | Some _ as id_like -> return id_like
+        | None -> Lazy.force os_distribution)
+      | Some ("freebsd" | "openbsd" | "netbsd" | "dragonfly") ->
+        return @@ Some "bsd"
+      | Some ("win32" | "cygwin") ->
+        return @@ Some "windows"
+      | _ -> Lazy.force os_distribution)
   let os_family = Lazy.from_fun poll_os_family
+
+  let variables =
+    List.map
+      (fun (name, value) ->
+        let var_name = OpamVariable.of_string name in
+        let opam_value = OpamCompat.Lazy.map (fun m ->
+           OpamStdSys.R.map m (fun opt ->
+             OpamStd.Option.map (fun v -> OpamTypes.S v)
+             opt))
+         value
+        in
+        (var_name, opam_value))
+      [
+        "arch", arch;
+        "os", os;
+        "os-distribution", os_distribution;
+        "os-version", os_version;
+        "os-family", os_family;
+      ]
+
 end
 
-include Include(OpamStd.Sys)
+include Include'(OpamStd.OpamSysRunnable')(OpamStd.UnitRunner)
 
 let variables =
-  List.map
-    (fun (n, v) ->
-       OpamVariable.of_string n,
-       OpamCompat.Lazy.map (OpamStd.Option.map (fun v -> OpamTypes.S v)) v)
-    [
-      "arch", arch;
-      "os", os;
-      "os-distribution", os_distribution;
-      "os-version", os_version;
-      "os-family", os_family;
-    ]
+  List.map (fun (k, v) ->
+    let v = OpamCompat.Lazy.map (fun m ->
+      OpamStd.UnitRunner.escape m) v
+    in
+    (k, v))
+    variables
 
 let cores =
   let v = Lazy.from_fun OpamSystem.cpu_count in
@@ -172,7 +222,9 @@ let resolve_or_poll var poll env =
   | _ ->
     match OpamVariable.Map.find_opt (OpamVariable.of_string var) env with
     | Some (lazy (Some (OpamTypes.S c)), _) -> Some c
-    | _ -> Lazy.force poll
+    | _ ->
+      let m = Lazy.force poll in
+      OpamStd.UnitRunner.escape m
 
 let arch = resolve_or_poll "arch" arch
 let os = resolve_or_poll "os" os

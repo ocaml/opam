@@ -1360,6 +1360,8 @@ module OpamSysRunnable(R : Runner) = struct
       if !called then invalid_arg "Just what do you think you're doing, Dave?";
       called := true;
       console := printer
+
+  module R = R
 end
 
 module type OpamSysRunnableT = functor (R : Runner) -> sig 
@@ -1434,11 +1436,12 @@ module type OpamSysRunnableT = functor (R : Runner) -> sig
   type warning_printer =
     {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
   val set_warning_printer : warning_printer -> unit
+
+  module R : Runner with type 'a t = 'a R.t
 end
 
 module OpamSysRunnable' = (OpamSysRunnable : OpamSysRunnableT)
 module OpamSysUnit = OpamSysRunnable'(UnitRunner)
-(* module OpamSysUnit = OpamSysRunnable(UnitRunner) *)
 
 module type Sys = sig
   val tty_out : bool
