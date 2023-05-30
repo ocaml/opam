@@ -101,6 +101,7 @@ users)
 
 ## Github Actions
   * Fix hygiene scripts for install check: it was missing a conversion `~` -> `-` for dev version [#5588 @rjbou]
+  * Add configure autoupdate test [#5555 @rjbou]
 
 ## Doc
 

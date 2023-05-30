@@ -18,16 +18,32 @@ CheckConfigure () {
   if [[ -e CHECK_CONFIGURE ]] ; then
     echo "configure generation altered in $1"
     echo 'Verifying that configure.ac generates configure'
+    error=0
     git clean -dfx
     git checkout -f "$1"
+
+    # check for configure generation
     mv configure configure.ref
     make configure
     if ! diff -u configure configure.ref ; then
       echo -e "[\e[31mERROR\e[0m] configure.ac in $1 doesn't generate configure, \
 please run make configure and fixup the commit"
-      ERROR=1
-    else
+      error=1
+    fi
+
+    # check for newer syntax validation
+    cp configure.ac configure.ac.ref
+    autoupdate
+    if ! diff -u configure.ac configure.ac.ref; then
+      echo -e "[\e[31mERROR\e[0m] configure.ac in $1 has not been updated, \
+please run 'autoupdate' and fixup the commit"
+        error=1
+    fi
+
+    if [ $error -eq 0 ]; then
       echo "configure ok for $1"
+    else
+      ERROR=$error
     fi
   fi
 }
