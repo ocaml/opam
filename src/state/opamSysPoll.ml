@@ -49,15 +49,11 @@ module Include' (OpamStdSys : OpamStd.OpamSysRunnableT) (Runner : OpamStd.Runner
   module OpamStdSys = OpamStdSys(Runner)
 
   let command_output ~prog ~argv =
-    let c = prog::argv in
-    match List.filter (fun s -> String.trim s <> "")
-            (OpamSystem.read_command_output c)
-    with
-    | [""] -> None
-    | [s] -> Some s
-    | _ -> None
-    | exception (OpamSystem.Process_error _ | OpamSystem.Command_not_found _) ->
-      None
+    let output = OpamStdSys.R.run ~prog ~argv in
+    OpamStdSys.R.map output (function
+      | None -> None
+      | Some "" -> None
+      | Some s -> Some s)
 
   let poll_arch () =
     let raw = match Sys.os_type with
@@ -87,7 +83,10 @@ module Include' (OpamStdSys : OpamStd.OpamSysRunnableT) (Runner : OpamStd.Runner
 
   let is_android, android_release =
     let prop = lazy (command_output ~prog:"getprop" ~argv:["ro.build.version.release"]) in
-    (fun () -> Lazy.force prop <> None),
+    (fun () ->
+      OpamStdSys.R.map
+        (Lazy.force prop)
+        (fun prop -> prop <> None)),
     (fun () -> Lazy.force prop)
 
   let os_release_field =
@@ -113,25 +112,28 @@ module Include' (OpamStdSys : OpamStd.OpamSysRunnableT) (Runner : OpamStd.Runner
     let lazy os = os in
     OpamStdSys.R.bind os (function
       | Some "linux" -> (
-        match android_release () with
+        OpamStdSys.R.bind (android_release ()) (function
         | Some android -> return (norm android)
         | None ->
-          match command_output ~prog:"lsb_release" ~argv:["-s"; "-r"] with
+          let release = command_output ~prog:"lsb_release" ~argv:["-s"; "-r"] in
+          OpamStdSys.R.bind release (function
           | Some lsb -> return (norm lsb) 
           | None ->
-            os_release_field "VERSION_ID" >>= norm |> return)
+            os_release_field "VERSION_ID" >>= norm |> return)))
       | Some "macos" ->
-        command_output ~prog:"sw_vers" ~argv:["-productVersion"] >>= norm |> return
+        let sw_vers = command_output ~prog:"sw_vers" ~argv:["-productVersion"] in
+        OpamStdSys.R.map sw_vers (fun sw_vers -> sw_vers >>= norm)
       | Some "win32" ->
         let (major, minor, build, _) = OpamStubs.getWindowsVersion () in
         OpamStd.Option.some @@ Printf.sprintf "%d.%d.%d" major minor build
         |> return 
       | Some "cygwin" ->
         (try
-           command_output ~prog:"cmd" ~argv:["/C"; "ver"] >>= fun s ->
-           Scanf.sscanf s "%_s@[ Version %s@]" norm
-         with Scanf.Scan_failure _ | End_of_file -> None)
-        |> return
+          let cmd = command_output ~prog:"cmd" ~argv:["/C"; "ver"] in
+          OpamStdSys.R.map cmd (fun cmd ->
+            cmd >>= fun s ->
+            Scanf.sscanf s "%_s@[ Version %s@]" norm)
+         with Scanf.Scan_failure _ | End_of_file -> return None)
       | Some "freebsd" ->
         let uname = OpamStdSys.uname ["-U"] in
         OpamStdSys.R.map uname (fun uname -> Option.bind uname norm)
@@ -142,23 +144,33 @@ module Include' (OpamStdSys : OpamStd.OpamSysRunnableT) (Runner : OpamStd.Runner
 
   let poll_os_distribution () =
     let lazy os = os in
-    OpamStdSys.R.map os (function
+    let return = OpamStdSys.R.return in
+    OpamStdSys.R.bind os (function
       | Some "macos" as macos ->
-        if OpamSystem.resolve_command "brew" <> None then Some "homebrew"
-        else if OpamSystem.resolve_command "port" <> None then Some "macports"
-        else macos
-      | Some "linux" as linux ->
-        (if is_android () then Some "android" else
-         os_release_field "ID" >>= norm >>+ fun () ->
-         command_output ~prog:"lsb_release" ~argv:["-i"; "-s"] >>= norm >>+ fun () ->
-         try
-           List.find Sys.file_exists ["/etc/redhat-release";
-                                      "/etc/centos-release";
-                                      "/etc/gentoo-release";
-                                      "/etc/issue"] |>
-           fun s -> Scanf.sscanf s " %s " norm
-         with Not_found -> linux)
-      | os -> os)
+        if OpamSystem.resolve_command "brew" <> None then return (Some "homebrew")
+        else if OpamSystem.resolve_command "port" <> None then return (Some "macports")
+        else (return macos)
+      | Some "linux" as linux -> (
+        let is_android = is_android () in
+        OpamStdSys.R.bind is_android (function
+          | true -> return @@ Some "android"
+          | false -> (
+            match os_release_field "ID" with
+            | Some os_release_field -> return @@ norm os_release_field
+            | None -> (
+              let lsb_release = command_output ~prog:"lsb_release" ~argv:["-i"; "-s"] in
+              OpamStdSys.R.bind lsb_release (function
+                | Some lsb_release -> return @@ norm lsb_release
+                | None -> (
+                  try
+                    List.find Sys.file_exists ["/etc/redhat-release";
+                                               "/etc/centos-release";
+                                               "/etc/gentoo-release";
+                                               "/etc/issue"]
+                    |> fun s -> Scanf.sscanf s " %s " norm
+                    |> return
+                  with Not_found -> return linux))))))
+      | os -> return os)
   let os_distribution = Lazy.from_fun poll_os_distribution
 
   let poll_os_family () =
