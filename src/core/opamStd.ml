@@ -854,11 +854,10 @@ let fatal e = match e with
   | Assert_failure _ | Match_failure _ -> raise e
   | _ -> ()
 
-module OpamSys = struct
+module Path = struct
+  let sep = if Sys.win32 then ';' else ':'
 
-  let path_sep = if Sys.win32 then ';' else ':'
-
-  let split_path_variable ?(clean=true) =
+  let split_variable ?(clean=true) =
     if Sys.win32 then fun path ->
       let length = String.length path in
       let rec f acc index current last normal =
@@ -879,21 +878,64 @@ module OpamSys = struct
       f [] 0 "" 0 true
     else fun path ->
       let split = if clean then OpamString.split else OpamString.split_delim in
-      split path path_sep
+      split path sep
+end
 
-  let with_process_in cmd args f =
+module type Runner = sig
+  type 'a t
+
+  val bind : 'a t -> ('a -> 'b t) -> 'b t
+
+  val map : 'a t -> ('a -> 'b) -> 'b t
+
+  val return : 'a -> 'a t
+
+  val run : prog:string -> argv:string list -> string option t
+
+  val escape : 'a t -> 'a
+end
+
+module UnitRunner : Runner = struct
+  type 'a t = unit -> 'a
+
+  let bind v f = f (v ())
+
+  let return v = (fun () -> v)
+
+  let map v f = return (f (v ()))
+
+  let with_process_in ~prog ~argv =
     if Sys.win32 then
       assert false;
-    let path = split_path_variable (Env.get "PATH") in
+    let path = Path.split_variable (Env.get "PATH") in
     let cmd =
-      List.find Sys.file_exists (List.map (fun d -> Filename.concat d cmd) path)
+      List.find Sys.file_exists (List.map (fun d -> Filename.concat d prog) path)
     in
-    let ic = Unix.open_process_in (cmd^" "^args) in
+    let argv = Array.of_list argv in
+    let stdio = Unix.open_process_full cmd argv in
+    let (stdout, _, _) = stdio in
+    Fun.protect
+      (fun () -> return (input_line stdout))
+      ~finally:(fun () ->
+        let _ : Unix.process_status = Unix.close_process_full stdio in
+        ())
+
+  let run ~prog ~argv =
     try
-      let r = f ic in
-      ignore (Unix.close_process_in ic) ; r
-    with exn ->
-      ignore (Unix.close_process_in ic) ; raise exn
+      let line = with_process_in ~prog ~argv in
+      map line @@ fun line -> Some (OpamString.strip line)
+    with
+    | Unix.Unix_error _ | Sys_error _ | Not_found | End_of_file ->
+      return None
+
+  let escape v = v ()
+end
+
+module OpamSysRunnable(R : Runner) = struct
+
+  let path_sep = Path.sep
+
+  let split_path_variable = Path.split_variable
 
   let tty_out = Unix.isatty Unix.stdout
 
@@ -906,28 +948,27 @@ module OpamSys = struct
       | Not_found
       | Failure _ -> default
     in
-    if cols > 0 then cols else default
+    if cols > 0 then R.return cols else R.return default
   )
 
   let get_terminal_columns () =
     let fallback = 80 in
     let cols =
-      try (* terminfo *)
-        with_process_in "tput" "cols"
-          (fun ic -> int_of_string (input_line ic))
-      with
-      | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
-        try (* GNU stty *)
-          with_process_in "stty" "size"
-            (fun ic ->
-               match OpamString.split (input_line ic) ' ' with
-               | [_ ; v] -> int_of_string v
-               | _ -> failwith "stty")
-        with
-        | Unix.Unix_error _ | Sys_error _ | Failure _
-        | End_of_file | Not_found -> fallback
+      (* terminfo *)
+      R.bind (R.run ~prog:"tput" ~argv:["cols"]) (function
+      | Some cols -> R.return @@ int_of_string cols
+      | None -> (
+        (* GNU stty *)
+        R.map (R.run ~prog:"stty" ~argv:["size"])
+          (function
+            | None -> fallback
+            | Some s ->
+             match OpamString.split s ' ' with
+             | [_ ; v] -> int_of_string v
+             | _ -> failwith "stty")))
     in
-    if cols > 0 then cols else fallback
+    R.map cols (fun cols ->
+      if cols > 0 then cols else fallback)
 
   let win32_get_console_width default_columns =
     try
@@ -935,7 +976,7 @@ module OpamSys = struct
       let {OpamStubs.size = (width, _); _} =
         OpamStubs.getConsoleScreenBufferInfo hConsoleOutput
       in
-      width
+      R.return width
     with Not_found ->
       Lazy.force default_columns
 
@@ -974,18 +1015,8 @@ module OpamSys = struct
 
   let etc () = "/etc"
 
-  let uname =
-    let memo = Hashtbl.create 7 in
-    fun arg ->
-      try Hashtbl.find memo arg with Not_found ->
-        let r =
-          try
-            with_process_in "uname" arg
-              (fun ic -> Some (OpamString.strip (input_line ic)))
-          with Unix.Unix_error _ | Sys_error _ | Not_found -> None
-        in
-        Hashtbl.add memo arg r;
-        r
+  let uname argv =
+    R.run ~prog:"uname" ~argv
 
   let system () =
     (* CSIDL_SYSTEM = 0x25 *)
@@ -1007,18 +1038,19 @@ module OpamSys = struct
     let os = lazy (
       match Sys.os_type with
       | "Unix" -> begin
-          match uname "-s" with
+        let res = uname ["-s"] in
+        R.map res (function
           | Some "Darwin"    -> Darwin
           | Some "Linux"     -> Linux
           | Some "FreeBSD"   -> FreeBSD
           | Some "OpenBSD"   -> OpenBSD
           | Some "NetBSD"    -> NetBSD
           | Some "DragonFly" -> DragonFly
-          | _                -> Unix
+          | _                -> Unix)
         end
-      | "Win32"  -> Win32
-      | "Cygwin" -> Cygwin
-      | s        -> Other s
+      | "Win32"  -> R.return Win32
+      | "Cygwin" -> R.return Cygwin
+      | s        -> R.return (Other s)
     ) in
     fun () -> Lazy.force os
 
@@ -1110,33 +1142,27 @@ module OpamSys = struct
 
   let guess_shell_compat () =
     let parent_guess () =
-      let ppid = Unix.getppid () in
-      let dir = Filename.concat "/proc" (string_of_int ppid) in
+      let ppid = Unix.getppid () |> string_of_int in
+      let dir = Filename.concat "/proc" ppid in
       try
-        Some (Unix.readlink (Filename.concat dir "exe"))
+        R.return (Some (Unix.readlink (Filename.concat dir "exe")))
       with e ->
         fatal e;
-        try
-          with_process_in "ps"
-            (Printf.sprintf "-p %d -o comm= 2>/dev/null" ppid)
-            (fun ic -> Some (input_line ic))
-        with
-        | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
+        R.map (R.run ~prog:"ps" ~argv:["-p"; ppid; "-o"; "comm="])
+          (function
+          | Some _ as x -> x
+          | None -> (
             try
-              let c = open_in_bin ("/proc/" ^ string_of_int ppid ^ "/cmdline") in
-              begin try
+              let cmdline = Filename.concat dir "cmdline" in
+              let c = open_in_bin cmdline in
+              Fun.protect (fun () ->
                 let s = input_line c in
-                close_in c;
-                Some (String.sub s 0 (String.index s '\000'))
-              with
-              | Not_found ->
-                  None
-              | e ->
-                  close_in c;
-                  fatal e; None
-              end
+                try Some (String.sub s 0 (String.index s '\000'))
+                with Not_found -> None)
+                ~finally:(fun () -> close_in c)
             with e ->
-              fatal e; None
+              fatal e;
+              None))
     in
     let test shell = shell_of_string (Filename.basename shell) in
     if Sys.win32 then
@@ -1147,16 +1173,19 @@ module OpamSys = struct
         | some ->
           some
         in
-      Option.default windows_default_shell shell
+      R.return (Option.default windows_default_shell shell)
     else
       let shell =
-        match Option.replace test (parent_guess ()) with
-        | None ->
-            Option.of_Not_found Env.get "SHELL" |> Option.replace test
-        | some ->
-            some
+        let res = parent_guess () in
+        R.map res (fun guess ->
+          match Option.replace test guess with
+          | None ->
+              Option.of_Not_found Env.get "SHELL" |> Option.replace test
+          | some ->
+              some)
       in
-      Option.default unix_default_shell shell
+      R.map shell (fun shell ->
+        Option.default unix_default_shell shell)
 
   let guess_dot_profile shell =
     let win_my_powershell f =
@@ -1316,8 +1345,185 @@ module OpamSys = struct
       if !called then invalid_arg "Just what do you think you're doing, Dave?";
       called := true;
       console := printer
+
+  module R = R
 end
 
+module type OpamSysRunnableT = functor (R : Runner) -> sig 
+  val tty_out : bool
+
+  val tty_in : bool
+
+  val terminal_columns : unit -> int R.t
+
+  val home: unit -> string
+
+  val etc: unit -> string
+
+  val system: unit -> string
+
+  type os = Darwin
+          | Linux
+          | FreeBSD
+          | OpenBSD
+          | NetBSD
+          | DragonFly
+          | Cygwin
+          | Win32
+          | Unix
+          | Other of string
+
+  val os: unit -> os R.t
+
+  val uname: string list -> string option R.t
+
+  val executable_name : string -> string
+
+  type powershell_host = Powershell_pwsh | Powershell
+  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
+    | SH_pwsh of powershell_host | SH_win_cmd
+
+  val all_shells : shell list
+
+  val guess_shell_compat: unit -> shell R.t
+
+  val guess_dot_profile: shell -> string
+
+  val path_sep: char
+
+  val split_path_variable: ?clean:bool -> string -> string list
+
+  val get_windows_executable_variant:
+    string -> [ `Native | `Cygwin | `Tainted of [ `Msys2 | `Cygwin] | `Msys2 ]
+
+  val is_cygwin_variant: string -> [ `Native | `Cygwin | `CygLinked ]
+
+  val at_exit: (unit -> unit) -> unit
+
+  val exec_at_exit: unit -> unit
+
+  exception Exit of int
+
+  exception Exec of string * string array * string array
+
+  type exit_reason =
+    [ `Success | `False | `Bad_arguments | `Not_found | `Aborted | `Locked
+    | `No_solution | `File_error | `Package_operation_error | `Sync_error
+    | `Configuration_error | `Solver_failure | `Internal_error
+    | `User_interrupt ]
+
+  val exit_codes : (exit_reason * int) list
+
+  val get_exit_code : exit_reason -> int
+
+  val exit_because: exit_reason -> 'a
+
+  type warning_printer =
+    {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
+  val set_warning_printer : warning_printer -> unit
+
+  module R : Runner with type 'a t = 'a R.t
+end
+
+module OpamSysRunnable' = (OpamSysRunnable : OpamSysRunnableT)
+module OpamSysUnit = OpamSysRunnable'(UnitRunner)
+
+module type Sys = sig
+  val tty_out : bool
+
+  val tty_in : bool
+
+  val terminal_columns : unit -> int
+
+  val home: unit -> string
+
+  val etc: unit -> string
+
+  val system: unit -> string
+
+  type os = Darwin
+          | Linux
+          | FreeBSD
+          | OpenBSD
+          | NetBSD
+          | DragonFly
+          | Cygwin
+          | Win32
+          | Unix
+          | Other of string
+
+  val os: unit -> os
+
+  val uname: string -> string option
+
+  val executable_name : string -> string
+
+  type powershell_host = Powershell_pwsh | Powershell
+  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
+    | SH_pwsh of powershell_host | SH_win_cmd
+
+  val all_shells : shell list
+
+  val guess_shell_compat: unit -> shell
+
+  val guess_dot_profile: shell -> string
+
+  val path_sep: char
+
+  val split_path_variable: ?clean:bool -> string -> string list
+
+  val get_windows_executable_variant:
+    string -> [ `Native | `Cygwin | `Tainted of [ `Msys2 | `Cygwin] | `Msys2 ]
+
+  val is_cygwin_variant: string -> [ `Native | `Cygwin | `CygLinked ]
+
+  val at_exit: (unit -> unit) -> unit
+
+  val exec_at_exit: unit -> unit
+
+  exception Exit of int
+
+  exception Exec of string * string array * string array
+
+  type exit_reason =
+    [ `Success | `False | `Bad_arguments | `Not_found | `Aborted | `Locked
+    | `No_solution | `File_error | `Package_operation_error | `Sync_error
+    | `Configuration_error | `Solver_failure | `Internal_error
+    | `User_interrupt ]
+
+  val exit_codes : (exit_reason * int) list
+
+  val get_exit_code : exit_reason -> int
+
+  val exit_because: exit_reason -> 'a
+
+  type warning_printer =
+    {mutable warning : 'a . ('a, unit, string, unit) format4 -> 'a}
+  val set_warning_printer : warning_printer -> unit
+end
+
+module OpamSys = struct
+  include OpamSysUnit
+
+  let uname =
+    let memo = Hashtbl.create 7 in
+    fun arg ->
+      try
+        Hashtbl.find memo arg
+      with Not_found ->
+        let r = UnitRunner.escape @@ OpamSysUnit.uname [arg] in
+        Hashtbl.add memo arg r;
+        r
+
+  let terminal_columns () =
+    UnitRunner.escape @@ OpamSysUnit.terminal_columns ()
+
+  let os () =
+    UnitRunner.escape @@ OpamSysUnit.os ()
+
+  let guess_shell_compat () =
+    UnitRunner.escape @@ guess_shell_compat ()
+end
 
 module Win32 = struct
   module RegistryHive = struct

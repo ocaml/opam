@@ -385,7 +385,7 @@ first  --
 [ERROR] In ${BASEDIR}/OPAM/repo/oper2/packages/second/second.2/opam:
         This file is for package 'second.2' but has mismatching fields 'version:2.2.
 [ERROR] Strict mode: aborting
-[ERROR] Could not update repository "oper2": OpamStd.OpamSys.Exit(30)
+[ERROR] Could not update repository "oper2": OpamStd.OpamSysRunnable(R).Exit(30)
 [ERROR] Initial repository fetch failed
 # Return code 40 #
 ### opam repository --this-switch
@@ -397,7 +397,7 @@ first  --
 [ERROR] In ${BASEDIR}/OPAM/repo/oper/packages/second/second.2/opam:
         This file is for package 'second.2' but has mismatching fields 'version:2.2.
 [ERROR] Strict mode: aborting
-[ERROR] Could not update repository "oper": OpamStd.OpamSys.Exit(30)
+[ERROR] Could not update repository "oper": OpamStd.OpamSysRunnable(R).Exit(30)
 [ERROR] Fetching repository oper with file://${BASEDIR}/OPER2 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam repository --this-switch
@@ -551,7 +551,7 @@ first  --
 [ERROR] In ${BASEDIR}/OPAM/repo/oper2/packages/second/second.2/opam:
         This file is for package 'second.2' but has mismatching fields 'version:2.2.
 [ERROR] Strict mode: aborting
-[ERROR] Could not update repository "oper2": OpamStd.OpamSys.Exit(30)
+[ERROR] Could not update repository "oper2": OpamStd.OpamSysRunnable(R).Exit(30)
 [ERROR] Initial repository fetch failed
 # Return code 40 #
 ### opam repository --this-switch
@@ -563,7 +563,7 @@ first  --
 [ERROR] In ${BASEDIR}/OPAM/repo/oper/packages/second/second.2/opam:
         This file is for package 'second.2' but has mismatching fields 'version:2.2.
 [ERROR] Strict mode: aborting
-[ERROR] Could not update repository "oper": OpamStd.OpamSys.Exit(30)
+[ERROR] Could not update repository "oper": OpamStd.OpamSysRunnable(R).Exit(30)
 [ERROR] Fetching repository oper with file://${BASEDIR}/OPER2 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam repository --this-switch

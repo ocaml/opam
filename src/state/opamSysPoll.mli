@@ -13,6 +13,24 @@ open OpamStateTypes
 (** This module polls various aspects of the host, to define the [arch], [os],
     etc. variables *)
 
+module type IncludeT = functor (Runnable : OpamStd.OpamSysRunnableT) (Runner : OpamStd.Runner) -> sig
+  val poll_arch : unit -> string option Runnable(Runner).R.t
+  val arch : string option Runnable(Runner).R.t Lazy.t
+
+  val poll_os : unit -> string option Runnable(Runner).R.t
+  val os : string option Runnable(Runner).R.t Lazy.t
+
+  val poll_os_version : unit -> string option Runnable(Runner).R.t
+  val os_version : string option Runnable(Runner).R.t Lazy.t
+
+  val poll_os_distribution : unit -> string option Runnable(Runner).R.t
+  val os_distribution : string option Runnable(Runner).R.t Lazy.t
+
+  val variables : (OpamVariable.t * OpamVariable.variable_contents option Runnable(Runner).R.t lazy_t) list
+end
+
+module Include' : IncludeT
+
 (** Functions to get host specification. It checks if variables value is
     defined in the environment map before polling. *)
 val arch: gt_variables -> string option
