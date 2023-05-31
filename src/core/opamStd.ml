@@ -918,8 +918,7 @@ module UnitRunner : Runner = struct
     let (stdout, _, _) = stdio in
     Fun.protect
       (fun () ->
-        let line = input_line stdout in
-        return line)
+        return (input_line stdout))
       ~finally:(fun () ->
         let _ : Unix.process_status = Unix.close_process_full stdio in
         ())
