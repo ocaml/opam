@@ -916,19 +916,18 @@ module UnitRunner : Runner = struct
     let argv = Array.of_list argv in
     let stdio = Unix.open_process_full cmd argv in
     let (stdout, _, _) = stdio in
-    try
-      let r = input_line stdout in
-      let _ : Unix.process_status = Unix.close_process_full stdio in
-      return r
-    with exn ->
-      let _ : Unix.process_status = Unix.close_process_full stdio in
-      raise exn
+    Fun.protect
+      (fun () ->
+        let line = input_line stdout in
+        return line)
+      ~finally:(fun () ->
+        let _ : Unix.process_status = Unix.close_process_full stdio in
+        ())
 
   let run ~prog ~argv =
     try
       let line = with_process_in ~prog ~argv in
-      map line (fun line ->
-        Some (OpamString.strip line))
+      map line @@ fun line -> Some (OpamString.strip line)
     with Unix.Unix_error _ | Sys_error _ | Not_found -> return None
 
   let escape v = v ()
