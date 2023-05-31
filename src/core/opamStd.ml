@@ -917,8 +917,7 @@ module UnitRunner : Runner = struct
     let stdio = Unix.open_process_full cmd argv in
     let (stdout, _, _) = stdio in
     Fun.protect
-      (fun () ->
-        return (input_line stdout))
+      (fun () -> return (input_line stdout))
       ~finally:(fun () ->
         let _ : Unix.process_status = Unix.close_process_full stdio in
         ())
