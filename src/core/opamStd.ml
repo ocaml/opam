@@ -926,7 +926,9 @@ module UnitRunner : Runner = struct
     try
       let line = with_process_in ~prog ~argv in
       map line @@ fun line -> Some (OpamString.strip line)
-    with Unix.Unix_error _ | Sys_error _ | Not_found -> return None
+    with
+    | Unix.Unix_error _ | Sys_error _ | Not_found | End_of_file ->
+      return None
 
   let escape v = v ()
 end
