@@ -469,8 +469,6 @@ module type Runner = sig
 
   val return : 'a -> 'a t
 
-  val with_process_in : prog:string -> argv:string list -> string t
-
   val run : prog:string -> argv:string list -> string option t
 
   val escape : 'a t -> 'a

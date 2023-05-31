@@ -890,8 +890,6 @@ module type Runner = sig
 
   val return : 'a -> 'a t
 
-  val with_process_in : prog:string -> argv:string list -> string t
-
   val run : prog:string -> argv:string list -> string option t
 
   val escape : 'a t -> 'a
@@ -939,8 +937,6 @@ module OpamSysRunnable(R : Runner) = struct
 
   let split_path_variable = Path.split_variable
 
-  let with_process_in = R.with_process_in
-
   let tty_out = Unix.isatty Unix.stdout
 
   let tty_in = Unix.isatty Unix.stdin
@@ -958,20 +954,18 @@ module OpamSysRunnable(R : Runner) = struct
   let get_terminal_columns () =
     let fallback = 80 in
     let cols =
-      try (* terminfo *)
-        R.map (with_process_in ~prog:"tput" ~argv:["cols"])
-          (fun s -> int_of_string s)
-      with
-      | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
-        try (* GNU stty *)
-          R.map (with_process_in ~prog:"stty" ~argv:["size"])
-            (fun s ->
-               match OpamString.split s ' ' with
-               | [_ ; v] -> int_of_string v
-               | _ -> failwith "stty")
-        with
-        | Unix.Unix_error _ | Sys_error _ | Failure _
-        | End_of_file | Not_found -> R.return fallback
+      (* terminfo *)
+      R.bind (R.run ~prog:"tput" ~argv:["cols"]) (function
+      | Some cols -> R.return @@ int_of_string cols
+      | None -> (
+        (* GNU stty *)
+        R.map (R.run ~prog:"stty" ~argv:["size"])
+          (function
+            | None -> fallback
+            | Some s ->
+             match OpamString.split s ' ' with
+             | [_ ; v] -> int_of_string v
+             | _ -> failwith "stty")))
     in
     R.map cols (fun cols ->
       if cols > 0 then cols else fallback)
@@ -1148,35 +1142,27 @@ module OpamSysRunnable(R : Runner) = struct
 
   let guess_shell_compat () =
     let parent_guess () =
-      let ppid = Unix.getppid () in
-      let dir = Filename.concat "/proc" (string_of_int ppid) in
+      let ppid = Unix.getppid () |> string_of_int in
+      let dir = Filename.concat "/proc" ppid in
       try
         R.return (Some (Unix.readlink (Filename.concat dir "exe")))
       with e ->
         fatal e;
-        try
-          R.map (with_process_in ~prog:"ps"
-            ~argv:["-p"; (string_of_int ppid); "-o"; "comm="])
-            Option.some
-        with
-        | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
+        R.map (R.run ~prog:"ps" ~argv:["-p"; ppid; "-o"; "comm="])
+          (function
+          | Some _ as x -> x
+          | None -> (
             try
-              let c = open_in_bin ("/proc/" ^ string_of_int ppid ^ "/cmdline") in
-              begin try
+              let cmdline = Filename.concat dir "cmdline" in
+              let c = open_in_bin cmdline in
+              Fun.protect (fun () ->
                 let s = input_line c in
-                close_in c;
-                R.return (Some (String.sub s 0 (String.index s '\000')))
-              with
-              | Not_found ->
-                  R.return None
-              | e ->
-                  close_in c;
-                  fatal e;
-                  R.return None
-              end
+                try Some (String.sub s 0 (String.index s '\000'))
+                with Not_found -> None)
+                ~finally:(fun () -> close_in c)
             with e ->
               fatal e;
-              R.return None
+              None))
     in
     let test shell = shell_of_string (Filename.basename shell) in
     if Sys.win32 then
