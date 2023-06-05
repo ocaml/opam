@@ -98,13 +98,17 @@ let poll_os_distribution () =
     (if is_android () then Some "android" else
      os_release_field "ID" >>= norm >>+ fun () ->
      command_output ["lsb_release"; "-i"; "-s"] >>= norm >>+ fun () ->
-     try
-       List.find Sys.file_exists ["/etc/redhat-release";
-                                  "/etc/centos-release";
-                                  "/etc/gentoo-release";
-                                  "/etc/issue"] |>
-       fun s -> Scanf.sscanf s " %s " norm
-     with Not_found -> linux)
+     let release_file =
+       List.find_opt Sys.file_exists ["/etc/redhat-release";
+                                      "/etc/centos-release";
+                                      "/etc/gentoo-release";
+                                      "/etc/issue"]
+     in
+     match OpamStd.Option.map OpamProcess.read_lines release_file with
+     | None |  Some [] -> linux
+     | Some (s::_) ->
+       try Scanf.sscanf s " %s " norm
+       with Scanf.Scan_failure _ -> linux)
   | os -> os
 let os_distribution = Lazy.from_fun poll_os_distribution
 
