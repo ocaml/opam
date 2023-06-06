@@ -741,7 +741,7 @@ dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
-           warning 62: License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/: "DTFWYW"
+           warning 62: License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/ : "DTFWYW"
 ### : E65: URLs must be absolute
 ### <lint.opam>
 opam-version: "2.0"
