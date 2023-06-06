@@ -166,6 +166,7 @@ users)
   * E67: check checksums only for vcs urls [#4960 @rjbou]
   * E57: Enforce synopsis to always be there, restoring behaviour from opam 2.1 [#5442 @kit-ty-kate]
   * W56: detection removed, since `OPAM_LAST_ENV` allows reliable reverting [#5417 @dra27]
+  * W62: Fix URL [#5571 @3Rafal]
 
 ## Repository
   * When several checksums are specified, instead of adding in the cache only the archive by first checksum, name by best one and link others to this archive [#4696 rjbou]
