@@ -1118,7 +1118,7 @@ Pin and install them? [y/n] y
 Package apron does not exist, create as a NEW package? [y/n] y
 [apron.v0.9.13] synchronised (no changes)
 [WARNING] Failed checks on apron package definition from source at git+https://github.com/antoinemine/apron.git#c852ebcc89e5cf4a5a3318e7c13c73e1756abb11:
-           warning 62: License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/: "LGPL-2.1 with linking exception"
+           warning 62: License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/ : "LGPL-2.1 with linking exception"
 apron is now pinned to git+https://github.com/antoinemine/apron.git#c852ebcc89e5cf4a5a3318e7c13c73e1756abb11 (version v0.9.13)
 Package goblint-cil does not exist, create as a NEW package? [y/n] y
 [goblint-cil.1.8.2] synchronised (no changes)

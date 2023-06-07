@@ -752,7 +752,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        List.filter (fun s -> not (is_valid_license_id s)) t.license
      in
      cond 62 `Warning
-       "License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/"
+       "License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/ "
        ~detail:bad_licenses
        (bad_licenses <> []));
 (*
