@@ -495,6 +495,7 @@ users)
   * Update sed-cmd to handle commands without any arguments [#5257 @kit-ty-kate]
   * Make the binary name of opam the same accross platforms (used when testing invalid commands) [#5308 @kit-ty-kate]
   * Handle cygpaths for opamp binary path [#5308 @rjbou]
+  * Fix line replacement/deletion with specific printers [#5572 @rjbou]
 
 ## Github Actions
   * Add solver backends compile test [#4723 @rjbou] [2.1.0~rc2 #4720]

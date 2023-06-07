@@ -757,10 +757,8 @@ invariant: ["i-am-compiler" {>= "2"}]
 opam-version: "2.0"
 synopsis: "switch with compiler"
 paths {
-
 }
 variables {
-
 }
 ### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-state
 compiler: ["i-am-compiler.2"]
@@ -840,10 +838,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 paths {
-
 }
 variables {
-
 }
 ### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
@@ -923,10 +919,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 paths {
-
 }
 variables {
-
 }
 ### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
@@ -992,10 +986,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 paths {
-
 }
 variables {
-
 }
 ### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
@@ -1138,10 +1130,8 @@ invariant: ["i-am-compiler"]
 opam-version: "2.0"
 synopsis: "switch with compiler"
 paths {
-
 }
 variables {
-
 }
 ### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-state
 compiler: ["i-am-compiler.2"]
@@ -1213,10 +1203,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 paths {
-
 }
 variables {
-
 }
 ### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
@@ -1290,10 +1278,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 paths {
-
 }
 variables {
-
 }
 ### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
@@ -1358,10 +1344,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 paths {
-
 }
 variables {
-
 }
 ### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
@@ -1510,10 +1494,8 @@ invariant: ["i-am-compiler"]
 opam-version: "2.0"
 synopsis: "switch with compiler"
 paths {
-
 }
 variables {
-
 }
 ### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-state
 compiler: ["i-am-compiler.2"]
@@ -1587,10 +1569,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 paths {
-
 }
 variables {
-
 }
 ### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
@@ -1666,10 +1646,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 paths {
-
 }
 variables {
-
 }
 ### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
@@ -1734,10 +1712,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 paths {
-
 }
 variables {
-
 }
 ### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
