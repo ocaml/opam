@@ -596,6 +596,7 @@ users)
   * `OpamVCS.VCS`: add a `clean` function to the interface clearing all the uncommited files [#4879 @rjbou]
   * `OpamVCS.pull_url`: clean repository before fetching [#4879 @rjbou]
   * `OpamDownload`: Add `SWHID` submodule that implements SWH fallback (retrieve url, download, check hash, and copy in target) [#4859 @rjbou]
+  * `OpamCLIVersion.of_string`: print version when failing to parse it [#5566 @MisterDA]
 
 ## opam-state
   * `OpamSwitchState.universe`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
