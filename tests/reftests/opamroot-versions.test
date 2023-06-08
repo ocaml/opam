@@ -671,7 +671,7 @@ let _ =
   | _ -> ()
 ### rm -rf $OPAMROOT
 ### OPAMSYSCOMP=2
-### opam init -na default ./default --bare --bypass-checks --no-opamrc --debug-level=0
+### opam init -na default ./default --bare --bypass-checks --no-opamrc --debug-level=0 | grep -v Cygwin
 No configuration file found, using built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
@@ -736,7 +736,7 @@ RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ sw-comp
 STATE                           Switch state loaded in 0.000s
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 depext: true
 depext-cannot-install: false
@@ -815,7 +815,7 @@ Continue? [y/n] y
            opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 depext: true
 depext-cannot-install: false
@@ -896,7 +896,7 @@ Continue? [y/n] y
            opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 depext: true
 depext-cannot-install: false
@@ -962,7 +962,7 @@ Done.
 ### opam option jobs=4
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -996,7 +996,7 @@ opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:1:e: reinit from 2.0
 ### ocaml generate.ml 2.0
-### opam init --reinit --bypass-checks --no-setup | "${OPAMROOTVERSION}($|,)" -> "current"
+### opam init --reinit --bypass-checks --no-setup | "${OPAMROOTVERSION}($|,)" -> "current" | grep -v Cygwin
 No configuration file found, using built-in defaults.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
@@ -1030,7 +1030,7 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
@@ -1050,7 +1050,7 @@ wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "ma
 ### rm -rf _opam
 ### :V:2:a: From 2.1~alpha root, global
 ### ocaml generate.ml 2.1~alpha
-### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
+### opam list | "${OPAMROOTVERSION}($|,)" -> "current" | grep -v Cygwin
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Hard config upgrade, from 2.1~alpha to current
@@ -1105,7 +1105,7 @@ RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ sw-comp
 STATE                           Switch state loaded in 0.000s
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
@@ -1140,7 +1140,7 @@ opam-version: "2.0"
 roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 ### :V:2:b: From 2.1~alpha root, local
 ### ocaml generate.ml 2.1~alpha local
-### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
+### opam list | "${OPAMROOTVERSION}($|,)" -> "current" | grep -v Cygwin
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Hard config upgrade, from 2.1~alpha to current
@@ -1177,7 +1177,7 @@ The following actions will be performed:
 -> installed i-am-package.2
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
@@ -1214,7 +1214,7 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### rm -rf _opam
 ### :V:2:c: From 2.1~alpha root, local unknown from config
 ### ocaml generate.ml 2.1~alpha orphaned
-### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
+### opam list | "${OPAMROOTVERSION}($|,)" -> "current" | grep -v Cygwin
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Hard config upgrade, from 2.1~alpha to current
@@ -1252,7 +1252,7 @@ The following actions will be performed:
 -> installed i-am-package.2
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
@@ -1320,7 +1320,7 @@ Done.
 ### opam option jobs=4
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -1354,7 +1354,7 @@ opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:2:e: reinit from 2.1~alpha
 ### ocaml generate.ml 2.1~alpha
-### opam init --reinit --bypass-checks --no-setup | "${OPAMROOTVERSION}($|,)" -> "current"
+### opam init --reinit --bypass-checks --no-setup | "${OPAMROOTVERSION}($|,)" -> "current" | grep -v Cygwin
 No configuration file found, using built-in defaults.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
@@ -1391,7 +1391,7 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
@@ -1412,7 +1412,7 @@ wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "ma
 ### :V:3:a: From 2.1~alpha2 root, global
 ### ocaml generate.ml 2.1~alpha2
 ### # ro global state
-### opam option jobs | "${OPAMROOTVERSION}($|,)" -> "current"
+### opam option jobs | "${OPAMROOTVERSION}($|,)" -> "current" | grep -v Cygwin
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         Intermediate opam root detected, launch hard upgrade
 FMT_UPG                         Downgrade config opam-version to fix up
@@ -1469,7 +1469,7 @@ RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ sw-comp
 STATE                           Switch state loaded in 0.000s
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
@@ -1504,7 +1504,7 @@ opam-version: "2.0"
 roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 ### :V:3:b: From 2.1~alpha2 root, local
 ### ocaml generate.ml 2.1~alpha2 local
-### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
+### opam list | "${OPAMROOTVERSION}($|,)" -> "current" | grep -v Cygwin
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         Intermediate opam root detected, launch hard upgrade
 FMT_UPG                         Downgrade config opam-version to fix up
@@ -1543,7 +1543,7 @@ The following actions will be performed:
 -> installed i-am-package.2
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
@@ -1580,7 +1580,7 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### rm -rf _opam
 ### :V:3:c: From 2.1~alpha2 root, local unknown from config
 ### ocaml generate.ml 2.1~alpha2 orphaned
-### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
+### opam list | "${OPAMROOTVERSION}($|,)" -> "current" | grep -v Cygwin
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         Intermediate opam root detected, launch hard upgrade
 FMT_UPG                         Downgrade config opam-version to fix up
@@ -1620,7 +1620,7 @@ The following actions will be performed:
 -> installed i-am-package.2
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
@@ -1688,7 +1688,7 @@ Done.
 ### opam option jobs=4
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -1722,7 +1722,7 @@ opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:3:e: reinit from 2.1~alpha2
 ### ocaml generate.ml 2.1~alpha2
-### opam init --reinit --bypass-checks --no-setup | "${OPAMROOTVERSION}($|,)" -> "current"
+### opam init --reinit --bypass-checks --no-setup | "${OPAMROOTVERSION}($|,)" -> "current" | grep -v Cygwin
 No configuration file found, using built-in defaults.
 FMT_UPG                         Intermediate opam root detected, launch hard upgrade
 FMT_UPG                         Downgrade config opam-version to fix up
@@ -1759,7 +1759,7 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
@@ -1828,7 +1828,7 @@ You may want to back it up before going further.
 Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -1899,7 +1899,7 @@ You may want to back it up before going further.
 Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -1972,7 +1972,7 @@ You may want to back it up before going further.
 Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -2033,7 +2033,7 @@ Done.
 ### opam option jobs=4
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -2063,7 +2063,7 @@ opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:4:e: reinit from 2.1~rc
 ### ocaml generate.ml 2.1~rc
-### opam init --reinit --bypass-checks --no-setup | "${OPAMROOTVERSION}($|,)" -> "current"
+### opam init --reinit --bypass-checks --no-setup | "${OPAMROOTVERSION}($|,)" -> "current" | grep -v Cygwin
 No configuration file found, using built-in defaults.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
@@ -2095,7 +2095,7 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -2175,7 +2175,7 @@ You may want to back it up before going further.
 Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -2245,7 +2245,7 @@ You may want to back it up before going further.
 Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -2317,7 +2317,7 @@ You may want to back it up before going further.
 Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -2389,7 +2389,7 @@ You may want to back it up before going further.
 Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -2419,7 +2419,7 @@ opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:5:e: reinit from 2.1
 ### ocaml generate.ml 2.1
-### opam init --reinit --bypass-checks --no-setup | "${OPAMROOTVERSION}($|,)" -> "current"
+### opam init --reinit --bypass-checks --no-setup | "${OPAMROOTVERSION}($|,)" -> "current" | grep -v Cygwin
 No configuration file found, using built-in defaults.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
@@ -2435,7 +2435,7 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -2516,7 +2516,7 @@ RSTATE                          Cache found
 ### opam option jobs=4
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -2576,7 +2576,7 @@ Done.
 ### opam option jobs=4
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -2636,7 +2636,7 @@ Done.
 ### opam option jobs=4
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -2697,7 +2697,7 @@ Done.
 ### opam option jobs=4
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
@@ -2727,7 +2727,7 @@ opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:6:e: reinit from 2.2~alpha
 ### ocaml generate.ml 2.2~alpha
-### opam init --reinit --bypass-checks --no-setup
+### opam init --reinit --bypass-checks --no-setup | grep -v Cygwin
 No configuration file found, using built-in defaults.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -2736,7 +2736,7 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current"
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true

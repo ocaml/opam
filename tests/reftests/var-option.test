@@ -14,6 +14,7 @@ opam-version: "2.0"
 Removed variable user in switch var-option
 ### opam var group= --switch var-option
 Removed variable group in switch var-option
+### opam option sys-pkg-manager-cmd= --global | grep -v configuration
 ### opam var arch=x86_64 --global
 Added '[arch "x86_64" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam var jobs=7 --global

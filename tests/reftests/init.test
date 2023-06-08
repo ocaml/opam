@@ -5,7 +5,7 @@
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["false"] "no system compiler" ]
-### opam init --no-setup --bypass-checks default default/ --fake --config opamrc
+### opam init --no-setup --bypass-checks default default/ --fake --config opamrc | grep -v Cygwin
 Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
@@ -29,7 +29,7 @@ Done.
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["echo" "4.02.3"] "old system compiler" ]
-### opam init --no-setup --bypass-checks default default/ --fake --config opamrc
+### opam init --no-setup --bypass-checks default default/ --fake --config opamrc | grep -v Cygwin
 Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
@@ -53,7 +53,7 @@ Done.
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["echo" "4.07.0"] "new system compiler" ]
-### opam init --no-setup --bypass-checks default default/ --fake --config opamrc
+### opam init --no-setup --bypass-checks default default/ --fake --config opamrc | grep -v Cygwin
 Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
@@ -101,12 +101,12 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### :: default setup ::
 ### rm -rf $OPAMROOT
-### opam init --bypass-checks --bare --no-setup default REPO/
+### opam init --bypass-checks --bare --no-setup default REPO/ | grep -v Cygwin
 No configuration file found, using built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
-### opam-cat $OPAMROOT/config | 'opam-root-version: "${OPAMROOTVERSION}"' -> 'opam-root-version: current'
+### opam-cat $OPAMROOT/config | 'opam-root-version: "${OPAMROOTVERSION}"' -> 'opam-root-version: current' | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["ocaml-system" "ocaml-base-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
@@ -157,12 +157,12 @@ post-build-commands: ["%{hooks}%/a-script.sh" "post-build" ]
 post-install-commands: ["%{hooks}%/a-script.sh" "post-install" ]
 post-remove-commands: ["%{hooks}%/a-script.sh" "post-remove" ]
 post-session-commands: ["%{hooks}%/a-script.sh" "post-session" ]
-### opam init --bypass-checks --bare --no-setup --config opamrc
+### opam init --bypass-checks --bare --no-setup --config opamrc | grep -v Cygwin
 Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [norepo] Initialised
-### opam-cat $OPAMROOT/config | 'opam-root-version: "${OPAMROOTVERSION}"' -> 'opam-root-version: current'
+### opam-cat $OPAMROOT/config | 'opam-root-version: "${OPAMROOTVERSION}"' -> 'opam-root-version: current' | grep -v sys-pkg-manager-cmd | '\[\[os-distribution "cygwin" "Set by opam init"] ' -> '' | ']]' -> ']'
 archive-mirrors: "file://${BASEDIR}/REPO/cache"
 default-compiler: ["comp"]
 default-invariant: ["comp" {= "1"}]
@@ -224,12 +224,12 @@ echo "SUCCESS"
 pre-build-commands: ["%{hooks}%/a-script.sh" "pre-build" ]
 wrap-install-commands: ["%{hooks}%/a-script.sh" "wrap-install" ]
 post-session-commands: ["%{hooks}%/a-script.sh" "post-session" ]
-### opam init --bypass-checks --bare --no-setup --config opamrc
+### opam init --bypass-checks --bare --no-setup --config opamrc | grep -v Cygwin
 Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [norepo] Initialised
-### opam-cat $OPAMROOT/config | 'opam-root-version: "${OPAMROOTVERSION}"' -> 'opam-root-version: current'
+### opam-cat $OPAMROOT/config | 'opam-root-version: "${OPAMROOTVERSION}"' -> 'opam-root-version: current' | grep -v sys-pkg-manager-cmd | grep -v global-variables
 archive-mirrors: "file://${BASEDIR}/REPO/cache"
 default-compiler: ["comp"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
