@@ -594,6 +594,24 @@ dev-repo: "hg+https://pkg@op.am"
 bug-reports: "https://nobug"
 |} "<nofile>"
 
+let print_file ~filters reader names =
+  let files =
+    match names with
+    | [file] -> [reader file]
+    | files  ->
+      List.map
+        (fun f -> Printf.sprintf "=> %s <=\n%s" f (reader f))
+        files
+  in
+  List.map (fun s -> OpamStd.String.split s '\n') files
+  |> List.flatten
+  |> List.iter (fun s ->
+      let s =
+        str_replace_path OpamSystem.back_to_forward
+          filters s
+      in
+      if not (String.equal s "\\c") then print_string (s^"\n"))
+
 let run_test ?(vars=[]) ~opam t =
   let old_cwd = Sys.getcwd () in
   let opamroot0 = Filename.concat old_cwd ("root-"^t.repo_hash) in
@@ -693,16 +711,8 @@ let run_test ?(vars=[]) ~opam t =
             List.map (fun s -> Re.(replace_string (compile @@ str "$OPAMROOT")
                                      ~by:opamroot s)) files
           in
-          let s =
-            match files with
-            | [file] -> print_opamfile file
-            | files  ->
-              OpamStd.List.concat_map "\n"
-                (fun f -> Printf.sprintf "=> %s <=\n%s" f (print_opamfile f))
-                files
-          in
-          print_string (str_replace_path OpamSystem.back_to_forward
-                          (filter @ common_filters dir) s);
+          print_file ~filters:(filter @ common_filters dir)
+            print_opamfile files;
           vars
         | Json { files; filter } ->
           let files =
@@ -745,16 +755,8 @@ let run_test ?(vars=[]) ~opam t =
               OpamJson.to_string ~minify:false json ^ "\n"
             | None -> "# Return Error reading json\n"^content
           in
-          let s =
-            match files with
-            | [file] -> to_string file
-            | files  ->
-              OpamStd.List.concat_map "\n"
-                (fun f -> Printf.sprintf "=> %s <=\n%s" f (to_string f))
-                files
-          in
-          print_string (str_replace_path OpamSystem.back_to_forward
-                          (filter @ common_filters ~opam dir @ json_filters) s);
+          print_file ~filters:(filter @ common_filters ~opam dir @ json_filters)
+            to_string files;
           vars
         | Run {env; cmd; args; filter; output; unordered} ->
           let silent = output <> None || unordered in
