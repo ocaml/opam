@@ -25,7 +25,7 @@ fi
 
 ACTUALMD5=`openssl md5 ${V}.tar.gz  2> /dev/null | cut -f 2 -d ' '`
 if [ -z "$ACTUALMD5" ]; then
-  echo "Blank checksum returned; is `openssl` installed?"
+  echo "Blank checksum returned; is openssl installed?"
   exit 2
 else
   if [ "$ACTUALMD5" != "$MD5" ]; then
