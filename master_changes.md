@@ -339,6 +339,7 @@ users)
   * Do not rebuild packages when an extra-source's url changes but not its checksum [#5258 @kit-ty-kate]
   * Correctly handle empty environment variable additions [#5350 @dra27]
   * Skip empty environment variable additions [#5350 @dra27]
+  * Open the release files when determining the distribution [#5568 @Leonidas-from-XIV]
 
 ## Opam file format
   *
