@@ -19,10 +19,12 @@ let of_string s =
   | i when s.[0] <> '0' && (i >= String.length s - 2 || s.[i + 1] <> '0') ->
     begin
       try Scanf.sscanf s "%u.%u%!" (fun major minor -> (major, minor))
-      with Scanf.Scan_failure _ -> failwith "OpamVersion.CLI.of_string"
+      with Scanf.Scan_failure _ ->
+        Printf.kprintf failwith "OpamVersion.CLI.of_string: %s" s
     end
-  | exception Not_found -> failwith "OpamVersion.CLI.of_string"
-  | _ -> failwith "OpamVersion.CLI.of_string"
+  | exception Not_found ->
+     Printf.kprintf failwith "OpamVersion.CLI.of_string: %s" s
+  | _ -> Printf.kprintf failwith "OpamVersion.CLI.of_string: %s" s
 
 let current = of_string @@ OpamVersion.(to_string current_nopatch)
 
