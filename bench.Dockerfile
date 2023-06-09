@@ -8,4 +8,8 @@ RUN make cold
 USER root
 RUN install ./opam /usr/local/bin/
 USER opam
-RUN opam init -n --disable-sandboxing git+https://github.com/ocaml/opam-repository#26770281fa1ea8b13aab979c1dfbd326e9ab512c
+ENV OPAMREPOSHA 26770281fa1ea8b13aab979c1dfbd326e9ab512c
+RUN git clone https://github.com/ocaml/opam-repository --depth 1
+RUN git -C opam-repository fetch origin $OPAMREPOSHA
+RUN git -C opam-repository checkout $OPAMREPOSHA
+RUN opam init -n --disable-sandboxing ./opam-repository
