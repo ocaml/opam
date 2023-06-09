@@ -578,13 +578,13 @@ let download_package_source_t st url nv_dirs =
          dirnames checksums
          (OpamFile.URL.url url :: OpamFile.URL.mirrors url))
       @@+ function
-      | Not_available (_s,_l) as source_result
+      | Not_available _not_available as source_result
         when OpamFile.Config.swh_fallback st.switch_global.config ->
         (OpamDownload.SWHID.archive_fallback url dirnames
          @@| function
          | Result None -> Some source_result
          | Result (Some r) -> Some (Result r)
-         | Not_available (s,l) -> Some (Not_available (s,l))
+         | Not_available na -> Some (Not_available na)
          | Up_to_date _ -> assert false)
       | source_result -> Done (Some source_result)
   in

@@ -81,7 +81,8 @@ module B = struct
            | OpamDownload.Download_fail (s,l) -> s, str l
            | _ -> Some "Download failed", str "download failed"
          in
-         Done (Not_available (s,l)))
+         let na = Generic_error (s, l) in
+         Done (Not_available na))
     @@ fun () ->
     OpamDownload.download ~quiet:true ~overwrite:true ?checksum remote_url dirname
     @@+ fun local_file -> Done (Result (Some local_file))

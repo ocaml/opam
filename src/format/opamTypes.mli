@@ -48,13 +48,19 @@ type std_path =
   | Lib | Bin | Sbin | Share | Doc | Etc | Man
   | Toplevel | Stublibs
 
+type not_available = 
+  | Generic_error of string option * string
+  | Checksum_error of OpamHash.t list
+(** Arguments are respectively the short and long version of an error message.
+    The usage is: the first argument is displayed on normal mode (nothing
+    if [None]), and the second one on verbose mode.
+    If there was an error with checksum validation, the actual checksum
+    is passed in [checksum]. *)
+
 (** Download result *)
 type 'a download =
   | Up_to_date of 'a
-  | Not_available of string option * string
-  (** Arguments are respectively the short and long version of an error message.
-      The usage is: the first argument is displayed on normal mode (nothing
-      if [None]), and the second one on verbose mode. *)
+  | Not_available of not_available
   | Result of 'a
 
 (** {2 Packages} *)

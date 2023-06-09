@@ -296,7 +296,7 @@ let download_shared_source st url nvs =
       Done (Some na))
   @@ fun () ->
   OpamUpdate.download_shared_package_source st url nvs @@| function
-  | Some (Not_available (s, l)), _ ->
+  | Some (Not_available (Generic_error (s, l))), _ ->
     let msg = OpamStd.Option.default l s in
     OpamConsole.error "Failed to get sources of %s%s: %s"
       (labelise OpamPackage.to_string)
@@ -306,7 +306,10 @@ let download_shared_source st url nvs =
          Printf.sprintf " (%s)" (OpamUrl.to_string (OpamFile.URL.url url)))
       msg;
     Some (s, l)
-  | _, ((nv, name, Not_available (s, l)) :: _) ->
+  | Some (Not_available (Checksum_error _)), _ ->
+    (* no checksums provided, can't trigger *)
+    assert false
+  | _, ((nv, name, Not_available (Generic_error (s, l))) :: _) ->
     let msg = match s with None -> l | Some s -> s in
     OpamConsole.error "Failed to get extra source \"%s\" of %s: %s"
       name (OpamPackage.to_string nv) msg;
@@ -468,7 +471,14 @@ let prepare_package_source st nv dir =
         (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
       @@| function
       | Result () | Up_to_date () -> None
-      | Not_available (_,msg) -> Some (Failure msg)
+      | Not_available (Checksum_error actual_checksums) ->
+        let failures =
+          List.map OpamHash.to_string actual_checksums
+          |> String.concat ", "
+        in
+        let msg = Printf.sprintf "Unexpected checksums: %s" failures in
+        Some (Failure msg)
+      | Not_available (Generic_error (_,msg)) -> Some (Failure msg)
     in
     List.fold_left (fun job dl ->
         job @@+ function

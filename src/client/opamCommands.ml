@@ -3249,7 +3249,10 @@ let pin ?(unpin_only=false) cli =
             ~cache_dir:(OpamRepositoryPath.download_cache
                           OpamStateConfig.(!r.root_dir))
             basename pin_cache_dir [] [url] @@| function
-          | Not_available (_,u) ->
+          | Not_available (Checksum_error _) ->
+            (* no checksums passed *)
+            assert false
+          | Not_available (Generic_error (_,u)) ->
             OpamConsole.error_and_exit `Sync_error
               "Could not retrieve %s" u
           | Result _ | Up_to_date _ ->
@@ -3627,7 +3630,10 @@ let source cli =
                   (OpamPackage.to_string nv) dir []
                   [url])
            with
-           | Not_available (_,u) ->
+           | Not_available (Checksum_error _) ->
+             (* no checksums passed *)
+             assert false
+           | Not_available (Generic_error (_,u)) ->
              OpamConsole.error_and_exit `Sync_error "%s is not available" u
            | Result _ | Up_to_date _ ->
              OpamConsole.formatted_msg
@@ -3638,7 +3644,11 @@ let source cli =
         (let job =
            let open OpamProcess.Job.Op in
            OpamUpdate.download_package_source t nv dir @@+ function
-           | Some (Not_available (_,s)), _ | _, (_, Not_available (_, s)) :: _ ->
+           | Some (Not_available (Checksum_error _)), _
+           | _, (_, Not_available (Checksum_error _)) :: _ ->
+             assert false
+           | Some (Not_available (Generic_error (_,s))), _
+           | _, (_, Not_available (Generic_error (_, s))) :: _ ->
              OpamConsole.error_and_exit `Sync_error "Download failed: %s" s
            | None, _ | Some (Result _ | Up_to_date _), _ ->
              OpamAction.prepare_package_source t nv dir @@| function

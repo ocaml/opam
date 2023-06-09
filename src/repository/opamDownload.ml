@@ -288,10 +288,10 @@ module SWHID = struct
     let attempts = max_tries in
     let hash = OpamSWHID.hash swhid in
     let rec aux max_tries =
-      if max_tries <= 0 then
-        Done (Not_available
-                (Some (fallback_err "max_tries"),
-                 fallback_err "%d attempts tried; aborting" attempts))
+      if max_tries <= 0 then (
+        let na = Generic_error (Some (fallback_err "max_tries"),
+                   fallback_err "%d attempts tried; aborting" attempts) in
+        Done (Not_available na))
       else
         get_dir hash @@+ function
         | Some (`Done fetch_url) -> Done (Result fetch_url)
@@ -299,7 +299,7 @@ module SWHID = struct
           Unix.sleep 10;
           aux (max_tries - 1)
         | None | Some (`Failed | `Unknown) ->
-          Done (Not_available (None, fallback_err "Unknown swhid"))
+          Done (Not_available (Generic_error (None, fallback_err "Unknown swhid")))
     in
     aux max_tries
 
@@ -332,20 +332,22 @@ module SWHID = struct
                OpamFilename.extract_job archive sources @@| function
                | Some e ->
                  Not_available (
-                   Some (fallback_err "archive extraction failure"),
-                   fallback_err "archive extraction failure %s"
-                     (match e with
-                      | Failure s -> s
-                      | OpamSystem.Process_error pe ->
-                        OpamProcess.string_of_result pe
-                      | e -> Printexc.to_string e))
+                   Generic_error (
+                     Some (fallback_err "archive extraction failure"),
+                     fallback_err "archive extraction failure %s"
+                       (match e with
+                        | Failure s -> s
+                        | OpamSystem.Process_error pe ->
+                          OpamProcess.string_of_result pe
+                        | e -> Printexc.to_string e)))
                | None ->
                  (match OpamSWHID.compute sources with
                   | None ->
                     Not_available (
-                      Some (fallback_err "can't check archive validity"),
-                      fallback_err
-                        "error on swhid computation, can't check its validity")
+                      Generic_error (
+                        Some (fallback_err "can't check archive validity"),
+                        fallback_err
+                          "error on swhid computation, can't check its validity"))
                   | Some computed ->
                     if String.equal computed hash then
                       (List.iter (fun (_nv, dst, _sp) ->
@@ -355,22 +357,26 @@ module SWHID = struct
                        Result (Some "SWH fallback"))
                     else
                       Not_available (
-                        Some (fallback_err "archive not valid"),
-                        fallback_err
-                          "archive corrupted, opam file swhid %S vs computed %S"
-                          hash computed)))
+                        Generic_error (
+                          Some (fallback_err "archive not valid"),
+                          fallback_err
+                            "archive corrupted, opam file swhid %S vs computed %S"
+                            hash computed))))
           else
-            Done (Not_available
-                    (Some (fallback_err "skip retrieval"),
-                     fallback_err "retrieval refused by user"))
+            Done (Not_available (
+                    Generic_error (
+                      (Some (fallback_err "skip retrieval"),
+                       fallback_err "retrieval refused by user"))))
         else
-          Done (Not_available
-                  (Some (fallback_err "unreachable"),
-                   fallback_err "network failure or API down"))
+          Done (Not_available (
+                  Generic_error (
+                    (Some (fallback_err "unreachable"),
+                     fallback_err "network failure or API down"))))
       else
-        Done (Not_available
-                (Some (fallback_err "no retrieval"),
-                 fallback_err "Download tool permitting post request (%s) not \
-                 set as download tool"
-                   (OpamStd.Format.pretty_list post_tools)))
+        Done (Not_available (
+                Generic_error (
+                  (Some (fallback_err "no retrieval"),
+                   fallback_err "Download tool permitting post request (%s) not \
+                   set as download tool"
+                     (OpamStd.Format.pretty_list post_tools)))))
 end
