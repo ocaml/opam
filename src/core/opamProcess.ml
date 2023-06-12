@@ -339,7 +339,7 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
     | None -> (fun f -> f ())
     | Some dir ->
       Unix.chdir dir;
-      Fun.protect ~finally:(fun () -> Unix.chdir oldcwd)
+      OpamStd.Exn.finally (fun () -> Unix.chdir oldcwd)
   in
   with_chdir dir @@ fun () ->
   let stdin_fd,close_stdin =
