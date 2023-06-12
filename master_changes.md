@@ -712,6 +712,7 @@ users)
   * `OpamStd.Compare`: add module to flag polymorphic comparison functions in opam codebase [#5374 @kit-ty-kate @rjbou]
   * `OpamStd.Env.`: introduce OpamStd.Env.Name to abstract environment variable names [#5356 @dra27]
   * `OpamCompat`: Add `Fun.protect` [#5441 @kit-ty-kate]
+    * removed by #5466
   * `OpamJson`: use `Jsonm` and add an `of_string` function [#5142 @rjbou]
   * `OpamSystem`: avoid calling Unix.environment at top level [#4789 @hannesm]
   * `OpamStd.String`: add `is_hex` [#4859 @rjbou]
