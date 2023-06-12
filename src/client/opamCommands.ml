@@ -1488,8 +1488,6 @@ let config cli =
                 | None -> false)
             |> OpamSwitchState.dependencies ~depopts:true ~post:true ~build:true
               ~installed:true state
-              (OpamSwitchState.universe ~test:true ~doc:true ~dev_setup:true
-                 ~requested:OpamPackage.Set.empty state Query)
             |> OpamPackage.Set.iter process;
             if not Sys.win32 && List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
             then OpamConsole.warning

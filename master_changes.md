@@ -92,6 +92,7 @@ users)
   * On import, check that installed pinned packages changed, reinstall if so [#5181 @rjbou - fix #5173]
   * [BUG] Enforce extra-source to have a checksum when using "opam switch export --freeze" [#5418 @kit-ty-kate]
   * Update compiler / base packages handling: always updated, the field contains installed packages resolving invariant formula [#5208 @rjbou]
+    * Fix performance issue from #5208 [#5508 @kit-ty-kate - fix #5502]
   * Fill empty switch synopsis with invariant formula instead of compiler package name [#5208 @rjbou]
 
 ## Config
@@ -651,6 +652,7 @@ users)
   * `OpamCudf.filter_solution`: can do not remove recursively actions with optional `~recursive:true` [#4975 @AltGr]
   * `OpamSolver`, `OpamCudf`: remove `dependencies` and `reverse_dependencies` [#5337 @rjbou]
   * `OpamSwitchState`: add `invariant_root_packages`, `compute_invariant_packages`, `compute_compiler_packages` [#5208 @rjbou]
+    * `OpamSwitchState`: `invariant_root_packages`, `compute_invariant_packages`, `compute_compiler_packages` no more take an `universe` argument [#5508 @kit-ty-kate - fix #5502]
   * `OpamSwitchAction.update_switch_state`: `compiler_packages` now computes dependency cone of invariant formula [#5208 @rjbou]
   * `OpamSolver`: add `removed_packages` to retrieve packages that are removed from solution [#5208 @rjbou]
 
