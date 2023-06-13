@@ -202,6 +202,7 @@ users)
 
 ## External dependencies
   * Depexts support Cygwin on Windows [#5542 @rjbou]
+    * Default location of setup.exe is now `<opamroot>/.cygwin/setup-x86_64.exe` [#5544 @rjbou]
   * Support MSYS2 on Windows for depexts [#5348 @jonahbeckford #5433 @rjbou]
   * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
   * Fix depext alpine tagged repositories handling [#4763 @rjbou] [2.1.0~rc2 #4758]

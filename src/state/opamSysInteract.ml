@@ -227,15 +227,12 @@ module Cygwin = struct
   let cygroot_opt config =
     cygbin_opt config
     >>| OpamFilename.dirname_dir
-  let cygsetup_raw cygroot = OpamFilename.Op.(cygroot // setupexe)
-  let cygsetup_opt config =
-    cygroot_opt config
-    >>| cygsetup_raw
   let get_opt = function
     | Some c -> c
     | None -> failwith "Cygwin install not found"
   let cygroot config = get_opt (cygroot_opt config)
-  let cygsetup config = get_opt (cygsetup_opt config)
+  let cygsetup () =
+    OpamFilename.Op.(OpamStateConfig.(!r.root_dir) / ".cygwin" // setupexe)
 
 end
 
@@ -805,7 +802,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
   | Cygwin ->
     (* We use setp_x86_64 to install package instead of `cygcheck` that is
        stored in `sys-pkg-manager-cmd` field *)
-    [`AsUser (OpamFilename.to_string (Cygwin.cygsetup config)),
+    [`AsUser (OpamFilename.to_string (Cygwin.cygsetup ())),
       [ "--root"; (OpamFilename.Dir.to_string (Cygwin.cygroot config));
         "--quiet-mode";
         "--no-shortcuts";
