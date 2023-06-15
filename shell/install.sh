@@ -5,7 +5,7 @@ set -ue
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
 # (c) Copyright Louis Gesbert OCamlPro 2014-2017
 
-VERSION='2.1.4'
+VERSION='2.1.5'
 DEV_VERSION='2.1.5'
 DEFAULT_BINDIR=/usr/local/bin
 
