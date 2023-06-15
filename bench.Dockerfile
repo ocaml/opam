@@ -1,4 +1,4 @@
-FROM debian
+FROM debian:bullseye
 RUN apt-get update -qq && apt-get install -qq -yy make curl gcc g++ patch bzip2 git unzip
 RUN adduser --disabled-password --gecos '' --shell /bin/bash opam
 USER opam

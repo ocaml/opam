@@ -417,6 +417,7 @@ users)
   * No more mute test debug output (level < 0) if `--readonly` is given with `--debug-level` [#5476 @rjbou]
   * Setup benchmarking using current-bench [#5525 @kit-ty-kate]
     * Add install benchs [#5574 @rjbou]
+    * Set debian version to bullseye [#5577 @rjbou]
 
 ## Reftests
 ### Tests
