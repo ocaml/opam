@@ -6,8 +6,10 @@ Small standard library extensions, and generic system interaction modules used b
 """
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
+  "David Allsopp <david@tarides.com>"
   "Vincent Bernardoff <vb@luminar.eu.org>"
   "Raja Boujbel <raja.boujbel@ocamlpro.com>"
+  "Kate Deplaix <kit.ty.kate@disroot.org>"
   "Roberto Di Cosmo <roberto@dicosmo.org>"
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
   "Louis Gesbert <louis.gesbert@ocamlpro.com>"
