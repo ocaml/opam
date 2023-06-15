@@ -504,7 +504,7 @@ module Sys : sig
   (** The different families of shells we know about *)
   type powershell_host = Powershell_pwsh | Powershell
   type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
-    | SH_pwsh of powershell_host | SH_win_cmd
+    | SH_pwsh of powershell_host | SH_cmd
 
   (** List of all supported shells *)
   val all_shells : shell list
@@ -512,8 +512,9 @@ module Sys : sig
   (** Guess the shell compat-mode *)
   val guess_shell_compat: unit -> shell
 
-  (** Guess the location of .profile *)
-  val guess_dot_profile: shell -> string
+  (** Guess the location of .profile. Returns None if the shell doesn't
+      support the concept of a .profile file. *)
+  val guess_dot_profile: shell -> string option
 
   (** The separator character used in the PATH variable (varies depending on
       OS) *)

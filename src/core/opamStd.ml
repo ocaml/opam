@@ -1024,7 +1024,7 @@ module OpamSys = struct
 
   type powershell_host = Powershell_pwsh | Powershell
   type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
-    | SH_pwsh of powershell_host | SH_win_cmd
+    | SH_pwsh of powershell_host | SH_cmd
 
   let all_shells =
     [SH_sh; SH_bash;
@@ -1033,9 +1033,9 @@ module OpamSys = struct
      SH_fish;
      SH_pwsh Powershell_pwsh;
      SH_pwsh Powershell;
-     SH_win_cmd]
+     SH_cmd]
 
-  let windows_default_shell = SH_win_cmd
+  let windows_default_shell = SH_cmd
   let unix_default_shell = SH_sh
 
   let shell_of_string = function
@@ -1060,40 +1060,17 @@ module OpamSys = struct
     else
       fun x -> x
 
-  let windows_max_ancestor_depth = 5
-
-  (** [windows_ancestor_process_names] finds the names of the parent of the
-      current process and all of its ancestors up to [max_ancestor_depth]
-      in length.
-
-      The immediate parent of the current process will be first in the list.
-    *)
-  let windows_ancestor_process_names () =
-    let rec helper pid depth =
-      if depth > windows_max_ancestor_depth then []
-      else
-      try
-        OpamStubs.(getProcessName pid ::
-                   helper
-                     (getParentProcessID pid)
-                     (depth + 1))
-      with Failure _ -> []
-    in
-    lazy (
-      try
-        let parent = OpamStubs.getCurrentProcessID () in
-        helper (OpamStubs.getParentProcessID parent) 0
-      with Failure _ -> []
-    )
+  let windows_process_ancestry = Lazy.from_fun OpamStubs.getProcessAncestry
 
   type shell_choice = Accept of shell
 
   let windows_get_shell =
-    let categorize_process = function
+    let categorize_process (_, image) =
+      match String.lowercase_ascii (Filename.basename image) with
       | "powershell.exe" | "powershell_ise.exe" ->
         Some (Accept (SH_pwsh Powershell))
       | "pwsh.exe" -> Some (Accept (SH_pwsh Powershell_pwsh))
-      | "cmd.exe" -> Some (Accept SH_win_cmd)
+      | "cmd.exe" -> Some (Accept SH_cmd)
       | "env.exe" -> Some (Accept SH_sh)
       | name ->
         Option.map
@@ -1101,9 +1078,8 @@ module OpamSys = struct
           (shell_of_string (Filename.chop_suffix name ".exe"))
     in
     lazy (
-      let ancestors = Lazy.force (windows_ancestor_process_names ()) in
-      match (List.map String.lowercase_ascii ancestors |>
-              OpamList.filter_map categorize_process) with
+      let lazy ancestors = windows_process_ancestry in
+      match OpamList.filter_map categorize_process ancestors with
       | [] -> None
       | Accept most_relevant_shell :: _ -> Some most_relevant_shell
     )
@@ -1159,48 +1135,42 @@ module OpamSys = struct
       Option.default unix_default_shell shell
 
   let guess_dot_profile shell =
-    let win_my_powershell f =
-      let p = Filename.concat (home ()) "Documents" in
-      if Sys.file_exists p then Filename.concat (Filename.concat p "PowerShell") f
-      else let p = Filename.concat (home ()) "My Documents" in
-      if Sys.file_exists p then Filename.concat (Filename.concat p "PowerShell") f
-      else f
-    in
     let home f =
       try Filename.concat (home ()) f
       with Not_found -> f in
     match shell with
     | SH_fish ->
-      List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"]
-    | SH_zsh  -> home ".zshrc"
+      Some (List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"])
+    | SH_zsh  -> Some (home ".zshrc")
     | SH_bash ->
-      (try
-         List.find Sys.file_exists [
-           (* Bash looks up these 3 files in order and only loads the first,
-              for LOGIN shells *)
-           home ".bash_profile";
-           home ".bash_login";
-           home ".profile";
-           (* Bash loads .bashrc INSTEAD, for interactive NON login shells only;
-              but it's often included from the above.
-              We may include our variables in both to be sure ; for now we rely
-              on non-login shells inheriting their env from a login shell
-              somewhere... *)
-         ]
-       with Not_found ->
-         (* iff none of the above exist, creating this should be safe *)
-         home ".bash_profile")
+      let shell =
+        (try
+           List.find Sys.file_exists [
+             (* Bash looks up these 3 files in order and only loads the first,
+                for LOGIN shells *)
+             home ".bash_profile";
+             home ".bash_login";
+             home ".profile";
+             (* Bash loads .bashrc INSTEAD, for interactive NON login shells only;
+                but it's often included from the above.
+                We may include our variables in both to be sure ; for now we rely
+                on non-login shells inheriting their env from a login shell
+                somewhere... *)
+           ]
+         with Not_found ->
+           (* iff none of the above exist, creating this should be safe *)
+           home ".bash_profile")
+      in
+      Some shell
     | SH_csh ->
       let cshrc = home ".cshrc" in
       let tcshrc = home ".tcshrc" in
-      if Sys.file_exists cshrc then cshrc else tcshrc
+      Some (if Sys.file_exists cshrc then cshrc else tcshrc)
     | SH_pwsh _ ->
-      if Sys.win32 then win_my_powershell "Microsoft.Powershell_profile.ps1" else
-      List.fold_left Filename.concat (home ".config") ["powershell"; "Microsoft.Powershell_profile.ps1"]
-    | SH_sh -> home ".profile"
-    | SH_win_cmd ->
-      (* cmd.exe does not have a concept of profiles *)
-      home ".profile"
+      None
+    | SH_sh -> Some (home ".profile")
+    | SH_cmd ->
+      None
 
 
   let registered_at_exit = ref []
@@ -1343,47 +1313,58 @@ module Win32 = struct
   end
 
   let (set_parent_pid, parent_putenv) =
-    let ppid = ref (lazy (OpamStubs.(getCurrentProcessID () |> getParentProcessID))) in
+    let ppid = ref (OpamCompat.Lazy.map (function (_::(pid, _)::_) -> pid | _ -> 0l) OpamSys.windows_process_ancestry) in
     let parent_putenv = lazy (
-      let ppid = Lazy.force !ppid in
-      if OpamStubs.isWoW64 () <> OpamStubs.isWoW64Process ppid then
-        (*
-         * Expect to see opam-putenv.exe in the same directory as opam.exe,
-         * rather than PATH (allow for crazy users like developers who may have
-         * both builds of opam)
-         *)
-        let putenv_exe =
-          Filename.(concat (dirname Sys.executable_name) "opam-putenv.exe")
+      let {contents = lazy ppid} = ppid in
+      let our_architecture = OpamStubs.getProcessArchitecture None in
+      let their_architecture = OpamStubs.getProcessArchitecture (Some ppid) in
+      let no_opam_putenv =
+        let warning = lazy (
+          !console.warning "opam-putenv was not found - \
+                            OPAM is unable to alter environment variables";
+          false)
         in
-        let ctrl = ref stdout in
-        let quit_putenv () =
-          if !ctrl <> stdout then
-            let () = Printf.fprintf !ctrl "::QUIT\n%!" in
-            ctrl := stdout
-        in
-        at_exit quit_putenv;
-        if Sys.file_exists putenv_exe then
-          fun key value ->
-            if !ctrl = stdout then begin
-              let (inCh, outCh) = Unix.pipe () in
-              let _ =
-                Unix.create_process putenv_exe
-                                    [| putenv_exe; Int32.to_string ppid |]
-                                    inCh Unix.stdout Unix.stderr
-              in
-              ctrl := (Unix.out_channel_of_descr outCh);
-              set_binary_mode_out !ctrl true;
-            end;
-            Printf.fprintf !ctrl "%s\n%s\n%!" key value;
-            if key = "::QUIT" then ctrl := stdout;
-            true
-        else
-          let warning = lazy (
-            !console.warning "opam-putenv was not found - \
-                              OPAM is unable to alter environment variables";
-            false)
+        fun _ _ -> Lazy.force warning
+      in
+      if our_architecture <> their_architecture then
+        match their_architecture with
+        | OpamStubs.ARM | ARM64 | IA64 | Unknown ->
+          (* ARM support not yet implemented - just ensure we don't inject Intel
+             code into an ARM process! *)
+          no_opam_putenv
+        | AMD64 | Intel ->
+          (*
+           * Expect to see opam-putenv.exe in the same directory as opam.exe,
+           * rather than PATH (allow for crazy users like developers who may have
+           * both builds of opam)
+           *)
+          let putenv_exe =
+            Filename.(concat (dirname Sys.executable_name) "opam-putenv.exe")
           in
-          fun _ _ -> Lazy.force warning
+          let ctrl = ref stdout in
+          let quit_putenv () =
+            if !ctrl <> stdout then
+              let () = Printf.fprintf !ctrl "::QUIT\n%!" in
+              ctrl := stdout
+          in
+          at_exit quit_putenv;
+          if Sys.file_exists putenv_exe then
+            fun key value ->
+              if !ctrl = stdout then begin
+                let (inCh, outCh) = Unix.pipe () in
+                let _ =
+                  Unix.create_process putenv_exe
+                                      [| putenv_exe; Int32.to_string ppid |]
+                                      inCh Unix.stdout Unix.stderr
+                in
+                ctrl := (Unix.out_channel_of_descr outCh);
+                set_binary_mode_out !ctrl true;
+              end;
+              Printf.fprintf !ctrl "%s\n%s\n%!" key value;
+              if key = "::QUIT" then ctrl := stdout;
+              true
+          else
+            no_opam_putenv
       else
         function "::QUIT" -> fun _ -> true
         | key -> OpamStubs.process_putenv ppid key)

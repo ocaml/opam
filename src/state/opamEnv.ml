@@ -21,17 +21,37 @@ let slog = OpamConsole.slog
 
 (* - Environment and updates handling - *)
 
-let split_var v = OpamStd.Sys.split_path_variable ~clean:false v
+type _ env_classification =
+| Separator : char env_classification
+| Split : (string -> string list) env_classification
 
-let join_var l =
-  String.concat (String.make 1 OpamStd.Sys.path_sep) l
+let get_env_property : type s . string -> s env_classification -> s = fun var classification ->
+  let split_delim = Fun.flip OpamStd.String.split in
+  let separator, split =
+    match String.uppercase_ascii var with
+    | "CAML_LD_LIBRARY_PATH" ->
+      OpamStd.Sys.path_sep, split_delim OpamStd.Sys.path_sep
+    | "PKG_CONFIG_PATH" | "MANPATH" ->
+      ':', split_delim ':'
+    | _ ->
+      OpamStd.Sys.path_sep, OpamStd.Sys.split_path_variable ~clean:false
+  in
+  match classification with
+  | Separator -> separator
+  | Split -> split
+
+let split_var (var : OpamStd.Env.Name.t) =
+  get_env_property (var :> string) Split
+
+let join_var (var : OpamStd.Env.Name.t) l =
+  String.concat (String.make 1 (get_env_property (var :> string) Separator)) l
 
 (* To allow in-place updates, we store intermediate values of path-like as a
    pair of list [(rl1, l2)] such that the value is [List.rev_append rl1 l2] and
    the place where the new value should be inserted is in front of [l2] *)
 
 
-let unzip_to elt current =
+let unzip_to var elt current =
   (* If [r = l @ rs] then [remove_prefix l r] is [Some rs], otherwise [None] *)
   let rec remove_prefix l r =
     match l, r with
@@ -40,7 +60,7 @@ let unzip_to elt current =
     | ([], rs) -> Some rs
     | _ -> None
   in
-  match (if String.equal elt "" then [""] else split_var elt) with
+  match (if String.equal elt "" then [""] else split_var var elt) with
   | [] -> invalid_arg "OpamEnv.unzip_to"
   | hd::tl ->
     let rec aux acc = function
@@ -57,8 +77,8 @@ let unzip_to elt current =
 let rezip ?insert (l1, l2) =
   List.rev_append l1 (match insert with None -> l2 | Some i -> i::l2)
 
-let rezip_to_string ?insert z =
-  join_var (rezip ?insert z)
+let rezip_to_string var ?insert z =
+  join_var var (rezip ?insert z)
 
 let apply_op_zip op arg (rl1,l2 as zip) =
   let colon_eq ?(eqcol=false) = function (* prepend a, but keep ":"s *)
@@ -90,23 +110,23 @@ let apply_op_zip op arg (rl1,l2 as zip) =
     position of the matching element and allow [=+=] to be applied later. A pair
     or empty lists is returned if the variable should be unset or has an unknown
     previous value. *)
-let reverse_env_update op arg cur_value =
+let reverse_env_update var op arg cur_value =
   if String.equal arg  "" && op <> Eq then None else
   match op with
   | Eq ->
-    if arg = join_var cur_value
+    if arg = join_var var cur_value
     then Some ([],[]) else None
-  | PlusEq | EqPlusEq -> unzip_to arg cur_value
+  | PlusEq | EqPlusEq -> unzip_to var arg cur_value
   | EqPlus ->
-    (match unzip_to arg (List.rev cur_value) with
+    (match unzip_to var arg (List.rev cur_value) with
      | None -> None
      | Some (rl1, l2) -> Some (List.rev l2, List.rev rl1))
   | ColonEq ->
-    (match unzip_to arg cur_value with
+    (match unzip_to var arg cur_value with
      | Some ([], [""]) -> Some ([], [])
      | r -> r)
   | EqColon ->
-    (match unzip_to arg (List.rev cur_value) with
+    (match unzip_to var arg (List.rev cur_value) with
      | Some ([], [""]) -> Some ([], [])
      | Some (rl1, l2) -> Some (List.rev l2, List.rev rl1)
      | None -> None)
@@ -173,10 +193,10 @@ let expand (updates: env_update list) : env =
             match Option.map rezip v_opt with
             | Some v -> v
             | None ->
-              OpamStd.Option.map_default split_var []
+              OpamStd.Option.map_default (split_var var) []
                 (OpamStd.Env.getopt (var :> string))
           in
-          match reverse_env_update op arg v with
+          match reverse_env_update var op arg v with
           | Some v -> (var, v)::defs
           | None -> defs0)
         updates []
@@ -207,7 +227,7 @@ let expand (updates: env_update list) : env =
           | Some z, reverts -> z, reverts
           | None, _ ->
             match OpamStd.Env.getopt (var :> string) with
-            | Some s -> ([], split_var s), reverts
+            | Some s -> ([], split_var var s), reverts
             | None -> ([], []), reverts
       in
       let acc =
@@ -221,9 +241,9 @@ let expand (updates: env_update list) : env =
     | [] ->
       List.rev @@
       List.rev_append
-        (List.rev_map (fun (var, z, doc) -> var, rezip_to_string z, doc) acc) @@
+        (List.rev_map (fun (var, z, doc) -> var, rezip_to_string var z, doc) acc) @@
       List.rev_map (fun (var, z) ->
-          var, rezip_to_string z, Some "Reverting previous opam update")
+          var, rezip_to_string var z, Some "Reverting previous opam update")
         reverts
   in
   apply_updates reverts [] updates
@@ -388,7 +408,7 @@ let is_up_to_date_raw ?(skip=OpamStateConfig.(!r.no_env_notice)) updates =
         match OpamStd.Env.getopt_full var with
         | _, None -> upd::notutd
         | var, Some v ->
-          if reverse_env_update op arg (split_var v) = None then upd::notutd
+          if reverse_env_update var op arg (split_var var v) = None then upd::notutd
           else List.filter (fun (v, _, _, _) ->
               OpamStd.Env.Name.equal_string var v) notutd)
       []
@@ -446,7 +466,7 @@ let shell_eval_invocation shell cmd =
     Printf.sprintf "eval (%s)" cmd
   | SH_csh ->
     Printf.sprintf "eval `%s`" cmd
-  | SH_win_cmd ->
+  | SH_cmd ->
     Printf.sprintf {|for /f "tokens=*" %%i in ('%s') do @%%i|} cmd
   | _ ->
     Printf.sprintf "eval $(%s)" cmd
@@ -489,7 +509,7 @@ let filepath_needs_quote path =
 let opam_env_invocation ?root ?switch ?(set_opamswitch=false) shell =
   let shell_arg argname pathval =
     let quoted = match shell with
-    | SH_win_cmd | SH_pwsh _ ->
+    | SH_cmd | SH_pwsh _ ->
       Printf.sprintf " \"--%s=%s\"" argname
     | SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish ->
       Printf.sprintf " '--%s=%s'" argname
@@ -542,48 +562,47 @@ let eval_string gt ?(set_opamswitch=false) switch =
 
 (** The shells for which we generate init scripts (bash and sh are the same
     entry) *)
-let shells_list = [ SH_sh; SH_zsh; SH_csh; SH_fish ]
+let shells_list = [ SH_sh; SH_zsh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd ]
 
 let complete_file = function
   | SH_sh | SH_bash -> Some "complete.sh"
   | SH_zsh -> Some "complete.zsh"
-  | SH_csh | SH_fish | SH_pwsh _ | SH_win_cmd -> None
+  | SH_csh | SH_fish | SH_pwsh _ | SH_cmd -> None
 
 let env_hook_file = function
   | SH_sh | SH_bash -> Some "env_hook.sh"
   | SH_zsh -> Some "env_hook.zsh"
   | SH_csh -> Some "env_hook.csh"
   | SH_fish -> Some "env_hook.fish"
-  | SH_pwsh _ | SH_win_cmd ->
-    (* N/A because not present in `shells_list` yet *) None
+  | SH_pwsh _ | SH_cmd -> None
 
 let variables_file = function
   | SH_sh | SH_bash | SH_zsh -> "variables.sh"
   | SH_csh -> "variables.csh"
   | SH_fish -> "variables.fish"
-  | SH_pwsh _ | SH_win_cmd ->
-    (* N/A because not present in `shells_list` yet *) "variables.sh"
+  | SH_pwsh _ -> "variables.ps1"
+  | SH_cmd -> "variables.cmd"
 
 let init_file = function
   | SH_sh | SH_bash -> "init.sh"
   | SH_zsh -> "init.zsh"
   | SH_csh -> "init.csh"
   | SH_fish -> "init.fish"
-  | SH_pwsh _ | SH_win_cmd ->
-    (* N/A because not present in `shells_list` yet *) "init.sh"
+  | SH_pwsh _ -> "init.ps1"
+  | SH_cmd -> "init.cmd"
 
 let complete_script = function
   | SH_sh | SH_bash -> Some OpamScript.complete
   | SH_zsh -> Some OpamScript.complete_zsh
   | SH_csh | SH_fish -> None
-  | SH_pwsh _ | SH_win_cmd -> None
+  | SH_pwsh _ | SH_cmd -> None
 
 let env_hook_script_base = function
   | SH_sh | SH_bash -> Some OpamScript.env_hook
   | SH_zsh -> Some OpamScript.env_hook_zsh
   | SH_csh -> Some OpamScript.env_hook_csh
   | SH_fish -> Some OpamScript.env_hook_fish
-  | SH_pwsh _ | SH_win_cmd -> None
+  | SH_pwsh _ | SH_cmd -> None
 
 let export_in_shell shell =
   let make_comment comment_opt =
@@ -620,20 +639,20 @@ let export_in_shell shell =
         (make_comment comment) k v
   in
   let pwsh (k,v,comment) =
-    Printf.sprintf "%s$env:%s=%s;\n"
+    Printf.sprintf "%s$env:%s=%s\n"
       (make_comment comment) k v in
-  let win_cmd (k,v,comment) =
+  let cmd (k,v,comment) =
     let make_cmd_comment comment_opt =
-      OpamStd.Option.to_string (Printf.sprintf "REM %s\n") comment_opt
+      OpamStd.Option.to_string (Printf.sprintf ":: %s\n") comment_opt
     in
-    Printf.sprintf "%sSET \"%s=%s\"\n"
+    Printf.sprintf "%sset \"%s=%s\"\n"
       (make_cmd_comment comment) k v in
   match shell with
   | SH_zsh | SH_bash | SH_sh -> sh
   | SH_fish -> fish
   | SH_csh -> csh
   | SH_pwsh _ -> pwsh
-  | SH_win_cmd -> win_cmd
+  | SH_cmd -> cmd
 
 let env_hook_script shell =
   OpamStd.Option.map (fun script ->
@@ -654,10 +673,10 @@ let source root shell f =
   | SH_zsh ->
     Printf.sprintf "[[ ! -r %s ]] || source %s  > /dev/null 2> /dev/null\n"
       fname fname
-  | SH_win_cmd ->
-    Printf.sprintf "if exist \"%s\" ( \"%s\" >NUL 2>NUL )\n" fname fname
+  | SH_cmd ->
+    Printf.sprintf "if exist \"%s\" call \"%s\" >NUL 2>NUL\n" fname fname
   | SH_pwsh _ ->
-    Printf.sprintf "& \"%s\" > $null 2> $null\n" fname
+    Printf.sprintf ". \"%s\" *> $null\n" fname
 
 let if_interactive_script shell t e =
   let ielse else_opt = match else_opt with
@@ -681,7 +700,7 @@ let if_interactive_script shell t e =
     Printf.sprintf "if ( $?prompt ) then\n  %s%sendif\n" t @@ ielse e
   | SH_fish ->
     Printf.sprintf "if isatty\n  %s%send\n" t @@ ielse e
-  | SH_win_cmd ->
+  | SH_cmd ->
     Printf.sprintf "echo %%cmdcmdline%% | find /i \"%%~0\" >nul\nif errorlevel 1 (\n%s%s)\n" t @@ ielse_cmd e
   | SH_pwsh _ ->
     Printf.sprintf "if ([Environment]::UserInteractive) {\n  %s%s}\n" t @@ ielse_pwsh e
@@ -706,11 +725,26 @@ let string_of_update st shell updates =
     in
     let key, value =
       ident, match symbol with
-      | Eq  -> Printf.sprintf "'%s'" string
+      | Eq ->
+        (match shell with
+         | SH_pwsh _ ->
+           Printf.sprintf "'%s'" (OpamStd.Env.escape_powershell string)
+         | SH_cmd -> string
+         | _ -> Printf.sprintf "'%s'" string)
       | PlusEq | ColonEq | EqPlusEq ->
-        Printf.sprintf "'%s':\"$%s\"" string ident
+        let sep = get_env_property ident Separator in
+        (match shell with
+         | SH_pwsh _ ->
+           Printf.sprintf "'%s%c' + \"$env:%s\""
+             (OpamStd.Env.escape_powershell string) sep ident
+         | SH_cmd -> Printf.sprintf "%s%c%%%s%%" string sep ident
+         | _ -> Printf.sprintf "'%s':\"$%s\"" string ident)
       | EqColon | EqPlus ->
-        Printf.sprintf "\"$%s\":'%s'" ident string
+        let sep = get_env_property ident Separator in
+        (match shell with
+         | SH_pwsh _ -> Printf.sprintf "\"$env:%s\" + '%c%s'" ident sep string
+         | SH_cmd -> Printf.sprintf "%%%s%%%c%s" ident sep string
+         | _ -> Printf.sprintf "\"$%s\":'%s'" ident string)
     in
     export_in_shell shell (key, value, comment) in
   OpamStd.List.concat_map "" aux updates
@@ -790,7 +824,7 @@ let write_dynamic_init_scripts st =
       (fun shell ->
          write_script (OpamPath.init st.switch_global.root)
            (variables_file shell, string_of_update st shell updates))
-      [SH_sh; SH_csh; SH_fish]
+      [SH_sh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd]
   with OpamSystem.Locked ->
     OpamConsole.warning
       "Global shell init scripts not installed (could not acquire lock)"
@@ -798,7 +832,7 @@ let write_dynamic_init_scripts st =
 let clear_dynamic_init_scripts gt =
   List.iter (fun shell ->
       OpamFilename.remove (OpamPath.init gt.root // variables_file shell))
-    [SH_sh; SH_csh; SH_fish]
+    [SH_sh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd]
 
 let dot_profile_needs_update root dot_profile =
   if not (OpamFilename.exists dot_profile) then `yes else
@@ -891,10 +925,9 @@ let setup
   let shell, update_dot_profile, env_hook =
     match update_config, dot_profile, interactive with
     | Some false, _, _ -> shell, None, env_hook
-    | _, None, _ -> invalid_arg "OpamEnv.setup"
-    | Some true, Some dot_profile, _ -> shell, Some dot_profile, env_hook
+    | Some true, dot_profile, _ -> shell, dot_profile, env_hook
     | None, _, false -> shell, None, env_hook
-    | None, Some dot_profile, true ->
+    | None, dot_profile, true ->
       OpamConsole.header_msg "Required setup - please read";
 
       OpamConsole.msg
@@ -902,49 +935,78 @@ let setup
         \  In normal operation, opam only alters files within %s.\n\
          \n\
         \  However, to best integrate with your system, some environment variables\n\
-        \  should be set. If you allow it to, this initialisation step will update\n\
-        \  your %s configuration by adding the following line to %s:\n\
-         \n\
-        \    %s\
-         \n\
-        \  You can always re-run this setup with 'opam init' later.\n\n"
-        opam_root_msg
-        (OpamConsole.colorise `bold @@ string_of_shell shell)
+        \  should be set. "
+        opam_root_msg;
+      begin match dot_profile with
+      | Some dot_profile ->
+        OpamConsole.msg
+          "If you allow it to, this initialisation step will update\n\
+          \  your %s configuration by adding the following line to %s:\n\
+           \n\
+          \    %s\
+           \n\
+          \  Otherwise, every time"
+        (OpamConsole.colorise `bold (string_of_shell shell))
         (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
         (OpamConsole.colorise `bold @@ source root shell (init_file shell));
+      | None ->
+        OpamConsole.msg "When"
+      end;
+      OpamConsole.msg
+        " you want to access your opam installation, you will\n\
+        \  need to run:\n\
+         \n\
+        \    %s\n\
+         \n\
+        \  You can always re-run this setup with 'opam init' later.\n\n"
+        (OpamConsole.colorise `bold @@ shell_eval_invocation shell (opam_env_invocation shell));
       if OpamCoreConfig.answer_is_yes () then begin
-        OpamConsole.warning "Shell not updated in non-interactive mode: use --shell-setup";
+        if dot_profile <> None then
+          OpamConsole.warning "Shell not updated in non-interactive mode: use --shell-setup";
         shell, None, env_hook
       end else
       let rec menu shell dot_profile default =
+        let colorised_shell = OpamConsole.colorise `bold (string_of_shell shell) in
         let opam_env_inv =
           OpamConsole.colorise `bold @@ shell_eval_invocation shell (opam_env_invocation shell)
         in
-        match
-          OpamConsole.menu "Do you want opam to configure %s?"
-            (OpamConsole.colorise `bold (string_of_shell shell))
-            ~default ~no:`No ~options:[
-              `Yes, Printf.sprintf "Yes, update %s"
-                (OpamConsole.colorise `cyan (OpamFilename.prettify dot_profile));
-              `No_hooks, Printf.sprintf "Yes, but don't setup any hooks. You'll \
-                                         have to run %s whenever you change \
-                                         your current 'opam switch'"
-                opam_env_inv;
-              `Change_shell, "Select a different shell";
-              `Change_file, "Specify another config file to update instead";
-              `No, Printf.sprintf "No, I'll remember to run %s when I need opam"
-                opam_env_inv;
-          ]
-        with
+        let prompt () =
+          match dot_profile with
+          | Some dot_profile ->
+              let options = [
+                `Yes, Printf.sprintf "Yes, update %s"
+                   (OpamConsole.colorise `cyan (OpamFilename.prettify dot_profile));
+                `No_hooks, Printf.sprintf "Yes, but don't setup any hooks. You'll \
+                                           have to run %s whenever you change \
+                                           your current 'opam switch'"
+                                          opam_env_inv;
+                `Change_shell, "Select a different shell";
+                `Change_file, "Specify another config file to update instead";
+                `No, Printf.sprintf "No, I'll remember to run %s when I need opam"
+                                     opam_env_inv
+              ] in
+            OpamConsole.menu "Do you want opam to configure %s?" colorised_shell
+              ~default ~no:`No ~options
+          | None ->
+            if OpamConsole.confirm ~default:false
+                "opam doesn't have any configuration options for %s; you will have to run %s \
+                 whenever you change you current 'opam switch' or start a new terminal session. \
+                 Alternatively, would you like to select a different shell?" colorised_shell opam_env_inv then
+              `Change_shell
+            else
+              `No
+        in
+        match prompt () with
         | `No -> shell, None, env_hook
-        | `Yes -> shell, Some dot_profile, Some true
-        | `No_hooks -> shell, Some dot_profile, Some false
+        | `Yes -> shell, dot_profile, Some true
+        | `No_hooks -> shell, dot_profile, Some false
         | `Change_shell ->
-          let shell = OpamConsole.menu ~default:shell ~no:shell
+          let shell =
+            OpamConsole.menu ~default:shell ~no:shell
               "Please select a shell to configure"
               ~options: (List.map (fun s -> s, string_of_shell s) OpamStd.Sys.all_shells)
           in
-          menu shell (OpamFilename.of_string (OpamStd.Sys.guess_dot_profile shell))
+          menu shell (OpamStd.Option.map OpamFilename.of_string (OpamStd.Sys.guess_dot_profile shell))
             default
         | `Change_file ->
           let open OpamStd.Option.Op in
@@ -954,14 +1016,15 @@ let setup
                  if Filename.is_implicit f then Filename.concat (OpamStd.Sys.home ()) f
                  else f)
              >>| OpamFilename.of_string)
-            +! dot_profile
           in
           menu shell dot_profile `Yes
       in
-      let default = match env_hook with
-        | Some true -> `Yes
-        | Some false -> `No_hooks
-        | None -> `Yes
+      let default =
+        if dot_profile = None then `No else
+          match env_hook with
+          | Some true -> `Yes
+          | Some false -> `No_hooks
+          | None -> `Yes
       in
       menu shell dot_profile default
   in

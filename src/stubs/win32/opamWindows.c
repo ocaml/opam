@@ -41,17 +41,9 @@ static struct custom_operations HandleOps =
 
 #define HANDLE_val(v) (*((HANDLE*)Data_custom_val(v)))
 
-typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS2) (HANDLE, USHORT *, USHORT *);
 
-static LPFN_ISWOW64PROCESS IsWoW64Process = NULL;
-
-static inline BOOL has_IsWoW64Process(void)
-{
-  return (IsWoW64Process
-          || (IsWoW64Process =
-               (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(L"kernel32"),
-                                                   "IsWow64Process")));
-}
+static LPFN_ISWOW64PROCESS2 pIsWow64Process2 = NULL;
 
 /*
  * Taken from otherlibs/unix/winwait.c (sadly declared static)
@@ -77,45 +69,6 @@ static HKEY roots[] =
    HKEY_CURRENT_USER,
    HKEY_LOCAL_MACHINE,
    HKEY_USERS};
-
-/*
- * OPAMW_process_putenv is implemented using Process Injection.
- * Idea inspired by Bill Stewart's editvar
- *   (see http://www.westmesatech.com/editv.html)
- * Full technical details at http://www.codeproject.com/Articles/4610/Three-Ways-to-Inject-Your-Code-into-Another-Proces#section_3
- */
-
-static char* getProcessInfo(HANDLE hProcessSnapshot,
-                            DWORD processId,
-                            PROCESSENTRY32 *entry)
-{
-  entry->dwSize = sizeof(PROCESSENTRY32);
-
-  if (hProcessSnapshot == INVALID_HANDLE_VALUE)
-    return "getProcessInfo: could not create snapshot";
-
-  /*
-   * Locate our process
-   */
-  if (!Process32First(hProcessSnapshot, entry))
-  {
-    CloseHandle(hProcessSnapshot);
-    return "getProcessInfo: could not walk process tree";
-  }
-  else
-  {
-    while (entry->th32ProcessID != processId)
-    {
-      if (!Process32Next(hProcessSnapshot, entry))
-      {
-        CloseHandle(hProcessSnapshot);
-        return "getProcessInfo: could not find process!";
-      }
-    }
-  }
-
-  return NULL;
-}
 
 char* InjectSetEnvironmentVariable(DWORD, LPCWSTR, LPCWSTR);
 
@@ -245,19 +198,95 @@ CAMLprim value OPAMW_GetWindowsVersion(value unit)
   return result;
 }
 
-CAMLprim value OPAMW_IsWoW64(value unit)
+static inline value get_native_cpu_architecture(void)
 {
-  BOOL result = FALSE;
-  /*
-   * 32-bit versions may or may not have IsWow64Process (depends on age).
-   * Recommended way is to use GetProcAddress to obtain IsWow64Process, rather
-   * than relying on Windows.h.
-   * See http://msdn.microsoft.com/en-gb/library/windows/desktop/ms684139.aspx
-   */
-  if (has_IsWoW64Process() && !IsWoW64Process(GetCurrentProcess(), &result))
-    result = FALSE;
+  SYSTEM_INFO SystemInfo;
+  GetNativeSystemInfo(&SystemInfo);
+  switch (SystemInfo.wProcessorArchitecture) {
+  case PROCESSOR_ARCHITECTURE_AMD64:
+    return Val_int(0);
+  case PROCESSOR_ARCHITECTURE_ARM:
+    return Val_int(1);
+  case PROCESSOR_ARCHITECTURE_ARM64:
+    return Val_int(2);
+  case PROCESSOR_ARCHITECTURE_IA64:
+    return Val_int(3); /* Wow! */
+  case PROCESSOR_ARCHITECTURE_INTEL:
+    return Val_int(4);
+  default: /* PROCESSOR_ARCHITECTURE_UNKNOWN */
+    return Val_int(5);
+  }
+}
 
-  return Val_bool(result);
+static inline value get_PE_cpu_architecture(USHORT image)
+{
+  switch (image) {
+  case IMAGE_FILE_MACHINE_I386:
+    return Val_int(4);
+  case IMAGE_FILE_MACHINE_ARM:
+  case IMAGE_FILE_MACHINE_THUMB:
+  case IMAGE_FILE_MACHINE_ARMNT:
+    return Val_int(1);
+  case IMAGE_FILE_MACHINE_IA64:
+    return Val_int(3); /* Wow! */
+  case IMAGE_FILE_MACHINE_AMD64:
+    return Val_int(0);
+  case IMAGE_FILE_MACHINE_ARM64:
+    return Val_int(2);
+  default:
+    return Val_int(5);
+  }
+}
+
+CAMLprim value OPAMW_GetArchitecture(value unit)
+{
+  USHORT ProcessMachine, NativeMachine;
+
+  if (!pIsWow64Process2)
+    pIsWow64Process2 =
+      (LPFN_ISWOW64PROCESS2)GetProcAddress(GetModuleHandle(L"kernel32"), "IsWow64Process2");
+
+  if (!pIsWow64Process2 || !pIsWow64Process2(GetCurrentProcess(), &ProcessMachine, &NativeMachine))
+    return get_native_cpu_architecture();
+  else
+    return get_PE_cpu_architecture(NativeMachine);
+}
+
+CAMLprim value OPAMW_GetProcessArchitecture(value pid)
+{
+  HANDLE hProcess;
+  USHORT ProcessMachine, NativeMachine;
+  BOOL Wow64Process;
+  value result;
+
+  if (!pIsWow64Process2)
+    pIsWow64Process2 =
+      (LPFN_ISWOW64PROCESS2)GetProcAddress(GetModuleHandle(L"kernel32"), "IsWow64Process");
+
+  if (Is_long(pid)) {
+    hProcess = GetCurrentProcess();
+  } else {
+    hProcess =
+      OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, Int32_val(Field(pid, 0)));
+  }
+
+  if (!pIsWow64Process2 || !pIsWow64Process2(hProcess, &ProcessMachine, &NativeMachine))
+    if (IsWow64Process(hProcess, &Wow64Process) && Wow64Process)
+      /* Must be x86_32 */
+      result = Val_int(4);
+    else
+      /* Will be either x86_32 or x86_64 */
+      result = get_native_cpu_architecture();
+  else
+    if (ProcessMachine == IMAGE_FILE_MACHINE_UNKNOWN)
+      result = get_PE_cpu_architecture(NativeMachine);
+    else
+      result = get_PE_cpu_architecture(ProcessMachine);
+
+  if (Is_block(pid))
+    CloseHandle(hProcess);
+
+  return result;
 }
 
 /*
@@ -477,6 +506,13 @@ CAMLprim value OPAMW_HasGlyph(value checker, value scalar)
   return Val_bool(index != 0xffff);
 }
 
+/*
+ * OPAMW_process_putenv is implemented using Process Injection.
+ * Idea inspired by Bill Stewart's editvar
+ *   (see http://www.westmesatech.com/editv.html)
+ * Full technical details at http://www.codeproject.com/Articles/4610/Three-Ways-to-Inject-Your-Code-into-Another-Proces#section_3
+ */
+
 CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
 {
   char* result;
@@ -511,26 +547,6 @@ CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
     return Val_false;
   else
     caml_failwith(result);
-}
-
-CAMLprim value OPAMW_IsWoW64Process(value pid)
-{
-  BOOL result = FALSE;
-
-  if (has_IsWoW64Process())
-  {
-    HANDLE hProcess =
-      OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, Int32_val(pid));
-
-    if (hProcess)
-    {
-      if (!IsWoW64Process(hProcess, &result))
-        result = FALSE;
-      CloseHandle(hProcess);
-    }
-  }
-
-  return Val_bool(result);
 }
 
 /*
@@ -602,41 +618,111 @@ CAMLprim value OPAMW_SendMessageTimeout_byte(value * v, int n)
   return OPAMW_SendMessageTimeout(v[0], v[1], v[2], v[3], v[4], v[5]);
 }
 
-CAMLprim value OPAMW_GetParentProcessID(value processId)
+CAMLprim value OPAMW_GetProcessAncestry(value unit)
 {
+  CAMLparam0();
+  CAMLlocal3(result, tail, info);
   PROCESSENTRY32 entry;
-  char* msg;
-  /*
-   * Create a Toolhelp Snapshot of running processes
-   */
-  HANDLE hProcessSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  HANDLE hProcessSnapshot, hProcess;
+  value cell;
+  ULARGE_INTEGER *processes, *cur;
+  int capacity = 512;
+  int length = 0;
+  DWORD target = GetCurrentProcessId();
+  BOOL read_entry = TRUE;
+  WCHAR ExeName[MAX_PATH + 1];
+  DWORD dwSize;
 
-  if ((msg = getProcessInfo(hProcessSnapshot, Int32_val(processId), &entry)))
-    caml_failwith(msg);
+  result = caml_alloc_small(2, 0);
+  Field(result, 0) = Val_int(0);
+  Field(result, 1) = Val_int(0);
+  tail = result;
 
-  /*
-   * Finished with the snapshot
-   */
-  CloseHandle(hProcessSnapshot);
+  /* Snapshot running processes */
+  hProcessSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (hProcessSnapshot != INVALID_HANDLE_VALUE) {
+    entry.dwSize = sizeof(PROCESSENTRY32);
+    /* Read the first entry (just because it's a special function) */
+    if (Process32First(hProcessSnapshot, &entry)) {
+      if ((processes = (ULARGE_INTEGER *)malloc(capacity * sizeof(ULARGE_INTEGER)))) {
+        /* Initialise the processes array */
+        if (entry.th32ProcessID == 0) {
+          processes->QuadPart = 0LL;
+        } else {
+          length = 1;
+          processes->LowPart = entry.th32ProcessID;
+          processes->HighPart = entry.th32ParentProcessID;
+          processes[1].QuadPart = 0LL;
+        }
 
-  return caml_copy_int32(entry.th32ParentProcessID);
-}
+        /* Build the process tree, starting with the current process */
+        do {
+          /* First search through processes we've already read */
+          for (cur = processes; cur->QuadPart != 0; cur++) {
+            if (cur->LowPart == target)
+              break;
+          }
 
-CAMLprim value OPAMW_GetProcessName(value processId)
-{
-  CAMLparam1(processId);
+          if (cur->QuadPart == 0LL) {
+            /* Keep reading process entries until we reach the end of the list */
+            while ((read_entry = Process32Next(hProcessSnapshot, &entry))) {
+              if (entry.th32ProcessID != 0) {
+                if (++length >= capacity) {
+                  ULARGE_INTEGER *ptr;
+                  capacity += 512;
+                  ptr = (ULARGE_INTEGER *)realloc(processes, capacity * sizeof(ULARGE_INTEGER));
+                  if (ptr == NULL) {
+                    read_entry = FALSE;
+                    break;
+                  } else {
+                    processes = ptr;
+                  }
+                }
+                cur->LowPart = entry.th32ProcessID;
+                cur->HighPart = entry.th32ParentProcessID;
+                if (cur->LowPart == target) {
+                  cur[1].QuadPart = 0LL;
+                  break;
+                } else {
+                  cur++;
+                }
+              }
+            }
+            if (!read_entry)
+              break;
+          }
 
-  PROCESSENTRY32 entry;
-  DWORD parent_pid;
-  char* msg;
-  HANDLE hProcessSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+          /* Found it - construct the list entry */
+          hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, target);
+          if (hProcess != NULL) {
+            dwSize = MAX_PATH + 1;
+            if (!QueryFullProcessImageName(hProcess, 0, ExeName, &dwSize))
+              ExeName[0] = L'\0';
+            CloseHandle(hProcess);
+          } else {
+            ExeName[0] = L'\0';
+          }
+          info = caml_alloc_tuple(2);
+          Store_field(info, 0, caml_copy_int32(target));
+          Store_field(info, 1, caml_copy_string_of_utf16(ExeName));
+          cell = caml_alloc_small(2, 0);
+          Field(cell, 0) = info;
+          Field(cell, 1) = Val_int(0);
+          Store_field(tail, 1, cell);
+          tail = cell;
+          /* Search for this process's parent on the next round */
+          target = cur->HighPart;
+          /* Guard against looping by zeroing out the parent */
+          cur->HighPart = 0;
+        } while (1);
+      }
+      free(processes);
+    }
 
-  if ((msg = getProcessInfo(hProcessSnapshot, Int32_val(processId), &entry)))
-    caml_failwith(msg);
+    CloseHandle(hProcessSnapshot);
+  }
 
-  CloseHandle(hProcessSnapshot);
-
-  CAMLreturn(caml_copy_string_of_utf16(entry.szExeFile));
+  CAMLreturn(Field(result, 1));
 }
 
 CAMLprim value OPAMW_GetConsoleAlias(value alias, value exe_name)
@@ -672,4 +758,22 @@ CAMLprim value OPAMW_GetConsoleAlias(value alias, value exe_name)
   caml_stat_free(lpSource);
 
   return result;
+}
+
+CAMLprim value OPAMW_GetConsoleWindowClass(value unit)
+{
+  CAMLparam0();
+  CAMLlocal1(result);
+
+  HWND hWnd;
+  WCHAR buffer[257];
+  hWnd = GetConsoleWindow();
+  if (hWnd == NULL || GetClassName(hWnd, buffer, 257) == 0) {
+    result = Val_int(0);
+  } else {
+    result = caml_alloc(1, 0);
+    Store_field(result, 0, caml_copy_string_of_utf16(buffer));
+  }
+
+  CAMLreturn(result);
 }

@@ -48,6 +48,8 @@ users)
   * Use `.opam` from `%HOME%` or `%USERPROFILE%` on Windows, only if found; otherwise use `%LOCALAPPDATA%\opam` as root. [#5212 @dra27]
   * Display actual location of OPAMROOT in `opam init` if `--root` or `OPAMROOT` have been set [#5212 @dra27 - fix #4992]
   * Surround and add a comment describing the role of the lines added to the ~/.profile or equivalent [#5456 @kit-ty-kate]
+  * Don't require cc on Windows [#5541 @dra27]
+  * Generate init and variables for Windows [#5541 @dra27]
 
 ## Config report
   * [BUG] Don't fail is no switch is set [#5198 @rjbou]
@@ -405,6 +407,10 @@ users)
   * Correct invocation of Cygwin binaries when Cygwin bin directory is first in PATH [#5293 @dra27]
   * [BUG] Fix case insensitive variable handling [#5356 @dra27]
   * Use OCaml code to copy/move/remove directories instead of unix commands [#4823 @kit-ty-kate - fix #1073]
+  * Update Windows-on-Windows detection for ARM [#5541 @dra27]
+  * Overhaul parent process detection [#5541 @dra27]
+  * Tweak UTF-8 support for Windows Terminal [#5541 @dra27]
+  * Handle Windows specific environment variables [#5541 @dra27]
 
 ## Test
   * Update crowbar with compare functions [#4918 @rjbou]
@@ -528,7 +534,10 @@ users)
   * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
   * dash: recognize dash as a POSIX shell for opam env [#4816 @jonahbeckford]
   * pwsh,powershell: use $env: for opam env [#4816 @jonahbeckford]
-  * command prompt: use SET for opam env [#4816 @jonahbeckford]
+    * use `::` instead of REM [#5541 @dra27]
+    * Don't generate .profile for cmd & powershell [#5541 @dra27]
+  * command prompt: use `SET` for opam env [#4816 @jonahbeckford]
+    * use `set` instead [#5541 @dra27]
 
 ## Doc
   * Standardise `macOS` use [#4782 @kit-ty-kate]
@@ -601,6 +610,7 @@ users)
   * `OpamVCS.pull_url`: clean repository before fetching [#4879 @rjbou]
   * `OpamDownload`: Add `SWHID` submodule that implements SWH fallback (retrieve url, download, check hash, and copy in target) [#4859 @rjbou]
   * `OpamCLIVersion.of_string`: print version when failing to parse it [#5566 @MisterDA]
+  * `OpamInitdefaults.recommended_tools`: don't require `cc` on Windows [#5541 @dra27]
 
 ## opam-state
   * `OpamSwitchState.universe`: `requested` argument moved from `name_package_set` to `package_set`, to precise installed packages with `--best-effort` [#4796 @LasseBlaauwbroek]
@@ -634,6 +644,8 @@ users)
   * `OpamSysInteract`: add global config argument to function, in order to be able to retrieve system package manager path for MSYS2, and in the future Cygwin, etc. [#5433 @rjbou]
   * `OpamSwitchState.load`: fill empty switch synopsis with invariant formula instead of compiler package name [#5208 @rjbou]
   * `OpamSwitchState`: add `compiler_packages` that returns set of installed compilers, with their dependencies including only build & depopt [#5480 @rjbou]
+  * `OpamEnv`: generalise splitting of environment variables [#5541 @dra27]
+  * `OpamEnv`: add handling of `SH_pwsh` and `SH_cmd` in shell lists [#5541 @dra27]
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
@@ -726,3 +738,6 @@ users)
   * `OpamSWHID`: add module to handle swhid [#4859 @rjbou]
   * `OpamProcess`: expose the `command` type as a private type [#5452 @Leonidas-from-XIV]
   * `OpamFilename`: add `with_open_out_bin` and `with_open_out_bin_atomic` [#5476 @dra27]
+  * `OpamStd.Sys`: add `SH_pwsh`, `SH_win_cmd` and `SH_win_powershell` to `shell` type [#4816 @jonahbeckford]
+    * unify powershell variant: `SH_win_powershell` and `SH_pwsh` to `SH_pwsh of powershell_host` [#5203 @dra27]
+    * change `SH_win_cmd` into `SH_cmd` [#5541 @dra27]
