@@ -474,6 +474,7 @@ users)
   * Add `switch list` test, add some in `switch invariant` and `switch import` [#5208 @rjbou]
   * Add opam env hooks test: change switch, set switch via `OPAMSWITCH`, entering directory, moving switch ; and opam exec with missing environment file [#5476 @rjbou @dra27]
   * Add a new reftest ensuring that the local cache is checked and behave correctly when corrupted [#5538 @kit-ty-kate @rjbou]
+  * No more depend on opam version: repository, opamroot-versions, config & swhid.unix [#5578 @rjbou]
 
 ### Engine
   * Add `opam-cat` to normalise opam file printing [#4763 @rjbou @dra27] [2.1.0~rc2 #4715]

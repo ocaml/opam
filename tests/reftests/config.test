@@ -171,9 +171,9 @@ Switch invariant: ["a-package"]
 -> installed a-package.1
 -> installed post-dep-compiler.1
 Done.
-### opam config report
+### opam config report | "${OPAMVERSION}" -> "current"
 # opam config report
-# opam-version         2.2.0~alpha~dev
+# opam-version         current
 # self-upgrade         no
 # system               arch=an-arch os=an-os os-distribution=an-os-distribution os-version=an-os-version
 # solver               builtin-mccs+glpk
@@ -199,9 +199,9 @@ Switch invariant: ["meta-compiler" "depopt-compiler"]
 -> installed meta-compiler.1
 -> installed post-dep-compiler.1
 Done.
-### opam config report
+### opam config report | "${OPAMVERSION}" -> "current"
 # opam config report
-# opam-version         2.2.0~alpha~dev
+# opam-version         current
 # self-upgrade         no
 # system               arch=an-arch os=an-os os-distribution=an-os-distribution os-version=an-os-version
 # solver               builtin-mccs+glpk
