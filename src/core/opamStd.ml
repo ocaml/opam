@@ -824,16 +824,29 @@ module Env = struct
     module Map = Map.Make(M)
   end
 
+  let to_list env =
+    List.rev_map (fun s ->
+        match OpamString.cut_at s '=' with
+        | None   -> s, ""
+        | Some p -> p)
+      (Array.to_list env)
+
+  let raw_env = Unix.environment
+
   let list =
-    let lazy_env = lazy (
-      let e = Unix.environment () in
-      List.rev_map (fun s ->
-          match OpamString.cut_at s '=' with
-          | None   -> s, ""
-          | Some p -> p
-        ) (Array.to_list e)
-    ) in
+    let lazy_env = lazy (to_list (raw_env ())) in
     fun () -> Lazy.force lazy_env
+
+  let cyg_env cygbin =
+    let env = raw_env () in
+    let f v =
+      match OpamString.cut_at v '=' with
+      | Some (path, c) when Name.equal_string path "path" ->
+        Printf.sprintf "%s=%s;%s"
+          path cygbin c
+      | _ -> v
+    in
+    Array.map f env
 
   let get_full n = List.find (fun (k,_) -> Name.equal k n) (list ())
 
@@ -1185,58 +1198,72 @@ module OpamSys = struct
   let get_windows_executable_variant =
     if Sys.win32 then
       let results = Hashtbl.create 17 in
-      let requires_cygwin name =
-        let cmd = Printf.sprintf "cygcheck \"%s\"" name in
-        let ((c, _, _) as process) = Unix.open_process_full cmd (Unix.environment ()) in
-        let rec f a =
+      let requires_cygwin cygcheck name =
+        let env = Env.cyg_env (Filename.dirname cygcheck) in
+        let cmd = OpamCompat.Filename.quote_command cygcheck [name] in
+        let ((c, _, _) as process) = Unix.open_process_full cmd env in
+        let rec check_dll platform =
           match input_line c with
-          | x ->
-            let tx = String.trim x in
-            if OpamString.ends_with ~suffix:"cygwin1.dll" tx then
-              if OpamString.starts_with ~prefix:"  " x then
-                f `Cygwin
-              else if a = `Native then
-                f (`Tainted `Cygwin)
+          | dll ->
+            let tdll = (*String.trim*) dll in
+            if OpamString.ends_with ~suffix:"cygwin1.dll" tdll then
+              if OpamString.starts_with ~prefix:"  " dll then
+                check_dll `Cygwin
+              else if platform = `Native then
+                check_dll (`Tainted `Cygwin)
               else
-                f a
-            else if OpamString.ends_with ~suffix:"msys-2.0.dll" tx then
-              if OpamString.starts_with ~prefix:"  " x then
-                f `Msys2
-              else if a = `Native then
-                f (`Tainted `Msys2)
+                check_dll platform
+            else if OpamString.ends_with ~suffix:"msys-2.0.dll" tdll then
+              if OpamString.starts_with ~prefix:"  " dll then
+                check_dll `Msys2
+              else if platform = `Native then
+                check_dll (`Tainted `Msys2)
               else
-                f a
+                check_dll platform
             else
-              f a
+              check_dll platform
           | exception e ->
-              Unix.close_process_full process |> ignore;
-              fatal e;
-              a
+            Unix.close_process_full process |> ignore;
+            fatal e;
+            platform
         in
-        f `Native
+        check_dll `Native
       in
-      fun name ->
-        if Filename.is_relative name then
-          requires_cygwin name
-        else
-          try
-            Hashtbl.find results name
-          with Not_found ->
-            let result = requires_cygwin name
-            in
-              Hashtbl.add results name result;
-              result
+      fun ~cygbin name ->
+        match cygbin with
+        | Some cygbin ->
+          (let cygcheck = Filename.concat cygbin "cygcheck.exe" in
+           if Filename.is_relative name then
+             requires_cygwin cygcheck name
+           else
+           try Hashtbl.find results (cygcheck, name)
+           with Not_found ->
+             let result = requires_cygwin cygcheck name in
+             Hashtbl.add results (cygcheck, name) result;
+             result)
+        | None -> `Native
     else
-      fun _ -> `Native
+    fun ~cygbin:_ _ -> `Native
 
-  let is_cygwin_variant cmd =
+  let is_cygwin_cygcheck ~cygbin =
+    match cygbin with
+    | Some cygbin ->
+      let cygpath = Filename.concat cygbin "cygpath.exe" in
+      Sys.file_exists cygpath
+      && (get_windows_executable_variant ~cygbin:(Some cygbin) cygpath = `Cygwin)
+    | None -> false
+
+  let get_cygwin_variant ~cygbin cmd =
     (* Treat MSYS2's variant of `cygwin1.dll` called `msys-2.0.dll` equivalently.
        Confer https://www.msys2.org/wiki/How-does-MSYS2-differ-from-Cygwin/ *)
-    match get_windows_executable_variant cmd with
+    match get_windows_executable_variant ~cygbin cmd with
     | `Native -> `Native
     | `Cygwin
     | `Msys2 -> `Cygwin
     | `Tainted _ -> `CygLinked
+
+  let is_cygwin_variant ~cygbin cmd =
+    get_cygwin_variant ~cygbin cmd = `Cygwin
 
   exception Exit of int
   exception Exec of string * string array * string array

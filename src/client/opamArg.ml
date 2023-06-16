@@ -523,6 +523,7 @@ let apply_global_options cli o =
     ?confirm_level:o.confirm_level
     ?yes
     ?safe_mode:(flag o.safe_mode)
+    (* ?cygbin:string option *)
     (* ?lock_retries:int *)
     (* ?log_dir:OpamTypes.dirname *)
     (* ?keep_log_dir:bool *)
@@ -570,8 +571,36 @@ let apply_global_options cli o =
     OpamJson.append "opam-version" (`String OpamVersion.(to_string (full ())));
     OpamJson.append "command-line"
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)))
-  )
-
+  );
+  (* We need to retrieve very early cygwin root path to set up 'cygbin' config
+     field. It is retrieved from config file, and we use a low level reading of
+     that file instead of OpamStateConfig.safe_load to avoid multiple error
+     messages displayed if an error is detected in the config file. If there is
+     an error, or best effort notification, it will be highlighted after
+     anyway. *)
+  try
+    let opamfile =
+      OpamPath.config OpamStateConfig.(!r.root_dir)
+      |> OpamFile.to_string
+      |> OpamParser.FullPos.file
+    in
+    List.iter OpamParserTypes.FullPos.(function
+        | { pelem = Variable ({ pelem = "sys-pkg-manager-cmd"; _},
+                              {pelem = List { pelem = elements; _}; _}); _} ->
+          let rec aux last elements =
+            match last, elements with
+            | _, [] -> ()
+            | Some { pelem = String "cygwin"; _},
+              { pelem = String cygcheck; _}::_  ->
+              let cygbin = Filename.dirname cygcheck in
+              OpamCoreConfig.update ~cygbin ()
+            | _, element::elements -> aux (Some element) elements
+          in
+          aux None elements
+        | _ -> ())
+      opamfile.file_contents
+  with
+  | Sys_error _ | Not_found -> ()
 
 (** Build options *)
 

@@ -50,6 +50,7 @@ users)
   * Surround and add a comment describing the role of the lines added to the ~/.profile or equivalent [#5456 @kit-ty-kate]
   * Don't require cc on Windows [#5541 @dra27]
   * Generate init and variables for Windows [#5541 @dra27]
+  * On Windows, ask for pre-existent Cygwin installation, check it, and configure opam with it [#5544 @dra27 @rjbou]
 
 ## Config report
   * [BUG] Don't fail is no switch is set [#5198 @rjbou]
@@ -74,6 +75,7 @@ users)
     * ◈ Rename --with-tools` to `--with-dev-setup` [#5214 @rjbou - fix #4959]
   * Use the default criteria during reinstall/upgrade when requesting at least one non-installed package [#5228 @kit-ty-kate]
   * Show the reason for installing packages when using opam reinstall [#5229 @kit-ty-kate]
+  * When defined, add cygwin binary path to build environment [#5543 @rjbou]
 
 ## Remove
   *
@@ -201,6 +203,7 @@ users)
 
 ## External dependencies
   * Depexts support Cygwin on Windows [#5542 @rjbou]
+    * Default location of setup.exe is now `<opamroot>/.cygwin/setup-x86_64.exe` [#5544 @rjbou]
   * Support MSYS2 on Windows for depexts [#5348 @jonahbeckford #5433 @rjbou]
   * Set `DEBIAN_FRONTEND=noninteractive` for unsafe-yes confirmation level [#4735 @dra27 - partially fix #4731] [2.1.0~rc2 #4739]
   * Fix depext alpine tagged repositories handling [#4763 @rjbou] [2.1.0~rc2 #4758]
@@ -598,6 +601,8 @@ users)
   * `OpamListCommand`: add `swhid` in `info` printable fields and its handling in `details_printer`
   * ✘ `OpamListCommand.apply_selector`, `string_of_selector`: change column name base to invariant, and the content is invariant formula installed dependencies [#5208 @rjbou]
   * `OpamSwitchCommand.install_compiler`: fill empty switch synopsis with invariant formula instead of compiler package name [#5208 @rjbou]
+  * `OpamArg.opam_init`: retrieve cygwin binary path from config (low level reading) to add it to opamCoreConfig.r.cygbin [#5543 @rjbou]
+  * `OpamAction`: when defined, add cygwin binary path to build environment [#5543 @rjbou]
 
 ## opam-repository
   * `OpamRepositoryConfig`: add in config record `repo_tarring` field and as an argument to config functions, and a new constructor `REPOSITORYTARRING` in `E` environment module and its access function [#5015 @rjbou]
@@ -632,7 +637,6 @@ users)
   * `OpamUpdate`: change `repository` output to update function option, to not write cache and new repo config if nothing changed in `repositories` [#5146 @rjbou]
   * Add `OpamPinned.version_opt` [#5325 @kit-ty-kate]
   * `OpamUpdate.download_package_source`: add SWH fallback when archive remain not found [#4859 @rjbou]
-
   * Add optional argument `?env:(variable_contents option Lazy.t * string) OpamVariable.Map.t` to `OpamSysPoll` and `OpamSysInteract` functions. It is used to get syspolling variables from the environment first. [#4892 @rjbou]
   * `OpamSwitchState`: move and reimplement `opam-solver` `dependencies` and `reverse_dependencies` [#5337 @rjbou]
   * `OpamEnv`: add `env_expansion` [#5352 @dra27]
@@ -647,6 +651,11 @@ users)
   * `OpamSwitchState`: add `compiler_packages` that returns set of installed compilers, with their dependencies including only build & depopt [#5480 @rjbou]
   * `OpamEnv`: generalise splitting of environment variables [#5541 @dra27]
   * `OpamEnv`: add handling of `SH_pwsh` and `SH_cmd` in shell lists [#5541 @dra27]
+  * `OpamSysInteract.Cygwin`: add `cygbin_opt` to retrieve cygwin binary path from config file [#5543 @rjbou]
+  * `OpamGlobalState.load`: Retrieve cygwin binary path from config to add it to opamCoreConfig.r.cygbin [#5543 @rjbou]
+  * `OpamSysInteract.Cygwin`: add `check_install` to check that a given path is a cygwin installation, regarding presence of `cygcheck.exe` [#5544 @rjbou @dra27]
+  * `OpamSysInteract.Cygwin`: add `check_setup` to check, copy or download a cygwin setup.exe [#5544 @rjbou]
+
 
 ## opam-solver
   * `OpamCudf`: Change type of `conflict_case.Conflict_cycle` (`string list list` to `Cudf.package action list list`) and `cycle_conflict`, `string_of_explanations`, `conflict_explanations_raw` types accordingly [#4039 @gasche]
@@ -742,3 +751,11 @@ users)
   * `OpamStd.Sys`: add `SH_pwsh`, `SH_win_cmd` and `SH_win_powershell` to `shell` type [#4816 @jonahbeckford]
     * unify powershell variant: `SH_win_powershell` and `SH_pwsh` to `SH_pwsh of powershell_host` [#5203 @dra27]
     * change `SH_win_cmd` into `SH_cmd` [#5541 @dra27]
+  * `OpamCoreConfig`: add `cygbin`, the cygwin install binary path [#5543 @rjbou]
+  * `OpamStd.Env`: add `cyg_env` that returns the environment with PATH containing cygwin binary path [#5543 @rjbou]
+  * `OpamCompat`: add `Filename.quote_command` [#5543 @rjbou]
+  * `OpamStd.Sys.get_windows_executable`: Add `cygbin` argument to pass cygwin binary path [#5543 @rjbou]
+  * `OpamStd.Sys.is_cygwin_variant`: returns a boolean [#5543 @rjbou]
+  * `OpamStd.Sys`: add `is_cygwin_cygcheck` anf `get_cygwin_variant` [#5543 @rjbou]
+  * `OpamProcess`: add `default_env` to retrieve environment, if cygwin is set, adds cygwin binary path to environment ; and use it instead of `Unix.environment` [#5543 @rjbou]
+  * `OpamProcess.apply_cygpath`: fix empty output [#5543 @rjbou]
