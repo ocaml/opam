@@ -208,7 +208,11 @@ AS_IF([ test ${WIN32} -eq 1 -a "$GCC" = "yes"],[
 AS_IF([ test ${WIN32} -eq 1 ],[
   AS_IF([ test "$GCC" = "yes"], [
     AS_IF([ test "x${CC64}" = "x" ], [
-      AS_IF([ test "$ARCH" = "i386" ],[T_CC64=x86_64-w64-mingw32-gcc],[T_CC64=i686-w64-mingw32-gcc])])
+      AS_IF([ test "$ARCH" = "i386" ],
+        [T_CC64=x86_64-w64-mingw32-gcc
+        ac_tool_prefix='i686-w64-mingw32-'],
+        [T_CC64=i686-w64-mingw32-gcc
+        ac_tool_prefix='x86_64-w64-mingw32-'])])
     AC_CHECK_TOOL(CC64,[${T_CC64}],[no])
     AS_IF([ test "x${CC64}" != "xno" ],[
       echo "${CC64} -o " > src/stubs/win32/cc64

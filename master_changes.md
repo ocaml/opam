@@ -307,6 +307,7 @@ users)
   * Do not silently disable mccs if a C++ compiler is not present [#5527 @kit-ty-kate - fix #4452]
   * Ensure all make targets are run serially [#5532 @kit-ty-kate]
   * Fix openssl missing message in `shell/bootstrap-ocaml.sh` [#5557 @MisterDA]
+  * Fix detection of C++ compiler when it is prefixed [#5556 @MisterDA]
 
 ## Infrastructure
   * Fix caching of Cygwin compiler on AppVeyor [#4988 @dra27]
