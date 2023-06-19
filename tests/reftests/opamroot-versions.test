@@ -1,5 +1,6 @@
 N0REP0
 ### opam option opam-root-version --global | '"' -> '' >$ OPAMROOTVERSION
+### opam --version >$ OPAMVERSION
 ### OPAMYES=1 OPAMDEBUG=-1 OPAMSTRICT=0 OPAMDEBUGSECTIONS="FMT_UPG FORMAT GSTATE RSTATE STATE"
 ### : setup
 ### <generate.ml>
@@ -639,7 +640,14 @@ let opam_current v =
   ]
 let clean_repo () =
   List.iter (fun f -> try Sys.remove (Filename.concat opamroot f) with Sys_error _ -> ()) [
-    "repo/state-003ACE73.cache";
+    (* From OpamVersion.magic *)
+    (let hash =
+       Unix.getenv "OPAMVERSION"
+       |> Hashtbl.hash
+       |> Printf.sprintf "%08X"
+       |> fun s -> String.sub s 0 8
+     in
+     Printf.sprintf "repo/state-%s.cache" hash);
     "repo/root-config/repo";
   ];
   List.iter (fun d -> try Sys.rmdir (Filename.concat opamroot d) with Sys_error _ -> ()) [

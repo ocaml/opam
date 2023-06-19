@@ -1,5 +1,6 @@
 N0REP0
 ### OPAMYES=1
+### opam --version >$ OPAMVERSION
 ### <pkg:snappy-ok.1>
 opam-version: "2.0"
 build: [
@@ -30,7 +31,7 @@ url {
 }
 ### opam option download-command=curl
 Set to 'curl' the field download-command in global configuration
-### opam install snappy-ko | '"/.*curl' -> '"curl'
+### opam install snappy-ko | '"/.*curl' -> '"curl' | "${OPAMVERSION}" -> "current"
 The following actions will be performed:
 === install 1 package
   - install snappy-ko 2
@@ -38,7 +39,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Failed to get sources of snappy-ko.2: Download command failed
 
-OpamSolution.Fetch_fail("https://fa.ke/url.tar.gz (Download command failed: \"curl --write-out %{http_code}\\n --retry 3 --retry-delay 2 --user-agent opam/2.2.0~alpha~dev -L -o ${BASEDIR}/OPAM/fallback/.opam-switch/sources/snappy-ko.2/url.tar.gz.part -- https://fa.ke/url.tar.gz\" exited with code 6)")
+OpamSolution.Fetch_fail("https://fa.ke/url.tar.gz (Download command failed: \"curl --write-out %{http_code}\\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${BASEDIR}/OPAM/fallback/.opam-switch/sources/snappy-ko.2/url.tar.gz.part -- https://fa.ke/url.tar.gz\" exited with code 6)")
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -58,7 +59,7 @@ url {
 }
 ### opam option swh-fallback=false
 Set to 'false' the field swh-fallback in global configuration
-### opam install snappy-swhid-dir -v | '"/.*curl' -> '"curl'
+### opam install snappy-swhid-dir -v | '"/.*curl' -> '"curl' | "${OPAMVERSION}" -> "current"
 The following actions will be performed:
 === install 1 package
   - install snappy-swhid-dir 2
@@ -67,7 +68,7 @@ The following actions will be performed:
 Processing  1/3: [snappy-swhid-dir.2: http]
 [ERROR] Failed to get sources of snappy-swhid-dir.2: Download command failed
 
-OpamSolution.Fetch_fail("https://fa.ke/url.tar.gz (Download command failed: \"curl --write-out %{http_code}\\n --retry 3 --retry-delay 2 --user-agent opam/2.2.0~alpha~dev -L -o ${BASEDIR}/OPAM/fallback/.opam-switch/sources/snappy-swhid-dir.2/url.tar.gz.part -- https://fa.ke/url.tar.gz\" exited with code 6)")
+OpamSolution.Fetch_fail("https://fa.ke/url.tar.gz (Download command failed: \"curl --write-out %{http_code}\\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${BASEDIR}/OPAM/fallback/.opam-switch/sources/snappy-swhid-dir.2/url.tar.gz.part -- https://fa.ke/url.tar.gz\" exited with code 6)")
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
