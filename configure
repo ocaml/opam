@@ -5142,8 +5142,10 @@ then :
       if  test "$ARCH" = "i386"
 then :
   T_CC64=x86_64-w64-mingw32-gcc
+        ac_tool_prefix='i686-w64-mingw32-'
 else $as_nop
   T_CC64=i686-w64-mingw32-gcc
+        ac_tool_prefix='x86_64-w64-mingw32-'
 fi
 fi
     if test -n "$ac_tool_prefix"; then
