@@ -3,6 +3,17 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.1.5:
+* [BUG] Variables are now expanded in build-env (as for setenv) [#5352 @dra27]
+* Correctly handle empty environment variable additions [#5350 @dra27]
+* Skip empty environment variable additions [#5350 @dra27]
+* [BUG] Fix passing `archive-mirrors` field from init config file to config
+  [#5315 @hannesm]
+* git, hg: Use the full SHA1 revision instead of just the 8 first characters
+  [#5342 @reynir]
+* [BUG] Fix opam installing packages without checking their checksum when the
+  local cache is corrupted in some case [#5538 @kit-ty-kate]
+
 2.1.4:
 * Add support for OCaml 5.0. Dose3 >= 6.1 and base64 >= 3.1.0 are now required [#5357 @kit-ty-kate @dra27 - fix #5354]
 * [BUG] Fix all empty conflict explanation messages [#5378 @kit-ty-kate - partial fix #4373]
@@ -87,6 +98,12 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 * Fix `set-invariant: default repos were loaded instead of switch repos
   [#4866 @rjbou]
 
+2.0.10:
+* Fix reverting environment additions to PATH-like variables when several dirs
+  added at once [#4861 @dra27]
+* Ensure setenv can use package variables defined during the build
+  [#4841 @dra27]
+
 2.1.0:
 * Set DEBIAN_FRONTEND=noninteractive for unsafe-yes confirmation level
   [#4735 @dra27 - partially fix #4731]
@@ -95,6 +112,47 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 * fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
 * Bump src_exts and fix build compat with Dune 2.9.0 [#4754 @dra27]
 * Fix depext alpine tagged repositories handling [#4758 @rjbou]
+
+2.0.9:
+* Fix the conflict with the environment variable name used by dune
+  [#4535 @smorimoto - fix ocaml/dune#4166]
+* Kill builds on Ctrl-C with bubblewrap [#4530 @kit-ty-kate - fix #4404]
+* Linux: mount existing TMPDIR read-only, re-bind `$TMPDIR` to a separate tmpfs
+  [#4589 @AltGr]
+* Fix the sandbox check [#4589 @AltGr]
+* Fix sandbox script shell mistake that made `PWD` read-write on remove actions
+  [#4589 @AltGr]
+* Port bwrap improvements to sandbox_exec [#4589 #4609 @AltGr]
+* Fix W59 & E60 with conf flag handling (no url required) [#4550 @rjbou - fix #4549]
+* Fix temporary file with a too long name causing errors on Windows
+  [#4590 @AltGr]
+* Switch to newer version of MCCS (based on newer GLPK) for src_ext
+  [#4559 @AltGr]
+* Fix version pin source retrieving: don't error if archive opam file is
+  malformed [#4580 @rjbou]
+* Release scripts: switch to OCaml 4.10.2 by default, add macos/arm64 builds by
+  default [#4559 @AltGr]
+* Fix opam-devel's tests on platforms without openssl, GNU-diff and a
+  system-wide ocaml [#4500 @kit-ty-kate]
+* Untag dune as a build dependency [#4229 @kit-ty-kate]
+* Fix configure check in github actions [#4593 @rjbou]
+* Add missing shell quoting to support space and special shell characters in
+  switch directory path [#4707 @kit-ty-kate]
+* The options `--root` and `--switch` are now reflected in environment
+  variables when building packages so that calls to `opam` during build access
+  the correct root and switch [#4668 @LasseBlaauwbroek]
+* If opam root is different from the binary, allow reading it and try to read
+  in best effort mode [#4638 @rjbou - fix #4636]
+* Differentiate bad format from bad (opam) version with `Bad_version`
+  exception, raised from `OpamFormat.check_opam_version` [#4638 @rjbou]
+* Add `BestEffort` modules with reading functions that don't show errors, given
+  the `opam_file_format` internal field [#4638 @rjbou - fix
+* Require opam-file-format 2.1.3+ in order to enforce opam-version: "2.1" as
+  first non-comment line [#4639 @dra27 - fix #4394]
+* Fix opam switch creation not compatible compiler message
+  [#4547 @rjbou - fix #4718]
+* fish: fix deprecated redirection syntax `^` [#4736 @vzaliva]
+* Fix `opam-version' field reading in new roots [#4742 @dra27 @rjbou]
 
 2.1.0~rc2:
 * Remove OPAMZ3DEBUG evironment variable [#4720 @rjbou - fix #4717]
@@ -302,6 +360,27 @@ are not marked). Those prefixed with "(+)" are new command/option (since
   [#4496 #4506 #4513 #4637 #4681 #4702
   @dannywillems @eth-arm @kit-ty-kate @rjbou @UnixJunkie]
 
+2.0.8:
+* Add colon for fish MANPATH fix. [#4084 @rjbou - fix #4078]
+* No error when linked directory doesn't exist (e.g. XDG defined)
+  [#4278 @kit-ty-kate]
+* Add quotes to avoid space unwanted behaviors [#4278 @kit-ty-kate]
+* Handle `CCACHE_DIR` environment variable in sandbox script.
+  [#4087 @rjbou - fix #4079]
+* Follow links of `~/.cache` & `~/.cache/dune` for bwrap call.
+  [#4087 @rjbou - fix #4086]
+* Don't overwrite user's sandbow script modification. [#4020 #4092 @rjbou]
+* On MacOS sandbox script, always read write mount `/tmp`
+  [#3742 @rjbou - fix ocaml/opam-repository#13339]
+* Use version var in opam file instead of equal current version number in
+  opamlib dependencies [#4178 @rjbou]
+* Opam file build using dune [#4178 @rjbou #4229 @kit-ty-kate - fix #4173]
+* Update opam file to 2.0 [#4371 @AltGr]
+* Fix `arch` detection when using 32bit mode on ARM64 [#4462 @kit-ty-kate]
+* Fix `arch` detection of i486 [#4462 @kit-ty-kate]
+* The stdout of pre- and post-session hooks is now propagated to the user
+  [#4382 @AltGr - fix #4359]
+* Run switch pre/post sessions hooks [#4476 @rjbou - fix #4472]
 
 2.1.0~beta4:
 * (*) Implemented CLI version compatibility layer [#4385 @rjbou]
