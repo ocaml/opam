@@ -519,7 +519,7 @@ let import_t ?ask importfile t =
             opam)
       pinned;
     (* Save new pinnings *)
-    let sel = OpamSwitchState.load_selections t.switch_global t.switch in
+    let sel = OpamSwitchState.load_selections ~lock_kind:`Lock_write t.switch_global t.switch in
     S.write
       (OpamPath.Switch.selections t.switch_global.root t.switch)
       { sel with sel_pinned = pinned }
