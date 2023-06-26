@@ -1,13 +1,15 @@
 opam-version: "2.0"
-version: "2.2.0~alpha~dev"
-synopsis: "State library for opam 2.1"
+version: "2.2.0~alpha"
+synopsis: "State library for opam 2.2"
 description: """
 Handling of the ~/.opam hierarchy, repository and switch states.
 """
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
+  "David Allsopp <david@tarides.com>"
   "Vincent Bernardoff <vb@luminar.eu.org>"
   "Raja Boujbel <raja.boujbel@ocamlpro.com>"
+  "Kate Deplaix <kit.ty.kate@disroot.org>"
   "Roberto Di Cosmo <roberto@dicosmo.org>"
   "Thomas Gazagnaire <thomas@gazagnaire.org>"
   "Louis Gesbert <louis.gesbert@ocamlpro.com>"
