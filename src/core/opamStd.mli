@@ -494,6 +494,9 @@ module Sys : sig
           | Unix
           | Other of string
 
+  (** Machine triplet, if found. Queried lazily. *)
+  val machine_triplet : unit -> string option
+
   (** Queried lazily *)
   val os: unit -> os
 
