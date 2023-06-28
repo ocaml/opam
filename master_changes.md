@@ -94,6 +94,7 @@ users)
 ### Engine
 
 ## Github Actions
+  * Fix hygiene scripts for install check: it was missing a conversion `~` -> `-` for dev version [#5588 @rjbou]
 
 ## Doc
 
