@@ -164,6 +164,9 @@ let poll_os_family () =
   | _ -> Lazy.force os_distribution
 let os_family = Lazy.from_fun poll_os_family
 
+let poll_machine_triplet () = OpamStd.Sys.machine_triplet ()
+let machine_triplet = Lazy.from_fun poll_machine_triplet
+
 let variables =
   List.map
     (fun (n, v) ->
@@ -175,7 +178,7 @@ let variables =
       "os-distribution", os_distribution;
       "os-version", os_version;
       "os-family", os_family;
-      "machine-triplet", lazy (OpamStd.Sys.machine_triplet ());
+      "machine-triplet", machine_triplet;
     ]
 
 let cores =
