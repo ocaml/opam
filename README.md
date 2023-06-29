@@ -1,4 +1,4 @@
-# opam - A package manager for OCaml
+# opam - A Package Manager for OCaml
 
 |master|2.0|2.1|
 |--|--|--|
@@ -13,7 +13,7 @@ Opam was created and is maintained by [OCamlPro](http://www.ocamlpro.com).
 To get started, checkout the [Install](http://opam.ocaml.org/doc/Install.html)
 and [Usage](http://opam.ocaml.org/doc/Usage.html) guides.
 
-## Compiling this repo
+## Compiling This Repo
 
 Either from an existing opam installation, use `opam pin add opam-devel
 --dev`, or:
@@ -33,20 +33,20 @@ This is all you need for installing and using opam, but if you want to use the
 libraries. It's easier to already have a working opam installation in this case,
 so you can do it as a second step.
 
-* Make sure to have ocamlfind, ocamlgraph, cmdliner >= 1.0.0, cudf >= 0.7,
-  dose3 >= 6.1, re >= 1.9.0, opam-file-format installed. Or run `opam install
+* Make sure to have `ocamlfind`, `ocamlgraph`, `cmdliner` >= 1.0.0, `cudf` >= 0.7,
+  `dose3` >= 6.1, `re` >= 1.9.0, `opam-file-format` installed. Or run `opam install
   . --deps-only` if you already have a working instance. Re-run
   `./configure` once done
 * Run `make libinstall` at the end
 
 _Note_: If you install on your system (without changing the prefix), you will
-need to install as root (`sudo`). As sudo do not propagate environment
-variables, there wil be some errors. You can use `sudo -E "PATH=$PATH" in order
-to be sure to have the good environment for install.
+need to install as root (`sudo`). As `sudo` does not propagate environment
+variables, so there wil be some errors. You can use `sudo -E "PATH=$PATH" in order
+to ensure you have a good environment for install.
 
-## Developer mode
+## Developer Mode
 
-If you are developing OPAM, you may enable developer features by including the
+If you are developing opam, you may enable developer features by including the
 `--enable-developer-mode` parameter with `./configure`.
 
 ## Compiling on Native Windows
@@ -57,7 +57,7 @@ BUILDING ON WINDOWS IS A WORK-IN-PROGRESS AND THESE INSTRUCTIONS WILL EVOLVE!
 
 Cygwin (https://www.cygwin.com/setup-x86_64.exe) is always required to build opam on
 Windows. Both the 64-bit and 32-bit versions of Cygwin may be used (you can build
-32-bit opam using 64-bit Cygwin and vice versa though note that you must be running
+32-bit opam using 64-bit Cygwin and vice versa though. Note that you must be running
 64-bit Windows in order to build the 64-bit version).
 
 The following Cygwin packages are required:
@@ -73,11 +73,11 @@ using the following command line:
 `setup-x86_64 --root=C:\cygwin64 --quiet-mode --no-desktop --no-startmenu --packages=make,mingw64-i686-gcc-core,mingw64-x86_64-gcc-core,patch`
 
 The `--no-desktop` and `--no-startmenu` switches may be omitted in order to create
-shortcuts on the Desktop and Start Menu respectively. Executed this way, setup will
-still be interactive, but the packages will have been pre-selected. To make setup
+shortcuts on the Desktop and Start Menu, respectively. Executed this way, setup will
+still be interactive, but the packages will have been preselected. To make setup
 fully unattended, choose a mirror URL from https://cygwin.com/mirrors.lst and add
-the --site switch to the command line
-(e.g. `--site=http://www.mirrorservice.org/sites/sourceware.org/pub/cygwin/`).
+the `--site` switch to the command line
+(e.g., `--site=http://www.mirrorservice.org/sites/sourceware.org/pub/cygwin/`).
 
 It is recommended that you set the `CYGWIN` environment variable to
 `nodosfilewarning winsymlinks:native`.
@@ -88,7 +88,7 @@ Cygwin is started either from a shortcut or by running:
 C:\cygwin64\bin\mintty -
 ```
 
-It is recommended that opam be built outside Cygwin's root
+We recommended you build opam outside Cygwin's root
 (so in `/cygdrive/c/...`). From an elevated Cygwin shell, edit `/etc/fstab` and
 ensure that the file's content is exactly:
 
@@ -102,39 +102,39 @@ over NTFS (which can result in strange and unnecessary permissions showing up in
 Windows Explorer). It is necessary to close and restart all Cygwin terminal windows
 after changing `/etc/fstab`.
 
-opam is able to be built **without** a pre-installed OCaml compiler. For the MSVC
+Opam is able to be built **without** a preinstalled OCaml compiler. For the MSVC
 ports of OCaml, the Microsoft Windows SDK 7 or later or Microsoft Visual Studio is
 required (https://www.microsoft.com/en-gb/download/details.aspx?id=8442 - either x86
 or x64 may be installed, as appropriate to your system). It is not necessary to
-modify PATH, INCLUDE or LIB - opam's build system will automatically detect the
+modify PATH, INCLUDE, or LIB. Opam's build system will automatically detect the
 required changes.
 
-If OCaml is not pre-installed, run:
+If OCaml is not preinstalled, run:
 ```
 make compiler [OCAML_PORT=mingw64|mingw|msvc64|msvc|auto]
 ```
-The `OCAML_PORT` variable determines which flavour of Windows OCaml is compiled -
-`auto` will attempt to guess. As long as `gcc` is **not** installed in Cygwin
-(i.e. the native C compiler *for Cygwin*), `OCAML_PORT` does not need to be
+The `OCAML_PORT` variable determines which flavour of Windows OCaml is compiled;
+`auto` will attempt to guess. As long as GCC is **not** installed in Cygwin
+(i.e., the native C compiler *for Cygwin*), `OCAML_PORT` does not need to be
 specified and `auto` will be assumed. Once the compiler is built, you may run:
 ```
 make lib-pkg
 ```
-to install the dependencies as findlib packages to the compiler. Building `lib-pkg`
+to install the dependencies as `findlib` packages to the compiler. Building `lib-pkg`
 requires the ability to create native symbolic links (and the `CYGWIN` variable
-*must* include `winsymlinks:native`) - this means that either Cygwin must be run
-elevated from an account with administrative privileges or your user account must be
-granted the SeCreateSymbolicLinkPrivilege either by enabling Developer mode on
-Windows 10, or using Local Security Policy on earlier versions of Windows.
+*must* include `winsymlinks:native`). This means that either Cygwin must be run
+elevated from an account with administrative privileges, or your user account must be
+granted the _SeCreateSymbolicLinkPrivilege_ either by enabling Developer mode on
+Windows 10 or using Local Security Policy on earlier versions of Windows.
 Alternatively, you may run `configure` and use vendored deps, as advised.
 
 You can then `configure` and build opam as above.
 
-## Compiling without OCaml
+## Compiling Without OCaml
 
 `make cold` is provided as a facility to compile OCaml, then bootstrap opam.
-You don't need need to run `./configure` in that case, but
-you may specify `CONFIGURE_ARGS` if needed, e.g.:
+You don't need to run `./configure` in that case, but
+you may specify `CONFIGURE_ARGS` if needed. E.g.,:
 
 ```
 make cold CONFIGURE_ARGS="--prefix ~/local"
@@ -143,11 +143,11 @@ make cold-install
 
 NOTE: You'll still need GNU make.
 
-## Bug tracker
+## Bug Tracker
 
-Have a bug or a feature request ? Please open an issue on [our
+Have a bug or a feature request? Please open an issue on [our
 bug-tracker](https://github.com/ocaml/opam/issues). Please search for existing
-issues before posting, and include the output of `opam config report` and any
+issues before posting and include the output of `opam config report` and any
 details that may help track down the issue.
 
 ## Documentation
@@ -164,7 +164,7 @@ A collection of guides and tutorials is available
 [online](http://opam.ocaml.org/doc/Usage.html). They are generated from the
 files in [doc/pages](https://github.com/ocaml/opam/tree/master/doc/pages).
 
-#### API, Code Documentation and Developer Manual
+#### API, Code Documentation, and Developer Manual
 
 A more thorough technical document describing opam and specifying the package
 description format is available in the
@@ -183,7 +183,7 @@ Keep track of development and community news.
 
 ## Contributing
 
-We welcome contributions ! Please use Github's pull-request mechanism against
+We welcome contributions! Please use GitHub's pull-request mechanism against
 the master branch of the [opam repository](https://github.com/ocaml/opam). If
 that's not an option for you, you can use `git format-patch` and email us.
 
@@ -191,10 +191,10 @@ that's not an option for you, you can use `git format-patch` and email us.
 
 The release cycle respects [Semantic Versioning](http://semver.org/).
 
-## Related repositories
+## Related Repositories
 
 - [ocaml/opam-repository](https://github.com/ocaml/opam-repository) is the
-  official repository for opam packages and compilers. A number of non-official
+  official repository for opam packages and compilers. A number of unofficial
   repositories are also available on the interwebs, for instance on
   [Github](https://github.com/search?q=opam-repo&type=Repositories).
 - [opam2web](https://github.com/ocaml/opam2web) generates a collection of
@@ -202,7 +202,7 @@ The release cycle respects [Semantic Versioning](http://semver.org/).
   http://opam.ocaml.org.
 - [opam-rt](https://github.com/ocaml/opam-rt) is the regression framework for opam.
 - [opam-publish](https://github.com/ocaml-opam/opam-publish) is a tool to facilitate
-  the creation, update and publication of opam packages.
+  the creation, update, and publication of opam packages.
 
 ## Copyright and license
 
