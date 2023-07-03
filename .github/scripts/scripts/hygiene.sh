@@ -14,6 +14,7 @@ if [[ $GITHUB_EVENT_NAME = 'pull_request' ]]; then
     eval $(grep '^\(OPAM_BIN_URL_BASE\|DEV_VERSION\|VERSION\)=' shell/install.sh)
     echo "OPAM_BIN_URL_BASE = $OPAM_BIN_URL_BASE"
     echo "VERSION = $VERSION; DEV_VERSION = $DEV_VERSION"
+    DEV_VERSION=${DEV_VERSION//\~/-}
     if [[ $DEV_VERSION != $VERSION ]]; then
       ARCHES=2
     else
