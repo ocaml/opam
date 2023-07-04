@@ -91,6 +91,8 @@ users)
 ## Reftests
 ### Tests
   * Admin: add a full test [#5385 @rjbou]
+  * Lint
+    * E29: Add conflicts test and simplify W41 to no more trigger E29 [#5535 @rjbou]
 
 ### Engine
 
