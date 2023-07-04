@@ -3353,6 +3353,7 @@ let pin ?(unpin_only=false) cli =
         when not (current || dev_repo) ->
         `add_wtarget ([n],target)
       | Some `add, (_n1 :: _n2 :: _ :: _ as ns_and_target)
+      | Some `default _n1, (_n2 :: _ :: _ as ns_and_target)
         when not (current || dev_repo) ->
         let ns, target =
           match List.rev ns_and_target with
