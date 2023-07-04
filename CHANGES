@@ -43,7 +43,7 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 * (+) Add `--untracked` option to remove interactively untracked files
   [#4915 @rjbou - fix #4831]
 * (+) Add support for `opam switch -` that goes to previous non-local switch
-  [#4910 @kit-ty-kate - fix 4866]
+  [#4910 @kit-ty-kate - fix #4688]
 * (+) Add `opam admin add-constraint <cst> --packages` to select a subset of
   packages to apply constraints [#5386 @rjbou - fix #3077]
 * (+) Add `OPAMREPOSITORYTARRING` environment variable to enable repository
@@ -158,7 +158,7 @@ are not marked). Those prefixed with "(+)" are new command/option (since
   [#5079 @rjbou - fix #4936]
 * [BUG] When reinstalling a package that has a dirty source, if uncommitted
   changes are the same than the ones stored in opam's cache, opam consider that
-  it is up to date and nothing is updated [4879 @rjbou]
+  it is up to date and nothing is updated [#4879 @rjbou]
 * [BUG] Handle external dependencies when updating switch state pin status (all
   pins), instead as a post pin action (only when called with `opam pin`
   [#5047 @rjbou - fix #5046]
@@ -604,8 +604,8 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 * Fix dose3 download url since gforge is gone [#4870 @avsm]
 * Ensure setenv can use package variables defined during the build
   [#4841 @dra27]
-* Fix `set-invariant: default repos were loaded instead of switch repos
-  [#4866 @rjbou]
+* Fix `set-invariant`: default repos were loaded instead of switch repos
+  [#4869 @rjbou]
 
 2.0.10:
 * Fix reverting environment additions to PATH-like variables when several dirs
