@@ -31,6 +31,7 @@ users)
 ## Config
 
 ## Pin
+  * Add pin several package with one target [#5537 @reynir]
 
 ## List
 
@@ -90,6 +91,8 @@ users)
 
 ## Reftests
 ### Tests
+  * Pin
+    * Add pinning several packages with one target test [#5537 @rjbou]
 
 ### Engine
 
