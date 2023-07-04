@@ -263,3 +263,135 @@ Could not retrieve some package sources, they will not be pinned nor installed:
 
 Continue anyway? [y/n] y
 ### opam pin
+### : Pin several packages with a target :
+### opam switch create several --empty
+### opam pin nip ./nip
+Package nip does not exist, create as a NEW package? [y/n] y
+[nip.dev] synchronised (file://${BASEDIR}/nip)
+nip is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (file://${BASEDIR}/nip)
+-> installed nip.dev
+Done.
+### cp nip/nip.opam nip/nip0.opam
+### cp nip/nip.opam nip/nip1.opam
+### cp nip/nip.opam nip/nip2.opam
+### cp nip/nip.opam nip/nip3.opam
+### opam pin nip0 nip1 nip2 nip3 ./nip
+Package nip3 does not exist, create as a NEW package? [y/n] y
+[nip3.dev] synchronised (file://${BASEDIR}/nip)
+nip3 is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip3 dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip3.dev  (file://${BASEDIR}/nip)
+-> installed nip3.dev
+Done.
+Package nip2 does not exist, create as a NEW package? [y/n] y
+[nip2.dev] synchronised (file://${BASEDIR}/nip)
+nip2 is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip2 dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip2.dev  (file://${BASEDIR}/nip)
+-> installed nip2.dev
+Done.
+Package nip1 does not exist, create as a NEW package? [y/n] y
+[nip1.dev] synchronised (file://${BASEDIR}/nip)
+nip1 is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip1 dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip1.dev  (file://${BASEDIR}/nip)
+-> installed nip1.dev
+Done.
+### opam pin
+nip.dev     rsync  file://${BASEDIR}/nip
+nip1.dev    rsync  file://${BASEDIR}/nip
+nip2.dev    rsync  file://${BASEDIR}/nip
+nip3.dev    rsync  file://${BASEDIR}/nip
+### opam unpin nip0 nip1 nip2 nip3
+Ok, nip3 is no longer pinned to file://${BASEDIR}/nip (version dev)
+Ok, nip2 is no longer pinned to file://${BASEDIR}/nip (version dev)
+Ok, nip1 is no longer pinned to file://${BASEDIR}/nip (version dev)
+[NOTE] nip0 is not pinned.
+The following actions will be performed:
+=== remove 3 packages
+  - remove nip1 dev
+  - remove nip2 dev
+  - remove nip3 dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   nip1.dev
+-> removed   nip2.dev
+-> removed   nip3.dev
+Done.
+### opam pin add nip0 nip1 nip2 nip3 ./nip
+Package nip3 does not exist, create as a NEW package? [y/n] y
+[nip3.dev] synchronised (file://${BASEDIR}/nip)
+nip3 is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip3 dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip3.dev  (file://${BASEDIR}/nip)
+-> installed nip3.dev
+Done.
+Package nip2 does not exist, create as a NEW package? [y/n] y
+[nip2.dev] synchronised (file://${BASEDIR}/nip)
+nip2 is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip2 dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip2.dev  (file://${BASEDIR}/nip)
+-> installed nip2.dev
+Done.
+Package nip1 does not exist, create as a NEW package? [y/n] y
+[nip1.dev] synchronised (file://${BASEDIR}/nip)
+nip1 is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip1 dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip1.dev  (file://${BASEDIR}/nip)
+-> installed nip1.dev
+Done.
+Package nip0 does not exist, create as a NEW package? [y/n] y
+[nip0.dev] synchronised (file://${BASEDIR}/nip)
+nip0 is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip0 dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip0.dev  (file://${BASEDIR}/nip)
+-> installed nip0.dev
+Done.
+### opam pin
+nip.dev     rsync  file://${BASEDIR}/nip
+nip0.dev    rsync  file://${BASEDIR}/nip
+nip1.dev    rsync  file://${BASEDIR}/nip
+nip2.dev    rsync  file://${BASEDIR}/nip
+nip3.dev    rsync  file://${BASEDIR}/nip
