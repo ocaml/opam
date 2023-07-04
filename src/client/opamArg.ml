@@ -420,7 +420,7 @@ let help_sections cli =
     `S "David Allsopp      <david@tarides.com>"; `Noblank;
     `P "Vincent Bernardoff <vb@luminar.eu.org>"; `Noblank;
     `P "Raja Boujbel       <raja.boujbel@ocamlpro.com>"; `Noblank;
-    `S "Kate Deplaix       <kit.ty.kate@disroot.org>"; `Noblank;
+    `S "Kate Deplaix       <kit-ty-kate@outlook.com>"; `Noblank;
     `P "Roberto Di Cosmo   <roberto@dicosmo.org>"; `Noblank;
     `P "Thomas Gazagnaire  <thomas@gazagnaire.org>"; `Noblank;
     `P "Louis Gesbert      <louis.gesbert@ocamlpro.com>"; `Noblank;
