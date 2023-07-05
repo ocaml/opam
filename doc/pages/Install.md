@@ -1,24 +1,24 @@
-# How to install opam
+# How to Install opam
 
 This page describes how to install and configure opam. For further help on how
 to use opam, either read [`opam --help`](man/opam.html) or move on to the
 [Usage](Usage.html) guide.
 
-## Upgrading from a previous version
+## Upgrading From a Previous Version
 
 Generally, you should just reproduce the same installation steps as for the
-original installation: upgrade from your system's package manager, or re-run the
+original installation: upgrade from your system's package manager or rerun the
 binary installer. Opam will automatically update its internal repository at
 `~/.opam` on first run if needed (if using our installer script, a backup can be
 made automatically).
 
-To upgrade shell scripts, and enable sandboxing, don't forget to run `opam init
+To upgrade shell scripts and enable sandboxing, don't forget to run `opam init
 --reinit -ni`.
 
 Then see the [Upgrade guide](Upgrade_guide.html) to check the changes.
 
 
-## Binary distribution
+## Binary Distribution
 
 The quickest way to get the latest opam up and working is to run
 [this script](https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh):
@@ -27,34 +27,34 @@ bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/she
 ```
 
 This will simply check your architecture, download and install the proper
-pre-compiled binary, backup your opam data if from an older version, and run
+precompiled binary, backup your opam data if from an older version, and run
 `opam init`.
 
 (If you have trouble with `curl`, just
 [download the script](https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)
 and run `sh install.sh`)
 
-We provide pre-compiled binaries for:
+We provide precompiled binaries for:
 - Linux (amd64, arm64, arm7, i686)
 - macOS (amd64, arm64)
 - FreeBSD (amd64)
 - OpenBSD (amd64)
 - We do not at present provide an official Windows distribution of opam, but please see [this separately maintained distribution](https://fdopen.github.io/opam-repository-mingw/)
-(other platforms are available using the other methods below)
+(other platforms are available using the other methods below).
 
 If you don't like scripts, you can just pick your download
 [here](https://github.com/ocaml/opam/releases), put it in your PATH as
-`opam`, and set it as executable, e.g.
+`opam` and set it as executable, e.g.,
 
 ```
 sudo install <downloaded file> /usr/local/bin/opam
 ```
 
-> Note that this script is intended for end-users, not CI. For that purpose,
-> you can use pre-built [Docker images for various
+> Note that this script is intended for end users, not CI. For that purpose,
+> you can use prebuilt [Docker images for various
 > configurations](https://hub.docker.com/r/ocaml/opam).
 
-## Using your distribution's package system
+## Using Your Distribution's Package System
 
 This is generally the recommended way, **when available and up-to-date** (you
 can check [here](Distribution.html) the latest
@@ -120,7 +120,7 @@ dnf install opam
 ```
 
 There is not currently a package for CentOS/RHEL. You will need to use our
-pre-built binaries, or build from sources.
+prebuilt binaries or build from sources.
 
 #### Mageia
 
@@ -169,13 +169,13 @@ port install opam
 
 See also
 [howto setup Emacs.app](https://github.com/ocaml/opam/wiki/Setup-Emacs.app-on-macosx-for-opam-usage)
-for Opam usage.
+for opam usage.
 
 #### Ubuntu
 
 [![badge](https://repology.org/badge/version-for-repo/ubuntu_20_04/opam.svg)](https://repology.org/project/opam/versions)
 
-##### Versions 18.04 and newer
+##### Versions 18.04 and Newer
 There is a [ppa](https://launchpad.net/~avsm/+archive/ubuntu/ppa) available that contains the current stable version of `opam`.
 ```
 add-apt-repository ppa:avsm/ppa
@@ -184,7 +184,7 @@ apt install opam
 ```
 
 ##### Versions older than 18.04
-Use the binary distribution. Instructions provided at https://opam.ocaml.org/doc/Install.html#Binary-distribution
+Use the binary distribution. Instructions provided [here](https://opam.ocaml.org/doc/Install.html#Binary-distribution)
 
 #### Windows
 
