@@ -98,6 +98,8 @@ users)
 
 ## Doc
 
+  * Add Makefile command to convert HTML man pages to markdown with YAML header using `pandoc`.
+
 ## Security fixes
 
 # API updates
