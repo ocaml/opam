@@ -69,6 +69,7 @@ users)
 ## Release scripts
 
 ## Admin
+  * When linting, clean output when stdout is not tty [#5594 @rjbou]
 
 ## Opam installer
 
@@ -113,4 +114,4 @@ users)
 ## opam-format
 
 ## opam-core
-
+  * `OpamConsole.carriage_delete`: no-op when not tty out [XXX @rjbou]

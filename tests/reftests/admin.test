@@ -392,9 +392,9 @@ packages/ocaml-system/ocaml-system.1.2/files/gen_ocaml_config.ml.in
 repo
 ### : lint :
 ### opam admin lint
-[KIn base-comp.base:
+In base-comp.base:
            warning 47: Synopsis should start with a capital and not end with a dot
-[KIn risus.1:
+In risus.1:
              error 23: Missing field 'maintainer'
            warning 25: Missing field 'authors'
            warning 35: Missing field 'homepage'

@@ -451,6 +451,7 @@ let carriage_delete_windows () =
       carriage_delete_unix ()
 
 let carriage_delete =
+  if not OpamStd.Sys.tty_out then fun () -> () else
   if Sys.win32 then
     let carriage_delete = lazy (
       match get_win32_console_shim `stdout Mode with
