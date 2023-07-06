@@ -123,4 +123,5 @@ users)
 ## opam-format
 
 ## opam-core
-  * `OpamConsole.carriage_delete`: no-op when not tty out [XXX @rjbou]
+  * `OpamConsole.carriage_delete`: no-op when not tty out [#5595 @rjbou]
+  * `OpamSystem.make_command`: Remove the warning triggered when the command contained spaces [#5596 @rjbou - fix #5163]
