@@ -131,7 +131,7 @@ conf
 ${BASEDIR}/lint.opam: Errors.
              error  3: File format error in 'flags' at line 10, column 0: Unknown package flags unkn ignored
 # Return code 1 #
-### : E29: Package dependencies mention package variables
+### : E29: Package dependencies or conflicts mention package variables
 ### <lint.opam>
 opam-version: "2.0"
 synopsis: "A word"
@@ -145,7 +145,22 @@ bug-reports: "https://nobug"
 depends: "foo" {_:innervar}
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Errors.
-             error 29: Package dependencies mention package variables: "_:innervar"
+             error 29: Package dependencies or conflicts mention package variables: "_:innervar"
+# Return code 1 #
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+conflicts: "foo" {_:innervar}
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 29: Package dependencies or conflicts mention package variables: "_:innervar"
 # Return code 1 #
 ### : E31: Fields 'depends' and 'depopts' refer to the same package names
 ### <lint.opam>
@@ -294,12 +309,10 @@ maintainer: "maint@tain.er"
 license: "ISC"
 dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
-depends: "foo" { bar:innerenv }
+messages: "foo" { bar:innerenv }
 ### opam lint ./lint.opam
-${BASEDIR}/lint.opam: Errors.
-             error 29: Package dependencies mention package variables: "bar:innerenv"
+${BASEDIR}/lint.opam: Warnings.
            warning 41: Some packages are mentioned in package scripts or features, but there is no dependency or depopt toward them: "bar"
-# Return code 1 #
 ### : E42: The 'dev-repo:' field doesn't use version control. You should use URLs of the form "git://", "git+https://", "hg+https://"...
 ### <lint.opam>
 opam-version: "2.0"

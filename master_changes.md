@@ -45,6 +45,7 @@ users)
 ## Source
 
 ## Lint
+  * E29: The conflicts field's filter does not support package variables [#5535 @kit-ty-kate]
 
 ## Repository
 
@@ -92,6 +93,8 @@ users)
 ## Reftests
 ### Tests
   * Admin: add a full test [#5385 @rjbou]
+  * Lint
+    * E29: Add conflicts test and simplify W41 to no more trigger E29 [#5535 @rjbou]
 
 ### Engine
 
