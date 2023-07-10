@@ -275,6 +275,7 @@ type solution_result =
   | OK of package action list (** List of successful actions *)
   | Aborted
   | Partial_error of actions_result
+  | Missing_depexts of OpamSysPkg.Set.t package_map
 
 (** Solver result *)
 type ('a, 'b) result =
@@ -419,4 +420,17 @@ type json = OpamJson.t
 
 type sys_package = OpamSysPkg.t
 
-type sys_pkg_status = OpamSysPkg.status
+type sys_pkg_status = {
+  sys_available : OpamSysPkg.Set.t;
+  (** Package available but not installed *)
+
+  sys_not_found : OpamSysPkg.Set.t;
+  (** Package unavailable on this system *)
+}
+
+(** List [sys_pkg_status] but keep filter with unresolved variable at switch
+    load, in order to be resolved when applying solution *)
+type sys_pkg_status_w_filter = {
+  sys_available_wf :  filter OpamSysPkg.Map.t ;
+  sys_not_found_wf :  filter OpamSysPkg.Map.t;
+}
