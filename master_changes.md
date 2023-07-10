@@ -90,6 +90,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Admin: add a full test [#5385 @rjbou]
 
 ### Engine
 
