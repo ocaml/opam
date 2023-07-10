@@ -164,6 +164,9 @@ global-foo
 2.4.6
 ### opam var i-got-the-variables:version --switch var-option
 2.4.6
+### opam var i-got-the-variables:version --global
+[ERROR] Variable i-got-the-variables:version not found in global config
+# Return code 5 #
 ### opam var --package i-got-the-variables | ".*build-id.*" -> '\c' | ".*opamfile.*" -> '\c' | "   *" -> " "
 i-got-the-variables:name i-got-the-variables # Name of the package
 i-got-the-variables:version 2.4.6 # Version of the package
@@ -180,6 +183,33 @@ i-got-the-variables:share ${BASEDIR}/OPAM/var-option/share/i-got-the-variables #
 i-got-the-variables:etc ${BASEDIR}/OPAM/var-option/etc/i-got-the-variables # Etc directory for this package
 i-got-the-variables:build ${BASEDIR}/OPAM/var-option/.opam-switch/build/i-got-the-variables.2.4.6 # Directory where the package was built
 i-got-the-variables:dev false # True if this is a development package
+### opam var i-got-the-variables:version=1 | '…' -> '...' | '`' -> "'"
+[ERROR] Variable i-got-the-variables:version=1 not found in switch var-option
+# Return code 5 #
+### opam var i-got-the-variables:version=1 --switch var-option
+[ERROR] Variable i-got-the-variables:version=1 not found in switch var-option
+# Return code 5 #
+### opam var i-got-the-variables:version=1 --global
+[ERROR] Variable i-got-the-variables:version=1 not found in global config
+# Return code 5 #
+### opam var _:version
+[ERROR] Variable _:version not found in switch var-option
+# Return code 5 #
+### opam var _:version --switch var-option
+[ERROR] Variable _:version not found in switch var-option
+# Return code 5 #
+### opam var _:version --global
+[ERROR] Variable _:version not found in global config
+# Return code 5 #
+### opam var _:version=1 | '…' -> '...' | '`' -> "'"
+[ERROR] Variable _:version=1 not found in switch var-option
+# Return code 5 #
+### opam var _:version=1 --switch var-option
+[ERROR] Variable _:version=1 not found in switch var-option
+# Return code 5 #
+### opam var _:version=1 --global
+[ERROR] Variable _:version=1 not found in global config
+# Return code 5 #
 ### opam option
 
 <><> Global configuration <><><><><><><><><><><><><><><><><><><><><><><><><><><>
