@@ -64,6 +64,8 @@ users)
 ## VCS
 
 ## Build
+### Dependencies
+  * Bump mccs to 1.1+16 [#5510 @rjbou]
 
 ## Infrastructure
 
