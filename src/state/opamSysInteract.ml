@@ -247,6 +247,10 @@ module Cygwin = struct
   let internal_cygroot () = internal_cygwin () / "root"
   let internal_cygcache () = internal_cygwin () / "cache"
   let cygsetup () = internal_cygwin () // setupexe
+  let is_internal config =
+    OpamStd.Option.equal OpamFilename.Dir.equal
+      (cygroot_opt config)
+      (Some (internal_cygroot ()))
 
   let download_setupexe dst =
     let overwrite = true in

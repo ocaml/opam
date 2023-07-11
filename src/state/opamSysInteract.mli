@@ -54,6 +54,9 @@ module Cygwin : sig
   val check_install:
     string -> (OpamFilename.t, string) result
 
+  (* Returns true if Cygwin install is internal *)
+  val is_internal: OpamFile.Config.t -> bool
+
   (* [check_setup path] checks and store Cygwin setup executable. Is [path] is
      [None], it downloads it, otherwise it copies it to
      <opamroot>/.cygwin/setup-x86_64.exe. If the file is already existent, it
