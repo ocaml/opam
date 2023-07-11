@@ -44,7 +44,7 @@ case "$HOST" in
     PREFIX="$OCAML_LOCAL";;
 esac
 
-FLEXDLL_VERSION=0.42
+FLEXDLL_VERSION=0.43
 
 curl -sLO "https://caml.inria.fr/pub/distrib/ocaml-${OCAML_VERSION%.*}/ocaml-$OCAML_VERSION.tar.gz"
 if [[ $PLATFORM = 'Windows' ]] ; then
