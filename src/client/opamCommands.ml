@@ -303,11 +303,36 @@ let init cli =
        $(b,--config) is used). Use this at your own risk, without sandboxing \
        it is possible for a broken package script to delete all your files."
   in
+  let cygwin_internal =
+    if Sys.win32 then
+      mk_vflag ~cli `none [
+        cli_from ~experimental:true cli2_2,
+        `internal, ["cygwin-internal-install"],
+        "Let opam setup and manage an internal Cygwin install";
+        cli_from ~experimental:true cli2_2,
+        `default_location, ["cygwin-local-install"],
+        "Use preexistent Cygwin install";
+        cli_from ~experimental:true cli2_2,
+        `no, ["no-cygwin-setup"],
+        "Don't setup Cygwin";
+      ]
+    else
+      Term.const `none
+  in
+  let cygwin_location =
+    if Sys.win32 then
+      mk_opt ~cli (cli_from ~experimental:true cli2_2)
+        ["cygwin-location"] "DIR" "Specify Cygwin root location"
+        Arg.(some dirname) None
+    else
+      Term.const None
+  in
   let init global_options
       build_options repo_kind repo_name repo_url
       interactive update_config completion env_hook no_sandboxing shell
       dot_profile_o compiler no_compiler config_file no_config_file reinit
       show_opamrc bypass_checks
+      cygwin_internal cygwin_location
       () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
@@ -363,6 +388,19 @@ let init cli =
       OpamStd.Option.Op.(dot_profile_o >>+ fun () ->
         OpamStd.Sys.guess_dot_profile shell >>| OpamFilename.of_string)
     in
+    let cygwin_setup =
+      match cygwin_internal, cygwin_location with
+      | `internal, Some _ ->
+        OpamConsole.error_and_exit `Bad_arguments
+          "Options --cygwin-internal-install and \
+           --cygwin-location are incompatible";
+      | `no, Some _ ->
+        OpamConsole.note "Ignoring argument --cygwin-location";
+        Some `no
+      | `none, None -> None
+      | (`default_location | `none), Some dir -> Some (`location dir)
+      | (`internal | `default_location | `no) as setup, None -> Some setup
+    in
     if already_init then
       if reinit then
         let init_config =
@@ -372,7 +410,7 @@ let init cli =
         let reinit conf =
           OpamClient.reinit ~init_config ~interactive ?dot_profile
             ?update_config ?env_hook ?completion ~inplace ~bypass_checks
-            ~check_sandbox:(not no_sandboxing)
+            ~check_sandbox:(not no_sandboxing) ?cygwin_setup
             conf shell
         in
         let config =
@@ -412,6 +450,7 @@ let init cli =
         ?repo ~bypass_checks ?dot_profile
         ?update_config ?env_hook ?completion
         ~check_sandbox:(not no_sandboxing)
+        ?cygwin_setup
         shell
     in
     OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
@@ -460,7 +499,7 @@ let init cli =
           $setup_completion $env_hook $no_sandboxing $shell_opt cli
           cli_original $dot_profile_flag cli cli_original $compiler
           $no_compiler $config_file $no_config_file $reinit $show_default_opamrc
-          $bypass_checks)
+          $bypass_checks $cygwin_internal $cygwin_location)
 
 (* LIST *)
 let list_doc = "Display the list of available packages."
