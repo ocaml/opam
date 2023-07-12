@@ -97,7 +97,7 @@ cd ..
 
 if [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$BRANCH" = "master" ]; then
   (set +x ; echo -en "::group::check default cli\r") 2>/dev/null
-  CURRENT_MAJOR="`sed -n "s/^AC_INIT(opam,\([0-9]\+\)[^0-9]*.*)$/\1/p" configure.ac`"
+  CURRENT_MAJOR="`sed -n "s/^AC_INIT(\[opam],\[\([0-9]\+\)[^0-9]*.*])$/\1/p" configure.ac`"
   DEFAULT_CLI_MAJOR="`sed -n "/let *default *=/s/.*(\([0-9]*\)[^0-9]*.*/\1/p" src/client/opamCLIVersion.ml`"
   if [ $CURRENT_MAJOR -eq $DEFAULT_CLI_MAJOR ]; then
     echo "Major viersion is default cli one: $CURRENT_MAJOR"
