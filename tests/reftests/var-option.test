@@ -130,7 +130,7 @@ ${BASEDIR}/OPAM/var-option/bin
 ### opam var bin --switch var-option
 ${BASEDIR}/OPAM/var-option/bin
 ### opam var bin --global
-[ERROR] Variable bin not found in global config
+[ERROR] Variable bin not found in the global configuration
 # Return code 5 #
 ### opam var bin=global-bin --global
 Added '[bin "global-bin" "Set through 'opam var'"]' to field global-variables in global configuration
@@ -153,10 +153,13 @@ switch-foo
 ### opam var foo --global
 global-foo
 ### opam var ocaml-base-compiler:version
-[ERROR] Variable ocaml-base-compiler:version not found in switch var-option
+[ERROR] Variable ocaml-base-compiler:version not found in switch var-option; package ocaml-base-compiler is not installed in this switch
 # Return code 5 #
 ### opam var ocaml-base-compiler:version --switch var-option
-[ERROR] Variable ocaml-base-compiler:version not found in switch var-option
+[ERROR] Variable ocaml-base-compiler:version not found in switch var-option; package ocaml-base-compiler is not installed in this switch
+# Return code 5 #
+### opam var ocaml-base-compiler:version --global
+[ERROR] Variable ocaml-base-compiler:version not found in the global configuration
 # Return code 5 #
 ### opam var --package ocaml | ".*build-id.*" -> '\c' | ".*opamfile.*" -> '\c' | "   *" -> " "
 [ERROR] Package ocaml not found, skipping
@@ -164,6 +167,9 @@ global-foo
 2.4.6
 ### opam var i-got-the-variables:version --switch var-option
 2.4.6
+### opam var i-got-the-variables:version --global
+[ERROR] Variable i-got-the-variables:version not found in the global configuration
+# Return code 5 #
 ### opam var --package i-got-the-variables | ".*build-id.*" -> '\c' | ".*opamfile.*" -> '\c' | "   *" -> " "
 i-got-the-variables:name i-got-the-variables # Name of the package
 i-got-the-variables:version 2.4.6 # Version of the package
@@ -180,6 +186,37 @@ i-got-the-variables:share ${BASEDIR}/OPAM/var-option/share/i-got-the-variables #
 i-got-the-variables:etc ${BASEDIR}/OPAM/var-option/etc/i-got-the-variables # Etc directory for this package
 i-got-the-variables:build ${BASEDIR}/OPAM/var-option/.opam-switch/build/i-got-the-variables.2.4.6 # Directory where the package was built
 i-got-the-variables:dev false # True if this is a development package
+### opam var i-got-the-variables:version=1 | '…' -> '...' | '`' -> "'"
+opam: variable setting needs a scope, use '--global' or '--switch <switch>'
+Usage: opam var [--global] [--package=PACKAGE] [OPTION]... [VAR[=[VALUE]]]
+Try 'opam var --help' or 'opam --help' for more information.
+# Return code 2 #
+### opam var i-got-the-variables:version=1 --switch var-option
+[ERROR] Package variables are read-only and cannot be updated using `opam var --global`
+# Return code 2 #
+### opam var i-got-the-variables:version=1 --global
+[ERROR] Package variables are read-only and cannot be updated using `opam var --global`
+# Return code 2 #
+### opam var _:version
+[ERROR] Self variables (`_:`) are not valid here
+# Return code 2 #
+### opam var _:version --switch var-option
+[ERROR] Self variables (`_:`) are not valid here
+# Return code 2 #
+### opam var _:version --global
+[ERROR] Self variables (`_:`) are not valid here
+# Return code 2 #
+### opam var _:version=1 | '…' -> '...' | '`' -> "'"
+opam: variable setting needs a scope, use '--global' or '--switch <switch>'
+Usage: opam var [--global] [--package=PACKAGE] [OPTION]... [VAR[=[VALUE]]]
+Try 'opam var --help' or 'opam --help' for more information.
+# Return code 2 #
+### opam var _:version=1 --switch var-option
+[ERROR] Self variables (`_:`) are not valid here
+# Return code 2 #
+### opam var _:version=1 --global
+[ERROR] Self variables (`_:`) are not valid here
+# Return code 2 #
 ### opam option
 
 <><> Global configuration <><><><><><><><><><><><><><><><><><><><><><><><><><><>

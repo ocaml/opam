@@ -37,6 +37,8 @@ users)
 ## Show
 
 ## Var/Option
+  * Handle package variable syntax in parse update regexp [#4903 @rjbou - fix #4489]
+  * Error with more accurate message in case of package/self variable wrongly given as argument [#4903 @rjbou - fix #4489]
 
 ## Update / Upgrade
 
