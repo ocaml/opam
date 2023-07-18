@@ -441,11 +441,11 @@ let t_resolve_command =
     else fun f ->
       try
         let open Unix in
-        let uid = geteuid () in
+        let {st_uid; st_gid; st_perm; st_kind; _} = stat f in
+        if st_kind <> Unix.S_REG then false else
         let groups = OpamStd.IntSet.of_list (getegid () :: Array.to_list (getgroups ())) in
-        let {st_uid; st_gid; st_perm; _} = stat f in
         let mask =
-          if uid = st_uid then
+          if geteuid () = st_uid then
             0o100
           else if OpamStd.IntSet.mem st_gid groups then
             0o010
@@ -488,9 +488,13 @@ let t_resolve_command =
         name ^ ".exe"
       else name
     in
-    let possibles = OpamStd.List.filter_map (fun path ->
-        let candidate = Filename.concat path name in
-        if Sys.file_exists candidate then Some candidate else None) path
+    let possibles =
+      OpamStd.List.filter_map (fun path ->
+          let candidate = Filename.concat path name in
+          match Sys.is_directory candidate with
+          | false -> Some candidate
+          | true | exception (Sys_error _) -> None)
+        path
     in
     match List.find check_perms possibles with
     | cmdname -> `Cmd cmdname

@@ -148,3 +148,4 @@ users)
 
 ## opam-core
   * `OpamSystem.mk_temp_dir`: resolve real path with `OpamSystem.real_path` before returning it [#5654 @rjbou]
+  * `OpamSystem.resolve_command`: in command resolution path, check that the file is not a directory and that it is a regular file [#5606 @rjbou - fix #5585 #5597]

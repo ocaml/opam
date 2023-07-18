@@ -13,11 +13,9 @@ system
 ### mkdir -p bin/echo
 ### PATH+=$BASEDIR/bin/
 ### opam exec -- echo system
-Fatal error: exception ${OPAM}: "execvpe" failed on ${BASEDIR}/bin/echo: Permission denied
-# Return code 2 #
+system
 ### opam exec --no-switch -- echo system
-Fatal error: exception ${OPAM}: "execvpe" failed on ${BASEDIR}/bin/echo: Permission denied
-# Return code 2 #
+system
 ### :I:c: is not executable
 ### rm -rf bin/echo
 ### <bin/echo>
