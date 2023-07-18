@@ -270,6 +270,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:conflict-solo5.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-core-system.unix)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (diff core-system.unix.test core-system.unix.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Unix"))
+ (deps (alias reftest-core-system.unix)))
+
+(rule
+ (targets core-system.unix.out)
+ (deps root-N0REP0)
+ (enabled_if (= %{os_type} "Unix"))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:core-system.unix.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-cudf-preprocess)
  (action
   (diff cudf-preprocess.test cudf-preprocess.out)))
