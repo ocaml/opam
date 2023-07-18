@@ -196,7 +196,10 @@ let command
   let env =
     Array.of_list @@
     List.map (fun (var, value) -> Printf.sprintf "%s=%s" var value) @@
-    (base_env @ vars)
+    (List.filter (fun (v,_) ->
+         List.find_opt (fun (v',_) -> String.equal v v') vars = None)
+        base_env)
+    @ vars
   in
   let input, stdout = Unix.pipe () in
   Unix.set_close_on_exec input;
