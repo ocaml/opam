@@ -696,6 +696,7 @@ let run_test ?(vars=[]) ~opam t =
     "OPAM", opam.as_seen_in_opam;
     "OPAMROOT", opamroot;
     "BASEDIR", dir;
+    "PATH", Sys.getenv "PATH";
   ] @ vars
   in
   if t.repo_hash = no_opam_repo then
