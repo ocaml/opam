@@ -115,6 +115,7 @@ users)
 
 ## Github Actions
   * Add coreutils install for cheksum validation tests [#5560 @rjbou]
+  * Add `wget` on Cygwin install [#5607 @rjbou]
 
 ## Doc
 
