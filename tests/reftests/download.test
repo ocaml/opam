@@ -88,9 +88,9 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
 + curl "--another-args" "3"
-[ERROR] Failed to get sources of foo.1: Curl failed
+[ERROR] Failed to get sources of foo.1: curl error code ***The curl is a lie*** [args: --another-args 3]
 
-OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (Curl failed: \"curl --another-args 3\" exited with code 2)")
+OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (curl: code ***The curl is a lie*** [args: --another-args 3] while downloading https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz)")
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -100,7 +100,7 @@ OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.t
 Clearing cache of downloaded files
 ### :I:e: FETCH curl & local curl
 ### OPAMFETCH=curl OPAMCURL=$BASEDIR/bin/curl
-### opam install foo --download-only | grep -v "^+-" | sed-cmd curl | sed-cmd tar | "${OPAMVERSION}" -> "current"
+### opam install foo --download-only | grep -v "^+-" | sed-cmd curl | "${OPAMVERSION}" -> "current"
 The following actions will be performed:
 === install 1 package
   - install foo 1
@@ -108,9 +108,14 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
 + curl "--write-out" "%{http_code}\n" "--retry" "3" "--retry-delay" "2" "--user-agent" "opam/current" "-L" "-o" "${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
-Processing  1/1:
-+ tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"
-Done.
+[ERROR] Failed to get sources of foo.1: curl error code ***The curl is a lie*** [args: --write-out %{http_code}\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part -- https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz]
+
+OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (curl: code ***The curl is a lie*** [args: --write-out %{http_code}\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part -- https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz] while downloading https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz)")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+'${OPAM} install foo --download-only' failed.
+# Return code 40 #
 ### opam clean -c
 Clearing cache of downloaded files
 ### :I:f: FETCH curl with args & local curl
@@ -123,9 +128,9 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
 + curl "--another-args" "3"
-[ERROR] Failed to get sources of foo.1: Curl failed
+[ERROR] Failed to get sources of foo.1: curl error code ***The curl is a lie*** [args: --another-args 3]
 
-OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (Curl failed: \"curl --another-args 3\" exited with code 2)")
+OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (curl: code ***The curl is a lie*** [args: --another-args 3] while downloading https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz)")
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>

@@ -54,6 +54,7 @@ users)
   * Allow to mark a set of warnings as errors using a new syntax -W @1..9 [#5652 @kit-ty-kate @rjbou - fixes #5651]
 
 ## Repository
+  * Fix `OPAMCURL` and `OPAMFETCH` handling [#5607 @rjbou - fix #5597]
 
 ## Lock
 
