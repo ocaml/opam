@@ -1,0 +1,150 @@
+N0REP0
+### ::::::::::::::::::::::::::::::::::
+### :I: OPAMFETCH & OPAMCURL variables
+### ::::::::::::::::::::::::::::::::::
+### OPAMVERBOSE=2
+### opam --version >$ OPAMVERSION
+### <pkg:foo.1>
+opam-version: "2.0"
+url {
+  src: "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
+  checksum: "md5=c9c157af4229fbb45d3f59f0d6d75dbe"
+}
+### opam switch create download --empty
+### opam install foo --download-only | grep -v "^+-" | ".*\(curl\|wget\).* \"--\"" -> 'curl-or-wget --' | sed-cmd tar
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/1: [foo.1: http]
+curl-or-wget -- "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
+Processing  1/1:
++ tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"
+Done.
+### opam clean -c
+Clearing cache of downloaded files
+### :I:a: FETCH wget
+### OPAMFETCH=wget
+### opam install foo --download-only | grep -v "^+-" | sed-cmd wget | sed-cmd tar | "${OPAMVERSION}" -> "current"
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/1: [foo.1: http]
++ wget "--content-disposition" "-t" "3" "-O" "${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part" "-U" "opam/current" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
+Processing  1/1:
++ tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"
+Done.
+### opam clean -c
+Clearing cache of downloaded files
+### :I:b: FETCH curl
+### OPAMFETCH=curl
+### opam install foo --download-only | grep -v "^+-" | sed-cmd curl | sed-cmd tar | "${OPAMVERSION}" -> "current"
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/1: [foo.1: http]
++ curl "--write-out" "%{http_code}\n" "--retry" "3" "--retry-delay" "2" "--user-agent" "opam/current" "-L" "-o" "${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
+Processing  1/1:
++ tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"
+Done.
+### opam clean -c
+Clearing cache of downloaded files
+### :I:c: FETCH curl with args
+### OPAMFETCH="curl --another-args %{retry}%"
+### opam install foo --download-only | grep -v "^+-" | sed-cmd curl
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/1: [foo.1: http]
++ curl "--another-args" "3"
+[ERROR] Failed to get sources of foo.1: Curl failed
+
+OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (Curl failed: \"curl --another-args 3\" exited with code 2)")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+'${OPAM} install foo --download-only' failed.
+# Return code 40 #
+### opam clean -c
+Clearing cache of downloaded files
+### <bin/curl>
+#!/usr/bin/env bash
+echo "***The curl is a lie*** [args: $@]"
+### chmod +x bin/curl
+### :I:d: local curl
+### OPAMCURL=$BASEDIR/bin/curl
+### opam install foo --download-only | grep -v "^+-" | sed-cmd curl
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/1: [foo.1: http]
++ curl "--another-args" "3"
+[ERROR] Failed to get sources of foo.1: Curl failed
+
+OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (Curl failed: \"curl --another-args 3\" exited with code 2)")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+'${OPAM} install foo --download-only' failed.
+# Return code 40 #
+### opam clean -c
+Clearing cache of downloaded files
+### :I:e: FETCH curl & local curl
+### OPAMFETCH=curl OPAMCURL=$BASEDIR/bin/curl
+### opam install foo --download-only | grep -v "^+-" | sed-cmd curl | sed-cmd tar | "${OPAMVERSION}" -> "current"
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/1: [foo.1: http]
++ curl "--write-out" "%{http_code}\n" "--retry" "3" "--retry-delay" "2" "--user-agent" "opam/current" "-L" "-o" "${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
+Processing  1/1:
++ tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"
+Done.
+### opam clean -c
+Clearing cache of downloaded files
+### :I:f: FETCH curl with args & local curl
+### OPAMFETCH="curl --another-args %{retry}%" OPAMCURL=$BASEDIR/bin/curl
+### opam install foo --download-only | grep -v "^+-" | sed-cmd curl
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/1: [foo.1: http]
++ curl "--another-args" "3"
+[ERROR] Failed to get sources of foo.1: Curl failed
+
+OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (Curl failed: \"curl --another-args 3\" exited with code 2)")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+'${OPAM} install foo --download-only' failed.
+# Return code 40 #
+### opam clean -c
+Clearing cache of downloaded files
+### :I:g: FETCH wget & local curl
+### OPAMFETCH=wget OPAMCURL=$BASEDIR/bin/curl
+### opam install foo --download-only | grep -v "^+-" | sed-cmd wget | sed-cmd tar | "${OPAMVERSION}" -> "current"
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/1: [foo.1: http]
++ wget "--content-disposition" "-t" "3" "-O" "${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part" "-U" "opam/current" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
+Processing  1/1:
++ tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"
+Done.
+### opam clean -c
+Clearing cache of downloaded files

@@ -360,6 +360,24 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:dot-install.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-download)
+ (action
+  (diff download.test download.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-download)))
+
+(rule
+ (targets download.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:download.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-empty-conflicts-001)
  (action
   (diff empty-conflicts-001.test empty-conflicts-001.out)))
