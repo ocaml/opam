@@ -115,6 +115,7 @@ users)
 ### Engine
   * With real path resolved for all opam temp dir, remove `/private` from mac temp dir regexp [#5654 @rjbou]
   * Reimplement `sed-cmd` command regexp, to handle prefixed commands with path not only in subprocess, but anywere in output [#5657 #5607 @rjbou]
+  * Add environment variables path addition [#5606 @rjbou]
 
 ## Github Actions
   * Add coreutils install for cheksum validation tests [#5560 @rjbou]

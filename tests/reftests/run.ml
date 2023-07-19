@@ -306,7 +306,7 @@ type command =
              filter: (Re.t * filt_sort) list;
              output: string option;
              unordered: bool; }
-  | Export of (string * string) list
+  | Export of (string * [`eq | `pluseq | `eqplus] * string) list
   | Comment of string
 
 module Parse = struct
@@ -344,7 +344,7 @@ module Parse = struct
   let re_varbind =
     seq [
       group @@ seq [alpha; rep (alt [alnum; set "_-"])];
-      char '=';
+      group @@ alt [ str "+="; str "=+"; char '=' ];
       group @@ re_str_atom;
       rep space;
     ]
@@ -383,7 +383,14 @@ module Parse = struct
     else
     let varbinds, pos =
       let gr = exec (compile @@ rep re_varbind) str in
-      List.map (fun gr -> Group.get gr 1, get_str (Group.get gr 2))
+      List.map (fun gr ->
+          Group.get gr 1,
+          (match Group.get gr 2 with
+           | "=" -> `eq
+           | "+=" -> `pluseq
+           | "=+" -> `eqplus
+           | _ -> assert false),
+          get_str (Group.get gr 3))
         (all (compile @@ re_varbind) (Group.get gr 0)),
       Group.stop gr 0
     in
@@ -498,8 +505,23 @@ module Parse = struct
     | Some "json-cat" ->
       Json { files = args; filter = rewr; }
     | Some cmd ->
+      let env, plus =
+        List.fold_left (fun (env,plus) (v,op,value) ->
+            match op with
+            | `eq -> (v,value)::env, plus
+            | `pluseq -> env, (v^"+="^value)::plus
+            | `eqplus -> env, (v^"=+"^value)::plus)
+          ([],[]) varbinds
+      in
+      (match plus with
+       | [] -> ()
+       | _ ->
+         OpamConsole.error
+           "variable bindings at the beginning of a command does not \
+            support '+=' or '=+' operators: %s"
+           (OpamStd.Format.pretty_list plus));
       Run {
-        env = varbinds;
+        env;
         cmd;
         args;
         filter = rewr;
@@ -741,12 +763,24 @@ let run_test ?(vars=[]) ~opam t =
           vars
         | Export bindings ->
           List.fold_left
-            (fun vars (v, r) ->
-               let r =
+            (fun vars -> fun (v, op, r) ->
+               let r' =
                  str_replace_path ~escape:`Backslashes
                    OpamSystem.forward_to_back (filters_of_var vars) r
                in
-               (v, r) :: List.filter (fun (w, _) -> not (String.equal v w)) vars)
+               let value =
+                 match op with
+                 | `eq -> r'
+                 | (`pluseq | `eqplus) as op ->
+                   match List.find_opt (fun (v',_) -> String.equal v v') (base_env @ vars) with
+                   | Some (_,c) ->
+                     let sep = if Sys.win32 then ";" else ":" in
+                     (match op with
+                      | `pluseq -> r'^sep^c
+                      | `eqplus -> c^sep^r')
+                   | None -> r'
+               in
+               (v, value) :: List.filter (fun (w, _) -> not (String.equal v w)) vars)
             vars bindings
         | Cat { files; filter } ->
           let files =
