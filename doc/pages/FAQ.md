@@ -1,3 +1,11 @@
+---
+slug: FAQ.html
+order: 3
+title: FAQ
+description: |
+  Answers to frequently asked questions about Opam.
+---
+
 # opam FAQ
 
 > This FAQ is for general questions about opam and its usage. You may also be
