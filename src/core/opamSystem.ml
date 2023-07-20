@@ -585,9 +585,6 @@ let make_command
   let verbose =
     OpamStd.Option.default OpamCoreConfig.(!r.verbose_level >= 2) verbose
   in
-  (* Check that the command doesn't contain whitespaces *)
-  if None <> try Some (String.index cmd ' ') with Not_found -> None then
-    OpamConsole.warning "Command %S contains space characters" cmd;
   let full_cmd =
     if resolve_path then t_resolve_command ~env ?dir cmd
     else `Cmd cmd
@@ -608,10 +605,6 @@ let run_process
   match command with
   | []          -> invalid_arg "run_process"
   | cmd :: args ->
-
-    if OpamStd.String.contains_char cmd ' ' then
-      OpamConsole.warning "Command %S contains space characters" cmd;
-
     match t_resolve_command ~env cmd with
     | `Cmd full_cmd ->
       let verbose = match verbose with
