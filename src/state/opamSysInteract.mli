@@ -46,10 +46,16 @@ module Cygwin : sig
   (* Default Cygwin installation prefix C:\cygwin64 *)
   val default_cygroot: string
 
+  (* Install an internal Cygwin install, in <root>/.cygwin *)
+  val install: packages:OpamSysPkg.t list -> OpamFilename.t
+
   (* [check_install path] checks a Cygwin installation at [path]. It checks
      that 'path\cygcheck.exe' or 'path\bin\cygcheck.exe' exists. *)
   val check_install:
     string -> (OpamFilename.t, string) result
+
+  (* Returns true if Cygwin install is internal *)
+  val is_internal: OpamFile.Config.t -> bool
 
   (* [check_setup path] checks and store Cygwin setup executable. Is [path] is
      [None], it downloads it, otherwise it copies it to

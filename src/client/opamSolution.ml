@@ -1147,6 +1147,9 @@ let get_depexts ?(force=false) ?(recover=false) t packages =
   avail
 
 let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
+  let confirm =
+    confirm && not (OpamSysInteract.Cygwin.is_internal t.switch_global.config)
+  in
   let sys_packages =
     get_depexts ~force:force_depext ~recover:force_depext t packages
   in

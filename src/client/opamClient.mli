@@ -28,6 +28,7 @@ val init:
   ?env_hook:bool ->
   ?completion:bool ->
   ?check_sandbox:bool ->
+  ?cygwin_setup: [ `internal | `default_location | `location of dirname | `no ] ->
   shell ->
   rw global_state * unlocked repos_state * atom list
 
@@ -44,6 +45,7 @@ val reinit:
   ?init_config:OpamFile.InitConfig.t -> interactive:bool -> ?dot_profile:filename ->
   ?update_config:bool -> ?env_hook:bool -> ?completion:bool -> ?inplace:bool ->
   ?check_sandbox:bool -> ?bypass_checks:bool ->
+  ?cygwin_setup: [ `internal | `default_location | `location of dirname | `no ] ->
   OpamFile.Config.t -> shell -> unit
 
 (** Install the given list of packages. [add_to_roots], if given, specifies that
