@@ -3,6 +3,28 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.2.0~alpha2:
+* Permit internal Cygwin install on Windows [#5545 @rjbou @dra27]
+* Add `--no-cygwin-setup`, `--cygwin-internal-install`,
+  `--cygwin-local-install` and `--cygwin-location <path>` experimental flags
+  available only on Windows to permit non-interactive Cygwin configuration
+  [#5545 @rjbou]
+* opam var/option: Error with more accurate message in case of package/self
+  variable wrongly given as argument [#4903 @rjbou - fix #4489]
+* [BUG] opam var/option: Handle package variable syntax in parse update
+  regexp [#4903 @rjbou - fix #4489]
+* Lint: E29: The conflicts field's filter does not support package variables
+  [#5535 @kit-ty-kate]
+* opam admin: On linting, clean output when stdout is not tty [#5594 @rjbou]
+* Run autoupdate to silence autogen warnings [#5555 @MisterDA]
+* Update bootstrap to use FlexDLL 0.43 from ocaml/flexdll [#5579 @MisterDA]
+* configure: Ensure a complementary (32bit on 64bit platforms and 64bit on
+  32bit platforms) C compiler is installed on Windows [#5522 @kit-ty-kate]
+* Bump versions, fix authors [#5603 #5609 #5611 @rjbou]
+* Improve and extended tests: [#5385 #5535 @rjbou]
+* Improve test engine: [#5481 @dra27]
+* Improve Github actions: [#5555 #5588 #5598 @rjbou]
+
 2.2.0~alpha:
 * Depexts support Cygwin on Windows [#5542 @rjbou] [#5544 @rjbou]
   [#5541 @dra27]
