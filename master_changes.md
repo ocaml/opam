@@ -12,6 +12,8 @@ users)
 
 ## Version
   * Bump to 2.2.0~alpha2~dev [#5603 @rjbou]
+  * Update Kate email [#5609 @rjbou]
+  * Fix author heading in manpage [#5609 @rjbou]
 
 ## Global CLI
 
