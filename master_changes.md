@@ -20,6 +20,8 @@ users)
 ## Plugins
 
 ## Init
+  * Permit internal Cygwin install on Windows [#5545 @rjbou @dra27]
+  * Add `--no-cygwin-setup`, `--cygwin-internal-install`, `--cygwin-local-install` and `--cygwin-location <path>` experimental flags available only on Windows to permit non-interactive Cygwin configuration [#5545 @rjbou]
 
 ## Config report
 
@@ -116,10 +118,18 @@ users)
 
 # API updates
 ## opam-client
+  * `OpaminitDefault`: add `required_packages_for_cygwin` packages tool list [#5545 @rjbou]
+  * `OpamClient.init`: now propose to install internal Cygwin install [#5545 @rjbou]
+  * `OpamSolution.get_depext`: do not confirm in case of internal Cygwin install [#5545 @rjbou]
+  * `OpamClient.init`: add optional `cygwin_setup` argument to permit non interactive setup [#5545 @rjbou]
+  * `OpamCommands.init`: add cygwin setup flags [#5545 @rjbou]
 
 ## opam-repository
 
 ## opam-state
+  * `OpamSysinteract.Cygwin`: add `install` that performs a Cygwin install in opam internals [#5545 @rjbou @dra27]
+  * `OpamSysInteract.Cygwin`: add `is_internal` [#5545 @rjbou]
+  * `OpamSysInteract.install`: on Cygwin, upgrade automatically packages, and select local cache [#5545 @rjbou]
 
 ## opam-solver
 
