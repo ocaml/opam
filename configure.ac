@@ -329,7 +329,6 @@ echo
 
 # Dependencies
 AC_CHECK_OCAML_PKG([unix])
-AC_CHECK_OCAML_PKG([bigarray])
 AC_CHECK_OCAML_PKG_AT_LEAST([re], [1.9.0])
 AC_CHECK_OCAML_PKG_AT_LEAST([base64], [3.1.0])
 AC_CHECK_OCAML_PKG([cmdliner])

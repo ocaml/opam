@@ -668,7 +668,6 @@ OCAML_PKG_ocamlgraph
 OCAML_PKG_cmdliner
 OCAML_PKG_base64
 OCAML_PKG_re
-OCAML_PKG_bigarray
 OCAML_PKG_unix
 CONF_MANIFEST_O
 RUNTIME_GCC_S
@@ -6176,30 +6175,6 @@ printf "%s\n" "found" >&6; }
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: not found" >&5
 printf "%s\n" "not found" >&6; }
     OCAML_PKG_unix=no
-  fi
-
-
-
-
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package bigarray" >&5
-printf %s "checking for OCaml findlib package bigarray... " >&6; }
-
-  unset found
-  unset pkg
-  found=no
-  for pkg in bigarray  ; do
-    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: found" >&5
-printf "%s\n" "found" >&6; }
-      OCAML_PKG_bigarray=$pkg
-      found=yes
-      break
-    fi
-  done
-  if test "$found" = "no" ; then
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-printf "%s\n" "not found" >&6; }
-    OCAML_PKG_bigarray=no
   fi
 
 
