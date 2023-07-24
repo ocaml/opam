@@ -821,28 +821,35 @@ let tree ?(why=false) cli =
        switch to draw the forest"
   in
   let tree global_options mode filter post dev doc test dev_setup no_constraint
-      no_switch names () =
-    if names = [] && no_switch then
+      no_switch atoms_or_locals () =
+    if atoms_or_locals = [] && no_switch then
       `Error
-        (true, "--no-switch can't be used without specifying a name")
+        (true, "--no-switch can't be used without specifying a package")
     else
       (apply_global_options cli global_options;
        OpamGlobalState.with_ `Lock_none @@ fun gt ->
        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+       let recurse = false in (* TODO *)
+       let subpath = None in (* TODO *)
+       let st, atoms =
+         OpamAuxCommands.simulate_autopin
+           st ~recurse ?subpath ~quiet:true
+           ?locked:OpamStateConfig.(!r.locked) atoms_or_locals
+       in
        let tog = OpamListCommand.{
            post; test; doc; dev; dev_setup;
            recursive = false;
            depopts = false;
            build = true;
          } in
-       OpamTreeCommand.run st tog ~no_constraint ~no_switch mode filter names;
+       OpamTreeCommand.run st tog ~no_constraint ~no_switch mode filter atoms;
        `Ok ())
   in
   mk_command_ret ~cli (cli_from cli2_2) "tree" ~doc ~man
     Term.(const tree $global_options cli $mode $filter
           $post cli $dev cli $doc_flag cli $test cli $dev_setup cli
           $no_cstr $no_switch
-          $name_list)
+          $atom_or_local_list)
 
 (* SHOW *)
 let show_doc = "Display information about specific packages."

@@ -41,6 +41,9 @@ users)
 
 ## Update / Upgrade
 
+## Tree
+  * Allow packages with a specific version, directories or local opam files, as input [#5613 @kit-ty-kate]
+
 ## Exec
 
 ## Source
@@ -109,6 +112,7 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamTreeCommand.run`: now takes an `atom` instead of `name` [#5613 @kit-ty-kate]
 
 ## opam-repository
 

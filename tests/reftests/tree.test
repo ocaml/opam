@@ -282,8 +282,8 @@ e.1
 [ERROR] No package to display
 # Return code 5 #
 ### opam tree --no-switch | '…' -> '...' | '`' -> "'"
-opam: --no-switch can't be used without specifying a name
-Usage: opam tree [OPTION]... [PACKAGES]...
+opam: --no-switch can't be used without specifying a package
+Usage: opam tree [--recursive] [--subpath=PATH] [OPTION]... [PACKAGES]...
 Try 'opam tree --help' or 'opam --help' for more information.
 # Return code 2 #
 ### opam tree f h --no-switch
@@ -388,3 +388,83 @@ Done.
     You can temporarily relax the switch invariant with `--update-invariant'
 
 # Return code 20 #
+### <pkg:i.1>
+opam-version: "2.0"
+depends: "a"
+### <pkg:i.2>
+opam-version: "2.0"
+depends: "b"
+### opam switch create extended-inputs --empty
+### opam tree i
+The following actions are simulated:
+=== install 3 packages
+  - install a 1 [required by b]
+  - install b 1 [required by i]
+  - install i 2
+
+i.2
+'-- b.1
+    '-- a.1
+### opam tree i.1
+The following actions are simulated:
+=== install 2 packages
+  - install a 1 [required by i]
+  - install i 1
+
+i.1
+'-- a.1
+### opam tree i.2
+The following actions are simulated:
+=== install 3 packages
+  - install a 1 [required by b]
+  - install b 1 [required by i]
+  - install i 2
+
+i.2
+'-- b.1
+    '-- a.1
+### opam install i.2
+The following actions will be performed:
+=== install 3 packages
+  - install a 1 [required by b]
+  - install b 1 [required by i]
+  - install i 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed a.1
+-> installed b.1
+-> installed i.2
+Done.
+### opam tree i.1
+The following actions are simulated:
+=== downgrade 1 package
+  - downgrade i 2 to 1
+
+i.1
+'-- a.1
+### <local-pkg.opam>
+opam-version: "2.0"
+depends: ["local-pkg-core" "b"]
+### <local-pkg-core.opam>
+opam-version: "2.0"
+depends: "a"
+### opam tree .
+The following actions are simulated:
+=== install 2 packages
+  - install local-pkg      dev
+  - install local-pkg-core dev
+
+local-pkg.dev
+|-- b.1
+|   '-- a.1
+'-- local-pkg-core.dev
+    '-- a.1 [*]
+
+local-pkg-core.dev
+### opam tree ./local-pkg-core.opam
+The following actions are simulated:
+=== install 1 package
+  - install local-pkg-core dev
+
+local-pkg-core.dev
+'-- a.1
