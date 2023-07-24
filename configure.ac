@@ -243,7 +243,7 @@ AS_IF([ test ${WIN32} -eq 1 ],[
     ])
   ])
   AS_IF([ test "x${CC64}" = "xno" ],[
-    AC_MSG_WARN([Complementary C compiler not found - opam-putenv will not be built])
+    AC_MSG_ERROR([${ARCH} C compiler not found - opam-putenv cannot be built])
   ])
 ])
 

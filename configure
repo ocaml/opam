@@ -5315,8 +5315,7 @@ fi
   if  test "x${CC64}" = "xno"
 then :
 
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Complementary C compiler not found - opam-putenv will not be built" >&5
-printf "%s\n" "$as_me: WARNING: Complementary C compiler not found - opam-putenv will not be built" >&2;}
+    as_fn_error $? "${ARCH} C compiler not found - opam-putenv cannot be built" "$LINENO" 5
 
 fi
 
