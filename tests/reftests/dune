@@ -38,4 +38,17 @@
  (action
   (diff dune.inc dune.inc.gen)))
 
+(rule
+  (with-stdout-to opam-root-version
+    (run ./root_version.exe)))
+
+(executable
+  (name root_version)
+  (libraries opam-format)
+  (modules root_version))
+
+(rule
+  (with-stdout-to root_version.ml
+    (echo "print_endline (OpamVersion.to_string OpamFile.Config.root_version)")))
+
 (include dune.inc)

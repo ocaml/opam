@@ -75,6 +75,7 @@ let opam_init_rule archive_hash =
   Format.sprintf {|
 (rule
   (targets %s)
+  (deps opam-root-version)
   (action
    (progn
     (ignore-stdout
