@@ -89,6 +89,6 @@ make JOBS="${JOBS}" TAG="$TAG" s390x-linux
 
 # VM based
 [ -d ./qemu-base-images ] || git clone https://gitlab.com/kit-ty-kate/qemu-base-images.git
-[ -f "${OUTDIR}/opam-$TAG-x86_64-openbsd" ] || qemu_build 9999 OpenBSD-7.0-amd64 "pkg_add gmake curl bzip2" gmake x86_64 &
+[ -f "${OUTDIR}/opam-$TAG-x86_64-openbsd" ] || qemu_build 9999 OpenBSD-7.3-amd64 "pkg_add gmake curl bzip2" gmake x86_64 &
 [ -f "${OUTDIR}/opam-$TAG-x86_64-freebsd" ] || qemu_build 9998 FreeBSD-13.0-RELEASE-amd64 "env IGNORE_OSVERSION=yes pkg install -y gmake curl bzip2" gmake x86_64 &
 wait
