@@ -261,7 +261,8 @@ ARCH=$(uname -m || echo unknown)
 case "$ARCH" in
     x86|i?86) ARCH="i686";;
     x86_64|amd64) ARCH="x86_64";;
-    ppc|powerpc|ppcle) ARCH="ppc";;
+    ppcle|ppc64le) ARCH="ppc64le";;
+    s390x) ARCH="s390x";;
     aarch64_be|aarch64) ARCH="arm64";;
     armv5*|armv6*|earmv6*|armv7*|earmv7*|armv8b|armv8l) ARCH="armhf";;
     *) ARCH=$(echo "$ARCH" | awk '{print tolower($0)}')

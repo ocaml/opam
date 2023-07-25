@@ -18,6 +18,8 @@ x86_64-linux: $(OUTDIR)/opam-$(VERSION)-x86_64-linux
 i686-linux: $(OUTDIR)/opam-$(VERSION)-i686-linux
 armhf-linux: $(OUTDIR)/opam-$(VERSION)-armhf-linux
 arm64-linux: $(OUTDIR)/opam-$(VERSION)-arm64-linux
+ppc64le-linux: $(OUTDIR)/opam-$(VERSION)-ppc64le-linux
+s390x-linux: $(OUTDIR)/opam-$(VERSION)-s390x-linux
 
 $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	mkdir -p "$(OUTDIR)"
@@ -40,6 +42,10 @@ build/Dockerfile.armhf-linux: Dockerfile.in
 	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/armv7-v3.13/g' -e 's/%CONF%//g' $^ >$@
 build/Dockerfile.arm64-linux: Dockerfile.in
 	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/arm64-v3.13/g' -e 's/%CONF%//g' $^ >$@
+build/Dockerfile.ppc64le-linux: Dockerfile.in
+	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/ppc64le-v3.13/g' -e 's/%CONF%//g' $^ >$@
+build/Dockerfile.s390x-linux: Dockerfile.in
+	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/s390x-v3.13/g' -e 's/%CONF%//g' $^ >$@
 
 
 build/%.image: build/Dockerfile.%
