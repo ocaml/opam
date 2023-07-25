@@ -63,6 +63,8 @@ users)
 ## VCS
 
 ## Build
+  * Remove `bigarray` dependency [#5612 @kit-ty-kate]
+  * Remove use of deprecated `Printf.kprintf" [#5612 @kit-ty-kate]
 
 ## Infrastructure
 
