@@ -19,6 +19,7 @@ users)
 ## Init
 
 ## Config report
+  * Make `opam config report` return the actual invariant syntax expected by `--invariant` [#5619 @kit-ty-kate - fixes #5491]
 
 ## Actions
 
@@ -27,6 +28,7 @@ users)
 ## Remove
 
 ## Switch
+  * Make `opam switch set-invariant` return the actual invariant syntax expected by `--invariant` [#5619 @kit-ty-kate - fixes #5491]
 
 ## Config
 

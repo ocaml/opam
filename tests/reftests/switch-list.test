@@ -41,7 +41,7 @@ The following actions will be performed:
 -> installed g.1
 Done.
 ### opam switch set-invariant b
-The switch invariant was set to b
+The switch invariant was set to ["b"]
 ### opam switch list
 #   switch   compiler  description
 ->  display  a.1       display
@@ -113,7 +113,7 @@ The following actions will be performed:
 -> installed g.1
 Done.
 ### opam switch set-invariant b
-The switch invariant was set to b
+The switch invariant was set to ["b"]
 The following actions will be performed:
 === install 1 package
   - install b 1
