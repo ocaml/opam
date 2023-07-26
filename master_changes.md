@@ -24,6 +24,7 @@ users)
 
 ## Config report
   * Always list all the repositories regardless of whether or not a switch is currently set [#6116 @kit-ty-kate]
+  * Make `opam config report` return the actual invariant syntax expected by `--invariant` [#5619 @kit-ty-kate - fixes #5491]
 
 ## Actions
   * Add support for wget2 [#6104 @kit-ty-kate]
@@ -45,6 +46,7 @@ users)
   * ◈ Add `opam switch import --deps-only` option to install only dependencies of root package at import [#5388 @rjbou - fix #5200]
   * [BUG] Make accepted `--repos` URLs on creation consistent with `opam repository` [#6091 @Keryan-dev - fix #4673]
   * ◈ opam switch list-available will not display compilers flagged with avoid-version/deprecated unless --all is given [#6098 @kit-ty-kate - fix #6089]
+  * Make `opam switch set-invariant` return the actual invariant syntax expected by `--invariant` [#5619 @kit-ty-kate - fixes #5491]
 
 ## Config
 
