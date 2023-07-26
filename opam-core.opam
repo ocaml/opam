@@ -30,7 +30,6 @@ build: [
 depends: [
   "ocaml" {>= "4.08.0"}
   "base-unix"
-  "base-bigarray"
   "ocamlgraph"
   "re" {>= "1.9.0"}
   "dune" {>= "2.0.0"}

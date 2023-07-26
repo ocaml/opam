@@ -20,11 +20,11 @@ let of_string s =
     begin
       try Scanf.sscanf s "%u.%u%!" (fun major minor -> (major, minor))
       with Scanf.Scan_failure _ ->
-        Printf.kprintf failwith "OpamVersion.CLI.of_string: %s" s
+        Printf.ksprintf failwith "OpamVersion.CLI.of_string: %s" s
     end
   | exception Not_found ->
-     Printf.kprintf failwith "OpamVersion.CLI.of_string: %s" s
-  | _ -> Printf.kprintf failwith "OpamVersion.CLI.of_string: %s" s
+     Printf.ksprintf failwith "OpamVersion.CLI.of_string: %s" s
+  | _ -> Printf.ksprintf failwith "OpamVersion.CLI.of_string: %s" s
 
 let current = of_string @@ OpamVersion.(to_string current_nopatch)
 
