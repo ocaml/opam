@@ -115,6 +115,7 @@ host: $(OUTDIR)/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	)
 	cp build/opam-full-$(VERSION)/opam $(OUTDIR)/opam-$(VERSION)-$(HOST)
 	strip $(OUTDIR)/opam-$(VERSION)-$(HOST)
+	$(OUTDIR)/opam-$(VERSION)-$(HOST) --version
 	rm -rf build/opam-full-$(VERSION)
 
 # Containerised builds
