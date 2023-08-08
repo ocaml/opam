@@ -180,6 +180,19 @@ Switches are laid out thusly:
 - `<switch-prefix>/.opam-switch/backup`: snapshots of previous states of the
   switch, and other backup files.
 
+#### Plugins
+
+Opam has a plugin mechanism. It works via opam packages whose name starts by
+`opam-` and that have the flag [`plugin`](#opamflag-plugin). They are
+installed in the current switch but can be used accross switches via
+their dedicated `opam insert-plugin-name-here` subcommand.
+
+Internally, when opam doesn't know a subcommand name (e.g. `opam plugin-name`),
+it looks at the binaries located in `${OPAMROOT}/plugins/bin`
+(by default: `~/.opam/plugins/bin`). Everytime a plugin package is installed,
+its `opam-insert-plugin-name-here` binary gets symlinked in that directory.
+If no binaries with a matching name are found, a warning will be shown.
+
 #### Pinning
 
 Pinning is an operation by which a package definition can be created or altered
