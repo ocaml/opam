@@ -821,16 +821,14 @@ let tree ?(why=false) cli =
        switch to draw the forest"
   in
   let tree global_options mode filter post dev doc test dev_setup no_constraint
-      no_switch atoms_or_locals () =
+      no_switch recurse subpath atoms_or_locals () =
     if atoms_or_locals = [] && no_switch then
       `Error
-        (true, "--no-switch can't be used without specifying a package")
+        (true, "--no-switch can't be used without specifying a package or a path")
     else
       (apply_global_options cli global_options;
        OpamGlobalState.with_ `Lock_none @@ fun gt ->
        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-       let recurse = false in (* TODO *)
-       let subpath = None in (* TODO *)
        let st, atoms =
          OpamAuxCommands.simulate_autopin
            st ~recurse ?subpath ~quiet:true
@@ -849,6 +847,7 @@ let tree ?(why=false) cli =
     Term.(const tree $global_options cli $mode $filter
           $post cli $dev cli $doc_flag cli $test cli $dev_setup cli
           $no_cstr $no_switch
+          $recurse cli $subpath cli
           $atom_or_local_list)
 
 (* SHOW *)

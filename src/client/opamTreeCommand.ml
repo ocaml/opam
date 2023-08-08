@@ -454,7 +454,7 @@ let run st tog ?no_constraint ?(no_switch=false) mode filter atoms =
         OpamConsole.warning "Not installed package%s %s, skipping"
           (match missing with | [_] -> "" | _ -> "s")
           (OpamStd.Format.pretty_list
-             (List.map (fun (name, _) -> OpamPackage.Name.to_string name) missing));
+             (List.map OpamFormula.string_of_atom missing));
       if select = [] && atoms <> [] then
         OpamConsole.error_and_exit `Not_found "No package to display"
       else

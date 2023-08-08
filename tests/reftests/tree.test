@@ -282,7 +282,7 @@ e.1
 [ERROR] No package to display
 # Return code 5 #
 ### opam tree --no-switch | '…' -> '...' | '`' -> "'"
-opam: --no-switch can't be used without specifying a package
+opam: --no-switch can't be used without specifying a package or a path
 Usage: opam tree [--recursive] [--subpath=PATH] [OPTION]... [PACKAGES]...
 Try 'opam tree --help' or 'opam --help' for more information.
 # Return code 2 #

@@ -43,6 +43,7 @@ users)
 
 ## Tree
   * Allow packages with a specific version, directories or local opam files, as input [#5613 @kit-ty-kate]
+  * Add handling of `--recurse` and `--subpath` for directory arguments [#5613 @kit-ty-kate]
 
 ## Exec
 
