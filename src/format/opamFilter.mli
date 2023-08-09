@@ -130,6 +130,8 @@ val ident_string: ?default:string -> env -> fident -> string
 val ident_bool: ?default:bool -> env -> fident -> bool
 
 val expand_interpolations_in_file_full: env -> src:filename -> dst:filename -> unit
+(** Same as [expand_interpolations_in_file] but allows to set the source [src] and
+    destination [dst] files independently instead of implying [src] = [dst].in *)
 
 (** Rewrites [basename].in to [basename], expanding interpolations.
     If the first line begins ["opam-version:"], assumes that expansion of
