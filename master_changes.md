@@ -114,4 +114,7 @@ users)
 
 ## opam-format
 
+* Add `OpamFilter.expand_interpolations_in_file_full` which allows setting the
+  output file along with the input file [#5629 @rgrinberg]
+
 ## opam-core
