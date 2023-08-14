@@ -117,4 +117,7 @@ users)
 * Add `OpamFilter.expand_interpolations_in_file_full` which allows setting the
   output file along with the input file [#5629 @rgrinberg]
 
+* Expose `OpamFilter.string_interp_regex` which allows clients to identify
+  variable interpolations in strings [#5633 @gridbugs]
+
 ## opam-core
