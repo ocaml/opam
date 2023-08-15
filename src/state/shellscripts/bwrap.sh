@@ -19,6 +19,7 @@ fi
 ARGS=(--unshare-net --new-session --die-with-parent)
 ARGS=("${ARGS[@]}" --proc /proc --dev /dev)
 ARGS=("${ARGS[@]}" --setenv TMPDIR /opam-tmp --setenv TMP /opam-tmp --setenv TEMPDIR /opam-tmp --setenv TEMP /opam-tmp)
+ARGS=("${ARGS[@]}" --bind /tmp /tmp)
 ARGS=("${ARGS[@]}" --tmpfs /opam-tmp)
 ARGS=("${ARGS[@]}" --tmpfs /run)
 # NOTE: When adding a new mount-point please sync with the loop below to avoid overriding the mount point
@@ -62,7 +63,7 @@ add_sys_mounts() {
 # See https://github.com/containers/bubblewrap/issues/413
 for dir in /*; do
     case "$dir" in
-    "/proc" | "/dev" | "/run" | "/opam-tmp") ;;
+    "/proc" | "/dev" | "/run" | "/tmp" | "/opam-tmp") ;;
     "/sys") ;; # Disabled without a corresponding bind, due to security concerns
     *) add_sys_mounts "$dir";;
     esac
