@@ -217,6 +217,20 @@ usage() {
     echo "using '--fresh' or '--dev'"
 }
 
+# Conditionally connect /dev/tty when
+# the environment variable TTY is set to 1
+TTY="${TTY-0}"
+R=
+prompt() {
+  # expects to be called as prompt "Do you want to do this? [Y/n] "
+  printf "$1"
+  if [ "$TTY" = 1 ]; then
+    read R </dev/tty
+  else
+    read R
+  fi
+}
+
 RESTORE=
 NOBACKUP=
 FRESH=
@@ -390,8 +404,7 @@ if [ -n "$RESTORE" ]; then
         exit 1
     fi
     if [ "$NOBACKUP" = 1 ]; then
-        printf "## This will clear $OPAM and $OPAMROOT. Continue ? [Y/n] "
-        read R
+        prompt "## This will clear $OPAM and $OPAMROOT. Continue ? [Y/n] "
         case "$R" in
             ""|"y"|"Y"|"yes")
                 xsudo rm -f "$OPAM"
@@ -422,16 +435,15 @@ if [ -n "$EXISTING_OPAM" ]; then
 fi
 
 while true; do
-    printf "## Where should it be installed ? [$DEFAULT_BINDIR] "
-    read BINDIR
+    prompt "## Where should it be installed ? [$DEFAULT_BINDIR] "
+    BINDIR="$R"
     if [ -z "$BINDIR" ]; then BINDIR="$DEFAULT_BINDIR"; fi
 
     if [ -d "$BINDIR" ]; then break
     else
         if [ "${BINDIR#\~/}" != "$BINDIR" ] ; then
             RES_BINDIR="$HOME/${BINDIR#\~/}"
-            printf "## '$BINDIR' resolves to '$RES_BINDIR', do you confirm [Y/n] "
-            read R
+            prompt "## '$BINDIR' resolves to '$RES_BINDIR', do you confirm [Y/n] "
             case "$R" in
                 ""|"y"|"Y"|"yes")
                    BINDIR="$RES_BINDIR"
@@ -441,8 +453,7 @@ while true; do
                    ;;
             esac
         fi
-        printf "## $BINDIR does not exist. Create ? [Y/n] "
-        read R
+        prompt "## $BINDIR does not exist. Create ? [Y/n] "
         case "$R" in
             ""|"y"|"Y"|"yes")
             xsudo mkdir -p $BINDIR
@@ -463,8 +474,7 @@ fi
 if [ -d "$OPAMROOT" ]; then
     if [ "$FRESH" = 1 ]; then
         if [ "$NOBACKUP" = 1 ]; then
-            printf "## This will clear $OPAMROOT. Continue ? [Y/n] "
-            read R
+            prompt "## This will clear $OPAMROOT. Continue ? [Y/n] "
             case "$R" in
                 ""|"y"|"Y"|"yes")
                     rm -rf "$OPAMROOT";;
