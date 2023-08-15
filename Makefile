@@ -267,9 +267,7 @@ release-%:
 
 ifeq ($(OCAML_PORT),)
 ifneq ($(COMSPEC),)
-ifeq ($(shell which gcc 2>/dev/null),)
 OCAML_PORT=auto
-endif
 endif
 endif
 

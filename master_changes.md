@@ -66,6 +66,7 @@ users)
 ## Build
   * Remove `bigarray` dependency [#5612 @kit-ty-kate]
   * Remove use of deprecated `Printf.kprintf" [#5612 @kit-ty-kate]
+  * Fix "make cold" on Windows when gcc is available [#5635 @kit-ty-kate - fixes #5600]
 
 ## Infrastructure
 
