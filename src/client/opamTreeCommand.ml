@@ -43,13 +43,6 @@ type resulting_forest =
   | DepsForest of deps node forest
   | RevdepsForest of revdeps node forest
 
-let installed st names =
-  names |> List.fold_left (fun state n ->
-      (* non-installed packages should already be simulated to be installed *)
-      OpamSwitchState.find_installed_package_by_name st n :: state
-    ) [] |> OpamPackage.Set.of_list
-
-
 (** Forest building *)
 
 let build_condition_map tog st =
@@ -143,7 +136,6 @@ let cut_leaves (mode: [ `succ | `pred]) ~names ~root st graph =
   OpamPackage.Set.inter root packages, graph
 
 let build_deps_forest st universe tog filter names =
-  let names = installed st names in
   let OpamListCommand.{ build; post; _ } = tog in
   let root, graph =
     let graph =
@@ -191,7 +183,6 @@ let build_deps_forest st universe tog filter names =
   |> snd
 
 let build_revdeps_forest st universe tog filter names =
-  let names = installed st names in
   let OpamListCommand.{ build; post; _ } = tog in
   let root, graph =
     let graph =
@@ -429,14 +420,16 @@ let raw_state tog st install =
   simulate_new_state tog st universe install names
 
 let run st tog ?no_constraint ?(no_switch=false) mode filter atoms =
+  let open OpamPackage.Set.Op in
   let select, missing =
     List.fold_left (fun (select, missing) atom ->
-        if OpamPackage.Set.disjoint
-            (OpamSwitchState.packages_of_atoms st [atom])
-            st.installed
-        then (select, atom :: missing)
-        else (fst atom :: select, missing)
-      ) ([], []) atoms
+        let installed =
+          OpamPackage.Set.filter (OpamFormula.check atom) st.installed
+        in
+        if OpamPackage.Set.is_empty installed then
+          (select, atom :: missing)
+        else (installed ++ select, missing))
+      (OpamPackage.Set.empty, []) atoms
   in
   let st, universe =
     let universe = get_universe tog st in
@@ -455,7 +448,7 @@ let run st tog ?no_constraint ?(no_switch=false) mode filter atoms =
           (match missing with | [_] -> "" | _ -> "s")
           (OpamStd.Format.pretty_list
              (List.map OpamFormula.string_of_atom missing));
-      if select = [] && atoms <> [] then
+      if OpamPackage.Set.is_empty select && atoms <> [] then
         OpamConsole.error_and_exit `Not_found "No package to display"
       else
         st, universe
@@ -463,7 +456,10 @@ let run st tog ?no_constraint ?(no_switch=false) mode filter atoms =
   if OpamPackage.Set.is_empty st.installed then
     OpamConsole.error_and_exit `Not_found "No package is installed"
   else
-  let forest = build st universe tog mode filter (select @ List.map fst missing) in
+  let simulated = OpamFormula.packages_of_atoms st.installed missing in
+  let forest =
+    build st universe tog mode filter (select ++ simulated)
+  in
   print ?no_constraint forest;
   if OpamClientConfig.(!r.json_out) <> None then
     (if not no_switch then
