@@ -468,3 +468,42 @@ The following actions are simulated:
 
 local-pkg-core.dev
 '-- a.1
+### <pin:dir/installed-local.opam>
+opam-version: "2.0"
+depends: ["b" "installed-local-core"]
+### <pin:dir/installed-local-core.opam>
+opam-version: "2.0"
+depends: "a"
+### opam install ./dir
+Package installed-local does not exist, create as a NEW package? [y/n] y
+installed-local is now pinned to file://${BASEDIR}/dir (version dev)
+Package installed-local-core does not exist, create as a NEW package? [y/n] y
+installed-local-core is now pinned to file://${BASEDIR}/dir (version dev)
+The following actions will be performed:
+=== install 2 packages
+  - install installed-local      dev (pinned)
+  - install installed-local-core dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved installed-local.dev  (file://${BASEDIR}/dir)
+-> retrieved installed-local-core.dev  (file://${BASEDIR}/dir)
+-> installed installed-local-core.dev
+-> installed installed-local.dev
+Done.
+### opam tree installed-local
+installed-local.dev
+|-- b.1
+|   '-- a.1
+'-- installed-local-core.dev
+    '-- a.1 [*]
+### opam tree ./dir
+installed-local.dev
+|-- b.1
+|   '-- a.1
+'-- installed-local-core.dev
+    '-- a.1 [*]
+
+installed-local-core.dev
+### opam tree ./dir/installed-local-core.opam
+installed-local-core.dev
+'-- a.1
