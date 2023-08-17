@@ -66,6 +66,7 @@ users)
 
 ## Opamfile
   * Update populating extra-files fields log [#5640 @rjbou]
+  * Fix `x-locked` type error message [#5636 @rjbou]
 
 ## External dependencies
 

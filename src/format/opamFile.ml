@@ -3187,7 +3187,7 @@ module OPAMSyntax = struct
         { t with locked = Some locked }
         |> Pp.parse ~pos pp_constraint
       | Some {pos; _} ->
-        Pp.bad_format ~pos "Field %s must be a bool"
+        Pp.bad_format ~pos "Field %s must be a string"
           (OpamConsole.colorise `underline locked_xfield)
       | None -> { t with locked = None }
     in
