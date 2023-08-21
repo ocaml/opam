@@ -27,7 +27,7 @@ to the codebase. In Nov 2013,
 [opam 1.1.0](https://opam.ocaml.org/blog/opam-1-1-0-released/) was released and Louis became the
 technical lead. A months later, [opam 1.1.1](https://opam.ocaml.org/blog/opam-1-1-1-released/) with numerous bug fixes.
 
-### `opam-repository``
+### `opam-repository`
 
 Meanwhile, in June 2012, MirageOS started to use opam (as it was using a
 custom 3.12.1 compiler). Very quickly, building on Frederic's work, Anil and Thomas shared the task
