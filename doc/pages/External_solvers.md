@@ -59,7 +59,7 @@ Preferences are expressed using a simple language built by prefixing a little se
 
 For example, the preference `-removed` tells the solver that among all possible ways of satisfying your request, it should choose one that minimises the number of packages removed.
 
-These combinators can be combined in a comm-separated sequence that is treated in lexicographic order by the solver.
+These combinators can be combined in a comma-separated sequence that is treated in lexicographic order by the solver.
 
 ### Default Preferences for an Upgrade
 For example, the preference `-removed,-notuptodate,-changed` tells the solver that after ensuring that removals are minimised, it should look for a solution that also minimises the number of packages not at their latest version, and then reduce the changes to a minimum.
