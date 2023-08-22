@@ -4,7 +4,7 @@
 
 ### opam
 
-Thomas Gazagnaire of Tarides wrote the [first specification draft of opam](https://github.com/ocaml/opam/blob/30598a59c98554057ce2beda80f0d31474b94150/specs/roadmap.pdf?raw=true) at the end of Jan 2012, when he was still working with OCamlPro. The specification was reviewed by Fabrice Le Fessant (OCamlPro/INRIA), Yaron Minsky of Jane Street (who funded the project), and Anil Madhavapeddy (University of Cambridge) who needed a source-based package manager to manage libraries emerging from the MirageOS project.
+Thomas Gazagnaire (OCamlPro, at the time) wrote the [first specification draft of opam](https://github.com/ocaml/opam/blob/30598a59c98554057ce2beda80f0d31474b94150/specs/roadmap.pdf?raw=true) at the end of Jan 2012. The specification was reviewed by Fabrice Le Fessant (OCamlPro/INRIA), Yaron Minsky of Jane Street (who funded the project), and Anil Madhavapeddy (University of Cambridge) who needed a source-based package manager to manage libraries emerging from the MirageOS project.
 
 At about the same time, Frederic Tuong, an intern from Inria started to implement [the first version of opam](https://github.com/ocaml/opam/commits/master?page=112)
 (called `ocp-get` at the time) at the end of Feb 2012. The DORM research grant funded this project in collaboration with OCamlPro and IRILL. Frederic also started to create the
