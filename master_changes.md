@@ -46,6 +46,7 @@ users)
 ## Source
 
 ## Lint
+  * Fix extra-files handling when linting packages from repositories, see #5068 [#5639 @rjbou]
 
 ## Repository
 
@@ -96,6 +97,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Lint: add test for W53, to test extra file with good hash [#5639 @rjbou]
 
 ### Engine
 

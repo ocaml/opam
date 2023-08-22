@@ -3826,8 +3826,8 @@ let lint cli =
            let opam = OpamSwitchState.opam st nv in
            match OpamPinned.orig_opam_file st (OpamPackage.name nv) opam with
            | None -> raise Not_found
-           | Some f ->
-             let filename =
+           | Some file ->
+             let label =
                match OpamFile.OPAM.metadata_dir opam with
                | None -> None
                | Some (None, abs) ->
@@ -3844,7 +3844,7 @@ let lint cli =
                          (OpamRepositoryName.to_string repo)
                          (OpamPackage.to_string nv))
              in
-             [`pkg (OpamFilename.read (OpamFile.filename f), filename)]
+             [`pkg (file, label)]
          with Not_found ->
            OpamConsole.error_and_exit `Not_found "No opam file found for %s%s"
              (OpamPackage.Name.to_string (fst pkg))
@@ -3870,12 +3870,10 @@ let lint cli =
               | `file f ->
                 OpamFileTools.lint_file ~check_upstream ~handle_dirname:true f,
                 Some (OpamFile.to_string f)
-              | `pkg (content, filename) ->
-                OpamFileTools.lint_string
-                  ~check_upstream ~handle_dirname:false
-                  OpamStd.Option.(default stdin_f (map to_file filename))
-                  content,
-                filename
+              | `pkg (file, label) ->
+                OpamFileTools.lint_file ~check_upstream ~handle_dirname:false
+                  file,
+                label
               | `stdin ->
                 OpamFileTools.lint_channel ~check_upstream ~handle_dirname:false
                   stdin_f stdin,

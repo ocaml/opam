@@ -1,19 +1,6 @@
 N0REP0
 ### # Needed for extra file check
 ### OPAMSTRICT=0
-### <pkg:lint.1>
-opam-version: "2.0"
-synopsis: "A word"
-description: "Two words."
-authors: "the testing team"
-homepage: "egapemoh"
-maintainer: "maint@tain.er"
-license: "ISC"
-dev-repo: "hg+https://to@li.nt"
-bug-reports: "https://nobug"
-extra-files: [ "more-file" "md5=00000000000000000000000000000000" ]
-### <pkg:lint.1:more-file>
-and there is content!
 ### opam switch create linting --empty
 ### # needed for check upstream checks
 ### <one-more-file>
@@ -534,19 +521,56 @@ ${BASEDIR}/lint.opam: Errors.
              error 52: Package is needlessly flagged "light-uninstall", since it has no remove instructions
 # Return code 1 #
 ### : E53: Mismatching 'extra-files:' field
-### opam lint --package lint
+### <pkg:lint.1>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+extra-files: [ "more-file-bad-md5" "md5=00000000000000000000000000000000" ]
+### <pkg:lint.1:more-file-bad-md5>
+and there is content!
+### <pkg:lint.2>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### <pkg:lint.2:more-file-good-md5>
+and there is content!
+### <add-hash.sh>
+hsh=`openssl md5 REPO/packages/lint/lint.2/files/more-file-good-md5 | cut -d ' ' -f 2`
+echo "extra-files: [ \"more-file-good-md5\" \"md5=$hsh\" ]" >> REPO/packages/lint/lint.2/opam
+### sh add-hash.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam lint --package lint.1
 <default>/lint.1: Errors.
-             error 53: Mismatching 'extra-files:' field: "more-file"
+             error 53: Mismatching 'extra-files:' field: "more-file-bad-md5"
 # Return code 1 #
+### opam lint --package lint.2
+<default>/lint.2: Passed.
 ### OPAMREPOSITORYTARRING=1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/REPO
-### opam lint --package lint
+### opam lint --package lint.1
 <default>/lint.1: Errors.
-             error 53: Mismatching 'extra-files:' field: "more-file"
+             error 53: Mismatching 'extra-files:' field: "more-file-bad-md5"
 # Return code 1 #
+### opam lint --package lint.2
+<default>/lint.2: Passed.
 ### : W54: External dependencies should not contain spaces nor empty string
 ### <lint.opam>
 opam-version: "2.0"
