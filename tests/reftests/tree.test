@@ -507,3 +507,26 @@ installed-local-core.dev
 ### opam tree ./dir/installed-local-core.opam
 installed-local-core.dev
 '-- a.1
+### : different package version :
+### <pkg:a.2>
+opam-version: "2.0"
+### opam tree a.2
+The following actions are simulated:
+=== recompile 4 packages
+  - recompile b                    1            [uses a]
+  - recompile i                    2            [uses b]
+  - recompile installed-local      dev (pinned) [uses b, installed-local-core]
+  - recompile installed-local-core dev (pinned) [uses a]
+=== upgrade 1 package
+  - upgrade   a                    1 to 2
+
+a.2
+### opam list a
+# Packages matching: name-match(a) & (installed | available)
+# Package # Installed # Synopsis
+a.1       1
+a.2       1
+### opam tree --rev-deps a.2
+[WARNING] Not installed package a (= 2), skipping
+[ERROR] No package to display
+# Return code 5 #
