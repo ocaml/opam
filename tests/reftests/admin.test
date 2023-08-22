@@ -563,3 +563,14 @@ depends: [
 ]
 ### opam admin add-constraint 'ocaml<5.0'
 [WARNING] In package fail-5334.1, updated constraint ocaml {< "5.0" & >= "5.00"} cannot be satisfied, not updating (use `--force' to update anyway)
+### : Extra-files :
+### rm -rf packages
+### <packages/no-extra/no-extra.1/opam>
+opam-version: "2.0"
+### <packages/no-extra/no-extra.1/files/missing-file>
+nothing here
+### OPAMDEBUGSECTIONS="opam-file" OPAMDEBUG=-2 opam admin list
+opam-file                       Missing extra-files field for missing-file, adding them.
+# Packages matching: available
+# Name   # Installed # Synopsis
+no-extra --
