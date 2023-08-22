@@ -54,6 +54,7 @@ users)
 ## Clean
 
 ## Opamfile
+  * Update populating extra-files fields log [#5640 @rjbou]
 
 ## External dependencies
 
