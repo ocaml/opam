@@ -2,7 +2,7 @@
   .opam {font-family: Tahoma,Verdana,sans-serif; font-size: 110%; font-weight: lighter; line-height: 90.9%}
 --></style>
 
-# The opam manual
+# The opam Manual
 
 This manual gathers reference information on opam and its file formats. It is
 primarily of use for packagers, package maintainers and repository maintainers.
@@ -14,11 +14,11 @@ primarily of use for packagers, package maintainers and repository maintainers.
 * If you want to hack on opam or build related tools, the API documentation can
   be browsed [here](api/index.html)
 
-## File hierarchies
+## File Hierarchies
 
 ### opam root
 
-opam holds its configuration, metadata, logs, temporary directories and caches
+Opam holds its configuration, metadata, logs, temporary directories and caches
 within a directory that we will call _opam root_. By default, this is `~/.opam`,
 and we may refer to it by this name in this manual for the sake of simplicity,
 but this can be changed using the `OPAMROOT` environment variable or the
@@ -94,8 +94,7 @@ using the `opam update` command. This only updates repositories in use by the
 currently selected switches, unless `--all` is specified.
 
 ### Switches
-
-opam is designed to hold any number of concurrent installation prefixes, called
+Opam is designed to hold any number of concurrent installation prefixes, called
 _switches_. Switches are isolated from each other and have their own set of
 installed packages, selection of repositories, and configuration options. All
 package-related commands operate on a single switch, and require one to be
@@ -213,7 +212,7 @@ definitions are found in `<DIR>`, synchronise and install them. The `upgrade`,
 `reinstall` and `remove` commands can likewise be used with a directory argument
 to refer to pinned packages.
 
-## Common file format
+## Common File Format
 
 ### Conventions
 
@@ -238,7 +237,7 @@ and _options_:
   It corresponds to a specific case of the `<option>` non-terminal where there
   is exactly one element within the braces..
 
-### General syntax
+### General Syntax
 
 ```BNF
 <file-contents> ::= { <file-item> }*
@@ -264,7 +263,7 @@ and _options_:
 The opam file formats share a common base syntax. The
 files are UTF-8 encoded and define a list of _fields_ and _sections_.
 
-opam uses a range of different files, each allowing their own set of fields and
+Opam uses a range of different files, each allowing their own set of fields and
 sections, in a specific format.
 
 Base values can be literal booleans, integers or strings, identifiers, and
@@ -418,7 +417,7 @@ three scopes:
     shortcuts to `_:name` and `_:version`, corresponding to the package being
     defined, are always available.
 
-#### Pre-defined variables
+#### Pre-Defined Variables
 
 The following variables are dynamically defined by opam, but can still be
 overridden from configuration. You can get the list of currently defined
@@ -429,7 +428,7 @@ opam config list # opam 2.0
 opam var         # opam 2.1.0
 ```
 
-#### Global variables
+#### Global Variables
 
 - <a id="opamvar-opam-version">`opam-version`</a>:
   the version of the running opam
@@ -463,7 +462,7 @@ Extra variables can be defined in the file `~/.opam/config`, using the
 [`global-variables:`](#configfield-global-variables) (static) or
 [`eval-variables`](#configfield-eval-variables) (dynamic) fields.
 
-#### Switch variables
+#### Switch Variables
 
 The following standard paths are defined as variables in the global scope and
 depend on the current switch:
@@ -480,7 +479,7 @@ Extra variables can be defined in the file
 `<switch-prefix>/.opam-switch/switch-config`, using the
 [`variables {}`](#switchconfigsection-variables) section.
 
-#### Package variables
+#### Package Variables
 
 These variables need to be prefixed with `<pkgname>:`, or `_:`, except for
 `name` and `version`, or if they can unambiguously be resolved as variables of
@@ -586,7 +585,7 @@ operators unless absorbed (`undef & false` is `false`, `undef | true` is
 `!(?foo & foo != bar)` requires either `foo` to be undefined or equal in value
 to `bar`.
 
-### Filtered package formulas
+### Filtered Package Formulas
 
 This extension to package formulas allows variables to be referenced within
 version constraints, and parts of the formula to be made optional. This is
@@ -629,7 +628,7 @@ the results are written back to `file`.
 
 This can also be done explicitly using the command `opam config subst "file"`.
 
-### Environment updates
+### Environment Updates
 
 Some fields define updates to environment variables in the form:
 
@@ -775,7 +774,7 @@ seen with `opam init --show-default-opamrc`.
   [`default-compiler:`](#configfield-default-compiler) is additionally used to
   select the switch that will be created by `opam init` without `--bare`.
 
-### Package definitions
+### Package Definitions
 
 Package definitions can be a single [`opam`](#opam) file. A [`files/`](#files)
 subdirectory can also be used to add files over the package source. Older
@@ -1301,7 +1300,7 @@ source tree after its installation instructions have been run.
   "}"`</a>: allows the definition of package variables, that will be available
   as `<pkgname>:<varname>` to dependent packages.
 
-### Local configuration files
+### Local Configuration Files
 
 These files are local to the opam root, and managed by opam. [`config`](#config)
 and [`switch-config`](#switch-config) can be manually edited to set configuration
