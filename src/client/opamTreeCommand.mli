@@ -11,7 +11,6 @@
 
 (** Functions handling the "opam tree" subcommand *)
 
-open OpamTypes
 open OpamStateTypes
 
 (** Speficy the type of the forest to build *)
@@ -37,4 +36,4 @@ val run :
   ?no_constraint:bool ->
   (* do no keep switch consistency *)
   ?no_switch:bool ->
-  mode -> tree_filter -> name list -> unit
+  mode -> tree_filter -> OpamTypes.atom list -> unit
