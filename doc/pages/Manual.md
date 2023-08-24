@@ -10,7 +10,7 @@ primarily of use for packagers, package maintainers, and repository maintainers.
 * For simple usage of opam, see the [Usage](Usage.html) page and the
   comprehensive built-in documentation [`opam [command] --help`](man/index.html).
 * For a gentler introduction to packaging, see the
-  [Packaging guide](Packaging.html)
+  [Packaging Guide](Packaging.html)
 * If you want to hack on opam or build related tools, the API documentation can
   be browsed [here](api/index.html)
 
@@ -64,9 +64,9 @@ following hierarchy:
   cache) needed when serving over HTTP. It can be generated using `opam admin
   index`.
 
-opam repositories can be accessed using local or
+Opam repositories can be accessed using local or
 remote (ssh) paths, HTTP URLs, or one of the supported version control systems
-(git, Mercurial, Darcs). A repository is set up using
+(Git, Mercurial, Darcs). A repository is set up using
 
 ```
 opam repository add <name> <URL> [--this-switch|--all-switches|--set-default]
@@ -101,14 +101,14 @@ package-related commands operate on a single switch and require one to be
 selected.
 
 The current switch can be selected in the following ways:
-- globally, using `opam switch <switch>`. opam will use that switch for all
+- Globally, using `opam switch <switch>`. Opam will use that switch for all
   further commands, except when overridden in one of the following ways.
-- for local switches, which are external to the opam root, when in the directory
+- For local switches, which are external to the opam root, when in the directory
   where the switch resides or a descendant.
-- by setting the `OPAMSWITCH=<switch>` environment variable, to set it within a
+- By setting the `OPAMSWITCH=<switch>` environment variable, to set it within a
   single shell session. This can be done by running `eval $(opam env --switch
   <switch>)` to set the shell environment at once (see below).
-- through the `--switch <switch>` command-line flag, for a single command.
+- Through the `--switch <switch>` command-line flag, for a single command.
 
 Switches have their own prefix, normally `~/.opam/<switch>`, where packages get
 installed ; to use what is installed in a switch, some environment variables need
@@ -265,7 +265,7 @@ files are UTF-8 encoded and define a list of _fields_ and _sections_.
 Opam uses a range of different files, each allowing their own set of fields and
 sections in a specific format.
 
-Base values can be literal booleans, integers or strings, identifiers, and
+Base values can be literal Booleans, integers or strings, identifiers, and
 operators. Strings allow the escapes `\"`, `\\`, `\n`, `\r`, `\b`, `\t`, as well
 as three-digit decimal and two-digit hexadecimal character codes (`\NNN` and
 `\xNN`), and escaped newlines. As a special case, they can be enclosed in triple
@@ -368,15 +368,15 @@ They can be used in two forms:
 
 For both forms, and within values that allow them, the variables are replaced by
 their contents, if any, just before the value is used. Variable contents can be
-either _strings_, _booleans_, _lists of strings_, or _undefined_, and automatic conversion may take
+either _strings_, _Booleans_, _lists of strings_, or _undefined_, and automatic conversion may take
 place using the strings `"true"` and `"false"` (leading to an _undefined_ bool
 when converting from any other string). Undefined values are propagated through
-boolean expressions and lead otherwise to context-dependent default values (the
+Boolean expressions and lead otherwise to context-dependent default values (the
 empty string or `false`, depending on the expected type, unless specified
 otherwise).
 
 The syntax`"%{var?string-if-true:string-if-false-or-undefined}%"` can be used to
-insert different strings depending on the boolean value of a variable.
+insert different strings depending on the Boolean value of a variable.
 
 Additionally, boolean package variables may be combined using the following
 form: `name1+name2+name3:var` is the conjunction of `var` for each of `name1`,
@@ -392,7 +392,7 @@ three scopes:
    current switch settings (system setup, opam configuration, current switch
    name, etc.). For example, `opam-version`, `arch`, or `make`.
 2. Package variables have the form `package-name:var-name` and contain values
-   specific to a given package. For example `foo:installed` is a boolean
+   specific to a given package. For example `foo:installed` is a Boolean
    variable that can be used to check if package `foo` is installed, and
    `foo:lib` is its library installation directory.
 
@@ -564,7 +564,7 @@ Filters are evaluated at a certain point in time and should not be mistaken
 with package formulas, which express requirements.
 
 The following are allowed in filters:
-- String, integer, and boolean literals
+- String, integer, and Boolean literals
 - Idents
 - Parentheses
 - Logical operators (binary AND `&`, binary OR `|`, prefix, unary NOT `!`)
@@ -611,7 +611,7 @@ For example, a dependency on `"foo" { = version }` will require package `foo` at
 the version defined by variable `version` (which is the version of the package
 being defined). Conditions can be added using the same logical operators present
 in pure package formulas, so one can also write `"foo" { >= "3.12" & build }`,
-which makes the dependency dependent on the boolean value of the variable
+which makes the dependency dependent on the Boolean value of the variable
 `build`.
 
 When the version formula reduces to `false`, as would be the case here when
@@ -652,13 +652,13 @@ other system).
 ### URLs
 
 URLs are provided as strings. They can refer to:
-- raw local filesystem paths
-- ssh addresses `user@host:path`
+- Raw local filesystem paths
+- SSH addresses `user@host:path`
 - URLs of the form `http://`, `https://`, `ftp://`, `ssh://`, `file://`, `rsync://`
-- Version control URLs for git, mercurial, and darcs: `git://`, `hg://`,
+- Version control URLs for Git, Mercurial, and Darcs: `git://`, `hg://`,
   `darcs://`. This assumes http transport for `hg` and `darcs`, _i.e.,_
   `hg://` is short for `hg+http://`.
-  - Note that Github
+  - Note that GitHub
   [disabled](https://github.blog/2021-09-01-improving-git-protocol-security-github/)
   `git://` protocol support.
 - Version control bound to a specific URL: `<vc>+<scheme>://`, e.g., `git://`,
@@ -689,12 +689,12 @@ and SHA512).
 Until opam 2.2.0, if `openssl` was installed on the system, it would be used for
 faster computation of SHA hashes.
 
-## Specific file formats
+## Specific File Formats
 
 This section describes the precise file formats of the different kinds of files
 used by opam.
 
-### Public configuration files
+### Public Configuration Files
 
 These files are intended to be publicly distributed as part of public
 repositories, initial distributions, or packages.
@@ -933,7 +933,7 @@ files.
   package formulas, understood as a conjunction.
 
     The filtered package formula can access the global and switch variables but
-    not variables from other packages. Additionally, special boolean variables
+    not variables from other packages. Additionally, special Boolean variables
     [`build`](#pkgvar-build), [`post`](#pkgvar-post),
     [`with-test`](#pkgvar-with-test), [`with-doc`](#pkgvar-with-doc), and
     [`with-dev-setup`](#pkgvar-with-dev-setup) are defined to allow limiting
@@ -948,9 +948,9 @@ files.
       the invariant that `!build` dependencies are always installed.
     * `with-test` dependencies are only needed when building tests (when the
       package is explicitly installed with `--with-test`).
-    * likewise, `with-doc` dependencies are only required when building the
+    * Likewise, `with-doc` dependencies are only required when building the
       package documentation.
-    * likewise, `with-dev-setup` dependencies are only required for a developer
+    * Likewise, `with-dev-setup` dependencies are only required for a developer
       tool.
 
 - <a id="opamfield-depopts">
@@ -1021,7 +1021,7 @@ files.
 - <a id="opamfield-post-messages">
   `post-messages: [ <string> { <filter> } ... ]`</a>:
   allows one to print specific messages to the user after the end of installation.
-  The special boolean variable `failure` is defined in the scope of the filter
+  The special Boolean variable `failure` is defined in the scope of the filter
   and can be used to print messages in case there was an error (typically, a
   hint on how it can be resolved or a link to an open issue). `success` is also
   defined as syntactic sugar for `!failure`. The
@@ -1151,7 +1151,7 @@ files.
        been removed from `pin-depends:`.
 
 - <a id="opamfield-extra-fields">`x-*: <value>`</a>:
-  extra fields prefixed with `x-` can be defined for use by external tools. opam
+  extra fields prefixed with `x-` can be defined for use by external tools. Opam
   will ignore them except for some search operations.
 
 #### descr
