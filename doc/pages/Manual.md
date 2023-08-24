@@ -78,7 +78,7 @@ The last flag sets what switches are affected by the new repository:
 - `--set-default` affects all switches created in the future
 
 Creating a new switch using, e.g., a custom repository overlay on the default
-repository can be done in a single call using:
+repository, can be done in a single call using:
 ```
 opam switch create --repos=<name>=<URL>,default
 ```
@@ -104,11 +104,11 @@ The current switch can be selected in the following ways:
 - Globally, using `opam switch <switch>`. Opam will use that switch for all
   further commands, except when overridden in one of the following ways.
 - For local switches, which are external to the opam root, when in the directory
-  where the switch resides or a descendant.
+  where the switch resides or a descendant
 - By setting the `OPAMSWITCH=<switch>` environment variable, to set it within a
   single shell session. This can be done by running `eval $(opam env --switch
   <switch>)` to set the shell environment at once (see below).
-- Through the `--switch <switch>` command-line flag, for a single command.
+- Through the `--switch <switch>` command-line flag, for a single command
 
 Switches have their own prefix, normally `~/.opam/<switch>`, where packages get
 installed ; to use what is installed in a switch, some environment variables need
@@ -143,7 +143,7 @@ If we define `<switch-prefix>` as:
 - `<switch>/_opam` for local switches, when `<switch>` is a path
 
 Switches are laid out thusly:
-- `<switch-prefix>/`: prefix of the switch, holding the installation hierarchy
+- `<switch-prefix>/`: prefix of the switch, which holds the installation hierarchy
   in the UNIX `/usr` standard (with subdirectories `bin`, `lib`, `share`, `man`,
   `doc`, `etc`)
 - `<switch-prefix>/.opam-switch/`: holds all opam data regarding this switch
@@ -337,7 +337,7 @@ operators.
 >   `[""; 1]`, so we have `1 < a` because the non-digit component of
 >   1, which is the empty string `""`, is smaller than `"a"`.
 >
-> - For non-digit components, the ordering used is that letters are
+> - For ordering non-digit components, letters are
 >   always smaller than non-letters (for example `z` < `"#"`), while
 >   non-letters are compared by ASCII order.
 >
@@ -454,7 +454,7 @@ opam var         # opam 2.1.0
   on Win32 or Cygwin, or `"bsd"` on all bsds. Useful, _e.g.,_ to detect the main
   package manager
 - <a id="opamvar-os-version">`os-version`</a>:
-  the release id of the distribution when applicable, or system otherwise
+  the distribution's release id of the distribution, when applicable, or system otherwise
 
 Extra variables can be defined in the file `~/.opam/config` using the
 [`global-variables:`](#configfield-global-variables) (static) or
@@ -679,7 +679,7 @@ not concerned and should just load nicely in common browsers.
 ```
 
 Checksums are specified as strings in hexadecimal form and should be prefixed
-by the name of the hashing algorithm (when unspecified, MD5 is assumed for
+by the hashing algorithm's name (when unspecified, MD5 is assumed for
 backwards compatibility only).
 
 Additionally, the number of hexadecimal chars must match exactly what is
@@ -812,7 +812,7 @@ files.
 
 - <a id="opamfield-license">`license: [ <string> ... ]`</a>:
   The SPDX expression of the license(s) under which the source software is available
-  (see http://spdx.org/licenses/). The [SPDX standard](https://spdx.github.io/spdx-spec/SPDX-license-expressions/) allows to define custom licenses if necessary using the `LicenseRef-your-custom-name` syntax (e.g., `license: "LicenseRef-My-Custom-Non-Commercial-License"`).
+  (see http://spdx.org/licenses/). The [SPDX standard](https://spdx.github.io/spdx-spec/SPDX-license-expressions/) allows us to define custom licenses if necessary using the `LicenseRef-your-custom-name` syntax (e.g., `license: "LicenseRef-My-Custom-Non-Commercial-License"`).
   When several licenses are defined, the combination of them is equivalent to a single license expression separated by `AND`. For instance: `license: ["MIT" "ISC"]` is equivalent to `license: "MIT AND ISC"`. 
 
 - <a id="opamfield-homepage">`homepage: [ <string> ... ]`</a>,
@@ -1021,12 +1021,11 @@ files.
 - <a id="opamfield-post-messages">
   `post-messages: [ <string> { <filter> } ... ]`</a>:
   allows one to print specific messages to the user after the end of installation.
-  The special Boolean variable `failure` is defined in the scope of the filter
-  and can be used to print messages in case there was an error (typically, a
+  The special Boolean variable `failure` is defined in the filter's scope.
+  It can be used to print messages in case there was an error (typically, a
   hint on how it can be resolved or a link to an open issue). `success` is also
   defined as syntactic sugar for `!failure`. The
-  [`with-dev-setup`](#pkgvar-with-dev-setup) variable is also available in the
-  scope of this field.
+  [`with-dev-setup`](#pkgvar-with-dev-setup) variable is also available in this      field's scope.
 
 - <a id="opamfield-available">`available: [ <filter> ]`</a>:
   can be used to add constraints on the OS and other global variables.
@@ -1422,8 +1421,7 @@ them modified with [`opam option --global`](man/opam-option.html).
     The `post-install-commands` hook also has access to an extra variable,
     `installed-files`, which expands to the list of files and directories added or
     modified during the installation of the package.
-    Note that this hook is run after the scan for installed files is
-    done, so any additional installed files won't be recorded and must be taken
+    Note that this hook is run after the scan for installed files completes, so any additional installed files won't be recorded and must be taken
     care of by a `pre-remove-commands` hook. However, modified or deleted installed
     files during the `post-install-commands` will be handled correctly by `opam`.
 - <a id="configfield-pre-session-commands">`pre-session-commands: [ [ <term> { <filter> } ... ] { <filter> } ... ]`</a>,
