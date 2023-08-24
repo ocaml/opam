@@ -1,0 +1,1432 @@
+N0REP0
+### : Variable definition in all filters :
+### OPAMSTRICT=0
+### <pkg:foo.1>
+opam-version: "2.0"
+### <pkg:bar.1>
+opam-version: "2.0"
+### <pkg:baz.1>
+opam-version: "2.0"
+### <pkg:undefined-smtg.1>
+opam-version: "2.0"
+### ::::::::::::::::::::::
+### :I: Global variable ::
+### ::::::::::::::::::::::
+### opam switch create global-variable --empty
+### opam var smtg=something --global
+Added '[smtg "something" "Set through 'opam var'"]' to field global-variables in global configuration
+### :I:1: patches :::
+### <pkg:patches.1:some-content>
+blabla
+pioupiou
+bloblob
+### <pkg:patches.1:to-apply.patch>
+--- a/some-content	2020-12-02 14:22:55.364620832 +0100
++++ b/some-content	2020-12-02 14:23:05.668686881 +0100
+@@ -1,3 +1,3 @@
+ blabla
+-pioupiou
++ploplop
+ bloblob
+### <pkg:patches.1:to-not-apply.patch>
+--- a/some-content	2020-12-02 14:22:55.364620832 +0100
++++ b/some-content	2020-12-02 14:23:05.668686881 +0100
+@@ -2,3 +2,3 @@
+ ploplop
+-bloblob
++noooooo
+### <pkg:patches.1>
+opam-version: "2.0"
+patches: [
+  "to-apply.patch" { ?smtg }
+  "to-not-apply.patch" { !?smtg }
+]
+build: [
+  [ "grep" "ploplop" "some-content" ]
+  [ "grep" "bloblob" "some-content" ]
+]
+### opam install patches -v | sed-cmd grep | unordered
+The following actions will be performed:
+=== install 1 package
+  - install patches 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[patches: patch] applying to-apply.patch
+Processing  2/3: [patches: grep ploplop]
++ grep "ploplop" "some-content" (CWD=${BASEDIR}/OPAM/global-variable/.opam-switch/build/patches.1)
+- ploplop
+Processing  2/3: [patches: grep bloblob]
++ grep "bloblob" "some-content" (CWD=${BASEDIR}/OPAM/global-variable/.opam-switch/build/patches.1)
+- bloblob
+-> compiled  patches.1
+-> installed patches.1
+Done.
+### :I:2: build :::
+### <pkg:build.1>
+opam-version: "2.0"
+build: [
+  [ "true" { ?smtg } ]
+  [ "false" { !?smtg } ]
+]
+### opam install build -v | sed-cmd true | unordered
+The following actions will be performed:
+=== install 1 package
+  - install build 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [build: true]
++ true (CWD=${BASEDIR}/OPAM/global-variable/.opam-switch/build/build.1)
+-> compiled  build.1
+-> installed build.1
+Done.
+### :I:3: install :::
+### <pkg:install.1>
+opam-version: "2.0"
+install: [
+  [ "true" { ?smtg } ]
+  [ "false" { !?smtg } ]
+]
+### opam install install -v | sed-cmd true | unordered
+The following actions will be performed:
+=== install 1 package
+  - install install 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  3/3: [install: true]
++ true (CWD=${BASEDIR}/OPAM/global-variable/.opam-switch/build/install.1)
+-> installed install.1
+Done.
+### :I:4: runtest :::
+### <pkg:runtest.1>
+opam-version: "2.0"
+run-test: [
+  [ "true" { ?smtg } ]
+  [ "false" { !?smtg } ]
+]
+### opam install runtest --with-test -v | sed-cmd true | unordered
+The following actions will be performed:
+=== install 1 package
+  - install runtest 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [runtest: true]
++ true (CWD=${BASEDIR}/OPAM/global-variable/.opam-switch/build/runtest.1)
+-> compiled  runtest.1
+-> installed runtest.1
+Done.
+### :I:5: remove :::
+### <pkg:remove.1>
+opam-version: "2.0"
+remove: [
+  [ "true" { ?smtg } ]
+  [ "false" { !?smtg } ]
+]
+### opam install remove
+The following actions will be performed:
+=== install 1 package
+  - install remove 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed remove.1
+Done.
+### opam remove remove -v | sed-cmd true | unordered
+The following actions will be performed:
+=== remove 1 package
+  - remove remove 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/2: [remove: true]
++ true (CWD=${BASEDIR}/OPAM/global-variable/.opam-switch/remove/remove.1)
+-> removed   remove.1
+Done.
+### :I:6: depends :::
+### <pkg:depends.1>
+opam-version: "2.0"
+depends: [
+ "foo" { ?smtg }
+ "undefined-smtg" { !?smtg }
+]
+### opam install depends --show
+The following actions would be performed:
+=== install 2 packages
+  - install depends 1
+  - install foo     1 [required by depends]
+### :I:7: depopts :::
+### <pkg:depopts.1>
+opam-version: "2.0"
+depopts: [
+ "bar" { ?smtg }
+ "undefined-smtg" { !?smtg }
+]
+### opam install depopts
+The following actions will be performed:
+=== install 1 package
+  - install depopts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed depopts.1
+Done.
+### opam install bar --show
+The following actions would be performed:
+=== recompile 1 package
+  - recompile depopts 1 [uses bar]
+=== install 1 package
+  - install   bar     1
+### opam install undefined-smtg --show
+The following actions would be performed:
+=== install 1 package
+  - install undefined-smtg 1
+### opam remove depopts
+The following actions will be performed:
+=== remove 1 package
+  - remove depopts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   depopts.1
+Done.
+### :I:8: conflicts :::
+### <pkg:conflicts.1>
+opam-version: "2.0"
+conflicts: [
+  "baz" { ?smtg }
+  "undefined-smtg" { !?smtg }
+]
+### opam install conflicts
+The following actions will be performed:
+=== install 1 package
+  - install conflicts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed conflicts.1
+Done.
+### opam install baz --show
+The following actions would be performed:
+=== remove 1 package
+  - remove  conflicts 1 [conflicts with baz]
+=== install 1 package
+  - install baz       1
+### opam install undefined-smtg --show
+The following actions would be performed:
+=== install 1 package
+  - install undefined-smtg 1
+### :I:9: msg :::
+### <pkg:msg.1>
+opam-version: "2.0"
+messages: [
+  "Hej!" { ?smtg }
+  ">>smtg is undefined<<" { !?smtg }
+]
+### opam install msg
+The following actions will be performed:
+=== install 1 package
+  - install msg 1  Hej!
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed msg.1
+Done.
+### :I:10: post-msg :::
+### <pkg:post-msg.1>
+opam-version: "2.0"
+post-messages: [
+  "Bye!" { ?smtg }
+  ">>smtg is undefined<<" { !?smtg }
+]
+### opam install post-msg
+The following actions will be performed:
+=== install 1 package
+  - install post-msg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed post-msg.1
+Done.
+
+<><> post-msg.1 installed successfully ><><><><><><><><><><><><><><><><><><><><>
+=> Bye!
+### :I:11: avail :::
+### <pkg:avail.1>
+opam-version: "2.0"
+available: [ ?smtg ]
+### opam install avail
+The following actions will be performed:
+=== install 1 package
+  - install avail 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed avail.1
+Done.
+### opam var smtg= --global
+Removed variable smtg in global configuration
+### :::::::::::::::::::::::
+### :II: Switch variable ::
+### :::::::::::::::::::::::
+### opam switch create switch-variable --empty
+### opam var smtg=something --switch switch-variable
+Added 'smtg: "something"' to field variables in switch switch-variable
+### :II:1: patches :::
+### <pkg:patches.1:some-content>
+blabla
+pioupiou
+bloblob
+### <pkg:patches.1:to-apply.patch>
+--- a/some-content	2020-12-02 14:22:55.364620832 +0100
++++ b/some-content	2020-12-02 14:23:05.668686881 +0100
+@@ -1,3 +1,3 @@
+ blabla
+-pioupiou
++ploplop
+ bloblob
+### <pkg:patches.1:to-not-apply.patch>
+--- a/some-content	2020-12-02 14:22:55.364620832 +0100
++++ b/some-content	2020-12-02 14:23:05.668686881 +0100
+@@ -2,3 +2,3 @@
+ ploplop
+-bloblob
++noooooo
+### <pkg:patches.1>
+opam-version: "2.0"
+patches: [
+  "to-apply.patch" { ?smtg }
+  "to-not-apply.patch" { !?smtg }
+]
+build: [
+  [ "grep" "ploplop" "some-content" ]
+  [ "grep" "bloblob" "some-content" ]
+]
+### opam install patches -v | sed-cmd grep | unordered
+The following actions will be performed:
+=== install 1 package
+  - install patches 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[patches: patch] applying to-apply.patch
+Processing  2/3: [patches: grep ploplop]
++ grep "ploplop" "some-content" (CWD=${BASEDIR}/OPAM/switch-variable/.opam-switch/build/patches.1)
+- ploplop
+Processing  2/3: [patches: grep bloblob]
++ grep "bloblob" "some-content" (CWD=${BASEDIR}/OPAM/switch-variable/.opam-switch/build/patches.1)
+- bloblob
+-> compiled  patches.1
+-> installed patches.1
+Done.
+### :II:2: build :::
+### <pkg:build.1>
+opam-version: "2.0"
+build: [
+  [ "true" { ?smtg } ]
+  [ "false" { !?smtg } ]
+]
+### opam install build -v | sed-cmd true | unordered
+The following actions will be performed:
+=== install 1 package
+  - install build 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [build: true]
++ true (CWD=${BASEDIR}/OPAM/switch-variable/.opam-switch/build/build.1)
+-> compiled  build.1
+-> installed build.1
+Done.
+### :II:3: install :::
+### <pkg:install.1>
+opam-version: "2.0"
+install: [
+  [ "true" { ?smtg } ]
+  [ "false" { !?smtg } ]
+]
+### opam install install -v | sed-cmd true | unordered
+The following actions will be performed:
+=== install 1 package
+  - install install 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  3/3: [install: true]
++ true (CWD=${BASEDIR}/OPAM/switch-variable/.opam-switch/build/install.1)
+-> installed install.1
+Done.
+### :II:4: runtest :::
+### <pkg:runtest.1>
+opam-version: "2.0"
+run-test: [
+  [ "true" { ?smtg } ]
+  [ "false" { !?smtg } ]
+]
+### opam install runtest --with-test -v | sed-cmd true | unordered
+The following actions will be performed:
+=== install 1 package
+  - install runtest 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [runtest: true]
++ true (CWD=${BASEDIR}/OPAM/switch-variable/.opam-switch/build/runtest.1)
+-> compiled  runtest.1
+-> installed runtest.1
+Done.
+### :II:5: remove :::
+### <pkg:remove.1>
+opam-version: "2.0"
+remove: [
+  [ "true" { ?smtg } ]
+  [ "false" { !?smtg } ]
+]
+### opam install remove
+The following actions will be performed:
+=== install 1 package
+  - install remove 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed remove.1
+Done.
+### opam remove remove -v | sed-cmd true | unordered
+The following actions will be performed:
+=== remove 1 package
+  - remove remove 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/2: [remove: true]
++ true (CWD=${BASEDIR}/OPAM/switch-variable/.opam-switch/remove/remove.1)
+-> removed   remove.1
+Done.
+### :II:6: depends :::
+### <pkg:depends.1>
+opam-version: "2.0"
+depends: [
+ "foo" { ?smtg }
+ "undefined-smtg" { !?smtg }
+]
+### opam install depends --show
+The following actions would be performed:
+=== install 2 packages
+  - install depends 1
+  - install foo     1 [required by depends]
+### :II:7: depopts :::
+### <pkg:depopts.1>
+opam-version: "2.0"
+depopts: [
+ "bar" { ?smtg }
+ "undefined-smtg" { !?smtg }
+]
+### opam install depopts
+The following actions will be performed:
+=== install 1 package
+  - install depopts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed depopts.1
+Done.
+### opam install bar --show
+The following actions would be performed:
+=== recompile 1 package
+  - recompile depopts 1 [uses bar]
+=== install 1 package
+  - install   bar     1
+### opam install undefined-smtg --show
+The following actions would be performed:
+=== install 1 package
+  - install undefined-smtg 1
+### opam remove depopts
+The following actions will be performed:
+=== remove 1 package
+  - remove depopts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   depopts.1
+Done.
+### :II:8: conflicts :::
+### <pkg:conflicts.1>
+opam-version: "2.0"
+conflicts: [
+  "baz" { ?smtg }
+  "undefined-smtg" { !?smtg }
+]
+### opam install conflicts
+The following actions will be performed:
+=== install 1 package
+  - install conflicts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed conflicts.1
+Done.
+### opam install baz --show
+The following actions would be performed:
+=== remove 1 package
+  - remove  conflicts 1 [conflicts with baz]
+=== install 1 package
+  - install baz       1
+### opam install undefined-smtg --show
+The following actions would be performed:
+=== install 1 package
+  - install undefined-smtg 1
+### :II:9: msg :::
+### <pkg:msg.1>
+opam-version: "2.0"
+messages: [
+  "Hej!" { ?smtg }
+  ">>smtg is undefined<<" { !?smtg }
+]
+### opam install msg
+The following actions will be performed:
+=== install 1 package
+  - install msg 1  Hej!
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed msg.1
+Done.
+### :II:10: post-msg :::
+### <pkg:post-msg.1>
+opam-version: "2.0"
+post-messages: [
+  "Bye!" { ?smtg }
+  ">>smtg is undefined<<" { !?smtg }
+]
+### opam install post-msg
+The following actions will be performed:
+=== install 1 package
+  - install post-msg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed post-msg.1
+Done.
+
+<><> post-msg.1 installed successfully ><><><><><><><><><><><><><><><><><><><><>
+=> Bye!
+### :II:11: avail :::
+### <pkg:avail.1>
+opam-version: "2.0"
+available: [ ?smtg ]
+### opam install avail
+The following actions will be performed:
+=== install 1 package
+  - install avail 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed avail.1
+Done.
+### :::::::::::::::::::::::::
+### :III: Package variable ::
+### :::::::::::::::::::::::::
+### opam switch create package-variable --empty
+### <pkg:v.1>
+opam-version: "2.0"
+### <pkg:v.1:v.config>
+opam-version: "2.0"
+variables { smtg: "something" }
+### opam install v
+The following actions will be performed:
+=== install 1 package
+  - install v 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed v.1
+Done.
+### :III:1: patches :::
+### <pkg:patches.1:some-content>
+blabla
+pioupiou
+bloblob
+### <pkg:patches.1:to-apply.patch>
+--- a/some-content	2020-12-02 14:22:55.364620832 +0100
++++ b/some-content	2020-12-02 14:23:05.668686881 +0100
+@@ -1,3 +1,3 @@
+ blabla
+-pioupiou
++ploplop
+ bloblob
+### <pkg:patches.1:to-not-apply.patch>
+--- a/some-content	2020-12-02 14:22:55.364620832 +0100
++++ b/some-content	2020-12-02 14:23:05.668686881 +0100
+@@ -2,3 +2,3 @@
+ ploplop
+-bloblob
++noooooo
+### <pkg:patches.1>
+opam-version: "2.0"
+patches: [
+  "to-apply.patch" { ?v:smtg }
+  "to-not-apply.patch" { !?v:smtg }
+]
+build: [
+  [ "grep" "ploplop" "some-content" ]
+  [ "grep" "bloblob" "some-content" ]
+]
+### opam install patches -v | sed-cmd grep | unordered
+The following actions will be performed:
+=== install 1 package
+  - install patches 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[patches: patch] applying to-apply.patch
+Processing  2/3: [patches: grep ploplop]
++ grep "ploplop" "some-content" (CWD=${BASEDIR}/OPAM/package-variable/.opam-switch/build/patches.1)
+- ploplop
+Processing  2/3: [patches: grep bloblob]
++ grep "bloblob" "some-content" (CWD=${BASEDIR}/OPAM/package-variable/.opam-switch/build/patches.1)
+- bloblob
+-> compiled  patches.1
+-> installed patches.1
+Done.
+### :III:2: build :::
+### <pkg:build.1>
+opam-version: "2.0"
+build: [
+  [ "true" { ?v:smtg } ]
+  [ "false" { !?v:smtg } ]
+]
+### opam install build -v | sed-cmd true | unordered
+The following actions will be performed:
+=== install 1 package
+  - install build 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [build: true]
++ true (CWD=${BASEDIR}/OPAM/package-variable/.opam-switch/build/build.1)
+-> compiled  build.1
+-> installed build.1
+Done.
+### :III:3: install :::
+### <pkg:install.1>
+opam-version: "2.0"
+install: [
+  [ "true" { ?v:smtg } ]
+  [ "false" { !?v:smtg } ]
+]
+### opam install install -v | sed-cmd true | unordered
+The following actions will be performed:
+=== install 1 package
+  - install install 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  3/3: [install: true]
++ true (CWD=${BASEDIR}/OPAM/package-variable/.opam-switch/build/install.1)
+-> installed install.1
+Done.
+### :III:4: runtest :::
+### <pkg:runtest.1>
+opam-version: "2.0"
+run-test: [
+  [ "true" { ?v:smtg } ]
+  [ "false" { !?v:smtg } ]
+]
+### opam install runtest --with-test -v | sed-cmd true | unordered
+The following actions will be performed:
+=== install 1 package
+  - install runtest 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [runtest: true]
++ true (CWD=${BASEDIR}/OPAM/package-variable/.opam-switch/build/runtest.1)
+-> compiled  runtest.1
+-> installed runtest.1
+Done.
+### :III:5: remove :::
+### <pkg:remove.1>
+opam-version: "2.0"
+remove: [
+  [ "true" { ?v:smtg } ]
+  [ "false" { !?v:smtg } ]
+]
+### opam install remove
+The following actions will be performed:
+=== install 1 package
+  - install remove 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed remove.1
+Done.
+### opam remove remove -v | sed-cmd true | unordered
+The following actions will be performed:
+=== remove 1 package
+  - remove remove 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/2: [remove: true]
++ true (CWD=${BASEDIR}/OPAM/package-variable/.opam-switch/remove/remove.1)
+-> removed   remove.1
+Done.
+### :III:6: depends :::
+### <pkg:depends.1>
+opam-version: "2.0"
+depends: [
+ "foo" { ?v:smtg }
+ "undefined-smtg" { !?v:smtg }
+]
+### opam install depends --show
+The following actions would be performed:
+=== install 2 packages
+  - install depends        1
+  - install undefined-smtg 1 [required by depends]
+### :III:7: depopts :::
+### <pkg:depopts.1>
+opam-version: "2.0"
+depopts: [
+ "bar" { ?v:smtg }
+ "undefined-smtg" { !?v:smtg }
+]
+### opam install depopts
+The following actions will be performed:
+=== install 1 package
+  - install depopts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed depopts.1
+Done.
+### opam install bar --show
+The following actions would be performed:
+=== install 1 package
+  - install bar 1
+### opam install undefined-smtg --show
+The following actions would be performed:
+=== recompile 1 package
+  - recompile depopts        1 [uses undefined-smtg]
+=== install 1 package
+  - install   undefined-smtg 1
+### opam remove depopts
+The following actions will be performed:
+=== remove 1 package
+  - remove depopts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   depopts.1
+Done.
+### :III:8: conflicts :::
+### <pkg:conflicts.1>
+opam-version: "2.0"
+conflicts: [
+  "baz" { ?v:smtg }
+  "undefined-smtg" { !?v:smtg }
+]
+### opam install conflicts
+The following actions will be performed:
+=== install 1 package
+  - install conflicts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed conflicts.1
+Done.
+### opam install baz --show
+The following actions would be performed:
+=== install 1 package
+  - install baz 1
+### opam install undefined-smtg --show
+The following actions would be performed:
+=== remove 1 package
+  - remove  conflicts      1 [conflicts with undefined-smtg]
+=== install 1 package
+  - install undefined-smtg 1
+### :III:9: msg :::
+### <pkg:msg.1>
+opam-version: "2.0"
+messages: [
+  "Hej!" { ?v:smtg }
+  ">>smtg is undefined<<" { !?v:smtg }
+]
+### opam install msg
+The following actions will be performed:
+=== install 1 package
+  - install msg 1  Hej!
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed msg.1
+Done.
+### :III:10: post-msg :::
+### <pkg:post-msg.1>
+opam-version: "2.0"
+post-messages: [
+  "Bye!" { ?v:smtg }
+  ">>smtg is undefined<<" { !?v:smtg }
+]
+### opam install post-msg
+The following actions will be performed:
+=== install 1 package
+  - install post-msg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed post-msg.1
+Done.
+
+<><> post-msg.1 installed successfully ><><><><><><><><><><><><><><><><><><><><>
+=> Bye!
+### :III:11: avail :::
+### <pkg:avail.1>
+opam-version: "2.0"
+available: [ ?v:smtg ]
+### opam install avail
+[ERROR] avail: unmet availability conditions: '?v:smtg'
+# Return code 5 #
+### :::::::::::::::::::::::::::
+### :: Self package variable ::
+### :::::::::::::::::::::::::::
+### opam switch create self-package-variable --empty
+### :IV:1: patches :::
+### <pkg:patches.1:some-content>
+blabla
+pioupiou
+bloblob
+### <pkg:patches.1:to-apply.patch>
+--- a/some-content	2020-12-02 14:22:55.364620832 +0100
++++ b/some-content	2020-12-02 14:23:05.668686881 +0100
+@@ -1,3 +1,3 @@
+ blabla
+-pioupiou
++ploplop
+ bloblob
+### <pkg:patches.1:to-not-apply.patch>
+--- a/some-content	2020-12-02 14:22:55.364620832 +0100
++++ b/some-content	2020-12-02 14:23:05.668686881 +0100
+@@ -2,3 +2,3 @@
+ ploplop
+-bloblob
++noooooo
+### <pkg:patches.1>
+opam-version: "2.0"
+patches: [
+  "to-apply.patch" { ?_:smtg }
+  "to-not-apply.patch" { !?_:smtg }
+]
+build: [
+  [ "grep" "ploplop" "some-content" ]
+  [ "grep" "bloblob" "some-content" ]
+]
+### <pkg:patches.1:patches.config>
+opam-version: "2.0"
+variables { smtg: "something" }
+### :IV:1:a: first install ::::
+### opam install patches -v | sed-cmd grep | unordered
+The following actions will be performed:
+=== install 1 package
+  - install patches 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[patches: patch] applying to-not-apply.patch
+[ERROR] The compilation of patches.1 failed at "grep ploplop some-content".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build patches 1
++- 
+- No changes have been performed
+'${OPAM} install patches -v' failed.
+Processing  2/3: [patches: grep ploplop]
++ grep "ploplop" "some-content" (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/build/patches.1)
+# Return code 31 #
+### :IV:1:b: reinstall ::::
+### <pkg:patches.1>
+opam-version: "2.0"
+### opam install patches
+The following actions will be performed:
+=== install 1 package
+  - install patches 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed patches.1
+Done.
+### opam var patches:smtg
+something
+### <pkg:patches.1>
+opam-version: "2.0"
+patches: [
+  "to-apply.patch" { ?_:smtg }
+  "to-not-apply.patch" { !?_:smtg }
+]
+build: [
+  [ "grep" "ploplop" "some-content" ]
+  [ "grep" "bloblob" "some-content" ]
+]
+### opam reinstall patches -v | sed-cmd grep | unordered
+The following actions will be performed:
+=== recompile 1 package
+  - recompile patches 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[patches: patch] applying to-not-apply.patch
+Processing  2/4: [patches: grep ploplop]
++ grep "ploplop" "some-content" (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/build/patches.1)
+[ERROR] The compilation of patches.1 failed at "grep ploplop some-content".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build patches 1
++- 
+- No changes have been performed
+'${OPAM} reinstall patches -v' failed.
+# Return code 31 #
+### :IV:2: build :::
+### <pkg:build.1>
+opam-version: "2.0"
+build: [
+  [ "true" { ?_:smtg } ]
+  [ "false" { !?_:smtg } ]
+]
+### <pkg:build.1:build.config>
+opam-version: "2.0"
+variables { smtg: "something" }
+### :IV:2:a: first install ::::
+### opam install build -v | sed-cmd false | unordered
+The following actions will be performed:
+=== install 1 package
+  - install build 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [build: false]
++ false (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/build/build.1)
+[ERROR] The compilation of build.1 failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build build 1
++- 
+- No changes have been performed
+'${OPAM} install build -v' failed.
+# Return code 31 #
+### :IV:2:b: reinstall ::::
+### <pkg:build.1>
+opam-version: "2.0"
+### opam install build
+The following actions will be performed:
+=== install 1 package
+  - install build 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed build.1
+Done.
+### opam var build:smtg
+something
+### <pkg:build.1>
+opam-version: "2.0"
+build: [
+  [ "true" { ?_:smtg } ]
+  [ "false" { !?_:smtg } ]
+]
+### opam reinstall build -v | sed-cmd false | unordered
+The following actions will be performed:
+=== recompile 1 package
+  - recompile build 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/4: [build: false]
++ false (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/build/build.1)
+[ERROR] The compilation of build.1 failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build build 1
++- 
+- No changes have been performed
+'${OPAM} reinstall build -v' failed.
+# Return code 31 #
+### :IV:3: install :::
+### <pkg:install.1>
+opam-version: "2.0"
+install: [
+  [ "true" { ?_:smtg } ]
+  [ "false" { !?_:smtg } ]
+]
+### <pkg:install.1:install.config>
+opam-version: "2.0"
+variables { smtg: "something" }
+### :IV:3:a: first install ::::
+### opam install install -v | sed-cmd false | unordered
+The following actions will be performed:
+=== install 1 package
+  - install install 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  3/3: [install: false]
++ false (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/build/install.1)
+[ERROR] The installation of install failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install install 1
++- 
+- No changes have been performed
+'${OPAM} install install -v' failed.
+# Return code 31 #
+### :IV:3:b: reinstall ::::
+### <pkg:install.1>
+opam-version: "2.0"
+### opam install install
+The following actions will be performed:
+=== install 1 package
+  - install install 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed install.1
+Done.
+### opam var install:smtg
+something
+### <pkg:install.1>
+opam-version: "2.0"
+install: [
+  [ "true" { ?_:smtg } ]
+  [ "false" { !?_:smtg } ]
+]
+### opam reinstall install -v | sed-cmd false | grep -v import | unordered
+The following actions will be performed:
+=== recompile 1 package
+  - recompile install 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   install.1
+Processing  4/4: [install: false]
++ false (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/build/install.1)
+[ERROR] The installation of install failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install install 1
++- 
++- The following changes have been performed
+| - remove install 1
++- 
+
+The former state can be restored with:
+Or you can retry to install your package selection with:
+    ${OPAM} install --restore
+'${OPAM} reinstall install -v' failed.
+# Return code 31 #
+### :IV:4: runtest :::
+### <pkg:runtest.1>
+opam-version: "2.0"
+run-test: [
+  [ "true" { ?_:smtg } ]
+  [ "false" { !?_:smtg } ]
+]
+### <pkg:runtest.1:runtest.config>
+opam-version: "2.0"
+variables { smtg: "something" }
+### :IV:4:a: first install ::::
+### opam install runtest --with-test -v | sed-cmd false | unordered
+The following actions will be performed:
+=== install 1 package
+  - install runtest 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [runtest: false]
++ false (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/build/runtest.1)
+[ERROR] The compilation of runtest.1 failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build runtest 1
++- 
+- No changes have been performed
+'${OPAM} install runtest --with-test -v' failed.
+# Return code 31 #
+### :IV:4:b: reinstall ::::
+### <pkg:runtest.1>
+opam-version: "2.0"
+### opam install runtest
+The following actions will be performed:
+=== install 1 package
+  - install runtest 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed runtest.1
+Done.
+### opam var runtest:smtg
+something
+### <pkg:runtest.1>
+opam-version: "2.0"
+run-test: [
+  [ "true" { ?_:smtg } ]
+  [ "false" { !?_:smtg } ]
+]
+### opam install runtest --with-test -v | sed-cmd false | unordered
+The following actions will be performed:
+=== recompile 1 package
+  - recompile runtest 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/4: [runtest: false]
++ false (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/build/runtest.1)
+[ERROR] The compilation of runtest.1 failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build runtest 1
++- 
+- No changes have been performed
+'${OPAM} install runtest --with-test -v' failed.
+# Return code 31 #
+### :IV:5: remove :::
+### <pkg:remove.1>
+opam-version: "2.0"
+remove: [
+  [ "true" { ?_:smtg } ]
+  [ "false" { !?_:smtg } ]
+]
+### <pkg:remove.1:remove.config>
+opam-version: "2.0"
+variables { smtg: "something" }
+### :IV:5:a: first install ::::
+### opam install remove
+The following actions will be performed:
+=== install 1 package
+  - install remove 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed remove.1
+Done.
+### opam remove remove -v | sed-cmd true | unordered
+The following actions will be performed:
+=== remove 1 package
+  - remove remove 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/2: [remove: true]
++ true (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/remove/remove.1)
+-> removed   remove.1
+Done.
+### :IV:5:b: reinstall ::::
+### opam install remove
+The following actions will be performed:
+=== install 1 package
+  - install remove 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed remove.1
+Done.
+### opam var remove:smtg
+something
+### opam remove remove -v | sed-cmd true | unordered
+The following actions will be performed:
+=== remove 1 package
+  - remove remove 1
+Processing  2/2: [remove: true]
++ true (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/remove/remove.1)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   remove.1
+Done.
+### :IV:6: depends :::
+### <pkg:depends.1>
+opam-version: "2.0"
+depends: [
+ "foo" { ?_:smtg }
+ "undefined-smtg" { !?_:smtg }
+]
+### <pkg:depends.1:depends.config>
+opam-version: "2.0"
+variables { smtg: "something" }
+### :IV:6:a: first install ::::
+### opam install depends --show
+The following actions would be performed:
+=== install 2 packages
+  - install depends        1
+  - install undefined-smtg 1 [required by depends]
+### :IV:6:b: reinstall ::::
+### <pkg:depends.1>
+opam-version: "2.0"
+### opam install depends
+The following actions will be performed:
+=== install 1 package
+  - install depends 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed depends.1
+Done.
+### opam var depends:smtg
+something
+### <pkg:depends.1>
+opam-version: "2.0"
+depends: [
+ "foo" { ?_:smtg }
+ "undefined-smtg" { !?_:smtg }
+]
+### opam reinstall depends --show
+The following actions would be performed:
+=== recompile 1 package
+  - recompile depends        1
+=== install 1 package
+  - install   undefined-smtg 1 [required by depends]
+### opam remove depends
+The following actions will be performed:
+=== remove 1 package
+  - remove depends 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   depends.1
+Done.
+### :IV:7: depopts :::
+### <pkg:depopts.1>
+opam-version: "2.0"
+depopts: [
+ "bar" { ?_:smtg }
+ "undefined-smtg" { !?_:smtg }
+]
+### <pkg:depopts.1:depopts.config>
+opam-version: "2.0"
+variables { smtg: "something" }
+### :IV:7:a: first install ::::
+### opam install depopts
+The following actions will be performed:
+=== install 1 package
+  - install depopts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed depopts.1
+Done.
+### opam install bar --show
+The following actions would be performed:
+=== install 1 package
+  - install bar 1
+### opam install undefined-smtg --show
+The following actions would be performed:
+=== recompile 1 package
+  - recompile depopts        1 [uses undefined-smtg]
+=== install 1 package
+  - install   undefined-smtg 1
+### opam remove depopts
+The following actions will be performed:
+=== remove 1 package
+  - remove depopts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   depopts.1
+Done.
+### :IV:7:b: reinstall ::::
+### : no need
+### :IV:8: conflicts :::
+### <pkg:conflicts.1>
+opam-version: "2.0"
+conflicts: [
+  "baz" { ?_:smtg }
+  "undefined-smtg" { !?_:smtg }
+]
+### <pkg:conflicts.1:conflicts.config>
+opam-version: "2.0"
+variables { smtg: "something" }
+### :IV:8:a: first install ::::
+### ::: conflicts before conflicted
+### opam install conflicts
+The following actions will be performed:
+=== install 1 package
+  - install conflicts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed conflicts.1
+Done.
+### opam install baz --show
+The following actions would be performed:
+=== install 1 package
+  - install baz 1
+### opam install undefined-smtg --show
+The following actions would be performed:
+=== remove 1 package
+  - remove  conflicts      1 [conflicts with undefined-smtg]
+=== install 1 package
+  - install undefined-smtg 1
+### ::: conflicted before conflicts
+### opam remove conflicts
+The following actions will be performed:
+=== remove 1 package
+  - remove conflicts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   conflicts.1
+Done.
+### opam install baz undefined-smtg
+The following actions will be performed:
+=== install 2 packages
+  - install baz            1
+  - install undefined-smtg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed baz.1
+-> installed undefined-smtg.1
+Done.
+### opam install conflicts --show
+The following actions would be performed:
+=== remove 1 package
+  - remove  undefined-smtg 1 [conflicts with conflicts]
+=== install 1 package
+  - install conflicts      1
+### :IV:8:b: reinstall ::::
+### <pkg:conflicts.1>
+opam-version: "2.0"
+### opam install conflicts
+The following actions will be performed:
+=== install 1 package
+  - install conflicts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed conflicts.1
+Done.
+### opam var conflicts:smtg
+something
+### <pkg:conflicts.1>
+opam-version: "2.0"
+conflicts: [
+  "baz" { ?_:smtg }
+  "undefined-smtg" { !?_:smtg }
+]
+### opam reinstall conflicts --show
+The following actions would be performed:
+=== remove 1 package
+  - remove    undefined-smtg 1 [conflicts with conflicts]
+=== recompile 1 package
+  - recompile conflicts      1
+### opam remove conflicts
+The following actions will be performed:
+=== remove 1 package
+  - remove conflicts 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   conflicts.1
+Done.
+### :IV:9: msg :::
+### <pkg:msg.1>
+opam-version: "2.0"
+messages: [
+  "Hej!" { ?_:smtg }
+  ">>smtg is undefined<<" { !?_:smtg }
+]
+### <pkg:msg.1:msg.config>
+opam-version: "2.0"
+variables { smtg: "something" }
+### :IV:9:a: first install ::::
+### opam install msg
+The following actions will be performed:
+=== install 1 package
+  - install msg 1  >>smtg is undefined<<
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed msg.1
+Done.
+### :IV:9:b: reinstall ::::
+### <pkg:msg.1>
+opam-version: "2.0"
+### opam reinstall msg
+The following actions will be performed:
+=== recompile 1 package
+  - recompile msg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   msg.1
+-> installed msg.1
+Done.
+### opam var msg:smtg
+something
+### <pkg:msg.1>
+opam-version: "2.0"
+messages: [
+  "Hej!" { ?_:smtg }
+  ">>smtg is undefined<<" { !?_:smtg }
+]
+### opam reinstall msg
+The following actions will be performed:
+=== recompile 1 package
+  - recompile msg 1  Hej!
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   msg.1
+-> installed msg.1
+Done.
+### :IV:10: post-msg :::
+### <pkg:post-msg.1>
+opam-version: "2.0"
+post-messages: [
+  "Bye!" { ?_:smtg }
+  ">>smtg is undefined<<" { !?_:smtg }
+]
+### <pkg:post-msg.1:post-msg.config>
+opam-version: "2.0"
+variables { smtg: "something" }
+### :IV:10:a: first install ::::
+### opam install post-msg
+The following actions will be performed:
+=== install 1 package
+  - install post-msg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed post-msg.1
+Done.
+
+<><> post-msg.1 installed successfully ><><><><><><><><><><><><><><><><><><><><>
+=> Bye!
+### :IV:10:b: reinstall ::::
+### <pkg:post-msg.1>
+opam-version: "2.0"
+### opam reinstall post-msg
+The following actions will be performed:
+=== recompile 1 package
+  - recompile post-msg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   post-msg.1
+-> installed post-msg.1
+Done.
+### opam var post-msg:smtg
+something
+### <pkg:post-msg.1>
+opam-version: "2.0"
+post-messages: [
+  "Bye!" { ?_:smtg }
+  ">>smtg is undefined<<" { !?_:smtg }
+]
+### opam reinstall post-msg
+The following actions will be performed:
+=== recompile 1 package
+  - recompile post-msg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   post-msg.1
+-> installed post-msg.1
+Done.
+
+<><> post-msg.1 installed successfully ><><><><><><><><><><><><><><><><><><><><>
+=> Bye!
+### :IV:11: avail :::
+### <pkg:avail.1>
+opam-version: "2.0"
+available: [ ?_:smtg ]
+### <pkg:avail.1:avail.config>
+opam-version: "2.0"
+variables { smtg: "something" }
+### :IV:11:a: first install ::::
+### opam install avail
+[ERROR] avail: unmet availability conditions: '?_:smtg'
+# Return code 5 #
+### :IV:11:b: reinstall ::::
+### <pkg:avail.1>
+opam-version: "2.0"
+### opam install avail
+The following actions will be performed:
+=== install 1 package
+  - install avail 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed avail.1
+Done.
+### opam var avail:smtg
+something
+### <pkg:avail.1>
+opam-version: "2.0"
+available: [ ?_:smtg ]
+### opam reinstall avail
+[ERROR] avail: unmet availability conditions: '?_:smtg'
+# Return code 5 #
