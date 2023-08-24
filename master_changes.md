@@ -98,6 +98,9 @@ users)
 
 ## Reftests
 ### Tests
+  * Add some additional test to tree, for `--dev` && `--no-switch` [#5687 @rjbou]
+  * switch-set: add test that checks unsetting `OPAMSWITCH` when it was set by `opam env --set-switch` on an already set `OPAMSWITCH` variable in environment [#5742 rjbou]
+  * Add test for filter operators in opam file [#5642 @rjbou]
 
 ### Engine
 
