@@ -97,6 +97,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add test for filter operators in opam file [#5642 @rjbou]
 
 ### Engine
   * Set `SHELL` to `/bin/sh` in Windows to ensure `opam env` commands are consistent [#5723 @dra27]
