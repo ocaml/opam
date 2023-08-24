@@ -97,6 +97,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add test for variables resolution in filters, for all fields [#5643 @rjbou]
 
 ### Engine
   * Set `SHELL` to `/bin/sh` in Windows to ensure `opam env` commands are consistent [#5723 @dra27]
