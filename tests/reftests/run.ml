@@ -151,6 +151,7 @@ type filt_sort =
   | GrepV
 
 let escape_regexps s =
+let r =
   let buf = Buffer.create (String.length s * 2) in
   String.iter (function
     | ('|' | '(' | ')' | '*' | '+' | '?'
@@ -158,6 +159,9 @@ let escape_regexps s =
     | c -> Buffer.add_char buf c
   ) s;
   Buffer.contents buf
+  in
+  OpamConsole.error "%S -> %S" s r;
+  r
 
 let str_replace_path ?escape whichway filters s =
   let s =
@@ -182,8 +186,16 @@ let str_replace_path ?escape whichway filters s =
         ) in
       match by with
       | Sed by ->
+(*
+      OpamConsole.error "sed %S" by;
+      OpamConsole.error "bef %s" s;
+*)
+      let r =
         Re.replace (Re.compile re_path) s ~f:(fun g ->
             escape_regexps by ^ escape_backslashes (whichway (Re.Group.(get g (nb_groups g - 1)))))
+            in
+(*             OpamConsole.error "aft %s" r ; *)
+            r
       | Grep | GrepV ->
         if (by = Grep) = Re.execp (Re.compile re) s then s else "\\c")
     s filters
@@ -421,6 +433,8 @@ module Parse = struct
       List.map (fun gr -> Group.get gr 0) grs
     in
     let get_str ?escape s =
+(*     OpamConsole.error "%s -> %s" s (get_str s); *)
+
       str_replace_path ?escape OpamSystem.back_to_forward
         (filters_of_var vars)
         (get_str s)
@@ -435,6 +449,7 @@ module Parse = struct
       | ("|"|">$") :: _ as rewr ->
         let rec get_rewr (unordered, sort, acc) = function
           | "|" :: re :: "->" :: str :: r ->
+(*           OpamConsole.error "RE %s GGRE %s" re (get_str ~escape:`Regexps re); *)
             get_rewr (unordered, sort, (posix_re re, Sed (get_str str)) :: acc) r
           | "|" :: "grep" :: "-v" :: re :: r ->
             get_rewr (unordered, sort, (posix_re re, GrepV) :: acc) r

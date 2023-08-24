@@ -178,6 +178,7 @@ users)
   * Add a test showing the behaviour of `opam switch list-available` [#6098 @kit-ty-kate]
   * Add a test for git packages with submodules [#6132 @kit-ty-kate]
   * Add basic test for `install --check` [#6122 @rjbou]
+  * Add test for variables resolution in filters, for all fields [#5643 @rjbou]
 
 ### Engine
   * Add a test filtering mechanism [#6105 @Keryan-dev]
