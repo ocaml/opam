@@ -359,11 +359,11 @@ Here is a full example:
 
 #### Usage
 
-Variables may appear at a few different places in opam files and configuration.
+Variables may appear at a few different places in `opam` files and configuration.
 They can be used in two forms:
 
-- raw idents: `foo < bar`
-- within strings, using _interpolation_, when enclosed in `%{` and `}%`:
+- Raw idents: `foo < bar`
+- Within strings, using _interpolation_, when enclosed in `%{` and `}%`:
   `"%{foo}%/bar"`
 
 For both forms, and within values that allow them, the variables are replaced by
@@ -699,7 +699,7 @@ used by opam.
 These files are intended to be publicly distributed as part of public
 repositories, initial distributions, or packages.
 
-#### repo
+#### `repo`
 <a id="Repospecification"></a>
 
 The `repo` file is placed at the root of a repository and allows one to specify
@@ -726,7 +726,7 @@ some specifics of the repository. It has the following optional fields:
   Messages that will be printed to the user on initialisation or updates of this
   repository, with optional conditions.
 
-#### opamrc
+#### `opamrc`
 
 This file has a format close to that of [config](#config) and can be used to
 define an initial setup for opam. When running `opam init`, if `~/.opamrc` or
@@ -1153,7 +1153,7 @@ files.
   extra fields prefixed with `x-` can be defined for use by external tools. Opam
   will ignore them except for some search operations.
 
-#### descr
+#### `descr`
 
 Descr is a plain UTF-8 text file without specific syntactic constraints. The
 first line of the file defines the package's synopsis, while the rest defines
@@ -1164,7 +1164,7 @@ This information can be embedded in `opam` package definition files using the
 fields since opam version 2.0. However, if a `descr` file is present alongside
 the `opam` file, it takes precedence.
 
-#### url
+#### `url`
 
 The `url` file describes the source of the package and how it may be obtained.
 It has the following fields:
@@ -1193,7 +1193,7 @@ of an `opam` file, which is the preferred way. You shouldn't have both a `url`
 file and an `opam` file with a `url {}` section. In that case, the `url` file
 will be ignored with a warning.
 
-#### files/
+#### `files/`
 
 A special subdirectory that can appear in package definition directories
 alongside the `opam` file.
@@ -1208,7 +1208,7 @@ this subdirectory.
 Also see the [`extra-sources:`](#opamsection-extra-sources) opam section, which has
 a similar behaviour and is processed before the `files/` are copied.
 
-#### <pkgname>.install
+#### `<pkgname>.install`
 <a id="packagenameinstall"></a>
 
 This file format describes the installation from a source directory to an
@@ -1275,7 +1275,7 @@ The following are treated slightly differently:
   requires files to specify an absolute destination, and the user will be
   prompted before the installation is done.
 
-#### <pkgname>.config
+#### `<pkgname>.config`
 
 This file is used by packages to give opam specific options upon
 installation. A file with this name will be installed by opam into
@@ -1304,7 +1304,7 @@ and [`switch-config`](#switch-config) can be manually edited to set configuratio
 options when opam isn't running. [`switch-state`](#switch-state) and
 [`repos-config`](#repos-config) store internal state and are documented here, but they shouldn't be edited except by opam.
 
-#### config
+#### `config`
 
 This file is stored as `~/.opam/config` and defines global configuration options
 for opam. Field values can be displayed and some of
@@ -1511,7 +1511,7 @@ them modified with [`opam option --global`](man/opam-option.html).
   Heritage](www.softwareheritage.org) archive, if the `swhid` is present in the
   opam file.
 
-#### switch-config
+#### `switch-config`
 
 This file is located in `<switch-prefix>/.opam-switch/switch-config` and
 contains configuration options specific to that switch:
@@ -1560,7 +1560,7 @@ contains configuration options specific to that switch:
 As [config](#config), field values can be displayed and some of them modified
 with [`opam option`](man/opam-option.html).
 
-#### switch-state
+#### `switch-state`
 
 This file, located at `<switch-prefix>/.opam-switch/switch-state`, is used by
 opam to store the current state of a switch. All
@@ -1585,7 +1585,7 @@ fields are lists of `<package>` (_i.e.,_ `[ "<pkgname>.<version>" ... ]`).
   the package definition and modify its source URL. Otherwise, the package is
   simply pinned to the given version.
 
-#### repos-config
+#### `repos-config`
 
 This file is at `~/.opam/repo/repos-config` and lists all package repositories
 configured on the system and their source URLs.
