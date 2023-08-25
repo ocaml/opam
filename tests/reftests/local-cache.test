@@ -76,16 +76,16 @@ build: [ "test" "-f" "hello" ]
 url {
   src: "archive.tgz"
   checksum: [
-    "sha256=good-sha256"
-    "md5=good-md5"
+    "sha256=archive-sha256"
+    "md5=archive-md5"
   ]
 }
 ### <update-hashes.sh>
 set -ue
 
 for p in `ls REPO/packages/*/*/opam`; do
-  sed -i.bak "s/good-md5/$ARCHIVE_MD5/" $p
-  sed -i.bak "s/good-sha256/$ARCHIVE_SHA256/" $p
+  sed -i.bak "s/archive-md5/$ARCHIVE_MD5/" $p
+  sed -i.bak "s/archive-sha256/$ARCHIVE_SHA256/" $p
 done
 ### sh update-hashes.sh
 ### opam update
@@ -283,7 +283,7 @@ build: [ "test" "-f" "hello" ]
 url {
   src: "archive.tgz"
   checksum: [
-    "sha256=good-sha256"
+    "sha256=archive-sha256"
   ]
 }
 ### sh update-hashes.sh
