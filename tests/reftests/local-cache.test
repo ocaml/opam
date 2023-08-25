@@ -63,6 +63,7 @@ sha256=$(check "$SHA256_PATH")
 
 echo "MD5: $md5"
 echo "SHA256: $sha256"
+### ::: Setup: archives in url section :::
 ### <pkg:good-sha256.1>
 opam-version: "2.0"
 maintainer: "nobody"
@@ -108,9 +109,11 @@ done
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
 ### ::: End setup :::
-### opam switch create default --empty
-### :I:11: Change archive in cache
-### :I:11:a: install with removed md5 frome cache, and kept sha256
+### opam switch create robur --empty
+### :::::::::::::::::
+### :II: Cache manipulation
+### :::::::::::::::::
+### :II:1: install with removed md5 frome cache, and kept sha256
 ### opam install good-sha256-good-md5
 The following actions will be performed:
 === install 1 package
@@ -147,7 +150,7 @@ Done.
 ### sh check-cache.sh
 MD5: not found
 SHA256: archive, with matching checksum
-### :I:11:b: install with removed sha256 frome cache, and kept md5
+### :II:2: install with removed sha256 frome cache, and kept md5
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### opam reinstall good-sha256-good-md5
@@ -187,7 +190,7 @@ Done.
 ### sh check-cache.sh
 MD5: link, to sha256 archive
 SHA256: archive, with matching checksum
-### :I:11:c: corrupt md5 archive in cache
+### :II:3: corrupt md5 archive in cache
 ### sh check-cache.sh
 MD5: link, to sha256 archive
 SHA256: archive, with matching checksum
@@ -217,7 +220,7 @@ Done.
 ### sh check-cache.sh
 MD5: archive, with mismatching checksum
 SHA256: archive, with matching checksum
-### :I:11:d: corrupt sha256 archive in cache
+### :II:4: corrupt sha256 archive in cache
 ### sh check-cache.sh
 MD5: archive, with mismatching checksum
 SHA256: archive, with matching checksum
@@ -252,7 +255,7 @@ Done.
 ### sh check-cache.sh
 MD5: link, to sha256 archive
 SHA256: archive, with matching checksum
-### :I:11:e: Both corrupted
+### :II:5: Both corrupted
 ### opam remove good-sha256-good-md5
 The following actions will be performed:
 === remove 1 package
@@ -284,6 +287,7 @@ Done.
 ### sh check-cache.sh
 MD5: link, to sha256 archive
 SHA256: archive, with matching checksum
+### :II:6: Corrupt linked archive
 ### opam install good-sha256.1
 The following actions will be performed:
 === install 1 package
