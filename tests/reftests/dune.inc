@@ -18,6 +18,24 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:admin.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-archive)
+ (action
+  (diff archive.test archive.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-archive)))
+
+(rule
+ (targets archive.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:archive.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-assume-built)
  (action
   (diff assume-built.test assume-built.out)))
@@ -727,24 +745,6 @@
   (with-stdout-to
    %{targets}
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:list.unix.test} %{read-lines:testing-env}))))
-
-(rule
- (alias reftest-local-cache)
- (action
-  (diff local-cache.test local-cache.out)))
-
-(alias
- (name reftest)
- (deps (alias reftest-local-cache)))
-
-(rule
- (targets local-cache.out)
- (deps root-N0REP0)
- (package opam)
- (action
-  (with-stdout-to
-   %{targets}
-   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:local-cache.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-lock)
