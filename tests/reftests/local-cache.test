@@ -63,6 +63,20 @@ sha256=$(check "$SHA256_PATH")
 
 echo "MD5: $md5"
 echo "SHA256: $sha256"
+### <pkg:good-sha256.1>
+opam-version: "2.0"
+maintainer: "nobody"
+authors: "nobody neither"
+homepage: "https://no.bo.dy"
+bug-reports: "https://still.nobo.dy"
+dev-repo: "git+https://no.were"
+license: "MIT"
+synopsis: "Initially empty"
+build: [ "test" "-f" "hello" ]
+url {
+  src: "archive.tgz"
+  checksum: [ "sha256=archive-sha256" ]
+}
 ### <pkg:good-sha256-good-md5.1>
 opam-version: "2.0"
 maintainer: "nobody"
@@ -267,31 +281,6 @@ The following actions will be performed:
 -> retrieved good-sha256-good-md5.1  (file://${BASEDIR}/archive.tgz)
 -> installed good-sha256-good-md5.1
 Done.
-### sh check-cache.sh
-MD5: link, to sha256 archive
-SHA256: archive, with matching checksum
-### <pkg:good-sha256.1>
-opam-version: "2.0"
-maintainer: "nobody"
-authors: "nobody neither"
-homepage: "https://no.bo.dy"
-bug-reports: "https://still.nobo.dy"
-dev-repo: "git+https://no.were"
-license: "MIT"
-synopsis: "Initially empty"
-build: [ "test" "-f" "hello" ]
-url {
-  src: "archive.tgz"
-  checksum: [
-    "sha256=archive-sha256"
-  ]
-}
-### sh update-hashes.sh
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### sh check-cache.sh
 MD5: link, to sha256 archive
 SHA256: archive, with matching checksum
