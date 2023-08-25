@@ -11,12 +11,13 @@ Hi robur!
 ### echo "$OPAMROOT/download-cache/sha256/$PRE_SHA256/$ARCHIVE_SHA256" >$ ARCHIVE_SHA256_PATH
 ### <check-cache.sh>
 set -ue
-eval "ARCHIVE_MD5_PATH=\"$ARCHIVE_MD5_PATH\""
-eval "ARCHIVE_SHA256_PATH=\"$ARCHIVE_SHA256_PATH\""
+
+eval "MD5_PATH=\"$ARCHIVE_MD5_PATH\""
+eval "SHA256_PATH=\"$ARCHIVE_SHA256_PATH\""
 
 if command -v cygpath 2> /dev/null > /dev/null ; then
-  ARCHIVE_MD5_PATH=`cygpath -u "$ARCHIVE_MD5_PATH"`
-  ARCHIVE_SHA256_PATH=`cygpath -u "$ARCHIVE_SHA256_PATH"`
+  MD5_PATH=`cygpath -u "$MD5_PATH"`
+  SHA256_PATH=`cygpath -u "$SHA256_PATH"`
 fi
 
 check2sum () {
@@ -35,9 +36,9 @@ check () {
   if [ -L "$path" ] ; then
     out="link,"
     realpath=`readlink -f "$path"` || true
-    if [ "$realpath" = "$ARCHIVE_MD5_PATH" ]; then
+    if [ "$realpath" = "$MD5_PATH" ]; then
       out="$out to md5 archive"
-    elif [ "$realpath" = "$ARCHIVE_SHA256_PATH" ]; then
+    elif [ "$realpath" = "$SHA256_PATH" ]; then
       out="$out to sha256 archive"
     else
       out="$out to unknown path $realpath"
@@ -57,8 +58,9 @@ check () {
   echo "$out"
 }
 
-md5=$(check "$ARCHIVE_MD5_PATH")
-sha256=$(check "$ARCHIVE_SHA256_PATH")
+md5=$(check "$MD5_PATH")
+sha256=$(check "$SHA256_PATH")
+
 echo "MD5: $md5"
 echo "SHA256: $sha256"
 ### <update-hash.sh>
