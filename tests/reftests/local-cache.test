@@ -150,9 +150,9 @@ Done.
 ### sh check-cache.sh
 MD5: not found
 SHA256: archive, with matching checksum
-### :II:2: install with removed sha256 frome cache, and kept md5
 ### opam clean --download-cache
 Clearing cache of downloaded files
+### :II:2: install with removed sha256 frome cache, and kept md5
 ### opam reinstall good-sha256-good-md5
 The following actions will be performed:
 === recompile 1 package
@@ -287,7 +287,19 @@ Done.
 ### sh check-cache.sh
 MD5: link, to sha256 archive
 SHA256: archive, with matching checksum
+### opam clean --download-cache
+Clearing cache of downloaded files
 ### :II:6: Corrupt linked archive
+### opam reinstall good-sha256-good-md5.1
+The following actions will be performed:
+=== recompile 1 package
+  - recompile good-sha256-good-md5 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved good-sha256-good-md5.1  (file://${BASEDIR}/archive.tgz)
+-> removed   good-sha256-good-md5.1
+-> installed good-sha256-good-md5.1
+Done.
 ### opam install good-sha256.1
 The following actions will be performed:
 === install 1 package
