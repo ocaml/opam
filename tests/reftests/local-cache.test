@@ -58,11 +58,8 @@ check () {
   echo "$out"
 }
 
-md5=$(check "$MD5_PATH")
-sha256=$(check "$SHA256_PATH")
-
-echo "MD5: $md5"
-echo "SHA256: $sha256"
+echo "MD5: $(check "$MD5_PATH")"
+echo "SHA256: $(check "$SHA256_PATH")"
 ### ::: Setup: archives in url section :::
 ### <pkg:good-sha256.1>
 opam-version: "2.0"
