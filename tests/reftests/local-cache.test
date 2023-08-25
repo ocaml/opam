@@ -35,7 +35,7 @@ check () {
   path=$1
   if [ -L "$path" ] ; then
     out="link,"
-    realpath=`readlink -f "$path"` || true
+    realpath=`realpath -mLP "$path"`
     if [ "$realpath" = "$MD5_PATH" ]; then
       out="$out to md5 archive"
     elif [ "$realpath" = "$SHA256_PATH" ]; then
