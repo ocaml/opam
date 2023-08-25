@@ -63,27 +63,6 @@ sha256=$(check "$SHA256_PATH")
 
 echo "MD5: $md5"
 echo "SHA256: $sha256"
-### <update-hash.sh>
-set -ue
-pkg=$1
-kind=$2
-hsh=$3
-case "$hsh-$kind" in
-  md5-archive)
-    HSH=$ARCHIVE_MD5
-    break;;
-  sha256-archive)
-    HSH=$ARCHIVE_SHA256
-    break;;
-  md5-patch)
-    HSH=$PATCH_MD5
-    break;;
-  sha256-patch)
-    HSH=$PATCH_SHA256
-    break;;
-esac
-pkgpath="REPO/packages/${pkg%.*}/$pkg"
-sed -i.bak "s/good-$hsh/$HSH/" "$pkgpath/opam"
 ### <pkg:good-sha256-good-md5.1>
 opam-version: "2.0"
 maintainer: "nobody"
@@ -101,13 +80,20 @@ url {
     "md5=good-md5"
   ]
 }
-### sh update-hash.sh good-sha256-good-md5.1 archive md5
-### sh update-hash.sh good-sha256-good-md5.1 archive sha256
+### <update-hashes.sh>
+set -ue
+
+for p in `ls REPO/packages/*/*/opam`; do
+  sed -i.bak "s/good-md5/$ARCHIVE_MD5/" $p
+  sed -i.bak "s/good-sha256/$ARCHIVE_SHA256/" $p
+done
+### sh update-hashes.sh
 ### opam update
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
+### ::: End setup :::
 ### opam switch create default --empty
 ### :I:11: Change archive in cache
 ### :I:11:a: install with removed md5 frome cache, and kept sha256
@@ -300,7 +286,7 @@ url {
     "sha256=good-sha256"
   ]
 }
-### sh update-hash.sh good-sha256.1 archive sha256
+### sh update-hashes.sh
 ### opam update
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
