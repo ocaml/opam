@@ -3,12 +3,8 @@ N0REP0
 ### <hello>
 Hi robur!
 ### tar czf archive.tgz hello
-### <p.patch>
-Trust me, im' a patch!
 ### openssl md5 archive.tgz | '.*= ' -> '' >$ ARCHIVE_MD5
 ### openssl sha256 archive.tgz | '.*= ' -> '' >$ ARCHIVE_SHA256
-### openssl md5 p.patch | '.*= ' -> '' >$ PATCH_MD5
-### openssl sha256 p.patch | '.*= ' -> '' >$ PATCH_SHA256
 ### sh -c "echo '$ARCHIVE_MD5' | cut -c 1-2" >$ PRE_MD5
 ### echo "$OPAMROOT/download-cache/md5/$PRE_MD5/$ARCHIVE_MD5" >$ ARCHIVE_MD5_PATH
 ### sh -c "echo '$ARCHIVE_SHA256' | cut -c 1-2" >$ PRE_SHA256
@@ -202,7 +198,7 @@ The following actions will be performed:
 -> removed   good-sha256-good-md5.1
 Done.
 ### rm "$ARCHIVE_MD5_PATH"
-### tar czf "$ARCHIVE_MD5_PATH" p.patch
+### tar czf "$ARCHIVE_MD5_PATH" check-cache.sh
 ### sh check-cache.sh
 MD5: archive, with mismatching checksum
 SHA256: archive, with matching checksum
@@ -233,7 +229,7 @@ The following actions will be performed:
 Done.
 ### cp archive.tgz "$ARCHIVE_MD5_PATH"
 ### rm "$ARCHIVE_SHA256_PATH"
-### tar czf "$ARCHIVE_SHA256_PATH" p.patch
+### tar czf "$ARCHIVE_SHA256_PATH" check-cache.sh
 ### sh check-cache.sh
 MD5: archive, with matching checksum
 SHA256: archive, with mismatching checksum
@@ -264,9 +260,9 @@ The following actions will be performed:
 -> removed   good-sha256-good-md5.1
 Done.
 ### rm "$ARCHIVE_SHA256_PATH"
-### tar czf "$ARCHIVE_SHA256_PATH" p.patch
+### tar czf "$ARCHIVE_SHA256_PATH" check-cache.sh
 ### rm "$ARCHIVE_MD5_PATH"
-### tar czf "$ARCHIVE_MD5_PATH" p.patch
+### tar czf "$ARCHIVE_MD5_PATH" check-cache.sh
 ### sh check-cache.sh
 MD5: archive, with mismatching checksum
 SHA256: archive, with mismatching checksum
@@ -353,7 +349,7 @@ The following actions will be performed:
 -> removed   good-sha256.1
 Done.
 ### rm "$ARCHIVE_SHA256_PATH"
-### tar czf "$ARCHIVE_SHA256_PATH" p.patch
+### tar czf "$ARCHIVE_SHA256_PATH" check-cache.sh
 ### sh check-cache.sh
 MD5: link, to sha256 archive
 SHA256: archive, with mismatching checksum
