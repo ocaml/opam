@@ -1279,7 +1279,7 @@ let try_read rd f =
     let f = OpamFile.filename f in
     Some (OpamFilename.(Base.to_string (basename f)), bf)
 
-let add_aux_files ?dir ~files_subdir_hashes opam =
+let add_aux_files ?dir ?(files_subdir_hashes=false) opam =
   let dir = match dir with
     | None ->
       OpamFile.OPAM.get_metadata_dir ~repos_roots:(fun r ->
@@ -1330,7 +1330,6 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
       | _, (None, None)  -> opam
     in
     let opam =
-      if not files_subdir_hashes then opam else
       let extra_files =
         OpamFilename.opt_dir files_dir >>| fun dir ->
         OpamFilename.rec_files dir
@@ -1341,20 +1340,27 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
       match OpamFile.OPAM.extra_files opam, extra_files with
       | None, None -> opam
       | None, Some ef ->
-        log ~level:2
-          "Missing extra-files field for %a for %a, adding them."
-          (slog @@ OpamStd.List.concat_map ", "
-             (fun (_,f) -> OpamFilename.Base.to_string f)) ef
-          OpamStd.Op.(slog @@ OpamPackage.to_string @* OpamFile.OPAM.package)
-          opam;
-        let ef =
-          List.map
-            (fun (file, basename) ->
-               basename,
-               OpamHash.compute (OpamFilename.to_string file))
-            ef
+        let log ?level act =
+          log ?level
+            "Missing extra-files field for %a for %a, %s them."
+            (slog @@ OpamStd.List.concat_map ", "
+               (fun (_,f) -> OpamFilename.Base.to_string f)) ef
+            OpamStd.Op.(slog @@ OpamPackage.to_string @* OpamFile.OPAM.package)
+            opam act
         in
-        OpamFile.OPAM.with_extra_files ef opam
+        if files_subdir_hashes then
+          (log ~level:2 "adding";
+           let ef =
+             List.map
+               (fun (file, basename) ->
+                  basename,
+                  OpamHash.compute (OpamFilename.to_string file))
+               ef
+           in
+           OpamFile.OPAM.with_extra_files ef opam)
+        else
+          (log "ignoring";
+           opam)
       | Some ef, None ->
         log "Missing expected extra files %s at %s/files"
           (OpamStd.List.concat_map ", "
@@ -1401,7 +1407,7 @@ let read_opam dir =
     OpamFile.make (dir // "opam")
   in
   match try_read OpamFile.OPAM.read_opt opam_file with
-  | Some opam, None -> Some (add_aux_files ~dir ~files_subdir_hashes:true opam)
+  | Some opam, None -> Some (add_aux_files ~dir ~files_subdir_hashes:false opam)
   | _, Some err ->
     OpamConsole.warning
       "Could not read file %s. skipping:\n%s"

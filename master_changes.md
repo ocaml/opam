@@ -83,6 +83,7 @@ users)
 ## Repository
  * Mitigate curl/curl#13845 by falling back from --write-out to --fail if exit code 43 is returned by curl [#6168 @dra27 - fix #6120]
   * Silently mark packages requiring an unsupported version of opam as unavailable [#5665 @kit-ty-kate - fix #5631]
+  * When loading a repository, don't automatically populate `extra-files:` field with found files in `files/` [#5564 @rjbou]
 
 ## Lock
 
@@ -265,6 +266,8 @@ users)
 ## opam-state
  * `OpamStateConfig.opamroot_with_provenance`: restore previous behaviour to `OpamStateConfig.opamroot` for compatibility with third party code [#6047 @dra27]
   * `OpamSwitchState.{,reverse_}dependencies`: make `unavailable` a non-optional argument to enforce speedups when availability information is not needed [#5317 @kit-ty-kate]
+  * `OpamFilteTools.add_aux_files`: ignore non registered extra-files and make the `files_subdir_hashes` argument optional (defaults to `false`) [#5564 @@rjbou]
+  * `OpamFileTools`: `read_opam` & `read_repo_opam` no more add non registered extra-files [#5564 @rjbou]
 
 ## opam-solver
  * `OpamCudfCriteria`, `OpamBuiltinZ3.Syntax`: Move `OpamBuiltinZ3.Syntax` into a dedicated module `OpamCudfCriteria` [#6130 @kit-ty-kate]

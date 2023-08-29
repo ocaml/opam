@@ -52,7 +52,9 @@ following hierarchy:
   they override what may already be present in the `opam` file
 - [`/packages/<pkgname>/<pkgname>.<version>/files/`](#files): contains files
   that are copied over the root of the source tree of the given package before
-  it gets used.
+  it gets used. Before opam 2.3, all files in this directory were copied. 
+  Since opam 2.3 _only_ the files listed in the
+  [`extra-files`](#opamfield-extra-files) field are copied.
 - `/cache/`: cached package files, by checksum. Note that the cache location is
   configured in the [repo](#repofield-archive-mirrors) file, this name is only
   where `opam admin cache` puts it by default.
@@ -1216,8 +1218,10 @@ files.
   for path portability of environment variables on Windows.
 
 - <a id="opamfield-extra-files">`extra-files: [ [ <string> <checksum> ] ... ]`</a>:
-  optionally lists the files below `files/` with their checksums. Used
-  internally for integrity verifications.
+  lists the files below `files/` with their checksums. Used
+  internally for integrity verification. Before opam 2.3, listing files in
+  this field was optional, but since opam 2.3 all files must be listed in
+  this field or they will not be copied from the `files/` directory.
 
 - <a id="opamfield-pin-depends">`pin-depends: [ [ <package> <URL> ] ... ]`</a>:
   this field has no effect on the package repository, but is useful for
@@ -1294,7 +1298,10 @@ will be copied over the root of the package source. If already present, files
 are overwritten, and directories are recursively merged. [`opam`](#opam) file
 fields like [`patches:`](#opamfield-patches) refer to files at that same root,
 so patches specific to opam are typically included in
-this subdirectory.
+this subdirectory. Since opam 2.3, files must be listed in the
+[`extra-files:`](#opamfield-extra-files) or they are ignored. Before
+opam 2.3, all files were copied regardless of whether they appeared
+in the `extra-files` list.
 
 Also see the [`extra-sources:`](#opamsection-extra-sources) opam section, which has
 a similar behaviour and is processed before the `files/` are copied.
