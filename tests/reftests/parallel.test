@@ -31,6 +31,26 @@ install: [ "sh" "shout.sh" name ]
 if [ $# -eq 1 ]; then
   echo "finally installed $1"
 fi
+### <hash.sh>
+set -ue
+for nv in REPO/packages/*/*; do
+  n=`echo $nv | cut -f3 -d/`
+  nv=`echo $nv | cut -f4 -d/`
+  path=REPO/packages/$n/$nv
+  if [ -d $path/files ]; then
+    echo "extra-files:[" >> $path/opam
+    for file in `ls $path/files`; do
+      echo "  [\"$file\" \"md5=`openssl md5 $path/files/$file | cut -f2 -d' '`\"]" >> $path/opam
+    done
+    echo   "]" >> $path/opam
+  fi
+done
+### sh hash.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create parallel --empty
 ### opam install foo bar baz qux top -vv | grep -v '^Processing' | sed-cmd sh | unordered
 The following actions will be performed:

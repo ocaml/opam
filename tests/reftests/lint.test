@@ -568,6 +568,7 @@ echo "extra-files: [ \"more-file-good-md5\" \"md5=$hsh\" ]" >> REPO/packages/lin
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam lint --package lint.1
 <default>/lint.1: Errors.
              error 53: Mismatching 'extra-files:' field: "more-file-bad-md5"
