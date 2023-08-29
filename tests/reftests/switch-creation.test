@@ -13,6 +13,18 @@ build: ["sh" "./prefix"]
 install: ["cp" "pref" "%{lib}%/prefix"]
 ### <pkg:baz.1:prefix>
 opam var prefix --safe > pref
+### <hash.sh>
+set -ue
+file=prefix
+path=REPO/packages/baz/baz.1
+MD5=$(openssl md5 $path/files/$file | cut -d' ' -f2)
+echo "extra-files: [ \"$file\" \"md5=$MD5\"]" >> $path/opam
+### sh hash.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### # switch not undefined for opam calls in build, on build creation
 ### opam switch create undef-prefix baz
 

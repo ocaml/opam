@@ -54,6 +54,7 @@ users)
   * Update W59 (no checksum in `url`) to always display a warning, untie it from `--check-upstream` option [#5561 @rjbou]
 
 ## Repository
+  * When loading a repository, no more automatically populate `extra-files:` field with found files in `files/` [#5564 @rjbou]
 
 ## Lock
 
@@ -120,6 +121,8 @@ users)
 ## opam-repository
 
 ## opam-state
+  * `OpamFilteTools.add_aux_files`: ignore non registered extra-files [#5564 @@rjbou]
+  * `OpamFileTools`: `read_opam` & `read_repo_opam` no more add non registered extra-files [#5564 @rjbou]
 
 ## opam-solver
 

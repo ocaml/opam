@@ -64,6 +64,34 @@ hellow
 bonjour
 ### <pkg:lot-of-files.~dev:dosiero>
 saluton
+### <hash.sh>
+set -ue
+if [ $# -eq 0 ]; then
+  nvs=REPO/packages/*/*
+else
+  nvs=""
+  for nv in $@; do
+    nvs="REPO/packages/${nv%.*}/$nv $nvs"
+  done
+fi
+for nv in $nvs; do
+  n=`echo $nv | cut -f3 -d/`
+  nv=`echo $nv | cut -f4 -d/`
+  path=REPO/packages/$n/$nv
+  if [ -d $path/files ]; then
+    echo "extra-files:[" >> $path/opam
+    for file in `ls $path/files`; do
+      echo "  [\"$file\" \"md5=`openssl md5 $path/files/$file | cut -f2 -d' '`\"]" >> $path/opam
+    done
+    echo   "]" >> $path/opam
+  fi
+done
+### sh hash.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMYES=1
 ### opam switch create inst --empty
 ### OPAMPRECISETRACKING=1 OPAMDEBUGSECTIONS="TRACK ACTION" OPAMDEBUG=-1
@@ -243,6 +271,12 @@ lib_root: [
 share: [ "a-file" ]
 ### <pkg:no-specified-dir.1:a-file>
 touch
+### sh hash.sh no-specified-dir.1
+### opam update --debug-level=0
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUGSECTIONS="SYSTEM TRACK" OPAMDEBUG=-1
 ### opam install no-specified-dir | '[0-9]{14}' -> "now"
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/backup
@@ -253,8 +287,8 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1
-SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/no-specified-dir.install -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/no-specified-dir.install
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/a-file -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/a-file
+SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/no-specified-dir.install -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/no-specified-dir.install
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/lib/another
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/lib/another/somedir
 SYSTEM                          install ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/a-file -> ${BASEDIR}/OPAM/rem-dir/lib/another/somedir/an-installed-file (644)
@@ -267,8 +301,8 @@ TRACK                           after install: 9 elements, 7 added, scanned in 0
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files
-SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/no-specified-dir.install -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files/no-specified-dir.install
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/a-file -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files/a-file
+SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/no-specified-dir.install -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files/no-specified-dir.install
 Done.
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/backup/state-now.export
 ### ocaml cat.ml rem-dir no-specified-dir
