@@ -369,6 +369,7 @@ let main_test_job ~analyse_job ~build_linux_job ~build_windows_job:_ ~build_macO
   let host = host_of_platform platform in
   let ocamlv = "${{ matrix.ocamlv }}" in
   job ~oc ~workflow ?section ~runs_on:(Runner [runner]) ~env:[("OPAM_TEST", "1")] ~matrix ~needs ("Test-" ^ name_of_platform platform)
+    ++ only_on MacOS (install_sys_packages ["coreutils"] ~descr:"Install gnu coreutils" [MacOS])
     ++ checkout ()
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
     ++ cache Archives

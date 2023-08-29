@@ -102,10 +102,13 @@ users)
 ## Reftests
 ### Tests
   * Lint: add test for W53, to test extra file with good hash [#5639 @rjbou]
+  * Add several checksum & cache validation checks for archive, extra-source section, and extra-file field [#5560 @rjbou]
+  * Move local-cache into archive-field-checks test [#5560 @rjbou]
 
 ### Engine
 
 ## Github Actions
+  * Add coreutils install for cheksum validation tests [#5560 @rjbou]
 
 ## Doc
 

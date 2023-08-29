@@ -325,6 +325,8 @@ jobs:
     env:
       OPAM_TEST: 1
     steps:
+    - name: Install gnu coreutils
+      run: brew install coreutils
     - name: Checkout tree
       uses: actions/checkout@v3
     - name: src_ext/archives and opam-repository Cache
