@@ -861,7 +861,7 @@ extra-source "notrelative" {
   checksum: "md5=00000000000000000000000000000000"
 }
 pin-depends: [
-  [ "pinned.1" "/my/../pinned/package" ]
+  [ "pinned.1" "file:///my/../pinned/package" ]
 ]
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Errors.
