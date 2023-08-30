@@ -67,7 +67,7 @@ set -ue
 file=meta-compiler.config
 path=REPO/packages/meta-compiler/meta-compiler.1
 MD5=$(openssl md5 $path/files/$file | cut -d' ' -f2)
-echo "extra-files: [ \"meta-compiler.config\" \"md5=$MD5\"]" >> $path/opam
+echo "extra-files: [ \"$file\" \"md5=$MD5\"]" >> $path/opam
 ### sh hash.sh
 ### opam update
 

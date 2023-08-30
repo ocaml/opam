@@ -16,6 +16,13 @@ build: [
 ]
 ### <pkg:extra.3:extra_uniq.ml>
 print_endline "I am a non shared code"
+### <hash.sh>
+set -ue
+file=extra_uniq.ml
+path=REPO/packages/extra/extra.3
+MD5=$(openssl md5 $path/files/$file | cut -d' ' -f2)
+echo "extra-files: [ \"$file\" \"md5=$MD5\"]" >> $path/opam
+### sh hash.sh
 ### <pkg:non-shared.4>
 opam-version: "2.0"
 build: [ "ocaml" "non-shared.ml" ]
@@ -73,6 +80,7 @@ build: [
   [ "ocaml" "extra_uniq.ml" ]
   [ "ocaml" "extra_source.ml" ]
 ]
+### sh hash.sh
 ### <extra/extra_source.ml>
 print_endline "I am an extra sourced code!"
 ### <pkg:non-shared.4>

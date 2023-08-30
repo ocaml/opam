@@ -46,6 +46,20 @@ build: [
   ["grep" "ploplop" "bar"]
   ["grep" "ploplop" "baz"]
 ]
+### <hash.sh>
+set -ue
+path=REPO/packages/pat-sub/pat-sub.0.1
+echo "extra-files:[" >> $path/opam
+for file in `ls $path/files`; do
+  echo "  [\"$file\" \"md5=`openssl md5 $path/files/$file | cut -f2 -d' '`\"]" >> $path/opam
+done
+echo   "]" >> $path/opam
+### sh hash.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create sw --empty
 ### OPAMDEBUGSECTIONS="ACTION" opam install pat-sub -y --debug --debug-level=-1
 The following actions will be performed:
