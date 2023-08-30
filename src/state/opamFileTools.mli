@@ -100,7 +100,7 @@ val read_repo_opam:
     [files_subdir_hashes] is [true], also adds the names and hashes of files
     found below 'files/' *)
 val add_aux_files:
-  ?dir:dirname -> files_subdir_hashes:bool -> OpamFile.OPAM.t -> OpamFile.OPAM.t
+  ?dir:dirname -> ?files_subdir_hashes:bool -> OpamFile.OPAM.t -> OpamFile.OPAM.t
 
 (** {2 Tools to manipulate the [OpamFile.OPAM.t] contents} *)
 val map_all_variables:
