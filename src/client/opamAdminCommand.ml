@@ -331,6 +331,100 @@ let packages_with_prefixes repo_root packages =
             (List.rev missing_pkgs)));
   pkgs_map
 
+let update_extrafiles_command_doc =
+  "Add extra-files to an opam repository."
+let update_extrafiles_command cli =
+  let command = "update-extrafiles" in
+  let doc = update_extrafiles_command_doc in
+  let man = [
+    `S Manpage.s_description;
+    `P "This command scans through package definitions, and add extrafiles \
+        field as requested."
+  ]
+  in
+  let hash_kinds = [`MD5; `SHA256; `SHA512] in
+  let hash_type_arg =
+    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_2) ["hash"]
+      "HASH_ALGO" "The hash, or hashes to be added"
+      Arg.(some (enum
+                   (List.map (fun k -> OpamHash.string_of_kind k, k)
+                      hash_kinds))) None
+  in
+  let packages =
+    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_2) ["p";"packages"]
+      "PACKAGES" "Only add extra files for the given packages"
+      Arg.(list OpamArg.package) []
+  in
+  let cmd global_options hash_type packages () =
+    OpamArg.apply_global_options cli global_options;
+    let repo_root = checked_repo_root () in
+    let pkg_prefixes = packages_with_prefixes repo_root packages in
+    let compute ?kind file =
+      OpamHash.compute ?kind (OpamFilename.to_string file)
+    in
+    let has_error =
+      OpamPackage.Map.fold (fun nv prefix has_error ->
+          let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
+          let opam = OpamFile.OPAM.read opam_file in
+          let has_error =
+            if OpamFile.exists (OpamRepositoryPath.url repo_root prefix nv) then
+              (OpamConsole.warning "Not updating external URL file at %s"
+                 (OpamFile.to_string
+                    (OpamRepositoryPath.url repo_root prefix nv));
+               true)
+            else has_error
+          in
+          let files_dir = OpamRepositoryPath.files repo_root prefix nv in
+          if OpamFilename.exists_dir files_dir then
+            (let files =
+               OpamFilename.rec_files files_dir
+               |> List.map (fun file ->
+                   file,
+                   OpamFilename.Base.of_string
+                     (OpamFilename.remove_prefix files_dir file))
+             in
+             let extra_files =
+               OpamStd.Option.default [] (OpamFile.OPAM.extra_files opam)
+             in
+             let extra_files = OpamFilename.Base.Map.of_list extra_files in
+             let xfiles =
+               List.fold_left (fun extra (file, base) ->
+                   match OpamFilename.Base.Map.find_opt base extra_files with
+                   | Some hash ->
+                     let kind = OpamHash.kind hash in
+                     let xhash = compute ~kind file in
+                     if OpamHash.compare hash xhash <> 0 then
+                       OpamFilename.Base.Map.add base
+                         (OpamStd.Option.map_default (fun kind ->
+                              compute ~kind file) xhash hash_type)
+                         extra
+                     else
+                       (match hash_type with
+                        | Some kind ->
+                          OpamFilename.Base.Map.add base (compute ~kind file)
+                            extra
+                        | None -> extra)
+                   | None ->
+                     OpamFilename.Base.Map.add base
+                       (compute ?kind:hash_type file) extra)
+                 extra_files files
+             in
+             if not (OpamFilename.Base.Map.equal
+                       OpamHash.equal extra_files xfiles) then
+               let xfiles = OpamFilename.Base.Map.bindings xfiles in
+               let opam1 = OpamFile.OPAM.with_extra_files xfiles opam in
+               OpamFile.OPAM.write_with_preserved_format opam_file opam1);
+          has_error)
+        pkg_prefixes false
+    in
+    if has_error then OpamStd.Sys.exit_because `Sync_error
+    else OpamStd.Sys.exit_because `Success
+  in
+  OpamArg.mk_command  ~cli OpamArg.(cli_from cli2_2) command ~doc ~man
+    Term.(const cmd $ global_options cli
+          $ hash_type_arg $ packages)
+
+
 let add_hashes_command_doc =
   "Add archive hashes to an opam repository."
 let add_hashes_command cli =
@@ -1127,6 +1221,7 @@ let admin_subcommands cli =
     filter_command cli;
     add_constraint_command cli;
     add_hashes_command cli;
+    update_extrafiles_command cli;
     help;
   ]
 

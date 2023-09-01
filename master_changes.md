@@ -80,6 +80,7 @@ users)
   * Add ppc64le and s390x support [#5420 @kit-ty-kate]
 
 ## Admin
+  * Add `add-extrafiles` command to add, check, and update `extra-files:` field according files present in `files/` directory [#5647 @rjbou]
 
 ## Opam installer
 
