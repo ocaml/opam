@@ -454,7 +454,7 @@ opam var         # opam 2.1.0
   on Win32 or Cygwin, or `"bsd"` on all bsds. Useful, _e.g.,_ to detect the main
   package manager
 - <a id="opamvar-os-version">`os-version`</a>:
-  the distribution's release id of the distribution, when applicable, or system otherwise
+  the distribution's release id, when applicable, or system otherwise
 
 Extra variables can be defined in the file `~/.opam/config` using the
 [`global-variables:`](#configfield-global-variables) (static) or
