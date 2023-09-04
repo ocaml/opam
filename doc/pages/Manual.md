@@ -111,8 +111,8 @@ The current switch can be selected in the following ways:
 - Through the `--switch <switch>` command-line flag, for a single command
 
 Switches have their own prefix, normally `~/.opam/<switch>`, where packages get
-installed ; to use what is installed in a switch, some environment variables need
-to be set, _e.g._ to make executables installed into `~/.opam/<switch>/bin`
+installed. To use what is installed in a switch, some environment variables need
+to be set, _e.g,._ to make executables that are installed into `~/.opam/<switch>/bin`
 visible, that directory needs to be added to `PATH`, but individual packages can
 define their own settings as well.
 
