@@ -3780,8 +3780,9 @@ let lint cli =
   let warnings =
     mk_opt ~cli cli_original ["warnings";"W"] "WARNS"
       "Select the warnings to show or hide. $(i,WARNS) should be a \
-       concatenation of $(b,+N), $(b,-N), $(b,+N..M), $(b,-N..M) to \
-       respectively enable or disable warning or error number $(b,N) or \
+       concatenation of $(b,+N), $(b,-N), $(b,@N), $(b,+N..M), \
+       $(b,-N..M), $(b,@N..M) to respectively enable, disable or \
+       enable-as-error warning or error number $(b,N) or \
        all warnings with numbers between $(b,N) and $(b,M) inclusive.\n\
        All warnings are enabled by default, unless $(i,WARNS) starts with \
        $(b,+), which disables all but the selected ones."
@@ -3866,6 +3867,10 @@ let lint cli =
       | None -> None
       | Some _ -> Some []
     in
+    let default_warn = match warnings_sel with
+      | (_, (`Enable | `EnableError)) :: _ -> `Disable
+      | (_, `Disable) :: _ | [] -> `Enable
+    in
     let err,json =
       List.fold_left (fun (err,json) opam_f ->
           try
@@ -3886,20 +3891,20 @@ let lint cli =
                 None
             in
             let enabled =
-              let default = match warnings_sel with
-                | (_,true) :: _ -> false
-                | _ -> true
-              in
               let map =
                 List.fold_left
-                  (fun acc (wn, enable) -> OpamStd.IntMap.add wn enable acc)
+                  (fun acc (wn, state) -> OpamStd.IntMap.add wn state acc)
                   OpamStd.IntMap.empty warnings_sel
               in
-              fun w -> try OpamStd.IntMap.find w map with Not_found -> default
+              fun w -> try OpamStd.IntMap.find w map with Not_found -> default_warn
             in
-            let warnings = List.filter (fun (n, _, _) -> enabled n) warnings in
-            let failed =
-              List.exists (function _,`Error,_ -> true | _ -> false) warnings
+            let warnings, failed =
+              List.fold_left (fun (warnings, failed) ((n, state, _) as warn) ->
+                  match enabled n, state with
+                  | `Enable, `Warning -> (warnings @ [warn], failed)
+                  | `Enable, `Error | `EnableError, _ -> (warnings @ [warn], true)
+                  | `Disable, _ -> (warnings, failed)
+                ) ([], false) warnings
             in
             if short then
               (if warnings <> [] then

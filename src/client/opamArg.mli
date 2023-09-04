@@ -281,8 +281,8 @@ val dep_formula: formula Arg.conv
 (** [var=value,...] argument *)
 val variable_bindings: (OpamVariable.t * string) list Arg.conv
 
-(** Warnings string ["+3..10-4"] *)
-val warn_selector: (int * bool) list Arg.conv
+(** Warnings string ["+3..10-4@12"] *)
+val warn_selector: (int * [`Enable | `Disable | `EnableError]) list Arg.conv
 
 val opamlist_columns: OpamListCommand.output_format list Arg.conv
 

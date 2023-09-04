@@ -51,6 +51,7 @@ users)
 
 ## Lint
   * Fix extra-files handling when linting packages from repositories, see #5068 [#5639 @rjbou]
+  * Allow to mark a set of warnings as errors using a new syntax -W @1..9 [#5652 @kit-ty-kate @rjbou - fixes #5651]
 
 ## Repository
 
