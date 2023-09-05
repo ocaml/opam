@@ -42,23 +42,23 @@ The following actions will be performed:
   - install qux 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-sh "sleep.sh" "bar" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/bar.1)
-- woke up bar
 -> compiled  bar.1
 -> installed bar.1
-sh "sleep.sh" "baz" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/baz.1)
-- woke up baz
++ sh "sleep.sh" "bar" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/bar.1)
+- woke up bar
 -> compiled  baz.1
 -> installed baz.1
-sh "sleep.sh" "foo" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/foo.1)
++ sh "sleep.sh" "baz" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/baz.1)
+- woke up baz
 -> compiled  foo.1
 -> installed foo.1
-sh "sleep.sh" "qux" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/qux.1)
++ sh "sleep.sh" "foo" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/foo.1)
 -> compiled  qux.1
 -> installed qux.1
-sh "shout.sh" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/top.1)
++ sh "sleep.sh" "qux" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/qux.1)
 -> compiled  top.1
-sh "shout.sh" "top" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/top.1)
++ sh "shout.sh" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/top.1)
++ sh "shout.sh" "top" (CWD=${BASEDIR}/OPAM/parallel/.opam-switch/build/top.1)
 - finally installed top
 -> installed top.1
 Done.

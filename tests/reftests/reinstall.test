@@ -46,14 +46,14 @@ Nothing to do.
 opam-version: "2.0"
 build: ["opam" "var" "switch"]
 depends: ["b" {= version}]
-### opam upgrade -y --verbose | '^\+ .+ "build"' -> '+' | '^\+ .+opam(\.exe)? ' -> '+ "opam" '
+### opam upgrade -y --verbose | sed-cmd opam
 The following actions will be performed:
 === recompile 1 package
   - recompile a 1 [upstream or system changes]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  2/4: [a: opam var]
-+ "opam" "var" "switch" (CWD=${BASEDIR}/OPAM/default/.opam-switch/build/a.1)
++ opam "var" "switch" (CWD=${BASEDIR}/OPAM/default/.opam-switch/build/a.1)
 - default
 -> compiled  a.1
 -> removed   a.1

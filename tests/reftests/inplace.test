@@ -32,13 +32,13 @@ The following actions will be performed:
 Processing  1/3: [ongoing.dev: git]
 -> retrieved ongoing.dev  (no changes)
 Processing  2/3: [ongoing: test ongoing.txt]
-test "-f" "ongoing.txt" (CWD=${BASEDIR}/OPAM/inplace/.opam-switch/build/ongoing.dev)
++ test "-f" "ongoing.txt" (CWD=${BASEDIR}/OPAM/inplace/.opam-switch/build/ongoing.dev)
 Processing  2/3: [ongoing: cat ongoing.txt]
-cat "ongoing.txt" (CWD=${BASEDIR}/OPAM/inplace/.opam-switch/build/ongoing.dev)
++ cat "ongoing.txt" (CWD=${BASEDIR}/OPAM/inplace/.opam-switch/build/ongoing.dev)
 - versionned
 -> compiled  ongoing.dev
 Processing  3/3: [ongoing: touch installed]
-touch "installed" (CWD=${BASEDIR}/OPAM/inplace/.opam-switch/build/ongoing.dev)
++ touch "installed" (CWD=${BASEDIR}/OPAM/inplace/.opam-switch/build/ongoing.dev)
 -> installed ongoing.dev
 Done.
 ### test -f ./ongoing/installed
@@ -65,13 +65,13 @@ The following actions will be performed:
 Processing  1/3: [ongoing.dev: git]
 -> retrieved ongoing.dev  (no changes)
 Processing  2/3: [ongoing: test ongoing.txt]
-test "-f" "ongoing.txt" (CWD=${BASEDIR}/ongoing)
++ test "-f" "ongoing.txt" (CWD=${BASEDIR}/ongoing)
 Processing  2/3: [ongoing: cat ongoing.txt]
-cat "ongoing.txt" (CWD=${BASEDIR}/ongoing)
++ cat "ongoing.txt" (CWD=${BASEDIR}/ongoing)
 - versionned
 -> compiled  ongoing.dev
 Processing  3/3: [ongoing: touch installed]
-touch "installed" (CWD=${BASEDIR}/ongoing)
++ touch "installed" (CWD=${BASEDIR}/ongoing)
 -> installed ongoing.dev
 Done.
 ### test -f ./ongoing/installed
@@ -102,13 +102,13 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/2: [ongoing: test newfile.txt]
-test "-f" "newfile.txt" (CWD=${BASEDIR}/ongoing)
++ test "-f" "newfile.txt" (CWD=${BASEDIR}/ongoing)
 Processing  1/2: [ongoing: cat newfile.txt]
-cat "newfile.txt" (CWD=${BASEDIR}/ongoing)
++ cat "newfile.txt" (CWD=${BASEDIR}/ongoing)
 - new!
 -> compiled  ongoing.dev
 Processing  2/2: [ongoing: touch installed]
-touch "installed" (CWD=${BASEDIR}/ongoing)
++ touch "installed" (CWD=${BASEDIR}/ongoing)
 -> installed ongoing.dev
 Done.
 ### test -f ./ongoing/installed

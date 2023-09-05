@@ -51,9 +51,9 @@ The following actions will be performed:
 Processing  1/3: [ongoing.dev: git]
 -> retrieved ongoing.dev  (no changes)
 Processing  2/3: [ongoing: test ongoing.txt]
-test "-f" "ongoing.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
++ test "-f" "ongoing.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
 Processing  2/3: [ongoing: cat ongoing.txt]
-cat "ongoing.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
++ cat "ongoing.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
 - versionned
 -> compiled  ongoing.dev
 -> installed ongoing.dev
@@ -71,9 +71,9 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/3: [ongoing: test newfile.txt]
-test "-f" "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
++ test "-f" "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
 Processing  1/3: [ongoing: cat newfile.txt]
-cat "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
++ cat "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
 - new!
 -> compiled  ongoing.dev
 -> removed   ongoing.dev
@@ -105,7 +105,7 @@ The following actions will be performed:
 Processing  1/3: [ongoing.dev: git]
 -> retrieved ongoing.dev  (no changes)
 Processing  2/3: [ongoing: test newfile.txt]
-test "-f" "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
++ test "-f" "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
 [ERROR] The compilation of ongoing.dev failed at "test -f newfile.txt".
 
 
@@ -130,9 +130,9 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/2: [ongoing: test newfile.txt]
-test "-f" "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
++ test "-f" "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
 Processing  1/2: [ongoing: cat newfile.txt]
-cat "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
++ cat "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
 - new!
 -> compiled  ongoing.dev
 -> installed ongoing.dev
@@ -215,13 +215,13 @@ The following actions will be performed:
   - install qux     4
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++ test "-f" "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
++ cat "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
++ test "-f" "present" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/qux.4)
 -> retrieved qux.4  (file://${BASEDIR}/qux)
-test "-f" "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
-cat "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
 - new!
 -> compiled  ongoing.dev
 -> installed ongoing.dev
-test "-f" "present" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/qux.4)
 -> compiled  qux.4
 -> installed qux.4
 Done.
