@@ -106,6 +106,7 @@ users)
   * Move local-cache into archive-field-checks test [#5560 @rjbou]
 
 ### Engine
+  * With real path resolved for all opam temp dir, remove `/private` from mac temp dir regexp [#5654 @rjbou]
 
 ## Github Actions
   * Add coreutils install for cheksum validation tests [#5560 @rjbou]
