@@ -133,3 +133,4 @@ users)
   variable interpolations in strings [#5633 @gridbugs]
 
 ## opam-core
+  * `OpamSystem.mk_temp_dir`: resolve real path with `OpamSystem.real_path` before returning it [#5654 @rjbou]

@@ -86,7 +86,7 @@ let rec mk_temp_dir ?(prefix="opam") () =
   if Sys.file_exists s then
     mk_temp_dir ()
   else
-    s
+    real_path s
 
 let safe_mkdir dir =
   try
