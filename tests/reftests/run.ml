@@ -488,7 +488,7 @@ let common_filters ?opam dir =
      Sed "##% ";
      alt [str dir; str (OpamSystem.back_to_forward dir)],
      Sed "${BASEDIR}";
-     seq [opt (str "/private");
+     seq [
           alt [str tmpdir;
                str (OpamSystem.back_to_forward tmpdir)];
           rep (set "/\\");
