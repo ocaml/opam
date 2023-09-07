@@ -56,6 +56,12 @@ add_dune_cache_mount() {
   add_mounts rw "$dune_cache"
 }
 
+# In case OPAMROOT happens to be in one of the writeable directories we
+# need to make sure it is read-only
+if [ -n ${OPAMROOT+x} ]; then
+  add_mounts ro "$OPAMROOT"
+fi
+
 # When using opam variable that must be defined at action time, add them also
 # at init check in OpamAuxCommands.check_and_revert_sandboxing (like
 # OPAM_SWITCH_PREFIX).
