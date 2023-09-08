@@ -1,9 +1,21 @@
 N0REP0
+### <hash.sh>
+set -ue
+repo=$1
+nv=$2
+n=`echo $nv | cut -f1 -d.`
+path=$repo/packages/$n/$nv
+echo "extra-files:[" >> $path/opam
+for file in `ls $path/files`; do
+  echo "  [\"$file\" \"md5=`openssl md5 $path/files/$file | cut -f2 -d' '`\"]" >> $path/opam
+done
+echo   "]" >> $path/opam
 ### <REPO/packages/foo/foo.1/opam>
 opam-version: "2.0"
 build: ["test" "-f" "bar"]
 ### <REPO/packages/foo/foo.1/files/bar>
 some content
+### sh hash.sh REPO foo.1
 ### : Internal repository storage as archive or plain directory :
 ### opam switch create tarring --empty
 ### opam update -vv | grep '^\+' | sed-cmd diff | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
@@ -24,6 +36,7 @@ opam-version: "2.0"
 build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.2/files/baz>
 some content
+### sh hash.sh REPO foo.2
 ### opam update default -vv | grep '^\+' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)default\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/default.tar.gz -C TMPDIR' | '.*tar(\.exe)?"? "cfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)default\.tar\.gz\.tmp" "-C" ".*" "default"' -> 'tar cfz OPAM/repo/default.tar.gz.tmp -C TMPDIR default' | sed-cmd diff | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
 diff "-ruaN" "default" "default.new" (CWD=${BASEDIR}/OPAM/repo)
 patch (CWD=${BASEDIR}/OPAM/repo/default)
@@ -43,6 +56,7 @@ opam-version: "2.0"
 build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.3/files/baz>
 some content
+### sh hash.sh REPO foo.3
 ### opam repository add tarred ./REPO --this-switch
 [tarred] Initialised
 ### : New tarred repositories does not change already unchanged existing ones
@@ -61,6 +75,7 @@ opam-version: "2.0"
 build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.4/files/baz>
 some content
+### sh hash.sh REPO foo.4
 ### opam update -vv | grep '^\+' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR' | '.*tar(\.exe)?"? "cfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz\.tmp" "-C" ".*" "tarred"' -> 'tar cfz OPAM/repo/tarred.tar.gz.tmp -C TMPDIR tarred' | sed-cmd diff | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
 tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR
 diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
@@ -83,6 +98,7 @@ opam-version: "2.0"
 build: ["test" "-f" "quux"]
 ### <REPO/packages/foo/foo.5/files/quux>
 some content
+### sh hash.sh REPO foo.5
 ### opam update -vv | grep '^\+' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR' | sed-cmd diff | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
 tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR
 diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
@@ -103,6 +119,7 @@ opam-version: "2.0"
 build: ["test" "-f" "rab"]
 ### <REPO/packages/foo/foo.4/files/rab>
 some content
+### sh hash.sh REPO foo.4
 ### OPAMDEBUGSECTIONS="FILE(opam) FILE(repo) FILE(repos-config)  CACHE(repository)"
 ### opam update --debug-level=-3 | "state-[0-9A-Z]{8}" -> "state-hash" | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -164,6 +181,7 @@ opam-version: "2.0"
 build: ["test" "-f" "oof"]
 ### <REPO2/packages/bar/bar.1/files/oof>
 some content
+### sh hash.sh REPO2 bar.1
 ### opam repository add repo2 ./REPO2 --this-switch
 [repo2] Initialised
 ### opam update --debug-level=-3 | "state-[0-9A-Z]{8}" -> "state-hash"
@@ -188,6 +206,7 @@ opam-version: "2.0"
 build: ["test" "-f" "oof"]
 ### <REPO2/packages/bar/bar.2/files/oof>
 some content
+### sh hash.sh REPO2 bar.2
 ### opam update --debug-level=-3 | "state-[0-9A-Z]{8}" -> "state-hash" | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
@@ -217,11 +236,13 @@ opam-version: "2.0"
 build: ["test" "-f" "rab"]
 ### <REPO/packages/foo/foo.6/files/rab>
 some content
+### sh hash.sh REPO foo.6
 ### <REPO2/packages/bar/bar.3/opam>
 opam-version: "2.0"
 build: ["test" "-f" "oof"]
 ### <REPO2/packages/bar/bar.3/files/oof>
 some content
+### sh hash.sh REPO2 bar.3
 ### opam update --debug-level=-3 | "state-[0-9A-Z]{8}" -> "state-hash" | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
