@@ -3890,13 +3890,10 @@ let lint cli =
                   stdin_f stdin,
                 None
             in
-            let enabled =
-              let map =
-                List.fold_left
-                  (fun acc (wn, state) -> OpamStd.IntMap.add wn state acc)
-                  OpamStd.IntMap.empty warnings_sel
-              in
-              fun w -> try OpamStd.IntMap.find w map with Not_found -> default_warn
+            let warnings_sel_map = OpamStd.IntMap.of_list warnings_sel in
+            let enabled w =
+              try OpamStd.IntMap.find w warnings_sel_map
+              with Not_found -> default_warn
             in
             let warnings, failed =
               List.fold_left (fun (warnings, failed) ((n, state, _) as warn) ->
@@ -3905,6 +3902,13 @@ let lint cli =
                   | `Enable, `Error | `EnableError, _ -> (warnings @ [warn], true)
                   | `Disable, _ -> (warnings, failed)
                 ) ([], false) warnings
+            in
+            let warnings =
+              List.map (fun ((n, _, s) as warn) ->
+                  match OpamStd.IntMap.find_opt n warnings_sel_map with
+                  | Some `EnableError -> (n, `Error, s)
+                  | Some (`Disable | `Enable) | None -> warn)
+                warnings
             in
             if short then
               (if warnings <> [] then

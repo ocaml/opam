@@ -64,31 +64,31 @@ ${BASEDIR}/lint.opam: Errors.
 ### opam lint ./lint.opam --warn=@0..99
 ${BASEDIR}/lint.opam: Errors.
              error 23: Missing field 'maintainer'
-           warning 25: Missing field 'authors'
-           warning 35: Missing field 'homepage'
-           warning 36: Missing field 'bug-reports'
+             error 25: Missing field 'authors'
+             error 35: Missing field 'homepage'
+             error 36: Missing field 'bug-reports'
              error 57: Synopsis must not be empty
-           warning 68: Missing field 'license'
+             error 68: Missing field 'license'
 # Return code 1 #
 ### opam lint ./lint.opam --warn=@0..99
 ${BASEDIR}/lint.opam: Errors.
              error 23: Missing field 'maintainer'
-           warning 25: Missing field 'authors'
-           warning 35: Missing field 'homepage'
-           warning 36: Missing field 'bug-reports'
+             error 25: Missing field 'authors'
+             error 35: Missing field 'homepage'
+             error 36: Missing field 'bug-reports'
              error 57: Synopsis must not be empty
-           warning 68: Missing field 'license'
+             error 68: Missing field 'license'
 # Return code 1 #
 ### opam lint ./lint.opam --warn=+25@25
 ${BASEDIR}/lint.opam: Errors.
-           warning 25: Missing field 'authors'
+             error 25: Missing field 'authors'
 # Return code 1 #
 ### opam lint ./lint.opam --warn=+20..40@30..40
 ${BASEDIR}/lint.opam: Errors.
              error 23: Missing field 'maintainer'
            warning 25: Missing field 'authors'
-           warning 35: Missing field 'homepage'
-           warning 36: Missing field 'bug-reports'
+             error 35: Missing field 'homepage'
+             error 36: Missing field 'bug-reports'
 # Return code 1 #
 ### ::::::::::::::
 ### : Test lints :
