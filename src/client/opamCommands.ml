@@ -3904,6 +3904,7 @@ let lint cli =
                 ) ([], false) warnings
             in
             let warnings =
+              if warnings_sel = [] then warnings else
               List.map (fun ((n, _, s) as warn) ->
                   match OpamStd.IntMap.find_opt n warnings_sel_map with
                   | Some `EnableError -> (n, `Error, s)
