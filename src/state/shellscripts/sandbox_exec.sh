@@ -7,6 +7,7 @@ set -ue
 POL='(version 1)(allow default)(deny network*)(deny file-write*)'
 POL="$POL"'(allow network* (remote unix))'
 POL="$POL"'(allow file-write* (literal "/dev/null") (literal "/dev/dtracehelper"))'
+POL="$POL"'(allow file-write* (regex #"^(/private)?(/var)?/tmp/"))'
 
 add_mounts() {
     if [ -d "$2" ]; then
@@ -54,6 +55,12 @@ add_dune_cache_mount() {
   mkdir -p "${dune_cache}"
   add_mounts rw "$dune_cache"
 }
+
+# In case OPAMROOT happens to be in one of the writeable directories we
+# need to make sure it is read-only
+if [ -n ${OPAMROOT+x} ]; then
+  add_mounts ro "$OPAMROOT"
+fi
 
 # When using opam variable that must be defined at action time, add them also
 # at init check in OpamAuxCommands.check_and_revert_sandboxing (like

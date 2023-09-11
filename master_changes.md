@@ -66,6 +66,7 @@ users)
 ## Format upgrade
 
 ## Sandbox
+  * Make /tmp writable again to restore POSIX compliancy [#5634 @kit-ty-kate - fixes #5462]
 
 ## VCS
 
