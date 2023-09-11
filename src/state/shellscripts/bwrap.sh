@@ -101,7 +101,7 @@ add_dune_cache_mount() {
 
 # In case OPAMROOT happens to be in one of the writeable directories we
 # need to make sure it is read-only
-if [ -n ${OPAMROOT+x} ]; then
+if [ -n "${OPAMROOT:-}" ]; then
   add_mounts ro "$OPAMROOT"
 fi
 
