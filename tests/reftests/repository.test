@@ -6,15 +6,15 @@ build: ["test" "-f" "bar"]
 some content
 ### : Internal repository storage as archive or plain directory :
 ### opam switch create tarring --empty
-### opam update -vv | grep '^\+' | sed-cmd diff | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
-diff "-ruaN" "default" "default.new" (CWD=${BASEDIR}/OPAM/repo)
-patch (CWD=${BASEDIR}/OPAM/repo/default)
+### opam update -vv | grep '^\+' | sed-cmd diff | sed-cmd patch | 'patch-[^"]+' -> 'patch'
++ diff "-ruaN" "default" "default.new" (CWD=${BASEDIR}/OPAM/repo)
++ patch "-p1" "-i" "${BASEDIR}/OPAM/log/patch" (CWD=${BASEDIR}/OPAM/repo/default)
 ### ls $OPAMROOT/repo | grep -v "cache"
 default
 lock
 repos-config
 ### opam install foo.1 -vv | grep '^\+' | sed-cmd test
-test "-f" "bar" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.1)
++ test "-f" "bar" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.1)
 ### opam repository add plain ./REPO --this-switch
 [plain] Initialised
 ### OPAMREPOSITORYTARRING=1
@@ -24,18 +24,18 @@ opam-version: "2.0"
 build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.2/files/baz>
 some content
-### opam update default -vv | grep '^\+' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)default\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/default.tar.gz -C TMPDIR' | '.*tar(\.exe)?"? "cfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)default\.tar\.gz\.tmp" "-C" ".*" "default"' -> 'tar cfz OPAM/repo/default.tar.gz.tmp -C TMPDIR default' | sed-cmd diff | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
-diff "-ruaN" "default" "default.new" (CWD=${BASEDIR}/OPAM/repo)
-patch (CWD=${BASEDIR}/OPAM/repo/default)
-tar cfz OPAM/repo/default.tar.gz.tmp -C TMPDIR default
+### opam update default -vv | grep '^\+' | sed-cmd tar | sed-cmd diff | sed-cmd patch | 'patch-[^"]+' -> 'patch'
++ diff "-ruaN" "default" "default.new" (CWD=${BASEDIR}/OPAM/repo)
++ patch "-p1" "-i" "${BASEDIR}/OPAM/log/patch" (CWD=${BASEDIR}/OPAM/repo/default)
++ tar "cfz" "${BASEDIR}/OPAM/repo/default.tar.gz.tmp" "-C" "${BASEDIR}/OPAM/repo" "default"
 ### ls $OPAMROOT/repo | grep -v "cache"
 default.tar.gz
 lock
 plain
 repos-config
-### opam install foo.2 -vv | grep '^\+' | sed-cmd test | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)default\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/default.tar.gz -C TMPDIR'
-tar xfz OPAM/repo/default.tar.gz -C TMPDIR
-test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.2)
+### opam install foo.2 -vv | grep '^\+' | sed-cmd test | sed-cmd tar
++ tar "xfz" "${BASEDIR}/OPAM/repo/default.tar.gz" "-C" "${OPAMTMP}"
++ test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.2)
 ### opam repository remove default --all
 ### : Add tarred repo (tarred)
 ### <REPO/packages/foo/foo.3/opam>
@@ -51,9 +51,9 @@ lock
 plain
 repos-config
 tarred.tar.gz
-### opam install foo.3 -vv | grep '^\+' | sed-cmd test | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR'
-tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR
-test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.3)
+### opam install foo.3 -vv | grep '^\+' | sed-cmd test | sed-cmd tar
++ tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
++ test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.3)
 ### opam repository remove plain --all
 ### : Update tarred repo (tarred)
 ### <REPO/packages/foo/foo.4/opam>
@@ -61,14 +61,14 @@ opam-version: "2.0"
 build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.4/files/baz>
 some content
-### opam update -vv | grep '^\+' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR' | '.*tar(\.exe)?"? "cfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz\.tmp" "-C" ".*" "tarred"' -> 'tar cfz OPAM/repo/tarred.tar.gz.tmp -C TMPDIR tarred' | sed-cmd diff | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
-tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR
-diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
-patch (CWD=${OPAMTMP}/tarred)
-tar cfz OPAM/repo/tarred.tar.gz.tmp -C TMPDIR tarred
-### opam install foo.4 -vv | grep '^\+' | sed-cmd test | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR'
-tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR
-test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.4)
+### opam update -vv | grep '^\+' | sed-cmd tar | sed-cmd diff | sed-cmd patch | 'patch-[^"]+' -> 'patch'
++ tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
++ diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
++ patch "-p1" "-i" "${BASEDIR}/OPAM/log/patch" (CWD=${OPAMTMP}/tarred)
++ tar "cfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz.tmp" "-C" "${OPAMTMP}" "tarred"
+### opam install foo.4 -vv | grep '^\+' | sed-cmd test | sed-cmd tar
++ tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
++ test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.4)
 ### mkdir tarred-ext
 ### tar xf OPAM/repo/tarred.tar.gz
 ### diff -ru ./tarred REPO
@@ -83,12 +83,12 @@ opam-version: "2.0"
 build: ["test" "-f" "quux"]
 ### <REPO/packages/foo/foo.5/files/quux>
 some content
-### opam update -vv | grep '^\+' | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR' | sed-cmd diff | '.*(/|\\)patch(\.exe)?"?.*"' -> 'patch'
-tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR
-diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
-patch (CWD=${OPAMTMP}/tarred)
-### opam install foo.5 -vv | grep '^\+' | sed-cmd test | '.*tar(\.exe)?"? "xfz" ".*(/|\\)OPAM(/|\\)repo(/|\\)tarred\.tar\.gz" "-C" ".*"' -> 'tar xfz OPAM/repo/tarred.tar.gz -C TMPDIR'
-test "-f" "quux" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.5)
+### opam update -vv | grep '^\+' | sed-cmd tar | sed-cmd diff | sed-cmd patch | 'patch-[^"]+' -> 'patch'
++ tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
++ diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
++ patch "-p1" "-i" "${BASEDIR}/OPAM/log/patch" (CWD=${OPAMTMP}/tarred)
+### opam install foo.5 -vv | grep '^\+' | sed-cmd test
++ test "-f" "quux" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.5)
 ### ls $OPAMROOT/repo | grep -v "cache"
 lock
 repos-config
@@ -294,7 +294,7 @@ opam-version: "2.0"
 # Name # Installed # Synopsis
 first  --
 ### ::: rsync - git :::
-### opam repository set-url oper git+file://$BASEDIR/OPER4 | ': ".*git(.exe)?' -> ': "git'
+### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
 [ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
@@ -302,7 +302,7 @@ first  --
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
 first  --
-### opam repository set-url oper git+file://./OPER3#unknownbranch | ': ".*git(.exe)?' -> ': "git'
+### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
 [ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
@@ -333,7 +333,7 @@ first  --
 # Name # Installed # Synopsis
 first  --
 ### ::: git - git :::
-### opam repository set-url oper git+file://$BASEDIR/OPER4 | ': ".*git(.exe)?' -> ': "git'
+### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
 [ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
@@ -341,7 +341,7 @@ first  --
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
 first  --
-### opam repository set-url oper git+file://./OPER3#unknownbranch | ': ".*git(.exe)?' -> ': "git'
+### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
 [ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
@@ -460,7 +460,7 @@ opam-version: "2.0"
 # Name # Installed # Synopsis
 first  --
 ### :::: rsync - git ::::
-### opam repository set-url oper git+file://$BASEDIR/OPER4 | ': ".*git(.exe)?' -> ': "git'
+### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
 [ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
@@ -468,7 +468,7 @@ first  --
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
 first  --
-### opam repository set-url oper git+file://./OPER3#unknownbranch | ': ".*git(.exe)?' -> ': "git'
+### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
 [ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
@@ -499,7 +499,7 @@ first  --
 # Name # Installed # Synopsis
 first  --
 ### :::: git - git ::::
-### opam repository set-url oper git+file://$BASEDIR/OPER4 | ': ".*git(.exe)?' -> ': "git'
+### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
 [ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
@@ -507,7 +507,7 @@ first  --
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
 first  --
-### opam repository set-url oper git+file://./OPER3#unknownbranch | ': ".*git(.exe)?' -> ': "git'
+### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
 [ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #

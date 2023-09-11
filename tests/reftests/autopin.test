@@ -65,7 +65,7 @@ opam believes some required external dependencies are missing. opam can:
 
 [1/2/3/4] 1
 
-echo "some-depext"
++ echo "some-depext"
 - some-depext
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -112,7 +112,7 @@ opam believes some required external dependencies are missing. opam can:
 
 [1/2/3/4] 1
 
-echo "some-depext"
++ echo "some-depext"
 - some-depext
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -156,7 +156,7 @@ opam believes some required external dependencies are missing. opam can:
 
 [1/2/3/4] 1
 
-echo "some-depext"
++ echo "some-depext"
 - some-depext
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -208,7 +208,7 @@ opam believes some required external dependencies are missing. opam can:
 
 [1/2/3/4] 1
 
-echo "some-depext"
++ echo "some-depext"
 - some-depext
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -241,7 +241,7 @@ The following system packages will first need to be installed:
 
 <><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
 
-echo "some-depext"
++ echo "some-depext"
 - some-depext
 ### opam remove foo-format | grep -v import
 [WARNING] Opam package foo-format.2.0 depends on the following system package that can no longer be found: some-depext
@@ -317,6 +317,6 @@ opam believes some required external dependencies are missing. opam can:
 
 [1/2/3/4] 1
 
-echo "some-depext"
++ echo "some-depext"
 - some-depext
 Nothing to do.
