@@ -176,6 +176,7 @@ users)
   * Speedup the gentoo depexts test [#6363 @kit-ty-kate]
   * Add OCaml 5.3 to the build matrix [#6192 @kit-ty-kate]
   * Add OCaml 5.3/MSVC to the build matrix [#6192 @kit-ty-kate]
+  * Add a test making sure `opam init` works in the absence of `OPAMROOT` [#5663 @kit-ty-kate]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]
