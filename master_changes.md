@@ -81,6 +81,7 @@ users)
   * Add ppc64le and s390x support [#5420 @kit-ty-kate]
 
 ## Admin
+  * Add `add-extrafiles` command to add, check, and update `extra-files:` field according files present in `files/` directory [#5647 @rjbou]
 
 ## Opam installer
 
@@ -105,6 +106,7 @@ users)
   * Lint: add test for W53, to test extra file with good hash [#5639 @rjbou]
   * Add several checksum & cache validation checks for archive, extra-source section, and extra-file field [#5560 @rjbou]
   * Move local-cache into archive-field-checks test [#5560 @rjbou]
+  * Admin: add `admin add-extrafiles` test cases [#5647 @rjbou]
 
 ### Engine
   * With real path resolved for all opam temp dir, remove `/private` from mac temp dir regexp [#5654 @rjbou]

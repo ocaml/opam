@@ -11,6 +11,16 @@
   (package opam))
 
 (rule
+  (with-stdout-to opam-admin-update-extrafiles.0 (echo "")))
+(rule
+  (targets opam-admin-update-extrafiles.1 opam-admin-update-extrafiles.err)
+  (deps using-built-opam)
+  (action (progn (with-stderr-to opam-admin-update-extrafiles.err
+                   (with-stdout-to opam-admin-update-extrafiles.1 (run %{bin:opam} admin update-extrafiles --help=groff)))
+                 (diff opam-admin-update-extrafiles.err %{dep:opam-admin-update-extrafiles.0})))
+  (package opam))
+
+(rule
   (with-stdout-to opam-admin-add-hashes.0 (echo "")))
 (rule
   (targets opam-admin-add-hashes.1 opam-admin-add-hashes.err)
@@ -115,6 +125,7 @@
   (package opam)
   (files
     opam-admin-help.1 
+    opam-admin-update-extrafiles.1 
     opam-admin-add-hashes.1 
     opam-admin-add-constraint.1 
     opam-admin-filter.1 

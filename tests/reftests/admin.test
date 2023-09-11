@@ -553,8 +553,56 @@ url.checksum: md5=HASH sha256=HASH sha512=HASH
 ${BASEDIR}/packages/dolor/dolor.1/opam: Passed.
 ${BASEDIR}/packages/sit/sit.1/opam: Passed.
 ### :::::::::::::::::::::
-### :VI: Specific cases :
+### :VI: update-extrafiles :
 ### :::::::::::::::::::::
+### <packages/with-xf/with-xf.1/opam>
+opam-version: "2.0"
+extra-files: [
+  [ "bad-md5" "md5=00000000000000000000000000000000"]
+  [ "good-md5" "md5=xf-md5" ]
+  [ "bad-sha"  "sha256=0000000000000000000000000000000000000000000000000000000000000000"]
+  [ "good-sha" "sha256=xf-sha" ]
+]
+### <packages/with-xf/with-xf.1/files/good-md5>
+content
+### cp packages/with-xf/with-xf.1/files/good-md5 packages/with-xf/with-xf.1/files/bad-md5
+### cp packages/with-xf/with-xf.1/files/good-md5 packages/with-xf/with-xf.1/files/missing-hash
+### cp packages/with-xf/with-xf.1/files/good-md5 packages/with-xf/with-xf.1/files/good-sha
+### cp packages/with-xf/with-xf.1/files/good-md5 packages/with-xf/with-xf.1/files/bad-sha
+### openssl md5 packages/with-xf/with-xf.1/files/good-md5 | '.*= ' -> '' >$ XF_MD5
+### openssl sha256 packages/with-xf/with-xf.1/files/good-md5 | '.*= ' -> '' >$ XF_SHA256
+### <hash-xf.sh>
+sed -i.bak "s/xf-md5/$XF_MD5/" packages/with-xf/with-xf.1/opam
+sed -i.bak "s/xf-sha/$XF_SHA256/" packages/with-xf/with-xf.1/opam
+### sh hash-xf.sh
+### opam admin update-extrafiles
+### opam-cat packages/with-xf/with-xf.1/opam | "${XF_MD5}" -> "good-md5" | "${XF_SHA256}" -> "good-sha"
+extra-files: [["bad-md5" "md5=good-md5"] ["bad-sha" "sha256=good-sha"] ["good-md5" "md5=good-md5"] ["good-sha" "sha256=good-sha"] ["missing-hash" "md5=good-md5"]]
+opam-version: "2.0"
+### <packages/with-xf/with-xf.1/opam>
+opam-version: "2.0"
+extra-files: [
+  [ "bad-md5" "md5=00000000000000000000000000000000"]
+  [ "good-md5" "md5=xf-md5" ]
+  [ "bad-sha"  "sha256=0000000000000000000000000000000000000000000000000000000000000000"]
+  [ "good-sha" "sha256=xf-sha" ]
+]
+### sh hash-xf.sh
+### opam admin update-extrafiles --hash sha256
+### opam-cat packages/with-xf/with-xf.1/opam | "${XF_MD5}" -> "good-md5" | "${XF_SHA256}" -> "good-sha"
+extra-files: [["bad-md5" "sha256=good-sha"] ["bad-sha" "sha256=good-sha"] ["good-md5" "sha256=good-sha"] ["good-sha" "sha256=good-sha"] ["missing-hash" "sha256=good-sha"]]
+opam-version: "2.0"
+### <packages/with-xf/with-xf.2/opam>
+opam-version: "2.0"
+### mkdir -p packages/with-xf/with-xf.2/files
+### cp packages/with-xf/with-xf.1/files/good-md5 packages/with-xf/with-xf.2/files/missing-hash
+### opam admin update-extrafiles
+### opam-cat packages/with-xf/with-xf.2/opam | "${XF_MD5}" -> "good-md5" | "${XF_SHA256}" -> "good-sha"
+extra-files: ["missing-hash" "md5=good-md5"]
+opam-version: "2.0"
+### ::::::::::::::::::::::
+### :VII: Specific cases :
+### ::::::::::::::::::::::
 ### : Package version comparison error (#5334)
 ### <packages/fail-5334/fail-5334.1/opam>
 opam-version: "2.0"
