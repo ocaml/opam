@@ -468,8 +468,9 @@ module Parse = struct
               *)
               opt_quoted @@ [
                 alpha; char ':';
-                rep1 @@ seq [ char '\\'; rep1 @@ diff any (with_quote_set "\\") ];
-                char '\\';
+                rep1 @@ seq [ char '\\'; opt @@ char '\\';
+                              rep1 @@ diff any (with_quote_set "\\") ];
+                char '\\'; opt @@ char '\\';
                 Re.str cmd;
                 opt @@ Re.str ".exe";
               ] in
