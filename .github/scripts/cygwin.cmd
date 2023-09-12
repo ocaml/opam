@@ -96,6 +96,9 @@ if "%1" equ "x86_64-pc-cygwin" (
 :: is found
 set CYGWIN_PACKAGES=make,patch,curl,diffutils,tar,unzip,git,gcc-g++,libicu-devel%CYGWIN_PACKAGES%
 
+:: wget is needed for download.test OPAMFETCH/OPAMCURL testing
+set CYGWIN_PACKAGES=wget,%CYGWIN_PACKAGES%
+
 :: D:\cygwin-packages is specified just to keep the build directory clean; the
 :: files aren't preserved.
 %CYGWIN_ROOT%\setup.exe --quiet-mode --no-shortcuts --no-startmenu --no-desktop --only-site --root %CYGWIN_ROOT% --site "%CYGWIN_MIRROR%" --local-package-dir D:\cygwin-packages --packages %CYGWIN_PACKAGES%

@@ -54,6 +54,7 @@ users)
   * Allow to mark a set of warnings as errors using a new syntax -W @1..9 [#5652 @kit-ty-kate @rjbou - fixes #5651]
 
 ## Repository
+  * Fix `OPAMCURL` and `OPAMFETCH` handling [#5607 @rjbou - fix #5597]
 
 ## Lock
 
@@ -108,13 +109,15 @@ users)
   * Add several checksum & cache validation checks for archive, extra-source section, and extra-file field [#5560 @rjbou]
   * Move local-cache into archive-field-checks test [#5560 @rjbou]
   * Admin: add `admin add-extrafiles` test cases [#5647 @rjbou]
+  * Add download test, to check `OPAMCURL/OPAMFETCH` handling [#5607 @rjbou]
 
 ### Engine
   * With real path resolved for all opam temp dir, remove `/private` from mac temp dir regexp [#5654 @rjbou]
-  * Reimplement `sed-cmd` command regexp, to handle prefixed commands with path not only in subprocess, but anywere in output [#5657 @rjbou]
+  * Reimplement `sed-cmd` command regexp, to handle prefixed commands with path not only in subprocess, but anywere in output [#5657 #5607 @rjbou]
 
 ## Github Actions
   * Add coreutils install for cheksum validation tests [#5560 @rjbou]
+  * Add `wget` on Cygwin install [#5607 @rjbou]
 
 ## Doc
 
