@@ -82,6 +82,7 @@ users)
 
 ## Repository
  * Mitigate curl/curl#13845 by falling back from --write-out to --fail if exit code 43 is returned by curl [#6168 @dra27 - fix #6120]
+  * Silently mark packages requiring an unsupported version of opam as unavailable [#5665 @kit-ty-kate - fix #5631]
 
 ## Lock
 

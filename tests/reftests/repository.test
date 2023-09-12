@@ -637,12 +637,10 @@ some-field-that-do-not-exist: true
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [repo] no changes from file://${BASEDIR}/REPO
 [versions] synchronised from file://${BASEDIR}/VRS
-[ERROR] In ${BASEDIR}/OPAM/repo/versions/packages/bad-opam-version/bad-opam-version.1/opam:
-        unsupported or missing file format version; should be 2.0 or older
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "versions": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+opam-file                       opam-version "5.0" unsupported on ${BASEDIR}/OPAM/repo/versions/packages/bad-opam-version/bad-opam-version.1/opam. Added as dummy unavailable package.
+Now run 'opam upgrade' to apply any package updates.
 ### opam list -A --all-versions -s
+bad-opam-version.1
 foo.1
 foo.2
 foo.3
@@ -651,8 +649,15 @@ foo.5
 foo.6
 good-opam-version.1
 ### opam show --raw bad-opam-version.1 | "${OPAMMAJORVERSION}" -> "CURRENTMAJOR"
-[ERROR] No package matching bad-opam-version.1 found
-# Return code 5 #
+opam-version: "2.0"
+name: "bad-opam-version"
+version: "1"
+synopsis: ""
+description: """\
+This package uses opam 5.0 file format which opam CURRENTMAJOR cannot read.
+
+In order to install or view information on this package, please upgrade your opam installation to at least version 5.0."""
+available: opam-version >= "5.0"
 ### :: without opam strict
 ### OPAMSTRICT=0
 ### <REPO/packages/bad-opam-version/bad-opam-version.2/opam>
@@ -667,13 +672,16 @@ opam-version: "2.0"
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [repo] synchronised from file://${BASEDIR}/REPO
-[ERROR] Could not update repository "repo": In ${BASEDIR}/OPAM/repo/repo/packages/bad-opam-version/bad-opam-version.2/opam:
-        unsupported or missing file format version; should be 2.0 or older
+opam-file                       opam-version "5.0" unsupported on ${BASEDIR}/OPAM/repo/repo/packages/bad-opam-version/bad-opam-version.2/opam. Added as dummy unavailable package.
+opam-file                       opam-version "5.0" unsupported on ${BASEDIR}/OPAM/repo/repo/packages/bad-opam-version/bad-opam-version.3/opam. Added as dummy unavailable package.
 [versions] synchronised from file://${BASEDIR}/VRS
-[ERROR] Could not update repository "versions": In ${BASEDIR}/OPAM/repo/versions/packages/bad-opam-version/bad-opam-version.1/opam:
-        unsupported or missing file format version; should be 2.0 or older
-# Return code 40 #
+opam-file                       opam-version "5.0" unsupported on ${BASEDIR}/OPAM/repo/versions/packages/bad-opam-version/bad-opam-version.1/opam. Added as dummy unavailable package.
+Now run 'opam upgrade' to apply any package updates.
 ### opam list -A --all-versions -s
+a.1
+bad-opam-version.1
+bad-opam-version.2
+bad-opam-version.3
 foo.1
 foo.2
 foo.3
@@ -686,33 +694,61 @@ good-opam-version.1
 ### opam list -A --all-versions -s
 ### opam repository --this-switch add repo ./REPO
 [repo] Initialised
-[ERROR] Could not update repository "repo": In ${BASEDIR}/OPAM/repo/repo/packages/bad-opam-version/bad-opam-version.3/opam:
-        unsupported or missing file format version; should be 2.0 or older
-[ERROR] Initial repository fetch failed
-# Return code 40 #
 ### opam repository --this-switch add versions ./VRS
 [versions] Initialised
-[ERROR] Could not update repository "versions": In ${BASEDIR}/OPAM/repo/versions/packages/bad-opam-version/bad-opam-version.1/opam:
-        unsupported or missing file format version; should be 2.0 or older
-[ERROR] Initial repository fetch failed
-# Return code 40 #
 ### opam list -A --all-versions -s
+a.1
+bad-opam-version.1
+bad-opam-version.2
+bad-opam-version.3
+foo.1
+foo.2
+foo.3
+foo.4
+foo.5
+foo.6
+good-opam-version.1
 ### opam show --raw bad-opam-version.1 | "${OPAMMAJORVERSION}" -> "CURRENTMAJOR"
-[ERROR] No package matching bad-opam-version.1 found
-# Return code 5 #
+opam-version: "2.0"
+name: "bad-opam-version"
+version: "1"
+synopsis: ""
+description: """\
+This package uses opam 5.0 file format which opam CURRENTMAJOR cannot read.
+
+In order to install or view information on this package, please upgrade your opam installation to at least version 5.0."""
+available: opam-version >= "5.0"
 ### opam show --raw bad-opam-version.2 | "${OPAMMAJORVERSION}" -> "CURRENTMAJOR"
-[ERROR] No package matching bad-opam-version.2 found
-# Return code 5 #
+opam-version: "2.0"
+name: "bad-opam-version"
+version: "2"
+synopsis: ""
+description: """\
+This package uses opam 5.0 file format which opam CURRENTMAJOR cannot read.
+
+In order to install or view information on this package, please upgrade your opam installation to at least version 5.0."""
+available: opam-version >= "5.0"
 ### opam show --raw bad-opam-version.3 | "${OPAMMAJORVERSION}" -> "CURRENTMAJOR"
-[ERROR] No package matching bad-opam-version.3 found
-# Return code 5 #
+opam-version: "2.0"
+name: "bad-opam-version"
+version: "3"
+synopsis: ""
+description: """\
+This package uses opam 5.0 file format which opam CURRENTMAJOR cannot read.
+
+In order to install or view information on this package, please upgrade your opam installation to at least version 5.0."""
+available: opam-version >= "5.0"
 ### :: Parse errors
 ### <VRS/packages/two-zero/two-zero.1/opam>
 opam-version: "2.0"
 GARBAGE
 ### opam update versions
-[ERROR] Unknown repositories or installed packages: versions
-# Return code 40 #
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[versions] synchronised from file://${BASEDIR}/VRS
+[WARNING] Could not read file ${BASEDIR}/OPAM/repo/versions/packages/two-zero/two-zero.1/opam. skipping:
+          At ${BASEDIR}/OPAM/repo/versions/packages/two-zero/two-zero.1/opam:3:0-3:0::
+          Parse error
 ### opam show two-zero --raw
 [ERROR] No package matching two-zero found
 # Return code 5 #
@@ -721,8 +757,13 @@ GARBAGE
 opam-version: "2.1"
 GARBAGE
 ### opam update versions
-[ERROR] Unknown repositories or installed packages: versions
-# Return code 40 #
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[versions] synchronised from file://${BASEDIR}/VRS
+[WARNING] Could not read file ${BASEDIR}/OPAM/repo/versions/packages/two-one/two-one.1/opam. skipping:
+          At ${BASEDIR}/OPAM/repo/versions/packages/two-one/two-one.1/opam:3:0-3:0::
+          Parse error
+Now run 'opam upgrade' to apply any package updates.
 ### opam show two-one --raw
 [ERROR] No package matching two-one found
 # Return code 5 #
@@ -731,8 +772,12 @@ GARBAGE
 opam-version: "2.2"
 GARBAGE
 ### opam update versions
-[ERROR] Unknown repositories or installed packages: versions
-# Return code 40 #
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[versions] synchronised from file://${BASEDIR}/VRS
+[WARNING] Could not read file ${BASEDIR}/OPAM/repo/versions/packages/two-two/two-two.1/opam. skipping:
+          At ${BASEDIR}/OPAM/repo/versions/packages/two-two/two-two.1/opam:3:0-3:0::
+          Parse error
 ### opam show two-two --raw
 [ERROR] No package matching two-two found
 # Return code 5 #
@@ -741,8 +786,12 @@ GARBAGE
 opam-version: "2.3"
 GARBAGE
 ### opam update versions
-[ERROR] Unknown repositories or installed packages: versions
-# Return code 40 #
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[versions] synchronised from file://${BASEDIR}/VRS
+[WARNING] Could not read file ${BASEDIR}/OPAM/repo/versions/packages/two-three/two-three.1/opam. skipping:
+          At ${BASEDIR}/OPAM/repo/versions/packages/two-three/two-three.1/opam:3:0-3:0::
+          Parse error
 ### opam show two-three --raw
 [ERROR] No package matching two-three found
 # Return code 5 #

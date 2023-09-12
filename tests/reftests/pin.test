@@ -269,9 +269,12 @@ Continue anyway? [y/n] y
 opam-version: "2.1"
 ### opam install ./pin-at-two-one
 [ERROR] In ${BASEDIR}/pin-at-two-one/pin-at-two-one.opam:
-        unsupported or missing file format version; should be 2.0 or older
-[ERROR] Strict mode: aborting
-# Return code 30 #
+        unsupported or missing file format version; should be 2.0 or older [skipped]
+
+[ERROR] Invalid opam file in pin-at-two-one source from file://${BASEDIR}/pin-at-two-one:
+             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
+[ERROR] No package named pin-at-two-one found.
+# Return code 5 #
 ### OPAMSTRICT=0 opam install ./pin-at-two-one
 [ERROR] In ${BASEDIR}/pin-at-two-one/pin-at-two-one.opam:
         unsupported or missing file format version; should be 2.0 or older [skipped]
@@ -284,9 +287,12 @@ opam-version: "2.1"
 opam-version: "2.2"
 ### opam install ./pin-at-two-two
 [ERROR] In ${BASEDIR}/pin-at-two-two/pin-at-two-two.opam:
-        unsupported or missing file format version; should be 2.0 or older
-[ERROR] Strict mode: aborting
-# Return code 30 #
+        unsupported or missing file format version; should be 2.0 or older [skipped]
+
+[ERROR] Invalid opam file in pin-at-two-two source from file://${BASEDIR}/pin-at-two-two:
+             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
+[ERROR] No package named pin-at-two-two found.
+# Return code 5 #
 ### OPAMSTRICT=0 opam install ./pin-at-two-two
 [ERROR] In ${BASEDIR}/pin-at-two-two/pin-at-two-two.opam:
         unsupported or missing file format version; should be 2.0 or older [skipped]
@@ -299,9 +305,12 @@ opam-version: "2.2"
 opam-version: "2.3"
 ### opam install ./pin-at-two-three
 [ERROR] In ${BASEDIR}/pin-at-two-three/pin-at-two-three.opam:
-        unsupported or missing file format version; should be 2.0 or older
-[ERROR] Strict mode: aborting
-# Return code 30 #
+        unsupported or missing file format version; should be 2.0 or older [skipped]
+
+[ERROR] Invalid opam file in pin-at-two-three source from file://${BASEDIR}/pin-at-two-three:
+             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
+[ERROR] No package named pin-at-two-three found.
+# Return code 5 #
 ### OPAMSTRICT=0 opam install ./pin-at-two-three
 [ERROR] In ${BASEDIR}/pin-at-two-three/pin-at-two-three.opam:
         unsupported or missing file format version; should be 2.0 or older [skipped]
@@ -314,9 +323,12 @@ opam-version: "2.3"
 opam-version: "50.0"
 ### opam install ./pin-at-future
 [ERROR] In ${BASEDIR}/pin-at-future/pin-at-future.opam:
-        unsupported or missing file format version; should be 2.0 or older
-[ERROR] Strict mode: aborting
-# Return code 30 #
+        unsupported or missing file format version; should be 2.0 or older [skipped]
+
+[ERROR] Invalid opam file in pin-at-future source from file://${BASEDIR}/pin-at-future:
+             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
+[ERROR] No package named pin-at-future found.
+# Return code 5 #
 ### OPAMSTRICT=0 opam install ./pin-at-future
 [ERROR] In ${BASEDIR}/pin-at-future/pin-at-future.opam:
         unsupported or missing file format version; should be 2.0 or older [skipped]
@@ -373,9 +385,12 @@ echo GARBAGE>>"$1"
 ### sh junk.sh pin-at-future/pin-at-future.opam
 ### opam install ./pin-at-future
 [ERROR] In ${BASEDIR}/pin-at-future/pin-at-future.opam:
-        unsupported or missing file format version; should be 2.0 or older
-[ERROR] Strict mode: aborting
-# Return code 30 #
+        unsupported or missing file format version; should be 2.0 or older [skipped]
+
+[ERROR] Invalid opam file in pin-at-future source from file://${BASEDIR}/pin-at-future:
+             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
+[ERROR] No package named pin-at-future found.
+# Return code 5 #
 ### OPAMSTRICT=0 opam install ./pin-at-future
 [ERROR] In ${BASEDIR}/pin-at-future/pin-at-future.opam:
         unsupported or missing file format version; should be 2.0 or older [skipped]
