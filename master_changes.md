@@ -50,6 +50,7 @@ users)
 ## Lint
 
 ## Repository
+  * Silently mark packages requiring an unsupported version of opam as unavailable [#5665 @kit-ty-kate - fix #5631]
 
 ## Lock
 

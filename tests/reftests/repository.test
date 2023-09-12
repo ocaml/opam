@@ -629,15 +629,13 @@ some-field-that-do-not-exist: true
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [oper] synchronised from file://${BASEDIR}/OPER3
-[ERROR] In ${OPAMTMP}/oper/packages/bad-opam-version/bad-opam-version.1/opam:
-        unsupported or missing file format version; should be 2.0 or older
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "oper": OpamStd.OpamSys.Exit(30)
+opam-file                       opam-version unsupported on ${OPAMTMP}/oper/packages/bad-opam-version/bad-opam-version.1/opam. Add as dummy unavailable package.
 [repo] no changes from file://${BASEDIR}/REPO
 [repo2] no changes from file://${BASEDIR}/REPO2
 [to-many-commits] no changes from git+file://${BASEDIR}/TMCS
-# Return code 40 #
+Now run 'opam upgrade' to apply any package updates.
 ### opam list -A --all-versions -s
+bad-opam-version.1
 first.1
 foo.1
 foo.2
@@ -656,15 +654,16 @@ opam-version: "2.0"
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [oper] synchronised from file://${BASEDIR}/OPER3
-[ERROR] Could not update repository "oper": In ${OPAMTMP}/oper/packages/bad-opam-version/bad-opam-version.1/opam:
-        unsupported or missing file format version; should be 2.0 or older
+opam-file                       opam-version unsupported on ${BASEDIR}/OPAM/repo/oper/packages/bad-opam-version/bad-opam-version.1/opam. Add as dummy unavailable package.
 [repo] synchronised from file://${BASEDIR}/REPO
-[ERROR] Could not update repository "repo": In ${BASEDIR}/OPAM/repo/repo/packages/bad-opam-version/bad-opam-version.2/opam:
-        unsupported or missing file format version; should be 2.0 or older
+opam-file                       opam-version unsupported on ${BASEDIR}/OPAM/repo/repo/packages/bad-opam-version/bad-opam-version.2/opam. Add as dummy unavailable package.
 [repo2] no changes from file://${BASEDIR}/REPO2
 [to-many-commits] no changes from git+file://${BASEDIR}/TMCS
-# Return code 40 #
+Now run 'opam upgrade' to apply any package updates.
 ### opam list -A --all-versions -s
+a.1
+bad-opam-version.1
+bad-opam-version.2
 first.1
 foo.1
 foo.2
@@ -679,15 +678,17 @@ third.3
 first.1
 ### opam repository --this-switch add repo ./REPO
 [repo] Initialised
-[ERROR] Could not update repository "repo": In ${BASEDIR}/OPAM/repo/repo/packages/bad-opam-version/bad-opam-version.2/opam:
-        unsupported or missing file format version; should be 2.0 or older
-[ERROR] Initial repository fetch failed
-# Return code 40 #
 ### opam repository --this-switch add oper ./OPER3
 [oper] Initialised
-[ERROR] Could not update repository "oper": In ${BASEDIR}/OPAM/repo/oper/packages/bad-opam-version/bad-opam-version.1/opam:
-        unsupported or missing file format version; should be 2.0 or older
-[ERROR] Initial repository fetch failed
-# Return code 40 #
 ### opam list -A --all-versions -s
+a.1
+bad-opam-version.1
+bad-opam-version.2
 first.1
+foo.1
+foo.2
+foo.3
+foo.4
+foo.5
+foo.6
+third.3
