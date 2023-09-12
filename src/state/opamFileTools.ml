@@ -1192,6 +1192,10 @@ let read_opam dir =
       (OpamPp.string_of_bad_format (OpamPp.Bad_format (snd err)));
     None
   | None, None -> None
+  | exception (OpamPp.Bad_version _bf) ->
+    log "opam-version unsupported on %s. Add as dummy unavailable package."
+      (OpamFile.to_string opam_file);
+    Some (OpamFile.OPAM.with_available (FBool false) OpamFile.OPAM.empty)
 
 let read_repo_opam ~repo_name ~repo_root dir =
   let open OpamStd.Option.Op in
