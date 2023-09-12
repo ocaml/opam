@@ -6,6 +6,93 @@ N0REP0
 ### <one-more-file>
 and it also has content
 ### tar czf an-archive.tgz one-more-file
+### ::::::::::::::::::::::
+### : Test --warn option :
+### ::::::::::::::::::::::
+### <lint.opam>
+opam-version: "2.0"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 23: Missing field 'maintainer'
+           warning 25: Missing field 'authors'
+           warning 35: Missing field 'homepage'
+           warning 36: Missing field 'bug-reports'
+             error 57: Synopsis must not be empty
+           warning 68: Missing field 'license'
+# Return code 1 #
+### opam lint ./lint.opam --warn=+25
+${BASEDIR}/lint.opam: Warnings.
+           warning 25: Missing field 'authors'
+### opam lint ./lint.opam --warn=-25
+${BASEDIR}/lint.opam: Errors.
+             error 23: Missing field 'maintainer'
+           warning 35: Missing field 'homepage'
+           warning 36: Missing field 'bug-reports'
+             error 57: Synopsis must not be empty
+           warning 68: Missing field 'license'
+# Return code 1 #
+### opam lint ./lint.opam --warn=+25-25
+${BASEDIR}/lint.opam: Passed.
+### opam lint ./lint.opam --warn=+20..50
+${BASEDIR}/lint.opam: Errors.
+             error 23: Missing field 'maintainer'
+           warning 25: Missing field 'authors'
+           warning 35: Missing field 'homepage'
+           warning 36: Missing field 'bug-reports'
+# Return code 1 #
+### opam lint ./lint.opam --warn=-20..40
+${BASEDIR}/lint.opam: Errors.
+             error 57: Synopsis must not be empty
+           warning 68: Missing field 'license'
+# Return code 1 #
+### opam lint ./lint.opam --warn=+25+25+30..38
+${BASEDIR}/lint.opam: Warnings.
+           warning 25: Missing field 'authors'
+           warning 35: Missing field 'homepage'
+           warning 36: Missing field 'bug-reports'
+### opam lint ./lint.opam --warn=+50..38+23+25
+${BASEDIR}/lint.opam: Errors.
+             error 23: Missing field 'maintainer'
+           warning 25: Missing field 'authors'
+# Return code 1 #
+### opam lint ./lint.opam --warn=-25-25-30..38
+${BASEDIR}/lint.opam: Errors.
+             error 23: Missing field 'maintainer'
+             error 57: Synopsis must not be empty
+           warning 68: Missing field 'license'
+# Return code 1 #
+### opam lint ./lint.opam --warn=@0..99
+${BASEDIR}/lint.opam: Errors.
+             error 23: Missing field 'maintainer'
+             error 25: Missing field 'authors'
+             error 35: Missing field 'homepage'
+             error 36: Missing field 'bug-reports'
+             error 57: Synopsis must not be empty
+             error 68: Missing field 'license'
+# Return code 1 #
+### opam lint ./lint.opam --warn=@0..99
+${BASEDIR}/lint.opam: Errors.
+             error 23: Missing field 'maintainer'
+             error 25: Missing field 'authors'
+             error 35: Missing field 'homepage'
+             error 36: Missing field 'bug-reports'
+             error 57: Synopsis must not be empty
+             error 68: Missing field 'license'
+# Return code 1 #
+### opam lint ./lint.opam --warn=+25@25
+${BASEDIR}/lint.opam: Errors.
+             error 25: Missing field 'authors'
+# Return code 1 #
+### opam lint ./lint.opam --warn=+20..40@30..40
+${BASEDIR}/lint.opam: Errors.
+             error 23: Missing field 'maintainer'
+           warning 25: Missing field 'authors'
+             error 35: Missing field 'homepage'
+             error 36: Missing field 'bug-reports'
+# Return code 1 #
+### ::::::::::::::
+### : Test lints :
+### ::::::::::::::
 ### : W20: Field 'opam-version' refers to the patch version of opam, it should be of the form MAJOR.MINOR
 ### : E21: Field 'opam-version' doesn't match the current version, validation may not be accurate
 ### <lint.opam>

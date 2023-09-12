@@ -890,13 +890,13 @@ let variable_bindings =
 
 let warn_selector =
   let parse str =
-    let sep = Re.(compile (set "+-")) in
+    let sep = Re.(compile (set "+-@")) in
     let sel = Re.(compile @@
                   seq [bos; group (rep1 digit);
                        opt @@ seq [str ".."; group (rep1 digit)];
                        eos]) in
     let rec seq i j =
-      if i = j then [i]
+      if Int.equal i j then [i]
       else if i < j then i :: seq (i+1) j
       else j :: seq (j+1) i
     in
@@ -908,8 +908,13 @@ let warn_selector =
           try seq i (int_of_string (Re.Group.get g 2))
           with Not_found -> [i]
         in
-        let enabled = Re.Group.get d 0 = "+" in
-        let acc = List.fold_left (fun acc n -> (n, enabled) :: acc) acc nums in
+        let state = match Re.Group.get d 0 with
+          | "+" -> `Enable
+          | "-" -> `Disable
+          | "@" -> `EnableError
+          | _ -> assert false
+        in
+        let acc = List.fold_left (fun acc n -> (n, state) :: acc) acc nums in
         aux acc r
       | [] -> acc
       | _ -> raise Not_found
@@ -920,8 +925,13 @@ let warn_selector =
   in
   let print ppf warns =
     pr_str ppf @@
-    OpamStd.List.concat_map "" (fun (num,enable) ->
-        Printf.sprintf "%c%d" (if enable then '+' else '-') num)
+    OpamStd.List.concat_map "" (fun (num,state) ->
+        let state = match state with
+          | `Enable -> '+'
+          | `Disable -> '-'
+          | `EnableError -> '@'
+        in
+        Printf.sprintf "%c%d" state num)
       warns
   in
   parse, print
