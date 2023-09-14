@@ -5141,9 +5141,11 @@ then :
       if  test "$ARCH" = "i386"
 then :
   T_CC64=x86_64-w64-mingw32-gcc
+        COMP_ARCH='x86_64'
         ac_tool_prefix='i686-w64-mingw32-'
 else $as_nop
   T_CC64=i686-w64-mingw32-gcc
+        COMP_ARCH='i686'
         ac_tool_prefix='x86_64-w64-mingw32-'
 fi
 fi
@@ -5314,7 +5316,7 @@ fi
   if  test "x${CC64}" = "xno"
 then :
 
-    as_fn_error $? "${ARCH} C compiler not found - opam-putenv cannot be built" "$LINENO" 5
+    as_fn_error $? "${COMP_ARCH} C compiler not found - opam-putenv cannot be built" "$LINENO" 5
 
 fi
 

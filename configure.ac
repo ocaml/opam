@@ -202,8 +202,10 @@ AS_IF([ test ${WIN32} -eq 1 ],[
     AS_IF([ test "x${CC64}" = "x" ], [
       AS_IF([ test "$ARCH" = "i386" ],
         [T_CC64=x86_64-w64-mingw32-gcc
+        COMP_ARCH='x86_64'
         ac_tool_prefix='i686-w64-mingw32-'],
         [T_CC64=i686-w64-mingw32-gcc
+        COMP_ARCH='i686'
         ac_tool_prefix='x86_64-w64-mingw32-'])])
     AC_CHECK_TOOL(CC64,[${T_CC64}],[no])
     AS_IF([ test "x${CC64}" != "xno" ],[
@@ -243,7 +245,7 @@ AS_IF([ test ${WIN32} -eq 1 ],[
     ])
   ])
   AS_IF([ test "x${CC64}" = "xno" ],[
-    AC_MSG_ERROR([${ARCH} C compiler not found - opam-putenv cannot be built])
+    AC_MSG_ERROR([${COMP_ARCH} C compiler not found - opam-putenv cannot be built])
   ])
 ])
 
