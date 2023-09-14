@@ -52,9 +52,7 @@ If you are developing opam, you may enable developer features by including the
 ## Compiling on Native Windows
 
 Cygwin (https://www.cygwin.com/setup-x86_64.exe) is always required to build opam on
-Windows. Both the 64-bit and 32-bit versions of Cygwin may be used (you can build
-32-bit opam using 64-bit Cygwin and vice versa though. Note that you must be running
-64-bit Windows in order to build the 64-bit version).
+Windows.
 
 The following Cygwin packages are required:
 * From Devel - `make`
