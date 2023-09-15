@@ -42,8 +42,8 @@ env:
   OPAMBSROOT: ~/.cache/.opam.cached
   OPAM12CACHE: ~/.cache/opam1.2/cache
   OPAM_REPO: https://github.com/ocaml/opam-repository.git
-  OPAM_TEST_REPO_SHA: 849d953adddc9c44486de3307e9c757aba85b225
-  OPAM_REPO_SHA: 849d953adddc9c44486de3307e9c757aba85b225
+  OPAM_TEST_REPO_SHA: b251e0d9d0a8bcb0742d4d495c70f479effe16c2
+  OPAM_REPO_SHA: b251e0d9d0a8bcb0742d4d495c70f479effe16c2
   SOLVER:
   CYGWIN_MIRROR: http://mirrors.kernel.org/sourceware/cygwin/
   CYGWIN_ROOT: D:\cygwin
@@ -122,7 +122,7 @@ jobs:
     needs: Analyse
     strategy:
       matrix:
-        ocamlv: [ 4.08.1, 4.09.1, 4.10.2, 4.11.2, 4.12.1, 4.13.1, 4.14.1 ]
+        ocamlv: [ 4.08.1, 4.09.1, 4.10.2, 4.11.2, 4.12.1, 4.13.1, 5.0.0, 5.1.0, 4.14.1 ]
       fail-fast: true
     steps:
     - name: Install bubblewrap
