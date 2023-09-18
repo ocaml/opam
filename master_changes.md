@@ -78,6 +78,7 @@ users)
   * Fix "make cold" on Windows when gcc is available [#5635 @kit-ty-kate - fixes #5600]
 
 ## Infrastructure
+  * Test OCaml 5.0 and 5.1 in CI [#5672 @kit-ty-kate]
 
 ## Release scripts
   * Add ppc64le and s390x support [#5420 @kit-ty-kate]

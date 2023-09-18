@@ -15,7 +15,7 @@ open Lib
 
 let ocamls = [
   (* Fully supported versions *)
-   "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1"; "4.14.1";
+   "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1"; "5.0.0"; "5.1.0"; "4.14.1";
 ]
 
 (* Entry point for the workflow. Workflows are specified as continuations where
@@ -85,7 +85,7 @@ let latest_ocaml = List.fold_left (fun _ (v, _) -> v) (0, 0) ocamls
 
 let platform_ocaml_matrix ?(dir=List.drop_while) ~fail_fast start_version =
   (fail_fast,
-   [("ocamlv", List.map snd (dir (fun ocaml -> fst ocaml < start_version) ocamls))],
+   [("ocamlv", List.map snd (dir (fun ocaml -> fst ocaml <> start_version) ocamls))],
    [])
 
 let git_lf_checkouts ?(title="Configure Git") ?cond ?shell () =
@@ -470,8 +470,8 @@ let main oc : unit =
     ("OPAM12CACHE", "~/.cache/opam1.2/cache");
     (* These should be identical to the values in appveyor.yml *)
     ("OPAM_REPO", "https://github.com/ocaml/opam-repository.git");
-    ("OPAM_TEST_REPO_SHA", "849d953adddc9c44486de3307e9c757aba85b225");
-    ("OPAM_REPO_SHA", "849d953adddc9c44486de3307e9c757aba85b225");
+    ("OPAM_TEST_REPO_SHA", "b251e0d9d0a8bcb0742d4d495c70f479effe16c2");
+    ("OPAM_REPO_SHA", "b251e0d9d0a8bcb0742d4d495c70f479effe16c2");
     ("SOLVER", "");
     (* Cygwin configuration *)
     ("CYGWIN_MIRROR", "http://mirrors.kernel.org/sourceware/cygwin/");
