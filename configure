@@ -770,6 +770,7 @@ with_mccs
 with_0install_solver
 with_libacl
 with_private_runtime
+enable_static
 enable_cold_check
 with_dune
 with_vendored_deps
@@ -1410,6 +1411,10 @@ Optional Features:
 
   --enable-developer-mode Enable developer features
 
+  --enable-static         Compile the opam binary statically. Only Musl-based
+                          Linux distributions and Windows with MinGW is
+                          currently supported. This is the default on Windows
+                          with MinGW
   --enable-cold-check     Fail on some check necessary for make cold
   --disable-certificate-check
                           Do not check the certificate of opam's dependency
@@ -4037,6 +4042,15 @@ else $as_nop
 fi
 
 
+# Check whether --enable-static was given.
+if test ${enable_static+y}
+then :
+  enableval=$enable_static;
+else $as_nop
+  enable_static=auto
+fi
+
+
 # Check whether --enable-cold_check was given.
 if test ${enable_cold_check+y}
 then :
@@ -4191,6 +4205,11 @@ SYSTEM=`$OCAML shell/print_config.ml system 2>/dev/null | grep -F -v "Cannot fin
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $SYSTEM" >&5
 printf "%s\n" "$SYSTEM" >&6; }
 
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for compiler target" >&5
+printf %s "checking for compiler target... " >&6; }
+TARGET=`$OCAML shell/print_config.ml target 2>/dev/null | grep -F -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/target: //p"`
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $TARGET" >&5
+printf "%s\n" "$TARGET" >&6; }
 
 LIB_PREPEND=
 INC_PREPEND=
@@ -6153,6 +6172,51 @@ else $as_nop
   CONF_MANIFEST_O=
 fi
 
+
+# Handle --enable-static
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for linking method" >&5
+printf %s "checking for linking method... " >&6; }
+support_static=no
+default_static=no
+case $TARGET in #(
+  *-linux-musl*) :
+
+    support_static=yes
+    platform_dependant_stuff="-cclib -lstdc++ -cclib -static-libgcc -cclib -static"
+   ;; #(
+  *-*-mingw32*) :
+
+    support_static=yes
+    default_static=yes
+    # NOTE: On Windows, the Windows specific dlls should stay dynamic for security reasons
+    # NOTE: -l:libstdc++.a is necessary (vs. -lstdc++) as flexlink will use libstdc++.dll.a
+    # which still depends on the DLL at runtime instead of libstdc++.a (that looks like a bug in flexlink)
+    platform_dependant_stuff="-cclib -lopam_stubs_win32_stubs -cclib -l:libstdc++.a -cclib -l:libpthread.a -cclib -Wl,-static -cclib -ladvapi32 -cclib -lgdi32 -cclib -luser32 -cclib -lshell32"
+   ;; #(
+  *) :
+     ;;
+esac
+case ${support_static},${enable_static} in #(
+  no,yes) :
+    as_fn_error $? "--enable-static is not available on this platform (${TARGET})." "$LINENO" 5 ;; #(
+  *,auto) :
+    enable_static=${default_static} ;; #(
+  *) :
+     ;;
+esac
+if test "${enable_static}" = yes
+then :
+
+  echo "(-noautolink -cclib -lunix -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lsha_stubs ${platform_dependant_stuff})" > src/client/linking.sexp
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: static" >&5
+printf "%s\n" "static" >&6; }
+
+else $as_nop
+
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: shared" >&5
+printf "%s\n" "shared" >&6; }
+
+fi
 
 echo
 

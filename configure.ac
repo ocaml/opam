@@ -76,6 +76,12 @@ AC_ARG_WITH([private_runtime],
   AS_HELP_STRING([--with-private-runtime],[For a mingw-w64 build, manifest the runtime DLLs locally in Opam.Runtime.arch]),,[with_private_runtime=no]
 )
 
+AC_ARG_ENABLE([static],
+  AS_HELP_STRING([--enable-static],
+    [Compile the opam binary statically. Only Musl-based Linux distributions and Windows with MinGW is currently supported. This is the default on Windows with MinGW]),
+  [],
+  [enable_static=auto])
+
 AC_ARG_ENABLE([cold_check],
   AS_HELP_STRING([--enable-cold-check],[Fail on some check necessary for make cold]),[COLD_CHECK=yes],[]
 )
@@ -113,6 +119,9 @@ AC_MSG_CHECKING([for compiler system])
 SYSTEM=`$OCAML shell/print_config.ml system 2>/dev/null | grep -F -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/system: //p"`
 AC_MSG_RESULT([$SYSTEM])
 AC_SUBST(SYSTEM)
+AC_MSG_CHECKING([for compiler target])
+TARGET=`$OCAML shell/print_config.ml target 2>/dev/null | grep -F -v "Cannot find" || $OCAMLC -config | tr -d '\r' | sed -n -e "s/target: //p"`
+AC_MSG_RESULT([$TARGET])
 
 LIB_PREPEND=
 INC_PREPEND=
@@ -326,6 +335,33 @@ AS_IF([test "x${with_private_runtime}" != "xno"],[
   ])
 ],[CONF_MANIFEST_O=])
 AC_SUBST(CONF_MANIFEST_O)
+
+# Handle --enable-static
+AC_MSG_CHECKING([for linking method])
+support_static=no
+default_static=no
+AS_CASE([$TARGET],
+  [*-linux-musl*],[
+    support_static=yes
+    platform_dependant_stuff="-cclib -lstdc++ -cclib -static-libgcc -cclib -static"
+  ],
+  [*-*-mingw32*],[
+    support_static=yes
+    default_static=yes
+    # NOTE: On Windows, the Windows specific dlls should stay dynamic for security reasons
+    # NOTE: -l:libstdc++.a is necessary (vs. -lstdc++) as flexlink will use libstdc++.dll.a
+    # which still depends on the DLL at runtime instead of libstdc++.a (that looks like a bug in flexlink)
+    platform_dependant_stuff="-cclib -lopam_stubs_win32_stubs -cclib -l:libstdc++.a -cclib -l:libpthread.a -cclib -Wl,-static -cclib -ladvapi32 -cclib -lgdi32 -cclib -luser32 -cclib -lshell32"
+  ])
+AS_CASE([${support_static},${enable_static}],
+  [no,yes],[AC_MSG_ERROR([--enable-static is not available on this platform (${TARGET}).])],
+  [*,auto],[enable_static=${default_static}])
+AS_IF([test "${enable_static}" = yes],[
+  echo "(-noautolink -cclib -lunix -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lsha_stubs ${platform_dependant_stuff})" > src/client/linking.sexp
+  AC_MSG_RESULT([static])
+],[
+  AC_MSG_RESULT([shared])
+])
 
 echo
 
