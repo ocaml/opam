@@ -51,26 +51,22 @@ If you are developing opam, you may enable developer features by including the
 
 ## Compiling on Native Windows
 
-```
-BUILDING ON WINDOWS IS A WORK-IN-PROGRESS AND THESE INSTRUCTIONS WILL EVOLVE!
-```
-
 Cygwin (https://www.cygwin.com/setup-x86_64.exe) is always required to build opam on
-Windows. Both the 64-bit and 32-bit versions of Cygwin may be used (you can build
-32-bit opam using 64-bit Cygwin and vice versa though. Note that you must be running
-64-bit Windows in order to build the 64-bit version).
+Windows.
 
 The following Cygwin packages are required:
 * From Devel - `make`
 * From Devel - `patch` (not required if OCaml and all required packages are
                         pre-installed)
-* From Devel - `mingw64-i686-gcc-core` & `mingw64-x86_64-gcc-core` (not required if
+* From Devel - `autoconf`
+* From Devel - `curl`
+* From Devel - `mingw64-i686-gcc-g++` & `mingw64-x86_64-gcc-g++` (not required if
                                                                  building with MSVC)
 
 Alternatively, having downloaded Cygwin's setup program, Cygwin can be installed
 using the following command line:
 
-`setup-x86_64 --root=C:\cygwin64 --quiet-mode --no-desktop --no-startmenu --packages=make,mingw64-i686-gcc-core,mingw64-x86_64-gcc-core,patch`
+`setup-x86_64 --root=C:\cygwin64 --quiet-mode --no-desktop --no-startmenu --packages=make,mingw64-i686-gcc-g++,mingw64-x86_64-gcc-g++,patch,autoconf,curl`
 
 The `--no-desktop` and `--no-startmenu` switches may be omitted in order to create
 shortcuts on the Desktop and Start Menu, respectively. Executed this way, setup will
