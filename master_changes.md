@@ -158,6 +158,9 @@ users)
 # API updates
 ## opam-client
   * `OpamSwitchCommand.import`: add optional `?deps_only` argument to install only dependencies of root packages [#5388 @rjbou]
+  * `OpamArg.build_options`: add `--verbose-on` flag [#5682 @desumn @rjbou]
+  * `OpamClientConfig.build_options`: add `verbose_on` field [#5682 @desumn]
+  * `OpamClientConfig.E`, `OpamArg.environment_variables`: and `OPAMVERBOSEON` support [#5682 @desumn @rjbou]
 
 ## opam-repository
  * `OpamRepository.fetch_from_cache`: when an archive is found, add a symlink (or copy) for the ones found in opam file but not in cache [#6068 @kit-ty-kate]
