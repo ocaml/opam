@@ -185,8 +185,7 @@ the binaries installed in `${OPAMROOT}/plugins/bin` (by default: `~/.opam/plugin
 This directory contains symlinks to binaries installed in whichever opam switch
 the plugin it belongs to was installed in.
 These symlinks are added for any packages that have the ["plugin" flag](#opamflag-plugin)
-and have a binary matching their package name. If no binaries with the same name
-as the package is found, a warning will be shown.
+and have a binary matching their package name. If no binaries with a matching name are found, a warning will be shown.
 For example, when calling `opam plugin-name`, opam will look for a binary named
 `opam-plugin-name` in `~/.opam/plugins/bin`.
 
