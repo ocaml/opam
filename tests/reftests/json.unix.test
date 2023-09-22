@@ -1301,3 +1301,57 @@ a.1
     }
   ]
 }
+### opam tree c --no-switch --json=out.json
+c.1
+|-- a.1
+|-- b.1
+|   '-- a.1 [*]
+'-- c-build.1 (build)
+### json-cat out.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "tree",
+    "c",
+    "--no-switch",
+    "--json=out.json"
+  ],
+  "tree": [
+    {
+      "name": "c",
+      "version": "1",
+      "dependencies": [
+        {
+          "name": "a",
+          "version": "1",
+          "satisfies": null,
+          "is_duplicate": false,
+          "dependencies": []
+        },
+        {
+          "name": "b",
+          "version": "1",
+          "satisfies": null,
+          "is_duplicate": false,
+          "dependencies": [
+            {
+              "name": "a",
+              "version": "1",
+              "satisfies": null,
+              "is_duplicate": true,
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "name": "c-build",
+          "version": "1",
+          "satisfies": "(build)",
+          "is_duplicate": false,
+          "dependencies": []
+        }
+      ]
+    }
+  ]
+}

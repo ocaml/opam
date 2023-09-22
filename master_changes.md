@@ -97,6 +97,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add some additional test to tree, for `--dev` && `--no-switch` [#5687 @rjbou]
 
 ### Engine
   * Set `SHELL` to `/bin/sh` in Windows to ensure `opam env` commands are consistent [#5723 @dra27]
