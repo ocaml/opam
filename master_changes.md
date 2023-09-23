@@ -42,6 +42,7 @@ users)
 ## Update / Upgrade
 
 ## Tree
+  * Fix `--dev` option, force dev dependencies when option is given [#5687 @rjbou - fix #5675]
 
 ## Exec
 

@@ -379,8 +379,10 @@ let print_solution st new_st missing solution =
 (** Setting states for building *)
 
 let get_universe tog st =
-  let OpamListCommand.{doc; test; dev_setup; _} = tog in
-  OpamSwitchState.universe st ~doc ~test ~dev_setup ~requested:st.installed Query
+  let OpamListCommand.{doc; test; dev_setup; dev; _} = tog in
+  OpamSwitchState.universe st ~doc ~test ~dev_setup ~force_dev_deps:dev
+    ~requested:st.installed
+    Query
 
 let simulate_new_state tog st universe install names =
   match OpamSolver.resolve universe
@@ -402,7 +404,7 @@ let dry_install tog st universe install =
     (OpamPackage.Name.Set.of_list (List.map fst install))
 
 let raw_state tog st install =
-  let OpamListCommand.{doc; test; dev_setup; _} = tog in
+  let OpamListCommand.{doc; test; dev_setup; dev; _} = tog in
   let names = OpamPackage.Name.Set.of_list (List.map fst install) in
   let requested =
     OpamPackage.packages_of_names
@@ -410,7 +412,8 @@ let raw_state tog st install =
       names
   in
   let universe =
-    OpamSwitchState.universe st ~doc ~test ~dev_setup ~requested Query
+    OpamSwitchState.universe st ~doc ~test ~dev_setup ~force_dev_deps:dev
+      ~requested Query
   in
   let universe =
     { universe

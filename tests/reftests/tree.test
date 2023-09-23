@@ -260,11 +260,13 @@ l.1
 '-- a.1
 ### opam tree l --dev
 The following actions are simulated:
-=== install 1 package
-  - install l 1
+=== install 2 packages
+  - install l     1
+  - install l-dev 1 [required by l]
 
 l.1
-'-- a.1
+|-- a.1
+'-- l-dev.1 (dev)
 ### opam tree l --no-switch
 The following actions are simulated:
 === install 2 packages
@@ -275,12 +277,14 @@ l.1
 '-- a.1
 ### opam tree l --dev --no-switch
 The following actions are simulated:
-=== install 2 packages
-  - install a 1 [required by l]
-  - install l 1
+=== install 3 packages
+  - install a     1 [required by l]
+  - install l     1
+  - install l-dev 1 [required by l]
 
 l.1
-'-- a.1
+|-- a.1
+'-- l-dev.1 (dev)
 ### opam pin ./l
 l is now pinned to file://${BASEDIR}/l (version 1)
 
