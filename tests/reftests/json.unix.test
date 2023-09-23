@@ -1302,6 +1302,13 @@ a.1
   ]
 }
 ### opam tree c --no-switch --json=out.json
+The following actions are simulated:
+=== install 4 packages
+  - install a       1 [required by c]
+  - install b       1 [required by c]
+  - install c       1
+  - install c-build 1 [required by c]
+
 c.1
 |-- a.1
 |-- b.1
