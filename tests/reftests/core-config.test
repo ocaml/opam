@@ -15,32 +15,44 @@ The following actions will be performed:
 -> installed foo.1
 Done.
 ### OPAMVERBOSE=1
-### opam reinstall foo
+### opam reinstall foo | sed-cmd echo
 The following actions will be performed:
 === recompile 1 package
   - recompile foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/4: [foo: echo hej]
++ echo "hej" (CWD=${BASEDIR}/OPAM/core-config/.opam-switch/build/foo.1)
+- hej
+-> compiled  foo.1
 -> removed   foo.1
 -> installed foo.1
 Done.
 ### OPAMVERBOSE=yes
-### opam reinstall foo
+### opam reinstall foo | sed-cmd echo
 The following actions will be performed:
 === recompile 1 package
   - recompile foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/4: [foo: echo hej]
++ echo "hej" (CWD=${BASEDIR}/OPAM/core-config/.opam-switch/build/foo.1)
+- hej
+-> compiled  foo.1
 -> removed   foo.1
 -> installed foo.1
 Done.
 ### OPAMVERBOSE=true
-### opam reinstall foo
+### opam reinstall foo | sed-cmd echo
 The following actions will be performed:
 === recompile 1 package
   - recompile foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/4: [foo: echo hej]
++ echo "hej" (CWD=${BASEDIR}/OPAM/core-config/.opam-switch/build/foo.1)
+- hej
+-> compiled  foo.1
 -> removed   foo.1
 -> installed foo.1
 Done.
@@ -59,16 +71,12 @@ Processing  2/4: [foo: echo hej]
 -> installed foo.1
 Done.
 ### OPAMVERBOSE=0
-### opam reinstall foo | sed-cmd echo
+### opam reinstall foo
 The following actions will be performed:
 === recompile 1 package
   - recompile foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  2/4: [foo: echo hej]
-+ echo "hej" (CWD=${BASEDIR}/OPAM/core-config/.opam-switch/build/foo.1)
-- hej
--> compiled  foo.1
 -> removed   foo.1
 -> installed foo.1
 Done.
@@ -83,30 +91,22 @@ The following actions will be performed:
 -> installed foo.1
 Done.
 ### OPAMVERBOSE=false
-### opam reinstall foo | sed-cmd echo
+### opam reinstall foo
 The following actions will be performed:
 === recompile 1 package
   - recompile foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  2/4: [foo: echo hej]
-+ echo "hej" (CWD=${BASEDIR}/OPAM/core-config/.opam-switch/build/foo.1)
-- hej
--> compiled  foo.1
 -> removed   foo.1
 -> installed foo.1
 Done.
 ### OPAMVERBOSE=no
-### opam reinstall foo | sed-cmd echo
+### opam reinstall foo
 The following actions will be performed:
 === recompile 1 package
   - recompile foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  2/4: [foo: echo hej]
-+ echo "hej" (CWD=${BASEDIR}/OPAM/core-config/.opam-switch/build/foo.1)
-- hej
--> compiled  foo.1
 -> removed   foo.1
 -> installed foo.1
 Done.
