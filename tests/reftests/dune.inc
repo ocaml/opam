@@ -270,6 +270,24 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:conflict-solo5.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-core-config)
+ (action
+  (diff core-config.test core-config.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-core-config)))
+
+(rule
+ (targets core-config.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:core-config.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-core-system.unix)
  (enabled_if (= %{os_type} "Unix"))
  (action

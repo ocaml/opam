@@ -112,6 +112,7 @@ users)
   * Admin: add `admin add-extrafiles` test cases [#5647 @rjbou]
   * Add download test, to check `OPAMCURL/OPAMFETCH` handling [#5607 @rjbou]
   * Add `core/opamSystem.ml` specific tests, to test command resolution [#5600 @rjbou]
+  * Add test for `OpamCoreConfig`, to check `OPAMVERBOSE` values [#5686 @rjbou]
 
 ### Engine
   * With real path resolved for all opam temp dir, remove `/private` from mac temp dir regexp [#5654 @rjbou]
