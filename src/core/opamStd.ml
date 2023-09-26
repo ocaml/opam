@@ -1683,8 +1683,8 @@ module Config = struct
     env (function s ->
         if s = "" then 0 else
         match bool_of_string s with
-        | Some true -> 0
-        | Some false -> 1
+        | Some true -> 1
+        | Some false -> 0
         | None -> int_of_string s)
       var
 

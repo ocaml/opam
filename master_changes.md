@@ -14,6 +14,7 @@ users)
   * Bump to 2.2.0~alpha3~dev [#5615 @rjbou]
 
 ## Global CLI
+  * Fix `OPAMVERBOSE` setting, 0 and 1 levels was inverted: eg, "no" gives level 1, and "yes" level 0 [#5686 @smorimoto]
 
 ## Plugins
 
@@ -112,6 +113,7 @@ users)
   * Admin: add `admin add-extrafiles` test cases [#5647 @rjbou]
   * Add download test, to check `OPAMCURL/OPAMFETCH` handling [#5607 @rjbou]
   * Add `core/opamSystem.ml` specific tests, to test command resolution [#5600 @rjbou]
+  * Add test for `OpamCoreConfig`, to check `OPAMVERBOSE` values [#5686 @rjbou]
 
 ### Engine
   * With real path resolved for all opam temp dir, remove `/private` from mac temp dir regexp [#5654 @rjbou]
@@ -139,13 +141,11 @@ users)
 ## opam-solver
 
 ## opam-format
-
-* Add `OpamFilter.expand_interpolations_in_file_full` which allows setting the
-  output file along with the input file [#5629 @rgrinberg]
-
-* Expose `OpamFilter.string_interp_regex` which allows clients to identify
-  variable interpolations in strings [#5633 @gridbugs]
+## opam-format
+  * `OpamFilter`: add `expand_interpolations_in_file_full` which allows setting the output file along with the input file [#5629 @rgrinberg]
+  * `OpamFilter`: expose `string_interp_regex` which allows clients to identify variable interpolations in strings [#5633 @gridbugs]
 
 ## opam-core
   * `OpamSystem.mk_temp_dir`: resolve real path with `OpamSystem.real_path` before returning it [#5654 @rjbou]
-  * `OpamSystem.resolve_command`: in command resolution path, check that the file is not a directory and that it is a regular file [#5606 @rjbou - fix #5585 #5597]
+  * `OpamSystem.resolve_command`: in command resolution path, check that the file is not a directory and that it is a regular file [#5606 @rjbou - fix #5585 #5597 #5650 #5626]
+  * `OpamStd.Config.env_level`: fix level parsing, it was inverted (eg, "no" gives level 1, and "yes" level 0) [#5686 @smorimoto]
