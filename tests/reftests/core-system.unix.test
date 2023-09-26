@@ -1,0 +1,32 @@
+N0REP0
+### # This test is unix only until https://github.com/ocaml/opam/pull/5682 resolution
+### ::::::::::::::::::::::::::::::::::
+### :I: System.resolve_commands checks
+### ::::::::::::::::::::::::::::::::::
+### opam switch create resolve --empty
+### :I:a: System one
+### opam exec -- echo system
+system
+### opam exec --no-switch -- echo system
+system
+### :I:b: is a directory
+### mkdir -p bin/echo
+### PATH+=$BASEDIR/bin/
+### opam exec -- echo system
+system
+### opam exec --no-switch -- echo system
+system
+### :I:c: is not executable
+### rm -rf bin/echo
+### <bin/echo>
+echo 'echo'
+### opam exec -- echo system
+system
+### opam exec --no-switch -- echo system
+system
+### :I:d: is executable
+### chmod +x bin/echo
+### opam exec -- echo system
+echo
+### opam exec --no-switch -- echo system
+echo

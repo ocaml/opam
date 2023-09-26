@@ -111,10 +111,14 @@ users)
   * Move local-cache into archive-field-checks test [#5560 @rjbou]
   * Admin: add `admin add-extrafiles` test cases [#5647 @rjbou]
   * Add download test, to check `OPAMCURL/OPAMFETCH` handling [#5607 @rjbou]
+  * Add `core/opamSystem.ml` specific tests, to test command resolution [#5600 @rjbou]
 
 ### Engine
   * With real path resolved for all opam temp dir, remove `/private` from mac temp dir regexp [#5654 @rjbou]
   * Reimplement `sed-cmd` command regexp, to handle prefixed commands with path not only in subprocess, but anywere in output [#5657 #5607 @rjbou]
+  * Add environment variables path addition [#5606 @rjbou]
+  * Remove duplicated environment variables in environmenet [#5606 @rjbou]
+  * Add `PATH` to replaceable variables [#5606 @rjbou]
 
 ## Github Actions
   * Add coreutils install for cheksum validation tests [#5560 @rjbou]
@@ -144,3 +148,4 @@ users)
 
 ## opam-core
   * `OpamSystem.mk_temp_dir`: resolve real path with `OpamSystem.real_path` before returning it [#5654 @rjbou]
+  * `OpamSystem.resolve_command`: in command resolution path, check that the file is not a directory and that it is a regular file [#5606 @rjbou - fix #5585 #5597]
