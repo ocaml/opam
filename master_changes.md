@@ -141,14 +141,11 @@ users)
 ## opam-solver
 
 ## opam-format
-
-* Add `OpamFilter.expand_interpolations_in_file_full` which allows setting the
-  output file along with the input file [#5629 @rgrinberg]
-
-* Expose `OpamFilter.string_interp_regex` which allows clients to identify
-  variable interpolations in strings [#5633 @gridbugs]
+## opam-format
+  * `OpamFilter`: add `expand_interpolations_in_file_full` which allows setting the output file along with the input file [#5629 @rgrinberg]
+  * `OpamFilter`: expose `string_interp_regex` which allows clients to identify variable interpolations in strings [#5633 @gridbugs]
 
 ## opam-core
   * `OpamSystem.mk_temp_dir`: resolve real path with `OpamSystem.real_path` before returning it [#5654 @rjbou]
-  * `OpamSystem.resolve_command`: in command resolution path, check that the file is not a directory and that it is a regular file [#5606 @rjbou - fix #5585 #5597]
+  * `OpamSystem.resolve_command`: in command resolution path, check that the file is not a directory and that it is a regular file [#5606 @rjbou - fix #5585 #5597 #5650 #5626]
   * `OpamStd.Config.env_level`: fix level parsing, it was inverted (eg, "no" gives level 1, and "yes" level 0) [#5686 @smorimoto]
