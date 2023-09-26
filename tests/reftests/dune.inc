@@ -1578,6 +1578,24 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:var-option.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-verbose-on)
+ (action
+  (diff verbose-on.test verbose-on.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-verbose-on)))
+
+(rule
+ (targets verbose-on.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:verbose-on.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-with-dev-setup)
  (action
   (diff with-dev-setup.test with-dev-setup.out)))

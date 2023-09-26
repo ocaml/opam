@@ -139,6 +139,7 @@ users)
   * Add admin cache test [#6068 @rjbou]
   * env: Add a test for `build-env` overwrites build env opam environment variables [#5377 @rjbou]
   * clean: Add to check cleaning of sources directories [#5474 @rjbou]
+  * Add reftest for `--verbose-on` option [#5682 @rjbou]
 
 ### Engine
 
