@@ -71,6 +71,7 @@ users)
 ## Lint
 
 ## Repository
+  * Improve error message when `opam repo add` fails because local src directory doesn't exist [#5689 @punchagan - fix #5632]
 
 ## Lock
 
