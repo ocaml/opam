@@ -229,3 +229,87 @@ SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev/files
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in -> ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev/files/lot-of-files.install.in
+### : Removal of non specified directories in .install :
+### opam switch create rem-dir --empty --debug-level=0
+### mkdir -p OPAM/rem-dir/lib/shared
+### <pkg:no-specified-dir.1>
+opam-version: "2.0"
+### <pkg:no-specified-dir.1:no-specified-dir.install>
+opam-version: "2.0"
+lib_root: [
+  "a-file" {"another/somedir/an-installed-file"}
+  "a-file" {"shared/an-installed-file"}
+]
+share: [ "a-file" ]
+### <pkg:no-specified-dir.1:a-file>
+touch
+### OPAMDEBUGSECTIONS="SYSTEM TRACK" OPAMDEBUG=-1
+### opam install no-specified-dir | '[0-9]{14}' -> "now"
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/backup
+The following actions will be performed:
+=== install 1 package
+  - install no-specified-dir 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1
+SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/no-specified-dir.install -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/no-specified-dir.install
+SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/a-file -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/a-file
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/lib/another
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/lib/another/somedir
+SYSTEM                          install ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/a-file -> ${BASEDIR}/OPAM/rem-dir/lib/another/somedir/an-installed-file (644)
+SYSTEM                          install ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/a-file -> ${BASEDIR}/OPAM/rem-dir/lib/shared/an-installed-file (644)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/share
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/share/no-specified-dir
+SYSTEM                          install ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/a-file -> ${BASEDIR}/OPAM/rem-dir/share/no-specified-dir/a-file (644)
+TRACK                           after install: 4 elements, 4 added, scanned in 0.000s
+-> installed no-specified-dir.1
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files
+SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/no-specified-dir.install -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files/no-specified-dir.install
+SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/a-file -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files/a-file
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/backup/state-now.export
+### ocaml cat.ml rem-dir no-specified-dir
+==> no-specified-dir installed file
+touch
+==> no-specified-dir changes
+opam-version: "2.0"
+added: [
+  "lib|another|somedir|an-installed-file"
+    {"F:af5d4d883c8c9c50711d86a7e1807cab"}
+  "lib|shared|an-installed-file" {"F:af5d4d883c8c9c50711d86a7e1807cab"}
+  "share|no-specified-dir" {"D"}
+  "share|no-specified-dir|a-file" {"F:af5d4d883c8c9c50711d86a7e1807cab"}
+]
+### opam remove  no-specified-dir | '[0-9]{14}' -> "now"
+The following actions will be performed:
+=== remove 1 package
+  - remove no-specified-dir 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/lib/no-specified-dir
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/lib/no-specified-dir
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/share/no-specified-dir/a-file
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/share/no-specified-dir
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/etc/no-specified-dir
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/doc/no-specified-dir
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/install/no-specified-dir.install
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/lib/shared/an-installed-file
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/lib/another/somedir/an-installed-file
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/install/no-specified-dir.changes
+-> removed   no-specified-dir.1
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/sources/no-specified-dir.1
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/backup/state-now.export
+### test -d OPAM/rem-dir/lib/another/somedir
+### find OPAM/rem-dir/lib | unordered
+OPAM/rem-dir/lib
+OPAM/rem-dir/lib/shared
+OPAM/rem-dir/lib/another
+OPAM/rem-dir/lib/another/somedir
+OPAM/rem-dir/lib/stublibs
+OPAM/rem-dir/lib/toplevel

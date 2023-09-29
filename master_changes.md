@@ -115,6 +115,7 @@ users)
   * Add `core/opamSystem.ml` specific tests, to test command resolution [#5600 @rjbou]
   * Add test for `OpamCoreConfig`, to check `OPAMVERBOSE` values [#5686 @rjbou]
   * dot-install: generalise inner script & use less generic filenames [#5691 @rjbou]
+  * dot-install: add a test for removal of non specified in .install empty directories [#5701 @rjbou]
 
 ### Engine
   * With real path resolved for all opam temp dir, remove `/private` from mac temp dir regexp [#5654 @rjbou]
