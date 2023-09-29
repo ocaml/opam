@@ -103,7 +103,7 @@ ACTION                          prepare_package_source: dot.~dev at ${BASEDIR}/O
 ACTION                          Installing dot.~dev.
 
 ACTION                          creating ${BASEDIR}/OPAM/inst/share/dot
-TRACK                           after install: 2 elements, 2 added, scanned in 0.000s
+TRACK                           after install: 3 elements, 2 added, scanned in 0.000s
 ACTION                          changes recorded for dot.~dev: 2 items (addition: 2)
 -> installed dot.~dev
 Done.
@@ -262,7 +262,7 @@ SYSTEM                          install ${BASEDIR}/OPAM/rem-dir/.opam-switch/bui
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/share
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/share/no-specified-dir
 SYSTEM                          install ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/a-file -> ${BASEDIR}/OPAM/rem-dir/share/no-specified-dir/a-file (644)
-TRACK                           after install: 4 elements, 4 added, scanned in 0.000s
+TRACK                           after install: 9 elements, 7 added, scanned in 0.000s
 -> installed no-specified-dir.1
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1
@@ -277,9 +277,12 @@ touch
 ==> no-specified-dir changes
 opam-version: "2.0"
 added: [
+  "lib|another" {"D"}
+  "lib|another|somedir" {"D"}
   "lib|another|somedir|an-installed-file"
     {"F:af5d4d883c8c9c50711d86a7e1807cab"}
   "lib|shared|an-installed-file" {"F:af5d4d883c8c9c50711d86a7e1807cab"}
+  "share" {"D"}
   "share|no-specified-dir" {"D"}
   "share|no-specified-dir|a-file" {"F:af5d4d883c8c9c50711d86a7e1807cab"}
 ]
@@ -296,8 +299,11 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/share/no-specified
 SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/etc/no-specified-dir
 SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/doc/no-specified-dir
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/install/no-specified-dir.install
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/share
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/lib/shared/an-installed-file
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/lib/another/somedir/an-installed-file
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/lib/another/somedir
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/lib/another
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/install/no-specified-dir.changes
 -> removed   no-specified-dir.1
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache
@@ -306,10 +312,9 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/sourc
 Done.
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/backup/state-now.export
 ### test -d OPAM/rem-dir/lib/another/somedir
+# Return code 1 #
 ### find OPAM/rem-dir/lib | unordered
 OPAM/rem-dir/lib
 OPAM/rem-dir/lib/shared
-OPAM/rem-dir/lib/another
-OPAM/rem-dir/lib/another/somedir
 OPAM/rem-dir/lib/stublibs
 OPAM/rem-dir/lib/toplevel

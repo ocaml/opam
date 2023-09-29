@@ -25,6 +25,7 @@ users)
 ## Actions
 
 ## Install
+  * [BUG] On install driven by `.install` file, track intermediate directories too, in order to have them suppressed at package removal [#5691 @rjbou - fix #5688]
 
 ## Remove
 
