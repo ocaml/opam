@@ -377,17 +377,103 @@ let yum_cmd = lazy begin
     raise (OpamSystem.Command_not_found "yum or dnf")
 end
 
+let npm_cmd = lazy begin
+  if OpamSystem.resolve_command "npm" <> None then
+    ("npm", ["install"; "-g"], ["update"; "-g"])
+  else if OpamSystem.resolve_command "yarn" <> None then
+    ("yarn", ["global"; "add"], ["global"; "upgrade"])
+  else
+    raise (OpamSystem.Command_not_found "npm or yarn")
+end
+
+type npm_package_coord = {
+    scope : string option;
+    name : string;
+  }
+
+type 'coord package_spec' =
+  | System_package : string -> string package_spec'
+  | Npm_package : npm_package_coord -> npm_package_coord package_spec'
+
+type package_spec = Package : _ package_spec' -> package_spec
+
+let parse_package_spec spec : package_spec =
+  (* [spec] can be one of the following forms:
+     - [@npm:pkgname]
+     - [@npm:@npm-scope/pkgname]
+     - [syspkg-name]
+   *)
+  if String.(length spec > 0 && get spec 0 = '@') then (
+    try
+      let i = String.index_from spec 0 ':' in
+      match String.sub spec 1 (i-1) with
+      | "npm" -> (
+        let npm_spec = String.(sub spec (i+1) (length spec - (i+1))) in
+        if String.(length npm_spec > 0 && get npm_spec 0 = '@') then (
+          match String.split_on_char '/' npm_spec with
+          | [at_scope; name] ->
+             Package
+               (Npm_package {
+                  scope = Some String.(sub at_scope 1 (length at_scope - 1));
+                  name;
+               })
+          | _ -> raise Stdlib.Not_found
+        ) else 
+        Package (Npm_package { scope = None; name = npm_spec })
+      )
+      | _ -> raise Stdlib.Not_found
+    with
+      | Not_found -> invalid_arg ("bad depexts package spec: "^spec)
+  ) else Package (System_package spec)
+
+let unparse_package_spec : package_spec -> string =
+  function
+  | Package (System_package name) -> name
+  | Package (Npm_package { scope = Some scope; name }) ->
+     "@npm:@"^scope^"/"^name
+  | Package (Npm_package { scope = None; name }) ->
+     "@npm:"^name
+
 let packages_status ?(env=OpamVariable.Map.empty) config packages =
   let (+++) pkg set = OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set in
   (* Some package managers don't permit to request on available packages. In
      this case, we consider all non installed packages as [available]. *)
   let open OpamSysPkg.Set.Op in
+  let to_string_list pkgs =
+    OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) pkgs [])
+  in
+  let system_packages_str, npm_packages =
+    packages |> to_string_list
+    |> List.partition_map (fun spec ->
+         match parse_package_spec spec with
+         | Package (System_package pkgname) -> Either.Left pkgname
+         | Package (Npm_package spec) -> Either.right spec) in
+  let to_npm_package_set specs =
+    let conv spec = OpamSysPkg.of_string (unparse_package_spec (Package (Npm_package spec))) in
+    List.map conv specs |> OpamSysPkg.Set.of_list in
+  let npm_installed =
+    match Lazy.force npm_cmd with
+    | cmd, install_args, _ ->
+       let test spec =
+         let string_spec = match spec with
+           | { scope = Some scope; name } -> "@"^scope^"/"^name
+           | { scope = None; name } -> name in
+         run_command_exit_code cmd (install_args @ [string_spec]) = 0
+       in
+       npm_packages |> List.filter test |> to_npm_package_set
+    | exception OpamSystem.Command_not_found _ -> OpamSysPkg.Set.empty
+  in
+  let system_packages =
+    system_packages_str
+    |> List.map OpamSysPkg.of_string
+    |> OpamSysPkg.Set.of_list in
   let compute_sets ?sys_available sys_installed =
-    let installed = packages %% sys_installed in
+    let installed = packages %% (sys_installed ++ npm_installed) in
+    let npm_available = (to_npm_package_set npm_packages) -- npm_installed in
     let available, not_found =
       match sys_available with
       | Some sys_available ->
-        let available = (packages -- installed) %% sys_available in
+        let available = (packages -- installed) %% (sys_available ++ npm_available) in
         let not_found = packages -- installed -- available in
         available, not_found
       | None ->
@@ -396,12 +482,9 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     in
     available, not_found
   in
-  let to_string_list pkgs =
-    OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) pkgs [])
-  in
   let names_re ?str_pkgs () =
     let str_pkgs =
-      OpamStd.Option.default (to_string_list packages) str_pkgs
+      OpamStd.Option.default (to_string_list system_packages) str_pkgs
     in
     let need_escape = Re.(compile (group (set "+."))) in
     Printf.sprintf "^(%s)$"
@@ -448,9 +531,9 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     let sys_available, sys_provides = get_avail_w_virtuals () in
     let need_inst_check =
       OpamSysPkg.Map.fold (fun cp vps set ->
-          if OpamSysPkg.Set.(is_empty (inter vps packages)) then set else
+          if OpamSysPkg.Set.(is_empty (inter vps system_packages)) then set else
             OpamSysPkg.Set.add cp set)
-        sys_provides packages
+        sys_provides system_packages
     in
     let str_need_inst_check = to_string_list need_inst_check in
     let sys_installed = get_installed str_need_inst_check in
@@ -578,7 +661,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
         let pkg = match repo with Some r -> pkg^"@"^r | None -> pkg in
         if installed then pkg +++ inst, avail else inst, pkg +++ avail
       in
-      to_string_list packages
+      system_packages_str
       |> List.map (fun s ->
           match OpamStd.String.cut_at s '@' with
           | Some (pkg, _repo) -> pkg
@@ -625,7 +708,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     *)
     let sys_installed =
       run_query_command (Commands.cygcheck config)
-      ([ "-c"; "-d" ] @ to_string_list packages)
+      ([ "-c"; "-d" ] @ to_string_list system_packages)
       |> (function | _::_::l -> l | _ -> [])
       |> OpamStd.List.filter_map (fun l ->
           match OpamStd.String.split l ' ' with
@@ -702,15 +785,15 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
   | Dummy test ->
     let sys_installed =
       match test.installed with
-      | `all -> packages
+      | `all -> system_packages
       | `none -> OpamSysPkg.Set.empty
-      | `set pkgs -> pkgs %% packages
+      | `set pkgs -> pkgs %% system_packages
     in
     let sys_available =
       match test.available with
-      | `all -> packages
+      | `all -> system_packages
       | `none -> OpamSysPkg.Set.empty
-      | `set pkgs -> pkgs %% packages
+      | `set pkgs -> pkgs %% system_packages
     in
     compute_sets ~sys_available sys_installed
   | Freebsd ->
@@ -779,7 +862,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
             OpamStd.String.Map.add pkg variant map,
             pkg +++ set
           | None -> map, Set.add spkg set)
-          packages (OpamStd.String.Map.empty, Set.empty))
+          system_packages (OpamStd.String.Map.empty, Set.empty))
     in
     let str_pkgs = to_string_list packages in
     let sys_installed =
@@ -901,18 +984,32 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
 
 (* Install *)
 
-let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_packages =
+let install_packages_commands_t ?(env=OpamVariable.Map.empty) config packages0 =
   let unsafe_yes = OpamCoreConfig.answer_is `unsafe_yes in
   let yes ?(no=[]) yes r =
     if unsafe_yes then
       yes @ r else no @ r
   in
-  let packages =
-    List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements sys_packages)
+  let system_packages, npm_packages =
+    List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements packages0)
+    |> List.partition_map (fun spec ->
+         match parse_package_spec spec with
+         | Package (System_package pkgname) -> Either.Left pkgname
+         | Package (Npm_package spec) -> Either.right spec)
   in
+  let (@/@) (xs1) (xs2, y) = xs1 @ xs2, y in
+  (let cmd, install_args, _ = Lazy.force npm_cmd in
+   let install string_spec = `AsUser cmd, install_args @ [string_spec] in
+   npm_packages
+   |> List.map (function
+           | { scope = Some scope; name } ->
+              install ("@"^scope^"/"^name)
+           | { scope = None; name } ->
+              install name))
+  @/@
   match family ~env () with
-  | Alpine -> [`AsAdmin "apk", "add"::yes ~no:["-i"] [] packages], None
-  | Arch -> [`AsAdmin "pacman", "-Su"::yes ["--noconfirm"] packages], None
+  | Alpine -> [`AsAdmin "apk", "add"::yes ~no:["-i"] [] system_packages], None
+  | Arch -> [`AsAdmin "pacman", "-Su"::yes ["--noconfirm"] system_packages], None
   | Centos ->
     (* TODO: check if they all declare "rhel" as primary family *)
     (* Kate's answer: no they don't :( (e.g. Fedora, Oraclelinux define Nothing and "fedora" respectively)  *)
@@ -921,16 +1018,16 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
        already setup when yum-install is called. Cf. opam-depext/#70,#76. *)
     let epel_release = "epel-release" in
     let install_epel rest =
-      if List.mem epel_release packages then
+      if List.mem epel_release system_packages then
         [`AsAdmin (Lazy.force yum_cmd), "install"::yes ["-y"] [epel_release]] @ rest
       else rest
     in
     install_epel
       [`AsAdmin (Lazy.force yum_cmd), "install"::yes ["-y"]
-                (OpamStd.String.Set.of_list packages
+                (OpamStd.String.Set.of_list system_packages
                  |> OpamStd.String.Set.remove epel_release
                  |> OpamStd.String.Set.elements);
-       `AsUser "rpm", "-q"::"--whatprovides"::packages], None
+       `AsUser "rpm", "-q"::"--whatprovides"::system_packages], None
   | Cygwin ->
     (* We use setp_x86_64 to install package instead of `cygcheck` that is
        stored in `sys-pkg-manager-cmd` field *)
@@ -942,7 +1039,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
        "--no-desktop";
        "--no-admin";
        "--packages";
-       String.concat "," packages;
+       String.concat "," system_packages;
      ] @ (if Cygwin.is_internal config then
             [ "--upgrade-also";
               "--only-site";
@@ -953,21 +1050,21 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
     ],
     None
   | Debian ->
-    [`AsAdmin "apt-get", "install"::yes ["-qq"; "-yy"] packages],
+    [`AsAdmin "apt-get", "install"::yes ["-qq"; "-yy"] system_packages],
     (if unsafe_yes then Some ["DEBIAN_FRONTEND", "noninteractive"] else None)
   | Dummy test ->
     if test.install then
-      [`AsUser "echo", packages], None
+      [`AsUser "echo", system_packages], None
     else
       [`AsUser "false", []], None
-  | Freebsd -> [`AsAdmin "pkg", "install"::yes ["-y"] packages], None
-  | Gentoo -> [`AsAdmin "emerge", yes ~no:["-a"] [] packages], None
+  | Freebsd -> [`AsAdmin "pkg", "install"::yes ["-y"] system_packages], None
+  | Gentoo -> [`AsAdmin "emerge", yes ~no:["-a"] [] system_packages], None
   | Homebrew ->
-    [`AsUser "brew", "install"::packages], (* NOTE: Does not have any interactive mode *)
+    [`AsUser "brew", "install"::system_packages], (* NOTE: Does not have any interactive mode *)
     Some (["HOMEBREW_NO_AUTO_UPDATE","yes"])
   | Macports ->
     let packages = (* Separate variants from their packages *)
-      List.map (fun p -> OpamStd.String.split p ' ')  packages
+      List.map (fun p -> OpamStd.String.split p ' ')  system_packages
       |> List.flatten
     in
     [`AsAdmin "port", yes ["-N"] ("install"::packages)],
@@ -977,10 +1074,10 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
        when called from opam. Confer
        https://www.msys2.org/wiki/Terminals/#mixing-msys2-and-windows. *)
     [`AsUser (Commands.msys2 config),
-     "-Su"::"--noconfirm"::packages], None
-  | Netbsd -> [`AsAdmin "pkgin", yes ["-y"] ("install" :: packages)], None
-  | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
-  | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
+     "-Su"::"--noconfirm"::system_packages], None
+  | Netbsd -> [`AsAdmin "pkgin", yes ["-y"] ("install" :: system_packages)], None
+  | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] system_packages], None
+  | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::system_packages)], None
 
 let install_packages_commands ?env config sys_packages =
   fst (install_packages_commands_t ?env config sys_packages)
@@ -1024,7 +1121,7 @@ let install ?env config packages =
       commands
 
 let update ?(env=OpamVariable.Map.empty) config =
-  let cmd =
+  let syspkg_cmd =
     match family ~env () with
     | Alpine -> Some (`AsAdmin "apk", ["update"])
     | Arch -> Some (`AsAdmin "pacman", ["-Sy"])
@@ -1042,7 +1139,15 @@ let update ?(env=OpamVariable.Map.empty) config =
     | Openbsd -> None
     | Suse -> Some (`AsAdmin "zypper", ["--non-interactive"; "refresh"])
   in
-  match cmd with
+  (match Lazy.force npm_cmd with
+   | cmd, _, update_args -> (
+      try sudo_run_command ~env (`AsUser cmd) update_args
+      with Failure msg -> failwith ("System package update " ^ msg)
+   )
+   | exception OpamSystem.Command_not_found _ ->
+    OpamConsole.warning "Unknown npm command, skipping npm update"
+  );
+  match syspkg_cmd with
   | None ->
     OpamConsole.warning
       "Unknown update command for %s, skipping system update"
