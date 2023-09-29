@@ -12,7 +12,7 @@ let read file =
     in
     let r = Str.regexp "/\\|\\\\\\\\" in
     List.rev_map
-      (Str.global_replace r "-")
+      (Str.global_replace r "|")
       (aux [])
   with Sys_error _ -> ["Not found: "^file]
 
@@ -21,12 +21,13 @@ let cat header path =
   let contents = read path in
   Printf.printf "%s\n" (String.concat "\n" contents)
 
-let pkg = (Sys.argv).(1)
+let switch = Sys.argv.(1)
+let pkg = Sys.argv.(2)
 let root = Sys.getenv "OPAMROOT"
 let (/) = Filename.concat
-let share = root / "inst" / "share"
+let share = root / switch / "share"
 let inst_file = share / pkg / "file"
-let changes = root / "inst" / ".opam-switch" / "install" / pkg ^ ".changes"
+let changes = root / switch / ".opam-switch" / "install" / pkg ^ ".changes"
 let _ =
   cat (pkg ^" installed file") inst_file;
   cat (pkg^" changes") changes
@@ -81,15 +82,15 @@ TRACK                           after install: 19 elements, 3 added, scanned in 
 ACTION                          changes recorded for nodot.~dev: 3 items (addition: 3)
 -> installed nodot.~dev
 Done.
-### ocaml cat.ml nodot
+### ocaml cat.ml inst nodot
 ==> nodot installed file
 hellow
 ==> nodot changes
 opam-version: "2.0"
 added: [
   "share" {"D"}
-  "share-nodot" {"D"}
-  "share-nodot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+  "share|nodot" {"D"}
+  "share|nodot|file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
 ]
 ### opam install dot
 The following actions will be performed:
@@ -106,14 +107,14 @@ TRACK                           after install: 2 elements, 2 added, scanned in 0
 ACTION                          changes recorded for dot.~dev: 2 items (addition: 2)
 -> installed dot.~dev
 Done.
-### ocaml cat.ml dot
+### ocaml cat.ml inst dot
 ==> dot installed file
 hellow
 ==> dot changes
 opam-version: "2.0"
 added: [
-  "share-dot" {"D"}
-  "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+  "share|dot" {"D"}
+  "share|dot|file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
 ]
 ### : Check with dry-run
 ### opam reinstall dot --dry-run
@@ -131,14 +132,14 @@ TRACK                           after install: 0 elements, 0 added, scanned in 0
 -> installed dot.~dev
 ACTION                          Cleaning up artefacts of dot.~dev
 Done.
-### ocaml cat.ml dot
+### ocaml cat.ml inst dot
 ==> dot installed file
 hellow
 ==> dot changes
 opam-version: "2.0"
 added: [
-  "share-dot" {"D"}
-  "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+  "share|dot" {"D"}
+  "share|dot|file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
 ]
 ### opam reinstall dot --debug-level=0
 The following actions will be performed:
@@ -149,14 +150,14 @@ The following actions will be performed:
 -> removed   dot.~dev
 -> installed dot.~dev
 Done.
-### ocaml cat.ml dot
+### ocaml cat.ml inst dot
 ==> dot installed file
 hellow
 ==> dot changes
 opam-version: "2.0"
 added: [
-  "share-dot" {"D"}
-  "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+  "share|dot" {"D"}
+  "share|dot|file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
 ]
 ### opam remove dot --dry-run
 The following actions will be simulated:
@@ -169,14 +170,14 @@ ACTION                          Removing dot.~dev
 ACTION                          Cleaning up artefacts of dot.~dev
 ACTION                          Removing the local metadata
 Done.
-### ocaml cat.ml dot
+### ocaml cat.ml inst dot
 ==> dot installed file
 hellow
 ==> dot changes
 opam-version: "2.0"
 added: [
-  "share-dot" {"D"}
-  "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+  "share|dot" {"D"}
+  "share|dot|file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
 ]
 ### opam remove dot --debug-level=0
 The following actions will be performed:
@@ -198,7 +199,7 @@ Installing dot.~dev.
 TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
 -> installed dot.~dev
 Done.
-### ocaml cat.ml dot
+### ocaml cat.ml inst dot
 ==> dot installed file
 Not found: ${BASEDIR}/OPAM/inst/share/dot/file
 ==> dot changes
