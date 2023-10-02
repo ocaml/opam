@@ -16,7 +16,8 @@
                    (:include ../c-flags.sexp)))
   (c_library_flags (:standard
                    (:include c-libraries.sexp)))
-  (wrapped         false))
+  (wrapped         false)
+  (enabled_if      (= %{os_type} "Win32")))
 
 (rule
   (copy opamWin32Stubs.ml opamWin32Stubs.mli))
@@ -34,7 +35,8 @@
 (install
   (section bin)
   (package opam)
-  (files   opam-putenv.exe))
+  (files   opam-putenv.exe)
+  (enabled_if      (= %{os_type} "Win32")))
 
 (rule
   (with-stdout-to c-libraries.sexp (run ocaml %{dep:../../../shell/context_flags.ml} clibs)))

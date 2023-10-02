@@ -24,7 +24,6 @@ bug-reports: "https://github.com/ocaml/opam/issues"
 dev-repo: "git+https://github.com/ocaml/opam.git"
 license: "LGPL-2.1-only WITH OCaml-LGPL-linking-exception"
 build: [
-  ["./configure" "--disable-checks" "--prefix" prefix]
   ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
@@ -32,7 +31,7 @@ depends: [
   "base-unix"
   "ocamlgraph"
   "re" {>= "1.9.0"}
-  "dune" {>= "2.0.0"}
+  "dune" {>= "2.6.0"}
   "sha" {>= "1.13"}
   "jsonm"
   "swhid_core"

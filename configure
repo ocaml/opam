@@ -8516,15 +8516,6 @@ fi
 
 fi
 
-rm -f src/stubs/win32/dune
-if  test ${WIN32} -eq 1
-then :
-
-  cd src/stubs/win32
-  ${LN_S} -f dune-win32 dune
-  cd ../../..
-
-fi
 rm -f src/stubs/libacl/dune
 if  test "x${with_libacl}" = "xyes"
 then :
