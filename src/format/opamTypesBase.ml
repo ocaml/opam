@@ -221,3 +221,8 @@ let map_success f = function
 let iter_success f = function
   | Success x -> f x
   | Conflicts _ -> ()
+
+(** Environment update helpers *)
+let env_update ?comment:envu_comment
+    envu_var envu_op envu_value =
+  { envu_var; envu_op; envu_value; envu_comment; }

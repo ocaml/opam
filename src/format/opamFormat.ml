@@ -556,14 +556,19 @@ module V = struct
   let env_binding =
     let parse ~pos:_ v = match v.pelem with
       | Relop ({ pelem = `Eq;_}, { pelem = Ident i;_}, { pelem = String s;_}) ->
-        i, OpamParserTypes.Eq, s, None
+        { envu_var = i; envu_op = OpamParserTypes.Eq;
+          envu_value = s; envu_comment = None;
+        }
       | Env_binding ({ pelem = Ident i; _}, op, { pelem = String s; _}) ->
-        i, op.pelem, s, None
+        { envu_var = i; envu_op = op.pelem;
+          envu_value = s; envu_comment = None;
+        }
       | _ -> unexpected ()
     in
-    let print (id, op, str, _) =
+    let print { envu_var; envu_op; envu_value; envu_comment = _ } =
       nullify_pos @@
-      Env_binding (print ident id, nullify_pos op, print string str)
+      Env_binding (print ident envu_var, nullify_pos envu_op,
+                   print string envu_value)
     in
     list -| singleton -| pp ~name:"env-binding" parse print
 

@@ -366,12 +366,14 @@ let do_upgrade repo_root =
         None
       ] |>
       O.with_maintainer [ "platform@lists.ocaml.org" ] |>
-      O.with_build_env ["CAML_LD_LIBRARY_PATH", Eq, "", None] |>
-      O.with_env [
-        "CAML_LD_LIBRARY_PATH", Eq, "%{_:stubsdir}%", None;
-        "CAML_LD_LIBRARY_PATH", PlusEq, "%{lib}%/stublibs", None;
-        "OCAML_TOPLEVEL_PATH", Eq, "%{toplevel}%", None;
+      O.with_build_env [
+        OpamTypesBase.env_update "CAML_LD_LIBRARY_PATH" Eq ""
       ] |>
+      O.with_env [
+        OpamTypesBase.env_update "CAML_LD_LIBRARY_PATH" Eq "%{_:stubsdir}%";
+        OpamTypesBase.env_update "CAML_LD_LIBRARY_PATH" PlusEq
+          "%{lib}%/stublibs";
+        OpamTypesBase.env_update "OCAML_TOPLEVEL_PATH" Eq "%{toplevel}%" ] |>
       (* leave the Compiler flag to the implementations (since the user
          needs to select one)
          O.with_flags [Pkgflag_Compiler] |> *)

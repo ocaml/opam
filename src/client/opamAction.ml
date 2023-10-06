@@ -527,25 +527,52 @@ let compilation_env t opam =
   let cygwin_env =
     match OpamSysInteract.Cygwin.cygbin_opt t.switch_global.config with
     | Some cygbin ->
-      [ "PATH", EqPlus, OpamFilename.Dir.to_string cygbin, Some "Cygwin path" ]
+      [ OpamTypesBase.env_update "PATH" EqPlus
+          (OpamFilename.Dir.to_string cygbin)
+          ~comment:"Cygwin path"
+      ]
     | None -> []
+  in
+  let shell_sanitization = "shell env sanitization" in
+  let build_env_def = "build environment definition" in
+  let cdpath =
+    OpamTypesBase.env_update "CDPATH" Eq ""
+      ~comment:shell_sanitization
+  in
+  let makeflags =
+    OpamTypesBase.env_update "MAKEFLAGS" Eq ""
+      ~comment:shell_sanitization
+  in
+  let makelevel =
+    OpamTypesBase.env_update "MAKELEVEL" Eq ""
+      ~comment:"make env sanitization"
+  in
+  let pkg_name =
+    OpamTypesBase.env_update "OPAM_PACKAGE_NAME" Eq
+      (OpamPackage.Name.to_string (OpamFile.OPAM.name opam))
+      ~comment:build_env_def
+  in
+  let pkg_version =
+    OpamTypesBase.env_update "OPAM_PACKAGE_VERSION" Eq
+      (OpamPackage.Version.to_string (OpamFile.OPAM.version opam))
+      ~comment:build_env_def
+  in
+  let cli =
+    OpamTypesBase.env_update "OPAMCLI" Eq "2.0"
+      ~comment:"opam CLI version"
   in
   let scrub = OpamClientConfig.(!r.scrubbed_environment_variables) in
   OpamEnv.get_full ~scrub ~set_opamroot:true ~set_opamswitch:true
     ~force_path:true t ~updates:([
-      "CDPATH", Eq, "", Some "shell env sanitization";
-      "MAKEFLAGS", Eq, "", Some "make env sanitization";
-      "MAKELEVEL", Eq, "", Some "make env sanitization";
-      "OPAM_PACKAGE_NAME", Eq,
-      OpamPackage.Name.to_string (OpamFile.OPAM.name opam),
-      Some "build environment definition";
-      "OPAM_PACKAGE_VERSION", Eq,
-      OpamPackage.Version.to_string (OpamFile.OPAM.version opam),
-      Some "build environment definition";
-      "OPAMCLI", Eq, "2.0", Some "opam CLI version";
-    ] @
-      build_env
-      @ cygwin_env)
+        cdpath;
+        makeflags;
+        makelevel;
+        pkg_name;
+        pkg_version;
+        cli
+      ] @
+        build_env
+        @ cygwin_env)
 
 let installed_opam_opt st nv =
   OpamStd.Option.Op.(

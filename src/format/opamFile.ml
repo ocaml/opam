@@ -566,11 +566,13 @@ module Environment = LineFile(struct
 
 
     let pp =
-       pp -|
-       Pp.map_list
-         (Pp.pp
-           (fun ~pos:_ (a, (b, (c, d))) -> (a, b, c, d))
-           (fun (a, b, c, d) -> (a, (b, (c, d)))))
+      pp -|
+      Pp.map_list
+        (Pp.pp
+           (fun ~pos:_ (envu_var, (envu_op, (envu_value, envu_comment))) ->
+              { envu_var; envu_op; envu_value; envu_comment })
+           (fun {envu_var; envu_op; envu_value; envu_comment} ->
+              (envu_var, (envu_op, (envu_value, envu_comment)))))
 
   end)
 
@@ -2564,10 +2566,11 @@ module OPAMSyntax = struct
   let env (t:t) =
     List.map
       (fun env -> match t.name, env with
-        | Some name, (var,op,value,None) ->
-          var, op, value,
-          Some ("Updated by package " ^ OpamPackage.Name.to_string name)
-        | _, b -> b)
+         | Some name, { envu_comment = None; _ } ->
+           { env with
+             envu_comment =
+               Some ("Updated by package " ^ OpamPackage.Name.to_string name) }
+         | _, b -> b)
       t.env
 
   let build t = t.build
@@ -3827,9 +3830,8 @@ module CompSyntax = struct
   let preinstalled t = t.preinstalled
   let env (t:t) =
     List.map (function
-        | var,op,value,None ->
-          var, op, value,
-          Some ("Updated by compiler " ^ t.name)
+        | { envu_comment = None; _ } as env ->
+          { env with envu_comment = Some ("Updated by compiler " ^ t.name) }
         | b -> b)
       t.env
 

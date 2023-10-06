@@ -132,14 +132,15 @@ let reverse_env_update var op arg cur_value =
      | None -> None)
 
 let map_update_names env_keys updates =
-  let convert (k, o, a, d) =
+  let convert upd =
+    let { envu_var = k; _ } = upd in
     let k =
       try
         let k = OpamStd.Env.Name.of_string k in
         (OpamStd.Env.Name.(Set.find (equal k) env_keys) :> string)
       with Not_found -> k
     in
-    k, o, a, d
+    { upd with envu_var = k }
   in
   List.map convert updates
 
@@ -184,7 +185,8 @@ let expand (updates: env_update list) : env =
     match Lazy.force updates_from_previous_instance with
     | None -> []
     | Some updates ->
-      List.fold_right (fun (var, op, arg, _) defs0 ->
+      List.fold_right (fun upd defs0 ->
+          let { envu_var = var; envu_op = op; envu_value = arg; _} = upd in
           let var = OpamStd.Env.Name.of_string var in
           let v_opt, defs =
             OpamStd.List.pick_assoc OpamStd.Env.Name.equal var defs0
@@ -216,7 +218,10 @@ let expand (updates: env_update list) : env =
   in
   (* And apply the new ones *)
   let rec apply_updates reverts acc = function
-    | (var, op, arg, doc) :: updates ->
+    | upd :: updates ->
+      let { envu_var = var; envu_op = op;
+            envu_value = arg; envu_comment = doc } = upd
+      in
       let var = OpamStd.Env.Name.of_string var in
       let zip, reverts =
         match OpamStd.List.find_opt (fun (v, _, _) ->
@@ -258,8 +263,8 @@ let add (env: env) (updates: env_update list) =
       updates
   in
   let update_keys =
-    List.fold_left (fun m (k,_,_,_) ->
-        OpamStd.Env.Name.(Set.add (of_string k) m))
+    List.fold_left (fun m upd ->
+        OpamStd.Env.Name.(Set.add (of_string upd.envu_var) m))
       OpamStd.Env.Name.Set.empty updates
   in
   let env =
@@ -269,15 +274,17 @@ let add (env: env) (updates: env_update list) =
   in
   env @ expand updates
 
-let env_expansion ?opam st (name, op, str, cmt) =
+let env_expansion ?opam st upd =
   let fenv v =
     try OpamPackageVar.resolve st ?opam v
     with Not_found ->
       log "Undefined variable: %s" (OpamVariable.Full.to_string v);
       None
   in
-  let s = OpamFilter.expand_string ~default:(fun _ -> "") fenv str in
-  name, op, s, cmt
+  let s =
+    OpamFilter.expand_string ~default:(fun _ -> "") fenv upd.envu_value
+  in
+  { upd with envu_value = s }
 
 let compute_updates ?(force_path=false) st =
   (* Todo: put these back into their packages!
@@ -289,29 +296,31 @@ let compute_updates ?(force_path=false) st =
     OpamPath.Switch.bin st.switch_global.root st.switch st.switch_config
   in
   let path =
-    "PATH",
-    (if force_path then PlusEq else EqPlusEq),
-    OpamFilename.Dir.to_string bindir,
-    Some ("Binary dir for opam switch "^OpamSwitch.to_string st.switch)
-  in
+    env_update "PATH"
+      (if force_path then PlusEq else EqPlusEq)
+      (OpamFilename.Dir.to_string bindir)
+      ~comment:("Binary dir for opam switch "^OpamSwitch.to_string st.switch)
+ in
   let man_path =
     let open OpamStd.Sys in
     match os () with
     | OpenBSD | NetBSD | FreeBSD | Darwin | DragonFly ->
       [] (* MANPATH is a global override on those, so disabled for now *)
     | _ ->
-      ["MANPATH", EqColon,
-       OpamFilename.Dir.to_string
-         (OpamPath.Switch.man_dir
-            st.switch_global.root st.switch st.switch_config),
-      Some "Current opam switch man dir"]
-  in
-  let switch_env =
-    ("OPAM_SWITCH_PREFIX", Eq,
-     OpamFilename.Dir.to_string
-       (OpamPath.Switch.root st.switch_global.root st.switch),
-     Some "Prefix of the current opam switch") ::
-    List.map (env_expansion st) st.switch_config.OpamFile.Switch_config.env
+      [ env_update "MANPATH" EqColon
+          (OpamFilename.Dir.to_string
+             (OpamPath.Switch.man_dir st.switch_global.root
+                st.switch st.switch_config))
+          ~comment:"Current opam switch man dir"
+      ]
+ in
+ let switch_env =
+   (env_update "OPAM_SWITCH_PREFIX" Eq
+      (OpamFilename.Dir.to_string
+         (OpamPath.Switch.root st.switch_global.root st.switch))
+      ~comment:"Prefix of the current opam switch")
+   ::
+   List.map (env_expansion st) st.switch_config.OpamFile.Switch_config.env
   in
   let pkg_env = (* XXX: Does this need a (costly) topological sort? *)
     OpamPackage.Set.fold (fun nv acc ->
@@ -325,13 +334,14 @@ let compute_updates ?(force_path=false) st =
 let updates_common ~set_opamroot ~set_opamswitch root switch =
   let root =
     if set_opamroot then
-      [ "OPAMROOT", Eq, OpamFilename.Dir.to_string root,
-        Some "Opam root in use" ]
+      [ env_update "OPAMROOT" Eq (OpamFilename.Dir.to_string root)
+          ~comment:"Opam root in use" ]
     else []
   in
   let switch =
     if set_opamswitch then
-      [ "OPAMSWITCH", Eq, OpamSwitch.to_string switch, None ]
+      [ env_update "OPAMSWITCH" Eq
+          (OpamSwitch.to_string switch) ]
     else [] in
   root @ switch
 
@@ -356,12 +366,13 @@ let get_opam_raw_updates ~set_opamroot ~set_opamswitch ~force_path root switch =
       else
         PlusEq, EqPlusEq
     in
-      List.map (function
-          | var, op, v, doc when String.uppercase_ascii var = "PATH" && op = from_op ->
-            var, to_op, v, doc
-          | e -> e) upd
+    List.map (function
+        | { envu_var; envu_op; _} as upd when
+            String.uppercase_ascii envu_var = "PATH" && envu_op = from_op ->
+          { upd with envu_op = to_op }
+        | e -> e) upd
   in
-    updates_common ~set_opamroot ~set_opamswitch root switch @ upd
+  updates_common ~set_opamroot ~set_opamswitch root switch @ upd
 
 let get_opam_raw ~set_opamroot ~set_opamswitch ?(base=[]) ~force_path
   root switch =
@@ -373,10 +384,10 @@ let get_opam_raw ~set_opamroot ~set_opamswitch ?(base=[]) ~force_path
 let hash_env_updates upd =
   (* Should we use OpamFile.Environment.write_to_string ? cons: it contains
      tabulations *)
-  let to_string (name, op, value, _) =
-    String.escaped name
-    ^ OpamPrinter.FullPos.env_update_op_kind op
-    ^ String.escaped value
+  let to_string { envu_var; envu_op; envu_value; _} =
+    String.escaped envu_var
+    ^ OpamPrinter.FullPos.env_update_op_kind envu_op
+    ^ String.escaped envu_value
   in
   List.rev_map to_string upd
   |> String.concat "\n"
@@ -403,21 +414,22 @@ let get_full
 let is_up_to_date_raw ?(skip=OpamStateConfig.(!r.no_env_notice)) updates =
   skip ||
   let not_utd =
-    List.fold_left (fun notutd (var, op, arg, _doc as upd) ->
+    List.fold_left (fun notutd upd ->
+        let { envu_var = var; envu_op = op; envu_value = arg; _ } = upd in
         let var = OpamStd.Env.Name.of_string var in
         match OpamStd.Env.getopt_full var with
         | _, None -> upd::notutd
         | var, Some v ->
           if reverse_env_update var op arg (split_var var v) = None then upd::notutd
-          else List.filter (fun (v, _, _, _) ->
-              OpamStd.Env.Name.equal_string var v) notutd)
+          else List.filter (fun upd ->
+              OpamStd.Env.Name.equal_string var upd.envu_var) notutd)
       []
       updates
   in
   let r = not_utd = [] in
   if not r then
     log "Not up-to-date env variables: [%a]"
-      (slog @@ String.concat " " @* List.map (fun (v, _, _, _) -> v)) not_utd
+      (slog @@ String.concat " " @* List.map (fun upd -> upd.envu_var)) not_utd
   else log "Environment is up-to-date";
   r
 
@@ -435,12 +447,10 @@ let switch_path_update ~force_path root switch =
       (OpamStateConfig.Switch.safe_load_t
          ~lock_kind:`Lock_read root switch)
   in
-  [
-    "PATH",
-    (if force_path then PlusEq else EqPlusEq),
-    OpamFilename.Dir.to_string bindir,
-    Some "Current opam switch binary dir"
-  ]
+  [ env_update "PATH"
+      (if force_path then PlusEq else EqPlusEq)
+      (OpamFilename.Dir.to_string bindir)
+      ~comment:"Current opam switch binary dir" ]
 
 let path ~force_path root switch =
   let env = expand (switch_path_update ~force_path root switch) in
@@ -718,13 +728,13 @@ let init_script root shell =
 
 let string_of_update st shell updates =
   let fenv = OpamPackageVar.resolve st in
-  let aux (ident, symbol, string, comment) =
+  let aux { envu_var; envu_op; envu_value; envu_comment } =
     let string =
-      OpamFilter.expand_string ~default:(fun _ -> "") fenv string |>
+      OpamFilter.expand_string ~default:(fun _ -> "") fenv envu_value |>
       OpamStd.Env.escape_single_quotes ~using_backslashes:(shell = SH_fish)
     in
     let key, value =
-      ident, match symbol with
+      envu_var, match envu_op with
       | Eq ->
         (match shell with
          | SH_pwsh _ ->
@@ -732,21 +742,21 @@ let string_of_update st shell updates =
          | SH_cmd -> string
          | _ -> Printf.sprintf "'%s'" string)
       | PlusEq | ColonEq | EqPlusEq ->
-        let sep = get_env_property ident Separator in
+        let sep = get_env_property envu_var Separator in
         (match shell with
          | SH_pwsh _ ->
            Printf.sprintf "'%s%c' + \"$env:%s\""
-             (OpamStd.Env.escape_powershell string) sep ident
-         | SH_cmd -> Printf.sprintf "%s%c%%%s%%" string sep ident
-         | _ -> Printf.sprintf "'%s':\"$%s\"" string ident)
+             (OpamStd.Env.escape_powershell string) sep envu_var
+         | SH_cmd -> Printf.sprintf "%s%c%%%s%%" string sep envu_var
+         | _ -> Printf.sprintf "'%s':\"$%s\"" string envu_var)
       | EqColon | EqPlus ->
-        let sep = get_env_property ident Separator in
+        let sep = get_env_property envu_var Separator in
         (match shell with
-         | SH_pwsh _ -> Printf.sprintf "\"$env:%s\" + '%c%s'" ident sep string
-         | SH_cmd -> Printf.sprintf "%%%s%%%c%s" ident sep string
-         | _ -> Printf.sprintf "\"$%s\":'%s'" ident string)
+         | SH_pwsh _ -> Printf.sprintf "\"$env:%s\" + '%c%s'" envu_var sep string
+         | SH_cmd -> Printf.sprintf "%%%s%%%c%s" envu_var sep string
+         | _ -> Printf.sprintf "\"$%s\":'%s'" envu_var string)
     in
-    export_in_shell shell (key, value, comment) in
+    export_in_shell shell (key, value, envu_comment) in
   OpamStd.List.concat_map "" aux updates
 
 let write_script dir (name, body) =
