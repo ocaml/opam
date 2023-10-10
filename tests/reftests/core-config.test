@@ -1,0 +1,123 @@
+N0REP0
+### <pkg:foo.1>
+opam-version: "2.0"
+build: ["echo" "hej"]
+### opam switch create core-config --empty
+### :::::::::::::::::::::::
+### : OPAMVERBOSE setting :
+### :::::::::::::::::::::::
+### opam install foo
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### OPAMVERBOSE=1
+### opam reinstall foo | sed-cmd echo
+The following actions will be performed:
+=== recompile 1 package
+  - recompile foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/4: [foo: echo hej]
++ echo "hej" (CWD=${BASEDIR}/OPAM/core-config/.opam-switch/build/foo.1)
+- hej
+-> compiled  foo.1
+-> removed   foo.1
+-> installed foo.1
+Done.
+### OPAMVERBOSE=yes
+### opam reinstall foo | sed-cmd echo
+The following actions will be performed:
+=== recompile 1 package
+  - recompile foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/4: [foo: echo hej]
++ echo "hej" (CWD=${BASEDIR}/OPAM/core-config/.opam-switch/build/foo.1)
+- hej
+-> compiled  foo.1
+-> removed   foo.1
+-> installed foo.1
+Done.
+### OPAMVERBOSE=true
+### opam reinstall foo | sed-cmd echo
+The following actions will be performed:
+=== recompile 1 package
+  - recompile foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/4: [foo: echo hej]
++ echo "hej" (CWD=${BASEDIR}/OPAM/core-config/.opam-switch/build/foo.1)
+- hej
+-> compiled  foo.1
+-> removed   foo.1
+-> installed foo.1
+Done.
+### OPAMVERBOSE=2
+### opam reinstall foo | sed-cmd echo
+The following actions will be performed:
+=== recompile 1 package
+  - recompile foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/4: [foo: echo hej]
++ echo "hej" (CWD=${BASEDIR}/OPAM/core-config/.opam-switch/build/foo.1)
+- hej
+-> compiled  foo.1
+-> removed   foo.1
+-> installed foo.1
+Done.
+### OPAMVERBOSE=0
+### opam reinstall foo
+The following actions will be performed:
+=== recompile 1 package
+  - recompile foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> installed foo.1
+Done.
+### OPAMVERBOSE=""
+### opam reinstall foo
+The following actions will be performed:
+=== recompile 1 package
+  - recompile foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> installed foo.1
+Done.
+### OPAMVERBOSE=false
+### opam reinstall foo
+The following actions will be performed:
+=== recompile 1 package
+  - recompile foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> installed foo.1
+Done.
+### OPAMVERBOSE=no
+### opam reinstall foo
+The following actions will be performed:
+=== recompile 1 package
+  - recompile foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> installed foo.1
+Done.
+### OPAMVERBOSE=another
+### opam reinstall foo
+[WARNING] Invalid value for environment variable OPAMVERBOSE, ignored.
+The following actions will be performed:
+=== recompile 1 package
+  - recompile foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> installed foo.1
+Done.
