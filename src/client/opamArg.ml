@@ -669,10 +669,6 @@ let apply_build_options cli b =
     ?unlock_base:(flag b.unlock_base)
     ?locked:(if b.locked then Some (Some b.lock_suffix) else None)
     ?no_depexts:(flag (b.no_depexts || OpamCLIVersion.Op.(cli @= cli2_0)))
-    ?verbose_on:
-      (b.verbose_on 
-       >>| List.map fst
-       >>| OpamPackage.Name.Set.of_list)
     ();
   OpamClientConfig.update
     ?keep_build_dir:(flag b.keep_build_dir)
@@ -682,6 +678,10 @@ let apply_build_options cli b =
     ?fake:(flag b.fake)
     ?skip_dev_update:(flag b.skip_update)
     ?assume_depexts:(flag (b.assume_depexts || b.no_depexts))
+    ?verbose_on:
+    (b.verbose_on 
+     >>| List.map fst
+     >>| OpamPackage.Name.Set.of_list)
     ~scrubbed_environment_variables
     ()
 

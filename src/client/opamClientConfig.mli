@@ -33,6 +33,7 @@ module E: sig
     | SKIPUPDATE of bool option
     | STATS of bool option
     | WORKINGDIR of bool option
+    | VERBOSEON of string option
     val cli: unit -> string option
     val rootisok: unit -> bool option
     val noaggregate: unit -> bool option
@@ -59,6 +60,7 @@ type t = private {
   assume_depexts: bool;
   cli: OpamCLIVersion.t;
   scrubbed_environment_variables: string list;
+  verbose_on:OpamTypes.name_set;
 }
 
 type 'a options_fun =
@@ -82,6 +84,7 @@ type 'a options_fun =
   ?assume_depexts:bool ->
   ?cli:OpamCLIVersion.t ->
   ?scrubbed_environment_variables:string list ->
+  ?verbose_on:OpamTypes.name_set -> 
   'a
   (* constraint 'a = 'b -> 'c *)
 
@@ -120,6 +123,7 @@ val opam_init:
   ?assume_depexts:bool ->
   ?cli:OpamCLIVersion.t ->
   ?scrubbed_environment_variables:string list ->
+  ?verbose_on:OpamTypes.name_set ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:OpamStateTypes.provenance ->
   ?jobs:int Lazy.t ->
@@ -134,7 +138,6 @@ val opam_init:
   ?no_env_notice:bool ->
   ?locked:string option ->
   ?no_depexts:bool ->
-  ?verbose_on:OpamPackage.Name.Set.t ->
   ?cudf_file:string option ->
   ?best_effort:bool ->
   ?solver_preferences_default:string option Lazy.t ->

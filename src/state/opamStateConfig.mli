@@ -53,7 +53,6 @@ type t = private {
   no_env_notice: bool;
   locked: string option;
   no_depexts : bool;
-  verbose_on : name_set;
 }
 
 type 'a options_fun =
@@ -72,7 +71,6 @@ type 'a options_fun =
   ?no_env_notice:bool ->
   ?locked:string option ->
   ?no_depexts: bool ->
-  ?verbose_on: name_set ->
   'a
 
 include OpamStd.Config.Sig
