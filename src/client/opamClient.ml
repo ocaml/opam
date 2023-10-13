@@ -1078,9 +1078,14 @@ let check_installed ~build ~post t atoms =
   let test = OpamStateConfig.(!r.build_test) in
   let doc = OpamStateConfig.(!r.build_doc) in
   let dev_setup = OpamStateConfig.(!r.dev_setup) in
-  let env p =
-    OpamFilter.deps_var_env ~build ~post ~test ~doc ~dev_setup
-      ~dev:(OpamSwitchState.is_dev_package t p)
+  let env package var =
+    let content =
+      OpamFilter.deps_var_env ~build ~post ~test ~doc ~dev_setup
+        ~dev:(OpamSwitchState.is_dev_package t package) var
+    in
+    match content with
+    | None -> OpamPackageVar.resolve_switch ~package t var
+    | Some _ -> content
   in
   OpamPackage.Name.Map.fold (fun name versions map ->
       let compliant, missing_opt =
