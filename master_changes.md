@@ -27,6 +27,7 @@ users)
 ## Install
   * [BUG] On install driven by `.install` file, track intermediate directories too, in order to have them suppressed at package removal [#5691 @rjbou - fix #5688]
   * [BUG] With `--assume-built`, resolve variables in depends filter according switch & global environment, not only depends predefined variables [#570 @rjbou - fix #5698]
+  * [BUG] Handle undefined variables defaults to false in dependencies formula resolution for assume built [#5701 rjbou]
 
 ## Remove
 
