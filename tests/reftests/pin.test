@@ -263,3 +263,69 @@ Could not retrieve some package sources, they will not be pinned nor installed:
 
 Continue anyway? [y/n] y
 ### opam pin
+### : source wrongly fetched :
+### <pin:foo/foo.opam>
+opam-version: "2.0"
+version: "3.2"
+build: [
+  [ "test" "-f" "im.here"]
+  [ "test" "-d" "im.here.dir"]
+  [ "test" "-f" "im.here.dir/ok"]
+  [ "test" "!" "-f" "imnot.here"]
+  [ "test" "!" "-d" "imnot.here.dir"]
+  [ "test" "!" "-f" "imnot.here.dir/ko"]
+]
+### <foo/im.here>
+OK
+### <foo/im.here.dir/ok>
+OK
+### git -C foo init -q --initial-branch=master
+### git -C foo config core.autocrlf false
+### git -C foo add -A
+### git -C foo commit -qm "init"
+### <foo/imnot.here>
+KO
+### <foo/imnot.here.dir/ko>
+KO
+### git -C foo ls-files
+foo.opam
+im.here
+im.here.dir/ok
+### opam pin foo ./foo#master -v
+Package foo does not exist, create as a NEW package? [y/n] y
+[foo.dev: rsync]
+[foo.dev] synchronised (file://${BASEDIR}/foo)
+foo is now pinned to git+file://${BASEDIR}/foo#master (version 3.2)
+
+The following actions will be performed:
+=== install 1 package
+  - install foo 3.2 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [foo: test im.here]
++ ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "build" "test" "-f" "im.here" (CWD=${BASEDIR}/OPAM/pinning/.opam-switch/build/foo.3.2)
+Processing  2/3: [foo: test im.here.dir]
++ ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "build" "test" "-d" "im.here.dir" (CWD=${BASEDIR}/OPAM/pinning/.opam-switch/build/foo.3.2)
+Processing  2/3: [foo: test]
++ ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "build" "test" "-f" "im.here.dir/ok" (CWD=${BASEDIR}/OPAM/pinning/.opam-switch/build/foo.3.2)
+Processing  2/3: [foo: test !]
++ ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "build" "test" "!" "-f" "imnot.here" (CWD=${BASEDIR}/OPAM/pinning/.opam-switch/build/foo.3.2)
+[ERROR] The compilation of foo.3.2 failed at "test ! -f imnot.here".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build foo 3.2
++- 
+- No changes have been performed
+[NOTE] Pinning command successful, but your installed packages may be out of sync.
+'${OPAM} pin foo ./foo#master -v' failed.
+# Return code 31 #
+### ls OPAM/pinning/.opam-switch/sources/foo
+foo.opam
+im.here
+im.here.dir
+imnot.here
+imnot.here.dir
