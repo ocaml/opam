@@ -41,7 +41,7 @@ so you can do it as a second step.
 
 _Note_: If you install on your system (without changing the prefix), you will
 need to install as root (`sudo`). As `sudo` does not propagate environment
-variables, so there wil be some errors. You can use `sudo -E "PATH=$PATH" in order
+variables, there will be some errors. You can use `sudo -E "PATH=$PATH"` in order
 to ensure you have a good environment for install.
 
 ## Developer Mode
@@ -66,14 +66,16 @@ The following Cygwin packages are required:
 Alternatively, having downloaded Cygwin's setup program, Cygwin can be installed
 using the following command line:
 
-`setup-x86_64 --root=C:\cygwin64 --quiet-mode --no-desktop --no-startmenu --packages=make,mingw64-i686-gcc-g++,mingw64-x86_64-gcc-g++,patch,autoconf,curl`
+```
+setup-x86_64 --root=C:\cygwin64 --quiet-mode --no-desktop --no-startmenu --packages=make,mingw64-i686-gcc-g++,mingw64-x86_64-gcc-g++,patch,autoconf,curl
+```
 
 The `--no-desktop` and `--no-startmenu` switches may be omitted in order to create
 shortcuts on the Desktop and Start Menu, respectively. Executed this way, setup will
 still be interactive, but the packages will have been preselected. To make setup
 fully unattended, choose a mirror URL from https://cygwin.com/mirrors.lst and add
 the `--site` switch to the command line
-(e.g., `--site=http://www.mirrorservice.org/sites/sourceware.org/pub/cygwin/`).
+(e.g., `--site=https://www.mirrorservice.org/sites/sourceware.org/pub/cygwin/`).
 
 It is recommended that you set the `CYGWIN` environment variable to
 `nodosfilewarning winsymlinks:native`.
@@ -217,4 +219,3 @@ described in the file LICENSE.
 Opam is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
-
