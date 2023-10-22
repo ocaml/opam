@@ -146,6 +146,7 @@ users)
 ## Doc
   * Fix typos in readme [#5706 @MisterDA]
   * Fix formatting in the Manual [#5708 @kit-ty-kate]
+  * Add `x-env-path-rewriting` documentation [#5636 @rjbou]
 
 ## Security fixes
 
