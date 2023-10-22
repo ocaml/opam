@@ -563,6 +563,32 @@ module V = struct
   let package_formula kind constraints =
     list -| package_formula_items kind constraints
 
+  let path_format =
+    let parse ~pos:_ v =
+      match v.pelem with
+      | String "host" -> Host
+      | String "target" -> Target
+      | String "target-quoted" -> Target_quoted
+      | String "host-quoted" -> Host_quoted
+      | _ -> unexpected ()
+    in
+    let print ht =
+      nullify_pos (String (OpamTypesBase.string_of_path_format ht))
+    in
+    pp ~name:"path-format" parse print
+
+  let separator =
+    let parse ~pos:_ v =
+      match v.pelem with
+      | String ":" -> SColon
+      | String ";" -> SSemiColon
+      | _ -> unexpected ()
+    in
+    let print sep =
+      nullify_pos (String (String.make 1 (OpamTypesBase.char_of_separator sep)))
+    in
+    pp ~name:"separator" parse print
+
   let env_binding_t empty =
     let parse ~pos:_ v = match v.pelem with
       | Relop ({ pelem = `Eq;_}, { pelem = Ident i;_}, { pelem = String s;_}) ->

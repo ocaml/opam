@@ -181,6 +181,8 @@ module V : sig
     (value list, ('a * 'b) OpamFormula.formula) t
 
   (** Environment variable updates syntax *)
+  val separator : (value, separator) t
+  val path_format : (value, path_format) t
   val env_binding : (value, spf_resolved env_update) t
   val env_binding_unresolved : (value, spf_unresolved env_update) t
 
