@@ -165,6 +165,8 @@ users)
   * `OpamFile.OPAM`: add handling of `x-env-path-rewrite` extensions field, that specifies rewrite rules [#5636 @rjbou]
   * `OpamFile.Environment`: add parsing-printing of rewriting rules, keeping backward compatibility [#5636 @rjbou]
   * `OpamFile.OPAM`: `effective_part` keeps `x-env-path-rewrite`, affects also `effectively_equal` [#5636 @rjbou]
+  * `OpamTypesBase`: add `env_update_resolved` and `env_update_unresolved` builders [#5636 @rjbou]
+  * `OpamPp.fallback`: add name concatenation and printing fallback too [#5636 @rjbou]
 
 ## opam-core
   * `OpamSystem.mk_temp_dir`: resolve real path with `OpamSystem.real_path` before returning it [#5654 @rjbou]
