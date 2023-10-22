@@ -508,19 +508,25 @@ module V = struct
       List.rev_append (ors_to_list f) (rev_ors_to_list e)
     | x -> [x]
 
-  let package_formula_items kind constraints =
+  let formula_items ~name kind ?only atom constraints =
     let split, join = match kind with
       | `Conj -> ands_to_list, OpamFormula.ands
       | `Disj -> ors_to_list, OpamFormula.ors
     in
+    let keep = match only with
+      | None -> fun _ -> true
+      | Some `And -> fun x -> not (OpamStd.Compare.equal `Or x)
+      | Some `Or -> fun x -> not (OpamStd.Compare.equal `And x)
+    in
+    let pp_atom = map_option atom constraints in
     let rec parse_formula ~pos:_ l =
       let rec aux v = match v.pelem with
         | String _ | Option (_,_) ->
-          Atom (parse (package_atom constraints) ~pos:v.pos v)
+          Atom (parse pp_atom ~pos:v.pos v)
         | Group g -> Block (parse_formula ~pos:v.pos g.pelem)
-        | Logop ({ pelem = `Or; _}, e1, e2) ->
+        | Logop ({ pelem = `Or; _}, e1, e2) when keep `Or ->
           let left = aux e1 in Or (left, aux e2)
-        | Logop ({ pelem = `And; _}, e1, e2) ->
+        | Logop ({ pelem = `And; _}, e1, e2) when keep `And  ->
           let left = aux e1 in And (left, aux e2)
         | _ -> unexpected ~pos:(value_pos v) ()
       in
@@ -537,18 +543,22 @@ module V = struct
         | Empty -> assert false
         | Block f ->
           nullify_pos @@ Group (nullify_pos @@ print_formula ~inner:true f)
-        | And (e,f) ->
+        | And (e,f) when keep `And ->
           group_if @@ nullify_pos @@
           Logop (nullify_pos `And, aux ~in_and:true e, aux ~in_and:true f)
-        | Or (e,f) ->
+        | Or (e,f) when keep `Or ->
           group_if ~cond:in_and @@ nullify_pos @@
           Logop (nullify_pos `Or, aux e, aux f)
-        | Atom at -> group_if (print (package_atom constraints) at)
+        | Atom at -> group_if (print pp_atom at)
+        | _ -> unexpected ()
       in
       let fl = if inner then [f] else split f in
       List.map (aux ~in_and:false) fl
     in
-    pp ~name:"pkg-formula" parse_formula print_formula
+    pp ~name parse_formula print_formula
+
+  let package_formula_items kind constraints =
+    formula_items ~name:"pkg-formula" kind pkgname constraints
 
   let package_formula kind constraints =
     list -| package_formula_items kind constraints
