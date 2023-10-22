@@ -359,7 +359,7 @@ module OPAM: sig
     conflict_class : name list;
     available  : filter;
     flags      : package_flag list;
-    env        : env_update list;
+    env        : spf_unresolved env_update list;
 
     (* Build instructions *)
     build      : command list;
@@ -370,7 +370,7 @@ module OPAM: sig
     (* Auxiliary data affecting the build *)
     substs     : basename list;
     patches    : (basename * filter option) list;
-    build_env  : env_update list;
+    build_env  : spf_unresolved env_update list;
     features   : (OpamVariable.t * filtered_formula * string) list;
     extra_sources: (basename * URL.t) list;
 
@@ -471,7 +471,7 @@ module OPAM: sig
   val substs: t -> basename list
 
   (** List of environment variables to set-up for the build *)
-  val build_env: t -> env_update list
+  val build_env: t -> spf_unresolved env_update list
 
   (** List of command to run for building the package *)
   val build: t -> command list
@@ -561,7 +561,7 @@ module OPAM: sig
   val has_flag: package_flag -> t -> bool
 
   (** The environment variables that this package exports *)
-  val env: t -> env_update list
+  val env: t -> spf_unresolved env_update list
 
   val descr: t -> Descr.t option
 
@@ -646,7 +646,7 @@ module OPAM: sig
   (** Construct as [substs] *)
   val with_substs: basename list -> t -> t
 
-  val with_build_env: env_update list -> t -> t
+  val with_build_env: spf_unresolved env_update list -> t -> t
 
   val with_available: filter -> t -> t
 
@@ -674,7 +674,7 @@ module OPAM: sig
 
   val with_tags: string list -> t -> t
 
-  val with_env: env_update list -> t -> t
+  val with_env: spf_unresolved env_update list -> t -> t
 
   val with_dev_repo: url -> t -> t
 
@@ -792,7 +792,7 @@ end
 module PkgList: IO_FILE with type t = package_set
 
 (** Cached environment updates (<switch>/environment) *)
-module Environment: IO_FILE with type t = env_update list
+module Environment: IO_FILE with type t = spf_resolved env_update list
 
 (** Compiler version [$opam/compilers/]. Deprecated, only used to upgrade old
     data *)
@@ -805,7 +805,7 @@ module Comp: sig
 
   (** Create a pre-installed compiler description file *)
   val create_preinstalled:
-    compiler -> compiler_version -> name list -> env_update list -> t
+    compiler -> compiler_version -> name list -> spf_unresolved env_update list -> t
 
   (** Is it a pre-installed compiler description file *)
   val preinstalled: t -> bool
@@ -840,7 +840,7 @@ module Comp: sig
 
   (** Environment variable to set-up before running commands in the
       subtree *)
-  val env: t -> env_update list
+  val env: t -> spf_unresolved env_update list
 
   val tags: t -> string list
 
@@ -1025,7 +1025,7 @@ module Switch_config: sig
     variables: (variable * variable_contents) list;
     opam_root: dirname option;
     wrappers: Wrappers.t;
-    env: env_update list;
+    env: spf_resolved env_update list;
     invariant: OpamFormula.t option;
     depext_bypass: OpamSysPkg.Set.t;
   }

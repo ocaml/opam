@@ -16,6 +16,10 @@ open OpamStateTypes
 
 (** {2 Environment handling} *)
 
+(* transitional no-op resolver *)
+val resolve_separator_and_format:
+  'r env_update -> spf_resolved env_update
+
 (** Get the current environment with OPAM specific additions. If [force_path],
     the PATH is modified to ensure opam dirs are leading. [set_opamroot] and
     [set_opamswitch] can be additionally used to set the [OPAMROOT] and
@@ -23,7 +27,7 @@ open OpamStateTypes
     remove from the environment. *)
 val get_full:
   set_opamroot:bool -> set_opamswitch:bool -> force_path:bool ->
-  ?updates:env_update list -> ?scrub:string list -> 'a switch_state -> env
+  ?updates: 'r env_update list -> ?scrub:string list -> 'a switch_state -> env
 
 (** Get only environment modified by OPAM. If [force_path], the PATH is modified
     to ensure opam dirs are leading. [set_opamroot] and [set_opamswitch] can be
@@ -47,26 +51,26 @@ val get_opam_raw:
     environment. *)
 val get_opam_raw_updates:
   set_opamroot:bool -> set_opamswitch:bool -> force_path:bool ->
-  dirname -> switch -> env_update list
+  dirname -> switch -> spf_resolved env_update list
 
 (** Returns a hash of the given env_update list suitable for use with
     OPAM_LAST_ENV *)
-val hash_env_updates: env_update list -> string
+val hash_env_updates: 'a env_update list -> string
 
 (** Returns the running environment, with any opam modifications cleaned out,
     and optionally the given updates *)
-val get_pure: ?updates:env_update list -> unit -> env
+val get_pure: ?updates:spf_resolved env_update list -> unit -> env
 
 (** Update an environment, including reverting opam changes that could have been
     previously applied (therefore, don't apply to an already updated env as
     returned by e.g. [get_full]!) *)
-val add: env -> env_update list -> env
+val add: env -> spf_resolved env_update list -> env
 
 (** Like [get_opam] computes environment modification by OPAM , but returns
     these [updates] instead of the new environment. *)
 val updates:
   set_opamroot:bool -> set_opamswitch:bool -> ?force_path:bool ->
-  'a switch_state -> env_update list
+  'a switch_state -> spf_resolved env_update list
 
 (** Check if the shell environment is in sync with the current OPAM switch,
     unless [skip] is true (it's default value is OPAMNOENVNOTICE *)
@@ -79,7 +83,7 @@ val is_up_to_date_switch: dirname -> switch -> bool
 
 (** Returns the current environment updates to configure the current switch with
     its set of installed packages *)
-val compute_updates: ?force_path:bool -> 'a switch_state -> env_update list
+val compute_updates: ?force_path:bool -> 'a switch_state -> spf_resolved env_update list
 
 (** Returns shell-appropriate statement to evaluate [cmd]. *)
 val shell_eval_invocation:
@@ -102,10 +106,10 @@ val path: force_path:bool -> dirname -> switch -> string
 (** Returns the full environment with only the PATH variable updated, as per
     [path] *)
 val full_with_path:
-  force_path:bool -> ?updates:env_update list -> dirname -> switch -> env
+  force_path:bool -> ?updates:spf_resolved env_update list -> dirname -> switch -> env
 
 (** Performs variable expansion on the strings in an environment update *)
-val env_expansion: ?opam:OpamFile.OPAM.t -> 'a switch_state -> env_update -> env_update
+val env_expansion: ?opam:OpamFile.OPAM.t -> 'a switch_state -> spf_unresolved env_update -> spf_unresolved env_update
 
 (** {2 Shell and initialisation support} *)
 

@@ -553,24 +553,33 @@ module V = struct
   let package_formula kind constraints =
     list -| package_formula_items kind constraints
 
-  let env_binding =
+  let env_binding_t empty =
     let parse ~pos:_ v = match v.pelem with
       | Relop ({ pelem = `Eq;_}, { pelem = Ident i;_}, { pelem = String s;_}) ->
         { envu_var = i; envu_op = OpamParserTypes.Eq;
           envu_value = s; envu_comment = None;
+          envu_rewrite = Some empty;
         }
       | Env_binding ({ pelem = Ident i; _}, op, { pelem = String s; _}) ->
         { envu_var = i; envu_op = op.pelem;
           envu_value = s; envu_comment = None;
+          envu_rewrite = Some empty;
         }
       | _ -> unexpected ()
     in
-    let print { envu_var; envu_op; envu_value; envu_comment = _ } =
+    let print { envu_var; envu_op; envu_value; envu_comment = _ ;
+                envu_rewrite = _} =
       nullify_pos @@
       Env_binding (print ident envu_var, nullify_pos envu_op,
                    print string envu_value)
     in
     list -| singleton -| pp ~name:"env-binding" parse print
+
+  let env_binding =
+    env_binding_t (SPF_Resolved None)
+
+  let env_binding_unresolved =
+    env_binding_t (SPF_Unresolved (Empty, Empty))
 
   (* Only used by the deprecated "os" field *)
   let os_constraint =

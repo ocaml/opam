@@ -223,6 +223,20 @@ let iter_success f = function
   | Conflicts _ -> ()
 
 (** Environment update helpers *)
-let env_update ?comment:envu_comment
+let env_update ?comment:envu_comment ~rewrite:envu_rewrite
     envu_var envu_op envu_value =
-  { envu_var; envu_op; envu_value; envu_comment; }
+  { envu_var; envu_op; envu_value; envu_comment; envu_rewrite }
+
+let env_update_resolved ?comment:envu_comment ?rewrite
+    envu_var envu_op envu_value =
+  { envu_var; envu_op; envu_value; envu_comment;
+    envu_rewrite = OpamStd.Option.default (Some (SPF_Resolved None)) rewrite;
+  }
+
+let env_update_unresolved ?comment:envu_comment ?rewrite
+    envu_var envu_op envu_value =
+  { envu_var; envu_op; envu_value; envu_comment;
+    envu_rewrite =
+      OpamStd.Option.default (Some (SPF_Unresolved (Empty, Empty)))
+        rewrite;
+  }

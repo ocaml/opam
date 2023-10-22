@@ -399,17 +399,50 @@ type stats = {
   s_remove   : int;
 }
 
-(** Environement variables: var name, value, optional comment *)
+(** Environment variables: var name, value, optional comment *)
 type env = (OpamStd.Env.Name.t * string * string option) list
 
+type path_format =
+  | Host
+  (** use host interpretation of path format *)
+
+  | Host_quoted
+  (** use host interpretation of path format and quote resulting path if it
+      contains the separator character *)
+
+  | Target
+  (** use the target interpretation of path format (opam file one) *)
+
+  | Target_quoted
+  (** use the target interpretation of path format (opam file one) and quote
+      path if it contains the separator character *)
+
+type separator =
+  | SColon
+  (** Colon separator, i.e. ':' *)
+
+  | SSemiColon
+  (** Semi-colon separator, i.e. ';' *)
+
+type spf_resolved = [ `resolved ]
+type spf_unresolved = [ `unresolved ]
+type _ separator_path_format =
+  | SPF_Resolved:
+      (separator * path_format) option
+      -> spf_resolved separator_path_format
+  | SPF_Unresolved:
+      (separator * filter) generic_formula
+      * (path_format * filter) generic_formula
+      -> spf_unresolved separator_path_format
+
 (** Environment updates *)
-type env_update = {
+type 'a env_update = {
   envu_var : string;
   envu_op : OpamParserTypes.FullPos.env_update_op_kind;
   envu_value : string;
   envu_comment : string option;
+  envu_rewrite: 'a separator_path_format option;
 }
-(** var, update_op, value, comment *)
 
 (** Tags *)
 type tags = OpamStd.String.Set.t OpamStd.String.SetMap.t

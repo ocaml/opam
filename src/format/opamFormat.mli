@@ -172,7 +172,8 @@ module V : sig
     (value list, (name * 'a) OpamFormula.formula) t
 
   (** Environment variable updates syntax *)
-  val env_binding : (value, env_update) t
+  val env_binding : (value, spf_resolved env_update) t
+  val env_binding_unresolved : (value, spf_unresolved env_update) t
 
   val os_constraint : (value, (bool * string) OpamFormula.formula) t
 end

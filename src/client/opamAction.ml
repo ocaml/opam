@@ -522,12 +522,16 @@ let prepare_package_source st nv dir =
 let compilation_env t opam =
   let open OpamParserTypes in
   let build_env =
-    List.map (OpamEnv.env_expansion ~opam t) (OpamFile.OPAM.build_env opam)
+    List.map
+      (fun env ->
+         OpamEnv.resolve_separator_and_format
+           (OpamEnv.env_expansion ~opam t env))
+      (OpamFile.OPAM.build_env opam)
   in
   let cygwin_env =
     match OpamSysInteract.Cygwin.cygbin_opt t.switch_global.config with
     | Some cygbin ->
-      [ OpamTypesBase.env_update "PATH" EqPlus
+      [ OpamTypesBase.env_update_resolved "PATH" EqPlus
           (OpamFilename.Dir.to_string cygbin)
           ~comment:"Cygwin path"
       ]
@@ -536,29 +540,29 @@ let compilation_env t opam =
   let shell_sanitization = "shell env sanitization" in
   let build_env_def = "build environment definition" in
   let cdpath =
-    OpamTypesBase.env_update "CDPATH" Eq ""
+    OpamTypesBase.env_update_resolved "CDPATH" Eq ""
       ~comment:shell_sanitization
   in
   let makeflags =
-    OpamTypesBase.env_update "MAKEFLAGS" Eq ""
+    OpamTypesBase.env_update_resolved "MAKEFLAGS" Eq ""
       ~comment:shell_sanitization
   in
   let makelevel =
-    OpamTypesBase.env_update "MAKELEVEL" Eq ""
+    OpamTypesBase.env_update_resolved "MAKELEVEL" Eq ""
       ~comment:"make env sanitization"
   in
   let pkg_name =
-    OpamTypesBase.env_update "OPAM_PACKAGE_NAME" Eq
+    OpamTypesBase.env_update_resolved "OPAM_PACKAGE_NAME" Eq
       (OpamPackage.Name.to_string (OpamFile.OPAM.name opam))
       ~comment:build_env_def
   in
   let pkg_version =
-    OpamTypesBase.env_update "OPAM_PACKAGE_VERSION" Eq
+    OpamTypesBase.env_update_resolved "OPAM_PACKAGE_VERSION" Eq
       (OpamPackage.Version.to_string (OpamFile.OPAM.version opam))
       ~comment:build_env_def
   in
   let cli =
-    OpamTypesBase.env_update "OPAMCLI" Eq "2.0"
+    OpamTypesBase.env_update_resolved "OPAMCLI" Eq "2.0"
       ~comment:"opam CLI version"
   in
   let scrub = OpamClientConfig.(!r.scrubbed_environment_variables) in

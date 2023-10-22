@@ -156,7 +156,15 @@ users)
   * `OpamFilter`: add `expand_interpolations_in_file_full` which allows setting the output file along with the input file [#5629 @rgrinberg]
   * `OpamFilter`: expose `string_interp_regex` which allows clients to identify variable interpolations in strings [#5633 @gridbugs]
   * `OpamTypes.env_update`: change from tuple to a record [#5636 @rjbou]
-  * `OpamTypesBase`: add `env_update` builder [#5636 @rjbou]
+  * `OpamTypesBase`: add `env_update`, `env_update_resolved`, and `env_update_unresolved` builders [#5636 @rjbou]
+  * `OpamTypes.env_update`: add a `rewrite` field, that contains environment variable rewriting rules (formula to resolved, or already resolved, or no rewriting) [#5636 @rjbou]
+  * `OpamPp.fallback`: add name concatenation and printing fallback too [#5636 @rjbou]
+  * `OpamFormat`: add `formula_items` to permit definition of formulae pp not only of the type `package-formula` [#5636 @rjbou]
+  * `OpamTypesBase`: add to_string function for `path_format` & `separator` [#5636 @rjbou]
+  * `OpamFormat.V`: add `path_format` & `separator` value parser printer [#5636 @rjbou]
+  * `OpamFile.OPAM`: add handling of `x-env-path-rewrite` extensions field, that specifies rewrite rules [#5636 @rjbou]
+  * `OpamFile.Environment`: add parsing-printing of rewriting rules, keeping backward compatibility [#5636 @rjbou]
+  * `OpamFile.OPAM`: `effective_part` keeps `x-env-path-rewrite`, affects also `effectively_equal` [#5636 @rjbou]
 
 ## opam-core
   * `OpamSystem.mk_temp_dir`: resolve real path with `OpamSystem.real_path` before returning it [#5654 @rjbou]

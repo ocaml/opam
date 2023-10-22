@@ -207,7 +207,7 @@ let check_and_run_external_commands () =
     let env =
       if has_init then
         let updates = [
-          env_update "PATH" PlusEq
+          env_update_resolved "PATH" PlusEq
             (OpamFilename.Dir.to_string plugins_bin)
         ] in
         OpamStateConfig.init ~root_dir ();
