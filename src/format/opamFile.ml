@@ -3207,6 +3207,63 @@ module OPAMSyntax = struct
     in
     Pp.pp parse print
 
+  let rewrite_xfield = "x-env-path-rewrite"
+  let handle_env_paths =
+    let pp =
+      let filtered pp =
+        let name = pp.Pp.ppname^"-filtered-formula" in
+        Pp.V.list
+        -| Pp.V.formula_items ~name `Disj ~only:`Or
+          pp Pp.V.filter
+      in
+      let rewrite pp =
+        pp -|
+        Pp.pp ~name:"-x-env-path-rewrite-formula"
+          (fun ~pos:_ (name,separator,path) -> name, Some (separator, path))
+          (function n, Some (sep, ht) -> n, sep, ht | _ -> assert false)
+      in
+      let norewrite pp =
+        pp -|
+        Pp.pp ~name:"x-env-path-rewrite-bool"
+          (fun ~pos:_ (name, rewrite) ->
+             if rewrite then name, Some (Empty,  Empty)
+             else name, None)
+          (function
+            | n, None -> n, false
+            | n, Some (Empty, Empty) -> n, true
+            | _ -> assert false)
+      in
+      Pp.V.map_list @@
+      Pp.fallback
+        (norewrite @@ Pp.V.map_pair Pp.V.ident Pp.V.bool)
+        (rewrite @@ Pp.V.map_triple Pp.V.ident
+           (filtered Pp.V.separator) (filtered Pp.V.path_format))
+    in
+    let parse ~pos t =
+      if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
+      else
+      match OpamStd.String.Map.find_opt rewrite_xfield t.extensions with
+      | None -> t
+      | Some value ->
+        let rewrites = Pp.parse pp value ~pos |> OpamStd.String.Map.of_list in
+        let update env =
+          List.map (fun upd ->
+              match OpamStd.String.Map.find_opt upd.envu_var rewrites with
+              | Some (Some (sep, ht)) ->
+                { upd with envu_rewrite = Some (SPF_Unresolved (sep, ht)) }
+              | Some None ->
+                { upd with envu_rewrite = None; }
+              | None -> upd)
+            env
+        in
+        { t with
+          env = update t.env;
+          build_env = update t.build_env;
+        }
+    in
+    let print t = t in (* extension field is rewritten as is *)
+    Pp.pp parse print
+
   (* Doesn't handle package name encoded in directory name *)
   let pp_raw_fields =
     Pp.I.check_opam_version ~format_version () -|
@@ -3227,7 +3284,8 @@ module OPAMSyntax = struct
       ~errmsg:"The url.subpath field is not allowed in files with \
                `opam-version` <= 2.0" -|
     handle_subpath_2_0 -|
-    handle_locked
+    handle_locked -|
+    handle_env_paths
 
   let pp_raw = Pp.I.map_file @@ pp_raw_fields
 

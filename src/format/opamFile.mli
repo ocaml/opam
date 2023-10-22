@@ -754,6 +754,9 @@ module OPAM: sig
       sections can be accessed through [section.field]. *)
   val print_field_as_syntax: string -> t -> value option
 
+  (** x-field name for path rewriting on windows *)
+  val rewrite_xfield: string
+
 end
 
 (** Compiler aliases: [$opam/aliases]. Deprecated, used only for migration *)

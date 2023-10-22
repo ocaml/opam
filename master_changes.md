@@ -67,6 +67,7 @@ users)
 ## Opamfile
   * Update populating extra-files fields log [#5640 @rjbou]
   * Fix `x-locked` type error message [#5636 @rjbou]
+  * Add `x-env-path-rewrite` extensions field to permit specification of rewriting rules for variables defined in `setenv` and `build-env`: no rewrite; separator and path format formulae [#5636 @rjbou - fix #5602 #4690 #2927]
 
 ## External dependencies
 
@@ -170,6 +171,7 @@ users)
   * `OpamFormat`: add `formula_items` to permit definition of formulae pp not only of the type `package-formula` [#5636 @rjbou]
   * `OpamTypesBase`: add to_string function for `path_format` & `separator` [#5636 @rjbou]
   * `OpamFormat.V`: add `path_format` & `separator` value parser printer [#5636 @rjbou]
+  * `OpamFile.OPAM`: add handling of `x-env-path-rewrite` extensions field, that specifies rewrite rules [#5636 @rjbou]
 
 ## opam-core
   * `OpamSystem.mk_temp_dir`: resolve real path with `OpamSystem.real_path` before returning it [#5654 @rjbou]
