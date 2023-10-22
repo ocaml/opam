@@ -16,7 +16,7 @@ open OpamStateTypes
 
 (** {2 Environment handling} *)
 
-(* transitional no-op resolver *)
+(* Resolve [env_update] separator & format according system *)
 val resolve_separator_and_format:
   'r env_update -> spf_resolved env_update
 

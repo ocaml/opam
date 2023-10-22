@@ -64,6 +64,9 @@ users)
 
 ## Clean
 
+## Env
+  * When computing environment variables updates, use rewriting rules (defined in opam file, or default per variable) to split, join, quote, etc. [#5636 @rjbou - fix #5602 #4690 #2927]
+
 ## Opamfile
   * Update populating extra-files fields log [#5640 @rjbou]
   * Fix `x-locked` type error message [#5636 @rjbou]

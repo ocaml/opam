@@ -19,45 +19,190 @@ open OpamFilename.Op
 let log fmt = OpamConsole.log "ENV" fmt
 let slog = OpamConsole.slog
 
-(* transitional no-op resolver *)
+
+(* Path format & separator handling *)
+let default_separator = if Sys.win32 then SSemiColon else SColon
+let default_format = Target
+
+(* Predefined default separators and format for some environment variables *)
+let default_sep_fmt_str var =
+  match String.uppercase_ascii var with
+  | "PATH" when Sys.win32 ->
+    SSemiColon, Target_quoted
+  | "PKG_CONFIG_PATH" | "MANPATH" ->
+    SColon, Target_quoted
+  | _ -> default_separator, default_format
+
+let default_sep_fmt var = default_sep_fmt_str (OpamStd.Env.Name.to_string var)
+
+(* sepfmt argument:
+   - None: no rewrite
+   - Some None: rewrite with defaults for given variable
+   - Some (Some (separator, path_format): use given separator & path format
+*)
+type sep_path_format = [
+  | `norewrite (* not a path, rewrite *)
+  | `rewrite_default of string (* path, default of variable *)
+  | `rewrite of separator * path_format (* path, rewrite using sep & fmt *)
+]
+
+let transform_format ~(sepfmt:sep_path_format) =
+  match sepfmt with
+  | `norewrite -> fun x -> x
+  | (`rewrite_default _ | `rewrite _) as sepfmt ->
+    let separator, format =
+      match sepfmt with
+      | `rewrite_default var -> default_sep_fmt_str var
+      | `rewrite (sep, fmt) -> sep, fmt
+    in
+    let translate =
+      match format with
+      | Target | Target_quoted ->
+        (match sepfmt with
+         | `rewrite_default _ -> fun x -> x
+         | `rewrite _ ->  OpamSystem.forward_to_back)
+      | Host | Host_quoted ->
+        (* noop on non windows *)
+        (Lazy.force OpamSystem.get_cygpath_path_transform) ~pathlist:false
+    in
+    match format with
+    | Target | Host -> translate
+    | Target_quoted | Host_quoted ->
+      fun arg ->
+        let path = translate arg in
+        let separator = OpamTypesBase.char_of_separator separator in
+        if String.contains path separator then
+          "\""^path^"\"" else path
+
 let resolve_separator_and_format :
   type r. r env_update -> spf_resolved env_update =
+  let env fv =
+    let fv = OpamVariable.Full.variable fv in
+    OpamStd.Option.(Op.(
+        of_Not_found
+          (OpamStd.List.assoc OpamVariable.equal fv)
+          OpamSysPoll.variables >>= Lazy.force))
+  in
+  let resolve var to_str formula =
+    let evaluated =
+      OpamFormula.map (fun (x, filter) ->
+          let eval = OpamFilter.eval_to_bool ~default:false env filter in
+          if eval then Atom (x, FBool true) else Empty)
+        formula
+      |> OpamFormula.map_formula (function
+          | Block x -> x
+          | x -> x)
+    in
+    match evaluated with
+    | Empty  -> None
+    | Atom (x, FBool true) -> Some x
+    | _ ->
+      let sep, pfmt = default_sep_fmt_str var in
+      OpamConsole.error
+        "Formula can't be completely resolved : %s %s. Using default '%c' '%s'."
+        var
+        (OpamFormula.string_of_formula (fun (s, f) ->
+             "\""^to_str s ^ "\" " ^
+             OpamFilter.to_string f) formula)
+        (char_of_separator sep)
+        (string_of_path_format pfmt);
+      None
+  in
   fun upd ->
-  { upd with envu_rewrite = Some (SPF_Resolved None); }
+    let var = upd.envu_var in
+    let envu_rewrite =
+      match upd.envu_rewrite with
+      | Some (SPF_Unresolved (sep_f, pfmt_f)) ->
+        let def_sep, def_pfmt = default_sep_fmt_str var in
+        let sep =
+          resolve upd.envu_var
+            (fun sep -> String.make 1 (char_of_separator sep))
+            sep_f
+        in
+        let pfmt =
+          resolve upd.envu_var string_of_path_format pfmt_f
+        in
+        let sep_pfmt =
+          match sep, pfmt with
+          | Some sep, Some pfmt -> Some (sep, pfmt)
+          | Some sep, None -> Some (sep, def_pfmt)
+          | None, Some pfmt -> Some (def_sep, pfmt)
+          | None, None -> None
+        in
+        Some (SPF_Resolved (sep_pfmt))
+      | Some (SPF_Resolved _) -> upd.envu_rewrite
+      | None -> None
+    in
+    { upd with envu_rewrite }
 
 (* - Environment and updates handling - *)
+let split_var ~(sepfmt:sep_path_format) var value =
+  match sepfmt with
+  | `norewrite ->
+    default_sep_fmt var
+    |> fst
+    |> char_of_separator
+    |> OpamStd.String.split value
+  | (`rewrite_default _ | `rewrite _) as sepfmt ->
+    let separator, format =
+      match sepfmt with
+      | `rewrite_default var -> default_sep_fmt_str var
+      | `rewrite (sep, fmt) -> sep, fmt
+    in
+    let sep = OpamTypesBase.char_of_separator separator in
+    match format with
+    | Target_quoted | Host_quoted ->
+      OpamStd.String.split value sep
+    | Target | Host ->
+      (* we suppose that it is in the form:
+         - "quoted":unquoted
+         - unquoted:"quoted"
+         - "quoted":unquoted:"quoted"
+         - unquoted:"quoted":unquoted
+         - "quoted"
+         - unquoted
+      *)
+      let rec aux remaining acc =
+        match String.get remaining 0 with
+        | '"' ->
+          (let remaining =
+             String.sub remaining 1 (String.length remaining - 1)
+           in
+           match OpamStd.String.cut_at remaining '"' with
+           | Some (quoted, rest) ->
+             aux rest (("\""^quoted^"\"")::acc)
+           | None -> remaining::acc)
+        | _ ->
+          let remaining =
+            if Char.equal (String.get remaining 0) sep then
+              String.sub remaining 1 (String.length remaining - 1)
+            else remaining in
+          (match OpamStd.String.cut_at remaining sep with
+           | Some (unquoted, rest) ->
+             aux rest (unquoted::acc)
+           | None -> remaining::acc)
+        | exception Invalid_argument _ -> acc
+      in
+      List.rev @@ aux value []
 
-type _ env_classification =
-| Separator : char env_classification
-| Split : (string -> string list) env_classification
-
-let get_env_property : type s . string -> s env_classification -> s = fun var classification ->
-  let split_delim = Fun.flip OpamStd.String.split in
-  let separator, split =
-    match String.uppercase_ascii var with
-    | "CAML_LD_LIBRARY_PATH" ->
-      OpamStd.Sys.path_sep, split_delim OpamStd.Sys.path_sep
-    | "PKG_CONFIG_PATH" | "MANPATH" ->
-      ':', split_delim ':'
-    | _ ->
-      OpamStd.Sys.path_sep, OpamStd.Sys.split_path_variable ~clean:false
+let join_var ~(sepfmt:sep_path_format) var values =
+  let separator =
+    match sepfmt with
+    | `norewrite -> fst (default_sep_fmt var)
+    | `rewrite_default var -> fst (default_sep_fmt_str var)
+    | `rewrite (sep, _) -> sep
   in
-  match classification with
-  | Separator -> separator
-  | Split -> split
+  String.concat
+    (String.make 1 (OpamTypesBase.char_of_separator separator))
+    values
 
-let split_var (var : OpamStd.Env.Name.t) =
-  get_env_property (var :> string) Split
-
-let join_var (var : OpamStd.Env.Name.t) l =
-  String.concat (String.make 1 (get_env_property (var :> string) Separator)) l
 
 (* To allow in-place updates, we store intermediate values of path-like as a
    pair of list [(rl1, l2)] such that the value is [List.rev_append rl1 l2] and
    the place where the new value should be inserted is in front of [l2] *)
 
 
-let unzip_to var elt current =
+let unzip_to ~sepfmt var elt current =
   (* If [r = l @ rs] then [remove_prefix l r] is [Some rs], otherwise [None] *)
   let rec remove_prefix l r =
     match l, r with
@@ -66,7 +211,8 @@ let unzip_to var elt current =
     | ([], rs) -> Some rs
     | _ -> None
   in
-  match (if String.equal elt "" then [""] else split_var var elt) with
+  match (if String.equal elt "" then [""]
+         else split_var ~sepfmt var elt) with
   | [] -> invalid_arg "OpamEnv.unzip_to"
   | hd::tl ->
     let rec aux acc = function
@@ -83,10 +229,13 @@ let unzip_to var elt current =
 let rezip ?insert (l1, l2) =
   List.rev_append l1 (match insert with None -> l2 | Some i -> i::l2)
 
-let rezip_to_string var ?insert z =
-  join_var var (rezip ?insert z)
+let rezip_to_string ~sepfmt var ?insert z =
+  join_var ~sepfmt var (rezip ?insert z)
 
-let apply_op_zip op arg (rl1,l2 as zip) =
+
+(* apply_zip take an already transformed arg *)
+let apply_op_zip ~sepfmt op arg (rl1,l2 as zip) =
+  let arg = transform_format ~sepfmt arg in
   let colon_eq ?(eqcol=false) = function (* prepend a, but keep ":"s *)
     | [] | [""] -> [], [arg; ""]
     | "" :: l ->
@@ -116,23 +265,23 @@ let apply_op_zip op arg (rl1,l2 as zip) =
     position of the matching element and allow [=+=] to be applied later. A pair
     or empty lists is returned if the variable should be unset or has an unknown
     previous value. *)
-let reverse_env_update var op arg cur_value =
+let reverse_env_update ~sepfmt var op arg cur_value =
   if String.equal arg  "" && op <> Eq then None else
   match op with
   | Eq ->
-    if arg = join_var var cur_value
+    if arg = join_var ~sepfmt var cur_value
     then Some ([],[]) else None
-  | PlusEq | EqPlusEq -> unzip_to var arg cur_value
+  | PlusEq | EqPlusEq -> unzip_to var ~sepfmt arg cur_value
   | EqPlus ->
-    (match unzip_to var arg (List.rev cur_value) with
+    (match unzip_to ~sepfmt var arg (List.rev cur_value) with
      | None -> None
      | Some (rl1, l2) -> Some (List.rev l2, List.rev rl1))
   | ColonEq ->
-    (match unzip_to var arg cur_value with
+    (match unzip_to var ~sepfmt arg cur_value with
      | Some ([], [""]) -> Some ([], [])
      | r -> r)
   | EqColon ->
-    (match unzip_to var arg (List.rev cur_value) with
+    (match unzip_to ~sepfmt var arg (List.rev cur_value) with
      | Some ([], [""]) -> Some ([], [])
      | Some (rl1, l2) -> Some (List.rev l2, List.rev rl1)
      | None -> None)
@@ -186,75 +335,107 @@ let expand (updates: spf_resolved env_update list) : env =
     else
       updates
   in
+  let pick_assoc3 eq x l =
+    let rec aux acc = function
+      | [] -> None, l
+      | (k,v,_) as b::r ->
+        if eq k x then Some v, List.rev_append acc r
+        else aux (b::acc) r
+    in
+    aux [] l
+  in
   (* Reverse all previous updates, in reverse order, on current environment *)
   let reverts =
     match Lazy.force updates_from_previous_instance with
     | None -> []
     | Some updates ->
       List.fold_right (fun upd defs0 ->
-          let { envu_var = var; envu_op = op; envu_value = arg; _} = upd in
+          let { envu_var = var; envu_op = op; envu_value = arg;
+                envu_rewrite; _} = upd
+          in
+          let sepfmt =
+            match envu_rewrite with
+            | None -> `norewrite
+            | Some (SPF_Resolved None) -> `rewrite_default var
+            | Some (SPF_Resolved (Some spf)) -> `rewrite spf
+          in
           let var = OpamStd.Env.Name.of_string var in
           let v_opt, defs =
-            OpamStd.List.pick_assoc OpamStd.Env.Name.equal var defs0
+            pick_assoc3 OpamStd.Env.Name.equal var defs0
           in
           let v =
             match Option.map rezip v_opt with
             | Some v -> v
             | None ->
-              OpamStd.Option.map_default (split_var var) []
+              OpamStd.Option.map_default (split_var ~sepfmt var) []
                 (OpamStd.Env.getopt (var :> string))
           in
-          match reverse_env_update var op arg v with
-          | Some v -> (var, v)::defs
+          match reverse_env_update ~sepfmt var op arg v with
+          | Some v -> (var, v, sepfmt)::defs
           | None -> defs0)
         updates []
   in
   (* OPAM_LAST_ENV and OPAM_SWITCH_PREFIX must be reverted if they were set *)
   let reverts =
     if OpamStd.Env.getopt "OPAM_LAST_ENV" <> None then
-      (OpamStd.Env.Name.of_string "OPAM_LAST_ENV", ([], []))::reverts
+      (OpamStd.Env.Name.of_string "OPAM_LAST_ENV", ([], []),
+       `rewrite_default "OPAM_LAST_ENV")
+      ::reverts
     else
       reverts
   in
   let reverts =
     if OpamStd.Env.getopt "OPAM_SWITCH_PREFIX" <> None then
-      (OpamStd.Env.Name.of_string "OPAM_SWITCH_PREFIX", ([], []))::reverts
+      (OpamStd.Env.Name.of_string "OPAM_SWITCH_PREFIX", ([], []),
+       `rewrite_default "OPAM_SWITCH_PREFIX")
+      ::reverts
     else
       reverts
   in
   (* And apply the new ones *)
-  let rec apply_updates reverts acc = function
+  let rec apply_updates reverts acc lst =
+    match lst with
     | upd :: updates ->
-      let { envu_var = var; envu_op = op;
-            envu_value = arg; envu_comment = doc; _ } = upd
+      let { envu_var = svar; envu_op = op;
+            envu_value = arg; envu_comment = doc;
+            envu_rewrite } = upd
       in
-      let var = OpamStd.Env.Name.of_string var in
+      let sepfmt =
+        match envu_rewrite with
+        | None -> `norewrite
+        | Some (SPF_Resolved None) -> `rewrite_default svar
+        | Some (SPF_Resolved (Some spf)) -> `rewrite spf
+      in
+      let var = OpamStd.Env.Name.of_string svar in
       let zip, reverts =
-        match OpamStd.List.find_opt (fun (v, _, _) ->
+        match OpamStd.List.find_opt (fun (v, _, _, _) ->
             OpamStd.Env.Name.equal var v) acc with
-        | Some (_, z, _doc) -> z, reverts
+        | Some (_, z, _doc, _) -> z, reverts
         | None ->
-          match OpamStd.List.pick_assoc OpamStd.Env.Name.equal var reverts with
+          match pick_assoc3 OpamStd.Env.Name.equal var reverts with
           | Some z, reverts -> z, reverts
           | None, _ ->
-            match OpamStd.Env.getopt (var :> string) with
-            | Some s -> ([], split_var var s), reverts
+            match OpamStd.Env.getopt svar with
+            | Some s -> ([], split_var var s ~sepfmt), reverts
             | None -> ([], []), reverts
       in
       let acc =
         if String.equal arg "" && op <> Eq then acc else
-          ((var, apply_op_zip op arg zip, doc) :: acc)
+          ((var, apply_op_zip ~sepfmt op arg zip, doc, sepfmt)
+           :: acc)
       in
       apply_updates
         reverts
         acc
         updates
     | [] ->
-      List.rev @@
-      List.rev_append
-        (List.rev_map (fun (var, z, doc) -> var, rezip_to_string var z, doc) acc) @@
-      List.rev_map (fun (var, z) ->
-          var, rezip_to_string var z, Some "Reverting previous opam update")
+      List.rev
+      @@ List.rev_append
+        (List.rev_map (fun (var, z, doc, sepfmt) ->
+             var, rezip_to_string ~sepfmt var z, doc) acc)
+      @@ List.rev_map (fun (var, z, sepfmt) ->
+          var, rezip_to_string ~sepfmt var z,
+          Some "Reverting previous opam update")
         reverts
   in
   apply_updates reverts [] updates
@@ -329,16 +510,15 @@ let compute_updates ?(force_path=false) st =
    List.map (env_expansion st) st.switch_config.OpamFile.Switch_config.env
   in
   let pkg_env = (* XXX: Does this need a (costly) topological sort? *)
-    OpamPackage.Set.fold (fun nv acc ->
-        match OpamPackage.Map.find_opt nv st.opams with
-        | Some opam ->
-          List.map (fun upd ->
-              env_expansion ~opam st upd
-              |> resolve_separator_and_format)
-            (OpamFile.OPAM.env opam)
-          @ acc
-        | None -> acc)
-      st.installed []
+    let updates =
+      OpamPackage.Set.fold (fun nv acc ->
+          match OpamPackage.Map.find_opt nv st.opams with
+          | Some opam ->
+            List.map (env_expansion ~opam st) (OpamFile.OPAM.env opam) @ acc
+          | None -> acc)
+        st.installed []
+    in
+    List.map resolve_separator_and_format updates
   in
   switch_env @ pkg_env @ man_path @ [path]
 
@@ -421,7 +601,7 @@ let get_full
   in
   let env0 = List.map (fun (v,va) -> v,va,None) env in
   let updates =
-    List.map resolve_separator_and_format u
+    (List.map resolve_separator_and_format u)
     @ updates ~set_opamroot ~set_opamswitch ~force_path st in
   add env0 updates
 
@@ -429,12 +609,20 @@ let is_up_to_date_raw ?(skip=OpamStateConfig.(!r.no_env_notice)) updates =
   skip ||
   let not_utd =
     List.fold_left (fun notutd upd ->
-        let { envu_var = var; envu_op = op; envu_value = arg; _ } = upd in
+        let { envu_var = var; envu_op = op; envu_value = arg;
+              envu_rewrite; _} = upd in
+        let sepfmt =
+          match envu_rewrite with
+          | None -> `norewrite
+          | Some (SPF_Resolved None) -> `rewrite_default var
+          | Some (SPF_Resolved (Some spf)) -> `rewrite spf
+        in
         let var = OpamStd.Env.Name.of_string var in
         match OpamStd.Env.getopt_full var with
         | _, None -> upd::notutd
         | var, Some v ->
-          if reverse_env_update var op arg (split_var var v) = None then upd::notutd
+          if reverse_env_update ~sepfmt var op arg
+              (split_var ~sepfmt var v) = None then upd::notutd
           else List.filter (fun upd ->
               OpamStd.Env.Name.equal_string var upd.envu_var) notutd)
       []
@@ -742,10 +930,26 @@ let init_script root shell =
 
 let string_of_update st shell updates =
   let fenv = OpamPackageVar.resolve st in
-  let aux { envu_var; envu_op; envu_value; envu_comment; _ } =
+  let aux { envu_var; envu_op; envu_value; envu_comment; envu_rewrite } =
     let string =
       OpamFilter.expand_string ~default:(fun _ -> "") fenv envu_value |>
       OpamStd.Env.escape_single_quotes ~using_backslashes:(shell = SH_fish)
+    in
+    let sepfmt =
+      match envu_rewrite with
+      | None -> `norewrite
+      | Some (SPF_Resolved None) -> `rewrite_default envu_var
+      | Some (SPF_Resolved (Some spf)) -> `rewrite spf
+    in
+    let string =
+      transform_format ~sepfmt string
+    in
+    let sep =
+      OpamTypesBase.char_of_separator
+        (match envu_rewrite with
+         | Some (SPF_Resolved (Some (sep, _))) -> sep
+         | None | Some (SPF_Resolved None) ->
+           fst @@ default_sep_fmt_str envu_var)
     in
     let key, value =
       envu_var, match envu_op with
@@ -756,7 +960,6 @@ let string_of_update st shell updates =
          | SH_cmd -> string
          | _ -> Printf.sprintf "'%s'" string)
       | PlusEq | ColonEq | EqPlusEq ->
-        let sep = get_env_property envu_var Separator in
         (match shell with
          | SH_pwsh _ ->
            Printf.sprintf "'%s%c' + \"$env:%s\""
@@ -764,7 +967,6 @@ let string_of_update st shell updates =
          | SH_cmd -> Printf.sprintf "%s%c%%%s%%" string sep envu_var
          | _ -> Printf.sprintf "'%s':\"$%s\"" string envu_var)
       | EqColon | EqPlus ->
-        let sep = get_env_property envu_var Separator in
         (match shell with
          | SH_pwsh _ -> Printf.sprintf "\"$env:%s\" + '%c%s'" envu_var sep string
          | SH_cmd -> Printf.sprintf "%%%s%%%c%s" envu_var sep string
