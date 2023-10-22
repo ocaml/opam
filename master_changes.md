@@ -106,6 +106,7 @@ users)
 ## Shell
 
 ## Internal
+  * `environment` file now stores environmnet variable rewriting rules [#5636 @rjbou]
 
 ## Internal: Windows
   * Fix sporadic crash and segfault in shell detection (seen in native containers) [#5714 @dra27]
@@ -172,6 +173,7 @@ users)
   * `OpamTypesBase`: add to_string function for `path_format` & `separator` [#5636 @rjbou]
   * `OpamFormat.V`: add `path_format` & `separator` value parser printer [#5636 @rjbou]
   * `OpamFile.OPAM`: add handling of `x-env-path-rewrite` extensions field, that specifies rewrite rules [#5636 @rjbou]
+  * `OpamFile.Environment`: add parsing-printing of rewriting rules, keeping backward compatibility [#5636 @rjbou]
 
 ## opam-core
   * `OpamSystem.mk_temp_dir`: resolve real path with `OpamSystem.real_path` before returning it [#5654 @rjbou]

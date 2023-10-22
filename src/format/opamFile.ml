@@ -555,13 +555,99 @@ module Environment = LineFile(struct
 
     let empty = []
 
+    type optional_parts = [
+      | `comment of string
+      | `format of separator * path_format
+      | `norewrite
+      | `comment_format of string * separator * path_format
+      | `comment_norewrite of string
+    ]
+
     let pp =
-      (OpamFormat.lines_set ~empty:[] ~add:OpamStd.List.cons ~fold:List.fold_right @@
-       Pp.identity ^+
-       Pp.of_pair "env_update_op"
-         (OpamLexer.FullPos.env_update_op, OpamPrinter.env_update_op_kind) ^+
-       Pp.identity ^+
-       Pp.opt Pp.singleton)
+      let path_format : (string, path_format) Pp.t =
+        Pp.of_pair "path-format"
+          ((function
+              | "host" -> Host
+              | "target" -> Target
+              | "target-quoted" -> Target_quoted
+              | "host-quoted" -> Host_quoted
+              | _ -> Pp.unexpected ()),
+           OpamTypesBase.string_of_path_format)
+      in
+      let separator : (string, separator) Pp.t =
+        Pp.of_pair "separator"
+          ((function
+              | ":" -> SColon
+              | ";" -> SSemiColon
+              | _ -> Pp.unexpected ()),
+           (fun sep -> String.make 1 (char_of_separator sep)))
+      in
+      let env : (string, env_update_op_kind) Pp.t =
+        (Pp.of_pair "env_update_op"
+           (OpamLexer.FullPos.env_update_op, OpamPrinter.env_update_op_kind))
+      in
+      let failparse name = failwith (Printf.sprintf "parse <%s>" name) in
+      let failprint name = failwith (Printf.sprintf "print <%s>" name) in
+      let norewrite: (string, [ `norewrite ]) Pp.t =
+        let name = "norewrite" in
+        Pp.of_pair name
+          ((function "norewrite" -> `norewrite | _ -> failparse name),
+           (function `norewrite -> "norewrite" ))
+      in
+      let comment_and_sepformat : (string list, optional_parts) Pp.t =
+        (separator ^+ path_format ^+ (Pp.last -| Pp.identity))
+        -| (let name = "separator-pathi-format-comment" in
+            Pp.of_pair name
+              ((fun (sep, (fmt, comment)) ->
+                  `comment_format (comment, sep, fmt)),
+               (function
+                 | `comment_format (comment, sep, fmt) -> sep, (fmt, comment)
+                 | _ -> failprint name)))
+      in
+      let comment_and_norewrite : (string list, optional_parts) Pp.t =
+        (norewrite ^+ (Pp.last -| Pp.identity))
+        -| (let name = "norewrite-comment" in
+            Pp.of_pair name
+              ((fun (`norewrite, comment) ->
+                  `comment_norewrite comment),
+               (function
+                 | `comment_norewrite comment -> `norewrite, comment
+                 | _ -> failprint name)))
+      in
+      let only_comment : (string list, optional_parts) Pp.t =
+        Pp.singleton
+        -| (let name = "only-comment" in
+            Pp.of_pair name
+              ((fun x -> `comment x),
+               (function `comment x -> x | _ -> failprint name)))
+      in
+      let only_format : (string list, optional_parts) Pp.t =
+        (separator ^+ (Pp.last -| path_format))
+        -| (let name = "only-path-format" in
+            Pp.of_pair name
+              ((fun sh -> `format sh),
+               (function `format sh -> sh | _ -> failprint name)))
+      in
+      let only_norewrite : (string list, optional_parts) Pp.t =
+        Pp.last -| norewrite
+        -| (let name = "only-norewrite" in
+            Pp.of_pair name
+              ((function `norewrite -> `norewrite),
+               (function `norewrite -> `norewrite | _ -> failprint name)))
+      in
+      let optional_parts : (string list, optional_parts option) Pp.t =
+        Pp.opt
+        @@ Pp.fallback comment_and_sepformat
+        @@ Pp.fallback comment_and_norewrite
+        @@ Pp.fallback only_norewrite
+        @@ Pp.fallback only_format only_comment
+      in
+      (OpamFormat.lines_set ~empty:[] ~add:OpamStd.List.cons
+         ~fold:List.fold_right
+       @@ (Pp.identity
+           ^+ env
+           ^+ Pp.identity
+           ^+ optional_parts))
       -| Pp.pp (fun ~pos:_ -> List.rev) List.rev
 
 
@@ -569,11 +655,53 @@ module Environment = LineFile(struct
       pp -|
       Pp.map_list
         (Pp.pp
-           (fun ~pos:_ (envu_var, (envu_op, (envu_value, envu_comment))) ->
-              { envu_var; envu_op; envu_value; envu_comment;
-                envu_rewrite = Some (SPF_Resolved None); })
-           (fun {envu_var; envu_op; envu_value; envu_comment; _} ->
-              (envu_var, (envu_op, (envu_value, envu_comment)))))
+           (fun ~pos:_ (envu_var, (envu_op, (envu_value, optional_parts))) ->
+              let envu = {
+                envu_var; envu_op; envu_value; envu_comment = None;
+                envu_rewrite = Some (SPF_Resolved None);
+              } in
+              match optional_parts with
+              | None -> envu
+              | Some (`comment_format (comment, sep, fmt)) ->
+                { envu with
+                  envu_comment = Some comment;
+                  envu_rewrite = Some (SPF_Resolved (Some (sep, fmt)));
+                }
+              | Some (`comment comment) ->
+                { envu with
+                  envu_comment = Some comment;
+                }
+              | Some (`format (sep, fmt)) ->
+                { envu with
+                  envu_rewrite = Some (SPF_Resolved (Some (sep, fmt)));
+                }
+              | Some `norewrite ->
+                { envu with
+                  envu_rewrite = None;
+                }
+              | Some (`comment_norewrite comment) ->
+                { envu with
+                  envu_comment = Some comment;
+                  envu_rewrite = None;
+                }
+           )
+           (fun {envu_var; envu_op; envu_value; envu_comment; envu_rewrite} ->
+             let optional_parts =
+               match envu_comment, envu_rewrite with
+               | None, Some (SPF_Resolved None) ->
+                 None
+               | None, Some (SPF_Resolved (Some (sep, fmt))) ->
+                 Some (`format (sep, fmt))
+               | None, None ->
+                 Some `norewrite
+               | Some comment, Some (SPF_Resolved (Some (sep, fmt))) ->
+                 Some (`comment_format (comment, sep, fmt))
+               | Some comment, Some (SPF_Resolved None) ->
+                 Some (`comment comment)
+               | Some comment, None ->
+                 Some (`comment_norewrite comment)
+             in
+             (envu_var, (envu_op, (envu_value, optional_parts)))))
 
   end)
 
