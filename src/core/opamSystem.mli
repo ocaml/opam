@@ -190,11 +190,14 @@ val resolve_command: ?env:string array -> ?dir:string -> string -> string option
     the identity function otherwise. *)
 val get_cygpath_function: command:string -> (string -> string) lazy_t
 
-(** Returns a function which should be applied to a PATH environment variable
-    if in a functioning Cygwin or MSYS2 environment, translating the Windows or a
-    Unix PATH variable into a Unix PATH variable. Returns the identity function
-    otherwise. *)
-val get_cygpath_path_transform: (string -> string) lazy_t
+(** Returns a function which should be applied to a path (or a path list), if
+    in a functioning Cygwin or MSYS2 environment, translating the Windows or a
+    Unix path into a Unix path, by calling `cygpath`. Returns the identity
+    function
+    otherwise.
+    [pathlist] argument permit to specify if it is applied to a path or a path
+    list, by giving the `--path` argument in the last case. *)
+val get_cygpath_path_transform: (pathlist:bool -> string -> string) lazy_t
 
 (** [command cmd] executes the command [cmd] in the correct OPAM
     environment. *)

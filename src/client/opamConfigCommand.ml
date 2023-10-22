@@ -63,7 +63,8 @@ let list t ns =
   OpamConsole.print_table stdout ~sep:" "
 
 let possibly_unix_path_env_value k v =
-  if k = "PATH" then (Lazy.force OpamSystem.get_cygpath_path_transform) v
+  if k = "PATH" then
+    (Lazy.force OpamSystem.get_cygpath_path_transform) ~pathlist:true v
   else v
 
 let rec print_env = function
