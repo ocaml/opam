@@ -168,6 +168,7 @@ users)
   * `OpamTypesBase`: add `env_update_resolved` and `env_update_unresolved` builders [#5636 @rjbou]
   * `OpamPp.fallback`: add name concatenation and printing fallback too [#5636 @rjbou]
   * `OpamFormat`: add `formula_items` to permit definition of formulae pp not only of the type `package-formula` [#5636 @rjbou]
+  * `OpamTypesBase`: add to_string function for `path_format` & `separator` [#5636 @rjbou]
 
 ## opam-core
   * `OpamSystem.mk_temp_dir`: resolve real path with `OpamSystem.real_path` before returning it [#5654 @rjbou]

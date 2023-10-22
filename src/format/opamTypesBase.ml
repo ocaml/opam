@@ -240,3 +240,14 @@ let env_update_unresolved ?comment:envu_comment ?rewrite
       OpamStd.Option.default (Some (SPF_Unresolved (Empty, Empty)))
         rewrite;
   }
+
+(** Environment update path transformers functions *)
+let string_of_path_format = function
+  | Host -> "host"
+  | Target -> "target"
+  | Target_quoted -> "target-quoted"
+  | Host_quoted -> "host-quoted"
+
+let char_of_separator = function
+  | SSemiColon -> ';'
+  | SColon -> ':'

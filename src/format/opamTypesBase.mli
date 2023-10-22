@@ -93,3 +93,7 @@ val env_update_unresolved:
   ?comment:string -> ?rewrite:spf_unresolved separator_path_format option
   -> string -> env_update_op_kind -> string
   -> spf_unresolved env_update
+
+(* Path transformers & separator functions *)
+val string_of_path_format: path_format -> string
+val char_of_separator: separator -> char
