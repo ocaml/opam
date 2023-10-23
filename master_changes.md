@@ -127,6 +127,8 @@ users)
   * Add `wget` on Cygwin install [#5607 @rjbou]
 
 ## Doc
+  * Fix typos in readme [#5706 @MisterDA]
+  * Fix formatting in the Manual [#5708 @kit-ty-kate]
 
 ## Security fixes
 

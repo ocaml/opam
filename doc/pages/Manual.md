@@ -1072,7 +1072,6 @@ files.
       explicitely. This can be affected by the
       [solver criteria](#configfield-solver-criteria). This can be useful for
       beta releases, or to discourage installation of releases with known bugs.
-
       Note that this behaviour is disabled when a flagged version of the package
       is already installed.
     - <a id="opamflag-deprecated">`deprecated`</a>: this flag is equivalent to
