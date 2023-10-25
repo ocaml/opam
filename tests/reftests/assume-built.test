@@ -225,3 +225,44 @@ The following actions will be performed:
 -> installed ongoing.1.0
 Done.
 ### test -f ./ongoing/installed
+### : assume built & undefined opam file variables :
+### OPAMSTRICT=0
+### opam unpin ongoing
+Ok, ongoing is no longer pinned to git+file://${BASEDIR}/ongoing#master (version 1.0)
+The following actions will be performed:
+=== remove 1 package
+  - remove ongoing 1.0
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   ongoing.1.0
+Done.
+### <pin:ongoing/ongoing.opam>
+opam-version: "2.0"
+depends: [
+  "qux"
+  "foo" { not-defined }
+]
+build: [
+  [ "test" "-f" "ongoing.txt" ]
+  [ "sh" "-c" "cat ongoing.txt > out" ]
+]
+install: [
+  [ "test" "-f" "out" ]
+  [ "test" "-f" "out2" ] { not-defined }
+  [ "touch" "installed"]
+]
+### git -C ongoing clean -fdqx
+### opam pin ./ongoing -n
+Package ongoing does not exist, create as a NEW package? [y/n] y
+ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
+### touch ongoing/out
+### opam install ongoing --assume-built --with-test
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not specified or specified with no argument).
+[ongoing.dev] synchronised (no changes)
+
+Fatal error: Undefined boolean filter value: not-defined
+# Return code 99 #
+### test -f ./ongoing/installed
+# Return code 1 #
