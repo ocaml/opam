@@ -14,7 +14,7 @@ users)
   * Bump to 2.2.0~alpha3~dev [#5615 @rjbou]
 
 ## Global CLI
-  * Fix `OPAMVERBOSE` setting, 0 and 1 levels was inverted: eg, "no" gives level 1, and "yes" level 0 [#5686 @smorimoto]
+  * [BUG] Fix `OPAMVERBOSE` setting, 0 and 1 levels was inverted: eg, "no" gives level 1, and "yes" level 0 [#5686 @smorimoto]
 
 ## Plugins
 
@@ -53,11 +53,11 @@ users)
 ## Source
 
 ## Lint
-  * Fix extra-files handling when linting packages from repositories, see #5068 [#5639 @rjbou]
+  * [BUG] Fix extra-files handling when linting packages from repositories, see #5068 [#5639 @rjbou]
   * Allow to mark a set of warnings as errors using a new syntax -W @1..9 [#5652 @kit-ty-kate @rjbou - fixes #5651]
 
 ## Repository
-  * Fix `OPAMCURL` and `OPAMFETCH` handling [#5607 @rjbou - fix #5597]
+  * [BUG] Fix `OPAMCURL` and `OPAMFETCH` handling [#5607 @rjbou - fix #5597]
 
 ## Lock
 
@@ -78,7 +78,7 @@ users)
 ## Build
   * Remove `bigarray` dependency [#5612 @kit-ty-kate]
   * Remove use of deprecated `Printf.kprintf" [#5612 @kit-ty-kate]
-  * Fix "make cold" on Windows when gcc is available [#5635 @kit-ty-kate - fixes #5600]
+  * [BUG] Fix "make cold" on Windows when gcc is available [#5635 @kit-ty-kate - fixes #5600]
 
 ## Infrastructure
   * Test OCaml 5.0 and 5.1 in CI [#5672 @kit-ty-kate]
