@@ -150,13 +150,27 @@ let track_t to_track ?(except=OpamFilename.Base.Set.empty) job_f =
       fun () -> make_index_topdir SM.empty (OpamFilename.Dir.to_string dir) ""
     | `Paths (prefix, files) ->
       fun () ->
+        let prefix = OpamFilename.Dir.to_string prefix in
         List.fold_left (fun acc f ->
-            let prefix = OpamFilename.Dir.to_string prefix in
-            let rel = Filename.concat prefix f in
-            let item = item_of_filename_opt rel in
-            match item with
-            | None -> acc
-            | Some item -> SM.add f item acc)
+            let _, acc =
+              List.fold_left (fun (path, acc) dir ->
+                  let path =
+                    match path with
+                    | Some path -> Filename.concat path dir
+                    | None -> dir
+                  in
+                  let rel = Filename.concat prefix path in
+                  let item = item_of_filename_opt rel in
+                  let acc =
+                    match item with
+                    | None -> acc
+                    | Some item -> SM.add path item acc
+                  in
+                  Some path, acc)
+                (None, acc)
+                (Re.(split (compile (rep1 (str Filename.dir_sep)))) f)
+            in
+            acc)
           SM.empty files
   in
   let scan_timer = OpamConsole.timer () in

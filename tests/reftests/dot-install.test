@@ -12,7 +12,7 @@ let read file =
     in
     let r = Str.regexp "/\\|\\\\\\\\" in
     List.rev_map
-      (Str.global_replace r "-")
+      (Str.global_replace r "|")
       (aux [])
   with Sys_error _ -> ["Not found: "^file]
 
@@ -21,12 +21,13 @@ let cat header path =
   let contents = read path in
   Printf.printf "%s\n" (String.concat "\n" contents)
 
-let pkg = (Sys.argv).(1)
+let switch = Sys.argv.(1)
+let pkg = Sys.argv.(2)
 let root = Sys.getenv "OPAMROOT"
 let (/) = Filename.concat
-let share = root / "inst" / "share"
-let inst_file = share / pkg / "file"
-let changes = root / "inst" / ".opam-switch" / "install" / pkg ^ ".changes"
+let share = root / switch / "share"
+let inst_file = share / pkg / "a-file"
+let changes = root / switch / ".opam-switch" / "install" / pkg ^ ".changes"
 let _ =
   cat (pkg ^" installed file") inst_file;
   cat (pkg^" changes") changes
@@ -34,30 +35,30 @@ let _ =
 opam-version: "2.0"
 depends: "nodot"
 ### <pkg:dot.~dev:dot.install>
-share: [ "file" ]
-### <pkg:dot.~dev:file>
+share: [ "a-file" ]
+### <pkg:dot.~dev:a-file>
 hellow
 ### <pkg:nodot.~dev>
 opam-version: "2.0"
 install: [ "echo" "hellow" ]
 ### <pkg:nodot.~dev:nodot.install>
-share: [ "file" ]
-### <pkg:nodot.~dev:file>
+share: [ "a-file" ]
+### <pkg:nodot.~dev:a-file>
 hellow
 ### <pkg:lot-of-files.~dev>
 opam-version: "2.0"
 install: [ "echo" "hellow" ]
 substs: "lot-of-files.install"
 ### <pkg:lot-of-files.~dev:lot-of-files.install.in>
-lib: [ "file" "fichier" "dosiero" ]
+lib: [ "a-file" "fichier" "dosiero" ]
 bin: [ "fichier" ]
-etc: [ "dosiero" "file" ]
+etc: [ "dosiero" "a-file" ]
 share: [ "fichier" "dosiero" ]
-misc: [ "file" {"%{root}%/dosiero"} ]
+misc: [ "a-file" {"%{root}%/dosiero"} ]
 ### <pkg:lot-of-files.~dev:lot-of-files.config>
 opam-version: "2.0"
 variables { lot: true }
-### <pkg:lot-of-files.~dev:file>
+### <pkg:lot-of-files.~dev:a-file>
 hellow
 ### <pkg:lot-of-files.~dev:fichier>
 bonjour
@@ -81,15 +82,15 @@ TRACK                           after install: 19 elements, 3 added, scanned in 
 ACTION                          changes recorded for nodot.~dev: 3 items (addition: 3)
 -> installed nodot.~dev
 Done.
-### ocaml cat.ml nodot
+### ocaml cat.ml inst nodot
 ==> nodot installed file
 hellow
 ==> nodot changes
 opam-version: "2.0"
 added: [
   "share" {"D"}
-  "share-nodot" {"D"}
-  "share-nodot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+  "share|nodot" {"D"}
+  "share|nodot|a-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
 ]
 ### opam install dot
 The following actions will be performed:
@@ -102,18 +103,18 @@ ACTION                          prepare_package_source: dot.~dev at ${BASEDIR}/O
 ACTION                          Installing dot.~dev.
 
 ACTION                          creating ${BASEDIR}/OPAM/inst/share/dot
-TRACK                           after install: 2 elements, 2 added, scanned in 0.000s
+TRACK                           after install: 3 elements, 2 added, scanned in 0.000s
 ACTION                          changes recorded for dot.~dev: 2 items (addition: 2)
 -> installed dot.~dev
 Done.
-### ocaml cat.ml dot
+### ocaml cat.ml inst dot
 ==> dot installed file
 hellow
 ==> dot changes
 opam-version: "2.0"
 added: [
-  "share-dot" {"D"}
-  "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+  "share|dot" {"D"}
+  "share|dot|a-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
 ]
 ### : Check with dry-run
 ### opam reinstall dot --dry-run
@@ -131,14 +132,14 @@ TRACK                           after install: 0 elements, 0 added, scanned in 0
 -> installed dot.~dev
 ACTION                          Cleaning up artefacts of dot.~dev
 Done.
-### ocaml cat.ml dot
+### ocaml cat.ml inst dot
 ==> dot installed file
 hellow
 ==> dot changes
 opam-version: "2.0"
 added: [
-  "share-dot" {"D"}
-  "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+  "share|dot" {"D"}
+  "share|dot|a-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
 ]
 ### opam reinstall dot --debug-level=0
 The following actions will be performed:
@@ -149,14 +150,14 @@ The following actions will be performed:
 -> removed   dot.~dev
 -> installed dot.~dev
 Done.
-### ocaml cat.ml dot
+### ocaml cat.ml inst dot
 ==> dot installed file
 hellow
 ==> dot changes
 opam-version: "2.0"
 added: [
-  "share-dot" {"D"}
-  "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+  "share|dot" {"D"}
+  "share|dot|a-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
 ]
 ### opam remove dot --dry-run
 The following actions will be simulated:
@@ -169,14 +170,14 @@ ACTION                          Removing dot.~dev
 ACTION                          Cleaning up artefacts of dot.~dev
 ACTION                          Removing the local metadata
 Done.
-### ocaml cat.ml dot
+### ocaml cat.ml inst dot
 ==> dot installed file
 hellow
 ==> dot changes
 opam-version: "2.0"
 added: [
-  "share-dot" {"D"}
-  "share-dot-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+  "share|dot" {"D"}
+  "share|dot|a-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
 ]
 ### opam remove dot --debug-level=0
 The following actions will be performed:
@@ -198,9 +199,9 @@ Installing dot.~dev.
 TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
 -> installed dot.~dev
 Done.
-### ocaml cat.ml dot
+### ocaml cat.ml inst dot
 ==> dot installed file
-Not found: ${BASEDIR}/OPAM/inst/share/dot/file
+Not found: ${BASEDIR}/OPAM/inst/share/dot/a-file
 ==> dot changes
 Not found: ${BASEDIR}/OPAM/inst/.opam-switch/install/dot.changes
 ### OPAMDEBUGSECTIONS="SYSTEM FILE(.config)" OPAMDEBUG=-1
@@ -213,7 +214,7 @@ SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/lot-o
 FILE(.config)                   Wrote ${BASEDIR}/OPAM/inst/.opam-switch/config/lot-of-files.config in 0.000s
 SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/fichier -> ${BASEDIR}/OPAM/inst/bin/fichier (755)
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/lib/lot-of-files
-SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/file -> ${BASEDIR}/OPAM/inst/lib/lot-of-files/file (644)
+SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/a-file -> ${BASEDIR}/OPAM/inst/lib/lot-of-files/a-file (644)
 SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/fichier -> ${BASEDIR}/OPAM/inst/lib/lot-of-files/fichier (644)
 SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/dosiero -> ${BASEDIR}/OPAM/inst/lib/lot-of-files/dosiero (644)
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/share/lot-of-files
@@ -222,9 +223,98 @@ SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/etc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/etc/lot-of-files
 SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/dosiero -> ${BASEDIR}/OPAM/inst/etc/lot-of-files/dosiero (644)
-SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/file -> ${BASEDIR}/OPAM/inst/etc/lot-of-files/file (644)
-SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/file -> ${BASEDIR}/OPAM/dosiero (644)
+SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/a-file -> ${BASEDIR}/OPAM/inst/etc/lot-of-files/a-file (644)
+SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/a-file -> ${BASEDIR}/OPAM/dosiero (644)
 -> installed lot-of-files.~dev
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev/files
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in -> ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev/files/lot-of-files.install.in
+### : Removal of non specified directories in .install :
+### opam switch create rem-dir --empty --debug-level=0
+### mkdir -p OPAM/rem-dir/lib/shared
+### <pkg:no-specified-dir.1>
+opam-version: "2.0"
+### <pkg:no-specified-dir.1:no-specified-dir.install>
+opam-version: "2.0"
+lib_root: [
+  "a-file" {"another/somedir/an-installed-file"}
+  "a-file" {"shared/an-installed-file"}
+]
+share: [ "a-file" ]
+### <pkg:no-specified-dir.1:a-file>
+touch
+### OPAMDEBUGSECTIONS="SYSTEM TRACK" OPAMDEBUG=-1
+### opam install no-specified-dir | '[0-9]{14}' -> "now"
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/backup
+The following actions will be performed:
+=== install 1 package
+  - install no-specified-dir 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1
+SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/no-specified-dir.install -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/no-specified-dir.install
+SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/a-file -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/a-file
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/lib/another
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/lib/another/somedir
+SYSTEM                          install ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/a-file -> ${BASEDIR}/OPAM/rem-dir/lib/another/somedir/an-installed-file (644)
+SYSTEM                          install ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/a-file -> ${BASEDIR}/OPAM/rem-dir/lib/shared/an-installed-file (644)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/share
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/share/no-specified-dir
+SYSTEM                          install ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/a-file -> ${BASEDIR}/OPAM/rem-dir/share/no-specified-dir/a-file (644)
+TRACK                           after install: 9 elements, 7 added, scanned in 0.000s
+-> installed no-specified-dir.1
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files
+SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/no-specified-dir.install -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files/no-specified-dir.install
+SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/a-file -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files/a-file
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/backup/state-now.export
+### ocaml cat.ml rem-dir no-specified-dir
+==> no-specified-dir installed file
+touch
+==> no-specified-dir changes
+opam-version: "2.0"
+added: [
+  "lib|another" {"D"}
+  "lib|another|somedir" {"D"}
+  "lib|another|somedir|an-installed-file"
+    {"F:af5d4d883c8c9c50711d86a7e1807cab"}
+  "lib|shared|an-installed-file" {"F:af5d4d883c8c9c50711d86a7e1807cab"}
+  "share" {"D"}
+  "share|no-specified-dir" {"D"}
+  "share|no-specified-dir|a-file" {"F:af5d4d883c8c9c50711d86a7e1807cab"}
+]
+### opam remove  no-specified-dir | '[0-9]{14}' -> "now"
+The following actions will be performed:
+=== remove 1 package
+  - remove no-specified-dir 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/lib/no-specified-dir
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/lib/no-specified-dir
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/share/no-specified-dir/a-file
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/share/no-specified-dir
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/etc/no-specified-dir
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/doc/no-specified-dir
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/install/no-specified-dir.install
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/share
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/lib/shared/an-installed-file
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/lib/another/somedir/an-installed-file
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/lib/another/somedir
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/lib/another
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/install/no-specified-dir.changes
+-> removed   no-specified-dir.1
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/sources/no-specified-dir.1
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/backup/state-now.export
+### test -d OPAM/rem-dir/lib/another/somedir
+# Return code 1 #
+### find OPAM/rem-dir/lib | unordered
+OPAM/rem-dir/lib
+OPAM/rem-dir/lib/shared
+OPAM/rem-dir/lib/stublibs
+OPAM/rem-dir/lib/toplevel
