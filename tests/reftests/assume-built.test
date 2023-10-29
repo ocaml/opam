@@ -166,3 +166,62 @@ Processing  2/2: [ongoing: touch installed]
 -> installed ongoing.dev
 Done.
 ### test -f ./ongoing/installed
+### : assume built & opam file variables :
+### opam unpin ongoing
+Ok, ongoing is no longer pinned to git+file://${BASEDIR}/ongoing#master (version dev)
+The following actions will be performed:
+=== remove 1 package
+  - remove ongoing dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   ongoing.dev
+Done.
+### opam var os=some-os --global
+Added '[os "some-os" "Set through 'opam var'"]' to field global-variables in global configuration
+### <pin:ongoing/ongoing.opam>
+opam-version: "2.0"
+version: "1.0"
+depends: [
+  "qux" { with-test }
+  "foo" { os != "some-os" }
+  "bar" { version != "1.0" }
+]
+build: [
+  [ "test" "-f" "ongoing.txt" ]
+  [ "sh" "-c" "cat ongoing.txt > out" ]
+]
+install: [
+  ["test" "-f" "out" ]
+  [ "test" "-f" "ongoing.txt" ] { with-test }
+  [ "test" "-f" "out2" ] { os != "some-os" }
+  [ "test" "-f" "out3" ] { version != "1.0" }
+  ["touch" "installed"]
+]
+### git -C ongoing clean -fdqx
+### opam pin ./ongoing -n
+Package ongoing does not exist, create as a NEW package? [y/n] y
+ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version 1.0)
+### touch ongoing/out
+### opam install qux
+The following actions will be performed:
+=== install 1 package
+  - install qux u
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed qux.u
+Done.
+### opam install ongoing --assume-built --with-test
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/ongoing (`--working-dir' not specified or specified with no argument).
+[ongoing.1.0] synchronised (no changes)
+
+The following actions will be performed:
+=== install 1 package
+  - install ongoing 1.0 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved ongoing.1.0  (no changes)
+-> installed ongoing.1.0
+Done.
+### test -f ./ongoing/installed

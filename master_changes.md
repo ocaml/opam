@@ -14,7 +14,7 @@ users)
   * Bump to 2.2.0~alpha3~dev [#5615 @rjbou]
 
 ## Global CLI
-  * Fix `OPAMVERBOSE` setting, 0 and 1 levels was inverted: eg, "no" gives level 1, and "yes" level 0 [#5686 @smorimoto]
+  * [BUG] Fix `OPAMVERBOSE` setting, 0 and 1 levels was inverted: eg, "no" gives level 1, and "yes" level 0 [#5686 @smorimoto]
 
 ## Plugins
 
@@ -26,6 +26,7 @@ users)
 
 ## Install
   * [BUG] On install driven by `.install` file, track intermediate directories too, in order to have them suppressed at package removal [#5691 @rjbou - fix #5688]
+  * [BUG] With `--assume-built`, resolve variables in depends filter according switch & global environment, not only depends predefined variables [#570 @rjbou - fix #5698]
 
 ## Remove
 
@@ -52,11 +53,11 @@ users)
 ## Source
 
 ## Lint
-  * Fix extra-files handling when linting packages from repositories, see #5068 [#5639 @rjbou]
+  * [BUG] Fix extra-files handling when linting packages from repositories, see #5068 [#5639 @rjbou]
   * Allow to mark a set of warnings as errors using a new syntax -W @1..9 [#5652 @kit-ty-kate @rjbou - fixes #5651]
 
 ## Repository
-  * Fix `OPAMCURL` and `OPAMFETCH` handling [#5607 @rjbou - fix #5597]
+  * [BUG] Fix `OPAMCURL` and `OPAMFETCH` handling [#5607 @rjbou - fix #5597]
 
 ## Lock
 
@@ -77,7 +78,7 @@ users)
 ## Build
   * Remove `bigarray` dependency [#5612 @kit-ty-kate]
   * Remove use of deprecated `Printf.kprintf" [#5612 @kit-ty-kate]
-  * Fix "make cold" on Windows when gcc is available [#5635 @kit-ty-kate - fixes #5600]
+  * [BUG] Fix "make cold" on Windows when gcc is available [#5635 @kit-ty-kate - fixes #5600]
 
 ## Infrastructure
   * Test OCaml 5.0 and 5.1 in CI [#5672 @kit-ty-kate]
@@ -117,6 +118,7 @@ users)
   * Add test for `OpamCoreConfig`, to check `OPAMVERBOSE` values [#5686 @rjbou]
   * dot-install: generalise inner script & use less generic filenames [#5691 @rjbou]
   * dot-install: add a test for removal of non specified in .install empty directories [#5701 @rjbou]
+  * Add test in assume-built for depends with switch variable filters [#5700 @rjbou]
 
 ### Engine
   * With real path resolved for all opam temp dir, remove `/private` from mac temp dir regexp [#5654 @rjbou]
