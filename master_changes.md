@@ -32,6 +32,7 @@ users)
 ## Remove
 
 ## Switch
+  * Precise message for Ctrl-c-ed opam switch creation "Switch left partially installed" [#5713 @rjbou - fix #5710]
 
 ## Config
 
