@@ -27,6 +27,7 @@ users)
 ## Install
   * [BUG] On install driven by `.install` file, track intermediate directories too, in order to have them suppressed at package removal [#5691 @rjbou - fix #5688]
   * [BUG] With `--assume-built`, resolve variables in depends filter according switch & global environment, not only depends predefined variables [#570 @rjbou - fix #5698]
+  * [BUG] Handle undefined variables defaults to false in dependencies formula resolution for assume built [#5701 rjbou]
 
 ## Remove
 
@@ -119,6 +120,7 @@ users)
   * dot-install: generalise inner script & use less generic filenames [#5691 @rjbou]
   * dot-install: add a test for removal of non specified in .install empty directories [#5701 @rjbou]
   * Add test in assume-built for depends with switch variable filters [#5700 @rjbou]
+  * Add undefined variable handling in assume built test [#5701 @rjbou]
 
 ### Engine
   * With real path resolved for all opam temp dir, remove `/private` from mac temp dir regexp [#5654 @rjbou]

@@ -1096,7 +1096,7 @@ let check_installed ~build ~post t atoms =
             let cnf_formula =
               OpamSwitchState.opam t pkg
               |> OpamFile.OPAM.depends
-              |> OpamFilter.filter_formula (env pkg)
+              |> OpamFilter.filter_formula ~default:false (env pkg)
               |> OpamFormula.to_cnf
             in
             let missing_conj =
