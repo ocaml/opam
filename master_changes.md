@@ -188,3 +188,4 @@ users)
   * `OpamStd.Config.env_level`: fix level parsing, it was inverted (eg, "no" gives level 1, and "yes" level 0) [#5686 @smorimoto]
   * `OpamStd.Sys.chop_exe_suffix`: removes `.exe` from the end of a path, if present
   * `OpamSystem.get_cygpath_path_transform`: add labeled argument to specify if path is a pathlist [#5636 @rjbou]
+  * `OpamSystem.apply_cygpath_path_transform`: fix cygpath call, use resolved name [#5716 @rjbou]
